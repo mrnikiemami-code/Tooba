@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Queries.GetEffectiveAccess;
 
 /// <summary>
@@ -16,10 +18,10 @@ public sealed record GetEffectiveAccessQuery(
     Guid ActorUserId,
     AccessOwnerScopeKind OwnerScopeKind,
     Guid? OwnerScopeId,
-    string? TenantId) : IRequest<EffectiveAccessDto>;
+    string? TenantId) : IRequest<Result<EffectiveAccessDto>>;
 
 /// <summary>Handler پرس‌وجوی مجوز مؤثر.</summary>
-public sealed class GetEffectiveAccessQueryHandler : IRequestHandler<GetEffectiveAccessQuery, EffectiveAccessDto>
+public sealed class GetEffectiveAccessQueryHandler : IRequestHandler<GetEffectiveAccessQuery, Result<EffectiveAccessDto>>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -28,9 +30,10 @@ public sealed class GetEffectiveAccessQueryHandler : IRequestHandler<GetEffectiv
     public GetEffectiveAccessQueryHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public Task<EffectiveAccessDto> Handle(GetEffectiveAccessQuery request, CancellationToken cancellationToken)
+    public Task<Result<EffectiveAccessDto>> Handle(GetEffectiveAccessQuery request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        return _directory.GetEffectiveAccessAsync(request.ActorUserId, owner, cancellationToken);
+        return AccessControlOperation.ExecuteAsync(() =>
+            _directory.GetEffectiveAccessAsync(request.ActorUserId, owner, cancellationToken));
     }
 }

@@ -7007,5 +7007,22 @@
         "automaticNextImplementationTask": "NONE",
         "implementationCommit": "9210b8435bc8df6e7d5e2cd65b12aad43639055d",
         "docsStamp": "9f434eeaec1ce22e36b85c51ab8fc061d8d49109"
+    },
+    "accessControlModuleAmc001W3": {
+        "task": "TB-TMAR-ACCESSCONTROL-AMC-001-W3",
+        "parentTask": "TB-TMAR-ACCESSCONTROL-AMC-001-W2",
+        "mode": "MIGRATE",
+        "slice": "RESULT_PIPELINE",
+        "state": "ACCESSCONTROL_RESULT_PIPELINE_APPLIED",
+        "handlerResultReturns": "APPLIED",
+        "endpointApiFrom": "APPLIED",
+        "accessControlExceptionCatchInEndpoints": "ZERO",
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "durableGuard": "AccessControlModuleAmcW3ResultGuardTests",
+        "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-001-W3/",
+        "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_001_W3",
+        "automaticNextImplementationTask": "NONE",
+        "implementationCommit": "PENDING",
+        "docsStamp": "PENDING"
     }
 }

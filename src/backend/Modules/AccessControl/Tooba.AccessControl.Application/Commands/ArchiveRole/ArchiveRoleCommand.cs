@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Commands.ArchiveRole;
 
 /// <summary>
@@ -20,10 +22,10 @@ public sealed record ArchiveRoleCommand(
     Guid? OwnerScopeId,
     Guid ActorUserId,
     string? TenantId,
-    string? TraceId) : IRequest<Unit>;
+    string? TraceId) : IRequest<Result>;
 
 /// <summary>Handler فرمان آرشیو نقش.</summary>
-public sealed class ArchiveRoleCommandHandler : IRequestHandler<ArchiveRoleCommand, Unit>
+public sealed class ArchiveRoleCommandHandler : IRequestHandler<ArchiveRoleCommand, Result>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -32,15 +34,14 @@ public sealed class ArchiveRoleCommandHandler : IRequestHandler<ArchiveRoleComma
     public ArchiveRoleCommandHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public async Task<Unit> Handle(ArchiveRoleCommand request, CancellationToken cancellationToken)
+    public Task<Result> Handle(ArchiveRoleCommand request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        await _directory.ArchiveRoleAsync(
+        return AccessControlOperation.ExecuteAsync(() => _directory.ArchiveRoleAsync(
             request.RoleId,
             owner,
             request.ActorUserId,
             request.TraceId,
-            cancellationToken);
-        return Unit.Value;
+            cancellationToken));
     }
 }

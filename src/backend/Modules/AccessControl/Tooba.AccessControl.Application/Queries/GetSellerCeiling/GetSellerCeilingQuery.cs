@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Queries.GetSellerCeiling;
 
 /// <summary>
@@ -10,11 +12,11 @@ namespace Tooba.AccessControl.Application.Queries.GetSellerCeiling;
 /// </summary>
 /// <param name="SellerPartyId">شناسهٔ فروشنده.</param>
 public sealed record GetSellerCeilingQuery(
-    Guid SellerPartyId) : IRequest<IReadOnlyList<SellerCeilingEntryDto>>;
+    Guid SellerPartyId) : IRequest<Result<IReadOnlyList<SellerCeilingEntryDto>>>;
 
 /// <summary>Handler پرس‌وجوی سقف فروشنده.</summary>
 public sealed class GetSellerCeilingQueryHandler
-    : IRequestHandler<GetSellerCeilingQuery, IReadOnlyList<SellerCeilingEntryDto>>
+    : IRequestHandler<GetSellerCeilingQuery, Result<IReadOnlyList<SellerCeilingEntryDto>>>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -23,7 +25,8 @@ public sealed class GetSellerCeilingQueryHandler
     public GetSellerCeilingQueryHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<SellerCeilingEntryDto>> Handle(
+    public Task<Result<IReadOnlyList<SellerCeilingEntryDto>>> Handle(
         GetSellerCeilingQuery request, CancellationToken cancellationToken) =>
-        _directory.GetSellerCeilingAsync(request.SellerPartyId, cancellationToken);
+        AccessControlOperation.ExecuteAsync(() =>
+            _directory.GetSellerCeilingAsync(request.SellerPartyId, cancellationToken));
 }

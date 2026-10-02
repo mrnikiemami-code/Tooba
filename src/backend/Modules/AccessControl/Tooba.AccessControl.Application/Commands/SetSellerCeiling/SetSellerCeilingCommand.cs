@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Commands.SetSellerCeiling;
 
 /// <summary>
@@ -29,10 +31,10 @@ public sealed record SetSellerCeilingCommand(
     Guid SellerPartyId,
     IReadOnlyList<SellerCeilingEntryInput> Entries,
     Guid ActorUserId,
-    string? TraceId) : IRequest<Unit>;
+    string? TraceId) : IRequest<Result>;
 
 /// <summary>Handler فرمان تنظیم سقف فروشنده.</summary>
-public sealed class SetSellerCeilingCommandHandler : IRequestHandler<SetSellerCeilingCommand, Unit>
+public sealed class SetSellerCeilingCommandHandler : IRequestHandler<SetSellerCeilingCommand, Result>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -41,18 +43,17 @@ public sealed class SetSellerCeilingCommandHandler : IRequestHandler<SetSellerCe
     public SetSellerCeilingCommandHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public async Task<Unit> Handle(SetSellerCeilingCommand request, CancellationToken cancellationToken)
+    public Task<Result> Handle(SetSellerCeilingCommand request, CancellationToken cancellationToken)
     {
         var entries = request.Entries
             .Select(e => (e.PermissionId, e.Enabled, e.ScopeKind, e.ScopeResourceId))
             .ToList();
 
-        await _directory.SetSellerCeilingAsync(
+        return AccessControlOperation.ExecuteAsync(() => _directory.SetSellerCeilingAsync(
             request.SellerPartyId,
             entries,
             request.ActorUserId,
             request.TraceId,
-            cancellationToken);
-        return Unit.Value;
+            cancellationToken));
     }
 }

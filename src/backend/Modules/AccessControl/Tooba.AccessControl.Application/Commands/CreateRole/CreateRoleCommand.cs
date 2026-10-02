@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Commands.CreateRole;
 
 /// <summary>
@@ -24,10 +26,10 @@ public sealed record CreateRoleCommand(
     string Name,
     string Code,
     string Description,
-    string? TraceId) : IRequest<AccessRoleDto>;
+    string? TraceId) : IRequest<Result<AccessRoleDto>>;
 
 /// <summary>Handler فرمان ایجاد نقش.</summary>
-public sealed class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, AccessRoleDto>
+public sealed class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, Result<AccessRoleDto>>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -36,14 +38,14 @@ public sealed class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand
     public CreateRoleCommandHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public Task<AccessRoleDto> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
+    public Task<Result<AccessRoleDto>> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        return _directory.CreateRoleAsync(
+        return AccessControlOperation.ExecuteAsync(() => _directory.CreateRoleAsync(
             owner,
             new CreateAccessRoleCommand(request.Name, request.Code, request.Description),
             request.ActorUserId,
             request.TraceId,
-            cancellationToken);
+            cancellationToken));
     }
 }

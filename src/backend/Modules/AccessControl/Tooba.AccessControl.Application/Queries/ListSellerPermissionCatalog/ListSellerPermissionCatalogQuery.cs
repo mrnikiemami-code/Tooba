@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Queries.ListSellerPermissionCatalog;
 
 /// <summary>
@@ -30,10 +32,12 @@ public sealed record SellerPermissionCatalogItem(
 /// پرس‌وجوی کاتالوگ مجوز از دید فروشنده با اعمال سقف.
 /// </summary>
 /// <param name="SellerPartyId">شناسهٔ فروشندهٔ مجاز.</param>
-public sealed record ListSellerPermissionCatalogQuery(Guid SellerPartyId) : IRequest<IReadOnlyList<SellerPermissionCatalogItem>>;
+public sealed record ListSellerPermissionCatalogQuery(Guid SellerPartyId)
+    : IRequest<Result<IReadOnlyList<SellerPermissionCatalogItem>>>;
 
 /// <summary>Handler کاتالوگ مجوز فروشنده.</summary>
-public sealed class ListSellerPermissionCatalogQueryHandler : IRequestHandler<ListSellerPermissionCatalogQuery, IReadOnlyList<SellerPermissionCatalogItem>>
+public sealed class ListSellerPermissionCatalogQueryHandler
+    : IRequestHandler<ListSellerPermissionCatalogQuery, Result<IReadOnlyList<SellerPermissionCatalogItem>>>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -42,21 +46,22 @@ public sealed class ListSellerPermissionCatalogQueryHandler : IRequestHandler<Li
     public ListSellerPermissionCatalogQueryHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<SellerPermissionCatalogItem>> Handle(
+    public Task<Result<IReadOnlyList<SellerPermissionCatalogItem>>> Handle(
         ListSellerPermissionCatalogQuery request,
         CancellationToken cancellationToken)
-    {
-        var ceiling = await _directory.GetSellerCeilingAsync(request.SellerPartyId, cancellationToken);
-        return _directory.ListCatalog()
-            .Select(p => new SellerPermissionCatalogItem(
-                p.PermissionId,
-                p.Module,
-                p.DisplayNameKey,
-                p.DescriptionKey,
-                p.Delegable,
-                p.ScopeKinds,
-                DisabledByCeiling: p.Delegable && ceiling.All(c => c.PermissionId != p.PermissionId || !c.Enabled),
-                PlatformOnly: !p.Delegable))
-            .ToArray();
-    }
+        => AccessControlOperation.ExecuteAsync(async () =>
+        {
+            var ceiling = await _directory.GetSellerCeilingAsync(request.SellerPartyId, cancellationToken);
+            return (IReadOnlyList<SellerPermissionCatalogItem>)_directory.ListCatalog()
+                .Select(p => new SellerPermissionCatalogItem(
+                    p.PermissionId,
+                    p.Module,
+                    p.DisplayNameKey,
+                    p.DescriptionKey,
+                    p.Delegable,
+                    p.ScopeKinds,
+                    DisabledByCeiling: p.Delegable && ceiling.All(c => c.PermissionId != p.PermissionId || !c.Enabled),
+                    PlatformOnly: !p.Delegable))
+                .ToArray();
+        });
 }

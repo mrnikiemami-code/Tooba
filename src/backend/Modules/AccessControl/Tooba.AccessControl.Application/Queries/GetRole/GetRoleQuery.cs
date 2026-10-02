@@ -1,6 +1,8 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
+using Tooba.AccessControl.Contracts.Errors;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.AccessControl.Application.Queries.GetRole;
@@ -16,10 +18,10 @@ public sealed record GetRoleQuery(
     Guid RoleId,
     AccessOwnerScopeKind OwnerScopeKind,
     Guid? OwnerScopeId,
-    string? TenantId) : IRequest<AccessRoleDto?>;
+    string? TenantId) : IRequest<Result<AccessRoleDto>>;
 
 /// <summary>Handler پرس‌وجوی یک نقش.</summary>
-public sealed class GetRoleQueryHandler : IRequestHandler<GetRoleQuery, AccessRoleDto?>
+public sealed class GetRoleQueryHandler : IRequestHandler<GetRoleQuery, Result<AccessRoleDto>>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -28,9 +30,13 @@ public sealed class GetRoleQueryHandler : IRequestHandler<GetRoleQuery, AccessRo
     public GetRoleQueryHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public Task<AccessRoleDto?> Handle(GetRoleQuery request, CancellationToken cancellationToken)
+    public async Task<Result<AccessRoleDto>> Handle(GetRoleQuery request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        return _directory.GetRoleAsync(request.RoleId, owner, cancellationToken);
+        var wrapped = await AccessControlOperation.ExecuteAsync(
+            () => _directory.GetRoleAsync(request.RoleId, owner, cancellationToken));
+        if (wrapped.IsFailure)
+            return Result.Failure<AccessRoleDto>(wrapped.Errors);
+        return AccessControlOperation.NotFoundIfNull(wrapped.Value, AccessControlErrorCodes.RoleNotFound);
     }
 }

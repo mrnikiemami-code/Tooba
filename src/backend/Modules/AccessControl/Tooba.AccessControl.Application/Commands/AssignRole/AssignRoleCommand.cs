@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Commands.AssignRole;
 
 /// <summary>
@@ -22,10 +24,10 @@ public sealed record AssignRoleCommand(
     Guid RoleId,
     Guid ActorUserId,
     string? TenantId,
-    string? TraceId) : IRequest<UserRoleAssignmentDto>;
+    string? TraceId) : IRequest<Result<UserRoleAssignmentDto>>;
 
 /// <summary>Handler فرمان تخصیص نقش.</summary>
-public sealed class AssignRoleCommandHandler : IRequestHandler<AssignRoleCommand, UserRoleAssignmentDto>
+public sealed class AssignRoleCommandHandler : IRequestHandler<AssignRoleCommand, Result<UserRoleAssignmentDto>>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -34,15 +36,15 @@ public sealed class AssignRoleCommandHandler : IRequestHandler<AssignRoleCommand
     public AssignRoleCommandHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public Task<UserRoleAssignmentDto> Handle(AssignRoleCommand request, CancellationToken cancellationToken)
+    public Task<Result<UserRoleAssignmentDto>> Handle(AssignRoleCommand request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        return _directory.AssignRoleAsync(
+        return AccessControlOperation.ExecuteAsync(() => _directory.AssignRoleAsync(
             owner,
             request.UserId,
             request.RoleId,
             request.ActorUserId,
             request.TraceId,
-            cancellationToken);
+            cancellationToken));
     }
 }

@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.Catalog.Contracts;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Queries.ListScopeResources;
 
 /// <summary>
@@ -45,13 +47,13 @@ public sealed record ScopeResourceListResult(
 /// <param name="Search">عبارت جستجو در صورت وجود.</param>
 public sealed record ListScopeResourcesQuery(
     AccessScopeResourceKind Kind,
-    string? Search) : IRequest<ScopeResourceListResult>;
+    string? Search) : IRequest<Result<ScopeResourceListResult>>;
 
 /// <summary>
 /// Handler پرس‌وجوی منابع scope — منابع مشخص از درز قراردادی Catalog و منابع دیگر به‌صورت deferred.
 /// </summary>
 public sealed class ListScopeResourcesQueryHandler
-    : IRequestHandler<ListScopeResourcesQuery, ScopeResourceListResult>
+    : IRequestHandler<ListScopeResourcesQuery, Result<ScopeResourceListResult>>
 {
     private readonly IAccessControlScopeResourceLookup _catalog;
 
@@ -60,25 +62,26 @@ public sealed class ListScopeResourcesQueryHandler
     public ListScopeResourcesQueryHandler(IAccessControlScopeResourceLookup catalog) => _catalog = catalog;
 
     /// <inheritdoc />
-    public async Task<ScopeResourceListResult> Handle(
+    public Task<Result<ScopeResourceListResult>> Handle(
         ListScopeResourcesQuery request, CancellationToken cancellationToken)
-    {
-        switch (request.Kind)
+        => AccessControlOperation.ExecuteAsync(async () =>
         {
-            case AccessScopeResourceKind.Category:
-                var categories = await _catalog.ListCategoriesAsync(request.Search, cancellationToken);
-                return new ScopeResourceListResult(false, categories.Cast<object>().ToList());
+            switch (request.Kind)
+            {
+                case AccessScopeResourceKind.Category:
+                    var categories = await _catalog.ListCategoriesAsync(request.Search, cancellationToken);
+                    return new ScopeResourceListResult(false, categories.Cast<object>().ToList());
 
-            case AccessScopeResourceKind.Brand:
-                var brands = await _catalog.ListBrandsAsync(request.Search, cancellationToken);
-                return new ScopeResourceListResult(false, brands.Cast<object>().ToList());
+                case AccessScopeResourceKind.Brand:
+                    var brands = await _catalog.ListBrandsAsync(request.Search, cancellationToken);
+                    return new ScopeResourceListResult(false, brands.Cast<object>().ToList());
 
-            case AccessScopeResourceKind.Product:
-                var products = await _catalog.ListProductsAsync(request.Search, cancellationToken);
-                return new ScopeResourceListResult(false, products.Cast<object>().ToList());
+                case AccessScopeResourceKind.Product:
+                    var products = await _catalog.ListProductsAsync(request.Search, cancellationToken);
+                    return new ScopeResourceListResult(false, products.Cast<object>().ToList());
 
-            default:
-                return new ScopeResourceListResult(true, Array.Empty<object>());
-        }
-    }
+                default:
+                    return new ScopeResourceListResult(true, Array.Empty<object>());
+            }
+        });
 }

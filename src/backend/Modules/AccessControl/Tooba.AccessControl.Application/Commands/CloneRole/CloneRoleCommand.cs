@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Commands.CloneRole;
 
 /// <summary>
@@ -26,10 +28,10 @@ public sealed record CloneRoleCommand(
     string Name,
     string Code,
     string? Description,
-    string? TraceId) : IRequest<AccessRoleDto>;
+    string? TraceId) : IRequest<Result<AccessRoleDto>>;
 
 /// <summary>Handler فرمان کلون نقش.</summary>
-public sealed class CloneRoleCommandHandler : IRequestHandler<CloneRoleCommand, AccessRoleDto>
+public sealed class CloneRoleCommandHandler : IRequestHandler<CloneRoleCommand, Result<AccessRoleDto>>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -38,15 +40,15 @@ public sealed class CloneRoleCommandHandler : IRequestHandler<CloneRoleCommand, 
     public CloneRoleCommandHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public Task<AccessRoleDto> Handle(CloneRoleCommand request, CancellationToken cancellationToken)
+    public Task<Result<AccessRoleDto>> Handle(CloneRoleCommand request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        return _directory.CloneRoleAsync(
+        return AccessControlOperation.ExecuteAsync(() => _directory.CloneRoleAsync(
             request.RoleId,
             owner,
             new CloneAccessRoleCommand(request.Name, request.Code, request.Description),
             request.ActorUserId,
             request.TraceId,
-            cancellationToken);
+            cancellationToken));
     }
 }

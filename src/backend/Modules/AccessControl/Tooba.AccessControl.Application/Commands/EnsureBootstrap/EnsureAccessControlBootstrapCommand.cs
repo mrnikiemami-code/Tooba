@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
@@ -24,13 +25,10 @@ public sealed class EnsureAccessControlBootstrapHandler : IRequestHandler<Ensure
     public EnsureAccessControlBootstrapHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public async Task<Result> Handle(EnsureAccessControlBootstrapCommand request, CancellationToken cancellationToken)
-    {
-        await _directory.EnsureBootstrapAsync(
+    public Task<Result> Handle(EnsureAccessControlBootstrapCommand request, CancellationToken cancellationToken)
+        => AccessControlOperation.ExecuteAsync(() => _directory.EnsureBootstrapAsync(
             request.ActorUserId,
             Array.Empty<Guid>(),
             request.TenantId,
-            cancellationToken);
-        return Result.Success();
-    }
+            cancellationToken));
 }

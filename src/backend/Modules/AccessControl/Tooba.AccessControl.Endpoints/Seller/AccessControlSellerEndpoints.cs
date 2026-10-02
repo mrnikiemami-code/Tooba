@@ -23,7 +23,6 @@ using Tooba.AccessControl.Application.Queries.SearchAccessUsers;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.AccessControl.Endpoints.Errors;
 using Tooba.BuildingBlocks.Security;
 
 using Tooba.AccessControl.Application.Models;
@@ -59,18 +58,18 @@ public static class AccessControlSellerEndpoints
 
     private static void MapScopeResources(RouteGroupBuilder group)
     {
-        group.MapGet("/categories", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct, string? q = null) =>
-            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Category, q, ct));
-        group.MapGet("/brands", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct, string? q = null) =>
-            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Brand, q, ct));
-        group.MapGet("/products", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct, string? q = null) =>
-            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Product, q, ct));
-        group.MapGet("/warehouses", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct) =>
-            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Warehouse, null, ct));
-        group.MapGet("/stores", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct) =>
-            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Store, null, ct));
-        group.MapGet("/order-segments", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct) =>
-            ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.OrderSegment, null, ct));
+        group.MapGet("/categories", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct, string? q = null) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, api, AccessScopeResourceKind.Category, q, ct));
+        group.MapGet("/brands", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct, string? q = null) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, api, AccessScopeResourceKind.Brand, q, ct));
+        group.MapGet("/products", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct, string? q = null) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, api, AccessScopeResourceKind.Product, q, ct));
+        group.MapGet("/warehouses", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, api, AccessScopeResourceKind.Warehouse, null, ct));
+        group.MapGet("/stores", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, api, AccessScopeResourceKind.Store, null, ct));
+        group.MapGet("/order-segments", (HttpRequest request, ISender sender, ISellerPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct) =>
+            ListScopeResourceAsync(request, sender, access, authz, tenant, api, AccessScopeResourceKind.OrderSegment, null, ct));
     }
 
     private static async Task<IResult> ListScopeResourceAsync(
@@ -79,13 +78,14 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         AccessScopeResourceKind kind,
         string? q,
         CancellationToken cancellationToken)
     {
         var (actor, _) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
         await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
-        return Results.Json(await sender.Send(new ListScopeResourcesQuery(kind, q), cancellationToken));
+        return api.From(await sender.Send(new ListScopeResourcesQuery(kind, q), cancellationToken));
     }
 
     private static async Task<IResult> SearchUsersAsync(
@@ -100,7 +100,7 @@ public static class AccessControlSellerEndpoints
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
         await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
-        return Results.Json(await sender.Send(
+        return api.From(await sender.Send(
             new SearchAccessUsersQuery(
                 AccessOwnerScopeKind.Seller,
                 sellerId,
@@ -121,7 +121,7 @@ public static class AccessControlSellerEndpoints
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
         await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
-        return Results.Json(await sender.Send(
+        return api.From(await sender.Send(
             new GetEffectiveAccessQuery(
                 userId,
                 AccessOwnerScopeKind.Seller,
@@ -141,7 +141,7 @@ public static class AccessControlSellerEndpoints
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
         await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
-        return Results.Json(await sender.Send(new GetSellerCeilingQuery(sellerId), cancellationToken));
+        return api.From(await sender.Send(new GetSellerCeilingQuery(sellerId), cancellationToken));
     }
 
     private static async Task<IResult> ListAssignmentsAsync(
@@ -155,7 +155,7 @@ public static class AccessControlSellerEndpoints
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
         await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
-        return Results.Json(await sender.Send(
+        return api.From(await sender.Send(
             new ListAssignmentsQuery(
                 AccessOwnerScopeKind.Seller,
                 sellerId,
@@ -174,11 +174,9 @@ public static class AccessControlSellerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
             var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
             await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
-            return Results.Json(await sender.Send(
+            return api.From(await sender.Send(
                 new AssignRoleCommand(
                     AccessOwnerScopeKind.Seller,
                     sellerId,
@@ -188,11 +186,6 @@ public static class AccessControlSellerEndpoints
                     tenant.Current?.TenantId.Value,
                     Trace(request)),
                 cancellationToken));
-        }
-        catch (AccessControlException ace)
-        {
-            return AccessControlHttpErrors.From(ace, api);
-        }
     }
 
     private static async Task<IResult> RemoveAssignmentAsync(
@@ -205,25 +198,15 @@ public static class AccessControlSellerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
             var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
             await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
-            await sender.Send(
-                new RemoveAssignmentCommand(
+            return api.From(await sender.Send(new RemoveAssignmentCommand(
                     assignmentId,
                     AccessOwnerScopeKind.Seller,
                     sellerId,
                     actor,
                     tenant.Current?.TenantId.Value,
-                    Trace(request)),
-                cancellationToken);
-            return Results.NoContent();
-        }
-        catch (AccessControlException ace)
-        {
-            return AccessControlHttpErrors.From(ace, api);
-        }
+                    Trace(request)), cancellationToken));
     }
 
     private static async Task<IResult> ListRolesAsync(
@@ -237,7 +220,7 @@ public static class AccessControlSellerEndpoints
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
         await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
-        return Results.Json(await sender.Send(
+        return api.From(await sender.Send(
             new ListRolesQuery(
                 AccessOwnerScopeKind.Seller,
                 sellerId,
@@ -256,11 +239,9 @@ public static class AccessControlSellerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
             var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
             await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
-            return Results.Json(await sender.Send(
+            return api.From(await sender.Send(
                 new CreateRoleCommand(
                     AccessOwnerScopeKind.Seller,
                     sellerId,
@@ -271,11 +252,6 @@ public static class AccessControlSellerEndpoints
                     body.Description,
                     Trace(request)),
                 cancellationToken));
-        }
-        catch (AccessControlException ace)
-        {
-            return AccessControlHttpErrors.From(ace, api);
-        }
     }
 
     private static async Task<IResult> GetRoleAsync(
@@ -288,23 +264,13 @@ public static class AccessControlSellerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
             var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
             await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
-            var role = await sender.Send(
-                new GetRoleQuery(
+            return api.From(await sender.Send(new GetRoleQuery(
                     roleId,
                     AccessOwnerScopeKind.Seller,
                     sellerId,
-                    tenant.Current?.TenantId.Value),
-                cancellationToken);
-            return role is null ? Results.NotFound() : Results.Json(role);
-        }
-        catch (AccessControlException ace)
-        {
-            return AccessControlHttpErrors.From(ace, api);
-        }
+                    tenant.Current?.TenantId.Value), cancellationToken));
     }
 
     private static async Task<IResult> UpdateRoleAsync(
@@ -318,11 +284,9 @@ public static class AccessControlSellerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
             var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
             await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
-            return Results.Json(await sender.Send(
+            return api.From(await sender.Send(
                 new UpdateRoleCommand(
                     roleId,
                     AccessOwnerScopeKind.Seller,
@@ -333,11 +297,6 @@ public static class AccessControlSellerEndpoints
                     body.Description,
                     Trace(request)),
                 cancellationToken));
-        }
-        catch (AccessControlException ace)
-        {
-            return AccessControlHttpErrors.From(ace, api);
-        }
     }
 
     private static async Task<IResult> CloneRoleAsync(
@@ -351,11 +310,9 @@ public static class AccessControlSellerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
             var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
             await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
-            return Results.Json(await sender.Send(
+            return api.From(await sender.Send(
                 new CloneRoleCommand(
                     roleId,
                     AccessOwnerScopeKind.Seller,
@@ -367,11 +324,6 @@ public static class AccessControlSellerEndpoints
                     body.Description,
                     Trace(request)),
                 cancellationToken));
-        }
-        catch (AccessControlException ace)
-        {
-            return AccessControlHttpErrors.From(ace, api);
-        }
     }
 
     private static async Task<IResult> ArchiveRoleAsync(
@@ -384,25 +336,15 @@ public static class AccessControlSellerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
             var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
             await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
-            await sender.Send(
-                new ArchiveRoleCommand(
+            return api.From(await sender.Send(new ArchiveRoleCommand(
                     roleId,
                     AccessOwnerScopeKind.Seller,
                     sellerId,
                     actor,
                     tenant.Current?.TenantId.Value,
-                    Trace(request)),
-                cancellationToken);
-            return Results.NoContent();
-        }
-        catch (AccessControlException ace)
-        {
-            return AccessControlHttpErrors.From(ace, api);
-        }
+                    Trace(request)), cancellationToken));
     }
 
     private static async Task<IResult> GetRolePermissionsAsync(
@@ -415,22 +357,15 @@ public static class AccessControlSellerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
             var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
             await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
-            return Results.Json(await sender.Send(
+            return api.From(await sender.Send(
                 new GetRolePermissionsQuery(
                     roleId,
                     AccessOwnerScopeKind.Seller,
                     sellerId,
                     tenant.Current?.TenantId.Value),
                 cancellationToken));
-        }
-        catch (AccessControlException ace)
-        {
-            return AccessControlHttpErrors.From(ace, api);
-        }
     }
 
     private static async Task<IResult> SetRolePermissionsAsync(
@@ -444,26 +379,16 @@ public static class AccessControlSellerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
             var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
             await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.manage", authz, tenant, cancellationToken);
-            await sender.Send(
-                new SetRolePermissionsCommand(
+            return api.From(await sender.Send(new SetRolePermissionsCommand(
                     roleId,
                     AccessOwnerScopeKind.Seller,
                     sellerId,
                     actor,
                     tenant.Current?.TenantId.Value,
                     body,
-                    Trace(request)),
-                cancellationToken);
-            return Results.NoContent();
-        }
-        catch (AccessControlException ace)
-        {
-            return AccessControlHttpErrors.From(ace, api);
-        }
+                    Trace(request)), cancellationToken));
     }
 
     private static string? Trace(HttpRequest request) =>
@@ -483,7 +408,7 @@ public static class AccessControlSellerEndpoints
         CancellationToken cancellationToken)
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
-        return Results.Json(await sender.Send(
+        return api.From(await sender.Send(
             new GetEffectiveAccessQuery(
                 actor,
                 AccessOwnerScopeKind.Seller,
@@ -503,6 +428,6 @@ public static class AccessControlSellerEndpoints
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
         await AccessControlCapabilityGate.EnsureAsync(actor, "accesscontrol.view", authz, tenant, cancellationToken);
-        return Results.Json(await sender.Send(new ListSellerPermissionCatalogQuery(sellerId), cancellationToken));
+        return api.From(await sender.Send(new ListSellerPermissionCatalogQuery(sellerId), cancellationToken));
     }
 }

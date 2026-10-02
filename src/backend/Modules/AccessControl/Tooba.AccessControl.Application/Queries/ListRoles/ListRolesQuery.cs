@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Queries.ListRoles;
 
 /// <summary>
@@ -16,10 +18,10 @@ public sealed record ListRolesQuery(
     AccessOwnerScopeKind OwnerScopeKind,
     Guid? OwnerScopeId,
     string? TenantId,
-    bool IncludeArchived) : IRequest<IReadOnlyList<AccessRoleDto>>;
+    bool IncludeArchived) : IRequest<Result<IReadOnlyList<AccessRoleDto>>>;
 
 /// <summary>Handler پرس‌وجوی فهرست نقش‌ها.</summary>
-public sealed class ListRolesQueryHandler : IRequestHandler<ListRolesQuery, IReadOnlyList<AccessRoleDto>>
+public sealed class ListRolesQueryHandler : IRequestHandler<ListRolesQuery, Result<IReadOnlyList<AccessRoleDto>>>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -28,9 +30,10 @@ public sealed class ListRolesQueryHandler : IRequestHandler<ListRolesQuery, IRea
     public ListRolesQueryHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<AccessRoleDto>> Handle(ListRolesQuery request, CancellationToken cancellationToken)
+    public Task<Result<IReadOnlyList<AccessRoleDto>>> Handle(ListRolesQuery request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        return _directory.ListRolesAsync(owner, request.IncludeArchived, cancellationToken);
+        return AccessControlOperation.ExecuteAsync(() =>
+            _directory.ListRolesAsync(owner, request.IncludeArchived, cancellationToken));
     }
 }

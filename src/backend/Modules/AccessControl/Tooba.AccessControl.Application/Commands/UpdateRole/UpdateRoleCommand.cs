@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Commands.UpdateRole;
 
 /// <summary>
@@ -24,10 +26,10 @@ public sealed record UpdateRoleCommand(
     string? TenantId,
     string Name,
     string Description,
-    string? TraceId) : IRequest<AccessRoleDto>;
+    string? TraceId) : IRequest<Result<AccessRoleDto>>;
 
 /// <summary>Handler فرمان به‌روزرسانی نقش.</summary>
-public sealed class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, AccessRoleDto>
+public sealed class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Result<AccessRoleDto>>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -36,15 +38,15 @@ public sealed class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand
     public UpdateRoleCommandHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public Task<AccessRoleDto> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
+    public Task<Result<AccessRoleDto>> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        return _directory.UpdateRoleAsync(
+        return AccessControlOperation.ExecuteAsync(() => _directory.UpdateRoleAsync(
             request.RoleId,
             owner,
             new UpdateAccessRoleCommand(request.Name, request.Description),
             request.ActorUserId,
             request.TraceId,
-            cancellationToken);
+            cancellationToken));
     }
 }

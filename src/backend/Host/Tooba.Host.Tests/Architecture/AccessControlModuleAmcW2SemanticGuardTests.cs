@@ -41,8 +41,10 @@ public sealed class AccessControlModuleAmcW2SemanticGuardTests
             var text = File.ReadAllText(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
             Assert.DoesNotContain("Code.Contains", text, StringComparison.Ordinal);
             Assert.DoesNotContain("MapAccessError", text, StringComparison.Ordinal);
-            Assert.Contains("AccessControlHttpErrors.From", text, StringComparison.Ordinal);
         }
+
+        Assert.True(File.Exists(Path.Combine(root,
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Endpoints/Errors/AccessControlHttpErrors.cs")));
 
         var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
         Assert.Contains("AddAccessControlEndpointPresentation", program, StringComparison.Ordinal);

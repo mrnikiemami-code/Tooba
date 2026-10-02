@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Commands.SetRolePermissions;
 
 /// <summary>
@@ -22,10 +24,10 @@ public sealed record SetRolePermissionsCommand(
     Guid ActorUserId,
     string? TenantId,
     IReadOnlyList<RolePermissionGrant> Grants,
-    string? TraceId) : IRequest<Unit>;
+    string? TraceId) : IRequest<Result>;
 
 /// <summary>Handler فرمان جایگزینی مجوزهای نقش.</summary>
-public sealed class SetRolePermissionsCommandHandler : IRequestHandler<SetRolePermissionsCommand, Unit>
+public sealed class SetRolePermissionsCommandHandler : IRequestHandler<SetRolePermissionsCommand, Result>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -34,16 +36,15 @@ public sealed class SetRolePermissionsCommandHandler : IRequestHandler<SetRolePe
     public SetRolePermissionsCommandHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public async Task<Unit> Handle(SetRolePermissionsCommand request, CancellationToken cancellationToken)
+    public Task<Result> Handle(SetRolePermissionsCommand request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        await _directory.SetRolePermissionsAsync(
+        return AccessControlOperation.ExecuteAsync(() => _directory.SetRolePermissionsAsync(
             request.RoleId,
             owner,
             request.Grants,
             request.ActorUserId,
             request.TraceId,
-            cancellationToken);
-        return Unit.Value;
+            cancellationToken));
     }
 }

@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Commands.RemoveAssignment;
 
 /// <summary>
@@ -20,10 +22,10 @@ public sealed record RemoveAssignmentCommand(
     Guid? OwnerScopeId,
     Guid ActorUserId,
     string? TenantId,
-    string? TraceId) : IRequest<Unit>;
+    string? TraceId) : IRequest<Result>;
 
 /// <summary>Handler فرمان حذف تخصیص.</summary>
-public sealed class RemoveAssignmentCommandHandler : IRequestHandler<RemoveAssignmentCommand, Unit>
+public sealed class RemoveAssignmentCommandHandler : IRequestHandler<RemoveAssignmentCommand, Result>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -32,15 +34,14 @@ public sealed class RemoveAssignmentCommandHandler : IRequestHandler<RemoveAssig
     public RemoveAssignmentCommandHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public async Task<Unit> Handle(RemoveAssignmentCommand request, CancellationToken cancellationToken)
+    public Task<Result> Handle(RemoveAssignmentCommand request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        await _directory.RemoveAssignmentAsync(
+        return AccessControlOperation.ExecuteAsync(() => _directory.RemoveAssignmentAsync(
             request.AssignmentId,
             owner,
             request.ActorUserId,
             request.TraceId,
-            cancellationToken);
-        return Unit.Value;
+            cancellationToken));
     }
 }

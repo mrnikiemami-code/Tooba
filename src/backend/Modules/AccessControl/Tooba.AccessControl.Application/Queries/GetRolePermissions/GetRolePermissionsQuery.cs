@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Queries.GetRolePermissions;
 
 /// <summary>
@@ -16,11 +18,11 @@ public sealed record GetRolePermissionsQuery(
     Guid RoleId,
     AccessOwnerScopeKind OwnerScopeKind,
     Guid? OwnerScopeId,
-    string? TenantId) : IRequest<IReadOnlyList<RolePermissionGrant>>;
+    string? TenantId) : IRequest<Result<IReadOnlyList<RolePermissionGrant>>>;
 
 /// <summary>Handler پرس‌وجوی مجوزهای نقش.</summary>
 public sealed class GetRolePermissionsQueryHandler
-    : IRequestHandler<GetRolePermissionsQuery, IReadOnlyList<RolePermissionGrant>>
+    : IRequestHandler<GetRolePermissionsQuery, Result<IReadOnlyList<RolePermissionGrant>>>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -29,10 +31,11 @@ public sealed class GetRolePermissionsQueryHandler
     public GetRolePermissionsQueryHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<RolePermissionGrant>> Handle(
+    public Task<Result<IReadOnlyList<RolePermissionGrant>>> Handle(
         GetRolePermissionsQuery request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        return _directory.GetRolePermissionsAsync(request.RoleId, owner, cancellationToken);
+        return AccessControlOperation.ExecuteAsync(() =>
+            _directory.GetRolePermissionsAsync(request.RoleId, owner, cancellationToken));
     }
 }

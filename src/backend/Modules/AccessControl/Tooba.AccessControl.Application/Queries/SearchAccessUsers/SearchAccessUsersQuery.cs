@@ -1,4 +1,6 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
 using Tooba.Identity.Contracts;
 using Tooba.OperatorProfile.Contracts;
@@ -18,13 +20,13 @@ public sealed record SearchAccessUsersQuery(
     AccessOwnerScopeKind OwnerScopeKind,
     Guid? OwnerScopeId,
     string? TenantId,
-    string? Query) : IRequest<IReadOnlyList<AccessUserHitDto>>;
+    string? Query) : IRequest<Result<IReadOnlyList<AccessUserHitDto>>>;
 
 /// <summary>
 /// Handler جست‌وجوی کاربران دسترسی با غنی‌سازی از Contracts ماژول‌های Identity و OperatorProfile.
 /// </summary>
 public sealed class SearchAccessUsersQueryHandler
-    : IRequestHandler<SearchAccessUsersQuery, IReadOnlyList<AccessUserHitDto>>
+    : IRequestHandler<SearchAccessUsersQuery, Result<IReadOnlyList<AccessUserHitDto>>>
 {
     private readonly IAccessControlDirectory _directory;
     private readonly IActorContactLookup _contacts;
@@ -49,8 +51,9 @@ public sealed class SearchAccessUsersQueryHandler
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<AccessUserHitDto>> Handle(
+    public Task<Result<IReadOnlyList<AccessUserHitDto>>> Handle(
         SearchAccessUsersQuery request, CancellationToken cancellationToken)
+        => AccessControlOperation.ExecuteAsync(async () =>
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
         var hits = await _directory.SearchUsersInScopeAsync(owner, null, cancellationToken);
@@ -103,12 +106,12 @@ public sealed class SearchAccessUsersQueryHandler
 
         if (q is null)
         {
-            return enriched
+            return (IReadOnlyList<AccessUserHitDto>)enriched
                 .OrderBy(h => h.DisplayName ?? h.Email ?? h.UserId.ToString("D"), StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }
 
-        return enriched
+        return (IReadOnlyList<AccessUserHitDto>)enriched
             .Where(h =>
                 (h.DisplayName?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
                 || (h.Email?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
@@ -117,7 +120,7 @@ public sealed class SearchAccessUsersQueryHandler
                 || h.RoleCodes.Any(c => c.Contains(q, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(h => h.DisplayName ?? h.Email ?? h.UserId.ToString("D"), StringComparer.OrdinalIgnoreCase)
             .ToList();
-    }
+        });
 
     private static string? FirstNonEmpty(params string?[] values)
     {

@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Domain;
-
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
+
 namespace Tooba.AccessControl.Application.Queries.ListAssignments;
 
 /// <summary>
@@ -16,11 +18,11 @@ public sealed record ListAssignmentsQuery(
     AccessOwnerScopeKind OwnerScopeKind,
     Guid? OwnerScopeId,
     string? TenantId,
-    Guid? UserId) : IRequest<IReadOnlyList<UserRoleAssignmentDto>>;
+    Guid? UserId) : IRequest<Result<IReadOnlyList<UserRoleAssignmentDto>>>;
 
 /// <summary>Handler پرس‌وجوی فهرست تخصیص‌ها.</summary>
 public sealed class ListAssignmentsQueryHandler
-    : IRequestHandler<ListAssignmentsQuery, IReadOnlyList<UserRoleAssignmentDto>>
+    : IRequestHandler<ListAssignmentsQuery, Result<IReadOnlyList<UserRoleAssignmentDto>>>
 {
     private readonly IAccessControlDirectory _directory;
 
@@ -29,10 +31,11 @@ public sealed class ListAssignmentsQueryHandler
     public ListAssignmentsQueryHandler(IAccessControlDirectory directory) => _directory = directory;
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<UserRoleAssignmentDto>> Handle(
+    public Task<Result<IReadOnlyList<UserRoleAssignmentDto>>> Handle(
         ListAssignmentsQuery request, CancellationToken cancellationToken)
     {
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
-        return _directory.ListAssignmentsAsync(owner, request.UserId, cancellationToken);
+        return AccessControlOperation.ExecuteAsync(() =>
+            _directory.ListAssignmentsAsync(owner, request.UserId, cancellationToken));
     }
 }
