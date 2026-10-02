@@ -12,9 +12,11 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-CONFIGURATION-AMC-001-W2-CERT`. CERTIFY_ONLY of Host/Configuration: `HOST_CONFIGURATION_AMC_CERTIFIED` / `HOST_CONFIGURATION_PLATFORM_BOUNDARY_CERTIFIED`; exact 9 files / 9 types; EXACT `Tooba.Host.Configuration`; TrustedProxies + PrimaryDomain fail-fast certified; production change ZERO. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Configuration`; workflowStop / Next-Task = `USER_REVIEW_HOST_CONFIGURATION_AMC_001_W2_CERT`; automatic next = NONE; stale pointer = ZERO.
-- Implementation SHA remains Configuration W1 `32719977bc6408490fe5945d75dedaa5c2f7af4c`; Persistence / Outbox / Observability / Messaging / Health / MultiTenancy / Errors / Security / Admin CERT preserved.
+Reconciled by `TB-TMAR-HOST-ROOT-FINAL-CERT-001`. Final Host root / Program composition closure: `HOST_ROOT_FINAL_CERTIFIED` / `HOST_PROGRAM_COMPOSITION_ROOT_CERTIFIED` / `HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED`; Program.cs sole root production .cs; bounded hygiene (duplicate Offer tracing using + stale PostgreSQL.ConnectionString keys removed); Behavior-Change = NONE. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `HOST_ROOT_FINAL_CERTIFIED`; workflowStop / Next-Task = `USER_REVIEW_HOST_ROOT_FINAL_CERT_001`; automatic next = NONE; next Host folder = null; stale pointer = ZERO.
+- Latest implementation wave = `TB-TMAR-HOST-ROOT-FINAL-CERT-001`; Configuration W1 SHA preserved `32719977bc6408490fe5945d75dedaa5c2f7af4c`; Persistence / Outbox / Observability / Messaging / Health / MultiTenancy / Errors / Security / Admin / Configuration CERT preserved.
+
+Reconciled by `TB-TMAR-HOST-CONFIGURATION-AMC-001-W2-CERT` (HISTORICAL for current pointer). CERTIFY_ONLY of Host/Configuration: `HOST_CONFIGURATION_AMC_CERTIFIED` / `HOST_CONFIGURATION_PLATFORM_BOUNDARY_CERTIFIED`; exact 9 files / 9 types; EXACT `Tooba.Host.Configuration`; production change ZERO.
 
 Reconciled by `TB-TMAR-HOST-CONFIGURATION-AMC-001-W1` (HISTORICAL for current pointer). MIGRATE Host/Configuration: exact 9/9; EXACT namespace; fail-fast TrustedProxies/PrimaryDomain; legacy ConnectionString removed.
 
