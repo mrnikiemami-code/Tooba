@@ -4,7 +4,7 @@ using Xunit;
 namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
-/// TB-TMAR-HOST-PERSISTENCE-AMC-001 — KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE.
+/// TB-TMAR-HOST-PERSISTENCE-AMC-001 — KEEP_AS_GLOBAL_HOST_PERSISTENCE_PLATFORM.
 /// </summary>
 public sealed class HostPersistenceAmcGuardTests
 {
@@ -57,10 +57,10 @@ public sealed class HostPersistenceAmcGuardTests
         Assert.Contains("using Tooba.Host.Persistence;", program, StringComparison.Ordinal);
 
         var sot = File.ReadAllText(Path.Combine(root, "docs/architecture/tmar-current-state.json"));
-        Assert.Contains("\"hostPersistenceAmc\"", sot, StringComparison.Ordinal);
-        Assert.Contains("KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE", sot, StringComparison.Ordinal);
+        Assert.Contains("\"hostPersistenceAmc001\"", sot, StringComparison.Ordinal);
+        Assert.Contains("KEEP_AS_GLOBAL_HOST_PERSISTENCE_PLATFORM", sot, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-HOST-PERSISTENCE-AMC-001", sot, StringComparison.Ordinal);
-        Assert.Contains("USER_REVIEW_HOST_PERSISTENCE_AMC_001_KEEP_PLATFORM", sot, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_HOST_PERSISTENCE_AMC_001", sot, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

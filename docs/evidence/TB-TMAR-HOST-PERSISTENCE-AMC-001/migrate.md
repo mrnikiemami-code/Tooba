@@ -1,6 +1,8 @@
-# Migrate — Host/Persistence AMC-001
+# Migrate — Host/Persistence AMC-001 (HISTORICAL)
 
-Disposition: **KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE** (no business evacuation).
+> HISTORICAL evidence from prior Persistence AMC execution. Superseded as certification authority by the fresh Analyze under parent Outbox W2-CERT. Production namespace EXACT outcome remains CURRENT.
+
+Disposition (historical vocabulary): **KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE** (no business evacuation).
 
 ## Changes
 

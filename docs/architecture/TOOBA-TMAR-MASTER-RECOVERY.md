@@ -12,9 +12,11 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-OUTBOX-AMC-001-W2-CERT`. CERTIFY_ONLY of Host/Outbox: `HOST_OUTBOX_AMC_CERTIFIED` / `HOST_OUTBOX_PLATFORM_BOUNDARY_CERTIFIED`; 7 files / 7 types; EXACT `Tooba.Host.Outbox`; OCE/options/scope/trust certified; production change ZERO. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Outbox`; workflowStop / Next-Task = `USER_REVIEW_HOST_OUTBOX_AMC_001_W2_CERT`; automatic next = NONE; stale pointer = ZERO.
-- Implementation SHA remains Outbox W1 `382ef10af3a5eb49f519e49cb399809b19844bbc`; Observability / Messaging / Health / MultiTenancy / Errors / Security / Admin CERT preserved.
+Reconciled by `TB-TMAR-HOST-PERSISTENCE-AMC-001`. ANALYSIS_ONLY of Host/Persistence: 1 file / 1 type; EXACT `Tooba.Host.Persistence`; disposition `KEEP_AS_GLOBAL_HOST_PERSISTENCE_PLATFORM`; PlatformHttpException accepted as canonical fail-closed; recommended DIRECT W2-CERT; production change ZERO. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Persistence`; workflowStop / Next-Task = `USER_REVIEW_HOST_PERSISTENCE_AMC_001`; automatic next = NONE; stale pointer = ZERO.
+- Implementation SHA remains Outbox W1 `382ef10af3a5eb49f519e49cb399809b19844bbc`; Outbox / Observability / Messaging / Health / MultiTenancy / Errors / Security / Admin CERT preserved.
+
+Reconciled by `TB-TMAR-HOST-OUTBOX-AMC-001-W2-CERT` (HISTORICAL for current pointer). CERTIFY_ONLY of Host/Outbox: `HOST_OUTBOX_AMC_CERTIFIED` / `HOST_OUTBOX_PLATFORM_BOUNDARY_CERTIFIED`; 7 files / 7 types; EXACT `Tooba.Host.Outbox`.
 
 Reconciled by `TB-TMAR-HOST-OUTBOX-AMC-001-W1` (HISTORICAL for current pointer). MIGRATE of Host/Outbox: 7 files / 7 types; EXACT `Tooba.Host.Outbox`.
 
@@ -162,7 +164,7 @@ Reconciled by `TB-TMAR-HOST-PRODUCTQNA-AMC-001` (HISTORICAL). Host/ProductQnA = 
 
 Reconciled by `TB-TMAR-HOST-REVIEWS-AMC-001-R1` (HISTORICAL). Host/Reviews = `ABSENT` / `CLOSED_HOST_ZERO`; message-text classification ZERO.
 
-Reconciled by `TB-TMAR-HOST-PERSISTENCE-AMC-001` (HISTORICAL). Host/Persistence = `PRESENT` / `KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE`.
+Reconciled by `TB-TMAR-HOST-PERSISTENCE-AMC-001` (CURRENT analyze; prior CERT claim HISTORICAL). Host/Persistence = `PRESENT` / `KEEP_AS_GLOBAL_HOST_PERSISTENCE_PLATFORM` (Analyze); folder CERT deferred to recommended W2-CERT.
 
 Reconciled by `TB-TMAR-HOST-REVIEWS-AMC-001` (HISTORICAL parent). Host/Reviews = `ABSENT` / `CLOSED_HOST_ZERO`.
 

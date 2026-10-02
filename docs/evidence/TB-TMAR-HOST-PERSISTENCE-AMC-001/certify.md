@@ -1,12 +1,14 @@
-# Certify — Host/Persistence AMC-001
+# Certify — Host/Persistence AMC-001 (HISTORICAL)
 
-## Verdict
+> HISTORICAL certification claim. Live SoT later dropped `hostPersistenceAmc`; current program treats folder as **NOT_FOLDER_CERTIFIED** until recommended `TB-TMAR-HOST-PERSISTENCE-AMC-001-W2-CERT` after Analyze ACCEPT. Production EXACT tree remains.
 
-**PASS — KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE**
+## Historical verdict
 
-Host/Persistence is certified as intentional Host platform residue. **Not HOST_ZERO.**
+**PASS — KEEP_AS_GENERIC_HOST_PLATFORM_INFRASTRUCTURE** (historical vocabulary)
 
-## Checklist
+Host/Persistence certified as intentional Host platform residue. **Not HOST_ZERO.**
+
+## Checklist (historical)
 
 | Goal | State |
 | --- | --- |
@@ -18,8 +20,8 @@ Host/Persistence is certified as intentional Host platform residue. **Not HOST_Z
 | Contract seam | BuildingBlocks `IDatabaseConnectionResolver` |
 | Schema / frontend | UNCHANGED |
 | Durable guard | `HostPersistenceAmcGuardTests` |
-| SoT `hostPersistenceAmc` | KEEP |
+| SoT `hostPersistenceAmc` | KEEP (historical; not present on live SoT before re-Analyze) |
 
 ## Residual
 
-None blocking. Other Host platform folders (Caching, Messaging, Outbox, …) remain deferred.
+Other Host platform folders remain deferred relative to that historical CERT moment.
