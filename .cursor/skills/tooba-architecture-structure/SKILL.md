@@ -16,6 +16,24 @@ This skill is the fourth architecture skill. The workflow is four distinct skill
 
 This skill owns **filesystem + Solution Explorer organization**. It does not absorb Analyze/Migrate/Certify concerns.
 
+
+## Four-Skill Handoff Contract
+
+The canonical workflow is:
+
+`Analyze → Migrate → Structure → Certify`
+
+Handoff semantics:
+
+- **Analyze → Structure:** Analyze supplies ownership/capability findings and proposed destinations; Structure independently verifies the physical tree and may reject over-foldered or technically organized destinations.
+- **Migrate → Structure:** Migrate supplies the behavior-preserving implemented surface; Structure normalizes/verifies its physical organization within the authorized scope.
+- **Structure → Certify:** only `Structure-State = READY_FOR_CERTIFY` is a valid structural handoff to Certify.
+- **Certify cannot override Structure:** compile success, passing tests, exact namespaces, or manifest membership cannot substitute for a current Structure PASS.
+- If current disk state contradicts an older Structure PASS, that PASS is stale for the affected surface and Structure must run again.
+
+Structure is the single source of truth for physical/foldering quality. Analyze/Migrate/Certify may retain defensive structural rules, but those rules must not diverge from or weaken this skill.
+
+
 ## 1. Mission
 
 Make the touched module surface **professionally foldable in Visual Studio and on disk** under ARCH-COMPLETE-002 / `TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD`:
