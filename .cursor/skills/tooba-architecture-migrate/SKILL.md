@@ -754,7 +754,7 @@ Use only when:
 - required foundation exists;
 - migration completed;
 - file cohesion is correct and no new god-file exists;
-- capability-first folder granularity is professional (no unjustified single-file request folders);
+- capability-first folder granularity is professional: capability is the first axis, technical folders such as Commands/Queries/Validators are secondary, and there are no unjustified single-file request folders or technical-axis-first request trees;
 - Contracts-vs-Application semantic ownership is correct, with no mixed `*Contracts.cs` Application dump or duplicate CQRS command shape;
 - illegal coupling removed;
 - no cross-module persistence/join remains;
@@ -861,7 +861,7 @@ This guard does not prohibit legitimate composition-root changes in `Program.cs`
 - No cosmetic god-file splitting and no god-file creation.
 - No generic/mixed `*Contracts.cs` file in Application as a substitute for proper capability Models/Ports/Requests.
 - No duplicate command/query shape in Application Models beside the authoritative MediatR request.
-- No one-folder-per-Command/Query pattern when the folder contains only a single request file; capability-first shallow grouping is the default, with per-use-case folders only when multi-file cohesion/complexity justifies them.
+- No one-folder-per-Command/Query pattern when the leaf folder contains only one production source file. Count source files, not types: one `.cs` containing request + handler is still a single-file leaf and does not justify a use-case folder. Capability-first shallow grouping is the default; in multi-capability modules, top-level technical request trees such as `Application/Commands/<UseCase>`, `Application/Queries/<UseCase>`, or `Application/Validators/<UseCase>` are non-canonical unless an explicit module-wide capability justification exists. Prefer `Application/<Capability>/{Commands,Queries,Models,Ports,Validators}`, and create a per-use-case subfolder only for genuine multi-file cohesion/complexity.
 - Preserve user work.
 - Verify before claiming readiness.
 - Task wording such as "empty/evacuate Host" never authorizes physical relocation that leaves the touched destination non-canonical.
