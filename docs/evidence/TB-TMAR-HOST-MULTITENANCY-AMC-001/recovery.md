@@ -25,4 +25,4 @@ nextHostFolderStarted = false
 evidenceRoot = docs/evidence/TB-TMAR-HOST-MULTITENANCY-AMC-001/
 ```
 
-Docs stamp SHA filled at commit time (separate from implementation SHA).
+Docs stamp SHA: `7f364b41920a0b6d9806546f04e849ac935d0ecc` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
