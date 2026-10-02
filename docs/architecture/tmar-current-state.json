@@ -6,9 +6,9 @@
     "lastAcceptedTask": "TB-TMAR-HOST-CONFIGURATION-AMC-001-W2-CERT",
     "lastAcceptedCommit": "32719977bc6408490fe5945d75dedaa5c2f7af4c",
     "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-    "lastAcceptedResultEvidenceCommit": "PENDING_DOCS_STAMP",
+    "lastAcceptedResultEvidenceCommit": "bb96efab0f863d66f4978798aa7b9afde343d4f9",
     "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-    "lastAcceptedSoTStamp": "PENDING_DOCS_STAMP",
+    "lastAcceptedSoTStamp": "bb96efab0f863d66f4978798aa7b9afde343d4f9",
     "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
     "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-CONFIGURATION-AMC-001-W2-CERT (CERTIFY_ONLY docs). lastAcceptedCommit remains Configuration W1 implementation SHA 32719977.... Cert docs stamp is NOT an implementation commit.",
     "lastAcceptedNote": "Host/Configuration W2-CERT: HOST_CONFIGURATION_AMC_CERTIFIED / HOST_CONFIGURATION_PLATFORM_BOUNDARY_CERTIFIED; exact 9/9; EXACT Tooba.Host.Configuration; TrustedProxies+PrimaryDomain fail-fast certified; production ZERO; impl SHA remains W1 32719977...; Persistence/Outbox/Observability/Messaging/Health/MT/Errors/Security/Admin CERT preserved.",
@@ -6763,6 +6763,6 @@
         "nextHostFolderStarted": false,
         "evidenceRoot": "docs/evidence/TB-TMAR-HOST-CONFIGURATION-AMC-001-W2-CERT",
         "note": "CERTIFY_ONLY; production ZERO; impl SHA remains W1; do not auto-start next Host folder.",
-        "docsStamp": "PENDING_DOCS_STAMP"
+        "docsStamp": "bb96efab0f863d66f4978798aa7b9afde343d4f9"
     }
 }

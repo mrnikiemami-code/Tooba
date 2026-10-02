@@ -21,4 +21,4 @@ evidenceRoot = docs/evidence/TB-TMAR-HOST-CONFIGURATION-AMC-001-W2-CERT/
 ```
 
 Implementation SHA (unchanged): `32719977bc6408490fe5945d75dedaa5c2f7af4c`.
-Docs stamp SHA: set after commit.
+Docs stamp SHA: `bb96efab0f863d66f4978798aa7b9afde343d4f9`.
