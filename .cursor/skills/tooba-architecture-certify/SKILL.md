@@ -513,6 +513,21 @@ Produce evidence containing:
 23. residual non-blocking debt
 24. exact certification verdict
 
+## Post-Host-Final-Closure Certification Guard
+
+If canonical SoT contains `HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED` / `HOST_ROOT_FINAL_CERTIFIED`, certification must verify that the closure has not regressed.
+
+For the touched/certified surface:
+
+- any new Host production folder or source file must have explicit proof of genuine `HOST_COMPOSITION_ROOT` / `GLOBAL_HOST_PLATFORM_BOUNDARY` ownership and be covered by canonical Host allowlists/guards;
+- any reintroduced module business logic, module-owned HTTP endpoint, policy/use-case logic, module-specific worker/orchestration, repository, DbContext/DbSet/persistence access, module-specific composer/projection, or module-specific adapter under Host is `HOST_FINAL_CLOSURE_REGRESSION`;
+- Host must never be accepted as a dependency sink or temporary compatibility location;
+- do not make such a regression pass by widening baselines, root allowlists, or exemptions;
+- legitimate DI/endpoint-map/middleware/options/platform composition in `Program.cs` or an already-approved Host platform seam remains allowed when it contains zero module business authority.
+
+`HOST_FINAL_CLOSURE_REGRESSION` is a certification blocker. A module/touched surface cannot receive final PASS until the regression is removed or an explicit canonical architecture decision establishes that the responsibility is truly Host/platform-owned.
+
+
 ## Hard Rules
 
 - Verification before declaration.
