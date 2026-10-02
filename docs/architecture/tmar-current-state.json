@@ -6877,6 +6877,7 @@
         "workflowStop": "USER_REVIEW_STORY_AMC_001_W3",
         "automaticNextImplementationTask": "NONE",
         "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001-W3/",
-        "docsStamp": "PENDING_DOCS_STAMP"
+        "docsStamp": "PENDING_DOCS_STAMP",
+        "implementationCommit": "25872604fc127f46291f14f7e24fb20c99dfd39a"
     }
 }
