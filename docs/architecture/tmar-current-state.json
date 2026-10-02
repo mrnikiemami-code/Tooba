@@ -6857,5 +6857,26 @@
         "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001-W2-CERT/",
         "note": "Bounded semantic/localization cert only; do not treat as full Story STRUCTURE_CERTIFIED.",
         "docsStamp": "f9b3f0bc083f853c9d7f0905b7dec94ef3ef4cf9"
+    },
+    "storyModuleAmc001W3": {
+        "task": "TB-TMAR-STORY-AMC-001-W3",
+        "parentTask": "TB-TMAR-STORY-AMC-001-W2-CERT",
+        "mode": "MIGRATE",
+        "slice": "CAPABILITY_FOLDERING_AND_SOLUTION_GROUPING",
+        "state": "STORY_CAPABILITY_FOLDERING_APPLIED",
+        "applicationRootCs": "ZERO",
+        "domainRootCs": "ZERO",
+        "infrastructureRootAllowlist": [
+            "StoryModule.cs"
+        ],
+        "pathNamespace": "EXACT_FOR_MOVED_SURFACE",
+        "slnxFolder": "/Modules/Story/",
+        "archComplete002StructureCertified": "FALSE_DEFERRED",
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "durableGuard": "StoryModuleAmcW3StructureGuardTests",
+        "workflowStop": "USER_REVIEW_STORY_AMC_001_W3",
+        "automaticNextImplementationTask": "NONE",
+        "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001-W3/",
+        "docsStamp": "PENDING_DOCS_STAMP"
     }
 }

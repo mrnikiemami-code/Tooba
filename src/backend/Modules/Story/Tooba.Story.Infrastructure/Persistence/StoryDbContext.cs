@@ -1,8 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
-using Tooba.Story.Domain;
-using StoryEntity = Tooba.Story.Domain.Story;
+using Tooba.Story.Domain.Aggregates;
+using Tooba.Story.Domain.Enums;
+using Tooba.Story.Domain.Rules;
+using Tooba.Story.Domain.Tenant;
+using StoryEntity = Tooba.Story.Domain.Aggregates.Story;
 
 namespace Tooba.Story.Infrastructure.Persistence;
 

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Story.Application.Queries.GetPublicStories;
+using Tooba.Story.Application.Stories.Queries.Storefront;
 
 namespace Tooba.Story.Endpoints.Storefront;
 

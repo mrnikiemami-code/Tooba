@@ -21,7 +21,7 @@ public sealed class HostStoryAmcGuardTests
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Modules/Story/Tooba.Story.Endpoints/StoryEndpointModule.cs")));
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Story/Tooba.Story.Application/Presentation/StoryPresentationComposer.cs")));
+            root, "src/backend/Modules/Story/Tooba.Story.Application/Stories/Presentation/StoryPresentationComposer.cs")));
     }
 
     [Fact]

@@ -5,8 +5,10 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
-using Tooba.Story.Application;
+using Tooba.Story.Application.Stories.Ports;
+using Tooba.Story.Application.Stories.Presentation;
 using Tooba.Story.Infrastructure.Adapters;
+using Tooba.Story.Infrastructure.Directory;
 using Tooba.Story.Infrastructure.Persistence;
 
 namespace Tooba.Story.Infrastructure;
@@ -23,7 +25,7 @@ public sealed class StoryModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, StoryOutboxRegistration>();
         services.AddScoped<IStoryDirectory, StoryDirectory>();
         services.AddScoped<IAdminStoryGridPort, AdminStoryGridAdapter>();
-        services.AddScoped<Tooba.Story.Application.Presentation.StoryPresentationComposer>();
+        services.AddScoped<StoryPresentationComposer>();
         services.AddModuleSchemaMigrator<StoryDbContext>("Story", ModuleSchemaMigrationOrder.Story);
         services.AddDbContext<StoryDbContext>((sp, options) =>
         {

@@ -1,10 +1,12 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Story.Application;
+using Tooba.Story.Application.Stories.Models;
+using Tooba.Story.Application.Stories.Ports;
 using Tooba.Story.Contracts.Errors;
-using Tooba.Story.Domain;
+using Tooba.Story.Domain.Enums;
+using Tooba.Story.Domain.Tenant;
 
-namespace Tooba.Story.Application.Presentation;
+namespace Tooba.Story.Application.Stories.Presentation;
 
 /// <summary>ترکیب use-case برای مسیرهای عمومی، فروشنده و مدیریتی Story.</summary>
 public sealed class StoryPresentationComposer

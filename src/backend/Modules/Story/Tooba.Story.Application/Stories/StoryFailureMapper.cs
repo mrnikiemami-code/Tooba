@@ -1,8 +1,8 @@
 using Tooba.BuildingBlocks;
 using Tooba.Story.Contracts.Errors;
-using Tooba.Story.Domain;
+using Tooba.Story.Domain.Enums;
 
-namespace Tooba.Story.Application;
+namespace Tooba.Story.Application.Stories;
 
 /// <summary>Story application helpers for transport parsing (no message-text failure classification).</summary>
 public static class StoryFailureMapper

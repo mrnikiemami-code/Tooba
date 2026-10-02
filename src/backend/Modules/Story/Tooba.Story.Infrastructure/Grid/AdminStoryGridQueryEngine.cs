@@ -1,10 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Persistence.Grid;
-using Tooba.Story.Application;
-using Tooba.Story.Domain;
+using Tooba.Story.Application.Stories.Models;
+using Tooba.Story.Application.Stories.Ports;
+using Tooba.Story.Domain.Aggregates;
+using Tooba.Story.Domain.Enums;
+using Tooba.Story.Domain.Rules;
+using Tooba.Story.Domain.Tenant;
 using Tooba.Story.Infrastructure.Persistence;
-using StoryEntity = Tooba.Story.Domain.Story;
+using StoryEntity = Tooba.Story.Domain.Aggregates.Story;
 
 namespace Tooba.Story.Infrastructure.Grid;
 

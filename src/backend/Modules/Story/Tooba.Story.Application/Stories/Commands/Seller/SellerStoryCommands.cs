@@ -1,7 +1,8 @@
 using MediatR;
-using Tooba.Story.Application.Presentation;
+using Tooba.Story.Application.Stories.Models;
+using Tooba.Story.Application.Stories.Presentation;
 
-namespace Tooba.Story.Application.Commands.Seller;
+namespace Tooba.Story.Application.Stories.Commands.Seller;
 
 /// <summary>ایجاد پیش‌نویس فروشنده.</summary>
 public sealed record CreateSellerStoryDraftCommand(

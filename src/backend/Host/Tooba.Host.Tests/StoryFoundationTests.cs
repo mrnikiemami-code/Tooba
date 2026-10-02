@@ -9,9 +9,15 @@ using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Host.Admin.Access;
 using Tooba.Host.Security.Seller;
 using Tooba.Persistence;
-using global::Tooba.Story.Application;
-using global::Tooba.Story.Domain;
+using global::Tooba.Story.Application.Stories.Models;
+using global::Tooba.Story.Application.Stories.Ports;
+using global::Tooba.Story.Domain.Aggregates;
+using global::Tooba.Story.Domain.Enums;
+using global::Tooba.Story.Domain.Rules;
+using global::Tooba.Story.Domain.Tenant;
 using global::Tooba.Story.Infrastructure;
+using global::Tooba.Story.Infrastructure.Development;
+using global::Tooba.Story.Infrastructure.Directory;
 using global::Tooba.Story.Infrastructure.Persistence;
 using Xunit;
 

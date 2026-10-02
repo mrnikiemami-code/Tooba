@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Story.Application.Commands.Admin;
-using Tooba.Story.Application.Queries.Admin;
+using Tooba.Story.Application.Stories.Commands.Admin;
+using Tooba.Story.Application.Stories.Queries.Admin;
 using Tooba.Story.Endpoints.Models;
 
 namespace Tooba.Story.Endpoints.Admin;

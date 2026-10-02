@@ -1,8 +1,8 @@
 using FluentValidation;
-using Tooba.Story.Application.Commands.Admin;
-using Tooba.Story.Application.Commands.Seller;
+using Tooba.Story.Application.Stories.Commands.Admin;
+using Tooba.Story.Application.Stories.Commands.Seller;
 
-namespace Tooba.Story.Application.Validators;
+namespace Tooba.Story.Application.Stories.Validators;
 
 /// <summary>کدهای شکل انتقال Story.</summary>
 public static class StoryValidationCodes

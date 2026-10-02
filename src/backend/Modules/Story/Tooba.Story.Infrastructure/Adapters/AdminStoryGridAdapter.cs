@@ -1,6 +1,10 @@
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Story.Application;
-using Tooba.Story.Domain;
+using Tooba.Story.Application.Stories.Models;
+using Tooba.Story.Application.Stories.Ports;
+using Tooba.Story.Domain.Aggregates;
+using Tooba.Story.Domain.Enums;
+using Tooba.Story.Domain.Rules;
+using Tooba.Story.Domain.Tenant;
 using Tooba.Story.Infrastructure.Persistence;
 
 namespace Tooba.Story.Infrastructure.Adapters;

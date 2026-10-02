@@ -1,7 +1,8 @@
 using MediatR;
-using Tooba.Story.Application.Presentation;
+using Tooba.Story.Application.Stories.Models;
+using Tooba.Story.Application.Stories.Presentation;
 
-namespace Tooba.Story.Application.Commands.Admin;
+namespace Tooba.Story.Application.Stories.Commands.Admin;
 
 /// <summary>ایجاد استوری ادمین.</summary>
 public sealed record CreateAdminStoryCommand(Guid TenantId, CreateStoryCommand Input) : IRequest<AdminStorySnapshot>;

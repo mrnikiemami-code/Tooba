@@ -11,22 +11,24 @@ public sealed class StoryModuleAmcW1GuardTests
     {
         var root = Repo();
         var mapper = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Story/Tooba.Story.Application/StoryFailureMapper.cs"));
+            root, "src/backend/Modules/Story/Tooba.Story.Application/Stories/StoryFailureMapper.cs"));
         Assert.DoesNotContain("ToSemantic", mapper, StringComparison.Ordinal);
         Assert.DoesNotContain("message.Contains", mapper, StringComparison.Ordinal);
         Assert.DoesNotContain("یافت نشد", mapper, StringComparison.Ordinal);
         Assert.DoesNotContain("ناامن", mapper, StringComparison.Ordinal);
 
         var composer = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Story/Tooba.Story.Application/Presentation/StoryPresentationComposer.cs"));
+            root, "src/backend/Modules/Story/Tooba.Story.Application/Stories/Presentation/StoryPresentationComposer.cs"));
         Assert.DoesNotContain("StoryFailureMapper.ToSemantic", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("Tenant resolve نشده", composer, StringComparison.Ordinal);
         Assert.Contains("StoryErrorCodes.TenantMissing", composer, StringComparison.Ordinal);
 
         foreach (var relative in new[]
                  {
-                     "src/backend/Modules/Story/Tooba.Story.Domain/StoryEntities.cs",
-                     "src/backend/Modules/Story/Tooba.Story.Infrastructure/StoryDirectory.cs",
+                     "src/backend/Modules/Story/Tooba.Story.Domain/Aggregates/Story.cs",
+                     "src/backend/Modules/Story/Tooba.Story.Domain/Aggregates/StoryItem.cs",
+                     "src/backend/Modules/Story/Tooba.Story.Domain/Rules/StoryRules.cs",
+                     "src/backend/Modules/Story/Tooba.Story.Infrastructure/Directory/StoryDirectory.cs",
                  })
         {
             var text = File.ReadAllText(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));

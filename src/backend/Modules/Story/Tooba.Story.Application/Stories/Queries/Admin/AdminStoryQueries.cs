@@ -1,8 +1,10 @@
 using MediatR;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Story.Application.Presentation;
+using Tooba.Story.Application.Stories;
+using Tooba.Story.Application.Stories.Models;
+using Tooba.Story.Application.Stories.Presentation;
 
-namespace Tooba.Story.Application.Queries.Admin;
+namespace Tooba.Story.Application.Stories.Queries.Admin;
 
 /// <summary>فهرست مدیریتی استوری — ReviewStatus transport string parsed in Application.</summary>
 public sealed record ListAdminStoriesQuery(Guid TenantId, string? ReviewStatus, bool PendingReview)

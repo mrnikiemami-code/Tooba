@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Story.Application.Presentation;
+using Tooba.Story.Application.Stories.Presentation;
 
 namespace Tooba.Story.Endpoints;
 

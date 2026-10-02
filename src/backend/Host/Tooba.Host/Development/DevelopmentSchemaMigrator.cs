@@ -11,7 +11,8 @@ using Tooba.Host.Admin.Development;
 using Tooba.Host.Composition;
 using Tooba.Content.Infrastructure.Development;
 using Tooba.PageComposition.Infrastructure;
-using global::Tooba.Story.Infrastructure;
+using Tooba.Story.Infrastructure;
+using Tooba.Story.Infrastructure.Development;
 using Tooba.Wishlist.Infrastructure.Development;
 
 namespace Tooba.Host.Development;

@@ -1,7 +1,8 @@
 using MediatR;
-using Tooba.Story.Application.Presentation;
+using Tooba.Story.Application.Stories.Models;
+using Tooba.Story.Application.Stories.Presentation;
 
-namespace Tooba.Story.Application.Queries.Seller;
+namespace Tooba.Story.Application.Stories.Queries.Seller;
 
 /// <summary>فهرست استوری‌های فروشنده.</summary>
 public sealed record ListSellerStoriesQuery(Guid TenantId, Guid SellerPartyId)

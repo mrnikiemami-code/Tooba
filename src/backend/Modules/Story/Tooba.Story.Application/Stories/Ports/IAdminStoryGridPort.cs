@@ -1,7 +1,8 @@
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Story.Domain;
+using Tooba.Story.Application.Stories.Models;
+using Tooba.Story.Domain.Enums;
 
-namespace Tooba.Story.Application;
+namespace Tooba.Story.Application.Stories.Ports;
 
 /// <summary>Admin story grid — DB-native paging; Infrastructure implements.</summary>
 public interface IAdminStoryGridPort

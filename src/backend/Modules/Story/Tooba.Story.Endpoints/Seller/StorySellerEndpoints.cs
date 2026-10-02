@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Story.Application.Commands.Seller;
-using Tooba.Story.Application.Queries.Seller;
+using Tooba.Story.Application.Stories.Commands.Seller;
+using Tooba.Story.Application.Stories.Queries.Seller;
 using Tooba.Story.Endpoints.Models;
 
 namespace Tooba.Story.Endpoints.Seller;

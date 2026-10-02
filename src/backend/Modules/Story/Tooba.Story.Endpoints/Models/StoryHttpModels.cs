@@ -1,3 +1,5 @@
+using Tooba.Story.Application.Stories.Models;
+
 namespace Tooba.Story.Endpoints.Models;
 
 /// <summary>بدنهٔ ایجاد استوری.</summary>
@@ -57,22 +59,22 @@ public sealed record ReorderStoryItemsBody(IReadOnlyList<Guid> ItemIds);
 /// <summary>نگاشت بدنهٔ HTTP به فرمان‌های Application.</summary>
 public static class StoryBodyMapping
 {
-    public static Application.CreateStoryCommand ToCreate(CreateStoryBody body) => new(
+    public static CreateStoryCommand ToCreate(CreateStoryBody body) => new(
         body.Title, body.Locale, body.Market, body.CoverMediaAssetId, body.CoverMediaUrl,
         body.DisplayOrder, body.CtaType, body.CtaTarget);
 
-    public static Application.UpdateStoryCommand ToUpdate(UpdateStoryBody body) => new(
+    public static UpdateStoryCommand ToUpdate(UpdateStoryBody body) => new(
         body.Title, body.Locale, body.Market, body.CoverMediaAssetId, body.CoverMediaUrl,
         body.CtaType, body.CtaTarget);
 
-    public static Application.SetStoryScheduleCommand ToSchedule(SetStoryScheduleBody body) =>
+    public static SetStoryScheduleCommand ToSchedule(SetStoryScheduleBody body) =>
         new(body.StartAt, body.EndAt);
 
-    public static Application.AddStoryItemCommand ToAddItem(AddStoryItemBody body) => new(
+    public static AddStoryItemCommand ToAddItem(AddStoryItemBody body) => new(
         body.MediaType, body.MediaAssetId, body.MediaUrl, body.Caption, body.DurationMs,
         body.CtaType, body.CtaTarget, body.DisplayOrder);
 
-    public static Application.UpdateStoryItemCommand ToUpdateItem(UpdateStoryItemBody body) => new(
+    public static UpdateStoryItemCommand ToUpdateItem(UpdateStoryItemBody body) => new(
         body.MediaType, body.MediaAssetId, body.MediaUrl, body.Caption, body.DurationMs,
         body.CtaType, body.CtaTarget);
 }
