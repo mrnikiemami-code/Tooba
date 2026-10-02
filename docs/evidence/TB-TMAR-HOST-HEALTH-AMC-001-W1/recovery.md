@@ -1,4 +1,4 @@
-# recovery — TB-TMAR-HOST-HEALTH-AMC-001-W1
+﻿# recovery — TB-TMAR-HOST-HEALTH-AMC-001-W1
 
 ```text
 task = TB-TMAR-HOST-HEALTH-AMC-001-W1
@@ -34,4 +34,4 @@ evidenceRoot = docs/evidence/TB-TMAR-HOST-HEALTH-AMC-001-W1/
 ```
 
 Implementation SHA: `ba8db8c6bcb22f0ad4c386073d3b612e3d318e00`.
-Docs stamp SHA: updated in follow-up stamp commit (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
+Docs stamp SHA: `17a866d56ccd139b1e912371fb8d07c9159f9019` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
