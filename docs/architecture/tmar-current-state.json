@@ -741,7 +741,10 @@
         "frontendFrozen": true,
         "evidenceStructure": "docs/evidence/TB-TMAR-IDENTITY-AMC-001/w5-structure-gate.md",
         "evidenceCertify": "docs/evidence/TB-TMAR-IDENTITY-AMC-001/w6-certification.md",
-        "implementationShaPendingDocsStamp": true
+        "implementationCommit": "aafd14e0be51bdf3eae2ec2c6c1a09f92c613992",
+        "implementationCommitKind": "IMPLEMENTATION_COMMIT",
+        "docsStampCommit": "c7e473cd13d800de9cf3c429d884a10bb68819a1",
+        "docsStampCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION"
     },
     "offerArchComplete002Structure": {
         "task": "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001",
@@ -785,7 +788,8 @@
             "Fulfillment",
             "AccessControl",
             "AddressBook",
-            "Content"
+            "Content",
+            "Identity"
         ],
         "manifest": "docs/architecture/tmar-module-structure-manifests.json",
         "standard": "docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md",
