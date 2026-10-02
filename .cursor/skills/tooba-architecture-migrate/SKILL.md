@@ -9,6 +9,30 @@ Use this skill when the user wants actual architecture migration, Host evacuatio
 
 This skill MAY modify production code.
 
+
+## Four-Skill Workflow Integration
+
+The canonical architecture workflow is:
+
+`Analyze → Migrate → Structure → Certify`
+
+Physical/folder structure authority belongs to:
+`.cursor/skills/tooba-architecture-structure/SKILL.md`
+
+Migrate may create/move files because migration requires it, but it must follow the Structure skill while doing so and must not self-certify the resulting physical tree.
+
+For every migration that changes project/folder/file placement:
+
+- read the Structure skill before choosing final paths;
+- preserve its capability-first, shallow-by-default, single-file-leaf, Solution Explorer, path↔namespace, root-allowlist, stale-copy, and Host final-closure rules;
+- after behavioral/ownership migration is complete, hand the touched surface to Structure;
+- report `Structure-Handoff-State = REQUIRED` until Structure returns `Structure-State = READY_FOR_CERTIFY`;
+- do not return final certification readiness merely because builds/tests pass;
+- if Structure returns `REPAIR_REQUIRED` or `BLOCKED`, migration may be behavior-complete but is not ready for Certify.
+
+Migrate remains the authority for actual ownership correction, code movement, dependency repair, behavior preservation, and production implementation. Structure owns the final physical organization gate.
+
+
 The migration is not complete merely because files were moved.
 The final state must be structurally correct, behavior-preserving, Contracts-bounded, CQRS-aligned where applicable, cohesive, canonical in its cross-cutting concerns (localization, API result/error, logging, tracing/correlation), and ready for later microservice extraction.
 
