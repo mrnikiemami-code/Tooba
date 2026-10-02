@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-MESSAGING-AMC-001-W2-CERT",
   "lastAcceptedCommit": "f29a881370b9a8813035715ef6973145ce3f1723",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "PENDING_MESSAGING_W2_DOCS_STAMP",
+  "lastAcceptedResultEvidenceCommit": "8f0954f511e283e50b39dbaea6d43094d113953a",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "PENDING_MESSAGING_W2_DOCS_STAMP",
+  "lastAcceptedSoTStamp": "8f0954f511e283e50b39dbaea6d43094d113953a",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-MESSAGING-AMC-001-W2-CERT (CERTIFY_ONLY). IMPLEMENTATION commit remains Messaging W1 SHA at lastAcceptedCommit (f29a881370b9a8813035715ef6973145ce3f1723). Certification docs stamp is NOT an implementation commit.",
   "lastAcceptedNote": "Host/Messaging CERTIFY: HOST_MESSAGING_AMC_CERTIFIED / HOST_MESSAGING_PLATFORM_BOUNDARY_CERTIFIED; 7 files / 7 types; EXACT Tooba.Host.Messaging; Testing-only service-location exception certified; composition-callback DI allowed; Health/MultiTenancy/Errors/Security/Admin CERT preserved; production change ZERO.",
@@ -6254,6 +6254,6 @@
     "workflowStop": "USER_REVIEW_HOST_MESSAGING_AMC_001_W2_CERT",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-MESSAGING-AMC-001-W2-CERT",
     "note": "Certification docs/tests only; does not advance implementation SHA.",
-    "docsStamp": "PENDING_MESSAGING_W2_DOCS_STAMP"
+    "docsStamp": "8f0954f511e283e50b39dbaea6d43094d113953a"
   }
 }
