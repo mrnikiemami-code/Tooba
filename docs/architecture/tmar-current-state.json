@@ -6973,5 +6973,20 @@
         "automaticNextImplementationTask": "NONE",
         "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-001/",
         "hostRootFinalCheckpoint": "PRESERVED"
+    },
+    "accessControlModuleAmc001W1": {
+        "task": "TB-TMAR-ACCESSCONTROL-AMC-001-W1",
+        "parentTask": "TB-TMAR-ACCESSCONTROL-AMC-001",
+        "mode": "MIGRATE",
+        "slice": "SOLUTION_FOLDER",
+        "state": "ACCESSCONTROL_SOLUTION_GROUP_APPLIED",
+        "slnxFolder": "/Modules/AccessControl/",
+        "endpointsInSolution": true,
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "durableGuard": "AccessControlModuleAmcW1SolutionGuardTests",
+        "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-001-W1/",
+        "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_001_W1",
+        "automaticNextImplementationTask": "NONE",
+        "implementationCommit": "PENDING"
     }
 }

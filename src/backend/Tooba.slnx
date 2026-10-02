@@ -26,10 +26,6 @@
     <Project Path="Modules/Localization/Tooba.Localization.Domain/Tooba.Localization.Domain.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Application/Tooba.Localization.Application.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Infrastructure/Tooba.Localization.Infrastructure.csproj" />
-    <Project Path="Modules/AccessControl/Tooba.AccessControl.Domain/Tooba.AccessControl.Domain.csproj" />
-    <Project Path="Modules/AccessControl/Tooba.AccessControl.Contracts/Tooba.AccessControl.Contracts.csproj" />
-    <Project Path="Modules/AccessControl/Tooba.AccessControl.Application/Tooba.AccessControl.Application.csproj" />
-    <Project Path="Modules/AccessControl/Tooba.AccessControl.Infrastructure/Tooba.AccessControl.Infrastructure.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Domain/Tooba.Wishlist.Domain.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Application/Tooba.Wishlist.Application.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Contracts/Tooba.Wishlist.Contracts.csproj" />
@@ -63,6 +59,13 @@
     <Project Path="Modules/Story/Tooba.Story.Contracts/Tooba.Story.Contracts.csproj" />
     <Project Path="Modules/Story/Tooba.Story.Infrastructure/Tooba.Story.Infrastructure.csproj" />
     <Project Path="Modules/Story/Tooba.Story.Endpoints/Tooba.Story.Endpoints.csproj" />
+  </Folder>
+  <Folder Name="/Modules/AccessControl/">
+    <Project Path="Modules/AccessControl/Tooba.AccessControl.Domain/Tooba.AccessControl.Domain.csproj" />
+    <Project Path="Modules/AccessControl/Tooba.AccessControl.Contracts/Tooba.AccessControl.Contracts.csproj" />
+    <Project Path="Modules/AccessControl/Tooba.AccessControl.Application/Tooba.AccessControl.Application.csproj" />
+    <Project Path="Modules/AccessControl/Tooba.AccessControl.Infrastructure/Tooba.AccessControl.Infrastructure.csproj" />
+    <Project Path="Modules/AccessControl/Tooba.AccessControl.Endpoints/Tooba.AccessControl.Endpoints.csproj" />
   </Folder>
   <Folder Name="/Modules/Catalog/">
     <Project Path="Modules/Catalog/Tooba.Catalog.Application/Tooba.Catalog.Application.csproj" />
