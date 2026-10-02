@@ -9,6 +9,36 @@ Use this skill only after a module/capability migration is believed complete.
 
 This skill verifies and locks architecture. It is not a redesign task.
 
+
+## Four-Skill Workflow Integration — Mandatory Structure Gate
+
+The canonical architecture workflow is:
+
+`Analyze → Migrate → Structure → Certify`
+
+Physical/folder structure authority belongs to:
+`.cursor/skills/tooba-architecture-structure/SKILL.md`
+
+Before final certification of any touched module/surface where physical structure is applicable, Certify MUST read the Structure skill and require current evidence for the same touched surface showing:
+
+- `Structure-State = READY_FOR_CERTIFY`
+- `Folder-Granularity-State = PROFESSIONAL_SHALLOW`
+- `Solution-Explorer-State = CANONICAL` or `NOT_APPLICABLE`
+- `Path-Namespace-State = EXACT`
+- `Physical-Copy-State = CLEAN`
+- `Root-Allowlist-State = ENFORCED`
+- no unjustified single-file request/use-case leaf folders
+- no unjustified technical-axis-first request tree
+- no unresolved root dump / folder explosion / structure-level god-file blocker
+- Host final closure preserved
+
+Certify must not infer or recreate this PASS from compilation, namespace checks, manifest membership, or its own spot checks. If the Structure gate is missing, stale, scoped to a different surface, `REPAIR_REQUIRED`, `BLOCKED`, or contradicted by current disk state, final certification is `NOT_CERTIFIED`.
+
+Certify may re-check structural invariants as defense in depth, but it may not weaken or override Structure. A later concrete structural regression invalidates an older Structure PASS for the affected surface and requires Structure to run again.
+
+Certify remains the authority for the whole-module/touched-surface certification verdict, including CQRS, validators, Contracts-only boundaries, API result/error mapping, localization, observability, persistence/schema safety, manifest promotion, and SoT closure.
+
+
 ## Certification Standard
 
 Use the current repository sources of truth, especially:
