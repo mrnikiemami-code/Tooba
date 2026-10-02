@@ -1,4 +1,4 @@
-# Tooba — Recovery Context
+﻿# Tooba — Recovery Context
 
 Canonical repository:
 
@@ -25,22 +25,24 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT
 Implementation-Commit: f1425fed94cc1a8354d3c9f9a013065d87cbe66c
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: 2bc3bda4408a97f65378e8d7dea46be1a4fd9f45
+Result-Evidence-Docs-Stamp: PENDING_DOCS_STAMP
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_OBSERVABILITY_AMC_001_W1_MIGRATE
+Mode: HOST_OBSERVABILITY_AMC_001_W2_CERTIFY_ONLY
 Observability-Production-File-Count: 1
 Observability-Production-Type-Count: 1
 Path-Namespace-State: EXACT_Tooba.Host.Observability
-Middleware-Order-State: AFTER_TENANT_AND_SESSION_PRESERVED
-ClientIp-Logging-State: OMITTED_PRIVACY_SAFE
-Certification-State: NOT_CERTIFIED_W2_REQUIRED
+Middleware-Order-State: AFTER_TENANT_AND_SESSION_CERTIFIED
+ClientIp-Logging-State: OMITTED_PRIVACY_SAFE_CERTIFIED
+Certification-State: HOST_OBSERVABILITY_AMC_CERTIFIED
+Boundary-State: HOST_OBSERVABILITY_PLATFORM_BOUNDARY_CERTIFIED
+Production-Code-Change: ZERO
 Host-Messaging-State: HOST_MESSAGING_AMC_CERTIFIED_PRESERVED
 Host-Health-State: HOST_HEALTH_AMC_CERTIFIED_PRESERVED
 MultiTenancy-Certification-State: HOST_MULTITENANCY_AMC_CERTIFIED_PRESERVED
@@ -50,8 +52,8 @@ Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
 Current-Host-Checkpoint: Observability
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W1
-Next-Task: USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W1
+workflowStop: USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W2_CERT
+Next-Task: USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W2_CERT
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```

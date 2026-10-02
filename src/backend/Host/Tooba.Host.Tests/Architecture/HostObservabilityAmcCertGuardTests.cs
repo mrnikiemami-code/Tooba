@@ -4,9 +4,9 @@ using Xunit;
 namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
-/// TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1 — structure/privacy hygiene guard (not certification).
+/// TB-TMAR-HOST-OBSERVABILITY-AMC-001-W2-CERT — durable certification of Host/Observability platform boundary.
 /// </summary>
-public sealed class HostObservabilityAmcW1GuardTests
+public sealed class HostObservabilityAmcCertGuardTests
 {
     private static readonly string[] ExpectedFiles =
     [
@@ -14,11 +14,11 @@ public sealed class HostObservabilityAmcW1GuardTests
     ];
 
     private static readonly Regex ForeignModuleLayer = new(
-        @"Tooba\.(Catalog|Party|AccessControl|Identity|Order|Offer|Promotion|Returns|Settlement|Notification|Support|Story|Payment|Inventory|Cart|Persistence)\.(Application|Domain|Infrastructure|Persistence)",
+        @"Tooba\.(Catalog|Party|AccessControl|Identity|Order|Offer|Promotion|Returns|Settlement|Notification|Support|Story|Payment|Inventory|Cart|Persistence|StoreContext)\.(Application|Domain|Infrastructure|Persistence)",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     [Fact]
-    public void Observability_exact_one_file_exact_namespace_and_program_order()
+    public void Observability_certified_exact_tree_privacy_and_boundaries()
     {
         var dir = Dir("src/backend/Host/Tooba.Host/Observability");
         Assert.True(Directory.Exists(dir));
@@ -38,7 +38,10 @@ public sealed class HostObservabilityAmcW1GuardTests
         Assert.Contains("ICorrelationIdProvider", text, StringComparison.Ordinal);
         Assert.Contains("CorrelationIdMiddleware.HttpContextItemKey", text, StringComparison.Ordinal);
         Assert.Contains("EnsureCorrelationId()", text, StringComparison.Ordinal);
+        Assert.Contains("ICurrentCommerceContext", text, StringComparison.Ordinal);
+        Assert.Contains("CurrentAuthenticatedSession", text, StringComparison.Ordinal);
         Assert.Contains("context.Request.Path.Value", text, StringComparison.Ordinal);
+        Assert.Contains("context.TraceIdentifier", text, StringComparison.Ordinal);
         Assert.Contains("ToString(\"N\")", text, StringComparison.Ordinal);
         Assert.Contains("storeId = tenantId", text, StringComparison.Ordinal);
         Assert.DoesNotContain("RemoteIpAddress", text, StringComparison.Ordinal);
@@ -51,6 +54,7 @@ public sealed class HostObservabilityAmcW1GuardTests
         Assert.DoesNotContain("catch (", text, StringComparison.Ordinal);
         Assert.DoesNotContain("TypeForwardedTo", text, StringComparison.Ordinal);
         Assert.DoesNotContain("DbContext", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("_logger.Log", text, StringComparison.Ordinal);
 
         foreach (Match m in ForeignModuleLayer.Matches(text))
             Assert.Fail("foreign module layer: " + m.Value);
@@ -60,22 +64,29 @@ public sealed class HostObservabilityAmcW1GuardTests
         Assert.Single(Regex.Matches(program, @"UseMiddleware<RequestObservabilityEnrichmentMiddleware>\(\)"));
         var sessionIdx = program.IndexOf("UseMiddleware<SessionAuthenticationMiddleware>()", StringComparison.Ordinal);
         var obsIdx = program.IndexOf("UseMiddleware<RequestObservabilityEnrichmentMiddleware>()", StringComparison.Ordinal);
-        Assert.True(sessionIdx >= 0 && obsIdx > sessionIdx);
+        var tenantIdx = program.IndexOf("UseMiddleware<TenantResolutionMiddleware>()", StringComparison.Ordinal);
+        Assert.True(tenantIdx >= 0 && sessionIdx > tenantIdx && obsIdx > sessionIdx);
     }
 
     [Fact]
-    public void Observability_protected_certifications_present_in_sot()
+    public void Sot_certifies_observability_and_preserves_prior_host_certs()
     {
-        var state = Read("docs/architecture/tmar-current-state.json");
-        Assert.Contains("HOST_MESSAGING_AMC_CERTIFIED", state, StringComparison.Ordinal);
-        Assert.Contains("HOST_HEALTH_AMC_CERTIFIED", state, StringComparison.Ordinal);
-        Assert.Contains("HOST_MULTITENANCY_AMC_CERTIFIED", state, StringComparison.Ordinal);
-        Assert.Contains("HOST_ERRORS_AMC_CERTIFIED", state, StringComparison.Ordinal);
-        Assert.Contains("HOST_SECURITY_AMC_CERTIFIED", state, StringComparison.Ordinal);
-        Assert.Contains("HOST_ADMIN_FULLY_CERTIFIED", state, StringComparison.Ordinal);
-        Assert.Contains("\"hostObservabilityAmc001W1\"", state, StringComparison.Ordinal);
-        Assert.Contains("HostObservabilityAmcW1GuardTests", state, StringComparison.Ordinal);
-        Assert.Contains("EXACT_Tooba.Host.Observability", state, StringComparison.Ordinal);
+        var sot = Read("docs/architecture/tmar-current-state.json");
+        Assert.Contains("HOST_OBSERVABILITY_AMC_CERTIFIED", sot, StringComparison.Ordinal);
+        Assert.Contains("HOST_OBSERVABILITY_PLATFORM_BOUNDARY_CERTIFIED", sot, StringComparison.Ordinal);
+        Assert.Contains("\"hostObservabilityAmc001W2Cert\"", sot, StringComparison.Ordinal);
+        Assert.Contains("\"implementationCommit\": \"f1425fed94cc1a8354d3c9f9a013065d87cbe66c\"", sot, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_HOST_OBSERVABILITY_AMC_001_W2_CERT", sot, StringComparison.Ordinal);
+        Assert.Contains("OMITTED_PRIVACY_SAFE_CERTIFIED", sot, StringComparison.Ordinal);
+        Assert.Contains("PATH_ONLY_NO_QUERY_CERTIFIED", sot, StringComparison.Ordinal);
+        Assert.Contains("HOST_MESSAGING_AMC_CERTIFIED", sot, StringComparison.Ordinal);
+        Assert.Contains("HOST_HEALTH_AMC_CERTIFIED", sot, StringComparison.Ordinal);
+        Assert.Contains("HOST_MULTITENANCY_AMC_CERTIFIED", sot, StringComparison.Ordinal);
+        Assert.Contains("HOST_ERRORS_AMC_CERTIFIED", sot, StringComparison.Ordinal);
+        Assert.Contains("HOST_SECURITY_AMC_CERTIFIED", sot, StringComparison.Ordinal);
+        Assert.Contains("HOST_ADMIN_FULLY_CERTIFIED", sot, StringComparison.Ordinal);
+        Assert.Contains("HostObservabilityAmcCertGuardTests", sot, StringComparison.Ordinal);
+        Assert.Contains("HostObservabilityAmcW1GuardTests", sot, StringComparison.Ordinal);
     }
 
     private static string Dir(string relative) => Path.Combine(Repo(), relative.Replace('/', Path.DirectorySeparatorChar));
