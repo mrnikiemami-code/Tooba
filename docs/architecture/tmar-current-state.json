@@ -1,4 +1,4 @@
-﻿{
+{
     "program": "TMAR — Tooba Microservice-Ready Architecture Recovery",
     "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
     "frontendFrozen": true,
