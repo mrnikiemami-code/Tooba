@@ -32,7 +32,7 @@ Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-MULTITENANCY-AMC-001-W1
 Latest-Accepted-Task: TB-TMAR-HOST-MULTITENANCY-AMC-001-W1
 Implementation-Commit: cfbc94d258de837fdc018ddb29db68233cc25783
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: PENDING_AFTER_SOT_STAMP
+Result-Evidence-Docs-Stamp: 5eb4dc2ff93633995c89e2201bef3ddccb60a14b
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
 Mode: HOST_MULTITENANCY_AMC_001_W1_MIGRATE
 MultiTenancy-Production-File-Count: 2

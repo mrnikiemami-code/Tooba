@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-MULTITENANCY-AMC-001-W1",
   "lastAcceptedCommit": "cfbc94d258de837fdc018ddb29db68233cc25783",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "7f364b41920a0b6d9806546f04e849ac935d0ecc",
+  "lastAcceptedResultEvidenceCommit": "5eb4dc2ff93633995c89e2201bef3ddccb60a14b",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "7f364b41920a0b6d9806546f04e849ac935d0ecc",
+  "lastAcceptedSoTStamp": "5eb4dc2ff93633995c89e2201bef3ddccb60a14b",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-MULTITENANCY-AMC-001-W1. IMPLEMENTATION commit is W1 SHA at lastAcceptedCommit (cfbc94d258de837fdc018ddb29db68233cc25783). Result evidence docs stamp is separate and NOT an implementation commit.",
   "lastAcceptedNote": "Host/MultiTenancy W1: split to 2 files; namespace EXACT Tooba.Host.MultiTenancy; RequestServices ZERO; IStoreCommerceContextAssigner via InvokeAsync; resolution/anti-enumeration/presentation preserved; NOT_CERTIFIED_W2_REQUIRED; Errors/Security/Admin CERT preserved.",
@@ -5996,6 +5996,6 @@
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-MULTITENANCY-AMC-001-W1",
     "implementationCommit": "cfbc94d258de837fdc018ddb29db68233cc25783",
     "note": "Structure + InvokeAsync DI hygiene; does not certify MultiTenancy.",
-    "docsStamp": "7f364b41920a0b6d9806546f04e849ac935d0ecc"
+    "docsStamp": "5eb4dc2ff93633995c89e2201bef3ddccb60a14b"
   }
 }
