@@ -380,7 +380,7 @@ Ensure automated guards enforce the certified structure, including as applicable
 - root allowlists;
 - forbidden root files;
 - forbidden top-level folders;
-- capability-first folder-granularity rules (including no unjustified single-file request folders);
+- capability-first folder-granularity rules: capability is the first axis; Commands/Queries/Validators/Models/Ports are secondary; reject technical-axis-first request trees and unjustified single-file request folders; count production source files, not types declared inside one file;
 - semantic Contracts/Application ownership and no mixed Application `*Contracts.cs` dumps;
 - no duplicate CQRS command/query shapes;
 - path↔namespace exactness;
@@ -548,7 +548,7 @@ For the touched/certified surface:
 - Never permit foreign Application/Infrastructure/Domain dependencies in the certified state.
 - Never accept a file solely because it is under a LOC ceiling.
 - Never certify generic/mixed Application `*Contracts.cs` bundles or duplicate command/query-shaped models beside the authoritative CQRS request.
-- Never certify one-folder-per-Command/Query trees when leaf folders exist only to wrap a single request file; capability-first shallow grouping is the default unless multi-file cohesion/complexity justifies the use-case folder.
+- Never certify one-folder-per-Command/Query trees when a leaf folder contains only one production source file; count source files, not types, so one `.cs` containing request + handler is still an unjustified single-file leaf. In a multi-capability module, do not certify technical-axis-first request trees such as `Application/Commands/<UseCase>`, `Application/Queries/<UseCase>`, or `Application/Validators/<UseCase>` unless an explicit module-wide capability justification exists. Capability-first shallow grouping (`Application/<Capability>/{Commands,Queries,Models,Ports,Validators}`) is the default; per-use-case subfolders require genuine multi-file cohesion/complexity.
 - Never accept a parallel localization/response/logging/telemetry mechanism.
 - Never hide duplicate error descriptors with first/last-wins, overwrite, `DistinctBy`, suppression, or catch-and-ignore behavior.
 - Never create a shared-errors project/layer merely because multiple modules consume the same machine code; prefer the natural bounded-context owner and use an existing neutral shared location only for genuinely cross-cutting/platform semantics with no natural module owner.
