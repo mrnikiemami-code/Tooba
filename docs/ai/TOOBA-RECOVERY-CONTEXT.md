@@ -25,35 +25,34 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-MESSAGING-AMC-001-W2-CERT)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OBSERVABILITY-AMC-001)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-MESSAGING-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-MESSAGING-AMC-001-W2-CERT
+Latest-Accepted-Task: TB-TMAR-HOST-OBSERVABILITY-AMC-001
 Implementation-Commit: f29a881370b9a8813035715ef6973145ce3f1723
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: 8f0954f511e283e50b39dbaea6d43094d113953a
+Result-Evidence-Docs-Stamp: PENDING_OBS_ANALYZE_DOCS_STAMP
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_MESSAGING_AMC_001_W2_CERTIFY
-Certification-State: HOST_MESSAGING_AMC_CERTIFIED
-Boundary-State: HOST_MESSAGING_PLATFORM_BOUNDARY_CERTIFIED
-Messaging-Production-File-Count: 7
-Messaging-Production-Type-Count: 7
-Path-Namespace-State: EXACT_Tooba.Host.Messaging
-File-Cohesion-State: ONE_TOP_LEVEL_TYPE_PER_FILE_CERTIFIED
-InProcess-ServiceLocator-State: TESTING_ONLY_EXCEPTION_CERTIFIED
-Composition-Callback-ServiceProvider-State: FRAMEWORK_COMPOSITION_CALLBACK_ALLOWED
-Production-Code-Change: ZERO
+Mode: HOST_OBSERVABILITY_AMC_001_ANALYSIS_ONLY
+Observability-Production-File-Count: 1
+Observability-Production-Type-Count: 1
+Path-Namespace-State: VIOLATION_Tooba.Host_vs_Observability
+Middleware-Order-State: INTENTIONAL_AFTER_TENANT_AND_SESSION
+ClientIp-Logging-State: SENSITIVE_DEBT_TRUSTED_PROXY_CONTRACT_MISMATCH
+Recommended-Wave-Count: 2
+Recommended-Next-Task: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1
+Host-Messaging-State: HOST_MESSAGING_AMC_CERTIFIED_PRESERVED
 Host-Health-State: HOST_HEALTH_AMC_CERTIFIED_PRESERVED
 MultiTenancy-Certification-State: HOST_MULTITENANCY_AMC_CERTIFIED_PRESERVED
 Errors-Certification-State: HOST_ERRORS_AMC_CERTIFIED_PRESERVED
 Host-Security-State: HOST_SECURITY_AMC_CERTIFIED_PRESERVED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
-Current-Host-Checkpoint: Messaging
+Current-Host-Checkpoint: Observability
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_MESSAGING_AMC_001_W2_CERT
-Next-Task: USER_REVIEW_HOST_MESSAGING_AMC_001_W2_CERT
+workflowStop: USER_REVIEW_HOST_OBSERVABILITY_AMC_001
+Next-Task: USER_REVIEW_HOST_OBSERVABILITY_AMC_001
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```
