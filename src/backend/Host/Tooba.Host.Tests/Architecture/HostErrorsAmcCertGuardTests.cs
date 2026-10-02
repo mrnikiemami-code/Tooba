@@ -168,9 +168,11 @@ public sealed class HostErrorsAmcCertGuardTests
         Assert.Contains("HOST_SECURITY_AMC_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("HOST_ADMIN_FULLY_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("\"hostErrorsAmc001W2Cert\"", sot, StringComparison.Ordinal);
+        // Errors W2-CERT historical block still records Multitenancy as NOT_OPENED at certify time.
         Assert.Contains("\"multiTenancyCertification\": \"NOT_OPENED\"", sot, StringComparison.Ordinal);
-        Assert.Contains("\"lastAcceptedCommit\": \"e190e213c491fd530d86c7e5680cb0607b5e98d3\"", sot, StringComparison.Ordinal);
-        Assert.Contains("\"latestAcceptedImplementationWave\": \"TB-TMAR-HOST-ERRORS-AMC-001-W1\"", sot, StringComparison.Ordinal);
+        Assert.Contains("\"implementationCommit\": \"e190e213c491fd530d86c7e5680cb0607b5e98d3\"", sot, StringComparison.Ordinal);
+        Assert.Contains("\"hostMultiTenancyAmc001W1\"", sot, StringComparison.Ordinal);
+        Assert.Contains("NOT_CERTIFIED_W2_REQUIRED", sot, StringComparison.Ordinal);
     }
 
     [Fact]
