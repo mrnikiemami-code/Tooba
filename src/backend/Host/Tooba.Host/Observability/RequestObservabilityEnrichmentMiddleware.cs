@@ -1,11 +1,13 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Observability.Logging;
+using Tooba.Host;
 
-namespace Tooba.Host;
+namespace Tooba.Host.Observability;
 
 /// <summary>
 /// غنی‌سازی تودرتوی log scope پس از Tenant + Session auth — بدون تغییر CorrelationId و بدون PII.
+/// کلید IP اختیاری BuildingBlocks اینجا پر نمی‌شود: فقط وقتی trusted-proxy-safe مجاز است و این مرز Host آن را اثبات نمی‌کند.
 /// </summary>
 internal sealed class RequestObservabilityEnrichmentMiddleware
 {
@@ -36,7 +38,6 @@ internal sealed class RequestObservabilityEnrichmentMiddleware
         var actorId = session.UserId is Guid userId && userId != Guid.Empty
             ? userId.ToString("N")
             : null;
-        var clientIp = context.Connection.RemoteIpAddress?.ToString();
 
         var state = ObservabilityLogScope.CreateState(
             correlationId,
@@ -44,7 +45,6 @@ internal sealed class RequestObservabilityEnrichmentMiddleware
             tenantId: tenantId,
             storeId: storeId,
             actorId: actorId,
-            clientIp: clientIp,
             httpMethod: context.Request.Method,
             httpPath: context.Request.Path.Value);
 

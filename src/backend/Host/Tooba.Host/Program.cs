@@ -18,6 +18,7 @@ using Tooba.Host;
 using Tooba.Host.MultiTenancy;
 using Tooba.Host.Health;
 using Tooba.Host.Messaging;
+using Tooba.Host.Observability;
 using Tooba.Host.Errors;
 using Tooba.Host.Caching;
 using Tooba.Host.Persistence;
