@@ -57,51 +57,13 @@ Automatic-Next-Implementation-Task: NONE
 ```
 
 
-Last Architect Accepted Task:
+Current recovery authority:
 
 ```text
-TB-P10-T022-R20
+Use ONLY the "Latest Accepted TMAR Checkpoint — authoritative" block above and docs/architecture/tmar-current-state.json for resume/current-task decisions.
+Older product/module recovery sections below are historical context unless explicitly marked CURRENT.
 ```
 
-Prior accepted catalog wave:
-
-```text
-TB-P07-T035
-TB-P07-T036
-TB-P07-T036-R1
-TB-P07-T037
-TB-P07-T038
-TB-P07-T038-R1
-TB-P07-T039
-TB-P07-T041
-TB-P07-T042-R1
-TB-P07-T043
-```
-
-
-Last Implementation Task:
-
-```text
-TB-TMAR-RECOVERY-LOCK-HARDEN-001
-```
-
-Last Architecture Audit Task:
-
-```text
-TB-P10-T022-R14
-```
-
-Current Issued Task:
-
-```text
-TB-TMAR-RECOVERY-LOCK-HARDEN-001 (Worker PASS — awaiting Architect)
-```
-
-Current Repair Task:
-
-```text
-none
-```
 
 TMAR Module Recovery (Worker PASS — awaiting Architect):
 
