@@ -25,24 +25,23 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OUTBOX-AMC-001)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-OUTBOX-AMC-001-W1)
 
 ```text
-Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-OUTBOX-AMC-001
-Implementation-Commit: f1425fed94cc1a8354d3c9f9a013065d87cbe66c
+Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-OUTBOX-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-OUTBOX-AMC-001-W1
+Implementation-Commit: 382ef10af3a5eb49f519e49cb399809b19844bbc
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: 91403c9c7a8f830aaf090e1f43338d4a1d236e54
+Result-Evidence-Docs-Stamp: 6df920706124ac2089def61c62f90d8e33c13022
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_OUTBOX_AMC_001_ANALYSIS_ONLY
-Outbox-Production-File-Count: 3
-Outbox-Production-Type-Count: 6
-Path-Namespace-State: VIOLATION_Tooba.Host_vs_Outbox
-File-Cohesion-State: MULTI_TYPE_FILES_MUST_SPLIT
-Cancellation-Safety-State: DEBT_OCE_SWALLOWED_IN_MESSAGE_CLAIM_CATCH
-Options-Validation-State: VALIDATOR_ABSENT_DEBT
-Recommended-Wave-Count: 2
-Recommended-Next-Task: TB-TMAR-HOST-OUTBOX-AMC-001-W1
+Mode: HOST_OUTBOX_AMC_001_W1_MIGRATE
+Outbox-Production-File-Count: 7
+Outbox-Production-Type-Count: 7
+Path-Namespace-State: EXACT_Tooba.Host.Outbox
+File-Cohesion-State: ONE_TOP_LEVEL_TYPE_PER_FILE
+Cancellation-Safety-State: REQUESTED_OCE_PROPAGATES_NO_RETRY_DEADLETTER
+Options-Validation-State: FAIL_FAST_PRESENT
+Certification-State: NOT_CERTIFIED_W2_REQUIRED
 Host-Observability-State: HOST_OBSERVABILITY_AMC_CERTIFIED_PRESERVED
 Host-Messaging-State: HOST_MESSAGING_AMC_CERTIFIED_PRESERVED
 Host-Health-State: HOST_HEALTH_AMC_CERTIFIED_PRESERVED
@@ -53,8 +52,8 @@ Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
 Current-Host-Checkpoint: Outbox
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_OUTBOX_AMC_001
-Next-Task: USER_REVIEW_HOST_OUTBOX_AMC_001
+workflowStop: USER_REVIEW_HOST_OUTBOX_AMC_001_W1
+Next-Task: USER_REVIEW_HOST_OUTBOX_AMC_001_W1
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```
