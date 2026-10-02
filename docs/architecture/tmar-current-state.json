@@ -1,4 +1,4 @@
-﻿{
+{
   "program": "TMAR — Tooba Microservice-Ready Architecture Recovery",
   "executionMode": "BACKEND_ONLY_UNTIL_EXPLICIT_RELEASE",
   "frontendFrozen": true,
@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-MESSAGING-AMC-001",
   "lastAcceptedCommit": "ba8db8c6bcb22f0ad4c386073d3b612e3d318e00",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "65a371489b87991d8d5d276c88874b479a5b34a9",
+  "lastAcceptedResultEvidenceCommit": "0b1e4ace728bd6bd80b6e96f8a613605ac8b77db",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "65a371489b87991d8d5d276c88874b479a5b34a9",
+  "lastAcceptedSoTStamp": "0b1e4ace728bd6bd80b6e96f8a613605ac8b77db",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-MESSAGING-AMC-001 (ANALYSIS_ONLY docs). IMPLEMENTATION commit remains Health W1 SHA at lastAcceptedCommit (ba8db8c6bcb22f0ad4c386073d3b612e3d318e00). Analyze docs stamp is NOT an implementation commit.",
   "lastAcceptedNote": "Host/Messaging ANALYSIS_ONLY: 6 files / 7 types; path↔namespace VIOLATION; Testing-only in-process IServiceProvider double; composition-callback DI acceptable; options/validator MUST_SPLIT; recommended W1 then CERT; Health/MultiTenancy/Errors/Security/Admin CERT preserved.",
@@ -6171,6 +6171,6 @@
     "workflowStop": "USER_REVIEW_HOST_MESSAGING_AMC_001",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-MESSAGING-AMC-001",
     "note": "Docs-only analyze; does not advance implementation SHA.",
-    "docsStamp": "65a371489b87991d8d5d276c88874b479a5b34a9"
+    "docsStamp": "0b1e4ace728bd6bd80b6e96f8a613605ac8b77db"
   }
 }

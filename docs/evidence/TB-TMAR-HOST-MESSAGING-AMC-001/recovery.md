@@ -30,3 +30,5 @@ nextHostFolderStarted = false
 evidenceRoot = docs/evidence/TB-TMAR-HOST-MESSAGING-AMC-001/
 implementationCommitUnchanged = ba8db8c6bcb22f0ad4c386073d3b612e3d318e00
 ```
+
+Docs stamp SHA: `0b1e4ace728bd6bd80b6e96f8a613605ac8b77db` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
