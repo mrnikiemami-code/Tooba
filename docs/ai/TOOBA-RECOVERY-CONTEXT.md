@@ -25,32 +25,32 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ERRORS-AMC-001-W1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ERRORS-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-ERRORS-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT
 Implementation-Commit: e190e213c491fd530d86c7e5680cb0607b5e98d3
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Result-Evidence-Docs-Stamp: 4a379419389f58903d8d1bc5d7e7f33368bfe8e6
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_ERRORS_W1_MIGRATE
+Mode: HOST_ERRORS_W2_CERTIFY
 Errors-Production-File-Count: 1
-PlatformExceptionMapper: REMOVED
-MappedPlatformError: REMOVED
-ToobaExceptionHandler: KEEP_THIN_CANONICAL
+PlatformExceptionMapper: ABSENT_CERTIFIED
+MappedPlatformError: ABSENT_CERTIFIED
+ToobaExceptionHandler: THIN_CANONICAL_CERTIFIED
 Canonical-Presentation-Authority: IExceptionPresentationService
 Path-Namespace: EXACT_Tooba.Host.Errors
-TenantResolution-Presentation: CANONICAL_IExceptionPresentationService
-TenantResolution-Platform-Errors: FOUNDATION_CODE_BASED
-MultiTenancy-Structure: NOT_OPENED_DEFERRED
+Certification-State: HOST_ERRORS_AMC_CERTIFIED
+Boundary-State: HOST_ERRORS_CANONICAL_GLOBAL_EXCEPTION_BOUNDARY_CERTIFIED
+MultiTenancy-Structure: NOT_OPENED
 Host-Security-State: HOST_SECURITY_AMC_CERTIFIED_PRESERVED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
 Current-Host-Checkpoint: Errors
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_ERRORS_AMC_001_W1
-Next-Task: USER_REVIEW_HOST_ERRORS_AMC_001_W1
+workflowStop: USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT
+Next-Task: USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 Recommended-Next-Implementation: NONE
