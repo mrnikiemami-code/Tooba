@@ -25,33 +25,33 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-HEALTH-AMC-001)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-MULTITENANCY-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT
+Latest-Accepted-Task: TB-TMAR-HOST-HEALTH-AMC-001
 Implementation-Commit: cfbc94d258de837fdc018ddb29db68233cc25783
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Result-Evidence-Docs-Stamp: 37de9af8f4617749a519626d509c7a58a711dafc
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_MULTITENANCY_AMC_001_W2_CERTIFY
-Certification-State: HOST_MULTITENANCY_AMC_CERTIFIED
-Boundary-State: HOST_MULTITENANCY_PLATFORM_BOUNDARY_CERTIFIED
-MultiTenancy-Production-File-Count: 2
-MultiTenancy-Production-Type-Count: 2
-Path-Namespace-State: EXACT_Tooba.Host.MultiTenancy
-File-Cohesion-State: SPLIT_COMPLETE
-RequestServices-ServiceLocator-State: ZERO
-Scoped-StoreCommerce-Assigner: INVOKEASYNC_PARAMETER_CERTIFIED
-Production-Code-Change: ZERO
+Mode: HOST_HEALTH_AMC_001_ANALYSIS_ONLY
+Health-Production-File-Count: 2
+Health-Production-Type-Count: 2
+Route-Count: 4
+Path-Namespace-State: VIOLATION_Tooba.Host_vs_Health
+Service-Locator-State: GENUINE_ISERVICEPROVIDER_OPTIONAL_BUS_DEBT
+Disclosure-State: CONFIG_INTERNAL_REFERENCE_AND_SCHEMA_DISCLOSURE_DEBT
+Recommended-Wave-Count: 2
+Recommended-Next-Task: TB-TMAR-HOST-HEALTH-AMC-001-W1
+MultiTenancy-Certification-State: HOST_MULTITENANCY_AMC_CERTIFIED_PRESERVED
 Errors-Certification-State: HOST_ERRORS_AMC_CERTIFIED_PRESERVED
 Host-Security-State: HOST_SECURITY_AMC_CERTIFIED_PRESERVED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
-Current-Host-Checkpoint: MultiTenancy
+Current-Host-Checkpoint: Health
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_MULTITENANCY_AMC_001_W2_CERT
-Next-Task: USER_REVIEW_HOST_MULTITENANCY_AMC_001_W2_CERT
+workflowStop: USER_REVIEW_HOST_HEALTH_AMC_001
+Next-Task: USER_REVIEW_HOST_HEALTH_AMC_001
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```
