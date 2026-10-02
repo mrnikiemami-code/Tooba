@@ -5,6 +5,7 @@ using Tooba.Identity.Application.Models;
 using Tooba.Identity.Application.Options;
 using Tooba.Identity.Application.Ports;
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Domain.Aggregates;
 using Tooba.Identity.Domain.Enums;
 using Tooba.Identity.Domain.Events;

@@ -1,4 +1,5 @@
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Auth;
 
 namespace Tooba.Identity.Application.Ports;
 

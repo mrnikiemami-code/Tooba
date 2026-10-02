@@ -5,6 +5,7 @@ using Tooba.Identity.Application.Auth.Commands;
 using Tooba.Identity.Application.Auth.Queries;
 using Tooba.Identity.Application.Auth.Validators;
 using Xunit;
+using Tooba.Identity.Contracts.Auth;
 
 namespace Tooba.Host.Tests.Architecture;
 

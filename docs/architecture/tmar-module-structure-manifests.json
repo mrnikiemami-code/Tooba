@@ -78,6 +78,68 @@
       ]
     },
     {
+      "module": "Identity",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "projects": [
+        {
+          "projectName": "Tooba.Identity.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Identity.Application has no root .cs: capability Auth/ plus shared Composition/Models/Options/Ports/Validators; path↔namespace exact.",
+          "forbiddenRootFiles": [
+            "IdentityContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries"
+          ]
+        },
+        {
+          "projectName": "Tooba.Identity.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Identity.Domain has no root .cs; Aggregates/Enums/Events/Rules hold types with exact path↔namespace.",
+          "forbiddenRootFiles": [
+            "IdentityDomain.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Identity.Endpoints",
+          "rootAllowlist": [
+            "IdentityEndpointModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "IdentityAuthEndpoints.cs",
+            "IdentityAuthHttpModels.cs",
+            "IdentityAuthHttpProblem.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Identity.Infrastructure",
+          "rootAllowlist": [
+            "IdentityModule.cs"
+          ],
+          "forbiddenRootFiles": [
+            "IdentityOutboxRegistration.cs",
+            "IdentityAuthenticationService.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Identity.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Identity.Contracts has no root .cs: Auth/Actors/Contacts/Problems (+ Resources) carry contracts; Auth namespace is Tooba.Identity.Contracts.Auth.",
+          "forbiddenRootFiles": [
+            "ActorContactContracts.cs",
+            "ActorIdentifierResolverContracts.cs",
+            "IdentityAuthenticationContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    },
+    {
       "module": "Order",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",

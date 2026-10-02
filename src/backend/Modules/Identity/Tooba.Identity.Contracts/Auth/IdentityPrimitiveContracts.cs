@@ -1,4 +1,4 @@
-namespace Tooba.Identity.Contracts;
+namespace Tooba.Identity.Contracts.Auth;
 
 /// <summary>
 /// Neutral login identifier kind used by the global authentication boundary.

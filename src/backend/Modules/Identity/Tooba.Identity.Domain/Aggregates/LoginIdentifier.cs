@@ -1,4 +1,5 @@
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Domain.Enums;
 
 namespace Tooba.Identity.Domain.Aggregates;

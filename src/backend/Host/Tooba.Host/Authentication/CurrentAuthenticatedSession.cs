@@ -1,4 +1,5 @@
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Endpoints.Auth;
 
 namespace Tooba.Host;

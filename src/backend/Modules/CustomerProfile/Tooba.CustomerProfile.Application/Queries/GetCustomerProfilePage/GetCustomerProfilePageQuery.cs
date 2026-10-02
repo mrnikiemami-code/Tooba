@@ -4,6 +4,7 @@ using Tooba.CustomerProfile.Application.Models;
 using Tooba.CustomerProfile.Application.Ports;
 using Tooba.CustomerProfile.Contracts;
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Auth;
 using Tooba.Order.Contracts.Customer;
 
 namespace Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage;

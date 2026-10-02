@@ -1,4 +1,4 @@
-namespace Tooba.Identity.Contracts;
+namespace Tooba.Identity.Contracts.Auth;
 
 /// <summary>
 /// Internal authentication outcome. Some values must never reach the public surface verbatim.

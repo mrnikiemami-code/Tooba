@@ -2,6 +2,7 @@ using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Identity.Application.Auth.Models;
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Auth;
 
 namespace Tooba.Identity.Application.Auth.Commands;
 

@@ -7,6 +7,7 @@ using Tooba.BuildingBlocks.Observability.Logging;
 using Tooba.Host;
 using Tooba.Host.Observability;
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Auth;
 using Xunit;
 
 namespace Tooba.Host.Tests;

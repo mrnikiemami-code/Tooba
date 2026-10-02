@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Domain.Enums;
 using Tooba.Identity.Domain.Rules;
 using Tooba.Identity.Domain.Events;

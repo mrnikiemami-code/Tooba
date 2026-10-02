@@ -7,7 +7,7 @@ using Tooba.Identity.Infrastructure.Events;
 using Tooba.Identity.Infrastructure.Persistence;
 using Tooba.Persistence;
 
-namespace Tooba.Identity.Infrastructure;
+namespace Tooba.Identity.Infrastructure.Persistence;
 
 /// <summary>
 /// ثبت Outbox ماژول Identity. فقط قرارداد صریح ثبت User را ترجمه می‌کند.

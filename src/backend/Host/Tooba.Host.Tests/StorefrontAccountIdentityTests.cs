@@ -6,6 +6,7 @@ using Tooba.AddressBook.Contracts.Ports;
 using Tooba.Cart.Application.Ports;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Xunit;
+using Tooba.Identity.Contracts.Auth;
 
 namespace Tooba.Host.Tests;
 

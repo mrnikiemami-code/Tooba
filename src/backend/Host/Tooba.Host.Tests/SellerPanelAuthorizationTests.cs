@@ -5,6 +5,7 @@ using Tooba.AccessControl.Infrastructure.Authorization;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Security.Seller;
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Contracts.Auth;
 using Xunit;
 
 namespace Tooba.Host.Tests;

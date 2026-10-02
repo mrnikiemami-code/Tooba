@@ -1,4 +1,4 @@
-namespace Tooba.Identity.Contracts;
+namespace Tooba.Identity.Contracts.Auth;
 
 /// <summary>
 /// Outcome of an OTP delivery attempt without exposing the secret or vendor details.
