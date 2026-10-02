@@ -18,10 +18,23 @@
         {
           "projectName": "Tooba.AccessControl.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "AccessControl.Application intentionally has no root .cs file: the capability folders Authorization/Commands/Models/Permissions/Queries/Validators carry every type, and namespace alignment is exact path-derived equality.",
+          "rootAllowlistJustification": "AccessControl.Application intentionally has no root .cs file: Authorization/Commands/Composition/Development/Exceptions/Models/Permissions/Ports/Queries/Validators carry every type; namespace alignment is exact path-derived equality.",
           "forbiddenRootFiles": [
             "AccessControlContracts.cs",
-            "PermissionCatalog.cs"
+            "AccessControlDtos.cs",
+            "PermissionCatalog.cs",
+            "AccessControlException.cs",
+            "IAccessControlDirectory.cs",
+            "AccessControlOperation.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.AccessControl.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "AccessControl.Domain has no root .cs; Aggregates/ holds entities; enums live in Contracts.Enums for Endpoints Domain ZERO.",
+          "forbiddenRootFiles": [
+            "AccessControlDomain.cs"
           ],
           "forbiddenTopLevelFolders": []
         },
@@ -52,10 +65,13 @@
         {
           "projectName": "Tooba.AccessControl.Contracts",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "AccessControl.Contracts intentionally has no root .cs file: the capability folder Access/ carries the cross-module effective-access port and value types, and namespace alignment is exact path-derived equality.",
+          "rootAllowlistJustification": "AccessControl.Contracts intentionally has no root .cs file: Access/, Development/, Enums/, Errors/, Readiness/ carry contracts; namespace alignment is exact path-derived equality.",
           "forbiddenRootFiles": [
             "AccessControlContracts.cs",
-            "AccessControlEffectiveAccessContracts.cs"
+            "AccessControlEffectiveAccessContracts.cs",
+            "AccessOwnerScopeKind.cs",
+            "AccessScopeKind.cs",
+            "AccessControlErrorCodes.cs"
           ],
           "forbiddenTopLevelFolders": []
         }
