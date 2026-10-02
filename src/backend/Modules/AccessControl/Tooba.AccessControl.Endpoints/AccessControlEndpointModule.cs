@@ -1,8 +1,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.AccessControl.Endpoints.Admin;
+using Tooba.AccessControl.Endpoints.Errors;
+using Tooba.AccessControl.Endpoints.Resources;
 using Tooba.AccessControl.Endpoints.Seller;
 using Tooba.AccessControl.Endpoints.Seller.Development;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 
 namespace Tooba.AccessControl.Endpoints;
 
@@ -10,8 +15,6 @@ namespace Tooba.AccessControl.Endpoints;
 public static class AccessControlEndpointModule
 {
     /// <summary>مسیرهای ماژول Access Control را ثبت می‌کند.</summary>
-    /// <param name="app">سازندهٔ مسیر.</param>
-    /// <returns>همان سازندهٔ مسیر برای زنجیره‌سازی.</returns>
     public static IEndpointRouteBuilder MapAccessControlModuleEndpoints(this IEndpointRouteBuilder app)
     {
         ArgumentNullException.ThrowIfNull(app);
@@ -24,5 +27,14 @@ public static class AccessControlEndpointModule
         var sellerDevelopment = app.MapGroup("/v1/seller");
         SellerDevContextEndpoints.Map(sellerDevelopment);
         return app;
+    }
+
+    /// <summary>ثبت presentation seams (error catalog/resources).</summary>
+    public static IServiceCollection AddAccessControlEndpointPresentation(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddSingleton<IErrorCatalogContributor, AccessControlErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, AccessControlErrorResourceSet>();
+        return services;
     }
 }

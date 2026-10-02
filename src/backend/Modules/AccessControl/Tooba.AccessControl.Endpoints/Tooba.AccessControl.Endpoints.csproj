@@ -11,7 +11,12 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Update="Resources\AccessControlErrors.resx"><Generator></Generator></EmbeddedResource>
+    <EmbeddedResource Update="Resources\AccessControlErrors.fa.resx"><Generator></Generator></EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Tooba.AccessControl.Application\Tooba.AccessControl.Application.csproj" />
+    <ProjectReference Include="..\Tooba.AccessControl.Contracts\Tooba.AccessControl.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
 </Project>

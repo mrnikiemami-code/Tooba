@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="access.role.code_conflict" xml:space="preserve"><value>کد نقش تکراری است.</value></data>
+  <data name="access.role.system_immutable" xml:space="preserve"><value>نقش سیستمی قابل تغییر نیست.</value></data>
+  <data name="access.role.archived" xml:space="preserve"><value>نقش بایگانی‌شده قابل تخصیص نیست.</value></data>
+  <data name="access.role.not_found" xml:space="preserve"><value>نقش یافت نشد.</value></data>
+  <data name="access.user.invalid" xml:space="preserve"><value>کاربر نامعتبر است.</value></data>
+  <data name="access.assignment.exists" xml:space="preserve"><value>تخصیص تکراری است.</value></data>
+  <data name="access.assignment.not_found" xml:space="preserve"><value>تخصیص یافت نشد.</value></data>
+  <data name="access.ceiling.not_delegable" xml:space="preserve"><value>مجوز قابل سقف‌گذاری نیست.</value></data>
+  <data name="access.scope.unsupported" xml:space="preserve"><value>Scope برای این مجوز مجاز نیست.</value></data>
+  <data name="access.scope.unknown_resource" xml:space="preserve"><value>منبع scope یافت نشد.</value></data>
+  <data name="access.owner.invalid" xml:space="preserve"><value>محدودهٔ مالک نامعتبر است.</value></data>
+  <data name="access.escalation.platform_permission" xml:space="preserve"><value>ارتقای مجوز پلتفرم مجاز نیست.</value></data>
+  <data name="access.escalation.ceiling" xml:space="preserve"><value>مجوز خارج از سقف است.</value></data>
+  <data name="access.validation.text" xml:space="preserve"><value>متن نامعتبر است.</value></data>
+  <data name="access.validation.code" xml:space="preserve"><value>کد نقش نامعتبر است.</value></data>
+  <data name="access.permission.unknown" xml:space="preserve"><value>مجوز ناشناخته است.</value></data>
+  <data name="access.authorization.unavailable" xml:space="preserve"><value>سرویس مجوز در دسترس نیست.</value></data>
+  <data name="access.capability.denied" xml:space="preserve"><value>مجوز این عملیات وجود ندارد.</value></data>
+</root>

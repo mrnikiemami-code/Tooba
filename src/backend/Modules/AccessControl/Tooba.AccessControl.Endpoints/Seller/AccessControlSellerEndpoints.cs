@@ -22,6 +22,8 @@ using Tooba.AccessControl.Application.Queries.ListSellerPermissionCatalog;
 using Tooba.AccessControl.Application.Queries.SearchAccessUsers;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.AccessControl.Endpoints.Errors;
 using Tooba.BuildingBlocks.Security;
 
 using Tooba.AccessControl.Application.Models;
@@ -92,6 +94,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken,
         string? q = null)
     {
@@ -113,6 +116,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -132,6 +136,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -145,6 +150,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -165,6 +171,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -184,7 +191,7 @@ public static class AccessControlSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -195,6 +202,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -214,7 +222,7 @@ public static class AccessControlSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -224,6 +232,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -244,6 +253,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -264,7 +274,7 @@ public static class AccessControlSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -275,6 +285,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -292,7 +303,7 @@ public static class AccessControlSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -304,6 +315,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -324,7 +336,7 @@ public static class AccessControlSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -336,6 +348,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -357,7 +370,7 @@ public static class AccessControlSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -368,6 +381,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -387,7 +401,7 @@ public static class AccessControlSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -398,6 +412,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -414,7 +429,7 @@ public static class AccessControlSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -426,6 +441,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -446,7 +462,7 @@ public static class AccessControlSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -456,19 +472,14 @@ public static class AccessControlSellerEndpoints
     /// <summary>بدنهٔ تخصیص نقش به کاربر.</summary>
     private sealed record SellerAssignBody(Guid UserId, Guid RoleId);
 
-    private static IResult MapAccessError(AccessControlException ace) =>
-        Results.Json(
-            new { title = ace.Message, code = ace.Code },
-            statusCode: ace.Code.Contains("escalation", StringComparison.Ordinal)
-                || ace.Code.Contains("ceiling", StringComparison.Ordinal)
-                    ? 403
-                    : 400);
+
 
     private static async Task<IResult> MeCapabilitiesAsync(
         HttpRequest request,
         ISender sender,
         ISellerPanelAccess sellerPanelAccess,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -487,6 +498,7 @@ public static class AccessControlSellerEndpoints
         ISellerPanelAccess sellerPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var (actor, sellerId) = await sellerPanelAccess.RequireAuthorizedAsync(request, cancellationToken);

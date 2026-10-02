@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="access.role.code_conflict" xml:space="preserve"><value>Role code conflicts.</value></data>
+  <data name="access.role.system_immutable" xml:space="preserve"><value>System role is immutable.</value></data>
+  <data name="access.role.archived" xml:space="preserve"><value>Archived role cannot be assigned.</value></data>
+  <data name="access.role.not_found" xml:space="preserve"><value>Role was not found.</value></data>
+  <data name="access.user.invalid" xml:space="preserve"><value>User is invalid.</value></data>
+  <data name="access.assignment.exists" xml:space="preserve"><value>Assignment already exists.</value></data>
+  <data name="access.assignment.not_found" xml:space="preserve"><value>Assignment was not found.</value></data>
+  <data name="access.ceiling.not_delegable" xml:space="preserve"><value>Permission is not ceiling-delegable.</value></data>
+  <data name="access.scope.unsupported" xml:space="preserve"><value>Scope is unsupported for permission.</value></data>
+  <data name="access.scope.unknown_resource" xml:space="preserve"><value>Scope resource was not found.</value></data>
+  <data name="access.owner.invalid" xml:space="preserve"><value>Owner scope is invalid.</value></data>
+  <data name="access.escalation.platform_permission" xml:space="preserve"><value>Platform permission escalation denied.</value></data>
+  <data name="access.escalation.ceiling" xml:space="preserve"><value>Ceiling escalation denied.</value></data>
+  <data name="access.validation.text" xml:space="preserve"><value>Text is invalid.</value></data>
+  <data name="access.validation.code" xml:space="preserve"><value>Role code is invalid.</value></data>
+  <data name="access.permission.unknown" xml:space="preserve"><value>Permission is unknown.</value></data>
+  <data name="access.authorization.unavailable" xml:space="preserve"><value>Authorization service unavailable.</value></data>
+  <data name="access.capability.denied" xml:space="preserve"><value>Capability denied.</value></data>
+</root>

@@ -1,4 +1,5 @@
-﻿using Tooba.BuildingBlocks;
+﻿using Tooba.AccessControl.Contracts.Errors;
+using Tooba.BuildingBlocks;
 
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
@@ -58,7 +59,10 @@ public static class AccessControlCapabilityGate
 
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
         {
-            throw new PlatformHttpException(503, "سرویس مجوز در دسترس نیست.", "access.authorization.unavailable");
+            throw new PlatformHttpException(
+                503,
+                AccessControlErrorCodes.AuthorizationUnavailable,
+                AccessControlErrorCodes.AuthorizationUnavailable);
         }
 
         // For manage: also allow if actor has accesscontrol.manage OR panel admin already authorized.
@@ -68,6 +72,9 @@ public static class AccessControlCapabilityGate
             return;
         }
 
-        throw new PlatformHttpException(403, "مجوز این عملیات وجود ندارد.", "access.capability.denied");
+        throw new PlatformHttpException(
+            403,
+            AccessControlErrorCodes.CapabilityDenied,
+            AccessControlErrorCodes.CapabilityDenied);
     }
 }

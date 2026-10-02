@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
@@ -87,7 +87,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
 
         if (await ScopedRoles(owner).AnyAsync(r => r.Code == role.Code && !r.IsArchived, cancellationToken))
         {
-            throw new AccessControlException("access.role.code_conflict", "کد نقش تکراری است.");
+            throw new AccessControlException("access.role.code_conflict");
         }
 
         _db.Roles.Add(role);
@@ -156,7 +156,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         EnsureMutable(role);
         if (role.IsSystem)
         {
-            throw new AccessControlException("access.role.system_immutable", "نقش سیستمی قابل بایگانی نیست.");
+            throw new AccessControlException("access.role.system_immutable");
         }
 
         role.IsArchived = true;
@@ -272,13 +272,13 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
     {
         if (userId == Guid.Empty)
         {
-            throw new AccessControlException("access.user.invalid", "کاربر نامعتبر است.");
+            throw new AccessControlException("access.user.invalid");
         }
 
         var role = await RequireRoleAsync(roleId, owner, cancellationToken);
         if (role.IsArchived)
         {
-            throw new AccessControlException("access.role.archived", "نقش بایگانی‌شده قابل تخصیص نیست.");
+            throw new AccessControlException("access.role.archived");
         }
 
         var exists = await _db.Assignments.AnyAsync(
@@ -286,7 +286,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
             cancellationToken);
         if (exists)
         {
-            throw new AccessControlException("access.assignment.exists", "تخصیص تکراری است.");
+            throw new AccessControlException("access.assignment.exists");
         }
 
         var row = new UserRoleAssignment
@@ -318,7 +318,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         var row = await _db.Assignments.FirstOrDefaultAsync(
             a => a.Id == assignmentId && a.OwnerScopeKind == owner.Kind && a.OwnerScopeId == owner.OwnerScopeId,
             cancellationToken)
-            ?? throw new AccessControlException("access.assignment.not_found", "تخصیص یافت نشد.");
+            ?? throw new AccessControlException("access.assignment.not_found");
         var userId = row.UserId;
         _db.Assignments.Remove(row);
         await AuditAsync(actorUserId, "assignment.remove", "assignment", assignmentId.ToString("D"), owner.OwnerScopeId, userId.ToString("D"), string.Empty, traceId, cancellationToken);
@@ -377,12 +377,12 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
             var def = PermissionCatalog.Require(permissionId);
             if (!def.Delegable)
             {
-                throw new AccessControlException("access.ceiling.not_delegable", $"مجوز پلتفرمی قابل سقف نیست: {permissionId}");
+                throw new AccessControlException("access.ceiling.not_delegable");
             }
 
             if (!def.ScopeKinds.Contains(scopeKind))
             {
-                throw new AccessControlException("access.scope.unsupported", $"Scope برای {permissionId} مجاز نیست.");
+                throw new AccessControlException("access.scope.unsupported");
             }
 
             if (scopeKind == AccessScopeKind.Category && scopeResourceId is Guid categoryId)
@@ -390,7 +390,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
                 var found = await _catalog.CategoryExistsAsync(categoryId, cancellationToken);
                 if (!found)
                 {
-                    throw new AccessControlException("access.scope.unknown_resource", "ردهٔ scope در Catalog یافت نشد.");
+                    throw new AccessControlException("access.scope.unknown_resource");
                 }
             }
         }
@@ -775,14 +775,14 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
     private async Task<AccessRole> RequireRoleAsync(Guid roleId, AccessOwnerScope owner, CancellationToken cancellationToken)
     {
         var role = await ScopedRoles(owner).FirstOrDefaultAsync(r => r.Id == roleId, cancellationToken);
-        return role ?? throw new AccessControlException("access.role.not_found", "نقش در این محدوده یافت نشد.");
+        return role ?? throw new AccessControlException("access.role.not_found");
     }
 
     private static void EnsureMutable(AccessRole role)
     {
         if (role.IsSystem || !role.IsMutable)
         {
-            throw new AccessControlException("access.role.system_immutable", "نقش سیستمی یا غیرقابل‌ویرایش است.");
+            throw new AccessControlException("access.role.system_immutable");
         }
     }
 
@@ -790,7 +790,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
     {
         if (owner.Kind == AccessOwnerScopeKind.Seller && owner.OwnerScopeId is null)
         {
-            throw new AccessControlException("access.owner.invalid", "محدودهٔ فروشنده نامعتبر است.");
+            throw new AccessControlException("access.owner.invalid");
         }
     }
 
@@ -812,20 +812,20 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
             var def = PermissionCatalog.Require(grant.PermissionId);
             if (!def.ScopeKinds.Contains(grant.ScopeKind))
             {
-                throw new AccessControlException("access.scope.unsupported", $"Scope برای {grant.PermissionId} مجاز نیست.");
+                throw new AccessControlException("access.scope.unsupported");
             }
 
             if (grant.ScopeKind == AccessScopeKind.Category)
             {
                 if (grant.ScopeResourceId is not Guid categoryId)
                 {
-                    throw new AccessControlException("access.scope.unknown_resource", "منبع scope رده الزامی است.");
+                    throw new AccessControlException("access.scope.unknown_resource");
                 }
 
                 var found = await _catalog.CategoryExistsAsync(categoryId, cancellationToken);
                 if (!found)
                 {
-                    throw new AccessControlException("access.scope.unknown_resource", "ردهٔ scope در Catalog یافت نشد.");
+                    throw new AccessControlException("access.scope.unknown_resource");
                 }
             }
 
@@ -833,12 +833,12 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
             {
                 if (!def.Delegable)
                 {
-                    throw new AccessControlException("access.escalation.platform_permission", $"فروشنده نمی‌تواند مجوز پلتفرم بدهد: {grant.PermissionId}");
+                    throw new AccessControlException("access.escalation.platform_permission");
                 }
 
                 if (!CeilingAllows(ceilingRows, grant.PermissionId, grant.ScopeKind, grant.ScopeResourceId))
                 {
-                    throw new AccessControlException("access.escalation.ceiling", $"مجوز خارج از سقف پلتفرم است: {grant.PermissionId}");
+                    throw new AccessControlException("access.escalation.ceiling");
                 }
             }
         }
@@ -937,7 +937,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         var trimmed = (value ?? string.Empty).Trim();
         if (trimmed.Length == 0 || trimmed.Length > max)
         {
-            throw new AccessControlException("access.validation.text", "متن نامعتبر است.");
+            throw new AccessControlException("access.validation.text");
         }
 
         return trimmed;
@@ -948,7 +948,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         var trimmed = (value ?? string.Empty).Trim().ToLowerInvariant();
         if (trimmed.Length is < 2 or > 64 || trimmed.Any(c => !(char.IsLetterOrDigit(c) || c is '-' or '_')))
         {
-            throw new AccessControlException("access.validation.code", "کد نقش نامعتبر است.");
+            throw new AccessControlException("access.validation.code");
         }
 
         return trimmed;

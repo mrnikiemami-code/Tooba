@@ -143,13 +143,15 @@ public sealed record AccessUserHitDto(
     string? Email = null,
     string? Mobile = null);
 
-/// <summary>خطای دامنهٔ Access Control با کد پایدار.</summary>
+/// <summary>خطای دامنهٔ Access Control با کد پایدار (بدون متن محلی در Exception).</summary>
 public sealed class AccessControlException : Exception
 {
-    /// <summary>استثنا را با کد پایدار می‌سازد.</summary>
-    public AccessControlException(string code, string message) : base(message)
+    /// <summary>استثنا را با کد پایدار می‌سازد؛ پیام فنی = کد.</summary>
+    public AccessControlException(string code) : base(code)
     {
-        Code = code;
+        if (string.IsNullOrWhiteSpace(code))
+            throw new ArgumentException("error_code_required", nameof(code));
+        Code = code.Trim();
     }
 
     /// <summary>کد پایدار.</summary>

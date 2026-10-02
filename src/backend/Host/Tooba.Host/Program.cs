@@ -105,6 +105,7 @@ builder.Services.AddReturnEndpointPresentation();
 builder.Services.AddAddressBookEndpointPresentation();
 builder.Services.AddWishlistEndpointPresentation();
 builder.Services.AddStoryEndpointPresentation();
+builder.Services.AddAccessControlEndpointPresentation();
 builder.Services.AddPageCompositionEndpointPresentation();
 builder.Services.AddReviewsEndpointPresentation();
 builder.Services.AddUserPreferenceEndpointPresentation();

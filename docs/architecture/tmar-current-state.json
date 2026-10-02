@@ -6989,5 +6989,22 @@
         "automaticNextImplementationTask": "NONE",
         "implementationCommit": "e8dc8b0b0b57845d8fa93f79708a87c1d20825c8",
         "docsStamp": "a41c4d0da14659d173839445689d889c61bd873a"
+    },
+    "accessControlModuleAmc001W2": {
+        "task": "TB-TMAR-ACCESSCONTROL-AMC-001-W2",
+        "parentTask": "TB-TMAR-ACCESSCONTROL-AMC-001-W1",
+        "mode": "MIGRATE",
+        "slice": "SEMANTIC_LOCALIZATION",
+        "state": "ACCESSCONTROL_SEMANTIC_LOCALIZATION_APPLIED",
+        "codeContainsHttpHeuristic": "ZERO",
+        "hardcodedFaExceptionText": "ZERO",
+        "errorCatalogResx": "PRESENT",
+        "resultPipeline": "DEFERRED_W3",
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "durableGuard": "AccessControlModuleAmcW2SemanticGuardTests",
+        "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-001-W2/",
+        "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_001_W2",
+        "automaticNextImplementationTask": "NONE",
+        "implementationCommit": "PENDING"
     }
 }

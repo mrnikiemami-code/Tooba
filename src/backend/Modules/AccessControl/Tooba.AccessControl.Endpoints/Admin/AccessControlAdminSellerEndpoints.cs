@@ -19,6 +19,8 @@ using Tooba.AccessControl.Application.Queries.ListAssignments;
 using Tooba.AccessControl.Application.Queries.ListRoles;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.AccessControl.Endpoints.Errors;
 using Tooba.BuildingBlocks.Security;
 
 using Tooba.AccessControl.Application.Models;
@@ -55,6 +57,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -70,6 +73,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -89,7 +93,7 @@ public static class AccessControlAdminSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -100,6 +104,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -121,6 +126,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -140,7 +146,7 @@ public static class AccessControlAdminSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -152,6 +158,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -171,7 +178,7 @@ public static class AccessControlAdminSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -183,6 +190,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -203,6 +211,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -224,6 +233,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -244,7 +254,7 @@ public static class AccessControlAdminSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -257,6 +267,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -277,7 +288,7 @@ public static class AccessControlAdminSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -290,6 +301,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -311,7 +323,7 @@ public static class AccessControlAdminSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -323,6 +335,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -342,7 +355,7 @@ public static class AccessControlAdminSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -354,6 +367,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -370,7 +384,7 @@ public static class AccessControlAdminSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -383,6 +397,7 @@ public static class AccessControlAdminSellerEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -403,7 +418,7 @@ public static class AccessControlAdminSellerEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -423,11 +438,5 @@ public static class AccessControlAdminSellerEndpoints
     /// <summary>بدنهٔ تخصیص نقش به کاربر.</summary>
     private sealed record AdminSellerAssignBody(Guid UserId, Guid RoleId);
 
-    private static IResult MapAccessError(AccessControlException ace) =>
-        Results.Json(
-            new { title = ace.Message, code = ace.Code },
-            statusCode: ace.Code.Contains("escalation", StringComparison.Ordinal)
-                || ace.Code.Contains("ceiling", StringComparison.Ordinal)
-                    ? 403
-                    : 400);
+
 }

@@ -1,5 +1,8 @@
 ﻿using Tooba.AccessControl.Domain;
 
+using Tooba.AccessControl.Contracts.Errors;
+using Tooba.AccessControl.Application.Models;
+
 namespace Tooba.AccessControl.Application.Permissions;
 
 /// <summary>
@@ -103,7 +106,7 @@ public static class PermissionCatalog
 
     /// <summary>وجود canonical را الزام می‌کند.</summary>
     public static PermissionDefinition Require(string permissionId) =>
-        Find(permissionId) ?? throw new InvalidOperationException($"مجوز ناشناخته: {permissionId}");
+        Find(permissionId) ?? throw new AccessControlException(AccessControlErrorCodes.PermissionUnknown);
 
     /// <summary>آیا مجوز قابل تفویض به فروشنده است.</summary>
     public static bool IsDelegable(string permissionId) =>

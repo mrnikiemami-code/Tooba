@@ -22,6 +22,8 @@ using Tooba.AccessControl.Application.Queries.ListScopeResources;
 using Tooba.AccessControl.Application.Queries.SearchAccessUsers;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation;
+using Tooba.AccessControl.Endpoints.Errors;
 using Tooba.BuildingBlocks.Security;
 
 using Tooba.AccessControl.Application.Models;
@@ -57,17 +59,17 @@ public static class AccessControlAdminEndpoints
 
     private static void MapScopeResources(RouteGroupBuilder group)
     {
-        group.MapGet("/categories", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct, string? q = null) =>
+        group.MapGet("/categories", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct, string? q = null) =>
             ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Category, q, ct));
-        group.MapGet("/brands", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct, string? q = null) =>
+        group.MapGet("/brands", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct, string? q = null) =>
             ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Brand, q, ct));
-        group.MapGet("/products", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct, string? q = null) =>
+        group.MapGet("/products", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct, string? q = null) =>
             ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Product, q, ct));
-        group.MapGet("/warehouses", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct) =>
+        group.MapGet("/warehouses", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct) =>
             ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Warehouse, null, ct));
-        group.MapGet("/stores", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct) =>
+        group.MapGet("/stores", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct) =>
             ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.Store, null, ct));
-        group.MapGet("/order-segments", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, CancellationToken ct) =>
+        group.MapGet("/order-segments", (HttpRequest request, ISender sender, IAdminPanelAccess access, IAuthorizationService authz, ICurrentTenant tenant, ApiResponseFactory api, CancellationToken ct) =>
             ListScopeResourceAsync(request, sender, access, authz, tenant, AccessScopeResourceKind.OrderSegment, null, ct));
     }
 
@@ -92,6 +94,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken,
         string? q = null)
     {
@@ -112,6 +115,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken,
         Guid? userId = null)
     {
@@ -133,6 +137,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -152,7 +157,7 @@ public static class AccessControlAdminEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -163,6 +168,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -182,7 +188,7 @@ public static class AccessControlAdminEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -193,6 +199,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -211,6 +218,7 @@ public static class AccessControlAdminEndpoints
         ISender sender,
         IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -225,6 +233,7 @@ public static class AccessControlAdminEndpoints
         ISender sender,
         IAdminPanelAccess adminPanelAccess,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -243,6 +252,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         var actor = await adminPanelAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -256,6 +266,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken,
         bool includeArchived = false)
     {
@@ -277,6 +288,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -294,7 +306,7 @@ public static class AccessControlAdminEndpoints
         }
         catch (AccessControlException ace)
         {
-            return Results.Json(new { title = ace.Message, code = ace.Code }, statusCode: ace.Code.Contains("escalation", StringComparison.Ordinal) || ace.Code.Contains("ceiling", StringComparison.Ordinal) ? 403 : 400);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -305,6 +317,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -325,9 +338,7 @@ public static class AccessControlAdminEndpoints
         }
         catch (Exception ex) when (ex is AccessControlException or PlatformHttpException)
         {
-            return ex is PlatformHttpException ph
-                ? Results.Json(new { title = ph.Title, code = ph.ErrorCode }, statusCode: ph.StatusCode)
-                : MapAccessError(ex);
+            return AccessControlHttpErrors.From(ex, api);
         }
     }
 
@@ -339,6 +350,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -359,7 +371,7 @@ public static class AccessControlAdminEndpoints
         }
         catch (Exception ex) when (ex is AccessControlException or PlatformHttpException)
         {
-            return MapAccessError(ex);
+            return AccessControlHttpErrors.From(ex, api);
         }
     }
 
@@ -371,6 +383,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -392,7 +405,7 @@ public static class AccessControlAdminEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -403,6 +416,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -422,7 +436,7 @@ public static class AccessControlAdminEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -433,6 +447,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -449,7 +464,7 @@ public static class AccessControlAdminEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -461,6 +476,7 @@ public static class AccessControlAdminEndpoints
         IAdminPanelAccess adminPanelAccess,
         IAuthorizationService authz,
         ICurrentTenant tenant,
+        ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
         try
@@ -481,7 +497,7 @@ public static class AccessControlAdminEndpoints
         }
         catch (AccessControlException ace)
         {
-            return MapAccessError(ace);
+            return AccessControlHttpErrors.From(ace, api);
         }
     }
 
@@ -490,9 +506,4 @@ public static class AccessControlAdminEndpoints
 
     /// <summary>بدنهٔ تخصیص نقش به کاربر در سطح Platform.</summary>
     private sealed record AdminAssignBody(Guid UserId, Guid RoleId);
-
-    private static IResult MapAccessError(Exception ex) =>
-        ex is AccessControlException ace
-            ? Results.Json(new { title = ace.Message, code = ace.Code }, statusCode: ace.Code.Contains("escalation", StringComparison.Ordinal) || ace.Code.Contains("ceiling", StringComparison.Ordinal) ? 403 : 400)
-            : Results.Json(new { title = "access.error", code = "access.error" }, statusCode: 500);
 }
