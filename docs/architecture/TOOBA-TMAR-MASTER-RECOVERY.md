@@ -12,9 +12,11 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-MESSAGING-AMC-001-W1`. MIGRATE of Host/Messaging: 7 files / 7 types; EXACT `Tooba.Host.Messaging`; options/validator split; Testing-only in-process double guarded; composition-callback DI allowed; CERT pending W2. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Messaging`; workflowStop / Next-Task = `USER_REVIEW_HOST_MESSAGING_AMC_001_W1`; automatic next = NONE; stale pointer = ZERO.
-- `HOST_HEALTH_AMC_CERTIFIED` / `HOST_MULTITENANCY_AMC_CERTIFIED` / `HOST_ERRORS_AMC_CERTIFIED` / `HOST_SECURITY_AMC_CERTIFIED` / `HOST_ADMIN_FULLY_CERTIFIED` preserved; `latestAcceptedImplementationWave` = Messaging W1; certificationState = NOT_CERTIFIED_W2_REQUIRED.
+Reconciled by `TB-TMAR-HOST-MESSAGING-AMC-001-W2-CERT`. CERTIFY_ONLY of Host/Messaging: `HOST_MESSAGING_AMC_CERTIFIED` / `HOST_MESSAGING_PLATFORM_BOUNDARY_CERTIFIED`; 7 files / 7 types; EXACT `Tooba.Host.Messaging`; Testing-only service-location exception certified; production change ZERO. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Messaging`; workflowStop / Next-Task = `USER_REVIEW_HOST_MESSAGING_AMC_001_W2_CERT`; automatic next = NONE; stale pointer = ZERO.
+- Implementation SHA remains Messaging W1 `f29a8813...`; `HOST_HEALTH_AMC_CERTIFIED` / `HOST_MULTITENANCY_AMC_CERTIFIED` / `HOST_ERRORS_AMC_CERTIFIED` / `HOST_SECURITY_AMC_CERTIFIED` / `HOST_ADMIN_FULLY_CERTIFIED` preserved.
+
+Reconciled by `TB-TMAR-HOST-MESSAGING-AMC-001-W1` (HISTORICAL for current pointer). MIGRATE of Host/Messaging: 7 files / 7 types; EXACT `Tooba.Host.Messaging`; options/validator split.
 
 Reconciled by `TB-TMAR-HOST-MESSAGING-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/Messaging: 6 files / 7 types; path↔namespace VIOLATION; recommended W1 then CERT.
 

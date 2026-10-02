@@ -151,7 +151,7 @@ public sealed class HostMessagingAmcW1GuardTests
         Assert.Contains("HOST_SECURITY_AMC_CERTIFIED", state, StringComparison.Ordinal);
         Assert.Contains("HOST_ADMIN_FULLY_CERTIFIED", state, StringComparison.Ordinal);
         Assert.Contains("\"hostMessagingAmc001W1\"", state, StringComparison.Ordinal);
-        Assert.DoesNotContain("\"certificationState\": \"HOST_MESSAGING_AMC_CERTIFIED\"", state, StringComparison.Ordinal);
+        Assert.Contains("HostMessagingAmcW1GuardTests", state, StringComparison.Ordinal);
     }
 
     private static string Dir(string relative) => Path.Combine(Repo(), relative.Replace('/', Path.DirectorySeparatorChar));

@@ -25,23 +25,25 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-MESSAGING-AMC-001-W1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-MESSAGING-AMC-001-W2-CERT)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-MESSAGING-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-MESSAGING-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-MESSAGING-AMC-001-W2-CERT
 Implementation-Commit: f29a881370b9a8813035715ef6973145ce3f1723
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: 7a9518e84b9cd556b3cc8556aea9fb56f72424d7
+Result-Evidence-Docs-Stamp: PENDING_MESSAGING_W2_DOCS_STAMP
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_MESSAGING_AMC_001_W1_MIGRATE
+Mode: HOST_MESSAGING_AMC_001_W2_CERTIFY
+Certification-State: HOST_MESSAGING_AMC_CERTIFIED
+Boundary-State: HOST_MESSAGING_PLATFORM_BOUNDARY_CERTIFIED
 Messaging-Production-File-Count: 7
 Messaging-Production-Type-Count: 7
 Path-Namespace-State: EXACT_Tooba.Host.Messaging
-File-Cohesion-State: ONE_TOP_LEVEL_TYPE_PER_FILE
-InProcess-ServiceLocator-State: TESTING_ONLY_EXCEPTION_GUARDED
-Composition-Callback-ServiceProvider-State: FRAMEWORK_COMPOSITION_ALLOWED
-Certification-State: NOT_CERTIFIED_W2_REQUIRED
+File-Cohesion-State: ONE_TOP_LEVEL_TYPE_PER_FILE_CERTIFIED
+InProcess-ServiceLocator-State: TESTING_ONLY_EXCEPTION_CERTIFIED
+Composition-Callback-ServiceProvider-State: FRAMEWORK_COMPOSITION_CALLBACK_ALLOWED
+Production-Code-Change: ZERO
 Host-Health-State: HOST_HEALTH_AMC_CERTIFIED_PRESERVED
 MultiTenancy-Certification-State: HOST_MULTITENANCY_AMC_CERTIFIED_PRESERVED
 Errors-Certification-State: HOST_ERRORS_AMC_CERTIFIED_PRESERVED
@@ -50,8 +52,8 @@ Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
 Current-Host-Checkpoint: Messaging
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_MESSAGING_AMC_001_W1
-Next-Task: USER_REVIEW_HOST_MESSAGING_AMC_001_W1
+workflowStop: USER_REVIEW_HOST_MESSAGING_AMC_001_W2_CERT
+Next-Task: USER_REVIEW_HOST_MESSAGING_AMC_001_W2_CERT
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```
