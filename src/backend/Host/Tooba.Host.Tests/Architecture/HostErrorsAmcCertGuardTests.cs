@@ -172,7 +172,7 @@ public sealed class HostErrorsAmcCertGuardTests
         Assert.Contains("\"multiTenancyCertification\": \"NOT_OPENED\"", sot, StringComparison.Ordinal);
         Assert.Contains("\"implementationCommit\": \"e190e213c491fd530d86c7e5680cb0607b5e98d3\"", sot, StringComparison.Ordinal);
         Assert.Contains("\"hostMultiTenancyAmc001W1\"", sot, StringComparison.Ordinal);
-        Assert.Contains("NOT_CERTIFIED_W2_REQUIRED", sot, StringComparison.Ordinal);
+        Assert.Contains("HOST_MULTITENANCY_AMC_CERTIFIED", sot, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -25,31 +25,33 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-MULTITENANCY-AMC-001-W1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-MULTITENANCY-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-MULTITENANCY-AMC-001-W1
+Latest-Accepted-Task: TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT
 Implementation-Commit: cfbc94d258de837fdc018ddb29db68233cc25783
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Result-Evidence-Docs-Stamp: 5eb4dc2ff93633995c89e2201bef3ddccb60a14b
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_MULTITENANCY_AMC_001_W1_MIGRATE
+Mode: HOST_MULTITENANCY_AMC_001_W2_CERTIFY
+Certification-State: HOST_MULTITENANCY_AMC_CERTIFIED
+Boundary-State: HOST_MULTITENANCY_PLATFORM_BOUNDARY_CERTIFIED
 MultiTenancy-Production-File-Count: 2
 MultiTenancy-Production-Type-Count: 2
 Path-Namespace-State: EXACT_Tooba.Host.MultiTenancy
 File-Cohesion-State: SPLIT_COMPLETE
 RequestServices-ServiceLocator-State: ZERO
-Scoped-StoreCommerce-Assigner: INVOKEASYNC_PARAMETER
-Certification-State: NOT_CERTIFIED_W2_REQUIRED
+Scoped-StoreCommerce-Assigner: INVOKEASYNC_PARAMETER_CERTIFIED
+Production-Code-Change: ZERO
 Errors-Certification-State: HOST_ERRORS_AMC_CERTIFIED_PRESERVED
 Host-Security-State: HOST_SECURITY_AMC_CERTIFIED_PRESERVED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
 Current-Host-Checkpoint: MultiTenancy
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_MULTITENANCY_AMC_001_W1
-Next-Task: USER_REVIEW_HOST_MULTITENANCY_AMC_001_W1
+workflowStop: USER_REVIEW_HOST_MULTITENANCY_AMC_001_W2_CERT
+Next-Task: USER_REVIEW_HOST_MULTITENANCY_AMC_001_W2_CERT
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```

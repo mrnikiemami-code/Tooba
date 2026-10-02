@@ -12,9 +12,11 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-MULTITENANCY-AMC-001-W1`. MIGRATE of Host/MultiTenancy: split to 2 files; namespace EXACT `Tooba.Host.MultiTenancy`; RequestServices ZERO; `IStoreCommerceContextAssigner` via InvokeAsync; resolution/anti-enumeration/presentation preserved; NOT_CERTIFIED_W2_REQUIRED. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `MultiTenancy`; workflowStop / Next-Task = `USER_REVIEW_HOST_MULTITENANCY_AMC_001_W1`; automatic next = NONE; stale pointer = ZERO.
-- `HOST_ERRORS_AMC_CERTIFIED` / `HOST_SECURITY_AMC_CERTIFIED` / `HOST_ADMIN_FULLY_CERTIFIED` preserved; `lastAcceptedCommit` = W1 `cfbc94d2...`.
+Reconciled by `TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT`. CERTIFY_ONLY of Host/MultiTenancy: `HOST_MULTITENANCY_AMC_CERTIFIED` / `HOST_MULTITENANCY_PLATFORM_BOUNDARY_CERTIFIED`; 2 files; EXACT namespace; RequestServices ZERO; production change ZERO. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `MultiTenancy`; workflowStop / Next-Task = `USER_REVIEW_HOST_MULTITENANCY_AMC_001_W2_CERT`; automatic next = NONE; stale pointer = ZERO.
+- `HOST_ERRORS_AMC_CERTIFIED` / `HOST_SECURITY_AMC_CERTIFIED` / `HOST_ADMIN_FULLY_CERTIFIED` preserved; `lastAcceptedCommit` remains W1 `cfbc94d2...`.
+
+Reconciled by `TB-TMAR-HOST-MULTITENANCY-AMC-001-W1` (HISTORICAL for current pointer). MIGRATE of Host/MultiTenancy: split to 2 files; namespace EXACT; InvokeAsync scoped assigner.
 
 Reconciled by `TB-TMAR-HOST-MULTITENANCY-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/MultiTenancy: 1 file / 2 types; path↔namespace VIOLATION; MUST_SPLIT.
 
