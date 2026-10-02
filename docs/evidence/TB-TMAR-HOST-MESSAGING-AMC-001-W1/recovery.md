@@ -37,4 +37,4 @@ evidenceRoot = docs/evidence/TB-TMAR-HOST-MESSAGING-AMC-001-W1/
 ```
 
 Implementation SHA: `f29a881370b9a8813035715ef6973145ce3f1723`.
-Docs stamp SHA: filled after SoT stamp commit (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
+Docs stamp SHA: `7a9518e84b9cd556b3cc8556aea9fb56f72424d7` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
