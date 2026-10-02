@@ -7088,8 +7088,8 @@
         "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-002-W1/",
         "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_002_W1",
         "automaticNextImplementationTask": "NONE",
-        "implementationCommit": "f39309dc8a0d51116a7c043c7f3e92411dd0d39d",
-        "docsStamp": "3d0d37fd7fdd1fc9997fc0e581d256ac92eaa923"
+        "implementationCommit": "e01537b720742fa3a2c79e334616cc300db3b529",
+        "docsStamp": "88a01a7c9bb128f71d30903caf1ff58c15b73c10"
     },
     "accessControlModuleAmc002W2Cert": {
         "task": "TB-TMAR-ACCESSCONTROL-AMC-002-W2-CERT",
@@ -7106,7 +7106,7 @@
         "evidenceRoot": "docs/evidence/TB-TMAR-ACCESSCONTROL-AMC-002-W2-CERT/",
         "workflowStop": "USER_REVIEW_ACCESSCONTROL_AMC_002_W2_CERT_COMPLETE",
         "automaticNextImplementationTask": "NONE",
-        "implementationCommit": "15099495e4fc717c27bb421829a36e2ed0796a80",
-        "docsStamp": "08baef4b96fc389928c6d2685db7e9524e2e07dd"
+        "implementationCommit": "de488cff023a8be4aabfaeeb0f6ca0176545f2fc",
+        "docsStamp": "926c48a48ad30acae8dded1f98646289e7dbaa52"
     }
 }
