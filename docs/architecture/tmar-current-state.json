@@ -6,9 +6,9 @@
     "lastAcceptedTask": "TB-TMAR-HOST-CONFIGURATION-AMC-001-W1",
     "lastAcceptedCommit": "32719977bc6408490fe5945d75dedaa5c2f7af4c",
     "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-    "lastAcceptedResultEvidenceCommit": "PENDING_DOCS_STAMP",
+    "lastAcceptedResultEvidenceCommit": "cbc078565ced46db463a5c581ef2a31fb0ba08d3",
     "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-    "lastAcceptedSoTStamp": "PENDING_DOCS_STAMP",
+    "lastAcceptedSoTStamp": "cbc078565ced46db463a5c581ef2a31fb0ba08d3",
     "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
     "lastAcceptedCommitSemantics": "lastAcceptedTask/Commit are TB-TMAR-HOST-CONFIGURATION-AMC-001-W1 implementation. Docs stamp is separate RESULT_EVIDENCE_DOCS_STAMP and is NOT an implementation commit.",
     "lastAcceptedNote": "Host/Configuration W1: exact 9 files / 9 types; namespace Tooba.Host.Configuration; legacy PostgreSqlOptions.ConnectionString removed; TrustedProxies fail-fast; Program no silent skip; invalid PrimaryDomain fails fast; NOT CERTIFIED (W2 required); Persistence/Outbox/Observability/Messaging/Health/MT/Errors/Security/Admin CERT preserved.",
@@ -6710,7 +6710,7 @@
         "nextHostFolderStarted": false,
         "evidenceRoot": "docs/evidence/TB-TMAR-HOST-CONFIGURATION-AMC-001-W1",
         "note": "W1 structural+fail-fast hygiene only; do not auto-start W2-CERT.",
-        "docsStamp": "PENDING_DOCS_STAMP",
+        "docsStamp": "cbc078565ced46db463a5c581ef2a31fb0ba08d3",
         "implementationCommit": "32719977bc6408490fe5945d75dedaa5c2f7af4c"
     }
 }

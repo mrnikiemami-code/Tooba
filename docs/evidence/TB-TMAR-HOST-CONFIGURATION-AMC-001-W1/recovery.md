@@ -32,4 +32,4 @@ evidenceRoot = docs/evidence/TB-TMAR-HOST-CONFIGURATION-AMC-001-W1/
 ```
 
 Implementation SHA: `32719977bc6408490fe5945d75dedaa5c2f7af4c`.
-Docs stamp SHA: set after docs stamp commit.
+Docs stamp SHA: `cbc078565ced46db463a5c581ef2a31fb0ba08d3`.
