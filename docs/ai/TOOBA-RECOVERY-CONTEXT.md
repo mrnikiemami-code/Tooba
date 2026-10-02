@@ -25,32 +25,33 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT-R1)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-MULTITENANCY-AMC-001)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ERRORS-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT
+Latest-Accepted-Task: TB-TMAR-HOST-MULTITENANCY-AMC-001
 Implementation-Commit: e190e213c491fd530d86c7e5680cb0607b5e98d3
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: 8d5e6a2dce7b34e2ceeb4166e5d324467bc3a8f3
+Result-Evidence-Docs-Stamp: PENDING_AFTER_DOCS_COMMIT
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_ERRORS_W2_CERT_R1_RECOVERY_REPAIR
-Errors-Production-File-Count: 1
-Certification-State: HOST_ERRORS_AMC_CERTIFIED
-Security-DocsStamp: 73a80ee28ed9dc054be5adae0f7115e72c115ded
-Errors-Cert-DocsStamp: 8d5e6a2dce7b34e2ceeb4166e5d324467bc3a8f3
-Duplicate-Json-Property-State: ZERO
-MultiTenancy-Structure: NOT_OPENED
+Mode: HOST_MULTITENANCY_AMC_001_ANALYSIS_ONLY
+MultiTenancy-Production-File-Count: 1
+MultiTenancy-Production-Type-Count: 2
+Path-Namespace-State: VIOLATION_Tooba.Host_vs_MultiTenancy
+File-Cohesion-State: MUST_SPLIT
+Service-Locator-State: ACCEPTABLE_REQUEST_SCOPE_BRIDGE_REQUIRED_BY_MIDDLEWARE_LIFETIME
+Recommended-Wave-Count: 2
+Recommended-Next-Task: TB-TMAR-HOST-MULTITENANCY-AMC-001-W1
+Errors-Certification-State: HOST_ERRORS_AMC_CERTIFIED_PRESERVED
 Host-Security-State: HOST_SECURITY_AMC_CERTIFIED_PRESERVED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
-Current-Host-Checkpoint: Errors
+Current-Host-Checkpoint: MultiTenancy
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT_R1
-Next-Task: USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT_R1
+workflowStop: USER_REVIEW_HOST_MULTITENANCY_AMC_001
+Next-Task: USER_REVIEW_HOST_MULTITENANCY_AMC_001
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
-Recommended-Next-Implementation: NONE
 ```
 
 

@@ -12,9 +12,11 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT-R1`. Recovery/SoT repair only: removed duplicate/wrong Errors docsStamp from `hostSecurityAmc001W3Cert`; Security stamp restored to `73a80ee...`; Errors cert stamp remains sole owner of `8d5e6a2...`. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Errors`; workflowStop / Next-Task = `USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT_R1`; automatic next = NONE; stale pointer = ZERO.
-- `HOST_ERRORS_AMC_CERTIFIED` preserved; `lastAcceptedCommit` remains W1 `e190e213...`; production change ZERO.
+Reconciled by `TB-TMAR-HOST-MULTITENANCY-AMC-001`. ANALYSIS_ONLY of Host/MultiTenancy: 1 file / 2 types; path↔namespace VIOLATION; dispositions KEEP thin accessor + KEEP platform middleware with MUST_SPLIT; RequestServices scoped bridge lifetime-required; recommended W1 then CERT. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `MultiTenancy`; workflowStop / Next-Task = `USER_REVIEW_HOST_MULTITENANCY_AMC_001`; automatic next = NONE; stale pointer = ZERO.
+- `HOST_ERRORS_AMC_CERTIFIED` / `HOST_SECURITY_AMC_CERTIFIED` / `HOST_ADMIN_FULLY_CERTIFIED` preserved; `lastAcceptedCommit` remains Errors W1 `e190e213...`; production change ZERO.
+
+Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT-R1` (HISTORICAL for current pointer). Recovery/SoT repair only: removed duplicate/wrong Errors docsStamp from `hostSecurityAmc001W3Cert`; Security stamp restored to `73a80ee...`; Errors cert stamp remains sole owner of `8d5e6a2...`.
 
 Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT` (HISTORICAL for current pointer as review gate; certification verdict still authoritative). CERTIFY_ONLY of Host/Errors.
 
