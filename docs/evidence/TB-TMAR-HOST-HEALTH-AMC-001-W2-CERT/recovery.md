@@ -38,4 +38,4 @@ evidenceRoot = docs/evidence/TB-TMAR-HOST-HEALTH-AMC-001-W2-CERT/
 ```
 
 Implementation SHA unchanged: `ba8db8c6bcb22f0ad4c386073d3b612e3d318e00`.
-Docs stamp SHA: pending SoT stamp commit.
+Docs stamp SHA: `d0c7b14085cc8b34d1bb4260ad3f75a9f6146bb0` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).

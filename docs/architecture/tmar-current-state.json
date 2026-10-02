@@ -6,9 +6,9 @@
   "lastAcceptedTask": "TB-TMAR-HOST-HEALTH-AMC-001-W2-CERT",
   "lastAcceptedCommit": "ba8db8c6bcb22f0ad4c386073d3b612e3d318e00",
   "lastAcceptedCommitKind": "IMPLEMENTATION_COMMIT",
-  "lastAcceptedResultEvidenceCommit": "17a866d56ccd139b1e912371fb8d07c9159f9019",
+  "lastAcceptedResultEvidenceCommit": "d0c7b14085cc8b34d1bb4260ad3f75a9f6146bb0",
   "lastAcceptedResultEvidenceCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
-  "lastAcceptedSoTStamp": "17a866d56ccd139b1e912371fb8d07c9159f9019",
+  "lastAcceptedSoTStamp": "d0c7b14085cc8b34d1bb4260ad3f75a9f6146bb0",
   "lastAcceptedSoTStampKind": "RESULT_EVIDENCE_DOCS_STAMP",
   "lastAcceptedCommitSemantics": "lastAcceptedTask is TB-TMAR-HOST-HEALTH-AMC-001-W2-CERT (CERTIFY_ONLY docs/tests). lastAcceptedCommit remains Health W1 implementation SHA ba8db8c6bcb22f0ad4c386073d3b612e3d318e00. Certification docs stamp is separate and MUST NOT replace implementation SHA.",
   "lastAcceptedNote": "Host/Health W2-CERT: HOST_HEALTH_AMC_CERTIFIED / HOST_HEALTH_PLATFORM_BOUNDARY_CERTIFIED. Exact 2-file tree; EXACT namespace; IServiceProvider ZERO; explicit bus DI; disclosure ZERO; Results.Json operational protocol certified; production change ZERO; Multitenancy/Errors/Security/Admin CERT preserved.",
@@ -6139,6 +6139,6 @@
     "workflowStop": "USER_REVIEW_HOST_HEALTH_AMC_001_W2_CERT",
     "evidenceRoot": "docs/evidence/TB-TMAR-HOST-HEALTH-AMC-001-W2-CERT",
     "note": "Certification docs/tests only; does not advance implementation SHA.",
-    "docsStamp": "17a866d56ccd139b1e912371fb8d07c9159f9019"
+    "docsStamp": "d0c7b14085cc8b34d1bb4260ad3f75a9f6146bb0"
   }
 }
