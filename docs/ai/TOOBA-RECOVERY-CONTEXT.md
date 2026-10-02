@@ -25,40 +25,33 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-HEALTH-AMC-001-W2-CERT)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-MESSAGING-AMC-001)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-HEALTH-AMC-001-W1
-Latest-Accepted-Task: TB-TMAR-HOST-HEALTH-AMC-001-W2-CERT
+Latest-Accepted-Task: TB-TMAR-HOST-MESSAGING-AMC-001
 Implementation-Commit: ba8db8c6bcb22f0ad4c386073d3b612e3d318e00
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
-Result-Evidence-Docs-Stamp: d0c7b14085cc8b34d1bb4260ad3f75a9f6146bb0
+Result-Evidence-Docs-Stamp: 65a371489b87991d8d5d276c88874b479a5b34a9
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_HEALTH_AMC_001_W2_CERTIFY_ONLY
-Certification-State: HOST_HEALTH_AMC_CERTIFIED
-Boundary-Certification-State: HOST_HEALTH_PLATFORM_BOUNDARY_CERTIFIED
-Health-Production-File-Count: 2
-Health-Production-Type-Count: 2
-Route-Count: 4
-Path-Namespace-State: EXACT_Tooba.Host.Health
-Service-Locator-State: ZERO
-IServiceProvider-State: ZERO
-Messaging-Bus-DI-State: EXPLICIT_DI_COLLECTION_CERTIFIED
-ConnectionReference-Disclosure-State: ZERO
-MessagingSchema-Disclosure-State: ZERO
-Raw-ResultsJson-State: OPERATIONAL_PROTOCOL_CERTIFIED
-Connection-Readiness-Truth-State: CONFIGURED_NOT_CONNECTIVITY_CERTIFIED
-Tenant-Reference-Policy-State: ALL_CONFIGURED_CERTIFIED
-Production-Code-Change-State: ZERO
+Mode: HOST_MESSAGING_AMC_001_ANALYSIS_ONLY
+Messaging-Production-File-Count: 6
+Messaging-Production-Type-Count: 7
+Path-Namespace-State: VIOLATION_Tooba.Host_vs_Messaging
+InProcess-ServiceLocator-State: TESTING_ONLY_EXPLICIT_DOUBLE
+Composition-Callback-ServiceProvider-State: ACCEPTABLE_FRAMEWORK_COMPOSITION
+Recommended-Wave-Count: 2
+Recommended-Next-Task: TB-TMAR-HOST-MESSAGING-AMC-001-W1
+Host-Health-State: HOST_HEALTH_AMC_CERTIFIED_PRESERVED
 MultiTenancy-Certification-State: HOST_MULTITENANCY_AMC_CERTIFIED_PRESERVED
 Errors-Certification-State: HOST_ERRORS_AMC_CERTIFIED_PRESERVED
 Host-Security-State: HOST_SECURITY_AMC_CERTIFIED_PRESERVED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
-Current-Host-Checkpoint: Health
+Current-Host-Checkpoint: Messaging
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_HEALTH_AMC_001_W2_CERT
-Next-Task: USER_REVIEW_HOST_HEALTH_AMC_001_W2_CERT
+workflowStop: USER_REVIEW_HOST_MESSAGING_AMC_001
+Next-Task: USER_REVIEW_HOST_MESSAGING_AMC_001
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 ```

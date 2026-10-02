@@ -12,13 +12,15 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-HEALTH-AMC-001-W2-CERT`. CERTIFY_ONLY of Host/Health: `HOST_HEALTH_AMC_CERTIFIED` / `HOST_HEALTH_PLATFORM_BOUNDARY_CERTIFIED`. Exact 2-file tree; EXACT namespace; IServiceProvider ZERO; explicit bus DI; disclosure ZERO; Results.Json operational protocol certified; production change ZERO. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Health`; workflowStop / Next-Task = `USER_REVIEW_HOST_HEALTH_AMC_001_W2_CERT`; automatic next = NONE; stale pointer = ZERO.
-- `HOST_MULTITENANCY_AMC_CERTIFIED` / `HOST_ERRORS_AMC_CERTIFIED` / `HOST_SECURITY_AMC_CERTIFIED` / `HOST_ADMIN_FULLY_CERTIFIED` preserved; `lastAcceptedCommit` remains Health W1 `ba8db8c6...`.
+Reconciled by `TB-TMAR-HOST-MESSAGING-AMC-001`. ANALYSIS_ONLY of Host/Messaging: 6 files / 7 types; path↔namespace VIOLATION; Testing-only in-process IServiceProvider double; composition-callback DI acceptable; options/validator MUST_SPLIT; recommended W1 then CERT. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Messaging`; workflowStop / Next-Task = `USER_REVIEW_HOST_MESSAGING_AMC_001`; automatic next = NONE; stale pointer = ZERO.
+- `HOST_HEALTH_AMC_CERTIFIED` / `HOST_MULTITENANCY_AMC_CERTIFIED` / `HOST_ERRORS_AMC_CERTIFIED` / `HOST_SECURITY_AMC_CERTIFIED` / `HOST_ADMIN_FULLY_CERTIFIED` preserved; `lastAcceptedCommit` remains Health W1 `ba8db8c6...`; production change ZERO.
+
+Reconciled by `TB-TMAR-HOST-HEALTH-AMC-001-W2-CERT` (HISTORICAL for current pointer). CERTIFY_ONLY of Host/Health: `HOST_HEALTH_AMC_CERTIFIED` / `HOST_HEALTH_PLATFORM_BOUNDARY_CERTIFIED`.
 
 Reconciled by `TB-TMAR-HOST-HEALTH-AMC-001-W1` (HISTORICAL for current pointer). MIGRATE of Host/Health: namespace EXACT `Tooba.Host.Health`; IServiceProvider/service-locator ZERO; explicit `IEnumerable<IBusControl>`; disclosure sanitized.
 
-Reconciled by `TB-TMAR-HOST-HEALTH-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/Health: 2 files / 2 types; path↔namespace VIOLATION; IServiceProvider optional-bus locator debt; disclosure debt.
+Reconciled by `TB-TMAR-HOST-HEALTH-AMC-001` (HISTORICAL for current pointer). ANALYSIS_ONLY of Host/Health.
 
 Reconciled by `TB-TMAR-HOST-MULTITENANCY-AMC-001-W2-CERT` (HISTORICAL for current pointer). CERTIFY_ONLY of Host/MultiTenancy: `HOST_MULTITENANCY_AMC_CERTIFIED`.
 

@@ -105,8 +105,7 @@ public sealed class HostHealthAmcCertGuardTests
         Assert.Contains("HOST_HEALTH_AMC_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("HOST_HEALTH_PLATFORM_BOUNDARY_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("\"hostHealthAmc001W2Cert\"", sot, StringComparison.Ordinal);
-        Assert.Contains("\"lastAcceptedCommit\": \"ba8db8c6bcb22f0ad4c386073d3b612e3d318e00\"", sot, StringComparison.Ordinal);
-        Assert.Contains("\"latestAcceptedImplementationWave\": \"TB-TMAR-HOST-HEALTH-AMC-001-W1\"", sot, StringComparison.Ordinal);
+        Assert.Contains("\"implementationCommit\": \"ba8db8c6bcb22f0ad4c386073d3b612e3d318e00\"", sot, StringComparison.Ordinal);
         Assert.Contains("USER_REVIEW_HOST_HEALTH_AMC_001_W2_CERT", sot, StringComparison.Ordinal);
         Assert.Contains("HOST_MULTITENANCY_AMC_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("HOST_ERRORS_AMC_CERTIFIED", sot, StringComparison.Ordinal);
