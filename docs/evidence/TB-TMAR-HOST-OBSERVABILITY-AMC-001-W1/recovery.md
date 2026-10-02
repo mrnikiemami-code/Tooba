@@ -38,4 +38,4 @@ evidenceRoot = docs/evidence/TB-TMAR-HOST-OBSERVABILITY-AMC-001-W1/
 ```
 
 Implementation SHA: `f1425fed94cc1a8354d3c9f9a013065d87cbe66c`.
-Docs stamp SHA: `PENDING_DOCS_STAMP` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
+Docs stamp SHA: `2bc3bda4408a97f65378e8d7dea46be1a4fd9f45` (RESULT_EVIDENCE_DOCS_STAMP; not implementation).
