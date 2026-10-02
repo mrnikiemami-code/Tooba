@@ -9,6 +9,29 @@ Use this skill when the user asks to analyze a Host file, legacy service, compos
 
 This skill is ANALYSIS-ONLY unless the user explicitly asks to migrate.
 
+
+## Four-Skill Workflow Integration
+
+The canonical architecture workflow is:
+
+`Analyze → Migrate → Structure → Certify`
+
+Physical/folder structure authority belongs to:
+`.cursor/skills/tooba-architecture-structure/SKILL.md`
+
+Analyze still identifies structural symptoms and proposes target paths, but it must not treat its own foldering judgment as final structural proof. For every touched module/capability, Analyze must:
+
+- read the Structure skill before proposing physical target layout;
+- use Structure terminology for folder granularity, Solution Explorer, path↔namespace, root allowlists, stale/duplicate copies, and Host final-closure structure;
+- report a `Structure-Handoff-State`:
+  - `NOT_REQUIRED` only when no physical/module structure is touched or evaluated;
+  - `REQUIRED` when migration/repair changes or depends on physical structure;
+  - `BLOCKED` when the proposed destination cannot satisfy the Structure skill without a separate architecture decision;
+- never claim `PROFESSIONAL_SHALLOW`, `READY_FOR_CERTIFY`, or equivalent final structural readiness on its own; those are established by the Structure skill.
+
+Analyze remains the authority for ownership, responsibility decomposition, coupling, behavior-preservation planning, and migration design.
+
+
 ## Primary Goal
 
 Determine the real architectural ownership of the target code without guessing and without moving code prematurely.
