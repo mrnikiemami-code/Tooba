@@ -1,20 +1,24 @@
-﻿using System.Text.Json;
+using System.Text.Json;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
+using Tooba.Identity.Endpoints.Errors;
 using Tooba.CustomerProfile.Contracts;
-using Tooba.Host.Authentication;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Problems;
 
-namespace Tooba.Host;
+namespace Tooba.Identity.Endpoints.Auth;
 
 /// <summary>
 /// نگاشت مسیرهای /v1/auth. مرز HTTP است نه دامنه و تماس مجوز اینجا انجام نمی‌شود.
 /// </summary>
-internal static class AuthenticationEndpointMapper
+public static class IdentityAuthEndpoints
 {
     /// <summary>
     /// مسیرهای احراز نسخهٔ ۱ را ثبت می‌کند. کوکی امن پیش‌فرض ساخته نمی‌شود.
     /// </summary>
-    public static void MapAuthenticationBoundary(this WebApplication app, bool enableCors = false)
+    public static void Map(this IEndpointRouteBuilder app, bool enableCors = false)
     {
         var group = app.MapGroup("/v1/auth");
         if (enableCors)
@@ -38,11 +42,11 @@ internal static class AuthenticationEndpointMapper
 
     private static async Task<IResult> RegisterAsync(
         HttpContext http,
-        AuthenticationHttpModels.RegisterRequest body,
+        IdentityAuthHttpModels.RegisterRequest body,
         IIdentityAuthenticationService auth,
         ILoggerFactory loggers)
     {
-        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (IdentityAuthHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
@@ -51,7 +55,7 @@ internal static class AuthenticationEndpointMapper
             || string.IsNullOrWhiteSpace(body.Identifier)
             || string.IsNullOrWhiteSpace(body.Password))
         {
-            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
+            return IdentityAuthHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
 
         try
@@ -60,45 +64,45 @@ internal static class AuthenticationEndpointMapper
                 new RegisterUserCommand { IdentifierKind = kind, Identifier = body.Identifier, Password = body.Password },
                 http.RequestAborted);
             loggers.CreateLogger("Tooba.Auth").LogInformation("identity.register.succeeded");
-            return Results.Json(new AuthenticationHttpModels.RegisterResponse(created.UserId), statusCode: StatusCodes.Status201Created);
+            return Results.Json(new IdentityAuthHttpModels.RegisterResponse(created.UserId), statusCode: StatusCodes.Status201Created);
         }
         catch (IdentityDuplicateIdentifierFault)
         {
-            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.IdentifierConflict);
+            return IdentityAuthHttpProblem.BadRequest(http, IdentityErrorCodes.IdentifierConflict);
         }
         catch (ArgumentException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
+            return IdentityAuthHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
     }
 
     private static async Task<IResult> LoginAsync(
         HttpContext http,
-        AuthenticationHttpModels.LoginRequest body,
+        IdentityAuthHttpModels.LoginRequest body,
         IIdentityAuthenticationService auth,
-        IAuthenticationThrottleSeam throttle,
+        IIdentityAuthThrottle throttle,
         ILoggerFactory loggers)
     {
-        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (IdentityAuthHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "login") is { } throttled)
+        if (IdentityAuthHttpProblem.RejectIfThrottled(http, throttle, "login") is { } throttled)
         {
             return throttled;
         }
 
         if (!TryParseKind(body.IdentifierKind, out var kind))
         {
-            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.AuthenticationFailed);
+            return IdentityAuthHttpProblem.Unauthorized(http, IdentityErrorCodes.AuthenticationFailed);
         }
 
         var result = await auth.AuthenticateWithPasswordAsync(kind, body.Identifier ?? "", body.Password ?? "", http.RequestAborted);
         if (!result.Succeeded || result.Ticket is null || string.IsNullOrEmpty(result.Ticket.RefreshToken))
         {
             loggers.CreateLogger("Tooba.Auth").LogInformation("identity.login.failed");
-            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.AuthenticationFailed);
+            return IdentityAuthHttpProblem.Unauthorized(http, IdentityErrorCodes.AuthenticationFailed);
         }
 
         loggers.CreateLogger("Tooba.Auth").LogInformation("identity.login.succeeded");
@@ -107,17 +111,17 @@ internal static class AuthenticationEndpointMapper
 
     private static async Task<IResult> RefreshAsync(
         HttpContext http,
-        AuthenticationHttpModels.RefreshRequest body,
+        IdentityAuthHttpModels.RefreshRequest body,
         IIdentityAuthenticationService auth,
-        IAuthenticationThrottleSeam throttle,
+        IIdentityAuthThrottle throttle,
         ILoggerFactory loggers)
     {
-        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (IdentityAuthHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "refresh") is { } throttled)
+        if (IdentityAuthHttpProblem.RejectIfThrottled(http, throttle, "refresh") is { } throttled)
         {
             return throttled;
         }
@@ -126,7 +130,7 @@ internal static class AuthenticationEndpointMapper
         if (!result.Succeeded || result.Ticket?.RefreshToken is null)
         {
             loggers.CreateLogger("Tooba.Auth").LogInformation("identity.refresh.failed");
-            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
+            return IdentityAuthHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
         return Results.Json(ToSessionResponse(result.Ticket));
@@ -134,7 +138,7 @@ internal static class AuthenticationEndpointMapper
 
     private static async Task<IResult> LogoutAsync(
         HttpContext http,
-        CurrentAuthenticatedSession current,
+        IIdentityHttpSession current,
         IIdentityAuthenticationService auth)
     {
         if (TryReadBearerSessionId(http, out var sessionId))
@@ -145,7 +149,7 @@ internal static class AuthenticationEndpointMapper
 
         if (!current.IsAuthenticated)
         {
-            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
+            return IdentityAuthHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
         await auth.RevokeSessionAsync(current.SessionId!.Value, "http_logout", http.RequestAborted);
@@ -154,12 +158,12 @@ internal static class AuthenticationEndpointMapper
 
     private static async Task<IResult> LogoutAllAsync(
         HttpContext http,
-        CurrentAuthenticatedSession current,
+        IIdentityHttpSession current,
         IIdentityAuthenticationService auth)
     {
         if (!current.IsAuthenticated)
         {
-            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
+            return IdentityAuthHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
         await auth.RevokeAllSessionsAsync(current.UserId!.Value, "http_logout_all", http.RequestAborted);
@@ -168,16 +172,16 @@ internal static class AuthenticationEndpointMapper
 
     private static async Task<IResult> RequestResetAsync(
         HttpContext http,
-        AuthenticationHttpModels.ResetRequest body,
+        IdentityAuthHttpModels.ResetRequest body,
         IIdentityCredentialLifecycle lifecycle,
-        IAuthenticationThrottleSeam throttle)
+        IIdentityAuthThrottle throttle)
     {
-        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (IdentityAuthHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "password_reset_request") is { } throttled)
+        if (IdentityAuthHttpProblem.RejectIfThrottled(http, throttle, "password_reset_request") is { } throttled)
         {
             return throttled;
         }
@@ -187,21 +191,21 @@ internal static class AuthenticationEndpointMapper
             await lifecycle.RequestPasswordResetAsync(kind, body.Identifier ?? "", http.RequestAborted);
         }
 
-        return Results.Json(new AuthenticationHttpModels.AcceptedResponse(true));
+        return Results.Json(new IdentityAuthHttpModels.AcceptedResponse(true));
     }
 
     private static async Task<IResult> CompleteResetAsync(
         HttpContext http,
-        AuthenticationHttpModels.ResetCompleteRequest body,
+        IdentityAuthHttpModels.ResetCompleteRequest body,
         IIdentityCredentialLifecycle lifecycle,
-        IAuthenticationThrottleSeam throttle)
+        IIdentityAuthThrottle throttle)
     {
-        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (IdentityAuthHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "password_reset_complete") is { } throttled)
+        if (IdentityAuthHttpProblem.RejectIfThrottled(http, throttle, "password_reset_complete") is { } throttled)
         {
             return throttled;
         }
@@ -213,7 +217,7 @@ internal static class AuthenticationEndpointMapper
             http.RequestAborted);
         if (outcome != ChallengeConsumeOutcome.Succeeded)
         {
-            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ChallengeInvalid);
+            return IdentityAuthHttpProblem.BadRequest(http, IdentityErrorCodes.ChallengeInvalid);
         }
 
         return Results.NoContent();
@@ -221,29 +225,29 @@ internal static class AuthenticationEndpointMapper
 
     private static async Task<IResult> RequestVerificationAsync(
         HttpContext http,
-        AuthenticationHttpModels.VerificationRequest body,
-        CurrentAuthenticatedSession current,
+        IdentityAuthHttpModels.VerificationRequest body,
+        IIdentityHttpSession current,
         IIdentityCredentialLifecycle lifecycle,
-        IAuthenticationThrottleSeam throttle)
+        IIdentityAuthThrottle throttle)
     {
         if (!current.IsAuthenticated)
         {
-            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
+            return IdentityAuthHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
-        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (IdentityAuthHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "identifier_verification_request") is { } throttled)
+        if (IdentityAuthHttpProblem.RejectIfThrottled(http, throttle, "identifier_verification_request") is { } throttled)
         {
             return throttled;
         }
 
         if (!TryParseKind(body.IdentifierKind, out var kind))
         {
-            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
+            return IdentityAuthHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
 
         try
@@ -253,26 +257,26 @@ internal static class AuthenticationEndpointMapper
                 kind,
                 body.Identifier ?? "",
                 http.RequestAborted);
-            return Results.Json(new AuthenticationHttpModels.AcceptedResponse(true));
+            return Results.Json(new IdentityAuthHttpModels.AcceptedResponse(true));
         }
         catch (InvalidOperationException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
+            return IdentityAuthHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
     }
 
     private static async Task<IResult> CompleteVerificationAsync(
         HttpContext http,
-        AuthenticationHttpModels.VerificationCompleteRequest body,
+        IdentityAuthHttpModels.VerificationCompleteRequest body,
         IIdentityCredentialLifecycle lifecycle,
-        IAuthenticationThrottleSeam throttle)
+        IIdentityAuthThrottle throttle)
     {
-        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (IdentityAuthHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "identifier_verification_complete") is { } throttled)
+        if (IdentityAuthHttpProblem.RejectIfThrottled(http, throttle, "identifier_verification_complete") is { } throttled)
         {
             return throttled;
         }
@@ -283,7 +287,7 @@ internal static class AuthenticationEndpointMapper
             http.RequestAborted);
         if (outcome != ChallengeConsumeOutcome.Succeeded)
         {
-            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ChallengeInvalid);
+            return IdentityAuthHttpProblem.BadRequest(http, IdentityErrorCodes.ChallengeInvalid);
         }
 
         return Results.NoContent();
@@ -291,16 +295,16 @@ internal static class AuthenticationEndpointMapper
 
     private static async Task<IResult> RequestOtpLoginAsync(
         HttpContext http,
-        AuthenticationHttpModels.OtpLoginRequest body,
+        IdentityAuthHttpModels.OtpLoginRequest body,
         IIdentityOtpLoginService otpLogin,
-        IAuthenticationThrottleSeam throttle)
+        IIdentityAuthThrottle throttle)
     {
-        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (IdentityAuthHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "otp_login_request") is { } throttled)
+        if (IdentityAuthHttpProblem.RejectIfThrottled(http, throttle, "otp_login_request") is { } throttled)
         {
             return throttled;
         }
@@ -312,27 +316,27 @@ internal static class AuthenticationEndpointMapper
         }
         catch (ArgumentException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
+            return IdentityAuthHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
         catch (InvalidOperationException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.OtpDeliveryUnavailable);
+            return IdentityAuthHttpProblem.BadRequest(http, IdentityErrorCodes.OtpDeliveryUnavailable);
         }
     }
 
     private static async Task<IResult> CompleteOtpLoginAsync(
         HttpContext http,
-        AuthenticationHttpModels.OtpLoginCompleteRequest body,
+        IdentityAuthHttpModels.OtpLoginCompleteRequest body,
         IIdentityOtpLoginService otpLogin,
-        IAuthenticationThrottleSeam throttle,
+        IIdentityAuthThrottle throttle,
         ILoggerFactory loggers)
     {
-        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (IdentityAuthHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
 
-        if (AuthenticationHttpProblem.RejectIfThrottled(http, throttle, "otp_login_complete") is { } throttled)
+        if (IdentityAuthHttpProblem.RejectIfThrottled(http, throttle, "otp_login_complete") is { } throttled)
         {
             return throttled;
         }
@@ -345,7 +349,7 @@ internal static class AuthenticationEndpointMapper
         if (!result.Succeeded || result.Ticket is null || string.IsNullOrEmpty(result.Ticket.RefreshToken))
         {
             loggers.CreateLogger("Tooba.Auth").LogInformation("identity.otp_login.failed");
-            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.AuthenticationFailed);
+            return IdentityAuthHttpProblem.Unauthorized(http, IdentityErrorCodes.AuthenticationFailed);
         }
 
         loggers.CreateLogger("Tooba.Auth").LogInformation("identity.otp_login.succeeded");
@@ -354,16 +358,16 @@ internal static class AuthenticationEndpointMapper
 
     private static async Task<IResult> ChangePasswordAsync(
         HttpContext http,
-        AuthenticationHttpModels.ChangePasswordRequest body,
-        CurrentAuthenticatedSession current,
+        IdentityAuthHttpModels.ChangePasswordRequest body,
+        IIdentityHttpSession current,
         IIdentityAuthenticationService auth)
     {
         if (!current.IsAuthenticated)
         {
-            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
+            return IdentityAuthHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
-        if (AuthenticationHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        if (IdentityAuthHttpProblem.RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
         {
             return spoof;
         }
@@ -379,24 +383,24 @@ internal static class AuthenticationEndpointMapper
         }
         catch (InvalidOperationException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.PasswordChangeFailed);
+            return IdentityAuthHttpProblem.BadRequest(http, IdentityErrorCodes.PasswordChangeFailed);
         }
         catch (ArgumentException)
         {
-            return AuthenticationHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
+            return IdentityAuthHttpProblem.BadRequest(http, IdentityErrorCodes.ValidationFailed);
         }
     }
 
     private static async Task<IResult> MeAsync(
         HttpContext http,
-        CurrentAuthenticatedSession current,
+        IIdentityHttpSession current,
         ICustomerProfileDirectory profiles,
         IIdentityContactLookup contacts,
         CancellationToken cancellationToken)
     {
         if (!current.IsAuthenticated)
         {
-            return AuthenticationHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
+            return IdentityAuthHttpProblem.Unauthorized(http, IdentityErrorCodes.SessionInvalid);
         }
 
         var userId = current.UserId!.Value;
@@ -406,7 +410,7 @@ internal static class AuthenticationEndpointMapper
             profile?.DisplayName,
             profile?.FirstName,
             profile?.LastName);
-        return Results.Json(new AuthenticationHttpModels.MeResponse(
+        return Results.Json(new IdentityAuthHttpModels.MeResponse(
             userId,
             current.SessionId!.Value,
             current.Edition ?? "",
@@ -420,7 +424,7 @@ internal static class AuthenticationEndpointMapper
     private static string? BlankToNull(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-    private static AuthenticationHttpModels.SessionResponse ToSessionResponse(AuthenticationTicket ticket) =>
+    private static IdentityAuthHttpModels.SessionResponse ToSessionResponse(AuthenticationTicket ticket) =>
         new(ticket.UserId, ticket.SessionHandle, ticket.SessionHandle.ToString("D"), ticket.RefreshToken!);
 
     private static bool TryParseKind(string? raw, out LoginIdentifierKind kind) =>

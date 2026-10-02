@@ -1,4 +1,4 @@
-﻿namespace Tooba.Host.Authentication;
+namespace Tooba.Identity.Endpoints.Auth;
 
 /// <summary>
 /// هویت نمایشی هدر ویترین: نام پروفایل، وگرنه موبایل Identity. Recipient ارسال منبع هویت نیست.

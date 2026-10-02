@@ -1,11 +1,12 @@
 using Tooba.Identity.Contracts;
+using Tooba.Identity.Endpoints.Auth;
 
 namespace Tooba.Host;
 
 /// <summary>
 /// اصل احراز همین درخواست HTTP. مجوز کسب‌وکار اینجا حل نمی‌شود و Tenant از هدر/کوئری/بدنه جعل نمی‌شود.
 /// </summary>
-internal sealed class CurrentAuthenticatedSession
+internal sealed class CurrentAuthenticatedSession : IIdentityHttpSession
 {
     /// <summary>
     /// User پایدار پس از اعتبارسنجی Bearer نشست.

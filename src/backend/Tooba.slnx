@@ -61,6 +61,7 @@
     <Project Path="Modules/Identity/Tooba.Identity.Contracts/Tooba.Identity.Contracts.csproj" />
     <Project Path="Modules/Identity/Tooba.Identity.Application/Tooba.Identity.Application.csproj" />
     <Project Path="Modules/Identity/Tooba.Identity.Infrastructure/Tooba.Identity.Infrastructure.csproj" />
+    <Project Path="Modules/Identity/Tooba.Identity.Endpoints/Tooba.Identity.Endpoints.csproj" />
   </Folder>
   <Folder Name="/Modules/AccessControl/">
     <Project Path="Modules/AccessControl/Tooba.AccessControl.Domain/Tooba.AccessControl.Domain.csproj" />

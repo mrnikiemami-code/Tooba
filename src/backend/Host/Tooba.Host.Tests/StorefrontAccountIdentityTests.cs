@@ -1,4 +1,4 @@
-using Tooba.Host.Authentication;
+using Tooba.Identity.Endpoints.Auth;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.AddressBook.Contracts.Dtos;
@@ -43,7 +43,7 @@ public sealed class StorefrontAccountIdentityTests
     {
         var root = FindRepoRoot();
         var source = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "Authentication", "AuthenticationHttpBoundary.cs"));
+            root, "src", "backend", "Modules", "Identity", "Tooba.Identity.Endpoints", "Auth", "IdentityAuthEndpoints.cs"));
         Assert.Contains("ICustomerProfileDirectory", source, StringComparison.Ordinal);
         Assert.Contains("IIdentityContactLookup", source, StringComparison.Ordinal);
         Assert.DoesNotContain("RecipientName", source, StringComparison.Ordinal);

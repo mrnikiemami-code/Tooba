@@ -39,7 +39,7 @@ public sealed class CheckoutIdentityContractTests
     [Fact]
     public void Storefront_and_auth_boundaries_expose_otp_login_and_merge()
     {
-        var auth = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Authentication", "AuthenticationHttpBoundary.cs"));
+        var auth = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Identity", "Tooba.Identity.Endpoints", "Auth", "IdentityAuthEndpoints.cs"));
         var orderEndpoints = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Storefront", "StorefrontOrderEndpoints.cs"));
         Assert.False(Directory.Exists(Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Storefront")));
         var catalogSettings = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Catalog", "Tooba.Catalog.Endpoints", "Storefront", "Settings", "CatalogStorefrontSettingsEndpoints.cs"));

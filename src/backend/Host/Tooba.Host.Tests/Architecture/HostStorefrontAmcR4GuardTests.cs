@@ -4,7 +4,7 @@ namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
 /// TB-TMAR-HOST-STOREFRONT-AMC-001-R4 (FINAL) — Host/Storefront ABSENT (HOST_ZERO);
-/// demo seed in Catalog Development; AccountIdentity under Host/Authentication.
+/// demo seed in Catalog Development; AccountIdentity under Identity.Endpoints Auth.
 /// </summary>
 public sealed class HostStorefrontAmcR4GuardTests
 {
@@ -59,17 +59,21 @@ public sealed class HostStorefrontAmcR4GuardTests
     }
 
     [Fact]
-    public void Account_identity_lives_under_host_authentication_platform()
+    public void Account_identity_lives_under_identity_endpoints_auth()
     {
         var hostRoot = HostRoot();
-        Assert.True(File.Exists(Path.Combine(hostRoot, "Authentication", "StorefrontAccountIdentity.cs")));
+        Assert.False(File.Exists(Path.Combine(hostRoot, "Authentication", "StorefrontAccountIdentity.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Storefront", "StorefrontAccountIdentity.cs")));
 
-        var identity = File.ReadAllText(Path.Combine(hostRoot, "Authentication", "StorefrontAccountIdentity.cs"));
-        Assert.Contains("namespace Tooba.Host.Authentication", identity, StringComparison.Ordinal);
+        var identityPath = Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "Identity", "Tooba.Identity.Endpoints", "Auth", "StorefrontAccountIdentity.cs");
+        Assert.True(File.Exists(identityPath));
+        var identity = File.ReadAllText(identityPath);
+        Assert.Contains("namespace Tooba.Identity.Endpoints.Auth", identity, StringComparison.Ordinal);
 
-        var boundary = File.ReadAllText(Path.Combine(hostRoot, "Authentication", "AuthenticationHttpBoundary.cs"));
-        Assert.Contains("using Tooba.Host.Authentication;", boundary, StringComparison.Ordinal);
+        var boundary = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Modules", "Identity", "Tooba.Identity.Endpoints", "Auth", "IdentityAuthEndpoints.cs"));
+        Assert.DoesNotContain("using Tooba.Host.Authentication;", boundary, StringComparison.Ordinal);
         Assert.DoesNotContain("using Tooba.Host.Storefront;", boundary, StringComparison.Ordinal);
         Assert.Contains("StorefrontAccountIdentity.CanonicalName", boundary, StringComparison.Ordinal);
     }

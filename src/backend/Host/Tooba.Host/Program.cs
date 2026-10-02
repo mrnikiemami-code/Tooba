@@ -16,6 +16,7 @@ using Tooba.BuildingBlocks.Presentation;
 using Tooba.StoreContext.Contracts.Current;
 using Tooba.Host;
 using Tooba.Host.Configuration;
+using Tooba.Identity.Endpoints;
 using Tooba.Host.MultiTenancy;
 using Tooba.Host.Health;
 using Tooba.Host.Messaging;
@@ -151,7 +152,9 @@ builder.Services.AddOptions<AuthSecurityHostOptions>()
 builder.Services.AddSingleton<IValidateOptions<AuthSecurityHostOptions>, AuthSecurityOptionsValidator>();
 builder.Services.AddSingleton<AuthenticationInstrumentation>();
 builder.Services.AddScoped<CurrentAuthenticatedSession>();
+builder.Services.AddScoped<Tooba.Identity.Endpoints.Auth.IIdentityHttpSession>(sp => sp.GetRequiredService<CurrentAuthenticatedSession>());
 builder.Services.AddSingleton<IAuthenticationThrottleSeam, AuthenticationRateLimitThrottleSeam>();
+builder.Services.AddSingleton<Tooba.Identity.Endpoints.Auth.IIdentityAuthThrottle>(sp => sp.GetRequiredService<IAuthenticationThrottleSeam>());
 builder.Services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventSerializer>();
 builder.Services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
 builder.Services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
@@ -408,7 +411,7 @@ app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseMiddleware<SessionAuthenticationMiddleware>();
 app.UseMiddleware<RequestObservabilityEnrichmentMiddleware>();
 
-app.MapAuthenticationBoundary(enableCors: true);
+app.MapIdentityModuleEndpoints(enableCors: true);
 app.MapProductWorkspaceModuleEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapAdminDevContextEndpoints();

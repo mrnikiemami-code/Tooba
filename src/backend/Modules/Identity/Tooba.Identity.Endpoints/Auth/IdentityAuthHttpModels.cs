@@ -1,12 +1,13 @@
+using Tooba.Identity.Endpoints.Errors;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Tooba.Host;
+namespace Tooba.Identity.Endpoints.Auth;
 
 /// <summary>
 /// قراردادهای JSON مرز احراز. موجودیت EF نیستند و هش/راز persistشده را برنمی‌گردانند مگر Refresh خام در صدور/چرخش.
 /// </summary>
-internal static class AuthenticationHttpModels
+public static class IdentityAuthHttpModels
 {
     /// <summary>ثبت حساب با شناسهٔ typed.</summary>
     internal sealed class RegisterRequest

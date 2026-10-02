@@ -98,7 +98,14 @@ public sealed class AuthenticationV2CanonicalizationGuardTests
     public void Authentication_problem_helper_uses_canonical_factory_not_a_parallel_pipeline()
     {
         var source = File.ReadAllText(Path.Combine(
-            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Authentication", "AuthenticationHttpProblem.cs"));
+            FindRepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Identity",
+            "Tooba.Identity.Endpoints",
+            "Errors",
+            "IdentityAuthHttpProblem.cs"));
         Assert.Contains("ApiResponseFactory", source, StringComparison.Ordinal);
         Assert.DoesNotContain("new ProblemDetails", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Results.Problem", source, StringComparison.Ordinal);

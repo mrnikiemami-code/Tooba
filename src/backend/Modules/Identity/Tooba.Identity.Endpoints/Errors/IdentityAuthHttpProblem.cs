@@ -1,9 +1,12 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.Identity.Contracts.Problems;
+using Tooba.Identity.Endpoints.Auth;
 
-namespace Tooba.Host;
+namespace Tooba.Identity.Endpoints.Errors;
 
 /// <summary>
 /// Tenant-spoof and throttle decisions stay auth-specific, but every error response is presented
@@ -11,7 +14,7 @@ namespace Tooba.Host;
 /// correlation ids, and localization come from the shared pipeline. Secrets and account existence
 /// are never exposed.
 /// </summary>
-internal static class AuthenticationHttpProblem
+public static class IdentityAuthHttpProblem
 {
     private static readonly HashSet<string> ForbiddenTenantKeys = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -68,7 +71,7 @@ internal static class AuthenticationHttpProblem
     /// <summary>
     /// Returns an enumeration-safe 429 when the current operation window is exhausted.
     /// </summary>
-    public static IResult? RejectIfThrottled(HttpContext http, IAuthenticationThrottleSeam throttle, string operation)
+    public static IResult? RejectIfThrottled(HttpContext http, IIdentityAuthThrottle throttle, string operation)
     {
         if (throttle.TryAcquire(http, operation))
         {

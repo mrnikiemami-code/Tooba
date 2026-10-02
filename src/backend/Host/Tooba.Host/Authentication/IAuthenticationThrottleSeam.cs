@@ -1,12 +1,10 @@
+using Tooba.Identity.Endpoints.Auth;
+
 namespace Tooba.Host;
 
 /// <summary>
-/// درز محدودسازی نرخ auth-sensitive. هویت را فقط به IP گره نمی‌زند.
+/// Host binding of <see cref="IIdentityAuthThrottle"/> (platform rate-limit seam).
 /// </summary>
-internal interface IAuthenticationThrottleSeam
+internal interface IAuthenticationThrottleSeam : IIdentityAuthThrottle
 {
-    /// <summary>
-    /// تلاش برای مصرف یک permit در پنجرهٔ IP+operation. false یعنی 429 enumeration-safe.
-    /// </summary>
-    bool TryAcquire(HttpContext context, string operation);
 }
