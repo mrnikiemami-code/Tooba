@@ -25,7 +25,7 @@ BRIDGE-WAKE-V1
 Channel: tooba-main
 ```
 
-Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT)
+Latest Accepted TMAR Checkpoint — authoritative (reconciled by TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT-R1)
 
 ```text
 Latest-Accepted-Implementation-Wave: TB-TMAR-HOST-ERRORS-AMC-001-W1
@@ -34,23 +34,20 @@ Implementation-Commit: e190e213c491fd530d86c7e5680cb0607b5e98d3
 Implementation-Commit-Kind: IMPLEMENTATION_COMMIT
 Result-Evidence-Docs-Stamp: 8d5e6a2dce7b34e2ceeb4166e5d324467bc3a8f3
 Result-Evidence-Docs-Stamp-Kind: RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION
-Mode: HOST_ERRORS_W2_CERTIFY
+Mode: HOST_ERRORS_W2_CERT_R1_RECOVERY_REPAIR
 Errors-Production-File-Count: 1
-PlatformExceptionMapper: ABSENT_CERTIFIED
-MappedPlatformError: ABSENT_CERTIFIED
-ToobaExceptionHandler: THIN_CANONICAL_CERTIFIED
-Canonical-Presentation-Authority: IExceptionPresentationService
-Path-Namespace: EXACT_Tooba.Host.Errors
 Certification-State: HOST_ERRORS_AMC_CERTIFIED
-Boundary-State: HOST_ERRORS_CANONICAL_GLOBAL_EXCEPTION_BOUNDARY_CERTIFIED
+Security-DocsStamp: 73a80ee28ed9dc054be5adae0f7115e72c115ded
+Errors-Cert-DocsStamp: 8d5e6a2dce7b34e2ceeb4166e5d324467bc3a8f3
+Duplicate-Json-Property-State: ZERO
 MultiTenancy-Structure: NOT_OPENED
 Host-Security-State: HOST_SECURITY_AMC_CERTIFIED_PRESERVED
 Whole-Host-Admin-State: HOST_ADMIN_FULLY_CERTIFIED
 Current-Host-Checkpoint: Errors
 Next-Host-Folder-Started: false
 Stale-Current-Pointer-State: ZERO
-workflowStop: USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT
-Next-Task: USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT
+workflowStop: USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT_R1
+Next-Task: USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT_R1
 Next-Task-Gate: USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK
 Automatic-Next-Implementation-Task: NONE
 Recommended-Next-Implementation: NONE

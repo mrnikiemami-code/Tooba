@@ -12,9 +12,11 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 
 Latest Accepted TMAR Checkpoint — authoritative
 
-Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT`. CERTIFY_ONLY of Host/Errors: `HOST_ERRORS_AMC_CERTIFIED` / `HOST_ERRORS_CANONICAL_GLOBAL_EXCEPTION_BOUNDARY_CERTIFIED`; one-file thin `ToobaExceptionHandler`; mapper ABSENT; Foundation platform.* 503/503/404; MultiTenancy NOT_OPENED; production change ZERO. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
-- Current Host checkpoint = `Errors`; workflowStop / Next-Task = `USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT`; automatic next = NONE; stale pointer = ZERO.
-- `lastAcceptedCommit` remains W1 implementation `e190e213c491fd530d86c7e5680cb0607b5e98d3`; Security/Admin CERT preserved.
+Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT-R1`. Recovery/SoT repair only: removed duplicate/wrong Errors docsStamp from `hostSecurityAmc001W3Cert`; Security stamp restored to `73a80ee...`; Errors cert stamp remains sole owner of `8d5e6a2...`. Gate: `USER_DECISION_REQUIRED_NO_AUTOMATIC_NEXT_IMPLEMENTATION_TASK`.
+- Current Host checkpoint = `Errors`; workflowStop / Next-Task = `USER_REVIEW_HOST_ERRORS_AMC_001_W2_CERT_R1`; automatic next = NONE; stale pointer = ZERO.
+- `HOST_ERRORS_AMC_CERTIFIED` preserved; `lastAcceptedCommit` remains W1 `e190e213...`; production change ZERO.
+
+Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001-W2-CERT` (HISTORICAL for current pointer as review gate; certification verdict still authoritative). CERTIFY_ONLY of Host/Errors.
 
 Reconciled by `TB-TMAR-HOST-ERRORS-AMC-001-W1` (HISTORICAL for current pointer). MIGRATE of Host/Errors: PlatformExceptionMapper REMOVED; ToobaExceptionHandler KEEP thin under `Tooba.Host.Errors`.
 

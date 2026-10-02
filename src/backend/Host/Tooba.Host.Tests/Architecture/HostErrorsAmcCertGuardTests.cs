@@ -173,6 +173,55 @@ public sealed class HostErrorsAmcCertGuardTests
         Assert.Contains("\"latestAcceptedImplementationWave\": \"TB-TMAR-HOST-ERRORS-AMC-001-W1\"", sot, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Sot_security_and_errors_cert_blocks_have_exactly_one_docsStamp_each()
+    {
+        var sot = Read("docs/architecture/tmar-current-state.json");
+        AssertBlockDocsStamp(sot, "hostSecurityAmc001W3Cert", "73a80ee28ed9dc054be5adae0f7115e72c115ded");
+        AssertBlockDocsStamp(sot, "hostErrorsAmc001W2Cert", "8d5e6a2dce7b34e2ceeb4166e5d324467bc3a8f3");
+    }
+
+    private static void AssertBlockDocsStamp(string json, string blockName, string expectedStamp)
+    {
+        var key = $"\"{blockName}\":";
+        var start = json.IndexOf(key, StringComparison.Ordinal);
+        Assert.True(start >= 0, blockName + " missing");
+        var brace = json.IndexOf('{', start);
+        Assert.True(brace >= 0);
+        var depth = 0;
+        var end = -1;
+        for (var i = brace; i < json.Length; i++)
+        {
+            var c = json[i];
+            if (c == '{') depth++;
+            else if (c == '}')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    end = i;
+                    break;
+                }
+            }
+        }
+
+        Assert.True(end > brace);
+        var block = json.Substring(brace, end - brace + 1);
+        var matches = Regex.Matches(block, @"""docsStamp""\s*:");
+        Assert.True(matches.Count == 1, $"{blockName} docsStamp count={matches.Count}");
+        Assert.Contains($"\"docsStamp\": \"{expectedStamp}\"", block, StringComparison.Ordinal);
+
+        // Also detect any duplicated property names inside the block via raw key scan.
+        var keys = Regex.Matches(block, @"""(?<k>[^""]+)""\s*:")
+            .Select(m => m.Groups["k"].Value)
+            .ToList();
+        var dup = keys.GroupBy(k => k, StringComparer.Ordinal)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToArray();
+        Assert.True(dup.Length == 0, $"{blockName} duplicate properties: " + string.Join(",", dup));
+    }
+
     private static void AssertResxHas(string path, IEnumerable<string> codes)
     {
         var doc = XDocument.Load(path);
