@@ -6838,5 +6838,24 @@
         "docsStamp": "78a99034d91e58aab65595e40f634a4d56825103",
         "hostCheckpointUnaffected": true,
         "implementationCommit": "77f893366069edbeff10312ffbcce7d8b90447e5"
+    },
+    "storyModuleAmc001W2Cert": {
+        "task": "TB-TMAR-STORY-AMC-001-W2-CERT",
+        "parentTask": "TB-TMAR-STORY-AMC-001-W1",
+        "mode": "CERTIFY_ONLY",
+        "certificationState": "STORY_SEMANTIC_FAILURE_CHANNEL_CERTIFIED",
+        "messageTextClassification": "ZERO",
+        "hardcodedFaBusinessExceptions": "ZERO",
+        "structureCertified": "FALSE_DEFERRED",
+        "archComplete002": "NOT_CLAIMED",
+        "hostStoryZero": "PRESERVED",
+        "hostRootFinalCheckpoint": "PRESERVED_UNAFFECTED",
+        "implementationCommit": "77f893366069edbeff10312ffbcce7d8b90447e5",
+        "durableGuard": "StoryModuleAmcW1GuardTests",
+        "workflowStop": "USER_REVIEW_STORY_AMC_001_W2_CERT",
+        "automaticNextImplementationTask": "NONE",
+        "evidenceRoot": "docs/evidence/TB-TMAR-STORY-AMC-001-W2-CERT/",
+        "note": "Bounded semantic/localization cert only; do not treat as full Story STRUCTURE_CERTIFIED.",
+        "docsStamp": "PENDING_DOCS_STAMP"
     }
 }

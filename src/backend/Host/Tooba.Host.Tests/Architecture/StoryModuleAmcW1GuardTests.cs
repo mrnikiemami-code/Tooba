@@ -44,6 +44,8 @@ public sealed class StoryModuleAmcW1GuardTests
         var sot = File.ReadAllText(Path.Combine(root, "docs/architecture/tmar-current-state.json"));
         Assert.Contains("\"storyModuleAmc001W1\"", sot, StringComparison.Ordinal);
         Assert.Contains("SEMANTIC_LOCALIZATION_FAILURE_CHANNEL", sot, StringComparison.Ordinal);
+        Assert.Contains("\"storyModuleAmc001W2Cert\"", sot, StringComparison.Ordinal);
+        Assert.Contains("STORY_SEMANTIC_FAILURE_CHANNEL_CERTIFIED", sot, StringComparison.Ordinal);
         Assert.Contains("HOST_ROOT_FINAL_CERTIFIED", sot, StringComparison.Ordinal);
     }
 
