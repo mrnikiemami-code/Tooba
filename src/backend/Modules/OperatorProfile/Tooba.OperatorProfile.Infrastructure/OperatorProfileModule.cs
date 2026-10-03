@@ -2,8 +2,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.ModuleContracts;
 using Tooba.OperatorProfile.Application.Ports;
+using Tooba.OperatorProfile.Contracts.Errors;
 using Tooba.OperatorProfile.Contracts.Ports;
 using Tooba.OperatorProfile.Infrastructure.Adapters;
 using Tooba.OperatorProfile.Infrastructure.Persistence;
@@ -22,6 +25,8 @@ public sealed class OperatorProfileModule : IToobaModule
     public void AddServices(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         services.AddSingleton<IOutboxModuleRegistration, OperatorProfileOutboxRegistration>();
+        services.AddSingleton<IErrorCatalogContributor, OperatorProfileErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, OperatorProfileErrorResourceSet>();
         services.AddScoped<IOperatorProfileDirectory, OperatorProfileDirectory>();
         services.AddScoped<IActorDisplayLookup, ActorDisplayLookupAdapter>();
         services.AddModuleSchemaMigrator<OperatorProfileDbContext>("OperatorProfile", ModuleSchemaMigrationOrder.OperatorProfile);

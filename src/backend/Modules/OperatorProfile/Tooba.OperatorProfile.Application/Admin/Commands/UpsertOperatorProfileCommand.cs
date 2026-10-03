@@ -1,9 +1,9 @@
-using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
+using Tooba.BuildingBlocks.Results;
+using Tooba.OperatorProfile.Application.Composition;
 using Tooba.OperatorProfile.Application.Models;
 using Tooba.OperatorProfile.Application.Ports;
-using Tooba.OperatorProfile.Contracts.Errors;
-using DomainProfile = Tooba.OperatorProfile.Domain.Aggregates.OperatorProfile;
 
 namespace Tooba.OperatorProfile.Application.Admin.Commands;
 
@@ -13,43 +13,35 @@ public sealed record UpsertOperatorProfileCommand(
     string DisplayName,
     string? FirstName,
     string? LastName,
-    string? Bio) : IRequest<OperatorProfileSnapshot>;
+    string? Bio) : IRequest<Result<OperatorProfileAdminResponse>>;
 
 /// <summary>Handler نوشتن پروفایل اپراتور.</summary>
-public sealed class UpsertOperatorProfileCommandHandler(IOperatorProfileDirectory directory)
-    : IRequestHandler<UpsertOperatorProfileCommand, OperatorProfileSnapshot>
+public sealed class UpsertOperatorProfileCommandHandler(
+    IOperatorProfileDirectory directory,
+    ILogger<UpsertOperatorProfileCommandHandler> logger)
+    : IRequestHandler<UpsertOperatorProfileCommand, Result<OperatorProfileAdminResponse>>
 {
     /// <inheritdoc />
-    public Task<OperatorProfileSnapshot> Handle(UpsertOperatorProfileCommand request, CancellationToken cancellationToken)
-        => directory.UpsertAsync(
-            request.ActorUserId,
-            new OperatorProfileWrite(request.DisplayName, request.FirstName, request.LastName, request.Bio),
-            cancellationToken);
-}
-
-/// <summary>اعتبارسنجی شکل حمل‌ونقل پروفایل اپراتور.</summary>
-public sealed class UpsertOperatorProfileCommandValidator : AbstractValidator<UpsertOperatorProfileCommand>
-{
-    /// <summary>قواعد حمل‌ونقل؛ قواعد دامنه در Domain می‌مانند.</summary>
-    public UpsertOperatorProfileCommandValidator()
+    public async Task<Result<OperatorProfileAdminResponse>> Handle(
+        UpsertOperatorProfileCommand request,
+        CancellationToken cancellationToken)
     {
-        RuleFor(x => x.ActorUserId).NotEmpty().WithErrorCode(OperatorProfileErrorCodes.ActorRequired);
-        RuleFor(x => x.DisplayName)
-            .NotEmpty()
-            .MinimumLength(DomainProfile.DisplayNameMinLength)
-            .MaximumLength(DomainProfile.DisplayNameMaxLength)
-            .WithErrorCode(OperatorProfileErrorCodes.InvalidDisplayName);
-        RuleFor(x => x.FirstName!)
-            .MaximumLength(DomainProfile.NamePartMaxLength)
-            .When(x => !string.IsNullOrWhiteSpace(x.FirstName))
-            .WithErrorCode(OperatorProfileErrorCodes.InvalidFirstName);
-        RuleFor(x => x.LastName!)
-            .MaximumLength(DomainProfile.NamePartMaxLength)
-            .When(x => !string.IsNullOrWhiteSpace(x.LastName))
-            .WithErrorCode(OperatorProfileErrorCodes.InvalidLastName);
-        RuleFor(x => x.Bio!)
-            .MaximumLength(DomainProfile.BioMaxLength)
-            .When(x => !string.IsNullOrWhiteSpace(x.Bio))
-            .WithErrorCode(OperatorProfileErrorCodes.InvalidBio);
+        var outcome = await OperatorProfileOperation.ExecuteAsync(async () =>
+        {
+            var updated = await directory.UpsertAsync(
+                request.ActorUserId,
+                new OperatorProfileWrite(request.DisplayName, request.FirstName, request.LastName, request.Bio),
+                cancellationToken);
+            return OperatorProfileAdminResponse.FromSnapshot(updated);
+        });
+
+        if (outcome.IsFailure)
+        {
+            logger.LogInformation("operator.profile.upsert.failed");
+            return outcome;
+        }
+
+        logger.LogInformation("operator.profile.upsert.succeeded");
+        return outcome;
     }
 }

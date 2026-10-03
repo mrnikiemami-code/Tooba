@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.OperatorProfile.Endpoints.Admin;
-using Tooba.OperatorProfile.Endpoints.Errors;
 
 namespace Tooba.OperatorProfile.Endpoints;
 
@@ -18,11 +16,13 @@ public static class OperatorProfileEndpointModule
         return app;
     }
 
-    /// <summary>Registers OperatorProfile endpoint presentation (error catalog). Authorizer is Host-owned.</summary>
+    /// <summary>
+    /// Host composition seam retained for presentation registration.
+    /// Error catalog/resources are owned by <c>OperatorProfileModule</c> (Infrastructure).
+    /// </summary>
     public static IServiceCollection AddOperatorProfileEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddSingleton<IErrorCatalogContributor, OperatorProfileErrorCatalogContributor>();
         return services;
     }
 }
