@@ -1011,7 +1011,40 @@
         "evidenceW4": "docs/architecture/evidence/TB-TMAR-PLATFORMPROBE-AMC-001-W4/",
         "workflowStop": "USER_REVIEW_PLATFORMPROBE_AMC_001_W4",
         "automaticNextImplementationTask": "NONE"
-    },    "userPreferenceAmc001W4R1": {
+    },
+    "catalogAmc001": {
+        "task": "TB-TMAR-CATALOG-AMC-001",
+        "mode": "ARCHITECT_DIRECT_AMSC",
+        "skills": "Analyze,Migrate,Structure,Certify",
+        "state": "ANALYZE_ACCEPTED_W0",
+        "httpApplicability": "HTTP_OWNING",
+        "endpointOwnership": "MODULE_ENDPOINTS",
+        "moduleMap": "MapCatalogEndpoints",
+        "cqrs": "MEDIATR_12_5_PARTIAL_RESULT",
+        "structureCertifiedUnderArchComplete002": false,
+        "structureState": "REQUIRED_HANDOFF",
+        "folderGranularity": "MIXED_ROOT_DUMPS_PLUS_CAPABILITY_APP",
+        "solutionExplorer": "CANONICAL_MODULES_CATALOG",
+        "pathNamespace": "FLAT_DOMAIN_INFRA_CONTRACTS_ROOT",
+        "rootAllowlist": "NOT_ENFORCED",
+        "foreignAppInfraDomainCoupling": "ZERO",
+        "contractsBoundary": "LEGAL_CONTRACTS_ONLY",
+        "godFiles": [
+            "Domain/CatalogDomain.cs",
+            "Application/CatalogContracts.cs",
+            "Infrastructure/CatalogDirectory.cs"
+        ],
+        "endpointReachableRequests": 88,
+        "validatorsPresent": 37,
+        "residualResultsJsonEndpointFiles": 5,
+        "nonResultIRequests": 22,
+        "manifestCertified": false,
+        "microserviceExtractable": false,
+        "evidenceW0": "docs/architecture/evidence/TB-TMAR-CATALOG-AMC-001-W0/",
+        "workflowStop": "USER_REVIEW_CATALOG_AMC_001_W0",
+        "automaticNextImplementationTask": "TB-TMAR-CATALOG-AMC-001-W1"
+    },
+    "userPreferenceAmc001W4R1": {
         "task": "TB-TMAR-USERPREFERENCE-AMC-001-W4-R1",
         "parentTask": "TB-TMAR-USERPREFERENCE-AMC-001-W4",
         "mode": "CERTIFICATION_DEFECT_REPAIR",
