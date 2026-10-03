@@ -1,9 +1,6 @@
-global using Microsoft.AspNetCore.Builder;
-global using Microsoft.AspNetCore.Http;
-global using Microsoft.AspNetCore.Routing;
-global using Microsoft.Extensions.DependencyInjection;
 global using Tooba.Catalog.Application.Models;
 global using Tooba.Catalog.Application.Ports;
+global using Tooba.Catalog.Application.ProductPublishing;
 global using Tooba.Catalog.Application.Settings.StoreAppearance.Commands;
 global using Tooba.Catalog.Application.Shared;
 global using Tooba.Catalog.Application.StoreLandingPages.Commands;
@@ -21,3 +18,5 @@ global using Tooba.Catalog.Domain.StoreLandingPages;
 global using Tooba.Catalog.Domain.StoreMenus;
 global using Tooba.Catalog.Domain.TemplateCatalog;
 global using Tooba.Catalog.Domain.ValueObjects;
+global using Tooba.Catalog.Infrastructure.Directories;
+global using Tooba.Catalog.Infrastructure.Outbox;

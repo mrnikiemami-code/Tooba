@@ -625,6 +625,81 @@
       ]
     },
     {
+      "module": "Catalog",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Certified by TB-TMAR-CATALOG-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first Admin/Seller/Storefront CQRS; Result+ApiResponseFactory on production endpoints; exhaustive 132-request validator matrix (53 required present + 79 NO_VALIDATOR); Contracts.Ports + Contracts.Errors/Resources catalog; foreign seams Contracts-only; Host thin seller authorizer + composition retained; /Modules/Catalog/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "projects": [
+        {
+          "projectName": "Tooba.Catalog.Application",
+          "rootAllowlist": [
+            "GlobalUsings.cs"
+          ],
+          "rootAllowlistJustification": "GlobalUsings.cs only for Domain/App namespace bridges after god-file split; capability trees (Attributes/Categories/Settings/Storefront/...) hold CQRS; path↔namespace exact.",
+          "forbiddenRootFiles": [
+            "CatalogContracts.cs",
+            "CatalogActorContext.cs",
+            "StoreMenuWriteContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries"
+          ]
+        },
+        {
+          "projectName": "Tooba.Catalog.Domain",
+          "rootAllowlist": [
+            "GlobalUsings.cs"
+          ],
+          "rootAllowlistJustification": "GlobalUsings.cs only; Aggregates/Enums/Events/Rules/ValueObjects plus capability folders hold types with exact path↔namespace.",
+          "forbiddenRootFiles": [
+            "CatalogDomain.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Catalog.Endpoints",
+          "rootAllowlist": [
+            "CatalogEndpointModule.cs",
+            "GlobalUsings.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry + GlobalUsings; Admin/Seller/Storefront hold HTTP surfaces.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": [
+            "Errors",
+            "Resources"
+          ]
+        },
+        {
+          "projectName": "Tooba.Catalog.Infrastructure",
+          "rootAllowlist": [
+            "CatalogModule.cs",
+            "GlobalUsings.cs"
+          ],
+          "rootAllowlistJustification": "Composition CatalogModule.cs + GlobalUsings; Directories/Outbox/Persistence/Development/Storefront/Adapters hold integrations; Migrations under Persistence/.",
+          "forbiddenRootFiles": [
+            "CatalogDirectory.cs",
+            "CatalogOutboxRegistration.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations"
+          ]
+        },
+        {
+          "projectName": "Tooba.Catalog.Contracts",
+          "rootAllowlist": [
+            "GlobalUsings.cs"
+          ],
+          "rootAllowlistJustification": "GlobalUsings.cs only; Ports/Errors/Resources/Cart/Checkout/Reservation carry contracts.",
+          "forbiddenRootFiles": [
+            "ICatalogVariantLookup.cs",
+            "CatalogErrorCodes.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    },
+    {
       "module": "Party",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
