@@ -8,7 +8,7 @@ using Tooba.PageComposition.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Tooba.PageComposition.Infrastructure.Migrations
+namespace Tooba.PageComposition.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(PageCompositionDbContext))]
     partial class PageCompositionDbContextModelSnapshot : ModelSnapshot
@@ -23,7 +23,7 @@ namespace Tooba.PageComposition.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Tooba.PageComposition.Domain.PageDefinition", b =>
+            modelBuilder.Entity("Tooba.PageComposition.Domain.Aggregates.PageDefinition", b =>
                 {
                     b.Property<Guid>("PageDefinitionId")
                         .HasColumnType("uuid")
@@ -67,7 +67,7 @@ namespace Tooba.PageComposition.Infrastructure.Migrations
                     b.ToTable("page_definitions", "page_composition");
                 });
 
-            modelBuilder.Entity("Tooba.PageComposition.Domain.PageSection", b =>
+            modelBuilder.Entity("Tooba.PageComposition.Domain.Aggregates.PageSection", b =>
                 {
                     b.Property<Guid>("PageSectionId")
                         .HasColumnType("uuid")

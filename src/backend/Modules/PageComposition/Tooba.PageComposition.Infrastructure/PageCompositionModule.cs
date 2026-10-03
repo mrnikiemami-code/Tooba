@@ -4,8 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
-using Tooba.PageComposition.Application;
-using Tooba.PageComposition.Domain;
+using Tooba.PageComposition.Application.Composition;
+using Tooba.PageComposition.Application.Ports;
+using Tooba.PageComposition.Infrastructure.Directories;
 using Tooba.PageComposition.Infrastructure.Persistence;
 using Tooba.Persistence;
 
@@ -22,7 +23,7 @@ public sealed class PageCompositionModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, PageCompositionOutboxRegistration>();
         services.AddScoped<IPageCompositionDirectory, PageCompositionDirectory>();
-        services.AddScoped<Tooba.PageComposition.Application.Presentation.PageCompositionPresentationComposer>();
+        services.AddScoped<PageCompositionPresentationComposer>();
         services.AddModuleSchemaMigrator<PageCompositionDbContext>("PageComposition", ModuleSchemaMigrationOrder.PageComposition);
         services.AddDbContext<PageCompositionDbContext>((sp, options) =>
         {

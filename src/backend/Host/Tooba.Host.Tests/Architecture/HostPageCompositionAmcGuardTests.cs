@@ -22,7 +22,7 @@ public sealed class HostPageCompositionAmcGuardTests
             root, "src/backend/Modules/PageComposition/Tooba.PageComposition.Endpoints/PageCompositionEndpointModule.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/PageComposition/Tooba.PageComposition.Application/Presentation/PageCompositionPresentationComposer.cs")));
+            "src/backend/Modules/PageComposition/Tooba.PageComposition.Application/Composition/PageCompositionPresentationComposer.cs")));
     }
 
     [Fact]

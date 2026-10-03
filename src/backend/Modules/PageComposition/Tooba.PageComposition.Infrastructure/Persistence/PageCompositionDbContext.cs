@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Tooba.PageComposition.Domain;
+using Tooba.PageComposition.Domain.Aggregates;
 using Tooba.Persistence;
 
 namespace Tooba.PageComposition.Infrastructure.Persistence;

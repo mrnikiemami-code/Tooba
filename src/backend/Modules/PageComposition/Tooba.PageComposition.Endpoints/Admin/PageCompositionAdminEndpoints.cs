@@ -4,9 +4,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.PageComposition.Application;
-using Tooba.PageComposition.Application.Commands;
-using Tooba.PageComposition.Application.Queries;
+using Tooba.PageComposition.Application.Admin.Commands;
+using Tooba.PageComposition.Application.Admin.Queries;
+using Tooba.PageComposition.Application.Models;
+using Tooba.PageComposition.Application.Storefront.Queries;
 using Tooba.PageComposition.Endpoints.Models;
 
 namespace Tooba.PageComposition.Endpoints.Admin;

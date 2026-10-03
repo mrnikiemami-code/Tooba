@@ -1,7 +1,7 @@
 using FluentValidation;
-using Tooba.PageComposition.Application.Commands;
+using Tooba.PageComposition.Application.Admin.Commands;
 
-namespace Tooba.PageComposition.Application.Validators;
+namespace Tooba.PageComposition.Application.Admin.Validators;
 
 /// <summary>کدهای شکل انتقال PageComposition.</summary>
 public static class PageCompositionValidationCodes

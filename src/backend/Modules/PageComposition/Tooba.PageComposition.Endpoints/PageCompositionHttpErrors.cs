@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.PageComposition.Application.Presentation;
+using Tooba.PageComposition.Application.Composition;
 
 namespace Tooba.PageComposition.Endpoints;
 

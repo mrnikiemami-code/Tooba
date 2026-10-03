@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.PageComposition.Domain;
+using Tooba.PageComposition.Domain.Aggregates;
+using Tooba.PageComposition.Domain.Constants;
 using Tooba.PageComposition.Infrastructure.Persistence;
 
-namespace Tooba.PageComposition.Infrastructure;
+namespace Tooba.PageComposition.Infrastructure.Development;
 
 /// <summary>دانهٔ توسعهٔ idempotent برای ترکیب پیش‌فرض خانه به‌ازای Tenant.</summary>
 public static class PageCompositionDevelopmentSeed

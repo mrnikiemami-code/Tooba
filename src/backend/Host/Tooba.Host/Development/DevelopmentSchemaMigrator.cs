@@ -10,7 +10,7 @@ using Tooba.AccessControl.Application.Development.Seller;
 using Tooba.Host.Admin.Development;
 using Tooba.Host.Composition;
 using Tooba.Content.Infrastructure.Development;
-using Tooba.PageComposition.Infrastructure;
+using Tooba.PageComposition.Infrastructure.Development;
 using Tooba.Story.Infrastructure;
 using Tooba.Story.Infrastructure.Development;
 using Tooba.Wishlist.Infrastructure.Development;

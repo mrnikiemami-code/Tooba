@@ -1,8 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
-using Tooba.PageComposition.Application;
-using Tooba.PageComposition.Domain;
-using Tooba.PageComposition.Infrastructure;
+using Tooba.PageComposition.Application.Models;
+using Tooba.PageComposition.Application.Ports;
+using Tooba.PageComposition.Domain.Aggregates;
+using Tooba.PageComposition.Domain.Catalog;
+using Tooba.PageComposition.Domain.Constants;
+using Tooba.PageComposition.Infrastructure.Development;
+using Tooba.PageComposition.Infrastructure.Directories;
 using Tooba.PageComposition.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Xunit;

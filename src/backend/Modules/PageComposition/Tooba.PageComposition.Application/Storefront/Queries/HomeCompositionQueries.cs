@@ -1,7 +1,8 @@
 using MediatR;
-using Tooba.PageComposition.Application.Presentation;
+using Tooba.PageComposition.Application.Composition;
+using Tooba.PageComposition.Application.Models;
 
-namespace Tooba.PageComposition.Application.Queries;
+namespace Tooba.PageComposition.Application.Storefront.Queries;
 
 /// <summary>ترکیب عمومی خانهٔ فروشگاه.</summary>
 public sealed record GetHomeCompositionQuery(Guid TenantId, string? Locale)
@@ -26,19 +27,4 @@ public sealed class GetSectionCatalogQueryHandler(PageCompositionPresentationCom
     /// <inheritdoc />
     public Task<SectionCatalogSnapshot> Handle(GetSectionCatalogQuery request, CancellationToken cancellationToken)
         => composer.GetCatalogAsync(cancellationToken);
-}
-
-/// <summary>نمای admin خانه.</summary>
-public sealed record AdminGetHomeCompositionQuery(Guid TenantId, string? Locale)
-    : IRequest<AdminHomeCompositionSnapshot>;
-
-/// <summary>Handler نمای admin خانه.</summary>
-public sealed class AdminGetHomeCompositionQueryHandler(PageCompositionPresentationComposer composer)
-    : IRequestHandler<AdminGetHomeCompositionQuery, AdminHomeCompositionSnapshot>
-{
-    /// <inheritdoc />
-    public Task<AdminHomeCompositionSnapshot> Handle(
-        AdminGetHomeCompositionQuery request,
-        CancellationToken cancellationToken)
-        => composer.AdminGetHomeAsync(request.TenantId, request.Locale, cancellationToken);
 }

@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.PageComposition.Contracts.Errors;
 
-namespace Tooba.PageComposition.Application;
+namespace Tooba.PageComposition.Application.Composition;
 
 /// <summary>Maps known PageComposition InvalidOperation failures to stable SemanticError codes.</summary>
 public static class PageCompositionFailureMapper

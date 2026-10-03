@@ -1,9 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.PageComposition.Application;
-using Tooba.PageComposition.Domain;
+using Tooba.PageComposition.Application.Models;
+using Tooba.PageComposition.Application.Ports;
+using Tooba.PageComposition.Domain.Aggregates;
+using Tooba.PageComposition.Domain.Catalog;
+using Tooba.PageComposition.Domain.Constants;
 using Tooba.PageComposition.Infrastructure.Persistence;
 
-namespace Tooba.PageComposition.Infrastructure;
+namespace Tooba.PageComposition.Infrastructure.Directories;
 
 /// <summary>دایرکتوری Page Composition با schema مستقل.</summary>
 public sealed class PageCompositionDirectory : IPageCompositionDirectory

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Tooba.PageComposition.Infrastructure.Migrations
+namespace Tooba.PageComposition.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialPageComposition : Migration

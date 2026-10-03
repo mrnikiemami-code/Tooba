@@ -1,7 +1,8 @@
 using MediatR;
-using Tooba.PageComposition.Application.Presentation;
+using Tooba.PageComposition.Application.Composition;
+using Tooba.PageComposition.Application.Models;
 
-namespace Tooba.PageComposition.Application.Commands;
+namespace Tooba.PageComposition.Application.Admin.Commands;
 
 /// <summary>مرتب‌سازی sectionهای خانه.</summary>
 public sealed record AdminReorderHomeSectionsCommand(

@@ -1,8 +1,10 @@
 using Tooba.BuildingBlocks;
 using Tooba.PageComposition.Contracts.Errors;
-using Tooba.PageComposition.Domain;
+using Tooba.PageComposition.Application.Models;
+using Tooba.PageComposition.Application.Ports;
+using Tooba.PageComposition.Domain.Constants;
 
-namespace Tooba.PageComposition.Application.Presentation;
+namespace Tooba.PageComposition.Application.Composition;
 
 /// <summary>ترکیب use-case برای مسیرهای عمومی و مدیریتی Page Composition.</summary>
 public sealed class PageCompositionPresentationComposer

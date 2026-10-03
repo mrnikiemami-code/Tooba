@@ -3,7 +3,7 @@ using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Development;
 using Tooba.Media.Infrastructure.Persistence;
 using Tooba.PageComposition.Infrastructure.Persistence;
-using Tooba.PageComposition.Infrastructure;
+using Tooba.PageComposition.Infrastructure.Development;
 using Tooba.Story.Infrastructure.Persistence;
 using Tooba.Story.Infrastructure;
 using Tooba.Story.Infrastructure.Development;
