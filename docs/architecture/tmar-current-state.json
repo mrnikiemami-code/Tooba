@@ -969,8 +969,31 @@
         "frontendFrozen": true,
         "evidenceStructure": "docs/architecture/evidence/TB-TMAR-USERPREFERENCE-AMC-001-W4/w4-structure-gate.md",
         "evidenceCertify": "docs/architecture/evidence/TB-TMAR-USERPREFERENCE-AMC-001-W4/w4-certification.md",
+        "implementationCommit": "f2c3c2f28e1a7db9075992cd4bf3f41300562c4d",
         "implementationCommitKind": "IMPLEMENTATION_COMMIT",
-        "workflowStop": "USER_REVIEW_USERPREFERENCE_AMC_001_W4"
+        "workflowStop": "USER_REVIEW_USERPREFERENCE_AMC_001_W4",
+        "latestPostCertRepairCheckpoint": "userPreferenceAmc001W4R1"
+    },
+    "userPreferenceAmc001W4R1": {
+        "task": "TB-TMAR-USERPREFERENCE-AMC-001-W4-R1",
+        "parentTask": "TB-TMAR-USERPREFERENCE-AMC-001-W4",
+        "mode": "CERTIFICATION_DEFECT_REPAIR",
+        "state": "USERPREFERENCE_AMC_W4_CERT_DEFECTS_REPAIRED",
+        "endpointCatchAndMapState": "ZERO",
+        "apiResponseFactoryState": "CANONICAL",
+        "foreignAppInfraDomainCoupling": "ZERO",
+        "orderContractsBoundary": "CUSTOMER_ACTOR_RESOLVER_ONLY",
+        "structureState": "READY_FOR_CERTIFY_PRESERVED",
+        "pathNamespace": "EXACT",
+        "hostFinalClosure": "PRESERVED",
+        "schemaChange": "NONE",
+        "frontendState": "UNTOUCHED",
+        "implementationCommit": "26444f2f140e5bae61146538cf47d3dc77c13e05",
+        "implementationCommitKind": "IMPLEMENTATION_COMMIT",
+        "evidenceRoot": "docs/architecture/evidence/TB-TMAR-USERPREFERENCE-AMC-001-W4-R1/",
+        "taskArtifact": "docs/ai/tasks/TB-TMAR-USERPREFERENCE-AMC-001-W4-R1.task.md",
+        "workflowStop": "USER_REVIEW_USERPREFERENCE_AMC_001_W4_R1",
+        "automaticNextImplementationTask": "NONE"
     },
     "wishlistAmc001W4R1": {
         "task": "TB-TMAR-WISHLIST-AMC-001-W4-R1",
