@@ -274,6 +274,78 @@
       ]
     },
     {
+      "module": "Party",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Certified by TB-TMAR-PARTY-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first Admin/Sellers + Seller CQRS; Result+PartyOperation+ApiResponseFactory; exhaustive 4-request validator matrix (2 required present + 2 NO_VALIDATOR); Contracts.Ports for foreign consumers and Contracts.Errors/Resources catalog; Offer/Order Contracts-only Admin composition; Host thin seller authorizer retained; /Modules/Party/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "projects": [
+        {
+          "projectName": "Tooba.Party.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Party.Application has no root .cs: Admin/Sellers and Seller capability trees plus Composition/Models/Ports; path↔namespace exact.",
+          "forbiddenRootFiles": [
+            "PartyContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries"
+          ]
+        },
+        {
+          "projectName": "Tooba.Party.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Party.Domain has no root .cs; Aggregates/Enums/Events hold types with exact path↔namespace.",
+          "forbiddenRootFiles": [
+            "PartyDomain.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Party.Endpoints",
+          "rootAllowlist": [
+            "PartyEndpointModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry only; Admin/ and Seller/ hold HTTP surfaces.",
+          "forbiddenRootFiles": [
+            "PartySellerSettingsEndpoints.cs",
+            "PartyAdminSellersEndpoints.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Errors",
+            "Resources"
+          ]
+        },
+        {
+          "projectName": "Tooba.Party.Infrastructure",
+          "rootAllowlist": [
+            "PartyModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry PartyModule.cs only; Directories/Admin/Grid/Seller/Adapters/Development/Events/Projections/Persistence hold integrations; Migrations under Persistence/.",
+          "forbiddenRootFiles": [
+            "PartyDirectory.cs",
+            "PartyOutboxRegistration.cs",
+            "PartyDevelopmentSeedGateway.cs",
+            "PartyMembershipProjectionHandler.cs",
+            "PartyDbContext.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations"
+          ]
+        },
+        {
+          "projectName": "Tooba.Party.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Party.Contracts has no root .cs: Ports/Errors (+ Resources) carry contracts.",
+          "forbiddenRootFiles": [
+            "IPartyLookup.cs",
+            "PartyErrorCodes.cs",
+            "AdminSellersGridContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    },
+    {
       "module": "Localization",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",

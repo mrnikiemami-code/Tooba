@@ -28,7 +28,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
             new[]
             {
                 "AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", "Identity", "Localization",
-                "Media", "Offer", "OperatorProfile", "Order", "Payment", "Settlement", "StoreContext", "Story",
+                "Media", "Offer", "OperatorProfile", "Order", "Party", "Payment", "Settlement", "StoreContext", "Story",
             },
             modules.Select(m => m.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
@@ -43,7 +43,8 @@ public sealed class TmarCompleteReferenceStructureGateTests
             Assert.DoesNotContain(other.GetString(), new[]
             {
                 "Order", "Cart", "StoreContext", "Offer", "Payment", "Settlement", "Fulfillment",
-                "AccessControl", "AddressBook", "Content", "Identity", "Media", "Localization", "OperatorProfile", "Story",
+                "AccessControl", "AddressBook", "Content", "Identity", "Media", "Localization", "OperatorProfile",
+                "Party", "Story",
             }, StringComparer.Ordinal);
         }
     }
@@ -118,7 +119,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
             new[]
             {
                 "AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", "Identity", "Localization",
-                "Media", "Offer", "OperatorProfile", "Order", "Payment", "Settlement", "StoreContext",
+                "Media", "Offer", "OperatorProfile", "Order", "Party", "Payment", "Settlement", "StoreContext",
             },
             certified);
     }

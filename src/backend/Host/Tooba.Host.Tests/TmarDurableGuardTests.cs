@@ -123,7 +123,7 @@ public sealed class TmarDurableGuardTests
             new[]
             {
                 "AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", "Identity", "Localization",
-                "Media", "Offer", "OperatorProfile", "Order", "Payment", "Settlement", "StoreContext",
+                "Media", "Offer", "OperatorProfile", "Order", "Party", "Payment", "Settlement", "StoreContext",
             },
             structureLock.GetProperty("certifiedModules").EnumerateArray()
                 .Select(x => x.GetString()!)
