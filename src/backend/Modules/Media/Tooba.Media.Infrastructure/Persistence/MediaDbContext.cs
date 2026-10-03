@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Tooba.Media.Domain;
+using Tooba.Media.Domain.Aggregates;
+using Tooba.Media.Domain.Enums;
 using Tooba.Persistence;
 
 namespace Tooba.Media.Infrastructure.Persistence;

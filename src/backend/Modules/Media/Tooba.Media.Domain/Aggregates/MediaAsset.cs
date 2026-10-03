@@ -1,16 +1,7 @@
 using Tooba.BuildingBlocks;
+using Tooba.Media.Domain.Enums;
 
-namespace Tooba.Media.Domain;
-
-/// <summary>وضعیت پردازش دارایی رسانه.</summary>
-public enum MediaAssetStatus
-{
-    /// <summary>باینری و فراداده آمادهٔ ارائه است.</summary>
-    Ready = 0,
-
-    /// <summary>آپلود یا ذخیره‌سازی ناموفق بوده است.</summary>
-    Failed = 1,
-}
+namespace Tooba.Media.Domain.Aggregates;
 
 /// <summary>دارایی رسانهٔ canonical؛ مالک باینری و فراداده در schema مستقل Media.</summary>
 public sealed class MediaAsset

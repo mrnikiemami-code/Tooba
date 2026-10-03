@@ -8,7 +8,7 @@ using Tooba.Media.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Tooba.Media.Infrastructure.Migrations
+namespace Tooba.Media.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(MediaDbContext))]
     partial class MediaDbContextModelSnapshot : ModelSnapshot

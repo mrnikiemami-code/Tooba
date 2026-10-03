@@ -1,7 +1,8 @@
 using Tooba.BuildingBlocks;
-using Tooba.Media.Application;
+using Tooba.Media.Application.Models;
+using Tooba.Media.Application.Ports;
 
-namespace Tooba.Media.Infrastructure;
+namespace Tooba.Media.Infrastructure.Storage;
 
 /// <summary>ذخیره‌ساز فایل محلی با کلید نسبی امن زیر ریشهٔ پیکربندی‌شده.</summary>
 public sealed class LocalFileMediaStore : IMediaObjectStore

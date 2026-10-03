@@ -2,11 +2,13 @@ using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Tooba.BuildingBlocks;
-using Tooba.Media.Application;
-using Tooba.Media.Domain;
+using Tooba.Media.Application.Models;
+using Tooba.Media.Application.Ports;
+using Tooba.Media.Domain.Aggregates;
+using Tooba.Media.Domain.Enums;
 using Tooba.Media.Infrastructure.Persistence;
 
-namespace Tooba.Media.Infrastructure;
+namespace Tooba.Media.Infrastructure.Assets;
 
 /// <summary>دایرکتوری Media با اعتبارسنجی MIME/اندازه و ذخیره‌سازی امن کلید.</summary>
 public sealed class MediaDirectory : IMediaDirectory

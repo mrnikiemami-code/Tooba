@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tooba.Media.Application;
+using Tooba.Media.Application.Models;
+using Tooba.Media.Application.Ports;
 using Tooba.Media.Endpoints.Admin;
 
 namespace Tooba.Media.Endpoints.Storefront;

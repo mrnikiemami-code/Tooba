@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
-using Tooba.Media.Application;
+using Tooba.Media.Application.Models;
+using Tooba.Media.Application.Ports;
 using Tooba.Media.Contracts.Ports;
 
 namespace Tooba.Media.Infrastructure.Adapters;

@@ -1,5 +1,6 @@
 #pragma warning disable CS1591
-using Tooba.Media.Application;
+using Tooba.Media.Application.Models;
+using Tooba.Media.Application.Ports;
 using Tooba.Media.Contracts.Assets;
 
 namespace Tooba.Media.Infrastructure.Assets;

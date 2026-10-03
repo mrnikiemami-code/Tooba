@@ -3,12 +3,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
-using Tooba.Media.Application;
+using Tooba.Media.Application.Models;
+using Tooba.Media.Application.Ports;
 using Tooba.Media.Contracts.Assets;
 using Tooba.Media.Contracts.Ports;
 using Tooba.Media.Infrastructure.Adapters;
 using Tooba.Media.Infrastructure.Assets;
 using Tooba.Media.Infrastructure.Persistence;
+using Tooba.Media.Infrastructure.Storage;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 
