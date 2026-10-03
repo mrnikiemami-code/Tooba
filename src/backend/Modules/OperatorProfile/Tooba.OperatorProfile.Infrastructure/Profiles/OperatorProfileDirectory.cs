@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.OperatorProfile.Application;
+using Tooba.OperatorProfile.Application.Models;
+using Tooba.OperatorProfile.Application.Ports;
 using Tooba.OperatorProfile.Contracts.Errors;
 using Tooba.OperatorProfile.Infrastructure.Persistence;
+using ProfileAggregate = Tooba.OperatorProfile.Domain.Aggregates.OperatorProfile;
 
-namespace Tooba.OperatorProfile.Infrastructure;
+namespace Tooba.OperatorProfile.Infrastructure.Profiles;
 
 /// <summary>پیاده‌سازی پروفایل اپراتور که فقط schema خود را لمس می‌کند و مالکیت را سرورمحور اعمال می‌کند.</summary>
 public sealed class OperatorProfileDirectory : IOperatorProfileDirectory
@@ -57,7 +59,7 @@ public sealed class OperatorProfileDirectory : IOperatorProfileDirectory
         var profile = await _db.Profiles.SingleOrDefaultAsync(x => x.OwnerUserId == actorUserId, cancellationToken);
         if (profile is null)
         {
-            profile = Domain.OperatorProfile.Create(
+            profile = ProfileAggregate.Create(
                 actorUserId,
                 input.DisplayName,
                 input.FirstName,
@@ -80,7 +82,7 @@ public sealed class OperatorProfileDirectory : IOperatorProfileDirectory
         return Map(profile);
     }
 
-    private static OperatorProfileSnapshot Map(Domain.OperatorProfile profile) =>
+    private static OperatorProfileSnapshot Map(ProfileAggregate profile) =>
         new(
             profile.FirstName,
             profile.LastName,

@@ -3,8 +3,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
-using Tooba.OperatorProfile.Application;
+using Tooba.OperatorProfile.Application.Ports;
+using Tooba.OperatorProfile.Contracts.Ports;
+using Tooba.OperatorProfile.Infrastructure.Adapters;
 using Tooba.OperatorProfile.Infrastructure.Persistence;
+using Tooba.OperatorProfile.Infrastructure.Profiles;
 using Tooba.Persistence;
 
 namespace Tooba.OperatorProfile.Infrastructure;
@@ -20,7 +23,7 @@ public sealed class OperatorProfileModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, OperatorProfileOutboxRegistration>();
         services.AddScoped<IOperatorProfileDirectory, OperatorProfileDirectory>();
-        services.AddScoped<Contracts.IActorDisplayLookup, ActorDisplayLookupAdapter>();
+        services.AddScoped<IActorDisplayLookup, ActorDisplayLookupAdapter>();
         services.AddModuleSchemaMigrator<OperatorProfileDbContext>("OperatorProfile", ModuleSchemaMigrationOrder.OperatorProfile);
         services.AddDbContext<OperatorProfileDbContext>((sp, options) =>
         {
@@ -35,27 +38,4 @@ public sealed class OperatorProfileModule : IToobaModule
             options.AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>());
         });
     }
-}
-
-/// <summary>ثبت Outbox پروفایل اپراتور؛ نسخهٔ فعلی رویداد بیرونی تعریف نمی‌کند.</summary>
-public sealed class OperatorProfileOutboxRegistration : IOutboxModuleRegistration
-{
-    /// <inheritdoc />
-    public string Schema => OperatorProfileDbContext.Schema;
-
-    /// <inheritdoc />
-    public string TableName => OutboxMessageMapping.TableName;
-
-    /// <inheritdoc />
-    public Type DbContextType => typeof(OperatorProfileDbContext);
-
-    /// <inheritdoc />
-    public IIntegrationEvent? Translate(IDomainEvent domainEvent, EventMetadata metadata) => null;
-
-    /// <inheritdoc />
-    public string GetEventTypeName(Type integrationEventType) =>
-        throw new InvalidOperationException("OperatorProfile integration event is not registered.");
-
-    /// <inheritdoc />
-    public Type? ResolveEventClrType(string eventTypeName) => null;
 }

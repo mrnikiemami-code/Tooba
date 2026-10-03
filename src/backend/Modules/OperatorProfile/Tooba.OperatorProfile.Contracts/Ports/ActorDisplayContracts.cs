@@ -1,4 +1,4 @@
-namespace Tooba.OperatorProfile.Contracts;
+namespace Tooba.OperatorProfile.Contracts.Ports;
 
 /// <summary>
 /// Cross-module display identity of an acting user. Never carries permissions or credentials.

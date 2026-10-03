@@ -23,7 +23,7 @@ namespace Tooba.OperatorProfile.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Tooba.OperatorProfile.Domain.OperatorProfile", b =>
+            modelBuilder.Entity("Tooba.OperatorProfile.Domain.Aggregates.OperatorProfile", b =>
                 {
                     b.Property<Guid>("OwnerUserId")
                         .HasColumnType("uuid")

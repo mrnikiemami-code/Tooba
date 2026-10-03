@@ -48,7 +48,7 @@ public sealed class HostOperatorProfileAmcGuardTests
 
         var directory = File.ReadAllText(Path.Combine(
             root,
-            "src/backend/Modules/OperatorProfile/Tooba.OperatorProfile.Infrastructure/OperatorProfileDirectory.cs"));
+            "src/backend/Modules/OperatorProfile/Tooba.OperatorProfile.Infrastructure/Profiles/OperatorProfileDirectory.cs"));
         Assert.DoesNotContain("catch (InvalidOperationException)", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", directory, StringComparison.Ordinal);
         Assert.Contains("OperatorProfileErrorCodes.ProfileRejected", directory, StringComparison.Ordinal);

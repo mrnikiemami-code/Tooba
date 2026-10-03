@@ -1,6 +1,6 @@
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Contacts;
-using Tooba.OperatorProfile.Contracts;
+using Tooba.OperatorProfile.Contracts.Ports;
 
 namespace Tooba.Order.Application.Admin.Completeness.Models;
 

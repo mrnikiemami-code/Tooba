@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.OperatorProfile.Contracts.Errors;
 using Xunit;
-using DomainProfile = Tooba.OperatorProfile.Domain.OperatorProfile;
+using DomainProfile = Tooba.OperatorProfile.Domain.Aggregates.OperatorProfile;
 
 namespace Tooba.Host.Tests;
 
@@ -30,7 +30,7 @@ public sealed class OperatorProfileFailureSemanticsTests
         var root = FindRepoRoot();
         var path = Path.Combine(
             root,
-            "src/backend/Modules/OperatorProfile/Tooba.OperatorProfile.Infrastructure/OperatorProfileDirectory.cs");
+            "src/backend/Modules/OperatorProfile/Tooba.OperatorProfile.Infrastructure/Profiles/OperatorProfileDirectory.cs");
         var text = File.ReadAllText(path);
         Assert.DoesNotContain("catch (InvalidOperationException)", text, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", text, StringComparison.Ordinal);
@@ -45,7 +45,7 @@ public sealed class OperatorProfileFailureSemanticsTests
         var root = FindRepoRoot();
         var text = File.ReadAllText(Path.Combine(
             root,
-            "src/backend/Modules/OperatorProfile/Tooba.OperatorProfile.Infrastructure/OperatorProfileDirectory.cs"));
+            "src/backend/Modules/OperatorProfile/Tooba.OperatorProfile.Infrastructure/Profiles/OperatorProfileDirectory.cs"));
         Assert.DoesNotContain("catch (InvalidOperationException)", text, StringComparison.Ordinal);
         Assert.Contains("SemanticException", text, StringComparison.Ordinal);
         Assert.Contains("OperatorProfileErrorCodes.ProfileRejected", text, StringComparison.Ordinal);

@@ -5360,6 +5360,8 @@
         "expectedRejection": "operator.profile.rejected",
         "durableGuard": "HostOperatorProfileAmcGuardTests",
         "evidenceRoot": "docs/evidence/TB-TMAR-HOST-OPERATORPROFILE-AMC-001-R1",
+        "workflowStop": "USER_REVIEW_HOST_OPERATORPROFILE_AMC_001_R1_CLOSED_HOST_ZERO",
+        "recoveryMarker": "OPERATORPROFILE_CLOSED_HOST_ZERO_R1_USER_REVIEW_REQUIRED",
         "note": "Implementation commit 930916f7fa3141cae30f1976f86b38003c683682; OperatorProfile AMC R1 failure-semantics closed."
     },
     "hostCachingAmc": {

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using OperatorProfileEntity = Tooba.OperatorProfile.Domain.OperatorProfile;
+using OperatorProfileEntity = Tooba.OperatorProfile.Domain.Aggregates.OperatorProfile;
 using Tooba.Persistence;
 
 namespace Tooba.OperatorProfile.Infrastructure.Persistence;

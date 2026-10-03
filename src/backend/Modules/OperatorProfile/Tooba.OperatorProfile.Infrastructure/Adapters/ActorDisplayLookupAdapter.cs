@@ -1,7 +1,7 @@
-using Tooba.OperatorProfile.Application;
-using Tooba.OperatorProfile.Contracts;
+using Tooba.OperatorProfile.Application.Ports;
+using Tooba.OperatorProfile.Contracts.Ports;
 
-namespace Tooba.OperatorProfile.Infrastructure;
+namespace Tooba.OperatorProfile.Infrastructure.Adapters;
 
 /// <summary>
 /// Exposes the owning operator profile directory as the contracts-only actor display lookup.

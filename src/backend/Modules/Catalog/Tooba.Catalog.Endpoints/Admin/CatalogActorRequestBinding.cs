@@ -1,5 +1,5 @@
 using Tooba.Catalog.Application;
-using Tooba.OperatorProfile.Contracts;
+using Tooba.OperatorProfile.Contracts.Ports;
 
 namespace Tooba.Catalog.Endpoints.Admin;
 

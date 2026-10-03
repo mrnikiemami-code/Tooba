@@ -16,7 +16,7 @@ using Tooba.Catalog.Application.ProductTaxonomy.Models;
 using Tooba.Catalog.Application.Variants.Commands;
 using Tooba.Catalog.Application.Variants.Models;
 using Tooba.Catalog.Contracts.Errors;
-using Tooba.OperatorProfile.Contracts;
+using Tooba.OperatorProfile.Contracts.Ports;
 using Tooba.ProductWorkspace.Application.Composition.Models;
 using Tooba.ProductWorkspace.Application.Composition.Queries;
 using Tooba.ProductWorkspace.Endpoints.Admin;

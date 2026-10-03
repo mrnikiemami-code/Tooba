@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.OperatorProfile.Contracts.Errors;
 
-namespace Tooba.OperatorProfile.Domain;
+namespace Tooba.OperatorProfile.Domain.Aggregates;
 
 /// <summary>
 /// پروفایل توصیفی خصوصی اپراتور Admin. شناسه‌های ورود در Identity می‌مانند

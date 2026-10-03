@@ -1,7 +1,9 @@
 using FluentValidation;
 using MediatR;
-using Tooba.OperatorProfile.Application;
-using DomainProfile = Tooba.OperatorProfile.Domain.OperatorProfile;
+using Tooba.OperatorProfile.Application.Models;
+using Tooba.OperatorProfile.Application.Ports;
+using Tooba.OperatorProfile.Contracts.Errors;
+using DomainProfile = Tooba.OperatorProfile.Domain.Aggregates.OperatorProfile;
 
 namespace Tooba.OperatorProfile.Application.Admin.Commands;
 
@@ -31,23 +33,23 @@ public sealed class UpsertOperatorProfileCommandValidator : AbstractValidator<Up
     /// <summary>قواعد حمل‌ونقل؛ قواعد دامنه در Domain می‌مانند.</summary>
     public UpsertOperatorProfileCommandValidator()
     {
-        RuleFor(x => x.ActorUserId).NotEmpty().WithErrorCode("operator.profile.validation.actor_required");
+        RuleFor(x => x.ActorUserId).NotEmpty().WithErrorCode(OperatorProfileErrorCodes.ActorRequired);
         RuleFor(x => x.DisplayName)
             .NotEmpty()
             .MinimumLength(DomainProfile.DisplayNameMinLength)
             .MaximumLength(DomainProfile.DisplayNameMaxLength)
-            .WithErrorCode("operator.profile.validation.display_name");
+            .WithErrorCode(OperatorProfileErrorCodes.InvalidDisplayName);
         RuleFor(x => x.FirstName!)
             .MaximumLength(DomainProfile.NamePartMaxLength)
             .When(x => !string.IsNullOrWhiteSpace(x.FirstName))
-            .WithErrorCode("operator.profile.validation.first_name");
+            .WithErrorCode(OperatorProfileErrorCodes.InvalidFirstName);
         RuleFor(x => x.LastName!)
             .MaximumLength(DomainProfile.NamePartMaxLength)
             .When(x => !string.IsNullOrWhiteSpace(x.LastName))
-            .WithErrorCode("operator.profile.validation.last_name");
+            .WithErrorCode(OperatorProfileErrorCodes.InvalidLastName);
         RuleFor(x => x.Bio!)
             .MaximumLength(DomainProfile.BioMaxLength)
             .When(x => !string.IsNullOrWhiteSpace(x.Bio))
-            .WithErrorCode("operator.profile.validation.bio");
+            .WithErrorCode(OperatorProfileErrorCodes.InvalidBio);
     }
 }

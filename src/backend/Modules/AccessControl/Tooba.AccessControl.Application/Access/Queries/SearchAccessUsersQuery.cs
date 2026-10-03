@@ -5,7 +5,7 @@ using Tooba.AccessControl.Contracts.Enums;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Actors;
 using Tooba.Identity.Contracts.Contacts;
-using Tooba.OperatorProfile.Contracts;
+using Tooba.OperatorProfile.Contracts.Ports;
 
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Ports;
