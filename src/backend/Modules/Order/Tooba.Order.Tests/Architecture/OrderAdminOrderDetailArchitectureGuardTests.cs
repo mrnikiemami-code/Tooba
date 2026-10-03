@@ -61,7 +61,7 @@ public sealed class OrderAdminOrderDetailArchitectureGuardTests
         Assert.DoesNotContain("ex.Message", endpoints, StringComparison.Ordinal);
 
         var hostAdmin = File.ReadAllText(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelEndpoints.cs"));
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "Panel", "AdminPanelEndpoints.cs"));
         Assert.DoesNotContain("MapGet(\"/orders/{checkoutId:guid}\"", hostAdmin, StringComparison.Ordinal);
         Assert.DoesNotContain("GetOrderAsync", hostAdmin, StringComparison.Ordinal);
     }
@@ -70,7 +70,7 @@ public sealed class OrderAdminOrderDetailArchitectureGuardTests
     public void Host_composer_no_longer_owns_GetOrderAsync_or_AdminViewAck()
     {
         var composer = File.ReadAllText(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelComposer.cs"));
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "Panel", "AdminPanelComposer.cs"));
         Assert.DoesNotContain("GetOrderAsync", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminViewAcks", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("CheckoutAdminViewAck", composer, StringComparison.Ordinal);

@@ -119,12 +119,12 @@ public sealed class OrderEndpointOrganizationGuardTests
         var program = File.ReadAllText(Path.Combine(host, "Program.cs"));
         Assert.Contains("MapOrderEndpoints()", program, StringComparison.Ordinal);
 
-        var admin = File.ReadAllText(Path.Combine(host, "Admin", "AdminPanelEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/orders\"", admin, StringComparison.Ordinal);
+        var panel = File.ReadAllText(Path.Combine(host, "Admin", "Panel", "AdminPanelEndpoints.cs"));
+        Assert.DoesNotContain("MapGet(\"/orders\"", panel, StringComparison.Ordinal);
 
-        Assert.False(File.Exists(Path.Combine(host, "Admin", "AdminOrderOperationsEndpoints.cs")));
-        Assert.False(File.Exists(Path.Combine(host, "Admin", "AdminOrdersGridEndpoints.cs")));
-        Assert.False(File.Exists(Path.Combine(host, "Admin", "AdminCustomersEndpoints.cs")));
+        Assert.False(Directory.Exists(Path.Combine(host, "Admin", "Operations")));
+        Assert.False(Directory.Exists(Path.Combine(host, "Admin", "Grid")));
+        Assert.False(Directory.Exists(Path.Combine(host, "Customer")));
     }
 
     private static string EndpointsRoot() =>

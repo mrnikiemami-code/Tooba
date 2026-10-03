@@ -86,7 +86,8 @@ public sealed class OrderAdminPanelResidualArchitectureGuardTests
         Assert.DoesNotContain("ListOrdersAsync", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("ListCustomersAsync", composer, StringComparison.Ordinal);
         Assert.Contains("IAdminOrderDashboardMetricsPort", composer, StringComparison.Ordinal);
-        Assert.Contains("IAdminSellerOrderCountPort", composer, StringComparison.Ordinal);
+        // IAdminSellerOrderCountPort is a Party-owned grid concern, never a Host Admin composer dependency.
+        Assert.DoesNotContain("IAdminSellerOrderCountPort", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("GetAdminOrderDashboardMetricsQuery", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("ISellerOrderCountReader", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Order.Application", composer, StringComparison.Ordinal);
@@ -148,11 +149,10 @@ public sealed class OrderAdminPanelResidualArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(host, "ReservationCyclePolicyResolver.cs")));
         Assert.False(File.Exists(Path.Combine(host, "Grid", "AdminCustomersGridQueryEngine.cs")));
 
-        var customer = File.ReadAllText(Path.Combine(host, "Customer", "CustomerPanelComposer.cs"));
-        Assert.DoesNotContain("OrderDbContext", customer, StringComparison.Ordinal);
-        // R4 removed the zero-consumer Host SellerPanelComposer.cs and R5 removed the whole Host/Seller
-        // folder; no Host/Seller file may own Order access.
-        Assert.False(Directory.Exists(Path.Combine(host, "Seller")), "Host/Seller must be absent after R5");
+        Assert.False(Directory.Exists(Path.Combine(host, "Grid")), "Host/Grid must be absent after orders-grid evacuation");
+        Assert.False(
+            Directory.Exists(Path.Combine(host, "Customer")),
+            "Host/Customer must be absent after customer-order evacuation");
     }
 
     private static IEnumerable<(string Path, string Text)> R11Sources()

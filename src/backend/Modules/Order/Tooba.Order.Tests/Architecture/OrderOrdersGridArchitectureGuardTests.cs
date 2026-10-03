@@ -48,7 +48,7 @@ public sealed class OrderOrdersGridArchitectureGuardTests
             RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Grid", "AdminOrdersGridQueryEngine.cs")));
 
         var composer = File.ReadAllText(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelComposer.cs"));
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "Panel", "AdminPanelComposer.cs"));
         Assert.DoesNotContain("QueryOrdersGridAsync", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("AdminOrdersGridQueryEngine", composer, StringComparison.Ordinal);
 
@@ -69,7 +69,7 @@ public sealed class OrderOrdersGridArchitectureGuardTests
         Assert.DoesNotContain("IAdminOrdersGridReader", endpoints, StringComparison.Ordinal);
 
         var hostAdmin = File.ReadAllText(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "AdminPanelEndpoints.cs"));
+            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "Panel", "AdminPanelEndpoints.cs"));
         Assert.DoesNotContain("MapPost(\"/orders/query\"", hostAdmin, StringComparison.Ordinal);
     }
 

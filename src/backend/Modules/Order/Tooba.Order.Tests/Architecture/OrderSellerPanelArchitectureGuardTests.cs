@@ -155,10 +155,9 @@ public sealed class OrderSellerPanelArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(host, "ReservationCycleCoordinator.cs")));
         Assert.False(File.Exists(Path.Combine(host, "ReservationCyclePolicyResolver.cs")));
 
-        var customerComposer = File.ReadAllText(Path.Combine(host, "Customer", "CustomerPanelComposer.cs"));
-        Assert.DoesNotContain("OrderDbContext", customerComposer, StringComparison.Ordinal);
-        var customerEndpoints = File.ReadAllText(Path.Combine(host, "Customer", "CustomerPanelEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/orders\"", customerEndpoints, StringComparison.Ordinal);
+        Assert.False(
+            Directory.Exists(Path.Combine(host, "Customer")),
+            "Host/Customer must be absent after customer-order evacuation");
     }
 
     private static IReadOnlyList<(string Path, string Text)> SellerSources() =>

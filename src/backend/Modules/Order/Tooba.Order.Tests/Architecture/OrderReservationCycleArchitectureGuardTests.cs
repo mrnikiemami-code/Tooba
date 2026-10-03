@@ -63,18 +63,13 @@ public sealed class OrderReservationCycleArchitectureGuardTests
     }
 
     [Fact]
-    public void Unpaid_expiry_Host_is_shell_only_and_Order_owns_reconciler()
+    public void Unpaid_expiry_is_owned_by_Order_and_absent_from_Host()
     {
         var root = FindRepoRoot();
-        var hostWorker = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Host", "Tooba.Host", "UnpaidOrderExpiryHostedService.cs"));
-        Assert.Contains("IUnpaidOrderExpiryReconciler", hostWorker, StringComparison.Ordinal);
-        Assert.DoesNotContain("IReservationCycleDirectory", hostWorker, StringComparison.Ordinal);
-        Assert.DoesNotContain("IOrderPaymentProjectionPort", hostWorker, StringComparison.Ordinal);
-        Assert.DoesNotContain("IPaymentCustomerGateway", hostWorker, StringComparison.Ordinal);
-        Assert.DoesNotContain("ReservationCycleStatus", hostWorker, StringComparison.Ordinal);
-        Assert.DoesNotContain("DateTimeOffset.UtcNow", hostWorker, StringComparison.Ordinal);
-        Assert.DoesNotContain("DateTime.UtcNow", hostWorker, StringComparison.Ordinal);
+        var host = Path.Combine(root, "src", "backend", "Host", "Tooba.Host");
+        Assert.False(
+            File.Exists(Path.Combine(host, "UnpaidOrderExpiryHostedService.cs")),
+            "Host must not host the Order unpaid-expiry worker after Order owns it");
 
         var reconciler = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "ReservationCycle", "UnpaidOrderExpiryReconciler.cs"));

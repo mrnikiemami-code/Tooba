@@ -74,26 +74,16 @@ public sealed class OrderCustomerPanelArchitectureGuardTests
     }
 
     [Fact]
-    public void Host_no_longer_registers_customer_order_routes_or_retry_business()
+    public void Host_owns_no_customer_panel_endpoint_or_composer_after_evacuation()
     {
-        var hostEndpoints = File.ReadAllText(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Customer", "CustomerPanelEndpoints.cs"));
-        Assert.DoesNotContain("MapGet(\"/orders\"", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapGet(\"/orders/{checkoutId:guid}\"", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/orders/{checkoutId:guid}/retry-unpaid\"", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetryUnpaidAsync", hostEndpoints, StringComparison.Ordinal);
-        Assert.DoesNotContain("ListOrdersAsync", hostEndpoints, StringComparison.Ordinal);
-        Assert.Contains("GetCustomerOrderDashboardSummaryQuery", hostEndpoints, StringComparison.Ordinal);
+        var host = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        Assert.False(Directory.Exists(Path.Combine(host, "Customer")), "Host/Customer must be absent after evacuation");
+        Assert.False(File.Exists(Path.Combine(host, "Customer", "CustomerPanelEndpoints.cs")));
+        Assert.False(File.Exists(Path.Combine(host, "Customer", "CustomerPanelComposer.cs")));
 
-        var composer = File.ReadAllText(Path.Combine(
-            RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Customer", "CustomerPanelComposer.cs"));
-        Assert.DoesNotContain("OrderDbContext", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("RetryUnpaidAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("ListOrdersAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("GetOrderAsync", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("IReservationCycleCoordinator", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("EnsureUnpaidRetryHold", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain("CatalogDbContext", composer, StringComparison.Ordinal);
+        var program = File.ReadAllText(Path.Combine(host, "Program.cs"));
+        Assert.DoesNotContain("CustomerPanelEndpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("CustomerPanelComposer", program, StringComparison.Ordinal);
     }
 
     [Fact]
