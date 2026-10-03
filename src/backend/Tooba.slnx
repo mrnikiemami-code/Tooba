@@ -27,11 +27,6 @@
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Contracts/Tooba.Wishlist.Contracts.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Infrastructure/Tooba.Wishlist.Infrastructure.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Endpoints/Tooba.Wishlist.Endpoints.csproj" />
-    <Project Path="Modules/Media/Tooba.Media.Domain/Tooba.Media.Domain.csproj" />
-    <Project Path="Modules/Media/Tooba.Media.Contracts/Tooba.Media.Contracts.csproj" />
-    <Project Path="Modules/Media/Tooba.Media.Application/Tooba.Media.Application.csproj" />
-    <Project Path="Modules/Media/Tooba.Media.Infrastructure/Tooba.Media.Infrastructure.csproj" />
-    <Project Path="Modules/Media/Tooba.Media.Endpoints/Tooba.Media.Endpoints.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Domain/Tooba.UserPreference.Domain.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Application/Tooba.UserPreference.Application.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Infrastructure/Tooba.UserPreference.Infrastructure.csproj" />
@@ -62,6 +57,13 @@
     <Project Path="Modules/Identity/Tooba.Identity.Application/Tooba.Identity.Application.csproj" />
     <Project Path="Modules/Identity/Tooba.Identity.Infrastructure/Tooba.Identity.Infrastructure.csproj" />
     <Project Path="Modules/Identity/Tooba.Identity.Endpoints/Tooba.Identity.Endpoints.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Media/">
+    <Project Path="Modules/Media/Tooba.Media.Domain/Tooba.Media.Domain.csproj" />
+    <Project Path="Modules/Media/Tooba.Media.Contracts/Tooba.Media.Contracts.csproj" />
+    <Project Path="Modules/Media/Tooba.Media.Application/Tooba.Media.Application.csproj" />
+    <Project Path="Modules/Media/Tooba.Media.Infrastructure/Tooba.Media.Infrastructure.csproj" />
+    <Project Path="Modules/Media/Tooba.Media.Endpoints/Tooba.Media.Endpoints.csproj" />
   </Folder>
   <Folder Name="/Modules/AccessControl/">
     <Project Path="Modules/AccessControl/Tooba.AccessControl.Domain/Tooba.AccessControl.Domain.csproj" />
