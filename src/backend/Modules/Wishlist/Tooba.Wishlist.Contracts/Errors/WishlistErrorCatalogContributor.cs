@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Wishlist.Contracts.Errors;
 
-namespace Tooba.Wishlist.Endpoints.Errors;
+namespace Tooba.Wishlist.Contracts.Errors;
 
 /// <summary>کاتالوگ صریح کدهای خطای Wishlist برای مرز HTTP مشتری.</summary>
 public sealed class WishlistErrorCatalogContributor : IErrorCatalogContributor
@@ -12,6 +11,10 @@ public sealed class WishlistErrorCatalogContributor : IErrorCatalogContributor
     [
         D(WishlistErrorCodes.ProductUnavailable, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Published product was not found."),
+        D(WishlistErrorCodes.ProductIdRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Product id is required."),
+        D(WishlistErrorCodes.ProductIdsRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Product ids are required."),
         // customer.session.required is owned by FoundationErrorCatalogContributor.
     ];
 

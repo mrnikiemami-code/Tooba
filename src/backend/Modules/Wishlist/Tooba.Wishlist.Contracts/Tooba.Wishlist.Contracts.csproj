@@ -6,4 +6,7 @@
     <RootNamespace>Tooba.Wishlist.Contracts</RootNamespace>
     <AssemblyName>Tooba.Wishlist.Contracts</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+  </ItemGroup>
 </Project>

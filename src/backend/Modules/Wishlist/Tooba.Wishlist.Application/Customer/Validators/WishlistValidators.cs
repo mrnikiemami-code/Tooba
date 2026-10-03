@@ -1,18 +1,9 @@
 using FluentValidation;
 using Tooba.Wishlist.Application.Customer.Commands;
 using Tooba.Wishlist.Application.Customer.Queries;
+using Tooba.Wishlist.Contracts.Errors;
 
 namespace Tooba.Wishlist.Application.Customer.Validators;
-
-/// <summary>کدهای پایدار خطای شکل انتقال Wishlist.</summary>
-public static class WishlistValidationCodes
-{
-    /// <summary>شناسهٔ محصول مسیر الزامی/معتبر است.</summary>
-    public const string ProductIdRequired = "customer.wishlist.product_id_required";
-
-    /// <summary>بدنهٔ عضویت باید مجموعهٔ شناسه داشته باشد.</summary>
-    public const string ProductIdsRequired = "customer.wishlist.product_ids_required";
-}
 
 /// <summary>اعتبارسنجی شکل انتقال <see cref="AddWishlistItemCommand"/>.</summary>
 public sealed class AddWishlistItemCommandValidator : AbstractValidator<AddWishlistItemCommand>
@@ -22,7 +13,7 @@ public sealed class AddWishlistItemCommandValidator : AbstractValidator<AddWishl
     {
         RuleFor(x => x.ProductId)
             .NotEmpty()
-            .WithErrorCode(WishlistValidationCodes.ProductIdRequired);
+            .WithErrorCode(WishlistErrorCodes.ProductIdRequired);
     }
 }
 
@@ -34,7 +25,7 @@ public sealed class RemoveWishlistItemCommandValidator : AbstractValidator<Remov
     {
         RuleFor(x => x.ProductId)
             .NotEmpty()
-            .WithErrorCode(WishlistValidationCodes.ProductIdRequired);
+            .WithErrorCode(WishlistErrorCodes.ProductIdRequired);
     }
 }
 
@@ -46,6 +37,6 @@ public sealed class GetWishlistMembershipQueryValidator : AbstractValidator<GetW
     {
         RuleFor(x => x.ProductIds)
             .NotNull()
-            .WithErrorCode(WishlistValidationCodes.ProductIdsRequired);
+            .WithErrorCode(WishlistErrorCodes.ProductIdsRequired);
     }
 }

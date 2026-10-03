@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.BuildingBlocks.Results;
 using Tooba.Wishlist.Application.Customer.Commands;
 using Tooba.Wishlist.Application.Customer.Queries;
 using Tooba.Wishlist.Contracts.Errors;
@@ -37,8 +36,8 @@ public static class WishlistCustomerEndpoints
             return api.FromFailure(new SemanticError(WishlistErrorCodes.SessionRequired));
         }
 
-        var page = await sender.Send(new ListWishlistPageQuery(actor.Value), cancellationToken);
-        return Results.Json(page);
+        var result = await sender.Send(new ListWishlistPageQuery(actor.Value), cancellationToken);
+        return api.From(result);
     }
 
     private static async Task<IResult> AddAsync(
@@ -56,7 +55,12 @@ public static class WishlistCustomerEndpoints
         }
 
         var result = await sender.Send(new AddWishlistItemCommand(actor.Value, productId), cancellationToken);
-        return Results.Json(result, statusCode: result.Created ? StatusCodes.Status201Created : StatusCodes.Status200OK);
+        if (result.IsSuccess && result.Value.Created)
+        {
+            return api.Created($"/v1/customer/wishlist/{productId}", result);
+        }
+
+        return api.From(result);
     }
 
     private static async Task<IResult> RemoveAsync(
@@ -73,8 +77,8 @@ public static class WishlistCustomerEndpoints
             return api.FromFailure(new SemanticError(WishlistErrorCodes.SessionRequired));
         }
 
-        await sender.Send(new RemoveWishlistItemCommand(actor.Value, productId), cancellationToken);
-        return Results.NoContent();
+        var result = await sender.Send(new RemoveWishlistItemCommand(actor.Value, productId), cancellationToken);
+        return api.From(result);
     }
 
     private static async Task<IResult> MembershipAsync(
@@ -92,10 +96,10 @@ public static class WishlistCustomerEndpoints
         }
 
         var productIds = (body.ProductIds ?? Array.Empty<Guid>()).Distinct().Take(500).ToArray();
-        var membership = await sender.Send(
+        var result = await sender.Send(
             new GetWishlistMembershipQuery(actor.Value, productIds),
             cancellationToken);
-        return Results.Json(membership);
+        return api.From(result);
     }
 }
 

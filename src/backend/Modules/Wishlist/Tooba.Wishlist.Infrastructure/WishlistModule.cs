@@ -2,10 +2,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Tooba.Wishlist.Application.Composition;
 using Tooba.Wishlist.Application.Ports;
+using Tooba.Wishlist.Contracts.Errors;
 using Tooba.Wishlist.Contracts.Ports;
 using Tooba.Wishlist.Infrastructure.Directories;
 using Tooba.Wishlist.Infrastructure.Persistence;
@@ -22,6 +25,8 @@ public sealed class WishlistModule : IToobaModule
     public void AddServices(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         services.AddSingleton<IOutboxModuleRegistration, WishlistOutboxRegistration>();
+        services.AddSingleton<IErrorCatalogContributor, WishlistErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, WishlistErrorResourceSet>();
         services.AddScoped<IWishlistDirectory, WishlistDirectory>();
         services.AddScoped<IWishlistCountPort>(sp => sp.GetRequiredService<WishlistDirectory>());
         services.AddScoped<WishlistPresentationComposer>();

@@ -1,11 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.BuildingBlocks.Localization;
-using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Wishlist.Endpoints.Customer;
-using Tooba.Wishlist.Endpoints.Errors;
-using Tooba.Wishlist.Endpoints.Resources;
 
 namespace Tooba.Wishlist.Endpoints;
 
@@ -22,15 +18,13 @@ public static class WishlistEndpointModule
     }
 
     /// <summary>
-    /// Registers Wishlist presentation seams (actor resolver + error catalog/resource set).
-    /// Does not re-register shared <c>customer.session.required</c>.
+    /// Registers Wishlist presentation seams (actor resolver).
+    /// Error catalog/resource set are registered by <c>WishlistModule</c>.
     /// </summary>
     public static IServiceCollection AddWishlistEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<IWishlistCustomerActorResolver, WishlistCustomerActorResolver>();
-        services.AddSingleton<IErrorCatalogContributor, WishlistErrorCatalogContributor>();
-        services.AddSingleton<IErrorResourceSet, WishlistErrorResourceSet>();
         return services;
     }
 }

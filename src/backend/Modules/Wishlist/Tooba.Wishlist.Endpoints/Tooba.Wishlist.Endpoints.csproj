@@ -11,14 +11,6 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Update="Resources\WishlistErrors.resx">
-      <Generator></Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\WishlistErrors.fa.resx">
-      <Generator></Generator>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Tooba.Wishlist.Application\Tooba.Wishlist.Application.csproj" />
     <ProjectReference Include="..\Tooba.Wishlist.Contracts\Tooba.Wishlist.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
