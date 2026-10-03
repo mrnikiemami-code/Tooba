@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -114,7 +114,7 @@ public sealed class HostAdminAmcW9GuardTests
     {
         var root = FindRepoRoot();
         var directory = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CategoryAttributeSchemaDirectory.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CategoryAttributeSchemaDirectory.cs"));
         Assert.Contains("Result.Failure", directory, StringComparison.Ordinal);
         Assert.Contains("CatalogErrorCodes", directory, StringComparison.Ordinal);
         Assert.Contains("SchemaBindingDuplicate", directory, StringComparison.Ordinal);

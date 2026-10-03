@@ -19,7 +19,7 @@ public sealed class HostAdminAmcW19R1GuardTests
     {
         var gateway = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogAdminProductWorkspaceReadGateway.cs"));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CatalogAdminProductWorkspaceReadGateway.cs"));
 
         Assert.DoesNotContain("catch (InvalidOperationException", gateway, StringComparison.Ordinal);
         Assert.DoesNotContain("catch(InvalidOperationException", gateway, StringComparison.Ordinal);
@@ -80,7 +80,7 @@ public sealed class HostAdminAmcW19R1GuardTests
 
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogAdminProductWorkspaceReadGateway.cs")));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CatalogAdminProductWorkspaceReadGateway.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
             "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/CatalogAdminProductWorkspaceReadContracts.cs")));

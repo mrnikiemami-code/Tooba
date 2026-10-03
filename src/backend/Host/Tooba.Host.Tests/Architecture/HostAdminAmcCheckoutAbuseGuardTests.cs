@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -29,7 +29,7 @@ public sealed class HostAdminAmcCheckoutAbuseGuardTests
         Assert.DoesNotContain("MapCheckoutAbuseSettingsEndpoints()", program, StringComparison.Ordinal);
 
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreCheckoutAbuseSettingsDirectory.cs")));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/StoreCheckoutAbuseSettingsDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/Settings/CheckoutAbuse/Queries/GetCheckoutAbuseSettingsQuery.cs")));
     }

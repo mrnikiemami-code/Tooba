@@ -120,7 +120,7 @@ using Tooba.Catalog.Contracts.Ports;", text, StringComparison.Ordinal);
     {
         foreach (var path in new[]
                  {
-                     RepoFile("src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogAdminProductCountGateway.cs"),
+                     RepoFile("src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CatalogAdminProductCountGateway.cs"),
                      RepoFile("src/backend/Modules/Party/Tooba.Party.Infrastructure/Admin/PartyAdminSellerReadGateway.cs"),
                      RepoFile("src/backend/Modules/Order/Tooba.Order.Infrastructure/Admin/AdminPanelReadPortAdapters.cs"),
                  })

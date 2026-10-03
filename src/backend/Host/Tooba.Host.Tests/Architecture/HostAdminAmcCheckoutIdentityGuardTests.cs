@@ -1,4 +1,4 @@
-﻿using Xunit;
+using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
@@ -26,7 +26,7 @@ public sealed class HostAdminAmcCheckoutIdentityGuardTests
         Assert.DoesNotContain("MapCheckoutIdentitySettingsEndpoints()", program, StringComparison.Ordinal);
 
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreCheckoutIdentitySettingsDirectory.cs")));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/StoreCheckoutIdentitySettingsDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/Settings/CheckoutIdentity/Queries/GetCheckoutIdentitySettingsQuery.cs")));
 

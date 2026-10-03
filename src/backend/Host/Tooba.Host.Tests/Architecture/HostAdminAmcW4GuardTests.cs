@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -114,7 +114,7 @@ public sealed class HostAdminAmcW4GuardTests
     {
         var root = FindRepoRoot();
         var directory = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/TagDirectory.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/TagDirectory.cs"));
         Assert.Contains("Result.Failure", directory, StringComparison.Ordinal);
         Assert.Contains("CatalogErrorCodes", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("PlatformHttpException", directory, StringComparison.Ordinal);

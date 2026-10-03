@@ -1016,21 +1016,21 @@
         "task": "TB-TMAR-CATALOG-AMC-001",
         "mode": "ARCHITECT_DIRECT_AMSC",
         "skills": "Analyze,Migrate,Structure,Certify",
-        "state": "W1_DOMAIN_APP_CONTRACTS_STRUCTURE_DONE",
+        "state": "W2_INFRASTRUCTURE_DIRECTORIES_STRUCTURE_DONE",
         "httpApplicability": "HTTP_OWNING",
         "endpointOwnership": "MODULE_ENDPOINTS",
         "moduleMap": "MapCatalogEndpoints",
         "cqrs": "MEDIATR_12_5_PARTIAL_RESULT",
         "structureCertifiedUnderArchComplete002": false,
-        "structureState": "PARTIAL_W1_DOMAIN_APP_CONTRACTS",
-        "folderGranularity": "DOMAIN_APP_CONTRACTS_SHALLOW_INFRA_ROOT_DUMP_REMAINS",
+        "structureState": "PHYSICAL_STRUCTURE_READY_FOR_CANONICAL_HARDENING",
+        "folderGranularity": "PROFESSIONAL_SHALLOW_PENDING_API_VALIDATOR_HARDENING",
         "solutionExplorer": "CANONICAL_MODULES_CATALOG",
-        "pathNamespace": "EXACT_DOMAIN_APP_CONTRACTS",
-        "rootAllowlist": "DOMAIN_APP_CONTRACTS_ENFORCED_INFRA_PENDING",
+        "pathNamespace": "EXACT",
+        "rootAllowlist": "ENFORCED",
         "foreignAppInfraDomainCoupling": "ZERO",
         "contractsBoundary": "LEGAL_CONTRACTS_ONLY",
-        "godFilesRemaining": [
-            "Infrastructure/CatalogDirectory.cs"
+        "oversizedFacadeRemaining": [
+            "Infrastructure/Directories/CatalogDirectory.cs"
         ],
         "godFilesSplitW1": [
             "Domain/CatalogDomain.cs",
@@ -1044,8 +1044,9 @@
         "microserviceExtractable": false,
         "evidenceW0": "docs/architecture/evidence/TB-TMAR-CATALOG-AMC-001-W0/",
         "evidenceW1": "docs/architecture/evidence/TB-TMAR-CATALOG-AMC-001-W1/",
-        "workflowStop": "USER_REVIEW_CATALOG_AMC_001_W1",
-        "automaticNextImplementationTask": "TB-TMAR-CATALOG-AMC-001-W2"
+        "evidenceW2": "docs/architecture/evidence/TB-TMAR-CATALOG-AMC-001-W2/",
+        "workflowStop": "USER_REVIEW_CATALOG_AMC_001_W2",
+        "automaticNextImplementationTask": "TB-TMAR-CATALOG-AMC-001-W3"
     },
     "userPreferenceAmc001W4R1": {
         "task": "TB-TMAR-USERPREFERENCE-AMC-001-W4-R1",

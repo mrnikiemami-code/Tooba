@@ -1,4 +1,4 @@
-﻿using Xunit;
+using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
@@ -23,7 +23,7 @@ public sealed class HostAdminAmcStoreMenuGuardTests
         Assert.DoesNotContain("StoreMenuComposer", program, StringComparison.Ordinal);
 
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreMenuWorkspace.cs")));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/StoreMenuWorkspace.cs")));
     }
 
     [Fact]

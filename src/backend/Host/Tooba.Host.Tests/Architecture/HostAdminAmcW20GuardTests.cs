@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -64,7 +64,7 @@ public sealed class HostAdminAmcW20GuardTests
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Application/Brands/Models/BrandOptionView.cs")));
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/BrandOptionReader.cs")));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/BrandOptionReader.cs")));
 
         var catalogRoot = Path.Combine(root, "src/backend/Modules/Catalog");
         var endpointCsproj = File.ReadAllText(Path.Combine(
@@ -76,7 +76,7 @@ public sealed class HostAdminAmcW20GuardTests
         Assert.DoesNotContain("Tooba.Host", appCsproj, StringComparison.Ordinal);
 
         var reader = File.ReadAllText(Path.Combine(
-            catalogRoot, "Tooba.Catalog.Infrastructure/BrandOptionReader.cs"));
+            catalogRoot, "Tooba.Catalog.Infrastructure/Directories/BrandOptionReader.cs"));
         Assert.DoesNotContain("catch (InvalidOperationException", reader, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", reader, StringComparison.Ordinal);
         Assert.DoesNotContain("PlatformHttpException", reader, StringComparison.Ordinal);

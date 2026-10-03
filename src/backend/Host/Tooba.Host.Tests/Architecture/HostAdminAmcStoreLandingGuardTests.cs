@@ -1,4 +1,4 @@
-﻿using Xunit;
+using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
 
@@ -22,7 +22,7 @@ public sealed class HostAdminAmcStoreLandingGuardTests
         Assert.DoesNotContain("StoreLandingPageComposer", program, StringComparison.Ordinal);
 
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/StoreLandingPageWorkspace.cs")));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/StoreLandingPageWorkspace.cs")));
     }
 
     [Fact]

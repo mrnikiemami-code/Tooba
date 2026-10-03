@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -99,7 +99,7 @@ public sealed class HostAdminAmcW16GuardTests
         }
 
         var reader = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductPublishReadinessReader.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductPublishReadinessReader.cs"));
         Assert.Contains("Result.Failure", reader, StringComparison.Ordinal);
         Assert.Contains("CatalogErrorCodes", reader, StringComparison.Ordinal);
         Assert.Contains("WorkspaceProductMissing", reader, StringComparison.Ordinal);
@@ -129,7 +129,7 @@ public sealed class HostAdminAmcW16GuardTests
         Assert.DoesNotContain("throw new InvalidOperationException", reader, StringComparison.Ordinal);
 
         var directory = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogDirectory.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CatalogDirectory.cs"));
         Assert.Contains("PublishReadinessPort().GetAsync", directory, StringComparison.Ordinal);
         Assert.Contains("UnwrapHistory", directory, StringComparison.Ordinal);
 

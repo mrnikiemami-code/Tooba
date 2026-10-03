@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -51,7 +51,7 @@ public sealed class HostAdminAmcW31PwListGridGuardTests
             "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/CatalogAdminProductWorkspaceListContracts.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogAdminProductWorkspaceListGateway.cs")));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CatalogAdminProductWorkspaceListGateway.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
             "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Grid/AdminProductGridQueryEngine.cs")));

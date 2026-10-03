@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -57,11 +57,11 @@ public sealed class HostAdminAmcW28PwDeleteGuardTests
             "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductDeletion/Ports/IProductDeletionDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductDeletionDirectory.cs")));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductDeletionDirectory.cs")));
 
         var directory = File.ReadAllText(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductDeletionDirectory.cs"));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductDeletionDirectory.cs"));
         Assert.Contains("IOfferQueryGateway", directory, StringComparison.Ordinal);
         Assert.Contains("AnyOffersForCatalogVariantIdsAsync", directory, StringComparison.Ordinal);
         Assert.Contains("WorkspaceProductDeleteReferenced", directory, StringComparison.Ordinal);

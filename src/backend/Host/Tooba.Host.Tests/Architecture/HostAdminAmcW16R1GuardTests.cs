@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -14,7 +14,7 @@ public sealed class HostAdminAmcW16R1GuardTests
     {
         var reader = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductPublishReadinessReader.cs"));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductPublishReadinessReader.cs"));
         Assert.DoesNotContain("catch (InvalidOperationException", reader, StringComparison.Ordinal);
         Assert.DoesNotContain("catch(InvalidOperationException", reader, StringComparison.Ordinal);
         Assert.DoesNotContain("catch (", reader, StringComparison.Ordinal);
@@ -37,7 +37,7 @@ public sealed class HostAdminAmcW16R1GuardTests
         Assert.Contains("GetCategoryLevel(categoryId, parentById) == ProductAssignableLevel", rules, StringComparison.Ordinal);
 
         var reader = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductPublishReadinessReader.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductPublishReadinessReader.cs"));
         Assert.Contains("CatalogCategoryTreeRules.IsAssignableProductCategory", reader, StringComparison.Ordinal);
         Assert.DoesNotContain("GetCategoryLevel", reader, StringComparison.Ordinal);
         Assert.DoesNotContain("ProductAssignableLevel", reader, StringComparison.Ordinal);
@@ -64,7 +64,7 @@ public sealed class HostAdminAmcW16R1GuardTests
 
 
         var reader = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductPublishReadinessReader.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductPublishReadinessReader.cs"));
         Assert.Contains("IProductSeoDirectory", reader, StringComparison.Ordinal);
         Assert.Contains("IProductAttributeDirectory", reader, StringComparison.Ordinal);
         Assert.Contains("IProductVariantDirectory", reader, StringComparison.Ordinal);

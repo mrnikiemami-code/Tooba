@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -13,7 +13,7 @@ public sealed class HostAdminAmcW14R1GuardTests
     {
         var directory = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductSeoDirectory.cs"));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductSeoDirectory.cs"));
         Assert.DoesNotContain("catch (InvalidOperationException", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("catch(InvalidOperationException", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("catch (", directory, StringComparison.Ordinal);
@@ -42,7 +42,7 @@ public sealed class HostAdminAmcW14R1GuardTests
 
         var directory = File.ReadAllText(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductSeoDirectory.cs"));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductSeoDirectory.cs"));
         Assert.DoesNotContain("pendingHyphen", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("TryBuildNormalizedSlug", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("StringBuilder", directory, StringComparison.Ordinal);
@@ -104,7 +104,7 @@ public sealed class HostAdminAmcW14R1GuardTests
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Domain/CatalogCategorySlugNormalizer.cs")));
         var seoDirectory = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductSeoDirectory.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductSeoDirectory.cs"));
         Assert.Contains("TryNormalizeSlug", seoDirectory, StringComparison.Ordinal);
         Assert.Contains("TrySlugifyFromName", seoDirectory, StringComparison.Ordinal);
     }

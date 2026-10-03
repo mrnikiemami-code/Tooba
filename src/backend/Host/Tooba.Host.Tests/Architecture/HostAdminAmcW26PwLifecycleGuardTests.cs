@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -53,7 +53,7 @@ public sealed class HostAdminAmcW26PwLifecycleGuardTests
             "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductPublishing/Ports/IProductLifecycleDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductLifecycleDirectory.cs")));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductLifecycleDirectory.cs")));
 
         var codes = File.ReadAllText(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCodes.cs"));

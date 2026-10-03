@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -66,11 +66,11 @@ public sealed class HostAdminAmcW29PwIdentityGuardTests
             "src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductIdentity/Models/ProductIdentityWriteModels.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductIdentityDirectory.cs")));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductIdentityDirectory.cs")));
 
         var directory = File.ReadAllText(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/ProductIdentityDirectory.cs"));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductIdentityDirectory.cs"));
         Assert.Contains("ICatalogDirectory", directory, StringComparison.Ordinal);
         Assert.Contains("CreateProductAsync", directory, StringComparison.Ordinal);
         Assert.Contains("AssignCategoryAsync", directory, StringComparison.Ordinal);
