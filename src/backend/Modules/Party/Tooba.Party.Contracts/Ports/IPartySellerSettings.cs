@@ -1,4 +1,4 @@
-namespace Tooba.Party.Contracts;
+namespace Tooba.Party.Contracts.Ports;
 
 /// <summary>
 /// درز پایدار خواندن/نوشتن پروفایل عملیاتی Organization برای پنل فروشنده.

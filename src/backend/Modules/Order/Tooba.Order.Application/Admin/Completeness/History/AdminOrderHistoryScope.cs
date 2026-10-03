@@ -1,6 +1,6 @@
 using Tooba.Catalog.Contracts;
 using Tooba.Order.Domain;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 
 namespace Tooba.Order.Application.Admin.Completeness.History;
 

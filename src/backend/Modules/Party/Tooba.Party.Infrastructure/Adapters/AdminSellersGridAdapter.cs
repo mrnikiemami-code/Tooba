@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Contracts.Admin;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 
 namespace Tooba.Party.Infrastructure.Adapters;
 

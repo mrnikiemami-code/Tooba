@@ -7,7 +7,7 @@ using Tooba.Fulfillment.Contracts.Returns;
 using Tooba.Returns.Application.Models;
 using Tooba.Returns.Application.Ports;
 using Tooba.Order.Contracts.Fulfillment;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Persistence.Grid;
 using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;

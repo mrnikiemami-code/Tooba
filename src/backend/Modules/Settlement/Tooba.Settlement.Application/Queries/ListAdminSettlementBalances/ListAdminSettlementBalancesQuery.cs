@@ -1,6 +1,6 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Settlement.Application.Models;
 using Tooba.Settlement.Application.Ports;
 

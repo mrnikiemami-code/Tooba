@@ -2,7 +2,7 @@ using Tooba.Catalog.Contracts;
 using Tooba.Order.Application.Customer.Models;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Domain;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Payment.Contracts.Customer;
 
 namespace Tooba.Order.Application.Customer;

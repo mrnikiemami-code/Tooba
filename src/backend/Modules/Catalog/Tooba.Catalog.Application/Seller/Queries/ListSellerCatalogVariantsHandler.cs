@@ -3,7 +3,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application.Seller.Models;
 using Tooba.Catalog.Application.Seller.Ports;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 
 namespace Tooba.Catalog.Application.Seller.Queries;
 

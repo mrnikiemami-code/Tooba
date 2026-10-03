@@ -1,10 +1,12 @@
 using Tooba.BuildingBlocks;
-using Tooba.Party.Domain;
+
 using Tooba.Party.Infrastructure.Events;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
 
-namespace Tooba.Party.Infrastructure;
+using Tooba.Party.Domain.Events;
+
+namespace Tooba.Party.Infrastructure.Persistence;
 
 /// <summary>
 /// ثبت Outbox ماژول Party. ترجمه فقط برای برقراری عضویت است تا تصویرسازی مجوز بعد از persist انجام شود.

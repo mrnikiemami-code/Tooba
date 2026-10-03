@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Party.Infrastructure.Persistence;
 
 namespace Tooba.Party.Infrastructure.Admin;

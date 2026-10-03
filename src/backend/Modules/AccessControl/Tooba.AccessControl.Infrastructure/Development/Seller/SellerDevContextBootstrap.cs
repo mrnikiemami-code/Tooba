@@ -4,7 +4,7 @@ using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Contracts.Auth;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 
 namespace Tooba.AccessControl.Infrastructure.Development.Seller;
 

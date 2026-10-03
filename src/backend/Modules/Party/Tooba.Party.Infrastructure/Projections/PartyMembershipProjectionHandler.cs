@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Party.Infrastructure.Events;
 
-namespace Tooba.Party.Infrastructure;
+namespace Tooba.Party.Infrastructure.Projections;
 
 /// <summary>
 /// تصویرسازی رابطهٔ مجوز پس از persist عضویت. داخل تراکنش DbContext Party اجرا نمی‌شود تا در دسترس نبودن SpiceDB commit کسب‌وکار را rollback نکند.

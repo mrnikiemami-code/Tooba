@@ -1,4 +1,4 @@
-namespace Tooba.Party.Contracts;
+namespace Tooba.Party.Contracts.Ports;
 
 /// <summary>Minimal Party scalar projection required by cross-module Admin composition.</summary>
 public sealed record PartyStatusProjection(Guid PartyId, string DisplayName, string Status);

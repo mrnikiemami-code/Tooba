@@ -1,7 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Tooba.Party.Application;
-using Tooba.Party.Contracts;
+using Tooba.Party.Application.Models;
+using Tooba.Party.Application.Ports;
+using Tooba.Party.Contracts.Ports;
 
 namespace Tooba.Party.Infrastructure.Development;
 

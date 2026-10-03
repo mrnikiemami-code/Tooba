@@ -11,7 +11,7 @@ using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 
 namespace Tooba.Offer.Application.ReadModels;

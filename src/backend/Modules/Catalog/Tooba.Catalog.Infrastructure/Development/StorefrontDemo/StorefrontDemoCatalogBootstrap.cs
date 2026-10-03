@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
@@ -6,7 +6,7 @@ using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Tax.Contracts;
 

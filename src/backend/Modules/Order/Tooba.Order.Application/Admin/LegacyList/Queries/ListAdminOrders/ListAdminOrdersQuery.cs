@@ -4,7 +4,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Order.Application.Admin.LegacyList.Ports;
 using Tooba.Order.Application.Admin.OrdersGrid;
 using Tooba.Order.Application.Admin.OrdersGrid.Models;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Returns.Contracts.Operations;
 
 namespace Tooba.Order.Application.Admin.LegacyList.Queries.ListAdminOrders;

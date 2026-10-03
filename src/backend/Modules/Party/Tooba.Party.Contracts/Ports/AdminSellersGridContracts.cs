@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks.Grid;
 
-namespace Tooba.Party.Contracts;
+namespace Tooba.Party.Contracts.Ports;
 
 /// <summary>ردیف فروشنده Admin از Party + شمارنده‌های Offer/Order.</summary>
 public sealed record AdminSellerListItem(

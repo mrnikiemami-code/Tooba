@@ -2,7 +2,7 @@ using Tooba.BuildingBlocks.Security;
 using Tooba.Cart.Application.Errors;
 using Tooba.Cart.Contracts;
 using Tooba.Catalog.Contracts;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 
 namespace Tooba.Cart.Application.Presentation;
 

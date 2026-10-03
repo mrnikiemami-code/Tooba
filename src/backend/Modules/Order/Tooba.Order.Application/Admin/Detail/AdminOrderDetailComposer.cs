@@ -7,7 +7,7 @@ using Tooba.Order.Application.Admin.OrdersGrid;
 using Tooba.Order.Application.Admin.Supply.Services;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Domain;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Payment.Contracts.Admin;
 using Tooba.Returns.Contracts.Operations;
 using Tooba.Settlement.Contracts.Operations;

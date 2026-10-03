@@ -1,4 +1,4 @@
-namespace Tooba.Party.Contracts;
+namespace Tooba.Party.Contracts.Ports;
 
 /// <summary>Provides a stable cross-module Party lookup.</summary>
 public interface IPartyLookup

@@ -1,14 +1,19 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
-using Tooba.Party.Application;
-using Tooba.Party.Contracts;
+using Tooba.Party.Application.Ports;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Party.Infrastructure.Adapters;
+using Tooba.Party.Infrastructure.Admin;
+using Tooba.Party.Infrastructure.Development;
+using Tooba.Party.Infrastructure.Directories;
 using Tooba.Party.Infrastructure.Events;
 using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Party.Infrastructure.Projections;
+using Tooba.Party.Infrastructure.Seller;
 using Tooba.Persistence;
 
 namespace Tooba.Party.Infrastructure;
@@ -34,7 +39,7 @@ public sealed class PartyModule : IToobaModule
         services.AddScoped<IPartyDevelopmentSeedGateway, PartyDevelopmentSeedGateway>();
         services.AddScoped<IPartyLookupGateway>(sp => (PartyDirectory)sp.GetRequiredService<IPartyDirectory>());
         services.AddScoped<IPartyLookup>(sp => (PartyDirectory)sp.GetRequiredService<IPartyDirectory>());
-        services.AddScoped<IPartyAdminSellerReadGateway, Tooba.Party.Infrastructure.Admin.PartyAdminSellerReadGateway>();
+        services.AddScoped<IPartyAdminSellerReadGateway, PartyAdminSellerReadGateway>();
         services.AddScoped<IAdminSellersGridPort, AdminSellersGridAdapter>();
         services.AddScoped<IIntegrationEventHandler<PartyMembershipEstablishedIntegrationEvent>, PartyMembershipProjectionHandler>();
         services.AddModuleSchemaMigrator<PartyDbContext>("Party", ModuleSchemaMigrationOrder.Party);
@@ -52,3 +57,4 @@ public sealed class PartyModule : IToobaModule
         });
     }
 }
+

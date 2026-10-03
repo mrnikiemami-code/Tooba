@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
@@ -16,8 +16,9 @@ using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Events;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Party.Application;
-using Tooba.Party.Contracts;
+using Tooba.Party.Application.Models;
+using Tooba.Party.Application.Ports;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Application.Ports;

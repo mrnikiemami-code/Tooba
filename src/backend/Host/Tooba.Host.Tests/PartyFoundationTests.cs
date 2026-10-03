@@ -6,8 +6,14 @@ using Tooba.Identity.Domain.Enums;
 using Tooba.Identity.Domain.Events;
 using Tooba.Identity.Domain.Rules;
 using Tooba.Party.Application;
-using Tooba.Party.Domain;
+using Tooba.Party.Application.Models;
+using Tooba.Party.Application.Ports;
+using Tooba.Party.Domain.Aggregates;
+using Tooba.Party.Domain.Enums;
 using Tooba.Party.Infrastructure;
+using Tooba.Party.Infrastructure.Directories;
+using Tooba.Party.Infrastructure.Development;
+using Tooba.Party.Infrastructure.Projections;
 using Tooba.Party.Infrastructure.Events;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
@@ -83,10 +89,18 @@ public sealed class PartyFoundationTests : IAsyncLifetime
             Assert.DoesNotContain("Tooba.Identity", csproj, StringComparison.Ordinal);
         }
 
-        var domain = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Party", "Tooba.Party.Domain", "PartyDomain.cs"));
-        var application = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Party", "Tooba.Party.Application", "PartyContracts.cs"));
-        Assert.DoesNotContain("Authzed", domain, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("Authzed", application, StringComparison.OrdinalIgnoreCase);
+        var domainSources = Directory.EnumerateFiles(
+                Path.Combine(root, "src", "backend", "Modules", "Party", "Tooba.Party.Domain"),
+                "*.cs",
+                SearchOption.AllDirectories)
+            .Select(File.ReadAllText);
+        var applicationSources = Directory.EnumerateFiles(
+                Path.Combine(root, "src", "backend", "Modules", "Party", "Tooba.Party.Application"),
+                "*.cs",
+                SearchOption.AllDirectories)
+            .Select(File.ReadAllText);
+        Assert.All(domainSources, text => Assert.DoesNotContain("Authzed", text, StringComparison.OrdinalIgnoreCase));
+        Assert.All(applicationSources, text => Assert.DoesNotContain("Authzed", text, StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain("Permission", typeof(PartyMembership).GetProperties().Select(p => p.Name));
         Assert.DoesNotContain("Role", typeof(PartyMembership).GetProperties().Select(p => p.Name));
         Assert.Equal("party", PartyDbContext.Schema);

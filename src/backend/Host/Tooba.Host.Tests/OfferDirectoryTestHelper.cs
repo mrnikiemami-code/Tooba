@@ -11,8 +11,9 @@ using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Domain.Aggregates;
-using Tooba.Offer.Infrastructure.Persistence;using Tooba.Party.Application;
-using Tooba.Party.Domain;
+using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Party.Application.Ports;
+using Tooba.Party.Domain.Enums;
 
 namespace Tooba.Offer.Infrastructure.Adapters;
 

@@ -1,4 +1,4 @@
-namespace Tooba.Party.Contracts;
+namespace Tooba.Party.Contracts.Ports;
 
 /// <summary>
 /// Party-owned Development-support request to rename development organizations by their

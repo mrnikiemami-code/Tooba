@@ -1,5 +1,7 @@
 using FluentValidation;
-using Tooba.Party.Domain;
+using Tooba.Party.Domain.Aggregates;
+using Tooba.Party.Domain.Enums;
+using Tooba.Party.Domain.Events;
 
 namespace Tooba.Party.Application.Seller.Validators;
 

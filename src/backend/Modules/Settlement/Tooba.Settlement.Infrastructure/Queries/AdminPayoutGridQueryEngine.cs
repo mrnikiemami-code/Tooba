@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Persistence.Grid;
 using Tooba.Settlement.Application.Models;
 using Tooba.Settlement.Application.Ports;

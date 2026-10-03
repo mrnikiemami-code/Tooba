@@ -7,7 +7,7 @@ using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Contracts.Orders;
 using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Contracts.Dtos;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 
 namespace Tooba.Offer.Infrastructure.Adapters.Tracing;

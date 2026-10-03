@@ -15,7 +15,7 @@ using Tooba.Order.Application.Admin.OrdersGrid.Models;
 using Tooba.Order.Application.Admin.OrdersGrid.Ports;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Persistence.Grid;
 using Tooba.Returns.Contracts.Operations;
 

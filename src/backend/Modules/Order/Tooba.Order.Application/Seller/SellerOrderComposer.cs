@@ -4,7 +4,7 @@ using Tooba.Catalog.Contracts;
 using Tooba.Order.Application.Seller.Models;
 using Tooba.Order.Application.Seller.Ports;
 using Tooba.Order.Domain;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 
 namespace Tooba.Order.Application.Seller;
 

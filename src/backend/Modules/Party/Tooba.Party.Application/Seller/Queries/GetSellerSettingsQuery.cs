@@ -2,7 +2,7 @@ using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Party.Application.Seller.Models;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 
 namespace Tooba.Party.Application.Seller.Queries;
 

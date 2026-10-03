@@ -1,4 +1,4 @@
-﻿using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
@@ -31,6 +31,11 @@ using Tooba.Offer.Infrastructure.Outbox;
 using Tooba.Offer.Infrastructure.Adapters;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure;
+using Tooba.Party.Infrastructure.Directories;
+using Tooba.Party.Infrastructure.Development;
+using Tooba.Party.Infrastructure.Projections;
+using Tooba.Party.Application.Ports;
+using Tooba.Party.Application.Models;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;

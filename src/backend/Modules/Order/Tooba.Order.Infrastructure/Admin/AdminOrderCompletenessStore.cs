@@ -20,7 +20,7 @@ using Tooba.Order.Application.Admin.Completeness.Models;
 using Tooba.Order.Application.Admin.Completeness.Ports;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Payment.Contracts.Admin;
 using Tooba.Returns.Contracts.History;
 using Tooba.Settlement.Contracts.History;

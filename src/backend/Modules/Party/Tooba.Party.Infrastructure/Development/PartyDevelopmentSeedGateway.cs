@@ -1,11 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.Party.Application;
-using Tooba.Party.Contracts;
-using Tooba.Party.Domain;
+
+
+using Tooba.Party.Domain.Aggregates;
+using Tooba.Party.Domain.Enums;
+using Tooba.Party.Domain.Events;
 using Tooba.Party.Infrastructure.Persistence;
 
-namespace Tooba.Party.Infrastructure;
+using Tooba.Party.Application.Ports;
+
+using Tooba.Party.Contracts.Ports;
+
+namespace Tooba.Party.Infrastructure.Development;
 
 /// <summary>Development-only Party seed capability owned by Party.Infrastructure.</summary>
 public sealed class PartyDevelopmentSeedGateway(

@@ -8,7 +8,7 @@ using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Domain.Aggregates;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using DomainChannel = Tooba.Offer.Domain.ValueObjects.SalesChannel;
 
 namespace Tooba.Offer.Application.Commands.CreateOffer;

@@ -5,7 +5,7 @@ using Tooba.Cart.Application.Presentation;
 using Tooba.Cart.Contracts;
 using Tooba.Catalog.Contracts;
 using Tooba.Offer.Contracts.Dtos;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Cart.Tests.Behavior;

@@ -1,4 +1,4 @@
-﻿using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Fulfillment.Application.Models;
@@ -8,7 +8,7 @@ using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Order.Contracts.Fulfillment;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Persistence.Grid;
 
 namespace Tooba.Fulfillment.Infrastructure.Queries;

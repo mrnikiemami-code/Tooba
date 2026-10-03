@@ -2,7 +2,7 @@ using Tooba.Host.Admin.Panel;
 using Tooba.Order.Application.Admin.Customers.Models;
 using Tooba.Order.Application.Admin.Detail.Models;
 using Tooba.Order.Application.Admin.OrdersGrid.Models;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Host.Tests;

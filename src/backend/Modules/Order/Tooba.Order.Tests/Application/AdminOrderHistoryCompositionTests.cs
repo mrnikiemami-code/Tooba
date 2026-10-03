@@ -12,7 +12,7 @@ using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
 using Tooba.Order.Application.Admin.Completeness.History;
 using Tooba.Order.Domain;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Payment.Contracts.Admin;
 using Tooba.Returns.Contracts.History;
 using Tooba.Settlement.Contracts.History;

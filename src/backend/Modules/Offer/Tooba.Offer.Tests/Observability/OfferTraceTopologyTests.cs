@@ -18,7 +18,7 @@ using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Infrastructure.Adapters;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Xunit;
 using DomainChannel = Tooba.Offer.Domain.ValueObjects.SalesChannel;

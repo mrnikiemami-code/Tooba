@@ -6,7 +6,7 @@ using Tooba.Catalog.Contracts.Errors;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.ProductWorkspace.Application.Composition.Models;
 using Tooba.Tax.Contracts;

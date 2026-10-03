@@ -25,7 +25,7 @@ namespace Tooba.Party.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Tooba.Party.Domain.BusinessParty", b =>
+            modelBuilder.Entity("Tooba.Party.Domain.Aggregates.BusinessParty", b =>
                 {
                     b.Property<Guid>("PartyId")
                         .HasColumnType("uuid")
@@ -88,7 +88,7 @@ namespace Tooba.Party.Infrastructure.Persistence.Migrations
                     b.ToTable("parties", "party");
                 });
 
-            modelBuilder.Entity("Tooba.Party.Domain.OrganizationRelationship", b =>
+            modelBuilder.Entity("Tooba.Party.Domain.Aggregates.OrganizationRelationship", b =>
                 {
                     b.Property<Guid>("RelationshipId")
                         .HasColumnType("uuid")
@@ -128,7 +128,7 @@ namespace Tooba.Party.Infrastructure.Persistence.Migrations
                     b.ToTable("organization_relationships", "party");
                 });
 
-            modelBuilder.Entity("Tooba.Party.Domain.PartyCapability", b =>
+            modelBuilder.Entity("Tooba.Party.Domain.Aggregates.PartyCapability", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -158,7 +158,7 @@ namespace Tooba.Party.Infrastructure.Persistence.Migrations
                     b.ToTable("party_capabilities", "party");
                 });
 
-            modelBuilder.Entity("Tooba.Party.Domain.PartyMembership", b =>
+            modelBuilder.Entity("Tooba.Party.Domain.Aggregates.PartyMembership", b =>
                 {
                     b.Property<Guid>("MembershipId")
                         .HasColumnType("uuid")
@@ -198,7 +198,7 @@ namespace Tooba.Party.Infrastructure.Persistence.Migrations
                     b.ToTable("memberships", "party");
                 });
 
-            modelBuilder.Entity("Tooba.Party.Domain.UserPartyLink", b =>
+            modelBuilder.Entity("Tooba.Party.Domain.Aggregates.UserPartyLink", b =>
                 {
                     b.Property<Guid>("LinkId")
                         .HasColumnType("uuid")
@@ -308,9 +308,9 @@ namespace Tooba.Party.Infrastructure.Persistence.Migrations
                     b.ToTable("outbox_messages", "party");
                 });
 
-            modelBuilder.Entity("Tooba.Party.Domain.PartyCapability", b =>
+            modelBuilder.Entity("Tooba.Party.Domain.Aggregates.PartyCapability", b =>
                 {
-                    b.HasOne("Tooba.Party.Domain.BusinessParty", null)
+                    b.HasOne("Tooba.Party.Domain.Aggregates.BusinessParty", null)
                         .WithMany("Capabilities")
                         .HasForeignKey("PartyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -318,7 +318,7 @@ namespace Tooba.Party.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_party_capabilities_parties_party_id");
                 });
 
-            modelBuilder.Entity("Tooba.Party.Domain.BusinessParty", b =>
+            modelBuilder.Entity("Tooba.Party.Domain.Aggregates.BusinessParty", b =>
                 {
                     b.Navigation("Capabilities");
                 });

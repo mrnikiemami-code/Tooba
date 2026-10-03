@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Tooba.Party.Domain;
+using Tooba.Party.Domain.Aggregates;
+using Tooba.Party.Domain.Enums;
+using Tooba.Party.Domain.Events;
 using Tooba.Persistence;
 
 namespace Tooba.Party.Infrastructure.Persistence;

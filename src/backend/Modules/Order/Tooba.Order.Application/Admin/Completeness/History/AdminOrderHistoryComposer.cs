@@ -1,7 +1,7 @@
 using Tooba.Catalog.Contracts;
 using Tooba.Fulfillment.Contracts.History;
 using Tooba.Order.Domain;
-using Tooba.Party.Contracts;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Payment.Contracts.Admin;
 using Tooba.Returns.Contracts.History;
 using Tooba.Settlement.Contracts.History;

@@ -29,6 +29,10 @@ using Tooba.OperatorProfile.Infrastructure.Persistence;
 using Tooba.OperatorProfile.Infrastructure.Profiles;
 using Tooba.Party.Application;
 using Tooba.Party.Infrastructure;
+using Tooba.Party.Infrastructure.Directories;
+using Tooba.Party.Infrastructure.Development;
+using Tooba.Party.Application.Ports;
+using Tooba.Party.Application.Models;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.UserPreference.Application;
@@ -266,7 +270,7 @@ public sealed class SettingsFoundationTests
         var services = new ServiceCollection();
         services.AddSingleton(partyDb);
         services.AddSingleton<IPartyDirectory>(parties);
-        services.AddSingleton<Tooba.Party.Contracts.IPartyDevelopmentSeedGateway>(
+        services.AddSingleton<Tooba.Party.Contracts.Ports.IPartyDevelopmentSeedGateway>(
             new StubPartyDevelopmentSeedGateway(org.PartyId, WorkspaceDemoMarketplaceSeed.SellerADisplayName));
         services.AddSingleton(preferenceDb);
         services.AddSingleton<IUserPreferenceDirectory>(new UserPreferenceDirectory(preferenceDb));
@@ -289,7 +293,7 @@ public sealed class SettingsFoundationTests
     }
 
     private sealed class StubPartyDevelopmentSeedGateway(Guid partyId, string expectedDisplayName)
-        : Tooba.Party.Contracts.IPartyDevelopmentSeedGateway
+        : Tooba.Party.Contracts.Ports.IPartyDevelopmentSeedGateway
     {
         public Task<Guid> ResolveDevelopmentSellerPartyAsync(
             string displayName,
@@ -302,7 +306,7 @@ public sealed class SettingsFoundationTests
             CancellationToken cancellationToken) => Task.FromResult(partyId);
 
         public Task EnsureDevelopmentOrganizationDisplayNamesAsync(
-            IReadOnlyCollection<Tooba.Party.Contracts.DevelopmentOrganizationRename> renames,
+            IReadOnlyCollection<Tooba.Party.Contracts.Ports.DevelopmentOrganizationRename> renames,
             CancellationToken cancellationToken) => Task.CompletedTask;
 
         public Task<Guid?> FindDevelopmentOrganizationByDisplayNameAsync(
