@@ -1,14 +1,21 @@
+using System.Globalization;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Media.Application.Models;
-using Tooba.Media.Application.Ports;
+using Tooba.Media.Application.Assets.Commands;
+using Tooba.Media.Application.Assets.Queries;
+using Tooba.Media.Contracts.Errors;
 
 namespace Tooba.Media.Endpoints.Admin;
 
-/// <summary>مرزهای HTTP مدیریتی Media DAM.</summary>
+/// <summary>
+/// مرزهای HTTP مدیریتی Media DAM.
+/// Stable machine codes preserved for clients: media.upload.failed, media.missing.
+/// </summary>
 public static class MediaAdminEndpoints
 {
     /// <summary>مسیرهای Admin Media را ثبت می‌کند.</summary>
@@ -20,74 +27,64 @@ public static class MediaAdminEndpoints
         admin.MapGet("/{id:guid}", GetAsync);
     }
 
-    private static IResult ToError(PlatformHttpException ex) =>
-        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
-
     private static async Task<IResult> UploadAsync(
         HttpRequest request,
-        IMediaDirectory directory,
+        ISender sender,
+        ApiResponseFactory api,
         IAdminPanelAccess adminAccess,
         CancellationToken cancellationToken)
     {
-        try
+        var actorUserId = await adminAccess.RequireAuthorizedAsync(request, cancellationToken);
+
+        if (!request.HasFormContentType)
         {
-            var actorUserId = await adminAccess.RequireAuthorizedAsync(request, cancellationToken);
-
-            if (!request.HasFormContentType)
-            {
-                return Results.Json(
-                    new { title = "درخواست multipart لازم است.", errorCode = "media.upload.failed" },
-                    statusCode: StatusCodes.Status400BadRequest);
-            }
-
-            var form = await request.ReadFormAsync(cancellationToken);
-            var files = form.Files.GetFiles("files");
-            if (files.Count == 0)
-                files = form.Files.Count > 0 ? form.Files : Array.Empty<IFormFile>();
-
-            if (files.Count == 0)
-            {
-                return Results.Json(
-                    new { title = "هیچ فایلی برای آپلود ارسال نشده است.", errorCode = "media.upload.failed" },
-                    statusCode: StatusCodes.Status400BadRequest);
-            }
-
-            var results = new List<object>(files.Count);
-            foreach (var file in files)
-            {
-                try
-                {
-                    await using var stream = file.OpenReadStream();
-                    var asset = await directory.UploadAsync(
-                        stream,
-                        file.FileName,
-                        file.ContentType ?? string.Empty,
-                        actorUserId,
-                        cancellationToken);
-                    results.Add(new { ok = true, asset });
-                }
-                catch (PlatformHttpException ex)
-                {
-                    results.Add(new
-                    {
-                        ok = false,
-                        fileName = file.FileName,
-                        title = ex.Title,
-                        errorCode = ex.ErrorCode,
-                    });
-                }
-            }
-
-            return Results.Json(new { items = results }, statusCode: StatusCodes.Status200OK);
+            return api.FromFailure(new SemanticError(MediaErrorCodes.UploadFailed));
         }
-        catch (PlatformHttpException ex)
+
+        var form = await request.ReadFormAsync(cancellationToken);
+        var files = form.Files.GetFiles("files");
+        if (files.Count == 0)
+            files = form.Files.Count > 0 ? form.Files : Array.Empty<IFormFile>();
+
+        if (files.Count == 0)
         {
-            return ToError(ex);
+            return api.FromFailure(new SemanticError(MediaErrorCodes.UploadFailed));
         }
+
+        var results = new List<object>(files.Count);
+        foreach (var file in files)
+        {
+            await using var stream = file.OpenReadStream();
+            var outcome = await sender.Send(
+                new UploadMediaAssetCommand(
+                    stream,
+                    file.FileName,
+                    file.ContentType ?? string.Empty,
+                    actorUserId),
+                cancellationToken);
+
+            if (outcome.IsSuccess)
+            {
+                results.Add(new { ok = true, asset = outcome.Value });
+                continue;
+            }
+
+            var errorCode = outcome.Errors[0].Code;
+            results.Add(new
+            {
+                ok = false,
+                fileName = file.FileName,
+                title = ResolveTitle(errorCode),
+                errorCode,
+            });
+        }
+
+        return Results.Json(new { items = results }, statusCode: StatusCodes.Status200OK);
     }
 
     private static async Task<IResult> QueryAsync(
-        IMediaDirectory directory,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         IAdminPanelAccess adminAccess,
         string? search = null,
@@ -97,16 +94,11 @@ public static class MediaAdminEndpoints
         int pageSize = 24,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            await adminAccess.RequireAuthorizedAsync(request, cancellationToken);
-            var prefix = ResolveContentTypePrefix(contentTypePrefix, kind);
-            return Results.Json(await directory.QueryAsync(search, page, pageSize, cancellationToken, prefix));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
+        await adminAccess.RequireAuthorizedAsync(request, cancellationToken);
+        var prefix = ResolveContentTypePrefix(contentTypePrefix, kind);
+        return api.From(await sender.Send(
+            new QueryMediaAssetsQuery(search, prefix, page, pageSize),
+            cancellationToken));
     }
 
     /// <summary>نگاشت contentTypePrefix یا kind=image|video|file به پیشوند ContentType.</summary>
@@ -125,22 +117,18 @@ public static class MediaAdminEndpoints
 
     private static async Task<IResult> GetAsync(
         Guid id,
-        IMediaDirectory directory,
+        ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         IAdminPanelAccess adminAccess,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            await adminAccess.RequireAuthorizedAsync(request, cancellationToken);
-            var asset = await directory.GetAsync(id, cancellationToken);
-            return asset is null
-                ? Results.Json(new { title = "رسانه یافت نشد.", errorCode = "media.missing" }, statusCode: StatusCodes.Status404NotFound)
-                : Results.Json(asset);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return ToError(ex);
-        }
+        await adminAccess.RequireAuthorizedAsync(request, cancellationToken);
+        return api.From(await sender.Send(new GetMediaAssetQuery(id), cancellationToken));
     }
+
+    private static string ResolveTitle(string errorCode) =>
+        MediaErrorResources.Manager.GetString(errorCode, CultureInfo.GetCultureInfo("fa"))
+        ?? MediaErrorResources.Manager.GetString(errorCode, CultureInfo.InvariantCulture)
+        ?? errorCode;
 }

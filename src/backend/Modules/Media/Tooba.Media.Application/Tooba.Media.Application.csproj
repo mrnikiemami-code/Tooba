@@ -4,8 +4,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Tooba.Media.Application</RootNamespace>
+    <AssemblyName>Tooba.Media.Application</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
     <ProjectReference Include="..\Tooba.Media.Domain\Tooba.Media.Domain.csproj" />
+    <ProjectReference Include="..\Tooba.Media.Contracts\Tooba.Media.Contracts.csproj" />
   </ItemGroup>
 </Project>

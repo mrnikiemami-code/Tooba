@@ -14,6 +14,7 @@ using Tooba.Catalog.Infrastructure.Development.CatalogDemo;
 using Tooba.Media.Infrastructure;
 using Tooba.Media.Infrastructure.Assets;
 using Tooba.Media.Infrastructure.Persistence;
+using Tooba.Media.Infrastructure.Storage;
 using Tooba.Persistence;
 using Xunit;
 

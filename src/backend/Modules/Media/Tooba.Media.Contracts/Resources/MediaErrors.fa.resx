@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="media.validation.failed" xml:space="preserve"><value>درخواست نامعتبر است.</value></data>
+  <data name="media.upload.failed" xml:space="preserve"><value>آپلود رسانه ناموفق بود.</value></data>
+  <data name="media.type.unsupported" xml:space="preserve"><value>نوع فایل رسانه پشتیبانی نمی‌شود.</value></data>
+  <data name="media.too_large" xml:space="preserve"><value>حجم فایل رسانه از سقف مجاز بیشتر است.</value></data>
+  <data name="media.storage.unavailable" xml:space="preserve"><value>ذخیره‌سازی رسانه در دسترس نیست.</value></data>
+  <data name="media.missing" xml:space="preserve"><value>رسانه یافت نشد.</value></data>
+  <data name="media.asset.missing" xml:space="preserve"><value>رسانه یافت نشد.</value></data>
+</root>

@@ -3,9 +3,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Media.Application.Models;
 using Tooba.Media.Application.Ports;
 using Tooba.Media.Contracts.Assets;
+using Tooba.Media.Contracts.Errors;
 using Tooba.Media.Contracts.Ports;
 using Tooba.Media.Infrastructure.Adapters;
 using Tooba.Media.Infrastructure.Assets;
@@ -42,6 +45,8 @@ public sealed class MediaModule : IToobaModule
         services.AddScoped<IMediaAssetUploadPort, MediaAssetUploadBridge>();
         services.AddScoped<IMediaAssetDemoPort, MediaAssetDemoBridge>();
         services.AddScoped<IMediaAssetReadinessPort, MediaAssetReadinessBridge>();
+        services.AddSingleton<IErrorCatalogContributor, MediaErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, MediaErrorResourceSet>();
         services.AddModuleSchemaMigrator<MediaDbContext>("Media", ModuleSchemaMigrationOrder.Media);
         services.AddDbContext<MediaDbContext>((sp, options) =>
         {

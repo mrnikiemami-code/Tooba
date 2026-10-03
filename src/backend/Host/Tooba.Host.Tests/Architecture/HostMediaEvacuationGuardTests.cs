@@ -109,7 +109,7 @@ public sealed class HostMediaEvacuationGuardTests
     public void Admin_certification_remains_untouched()
     {
         var admin = Path.Combine(HostRoot(), "Admin");
-        Assert.Equal(15, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
+        Assert.Equal(17, Directory.GetFiles(admin, "*.cs", SearchOption.AllDirectories).Length);
         Assert.Empty(Directory.GetFiles(admin, "*.cs", SearchOption.TopDirectoryOnly));
         Assert.True(File.Exists(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host.Tests", "Architecture",

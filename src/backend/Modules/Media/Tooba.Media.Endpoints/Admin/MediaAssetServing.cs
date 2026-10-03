@@ -1,5 +1,6 @@
+using MediatR;
 using Microsoft.AspNetCore.Http;
-using Tooba.Media.Application.Models;
+using Tooba.Media.Application.Assets.Queries;
 using Tooba.Media.Application.Ports;
 
 namespace Tooba.Media.Endpoints.Admin;
@@ -29,18 +30,26 @@ public static class MediaAssetServing
         return Results.File(stream, info.ContentType, enableRangeProcessing: true);
     }
 
-    /// <summary>باینری دارایی را ارائه می‌کند و در نبود آن SVG نمایشی برمی‌گرداند.</summary>
+    /// <summary>باینری دارایی را از طریق CQRS ارائه می‌کند و در نبود SVG نمایشی برمی‌گرداند.</summary>
     public static async Task<IResult> ServeAsync(
         Guid id,
-        IMediaDirectory directory,
+        ISender sender,
         IMediaObjectStore store,
         CancellationToken cancellationToken)
     {
-        var served = await TryServeStoredMediaAsync(id, directory, store, cancellationToken);
-        if (served is not null)
-            return served;
+        var asset = await sender.Send(new GetMediaAssetQuery(id), cancellationToken);
+        if (asset.IsFailure)
+            return PlaceholderSvg(id);
 
-        return PlaceholderSvg(id);
+        var keyResult = await sender.Send(new GetMediaStorageKeyQuery(id), cancellationToken);
+        if (keyResult.IsFailure || string.IsNullOrWhiteSpace(keyResult.Value))
+            return PlaceholderSvg(id);
+
+        var stream = await store.OpenReadAsync(keyResult.Value!, cancellationToken);
+        if (stream is null)
+            return PlaceholderSvg(id);
+
+        return Results.File(stream, asset.Value.ContentType, enableRangeProcessing: true);
     }
 
     /// <summary>SVG نمایشی برای Guidهای legacy بدون دارایی واقعی.</summary>

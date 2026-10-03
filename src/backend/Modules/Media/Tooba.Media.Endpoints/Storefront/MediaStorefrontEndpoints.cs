@@ -1,7 +1,7 @@
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tooba.Media.Application.Models;
 using Tooba.Media.Application.Ports;
 using Tooba.Media.Endpoints.Admin;
 
@@ -17,14 +17,10 @@ public static class MediaStorefrontEndpoints
         app.MapGet("/v1/storefront/media/{assetId:guid}", ServeStorefrontMediaAsync);
     }
 
-    private static async Task<IResult> ServeStorefrontMediaAsync(
+    private static Task<IResult> ServeStorefrontMediaAsync(
         Guid assetId,
-        IMediaDirectory directory,
+        ISender sender,
         IMediaObjectStore store,
-        CancellationToken cancellationToken)
-    {
-        var served = await MediaAssetServing.TryServeStoredMediaAsync(
-            assetId, directory, store, cancellationToken);
-        return served ?? MediaAssetServing.PlaceholderSvg(assetId);
-    }
+        CancellationToken cancellationToken) =>
+        MediaAssetServing.ServeAsync(assetId, sender, store, cancellationToken);
 }
