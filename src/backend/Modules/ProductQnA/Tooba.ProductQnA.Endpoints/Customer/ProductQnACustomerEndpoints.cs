@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.ProductQnA.Application;
-using Tooba.ProductQnA.Application.Commands;
+using Tooba.ProductQnA.Application.Customer.Commands;
+using Tooba.ProductQnA.Application.Models;
 using Tooba.ProductQnA.Contracts.Errors;
 
 namespace Tooba.ProductQnA.Endpoints.Customer;

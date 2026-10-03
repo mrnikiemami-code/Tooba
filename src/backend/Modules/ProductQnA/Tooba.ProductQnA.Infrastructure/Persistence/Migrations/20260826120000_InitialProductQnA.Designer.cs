@@ -9,7 +9,7 @@ using Tooba.ProductQnA.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Tooba.ProductQnA.Infrastructure.Migrations
+namespace Tooba.ProductQnA.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ProductQnADbContext))]
     [Migration("20260826120000_InitialProductQnA")]

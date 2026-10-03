@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
-using Tooba.ProductQnA.Domain;
+using Tooba.ProductQnA.Domain.Aggregates;
 
 namespace Tooba.ProductQnA.Infrastructure.Persistence;
 

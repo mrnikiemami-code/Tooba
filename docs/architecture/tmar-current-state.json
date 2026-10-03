@@ -5044,6 +5044,17 @@
         "automaticNext": "NONE",
         "activeState": "GRID_CLOSED_HOST_ZERO_USER_REVIEW_REQUIRED"
     },
+    "hostProductQnAAmc": {
+        "task": "TB-TMAR-HOST-PRODUCTQNA-AMC-001",
+        "state": "CLOSED_HOST_ZERO",
+        "hostProductQnADirectoryState": "ABSENT",
+        "httpOwner": "Tooba.ProductQnA.Endpoints.ProductQnAEndpointModule",
+        "splitSibling": "Tooba.BulkInquiry.Endpoints.BulkInquiryEndpointModule",
+        "catalogContractsSeam": "ICatalogReviewProductLookup",
+        "workflowStop": "USER_REVIEW_HOST_PRODUCTQNA_AMC_001_CLOSED_HOST_ZERO",
+        "automaticNext": "NONE",
+        "note": "Host ProductQnA evacuated/split to ProductQnA+BulkInquiry; Host folder deleted."
+    },
     "hostWishlistAmc": {
         "task": "TB-TMAR-HOST-WISHLIST-AMC-001",
         "execution": "ARCHITECT_DIRECT_ANALYZE_MIGRATE_CERTIFY",

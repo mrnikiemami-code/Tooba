@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.ProductQnA.Application.Queries;
+using Tooba.ProductQnA.Application.Storefront.Queries;
 
 namespace Tooba.ProductQnA.Endpoints.Storefront;
 

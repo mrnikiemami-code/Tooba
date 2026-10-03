@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Tooba.ProductQnA.Infrastructure.Migrations
+namespace Tooba.ProductQnA.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialProductQnA : Migration

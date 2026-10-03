@@ -192,7 +192,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Reviews.Application.Queries.GetPublishedReviewsQuery).Assembly,
     typeof(Tooba.UserPreference.Application.LocalePreferences.Commands.UpsertUserPreferenceCommand).Assembly,
     typeof(Tooba.OperatorProfile.Application.Admin.Commands.UpsertOperatorProfileCommand).Assembly,
-    typeof(Tooba.ProductQnA.Application.Commands.SubmitProductQuestionCommand).Assembly,
+    typeof(Tooba.ProductQnA.Application.Customer.Commands.SubmitProductQuestionCommand).Assembly,
     typeof(Tooba.BulkInquiry.Application.Commands.SubmitBulkInquiryCommand).Assembly,
     typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly,
     typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly,

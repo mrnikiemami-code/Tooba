@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.Catalog.Contracts;
-using Tooba.ProductQnA.Domain;
+using Tooba.ProductQnA.Domain.Aggregates;
 using Tooba.ProductQnA.Infrastructure.Persistence;
 
-namespace Tooba.ProductQnA.Infrastructure;
+namespace Tooba.ProductQnA.Infrastructure.Development;
 
 /// <summary>دانهٔ توسعهٔ قطعی و idempotent برای پرسش و پاسخ نمایشی.</summary>
 public static class ProductQnADevelopmentSeed

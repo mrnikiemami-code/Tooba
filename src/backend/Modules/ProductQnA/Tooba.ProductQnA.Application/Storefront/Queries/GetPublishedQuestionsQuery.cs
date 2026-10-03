@@ -1,7 +1,8 @@
 using MediatR;
-using Tooba.ProductQnA.Application;
+using Tooba.ProductQnA.Application.Models;
+using Tooba.ProductQnA.Application.Ports;
 
-namespace Tooba.ProductQnA.Application.Queries;
+namespace Tooba.ProductQnA.Application.Storefront.Queries;
 
 /// <summary>صفحهٔ عمومی پرسش‌های Published برای slug محصول.</summary>
 public sealed record GetPublishedQuestionsQuery(string ProductSlug, int Page, int PageSize)

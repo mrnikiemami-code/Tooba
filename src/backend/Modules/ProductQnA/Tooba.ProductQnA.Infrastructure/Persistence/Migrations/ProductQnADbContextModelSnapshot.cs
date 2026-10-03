@@ -8,7 +8,7 @@ using Tooba.ProductQnA.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Tooba.ProductQnA.Infrastructure.Migrations
+namespace Tooba.ProductQnA.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ProductQnADbContext))]
     partial class ProductQnADbContextModelSnapshot : ModelSnapshot

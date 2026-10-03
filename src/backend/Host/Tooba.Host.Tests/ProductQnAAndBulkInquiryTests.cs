@@ -4,10 +4,11 @@ using Tooba.BuildingBlocks;
 using Tooba.BulkInquiry.Domain;
 using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Persistence;
-using Tooba.ProductQnA.Application;
-using Tooba.ProductQnA.Domain;
+using Tooba.ProductQnA.Application.Models;
+using Tooba.ProductQnA.Domain.Aggregates;
+using Tooba.ProductQnA.Domain.Enums;
 using Tooba.ProductQnA.Endpoints.Customer;
-using Tooba.ProductQnA.Infrastructure;
+using Tooba.ProductQnA.Infrastructure.Directories;
 using Tooba.ProductQnA.Infrastructure.Persistence;
 using Xunit;
 

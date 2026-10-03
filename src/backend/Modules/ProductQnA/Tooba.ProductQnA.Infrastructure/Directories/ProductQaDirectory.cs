@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
-using Tooba.ProductQnA.Application;
+using Tooba.ProductQnA.Application.Models;
+using Tooba.ProductQnA.Application.Ports;
 using Tooba.ProductQnA.Contracts.Errors;
-using Tooba.ProductQnA.Domain;
+using Tooba.ProductQnA.Domain.Aggregates;
+using Tooba.ProductQnA.Domain.Enums;
 using Tooba.ProductQnA.Infrastructure.Persistence;
 
-namespace Tooba.ProductQnA.Infrastructure;
+namespace Tooba.ProductQnA.Infrastructure.Directories;
 
 /// <summary>دایرکتوری ProductQnA با خواندن فقط از Catalog.Contracts و schema خودش.</summary>
 public sealed class ProductQaDirectory : IProductQaDirectory
