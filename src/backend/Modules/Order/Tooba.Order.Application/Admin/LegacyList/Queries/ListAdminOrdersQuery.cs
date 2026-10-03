@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Order.Application.Admin.LegacyList.Ports;
@@ -7,7 +7,7 @@ using Tooba.Order.Application.Admin.OrdersGrid.Models;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Returns.Contracts.Operations;
 
-namespace Tooba.Order.Application.Admin.LegacyList.Queries.ListAdminOrders;
+namespace Tooba.Order.Application.Admin.LegacyList.Queries;
 
 /// <summary>فهرست سازگاری آخرین Checkoutها برای GET /v1/admin/orders.</summary>
 public sealed record ListAdminOrdersQuery : IRequest<Result<IReadOnlyList<AdminOrderListItem>>>;

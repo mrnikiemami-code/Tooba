@@ -1,7 +1,7 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 
 
-namespace Tooba.Order.Domain;
+namespace Tooba.Order.Domain.Checkout.Abuse;
 
 /// <summary>ممیزی مسدود شدن تسویه به‌خاطر سقف سفارش باز یا سهمیه رزرو.</summary>
 public sealed class CheckoutAbuseBlockEvent

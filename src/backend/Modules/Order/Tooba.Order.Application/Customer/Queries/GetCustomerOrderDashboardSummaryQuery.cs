@@ -1,10 +1,10 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Order.Application.Customer.Models;
 using Tooba.Order.Application.Customer.Ports;
 
-namespace Tooba.Order.Application.Customer.Queries.GetCustomerOrderDashboardSummary;
+namespace Tooba.Order.Application.Customer.Queries;
 
 /// <summary>شمارنده‌ها و سفارش‌های اخیر داشبورد مشتری.</summary>
 public sealed record GetCustomerOrderDashboardSummaryQuery(Guid ActorUserId)

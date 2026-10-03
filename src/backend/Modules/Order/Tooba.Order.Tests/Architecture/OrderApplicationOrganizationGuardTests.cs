@@ -22,6 +22,11 @@ public sealed class OrderApplicationOrganizationGuardTests
         "SellerOrderCancellationPolicy.cs",
     ];
 
+    private static readonly string[] AllowedRootCsFiles =
+    [
+        "GlobalUsings.cs",
+    ];
+
     private static readonly (string RelativePath, string Namespace)[] RequiredAlignments =
     [
         ("Checkout/Abuse/CheckoutAbuseContracts.cs", "Tooba.Order.Application.Checkout.Abuse"),
@@ -60,7 +65,7 @@ public sealed class OrderApplicationOrganizationGuardTests
             .ToArray();
 
         // Post-closure: no unexplained capability dump at Application root.
-        Assert.Empty(rootFiles);
+        Assert.Equal(AllowedRootCsFiles, rootFiles);
     }
 
     [Fact]

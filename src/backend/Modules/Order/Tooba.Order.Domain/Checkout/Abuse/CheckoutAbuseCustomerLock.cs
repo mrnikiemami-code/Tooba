@@ -1,5 +1,5 @@
-
-namespace Tooba.Order.Domain;
+﻿
+namespace Tooba.Order.Domain.Checkout.Abuse;
 
 /// <summary>قفل سطری مشتری برای جلوگیری از رقابت روی آخرین ظرفیت/سهمیه.</summary>
 public sealed class CheckoutAbuseCustomerLock

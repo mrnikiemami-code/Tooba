@@ -10,7 +10,7 @@ using Tooba.Order.Application.ReservationCycle.Policies;
 using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
 using Tooba.Order.Domain;
-using ReservationCycleEntity = Tooba.Order.Domain.ReservationCycle;
+using ReservationCycleEntity = Tooba.Order.Domain.Reservation.ReservationCycle;
 using Tooba.Order.Infrastructure.Persistence;
 
 namespace Tooba.Order.Infrastructure.ReservationCycle;

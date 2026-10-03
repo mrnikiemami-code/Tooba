@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Order.Application.Admin.Customers.Queries.ListAdminCustomers;
+using Tooba.Order.Application.Admin.Customers.Queries;
 using Tooba.Order.Application.Admin.Customers.Queries.QueryAdminCustomersGrid;
 
 using Tooba.Order.Endpoints;

@@ -1,9 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Order.Application.Admin.Sellers.Models;
 using Tooba.Order.Application.Admin.Sellers.Ports;
 
-namespace Tooba.Order.Application.Admin.Sellers.Queries.GetSellerOrderCounts;
+namespace Tooba.Order.Application.Admin.Sellers.Queries;
 
 /// <summary>شمارش سفارش به ازای فهرست SellerPartyId.</summary>
 public sealed record GetSellerOrderCountsQuery(IReadOnlyList<Guid> SellerPartyIds)

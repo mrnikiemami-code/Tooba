@@ -1,4 +1,4 @@
-namespace Tooba.Order.Domain;
+﻿namespace Tooba.Order.Domain.Rules;
 
 /// <summary>
 /// پیش‌بینی کانونی سفارش بازِ پرداخت‌نشده. شمارش از کارت پنهان یا تلاش پرداخت ساخته نمی‌شود.

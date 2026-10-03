@@ -1,4 +1,4 @@
-namespace Tooba.Order.Domain;
+﻿namespace Tooba.Order.Domain.Reservation;
 
 /// <summary>وضعیت چرخهٔ رزرو سفارش؛ با PaymentAttempt یکی نیست.</summary>
 public enum ReservationCycleStatus

@@ -1,5 +1,6 @@
 using Tooba.Offer.Contracts.Dtos;
-using Tooba.Order.Domain;
+using Tooba.Order.Domain.Aggregates;
+using Tooba.Order.Domain.Enums;
 
 namespace Tooba.Order.Tests;
 
@@ -30,7 +31,7 @@ internal static class OrderTestData
         var lines = codes
             .Select(code => Line(sellerOrderId, seller, quantity, unitPrice, code))
             .ToArray();
-        return Domain.SellerOrder.Open(
+        return Tooba.Order.Domain.Aggregates.SellerOrder.Open(
             checkoutId,
             seller,
             $"SO-{sellerOrderId:N}"[..20],

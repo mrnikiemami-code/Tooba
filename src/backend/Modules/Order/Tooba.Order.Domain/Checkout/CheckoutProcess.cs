@@ -1,4 +1,4 @@
-namespace Tooba.Order.Domain;
+﻿namespace Tooba.Order.Domain.Checkout;
 
 /// <summary>وضعیت فرآیند checkout؛ با وضعیت کسب‌وکار SellerOrder یکی نیست.</summary>
 public enum CheckoutProcessStatus

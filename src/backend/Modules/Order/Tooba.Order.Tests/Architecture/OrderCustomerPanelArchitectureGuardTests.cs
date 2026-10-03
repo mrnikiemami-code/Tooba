@@ -112,7 +112,7 @@ public sealed class OrderCustomerPanelArchitectureGuardTests
         Assert.Contains("Result<CustomerOrderDetailPage>", detail, StringComparison.Ordinal);
 
         var summary = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Application", "Customer", "Queries", "GetCustomerOrderDashboardSummary",
+            OrderRoot(), "Tooba.Order.Application", "Customer", "Queries",
             "GetCustomerOrderDashboardSummaryQuery.cs"));
         Assert.Contains("IRequestHandler", summary, StringComparison.Ordinal);
         Assert.Contains("Result<CustomerOrderDashboardSummary>", summary, StringComparison.Ordinal);

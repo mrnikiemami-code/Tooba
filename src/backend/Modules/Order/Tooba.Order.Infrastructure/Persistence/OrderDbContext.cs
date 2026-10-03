@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Order.Domain;
-using ReservationCycleEntity = Tooba.Order.Domain.ReservationCycle;
+using ReservationCycleEntity = Tooba.Order.Domain.Reservation.ReservationCycle;
 using Tooba.Persistence;
 
 using Tooba.Order.Application.Checkout.Abuse;

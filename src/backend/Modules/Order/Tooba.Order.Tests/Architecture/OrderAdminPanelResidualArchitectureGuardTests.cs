@@ -105,13 +105,13 @@ public sealed class OrderAdminPanelResidualArchitectureGuardTests
     public void CQRS_handlers_and_customers_grid_are_Order_owned()
     {
         var listOrders = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Application", "Admin", "LegacyList", "Queries", "ListAdminOrders",
+            OrderRoot(), "Tooba.Order.Application", "Admin", "LegacyList", "Queries",
             "ListAdminOrdersQuery.cs"));
         Assert.Contains("IRequestHandler", listOrders, StringComparison.Ordinal);
         Assert.Contains("AdminOrdersGridProjection.MapOrderListItem", listOrders, StringComparison.Ordinal);
 
         var listCustomers = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Application", "Admin", "Customers", "Queries", "ListAdminCustomers",
+            OrderRoot(), "Tooba.Order.Application", "Admin", "Customers", "Queries",
             "ListAdminCustomersQuery.cs"));
         Assert.Contains("IRequestHandler", listCustomers, StringComparison.Ordinal);
 
@@ -122,11 +122,11 @@ public sealed class OrderAdminPanelResidualArchitectureGuardTests
 
         var metrics = File.ReadAllText(Path.Combine(
             OrderRoot(), "Tooba.Order.Application", "Admin", "Dashboard", "Queries",
-            "GetAdminOrderDashboardMetrics", "GetAdminOrderDashboardMetricsQuery.cs"));
+            "GetAdminOrderDashboardMetricsQuery.cs"));
         Assert.Contains("IRequestHandler", metrics, StringComparison.Ordinal);
 
         var counts = File.ReadAllText(Path.Combine(
-            OrderRoot(), "Tooba.Order.Application", "Admin", "Sellers", "Queries", "GetSellerOrderCounts",
+            OrderRoot(), "Tooba.Order.Application", "Admin", "Sellers", "Queries",
             "GetSellerOrderCountsQuery.cs"));
         Assert.Contains("IRequestHandler", counts, StringComparison.Ordinal);
 

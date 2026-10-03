@@ -93,7 +93,7 @@ public sealed class OrderStorefrontArchitectureGuardTests
             "GetStorefrontCheckout", "GetStorefrontCheckoutQuery.cs")));
         Assert.True(File.Exists(Path.Combine(
             OrderRoot(), "Tooba.Order.Application", "Storefront", "PendingPayment", "Queries",
-            "ListStorefrontPendingPayments", "ListStorefrontPendingPaymentsQuery.cs")));
+            "ListStorefrontPendingPaymentsQuery.cs")));
         Assert.True(File.Exists(Path.Combine(
             OrderRoot(), "Tooba.Order.Application", "Storefront", "PendingPayment", "Commands",
             "CancelPendingCheckout", "CancelPendingCheckoutCommand.cs")));

@@ -189,7 +189,7 @@ internal sealed class AdminCustomersGridReader(OrderDbContext orders) : IAdminCu
         CancellationToken cancellationToken)
     {
         var fieldIsName = filter.Field == "name";
-        IQueryable<Tooba.Order.Domain.CheckoutGroup> q = orders.Checkouts.AsNoTracking();
+        IQueryable<Tooba.Order.Domain.Aggregates.CheckoutGroup> q = orders.Checkouts.AsNoTracking();
         q = fieldIsName
             ? EfGridQuery.ApplyTextFilter(q, x => x.RecipientName, filter)
             : EfGridQuery.ApplyTextFilter(q, x => x.ContactMobile, filter);

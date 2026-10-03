@@ -1,4 +1,4 @@
-namespace Tooba.Order.Domain;
+﻿namespace Tooba.Order.Domain.Checkout;
 
 /// <summary>
 /// پیش‌نویس ارسال فروشگاهی وابسته به سبد. حقیقت قیمت/حداقل تحویل از backend است نه React.

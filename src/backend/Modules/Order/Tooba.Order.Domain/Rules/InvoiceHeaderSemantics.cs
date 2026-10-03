@@ -1,4 +1,6 @@
-namespace Tooba.Order.Domain;
+﻿using Tooba.Order.Domain.Aggregates;
+
+namespace Tooba.Order.Domain.Rules;
 
 /// <summary>
 /// LOCK-INVOICE-002 / LOCK-QTY-001: تعداد ردیف صحیح است؛ جمع مقدار اعشاری جدا می‌ماند.

@@ -9,7 +9,7 @@ using Tooba.Order.Application.Storefront.Checkout.Queries.PreviewStorefrontCheck
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.PendingPayment.Commands.CancelPendingCheckout;
 using Tooba.Order.Application.Storefront.PendingPayment.Commands.HidePendingPaymentCard;
-using Tooba.Order.Application.Storefront.PendingPayment.Queries.ListStorefrontPendingPayments;
+using Tooba.Order.Application.Storefront.PendingPayment.Queries;
 using Tooba.Order.Contracts.Storefront;
 using Tooba.Order.Application.Storefront.Shipping.Commands.CommitStorefrontShipping;
 using Tooba.Order.Application.Storefront.Shipping.Commands.SaveStorefrontShippingSelection;

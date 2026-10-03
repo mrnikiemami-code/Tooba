@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Order.Application.Seller.Queries.GetSellerOrderDashboardSummary;
+using Tooba.Order.Application.Seller.Queries;
 
 namespace Tooba.Order.Endpoints.Seller;
 

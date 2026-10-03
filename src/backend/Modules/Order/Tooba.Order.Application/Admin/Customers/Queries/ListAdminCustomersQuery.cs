@@ -1,9 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Order.Application.Admin.Customers.Models;
 using Tooba.Order.Application.Admin.Customers.Ports;
 
-namespace Tooba.Order.Application.Admin.Customers.Queries.ListAdminCustomers;
+namespace Tooba.Order.Application.Admin.Customers.Queries;
 
 /// <summary>فهرست مشتریان مشتق‌شده از Checkout.</summary>
 public sealed record ListAdminCustomersQuery : IRequest<Result<IReadOnlyList<AdminCustomerListItem>>>;

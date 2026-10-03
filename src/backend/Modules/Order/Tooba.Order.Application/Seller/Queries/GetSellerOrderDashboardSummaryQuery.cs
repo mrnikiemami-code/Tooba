@@ -1,9 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Order.Application.Seller.Models;
 
-namespace Tooba.Order.Application.Seller.Queries.GetSellerOrderDashboardSummary;
+namespace Tooba.Order.Application.Seller.Queries;
 
 /// <summary>
 /// نمای داشبورد فروشنده: شمارش open/paid سفارش Order-owned بعلاوهٔ غنی‌سازی نام نمایشی از Party.Contracts.

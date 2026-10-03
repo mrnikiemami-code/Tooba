@@ -1,9 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Order.Application.Admin.Dashboard.Models;
 using Tooba.Order.Application.Admin.Dashboard.Ports;
 
-namespace Tooba.Order.Application.Admin.Dashboard.Queries.GetAdminOrderDashboardMetrics;
+namespace Tooba.Order.Application.Admin.Dashboard.Queries;
 
 /// <summary>شمارنده‌های Order برای داشبورد مدیر.</summary>
 public sealed record GetAdminOrderDashboardMetricsQuery : IRequest<Result<AdminOrderDashboardMetrics>>;

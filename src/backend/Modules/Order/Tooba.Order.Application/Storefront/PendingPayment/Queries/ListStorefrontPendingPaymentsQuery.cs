@@ -3,7 +3,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Services;
 
-namespace Tooba.Order.Application.Storefront.PendingPayment.Queries.ListStorefrontPendingPayments;
+namespace Tooba.Order.Application.Storefront.PendingPayment.Queries;
 
 public sealed record ListStorefrontPendingPaymentsQuery(StorefrontPendingPaymentQueryRequest? Body)
     : IRequest<Result<StorefrontPendingPaymentPage>>;

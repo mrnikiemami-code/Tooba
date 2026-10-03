@@ -1,6 +1,6 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 
-namespace Tooba.Order.Domain;
+namespace Tooba.Order.Domain.Checkout;
 
 /// <summary>
 /// رویداد تغییرناپذیر شروع موفق رزرو Cycle #1. لغو/پنهان/پرداخت آن را حذف نمی‌کند.

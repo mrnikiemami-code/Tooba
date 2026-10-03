@@ -116,7 +116,7 @@ public sealed class OrderCompletenessArchitectureGuardTests
         Assert.False(File.Exists(Path.Combine(hostAdmin, "InvoiceHeaderSemantics.cs")));
         Assert.False(File.Exists(Path.Combine(
             RepoRoot(), "src", "backend", "Host", "Tooba.Host.Tests", "AdminOrderCompletenessLegacyTestHelpers.cs")));
-        Assert.True(File.Exists(Path.Combine(OrderRoot(), "Tooba.Order.Domain", "InvoiceHeaderSemantics.cs")));
+        Assert.True(File.Exists(Path.Combine(OrderRoot(), "Tooba.Order.Domain", "Rules", "InvoiceHeaderSemantics.cs")));
     }
 
     [Fact]

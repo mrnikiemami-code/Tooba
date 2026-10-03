@@ -28,6 +28,7 @@ public sealed class OrderInfrastructureOrganizationGuardTests
 
     private static readonly string[] AllowedRootCsFiles =
     [
+        "GlobalUsings.cs",
         "OrderModule.cs",
     ];
 

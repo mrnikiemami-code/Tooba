@@ -119,7 +119,7 @@ public sealed record ReservationCycleProjection(
 public interface IReservationCycleDirectory
 {
     /// <summary>چرخه را بدون Save جدا آماده می‌کند تا با commit سفارش یکی شود.</summary>
-    global::Tooba.Order.Domain.ReservationCycle PrepareStart(
+    global::Tooba.Order.Domain.Reservation.ReservationCycle PrepareStart(
         Guid checkoutId,
         ReservationCycleReason reason,
         DateTimeOffset startedAt,

@@ -1,4 +1,4 @@
-namespace Tooba.Order.Domain;
+﻿namespace Tooba.Order.Domain.PendingPayment;
 
 /// <summary>
 /// ترجیح نمایش کارت در انتظار پرداخت. وضعیت سفارش/پرداخت/رزرو را عوض نمی‌کند.
