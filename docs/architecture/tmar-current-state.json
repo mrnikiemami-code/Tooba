@@ -907,6 +907,38 @@
         "implementationCommitKind": "IMPLEMENTATION_COMMIT",
         "workflowStop": "USER_REVIEW_BULKINQUIRY_AMC_001_W4"
     },
+    "wishlistAmc001": {
+        "task": "TB-TMAR-WISHLIST-AMC-001",
+        "mode": "ARCHITECT_DIRECT_AMSC",
+        "skills": "Analyze,Migrate,Structure,Certify",
+        "state": "COMPLETE_REFERENCE_PATTERN",
+        "httpApplicability": "HTTP_OWNING",
+        "endpointOwnership": "MODULE_ENDPOINTS",
+        "moduleMap": "MapWishlistModuleEndpoints",
+        "cqrs": "MEDIATR_12_5",
+        "structureCertifiedUnderArchComplete002": true,
+        "structureState": "READY_FOR_CERTIFY",
+        "folderGranularity": "PROFESSIONAL_SHALLOW",
+        "solutionExplorer": "CANONICAL_MODULES_WISHLIST",
+        "pathNamespace": "EXACT",
+        "rootAllowlist": "ENFORCED",
+        "validatorCoverage": "COMPLETE_3_OF_3_REQUIRED_PRESENT_PLUS_1_NOT_REQUIRED",
+        "endpointReachableRequests": 4,
+        "validatorRequiredCount": 3,
+        "noValidatorRequiredCount": 1,
+        "validationDiscovery": "ADD_VALIDATORS_FROM_ASSEMBLY_VIA_ADD_TOOBA_CQRS_FOUNDATION",
+        "contractsBoundary": "CLEAN_CONTRACTS_ONLY",
+        "foreignAppInfraDomainCoupling": "ZERO",
+        "crossModuleComposition": "CATALOG_CONTRACTS_PORTS_ONLY_PLUS_ORDER_FULFILLMENT_SESSION_SEAM_IN_DEV_SEED",
+        "hostWishlistHttpResidue": "ZERO_CLOSED_HOST_ZERO",
+        "manifestCertified": true,
+        "microserviceExtractable": true,
+        "frontendFrozen": true,
+        "evidenceStructure": "docs/architecture/evidence/TB-TMAR-WISHLIST-AMC-001-W4/w4-structure-gate.md",
+        "evidenceCertify": "docs/architecture/evidence/TB-TMAR-WISHLIST-AMC-001-W4/w4-certification.md",
+        "implementationCommitKind": "IMPLEMENTATION_COMMIT",
+        "workflowStop": "USER_REVIEW_WISHLIST_AMC_001_W4"
+    },
     "localizationAmc001": {
         "task": "TB-TMAR-LOCALIZATION-AMC-001",
         "mode": "ARCHITECT_DIRECT_AMSC",
@@ -1045,7 +1077,8 @@
             "Party",
             "ProductQnA",
             "PageComposition",
-            "BulkInquiry"
+            "BulkInquiry",
+            "Wishlist"
         ],
         "manifest": "docs/architecture/tmar-module-structure-manifests.json",
         "standard": "docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md",
@@ -5180,7 +5213,7 @@
         "catalogApplicationLeakage": "ZERO",
         "catalogDomainLeakage": "ZERO",
         "folderCertification": "HOST_ZERO",
-        "moduleStructureCertification": "PARTIAL_FOUNDATION_IMPROVED_ENDPOINTS_CQRS_PRESENT",
+        "moduleStructureCertification": "COMPLETE_REFERENCE_PATTERN_VIA_TB_TMAR_WISHLIST_AMC_001",
         "schemaChangeState": "NONE",
         "frontendState": "UNCHANGED",
         "durableGuard": "HostWishlistAmcGuardTests",
@@ -5190,7 +5223,8 @@
         "automaticNext": "NONE",
         "implementationCommit": "cb573a8d8bf47c430483d4fd5ff604e3404bc60a",
         "certificationState": "CLOSED_HOST_ZERO",
-        "automaticNextImplementationTask": "NONE"
+        "automaticNextImplementationTask": "NONE",
+        "moduleAmcFollowOn": "docs/architecture/evidence/TB-TMAR-WISHLIST-AMC-001-W4/"
     },
     "hostStoryAmc": {
         "task": "TB-TMAR-HOST-STORY-AMC-001",
