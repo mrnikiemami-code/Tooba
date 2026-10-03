@@ -26,10 +26,6 @@
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Domain/Tooba.UserPreference.Domain.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Application/Tooba.UserPreference.Application.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Infrastructure/Tooba.UserPreference.Infrastructure.csproj" />
-    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Domain/Tooba.OperatorProfile.Domain.csproj" />
-    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Contracts/Tooba.OperatorProfile.Contracts.csproj" />
-    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Application/Tooba.OperatorProfile.Application.csproj" />
-    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Infrastructure/Tooba.OperatorProfile.Infrastructure.csproj" />
     <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Domain/Tooba.ProductQnA.Domain.csproj" />
     <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Application/Tooba.ProductQnA.Application.csproj" />
     <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Infrastructure/Tooba.ProductQnA.Infrastructure.csproj" />
@@ -67,6 +63,13 @@
     <Project Path="Modules/Localization/Tooba.Localization.Application/Tooba.Localization.Application.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Infrastructure/Tooba.Localization.Infrastructure.csproj" />
     <Project Path="Modules/Localization/Tooba.Localization.Endpoints/Tooba.Localization.Endpoints.csproj" />
+  </Folder>
+  <Folder Name="/Modules/OperatorProfile/">
+    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Domain/Tooba.OperatorProfile.Domain.csproj" />
+    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Contracts/Tooba.OperatorProfile.Contracts.csproj" />
+    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Application/Tooba.OperatorProfile.Application.csproj" />
+    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Infrastructure/Tooba.OperatorProfile.Infrastructure.csproj" />
+    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Endpoints/Tooba.OperatorProfile.Endpoints.csproj" />
   </Folder>
   <Folder Name="/Modules/AccessControl/">
     <Project Path="Modules/AccessControl/Tooba.AccessControl.Domain/Tooba.AccessControl.Domain.csproj" />
