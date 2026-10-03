@@ -1,11 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.BuildingBlocks.Localization;
-using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.ProductQnA.Endpoints.Customer;
-using Tooba.ProductQnA.Endpoints.Errors;
-using Tooba.ProductQnA.Endpoints.Resources;
 using Tooba.ProductQnA.Endpoints.Storefront;
 
 namespace Tooba.ProductQnA.Endpoints;
@@ -22,13 +18,14 @@ public static class ProductQnAEndpointModule
         return app;
     }
 
-    /// <summary>ثبت actor resolver و error catalog/resources.</summary>
+    /// <summary>
+    /// Host composition seam for presentation registration.
+    /// Error catalog/resources are owned by <c>ProductQnAModule</c> (Infrastructure).
+    /// </summary>
     public static IServiceCollection AddProductQnAEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<IProductQnACustomerActorResolver, ProductQnACustomerActorResolver>();
-        services.AddSingleton<IErrorCatalogContributor, ProductQnAErrorCatalogContributor>();
-        services.AddSingleton<IErrorResourceSet, ProductQnAErrorResourceSet>();
         return services;
     }
 }

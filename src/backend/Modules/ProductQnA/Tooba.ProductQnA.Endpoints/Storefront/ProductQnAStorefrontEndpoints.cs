@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.ProductQnA.Application.Storefront.Queries;
 
@@ -26,44 +25,7 @@ public static class ProductQnAStorefrontEndpoints
         int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var result = await sender.Send(new GetPublishedQuestionsQuery(slug, page, pageSize), cancellationToken);
-            if (result is null)
-                return Results.NotFound();
-
-            return Results.Json(new PublicQuestionsResponse(
-                result.Items.Select(x => new PublicQuestionItem(
-                    x.QuestionId, x.AuthorDisplayName, x.Body, x.CreatedAt,
-                    x.AnswerBody, x.AnswerAuthorDisplayName, x.AnswerCreatedAt)).ToList(),
-                result.Page,
-                result.PageSize,
-                result.TotalCount));
-        }
-        catch (SemanticException ex)
-        {
-            return api.FromSemanticException(ex);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return api.FromPlatformException(ex);
-        }
+        var result = await sender.Send(new GetPublishedQuestionsQuery(slug, page, pageSize), cancellationToken);
+        return api.From(result);
     }
 }
-
-/// <summary>پاسخ عمومی صفحهٔ پرسش‌های Published (نام فیلد questions حفظ می‌شود).</summary>
-public sealed record PublicQuestionsResponse(
-    IReadOnlyList<PublicQuestionItem> Questions,
-    int Page,
-    int PageSize,
-    long TotalCount);
-
-/// <summary>ردیف عمومی پرسش با پاسخ Published اختیاری.</summary>
-public sealed record PublicQuestionItem(
-    Guid QuestionId,
-    string AuthorDisplayName,
-    string Body,
-    DateTimeOffset CreatedAt,
-    string? AnswerBody,
-    string? AnswerAuthorDisplayName,
-    DateTimeOffset? AnswerCreatedAt);

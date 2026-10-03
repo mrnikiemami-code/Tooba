@@ -28,25 +28,16 @@ public static class ProductQnACustomerEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
+        var actor = actorResolver.ResolveActor(http);
+        if (actor is null)
         {
-            var actor = actorResolver.ResolveActor(http);
-            if (actor is null)
-            {
-                return api.FromSemanticException(
-                    new SemanticException(new SemanticError(ProductQnAErrorCodes.SessionRequired)));
-            }
+            return api.FromFailure(new SemanticError(ProductQnAErrorCodes.SessionRequired));
+        }
 
-            var id = await sender.Send(new SubmitProductQuestionCommand(actor.Value, body), cancellationToken);
-            return Results.Json(new { questionId = id, status = "Pending" }, statusCode: StatusCodes.Status201Created);
-        }
-        catch (SemanticException ex)
-        {
-            return api.FromSemanticException(ex);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return api.FromPlatformException(ex);
-        }
+        var result = await sender.Send(new SubmitProductQuestionCommand(actor.Value, body), cancellationToken);
+        var location = result.IsSuccess
+            ? $"/v1/customer/product-questions/{result.Value.QuestionId}"
+            : "/v1/customer/product-questions";
+        return api.Created(location, result);
     }
 }

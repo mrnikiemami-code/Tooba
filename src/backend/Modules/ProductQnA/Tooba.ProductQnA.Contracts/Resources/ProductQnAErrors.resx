@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="product_qna.rejected" xml:space="preserve"><value>Product question was rejected.</value></data>
+  <data name="product_qna.not_found" xml:space="preserve"><value>Not Found</value></data>
+  <data name="product_qna.validation.actor_required" xml:space="preserve"><value>Actor is required.</value></data>
+  <data name="product_qna.validation.body_required" xml:space="preserve"><value>Body is required.</value></data>
+  <data name="product_qna.validation.product_required" xml:space="preserve"><value>Product is required.</value></data>
+  <data name="product_qna.validation.question_body_required" xml:space="preserve"><value>Question body is required.</value></data>
+  <data name="product_qna.validation.slug_required" xml:space="preserve"><value>Slug is required.</value></data>
+  <data name="product_qna.validation.page_invalid" xml:space="preserve"><value>Page is invalid.</value></data>
+  <data name="product_qna.validation.page_size_invalid" xml:space="preserve"><value>Page size is invalid.</value></data>
+</root>

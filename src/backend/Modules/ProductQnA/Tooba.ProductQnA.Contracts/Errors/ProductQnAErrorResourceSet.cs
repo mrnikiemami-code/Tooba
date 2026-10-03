@@ -2,17 +2,17 @@ using System.Globalization;
 using System.Resources;
 using Tooba.BuildingBlocks.Localization;
 
-namespace Tooba.ProductQnA.Endpoints.Resources;
+namespace Tooba.ProductQnA.Contracts.Errors;
 
-/// <summary>نشانگر منبع خطاهای ProductQnA.</summary>
+/// <summary>Resource manager marker for ProductQnAErrors.resx.</summary>
 public static class ProductQnAErrorResources
 {
-    /// <summary>ResourceManager.</summary>
+    /// <summary>ResourceManager for ProductQnA error resources.</summary>
     public static ResourceManager Manager { get; } =
-        new("Tooba.ProductQnA.Endpoints.Resources.ProductQnAErrors", typeof(ProductQnAErrorResources).Assembly);
+        new("Tooba.ProductQnA.Contracts.Resources.ProductQnAErrors", typeof(ProductQnAErrorResources).Assembly);
 }
 
-/// <summary>مجموعهٔ منبع ProductQnA.</summary>
+/// <summary>ProductQnA-owned error resource set for the <c>product_qna.</c> key space.</summary>
 public sealed class ProductQnAErrorResourceSet : IErrorResourceSet
 {
     /// <inheritdoc />

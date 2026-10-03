@@ -7,4 +7,7 @@
     <RootNamespace>Tooba.ProductQnA.Contracts</RootNamespace>
     <AssemblyName>Tooba.ProductQnA.Contracts</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+  </ItemGroup>
 </Project>
