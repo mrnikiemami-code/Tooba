@@ -42,7 +42,9 @@ public sealed class OrderApplicationOrganizationGuardTests
         ("ReservationCycle/Services/ReservationCycleCoordinator.cs", "Tooba.Order.Application.ReservationCycle.Services"),
         ("ReservationCycle/Policies/ReservationCyclePolicyResolver.cs", "Tooba.Order.Application.ReservationCycle.Policies"),
         ("Seller/Policies/SellerOrderCancellationPolicy.cs", "Tooba.Order.Application.Seller.Policies"),
-        ("PurchaseVerification/OrderPurchaseVerificationContracts.cs", "Tooba.Order.Application.PurchaseVerification"),
+        ("Seller/Queries/GetSellerOrderDashboardSummaryQuery.cs", "Tooba.Order.Application.Seller.Queries"),
+        ("Seller/Queries/GetSellerOrderDashboardSummaryQueryValidator.cs", "Tooba.Order.Application.Seller.Queries"),
+        ("Admin/Settings/ReservationPolicy/Validators/ReservationPolicyQueryValidators.cs", "Tooba.Order.Application.Admin.Settings.ReservationPolicy.Validators"),
         ("Validation/OrderValidationCodes.cs", "Tooba.Order.Application.Validation"),
     ];
 

@@ -1,4 +1,4 @@
-﻿using Tooba.AddressBook.Contracts.Ports;
+using Tooba.AddressBook.Contracts.Ports;
 using Tooba.AddressBook.Contracts.Dtos;
 using Tooba.Cart.Contracts;
 using Tooba.Order.Application.Storefront.Models;
@@ -10,7 +10,6 @@ using Tooba.Order.Application.Checkout.Abuse;
 using Tooba.Order.Application.Checkout.Contracts;
 using Tooba.Order.Application.Checkout.Policies;
 using Tooba.Order.Application.Checkout.Process;
-using Tooba.Order.Application.PurchaseVerification;
 using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.ReservationCycle.Policies;
 using Tooba.Order.Application.ReservationCycle.Services;

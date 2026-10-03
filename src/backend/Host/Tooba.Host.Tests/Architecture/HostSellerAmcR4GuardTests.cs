@@ -88,7 +88,7 @@ public sealed class HostSellerAmcR4GuardTests
     [Fact]
     public void Dashboard_cqrs_retains_one_authoritative_query_with_order_and_party_boundaries()
     {
-        var query = Read("src/backend/Modules/Order/Tooba.Order.Application/Seller/Queries/GetSellerOrderDashboardSummary/GetSellerOrderDashboardSummaryQuery.cs");
+        var query = Read("src/backend/Modules/Order/Tooba.Order.Application/Seller/Queries/GetSellerOrderDashboardSummaryQuery.cs");
         Assert.Contains("IRequest<Result<SellerDashboardView>>", query, StringComparison.Ordinal);
         Assert.Contains("IRequestHandler<GetSellerOrderDashboardSummaryQuery, Result<SellerDashboardView>>", query, StringComparison.Ordinal);
         Assert.Contains("GetDashboardViewAsync", query, StringComparison.Ordinal);

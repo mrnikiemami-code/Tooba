@@ -19,6 +19,8 @@ public static class OrderValidationCodes
     public const string OperationRequestRequired = "order.validation.operation_request_required";
     public const string ExpectedCartVersionMin = "order.validation.expected_cart_version_min";
     public const string SellerOrderIdRequired = "order.validation.seller_order_id_required";
+    public const string OfferIdRequired = "order.validation.offer_id_required";
+    public const string CategoryIdRequired = "order.validation.category_id_required";
     public const string ReasonRequired = "order.validation.reason_required";
     public const string ReasonTooLong = "order.validation.reason_too_long";
     public const string TakeRange = "order.validation.take_range";

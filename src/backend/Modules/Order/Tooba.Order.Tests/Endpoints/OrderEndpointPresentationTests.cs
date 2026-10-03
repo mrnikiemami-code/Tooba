@@ -3,6 +3,7 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
+using Tooba.Catalog.Contracts.Errors;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.Completeness.Errors;
 using Tooba.Order.Application.Customer;
@@ -97,8 +98,20 @@ public sealed class OrderEndpointPresentationTests
         CustomerOrderErrors.SupplyUnavailable,
     ];
 
+    /// <summary>
+    /// Codes consumed by Order on admin/seller reservation-policy settings but canonically owned by
+    /// CatalogErrorCatalogContributor (Catalog/HoldPolicy* is the natural bounded context and primary
+    /// producer). Order keeps the stable machine codes and FA resources but must not re-register them.
+    /// </summary>
+    private static readonly string[] SharedCatalogCodes =
+    [
+        ReservationPolicyErrors.InitialInvalid,
+        ReservationPolicyErrors.RetryInvalid,
+        ReservationPolicyErrors.MaxInvalid,
+    ];
+
     private static readonly string[] SharedCodes =
-        SharedFoundationCodes.Concat(SharedPaymentCodes).ToArray();
+        SharedFoundationCodes.Concat(SharedPaymentCodes).Concat(SharedCatalogCodes).ToArray();
 
     private static readonly string[] OrderOwnedCodes =
         AllCodes.Where(c => !SharedCodes.Contains(c, StringComparer.Ordinal)).ToArray();
@@ -151,10 +164,11 @@ public sealed class OrderEndpointPresentationTests
         var catalog = new ErrorDefinitionCatalog(
         [
             new FoundationErrorCatalogContributor(),
+            new CatalogErrorCatalogContributor(),
             new OrderErrorCatalogContributor(),
         ]);
 
-        foreach (var code in OrderOwnedCodes.Concat(SharedFoundationCodes))
+        foreach (var code in OrderOwnedCodes.Concat(SharedFoundationCodes).Concat(SharedCatalogCodes))
         {
             Assert.True(catalog.TryGet(code, out _), "missing descriptor: " + code);
         }

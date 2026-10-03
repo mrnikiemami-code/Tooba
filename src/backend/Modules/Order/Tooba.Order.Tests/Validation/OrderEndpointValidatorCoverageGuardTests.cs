@@ -87,6 +87,18 @@ public sealed class OrderEndpointValidatorCoverageGuardTests
         ("RetryCustomerUnpaidOrderCommand", "VALIDATOR_REQUIRED"),
         ("ListSellerOrdersQuery", "VALIDATOR_REQUIRED"),
         ("GetSellerOrderDetailQuery", "VALIDATOR_REQUIRED"),
+        ("GetSellerOrderDashboardSummaryQuery", "VALIDATOR_REQUIRED"),
+        // Admin/Seller reservation-policy settings
+        ("GetStoreReservationPolicyQuery", "NO_VALIDATOR_REQUIRED"),
+        ("SaveStoreReservationPolicyCommand", "VALIDATOR_REQUIRED"),
+        ("GetCategoryReservationPolicyQuery", "VALIDATOR_REQUIRED"),
+        ("SaveCategoryReservationPolicyCommand", "VALIDATOR_REQUIRED"),
+        ("GetOffersReservationPolicyBatchQuery", "NO_VALIDATOR_REQUIRED"),
+        ("GetOfferReservationPolicyQuery", "VALIDATOR_REQUIRED"),
+        ("SaveOfferReservationPolicyCommand", "VALIDATOR_REQUIRED"),
+        ("GetReservationPolicyAuditQuery", "VALIDATOR_REQUIRED"),
+        ("GetSellerOfferReservationPolicyQuery", "VALIDATOR_REQUIRED"),
+        ("DenySellerOfferReservationPolicyCommand", "VALIDATOR_REQUIRED"),
     ];
 
     [Fact]

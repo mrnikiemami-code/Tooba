@@ -1,11 +1,13 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Order.Application.Storefront.Checkout.Commands.SubmitStorefrontCheckout;
 using Tooba.Order.Application.Storefront.Checkout.Queries.GetStorefrontCheckout;
 using Tooba.Order.Application.Storefront.Checkout.Queries.PreviewStorefrontCheckout;
+using Tooba.Order.Application.Storefront.Geography;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.PendingPayment.Commands.CancelPendingCheckout;
 using Tooba.Order.Application.Storefront.PendingPayment.Commands.HidePendingPaymentCard;
@@ -32,7 +34,8 @@ internal static class StorefrontOrderEndpoints
         group.MapPost("/shipping/projection", ProjectShippingAsync);
         group.MapPut("/shipping/selection", SaveShippingSelectionAsync);
         group.MapPost("/shipping/commit", CommitShippingAsync);
-        group.MapGet("/geography/provinces", () => Results.Json(StorefrontIranGeography.Provinces));
+        group.MapGet("/geography/provinces", (ApiResponseFactory api) =>
+            api.From(Result.Success(StorefrontIranGeography.Provinces)));
     }
 
     private static async Task<IResult> ListPendingPaymentsAsync(
