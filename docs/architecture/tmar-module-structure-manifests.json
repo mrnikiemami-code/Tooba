@@ -274,6 +274,75 @@
       ]
     },
     {
+      "module": "ProductQnA",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Certified by TB-TMAR-PRODUCTQNA-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first Customer/Storefront CQRS; Result+ProductQnAOperation+ApiResponseFactory; exhaustive 2-request validator matrix (2 required present); Contracts.Errors/Resources catalog; Catalog.Contracts-only foreign seam; Host ProductQnA CLOSED_HOST_ZERO; /Modules/ProductQnA/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "projects": [
+        {
+          "projectName": "Tooba.ProductQnA.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "ProductQnA.Application has no root .cs: Customer/Storefront capability trees plus Composition/Models/Ports; path↔namespace exact.",
+          "forbiddenRootFiles": [
+            "ProductQaContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries"
+          ]
+        },
+        {
+          "projectName": "Tooba.ProductQnA.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "ProductQnA.Domain has no root .cs; Aggregates/Enums hold types with exact path↔namespace.",
+          "forbiddenRootFiles": [
+            "ProductQuestion.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.ProductQnA.Endpoints",
+          "rootAllowlist": [
+            "ProductQnAEndpointModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry only; Customer/ and Storefront/ hold HTTP surfaces.",
+          "forbiddenRootFiles": [
+            "ProductQnACustomerEndpoints.cs",
+            "ProductQnAStorefrontEndpoints.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Errors",
+            "Resources"
+          ]
+        },
+        {
+          "projectName": "Tooba.ProductQnA.Infrastructure",
+          "rootAllowlist": [
+            "ProductQnAModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry ProductQnAModule.cs only; Directories/Development/Persistence hold integrations; Migrations under Persistence/.",
+          "forbiddenRootFiles": [
+            "ProductQaDirectory.cs",
+            "ProductQnADevelopmentSeed.cs",
+            "ProductQnADbContext.cs",
+            "ProductQnAOutboxRegistration.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations"
+          ]
+        },
+        {
+          "projectName": "Tooba.ProductQnA.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "ProductQnA.Contracts has no root .cs: Errors (+ Resources) carry contracts.",
+          "forbiddenRootFiles": [
+            "ProductQnAErrorCodes.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    },
+    {
       "module": "Party",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
