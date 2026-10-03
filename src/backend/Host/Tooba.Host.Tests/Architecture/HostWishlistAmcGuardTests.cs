@@ -60,9 +60,9 @@ public sealed class HostWishlistAmcGuardTests
     {
         var root = FindRepoRoot();
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/CatalogStorefrontProductCardContracts.cs")));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Ports/CatalogStorefrontProductCardContracts.cs")));
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/CatalogDevelopmentPublishedProductSamplerContracts.cs")));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Ports/CatalogDevelopmentPublishedProductSamplerContracts.cs")));
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Adapters/CatalogStorefrontProductCardLookup.cs")));
         Assert.True(File.Exists(Path.Combine(

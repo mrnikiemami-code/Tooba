@@ -48,7 +48,7 @@ public sealed class HostAdminAmcW31PwListGridGuardTests
             "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Application/Composition/Grid/AdminProductGridQueryPolicy.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/CatalogAdminProductWorkspaceListContracts.cs")));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Ports/CatalogAdminProductWorkspaceListContracts.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
             "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CatalogAdminProductWorkspaceListGateway.cs")));

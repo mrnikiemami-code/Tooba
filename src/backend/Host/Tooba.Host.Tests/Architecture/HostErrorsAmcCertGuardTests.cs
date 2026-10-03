@@ -132,7 +132,7 @@ public sealed class HostErrorsAmcCertGuardTests
         AssertResxHas(Repo("src/backend/BuildingBlocks/Tooba.BuildingBlocks/Localization/Resources/FoundationErrors.resx"), PlatformCodes);
         AssertResxHas(Repo("src/backend/BuildingBlocks/Tooba.BuildingBlocks/Localization/Resources/FoundationErrors.fa.resx"), PlatformCodes);
 
-        var catalogSrc = Read("src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs");
+        var catalogSrc = Read("src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs");
         var catalogCodes = Read("src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCodes.cs");
         var orderSrc = Read("src/backend/Modules/Order/Tooba.Order.Endpoints/Errors/OrderErrorCatalogContributor.cs");
         foreach (var code in ReservationPolicyCodes)

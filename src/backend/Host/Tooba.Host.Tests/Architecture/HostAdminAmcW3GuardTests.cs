@@ -164,14 +164,14 @@ public sealed class HostAdminAmcW3GuardTests
         Assert.Contains("unit.language.unknown", codes, StringComparison.Ordinal);
 
         var contributor = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs"));
         Assert.Contains("UnitMissing", contributor, StringComparison.Ordinal);
         Assert.Contains("UnitDimensionInvalid", contributor, StringComparison.Ordinal);
         Assert.Contains("UnitCodeDuplicate", contributor, StringComparison.Ordinal);
         Assert.Contains("UnitLanguageUnknown", contributor, StringComparison.Ordinal);
 
         var resx = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.resx"));
         Assert.Contains("unit.missing", resx, StringComparison.Ordinal);
         Assert.Contains("unit.language.unknown", resx, StringComparison.Ordinal);
     }

@@ -1,5 +1,3 @@
-using Tooba.BuildingBlocks.Localization;
-using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Catalog.Endpoints.Admin;
 using Tooba.Catalog.Endpoints.Admin.Attributes.Definitions;
 using Tooba.Catalog.Endpoints.Admin.Attributes.ProductValues;
@@ -21,8 +19,6 @@ using Tooba.Catalog.Endpoints.Admin.Settings;
 using Tooba.Catalog.Endpoints.Admin.Tags;
 using Tooba.Catalog.Endpoints.Admin.Units;
 using Tooba.Catalog.Endpoints.Admin.Variants;
-using Tooba.Catalog.Endpoints.Errors;
-using Tooba.Catalog.Endpoints.Resources;
 using Tooba.Catalog.Endpoints.Seller;
 using Tooba.Catalog.Endpoints.Storefront.Browse;
 using Tooba.Catalog.Endpoints.Storefront.Categories;
@@ -83,8 +79,6 @@ public static class CatalogEndpointModule
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<ICatalogAdminAuthorizer, CatalogAdminAuthorizer>();
-        services.AddSingleton<IErrorCatalogContributor, CatalogErrorCatalogContributor>();
-        services.AddSingleton<IErrorResourceSet, CatalogErrorResourceSet>();
         return services;
     }
 }

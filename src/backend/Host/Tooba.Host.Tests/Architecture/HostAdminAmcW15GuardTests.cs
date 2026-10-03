@@ -164,7 +164,7 @@ public sealed class HostAdminAmcW15GuardTests
         Assert.Contains("workspace.product.missing", codes, StringComparison.Ordinal);
 
         var contributor = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs"));
         Assert.Contains("WorkspaceProductMissing", contributor, StringComparison.Ordinal);
     }
 

@@ -3,6 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FluentValidation;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
+using Tooba.Catalog.Contracts.Errors;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Application.Attributes.Definitions.Ports;
 using Tooba.Catalog.Application.Attributes.ProductValues.Ports;
@@ -71,6 +74,8 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<ICatalogUseCaseGuard, OpenCatalogUseCaseGuard>();
         services.AddScoped<ICatalogActorContext, CatalogActorContext>();
         services.AddScoped<ICatalogDirectory, CatalogDirectory>();
+        services.AddSingleton<IErrorCatalogContributor, CatalogErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, CatalogErrorResourceSet>();
         services.AddScoped<ICatalogLookupGateway>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
         services.AddScoped<IAccessControlScopeResourceLookup, CatalogAccessControlScopeResourceLookup>();
         services.AddScoped<ICatalogVariantLookup>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());

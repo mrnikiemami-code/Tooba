@@ -83,7 +83,7 @@ public sealed class HostAdminAmcW19R1GuardTests
             "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CatalogAdminProductWorkspaceReadGateway.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/CatalogAdminProductWorkspaceReadContracts.cs")));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Ports/CatalogAdminProductWorkspaceReadContracts.cs")));
     }
 
     [Fact]

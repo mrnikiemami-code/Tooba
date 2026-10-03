@@ -1,4 +1,5 @@
 using MediatR;
+using Tooba.BuildingBlocks.Presentation;
 using Tooba.Catalog.Application.Storefront.Models;
 using Tooba.Catalog.Application.Storefront.Queries;
 
@@ -6,7 +7,7 @@ namespace Tooba.Catalog.Endpoints.Storefront.Browse;
 
 /// <summary>
 /// Catalog-owned storefront browse BFF routes (home/categories/brands/sellers/merchandising/products/PLP).
-/// Response shapes and errorCodes preserved from Host StorefrontEndpoints.
+/// Dispatches via MediatR + ApiResponseFactory (canonical ProblemDetails on failure).
 /// </summary>
 public static class CatalogStorefrontBrowseEndpoints
 {
@@ -29,55 +30,53 @@ public static class CatalogStorefrontBrowseEndpoints
 
     private static async Task<IResult> GetHomeAsync(
         ISender sender,
+        ApiResponseFactory api,
         string? locale = null,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await sender.Send(new GetStorefrontHomeQuery(locale), cancellationToken);
-        return Results.Json(result.Value);
-    }
+        CancellationToken cancellationToken = default) =>
+        api.From(await sender.Send(new GetStorefrontHomeQuery(locale), cancellationToken));
 
-    private static async Task<IResult> GetCategoriesAsync(ISender sender, CancellationToken cancellationToken)
-    {
-        var result = await sender.Send(new GetStorefrontCategoriesQuery(), cancellationToken);
-        return Results.Json(result.Value);
-    }
+    private static async Task<IResult> GetCategoriesAsync(
+        ISender sender,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
+        api.From(await sender.Send(new GetStorefrontCategoriesQuery(), cancellationToken));
 
-    private static async Task<IResult> GetBrandsAsync(ISender sender, CancellationToken cancellationToken)
-    {
-        var result = await sender.Send(new GetStorefrontBrandsQuery(), cancellationToken);
-        return Results.Json(result.Value);
-    }
+    private static async Task<IResult> GetBrandsAsync(
+        ISender sender,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
+        api.From(await sender.Send(new GetStorefrontBrandsQuery(), cancellationToken));
 
-    private static async Task<IResult> GetBrandAsync(string slug, ISender sender, CancellationToken cancellationToken)
-    {
-        var result = await sender.Send(new GetStorefrontBrandBySlugQuery(slug), cancellationToken);
-        return result.IsFailure
-            ? Results.Json(new { title = "Not Found", errorCode = result.Errors[0].Code }, statusCode: StatusCodes.Status404NotFound)
-            : Results.Json(result.Value);
-    }
+    private static async Task<IResult> GetBrandAsync(
+        string slug,
+        ISender sender,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
+        api.From(await sender.Send(new GetStorefrontBrandBySlugQuery(slug), cancellationToken));
 
-    private static async Task<IResult> GetSellersAsync(ISender sender, CancellationToken cancellationToken)
-    {
-        var result = await sender.Send(new GetStorefrontSellersQuery(), cancellationToken);
-        return Results.Json(result.Value);
-    }
+    private static async Task<IResult> GetSellersAsync(
+        ISender sender,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
+        api.From(await sender.Send(new GetStorefrontSellersQuery(), cancellationToken));
 
-    private static async Task<IResult> GetSellerAsync(string publicId, ISender sender, CancellationToken cancellationToken)
-    {
-        var result = await sender.Send(new GetStorefrontSellerByPublicIdQuery(publicId), cancellationToken);
-        return result.IsFailure
-            ? Results.Json(new { title = "Not Found", errorCode = result.Errors[0].Code }, statusCode: StatusCodes.Status404NotFound)
-            : Results.Json(result.Value);
-    }
+    private static async Task<IResult> GetSellerAsync(
+        string publicId,
+        ISender sender,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
+        api.From(await sender.Send(new GetStorefrontSellerByPublicIdQuery(publicId), cancellationToken));
 
-    private static async Task<IResult> GetMerchandisingAsync(string kind, ISender sender, CancellationToken cancellationToken)
-    {
-        var result = await sender.Send(new GetStorefrontMerchandisingQuery(kind), cancellationToken);
-        return Results.Json(result.Value);
-    }
+    private static async Task<IResult> GetMerchandisingAsync(
+        string kind,
+        ISender sender,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
+        api.From(await sender.Send(new GetStorefrontMerchandisingQuery(kind), cancellationToken));
 
     private static async Task<IResult> GetListingAsync(
         ISender sender,
+        ApiResponseFactory api,
         string? q,
         Guid? categoryId,
         Guid? sellerPartyId,
@@ -85,29 +84,23 @@ public static class CatalogStorefrontBrowseEndpoints
         string? sort,
         int page = 1,
         int pageSize = 24,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await sender.Send(
+        CancellationToken cancellationToken = default) =>
+        api.From(await sender.Send(
             new GetStorefrontProductListingQuery(q, categoryId, sellerPartyId, inStock, sort, page, pageSize),
-            cancellationToken);
-        return Results.Json(result.Value);
-    }
+            cancellationToken));
 
     private static async Task<IResult> GetDetailAsync(
         string slug,
         Guid? variantId,
         ISender sender,
-        CancellationToken cancellationToken)
-    {
-        var result = await sender.Send(new GetStorefrontProductDetailQuery(slug, variantId), cancellationToken);
-        return result.IsFailure
-            ? Results.Json(new { title = "Not Found", errorCode = result.Errors[0].Code }, statusCode: StatusCodes.Status404NotFound)
-            : Results.Json(result.Value);
-    }
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
+        api.From(await sender.Send(new GetStorefrontProductDetailQuery(slug, variantId), cancellationToken));
 
     private static async Task<IResult> GetCategoryPlpAsync(
         string slug,
         ISender sender,
+        ApiResponseFactory api,
         HttpRequest request,
         string? locale,
         string? sort,
@@ -116,12 +109,9 @@ public static class CatalogStorefrontBrowseEndpoints
         CancellationToken cancellationToken = default)
     {
         var filters = ParsePlpFilters(request);
-        var result = await sender.Send(
+        return api.From(await sender.Send(
             new GetStorefrontCategoryPlpQuery(locale ?? "fa-IR", slug, filters, sort, page, pageSize),
-            cancellationToken);
-        return result.IsFailure
-            ? Results.Json(new { title = "Not Found", errorCode = result.Errors[0].Code }, statusCode: StatusCodes.Status404NotFound)
-            : Results.Json(result.Value);
+            cancellationToken));
     }
 
     private static IReadOnlyList<StorefrontPlpFilterInput> ParsePlpFilters(HttpRequest request)

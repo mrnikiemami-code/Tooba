@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Catalog.Contracts.Errors;
 
-namespace Tooba.Catalog.Endpoints.Errors;
+namespace Tooba.Catalog.Contracts.Errors;
 
 /// <summary>Canonical Catalog error catalog contributor.</summary>
 public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor

@@ -185,16 +185,16 @@ public sealed class HostAdminAmcW10GuardTests
         Assert.Contains("catalog.attribute.validation.bounds", codes, StringComparison.Ordinal);
 
         var contributor = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs"));
         Assert.Contains("ProductMissing", contributor, StringComparison.Ordinal);
         Assert.Contains("AttributeSchemaNotAllowed", contributor, StringComparison.Ordinal);
         Assert.Contains("AttributeVariantAxisOnProductForbidden", contributor, StringComparison.Ordinal);
 
         var resx = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.resx"));
         Assert.Contains("catalog.product.missing", resx, StringComparison.Ordinal);
         var fa = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.fa.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.fa.resx"));
         Assert.Contains("catalog.attribute.clear.required_forbidden", fa, StringComparison.Ordinal);
     }
 

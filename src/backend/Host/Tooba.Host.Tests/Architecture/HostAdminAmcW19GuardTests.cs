@@ -69,14 +69,14 @@ public sealed class HostAdminAmcW19GuardTests
 
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/CatalogAdminProductWorkspaceReadContracts.cs")));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Ports/CatalogAdminProductWorkspaceReadContracts.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
             "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CatalogAdminProductWorkspaceReadGateway.cs")));
 
         var catalogContract = File.ReadAllText(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/CatalogAdminProductWorkspaceReadContracts.cs"));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Ports/CatalogAdminProductWorkspaceReadContracts.cs"));
         Assert.DoesNotContain("DbContext", catalogContract, StringComparison.Ordinal);
         Assert.DoesNotContain("IQueryable", catalogContract, StringComparison.Ordinal);
         Assert.DoesNotContain("EntityFramework", catalogContract, StringComparison.Ordinal);

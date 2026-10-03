@@ -25,38 +25,31 @@ public sealed class SaveHoldPolicySettingsCommandValidator : AbstractValidator<S
 
         RuleFor(x => x.CartPersistenceHours)
             .Must(v => HoursOk(v, MinHoldHours, MaxCartHours))
-            .WithErrorCode(CatalogErrorCodes.HoldPolicyCartPersistenceInvalid)
-            .WithMessage("مقدار مهلت معتبر نیست.");
+            .WithErrorCode(CatalogErrorCodes.HoldPolicyCartPersistenceInvalid);
 
         RuleFor(x => x.OnlinePaymentHoldHours)
             .Must(v => HoursOk(v, MinHoldHours, MaxPaymentHours))
-            .WithErrorCode(CatalogErrorCodes.HoldPolicyOnlineInvalid)
-            .WithMessage("مقدار مهلت معتبر نیست.");
+            .WithErrorCode(CatalogErrorCodes.HoldPolicyOnlineInvalid);
 
         RuleFor(x => x.ManualPaymentInitialHoldHours)
             .Must(v => HoursOk(v, MinHoldHours, MaxPaymentHours))
-            .WithErrorCode(CatalogErrorCodes.HoldPolicyManualInitialInvalid)
-            .WithMessage("مقدار مهلت معتبر نیست.");
+            .WithErrorCode(CatalogErrorCodes.HoldPolicyManualInitialInvalid);
 
         RuleFor(x => x.ManualPaymentReviewHoldHours)
             .Must(v => HoursOk(v, MinHoldHours, MaxPaymentHours))
-            .WithErrorCode(CatalogErrorCodes.HoldPolicyManualReviewInvalid)
-            .WithMessage("مقدار مهلت معتبر نیست.");
+            .WithErrorCode(CatalogErrorCodes.HoldPolicyManualReviewInvalid);
 
         RuleFor(x => x.InitialReservationHoldMinutes)
             .Must(v => HoursOk(v, MinReservationMinutes, MaxReservationMinutes))
-            .WithErrorCode(CatalogErrorCodes.HoldPolicyReservationInitialInvalid)
-            .WithMessage("مدت رزرو اولیه باید عددی صحیح بین ۱ و ۴۳۲۰۰ دقیقه باشد.");
+            .WithErrorCode(CatalogErrorCodes.HoldPolicyReservationInitialInvalid);
 
         RuleFor(x => x.RetryReservationHoldMinutes)
             .Must(v => HoursOk(v, MinReservationMinutes, MaxReservationMinutes))
-            .WithErrorCode(CatalogErrorCodes.HoldPolicyReservationRetryInvalid)
-            .WithMessage("مدت رزرو مجدد باید عددی صحیح بین ۱ و ۴۳۲۰۰ دقیقه باشد.");
+            .WithErrorCode(CatalogErrorCodes.HoldPolicyReservationRetryInvalid);
 
         RuleFor(x => x.MaxReservationCycles)
             .Must(v => HoursOk(v, MinCycles, MaxCycles))
-            .WithErrorCode(CatalogErrorCodes.HoldPolicyReservationMaxInvalid)
-            .WithMessage("حداکثر دفعات رزرو باید عددی صحیح بین ۱ و ۲۰ باشد.");
+            .WithErrorCode(CatalogErrorCodes.HoldPolicyReservationMaxInvalid);
 
         When(x => x.Methods is not null, () =>
         {
@@ -65,16 +58,13 @@ public sealed class SaveHoldPolicySettingsCommandValidator : AbstractValidator<S
                 {
                     method.RuleFor(m => m.OnlinePaymentHoldHours)
                         .Must(v => HoursOk(v, MinHoldHours, MaxPaymentHours))
-                        .WithErrorCode(CatalogErrorCodes.HoldPolicyMethodInvalid)
-                        .WithMessage("مقدار مهلت معتبر نیست.");
+                        .WithErrorCode(CatalogErrorCodes.HoldPolicyMethodInvalid);
                     method.RuleFor(m => m.ManualPaymentInitialHoldHours)
                         .Must(v => HoursOk(v, MinHoldHours, MaxPaymentHours))
-                        .WithErrorCode(CatalogErrorCodes.HoldPolicyMethodInvalid)
-                        .WithMessage("مقدار مهلت معتبر نیست.");
+                        .WithErrorCode(CatalogErrorCodes.HoldPolicyMethodInvalid);
                     method.RuleFor(m => m.ManualPaymentReviewHoldHours)
                         .Must(v => HoursOk(v, MinHoldHours, MaxPaymentHours))
-                        .WithErrorCode(CatalogErrorCodes.HoldPolicyMethodInvalid)
-                        .WithMessage("مقدار مهلت معتبر نیست.");
+                        .WithErrorCode(CatalogErrorCodes.HoldPolicyMethodInvalid);
                 });
         });
     }

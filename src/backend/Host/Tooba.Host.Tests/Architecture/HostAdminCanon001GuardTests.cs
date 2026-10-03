@@ -54,8 +54,8 @@ public sealed class HostAdminCanon001GuardTests
         Assert.DoesNotContain("ListSellersAsync", text, StringComparison.Ordinal);
         Assert.DoesNotContain("QuerySellersGridAsync", text, StringComparison.Ordinal);
 
-        Assert.Contains("using Tooba.Catalog.Contracts;
-using Tooba.Catalog.Contracts.Ports;", text, StringComparison.Ordinal);
+        Assert.Contains("using Tooba.Catalog.Contracts;", text, StringComparison.Ordinal);
+        Assert.Contains("using Tooba.Catalog.Contracts.Ports;", text, StringComparison.Ordinal);
         Assert.DoesNotContain("using Tooba.Party.Contracts;", text, StringComparison.Ordinal);
         Assert.Contains("using Tooba.Order.Contracts.Admin;", text, StringComparison.Ordinal);
         Assert.Contains("using Tooba.Offer.Contracts.Ports;", text, StringComparison.Ordinal);
@@ -102,7 +102,7 @@ using Tooba.Catalog.Contracts.Ports;", text, StringComparison.Ordinal);
     {
         foreach (var path in new[]
                  {
-                     RepoFile("src/backend/Modules/Catalog/Tooba.Catalog.Contracts/CatalogAdminProductCountContracts.cs"),
+                     RepoFile("src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Ports/CatalogAdminProductCountContracts.cs"),
                      RepoFile("src/backend/Modules/Party/Tooba.Party.Contracts/IPartyAdminSellerReadGateway.cs"),
                      RepoFile("src/backend/Modules/Order/Tooba.Order.Contracts/Admin/AdminPanelReadContracts.cs"),
                  })

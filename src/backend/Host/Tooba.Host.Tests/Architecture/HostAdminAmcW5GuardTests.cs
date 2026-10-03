@@ -176,13 +176,13 @@ public sealed class HostAdminAmcW5GuardTests
         Assert.Contains("catalog.megamenu.remove.has_children", codes, StringComparison.Ordinal);
 
         var contributor = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs"));
         Assert.Contains("MegaMenuCategoryMissing", contributor, StringComparison.Ordinal);
         Assert.Contains("MegaMenuPlacementInvalid", contributor, StringComparison.Ordinal);
         Assert.Contains("MegaMenuRemoveHasChildren", contributor, StringComparison.Ordinal);
 
         var resx = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.resx"));
         Assert.Contains("catalog.megamenu.category.missing", resx, StringComparison.Ordinal);
         Assert.Contains("catalog.megamenu.placement.invalid", resx, StringComparison.Ordinal);
         Assert.Contains("catalog.megamenu.remove.has_children", resx, StringComparison.Ordinal);

@@ -191,15 +191,15 @@ public sealed class HostAdminAmcW11GuardTests
         Assert.Contains("catalog.variant.default.archived_forbidden", codes, StringComparison.Ordinal);
 
         var contributor = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs"));
         Assert.Contains("VariantAxesDuplicate", contributor, StringComparison.Ordinal);
         Assert.Contains("VariantCombinationLimitExceeded", contributor, StringComparison.Ordinal);
 
         var resx = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.resx"));
         Assert.Contains("catalog.variant.axes.duplicate", resx, StringComparison.Ordinal);
         var resxFa = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.fa.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.fa.resx"));
         Assert.Contains("catalog.variant.default.archived_forbidden", resxFa, StringComparison.Ordinal);
     }
 

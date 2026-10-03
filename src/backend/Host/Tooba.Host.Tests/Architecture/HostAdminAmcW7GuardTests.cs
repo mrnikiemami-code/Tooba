@@ -204,14 +204,14 @@ public sealed class HostAdminAmcW7GuardTests
         Assert.Contains("catalog.category.route.missing", codes, StringComparison.Ordinal);
 
         var contributor = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs"));
         Assert.Contains("CategoryMissing", contributor, StringComparison.Ordinal);
         Assert.Contains("CategorySlugDuplicate", contributor, StringComparison.Ordinal);
         Assert.Contains("CategorySelfParent", contributor, StringComparison.Ordinal);
         Assert.Contains("CategoryRouteMissing", contributor, StringComparison.Ordinal);
 
-        var en = File.ReadAllText(Path.Combine(root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.resx"));
-        var fa = File.ReadAllText(Path.Combine(root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.fa.resx"));
+        var en = File.ReadAllText(Path.Combine(root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.resx"));
+        var fa = File.ReadAllText(Path.Combine(root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.fa.resx"));
         Assert.Contains("catalog.category.slug.duplicate", en, StringComparison.Ordinal);
         Assert.Contains("catalog.category.slug.duplicate", fa, StringComparison.Ordinal);
     }

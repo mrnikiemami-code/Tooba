@@ -64,7 +64,7 @@ public sealed class HostStorefrontAmcR1GuardTests
         Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
         Assert.Contains("GetFashionTemplatePreviewQuery", endpoints, StringComparison.Ordinal);
         Assert.Contains("GetIndustryTemplatePreviewQuery", endpoints, StringComparison.Ordinal);
-        Assert.Contains("errorCode", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
         Assert.Contains("Results.Json", endpoints, StringComparison.Ordinal);
 
         var handlers = File.ReadAllText(Path.Combine(

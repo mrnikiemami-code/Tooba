@@ -393,8 +393,8 @@ public sealed class HostAdminCanonicalCertificationGuardTests
             Assert.DoesNotContain($"using {module}.Domain", text, StringComparison.Ordinal);
         }
 
-        Assert.Contains("using Tooba.Catalog.Contracts;
-using Tooba.Catalog.Contracts.Ports;", text, StringComparison.Ordinal);
+        Assert.Contains("using Tooba.Catalog.Contracts;", text, StringComparison.Ordinal);
+        Assert.Contains("using Tooba.Catalog.Contracts.Ports;", text, StringComparison.Ordinal);
         Assert.DoesNotContain("using Tooba.Party.Contracts;", text, StringComparison.Ordinal);
         Assert.Contains("using Tooba.Order.Contracts.Admin;", text, StringComparison.Ordinal);
         Assert.Contains("using Tooba.Offer.Contracts.Ports;", text, StringComparison.Ordinal);

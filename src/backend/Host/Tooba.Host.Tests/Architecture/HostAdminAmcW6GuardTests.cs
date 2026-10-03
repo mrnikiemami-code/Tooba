@@ -192,14 +192,14 @@ public sealed class HostAdminAmcW6GuardTests
         Assert.Contains("catalog.facet.reorder.invalid", codes, StringComparison.Ordinal);
 
         var contributor = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs"));
         Assert.Contains("FacetCategoryMissing", contributor, StringComparison.Ordinal);
         Assert.Contains("FacetDisplayTypeInvalid", contributor, StringComparison.Ordinal);
         Assert.Contains("FacetOverrideMissing", contributor, StringComparison.Ordinal);
         Assert.Contains("FacetReorderInvalid", contributor, StringComparison.Ordinal);
 
         var resx = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.resx"));
         Assert.Contains("catalog.facet.category.missing", resx, StringComparison.Ordinal);
         Assert.Contains("catalog.facet.display_type.invalid", resx, StringComparison.Ordinal);
         Assert.Contains("catalog.facet.override.missing", resx, StringComparison.Ordinal);

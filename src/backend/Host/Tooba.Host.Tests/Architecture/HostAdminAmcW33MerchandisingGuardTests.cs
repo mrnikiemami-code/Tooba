@@ -87,7 +87,7 @@ public sealed class HostAdminAmcW33MerchandisingGuardTests
 
         var catalogLookup = File.ReadAllText(Path.Combine(
             root,
-            "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/ICatalogVariantLookup.cs"));
+            "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Ports/ICatalogVariantLookup.cs"));
         Assert.Contains("GetPublishedVariantIdsAsync", catalogLookup, StringComparison.Ordinal);
 
         var promoModule = File.ReadAllText(Path.Combine(

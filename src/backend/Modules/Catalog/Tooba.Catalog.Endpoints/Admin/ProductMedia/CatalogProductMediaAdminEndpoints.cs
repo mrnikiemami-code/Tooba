@@ -68,7 +68,7 @@ public static class CatalogProductMediaAdminEndpoints
 
         await CatalogActorRequestBinding.BindAsync(http, actorUserId, cancellationToken);
         var result = await sender.Send(new AttachProductMediaCommand(productId, body), cancellationToken);
-        return ToCreatedList(api, result);
+        return ToCreatedList(api, productId, result);
     }
 
     private static async Task<IResult> AttachPlaceholderAsync(
@@ -90,7 +90,7 @@ public static class CatalogProductMediaAdminEndpoints
         var result = await sender.Send(
             new AttachPlaceholderProductMediaCommand(productId, body),
             cancellationToken);
-        return ToCreatedList(api, result);
+        return ToCreatedList(api, productId, result);
     }
 
     private static async Task<IResult> ReorderAsync(
@@ -181,19 +181,13 @@ public static class CatalogProductMediaAdminEndpoints
     }
 
     /// <summary>
-    /// Host returned 201 JSON without Location header for attach/placeholder — preserve that contract.
+    /// Attach/placeholder success returns 201 + Location under the product media collection.
     /// </summary>
     private static IResult ToCreatedList(
         ApiResponseFactory api,
-        Result<IReadOnlyList<ProductMediaItemView>> result)
-    {
-        if (result.IsFailure)
-        {
-            return api.From(result);
-        }
-
-        return Results.Json(result.Value, statusCode: StatusCodes.Status201Created);
-    }
+        Guid productId,
+        Result<IReadOnlyList<ProductMediaItemView>> result) =>
+        api.Created($"/v1/admin/products/{productId}/media", result);
 }
 
 /// <summary>

@@ -177,14 +177,14 @@ public sealed class HostAdminAmcW4GuardTests
         Assert.Contains("catalog.tag.category.missing", codes, StringComparison.Ordinal);
 
         var contributor = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs"));
         Assert.Contains("TagInvalid", contributor, StringComparison.Ordinal);
         Assert.Contains("TagCodeDuplicate", contributor, StringComparison.Ordinal);
         Assert.Contains("TagMissing", contributor, StringComparison.Ordinal);
         Assert.Contains("TagAssignDuplicate", contributor, StringComparison.Ordinal);
 
         var resx = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.resx"));
         Assert.Contains("catalog.tag.invalid", resx, StringComparison.Ordinal);
         Assert.Contains("catalog.tag.code.duplicate", resx, StringComparison.Ordinal);
         Assert.Contains("catalog.tag.assign.duplicate", resx, StringComparison.Ordinal);

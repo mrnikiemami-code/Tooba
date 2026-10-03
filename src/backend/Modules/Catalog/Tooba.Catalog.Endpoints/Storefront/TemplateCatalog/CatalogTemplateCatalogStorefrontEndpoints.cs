@@ -1,11 +1,11 @@
 using MediatR;
+using Tooba.BuildingBlocks.Presentation;
 using Tooba.Catalog.Application.TemplateCatalog.Queries;
 
 namespace Tooba.Catalog.Endpoints.Storefront.TemplateCatalog;
 
 /// <summary>
-/// Template-catalog storefront previews owned by Catalog.
-/// Response shapes preserved from Host residual (raw JSON + stable errorCode on 404).
+/// Template-catalog storefront previews owned by Catalog via MediatR + ApiResponseFactory.
 /// </summary>
 public static class CatalogTemplateCatalogStorefrontEndpoints
 {
@@ -20,34 +20,14 @@ public static class CatalogTemplateCatalogStorefrontEndpoints
 
     private static async Task<IResult> GetFashionTemplatePreviewAsync(
         ISender sender,
-        CancellationToken cancellationToken)
-    {
-        var result = await sender.Send(new GetFashionTemplatePreviewQuery(), cancellationToken);
-        if (result.IsFailure)
-        {
-            var code = result.Errors[0].Code;
-            return Results.Json(
-                new { title = "Not Found", errorCode = code },
-                statusCode: StatusCodes.Status404NotFound);
-        }
-
-        return Results.Json(result.Value);
-    }
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
+        api.From(await sender.Send(new GetFashionTemplatePreviewQuery(), cancellationToken));
 
     private static async Task<IResult> GetIndustryTemplatePreviewAsync(
         string templateKey,
         ISender sender,
-        CancellationToken cancellationToken)
-    {
-        var result = await sender.Send(new GetIndustryTemplatePreviewQuery(templateKey), cancellationToken);
-        if (result.IsFailure)
-        {
-            var code = result.Errors[0].Code;
-            return Results.Json(
-                new { title = "Not Found", errorCode = code },
-                statusCode: StatusCodes.Status404NotFound);
-        }
-
-        return Results.Json(result.Value);
-    }
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
+        api.From(await sender.Send(new GetIndustryTemplatePreviewQuery(templateKey), cancellationToken));
 }

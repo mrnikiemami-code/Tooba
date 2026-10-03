@@ -62,7 +62,7 @@ public sealed class HostStorefrontAmcR3GuardTests
         Assert.Contains("MapGet(\"/category-plp/{slug}\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
         Assert.Contains("GetStorefrontHomeQuery", endpoints, StringComparison.Ordinal);
-        Assert.Contains("errorCode", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
 
         var module = File.ReadAllText(Path.Combine(
             catalogRoot, "Tooba.Catalog.Endpoints", "CatalogEndpointModule.cs"));

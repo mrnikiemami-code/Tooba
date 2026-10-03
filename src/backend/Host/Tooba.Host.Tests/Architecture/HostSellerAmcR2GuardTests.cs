@@ -136,7 +136,7 @@ public sealed class HostSellerAmcR2GuardTests
         Assert.Contains("\"seller.missing\"", codes, StringComparison.Ordinal);
 
         // seller.missing descriptor/localization stays owned by Order; Catalog must not re-register it.
-        var contributor = Read("src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs");
+        var contributor = Read("src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs");
         Assert.DoesNotContain("\"seller.missing\"", contributor, StringComparison.Ordinal);
 
         // Stable Catalog business codes used by the evacuated write routes stay descriptor-backed.

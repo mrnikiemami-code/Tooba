@@ -2,13 +2,14 @@ using System.Globalization;
 using System.Resources;
 using Tooba.BuildingBlocks.Localization;
 
-namespace Tooba.Catalog.Endpoints.Resources;
+namespace Tooba.Catalog.Contracts.Errors;
 
 /// <summary>Resource marker for CatalogErrors.resx.</summary>
 public static class CatalogErrorResources
 {
+    /// <summary>ResourceManager for CatalogErrors.resx.</summary>
     public static ResourceManager Manager { get; } =
-        new("Tooba.Catalog.Endpoints.Resources.CatalogErrors", typeof(CatalogErrorResources).Assembly);
+        new("Tooba.Catalog.Contracts.Resources.CatalogErrors", typeof(CatalogErrorResources).Assembly);
 }
 
 /// <summary>Catalog error resource set — owns quantity.* / catalog.* keys used by Catalog endpoints.</summary>

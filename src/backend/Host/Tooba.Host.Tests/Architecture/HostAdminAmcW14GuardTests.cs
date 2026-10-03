@@ -164,17 +164,17 @@ public sealed class HostAdminAmcW14GuardTests
         }
 
         var contributor = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs"));
         Assert.Contains("WorkspaceCatalogStale", contributor, StringComparison.Ordinal);
         Assert.Contains("WorkspaceProductSlugDuplicate", contributor, StringComparison.Ordinal);
         Assert.Contains("WorkspaceProductSlugInvalid", contributor, StringComparison.Ordinal);
         Assert.Contains("WorkspaceProductSeoRejected", contributor, StringComparison.Ordinal);
 
         var resx = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.resx"));
         Assert.Contains("workspace.product.slug.duplicate", resx, StringComparison.Ordinal);
         var resxFa = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.fa.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.fa.resx"));
         Assert.Contains("نشانی صفحه نامعتبر است.", resxFa, StringComparison.Ordinal);
     }
 

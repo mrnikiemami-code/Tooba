@@ -170,16 +170,16 @@ public sealed class HostAdminAmcW12GuardTests
         Assert.Contains("ProductAssignableLevel = 3", domain, StringComparison.Ordinal);
 
         var contributor = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Errors/CatalogErrorCatalogContributor.cs"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Errors/CatalogErrorCatalogContributor.cs"));
         Assert.Contains("CategoryAssignmentLevelInvalid", contributor, StringComparison.Ordinal);
         Assert.Contains("CategoryChangeInvalid", contributor, StringComparison.Ordinal);
 
         var resx = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.resx"));
         Assert.Contains("catalog.category.assignment.level.invalid", resx, StringComparison.Ordinal);
         Assert.Contains("catalog.category_change.invalid", resx, StringComparison.Ordinal);
         var resxFa = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Resources/CatalogErrors.fa.resx"));
+            root, "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Resources/CatalogErrors.fa.resx"));
         Assert.Contains("محصول باید به یک دسته‌بندی سطح سوم اختصاص داده شود.", resxFa, StringComparison.Ordinal);
     }
 
@@ -191,7 +191,7 @@ public sealed class HostAdminAmcW12GuardTests
             Tooba.Catalog.Contracts.Errors.CatalogErrorCodes.CategoryAssignmentLevelInvalid);
         Assert.Equal(
             Tooba.Catalog.Contracts.Errors.CatalogErrorCodes.CategoryAssignmentLevelInvalid,
-            Tooba.Catalog.Domain.CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode);
+            CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode);
     }
 
     private static string FindRepoRoot()
