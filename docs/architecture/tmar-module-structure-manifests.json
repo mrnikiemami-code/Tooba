@@ -479,6 +479,80 @@
       ]
     },
     {
+      "module": "UserPreference",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Certified by TB-TMAR-USERPREFERENCE-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first LocalePreferences/UiPreferences CQRS; Result+UserPreferenceOperation+ApiResponseFactory; exhaustive validator matrix (3 required + 1 Actor-only not required); Contracts.Errors/Resources catalog; Order.Contracts.Fulfillment session seam in Customer actor resolver only; Host Preferences CLOSED_HOST_ZERO; /Modules/UserPreference/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "projects": [
+        {
+          "projectName": "Tooba.UserPreference.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "UserPreference.Application has no root .cs: LocalePreferences/UiPreferences capability trees plus Composition/Models/Ports; path↔namespace exact.",
+          "forbiddenRootFiles": [
+            "UserPreferenceContracts.cs",
+            "UserPreferenceShapes.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Validators",
+            "Presentation"
+          ]
+        },
+        {
+          "projectName": "Tooba.UserPreference.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "UserPreference.Domain has no root .cs; Aggregates hold UserPreference and UiPreference with exact path↔namespace.",
+          "forbiddenRootFiles": [
+            "UserPreference.cs",
+            "UiPreference.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.UserPreference.Endpoints",
+          "rootAllowlist": [
+            "UserPreferenceEndpointModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry only; Customer/ and Admin/ hold HTTP surfaces.",
+          "forbiddenRootFiles": [
+            "UserPreferenceCustomerEndpoints.cs",
+            "UserPreferenceAdminEndpoints.cs",
+            "UiPreferenceAdminEndpoints.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Errors",
+            "Resources"
+          ]
+        },
+        {
+          "projectName": "Tooba.UserPreference.Infrastructure",
+          "rootAllowlist": [
+            "UserPreferenceModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry UserPreferenceModule.cs only; Directories/Persistence/Development hold integrations; Migrations and Outbox under Persistence/.",
+          "forbiddenRootFiles": [
+            "UserPreferenceDirectory.cs",
+            "UiPreferenceDirectory.cs",
+            "UserPreferenceDbContext.cs",
+            "UserPreferenceOutboxRegistration.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations"
+          ]
+        },
+        {
+          "projectName": "Tooba.UserPreference.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "UserPreference.Contracts has no root .cs: Errors (+ Resources) carry contracts.",
+          "forbiddenRootFiles": [
+            "UserPreferenceErrorCodes.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    },
+    {
       "module": "PageComposition",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",

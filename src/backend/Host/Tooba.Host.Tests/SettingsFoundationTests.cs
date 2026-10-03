@@ -41,6 +41,7 @@ using Tooba.UserPreference.Endpoints.Customer;
 using Tooba.UserPreference.Infrastructure.Directories;
 using Tooba.UserPreference.Infrastructure.Persistence;
 using Xunit;
+using DomainUserPreference = Tooba.UserPreference.Domain.Aggregates.UserPreference;
 
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
@@ -137,7 +138,7 @@ public sealed class SettingsFoundationTests
         Assert.Equal("operator_profile", OperatorProfileDbContext.Schema);
         Assert.Equal(
             ["OwnerUserId", "Locale", "CreatedAt", "UpdatedAt"],
-            typeof(Tooba.UserPreference.Domain.UserPreference).GetProperties().Select(x => x.Name).ToArray());
+            typeof(DomainUserPreference).GetProperties().Select(x => x.Name).ToArray());
     }
 
     [SkippableFact]

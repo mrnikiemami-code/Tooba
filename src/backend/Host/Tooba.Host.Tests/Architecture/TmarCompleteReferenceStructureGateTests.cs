@@ -27,9 +27,9 @@ public sealed class TmarCompleteReferenceStructureGateTests
         Assert.Equal(
             new[]
             {
-                "AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", "Identity", "Localization",
-                "Media", "Offer", "OperatorProfile", "Order", "Party", "Payment", "ProductQnA", "Settlement",
-                "StoreContext", "Story",
+                "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Content", "Fulfillment", "Identity",
+                "Localization", "Media", "Offer", "OperatorProfile", "Order", "PageComposition", "Party",
+                "Payment", "ProductQnA", "Settlement", "StoreContext", "Story", "UserPreference", "Wishlist",
             },
             modules.Select(m => m.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
@@ -45,7 +45,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
             {
                 "Order", "Cart", "StoreContext", "Offer", "Payment", "Settlement", "Fulfillment",
                 "AccessControl", "AddressBook", "Content", "Identity", "Media", "Localization", "OperatorProfile",
-                "Party", "ProductQnA", "Story",
+                "Party", "ProductQnA", "PageComposition", "BulkInquiry", "Wishlist", "UserPreference", "Story",
             }, StringComparer.Ordinal);
         }
     }
@@ -119,9 +119,9 @@ public sealed class TmarCompleteReferenceStructureGateTests
         Assert.Equal(
             new[]
             {
-                "AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", "Identity", "Localization",
-                "Media", "Offer", "OperatorProfile", "Order", "Party", "Payment", "ProductQnA", "Settlement",
-                "StoreContext",
+                "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Content", "Fulfillment", "Identity",
+                "Localization", "Media", "Offer", "OperatorProfile", "Order", "PageComposition", "Party",
+                "Payment", "ProductQnA", "Settlement", "StoreContext", "UserPreference", "Wishlist",
             },
             certified);
     }
