@@ -3,7 +3,7 @@ using Testcontainers.PostgreSql;
 using Tooba.Persistence;
 using Tooba.Wishlist.Application.Models;
 using Tooba.Wishlist.Application.Ports;
-using Tooba.Wishlist.Domain;
+using Tooba.Wishlist.Domain.Aggregates;
 using Tooba.Wishlist.Endpoints.Customer;
 using Tooba.Wishlist.Infrastructure.Persistence;
 using Xunit;

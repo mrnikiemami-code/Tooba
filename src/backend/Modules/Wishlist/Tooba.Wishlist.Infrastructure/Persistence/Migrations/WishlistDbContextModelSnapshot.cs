@@ -8,7 +8,7 @@ using Tooba.Wishlist.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Tooba.Wishlist.Infrastructure.Migrations
+namespace Tooba.Wishlist.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(WishlistDbContext))]
     partial class WishlistDbContextModelSnapshot : ModelSnapshot
@@ -105,7 +105,7 @@ namespace Tooba.Wishlist.Infrastructure.Migrations
                     b.ToTable("outbox_messages", "wishlist");
                 });
 
-            modelBuilder.Entity("Tooba.Wishlist.Domain.WishlistItem", b =>
+            modelBuilder.Entity("Tooba.Wishlist.Domain.Aggregates.WishlistItem", b =>
                 {
                     b.Property<Guid>("WishlistItemId")
                         .HasColumnType("uuid")

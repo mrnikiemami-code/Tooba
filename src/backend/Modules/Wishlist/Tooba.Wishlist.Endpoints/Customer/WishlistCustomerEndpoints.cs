@@ -5,10 +5,8 @@ using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Wishlist.Application.Commands.AddWishlistItem;
-using Tooba.Wishlist.Application.Commands.RemoveWishlistItem;
-using Tooba.Wishlist.Application.Queries.GetWishlistMembership;
-using Tooba.Wishlist.Application.Queries.ListWishlistPage;
+using Tooba.Wishlist.Application.Customer.Commands;
+using Tooba.Wishlist.Application.Customer.Queries;
 using Tooba.Wishlist.Contracts.Errors;
 
 namespace Tooba.Wishlist.Endpoints.Customer;

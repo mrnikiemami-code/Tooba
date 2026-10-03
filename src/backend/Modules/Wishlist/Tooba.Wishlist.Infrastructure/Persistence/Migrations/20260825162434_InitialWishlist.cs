@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Tooba.Wishlist.Infrastructure.Migrations
+namespace Tooba.Wishlist.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialWishlist : Migration

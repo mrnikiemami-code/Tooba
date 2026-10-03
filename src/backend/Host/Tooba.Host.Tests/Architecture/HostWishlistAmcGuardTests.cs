@@ -30,7 +30,7 @@ public sealed class HostWishlistAmcGuardTests
     {
         var root = FindRepoRoot();
         var directory = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/WishlistDirectory.cs"));
+            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/Directories/WishlistDirectory.cs"));
         Assert.Contains("ICatalogReviewProductLookup", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("ICatalogLookupGateway", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogPublicationStatus", directory, StringComparison.Ordinal);
@@ -38,7 +38,7 @@ public sealed class HostWishlistAmcGuardTests
         Assert.DoesNotContain("Tooba.Catalog.Domain", directory, StringComparison.Ordinal);
 
         var composer = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Application/Presentation/WishlistPresentationComposer.cs"));
+            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Application/Composition/WishlistPresentationComposer.cs"));
         Assert.Contains("ICatalogStorefrontProductCardLookup", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("IStorefrontComposer", composer, StringComparison.Ordinal);
 

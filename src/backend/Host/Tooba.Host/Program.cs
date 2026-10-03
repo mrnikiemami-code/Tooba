@@ -186,7 +186,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Media.Application.Assets.Commands.UploadMediaAssetCommand).Assembly,
     typeof(Tooba.Localization.Application.Languages.Commands.CreateLanguageCommand).Assembly,
     typeof(Tooba.AddressBook.Application.Ports.IAddressBookDirectory).Assembly,
-    typeof(Tooba.Wishlist.Application.Commands.AddWishlistItem.AddWishlistItemCommand).Assembly,
+    typeof(Tooba.Wishlist.Application.Customer.Commands.AddWishlistItemCommand).Assembly,
     typeof(Tooba.Story.Application.Stories.Queries.Storefront.GetPublicStoriesQuery).Assembly,
     typeof(Tooba.PageComposition.Application.Storefront.Queries.GetHomeCompositionQuery).Assembly,
     typeof(Tooba.Reviews.Application.Queries.GetPublishedReviewsQuery).Assembly,

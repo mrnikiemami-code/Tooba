@@ -5,7 +5,7 @@ using Tooba.CustomerProfile.Application.Models;
 using Tooba.CustomerProfile.Application.Ports;
 using Tooba.CustomerProfile.Contracts;
 using Tooba.Order.Contracts.Customer;
-using Tooba.Wishlist.Contracts;
+using Tooba.Wishlist.Contracts.Ports;
 
 namespace Tooba.CustomerProfile.Application.Queries.GetCustomerAccountDashboard;
 

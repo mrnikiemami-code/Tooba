@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Wishlist.Domain;
+namespace Tooba.Wishlist.Domain.Aggregates;
 
 /// <summary>قصد خصوصی یک کاربر برای نگهداری مرجع یک محصول؛ دادهٔ قیمت و موجودی را مالک نمی‌شود.</summary>
 public sealed class WishlistItem

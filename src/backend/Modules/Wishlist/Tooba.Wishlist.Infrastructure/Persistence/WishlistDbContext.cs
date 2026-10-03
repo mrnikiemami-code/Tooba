@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
-using Tooba.Wishlist.Domain;
+using Tooba.Wishlist.Domain.Aggregates;
 
 namespace Tooba.Wishlist.Infrastructure.Persistence;
 

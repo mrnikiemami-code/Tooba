@@ -1,7 +1,8 @@
 using MediatR;
+using Tooba.Wishlist.Application.Models;
 using Tooba.Wishlist.Application.Ports;
 
-namespace Tooba.Wishlist.Application.Commands.AddWishlistItem;
+namespace Tooba.Wishlist.Application.Customer.Commands;
 
 /// <summary>افزودن idempotent محصول Published به Wishlist Actor.</summary>
 public sealed record AddWishlistItemCommand(Guid ActorUserId, Guid ProductId) : IRequest<WishlistAddResult>;

@@ -4,9 +4,10 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
+using Tooba.Wishlist.Application.Composition;
 using Tooba.Wishlist.Application.Ports;
-using Tooba.Wishlist.Application.Presentation;
-using Tooba.Wishlist.Contracts;
+using Tooba.Wishlist.Contracts.Ports;
+using Tooba.Wishlist.Infrastructure.Directories;
 using Tooba.Wishlist.Infrastructure.Persistence;
 
 namespace Tooba.Wishlist.Infrastructure;

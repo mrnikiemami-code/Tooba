@@ -1,4 +1,4 @@
-namespace Tooba.Wishlist.Contracts;
+namespace Tooba.Wishlist.Contracts.Ports;
 
 /// <summary>Narrow read port: actor wishlist row count for customer-account dashboard.</summary>
 public interface IWishlistCountPort

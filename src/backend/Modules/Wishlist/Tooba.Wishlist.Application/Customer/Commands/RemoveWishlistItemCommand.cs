@@ -1,7 +1,7 @@
 using MediatR;
 using Tooba.Wishlist.Application.Ports;
 
-namespace Tooba.Wishlist.Application.Commands.RemoveWishlistItem;
+namespace Tooba.Wishlist.Application.Customer.Commands;
 
 /// <summary>حذف مرجع محصول از Wishlist Actor (idempotent).</summary>
 public sealed record RemoveWishlistItemCommand(Guid ActorUserId, Guid ProductId) : IRequest;

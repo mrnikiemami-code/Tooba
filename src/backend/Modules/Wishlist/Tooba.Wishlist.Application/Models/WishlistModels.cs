@@ -18,3 +18,6 @@ public sealed record WishlistPageItem(
 
 /// <summary>پاسخ مجموعه‌ای عضویت برای شناسه‌های درخواستی.</summary>
 public sealed record WishlistMembershipResult(IReadOnlySet<Guid> ProductIds);
+
+/// <summary>نتیجهٔ افزودن idempotent که مشخص می‌کند ردیف تازه ساخته شده است یا خیر.</summary>
+public sealed record WishlistAddResult(Guid WishlistItemId, bool Created);

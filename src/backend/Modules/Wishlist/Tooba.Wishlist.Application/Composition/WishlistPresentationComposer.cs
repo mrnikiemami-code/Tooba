@@ -2,7 +2,7 @@ using Tooba.Catalog.Contracts;
 using Tooba.Wishlist.Application.Models;
 using Tooba.Wishlist.Application.Ports;
 
-namespace Tooba.Wishlist.Application.Presentation;
+namespace Tooba.Wishlist.Application.Composition;
 
 /// <summary>نمای خصوصی Wishlist را با کارت‌های زندهٔ فروشگاه از مرز Catalog.Contracts ترکیب می‌کند.</summary>
 public sealed class WishlistPresentationComposer(

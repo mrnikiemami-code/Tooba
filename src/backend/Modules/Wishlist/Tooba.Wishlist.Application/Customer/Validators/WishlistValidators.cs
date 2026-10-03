@@ -1,9 +1,8 @@
 using FluentValidation;
-using Tooba.Wishlist.Application.Commands.AddWishlistItem;
-using Tooba.Wishlist.Application.Commands.RemoveWishlistItem;
-using Tooba.Wishlist.Application.Queries.GetWishlistMembership;
+using Tooba.Wishlist.Application.Customer.Commands;
+using Tooba.Wishlist.Application.Customer.Queries;
 
-namespace Tooba.Wishlist.Application.Validators;
+namespace Tooba.Wishlist.Application.Customer.Validators;
 
 /// <summary>کدهای پایدار خطای شکل انتقال Wishlist.</summary>
 public static class WishlistValidationCodes

@@ -2,7 +2,7 @@ using MediatR;
 using Tooba.Wishlist.Application.Models;
 using Tooba.Wishlist.Application.Ports;
 
-namespace Tooba.Wishlist.Application.Queries.GetWishlistMembership;
+namespace Tooba.Wishlist.Application.Customer.Queries;
 
 /// <summary>عضویت گروهی محصولات در Wishlist Actor.</summary>
 public sealed record GetWishlistMembershipQuery(Guid ActorUserId, IReadOnlyList<Guid> ProductIds)
