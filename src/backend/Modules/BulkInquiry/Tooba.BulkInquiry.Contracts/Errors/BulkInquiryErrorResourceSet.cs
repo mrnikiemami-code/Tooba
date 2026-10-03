@@ -2,17 +2,17 @@ using System.Globalization;
 using System.Resources;
 using Tooba.BuildingBlocks.Localization;
 
-namespace Tooba.BulkInquiry.Endpoints.Resources;
+namespace Tooba.BulkInquiry.Contracts.Errors;
 
-/// <summary>نشانگر منبع خطاهای BulkInquiry.</summary>
+/// <summary>Resource manager marker for BulkInquiryErrors.resx.</summary>
 public static class BulkInquiryErrorResources
 {
-    /// <summary>ResourceManager.</summary>
+    /// <summary>ResourceManager for BulkInquiry error resources.</summary>
     public static ResourceManager Manager { get; } =
-        new("Tooba.BulkInquiry.Endpoints.Resources.BulkInquiryErrors", typeof(BulkInquiryErrorResources).Assembly);
+        new("Tooba.BulkInquiry.Contracts.Resources.BulkInquiryErrors", typeof(BulkInquiryErrorResources).Assembly);
 }
 
-/// <summary>مجموعهٔ منبع BulkInquiry.</summary>
+/// <summary>BulkInquiry-owned error resource set for the <c>bulk_inquiry.</c> key space.</summary>
 public sealed class BulkInquiryErrorResourceSet : IErrorResourceSet
 {
     /// <inheritdoc />

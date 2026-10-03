@@ -7,4 +7,7 @@
     <RootNamespace>Tooba.BulkInquiry.Contracts</RootNamespace>
     <AssemblyName>Tooba.BulkInquiry.Contracts</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+  </ItemGroup>
 </Project>

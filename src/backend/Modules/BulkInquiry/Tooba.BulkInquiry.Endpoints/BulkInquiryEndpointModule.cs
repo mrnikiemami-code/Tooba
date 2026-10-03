@@ -1,10 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.BuildingBlocks.Localization;
-using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.BulkInquiry.Endpoints.Errors;
-using Tooba.BulkInquiry.Endpoints.Resources;
 using Tooba.BulkInquiry.Endpoints.Storefront;
 
 namespace Tooba.BulkInquiry.Endpoints;
@@ -20,12 +16,10 @@ public static class BulkInquiryEndpointModule
         return app;
     }
 
-    /// <summary>ثبت error catalog/resources.</summary>
+    /// <summary>ثبت presentation seams. Error catalog owns in Infrastructure.</summary>
     public static IServiceCollection AddBulkInquiryEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddSingleton<IErrorCatalogContributor, BulkInquiryErrorCatalogContributor>();
-        services.AddSingleton<IErrorResourceSet, BulkInquiryErrorResourceSet>();
         return services;
     }
 }

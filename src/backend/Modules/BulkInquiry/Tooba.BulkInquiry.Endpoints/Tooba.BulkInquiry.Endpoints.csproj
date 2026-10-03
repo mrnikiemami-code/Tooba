@@ -11,10 +11,6 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Update="Resources\BulkInquiryErrors.resx"><Generator></Generator></EmbeddedResource>
-    <EmbeddedResource Update="Resources\BulkInquiryErrors.fa.resx"><Generator></Generator></EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Tooba.BulkInquiry.Application\Tooba.BulkInquiry.Application.csproj" />
     <ProjectReference Include="..\Tooba.BulkInquiry.Contracts\Tooba.BulkInquiry.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
