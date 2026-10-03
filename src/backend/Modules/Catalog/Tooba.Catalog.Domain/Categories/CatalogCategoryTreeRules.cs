@@ -1,0 +1,257 @@
+namespace Tooba.Catalog.Domain.Categories;
+
+/// <summary>
+/// قواعد سلسله‌مراتب رده: خود-والد و descendant-as-parent ممنوع؛ ترتیب خواهر/برادر جداست.
+/// سطح محصول: Level = 1 + تعداد اجداد (ParentId)؛ فقط سطح ۳ قابل اختصاص به محصول است.
+/// </summary>
+public static class CatalogCategoryTreeRules
+{
+    /// <summary>سطح قابل اختصاص محصول به رده (سطح سوم).</summary>
+    public const int ProductAssignableLevel = 3;
+
+    /// <summary>حداکثر عمق درخت رده (ریشه = ۱)؛ ایجاد زیرسطح برای سطح ۳ ممنوع است.</summary>
+    public const int MaxCategoryDepth = 3;
+
+    /// <summary>پیام خطای اختصاص ردهٔ غیرفعال برای محصول.</summary>
+    public const string ProductAssignableLevelRequiredMessageFa =
+        "محصول باید به یک دسته‌بندی سطح سوم اختصاص داده شود.";
+
+    /// <summary>کد ماشین پایدار برای رد اختصاص به سطح ۱/۲.</summary>
+    public const string AssignmentLevelInvalidErrorCode =
+        "catalog.category.assignment.level.invalid";
+
+    /// <summary>پیام خطای عمق بیش از حد درخت رده.</summary>
+    public const string MaxCategoryDepthExceededMessageFa =
+        "عمیق‌تر از سطح سوم برای دسته‌بندی مجاز نیست.";
+
+    /// <summary>
+    /// آیا <paramref name="nodeId"/> زیر درخت <paramref name="ancestorId"/> است؟
+    /// </summary>
+    public static bool IsDescendant(
+        Guid ancestorId,
+        Guid nodeId,
+        IReadOnlyDictionary<Guid, Guid?> parentById)
+    {
+        if (ancestorId == nodeId)
+        {
+            return false;
+        }
+
+        var current = nodeId;
+        var guard = 0;
+        while (parentById.TryGetValue(current, out var parent) && parent is Guid p)
+        {
+            if (p == ancestorId)
+            {
+                return true;
+            }
+
+            current = p;
+            if (++guard > parentById.Count + 2)
+            {
+                throw new InvalidOperationException("حلقهٔ موجود در درخت رده تشخیص داده شد.");
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// سطح رده = ۱ + تعداد اجداد از طریق ParentId. ریشه (بدون والد) سطح ۱ است.
+    /// ردهٔ غایب یا حلقه → <see cref="InvalidOperationException"/>.
+    /// </summary>
+    public static int GetCategoryLevel(Guid categoryId, IReadOnlyDictionary<Guid, Guid?> parentById)
+    {
+        var status = TryResolveCategoryLevel(categoryId, parentById, out var level);
+        return status switch
+        {
+            CategoryLevelResolveStatus.Ok => level,
+            CategoryLevelResolveStatus.Missing =>
+                throw new InvalidOperationException("رده در Catalog این Tenant وجود ندارد."),
+            _ => throw new InvalidOperationException("حلقهٔ موجود در درخت رده تشخیص داده شد."),
+        };
+    }
+
+    /// <summary>
+    /// پرس‌وجوی غیرپرتاب‌کنندهٔ سطح رده. ردهٔ غایب یا حلقه → <c>false</c> و <paramref name="level"/> = ۰.
+    /// درخت معتبر → همان خروجی <see cref="GetCategoryLevel"/>.
+    /// </summary>
+    public static bool TryGetCategoryLevel(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById,
+        out int level) =>
+        TryResolveCategoryLevel(categoryId, parentById, out level) == CategoryLevelResolveStatus.Ok;
+
+    /// <summary>آیا رده برای اختصاص به محصول مجاز است؟ (فقط سطح ۳)</summary>
+    public static bool IsAssignableProductCategory(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById) =>
+        GetCategoryLevel(categoryId, parentById) == ProductAssignableLevel;
+
+    /// <summary>
+    /// پرس‌وجوی غیرپرتاب‌کنندهٔ قابلیت اختصاص محصول. ردهٔ غایب/حلقه → <c>false</c> و
+    /// <paramref name="isAssignable"/> = <c>false</c>. درخت معتبر → سطح ۳ فقط.
+    /// </summary>
+    public static bool TryIsAssignableProductCategory(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById,
+        out bool isAssignable)
+    {
+        if (TryResolveCategoryLevel(categoryId, parentById, out var level) != CategoryLevelResolveStatus.Ok)
+        {
+            isAssignable = false;
+            return false;
+        }
+
+        isAssignable = level == ProductAssignableLevel;
+        return true;
+    }
+
+    /// <summary>هستهٔ یکپارچهٔ پیمایش والد برای سطح رده (Throwing و Try*).</summary>
+    private static CategoryLevelResolveStatus TryResolveCategoryLevel(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById,
+        out int level)
+    {
+        level = 0;
+        if (!parentById.ContainsKey(categoryId))
+        {
+            return CategoryLevelResolveStatus.Missing;
+        }
+
+        var ancestors = 0;
+        var current = categoryId;
+        var guard = 0;
+        while (parentById.TryGetValue(current, out var parent) && parent is Guid p)
+        {
+            ancestors++;
+            current = p;
+            if (++guard > parentById.Count + 2)
+            {
+                return CategoryLevelResolveStatus.Cycle;
+            }
+        }
+
+        level = 1 + ancestors;
+        return CategoryLevelResolveStatus.Ok;
+    }
+
+    private enum CategoryLevelResolveStatus
+    {
+        Ok,
+        Missing,
+        Cycle,
+    }
+
+    /// <summary>اختصاص محصول به ردهٔ سطح ۱ یا ۲ را رد می‌کند.</summary>
+    public static void EnsureAssignableProductCategory(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById)
+    {
+        if (!IsAssignableProductCategory(categoryId, parentById))
+        {
+            throw new InvalidOperationException(ProductAssignableLevelRequiredMessageFa);
+        }
+    }
+
+    /// <summary>
+    /// آیا می‌توان زیر ردهٔ والد، فرزند جدید ساخت؟ فقط وقتی سطح والد کمتر از MaxCategoryDepth باشد.
+    /// </summary>
+    public static bool CanAddChildUnder(
+        Guid? parentCategoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById)
+    {
+        if (parentCategoryId is null || parentCategoryId == Guid.Empty)
+        {
+            return true;
+        }
+
+        return GetCategoryLevel(parentCategoryId.Value, parentById) < MaxCategoryDepth;
+    }
+
+    /// <summary>ایجاد فرزند زیر سطح ۳ را رد می‌کند.</summary>
+    public static void EnsureCanAddChildUnder(
+        Guid? parentCategoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById)
+    {
+        if (!CanAddChildUnder(parentCategoryId, parentById))
+        {
+            throw new InvalidOperationException(MaxCategoryDepthExceededMessageFa);
+        }
+    }
+
+    /// <summary>ارتفاع زیردرخت (خود = ۱).</summary>
+    public static int GetSubtreeHeight(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById)
+    {
+        var children = parentById
+            .Where(kv => kv.Value == categoryId)
+            .Select(kv => kv.Key)
+            .ToList();
+        if (children.Count == 0)
+        {
+            return 1;
+        }
+
+        var maxChild = 0;
+        foreach (var child in children)
+        {
+            maxChild = Math.Max(maxChild, GetSubtreeHeight(child, parentById));
+        }
+
+        return 1 + maxChild;
+    }
+
+    /// <summary>جابه‌جایی را بدون ایجاد حلقه اعتبارسنجی می‌کند.</summary>
+    public static void ValidateMove(
+        Guid categoryId,
+        Guid? newParentId,
+        IReadOnlyDictionary<Guid, Guid?> parentById)
+    {
+        ValidateNoCycle(categoryId, newParentId, parentById);
+        if (newParentId is null || newParentId == Guid.Empty)
+        {
+            // ریشه: سطح زیردرخت نباید از Max بیشتر شود
+            if (GetSubtreeHeight(categoryId, parentById) > MaxCategoryDepth)
+            {
+                throw new InvalidOperationException(MaxCategoryDepthExceededMessageFa);
+            }
+
+            return;
+        }
+
+        var parentLevel = GetCategoryLevel(newParentId.Value, parentById);
+        if (parentLevel + GetSubtreeHeight(categoryId, parentById) > MaxCategoryDepth)
+        {
+            throw new InvalidOperationException(MaxCategoryDepthExceededMessageFa);
+        }
+    }
+
+    /// <summary>خود-والد و والد بودن descendant را رد می‌کند.</summary>
+    public static void ValidateNoCycle(
+        Guid categoryId,
+        Guid? newParentId,
+        IReadOnlyDictionary<Guid, Guid?> parentById)
+    {
+        if (newParentId is null || newParentId == Guid.Empty)
+        {
+            return;
+        }
+
+        if (newParentId == categoryId)
+        {
+            throw new InvalidOperationException("رده نمی‌تواند والد خودش باشد؛ حلقهٔ درخت طبقه‌بندی ممنوع است.");
+        }
+
+        if (!parentById.ContainsKey(newParentId.Value))
+        {
+            throw new InvalidOperationException("ردهٔ والد در Catalog این Tenant وجود ندارد.");
+        }
+
+        if (IsDescendant(categoryId, newParentId.Value, parentById))
+        {
+            throw new InvalidOperationException("نمی‌توان رده را زیر نوادهٔ خودش قرار داد؛ حلقهٔ درخت ممنوع است.");
+        }
+    }
+}

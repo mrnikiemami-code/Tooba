@@ -10,6 +10,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Contracts.Checkout;

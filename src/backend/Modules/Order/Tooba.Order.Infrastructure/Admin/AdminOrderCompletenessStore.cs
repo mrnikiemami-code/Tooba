@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Fulfillment.Contracts.History;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Contacts;

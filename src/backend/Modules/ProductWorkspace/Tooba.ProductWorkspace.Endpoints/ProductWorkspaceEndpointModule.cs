@@ -8,6 +8,7 @@ using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Application.Shared;
 using Tooba.Catalog.Application.ProductIdentity.Commands;
 using Tooba.Catalog.Application.ProductIdentity.Models;
 using Tooba.Catalog.Application.ProductPublishing.Commands;

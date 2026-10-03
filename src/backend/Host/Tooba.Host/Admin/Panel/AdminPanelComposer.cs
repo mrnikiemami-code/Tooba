@@ -1,4 +1,5 @@
-﻿using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Contracts.Admin;
 

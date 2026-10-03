@@ -2,6 +2,7 @@ using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.AccessControl.Application.Composition;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
 

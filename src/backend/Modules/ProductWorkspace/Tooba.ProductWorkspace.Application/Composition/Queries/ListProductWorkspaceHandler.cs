@@ -1,6 +1,7 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;

@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Reviews.Application.Models;
 using Tooba.Reviews.Domain;

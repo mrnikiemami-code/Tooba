@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Grid;
 using Tooba.Catalog.Infrastructure.Persistence;

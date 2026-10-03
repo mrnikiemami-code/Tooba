@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Order.Application.Seller.Models;
 using Tooba.Order.Application.Seller.Ports;
 using Tooba.Order.Domain;

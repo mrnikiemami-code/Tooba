@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FluentValidation;
@@ -32,6 +32,7 @@ using Tooba.Catalog.Application.ProductTaxonomy.Ports;
 using Tooba.Catalog.Application.ProductSeo.Ports;
 using Tooba.Catalog.Application.Seller.Ports;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Catalog.Contracts.Checkout;
 using Tooba.Catalog.Contracts.Reservation;
 using Tooba.Catalog.Infrastructure.Adapters;

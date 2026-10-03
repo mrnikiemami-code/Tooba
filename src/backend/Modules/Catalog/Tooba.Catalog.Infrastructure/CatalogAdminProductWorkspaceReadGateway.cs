@@ -1,6 +1,7 @@
 using Tooba.Catalog.Application.ProductHistory.Ports;
 using Tooba.Catalog.Application.ProductPublishing.Ports;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

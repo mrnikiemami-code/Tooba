@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Catalog.Domain;
 
 namespace Tooba.Host.Tests;

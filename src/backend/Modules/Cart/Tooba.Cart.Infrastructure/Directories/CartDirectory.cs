@@ -12,6 +12,7 @@ using CartContract = Tooba.Cart.Contracts;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Cart.Infrastructure.Security;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Inventory.Contracts.Cart;
 using Tooba.Inventory.Contracts.Checkout;

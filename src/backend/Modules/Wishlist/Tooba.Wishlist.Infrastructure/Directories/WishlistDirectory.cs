@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Wishlist.Application.Models;
 using Tooba.Wishlist.Application.Ports;
 using Tooba.Wishlist.Contracts.Errors;

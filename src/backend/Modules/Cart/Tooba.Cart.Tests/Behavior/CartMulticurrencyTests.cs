@@ -6,6 +6,7 @@ using Tooba.Cart.Application.Presentation;
 using Tooba.Cart.Application.Validation;
 using Tooba.Cart.Contracts;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Party.Contracts.Ports;
 using Xunit;

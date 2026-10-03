@@ -1,0 +1,16 @@
+global using Tooba.Catalog.Domain.Aggregates;
+global using Tooba.Catalog.Domain.Enums;
+global using Tooba.Catalog.Domain.Events;
+global using Tooba.Catalog.Domain.Rules;
+global using Tooba.Catalog.Domain.ValueObjects;
+global using Tooba.Catalog.Domain.Categories;
+global using Tooba.Catalog.Domain.Products;
+global using Tooba.Catalog.Domain.Reservation;
+global using Tooba.Catalog.Domain.Settings;
+global using Tooba.Catalog.Domain.StoreLandingPages;
+global using Tooba.Catalog.Domain.StoreMenus;
+global using Tooba.Catalog.Domain.TemplateCatalog;
+global using Tooba.Catalog.Application.Ports;
+global using Tooba.Catalog.Application.Models;
+global using Tooba.Catalog.Application.Shared;
+global using Tooba.Catalog.Contracts.Ports;

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Wishlist.Domain.Aggregates;
 using Tooba.Wishlist.Infrastructure.Persistence;

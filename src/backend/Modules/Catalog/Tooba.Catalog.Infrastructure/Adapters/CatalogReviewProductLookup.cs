@@ -1,5 +1,6 @@
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 
 namespace Tooba.Catalog.Infrastructure.Adapters;
 

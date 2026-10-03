@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Order.Application;
 using Tooba.Order.Application.PurchaseVerification;
 using Tooba.Reviews.Application;

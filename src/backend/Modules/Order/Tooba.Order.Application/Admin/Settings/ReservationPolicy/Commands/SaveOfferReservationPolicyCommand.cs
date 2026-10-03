@@ -1,6 +1,7 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Catalog.Contracts.Reservation;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Application.Admin.Settings.ReservationPolicy.Models;

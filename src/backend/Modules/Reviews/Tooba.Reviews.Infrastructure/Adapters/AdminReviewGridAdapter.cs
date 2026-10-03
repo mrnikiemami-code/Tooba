@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Reviews.Application;
 using Tooba.Reviews.Infrastructure.Persistence;
 

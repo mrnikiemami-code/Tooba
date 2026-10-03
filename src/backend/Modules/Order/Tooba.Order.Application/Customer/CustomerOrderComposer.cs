@@ -1,4 +1,5 @@
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Order.Application.Customer.Models;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Domain;

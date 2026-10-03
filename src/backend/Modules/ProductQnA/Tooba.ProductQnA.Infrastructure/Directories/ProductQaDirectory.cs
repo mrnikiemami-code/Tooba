@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.ProductQnA.Application.Models;
 using Tooba.ProductQnA.Application.Ports;
 using Tooba.ProductQnA.Contracts.Errors;

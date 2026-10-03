@@ -1,6 +1,7 @@
 using Tooba.Catalog.Application.Storefront.Models;
 using Tooba.Catalog.Application.Storefront.Ports;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 
 namespace Tooba.Catalog.Infrastructure.Adapters;
 

@@ -169,7 +169,7 @@ builder.Services.AddToobaIntegrationPublisher(builder.Environment, messagingOpti
 builder.Services.AddScoped<OutboxSaveChangesInterceptor>();
 builder.Services.AddHostedService<OutboxDispatcherHostedService>();
 builder.Services.AddToobaCqrsFoundation(
-    typeof(Tooba.Catalog.Application.CreateStoreLandingPageCommand).Assembly,
+    typeof(Tooba.Catalog.Application.StoreLandingPages.Commands.CreateStoreLandingPageCommand).Assembly,
     typeof(Tooba.Fulfillment.Application.Commands.CreateShippingService.CreateShippingServiceCommand).Assembly,
     typeof(Tooba.Offer.Application.Commands.CreateOffer.CreateOfferCommand).Assembly,
     typeof(Tooba.Settlement.Application.Queries.GetSellerSettlementBalance.GetSellerSettlementBalanceQuery).Assembly,

@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Fulfillment.Contracts.Returns;
 using Tooba.Returns.Application.Models;
 using Tooba.Returns.Application.Ports;

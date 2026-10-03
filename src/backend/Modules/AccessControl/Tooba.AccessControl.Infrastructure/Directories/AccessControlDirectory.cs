@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Ports;
@@ -11,6 +11,7 @@ using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.AccessControl.Infrastructure.Observability;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 
 namespace Tooba.AccessControl.Infrastructure.Directories;
 

@@ -1,0 +1,173 @@
+namespace Tooba.Catalog.Domain.Settings;
+
+/// <summary>حالت تم کنترل‌شدهٔ فروشگاه. رشتهٔ دلخواه پذیرفته نمی‌شود.</summary>
+public enum StoreAppearanceThemeMode
+{
+    /// <summary>میراث ذخیره‌شده؛ معادل LightOnly.</summary>
+    Light = 0,
+
+    /// <summary>میراث ذخیره‌شده؛ معادل DarkOnly.</summary>
+    Dark = 1,
+
+    /// <summary>فروشگاه همیشه روشن است.</summary>
+    LightOnly = 2,
+
+    /// <summary>فروشگاه همیشه تاریک است.</summary>
+    DarkOnly = 3,
+
+    /// <summary>از prefers-color-scheme پیروی می‌کند.</summary>
+    System = 4,
+
+    /// <summary>کاربر می‌تواند روشن/تاریک را روی دستگاه انتخاب کند.</summary>
+    UserChoice = 5,
+}
+
+/// <summary>پس‌زمینهٔ کنترل‌شدهٔ فروشگاه. رشتهٔ دلخواه پذیرفته نمی‌شود.</summary>
+public enum StoreAppearanceBackgroundStyle
+{
+    /// <summary>پس‌زمینهٔ خنثی فعلی پوسته.</summary>
+    Neutral = 0,
+
+    /// <summary>ته‌رنگ ملایم خانوادهٔ پالت curated.</summary>
+    PaletteTint = 1,
+}
+
+/// <summary>یک ردیف تنظیم ظاهری فروشگاه. مالک همان الگوی تنظیمات Store در Catalog است.</summary>
+public sealed class StoreAppearanceSettings
+{
+    /// <summary>شناسه تک‌ردیفی.</summary>
+    public static readonly Guid SingletonId = Guid.Parse("01900000-0000-7000-8000-00000000aa01");
+
+    /// <summary>کلید ردیف.</summary>
+    public Guid SettingsId { get; init; }
+
+    /// <summary>کلید پالت از پیش تعریف‌شده.</summary>
+    public string PaletteKey { get; private set; } = StoreAppearancePaletteRegistry.DefaultPaletteKey;
+
+    /// <summary>حالت تم ذخیره‌شده.</summary>
+    public StoreAppearanceThemeMode ThemeMode { get; private set; } = StoreAppearanceThemeMode.Light;
+
+    /// <summary>پوستهٔ کنترل‌شدهٔ کارت کالا.</summary>
+    public string ProductCardSkin { get; private set; } = StoreAppearanceProductCardSkinRegistry.DefaultSkinKey;
+
+    /// <summary>پس‌زمینهٔ کنترل‌شده؛ پیش‌فرض Neutral.</summary>
+    public StoreAppearanceBackgroundStyle BackgroundStyle { get; private set; } = StoreAppearanceBackgroundStyle.Neutral;
+
+    /// <summary>صفحهٔ Landing منتخب خانه؛ null یعنی خانهٔ کاننیکال فعلی.</summary>
+    public Guid? HomePageId { get; private set; }
+
+    /// <summary>منوی هدر؛ null یعنی مگامنوی رده‌ای فعلی.</summary>
+    public Guid? HeaderMenuId { get; private set; }
+
+    /// <summary>زمان به‌روزرسانی.</summary>
+    public DateTimeOffset UpdatedAt { get; private set; }
+
+    /// <summary>ردیف پیش‌فرض پالت آبی توبا و تم روشن.</summary>
+    public static StoreAppearanceSettings CreateDefault(DateTimeOffset now) => new()
+    {
+        SettingsId = SingletonId,
+        PaletteKey = StoreAppearancePaletteRegistry.DefaultPaletteKey,
+        ThemeMode = StoreAppearanceThemeMode.Light,
+        ProductCardSkin = StoreAppearanceProductCardSkinRegistry.DefaultSkinKey,
+        BackgroundStyle = StoreAppearanceBackgroundStyle.Neutral,
+        UpdatedAt = now,
+    };
+
+    /// <summary>پالت و حالت را با fallback کلید ناشناخته جایگزین می‌کند.</summary>
+    public void Replace(string? paletteKey, StoreAppearanceThemeMode themeMode, DateTimeOffset now)
+        => Replace(paletteKey, themeMode, productCardSkin: null, backgroundStyle: null, now);
+
+    /// <summary>پالت، تم و پوستهٔ کارت را با fallback کلید ناشناخته جایگزین می‌کند.</summary>
+    public void Replace(string? paletteKey, StoreAppearanceThemeMode themeMode, string? productCardSkin, DateTimeOffset now)
+        => Replace(paletteKey, themeMode, productCardSkin, backgroundStyle: null, now);
+
+    /// <summary>پالت، تم، پوستهٔ کارت و پس‌زمینه را اتمیک جایگزین می‌کند.</summary>
+    public void Replace(
+        string? paletteKey,
+        StoreAppearanceThemeMode themeMode,
+        string? productCardSkin,
+        StoreAppearanceBackgroundStyle? backgroundStyle,
+        DateTimeOffset now)
+    {
+        PaletteKey = StoreAppearancePaletteRegistry.ResolveKey(paletteKey);
+        ThemeMode = NormalizeThemeMode(themeMode);
+        ProductCardSkin = StoreAppearanceProductCardSkinRegistry.ResolveKey(productCardSkin ?? ProductCardSkin);
+        if (backgroundStyle is { } style)
+        {
+            BackgroundStyle = NormalizeBackgroundStyle(style);
+        }
+
+        UpdatedAt = now;
+    }
+
+    /// <summary>ارجاع خانه را می‌نویسد؛ null یعنی fallback کاننیکال.</summary>
+    public void SetHomePage(Guid? homePageId, DateTimeOffset now)
+    {
+        HomePageId = homePageId;
+        UpdatedAt = now;
+    }
+
+    /// <summary>ارجاع منوی هدر را می‌نویسد؛ null یعنی fallback پذیرفته‌شده.</summary>
+    public void SetHeaderMenu(Guid? headerMenuId, DateTimeOffset now)
+    {
+        HeaderMenuId = headerMenuId;
+        UpdatedAt = now;
+    }
+
+    /// <summary>Light/Dark میراث به LightOnly/DarkOnly نگاشت می‌شود.</summary>
+    public static StoreAppearanceThemeMode NormalizeThemeMode(StoreAppearanceThemeMode mode) => mode switch
+    {
+        StoreAppearanceThemeMode.Dark or StoreAppearanceThemeMode.DarkOnly => StoreAppearanceThemeMode.DarkOnly,
+        StoreAppearanceThemeMode.System => StoreAppearanceThemeMode.System,
+        StoreAppearanceThemeMode.UserChoice => StoreAppearanceThemeMode.UserChoice,
+        _ => StoreAppearanceThemeMode.LightOnly,
+    };
+
+    /// <summary>رشتهٔ ورودی را به حالت کاننیکال تبدیل می‌کند.</summary>
+    public static bool TryParseThemeMode(string? raw, out StoreAppearanceThemeMode mode)
+    {
+        switch (raw?.Trim())
+        {
+            case "Light":
+            case "LightOnly":
+                mode = StoreAppearanceThemeMode.LightOnly;
+                return true;
+            case "Dark":
+            case "DarkOnly":
+                mode = StoreAppearanceThemeMode.DarkOnly;
+                return true;
+            case "System":
+                mode = StoreAppearanceThemeMode.System;
+                return true;
+            case "UserChoice":
+                mode = StoreAppearanceThemeMode.UserChoice;
+                return true;
+            default:
+                mode = StoreAppearanceThemeMode.LightOnly;
+                return false;
+        }
+    }
+
+    /// <summary>مقدار نامعتبر یا میراث به Neutral نگاشت می‌شود.</summary>
+    public static StoreAppearanceBackgroundStyle NormalizeBackgroundStyle(StoreAppearanceBackgroundStyle style)
+        => style == StoreAppearanceBackgroundStyle.PaletteTint
+            ? StoreAppearanceBackgroundStyle.PaletteTint
+            : StoreAppearanceBackgroundStyle.Neutral;
+
+    /// <summary>رشتهٔ ورودی را به پس‌زمینهٔ کاننیکال تبدیل می‌کند.</summary>
+    public static bool TryParseBackgroundStyle(string? raw, out StoreAppearanceBackgroundStyle style)
+    {
+        switch (raw?.Trim())
+        {
+            case "Neutral":
+                style = StoreAppearanceBackgroundStyle.Neutral;
+                return true;
+            case "PaletteTint":
+                style = StoreAppearanceBackgroundStyle.PaletteTint;
+                return true;
+            default:
+                style = StoreAppearanceBackgroundStyle.Neutral;
+                return false;
+        }
+    }
+}

@@ -1,4 +1,5 @@
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Fulfillment.Contracts.History;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Checkout.Abuse;

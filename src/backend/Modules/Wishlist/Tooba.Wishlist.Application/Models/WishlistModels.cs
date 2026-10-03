@@ -1,4 +1,5 @@
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 
 namespace Tooba.Wishlist.Application.Models;
 

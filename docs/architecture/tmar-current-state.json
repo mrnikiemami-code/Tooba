@@ -1016,23 +1016,25 @@
         "task": "TB-TMAR-CATALOG-AMC-001",
         "mode": "ARCHITECT_DIRECT_AMSC",
         "skills": "Analyze,Migrate,Structure,Certify",
-        "state": "ANALYZE_ACCEPTED_W0",
+        "state": "W1_DOMAIN_APP_CONTRACTS_STRUCTURE_DONE",
         "httpApplicability": "HTTP_OWNING",
         "endpointOwnership": "MODULE_ENDPOINTS",
         "moduleMap": "MapCatalogEndpoints",
         "cqrs": "MEDIATR_12_5_PARTIAL_RESULT",
         "structureCertifiedUnderArchComplete002": false,
-        "structureState": "REQUIRED_HANDOFF",
-        "folderGranularity": "MIXED_ROOT_DUMPS_PLUS_CAPABILITY_APP",
+        "structureState": "PARTIAL_W1_DOMAIN_APP_CONTRACTS",
+        "folderGranularity": "DOMAIN_APP_CONTRACTS_SHALLOW_INFRA_ROOT_DUMP_REMAINS",
         "solutionExplorer": "CANONICAL_MODULES_CATALOG",
-        "pathNamespace": "FLAT_DOMAIN_INFRA_CONTRACTS_ROOT",
-        "rootAllowlist": "NOT_ENFORCED",
+        "pathNamespace": "EXACT_DOMAIN_APP_CONTRACTS",
+        "rootAllowlist": "DOMAIN_APP_CONTRACTS_ENFORCED_INFRA_PENDING",
         "foreignAppInfraDomainCoupling": "ZERO",
         "contractsBoundary": "LEGAL_CONTRACTS_ONLY",
-        "godFiles": [
-            "Domain/CatalogDomain.cs",
-            "Application/CatalogContracts.cs",
+        "godFilesRemaining": [
             "Infrastructure/CatalogDirectory.cs"
+        ],
+        "godFilesSplitW1": [
+            "Domain/CatalogDomain.cs",
+            "Application/CatalogContracts.cs"
         ],
         "endpointReachableRequests": 88,
         "validatorsPresent": 37,
@@ -1041,8 +1043,9 @@
         "manifestCertified": false,
         "microserviceExtractable": false,
         "evidenceW0": "docs/architecture/evidence/TB-TMAR-CATALOG-AMC-001-W0/",
-        "workflowStop": "USER_REVIEW_CATALOG_AMC_001_W0",
-        "automaticNextImplementationTask": "TB-TMAR-CATALOG-AMC-001-W1"
+        "evidenceW1": "docs/architecture/evidence/TB-TMAR-CATALOG-AMC-001-W1/",
+        "workflowStop": "USER_REVIEW_CATALOG_AMC_001_W1",
+        "automaticNextImplementationTask": "TB-TMAR-CATALOG-AMC-001-W2"
     },
     "userPreferenceAmc001W4R1": {
         "task": "TB-TMAR-USERPREFERENCE-AMC-001-W4-R1",

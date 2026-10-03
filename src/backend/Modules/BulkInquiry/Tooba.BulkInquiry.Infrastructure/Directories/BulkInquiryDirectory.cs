@@ -5,6 +5,7 @@ using Tooba.BulkInquiry.Contracts.Errors;
 using Tooba.BulkInquiry.Domain.Aggregates;
 using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 
 namespace Tooba.BulkInquiry.Infrastructure.Directories;
 

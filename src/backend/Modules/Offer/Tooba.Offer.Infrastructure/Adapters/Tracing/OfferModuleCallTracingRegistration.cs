@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Catalog.Contracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Inventory.Contracts.Checkout;
 using Tooba.Inventory.Contracts.Errors;
