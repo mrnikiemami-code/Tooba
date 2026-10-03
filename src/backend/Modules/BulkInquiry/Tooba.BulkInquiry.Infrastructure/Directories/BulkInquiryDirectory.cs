@@ -1,11 +1,12 @@
 using Tooba.BuildingBlocks;
-using Tooba.BulkInquiry.Application;
+using Tooba.BulkInquiry.Application.Models;
+using Tooba.BulkInquiry.Application.Ports;
 using Tooba.BulkInquiry.Contracts.Errors;
-using Tooba.BulkInquiry.Domain;
+using Tooba.BulkInquiry.Domain.Aggregates;
 using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Catalog.Contracts;
 
-namespace Tooba.BulkInquiry.Infrastructure;
+namespace Tooba.BulkInquiry.Infrastructure.Directories;
 
 /// <summary>دایرکتوری BulkInquiry با خواندن فقط از Catalog.Contracts و schema خودش.</summary>
 public sealed class BulkInquiryDirectory : IBulkInquiryDirectory

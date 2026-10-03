@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
-using Tooba.BulkInquiry.Domain;
+using Tooba.BulkInquiry.Domain.Aggregates;
+using Tooba.BulkInquiry.Domain.Enums;
 using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.ProductQnA.Application.Models;

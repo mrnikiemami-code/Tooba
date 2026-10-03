@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.BulkInquiry.Application;
-using Tooba.BulkInquiry.Application.Commands;
+using Tooba.BulkInquiry.Application.Models;
+using Tooba.BulkInquiry.Application.Storefront.Commands;
 
 namespace Tooba.BulkInquiry.Endpoints.Storefront;
 

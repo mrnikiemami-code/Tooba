@@ -1,15 +1,9 @@
 using System.Text.RegularExpressions;
 using Tooba.BuildingBlocks;
 using Tooba.BulkInquiry.Contracts.Errors;
+using Tooba.BulkInquiry.Domain.Enums;
 
-namespace Tooba.BulkInquiry.Domain;
-
-/// <summary>وضعیت چرخهٔ درخواست خرید عمده.</summary>
-public enum BulkInquiryStatus
-{
-    /// <summary>ثبت‌شده و در انتظار پیگیری.</summary>
-    Submitted = 0,
-}
+namespace Tooba.BulkInquiry.Domain.Aggregates;
 
 /// <summary>درخواست خرید عمده برای یک محصول منتشرشده؛ بدون قیمت یا تخفیف.</summary>
 public sealed class BulkPurchaseInquiry

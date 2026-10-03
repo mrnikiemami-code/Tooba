@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Tooba.BulkInquiry.Domain;
+using Tooba.BulkInquiry.Domain.Aggregates;
 using Tooba.Persistence;
 
 namespace Tooba.BulkInquiry.Infrastructure.Persistence;

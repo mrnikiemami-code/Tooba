@@ -3,7 +3,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
-using Tooba.BulkInquiry.Application;
+using Tooba.BulkInquiry.Application.Ports;
+using Tooba.BulkInquiry.Infrastructure.Directories;
 using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
@@ -29,26 +30,4 @@ public sealed class BulkInquiryModule : IToobaModule
             options.AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>());
         });
     }
-}
-
-/// <summary>ثبت Outbox BulkInquiry؛ نسخهٔ پایه هنوز رویداد بیرونی منتشر نمی‌کند.</summary>
-public sealed class BulkInquiryOutboxRegistration : IOutboxModuleRegistration
-{
-    /// <inheritdoc />
-    public string Schema => BulkInquiryDbContext.Schema;
-
-    /// <inheritdoc />
-    public string TableName => OutboxMessageMapping.TableName;
-
-    /// <inheritdoc />
-    public Type DbContextType => typeof(BulkInquiryDbContext);
-
-    /// <inheritdoc />
-    public IIntegrationEvent? Translate(IDomainEvent domainEvent, EventMetadata metadata) => null;
-
-    /// <inheritdoc />
-    public string GetEventTypeName(Type integrationEventType) => throw new InvalidOperationException("BulkInquiry integration event is not registered.");
-
-    /// <inheritdoc />
-    public Type? ResolveEventClrType(string eventTypeName) => null;
 }

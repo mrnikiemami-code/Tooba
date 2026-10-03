@@ -4,7 +4,7 @@ using Tooba.BulkInquiry.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Tooba.BulkInquiry.Infrastructure.Migrations
+namespace Tooba.BulkInquiry.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     [DbContext(typeof(BulkInquiryDbContext))]

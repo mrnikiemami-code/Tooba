@@ -76,7 +76,7 @@ public sealed class HostProductQnAAmcGuardTests
         var qnaDir = File.ReadAllText(Path.Combine(root,
             "src/backend/Modules/ProductQnA/Tooba.ProductQnA.Infrastructure/Directories/ProductQaDirectory.cs"));
         var bulkDir = File.ReadAllText(Path.Combine(root,
-            "src/backend/Modules/BulkInquiry/Tooba.BulkInquiry.Infrastructure/BulkInquiryDirectory.cs"));
+            "src/backend/Modules/BulkInquiry/Tooba.BulkInquiry.Infrastructure/Directories/BulkInquiryDirectory.cs"));
         Assert.Contains("ICatalogReviewProductLookup", qnaDir, StringComparison.Ordinal);
         Assert.Contains("ICatalogReviewProductLookup", bulkDir, StringComparison.Ordinal);
         Assert.DoesNotContain("ICatalogLookupGateway", qnaDir, StringComparison.Ordinal);

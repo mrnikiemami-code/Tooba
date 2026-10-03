@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Tooba.BulkInquiry.Infrastructure.Migrations
+namespace Tooba.BulkInquiry.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialBulkInquiry : Migration
