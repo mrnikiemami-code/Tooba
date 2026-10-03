@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Wishlist.Contracts.Errors;
 
 namespace Tooba.Wishlist.Domain.Aggregates;
 
@@ -19,8 +20,10 @@ public sealed class WishlistItem
     /// <summary>ردیف معتبر را برای مالک و محصول مشخص می‌سازد.</summary>
     public static WishlistItem Create(Guid ownerUserId, Guid productId, DateTimeOffset createdAt)
     {
-        if (ownerUserId == Guid.Empty || productId == Guid.Empty)
-            throw new InvalidOperationException("شناسهٔ مالک و محصول الزامی است.");
+        if (ownerUserId == Guid.Empty)
+            throw new SemanticException(new SemanticError(WishlistErrorCodes.SessionRequired));
+        if (productId == Guid.Empty)
+            throw new SemanticException(new SemanticError(WishlistErrorCodes.ProductIdRequired));
         return new WishlistItem
         {
             WishlistItemId = UuidV7.New(),

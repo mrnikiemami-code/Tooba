@@ -24,7 +24,7 @@
 ## Boundaries
 
 - Foreign Application/Infrastructure/Domain coupling: **ZERO**
-- Cross-module: `Catalog.Contracts` (+ `Order.Contracts.Fulfillment` session seam in Development seed only)
+- Cross-module: `Catalog.Contracts` (Application/Infrastructure) + `Order.Contracts.Fulfillment` session seam in production Customer actor resolver AND Development seed
 - CustomerProfile consumes `IWishlistCountPort` via `Wishlist.Contracts.Ports` only
 - Error catalog/resources: `Tooba.Wishlist.Contracts` registered by `WishlistModule`
 - Host Wishlist: CLOSED_HOST_ZERO

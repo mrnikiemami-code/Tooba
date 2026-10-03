@@ -94,6 +94,7 @@ public sealed class WishlistDirectory : IWishlistDirectory, IWishlistCountPort
 
     private static void EnsureActor(Guid actorUserId)
     {
-        if (actorUserId == Guid.Empty) throw new InvalidOperationException("Actor معتبر الزامی است.");
+        if (actorUserId == Guid.Empty)
+            throw new SemanticException(new SemanticError(WishlistErrorCodes.SessionRequired));
     }
 }

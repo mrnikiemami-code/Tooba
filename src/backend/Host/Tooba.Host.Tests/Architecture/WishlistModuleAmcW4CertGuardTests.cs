@@ -122,6 +122,34 @@ public sealed class WishlistModuleAmcW4CertGuardTests
             root, "docs/architecture/evidence/TB-TMAR-WISHLIST-AMC-001-W4/w4-certification.md")));
     }
 
+    [Fact]
+    public void Wishlist_expected_faults_use_semantic_codes_not_prose_invalid_operation()
+    {
+        var root = Repo();
+        var aggregate = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Domain/Aggregates/WishlistItem.cs"));
+        Assert.Contains("SemanticException", aggregate, StringComparison.Ordinal);
+        Assert.Contains("WishlistErrorCodes.SessionRequired", aggregate, StringComparison.Ordinal);
+        Assert.Contains("WishlistErrorCodes.ProductIdRequired", aggregate, StringComparison.Ordinal);
+        Assert.DoesNotContain("InvalidOperationException", aggregate, StringComparison.Ordinal);
+        Assert.DoesNotContain("شناسهٔ مالک و محصول الزامی است", aggregate, StringComparison.Ordinal);
+
+        var directory = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/Directories/WishlistDirectory.cs"));
+        var ensureActorStart = directory.IndexOf("EnsureActor", StringComparison.Ordinal);
+        Assert.True(ensureActorStart >= 0);
+        var ensureActor = directory[ensureActorStart..];
+        Assert.Contains("SemanticException", ensureActor, StringComparison.Ordinal);
+        Assert.Contains("WishlistErrorCodes.SessionRequired", ensureActor, StringComparison.Ordinal);
+        Assert.DoesNotContain("InvalidOperationException", ensureActor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Actor معتبر الزامی است", ensureActor, StringComparison.Ordinal);
+
+        var cert = File.ReadAllText(Path.Combine(
+            root, "docs/architecture/evidence/TB-TMAR-WISHLIST-AMC-001-W4/w4-certification.md"));
+        Assert.Contains("Customer actor resolver", cert, StringComparison.Ordinal);
+        Assert.DoesNotContain("Development seed only", cert, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string Repo()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

@@ -929,7 +929,7 @@
         "validationDiscovery": "ADD_VALIDATORS_FROM_ASSEMBLY_VIA_ADD_TOOBA_CQRS_FOUNDATION",
         "contractsBoundary": "CLEAN_CONTRACTS_ONLY",
         "foreignAppInfraDomainCoupling": "ZERO",
-        "crossModuleComposition": "CATALOG_CONTRACTS_PORTS_ONLY_PLUS_ORDER_FULFILLMENT_SESSION_SEAM_IN_DEV_SEED",
+        "crossModuleComposition": "CATALOG_CONTRACTS_PORTS_ONLY_PLUS_ORDER_FULFILLMENT_SESSION_SEAM_IN_CUSTOMER_ACTOR_RESOLVER_AND_DEV_SEED",
         "hostWishlistHttpResidue": "ZERO_CLOSED_HOST_ZERO",
         "manifestCertified": true,
         "microserviceExtractable": true,

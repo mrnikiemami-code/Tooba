@@ -414,7 +414,7 @@
       "module": "Wishlist",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Certified by TB-TMAR-WISHLIST-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first Customer CQRS; Result+WishlistOperation+ApiResponseFactory; exhaustive validator matrix (3 required + 1 Actor-only not required); Contracts.Errors/Resources catalog; Catalog.Contracts (+ Order.Contracts.Fulfillment session seam in Development seed); Host Wishlist CLOSED_HOST_ZERO; /Modules/Wishlist/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "certificationNote": "Certified by TB-TMAR-WISHLIST-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN (semantic-fault repair W4-R1). Capability-first Customer CQRS; Result+WishlistOperation+ApiResponseFactory; exhaustive validator matrix (3 required + 1 Actor-only not required); Contracts.Errors/Resources catalog; Catalog.Contracts ports in Application/Infrastructure; Order.Contracts.Fulfillment session seam in production Customer actor resolver AND Development seed; Host Wishlist CLOSED_HOST_ZERO; /Modules/Wishlist/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
       "projects": [
         {
           "projectName": "Tooba.Wishlist.Application",
