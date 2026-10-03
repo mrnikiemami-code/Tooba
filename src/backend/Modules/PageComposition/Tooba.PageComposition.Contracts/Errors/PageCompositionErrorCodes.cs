@@ -17,4 +17,13 @@ public static class PageCompositionErrorCodes
 
     /// <summary>Mutation was rejected by domain rules.</summary>
     public const string MutationRejected = "page-composition.mutation.rejected";
+
+    /// <summary>Section type transport field is required.</summary>
+    public const string SectionTypeRequired = "page-composition.sectionType.required";
+
+    /// <summary>Section ids transport field is required.</summary>
+    public const string SectionIdsRequired = "page-composition.sectionIds.required";
+
+    /// <summary>Section id transport field is required.</summary>
+    public const string SectionIdRequired = "page-composition.sectionId.required";
 }

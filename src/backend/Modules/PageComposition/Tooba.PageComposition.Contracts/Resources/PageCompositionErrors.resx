@@ -11,4 +11,5 @@
   <data name="page-composition.mutation.rejected" xml:space="preserve"><value>Page composition mutation was rejected.</value></data>
   <data name="page-composition.sectionType.required" xml:space="preserve"><value>Section type is required.</value></data>
   <data name="page-composition.sectionIds.required" xml:space="preserve"><value>Section ids are required.</value></data>
+  <data name="page-composition.sectionId.required" xml:space="preserve"><value>Section id is required.</value></data>
 </root>

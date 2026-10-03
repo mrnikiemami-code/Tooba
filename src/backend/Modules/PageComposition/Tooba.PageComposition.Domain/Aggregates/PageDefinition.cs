@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.PageComposition.Contracts.Errors;
 using Tooba.PageComposition.Domain.Catalog;
 using Tooba.PageComposition.Domain.Constants;
 
@@ -56,17 +57,17 @@ public sealed class PageDefinition
     public void ReorderSections(IReadOnlyList<Guid> sectionIdsInOrder, DateTimeOffset now)
     {
         if (sectionIdsInOrder.Count == 0)
-            throw new InvalidOperationException("ترتیب section خالی است.");
+            throw new SemanticException(new SemanticError(PageCompositionErrorCodes.MutationRejected));
         if (sectionIdsInOrder.Count != _sections.Count)
-            throw new InvalidOperationException("ترتیب section با تعداد فعلی هم‌خوان نیست.");
+            throw new SemanticException(new SemanticError(PageCompositionErrorCodes.MutationRejected));
         if (sectionIdsInOrder.Distinct().Count() != sectionIdsInOrder.Count)
-            throw new InvalidOperationException("شناسهٔ section تکراری در ترتیب وجود دارد.");
+            throw new SemanticException(new SemanticError(PageCompositionErrorCodes.MutationRejected));
 
         var lookup = _sections.ToDictionary(section => section.PageSectionId);
         for (var index = 0; index < sectionIdsInOrder.Count; index++)
         {
             if (!lookup.TryGetValue(sectionIdsInOrder[index], out var section))
-                throw new InvalidOperationException("section برای مرتب‌سازی یافت نشد.");
+                throw new SemanticException(new SemanticError(PageCompositionErrorCodes.SectionMissing));
             section.SetDisplayOrder(index, now);
         }
 
@@ -122,7 +123,7 @@ public sealed class PageDefinition
     {
         var index = _sections.FindIndex(section => section.PageSectionId == sectionId);
         if (index < 0)
-            throw new InvalidOperationException("section یافت نشد.");
+            throw new SemanticException(new SemanticError(PageCompositionErrorCodes.SectionMissing));
         _sections.RemoveAt(index);
         ReindexSections(now);
         Touch(now);
@@ -155,7 +156,7 @@ public sealed class PageDefinition
 
     private PageSection RequireSection(Guid sectionId) =>
         _sections.FirstOrDefault(section => section.PageSectionId == sectionId)
-        ?? throw new InvalidOperationException("section یافت نشد.");
+        ?? throw new SemanticException(new SemanticError(PageCompositionErrorCodes.SectionMissing));
 
     private void ReindexSections(DateTimeOffset now)
     {
@@ -173,13 +174,13 @@ public sealed class PageDefinition
     private static void ValidatePageKey(string pageKey)
     {
         if (string.IsNullOrWhiteSpace(pageKey) || pageKey.Trim().Length > PageKeyMaxLength)
-            throw new InvalidOperationException("PageKey معتبر نیست.");
+            throw new SemanticException(new SemanticError(PageCompositionErrorCodes.MutationRejected));
     }
 
     private static void ValidateLocale(string? locale)
     {
         if (locale is not null && (locale.Trim().Length == 0 || locale.Trim().Length > LocaleMaxLength))
-            throw new InvalidOperationException("locale معتبر نیست.");
+            throw new SemanticException(new SemanticError(PageCompositionErrorCodes.MutationRejected));
     }
 
     private static string? NormalizeLocale(string? locale) =>

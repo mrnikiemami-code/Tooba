@@ -2,16 +2,17 @@ using System.Globalization;
 using System.Resources;
 using Tooba.BuildingBlocks.Localization;
 
-namespace Tooba.PageComposition.Endpoints.Resources;
+namespace Tooba.PageComposition.Contracts.Errors;
 
-/// <summary>نشانگر منبع خطاهای PageComposition.</summary>
+/// <summary>Resource manager marker for PageCompositionErrors.resx.</summary>
 public static class PageCompositionErrorResources
 {
+    /// <summary>ResourceManager for PageComposition error resources.</summary>
     public static ResourceManager Manager { get; } =
-        new("Tooba.PageComposition.Endpoints.Resources.PageCompositionErrors", typeof(PageCompositionErrorResources).Assembly);
+        new("Tooba.PageComposition.Contracts.Resources.PageCompositionErrors", typeof(PageCompositionErrorResources).Assembly);
 }
 
-/// <summary>مجموعهٔ منبع PageComposition — مالکیت <c>page-composition.</c>.</summary>
+/// <summary>PageComposition-owned error resource set for the <c>page-composition.</c> key space.</summary>
 public sealed class PageCompositionErrorResourceSet : IErrorResourceSet
 {
     /// <inheritdoc />

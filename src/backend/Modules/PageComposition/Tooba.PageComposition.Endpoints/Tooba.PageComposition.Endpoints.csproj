@@ -11,10 +11,6 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Update="Resources\PageCompositionErrors.resx"><Generator></Generator></EmbeddedResource>
-    <EmbeddedResource Update="Resources\PageCompositionErrors.fa.resx"><Generator></Generator></EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Tooba.PageComposition.Application\Tooba.PageComposition.Application.csproj" />
     <ProjectReference Include="..\Tooba.PageComposition.Contracts\Tooba.PageComposition.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />

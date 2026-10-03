@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.PageComposition.Application.Composition;
 using Tooba.PageComposition.Application.Storefront.Queries;
 
 namespace Tooba.PageComposition.Endpoints.Storefront;
@@ -25,15 +26,14 @@ public static class PageCompositionStorefrontEndpoints
         string? locale = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var tenantId = PageCompositionHttpErrors.RequireTenantId(tenant);
-            return Results.Json(await sender.Send(
-                new GetHomeCompositionQuery(tenantId, locale), cancellationToken));
-        }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return PageCompositionHttpErrors.From(ex, api);
-        }
+        var tenantResult = PageCompositionOperation.Execute(() =>
+            PageCompositionPresentationComposer.RequireTenantId(tenant));
+        if (tenantResult.IsFailure)
+            return api.From(tenantResult);
+
+        var result = await sender.Send(
+            new GetHomeCompositionQuery(tenantResult.Value, locale),
+            cancellationToken);
+        return api.From(result);
     }
 }

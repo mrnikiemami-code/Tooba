@@ -1,5 +1,8 @@
 using System.Text.Json;
 
+using Tooba.BuildingBlocks;
+using Tooba.PageComposition.Contracts.Errors;
+
 namespace Tooba.PageComposition.Domain.Catalog;
 
 /// <summary>کاتالوگ ثابت انواع section تأییدشده.</summary>
@@ -111,7 +114,7 @@ public static class SectionCatalog
     public static void EnsureKnownSectionType(string sectionType)
     {
         if (string.IsNullOrWhiteSpace(sectionType) || !AllowedVariants.ContainsKey(sectionType))
-            throw new InvalidOperationException("نوع section در کاتالوگ تأییدشده نیست.");
+            throw new SemanticException(new SemanticError(PageCompositionErrorCodes.SectionTypeRejected));
     }
 
     /// <summary>variant را برای نوع section اعتبارسنجی می‌کند.</summary>
@@ -119,7 +122,7 @@ public static class SectionCatalog
     {
         EnsureKnownSectionType(sectionType);
         if (string.IsNullOrWhiteSpace(variant) || !AllowedVariants[sectionType].Contains(variant))
-            throw new InvalidOperationException("variant section مجاز نیست.");
+            throw new SemanticException(new SemanticError(PageCompositionErrorCodes.SectionTypeRejected));
     }
 
     /// <summary>JSON config امن را اعتبارسنجی و نرمال می‌کند.</summary>
@@ -131,53 +134,53 @@ public static class SectionCatalog
 
         using var document = JsonDocument.Parse(configurationJson);
         if (document.RootElement.ValueKind != JsonValueKind.Object)
-            throw new InvalidOperationException("پیکربندی section باید شیء JSON باشد.");
+            throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
 
         var normalized = new Dictionary<string, object?>(StringComparer.Ordinal);
         foreach (var property in document.RootElement.EnumerateObject())
         {
             if (ForbiddenConfigKeys.Contains(property.Name))
-                throw new InvalidOperationException($"کلید config ممنوع است: {property.Name}");
+                throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
             if (!AllowedConfigKeys.Contains(property.Name))
-                throw new InvalidOperationException($"کلید config ناشناخته است: {property.Name}");
+                throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
 
             switch (property.Name.ToLowerInvariant())
             {
                 case "title":
                     if (property.Value.ValueKind != JsonValueKind.String)
-                        throw new InvalidOperationException("title باید رشته باشد.");
+                        throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
                     var title = property.Value.GetString()?.Trim() ?? string.Empty;
                     if (title.Length == 0 || title.Length > TitleMaxLength)
-                        throw new InvalidOperationException("title معتبر نیست.");
+                        throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
                     normalized["title"] = title;
                     break;
                 case "href":
                     if (!SupportsHref(sectionType))
-                        throw new InvalidOperationException("href برای این section مجاز نیست.");
+                        throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
                     if (property.Value.ValueKind != JsonValueKind.String)
-                        throw new InvalidOperationException("href باید رشته باشد.");
+                        throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
                     var href = property.Value.GetString()?.Trim() ?? string.Empty;
                     if (href.Length == 0 || href.Length > HrefMaxLength)
-                        throw new InvalidOperationException("href معتبر نیست.");
+                        throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
                     normalized["href"] = href;
                     break;
                 case "itemcount":
                     if (!SupportsItemCount(sectionType))
-                        throw new InvalidOperationException("itemCount برای این section مجاز نیست.");
+                        throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
                     if (property.Value.ValueKind != JsonValueKind.Number || !property.Value.TryGetInt32(out var itemCount))
-                        throw new InvalidOperationException("itemCount باید عدد صحیح باشد.");
+                        throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
                     if (itemCount < ItemCountMin || itemCount > ItemCountMax)
-                        throw new InvalidOperationException("itemCount خارج از بازهٔ مجاز است.");
+                        throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
                     normalized["itemCount"] = itemCount;
                     break;
                 case "sourcekind":
                     if (!SupportsSourceKind(sectionType))
-                        throw new InvalidOperationException("sourceKind برای این section مجاز نیست.");
+                        throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
                     if (property.Value.ValueKind != JsonValueKind.String)
-                        throw new InvalidOperationException("sourceKind باید رشته باشد.");
+                        throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
                     var sourceKind = property.Value.GetString()?.Trim() ?? string.Empty;
                     if (!AllowedSourceKinds.Contains(sourceKind))
-                        throw new InvalidOperationException("sourceKind مجاز نیست.");
+                        throw new SemanticException(new SemanticError(PageCompositionErrorCodes.ConfigRejected));
                     normalized["sourceKind"] = sourceKind;
                     break;
             }

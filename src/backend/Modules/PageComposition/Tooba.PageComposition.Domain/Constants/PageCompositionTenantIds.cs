@@ -1,6 +1,9 @@
 using System.Security.Cryptography;
 using System.Text;
 
+using Tooba.BuildingBlocks;
+using Tooba.PageComposition.Contracts.Errors;
+
 namespace Tooba.PageComposition.Domain.Constants;
 
 /// <summary>شناسهٔ پایدار Tenant برای Page Composition.</summary>
@@ -16,7 +19,7 @@ public static class PageCompositionTenantIds
     public static Guid FromTenantKey(string tenantKey)
     {
         if (string.IsNullOrWhiteSpace(tenantKey))
-            throw new InvalidOperationException("TenantId معتبر نیست.");
+            throw new SemanticException(new SemanticError(PageCompositionErrorCodes.TenantMissing));
 
         if (string.Equals(tenantKey, "store-alpha", StringComparison.Ordinal))
             return StoreAlpha;

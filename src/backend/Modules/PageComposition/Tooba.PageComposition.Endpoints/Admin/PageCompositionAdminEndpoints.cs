@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 using Tooba.PageComposition.Application.Admin.Commands;
 using Tooba.PageComposition.Application.Admin.Queries;
+using Tooba.PageComposition.Application.Composition;
 using Tooba.PageComposition.Application.Models;
 using Tooba.PageComposition.Application.Storefront.Queries;
 using Tooba.PageComposition.Endpoints.Models;
@@ -36,15 +38,8 @@ public static class PageCompositionAdminEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            await auth.RequireAuthorizedAsync(http, cancellationToken);
-            return Results.Json(await sender.Send(new GetSectionCatalogQuery(), cancellationToken));
-        }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return PageCompositionHttpErrors.From(ex, api);
-        }
+        await auth.RequireAuthorizedAsync(http, cancellationToken);
+        return api.From(await sender.Send(new GetSectionCatalogQuery(), cancellationToken));
     }
 
     private static async Task<IResult> AdminGetHomeAsync(
@@ -56,17 +51,12 @@ public static class PageCompositionAdminEndpoints
         string? locale = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            await auth.RequireAuthorizedAsync(http, cancellationToken);
-            var tenantId = PageCompositionHttpErrors.RequireTenantId(tenant);
-            return Results.Json(await sender.Send(
-                new AdminGetHomeCompositionQuery(tenantId, locale), cancellationToken));
-        }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return PageCompositionHttpErrors.From(ex, api);
-        }
+        await auth.RequireAuthorizedAsync(http, cancellationToken);
+        var tenantResult = ResolveTenant(tenant, api, out var tenantId);
+        if (tenantResult is not null)
+            return tenantResult;
+
+        return api.From(await sender.Send(new AdminGetHomeCompositionQuery(tenantId, locale), cancellationToken));
     }
 
     private static Task<IResult> AdminReorderAsync(
@@ -124,7 +114,7 @@ public static class PageCompositionAdminEndpoints
                         body.ConfigurationJson,
                         body.IsVisible)),
                 cancellationToken),
-            StatusCodes.Status201Created);
+            created: true);
 
     private static Task<IResult> AdminRemoveSectionAsync(
         Guid id,
@@ -159,19 +149,31 @@ public static class PageCompositionAdminEndpoints
         ICurrentTenant tenant,
         ApiResponseFactory api,
         CancellationToken cancellationToken,
-        Func<Guid, Task<AdminHomeCompositionSnapshot>> action,
-        int successStatusCode = StatusCodes.Status200OK)
+        Func<Guid, Task<Result<AdminHomeCompositionSnapshot>>> action,
+        bool created = false)
     {
-        try
+        await auth.RequireAuthorizedAsync(http, cancellationToken);
+        var failure = ResolveTenant(tenant, api, out var tenantId);
+        if (failure is not null)
+            return failure;
+
+        var result = await action(tenantId);
+        return created
+            ? api.Created("/v1/admin/page-composition/home", result)
+            : api.From(result);
+    }
+
+    private static IResult? ResolveTenant(ICurrentTenant tenant, ApiResponseFactory api, out Guid tenantId)
+    {
+        var tenantResult = PageCompositionOperation.Execute(() =>
+            PageCompositionPresentationComposer.RequireTenantId(tenant));
+        if (tenantResult.IsFailure)
         {
-            await auth.RequireAuthorizedAsync(http, cancellationToken);
-            var tenantId = PageCompositionHttpErrors.RequireTenantId(tenant);
-            var result = await action(tenantId);
-            return Results.Json(result, statusCode: successStatusCode);
+            tenantId = default;
+            return api.From(tenantResult);
         }
-        catch (Exception ex) when (ex is SemanticException or PlatformHttpException)
-        {
-            return PageCompositionHttpErrors.From(ex, api);
-        }
+
+        tenantId = tenantResult.Value;
+        return null;
     }
 }

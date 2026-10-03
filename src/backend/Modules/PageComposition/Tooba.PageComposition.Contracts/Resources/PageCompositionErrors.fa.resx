@@ -11,4 +11,5 @@
   <data name="page-composition.mutation.rejected" xml:space="preserve"><value>تغییر ترکیب صفحه رد شد.</value></data>
   <data name="page-composition.sectionType.required" xml:space="preserve"><value>نوع بخش الزامی است.</value></data>
   <data name="page-composition.sectionIds.required" xml:space="preserve"><value>شناسه‌های بخش الزامی است.</value></data>
+  <data name="page-composition.sectionId.required" xml:space="preserve"><value>شناسهٔ بخش الزامی است.</value></data>
 </root>

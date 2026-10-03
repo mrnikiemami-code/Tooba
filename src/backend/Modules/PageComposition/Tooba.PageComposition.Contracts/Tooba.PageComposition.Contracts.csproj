@@ -7,4 +7,7 @@
     <RootNamespace>Tooba.PageComposition.Contracts</RootNamespace>
     <AssemblyName>Tooba.PageComposition.Contracts</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+  </ItemGroup>
 </Project>

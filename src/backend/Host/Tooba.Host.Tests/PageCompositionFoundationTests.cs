@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
+using Tooba.BuildingBlocks;
 using Tooba.PageComposition.Application.Models;
 using Tooba.PageComposition.Application.Ports;
+using Tooba.PageComposition.Contracts.Errors;
 using Tooba.PageComposition.Domain.Aggregates;
 using Tooba.PageComposition.Domain.Catalog;
 using Tooba.PageComposition.Domain.Constants;
@@ -71,12 +73,13 @@ public sealed class PageCompositionFoundationTests : IAsyncLifetime
         var tenantAlpha = PageCompositionTenantIds.StoreAlpha;
         var tenantBeta = PageCompositionTenantIds.StoreBeta;
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var unknown = await Assert.ThrowsAsync<SemanticException>(() =>
             directory.AdminAddSectionAsync(
                 tenantAlpha,
                 null,
                 new AddHomeSectionCommand("unknown_widget", SectionCatalog.DefaultVariant, null),
                 CancellationToken.None));
+        Assert.Equal(PageCompositionErrorCodes.SectionTypeRejected, unknown.Error.Code);
 
         var alpha = await directory.AdminGetHomeAsync(tenantAlpha, null, CancellationToken.None);
         Assert.Equal(SectionCatalog.DefaultHomeSectionTypes.Count, alpha.Sections.Count);
@@ -99,13 +102,14 @@ public sealed class PageCompositionFoundationTests : IAsyncLifetime
         var publicAlpha = await directory.GetHomeCompositionAsync(tenantAlpha, null, CancellationToken.None);
         Assert.DoesNotContain(publicAlpha.Sections, section => section.PageSectionId == hero.PageSectionId);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var forbidden = await Assert.ThrowsAsync<SemanticException>(() =>
             directory.AdminUpdateSectionAsync(
                 tenantAlpha,
                 null,
                 hero.PageSectionId,
                 new UpdateHomeSectionCommand(null, """{"className":"danger"}""", null),
                 CancellationToken.None));
+        Assert.Equal(PageCompositionErrorCodes.ConfigRejected, forbidden.Error.Code);
 
         var restored = await directory.AdminRestoreDefaultHomeAsync(tenantAlpha, null, CancellationToken.None);
         Assert.Equal(SectionCatalog.DefaultHomeSectionTypes, restored.Sections.Select(section => section.SectionType).ToList());

@@ -44,13 +44,18 @@ public sealed class HostPageCompositionAmcGuardTests
             Assert.DoesNotContain("message.Contains", text, StringComparison.Ordinal);
             Assert.DoesNotContain("یافت نشد", text, StringComparison.Ordinal);
             Assert.DoesNotContain("ex.Message", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("Results.Json", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (SemanticException", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (Exception ex) when", text, StringComparison.Ordinal);
         }
 
-        var httpErrors = File.ReadAllText(Path.Combine(
+        Assert.False(Directory.Exists(Path.Combine(
+            root, "src/backend/Modules/PageComposition/Tooba.PageComposition.Endpoints/Errors")));
+        Assert.False(Directory.Exists(Path.Combine(
+            root, "src/backend/Modules/PageComposition/Tooba.PageComposition.Endpoints/Resources")));
+        Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/PageComposition/Tooba.PageComposition.Endpoints/PageCompositionHttpErrors.cs"));
-        Assert.Contains("ApiResponseFactory", httpErrors, StringComparison.Ordinal);
-        Assert.Contains("FromSemanticException", httpErrors, StringComparison.Ordinal);
+            "src/backend/Modules/PageComposition/Tooba.PageComposition.Contracts/Errors/PageCompositionErrorCatalogContributor.cs")));
     }
 
     [Fact]

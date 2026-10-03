@@ -1,11 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.BuildingBlocks.Localization;
-using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.PageComposition.Endpoints.Admin;
-using Tooba.PageComposition.Endpoints.Errors;
-using Tooba.PageComposition.Endpoints.Resources;
 using Tooba.PageComposition.Endpoints.Storefront;
 
 namespace Tooba.PageComposition.Endpoints;
@@ -22,13 +18,11 @@ public static class PageCompositionEndpointModule
         return app;
     }
 
-    /// <summary>ثبت presentation seams (admin authorizer + error catalog/resources).</summary>
+    /// <summary>ثبت presentation seams (admin authorizer). Error catalog owns in Infrastructure.</summary>
     public static IServiceCollection AddPageCompositionEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<IPageCompositionAdminAuthorizer, PageCompositionAdminAuthorizer>();
-        services.AddSingleton<IErrorCatalogContributor, PageCompositionErrorCatalogContributor>();
-        services.AddSingleton<IErrorResourceSet, PageCompositionErrorResourceSet>();
         return services;
     }
 }
