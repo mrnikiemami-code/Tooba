@@ -13,9 +13,13 @@
   <Folder Name="/Modules/">
     <Project Path="Modules/Tooba.ModuleContracts/Tooba.ModuleContracts.csproj" />
     <Project Path="Modules/PlatformProbe/Tooba.PlatformProbe.Infrastructure/Tooba.PlatformProbe.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Modules/UserPreference/">
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Domain/Tooba.UserPreference.Domain.csproj" />
+    <Project Path="Modules/UserPreference/Tooba.UserPreference.Contracts/Tooba.UserPreference.Contracts.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Application/Tooba.UserPreference.Application.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Infrastructure/Tooba.UserPreference.Infrastructure.csproj" />
+    <Project Path="Modules/UserPreference/Tooba.UserPreference.Endpoints/Tooba.UserPreference.Endpoints.csproj" />
   </Folder>
   <Folder Name="/Modules/Story/">
     <Project Path="Modules/Story/Tooba.Story.Domain/Tooba.Story.Domain.csproj" />
