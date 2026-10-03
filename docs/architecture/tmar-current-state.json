@@ -1060,7 +1060,7 @@
         "task": "TB-TMAR-ORDER-AMC-001",
         "mode": "ARCHITECT_DIRECT_AMSC",
         "skills": "Analyze,Migrate,Structure,Certify",
-        "state": "W3_MIGRATE_REPAIR_COMPLETE",
+        "state": "W4_CERTIFY_NOT_CERTIFIED",
         "httpApplicability": "HTTP_OWNING",
         "endpointOwnership": "MODULE_ENDPOINTS",
         "moduleMap": "MapOrderModuleEndpoints",
@@ -1080,14 +1080,27 @@
         "apiResultMapping": "CANONICAL_HTML_CONTENT_SUCCESS_PATH_ONLY",
         "purchaseVerificationContract": "Tooba.Order.Contracts.PurchaseVerification",
         "reviewsInfrastructureBoundary": "ORDER_CONTRACTS_ONLY",
+        "certificationVerdict": "NOT_CERTIFIED",
+        "certificationBlockers": [
+            "StorefrontOrderResult.TryMapCheckoutDirectoryCode parses InvalidOperationException.Message",
+            "AdminOrderFulfillmentOperations.TryMapStableMachineCode parses InvalidOperationException.Message (incl. foreign shipping_service.*)",
+            "CheckoutDirectory.Reservations throws untyped InvalidOperationException for expected inventory/price/tax/promotion faults",
+            "OrderUnpaidRetrySupplyBridge / OrderSupplyCheckoutStore / SellerOrder / CartShippingDraft throw untyped InvalidOperationException for expected faults"
+        ],
+        "repairScopeW5": "TYPED_CONTRACT_OPERATION_FAULT_MIGRATION_NO_MESSAGE_CLASSIFICATION",
+        "hostFinalClosureRegression": "NONE",
+        "sinkFolderRegression": "NONE",
+        "manifestPromoted": false,
+        "schemaMigration": "NONE",
         "microserviceExtractable": true,
         "frontendFrozen": true,
         "evidenceW0": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W0/",
         "evidenceW1": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W1/",
         "evidenceW2": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W2/",
         "evidenceW3": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W3/",
-        "nextWave": "W4_CERTIFY",
-        "automaticNextImplementationTask": "TB-TMAR-ORDER-AMC-001-W4"
+        "evidenceW4": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W4/",
+        "nextWave": "W5_TYPED_FAULT_REPAIR_THEN_RECERTIFY",
+        "automaticNextImplementationTask": "TB-TMAR-ORDER-AMC-001-W5"
     },
     "userPreferenceAmc001W4R1": {
         "task": "TB-TMAR-USERPREFERENCE-AMC-001-W4-R1",
