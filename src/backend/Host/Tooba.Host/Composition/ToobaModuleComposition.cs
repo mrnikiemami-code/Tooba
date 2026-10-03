@@ -4,7 +4,6 @@ using Tooba.ModuleContracts;
 using Tooba.Offer.Infrastructure;
 using Tooba.Offer.Infrastructure.DependencyInjection;
 using Tooba.Party.Infrastructure;
-using Tooba.PlatformProbe.Infrastructure;
 using Tooba.Pricing.Infrastructure;
 using Tooba.Inventory.Infrastructure.DependencyInjection;
 using Tooba.Cart.Infrastructure.DependencyInjection;
@@ -55,7 +54,6 @@ internal static class ToobaModuleComposition
     /// </summary>
     public static IReadOnlyList<IToobaModule> Modules { get; } =
     [
-        new PlatformProbeModule(),
         new StoreContextModule(),
         new IdentityModule(),
         new PartyModule(),

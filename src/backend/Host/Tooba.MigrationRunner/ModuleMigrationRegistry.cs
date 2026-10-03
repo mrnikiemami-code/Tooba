@@ -22,7 +22,6 @@ using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.Support.Infrastructure.Persistence;
 using Tooba.Wallet.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Persistence;
-using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Tooba.ProductQnA.Infrastructure.Persistence;
 using Tooba.Reviews.Infrastructure.Persistence;
 using Tooba.Wishlist.Infrastructure.Persistence;
@@ -66,7 +65,6 @@ internal static class ModuleMigrationRegistry
         Descriptor<NotificationDbContext>("Notification", NotificationDbContext.Schema),
         Descriptor<AccessControlDbContext>("AccessControl", AccessControlDbContext.Schema),
         new ModuleMigrationDescriptor(Tooba.Promotion.Infrastructure.Adapters.PromotionModuleMigration.Module, Tooba.Promotion.Infrastructure.Adapters.PromotionModuleMigration.Schema, Tooba.Promotion.Infrastructure.Adapters.PromotionModuleMigration.CreateContext),
-        Descriptor<PlatformProbeDbContext>("PlatformProbe", PlatformProbeDbContext.Schema),
         Descriptor<ReviewsDbContext>("Reviews", ReviewsDbContext.Schema),
         Descriptor<ProductQnADbContext>("ProductQnA", ProductQnADbContext.Schema),
         Descriptor<BulkInquiryDbContext>("BulkInquiry", BulkInquiryDbContext.Schema),

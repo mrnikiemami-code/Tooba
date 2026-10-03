@@ -5,7 +5,6 @@ using Tooba.ModuleContracts;
 using Tooba.Offer.Infrastructure;
 using Tooba.Offer.Infrastructure.DependencyInjection;
 using Tooba.Party.Infrastructure;
-using Tooba.PlatformProbe.Infrastructure;
 using Tooba.Pricing.Infrastructure;
 using Tooba.Inventory.Infrastructure.DependencyInjection;
 using Tooba.Cart.Infrastructure;
@@ -42,14 +41,14 @@ namespace Tooba.Host.Tests;
 
 /// <summary>
 /// قوانین مرز Modular Monolith را به‌صورت اجرایی شکست می‌دهد؛ فقط مستند نیستند.
-/// تا وقتی فقط PlatformProbe وجود دارد، بخشی از قوانین لایه‌ای به‌صورت vacuous روی پروژه‌های آینده اعمال می‌شود.
 /// </summary>
 public sealed class ArchitectureBoundaryTests
 {
     [Fact]
     public void Host_composes_modules_from_explicit_list()
     {
-        Assert.Contains(ToobaModuleComposition.Modules, module => module is PlatformProbeModule);
+        Assert.DoesNotContain(ToobaModuleComposition.Modules, module => module.Name == "PlatformProbe");
+        Assert.DoesNotContain(ToobaModuleComposition.Modules, module => module.GetType().Name == "PlatformProbeModule");
         Assert.Contains(ToobaModuleComposition.Modules, module => module is IdentityModule);
         Assert.Contains(ToobaModuleComposition.Modules, module => module is PartyModule);
         Assert.Contains(ToobaModuleComposition.Modules, module => module is CatalogModule);

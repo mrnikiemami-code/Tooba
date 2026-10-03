@@ -24,7 +24,6 @@ public sealed class HostDevelopmentMigrationSeamGuardTests
         "Payment/Tooba.Payment.Infrastructure/DependencyInjection/PaymentModule.cs",
         "Fulfillment/Tooba.Fulfillment.Infrastructure/DependencyInjection/FulfillmentModule.cs",
         "Promotion/Tooba.Promotion.Infrastructure/DependencyInjection/PromotionModule.cs",
-        "PlatformProbe/Tooba.PlatformProbe.Infrastructure/PlatformProbeModule.cs",
         "Reviews/Tooba.Reviews.Infrastructure/ReviewsModule.cs",
         "ProductQnA/Tooba.ProductQnA.Infrastructure/ProductQnAModule.cs",
         "BulkInquiry/Tooba.BulkInquiry.Infrastructure/BulkInquiryModule.cs",
@@ -59,7 +58,7 @@ public sealed class HostDevelopmentMigrationSeamGuardTests
     }
 
     [Fact]
-    public void All_twenty_nine_modules_register_their_own_schema_migrator()
+    public void All_twenty_eight_active_modules_register_their_own_schema_migrator()
     {
         var modules = Path.Combine(FindRepoRoot(), "src/backend/Modules");
         var registrations = 0;
@@ -74,7 +73,10 @@ public sealed class HostDevelopmentMigrationSeamGuardTests
             }
         }
 
-        Assert.Equal(29, registrations);
+        Assert.Equal(28, registrations);
+        Assert.DoesNotContain(
+            ModuleCompositionRoots,
+            relative => relative.Contains("PlatformProbe", StringComparison.Ordinal));
     }
 
     [Fact]

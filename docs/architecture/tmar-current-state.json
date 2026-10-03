@@ -974,7 +974,27 @@
         "workflowStop": "USER_REVIEW_USERPREFERENCE_AMC_001_W4",
         "latestPostCertRepairCheckpoint": "userPreferenceAmc001W4R1"
     },
-    "userPreferenceAmc001W4R1": {
+    "platformProbeAmc001": {
+        "task": "TB-TMAR-PLATFORMPROBE-AMC-001",
+        "mode": "ARCHITECT_DIRECT_AMSC",
+        "skills": "Analyze,Migrate,Structure,Certify",
+        "disposition": "REMOVE_FROM_PRODUCTION_REHOME_TEST_FIXTURE",
+        "w0State": "ANALYZE_ACCEPTED",
+        "w1State": "TEST_FIXTURE_PARITY_ESTABLISHED",
+        "w2State": "PRODUCTION_RUNTIME_DETACHED_SOURCE_PRESERVED_FOR_W3",
+        "hostProjectReference": "ZERO",
+        "hostCompositionRegistration": "ZERO",
+        "migrationRunnerDescriptor": "ZERO",
+        "activeRuntimeMigrator": "ZERO",
+        "deployedSchema": "PRESERVED_NO_DROP",
+        "sourceTree": "PRESERVED_FOR_W3",
+        "moduleSchemaMigrationOrderConstant": "PlatformProbe=13_RESERVED_UNCHANGED",
+        "testFixture": "Host.Tests/Fixtures/PlatformProbe",
+        "structureCertified": false,
+        "workflowStop": "USER_REVIEW_PLATFORMPROBE_AMC_001_W2",
+        "automaticNextImplementationTask": "NONE",
+        "evidenceW2": "docs/architecture/evidence/TB-TMAR-PLATFORMPROBE-AMC-001-W2/"
+    },    "userPreferenceAmc001W4R1": {
         "task": "TB-TMAR-USERPREFERENCE-AMC-001-W4-R1",
         "parentTask": "TB-TMAR-USERPREFERENCE-AMC-001-W4",
         "mode": "CERTIFICATION_DEFECT_REPAIR",
@@ -2361,7 +2381,6 @@
             "Payment",
             "Fulfillment",
             "Promotion",
-            "PlatformProbe",
             "Reviews",
             "ProductQnA",
             "BulkInquiry",
