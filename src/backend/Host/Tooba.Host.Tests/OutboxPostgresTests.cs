@@ -7,8 +7,7 @@ using Npgsql;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
-using Tooba.PlatformProbe.Infrastructure.Events;
-using Tooba.PlatformProbe.Infrastructure.Persistence;
+using Tooba.Host.Tests.Fixtures.PlatformProbe;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -79,7 +78,7 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
         await using (var context = OutboxTestContextFactory.Create(_alpha, commerce))
         {
             await using var tx = await context.Database.BeginTransactionAsync();
-            context.Records.Add(PlatformProbePersistence.NewRecord());
+            context.Records.Add(TestPlatformProbePersistence.NewRecord());
             await context.SaveChangesAsync();
             Assert.Equal(1, await context.OutboxMessages.CountAsync());
             await tx.RollbackAsync();
@@ -93,7 +92,7 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
 
         await using (var context = OutboxTestContextFactory.Create(_alpha, commerce))
         {
-            var record = PlatformProbePersistence.NewRecord();
+            var record = TestPlatformProbePersistence.NewRecord();
             record.Raise(new ProbeInternalNoteDomainEvent("must-not-publish"));
             context.Records.Add(record);
             await context.SaveChangesAsync();
@@ -116,14 +115,14 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
 
         await using (var a = OutboxTestContextFactory.Create(_alpha, commerceA))
         {
-            a.Records.Add(PlatformProbePersistence.NewRecord());
+            a.Records.Add(TestPlatformProbePersistence.NewRecord());
             await a.SaveChangesAsync();
         }
 
         await using (var b = OutboxTestContextFactory.Create(_bravo, commerceB))
         {
             Assert.Equal(0, await b.OutboxMessages.CountAsync());
-            b.Records.Add(PlatformProbePersistence.NewRecord());
+            b.Records.Add(TestPlatformProbePersistence.NewRecord());
             await b.SaveChangesAsync();
             Assert.Equal(1, await b.OutboxMessages.CountAsync());
         }
@@ -160,7 +159,7 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
             }
 
             await context.SaveChangesAsync();
-            context.Records.Add(PlatformProbePersistence.NewRecord());
+            context.Records.Add(TestPlatformProbePersistence.NewRecord());
             await context.SaveChangesAsync();
         }
 
@@ -199,14 +198,14 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
         commerce.Assign(OutboxTestContextFactory.SingleStore("store-alpha", "tenant-alpha"));
         await using (var context = OutboxTestContextFactory.Create(_alpha, commerce))
         {
-            context.Records.Add(PlatformProbePersistence.NewRecord());
-            context.Records.Add(PlatformProbePersistence.NewRecord());
+            context.Records.Add(TestPlatformProbePersistence.NewRecord());
+            context.Records.Add(TestPlatformProbePersistence.NewRecord());
             await context.SaveChangesAsync();
         }
 
         var store = new NpgsqlOutboxDispatcherStore();
-        var first = store.ClaimAsync(_alpha, PlatformProbeDbContext.Schema, OutboxMessageMapping.TableName, 10, 30, CancellationToken.None);
-        var second = store.ClaimAsync(_alpha, PlatformProbeDbContext.Schema, OutboxMessageMapping.TableName, 10, 30, CancellationToken.None);
+        var first = store.ClaimAsync(_alpha, TestPlatformProbeDbContext.Schema, OutboxMessageMapping.TableName, 10, 30, CancellationToken.None);
+        var second = store.ClaimAsync(_alpha, TestPlatformProbeDbContext.Schema, OutboxMessageMapping.TableName, 10, 30, CancellationToken.None);
         var results = await Task.WhenAll(first, second);
         var ids = results.SelectMany(r => r).Select(m => m.Id).ToArray();
         Assert.Equal(2, ids.Length);
@@ -222,7 +221,7 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
         await using (var context = OutboxTestContextFactory.Create(_alpha, commerce))
         {
             context.OutboxMessages.RemoveRange(await context.OutboxMessages.ToListAsync());
-            context.Records.Add(PlatformProbePersistence.NewRecord());
+            context.Records.Add(TestPlatformProbePersistence.NewRecord());
             await context.SaveChangesAsync();
         }
 
@@ -247,7 +246,7 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
             "trace-m"));
         await using (var market = OutboxTestContextFactory.Create(_marketplace, marketCommerce))
         {
-            market.Records.Add(PlatformProbePersistence.NewRecord());
+            market.Records.Add(TestPlatformProbePersistence.NewRecord());
             await market.SaveChangesAsync();
         }
 
@@ -255,7 +254,7 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
         storeCommerce.Assign(OutboxTestContextFactory.SingleStore("store-alpha", "tenant-alpha"));
         await using (var store = OutboxTestContextFactory.Create(_alpha, storeCommerce))
         {
-            store.Records.Add(PlatformProbePersistence.NewRecord());
+            store.Records.Add(TestPlatformProbePersistence.NewRecord());
             await store.SaveChangesAsync();
         }
 
@@ -283,14 +282,14 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
         commerce.Assign(OutboxTestContextFactory.SingleStore("store-alpha", "tenant-alpha"));
         await using (var context = OutboxTestContextFactory.Create(_alpha, commerce))
         {
-            context.Records.Add(PlatformProbePersistence.NewRecord());
+            context.Records.Add(TestPlatformProbePersistence.NewRecord());
             await context.SaveChangesAsync();
         }
 
         var store = new NpgsqlOutboxDispatcherStore();
         var claimed = await store.ClaimAsync(
             _alpha,
-            PlatformProbeDbContext.Schema,
+            TestPlatformProbeDbContext.Schema,
             OutboxMessageMapping.TableName,
             1,
             1,
@@ -307,7 +306,7 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
 
         var reclaimed = await store.ClaimAsync(
             _alpha,
-            PlatformProbeDbContext.Schema,
+            TestPlatformProbeDbContext.Schema,
             OutboxMessageMapping.TableName,
             1,
             30,

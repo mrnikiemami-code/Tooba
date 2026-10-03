@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Configuration;
 using Tooba.Persistence;
-using Tooba.PlatformProbe.Infrastructure.Persistence;
+using Tooba.Host.Tests.Fixtures.PlatformProbe;
 using Xunit;
 
 using Tooba.Host.Persistence;
@@ -68,7 +68,7 @@ public sealed class PersistenceFoundationTests
     [Fact]
     public void Platform_probe_owns_dedicated_schema()
     {
-        Assert.Equal("platform_probe", PlatformProbeDbContext.Schema);
+        Assert.Equal("platform_probe", TestPlatformProbeDbContext.Schema);
     }
 
     [Fact]
@@ -81,34 +81,34 @@ public sealed class PersistenceFoundationTests
     /// <summary>
     /// DbContext نمونه با connection string تزریقی، بدون باز کردن شبکه در این تست واحد.
     /// </summary>
-    private static PlatformProbeDbContext CreateContext(string connectionString)
+    private static TestPlatformProbeDbContext CreateContext(string connectionString)
     {
-        var options = new DbContextOptionsBuilder<PlatformProbeDbContext>();
+        var options = new DbContextOptionsBuilder<TestPlatformProbeDbContext>();
         ToobaNpgsql.ConfigureModuleContext(
             options,
             connectionString,
-            PlatformProbeDbContext.Schema,
-            typeof(PlatformProbeDbContext));
-        return new PlatformProbeDbContext(options.Options);
+            TestPlatformProbeDbContext.Schema,
+            typeof(TestPlatformProbeDbContext));
+        return new TestPlatformProbeDbContext(options.Options);
     }
 }
 
 /// <summary>
-/// کارخانهٔ مشترک تست برای ساخت PlatformProbeDbContext روی اتصال واقعی یا تزریقی.
+/// کارخانهٔ مشترک تست برای ساخت TestPlatformProbeDbContext روی اتصال واقعی یا تزریقی.
 /// </summary>
 internal static class PersistenceFoundationTestsHelpers
 {
     /// <summary>
     /// همان پیکربندی ماژول production با رشتهٔ داده‌شده.
     /// </summary>
-    public static PlatformProbeDbContext Create(string connectionString)
+    public static TestPlatformProbeDbContext Create(string connectionString)
     {
-        var options = new DbContextOptionsBuilder<PlatformProbeDbContext>();
+        var options = new DbContextOptionsBuilder<TestPlatformProbeDbContext>();
         ToobaNpgsql.ConfigureModuleContext(
             options,
             connectionString,
-            PlatformProbeDbContext.Schema,
-            typeof(PlatformProbeDbContext));
-        return new PlatformProbeDbContext(options.Options);
+            TestPlatformProbeDbContext.Schema,
+            typeof(TestPlatformProbeDbContext));
+        return new TestPlatformProbeDbContext(options.Options);
     }
 }

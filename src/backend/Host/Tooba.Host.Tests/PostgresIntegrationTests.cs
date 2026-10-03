@@ -1,5 +1,5 @@
 using Testcontainers.PostgreSql;
-using Tooba.PlatformProbe.Infrastructure.Persistence;
+using Tooba.Host.Tests.Fixtures.PlatformProbe;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -53,7 +53,7 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
 
         await using var context = PersistenceFoundationTestsHelpers.Create(_container!.GetConnectionString());
         await context.Database.EnsureCreatedAsync();
-        var record = PlatformProbePersistence.NewRecord();
+        var record = TestPlatformProbePersistence.NewRecord();
         context.Records.Add(record);
         await context.SaveChangesAsync();
         Assert.NotEqual(Guid.Empty, record.Id);

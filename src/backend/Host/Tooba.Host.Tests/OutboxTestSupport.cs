@@ -6,9 +6,7 @@ using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Configuration;
 using Tooba.Persistence;
-using Tooba.PlatformProbe.Infrastructure;
-using Tooba.PlatformProbe.Infrastructure.Events;
-using Tooba.PlatformProbe.Infrastructure.Persistence;
+using Tooba.Host.Tests.Fixtures.PlatformProbe;
 using Tooba.StoreContext.Contracts.Current;
 
 using Tooba.Host.MultiTenancy;
@@ -85,21 +83,21 @@ internal sealed class FailingProbeHandler : IIntegrationEventHandler<ProbeRecord
 internal static class OutboxTestContextFactory
 {
     /// <summary>
-    /// PlatformProbeDbContext با interceptor و زمینهٔ تجارت تزریقی.
+    /// TestPlatformProbeDbContext با interceptor و زمینهٔ تجارت تزریقی.
     /// </summary>
-    public static PlatformProbeDbContext Create(string connectionString, ICurrentCommerceContext commerce)
+    public static TestPlatformProbeDbContext Create(string connectionString, ICurrentCommerceContext commerce)
     {
-        var modules = new IOutboxModuleRegistration[] { new PlatformProbeOutboxRegistration() };
+        var modules = new IOutboxModuleRegistration[] { new TestPlatformProbeOutboxRegistration() };
         var serializer = new JsonIntegrationEventSerializer(modules);
         var interceptor = new OutboxSaveChangesInterceptor(commerce, modules, serializer);
-        var options = new DbContextOptionsBuilder<PlatformProbeDbContext>();
+        var options = new DbContextOptionsBuilder<TestPlatformProbeDbContext>();
         ToobaNpgsql.ConfigureModuleContext(
             options,
             connectionString,
-            PlatformProbeDbContext.Schema,
-            typeof(PlatformProbeDbContext));
+            TestPlatformProbeDbContext.Schema,
+            typeof(TestPlatformProbeDbContext));
         options.AddInterceptors(interceptor);
-        return new PlatformProbeDbContext(options.Options);
+        return new TestPlatformProbeDbContext(options.Options);
     }
 
     /// <summary>
@@ -201,7 +199,7 @@ internal static class OutboxTestPlatform
         services.AddSingleton<IOptions<ToobaPlatformOptions>>(Options.Create(options));
         services.AddSingleton(PlatformOptionsValidator.BuildRegistry(options));
         services.AddSingleton<IDatabaseConnectionResolver, DatabaseConnectionResolver>();
-        services.AddSingleton<IOutboxModuleRegistration, PlatformProbeOutboxRegistration>();
+        services.AddSingleton<IOutboxModuleRegistration, TestPlatformProbeOutboxRegistration>();
         services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventSerializer>();
         services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
         services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();

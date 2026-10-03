@@ -13,9 +13,7 @@ using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Configuration;
 using Tooba.Persistence;
-using Tooba.PlatformProbe.Infrastructure;
-using Tooba.PlatformProbe.Infrastructure.Events;
-using Tooba.PlatformProbe.Infrastructure.Persistence;
+using Tooba.Host.Tests.Fixtures.PlatformProbe;
 using Xunit;
 
 using Tooba.Host.MultiTenancy;
@@ -89,7 +87,7 @@ public sealed class MassTransitPostgresTests : IAsyncLifetime
         Guid recordId;
         await using (var context = OutboxTestContextFactory.Create(_alpha, commerce))
         {
-            var record = PlatformProbePersistence.NewRecord();
+            var record = TestPlatformProbePersistence.NewRecord();
             recordId = record.Id;
             context.Records.Add(record);
             await context.SaveChangesAsync();
@@ -165,13 +163,13 @@ public sealed class MassTransitPostgresTests : IAsyncLifetime
         commerceB.Assign(OutboxTestContextFactory.SingleStore("store-bravo", "tenant-bravo"));
         await using (var a = OutboxTestContextFactory.Create(_alpha, commerceA))
         {
-            a.Records.Add(PlatformProbePersistence.NewRecord());
+            a.Records.Add(TestPlatformProbePersistence.NewRecord());
             await a.SaveChangesAsync();
         }
 
         await using (var b = OutboxTestContextFactory.Create(_bravo, commerceB))
         {
-            b.Records.Add(PlatformProbePersistence.NewRecord());
+            b.Records.Add(TestPlatformProbePersistence.NewRecord());
             await b.SaveChangesAsync();
         }
 
@@ -205,7 +203,7 @@ public sealed class MassTransitPostgresTests : IAsyncLifetime
         commerce.Assign(OutboxTestContextFactory.SingleStore("store-alpha", "tenant-alpha"));
         await using (var context = OutboxTestContextFactory.Create(_alpha, commerce))
         {
-            context.Records.Add(PlatformProbePersistence.NewRecord());
+            context.Records.Add(TestPlatformProbePersistence.NewRecord());
             await context.SaveChangesAsync();
         }
 
@@ -286,7 +284,7 @@ public sealed class MassTransitPostgresTests : IAsyncLifetime
                 services.AddSingleton<IOptions<ToobaPlatformOptions>>(Options.Create(platform));
                 services.AddSingleton(PlatformOptionsValidator.BuildRegistry(platform));
                 services.AddSingleton<IDatabaseConnectionResolver, DatabaseConnectionResolver>();
-                services.AddSingleton<IOutboxModuleRegistration, PlatformProbeOutboxRegistration>();
+                services.AddSingleton<IOutboxModuleRegistration, TestPlatformProbeOutboxRegistration>();
                 services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventSerializer>();
                 services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
                 services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();

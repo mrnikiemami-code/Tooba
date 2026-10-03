@@ -6,8 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Configuration;
 using Tooba.Persistence;
-using Tooba.PlatformProbe.Infrastructure;
-using Tooba.PlatformProbe.Infrastructure.Events;
+using Tooba.Host.Tests.Fixtures.PlatformProbe;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -20,7 +19,7 @@ public sealed class OutboxFoundationTests
     [Fact]
     public void Domain_event_is_not_automatically_an_integration_event()
     {
-        var registration = new PlatformProbeOutboxRegistration();
+        var registration = new TestPlatformProbeOutboxRegistration();
         var note = new ProbeInternalNoteDomainEvent("internal-only");
         var created = new ProbeRecordCreatedDomainEvent(Guid.NewGuid());
         var meta = EventMetadataFactory.ForDomain("x");
@@ -97,7 +96,7 @@ public sealed class OutboxFoundationTests
     [Fact]
     public void Serializer_rejects_unknown_event_type_without_clr_gettype()
     {
-        var serializer = new JsonIntegrationEventSerializer([new PlatformProbeOutboxRegistration()]);
+        var serializer = new JsonIntegrationEventSerializer([new TestPlatformProbeOutboxRegistration()]);
         var message = new OutboxMessage
         {
             Id = Guid.NewGuid(),
