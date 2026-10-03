@@ -1,0 +1,37 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-USERPREFERENCE-AMC-001-W4-R1
+Parent-Task: TB-TMAR-USERPREFERENCE-AMC-001-W4
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Removed Admin endpoint PlatformHttpException catch-and-map; authorization failures now propagate to the global canonical boundary; recorded W4 implementation SHA and W4-R1 repair checkpoint in SoT.
+Starting-HEAD-State: F2C3C2F2
+Endpoint-PlatformHttp-Catch-State: ZERO
+Endpoint-FromPlatformException-State: ZERO
+Endpoint-Semantic-Catch-State: ZERO
+Authorization-Behavior-State: PRESERVED
+ApiResponseFactory-State: CANONICAL
+Foreign-App-Infra-Domain-Coupling-State: ZERO
+OrderContracts-Seam-State: CUSTOMER_ACTOR_RESOLVER_ONLY
+Structure-State: READY_FOR_CERTIFY_PRESERVED
+Path-Namespace-State: EXACT
+Schema-Change-State: NONE
+Host-Final-Closure-State: PRESERVED
+Frontend-State: UNTOUCHED
+Focused-Guard-State: PASS
+Focused-Behavior-State: PASS
+W4R1-Canonical-SoT-State: RECORDED
+W4R1-Implementation-Commit-State: RECORDED
+W4R1-Evidence-Path-State: RECORDED
+Recovery-State: UPDATED
+Implementation-Commit-SHA: 26444f2f140e5bae61146538cf47d3dc77c13e05
+Docs-Commit-SHA: e89414fb691eb8e38c21f4d3735d49a80679a7a6
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN
+User-Work-Preserved: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_USERPREFERENCE_AMC_001_W4_R1
+STOP
+END_TOOBA_WORKER_RESULT

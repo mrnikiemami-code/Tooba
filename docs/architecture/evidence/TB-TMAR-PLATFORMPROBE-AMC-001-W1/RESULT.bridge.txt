@@ -1,0 +1,35 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-PLATFORMPROBE-AMC-001-W1
+Parent-Task: TB-TMAR-PLATFORMPROBE-AMC-001-W0
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Extracted PlatformProbe foundation types into Host.Tests Fixtures/PlatformProbe and repointed Outbox/Persistence/Postgres/MassTransit test consumers; production probe module/composition/migrations unchanged. Docker unavailable so Postgres/MassTransit integration tests skipped.
+Starting-HEAD-State: C14D3295
+Test-Fixture-Path-State: HOST_TESTS_FIXTURES_PLATFORMPROBE
+Test-Fixture-Ownership-State: TEST_ONLY
+Fixture-Schema-State: PLATFORM_PROBE_PRESERVED
+Fixture-Outbox-Parity-State: PRESERVED
+Migrated-Test-Consumer-Production-Probe-Reference-State: ZERO
+Production-PlatformProbe-Change-State: ZERO
+Host-Production-Change-State: ZERO
+MigrationRunner-Change-State: ZERO
+Migration-Order-Change-State: ZERO
+Schema-Migration-Source-Change-State: ZERO
+Focused-Build-State: PASS
+Focused-Unit-Foundation-Tests-State: PASS
+Focused-Postgres-Test-State: SKIPPED_DOCKER_UNAVAILABLE
+Focused-MassTransit-Test-State: SKIPPED_DOCKER_UNAVAILABLE
+W1-Decoupling-Guard-State: PASS
+Frontend-State: UNTOUCHED
+Evidence-State: COMPLETE
+Implementation-Commit-SHA: 2d27fde609ca7b1c242bb9b887420df3c193b04c
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_USER_WORK
+User-Work-Preserved: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_PLATFORMPROBE_AMC_001_W1
+STOP
+END_TOOBA_WORKER_RESULT

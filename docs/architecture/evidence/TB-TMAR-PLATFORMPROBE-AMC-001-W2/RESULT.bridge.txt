@@ -1,0 +1,37 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-PLATFORMPROBE-AMC-001-W2
+Parent-Task: TB-TMAR-PLATFORMPROBE-AMC-001-W1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Detached PlatformProbe from Host ProjectReference, module composition, and MigrationRunner descriptor; source tree/migrations/order constant/schema preserved for W3; test fixture and W1/W2 guards green.
+Starting-HEAD-State: 2D27FDE6
+Host-ProjectReference-State: ZERO
+Host-Composition-PlatformProbe-State: ZERO
+Runtime-PlatformProbe-Module-Registration-State: ZERO
+MigrationRunner-PlatformProbe-Descriptor-State: ZERO
+Active-PlatformProbe-Migrator-State: ZERO
+Deployed-Schema-Destructive-Change-State: ZERO
+PlatformProbe-Source-Tree-State: PRESERVED_FOR_W3
+PlatformProbe-Migration-Source-State: PRESERVED
+ModuleSchemaMigrationOrder-PlatformProbe-State: RESERVED_UNCHANGED
+Slnx-State: UNCHANGED
+Test-Fixture-State: PRESERVED
+Migrated-Test-Consumer-Production-Probe-Reference-State: ZERO
+Focused-Host-Build-State: PASS
+Focused-MigrationRunner-Build-State: PASS
+Focused-Tests-State: PASS
+W2-Detach-Guard-State: PASS
+SoT-Current-Runtime-Inventory-State: ACCURATE
+Frontend-State: UNTOUCHED
+Evidence-State: COMPLETE
+Implementation-Commit-SHA: f82a81ba461d2e152bd40ff886237072aa1a3a2d
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_USER_WORK
+User-Work-Preserved: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_PLATFORMPROBE_AMC_001_W2
+STOP
+END_TOOBA_WORKER_RESULT
