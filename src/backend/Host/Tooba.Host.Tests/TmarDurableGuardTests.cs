@@ -120,7 +120,11 @@ public sealed class TmarDurableGuardTests
         var structureLock = rootEl.GetProperty("structureLock");
         Assert.Equal("ARCH-COMPLETE-002", structureLock.GetProperty("version").GetString());
         Assert.Equal(
-            new[] { "AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", "Offer", "Order", "Payment", "Settlement", "StoreContext" },
+            new[]
+            {
+                "AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", "Identity", "Localization",
+                "Media", "Offer", "Order", "Payment", "Settlement", "StoreContext",
+            },
             structureLock.GetProperty("certifiedModules").EnumerateArray()
                 .Select(x => x.GetString()!)
                 .OrderBy(x => x, StringComparer.Ordinal)
