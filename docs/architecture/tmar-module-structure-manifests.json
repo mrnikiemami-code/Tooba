@@ -207,6 +207,73 @@
       ]
     },
     {
+      "module": "OperatorProfile",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Certified by TB-TMAR-OPERATORPROFILE-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first Admin/ CQRS; Result+ApiResponseFactory; exhaustive 2-request validator matrix (2 required present); Contracts.Ports IActorDisplayLookup for foreign consumers; Host OperatorProfile CLOSED_HOST_ZERO; /Modules/OperatorProfile/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "projects": [
+        {
+          "projectName": "Tooba.OperatorProfile.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "OperatorProfile.Application has no root .cs: Admin/{Commands,Queries,Validators} plus Composition/Models/Ports; path↔namespace exact.",
+          "forbiddenRootFiles": [
+            "OperatorProfileContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries"
+          ]
+        },
+        {
+          "projectName": "Tooba.OperatorProfile.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "OperatorProfile.Domain has no root .cs; Aggregates hold types with exact path↔namespace.",
+          "forbiddenRootFiles": [
+            "OperatorProfile.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.OperatorProfile.Endpoints",
+          "rootAllowlist": [
+            "OperatorProfileEndpointModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry only; Admin/ holds HTTP surfaces.",
+          "forbiddenRootFiles": [
+            "OperatorProfileAdminEndpoints.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Errors"
+          ]
+        },
+        {
+          "projectName": "Tooba.OperatorProfile.Infrastructure",
+          "rootAllowlist": [
+            "OperatorProfileModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry OperatorProfileModule.cs only; Profiles/Adapters/Development/Persistence hold integrations; Migrations under Persistence/.",
+          "forbiddenRootFiles": [
+            "OperatorProfileDirectory.cs",
+            "ActorDisplayLookupAdapter.cs",
+            "OperatorProfileDbContext.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations"
+          ]
+        },
+        {
+          "projectName": "Tooba.OperatorProfile.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "OperatorProfile.Contracts has no root .cs: Ports/Errors (+ Resources) carry contracts.",
+          "forbiddenRootFiles": [
+            "ActorDisplayContracts.cs",
+            "OperatorProfileErrorCodes.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    },
+    {
       "module": "Localization",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
