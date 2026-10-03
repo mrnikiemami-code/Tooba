@@ -777,7 +777,7 @@
         "evidenceCertify": "docs/evidence/TB-TMAR-MEDIA-AMC-001/w4-certification.md",
         "implementationCommit": "48b2c048e050800b28bd6b8b43332ee74482b012",
         "implementationCommitKind": "IMPLEMENTATION_COMMIT",
-        "docsStampCommit": "PENDING_W4_DOCS_STAMP",
+        "docsStampCommit": "55bbaf33e61e943985e1b0d35557056e63bbbcff",
         "docsStampCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION"
     },
     "offerArchComplete002Structure": {
