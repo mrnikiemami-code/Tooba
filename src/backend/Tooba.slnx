@@ -21,9 +21,6 @@
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Domain/Tooba.UserPreference.Domain.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Application/Tooba.UserPreference.Application.csproj" />
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Infrastructure/Tooba.UserPreference.Infrastructure.csproj" />
-    <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Domain/Tooba.ProductQnA.Domain.csproj" />
-    <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Application/Tooba.ProductQnA.Application.csproj" />
-    <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Infrastructure/Tooba.ProductQnA.Infrastructure.csproj" />
     <Project Path="Modules/BulkInquiry/Tooba.BulkInquiry.Domain/Tooba.BulkInquiry.Domain.csproj" />
     <Project Path="Modules/BulkInquiry/Tooba.BulkInquiry.Application/Tooba.BulkInquiry.Application.csproj" />
     <Project Path="Modules/BulkInquiry/Tooba.BulkInquiry.Infrastructure/Tooba.BulkInquiry.Infrastructure.csproj" />
@@ -65,6 +62,13 @@
     <Project Path="Modules/Party/Tooba.Party.Application/Tooba.Party.Application.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Infrastructure/Tooba.Party.Infrastructure.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Endpoints/Tooba.Party.Endpoints.csproj" />
+  </Folder>
+  <Folder Name="/Modules/ProductQnA/">
+    <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Domain/Tooba.ProductQnA.Domain.csproj" />
+    <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Contracts/Tooba.ProductQnA.Contracts.csproj" />
+    <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Application/Tooba.ProductQnA.Application.csproj" />
+    <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Infrastructure/Tooba.ProductQnA.Infrastructure.csproj" />
+    <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Endpoints/Tooba.ProductQnA.Endpoints.csproj" />
   </Folder>
   <Folder Name="/Modules/OperatorProfile/">
     <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Domain/Tooba.OperatorProfile.Domain.csproj" />
