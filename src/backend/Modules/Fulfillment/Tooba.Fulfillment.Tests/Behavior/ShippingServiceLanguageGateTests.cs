@@ -1,6 +1,7 @@
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Infrastructure.Shipping;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Fulfillment.Tests.Behavior;

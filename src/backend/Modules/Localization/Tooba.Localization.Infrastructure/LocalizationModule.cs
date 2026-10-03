@@ -2,8 +2,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
-using Tooba.Localization.Application;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Application.Ports;
+using Tooba.Localization.Contracts.Ports;
+using Tooba.Localization.Infrastructure.Adapters;
+using Tooba.Localization.Infrastructure.Bootstrap;
+using Tooba.Localization.Infrastructure.Languages;
 using Tooba.Localization.Infrastructure.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
@@ -36,15 +39,4 @@ public sealed class LocalizationModule : IToobaModule
             options.AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>());
         });
     }
-}
-
-public sealed class LocalizationOutboxRegistration : IOutboxModuleRegistration
-{
-    public string Schema => LocalizationDbContext.Schema;
-    public string TableName => OutboxMessageMapping.TableName;
-    public Type DbContextType => typeof(LocalizationDbContext);
-    public IIntegrationEvent? Translate(IDomainEvent domainEvent, EventMetadata metadata) => null;
-    public string GetEventTypeName(Type integrationEventType) =>
-        throw new InvalidOperationException("Localization integration event is not registered.");
-    public Type? ResolveEventClrType(string eventTypeName) => null;
 }

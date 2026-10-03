@@ -1,12 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.Localization.Application;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Application.Composition;
+using Tooba.Localization.Application.Models;
+using Tooba.Localization.Application.Ports;
+using Tooba.Localization.Contracts.Ports;
 using Tooba.Localization.Contracts.Errors;
-using Tooba.Localization.Domain;
+using Tooba.Localization.Domain.Aggregates;
+using Tooba.Localization.Domain.Enums;
 using Tooba.Localization.Infrastructure.Persistence;
 
-namespace Tooba.Localization.Infrastructure;
+namespace Tooba.Localization.Infrastructure.Languages;
 
 /// <summary>دایرکتوری DB-backed زبان با invariantهای کانونی.</summary>
 public sealed class LanguageDirectory : ILanguageDirectory

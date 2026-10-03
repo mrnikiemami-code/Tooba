@@ -1,5 +1,6 @@
 using Tooba.Fulfillment.Application.Shipping;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Contracts.Ports;
 
 namespace Tooba.Fulfillment.Infrastructure.Shipping;
 

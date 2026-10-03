@@ -1,4 +1,4 @@
-using Tooba.Catalog.Infrastructure;
+﻿using Tooba.Catalog.Infrastructure;
 using Tooba.Identity.Infrastructure;
 using Tooba.ModuleContracts;
 using Tooba.Offer.Infrastructure;
@@ -107,3 +107,4 @@ internal static class ToobaModuleComposition
         return services;
     }
 }
+

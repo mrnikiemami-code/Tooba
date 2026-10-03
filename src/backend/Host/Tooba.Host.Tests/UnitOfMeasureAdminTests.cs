@@ -10,7 +10,8 @@ using Tooba.Catalog.Contracts.Errors;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Host.Tests;

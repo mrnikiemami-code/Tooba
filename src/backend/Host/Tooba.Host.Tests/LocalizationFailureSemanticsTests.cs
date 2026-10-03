@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Tooba.BuildingBlocks;
-using Tooba.Localization.Application;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Application.Models;
+using Tooba.Localization.Application.Ports;
 using Tooba.Localization.Contracts.Errors;
-using Tooba.Localization.Infrastructure;
+using Tooba.Localization.Contracts.Ports;
+using Tooba.Localization.Infrastructure.Languages;
 using Tooba.Localization.Infrastructure.Persistence;
 
 namespace Tooba.Host.Tests;

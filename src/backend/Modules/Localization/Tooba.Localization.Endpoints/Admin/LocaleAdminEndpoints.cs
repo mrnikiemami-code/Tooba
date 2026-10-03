@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Localization.Application;
+using Tooba.Localization.Application.Models;
+using Tooba.Localization.Application.Ports;
 
 namespace Tooba.Localization.Endpoints.Admin;
 

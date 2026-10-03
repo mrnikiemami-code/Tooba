@@ -1,6 +1,7 @@
-﻿using MediatR;
+using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Contracts.Ports;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Application.Shipping;
 

@@ -2,10 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Tooba.Localization.Application;
+using Tooba.Localization.Application.Composition;
+using Tooba.Localization.Application.Models;
+using Tooba.Localization.Application.Ports;
 using Tooba.Localization.Infrastructure.Persistence;
 
-namespace Tooba.Localization.Infrastructure;
+namespace Tooba.Localization.Infrastructure.Bootstrap;
 
 /// <summary>bootstrap idempotent fa/en — فقط وقتی جدول خالی است.</summary>
 public sealed class LanguageBootstrapHostedService : IHostedService

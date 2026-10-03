@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Articles.Commands;
 using Tooba.Content.Application.Articles.Models;
 using Tooba.Content.Application.Articles.Ports;
@@ -10,7 +10,8 @@ using Tooba.BuildingBlocks;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
 using Tooba.Content.Infrastructure.Persistence;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Contracts.Ports;
 
 namespace Tooba.Content.Infrastructure.Directories;
 

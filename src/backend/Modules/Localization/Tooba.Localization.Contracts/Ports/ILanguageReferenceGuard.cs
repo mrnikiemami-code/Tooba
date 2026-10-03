@@ -1,4 +1,4 @@
-namespace Tooba.Localization.Contracts;
+namespace Tooba.Localization.Contracts.Ports;
 
 /// <summary>
 /// Cross-module language reference check (Content articles, etc.).

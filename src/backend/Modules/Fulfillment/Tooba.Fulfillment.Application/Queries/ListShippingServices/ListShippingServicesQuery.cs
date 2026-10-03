@@ -1,9 +1,10 @@
-﻿using MediatR;
+using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Contracts.Errors;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Contracts.Ports;
 
 namespace Tooba.Fulfillment.Application.Queries.ListShippingServices;
 

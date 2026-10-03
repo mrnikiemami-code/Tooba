@@ -1,4 +1,4 @@
-﻿using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Fulfillment.Contracts.Shipping;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +15,8 @@ using Tooba.Fulfillment.Application.Queries.GetShippingService;
 using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Fulfillment.Infrastructure.Shipping;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Host.Tests;

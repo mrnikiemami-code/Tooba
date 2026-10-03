@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Contracts.Shipping;
@@ -10,7 +10,8 @@ using Tooba.Fulfillment.Application.Commands.EnsureShippingCatalogSeed;
 using Tooba.Fulfillment.Application.Queries.ListShippingServices;
 using Tooba.Fulfillment.Application.Queries.GetShippingService;
 using Tooba.Fulfillment.Application.Queries.ListEnabledShippingMethodsTree;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Fulfillment.Tests.Behavior;

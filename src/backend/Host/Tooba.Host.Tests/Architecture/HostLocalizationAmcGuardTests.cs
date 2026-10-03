@@ -37,7 +37,7 @@ public sealed class HostLocalizationAmcGuardTests
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Modules/Content/Tooba.Content.Infrastructure/Adapters/ContentLanguageReferenceGuard.cs")));
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Localization/Tooba.Localization.Contracts/ILanguageReferenceGuard.cs")));
+            root, "src/backend/Modules/Localization/Tooba.Localization.Contracts/Ports/ILanguageReferenceGuard.cs")));
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Modules/Localization/Tooba.Localization.Contracts/Errors/LanguageErrorCodes.cs")));
 
@@ -76,7 +76,7 @@ public sealed class HostLocalizationAmcGuardTests
     {
         var directory = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
-            "src/backend/Modules/Localization/Tooba.Localization.Infrastructure/LanguageDirectory.cs"));
+            "src/backend/Modules/Localization/Tooba.Localization.Infrastructure/Languages/LanguageDirectory.cs"));
         Assert.Contains("SemanticException", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("InvalidOperationException", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("ContractOperationException", directory, StringComparison.Ordinal);

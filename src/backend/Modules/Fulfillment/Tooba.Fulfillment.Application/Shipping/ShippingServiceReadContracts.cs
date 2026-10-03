@@ -1,8 +1,9 @@
-﻿using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Errors;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Contracts.Ports;
 
 namespace Tooba.Fulfillment.Application.Shipping;
 

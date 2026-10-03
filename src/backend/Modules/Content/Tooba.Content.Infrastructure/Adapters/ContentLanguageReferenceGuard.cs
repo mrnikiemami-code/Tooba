@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Infrastructure.Persistence;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Contracts.Ports;
 
 namespace Tooba.Content.Infrastructure.Adapters;
 

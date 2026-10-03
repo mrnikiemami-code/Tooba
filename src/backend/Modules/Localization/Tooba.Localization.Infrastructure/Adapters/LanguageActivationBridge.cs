@@ -1,7 +1,9 @@
-using Tooba.Localization.Application;
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Application.Composition;
+using Tooba.Localization.Application.Models;
+using Tooba.Localization.Application.Ports;
+using Tooba.Localization.Contracts.Ports;
 
-namespace Tooba.Localization.Infrastructure;
+namespace Tooba.Localization.Infrastructure.Adapters;
 
 /// <summary>Contracts-facing active-language gate over Localization.Application directory.</summary>
 public sealed class LanguageActivationBridge(ILanguageDirectory directory) : ILanguageActivationPort

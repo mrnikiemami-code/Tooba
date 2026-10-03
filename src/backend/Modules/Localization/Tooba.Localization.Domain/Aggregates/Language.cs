@@ -1,25 +1,8 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Domain.Enums;
 
-namespace Tooba.Localization.Domain;
-
-/// <summary>جهت نوشتار زبان.</summary>
-public enum LanguageDirection
-{
-    /// <summary>راست‌به‌چپ.</summary>
-    Rtl = 0,
-    /// <summary>چپ‌به‌راست.</summary>
-    Ltr = 1,
-}
-
-/// <summary>سیاست نمایش تقویم — فقط UI.</summary>
-public enum LanguageCalendarPolicy
-{
-    /// <summary>نمایش جلالی.</summary>
-    Jalali = 0,
-    /// <summary>نمایش میلادی.</summary>
-    Gregorian = 1,
-}
+namespace Tooba.Localization.Domain.Aggregates;
 
 /// <summary>زبان/محلیهٔ کانونی پایدار برای Content و ویترین.</summary>
 public sealed class Language
@@ -61,9 +44,7 @@ public sealed class Language
     {
         ValidateIdentity(code, urlPrefix, displayName, nativeName, culture);
         if (!isActive && isDefault)
-        {
             throw new SemanticException(new SemanticError(LanguageErrorCodes.DefaultMustBeActive));
-        }
 
         return new Language
         {
@@ -96,9 +77,7 @@ public sealed class Language
     {
         ValidateIdentity(Code, UrlPrefix, displayName, nativeName, culture);
         if (!isActive && isDefault)
-        {
             throw new SemanticException(new SemanticError(LanguageErrorCodes.DefaultMustBeActive));
-        }
 
         DisplayName = displayName.Trim();
         NativeName = nativeName.Trim();
@@ -122,10 +101,7 @@ public sealed class Language
     public void SetDefault(bool isDefault, DateTimeOffset now)
     {
         if (isDefault && !IsActive)
-        {
             throw new SemanticException(new SemanticError(LanguageErrorCodes.DefaultMustBeActive));
-        }
-
         IsDefault = isDefault;
         UpdatedAt = now;
     }
@@ -133,48 +109,25 @@ public sealed class Language
     public void SetActive(bool isActive, DateTimeOffset now)
     {
         if (!isActive && IsDefault)
-        {
             throw new SemanticException(new SemanticError(LanguageErrorCodes.DefaultMustBeActive));
-        }
-
         IsActive = isActive;
         UpdatedAt = now;
     }
 
     public static string NormalizeCode(string code) => code.Trim();
-
     public static string NormalizeUrlPrefix(string urlPrefix) => urlPrefix.Trim().ToLowerInvariant();
 
-    private static void ValidateIdentity(
-        string code,
-        string urlPrefix,
-        string displayName,
-        string nativeName,
-        string culture)
+    private static void ValidateIdentity(string code, string urlPrefix, string displayName, string nativeName, string culture)
     {
         if (string.IsNullOrWhiteSpace(code) || code.Trim().Length > CodeMaxLength)
-        {
             throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidCode));
-        }
-
         if (string.IsNullOrWhiteSpace(urlPrefix) || urlPrefix.Trim().Length > UrlPrefixMaxLength)
-        {
             throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidUrlPrefix));
-        }
-
         if (string.IsNullOrWhiteSpace(displayName) || displayName.Trim().Length > DisplayNameMaxLength)
-        {
             throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidDisplayName));
-        }
-
         if (string.IsNullOrWhiteSpace(nativeName) || nativeName.Trim().Length > NativeNameMaxLength)
-        {
             throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidNativeName));
-        }
-
         if (string.IsNullOrWhiteSpace(culture) || culture.Trim().Length > CultureMaxLength)
-        {
             throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidCulture));
-        }
     }
 }

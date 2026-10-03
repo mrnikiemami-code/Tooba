@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Authors.Commands;
 using Tooba.Content.Application.Authors.Models;
 using Tooba.Content.Application.Authors.Ports;
@@ -12,14 +12,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 
 
-using Tooba.Localization.Contracts;
+using Tooba.Localization.Contracts.Errors;
+using Tooba.Localization.Contracts.Ports;
 using Tooba.Content.Domain.Aggregates;
 using Tooba.Content.Domain.Rules;
 using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Development;
 using Tooba.Content.Infrastructure.Directories;
 using Tooba.Content.Infrastructure.Persistence;
-using Tooba.Localization.Application;
+using Tooba.Localization.Application.Models;
+using Tooba.Localization.Application.Ports;
 using Tooba.Persistence;
 using Xunit;
 
@@ -223,7 +225,7 @@ public sealed class ContentDevelopmentSeedIdempotencyTests : IAsyncLifetime
         return new ContentDbContext(options.Options);
     }
 
-    private sealed class PermissiveLanguageDirectory : Tooba.Localization.Contracts.ILanguageActivationPort
+    private sealed class PermissiveLanguageDirectory : Tooba.Localization.Contracts.Ports.ILanguageActivationPort
     {
         public Task EnsureActiveAsync(string languageCode, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<bool> IsActiveAsync(string languageCode, CancellationToken cancellationToken) => Task.FromResult(true);

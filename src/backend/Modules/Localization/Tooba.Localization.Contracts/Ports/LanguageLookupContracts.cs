@@ -1,4 +1,4 @@
-namespace Tooba.Localization.Contracts;
+namespace Tooba.Localization.Contracts.Ports;
 
 /// <summary>Stable language row for cross-module lookup (no Localization.Application dependency).</summary>
 public sealed record LanguageLookupSnapshot(

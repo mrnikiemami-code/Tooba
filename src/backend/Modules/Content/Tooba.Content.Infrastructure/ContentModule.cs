@@ -37,7 +37,7 @@ public sealed class ContentModule : IToobaModule
         services.AddScoped<IContentArticleGridPort, ContentArticleGridAdapter>();
         services.AddScoped<IContentAuthorGridPort, ContentAuthorGridAdapter>();
         services.AddScoped<Tooba.Content.Contracts.Storefront.IContentStorefrontArticlesPort, ContentStorefrontArticlesAdapter>();
-        services.AddScoped<Tooba.Localization.Contracts.ILanguageReferenceGuard, ContentLanguageReferenceGuard>();
+        services.AddScoped<Tooba.Localization.Contracts.Ports.ILanguageReferenceGuard, ContentLanguageReferenceGuard>();
         services.AddModuleSchemaMigrator<ContentDbContext>("Content", ModuleSchemaMigrationOrder.Content);
         services.AddDbContext<ContentDbContext>((sp, options) =>
         {

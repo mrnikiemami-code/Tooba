@@ -1,4 +1,4 @@
-﻿using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Directories;
@@ -75,7 +75,6 @@ using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Contracts.Checkout;
-using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Domain.Aggregates;
 using Tooba.Promotion.Domain.ValueObjects;
 using Tooba.Promotion.Domain.Events;

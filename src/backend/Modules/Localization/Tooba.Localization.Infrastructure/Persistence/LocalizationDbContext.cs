@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Tooba.Localization.Domain;
+using Tooba.Localization.Domain.Aggregates;
 using Tooba.Persistence;
 
 namespace Tooba.Localization.Infrastructure.Persistence;

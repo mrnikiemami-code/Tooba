@@ -1,4 +1,4 @@
-namespace Tooba.Localization.Contracts;
+namespace Tooba.Localization.Contracts.Ports;
 
 /// <summary>Narrow active-language gate for foreign modules (Content locale assignment).</summary>
 public interface ILanguageActivationPort
