@@ -32,6 +32,8 @@ public sealed class UserPreferenceModuleAmcW3CqrsGuardTests
             var text = File.ReadAllText(file);
             Assert.DoesNotContain("Results.Json", text, StringComparison.Ordinal);
             Assert.DoesNotContain("catch (SemanticException", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (PlatformHttpException", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("FromPlatformException(", text, StringComparison.Ordinal);
         }
 
         var localeValidator = File.ReadAllText(Path.Combine(

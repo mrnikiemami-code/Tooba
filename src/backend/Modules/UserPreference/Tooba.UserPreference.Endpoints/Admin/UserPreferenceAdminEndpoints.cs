@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.UserPreference.Application.LocalePreferences.Commands;
 using Tooba.UserPreference.Application.LocalePreferences.Queries;
@@ -28,16 +27,9 @@ public static class UserPreferenceAdminEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var actor = await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var result = await sender.Send(new GetUserPreferenceQuery(actor), cancellationToken);
-            return api.From(result);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return api.FromPlatformException(ex);
-        }
+        var actor = await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+        var result = await sender.Send(new GetUserPreferenceQuery(actor), cancellationToken);
+        return api.From(result);
     }
 
     private static async Task<IResult> PutAsync(
@@ -48,17 +40,10 @@ public static class UserPreferenceAdminEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var actor = await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var result = await sender.Send(
-                new UpsertUserPreferenceCommand(actor, body.Locale),
-                cancellationToken);
-            return api.From(result);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return api.FromPlatformException(ex);
-        }
+        var actor = await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+        var result = await sender.Send(
+            new UpsertUserPreferenceCommand(actor, body.Locale),
+            cancellationToken);
+        return api.From(result);
     }
 }

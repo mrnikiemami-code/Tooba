@@ -127,6 +127,23 @@ public sealed class UserPreferenceModuleAmcW4CertGuardTests
     }
 
     [Fact]
+    public void UserPreference_endpoints_have_zero_catch_and_map_for_platform_or_semantic()
+    {
+        var endpoints = Path.Combine(
+            Repo(), "src/backend/Modules/UserPreference/Tooba.UserPreference.Endpoints");
+        foreach (var file in Directory.EnumerateFiles(endpoints, "*.cs", SearchOption.AllDirectories)
+                     .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")
+                                 && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")))
+        {
+            var text = File.ReadAllText(file);
+            Assert.DoesNotContain("Results.Json", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (PlatformHttpException", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("FromPlatformException(", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("catch (SemanticException", text, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
     public void UserPreference_foreign_app_infra_domain_coupling_is_zero()
     {
         var root = Repo();

@@ -30,16 +30,9 @@ public static class UiPreferenceAdminEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var actor = await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var result = await sender.Send(new GetUiPreferenceQuery(actor, key), cancellationToken);
-            return api.From(result);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return api.FromPlatformException(ex);
-        }
+        var actor = await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+        var result = await sender.Send(new GetUiPreferenceQuery(actor, key), cancellationToken);
+        return api.From(result);
     }
 
     private static async Task<IResult> PutAsync(
@@ -51,23 +44,16 @@ public static class UiPreferenceAdminEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
+        var actor = await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+        if (body.Json.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
         {
-            var actor = await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            if (body.Json.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
-            {
-                return api.FromFailure(new SemanticError(UserPreferenceErrorCodes.UiPreferenceJsonRequired));
-            }
+            return api.FromFailure(new SemanticError(UserPreferenceErrorCodes.UiPreferenceJsonRequired));
+        }
 
-            var result = await sender.Send(
-                new UpsertUiPreferenceCommand(actor, key, body.Json.GetRawText()),
-                cancellationToken);
-            return api.From(result);
-        }
-        catch (PlatformHttpException ex)
-        {
-            return api.FromPlatformException(ex);
-        }
+        var result = await sender.Send(
+            new UpsertUiPreferenceCommand(actor, key, body.Json.GetRawText()),
+            cancellationToken);
+        return api.From(result);
     }
 }
 
