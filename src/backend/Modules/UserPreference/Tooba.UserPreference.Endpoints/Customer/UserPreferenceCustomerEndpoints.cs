@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.UserPreference.Application;
 using Tooba.UserPreference.Application.LocalePreferences.Commands;
 using Tooba.UserPreference.Application.LocalePreferences.Queries;
+using Tooba.UserPreference.Application.Models;
 using Tooba.UserPreference.Contracts.Errors;
 using Tooba.UserPreference.Endpoints.Admin;
 

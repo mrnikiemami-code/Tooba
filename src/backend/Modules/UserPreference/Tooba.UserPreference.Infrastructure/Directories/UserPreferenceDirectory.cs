@@ -1,10 +1,12 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.UserPreference.Application;
+using Tooba.UserPreference.Application.Models;
+using Tooba.UserPreference.Application.Ports;
 using Tooba.UserPreference.Contracts.Errors;
 using Tooba.UserPreference.Infrastructure.Persistence;
+using DomainUserPreference = global::Tooba.UserPreference.Domain.Aggregates.UserPreference;
 
-namespace Tooba.UserPreference.Infrastructure;
+namespace Tooba.UserPreference.Infrastructure.Directories;
 
 /// <summary>پیاده‌سازی ترجیح که فقط schema خود را لمس می‌کند و مالکیت را سرورمحور اعمال می‌کند.</summary>
 public sealed class UserPreferenceDirectory : IUserPreferenceDirectory
@@ -37,7 +39,7 @@ public sealed class UserPreferenceDirectory : IUserPreferenceDirectory
         var preference = await _db.Preferences.SingleOrDefaultAsync(x => x.OwnerUserId == actorUserId, cancellationToken);
         if (preference is null)
         {
-            preference = Domain.UserPreference.Create(actorUserId, input.Locale, now);
+            preference = DomainUserPreference.Create(actorUserId, input.Locale, now);
             _db.Preferences.Add(preference);
         }
         else
@@ -49,7 +51,7 @@ public sealed class UserPreferenceDirectory : IUserPreferenceDirectory
         return Map(preference);
     }
 
-    private static UserPreferenceSnapshot Map(Domain.UserPreference preference) =>
+    private static UserPreferenceSnapshot Map(DomainUserPreference preference) =>
         new(preference.Locale, preference.CreatedAt, preference.UpdatedAt);
 
     private static void EnsureActor(Guid actorUserId)

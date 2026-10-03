@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.UserPreference.Application;
+using Tooba.UserPreference.Application.Models;
 using Tooba.UserPreference.Application.UiPreferences.Commands;
 using Tooba.UserPreference.Application.UiPreferences.Queries;
 using Tooba.UserPreference.Contracts.Errors;

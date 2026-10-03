@@ -4,7 +4,8 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
-using Tooba.UserPreference.Application;
+using Tooba.UserPreference.Application.Ports;
+using Tooba.UserPreference.Infrastructure.Directories;
 using Tooba.UserPreference.Infrastructure.Persistence;
 
 namespace Tooba.UserPreference.Infrastructure;
@@ -35,27 +36,4 @@ public sealed class UserPreferenceModule : IToobaModule
             options.AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>());
         });
     }
-}
-
-/// <summary>ثبت Outbox ترجیح کاربر؛ نسخهٔ فعلی رویداد بیرونی تعریف نمی‌کند.</summary>
-public sealed class UserPreferenceOutboxRegistration : IOutboxModuleRegistration
-{
-    /// <inheritdoc />
-    public string Schema => UserPreferenceDbContext.Schema;
-
-    /// <inheritdoc />
-    public string TableName => OutboxMessageMapping.TableName;
-
-    /// <inheritdoc />
-    public Type DbContextType => typeof(UserPreferenceDbContext);
-
-    /// <inheritdoc />
-    public IIntegrationEvent? Translate(IDomainEvent domainEvent, EventMetadata metadata) => null;
-
-    /// <inheritdoc />
-    public string GetEventTypeName(Type integrationEventType) =>
-        throw new InvalidOperationException("UserPreference integration event is not registered.");
-
-    /// <inheritdoc />
-    public Type? ResolveEventClrType(string eventTypeName) => null;
 }

@@ -35,9 +35,10 @@ using Tooba.Party.Application.Ports;
 using Tooba.Party.Application.Models;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
-using Tooba.UserPreference.Application;
+using Tooba.UserPreference.Application.Models;
+using Tooba.UserPreference.Application.Ports;
 using Tooba.UserPreference.Endpoints.Customer;
-using Tooba.UserPreference.Infrastructure;
+using Tooba.UserPreference.Infrastructure.Directories;
 using Tooba.UserPreference.Infrastructure.Persistence;
 using Xunit;
 

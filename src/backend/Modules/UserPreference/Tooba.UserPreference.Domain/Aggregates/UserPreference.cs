@@ -1,7 +1,7 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.UserPreference.Contracts.Errors;
 
-namespace Tooba.UserPreference.Domain;
+namespace Tooba.UserPreference.Domain.Aggregates;
 
 /// <summary>
 /// ترجیح locale کاربر. فقط <c>fa</c> و <c>en</c> مجازند؛ theme/notification اینجا نیست.

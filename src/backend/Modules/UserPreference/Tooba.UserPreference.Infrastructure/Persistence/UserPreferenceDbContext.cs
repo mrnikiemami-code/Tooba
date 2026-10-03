@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Tooba.UserPreference.Domain;
-using UserPreferenceEntity = Tooba.UserPreference.Domain.UserPreference;
+using Tooba.UserPreference.Domain.Aggregates;
+using UserPreferenceEntity = Tooba.UserPreference.Domain.Aggregates.UserPreference;
 using Tooba.Persistence;
 
 namespace Tooba.UserPreference.Infrastructure.Persistence;

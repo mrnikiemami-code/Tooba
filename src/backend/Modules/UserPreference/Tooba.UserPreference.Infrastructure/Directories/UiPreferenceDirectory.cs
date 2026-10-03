@@ -1,11 +1,12 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.UserPreference.Application;
+using Tooba.UserPreference.Application.Models;
+using Tooba.UserPreference.Application.Ports;
 using Tooba.UserPreference.Contracts.Errors;
-using Tooba.UserPreference.Domain;
+using Tooba.UserPreference.Domain.Aggregates;
 using Tooba.UserPreference.Infrastructure.Persistence;
 
-namespace Tooba.UserPreference.Infrastructure;
+namespace Tooba.UserPreference.Infrastructure.Directories;
 
 /// <summary>پیاده‌سازی ترجیح کلیددار UI با مالکیت سرورمحور.</summary>
 public sealed class UiPreferenceDirectory : IUiPreferenceDirectory

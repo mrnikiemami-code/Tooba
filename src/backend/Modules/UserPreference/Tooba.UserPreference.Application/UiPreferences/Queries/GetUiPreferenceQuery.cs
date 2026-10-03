@@ -1,5 +1,6 @@
 using MediatR;
-using Tooba.UserPreference.Application;
+using Tooba.UserPreference.Application.Models;
+using Tooba.UserPreference.Application.Ports;
 
 namespace Tooba.UserPreference.Application.UiPreferences.Queries;
 

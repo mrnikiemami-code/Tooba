@@ -1,7 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Tooba.UserPreference.Application;
-using UserPreferenceEntity = Tooba.UserPreference.Domain.UserPreference;
+using Tooba.UserPreference.Application.Models;
+using Tooba.UserPreference.Application.Ports;
+using DomainUserPreference = Tooba.UserPreference.Domain.Aggregates.UserPreference;
 
 namespace Tooba.UserPreference.Infrastructure.Development;
 
@@ -32,7 +33,7 @@ public static class UserPreferenceDevelopmentSeed
         {
             await directory.UpsertAsync(
                 guestActorUserId,
-                new UserPreferenceWrite(UserPreferenceEntity.LocaleFa),
+                new UserPreferenceWrite(DomainUserPreference.LocaleFa),
                 cancellationToken);
         }
 
@@ -41,7 +42,7 @@ public static class UserPreferenceDevelopmentSeed
         {
             await directory.UpsertAsync(
                 adminId,
-                new UserPreferenceWrite(UserPreferenceEntity.LocaleFa),
+                new UserPreferenceWrite(DomainUserPreference.LocaleFa),
                 cancellationToken);
         }
     }
