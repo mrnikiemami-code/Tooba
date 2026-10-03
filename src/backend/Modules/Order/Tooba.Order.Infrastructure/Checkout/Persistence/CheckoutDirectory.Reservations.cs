@@ -65,7 +65,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         {
             if (!reservationsByCartLineId.TryGetValue(cartLine.LineId, out var reservationId))
             {
-                throw new InvalidOperationException("inventory.supply.unavailable");
+                throw new ContractOperationException("inventory.supply.unavailable");
             }
 
             var orderLine = unused.FirstOrDefault(x =>
@@ -73,7 +73,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                 && x.SellerPartyId == cartLine.SellerPartyId
                 && x.Quantity == cartLine.Quantity
                 && x.ReservationId is null)
-                ?? throw new InvalidOperationException("inventory.supply.unavailable");
+                ?? throw new ContractOperationException("inventory.supply.unavailable");
             orderLine.ReplaceReservation(reservationId);
             unused.Remove(orderLine);
         }
@@ -177,15 +177,15 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             foreach (var cartLine in sellerGroup)
             {
                 var offer = await _offers.FindOfferAsync(cartLine.OfferId, cancellationToken)
-                    ?? throw new InvalidOperationException("Offer از قرارداد Lookup پیدا نشد؛ DbContext Offer خوانده نشد.");
+                    ?? throw new ContractOperationException("checkout.offer.missing");
                 if (offer.Status != OfferStatus.Active)
                 {
-                    throw new InvalidOperationException("Offer غیرفعال در checkout پذیرفته نمی‌شود.");
+                    throw new ContractOperationException("checkout.offer.inactive");
                 }
 
                 if (offer.SellerPartyId != cartLine.SellerPartyId)
                 {
-                    throw new InvalidOperationException("فروشندهٔ Offer با خط سبد یکی نیست.");
+                    throw new ContractOperationException("checkout.offer.seller_mismatch");
                 }
 
                 var returnPolicy = _returnPolicies.ResolveForCheckout(
@@ -193,21 +193,21 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                     offer.CustomReturnWindowDays);
 
                 var quote = await ResolveCheckoutLineQuoteAsync(cart, cartLine, effectiveCurrency, now, cancellationToken)
-                    ?? throw new InvalidOperationException("نقل‌قول قیمت از قرارداد Pricing پیدا نشد.");
+                    ?? throw new ContractOperationException("checkout.price.missing");
 
                 if (cartLine.QuotedAmount is null
                     || cartLine.QuotedAmount != quote.Amount
                     || !string.Equals(cartLine.QuotedCurrency, quote.Currency, StringComparison.Ordinal)
                     || cartLine.QuotedTaxExclusive != quote.TaxExclusive)
                 {
-                    throw new InvalidOperationException("PRICE_CHANGED");
+                    throw new ContractOperationException("PRICE_CHANGED");
                 }
 
                 reservationsByCartLineId.TryGetValue(cartLine.LineId, out var reservedId);
                 var reservationId = reservedId != Guid.Empty ? reservedId : cartLine.ReservationId;
                 if (requireReservation && reservationId is null)
                 {
-                    throw new InvalidOperationException("inventory.supply.unavailable");
+                    throw new ContractOperationException("inventory.supply.unavailable");
                 }
 
                 var lineExclusive = quote.Amount * cartLine.Quantity;
@@ -245,12 +245,12 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                     cancellationToken);
                 if (tax.Outcome is TaxOutcome.NoApplicableRule)
                 {
-                    throw new InvalidOperationException("TAX_NO_APPLICABLE_RULE");
+                    throw new ContractOperationException("TAX_NO_APPLICABLE_RULE");
                 }
 
                 if (tax.Outcome is TaxOutcome.CalculationError)
                 {
-                    throw new InvalidOperationException("TAX_CALCULATION_ERROR");
+                    throw new ContractOperationException("TAX_CALCULATION_ERROR");
                 }
 
                 lines.Add(OrderLine.FromCheckout(
@@ -303,7 +303,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         if (command.QuotedDiscountAmount is { } quotedDiscount
             && quotedDiscount != sellerOrders.Sum(x => x.DiscountSnapshot))
         {
-            throw new InvalidOperationException("PROMOTION_CHANGED");
+            throw new ContractOperationException("PROMOTION_CHANGED");
         }
 
         return sellerOrders;

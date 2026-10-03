@@ -398,7 +398,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         Assert.Null(await checkoutA.GetSellerOrderByNumberAsync(number, new OrderAccess(null, stranger), CancellationToken.None));
         Assert.NotNull(await checkoutA.GetSellerOrderByNumberAsync(number, orderAccess, CancellationToken.None));
 
-        var priceChanged = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var priceChanged = await Assert.ThrowsAsync<ContractOperationException>(() =>
             checkoutA.SubmitAsync(
                 new SubmitCheckoutCommand(
                     staleLined.CartId,
@@ -410,7 +410,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
                     "idem-price-changed",
                     "IR-NAT"),
                 CancellationToken.None));
-        Assert.Equal("PRICE_CHANGED", priceChanged.Message);
+        Assert.Equal("PRICE_CHANGED", priceChanged.Code);
 
         var requestCart = await cartDirA.CreateAuthenticatedAsync(actor, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
         var requestLined = await cartDirA.AddOrIncreaseLineAsync(requestCart.CartId, access, requestCart.Version, offer2.OfferId, 1, CancellationToken.None);

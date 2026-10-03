@@ -1,5 +1,7 @@
 ﻿namespace Tooba.Order.Domain.Checkout;
 
+using Tooba.BuildingBlocks;
+
 /// <summary>وضعیت فرآیند checkout؛ با وضعیت کسب‌وکار SellerOrder یکی نیست.</summary>
 public enum CheckoutProcessStatus
 {
@@ -69,12 +71,12 @@ public sealed class CheckoutProcess
     {
         if (string.IsNullOrWhiteSpace(submissionIdempotencyKey))
         {
-            throw new InvalidOperationException("checkout_process.idempotency_key.required");
+            throw new ContractOperationException("checkout_process.idempotency_key.required");
         }
 
         if (cartId == Guid.Empty)
         {
-            throw new InvalidOperationException("checkout_process.cart_id.required");
+            throw new ContractOperationException("checkout_process.cart_id.required");
         }
 
         return new CheckoutProcess
@@ -102,7 +104,7 @@ public sealed class CheckoutProcess
     {
         if (checkoutId == Guid.Empty)
         {
-            throw new InvalidOperationException("checkout_process.checkout_id.required");
+            throw new ContractOperationException("checkout_process.checkout_id.required");
         }
 
         CheckoutId = checkoutId;
@@ -120,7 +122,7 @@ public sealed class CheckoutProcess
     {
         if (Status is CheckoutProcessStatus.PaymentPending)
         {
-            throw new InvalidOperationException("checkout_process.transition.invalid");
+            throw new ContractOperationException("checkout_process.transition.invalid");
         }
 
         FailureCode = string.IsNullOrWhiteSpace(failureCode) ? "checkout_process.failed" : failureCode.Trim();
@@ -140,7 +142,7 @@ public sealed class CheckoutProcess
 
         if (!IsAllowed(Status, next))
         {
-            throw new InvalidOperationException("checkout_process.transition.invalid");
+            throw new ContractOperationException("checkout_process.transition.invalid");
         }
 
         Status = next;

@@ -65,7 +65,7 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
         CancellationToken cancellationToken)
     {
         var group = await FindCheckoutAsync(x => x.CheckoutId == checkout.CheckoutId, cancellationToken)
-            ?? throw new InvalidOperationException("checkout پیدا نشد.");
+            ?? throw new ContractOperationException("checkout.missing");
         await ReconcileCartConversionAsync(group, command, cancellationToken);
     }
 
@@ -75,20 +75,20 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
         CancellationToken cancellationToken)
     {
         var cart = await _carts.GetCartAsync(command.CartId, command.CartAccess, cancellationToken)
-            ?? throw new InvalidOperationException("سبد برای checkout پیدا نشد؛ CartId Bearer نیست.");
+            ?? throw new ContractOperationException("checkout.cart.missing");
         if (cart.Status != CartStatus.Active)
         {
-            throw new InvalidOperationException("فقط سبد Active به سفارش تبدیل می‌شود.");
+            throw new ContractOperationException("checkout.cart.expired");
         }
 
         if (cart.Version != command.ExpectedCartVersion)
         {
-            throw new InvalidOperationException("نسخهٔ سبد کهنه است؛ checkout همزمان رد شد.");
+            throw new ContractOperationException("checkout.version.conflict");
         }
 
         if (cart.Lines.Count == 0)
         {
-            throw new InvalidOperationException("سبد خالی به سفارش تبدیل نمی‌شود.");
+            throw new ContractOperationException("checkout.cart.empty");
         }
 
         return cart;

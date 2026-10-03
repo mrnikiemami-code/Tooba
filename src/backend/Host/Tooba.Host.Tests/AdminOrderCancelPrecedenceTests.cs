@@ -54,8 +54,8 @@ public sealed class AdminOrderCancelPrecedenceTests
     public void Composer_source_skips_payment_and_fulfillment_when_cancelled()
     {
         var root = FindRepoRoot();
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
+        var composer = OrderPartialSources.ReadAllAbsolute(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services"), "AdminOrderOperationsOrchestrator*.cs");
         var panel = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Admin", "Panel", "AdminPanelComposer.cs"));
         Assert.Contains("if (!IsCheckoutCancelled(group))", composer, StringComparison.Ordinal);

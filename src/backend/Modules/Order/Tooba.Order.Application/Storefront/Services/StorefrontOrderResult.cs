@@ -49,7 +49,7 @@ public static class StorefrontOrderResult
         {
             return Result.Failure<T>(exception.Error);
         }
-        catch (InvalidOperationException exception) when (TryMapCheckoutDirectoryCode(exception.Message, out var code))
+        catch (ContractOperationException exception) when (TryMapCheckoutCode(exception.Code, out var code))
         {
             return Result.Failure<T>(new SemanticError(code));
         }
@@ -66,42 +66,40 @@ public static class StorefrontOrderResult
     }
 
     /// <summary>
-    /// Maps already-typed fault tokens from Order checkout directory (not localized text).
+    /// Maps already-typed fault codes from Order checkout/domain producers (not localized text).
     /// </summary>
-    private static bool TryMapCheckoutDirectoryCode(string message, out string code)
+    private static bool TryMapCheckoutCode(string code, out string mapped)
     {
-        var token = message.Split(':', 2)[0].Trim();
-        if (token.StartsWith("inventory.", StringComparison.Ordinal)
-            || string.Equals(token, "inventory.supply.unavailable", StringComparison.Ordinal))
+        if (code.StartsWith("inventory.", StringComparison.Ordinal))
         {
-            code = StorefrontOrderErrors.CheckoutInventoryUnavailable;
+            mapped = StorefrontOrderErrors.CheckoutInventoryUnavailable;
             return true;
         }
 
-        if (string.Equals(token, "PRICE_CHANGED", StringComparison.Ordinal)
-            || string.Equals(token, "PROMOTION_CHANGED", StringComparison.Ordinal))
+        if (string.Equals(code, "PRICE_CHANGED", StringComparison.Ordinal)
+            || string.Equals(code, "PROMOTION_CHANGED", StringComparison.Ordinal))
         {
-            code = StorefrontOrderErrors.CheckoutPriceChanged;
+            mapped = StorefrontOrderErrors.CheckoutPriceChanged;
             return true;
         }
 
-        if (token.StartsWith("TAX_", StringComparison.Ordinal))
+        if (code.StartsWith("TAX_", StringComparison.Ordinal))
         {
-            code = StorefrontOrderErrors.CheckoutTaxUnavailable;
+            mapped = StorefrontOrderErrors.CheckoutTaxUnavailable;
             return true;
         }
 
-        if (token.StartsWith("checkout.", StringComparison.Ordinal)
-            || token.StartsWith("shipping.", StringComparison.Ordinal)
-            || token.StartsWith("order.", StringComparison.Ordinal)
-            || token.StartsWith("pending.", StringComparison.Ordinal)
-            || token.StartsWith("payment.", StringComparison.Ordinal))
+        if (code.StartsWith("checkout.", StringComparison.Ordinal)
+            || code.StartsWith("shipping.", StringComparison.Ordinal)
+            || code.StartsWith("order.", StringComparison.Ordinal)
+            || code.StartsWith("pending.", StringComparison.Ordinal)
+            || code.StartsWith("payment.", StringComparison.Ordinal))
         {
-            code = token;
+            mapped = code;
             return true;
         }
 
-        code = string.Empty;
+        mapped = string.Empty;
         return false;
     }
 }

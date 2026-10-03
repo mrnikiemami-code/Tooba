@@ -230,7 +230,8 @@ public sealed class ReservationLifecycleIntegrationGateTests
     [Fact]
     public void Commit_hold_uses_category_and_gate_sources_are_clean()
     {
-        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs");
+        var checkout = OrderPartialSources.ReadAll(
+            "src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence", "CheckoutDirectory*.cs");
         Assert.Contains("GetPrimaryCategoryIdsByVariantIdsAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("ResolveInitialCycleExpiresAtAsync", checkout, StringComparison.Ordinal);
         Assert.DoesNotContain("new ReservationCyclePolicyLine(x.OfferId, null)", checkout, StringComparison.Ordinal);

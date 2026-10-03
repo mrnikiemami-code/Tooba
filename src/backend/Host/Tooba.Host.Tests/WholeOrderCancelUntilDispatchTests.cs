@@ -1,5 +1,6 @@
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks;
 using Tooba.Order.Application.Admin.Operations.Policies;
-using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
@@ -140,16 +141,16 @@ public sealed class WholeOrderCancelUntilDispatchTests
         var shipped = dispatched.CreateShipment(Guid.NewGuid(), () => Guid.NewGuid(), "پست", [(lineId, 0.50m)], now);
         dispatched.AssignTracking(shipped.ShipmentId, "TRK-D", now);
         dispatched.ApplyShipmentDispatched(shipped.ShipmentId, now);
-        var ex = Assert.Throws<InvalidOperationException>(() => dispatched.AbortForOrderCancel(now));
-        Assert.Equal("fulfillment.cancel.already_dispatched", ex.Message);
+        var ex = Assert.Throws<ContractOperationException>(() => dispatched.AbortForOrderCancel(now));
+        Assert.Equal("fulfillment.cancel.already_dispatched", ex.Code);
     }
 
     [Fact]
     public void Composer_source_keeps_direct_guard_and_human_confirm()
     {
         var root = FindRepoRoot();
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
+        var composer = OrderPartialSources.ReadAllAbsolute(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services"), "AdminOrderOperationsOrchestrator*.cs");
         var completeness = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Completeness", "History", "AdminOrderHistoryComposer.cs"))
             + File.ReadAllText(Path.Combine(
@@ -158,8 +159,8 @@ public sealed class WholeOrderCancelUntilDispatchTests
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Completeness", "History", "AdminOrderHistoryComposer.Payment.cs"))
             + File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Completeness", "History", "AdminOrderHistoryComposer.Returns.cs"));
-        var checkout = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Checkout", "Persistence", "CheckoutDirectory.cs"));
+        var checkout = OrderPartialSources.ReadAllAbsolute(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Checkout", "Persistence"), "CheckoutDirectory*.cs");
         Assert.Contains(AdminOrderOperationsPolicy.WholeOrderCancelBlockedAfterDispatchFa, composer, StringComparison.Ordinal);
         Assert.Contains(AdminOrderOperationsPolicy.WholeOrderCancelConfirmFa, composer, StringComparison.Ordinal);
         Assert.Contains("HasDispatchedOrDelivered(fulfillments)", composer, StringComparison.Ordinal);

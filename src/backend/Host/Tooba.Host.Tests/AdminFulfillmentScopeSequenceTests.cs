@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Order.Application.Admin.Detail;
 using Tooba.Order.Application.Admin.Operations.Models;
 using Tooba.Order.Application.Admin.Operations.Policies;
@@ -20,8 +21,8 @@ public sealed class AdminFulfillmentScopeSequenceTests
         var line = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
         var unit = CreateReady(line, 2, now);
-        var ex = Assert.Throws<InvalidOperationException>(() => unit.PackSelections([(line, 1)], now));
-        Assert.Equal("fulfillment.pack.requires_processing", ex.Message);
+        var ex = Assert.Throws<ContractOperationException>(() => unit.PackSelections([(line, 1)], now));
+        Assert.Equal("fulfillment.pack.requires_processing", ex.Code);
         Assert.Equal(0, unit.Items.Single().QuantityPacked);
         Assert.Equal(FulfillmentStatus.ReadyToFulfill, unit.Status);
     }
@@ -37,8 +38,8 @@ public sealed class AdminFulfillmentScopeSequenceTests
         Assert.Equal(1, unit.Items.Single(x => x.OrderLineId == l1).QuantityProcessing);
         Assert.Equal(0, unit.Items.Single(x => x.OrderLineId == l2).QuantityProcessing);
         Assert.Equal(FulfillmentStatus.Processing, unit.Status);
-        var packOther = Assert.Throws<InvalidOperationException>(() => unit.PackSelections([(l2, 1)], now));
-        Assert.Equal("fulfillment.pack.requires_processing", packOther.Message);
+        var packOther = Assert.Throws<ContractOperationException>(() => unit.PackSelections([(l2, 1)], now));
+        Assert.Equal("fulfillment.pack.requires_processing", packOther.Code);
         unit.UnprocessSelections([(l1, 1)], now);
         Assert.Equal(0, unit.Items.Single(x => x.OrderLineId == l1).QuantityProcessing);
         Assert.Equal(FulfillmentStatus.ReadyToFulfill, unit.Status);
@@ -70,12 +71,12 @@ public sealed class AdminFulfillmentScopeSequenceTests
         Assert.Equal(0, unit.Items.Single(x => x.OrderLineId == l2).QuantityProcessing);
         Assert.Equal(0, unit.Items.Single(x => x.OrderLineId == l3).QuantityProcessing);
         Assert.Equal(FulfillmentStatus.Processing, unit.Status);
-        var packOther = Assert.Throws<InvalidOperationException>(() => unit.PackSelections([(l2, 1)], now));
-        Assert.Equal("fulfillment.pack.requires_processing", packOther.Message);
+        var packOther = Assert.Throws<ContractOperationException>(() => unit.PackSelections([(l2, 1)], now));
+        Assert.Equal("fulfillment.pack.requires_processing", packOther.Code);
         unit.PackSelections([(l1, 1)], now);
         Assert.Equal(1, unit.Items.Single(x => x.OrderLineId == l1).QuantityPacked);
-        var blocked = Assert.Throws<InvalidOperationException>(() => unit.UnprocessSelections([(l1, 1)], now));
-        Assert.Contains("fulfillment.processing.release_invalid", blocked.Message, StringComparison.Ordinal);
+        var blocked = Assert.Throws<ContractOperationException>(() => unit.UnprocessSelections([(l1, 1)], now));
+        Assert.Contains("fulfillment.processing.release_invalid", blocked.Code, StringComparison.Ordinal);
         unit.UnpackSelections([(l1, 1)], now);
         unit.UnprocessSelections([(l1, 1)], now);
         Assert.Equal(0, unit.Items.Single(x => x.OrderLineId == l1).QuantityProcessing);
@@ -131,9 +132,9 @@ public sealed class AdminFulfillmentScopeSequenceTests
         var now = DateTimeOffset.UtcNow;
         var unit = CreateReady(line, 2, now);
         unit.MarkProcessing(now);
-        var ex = Assert.Throws<InvalidOperationException>(() => unit.PackSelections([(line, 3)], now));
+        var ex = Assert.Throws<ContractOperationException>(() => unit.PackSelections([(line, 3)], now));
         Assert.Equal(0, unit.Items.Single().QuantityPacked);
-        Assert.Contains("fulfillment.pack.qty_exceeds", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("fulfillment.pack.qty_exceeds", ex.Code, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -193,7 +194,7 @@ public sealed class AdminFulfillmentScopeSequenceTests
     public void Composer_source_keeps_pack_behind_processing()
     {
         var root = FindRepoRoot();
-        var composer = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
+        var composer = OrderPartialSources.ReadAllAbsolute(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services"), "AdminOrderOperationsOrchestrator*.cs");
         Assert.Contains("pack_selected", composer, StringComparison.Ordinal);
         Assert.Contains("QuantityProcessing", composer, StringComparison.Ordinal);
         Assert.Contains("unprocess", composer, StringComparison.Ordinal);

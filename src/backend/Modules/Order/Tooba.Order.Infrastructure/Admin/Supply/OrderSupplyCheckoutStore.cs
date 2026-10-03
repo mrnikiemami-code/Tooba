@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Order.Application.Admin.Supply.Ports;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
@@ -71,7 +72,7 @@ internal sealed class OrderSupplyCheckoutStore(OrderDbContext orders) : IOrderSu
             .Include(x => x.SellerOrders)
             .ThenInclude(x => x.Lines)
             .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
-            ?? throw new InvalidOperationException("order.operation.invalid");
+            ?? throw new ContractOperationException("order.operation.invalid");
 
         foreach (var pair in bindingsByOrderLineId)
         {

@@ -225,8 +225,8 @@ public sealed class AdminOrderOperationsTests
         var root = FindRepoRoot();
         var endpoints = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Admin", "Operations", "AdminOrderOperationsEndpoints.cs"));
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
+        var composer = OrderPartialSources.ReadAllAbsolute(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services"), "AdminOrderOperationsOrchestrator*.cs");
         var program = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         Assert.Contains("/{checkoutId:guid}/operations", endpoints, StringComparison.Ordinal);

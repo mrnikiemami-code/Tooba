@@ -14,6 +14,14 @@ public sealed class OrderInventoryRecoveryTests
         return File.ReadAllText(Path.Combine(root, relative));
     }
 
+    private static string ReadOrderApplicationAll(string relativeDirectory, string searchPattern)
+    {
+        var root = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
+            "Modules", "Order", "Tooba.Order.Application"));
+        return OrderPartialSources.ReadAllAbsolute(Path.Combine(root, relativeDirectory), searchPattern);
+    }
+
     [Fact]
     public void Recovery_service_never_resurrects_and_rolls_back_partial_acquire()
     {
@@ -33,8 +41,7 @@ public sealed class OrderInventoryRecoveryTests
     [Fact]
     public void Admin_projects_recover_action_and_warning()
     {
-        var ops = ReadOrderApplication(Path.Combine(
-            "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
+        var ops = ReadOrderApplicationAll(Path.Combine("Admin", "Operations", "Services"), "AdminOrderOperationsOrchestrator*.cs");
         Assert.Contains("recover_inventory_reservation", ops, StringComparison.Ordinal);
         Assert.Contains("ProjectInventoryRecovery", ops, StringComparison.Ordinal);
         Assert.Contains("رزرو موجودی این سفارش از چرخه قبلی معتبر نیست", ops, StringComparison.Ordinal);

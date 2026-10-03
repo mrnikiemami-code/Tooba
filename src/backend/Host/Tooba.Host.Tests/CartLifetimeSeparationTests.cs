@@ -36,7 +36,9 @@ public sealed class CartLifetimeSeparationTests
     [Fact]
     public void Checkout_submit_creates_order_hold_preview_does_not()
     {
-        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs");
+        var checkout = ReadAggregated(
+            "src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence",
+            "CheckoutDirectory*.cs");
         var adapter = Read("src/backend/Modules/Inventory/Tooba.Inventory.Application/Checkout/CheckoutInventoryReservationAdapter.cs");
         Assert.Contains("ReserveCartLinesForOrderAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("requireReservation: false", checkout, StringComparison.Ordinal);
@@ -102,5 +104,29 @@ public sealed class CartLifetimeSeparationTests
         }
 
         throw new InvalidOperationException(relative);
+    }
+
+    /// <summary>
+    /// Reads every file matching a pattern in a repo-relative directory (order-stable).
+    /// Guards that assert symbols split across cohesive partial files must aggregate, not read one file.
+    /// </summary>
+    private static string ReadAggregated(string relativeDirectory, string searchPattern)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            var candidate = Path.Combine(dir.FullName, relativeDirectory);
+            if (Directory.Exists(candidate))
+            {
+                return string.Concat(Directory
+                    .GetFiles(candidate, searchPattern, SearchOption.TopDirectoryOnly)
+                    .OrderBy(x => x, StringComparer.Ordinal)
+                    .Select(File.ReadAllText));
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException(relativeDirectory);
     }
 }

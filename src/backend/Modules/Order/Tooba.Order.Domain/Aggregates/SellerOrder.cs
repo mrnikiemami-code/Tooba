@@ -116,7 +116,7 @@ public sealed class SellerOrder
     {
         if (lines.Count == 0)
         {
-            throw new InvalidOperationException("سفارش فروشنده بدون خط ساخته نمی‌شود.");
+            throw new ContractOperationException("order.seller_order.empty");
         }
 
         var order = new SellerOrder
@@ -168,8 +168,7 @@ public sealed class SellerOrder
             return;
         }
 
-        throw new InvalidOperationException(
-            "order.cancel.forbidden: لغو از این وضعیت سفارش مجاز نیست.");
+        throw new ContractOperationException("order.cancel.forbidden");
     }
 
     /// <summary>
@@ -184,8 +183,7 @@ public sealed class SellerOrder
 
         if (Status != SellerOrderStatus.Paid)
         {
-            throw new InvalidOperationException(
-                "order.cancel.forbidden: لغو پیش از ارسال فقط برای سفارش Paid مجاز است.");
+            throw new ContractOperationException("order.cancel.forbidden");
         }
 
         CancelledFromStatus = Status;
@@ -199,12 +197,12 @@ public sealed class SellerOrder
     {
         if (Status != SellerOrderStatus.Cancelled)
         {
-            throw new InvalidOperationException("order.restore.invalid_state");
+            throw new ContractOperationException("order.restore.invalid_state");
         }
 
         if (CancelledFromStatus is null)
         {
-            throw new InvalidOperationException("order.restore.missing_snapshot");
+            throw new ContractOperationException("order.restore.missing_snapshot");
         }
 
         Status = CancelledFromStatus.Value;
@@ -224,7 +222,7 @@ public sealed class SellerOrder
 
         if (Status != SellerOrderStatus.PendingPayment)
         {
-            throw new InvalidOperationException("فقط سفارش در انتظار پرداخت پس از Verify درگاه Paid می‌شود.");
+            throw new ContractOperationException("order.payment.confirm.invalid_state");
         }
 
         Status = SellerOrderStatus.Paid;
@@ -242,7 +240,7 @@ public sealed class SellerOrder
 
         if (Status != SellerOrderStatus.Paid)
         {
-            throw new InvalidOperationException("order.payment.unconfirm.invalid_state");
+            throw new ContractOperationException("order.payment.unconfirm.invalid_state");
         }
 
         Status = SellerOrderStatus.PendingPayment;

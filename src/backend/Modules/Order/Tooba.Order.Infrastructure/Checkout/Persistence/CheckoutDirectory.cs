@@ -131,15 +131,15 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var cart = await _carts.GetCartAsync(command.CartId, command.CartAccess, cancellationToken)
-            ?? throw new InvalidOperationException("سبد برای checkout پیدا نشد؛ CartId Bearer نیست.");
+            ?? throw new ContractOperationException("checkout.cart.missing");
         if (cart.Status != CartStatus.Active)
         {
-            throw new InvalidOperationException("فقط سبد Active به سفارش تبدیل می‌شود.");
+            throw new ContractOperationException("checkout.cart.expired");
         }
 
         if (cart.Lines.Count == 0)
         {
-            throw new InvalidOperationException("سبد خالی به سفارش تبدیل نمی‌شود.");
+            throw new ContractOperationException("checkout.cart.empty");
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -229,15 +229,14 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         var order = await _db.SellerOrders
             .Include(x => x.Lines)
             .SingleOrDefaultAsync(x => x.SellerOrderId == sellerOrderId, cancellationToken)
-            ?? throw new InvalidOperationException("سفارش فروشنده پیدا نشد.");
+            ?? throw new ContractOperationException("order.cancel.forbidden");
         var group = await _db.Checkouts.SingleAsync(x => x.CheckoutId == order.CheckoutId, cancellationToken);
         EnsureAccess(group, access);
 
         var fulfillment = await _cancelFulfillmentGate.GetAsync(sellerOrderId, cancellationToken);
         if (!SellerOrderCancellationPolicy.CanCancel(order.Status, fulfillment))
         {
-            throw new InvalidOperationException(
-                "order.cancel.forbidden: لغو از این وضعیت سفارش/ارسال مجاز نیست.");
+            throw new ContractOperationException("order.cancel.forbidden");
         }
 
         foreach (var line in order.Lines)
@@ -279,7 +278,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             .Include(x => x.SellerOrders)
             .ThenInclude(x => x.Lines)
             .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
-            ?? throw new InvalidOperationException("سفارش پیدا نشد.");
+            ?? throw new ContractOperationException("order.restore.invalid_state");
         EnsureAccess(group, access);
         if (group.SellerOrders.Count == 0 || group.SellerOrders.Any(x => x.Status != SellerOrderStatus.Cancelled))
         {
@@ -420,7 +419,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             .AnyAsync(x => x.CheckoutId == checkoutId, cancellationToken);
         if (!exists)
         {
-            throw new InvalidOperationException("سفارش پیدا نشد.");
+            throw new ContractOperationException("order.operation.invalid");
         }
 
         var note = CheckoutOperationalNote.Create(checkoutId, actorUserId, body, DateTimeOffset.UtcNow);

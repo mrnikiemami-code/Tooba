@@ -35,7 +35,8 @@ public sealed class CheckoutImplW4InventoryLifecycleTests
         Assert.DoesNotContain("Tooba.Inventory.Application", csproj, StringComparison.Ordinal);
         Assert.Contains("Tooba.Inventory.Contracts", csproj, StringComparison.Ordinal);
 
-        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs");
+        var checkout = OrderPartialSources.ReadAll(
+            "src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence", "CheckoutDirectory*.cs");
         Assert.Contains("IOrderInventoryLifecyclePort", checkout, StringComparison.Ordinal);
         Assert.Contains("ReleaseHeldReservationAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("ReacquireDurableHoldFromPreviousAsync", checkout, StringComparison.Ordinal);

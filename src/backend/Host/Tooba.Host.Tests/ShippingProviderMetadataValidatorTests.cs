@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Ports;
 using Tooba.Fulfillment.Application.Models;
 using Tooba.Fulfillment.Application.Shipping;
@@ -32,7 +33,7 @@ public sealed class ShippingProviderMetadataValidatorTests
     [Fact]
     public void Tipax_requires_name_and_address()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<ContractOperationException>(() =>
             ShippingProviderMetadataValidator.ValidateAndNormalize("tipax", """{"recipientName":"علی"}"""));
         var json = ShippingProviderMetadataValidator.ValidateAndNormalize(
             "tipax",
@@ -68,7 +69,7 @@ public sealed class ShippingProviderMetadataValidatorTests
     [Fact]
     public void Disabled_unknown_method_rejected()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<ContractOperationException>(() =>
             ShippingProviderMetadataValidator.ValidateAndNormalize("unknown", "{}"));
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Contracts.Shipping;
 
 namespace Tooba.Fulfillment.Application.Shipping;
@@ -87,7 +88,7 @@ public static class ShippingProviderMetadataValidator
     public static string? ValidateAndNormalize(string methodCode, string? rawJson)
     {
         var method = ShippingMethodRegistry.Find(methodCode)
-            ?? throw new InvalidOperationException("fulfillment.shipping_method.unsupported");
+            ?? throw new ContractOperationException("fulfillment.shipping_method.unsupported");
 
         rawJson = string.IsNullOrWhiteSpace(rawJson) ? "{}" : rawJson.Trim();
         using var doc = JsonDocument.Parse(rawJson);
@@ -100,7 +101,7 @@ public static class ShippingProviderMetadataValidator
             "snapp_courier" => NormalizeCourier(root),
             "store_courier" => NormalizeStoreCourier(root),
             "in_person" => NormalizeInPerson(root),
-            _ => throw new InvalidOperationException("fulfillment.shipping_method.unsupported"),
+            _ => throw new ContractOperationException("fulfillment.shipping_method.unsupported"),
         };
     }
 
@@ -112,22 +113,22 @@ public static class ShippingProviderMetadataValidator
         var address = Read(root, "destinationAddress", "DestinationAddress");
         if (string.IsNullOrWhiteSpace(recipientName))
         {
-            throw new InvalidOperationException("fulfillment.shipping.post.recipient_required");
+            throw new ContractOperationException("fulfillment.shipping.post.recipient_required");
         }
 
         if (!string.IsNullOrWhiteSpace(recipientPhone) && !PhonePattern.IsMatch(recipientPhone))
         {
-            throw new InvalidOperationException("fulfillment.shipping.mobile_invalid");
+            throw new ContractOperationException("fulfillment.shipping.mobile_invalid");
         }
 
         if (!string.IsNullOrWhiteSpace(postalCode) && !PostalPattern.IsMatch(postalCode))
         {
-            throw new InvalidOperationException("fulfillment.shipping.postal_invalid");
+            throw new ContractOperationException("fulfillment.shipping.postal_invalid");
         }
 
         if (string.IsNullOrWhiteSpace(address))
         {
-            throw new InvalidOperationException("fulfillment.shipping.post.address_required");
+            throw new ContractOperationException("fulfillment.shipping.post.address_required");
         }
 
         var meta = new PostShipmentMetadata(
@@ -151,18 +152,18 @@ public static class ShippingProviderMetadataValidator
         var address = Read(root, "fullAddress", "FullAddress");
         if (string.IsNullOrWhiteSpace(recipientName) || string.IsNullOrWhiteSpace(address))
         {
-            throw new InvalidOperationException("fulfillment.shipping.tipax.address_required");
+            throw new ContractOperationException("fulfillment.shipping.tipax.address_required");
         }
 
         if (!string.IsNullOrWhiteSpace(recipientPhone) && !PhonePattern.IsMatch(recipientPhone))
         {
-            throw new InvalidOperationException("fulfillment.shipping.mobile_invalid");
+            throw new ContractOperationException("fulfillment.shipping.mobile_invalid");
         }
 
         var postal = Read(root, "postalCode", "PostalCode");
         if (!string.IsNullOrWhiteSpace(postal) && !PostalPattern.IsMatch(postal))
         {
-            throw new InvalidOperationException("fulfillment.shipping.postal_invalid");
+            throw new ContractOperationException("fulfillment.shipping.postal_invalid");
         }
 
         var meta = new TipaxShipmentMetadata(
@@ -188,7 +189,7 @@ public static class ShippingProviderMetadataValidator
         var dest = Read(root, "destinationAddress", "DestinationAddress");
         if (string.IsNullOrWhiteSpace(pickup) || string.IsNullOrWhiteSpace(dest))
         {
-            throw new InvalidOperationException("fulfillment.shipping.courier.address_required");
+            throw new ContractOperationException("fulfillment.shipping.courier.address_required");
         }
 
         var meta = new CourierShipmentMetadata(
@@ -220,7 +221,7 @@ public static class ShippingProviderMetadataValidator
         var location = Read(root, "pickupLocation", "PickupLocation");
         if (string.IsNullOrWhiteSpace(location))
         {
-            throw new InvalidOperationException("fulfillment.shipping.pickup.location_required");
+            throw new ContractOperationException("fulfillment.shipping.pickup.location_required");
         }
 
         var meta = new InPersonShipmentMetadata(location, Read(root, "readyNote", "ReadyNote"));

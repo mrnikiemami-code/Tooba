@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Order.Application.Admin.Operations.Models;
 using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Fulfillment.Application.Ports;
@@ -102,8 +103,8 @@ public sealed class AdminOrderCorrectiveActionsTests
             now);
         var first = payment.RecordInitiation(Guid.NewGuid(), "manual-ok", now);
         payment.ApplyVerifiedSuccess(first.AttemptId, "manual-confirm", now.AddMinutes(1));
-        var ex = Assert.Throws<InvalidOperationException>(() => payment.RestoreRejectedManualToPending(Guid.NewGuid(), now.AddMinutes(2)));
-        Assert.Equal("payment.restore.already_succeeded", ex.Message);
+        var ex = Assert.Throws<ContractOperationException>(() => payment.RestoreRejectedManualToPending(Guid.NewGuid(), now.AddMinutes(2)));
+        Assert.Equal("payment.restore.already_succeeded", ex.Code);
     }
 
     [Fact]
@@ -222,9 +223,9 @@ public sealed class AdminOrderCorrectiveActionsTests
         Assert.Equal("TRK-NEW", unit.Shipments.Single().TrackingReference);
         Assert.Equal("TRK-OLD", unit.Shipments.Single().PreviousTrackingReference);
         unit.ApplyShipmentDispatched(shipment.ShipmentId, now.AddMinutes(2));
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<ContractOperationException>(() =>
             unit.CorrectTracking(shipment.ShipmentId, "TRK-LATER", now.AddMinutes(3)));
-        Assert.Equal("fulfillment.tracking.locked_after_dispatch", ex.Message);
+        Assert.Equal("fulfillment.tracking.locked_after_dispatch", ex.Code);
         Assert.Equal("TRK-NEW", unit.Shipments.Single().TrackingReference);
     }
 
@@ -398,8 +399,8 @@ public sealed class AdminOrderCorrectiveActionsTests
         payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-1", now.AddMinutes(1));
         payment.BeginOrderCancelRefund(now.AddMinutes(2));
         payment.MarkRefunded(now.AddMinutes(3));
-        var ex = Assert.Throws<InvalidOperationException>(() => payment.RestoreAfterOrderCancelRestore(now.AddMinutes(4)));
-        Assert.Equal("payment.restore.refund_completed", ex.Message);
+        var ex = Assert.Throws<ContractOperationException>(() => payment.RestoreAfterOrderCancelRestore(now.AddMinutes(4)));
+        Assert.Equal("payment.restore.refund_completed", ex.Code);
     }
 
     [Fact]
@@ -515,8 +516,8 @@ public sealed class AdminOrderCorrectiveActionsTests
     public void Composer_source_projects_restore_and_correct_tracking()
     {
         var root = FindRepoRoot();
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
+        var composer = OrderPartialSources.ReadAllAbsolute(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services"), "AdminOrderOperationsOrchestrator*.cs");
         Assert.Contains("restore_deposit", composer, StringComparison.Ordinal);
         Assert.Contains("unconfirm_deposit", composer, StringComparison.Ordinal);
         Assert.Contains("ApplyVerifiedSuccessAsync", composer, StringComparison.Ordinal);

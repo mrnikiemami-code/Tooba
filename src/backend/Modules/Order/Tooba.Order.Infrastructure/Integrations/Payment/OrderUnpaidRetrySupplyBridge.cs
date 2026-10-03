@@ -31,18 +31,18 @@ public sealed class OrderUnpaidRetrySupplyBridge(
         await cycles.CloseExpiredDueAsync(now, cancellationToken);
         var group = await orders.Checkouts.Include(x => x.SellerOrders).ThenInclude(x => x.Lines)
             .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
-            ?? throw new InvalidOperationException("payment.unpaid.supply_unavailable");
+            ?? throw new ContractOperationException("payment.unpaid.supply_unavailable");
         var projection = await cycles.GetProjectionAsync(checkoutId, now, null, cancellationToken);
         var active = await cycles.GetActiveAsync(checkoutId, cancellationToken);
         if (active is null && projection.RetryCountRemaining <= 0 && projection.TotalCyclesCreated > 0)
         {
             await cycles.RecordRetryLimitReachedAsync(checkoutId, now, cancellationToken);
-            throw new InvalidOperationException("inventory.reservation.retry_limit_reached");
+            throw new ContractOperationException("inventory.reservation.retry_limit_reached");
         }
 
         var lines = await BuildLinesAsync(group, cancellationToken);
         if (group.SellerOrders.All(x => x.Status == SellerOrderStatus.Cancelled))
-            throw new InvalidOperationException("payment.unpaid.supply_unavailable");
+            throw new ContractOperationException("payment.unpaid.supply_unavailable");
         if (active is null) await cycles.RecordReacquireRequestedAsync(checkoutId, now, cancellationToken);
         var result = await inventory.EnsureUnpaidRetryHoldAsync(
             new(checkoutId, active is null, active is null ? "unpaid-retry" : "active-cycle-retry", lines),
@@ -52,7 +52,7 @@ public sealed class OrderUnpaidRetrySupplyBridge(
         {
             if (active is null)
                 await cycles.RecordReacquireFailedAsync(checkoutId, now, result.Status, cancellationToken);
-            throw new InvalidOperationException("payment.unpaid.supply_unavailable");
+            throw new ContractOperationException("payment.unpaid.supply_unavailable");
         }
 
         foreach (var pair in result.NewBindingsByOrderLineId)

@@ -12,7 +12,10 @@ public sealed class OrderSupplyUxTests
     [Fact]
     public void List_items_carry_supply_status()
     {
-        var models = Host(Path.Combine("Admin", "Panel", "AdminPanelModels.cs"));
+        var models = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
+            "Modules", "Order", "Tooba.Order.Application", "Admin", "OrdersGrid", "Models",
+            "AdminOrdersGridModels.cs")));
         Assert.Contains("SupplyStatus", models, StringComparison.Ordinal);
         var orders = Host(Path.Combine(
             "..", "..", "Modules", "Order", "Tooba.Order.Infrastructure",
@@ -30,10 +33,10 @@ public sealed class OrderSupplyUxTests
     [Fact]
     public void Confirm_messages_and_recovery_capability()
     {
-        var ops = File.ReadAllText(Path.GetFullPath(Path.Combine(
+        var ops = OrderPartialSources.ReadAllAbsolute(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services",
-            "AdminOrderOperationsOrchestrator.cs")));
+            "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services"),
+            "AdminOrderOperationsOrchestrator*.cs");
         Assert.Contains("موجودی قابل تأمین است و هنگام تأیید واریز به‌صورت خودکار رزرو می‌شود.", ops, StringComparison.Ordinal);
         Assert.Contains("این سفارش در حال حاضر قابل تأمین نیست.", ops, StringComparison.Ordinal);
         Assert.Contains("canRecover", ops, StringComparison.Ordinal);

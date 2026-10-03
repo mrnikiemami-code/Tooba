@@ -223,7 +223,7 @@ public sealed class ReservationCycleFoundationTests
     public void Antipattern_scan_is_clean()
     {
         var dir = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/ReservationCycleDirectory.cs");
-        var checkout = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs");
+        var checkout = OrderPartialSources.ReadAll("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence", "CheckoutDirectory*.cs");
         var composer = Read("src/backend/Modules/Payment/Tooba.Payment.Application/Orchestration/StorefrontPaymentOrchestrator.cs");
         var cart = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs");
         Assert.Contains("CorrelatePaymentAttempt", dir, StringComparison.Ordinal);

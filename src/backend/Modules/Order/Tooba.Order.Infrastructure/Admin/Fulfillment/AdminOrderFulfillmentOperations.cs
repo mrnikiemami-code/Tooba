@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Order.Contracts.Fulfillment;
@@ -87,7 +88,7 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
                 _ => Fail("order.operation.invalid"),
             };
         }
-        catch (InvalidOperationException ex) when (TryMapStableMachineCode(ex.Message, out var mapped))
+        catch (ContractOperationException ex) when (TryMapStableMachineCode(ex.Code, out var mapped))
         {
             return Fail(mapped);
         }
@@ -328,29 +329,29 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
             .ToArray();
 
     /// <summary>
-    /// Maps only known stable machine codes. Persian/English prose is never mapped.
+    /// Maps only known stable machine codes from typed contract faults. Prose is never mapped.
     /// </summary>
-    private static bool TryMapStableMachineCode(string? message, out string code)
+    private static bool TryMapStableMachineCode(string? code, out string mapped)
     {
-        code = string.Empty;
-        if (string.IsNullOrWhiteSpace(message))
+        mapped = string.Empty;
+        if (string.IsNullOrWhiteSpace(code))
         {
             return false;
         }
 
         // Transition remap preserved for Fulfillment bulk consumers.
-        if (string.Equals(message, "fulfillment.cancel.already_dispatched", StringComparison.Ordinal))
+        if (string.Equals(code, "fulfillment.cancel.already_dispatched", StringComparison.Ordinal))
         {
-            code = "fulfillment.dispatch.already_dispatched";
+            mapped = "fulfillment.dispatch.already_dispatched";
             return true;
         }
 
-        if (message.StartsWith("fulfillment.", StringComparison.Ordinal)
-            || message.StartsWith("inventory.", StringComparison.Ordinal)
-            || message.StartsWith("shipping_service.", StringComparison.Ordinal)
-            || message.StartsWith("order.", StringComparison.Ordinal))
+        if (code.StartsWith("fulfillment.", StringComparison.Ordinal)
+            || code.StartsWith("inventory.", StringComparison.Ordinal)
+            || code.StartsWith("shipping_service.", StringComparison.Ordinal)
+            || code.StartsWith("order.", StringComparison.Ordinal))
         {
-            code = message;
+            mapped = code;
             return true;
         }
 

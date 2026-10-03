@@ -1060,13 +1060,13 @@
         "task": "TB-TMAR-ORDER-AMC-001",
         "mode": "ARCHITECT_DIRECT_AMSC",
         "skills": "Analyze,Migrate,Structure,Certify",
-        "state": "W4_CERTIFY_NOT_CERTIFIED",
+        "state": "W5_CERTIFY_COMPLETE_REFERENCE_PATTERN",
         "httpApplicability": "HTTP_OWNING",
         "endpointOwnership": "MODULE_ENDPOINTS",
         "moduleMap": "MapOrderModuleEndpoints",
         "cqrs": "MEDIATR_12_5",
         "priorStructureCertifiedUnderArchComplete002": true,
-        "completeReferencePattern": false,
+        "completeReferencePattern": true,
         "structureState": "READY_FOR_CERTIFY",
         "folderGranularity": "PROFESSIONAL_SHALLOW",
         "solutionExplorer": "CANONICAL_MODULES_ORDER",
@@ -1080,17 +1080,23 @@
         "apiResultMapping": "CANONICAL_HTML_CONTENT_SUCCESS_PATH_ONLY",
         "purchaseVerificationContract": "Tooba.Order.Contracts.PurchaseVerification",
         "reviewsInfrastructureBoundary": "ORDER_CONTRACTS_ONLY",
-        "certificationVerdict": "NOT_CERTIFIED",
-        "certificationBlockers": [
-            "StorefrontOrderResult.TryMapCheckoutDirectoryCode parses InvalidOperationException.Message",
-            "AdminOrderFulfillmentOperations.TryMapStableMachineCode parses InvalidOperationException.Message (incl. foreign shipping_service.*)",
-            "CheckoutDirectory.Reservations throws untyped InvalidOperationException for expected inventory/price/tax/promotion faults",
-            "OrderUnpaidRetrySupplyBridge / OrderSupplyCheckoutStore / SellerOrder / CartShippingDraft throw untyped InvalidOperationException for expected faults"
+        "expectedFaultCarrier": "TYPED_CONTRACT_OPERATION_FAULT_CODE_ONLY",
+        "messageClassificationState": "ZERO",
+        "certificationVerdict": "COMPLETE_REFERENCE_PATTERN_STRUCTURE_CERTIFIED",
+        "certificationBlockers": [],
+        "closedW4Blockers": [
+            "StorefrontOrderResult now catches ContractOperationException and maps ex.Code only (message parser deleted)",
+            "AdminOrderFulfillmentOperations now catches ContractOperationException and maps ex.Code only (message parser deleted, foreign shipping_service.* no longer text-matched)",
+            "CheckoutDirectory.Reservations / CheckoutDirectory / CheckoutSubmitHost emit ContractOperationException for expected faults",
+            "OrderUnpaidRetrySupplyBridge / OrderSupplyCheckoutStore / SellerOrder / CartShippingDraft / CheckoutProcess emit ContractOperationException for expected faults"
         ],
-        "repairScopeW5": "TYPED_CONTRACT_OPERATION_FAULT_MIGRATION_NO_MESSAGE_CLASSIFICATION",
+        "crossModuleTypedFaultProducers": [
+            "Tooba.Fulfillment.Application.Shipping.ShippingProviderMetadataValidator",
+            "Tooba.Payment.Application.Orchestration.StorefrontPaymentOrchestrator typed catch"
+        ],
         "hostFinalClosureRegression": "NONE",
         "sinkFolderRegression": "NONE",
-        "manifestPromoted": false,
+        "manifestPromoted": true,
         "schemaMigration": "NONE",
         "microserviceExtractable": true,
         "frontendFrozen": true,
@@ -1099,8 +1105,9 @@
         "evidenceW2": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W2/",
         "evidenceW3": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W3/",
         "evidenceW4": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W4/",
-        "nextWave": "W5_TYPED_FAULT_REPAIR_THEN_RECERTIFY",
-        "automaticNextImplementationTask": "TB-TMAR-ORDER-AMC-001-W5"
+        "evidenceW5": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W5/",
+        "nextWave": "NONE",
+        "automaticNextImplementationTask": "NONE"
     },
     "userPreferenceAmc001W4R1": {
         "task": "TB-TMAR-USERPREFERENCE-AMC-001-W4-R1",

@@ -446,11 +446,11 @@ public sealed class StorefrontPaymentOrchestrator
         {
             await _supply.EnsureRetrySupplyAsync(checkoutId, cancellationToken);
         }
-        catch (InvalidOperationException ex) when (PaymentExceptionMapper.TryMapExact(ex.Message, out _))
+        catch (ContractOperationException ex) when (PaymentExceptionMapper.TryMapExact(ex.Code, out _))
         {
             throw;
         }
-        catch (InvalidOperationException)
+        catch (Exception ex) when (ex is InvalidOperationException or ContractOperationException)
         {
             throw new InvalidOperationException(PaymentErrorCodes.UnpaidSupplyUnavailable);
         }

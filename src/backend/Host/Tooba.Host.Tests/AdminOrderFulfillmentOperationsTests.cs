@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Order.Contracts.Fulfillment;
@@ -99,7 +100,7 @@ public sealed class AdminOrderFulfillmentOperationsTests
         var shipmentId = Guid.NewGuid();
         var dir = new StubDirectory(fulfillmentId, sellerOrderId, checkoutId)
         {
-            DispatchThrows = new InvalidOperationException("fulfillment.dispatch.tracking_required"),
+            DispatchThrows = new ContractOperationException("fulfillment.dispatch.tracking_required"),
         };
         var ops = new AdminOrderFulfillmentOperations(
             new StubCheckout(false, [sellerOrderId]),

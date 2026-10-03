@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Checkout.Abuse;
 using Tooba.Order.Application.Checkout.Contracts;
@@ -33,8 +34,8 @@ public sealed class SellerOrderCancellationGuardTests
     {
         var order = OpenPending();
         order.RecordVerifiedPayment();
-        var ex = Assert.Throws<InvalidOperationException>(() => order.Cancel());
-        Assert.Contains("order.cancel.forbidden", ex.Message, StringComparison.Ordinal);
+        var ex = Assert.Throws<ContractOperationException>(() => order.Cancel());
+        Assert.Equal("order.cancel.forbidden", ex.Code);
     }
 
     [Fact]

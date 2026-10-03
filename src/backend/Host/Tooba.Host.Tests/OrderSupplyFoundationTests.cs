@@ -61,10 +61,20 @@ public sealed class OrderSupplyFoundationTests
     }
 
     private static string OrderOps() =>
-        File.ReadAllText(Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services",
-            "AdminOrderOperationsOrchestrator.cs")));
+        ReadAggregated(
+            Path.GetFullPath(Path.Combine(
+                AppContext.BaseDirectory, "..", "..", "..", "..", "..",
+                "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services")),
+            "AdminOrderOperationsOrchestrator*.cs");
+
+    /// <summary>
+    /// Aggregates cohesive partial files so guards assert the whole orchestrator, not one shard.
+    /// </summary>
+    private static string ReadAggregated(string directory, string searchPattern) =>
+        string.Concat(Directory
+            .GetFiles(directory, searchPattern, SearchOption.TopDirectoryOnly)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .Select(File.ReadAllText));
 
     [Fact]
     public void Confirm_uses_EnsurePaidDurable_and_blocks_unavailable()

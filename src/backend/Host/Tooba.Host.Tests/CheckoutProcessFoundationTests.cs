@@ -39,8 +39,8 @@ public sealed class CheckoutProcessFoundationTests
         process.MarkCartCommitting(now);
         process.MarkPaymentPending(now);
         Assert.True(process.IsSubmitSucceeded);
-        Assert.Throws<InvalidOperationException>(() => process.MarkFailed("x", now));
-        Assert.Throws<InvalidOperationException>(() => process.MarkValidating(now));
+        Assert.Throws<ContractOperationException>(() => process.MarkFailed("x", now));
+        Assert.Throws<ContractOperationException>(() => process.MarkValidating(now));
     }
 
     [Fact]
@@ -133,8 +133,8 @@ public sealed class CheckoutProcessFoundationTests
         p.MarkOrderPersisting(Guid.NewGuid(), now);
         p.MarkCartCommitting(now);
         p.MarkPaymentPending(now);
-        var ex = Assert.Throws<InvalidOperationException>(() => p.MarkFailed("nope", now));
-        Assert.Equal("checkout_process.transition.invalid", ex.Message);
+        var ex = Assert.Throws<ContractOperationException>(() => p.MarkFailed("nope", now));
+        Assert.Equal("checkout_process.transition.invalid", ex.Code);
     }
 
     private static OrderDbContext CreateDb(string? name = null)

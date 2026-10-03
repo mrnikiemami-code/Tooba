@@ -87,8 +87,8 @@ public sealed class AdminFulfillmentCapabilityTests
     public void Composer_source_projects_capabilities_without_n_plus_one()
     {
         var root = FindRepoRoot();
-        var composer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services", "AdminOrderOperationsOrchestrator.cs"));
+        var composer = OrderPartialSources.ReadAllAbsolute(Path.Combine(
+            root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Services"), "AdminOrderOperationsOrchestrator*.cs");
         var projector = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Admin", "Operations", "Policies", "AdminFulfillmentCapabilityProjector.cs"));
         Assert.Contains("AdminFulfillmentCapabilityProjector.Project", composer, StringComparison.Ordinal);

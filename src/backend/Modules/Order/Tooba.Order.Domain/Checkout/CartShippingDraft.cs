@@ -1,5 +1,7 @@
 ﻿namespace Tooba.Order.Domain.Checkout;
 
+using Tooba.BuildingBlocks;
+
 /// <summary>
 /// پیش‌نویس ارسال فروشگاهی وابسته به سبد. حقیقت قیمت/حداقل تحویل از backend است نه React.
 /// </summary>
@@ -156,7 +158,7 @@ public sealed class CartShippingDraft
         var note = string.IsNullOrWhiteSpace(customerNote) ? null : customerNote.Trim();
         if (note is { Length: > CustomerNoteMaxLength })
         {
-            throw new InvalidOperationException("shipping.note.too_long");
+            throw new ContractOperationException("shipping.note.too_long");
         }
 
         CustomerNote = note;
