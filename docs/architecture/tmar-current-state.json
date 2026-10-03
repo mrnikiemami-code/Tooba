@@ -1105,7 +1105,10 @@
         "evidenceW2": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W2/",
         "evidenceW3": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W3/",
         "evidenceW4": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W4/",
+        "certificationReconciliation": "W5_R1_MANIFEST_DISK_EXACT",
         "evidenceW5": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W5/",
+        "evidenceW5R1": "docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W5-R1/",
+        "workflowStop": "USER_REVIEW_ORDER_AMC_001_W5_R1",
         "nextWave": "NONE",
         "automaticNextImplementationTask": "NONE"
     },

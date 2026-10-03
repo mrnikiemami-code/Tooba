@@ -56,8 +56,12 @@ The prefix mapping (`inventory.`, `PRICE_CHANGED`, `PROMOTION_CHANGED`, `TAX_*`,
 | `catch (InvalidOperationException ex) when (TryMapStableMachineCode(ex.Message, out var mapped))` | `catch (ContractOperationException ex) when (TryMapStableMachineCode(ex.Code, out var mapped))` |
 
 The preserved transition remap `fulfillment.cancel.already_dispatched → fulfillment.dispatch.already_dispatched`
-is now keyed on `Code`. Because the carrier is typed, Order no longer classifies the **foreign** Fulfillment
-`shipping_service.*` text — that dependency is gone.
+is now keyed on `Code`.
+
+**Message-text** classification/dependency is removed: Order no longer reads any exception prose, and it no
+longer depends on the *text* of the foreign Fulfillment `shipping_service.*` messages. **Typed contract-code**
+classification remains allowed and is preserved — `shipping_service.*` is interpreted only from
+`ContractOperationException.Code`, never from `Exception.Message`.
 
 ## B3 closure — producers now emit the typed fault
 

@@ -32,7 +32,7 @@ evidence remains current for this exact surface (structure regression cannot be 
 | Blocker | State | Evidence |
 |---|---|---|
 | B1 storefront message classification | `CLOSED` | `StorefrontOrderResult` catches `ContractOperationException`, maps `ex.Code`; message parser deleted |
-| B2 admin fulfillment message classification | `CLOSED` | `AdminOrderFulfillmentOperations` catches `ContractOperationException`, maps `ex.Code`; foreign `shipping_service.*` text dependency removed |
+| B2 admin fulfillment message classification | `CLOSED` | `AdminOrderFulfillmentOperations` catches `ContractOperationException`, maps `ex.Code`; message-text classification removed, typed `shipping_service.*` code classification preserved |
 | B3 untyped expected-fault throws | `CLOSED` | 8 Order production files migrated to `ContractOperationException(code)` |
 
 ## Certified-PASS surface (verified this wave)
@@ -116,9 +116,12 @@ independent of Order AMC-001:
 
 ## Manifest and SoT
 
-- `tmar-module-structure-manifests.json`: Order entry remains a single certified entry with
-  `structureCertified: true`, `lockVersion: ARCH-COMPLETE-002`, exact root allowlists, forbidden root files,
-  and forbidden top-level folders. No pre-cert duplicate exists. Not weakened.
+- `tmar-module-structure-manifests.json`: Order is a single certified entry with `structureCertified: true`,
+  `lockVersion: ARCH-COMPLETE-002`, and exactly the five certified production projects
+  (`Tooba.Order.Domain`, `Tooba.Order.Contracts`, `Tooba.Order.Application`, `Tooba.Order.Endpoints`,
+  `Tooba.Order.Infrastructure`) with root allowlists equal to the real on-disk top-level `.cs` files.
+  This exactness was reconciled and made durable in `TB-TMAR-ORDER-AMC-001-W5-R1`; see
+  `docs/architecture/evidence/TB-TMAR-ORDER-AMC-001-W5-R1/manifest-reconciliation.md`.
 - `tmar-current-state.json` → `orderAmc001`: promoted to
   `W5_CERTIFY_COMPLETE_REFERENCE_PATTERN`, `completeReferencePattern: true`,
   `certificationVerdict: COMPLETE_REFERENCE_PATTERN_STRUCTURE_CERTIFIED`, `certificationBlockers: []`,

@@ -848,8 +848,38 @@
       "lockVersion": "ARCH-COMPLETE-002",
       "projects": [
         {
-          "projectName": "Tooba.Order.Application",
+          "projectName": "Tooba.Order.Domain",
+          "rootAllowlist": [
+            "GlobalUsings.cs"
+          ],
+          "forbiddenRootFiles": [
+            "CheckoutGroup.cs",
+            "CheckoutOperationalNote.cs",
+            "CheckoutAdminViewAck.cs",
+            "OrderLine.cs",
+            "SellerOrder.cs",
+            "CartShippingDraft.cs",
+            "CheckoutProcess.cs",
+            "CheckoutReservationCommit.cs",
+            "OrderMode.cs",
+            "SellerOrderStatus.cs",
+            "ReservationCycle.cs",
+            "InvoiceHeaderSemantics.cs",
+            "OpenUnpaidOrderPredicate.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Order.Contracts",
           "rootAllowlist": [],
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Order.Application",
+          "rootAllowlist": [
+            "GlobalUsings.cs"
+          ],
           "forbiddenRootFiles": [
             "OrderContracts.cs",
             "CheckoutAbuseContracts.cs",
@@ -887,6 +917,7 @@
         {
           "projectName": "Tooba.Order.Infrastructure",
           "rootAllowlist": [
+            "GlobalUsings.cs",
             "OrderModule.cs"
           ],
           "forbiddenRootFiles": [
