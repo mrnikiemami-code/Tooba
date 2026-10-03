@@ -3,8 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.ModuleContracts;
 using Tooba.Party.Application.Ports;
+using Tooba.Party.Contracts.Errors;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Party.Infrastructure.Adapters;
 using Tooba.Party.Infrastructure.Admin;
@@ -34,6 +37,8 @@ public sealed class PartyModule : IToobaModule
         ArgumentNullException.ThrowIfNull(environment);
 
         services.AddSingleton<IOutboxModuleRegistration, PartyOutboxRegistration>();
+        services.AddSingleton<IErrorCatalogContributor, PartyErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, PartyErrorResourceSet>();
         services.AddScoped<IPartyDirectory, PartyDirectory>();
         services.AddScoped<IPartySellerSettings, Tooba.Party.Infrastructure.Seller.PartySellerSettingsAdapter>();
         services.AddScoped<IPartyDevelopmentSeedGateway, PartyDevelopmentSeedGateway>();

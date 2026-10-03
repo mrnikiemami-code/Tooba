@@ -43,8 +43,10 @@ public sealed class HostSellerAmcR3GuardTests
         var module = Read("src/backend/Modules/Party/Tooba.Party.Endpoints/PartyEndpointModule.cs");
         Assert.Equal(1, Regex.Matches(module, @"PartySellerSettingsEndpoints\.Map\(").Count);
         Assert.Contains("/v1/seller/settings", module, StringComparison.Ordinal);
-        Assert.Contains("IErrorCatalogContributor, PartyErrorCatalogContributor", module, StringComparison.Ordinal);
-        Assert.Contains("IErrorResourceSet, PartyErrorResourceSet", module, StringComparison.Ordinal);
+
+        var infraModule = Read("src/backend/Modules/Party/Tooba.Party.Infrastructure/PartyModule.cs");
+        Assert.Contains("IErrorCatalogContributor, PartyErrorCatalogContributor", infraModule, StringComparison.Ordinal);
+        Assert.Contains("IErrorResourceSet, PartyErrorResourceSet", infraModule, StringComparison.Ordinal);
 
         var program = Read("src/backend/Host/Tooba.Host/Program.cs");
         Assert.Contains("MapPartyEndpoints()", program, StringComparison.Ordinal);
@@ -103,7 +105,8 @@ public sealed class HostSellerAmcR3GuardTests
 
         var command = Read("src/backend/Modules/Party/Tooba.Party.Application/Seller/Commands/UpdateSellerSettingsCommand.cs");
         Assert.Contains("IRequest<Result<PartySellerSettingsView>>", command, StringComparison.Ordinal);
-        Assert.Contains("PartySellerSettingsErrorCodes.Rejected", command, StringComparison.Ordinal);
+        Assert.Contains("PartyOperation.ExecuteAsync", command, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (InvalidOperationException)", command, StringComparison.Ordinal);
 
         var infrastructure = Read("src/backend/Modules/Party/Tooba.Party.Infrastructure/Seller/PartySellerSettingsAdapter.cs");
         Assert.Contains(": IPartySellerSettings", infrastructure, StringComparison.Ordinal);
@@ -118,18 +121,18 @@ public sealed class HostSellerAmcR3GuardTests
     [Fact]
     public void Seller_settings_error_codes_keep_parity_and_no_duplicate_descriptor_is_registered()
     {
-        var codes = Read("src/backend/Modules/Party/Tooba.Party.Application/Seller/PartySellerSettingsErrorCodes.cs");
+        var codes = Read("src/backend/Modules/Party/Tooba.Party.Contracts/Errors/PartyErrorCodes.cs");
         Assert.Contains("\"seller.settings.missing\"", codes, StringComparison.Ordinal);
         Assert.Contains("\"seller.settings.rejected\"", codes, StringComparison.Ordinal);
 
-        var contributor = Read("src/backend/Modules/Party/Tooba.Party.Endpoints/Errors/PartyErrorCatalogContributor.cs");
-        Assert.Contains("PartySellerSettingsErrorCodes.Missing", contributor, StringComparison.Ordinal);
-        Assert.Contains("PartySellerSettingsErrorCodes.Rejected", contributor, StringComparison.Ordinal);
+        var contributor = Read("src/backend/Modules/Party/Tooba.Party.Contracts/Errors/PartyErrorCatalogContributor.cs");
+        Assert.Contains("PartyErrorCodes.SellerSettingsMissing", contributor, StringComparison.Ordinal);
+        Assert.Contains("PartyErrorCodes.SellerSettingsRejected", contributor, StringComparison.Ordinal);
         // seller.authorization.denied stays owned by FoundationErrorCatalogContributor (no duplicate).
         Assert.DoesNotContain("\"seller.authorization.denied\"", contributor, StringComparison.Ordinal);
 
         var query = Read("src/backend/Modules/Party/Tooba.Party.Application/Seller/Queries/GetSellerSettingsQuery.cs");
-        Assert.Contains("PartySellerSettingsErrorCodes.Missing", query, StringComparison.Ordinal);
+        Assert.Contains("PartyErrorCodes.SellerSettingsMissing", query, StringComparison.Ordinal);
     }
 
     [Fact]

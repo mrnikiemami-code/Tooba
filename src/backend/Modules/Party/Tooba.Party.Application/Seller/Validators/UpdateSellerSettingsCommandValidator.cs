@@ -1,7 +1,7 @@
 using FluentValidation;
+using Tooba.Party.Application.Seller.Commands;
+using Tooba.Party.Contracts.Errors;
 using Tooba.Party.Domain.Aggregates;
-using Tooba.Party.Domain.Enums;
-using Tooba.Party.Domain.Events;
 
 namespace Tooba.Party.Application.Seller.Validators;
 
@@ -11,35 +11,35 @@ namespace Tooba.Party.Application.Seller.Validators;
 /// در Application/Domain می‌مانند.
 /// </summary>
 public sealed class UpdateSellerSettingsCommandValidator
-    : AbstractValidator<Commands.UpdateSellerSettingsCommand>
+    : AbstractValidator<UpdateSellerSettingsCommand>
 {
     /// <summary>قواعد شکل/طول ورودی را ثبت می‌کند.</summary>
     public UpdateSellerSettingsCommandValidator()
     {
         RuleFor(x => x.Input.DisplayName)
             .NotEmpty()
-            .WithErrorCode(PartySellerSettingsValidationCodes.DisplayNameRequired)
+            .WithErrorCode(PartyErrorCodes.DisplayNameRequired)
             .MaximumLength(256)
-            .WithErrorCode(PartySellerSettingsValidationCodes.DisplayNameLength);
+            .WithErrorCode(PartyErrorCodes.DisplayNameLength);
 
         RuleFor(x => x.Input.LegalName)
             .MaximumLength(256)
-            .WithErrorCode(PartySellerSettingsValidationCodes.LegalNameShape);
+            .WithErrorCode(PartyErrorCodes.LegalNameShape);
 
         RuleFor(x => x.Input.Description)
             .MaximumLength(BusinessParty.DescriptionMaxLength)
-            .WithErrorCode(PartySellerSettingsValidationCodes.DescriptionShape);
+            .WithErrorCode(PartyErrorCodes.DescriptionShape);
 
         RuleFor(x => x.Input.SupportPhone)
             .MaximumLength(BusinessParty.SupportPhoneMaxLength)
-            .WithErrorCode(PartySellerSettingsValidationCodes.SupportPhoneShape);
+            .WithErrorCode(PartyErrorCodes.SupportPhoneShape);
 
         RuleFor(x => x.Input.SupportEmail)
             .MaximumLength(BusinessParty.SupportEmailMaxLength)
-            .WithErrorCode(PartySellerSettingsValidationCodes.SupportEmailShape);
+            .WithErrorCode(PartyErrorCodes.SupportEmailShape);
 
         RuleFor(x => x.Input.AddressLine)
             .MaximumLength(BusinessParty.AddressLineMaxLength)
-            .WithErrorCode(PartySellerSettingsValidationCodes.AddressLineShape);
+            .WithErrorCode(PartyErrorCodes.AddressLineShape);
     }
 }

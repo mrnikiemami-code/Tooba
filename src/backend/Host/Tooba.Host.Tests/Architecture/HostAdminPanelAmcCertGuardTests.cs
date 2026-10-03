@@ -113,7 +113,7 @@ public sealed class HostAdminPanelAmcCertGuardTests
         var list = Read("src/backend/Modules/Party/Tooba.Party.Application/Admin/Sellers/Queries/ListAdminSellersQuery.cs");
         var query = Read("src/backend/Modules/Party/Tooba.Party.Application/Admin/Sellers/Queries/QueryAdminSellersGridQuery.cs");
         var validator = Read("src/backend/Modules/Party/Tooba.Party.Application/Admin/Sellers/Validators/QueryAdminSellersGridQueryValidator.cs");
-        var codes = Read("src/backend/Modules/Party/Tooba.Party.Application/Admin/Sellers/Validators/PartyAdminSellersValidationCodes.cs");
+        var codes = Read("src/backend/Modules/Party/Tooba.Party.Contracts/Errors/PartyErrorCodes.cs");
 
         Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);

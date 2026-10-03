@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Party.Contracts.Errors;
 using Tooba.Party.Domain.Enums;
 using Tooba.Party.Domain.Events;
 
@@ -114,7 +115,7 @@ public sealed class BusinessParty : IHasDomainEvents
     {
         if (Kind != PartyKind.Organization)
         {
-            throw new InvalidOperationException("قابلیت تجاری فقط روی Organization معنا دارد.");
+            throw new SemanticException(new SemanticError(PartyErrorCodes.OperationRejected));
         }
 
         ArgumentException.ThrowIfNullOrWhiteSpace(capabilityCode);
@@ -144,25 +145,25 @@ public sealed class BusinessParty : IHasDomainEvents
     {
         if (Kind != PartyKind.Organization)
         {
-            throw new InvalidOperationException("پروفایل سازمانی فقط برای Organization معنا دارد.");
+            throw new SemanticException(new SemanticError(PartyErrorCodes.SellerSettingsRejected));
         }
 
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
         DisplayName = displayName.Trim();
         if (DisplayName.Length > 256)
         {
-            throw new InvalidOperationException("نام نمایشی سازمان بیش از حد بلند است.");
+            throw new SemanticException(new SemanticError(PartyErrorCodes.SellerSettingsRejected));
         }
 
-        LegalName = OptionalBounded(legalName, 256, "نام حقوقی بیش از حد بلند است.");
-        Description = OptionalBounded(description, DescriptionMaxLength, "توضیح سازمان بیش از حد بلند است.");
-        SupportPhone = OptionalBounded(supportPhone, SupportPhoneMaxLength, "تلفن پشتیبانی بیش از حد بلند است.");
-        SupportEmail = OptionalBounded(supportEmail, SupportEmailMaxLength, "ایمیل پشتیبانی بیش از حد بلند است.");
-        AddressLine = OptionalBounded(addressLine, AddressLineMaxLength, "نشانی سازمان بیش از حد بلند است.");
+        LegalName = OptionalBounded(legalName, 256);
+        Description = OptionalBounded(description, DescriptionMaxLength);
+        SupportPhone = OptionalBounded(supportPhone, SupportPhoneMaxLength);
+        SupportEmail = OptionalBounded(supportEmail, SupportEmailMaxLength);
+        AddressLine = OptionalBounded(addressLine, AddressLineMaxLength);
         UpdatedAt = now;
     }
 
-    private static string? OptionalBounded(string? value, int max, string message)
+    private static string? OptionalBounded(string? value, int max)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -172,7 +173,7 @@ public sealed class BusinessParty : IHasDomainEvents
         var trimmed = value.Trim();
         if (trimmed.Length > max)
         {
-            throw new InvalidOperationException(message);
+            throw new SemanticException(new SemanticError(PartyErrorCodes.SellerSettingsRejected));
         }
 
         return trimmed;

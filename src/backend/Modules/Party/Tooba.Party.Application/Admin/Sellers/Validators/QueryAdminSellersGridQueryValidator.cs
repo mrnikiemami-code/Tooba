@@ -1,5 +1,6 @@
 using FluentValidation;
 using Tooba.Party.Application.Admin.Sellers.Queries;
+using Tooba.Party.Contracts.Errors;
 
 namespace Tooba.Party.Application.Admin.Sellers.Validators;
 
@@ -14,6 +15,6 @@ public sealed class QueryAdminSellersGridQueryValidator : AbstractValidator<Quer
     {
         RuleFor(x => x.Request)
             .NotNull()
-            .WithErrorCode(PartyAdminSellersValidationCodes.GridRequestRequired);
+            .WithErrorCode(PartyErrorCodes.AdminSellersGridRequestRequired);
     }
 }

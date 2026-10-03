@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="seller.settings.missing" xml:space="preserve">
+    <value>Not Found</value>
+  </data>
+  <data name="seller.settings.rejected" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="party.operation.rejected" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="seller.settings.validation.display_name_required" xml:space="preserve">
+    <value>Display name is required.</value>
+  </data>
+  <data name="seller.settings.validation.display_name_length" xml:space="preserve">
+    <value>Display name is too long.</value>
+  </data>
+  <data name="seller.settings.validation.legal_name_shape" xml:space="preserve">
+    <value>Legal name is invalid.</value>
+  </data>
+  <data name="seller.settings.validation.description_shape" xml:space="preserve">
+    <value>Description is invalid.</value>
+  </data>
+  <data name="seller.settings.validation.support_phone_shape" xml:space="preserve">
+    <value>Support phone is invalid.</value>
+  </data>
+  <data name="seller.settings.validation.support_email_shape" xml:space="preserve">
+    <value>Support email is invalid.</value>
+  </data>
+  <data name="seller.settings.validation.address_line_shape" xml:space="preserve">
+    <value>Address line is invalid.</value>
+  </data>
+  <data name="party.admin.sellers.validation.grid_request_required" xml:space="preserve">
+    <value>Grid request is required.</value>
+  </data>
+</root>

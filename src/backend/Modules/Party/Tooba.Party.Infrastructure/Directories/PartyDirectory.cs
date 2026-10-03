@@ -1,18 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-
-
-
-using Tooba.Party.Infrastructure.Persistence;
-
+using Tooba.BuildingBlocks;
 using Tooba.Party.Application.Models;
-
 using Tooba.Party.Application.Ports;
-
-using Tooba.Party.Domain.Aggregates;
-
-using Tooba.Party.Domain.Enums;
-
+using Tooba.Party.Contracts.Errors;
 using Tooba.Party.Contracts.Ports;
+using Tooba.Party.Domain.Aggregates;
+using Tooba.Party.Domain.Enums;
+using Tooba.Party.Infrastructure.Persistence;
 
 namespace Tooba.Party.Infrastructure.Directories;
 
@@ -121,7 +115,7 @@ public sealed class PartyDirectory : IPartyDirectory, IPartyLookupGateway, IPart
     {
         if (!await _db.Parties.AnyAsync(x => x.PartyId == partyId, cancellationToken))
         {
-            throw new InvalidOperationException("Party مقصد پیوند در این پایگاه Tenant وجود ندارد.");
+            throw new SemanticException(new SemanticError(PartyErrorCodes.OperationRejected));
         }
 
         var link = UserPartyLink.Bind(userId, partyId, DateTimeOffset.UtcNow);
@@ -135,7 +129,7 @@ public sealed class PartyDirectory : IPartyDirectory, IPartyLookupGateway, IPart
     {
         if (!await _db.Parties.AnyAsync(x => x.PartyId == partyId, cancellationToken))
         {
-            throw new InvalidOperationException("Party مقصد عضویت در این پایگاه Tenant وجود ندارد.");
+            throw new SemanticException(new SemanticError(PartyErrorCodes.OperationRejected));
         }
 
         var membership = PartyMembership.Establish(userId, partyId, relationCode, DateTimeOffset.UtcNow);
@@ -151,7 +145,7 @@ public sealed class PartyDirectory : IPartyDirectory, IPartyLookupGateway, IPart
         var to = await _db.Parties.SingleAsync(x => x.PartyId == toPartyId, cancellationToken);
         if (from.Kind != PartyKind.Organization || to.Kind != PartyKind.Organization)
         {
-            throw new InvalidOperationException("رابطهٔ سازمانی فقط بین دو Organization است.");
+            throw new SemanticException(new SemanticError(PartyErrorCodes.OperationRejected));
         }
 
         var relationship = OrganizationRelationship.Connect(fromPartyId, toPartyId, relationCode, DateTimeOffset.UtcNow);
@@ -191,7 +185,7 @@ public sealed class PartyDirectory : IPartyDirectory, IPartyLookupGateway, IPart
         CancellationToken cancellationToken)
     {
         var party = await _db.Parties.SingleOrDefaultAsync(x => x.PartyId == partyId, cancellationToken)
-            ?? throw new InvalidOperationException("سازمان مقصد پروفایل یافت نشد.");
+            ?? throw new SemanticException(new SemanticError(PartyErrorCodes.SellerSettingsRejected));
         party.UpdateOrganizationProfile(
             input.DisplayName,
             input.LegalName,

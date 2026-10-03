@@ -2,6 +2,7 @@ using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Party.Application.Seller.Models;
+using Tooba.Party.Contracts.Errors;
 using Tooba.Party.Contracts.Ports;
 
 namespace Tooba.Party.Application.Seller.Queries;
@@ -26,7 +27,7 @@ public sealed class GetSellerSettingsQueryHandler(IPartySellerSettings settings)
         if (snapshot is null)
         {
             return Result.Failure<PartySellerSettingsView>(
-                new SemanticError(PartySellerSettingsErrorCodes.Missing));
+                new SemanticError(PartyErrorCodes.SellerSettingsMissing));
         }
 
         return Result.Success(new PartySellerSettingsView(

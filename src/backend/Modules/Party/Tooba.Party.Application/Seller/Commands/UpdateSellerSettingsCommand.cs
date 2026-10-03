@@ -1,6 +1,6 @@
 using MediatR;
-using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Party.Application.Composition;
 using Tooba.Party.Application.Seller.Models;
 using Tooba.Party.Contracts.Ports;
 
@@ -23,11 +23,10 @@ public sealed class UpdateSellerSettingsCommandHandler(IPartySellerSettings sett
     : IRequestHandler<UpdateSellerSettingsCommand, Result<PartySellerSettingsView>>
 {
     /// <inheritdoc />
-    public async Task<Result<PartySellerSettingsView>> Handle(
+    public Task<Result<PartySellerSettingsView>> Handle(
         UpdateSellerSettingsCommand request,
-        CancellationToken cancellationToken)
-    {
-        try
+        CancellationToken cancellationToken) =>
+        PartyOperation.ExecuteAsync(async () =>
         {
             var updated = await settings.UpdateAsync(
                 request.SellerPartyId,
@@ -40,7 +39,7 @@ public sealed class UpdateSellerSettingsCommandHandler(IPartySellerSettings sett
                     request.Input.AddressLine),
                 cancellationToken);
 
-            return Result.Success(new PartySellerSettingsView(
+            return new PartySellerSettingsView(
                 updated.PartyId,
                 updated.DisplayName,
                 updated.LegalName,
@@ -49,13 +48,6 @@ public sealed class UpdateSellerSettingsCommandHandler(IPartySellerSettings sett
                 updated.SupportEmail,
                 updated.AddressLine,
                 updated.UpdatedAt,
-                CanManage: true));
-        }
-        catch (InvalidOperationException)
-        {
-            // Domain reject (Person مقصد یا مرز اعتبارسنجی دامنه) — همان معنای ۴۰۰ قرارداد قبلی.
-            return Result.Failure<PartySellerSettingsView>(
-                new SemanticError(PartySellerSettingsErrorCodes.Rejected));
-        }
-    }
+                CanManage: true);
+        });
 }
