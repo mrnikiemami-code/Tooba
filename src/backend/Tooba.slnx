@@ -24,9 +24,6 @@
     <Project Path="Modules/BulkInquiry/Tooba.BulkInquiry.Domain/Tooba.BulkInquiry.Domain.csproj" />
     <Project Path="Modules/BulkInquiry/Tooba.BulkInquiry.Application/Tooba.BulkInquiry.Application.csproj" />
     <Project Path="Modules/BulkInquiry/Tooba.BulkInquiry.Infrastructure/Tooba.BulkInquiry.Infrastructure.csproj" />
-    <Project Path="Modules/PageComposition/Tooba.PageComposition.Domain/Tooba.PageComposition.Domain.csproj" />
-    <Project Path="Modules/PageComposition/Tooba.PageComposition.Application/Tooba.PageComposition.Application.csproj" />
-    <Project Path="Modules/PageComposition/Tooba.PageComposition.Infrastructure/Tooba.PageComposition.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/Modules/Story/">
     <Project Path="Modules/Story/Tooba.Story.Domain/Tooba.Story.Domain.csproj" />
@@ -69,6 +66,13 @@
     <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Application/Tooba.ProductQnA.Application.csproj" />
     <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Infrastructure/Tooba.ProductQnA.Infrastructure.csproj" />
     <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Endpoints/Tooba.ProductQnA.Endpoints.csproj" />
+  </Folder>
+  <Folder Name="/Modules/PageComposition/">
+    <Project Path="Modules/PageComposition/Tooba.PageComposition.Domain/Tooba.PageComposition.Domain.csproj" />
+    <Project Path="Modules/PageComposition/Tooba.PageComposition.Contracts/Tooba.PageComposition.Contracts.csproj" />
+    <Project Path="Modules/PageComposition/Tooba.PageComposition.Application/Tooba.PageComposition.Application.csproj" />
+    <Project Path="Modules/PageComposition/Tooba.PageComposition.Infrastructure/Tooba.PageComposition.Infrastructure.csproj" />
+    <Project Path="Modules/PageComposition/Tooba.PageComposition.Endpoints/Tooba.PageComposition.Endpoints.csproj" />
   </Folder>
   <Folder Name="/Modules/OperatorProfile/">
     <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Domain/Tooba.OperatorProfile.Domain.csproj" />
