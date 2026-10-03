@@ -33,8 +33,6 @@ public static class ModuleSchemaMigrationOrder
     public const int Fulfillment = 11;
     /// <summary>Promotion migration order.</summary>
     public const int Promotion = 12;
-    /// <summary>PlatformProbe migration order.</summary>
-    public const int PlatformProbe = 13;
     /// <summary>Reviews migration order.</summary>
     public const int Reviews = 14;
     /// <summary>ProductQnA migration order.</summary>

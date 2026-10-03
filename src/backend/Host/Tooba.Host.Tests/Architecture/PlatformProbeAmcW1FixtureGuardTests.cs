@@ -74,11 +74,9 @@ public sealed class PlatformProbeAmcW1FixtureGuardTests
     }
 
     [Fact]
-    public void Production_platform_probe_source_tree_remains_for_deferred_w3_cleanup()
+    public void Production_platform_probe_source_tree_is_absent_after_w3()
     {
-        var root = Repo();
-        Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/PlatformProbe/Tooba.PlatformProbe.Infrastructure/PlatformProbeModule.cs")));
+        Assert.False(Directory.Exists(Path.Combine(Repo(), "src/backend/Modules/PlatformProbe")));
     }
 
     private static string Repo()

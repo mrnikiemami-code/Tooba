@@ -31,14 +31,14 @@ Worker tenant is not Host
 - `IIntegrationEventPublisher` boundary (T006 in-process publisher is now an explicit Testing double; production default is MassTransit SQL Transport in T007).
 - `IIntegrationEventHandler<T>` consumed after claim.
 - Hosted dispatcher from `Tooba:Outbox` (poll interval, batch size, retry base delay, max attempts).
-- `IOutboxModuleRegistration` so PlatformProbe registers as sample DI; generic interceptor/store do not hard-code probe names.
+- `IOutboxModuleRegistration` so modules register DI without hard-coding probe names into the generic interceptor/store.
 - Inbox seam: `IInboxProcessedStore` interface only (full inbox table deferred).
-- Disposable PlatformProbe sample: domain + integration event, schema `platform_probe.outbox_messages`, EF migration.
+- Historical PlatformProbe disposable sample (now retired from production): domain + integration event, schema `platform_probe.outbox_messages`; foundation proof continues via Host.Tests fixture.
 - JSON payload with explicit event-type map; metadata taken from columns so payload cannot spoof TenantId.
 - LastError sanitizer: no secrets, stack, or payload.
 - Observability via existing `ToobaTelemetry` (event type / tenant / schema tags only).
 
-PlatformProbe remains disposable convention proof. This is not Catalog, Identity, SpiceDB, or a bus.
+PlatformProbe was the original disposable convention proof and is no longer an active production module; the test-owned Host.Tests fixture carries foundation proof. This is not Catalog, Identity, SpiceDB, or a bus.
 
 ## Domain vs Integration
 
@@ -47,7 +47,7 @@ Domain Event = internal fact inside one module
 Integration Event = versioned externalized fact
 ```
 
-Not every domain event is published. PlatformProbe raises `ProbeRecordCreatedDomainEvent` (translated) and can raise `ProbeInternalNoteDomainEvent` (no translation → no outbox row).
+Not every domain event is published. The historical PlatformProbe sample (and current Host.Tests fixture) raise `ProbeRecordCreatedDomainEvent` (translated) and can raise `ProbeInternalNoteDomainEvent` (no translation → no outbox row).
 
 ## Outbox vs broker
 

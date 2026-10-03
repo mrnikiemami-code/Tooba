@@ -230,7 +230,7 @@ OpenTelemetry contrib package alignment later
 /__platform-* diagnostic endpoints before public deploy
 config-backed tenant registry is not production control plane
 Npgsql package alignment (EF Instant conversion vs MassTransit Dapper timestamptz)
-PlatformProbe disposable
+PlatformProbe retired from production (foundation proof via Host.Tests fixture; deployed schema may remain orphaned)
 durable Inbox/dedup not complete
 SQL Transport admin vs runtime credentials should be split in production
 MassTransit delayed redelivery / SQL scheduler deferred
@@ -241,6 +241,6 @@ process-wide Npgsql NodaTime plugin remains incompatible with MassTransit SQL Tr
 
 Keep `IIntegrationEventPublisher` / `IIntegrationEventHandler<T>` if SQL Transport is later replaced by RabbitMQ or another MassTransit transport. Do not leak `IPublishEndpoint` into modules.
 
-## PlatformProbe
+## PlatformProbe (historical)
 
-Disposable proof only: local transaction → T006 outbox → SQL Transport → probe handler. Not a business module.
+Was disposable proof only: local transaction → T006 outbox → SQL Transport → probe handler. Not a business module. Production module source has been retired; Host.Tests `Fixtures/PlatformProbe` now carries the foundation proof. Deployed `platform_probe` schema may remain intentionally orphaned.

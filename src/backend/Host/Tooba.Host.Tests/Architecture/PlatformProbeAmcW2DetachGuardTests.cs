@@ -3,7 +3,7 @@ using Xunit;
 namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
-/// TB-TMAR-PLATFORMPROBE-AMC-001-W2 — production runtime detach; source retained for W3.
+/// TB-TMAR-PLATFORMPROBE-AMC-001-W2 — production runtime detach (source absence enforced after W3).
 /// </summary>
 public sealed class PlatformProbeAmcW2DetachGuardTests
 {
@@ -38,19 +38,16 @@ public sealed class PlatformProbeAmcW2DetachGuardTests
     }
 
     [Fact]
-    public void Fixture_preserved_and_production_source_retained_for_w3()
+    public void Fixture_preserved_and_production_source_absent_after_w3()
     {
         var root = Repo();
         Assert.True(Directory.Exists(Path.Combine(
             root, "src/backend/Host/Tooba.Host.Tests/Fixtures/PlatformProbe")));
-        Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/PlatformProbe/Tooba.PlatformProbe.Infrastructure/PlatformProbeModule.cs")));
-        Assert.True(File.Exists(Path.Combine(
-            root,
-            "src/backend/Modules/PlatformProbe/Tooba.PlatformProbe.Infrastructure/Persistence/Migrations/20260823000054_InitialPlatformProbe.cs")));
+        Assert.False(Directory.Exists(Path.Combine(root, "src/backend/Modules/PlatformProbe")));
         var order = File.ReadAllText(Path.Combine(
             root, "src/backend/BuildingBlocks/Tooba.Persistence/ModuleSchemaMigrator.cs"));
-        Assert.Contains("public const int PlatformProbe = 13;", order, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlatformProbe", order, StringComparison.Ordinal);
+        Assert.DoesNotContain("= 13;", order, StringComparison.Ordinal);
     }
 
     private static string Repo()

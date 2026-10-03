@@ -12,7 +12,6 @@
   </Folder>
   <Folder Name="/Modules/">
     <Project Path="Modules/Tooba.ModuleContracts/Tooba.ModuleContracts.csproj" />
-    <Project Path="Modules/PlatformProbe/Tooba.PlatformProbe.Infrastructure/Tooba.PlatformProbe.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/Modules/UserPreference/">
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Domain/Tooba.UserPreference.Domain.csproj" />
