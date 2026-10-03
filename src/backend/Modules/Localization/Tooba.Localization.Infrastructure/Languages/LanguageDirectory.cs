@@ -74,7 +74,7 @@ public sealed class LanguageDirectory : ILanguageDirectory
         }
     }
 
-    public async Task<LanguageSnapshot> CreateAsync(CreateLanguageCommand command, CancellationToken cancellationToken)
+    public async Task<LanguageSnapshot> CreateAsync(CreateLanguageSpec command, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
         var code = Language.NormalizeCode(command.Code);
@@ -114,7 +114,7 @@ public sealed class LanguageDirectory : ILanguageDirectory
 
     public async Task<LanguageSnapshot> UpdateAsync(
         string code,
-        UpdateLanguageCommand command,
+        UpdateLanguageSpec command,
         CancellationToken cancellationToken)
     {
         var language = await FindByCodeTrackedAsync(code, cancellationToken)
@@ -179,7 +179,7 @@ public sealed class LanguageDirectory : ILanguageDirectory
         return LanguageMappings.ToSnapshot(language);
     }
 
-    public async Task<LanguageSnapshot> PatchAsync(string code, PatchLanguageCommand command, CancellationToken cancellationToken)
+    public async Task<LanguageSnapshot> PatchAsync(string code, PatchLanguageSpec command, CancellationToken cancellationToken)
     {
         var language = await FindByCodeTrackedAsync(code, cancellationToken)
             ?? throw new SemanticException(new SemanticError(LanguageErrorCodes.NotFound));

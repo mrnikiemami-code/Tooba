@@ -2,7 +2,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Localization.Application.Ports;
+using Tooba.Localization.Contracts.Errors;
 using Tooba.Localization.Contracts.Ports;
 using Tooba.Localization.Infrastructure.Adapters;
 using Tooba.Localization.Infrastructure.Bootstrap;
@@ -21,6 +24,8 @@ public sealed class LocalizationModule : IToobaModule
     public void AddServices(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         services.AddSingleton<IOutboxModuleRegistration, LocalizationOutboxRegistration>();
+        services.AddSingleton<IErrorCatalogContributor, LocalizationErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, LocalizationErrorResourceSet>();
         services.AddScoped<ILanguageDirectory, LanguageDirectory>();
         services.AddScoped<ILanguageLookup, LanguageLookupBridge>();
         services.AddScoped<ILanguageActivationPort, LanguageActivationBridge>();

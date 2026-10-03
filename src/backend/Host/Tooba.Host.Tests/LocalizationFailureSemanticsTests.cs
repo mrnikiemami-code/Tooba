@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Tooba.BuildingBlocks;
 using Tooba.Localization.Application.Models;
@@ -32,7 +32,7 @@ public sealed class LocalizationFailureSemanticsTests : IDisposable
         await directory.BootstrapAsync(CancellationToken.None);
 
         var duplicate = await Assert.ThrowsAsync<SemanticException>(() => directory.CreateAsync(
-            new CreateLanguageCommand("fa-IR", "xx", "x", "x", "rtl", "fa-IR", "Jalali", true, false, 9),
+            new CreateLanguageSpec("fa-IR", "xx", "x", "x", "rtl", "fa-IR", "Jalali", true, false, 9),
             CancellationToken.None));
         Assert.Equal(LanguageErrorCodes.CodeDuplicate, duplicate.Error.Code);
 
@@ -47,7 +47,7 @@ public sealed class LocalizationFailureSemanticsTests : IDisposable
         var directory = new LanguageDirectory(_db, new AlwaysFalseGuard());
         await directory.BootstrapAsync(CancellationToken.None);
         var ex = await Assert.ThrowsAsync<SemanticException>(() => directory.CreateAsync(
-            new CreateLanguageCommand("en-US", "yy", "x", "x", "ltr", "en-US", "Gregorian", true, false, 9),
+            new CreateLanguageSpec("en-US", "yy", "x", "x", "ltr", "en-US", "Gregorian", true, false, 9),
             CancellationToken.None));
 
         Assert.Equal(LanguageErrorCodes.CodeDuplicate, ex.Error.Code);
@@ -66,7 +66,10 @@ public sealed class LocalizationFailureSemanticsTests : IDisposable
         Assert.DoesNotContain("ex.Message", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("StartsWith", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("Contains(", endpoints, StringComparison.Ordinal);
-        Assert.Contains("catch (SemanticException", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (SemanticException", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("ILanguageDirectory", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
+        Assert.Contains("api.From", endpoints, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
     }
 
@@ -92,3 +95,4 @@ public sealed class LocalizationFailureSemanticsTests : IDisposable
         throw new InvalidOperationException("repo root not found");
     }
 }
+

@@ -1,10 +1,10 @@
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Localization.Application.Models;
-using Tooba.Localization.Application.Ports;
+using Tooba.Localization.Application.Languages.Commands;
+using Tooba.Localization.Application.Languages.Queries;
 
 namespace Tooba.Localization.Endpoints.Admin;
 
@@ -24,38 +24,25 @@ public static class LocaleAdminEndpoints
     private static async Task<IResult> ListAsync(
         HttpContext httpContext,
         ILocalizationAdminAuthorizer adminAuthorizer,
-        ILanguageDirectory directory,
+        ISender sender,
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var rows = await directory.ListAdminAsync(cancellationToken);
-            return Results.Json(rows.Select(ToApiModel));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return api.FromPlatformException(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return api.FromSemanticException(ex);
-        }
+        await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+        return api.From(await sender.Send(new ListLanguagesAdminQuery(), cancellationToken));
     }
 
     private static async Task<IResult> CreateAsync(
         LanguageWriteRequest body,
         HttpContext httpContext,
         ILocalizationAdminAuthorizer adminAuthorizer,
-        ILanguageDirectory directory,
+        ISender sender,
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var created = await directory.CreateAsync(new CreateLanguageCommand(
+        await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+        return api.From(await sender.Send(
+            new CreateLanguageCommand(
                 body.Code ?? "",
                 body.UrlPrefix ?? "",
                 body.DisplayName ?? "",
@@ -65,17 +52,8 @@ public static class LocaleAdminEndpoints
                 body.CalendarDisplay ?? "Jalali",
                 body.Active ?? true,
                 body.IsDefault ?? false,
-                body.SortOrder ?? 0), cancellationToken);
-            return Results.Json(ToApiModel(created, isReferenced: false));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return api.FromPlatformException(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return api.FromSemanticException(ex);
-        }
+                body.SortOrder ?? 0),
+            cancellationToken));
     }
 
     private static async Task<IResult> UpdateAsync(
@@ -83,14 +61,14 @@ public static class LocaleAdminEndpoints
         LanguageWriteRequest body,
         HttpContext httpContext,
         ILocalizationAdminAuthorizer adminAuthorizer,
-        ILanguageDirectory directory,
+        ISender sender,
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var updated = await directory.UpdateAsync(code, new UpdateLanguageCommand(
+        await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+        return api.From(await sender.Send(
+            new UpdateLanguageCommand(
+                code,
                 body.Code,
                 body.UrlPrefix,
                 body.DisplayName ?? "",
@@ -100,18 +78,8 @@ public static class LocaleAdminEndpoints
                 body.CalendarDisplay ?? "Jalali",
                 body.Active ?? true,
                 body.IsDefault ?? false,
-                body.SortOrder ?? 0), cancellationToken);
-            var admin = await directory.GetAdminByCodeAsync(updated.Code, cancellationToken);
-            return Results.Json(admin is null ? ToApiModel(updated, false) : ToApiModel(admin));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return api.FromPlatformException(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return api.FromSemanticException(ex);
-        }
+                body.SortOrder ?? 0),
+            cancellationToken));
     }
 
     private static async Task<IResult> PatchAsync(
@@ -119,53 +87,15 @@ public static class LocaleAdminEndpoints
         LocalePatchRequest body,
         HttpContext httpContext,
         ILocalizationAdminAuthorizer adminAuthorizer,
-        ILanguageDirectory directory,
+        ISender sender,
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var updated = await directory.PatchAsync(code, new PatchLanguageCommand(body.Active, body.IsDefault, body.SortOrder), cancellationToken);
-            var admin = await directory.GetAdminByCodeAsync(updated.Code, cancellationToken);
-            return Results.Json(admin is null ? ToApiModel(updated, false) : ToApiModel(admin));
-        }
-        catch (PlatformHttpException ex)
-        {
-            return api.FromPlatformException(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return api.FromSemanticException(ex);
-        }
+        await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
+        return api.From(await sender.Send(
+            new PatchLanguageCommand(code, body.Active, body.IsDefault, body.SortOrder),
+            cancellationToken));
     }
-
-    private static object ToApiModel(LanguageAdminSnapshot row) =>
-        ToApiModel(row.Snapshot, row.IsReferenced, row.CanEditCode, row.CanEditUrlPrefix);
-
-    private static object ToApiModel(
-        LanguageSnapshot row,
-        bool isReferenced,
-        bool? canEditCode = null,
-        bool? canEditUrlPrefix = null) => new
-    {
-        languageId = row.LanguageId,
-        code = row.Code,
-        urlPrefix = row.UrlPrefix,
-        displayName = row.DisplayName,
-        nativeName = row.NativeName,
-        direction = row.Direction,
-        culture = row.Culture,
-        calendarDisplay = row.CalendarDisplay,
-        active = row.IsActive,
-        isDefault = row.IsDefault,
-        sortOrder = row.SortOrder,
-        createdAt = row.CreatedAt,
-        updatedAt = row.UpdatedAt,
-        isReferenced,
-        canEditCode = canEditCode ?? !isReferenced,
-        canEditUrlPrefix = canEditUrlPrefix ?? !isReferenced,
-    };
 }
 
 /// <summary>بدنهٔ PATCH زبان.</summary>

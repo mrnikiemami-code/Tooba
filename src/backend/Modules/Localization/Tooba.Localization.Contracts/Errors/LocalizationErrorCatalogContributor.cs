@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Localization.Contracts.Errors;
 
-namespace Tooba.Localization.Endpoints.Errors;
+namespace Tooba.Localization.Contracts.Errors;
 
 /// <summary>کاتالوگ کدهای خطای Localization language admin.</summary>
 public sealed class LocalizationErrorCatalogContributor : IErrorCatalogContributor

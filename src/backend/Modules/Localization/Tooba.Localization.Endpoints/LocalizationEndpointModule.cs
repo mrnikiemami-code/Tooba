@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Localization.Endpoints.Admin;
-using Tooba.Localization.Endpoints.Errors;
 
 namespace Tooba.Localization.Endpoints;
 
@@ -18,11 +16,13 @@ public static class LocalizationEndpointModule
         return app;
     }
 
-    /// <summary>Registers Localization endpoint presentation (error catalog).</summary>
+    /// <summary>
+    /// Host composition seam retained for presentation registration.
+    /// Error catalog/resources are owned by <c>LocalizationModule</c> (Infrastructure).
+    /// </summary>
     public static IServiceCollection AddLocalizationEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddSingleton<IErrorCatalogContributor, LocalizationErrorCatalogContributor>();
         return services;
     }
 }

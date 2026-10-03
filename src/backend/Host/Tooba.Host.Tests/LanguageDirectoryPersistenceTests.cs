@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Tooba.BuildingBlocks;
 using Tooba.Localization.Application.Models;
@@ -51,7 +51,7 @@ public sealed class LanguageDirectoryPersistenceTests : IDisposable
     {
         await _directory.BootstrapAsync(CancellationToken.None);
         var ex = await Assert.ThrowsAsync<SemanticException>(() => _directory.CreateAsync(
-            new CreateLanguageCommand("fa-IR", "fa2", "x", "x", "rtl", "fa-IR", "Jalali", true, false, 2),
+            new CreateLanguageSpec("fa-IR", "fa2", "x", "x", "rtl", "fa-IR", "Jalali", true, false, 2),
             CancellationToken.None));
         Assert.Equal(LanguageErrorCodes.CodeDuplicate, ex.Error.Code);
     }
@@ -64,7 +64,7 @@ public sealed class LanguageDirectoryPersistenceTests : IDisposable
         var directory = new LanguageDirectory(_db, referenced);
         var ex = await Assert.ThrowsAsync<SemanticException>(() => directory.UpdateAsync(
             "fa-IR",
-            new UpdateLanguageCommand("fa-IR-NEW", "fa", "فارسی", "فارسی", "rtl", "fa-IR", "Jalali", true, true, 0),
+            new UpdateLanguageSpec("fa-IR-NEW", "fa", "فارسی", "فارسی", "rtl", "fa-IR", "Jalali", true, true, 0),
             CancellationToken.None));
         Assert.Equal(LanguageErrorCodes.CodeInUse, ex.Error.Code);
     }
@@ -77,7 +77,7 @@ public sealed class LanguageDirectoryPersistenceTests : IDisposable
         var directory = new LanguageDirectory(_db, referenced);
         var ex = await Assert.ThrowsAsync<SemanticException>(() => directory.UpdateAsync(
             "fa-IR",
-            new UpdateLanguageCommand("fa-IR", "fa2", "فارسی", "فارسی", "rtl", "fa-IR", "Jalali", true, true, 0),
+            new UpdateLanguageSpec("fa-IR", "fa2", "فارسی", "فارسی", "rtl", "fa-IR", "Jalali", true, true, 0),
             CancellationToken.None));
         Assert.Equal(LanguageErrorCodes.UrlPrefixInUse, ex.Error.Code);
     }
@@ -89,7 +89,7 @@ public sealed class LanguageDirectoryPersistenceTests : IDisposable
         var directory = new LanguageDirectory(_db, new NoLanguageReferences());
         var updated = await directory.UpdateAsync(
             "en-US",
-            new UpdateLanguageCommand("en-GB", "gb", "English UK", "English", "ltr", "en-GB", "Gregorian", true, false, 1),
+            new UpdateLanguageSpec("en-GB", "gb", "English UK", "English", "ltr", "en-GB", "Gregorian", true, false, 1),
             CancellationToken.None);
         Assert.Equal("en-GB", updated.Code);
         Assert.Equal("gb", updated.UrlPrefix);
@@ -103,7 +103,7 @@ public sealed class LanguageDirectoryPersistenceTests : IDisposable
         var directory = new LanguageDirectory(_db, referenced);
         var updated = await directory.UpdateAsync(
             "fa-IR",
-            new UpdateLanguageCommand("fa-IR", "fa", "Persian", "فارسی", "rtl", "fa-IR", "Jalali", true, true, 0),
+            new UpdateLanguageSpec("fa-IR", "fa", "Persian", "فارسی", "rtl", "fa-IR", "Jalali", true, true, 0),
             CancellationToken.None);
         Assert.Equal("Persian", updated.DisplayName);
     }
@@ -137,3 +137,4 @@ public sealed class LanguageDirectoryPersistenceTests : IDisposable
             Task.FromResult(referenced.Contains(languageCode));
     }
 }
+

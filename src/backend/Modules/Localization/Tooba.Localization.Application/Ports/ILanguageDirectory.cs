@@ -10,8 +10,8 @@ public interface ILanguageDirectory
     Task<LanguageSnapshot?> GetByCodeAsync(string code, CancellationToken cancellationToken);
     Task<LanguageAdminSnapshot?> GetAdminByCodeAsync(string code, CancellationToken cancellationToken);
     Task EnsureActiveLanguageCodeAsync(string code, CancellationToken cancellationToken);
-    Task<LanguageSnapshot> CreateAsync(CreateLanguageCommand command, CancellationToken cancellationToken);
-    Task<LanguageSnapshot> UpdateAsync(string code, UpdateLanguageCommand command, CancellationToken cancellationToken);
-    Task<LanguageSnapshot> PatchAsync(string code, PatchLanguageCommand command, CancellationToken cancellationToken);
+    Task<LanguageSnapshot> CreateAsync(CreateLanguageSpec command, CancellationToken cancellationToken);
+    Task<LanguageSnapshot> UpdateAsync(string code, UpdateLanguageSpec command, CancellationToken cancellationToken);
+    Task<LanguageSnapshot> PatchAsync(string code, PatchLanguageSpec command, CancellationToken cancellationToken);
     Task BootstrapAsync(CancellationToken cancellationToken);
 }

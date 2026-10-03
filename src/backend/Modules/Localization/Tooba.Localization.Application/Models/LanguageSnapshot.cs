@@ -23,8 +23,8 @@ public sealed record LanguageAdminSnapshot(
     bool CanEditCode,
     bool CanEditUrlPrefix);
 
-/// <summary>ایجاد زبان (directory DTO; MediatR IRequest arrives in W3).</summary>
-public sealed record CreateLanguageCommand(
+/// <summary>Directory create payload (not MediatR).</summary>
+public sealed record CreateLanguageSpec(
     string Code,
     string UrlPrefix,
     string DisplayName,
@@ -36,8 +36,8 @@ public sealed record CreateLanguageCommand(
     bool IsDefault,
     int SortOrder);
 
-/// <summary>به‌روزرسانی زبان — کد و UrlPrefix پس از ارجاع تغییر نمی‌کند.</summary>
-public sealed record UpdateLanguageCommand(
+/// <summary>Directory update payload (not MediatR).</summary>
+public sealed record UpdateLanguageSpec(
     string? Code,
     string? UrlPrefix,
     string DisplayName,
@@ -49,8 +49,27 @@ public sealed record UpdateLanguageCommand(
     bool IsDefault,
     int SortOrder);
 
-/// <summary>به‌روزرسانی جزئی (سازگار با PATCH قدیمی).</summary>
-public sealed record PatchLanguageCommand(
+/// <summary>Directory patch payload (not MediatR).</summary>
+public sealed record PatchLanguageSpec(
     bool? IsActive,
     bool? IsDefault,
     int? SortOrder);
+
+/// <summary>Admin HTTP response shape for language registry.</summary>
+public sealed record LanguageAdminResponse(
+    Guid LanguageId,
+    string Code,
+    string UrlPrefix,
+    string DisplayName,
+    string NativeName,
+    string Direction,
+    string Culture,
+    string CalendarDisplay,
+    bool Active,
+    bool IsDefault,
+    int SortOrder,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    bool IsReferenced,
+    bool CanEditCode,
+    bool CanEditUrlPrefix);

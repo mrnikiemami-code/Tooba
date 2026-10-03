@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="localization.language.not_found" xml:space="preserve"><value>زبان یافت نشد</value></data>
+  <data name="localization.language.code_duplicate" xml:space="preserve"><value>کد زبان تکراری است</value></data>
+  <data name="localization.language.url_prefix_duplicate" xml:space="preserve"><value>پیشوند URL زبان تکراری است</value></data>
+  <data name="localization.language.default_must_be_active" xml:space="preserve"><value>زبان پیش‌فرض باید فعال باشد</value></data>
+  <data name="localization.language.at_least_one_active" xml:space="preserve"><value>حداقل یک زبان باید فعال بماند</value></data>
+  <data name="localization.language.exactly_one_default" xml:space="preserve"><value>دقیقاً یک زبان پیش‌فرض لازم است</value></data>
+  <data name="localization.language.code_immutable" xml:space="preserve"><value>کد زبان تغییرناپذیر است</value></data>
+  <data name="localization.language.url_prefix_immutable" xml:space="preserve"><value>پیشوند URL زبان تغییرناپذیر است</value></data>
+  <data name="localization.language.code.in_use" xml:space="preserve"><value>کد زبان در حال استفاده است</value></data>
+  <data name="localization.language.url_prefix.in_use" xml:space="preserve"><value>پیشوند URL زبان در حال استفاده است</value></data>
+  <data name="localization.language.referenced" xml:space="preserve"><value>زبان ارجاع داده شده است</value></data>
+  <data name="localization.language.invalid_code" xml:space="preserve"><value>کد زبان نامعتبر است</value></data>
+  <data name="localization.language.invalid_url_prefix" xml:space="preserve"><value>پیشوند URL زبان نامعتبر است</value></data>
+  <data name="localization.language.invalid_display_name" xml:space="preserve"><value>نام نمایشی زبان نامعتبر است</value></data>
+  <data name="localization.language.invalid_native_name" xml:space="preserve"><value>نام بومی زبان نامعتبر است</value></data>
+  <data name="localization.language.invalid_culture" xml:space="preserve"><value>فرهنگ زبان نامعتبر است</value></data>
+  <data name="localization.language.invalid_direction" xml:space="preserve"><value>جهت زبان نامعتبر است</value></data>
+  <data name="localization.language.invalid_calendar" xml:space="preserve"><value>تقویم زبان نامعتبر است</value></data>
+  <data name="localization.language.inactive" xml:space="preserve"><value>زبان غیرفعال است</value></data>
+</root>

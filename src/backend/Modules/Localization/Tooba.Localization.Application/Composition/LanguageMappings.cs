@@ -30,6 +30,31 @@ public static class LanguageMappings
         CanEditCode: !isReferenced,
         CanEditUrlPrefix: !isReferenced);
 
+    public static LanguageAdminResponse ToAdminResponse(LanguageAdminSnapshot row) =>
+        ToAdminResponse(row.Snapshot, row.IsReferenced, row.CanEditCode, row.CanEditUrlPrefix);
+
+    public static LanguageAdminResponse ToAdminResponse(
+        LanguageSnapshot row,
+        bool isReferenced,
+        bool? canEditCode = null,
+        bool? canEditUrlPrefix = null) => new(
+        row.LanguageId,
+        row.Code,
+        row.UrlPrefix,
+        row.DisplayName,
+        row.NativeName,
+        row.Direction,
+        row.Culture,
+        row.CalendarDisplay,
+        row.IsActive,
+        row.IsDefault,
+        row.SortOrder,
+        row.CreatedAt,
+        row.UpdatedAt,
+        isReferenced,
+        canEditCode ?? !isReferenced,
+        canEditUrlPrefix ?? !isReferenced);
+
     public static LanguageDirection ParseDirection(string? raw)
     {
         if (string.Equals(raw, "rtl", StringComparison.OrdinalIgnoreCase)
