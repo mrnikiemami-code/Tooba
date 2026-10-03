@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -16,7 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Fulfillment.Application\Tooba.Fulfillment.Application.csproj" />
     <ProjectReference Include="..\Tooba.Fulfillment.Contracts\Tooba.Fulfillment.Contracts.csproj" />
-    <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
     <ProjectReference Include="..\..\Order\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
     <ProjectReference Include="..\..\Party\Tooba.Party.Contracts\Tooba.Party.Contracts.csproj" />

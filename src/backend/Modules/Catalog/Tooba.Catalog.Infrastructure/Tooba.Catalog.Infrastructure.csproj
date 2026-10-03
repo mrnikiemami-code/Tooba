@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -23,7 +23,7 @@
     <ProjectReference Include="..\..\Promotion\Tooba.Promotion.Contracts\Tooba.Promotion.Contracts.csproj" />
     <ProjectReference Include="..\..\Reviews\Tooba.Reviews.Contracts\Tooba.Reviews.Contracts.csproj" />
     <ProjectReference Include="..\..\Content\Tooba.Content.Contracts\Tooba.Content.Contracts.csproj" />
-    <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
     <ProjectReference Include="..\..\Localization\Tooba.Localization.Contracts\Tooba.Localization.Contracts.csproj" />
     <ProjectReference Include="..\..\Media\Tooba.Media.Contracts\Tooba.Media.Contracts.csproj" />

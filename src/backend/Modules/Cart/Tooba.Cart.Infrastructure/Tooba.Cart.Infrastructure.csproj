@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -14,7 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Cart.Application\Tooba.Cart.Application.csproj" />
-    <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\StoreContext\Tooba.StoreContext.Contracts\Tooba.StoreContext.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
       <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Contracts\Tooba.Catalog.Contracts.csproj" />

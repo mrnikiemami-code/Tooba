@@ -2,6 +2,7 @@
   <Folder Name="/BuildingBlocks/">
     <Project Path="BuildingBlocks/Tooba.BuildingBlocks/Tooba.BuildingBlocks.csproj" />
     <Project Path="BuildingBlocks/Tooba.BuildingBlocks.Tests/Tooba.BuildingBlocks.Tests.csproj" />
+    <Project Path="BuildingBlocks/Tooba.ModuleContracts/Tooba.ModuleContracts.csproj" />
     <Project Path="BuildingBlocks/Tooba.Persistence/Tooba.Persistence.csproj" />
   </Folder>
   <Folder Name="/Host/">
@@ -9,9 +10,6 @@
     <Project Path="Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj" />
     <Project Path="Host/Tooba.MigrationRunner/Tooba.MigrationRunner.csproj" />
     <Project Path="Host/Tooba.MigrationRunner.Tests/Tooba.MigrationRunner.Tests.csproj" />
-  </Folder>
-  <Folder Name="/Modules/">
-    <Project Path="Modules/Tooba.ModuleContracts/Tooba.ModuleContracts.csproj" />
   </Folder>
   <Folder Name="/Modules/UserPreference/">
     <Project Path="Modules/UserPreference/Tooba.UserPreference.Domain/Tooba.UserPreference.Domain.csproj" />

@@ -18,7 +18,7 @@ TB-P01-T001
 src/backend/Tooba.slnx
 src/backend/Host/Tooba.Host/
 src/backend/BuildingBlocks/Tooba.BuildingBlocks/
-src/backend/Modules/Tooba.ModuleContracts/
+src/backend/BuildingBlocks/Tooba.ModuleContracts/
 src/frontend/          Next.js App Router (TypeScript, Tailwind)
 ```
 
@@ -30,8 +30,8 @@ Existing local `shopeiva/` remains an **uncommitted external reference**, not th
 | --- | --- |
 | `Tooba.Host` | ASP.NET Core composition root. Starts the process. Health/readiness only. No business APIs. |
 | `Tooba.BuildingBlocks` | Shared technical primitives later (clock, errors). No module tables. |
-| `Tooba.ModuleContracts` | Cross-module contract assembly. Persistence stays inside future module Infrastructure projects. |
-| `Modules/` | Future domain modules (Catalog, Order, …) as separate projects. Not generated in this task. |
+| `Tooba.ModuleContracts` | Platform composition kernel (`IToobaModule`). Lives under BuildingBlocks — not a business module. Persistence stays inside module Infrastructure. Business DTOs stay in each module’s `*.Contracts`. |
+| `Modules/` | Domain modules (Catalog, Order, …) as separate project trees. |
 
 Solution format is `Tooba.slnx` (current `dotnet new sln` output).
 

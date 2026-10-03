@@ -5,7 +5,8 @@ using Microsoft.Extensions.Hosting;
 namespace Tooba.ModuleContracts;
 
 /// <summary>
-/// قرارداد ثبت یک ماژول در ریشهٔ ترکیب Host. کشف بازتابی ندارد؛ Host فهرست را صریح می‌چیند.
+/// قرارداد ثبت یک ماژول در ریشهٔ ترکیب Host (پلتفرم BuildingBlocks؛ ماژول کسب‌وکار نیست).
+/// کشف بازتابی ندارد؛ Host فهرست را صریح می‌چیند.
 /// این رابط سرویس، زیرساخت و کارگر پس‌زمینه را ثبت می‌کند. نگاشت endpoint اختیاری است و نباید این قرارداد را به خدای ترکیب تبدیل کند.
 /// </summary>
 public interface IToobaModule

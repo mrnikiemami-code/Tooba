@@ -20,13 +20,13 @@ This document locks the P01 composition root and dependency guards. P00 ownershi
 
 ## Module registration model
 
-Tooba-owned contract: `IToobaModule` in `Tooba.ModuleContracts`.
+Tooba-owned contract: `IToobaModule` in `Tooba.ModuleContracts` (`src/backend/BuildingBlocks/Tooba.ModuleContracts/`).
 
 A module registers its own services, infrastructure, and optional background workers through `AddServices`. Host composes an explicit list. There is no reflection-based auto-discovery.
 
 Optional HTTP endpoints are not part of `IToobaModule` so the contract does not become a god-interface and ModuleContracts does not take an ASP.NET FrameworkReference. A future endpoint contributor can be a separate Host-facing seam that still lives behind module-owned mapping called from composition — not from business Domain.
 
-`Tooba.ModuleContracts` is the stable surface for commands/queries/integration/gateway contracts later. It is not a dumping ground. No business contracts, persistence types, or DbContext belong there now.
+`Tooba.ModuleContracts` is the **platform Host-composition kernel**, grouped with BuildingBlocks in Solution Explorer. It is not a business module and must not absorb Catalog/Identity DTOs, persistence types, or DbContext. Inter-module business contracts stay in each module’s own `*.Contracts` assembly.
 
 ## Composition root
 
@@ -89,7 +89,8 @@ Limitation: only `Tooba.PlatformProbe.Infrastructure` exists as a module project
 src/backend/Modules/{Name}/Tooba.{Name}.Domain
 src/backend/Modules/{Name}/Tooba.{Name}.Application
 src/backend/Modules/{Name}/Tooba.{Name}.Infrastructure
-cross-module types → Tooba.ModuleContracts
+src/backend/Modules/{Name}/Tooba.{Name}.Contracts   ← business contracts
+src/backend/BuildingBlocks/Tooba.ModuleContracts    ← IToobaModule only (platform)
 Host lists the module explicitly in ToobaModuleComposition
 ```
 

@@ -22,7 +22,7 @@
     <ProjectReference Include="..\..\Payment\Tooba.Payment.Contracts\Tooba.Payment.Contracts.csproj" />
     <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Contracts\Tooba.Fulfillment.Contracts.csproj" />
     <ProjectReference Include="..\..\AccessControl\Tooba.AccessControl.Contracts\Tooba.AccessControl.Contracts.csproj" />
-    <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
   </ItemGroup>
 </Project>

@@ -94,7 +94,7 @@ public sealed class AuthorizationFoundationTests
                      Path.Combine(root, "src", "backend", "Modules", "Identity", "Tooba.Identity.Domain"),
                      Path.Combine(root, "src", "backend", "Modules", "Identity", "Tooba.Identity.Application"),
                      Path.Combine(root, "src", "backend", "BuildingBlocks", "Tooba.BuildingBlocks"),
-                     Path.Combine(root, "src", "backend", "Modules", "Tooba.ModuleContracts"),
+                     Path.Combine(root, "src", "backend", "BuildingBlocks", "Tooba.ModuleContracts"),
                  })
         {
             var csproj = Directory.GetFiles(project, "*.csproj").Single();

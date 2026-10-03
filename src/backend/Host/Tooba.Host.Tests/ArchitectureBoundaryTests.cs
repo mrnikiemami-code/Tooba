@@ -194,7 +194,7 @@ public sealed class ArchitectureBoundaryTests
     public void Building_blocks_do_not_depend_on_host_or_modules()
     {
         foreach (var project in LoadProjects().Where(project =>
-                     project.Name is "Tooba.BuildingBlocks" or "Tooba.Persistence"))
+                     project.Name is "Tooba.BuildingBlocks" or "Tooba.Persistence" or "Tooba.ModuleContracts"))
         {
             Assert.DoesNotContain(
                 project.References,
@@ -254,11 +254,7 @@ public sealed class ArchitectureBoundaryTests
         }
 
         var rest = normalized[(index + marker.Length)..];
-        var module = rest.Split(Path.DirectorySeparatorChar)[0];
-        return module.Equals("Tooba.ModuleContracts", StringComparison.OrdinalIgnoreCase)
-            || module.Equals("Tooba.ModuleContracts.csproj", StringComparison.OrdinalIgnoreCase)
-            ? null
-            : module;
+        return rest.Split(Path.DirectorySeparatorChar)[0];
     }
 
     private static bool IsModuleInfrastructureOrPersistence(ProjectInfo project) =>
