@@ -343,6 +343,78 @@
       ]
     },
     {
+      "module": "PageComposition",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Certified by TB-TMAR-PAGECOMPOSITION-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first Admin/Storefront CQRS; Result+PageCompositionOperation+ApiResponseFactory; exhaustive 8-request validator matrix (8 required present); Contracts.Errors/Resources catalog; zero foreign Application/Infrastructure/Domain coupling; Host PageComposition CLOSED_HOST_ZERO; /Modules/PageComposition/ solution group; microservice-extractable and self-contained.",
+      "projects": [
+        {
+          "projectName": "Tooba.PageComposition.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "PageComposition.Application has no root .cs: Admin/Storefront capability trees plus Composition/Models/Ports; path↔namespace exact.",
+          "forbiddenRootFiles": [
+            "PageCompositionContracts.cs",
+            "PageCompositionFailureMapper.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Validators",
+            "Presentation"
+          ]
+        },
+        {
+          "projectName": "Tooba.PageComposition.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "PageComposition.Domain has no root .cs; Aggregates/Catalog/Constants hold types with exact path↔namespace.",
+          "forbiddenRootFiles": [
+            "PageCompositionEntities.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.PageComposition.Endpoints",
+          "rootAllowlist": [
+            "PageCompositionEndpointModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry only; Admin/ and Storefront/ hold HTTP surfaces; Models/ for HTTP DTOs.",
+          "forbiddenRootFiles": [
+            "PageCompositionAdminEndpoints.cs",
+            "PageCompositionStorefrontEndpoints.cs",
+            "PageCompositionHttpErrors.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Errors",
+            "Resources"
+          ]
+        },
+        {
+          "projectName": "Tooba.PageComposition.Infrastructure",
+          "rootAllowlist": [
+            "PageCompositionModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry PageCompositionModule.cs only (includes Outbox registration); Directories/Development/Persistence hold integrations; Migrations under Persistence/.",
+          "forbiddenRootFiles": [
+            "PageCompositionDirectory.cs",
+            "PageCompositionDevelopmentSeed.cs",
+            "PageCompositionDbContext.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations"
+          ]
+        },
+        {
+          "projectName": "Tooba.PageComposition.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "PageComposition.Contracts has no root .cs: Errors (+ Resources) carry contracts.",
+          "forbiddenRootFiles": [
+            "PageCompositionErrorCodes.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    },
+    {
       "module": "Party",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
