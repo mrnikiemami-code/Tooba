@@ -6,9 +6,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.UserPreference.Application.LocalePreferences.Commands;
 using Tooba.UserPreference.Application.LocalePreferences.Queries;
-using Tooba.UserPreference.Application.Models;
 using Tooba.UserPreference.Contracts.Errors;
-using Tooba.UserPreference.Endpoints.Admin;
 
 namespace Tooba.UserPreference.Endpoints.Customer;
 
@@ -36,10 +34,8 @@ public static class UserPreferenceCustomerEndpoints
             return api.FromFailure(new SemanticError(UserPreferenceErrorCodes.SessionRequired));
         }
 
-        var snapshot = await sender.Send(new GetUserPreferenceQuery(actor.Value), cancellationToken);
-        return Results.Json(snapshot is null
-            ? new { locale = UserPreferenceShapes.DefaultLocale, createdAt = (DateTimeOffset?)null, updatedAt = (DateTimeOffset?)null }
-            : new { locale = snapshot.Locale, createdAt = snapshot.CreatedAt, updatedAt = snapshot.UpdatedAt });
+        var result = await sender.Send(new GetUserPreferenceQuery(actor.Value), cancellationToken);
+        return api.From(result);
     }
 
     private static async Task<IResult> PutAsync(
@@ -56,17 +52,10 @@ public static class UserPreferenceCustomerEndpoints
             return api.FromFailure(new SemanticError(UserPreferenceErrorCodes.SessionRequired));
         }
 
-        try
-        {
-            var updated = await sender.Send(
-                new UpsertUserPreferenceCommand(actor.Value, body.Locale),
-                cancellationToken);
-            return Results.Json(new { locale = updated.Locale, createdAt = updated.CreatedAt, updatedAt = updated.UpdatedAt });
-        }
-        catch (SemanticException ex)
-        {
-            return api.FromSemanticException(ex);
-        }
+        var result = await sender.Send(
+            new UpsertUserPreferenceCommand(actor.Value, body.Locale),
+            cancellationToken);
+        return api.From(result);
     }
 }
 

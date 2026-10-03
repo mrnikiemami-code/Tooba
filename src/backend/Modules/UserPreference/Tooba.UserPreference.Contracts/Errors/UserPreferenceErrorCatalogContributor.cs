@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.UserPreference.Contracts.Errors;
 
-namespace Tooba.UserPreference.Endpoints.Errors;
+namespace Tooba.UserPreference.Contracts.Errors;
 
 /// <summary>کاتالوگ کدهای خطای UserPreference.</summary>
 public sealed class UserPreferenceErrorCatalogContributor : IErrorCatalogContributor
@@ -18,6 +17,17 @@ public sealed class UserPreferenceErrorCatalogContributor : IErrorCatalogContrib
             "UI preference JSON is invalid."),
         D(UserPreferenceErrorCodes.UiPreferenceJsonRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
             "UI preference JSON is required."),
+        D(UserPreferenceErrorCodes.ActorRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Actor is required."),
+        D(UserPreferenceErrorCodes.LocaleRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Locale is required."),
+        D(UserPreferenceErrorCodes.UiActorRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Actor is required."),
+        D(UserPreferenceErrorCodes.UiKeyRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "UI preference key is required."),
+        D(UserPreferenceErrorCodes.UiJsonRequiredValidation, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "UI preference JSON is required."),
+        // customer.session.required is owned by FoundationErrorCatalogContributor.
     ];
 
     private static ErrorDescriptor D(

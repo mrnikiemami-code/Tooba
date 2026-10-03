@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.UserPreference.Application.Models;
 using Tooba.UserPreference.Application.UiPreferences.Commands;
 using Tooba.UserPreference.Application.UiPreferences.Queries;
 using Tooba.UserPreference.Contracts.Errors;
@@ -34,32 +33,12 @@ public static class UiPreferenceAdminEndpoints
         try
         {
             var actor = await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var snapshot = await sender.Send(new GetUiPreferenceQuery(actor, key), cancellationToken);
-            if (snapshot is null)
-            {
-                var normalized = UserPreferenceShapes.NormalizeUiKey(key);
-                return Results.Json(new { key = normalized, json = (object?)null, updatedAt = (DateTimeOffset?)null });
-            }
-
-            using var document = JsonDocument.Parse(snapshot.JsonPayload);
-            return Results.Json(new
-            {
-                key = snapshot.Key,
-                json = document.RootElement.Clone(),
-                updatedAt = snapshot.UpdatedAt,
-            });
+            var result = await sender.Send(new GetUiPreferenceQuery(actor, key), cancellationToken);
+            return api.From(result);
         }
         catch (PlatformHttpException ex)
         {
             return api.FromPlatformException(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return api.FromSemanticException(ex);
-        }
-        catch (JsonException)
-        {
-            return api.FromFailure(new SemanticError(UserPreferenceErrorCodes.UiPreferenceInvalidJson));
         }
     }
 
@@ -80,24 +59,14 @@ public static class UiPreferenceAdminEndpoints
                 return api.FromFailure(new SemanticError(UserPreferenceErrorCodes.UiPreferenceJsonRequired));
             }
 
-            var updated = await sender.Send(
+            var result = await sender.Send(
                 new UpsertUiPreferenceCommand(actor, key, body.Json.GetRawText()),
                 cancellationToken);
-            using var document = JsonDocument.Parse(updated.JsonPayload);
-            return Results.Json(new
-            {
-                key = updated.Key,
-                json = document.RootElement.Clone(),
-                updatedAt = updated.UpdatedAt,
-            });
+            return api.From(result);
         }
         catch (PlatformHttpException ex)
         {
             return api.FromPlatformException(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return api.FromSemanticException(ex);
         }
     }
 }

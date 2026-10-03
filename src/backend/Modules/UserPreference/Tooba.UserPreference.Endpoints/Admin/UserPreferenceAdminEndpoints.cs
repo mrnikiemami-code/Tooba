@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.UserPreference.Application.Models;
 using Tooba.UserPreference.Application.LocalePreferences.Commands;
 using Tooba.UserPreference.Application.LocalePreferences.Queries;
+using Tooba.UserPreference.Endpoints.Customer;
 
 namespace Tooba.UserPreference.Endpoints.Admin;
 
@@ -31,23 +31,17 @@ public static class UserPreferenceAdminEndpoints
         try
         {
             var actor = await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var snapshot = await sender.Send(new GetUserPreferenceQuery(actor), cancellationToken);
-            return Results.Json(snapshot is null
-                ? new { locale = UserPreferenceShapes.DefaultLocale, createdAt = (DateTimeOffset?)null, updatedAt = (DateTimeOffset?)null }
-                : new { locale = snapshot.Locale, createdAt = snapshot.CreatedAt, updatedAt = snapshot.UpdatedAt });
+            var result = await sender.Send(new GetUserPreferenceQuery(actor), cancellationToken);
+            return api.From(result);
         }
         catch (PlatformHttpException ex)
         {
             return api.FromPlatformException(ex);
         }
-        catch (SemanticException ex)
-        {
-            return api.FromSemanticException(ex);
-        }
     }
 
     private static async Task<IResult> PutAsync(
-        Customer.UserPreferenceWriteRequest body,
+        UserPreferenceWriteRequest body,
         HttpContext httpContext,
         IUserPreferenceAdminAuthorizer adminAuthorizer,
         ISender sender,
@@ -57,18 +51,14 @@ public static class UserPreferenceAdminEndpoints
         try
         {
             var actor = await adminAuthorizer.RequireAuthorizedAsync(httpContext, cancellationToken);
-            var updated = await sender.Send(
+            var result = await sender.Send(
                 new UpsertUserPreferenceCommand(actor, body.Locale),
                 cancellationToken);
-            return Results.Json(new { locale = updated.Locale, createdAt = updated.CreatedAt, updatedAt = updated.UpdatedAt });
+            return api.From(result);
         }
         catch (PlatformHttpException ex)
         {
             return api.FromPlatformException(ex);
-        }
-        catch (SemanticException ex)
-        {
-            return api.FromSemanticException(ex);
         }
     }
 }

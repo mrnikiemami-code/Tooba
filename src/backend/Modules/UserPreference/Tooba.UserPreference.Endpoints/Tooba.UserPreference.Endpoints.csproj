@@ -11,14 +11,6 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Update="Resources\UserPreferenceErrors.resx">
-      <Generator></Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\UserPreferenceErrors.fa.resx">
-      <Generator></Generator>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Tooba.UserPreference.Application\Tooba.UserPreference.Application.csproj" />
     <ProjectReference Include="..\Tooba.UserPreference.Contracts\Tooba.UserPreference.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />

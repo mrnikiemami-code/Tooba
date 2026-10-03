@@ -5209,6 +5209,33 @@
         "automaticNext": "NONE",
         "note": "Host ProductQnA evacuated/split to ProductQnA+BulkInquiry; Host folder deleted."
     },
+    "hostPreferencesAmc": {
+        "taskId": "TB-TMAR-HOST-PREFERENCES-AMC-001",
+        "status": "CLOSED_HOST_ZERO",
+        "classification": "HOST_ZERO",
+        "owningModule": "UserPreference",
+        "owningCapability": "UserPreference",
+        "routesMigrated": [
+            "GET /v1/customer/preferences",
+            "PUT /v1/customer/preferences",
+            "GET /v1/admin/operator/preferences",
+            "PUT /v1/admin/operator/preferences",
+            "GET /v1/admin/ui-preferences/{key}",
+            "PUT /v1/admin/ui-preferences/{key}"
+        ],
+        "hostFolderDeleted": "src/backend/Host/Tooba.Host/Preferences",
+        "moduleEndpoints": "src/backend/Modules/UserPreference/Tooba.UserPreference.Endpoints",
+        "moduleApplication": "src/backend/Modules/UserPreference/Tooba.UserPreference.Application",
+        "contracts": "src/backend/Modules/UserPreference/Tooba.UserPreference.Contracts",
+        "hostRetained": [
+            "Program.cs MapUserPreferenceModuleEndpoints + AddUserPreferenceEndpointPresentation",
+            "Admin/Access/Authorizers/HostUserPreferenceAdminAuthorizer.cs"
+        ],
+        "durableGuard": "HostPreferencesAmcGuardTests",
+        "evidenceRoot": "docs/evidence/TB-TMAR-HOST-PREFERENCES-AMC-001",
+        "workflowStop": "USER_REVIEW_HOST_PREFERENCES_AMC_001_CLOSED_HOST_ZERO",
+        "note": "Host Preferences evacuated to UserPreference Endpoints/CQRS; Host folder deleted."
+    },
     "hostWishlistAmc": {
         "task": "TB-TMAR-HOST-WISHLIST-AMC-001",
         "execution": "ARCHITECT_DIRECT_ANALYZE_MIGRATE_CERTIFY",

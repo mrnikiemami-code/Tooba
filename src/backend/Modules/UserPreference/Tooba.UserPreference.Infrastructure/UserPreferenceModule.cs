@@ -2,9 +2,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Tooba.UserPreference.Application.Ports;
+using Tooba.UserPreference.Contracts.Errors;
 using Tooba.UserPreference.Infrastructure.Directories;
 using Tooba.UserPreference.Infrastructure.Persistence;
 
@@ -20,6 +23,8 @@ public sealed class UserPreferenceModule : IToobaModule
     public void AddServices(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         services.AddSingleton<IOutboxModuleRegistration, UserPreferenceOutboxRegistration>();
+        services.AddSingleton<IErrorCatalogContributor, UserPreferenceErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, UserPreferenceErrorResourceSet>();
         services.AddScoped<IUserPreferenceDirectory, UserPreferenceDirectory>();
         services.AddScoped<IUiPreferenceDirectory, UiPreferenceDirectory>();
         services.AddModuleSchemaMigrator<UserPreferenceDbContext>("UserPreference", ModuleSchemaMigrationOrder.UserPreference);

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -8,4 +8,10 @@
   <data name="ui_preference.rejected" xml:space="preserve"><value>UI preference was rejected.</value></data>
   <data name="ui_preference.invalid_json" xml:space="preserve"><value>UI preference JSON is invalid.</value></data>
   <data name="ui_preference.json_required" xml:space="preserve"><value>UI preference JSON is required.</value></data>
+  <data name="preference.validation.actor_required" xml:space="preserve"><value>Actor is required.</value></data>
+  <data name="preference.validation.locale_required" xml:space="preserve"><value>Locale is required.</value></data>
+  <data name="ui_preference.validation.actor_required" xml:space="preserve"><value>Actor is required.</value></data>
+  <data name="ui_preference.validation.key_required" xml:space="preserve"><value>UI preference key is required.</value></data>
+  <data name="ui_preference.validation.json_required" xml:space="preserve"><value>UI preference JSON is required.</value></data>
 </root>
+

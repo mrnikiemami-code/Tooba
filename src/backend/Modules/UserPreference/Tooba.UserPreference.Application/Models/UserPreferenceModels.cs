@@ -1,3 +1,4 @@
+using System.Text.Json;
 using DomainUserPreference = Tooba.UserPreference.Domain.Aggregates.UserPreference;
 using DomainUiPreference = Tooba.UserPreference.Domain.Aggregates.UiPreference;
 
@@ -30,3 +31,9 @@ public static class UserPreferenceShapes
     /// <summary>نرمال‌سازی کلید UI با همان قواعد Domain.</summary>
     public static string NormalizeUiKey(string? key) => DomainUiPreference.NormalizeKey(key);
 }
+
+/// <summary>پاسخ HTTP locale با شکل پایدار کلاینت.</summary>
+public sealed record PreferenceLocaleResponse(string Locale, DateTimeOffset? CreatedAt, DateTimeOffset? UpdatedAt);
+
+/// <summary>پاسخ HTTP ترجیح UI با JSON زنده.</summary>
+public sealed record UiPreferenceResponse(string Key, JsonElement? Json, DateTimeOffset? UpdatedAt);

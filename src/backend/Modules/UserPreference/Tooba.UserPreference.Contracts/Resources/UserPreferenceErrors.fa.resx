@@ -8,4 +8,9 @@
   <data name="ui_preference.rejected" xml:space="preserve"><value>ترجیح UI پذیرفته نشد.</value></data>
   <data name="ui_preference.invalid_json" xml:space="preserve"><value>JSON ترجیح UI نامعتبر است.</value></data>
   <data name="ui_preference.json_required" xml:space="preserve"><value>JSON ترجیح UI الزامی است.</value></data>
+  <data name="preference.validation.actor_required" xml:space="preserve"><value>Actor الزامی است.</value></data>
+  <data name="preference.validation.locale_required" xml:space="preserve"><value>locale الزامی است.</value></data>
+  <data name="ui_preference.validation.actor_required" xml:space="preserve"><value>Actor الزامی است.</value></data>
+  <data name="ui_preference.validation.key_required" xml:space="preserve"><value>کلید ترجیح UI الزامی است.</value></data>
+  <data name="ui_preference.validation.json_required" xml:space="preserve"><value>JSON ترجیح UI الزامی است.</value></data>
 </root>

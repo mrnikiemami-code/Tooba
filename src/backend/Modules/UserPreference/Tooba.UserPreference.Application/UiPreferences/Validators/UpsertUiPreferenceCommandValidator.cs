@@ -1,5 +1,6 @@
 using FluentValidation;
 using Tooba.UserPreference.Application.UiPreferences.Commands;
+using Tooba.UserPreference.Contracts.Errors;
 
 namespace Tooba.UserPreference.Application.UiPreferences.Validators;
 
@@ -9,8 +10,8 @@ public sealed class UpsertUiPreferenceCommandValidator : AbstractValidator<Upser
     /// <summary>قواعد حمل‌ونقل؛ قواعد دامنه در Domain می‌مانند.</summary>
     public UpsertUiPreferenceCommandValidator()
     {
-        RuleFor(x => x.ActorUserId).NotEmpty().WithErrorCode("ui_preference.validation.actor_required");
-        RuleFor(x => x.Key).NotEmpty().WithErrorCode("ui_preference.validation.key_required");
-        RuleFor(x => x.JsonPayload).NotEmpty().WithErrorCode("ui_preference.validation.json_required");
+        RuleFor(x => x.ActorUserId).NotEmpty().WithErrorCode(UserPreferenceErrorCodes.UiActorRequired);
+        RuleFor(x => x.Key).NotEmpty().WithErrorCode(UserPreferenceErrorCodes.UiKeyRequired);
+        RuleFor(x => x.JsonPayload).NotEmpty().WithErrorCode(UserPreferenceErrorCodes.UiJsonRequiredValidation);
     }
 }

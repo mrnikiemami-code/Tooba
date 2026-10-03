@@ -2,14 +2,14 @@ using System.Globalization;
 using System.Resources;
 using Tooba.BuildingBlocks.Localization;
 
-namespace Tooba.UserPreference.Endpoints.Resources;
+namespace Tooba.UserPreference.Contracts.Errors;
 
 /// <summary>نشانگر منبع خطاهای UserPreference.</summary>
 public static class UserPreferenceErrorResources
 {
     /// <summary>ResourceManager.</summary>
     public static ResourceManager Manager { get; } =
-        new("Tooba.UserPreference.Endpoints.Resources.UserPreferenceErrors", typeof(UserPreferenceErrorResources).Assembly);
+        new("Tooba.UserPreference.Contracts.Resources.UserPreferenceErrors", typeof(UserPreferenceErrorResources).Assembly);
 }
 
 /// <summary>مجموعهٔ منبع UserPreference.</summary>

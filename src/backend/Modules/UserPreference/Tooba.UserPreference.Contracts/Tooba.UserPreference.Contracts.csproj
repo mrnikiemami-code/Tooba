@@ -7,4 +7,7 @@
     <AssemblyName>Tooba.UserPreference.Contracts</AssemblyName>
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+  </ItemGroup>
 </Project>

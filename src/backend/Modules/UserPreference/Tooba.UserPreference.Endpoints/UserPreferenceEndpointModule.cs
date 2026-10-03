@@ -1,12 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.BuildingBlocks.Localization;
-using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.UserPreference.Endpoints.Admin;
 using Tooba.UserPreference.Endpoints.Customer;
-using Tooba.UserPreference.Endpoints.Errors;
-using Tooba.UserPreference.Endpoints.Resources;
 
 namespace Tooba.UserPreference.Endpoints;
 
@@ -23,13 +19,13 @@ public static class UserPreferenceEndpointModule
         return app;
     }
 
-    /// <summary>Registers actor resolver, admin authorizer slot is Host-owned, and error catalog/resources.</summary>
+    /// <summary>
+    /// Registers actor resolver. Error catalog/resource set are registered by <c>UserPreferenceModule</c>.
+    /// </summary>
     public static IServiceCollection AddUserPreferenceEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<IUserPreferenceCustomerActorResolver, UserPreferenceCustomerActorResolver>();
-        services.AddSingleton<IErrorCatalogContributor, UserPreferenceErrorCatalogContributor>();
-        services.AddSingleton<IErrorResourceSet, UserPreferenceErrorResourceSet>();
         return services;
     }
 }
