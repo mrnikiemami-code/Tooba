@@ -823,7 +823,8 @@
             "AccessControl",
             "AddressBook",
             "Content",
-            "Identity"
+            "Identity",
+            "Media"
         ],
         "manifest": "docs/architecture/tmar-module-structure-manifests.json",
         "standard": "docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md",

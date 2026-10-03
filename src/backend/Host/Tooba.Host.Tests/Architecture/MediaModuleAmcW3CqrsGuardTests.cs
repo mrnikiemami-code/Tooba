@@ -77,9 +77,30 @@ public sealed class MediaModuleAmcW3CqrsGuardTests
         Assert.Contains("ISender", admin, StringComparison.Ordinal);
         Assert.Contains("api.From", admin, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory", admin, StringComparison.Ordinal);
+        Assert.Contains("MediaUploadBatchResponse", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("IMediaDirectory", admin, StringComparison.Ordinal);
         Assert.DoesNotContain("PlatformHttpException", admin, StringComparison.Ordinal);
-        Assert.DoesNotContain("Results.Json(new { title", admin, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json", admin, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Media_json_api_endpoints_have_zero_direct_Results_Json()
+    {
+        var root = Repo();
+        var admin = Path.Combine(root, "src/backend/Modules/Media/Tooba.Media.Endpoints/Admin/MediaAdminEndpoints.cs");
+        var storefront = Path.Combine(root, "src/backend/Modules/Media/Tooba.Media.Endpoints/Storefront/MediaStorefrontEndpoints.cs");
+        var module = Path.Combine(root, "src/backend/Modules/Media/Tooba.Media.Endpoints/MediaEndpointModule.cs");
+        foreach (var path in new[] { admin, storefront, module })
+        {
+            var text = File.ReadAllText(path);
+            Assert.DoesNotContain("Results.Json", text, StringComparison.Ordinal);
+        }
+
+        var serving = File.ReadAllText(Path.Combine(
+            root, "src/backend/Modules/Media/Tooba.Media.Endpoints/Admin/MediaAssetServing.cs"));
+        Assert.Contains("Results.File", serving, StringComparison.Ordinal);
+        Assert.Contains("Results.Text", serving, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json", serving, StringComparison.Ordinal);
     }
 
     [Fact]

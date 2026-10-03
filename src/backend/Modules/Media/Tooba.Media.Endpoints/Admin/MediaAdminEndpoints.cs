@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Results;
 using Tooba.BuildingBlocks.Security;
 using Tooba.Media.Application.Assets.Commands;
+using Tooba.Media.Application.Assets.Models;
 using Tooba.Media.Application.Assets.Queries;
 using Tooba.Media.Contracts.Errors;
 
@@ -79,7 +81,7 @@ public static class MediaAdminEndpoints
             });
         }
 
-        return Results.Json(new { items = results }, statusCode: StatusCodes.Status200OK);
+        return api.From(Result.Success(new MediaUploadBatchResponse(results)));
     }
 
     private static async Task<IResult> QueryAsync(

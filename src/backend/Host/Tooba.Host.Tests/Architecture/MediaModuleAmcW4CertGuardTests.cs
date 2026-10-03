@@ -56,6 +56,14 @@ public sealed class MediaModuleAmcW4CertGuardTests
         Assert.Equal(4, block.GetProperty("endpointReachableRequests").GetInt32());
         Assert.Equal(3, block.GetProperty("validatorRequiredCount").GetInt32());
         Assert.Equal(1, block.GetProperty("noValidatorRequiredCount").GetInt32());
+
+        var certified = doc.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
+            .EnumerateArray()
+            .Select(x => x.GetString())
+            .ToArray();
+        Assert.Equal(1, certified.Count(x => x == "Media"));
+        Assert.Contains("Identity", certified);
+        Assert.Contains("Content", certified);
     }
 
     [Fact]
