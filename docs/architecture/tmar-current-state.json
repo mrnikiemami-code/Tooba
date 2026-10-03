@@ -778,7 +778,29 @@
         "implementationCommit": "48b2c048e050800b28bd6b8b43332ee74482b012",
         "implementationCommitKind": "IMPLEMENTATION_COMMIT",
         "docsStampCommit": "55bbaf33e61e943985e1b0d35557056e63bbbcff",
-        "docsStampCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION"
+        "docsStampCommitKind": "RESULT_EVIDENCE_DOCS_STAMP_NOT_IMPLEMENTATION",
+        "latestPostCertRepairCheckpoint": "mediaAmc001W4R1"
+    },
+    "mediaAmc001W4R1": {
+        "task": "TB-TMAR-MEDIA-AMC-001-W4-R1",
+        "parentTask": "TB-TMAR-MEDIA-AMC-001-W4",
+        "mode": "REPAIR",
+        "state": "MEDIA_AMC_W4_CERT_DEFECTS_REPAIRED",
+        "apiResponseFactoryState": "CANONICAL",
+        "directResultsJsonState": "ZERO",
+        "structureLockMediaState": "PRESENT_EXACTLY_ONCE",
+        "uploadBehaviorParityState": "PRESERVED",
+        "durableGuardState": "STRENGTHENED_PASS",
+        "foreignAppInfraDomainCoupling": "ZERO",
+        "hostFinalClosure": "PRESERVED",
+        "schemaChange": "NONE",
+        "frontendState": "UNTOUCHED",
+        "implementationCommit": "587b1f817c97f5185706e09030e96e91dc3675ad",
+        "implementationCommitKind": "IMPLEMENTATION_COMMIT",
+        "evidenceRoot": "docs/evidence/TB-TMAR-MEDIA-AMC-001-W4-R1/",
+        "taskArtifact": "docs/ai/tasks/TB-TMAR-MEDIA-AMC-001-W4-R1.task.md",
+        "workflowStop": "USER_REVIEW_MEDIA_AMC_001_W4_R1",
+        "automaticNextImplementationTask": "NONE"
     },
     "offerArchComplete002Structure": {
         "task": "TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001",
