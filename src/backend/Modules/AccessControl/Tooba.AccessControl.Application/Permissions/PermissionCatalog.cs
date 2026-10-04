@@ -1,8 +1,7 @@
 ﻿using Tooba.AccessControl.Contracts.Enums;
 
 using Tooba.AccessControl.Contracts.Errors;
-using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Exceptions;
+using Tooba.AccessControl.Application.Validation;
 
 namespace Tooba.AccessControl.Application.Permissions;
 

@@ -15,11 +15,17 @@ public sealed class AccessControlModuleAmcW1SolutionGuardTests
         Assert.Equal(1, Count(slnx, "Modules/AccessControl/Tooba.AccessControl.Application/Tooba.AccessControl.Application.csproj"));
         Assert.Equal(1, Count(slnx, "Modules/AccessControl/Tooba.AccessControl.Endpoints/Tooba.AccessControl.Endpoints.csproj"));
 
-        // Must not remain as loose entries under the flat /Modules/ dump without the dedicated folder.
-        var flatModulesStart = slnx.IndexOf("<Folder Name=\"/Modules/\">", StringComparison.Ordinal);
-        var flatModulesEnd = slnx.IndexOf("</Folder>", flatModulesStart, StringComparison.Ordinal);
-        var flatWindow = slnx.Substring(flatModulesStart, flatModulesEnd - flatModulesStart);
-        Assert.DoesNotContain("Modules/AccessControl/", flatWindow, StringComparison.Ordinal);
+        // All five AccessControl projects must live inside the dedicated /Modules/AccessControl/ solution folder.
+        var moduleFolderStart = slnx.IndexOf("<Folder Name=\"/Modules/AccessControl/\">", StringComparison.Ordinal);
+        Assert.True(moduleFolderStart >= 0, "dedicated /Modules/AccessControl/ solution folder is required");
+        var moduleFolderEnd = slnx.IndexOf("</Folder>", moduleFolderStart, StringComparison.Ordinal);
+        Assert.True(moduleFolderEnd > moduleFolderStart, "dedicated /Modules/AccessControl/ folder is not closed");
+        var moduleWindow = slnx.Substring(moduleFolderStart, moduleFolderEnd - moduleFolderStart);
+        Assert.Equal(5, Count(moduleWindow, "<Project Path=\"Modules/AccessControl/"));
+
+        // The historical flat /Modules/ dump folder is gone: per-module folders replaced it, so no
+        // AccessControl entry can be parked in a flat window any more.
+        Assert.DoesNotContain("<Folder Name=\"/Modules/\">", slnx, StringComparison.Ordinal);
 
         var sot = File.ReadAllText(Path.Combine(root, "docs", "architecture", "tmar-current-state.json"));
         Assert.Contains("\"accessControlModuleAmc001W1\"", sot, StringComparison.Ordinal);

@@ -20,12 +20,14 @@ public sealed class AccessControlModuleAmcW4StructureGuardTests
 
         Assert.False(File.Exists(Path.Combine(root,
             "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Models/AccessControlContracts.cs")));
-        Assert.True(File.Exists(Path.Combine(root,
+        Assert.False(File.Exists(Path.Combine(root,
             "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Models/AccessControlDtos.cs")));
+        Assert.True(File.Exists(Path.Combine(root,
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Models/AccessOwnerScope.cs")));
         Assert.True(File.Exists(Path.Combine(root,
             "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Ports/IAccessControlDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(root,
-            "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Exceptions/AccessControlException.cs")));
+            "src/backend/Modules/AccessControl/Tooba.AccessControl.Application/Validation/AccessControlException.cs")));
 
         foreach (var relative in new[]
                  {

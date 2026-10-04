@@ -41,11 +41,14 @@ public sealed class AccessControlStructureRepair001GuardTests
 
         // Shared/cross-capability roots allowed
         Assert.True(Directory.Exists(Path.Combine(app, "Composition")));
-        Assert.True(Directory.Exists(Path.Combine(app, "Exceptions")));
         Assert.True(Directory.Exists(Path.Combine(app, "Models")));
         Assert.True(Directory.Exists(Path.Combine(app, "Ports")));
-        Assert.True(Directory.Exists(Path.Combine(app, "Validators")));
+        Assert.True(Directory.Exists(Path.Combine(app, "Validation")));
         Assert.True(File.Exists(Path.Combine(app, "Permissions", "PermissionCatalog.cs")));
+
+        // Single-file technical-axis shared folders were consolidated into Validation/ (AMSC-001 W1).
+        Assert.False(Directory.Exists(Path.Combine(app, "Exceptions")));
+        Assert.False(Directory.Exists(Path.Combine(app, "Validators")));
 
         var requestAxes = new[] { "Commands", "Queries" };
         foreach (var capability in Capabilities)
@@ -83,12 +86,12 @@ public sealed class AccessControlStructureRepair001GuardTests
             }
         }
 
-        // Shared Validators root must not reintroduce capability dump folders
-        var sharedValidators = Path.Combine(app, "Validators");
+        // Shared Validation root must not reintroduce capability dump folders
+        var sharedValidation = Path.Combine(app, "Validation");
         foreach (var banned in new[] { "Role", "Assignment", "Ceiling", "Permissions" })
         {
-            Assert.False(Directory.Exists(Path.Combine(sharedValidators, banned)),
-                $"Shared Validators/{banned} must not return; validators belong under capability roots");
+            Assert.False(Directory.Exists(Path.Combine(sharedValidation, banned)),
+                $"Shared Validation/{banned} must not return; validators belong under capability roots");
         }
     }
 

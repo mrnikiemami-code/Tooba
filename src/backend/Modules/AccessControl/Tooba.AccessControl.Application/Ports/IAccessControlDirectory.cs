@@ -1,4 +1,9 @@
-﻿using Tooba.AccessControl.Application.Models;
+﻿using Tooba.AccessControl.Application.Access.Models;
+using Tooba.AccessControl.Application.Assignments.Models;
+using Tooba.AccessControl.Application.Ceiling.Models;
+using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions.Models;
+using Tooba.AccessControl.Application.Roles.Models;
 using Tooba.AccessControl.Application.Permissions;
 using Tooba.AccessControl.Contracts.Enums;
 
@@ -14,13 +19,13 @@ public interface IAccessControlDirectory
     Task<AccessRoleDto?> GetRoleAsync(Guid roleId, AccessOwnerScope owner, CancellationToken cancellationToken);
 
     /// <summary>ایجاد نقش.</summary>
-    Task<AccessRoleDto> CreateRoleAsync(AccessOwnerScope owner, CreateAccessRoleCommand command, Guid actorUserId, string? traceId, CancellationToken cancellationToken);
+    Task<AccessRoleDto> CreateRoleAsync(AccessOwnerScope owner, CreateRoleRequest command, Guid actorUserId, string? traceId, CancellationToken cancellationToken);
 
     /// <summary>به‌روزرسانی نقش.</summary>
-    Task<AccessRoleDto> UpdateRoleAsync(Guid roleId, AccessOwnerScope owner, UpdateAccessRoleCommand command, Guid actorUserId, string? traceId, CancellationToken cancellationToken);
+    Task<AccessRoleDto> UpdateRoleAsync(Guid roleId, AccessOwnerScope owner, UpdateRoleRequest command, Guid actorUserId, string? traceId, CancellationToken cancellationToken);
 
     /// <summary>کلون نقش.</summary>
-    Task<AccessRoleDto> CloneRoleAsync(Guid roleId, AccessOwnerScope owner, CloneAccessRoleCommand command, Guid actorUserId, string? traceId, CancellationToken cancellationToken);
+    Task<AccessRoleDto> CloneRoleAsync(Guid roleId, AccessOwnerScope owner, CloneRoleRequest command, Guid actorUserId, string? traceId, CancellationToken cancellationToken);
 
     /// <summary>بایگانی نقش.</summary>
     Task ArchiveRoleAsync(Guid roleId, AccessOwnerScope owner, Guid actorUserId, string? traceId, CancellationToken cancellationToken);

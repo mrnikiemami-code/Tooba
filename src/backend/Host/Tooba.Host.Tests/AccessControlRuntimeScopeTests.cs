@@ -13,7 +13,9 @@ using Tooba.Persistence;
 using Xunit;
 
 using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Exceptions;
+using Tooba.AccessControl.Application.Permissions.Models;
+using Tooba.AccessControl.Application.Validation;
+using Tooba.AccessControl.Application.Roles.Models;
 using Tooba.AccessControl.Application.Permissions;
 using Tooba.AccessControl.Infrastructure.Directories;
 using Tooba.AccessControl.Infrastructure.Observability;
@@ -88,7 +90,7 @@ public sealed class AccessControlRuntimeScopeTests : IAsyncLifetime
         var owner = new AccessOwnerScope(AccessOwnerScopeKind.Seller, seller);
         var role = await directory.CreateRoleAsync(
             owner,
-            new CreateAccessRoleCommand("op", "op", "d"),
+            new CreateRoleRequest("op", "op", "d"),
             actor,
             "t2",
             CancellationToken.None);
@@ -140,7 +142,7 @@ public sealed class AccessControlRuntimeScopeTests : IAsyncLifetime
         var owner = new AccessOwnerScope(AccessOwnerScopeKind.Seller, seller);
         var role = await directory.CreateRoleAsync(
             owner,
-            new CreateAccessRoleCommand("mobile-op", "mobile-op", "d"),
+            new CreateRoleRequest("mobile-op", "mobile-op", "d"),
             actor,
             "t2",
             CancellationToken.None);
@@ -212,7 +214,7 @@ public sealed class AccessControlRuntimeScopeTests : IAsyncLifetime
         var owner = new AccessOwnerScope(AccessOwnerScopeKind.Seller, seller);
         var role = await access.CreateRoleAsync(
             owner,
-            new CreateAccessRoleCommand("Mobile Order Operator", "mobile-order-op", "scoped"),
+            new CreateRoleRequest("Mobile Order Operator", "mobile-order-op", "scoped"),
             ownerActor,
             "c2",
             CancellationToken.None);

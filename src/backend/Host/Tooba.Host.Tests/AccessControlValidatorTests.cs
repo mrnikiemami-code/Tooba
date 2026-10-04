@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.AccessControl.Application.Access.Queries;
 using Tooba.AccessControl.Application.Assignments.Commands;
@@ -8,8 +8,8 @@ using Tooba.AccessControl.Application.Bootstrap.Commands;
 using Tooba.AccessControl.Application.Ceiling.Commands;
 using Tooba.AccessControl.Application.Ceiling.Queries;
 using Tooba.AccessControl.Application.Ceiling.Validators;
-using Tooba.AccessControl.Application.Exceptions;
-using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Validation;
+using Tooba.AccessControl.Application.Permissions.Models;
 using Tooba.AccessControl.Application.Permissions.Commands;
 using Tooba.AccessControl.Application.Permissions.Queries;
 using Tooba.AccessControl.Application.Permissions.Validators;

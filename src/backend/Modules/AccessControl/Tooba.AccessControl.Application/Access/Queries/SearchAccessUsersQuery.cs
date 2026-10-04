@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Contracts.Enums;
@@ -7,6 +7,7 @@ using Tooba.Identity.Contracts.Actors;
 using Tooba.Identity.Contracts.Contacts;
 using Tooba.OperatorProfile.Contracts.Ports;
 
+using Tooba.AccessControl.Application.Access.Models;
 using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Ports;
 using Tooba.AccessControl.Application.Permissions;

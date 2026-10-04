@@ -1,6 +1,6 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Tooba.AccessControl.Application.Ceiling.Commands;
-using Tooba.AccessControl.Application.Validators;
+using Tooba.AccessControl.Application.Validation;
 
 namespace Tooba.AccessControl.Application.Ceiling.Validators;
 

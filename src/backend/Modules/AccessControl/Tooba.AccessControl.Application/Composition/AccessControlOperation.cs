@@ -1,4 +1,4 @@
-﻿using Tooba.AccessControl.Application.Exceptions;
+﻿using Tooba.AccessControl.Application.Validation;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 

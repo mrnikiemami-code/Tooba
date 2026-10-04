@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.Design;
 using Tooba.AccessControl.Domain.Aggregates;
 using Tooba.Persistence;
 
-using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
 using Tooba.AccessControl.Infrastructure.Directories;
 using Tooba.AccessControl.Infrastructure.Observability;

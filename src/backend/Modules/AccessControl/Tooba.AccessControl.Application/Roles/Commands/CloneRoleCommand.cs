@@ -1,8 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Contracts.Enums;
 using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Roles.Models;
 using Tooba.AccessControl.Application.Ports;
 using Tooba.AccessControl.Application.Permissions;
 
@@ -47,7 +48,7 @@ public sealed class CloneRoleCommandHandler : IRequestHandler<CloneRoleCommand, 
         return AccessControlOperation.ExecuteAsync(() => _directory.CloneRoleAsync(
             request.RoleId,
             owner,
-            new CloneAccessRoleCommand(request.Name, request.Code, request.Description),
+            new CloneRoleRequest(request.Name, request.Code, request.Description),
             request.ActorUserId,
             request.TraceId,
             cancellationToken));

@@ -12,7 +12,9 @@ using Tooba.Persistence;
 using Xunit;
 
 using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Exceptions;
+using Tooba.AccessControl.Application.Permissions.Models;
+using Tooba.AccessControl.Application.Validation;
+using Tooba.AccessControl.Application.Roles.Models;
 using Tooba.AccessControl.Application.Permissions;
 using Tooba.AccessControl.Infrastructure.Directories;
 using Tooba.AccessControl.Infrastructure.Observability;
@@ -132,7 +134,7 @@ public sealed class AccessControlFoundationTests : IAsyncLifetime
 
         var role = await directory.CreateRoleAsync(
             sellerOwner,
-            new CreateAccessRoleCommand("Mobile Order Operator", "mobile-order-op", "scoped"),
+            new CreateRoleRequest("Mobile Order Operator", "mobile-order-op", "scoped"),
             ownerActor,
             "t2",
             CancellationToken.None);
@@ -226,7 +228,7 @@ public sealed class AccessControlFoundationTests : IAsyncLifetime
         var systemRoles = await directory.ListRolesAsync(sellerOwner, false, CancellationToken.None);
         var system = Assert.Single(systemRoles, r => r.Code == "seller-owner");
         await Assert.ThrowsAsync<AccessControlException>(() =>
-            directory.UpdateRoleAsync(system.Id, sellerOwner, new UpdateAccessRoleCommand("x", "y"), ownerActor, "t8", CancellationToken.None));
+            directory.UpdateRoleAsync(system.Id, sellerOwner, new UpdateRoleRequest("x", "y"), ownerActor, "t8", CancellationToken.None));
     }
 
     private static AccessControlDbContext CreateDb(string connectionString)

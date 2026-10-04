@@ -1,7 +1,6 @@
 ﻿using Tooba.AccessControl.Contracts.Errors;
 using Tooba.BuildingBlocks;
 
-using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.AccessControl.Application.Authorization;
 

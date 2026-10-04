@@ -7867,5 +7867,41 @@
         "evidenceRoot": "docs/architecture/evidence/TB-TMAR-ACCESSCONTROL-AMSC-001-W0/",
         "workflowStop": "AUTO_CONTINUE_TO_ACCESSCONTROL_AMSC_001_W1",
         "automaticNextImplementationTask": "TB-TMAR-ACCESSCONTROL-AMSC-001-W1"
+    },
+    "accessControlModuleAmsc001W1": {
+        "task": "TB-TMAR-ACCESSCONTROL-AMSC-001-W1",
+        "mode": "ARCHITECT_DIRECT_AMSC",
+        "skill": "tooba-architecture-migrate",
+        "target": "src/backend/Modules/AccessControl/Tooba.AccessControl.*",
+        "startingHead": "a3ba1a4fda6b287c6ad8a554c4b98cc6b99edb3f",
+        "state": "ACCESSCONTROL_COHESION_MIGRATED",
+        "parentTask": "TB-TMAR-ACCESSCONTROL-AMSC-001-W0",
+        "behaviorPreservationRisk": "LOW",
+        "cohesionSplit": "Application/Models/AccessControlDtos.cs (8 mixed types) split into capability Models",
+        "validationConsolidation": "Application/Exceptions + Application/Validators merged into Application/Validation",
+        "transportBodyRename": "CreateAccessRoleCommand->CreateRoleRequest, UpdateAccessRoleCommand->UpdateRoleRequest, CloneAccessRoleCommand->CloneRoleRequest",
+        "ownedErrorCodes": "20 raw access.* literals in Infrastructure/Directories/AccessControlDirectory.cs replaced with AccessControlErrorCodes.*; duplicate using removed",
+        "guardRepairs": [
+            "AccessControlModuleAmcW1SolutionGuardTests stale flat-/Modules/ parser repaired to the dedicated /Modules/AccessControl/ folder",
+            "AccessControlModuleAmcW4StructureGuardTests retargeted from AccessControlDtos.cs/Exceptions to AccessOwnerScope.cs/Validation",
+            "AccessControlModuleAmcW2SemanticGuardTests retargeted to Application/Validation/AccessControlException.cs",
+            "AccessControlStructureRepair001GuardTests updated for Validation consolidation and Exceptions/Validators absence"
+        ],
+        "guardAdded": "AccessControlModuleAmsc001W1MigrateGuardTests (capability Models, single Validation folder, owned error constants, no CQRS vocabulary shadowing, non-stale solution parser)",
+        "manifestUpdated": "Tooba.AccessControl.Application forbiddenRootFiles + forbiddenTopLevelFolders [Exceptions, Validators]",
+        "filesSplit": 11,
+        "filesMoved": 3,
+        "filesDeleted": 1,
+        "routesChanged": "NONE",
+        "statusCodesChanged": "NONE",
+        "errorCodesChanged": "NONE",
+        "dtoShapeChanged": "NONE",
+        "schemaMigration": "NONE",
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "microserviceExtractable": true,
+        "focusedValidation": "AccessControl filter 35 passed / 4 skipped (Testcontainers-gated) / 0 failed; solution build 0 errors",
+        "evidenceRoot": "docs/architecture/evidence/TB-TMAR-ACCESSCONTROL-AMSC-001-W1/",
+        "workflowStop": "AUTO_CONTINUE_TO_ACCESSCONTROL_AMSC_001_W2",
+        "automaticNextImplementationTask": "TB-TMAR-ACCESSCONTROL-AMSC-001-W2"
     }
 }

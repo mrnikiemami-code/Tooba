@@ -10,7 +10,6 @@ using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Xunit;
 
-using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Host.Tests;
 

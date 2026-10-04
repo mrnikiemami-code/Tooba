@@ -18,16 +18,30 @@
         {
           "projectName": "Tooba.AccessControl.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "AccessControl.Application intentionally has no root .cs file: capability-first roots (Roles/Assignments/Permissions/Ceiling/Access/Bootstrap/Development) plus shared Authorization/Composition/Exceptions/Models/Ports/Validators carry every type; namespace alignment is exact path-derived equality.",
+          "rootAllowlistJustification": "AccessControl.Application intentionally has no root .cs file: capability-first roots (Roles/Assignments/Permissions/Ceiling/Access/Bootstrap/Development) plus shared Authorization/Composition/Models/Ports/Validation carry every type; AMSC-001 W1 consolidated the single-file Exceptions/ and Validators/ folders into Validation/ and split the mixed Models/AccessControlDtos.cs into capability Models.",
           "forbiddenRootFiles": [
             "AccessControlContracts.cs",
             "AccessControlDtos.cs",
             "PermissionCatalog.cs",
             "AccessControlException.cs",
             "IAccessControlDirectory.cs",
-            "AccessControlOperation.cs"
+            "AccessControlOperation.cs",
+            "AccessOwnerScope.cs",
+            "AccessRoleDto.cs",
+            "CreateRoleRequest.cs",
+            "UpdateRoleRequest.cs",
+            "CloneRoleRequest.cs",
+            "RolePermissionGrant.cs",
+            "UserRoleAssignmentDto.cs",
+            "SellerCeilingEntryDto.cs",
+            "EffectiveAccessDto.cs",
+            "EffectivePermissionDto.cs",
+            "AccessUserHitDto.cs"
           ],
-          "forbiddenTopLevelFolders": []
+          "forbiddenTopLevelFolders": [
+            "Exceptions",
+            "Validators"
+          ]
         },
         {
           "projectName": "Tooba.AccessControl.Domain",

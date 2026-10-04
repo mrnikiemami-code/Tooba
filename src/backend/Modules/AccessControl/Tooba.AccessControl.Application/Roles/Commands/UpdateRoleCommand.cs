@@ -1,8 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Contracts.Enums;
 using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Roles.Models;
 using Tooba.AccessControl.Application.Ports;
 using Tooba.AccessControl.Application.Permissions;
 
@@ -45,7 +46,7 @@ public sealed class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand
         return AccessControlOperation.ExecuteAsync(() => _directory.UpdateRoleAsync(
             request.RoleId,
             owner,
-            new UpdateAccessRoleCommand(request.Name, request.Description),
+            new UpdateRoleRequest(request.Name, request.Description),
             request.ActorUserId,
             request.TraceId,
             cancellationToken));

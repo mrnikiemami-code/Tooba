@@ -1,4 +1,4 @@
-﻿namespace Tooba.AccessControl.Application.Exceptions;
+﻿namespace Tooba.AccessControl.Application.Validation;
 
 /// <summary>خطای دامنهٔ Access Control با کد پایدار (بدون متن محلی در Exception).</summary>
 public sealed class AccessControlException : Exception

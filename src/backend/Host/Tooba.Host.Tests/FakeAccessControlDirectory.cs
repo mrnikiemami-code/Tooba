@@ -1,7 +1,12 @@
 ﻿using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Contracts.Enums;
 
+using Tooba.AccessControl.Application.Access.Models;
+using Tooba.AccessControl.Application.Assignments.Models;
+using Tooba.AccessControl.Application.Ceiling.Models;
 using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions.Models;
+using Tooba.AccessControl.Application.Roles.Models;
 using Tooba.AccessControl.Application.Ports;
 using Tooba.AccessControl.Application.Permissions;
 using Tooba.AccessControl.Infrastructure.Directories;
@@ -25,15 +30,15 @@ internal class FakeAccessControlDirectory : IAccessControlDirectory
         Task.FromResult<AccessRoleDto?>(null);
 
     /// <inheritdoc />
-    public Task<AccessRoleDto> CreateRoleAsync(AccessOwnerScope owner, CreateAccessRoleCommand command, Guid actorUserId, string? traceId, CancellationToken cancellationToken) =>
+    public Task<AccessRoleDto> CreateRoleAsync(AccessOwnerScope owner, CreateRoleRequest command, Guid actorUserId, string? traceId, CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
     /// <inheritdoc />
-    public Task<AccessRoleDto> UpdateRoleAsync(Guid roleId, AccessOwnerScope owner, UpdateAccessRoleCommand command, Guid actorUserId, string? traceId, CancellationToken cancellationToken) =>
+    public Task<AccessRoleDto> UpdateRoleAsync(Guid roleId, AccessOwnerScope owner, UpdateRoleRequest command, Guid actorUserId, string? traceId, CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
     /// <inheritdoc />
-    public Task<AccessRoleDto> CloneRoleAsync(Guid roleId, AccessOwnerScope owner, CloneAccessRoleCommand command, Guid actorUserId, string? traceId, CancellationToken cancellationToken) =>
+    public Task<AccessRoleDto> CloneRoleAsync(Guid roleId, AccessOwnerScope owner, CloneRoleRequest command, Guid actorUserId, string? traceId, CancellationToken cancellationToken) =>
         throw new NotSupportedException();
 
     /// <inheritdoc />

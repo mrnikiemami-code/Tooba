@@ -1,8 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.AccessControl.Application.Composition;
 using Tooba.AccessControl.Contracts.Enums;
 using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Roles.Models;
 using Tooba.AccessControl.Application.Ports;
 using Tooba.AccessControl.Application.Permissions;
 
@@ -44,7 +45,7 @@ public sealed class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand
         var owner = new AccessOwnerScope(request.OwnerScopeKind, request.OwnerScopeId, request.TenantId);
         return AccessControlOperation.ExecuteAsync(() => _directory.CreateRoleAsync(
             owner,
-            new CreateAccessRoleCommand(request.Name, request.Code, request.Description),
+            new CreateRoleRequest(request.Name, request.Code, request.Description),
             request.ActorUserId,
             request.TraceId,
             cancellationToken));

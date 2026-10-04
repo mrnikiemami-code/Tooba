@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Exceptions;
+using Tooba.AccessControl.Application.Validation;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 

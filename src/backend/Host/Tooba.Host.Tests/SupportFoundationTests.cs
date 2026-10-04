@@ -2,7 +2,6 @@
 using Tooba.AccessControl.Contracts.Enums;
 using Xunit;
 
-using Tooba.AccessControl.Application.Models;
 using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.Host.Tests;
 

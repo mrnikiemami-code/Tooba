@@ -1,4 +1,4 @@
-namespace Tooba.AccessControl.Application.Validators;
+﻿namespace Tooba.AccessControl.Application.Validation;
 
 /// <summary>
 /// Stable machine-readable codes for AccessControl FluentValidation transport-shape failures.

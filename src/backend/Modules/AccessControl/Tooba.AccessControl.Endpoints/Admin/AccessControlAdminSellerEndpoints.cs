@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -18,7 +18,8 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Security;
 
-using Tooba.AccessControl.Application.Models;
+using Tooba.AccessControl.Application.Permissions.Models;
+using Tooba.AccessControl.Application.Roles.Models;
 using Tooba.AccessControl.Application.Permissions;
 namespace Tooba.AccessControl.Endpoints.Admin;
 
@@ -195,7 +196,7 @@ public static class AccessControlAdminSellerEndpoints
 
     private static async Task<IResult> CreateRoleAsync(
         Guid sellerId,
-        CreateAccessRoleCommand body,
+        CreateRoleRequest body,
         HttpRequest request,
         ISender sender,
         IAdminPanelAccess adminPanelAccess,
@@ -222,7 +223,7 @@ public static class AccessControlAdminSellerEndpoints
     private static async Task<IResult> UpdateRoleAsync(
         Guid sellerId,
         Guid roleId,
-        UpdateAccessRoleCommand body,
+        UpdateRoleRequest body,
         HttpRequest request,
         ISender sender,
         IAdminPanelAccess adminPanelAccess,
@@ -249,7 +250,7 @@ public static class AccessControlAdminSellerEndpoints
     private static async Task<IResult> CloneRoleAsync(
         Guid sellerId,
         Guid roleId,
-        CloneAccessRoleCommand body,
+        CloneRoleRequest body,
         HttpRequest request,
         ISender sender,
         IAdminPanelAccess adminPanelAccess,

@@ -1,18 +1,22 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.AccessControl.Application;
+using Tooba.AccessControl.Application.Access.Models;
+using Tooba.AccessControl.Application.Assignments.Models;
+using Tooba.AccessControl.Application.Ceiling.Models;
 using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Ports;
-using Tooba.AccessControl.Application.Exceptions;
 using Tooba.AccessControl.Application.Permissions;
+using Tooba.AccessControl.Application.Permissions.Models;
+using Tooba.AccessControl.Application.Ports;
+using Tooba.AccessControl.Application.Roles.Models;
+using Tooba.AccessControl.Application.Validation;
+using Tooba.AccessControl.Contracts.Enums;
+using Tooba.AccessControl.Contracts.Errors;
 using Tooba.AccessControl.Domain.Aggregates;
-using Tooba.AccessControl.Contracts.Enums;
-using Tooba.AccessControl.Contracts.Enums;
-using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.AccessControl.Infrastructure.Observability;
+using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
-
 namespace Tooba.AccessControl.Infrastructure.Directories;
 
 /// <summary>
@@ -67,7 +71,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
     /// <inheritdoc />
     public async Task<AccessRoleDto> CreateRoleAsync(
         AccessOwnerScope owner,
-        CreateAccessRoleCommand command,
+        CreateRoleRequest command,
         Guid actorUserId,
         string? traceId,
         CancellationToken cancellationToken)
@@ -92,7 +96,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
 
         if (await ScopedRoles(owner).AnyAsync(r => r.Code == role.Code && !r.IsArchived, cancellationToken))
         {
-            throw new AccessControlException("access.role.code_conflict");
+            throw new AccessControlException(AccessControlErrorCodes.RoleCodeConflict);
         }
 
         _db.Roles.Add(role);
@@ -106,7 +110,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
     public async Task<AccessRoleDto> UpdateRoleAsync(
         Guid roleId,
         AccessOwnerScope owner,
-        UpdateAccessRoleCommand command,
+        UpdateRoleRequest command,
         Guid actorUserId,
         string? traceId,
         CancellationToken cancellationToken)
@@ -127,7 +131,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
     public async Task<AccessRoleDto> CloneRoleAsync(
         Guid roleId,
         AccessOwnerScope owner,
-        CloneAccessRoleCommand command,
+        CloneRoleRequest command,
         Guid actorUserId,
         string? traceId,
         CancellationToken cancellationToken)
@@ -135,7 +139,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         var source = await RequireRoleAsync(roleId, owner, cancellationToken);
         var created = await CreateRoleAsync(
             owner,
-            new CreateAccessRoleCommand(command.Name, command.Code, command.Description ?? source.Description),
+            new CreateRoleRequest(command.Name, command.Code, command.Description ?? source.Description),
             actorUserId,
             traceId,
             cancellationToken);
@@ -161,7 +165,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         EnsureMutable(role);
         if (role.IsSystem)
         {
-            throw new AccessControlException("access.role.system_immutable");
+            throw new AccessControlException(AccessControlErrorCodes.RoleSystemImmutable);
         }
 
         role.IsArchived = true;
@@ -277,13 +281,13 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
     {
         if (userId == Guid.Empty)
         {
-            throw new AccessControlException("access.user.invalid");
+            throw new AccessControlException(AccessControlErrorCodes.UserInvalid);
         }
 
         var role = await RequireRoleAsync(roleId, owner, cancellationToken);
         if (role.IsArchived)
         {
-            throw new AccessControlException("access.role.archived");
+            throw new AccessControlException(AccessControlErrorCodes.RoleArchived);
         }
 
         var exists = await _db.Assignments.AnyAsync(
@@ -291,7 +295,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
             cancellationToken);
         if (exists)
         {
-            throw new AccessControlException("access.assignment.exists");
+            throw new AccessControlException(AccessControlErrorCodes.AssignmentExists);
         }
 
         var row = new UserRoleAssignment
@@ -323,7 +327,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         var row = await _db.Assignments.FirstOrDefaultAsync(
             a => a.Id == assignmentId && a.OwnerScopeKind == owner.Kind && a.OwnerScopeId == owner.OwnerScopeId,
             cancellationToken)
-            ?? throw new AccessControlException("access.assignment.not_found");
+            ?? throw new AccessControlException(AccessControlErrorCodes.AssignmentNotFound);
         var userId = row.UserId;
         _db.Assignments.Remove(row);
         await AuditAsync(actorUserId, "assignment.remove", "assignment", assignmentId.ToString("D"), owner.OwnerScopeId, userId.ToString("D"), string.Empty, traceId, cancellationToken);
@@ -382,12 +386,12 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
             var def = PermissionCatalog.Require(permissionId);
             if (!def.Delegable)
             {
-                throw new AccessControlException("access.ceiling.not_delegable");
+                throw new AccessControlException(AccessControlErrorCodes.CeilingNotDelegable);
             }
 
             if (!def.ScopeKinds.Contains(scopeKind))
             {
-                throw new AccessControlException("access.scope.unsupported");
+                throw new AccessControlException(AccessControlErrorCodes.ScopeUnsupported);
             }
 
             if (scopeKind == AccessScopeKind.Category && scopeResourceId is Guid categoryId)
@@ -395,7 +399,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
                 var found = await _catalog.CategoryExistsAsync(categoryId, cancellationToken);
                 if (!found)
                 {
-                    throw new AccessControlException("access.scope.unknown_resource");
+                    throw new AccessControlException(AccessControlErrorCodes.ScopeUnknownResource);
                 }
             }
         }
@@ -780,14 +784,14 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
     private async Task<AccessRole> RequireRoleAsync(Guid roleId, AccessOwnerScope owner, CancellationToken cancellationToken)
     {
         var role = await ScopedRoles(owner).FirstOrDefaultAsync(r => r.Id == roleId, cancellationToken);
-        return role ?? throw new AccessControlException("access.role.not_found");
+        return role ?? throw new AccessControlException(AccessControlErrorCodes.RoleNotFound);
     }
 
     private static void EnsureMutable(AccessRole role)
     {
         if (role.IsSystem || !role.IsMutable)
         {
-            throw new AccessControlException("access.role.system_immutable");
+            throw new AccessControlException(AccessControlErrorCodes.RoleSystemImmutable);
         }
     }
 
@@ -795,7 +799,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
     {
         if (owner.Kind == AccessOwnerScopeKind.Seller && owner.OwnerScopeId is null)
         {
-            throw new AccessControlException("access.owner.invalid");
+            throw new AccessControlException(AccessControlErrorCodes.OwnerInvalid);
         }
     }
 
@@ -817,20 +821,20 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
             var def = PermissionCatalog.Require(grant.PermissionId);
             if (!def.ScopeKinds.Contains(grant.ScopeKind))
             {
-                throw new AccessControlException("access.scope.unsupported");
+                throw new AccessControlException(AccessControlErrorCodes.ScopeUnsupported);
             }
 
             if (grant.ScopeKind == AccessScopeKind.Category)
             {
                 if (grant.ScopeResourceId is not Guid categoryId)
                 {
-                    throw new AccessControlException("access.scope.unknown_resource");
+                    throw new AccessControlException(AccessControlErrorCodes.ScopeUnknownResource);
                 }
 
                 var found = await _catalog.CategoryExistsAsync(categoryId, cancellationToken);
                 if (!found)
                 {
-                    throw new AccessControlException("access.scope.unknown_resource");
+                    throw new AccessControlException(AccessControlErrorCodes.ScopeUnknownResource);
                 }
             }
 
@@ -838,12 +842,12 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
             {
                 if (!def.Delegable)
                 {
-                    throw new AccessControlException("access.escalation.platform_permission");
+                    throw new AccessControlException(AccessControlErrorCodes.EscalationPlatformPermission);
                 }
 
                 if (!CeilingAllows(ceilingRows, grant.PermissionId, grant.ScopeKind, grant.ScopeResourceId))
                 {
-                    throw new AccessControlException("access.escalation.ceiling");
+                    throw new AccessControlException(AccessControlErrorCodes.EscalationCeiling);
                 }
             }
         }
@@ -942,7 +946,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         var trimmed = (value ?? string.Empty).Trim();
         if (trimmed.Length == 0 || trimmed.Length > max)
         {
-            throw new AccessControlException("access.validation.text");
+            throw new AccessControlException(AccessControlErrorCodes.ValidationText);
         }
 
         return trimmed;
@@ -953,7 +957,7 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         var trimmed = (value ?? string.Empty).Trim().ToLowerInvariant();
         if (trimmed.Length is < 2 or > 64 || trimmed.Any(c => !(char.IsLetterOrDigit(c) || c is '-' or '_')))
         {
-            throw new AccessControlException("access.validation.code");
+            throw new AccessControlException(AccessControlErrorCodes.ValidationCode);
         }
 
         return trimmed;

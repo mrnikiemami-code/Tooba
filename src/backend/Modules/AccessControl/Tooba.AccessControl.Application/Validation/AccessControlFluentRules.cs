@@ -1,7 +1,7 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using FluentValidation;
 
-namespace Tooba.AccessControl.Application.Validators;
+namespace Tooba.AccessControl.Application.Validation;
 
 /// <summary>
 /// Reusable FluentValidation fragments for AccessControl transport input.

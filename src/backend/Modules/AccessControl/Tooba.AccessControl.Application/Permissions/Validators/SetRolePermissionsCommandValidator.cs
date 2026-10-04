@@ -1,7 +1,6 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Tooba.AccessControl.Application.Permissions.Commands;
-using Tooba.AccessControl.Application.Models;
-using Tooba.AccessControl.Application.Validators;
+using Tooba.AccessControl.Application.Validation;
 
 namespace Tooba.AccessControl.Application.Permissions.Validators;
 
