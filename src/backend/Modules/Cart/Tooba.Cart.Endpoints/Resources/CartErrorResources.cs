@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Resources;
 using Tooba.BuildingBlocks.Localization;
-using Tooba.Cart.Application.Errors;
+using Tooba.Cart.Contracts.Errors;
 
 namespace Tooba.Cart.Endpoints.Resources;
 

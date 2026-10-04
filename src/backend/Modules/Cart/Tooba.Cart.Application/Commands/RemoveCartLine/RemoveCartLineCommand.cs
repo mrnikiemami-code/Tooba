@@ -2,10 +2,9 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Cart.Application.Errors;
+using Tooba.Cart.Application.Composition;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
-using Tooba.Cart.Contracts;
 
 namespace Tooba.Cart.Application.Commands.RemoveCartLine;
 
@@ -22,7 +21,7 @@ internal sealed class RemoveCartLineHandler(
     ICurrentAuthenticatedUser user) : IRequestHandler<RemoveCartLineCommand, Result<CartPage>>
 {
     public Task<Result<CartPage>> Handle(RemoveCartLineCommand request, CancellationToken cancellationToken) =>
-        CartExceptionMapper.TryAsync(async () =>
+        CartOperation.ExecuteAsync(async () =>
         {
             var snapshot = await carts.RemoveLineAsync(
                 request.CartId,

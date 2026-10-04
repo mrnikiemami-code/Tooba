@@ -1,8 +1,9 @@
 using Tooba.BuildingBlocks;
-using Tooba.Cart.Application.Errors;
-using Tooba.Cart.Contracts;
+using Tooba.BuildingBlocks.Results;
+using Tooba.Cart.Application.Composition;
 using Tooba.Cart.Application.Presentation;
 using Tooba.Cart.Contracts;
+using Tooba.Cart.Contracts.Errors;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Offer.Contracts.Dtos;
@@ -14,41 +15,64 @@ namespace Tooba.Cart.Tests.Behavior;
 public sealed class CartPresentationAndErrorTests
 {
     [Fact]
-    public void Exception_mapper_maps_exact_stable_codes_only()
+    public async Task Semantic_faults_map_to_result_failures_by_stable_code()
     {
-        Assert.Equal(CartErrorCodes.Missing, CartExceptionMapper.ToSemanticError(new InvalidOperationException(CartErrorCodes.Missing)).Code);
-        Assert.Equal(CartErrorCodes.GuestInvalid, CartExceptionMapper.ToSemanticError(new InvalidOperationException("cart.guest_secret.invalid")).Code);
-        Assert.Equal(CartErrorCodes.AccessDenied, CartExceptionMapper.ToSemanticError(new InvalidOperationException(CartErrorCodes.AccessDenied)).Code);
-        Assert.Equal(CartErrorCodes.VersionConflict, CartExceptionMapper.ToSemanticError(new InvalidOperationException("cart.version.stale")).Code);
-        Assert.Equal(CartErrorCodes.Expired, CartExceptionMapper.ToSemanticError(new InvalidOperationException(CartErrorCodes.Expired)).Code);
-        Assert.Equal(CartErrorCodes.OfferUnavailable, CartExceptionMapper.ToSemanticError(new InvalidOperationException("cart.offer.inactive")).Code);
-        Assert.Equal(CartErrorCodes.InventoryInsufficient, CartExceptionMapper.ToSemanticError(new InvalidOperationException(CartErrorCodes.InventoryInsufficient)).Code);
-        Assert.Equal(CartErrorCodes.InventoryStale, CartExceptionMapper.ToSemanticError(new InvalidOperationException(CartErrorCodes.InventoryStale)).Code);
-        Assert.Equal(CartErrorCodes.QuantityInvalid, CartExceptionMapper.ToSemanticError(new InvalidOperationException("cart.line.quantity_positive")).Code);
-        Assert.Equal(CartErrorCodes.LineMissing, CartExceptionMapper.ToSemanticError(new InvalidOperationException(CartErrorCodes.LineMissing)).Code);
-        Assert.Equal(CartErrorCodes.Rejected, CartExceptionMapper.ToSemanticError(new InvalidOperationException("cart.line.requires_active")).Code);
-        Assert.Equal(CartErrorCodes.AuthenticationRequired, CartExceptionMapper.ToSemanticError(new InvalidOperationException(CartErrorCodes.AuthenticationRequired)).Code);
+        var codes = new[]
+        {
+            CartErrorCodes.Missing,
+            CartErrorCodes.GuestInvalid,
+            CartErrorCodes.AccessDenied,
+            CartErrorCodes.VersionConflict,
+            CartErrorCodes.Expired,
+            CartErrorCodes.OfferUnavailable,
+            CartErrorCodes.InventoryInsufficient,
+            CartErrorCodes.InventoryStale,
+            CartErrorCodes.QuantityInvalid,
+            CartErrorCodes.LineMissing,
+            CartErrorCodes.Rejected,
+            CartErrorCodes.AuthenticationRequired,
+            CartErrorCodes.PricingQuoteMissing,
+        };
+
+        foreach (var code in codes)
+        {
+            var result = await CartOperation.ExecuteAsync<int>(() =>
+                throw new SemanticException(new SemanticError(code)));
+
+            Assert.True(result.IsFailure, code);
+            Assert.Equal(code, result.FirstError.Code);
+            Assert.Equal(code, Assert.Single(result.Errors).Code);
+        }
     }
 
     [Fact]
-    public void Exception_mapper_does_not_parse_localized_or_prose_messages()
+    public async Task Semantic_faults_map_to_valueless_result_failures()
     {
-        Assert.False(CartExceptionMapper.TryMapExact("پیدا نشد", out _));
-        Assert.False(CartExceptionMapper.TryMapExact("Offer inactive", out _));
-        Assert.False(CartExceptionMapper.TryMapExact("Held reservation", out _));
-        Assert.False(CartExceptionMapper.TryMapExact("cart missing somehow", out _));
-        Assert.Throws<InvalidOperationException>(() =>
-            CartExceptionMapper.ToSemanticError(new InvalidOperationException("پیدا نشد")));
+        var result = await CartOperation.ExecuteAsync(() =>
+            throw new SemanticException(new SemanticError(CartErrorCodes.LineMergeViaQuantity)));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(CartErrorCodes.LineMergeViaQuantity, result.FirstError.Code);
     }
 
     [Fact]
-    public async Task Exception_mapper_propagates_unknown_InvalidOperationException()
+    public async Task CartOperation_propagates_unknown_exceptions_untouched()
     {
         var unknown = new InvalidOperationException("cart.pricing.quote_missing");
         var thrown = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            CartExceptionMapper.TryAsync<int>(() => throw unknown));
+            CartOperation.ExecuteAsync<int>(() => throw unknown));
         Assert.Same(unknown, thrown);
         Assert.Equal("cart.pricing.quote_missing", thrown.Message);
+    }
+
+    [Fact]
+    public async Task CartOperation_returns_success_value_without_errors()
+    {
+        var result = await CartOperation.ExecuteAsync(() => Task.FromResult(42));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(42, result.Value);
+        Assert.Empty(result.Errors);
     }
 
     [Fact]

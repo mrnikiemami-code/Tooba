@@ -33,7 +33,7 @@ public sealed class ContractsW6CharacterizationTests
     {
         var root = FindRepoRoot();
         var csproj = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj"));
+            root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Infrastructure", "Tooba.Cart.Infrastructure.csproj"));
         Assert.Contains("Tooba.Pricing.Contracts", csproj);
         Assert.DoesNotContain("Tooba.Pricing.Application", csproj);
     }

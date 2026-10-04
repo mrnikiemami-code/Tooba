@@ -48,6 +48,48 @@
   <data name="cart.rejected" xml:space="preserve">
     <value>عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.</value>
   </data>
+  <data name="cart.user_id.required" xml:space="preserve">
+    <value>برای این عملیات سبد باید وارد حساب خود شده باشید.</value>
+  </data>
+  <data name="cart.guest_secret.hash_required" xml:space="preserve">
+    <value>شناسهٔ سبد مهمان موجود نیست.</value>
+  </data>
+  <data name="cart.line.merge_via_quantity" xml:space="preserve">
+    <value>این کالا از قبل در سبد است. تعداد آن را تغییر دهید.</value>
+  </data>
+  <data name="cart.convert.order_required" xml:space="preserve">
+    <value>تبدیل سبد بدون مسیر سفارش مشخص ممکن نیست.</value>
+  </data>
+  <data name="cart.assign.guest_only" xml:space="preserve">
+    <value>فقط سبد مهمان را می‌توان به حساب کاربری متصل کرد.</value>
+  </data>
+  <data name="cart.expiry.future_required" xml:space="preserve">
+    <value>مهلت سبد باید در آینده باشد.</value>
+  </data>
+  <data name="cart.expiry.after_created" xml:space="preserve">
+    <value>مهلت سبد باید بعد از زمان ایجاد آن باشد.</value>
+  </data>
+  <data name="cart.market.required" xml:space="preserve">
+    <value>بازار این فروشگاه برای سبد تنظیم نشده است.</value>
+  </data>
+  <data name="cart.currency.invalid" xml:space="preserve">
+    <value>ارز انتخاب‌شده برای سبد معتبر نیست.</value>
+  </data>
+  <data name="cart.pricing.quote_missing" xml:space="preserve">
+    <value>برای این کالا در ارز انتخاب‌شده قیمتی موجود نیست.</value>
+  </data>
+  <data name="cart.commerce.context_unavailable" xml:space="preserve">
+    <value>زمینهٔ تجاری فروشگاه در دسترس نیست. دوباره تلاش کنید.</value>
+  </data>
+  <data name="cart.commerce.market_unconfigured" xml:space="preserve">
+    <value>بازار فروشگاه تنظیم نشده است.</value>
+  </data>
+  <data name="cart.commerce.currency_unconfigured" xml:space="preserve">
+    <value>ارز فروشگاه تنظیم نشده است.</value>
+  </data>
+  <data name="cart.commerce.channel_unconfigured" xml:space="preserve">
+    <value>کانال فروش فروشگاه تنظیم نشده است.</value>
+  </data>
   <data name="checkout.authentication_required" xml:space="preserve">
     <value>برای ادامه فرایند خرید وارد حساب خود شوید.</value>
   </data>

@@ -1,3 +1,4 @@
+using Tooba.Cart.Contracts.Errors;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Domain.Entities;
@@ -111,7 +112,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (userId == Guid.Empty)
         {
-            throw new InvalidOperationException("cart.user_id.required");
+            throw new SemanticException(new SemanticError(CartErrorCodes.UserIdRequired));
         }
 
         var cart = CreateCore(cartId, CartAccessKind.Authenticated, userId, null, market, defaultCurrency, channel, now, expiresAt);
@@ -133,7 +134,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (string.IsNullOrWhiteSpace(guestCredentialHash))
         {
-            throw new InvalidOperationException("cart.guest_secret.hash_required");
+            throw new SemanticException(new SemanticError(CartErrorCodes.GuestCredentialHashRequired));
         }
 
         var cart = CreateCore(cartId, CartAccessKind.Guest, null, guestCredentialHash.Trim(), market, defaultCurrency, channel, now, expiresAt);
@@ -149,7 +150,7 @@ public sealed class ShoppingCart : IHasDomainEvents
         EnsureActive();
         if (Lines.Any(x => x.OfferId == line.OfferId))
         {
-            throw new InvalidOperationException("cart.line.merge_via_quantity");
+            throw new SemanticException(new SemanticError(CartErrorCodes.LineMergeViaQuantity));
         }
 
         Lines.Add(line);
@@ -167,7 +168,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     /// </summary>
     public CartLine RequireLine(Guid lineId) =>
         Lines.SingleOrDefault(x => x.LineId == lineId)
-        ?? throw new InvalidOperationException("cart.line.missing");
+        ?? throw new SemanticException(new SemanticError(CartErrorCodes.LineMissing));
 
     /// <summary>
     /// پس از تغییر تعداد، رویداد و نسخه را جلو می‌برد.
@@ -198,7 +199,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (Status is CartStatus.Converted)
         {
-            throw new InvalidOperationException("cart.converted.not_expirable");
+            throw new SemanticException(new SemanticError(CartErrorCodes.Rejected));
         }
 
         if (Status == CartStatus.Expired)
@@ -230,7 +231,7 @@ public sealed class ShoppingCart : IHasDomainEvents
         EnsureActive();
         if (intent == CartConversionIntent.None)
         {
-            throw new InvalidOperationException("cart.convert.order_required");
+            throw new SemanticException(new SemanticError(CartErrorCodes.ConversionOrderRequired));
         }
 
         Status = CartStatus.Converted;
@@ -247,12 +248,12 @@ public sealed class ShoppingCart : IHasDomainEvents
         EnsureActive();
         if (userId == Guid.Empty)
         {
-            throw new InvalidOperationException("cart.user_id.required");
+            throw new SemanticException(new SemanticError(CartErrorCodes.UserIdRequired));
         }
 
         if (AccessKind != CartAccessKind.Guest)
         {
-            throw new InvalidOperationException("cart.assign.guest_only");
+            throw new SemanticException(new SemanticError(CartErrorCodes.AdoptGuestOnly));
         }
 
         AccessKind = CartAccessKind.Authenticated;
@@ -269,7 +270,7 @@ public sealed class ShoppingCart : IHasDomainEvents
         EnsureActive();
         if (expiresAt <= now)
         {
-            throw new InvalidOperationException("cart.expiry.future_required");
+            throw new SemanticException(new SemanticError(CartErrorCodes.ExpiryFutureRequired));
         }
 
         ExpiresAt = expiresAt;
@@ -283,7 +284,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (expectedVersion != Version)
         {
-            throw new InvalidOperationException("cart.version.stale");
+            throw new SemanticException(new SemanticError(CartErrorCodes.VersionConflict));
         }
     }
 
@@ -300,19 +301,19 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (string.IsNullOrWhiteSpace(market))
         {
-            throw new InvalidOperationException("cart.market.required");
+            throw new SemanticException(new SemanticError(CartErrorCodes.MarketRequired));
         }
 
         // Default selection shape only. This is NOT the currency invariant of all CartLines;
         // each line's authoritative currency comes from its own Pricing quote.
         if (string.IsNullOrWhiteSpace(defaultCurrency) || defaultCurrency.Trim().Length != 3)
         {
-            throw new InvalidOperationException("cart.currency.invalid");
+            throw new SemanticException(new SemanticError(CartErrorCodes.CurrencyInvalid));
         }
 
         if (expiresAt <= now)
         {
-            throw new InvalidOperationException("cart.expiry.after_created");
+            throw new SemanticException(new SemanticError(CartErrorCodes.ExpiryAfterCreated));
         }
 
         return new ShoppingCart
@@ -337,7 +338,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     {
         if (Status != CartStatus.Active)
         {
-            throw new InvalidOperationException("cart.line.requires_active");
+            throw new SemanticException(new SemanticError(CartErrorCodes.Rejected));
         }
     }
 

@@ -2,10 +2,9 @@ using Tooba.Cart.Application.Ports;
 using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Cart.Application.Errors;
+using Tooba.Cart.Application.Composition;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
-using Tooba.Cart.Contracts;
 
 namespace Tooba.Cart.Application.Commands.AddCartLine;
 
@@ -25,7 +24,7 @@ internal sealed class AddCartLineHandler(
     ICurrentAuthenticatedUser user) : IRequestHandler<AddCartLineCommand, Result<CartPage>>
 {
     public Task<Result<CartPage>> Handle(AddCartLineCommand request, CancellationToken cancellationToken) =>
-        CartExceptionMapper.TryAsync(async () =>
+        CartOperation.ExecuteAsync(async () =>
         {
             var snapshot = await carts.AddOrIncreaseLineAsync(
                 request.CartId,

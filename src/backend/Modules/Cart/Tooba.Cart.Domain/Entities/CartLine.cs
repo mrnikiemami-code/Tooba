@@ -1,3 +1,4 @@
+using Tooba.Cart.Contracts.Errors;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.BuildingBlocks;
 
@@ -159,12 +160,12 @@ public sealed class CartLine
     {
         if (quantity <= 0)
         {
-            throw new InvalidOperationException("cart.line.quantity_positive");
+            throw new SemanticException(new SemanticError(CartErrorCodes.QuantityInvalid));
         }
 
         if (quantity > 99)
         {
-            throw new InvalidOperationException("cart.line.quantity_ceiling");
+            throw new SemanticException(new SemanticError(CartErrorCodes.QuantityInvalid));
         }
     }
 }

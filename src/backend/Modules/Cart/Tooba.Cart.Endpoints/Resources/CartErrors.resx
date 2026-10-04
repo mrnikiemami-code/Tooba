@@ -48,6 +48,48 @@
   <data name="cart.rejected" xml:space="preserve">
     <value>Cart operation was rejected. Please retry.</value>
   </data>
+  <data name="cart.user_id.required" xml:space="preserve">
+    <value>A signed-in customer is required for this cart operation.</value>
+  </data>
+  <data name="cart.guest_secret.hash_required" xml:space="preserve">
+    <value>Guest cart credential is missing.</value>
+  </data>
+  <data name="cart.line.merge_via_quantity" xml:space="preserve">
+    <value>This offer already exists in the cart. Change its quantity instead.</value>
+  </data>
+  <data name="cart.convert.order_required" xml:space="preserve">
+    <value>A cart cannot be converted without a concrete order path.</value>
+  </data>
+  <data name="cart.assign.guest_only" xml:space="preserve">
+    <value>Only a guest cart can be attached to a signed-in customer.</value>
+  </data>
+  <data name="cart.expiry.future_required" xml:space="preserve">
+    <value>Cart expiry must be in the future.</value>
+  </data>
+  <data name="cart.expiry.after_created" xml:space="preserve">
+    <value>Cart expiry must be after its creation time.</value>
+  </data>
+  <data name="cart.market.required" xml:space="preserve">
+    <value>Cart market is not configured for this store.</value>
+  </data>
+  <data name="cart.currency.invalid" xml:space="preserve">
+    <value>Cart currency selection is not valid.</value>
+  </data>
+  <data name="cart.pricing.quote_missing" xml:space="preserve">
+    <value>No price is available for this offer in the selected currency.</value>
+  </data>
+  <data name="cart.commerce.context_unavailable" xml:space="preserve">
+    <value>Store commerce context is unavailable. Please retry.</value>
+  </data>
+  <data name="cart.commerce.market_unconfigured" xml:space="preserve">
+    <value>Store commerce market is not configured.</value>
+  </data>
+  <data name="cart.commerce.currency_unconfigured" xml:space="preserve">
+    <value>Store commerce currency is not configured.</value>
+  </data>
+  <data name="cart.commerce.channel_unconfigured" xml:space="preserve">
+    <value>Store commerce sales channel is not configured.</value>
+  </data>
   <data name="checkout.authentication_required" xml:space="preserve">
     <value>Sign in to continue.</value>
   </data>

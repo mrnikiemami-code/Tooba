@@ -8,8 +8,8 @@ public sealed class CartArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events"];
     private static readonly string[] AllowedApplicationFolders =
-        ["Ports", "Lifetime", "Conversion", "Commands", "Queries", "Models", "Errors", "Presentation", "Validation"];
-    private static readonly string[] AllowedContractsFolders = ["Checkout", "Presentation"];
+        ["Ports", "Lifetime", "Conversion", "Commands", "Queries", "Models", "Composition", "Presentation", "Validation"];
+    private static readonly string[] AllowedContractsFolders = ["Checkout", "Presentation", "Errors", "Lifetime"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Messaging", "DependencyInjection", "Events", "Security", "Migrations", "Lifetime"];
     private static readonly string[] AllowedEndpointsFolders = ["Storefront", "Errors", "Resources"];
@@ -66,8 +66,10 @@ public sealed class CartArchitectureGuardTests
         Assert.DoesNotContain(appRefs, r => r.Contains("Host", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(appRefs, r => r.Contains("Catalog.Contracts", StringComparison.Ordinal));
         Assert.Contains(appRefs, r => r.Contains("Party.Contracts", StringComparison.Ordinal));
-        Assert.Contains(appRefs, r => r.Contains("Inventory.Contracts", StringComparison.Ordinal));
+        Assert.Contains(appRefs, r => r.Contains("Offer.Contracts", StringComparison.Ordinal));
         Assert.Contains(appRefs, r => r.Contains("BuildingBlocks", StringComparison.Ordinal));
+        Assert.DoesNotContain(appRefs, r => r.Contains("Pricing.Contracts", StringComparison.Ordinal));
+        Assert.DoesNotContain(appRefs, r => r.Contains("Inventory.Contracts", StringComparison.Ordinal));
 
         var endpointRefs = ProjectRefs("Tooba.Cart.Endpoints");
         Assert.Contains(endpointRefs, r => r.Contains("Cart.Application", StringComparison.Ordinal));
@@ -183,48 +185,18 @@ public sealed class CartArchitectureGuardTests
     }
 
     [Fact]
-    public void Cart_exception_mapper_is_stable_codes_only_without_prose_heuristics()
+    public void Cart_typed_faults_use_contract_stable_codes_without_prose_heuristics()
     {
-        var mapperPath = Path.Combine(CartRoot(), "Tooba.Cart.Application", "Errors", "CartExceptionMapper.cs");
-        Assert.True(File.Exists(mapperPath));
-        var mapper = File.ReadAllText(mapperPath);
+        var codesPath = Path.Combine(CartRoot(), "Tooba.Cart.Contracts", "Errors", "CartErrorCodes.cs");
+        Assert.True(File.Exists(codesPath));
+        var codes = File.ReadAllText(codesPath);
 
-        Assert.DoesNotContain(".Contains(", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("StringComparison.OrdinalIgnoreCase", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("\"Offer\"", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("\"Held\"", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("پیدا نشد", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("راز", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("مجوز", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("کهنه", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("همزمان", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("منقضی", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("رزرو", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("آزادسازی", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("موجودی", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("تعداد", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("غیرفعال", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("فقط سبد Active", mapper, StringComparison.Ordinal);
-        Assert.DoesNotContain("قابل جهش خط", mapper, StringComparison.Ordinal);
-        Assert.True(Regex.IsMatch(mapper, @"[\u0600-\u06FF]") == false, "Persian prose in CartExceptionMapper");
+        Assert.DoesNotContain(".Contains(", codes, StringComparison.Ordinal);
+        Assert.DoesNotContain("StringComparison.OrdinalIgnoreCase", codes, StringComparison.Ordinal);
+        Assert.True(Regex.IsMatch(codes, @"[\u0600-\u06FF]") == false, "Persian prose in CartErrorCodes");
 
-        // No generic swallow of unknown InvalidOperationException → cart.rejected
-        Assert.False(
-            Regex.IsMatch(
-                mapper,
-                @"default\s*:\s*(?:\{[^}]*?)?return\s+new\s+SemanticError\(\s*CartErrorCodes\.Rejected\s*\)",
-                RegexOptions.Singleline),
-            "default branch must not map unknown IOE to cart.rejected");
-        Assert.Contains("TryMapExact", mapper, StringComparison.Ordinal);
-        Assert.Contains("default:", mapper, StringComparison.Ordinal);
-        Assert.Contains("return false", mapper, StringComparison.Ordinal);
-        Assert.Contains("throw exception", mapper, StringComparison.Ordinal);
-
-        // Application must not classify business outcomes via Contains on exception messages.
-        var messageHeuristics = Sources("Tooba.Cart.Application")
-            .Where(x => x.Path.Replace('\\', '/').Contains("/Errors/", StringComparison.Ordinal)
-                        || x.Path.Replace('\\', '/').Contains("/Commands/", StringComparison.Ordinal)
-                        || x.Path.Replace('\\', '/').Contains("/Queries/", StringComparison.Ordinal))
+        // No production source may classify business outcomes by exception message text.
+        var messageHeuristics = AllProductionSources()
             .Where(x => Regex.IsMatch(
                 x.Text,
                 @"exception\.Message.*\.Contains\(|\.Message\s*\.Contains\(|text\.Contains\(",
@@ -232,6 +204,30 @@ public sealed class CartArchitectureGuardTests
             .Select(x => x.Path)
             .ToList();
         Assert.True(messageHeuristics.Count == 0, "message Contains heuristics: " + string.Join("; ", messageHeuristics));
+
+        // No legacy string-matching mapper and no message-keyed code alias table may return.
+        Assert.DoesNotContain(AllProductionSources(), x =>
+            x.Text.Contains("CartExceptionMapper", StringComparison.Ordinal)
+            || x.Text.Contains("TryMapExact", StringComparison.Ordinal));
+        Assert.False(Directory.Exists(Path.Combine(CartRoot(), "Tooba.Cart.Application", "Errors")));
+        Assert.False(File.Exists(Path.Combine(CartRoot(), "Tooba.Cart.Application", "Errors", "CartExceptionMapper.cs")));
+
+        // Every business-layer fault carries a typed SemanticError code; Infrastructure keeps only
+        // technical invariant throws (never localized prose).
+        var rawThrows = Sources("Tooba.Cart.Domain")
+            .Concat(Sources("Tooba.Cart.Application"))
+            .Where(x => !x.Path.Replace('\\', '/').Contains("/Errors/", StringComparison.Ordinal))
+            .Where(x => Regex.IsMatch(x.Text, @"throw new SemanticException\(\s*new SemanticError\(", RegexOptions.None) == false
+                        && Regex.IsMatch(x.Text, @"throw new (?!SemanticException)\w+Exception\(", RegexOptions.None))
+            .Select(x => x.Path)
+            .ToList();
+        Assert.True(rawThrows.Count == 0, "non-semantic throws: " + string.Join("; ", rawThrows));
+
+        // Handlers map faults through the canonical CartOperation boundary.
+        Assert.True(File.Exists(Path.Combine(
+            CartRoot(), "Tooba.Cart.Application", "Composition", "CartOperation.cs")));
+        var application = Sources("Tooba.Cart.Application").ToList();
+        Assert.Contains(application, x => x.Text.Contains("CartOperation.ExecuteAsync", StringComparison.Ordinal));
     }
 
     [Fact]

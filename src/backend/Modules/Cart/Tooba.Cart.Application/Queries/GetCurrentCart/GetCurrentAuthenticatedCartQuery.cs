@@ -1,8 +1,10 @@
 ﻿using Tooba.Cart.Application.Ports;
 using MediatR;
+using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Cart.Application.Errors;
+using Tooba.Cart.Application.Composition;
+using Tooba.Cart.Contracts.Errors;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 
@@ -17,17 +19,17 @@ internal sealed class GetCurrentAuthenticatedCartHandler(
     ICurrentAuthenticatedUser user) : IRequestHandler<GetCurrentAuthenticatedCartQuery, Result<CartPage>>
 {
     public Task<Result<CartPage>> Handle(GetCurrentAuthenticatedCartQuery request, CancellationToken cancellationToken) =>
-        CartExceptionMapper.TryAsync(async () =>
+        CartOperation.ExecuteAsync(async () =>
         {
             if (!user.IsAuthenticated || user.UserId is not Guid userId || userId == Guid.Empty)
             {
-                throw new InvalidOperationException(CartErrorCodes.AuthenticationRequired);
+                throw new SemanticException(new SemanticError(CartErrorCodes.AuthenticationRequired));
             }
 
             var snapshot = await carts.FindActiveAuthenticatedAsync(userId, cancellationToken);
             if (snapshot is null)
             {
-                throw new InvalidOperationException(CartErrorCodes.Missing);
+                throw new SemanticException(new SemanticError(CartErrorCodes.Missing));
             }
 
             return await presentation.PresentAsync(snapshot, guestSecret: null, cancellationToken);

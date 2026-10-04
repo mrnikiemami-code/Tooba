@@ -102,8 +102,11 @@ public sealed class CampaignCartPriceIntegrityTests : IAsyncLifetime
         Assert.DoesNotContain("DiscountPercent", typeof(Tooba.Cart.Domain.Entities.CartLine).GetProperties().Select(p => p.Name));
         Assert.DoesNotContain("PromoAmount", typeof(Tooba.Cart.Domain.Entities.CartLine).GetProperties().Select(p => p.Name));
         Assert.Contains("ICampaignCartPriceAuthority", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Pricing", "Tooba.Pricing.Contracts", "Ports", "CampaignCartPriceAuthority.cs")));
-        Assert.Contains("Tooba.Pricing.Contracts", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
-        Assert.DoesNotContain("Tooba.Pricing.Application", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
+        // Cart consumes Pricing contracts from Infrastructure (quote validator), not from Application.
+        var cartInfraCsproj = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart", "Tooba.Cart.Infrastructure", "Tooba.Cart.Infrastructure.csproj"));
+        Assert.Contains("Tooba.Pricing.Contracts", cartInfraCsproj);
+        Assert.DoesNotContain("Tooba.Pricing.Application", cartInfraCsproj);
+        Assert.DoesNotContain("Tooba.Pricing.Contracts", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
     }
 
     [SkippableFact]

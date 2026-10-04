@@ -1,5 +1,6 @@
+using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Cart.Application.Errors;
+using Tooba.Cart.Contracts.Errors;
 using Tooba.Cart.Contracts;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
@@ -47,7 +48,7 @@ public sealed class CartPresentationComposer : Tooba.Cart.Contracts.ICartPresent
         {
             return await GetAsync(cartId, guestSecret, cancellationToken);
         }
-        catch (InvalidOperationException)
+        catch (SemanticException)
         {
             return null;
         }
@@ -86,7 +87,7 @@ public sealed class CartPresentationComposer : Tooba.Cart.Contracts.ICartPresent
             // Line currency truth only. There is no cart.DefaultCurrency fallback for a quoted line.
             if (string.IsNullOrWhiteSpace(line.QuotedCurrency))
             {
-                throw new InvalidOperationException(CartErrorCodes.LineCurrencyMissing);
+                throw new SemanticException(new SemanticError(CartErrorCodes.LineCurrencyMissing));
             }
 
             lines.Add(new CartLineView(

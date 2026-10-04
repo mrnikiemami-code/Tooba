@@ -132,9 +132,13 @@ public sealed class CartFoundationTests : IAsyncLifetime
         }
 
         Assert.Contains("Tooba.Offer.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
-        Assert.Contains("Tooba.Pricing.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
         Assert.DoesNotContain("Tooba.Pricing.Application", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
-        Assert.Contains("Tooba.Inventory.Contracts", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Application", "Tooba.Cart.Application.csproj")));
+        // Pricing contracts are consumed only by the Cart Infrastructure quote validator, never by Cart.Application.
+        var cartInfraCsproj = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Infrastructure", "Tooba.Cart.Infrastructure.csproj"));
+        Assert.Contains("Tooba.Pricing.Contracts", cartInfraCsproj);
+        Assert.DoesNotContain("Tooba.Pricing.Application", cartInfraCsproj);
+        // Inventory availability contracts are consumed only by the Cart Infrastructure snapshot projector.
+        Assert.Contains("Tooba.Inventory.Contracts", cartInfraCsproj);
         Assert.Equal("cart", CartDbContext.Schema);
         Assert.DoesNotContain("MassTransit", typeof(ShoppingCart).Assembly.GetReferencedAssemblies().Select(a => a.Name));
         Assert.DoesNotContain("MassTransit", typeof(ICartDirectory).Assembly.GetReferencedAssemblies().Select(a => a.Name));

@@ -228,9 +228,9 @@ public sealed class HostCartResidualGuardTests
         Assert.DoesNotContain("ICurrentCommerceContext", resolver, StringComparison.Ordinal);
         Assert.Contains("store.DefaultCurrency", resolver, StringComparison.Ordinal);
         Assert.DoesNotContain("store.Currency", resolver, StringComparison.Ordinal);
-        Assert.Contains("cart.commerce.market_unconfigured", resolver, StringComparison.Ordinal);
-        Assert.Contains("cart.commerce.currency_unconfigured", resolver, StringComparison.Ordinal);
-        Assert.Contains("cart.commerce.channel_unconfigured", resolver, StringComparison.Ordinal);
+        Assert.Contains("CartErrorCodes.CommerceMarketUnconfigured", resolver, StringComparison.Ordinal);
+        Assert.Contains("CartErrorCodes.CommerceCurrencyUnconfigured", resolver, StringComparison.Ordinal);
+        Assert.Contains("CartErrorCodes.CommerceChannelUnconfigured", resolver, StringComparison.Ordinal);
         Assert.DoesNotContain("IOptions<", resolver, StringComparison.Ordinal);
         Assert.DoesNotContain("CartCommerceDefaultsOptions", resolver, StringComparison.Ordinal);
         Assert.DoesNotContain("SalesChannel.Direct", resolver, StringComparison.Ordinal);

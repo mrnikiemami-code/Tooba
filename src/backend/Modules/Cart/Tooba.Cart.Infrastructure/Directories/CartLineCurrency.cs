@@ -1,4 +1,5 @@
-using Tooba.Cart.Application.Errors;
+using Tooba.BuildingBlocks;
+using Tooba.Cart.Contracts.Errors;
 using Tooba.Cart.Domain.Aggregates;
 using Tooba.Cart.Domain.Entities;
 using Tooba.Pricing.Contracts;
@@ -29,7 +30,7 @@ internal static class CartLineCurrency
     {
         if (string.IsNullOrWhiteSpace(line.QuotedCurrency))
         {
-            throw new InvalidOperationException(CartErrorCodes.LineCurrencyMissing);
+            throw new SemanticException(new SemanticError(CartErrorCodes.LineCurrencyMissing));
         }
 
         return line.QuotedCurrency;

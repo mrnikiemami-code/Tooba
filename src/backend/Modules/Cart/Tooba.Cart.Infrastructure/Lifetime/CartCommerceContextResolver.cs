@@ -1,4 +1,6 @@
+using Tooba.BuildingBlocks;
 using Tooba.Cart.Application.Ports;
+using Tooba.Cart.Contracts.Errors;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.StoreContext.Contracts.Current;
 
@@ -26,19 +28,19 @@ public sealed class CartCommerceContextResolver : ICartCommerceContextResolver
         var store = _storeCommerce.Current;
         if (store is null)
         {
-            throw new InvalidOperationException("cart.commerce.context_unavailable");
+            throw new SemanticException(new SemanticError(CartErrorCodes.CommerceContextUnavailable));
         }
 
         var market = store.Market;
         if (string.IsNullOrWhiteSpace(market))
         {
-            throw new InvalidOperationException("cart.commerce.market_unconfigured");
+            throw new SemanticException(new SemanticError(CartErrorCodes.CommerceMarketUnconfigured));
         }
 
         var currency = store.DefaultCurrency;
         if (string.IsNullOrWhiteSpace(currency))
         {
-            throw new InvalidOperationException("cart.commerce.currency_unconfigured");
+            throw new SemanticException(new SemanticError(CartErrorCodes.CommerceCurrencyUnconfigured));
         }
 
         var channel = ParseChannel(store.SalesChannel);
@@ -53,7 +55,7 @@ public sealed class CartCommerceContextResolver : ICartCommerceContextResolver
         if (string.IsNullOrWhiteSpace(raw)
             || !Enum.TryParse<SalesChannel>(raw.Trim(), ignoreCase: true, out var parsed))
         {
-            throw new InvalidOperationException("cart.commerce.channel_unconfigured");
+            throw new SemanticException(new SemanticError(CartErrorCodes.CommerceChannelUnconfigured));
         }
 
         return parsed;

@@ -1,10 +1,10 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
 using Tooba.Cart.Application.Commands.AddCartLine;
-using Tooba.Cart.Application.Errors;
 using Tooba.Cart.Application.Presentation;
 using Tooba.Cart.Application.Validation;
 using Tooba.Cart.Contracts;
+using Tooba.Cart.Contracts.Errors;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Offer.Contracts.Dtos;
@@ -93,9 +93,9 @@ public sealed class CartMulticurrencyTests
             1,
             [Line(10m, null, 1m)]);
 
-        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var error = await Assert.ThrowsAsync<SemanticException>(() =>
             Composer().PresentAsync(snapshot, guestSecret: null, CancellationToken.None));
-        Assert.Equal(CartErrorCodes.LineCurrencyMissing, error.Message);
+        Assert.Equal(CartErrorCodes.LineCurrencyMissing, error.Error.Code);
     }
 
     [Fact]

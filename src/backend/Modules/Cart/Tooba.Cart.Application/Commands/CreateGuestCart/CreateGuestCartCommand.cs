@@ -1,7 +1,7 @@
 ﻿using Tooba.Cart.Application.Ports;
 using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Cart.Application.Errors;
+using Tooba.Cart.Application.Composition;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 
@@ -16,7 +16,7 @@ internal sealed class CreateGuestCartHandler(
     CartPresentationComposer presentation) : IRequestHandler<CreateGuestCartCommand, Result<CartPage>>
 {
     public Task<Result<CartPage>> Handle(CreateGuestCartCommand request, CancellationToken cancellationToken) =>
-        CartExceptionMapper.TryAsync(async () =>
+        CartOperation.ExecuteAsync(async () =>
         {
             var context = commerceContext.Resolve();
             var created = await carts.CreateGuestAsync(

@@ -1,12 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
-using Tooba.Cart.Application.Errors;
 using Tooba.Cart.Application.Ports;
 using Tooba.Cart.Application.Lifetime;
+using Tooba.Cart.Contracts.Errors;
 using Tooba.Cart.Domain.Aggregates;
 using Tooba.Cart.Domain.Entities;
-using Tooba.Cart.Domain.Events;
 using Tooba.Cart.Domain.ValueObjects;
 using CartContract = Tooba.Cart.Contracts;
 using Tooba.Cart.Infrastructure.Persistence;
@@ -15,10 +14,6 @@ using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Inventory.Contracts.Cart;
-using Tooba.Inventory.Contracts.Checkout;
-using Tooba.Inventory.Contracts.Errors;
-using Tooba.Inventory.Contracts.Orders;
-using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
@@ -37,20 +32,19 @@ public sealed class OpenCartUseCaseGuard : ICartUseCaseGuard
 /// <summary>
 /// نوشتن سبد با قرارداد Offer/Pricing/Inventory. DbContext آن ماژول‌ها لمس نمی‌شود و تراکنش توزیع‌شده نیست.
 /// سیاست شکست: اعتبارسنجی موجودی بدون رزرو سخت. رزرو تاریخی سبد فقط آزاد می‌شود و تمدید نمی‌شود.
+/// همکارهای تخصصی (quote/expiry/snapshot) در فایل‌های مجاور جدا شده‌اند.
 /// </summary>
 public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGateway
 {
     private readonly TimeSpan _persistenceTtl;
     private readonly CartDbContext _db;
     private readonly ICartUseCaseGuard _guard;
-    private readonly IOfferLookupGateway _offers;
-    private readonly IPriceLookupGateway _prices;
     private readonly ICartInventoryHoldPort _inventory;
     private readonly IInventoryAvailabilityGateway _availability;
-    private readonly ICatalogCartQuantityPolicyGateway? _catalog;
-    private readonly IQuantityNormalizer _normalizer;
+    private readonly CartQuoteValidator _quote;
+    private readonly CartSnapshotProjector _snapshots;
+    private readonly CartExpiryScanner _expiry;
     private readonly ICartPersistenceHoursSource? _persistenceHours;
-    private readonly ICampaignCartPriceAuthority? _campaignPrices;
     private readonly ICartCommerceContextResolver? _commerceContext;
     private readonly IClock _clock;
     private readonly IIdGenerator _ids;
@@ -76,17 +70,15 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
     {
         _db = db;
         _guard = guard;
-        _offers = offers;
-        _prices = prices;
         _inventory = inventory;
         _availability = availability;
-        _catalog = catalog;
-        _normalizer = normalizer;
         _persistenceHours = persistenceHours;
-        _campaignPrices = campaignPrices;
         _commerceContext = commerceContext;
         _clock = clock;
         _ids = ids;
+        _quote = new CartQuoteValidator(offers, prices, normalizer, catalog, campaignPrices);
+        _snapshots = new CartSnapshotProjector(availability);
+        _expiry = new CartExpiryScanner(db, inventory, guard);
         var hours = CartPersistenceHours.Clamp(lifetime?.Value.PersistenceHours ?? CartPersistenceHours.DefaultHours);
         _persistenceTtl = TimeSpan.FromHours(hours);
     }
@@ -172,7 +164,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
 
         var lineCurrency = CartLineCurrency.ForNewLine(cart, requestedCurrency);
         var now = _clock.UtcNow;
-        var (offer, quote, normalized, effectiveCampaignId) = await ValidateOfferAndQuoteAsync(
+        var (offer, quote, normalized, effectiveCampaignId) = await _quote.ValidateOfferAndQuoteAsync(
             cart,
             offerId,
             quantity,
@@ -253,63 +245,8 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
     }
 
     /// <inheritdoc />
-    public async Task<int> ExpireDueCartsAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var limit = Math.Max(1, batchSize);
-        var total = 0;
-        while (true)
-        {
-            var expired = await ExpireDueBatchAsync(utcNow, limit, cancellationToken).ConfigureAwait(false);
-            total += expired;
-            if (expired < limit)
-            {
-                break;
-            }
-        }
-
-        await _inventory.ReleaseExpiredHoldsAsync(utcNow, limit, cancellationToken).ConfigureAwait(false);
-        return total;
-    }
-
-    private async Task<int> ExpireDueBatchAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken)
-    {
-        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        var ids = await _db.Database
-            .SqlQuery<Guid>(
-                $"""
-                 SELECT c.cart_id AS "Value"
-                 FROM cart.carts AS c
-                 WHERE c.status = 'Active'
-                   AND c.expires_at IS NOT NULL
-                   AND c.expires_at <= {utcNow}
-                 ORDER BY c.expires_at
-                 LIMIT {batchSize}
-                 FOR UPDATE SKIP LOCKED
-                 """)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        if (ids.Count == 0)
-        {
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-            return 0;
-        }
-
-        var due = await _db.Carts
-            .Include(x => x.Lines)
-            .Where(x => ids.Contains(x.CartId))
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        foreach (var cart in due)
-        {
-            await ReleaseAllAsync(cart, cancellationToken).ConfigureAwait(false);
-            cart.Expire(utcNow);
-        }
-
-        await SaveCartAsync(cancellationToken).ConfigureAwait(false);
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-        return due.Count;
-    }
+    public Task<int> ExpireDueCartsAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken) =>
+        _expiry.ExpireDueCartsAsync(utcNow, batchSize, ReleaseAllAsync, SaveCartAsync, cancellationToken);
 
     /// <inheritdoc />
     public async Task<CartMergeResult> MergeAnonymousAfterLoginAsync(
@@ -321,7 +258,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         await _guard.EnsureCanMutateAsync(cancellationToken);
         if (userId == Guid.Empty)
         {
-            throw new InvalidOperationException("cart.user_id.required");
+            throw new SemanticException(new SemanticError(CartErrorCodes.UserIdRequired));
         }
 
         ShoppingCart? guest = null;
@@ -329,7 +266,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         {
             if (string.IsNullOrWhiteSpace(guestSecret))
             {
-                throw new InvalidOperationException("cart.guest_secret.invalid");
+                throw new SemanticException(new SemanticError(CartErrorCodes.GuestInvalid));
             }
 
             guest = await LoadRequiredAsync(cartId, cancellationToken);
@@ -337,7 +274,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
             {
                 if (guest.OwnerUserId != userId)
                 {
-                    throw new InvalidOperationException("cart.access.denied");
+                    throw new SemanticException(new SemanticError(CartErrorCodes.AccessDenied));
                 }
 
                 return new CartMergeResult(await ToSnapshotAsync(guest, cancellationToken), false, (await ToSnapshotAsync(guest, cancellationToken)).Lines);
@@ -356,7 +293,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         {
             if (_commerceContext is null)
             {
-                throw new InvalidOperationException("cart.commerce.context_unavailable");
+                throw new SemanticException(new SemanticError(CartErrorCodes.CommerceContextUnavailable));
             }
 
             var context = _commerceContext.Resolve();
@@ -438,7 +375,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         var now = _clock.UtcNow;
         // Existing line requotes in its own authoritative QuotedCurrency; cart default never overrides it.
         var lineCurrency = CartLineCurrency.RequireForExistingLine(line);
-        var (_, quote, normalized, effectiveCampaignId) = await ValidateOfferAndQuoteAsync(
+        var (_, quote, normalized, effectiveCampaignId) = await _quote.ValidateOfferAndQuoteAsync(
             cart,
             line.OfferId,
             quantity,
@@ -481,77 +418,6 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         cart.RemoveLine(line.LineId, _clock.UtcNow);
         await SaveCartAsync(cancellationToken);
         return await ToSnapshotAsync(cart, cancellationToken);
-    }
-
-    private async Task<(OfferReference Offer, PriceQuote Quote, decimal Quantity, Guid? EffectiveCampaignId)> ValidateOfferAndQuoteAsync(
-        ShoppingCart cart,
-        Guid offerId,
-        decimal quantity,
-        string selectedCurrency,
-        DateTimeOffset now,
-        Guid? merchandisingCampaignId,
-        CancellationToken cancellationToken)
-    {
-        var offer = await _offers.FindOfferAsync(offerId, cancellationToken)
-            ?? throw new InvalidOperationException("cart.offer.missing");
-        if (offer.Status != OfferStatus.Active)
-        {
-            throw new InvalidOperationException("cart.offer.inactive");
-        }
-
-        if (offer.Channel != cart.Channel)
-        {
-            throw new InvalidOperationException("cart.offer.channel_mismatch");
-        }
-
-        if (_catalog is not null)
-        {
-            var policy = await _catalog.GetEffectiveQuantityPolicyForVariantAsync(offer.CatalogVariantId, cancellationToken)
-                ?? throw new InvalidOperationException("cart.quantity_policy.missing");
-            quantity = _normalizer.Normalize(quantity, policy);
-        }
-
-        CartLine.EnsureQuantity(quantity);
-        if (offer.MinimumOrderQuantity is { } min && quantity < min)
-        {
-            throw new InvalidOperationException("offer.min_quantity.not_met");
-        }
-
-        if (offer.MaximumOrderQuantity is { } max && quantity > max)
-        {
-            throw new InvalidOperationException("offer.max_quantity.exceeded");
-        }
-
-        Guid? effectiveCampaignId = null;
-        PriceQuote? campaignQuote = null;
-        if (merchandisingCampaignId is Guid campaignId
-            && campaignId != Guid.Empty
-            && _campaignPrices is not null)
-        {
-            campaignQuote = await _campaignPrices.TryResolveEligibleCampaignPriceAsync(
-                campaignId,
-                offerId,
-                cart.Market,
-                cart.Channel,
-                selectedCurrency,
-                now,
-                cancellationToken);
-            if (campaignQuote is not null)
-            {
-                effectiveCampaignId = campaignId;
-            }
-        }
-
-        if (campaignQuote is not null)
-        {
-            return (offer, campaignQuote, quantity, effectiveCampaignId);
-        }
-
-        var quote = await _prices.ResolvePriceAsync(
-            new PriceResolutionQuery(offerId, cart.Market, cart.Channel, selectedCurrency, now, null, null, quantity),
-            cancellationToken)
-            ?? throw new InvalidOperationException("cart.pricing.quote_missing");
-        return (offer, quote, quantity, null);
     }
 
     private async Task<TimeSpan> ResolvePersistenceTtlAsync(CancellationToken cancellationToken)
@@ -602,7 +468,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         var priceId = source.PriceId ?? Guid.Empty;
         try
         {
-            var (_, quote, normalized, effectiveCampaign) = await ValidateOfferAndQuoteAsync(
+            var (_, quote, normalized, effectiveCampaign) = await _quote.ValidateOfferAndQuoteAsync(
                 target,
                 source.OfferId,
                 quantity,
@@ -624,7 +490,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
                 source.SetMerchandisingCampaignId(effectiveCampaign);
             }
         }
-        catch (InvalidOperationException)
+        catch (SemanticException)
         {
             // خط ادغام‌شده حذف نمی‌شود؛ موجودی/قیمت در snapshot بازتاب می‌شود.
         }
@@ -670,10 +536,10 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
     private async Task EnsureSellableAsync(Guid offerId, decimal quantity, CancellationToken cancellationToken)
     {
         var availability = await _availability.GetAvailabilityAsync(offerId, cancellationToken)
-            ?? throw new InvalidOperationException("cart.inventory.missing");
+            ?? throw new SemanticException(new SemanticError(CartErrorCodes.InventoryInsufficient));
         if (availability.Available < quantity)
         {
-            throw new InvalidOperationException("cart.inventory.insufficient");
+            throw new SemanticException(new SemanticError(CartErrorCodes.InventoryInsufficient));
         }
     }
 
@@ -693,7 +559,8 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         await _db.Carts.Include(x => x.Lines).SingleOrDefaultAsync(x => x.CartId == cartId, cancellationToken);
 
     private async Task<ShoppingCart> LoadRequiredAsync(Guid cartId, CancellationToken cancellationToken) =>
-        await LoadAsync(cartId, cancellationToken) ?? throw new InvalidOperationException("cart.missing");
+        await LoadAsync(cartId, cancellationToken)
+            ?? throw new SemanticException(new SemanticError(CartErrorCodes.Missing));
 
     private static void EnsureAccess(ShoppingCart cart, CartContract.CartAccess access)
     {
@@ -701,7 +568,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         {
             if (access.UserId is null || access.UserId != cart.OwnerUserId)
             {
-                throw new InvalidOperationException("cart.access.denied");
+                throw new SemanticException(new SemanticError(CartErrorCodes.AccessDenied));
             }
 
             return;
@@ -711,7 +578,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
             || string.IsNullOrWhiteSpace(cart.GuestCredentialHash)
             || !CartCredentialHasher.Matches(access.GuestSecret, cart.GuestCredentialHash))
         {
-            throw new InvalidOperationException("cart.guest_secret.invalid");
+            throw new SemanticException(new SemanticError(CartErrorCodes.GuestInvalid));
         }
     }
 
@@ -723,59 +590,19 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         }
         catch (DbUpdateConcurrencyException)
         {
-            throw new InvalidOperationException("cart.version.stale");
+            throw new SemanticException(new SemanticError(CartErrorCodes.VersionConflict));
         }
     }
 
-    private async Task<CartContract.CartSnapshot> ToSnapshotAsync(ShoppingCart cart, CancellationToken cancellationToken)
-    {
-        var offerIds = cart.Lines.Select(x => x.OfferId).Distinct().ToArray();
-        var availability = offerIds.Length == 0
-            ? new Dictionary<Guid, InventoryAvailability>()
-            : await _availability.GetAvailabilityBatchAsync(offerIds, cancellationToken);
-        return new CartContract.CartSnapshot(
-            cart.CartId,
-            (CartContract.CartStatus)(int)cart.Status,
-            (CartContract.CartAccessKind)(int)cart.AccessKind,
-            cart.OwnerUserId,
-            cart.Market,
-            cart.DefaultCurrency,
-            cart.Channel,
-            cart.ExpiresAt,
-            (CartContract.CartConversionIntent)(int)cart.ConversionIntent,
-            cart.Version,
-            cart.Lines.Select(line =>
-            {
-                availability.TryGetValue(line.OfferId, out var stock);
-                var available = stock?.Available ?? 0;
-                var kind = available >= line.Quantity
-                    ? CartContract.CartLineAvailabilityKind.Available
-                    : available > 0
-                        ? CartContract.CartLineAvailabilityKind.LimitedQuantity
-                        : CartContract.CartLineAvailabilityKind.Unavailable;
-                return new CartContract.CartLineSnapshot(
-                    line.LineId,
-                    line.OfferId,
-                    line.CatalogVariantId,
-                    line.SellerPartyId,
-                    line.Quantity,
-                    line.ReservationId,
-                    line.QuotedAmount,
-                    line.QuotedCurrency,
-                    line.QuotedTaxExclusive,
-                    line.PriceId,
-                    line.QuotedAt,
-                    kind,
-                    line.MerchandisingCampaignId);
-            }).ToList());
-    }
+    private Task<CartContract.CartSnapshot> ToSnapshotAsync(ShoppingCart cart, CancellationToken cancellationToken) =>
+        _snapshots.ToSnapshotAsync(cart, cancellationToken);
 
     /// <summary>
     /// نقل‌قول خطوط کمپین را با واجدشرایطی جاری هم‌تراز می‌کند؛ تخفیف منقضی به Base برمی‌گردد.
     /// </summary>
     private async Task RevalidateCampaignQuotesAsync(ShoppingCart cart, CancellationToken cancellationToken)
     {
-        if (_campaignPrices is null || cart.Status != CartStatus.Active)
+        if (_quote.HasCampaignAuthority is false || cart.Status != CartStatus.Active)
         {
             return;
         }
@@ -791,7 +618,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
 
             try
             {
-                var (_, quote, _, effectiveCampaign) = await ValidateOfferAndQuoteAsync(
+                var (_, quote, _, effectiveCampaign) = await _quote.ValidateOfferAndQuoteAsync(
                     cart,
                     line.OfferId,
                     line.Quantity,
@@ -817,7 +644,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
                     changed = true;
                 }
             }
-            catch (InvalidOperationException)
+            catch (SemanticException)
             {
                 // leave line; availability snapshot will reflect issues
             }

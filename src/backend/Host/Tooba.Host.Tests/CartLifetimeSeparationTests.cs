@@ -30,7 +30,11 @@ public sealed class CartLifetimeSeparationTests
         Assert.DoesNotContain("ReserveAsync", cartDir, StringComparison.Ordinal);
         Assert.Contains("EnsureSellableAsync", cartDir, StringComparison.Ordinal);
         Assert.Contains("_persistenceTtl", cartDir, StringComparison.Ordinal);
-        Assert.Contains("GetAvailabilityBatchAsync", cartDir, StringComparison.Ordinal);
+        // Availability batch read lives in the cohesive snapshot projector collaborator.
+        var cartDirectories = ReadAggregated(
+            "src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories",
+            "Cart*.cs");
+        Assert.Contains("GetAvailabilityBatchAsync", cartDirectories, StringComparison.Ordinal);
     }
 
     [Fact]
