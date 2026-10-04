@@ -1,5 +1,7 @@
 using MediatR;
+using Tooba.AddressBook.Application.Composition;
 using Tooba.AddressBook.Application.Ports;
+using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.AddressBook.Application.Commands.DeleteCustomerAddress;
 
@@ -8,18 +10,16 @@ namespace Tooba.AddressBook.Application.Commands.DeleteCustomerAddress;
 /// مالکیت/وجود و رفتار خطا بدون ترجمه در Application/Domain می‌ماند.
 /// </summary>
 public sealed record DeleteCustomerAddressCommand(Guid ActorUserId, Guid AddressId)
-    : IRequest<Unit>;
+    : IRequest<Result>;
 
 /// <summary>Handler حذف نشانی؛ فقط از دایرکتوری ماژول استفاده می‌کند و DbContext را لمس نمی‌کند.</summary>
 public sealed class DeleteCustomerAddressCommandHandler(IAddressBookDirectory addresses)
-    : IRequestHandler<DeleteCustomerAddressCommand, Unit>
+    : IRequestHandler<DeleteCustomerAddressCommand, Result>
 {
     /// <inheritdoc />
-    public async Task<Unit> Handle(
+    public Task<Result> Handle(
         DeleteCustomerAddressCommand request,
         CancellationToken cancellationToken)
-    {
-        await addresses.DeleteAsync(request.ActorUserId, request.AddressId, cancellationToken);
-        return Unit.Value;
-    }
+        => AddressBookOperation.ExecuteAsync(
+            () => addresses.DeleteAsync(request.ActorUserId, request.AddressId, cancellationToken));
 }

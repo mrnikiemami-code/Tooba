@@ -1,6 +1,8 @@
 using MediatR;
+using Tooba.AddressBook.Application.Composition;
 using Tooba.AddressBook.Application.Ports;
 using Tooba.AddressBook.Contracts.Dtos;
+using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.AddressBook.Application.Commands.SetDefaultCustomerAddress;
 
@@ -9,15 +11,16 @@ namespace Tooba.AddressBook.Application.Commands.SetDefaultCustomerAddress;
 /// مالکیت/وجود و رفتار خطا بدون ترجمه در Application/Domain می‌ماند.
 /// </summary>
 public sealed record SetDefaultCustomerAddressCommand(Guid ActorUserId, Guid AddressId)
-    : IRequest<CustomerAddressRecord>;
+    : IRequest<Result<CustomerAddressRecord>>;
 
 /// <summary>Handler تعیین پیش‌فرض؛ فقط از دایرکتوری ماژول استفاده می‌کند و DbContext را لمس نمی‌کند.</summary>
 public sealed class SetDefaultCustomerAddressCommandHandler(IAddressBookDirectory addresses)
-    : IRequestHandler<SetDefaultCustomerAddressCommand, CustomerAddressRecord>
+    : IRequestHandler<SetDefaultCustomerAddressCommand, Result<CustomerAddressRecord>>
 {
     /// <inheritdoc />
-    public Task<CustomerAddressRecord> Handle(
+    public Task<Result<CustomerAddressRecord>> Handle(
         SetDefaultCustomerAddressCommand request,
         CancellationToken cancellationToken)
-        => addresses.SetDefaultAsync(request.ActorUserId, request.AddressId, cancellationToken);
+        => AddressBookOperation.ExecuteAsync(
+            () => addresses.SetDefaultAsync(request.ActorUserId, request.AddressId, cancellationToken));
 }

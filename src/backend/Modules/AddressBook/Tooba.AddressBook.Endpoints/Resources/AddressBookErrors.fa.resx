@@ -15,4 +15,37 @@
   <data name="customer.address.missing" xml:space="preserve">
     <value>نشانی مورد نظر پیدا نشد.</value>
   </data>
+  <data name="customer.address.actor_required" xml:space="preserve">
+    <value>هویت معتبر مشتری الزامی است.</value>
+  </data>
+  <data name="customer.address.recipient_name_required" xml:space="preserve">
+    <value>نام گیرنده الزامی است.</value>
+  </data>
+  <data name="customer.address.contact_mobile_invalid" xml:space="preserve">
+    <value>شمارهٔ تماس معتبر نیست.</value>
+  </data>
+  <data name="customer.address.country_invalid" xml:space="preserve">
+    <value>کشور معتبر نیست.</value>
+  </data>
+  <data name="customer.address.province_name_invalid" xml:space="preserve">
+    <value>نام استان معتبر نیست.</value>
+  </data>
+  <data name="customer.address.city_name_invalid" xml:space="preserve">
+    <value>نام شهر الزامی است.</value>
+  </data>
+  <data name="customer.address.postal_code_invalid" xml:space="preserve">
+    <value>کدپستی معتبر نیست.</value>
+  </data>
+  <data name="customer.address.postal_address_invalid" xml:space="preserve">
+    <value>نشانی پستی الزامی است.</value>
+  </data>
+  <data name="customer.address.building_unit_invalid" xml:space="preserve">
+    <value>واحد ساختمان معتبر نیست.</value>
+  </data>
+  <data name="customer.address.label_invalid" xml:space="preserve">
+    <value>برچسب نشانی معتبر نیست.</value>
+  </data>
+  <data name="customer.address.recipient_name_parts_invalid" xml:space="preserve">
+    <value>نام و نام خانوادگی هر دو الزامی‌اند.</value>
+  </data>
 </root>

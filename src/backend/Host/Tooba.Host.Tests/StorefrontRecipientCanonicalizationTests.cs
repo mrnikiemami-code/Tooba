@@ -1,4 +1,5 @@
 ﻿using Tooba.AddressBook.Domain.Aggregates;
+using Tooba.BuildingBlocks;
 using Tooba.Order.Application.Storefront;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Domain;
@@ -70,7 +71,7 @@ public sealed class StorefrontRecipientCanonicalizationTests
         Assert.Equal("محمد", address.FirstName);
         Assert.Equal("امامی", address.LastName);
         Assert.Equal("محمد امامی", address.RecipientName);
-        Assert.Throws<InvalidOperationException>(() => address.ApplyRecipientNames("علی", ""));
+        Assert.Throws<SemanticException>(() => address.ApplyRecipientNames("علی", ""));
     }
 
     [Fact]

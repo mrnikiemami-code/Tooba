@@ -145,13 +145,22 @@ public sealed class AddressBookValidatorCoverageGuardTests
         Assert.Contains("\"lockVersion\": \"ARCH-COMPLETE-002\"", window, StringComparison.Ordinal);
 
         using var doc = System.Text.Json.JsonDocument.Parse(manifests);
-        Assert.False(doc.RootElement.TryGetProperty("preCertModules", out _), "preCertModules must be removed after promotion");
 
         var entries = doc.RootElement.GetProperty("modules").EnumerateArray()
             .Where(m => m.GetProperty("module").GetString() == "AddressBook")
             .ToArray();
         Assert.Single(entries);
         Assert.True(entries[0].GetProperty("structureCertified").GetBoolean());
+
+        // AddressBook must not linger as an uncertified pre-cert duplicate. The preCertModules
+        // array may legitimately carry other modules (e.g. ProductWorkspace), so the guard asserts
+        // its documented intent — no AddressBook entry there — rather than its absence.
+        if (doc.RootElement.TryGetProperty("preCertModules", out var preCert))
+        {
+            Assert.DoesNotContain(
+                preCert.EnumerateArray(),
+                m => m.GetProperty("module").GetString() == "AddressBook");
+        }
     }
 
     [Fact]

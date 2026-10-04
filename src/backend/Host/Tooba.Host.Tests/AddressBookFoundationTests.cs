@@ -17,6 +17,7 @@ using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.AddressBook.Contracts.Dtos;
 using Tooba.Cart.Application.Ports;
+using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Order.Domain;
 using Tooba.Persistence;
@@ -82,12 +83,23 @@ public sealed class AddressBookFoundationTests
             Assert.Contains("ApiResponseFactory", source, StringComparison.Ordinal);
             Assert.Contains("FromFailure", source, StringComparison.Ordinal);
             Assert.Contains("new SemanticError(", source, StringComparison.Ordinal);
-            Assert.Contains("AddressBookErrorCodes.SessionRequired", source, StringComparison.Ordinal);
+            Assert.Contains("AddressBookErrorCodes.SessionRequired", moduleReadSource, StringComparison.Ordinal);
             Assert.DoesNotContain("Results.Json(new {", source, StringComparison.Ordinal);
             Assert.DoesNotContain("\"Unauthorized\"", source, StringComparison.Ordinal);
         }
 
-        Assert.Contains("AddressBookErrorCodes.AddressMissing", moduleReadSource, StringComparison.Ordinal);
+        // Canonical result contract: both read endpoints must map the handler Result through
+        // ApiResponseFactory.From(result); the missing-address outcome is owned by the Application
+        // handler (Result failure), not classified inside the HTTP layer.
+        Assert.Contains("api.From(result)", moduleReadSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json(", moduleReadSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.NoContent(", moduleWriteSource, StringComparison.Ordinal);
+        Assert.Contains(
+            "AddressBookErrorCodes.AddressMissing",
+            File.ReadAllText(Path.Combine(
+                FindRepoRoot(), "src", "backend", "Modules", "AddressBook",
+                "Tooba.AddressBook.Application", "Queries", "GetCustomerAddress", "GetCustomerAddressQuery.cs")),
+            StringComparison.Ordinal);
         Assert.DoesNotContain("{owner", moduleWriteSource, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("OwnerUserId", moduleWriteSource, StringComparison.Ordinal);
         Assert.DoesNotContain("CurrentAuthenticatedSession", moduleActorSource, StringComparison.Ordinal);
@@ -101,13 +113,13 @@ public sealed class AddressBookFoundationTests
             Guid.NewGuid(), "گیرنده", "+989120000000", null, null, "Tehran", "19199",
             "Sample street 14", null, null, false, DateTimeOffset.UtcNow);
         Assert.Equal("IR", address.Country);
-        Assert.Throws<InvalidOperationException>(() => CustomerAddress.Create(
+        Assert.Throws<SemanticException>(() => CustomerAddress.Create(
             Guid.Empty, "گیرنده", "+989120000000", "IR", null, "Tehran", "19199",
             "Sample street 14", null, null, false, DateTimeOffset.UtcNow));
-        Assert.Throws<InvalidOperationException>(() => CustomerAddress.Create(
+        Assert.Throws<SemanticException>(() => CustomerAddress.Create(
             Guid.NewGuid(), "گیرنده", "123", "IR", null, "Tehran", "19199",
             "Sample street 14", null, null, false, DateTimeOffset.UtcNow));
-        Assert.Throws<InvalidOperationException>(() => CustomerAddress.Create(
+        Assert.Throws<SemanticException>(() => CustomerAddress.Create(
             Guid.NewGuid(), "گیرنده", "+989120000000", "IR", null, "Tehran", "12",
             "Sample street 14", null, null, false, DateTimeOffset.UtcNow));
     }
@@ -407,11 +419,11 @@ public sealed class AddressBookPostgresTests : IAsyncLifetime
         var owned = await directory.CreateAsync(a, SampleWrite("A", true), CancellationToken.None);
         Assert.Null(await directory.GetAsync(b, owned.AddressId, CancellationToken.None));
         Assert.Empty(await directory.ListAsync(b, CancellationToken.None));
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<SemanticException>(() =>
             directory.UpdateAsync(b, owned.AddressId, SampleWrite("هک", false), CancellationToken.None));
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<SemanticException>(() =>
             directory.DeleteAsync(b, owned.AddressId, CancellationToken.None));
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<SemanticException>(() =>
             directory.SetDefaultAsync(b, owned.AddressId, CancellationToken.None));
         Assert.NotNull(await directory.GetAsync(a, owned.AddressId, CancellationToken.None));
     }

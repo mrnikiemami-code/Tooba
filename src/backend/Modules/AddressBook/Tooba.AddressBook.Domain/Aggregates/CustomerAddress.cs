@@ -1,3 +1,4 @@
+using Tooba.AddressBook.Contracts.Errors;
 using Tooba.BuildingBlocks;
 
 namespace Tooba.AddressBook.Domain.Aggregates;
@@ -116,7 +117,7 @@ public sealed class CustomerAddress
     {
         if (ownerUserId == Guid.Empty)
         {
-            throw new InvalidOperationException("Actor معتبر الزامی است.");
+            throw new SemanticException(new SemanticError(AddressBookErrorCodes.ActorRequired));
         }
 
         var address = new CustomerAddress
@@ -194,16 +195,16 @@ public sealed class CustomerAddress
         bool isDefault,
         DateTimeOffset now)
     {
-        RecipientName = RequireBounded(recipientName, 1, RecipientNameMaxLength, "نام گیرنده الزامی است.");
-        ContactMobile = RequireBounded(contactMobile, ContactMobileMinLength, ContactMobileMaxLength, "شمارهٔ تماس معتبر نیست.");
+        RecipientName = RequireBounded(recipientName, 1, RecipientNameMaxLength, AddressBookErrorCodes.RecipientNameRequired);
+        ContactMobile = RequireBounded(contactMobile, ContactMobileMinLength, ContactMobileMaxLength, AddressBookErrorCodes.ContactMobileInvalid);
         var resolvedCountry = string.IsNullOrWhiteSpace(country) ? DefaultCountry : country.Trim().ToUpperInvariant();
-        Country = RequireBounded(resolvedCountry, 2, CountryMaxLength, "کشور الزامی است.");
-        ProvinceName = OptionalBounded(provinceName, ProvinceNameMaxLength, "نام استان بیش از حد بلند است.");
-        CityName = RequireBounded(cityName, 1, CityNameMaxLength, "شهر الزامی است.");
-        PostalCode = RequireBounded(postalCode, PostalCodeMinLength, PostalCodeMaxLength, "کدپستی معتبر نیست.");
-        PostalAddress = RequireBounded(postalAddress, 1, PostalAddressMaxLength, "نشانی پستی الزامی است.");
-        BuildingUnit = OptionalBounded(buildingUnit, BuildingUnitMaxLength, "واحد ساختمان بیش از حد بلند است.");
-        Label = OptionalBounded(label, LabelMaxLength, "برچسب نشانی بیش از حد بلند است.");
+        Country = RequireBounded(resolvedCountry, 2, CountryMaxLength, AddressBookErrorCodes.CountryInvalid);
+        ProvinceName = OptionalBounded(provinceName, ProvinceNameMaxLength, AddressBookErrorCodes.ProvinceNameInvalid);
+        CityName = RequireBounded(cityName, 1, CityNameMaxLength, AddressBookErrorCodes.CityNameInvalid);
+        PostalCode = RequireBounded(postalCode, PostalCodeMinLength, PostalCodeMaxLength, AddressBookErrorCodes.PostalCodeInvalid);
+        PostalAddress = RequireBounded(postalAddress, 1, PostalAddressMaxLength, AddressBookErrorCodes.PostalAddressInvalid);
+        BuildingUnit = OptionalBounded(buildingUnit, BuildingUnitMaxLength, AddressBookErrorCodes.BuildingUnitInvalid);
+        Label = OptionalBounded(label, LabelMaxLength, AddressBookErrorCodes.LabelInvalid);
         IsDefault = isDefault;
         UpdatedAt = now;
     }
@@ -220,7 +221,7 @@ public sealed class CustomerAddress
 
         if (first.Length == 0 || last.Length == 0)
         {
-            throw new InvalidOperationException("نام و نام خانوادگی هر دو الزامی‌اند.");
+            throw new SemanticException(new SemanticError(AddressBookErrorCodes.RecipientNamePartsInvalid));
         }
 
         FirstName = first;
@@ -228,18 +229,18 @@ public sealed class CustomerAddress
         RecipientName = $"{first} {last}";
     }
 
-    private static string RequireBounded(string? value, int min, int max, string message)
+    private static string RequireBounded(string? value, int min, int max, string code)
     {
         var trimmed = value?.Trim() ?? string.Empty;
         if (trimmed.Length < min || trimmed.Length > max)
         {
-            throw new InvalidOperationException(message);
+            throw new SemanticException(new SemanticError(code));
         }
 
         return trimmed;
     }
 
-    private static string? OptionalBounded(string? value, int max, string message)
+    private static string? OptionalBounded(string? value, int max, string code)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -249,7 +250,7 @@ public sealed class CustomerAddress
         var trimmed = value.Trim();
         if (trimmed.Length > max)
         {
-            throw new InvalidOperationException(message);
+            throw new SemanticException(new SemanticError(code));
         }
 
         return trimmed;

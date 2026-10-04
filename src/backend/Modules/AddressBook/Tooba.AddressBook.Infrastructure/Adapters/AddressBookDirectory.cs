@@ -2,9 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.AddressBook.Application.Models;
 using Tooba.AddressBook.Application.Ports;
 using Tooba.AddressBook.Contracts.Dtos;
+using Tooba.AddressBook.Contracts.Errors;
 using Tooba.AddressBook.Contracts.Ports;
 using Tooba.AddressBook.Domain.Aggregates;
 using Tooba.AddressBook.Infrastructure.Persistence;
+using Tooba.BuildingBlocks;
 
 namespace Tooba.AddressBook.Infrastructure.Adapters;
 
@@ -120,7 +122,7 @@ public sealed class AddressBookDirectory : IAddressBookDirectory, IAddressBookCo
             cancellationToken);
         if (address is null)
         {
-            throw new InvalidOperationException("نشانی متعلق به این مشتری پیدا نشد.");
+            throw new SemanticException(new SemanticError(AddressBookErrorCodes.AddressMissing));
         }
 
         _db.Addresses.Remove(address);
@@ -152,7 +154,7 @@ public sealed class AddressBookDirectory : IAddressBookDirectory, IAddressBookCo
         var address = await _db.Addresses.SingleOrDefaultAsync(
             x => x.AddressId == addressId && x.OwnerUserId == actorUserId,
             cancellationToken);
-        return address ?? throw new InvalidOperationException("نشانی متعلق به این مشتری پیدا نشد.");
+        return address ?? throw new SemanticException(new SemanticError(AddressBookErrorCodes.AddressMissing));
     }
 
     private async Task ClearOtherDefaultsAsync(
@@ -213,7 +215,7 @@ public sealed class AddressBookDirectory : IAddressBookDirectory, IAddressBookCo
     {
         if (actorUserId == Guid.Empty)
         {
-            throw new InvalidOperationException("Actor معتبر الزامی است.");
+            throw new SemanticException(new SemanticError(AddressBookErrorCodes.ActorRequired));
         }
     }
 }

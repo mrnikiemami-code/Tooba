@@ -16,7 +16,7 @@ public sealed class AddressBookPhysicalStructureGuardTests
         ["Aggregates", "Entities", "ValueObjects", "Policies", "Events", "Errors"];
 
     private static readonly string[] AllowedApplicationFolders =
-        ["Commands", "Queries", "Mappings", "Ports", "Validators", "Dtos", "ReadModels", "Models", "Policies"];
+        ["Commands", "Queries", "Mappings", "Ports", "Validators", "Dtos", "ReadModels", "Models", "Policies", "Composition"];
 
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Repositories", "Adapters", "Outbox", "Events", "DependencyInjection"];

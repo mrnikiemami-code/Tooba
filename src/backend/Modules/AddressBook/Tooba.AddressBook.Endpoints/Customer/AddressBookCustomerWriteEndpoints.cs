@@ -10,7 +10,6 @@ using Tooba.AddressBook.Application.Commands.UpdateCustomerAddress;
 using Tooba.AddressBook.Contracts.Errors;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.AddressBook.Endpoints.Customer;
 
@@ -47,7 +46,9 @@ public static class AddressBookCustomerWriteEndpoints
         var created = await sender.Send(
             new CreateCustomerAddressCommand(actor.Value, body.ToWrite()),
             cancellationToken);
-        return Results.Json(created, statusCode: StatusCodes.Status201Created);
+        return created.IsSuccess
+            ? api.Created($"/v1/customer/addresses/{created.Value.AddressId}", created)
+            : api.From(created);
     }
 
     private static async Task<IResult> UpdateAsync(
@@ -68,7 +69,7 @@ public static class AddressBookCustomerWriteEndpoints
         var updated = await sender.Send(
             new UpdateCustomerAddressCommand(actor.Value, addressId, body.ToWrite()),
             cancellationToken);
-        return Results.Json(updated);
+        return api.From(updated);
     }
 
     private static async Task<IResult> DeleteAsync(
@@ -85,10 +86,10 @@ public static class AddressBookCustomerWriteEndpoints
             return api.FromFailure(new SemanticError(AddressBookErrorCodes.SessionRequired));
         }
 
-        await sender.Send(
+        var result = await sender.Send(
             new DeleteCustomerAddressCommand(actor.Value, addressId),
             cancellationToken);
-        return Results.NoContent();
+        return api.From(result);
     }
 
     private static async Task<IResult> SetDefaultAsync(
@@ -108,7 +109,7 @@ public static class AddressBookCustomerWriteEndpoints
         var updated = await sender.Send(
             new SetDefaultCustomerAddressCommand(actor.Value, addressId),
             cancellationToken);
-        return Results.Json(updated);
+        return api.From(updated);
     }
 }
 

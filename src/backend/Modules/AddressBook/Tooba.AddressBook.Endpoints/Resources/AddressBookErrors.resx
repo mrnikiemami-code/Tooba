@@ -15,4 +15,37 @@
   <data name="customer.address.missing" xml:space="preserve">
     <value>Address was not found.</value>
   </data>
+  <data name="customer.address.actor_required" xml:space="preserve">
+    <value>A trusted customer identity is required.</value>
+  </data>
+  <data name="customer.address.recipient_name_required" xml:space="preserve">
+    <value>Recipient name is required.</value>
+  </data>
+  <data name="customer.address.contact_mobile_invalid" xml:space="preserve">
+    <value>Contact mobile is invalid.</value>
+  </data>
+  <data name="customer.address.country_invalid" xml:space="preserve">
+    <value>Country is invalid.</value>
+  </data>
+  <data name="customer.address.province_name_invalid" xml:space="preserve">
+    <value>Province name is invalid.</value>
+  </data>
+  <data name="customer.address.city_name_invalid" xml:space="preserve">
+    <value>City name is invalid.</value>
+  </data>
+  <data name="customer.address.postal_code_invalid" xml:space="preserve">
+    <value>Postal code is invalid.</value>
+  </data>
+  <data name="customer.address.postal_address_invalid" xml:space="preserve">
+    <value>Postal address is invalid.</value>
+  </data>
+  <data name="customer.address.building_unit_invalid" xml:space="preserve">
+    <value>Building unit is invalid.</value>
+  </data>
+  <data name="customer.address.label_invalid" xml:space="preserve">
+    <value>Address label is invalid.</value>
+  </data>
+  <data name="customer.address.recipient_name_parts_invalid" xml:space="preserve">
+    <value>Recipient first and last name must be supplied together.</value>
+  </data>
 </root>

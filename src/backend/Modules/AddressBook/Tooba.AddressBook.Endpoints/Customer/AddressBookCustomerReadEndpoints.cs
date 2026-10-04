@@ -7,7 +7,6 @@ using Tooba.AddressBook.Application.Queries.ListCustomerAddresses;
 using Tooba.AddressBook.Contracts.Errors;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.AddressBook.Endpoints.Customer;
 
@@ -35,8 +34,8 @@ public static class AddressBookCustomerReadEndpoints
             return api.FromFailure(new SemanticError(AddressBookErrorCodes.SessionRequired));
         }
 
-        var items = await sender.Send(new ListCustomerAddressesQuery(actor.Value), cancellationToken);
-        return Results.Json(items);
+        var result = await sender.Send(new ListCustomerAddressesQuery(actor.Value), cancellationToken);
+        return api.From(result);
     }
 
     private static async Task<IResult> GetAsync(
@@ -53,9 +52,7 @@ public static class AddressBookCustomerReadEndpoints
             return api.FromFailure(new SemanticError(AddressBookErrorCodes.SessionRequired));
         }
 
-        var item = await sender.Send(new GetCustomerAddressQuery(actor.Value, addressId), cancellationToken);
-        return item is null
-            ? api.FromFailure(new SemanticError(AddressBookErrorCodes.AddressMissing))
-            : Results.Json(item);
+        var result = await sender.Send(new GetCustomerAddressQuery(actor.Value, addressId), cancellationToken);
+        return api.From(result);
     }
 }
