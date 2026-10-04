@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Fulfillments.Ports;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Fulfillment.Infrastructure.Directories;
@@ -49,7 +49,7 @@ public sealed class FulfillmentCharacterizationTests
             unit.FulfillmentId,
             Guid.NewGuid(),
             "Post",
-            [new Tooba.Fulfillment.Application.Models.ShipmentLineCommand(handoff.Lines[0].OrderLineId, 1)],
+            [new Tooba.Fulfillment.Application.Fulfillments.Models.ShipmentLineCommand(handoff.Lines[0].OrderLineId, 1)],
             CancellationToken.None);
         var shipmentId = snapshot.Shipments.Single().ShipmentId;
         await directory.AssignTrackingAsync(unit.FulfillmentId, shipmentId, Guid.NewGuid(), "TRK-1", CancellationToken.None);

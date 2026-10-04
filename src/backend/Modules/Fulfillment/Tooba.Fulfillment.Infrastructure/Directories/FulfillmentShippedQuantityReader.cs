@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Fulfillments.Ports;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 
 namespace Tooba.Fulfillment.Infrastructure.Directories;

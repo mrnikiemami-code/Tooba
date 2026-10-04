@@ -6,11 +6,10 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Fulfillment.Application.Commands.ExecuteAdminFulfillmentBulk;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Queries.GetAdminFulfillment;
-using Tooba.Fulfillment.Application.Queries.ListAdminFulfillments;
-using Tooba.Fulfillment.Application.Queries.QueryAdminFulfillmentWorkQueue;
+using Tooba.Fulfillment.Application.WorkQueue.Commands;
+using Tooba.Fulfillment.Application.WorkQueue.Models;
+using Tooba.Fulfillment.Application.Fulfillments.Queries;
+using Tooba.Fulfillment.Application.WorkQueue.Queries;
 
 namespace Tooba.Fulfillment.Endpoints.Admin;
 

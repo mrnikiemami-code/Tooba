@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Fulfillment.Application.Queries.ListCustomerCheckoutFulfillments;
+using Tooba.Fulfillment.Application.Checkout.Queries;
 
 namespace Tooba.Fulfillment.Endpoints.Customer;
 

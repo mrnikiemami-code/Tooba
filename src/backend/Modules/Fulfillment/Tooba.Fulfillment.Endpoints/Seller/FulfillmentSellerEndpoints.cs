@@ -3,10 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Fulfillment.Application.Commands.SellerMutateFulfillment;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Queries.GetSellerFulfillment;
-using Tooba.Fulfillment.Application.Queries.ListSellerFulfillments;
+using Tooba.Fulfillment.Application.Fulfillments.Commands;
+using Tooba.Fulfillment.Application.Fulfillments.Models;
+using Tooba.Fulfillment.Application.Fulfillments.Queries;
 
 namespace Tooba.Fulfillment.Endpoints.Seller;
 

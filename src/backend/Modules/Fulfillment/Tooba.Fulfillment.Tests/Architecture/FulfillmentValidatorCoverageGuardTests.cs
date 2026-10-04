@@ -2,20 +2,21 @@ using System.Text.RegularExpressions;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
-using Tooba.Fulfillment.Application.Commands.CreateShippingService;
-using Tooba.Fulfillment.Application.Commands.DeactivateShippingService;
-using Tooba.Fulfillment.Application.Commands.ExecuteAdminFulfillmentBulk;
-using Tooba.Fulfillment.Application.Commands.SellerMutateFulfillment;
-using Tooba.Fulfillment.Application.Commands.UpdateShippingService;
-using Tooba.Fulfillment.Application.Queries.GetAdminFulfillment;
-using Tooba.Fulfillment.Application.Queries.GetSellerFulfillment;
-using Tooba.Fulfillment.Application.Queries.GetShippingService;
-using Tooba.Fulfillment.Application.Queries.ListCustomerCheckoutFulfillments;
-using Tooba.Fulfillment.Application.Queries.QueryAdminFulfillmentWorkQueue;
-using Tooba.Fulfillment.Application.Validators.Admin;
-using Tooba.Fulfillment.Application.Validators.Customer;
-using Tooba.Fulfillment.Application.Validators.Seller;
-using Tooba.Fulfillment.Application.Validators.Shipping;
+using Tooba.Fulfillment.Application.Shipping.Commands;
+using Tooba.Fulfillment.Application.Shipping.Commands;
+using Tooba.Fulfillment.Application.WorkQueue.Commands;
+using Tooba.Fulfillment.Application.Fulfillments.Commands;
+using Tooba.Fulfillment.Application.Shipping.Commands;
+using Tooba.Fulfillment.Application.Fulfillments.Queries;
+using Tooba.Fulfillment.Application.Fulfillments.Queries;
+using Tooba.Fulfillment.Application.Shipping.Queries;
+using Tooba.Fulfillment.Application.Checkout.Queries;
+using Tooba.Fulfillment.Application.WorkQueue.Queries;
+using Tooba.Fulfillment.Application.Fulfillments.Validators;
+using Tooba.Fulfillment.Application.WorkQueue.Validators;
+using Tooba.Fulfillment.Application.Checkout.Validators;
+using Tooba.Fulfillment.Application.Fulfillments.Validators;
+using Tooba.Fulfillment.Application.Shipping.Validators;
 using Xunit;
 
 namespace Tooba.Fulfillment.Tests.Architecture;
@@ -169,21 +170,26 @@ public sealed class FulfillmentValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void Validator_folder_layout_is_exactly_seller_customer_admin_shipping()
+    public void Validator_folder_layout_is_capability_first_shallow()
     {
-        var validatorsRoot = Path.Combine(ApplicationRoot(), "Validators");
-        var folders = Directory.GetDirectories(validatorsRoot)
-            .Select(Path.GetFileName)
-            .OrderBy(x => x, StringComparer.Ordinal)
-            .ToArray();
-        Assert.Equal(new[] { "Admin", "Customer", "Seller", "Shipping" }, folders);
+        var applicationRoot = ApplicationRoot();
 
-        Assert.Equal(2, Directory.GetFiles(Path.Combine(validatorsRoot, "Seller"), "*Validator.cs").Length);
-        Assert.Single(Directory.GetFiles(Path.Combine(validatorsRoot, "Customer"), "*Validator.cs"));
-        Assert.Equal(3, Directory.GetFiles(Path.Combine(validatorsRoot, "Admin"), "*Validator.cs").Length);
-        Assert.Equal(4, Directory.GetFiles(Path.Combine(validatorsRoot, "Shipping"), "*Validator.cs").Length);
+        // AMSC-001 W2: the audience-axis Validators/{Admin,Seller,Customer,Shipping} tree was
+        // replaced by capability-first Validators under Shipping/Fulfillments/WorkQueue/Checkout.
+        Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Validators", "Admin")));
+        Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Validators", "Seller")));
+        Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Validators", "Customer")));
+        Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Validators", "Shipping")));
 
-        foreach (var path in Directory.EnumerateDirectories(validatorsRoot))
+        Assert.Equal(4, Directory.GetFiles(Path.Combine(applicationRoot, "Shipping", "Validators"), "*Validator.cs").Length);
+        Assert.Equal(3, Directory.GetFiles(Path.Combine(applicationRoot, "Fulfillments", "Validators"), "*Validator.cs").Length);
+        Assert.Equal(2, Directory.GetFiles(Path.Combine(applicationRoot, "WorkQueue", "Validators"), "*Validator.cs").Length);
+        Assert.Single(Directory.GetFiles(Path.Combine(applicationRoot, "Checkout", "Validators"), "*Validator.cs"));
+
+        // Shared cross-capability rules stay at the Application root.
+        Assert.Equal(2, Directory.GetFiles(Path.Combine(applicationRoot, "Validators"), "*.cs").Length);
+
+        foreach (var path in Directory.EnumerateDirectories(applicationRoot, "*", SearchOption.AllDirectories))
         {
             var name = Path.GetFileName(path);
             Assert.DoesNotContain(name, new[] { "Common", "Helpers", "Utils", "Managers" });

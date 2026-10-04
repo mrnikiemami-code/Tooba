@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Tooba.Fulfillment.Application.Commands.SellerMutateFulfillment;
+using Tooba.Fulfillment.Application.Fulfillments.Commands;
 
 namespace Tooba.Fulfillment.Endpoints.Seller;
 

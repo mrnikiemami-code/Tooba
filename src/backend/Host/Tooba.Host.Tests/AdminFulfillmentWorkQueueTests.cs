@@ -1,6 +1,7 @@
 using Tooba.Order.Application.Admin.Operations.Services;
-using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Fulfillments.Ports;
+using Tooba.Fulfillment.Application.Fulfillments.Models;
+using Tooba.Fulfillment.Application.WorkQueue.Models;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;

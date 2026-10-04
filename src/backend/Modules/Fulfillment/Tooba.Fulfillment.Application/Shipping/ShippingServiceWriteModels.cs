@@ -1,0 +1,57 @@
+namespace Tooba.Fulfillment.Application.Shipping;
+
+/// <summary>درز موقت اعتبار LanguageId و فهرست seed بدون وابستگی Fulfillment به Localization.</summary>
+public interface IShippingServiceLanguageGate
+{
+    /// <summary>همه LanguageIdها باید در رجیستری زبان شناخته‌شده باشند.</summary>
+    Task EnsureKnownAsync(IReadOnlyList<Guid> languageIds, CancellationToken cancellationToken);
+
+    /// <summary>زبان‌های موجود برای seed اولیهٔ کاتالوگ ارسال.</summary>
+    Task<IReadOnlyList<ShippingServiceSeedLanguage>> ListForSeedAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>زبان seed.</summary>
+/// <param name="LanguageId">شناسه.</param>
+/// <param name="Code">کد.</param>
+/// <param name="Culture">فرهنگ.</param>
+/// <param name="IsDefault">پیش‌فرض؟</param>
+public sealed record ShippingServiceSeedLanguage(
+    Guid LanguageId,
+    string Code,
+    string Culture,
+    bool IsDefault);
+
+/// <summary>ترجمهٔ سرویس والد.</summary>
+/// <param name="LanguageId">زبان.</param>
+/// <param name="Name">نام.</param>
+/// <param name="Description">توضیح.</param>
+public sealed record ShippingServiceTranslationWriteModel(Guid LanguageId, string Name, string? Description);
+
+/// <summary>ترجمهٔ گزینهٔ فرزند.</summary>
+/// <param name="LanguageId">زبان.</param>
+/// <param name="Name">نام.</param>
+public sealed record ShippingServiceOptionTranslationWriteModel(Guid LanguageId, string Name);
+
+/// <summary>گزینهٔ سطح ۲.</summary>
+/// <param name="ShippingServiceOptionId">شناسه اختیاری.</param>
+/// <param name="Code">کد.</param>
+/// <param name="IsActive">فعال؟</param>
+/// <param name="SortOrder">ترتیب.</param>
+/// <param name="Translations">ترجمه‌ها.</param>
+public sealed record ShippingServiceOptionWriteModel(
+    Guid? ShippingServiceOptionId,
+    string Code,
+    bool IsActive,
+    int SortOrder,
+    IReadOnlyList<ShippingServiceOptionTranslationWriteModel> Translations);
+
+/// <summary>مدل نوشتن سرویس ارسال دو‌سطحی.</summary>
+public sealed record ShippingServiceWriteModel(
+    string Code,
+    string ProviderKind,
+    string IconKey,
+    string ColorKey,
+    bool IsActive,
+    int SortOrder,
+    IReadOnlyList<ShippingServiceTranslationWriteModel> Translations,
+    IReadOnlyList<ShippingServiceOptionWriteModel> Options);

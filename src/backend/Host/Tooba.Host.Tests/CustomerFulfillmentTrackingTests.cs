@@ -1,9 +1,9 @@
-﻿using Tooba.Fulfillment.Application.Ports;
-using Tooba.Fulfillment.Application.Models;
+﻿using Tooba.Fulfillment.Application.Fulfillments.Ports;
+using Tooba.Fulfillment.Application.Fulfillments.Models;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
-using Tooba.Fulfillment.Application.Queries.ListCustomerCheckoutFulfillments;
+using Tooba.Fulfillment.Application.Checkout.Queries;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.AddressBook.Contracts.Dtos;

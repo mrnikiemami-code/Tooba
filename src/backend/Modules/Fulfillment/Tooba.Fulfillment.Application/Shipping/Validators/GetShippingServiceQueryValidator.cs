@@ -1,0 +1,18 @@
+using FluentValidation;
+using Tooba.Fulfillment.Application.Shipping.Queries;
+using Tooba.Fulfillment.Application.Validators;
+
+namespace Tooba.Fulfillment.Application.Shipping.Validators;
+
+/// <summary>
+/// Transport/input shape validation for <see cref="GetShippingServiceQuery"/>.
+/// Existence and read semantics stay in Application/Domain.
+/// </summary>
+public sealed class GetShippingServiceQueryValidator : AbstractValidator<GetShippingServiceQuery>
+{
+    /// <summary>Registers primitive-shape rules for the get shipping service query.</summary>
+    public GetShippingServiceQueryValidator()
+    {
+        FulfillmentFluentRules.RequireId(this, x => x.ServiceId, FulfillmentValidationCodes.ShippingServiceIdRequired);
+    }
+}

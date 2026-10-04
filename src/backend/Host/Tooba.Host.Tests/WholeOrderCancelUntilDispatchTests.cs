@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks;
 using Tooba.Order.Application.Admin.Operations.Policies;
-using Tooba.Fulfillment.Application.Models;
+using Tooba.Fulfillment.Application.Fulfillments.Models;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;

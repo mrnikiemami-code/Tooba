@@ -3,12 +3,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Fulfillment.Application.Commands.CreateShippingService;
-using Tooba.Fulfillment.Application.Commands.DeactivateShippingService;
-using Tooba.Fulfillment.Application.Commands.EnsureShippingCatalogSeed;
-using Tooba.Fulfillment.Application.Commands.UpdateShippingService;
-using Tooba.Fulfillment.Application.Queries.GetShippingService;
-using Tooba.Fulfillment.Application.Queries.ListShippingServices;
+using Tooba.Fulfillment.Application.Shipping.Commands;
+using Tooba.Fulfillment.Application.Shipping.Queries;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Endpoints.Admin;
 

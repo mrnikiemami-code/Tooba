@@ -1374,19 +1374,23 @@
         {
           "projectName": "Tooba.Fulfillment.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Fulfillment.Application intentionally has no root .cs file: the capability folders Commands/Queries/Errors/Models/Ports/Validators plus the Shipping capability folder carry every type, and namespace alignment is exact path-derived equality.",
+          "rootAllowlistJustification": "Fulfillment.Application intentionally has no root .cs file: the capability folders Checkout/Fulfillments/Shipping/WorkQueue (each carrying Commands/Queries/Validators/Models/Ports as needed) plus the cross-capability Validators/ rules and the shared Errors/ folder carry every type, and namespace alignment is exact path-derived equality. AMSC-001 W2 replaced the technical-axis-first Commands/Queries/Models/Ports/Validators-<audience> tree with this capability-first tree and removed the unjustified single-file use-case leaf folders.",
           "forbiddenRootFiles": [
             "FulfillmentContracts.cs",
             "FulfillmentCommands.cs",
             "FulfillmentQueries.cs",
             "FulfillmentHandlers.cs",
-            "FulfillmentQueries.cs",
             "FulfillmentErrorCodes.cs",
             "FulfillmentModels.cs",
             "SellerMutateFulfillmentCommand.cs",
             "QueryAdminFulfillmentWorkQueueQuery.cs"
           ],
-          "forbiddenTopLevelFolders": []
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Models",
+            "Ports"
+          ]
         },
         {
           "projectName": "Tooba.Fulfillment.Endpoints",
@@ -1408,7 +1412,7 @@
         {
           "projectName": "Tooba.Fulfillment.Infrastructure",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Fulfillment.Infrastructure intentionally has no root .cs file: Adapters/Bridges/DependencyInjection/Directories/Errors/Gateways/Handlers/Messaging/Observability/Persistence/Queries/Shipping carry every type, and namespace alignment is exact path-derived equality.",
+          "rootAllowlistJustification": "Fulfillment.Infrastructure intentionally has no root .cs file: Adapters/Bridges/DependencyInjection/Directories/Errors/Gateways/Handlers/Messaging/Observability/Persistence/Queries/Shipping carry every type, and namespace alignment is exact path-derived equality. AMSC-001 W2 additionally split the 1218-LOC Directories/FulfillmentDirectory.cs god-file into cohesive partials (FulfillmentDirectory.cs + FulfillmentDirectory.Packages.cs) to satisfy ARCH-SIZE-001 without changing behavior.",
           "forbiddenRootFiles": [
             "FulfillmentModule.cs",
             "FulfillmentDbContext.cs",

@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Fulfillments.Ports;
 using Tooba.Fulfillment.Contracts;
 using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Order.Contracts.Fulfillment;

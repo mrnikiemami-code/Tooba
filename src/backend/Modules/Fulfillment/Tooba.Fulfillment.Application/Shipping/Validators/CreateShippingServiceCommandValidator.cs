@@ -1,0 +1,19 @@
+using FluentValidation;
+using Tooba.Fulfillment.Application.Shipping.Commands;
+using Tooba.Fulfillment.Application.Validators;
+
+namespace Tooba.Fulfillment.Application.Shipping.Validators;
+
+/// <summary>
+/// Transport/input shape validation for <see cref="CreateShippingServiceCommand"/>.
+/// Only the write-model envelope null-shape is checked. ShippingServiceSemantic and all
+/// shipping directory/domain rules stay in Application/Domain.
+/// </summary>
+public sealed class CreateShippingServiceCommandValidator : AbstractValidator<CreateShippingServiceCommand>
+{
+    /// <summary>Registers primitive-shape rules for the create shipping service command.</summary>
+    public CreateShippingServiceCommandValidator()
+    {
+        FulfillmentFluentRules.RequireReference(this, x => x.Model, FulfillmentValidationCodes.ShippingServiceModelRequired);
+    }
+}

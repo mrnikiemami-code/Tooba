@@ -1,6 +1,7 @@
-﻿using Tooba.Fulfillment.Application.Commands.ExecuteAdminFulfillmentBulk;
-using Tooba.Fulfillment.Application.Models;
-using Tooba.Fulfillment.Application.Ports;
+﻿using Tooba.Fulfillment.Application.WorkQueue.Commands;
+using Tooba.Fulfillment.Application.Fulfillments.Models;
+using Tooba.Fulfillment.Application.WorkQueue.Models;
+using Tooba.Fulfillment.Application.Fulfillments.Ports;
 using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Order.Contracts.Fulfillment;

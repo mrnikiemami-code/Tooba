@@ -1,4 +1,4 @@
-using Tooba.Fulfillment.Application.Ports;
+using Tooba.Fulfillment.Application.Fulfillments.Ports;
 using Tooba.Inventory.Contracts.Fulfillment;
 
 namespace Tooba.Fulfillment.Infrastructure.Gateways;

@@ -1,4 +1,4 @@
-using App = Tooba.Fulfillment.Application.Models;
+using App = Tooba.Fulfillment.Application.Fulfillments.Models;
 using Contracts = Tooba.Fulfillment.Contracts.Operations;
 
 namespace Tooba.Host.Tests;

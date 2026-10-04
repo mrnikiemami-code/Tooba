@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Fulfillment.Application.Errors;
-using Tooba.Fulfillment.Application.Queries.QueryAdminFulfillmentWorkQueue;
+using Tooba.Fulfillment.Application.WorkQueue.Queries;
 using Tooba.Fulfillment.Contracts.Errors;
 using Xunit;
 

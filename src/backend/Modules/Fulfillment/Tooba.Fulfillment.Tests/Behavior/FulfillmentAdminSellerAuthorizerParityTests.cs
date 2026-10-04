@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Fulfillment.Application.Commands.SellerMutateFulfillment;
+using Tooba.Fulfillment.Application.Fulfillments.Commands;
 using Tooba.Fulfillment.Endpoints.Admin;
 using Tooba.Fulfillment.Endpoints.Seller;
 using Xunit;

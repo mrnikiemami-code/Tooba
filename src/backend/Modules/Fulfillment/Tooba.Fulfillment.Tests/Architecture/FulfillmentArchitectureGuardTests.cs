@@ -8,7 +8,7 @@ public sealed class FulfillmentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
     private static readonly string[] AllowedApplicationFolders =
-        ["Ports", "Models", "Shipping", "Commands", "Queries", "Errors", "Validators"];
+        ["Checkout", "Errors", "Fulfillments", "Shipping", "Validators", "WorkQueue"];
     private static readonly string[] AllowedContractsFolders = ["Events", "Returns", "Errors", "History", "Operations", "Shipping"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations",
@@ -150,7 +150,7 @@ public sealed class FulfillmentArchitectureGuardTests
         Assert.Contains("IShippingServiceLanguageGate, ShippingServiceLanguageGate", fulfillmentModule, StringComparison.Ordinal);
 
         var treeQuery = File.ReadAllText(Path.Combine(
-            ModuleRoot(), "Tooba.Fulfillment.Application", "Queries", "ListEnabledShippingMethodsTree", "ListEnabledShippingMethodsTreeQuery.cs"));
+            ModuleRoot(), "Tooba.Fulfillment.Application", "Shipping", "Queries", "ListEnabledShippingMethodsTreeQuery.cs"));
         Assert.Contains("ListEnabledShippingMethodsTreeQuery", treeQuery, StringComparison.Ordinal);
         Assert.Contains("ListEnabledShippingMethodsTreeHandler", treeQuery, StringComparison.Ordinal);
 
@@ -257,9 +257,10 @@ public sealed class FulfillmentArchitectureGuardTests
         Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
         Assert.DoesNotContain(application, x => x.Path.EndsWith("FulfillmentQueries.cs", StringComparison.OrdinalIgnoreCase));
-        Assert.DoesNotContain(application, x => x.Path.EndsWith("ExecuteAdminFulfillmentBulkCommand.cs", StringComparison.OrdinalIgnoreCase)
-            && x.Path.Contains("/Commands/ExecuteAdminFulfillmentBulkCommand.cs", StringComparison.Ordinal));
-        Assert.DoesNotContain(application, x => x.Path.Contains("/Commands/SellerMutateFulfillmentCommand.cs", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Path.Contains("/Commands/", StringComparison.Ordinal)
+            && x.Path.EndsWith("ExecuteAdminFulfillmentBulkCommand.cs", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(application, x => x.Path.Contains("/Commands/", StringComparison.Ordinal)
+            && x.Path.EndsWith("SellerMutateFulfillmentCommand.cs", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(application, x => x.Path.Contains("/Shipping/ShippingServiceWriteHandlers.cs", StringComparison.Ordinal));
         Assert.DoesNotContain(application, x => x.Path.Contains("/Shipping/ShippingServiceReadHandlers.cs", StringComparison.Ordinal));
         Assert.DoesNotContain(application, x => x.Path.Contains("/Shipping/ListEnabledShippingMethodsTreeQuery.cs", StringComparison.Ordinal));
@@ -372,11 +373,117 @@ public sealed class FulfillmentArchitectureGuardTests
             "FulfillmentModule.cs", "FulfillmentDbContext.cs", "FulfillmentDirectory.cs",
             "FulfillmentOutboxRegistration.cs", "AdminFulfillmentWorkQueueQueryEngine.cs",
             "FulfillmentErrorCatalogContributor.cs",
-        })
-        {
+        })        {
             Assert.False(File.Exists(Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Infrastructure", flattened)),
                 $"flattened Infrastructure root file {flattened}");
         }
+    }
+
+    [Fact]
+    public void Fulfillment_application_is_capability_first_with_no_technical_axis_root()
+    {
+        var applicationRoot = Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Application");
+
+        // Technical axes must never sit at the Application root (they are secondary under a capability).
+        foreach (var technicalAxis in new[] { "Commands", "Queries", "Models", "Ports" })
+        {
+            Assert.False(Directory.Exists(Path.Combine(applicationRoot, technicalAxis)),
+                $"Application/{technicalAxis} must not exist at the Application root");
+        }
+
+        // The four business capabilities must exist and carry only the approved secondary axes.
+        var capabilities = new[] { "Shipping", "Fulfillments", "WorkQueue", "Checkout" };
+        foreach (var capability in capabilities)
+        {
+            var dir = Path.Combine(applicationRoot, capability);
+            Assert.True(Directory.Exists(dir), $"Application/{capability} must exist");
+            foreach (var axis in Directory.EnumerateDirectories(dir))
+            {
+                Assert.Contains(Path.GetFileName(axis), new[] { "Commands", "Queries", "Validators", "Models", "Ports" });
+                // capability-first-shallow: no leaf under the secondary axis.
+                Assert.Empty(Directory.EnumerateDirectories(axis));
+            }
+        }
+
+        // Cross-capability shared validation rules stay at the Application root.
+        Assert.True(File.Exists(Path.Combine(applicationRoot, "Validators", "FulfillmentFluentRules.cs")));
+        Assert.True(File.Exists(Path.Combine(applicationRoot, "Validators", "FulfillmentValidationCodes.cs")));
+    }
+
+    [Fact]
+    public void Fulfillment_has_no_single_file_use_case_leaf_folders()
+    {
+        var applicationRoot = Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Application");
+        var structuralFolders = new[]
+        {
+            "bin", "obj", "artifacts", "Migrations", "Errors", "Resources",
+            "Shipping", "Fulfillments", "WorkQueue", "Checkout",
+            "Commands", "Queries", "Validators", "Models", "Ports",
+        };
+
+        var violations = new List<string>();
+        foreach (var dir in Directory.EnumerateDirectories(applicationRoot, "*", SearchOption.AllDirectories))
+        {
+            var normalized = dir.Replace('\\', '/');
+            if (normalized.Contains("/bin/") || normalized.Contains("/obj/") || normalized.Contains("/artifacts/"))
+            {
+                continue;
+            }
+
+            var name = Path.GetFileName(dir);
+            if (structuralFolders.Contains(name, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (Directory.EnumerateFiles(dir, "*.cs", SearchOption.TopDirectoryOnly).Count() == 1)
+            {
+                violations.Add(Path.GetRelativePath(applicationRoot, dir));
+            }
+        }
+
+        Assert.True(violations.Count == 0, "single-file use-case leaf folders: " + string.Join("; ", violations));
+    }
+
+    [Fact]
+    public void Fulfillment_application_has_no_flat_mixed_contracts_bundles()
+    {
+        var applicationRoot = Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Application");
+        foreach (var forbidden in new[]
+        {
+            "Shipping/ShippingServiceReadContracts.cs",
+            "Shipping/ShippingServiceWriteContracts.cs",
+            "Shipping/ShippingMethodRegistry.cs",
+        })
+        {
+            Assert.False(File.Exists(Path.Combine(applicationRoot, forbidden)),
+                $"mixed bundle {forbidden} must be split by responsibility");
+        }
+
+        // The split homes must exist.
+        foreach (var expected in new[]
+        {
+            "Shipping/ShippingServiceReadModels.cs",
+            "Shipping/ShippingServiceSemantic.cs",
+            "Shipping/ShippingServiceWriteModels.cs",
+            "Shipping/ShippingProviderMetadata.cs",
+            "Shipping/Ports/IShippingServiceDirectory.cs",
+        })
+        {
+            Assert.True(File.Exists(Path.Combine(applicationRoot, expected)), $"missing {expected}");
+        }
+    }
+
+    [Fact]
+    public void Fulfillment_directory_stays_under_the_arch_size_ceiling()
+    {
+        var directories = Path.Combine(ModuleRoot(), "Tooba.Fulfillment.Infrastructure", "Directories");
+        var main = File.ReadAllLines(Path.Combine(directories, "FulfillmentDirectory.cs")).Length;
+        var packages = File.ReadAllLines(Path.Combine(directories, "FulfillmentDirectory.Packages.cs")).Length;
+
+        // AMSC-001 W2: the 1218-LOC god-file was split into two cohesive partials.
+        Assert.True(main < 800, $"FulfillmentDirectory.cs is {main} LOC (ARCH-SIZE-001 ceiling 800)");
+        Assert.True(packages < 800, $"FulfillmentDirectory.Packages.cs is {packages} LOC");
     }
 
     [Fact]
@@ -384,7 +491,7 @@ public sealed class FulfillmentArchitectureGuardTests
     {
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
 
-        // Self-module short aliases (e.g. `using AppModels = Tooba.Fulfillment.Application.Models;`) are
+        // Self-module short aliases (e.g. `using AppModels = Tooba.Fulfillment.Application.Fulfillments.Models;`) are
         // legitimate import ergonomics and are not a namespace workaround. Only foreign-module
         // Application/Infrastructure/Domain aliases are rejected.
         var foreignAliases = AllProductionSources()
