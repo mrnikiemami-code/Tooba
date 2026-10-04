@@ -32,7 +32,7 @@ ARCH-COMPLETE-002 STRUCTURE_CERTIFIED
 | Validator coverage | `4 REQUIRED + 3 NO_VALIDATOR_REQUIRED` |
 | API result / error mapping | `CANONICAL` (`ApiResponseFactory`), raw `Results.*` `ZERO` |
 | Localization | `CANONICAL`, both-culture resx coverage |
-| Error descriptor ownership | `UNIQUE` — 26 module-owned descriptors + 1 shared code consumed-not-registered |
+| Error descriptor ownership | `UNIQUE` — 25 Cart-registered descriptors + 1 shared code consumed-not-registered (truth reconciled by W3-R1) |
 | Logging / telemetry / correlation | `CANONICAL` |
 | Cross-module boundary | `CONTRACTS_ONLY`, foreign App/Infra/Domain `ZERO`, joins `ZERO` |
 | Persistence / schema | module-owned, `UNCHANGED` |
@@ -41,8 +41,12 @@ ARCH-COMPLETE-002 STRUCTURE_CERTIFIED
 
 ## Behavior statement
 
-`behaviorChange = NONE`. No route, DTO shape, error code, status code or schema was changed by this
-certification wave. W3 added only durable certification locks, evidence and honest SoT/manifest records.
+`behaviorChange = BOUNDED_DEFECT_REPAIR_EXPECTED_FAILURE_MAPPING` (reconciled by W3-R1;
+the complete AMSC-001 contained one accepted bounded expected-failure repair, owned by W1:
+previously unexpected 500 `platform.unexpected` failure paths became typed/localized expected
+400/409/503). **W3 itself introduced zero runtime behavior change**: no route, DTO shape, error-code
+value, resource or schema was changed by this certification wave. W3 added only durable certification
+locks, evidence and honest SoT/manifest records.
 
 ## Bounded repair performed
 

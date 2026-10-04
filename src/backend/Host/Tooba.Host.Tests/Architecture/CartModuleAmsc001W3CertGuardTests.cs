@@ -104,8 +104,8 @@ public sealed class CartModuleAmsc001W3CertGuardTests
             ModuleRoot(), "Tooba.Cart.Endpoints", "Errors", "CartErrorCatalogContributor.cs"));
 
         // Two declared codes are intentionally not registered by the Cart contributor:
-        // - checkout.authentication_required is owned by the Foundation contributor (consumed, not re-registered);
-        // - cart.line.currency_missing is pre-existing undeclared/unregistered dead code (SoT watch R1).
+        // - checkout.authentication_required is owned/registered by the Foundation contributor (consumed, not re-registered);
+        // - cart.line.currency_missing is declared+localized+thrown but registered by no contributor (SoT watch R1).
         var locallyOwned = constants
             .Where(kv => kv.Value != "checkout.authentication_required"
                          && kv.Value != "cart.line.currency_missing")
@@ -392,6 +392,77 @@ public sealed class CartModuleAmsc001W3CertGuardTests
             Assert.Contains("IRequestHandler<", text, StringComparison.Ordinal);
             Assert.Contains("CartOperation.ExecuteAsync", text, StringComparison.Ordinal);
         }
+    }
+
+    /// <summary>
+    /// TB-TMAR-CART-AMSC-001-W3-R1 reconciliation lock. W3 originally recorded
+    /// <c>behaviorChange = NONE</c> while W1 (read from the same SoT document) records the accepted
+    /// bounded expected-failure repair (unexpected 500 -> catalogued 400/409/503). This is a real
+    /// cross-record consistency lock, not a tautological self-comparison.
+    /// </summary>
+    [Fact]
+    public void Cart_certification_truth_records_the_accepted_w1_bounded_defect_repair()
+    {
+        using var doc = ReadJson("docs/architecture/tmar-current-state.json");
+        var root = doc.RootElement;
+
+        // W1 is the wave that performed the accepted repair and must still record it.
+        var w1 = root.GetProperty("cartModuleAmsc001W1");
+        var w1Behavior = w1.GetProperty("behaviorChangeState").GetString()!;
+        Assert.StartsWith("PREVIOUSLY_500", w1Behavior, StringComparison.Ordinal);
+        Assert.Contains("400", w1Behavior, StringComparison.Ordinal);
+        Assert.Contains("409", w1Behavior, StringComparison.Ordinal);
+        Assert.Contains("503", w1Behavior, StringComparison.Ordinal);
+
+        // The final certification record must not contradict W1 with a NONE behavior claim.
+        var w3 = root.GetProperty("cartModuleAmsc001W3");
+        Assert.Equal(
+            "BOUNDED_DEFECT_REPAIR_EXPECTED_FAILURE_MAPPING",
+            w3.GetProperty("behaviorChange").GetString());
+        Assert.Equal(
+            "BOUNDED_EXPECTED_FAILURE_REMAP_500_TO_400_409_503",
+            w3.GetProperty("statusCodesChanged").GetString());
+        Assert.NotEqual("NONE", w3.GetProperty("statusCodesChanged").GetString());
+
+        // W3 itself introduced no runtime behavior change; the repair belongs to W1.
+        Assert.Equal("NONE", w3.GetProperty("w3RuntimeBehaviorChange").GetString());
+
+        // Unaffected axes stay NONE so the bounded claim cannot silently widen.
+        Assert.Equal("NONE", w3.GetProperty("schemaChange").GetString());
+        Assert.Equal("NONE", w3.GetProperty("routesChanged").GetString());
+        Assert.Equal("NONE", w3.GetProperty("errorCodesChanged").GetString());
+        Assert.Equal("NONE", w3.GetProperty("dtoShapeChanged").GetString());
+
+        // 27 declared/consumed codes != 25 Cart-registered descriptors; the shared checkout code is
+        // Foundation-owned and consumed-not-registered by Cart.
+        Assert.Equal(27, w3.GetProperty("declaredOrConsumedCodeCount").GetInt32());
+        Assert.Equal(25, w3.GetProperty("cartOwnedDescriptorCount").GetInt32());
+        Assert.NotEqual(
+            w3.GetProperty("declaredOrConsumedCodeCount").GetInt32(),
+            w3.GetProperty("cartOwnedDescriptorCount").GetInt32());
+        Assert.Equal("checkout.authentication_required", w3.GetProperty("sharedConsumedCode").GetString());
+        Assert.Equal("Foundation", w3.GetProperty("sharedConsumedCodeOwner").GetString());
+        Assert.False(w3.GetProperty("sharedConsumedCodeRegisteredByCart").GetBoolean());
+        Assert.Equal("ZERO", w3.GetProperty("duplicateErrorDescriptorState").GetString());
+
+        // The reconciliation checkpoint record must exist with the same truth.
+        var r1 = root.GetProperty("cartModuleAmsc001W3R1");
+        Assert.Equal("CART_AMSC_001_CERTIFICATION_TRUTH_RECONCILED", r1.GetProperty("state").GetString());
+        Assert.Equal("VERIFIED", r1.GetProperty("w1BehaviorRepairState").GetString());
+        Assert.Equal("BOUNDED_DEFECT_REPAIR_RECORDED", r1.GetProperty("behaviorChangeTruthState").GetString());
+        Assert.Equal("BOUNDED_500_TO_400_409_503_RECORDED", r1.GetProperty("statusCodeTruthState").GetString());
+        Assert.Equal("TWENTY_SEVEN", r1.GetProperty("declaredOrConsumedCodeCountState").GetString());
+        Assert.Equal("TWENTY_FIVE", r1.GetProperty("cartOwnedDescriptorCountState").GetString());
+        Assert.Equal("ZERO", r1.GetProperty("duplicateDescriptorOwnershipState").GetString());
+        Assert.Equal("ZERO", r1.GetProperty("productionCodeChangeState").GetString());
+        Assert.Equal("ZERO", r1.GetProperty("schemaMigrationChangeState").GetString());
+        Assert.Equal("ZERO", r1.GetProperty("resourceChangeState").GetString());
+        Assert.Equal("DOCUMENTATION_ONLY", r1.GetProperty("manifestStructureChangeState").GetString());
+        Assert.Equal(
+            "COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED",
+            r1.GetProperty("finalCertificationState").GetString());
+        Assert.Equal("NONE", r1.GetProperty("automaticNextImplementationTask").GetString());
+        Assert.Equal("USER_REVIEW_CART_AMSC_001_W3_R1", r1.GetProperty("workflowStop").GetString());
     }
 
     private static string ModuleRoot() =>
