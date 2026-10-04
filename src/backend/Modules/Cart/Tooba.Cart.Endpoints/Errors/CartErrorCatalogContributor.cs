@@ -24,6 +24,11 @@ public sealed class CartErrorCatalogContributor : IErrorCatalogContributor
             "Selected quantity is not valid."),
         D(CartErrorCodes.LineMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Cart line was not found."),
+        // A quoted line must always carry its own currency truth; when it is absent the fail-closed
+        // outcome is the line-level equivalent of a missing quote, so it follows the same
+        // Business/409 convention as cart.pricing.quote_missing rather than the unexpected 500 fallback.
+        D(CartErrorCodes.LineCurrencyMissing, ErrorClassification.Business, StatusCodes.Status409Conflict,
+            "Cart line currency is unavailable. Please retry."),
         D(CartErrorCodes.OfferUnavailable, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "This offer cannot be added to the cart."),
         D(CartErrorCodes.InventoryInsufficient, ErrorClassification.Conflict, StatusCodes.Status409Conflict,

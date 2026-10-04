@@ -103,15 +103,16 @@ public sealed class CartModuleAmsc001W3CertGuardTests
         var contributor = File.ReadAllText(Path.Combine(
             ModuleRoot(), "Tooba.Cart.Endpoints", "Errors", "CartErrorCatalogContributor.cs"));
 
-        // Two declared codes are intentionally not registered by the Cart contributor:
-        // - checkout.authentication_required is owned/registered by the Foundation contributor (consumed, not re-registered);
-        // - cart.line.currency_missing is declared+localized+thrown but registered by no contributor (SoT watch R1).
+        // Exactly one declared code is intentionally not registered by the Cart contributor:
+        // checkout.authentication_required is owned/registered by the Foundation contributor
+        // (consumed by Cart, not re-registered). Every other Cart-owned code, including
+        // cart.line.currency_missing (closed by W3-R2), is registered exactly once.
         var locallyOwned = constants
-            .Where(kv => kv.Value != "checkout.authentication_required"
-                         && kv.Value != "cart.line.currency_missing")
+            .Where(kv => kv.Value != "checkout.authentication_required")
             .ToArray();
-        Assert.Equal(25, locallyOwned.Length);
+        Assert.Equal(26, locallyOwned.Length);
         Assert.Equal(locallyOwned.Length, Regex.Matches(contributor, @"^\s*D\(", RegexOptions.Multiline).Count);
+        Assert.Single(Regex.Matches(contributor, @"D\(CartErrorCodes\.LineCurrencyMissing\s*,", RegexOptions.Multiline));
         foreach (var (name, _) in locallyOwned)
         {
             Assert.Contains($"CartErrorCodes.{name}", contributor, StringComparison.Ordinal);
@@ -433,10 +434,10 @@ public sealed class CartModuleAmsc001W3CertGuardTests
         Assert.Equal("NONE", w3.GetProperty("errorCodesChanged").GetString());
         Assert.Equal("NONE", w3.GetProperty("dtoShapeChanged").GetString());
 
-        // 27 declared/consumed codes != 25 Cart-registered descriptors; the shared checkout code is
-        // Foundation-owned and consumed-not-registered by Cart.
+        // 27 declared/consumed codes; after W3-R2 exactly 26 are Cart-registered descriptors and the
+        // shared checkout code stays Foundation-owned and consumed-not-registered by Cart.
         Assert.Equal(27, w3.GetProperty("declaredOrConsumedCodeCount").GetInt32());
-        Assert.Equal(25, w3.GetProperty("cartOwnedDescriptorCount").GetInt32());
+        Assert.Equal(26, w3.GetProperty("cartOwnedDescriptorCount").GetInt32());
         Assert.NotEqual(
             w3.GetProperty("declaredOrConsumedCodeCount").GetInt32(),
             w3.GetProperty("cartOwnedDescriptorCount").GetInt32());
@@ -445,14 +446,13 @@ public sealed class CartModuleAmsc001W3CertGuardTests
         Assert.False(w3.GetProperty("sharedConsumedCodeRegisteredByCart").GetBoolean());
         Assert.Equal("ZERO", w3.GetProperty("duplicateErrorDescriptorState").GetString());
 
-        // The reconciliation checkpoint record must exist with the same truth.
+        // The reconciliation checkpoint records must exist with the same truth.
         var r1 = root.GetProperty("cartModuleAmsc001W3R1");
         Assert.Equal("CART_AMSC_001_CERTIFICATION_TRUTH_RECONCILED", r1.GetProperty("state").GetString());
         Assert.Equal("VERIFIED", r1.GetProperty("w1BehaviorRepairState").GetString());
         Assert.Equal("BOUNDED_DEFECT_REPAIR_RECORDED", r1.GetProperty("behaviorChangeTruthState").GetString());
         Assert.Equal("BOUNDED_500_TO_400_409_503_RECORDED", r1.GetProperty("statusCodeTruthState").GetString());
         Assert.Equal("TWENTY_SEVEN", r1.GetProperty("declaredOrConsumedCodeCountState").GetString());
-        Assert.Equal("TWENTY_FIVE", r1.GetProperty("cartOwnedDescriptorCountState").GetString());
         Assert.Equal("ZERO", r1.GetProperty("duplicateDescriptorOwnershipState").GetString());
         Assert.Equal("ZERO", r1.GetProperty("productionCodeChangeState").GetString());
         Assert.Equal("ZERO", r1.GetProperty("schemaMigrationChangeState").GetString());
@@ -462,7 +462,27 @@ public sealed class CartModuleAmsc001W3CertGuardTests
             "COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED",
             r1.GetProperty("finalCertificationState").GetString());
         Assert.Equal("NONE", r1.GetProperty("automaticNextImplementationTask").GetString());
-        Assert.Equal("USER_REVIEW_CART_AMSC_001_W3_R1", r1.GetProperty("workflowStop").GetString());
+
+        // W3-R2 closes the last unregistered reachable Cart code.
+        var r2 = root.GetProperty("cartModuleAmsc001W3R2");
+        Assert.Equal("CART_AMSC_001_LINE_CURRENCY_CATALOG_CLOSED", r2.GetProperty("state").GetString());
+        Assert.Equal("EXACTLY_ONE", r2.GetProperty("lineCurrencyDescriptorAfterState").GetString());
+        Assert.Equal("Business", r2.GetProperty("lineCurrencyClassificationState").GetString());
+        Assert.Equal("409", r2.GetProperty("lineCurrencyHttpStatusState").GetString());
+        Assert.Equal("TWENTY_SEVEN", r2.GetProperty("declaredOrConsumedCodeCountState").GetString());
+        Assert.Equal("TWENTY_SIX", r2.GetProperty("cartOwnedDescriptorCountState").GetString());
+        Assert.Equal("FOUNDATION_OWNED_CONSUMED_NOT_REGISTERED", r2.GetProperty("sharedCheckoutAuthenticationState").GetString());
+        Assert.Equal("ZERO", r2.GetProperty("unregisteredReachableCartCodeState").GetString());
+        Assert.Equal("ZERO", r2.GetProperty("duplicateDescriptorOwnershipState").GetString());
+        Assert.Equal("ZERO", r2.GetProperty("productionFileDeltaState").GetString());
+        Assert.Equal("ZERO", r2.GetProperty("resourceChangeState").GetString());
+        Assert.Equal("ZERO", r2.GetProperty("schemaMigrationChangeState").GetString());
+        Assert.Equal("UNCHANGED", r2.GetProperty("manifestStructuralState").GetString());
+        Assert.Equal(
+            "COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED",
+            r2.GetProperty("finalCertificationState").GetString());
+        Assert.Equal("NONE", r2.GetProperty("automaticNextImplementationTask").GetString());
+        Assert.Equal("USER_REVIEW_CART_AMSC_001_W3_R2", r2.GetProperty("workflowStop").GetString());
     }
 
     private static string ModuleRoot() =>
