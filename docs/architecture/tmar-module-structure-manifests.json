@@ -1030,8 +1030,38 @@
       "lockVersion": "ARCH-COMPLETE-002",
       "projects": [
         {
+          "projectName": "Tooba.Offer.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Offer.Domain has no root .cs file; capability-first roots (Aggregates/Events/ValueObjects/Errors) carry every type; namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": [
+            "SellerOffer.cs",
+            "OfferDomainEvents.cs",
+            "OfferStatus.cs",
+            "SalesChannel.cs",
+            "OfferErrorCodes.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Offer.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Offer.Contracts has no root .cs file; boundary vocabulary lives under Dtos/Ports/Errors/ReturnPolicy capability folders; ReturnPolicy holds the boundary vocabulary plus the single Contracts-only resolver default consumed by Order.Infrastructure.",
+          "forbiddenRootFiles": [
+            "OfferQueryDtos.cs",
+            "OfferReference.cs",
+            "OfferSelectionCandidate.cs",
+            "OfferStatus.cs",
+            "SalesChannel.cs",
+            "SellerOfferPanelDtos.cs",
+            "OfferErrorCodes.cs",
+            "ReturnPolicyContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
           "projectName": "Tooba.Offer.Application",
           "rootAllowlist": [],
+          "rootAllowlistJustification": "Offer.Application has no root .cs file; capability-first roots (Offers/, Validation/) carry every type; namespace alignment is exact path-derived equality.",
           "forbiddenRootFiles": [
             "OfferContractMapping.cs",
             "IOfferStore.cs",
@@ -1041,7 +1071,18 @@
             "OfferQueries.cs",
             "OfferQueryHandlers.cs"
           ],
-          "forbiddenTopLevelFolders": []
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Mappings",
+            "Ports",
+            "Policies",
+            "ReadModels",
+            "Validators",
+            "Dtos",
+            "UseCases",
+            "ReturnPolicy"
+          ]
         },
         {
           "projectName": "Tooba.Offer.Endpoints",
@@ -1055,11 +1096,15 @@
             "OfferErrorResources.cs",
             "OfferEndpointLocalizer.cs"
           ],
-          "forbiddenTopLevelFolders": []
+          "forbiddenTopLevelFolders": [
+            "Admin",
+            "Storefront"
+          ]
         },
         {
           "projectName": "Tooba.Offer.Infrastructure",
           "rootAllowlist": [],
+          "rootAllowlistJustification": "Offer.Infrastructure has no root .cs file; capability-first roots (Persistence/Adapters/Events/Outbox/DependencyInjection) carry every type; namespace alignment is exact path-derived equality.",
           "forbiddenRootFiles": [
             "OfferModule.cs",
             "OfferDbContext.cs",
@@ -1070,7 +1115,9 @@
             "OfferDevelopmentSeedGateway.cs",
             "OfferOutboxRegistration.cs"
           ],
-          "forbiddenTopLevelFolders": []
+          "forbiddenTopLevelFolders": [
+            "Repositories"
+          ]
         }
       ]
     },
