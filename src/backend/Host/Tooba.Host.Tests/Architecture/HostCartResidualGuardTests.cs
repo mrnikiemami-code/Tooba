@@ -283,7 +283,7 @@ public sealed class HostCartResidualGuardTests
 
         // Host adapter must not carry a commerce-authority fallback literal.
         var adapter = File.ReadAllText(Path.Combine(
-            repoRoot, "src", "backend", "Host", "Tooba.Host", "Outbox", "OutboxWorkerSeams.cs"));
+            repoRoot, "src", "backend", "Host", "Tooba.Host", "Outbox", "WorkerStoreCommerceContextFactory.cs"));
         Assert.Contains("IWorkerStoreCommerceContextFactory", adapter, StringComparison.Ordinal);
         Assert.DoesNotContain("\"IR\"", adapter, StringComparison.Ordinal);
         Assert.DoesNotContain("\"IRR\"", adapter, StringComparison.Ordinal);
