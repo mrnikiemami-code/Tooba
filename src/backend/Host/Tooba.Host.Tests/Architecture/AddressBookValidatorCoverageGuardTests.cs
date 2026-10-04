@@ -1,18 +1,10 @@
 using System.Text.RegularExpressions;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using Tooba.AddressBook.Application.Commands.CreateCustomerAddress;
-using Tooba.AddressBook.Application.Commands.DeleteCustomerAddress;
-using Tooba.AddressBook.Application.Commands.SetDefaultCustomerAddress;
-using Tooba.AddressBook.Application.Commands.UpdateCustomerAddress;
+using Tooba.AddressBook.Application.Addresses.Commands;
+using Tooba.AddressBook.Application.Addresses.Queries;
+using Tooba.AddressBook.Application.Addresses.Validators;
 using Tooba.AddressBook.Application.Ports;
-using Tooba.AddressBook.Application.Queries.GetCustomerAddress;
-using Tooba.AddressBook.Application.Queries.ListCustomerAddresses;
-using Tooba.AddressBook.Application.Validators.CreateCustomerAddress;
-using Tooba.AddressBook.Application.Validators.DeleteCustomerAddress;
-using Tooba.AddressBook.Application.Validators.GetCustomerAddress;
-using Tooba.AddressBook.Application.Validators.SetDefaultCustomerAddress;
-using Tooba.AddressBook.Application.Validators.UpdateCustomerAddress;
 using Tooba.BuildingBlocks;
 using Xunit;
 
@@ -174,6 +166,9 @@ public sealed class AddressBookValidatorCoverageGuardTests
 
         Assert.True(File.Exists(Path.Combine(moduleRoot, "Tooba.AddressBook.Application", "Models", "CustomerAddressWrite.cs")));
         Assert.True(File.Exists(Path.Combine(moduleRoot, "Tooba.AddressBook.Application", "Ports", "IAddressBookDirectory.cs")));
+        Assert.True(File.Exists(Path.Combine(moduleRoot, "Tooba.AddressBook.Application", "Addresses", "Commands", "CreateCustomerAddressCommand.cs")));
+        Assert.True(File.Exists(Path.Combine(moduleRoot, "Tooba.AddressBook.Application", "Addresses", "Queries", "ListCustomerAddressesQuery.cs")));
+        Assert.True(File.Exists(Path.Combine(moduleRoot, "Tooba.AddressBook.Application", "Addresses", "Validators", "CreateCustomerAddressCommandValidator.cs")));
         Assert.True(File.Exists(Path.Combine(moduleRoot, "Tooba.AddressBook.Infrastructure", "Adapters", "AddressBookDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(moduleRoot, "Tooba.AddressBook.Contracts", "Dtos", "CustomerAddressRecord.cs")));
         Assert.True(Directory.Exists(Path.Combine(moduleRoot, "Tooba.AddressBook.Infrastructure", "Persistence", "Migrations")));

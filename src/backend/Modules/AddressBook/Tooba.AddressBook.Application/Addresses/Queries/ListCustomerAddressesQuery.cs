@@ -1,10 +1,10 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.AddressBook.Application.Composition;
 using Tooba.AddressBook.Application.Ports;
 using Tooba.AddressBook.Contracts.Dtos;
 using Tooba.BuildingBlocks.Results;
 
-namespace Tooba.AddressBook.Application.Queries.ListCustomerAddresses;
+namespace Tooba.AddressBook.Application.Addresses.Queries;
 
 /// <summary>
 /// فهرست نشانی‌های مشتری جاری. Identity از context سرور می‌آید و payload درخواست نیست.

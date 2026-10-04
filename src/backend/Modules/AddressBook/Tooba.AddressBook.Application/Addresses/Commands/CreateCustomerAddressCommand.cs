@@ -1,11 +1,11 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.AddressBook.Application.Composition;
 using Tooba.AddressBook.Application.Models;
 using Tooba.AddressBook.Application.Ports;
 using Tooba.AddressBook.Contracts.Dtos;
 using Tooba.BuildingBlocks.Results;
 
-namespace Tooba.AddressBook.Application.Commands.CreateCustomerAddress;
+namespace Tooba.AddressBook.Application.Addresses.Commands;
 
 /// <summary>
 /// ایجاد نشانی مشتری. <c>ActorUserId</c> از context سرور می‌آید و payload درخواست نیست؛

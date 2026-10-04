@@ -8191,5 +8191,70 @@
         "evidenceRoot": "docs/architecture/evidence/TB-TMAR-ADDRESSBOOK-AMSC-001-W1/",
         "workflowStop": "AUTO_CONTINUE_TO_ADDRESSBOOK_AMSC_001_W2",
         "automaticNextImplementationTask": "TB-TMAR-ADDRESSBOOK-AMSC-001-W2"
+    },
+    "addressBookModuleAmsc001W2": {
+        "task": "TB-TMAR-ADDRESSBOOK-AMSC-001-W2",
+        "mode": "IMPLEMENTATION",
+        "skill": "tooba-architecture-structure",
+        "target": "src/backend/Modules/AddressBook/Tooba.AddressBook.*",
+        "predecessorTask": "TB-TMAR-ADDRESSBOOK-AMSC-001-W1",
+        "predecessorEvidenceRoot": "docs/architecture/evidence/TB-TMAR-ADDRESSBOOK-AMSC-001-W1/",
+        "closedFindings": [
+            "F3_APPLICATION_TECHNICAL_AXIS_FIRST_11_SINGLE_FILE_USE_CASE_LEAF_FOLDERS_CLOSED",
+            "F4_VALIDATORS_USE_CASE_MIRROR_5_SINGLE_FILE_LEAVES_CLOSED"
+        ],
+        "recordedObservations": [
+            "F5_APPLICATION_VALIDATORS_ROOT_KEPT_AS_CROSS_CUTTING_CAPABILITY_FOLDER_NOT_RENAMED_TO_VALIDATION",
+            "F6_GET_QUERY_NULL_MEANS_MISSING_SEMANTICS_PRESERVED_NO_403",
+            "F7_APPLICATION_MODELS_CUSTOMERADDRESSWRITE_VS_ENDPOINTS_CUSTOMERADDRESSWRITEREQUEST_SANCTIONED_SPLIT_PRESERVED"
+        ],
+        "folderGranularityState": "PROFESSIONAL_SHALLOW",
+        "solutionExplorerState": "CANONICAL",
+        "pathNamespaceState": "EXACT",
+        "physicalCopyState": "CLEAN",
+        "rootAllowlistState": "ENFORCED",
+        "structureState": "READY_FOR_CERTIFY",
+        "capabilityFolder": "Tooba.AddressBook.Application/Addresses",
+        "capabilityAxes": [
+            "Commands",
+            "Queries",
+            "Validators"
+        ],
+        "singleFileUseCaseLeafFoldersRemoved": 11,
+        "flattenedFiles": [
+            "Application/Addresses/Commands/CreateCustomerAddressCommand.cs",
+            "Application/Addresses/Commands/DeleteCustomerAddressCommand.cs",
+            "Application/Addresses/Commands/SetDefaultCustomerAddressCommand.cs",
+            "Application/Addresses/Commands/UpdateCustomerAddressCommand.cs",
+            "Application/Addresses/Queries/GetCustomerAddressQuery.cs",
+            "Application/Addresses/Queries/ListCustomerAddressesQuery.cs",
+            "Application/Addresses/Validators/CreateCustomerAddressCommandValidator.cs",
+            "Application/Addresses/Validators/DeleteCustomerAddressCommandValidator.cs",
+            "Application/Addresses/Validators/GetCustomerAddressQueryValidator.cs",
+            "Application/Addresses/Validators/SetDefaultCustomerAddressCommandValidator.cs",
+            "Application/Addresses/Validators/UpdateCustomerAddressCommandValidator.cs"
+        ],
+        "namespaceMoves": "Tooba.AddressBook.Application.{Commands|Queries|Validators}.<UseCase> -> Tooba.AddressBook.Application.Addresses.{Commands|Queries|Validators}",
+        "solutionGroupingVerified": "src/backend/Tooba.slnx /Modules/AddressBook/ holds all five projects; unchanged and still canonical",
+        "durableGuardsAdded": [
+            "AddressBookPhysicalStructureGuardTests.AddressBook_application_is_capability_first_with_no_technical_axis_root",
+            "AddressBookPhysicalStructureGuardTests.AddressBook_has_no_single_file_use_case_leaf_folders",
+            "AddressBookPhysicalStructureGuardTests.AllowedApplicationFolders now capability-first (Addresses + shared cross-cutting folders only)"
+        ],
+        "manifestUpdated": "AddressBook certificationNote + AddressBook.Application rootAllowlistJustification corrected to the capability-first truth; whole-module structureCertified left to Certify (W3)",
+        "guardsWeakened": "NONE",
+        "baselinesWidened": "NONE",
+        "behaviorChange": "NONE_PURE_STRUCTURE_AND_NAMESPACE_MOVE",
+        "testsPassed": 23,
+        "testsFailed": 0,
+        "testsSkipped": 4,
+        "buildErrors": 0,
+        "buildWarnings": 146,
+        "preExistingDriftProof": "Identical 7 pre-existing failures before and after W2 (TmarCompleteReferenceStructureGateTests x3 Catalog namespace drift, TmarDurableGuardTests x1, TmarSourceSizeAndInfraAppTests x3 stale .tmp-baseline worktree); AddressBook appears in none of them",
+        "hostFinalClosureRegression": "NONE",
+        "microserviceExtractable": true,
+        "evidenceRoot": "docs/architecture/evidence/TB-TMAR-ADDRESSBOOK-AMSC-001-W2/",
+        "workflowStop": "AUTO_CONTINUE_TO_ADDRESSBOOK_AMSC_001_W3",
+        "automaticNextImplementationTask": "TB-TMAR-ADDRESSBOOK-AMSC-001-W3"
     }
 }

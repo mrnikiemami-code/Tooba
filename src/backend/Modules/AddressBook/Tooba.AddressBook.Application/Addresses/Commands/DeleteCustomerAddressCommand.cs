@@ -1,9 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.AddressBook.Application.Composition;
 using Tooba.AddressBook.Application.Ports;
 using Tooba.BuildingBlocks.Results;
 
-namespace Tooba.AddressBook.Application.Commands.DeleteCustomerAddress;
+namespace Tooba.AddressBook.Application.Addresses.Commands;
 
 /// <summary>
 /// حذف نشانی مشتری. <c>ActorUserId</c> از context سرور و <c>AddressId</c> از مسیر می‌آید؛

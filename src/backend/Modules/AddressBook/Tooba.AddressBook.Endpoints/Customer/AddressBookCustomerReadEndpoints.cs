@@ -1,9 +1,8 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tooba.AddressBook.Application.Queries.GetCustomerAddress;
-using Tooba.AddressBook.Application.Queries.ListCustomerAddresses;
+using Tooba.AddressBook.Application.Addresses.Queries;
 using Tooba.AddressBook.Contracts.Errors;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;

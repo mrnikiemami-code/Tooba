@@ -1,8 +1,8 @@
-using FluentValidation;
-using Tooba.AddressBook.Application.Commands.CreateCustomerAddress;
+﻿using FluentValidation;
+using Tooba.AddressBook.Application.Addresses.Commands;
 using Tooba.AddressBook.Application.Validators;
 
-namespace Tooba.AddressBook.Application.Validators.CreateCustomerAddress;
+namespace Tooba.AddressBook.Application.Addresses.Validators;
 
 /// <summary>
 /// اعتبارسنجی شکل انتقال برای <see cref="CreateCustomerAddressCommand"/> — فقط ورودی نامطمئن.

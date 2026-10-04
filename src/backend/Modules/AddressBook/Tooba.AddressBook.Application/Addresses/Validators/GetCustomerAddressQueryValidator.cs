@@ -1,8 +1,8 @@
-using FluentValidation;
-using Tooba.AddressBook.Application.Queries.GetCustomerAddress;
+﻿using FluentValidation;
+using Tooba.AddressBook.Application.Addresses.Queries;
 using Tooba.AddressBook.Application.Validators;
 
-namespace Tooba.AddressBook.Application.Validators.GetCustomerAddress;
+namespace Tooba.AddressBook.Application.Addresses.Validators;
 
 /// <summary>
 /// اعتبارسنجی شکل انتقال برای <see cref="GetCustomerAddressQuery"/> — فقط شناسهٔ مسیر.

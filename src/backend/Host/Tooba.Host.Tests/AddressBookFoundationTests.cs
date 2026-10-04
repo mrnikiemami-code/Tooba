@@ -98,7 +98,7 @@ public sealed class AddressBookFoundationTests
             "AddressBookErrorCodes.AddressMissing",
             File.ReadAllText(Path.Combine(
                 FindRepoRoot(), "src", "backend", "Modules", "AddressBook",
-                "Tooba.AddressBook.Application", "Queries", "GetCustomerAddress", "GetCustomerAddressQuery.cs")),
+                "Tooba.AddressBook.Application", "Addresses", "Queries", "GetCustomerAddressQuery.cs")),
             StringComparison.Ordinal);
         Assert.DoesNotContain("{owner", moduleWriteSource, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("OwnerUserId", moduleWriteSource, StringComparison.Ordinal);

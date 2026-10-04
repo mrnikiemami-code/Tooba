@@ -15,8 +15,28 @@ public sealed class AddressBookPhysicalStructureGuardTests
     private static readonly string[] AllowedDomainFolders =
         ["Aggregates", "Entities", "ValueObjects", "Policies", "Events", "Errors"];
 
+    // Capability-first: Application root holds capability folders + shared cross-cutting folders.
+    // Bare technical axes (Commands/Queries/Validators) are legal only *under* a capability folder.
     private static readonly string[] AllowedApplicationFolders =
-        ["Commands", "Queries", "Mappings", "Ports", "Validators", "Dtos", "ReadModels", "Models", "Policies", "Composition"];
+        ["Addresses", "Composition", "Models", "Ports", "Validators", "Dtos", "ReadModels", "Mappings", "Policies"];
+
+    private static readonly string[] AllowedApplicationCapabilityFolders =
+        ["Commands", "Queries", "Validators", "Models", "Ports", "Dtos", "ReadModels"];
+
+    /// <summary>
+    /// Structural folder names that are legitimate even when they hold a single production source
+    /// file (framework seams, resources, persistence, migrations, shared rules). A single-file
+    /// folder whose name is NOT structural is a use-case leaf and therefore OVER_FOLDERED.
+    /// </summary>
+    private static readonly string[] StructuralFolderNames =
+    [
+        "Aggregates", "Entities", "ValueObjects", "Policies", "Events", "Errors", "Enums", "Rules",
+        "Commands", "Queries", "Validators", "Validation", "Models", "Ports", "Dtos", "ReadModels",
+        "Mappings", "Composition", "Authorization", "Persistence", "Migrations", "Configurations",
+        "Repositories", "Adapters", "Directories", "Development", "Outbox", "Messaging",
+        "Observability", "DependencyInjection", "Admin", "Seller", "Storefront", "Customer",
+        "Resources", "Localization", "Integration", "Projections", "Grid", "Events", "Api", "Endpoints",
+    ];
 
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Repositories", "Adapters", "Outbox", "Events", "DependencyInjection"];
@@ -151,6 +171,82 @@ public sealed class AddressBookPhysicalStructureGuardTests
                 violations.Add($"{project}/{rel}: top folder '{top}' not in approved set");
             }
         }
+    }
+    [Fact]
+    public void AddressBook_application_is_capability_first_with_no_technical_axis_root()
+    {
+        var appRoot = Path.Combine(AddressBookRoot(), "Tooba.AddressBook.Application");
+        var violations = new List<string>();
+
+        foreach (var axis in new[] { "Commands", "Queries" })
+        {
+            if (Directory.Exists(Path.Combine(appRoot, axis)))
+            {
+                violations.Add($"Application/{axis}/ is a technical-axis-first top-level folder");
+            }
+        }
+
+        var capabilityRoot = Path.Combine(appRoot, "Addresses");
+        Assert.True(Directory.Exists(capabilityRoot), "Application/Addresses/ capability folder is missing");
+
+        foreach (var dir in Directory.EnumerateDirectories(capabilityRoot, "*", SearchOption.AllDirectories))
+        {
+            var rel = Path.GetRelativePath(capabilityRoot, dir).Replace('\\', '/');
+            if (rel.Contains('/', StringComparison.Ordinal))
+            {
+                violations.Add($"Addresses/{rel}: capability trees stay shallow (capability -> technical axis -> files)");
+                continue;
+            }
+
+            if (!AllowedApplicationCapabilityFolders.Contains(rel, StringComparer.OrdinalIgnoreCase))
+            {
+                violations.Add($"Addresses/{rel}: '{rel}' not in approved capability axis set");
+            }
+        }
+
+        Assert.True(violations.Count == 0, "capability-first violations:\n" + string.Join("\n", violations));
+    }
+
+    [Fact]
+    public void AddressBook_has_no_single_file_use_case_leaf_folders()
+    {
+        var root = AddressBookRoot();
+        var offenders = new List<string>();
+
+        foreach (var dir in Directory.EnumerateDirectories(root, "*", SearchOption.AllDirectories))
+        {
+            var n = dir.Replace('\\', '/');
+            if (n.Contains("/bin/", StringComparison.Ordinal)
+                || n.Contains("/obj/", StringComparison.Ordinal)
+                || n.Contains("/Migrations/", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var name = Path.GetFileName(dir);
+            if (StructuralFolderNames.Contains(name, StringComparer.OrdinalIgnoreCase)
+                || Path.GetDirectoryName(dir) is null
+                || string.Equals(Path.GetDirectoryName(dir), root, StringComparison.OrdinalIgnoreCase))
+            {
+                // Approved structural folder names are never use-case leaves; project roots are
+                // governed by the root-allowlist guard instead.
+                continue;
+            }
+
+            var sources = Directory.EnumerateFiles(dir, "*", SearchOption.TopDirectoryOnly)
+                .Where(f => !f.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase)
+                            && !f.EndsWith(".resx", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            if (sources.Length == 1)
+            {
+                offenders.Add(Path.GetRelativePath(root, sources[0]).Replace('\\', '/'));
+            }
+        }
+
+        Assert.True(
+            offenders.Count == 0,
+            "single-file use-case leaf folders are OVER_FOLDERED:\n" + string.Join("\n", offenders));
     }
 
     private static void CheckExactNamespaces(string project, List<string> violations)
