@@ -78,7 +78,7 @@ public static class ShippingServiceEndpoints
     {
         await authorizer.RequireAuthorizedAsync(context, cancellationToken);
         var result = await sender.Send(new DeactivateShippingServiceCommand(serviceId), cancellationToken);
-        return result.IsFailure ? api.From(result) : Results.Json(new { ok = true });
+        return api.From(result);
     }
 
     private static async Task<IResult> EnsureSeedHttpAsync(
@@ -87,7 +87,7 @@ public static class ShippingServiceEndpoints
     {
         await authorizer.RequireAuthorizedAsync(context, cancellationToken);
         var result = await sender.Send(new EnsureShippingCatalogSeedCommand(), cancellationToken);
-        return result.IsFailure ? api.From(result) : Results.Json(new { ok = true });
+        return api.From(result);
     }
 
     private static ShippingServiceWriteModel ToModel(ShippingServiceWriteRequest body) =>

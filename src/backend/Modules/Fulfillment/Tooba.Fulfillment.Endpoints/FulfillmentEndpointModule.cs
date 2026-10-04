@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Tooba.BuildingBlocks.Localization;
 using Tooba.Fulfillment.Endpoints.Admin;
 using Tooba.Fulfillment.Endpoints.Customer;
+using Tooba.Fulfillment.Endpoints.Resources;
 using Tooba.Fulfillment.Endpoints.Seller;
 using Tooba.Fulfillment.Endpoints.Shipping;
 
@@ -26,13 +28,14 @@ public static class FulfillmentEndpointModule
         return app;
     }
 
-    /// <summary>Registers module-owned Fulfillment authorizer implementations.</summary>
+    /// <summary>Registers module-owned Fulfillment authorizer implementations and error resources.</summary>
     public static IServiceCollection AddFulfillmentEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<IFulfillmentAdminAuthorizer, FulfillmentAdminAuthorizer>();
         services.AddScoped<IFulfillmentCustomerAuthorizer, FulfillmentCustomerAuthorizer>();
         services.AddScoped<IFulfillmentSellerAuthorizer, FulfillmentSellerAuthorizer>();
+        services.AddSingleton<IErrorResourceSet, FulfillmentErrorResourceSet>();
         return services;
     }
 }

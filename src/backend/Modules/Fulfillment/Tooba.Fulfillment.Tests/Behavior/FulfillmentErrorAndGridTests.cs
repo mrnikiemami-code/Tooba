@@ -28,9 +28,9 @@ public sealed class FulfillmentErrorAndGridTests
     [Fact]
     public void Exception_mapper_does_not_parse_localized_or_prose_messages()
     {
-        Assert.False(FulfillmentExceptionMapper.TryMapExact("پیدا نشد", out _));
-        Assert.False(FulfillmentExceptionMapper.TryMapExact("Shipment failed somehow", out _));
-        Assert.False(FulfillmentExceptionMapper.TryMapExact("fulfillment.unknown.future_code", out _));
+        Assert.False(FulfillmentErrors.IsKnown("پیدا نشد"));
+        Assert.False(FulfillmentErrors.IsKnown("Shipment failed somehow"));
+        Assert.False(FulfillmentErrors.IsKnown("fulfillment.unknown.future_code"));
         Assert.Throws<InvalidOperationException>(() =>
             FulfillmentExceptionMapper.ToSemanticError(new InvalidOperationException("پیدا نشد")));
     }

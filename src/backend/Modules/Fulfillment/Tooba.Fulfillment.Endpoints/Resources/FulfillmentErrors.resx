@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="fulfillment.missing" xml:space="preserve">
+    <value>Fulfillment was not found.</value>
+  </data>
+  <data name="fulfillment.not_found" xml:space="preserve">
+    <value>Fulfillment was not found.</value>
+  </data>
+  <data name="fulfillment.rejected" xml:space="preserve">
+    <value>Fulfillment mutation was rejected.</value>
+  </data>
+  <data name="fulfillment.order.not_found" xml:space="preserve">
+    <value>Source order was not found.</value>
+  </data>
+  <data name="fulfillment.order.not_paid" xml:space="preserve">
+    <value>Source order is not paid.</value>
+  </data>
+  <data name="fulfillment.order_line.not_found" xml:space="preserve">
+    <value>Order line was not found.</value>
+  </data>
+  <data name="fulfillment.qty.positive" xml:space="preserve">
+    <value>Quantity must be positive.</value>
+  </data>
+  <data name="fulfillment.status.terminal" xml:space="preserve">
+    <value>Fulfillment is in a terminal status.</value>
+  </data>
+  <data name="fulfillment.status.processing_invalid" xml:space="preserve">
+    <value>Processing status transition is invalid.</value>
+  </data>
+  <data name="fulfillment.selection.required" xml:space="preserve">
+    <value>A selection is required.</value>
+  </data>
+  <data name="fulfillment.outbox.unmapped_event" xml:space="preserve">
+    <value>Fulfillment outbox event has no mapping.</value>
+  </data>
+  <data name="fulfillment.processing.qty_exceeds" xml:space="preserve">
+    <value>Processing quantity exceeds the sellable amount.</value>
+  </data>
+  <data name="fulfillment.processing.qty_positive" xml:space="preserve">
+    <value>Processing quantity must be positive.</value>
+  </data>
+  <data name="fulfillment.processing.release_invalid" xml:space="preserve">
+    <value>Processing release is invalid.</value>
+  </data>
+  <data name="fulfillment.processing.release_qty_positive" xml:space="preserve">
+    <value>Processing release quantity must be positive.</value>
+  </data>
+  <data name="fulfillment.process.after_delivered" xml:space="preserve">
+    <value>Cannot process after delivery.</value>
+  </data>
+  <data name="fulfillment.unconfirm.already_started" xml:space="preserve">
+    <value>Cannot unconfirm a started fulfillment.</value>
+  </data>
+  <data name="fulfillment.pack.qty_exceeds" xml:space="preserve">
+    <value>Packing quantity exceeds the processed amount.</value>
+  </data>
+  <data name="fulfillment.pack.qty_positive" xml:space="preserve">
+    <value>Packing quantity must be positive.</value>
+  </data>
+  <data name="fulfillment.pack.release_exceeds" xml:space="preserve">
+    <value>Release exceeds the packed amount.</value>
+  </data>
+  <data name="fulfillment.pack.release_qty_positive" xml:space="preserve">
+    <value>Release quantity must be positive.</value>
+  </data>
+  <data name="fulfillment.pack.release_allocated" xml:space="preserve">
+    <value>Cannot release an already allocated line.</value>
+  </data>
+  <data name="fulfillment.pack.requires_processing" xml:space="preserve">
+    <value>Packing requires the line to be processed first.</value>
+  </data>
+  <data name="fulfillment.pack.after_delivered" xml:space="preserve">
+    <value>Cannot pack after delivery.</value>
+  </data>
+  <data name="fulfillment.ship.qty_exceeds" xml:space="preserve">
+    <value>Ship quantity exceeds the packed amount.</value>
+  </data>
+  <data name="fulfillment.ship.qty_positive" xml:space="preserve">
+    <value>Ship quantity must be positive.</value>
+  </data>
+  <data name="fulfillment.cancel.already_dispatched" xml:space="preserve">
+    <value>Cannot cancel an already dispatched fulfillment.</value>
+  </data>
+  <data name="fulfillment.restore.already_dispatched" xml:space="preserve">
+    <value>Cannot restore an already dispatched fulfillment.</value>
+  </data>
+  <data name="fulfillment.shipment.not_found" xml:space="preserve">
+    <value>Shipment was not found.</value>
+  </data>
+  <data name="fulfillment.shipment.qty_exceeds_ordered" xml:space="preserve">
+    <value>Shipment quantity exceeds the ordered amount.</value>
+  </data>
+  <data name="fulfillment.shipment.qty_exceeds_packed" xml:space="preserve">
+    <value>Shipment quantity exceeds the packed amount.</value>
+  </data>
+  <data name="fulfillment.shipment.cancel_invalid" xml:space="preserve">
+    <value>Shipment cancellation is invalid in this state.</value>
+  </data>
+  <data name="fulfillment.shipment.carrier_required" xml:space="preserve">
+    <value>Carrier display name is required.</value>
+  </data>
+  <data name="fulfillment.shipment.create_terminal" xml:space="preserve">
+    <value>Cannot create a shipment for a terminal fulfillment.</value>
+  </data>
+  <data name="fulfillment.shipment.locked_by_consolidated_package" xml:space="preserve">
+    <value>Shipment is locked by a consolidated package.</value>
+  </data>
+  <data name="fulfillment.dispatch.invalid_status" xml:space="preserve">
+    <value>Dispatch is invalid in this state.</value>
+  </data>
+  <data name="fulfillment.dispatch.tracking_required" xml:space="preserve">
+    <value>Dispatch requires a tracking reference.</value>
+  </data>
+  <data name="fulfillment.deliver.invalid_status" xml:space="preserve">
+    <value>Delivery is invalid in this state.</value>
+  </data>
+  <data name="fulfillment.tracking.required" xml:space="preserve">
+    <value>Tracking reference is required.</value>
+  </data>
+  <data name="fulfillment.tracking.already_set" xml:space="preserve">
+    <value>Tracking reference was already set.</value>
+  </data>
+  <data name="fulfillment.tracking.duplicate" xml:space="preserve">
+    <value>Duplicate tracking reference.</value>
+  </data>
+  <data name="fulfillment.tracking.invalid_state" xml:space="preserve">
+    <value>Tracking state does not allow this change.</value>
+  </data>
+  <data name="fulfillment.tracking.locked_after_dispatch" xml:space="preserve">
+    <value>Tracking is locked after dispatch.</value>
+  </data>
+  <data name="fulfillment.tracking.nothing_to_correct" xml:space="preserve">
+    <value>There is nothing to correct on the tracking reference.</value>
+  </data>
+  <data name="fulfillment.package.not_found" xml:space="preserve">
+    <value>Consolidated package was not found.</value>
+  </data>
+  <data name="fulfillment.package.requires_multi_seller" xml:space="preserve">
+    <value>Consolidation requires multiple sellers.</value>
+  </data>
+  <data name="fulfillment.package.mixed_checkout" xml:space="preserve">
+    <value>Consolidation cannot span checkouts.</value>
+  </data>
+  <data name="fulfillment.package.checkout_required" xml:space="preserve">
+    <value>Checkout is required for consolidation.</value>
+  </data>
+  <data name="fulfillment.package.shipping_method_required" xml:space="preserve">
+    <value>Shipping method is required for consolidation.</value>
+  </data>
+  <data name="fulfillment.package.shipping_method_mismatch" xml:space="preserve">
+    <value>Consolidated members must share one shipping method.</value>
+  </data>
+  <data name="fulfillment.package.shipment_already_member" xml:space="preserve">
+    <value>Shipment is already a package member.</value>
+  </data>
+  <data name="fulfillment.package.shipment_not_eligible" xml:space="preserve">
+    <value>Shipment is not eligible for consolidation.</value>
+  </data>
+  <data name="fulfillment.package.duplicate_shipment" xml:space="preserve">
+    <value>Duplicate shipment in the package.</value>
+  </data>
+  <data name="fulfillment.package.member_state_changed" xml:space="preserve">
+    <value>Package member state changed underneath the operation.</value>
+  </data>
+  <data name="fulfillment.package.dispatch_invalid_state" xml:space="preserve">
+    <value>Package dispatch is invalid in this state.</value>
+  </data>
+  <data name="fulfillment.package.deliver_before_dispatch" xml:space="preserve">
+    <value>Package cannot be delivered before dispatch.</value>
+  </data>
+  <data name="fulfillment.package.cancel_after_dispatch" xml:space="preserve">
+    <value>Package cannot be cancelled after dispatch.</value>
+  </data>
+  <data name="fulfillment.package.tracking_locked" xml:space="preserve">
+    <value>Package tracking is locked.</value>
+  </data>
+  <data name="fulfillment.package.tracking_required" xml:space="preserve">
+    <value>Package tracking is required.</value>
+  </data>
+  <data name="fulfillment.shipping_method.unsupported" xml:space="preserve">
+    <value>Shipping method is unsupported.</value>
+  </data>
+  <data name="fulfillment.shipping.post.recipient_required" xml:space="preserve">
+    <value>Post provider requires a recipient name.</value>
+  </data>
+  <data name="fulfillment.shipping.post.address_required" xml:space="preserve">
+    <value>Post provider requires a full address.</value>
+  </data>
+  <data name="fulfillment.shipping.postal_invalid" xml:space="preserve">
+    <value>Postal code is invalid.</value>
+  </data>
+  <data name="fulfillment.shipping.tipax.address_required" xml:space="preserve">
+    <value>Tipax provider requires a full address.</value>
+  </data>
+  <data name="fulfillment.shipping.courier.address_required" xml:space="preserve">
+    <value>Courier provider requires a full address.</value>
+  </data>
+  <data name="fulfillment.shipping.pickup.location_required" xml:space="preserve">
+    <value>Pickup provider requires a location.</value>
+  </data>
+  <data name="fulfillment.shipping.mobile_invalid" xml:space="preserve">
+    <value>Mobile number is invalid.</value>
+  </data>
+  <data name="seller.order.handle.denied" xml:space="preserve">
+    <value>Seller lacks order.handle permission.</value>
+  </data>
+  <data name="seller.order.handle.scope_denied" xml:space="preserve">
+    <value>Order.handle category scope does not cover all lines.</value>
+  </data>
+  <data name="seller.order.missing" xml:space="preserve">
+    <value>Seller order was not found.</value>
+  </data>
+  <data name="customer.actor.missing" xml:space="preserve">
+    <value>Customer actor is missing.</value>
+  </data>
+  <data name="customer.order.missing" xml:space="preserve">
+    <value>Customer order was not found.</value>
+  </data>
+  <data name="fulfillment.work_queue.bulk_failed" xml:space="preserve">
+    <value>Fulfillment work-queue bulk operation failed.</value>
+  </data>
+  <data name="fulfillment.work_queue.bulk_unsupported" xml:space="preserve">
+    <value>Fulfillment work-queue bulk action is unsupported.</value>
+  </data>
+  <data name="fulfillment.work_queue.bulk_empty" xml:space="preserve">
+    <value>Fulfillment work-queue bulk selection is empty.</value>
+  </data>
+  <data name="fulfillment.work_queue.cross_seller" xml:space="preserve">
+    <value>Fulfillment work-queue bulk cannot span sellers.</value>
+  </data>
+  <data name="fulfillment.work_queue.row_mismatch" xml:space="preserve">
+    <value>Fulfillment work-queue row does not match server state.</value>
+  </data>
+  <data name="fulfillment.work_queue.incompatible" xml:space="preserve">
+    <value>Fulfillment work-queue bulk selection is incompatible.</value>
+  </data>
+  <data name="fulfillment.work_queue.shipment_missing" xml:space="preserve">
+    <value>Fulfillment work-queue shipment is missing.</value>
+  </data>
+  <data name="shipping_service.not_found" xml:space="preserve">
+    <value>Shipping service was not found.</value>
+  </data>
+  <data name="shipping_service.code_duplicate" xml:space="preserve">
+    <value>Shipping service code already exists.</value>
+  </data>
+  <data name="shipping_service.code.required" xml:space="preserve">
+    <value>Shipping service code is required.</value>
+  </data>
+  <data name="shipping_service.name.required" xml:space="preserve">
+    <value>Shipping service name is required.</value>
+  </data>
+  <data name="shipping_service.language_invalid" xml:space="preserve">
+    <value>Shipping service language is invalid.</value>
+  </data>
+  <data name="shipping_service_option.code.required" xml:space="preserve">
+    <value>Shipping service option code is required.</value>
+  </data>
+  <data name="shipping_service_option.name.required" xml:space="preserve">
+    <value>Shipping service option name is required.</value>
+  </data>
+</root>

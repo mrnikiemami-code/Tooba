@@ -1,6 +1,7 @@
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Fulfillment.Application.Errors;
 using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Localization.Contracts.Errors;
 using Tooba.Localization.Contracts.Ports;
@@ -51,22 +52,13 @@ public static class ShippingServiceSemantic
 {
     /// <summary>Failure بدون مقدار.</summary>
     public static Result Failure(string code) =>
-        Result.Failure(new SemanticError(Normalize(code)));
+        Result.Failure(new SemanticError(FulfillmentErrors.RequireKnown(code)));
 
     /// <summary>Failure با نوع مقدار.</summary>
     public static Result<T> Failure<T>(string code) =>
-        Result.Failure<T>(new SemanticError(Normalize(code)));
+        Result.Failure<T>(new SemanticError(FulfillmentErrors.RequireKnown(code)));
 
-private static string Normalize(string code)
-    {
-        if (Errors.FulfillmentExceptionMapper.TryMapExact(code, out var error))
-        {
-            return error.Code;
-        }
-
-        throw new InvalidOperationException(code);
-    }
-/// <summary>Resolve language id with default/culture/code/urlPrefix fallback.</summary>
+    /// <summary>Resolve language id with default/culture/code/urlPrefix fallback.</summary>
     public static async Task<Guid> ResolveLanguageIdAsync(
         ILanguageLookup languages,
         string? language,

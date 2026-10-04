@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="fulfillment.missing" xml:space="preserve">
+    <value>مورد تحویل یافت نشد.</value>
+  </data>
+  <data name="fulfillment.not_found" xml:space="preserve">
+    <value>مورد تحویل یافت نشد.</value>
+  </data>
+  <data name="fulfillment.rejected" xml:space="preserve">
+    <value>تغییر مورد تحویل رد شد.</value>
+  </data>
+  <data name="fulfillment.order.not_found" xml:space="preserve">
+    <value>سفارش مبدأ یافت نشد.</value>
+  </data>
+  <data name="fulfillment.order.not_paid" xml:space="preserve">
+    <value>سفارش مبدأ پرداخت نشده است.</value>
+  </data>
+  <data name="fulfillment.order_line.not_found" xml:space="preserve">
+    <value>خط سفارش یافت نشد.</value>
+  </data>
+  <data name="fulfillment.qty.positive" xml:space="preserve">
+    <value>مقدار باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="fulfillment.status.terminal" xml:space="preserve">
+    <value>مورد تحویل در وضعیت پایانی است.</value>
+  </data>
+  <data name="fulfillment.status.processing_invalid" xml:space="preserve">
+    <value>تغییر وضعیت پردازش نامعتبر است.</value>
+  </data>
+  <data name="fulfillment.selection.required" xml:space="preserve">
+    <value>انتخاب الزامی است.</value>
+  </data>
+  <data name="fulfillment.outbox.unmapped_event" xml:space="preserve">
+    <value>رویداد outbox تحویل نگاشت ندارد.</value>
+  </data>
+  <data name="fulfillment.processing.qty_exceeds" xml:space="preserve">
+    <value>مقدار پردازش از مقدار قابل فروش بیشتر است.</value>
+  </data>
+  <data name="fulfillment.processing.qty_positive" xml:space="preserve">
+    <value>مقدار پردازش باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="fulfillment.processing.release_invalid" xml:space="preserve">
+    <value>آزادسازی پردازش نامعتبر است.</value>
+  </data>
+  <data name="fulfillment.processing.release_qty_positive" xml:space="preserve">
+    <value>مقدار آزادسازی پردازش باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="fulfillment.process.after_delivered" xml:space="preserve">
+    <value>پس از تحویل امکان پردازش نیست.</value>
+  </data>
+  <data name="fulfillment.unconfirm.already_started" xml:space="preserve">
+    <value>مورد تحویل شروع‌شده را نمی‌توان لغو تأیید کرد.</value>
+  </data>
+  <data name="fulfillment.pack.qty_exceeds" xml:space="preserve">
+    <value>مقدار بسته‌بندی از مقدار پردازش‌شده بیشتر است.</value>
+  </data>
+  <data name="fulfillment.pack.qty_positive" xml:space="preserve">
+    <value>مقدار بسته‌بندی باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="fulfillment.pack.release_exceeds" xml:space="preserve">
+    <value>آزادسازی از مقدار بسته‌بندی‌شده بیشتر است.</value>
+  </data>
+  <data name="fulfillment.pack.release_qty_positive" xml:space="preserve">
+    <value>مقدار آزادسازی باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="fulfillment.pack.release_allocated" xml:space="preserve">
+    <value>خط تخصیص‌یافته را نمی‌توان آزاد کرد.</value>
+  </data>
+  <data name="fulfillment.pack.requires_processing" xml:space="preserve">
+    <value>بسته‌بندی نیازمند پردازش قبلی خط است.</value>
+  </data>
+  <data name="fulfillment.pack.after_delivered" xml:space="preserve">
+    <value>پس از تحویل امکان بسته‌بندی نیست.</value>
+  </data>
+  <data name="fulfillment.ship.qty_exceeds" xml:space="preserve">
+    <value>مقدار ارسال از مقدار بسته‌بندی‌شده بیشتر است.</value>
+  </data>
+  <data name="fulfillment.ship.qty_positive" xml:space="preserve">
+    <value>مقدار ارسال باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="fulfillment.cancel.already_dispatched" xml:space="preserve">
+    <value>مورد تحویل ارسال‌شده را نمی‌توان لغو کرد.</value>
+  </data>
+  <data name="fulfillment.restore.already_dispatched" xml:space="preserve">
+    <value>مورد تحویل ارسال‌شده را نمی‌توان بازگرداند.</value>
+  </data>
+  <data name="fulfillment.shipment.not_found" xml:space="preserve">
+    <value>محموله یافت نشد.</value>
+  </data>
+  <data name="fulfillment.shipment.qty_exceeds_ordered" xml:space="preserve">
+    <value>مقدار محموله از مقدار سفارش بیشتر است.</value>
+  </data>
+  <data name="fulfillment.shipment.qty_exceeds_packed" xml:space="preserve">
+    <value>مقدار محموله از مقدار بسته‌بندی‌شده بیشتر است.</value>
+  </data>
+  <data name="fulfillment.shipment.cancel_invalid" xml:space="preserve">
+    <value>لغو محموله در این وضعیت نامعتبر است.</value>
+  </data>
+  <data name="fulfillment.shipment.carrier_required" xml:space="preserve">
+    <value>نام نمایشی حامل الزامی است.</value>
+  </data>
+  <data name="fulfillment.shipment.create_terminal" xml:space="preserve">
+    <value>برای مورد تحویل پایانی امکان ایجاد محموله نیست.</value>
+  </data>
+  <data name="fulfillment.shipment.locked_by_consolidated_package" xml:space="preserve">
+    <value>محموله توسط بستهٔ تجمیعی قفل شده است.</value>
+  </data>
+  <data name="fulfillment.dispatch.invalid_status" xml:space="preserve">
+    <value>ارسال در این وضعیت نامعتبر است.</value>
+  </data>
+  <data name="fulfillment.dispatch.tracking_required" xml:space="preserve">
+    <value>ارسال نیازمند کد رهگیری است.</value>
+  </data>
+  <data name="fulfillment.deliver.invalid_status" xml:space="preserve">
+    <value>تحویل در این وضعیت نامعتبر است.</value>
+  </data>
+  <data name="fulfillment.tracking.required" xml:space="preserve">
+    <value>کد رهگیری الزامی است.</value>
+  </data>
+  <data name="fulfillment.tracking.already_set" xml:space="preserve">
+    <value>کد رهگیری قبلاً ثبت شده است.</value>
+  </data>
+  <data name="fulfillment.tracking.duplicate" xml:space="preserve">
+    <value>کد رهگیری تکراری است.</value>
+  </data>
+  <data name="fulfillment.tracking.invalid_state" xml:space="preserve">
+    <value>وضعیت رهگیری اجازهٔ این تغییر را نمی‌دهد.</value>
+  </data>
+  <data name="fulfillment.tracking.locked_after_dispatch" xml:space="preserve">
+    <value>کد رهگیری پس از ارسال قفل شده است.</value>
+  </data>
+  <data name="fulfillment.tracking.nothing_to_correct" xml:space="preserve">
+    <value>برای کد رهگیری چیزی برای اصلاح وجود ندارد.</value>
+  </data>
+  <data name="fulfillment.package.not_found" xml:space="preserve">
+    <value>بستهٔ تجمیعی یافت نشد.</value>
+  </data>
+  <data name="fulfillment.package.requires_multi_seller" xml:space="preserve">
+    <value>تجمیع نیازمند چند فروشنده است.</value>
+  </data>
+  <data name="fulfillment.package.mixed_checkout" xml:space="preserve">
+    <value>تجمیع نمی‌تواند چند تسویه را در بر گیرد.</value>
+  </data>
+  <data name="fulfillment.package.checkout_required" xml:space="preserve">
+    <value>تسویه برای تجمیع الزامی است.</value>
+  </data>
+  <data name="fulfillment.package.shipping_method_required" xml:space="preserve">
+    <value>روش ارسال برای تجمیع الزامی است.</value>
+  </data>
+  <data name="fulfillment.package.shipping_method_mismatch" xml:space="preserve">
+    <value>اعضای تجمیع باید روش ارسال یکسان داشته باشند.</value>
+  </data>
+  <data name="fulfillment.package.shipment_already_member" xml:space="preserve">
+    <value>محموله از قبل عضو بسته است.</value>
+  </data>
+  <data name="fulfillment.package.shipment_not_eligible" xml:space="preserve">
+    <value>محموله برای تجمیع واجد شرایط نیست.</value>
+  </data>
+  <data name="fulfillment.package.duplicate_shipment" xml:space="preserve">
+    <value>محمولهٔ تکراری در بسته.</value>
+  </data>
+  <data name="fulfillment.package.member_state_changed" xml:space="preserve">
+    <value>وضعیت عضو بسته در حین عملیات تغییر کرد.</value>
+  </data>
+  <data name="fulfillment.package.dispatch_invalid_state" xml:space="preserve">
+    <value>ارسال بسته در این وضعیت نامعتبر است.</value>
+  </data>
+  <data name="fulfillment.package.deliver_before_dispatch" xml:space="preserve">
+    <value>بسته پیش از ارسال قابل تحویل نیست.</value>
+  </data>
+  <data name="fulfillment.package.cancel_after_dispatch" xml:space="preserve">
+    <value>بسته پس از ارسال قابل لغو نیست.</value>
+  </data>
+  <data name="fulfillment.package.tracking_locked" xml:space="preserve">
+    <value>کد رهگیری بسته قفل شده است.</value>
+  </data>
+  <data name="fulfillment.package.tracking_required" xml:space="preserve">
+    <value>کد رهگیری بسته الزامی است.</value>
+  </data>
+  <data name="fulfillment.shipping_method.unsupported" xml:space="preserve">
+    <value>روش ارسال پشتیبانی نمی‌شود.</value>
+  </data>
+  <data name="fulfillment.shipping.post.recipient_required" xml:space="preserve">
+    <value>ارسال پستی نیازمند نام گیرنده است.</value>
+  </data>
+  <data name="fulfillment.shipping.post.address_required" xml:space="preserve">
+    <value>ارسال پستی نیازمند نشانی کامل است.</value>
+  </data>
+  <data name="fulfillment.shipping.postal_invalid" xml:space="preserve">
+    <value>کد پستی نامعتبر است.</value>
+  </data>
+  <data name="fulfillment.shipping.tipax.address_required" xml:space="preserve">
+    <value>ارسال تیپاکس نیازمند نشانی کامل است.</value>
+  </data>
+  <data name="fulfillment.shipping.courier.address_required" xml:space="preserve">
+    <value>ارسال پیک نیازمند نشانی کامل است.</value>
+  </data>
+  <data name="fulfillment.shipping.pickup.location_required" xml:space="preserve">
+    <value>تحویل حضوری نیازمند مکان است.</value>
+  </data>
+  <data name="fulfillment.shipping.mobile_invalid" xml:space="preserve">
+    <value>شمارهٔ همراه نامعتبر است.</value>
+  </data>
+  <data name="seller.order.handle.denied" xml:space="preserve">
+    <value>فروشنده مجوز order.handle ندارد.</value>
+  </data>
+  <data name="seller.order.handle.scope_denied" xml:space="preserve">
+    <value>دامنهٔ دستهٔ order.handle همهٔ خطوط را پوشش نمی‌دهد.</value>
+  </data>
+  <data name="seller.order.missing" xml:space="preserve">
+    <value>سفارش فروشنده یافت نشد.</value>
+  </data>
+  <data name="customer.actor.missing" xml:space="preserve">
+    <value>هویت مشتری موجود نیست.</value>
+  </data>
+  <data name="customer.order.missing" xml:space="preserve">
+    <value>سفارش مشتری یافت نشد.</value>
+  </data>
+  <data name="fulfillment.work_queue.bulk_failed" xml:space="preserve">
+    <value>عملیات گروهی صف کار تحویل ناموفق بود.</value>
+  </data>
+  <data name="fulfillment.work_queue.bulk_unsupported" xml:space="preserve">
+    <value>عملیات گروهی صف کار تحویل پشتیبانی نمی‌شود.</value>
+  </data>
+  <data name="fulfillment.work_queue.bulk_empty" xml:space="preserve">
+    <value>انتخاب گروهی صف کار تحویل خالی است.</value>
+  </data>
+  <data name="fulfillment.work_queue.cross_seller" xml:space="preserve">
+    <value>عملیات گروهی صف کار نمی‌تواند چند فروشنده را در بر گیرد.</value>
+  </data>
+  <data name="fulfillment.work_queue.row_mismatch" xml:space="preserve">
+    <value>ردیف صف کار با وضعیت سرور مطابقت ندارد.</value>
+  </data>
+  <data name="fulfillment.work_queue.incompatible" xml:space="preserve">
+    <value>انتخاب گروهی صف کار ناسازگار است.</value>
+  </data>
+  <data name="fulfillment.work_queue.shipment_missing" xml:space="preserve">
+    <value>محمولهٔ صف کار تحویل موجود نیست.</value>
+  </data>
+  <data name="shipping_service.not_found" xml:space="preserve">
+    <value>سرویس ارسال یافت نشد.</value>
+  </data>
+  <data name="shipping_service.code_duplicate" xml:space="preserve">
+    <value>کد سرویس ارسال تکراری است.</value>
+  </data>
+  <data name="shipping_service.code.required" xml:space="preserve">
+    <value>کد سرویس ارسال الزامی است.</value>
+  </data>
+  <data name="shipping_service.name.required" xml:space="preserve">
+    <value>نام سرویس ارسال الزامی است.</value>
+  </data>
+  <data name="shipping_service.language_invalid" xml:space="preserve">
+    <value>زبان سرویس ارسال نامعتبر است.</value>
+  </data>
+  <data name="shipping_service_option.code.required" xml:space="preserve">
+    <value>کد گزینهٔ سرویس ارسال الزامی است.</value>
+  </data>
+  <data name="shipping_service_option.name.required" xml:space="preserve">
+    <value>نام گزینهٔ سرویس ارسال الزامی است.</value>
+  </data>
+</root>
