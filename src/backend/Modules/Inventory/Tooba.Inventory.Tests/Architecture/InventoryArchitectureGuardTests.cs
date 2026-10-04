@@ -168,7 +168,7 @@ public sealed class InventoryArchitectureGuardTests
         Assert.Contains("SetOfferInventoryCommand", offerEndpoint, StringComparison.Ordinal);
 
         var offerHandler = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Offer",
-            "Tooba.Offer.Application", "Commands", "SetOfferInventory", "SetOfferInventoryCommand.cs"));
+            "Tooba.Offer.Application", "Offers", "Commands", "SetOfferInventory", "SetOfferInventoryCommand.cs"));
         Assert.Contains("using Tooba.Inventory.Contracts.Seller;", offerHandler, StringComparison.Ordinal);
         Assert.Contains("ISellerOfferInventoryGateway", offerHandler, StringComparison.Ordinal);
         Assert.DoesNotContain("InventoryDbContext", offerHandler, StringComparison.Ordinal);

@@ -1,9 +1,9 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
-using Tooba.Offer.Application.Commands.CreateOffer;
-using Tooba.Offer.Application.Queries.ListSellerOffers;
+using Tooba.Offer.Application.Offers.Commands.CreateOffer;
+using Tooba.Offer.Application.Offers.Queries.ListSellerOffers;
 using Xunit;
 
 namespace Tooba.Offer.Tests.Architecture;
@@ -126,7 +126,7 @@ public sealed class OfferEndpointValidatorCoverageGuardTests
         var query = File.ReadAllText(Path.Combine(
             RepoRoot(),
             "src", "backend", "Modules", "Offer", "Tooba.Offer.Application",
-            "Queries", "ListSellerOffers", "ListSellerOffersQuery.cs"));
+            "Offers", "Queries", "ListSellerOffers", "ListSellerOffersQuery.cs"));
         Assert.Contains("public sealed record ListSellerOffersQuery(Guid SellerPartyId)", query, StringComparison.Ordinal);
         Assert.DoesNotContain("SellerPartyId =", query, StringComparison.Ordinal);
 

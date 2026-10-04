@@ -1,3 +1,4 @@
+﻿using Tooba.Offer.Contracts.ReturnPolicy;
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
@@ -12,9 +13,9 @@ using Tooba.Inventory.Contracts.Checkout;
 using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Contracts.Orders;
 using Tooba.Inventory.Contracts.Seller;
-using Tooba.Offer.Application.Commands.CreateOffer;
-using Tooba.Offer.Application.Ports;
-using Tooba.Offer.Application.ReadModels;
+using Tooba.Offer.Application.Offers.Commands.CreateOffer;
+using Tooba.Offer.Application.Offers.Ports;
+using Tooba.Offer.Application.Offers.ReadModels;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Domain.Aggregates;

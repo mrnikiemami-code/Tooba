@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Domain.Aggregates;

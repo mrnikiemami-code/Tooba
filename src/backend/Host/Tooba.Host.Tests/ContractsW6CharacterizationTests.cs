@@ -1,3 +1,4 @@
+﻿using Tooba.Offer.Contracts.ReturnPolicy;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
@@ -48,7 +49,7 @@ public sealed class ContractsW6CharacterizationTests
     [Fact]
     public void Return_policy_resolver_is_offer_contracts_owned()
     {
-        Assert.Equal("Tooba.Offer.Contracts.Ports", typeof(IReturnPolicyResolver).Namespace);
+        Assert.Equal("Tooba.Offer.Contracts.ReturnPolicy", typeof(IReturnPolicyResolver).Namespace);
         var resolved = new ReturnPolicyResolver(new ReturnPolicyOptions()).ResolveForCheckout(OfferReturnPolicyChoices.Default, null);
         Assert.True(resolved.IsReturnable);
     }

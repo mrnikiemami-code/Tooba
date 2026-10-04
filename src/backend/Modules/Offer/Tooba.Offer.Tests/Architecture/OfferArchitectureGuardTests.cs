@@ -143,10 +143,10 @@ public sealed class OfferArchitectureGuardTests
 
         var price = Sources("Tooba.Offer.Application")
             .Single(x => x.Path.Replace('\\', '/').EndsWith(
-                "/Commands/SetOfferPrice/SetOfferPriceCommand.cs", StringComparison.Ordinal));
+                "/Offers/Commands/SetOfferPrice/SetOfferPriceCommand.cs", StringComparison.Ordinal));
         var inventory = Sources("Tooba.Offer.Application")
             .Single(x => x.Path.Replace('\\', '/').EndsWith(
-                "/Commands/SetOfferInventory/SetOfferInventoryCommand.cs", StringComparison.Ordinal));
+                "/Offers/Commands/SetOfferInventory/SetOfferInventoryCommand.cs", StringComparison.Ordinal));
         Assert.Contains("IRequestHandler<SetOfferPriceCommand", price.Text, StringComparison.Ordinal);
         Assert.Contains("pricing.SetPriceAsync(", price.Text, StringComparison.Ordinal);
         Assert.Contains("IRequestHandler<SetOfferInventoryCommand", inventory.Text, StringComparison.Ordinal);
@@ -199,8 +199,12 @@ public sealed class OfferArchitectureGuardTests
         Assert.DoesNotContain("Results.Json(await sender.Send", endpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("Results.Json(result, statusCode: StatusCodes.Status201Created)", endpoint, StringComparison.Ordinal);
         foreach (var obsolete in new[] { "OfferRequests.cs", "OfferHandlers.cs", "OfferQueries.cs", "OfferQueryHandlers.cs" })
-            Assert.False(File.Exists(Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Commands", obsolete))
+        {
+            Assert.False(File.Exists(Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Offers", "Commands", obsolete))
+                         || File.Exists(Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Offers", "Queries", obsolete))
+                         || File.Exists(Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Commands", obsolete))
                          || File.Exists(Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Queries", obsolete)));
+        }
 
         var hostSeller = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
         // R5 removed the whole Host/Seller folder, so no Host seller file can own Offer persistence.
@@ -390,9 +394,14 @@ public sealed class OfferArchitectureGuardTests
             x => x.Text.Contains("OrderByDescending(candidate => candidate.AvailableUnits > 0)", StringComparison.Ordinal));
 
         // Host consumes the Offer Contracts port, never the Application implementation.
-        var composer = hostSources.Single(x => x.Path.EndsWith(
-            "Host/Tooba.Host/Storefront/StorefrontComposer.cs".Replace('/', Path.DirectorySeparatorChar),
-            StringComparison.Ordinal));
+        // Storefront composition was evacuated from Host to the Catalog module; the same invariant
+        // is asserted against its current module-owned home.
+        var composer = hostSources
+            .Concat(ModuleSources(Path.Combine(
+                RepoRoot(), "src", "backend", "Modules", "Catalog", "Tooba.Catalog.Infrastructure", "Storefront")))
+            .Single(x => x.Path.EndsWith(
+                "Tooba.Catalog.Infrastructure/Storefront/StorefrontComposer.cs".Replace('/', Path.DirectorySeparatorChar),
+                StringComparison.Ordinal));
         Assert.Contains("IPrimaryOfferSelectionPolicy", composer.Text, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Offer.Application", composer.Text, StringComparison.Ordinal);
         Assert.Contains("Tooba.Offer.Contracts.Ports", composer.Text, StringComparison.Ordinal);
@@ -401,7 +410,7 @@ public sealed class OfferArchitectureGuardTests
         Assert.True(File.Exists(Path.Combine(
             OfferRoot(), "Tooba.Offer.Contracts", "Ports", "IPrimaryOfferSelectionPolicy.cs")));
         Assert.True(File.Exists(Path.Combine(
-            OfferRoot(), "Tooba.Offer.Application", "Policies", "PrimaryOfferSelectionPolicy.cs")));
+            OfferRoot(), "Tooba.Offer.Application", "Offers", "Policies", "PrimaryOfferSelectionPolicy.cs")));
 
         // The allowed thin Host security adapter stays thin and business-free.
         var adapter = File.ReadAllText(Path.Combine(hostRoot, "Security", "Seller", "HostOfferSellerAuthorizer.cs"));
@@ -431,6 +440,9 @@ public sealed class OfferArchitectureGuardTests
     [Fact]
     public void Offer_domain_and_application_have_no_persian_prose()
     {
+        // Persian display labels for the return policy live in Tooba.Offer.Contracts.ReturnPolicy
+        // (boundary vocabulary consumed by Order checkout), so Domain / Application / Infrastructure
+        // are held to a strict Persian-free rule with no exception list.
         var violations = Sources("Tooba.Offer.Domain")
             .Concat(Sources("Tooba.Offer.Application"))
             .Concat(Sources("Tooba.Offer.Infrastructure"))
@@ -599,6 +611,13 @@ public sealed class OfferArchitectureGuardTests
         Directory.EnumerateFiles(OfferRoot(), "*.cs", SearchOption.AllDirectories)
             .Where(x => !x.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             .Where(x => !x.Contains($"{Path.DirectorySeparatorChar}Tooba.Offer.Tests{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Select(x => (Path.GetRelativePath(RepoRoot(), x), File.ReadAllText(x)))
+            .ToList();
+
+    private static IReadOnlyList<(string Path, string Text)> ModuleSources(string directory) =>
+        Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories)
+            .Where(x => !x.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !x.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             .Select(x => (Path.GetRelativePath(RepoRoot(), x), File.ReadAllText(x)))
             .ToList();
 

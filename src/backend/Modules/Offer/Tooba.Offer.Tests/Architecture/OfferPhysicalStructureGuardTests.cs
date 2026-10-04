@@ -16,12 +16,12 @@ public sealed class OfferPhysicalStructureGuardTests
 
     private static readonly string[] AllowedApplicationFolders =
     [
-        "UseCases", "Commands", "Queries", "Mappings", "Ports", "Validators", "Dtos", "ReadModels", "Policies"
+        "Offers", "Validation"
     ];
 
     private static readonly string[] AllowedContractsFolders =
     [
-        "Ports", "Commands", "Events", "Dtos", "Errors"
+        "Ports", "Commands", "Events", "Dtos", "Errors", "ReturnPolicy"
     ];
 
     private static readonly string[] AllowedInfrastructureFolders =
@@ -134,19 +134,36 @@ public sealed class OfferPhysicalStructureGuardTests
     public void ARCH_MODULE_PHYSICAL_001_contracts_and_validator_folders_are_namespace_exact()
     {
         var violations = new List<string>();
-        foreach (var project in new[]
-                 {
-                     "Tooba.Offer.Contracts",
-                     "Tooba.Offer.Application",
-                 })
+
+        // Contracts boundary vocabulary folders are namespace-exact per capability.
+        foreach (var folder in new[] { "Dtos", "Ports", "Errors", "ReturnPolicy" })
         {
-            foreach (var folder in new[] { "Dtos", "Ports", "Errors", "Validators" })
-            {
-                ExpectExactFolderNamespace(project, folder, violations);
-            }
+            ExpectExactFolderNamespace("Tooba.Offer.Contracts", folder, violations);
         }
 
+        // Application shared validation helpers keep an exact path-derived namespace.
+        ExpectExactFolderNamespace("Tooba.Offer.Application", "Validation", violations);
+
         Assert.True(violations.Count == 0, "namespace/path mismatches:\n" + string.Join("\n", violations));
+    }
+
+    [Fact]
+    public void ARCH_MODULE_PHYSICAL_001_no_technical_axis_first_application_folders()
+    {
+        // Capability-first: Offer.Application must expose capability folders only, never the
+        // historical technical-axis sinks (Commands/Queries/Mappings/Ports/Policies/ReadModels/Validators/Dtos).
+        string[] forbidden =
+        [
+            "Commands", "Queries", "Mappings", "Ports", "Policies", "ReadModels",
+            "Validators", "Dtos", "UseCases", "ReturnPolicy"
+        ];
+
+        var appRoot = Path.Combine(OfferRoot(), "Tooba.Offer.Application");
+        var present = forbidden
+            .Where(f => Directory.Exists(Path.Combine(appRoot, f)))
+            .ToArray();
+
+        Assert.True(present.Length == 0, "technical-axis-first Application folders: " + string.Join("; ", present));
     }
 
     [Fact]
@@ -155,8 +172,15 @@ public sealed class OfferPhysicalStructureGuardTests
         string[] ceremonialCandidates =
         [
             Path.Combine(OfferRoot(), "Tooba.Offer.Application", "UseCases"),
+            Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Commands"),
+            Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Queries"),
+            Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Mappings"),
+            Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Ports"),
+            Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Policies"),
+            Path.Combine(OfferRoot(), "Tooba.Offer.Application", "ReadModels"),
             Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Validators"),
             Path.Combine(OfferRoot(), "Tooba.Offer.Application", "Dtos"),
+            Path.Combine(OfferRoot(), "Tooba.Offer.Application", "ReturnPolicy"),
             Path.Combine(OfferRoot(), "Tooba.Offer.Domain", "Entities"),
             Path.Combine(OfferRoot(), "Tooba.Offer.Domain", "ValueObjects"),
             Path.Combine(OfferRoot(), "Tooba.Offer.Domain", "Policies"),
@@ -183,6 +207,21 @@ public sealed class OfferPhysicalStructureGuardTests
         var hostSeller = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Seller");
         Assert.False(Directory.Exists(hostSeller), "Host/Seller must be absent after R5");
 
+        var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
+        var hostRouteOwners = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(p =>
+            {
+                var n = p.Replace('\\', '/');
+                return !n.Contains("/bin/", StringComparison.Ordinal) && !n.Contains("/obj/", StringComparison.Ordinal);
+            })
+            .Where(p => File.ReadAllText(p).Contains("MapGet(\"/offers\"", StringComparison.Ordinal)
+                || File.ReadAllText(p).Contains("MapPost(\"/offers\"", StringComparison.Ordinal)
+                || File.ReadAllText(p).Contains("MapPatch(\"/offers/", StringComparison.Ordinal))
+            .Select(p => Path.GetRelativePath(RepoRoot(), p))
+            .ToArray();
+        Assert.True(hostRouteOwners.Length == 0, "Host must not map Offer routes: " + string.Join("; ", hostRouteOwners));
+
+        // The module itself owns the routes.
         var moduleEndpoints = Path.Combine(
             OfferRoot(),
             "Tooba.Offer.Endpoints",
@@ -190,9 +229,9 @@ public sealed class OfferPhysicalStructureGuardTests
             "OfferSellerEndpoints.cs");
         Assert.True(File.Exists(moduleEndpoints), "Offer seller endpoints must live in module Endpoints project");
         var text = File.ReadAllText(moduleEndpoints);
-        Assert.DoesNotContain("MapGet(\"/offers\"", text, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost(\"/offers\"", text, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPatch(\"/offers/", text, StringComparison.Ordinal);
+        Assert.Contains("MapGet(\"/offers\"", text, StringComparison.Ordinal);
+        Assert.Contains("MapPost(\"/offers\"", text, StringComparison.Ordinal);
+        Assert.Contains("MapPatch(\"/offers/", text, StringComparison.Ordinal);
     }
 
     [Fact]

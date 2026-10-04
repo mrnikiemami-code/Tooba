@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
@@ -6,7 +6,7 @@ using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
-using Tooba.Offer.Application.Ports;
+using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Domain;

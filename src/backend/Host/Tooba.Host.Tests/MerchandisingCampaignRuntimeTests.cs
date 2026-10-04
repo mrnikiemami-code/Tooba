@@ -1,4 +1,4 @@
-using Tooba.Promotion.Infrastructure.Queries;
+﻿using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Directories;
@@ -22,7 +22,7 @@ using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Events;
 using Tooba.Inventory.Infrastructure.DependencyInjection;
 using Tooba.Inventory.Infrastructure.Persistence;
-using Tooba.Offer.Application.Ports;
+using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Domain;

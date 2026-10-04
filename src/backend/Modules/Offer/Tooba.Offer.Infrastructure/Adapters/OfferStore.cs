@@ -1,8 +1,9 @@
-using Microsoft.EntityFrameworkCore;
-using Tooba.Offer.Application.Mappings;
-using Tooba.Offer.Application.Ports;
+﻿using Microsoft.EntityFrameworkCore;
+using Tooba.Offer.Application.Offers.Mappings;
+using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
+using Tooba.Offer.Contracts.ReturnPolicy;
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Infrastructure.Persistence;
 using DomainOfferStatus = Tooba.Offer.Domain.ValueObjects.OfferStatus;

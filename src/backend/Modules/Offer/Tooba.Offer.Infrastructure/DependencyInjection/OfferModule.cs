@@ -1,8 +1,9 @@
+﻿using Tooba.Offer.Contracts.ReturnPolicy;
 using Tooba.Offer.Infrastructure.Adapters.Tracing;
 using Tooba.Offer.Infrastructure.Outbox;
 using Tooba.Offer.Infrastructure.Adapters;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Offer.Application.Ports;
+using Tooba.Offer.Application.Offers.Ports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,8 +11,8 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Offer.Infrastructure.Persistence;
-using Tooba.Offer.Application.ReadModels;
-using Tooba.Offer.Application.Policies;
+using Tooba.Offer.Application.Offers.ReadModels;
+using Tooba.Offer.Application.Offers.Policies;
 using Tooba.Persistence;
 
 namespace Tooba.Offer.Infrastructure.DependencyInjection;

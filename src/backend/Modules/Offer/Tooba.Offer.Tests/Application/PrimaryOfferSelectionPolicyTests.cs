@@ -1,4 +1,4 @@
-using Tooba.Offer.Application.Policies;
+﻿using Tooba.Offer.Application.Offers.Policies;
 using Tooba.Offer.Contracts.Dtos;
 using Xunit;
 

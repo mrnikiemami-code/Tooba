@@ -1,12 +1,12 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application;
 using Tooba.Offer.Application;
-using Tooba.Offer.Application.Commands.ActivateOffer;
-using Tooba.Offer.Application.Commands.CreateOffer;
-using Tooba.Offer.Application.Mappings;
-using Tooba.Offer.Application.Ports;
+using Tooba.Offer.Application.Offers.Commands.ActivateOffer;
+using Tooba.Offer.Application.Offers.Commands.CreateOffer;
+using Tooba.Offer.Application.Offers.Mappings;
+using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Ports;

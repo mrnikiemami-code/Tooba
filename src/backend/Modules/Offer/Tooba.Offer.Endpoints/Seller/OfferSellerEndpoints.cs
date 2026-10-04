@@ -1,14 +1,14 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Offer.Application.Commands.CreateOffer;
-using Tooba.Offer.Application.Commands.SetOfferInventory;
-using Tooba.Offer.Application.Commands.SetOfferPrice;
-using Tooba.Offer.Application.Commands.UpdateOffer;
-using Tooba.Offer.Application.Queries.GetOffer;
-using Tooba.Offer.Application.Queries.ListSellerOffers;
+using Tooba.Offer.Application.Offers.Commands.CreateOffer;
+using Tooba.Offer.Application.Offers.Commands.SetOfferInventory;
+using Tooba.Offer.Application.Offers.Commands.SetOfferPrice;
+using Tooba.Offer.Application.Offers.Commands.UpdateOffer;
+using Tooba.Offer.Application.Offers.Queries.GetOffer;
+using Tooba.Offer.Application.Offers.Queries.ListSellerOffers;
 using Tooba.Offer.Contracts.Dtos;
 
 namespace Tooba.Offer.Endpoints.Seller;

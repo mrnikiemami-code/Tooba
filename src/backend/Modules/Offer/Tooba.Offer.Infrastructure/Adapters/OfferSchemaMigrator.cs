@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Infrastructure.Persistence;
 
