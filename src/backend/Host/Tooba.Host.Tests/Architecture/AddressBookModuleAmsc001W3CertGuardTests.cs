@@ -50,6 +50,67 @@ public sealed class AddressBookModuleAmsc001W3CertGuardTests
         }
     }
 
+    /// <summary>
+    /// W3-R1 reconciliation lock: the certification record may never regress to claiming
+    /// <c>behaviorChange = NONE</c> / <c>statusCodesChanged = NONE</c> while W1 still records the accepted
+    /// bounded expected-failure repair (unexpected 500 -> catalogued 404/400). The W1 record is read from
+    /// the same SoT document, so this is a real cross-record consistency lock, not a tautological
+    /// self-comparison.
+    /// </summary>
+    [Fact]
+    public void AddressBook_certification_truth_records_the_accepted_w1_bounded_defect_repair()
+    {
+        using var doc = ReadJson("docs/architecture/tmar-current-state.json");
+        var root = doc.RootElement;
+
+        // W1 is the wave that performed the accepted repair and must still record it.
+        var w1 = root.GetProperty("addressBookModuleAmsc001W1");
+        var w1Behavior = w1.GetProperty("behaviorChange").GetString()!;
+        Assert.StartsWith("BOUNDED_DEFECT_REPAIR", w1Behavior, StringComparison.Ordinal);
+        Assert.Contains("500", w1Behavior, StringComparison.Ordinal);
+        Assert.Contains("404", w1Behavior, StringComparison.Ordinal);
+        Assert.Contains("400", w1Behavior, StringComparison.Ordinal);
+
+        // W3 (certification) must not contradict W1 with a NONE behavior claim.
+        var w3 = root.GetProperty("addressBookModuleAmsc001W3");
+        Assert.Equal(
+            "BOUNDED_DEFECT_REPAIR_EXPECTED_FAILURE_MAPPING",
+            w3.GetProperty("behaviorChange").GetString());
+        Assert.Equal(
+            "BOUNDED_EXPECTED_FAILURE_REMAP_500_TO_404_400",
+            w3.GetProperty("statusCodesChanged").GetString());
+
+        // The unaffected axes stay NONE, so the bounded claim cannot silently widen.
+        Assert.Equal("NONE", w3.GetProperty("schemaChange").GetString());
+        Assert.Equal("NONE", w3.GetProperty("routesChanged").GetString());
+        Assert.Equal("NONE", w3.GetProperty("errorCodesChanged").GetString());
+        Assert.Equal("NONE", w3.GetProperty("dtoShapeChanged").GetString());
+
+        // Certification itself must remain valid and unreconciled-away.
+        Assert.Equal("COMPLETE_REFERENCE_PATTERN", w3.GetProperty("verdict").GetString());
+        Assert.True(w3.GetProperty("structureCertified").GetBoolean());
+        Assert.Equal("W3_R1_BEHAVIOR_TRUTH_EXACT", w3.GetProperty("certificationReconciliation").GetString());
+        Assert.Equal("USER_REVIEW_ADDRESSBOOK_AMSC_001_W3_R1", w3.GetProperty("workflowStop").GetString());
+        Assert.Equal("NONE", w3.GetProperty("automaticNextImplementationTask").GetString());
+
+        // The reconciliation checkpoint record must exist with the same truth.
+        var r1 = root.GetProperty("addressBookModuleAmsc001W3R1");
+        Assert.Equal("ADDRESSBOOK_AMSC_001_CERTIFICATION_TRUTH_RECONCILED", r1.GetProperty("state").GetString());
+        Assert.Equal("BOUNDED_DEFECT_REPAIR_RECORDED", r1.GetProperty("behaviorChangeTruthState").GetString());
+        Assert.Equal("BOUNDED_500_TO_404_400_RECORDED", r1.GetProperty("statusCodeTruthState").GetString());
+        Assert.Equal("ELEVEN", r1.GetProperty("addressBookNewCodeCountState").GetString());
+        Assert.Equal("TWELVE", r1.GetProperty("addressBookOwnedDescriptorCountState").GetString());
+        Assert.Equal("CONSUMED_NOT_OWNED", r1.GetProperty("sharedSessionCodeState").GetString());
+        Assert.Equal("ZERO", r1.GetProperty("duplicateDescriptorOwnershipState").GetString());
+        Assert.Equal("ZERO", r1.GetProperty("productionCodeChangeState").GetString());
+        Assert.Equal("ZERO", r1.GetProperty("schemaMigrationChangeState").GetString());
+        Assert.Equal("DOCUMENTATION_ONLY", r1.GetProperty("manifestStructureChangeState").GetString());
+        Assert.Equal(
+            "COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED",
+            r1.GetProperty("finalCertificationState").GetString());
+        Assert.Equal("NONE", r1.GetProperty("automaticNextImplementationTask").GetString());
+    }
+
     [Fact]
     public void AddressBook_manifest_entry_is_single_and_disk_reconciled()
     {

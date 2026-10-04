@@ -4,7 +4,7 @@
 
 | Guard | Tests | Status |
 | --- | --- | --- |
-| `AddressBookModuleAmsc001W3CertGuardTests` (NEW in W3) | 9 | PASS |
+| `AddressBookModuleAmsc001W3CertGuardTests` (NEW in W3, +1 in W3-R1) | 11 | PASS |
 | `AddressBookPhysicalStructureGuardTests` (+2 in W2) | 6 | PASS |
 | `AddressBookValidatorCoverageGuardTests` (F8 repaired in W1) | 6 | PASS |
 | `AddressBookCanonicalPresentationGuardTests` | 3 | PASS |
@@ -26,6 +26,7 @@
 | `AddressBook_owns_its_http_surface_with_zero_host_http_ownership` | endpoint module present, capability `*Endpoints.cs` files absent from the Endpoints root, `Customer/`+`Errors/`+`Resources/` present, **exactly 6** routes, `Host/Tooba.Host/AddressBook/` absent |
 | `AddressBook_schema_and_migrations_are_unchanged` | exact migration file set |
 | `AddressBook_application_is_capability_first_with_no_single_file_use_case_leaves` | `Application/Commands` + `Application/Queries` absent; `Addresses/{Commands,Queries,Validators}` present; all 11 legacy leaf folders absent |
+| `AddressBook_certification_truth_records_the_accepted_w1_bounded_defect_repair` (NEW in W3-R1) | cross-record lock: the W3 record cannot regress to `behaviorChange = NONE` / `statusCodesChanged = NONE` while `addressBookModuleAmsc001W1` still records the accepted `500 -> 404/400` bounded defect repair; unaffected axes (`schema`/`routes`/`errorCodes`/`dtoShape`) stay `NONE`; verdict/`structureCertified`/`certificationReconciliation = W3_R1_BEHAVIOR_TRUTH_EXACT`/`workflowStop`/`automaticNextImplementationTask = NONE`; the `addressBookModuleAmsc001W3R1` checkpoint records `ELEVEN` new / `TWELVE` owned / `CONSUMED_NOT_OWNED` session / `ZERO` duplicate ownership / `ZERO` production & migration delta |
 
 ## Guards added across the AMSC run
 
@@ -38,6 +39,7 @@
 | W2 | `AllowedApplicationFolders` re-pointed to capability-first | **strengthened** |
 | W2 | regex leaf guard consolidated from the validator-coverage guard into the physical-structure guard | single ownership; no coverage lost |
 | W3 | 10 new tests in `AddressBookModuleAmsc001W3CertGuardTests` | **strengthened** |
+| W3-R1 | 1 new test in `AddressBookModuleAmsc001W3CertGuardTests` (`AddressBook_certification_truth_records_the_accepted_w1_bounded_defect_repair`) | **strengthened** — locks the reconciled behavior/status-code truth so the certification cannot regress to `NONE` |
 
 ## Guards weakened
 

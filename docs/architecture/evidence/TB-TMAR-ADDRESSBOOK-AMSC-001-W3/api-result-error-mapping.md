@@ -54,8 +54,12 @@ matching the Offer/AccessControl catalog shape.
 
 This is the **W1 bounded defect repair** (W0 F2): the foreign/missing-address path moved from
 `500 platform.unexpected` to the already-declared `404 customer.address.missing`, and the escaped
-field-shape/actor faults from `500` to catalogued `400`s. No route, DTO, success payload or schema changed;
-`RoutesChanged = NONE`, `StatusCodesChanged = NONE`, `DtoShapeChanged = NONE`.
+field-shape/actor faults from `500` to catalogued `400`s. No route, DTO, success payload or schema changed.
+
+`RoutesChanged = NONE`, `DtoShapeChanged = NONE`,
+`BehaviorChange = BOUNDED_DEFECT_REPAIR_EXPECTED_FAILURE_MAPPING`,
+`StatusCodesChanged = BOUNDED_EXPECTED_FAILURE_REMAP_500_TO_404_400` (expected-failure statuses only —
+success statuses are unchanged; see `certification.md` and the W3-R1 reconciliation).
 
 ## Unknown/expected separation
 

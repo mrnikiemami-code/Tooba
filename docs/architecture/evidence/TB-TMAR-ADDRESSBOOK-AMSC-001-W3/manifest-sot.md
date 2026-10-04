@@ -80,7 +80,9 @@ and `AddressBookModuleAmsc001W3CertGuardTests.AddressBook_manifest_entry_is_sing
 | `crossModuleBoundaryState` / `crossModuleJoinState` | `CONTRACTS_ONLY` / `ZERO` |
 | `foreignAppInfraDomainCoupling` | `ZERO` |
 | `persistenceOwnershipState` / `schemaMigrationState` | `CORRECT` / `UNCHANGED` |
-| `behaviorChange` / `schemaChange` / `routesChanged` / `statusCodesChanged` / `errorCodesChanged` / `dtoShapeChanged` | `NONE` × 6 |
+| `behaviorChange` | `BOUNDED_DEFECT_REPAIR_EXPECTED_FAILURE_MAPPING` (inherited from W1; see W3-R1 reconciliation) |
+| `statusCodesChanged` | `BOUNDED_EXPECTED_FAILURE_REMAP_500_TO_404_400` (expected-failure statuses only) |
+| `schemaChange` / `routesChanged` / `errorCodesChanged` / `dtoShapeChanged` | `NONE` × 4 |
 | `productionCsFiles` / `productionProjects` | `32` / `5` |
 | `solutionFolder` / `solutionProjectEntries` | `/Modules/AddressBook/` / `5` |
 | `manifestEntryCount` / `manifestDiskReconciliation` | `1` / `EXACT` |

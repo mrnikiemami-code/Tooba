@@ -17,8 +17,10 @@ ARCH-COMPLETE-002 STRUCTURE_CERTIFIED
 - Blocking residual debt: **ZERO**
 - Guards weakened: **NONE**
 - Baselines widened: **NONE**
-- Behaviour change: **NONE**
+- Behaviour change: **`BOUNDED_DEFECT_REPAIR_EXPECTED_FAILURE_MAPPING`** (inherited from W1; not revoked by certification)
+- Status-code truth: **`BOUNDED_EXPECTED_FAILURE_REMAP_500_TO_404_400`** (expected-failure statuses only)
 - Schema change: **NONE**
+- Success payload / routes / DTO shapes: **PRESERVED**
 
 ## AMSC lineage
 

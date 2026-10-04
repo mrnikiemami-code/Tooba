@@ -95,9 +95,9 @@ scope; recorded as residual watch R5).
 | Concern | Result |
 | --- | --- |
 | routes | unchanged (6) |
-| status codes | unchanged for success paths; the W1 bounded defect repair is the only outcome change and was declared in W1 |
+| status codes | unchanged for success paths; the W1 bounded defect repair (unexpected `500 platform.unexpected` → catalogued `404 customer.address.missing` / `400 customer.address.*`) is the only outcome change and was declared in W1 — reconciled into the W3 record by W3-R1 (`BOUNDED_EXPECTED_FAILURE_REMAP_500_TO_404_400`) |
 | error codes | unchanged (the W1 additions are the ones certified here) |
 | DTO shape | unchanged |
 | schema / migrations | unchanged |
 | DI registrations | unchanged |
-| behaviour change attributable to W2/W3 | **NONE** (pure structure move + verification/guards/docs) |
+| behaviour change attributable to W2/W3 | **NONE** (pure structure move + verification/guards/docs). The certified record's behaviour truth is the **W1** bounded defect repair, recorded as `BOUNDED_DEFECT_REPAIR_EXPECTED_FAILURE_MAPPING` after the W3-R1 reconciliation. |
