@@ -7822,5 +7822,50 @@
         "automaticNextImplementationTask": "NONE",
         "implementationCommit": "24d45375a5608b7c7b39bddc0674f2481580b217",
         "docsStamp": "872ae3831f59f0de7b51e08259a0680586f96b01"
+    },
+    "accessControlModuleAmsc001W0": {
+        "task": "TB-TMAR-ACCESSCONTROL-AMSC-001-W0",
+        "mode": "ANALYSIS_ONLY",
+        "skill": "tooba-architecture-analyze",
+        "target": "src/backend/Modules/AccessControl/Tooba.AccessControl.*",
+        "baselineHead": "eea29fb871ca21c5461420074356023bf7fbeb54",
+        "foundationState": "FOUNDATION_READY",
+        "ownershipState": "CORRECT",
+        "fileCohesionState": "MULTI_RESPONSIBILITY_COHESION_VIOLATION",
+        "oversizedGodFileState": "AccessControlDirectory.cs OVERSIZED_ONLY 877 LOC",
+        "localizationState": "CANONICAL",
+        "apiResultPatternState": "CANONICAL",
+        "stableErrorCodeState": "CATALOGUED_WITH_LITERAL_USAGE_DEFECT",
+        "loggingState": "CANONICAL",
+        "sensitiveLoggingState": "NONE",
+        "openTelemetryState": "CANONICAL",
+        "correlationTraceState": "CANONICAL",
+        "cqrsState": "COMPLIANT",
+        "validatorCoverageState": "EXHAUSTIVE_6_REQUIRED_14_NO_VALIDATOR_REQUIRED",
+        "endpointReachableRequests": 20,
+        "contractsBoundaryState": "CLEAN",
+        "crossModuleCouplingState": "LEGAL_CONTRACTS_ONLY",
+        "crossModuleJoinState": "NONE",
+        "persistenceOwnershipState": "CORRECT",
+        "endpointOwnershipState": "MODULE_OWNED",
+        "hostResidueState": "ZERO_ILLEGAL",
+        "schemaMigrationState": "UNCHANGED",
+        "behaviorPreservationRisk": "LOW",
+        "finalDisposition": "READY_TO_MIGRATE",
+        "findings": [
+            "F1_APPLICATION_MODELS_MIXED_BUNDLE_8_TYPES",
+            "F2_ACCESS_CONTROL_DIRECTORY_RAW_ERROR_CODE_LITERALS_20",
+            "F3_APPLICATION_EXCEPTIONS_SINGLE_FILE_FOLDER",
+            "F4_STALE_ACCESSCONTROL_AMC_W1_SOLUTION_GUARD_PARSER"
+        ],
+        "outOfScopeObservations": [
+            "F5_NO_TOOBA_ACCESSCONTROL_TESTS_PROJECT",
+            "F6_STALE_TMP_BASELINE_WORKTREE_SCANNED_BY_TMAR_SOURCE_SIZE_GUARD"
+        ],
+        "hostRootFinalCheckpoint": "PRESERVED",
+        "microserviceExtractable": true,
+        "evidenceRoot": "docs/architecture/evidence/TB-TMAR-ACCESSCONTROL-AMSC-001-W0/",
+        "workflowStop": "AUTO_CONTINUE_TO_ACCESSCONTROL_AMSC_001_W1",
+        "automaticNextImplementationTask": "TB-TMAR-ACCESSCONTROL-AMSC-001-W1"
     }
 }
