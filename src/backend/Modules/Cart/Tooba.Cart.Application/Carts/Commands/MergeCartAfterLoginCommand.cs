@@ -8,7 +8,7 @@ using Tooba.Cart.Contracts.Errors;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 
-namespace Tooba.Cart.Application.Commands.MergeCartAfterLogin;
+namespace Tooba.Cart.Application.Carts.Commands;
 
 /// <summary>Merges a proven anonymous cart into the authenticated active cart after login.</summary>
 public sealed record MergeCartAfterLoginCommand(

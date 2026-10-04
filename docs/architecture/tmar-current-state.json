@@ -8537,5 +8537,80 @@
         "evidenceRoot": "docs/architecture/evidence/TB-TMAR-CART-AMSC-001-W1/",
         "workflowStop": "AUTO_CONTINUE_TO_CART_AMSC_001_W2",
         "automaticNextImplementationTask": "TB-TMAR-CART-AMSC-001-W2"
+    },
+    "cartModuleAmsc001W2": {
+        "task": "TB-TMAR-CART-AMSC-001-W2",
+        "mode": "IMPLEMENTATION",
+        "skill": "tooba-architecture-structure",
+        "target": "src/backend/Modules/Cart/Tooba.Cart.*",
+        "predecessor": "TB-TMAR-CART-AMSC-001-W1",
+        "predecessorHead": "a5ddc052",
+        "closedFindings": [
+            "F7_TECHNICAL_AXIS_FIRST_REPLACED_BY_CAPABILITY_FIRST",
+            "F9_APPLICATION_MODELS_CARTPAGE_TOMBSTONE_DELETED",
+            "D1_MANIFEST_NOW_LISTS_ALL_5_CART_PRODUCTION_PROJECTS",
+            "D2_MANIFEST_forbiddenTopLevelFolders_LOCKED_FOR_APPLICATION",
+            "G8_ASSERTNAMESPACESALIGN_STRENGTHENED_TO_FULL_PATH_COMPARISON"
+        ],
+        "folderGranularityState": "CAPABILITY_FIRST_SHALLOW",
+        "capabilityFolder": "Tooba.Cart.Application/Carts",
+        "capabilityNameRationale": "Carts is the module's own plural (DbSet Carts) and the sibling convention (AddressBook/Addresses, Offer/Offers, Content/Articles); the plural avoids Tooba.Cart.Application.Cart duplicating the module name inside itself",
+        "capabilityAxes": {
+            "Commands": 5,
+            "Queries": 2,
+            "Validators": 4
+        },
+        "removedLeafFolders": 7,
+        "removedTombstoneFiles": 1,
+        "filesMoved": 11,
+        "moveMechanism": "git_mv_history_preserved",
+        "namespaceState": "EXACT_FULL_PATH_MIRRORED",
+        "namespaceMap": {
+            "Tooba.Cart.Application.Commands.<UseCase>": "Tooba.Cart.Application.Carts.Commands",
+            "Tooba.Cart.Application.Queries.<UseCase>": "Tooba.Cart.Application.Carts.Queries",
+            "validators": "Tooba.Cart.Application.Carts.Validators"
+        },
+        "sharedRootFolders": [
+            "Ports",
+            "Lifetime",
+            "Conversion",
+            "Composition",
+            "Presentation",
+            "Validation"
+        ],
+        "sharedRootFoldersRationale": "All are shared cross-cutting seams of the single capability, mirroring the AddressBook allowance (Addresses + Composition + Models + Ports + Validators). Only Commands/Queries/Models were locked as forbidden at the Application root.",
+        "durableGuardsAdded": [
+            "Cart_application_is_capability_first_with_no_technical_axis_root",
+            "Cart_has_no_single_file_use_case_leaf_folders",
+            "Cart_directory_stays_under_the_arch_size_ceiling"
+        ],
+        "durableGuardsStrengthened": [
+            "CartArchitectureGuardTests.AssertNamespacesAlign_full_path_comparison",
+            "CartArchitectureGuardTests.AllowedApplicationFolders_capability_first"
+        ],
+        "manifestState": "ALL_5_PRODUCTION_PROJECTS_LOCKED",
+        "manifestForbiddenTopLevelFoldersApplication": [
+            "Commands",
+            "Queries",
+            "Models"
+        ],
+        "solutionExplorerState": "CANONICAL_UNCHANGED_ALREADY_MODULES_CART_GROUPED",
+        "solutionFileModified": false,
+        "guardsWeakened": "NONE",
+        "behaviorChangeState": "ZERO_MOVE_AND_NAMESPACE_ONLY",
+        "crossModuleCouplingState": "LEGAL_CONTRACTS_ONLY",
+        "persistenceOwnershipState": "CORRECT",
+        "endpointOwnershipState": "MODULE_OWNED",
+        "schemaMigrationState": "UNCHANGED",
+        "hostProductionFilesModified": 0,
+        "hostFinalClosureRegression": "NONE",
+        "microserviceExtractable": true,
+        "cartTestState": "27_PASSED_0_FAILED_0_SKIPPED",
+        "hostTestState": "91_FAILED_1761_PASSED_130_SKIPPED_SET_IDENTICAL_TO_PREEXISTING_BASELINE",
+        "buildState": "PASS_0_ERRORS_FULL_SOLUTION",
+        "structureHandoffState": "READY_FOR_CERTIFY",
+        "evidenceRoot": "docs/architecture/evidence/TB-TMAR-CART-AMSC-001-W2/",
+        "workflowStop": "AUTO_CONTINUE_TO_CART_AMSC_001_W3",
+        "automaticNextImplementationTask": "TB-TMAR-CART-AMSC-001-W3"
     }
 }

@@ -1,7 +1,8 @@
 using FluentValidation;
+using Tooba.Cart.Application.Carts.Commands;
 using Tooba.Cart.Application.Validation;
 
-namespace Tooba.Cart.Application.Commands.RemoveCartLine;
+namespace Tooba.Cart.Application.Carts.Validators;
 
 /// <summary>Transport validation for <see cref="RemoveCartLineCommand"/>.</summary>
 public sealed class RemoveCartLineCommandValidator : AbstractValidator<RemoveCartLineCommand>

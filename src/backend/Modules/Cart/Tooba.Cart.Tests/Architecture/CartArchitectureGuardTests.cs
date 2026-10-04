@@ -8,11 +8,21 @@ public sealed class CartArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events"];
     private static readonly string[] AllowedApplicationFolders =
-        ["Ports", "Lifetime", "Conversion", "Commands", "Queries", "Models", "Composition", "Presentation", "Validation"];
+        ["Carts", "Ports", "Lifetime", "Conversion", "Composition", "Presentation", "Validation"];
     private static readonly string[] AllowedContractsFolders = ["Checkout", "Presentation", "Errors", "Lifetime"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Messaging", "DependencyInjection", "Events", "Security", "Migrations", "Lifetime"];
     private static readonly string[] AllowedEndpointsFolders = ["Storefront", "Errors", "Resources"];
+
+    /// <summary>Folder names that are structural axes, not per-use-case leaves.</summary>
+    private static readonly string[] StructuralFolders =
+    [
+        "bin", "obj", "artifacts", "Migrations",
+        "Carts", "Commands", "Queries", "Validators", "Ports", "Lifetime", "Conversion", "Composition",
+        "Presentation", "Validation", "Errors", "Resources", "Storefront", "Persistence", "Directories",
+        "Messaging", "DependencyInjection", "Events", "Security", "Aggregates", "Entities", "ValueObjects",
+        "Adapters", "Models", "ReadModels", "Mappings", "Policies", "Dtos",
+    ];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -132,6 +142,79 @@ public sealed class CartArchitectureGuardTests
             .Select(x => $"{x.Path}:{x.Msg}")
             .ToList();
         Assert.True(localized.Count == 0, "localized exception prose: " + string.Join("; ", localized));
+    }
+
+    [Fact]
+    public void Cart_application_is_capability_first_with_no_technical_axis_root()
+    {
+        var applicationRoot = Path.Combine(CartRoot(), "Tooba.Cart.Application");
+
+        // The technical axes must never sit at the Application root.
+        Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Commands")),
+            "Application/Commands must not exist at the Application root");
+        Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Queries")),
+            "Application/Queries must not exist at the Application root");
+        Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Models")),
+            "Application/Models tombstone must not exist");
+
+        // The capability folder must exist and carry only the approved secondary axes.
+        var capability = Path.Combine(applicationRoot, "Carts");
+        Assert.True(Directory.Exists(capability), "Application/Carts must exist");
+        foreach (var dir in Directory.EnumerateDirectories(capability))
+        {
+            Assert.Contains(Path.GetFileName(dir), new[] { "Commands", "Queries", "Validators" });
+        }
+
+        // No deeper leaf under the capability (capability-first-shallow).
+        foreach (var axis in Directory.EnumerateDirectories(capability))
+        {
+            Assert.Empty(Directory.EnumerateDirectories(axis));
+        }
+
+        // All three axes are multi-file, so no single-file leaf remains.
+        Assert.True(Directory.EnumerateFiles(Path.Combine(capability, "Commands"), "*.cs").Count() > 1);
+        Assert.True(Directory.EnumerateFiles(Path.Combine(capability, "Queries"), "*.cs").Count() > 1);
+        Assert.True(Directory.EnumerateFiles(Path.Combine(capability, "Validators"), "*.cs").Count() > 1);
+    }
+
+    [Fact]
+    public void Cart_has_no_single_file_use_case_leaf_folders()
+    {
+        var violations = new List<string>();
+        // Scope: the Application capability tree. Infrastructure/Endpoints/Contracts folders are
+        // governed by their own allowlist arrays; the test project is not a production surface.
+        var applicationRoot = Path.Combine(CartRoot(), "Tooba.Cart.Application");
+        foreach (var dir in Directory.EnumerateDirectories(applicationRoot, "*", SearchOption.AllDirectories))
+        {
+            var normalized = dir.Replace('\\', '/');
+            if (normalized.Contains("/bin/") || normalized.Contains("/obj/")
+                || normalized.Contains("/artifacts/") || normalized.Contains("/Migrations/"))
+            {
+                continue;
+            }
+
+            var name = Path.GetFileName(dir);
+            if (StructuralFolders.Contains(name, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var sourceCount = Directory.EnumerateFiles(dir, "*.cs", SearchOption.TopDirectoryOnly).Count();
+            if (sourceCount == 1)
+            {
+                violations.Add(Path.GetRelativePath(applicationRoot, dir));
+            }
+        }
+
+        Assert.True(violations.Count == 0, "single-file leaf folders: " + string.Join("; ", violations));
+    }
+
+    [Fact]
+    public void Cart_directory_stays_under_the_arch_size_ceiling()
+    {
+        var path = Path.Combine(CartRoot(), "Tooba.Cart.Infrastructure", "Directories", "CartDirectory.cs");
+        var loc = File.ReadAllLines(path).Length;
+        Assert.True(loc < 800, $"CartDirectory.cs is {loc} LOC (ARCH-SIZE-001 ceiling 800)");
     }
 
     [Fact]
@@ -312,11 +395,18 @@ public sealed class CartArchitectureGuardTests
             var idx = rel.IndexOf(marker, StringComparison.Ordinal);
             if (idx < 0) continue;
             var under = rel[(idx + marker.Length)..];
-            var folder = under.Split('/')[0];
-            if (folder.EndsWith(".cs", StringComparison.Ordinal)) continue;
-            var expected = nsPrefix + "." + folder;
+            var segments = under.Split('/');
+            if (segments.Length < 2) continue;
+
+            // Namespace must mirror the folder path (excluding the file name), skipping
+            // technical-axis folders whose files deliberately share a flat namespace.
+            var folders = segments[..^1];
+            var expected = nsPrefix + "." + string.Join('.', folders);
+            var flat = nsPrefix + "." + string.Join('.', folders.Where(f =>
+                f is not ("Commands" or "Queries" or "Validators")));
             if (!ns.Equals(nsPrefix, StringComparison.Ordinal)
-                && !ns.StartsWith(expected, StringComparison.Ordinal))
+                && !ns.Equals(expected, StringComparison.Ordinal)
+                && !ns.Equals(flat, StringComparison.Ordinal))
                 violations.Add($"{path}: ns={ns} expectedPrefix={expected}");
         }
 

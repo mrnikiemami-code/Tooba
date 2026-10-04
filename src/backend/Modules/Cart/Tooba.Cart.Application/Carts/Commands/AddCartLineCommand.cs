@@ -6,29 +6,35 @@ using Tooba.Cart.Application.Composition;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 
-namespace Tooba.Cart.Application.Commands.RemoveCartLine;
+namespace Tooba.Cart.Application.Carts.Commands;
 
-/// <summary>Removes a cart line.</summary>
-public sealed record RemoveCartLineCommand(
+/// <summary>Adds or increases an Offer line on a cart.</summary>
+public sealed record AddCartLineCommand(
     Guid CartId,
     string? GuestSecret,
     int ExpectedVersion,
-    Guid LineId) : IRequest<Result<CartPage>>;
+    Guid OfferId,
+    decimal Quantity,
+    Guid? MerchandisingCampaignId = null,
+    string? Currency = null) : IRequest<Result<CartPage>>;
 
-internal sealed class RemoveCartLineHandler(
+internal sealed class AddCartLineHandler(
     ICartDirectory carts,
     CartPresentationComposer presentation,
-    ICurrentAuthenticatedUser user) : IRequestHandler<RemoveCartLineCommand, Result<CartPage>>
+    ICurrentAuthenticatedUser user) : IRequestHandler<AddCartLineCommand, Result<CartPage>>
 {
-    public Task<Result<CartPage>> Handle(RemoveCartLineCommand request, CancellationToken cancellationToken) =>
+    public Task<Result<CartPage>> Handle(AddCartLineCommand request, CancellationToken cancellationToken) =>
         CartOperation.ExecuteAsync(async () =>
         {
-            var snapshot = await carts.RemoveLineAsync(
+            var snapshot = await carts.AddOrIncreaseLineAsync(
                 request.CartId,
                 Access(request.GuestSecret),
                 request.ExpectedVersion,
-                request.LineId,
-                cancellationToken);
+                request.OfferId,
+                request.Quantity,
+                cancellationToken,
+                request.MerchandisingCampaignId,
+                request.Currency);
             return await presentation.PresentAsync(snapshot, guestSecret: null, cancellationToken);
         });
 

@@ -5,7 +5,7 @@ using Tooba.Cart.Application.Composition;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 
-namespace Tooba.Cart.Application.Commands.CreateGuestCart;
+namespace Tooba.Cart.Application.Carts.Commands;
 
 /// <summary>Creates an anonymous guest cart and returns the one-time raw guest secret.</summary>
 public sealed record CreateGuestCartCommand : IRequest<Result<CartPage>>;

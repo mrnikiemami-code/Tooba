@@ -7,7 +7,7 @@ using Tooba.Cart.Contracts.Errors;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 
-namespace Tooba.Cart.Application.Queries.GetCart;
+namespace Tooba.Cart.Application.Carts.Queries;
 
 /// <summary>Loads a cart by id after guest/authenticated access checks.</summary>
 public sealed record GetCartQuery(Guid CartId, string? GuestSecret) : IRequest<Result<CartPage>>;

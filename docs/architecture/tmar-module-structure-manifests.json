@@ -964,7 +964,27 @@
       "module": "Cart",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "AMSC-001 W2: Application is capability-first (Application/Carts/{Commands,Queries,Validators}); the technical axes Commands/Queries/Models are forbidden at the Application root and the Models tombstone is deleted. W1: fault identity is SemanticException(new SemanticError(code)) via CartOperation; CartErrorCodes lives in Tooba.Cart.Contracts.Errors; CartDirectory decomposed 831 -> 602 LOC.",
       "projects": [
+        {
+          "projectName": "Tooba.Cart.Contracts",
+          "rootAllowlist": [],
+          "forbiddenRootFiles": [
+            "CartContracts.cs",
+            "CartErrorCodes.cs",
+            "CartPresentationContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Cart.Domain",
+          "rootAllowlist": [],
+          "forbiddenRootFiles": [
+            "ShoppingCart.cs",
+            "CartLine.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
         {
           "projectName": "Tooba.Cart.Application",
           "rootAllowlist": [
@@ -978,7 +998,11 @@
             "CartPersistenceHours.cs",
             "CartConversionAdapter.cs"
           ],
-          "forbiddenTopLevelFolders": []
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Models"
+          ]
         },
         {
           "projectName": "Tooba.Cart.Endpoints",

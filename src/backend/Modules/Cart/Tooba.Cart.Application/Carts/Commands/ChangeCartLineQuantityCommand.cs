@@ -6,7 +6,7 @@ using Tooba.Cart.Application.Composition;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 
-namespace Tooba.Cart.Application.Commands.ChangeCartLineQuantity;
+namespace Tooba.Cart.Application.Carts.Commands;
 
 /// <summary>Changes a cart line quantity. Zero removes the line.</summary>
 public sealed record ChangeCartLineQuantityCommand(

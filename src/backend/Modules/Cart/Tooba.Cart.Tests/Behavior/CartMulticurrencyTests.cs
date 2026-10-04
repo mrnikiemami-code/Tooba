@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Cart.Application.Commands.AddCartLine;
+using Tooba.Cart.Application.Carts.Commands;
+using Tooba.Cart.Application.Carts.Validators;
 using Tooba.Cart.Application.Presentation;
 using Tooba.Cart.Application.Validation;
 using Tooba.Cart.Contracts;

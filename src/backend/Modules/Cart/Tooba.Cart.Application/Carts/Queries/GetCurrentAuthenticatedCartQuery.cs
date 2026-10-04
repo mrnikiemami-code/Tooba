@@ -8,7 +8,7 @@ using Tooba.Cart.Contracts.Errors;
 using Tooba.Cart.Contracts;
 using Tooba.Cart.Application.Presentation;
 
-namespace Tooba.Cart.Application.Queries.GetCurrentCart;
+namespace Tooba.Cart.Application.Carts.Queries;
 
 /// <summary>Returns the active authenticated cart without creating a guest shadow cart.</summary>
 public sealed record GetCurrentAuthenticatedCartQuery : IRequest<Result<CartPage>>;

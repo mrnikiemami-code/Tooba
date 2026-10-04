@@ -1,7 +1,8 @@
 using FluentValidation;
+using Tooba.Cart.Application.Carts.Queries;
 using Tooba.Cart.Application.Validation;
 
-namespace Tooba.Cart.Application.Queries.GetCart;
+namespace Tooba.Cart.Application.Carts.Validators;
 
 /// <summary>Transport validation for <see cref="GetCartQuery"/>; ownership/guest-secret checks stay in the handler.</summary>
 public sealed class GetCartQueryValidator : AbstractValidator<GetCartQuery>

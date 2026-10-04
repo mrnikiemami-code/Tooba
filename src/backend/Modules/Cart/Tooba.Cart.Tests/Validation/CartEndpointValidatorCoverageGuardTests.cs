@@ -2,10 +2,9 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Cart.Application.Commands.AddCartLine;
-using Tooba.Cart.Application.Commands.ChangeCartLineQuantity;
-using Tooba.Cart.Application.Commands.RemoveCartLine;
-using Tooba.Cart.Application.Queries.GetCart;
+using Tooba.Cart.Application.Carts.Commands;
+using Tooba.Cart.Application.Carts.Queries;
+using Tooba.Cart.Application.Carts.Validators;
 using Tooba.Cart.Application.Validation;
 using Xunit;
 

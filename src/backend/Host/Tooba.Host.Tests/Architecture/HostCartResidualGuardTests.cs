@@ -187,7 +187,7 @@ public sealed class HostCartResidualGuardTests
         var handler = File.ReadAllText(Path.Combine(
             repoRoot,
             "src", "backend", "Modules", "Cart", "Tooba.Cart.Application",
-            "Commands", "CreateGuestCart", "CreateGuestCartCommand.cs"));
+            "Carts", "Commands", "CreateGuestCartCommand.cs"));
 
         Assert.Contains("ICartCommerceContextResolver", handler, StringComparison.Ordinal);
         Assert.Contains("commerceContext.Resolve()", handler, StringComparison.Ordinal);

@@ -173,7 +173,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Fulfillment.Application.Commands.CreateShippingService.CreateShippingServiceCommand).Assembly,
     typeof(Tooba.Offer.Application.Offers.Commands.CreateOffer.CreateOfferCommand).Assembly,
     typeof(Tooba.Settlement.Application.Queries.GetSellerSettlementBalance.GetSellerSettlementBalanceQuery).Assembly,
-    typeof(Tooba.Cart.Application.Commands.CreateGuestCart.CreateGuestCartCommand).Assembly,
+    typeof(Tooba.Cart.Application.Carts.Commands.CreateGuestCartCommand).Assembly,
     typeof(Tooba.Returns.Application.Commands.CreateReturn.CreateReturnCommand).Assembly,
     typeof(Tooba.Notification.Application.Commands.MarkCustomerNotificationRead.MarkCustomerNotificationReadCommand).Assembly,
     typeof(Tooba.Support.Application.Commands.CreateCustomerTicket.CreateCustomerTicketCommand).Assembly,

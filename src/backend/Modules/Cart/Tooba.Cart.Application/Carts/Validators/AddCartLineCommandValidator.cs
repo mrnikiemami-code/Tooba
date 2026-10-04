@@ -1,7 +1,8 @@
 using FluentValidation;
+using Tooba.Cart.Application.Carts.Commands;
 using Tooba.Cart.Application.Validation;
 
-namespace Tooba.Cart.Application.Commands.AddCartLine;
+namespace Tooba.Cart.Application.Carts.Validators;
 
 /// <summary>
 /// Transport validation for <see cref="AddCartLineCommand"/>.

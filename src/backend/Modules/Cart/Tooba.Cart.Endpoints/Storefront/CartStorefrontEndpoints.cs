@@ -5,14 +5,9 @@ using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Cart.Application.Commands.AddCartLine;
-using Tooba.Cart.Application.Commands.ChangeCartLineQuantity;
-using Tooba.Cart.Application.Commands.CreateGuestCart;
-using Tooba.Cart.Application.Commands.MergeCartAfterLogin;
-using Tooba.Cart.Application.Commands.RemoveCartLine;
+using Tooba.Cart.Application.Carts.Commands;
 using Tooba.Cart.Contracts.Errors;
-using Tooba.Cart.Application.Queries.GetCart;
-using Tooba.Cart.Application.Queries.GetCurrentCart;
+using Tooba.Cart.Application.Carts.Queries;
 
 namespace Tooba.Cart.Endpoints.Storefront;
 
