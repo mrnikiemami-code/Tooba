@@ -5,6 +5,10 @@ namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
 /// TB-TMAR-IDENTITY-AMC-001 W5/W6 — structure gate + CERTIFIED SoT/manifest lock.
+/// Reconciled in TB-TMAR-IDENTITY-AMSC-001-W3: the Identity certification is now the AMSC-001
+/// four-wave certification, so <c>identityAmc001.structureState</c> is <c>CERTIFIED</c> (the W2
+/// <c>READY_FOR_CERTIFY</c> value is preserved as historical W2 truth inside
+/// <c>identityModuleAmsc001W2</c>). Every structural assertion is unchanged.
 /// </summary>
 public sealed class IdentityModuleAmcW5CertGuardTests
 {
@@ -47,7 +51,7 @@ public sealed class IdentityModuleAmcW5CertGuardTests
             Repo(), "docs/architecture/tmar-current-state.json")));
         var block = doc.RootElement.GetProperty("identityAmc001");
         Assert.Equal("COMPLETE_REFERENCE_PATTERN", block.GetProperty("state").GetString());
-        Assert.Equal("READY_FOR_CERTIFY", block.GetProperty("structureState").GetString());
+        Assert.Equal("CERTIFIED", block.GetProperty("structureState").GetString());
         Assert.True(block.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
         Assert.True(block.GetProperty("manifestCertified").GetBoolean());
         Assert.True(block.GetProperty("microserviceExtractable").GetBoolean());
