@@ -1488,7 +1488,7 @@
       "module": "Content",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Re-certified by TB-TMAR-HOST-CONTENT-AMC-001-R4 under hardened semantic-Contracts + capability-first foldering rules. Application is capability-first (Articles/Authors/Categories/Tags/Media/Comments) with Composition/ContentOperation and shared Validators/ContentValidationCodes; zero Application *Contracts.cs bundles; zero unjustified one-file Command/Query leaf folders; Contracts remains Errors-only (no foreign module Content.Application consumers). R1/R2 typed faults and R3 Host ZERO / Contracts-only Media+Localization preserved.",
+      "certificationNote": "Re-certified by TB-TMAR-CONTENT-AMSC-001 W0 702537be / W1 deb13ae8 / W2 ce7b3938 under hardened semantic-Contracts + capability-first foldering rules. Application is capability-first (Articles/Authors/Categories/Comments/Media/Tags) with Composition/ContentOperation and shared Validators/ContentValidationCodes; zero Application *Contracts.cs bundles; zero unjustified one-file Command/Query leaf folders; Contracts holds Errors/ + Enums/ArticleCommentStatus + Storefront boundary DTO only; single stable-code owner ContentErrorCodes (76 codes) with zero hard-coded user-facing fault text and zero Endpoints->Domain coupling. Prior TB-TMAR-HOST-CONTENT-AMC-001-R4 lineage, Host ZERO and Contracts-only Media+Localization boundaries preserved.",
       "projects": [
         {
           "projectName": "Tooba.Content.Contracts",
