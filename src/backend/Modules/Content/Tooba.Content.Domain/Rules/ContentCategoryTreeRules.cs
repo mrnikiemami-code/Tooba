@@ -1,4 +1,5 @@
 ﻿using Tooba.BuildingBlocks;
+using Tooba.Content.Contracts.Errors;
 using Tooba.Content.Domain.Aggregates;
 
 namespace Tooba.Content.Domain.Rules;
@@ -19,7 +20,7 @@ public static class ContentCategoryTreeRules
 
         if (!parentById.ContainsKey(categoryId.Value))
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.NotFound);
+            throw new ContractOperationException(ContentErrorCodes.CategoryNotFound);
         }
 
         var depth = 1;
@@ -31,7 +32,7 @@ public static class ContentCategoryTreeRules
             current = p;
             if (++guard > parentById.Count + 2)
             {
-                throw new ContractOperationException(ContentCategoryErrorCodes.CycleDetected);
+                throw new ContractOperationException(ContentErrorCodes.CategoryCycleDetected);
             }
         }
 
@@ -102,7 +103,7 @@ public static class ContentCategoryTreeRules
             current = p;
             if (++guard > parentById.Count + 2)
             {
-                throw new ContractOperationException(ContentCategoryErrorCodes.CycleDetected);
+                throw new ContractOperationException(ContentErrorCodes.CategoryCycleDetected);
             }
         }
 
@@ -116,13 +117,13 @@ public static class ContentCategoryTreeRules
     {
         if (!parentById.ContainsKey(parentId))
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidParent);
+            throw new ContractOperationException(ContentErrorCodes.CategoryInvalidParent);
         }
 
         var parentDepth = ComputeDepth(parentId, parentById);
         if (parentDepth >= MaxDepth)
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.MaxDepthExceeded);
+            throw new ContractOperationException(ContentErrorCodes.CategoryMaxDepthExceeded);
         }
     }
 
@@ -140,29 +141,29 @@ public static class ContentCategoryTreeRules
 
         if (newParentId == categoryId)
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.SelfParent);
+            throw new ContractOperationException(ContentErrorCodes.CategorySelfParent);
         }
 
         if (!parentById.ContainsKey(categoryId) || !parentById.ContainsKey(newParentId.Value))
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.NotFound);
+            throw new ContractOperationException(ContentErrorCodes.CategoryNotFound);
         }
 
         if (!string.Equals(languageById[categoryId], languageById[newParentId.Value], StringComparison.Ordinal))
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.CrossLanguageParent);
+            throw new ContractOperationException(ContentErrorCodes.CategoryCrossLanguageParent);
         }
 
         if (IsDescendant(categoryId, newParentId.Value, parentById))
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.DescendantParent);
+            throw new ContractOperationException(ContentErrorCodes.CategoryDescendantParent);
         }
 
         var parentDepth = ComputeDepth(newParentId.Value, parentById);
         var subtreeHeight = ComputeSubtreeHeight(categoryId, parentById);
         if (parentDepth + subtreeHeight > MaxDepth)
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.MaxDepthExceeded);
+            throw new ContractOperationException(ContentErrorCodes.CategoryMaxDepthExceeded);
         }
     }
 }

@@ -66,7 +66,7 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
         var slug = ContentAuthor.NormalizeSlug(command.Slug);
         if (await _db.Authors.AnyAsync(x => x.Slug == slug, cancellationToken))
         {
-            throw new ContractOperationException(ContentAuthorErrorCodes.SlugDuplicate);
+            throw new ContractOperationException(ContentErrorCodes.AuthorSlugDuplicate);
         }
 
         var author = ContentAuthor.Create(
@@ -97,7 +97,7 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
             x => x.AuthorId != command.AuthorId && x.Slug == slug,
             cancellationToken))
         {
-            throw new ContractOperationException(ContentAuthorErrorCodes.SlugDuplicate);
+            throw new ContractOperationException(ContentErrorCodes.AuthorSlugDuplicate);
         }
 
         author.Update(
@@ -163,10 +163,10 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
 
         var author = await _db.Authors.AsNoTracking()
             .FirstOrDefaultAsync(x => x.AuthorId == authorId, cancellationToken)
-            ?? throw new ContractOperationException(ContentAuthorErrorCodes.NotFound);
+            ?? throw new ContractOperationException(ContentErrorCodes.AuthorNotFound);
         if (isNewAssignment && !author.IsActive)
         {
-            throw new ContractOperationException(ContentAuthorErrorCodes.Inactive);
+            throw new ContractOperationException(ContentErrorCodes.AuthorInactive);
         }
     }
 
@@ -175,17 +175,17 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
     {
         if (authorId is null)
         {
-            throw new ContractOperationException(ContentAuthorErrorCodes.RequiredForPublish);
+            throw new ContractOperationException(ContentErrorCodes.AuthorRequiredForPublish);
         }
 
         _ = await _db.Authors.AsNoTracking()
             .FirstOrDefaultAsync(x => x.AuthorId == authorId, cancellationToken)
-            ?? throw new ContractOperationException(ContentAuthorErrorCodes.NotFound);
+            ?? throw new ContractOperationException(ContentErrorCodes.AuthorNotFound);
     }
 
     private async Task<ContentAuthor> FindTrackedAsync(Guid authorId, CancellationToken cancellationToken) =>
         await _db.Authors.FirstOrDefaultAsync(x => x.AuthorId == authorId, cancellationToken)
-        ?? throw new ContractOperationException(ContentAuthorErrorCodes.NotFound);
+        ?? throw new ContractOperationException(ContentErrorCodes.AuthorNotFound);
 
     private async Task<ContentAuthorWorkspaceDto> MapWorkspaceAsync(
         ContentAuthor row,

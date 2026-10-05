@@ -1,4 +1,5 @@
 ﻿using Tooba.BuildingBlocks;
+using Tooba.Content.Contracts.Errors;
 
 namespace Tooba.Content.Domain.Aggregates;
 
@@ -160,37 +161,37 @@ public sealed class ContentCategory
     {
         if (string.IsNullOrWhiteSpace(languageCode) || languageCode.Trim().Length > LanguageCodeMaxLength)
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidLanguage);
+            throw new ContractOperationException(ContentErrorCodes.CategoryInvalidLanguage);
         }
 
         if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > NameMaxLength)
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidName);
+            throw new ContractOperationException(ContentErrorCodes.CategoryInvalidName);
         }
 
         if (string.IsNullOrWhiteSpace(slug) || slug.Trim().Length > SlugMaxLength)
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidSlug);
+            throw new ContractOperationException(ContentErrorCodes.CategoryInvalidSlug);
         }
 
         if (shortDescription is not null && shortDescription.Trim().Length > ShortDescriptionMaxLength)
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidShortDescription);
+            throw new ContractOperationException(ContentErrorCodes.CategoryInvalidShortDescription);
         }
 
         if (description is not null && description.Trim().Length > DescriptionMaxLength)
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidDescription);
+            throw new ContractOperationException(ContentErrorCodes.CategoryInvalidDescription);
         }
 
         if (seoTitle is not null && seoTitle.Trim().Length > SeoTitleMaxLength)
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidSeoTitle);
+            throw new ContractOperationException(ContentErrorCodes.CategoryInvalidSeoTitle);
         }
 
         if (seoDescription is not null && seoDescription.Trim().Length > SeoDescriptionMaxLength)
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.InvalidSeoDescription);
+            throw new ContractOperationException(ContentErrorCodes.CategoryInvalidSeoDescription);
         }
     }
 
@@ -202,52 +203,6 @@ public sealed class ContentCategory
         }
 
         var trimmed = value.Trim();
-        return trimmed.Length > maxLength ? throw new ContractOperationException(ContentCategoryErrorCodes.InvalidField) : trimmed;
+        return trimmed.Length > maxLength ? throw new ContractOperationException(ContentErrorCodes.CategoryInvalidField) : trimmed;
     }
 }
-
-/// <summary>کدهای خطای پایدار دسته‌بندی مقاله.</summary>
-public static class ContentCategoryErrorCodes
-{
-    /// <summary>دسته یافت نشد.</summary>
-    public const string NotFound = "content.category.not_found";
-    /// <summary>slug تکراری در زبان.</summary>
-    public const string SlugDuplicate = "content.category.slug_duplicate";
-    /// <summary>چرخه در درخت.</summary>
-    public const string CycleDetected = "content.category.cycle_detected";
-    /// <summary>والد زبان متفاوت.</summary>
-    public const string CrossLanguageParent = "content.category.cross_language_parent";
-    /// <summary>والد خود گره.</summary>
-    public const string SelfParent = "content.category.self_parent";
-    /// <summary>والد از نسل فرزند.</summary>
-    public const string DescendantParent = "content.category.descendant_parent";
-    /// <summary>عمق بیش از دو سطح.</summary>
-    public const string MaxDepthExceeded = "content.category.max_depth_exceeded";
-    /// <summary>والد نامعتبر.</summary>
-    public const string InvalidParent = "content.category.invalid_parent";
-    /// <summary>دسته غیرفعال برای انتساب جدید مجاز نیست.</summary>
-    public const string Inactive = "content.category.inactive";
-    /// <summary>زبان مقاله با دسته نمی‌خواند.</summary>
-    public const string LanguageMismatch = "content.category.language_mismatch";
-    /// <summary>دسته مقاله دارد.</summary>
-    public const string HasArticles = "content.category.has_articles";
-    /// <summary>دسته فرزند دارد.</summary>
-    public const string HasChildren = "content.category.has_children";
-    /// <summary>زبان نامعتبر.</summary>
-    public const string InvalidLanguage = "content.category.invalid_language";
-    /// <summary>نام نامعتبر.</summary>
-    public const string InvalidName = "content.category.invalid_name";
-    /// <summary>slug نامعتبر.</summary>
-    public const string InvalidSlug = "content.category.invalid_slug";
-    /// <summary>توضیح کوتاه نامعتبر.</summary>
-    public const string InvalidShortDescription = "content.category.invalid_short_description";
-    /// <summary>توضیح نامعتبر.</summary>
-    public const string InvalidDescription = "content.category.invalid_description";
-    /// <summary>عنوان SEO نامعتبر.</summary>
-    public const string InvalidSeoTitle = "content.category.invalid_seo_title";
-    /// <summary>توضیح SEO نامعتبر.</summary>
-    public const string InvalidSeoDescription = "content.category.invalid_seo_description";
-    /// <summary>فیلد نامعتبر.</summary>
-    public const string InvalidField = "content.category.invalid_field";
-}
-

@@ -17,4 +17,5 @@ public static class ContentValidationCodes
     public const string MediaAssetIdRequired = "content.validation.media_asset_id_required";
     public const string GalleryIdsRequired = "content.validation.gallery_ids_required";
     public const string ReorderItemsRequired = "content.validation.reorder_items_required";
+    public const string CommentStatusInvalid = "content.validation.comment_status_invalid";
 }

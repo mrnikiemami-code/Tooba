@@ -1,4 +1,6 @@
 ﻿using Tooba.BuildingBlocks;
+using Tooba.Content.Contracts.Errors;
+
 namespace Tooba.Content.Domain.Aggregates;
 
 /// <summary>ارجاع گالری مقاله به دارایی DAM — بدون باینری.</summary>
@@ -53,30 +55,17 @@ public sealed class ContentArticleMediaItem
     private static void ValidateMetadata(string? altText, string? caption)
     {
         if (altText is not null && altText.Trim().Length > AltTextMaxLength)
-            throw new ContractOperationException("متن جایگزین گالری مقاله معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidGalleryAltText);
         if (caption is not null && caption.Trim().Length > CaptionMaxLength)
-            throw new ContractOperationException("زیرنویس گالری مقاله معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidGalleryCaption);
     }
 
     private static string? NormalizeOptional(string? value, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
         var trimmed = value.Trim();
-        return trimmed.Length > maxLength ? throw new ContractOperationException("متادیتای گالری مقاله معتبر نیست.") : trimmed;
-    }
-}
-
-/// <summary>قواعد امنیتی بدنهٔ HTML مقاله.</summary>
-public static class ContentArticleBodyRules
-{
-    /// <summary>از نگهداری base64 یا data URI در بدنه جلوگیری می‌کند.</summary>
-    public static void EnsureNoEmbeddedBinary(string body)
-    {
-        if (string.IsNullOrEmpty(body)) return;
-        if (body.Contains("data:image", StringComparison.OrdinalIgnoreCase)
-            || body.Contains("data:application", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new ContractOperationException(ContentArticleErrorCodes.UnsafeBodyMedia);
-        }
+        return trimmed.Length > maxLength
+            ? throw new ContractOperationException(ContentErrorCodes.ArticleInvalidGalleryMetadata)
+            : trimmed;
     }
 }

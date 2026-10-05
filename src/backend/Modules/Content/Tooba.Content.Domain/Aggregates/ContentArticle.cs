@@ -1,4 +1,6 @@
 ﻿using Tooba.BuildingBlocks;
+using Tooba.Content.Contracts.Errors;
+using Tooba.Content.Domain.Rules;
 
 namespace Tooba.Content.Domain.Aggregates;
 
@@ -150,7 +152,7 @@ public sealed class ContentArticle
         var resolvedLocale = string.IsNullOrWhiteSpace(locale) ? Locale : locale.Trim();
         if (!string.Equals(resolvedLocale, Locale, StringComparison.Ordinal) && !CanChangeLocale())
         {
-            throw new ContractOperationException(ContentArticleErrorCodes.LocaleLocked);
+            throw new ContractOperationException(ContentErrorCodes.LocaleLocked);
         }
 
         Validate(Slug, title, excerpt, body, authorDisplayName, resolvedLocale, seoTitle, seoDescription, category);
@@ -188,7 +190,7 @@ public sealed class ContentArticle
     {
         if (string.IsNullOrWhiteSpace(authorDisplayName) || authorDisplayName.Trim().Length > AuthorDisplayNameMaxLength)
         {
-            throw new ContractOperationException("نام نمایشی نویسنده معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidAuthorDisplayName);
         }
 
         AuthorId = authorId;
@@ -200,7 +202,7 @@ public sealed class ContentArticle
     public void Publish(DateTimeOffset now)
     {
         if (Status == ContentPublicationStatus.Archived)
-            throw new ContractOperationException(ContentArticleErrorCodes.AlreadyArchived);
+            throw new ContractOperationException(ContentErrorCodes.AlreadyArchived);
         Status = ContentPublicationStatus.Published;
         UpdatedAt = now;
     }
@@ -209,7 +211,7 @@ public sealed class ContentArticle
     public void Unpublish(DateTimeOffset now)
     {
         if (Status == ContentPublicationStatus.Archived)
-            throw new ContractOperationException(ContentArticleErrorCodes.AlreadyArchived);
+            throw new ContractOperationException(ContentErrorCodes.AlreadyArchived);
         Status = ContentPublicationStatus.Draft;
         UpdatedAt = now;
     }
@@ -218,7 +220,7 @@ public sealed class ContentArticle
     public void Archive(DateTimeOffset now)
     {
         if (Status == ContentPublicationStatus.Archived)
-            throw new ContractOperationException(ContentArticleErrorCodes.AlreadyArchived);
+            throw new ContractOperationException(ContentErrorCodes.AlreadyArchived);
         Status = ContentPublicationStatus.Archived;
         UpdatedAt = now;
     }
@@ -277,7 +279,7 @@ public sealed class ContentArticle
         if (string.IsNullOrWhiteSpace(value)) return null;
         var trimmed = value.Trim();
         if (trimmed.Length > maxLength)
-            throw new ContractOperationException("مقدار اختیاری مقاله از سقف مجاز بلندتر است.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidOptionalField);
         return trimmed;
     }
 
@@ -293,39 +295,22 @@ public sealed class ContentArticle
         string? category)
     {
         if (string.IsNullOrWhiteSpace(slug) || slug.Trim().Length > SlugMaxLength)
-            throw new ContractOperationException("slug مقاله معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidSlug);
         if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > TitleMaxLength)
-            throw new ContractOperationException("عنوان مقاله معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidTitle);
         if (string.IsNullOrWhiteSpace(excerpt) || excerpt.Trim().Length > ExcerptMaxLength)
-            throw new ContractOperationException("چکیدهٔ مقاله معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidExcerpt);
         if (body is null || body.Trim().Length > BodyMaxLength)
-            throw new ContractOperationException("بدنهٔ مقاله معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidBody);
         if ((authorDisplayName ?? string.Empty).Trim().Length > AuthorDisplayNameMaxLength)
-            throw new ContractOperationException("نام نمایشی نویسنده معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidAuthorDisplayName);
         if (string.IsNullOrWhiteSpace(locale) || locale.Trim().Length > LocaleMaxLength)
-            throw new ContractOperationException("locale مقاله معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidLocale);
         if (seoTitle is not null && seoTitle.Trim().Length > SeoTitleMaxLength)
-            throw new ContractOperationException("عنوان SEO مقاله معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidSeoTitle);
         if (seoDescription is not null && seoDescription.Trim().Length > SeoDescriptionMaxLength)
-            throw new ContractOperationException("توضیح SEO مقاله معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidSeoDescription);
         if (category is not null && category.Trim().Length > CategoryMaxLength)
-            throw new ContractOperationException("دستهٔ مقاله معتبر نیست.");
+            throw new ContractOperationException(ContentErrorCodes.ArticleInvalidCategory);
     }
-}
-
-/// <summary>کدهای خطای دامنهٔ مقاله.</summary>
-public static class ContentArticleErrorCodes
-{
-    /// <summary>تغییر locale پس از انتشار یا ارجاع ممنوع است.</summary>
-    public const string LocaleLocked = "content.article.locale_locked";
-    /// <summary>بدنهٔ مقاله رسانهٔ ناامن دارد.</summary>
-    public const string UnsafeBodyMedia = "content.article.unsafe_body_media";
-    /// <summary>دارایی رسانه یافت نشد.</summary>
-    public const string MediaNotFound = "content.article.media_not_found";
-    /// <summary>حذف دائمی برای این مقاله مجاز نیست.</summary>
-    public const string DeleteNotAllowed = "content.article.delete_not_allowed";
-    /// <summary>مقاله قبلاً بایگانی شده است.</summary>
-    public const string AlreadyArchived = "content.article.already_archived";
-    /// <summary>بایگانی برای این مقاله مجاز نیست.</summary>
-    public const string ArchiveNotAllowed = "content.article.archive_not_allowed";
 }

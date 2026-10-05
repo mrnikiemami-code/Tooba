@@ -22,6 +22,20 @@ public static class ContentErrorCodes
     public const string ArchiveNotAllowed = "content.article.archive_not_allowed";
     public const string GalleryItemMissing = "content.article.gallery_item_missing";
 
+    public const string ArticleInvalidSlug = "content.article.invalid_slug";
+    public const string ArticleInvalidTitle = "content.article.invalid_title";
+    public const string ArticleInvalidExcerpt = "content.article.invalid_excerpt";
+    public const string ArticleInvalidBody = "content.article.invalid_body";
+    public const string ArticleInvalidAuthorDisplayName = "content.article.invalid_author_display_name";
+    public const string ArticleInvalidLocale = "content.article.invalid_locale";
+    public const string ArticleInvalidSeoTitle = "content.article.invalid_seo_title";
+    public const string ArticleInvalidSeoDescription = "content.article.invalid_seo_description";
+    public const string ArticleInvalidCategory = "content.article.invalid_category";
+    public const string ArticleInvalidOptionalField = "content.article.invalid_optional_field";
+    public const string ArticleInvalidGalleryAltText = "content.article.invalid_gallery_alt_text";
+    public const string ArticleInvalidGalleryCaption = "content.article.invalid_gallery_caption";
+    public const string ArticleInvalidGalleryMetadata = "content.article.invalid_gallery_metadata";
+
     public const string PublishNotReady = "content.publish.not_ready";
     public const string PublishInvalidSchedule = "content.publish.invalid_schedule";
     public const string PublishForbidden = "content.publish.forbidden";

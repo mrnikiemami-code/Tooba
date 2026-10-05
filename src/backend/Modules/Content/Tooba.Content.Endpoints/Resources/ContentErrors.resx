@@ -67,5 +67,18 @@
   <data name="content.tag.not_found" xml:space="preserve"><value>tag not_found</value></data>
   <data name="content.unpublish.invalid_state" xml:space="preserve"><value>unpublish invalid_state</value></data>
   <data name="content.update.rejected" xml:space="preserve"><value>update rejected</value></data>
+  <data name="content.article.invalid_slug" xml:space="preserve"><value>Article slug is invalid.</value></data>
+  <data name="content.article.invalid_title" xml:space="preserve"><value>Article title is invalid.</value></data>
+  <data name="content.article.invalid_excerpt" xml:space="preserve"><value>Article excerpt is invalid.</value></data>
+  <data name="content.article.invalid_body" xml:space="preserve"><value>Article body is invalid.</value></data>
+  <data name="content.article.invalid_author_display_name" xml:space="preserve"><value>Article author display name is invalid.</value></data>
+  <data name="content.article.invalid_locale" xml:space="preserve"><value>Article locale is invalid.</value></data>
+  <data name="content.article.invalid_seo_title" xml:space="preserve"><value>Article SEO title is invalid.</value></data>
+  <data name="content.article.invalid_seo_description" xml:space="preserve"><value>Article SEO description is invalid.</value></data>
+  <data name="content.article.invalid_category" xml:space="preserve"><value>Article category is invalid.</value></data>
+  <data name="content.article.invalid_optional_field" xml:space="preserve"><value>Article optional field is too long.</value></data>
+  <data name="content.article.invalid_gallery_alt_text" xml:space="preserve"><value>Gallery alt text is invalid.</value></data>
+  <data name="content.article.invalid_gallery_caption" xml:space="preserve"><value>Gallery caption is invalid.</value></data>
+  <data name="content.article.invalid_gallery_metadata" xml:space="preserve"><value>Gallery metadata is invalid.</value></data>
 </root>
 

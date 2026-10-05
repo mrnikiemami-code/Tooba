@@ -1,5 +1,4 @@
-﻿using Tooba.Content.Domain.Aggregates;
-using Tooba.Content.Domain.Rules;
+﻿using Tooba.Content.Contracts.Enums;
 
 namespace Tooba.Content.Application.Comments.Models;
 

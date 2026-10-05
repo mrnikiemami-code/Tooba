@@ -67,5 +67,18 @@
   <data name="content.tag.not_found" xml:space="preserve"><value>خطای محتوا: content.tag.not_found</value></data>
   <data name="content.unpublish.invalid_state" xml:space="preserve"><value>خطای محتوا: content.unpublish.invalid_state</value></data>
   <data name="content.update.rejected" xml:space="preserve"><value>خطای محتوا: content.update.rejected</value></data>
+  <data name="content.article.invalid_slug" xml:space="preserve"><value>slug مقاله معتبر نیست.</value></data>
+  <data name="content.article.invalid_title" xml:space="preserve"><value>عنوان مقاله معتبر نیست.</value></data>
+  <data name="content.article.invalid_excerpt" xml:space="preserve"><value>چکیدهٔ مقاله معتبر نیست.</value></data>
+  <data name="content.article.invalid_body" xml:space="preserve"><value>بدنهٔ مقاله معتبر نیست.</value></data>
+  <data name="content.article.invalid_author_display_name" xml:space="preserve"><value>نام نمایشی نویسنده معتبر نیست.</value></data>
+  <data name="content.article.invalid_locale" xml:space="preserve"><value>locale مقاله معتبر نیست.</value></data>
+  <data name="content.article.invalid_seo_title" xml:space="preserve"><value>عنوان SEO مقاله معتبر نیست.</value></data>
+  <data name="content.article.invalid_seo_description" xml:space="preserve"><value>توضیح SEO مقاله معتبر نیست.</value></data>
+  <data name="content.article.invalid_category" xml:space="preserve"><value>دستهٔ مقاله معتبر نیست.</value></data>
+  <data name="content.article.invalid_optional_field" xml:space="preserve"><value>مقدار اختیاری مقاله از سقف مجاز بلندتر است.</value></data>
+  <data name="content.article.invalid_gallery_alt_text" xml:space="preserve"><value>متن جایگزین گالری مقاله معتبر نیست.</value></data>
+  <data name="content.article.invalid_gallery_caption" xml:space="preserve"><value>زیرنویس گالری مقاله معتبر نیست.</value></data>
+  <data name="content.article.invalid_gallery_metadata" xml:space="preserve"><value>متادیتای گالری مقاله معتبر نیست.</value></data>
 </root>
 

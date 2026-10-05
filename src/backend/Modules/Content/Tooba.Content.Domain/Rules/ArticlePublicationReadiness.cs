@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
+using Tooba.Content.Contracts.Errors;
 using Tooba.Content.Domain.Aggregates;
 
 namespace Tooba.Content.Domain.Rules;
@@ -103,7 +104,7 @@ public static class ArticlePublicationReadinessRules
                 required: true,
                 satisfied: input.Status != ContentPublicationStatus.Archived,
                 detail: input.Status == ContentPublicationStatus.Archived
-                    ? ContentArticleErrorCodes.AlreadyArchived
+                    ? ContentErrorCodes.AlreadyArchived
                     : null,
                 actionTarget: "publication"),
             Check(
@@ -129,7 +130,7 @@ public static class ArticlePublicationReadinessRules
                 "content.publish.check.author",
                 required: true,
                 satisfied: input.AuthorId is not null,
-                detail: input.AuthorId is null ? ContentAuthorErrorCodes.RequiredForPublish : null,
+                detail: input.AuthorId is null ? ContentErrorCodes.AuthorRequiredForPublish : null,
                 actionTarget: "author"),
             Check(
                 ArticlePublicationCodes.LanguageActive,

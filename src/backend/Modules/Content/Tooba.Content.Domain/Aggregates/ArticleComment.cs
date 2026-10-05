@@ -1,34 +1,8 @@
 ﻿using Tooba.BuildingBlocks;
+using Tooba.Content.Contracts.Enums;
+using Tooba.Content.Contracts.Errors;
 
 namespace Tooba.Content.Domain.Aggregates;
-
-/// <summary>وضعیت تعدیل نظر مقاله.</summary>
-public enum ArticleCommentStatus
-{
-    /// <summary>در انتظار بررسی.</summary>
-    Pending = 0,
-    /// <summary>تأییدشده و قابل نمایش عمومی (در صورت وجود سطح عمومی).</summary>
-    Approved = 1,
-    /// <summary>ردشده.</summary>
-    Rejected = 2,
-    /// <summary>پنهان اداری بدون حذف تاریخچه.</summary>
-    Hidden = 3,
-}
-
-/// <summary>کدهای پایدار خطای تعدیل نظر مقاله.</summary>
-public static class ArticleCommentCodes
-{
-    /// <summary>نظر یافت نشد.</summary>
-    public const string NotFound = "content.comment.not_found";
-    /// <summary>مقالهٔ مالک یافت نشد.</summary>
-    public const string ArticleNotFound = "content.comment.article_not_found";
-    /// <summary>انتقال وضعیت نامعتبر.</summary>
-    public const string InvalidTransition = "content.comment.invalid_transition";
-    /// <summary>بدنه یا نام نمایشی نامعتبر.</summary>
-    public const string InvalidPayload = "content.comment.invalid_payload";
-    /// <summary>تعدیل مجاز نیست.</summary>
-    public const string Forbidden = "content.comment.forbidden";
-}
 
 /// <summary>نظر متعلق به یک مقالهٔ Content — مالکیت Content؛ بدون ناوبری ORM بین‌ماژولی.</summary>
 public sealed class ArticleComment
@@ -81,7 +55,7 @@ public sealed class ArticleComment
         Guid? authorPartyId = null)
     {
         if (articleId == Guid.Empty)
-            throw new ContractOperationException(ArticleCommentCodes.InvalidPayload);
+            throw new ContractOperationException(ContentErrorCodes.CommentInvalidPayload);
         var name = NormalizeRequired(displayName, DisplayNameMaxLength, "displayName");
         var text = NormalizeRequired(body, BodyMaxLength, "body");
         return new ArticleComment
@@ -139,7 +113,7 @@ public sealed class ArticleComment
     private void EnsureTransition(ArticleCommentStatus next)
     {
         if (Status == next)
-            throw new ContractOperationException(ArticleCommentCodes.InvalidTransition);
+            throw new ContractOperationException(ContentErrorCodes.CommentInvalidTransition);
 
         var allowed = Status switch
         {
@@ -158,22 +132,22 @@ public sealed class ArticleComment
             _ => false,
         };
         if (!allowed)
-            throw new ContractOperationException(ArticleCommentCodes.InvalidTransition);
+            throw new ContractOperationException(ContentErrorCodes.CommentInvalidTransition);
     }
 
     private static void EnsureModerator(Guid moderatorUserId)
     {
         if (moderatorUserId == Guid.Empty)
-            throw new ContractOperationException(ArticleCommentCodes.Forbidden);
+            throw new ContractOperationException(ContentErrorCodes.CommentForbidden);
     }
 
     private static string NormalizeRequired(string value, int max, string field)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new ContractOperationException(ArticleCommentCodes.InvalidPayload);
+            throw new ContractOperationException(ContentErrorCodes.CommentInvalidPayload);
         var trimmed = value.Trim();
         if (trimmed.Length > max)
-            throw new ContractOperationException(ArticleCommentCodes.InvalidPayload);
+            throw new ContractOperationException(ContentErrorCodes.CommentInvalidPayload);
         return trimmed;
     }
 

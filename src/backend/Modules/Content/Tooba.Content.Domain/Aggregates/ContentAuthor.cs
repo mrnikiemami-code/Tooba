@@ -1,4 +1,5 @@
 ﻿using Tooba.BuildingBlocks;
+using Tooba.Content.Contracts.Errors;
 
 namespace Tooba.Content.Domain.Aggregates;
 
@@ -131,22 +132,22 @@ public sealed class ContentAuthor
     {
         if (string.IsNullOrWhiteSpace(displayName) || displayName.Trim().Length > DisplayNameMaxLength)
         {
-            throw new ContractOperationException(ContentAuthorErrorCodes.InvalidDisplayName);
+            throw new ContractOperationException(ContentErrorCodes.AuthorInvalidDisplayName);
         }
 
         if (string.IsNullOrWhiteSpace(slug) || slug.Trim().Length > SlugMaxLength)
         {
-            throw new ContractOperationException(ContentAuthorErrorCodes.InvalidSlug);
+            throw new ContractOperationException(ContentErrorCodes.AuthorInvalidSlug);
         }
 
         if (shortBio is not null && shortBio.Trim().Length > ShortBioMaxLength)
         {
-            throw new ContractOperationException(ContentAuthorErrorCodes.InvalidShortBio);
+            throw new ContractOperationException(ContentErrorCodes.AuthorInvalidShortBio);
         }
 
         if (fullBio is not null && fullBio.Trim().Length > FullBioMaxLength)
         {
-            throw new ContractOperationException(ContentAuthorErrorCodes.InvalidFullBio);
+            throw new ContractOperationException(ContentErrorCodes.AuthorInvalidFullBio);
         }
 
         ValidateOptionalUrl(websiteUrl);
@@ -159,7 +160,7 @@ public sealed class ContentAuthor
     {
         if (value is not null && value.Trim().Length > UrlMaxLength)
         {
-            throw new ContractOperationException(ContentAuthorErrorCodes.InvalidUrl);
+            throw new ContractOperationException(ContentErrorCodes.AuthorInvalidUrl);
         }
     }
 
@@ -172,32 +173,7 @@ public sealed class ContentAuthor
 
         var trimmed = value.Trim();
         return trimmed.Length > maxLength
-            ? throw new ContractOperationException(ContentAuthorErrorCodes.InvalidField)
+            ? throw new ContractOperationException(ContentErrorCodes.AuthorInvalidField)
             : trimmed;
     }
-}
-
-/// <summary>کدهای خطای پایدار نویسندهٔ مقاله.</summary>
-public static class ContentAuthorErrorCodes
-{
-    /// <summary>نویسنده یافت نشد.</summary>
-    public const string NotFound = "content.author.not_found";
-    /// <summary>slug تکراری.</summary>
-    public const string SlugDuplicate = "content.author.slug_duplicate";
-    /// <summary>نویسنده غیرفعال است.</summary>
-    public const string Inactive = "content.author.inactive";
-    /// <summary>نویسنده برای انتشار الزامی است.</summary>
-    public const string RequiredForPublish = "content.author.required_for_publish";
-    /// <summary>نام نمایشی نامعتبر.</summary>
-    public const string InvalidDisplayName = "content.author.invalid_display_name";
-    /// <summary>slug نامعتبر.</summary>
-    public const string InvalidSlug = "content.author.invalid_slug";
-    /// <summary>بیوگرافی کوتاه نامعتبر.</summary>
-    public const string InvalidShortBio = "content.author.invalid_short_bio";
-    /// <summary>بیوگرافی کامل نامعتبر.</summary>
-    public const string InvalidFullBio = "content.author.invalid_full_bio";
-    /// <summary>URL نامعتبر.</summary>
-    public const string InvalidUrl = "content.author.invalid_url";
-    /// <summary>فیلد نامعتبر.</summary>
-    public const string InvalidField = "content.author.invalid_field";
 }

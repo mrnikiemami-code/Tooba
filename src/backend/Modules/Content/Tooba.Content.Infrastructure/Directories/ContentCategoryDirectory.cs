@@ -85,7 +85,7 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
             x => x.LanguageCode == language && x.Slug == slug,
             cancellationToken))
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.SlugDuplicate);
+            throw new ContractOperationException(ContentErrorCodes.CategorySlugDuplicate);
         }
 
         var category = ContentCategory.Create(
@@ -118,7 +118,7 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
                 && x.Slug == slug,
             cancellationToken))
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.SlugDuplicate);
+            throw new ContractOperationException(ContentErrorCodes.CategorySlugDuplicate);
         }
 
         var status = Enum.TryParse<ContentCategoryStatus>(command.Status, true, out var parsed)
@@ -201,12 +201,12 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
         var category = await FindTrackedAsync(categoryId, cancellationToken);
         if (await _db.Categories.AnyAsync(x => x.ParentCategoryId == categoryId, cancellationToken))
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.HasChildren);
+            throw new ContractOperationException(ContentErrorCodes.CategoryHasChildren);
         }
 
         if (await _db.Articles.AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.HasArticles);
+            throw new ContractOperationException(ContentErrorCodes.CategoryHasArticles);
         }
 
         category.Archive(DateTimeOffset.UtcNow);
@@ -263,15 +263,15 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
 
         var category = await _db.Categories.AsNoTracking()
             .FirstOrDefaultAsync(x => x.CategoryId == categoryId, cancellationToken)
-            ?? throw new ContractOperationException(ContentCategoryErrorCodes.NotFound);
+            ?? throw new ContractOperationException(ContentErrorCodes.CategoryNotFound);
         if (!string.Equals(category.LanguageCode, articleLocale.Trim(), StringComparison.Ordinal))
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.LanguageMismatch);
+            throw new ContractOperationException(ContentErrorCodes.CategoryLanguageMismatch);
         }
 
         if (isNewAssignment && category.Status != ContentCategoryStatus.Active)
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.Inactive);
+            throw new ContractOperationException(ContentErrorCodes.CategoryInactive);
         }
     }
 
@@ -283,10 +283,10 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
     {
         var parent = await _db.Categories.AsNoTracking()
             .FirstOrDefaultAsync(x => x.CategoryId == parentId, cancellationToken)
-            ?? throw new ContractOperationException(ContentCategoryErrorCodes.NotFound);
+            ?? throw new ContractOperationException(ContentErrorCodes.CategoryNotFound);
         if (!string.Equals(parent.LanguageCode, languageCode, StringComparison.Ordinal))
         {
-            throw new ContractOperationException(ContentCategoryErrorCodes.CrossLanguageParent);
+            throw new ContractOperationException(ContentErrorCodes.CategoryCrossLanguageParent);
         }
 
         if (categoryId != Guid.Empty)
@@ -298,7 +298,7 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
 
     private async Task<ContentCategory> FindTrackedAsync(Guid categoryId, CancellationToken cancellationToken) =>
         await _db.Categories.FirstOrDefaultAsync(x => x.CategoryId == categoryId, cancellationToken)
-        ?? throw new ContractOperationException(ContentCategoryErrorCodes.NotFound);
+        ?? throw new ContractOperationException(ContentErrorCodes.CategoryNotFound);
 
     private async Task<(Dictionary<Guid, Guid?> ParentById, Dictionary<Guid, string> LanguageById)> BuildMapsAsync(
         CancellationToken cancellationToken)

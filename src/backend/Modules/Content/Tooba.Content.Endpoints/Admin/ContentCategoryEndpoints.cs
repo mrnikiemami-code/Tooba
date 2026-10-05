@@ -101,8 +101,7 @@ public static class ContentCategoryEndpoints
         IContentAdminAuthorizer auth, HttpContext http, CancellationToken cancellationToken)
     {
         await auth.RequireAsync(http, ContentAdminPermissions.Edit, cancellationToken);
-        var result = await sender.Send(new ArchiveCategoryCommand(id), cancellationToken);
-        return result.IsSuccess ? Results.Ok() : api.From(result);
+        return api.From(await sender.Send(new ArchiveCategoryCommand(id), cancellationToken));
     }
 }
 

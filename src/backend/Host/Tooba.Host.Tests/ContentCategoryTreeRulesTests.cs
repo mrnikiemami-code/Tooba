@@ -3,6 +3,8 @@ using Tooba.Content.Application.Categories.Commands;
 using Tooba.Content.Application.Categories.Models;
 using Tooba.Content.Application.Categories.Ports;
 using Tooba.Content.Domain.Rules;
+using Tooba.Content.Contracts.Errors;
+using Tooba.BuildingBlocks;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -15,9 +17,9 @@ public sealed class ContentCategoryTreeRulesTests
     {
         var id = Guid.NewGuid();
         var maps = Maps((id, null, "fa-IR"));
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<ContractOperationException>(() =>
             ContentCategoryTreeRules.ValidateMove(id, id, maps.ParentById, maps.LanguageById));
-        Assert.Equal(ContentCategoryErrorCodes.SelfParent, ex.Message);
+        Assert.Equal(ContentErrorCodes.CategorySelfParent, ex.Message);
     }
 
     [Fact]
@@ -26,9 +28,9 @@ public sealed class ContentCategoryTreeRulesTests
         var fa = Guid.NewGuid();
         var en = Guid.NewGuid();
         var maps = Maps((fa, null, "fa-IR"), (en, null, "en-US"));
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<ContractOperationException>(() =>
             ContentCategoryTreeRules.ValidateMove(fa, en, maps.ParentById, maps.LanguageById));
-        Assert.Equal(ContentCategoryErrorCodes.CrossLanguageParent, ex.Message);
+        Assert.Equal(ContentErrorCodes.CategoryCrossLanguageParent, ex.Message);
     }
 
     [Fact]
@@ -37,9 +39,9 @@ public sealed class ContentCategoryTreeRulesTests
         var root = Guid.NewGuid();
         var child = Guid.NewGuid();
         var maps = Maps((root, null, "fa-IR"), (child, root, "fa-IR"));
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<ContractOperationException>(() =>
             ContentCategoryTreeRules.ValidateMove(root, child, maps.ParentById, maps.LanguageById));
-        Assert.Equal(ContentCategoryErrorCodes.DescendantParent, ex.Message);
+        Assert.Equal(ContentErrorCodes.CategoryDescendantParent, ex.Message);
     }
 
     [Fact]
@@ -59,9 +61,9 @@ public sealed class ContentCategoryTreeRulesTests
         var root = Guid.NewGuid();
         var child = Guid.NewGuid();
         var maps = Maps((root, null, "fa-IR"), (child, root, "fa-IR"));
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<ContractOperationException>(() =>
             ContentCategoryTreeRules.ValidateCreateUnderParent(child, maps.ParentById));
-        Assert.Equal(ContentCategoryErrorCodes.MaxDepthExceeded, ex.Message);
+        Assert.Equal(ContentErrorCodes.CategoryMaxDepthExceeded, ex.Message);
     }
 
     [Fact]
@@ -76,9 +78,9 @@ public sealed class ContentCategoryTreeRulesTests
             (child, root, "fa-IR"),
             (otherRoot, null, "fa-IR"),
             (otherChild, otherRoot, "fa-IR"));
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<ContractOperationException>(() =>
             ContentCategoryTreeRules.ValidateMove(root, otherChild, maps.ParentById, maps.LanguageById));
-        Assert.Equal(ContentCategoryErrorCodes.MaxDepthExceeded, ex.Message);
+        Assert.Equal(ContentErrorCodes.CategoryMaxDepthExceeded, ex.Message);
     }
 
     [Fact]

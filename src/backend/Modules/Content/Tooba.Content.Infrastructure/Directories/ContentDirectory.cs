@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Articles.Commands;
 using Tooba.Content.Application.Articles.Models;
 using Tooba.Content.Application.Articles.Ports;
@@ -231,17 +231,17 @@ public sealed class ContentDirectory : IContentDirectory
         {
             if (!article.CanChangeLocale())
             {
-                throw new ContractOperationException(ContentArticleErrorCodes.LocaleLocked);
+                throw new ContractOperationException(ContentErrorCodes.LocaleLocked);
             }
 
             if (await _db.ArticleMedia.AnyAsync(row => row.ArticleId == command.ArticleId, cancellationToken))
             {
-                throw new ContractOperationException(ContentArticleErrorCodes.LocaleLocked);
+                throw new ContractOperationException(ContentErrorCodes.LocaleLocked);
             }
 
             if (await _db.ArticleTags.AnyAsync(row => row.ArticleId == command.ArticleId, cancellationToken))
             {
-                throw new ContractOperationException(ContentArticleErrorCodes.LocaleLocked);
+                throw new ContractOperationException(ContentErrorCodes.LocaleLocked);
             }
         }
 
@@ -378,7 +378,7 @@ public sealed class ContentDirectory : IContentDirectory
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
             ?? throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
         if (!ContentArticleLifecycleRules.CanArchive(article.Status))
-            throw new ContractOperationException(ContentArticleErrorCodes.ArchiveNotAllowed);
+            throw new ContractOperationException(ContentErrorCodes.ArchiveNotAllowed);
         var now = DateTimeOffset.UtcNow;
         var previous = article.Status;
         article.Archive(now);
@@ -400,7 +400,7 @@ public sealed class ContentDirectory : IContentDirectory
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
             ?? throw new ContractOperationException(ContentErrorCodes.ArticleMissing);
         if (!ContentArticleLifecycleRules.CanHardDelete(article.Status))
-            throw new ContractOperationException(ContentArticleErrorCodes.DeleteNotAllowed);
+            throw new ContractOperationException(ContentErrorCodes.DeleteNotAllowed);
 
         var gallery = await _db.ArticleMedia.Where(row => row.ArticleId == articleId).ToListAsync(cancellationToken);
         if (gallery.Count > 0)
@@ -774,7 +774,7 @@ public sealed class ContentDirectory : IContentDirectory
         }
 
         var workspace = await _authors.GetWorkspaceAsync(authorId.Value, cancellationToken)
-            ?? throw new ContractOperationException(ContentAuthorErrorCodes.NotFound);
+            ?? throw new ContractOperationException(ContentErrorCodes.AuthorNotFound);
         return workspace.DisplayName;
     }
 

@@ -63,7 +63,7 @@ public sealed class ContentTagDirectory : IContentTagDirectory
                 x => x.LanguageCode == tag.LanguageCode && x.NormalizedName == tag.NormalizedName,
                 cancellationToken))
         {
-            throw new ContractOperationException(ContentTagErrorCodes.DuplicateName);
+            throw new ContractOperationException(ContentErrorCodes.TagDuplicateName);
         }
 
         _db.Tags.Add(tag);
@@ -93,18 +93,18 @@ public sealed class ContentTagDirectory : IContentTagDirectory
         CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(x => x.ArticleId == articleId, cancellationToken)
-            ?? throw new ContractOperationException(ContentTagErrorCodes.ArticleNotFound);
+            ?? throw new ContractOperationException(ContentErrorCodes.TagArticleNotFound);
         var tag = await _db.Tags.AsNoTracking().FirstOrDefaultAsync(x => x.TagId == tagId, cancellationToken)
-            ?? throw new ContractOperationException(ContentTagErrorCodes.NotFound);
+            ?? throw new ContractOperationException(ContentErrorCodes.TagNotFound);
 
         if (!string.Equals(tag.LanguageCode, article.Locale, StringComparison.Ordinal))
         {
-            throw new ContractOperationException(ContentTagErrorCodes.LanguageMismatch);
+            throw new ContractOperationException(ContentErrorCodes.TagLanguageMismatch);
         }
 
         if (!tag.IsActive)
         {
-            throw new ContractOperationException(ContentTagErrorCodes.Inactive);
+            throw new ContractOperationException(ContentErrorCodes.TagInactive);
         }
 
         var exists = await _db.ArticleTags.AnyAsync(
@@ -127,7 +127,7 @@ public sealed class ContentTagDirectory : IContentTagDirectory
         CancellationToken cancellationToken)
     {
         var article = await _db.Articles.FirstOrDefaultAsync(x => x.ArticleId == articleId, cancellationToken)
-            ?? throw new ContractOperationException(ContentTagErrorCodes.ArticleNotFound);
+            ?? throw new ContractOperationException(ContentErrorCodes.TagArticleNotFound);
         var link = await _db.ArticleTags.FirstOrDefaultAsync(
             x => x.ArticleId == articleId && x.TagId == tagId,
             cancellationToken);
@@ -169,7 +169,7 @@ public sealed class ContentTagDirectory : IContentTagDirectory
     {
         if (!await _db.Articles.AnyAsync(x => x.ArticleId == articleId, cancellationToken))
         {
-            throw new ContractOperationException(ContentTagErrorCodes.ArticleNotFound);
+            throw new ContractOperationException(ContentErrorCodes.TagArticleNotFound);
         }
     }
 

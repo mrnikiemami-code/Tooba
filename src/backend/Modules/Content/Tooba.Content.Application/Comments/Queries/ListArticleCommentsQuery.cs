@@ -2,9 +2,8 @@
 using Tooba.BuildingBlocks.Results;
 using Tooba.Content.Application.Comments.Models;
 using Tooba.Content.Application.Comments.Ports;
+using Tooba.Content.Contracts.Enums;
 using Tooba.Content.Contracts.Errors;
-using Tooba.Content.Domain.Aggregates;
-using Tooba.Content.Domain.Rules;
 using Tooba.Content.Application.Composition;
 
 namespace Tooba.Content.Application.Comments.Queries;

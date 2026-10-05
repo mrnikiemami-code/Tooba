@@ -5,9 +5,8 @@ using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Content.Application.Comments.Commands;
 using Tooba.Content.Application.Comments.Queries;
+using Tooba.Content.Contracts.Enums;
 using Tooba.Content.Contracts.Errors;
-using Tooba.Content.Domain.Aggregates;
-using Tooba.Content.Domain.Rules;
 
 namespace Tooba.Content.Endpoints.Admin;
 

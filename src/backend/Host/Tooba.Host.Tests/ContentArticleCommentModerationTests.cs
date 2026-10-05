@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Articles.Commands;
 using Tooba.Content.Application.Articles.Models;
 using Tooba.Content.Application.Articles.Ports;
@@ -27,6 +27,9 @@ using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Localization.Application.Models;
 using Tooba.Localization.Application.Ports;
 using Tooba.Persistence;
+using Tooba.Content.Contracts.Errors;
+using Tooba.Content.Contracts.Enums;
+using Tooba.BuildingBlocks;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -75,8 +78,8 @@ public sealed class ContentArticleCommentModerationTests : IAsyncLifetime
         Assert.Equal(ArticleCommentStatus.Approved, comment.Status);
         Assert.Equal(moderator, comment.ModeratedByUserId);
 
-        var same = Assert.Throws<InvalidOperationException>(() => comment.Approve(moderator, now.AddMinutes(2)));
-        Assert.Contains(ArticleCommentCodes.InvalidTransition, same.Message, StringComparison.Ordinal);
+        var same = Assert.Throws<ContractOperationException>(() => comment.Approve(moderator, now.AddMinutes(2)));
+        Assert.Contains(ContentErrorCodes.CommentInvalidTransition, same.Message, StringComparison.Ordinal);
 
         comment.Hide(moderator, now.AddMinutes(3), "پنهان اداری");
         Assert.Equal(ArticleCommentStatus.Hidden, comment.Status);
@@ -158,13 +161,13 @@ public sealed class ContentArticleCommentModerationTests : IAsyncLifetime
 
         var missingArticle = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             comments.ListForArticleAsync(Guid.NewGuid(), null, null, 0, 10, CancellationToken.None));
-        Assert.Equal(ArticleCommentCodes.ArticleNotFound, missingArticle.Message);
+        Assert.Equal(ContentErrorCodes.CommentArticleNotFound, missingArticle.Message);
 
         var missingComment = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             comments.HideAsync(
                 new HideArticleCommentCommand(article.ArticleId, Guid.NewGuid(), moderator, null),
                 CancellationToken.None));
-        Assert.Equal(ArticleCommentCodes.NotFound, missingComment.Message);
+        Assert.Equal(ContentErrorCodes.CommentNotFound, missingComment.Message);
     }
 
     private static ContentDbContext CreateDb(string connectionString)

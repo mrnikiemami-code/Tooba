@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Articles.Commands;
 using Tooba.Content.Application.Articles.Models;
 using Tooba.Content.Application.Articles.Ports;
@@ -24,6 +24,7 @@ using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Localization.Application.Models;
 using Tooba.Localization.Application.Ports;
 using Tooba.Persistence;
+using Tooba.Content.Contracts.Errors;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -253,7 +254,7 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
                     enCategory.Id,
                     null),
                 CancellationToken.None));
-        Assert.Equal(ContentCategoryErrorCodes.LanguageMismatch, mismatch.Message);
+        Assert.Equal(ContentErrorCodes.CategoryLanguageMismatch, mismatch.Message);
 
         var aligned = await content.UpdateAsync(
             new UpdateArticleCommand(draft.ArticleId, 

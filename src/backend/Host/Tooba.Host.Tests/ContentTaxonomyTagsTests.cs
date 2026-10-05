@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application.Articles.Commands;
 using Tooba.Content.Application.Articles.Models;
 using Tooba.Content.Application.Articles.Ports;
@@ -22,6 +22,7 @@ using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Directories;
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Persistence;
+using Tooba.Content.Contracts.Errors;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -84,7 +85,7 @@ public sealed class ContentTaxonomyTagsTests : IAsyncLifetime
             categories.CreateAsync(
                 new CreateCategoryCommand("fa-IR", faChild.Id, "آیفون", "iphone", null, null, 2),
                 CancellationToken.None));
-        Assert.Equal(ContentCategoryErrorCodes.MaxDepthExceeded, level3.Message);
+        Assert.Equal(ContentErrorCodes.CategoryMaxDepthExceeded, level3.Message);
 
         var otherRoot = await categories.CreateAsync(
             new CreateCategoryCommand("fa-IR", null, "اخبار", "news", null, null, 3),
@@ -92,7 +93,7 @@ public sealed class ContentTaxonomyTagsTests : IAsyncLifetime
         var moveDepth = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             categories.MoveAsync(new MoveCategoryCommand(faRoot.Id, otherRoot.Id), CancellationToken.None));
         // moving L1 with child under another L1 would make child depth 3
-        Assert.Equal(ContentCategoryErrorCodes.MaxDepthExceeded, moveDepth.Message);
+        Assert.Equal(ContentErrorCodes.CategoryMaxDepthExceeded, moveDepth.Message);
 
         var enRoot = await categories.CreateAsync(
             new CreateCategoryCommand("en-US", null, "Guides", "guides", null, null, 0),
@@ -101,7 +102,7 @@ public sealed class ContentTaxonomyTagsTests : IAsyncLifetime
             categories.CreateAsync(
                 new CreateCategoryCommand("fa-IR", enRoot.Id, "bad", "bad-child", null, null, 4),
                 CancellationToken.None));
-        Assert.Equal(ContentCategoryErrorCodes.CrossLanguageParent, crossLang.Message);
+        Assert.Equal(ContentErrorCodes.CategoryCrossLanguageParent, crossLang.Message);
 
         var author = await authors.CreateAsync(
             new CreateAuthorCommand("نویسنده", "tax-author", null, null, null, null, null, null, null, null),
@@ -161,13 +162,13 @@ public sealed class ContentTaxonomyTagsTests : IAsyncLifetime
                     enRoot.Id,
                     null),
                 CancellationToken.None));
-        Assert.Equal(ContentCategoryErrorCodes.LanguageMismatch, mismatch.Message);
+        Assert.Equal(ContentErrorCodes.CategoryLanguageMismatch, mismatch.Message);
 
         var tagA = await tags.CreateAsync(new CreateTagCommand("fa-IR", "راهنما", null), CancellationToken.None);
         var tagB = await tags.CreateAsync(new CreateTagCommand("fa-IR", "خرید", null), CancellationToken.None);
         var dup = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             tags.CreateAsync(new CreateTagCommand("fa-IR", "  راهنما  ", null), CancellationToken.None));
-        Assert.Equal(ContentTagErrorCodes.DuplicateName, dup.Message);
+        Assert.Equal(ContentErrorCodes.TagDuplicateName, dup.Message);
 
         var assigned = await tags.AssignToArticleAsync(articleL2.ArticleId, tagA.TagId, CancellationToken.None);
         Assert.Contains(assigned, t => t.TagId == tagA.TagId);
@@ -182,7 +183,7 @@ public sealed class ContentTaxonomyTagsTests : IAsyncLifetime
         var enTag = await tags.CreateAsync(new CreateTagCommand("en-US", "guide", null), CancellationToken.None);
         var tagLang = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             tags.AssignToArticleAsync(articleL2.ArticleId, enTag.TagId, CancellationToken.None));
-        Assert.Equal(ContentTagErrorCodes.LanguageMismatch, tagLang.Message);
+        Assert.Equal(ContentErrorCodes.TagLanguageMismatch, tagLang.Message);
 
         var search = await tags.SearchAsync("fa-IR", "خر", 10, true, CancellationToken.None);
         Assert.Contains(search, t => t.TagId == tagB.TagId);

@@ -4,8 +4,8 @@ using Tooba.Content.Application.Comments.Models;
 using Tooba.Content.Application.Comments.Ports;
 using Tooba.Content.Contracts.Errors;
 using Tooba.BuildingBlocks;
+using Tooba.Content.Contracts.Enums;
 using Tooba.Content.Domain.Aggregates;
-using Tooba.Content.Domain.Rules;
 using Tooba.Content.Infrastructure.Persistence;
 
 namespace Tooba.Content.Infrastructure.Directories;
@@ -130,7 +130,7 @@ public sealed class ArticleCommentDirectory : IArticleCommentDirectory
         var entity = await _db.ArticleComments
             .FirstOrDefaultAsync(x => x.ArticleId == articleId && x.CommentId == commentId, cancellationToken);
         if (entity is null)
-            throw new ContractOperationException(ArticleCommentCodes.NotFound);
+            throw new ContractOperationException(ContentErrorCodes.CommentNotFound);
 
         var now = DateTimeOffset.UtcNow;
         apply(entity, now);
@@ -142,7 +142,7 @@ public sealed class ArticleCommentDirectory : IArticleCommentDirectory
     {
         var exists = await _db.Articles.AsNoTracking().AnyAsync(x => x.ArticleId == articleId, cancellationToken);
         if (!exists)
-            throw new ContractOperationException(ArticleCommentCodes.ArticleNotFound);
+            throw new ContractOperationException(ContentErrorCodes.CommentArticleNotFound);
     }
 
     private static ArticleCommentAdminDto Map(ArticleComment x) =>

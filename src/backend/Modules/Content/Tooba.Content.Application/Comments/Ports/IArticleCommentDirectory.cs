@@ -1,7 +1,6 @@
 ﻿using Tooba.Content.Application.Comments.Commands;
 using Tooba.Content.Application.Comments.Models;
-using Tooba.Content.Domain.Aggregates;
-using Tooba.Content.Domain.Rules;
+using Tooba.Content.Contracts.Enums;
 
 namespace Tooba.Content.Application.Comments.Ports;
 

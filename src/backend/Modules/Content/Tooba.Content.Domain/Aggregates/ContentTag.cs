@@ -1,4 +1,5 @@
 ﻿using Tooba.BuildingBlocks;
+using Tooba.Content.Contracts.Errors;
 
 namespace Tooba.Content.Domain.Aggregates;
 
@@ -77,12 +78,12 @@ public sealed class ContentTag
     {
         if (string.IsNullOrWhiteSpace(languageCode) || languageCode.Trim().Length > LanguageCodeMaxLength)
         {
-            throw new ContractOperationException(ContentTagErrorCodes.InvalidLanguage);
+            throw new ContractOperationException(ContentErrorCodes.TagInvalidLanguage);
         }
 
         if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > NameMaxLength)
         {
-            throw new ContractOperationException(ContentTagErrorCodes.InvalidName);
+            throw new ContractOperationException(ContentErrorCodes.TagInvalidName);
         }
     }
 }
@@ -107,23 +108,4 @@ public sealed class ArticleTag
             TagId = tagId,
             AssignedAt = now,
         };
-}
-
-/// <summary>کدهای خطای پایدار برچسب محتوا.</summary>
-public static class ContentTagErrorCodes
-{
-    /// <summary>برچسب یافت نشد.</summary>
-    public const string NotFound = "content.tag.not_found";
-    /// <summary>نام تکراری در زبان.</summary>
-    public const string DuplicateName = "content.tag.duplicate_name";
-    /// <summary>زبان برچسب با مقاله نمی‌خواند.</summary>
-    public const string LanguageMismatch = "content.tag.language_mismatch";
-    /// <summary>برچسب غیرفعال برای انتساب جدید.</summary>
-    public const string Inactive = "content.tag.inactive";
-    /// <summary>زبان نامعتبر.</summary>
-    public const string InvalidLanguage = "content.tag.invalid_language";
-    /// <summary>نام نامعتبر.</summary>
-    public const string InvalidName = "content.tag.invalid_name";
-    /// <summary>مقاله یافت نشد.</summary>
-    public const string ArticleNotFound = "content.tag.article_not_found";
 }
