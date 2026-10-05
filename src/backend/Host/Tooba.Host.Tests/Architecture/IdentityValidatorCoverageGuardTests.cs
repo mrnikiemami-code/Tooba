@@ -26,12 +26,12 @@ public sealed class IdentityValidatorCoverageGuardTests
         ("CompleteIdentifierVerificationCommand", ValidatorRequiredPresent),
         ("RequestOtpLoginCommand", ValidatorRequiredPresent),
         ("ChangePasswordCommand", ValidatorRequiredPresent),
-        ("LoginWithPasswordCommand", NoValidatorRequired),
-        ("RefreshAuthSessionCommand", NoValidatorRequired),
+        ("LoginWithPasswordCommand", ValidatorRequiredPresent),
+        ("RefreshAuthSessionCommand", ValidatorRequiredPresent),
+        ("CompleteOtpLoginCommand", ValidatorRequiredPresent),
         ("LogoutSessionCommand", NoValidatorRequired),
         ("LogoutAllSessionsCommand", NoValidatorRequired),
         ("RequestPasswordResetCommand", NoValidatorRequired),
-        ("CompleteOtpLoginCommand", NoValidatorRequired),
         ("GetAuthMeQuery", NoValidatorRequired),
     ];
 
@@ -43,6 +43,9 @@ public sealed class IdentityValidatorCoverageGuardTests
         ("CompleteIdentifierVerificationCommand", typeof(CompleteIdentifierVerificationCommandValidator)),
         ("RequestOtpLoginCommand", typeof(RequestOtpLoginCommandValidator)),
         ("ChangePasswordCommand", typeof(ChangePasswordCommandValidator)),
+        ("LoginWithPasswordCommand", typeof(LoginWithPasswordCommandValidator)),
+        ("RefreshAuthSessionCommand", typeof(RefreshAuthSessionCommandValidator)),
+        ("CompleteOtpLoginCommand", typeof(CompleteOtpLoginCommandValidator)),
     ];
 
     [Fact]

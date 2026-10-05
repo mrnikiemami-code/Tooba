@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Identity.Contracts.Problems;
+using Tooba.Identity.Contracts.Errors;
 using Xunit;
 
 namespace Tooba.Host.Tests;

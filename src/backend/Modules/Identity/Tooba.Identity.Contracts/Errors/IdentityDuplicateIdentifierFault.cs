@@ -1,4 +1,4 @@
-namespace Tooba.Identity.Contracts.Problems;
+namespace Tooba.Identity.Contracts.Errors;
 
 /// <summary>
 /// Typed, contract-safe fault raised by the Identity module when a normalized login identifier

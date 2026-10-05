@@ -100,16 +100,28 @@ public sealed class HostCustomerProfileEvacuationGuardTests
     public void Parent_R1_solution_grouping_remains_exact()
     {
         var doc = XDocument.Load(Path.Combine(FindRepoRoot(), "src", "backend", "Tooba.slnx"));
-        var customerFolder = doc.Root!.Elements("Folder").Single(f =>
+        var folders = doc.Root!.Elements("Folder").ToArray();
+        var customerFolder = folders.Single(f =>
             string.Equals((string?)f.Attribute("Name"), "/Modules/CustomerProfile/", StringComparison.Ordinal));
         Assert.Equal(5, customerFolder.Elements("Project").Count());
-        var flat = (doc.Root.Elements("Folder")
-            .FirstOrDefault(f => string.Equals((string?)f.Attribute("Name"), "/Modules/", StringComparison.Ordinal))
-            ?.Elements("Project")
-            ?? [])
-            .Select(p => (string?)p.Attribute("Path") ?? string.Empty)
-            .Where(p => p.Contains("/CustomerProfile/", StringComparison.Ordinal));
-        Assert.Empty(flat);
+
+        // Repaired in TB-TMAR-IDENTITY-AMSC-001-W2: the canonical layout nests every module under its own
+        // /Modules/<Module>/ folder, so the flat /Modules/ folder no longer exists. Assert the stricter
+        // property instead — no CustomerProfile project may appear under any other solution folder.
+        foreach (var folder in folders)
+        {
+            if (ReferenceEquals(folder, customerFolder))
+            {
+                continue;
+            }
+
+            var name = (string?)folder.Attribute("Name") ?? string.Empty;
+            var leaked = folder.Elements("Project")
+                .Select(p => (string?)p.Attribute("Path") ?? string.Empty)
+                .Where(p => p.Contains("/CustomerProfile/", StringComparison.Ordinal))
+                .ToArray();
+            Assert.True(leaked.Length == 0, $"CustomerProfile project leaked into '{name}': {string.Join(", ", leaked)}");
+        }
     }
 
     private static string FindRepoRoot()

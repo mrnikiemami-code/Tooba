@@ -14,7 +14,7 @@ using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
-using Tooba.Identity.Contracts.Problems;
+using Tooba.Identity.Contracts.Errors;
 using Tooba.Identity.Infrastructure;
 using Tooba.Identity.Infrastructure.Otp;
 using Tooba.Identity.Infrastructure.Persistence;

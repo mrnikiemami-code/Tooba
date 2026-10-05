@@ -1,9 +1,9 @@
 using FluentValidation;
 using Tooba.Identity.Application.Auth.Commands;
-using Tooba.Identity.Application.Validators;
+using Tooba.Identity.Application.Auth.Validators;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
-using Tooba.Identity.Contracts.Problems;
+using Tooba.Identity.Contracts.Errors;
 
 namespace Tooba.Identity.Application.Auth.Validators;
 

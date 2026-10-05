@@ -2,7 +2,7 @@ using Tooba.AccessControl.Application.Development.Seller;
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
-using Tooba.Identity.Contracts.Problems;
+using Tooba.Identity.Contracts.Errors;
 using Tooba.Identity.Contracts.Auth;
 using Tooba.Party.Contracts.Ports;
 

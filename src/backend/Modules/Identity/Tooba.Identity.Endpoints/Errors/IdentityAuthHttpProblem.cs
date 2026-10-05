@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Identity.Contracts.Problems;
+using Tooba.Identity.Contracts.Errors;
 using Tooba.Identity.Endpoints.Auth;
 
 namespace Tooba.Identity.Endpoints.Errors;

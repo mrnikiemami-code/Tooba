@@ -174,24 +174,4 @@ public static class IdentityAuthHttpModels
         [JsonExtensionData]
         public Dictionary<string, JsonElement>? Extra { get; init; }
     }
-
-    /// <summary>پاسخ ثبت بدون موجودیت EF.</summary>
-    internal sealed record RegisterResponse(Guid UserId);
-
-    /// <summary>پاسخ نشست؛ accessToken همان SessionId مات است نه JWT.</summary>
-    internal sealed record SessionResponse(Guid UserId, Guid SessionId, string AccessToken, string RefreshToken);
-
-    /// <summary>پاسخ عمومی بازنشانی بدون ChallengeId تا enumeration رخ ندهد.</summary>
-    internal sealed record AcceptedResponse(bool Accepted);
-
-    /// <summary>اصل جاری بدون راز، هش، یا SecurityStamp. نام/موبایل برای هدر ویترین است نه هویت ارسال.</summary>
-    internal sealed record MeResponse(
-        Guid UserId,
-        Guid SessionId,
-        string Edition,
-        string? TenantId,
-        string? DisplayName,
-        string? FirstName,
-        string? LastName,
-        string? Mobile);
 }

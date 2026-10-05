@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Resources;
 using Tooba.BuildingBlocks.Localization;
 
-namespace Tooba.Identity.Contracts.Problems;
+namespace Tooba.Identity.Contracts.Errors;
 
 /// <summary>Resource manager marker for IdentityErrors.resx.</summary>
 public static class IdentityErrorResources

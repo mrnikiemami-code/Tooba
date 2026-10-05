@@ -12,7 +12,7 @@ using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Contracts.Actors;
 using Tooba.Identity.Contracts.Contacts;
-using Tooba.Identity.Contracts.Problems;
+using Tooba.Identity.Contracts.Errors;
 using Tooba.Identity.Infrastructure.Adapters;
 using Tooba.Identity.Infrastructure.Authentication;
 using Tooba.Identity.Infrastructure.Contacts;

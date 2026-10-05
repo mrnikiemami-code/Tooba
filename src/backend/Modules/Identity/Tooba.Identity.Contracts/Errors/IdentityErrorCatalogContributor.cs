@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
 
-namespace Tooba.Identity.Contracts.Problems;
+namespace Tooba.Identity.Contracts.Errors;
 
 /// <summary>
 /// Explicit Identity error catalog. Descriptors pin the exact HTTP semantics of the global

@@ -1,4 +1,4 @@
-namespace Tooba.Identity.Application.Validators;
+namespace Tooba.Identity.Application.Auth.Validators;
 
 /// <summary>
 /// FluentValidation machine codes for Identity transport shape.

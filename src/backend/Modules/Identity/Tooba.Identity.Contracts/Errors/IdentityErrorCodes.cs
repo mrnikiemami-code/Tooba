@@ -1,4 +1,4 @@
-namespace Tooba.Identity.Contracts.Problems;
+namespace Tooba.Identity.Contracts.Errors;
 
 /// <summary>
 /// Stable machine error codes owned by Identity and consumed by the global Host auth boundary.
