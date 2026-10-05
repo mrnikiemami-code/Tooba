@@ -341,8 +341,8 @@ Recorded by `TB-TMAR-CONTENT-AMSC-001-W3-R1` (recovery/SoT/evidence reconciliati
 
 CustomerProfile AMSC module recovery checkpoint (authoritative, module-local)
 
-Recorded by `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W3` (Certify). This is the first ARCH-COMPLETE-002 certification for CustomerProfile; the earlier Host-evacuation lineage (`TB-TMAR-HOST-CUSTOMERPROFILE-EVACUATION-001` / `TB-TMAR-HOST-CUSTOMER-FULL-CLOSURE-001-R1`) stays in the repository as historical evidence only.
-- Accepted lineage: `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W0` Analyze `39a5de09` → `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W1` Migrate `4599c97f` → `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W2` Structure `4902fca6` → `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W3` Certify.
+Recorded by `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W3` (Certify). This is the first ARCH-COMPLETE-002 certification for CustomerProfile; the earlier Host-evacuation lineage (`TB-TMAR-HOST-CUSTOMERPROFILE-EVACUATION-001` / `TB-TMAR-HOST-CUSTOMER-FULL-CLOSURE-001-R1`) stays in the repository as historical evidence only and is explicitly marked `HISTORICAL / SUPERSEDED FOR CURRENT CUSTOMERPROFILE MODULE RECOVERY`.
+- Accepted lineage: `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W0` Analyze `39a5de09` → `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W1` Migrate `4599c97f` → `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W2` Structure `4902fca6` → `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W3` Certify `2ca6822f`.
 - Final verdict: `COMPLETE_REFERENCE_PATTERN` / `ARCH-COMPLETE-002` `STRUCTURE_CERTIFIED`; final `structureState = CERTIFIED` (W2 `structureState = READY_FOR_CERTIFY` preserved as historical W2 truth).
 - 3 endpoint-reachable requests / 3 handlers; 1 `VALIDATOR_REQUIRED` (present) + 2 `NO_VALIDATOR_REQUIRED_NO_TRANSPORT_INPUT`; module-owned routes only (4), Host HTTP ownership ZERO.
 - Canonical mechanisms: `Result`/`Result<T>` + `CustomerProfileOperation` typed-fault seam + `ApiResponseFactory`; single stable-code owner `Contracts/Errors/CustomerProfileErrorCodes.cs` (7 codes → 6 registered descriptors; the shared cross-cutting `customer.session.required` is consumed from the Foundation owner without re-registration); zero hard-coded user-facing fault text; zero raw `InvalidOperationException`; zero `Results.Ok/Json/BadRequest/Problem` bypasses.
@@ -352,6 +352,15 @@ Recorded by `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W3` (Certify). This is the first A
 - Durable guards: `CustomerProfileModuleAmsc001W3CertGuardTests`, `CustomerProfileModuleAmsc001W2StructureGuardTests`, `CustomerProfileSolutionGroupingGuardTests`, `HostCustomerProfileEvacuationGuardTests`, `CustomerProfileValidatorCoverageGuardTests`, `CustomerProfileFoundationTests`, `CustomerPanelCompositionTests`.
 - Evidence root: `docs/architecture/evidence/TB-TMAR-CUSTOMERPROFILE-AMSC-001-W0..W3/`.
 - Stop gate: `USER_REVIEW_CUSTOMERPROFILE_AMSC_001_W3`.
+
+CustomerProfile AMSC W3-R1 recovery reconciliation (module-local)
+
+Recorded by `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W3-R1` (recovery/SoT/evidence reconciliation only; zero production change). W3 certification is preserved unchanged.
+- W3 final commit SHA recorded explicitly: `2ca6822f` (`2ca6822fa61443006d562c09d9210707589bacea`). Accepted lineage preserved exactly: W0 `39a5de09` → W1 `4599c97f` → W2 `4902fca6` → W3 `2ca6822f`.
+- Historical CustomerProfile Host lineage preserved as historical evidence: `TB-TMAR-HOST-CUSTOMERPROFILE-EVACUATION-001` and `TB-TMAR-HOST-CUSTOMER-FULL-CLOSURE-001-R1` are explicitly marked `HISTORICAL / SUPERSEDED FOR CURRENT CUSTOMERPROFILE MODULE RECOVERY` — the AMSC-001 W0→W3 lineage is authoritative for the current CustomerProfile module certification, while the repository-global Host root checkpoint is NOT superseded or displaced.
+- Certified commit: `2ca6822fa61443006d562c09d9210707589bacea`; `automaticNextImplementationTask = NONE`.
+- Evidence root: `docs/architecture/evidence/TB-TMAR-CUSTOMERPROFILE-AMSC-001-W3-R1/`.
+- Stop gate: `USER_REVIEW_CUSTOMERPROFILE_AMSC_001_W3_R1`.
 
 - (HISTORICAL / SUPERSEDED FOR CURRENT BULKINQUIRY MODULE RECOVERY) BulkInquiry AMC-001 lineage: `TB-TMAR-BULKINQUIRY-AMC-001-W0` -> `W1` -> `W2` -> `W4` under `COMPLETE_REFERENCE_PATTERN` (Host BulkInquiry CLOSED_HOST_ZERO via the ProductQnA split; `/Modules/BulkInquiry/` solution group; Contracts.Errors/Resources catalog; `Result` + `BulkInquiryOperation` + `ApiResponseFactory`). Superseded by the AMSC-001 four-wave re-standardization above; retained as historical evidence only.
 

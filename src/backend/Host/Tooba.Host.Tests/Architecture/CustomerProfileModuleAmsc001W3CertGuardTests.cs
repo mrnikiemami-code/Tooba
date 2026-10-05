@@ -179,6 +179,46 @@ public sealed class CustomerProfileModuleAmsc001W3CertGuardTests
         Assert.Contains("USER_REVIEW_CUSTOMERPROFILE_AMSC_001_W3", recovery, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void CustomerProfile_amsc_w3r1_recovery_reconciliation_truth_is_locked()
+    {
+        var root = Repo();
+
+        using var sot = JsonDocument.Parse(File.ReadAllText(Path.Combine(
+            root, "docs/architecture/tmar-current-state.json")));
+
+        // Additive R1 reconciliation record is present and honest.
+        var w3r1 = sot.RootElement.GetProperty("customerProfileModuleAmsc001W3R1");
+        Assert.Equal("CUSTOMERPROFILE_AMSC_001_RECOVERY_RECONCILED", w3r1.GetProperty("state").GetString());
+        Assert.False(w3r1.GetProperty("productionCodeChanged").GetBoolean());
+        Assert.Equal("2ca6822fa61443006d562c09d9210707589bacea", w3r1.GetProperty("certifiedCommit").GetString());
+        Assert.Equal("RECORDED_2CA6822F", w3r1.GetProperty("masterRecoveryW3ShaState").GetString());
+        Assert.Equal("PRESERVED_AND_SUPERSEDED_FOR_CURRENT_MODULE_RECOVERY",
+            w3r1.GetProperty("historicalLineageState").GetString());
+        Assert.Equal("PRESERVED", w3r1.GetProperty("globalHostCheckpointState").GetString());
+        Assert.Equal("NONE", w3r1.GetProperty("automaticNextImplementationTask").GetString());
+
+        // W3 architectural truth itself is preserved unchanged.
+        var w3 = sot.RootElement.GetProperty("customerProfileModuleAmsc001W3");
+        Assert.Equal("CUSTOMERPROFILE_AMSC_001_CERTIFIED", w3.GetProperty("state").GetString());
+        Assert.Equal("COMPLETE_REFERENCE_PATTERN", w3.GetProperty("verdict").GetString());
+        Assert.Equal("ARCH-COMPLETE-002", w3.GetProperty("lockVersion").GetString());
+        Assert.Equal("CERTIFIED", w3.GetProperty("structureState").GetString());
+
+        // Repository-global Host root checkpoint must remain untouched by this module-local task.
+        Assert.Equal("TB-TMAR-HOST-ROOT-FINAL-CERT-001", sot.RootElement.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("NONE", sot.RootElement.GetProperty("automaticNextImplementationTask").GetString());
+
+        // Master Recovery records the W3 final commit SHA and the R1 reconciliation.
+        var recovery = File.ReadAllText(Path.Combine(root, "docs/architecture", "TOOBA-TMAR-MASTER-RECOVERY.md"));
+        Assert.Contains("`TB-TMAR-CUSTOMERPROFILE-AMSC-001-W3` Certify `2ca6822f`", recovery, StringComparison.Ordinal);
+        Assert.Contains("CustomerProfile AMSC W3-R1 recovery reconciliation", recovery, StringComparison.Ordinal);
+        Assert.Contains("HISTORICAL / SUPERSEDED FOR CURRENT CUSTOMERPROFILE MODULE RECOVERY", recovery, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_CUSTOMERPROFILE_AMSC_001_W3_R1", recovery, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-HOST-CUSTOMERPROFILE-EVACUATION-001", recovery, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-HOST-CUSTOMER-FULL-CLOSURE-001-R1", recovery, StringComparison.Ordinal);
+    }
+
     private static string Repo()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
