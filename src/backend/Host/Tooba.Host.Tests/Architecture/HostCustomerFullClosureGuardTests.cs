@@ -101,9 +101,14 @@ public sealed class HostCustomerFullClosureGuardTests
                          && !p.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)))
         {
             var text = File.ReadAllText(file);
-            Assert.DoesNotContain("IErrorCatalogContributor", text, StringComparison.Ordinal);
+
+            // CustomerProfile now owns a module error catalog for its own customer.profile.* codes,
+            // but the Foundation-owned customer.session.required descriptor must never be re-registered
+            // by this module (single descriptor owner).
             Assert.DoesNotMatch(
-                new Regex(@"new\s+ErrorDefinition\s*\(\s*""customer\.session\.required""", RegexOptions.CultureInvariant),
+                new Regex(
+                    @"(new\s+ErrorDefinition|new\s+ErrorDescriptor)\s*\(\s*(""customer\.session\.required""|CustomerProfileErrorCodes\.SessionRequired)",
+                    RegexOptions.CultureInvariant),
                 text);
         }
     }

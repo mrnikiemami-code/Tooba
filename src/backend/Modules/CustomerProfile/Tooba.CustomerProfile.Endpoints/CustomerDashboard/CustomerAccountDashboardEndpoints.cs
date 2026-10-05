@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.CustomerProfile.Application.Queries.GetCustomerAccountDashboard;
+using Tooba.CustomerProfile.Contracts.Errors;
 using Tooba.CustomerProfile.Endpoints.Customer;
 using Tooba.CustomerProfile.Endpoints.Resources;
 using Tooba.Order.Contracts.Fulfillment;
@@ -69,5 +70,5 @@ public static class CustomerAccountDashboardEndpoints
     }
 
     private static IResult Unauthorized(ApiResponseFactory api) =>
-        api.FromFailure(new SemanticError("customer.session.required"));
+        api.FromFailure(new SemanticError(CustomerProfileErrorCodes.SessionRequired));
 }

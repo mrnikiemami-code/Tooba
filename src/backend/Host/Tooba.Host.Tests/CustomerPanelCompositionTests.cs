@@ -104,7 +104,7 @@ public sealed class CustomerPanelCompositionTests
             "CustomerProfileEndpoints.cs"));
         Assert.Contains("MapPut(\"/profile\"", endpoints, StringComparison.Ordinal);
         Assert.Contains("ISender", endpoints, StringComparison.Ordinal);
-        Assert.Contains("customer.session.required", endpoints, StringComparison.Ordinal);
+        Assert.Contains("CustomerProfileErrorCodes.SessionRequired", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Order.Application", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Wishlist.Application", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.AddressBook.Application", endpoints, StringComparison.Ordinal);

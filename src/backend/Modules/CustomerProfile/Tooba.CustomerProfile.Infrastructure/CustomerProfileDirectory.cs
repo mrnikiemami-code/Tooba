@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.CustomerProfile.Contracts;
+using Tooba.CustomerProfile.Contracts.Errors;
 using Tooba.CustomerProfile.Domain;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
 
@@ -75,7 +77,7 @@ public sealed class CustomerProfileDirectory : ICustomerProfileDirectory
     {
         if (actorUserId == Guid.Empty)
         {
-            throw new InvalidOperationException("Actor معتبر الزامی است.");
+            throw new ContractOperationException(CustomerProfileErrorCodes.ActorRequired);
         }
     }
 }

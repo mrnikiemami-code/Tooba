@@ -1,5 +1,6 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
+using Tooba.CustomerProfile.Application.Composition;
 using Tooba.CustomerProfile.Application.Models;
 using Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage;
 using Tooba.CustomerProfile.Contracts;
@@ -24,7 +25,16 @@ public sealed class UpsertCustomerProfileCommandHandler(
         UpsertCustomerProfileCommand request,
         CancellationToken cancellationToken)
     {
-        await profiles.UpsertAsync(request.ActorUserId, request.Input, cancellationToken);
+        var persisted = await CustomerProfileOperation.ExecuteAsync(async () =>
+        {
+            await profiles.UpsertAsync(request.ActorUserId, request.Input, cancellationToken);
+            return true;
+        });
+        if (persisted.IsFailure)
+        {
+            return Result.Failure<CustomerProfilePage>(persisted.Errors);
+        }
+
         return await sender.Send(new GetCustomerProfilePageQuery(request.ActorUserId), cancellationToken);
     }
 }

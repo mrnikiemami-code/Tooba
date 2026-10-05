@@ -7,6 +7,7 @@ using Tooba.BuildingBlocks.Presentation;
 using Tooba.CustomerProfile.Application.Commands.UpsertCustomerProfile;
 using Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage;
 using Tooba.CustomerProfile.Contracts;
+using Tooba.CustomerProfile.Contracts.Errors;
 
 namespace Tooba.CustomerProfile.Endpoints.Customer;
 
@@ -59,7 +60,7 @@ public static class CustomerProfileEndpoints
     }
 
     private static IResult Unauthorized(ApiResponseFactory api) =>
-        api.FromFailure(new SemanticError("customer.session.required"));
+        api.FromFailure(new SemanticError(CustomerProfileErrorCodes.SessionRequired));
 }
 
 /// <summary>HTTP body for profile update; Identity credentials are never accepted.</summary>

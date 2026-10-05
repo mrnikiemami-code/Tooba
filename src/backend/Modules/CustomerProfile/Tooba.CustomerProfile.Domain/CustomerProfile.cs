@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.CustomerProfile.Contracts.Errors;
 
 namespace Tooba.CustomerProfile.Domain;
 
@@ -63,7 +64,7 @@ public sealed class CustomerProfile
     {
         if (ownerUserId == Guid.Empty)
         {
-            throw new InvalidOperationException("Actor معتبر الزامی است.");
+            throw new ContractOperationException(CustomerProfileErrorCodes.ActorRequired);
         }
 
         var profile = new CustomerProfile
@@ -94,13 +95,17 @@ public sealed class CustomerProfile
         string? bio,
         DateTimeOffset now)
     {
-        DisplayName = RequireBounded(displayName, DisplayNameMinLength, DisplayNameMaxLength, "نام نمایشی معتبر نیست.");
-        FirstName = OptionalBounded(firstName, NamePartMaxLength, "نام بیش از حد بلند است.")
+        DisplayName = RequireBounded(
+            displayName,
+            DisplayNameMinLength,
+            DisplayNameMaxLength,
+            CustomerProfileErrorCodes.DisplayNameInvalid);
+        FirstName = OptionalBounded(firstName, NamePartMaxLength, CustomerProfileErrorCodes.FirstNameInvalid)
             ?? DeriveFirstName(DisplayName);
-        LastName = OptionalBounded(lastName, NamePartMaxLength, "نام خانوادگی بیش از حد بلند است.")
+        LastName = OptionalBounded(lastName, NamePartMaxLength, CustomerProfileErrorCodes.LastNameInvalid)
             ?? DeriveLastName(DisplayName);
-        BirthDate = OptionalBounded(birthDate, BirthDateMaxLength, "تاریخ تولد بیش از حد بلند است.");
-        Bio = OptionalBounded(bio, BioMaxLength, "بیوگرافی بیش از حد بلند است.");
+        BirthDate = OptionalBounded(birthDate, BirthDateMaxLength, CustomerProfileErrorCodes.BirthDateInvalid);
+        Bio = OptionalBounded(bio, BioMaxLength, CustomerProfileErrorCodes.BioInvalid);
         UpdatedAt = now;
     }
 
@@ -116,18 +121,18 @@ public sealed class CustomerProfile
         return parts.Length <= 1 ? string.Empty : string.Join(' ', parts.Skip(1));
     }
 
-    private static string RequireBounded(string? value, int min, int max, string message)
+    private static string RequireBounded(string? value, int min, int max, string code)
     {
         var trimmed = value?.Trim() ?? string.Empty;
         if (trimmed.Length < min || trimmed.Length > max)
         {
-            throw new InvalidOperationException(message);
+            throw new ContractOperationException(code);
         }
 
         return trimmed;
     }
 
-    private static string? OptionalBounded(string? value, int max, string message)
+    private static string? OptionalBounded(string? value, int max, string code)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -137,7 +142,7 @@ public sealed class CustomerProfile
         var trimmed = value.Trim();
         if (trimmed.Length > max)
         {
-            throw new InvalidOperationException(message);
+            throw new ContractOperationException(code);
         }
 
         return trimmed;

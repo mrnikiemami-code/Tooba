@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.CustomerProfile.Application.Ports;
 using Tooba.CustomerProfile.Endpoints.Customer;
 using Tooba.CustomerProfile.Endpoints.CustomerDashboard;
+using Tooba.CustomerProfile.Endpoints.Errors;
 using Tooba.CustomerProfile.Endpoints.Resources;
 
 namespace Tooba.CustomerProfile.Endpoints;
@@ -25,14 +28,17 @@ public static class CustomerProfileEndpointModule
     }
 
     /// <summary>
-    /// Registers customer-account presentation seams (actor resolver + display texts).
-    /// Does not re-register Foundation-owned <c>customer.session.required</c>.
+    /// Registers customer-account presentation seams (actor resolver + display texts) and the
+    /// CustomerProfile error catalog/resource set. Does not re-register Foundation-owned
+    /// <c>customer.session.required</c>.
     /// </summary>
     public static IServiceCollection AddCustomerProfileEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<ICustomerAccountActorResolver, CustomerAccountActorResolver>();
         services.AddSingleton<ICustomerAccountDisplayTexts, CustomerAccountDisplayTexts>();
+        services.AddSingleton<IErrorCatalogContributor, CustomerProfileErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, CustomerProfileErrorResourceSet>();
         return services;
     }
 }

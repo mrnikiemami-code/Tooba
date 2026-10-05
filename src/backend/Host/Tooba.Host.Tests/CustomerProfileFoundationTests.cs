@@ -74,7 +74,7 @@ public sealed class CustomerProfileFoundationTests
         Assert.Contains("MapPut(\"/profile\"", source, StringComparison.Ordinal);
         Assert.Contains("ICustomerAccountActorResolver", source, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory", source, StringComparison.Ordinal);
-        Assert.Contains("customer.session.required", source, StringComparison.Ordinal);
+        Assert.Contains("CustomerProfileErrorCodes.SessionRequired", source, StringComparison.Ordinal);
     }
 
     [SkippableFact]
@@ -115,9 +115,9 @@ public sealed class CustomerProfileFoundationTests
     {
         await using var db = await OpenAsync();
         var directory = new CustomerProfileDirectory(db);
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<Tooba.BuildingBlocks.ContractOperationException>(() =>
             directory.UpsertAsync(Guid.NewGuid(), SampleWrite("ab"), CancellationToken.None));
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<Tooba.BuildingBlocks.ContractOperationException>(() =>
             directory.UpsertAsync(Guid.NewGuid(), SampleWrite("نام معتبر", bio: new string('x', 201)), CancellationToken.None));
     }
 
