@@ -1,0 +1,9 @@
+{
+  "id": "34db74f0-9d4e-467e-83c0-4d725dc5d28a",
+  "taskId": "TB-TMAR-INVENTORY-AMSC-001-W3-R1",
+  "channelId": "tooba-main",
+  "createdAtUtc": "2026-10-05T17:40:15.9915515",
+  "claimedAtUtc": "2026-10-05T22:09:42.2058832",
+  "receivedArtifact": "docs/ai/tasks/TB-TMAR-INVENTORY-AMSC-001-W3-R1.task.md",
+  "claimNote": "Claimed through GET /api/tasks/next?channelId=tooba-main. The claim-time HTTP response body was consumed by the claim attempt before the artifact could be captured, so the received content was recovered verbatim from the Bridge task store (BridgeTasks.Content) and persisted under docs/ai/tasks/. The single foreign binary run appended at the tail (an unrelated historical Task row) was trimmed; the task body itself is complete: BEGIN_TOOBA_TASK through END_TOOBA_TASK."
+}

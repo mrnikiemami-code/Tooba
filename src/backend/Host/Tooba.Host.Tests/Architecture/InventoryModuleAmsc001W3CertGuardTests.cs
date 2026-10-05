@@ -237,6 +237,53 @@ public sealed class InventoryModuleAmsc001W3CertGuardTests
         Assert.Contains("USER_REVIEW_INVENTORY_AMSC_001_W3", recovery, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Inventory_w3_r1_recovery_reconciliation_is_recorded()
+    {
+        var root = Repo();
+
+        using var sot = JsonDocument.Parse(File.ReadAllText(Path.Combine(
+            root, "docs/architecture/tmar-current-state.json")));
+        var r1 = sot.RootElement.GetProperty("inventoryModuleAmsc001W3R1");
+        Assert.Equal("TB-TMAR-INVENTORY-AMSC-001-W3-R1", r1.GetProperty("task").GetString());
+        Assert.Equal("TB-TMAR-INVENTORY-AMSC-001-W3", r1.GetProperty("parentTask").GetString());
+        Assert.Equal("RECOVERY_SOT_RECONCILIATION_ONLY", r1.GetProperty("mode").GetString());
+        Assert.Equal("INVENTORY_AMSC_001_RECOVERY_RECONCILED", r1.GetProperty("state").GetString());
+        Assert.False(r1.GetProperty("productionCodeChanged").GetBoolean());
+        Assert.Equal("3fa4eb552cd2c25733aee2df5b8e885cdd044b8e", r1.GetProperty("certifiedCommit").GetString());
+        Assert.Equal("MISSING", r1.GetProperty("masterRecoveryW3ShaBefore").GetString());
+        Assert.Equal("RECORDED_3FA4EB55", r1.GetProperty("masterRecoveryW3ShaState").GetString());
+        Assert.Equal("PRESERVED", r1.GetProperty("globalHostCheckpointState").GetString());
+        Assert.Equal("NOT_TOUCHED", r1.GetProperty("manifestStructuralState").GetString());
+        Assert.Equal("NONE", r1.GetProperty("automaticNextImplementationTask").GetString());
+
+        // W3 certification itself stays untouched by the recovery wave.
+        var w3 = sot.RootElement.GetProperty("inventoryModuleAmsc001W3");
+        Assert.Equal("INVENTORY_AMSC_001_CERTIFIED", w3.GetProperty("state").GetString());
+        Assert.Equal("COMPLETE_REFERENCE_PATTERN", w3.GetProperty("verdict").GetString());
+        Assert.Equal("ARCH-COMPLETE-002", w3.GetProperty("lockVersion").GetString());
+        Assert.True(w3.GetProperty("structureCertified").GetBoolean());
+        Assert.Equal("CERTIFIED", w3.GetProperty("structureState").GetString());
+        Assert.Equal("INTERNAL_ONLY", w3.GetProperty("httpApplicability").GetString());
+        Assert.Equal(0, w3.GetProperty("endpointReachableRequests").GetInt32());
+
+        // Repository-global Host root checkpoint is not displaced by a module-local recovery wave.
+        Assert.Equal("TB-TMAR-HOST-ROOT-FINAL-CERT-001", sot.RootElement.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("NONE", sot.RootElement.GetProperty("automaticNextImplementationTask").GetString());
+
+        var recovery = File.ReadAllText(Path.Combine(root, "docs/architecture", "TOOBA-TMAR-MASTER-RECOVERY.md"));
+        Assert.Contains("TB-TMAR-INVENTORY-AMSC-001-W3` Certify `3fa4eb55`", recovery, StringComparison.Ordinal);
+        Assert.DoesNotContain("TB-TMAR-INVENTORY-AMSC-001-W3` Certify *(this commit)*", recovery, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-INVENTORY-AMSC-001-W0` Analyze `c6917553`", recovery, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-INVENTORY-AMSC-001-W1` Migrate `133d413d`", recovery, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-INVENTORY-AMSC-001-W2` Structure `87101cb4`", recovery, StringComparison.Ordinal);
+        Assert.Contains("HISTORICAL / SUPERSEDED FOR CURRENT INVENTORY MODULE RECOVERY", recovery, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-INVENTORY-APPLICABILITY-REVERIFY-001", recovery, StringComparison.Ordinal);
+        Assert.Contains("2814da32", recovery, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_INVENTORY_AMSC_001_W3_R1", recovery, StringComparison.Ordinal);
+        Assert.Contains("Inventory AMSC W3-R1 recovery reconciliation (module-local)", recovery, StringComparison.Ordinal);
+    }
+
     private static IEnumerable<string> ProductionSources(string root) =>
         ProductionProjects
             .SelectMany(p => Directory.EnumerateFiles(
