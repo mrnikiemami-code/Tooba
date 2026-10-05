@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -9,7 +9,6 @@ using Tooba.Identity.Application.Ports;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Contracts.Problems;
-using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Domain.Aggregates;
 using Tooba.Identity.Domain.Enums;
 using Tooba.Identity.Domain.Events;
@@ -310,7 +309,7 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
                 await _sender.SendAsync(OtpPurpose.PasswordReset, identifier, raw, cancellationToken);
             }
         }
-        catch (ArgumentException)
+        catch (ContractOperationException)
         {
             // پاسخ عمومی یکسان می‌ماند تا قالب شناسه هم حساب را لو ندهد.
         }
@@ -365,7 +364,7 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
             cancellationToken);
         if (!owned)
         {
-            throw new InvalidOperationException(IdentityErrorCodes.ValidationFailed);
+            throw new ContractOperationException(IdentityErrorCodes.ValidationFailed);
         }
 
         var raw = OpaqueSecretHasher.GenerateNumericCode(8);
@@ -420,7 +419,7 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
         var user = await _db.Users.Include(x => x.Password).FirstAsync(x => x.UserId == userId, cancellationToken);
         if (user.Password is null || _hasher.Verify(user.Password.PasswordHash, currentPassword) == PasswordVerificationOutcome.Failed)
         {
-            throw new InvalidOperationException(IdentityErrorCodes.PasswordChangeFailed);
+            throw new ContractOperationException(IdentityErrorCodes.PasswordChangeFailed);
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -524,7 +523,7 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
             code = _otpFixture.OneTimeCode;
             return !string.IsNullOrWhiteSpace(code);
         }
-        catch (ArgumentException)
+        catch (ContractOperationException)
         {
             return false;
         }
@@ -535,12 +534,12 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
         var policy = _passwordPolicy.Value;
         if (password.Length < policy.MinimumLength)
         {
-            throw new ArgumentException(IdentityErrorCodes.ValidationFailed, nameof(password));
+            throw new ContractOperationException(IdentityErrorCodes.ValidationFailed);
         }
 
         if (policy.RequireLetterAndDigit && !(password.Any(char.IsLetter) && password.Any(char.IsDigit)))
         {
-            throw new ArgumentException(IdentityErrorCodes.ValidationFailed, nameof(password));
+            throw new ContractOperationException(IdentityErrorCodes.ValidationFailed);
         }
     }
 }

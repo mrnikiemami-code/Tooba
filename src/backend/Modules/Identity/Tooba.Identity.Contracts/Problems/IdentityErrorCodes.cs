@@ -30,6 +30,15 @@ public static class IdentityErrorCodes
     /// <summary>OTP delivery provider is unavailable or fails closed. HTTP 400.</summary>
     public const string OtpDeliveryUnavailable = "identity.otp.delivery.unavailable";
 
+    /// <summary>OTP delivery provider rate-limited the send. HTTP 429.</summary>
+    public const string OtpDeliveryRateLimited = "identity.otp.delivery.rate_limited";
+
+    /// <summary>OTP delivery destination is not deliverable. HTTP 400.</summary>
+    public const string OtpDeliveryInvalidDestination = "identity.otp.delivery.invalid_destination";
+
+    /// <summary>Production OTP delivery configuration is incomplete. HTTP 400.</summary>
+    public const string OtpDeliveryUnconfigured = "identity.otp.delivery.unconfigured";
+
     /// <summary>Password change was rejected by policy/current-password proof. HTTP 400.</summary>
     public const string PasswordChangeFailed = "identity.password.change.failed";
 }

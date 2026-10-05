@@ -1,3 +1,4 @@
+﻿using Tooba.BuildingBlocks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.Identity.Application.Models;
@@ -6,7 +7,6 @@ using Tooba.Identity.Application.Ports;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Contracts.Problems;
-using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Domain.Aggregates;
 using Tooba.Identity.Domain.Enums;
 using Tooba.Identity.Domain.Events;
@@ -90,7 +90,7 @@ public sealed class IdentityAuthenticationService : IIdentityAuthenticationServi
         {
             (_, normalized) = LoginIdentifierNormalizer.Normalize(kind, identifier);
         }
-        catch (ArgumentException)
+        catch (ContractOperationException)
         {
             await _security.RecordAsync(new IdentitySecurityEvent { EventName = "login_failure", OccurredAt = now }, cancellationToken);
             return AuthenticationResult.Fail(AuthenticationOutcome.InvalidCredentials);
@@ -228,12 +228,12 @@ public sealed class IdentityAuthenticationService : IIdentityAuthenticationServi
         var policy = _policy.Value;
         if (password.Length < policy.MinimumLength)
         {
-            throw new ArgumentException(IdentityErrorCodes.ValidationFailed, nameof(password));
+            throw new ContractOperationException(IdentityErrorCodes.ValidationFailed);
         }
 
         if (policy.RequireLetterAndDigit && !(password.Any(char.IsLetter) && password.Any(char.IsDigit)))
         {
-            throw new ArgumentException(IdentityErrorCodes.ValidationFailed, nameof(password));
+            throw new ContractOperationException(IdentityErrorCodes.ValidationFailed);
         }
     }
 }

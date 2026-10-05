@@ -28,6 +28,12 @@ public sealed class IdentityErrorCatalogContributor : IErrorCatalogContributor
             "Tenant input is not trusted."),
         D(IdentityErrorCodes.OtpDeliveryUnavailable, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "OTP delivery is unavailable."),
+        D(IdentityErrorCodes.OtpDeliveryRateLimited, ErrorClassification.Platform, StatusCodes.Status429TooManyRequests,
+            "OTP delivery was rate limited."),
+        D(IdentityErrorCodes.OtpDeliveryInvalidDestination, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "OTP destination is not deliverable."),
+        D(IdentityErrorCodes.OtpDeliveryUnconfigured, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "OTP delivery is not configured."),
         D(IdentityErrorCodes.PasswordChangeFailed, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Password change was rejected."),
     ];

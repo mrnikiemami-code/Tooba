@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Identity.Application.Models;
 using Tooba.Identity.Application.Options;
 using Tooba.Identity.Application.Ports;
@@ -35,8 +36,8 @@ public sealed class OtpDeliveryProviderTests
     public async Task Sender_maps_misconfigured_to_identity_error_code()
     {
         var sender = new OtpDeliveryProviderSender(new FailClosedOtpDeliveryProvider(new OtpDeliveryInstrumentation()));
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<ContractOperationException>(() =>
             sender.SendAsync(OtpPurpose.Login, "user@example.com", "123456", CancellationToken.None));
-        Assert.Equal("identity.otp.delivery.unconfigured", ex.Message);
+        Assert.Equal("identity.otp.delivery.unconfigured", ex.Code);
     }
 }

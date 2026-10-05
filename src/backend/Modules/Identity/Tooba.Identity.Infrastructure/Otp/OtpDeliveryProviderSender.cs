@@ -1,8 +1,10 @@
+using Tooba.BuildingBlocks;
 using Tooba.Identity.Application.Models;
 using Tooba.Identity.Application.Options;
 using Tooba.Identity.Application.Ports;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
+using Tooba.Identity.Contracts.Problems;
 using Tooba.Identity.Domain.Aggregates;
 using Tooba.Identity.Domain.Enums;
 using Tooba.Identity.Domain.Events;
@@ -29,12 +31,12 @@ public sealed class OtpDeliveryProviderSender : IOtpSender
             return;
         }
 
-        throw outcome.Kind switch
+        throw new ContractOperationException(outcome.Kind switch
         {
-            OtpDeliveryOutcomeKind.RateLimited => new InvalidOperationException("identity.otp.delivery.rate_limited"),
-            OtpDeliveryOutcomeKind.InvalidDestination => new InvalidOperationException("identity.otp.delivery.invalid_destination"),
-            OtpDeliveryOutcomeKind.Unavailable => new InvalidOperationException("identity.otp.delivery.unavailable"),
-            _ => new InvalidOperationException("identity.otp.delivery.unconfigured"),
-        };
+            OtpDeliveryOutcomeKind.RateLimited => IdentityErrorCodes.OtpDeliveryRateLimited,
+            OtpDeliveryOutcomeKind.InvalidDestination => IdentityErrorCodes.OtpDeliveryInvalidDestination,
+            OtpDeliveryOutcomeKind.Unavailable => IdentityErrorCodes.OtpDeliveryUnavailable,
+            _ => IdentityErrorCodes.OtpDeliveryUnconfigured,
+        });
     }
 }

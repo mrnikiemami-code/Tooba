@@ -123,9 +123,9 @@ public sealed class AuthSecurityHttpTests : IAsyncLifetime
     public async Task Production_otp_delivery_is_fail_closed()
     {
         var sender = new OtpDeliveryProviderSender(new FailClosedOtpDeliveryProvider(new OtpDeliveryInstrumentation()));
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<ContractOperationException>(() =>
             sender.SendAsync(OtpPurpose.PasswordReset, "user@example.com", "123456", CancellationToken.None));
-        Assert.Equal("identity.otp.delivery.unconfigured", ex.Message);
+        Assert.Equal("identity.otp.delivery.unconfigured", ex.Code);
     }
 
     private static async Task EnsureIdentityAsync(WebApplicationFactory<Program> factory, string tenantId, string connectionReference)

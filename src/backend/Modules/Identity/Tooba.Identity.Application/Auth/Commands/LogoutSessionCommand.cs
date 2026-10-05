@@ -4,7 +4,6 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Contracts.Problems;
-using Tooba.Identity.Contracts.Auth;
 
 namespace Tooba.Identity.Application.Auth.Commands;
 

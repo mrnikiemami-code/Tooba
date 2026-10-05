@@ -5,7 +5,6 @@ using Tooba.Identity.Application.Composition;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Contracts.Problems;
-using Tooba.Identity.Contracts.Auth;
 
 namespace Tooba.Identity.Application.Auth.Commands;
 
@@ -28,22 +27,10 @@ public sealed class ChangePasswordCommandHandler(IIdentityAuthenticationService 
             return Result.Failure(new SemanticError(IdentityErrorCodes.SessionInvalid));
         }
 
-        try
-        {
-            await auth.ChangePasswordAsync(
-                request.UserId,
-                request.CurrentPassword ?? string.Empty,
-                request.NewPassword ?? string.Empty,
-                cancellationToken);
-            return Result.Success();
-        }
-        catch (InvalidOperationException)
-        {
-            return Result.Failure(new SemanticError(IdentityErrorCodes.PasswordChangeFailed));
-        }
-        catch (ArgumentException)
-        {
-            return Result.Failure(new SemanticError(IdentityErrorCodes.ValidationFailed));
-        }
+        return await IdentityOperation.ExecuteAsync(() => auth.ChangePasswordAsync(
+            request.UserId,
+            request.CurrentPassword ?? string.Empty,
+            request.NewPassword ?? string.Empty,
+            cancellationToken));
     }
 }

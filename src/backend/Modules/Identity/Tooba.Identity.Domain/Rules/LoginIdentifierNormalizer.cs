@@ -1,5 +1,7 @@
+using Tooba.BuildingBlocks;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
+using Tooba.Identity.Contracts.Problems;
 
 namespace Tooba.Identity.Domain.Rules;
 
@@ -14,14 +16,14 @@ public static class LoginIdentifierNormalizer
     /// <param name="kind">گونهٔ شناسه؛ قوانین جدا دارند.</param>
     /// <param name="rawValue">ورودی کاربر؛ نباید لاگ شود اگر محرمانه تلقی شود.</param>
     /// <returns>جفت نمایش و کلید نرمال.</returns>
-    /// <exception cref="ArgumentException">وقتی مقدار پس از نرمال تهی است.</exception>
+    /// <exception cref="ContractOperationException">وقتی مقدار پس از نرمال تهی است؛ Code همان کد ماشین‌پایدار Identity است.</exception>
     public static (string Display, string Normalized) Normalize(LoginIdentifierKind kind, string rawValue)
     {
         ArgumentNullException.ThrowIfNull(rawValue);
         var display = rawValue.Trim();
         if (display.Length == 0)
         {
-            throw new ArgumentException("شناسهٔ ورود پس از پیرایش تهی است.", nameof(rawValue));
+            throw Invalid();
         }
 
         var normalized = kind switch
@@ -31,12 +33,12 @@ public static class LoginIdentifierNormalizer
             LoginIdentifierKind.Phone => NormalizePhone(display),
             LoginIdentifierKind.NationalId => NormalizeNationalId(display),
             LoginIdentifierKind.ExternalProvider => display.Trim(),
-            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "گونهٔ شناسه پشتیبانی نمی‌شود."),
+            _ => throw Invalid(),
         };
 
         if (string.IsNullOrWhiteSpace(normalized))
         {
-            throw new ArgumentException("شناسهٔ ورود پس از نرمال‌سازی تهی است.", nameof(rawValue));
+            throw Invalid();
         }
 
         return (display, normalized);
@@ -51,7 +53,7 @@ public static class LoginIdentifierNormalizer
         var at = trimmed.LastIndexOf('@');
         if (at <= 0 || at == trimmed.Length - 1)
         {
-            throw new ArgumentException("قالب ایمیل برای هویت نامعتبر است.", nameof(display));
+            throw Invalid();
         }
 
         return trimmed.ToLowerInvariant();
@@ -86,7 +88,7 @@ public static class LoginIdentifierNormalizer
 
         if (chars.Count == 0 || (chars.Count == 1 && chars[0] == '+'))
         {
-            throw new ArgumentException("شمارهٔ تلفن پس از نرمال‌سازی رقم معتبری ندارد.", nameof(display));
+            throw Invalid();
         }
 
         return new string(chars.ToArray());
@@ -100,9 +102,15 @@ public static class LoginIdentifierNormalizer
         var chars = display.Trim().Where(char.IsLetterOrDigit).ToArray();
         if (chars.Length == 0)
         {
-            throw new ArgumentException("شناسهٔ ملی پس از نرمال‌سازی تهی است.", nameof(display));
+            throw Invalid();
         }
 
         return new string(chars).ToUpperInvariant();
     }
+
+    /// <summary>
+    /// خرابی قالب شناسه با کد ماشین‌پایدار؛ متن پیام کاربرپسند نیست و از مسیر localization می‌آید.
+    /// </summary>
+    private static ContractOperationException Invalid() =>
+        new(IdentityErrorCodes.ValidationFailed);
 }

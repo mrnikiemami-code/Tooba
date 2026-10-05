@@ -1,3 +1,4 @@
+﻿using Tooba.BuildingBlocks;
 using Microsoft.EntityFrameworkCore;
 using Tooba.Identity.Application.Models;
 using Tooba.Identity.Application.Options;
@@ -52,7 +53,7 @@ public sealed class IdentityOtpLoginService : IIdentityOtpLoginService
         {
             (_, normalized) = LoginIdentifierNormalizer.Normalize(LoginIdentifierKind.Phone, mobile);
         }
-        catch (ArgumentException)
+        catch (ContractOperationException)
         {
             return AuthenticationResult.Fail(AuthenticationOutcome.InvalidCredentials);
         }
