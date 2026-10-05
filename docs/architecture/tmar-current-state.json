@@ -10180,5 +10180,41 @@
         ],
         "waveOutcome": "STRUCTURE_UNBLOCKED",
         "evidence": "docs/architecture/evidence/TB-TMAR-INVENTORY-AMSC-001-W1/migrate.md"
+    },
+    "inventoryModuleAmsc001W2": {
+        "task": "TB-TMAR-INVENTORY-AMSC-001-W2",
+        "mode": "ARCHITECT_DIRECT_AMSC",
+        "skill": "tooba-architecture-structure",
+        "target": "src/backend/Modules/Inventory/Tooba.Inventory.*",
+        "parentTask": "TB-TMAR-INVENTORY-AMSC-001-W1",
+        "startingHead": "133d413d",
+        "state": "STRUCTURE_COMPLETE",
+        "verdict": "STRUCTURE_READY_FOR_CERTIFY",
+        "lockVersion": "ARCH-COMPLETE-002",
+        "structureState": "READY_FOR_CERTIFY",
+        "folderGranularityState": "PROFESSIONAL_SHALLOW",
+        "pathNamespaceState": "EXACT_ZERO_MISMATCHES",
+        "rootAllowlistState": "EMPTY_ROOT_ON_ALL_FIVE_PROJECTS",
+        "overFolderingState": "NONE",
+        "staleDuplicateCopyState": "NONE",
+        "solutionGroupingState": "CANONICAL_MODULES_INVENTORY_FOLDER",
+        "endpointsProjectState": "ABSENT_BY_DESIGN_INTERNAL_ONLY",
+        "manifestState": "PRE_CERT_RECORD_ADDED_PRE_CERT_MODULES_STRUCTURE_CERTIFIED_FALSE",
+        "capabilityLayout": "Contracts/{Availability,Cart,Checkout,Errors,Fulfillment,Orders,Resources,Returns,Seller} + Domain/{Aggregates,Events,ValueObjects} + Application/{Checkout,Composition,Orders,Ports} + Infrastructure/{Adapters,DependencyInjection,Directories,Events,Messaging,Persistence/Migrations}",
+        "cohesiveDirectoryState": "InventoryDirectory split into persistence seam + OrderSupply + Availability + Reclaimer + SellerWrite + Lookups partials with OpenInventoryUseCaseGuard in its own file; every Directories/*.cs <= 500 LOC",
+        "durableGuard": "Tooba.Host.Tests/Architecture/InventoryModuleAmsc001W2StructureGuardTests.cs (10 facts)",
+        "verification": {
+            "hostTestsBuild": "succeeded",
+            "structureGuard": "10/10 passed",
+            "inventoryTests": "13/13 passed",
+            "pathNamespaceAudit": "0 mismatches",
+            "fullHostTestsVsW0Baseline": "identical 82 pre-existing failures by test name, zero new failures"
+        },
+        "inheritedDriftRecordedNotOwned": [
+            "TmarCompleteReferenceStructureGateTests hardcodes a stale certified module list (Catalog and CustomerProfile were certified without updating it) — pre-existing at the W0 starting HEAD, scheduled for W3 repair."
+        ],
+        "structureHandoffState": "READY_FOR_W3_CERTIFY",
+        "waveOutcome": "CERTIFY_UNBLOCKED",
+        "evidence": "docs/architecture/evidence/TB-TMAR-INVENTORY-AMSC-001-W2/structure.md"
     }
 }
