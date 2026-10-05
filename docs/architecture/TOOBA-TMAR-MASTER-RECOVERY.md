@@ -365,7 +365,7 @@ Recorded by `TB-TMAR-CUSTOMERPROFILE-AMSC-001-W3-R1` (recovery/SoT/evidence reco
 Identity AMSC module recovery checkpoint (authoritative, module-local)
 
 Recorded by `TB-TMAR-IDENTITY-AMSC-001-W3` (Certify). This is the AMSC-001 ARCH-COMPLETE-002 certification for Identity; the earlier AMC-001 lineage (`TB-TMAR-IDENTITY-AMC-001` W1→W6, implementation `aafd14e0` / docs stamp `c7e473cd`) stays in the repository as historical evidence only and is explicitly marked `HISTORICAL / SUPERSEDED FOR CURRENT IDENTITY MODULE RECOVERY`.
-- Accepted lineage: `TB-TMAR-IDENTITY-AMSC-001-W0` Analyze `91eec1fd` → `TB-TMAR-IDENTITY-AMSC-001-W1` Migrate `93a6b192` → `TB-TMAR-IDENTITY-AMSC-001-W2` Structure `7c79f8c6` → `TB-TMAR-IDENTITY-AMSC-001-W3` Certify `this wave`.
+- Accepted lineage: `TB-TMAR-IDENTITY-AMSC-001-W0` Analyze `91eec1fd` → `TB-TMAR-IDENTITY-AMSC-001-W1` Migrate `93a6b192` → `TB-TMAR-IDENTITY-AMSC-001-W2` Structure `7c79f8c6` → `TB-TMAR-IDENTITY-AMSC-001-W3` Certify `e6d46774` (`e6d467740dc0305c665d72712fbc5f115ba4b4bf`).
 - Final verdict: `COMPLETE_REFERENCE_PATTERN` / `ARCH-COMPLETE-002` `STRUCTURE_CERTIFIED`; final `structureState = CERTIFIED` (W2 `structureState = READY_FOR_CERTIFY` preserved as historical W2 truth).
 - 13 endpoint-reachable requests / 13 real MediatR 12.5.0 `IRequest`/`IRequestHandler` pairs; 9 `VALIDATOR_REQUIRED` (all present) + 4 `NO_VALIDATOR_REQUIRED`; module-owned routes only (13), Host HTTP ownership ZERO.
 - Canonical mechanisms: `Result`/`Result<T>` + `IdentityOperation` typed-fault seam + `ApiResponseFactory`; single stable-code owner `Contracts/Errors/IdentityErrorCodes.cs` (12 declared = 12 registered descriptors, including the three OTP-delivery codes previously emitted as raw string literals); zero hard-coded client-facing fault text; zero raw `Results.BadRequest/Problem`; the only raw `Results.Json` is the intentional locked `201` register DTO.
@@ -377,6 +377,17 @@ Recorded by `TB-TMAR-IDENTITY-AMSC-001-W3` (Certify). This is the AMSC-001 ARCH-
 - Focused validation: Identity/Auth/Otp filter 62 passed / 6 skipped / 0 failed at the W3 starting HEAD `7c79f8c6`; the full Host suite has 82 pre-existing failures unrelated to Identity (Host/Admin StoreAppearance count guards, Grid/Catalog/Party/Reviews module guards, Fulfillment/Tax/Pricing/Promotion domain tests, Master-Recovery history pins, source-size baselines) and no guard was weakened.
 - Evidence root: `docs/architecture/evidence/TB-TMAR-IDENTITY-AMSC-001-W0..W3/`.
 - Stop gate: `USER_REVIEW_IDENTITY_AMSC_001_W3`.
+
+Identity AMSC W3-R1 recovery reconciliation (module-local)
+
+Recorded by `TB-TMAR-IDENTITY-AMSC-001-W3-R1` (recovery/SoT/evidence reconciliation only; zero production change). W3 certification is preserved unchanged.
+- Historical-truth correction: `identityAmc001` (`TB-TMAR-IDENTITY-AMC-001`, implementation `aafd14e0` / docs stamp `c7e473cd`) had been rewritten by W3 into current AMSC truth. It is restored to its truthful pre-W3 values: `structureState = READY_FOR_CERTIFY`, `validatorCoverage = COMPLETE_6_OF_6_REQUIRED_PRESENT_7_NO_VALIDATOR_REQUIRED`, `validatorRequiredCount = 6`, `noValidatorRequiredCount = 7`; the W3-appended AMSC fields (`amsc001Certified`, `amsc001CertificationNote`, `amsc001EvidenceRoot`, `amsc001StopGate`) are removed. The historical AMC record is preserved, not erased.
+- Current Identity authority preserved unchanged: `identityModuleAmsc001W0..W3` remains the authoritative current lineage (`state = IDENTITY_AMSC_001_CERTIFIED`, `structureState = CERTIFIED`, `validatorCoverageState = EXHAUSTIVE_9_REQUIRED_PRESENT_4_NO_VALIDATOR_REQUIRED`, 13 endpoint-reachable requests, `microserviceExtractable = true`).
+- Historical Identity lineage is explicitly marked `HISTORICAL / SUPERSEDED FOR CURRENT IDENTITY MODULE RECOVERY` — AMC-001 remains truthful historical evidence; the AMSC-001 W0→W3 lineage is authoritative for the current Identity module certification, while the repository-global Host root checkpoint is NOT superseded or displaced.
+- W3 final commit SHA recorded explicitly: `e6d46774` (`e6d467740dc0305c665d72712fbc5f115ba4b4bf`). Accepted lineage preserved exactly: W0 `91eec1fd` → W1 `93a6b192` → W2 `7c79f8c6` → W3 `e6d46774`.
+- Certified commit: `e6d467740dc0305c665d72712fbc5f115ba4b4bf`; `automaticNextImplementationTask = NONE`.
+- Evidence root: `docs/architecture/evidence/TB-TMAR-IDENTITY-AMSC-001-W3-R1/`.
+- Stop gate: `USER_REVIEW_IDENTITY_AMSC_001_W3_R1`.
 
 - (HISTORICAL / SUPERSEDED FOR CURRENT BULKINQUIRY MODULE RECOVERY) BulkInquiry AMC-001 lineage: `TB-TMAR-BULKINQUIRY-AMC-001-W0` -> `W1` -> `W2` -> `W4` under `COMPLETE_REFERENCE_PATTERN` (Host BulkInquiry CLOSED_HOST_ZERO via the ProductQnA split; `/Modules/BulkInquiry/` solution group; Contracts.Errors/Resources catalog; `Result` + `BulkInquiryOperation` + `ApiResponseFactory`). Superseded by the AMSC-001 four-wave re-standardization above; retained as historical evidence only.
 

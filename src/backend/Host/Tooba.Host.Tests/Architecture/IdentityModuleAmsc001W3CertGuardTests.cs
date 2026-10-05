@@ -68,14 +68,46 @@ public sealed class IdentityModuleAmsc001W3CertGuardTests
         Assert.Equal(12, w3.GetProperty("declaredCodeCount").GetInt32());
         Assert.Equal(12, w3.GetProperty("registeredDescriptorCount").GetInt32());
 
-        // The pre-existing AMC-001 record is reconciled to the AMSC-001 certification, not duplicated.
+        // The pre-existing AMC-001 record is HISTORICAL: TB-TMAR-IDENTITY-AMSC-001-W3-R1 restored its
+        // truthful pre-W3 values (W3 had rewritten them with current AMSC truth). Current Identity
+        // authority lives only in the identityModuleAmsc001W0..W3 records asserted above.
         var amc = sot.RootElement.GetProperty("identityAmc001");
+        Assert.Equal("TB-TMAR-IDENTITY-AMC-001", amc.GetProperty("task").GetString());
         Assert.Equal("COMPLETE_REFERENCE_PATTERN", amc.GetProperty("state").GetString());
-        Assert.Equal("CERTIFIED", amc.GetProperty("structureState").GetString());
-        Assert.True(amc.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
-        Assert.True(amc.GetProperty("amsc001Certified").GetBoolean());
+        Assert.Equal("READY_FOR_CERTIFY", amc.GetProperty("structureState").GetString());
+        Assert.Equal(
+            "COMPLETE_6_OF_6_REQUIRED_PRESENT_7_NO_VALIDATOR_REQUIRED",
+            amc.GetProperty("validatorCoverage").GetString());
+        Assert.Equal(6, amc.GetProperty("validatorRequiredCount").GetInt32());
+        Assert.Equal(7, amc.GetProperty("noValidatorRequiredCount").GetInt32());
         Assert.Equal("ZERO", amc.GetProperty("foreignAppInfraDomainCoupling").GetString());
         Assert.Equal("MODULE_ENDPOINTS", amc.GetProperty("endpointOwnership").GetString());
+        foreach (var currentAmcField in new[]
+                 {
+                     "amsc001Certified", "amsc001CertificationNote", "amsc001EvidenceRoot", "amsc001StopGate",
+                 })
+        {
+            Assert.False(amc.TryGetProperty(currentAmcField, out _),
+                $"historical identityAmc001 must not carry the current AMSC field '{currentAmcField}'");
+        }
+
+        // The additive W3-R1 recovery reconciliation record locks the restored historical truth.
+        var r1 = sot.RootElement.GetProperty("identityModuleAmsc001W3R1");
+        Assert.Equal("TB-TMAR-IDENTITY-AMSC-001-W3-R1", r1.GetProperty("task").GetString());
+        Assert.Equal("TB-TMAR-IDENTITY-AMSC-001-W3", r1.GetProperty("parentTask").GetString());
+        Assert.Equal("RECOVERY_SOT_RECONCILIATION_ONLY", r1.GetProperty("mode").GetString());
+        Assert.Equal("IDENTITY_AMSC_001_RECOVERY_RECONCILED", r1.GetProperty("state").GetString());
+        Assert.False(r1.GetProperty("productionCodeChanged").GetBoolean());
+        Assert.Equal("e6d467740dc0305c665d72712fbc5f115ba4b4bf", r1.GetProperty("certifiedCommit").GetString());
+        Assert.Equal("RESTORED_PRE_W3_TRUTH", r1.GetProperty("historicalAmcState").GetString());
+        Assert.Equal(
+            "PRESERVED_AND_SUPERSEDED_FOR_CURRENT_MODULE_RECOVERY",
+            r1.GetProperty("historicalLineageState").GetString());
+        Assert.Equal("RECORDED_E6D46774", r1.GetProperty("masterRecoveryW3ShaState").GetString());
+        Assert.Equal("IDENTITY_AMSC_001_W0_TO_W3", r1.GetProperty("currentAuthority").GetString());
+        Assert.Equal("PRESERVED", r1.GetProperty("globalHostCheckpointState").GetString());
+        Assert.Equal("USER_REVIEW_IDENTITY_AMSC_001_W3_R1", r1.GetProperty("workflowStop").GetString());
+        Assert.Equal("NONE", r1.GetProperty("automaticNextImplementationTask").GetString());
 
         var certified = sot.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
             .EnumerateArray().Select(x => x.GetString()).ToArray();
@@ -282,6 +314,12 @@ public sealed class IdentityModuleAmsc001W3CertGuardTests
         var recovery = File.ReadAllText(Path.Combine(root, "docs/architecture", "TOOBA-TMAR-MASTER-RECOVERY.md"));
         Assert.Contains("TB-TMAR-IDENTITY-AMSC-001-W3", recovery, StringComparison.Ordinal);
         Assert.Contains("USER_REVIEW_IDENTITY_AMSC_001_W3", recovery, StringComparison.Ordinal);
+
+        // The final W3 SHA is recorded explicitly and the historical lineage is marked superseded.
+        Assert.Contains("`TB-TMAR-IDENTITY-AMSC-001-W3` Certify `e6d46774`", recovery, StringComparison.Ordinal);
+        Assert.Contains(
+            "HISTORICAL / SUPERSEDED FOR CURRENT IDENTITY MODULE RECOVERY", recovery, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_IDENTITY_AMSC_001_W3_R1", recovery, StringComparison.Ordinal);
     }
 
     private static HashSet<string> ResxKeys(string path) =>

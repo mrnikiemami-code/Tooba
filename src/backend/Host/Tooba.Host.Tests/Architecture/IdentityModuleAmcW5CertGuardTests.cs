@@ -4,11 +4,14 @@ using Xunit;
 namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
-/// TB-TMAR-IDENTITY-AMC-001 W5/W6 — structure gate + CERTIFIED SoT/manifest lock.
-/// Reconciled in TB-TMAR-IDENTITY-AMSC-001-W3: the Identity certification is now the AMSC-001
-/// four-wave certification, so <c>identityAmc001.structureState</c> is <c>CERTIFIED</c> (the W2
-/// <c>READY_FOR_CERTIFY</c> value is preserved as historical W2 truth inside
-/// <c>identityModuleAmsc001W2</c>). Every structural assertion is unchanged.
+/// TB-TMAR-IDENTITY-AMC-001 W5/W6 — structure gate + SoT/manifest lock for the historical
+/// AMC-001 lineage.
+/// Reconciled in TB-TMAR-IDENTITY-AMSC-001-W3-R1: the current Identity certification authority is
+/// the AMSC-001 four-wave lineage (<c>identityModuleAmsc001W0..W3</c>), so this guard now pins the
+/// <b>historical</b> AMC-001 truth on <c>identityAmc001</c> (<c>structureState = READY_FOR_CERTIFY</c>,
+/// 6 REQUIRED + 7 NO_VALIDATOR_REQUIRED) and asserts the current AMSC truth against
+/// <c>identityModuleAmsc001W3</c>. The W3 wave had rewritten the historical record with current
+/// AMSC values; R1 restored it. Every structural assertion is unchanged.
 /// </summary>
 public sealed class IdentityModuleAmcW5CertGuardTests
 {
@@ -49,14 +52,33 @@ public sealed class IdentityModuleAmcW5CertGuardTests
     {
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(
             Repo(), "docs/architecture/tmar-current-state.json")));
-        var block = doc.RootElement.GetProperty("identityAmc001");
-        Assert.Equal("COMPLETE_REFERENCE_PATTERN", block.GetProperty("state").GetString());
-        Assert.Equal("CERTIFIED", block.GetProperty("structureState").GetString());
-        Assert.True(block.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
-        Assert.True(block.GetProperty("manifestCertified").GetBoolean());
-        Assert.True(block.GetProperty("microserviceExtractable").GetBoolean());
-        Assert.Equal("ZERO", block.GetProperty("foreignAppInfraDomainCoupling").GetString());
-        Assert.Equal("MODULE_ENDPOINTS", block.GetProperty("endpointOwnership").GetString());
+
+        // Historical AMC-001 record: truthful pre-W3 values (restored by TB-TMAR-IDENTITY-AMSC-001-W3-R1).
+        var amc = doc.RootElement.GetProperty("identityAmc001");
+        Assert.Equal("COMPLETE_REFERENCE_PATTERN", amc.GetProperty("state").GetString());
+        Assert.Equal("READY_FOR_CERTIFY", amc.GetProperty("structureState").GetString());
+        Assert.True(amc.GetProperty("structureCertifiedUnderArchComplete002").GetBoolean());
+        Assert.True(amc.GetProperty("manifestCertified").GetBoolean());
+        Assert.True(amc.GetProperty("microserviceExtractable").GetBoolean());
+        Assert.Equal("ZERO", amc.GetProperty("foreignAppInfraDomainCoupling").GetString());
+        Assert.Equal("MODULE_ENDPOINTS", amc.GetProperty("endpointOwnership").GetString());
+        Assert.Equal(
+            "COMPLETE_6_OF_6_REQUIRED_PRESENT_7_NO_VALIDATOR_REQUIRED",
+            amc.GetProperty("validatorCoverage").GetString());
+        Assert.Equal(6, amc.GetProperty("validatorRequiredCount").GetInt32());
+        Assert.Equal(7, amc.GetProperty("noValidatorRequiredCount").GetInt32());
+
+        // Current AMSC-001 certification authority: the W3 record.
+        var w3 = doc.RootElement.GetProperty("identityModuleAmsc001W3");
+        Assert.Equal("IDENTITY_AMSC_001_CERTIFIED", w3.GetProperty("state").GetString());
+        Assert.Equal("CERTIFIED", w3.GetProperty("structureState").GetString());
+        Assert.Equal(
+            "EXHAUSTIVE_9_REQUIRED_PRESENT_4_NO_VALIDATOR_REQUIRED",
+            w3.GetProperty("validatorCoverageState").GetString());
+        Assert.Equal(13, w3.GetProperty("endpointReachableRequests").GetInt32());
+        Assert.Equal("ZERO", w3.GetProperty("foreignAppInfraDomainCoupling").GetString());
+        Assert.Equal("ZERO", w3.GetProperty("blockingResidualDebt").GetString());
+        Assert.True(w3.GetProperty("microserviceExtractable").GetBoolean());
     }
 
     [Fact]

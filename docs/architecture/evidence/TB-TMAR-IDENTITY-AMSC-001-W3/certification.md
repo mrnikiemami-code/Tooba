@@ -107,12 +107,13 @@ is the one failure whose name mentions Identity: it asserts 15 files under `Host
 folder holds 17 for reasons unrelated to the Identity module. It is red at the W3 starting HEAD and
 was left untouched.
 
-`IdentityModuleAmcW5CertGuardTests` and the two `TmarDurableGuardTests` SoT/Recovery facts were also
+- `IdentityModuleAmcW5CertGuardTests` and the two `TmarDurableGuardTests` SoT/Recovery facts were also
 red at the W3 starting HEAD (their assertions pin the historical `READY_FOR_CERTIFY` state and the
-historical Grid/Seller recovery checkpoint respectively). `IdentityModuleAmcW5CertGuardTests` is the
-Identity-owned certification guard and is reconciled here to the AMSC-001 certification (the
-historical `READY_FOR_CERTIFY` value is preserved inside `identityModuleAmsc001W2`), so it is now
-green — a strengthening, not a weakening. The two `TmarDurableGuardTests` facts remain red because
+historical Grid/Seller recovery checkpoint respectively). `IdentityModuleAmcW5CertGuardTests` was
+reconciled in W3 to assert the AMSC-001 certification against `identityAmc001`; `TB-TMAR-IDENTITY-AMSC-001-W3-R1`
+then corrected that to the proper split — the historical AMC-001 record keeps its historical truth and
+the current AMSC truth is asserted against `identityModuleAmsc001W3` — so the guard is green and
+strictly stronger, not weakened. The two `TmarDurableGuardTests` facts remain red because
 they pin the repository-global Host recovery checkpoint, which this module-local task must not touch.
 
 ## SoT / manifest changes in this wave
@@ -129,9 +130,30 @@ they pin the repository-global Host recovery checkpoint, which this module-local
   Identity record exists; `structureLock.certifiedModules` already contained `Identity` and still
   contains it exactly once. The repository-global root checkpoint
   (`lastAcceptedTask`, `nextTask`, `workflowStop`, `automaticNextImplementationTask`) is untouched.
+
+  > **Corrected by `TB-TMAR-IDENTITY-AMSC-001-W3-R1`** (recovery/SoT-only). Rewriting the historical
+  > `identityAmc001` record with current AMSC values was wrong: the record is historical AMC-001 truth
+  > and was restored to `structureState = READY_FOR_CERTIFY` / `COMPLETE_6_OF_6_REQUIRED_PRESENT_7_NO_VALIDATOR_REQUIRED`
+  > (`validatorRequiredCount = 6`, `noValidatorRequiredCount = 7`) with the W3-appended
+  > `amsc001Certified` / `amsc001CertificationNote` / `amsc001EvidenceRoot` / `amsc001StopGate` fields
+  > removed. The `identityModuleAmsc001W0..W3` records (and the additive
+  > `identityModuleAmsc001W3R1` record) are the sole current Identity authority. The
+  > `structureState = CERTIFIED` value that this wave recorded belongs to `identityModuleAmsc001W3`,
+  > not to `identityAmc001`.
+
+  > **Corrected by `TB-TMAR-IDENTITY-AMSC-001-W3-R1`** (recovery/SoT-only). Rewriting the historical
+  > `identityAmc001` record with current AMSC values was wrong: the record is historical AMC-001 truth
+  > and was restored to `structureState = READY_FOR_CERTIFY` / `COMPLETE_6_OF_6_REQUIRED_PRESENT_7_NO_VALIDATOR_REQUIRED`
+  > (`validatorRequiredCount = 6`, `noValidatorRequiredCount = 7`) with the W3-appended
+  > `amsc001Certified` / `amsc001CertificationNote` / `amsc001EvidenceRoot` / `amsc001StopGate` fields
+  > removed. The `identityModuleAmsc001W0..W3` records (and the additive
+  > `identityModuleAmsc001W3R1` record) are the sole current Identity authority. The
+  > `structureState = CERTIFIED` value that this wave recorded belongs to `identityModuleAmsc001W3`,
+  > not to `identityAmc001`.
 - `docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md` — module-local Identity AMSC checkpoint with the
   accepted lineage and the `USER_REVIEW_IDENTITY_AMSC_001_W3` stop gate; the authoritative current
-  region before the explicit historical boundary is byte-identical.
+  region before the explicit historical boundary is byte-identical. The lineage line now carries the
+  explicit final W3 SHA `e6d46774` (corrected by `TB-TMAR-IDENTITY-AMSC-001-W3-R1`).
 - `src/backend/Host/Tooba.Host.Tests/Architecture/IdentityModuleAmsc001W3CertGuardTests.cs` — new
   durable certification lock (5 facts).
 - `docs/architecture/evidence/TB-TMAR-IDENTITY-AMSC-001-W3/` — this certification, the SoT/manifest/

@@ -1,0 +1,11 @@
+{
+  "id": "9c05689c-582a-4e05-85ca-7cdc5fcb214f",
+  "taskId": "TB-TMAR-IDENTITY-AMSC-001-W3-R1",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "createdAtUtc": "2026-10-05T10:41:16.015044",
+  "claimedAtUtc": "2026-10-05T10:42:41.0179649",
+  "artifact": "docs/ai/tasks/TB-TMAR-IDENTITY-AMSC-001-W3-R1.task.md",
+  "note": "Task content was read from the Bridge claim response; the claimed payload cannot be re-read through /api/tasks/next. Content is preserved verbatim in the artifact."
+}
