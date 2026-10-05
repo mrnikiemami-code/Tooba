@@ -31,7 +31,7 @@ public sealed class FulfillmentModuleAmsc001W3CertGuardTests
         Assert.Equal("NONE", record.GetProperty("guardsWeakened").GetString());
         Assert.Equal("NONE", record.GetProperty("baselinesWidened").GetString());
         Assert.Equal("NONE", record.GetProperty("schemaChange").GetString());
-        Assert.Equal("READY_FOR_CERTIFY", record.GetProperty("structureState").GetString());
+        Assert.Equal("CERTIFIED", record.GetProperty("structureState").GetString());
         Assert.Equal("PROFESSIONAL_SHALLOW", record.GetProperty("folderGranularityState").GetString());
         Assert.Equal("EXACT", record.GetProperty("pathNamespaceState").GetString());
         Assert.Equal("ENFORCED", record.GetProperty("rootAllowlistState").GetString());
@@ -57,6 +57,78 @@ public sealed class FulfillmentModuleAmsc001W3CertGuardTests
         {
             Assert.True(root.TryGetProperty(key, out _), $"missing SoT record {key}");
         }
+
+        // W2's READY_FOR_CERTIFY handoff is correct historical W2 truth and must not be rewritten.
+        Assert.Equal("READY_FOR_CERTIFY", root.GetProperty("fulfillmentModuleAmsc001W2").GetProperty("structureHandoffState").GetString());
+    }
+
+    [Fact]
+    public void Fulfillment_w3_r1_recovery_reconciliation_is_locked()
+    {
+        using var doc = ReadJson("docs/architecture/tmar-current-state.json");
+        var root = doc.RootElement;
+
+        // The additive R1 checkpoint records the reconciliation without rewriting W0..W3 history.
+        var r1 = root.GetProperty("fulfillmentModuleAmsc001W3R1");
+        Assert.Equal("TB-TMAR-FULFILLMENT-AMSC-001-W3-R1", r1.GetProperty("task").GetString());
+        Assert.Equal("TB-TMAR-FULFILLMENT-AMSC-001-W3", r1.GetProperty("parentTask").GetString());
+        Assert.Equal("FULFILLMENT_AMSC_001_RECOVERY_RECONCILED", r1.GetProperty("state").GetString());
+        Assert.False(r1.GetProperty("productionCodeChanged").GetBoolean());
+        Assert.Equal("6f878aedcbb1571e9c483bc36aa88b5b304f37a8", r1.GetProperty("certifiedCommit").GetString());
+        Assert.Equal("CERTIFIED", r1.GetProperty("structureState").GetString());
+        Assert.Equal("READY_FOR_CERTIFY", r1.GetProperty("structureStateBefore").GetString());
+        Assert.Equal("RECONCILED", r1.GetProperty("masterRecoveryState").GetString());
+        Assert.Equal("PRESERVED", r1.GetProperty("historicalLineageState").GetString());
+        Assert.Equal("UNCHANGED", r1.GetProperty("schemaMigrationState").GetString());
+        Assert.Equal("NOT_TOUCHED", r1.GetProperty("manifestStructureChange").GetString());
+        Assert.Equal("PRESERVED", r1.GetProperty("globalHostRootCheckpointState").GetString());
+        Assert.Equal("NONE", r1.GetProperty("automaticNextImplementationTask").GetString());
+        Assert.Equal("USER_REVIEW_FULFILLMENT_AMSC_001_W3_R1", r1.GetProperty("workflowStop").GetString());
+
+        // The repository-global Host recovery authority must remain untouched by a module-local repair.
+        Assert.Equal("HOST_ROOT_FINAL_CERTIFIED", root.GetProperty("currentHostCheckpoint").GetString());
+        Assert.Equal("TB-TMAR-HOST-ROOT-FINAL-CERT-001", root.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("7a6c353a98a761df9124beb1fce23ed8424230de", root.GetProperty("lastAcceptedCommit").GetString());
+        Assert.Equal("TB-TMAR-HOST-ROOT-FINAL-CERT-001", root.GetProperty("latestAcceptedImplementationWave").GetString());
+        Assert.Equal("USER_REVIEW_HOST_ROOT_FINAL_CERT_001", root.GetProperty("workflowStop").GetString());
+        Assert.Equal("NONE", root.GetProperty("automaticNextImplementationTask").GetString());
+    }
+
+    [Fact]
+    public void Master_recovery_records_the_fulfillment_amsc_lineage_and_preserves_history()
+    {
+        var master = File.ReadAllText(Path.Combine(RepoRoot(), "docs", "architecture", "TOOBA-TMAR-MASTER-RECOVERY.md"));
+
+        // The current Fulfillment module recovery checkpoint records the accepted AMSC lineage.
+        Assert.Contains("Fulfillment AMSC module recovery checkpoint (authoritative, module-local)", master, StringComparison.Ordinal);
+        foreach (var needle in new[]
+                 {
+                     "TB-TMAR-FULFILLMENT-AMSC-001-W0", "TB-TMAR-FULFILLMENT-AMSC-001-W1",
+                     "TB-TMAR-FULFILLMENT-AMSC-001-W2", "TB-TMAR-FULFILLMENT-AMSC-001-W3",
+                     "9fe50047", "bfd53da4", "c0db0566", "6f878aed",
+                     "COMPLETE_REFERENCE_PATTERN", "ARCH-COMPLETE-002", "structureState = CERTIFIED",
+                     "21 module-owned routes", "Contracts-only",
+                     "automaticNextImplementationTask = NONE", "USER_REVIEW_FULFILLMENT_AMSC_001_W3_R1",
+                 })
+        {
+            Assert.Contains(needle, master, StringComparison.Ordinal);
+        }
+
+        // The older Fulfillment audit/precert/host-evacuation/structure lineage stays present as history.
+        foreach (var historical in new[]
+                 {
+                     "TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-AUDIT-001",
+                     "TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001",
+                     "TB-TMAR-FULFILLMENT-HOST-EVACUATION-001",
+                     "TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-STRUCTURE-001",
+                     "HISTORICAL / SUPERSEDED FOR CURRENT FULFILLMENT MODULE RECOVERY",
+                 })
+        {
+            Assert.Contains(historical, master, StringComparison.Ordinal);
+        }
+
+        // The global Host root closure is still recorded as the repository-global authority.
+        Assert.Contains("HOST_ROOT_FINAL_CERTIFIED", master, StringComparison.Ordinal);
     }
 
     [Fact]
