@@ -49,8 +49,10 @@ Module: `src/backend/Modules/Content/Tooba.Content.*` — 5 projects, 89 product
 ## Focused validation
 
 - `dotnet build src/backend/Tooba.slnx` → succeeded, 0 errors.
-- `dotnet test Tooba.Host.Tests --filter ~Content` → **54 passed / 0 failed / 14 skipped**
+- `dotnet test Tooba.Host.Tests --filter ~Content` → **66 passed / 0 failed / 14 skipped**
   (skips are Postgres Testcontainers integration tests).
+  Reconciled by `TB-TMAR-CONTENT-AMSC-001-W3-R1`: the earlier `54 passed` value in this document was
+  stale descriptive metadata; the deterministic count at the certified HEAD `c012345d` is `66 / 0 / 14`.
 - `ContentModuleAmsc001W2StructureGuardTests` → 8 passed.
 - `ContentModuleAmsc001W3CertGuardTests` → passed.
 
@@ -80,4 +82,4 @@ Module: `src/backend/Modules/Content/Tooba.Content.*` — 5 projects, 89 product
 | W0 Analyze | `702537be` |
 | W1 Migrate | `deb13ae8` |
 | W2 Structure | `ce7b3938` |
-| W3 Certify | *(this wave)* |
+| W3 Certify | `c012345d` |

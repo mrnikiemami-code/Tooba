@@ -317,7 +317,7 @@ Recorded by `TB-TMAR-BULKINQUIRY-AMSC-001-W3-R1` (recovery/SoT/evidence reconcil
 Content AMSC module recovery checkpoint (authoritative, module-local)
 
 Recorded by `TB-TMAR-CONTENT-AMSC-001-W3` (Certify). Supersedes the earlier AMC-001 lineage for the current Content module recovery; the AMC-001 records stay in the repository as historical evidence only.
-- Accepted lineage: `TB-TMAR-CONTENT-AMSC-001-W0` Analyze `702537be` → `TB-TMAR-CONTENT-AMSC-001-W1` Migrate `deb13ae8` → `TB-TMAR-CONTENT-AMSC-001-W2` Structure `ce7b3938` → `TB-TMAR-CONTENT-AMSC-001-W3` Certify (this wave).
+- Accepted lineage: `TB-TMAR-CONTENT-AMSC-001-W0` Analyze `702537be` → `TB-TMAR-CONTENT-AMSC-001-W1` Migrate `deb13ae8` → `TB-TMAR-CONTENT-AMSC-001-W2` Structure `ce7b3938` → `TB-TMAR-CONTENT-AMSC-001-W3` Certify `c012345d`.
 - Final verdict: `COMPLETE_REFERENCE_PATTERN` / `ARCH-COMPLETE-002` `STRUCTURE_CERTIFIED`; final `structureState = CERTIFIED` (W2 `structureState = READY_FOR_CERTIFY` preserved as historical W2 truth).
 - 51 endpoint-reachable requests / 51 handlers; 17 `VALIDATOR_REQUIRED` + 34 `NO_VALIDATOR_REQUIRED`; module-owned routes only, Host HTTP ownership ZERO.
 - Canonical mechanisms: `Result`/`Result<T>` + `ContentOperation` typed-fault seam + `ApiResponseFactory`; single stable-code owner `Contracts/Errors/ContentErrorCodes.cs` (76 codes → 76 descriptors → 76 `en`/`fa` resource keys); zero hard-coded user-facing fault text; zero `Results.Ok/Json/BadRequest/Problem` bypasses.
@@ -325,9 +325,19 @@ Recorded by `TB-TMAR-CONTENT-AMSC-001-W3` (Certify). Supersedes the earlier AMC-
 - Host Content ownership ZERO; cross-module boundary Contracts-only (`Localization.Contracts`, `Media.Contracts`); foreign App/Infra/Domain coupling ZERO; cross-module join ZERO; persistence ownership correct (own `content` schema).
 - Schema / migrations unchanged; blocking residual debt ZERO; `microserviceExtractable = true`; `automaticNextImplementationTask = NONE`.
 - Durable guards: `ContentModuleAmsc001W3CertGuardTests`, `ContentModuleAmsc001W2StructureGuardTests`, `HostContentAmcR1/R2/R3/R4GuardTests`.
-- Focused validation: `Content` filter 54 passed / 0 failed / 14 skipped (Postgres Testcontainers); `Tooba.slnx` build 0 errors.
+- Focused validation: `Content` filter 66 passed / 0 failed / 14 skipped (Postgres Testcontainers) — reconciled at the certified HEAD `c012345d` by `TB-TMAR-CONTENT-AMSC-001-W3-R1`; the earlier `54` value in this checkpoint was stale descriptive metadata.
 - Evidence root: `docs/architecture/evidence/TB-TMAR-CONTENT-AMSC-001-W0..W3/`.
 - Stop gate: `USER_REVIEW_CONTENT_AMSC_001_W3`.
+
+Content AMSC W3-R1 recovery reconciliation (module-local)
+
+Recorded by `TB-TMAR-CONTENT-AMSC-001-W3-R1` (recovery/SoT/evidence reconciliation only; zero production change). W3 certification is preserved unchanged.
+- W3 final commit SHA recorded explicitly: `c012345d` (Certify). Accepted lineage preserved exactly: W0 `702537be` → W1 `deb13ae8` → W2 `ce7b3938` → W3 `c012345d`.
+- Focused validation metadata reconciled from one deterministic run at the certified HEAD: `Content` filter **66 passed / 0 failed / 14 skipped** (Postgres Testcontainers skips). The earlier `54` value was stale descriptive metadata; no guard failed and no guard was weakened.
+- Historical Content lineage preserved as historical evidence: the Host-evacuation Content R4 lineage (`TB-TMAR-HOST-CONTENT-AMC-001` → `R1` → `R2` → `R3` → `R4` at `224ec5a3c4741d104a70fd54f4f169024e4d9b74`) is explicitly marked `HISTORICAL / SUPERSEDED FOR CURRENT CONTENT MODULE RECOVERY` — the AMSC-001 W0→W3 lineage is authoritative for the current Content module certification, while the repository-global Host root checkpoint is NOT superseded or displaced.
+- Certified commit: `c012345d866fec6ecb32ca6f3ff4aef616d877ae`; `automaticNextImplementationTask = NONE`.
+- Evidence root: `docs/architecture/evidence/TB-TMAR-CONTENT-AMSC-001-W3-R1/`.
+- Stop gate: `USER_REVIEW_CONTENT_AMSC_001_W3_R1`.
 
 - (HISTORICAL / SUPERSEDED FOR CURRENT BULKINQUIRY MODULE RECOVERY) BulkInquiry AMC-001 lineage: `TB-TMAR-BULKINQUIRY-AMC-001-W0` -> `W1` -> `W2` -> `W4` under `COMPLETE_REFERENCE_PATTERN` (Host BulkInquiry CLOSED_HOST_ZERO via the ProductQnA split; `/Modules/BulkInquiry/` solution group; Contracts.Errors/Resources catalog; `Result` + `BulkInquiryOperation` + `ApiResponseFactory`). Superseded by the AMSC-001 four-wave re-standardization above; retained as historical evidence only.
 
@@ -986,7 +996,7 @@ Current method:
 
 Recent accepted recovery facts (Host Content lineage — historical Content checkpoint, NOT current):
 
-The Content R4 facts below are HISTORICAL lineage evidence only. They are not the current checkpoint; see the "Latest Accepted TMAR Checkpoint" section at the top of this file and `tmar-current-state.json`.
+The Content R4 facts below are HISTORICAL lineage evidence only. They are not the current checkpoint; see the "Latest Accepted TMAR Checkpoint" section at the top of this file and `tmar-current-state.json`. (HISTORICAL / SUPERSEDED FOR CURRENT CONTENT MODULE RECOVERY — the current Content module certification authority is the `TB-TMAR-CONTENT-AMSC-001` W0→W3 lineage; the repository-global Host root checkpoint is not superseded or displaced.)
 - Content AMC physical evacuation `TB-TMAR-HOST-CONTENT-AMC-001` → Host/Content production files ZERO (Development retain exceptions untouched).
 - R1 destination CQRS/boundary repair `TB-TMAR-HOST-CONTENT-AMC-001-R1`.
 - R2 typed-fault/message-classification repair `TB-TMAR-HOST-CONTENT-AMC-001-R2`.

@@ -3496,7 +3496,9 @@
         ],
         "nextHostFolderStarted": false,
         "workflowStop": "USER_REVIEW_HOST_CONTENT_R4_CHECKPOINT",
-        "evidence": "docs/evidence/TB-TMAR-HOST-CONTENT-AMC-001-R4/"
+        "evidence": "docs/evidence/TB-TMAR-HOST-CONTENT-AMC-001-R4/",
+        "historicalLineageAuthority": "HISTORICAL / SUPERSEDED FOR CURRENT CONTENT MODULE RECOVERY",
+        "historicalLineageNote": "This Host-evacuation Content R4 record stays valid historical evidence only. The current Content module certification authority is the AMSC-001 W0->W3 lineage (contentModuleAmsc001W0..W3, reconciled by contentModuleAmsc001W3R1). The repository-global Host root checkpoint is NOT superseded or displaced by this module-local marker."
     },
     "addressBookPostRealignRepair": {
         "task": "TB-TMAR-ADDRESSBOOK-POST-REALIGN-REPAIR-001",
@@ -9515,6 +9517,27 @@
         "baselinesWidened": "NONE",
         "evidenceRoot": "docs/architecture/evidence/TB-TMAR-CONTENT-AMSC-001-W3/",
         "workflowStop": "USER_REVIEW_CONTENT_AMSC_001_W3",
+        "automaticNextImplementationTask": "NONE"
+    },
+    "contentModuleAmsc001W3R1": {
+        "task": "TB-TMAR-CONTENT-AMSC-001-W3-R1",
+        "parentTask": "TB-TMAR-CONTENT-AMSC-001-W3",
+        "mode": "RECOVERY_SOT_EVIDENCE_RECONCILIATION_ONLY",
+        "state": "CONTENT_AMSC_001_RECOVERY_RECONCILED",
+        "productionCodeChanged": false,
+        "certifiedCommit": "c012345d866fec6ecb32ca6f3ff4aef616d877ae",
+        "acceptedLineage": "W0 702537be -> W1 deb13ae8 -> W2 ce7b3938 -> W3 c012345d",
+        "masterRecoveryW3ShaBefore": "MISSING",
+        "masterRecoveryW3ShaState": "RECORDED_C012345D",
+        "masterRecoveryState": "RECONCILED",
+        "historicalLineageState": "PRESERVED_AND_SUPERSEDED_FOR_CURRENT_MODULE_RECOVERY",
+        "historicalLineageKeys": "hostContentAmc, hostContentAmcR1, hostContentAmcR2, hostContentAmcR3, hostContentAmcR4",
+        "focusedValidationBefore": "DRIFT_54_VS_66",
+        "focusedValidationState": "PASS_66_0_14_AT_CERTIFIED_HEAD_C012345D",
+        "w3ArchitecturalTruthState": "PRESERVED_UNCHANGED",
+        "globalHostCheckpointState": "PRESERVED",
+        "evidenceRoot": "docs/architecture/evidence/TB-TMAR-CONTENT-AMSC-001-W3-R1/",
+        "workflowStop": "USER_REVIEW_CONTENT_AMSC_001_W3_R1",
         "automaticNextImplementationTask": "NONE"
     }
 }
