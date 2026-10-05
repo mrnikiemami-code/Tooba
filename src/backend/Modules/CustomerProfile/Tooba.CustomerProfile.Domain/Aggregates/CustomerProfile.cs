@@ -1,7 +1,7 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.CustomerProfile.Contracts.Errors;
 
-namespace Tooba.CustomerProfile.Domain;
+namespace Tooba.CustomerProfile.Domain.Aggregates;
 
 /// <summary>
 /// پروفایل توصیفی خصوصی مشتری. شناسه‌های ورود، رمز و credential در Identity می‌مانند

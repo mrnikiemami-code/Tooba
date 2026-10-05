@@ -33,12 +33,14 @@ public sealed class CustomerProfileSolutionGroupingGuardTests
             .ToArray();
         Assert.Equal(ExpectedProjects.OrderBy(x => x, StringComparer.Ordinal).ToArray(), inFolder);
 
-        var flatModules = folders.Single(f =>
+        var flatModules = folders.FirstOrDefault(f =>
             string.Equals((string?)f.Attribute("Name"), "/Modules/", StringComparison.Ordinal));
-        var flatCustomer = flatModules.Elements("Project")
-            .Select(p => (string?)p.Attribute("Path") ?? string.Empty)
-            .Where(p => p.Contains("/CustomerProfile/", StringComparison.Ordinal))
-            .ToArray();
+        var flatCustomer = flatModules is null
+            ? []
+            : flatModules.Elements("Project")
+                .Select(p => (string?)p.Attribute("Path") ?? string.Empty)
+                .Where(p => p.Contains("/CustomerProfile/", StringComparison.Ordinal))
+                .ToArray();
         Assert.Empty(flatCustomer);
 
         var allCustomerPaths = doc.Descendants("Project")

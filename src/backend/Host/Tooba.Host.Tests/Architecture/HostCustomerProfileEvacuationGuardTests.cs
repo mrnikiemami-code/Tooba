@@ -1,10 +1,10 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Tooba.BuildingBlocks.Results;
-using Tooba.CustomerProfile.Application.Commands.UpsertCustomerProfile;
-using Tooba.CustomerProfile.Application.Models;
-using Tooba.CustomerProfile.Application.Queries.GetCustomerAccountDashboard;
-using Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage;
+using Tooba.CustomerProfile.Application.Profile.Commands;
+using Tooba.CustomerProfile.Application.Account.Models;
+using Tooba.CustomerProfile.Application.Account.Queries;
+using Tooba.CustomerProfile.Application.Profile.Queries;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -103,9 +103,10 @@ public sealed class HostCustomerProfileEvacuationGuardTests
         var customerFolder = doc.Root!.Elements("Folder").Single(f =>
             string.Equals((string?)f.Attribute("Name"), "/Modules/CustomerProfile/", StringComparison.Ordinal));
         Assert.Equal(5, customerFolder.Elements("Project").Count());
-        var flat = doc.Root.Elements("Folder")
-            .Single(f => string.Equals((string?)f.Attribute("Name"), "/Modules/", StringComparison.Ordinal))
-            .Elements("Project")
+        var flat = (doc.Root.Elements("Folder")
+            .FirstOrDefault(f => string.Equals((string?)f.Attribute("Name"), "/Modules/", StringComparison.Ordinal))
+            ?.Elements("Project")
+            ?? [])
             .Select(p => (string?)p.Attribute("Path") ?? string.Empty)
             .Where(p => p.Contains("/CustomerProfile/", StringComparison.Ordinal));
         Assert.Empty(flat);

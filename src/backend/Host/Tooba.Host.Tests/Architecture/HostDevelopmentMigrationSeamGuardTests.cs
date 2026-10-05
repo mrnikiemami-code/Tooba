@@ -29,7 +29,7 @@ public sealed class HostDevelopmentMigrationSeamGuardTests
         "BulkInquiry/Tooba.BulkInquiry.Infrastructure/BulkInquiryModule.cs",
         "Wishlist/Tooba.Wishlist.Infrastructure/WishlistModule.cs",
         "AddressBook/Tooba.AddressBook.Infrastructure/DependencyInjection/AddressBookModule.cs",
-        "CustomerProfile/Tooba.CustomerProfile.Infrastructure/CustomerProfileModule.cs",
+        "CustomerProfile/Tooba.CustomerProfile.Infrastructure/DependencyInjection/CustomerProfileModule.cs",
         "UserPreference/Tooba.UserPreference.Infrastructure/UserPreferenceModule.cs",
         "OperatorProfile/Tooba.OperatorProfile.Infrastructure/OperatorProfileModule.cs",
         "Localization/Tooba.Localization.Infrastructure/LocalizationModule.cs",

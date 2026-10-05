@@ -1,11 +1,12 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.CustomerProfile.Application.Composition;
-using Tooba.CustomerProfile.Application.Models;
-using Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage;
-using Tooba.CustomerProfile.Contracts;
+using Tooba.CustomerProfile.Application.Account.Models;
+using Tooba.CustomerProfile.Application.Profile.Queries;
+using Tooba.CustomerProfile.Contracts.Dtos;
+using Tooba.CustomerProfile.Contracts.Ports;
 
-namespace Tooba.CustomerProfile.Application.Commands.UpsertCustomerProfile;
+namespace Tooba.CustomerProfile.Application.Profile.Commands;
 
 /// <summary>
 /// Upsert descriptive profile fields for the trusted actor, then return the composed profile page.

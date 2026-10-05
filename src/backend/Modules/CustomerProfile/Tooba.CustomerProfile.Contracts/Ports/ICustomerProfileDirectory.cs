@@ -1,24 +1,6 @@
-namespace Tooba.CustomerProfile.Contracts;
+using Tooba.CustomerProfile.Contracts.Dtos;
 
-/// <summary>Private descriptive profile snapshot without owner/credential projection in API payloads.</summary>
-public sealed record CustomerProfileSnapshot(
-    string FirstName,
-    string LastName,
-    string DisplayName,
-    string? BirthDate,
-    string? Bio,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
-
-/// <summary>
-/// Descriptive profile write input. It carries no email/mobile/password/national code authority.
-/// </summary>
-public sealed record CustomerProfileWrite(
-    string DisplayName,
-    string? FirstName,
-    string? LastName,
-    string? BirthDate,
-    string? Bio);
+namespace Tooba.CustomerProfile.Contracts.Ports;
 
 /// <summary>
 /// Stable descriptive-profile contract. All operations are scoped to the acting user id supplied

@@ -1,11 +1,12 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.CustomerProfile.Contracts;
+using Tooba.CustomerProfile.Contracts.Dtos;
+using Tooba.CustomerProfile.Contracts.Ports;
 using Tooba.CustomerProfile.Contracts.Errors;
-using Tooba.CustomerProfile.Domain;
+using CustomerProfileAggregate = Tooba.CustomerProfile.Domain.Aggregates.CustomerProfile;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
 
-namespace Tooba.CustomerProfile.Infrastructure;
+namespace Tooba.CustomerProfile.Infrastructure.Directories;
 
 /// <summary>پیاده‌سازی پروفایل که فقط schema خود را لمس می‌کند و مالکیت را سرورمحور اعمال می‌کند.</summary>
 public sealed class CustomerProfileDirectory : ICustomerProfileDirectory
@@ -38,7 +39,7 @@ public sealed class CustomerProfileDirectory : ICustomerProfileDirectory
         var profile = await _db.Profiles.SingleOrDefaultAsync(x => x.OwnerUserId == actorUserId, cancellationToken);
         if (profile is null)
         {
-            profile = Tooba.CustomerProfile.Domain.CustomerProfile.Create(
+            profile = CustomerProfileAggregate.Create(
                 actorUserId,
                 input.DisplayName,
                 input.FirstName,
@@ -63,7 +64,7 @@ public sealed class CustomerProfileDirectory : ICustomerProfileDirectory
         return Map(profile);
     }
 
-    private static CustomerProfileSnapshot Map(Tooba.CustomerProfile.Domain.CustomerProfile profile) =>
+    private static CustomerProfileSnapshot Map(CustomerProfileAggregate profile) =>
         new(
             profile.FirstName,
             profile.LastName,

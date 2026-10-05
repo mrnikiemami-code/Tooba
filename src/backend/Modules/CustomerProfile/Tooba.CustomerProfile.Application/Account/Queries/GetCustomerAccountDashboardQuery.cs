@@ -1,16 +1,16 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.AddressBook.Contracts.Ports;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.CustomerProfile.Application.Composition;
-using Tooba.CustomerProfile.Application.Models;
+using Tooba.CustomerProfile.Application.Account.Models;
 using Tooba.CustomerProfile.Application.Ports;
-using Tooba.CustomerProfile.Contracts;
+using Tooba.CustomerProfile.Contracts.Ports;
 using Tooba.CustomerProfile.Contracts.Errors;
 using Tooba.Order.Contracts.Customer;
 using Tooba.Wishlist.Contracts.Ports;
 
-namespace Tooba.CustomerProfile.Application.Queries.GetCustomerAccountDashboard;
+namespace Tooba.CustomerProfile.Application.Account.Queries;
 
 /// <summary>
 /// Customer-account dashboard presentation composition. Policy-free, persistence-free,

@@ -1,12 +1,12 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.CustomerProfile.Application.Commands.UpsertCustomerProfile;
-using Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage;
-using Tooba.CustomerProfile.Contracts;
+using Tooba.CustomerProfile.Application.Profile.Commands;
+using Tooba.CustomerProfile.Application.Profile.Queries;
+using Tooba.CustomerProfile.Contracts.Dtos;
 using Tooba.CustomerProfile.Contracts.Errors;
 
 namespace Tooba.CustomerProfile.Endpoints.Customer;

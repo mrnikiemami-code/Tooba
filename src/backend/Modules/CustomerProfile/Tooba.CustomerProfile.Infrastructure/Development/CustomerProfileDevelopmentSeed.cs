@@ -1,7 +1,8 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
 using Tooba.Order.Contracts.Fulfillment;
+using CustomerProfileAggregate = Tooba.CustomerProfile.Domain.Aggregates.CustomerProfile;
 
 namespace Tooba.CustomerProfile.Infrastructure.Development;
 
@@ -22,7 +23,7 @@ public static class CustomerProfileDevelopmentSeed
         }
 
         var createdAt = new DateTimeOffset(2026, 8, 25, 16, 0, 0, TimeSpan.Zero);
-        db.Profiles.Add(Tooba.CustomerProfile.Domain.CustomerProfile.Create(
+        db.Profiles.Add(CustomerProfileAggregate.Create(
             actor,
             "مشتری نمایشی توبا",
             "مشتری",

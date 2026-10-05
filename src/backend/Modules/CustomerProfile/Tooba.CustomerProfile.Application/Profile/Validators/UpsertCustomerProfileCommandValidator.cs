@@ -1,7 +1,7 @@
-using FluentValidation;
-using Tooba.CustomerProfile.Application.Commands.UpsertCustomerProfile;
+﻿using FluentValidation;
+using Tooba.CustomerProfile.Application.Profile.Commands;
 
-namespace Tooba.CustomerProfile.Application.Validators.UpsertCustomerProfile;
+namespace Tooba.CustomerProfile.Application.Profile.Validators;
 
 /// <summary>Stable transport validation codes for customer profile write shape.</summary>
 public static class CustomerProfileValidationCodes

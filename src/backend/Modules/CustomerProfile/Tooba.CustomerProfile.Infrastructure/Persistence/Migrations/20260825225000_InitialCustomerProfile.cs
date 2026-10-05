@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Tooba.CustomerProfile.Infrastructure.Migrations
+namespace Tooba.CustomerProfile.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCustomerProfile : Migration

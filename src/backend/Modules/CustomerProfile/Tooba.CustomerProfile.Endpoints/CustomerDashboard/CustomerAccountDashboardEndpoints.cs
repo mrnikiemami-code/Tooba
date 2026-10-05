@@ -1,11 +1,11 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.CustomerProfile.Application.Queries.GetCustomerAccountDashboard;
+using Tooba.CustomerProfile.Application.Account.Queries;
 using Tooba.CustomerProfile.Contracts.Errors;
 using Tooba.CustomerProfile.Endpoints.Customer;
 using Tooba.CustomerProfile.Endpoints.Resources;

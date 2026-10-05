@@ -1,4 +1,4 @@
-// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ماژول‌های صریح، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
+﻿// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ماژول‌های صریح، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
 // Host ورودی routing است نه TenantId. کارگر Outbox و مصرف‌کننده Tenant را از Host نمی‌خوانند.
 // مسیرهای /__platform-* فقط Development/Testing هستند و قبل از استقرار عمومی باید محدود شوند.
 // لاگ فنی جایگزین Audit نیست. DbContext و Outbox برای /health و /ready باز نمی‌شوند.
@@ -194,7 +194,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.OperatorProfile.Application.Admin.Commands.UpsertOperatorProfileCommand).Assembly,
     typeof(Tooba.ProductQnA.Application.Customer.Commands.SubmitProductQuestionCommand).Assembly,
     typeof(Tooba.BulkInquiry.Application.Storefront.Commands.SubmitBulkInquiryCommand).Assembly,
-    typeof(Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage.GetCustomerProfilePageQuery).Assembly,
+    typeof(Tooba.CustomerProfile.Application.Profile.Queries.GetCustomerProfilePageQuery).Assembly,
     typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly,
     typeof(Tooba.ProductWorkspace.Application.Composition.Queries.GetProductWorkspaceQuery).Assembly,
     typeof(Tooba.Party.Application.Seller.Queries.GetSellerSettingsQuery).Assembly);

@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using CustomerProfileEntity = Tooba.CustomerProfile.Domain.CustomerProfile;
+using CustomerProfileEntity = Tooba.CustomerProfile.Domain.Aggregates.CustomerProfile;
 using Tooba.Persistence;
 
 namespace Tooba.CustomerProfile.Infrastructure.Persistence;

@@ -1,11 +1,11 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
-using Tooba.CustomerProfile.Application.Commands.UpsertCustomerProfile;
-using Tooba.CustomerProfile.Application.Queries.GetCustomerAccountDashboard;
-using Tooba.CustomerProfile.Application.Queries.GetCustomerProfilePage;
-using Tooba.CustomerProfile.Application.Validators.UpsertCustomerProfile;
+using Tooba.CustomerProfile.Application.Profile.Commands;
+using Tooba.CustomerProfile.Application.Account.Queries;
+using Tooba.CustomerProfile.Application.Profile.Queries;
+using Tooba.CustomerProfile.Application.Profile.Validators;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;

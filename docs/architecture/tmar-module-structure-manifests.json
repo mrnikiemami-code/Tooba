@@ -1,4 +1,4 @@
-{
+﻿{
   "version": "ARCH-COMPLETE-002",
   "definitionMarker": "COMPLETE_REFERENCE_PATTERN_REQUIRES_ENDPOINTS_CQRS_RESULT_CONTRACTS_VALIDATION_CAPABILITY_STRUCTURE_GUARDS_SOT",
   "rules": [
@@ -1635,6 +1635,49 @@
           ],
           "forbiddenRootFiles": [],
           "forbiddenTopLevelFolders": []
+        }
+      ]
+    },
+    {
+      "module": "CustomerProfile",
+      "structureCertified": false,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Pre-certification structure record from TB-TMAR-CUSTOMERPROFILE-AMSC-001-W2. Physical layout realigned to the capability-first COMPLETE_REFERENCE_PATTERN: Application Profile/{Commands,Queries,Validators} + Account/{Queries,Models} + shared Composition/Ports, Domain Aggregates, Contracts Dtos/Ports/Errors, Infrastructure DependencyInjection/Directories/Messaging/Persistence/Migrations. Removed the stale comment-only Application/CustomerProfileContracts.cs and the TECHNICAL_AXIS_FIRST Commands/<UseCase>, Queries/<UseCase>, Validators/<UseCase> single-file leaf folders; Migrations folded under Persistence/Migrations. Folder-Granularity-State TECHNICAL_AXIS_FIRST -> PROFESSIONAL_SHALLOW; Structure-State READY_FOR_CERTIFY. structureCertified stays false until TB-TMAR-CUSTOMERPROFILE-AMSC-001-W3.",
+      "projects": [
+        {
+          "projectName": "Tooba.CustomerProfile.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Boundary semantics only: the public port lives under Contracts/Ports/ and the snapshot/write records under Contracts/Dtos/, with stable codes under Contracts/Errors/; no root .cs remains and namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": ["CustomerProfileContracts.cs"],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.CustomerProfile.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "The CustomerProfile aggregate lives under Domain/Aggregates/ as in Order/AddressBook/Offer; no root .cs remains and namespace alignment is exact path-derived equality. AMSC-001 W1 added the Contracts project reference so the aggregate raises typed ContractOperationException faults carrying module-owned stable error codes instead of raw InvalidOperationException, a legal Domain -> own-Contracts boundary edge rather than foreign Application/Infrastructure coupling.",
+          "forbiddenRootFiles": ["CustomerProfile.cs"],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.CustomerProfile.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs remains. The two real capabilities are Profile/ (Commands/Queries/Validators) and Account/ (Queries/Models); shared cross-capability concerns are Composition/ (the typed-fault-to-Result seam) and Ports/ (presentation display texts). AMSC-001 W2 replaced the previous Commands/<UseCase>, Queries/<UseCase>, Validators/<UseCase> single-file leaf folders and the root Models dump; namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": ["CustomerProfileContracts.cs"],
+          "forbiddenTopLevelFolders": ["Commands", "Queries", "Models", "Validators"]
+        },
+        {
+          "projectName": "Tooba.CustomerProfile.Endpoints",
+          "rootAllowlist": ["CustomerProfileEndpointModule.cs"],
+          "rootAllowlistJustification": "Composition entry only; Customer/ carries the profile routes plus the neutral actor seam, CustomerDashboard/ the dashboard and dev-context routes, Errors/ the module error catalog contributor and Resources/ the error and presentation resx plus resource sets.",
+          "forbiddenRootFiles": ["CustomerProfileEndpoints.cs", "CustomerAccountDashboardEndpoints.cs", "CustomerAccountActorResolver.cs"],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.CustomerProfile.Infrastructure",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs remains: the module composition entry lives under DependencyInjection/, the EF adapter under Directories/, the outbox registration under Messaging/, the development seed under Development/ and EF migrations under Persistence/Migrations, with exact path-derived namespaces.",
+          "forbiddenRootFiles": ["CustomerProfileModule.cs", "CustomerProfileDirectory.cs"],
+          "forbiddenTopLevelFolders": ["Migrations"]
         }
       ]
     }

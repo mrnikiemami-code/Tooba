@@ -1,9 +1,11 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
-using Tooba.CustomerProfile.Contracts;
+using Tooba.CustomerProfile.Contracts.Dtos;
+using Tooba.CustomerProfile.Contracts.Ports;
 using Tooba.CustomerProfile.Endpoints.Customer;
-using Tooba.CustomerProfile.Infrastructure;
+using Tooba.CustomerProfile.Infrastructure.DependencyInjection;
+using Tooba.CustomerProfile.Infrastructure.Directories;
 using Tooba.CustomerProfile.Infrastructure.Development;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
 using Tooba.Order.Contracts.Fulfillment;
@@ -39,7 +41,7 @@ public sealed class CustomerProfileFoundationTests
     [Fact]
     public void Entity_does_not_store_identity_credentials()
     {
-        var names = typeof(Tooba.CustomerProfile.Domain.CustomerProfile).GetProperties().Select(x => x.Name).ToArray();
+        var names = typeof(Tooba.CustomerProfile.Domain.Aggregates.CustomerProfile).GetProperties().Select(x => x.Name).ToArray();
         Assert.Equal(
             ["OwnerUserId", "FirstName", "LastName", "DisplayName", "BirthDate", "Bio", "CreatedAt", "UpdatedAt"],
             names);

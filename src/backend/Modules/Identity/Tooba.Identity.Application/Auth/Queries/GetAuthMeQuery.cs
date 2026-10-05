@@ -1,7 +1,8 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.CustomerProfile.Contracts;
+using Tooba.CustomerProfile.Contracts.Dtos;
+using Tooba.CustomerProfile.Contracts.Ports;
 using Tooba.Identity.Application.Auth.Models;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;

@@ -1,6 +1,6 @@
-using Tooba.Order.Contracts.Customer;
+﻿using Tooba.Order.Contracts.Customer;
 
-namespace Tooba.CustomerProfile.Application.Models;
+namespace Tooba.CustomerProfile.Application.Account.Models;
 
 /// <summary>
 /// Customer-account dashboard presentation DTO (JSON field parity with former Host CustomerDashboardPage).

@@ -1,4 +1,4 @@
-using Tooba.CustomerProfile.Application.Models;
+﻿using Tooba.CustomerProfile.Application.Account.Models;
 using Tooba.Order.Application.Customer.Models;
 using Tooba.Order.Contracts.Customer;
 using Xunit;
