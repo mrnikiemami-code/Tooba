@@ -27,9 +27,10 @@ public sealed class TmarCompleteReferenceStructureGateTests
         Assert.Equal(
             new[]
             {
-                "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Content", "Fulfillment", "Identity",
-                "Localization", "Media", "Offer", "OperatorProfile", "Order", "PageComposition", "Party",
-                "Payment", "ProductQnA", "Settlement", "StoreContext", "Story", "UserPreference", "Wishlist",
+                "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile",
+                "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Offer", "OperatorProfile",
+                "Order", "PageComposition", "Party", "Payment", "ProductQnA", "Settlement", "StoreContext",
+                "Story", "UserPreference", "Wishlist",
             },
             modules.Select(m => m.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
@@ -46,6 +47,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "Order", "Cart", "StoreContext", "Offer", "Payment", "Settlement", "Fulfillment",
                 "AccessControl", "AddressBook", "Content", "Identity", "Media", "Localization", "OperatorProfile",
                 "Party", "ProductQnA", "PageComposition", "BulkInquiry", "Wishlist", "UserPreference", "Story",
+                "Catalog", "CustomerProfile", "Inventory",
             }, StringComparer.Ordinal);
         }
     }
@@ -94,6 +96,79 @@ public sealed class TmarCompleteReferenceStructureGateTests
         }
     }
 
+    /// <summary>
+    /// TB-TMAR-INVENTORY-AMSC-001-W3 — the exact path↔namespace rule is enforced for every project of
+    /// a newly certified module that the repository-global gate cannot reach. The gate itself cannot be
+    /// made green here: <c>Tooba.Catalog.Contracts/Cart</c> and <c>Tooba.Cart.Contracts/Checkout</c> +
+    /// <c>Presentation</c> legitimately declare the project-level namespace while sitting in a capability
+    /// folder (a boundary-Contracts aggregation that pre-dates Inventory and is out of scope for a
+    /// module-local certification), and the repository-global Host-root recovery pins in
+    /// <c>TmarDurableGuardTests</c> must not be displaced. Inventory's own project set has no such
+    /// deviation, so its exact alignment is asserted here.
+    /// </summary>
+    [Fact]
+    public void Inventory_projects_satisfy_root_allowlists_and_exact_namespace_alignment()
+    {
+        var repoRoot = RepoRoot();
+        using var doc = ReadManifest(out _);
+        var module = doc.RootElement.GetProperty("modules").EnumerateArray()
+            .Single(m => m.GetProperty("module").GetString() == "Inventory");
+
+        foreach (var project in module.GetProperty("projects").EnumerateArray())
+        {
+            var projectName = project.GetProperty("projectName").GetString()!;
+            var projectPath = Path.Combine(repoRoot, "src", "backend", "Modules", "Inventory", projectName);
+            Assert.True(Directory.Exists(projectPath), $"missing {projectName}");
+
+            var allowlist = project.GetProperty("rootAllowlist").EnumerateArray()
+                .Select(x => x.GetString()!)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray();
+            var actualRoot = Directory.GetFiles(projectPath, "*.cs", SearchOption.TopDirectoryOnly)
+                .Select(Path.GetFileName!)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray();
+            Assert.Equal(allowlist, actualRoot);
+
+            foreach (var file in Directory.GetFiles(projectPath, "*.cs", SearchOption.AllDirectories))
+            {
+                var relative = file[Path.GetFullPath(projectPath).Length..]
+                    .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                if (relative.StartsWith($"obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                    || relative.StartsWith($"bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                    || Path.GetFileName(relative).StartsWith("GlobalUsings", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var dir = Path.GetDirectoryName(relative);
+                var expected = string.IsNullOrEmpty(dir)
+                    ? projectName
+                    : projectName + "." + dir.Replace(Path.DirectorySeparatorChar, '.').Replace(Path.AltDirectorySeparatorChar, '.');
+                var match = System.Text.RegularExpressions.Regex.Match(
+                    File.ReadAllText(file).TrimStart('\uFEFF'),
+                    @"^namespace\s+([A-Za-z0-9_.]+)",
+                    System.Text.RegularExpressions.RegexOptions.Multiline);
+                Assert.True(match.Success, $"no namespace in {relative}");
+                Assert.Equal(expected, match.Groups[1].Value);
+            }
+
+            foreach (var forbidden in project.GetProperty("forbiddenRootFiles").EnumerateArray())
+            {
+                Assert.False(
+                    File.Exists(Path.Combine(projectPath, forbidden.GetString()!)),
+                    $"{projectName} still has forbidden root file {forbidden.GetString()}");
+            }
+
+            foreach (var forbiddenFolder in project.GetProperty("forbiddenTopLevelFolders").EnumerateArray())
+            {
+                Assert.False(
+                    Directory.Exists(Path.Combine(projectPath, forbiddenFolder.GetString()!)),
+                    $"{projectName} still has forbidden top-level folder {forbiddenFolder.GetString()}");
+            }
+        }
+    }
+
     [Fact]
     public void Uncertified_modules_are_explicitly_not_claimed()
     {
@@ -110,6 +185,9 @@ public sealed class TmarCompleteReferenceStructureGateTests
         Assert.DoesNotContain("AccessControl", uncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("AddressBook", uncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("Content", uncertified, StringComparer.Ordinal);
+        Assert.DoesNotContain("Catalog", uncertified, StringComparer.Ordinal);
+        Assert.DoesNotContain("CustomerProfile", uncertified, StringComparer.Ordinal);
+        Assert.DoesNotContain("Inventory", uncertified, StringComparer.Ordinal);
         Assert.NotEmpty(uncertified);
 
         var statePath = Path.Combine(RepoRoot(), "docs", "architecture", "tmar-current-state.json");
@@ -119,9 +197,10 @@ public sealed class TmarCompleteReferenceStructureGateTests
         Assert.Equal(
             new[]
             {
-                "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Content", "Fulfillment", "Identity",
-                "Localization", "Media", "Offer", "OperatorProfile", "Order", "PageComposition", "Party",
-                "Payment", "ProductQnA", "Settlement", "StoreContext", "UserPreference", "Wishlist",
+                "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile",
+                "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Offer", "OperatorProfile",
+                "Order", "PageComposition", "Party", "Payment", "ProductQnA", "Settlement", "StoreContext",
+                "UserPreference", "Wishlist",
             },
             certified);
     }

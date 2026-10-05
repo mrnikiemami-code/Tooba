@@ -190,14 +190,14 @@ public sealed class InventoryModuleAmsc001W2StructureGuardTests
     {
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(
             Repo(), "docs/architecture/tmar-module-structure-manifests.json")));
-        // Inventory is not ARCH-COMPLETE-002 certified yet, so its structure record lives in the
-        // preCertModules array (never in the certified modules array until W3).
-        Assert.DoesNotContain(
-            doc.RootElement.GetProperty("modules").EnumerateArray(),
-            m => string.Equals(m.GetProperty("module").GetString(), "Inventory", StringComparison.Ordinal));
-        var entry = doc.RootElement.GetProperty("preCertModules").EnumerateArray()
+        // Promoted by TB-TMAR-INVENTORY-AMSC-001-W3 from preCertModules to the certified modules
+        // array (structureCertified true). The structural allowlists asserted below are unchanged.
+        var entry = doc.RootElement.GetProperty("modules").EnumerateArray()
             .Single(m => string.Equals(m.GetProperty("module").GetString(), "Inventory", StringComparison.Ordinal));
-        Assert.False(entry.GetProperty("structureCertified").GetBoolean());
+        Assert.True(entry.GetProperty("structureCertified").GetBoolean());
+        Assert.DoesNotContain(
+            doc.RootElement.GetProperty("preCertModules").EnumerateArray(),
+            m => string.Equals(m.GetProperty("module").GetString(), "Inventory", StringComparison.Ordinal));
 
         foreach (var project in entry.GetProperty("projects").EnumerateArray())
         {

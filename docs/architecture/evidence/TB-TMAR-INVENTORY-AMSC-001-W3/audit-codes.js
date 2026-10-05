@@ -1,0 +1,11 @@
+const fs = require('fs');
+const path = require('path');
+const base = 'src/backend/Modules/Inventory/Tooba.Inventory.Contracts';
+const codes = fs.readFileSync(path.join(base, 'Errors/InventoryErrorCodes.cs'), 'utf8');
+const names = [...codes.matchAll(/public const string (\w+) = /g)].map(m => m[1]);
+const contrib = fs.readFileSync(path.join(base, 'Errors/InventoryErrorCatalogContributor.cs'), 'utf8');
+const reg = [...new Set([...contrib.matchAll(/InventoryErrorCodes\.(\w+)/g)].map(m => m[1]))];
+const descriptors = [...contrib.matchAll(/D\(InventoryErrorCodes\.(\w+)/g)].map(m => m[1]);
+console.log('declared', names.length, 'unique refs', reg.length, 'descriptors', descriptors.length);
+console.log('refs not descriptors', reg.filter(n => !descriptors.includes(n)));
+console.log('descriptors not declared', descriptors.filter(n => !names.includes(n)));

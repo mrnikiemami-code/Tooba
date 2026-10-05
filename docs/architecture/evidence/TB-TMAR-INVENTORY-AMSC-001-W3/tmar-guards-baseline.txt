@@ -1,0 +1,132 @@
+﻿Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\bin\Debug\net8.0\Tooba.Host.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\bin\Debug\net8.0\Tooba.Host.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.3+b1b99bdeb3 (64-bit .NET 8.0.24)
+[xUnit.net 00:00:00.09]   Discovering: Tooba.Host.Tests
+[xUnit.net 00:00:00.21]   Discovered:  Tooba.Host.Tests
+[xUnit.net 00:00:00.23]   Starting:    Tooba.Host.Tests
+dotnet : [xUnit.net 00:00:00.33]     Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Certified_mo
+dules_satisfy_root_allowlists_and_namespace_alignment [FAIL]
+At C:\Users\User\AppData\Local\Temp\ps-script-8f4127f1-a383-4276-8ade-4b5ea18e4937.ps1:87 char:1
++ dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...lignment [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[xUnit.net 00:00:00.33]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:00.33]                                         ↓ (pos 23)
+[xUnit.net 00:00:00.33]       Expected: "Tooba.Catalog.Contracts.Cart"
+[xUnit.net 00:00:00.33]       Actual:   "Tooba.Catalog.Contracts"
+[xUnit.net 00:00:00.33]       Stack Trace:
+[xUnit.net 00:00:00.33]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Architecture\TmarCompleteReferenceStructureGateTests.cs(154,0): at Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.AssertNamespaceAlignment(String projectPath, String projectName)
+[xUnit.net 00:00:00.33]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Architecture\TmarCompleteReferenceStructureGateTests.cs(78,0): at Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Certified_modules_satisfy_root_allowlists_and_namespace_alignment()
+[xUnit.net 00:00:00.33]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:00.33]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.33]     Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Manifest_is_well_form
+ed_and_only_declared_modules_are_certified [FAIL]
+[xUnit.net 00:00:00.33]       Assert.Equal() Failure: Collections differ
+[xUnit.net 00:00:00.33]                                              ↓ (pos 4)
+[xUnit.net 00:00:00.33]       Expected: [···, "BulkInquiry", "Cart", "Content", "Fulfillment", "Identity", ···]
+[xUnit.net 00:00:00.33]       Actual:   [···, "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile", ···]
+[xUnit.net 00:00:00.33]                                              ↑ (pos 4)
+[xUnit.net 00:00:00.33]       Stack Trace:
+[xUnit.net 00:00:00.33]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Architecture\TmarCompleteReferenceStructureGateTests.cs(27,0): at Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Manifest_is_well_formed_and_only_declared_modules_are_certified()
+[xUnit.net 00:00:00.33]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:00.33]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.34]     
+Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Uncertified_modules_are_explicitly_not_claimed 
+[FAIL]
+[xUnit.net 00:00:00.34]       Assert.Equal() Failure: Collections differ
+[xUnit.net 00:00:00.34]                                              ↓ (pos 4)
+[xUnit.net 00:00:00.34]       Expected: [···, "BulkInquiry", "Cart", "Content", "Fulfillment", "Identity", ···]
+[xUnit.net 00:00:00.34]       Actual:   [···, "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile", ···]
+[xUnit.net 00:00:00.34]                                              ↑ (pos 4)
+[xUnit.net 00:00:00.34]       Stack Trace:
+[xUnit.net 00:00:00.34]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Architecture\TmarCompleteReferenceStructureGateTests.cs(119,0): at Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Uncertified_modules_are_explicitly_not_claimed()
+[xUnit.net 00:00:00.34]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:00.34]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.55]     
+Tooba.Host.Tests.TmarDurableGuardTests.Recovery_sot_sync_001_current_checkpoint_is_unique_and_stop_is_authoritative 
+[FAIL]
+[xUnit.net 00:00:00.55]       Assert.Contains() Failure: Sub-string not found
+[xUnit.net 00:00:00.55]       String:    "TOOBA TMAR MASTER RECOVERY\r\n\r\nCanonical A"···
+[xUnit.net 00:00:00.55]       Not found: "Current Grid work checkpoint (CURRENT"
+[xUnit.net 00:00:00.55]       Stack Trace:
+[xUnit.net 00:00:00.55]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\TmarDurableGuardTests.cs(852,0): at Tooba.Host.Tests.TmarDurableGuardTests.Recovery_sot_sync_001_current_checkpoint_is_unique_and_stop_is_authoritative()
+[xUnit.net 00:00:00.55]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:00.55]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.56]     
+Tooba.Host.Tests.TmarDurableGuardTests.Recovery_current_state_is_fresh_and_machine_readable [FAIL]
+[xUnit.net 00:00:00.56]       Assert.Equal() Failure: Collections differ
+[xUnit.net 00:00:00.56]                                                  ↓ (pos 2)
+[xUnit.net 00:00:00.56]       Expected: ["AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", ···]
+[xUnit.net 00:00:00.56]       Actual:   ["AccessControl", "AddressBook", "BulkInquiry", "Cart", "Catalog", ···]
+[xUnit.net 00:00:00.56]                                                  ↑ (pos 2)
+[xUnit.net 00:00:00.56]       Stack Trace:
+[xUnit.net 00:00:00.56]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\TmarDurableGuardTests.cs(122,0): at Tooba.Host.Tests.TmarDurableGuardTests.Recovery_current_state_is_fresh_and_machine_readable()
+[xUnit.net 00:00:00.56]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:00.56]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.68]   Finished:    Tooba.Host.Tests
+  Passed Tooba.Host.Tests.TmarDurableGuardTests.Architecture_baselines_have_no_wildcard_suppression [4 ms]
+  Passed Tooba.Host.Tests.TmarDurableGuardTests.Backend_only_execution_mode_is_canonical_and_frontend_frozen [1 ms]
+  Failed Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Certified_modules_satisfy_root_allowlists_and_namespace_alignment [77 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                  ↓ (pos 23)
+Expected: "Tooba.Catalog.Contracts.Cart"
+Actual:   "Tooba.Catalog.Contracts"
+  Stack Trace:
+     at Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.AssertNamespaceAlignment(String projectPath, String projectName) in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Architecture\TmarCompleteReferenceStructureGateTests.cs:line 154
+   at Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Certified_modules_satisfy_root_allowlists_and_namespace_alignment() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Architecture\TmarCompleteReferenceStructureGateTests.cs:line 78
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Manifest_is_well_formed_and_only_declared_modules_are_certified [4 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+                                       ↓ (pos 4)
+Expected: [···, "BulkInquiry", "Cart", "Content", "Fulfillment", "Identity", ···]
+Actual:   [···, "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile", ···]
+                                       ↑ (pos 4)
+  Stack Trace:
+     at Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Manifest_is_well_formed_and_only_declared_modules_are_certified() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Architecture\TmarCompleteReferenceStructureGateTests.cs:line 27
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Uncertified_modules_are_explicitly_not_claimed [8 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+                                       ↓ (pos 4)
+Expected: [···, "BulkInquiry", "Cart", "Content", "Fulfillment", "Identity", ···]
+Actual:   [···, "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile", ···]
+                                       ↑ (pos 4)
+  Stack Trace:
+     at Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Uncertified_modules_are_explicitly_not_claimed() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\Architecture\TmarCompleteReferenceStructureGateTests.cs:line 119
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Tooba.Host.Tests.TmarDurableGuardTests.Recovery_sot_sync_001_current_checkpoint_is_unique_and_stop_is_authoritative [300 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "TOOBA TMAR MASTER RECOVERY\r\n\r\nCanonical A"···
+Not found: "Current Grid work checkpoint (CURRENT"
+  Stack Trace:
+     at Tooba.Host.Tests.TmarDurableGuardTests.Recovery_sot_sync_001_current_checkpoint_is_unique_and_stop_is_authoritative() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\TmarDurableGuardTests.cs:line 852
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Tooba.Host.Tests.TmarDurableGuardTests.Recovery_current_state_is_fresh_and_machine_readable [10 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+                                           ↓ (pos 2)
+Expected: ["AccessControl", "AddressBook", "Cart", "Content", "Fulfillment", ···]
+Actual:   ["AccessControl", "AddressBook", "BulkInquiry", "Cart", "Catalog", ···]
+                                           ↑ (pos 2)
+  Stack Trace:
+     at Tooba.Host.Tests.TmarDurableGuardTests.Recovery_current_state_is_fresh_and_machine_readable() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\TmarDurableGuardTests.cs:line 122
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Tooba.Host.Tests.TmarDurableGuardTests.Backend_only_mode_rejects_production_frontend_diff_vs_origin_main [87 ms]
+  Passed Tooba.Host.Tests.TmarDurableGuardTests.Protected_user_work_ancestor_18ca10c9_remains [25 ms]
+
+Test Run Failed.
+Total tests: 9
+     Passed: 4
+     Failed: 5
+ Total time: 0.9839 Seconds

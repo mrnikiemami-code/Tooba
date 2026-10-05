@@ -52,11 +52,14 @@ public sealed class InventoryArchitectureGuardTests
             InventoryRoot(), "Tooba.Inventory.Contracts", "Seller", "SellerOfferInventoryContracts.cs"));
         Assert.Contains("Task<Result> SetInventoryAsync", contracts, StringComparison.Ordinal);
 
+        // AMSC-001 W2 decomposed the multi-responsibility InventoryDirectory into cohesive partials, so
+        // the seller write use case lives in InventoryDirectory.SellerWrite.cs; the guard follows the
+        // capability (and asserts the canonical composition seam is the only failure path).
         var directory = File.ReadAllText(Path.Combine(
-            InventoryRoot(), "Tooba.Inventory.Infrastructure", "Directories", "InventoryDirectory.cs"));
+            InventoryRoot(), "Tooba.Inventory.Infrastructure", "Directories", "InventoryDirectory.SellerWrite.cs"));
         var start = directory.IndexOf("public async Task<Result> SetInventoryAsync", StringComparison.Ordinal);
         Assert.True(start >= 0);
-        var end = directory.IndexOf("public async Task<IReadOnlyDictionary<Guid, InventoryAvailability>> GetAvailabilityBatchAsync", start, StringComparison.Ordinal);
+        var end = directory.IndexOf("\n}", start, StringComparison.Ordinal);
         Assert.True(end > start);
         var body = directory[start..end];
         Assert.Contains("Result.Failure", body, StringComparison.Ordinal);
