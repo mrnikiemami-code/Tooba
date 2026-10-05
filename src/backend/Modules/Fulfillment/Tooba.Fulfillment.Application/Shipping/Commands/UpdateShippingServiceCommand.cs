@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Fulfillment.Application.Composition;
 using Tooba.Fulfillment.Application.Errors;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Application.Shipping;
@@ -20,11 +21,11 @@ public sealed class UpdateShippingServiceHandler
     { _directory = directory; _catalog = catalog; }
 
     public Task<Result<ShippingServiceDetailDto>> Handle(UpdateShippingServiceCommand request, CancellationToken cancellationToken) =>
-        FulfillmentExceptionMapper.TryAsync(async () =>
+        FulfillmentOperation.ExecuteAsync(async () =>
         {
             await _directory.UpdateAsync(request.ServiceId, request.Model, cancellationToken);
             var detail = await _catalog.GetAsync(request.ServiceId, cancellationToken)
-                ?? throw new InvalidOperationException(FulfillmentErrorCodes.ShippingServiceNotFound);
+                ?? throw FulfillmentErrors.SemanticFault(FulfillmentErrorCodes.ShippingServiceNotFound);
             return ShippingServiceSemantic.ToDetail(detail);
         });
 }

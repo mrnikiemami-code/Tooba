@@ -1,5 +1,8 @@
 
 
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Results;
+
 namespace Tooba.Fulfillment.Domain.Aggregates;
 
 
@@ -38,7 +41,7 @@ public sealed class ShippingServiceOption
     {
         if (string.IsNullOrWhiteSpace(code))
         {
-            throw new InvalidOperationException("shipping_service_option.code.required");
+            throw new SemanticException(new SemanticError("shipping_service_option.code.required"));
         }
 
         return new ShippingServiceOption
@@ -58,7 +61,7 @@ public sealed class ShippingServiceOption
     {
         if (string.IsNullOrWhiteSpace(code))
         {
-            throw new InvalidOperationException("shipping_service_option.code.required");
+            throw new SemanticException(new SemanticError("shipping_service_option.code.required"));
         }
 
         Code = code.Trim().ToLowerInvariant();

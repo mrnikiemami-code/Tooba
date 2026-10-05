@@ -48,7 +48,7 @@ public sealed class FulfillmentCustomerAuthorizer(
                     checkout.CartId, new CartAccess(null, guestSecret), cancellationToken);
                 ownedByGuest = cart is not null;
             }
-            catch (InvalidOperationException)
+            catch (SemanticException)
             {
                 ownedByGuest = false;
             }

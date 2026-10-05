@@ -1,4 +1,7 @@
+using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.BuildingBlocks.Results;
+using Tooba.Fulfillment.Application.Composition;
 using Tooba.Fulfillment.Application.Errors;
 using Tooba.Fulfillment.Application.WorkQueue.Queries;
 using Tooba.Fulfillment.Contracts.Errors;
@@ -9,40 +12,62 @@ namespace Tooba.Fulfillment.Tests.Behavior;
 public sealed class FulfillmentErrorAndGridTests
 {
     [Fact]
-    public void Exception_mapper_maps_exact_stable_codes_only()
+    public void Typed_fault_helper_accepts_only_declared_stable_codes()
     {
-        Assert.Equal(
-            FulfillmentErrorCodes.Missing,
-            FulfillmentExceptionMapper.ToSemanticError(new InvalidOperationException(FulfillmentErrorCodes.Missing)).Code);
-        Assert.Equal(
-            FulfillmentErrorCodes.ShippingServiceNotFound,
-            FulfillmentExceptionMapper.ToSemanticError(new InvalidOperationException(FulfillmentErrorCodes.ShippingServiceNotFound)).Code);
-        Assert.Equal(
-            "fulfillment.tracking.required",
-            FulfillmentExceptionMapper.ToSemanticError(new InvalidOperationException("fulfillment.tracking.required")).Code);
-        Assert.Equal(
-            "shipping_service_option.code.required",
-            FulfillmentExceptionMapper.ToSemanticError(new InvalidOperationException("shipping_service_option.code.required")).Code);
+        Assert.Equal(FulfillmentErrorCodes.Missing, FulfillmentErrors.RequireKnown(FulfillmentErrorCodes.Missing));
+        Assert.Equal(FulfillmentErrorCodes.ShippingServiceNotFound,
+            FulfillmentErrors.RequireKnown(FulfillmentErrorCodes.ShippingServiceNotFound));
+
+        var fault = FulfillmentErrors.SemanticFault(FulfillmentErrorCodes.ShippingServiceOptionCodeRequired);
+        Assert.Equal(FulfillmentErrorCodes.ShippingServiceOptionCodeRequired, fault.Error.Code);
+
+        // A bare/undeclared string is rejected at the throw site — never classified as prose.
+        Assert.Throws<InvalidOperationException>(() => FulfillmentErrors.RequireKnown("پیدا نشد"));
     }
 
     [Fact]
-    public void Exception_mapper_does_not_parse_localized_or_prose_messages()
+    public void Typed_fault_helper_does_not_parse_localized_or_prose_messages()
     {
         Assert.False(FulfillmentErrors.IsKnown("پیدا نشد"));
         Assert.False(FulfillmentErrors.IsKnown("Shipment failed somehow"));
         Assert.False(FulfillmentErrors.IsKnown("fulfillment.unknown.future_code"));
-        Assert.Throws<InvalidOperationException>(() =>
-            FulfillmentExceptionMapper.ToSemanticError(new InvalidOperationException("پیدا نشد")));
     }
 
     [Fact]
-    public async Task Exception_mapper_propagates_unknown_InvalidOperationException()
+    public async Task Fulfillment_operation_maps_semantic_fault_and_propagates_unknowns()
     {
+        var mapped = await FulfillmentOperation.ExecuteAsync<int>(() =>
+            throw FulfillmentErrors.SemanticFault(FulfillmentErrorCodes.Missing));
+        Assert.True(mapped.IsFailure);
+        Assert.Equal(FulfillmentErrorCodes.Missing, mapped.Errors[0].Code);
+
         var unknown = new InvalidOperationException("fulfillment.pricing.unexpected");
         var thrown = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            FulfillmentExceptionMapper.TryAsync<int>(() => throw unknown));
+            FulfillmentOperation.ExecuteAsync<int>(() => throw unknown));
         Assert.Same(unknown, thrown);
         Assert.Equal("fulfillment.pricing.unexpected", thrown.Message);
+    }
+
+    [Fact]
+    public async Task Fulfillment_operation_maps_domain_contract_faults_by_stable_code()
+    {
+        // The Domain aggregates and the Infrastructure directory raise ContractOperationException with a
+        // declared stable code; that expected failure must stay mapped (never a bare platform.unexpected).
+        var mapped = await FulfillmentOperation.ExecuteAsync<int>(() =>
+            throw new ContractOperationException(FulfillmentErrorCodes.PackQuantityExceeds));
+        Assert.True(mapped.IsFailure);
+        Assert.Equal(FulfillmentErrorCodes.PackQuantityExceeds, mapped.Errors[0].Code);
+
+        var voidMapped = await FulfillmentOperation.ExecuteAsync(() =>
+            throw new ContractOperationException(FulfillmentErrorCodes.OrderNotPaid));
+        Assert.True(voidMapped.IsFailure);
+        Assert.Equal(FulfillmentErrorCodes.OrderNotPaid, voidMapped.Errors[0].Code);
+
+        // A contract fault carrying a non-Fulfillment code is not classified and must fail loud.
+        var foreign = new ContractOperationException("catalog.category.not_found");
+        var thrown = await Assert.ThrowsAsync<ContractOperationException>(() =>
+            FulfillmentOperation.ExecuteAsync<int>(() => throw foreign));
+        Assert.Same(foreign, thrown);
     }
 
     [Fact]

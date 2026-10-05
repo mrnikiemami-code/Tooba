@@ -1,6 +1,7 @@
 using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Fulfillment.Application.Composition;
 using Tooba.Fulfillment.Application.Errors;
 using Tooba.Fulfillment.Application.Fulfillments.Models;
 using Tooba.Fulfillment.Application.Fulfillments.Ports;
@@ -38,7 +39,7 @@ public enum SellerFulfillmentMutationKind
     Deliver,
 }
 
-/// <summary>Handler جهش فروشنده — STABLE_CODES_ONLY via FulfillmentExceptionMapper.</summary>
+/// <summary>Handler جهش فروشنده — STABLE_CODES_ONLY via FulfillmentOperation.</summary>
 public sealed class SellerMutateFulfillmentHandler
     : IRequestHandler<SellerMutateFulfillmentCommand, Result<FulfillmentSnapshot>>
 {
@@ -75,7 +76,7 @@ public sealed class SellerMutateFulfillmentHandler
             return Result.Failure<FulfillmentSnapshot>(auth.Errors);
         }
 
-        return await FulfillmentExceptionMapper.TryAsync(async () =>
+        return await FulfillmentOperation.ExecuteAsync(async () =>
         {
             return request.Kind switch
             {
@@ -111,7 +112,7 @@ public sealed class SellerMutateFulfillmentHandler
                         request.ShipmentId ?? Guid.Empty,
                         request.ActorUserId,
                         cancellationToken),
-                _ => throw new InvalidOperationException(FulfillmentErrorCodes.Rejected),
+                _ => throw FulfillmentErrors.SemanticFault(FulfillmentErrorCodes.Rejected),
             };
         });
     }

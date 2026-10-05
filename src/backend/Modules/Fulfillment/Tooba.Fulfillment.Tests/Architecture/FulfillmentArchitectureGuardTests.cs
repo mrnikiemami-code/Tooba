@@ -8,7 +8,7 @@ public sealed class FulfillmentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
     private static readonly string[] AllowedApplicationFolders =
-        ["Checkout", "Errors", "Fulfillments", "Shipping", "Validators", "WorkQueue"];
+        ["Checkout", "Composition", "Errors", "Fulfillments", "Shipping", "Validators", "WorkQueue"];
     private static readonly string[] AllowedContractsFolders = ["Events", "Returns", "Errors", "History", "Operations", "Shipping"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations",
@@ -253,7 +253,9 @@ public sealed class FulfillmentArchitectureGuardTests
         Assert.Contains(application, x => x.Text.Contains("ListEnabledShippingMethodsTreeQuery", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("QueryAdminFulfillmentWorkQueueQuery", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("AdminFulfillmentGridQueryPolicy", StringComparison.Ordinal));
-        Assert.Contains(application, x => x.Text.Contains("FulfillmentExceptionMapper", StringComparison.Ordinal));
+        // AMSC-001 W3: the legacy message-parsing mapper is deleted; the canonical typed-fault seam remains.
+        Assert.Contains(application, x => x.Text.Contains("FulfillmentOperation", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Text.Contains("FulfillmentExceptionMapper", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
         Assert.DoesNotContain(application, x => x.Path.EndsWith("FulfillmentQueries.cs", StringComparison.OrdinalIgnoreCase));
@@ -405,7 +407,9 @@ public sealed class FulfillmentArchitectureGuardTests
             }
         }
 
-        // Cross-capability shared validation rules stay at the Application root.
+        // Cross-capability shared seams stay at the Application root: the typed-fault execution seam
+        // (Composition) and the shared validation rules (Validators). Neither is a business capability.
+        Assert.True(File.Exists(Path.Combine(applicationRoot, "Composition", "FulfillmentOperation.cs")));
         Assert.True(File.Exists(Path.Combine(applicationRoot, "Validators", "FulfillmentFluentRules.cs")));
         Assert.True(File.Exists(Path.Combine(applicationRoot, "Validators", "FulfillmentValidationCodes.cs")));
     }
@@ -417,7 +421,7 @@ public sealed class FulfillmentArchitectureGuardTests
         var structuralFolders = new[]
         {
             "bin", "obj", "artifacts", "Migrations", "Errors", "Resources",
-            "Shipping", "Fulfillments", "WorkQueue", "Checkout",
+            "Composition", "Shipping", "Fulfillments", "WorkQueue", "Checkout",
             "Commands", "Queries", "Validators", "Models", "Ports",
         };
 

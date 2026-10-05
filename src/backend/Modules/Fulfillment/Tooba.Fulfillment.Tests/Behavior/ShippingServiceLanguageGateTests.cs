@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Infrastructure.Shipping;
 using Tooba.Localization.Contracts.Errors;
@@ -31,9 +32,9 @@ public sealed class ShippingServiceLanguageGateTests
             new LanguageLookupSnapshot(Known, "fa", "fa-IR", "fa", true),
         ]));
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+        var ex = await Assert.ThrowsAsync<SemanticException>(
             () => gate.EnsureKnownAsync([Unknown], CancellationToken.None));
-        Assert.Equal("shipping_service.language_invalid", ex.Message);
+        Assert.Equal("shipping_service.language_invalid", ex.Error.Code);
     }
 
     [Fact]

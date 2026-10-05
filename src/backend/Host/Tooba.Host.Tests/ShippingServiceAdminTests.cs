@@ -227,7 +227,9 @@ public sealed class ShippingServiceAdminTests
         {
             if (languageIds.Any(id => !_known.Contains(id)))
             {
-                throw new InvalidOperationException("shipping_service.language_invalid");
+                // AMSC-001 W3: parity with the real ShippingServiceLanguageGate, which throws the typed
+                // SemanticException(new SemanticError(stable code)) fault rather than a bare message.
+                throw new SemanticException(new SemanticError(FulfillmentErrorCodes.ShippingServiceLanguageInvalid));
             }
 
             return Task.CompletedTask;

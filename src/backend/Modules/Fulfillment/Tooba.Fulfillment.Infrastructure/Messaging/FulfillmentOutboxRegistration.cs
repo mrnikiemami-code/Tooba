@@ -1,8 +1,10 @@
+using Tooba.Fulfillment.Application.Errors;
 using Tooba.Fulfillment.Contracts.Events;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Fulfillments.Ports;
 using Tooba.Fulfillment.Application.Fulfillments.Models;
 using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Fulfillment.Domain.Events;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Persistence;
@@ -50,7 +52,7 @@ public sealed class FulfillmentOutboxRegistration : IOutboxModuleRegistration
         {
             _ when integrationEventType == typeof(FulfillmentCreatedIntegrationEvent) => FulfillmentCreatedIntegrationEvent.EventTypeName,
             _ when integrationEventType == typeof(ShipmentDispatchedIntegrationEvent) => ShipmentDispatchedIntegrationEvent.EventTypeName,
-            _ => throw new InvalidOperationException("fulfillment.outbox.unmapped_event"),
+            _ => throw FulfillmentErrors.SemanticFault(FulfillmentErrorCodes.OutboxUnmappedEvent),
         };
 
     /// <inheritdoc />

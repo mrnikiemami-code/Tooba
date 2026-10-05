@@ -1,4 +1,6 @@
+using Tooba.Fulfillment.Application.Errors;
 using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Localization.Contracts.Errors;
 using Tooba.Localization.Contracts.Ports;
 
@@ -21,7 +23,7 @@ public sealed class ShippingServiceLanguageGate : IShippingServiceLanguageGate
         var known = (await _languages.ListAsync(cancellationToken)).Select(x => x.LanguageId).ToHashSet();
         if (languageIds.Any(id => !known.Contains(id)))
         {
-            throw new InvalidOperationException("shipping_service.language_invalid");
+            throw FulfillmentErrors.SemanticFault(FulfillmentErrorCodes.ShippingServiceLanguageInvalid);
         }
     }
 

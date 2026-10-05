@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Fulfillment.Application.Errors;
 using Tooba.Fulfillment.Application.Fulfillments.Ports;
 using Tooba.Fulfillment.Application.Fulfillments.Models;
 using Tooba.Fulfillment.Application.Shipping;
+using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Fulfillment.Infrastructure.Persistence;
@@ -38,7 +40,7 @@ public sealed class ShippingServiceDirectory : IShippingServiceDirectory
         var code = model.Code.Trim().ToLowerInvariant();
         if (await _db.ShippingServices.AnyAsync(x => x.Code == code, cancellationToken))
         {
-            throw new InvalidOperationException("shipping_service.code_duplicate");
+            throw FulfillmentErrors.SemanticFault(FulfillmentErrorCodes.ShippingServiceCodeDuplicate);
         }
 
         var now = _clock.UtcNow;
@@ -64,12 +66,12 @@ public sealed class ShippingServiceDirectory : IShippingServiceDirectory
     {
         await ValidateLanguagesAsync(model, cancellationToken);
         var entity = await _db.ShippingServices.FirstOrDefaultAsync(x => x.ShippingServiceId == serviceId, cancellationToken)
-            ?? throw new InvalidOperationException("shipping_service.not_found");
+            ?? throw FulfillmentErrors.SemanticFault(FulfillmentErrorCodes.ShippingServiceNotFound);
 
         var code = model.Code.Trim().ToLowerInvariant();
         if (await _db.ShippingServices.AnyAsync(x => x.Code == code && x.ShippingServiceId != serviceId, cancellationToken))
         {
-            throw new InvalidOperationException("shipping_service.code_duplicate");
+            throw FulfillmentErrors.SemanticFault(FulfillmentErrorCodes.ShippingServiceCodeDuplicate);
         }
 
         var now = _clock.UtcNow;
@@ -98,7 +100,7 @@ public sealed class ShippingServiceDirectory : IShippingServiceDirectory
     public async Task DeactivateAsync(Guid serviceId, CancellationToken cancellationToken)
     {
         var entity = await _db.ShippingServices.FirstOrDefaultAsync(x => x.ShippingServiceId == serviceId, cancellationToken)
-            ?? throw new InvalidOperationException("shipping_service.not_found");
+            ?? throw FulfillmentErrors.SemanticFault(FulfillmentErrorCodes.ShippingServiceNotFound);
         entity.SetActive(false, _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
