@@ -25,7 +25,8 @@ public sealed class BulkInquiryModuleAmcW2StructureGuardTests
         Assert.True(File.Exists(Path.Combine(app, "Ports", "IBulkInquiryDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(app, "Models", "BulkInquiryModels.cs")));
         Assert.True(File.Exists(Path.Combine(app, "Storefront", "Commands", "SubmitBulkInquiryCommand.cs")));
-        Assert.True(File.Exists(Path.Combine(app, "Storefront", "Validators", "SubmitBulkInquiryCommandValidator.cs")));
+        Assert.True(File.Exists(Path.Combine(app, "Validation", "SubmitBulkInquiryCommandValidator.cs")));
+        Assert.False(Directory.Exists(Path.Combine(app, "Storefront", "Validators")));
         Assert.True(File.Exists(Path.Combine(infra, "Directories", "BulkInquiryDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(infra, "Persistence", "Migrations", "20260826120000_InitialBulkInquiry.cs")));
         Assert.True(File.Exists(Path.Combine(infra, "Persistence", "BulkInquiryOutboxRegistration.cs")));

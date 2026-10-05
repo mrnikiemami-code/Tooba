@@ -59,10 +59,13 @@ public sealed class ProductQnAAndBulkInquiryTests
     [Theory]
     [InlineData(9)]
     [InlineData(1001)]
-    public void Invalid_quantity_is_rejected(int quantity) =>
-        Assert.Throws<SemanticException>(() => BulkPurchaseInquiry.Create(
+    public void Invalid_quantity_is_rejected(int quantity)
+    {
+        var ex = Assert.Throws<ContractOperationException>(() => BulkPurchaseInquiry.Create(
             Guid.NewGuid(), "علی رضایی", "09121234567", null, null,
             "تهران، خیابان نمونه شماره ۱۲", quantity, null, DateTimeOffset.UtcNow));
+        Assert.Equal("bulk_inquiry.rejected", ex.Code);
+    }
 
     /// <summary>مرز HTTP ثبت پرسش در production بدون نشست 401 می‌دهد.</summary>
     [Fact]

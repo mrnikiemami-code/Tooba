@@ -26,8 +26,8 @@ public sealed class BulkInquiryDirectory : IBulkInquiryDirectory
     public async Task<Guid> SubmitAsync(SubmitBulkInquiryRequest request, CancellationToken cancellationToken)
     {
         var product = await _catalog.FindBySlugAsync(request.ProductSlug, cancellationToken);
-        if (product is null || !string.Equals(product.Status, "Published", StringComparison.Ordinal))
-            throw new SemanticException(new SemanticError(BulkInquiryErrorCodes.Rejected));
+        if (product is null || !IsPublished(product.Status))
+            throw new ContractOperationException(BulkInquiryErrorCodes.Rejected);
 
         var inquiry = BulkPurchaseInquiry.Create(
             product.ProductId,
@@ -44,4 +44,7 @@ public sealed class BulkInquiryDirectory : IBulkInquiryDirectory
         await _db.SaveChangesAsync(cancellationToken);
         return inquiry.InquiryId;
     }
+
+    private static bool IsPublished(string status) =>
+        string.Equals(status, "Published", StringComparison.Ordinal);
 }

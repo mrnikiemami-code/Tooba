@@ -82,7 +82,8 @@ public sealed class BulkInquiryModuleAmcW4CertGuardTests
         Assert.Empty(Directory.EnumerateFiles(contracts, "*.cs", SearchOption.TopDirectoryOnly));
         Assert.False(Directory.Exists(Path.Combine(app, "Commands")));
         Assert.True(Directory.Exists(Path.Combine(app, "Storefront", "Commands")));
-        Assert.True(Directory.Exists(Path.Combine(app, "Storefront", "Validators")));
+        Assert.True(Directory.Exists(Path.Combine(app, "Validation")));
+        Assert.False(Directory.Exists(Path.Combine(app, "Storefront", "Validators")));
         Assert.True(Directory.Exists(Path.Combine(app, "Composition")));
 
         Assert.Equal(

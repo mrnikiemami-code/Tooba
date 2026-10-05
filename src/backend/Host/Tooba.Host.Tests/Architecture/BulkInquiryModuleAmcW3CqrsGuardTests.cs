@@ -35,9 +35,11 @@ public sealed class BulkInquiryModuleAmcW3CqrsGuardTests
         }
 
         var validator = File.ReadAllText(Path.Combine(
-            app, "Storefront", "Validators", "SubmitBulkInquiryCommandValidator.cs"));
-        Assert.Contains("BulkInquiryErrorCodes.", validator, StringComparison.Ordinal);
+            app, "Validation", "SubmitBulkInquiryCommandValidator.cs"));
+        Assert.Contains("BulkInquiryValidationCodes.", validator, StringComparison.Ordinal);
         Assert.DoesNotContain("\"bulk_inquiry.validation.", validator, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(app, "Storefront", "Validators")));
+        Assert.True(File.Exists(Path.Combine(app, "Validation", "BulkInquiryValidationCodes.cs")));
 
         var command = File.ReadAllText(Path.Combine(
             app, "Storefront", "Commands", "SubmitBulkInquiryCommand.cs"));

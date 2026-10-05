@@ -69,34 +69,34 @@ public sealed class BulkPurchaseInquiry
         DateTimeOffset now)
     {
         if (productId == Guid.Empty)
-            throw new SemanticException(new SemanticError(BulkInquiryErrorCodes.Rejected));
+            throw Rejected();
 
         var trimmedName = fullName?.Trim() ?? string.Empty;
         if (!PersianNamePattern.IsMatch(trimmedName))
-            throw new SemanticException(new SemanticError(BulkInquiryErrorCodes.Rejected));
+            throw Rejected();
 
         var trimmedPhone = phone?.Trim() ?? string.Empty;
         if (trimmedPhone.Length != PhoneLength || !trimmedPhone.StartsWith("09", StringComparison.Ordinal) || !trimmedPhone.All(char.IsDigit))
-            throw new SemanticException(new SemanticError(BulkInquiryErrorCodes.Rejected));
+            throw Rejected();
 
         if (quantity is < QuantityMin or > QuantityMax)
-            throw new SemanticException(new SemanticError(BulkInquiryErrorCodes.Rejected));
+            throw Rejected();
 
         var trimmedAddress = address?.Trim() ?? string.Empty;
         if (trimmedAddress.Length < AddressMinLength || trimmedAddress.Length > AddressMaxLength)
-            throw new SemanticException(new SemanticError(BulkInquiryErrorCodes.Rejected));
+            throw Rejected();
 
         var trimmedEmail = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
         if (trimmedEmail?.Length > EmailMaxLength)
-            throw new SemanticException(new SemanticError(BulkInquiryErrorCodes.Rejected));
+            throw Rejected();
 
         var trimmedCompany = string.IsNullOrWhiteSpace(companyName) ? null : companyName.Trim();
         if (trimmedCompany?.Length > CompanyNameMaxLength)
-            throw new SemanticException(new SemanticError(BulkInquiryErrorCodes.Rejected));
+            throw Rejected();
 
         var trimmedNotes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
         if (trimmedNotes?.Length > NotesMaxLength)
-            throw new SemanticException(new SemanticError(BulkInquiryErrorCodes.Rejected));
+            throw Rejected();
 
         return new BulkPurchaseInquiry
         {
@@ -113,4 +113,8 @@ public sealed class BulkPurchaseInquiry
             CreatedAt = now,
         };
     }
+
+    /// <summary>خطای قراردادی تایپ‌شده با کد پایدار؛ بدون متن محلی‌سازی‌شده.</summary>
+    private static ContractOperationException Rejected() =>
+        new(BulkInquiryErrorCodes.Rejected);
 }
