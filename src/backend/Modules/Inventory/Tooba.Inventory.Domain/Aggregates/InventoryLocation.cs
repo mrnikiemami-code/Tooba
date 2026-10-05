@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Domain.ValueObjects;
 
 namespace Tooba.Inventory.Domain.Aggregates;
@@ -53,17 +54,17 @@ public sealed class InventoryLocation : IHasDomainEvents
     {
         if (locationId == Guid.Empty)
         {
-            throw new InvalidOperationException("inventory.location.id_required");
+            throw new ContractOperationException(InventoryErrorCodes.LocationIdRequired);
         }
 
         if (string.IsNullOrWhiteSpace(code) || code.Trim().Length > 32)
         {
-            throw new InvalidOperationException("inventory.location.code_invalid");
+            throw new ContractOperationException(InventoryErrorCodes.LocationCodeInvalid);
         }
 
         if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > 128)
         {
-            throw new InvalidOperationException("inventory.location.name_required");
+            throw new ContractOperationException(InventoryErrorCodes.LocationNameRequired);
         }
 
         return new InventoryLocation

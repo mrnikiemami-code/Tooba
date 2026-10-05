@@ -1,6 +1,7 @@
 ﻿using Tooba.Inventory.Infrastructure.Directories;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Aggregates;
+using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Application.Ports;
 using Microsoft.EntityFrameworkCore;
@@ -47,13 +48,13 @@ public sealed class InventoryReturnGateway : IInventoryReturnGateway
     {
         if (quantity <= 0)
         {
-            throw new InvalidOperationException("domain.invariant");
+            throw new ContractOperationException(InventoryErrorCodes.ReturnRestockInvalid);
         }
 
         var normalizedKey = idempotencyKey.Trim();
         if (string.IsNullOrWhiteSpace(normalizedKey))
         {
-            throw new InvalidOperationException("domain.invariant");
+            throw new ContractOperationException(InventoryErrorCodes.ReturnRestockInvalid);
         }
 
         if (await _db.ReturnRestockInbox.AnyAsync(x => x.IdempotencyKey == normalizedKey, cancellationToken))
@@ -63,11 +64,11 @@ public sealed class InventoryReturnGateway : IInventoryReturnGateway
 
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
-            ?? throw new InvalidOperationException("inventory.reservation.not_found");
+            ?? throw new ContractOperationException(InventoryErrorCodes.ReservationNotFound);
 
         if (quantity > reservation.Quantity)
         {
-            throw new InvalidOperationException("domain.invariant");
+            throw new ContractOperationException(InventoryErrorCodes.ReturnRestockInvalid);
         }
 
         switch (reservation.Status)
@@ -84,7 +85,7 @@ public sealed class InventoryReturnGateway : IInventoryReturnGateway
             case StockReservationStatus.Held:
                 if (quantity != reservation.Quantity)
                 {
-                    throw new InvalidOperationException("domain.invariant");
+                    throw new ContractOperationException(InventoryErrorCodes.ReturnRestockInvalid);
                 }
 
                 await _directory.ReleaseAsync(reservationId, cancellationToken);
@@ -92,7 +93,7 @@ public sealed class InventoryReturnGateway : IInventoryReturnGateway
             case StockReservationStatus.Released:
                 break;
             default:
-                throw new InvalidOperationException("domain.invariant");
+                throw new ContractOperationException(InventoryErrorCodes.ReturnRestockInvalid);
         }
 
         _db.ReturnRestockInbox.Add(new ReturnRestockInboxRecord

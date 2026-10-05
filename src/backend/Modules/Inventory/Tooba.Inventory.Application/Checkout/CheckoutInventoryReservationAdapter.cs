@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Inventory.Contracts.Checkout;
@@ -53,14 +54,14 @@ public sealed class CheckoutInventoryReservationAdapter : ICheckoutInventoryRese
 
                 if (!stock.TryGetValue(cartLine.OfferId, out var availability))
                 {
-                    throw new InvalidOperationException("inventory.supply.unavailable");
+                    throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
                 }
 
                 var location = availability.Locations
                     .Where(x => x.Available >= cartLine.Quantity)
                     .OrderByDescending(x => x.Available)
                     .FirstOrDefault()
-                    ?? throw new InvalidOperationException("inventory.supply.unavailable");
+                    ?? throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
 
                 var correlation = string.IsNullOrWhiteSpace(request.CorrelationId)
                     ? $"checkout:{request.CartId:N}"

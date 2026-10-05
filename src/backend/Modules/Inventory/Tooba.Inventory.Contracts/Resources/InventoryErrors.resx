@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="inventory.quantity.invalid" xml:space="preserve"><value>Quantity is invalid.</value></data>
+  <data name="inventory.location.id_required" xml:space="preserve"><value>Location id is required.</value></data>
+  <data name="inventory.location.code_invalid" xml:space="preserve"><value>Location code is invalid.</value></data>
+  <data name="inventory.location.name_required" xml:space="preserve"><value>Location name is required.</value></data>
+  <data name="inventory.location.not_found" xml:space="preserve"><value>Storage location was not found.</value></data>
+  <data name="inventory.position.ids_required" xml:space="preserve"><value>Stock position ids are required.</value></data>
+  <data name="inventory.position.quantity_invalid" xml:space="preserve"><value>Stock position quantities are invalid.</value></data>
+  <data name="inventory.position.not_found" xml:space="preserve"><value>Stock position was not found.</value></data>
+  <data name="inventory.position.id_required" xml:space="preserve"><value>Stock position id is required.</value></data>
+  <data name="inventory.position.id_unknown" xml:space="preserve"><value>Stock position is unknown.</value></data>
+  <data name="inventory.reservation.id_required" xml:space="preserve"><value>Reservation id is required.</value></data>
+  <data name="inventory.reservation.quantity_invalid" xml:space="preserve"><value>Reservation quantity is invalid.</value></data>
+  <data name="inventory.reservation.expiry_invalid" xml:space="preserve"><value>Reservation expiry is invalid.</value></data>
+  <data name="inventory.reservation.review_expiry_invalid" xml:space="preserve"><value>Manual review expiry is invalid.</value></data>
+  <data name="inventory.reservation.not_active" xml:space="preserve"><value>Reservation is no longer active.</value></data>
+  <data name="inventory.reservation.not_found" xml:space="preserve"><value>Reservation was not found.</value></data>
+  <data name="inventory.reservation.conflict" xml:space="preserve"><value>Reservation conflicts with an existing reservation.</value></data>
+  <data name="inventory.reservation.release_mismatch" xml:space="preserve"><value>Reservation release does not match the held quantity.</value></data>
+  <data name="inventory.reservation.consume_mismatch" xml:space="preserve"><value>Reservation consumption does not match the held quantity.</value></data>
+  <data name="inventory.catalog_variant.missing" xml:space="preserve"><value>Catalog variant was not found.</value></data>
+  <data name="inventory.adjustment.quantity_invalid" xml:space="preserve"><value>Adjustment quantity is invalid.</value></data>
+  <data name="inventory.adjustment.quantity_exceeds" xml:space="preserve"><value>Adjustment exceeds the available quantity.</value></data>
+  <data name="inventory.adjustment.kind_unknown" xml:space="preserve"><value>Adjustment kind is unknown.</value></data>
+  <data name="inventory.adjustment.reason_required" xml:space="preserve"><value>Adjustment reason is required.</value></data>
+  <data name="inventory.supply.unavailable" xml:space="preserve"><value>Stock is not available.</value></data>
+  <data name="inventory.supply.mode_invalid" xml:space="preserve"><value>Supply mode is invalid.</value></data>
+  <data name="inventory.manual_review.unavailable" xml:space="preserve"><value>Stock is unavailable for manual payment review.</value></data>
+  <data name="inventory.return_restock.invalid" xml:space="preserve"><value>Return restock request is invalid.</value></data>
+  <data name="inventory.outbox.unmapped_event_type" xml:space="preserve"><value>Integration event type is not registered.</value></data>
+</root>

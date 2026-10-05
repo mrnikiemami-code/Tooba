@@ -47,10 +47,15 @@ public sealed class CartLifetimeSeparationTests
         Assert.Contains("ReserveCartLinesForOrderAsync", checkout, StringComparison.Ordinal);
         Assert.Contains("requireReservation: false", checkout, StringComparison.Ordinal);
         Assert.Contains("order-commit:", adapter, StringComparison.Ordinal);
-        Assert.Contains("inventory.supply.unavailable", adapter, StringComparison.Ordinal);
+        // Canonical typed-fault seam: adapter must use the Inventory error code owner, not a raw string literal.
+        Assert.Contains("InventoryErrorCodes.SupplyUnavailable", adapter, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"inventory.", adapter, StringComparison.Ordinal);
+        Assert.Contains(
+            "public const string SupplyUnavailable = \"inventory.supply.unavailable\"",
+            Read("src/backend/Modules/Inventory/Tooba.Inventory.Contracts/Errors/InventoryErrorCodes.cs"),
+            StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync(", Read("src/backend/Modules/Cart/Tooba.Cart.Application/Presentation/CartPresentationComposer.cs"), StringComparison.Ordinal);
     }
-
     [Fact]
     public void Settings_separate_cart_persistence_from_payment_holds()
     {

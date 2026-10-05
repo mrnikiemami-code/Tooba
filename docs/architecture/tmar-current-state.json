@@ -10134,5 +10134,51 @@
         "commit": "PENDING_W0_COMMIT",
         "waveOutcome": "MIGRATE_UNBLOCKED",
         "evidence": "docs/architecture/evidence/TB-TMAR-INVENTORY-AMSC-001-W0/analyze.md"
+    },
+    "inventoryModuleAmsc001W1": {
+        "task": "TB-TMAR-INVENTORY-AMSC-001-W1",
+        "mode": "ARCHITECT_DIRECT_AMSC",
+        "skill": "tooba-architecture-migrate",
+        "target": "src/backend/Modules/Inventory/Tooba.Inventory.*",
+        "parentTask": "TB-TMAR-INVENTORY-AMSC-001-W0",
+        "startingHead": "c6917553",
+        "state": "MIGRATE_COMPLETE",
+        "verdict": "MIGRATED",
+        "lockVersion": "ARCH-COMPLETE-002",
+        "localizationState": "CANONICAL_29_DECLARED_CODES_28_OWNED_DESCRIPTORS_BILINGUAL_RESX_AND_RESOURCE_SET",
+        "stableErrorCodeState": "REGISTERED_SINGLE_OWNER_PER_CODE",
+        "descriptorOwnership": "InventoryErrorCatalogContributor owns 28 Inventory-produced descriptors; inventory.reservation.retry_limit_reached stays Order-owned; inventory.recovery.* stays Order-owned and outside the Inventory Owns() keyspace.",
+        "fileCohesionState": "COHESIVE",
+        "cohesionAction": "Directories/InventoryDirectory.cs 791 LOC -> 324 LOC persistence seam + OrderSupply(302) + Availability(84) + Reclaimer(57) + SellerWrite(47) + Lookups(43) partials; OpenInventoryUseCaseGuard moved to its own file; Application/Ports/InventoryDirectoryPorts.cs split into IInventoryDirectory/IInventoryUseCaseGuard/ReservationReceipt.",
+        "faultTypingState": "SINGLE_TYPED_MECHANISM",
+        "faultTypingAction": "Raw InvalidOperationException and raw inventory.* literals removed from Domain/Application/Infrastructure; ContractOperationException + InventoryErrorCodes everywhere; InventoryOperation composition seam maps typed faults to Result.",
+        "apiResultPatternState": "CANONICAL",
+        "contractsBoundaryState": "CLEAN",
+        "crossModuleCouplingState": "LEGAL_CONTRACTS_ONLY",
+        "crossModuleJoinState": "NONE",
+        "domainToOwnContractsEdge": "Tooba.Inventory.Domain now references Tooba.Inventory.Contracts (own module only) so aggregates raise typed module-owned codes; no foreign module edge added.",
+        "behaviorPreservationRisk": "LOW",
+        "behaviorPreservationEvidence": "All 24 emitted code strings preserved; 4 migrations untouched; EnsureOrderSupply mode matrix, atomic ExecuteUpdateAsync guards, FOR UPDATE SKIP LOCKED reclaim and idempotency semantics unchanged; DI lifetimes preserved.",
+        "hostTouched": false,
+        "hostTestGuardsAligned": [
+            "Host.Tests/CartLifetimeSeparationTests.cs asserts the adapter uses InventoryErrorCodes.SupplyUnavailable instead of a raw literal (the literal the migration deliberately removed)",
+            "Host.Tests/OrderSupplyFoundationTests.cs InvInfra() aggregates InventoryDirectory*.cs partials",
+            "Host.Tests/UnpaidOrderExpiryTests.cs reads InventoryDirectory.OrderSupply.cs"
+        ],
+        "verification": {
+            "inventoryInfrastructureBuild": "succeeded",
+            "hostTestsBuild": "succeeded",
+            "inventoryTests": "13/13 passed",
+            "inventoryBehaviorHostSubset": "37 passed / 5 skipped / 0 failed",
+            "errorCatalogUniqueCodeGuard": "3/3 passed",
+            "fullHostTestsVsW0Baseline": "identical 82 pre-existing failures, zero new failures"
+        },
+        "durableGuard": "Tooba.Inventory.Tests/Architecture/InventoryAmcW1MigrateGuardTests.cs (7 facts)",
+        "structureHandoffState": "REQUIRED",
+        "remainingCertificationBlockers": [
+            "W0 blocker 5 only: SoT/manifest honesty — no structureCertified manifest entry, no ARCH-COMPLETE-002 durable cert guard, no Master Recovery checkpoint."
+        ],
+        "waveOutcome": "STRUCTURE_UNBLOCKED",
+        "evidence": "docs/architecture/evidence/TB-TMAR-INVENTORY-AMSC-001-W1/migrate.md"
     }
 }

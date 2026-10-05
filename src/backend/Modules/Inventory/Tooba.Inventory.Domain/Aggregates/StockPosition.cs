@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Events;
 
@@ -74,7 +75,7 @@ public sealed class StockPosition : IHasDomainEvents
     {
         if (stockItemId == Guid.Empty || offerId == Guid.Empty || catalogVariantId == Guid.Empty || locationId == Guid.Empty)
         {
-            throw new InvalidOperationException("inventory.position.ids_required");
+            throw new ContractOperationException(InventoryErrorCodes.PositionIdsRequired);
         }
 
         var position = new StockPosition
@@ -143,7 +144,7 @@ public sealed class StockPosition : IHasDomainEvents
     {
         if (onHand < 0 || reserved < 0 || reserved > onHand)
         {
-            throw new InvalidOperationException("inventory.position.quantity_invalid");
+            throw new ContractOperationException(InventoryErrorCodes.PositionQuantityInvalid);
         }
     }
 }

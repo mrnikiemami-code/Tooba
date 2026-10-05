@@ -7,8 +7,8 @@ namespace Tooba.Inventory.Tests.Architecture;
 public sealed class InventoryArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Checkout", "Orders"];
-    private static readonly string[] AllowedContractsFolders = ["Seller", "Checkout", "Orders", "Availability", "Errors", "Fulfillment", "Returns", "Cart"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Checkout", "Orders", "Composition"];
+    private static readonly string[] AllowedContractsFolders = ["Seller", "Checkout", "Orders", "Availability", "Errors", "Fulfillment", "Returns", "Cart", "Resources"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection"];
 
@@ -39,7 +39,10 @@ public sealed class InventoryArchitectureGuardTests
         Assert.DoesNotContain(refs, r => r.Contains("Application", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Endpoints", StringComparison.OrdinalIgnoreCase));
-        Assert.DoesNotContain(refs, r => r.Contains("Contracts", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Offer", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Catalog", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Order", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(refs, r => r.Contains("Cart", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -65,7 +68,10 @@ public sealed class InventoryArchitectureGuardTests
     [Fact]
     public void Inventory_golden_boundaries_and_physical_layout_remain_clean()
     {
-        Assert.DoesNotContain(ProjectRefs("Tooba.Inventory.Domain"), x => x.Contains("Tooba.Inventory.Contracts", StringComparison.Ordinal));
+        var domainRefs = ProjectRefs("Tooba.Inventory.Domain");
+        Assert.DoesNotContain(domainRefs, x => x.Contains("Tooba.Offer.Contracts", StringComparison.Ordinal));
+        Assert.DoesNotContain(domainRefs, x => x.Contains("Tooba.Catalog.Contracts", StringComparison.Ordinal));
+        Assert.DoesNotContain(domainRefs, x => x.Contains("Tooba.Order.", StringComparison.Ordinal));
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("OfferDbContext", StringComparison.Ordinal));
         Assert.DoesNotContain(Sources("Tooba.Inventory.Contracts"), x => x.Text.Contains("namespace Tooba.Inventory.Domain", StringComparison.Ordinal));

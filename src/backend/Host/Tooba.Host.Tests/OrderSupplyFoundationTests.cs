@@ -22,9 +22,15 @@ public sealed class OrderSupplyFoundationTests
 
     private static string InvInfra()
     {
-        return File.ReadAllText(Path.GetFullPath(Path.Combine(
+        // Aggregate the cohesive InventoryDirectory partials (persistence seam, order-supply engine,
+        // reclaimer, cross-module lookups) so guards assert the whole directory, not one shard.
+        var dir = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Inventory",
-            "Tooba.Inventory.Infrastructure", "Directories", "InventoryDirectory.cs")));
+            "Tooba.Inventory.Infrastructure", "Directories"));
+        return string.Concat(Directory
+            .GetFiles(dir, "InventoryDirectory*.cs", SearchOption.TopDirectoryOnly)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .Select(File.ReadAllText));
     }
 
     private static string Contracts()

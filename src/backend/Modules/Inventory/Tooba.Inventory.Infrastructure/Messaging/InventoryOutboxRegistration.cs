@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Events;
@@ -114,7 +115,7 @@ public sealed class InventoryOutboxRegistration : IOutboxModuleRegistration
             return InventoryAvailabilityChangedIntegrationEvent.EventTypeName;
         }
 
-        throw new InvalidOperationException("inventory.outbox.unmapped_event_type");
+        throw new ContractOperationException(InventoryErrorCodes.OutboxUnmappedEventType);
     }
 
     /// <inheritdoc />

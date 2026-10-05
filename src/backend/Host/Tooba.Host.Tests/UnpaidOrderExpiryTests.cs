@@ -184,7 +184,7 @@ public sealed class UnpaidOrderExpiryTests
     public void Regression_r5_r9_surfaces_remain()
     {
         Assert.Contains("PromoteReservationsForManualPaymentReviewAsync", Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/Integrations/Payment/OrderPaymentBridge.cs"), StringComparison.Ordinal);
-        Assert.Contains("EnsureOrderSupplyAsync", Read("src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.cs"), StringComparison.Ordinal);
+        Assert.Contains("EnsureOrderSupplyAsync", Read("src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.OrderSupply.cs"), StringComparison.Ordinal);
         Assert.Contains("GetStatusesAsync", Read("src/backend/Modules/Order/Tooba.Order.Application/Admin/Supply/Services/OrderSupplyService.cs"), StringComparison.Ordinal);
         Assert.DoesNotContain("ReserveAsync", Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs"), StringComparison.Ordinal);
         Assert.Contains(nameof(ICheckoutReservationHoldPolicy), typeof(ICheckoutReservationHoldPolicy).Name);

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="inventory.quantity.invalid" xml:space="preserve"><value>مقدار موجودی نامعتبر است.</value></data>
+  <data name="inventory.location.id_required" xml:space="preserve"><value>شناسهٔ محل نگهداری الزامی است.</value></data>
+  <data name="inventory.location.code_invalid" xml:space="preserve"><value>کد محل نگهداری نامعتبر است.</value></data>
+  <data name="inventory.location.name_required" xml:space="preserve"><value>نام محل نگهداری الزامی است.</value></data>
+  <data name="inventory.location.not_found" xml:space="preserve"><value>محل نگهداری پیدا نشد یا غیرفعال است.</value></data>
+  <data name="inventory.position.ids_required" xml:space="preserve"><value>شناسه‌های موقعیت موجودی الزامی است.</value></data>
+  <data name="inventory.position.quantity_invalid" xml:space="preserve"><value>مقادیر موقعیت موجودی نامعتبر است.</value></data>
+  <data name="inventory.position.not_found" xml:space="preserve"><value>موقعیت موجودی پیدا نشد.</value></data>
+  <data name="inventory.position.id_required" xml:space="preserve"><value>شناسهٔ موقعیت موجودی الزامی است.</value></data>
+  <data name="inventory.position.id_unknown" xml:space="preserve"><value>موقعیت موجودی ناشناخته است.</value></data>
+  <data name="inventory.reservation.id_required" xml:space="preserve"><value>شناسهٔ رزرو الزامی است.</value></data>
+  <data name="inventory.reservation.quantity_invalid" xml:space="preserve"><value>مقدار رزرو نامعتبر است.</value></data>
+  <data name="inventory.reservation.expiry_invalid" xml:space="preserve"><value>مهلت رزرو نامعتبر است.</value></data>
+  <data name="inventory.reservation.review_expiry_invalid" xml:space="preserve"><value>مهلت بررسی پرداخت دستی نامعتبر است.</value></data>
+  <data name="inventory.reservation.not_active" xml:space="preserve"><value>رزرو موجودی این سفارش دیگر فعال نیست.</value></data>
+  <data name="inventory.reservation.not_found" xml:space="preserve"><value>رزرو موجودی پیدا نشد.</value></data>
+  <data name="inventory.reservation.conflict" xml:space="preserve"><value>رزرو موجودی با یک رزرو موجود تعارض دارد.</value></data>
+  <data name="inventory.reservation.release_mismatch" xml:space="preserve"><value>آزادسازی رزرو با مقدار قفل‌شده هم‌خوان نیست.</value></data>
+  <data name="inventory.reservation.consume_mismatch" xml:space="preserve"><value>مصرف رزرو با مقدار قفل‌شده هم‌خوان نیست.</value></data>
+  <data name="inventory.catalog_variant.missing" xml:space="preserve"><value>گونهٔ کاتالوگ مرتبط با این پیشنهاد پیدا نشد.</value></data>
+  <data name="inventory.adjustment.quantity_invalid" xml:space="preserve"><value>مقدار اصلاح موجودی نامعتبر است.</value></data>
+  <data name="inventory.adjustment.quantity_exceeds" xml:space="preserve"><value>مقدار اصلاح از موجودی قابل‌دسترس بیشتر است.</value></data>
+  <data name="inventory.adjustment.kind_unknown" xml:space="preserve"><value>نوع اصلاح موجودی نامعتبر است.</value></data>
+  <data name="inventory.adjustment.reason_required" xml:space="preserve"><value>دلیل اصلاح موجودی الزامی است.</value></data>
+  <data name="inventory.supply.unavailable" xml:space="preserve"><value>موجودی کافی برای این عملیات در دسترس نیست.</value></data>
+  <data name="inventory.supply.mode_invalid" xml:space="preserve"><value>حالت تأمین موجودی نامعتبر است.</value></data>
+  <data name="inventory.manual_review.unavailable" xml:space="preserve"><value>موجودی این سفارش در زمان بررسی پرداخت دستی در دسترس نیست.</value></data>
+  <data name="inventory.return_restock.invalid" xml:space="preserve"><value>درخواست بازگرداندن موجودی مرجوعی نامعتبر است.</value></data>
+  <data name="inventory.outbox.unmapped_event_type" xml:space="preserve"><value>نوع رویداد یکپارچه‌سازی ثبت نشده است.</value></data>
+</root>

@@ -15,6 +15,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.ModuleContracts;
 using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Infrastructure.Persistence;
@@ -38,6 +40,8 @@ public sealed class InventoryModule : IToobaModule
         ArgumentNullException.ThrowIfNull(environment);
 
         services.AddSingleton<IOutboxModuleRegistration, InventoryOutboxRegistration>();
+        services.AddSingleton<IErrorCatalogContributor, InventoryErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, InventoryErrorResourceSet>();
         services.AddScoped<IInventoryUseCaseGuard, OpenInventoryUseCaseGuard>();
         services.AddScoped<IInventoryDirectory, InventoryDirectory>();
         services.AddScoped<IInventoryReturnGateway, InventoryReturnGateway>();

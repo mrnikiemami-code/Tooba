@@ -47,8 +47,7 @@ public sealed class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePor
                 cancellationToken);
             return receipt.ReservationId;
         }
-        catch (ContractOperationException ex) when (
-            ex.Code.StartsWith("inventory.", StringComparison.Ordinal))
+        catch (ContractOperationException ex) when (InventoryErrorCodes.IsKnown(ex.Code))
         {
             throw new ContractOperationException("order.restore.inventory_failed", ex);
         }
@@ -74,7 +73,7 @@ public sealed class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePor
 
         if (existing is null)
         {
-            throw new ContractOperationException("inventory.reservation.not_found");
+            throw new ContractOperationException(InventoryErrorCodes.ReservationNotFound);
         }
 
         try
@@ -94,7 +93,7 @@ public sealed class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePor
         }
         catch (InvalidOperationException)
         {
-            throw new ContractOperationException("inventory.manual_review.unavailable");
+            throw new ContractOperationException(InventoryErrorCodes.ManualReviewUnavailable);
         }
     }
 
@@ -216,7 +215,7 @@ public sealed class OrderInventoryLifecycleAdapter : IOrderInventoryLifecyclePor
     {
         if (!Enum.TryParse<OrderSupplyMode>(request.Mode, ignoreCase: true, out var mode))
         {
-            throw new ContractOperationException("inventory.supply.mode_invalid");
+            throw new ContractOperationException(InventoryErrorCodes.SupplyModeInvalid);
         }
 
         var result = await _inventory.EnsureOrderSupplyAsync(

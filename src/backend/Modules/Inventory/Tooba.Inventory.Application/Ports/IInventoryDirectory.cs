@@ -1,31 +1,7 @@
-﻿using Tooba.Inventory.Application.Orders;
+using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Domain.ValueObjects;
-using Tooba.Inventory.Domain.Aggregates;
-using Tooba.Inventory.Domain.Events;
 
 namespace Tooba.Inventory.Application.Ports;
-
-/// <summary>
-/// نتیجهٔ رزرو. سبد خرید ساخته نمی‌شود.
-/// </summary>
-public sealed record ReservationReceipt(
-    Guid ReservationId,
-    Guid StockItemId,
-    Guid OfferId,
-    decimal Quantity,
-    StockReservationStatus Status,
-    DateTimeOffset? ExpiresAt);
-
-/// <summary>
-/// درز نگهبان مجوز Inventory. ماتریس انبار اینجا نیست.
-/// </summary>
-public interface IInventoryUseCaseGuard
-{
-    /// <summary>
-    /// اجازهٔ نوشتن موجودی را بررسی می‌کند. پیاده‌سازی فعلی فقط درز است.
-    /// </summary>
-    Task EnsureCanMutateAsync(CancellationToken cancellationToken);
-}
 
 /// <summary>
 /// نوشتن foundation موجودی. Cart و Order اینجا نیستند.
@@ -74,9 +50,6 @@ public interface IInventoryDirectory
     /// </summary>
     Task<ReservationReceipt?> FindReservationAsync(Guid reservationId, CancellationToken cancellationToken);
 
-    /// <summary>
-    /// رزروهای Held منقضی‌شده را با زمان UTC سرور آزاد می‌کند؛ تایمر کلاینت نیست.
-    /// </summary>
     /// <summary>
     /// رزروهای Held منقضی را batch-wise با SKIP LOCKED آزاد می‌کند.
     /// </summary>
