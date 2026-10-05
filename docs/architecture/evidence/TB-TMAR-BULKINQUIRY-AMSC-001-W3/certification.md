@@ -145,8 +145,8 @@ annotated with `supersededBy`; `structureLock.certifiedModules` still contains B
 
 ## 22. Focused tests
 
-`dotnet test --filter FullyQualifiedName~BulkInquiry` → **24 passed / 0 failed / 2 skipped** (skips are
-Postgres Testcontainers).
+`dotnet test --filter FullyQualifiedName~BulkInquiry` → **23 passed / 0 failed / 2 skipped** (skips are
+Postgres Testcontainers). Reconciled by `TB-TMAR-BULKINQUIRY-AMSC-001-W3-R1` from one deterministic run.
 
 ## 23. Residual non-blocking debt
 

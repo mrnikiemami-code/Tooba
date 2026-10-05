@@ -167,6 +167,61 @@ public sealed class BulkInquiryModuleAmsc001W3CertGuardTests
         Assert.Contains("HISTORICAL / SUPERSEDED FOR CURRENT BULKINQUIRY MODULE RECOVERY", recovery, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void BulkInquiry_amsc_w3r1_recovery_reconciliation_truth_is_locked()
+    {
+        var root = Repo();
+
+        // Domain keeps only BuildingBlocks + its own Contracts reference; no foreign module layering.
+        var domainCsproj = File.ReadAllText(Path.Combine(
+            root, ModuleRoot, "Tooba.BulkInquiry.Domain", "Tooba.BulkInquiry.Domain.csproj"));
+        Assert.Contains("Tooba.BuildingBlocks.csproj", domainCsproj, StringComparison.Ordinal);
+        Assert.Contains("Tooba.BulkInquiry.Contracts.csproj", domainCsproj, StringComparison.Ordinal);
+        foreach (var foreign in new[]
+                 {
+                     "Tooba.Catalog.", "Tooba.Order.", "Tooba.Cart.", "Tooba.Fulfillment.",
+                     "Tooba.Payment.", "Tooba.Settlement.", "Tooba.AccessControl.", "Tooba.AddressBook.",
+                     "Tooba.Offer.", "Tooba.Inventory.", "Tooba.Party.", "Tooba.StoreContext.",
+                 })
+        {
+            Assert.DoesNotContain(foreign, domainCsproj, StringComparison.Ordinal);
+        }
+
+        using var sot = JsonDocument.Parse(File.ReadAllText(Path.Combine(
+            root, "docs/architecture/tmar-current-state.json")));
+
+        // W1 historical metadata must no longer carry the false REMOVED claim.
+        var w1 = sot.RootElement.GetProperty("bulkInquiryModuleAmsc001W1");
+        var w1Reference = w1.GetProperty("domainContractsReference").GetString();
+        Assert.NotEqual("REMOVED", w1Reference);
+        Assert.Contains("PRESERVED_OWN_MODULE_CONTRACTS_REFERENCE", w1Reference, StringComparison.Ordinal);
+
+        // Additive R1 reconciliation record is present and honest.
+        var w3r1 = sot.RootElement.GetProperty("bulkInquiryModuleAmsc001W3R1");
+        Assert.Equal("BULKINQUIRY_AMSC_001_RECOVERY_RECONCILED", w3r1.GetProperty("state").GetString());
+        Assert.False(w3r1.GetProperty("productionCodeChanged").GetBoolean());
+        Assert.Equal("67b5b55a2fecec33f3109b90252152875680edc0", w3r1.GetProperty("certifiedCommit").GetString());
+        Assert.Equal("PRESERVED_OWN_MODULE_CONTRACTS_REFERENCE", w3r1.GetProperty("w1DomainContractsTruth").GetString());
+        Assert.Equal("ZERO", w3r1.GetProperty("foreignAppInfraDomainCoupling").GetString());
+        Assert.Equal("RECORDED_67B5B55A", w3r1.GetProperty("masterRecoveryW3ShaState").GetString());
+        Assert.Equal("NONE", w3r1.GetProperty("automaticNextImplementationTask").GetString());
+
+        // W3 certification verdict itself is preserved unchanged.
+        Assert.Equal("COMPLETE_REFERENCE_PATTERN",
+            sot.RootElement.GetProperty("bulkInquiryModuleAmsc001W3").GetProperty("verdict").GetString());
+
+        // Repository-global Host root checkpoint must remain untouched by this module-local task.
+        Assert.Equal("TB-TMAR-HOST-ROOT-FINAL-CERT-001", sot.RootElement.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("HOST_ROOT_FINAL_CERTIFIED", sot.RootElement.GetProperty("currentHostCheckpoint").GetString());
+        Assert.Equal("NONE", sot.RootElement.GetProperty("automaticNextImplementationTask").GetString());
+
+        // Master Recovery records the W3 final commit SHA and the R1 reconciliation.
+        var recovery = File.ReadAllText(Path.Combine(root, "docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md"));
+        Assert.Contains("`TB-TMAR-BULKINQUIRY-AMSC-001-W3` Certify `67b5b55a`", recovery, StringComparison.Ordinal);
+        Assert.Contains("BulkInquiry AMSC W3-R1 recovery reconciliation", recovery, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_BULKINQUIRY_AMSC_001_W3_R1", recovery, StringComparison.Ordinal);
+    }
+
     private static string Repo()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

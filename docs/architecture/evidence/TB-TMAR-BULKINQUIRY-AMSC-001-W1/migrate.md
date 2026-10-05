@@ -28,15 +28,21 @@ The `.resx` / `.fa.resx` entries for the 5 validation keys are **unchanged** (lo
 
 ## 2. Typed Domain/Infrastructure faults
 
-Domain threw `SemanticException(SemanticError(code))` and `Tooba.BulkInquiry.Domain` referenced
-`Tooba.BulkInquiry.Contracts`. The dominant ARCH-COMPLETE-002 Domain convention
+Domain threw `SemanticException(SemanticError(code))`. The dominant ARCH-COMPLETE-002 Domain convention
 (Order, Payment, Settlement, Inventory, Content, Fulfillment) is the typed, code-carrying
-`ContractOperationException` with **no** Domain→Contracts project reference.
+`ContractOperationException`. W1 switched the Domain/Directory fault type to that mechanism.
+
+> **W3-R1 truth correction:** an earlier revision of this evidence wrongly stated that W1 removed the
+> `Domain → Contracts` project reference. That removal did **not** happen — commit `9e9e37df` did not
+> touch `Tooba.BulkInquiry.Domain.csproj`. The Domain project **retains** its own-module reference to
+> `Tooba.BulkInquiry.Contracts` for the single stable constant `BulkInquiryErrorCodes.Rejected`. This is
+> legitimate **self-module layering**, not cross-module coupling (foreign App/Infra/Domain coupling
+> remains ZERO). Repository reality wins over the stale prose.
 
 | Before | After |
 |---|---|
 | `Domain` throws `SemanticException` ×9 | `Domain` throws `ContractOperationException(BulkInquiryErrorCodes.Rejected)` via a single private `Rejected()` helper |
-| `Domain/…csproj` → `Tooba.BulkInquiry.Contracts` | reference removed; Domain → BuildingBlocks only |
+| `Domain/…csproj` → own-module `Tooba.BulkInquiry.Contracts` | **unchanged** — reference retained for `BulkInquiryErrorCodes.Rejected` (self-module, not cross-module); Domain → BuildingBlocks + own Contracts only |
 | `Infrastructure/BulkInquiryDirectory` throws `SemanticException` | throws `ContractOperationException(BulkInquiryErrorCodes.Rejected)`; drops the duplicate inline `"Published"` comparison in favour of one private `IsPublished` |
 | `BulkInquiryOperation` maps only `SemanticException` | maps `ContractOperationException` **when the code is a declared BulkInquiry code**, plus `SemanticException` for Application/Infrastructure guard sites; unknown codes/exceptions propagate to the global boundary |
 

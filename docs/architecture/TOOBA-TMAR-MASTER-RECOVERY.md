@@ -293,7 +293,7 @@ Reconciled by `TB-TMAR-FULFILLMENT-AMSC-001-W3-R1` (Recovery/SoT reconciliation 
 BulkInquiry AMSC module recovery checkpoint (authoritative, module-local)
 
 Recorded by `TB-TMAR-BULKINQUIRY-AMSC-001-W3` (Certify). Supersedes the earlier AMC-001 lineage for the current BulkInquiry module recovery; the AMC-001 records stay in the repository as historical evidence only.
-- Accepted lineage: `TB-TMAR-BULKINQUIRY-AMSC-001-W0` Analyze `7b89d81e` -> `TB-TMAR-BULKINQUIRY-AMSC-001-W1` Migrate `9e9e37df` -> `TB-TMAR-BULKINQUIRY-AMSC-001-W2` Structure `82c2fa8e` -> `TB-TMAR-BULKINQUIRY-AMSC-001-W3` Certify.
+- Accepted lineage: `TB-TMAR-BULKINQUIRY-AMSC-001-W0` Analyze `7b89d81e` -> `TB-TMAR-BULKINQUIRY-AMSC-001-W1` Migrate `9e9e37df` -> `TB-TMAR-BULKINQUIRY-AMSC-001-W2` Structure `82c2fa8e` -> `TB-TMAR-BULKINQUIRY-AMSC-001-W3` Certify `67b5b55a`.
 - Final verdict: `COMPLETE_REFERENCE_PATTERN` / `ARCH-COMPLETE-002` `STRUCTURE_CERTIFIED`; final `structureState = CERTIFIED` (W2 `structureState = READY_FOR_CERTIFY` preserved as historical W2 truth).
 - 1 endpoint-reachable request / 1 handler; 1 VALIDATOR_REQUIRED + 0 NO_VALIDATOR_REQUIRED; 1 module-owned route (`POST /v1/storefront/products/{slug}/bulk-inquiries`).
 - Typed faults: Domain/Infrastructure throw code-carrying `ContractOperationException`; `BulkInquiryOperation` maps declared BulkInquiry codes to `Result` and lets unknown faults reach the global boundary.
@@ -302,6 +302,17 @@ Recorded by `TB-TMAR-BULKINQUIRY-AMSC-001-W3` (Certify). Supersedes the earlier 
 - Schema / migrations unchanged; blocking residual debt ZERO; `automaticNextImplementationTask = NONE`.
 - Evidence root: `docs/architecture/evidence/TB-TMAR-BULKINQUIRY-AMSC-001-W0..W3/`.
 - Stop gate: `USER_REVIEW_BULKINQUIRY_AMSC_001_W3`.
+
+BulkInquiry AMSC W3-R1 recovery reconciliation (module-local)
+
+Recorded by `TB-TMAR-BULKINQUIRY-AMSC-001-W3-R1` (recovery/SoT/evidence reconciliation only; zero production change). W3 certification is preserved unchanged.
+- Historical-truth correction: the W1 evidence/SoT claim that `Domain → Contracts` was removed was false. Commit `9e9e37df` never modified `Tooba.BulkInquiry.Domain.csproj`; the Domain project keeps its legitimate **own-module** reference to `Tooba.BulkInquiry.Contracts` for the single stable constant `BulkInquiryErrorCodes.Rejected`. This is self-module layering, not cross-module coupling; foreign App/Infra/Domain coupling remains ZERO.
+- Accepted layering rule (preserved from W2/W3): `BulkInquiry_domain_references_only_buildingblocks_and_own_contracts`.
+- W3 final commit SHA recorded explicitly: `67b5b55a` (Certify).
+- Focused validation metadata reconciled from one deterministic run: `BulkInquiry` filter **23 passed / 0 failed / 2 skipped** (Postgres Testcontainers skips).
+- Certified commit: `67b5b55a2fecec33f3109b90252152875680edc0`; `automaticNextImplementationTask = NONE`.
+- Evidence root: `docs/architecture/evidence/TB-TMAR-BULKINQUIRY-AMSC-001-W3-R1/`.
+- Stop gate: `USER_REVIEW_BULKINQUIRY_AMSC_001_W3_R1`.
 
 - (HISTORICAL / SUPERSEDED FOR CURRENT BULKINQUIRY MODULE RECOVERY) BulkInquiry AMC-001 lineage: `TB-TMAR-BULKINQUIRY-AMC-001-W0` -> `W1` -> `W2` -> `W4` under `COMPLETE_REFERENCE_PATTERN` (Host BulkInquiry CLOSED_HOST_ZERO via the ProductQnA split; `/Modules/BulkInquiry/` solution group; Contracts.Errors/Resources catalog; `Result` + `BulkInquiryOperation` + `ApiResponseFactory`). Superseded by the AMSC-001 four-wave re-standardization above; retained as historical evidence only.
 
