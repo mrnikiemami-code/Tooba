@@ -10675,7 +10675,31 @@
     "guardsWeakened": 0,
     "automaticNextImplementationTask": "NONE",
     "stopGate": "USER_REVIEW_LOCALIZATION_AMSC_001_W3",
-    "commit": "PENDING",
+    "commit": "c3d01dc9",
     "evidence": "docs/architecture/evidence/TB-TMAR-LOCALIZATION-AMSC-001-W3/certification.md"
+  },
+  "localizationModuleAmsc001W3R1": {
+    "task": "TB-TMAR-LOCALIZATION-AMSC-001-W3-R1",
+    "parentTask": "TB-TMAR-LOCALIZATION-AMSC-001-W3",
+    "mode": "RECOVERY_SOT_RECONCILIATION_ONLY",
+    "state": "LOCALIZATION_AMSC_001_RECOVERY_RECONCILED",
+    "productionCodeChanged": false,
+    "certifiedCommit": "c3d01dc90498bc73b58fe769729e7aa5f9e243a6",
+    "certifiedCommitShort": "c3d01dc9",
+    "acceptedLineage": [
+      "TB-TMAR-LOCALIZATION-AMSC-001-W0 Analyze 5a0b882b",
+      "TB-TMAR-LOCALIZATION-AMSC-001-W1 Migrate 074fc3a4",
+      "TB-TMAR-LOCALIZATION-AMSC-001-W2 Structure 6bc3ee2d",
+      "TB-TMAR-LOCALIZATION-AMSC-001-W3 Certify c3d01dc9"
+    ],
+    "masterRecoveryW3ShaBefore": "PLACEHOLDER_THIS_COMMIT",
+    "masterRecoveryW3ShaState": "RECORDED_C3D01DC9",
+    "historicalAmcLineageState": "PRESERVED_HISTORICAL_NOT_REWRITTEN",
+    "globalHostCheckpointState": "PRESERVED",
+    "manifestStructuralState": "NOT_TOUCHED",
+    "guardsWeakened": 0,
+    "automaticNextImplementationTask": "NONE",
+    "stopGate": "USER_REVIEW_LOCALIZATION_AMSC_001_W3_R1",
+    "evidence": "docs/architecture/evidence/TB-TMAR-LOCALIZATION-AMSC-001-W3-R1/reconciliation.md"
   }
 }

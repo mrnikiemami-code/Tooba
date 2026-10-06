@@ -1,0 +1,16 @@
+const fs = require('fs');
+let r = fs.readFileSync('docs/architecture/tmar-current-state.json', 'utf8');
+if (r.charCodeAt(0) === 0xFEFF) r = r.slice(1);
+const j = JSON.parse(r);
+console.log('w3.commit        =', j.localizationModuleAmsc001W3.commit);
+console.log('w3.state         =', j.localizationModuleAmsc001W3.state);
+console.log('w3R1.state       =', j.localizationModuleAmsc001W3R1.state);
+console.log('w3R1.certified   =', j.localizationModuleAmsc001W3R1.certifiedCommit);
+console.log('amc001.state     =', j.localizationAmc001.state);
+console.log('amc001.structSt  =', j.localizationAmc001.structureState);
+console.log('certified count  =', j.structureLock.certifiedModules.length);
+console.log('localization x   =', j.structureLock.certifiedModules.filter(x => x === 'Localization').length);
+console.log('lastAcceptedTask =', j.lastAcceptedTask);
+console.log('autoNext         =', j.automaticNextImplementationTask);
+console.log('hostCheckpoint   =', j.currentHostCheckpoint);
+console.log('workflowStop     =', j.workflowStop);
