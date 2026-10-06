@@ -1686,10 +1686,61 @@
   ],
   "uncertifiedHttpOwningModules": [
     "Returns",
-    "Notification",
     "Support",
     "Wallet",
     "Promotion"
+  ],
+  "modules": [
+    {
+      "module": "Notification",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "TB-TMAR-NOTIFICATION-AMSC-001-W3 (tooba-architecture-certify) certified Notification under ARCH-COMPLETE-002: verdict COMPLETE_REFERENCE_PATTERN, structureState CERTIFIED, structureCertified true. Wave lineage W0 5777ff4a -> W1 c660b933 -> W2 e2f23975 -> W3 this commit. Structure: Contracts/{Commands,Copy,Dtos,Errors,Ports,Resources,Routes} + Domain/{Aggregates,ValueObjects} + Application capability-first {Customer,Seller}/{Commands,Queries} with shared {Composition,Models,Ports,Rendering,Validators} (the W0 technical-axis-first Commands/<UseCase> + Queries/<UseCase> tree was retired; empty technical-axis shells removed) + Infrastructure/{DependencyInjection,Directories,Handlers,Messaging,Observability,Projectors,Persistence/Migrations} + Endpoints/{Customer,Seller,Errors}; path<->namespace EXACT (0 mismatches, EF migration namespace lock preserved); no root .cs in any production project. Canonical mechanisms added in W1: stable-code owner Contracts/Errors/NotificationErrorCodes.cs (5 declared codes + IsKnown) + Application/Composition/NotificationOperation.cs typed-fault-to-Result seam (ContractOperationException, IsKnown filter, unknown codes propagate) + Contracts/Errors/NotificationErrorResources.cs IErrorResourceSet claiming the notification. keyspace + bilingual NotificationErrors.resx/.fa.resx pair + 6 FluentValidation transport validators emitting notification.validation.* codes through the foundation validation.failed descriptor (validator matrix: 6 VALIDATOR_REQUIRED present + 4 NO_VALIDATOR_REQUIRED auth-scoped, gap ZERO) + Endpoints/Errors/NotificationErrorCatalogContributor single-owner descriptors (customer.session.required stays Foundation-owned, consumed without re-registration). Microservice-extractable: zero foreign Application/Infrastructure/Domain project edge in any Notification project; foreign edges are Contracts-only (Order.Contracts reader IOrderNotificationReader, Payment/Fulfillment/Returns.Contracts integration events) and consumers reach Notification only via INotificationCreationPort in Contracts; no cross-module join; own notification schema; 0 migration files touched. Host closure PRESERVED (no Host/Notifications folder; Host residue = composition root registrations + HostNotificationSellerAuthorizer thin security adapter + migration descriptor). Durable guards NotificationModuleAmsc001W3CertGuardTests + NotificationModuleAmsc001W1MigrateGuardTests + NotificationArchitectureGuardTests. Stop gate USER_REVIEW_NOTIFICATION_AMSC_001_W3; automaticNextImplementationTask NONE.",
+      "projects": [
+        {
+          "projectName": "Tooba.Notification.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Boundary semantics only: Commands/ carries the cross-module CreateNotificationCommand, Ports/ the INotificationCreationPort seam consumed by Wallet/Support, Copy/ the shared semantic type contract, Dtos/ the recipient-kind DTO, Routes/ the safe deep-link allowlist, Errors/ the single stable-code owner plus resource set, Resources/ the bilingual NotificationErrors.resx pair; no root .cs and namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Notification.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Aggregates/UserNotification (persistent notification lifecycle invariants) and ValueObjects/NotificationRecipientKind hold the domain rules; no root .cs and namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Notification.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Capability-first Customer/ and Seller/ branches (Commands/Queries secondary axes under the capability, one folder per use case each carrying request+handler and validator files) with shared cross-capability Composition/ (typed-fault seam), Models/, Ports/, Rendering/ and Validators/; the previous technical-axis-first Application/Commands|Queries roots are forbidden; namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": ["Commands", "Queries", "Errors", "Services"]
+        },
+        {
+          "projectName": "Tooba.Notification.Infrastructure",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs: module composition lives under DependencyInjection/, the inbox persistence seam under Directories/, integration-event handlers under Handlers/, the checkout-recipient projection under Projectors/, the outbox registration under Messaging/, counters telemetry under Observability/ and the EF model plus migrations under Persistence/Migrations, with exact path-derived namespaces.",
+          "forbiddenRootFiles": ["NotificationModule.cs", "NotificationDirectory.cs", "NotificationDbContext.cs"],
+          "forbiddenTopLevelFolders": ["Migrations"]
+        },
+        {
+          "projectName": "Tooba.Notification.Endpoints",
+          "rootAllowlist": ["NotificationEndpointModule.cs"],
+          "rootAllowlistJustification": "Composition entry only; Customer/ carries the five customer routes plus the module-owned actor resolver, Seller/ the five seller routes plus the neutral Host-implemented seam, Errors/ the single-owner error catalog contributor; namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": ["NotificationCustomerEndpoints.cs", "NotificationSellerEndpoints.cs"],
+          "forbiddenTopLevelFolders": ["Resources"]
+        },
+        {
+          "projectName": "Tooba.Notification.Tests",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Test-only project with Architecture/ durable guards and Behavior/ behavior tests; no production code and no root .cs.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    }
   ],
   "preCertModules": [
     {
