@@ -78,8 +78,10 @@ public sealed class HostMediaEvacuationGuardTests
     public void Media_stable_error_codes_and_placeholder_fallback_are_preserved()
     {
         var admin = ReadMedia("Admin/MediaAdminEndpoints.cs");
-        Assert.Contains("media.upload.failed", admin, StringComparison.Ordinal);
-        Assert.Contains("media.missing", admin, StringComparison.Ordinal);
+        // AMSC-001-W1 canonicalization: the endpoint references the module code catalog symbolically;
+        // the exact published values are pinned by MediaModuleAmsc001W1MigrateGuardTests.
+        Assert.Contains("MediaErrorCodes.UploadFailed", admin, StringComparison.Ordinal);
+        Assert.Contains("MediaErrorCodes.Missing", admin, StringComparison.Ordinal);
 
         var serving = ReadMedia("Admin/MediaAssetServing.cs");
         Assert.Contains("enableRangeProcessing: true", serving, StringComparison.Ordinal);

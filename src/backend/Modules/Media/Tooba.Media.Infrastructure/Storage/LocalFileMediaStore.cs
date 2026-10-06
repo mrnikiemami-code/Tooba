@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Media.Application.Models;
 using Tooba.Media.Application.Ports;
+using Tooba.Media.Contracts.Errors;
 
 namespace Tooba.Media.Infrastructure.Storage;
 
@@ -13,7 +14,7 @@ public sealed class LocalFileMediaStore : IMediaObjectStore
     public LocalFileMediaStore(string root)
     {
         if (string.IsNullOrWhiteSpace(root))
-            throw new PlatformHttpException(503, "ریشهٔ ذخیره‌سازی رسانه پیکربندی نشده است.", "media.storage.unavailable");
+            throw new ContractOperationException(MediaErrorCodes.StorageUnavailable);
         _root = Path.GetFullPath(root);
         Directory.CreateDirectory(_root);
     }
@@ -24,7 +25,7 @@ public sealed class LocalFileMediaStore : IMediaObjectStore
         _ = contentType;
         var path = ResolveSafePath(key);
         var directory = Path.GetDirectoryName(path)
-            ?? throw new PlatformHttpException(503, "مسیر ذخیره‌سازی رسانه نامعتبر است.", "media.storage.unavailable");
+            ?? throw new ContractOperationException(MediaErrorCodes.StorageUnavailable);
         Directory.CreateDirectory(directory);
         await using var file = new FileStream(
             path,
@@ -78,12 +79,12 @@ public sealed class LocalFileMediaStore : IMediaObjectStore
             || key.Contains(':')
             || key.Contains('\\'))
         {
-            throw new PlatformHttpException(400, "کلید ذخیره‌سازی رسانه نامعتبر است.", "media.storage.unavailable");
+            throw new ContractOperationException(MediaErrorCodes.StorageUnavailable);
         }
 
         var normalized = key.Replace('\\', '/').Trim('/');
         if (normalized.Length == 0 || normalized.StartsWith('/'))
-            throw new PlatformHttpException(400, "کلید ذخیره‌سازی رسانه نامعتبر است.", "media.storage.unavailable");
+            throw new ContractOperationException(MediaErrorCodes.StorageUnavailable);
 
         var full = Path.GetFullPath(Path.Combine(_root, normalized.Replace('/', Path.DirectorySeparatorChar)));
         var rootWithSep = _root.EndsWith(Path.DirectorySeparatorChar)
@@ -92,7 +93,7 @@ public sealed class LocalFileMediaStore : IMediaObjectStore
         if (!full.StartsWith(rootWithSep, StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(full, _root, StringComparison.OrdinalIgnoreCase))
         {
-            throw new PlatformHttpException(400, "کلید ذخیره‌سازی رسانه از ریشه خارج است.", "media.storage.unavailable");
+            throw new ContractOperationException(MediaErrorCodes.StorageUnavailable);
         }
 
         return full;

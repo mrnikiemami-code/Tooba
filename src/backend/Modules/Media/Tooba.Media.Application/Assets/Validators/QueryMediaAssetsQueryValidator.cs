@@ -1,6 +1,5 @@
 using FluentValidation;
 using Tooba.Media.Application.Assets.Queries;
-using Tooba.Media.Contracts.Errors;
 
 namespace Tooba.Media.Application.Assets.Validators;
 
@@ -12,9 +11,9 @@ public sealed class QueryMediaAssetsQueryValidator : AbstractValidator<QueryMedi
     {
         RuleFor(x => x.Page)
             .GreaterThanOrEqualTo(1)
-            .WithErrorCode(MediaErrorCodes.ValidationFailed);
+            .WithErrorCode(MediaValidationCodes.PageOutOfRange);
         RuleFor(x => x.PageSize)
             .InclusiveBetween(1, 100)
-            .WithErrorCode(MediaErrorCodes.ValidationFailed);
+            .WithErrorCode(MediaValidationCodes.PageSizeOutOfRange);
     }
 }

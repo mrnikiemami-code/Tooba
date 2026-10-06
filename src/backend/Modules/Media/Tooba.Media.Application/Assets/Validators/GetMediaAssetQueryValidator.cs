@@ -1,6 +1,5 @@
 using FluentValidation;
 using Tooba.Media.Application.Assets.Queries;
-using Tooba.Media.Contracts.Errors;
 
 namespace Tooba.Media.Application.Assets.Validators;
 
@@ -12,6 +11,6 @@ public sealed class GetMediaAssetQueryValidator : AbstractValidator<GetMediaAsse
     {
         RuleFor(x => x.MediaAssetId)
             .NotEmpty()
-            .WithErrorCode(MediaErrorCodes.ValidationFailed);
+            .WithErrorCode(MediaValidationCodes.MediaAssetIdRequired);
     }
 }

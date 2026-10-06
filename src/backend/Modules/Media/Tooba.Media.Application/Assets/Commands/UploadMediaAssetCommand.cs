@@ -4,6 +4,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Media.Application.Composition;
 using Tooba.Media.Application.Models;
 using Tooba.Media.Application.Ports;
+using Tooba.Media.Contracts.Errors;
 
 namespace Tooba.Media.Application.Assets.Commands;
 
@@ -35,7 +36,7 @@ public sealed class UploadMediaAssetCommandHandler(
 
         if (outcome.IsFailure)
         {
-            logger.LogInformation("media.upload.failed");
+            logger.LogInformation("{MediaUploadEvent}", MediaErrorCodes.UploadFailed);
             return outcome;
         }
 

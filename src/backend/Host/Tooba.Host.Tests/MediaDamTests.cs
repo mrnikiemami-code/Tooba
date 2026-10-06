@@ -1,9 +1,11 @@
+using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Media.Endpoints.Admin;
+using Tooba.Media.Application.Assets.Queries;
 using Tooba.Media.Application.Models;
 using Tooba.Media.Application.Ports;
 using Tooba.Media.Infrastructure.Assets;
@@ -91,9 +93,9 @@ public sealed class MediaDamTests : IAsyncLifetime
         Assert.NotEqual(Guid.Empty, uploaded.MediaAssetId);
 
         await using var plain = new MemoryStream("not-an-image"u8.ToArray());
-        var unsupported = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var unsupported = await Assert.ThrowsAsync<ContractOperationException>(() =>
             directory.UploadAsync(plain, "notes.txt", "text/plain", null, CancellationToken.None));
-        Assert.Equal("media.type.unsupported", unsupported.ErrorCode);
+        Assert.Equal("media.type.unsupported", unsupported.Code);
 
         await using var pdf = new MemoryStream("%PDF-1.4 minimal"u8.ToArray());
         var pdfUploaded = await directory.UploadAsync(pdf, "doc.pdf", "application/pdf", null, CancellationToken.None);
@@ -101,9 +103,9 @@ public sealed class MediaDamTests : IAsyncLifetime
         Assert.True(pdfUploaded.ByteSize > 0);
 
         await using var oversized = new MemoryStream(new byte[5001]);
-        var tooLarge = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+        var tooLarge = await Assert.ThrowsAsync<ContractOperationException>(() =>
             directory.UploadAsync(oversized, "big.jpg", "image/jpeg", null, CancellationToken.None));
-        Assert.Equal("media.too_large", tooLarge.ErrorCode);
+        Assert.Equal("media.too_large", tooLarge.Code);
 
         await using var second = new MemoryStream(MinimalJpegBytes());
         await directory.UploadAsync(second, "second.jpg", "image/jpeg", null, CancellationToken.None);
@@ -116,10 +118,40 @@ public sealed class MediaDamTests : IAsyncLifetime
         Assert.NotEqual(page1.Items[0].MediaAssetId, page2.Items[0].MediaAssetId);
 
         // همان helper که /v1/storefront/media/{id} و /v1/media/{id} استفاده می‌کنند.
-        var served = await MediaAssetServing.TryServeStoredMediaAsync(
-            uploaded.MediaAssetId, directory, store, CancellationToken.None);
+        var served = await MediaAssetServing.ServeAsync(
+            uploaded.MediaAssetId,
+            new MediaTestSender(directory),
+            store,
+            CancellationToken.None);
         var file = Assert.IsType<FileStreamHttpResult>(served);
         Assert.Equal("image/jpeg", file.ContentType);
+    }
+
+    /// <summary>Minimal ISender adapter dispatching the two Media serving queries to the directory.</summary>
+    private sealed class MediaTestSender(IMediaDirectory directory) : ISender
+    {
+        public Task Send<TRequest>(TRequest request, CancellationToken token = default)
+            where TRequest : IRequest =>
+            throw new NotSupportedException(typeof(TRequest).Name);
+
+        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken token = default) =>
+            throw new NotSupportedException(request.GetType().Name);
+
+        public async Task<object?> Send(object request, CancellationToken token = default) =>
+            request switch
+            {
+                GetMediaAssetQuery get => await directory.GetAsync(get.MediaAssetId, token),
+                GetMediaStorageKeyQuery key => await directory.GetStorageKeyAsync(key.MediaAssetId, token),
+                _ => throw new NotSupportedException(request.GetType().Name),
+            };
+
+        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(
+            IStreamRequest<TResponse> request,
+            CancellationToken token = default) =>
+            throw new NotSupportedException();
+
+        public IAsyncEnumerable<object?> CreateStream(object request, CancellationToken token = default) =>
+            throw new NotSupportedException();
     }
 
     private static MediaDbContext CreateDb(string connectionString)

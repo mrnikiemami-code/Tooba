@@ -1,10 +1,13 @@
 using FluentValidation;
 using Tooba.Media.Application.Assets.Commands;
-using Tooba.Media.Contracts.Errors;
 
 namespace Tooba.Media.Application.Assets.Validators;
 
-/// <summary>Transport-shape validation for <see cref="UploadMediaAssetCommand"/>.</summary>
+/// <summary>
+/// Transport-shape validation for <see cref="UploadMediaAssetCommand"/>.
+/// The content stream is only null-checked here and is never read or sought; MIME allow-list,
+/// size ceiling and persistence policy stay in Infrastructure/Application.
+/// </summary>
 public sealed class UploadMediaAssetCommandValidator : AbstractValidator<UploadMediaAssetCommand>
 {
     /// <summary>Registers primitive-shape rules.</summary>
@@ -12,12 +15,12 @@ public sealed class UploadMediaAssetCommandValidator : AbstractValidator<UploadM
     {
         RuleFor(x => x.Content)
             .NotNull()
-            .WithErrorCode(MediaErrorCodes.ValidationFailed);
+            .WithErrorCode(MediaValidationCodes.UploadContentRequired);
         RuleFor(x => x.OriginalFileName)
             .NotEmpty()
-            .WithErrorCode(MediaErrorCodes.ValidationFailed);
+            .WithErrorCode(MediaValidationCodes.UploadOriginalFileNameRequired);
         RuleFor(x => x.ContentType)
             .NotEmpty()
-            .WithErrorCode(MediaErrorCodes.ValidationFailed);
+            .WithErrorCode(MediaValidationCodes.UploadContentTypeRequired);
     }
 }

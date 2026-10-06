@@ -5,7 +5,6 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Media.Application.Models;
 using Tooba.Media.Application.Ports;
 using Tooba.Media.Contracts.Assets;
 using Tooba.Media.Contracts.Errors;

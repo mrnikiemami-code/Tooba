@@ -8,28 +8,6 @@ namespace Tooba.Media.Endpoints.Admin;
 /// <summary>ارائهٔ باینری دارایی Media و fallback نمایشی.</summary>
 public static class MediaAssetServing
 {
-    /// <summary>باینری دارایی Ready را برمی‌گرداند؛ در نبود null برای fallback SVG.</summary>
-    public static async Task<IResult?> TryServeStoredMediaAsync(
-        Guid assetId,
-        IMediaDirectory directory,
-        IMediaObjectStore store,
-        CancellationToken cancellationToken)
-    {
-        var info = await directory.GetAsync(assetId, cancellationToken);
-        if (info is null)
-            return null;
-
-        var key = await directory.GetStorageKeyAsync(assetId, cancellationToken);
-        if (string.IsNullOrWhiteSpace(key))
-            return null;
-
-        var stream = await store.OpenReadAsync(key, cancellationToken);
-        if (stream is null)
-            return null;
-
-        return Results.File(stream, info.ContentType, enableRangeProcessing: true);
-    }
-
     /// <summary>باینری دارایی را از طریق CQRS ارائه می‌کند و در نبود SVG نمایشی برمی‌گرداند.</summary>
     public static async Task<IResult> ServeAsync(
         Guid id,

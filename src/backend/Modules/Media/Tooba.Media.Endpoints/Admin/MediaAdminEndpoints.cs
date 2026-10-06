@@ -1,9 +1,9 @@
-using System.Globalization;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
 using Tooba.BuildingBlocks.Security;
@@ -16,7 +16,8 @@ namespace Tooba.Media.Endpoints.Admin;
 
 /// <summary>
 /// مرزهای HTTP مدیریتی Media DAM.
-/// Stable machine codes preserved for clients: media.upload.failed, media.missing.
+/// Stable machine codes preserved for clients: <see cref="MediaErrorCodes.UploadFailed"/>,
+/// <see cref="MediaErrorCodes.Missing"/>.
 /// </summary>
 public static class MediaAdminEndpoints
 {
@@ -34,6 +35,8 @@ public static class MediaAdminEndpoints
         ISender sender,
         ApiResponseFactory api,
         IAdminPanelAccess adminAccess,
+        IErrorMessageLocalizer errorLocalizer,
+        IRequestLocaleResolver localeResolver,
         CancellationToken cancellationToken)
     {
         var actorUserId = await adminAccess.RequireAuthorizedAsync(request, cancellationToken);
@@ -53,6 +56,7 @@ public static class MediaAdminEndpoints
             return api.FromFailure(new SemanticError(MediaErrorCodes.UploadFailed));
         }
 
+        var culture = localeResolver.Resolve(request.Headers.AcceptLanguage.ToString());
         var results = new List<object>(files.Count);
         foreach (var file in files)
         {
@@ -76,7 +80,7 @@ public static class MediaAdminEndpoints
             {
                 ok = false,
                 fileName = file.FileName,
-                title = ResolveTitle(errorCode),
+                title = ResolveTitle(errorLocalizer, errorCode, culture),
                 errorCode,
             });
         }
@@ -129,8 +133,17 @@ public static class MediaAdminEndpoints
         return api.From(await sender.Send(new GetMediaAssetQuery(id), cancellationToken));
     }
 
-    private static string ResolveTitle(string errorCode) =>
-        MediaErrorResources.Manager.GetString(errorCode, CultureInfo.GetCultureInfo("fa"))
-        ?? MediaErrorResources.Manager.GetString(errorCode, CultureInfo.InvariantCulture)
-        ?? errorCode;
+    /// <summary>
+    /// Per-item batch title resolved through the canonical error localizer and request locale —
+    /// never by reading the module .resx with a hard-coded culture.
+    /// </summary>
+    private static string ResolveTitle(
+        IErrorMessageLocalizer errorLocalizer,
+        string errorCode,
+        System.Globalization.CultureInfo culture) =>
+        errorLocalizer.Localize(
+            errorCode,
+            culture,
+            new Dictionary<string, string?>(),
+            errorCode);
 }
