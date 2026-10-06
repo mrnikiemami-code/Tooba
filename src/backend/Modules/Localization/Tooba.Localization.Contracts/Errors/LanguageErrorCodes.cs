@@ -1,8 +1,44 @@
 namespace Tooba.Localization.Contracts.Errors;
 
-/// <summary>کدهای خطای پایدار زبان (Contracts).</summary>
+/// <summary>
+/// Stable semantic error codes owned by Localization. Values are the machine codes emitted by the
+/// Localization Domain/Application/Infrastructure and mapped by the canonical composed error
+/// catalog. The strings are part of the module boundary and are consumed by Content/Fulfillment
+/// through the Contracts ports; they must never be renamed or repurposed.
+/// </summary>
 public static class LanguageErrorCodes
 {
+    private static readonly HashSet<string> KnownCodes = new(StringComparer.Ordinal)
+    {
+        NotFound,
+        CodeDuplicate,
+        UrlPrefixDuplicate,
+        DefaultMustBeActive,
+        AtLeastOneActive,
+        ExactlyOneDefault,
+        CodeImmutable,
+        UrlPrefixImmutable,
+        CodeInUse,
+        UrlPrefixInUse,
+        Referenced,
+        InvalidCode,
+        InvalidUrlPrefix,
+        InvalidDisplayName,
+        InvalidNativeName,
+        InvalidCulture,
+        InvalidDirection,
+        InvalidCalendar,
+        Inactive,
+    };
+
+    /// <summary>
+    /// True when <paramref name="code"/> is a stable code declared by this Localization catalog.
+    /// Used by the module composition seam so Localization faults map to <c>Result</c> while codes
+    /// owned by another module propagate untouched.
+    /// </summary>
+    public static bool IsKnown(string? code) =>
+        !string.IsNullOrWhiteSpace(code) && KnownCodes.Contains(code);
+
     public const string NotFound = "localization.language.not_found";
     public const string CodeDuplicate = "localization.language.code_duplicate";
     public const string UrlPrefixDuplicate = "localization.language.url_prefix_duplicate";

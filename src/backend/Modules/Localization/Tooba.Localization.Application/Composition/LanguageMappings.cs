@@ -6,7 +6,13 @@ using Tooba.Localization.Domain.Enums;
 
 namespace Tooba.Localization.Application.Composition;
 
-/// <summary>Mapping helpers between Language aggregate and Application snapshots.</summary>
+/// <summary>
+/// Mapping helpers between the Language aggregate and Application snapshots, plus the
+/// direction/calendar primitive parsing that the directory input specs carry.
+/// Expected failures are raised as typed <see cref="ContractOperationException"/> carrying the
+/// module-owned stable code from <see cref="LanguageErrorCodes"/>; the Application
+/// <see cref="LocalizationOperation"/> seam maps that code to <c>Result</c>.
+/// </summary>
 public static class LanguageMappings
 {
     public static LanguageSnapshot ToSnapshot(Language language) => new(
@@ -65,7 +71,7 @@ public static class LanguageMappings
             || string.Equals(raw, "LTR", StringComparison.OrdinalIgnoreCase))
             return LanguageDirection.Ltr;
 
-        throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidDirection));
+        throw new ContractOperationException(LanguageErrorCodes.InvalidDirection);
     }
 
     public static LanguageCalendarPolicy ParseCalendar(string? raw)
@@ -79,6 +85,6 @@ public static class LanguageMappings
             || raw.Equals("Gregorian", StringComparison.OrdinalIgnoreCase))
             return LanguageCalendarPolicy.Gregorian;
 
-        throw new SemanticException(new SemanticError(LanguageErrorCodes.InvalidCalendar));
+        throw new ContractOperationException(LanguageErrorCodes.InvalidCalendar);
     }
 }

@@ -1,6 +1,5 @@
 using FluentValidation;
 using Tooba.Localization.Application.Languages.Commands;
-using Tooba.Localization.Contracts.Errors;
 
 namespace Tooba.Localization.Application.Languages.Validators;
 
@@ -10,12 +9,12 @@ public sealed class CreateLanguageCommandValidator : AbstractValidator<CreateLan
     /// <summary>Registers primitive-shape rules.</summary>
     public CreateLanguageCommandValidator()
     {
-        RuleFor(x => x.Code).NotEmpty().WithErrorCode(LanguageErrorCodes.InvalidCode);
-        RuleFor(x => x.UrlPrefix).NotEmpty().WithErrorCode(LanguageErrorCodes.InvalidUrlPrefix);
-        RuleFor(x => x.DisplayName).NotEmpty().WithErrorCode(LanguageErrorCodes.InvalidDisplayName);
-        RuleFor(x => x.NativeName).NotEmpty().WithErrorCode(LanguageErrorCodes.InvalidNativeName);
-        RuleFor(x => x.Direction).NotEmpty().WithErrorCode(LanguageErrorCodes.InvalidDirection);
-        RuleFor(x => x.Culture).NotEmpty().WithErrorCode(LanguageErrorCodes.InvalidCulture);
-        RuleFor(x => x.CalendarDisplay).NotEmpty().WithErrorCode(LanguageErrorCodes.InvalidCalendar);
+        RuleFor(x => x.Code).NotEmpty().WithErrorCode(LocalizationValidationCodes.LanguageCodeRequired);
+        RuleFor(x => x.UrlPrefix).NotEmpty().WithErrorCode(LocalizationValidationCodes.LanguageUrlPrefixRequired);
+        RuleFor(x => x.DisplayName).NotEmpty().WithErrorCode(LocalizationValidationCodes.LanguageDisplayNameRequired);
+        RuleFor(x => x.NativeName).NotEmpty().WithErrorCode(LocalizationValidationCodes.LanguageNativeNameRequired);
+        RuleFor(x => x.Direction).NotEmpty().WithErrorCode(LocalizationValidationCodes.LanguageDirectionRequired);
+        RuleFor(x => x.Culture).NotEmpty().WithErrorCode(LocalizationValidationCodes.LanguageCultureRequired);
+        RuleFor(x => x.CalendarDisplay).NotEmpty().WithErrorCode(LocalizationValidationCodes.LanguageCalendarRequired);
     }
 }
