@@ -3,7 +3,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Notification.Application.Commands.DismissCustomerNotification;
 using Tooba.Notification.Application.Commands.MarkAllCustomerNotificationsRead;
 using Tooba.Notification.Application.Commands.MarkCustomerNotificationRead;
-using Tooba.Notification.Application.Errors;
+using Tooba.Notification.Contracts.Errors;
 using Tooba.Notification.Application.Models;
 using Tooba.Notification.Application.Ports;
 using Tooba.Notification.Application.Queries.GetCustomerUnreadNotificationCount;
@@ -147,11 +147,11 @@ public sealed class NotificationCqrsAndHttpContractTests
     [Fact]
     public void Customer_session_required_code_is_stable()
     {
-        Assert.Equal("customer.session.required", NotificationErrorCodes.CustomerSessionRequired);
+        Assert.Equal("customer.session.required", NotificationSharedErrorCodes.CustomerSessionRequired);
         Assert.Equal("notification.missing", NotificationErrorCodes.Missing);
-        var failure = Result.Failure(new SemanticError(NotificationErrorCodes.CustomerSessionRequired));
+        var failure = Result.Failure(new SemanticError(NotificationSharedErrorCodes.CustomerSessionRequired));
         Assert.True(failure.IsFailure);
-        Assert.Equal(NotificationErrorCodes.CustomerSessionRequired, failure.Errors[0].Code);
+        Assert.Equal(NotificationSharedErrorCodes.CustomerSessionRequired, failure.Errors[0].Code);
     }
 
     private static async Task SeedCustomerAsync(INotificationDirectory directory, Guid actor, string source, string type)

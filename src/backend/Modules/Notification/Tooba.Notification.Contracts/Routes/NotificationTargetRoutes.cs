@@ -1,7 +1,11 @@
+using Tooba.BuildingBlocks;
+using Tooba.Notification.Contracts.Errors;
+
 namespace Tooba.Notification.Contracts.Routes;
 
 /// <summary>
 /// مسیرهای نسبی امن برای deep-link اعلان (قرارداد عمومی).
+/// نقض allowlist یک خطای تایپ‌شده با کد پایدار ماژول است، نه استثنای خام.
 /// </summary>
 public static class NotificationTargetRoutes
 {
@@ -18,7 +22,7 @@ public static class NotificationTargetRoutes
     public static string RequireAllowed(string route)
     {
         if (string.IsNullOrWhiteSpace(route))
-            throw new InvalidOperationException("notification.target_route.empty");
+            throw new ContractOperationException(NotificationErrorCodes.TargetRouteEmpty);
 
         var trimmed = route.Trim();
         if (!trimmed.StartsWith('/')
@@ -31,14 +35,14 @@ public static class NotificationTargetRoutes
             || trimmed.Contains('\'', StringComparison.Ordinal)
             || trimmed.Contains("javascript", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("notification.target_route.unsafe");
+            throw new ContractOperationException(NotificationErrorCodes.TargetRouteUnsafe);
         }
 
         if (!AllowedPrefixes.Any(prefix =>
                 trimmed.Equals(prefix, StringComparison.OrdinalIgnoreCase)
                 || trimmed.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase)))
         {
-            throw new InvalidOperationException("notification.target_route.not_allowed");
+            throw new ContractOperationException(NotificationErrorCodes.TargetRouteNotAllowed);
         }
 
         return trimmed;

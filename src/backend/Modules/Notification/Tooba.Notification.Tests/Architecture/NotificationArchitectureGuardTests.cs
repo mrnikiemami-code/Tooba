@@ -7,8 +7,8 @@ namespace Tooba.Notification.Tests.Architecture;
 public sealed class NotificationArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Rendering", "Services", "Errors"];
-    private static readonly string[] AllowedContractsFolders = ["Commands", "Dtos", "Ports", "Copy", "Routes", "Events"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Rendering", "Services", "Errors", "Validators", "Composition"];
+    private static readonly string[] AllowedContractsFolders = ["Commands", "Dtos", "Ports", "Copy", "Routes", "Events", "Errors", "Resources"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Projectors", "Handlers", "Observability", "Messaging", "DependencyInjection", "Migrations"];
     private static readonly string[] AllowedEndpointsFolders = ["Customer", "Seller", "Errors", "Resources"];

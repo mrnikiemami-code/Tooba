@@ -3,9 +3,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Fulfillment.Contracts.Events;
 using Tooba.ModuleContracts;
 using Tooba.Notification.Application.Ports;
+using Tooba.Notification.Contracts.Errors;
 using Tooba.Notification.Contracts.Ports;
 using Tooba.Notification.Infrastructure.Directories;
 using Tooba.Notification.Infrastructure.Handlers;
@@ -36,6 +39,7 @@ public sealed class NotificationModule : IToobaModule
 
         services.AddSingleton<NotificationInstrumentation>();
         services.AddSingleton<IOutboxModuleRegistration, NotificationOutboxRegistration>();
+        services.AddSingleton<IErrorResourceSet, NotificationErrorResourceSet>();
         services.AddScoped<NotificationDirectory>();
         services.AddScoped<INotificationDirectory>(sp => sp.GetRequiredService<NotificationDirectory>());
         services.AddScoped<INotificationCreationPort>(sp => sp.GetRequiredService<NotificationDirectory>());

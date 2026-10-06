@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Notification.Contracts.Errors;
 using Tooba.Notification.Application.Models;
 using Tooba.Notification.Contracts.Commands;
 using Tooba.Notification.Contracts.Copy;
@@ -122,10 +123,14 @@ public sealed class NotificationBehaviorCharacterizationTests
     }
 
     [Fact]
-    public void Route_allowlist_rejects_unsafe_paths()
+    public void Route_allowlist_rejects_unsafe_paths_with_typed_stable_codes()
     {
-        Assert.Throws<InvalidOperationException>(() => NotificationTargetRoutes.RequireAllowed("/admin/secret"));
-        Assert.Throws<InvalidOperationException>(() => NotificationTargetRoutes.RequireAllowed("javascript:alert(1)"));
+        // W1: the allow-list violations became typed ContractOperationException faults carrying
+        // the declared module codes (previously raw InvalidOperationException literals).
+        var notAllowed = Assert.Throws<ContractOperationException>(() => NotificationTargetRoutes.RequireAllowed("/admin/secret"));
+        Assert.Equal(NotificationErrorCodes.TargetRouteNotAllowed, notAllowed.Code);
+        var unsafeRoute = Assert.Throws<ContractOperationException>(() => NotificationTargetRoutes.RequireAllowed("javascript:alert(1)"));
+        Assert.Equal(NotificationErrorCodes.TargetRouteUnsafe, unsafeRoute.Code);
         Assert.Equal("/customer-panel/wallet", NotificationTargetRoutes.CustomerWallet());
     }
 

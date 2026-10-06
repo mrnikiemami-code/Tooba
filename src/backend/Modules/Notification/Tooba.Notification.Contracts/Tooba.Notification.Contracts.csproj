@@ -6,4 +6,7 @@
     <RootNamespace>Tooba.Notification.Contracts</RootNamespace>
     <AssemblyName>Tooba.Notification.Contracts</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+  </ItemGroup>
 </Project>

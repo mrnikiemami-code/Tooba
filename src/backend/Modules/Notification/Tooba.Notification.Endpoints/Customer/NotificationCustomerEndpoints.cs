@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Tooba.BuildingBlocks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +8,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Notification.Application.Commands.DismissCustomerNotification;
 using Tooba.Notification.Application.Commands.MarkAllCustomerNotificationsRead;
 using Tooba.Notification.Application.Commands.MarkCustomerNotificationRead;
-using Tooba.Notification.Application.Errors;
+using Tooba.Notification.Contracts.Errors;
 using Tooba.Notification.Application.Queries.GetCustomerUnreadNotificationCount;
 using Tooba.Notification.Application.Queries.ListCustomerNotifications;
 
@@ -34,7 +34,7 @@ public static class NotificationCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(NotificationErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(NotificationSharedErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(
             new ListCustomerNotificationsQuery(actor.Value, skip, take, locale ?? "fa"),
             cancellationToken));
@@ -46,7 +46,7 @@ public static class NotificationCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(NotificationErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(NotificationSharedErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(
             new GetCustomerUnreadNotificationCountQuery(actor.Value), cancellationToken));
     }
@@ -57,7 +57,7 @@ public static class NotificationCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(NotificationErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(NotificationSharedErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(
             new MarkCustomerNotificationReadCommand(id, actor.Value), cancellationToken));
     }
@@ -68,7 +68,7 @@ public static class NotificationCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(NotificationErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(NotificationSharedErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(
             new MarkAllCustomerNotificationsReadCommand(actor.Value), cancellationToken));
     }
@@ -79,7 +79,7 @@ public static class NotificationCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(NotificationErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(NotificationSharedErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(
             new DismissCustomerNotificationCommand(id, actor.Value), cancellationToken));
     }

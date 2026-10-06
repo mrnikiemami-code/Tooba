@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks;
+using Tooba.Notification.Contracts.Errors;
 using ContractsKind = Tooba.Notification.Contracts.Dtos.NotificationRecipientKind;
 using DomainKind = Tooba.Notification.Domain.ValueObjects.NotificationRecipientKind;
 
@@ -5,6 +7,7 @@ namespace Tooba.Notification.Application.Models;
 
 /// <summary>
 /// نگاشت صریح Domain ↔ Contracts برای نوع گیرنده (مقادیر عددی پایدار).
+/// مقدار ناشناخته یک خطای تایپ‌شده با کد پایدار ماژول است، نه استثنای خام.
 /// </summary>
 public static class NotificationRecipientKindMapping
 {
@@ -13,7 +16,7 @@ public static class NotificationRecipientKindMapping
     {
         ContractsKind.Customer => DomainKind.Customer,
         ContractsKind.Seller => DomainKind.Seller,
-        _ => throw new InvalidOperationException("notification.recipient_kind.invalid"),
+        _ => throw new ContractOperationException(NotificationErrorCodes.RecipientKindInvalid),
     };
 
     /// <summary>Domain → Contracts.</summary>
@@ -21,6 +24,6 @@ public static class NotificationRecipientKindMapping
     {
         DomainKind.Customer => ContractsKind.Customer,
         DomainKind.Seller => ContractsKind.Seller,
-        _ => throw new InvalidOperationException("notification.recipient_kind.invalid"),
+        _ => throw new ContractOperationException(NotificationErrorCodes.RecipientKindInvalid),
     };
 }
