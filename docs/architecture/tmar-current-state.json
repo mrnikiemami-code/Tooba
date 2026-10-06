@@ -11165,7 +11165,40 @@
     ],
     "stopGate": "USER_REVIEW_NOTIFICATION_AMSC_001_W3",
     "automaticNextImplementationTask": "NONE",
-    "commit": "PENDING_THIS_COMMIT",
+    "commit": "763dab13",
+    "commitFull": "763dab1393aaf823e78d8e58ea566f2ad0d99e63",
     "evidence": "docs/architecture/evidence/TB-TMAR-NOTIFICATION-AMSC-001-W3/certification.md"
+  },
+  "notificationModuleAmsc001W3R1": {
+    "task": "TB-TMAR-NOTIFICATION-AMSC-001-W3-R1",
+    "parentTask": "TB-TMAR-NOTIFICATION-AMSC-001-W3",
+    "mode": "RECOVERY_SOT_RECONCILIATION_ONLY",
+    "skill": "recovery-reconciliation",
+    "target": "docs/architecture (documentation/SoT/guard truth only)",
+    "startingHead": "763dab13",
+    "state": "NOTIFICATION_AMSC_001_RECOVERY_RECONCILED",
+    "verdict": "COMPLETE_REFERENCE_PATTERN",
+    "lockVersion": "ARCH-COMPLETE-002",
+    "structureCertified": true,
+    "productionCodeChanged": false,
+    "productionScopeState": "RECOVERY_SOT_EVIDENCE_ONLY",
+    "certifiedCommit": "763dab1393aaf823e78d8e58ea566f2ad0d99e63",
+    "certifiedCommitShort": "763dab13",
+    "masterRecoveryW3ShaBefore": "PLACEHOLDER_THIS_COMMIT",
+    "masterRecoveryW3ShaState": "RECORDED_763DAB13",
+    "acceptedLineage": {
+      "w0": "5777ff4a",
+      "w1": "c660b933",
+      "w2": "e2f23975",
+      "w3": "763dab13"
+    },
+    "globalHostCheckpointState": "PRESERVED",
+    "manifestStructuralState": "NOT_TOUCHED",
+    "schemaMigrationState": "NOT_TOUCHED",
+    "frontendState": "FROZEN_UNTOUCHED",
+    "guardsWeakened": 0,
+    "stopGate": "USER_REVIEW_NOTIFICATION_AMSC_001_W3_R1",
+    "automaticNextImplementationTask": "NONE",
+    "evidence": "docs/architecture/evidence/TB-TMAR-NOTIFICATION-AMSC-001-W3-R1/reconciliation.md"
   }
 }
