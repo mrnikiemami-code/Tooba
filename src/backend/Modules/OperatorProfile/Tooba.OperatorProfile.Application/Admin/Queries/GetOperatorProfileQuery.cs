@@ -4,6 +4,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.OperatorProfile.Application.Composition;
 using Tooba.OperatorProfile.Application.Models;
 using Tooba.OperatorProfile.Application.Ports;
+using Tooba.OperatorProfile.Contracts.Errors;
 
 namespace Tooba.OperatorProfile.Application.Admin.Queries;
 
@@ -31,7 +32,7 @@ public sealed class GetOperatorProfileQueryHandler(
 
         if (outcome.IsFailure)
         {
-            logger.LogInformation("operator.profile.get.failed");
+            logger.LogInformation("{OperatorProfileGetEvent}", OperatorProfileErrorCodes.ProfileRejected);
             return outcome;
         }
 

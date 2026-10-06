@@ -4,6 +4,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.OperatorProfile.Application.Composition;
 using Tooba.OperatorProfile.Application.Models;
 using Tooba.OperatorProfile.Application.Ports;
+using Tooba.OperatorProfile.Contracts.Errors;
 
 namespace Tooba.OperatorProfile.Application.Admin.Commands;
 
@@ -37,7 +38,7 @@ public sealed class UpsertOperatorProfileCommandHandler(
 
         if (outcome.IsFailure)
         {
-            logger.LogInformation("operator.profile.upsert.failed");
+            logger.LogInformation("{OperatorProfileUpsertEvent}", OperatorProfileErrorCodes.ProfileRejected);
             return outcome;
         }
 

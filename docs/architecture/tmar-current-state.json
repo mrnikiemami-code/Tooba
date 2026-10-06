@@ -11365,5 +11365,31 @@
     "stopGate": "USER_REVIEW_OPERATORPROFILE_AMSC_001_W0",
     "automaticNextImplementationTask": "NONE",
     "evidence": "docs/architecture/evidence/TB-TMAR-OPERATORPROFILE-AMSC-001-W0/analyze.md"
+  },
+  "operatorProfileAmsc001W1": {
+    "task": "TB-TMAR-OPERATORPROFILE-AMSC-001-W1",
+    "mode": "ARCHITECT_DIRECT_AMSC",
+    "skill": "tooba-architecture-migrate",
+    "target": "src/backend/Modules/OperatorProfile/Tooba.OperatorProfile.*",
+    "parentTask": "TB-TMAR-OPERATORPROFILE-AMSC-001-W0",
+    "startingHead": "639d73ea",
+    "state": "MIGRATE_COMPLETE",
+    "verdict": "READY_FOR_STRUCTURE",
+    "lockVersion": "ARCH-COMPLETE-002",
+    "productionCodeChanged": true,
+    "changedProjects": ["Tooba.OperatorProfile.Contracts", "Tooba.OperatorProfile.Application"],
+    "canonicalSeamsAdded": {
+      "declaredCodeGuard": "Contracts/Errors/OperatorProfileErrorCodes.cs KnownCodes set (6 codes) + IsKnown(string?) — certified Media/Inventory precedent",
+      "typedFaultSeam": "Application/Composition/OperatorProfileOperation.cs dual-mechanism mapping: ContractOperationException with IsKnown filter + SemanticException; value-less ExecuteAsync(Func<Task>) overload added; unknown codes/exceptions propagate untouched to the global boundary",
+      "structuredLogCode": "Handler failure logs now carry the stable code via {OperatorProfileUpsertEvent}/{OperatorProfileGetEvent} placeholders (Media W1 precedent); success events unchanged"
+    },
+    "behaviorDelta": "ACCEPTED_NO_BEHAVIOR_DELTA — module raises only SemanticException today; the ContractOperationException mapping is a dormant safety seam; HTTP routes/shapes/status/codes/localization unchanged; log placeholder change is log-field evolution at the same level with no client contract",
+    "schemaMigrationState": "UNCHANGED",
+    "migrationFilesChanged": 0,
+    "frontendState": "FROZEN_UNTOUCHED",
+    "focusedValidation": "dotnet build Tooba.OperatorProfile.Endpoints = 0 errors/0 warnings; dotnet build Tooba.Host = 0 errors; new durable guard OperatorProfileModuleAmsc001W1MigrateGuardTests (3 facts) pins IsKnown set, dual-mechanism mapping, no message heuristics, structured log-code shape",
+    "stopGate": "USER_REVIEW_OPERATORPROFILE_AMSC_001_W1",
+    "automaticNextImplementationTask": "NONE",
+    "evidence": "docs/architecture/evidence/TB-TMAR-OPERATORPROFILE-AMSC-001-W1/migrate.md"
   }
 }
