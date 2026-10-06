@@ -28,9 +28,9 @@ public sealed class TmarCompleteReferenceStructureGateTests
             new[]
             {
                 "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile",
-                "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Offer", "OperatorProfile",
-                "Order", "PageComposition", "Party", "Payment", "ProductQnA", "Settlement", "StoreContext",
-                "Story", "UserPreference", "Wishlist",
+                "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
+                "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "ProductQnA", "Settlement",
+                "StoreContext", "Story", "UserPreference", "Wishlist",
             },
             modules.Select(m => m.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
@@ -45,9 +45,9 @@ public sealed class TmarCompleteReferenceStructureGateTests
             Assert.DoesNotContain(other.GetString(), new[]
             {
                 "Order", "Cart", "StoreContext", "Offer", "Payment", "Settlement", "Fulfillment",
-                "AccessControl", "AddressBook", "Content", "Identity", "Media", "Localization", "OperatorProfile",
-                "Party", "ProductQnA", "PageComposition", "BulkInquiry", "Wishlist", "UserPreference", "Story",
-                "Catalog", "CustomerProfile", "Inventory",
+                "AccessControl", "AddressBook", "Content", "Identity", "Media", "Localization", "Notification",
+                "OperatorProfile", "Party", "ProductQnA", "PageComposition", "BulkInquiry", "Wishlist",
+                "UserPreference", "Story", "Catalog", "CustomerProfile", "Inventory",
             }, StringComparer.Ordinal);
         }
     }
@@ -198,9 +198,9 @@ public sealed class TmarCompleteReferenceStructureGateTests
             new[]
             {
                 "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile",
-                "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Offer", "OperatorProfile",
-                "Order", "PageComposition", "Party", "Payment", "ProductQnA", "Settlement", "StoreContext",
-                "UserPreference", "Wishlist",
+                "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
+                "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "ProductQnA", "Settlement",
+                "StoreContext", "UserPreference", "Wishlist",
             },
             certified);
     }
