@@ -1714,7 +1714,7 @@
         {
           "projectName": "Tooba.Notification.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "No root .cs. Capability-first Customer/ and Seller/ branches (Commands/Queries secondary axes under the capability, one folder per use case each carrying request+handler and validator files) with shared cross-capability Composition/ (typed-fault seam), Models/, Ports/, Rendering/ and Validators/; the previous technical-axis-first Application/Commands|Queries roots are forbidden; namespace alignment is exact path-derived equality.",
+          "rootAllowlistJustification": "No root .cs. Capability-first Customer/ and Seller/ branches with Commands/Queries secondary axes; all request and validator source files live directly on those axes with zero per-use-case leaf directories (single-file and per-use-case request leaf states are ZERO); shared cross-capability Composition/ (typed-fault seam), Models/, Ports/, Rendering/ and Validators/ remain; the previous technical-axis-first Application/Commands|Queries roots are forbidden; path↔namespace is exact.",
           "forbiddenRootFiles": [],
           "forbiddenTopLevelFolders": ["Commands", "Queries", "Errors", "Services"]
         },

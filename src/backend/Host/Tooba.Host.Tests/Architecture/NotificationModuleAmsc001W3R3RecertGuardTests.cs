@@ -150,6 +150,62 @@ public sealed class NotificationModuleAmsc001W3R3RecertGuardTests
         Assert.False(Directory.Exists(Path.Combine(Repo(), "src", "backend", "Host", "Tooba.Host", "Notifications")));
     }
 
+    [Fact]
+    public void Recovery_chain_metadata_is_fully_reconciled()
+    {
+        var state = System.Text.Json.JsonDocument.Parse(
+            System.Text.RegularExpressions.Regex.Replace(
+                File.ReadAllText(Path.Combine(Repo(), "docs", "architecture", "tmar-current-state.json")),
+                "^\\uFEFF", string.Empty));
+
+        Assert.Equal(
+            "7b8ab79e6f16d4eccd2eeaba5974936c109dba9b",
+            state.RootElement.GetProperty("notificationModuleAmsc001W3R1").GetProperty("commitFull").GetString());
+        Assert.Equal(
+            "028ef769c4face48308a9dffb7f9714826e1be7c",
+            state.RootElement.GetProperty("notificationModuleAmsc001W3R2").GetProperty("commitFull").GetString());
+        var r3 = state.RootElement.GetProperty("notificationModuleAmsc001W3R3");
+        Assert.Equal(
+            "e3eb185ba109779f395d64e35b3704e1439b40ae",
+            r3.GetProperty("commitFull").GetString());
+        Assert.Equal(
+            "RECONCILED_BY_TB_TMAR_NOTIFICATION_AMSC_001_W3_R4",
+            r3.GetProperty("recoveryFollowupState").GetString());
+        Assert.Equal(
+            "NOTIFICATION_AMSC_001_RECOVERY_CLOSED",
+            state.RootElement.GetProperty("notificationModuleAmsc001W3R4").GetProperty("state").GetString());
+        Assert.Equal(
+            "e3eb185ba109779f395d64e35b3704e1439b40ae",
+            state.RootElement.GetProperty("notificationModuleAmsc001W3R4").GetProperty("currentCertifiedCommit").GetString());
+
+        // Manifest metadata must describe the current shallow tree, never the superseded
+        // over-foldered shape, while the certified structural flags stay untouched.
+        var manifest = System.Text.Json.JsonDocument.Parse(
+            System.Text.RegularExpressions.Regex.Replace(
+                File.ReadAllText(Path.Combine(Repo(), "docs", "architecture", "tmar-module-structure-manifests.json")),
+                "^\\uFEFF", string.Empty));
+        var app = manifest.RootElement.GetProperty("modules").EnumerateArray()
+            .Single(m => m.GetProperty("module").GetString() == "Notification")
+            .GetProperty("projects").EnumerateArray()
+            .First(p => p.GetProperty("projectName").GetString() == "Tooba.Notification.Application");
+        var justification = app.GetProperty("rootAllowlistJustification").GetString()!;
+        Assert.DoesNotContain("one folder per use case", justification, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("zero per-use-case leaf directories", justification, StringComparison.OrdinalIgnoreCase);
+
+        var moduleEntry = manifest.RootElement.GetProperty("modules").EnumerateArray()
+            .Single(m => m.GetProperty("module").GetString() == "Notification");
+        Assert.True(moduleEntry.GetProperty("structureCertified").GetBoolean());
+        Assert.Equal("ARCH-COMPLETE-002", moduleEntry.GetProperty("lockVersion").GetString());
+
+        // Global Host checkpoint stays preserved and no next task is auto-issued.
+        Assert.Equal(
+            "HOST_ROOT_FINAL_CERTIFIED",
+            state.RootElement.GetProperty("currentHostCheckpoint").GetString());
+        Assert.Equal(
+            "NONE",
+            state.RootElement.GetProperty("notificationModuleAmsc001W3R4").GetProperty("automaticNextImplementationTask").GetString());
+    }
+
     private static string Read(string relativePath) =>
         File.ReadAllText(Path.Combine(Repo(), relativePath));
 
