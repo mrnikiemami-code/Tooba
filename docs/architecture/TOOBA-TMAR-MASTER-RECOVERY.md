@@ -476,6 +476,7 @@ Recorded by `TB-TMAR-MEDIA-AMSC-001-W3-R1` (recovery/SoT/evidence reconciliation
 - Additive SoT record `mediaModuleAmsc001W3R1`: `state = MEDIA_AMSC_001_RECOVERY_RECONCILED`, `productionCodeChanged = false`, `certifiedCommit = aa6cad925c1134481f4f264c94f4abf2244ae964`, `masterRecoveryW3ShaBefore = PLACEHOLDER_THIS_COMMIT`, `masterRecoveryW3ShaState = RECORDED_AA6CAD92`, `globalHostCheckpointState = PRESERVED`, `manifestStructuralState = NOT_TOUCHED`, `guardsWeakened = 0`.
 - Repository-global Host root checkpoint NOT superseded or displaced: `lastAcceptedTask = TB-TMAR-HOST-ROOT-FINAL-CERT-001`, `lastAcceptedCommit`, `latestAcceptedImplementationWave`, `currentHostCheckpoint = HOST_ROOT_FINAL_CERTIFIED`, `nextHostFolder`, `workflowStop` and `automaticNextImplementationTask = NONE` are untouched; the manifest structure, schema/migrations and the frozen frontend are untouched.
 - Evidence root: `docs/architecture/evidence/TB-TMAR-MEDIA-AMSC-001-W3-R1/`.
+- W3-R1 final commit SHA (recorded by `TB-TMAR-MEDIA-AMSC-001-W3-R2`): `097aae9b` (`097aae9b9cef43bec4705c4a13811778b5cc235b`); `mediaModuleAmsc001W3R1.commit` no longer carries the `PENDING` placeholder (`commitFull` recorded alongside it). Accepted recovery lineage: W3 Certify `aa6cad92` → W3-R1 Reconcile `097aae9b`.
 - Stop gate: `USER_REVIEW_MEDIA_AMSC_001_W3_R1`.
 - `automaticNextImplementationTask = NONE`.
 
