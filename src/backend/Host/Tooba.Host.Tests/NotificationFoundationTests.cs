@@ -84,8 +84,8 @@ public sealed class NotificationFoundationTests : IAsyncLifetime
         Assert.NotNull(typeof(INotificationDirectory).GetMethod(nameof(INotificationDirectory.MarkAllReadAsync)));
         Assert.Contains(ToobaModuleComposition.Modules, module => module is NotificationModule);
         Assert.Equal("/customer-panel/orders/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001", NotificationTargetRoutes.CustomerOrder(Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001")));
-        Assert.Throws<InvalidOperationException>(() => NotificationTargetRoutes.RequireAllowed("javascript:alert(1)"));
-        Assert.Throws<InvalidOperationException>(() => NotificationTargetRoutes.RequireAllowed("/admin/secret"));
+        Assert.Throws<ContractOperationException>(() => NotificationTargetRoutes.RequireAllowed("javascript:alert(1)"));
+        Assert.Throws<ContractOperationException>(() => NotificationTargetRoutes.RequireAllowed("/admin/secret"));
 
         var endpointsRoot = Path.Combine(RepoRoot(), "src", "backend", "Modules", "Notification", "Tooba.Notification.Endpoints");
         var customer = File.ReadAllText(Path.Combine(endpointsRoot, "Customer", "NotificationCustomerEndpoints.cs"));

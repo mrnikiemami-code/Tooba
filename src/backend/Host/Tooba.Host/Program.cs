@@ -175,7 +175,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Settlement.Application.Queries.GetSellerSettlementBalance.GetSellerSettlementBalanceQuery).Assembly,
     typeof(Tooba.Cart.Application.Carts.Commands.CreateGuestCartCommand).Assembly,
     typeof(Tooba.Returns.Application.Commands.CreateReturn.CreateReturnCommand).Assembly,
-    typeof(Tooba.Notification.Application.Customer.Commands.MarkCustomerNotificationRead.MarkCustomerNotificationReadCommand).Assembly,
+    typeof(Tooba.Notification.Application.Customer.Commands.MarkCustomerNotificationReadCommand).Assembly,
     typeof(Tooba.Support.Application.Commands.CreateCustomerTicket.CreateCustomerTicketCommand).Assembly,
     typeof(Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard.RedeemCustomerGiftCardCommand).Assembly,
     typeof(Tooba.Payment.Application.Commands.InitiateStorefrontPayment.InitiateStorefrontPaymentCommand).Assembly,

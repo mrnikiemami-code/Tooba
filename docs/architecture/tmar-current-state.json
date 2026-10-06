@@ -11200,5 +11200,33 @@
     "stopGate": "USER_REVIEW_NOTIFICATION_AMSC_001_W3_R1",
     "automaticNextImplementationTask": "NONE",
     "evidence": "docs/architecture/evidence/TB-TMAR-NOTIFICATION-AMSC-001-W3-R1/reconciliation.md"
+  },
+  "notificationModuleAmsc001W3R2": {
+    "task": "TB-TMAR-NOTIFICATION-AMSC-001-W3-R2",
+    "parentTask": "TB-TMAR-NOTIFICATION-AMSC-001-W3-R1",
+    "mode": "STRUCTURE_REPAIR",
+    "skill": "tooba-architecture-structure",
+    "target": "src/backend/Modules/Notification/Tooba.Notification.Application (structure repair, behavior-preserving)",
+    "startingHead": "7b8ab79e",
+    "state": "STRUCTURE_REPAIRED_READY_FOR_RECERTIFY",
+    "verdict": "STRUCTURE_READY_FOR_CERTIFY",
+    "priorW3CertificationState": "STRUCTURE_DRIFT_FOUND_OVERFOLDERED_USECASE_LEAVES",
+    "folderGranularityBefore": "OVER_FOLDERED",
+    "folderGranularityAfter": "PROFESSIONAL_SHALLOW",
+    "singleFileRequestLeafBefore": 4,
+    "singleFileRequestLeafAfter": 0,
+    "perUseCaseRequestLeafAfter": 0,
+    "pathNamespaceState": "EXACT",
+    "physicalCopyState": "CLEAN",
+    "rootAllowlistState": "ENFORCED",
+    "solutionExplorerState": "CANONICAL",
+    "productionBehaviorChanged": false,
+    "schemaMigrationState": "UNCHANGED",
+    "globalHostCheckpointState": "PRESERVED",
+    "recoveryFollowupRequired": "W3_R1_FINAL_SHA_7B8AB79E_NOT_YET_RECORDED",
+    "structureState": "READY_FOR_CERTIFY",
+    "automaticNextImplementationTask": "NONE",
+    "workflowStop": "USER_REVIEW_NOTIFICATION_AMSC_001_W3_R2",
+    "evidence": "docs/architecture/evidence/TB-TMAR-NOTIFICATION-AMSC-001-W3-R2/"
   }
 }

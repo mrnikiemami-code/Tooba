@@ -1,16 +1,13 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Notification.Application.Customer.Commands.DismissCustomerNotification;
-using Tooba.Notification.Application.Customer.Commands.MarkAllCustomerNotificationsRead;
-using Tooba.Notification.Application.Customer.Commands.MarkCustomerNotificationRead;
+using Tooba.Notification.Application.Customer.Commands;
 using Tooba.Notification.Contracts.Errors;
-using Tooba.Notification.Application.Customer.Queries.GetCustomerUnreadNotificationCount;
-using Tooba.Notification.Application.Customer.Queries.ListCustomerNotifications;
+using Tooba.Notification.Application.Customer.Queries;
 
 namespace Tooba.Notification.Endpoints.Customer;
 

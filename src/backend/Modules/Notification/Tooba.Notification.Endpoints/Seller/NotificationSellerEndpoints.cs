@@ -1,13 +1,10 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Notification.Application.Seller.Commands.DismissSellerNotification;
-using Tooba.Notification.Application.Seller.Commands.MarkAllSellerNotificationsRead;
-using Tooba.Notification.Application.Seller.Commands.MarkSellerNotificationRead;
-using Tooba.Notification.Application.Seller.Queries.GetSellerUnreadNotificationCount;
-using Tooba.Notification.Application.Seller.Queries.ListSellerNotifications;
+using Tooba.Notification.Application.Seller.Commands;
+using Tooba.Notification.Application.Seller.Queries;
 
 namespace Tooba.Notification.Endpoints.Seller;
 

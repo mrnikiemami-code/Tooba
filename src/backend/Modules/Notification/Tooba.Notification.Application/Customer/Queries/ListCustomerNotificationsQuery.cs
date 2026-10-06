@@ -1,10 +1,10 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Notification.Application.Models;
 using Tooba.Notification.Application.Ports;
 using Tooba.Notification.Contracts.Dtos;
 
-namespace Tooba.Notification.Application.Customer.Queries.ListCustomerNotifications;
+namespace Tooba.Notification.Application.Customer.Queries;
 
 /// <summary>MediatR list customer notifications use case.</summary>
 public sealed record ListCustomerNotificationsQuery(

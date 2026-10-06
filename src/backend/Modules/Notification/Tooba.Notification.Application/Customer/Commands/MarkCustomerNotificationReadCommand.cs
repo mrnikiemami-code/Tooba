@@ -1,11 +1,11 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Notification.Contracts.Errors;
 using Tooba.Notification.Application.Ports;
 using Tooba.Notification.Contracts.Dtos;
 
-namespace Tooba.Notification.Application.Customer.Commands.MarkCustomerNotificationRead;
+namespace Tooba.Notification.Application.Customer.Commands;
 
 /// <summary>MediatR mark customer notification read use case.</summary>
 public sealed record MarkCustomerNotificationReadCommand(Guid NotificationId, Guid ActorUserId)

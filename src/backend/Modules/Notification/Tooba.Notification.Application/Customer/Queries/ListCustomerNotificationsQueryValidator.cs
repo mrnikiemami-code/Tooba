@@ -1,8 +1,8 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Tooba.Notification.Application.Validators;
-using Tooba.Notification.Application.Customer.Queries.ListCustomerNotifications;
 
-namespace Tooba.Notification.Application.Customer.Queries.ListCustomerNotifications;
+
+namespace Tooba.Notification.Application.Customer.Queries;
 
 /// <summary>
 /// Transport-shape validation for <see cref="ListCustomerNotificationsQuery"/>.

@@ -1,10 +1,10 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Notification.Application.Models;
 using Tooba.Notification.Application.Ports;
 using Tooba.Notification.Contracts.Dtos;
 
-namespace Tooba.Notification.Application.Seller.Queries.GetSellerUnreadNotificationCount;
+namespace Tooba.Notification.Application.Seller.Queries;
 
 /// <summary>MediatR seller unread-count use case.</summary>
 public sealed record GetSellerUnreadNotificationCountQuery(Guid SellerPartyId)

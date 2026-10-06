@@ -1,11 +1,11 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Notification.Contracts.Errors;
 using Tooba.Notification.Application.Ports;
 using Tooba.Notification.Contracts.Dtos;
 
-namespace Tooba.Notification.Application.Seller.Commands.DismissSellerNotification;
+namespace Tooba.Notification.Application.Seller.Commands;
 
 /// <summary>MediatR dismiss seller notification use case.</summary>
 public sealed record DismissSellerNotificationCommand(Guid NotificationId, Guid SellerPartyId)

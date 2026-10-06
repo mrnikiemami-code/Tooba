@@ -1,10 +1,10 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Notification.Application.Models;
 using Tooba.Notification.Application.Ports;
 using Tooba.Notification.Contracts.Dtos;
 
-namespace Tooba.Notification.Application.Seller.Commands.MarkAllSellerNotificationsRead;
+namespace Tooba.Notification.Application.Seller.Commands;
 
 /// <summary>MediatR mark-all seller notifications read use case.</summary>
 public sealed record MarkAllSellerNotificationsReadCommand(Guid SellerPartyId)

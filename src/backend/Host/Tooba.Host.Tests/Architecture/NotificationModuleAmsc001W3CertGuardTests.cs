@@ -46,16 +46,16 @@ public sealed class NotificationModuleAmsc001W3CertGuardTests
     {
         foreach (var file in new[]
                  {
-                     "Customer/Commands/MarkCustomerNotificationRead/MarkCustomerNotificationReadCommand.cs",
-                     "Customer/Commands/MarkAllCustomerNotificationsRead/MarkAllCustomerNotificationsReadCommand.cs",
-                     "Customer/Commands/DismissCustomerNotification/DismissCustomerNotificationCommand.cs",
-                     "Customer/Queries/ListCustomerNotifications/ListCustomerNotificationsQuery.cs",
-                     "Customer/Queries/GetCustomerUnreadNotificationCount/GetCustomerUnreadNotificationCountQuery.cs",
-                     "Seller/Commands/MarkSellerNotificationRead/MarkSellerNotificationReadCommand.cs",
-                     "Seller/Commands/MarkAllSellerNotificationsRead/MarkAllSellerNotificationsReadCommand.cs",
-                     "Seller/Commands/DismissSellerNotification/DismissSellerNotificationCommand.cs",
-                     "Seller/Queries/ListSellerNotifications/ListSellerNotificationsQuery.cs",
-                     "Seller/Queries/GetSellerUnreadNotificationCount/GetSellerUnreadNotificationCountQuery.cs",
+                     "Customer/Commands/MarkCustomerNotificationReadCommand.cs",
+                     "Customer/Commands/MarkAllCustomerNotificationsReadCommand.cs",
+                     "Customer/Commands/DismissCustomerNotificationCommand.cs",
+                     "Customer/Queries/ListCustomerNotificationsQuery.cs",
+                     "Customer/Queries/GetCustomerUnreadNotificationCountQuery.cs",
+                     "Seller/Commands/MarkSellerNotificationReadCommand.cs",
+                     "Seller/Commands/MarkAllSellerNotificationsReadCommand.cs",
+                     "Seller/Commands/DismissSellerNotificationCommand.cs",
+                     "Seller/Queries/ListSellerNotificationsQuery.cs",
+                     "Seller/Queries/GetSellerUnreadNotificationCountQuery.cs",
                  })
         {
             var text = Read($"src/backend/Modules/Notification/Tooba.Notification.Application/{file}");
