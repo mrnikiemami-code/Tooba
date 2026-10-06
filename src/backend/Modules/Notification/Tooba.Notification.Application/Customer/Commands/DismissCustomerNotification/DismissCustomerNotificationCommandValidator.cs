@@ -1,8 +1,8 @@
 using FluentValidation;
 using Tooba.Notification.Application.Validators;
-using Tooba.Notification.Application.Commands.DismissCustomerNotification;
+using Tooba.Notification.Application.Customer.Commands.DismissCustomerNotification;
 
-namespace Tooba.Notification.Application.Commands.DismissCustomerNotification;
+namespace Tooba.Notification.Application.Customer.Commands.DismissCustomerNotification;
 
 /// <summary>
 /// Transport-shape validation for <see cref="DismissCustomerNotificationCommand"/>.

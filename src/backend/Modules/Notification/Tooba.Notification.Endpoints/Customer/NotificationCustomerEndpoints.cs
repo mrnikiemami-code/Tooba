@@ -5,12 +5,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Notification.Application.Commands.DismissCustomerNotification;
-using Tooba.Notification.Application.Commands.MarkAllCustomerNotificationsRead;
-using Tooba.Notification.Application.Commands.MarkCustomerNotificationRead;
+using Tooba.Notification.Application.Customer.Commands.DismissCustomerNotification;
+using Tooba.Notification.Application.Customer.Commands.MarkAllCustomerNotificationsRead;
+using Tooba.Notification.Application.Customer.Commands.MarkCustomerNotificationRead;
 using Tooba.Notification.Contracts.Errors;
-using Tooba.Notification.Application.Queries.GetCustomerUnreadNotificationCount;
-using Tooba.Notification.Application.Queries.ListCustomerNotifications;
+using Tooba.Notification.Application.Customer.Queries.GetCustomerUnreadNotificationCount;
+using Tooba.Notification.Application.Customer.Queries.ListCustomerNotifications;
 
 namespace Tooba.Notification.Endpoints.Customer;
 

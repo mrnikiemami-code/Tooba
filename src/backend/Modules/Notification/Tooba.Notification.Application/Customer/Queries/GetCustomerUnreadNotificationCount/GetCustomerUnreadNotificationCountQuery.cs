@@ -4,7 +4,7 @@ using Tooba.Notification.Application.Models;
 using Tooba.Notification.Application.Ports;
 using Tooba.Notification.Contracts.Dtos;
 
-namespace Tooba.Notification.Application.Queries.GetCustomerUnreadNotificationCount;
+namespace Tooba.Notification.Application.Customer.Queries.GetCustomerUnreadNotificationCount;
 
 /// <summary>MediatR customer unread-count use case.</summary>
 public sealed record GetCustomerUnreadNotificationCountQuery(Guid ActorUserId)

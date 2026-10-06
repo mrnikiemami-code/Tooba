@@ -97,12 +97,12 @@ public sealed class NotificationModuleAmsc001W1MigrateGuardTests
     {
         foreach (var file in new[]
                  {
-                     "Commands/MarkCustomerNotificationRead/MarkCustomerNotificationReadCommandValidator.cs",
-                     "Commands/DismissCustomerNotification/DismissCustomerNotificationCommandValidator.cs",
-                     "Queries/ListCustomerNotifications/ListCustomerNotificationsQueryValidator.cs",
-                     "Commands/MarkSellerNotificationRead/MarkSellerNotificationReadCommandValidator.cs",
-                     "Commands/DismissSellerNotification/DismissSellerNotificationCommandValidator.cs",
-                     "Queries/ListSellerNotifications/ListSellerNotificationsQueryValidator.cs",
+                     "Customer/Commands/MarkCustomerNotificationRead/MarkCustomerNotificationReadCommandValidator.cs",
+                     "Customer/Commands/DismissCustomerNotification/DismissCustomerNotificationCommandValidator.cs",
+                     "Customer/Queries/ListCustomerNotifications/ListCustomerNotificationsQueryValidator.cs",
+                     "Seller/Commands/MarkSellerNotificationRead/MarkSellerNotificationReadCommandValidator.cs",
+                     "Seller/Commands/DismissSellerNotification/DismissSellerNotificationCommandValidator.cs",
+                     "Seller/Queries/ListSellerNotifications/ListSellerNotificationsQueryValidator.cs",
                  })
         {
             var text = Read($"src/backend/Modules/Notification/Tooba.Notification.Application/{file}");

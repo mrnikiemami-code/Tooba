@@ -1,8 +1,8 @@
 using FluentValidation;
 using Tooba.Notification.Application.Validators;
-using Tooba.Notification.Application.Commands.DismissSellerNotification;
+using Tooba.Notification.Application.Seller.Commands.DismissSellerNotification;
 
-namespace Tooba.Notification.Application.Commands.DismissSellerNotification;
+namespace Tooba.Notification.Application.Seller.Commands.DismissSellerNotification;
 
 /// <summary>
 /// Transport-shape validation for <see cref="DismissSellerNotificationCommand"/>.

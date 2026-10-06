@@ -4,7 +4,7 @@ using Tooba.Notification.Application.Models;
 using Tooba.Notification.Application.Ports;
 using Tooba.Notification.Contracts.Dtos;
 
-namespace Tooba.Notification.Application.Queries.ListSellerNotifications;
+namespace Tooba.Notification.Application.Seller.Queries.ListSellerNotifications;
 
 /// <summary>MediatR list seller notifications use case.</summary>
 public sealed record ListSellerNotificationsQuery(

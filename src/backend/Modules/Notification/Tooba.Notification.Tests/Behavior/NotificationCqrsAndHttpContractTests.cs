@@ -1,14 +1,14 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Notification.Application.Commands.DismissCustomerNotification;
-using Tooba.Notification.Application.Commands.MarkAllCustomerNotificationsRead;
-using Tooba.Notification.Application.Commands.MarkCustomerNotificationRead;
+using Tooba.Notification.Application.Customer.Commands.DismissCustomerNotification;
+using Tooba.Notification.Application.Customer.Commands.MarkAllCustomerNotificationsRead;
+using Tooba.Notification.Application.Customer.Commands.MarkCustomerNotificationRead;
 using Tooba.Notification.Contracts.Errors;
 using Tooba.Notification.Application.Models;
 using Tooba.Notification.Application.Ports;
-using Tooba.Notification.Application.Queries.GetCustomerUnreadNotificationCount;
-using Tooba.Notification.Application.Queries.ListCustomerNotifications;
-using Tooba.Notification.Application.Queries.ListSellerNotifications;
+using Tooba.Notification.Application.Customer.Queries.GetCustomerUnreadNotificationCount;
+using Tooba.Notification.Application.Customer.Queries.ListCustomerNotifications;
+using Tooba.Notification.Application.Seller.Queries.ListSellerNotifications;
 using Tooba.Notification.Contracts.Commands;
 using Tooba.Notification.Contracts.Dtos;
 using Tooba.Notification.Contracts.Routes;
@@ -99,12 +99,12 @@ public sealed class NotificationCqrsAndHttpContractTests
         Assert.True(pageA.IsSuccess);
         Assert.Equal(1, pageA.Value.TotalCount);
 
-        var markAll = await sender.Send(new Application.Commands.MarkAllSellerNotificationsRead.MarkAllSellerNotificationsReadCommand(sellerA), CancellationToken.None);
+        var markAll = await sender.Send(new Application.Seller.Commands.MarkAllSellerNotificationsRead.MarkAllSellerNotificationsReadCommand(sellerA), CancellationToken.None);
         Assert.True(markAll.IsSuccess);
 
         var id = pageA.Value.Items[0].NotificationId;
         var dismiss = await sender.Send(
-            new Application.Commands.DismissSellerNotification.DismissSellerNotificationCommand(id, sellerA),
+            new Application.Seller.Commands.DismissSellerNotification.DismissSellerNotificationCommand(id, sellerA),
             CancellationToken.None);
         Assert.True(dismiss.IsSuccess);
     }

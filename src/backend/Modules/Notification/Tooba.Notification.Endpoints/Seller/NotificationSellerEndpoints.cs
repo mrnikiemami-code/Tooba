@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Notification.Application.Commands.DismissSellerNotification;
-using Tooba.Notification.Application.Commands.MarkAllSellerNotificationsRead;
-using Tooba.Notification.Application.Commands.MarkSellerNotificationRead;
-using Tooba.Notification.Application.Queries.GetSellerUnreadNotificationCount;
-using Tooba.Notification.Application.Queries.ListSellerNotifications;
+using Tooba.Notification.Application.Seller.Commands.DismissSellerNotification;
+using Tooba.Notification.Application.Seller.Commands.MarkAllSellerNotificationsRead;
+using Tooba.Notification.Application.Seller.Commands.MarkSellerNotificationRead;
+using Tooba.Notification.Application.Seller.Queries.GetSellerUnreadNotificationCount;
+using Tooba.Notification.Application.Seller.Queries.ListSellerNotifications;
 
 namespace Tooba.Notification.Endpoints.Seller;
 

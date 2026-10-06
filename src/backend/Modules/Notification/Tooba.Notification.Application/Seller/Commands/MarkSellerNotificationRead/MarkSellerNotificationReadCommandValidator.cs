@@ -1,8 +1,8 @@
 using FluentValidation;
 using Tooba.Notification.Application.Validators;
-using Tooba.Notification.Application.Commands.MarkSellerNotificationRead;
+using Tooba.Notification.Application.Seller.Commands.MarkSellerNotificationRead;
 
-namespace Tooba.Notification.Application.Commands.MarkSellerNotificationRead;
+namespace Tooba.Notification.Application.Seller.Commands.MarkSellerNotificationRead;
 
 /// <summary>
 /// Transport-shape validation for <see cref="MarkSellerNotificationReadCommand"/>.

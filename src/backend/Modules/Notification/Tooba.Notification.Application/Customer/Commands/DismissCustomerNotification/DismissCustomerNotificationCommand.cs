@@ -5,7 +5,7 @@ using Tooba.Notification.Contracts.Errors;
 using Tooba.Notification.Application.Ports;
 using Tooba.Notification.Contracts.Dtos;
 
-namespace Tooba.Notification.Application.Commands.DismissCustomerNotification;
+namespace Tooba.Notification.Application.Customer.Commands.DismissCustomerNotification;
 
 /// <summary>MediatR dismiss customer notification use case.</summary>
 public sealed record DismissCustomerNotificationCommand(Guid NotificationId, Guid ActorUserId)

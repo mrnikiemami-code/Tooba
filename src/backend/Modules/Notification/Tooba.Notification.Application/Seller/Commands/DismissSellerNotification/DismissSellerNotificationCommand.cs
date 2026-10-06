@@ -5,7 +5,7 @@ using Tooba.Notification.Contracts.Errors;
 using Tooba.Notification.Application.Ports;
 using Tooba.Notification.Contracts.Dtos;
 
-namespace Tooba.Notification.Application.Commands.DismissSellerNotification;
+namespace Tooba.Notification.Application.Seller.Commands.DismissSellerNotification;
 
 /// <summary>MediatR dismiss seller notification use case.</summary>
 public sealed record DismissSellerNotificationCommand(Guid NotificationId, Guid SellerPartyId)
