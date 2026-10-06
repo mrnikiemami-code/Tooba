@@ -11487,7 +11487,7 @@
       "w0": "639d73ea",
       "w1": "a89e94bb",
       "w2": "14b16690",
-      "w3": "PENDING_THIS_COMMIT"
+      "w3": "04d5b030"
     },
     "priorAmc001CertificationState": "HISTORICAL_SUPERSEDED_NOT_REWRITTEN",
     "durableGuards": [
@@ -11501,5 +11501,50 @@
     "stopGate": "USER_REVIEW_OPERATORPROFILE_AMSC_001_W3",
     "automaticNextImplementationTask": "NONE",
     "evidence": "docs/architecture/evidence/TB-TMAR-OPERATORPROFILE-AMSC-001-W3/certification.md"
+  },
+  "operatorProfileAmsc001W3R1": {
+    "task": "TB-TMAR-OPERATORPROFILE-AMSC-001-W3-R1",
+    "parentTask": "TB-TMAR-OPERATORPROFILE-AMSC-001-W3",
+    "mode": "RECOVERY_SOT_RECONCILIATION_ONLY",
+    "skill": "recovery-reconciliation",
+    "target": "docs/architecture (documentation/SoT/guard truth only)",
+    "startingHead": "04d5b030",
+    "state": "OPERATORPROFILE_AMSC_001_RECOVERY_RECONCILED",
+    "verdict": "COMPLETE_REFERENCE_PATTERN",
+    "lockVersion": "ARCH-COMPLETE-002",
+    "structureCertified": true,
+    "productionCodeChanged": false,
+    "productionScopeState": "RECOVERY_SOT_EVIDENCE_ONLY",
+    "certifiedCommit": "04d5b03018a8f262ee1446bf7ee5c467d29cb7b9",
+    "certifiedCommitShort": "04d5b030",
+    "masterRecoveryW3ShaBefore": "PLACEHOLDER_THIS_COMMIT",
+    "masterRecoveryW3ShaState": "RECORDED_04D5B030",
+    "masterRecoveryState": "RECONCILED",
+    "acceptedLineage": {
+      "w0": "639d73ea",
+      "w1": "a89e94bb",
+      "w2": "14b16690",
+      "w3": "04d5b030"
+    },
+    "priorAmc001CertificationState": "HISTORICAL_SUPERSEDED_NOT_REWRITTEN",
+    "historicalLineageState": "PRESERVED_HISTORICAL_NOT_REWRITTEN",
+    "historicalLineageKeys": "TB-TMAR-HOST-OPERATORPROFILE-AMC-001, TB-TMAR-OPERATORPROFILE-AMC-001-W4 (superseded by AMSC-001 W3 certification)",
+    "currentAuthority": "OPERATORPROFILE_AMSC_001_W0_TO_W3",
+    "globalHostCheckpointState": "PRESERVED",
+    "manifestStructuralState": "NOT_TOUCHED",
+    "schemaMigrationState": "UNCHANGED",
+    "frontendState": "FROZEN_UNTOUCHED",
+    "crossModuleBoundaryState": "CONTRACTS_ONLY",
+    "foreignAppInfraDomainCoupling": "ZERO",
+    "microserviceExtractable": true,
+    "focusedRecoveryGuardState": "PASS",
+    "jsonParseState": "PASS",
+    "guardsWeakened": "NONE",
+    "guardsWeakenedCount": 0,
+    "baselinesWidened": "NONE",
+    "evidenceRoot": "docs/architecture/evidence/TB-TMAR-OPERATORPROFILE-AMSC-001-W3-R1/",
+    "workflowStop": "USER_REVIEW_OPERATORPROFILE_AMSC_001_W3_R1",
+    "automaticNextImplementationTask": "NONE",
+    "evidence": "docs/architecture/evidence/TB-TMAR-OPERATORPROFILE-AMSC-001-W3-R1/reconciliation.md"
   }
 }
