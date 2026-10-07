@@ -571,7 +571,7 @@
       "module": "PageComposition",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Certified by TB-TMAR-PAGECOMPOSITION-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first Admin/Storefront CQRS; Result+PageCompositionOperation+ApiResponseFactory; exhaustive 8-request validator matrix (8 required present); Contracts.Errors/Resources catalog; zero foreign Application/Infrastructure/Domain coupling; Host PageComposition CLOSED_HOST_ZERO; /Modules/PageComposition/ solution group; microservice-extractable and self-contained.",
+      "certificationNote": "Certified by TB-TMAR-PAGECOMPOSITION-AMSC-001-W3 (tooba-architecture-certify) under ARCH-COMPLETE-002: verdict COMPLETE_REFERENCE_PATTERN, Structure-State READY_FOR_CERTIFY (structure gate source TB-TMAR-PAGECOMPOSITION-AMSC-001-W2, commit 361a1837), exhaustive 8/8 validator matrix, dual-mechanism typed-fault seam with IsKnown declared-code guard (8 codes), self-contained boundaries with zero foreign edges in both directions, own page_composition schema + Outbox, Host closure preserved, microservice-extractable. Prior certification: TB-TMAR-PAGECOMPOSITION-AMC-001-W4 (historical evidence, superseded for current module authority by the AMSC-001 lineage).",
       "projects": [
         {
           "projectName": "Tooba.PageComposition.Application",

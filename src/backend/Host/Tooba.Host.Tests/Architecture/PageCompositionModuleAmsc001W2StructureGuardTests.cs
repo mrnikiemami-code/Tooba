@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Xunit;
 
@@ -49,9 +50,14 @@ public sealed class PageCompositionModuleAmsc001W2StructureGuardTests
                     continue;
                 }
 
-                var name = Path.GetFileNameWithoutExtension(files[0]);
+                // A per-use-case leaf is a FOLDER named after one Command/Query/UseCase wrapping a
+                // single source file. Shared technical axes (Commands/, Queries/, Validators/, Models/,
+                // Ports/) legitimately contain request-named files and are the canonical shape.
+                var folderName = Path.GetFileName(dir.TrimEnd(Path.DirectorySeparatorChar));
                 Assert.False(
-                    name.EndsWith("Command", StringComparison.Ordinal) || name.EndsWith("Query", StringComparison.Ordinal),
+                    folderName.EndsWith("Command", StringComparison.Ordinal)
+                        || folderName.EndsWith("Query", StringComparison.Ordinal)
+                        || folderName.EndsWith("UseCase", StringComparison.Ordinal),
                     $"per-use-case request leaf folder {dir}");
             }
         }
