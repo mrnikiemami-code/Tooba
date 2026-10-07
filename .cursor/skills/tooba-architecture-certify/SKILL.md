@@ -112,6 +112,30 @@ Certification must never claim `LEGAL_CONTRACTS_ONLY` while any direct foreign A
 
 ### 0a. Touched-Surface Certification
 
+### 0b. Applicability Certification Gate (MANDATORY)
+
+Before applying endpoint/CQRS/validator certification checks, classify the certified module as `HTTP_OWNING`, `INTERNAL_ONLY`, or `MIXED_OR_UNKNOWN`.
+
+For `HTTP_OWNING`:
+- apply the normal endpoint ownership, CQRS, validator and API-mapping requirements.
+
+For `INTERNAL_ONLY`:
+- endpoint ownership is `NOT_APPLICABLE_INTERNAL_ONLY`;
+- CQRS and validator matrices are `NOT_APPLICABLE_INTERNAL_ONLY` unless a real non-HTTP application use case independently requires them;
+- certification must **FAIL** if a ceremonial Endpoints project, empty route group/module mapper, Host endpoint-presentation registration, or unused CQRS/validator tree remains solely for framework symmetry;
+- registration-only concerns must live in the repository's canonical internal-only composition location, not in a fake presentation surface.
+
+For `MIXED_OR_UNKNOWN`:
+- return `NOT_CERTIFIED` until applicability is resolved.
+
+Hard safeguards:
+- The existence of an Endpoints project does not prove `HTTP_OWNING`.
+- An empty `MapGroup` does not count as module HTTP ownership.
+- Zero local routes alone does not prove `INTERNAL_ONLY`; verify actual route/use-case ownership first.
+- Never remove or reject a real HTTP surface merely to reduce project count.
+- A module cannot receive `COMPLETE_REFERENCE_PATTERN` while its applicability classification and physical project set contradict each other.
+
+
 Any production file changed by the current task is part of the active certification surface. Before PASS, re-read every touched production file and verify: cohesive responsibility; correct capability folder; exact path↔namespace alignment; no root dump unless explicitly allowed; no obsolete/duplicate type; no hard-coded user-facing localized text; no foreign Application/Infrastructure/Domain leakage; no parallel canonical mechanism; no unintended behavior/schema change.
 
 For a Host folder-by-folder task, certification must also re-enumerate the **exact active Host folder** after all changes and verify every production file currently present there, including files that were not touched by the task. This is a narrow final-folder recheck, not a whole-Host scan.

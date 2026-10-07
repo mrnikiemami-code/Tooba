@@ -31,6 +31,26 @@ Analyze still identifies structural symptoms and proposes target paths, but it m
 
 Analyze remains the authority for ownership, responsibility decomposition, coupling, behavior-preservation planning, and migration design.
 
+## Applicability Gate (MANDATORY BEFORE TARGET SHAPE)
+
+Before proposing projects, folders, CQRS, validators, or endpoint composition, classify the module/capability as exactly one of:
+
+- `HTTP_OWNING` — the module truly owns one or more shipped HTTP routes/application use cases;
+- `INTERNAL_ONLY` — the module owns no HTTP route and is consumed through Contracts/internal composition;
+- `MIXED_OR_UNKNOWN` — applicability is not yet proven; stop structural planning until resolved.
+
+Rules:
+
+- Determine applicability from real ownership, callers, published routes and shipped behavior — **not** from the mere existence of an `Endpoints` project, `MapGroup`, endpoint registration method, CQRS folder, or validator folder.
+- An empty route group (for example `MapGroup(...)` with no mapped operation) is **ceremony**, not evidence of HTTP ownership.
+- Existing ceremonial `Endpoints`/CQRS/validator structure in an `INTERNAL_ONLY` module is a finding that must be retired by Migrate/Structure; do not preserve it as harmless legacy.
+- Do not classify a module `INTERNAL_ONLY` solely because its own route count is zero: first prove where the user-facing use case is actually owned (another module may own the HTTP boundary).
+- For `INTERNAL_ONLY`, the target plan must explicitly say `Endpoints = NOT_APPLICABLE`, `CQRS = NOT_APPLICABLE`, and `Validator Matrix = NOT_APPLICABLE` unless a real application use case independently requires them.
+- Reuse the repository's current internal-only precedent for composition concerns such as error-catalog/resource registration instead of inventing a presentation project just to host registrations.
+
+This gate prevents empty framework projects from being created first and deleted in a later wave.
+
+
 
 ## Primary Goal
 

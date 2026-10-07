@@ -117,6 +117,21 @@ For EACH target module, classify:
 
 ## 5. FOUNDATION CREATION RULES
 
+### 4a. Applicability Gate Before Foundation Creation
+
+Before creating or preserving any `Endpoints`, CQRS, validator, or presentation project/folder, classify the module as `HTTP_OWNING`, `INTERNAL_ONLY`, or `MIXED_OR_UNKNOWN`.
+
+- `HTTP_OWNING`: create/repair only the HTTP/CQRS structure required by real module-owned routes/use cases.
+- `INTERNAL_ONLY`: **do not create or preserve ceremonial Endpoints/CQRS/validator structure**. An empty route group, empty endpoint project, endpoint-registration extension used only for DI, or unused request/validator tree is structural debt and must be retired within the bounded migration/structure repair when behavior can be preserved.
+- `MIXED_OR_UNKNOWN`: do not guess; stop with `APPLICABILITY_REQUIRES_ARCHITECT_DECISION`.
+
+Hard protections:
+- Presence of an existing `Endpoints` project does not prove HTTP applicability.
+- Zero route count alone does not prove internal-only; inspect actual ownership and consumers.
+- Never move real HTTP behavior out of an HTTP-owning module merely to satisfy this rule.
+- For internal-only cross-cutting registration (for example error catalog/resource registration), use the module's canonical composition root/Infrastructure precedent when that is the established repository pattern.
+
+
 When foundation creation is required, create it BEFORE moving the migrated responsibility.
 
 The minimum foundation depends on module applicability.

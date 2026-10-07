@@ -94,6 +94,36 @@ Unsafe divergence ⇒ `Structure-State: RECOVERY_CONFLICT`.
 
 ## 4. Structure Classification Model
 
+## 4a. Module Applicability Gate (HARD STRUCTURE RULE)
+
+Before evaluating project count or folder shape, classify the module as `HTTP_OWNING`, `INTERNAL_ONLY`, or `MIXED_OR_UNKNOWN`.
+
+### HTTP_OWNING
+An Endpoints project is valid only when it owns real module HTTP composition/routes. CQRS/validators are required only for real endpoint-reachable application use cases.
+
+### INTERNAL_ONLY
+The canonical structure must not contain framework ceremony that exists only because "every module has it":
+
+- no ceremonial `*.Endpoints` project;
+- no empty `MapGroup(...)` / empty module route mapper;
+- no endpoint-presentation extension whose only purpose is DI registration that belongs in the module composition root;
+- no Commands/Queries/Validators folders created without real application use cases;
+- no solution/manifest project entry for a non-applicable Endpoints project.
+
+If any of the above exists, overall `Structure-State` is `REPAIR_REQUIRED`; it cannot be `READY_FOR_CERTIFY`.
+
+Move registration-only concerns to the established internal-only composition precedent (for example the module Infrastructure composition root) without changing business/error/localization semantics.
+
+### MIXED_OR_UNKNOWN
+Return `BLOCKED` until applicability is proven. Do not create placeholder projects/folders "for consistency".
+
+Safeguards:
+- An existing Endpoints project is not evidence of HTTP ownership.
+- An empty route group is not a route and must not justify Endpoints.
+- Zero local routes alone is not enough to declare internal-only; verify that any user-facing boundary is genuinely owned elsewhere.
+- Do not delete a real Endpoints project from an HTTP-owning module.
+
+
 Record every applicable state explicitly.
 
 ### Folder-Granularity-State
