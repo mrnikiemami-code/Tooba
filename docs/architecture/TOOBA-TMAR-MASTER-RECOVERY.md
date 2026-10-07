@@ -1,4 +1,4 @@
-TOOBA TMAR MASTER RECOVERY
+﻿TOOBA TMAR MASTER RECOVERY
 
 Canonical Architect ↔ Cursor handoff (recovery-critical)
 - Source of truth: `docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md#architect--cursor-canonical-task-handoff`.
@@ -1555,3 +1555,15 @@ Recorded by `TB-TMAR-PRICING-AMSC-001-W3-R4` (final recovery lineage reconciliat
 - **Global recovery lock preserved exactly**: `lastAcceptedTask = TB-TMAR-HOST-ROOT-FINAL-CERT-001`, `lastAcceptedCommit = 7a6c353a98a761df9124beb1fce23ed8424230de`, `latestAcceptedImplementationWave = TB-TMAR-HOST-ROOT-FINAL-CERT-001`, `currentHostCheckpoint = HOST_ROOT_FINAL_CERTIFIED`, `nextHostFolder = null`, repository-global `workflowStop = USER_REVIEW_HOST_ROOT_FINAL_CERT_001`, `automaticNextImplementationTask = NONE`. `structureLock.certifiedModules` is untouched (`Pricing` present exactly once).
 - **Guards repointed, never weakened**: `PricingModuleAmsc001W3R3CertGuardTests` now pins the reconciled truth (`certificationCommitState = RECORDED_A1CA9B5A`, the recorded certification `commit`/`commitFull`, both evidence-only hops classified `EVIDENCE_ONLY_NOT_CERTIFICATION_AUTHORITY`, `postCertRecoveryState = POST_CERT_RECOVERY_RECONCILIATION_REQUIRED_CLOSED_BY_W3_R4`, and the new W3-R4 Master Recovery checkpoint) — every structural, boundary, persistence and Host-closure assertion is kept verbatim and no test count decreased. `guardsWeakened = NONE`; `baselinesWidened = NONE`.
 - Stop gate `USER_REVIEW_PRICING_AMSC_001_W3_R4`; `automaticNextImplementationTask = NONE`; evidence `docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3-R4/recovery-reconciliation.md`. No R5, no next module.
+
+ProductQnA AMSC module recovery checkpoint (authoritative, module-local)
+
+Recorded by `TB-TMAR-PRODUCTQNA-AMSC-001-W0` (Analyze). Supersedes the earlier AMC-001 lineage for the current ProductQnA module recovery; the AMC-001 records stay in the repository as historical evidence only.
+- Accepted lineage (in progress): `TB-TMAR-PRODUCTQNA-AMSC-001-W0` Analyze (W0 commit SHA reconciled in the W1 wave) -> W1 Migrate -> W2 Structure -> W3 Certify.
+- Analyze verdict: `READY_TO_MIGRATE`; `Foundation-State = FOUNDATION_READY`; ownership `correct`; `Cross-Module-Coupling-State = LEGAL_CONTRACTS_ONLY` (`Tooba.Catalog.Contracts.Ports.ICatalogReviewProductLookup` only); cross-module join `NONE`; persistence ownership correct (own `product_qna` schema).
+- 2 endpoint-reachable requests / 2 handlers; 2 VALIDATOR_REQUIRED + 0 NO_VALIDATOR_REQUIRED; module-owned routes only (2), Host HTTP ownership ZERO; `AddProductQnAEndpointPresentation` + `MapProductQnAModuleEndpoints` are `ALLOWED_COMPOSITION_ROOT`.
+- Canonical mechanisms verified: `Result`/`Result<T>` + `ProductQnAOperation` + `ApiResponseFactory`; `Contracts/Errors` stable codes + catalog + `ProductQnAErrorResourceSet` + bilingual resx; zero `Results.Json/BadRequest/Problem` bypasses; zero `ex.Message` classification; zero hard-coded user-facing fault text; zero `Console.WriteLine`/second telemetry/custom correlation.
+- Blockers handed to W1/W2/W3: Domain/Directory `SemanticException` instead of the dominant code-carrying `ContractOperationException` + known-code seam; the 7 transport validation codes owned by `Contracts.Errors` + registered as descriptors while validators sit under `Customer/Validators` + `Storefront/Validators`; no AMSC-001 SoT record / Master Recovery checkpoint / ARCH-COMPLETE-002 durable guard / AMSC evidence tree.
+- Schema / migrations unchanged; `automaticNextImplementationTask = NONE`; Host root checkpoint preserved (`currentHostCheckpoint = HOST_ROOT_FINAL_CERTIFIED`, `lastAcceptedTask = TB-TMAR-HOST-ROOT-FINAL-CERT-001`).
+- Evidence root: `docs/architecture/evidence/TB-TMAR-PRODUCTQNA-AMSC-001-W0/`.
+- Stop gate: `USER_REVIEW_PRODUCTQNA_AMSC_001_W0`.
