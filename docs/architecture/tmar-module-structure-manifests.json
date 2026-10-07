@@ -1175,9 +1175,16 @@
             "PaymentQueries.cs",
             "PaymentQueryHandlers.cs",
             "StorefrontPaymentOrchestrator.cs",
-            "PaymentErrorCodes.cs"
+            "PaymentErrorCodes.cs",
+            "PaymentOperation.cs",
+            "PaymentFluentRules.cs",
+            "PaymentValidationCodes.cs"
           ],
-          "forbiddenTopLevelFolders": []
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Orchestration"
+          ]
         },
         {
           "projectName": "Tooba.Payment.Endpoints",

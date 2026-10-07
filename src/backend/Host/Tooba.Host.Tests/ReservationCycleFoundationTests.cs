@@ -224,7 +224,7 @@ public sealed class ReservationCycleFoundationTests
     {
         var dir = Read("src/backend/Modules/Order/Tooba.Order.Infrastructure/ReservationCycle/ReservationCycleDirectory.cs");
         var checkout = OrderPartialSources.ReadAll("src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence", "CheckoutDirectory*.cs");
-        var composer = Read("src/backend/Modules/Payment/Tooba.Payment.Application/Orchestration/StorefrontPaymentOrchestrator.cs");
+        var composer = Read("src/backend/Modules/Payment/Tooba.Payment.Application/Storefront/Orchestration/StorefrontPaymentOrchestrator.cs");
         var cart = Read("src/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs");
         Assert.Contains("CorrelatePaymentAttempt", dir, StringComparison.Ordinal);
         Assert.Contains("PrepareStart", checkout, StringComparison.Ordinal);

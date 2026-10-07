@@ -144,11 +144,14 @@ public sealed class PaymentModuleAmsc001W1MigrateGuardTests
     [Fact]
     public void Application_commands_and_queries_use_the_canonical_operation_seam()
     {
-        var commands = Path.Combine(Repo(), "src/backend/Modules/Payment/Tooba.Payment.Application/Commands");
-        var queries = Path.Combine(Repo(), "src/backend/Modules/Payment/Tooba.Payment.Application/Queries");
+        // W2 Structure: requests live on the capability's own technical axes.
+        var applicationRoot = Path.Combine(Repo(), "src/backend/Modules/Payment/Tooba.Payment.Application");
+        var requestSources = Directory.EnumerateFiles(applicationRoot, "*Command.cs", SearchOption.AllDirectories)
+            .Concat(Directory.EnumerateFiles(applicationRoot, "*Query.cs", SearchOption.AllDirectories))
+            .Where(p => !p.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                        && !p.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal));
 
-        foreach (var file in Directory.EnumerateFiles(commands, "*Command.cs", SearchOption.AllDirectories)
-                     .Concat(Directory.EnumerateFiles(queries, "*Query.cs", SearchOption.AllDirectories)))
+        foreach (var file in requestSources)
         {
             var text = File.ReadAllText(file);
             if (!text.Contains("IRequestHandler<", StringComparison.Ordinal))

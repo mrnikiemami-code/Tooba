@@ -4,12 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Payment.Application.Commands.ConfirmAdminDeposit;
-using Tooba.Payment.Application.Commands.ReconcileAdminPayment;
-using Tooba.Payment.Application.Commands.RejectAdminDeposit;
-using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Queries.GetAdminPayment;
-using Tooba.Payment.Application.Queries.QueryAdminPaymentsGrid;
+using Tooba.Payment.Application.Admin.Commands;
+using Tooba.Payment.Application.Admin.Models;
+using Tooba.Payment.Application.Admin.Queries;
 
 namespace Tooba.Payment.Endpoints.Admin;
 

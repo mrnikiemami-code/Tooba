@@ -1,13 +1,10 @@
 using FluentValidation.TestHelper;
-using Tooba.Payment.Application.Commands.ConfirmAdminDeposit;
-using Tooba.Payment.Application.Commands.ProcessPaymentWebhook;
-using Tooba.Payment.Application.Commands.ReconcileAdminPayment;
-using Tooba.Payment.Application.Commands.RejectAdminDeposit;
-using Tooba.Payment.Application.Models;
-using Tooba.Payment.Application.Queries.GetAdminPayment;
-using Tooba.Payment.Application.Queries.QueryAdminPaymentsGrid;
-using Tooba.Payment.Application.Validators.Admin;
-using Tooba.Payment.Application.Validators.Webhooks;
+using Tooba.Payment.Application.Admin.Commands;
+using Tooba.Payment.Application.Webhooks.Commands;
+using Tooba.Payment.Application.Admin.Models;
+using Tooba.Payment.Application.Admin.Queries;
+using Tooba.Payment.Application.Admin.Validators;
+using Tooba.Payment.Application.Webhooks.Validators;
 using Xunit;
 
 namespace Tooba.Payment.Tests.Validation;

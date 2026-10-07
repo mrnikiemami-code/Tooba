@@ -5,17 +5,9 @@ using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Commands.CompleteSandboxPayment;
-using Tooba.Payment.Application.Commands.InitiateStorefrontPayment;
-using Tooba.Payment.Application.Commands.RetryManualPayment;
-using Tooba.Payment.Application.Commands.RetryUnpaidPayment;
-using Tooba.Payment.Application.Commands.SubmitManualPaymentEvidence;
-using Tooba.Payment.Application.Commands.UploadManualPaymentProof;
+using Tooba.Payment.Application.Storefront.Commands;
 using Tooba.Payment.Contracts.Errors;
-using Tooba.Payment.Application.Queries.GetStorefrontPayment;
-using Tooba.Payment.Application.Queries.GetStorefrontPaymentSandboxContext;
-using Tooba.Payment.Application.Queries.GetStorefrontWalletQuote;
-using Tooba.Payment.Application.Queries.ListStorefrontPaymentMethods;
+using Tooba.Payment.Application.Storefront.Queries;
 
 namespace Tooba.Payment.Endpoints.Storefront;
 

@@ -178,7 +178,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Notification.Application.Customer.Commands.MarkCustomerNotificationReadCommand).Assembly,
     typeof(Tooba.Support.Application.Commands.CreateCustomerTicket.CreateCustomerTicketCommand).Assembly,
     typeof(Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard.RedeemCustomerGiftCardCommand).Assembly,
-    typeof(Tooba.Payment.Application.Commands.InitiateStorefrontPayment.InitiateStorefrontPaymentCommand).Assembly,
+    typeof(Tooba.Payment.Application.Storefront.Commands.InitiateStorefrontPaymentCommand).Assembly,
     typeof(Tooba.Promotion.Application.Commands.CreateSellerPromotion.CreateSellerPromotionCommand).Assembly,
     typeof(Tooba.Order.Application.Admin.Completeness.Queries.ListAdminOrderNotes.ListAdminOrderNotesQuery).Assembly,
     typeof(Tooba.AccessControl.Application.Bootstrap.Commands.EnsureAccessControlBootstrapCommand).Assembly,
@@ -220,7 +220,7 @@ builder.Services.AddScoped<Tooba.BuildingBlocks.Security.ICurrentAuthenticatedUs
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.IAdminPanelAccess, Tooba.Host.Admin.Access.HostAdminPanelAccess>();
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.ISellerPanelAccess, Tooba.Host.Security.Seller.HostSellerPanelAccess>();
 builder.Services.AddScoped<Tooba.BuildingBlocks.Security.IPlatformEffectiveAccessReader, Tooba.AccessControl.Infrastructure.Adapters.Security.PlatformEffectiveAccessReader>();
-builder.Services.AddScoped<Tooba.Payment.Application.Orchestration.StorefrontPaymentOrchestrator>();
+builder.Services.AddScoped<Tooba.Payment.Application.Storefront.Orchestration.StorefrontPaymentOrchestrator>();
 builder.Services.AddScoped<Tooba.Payment.Contracts.Ports.ICheckoutActorPolicyPort, Tooba.Host.Security.Checkout.HostCheckoutActorPolicyAdapter>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Storefront.IPaymentStorefrontAuthorizer, Tooba.Host.Security.Payment.HostPaymentStorefrontAuthorizer>();
 builder.Services.AddScoped<Tooba.Payment.Endpoints.Admin.IPaymentAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostPaymentAdminAuthorizer>();

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Payment.Application.Commands.ProcessPaymentWebhook;
+using Tooba.Payment.Application.Webhooks.Commands;
 using Tooba.Payment.Application.Ports;
 
 namespace Tooba.Payment.Endpoints.Webhooks;

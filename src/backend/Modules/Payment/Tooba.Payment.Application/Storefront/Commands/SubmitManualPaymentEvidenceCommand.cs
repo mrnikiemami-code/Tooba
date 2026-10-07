@@ -1,0 +1,29 @@
+using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.Payment.Application.Composition;
+using Tooba.Payment.Application.Storefront.Models;
+
+namespace Tooba.Payment.Application.Storefront.Commands;
+
+public sealed record SubmitManualPaymentEvidenceCommand(
+    Guid PaymentId,
+    Guid CartId,
+    string? GuestSecret,
+    string TransferReference,
+    Guid? ProofMediaAssetId,
+    Guid? AuthenticatedUserId) : IRequest<Result<StorefrontPaymentDto>>;
+
+public sealed class SubmitManualPaymentEvidenceHandler(StorefrontPaymentOrchestrator orchestrator)
+    : IRequestHandler<SubmitManualPaymentEvidenceCommand, Result<StorefrontPaymentDto>>
+{
+    public Task<Result<StorefrontPaymentDto>> Handle(
+        SubmitManualPaymentEvidenceCommand request, CancellationToken cancellationToken) =>
+        PaymentOperation.ExecuteAsync(() => orchestrator.SubmitManualEvidenceAsync(
+            request.PaymentId,
+            request.CartId,
+            request.GuestSecret,
+            request.TransferReference,
+            request.ProofMediaAssetId,
+            request.AuthenticatedUserId,
+            cancellationToken));
+}

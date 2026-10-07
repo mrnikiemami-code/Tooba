@@ -1,13 +1,11 @@
 using Tooba.BuildingBlocks;
-using Tooba.Payment.Application.Commands.ConfirmAdminDeposit;
-using Tooba.Payment.Application.Commands.ProcessPaymentWebhook;
-using Tooba.Payment.Application.Commands.ReconcileAdminPayment;
-using Tooba.Payment.Application.Commands.ReconcileStalePayments;
-using Tooba.Payment.Application.Commands.RejectAdminDeposit;
+using Tooba.Payment.Application.Admin.Commands;
+using Tooba.Payment.Application.Webhooks.Commands;
+using Tooba.Payment.Application.Reconciliation.Commands;
 using Tooba.Payment.Application.Composition;
 using Tooba.Payment.Contracts.Errors;
 using Tooba.Payment.Application.Ports;
-using Tooba.Payment.Application.Queries.GetAdminPayment;
+using Tooba.Payment.Application.Admin.Queries;
 using Tooba.Payment.Domain.ValueObjects;
 using Xunit;
 

@@ -1,4 +1,4 @@
-﻿using Tooba.Order.Application.Admin.Operations.Policies;
+using Tooba.Order.Application.Admin.Operations.Policies;
 using System.IO;
 using Xunit;
 
@@ -22,7 +22,7 @@ public sealed class OrderSupplyUxTests
             "Admin", "OrdersGrid", "AdminOrdersGridReader.cs"));
         Assert.Contains("GetStatusesAsync", orders, StringComparison.Ordinal);
         Assert.DoesNotContain("GetStatusAsync(r.CheckoutId", orders, StringComparison.Ordinal);
-        var payments = Host(Path.Combine("..", "..", "Modules", "Payment", "Tooba.Payment.Application", "Queries", "QueryAdminPaymentsGrid", "QueryAdminPaymentsGridQuery.cs"));
+        var payments = Host(Path.Combine("..", "..", "Modules", "Payment", "Tooba.Payment.Application", "Admin", "Queries", "QueryAdminPaymentsGridQuery.cs"));
         Assert.Contains("IPaymentAdminOrderEnrichmentReader", payments, StringComparison.Ordinal);
         Assert.Contains("GetProjectionsAsync", orders, StringComparison.Ordinal);
         Assert.Contains("EnrichAsync", payments, StringComparison.Ordinal);

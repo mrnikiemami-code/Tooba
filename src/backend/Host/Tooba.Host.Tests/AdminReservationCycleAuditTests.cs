@@ -138,7 +138,7 @@ public sealed class AdminReservationCycleAuditTests
         var orders = File.ReadAllText(OrderModule(
             "Tooba.Order.Infrastructure/Admin/OrdersGrid/AdminOrdersGridReader.cs"));
         var payments = File.ReadAllText(Module(
-            "Payment/Tooba.Payment.Application/Queries/QueryAdminPaymentsGrid/QueryAdminPaymentsGridQuery.cs"));
+            "Payment/Tooba.Payment.Application/Admin/Queries/QueryAdminPaymentsGridQuery.cs"));
         Assert.Contains("GetProjectionsAsync", orders, StringComparison.Ordinal);
         Assert.Equal(1, Regex.Matches(payments, @"EnrichAsync\(").Count);
         Assert.DoesNotContain("GetProjectionAsync(", orders, StringComparison.Ordinal);

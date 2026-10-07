@@ -2,26 +2,15 @@ using System.Text.RegularExpressions;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
-using Tooba.Payment.Application.Commands.CompleteSandboxPayment;
-using Tooba.Payment.Application.Commands.ConfirmAdminDeposit;
-using Tooba.Payment.Application.Commands.InitiateStorefrontPayment;
-using Tooba.Payment.Application.Commands.ProcessPaymentWebhook;
-using Tooba.Payment.Application.Commands.ReconcileAdminPayment;
-using Tooba.Payment.Application.Commands.ReconcileStalePayments;
-using Tooba.Payment.Application.Commands.RejectAdminDeposit;
-using Tooba.Payment.Application.Commands.RetryManualPayment;
-using Tooba.Payment.Application.Commands.RetryUnpaidPayment;
-using Tooba.Payment.Application.Commands.SubmitManualPaymentEvidence;
-using Tooba.Payment.Application.Commands.UploadManualPaymentProof;
-using Tooba.Payment.Application.Queries.GetAdminPayment;
-using Tooba.Payment.Application.Queries.GetStorefrontPayment;
-using Tooba.Payment.Application.Queries.GetStorefrontPaymentSandboxContext;
-using Tooba.Payment.Application.Queries.GetStorefrontWalletQuote;
-using Tooba.Payment.Application.Queries.ListStorefrontPaymentMethods;
-using Tooba.Payment.Application.Queries.QueryAdminPaymentsGrid;
-using Tooba.Payment.Application.Validators.Admin;
-using Tooba.Payment.Application.Validators.Storefront;
-using Tooba.Payment.Application.Validators.Webhooks;
+using Tooba.Payment.Application.Storefront.Commands;
+using Tooba.Payment.Application.Admin.Commands;
+using Tooba.Payment.Application.Webhooks.Commands;
+using Tooba.Payment.Application.Reconciliation.Commands;
+using Tooba.Payment.Application.Admin.Queries;
+using Tooba.Payment.Application.Storefront.Queries;
+using Tooba.Payment.Application.Admin.Validators;
+using Tooba.Payment.Application.Storefront.Validators;
+using Tooba.Payment.Application.Webhooks.Validators;
 using Xunit;
 
 namespace Tooba.Payment.Tests.Architecture;
@@ -216,18 +205,26 @@ public sealed class PaymentValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void Validator_folder_layout_is_exactly_storefront_admin_webhooks()
+    public void Validator_folder_layout_is_capability_first_shallow()
     {
-        var validatorsRoot = Path.Combine(PaymentRoot(), "Tooba.Payment.Application", "Validators");
-        var folders = Directory.GetDirectories(validatorsRoot)
-            .Select(Path.GetFileName)
-            .OrderBy(x => x, StringComparer.Ordinal)
-            .ToArray();
-        Assert.Equal(new[] { "Admin", "Storefront", "Webhooks" }, folders);
+        // W2 Structure: validators live on the capability's own technical axis
+        // (Application/<Capability>/Validators) with requests colocated directly — no
+        // Application/Validators/<Audience> technical-axis-first tree.
+        var applicationRoot = Path.Combine(PaymentRoot(), "Tooba.Payment.Application");
+        Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Validators", "Admin")));
+        Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Validators", "Storefront")));
+        Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Validators", "Webhooks")));
 
-        Assert.Equal(5, Directory.GetFiles(Path.Combine(validatorsRoot, "Admin"), "*Validator.cs").Length);
-        Assert.Equal(9, Directory.GetFiles(Path.Combine(validatorsRoot, "Storefront"), "*Validator.cs").Length);
-        Assert.Equal(1, Directory.GetFiles(Path.Combine(validatorsRoot, "Webhooks"), "*Validator.cs").Length);
+        Assert.Equal(5, Directory.GetFiles(
+            Path.Combine(applicationRoot, "Admin", "Validators"), "*Validator.cs").Length);
+        Assert.Equal(9, Directory.GetFiles(
+            Path.Combine(applicationRoot, "Storefront", "Validators"), "*Validator.cs").Length);
+        Assert.Equal(1, Directory.GetFiles(
+            Path.Combine(applicationRoot, "Webhooks", "Validators"), "*Validator.cs").Length);
+
+        // The two cross-capability helpers stay on the shared Application/Validators folder.
+        Assert.Equal(2, Directory.GetFiles(Path.Combine(applicationRoot, "Validators"), "*.cs").Length);
+        Assert.Empty(Directory.GetDirectories(Path.Combine(applicationRoot, "Validators")));
     }
 
     [Fact]

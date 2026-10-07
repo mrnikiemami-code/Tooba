@@ -29,7 +29,7 @@ public sealed class AtomicCheckoutCommitTests
         var host = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Checkout", "Persistence", "CheckoutSubmitHost.cs"));
         var directory = OrderPartialSources.ReadAll(
             "src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence", "CheckoutDirectory*.cs");
-        var payment = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Orchestration", "StorefrontPaymentOrchestrator.cs"));
+        var payment = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Storefront", "Orchestration", "StorefrontPaymentOrchestrator.cs"));
         var feCheckout = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-checkout-api.ts"));
         var feShipping = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-shipping-api.ts"));
         Assert.Contains("TransactionScope", checkout, StringComparison.Ordinal);

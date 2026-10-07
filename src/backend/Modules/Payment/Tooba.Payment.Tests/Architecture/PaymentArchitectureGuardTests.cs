@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -7,7 +7,14 @@ namespace Tooba.Payment.Tests.Architecture;
 public sealed class PaymentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Composition", "Orchestration", "Validators"];    private static readonly string[] AllowedContractsFolders = ["Admin", "Customer", "Events", "Dtos", "Errors", "Resources", "Hold", "Ports", "Returns", "Settlement", "Storefront", "Checkout"];
+    // W2 Structure: Application is capability-first. Technical axes (Commands/Queries/Validators/Models/
+    // Orchestration) live UNDER a capability; the root keeps only shared structural folders.
+    private static readonly string[] AllowedApplicationFolders =
+        ["Admin", "Storefront", "Webhooks", "Reconciliation", "Composition", "Models", "Ports", "Validators"];
+    private static readonly string[] AllowedApplicationCapabilityFolders = ["Admin", "Storefront", "Webhooks", "Reconciliation"];
+    private static readonly string[] AllowedApplicationSharedFolders = ["Composition", "Models", "Ports", "Validators"];
+    private static readonly string[] AllowedCapabilitySubFolders = ["Commands", "Queries", "Validators", "Models", "Orchestration"];
+    private static readonly string[] AllowedContractsFolders = ["Admin", "Customer", "Events", "Dtos", "Errors", "Resources", "Hold", "Ports", "Returns", "Settlement", "Storefront", "Checkout"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Providers", "Events", "Messaging", "DependencyInjection", "Gateways", "Migrations", "Workers"];
     private static readonly string[] AllowedEndpointsFolders = ["Storefront", "Admin", "Webhooks", "Errors", "Resources"];
@@ -248,8 +255,14 @@ public sealed class PaymentArchitectureGuardTests
             .ToArray();
         Assert.True(hostBoundaryViolations.Length == 0,
             "Host Payment.Application.Ports boundary violations: " + string.Join(", ", hostBoundaryViolations));
-        Assert.True(Directory.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Application", "Orchestration")));
-        Assert.False(File.Exists(Path.Combine(PaymentRoot(), "Tooba.Payment.Application", "Models", "StorefrontPaymentOrchestrator.cs")));
+        // W2 Structure: storefront orchestration lives under the Storefront capability.
+        Assert.True(Directory.Exists(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Application", "Storefront", "Orchestration")));
+        Assert.False(File.Exists(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Application", "Orchestration", "StorefrontPaymentOrchestrator.cs")),
+            "technical-axis-first Application/Orchestration must not return");
+        Assert.False(File.Exists(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Application", "Models", "StorefrontPaymentOrchestrator.cs")));
 
         foreach (var project in new[] { "Tooba.Payment.Application", "Tooba.Payment.Infrastructure" })
         {
@@ -459,7 +472,7 @@ public sealed class PaymentArchitectureGuardTests
     public void Payment_application_admin_grid_has_no_localized_presentation_fallback()
     {
         var gridQuery = File.ReadAllText(Path.Combine(
-            PaymentRoot(), "Tooba.Payment.Application", "Queries", "QueryAdminPaymentsGrid", "QueryAdminPaymentsGridQuery.cs"));
+            PaymentRoot(), "Tooba.Payment.Application", "Admin", "Queries", "QueryAdminPaymentsGridQuery.cs"));
         Assert.Contains("order?.CustomerDisplayName ?? string.Empty", gridQuery, StringComparison.Ordinal);
         Assert.Contains("order?.ReservationLabel ?? string.Empty", gridQuery, StringComparison.Ordinal);
         Assert.Contains("order?.ReservationLabelEn ?? string.Empty", gridQuery, StringComparison.Ordinal);
@@ -467,9 +480,16 @@ public sealed class PaymentArchitectureGuardTests
         Assert.False(Regex.IsMatch(gridQuery, @"[\u0600-\u06FF]"), "Persian literal in admin grid query");
 
         var dtos = File.ReadAllText(Path.Combine(
-            PaymentRoot(), "Tooba.Payment.Application", "Models", "StorefrontPaymentDtos.cs"));
+            PaymentRoot(), "Tooba.Payment.Application", "Storefront", "Models", "StorefrontPaymentDtos.cs"));
         Assert.DoesNotContain("ReservationLabel = \"—\"", dtos, StringComparison.Ordinal);
-        Assert.Contains("ReservationLabel = \"\"", dtos, StringComparison.Ordinal);
+        Assert.DoesNotContain("مشتری", dtos, StringComparison.Ordinal);
+
+        // W2 Structure: the admin grid read models live on the admin capability, not the storefront bundle.
+        var adminDtos = File.ReadAllText(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Application", "Admin", "Models", "AdminPaymentGridDtos.cs"));
+        Assert.Contains("ReservationLabel = \"\"", adminDtos, StringComparison.Ordinal);
+        Assert.DoesNotContain("ReservationLabel = \"—\"", adminDtos, StringComparison.Ordinal);
+        Assert.DoesNotContain("مشتری", adminDtos, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -557,6 +577,151 @@ public sealed class PaymentArchitectureGuardTests
         }
     }
 
+    [Fact]
+    public void Payment_application_is_capability_first_with_no_technical_axis_root()
+    {
+        var applicationRoot = Path.Combine(PaymentRoot(), "Tooba.Payment.Application");
+        var rootFolders = Directory.GetDirectories(applicationRoot)
+            .Select(Path.GetFileName!)
+            .Where(name => name is not ("bin" or "obj" or "artifacts") && !name.StartsWith('.'))
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(AllowedApplicationFolders.OrderBy(x => x, StringComparer.Ordinal).ToArray(), rootFolders);
+
+        // The technical request axes must never be the PRIMARY organization of the Application tree.
+        foreach (var banned in new[] { "Commands", "Queries", "Orchestration" })
+        {
+            Assert.False(Directory.Exists(Path.Combine(applicationRoot, banned)),
+                $"technical-axis-first Application/{banned} must not return");
+        }
+
+        // Capabilities are capability-first: each capability folder holds its own technical axes.
+        foreach (var capability in AllowedApplicationCapabilityFolders)
+        {
+            var capabilityRoot = Path.Combine(applicationRoot, capability);
+            Assert.True(Directory.Exists(capabilityRoot), capability);
+            var subFolders = Directory.GetDirectories(capabilityRoot)
+                .Select(Path.GetFileName!)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray();
+            Assert.NotEmpty(subFolders);
+            foreach (var sub in subFolders)
+            {
+                Assert.Contains(sub, AllowedCapabilitySubFolders);
+            }
+        }
+
+        // Shared structural folders at the Application root carry cross-capability collaborators only.
+        foreach (var shared in AllowedApplicationSharedFolders)
+        {
+            Assert.True(Directory.Exists(Path.Combine(applicationRoot, shared)), shared);
+        }
+    }
+
+    [Fact]
+    public void Payment_has_no_single_file_use_case_leaf_folders()
+    {
+        // Hard rule: a folder that exists only to wrap ONE production source file and is named after a
+        // single Command/Query/UseCase is OVER_FOLDERED. Count source files, not declared types.
+        var applicationRoot = Path.Combine(PaymentRoot(), "Tooba.Payment.Application");
+        var offenders = new List<string>();
+        foreach (var dir in Directory.EnumerateDirectories(applicationRoot, "*", SearchOption.AllDirectories))
+        {
+            var normalized = dir.Replace('\\', '/');
+            if (normalized.Contains("/bin/", StringComparison.Ordinal)
+                || normalized.Contains("/obj/", StringComparison.Ordinal)
+                || normalized.Contains("/artifacts/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var files = Directory.GetFiles(dir, "*.cs", SearchOption.TopDirectoryOnly);
+            if (files.Length != 1)
+            {
+                continue;
+            }
+
+            var folderName = Path.GetFileName(dir);
+            var fileName = Path.GetFileNameWithoutExtension(files[0]);
+            // A use-case-named folder wrapping exactly one request source file is the defect.
+            if (string.Equals(folderName, fileName, StringComparison.Ordinal))
+            {
+                offenders.Add(Path.GetRelativePath(applicationRoot, dir).Replace('\\', '/'));
+            }
+        }
+
+        Assert.True(offenders.Count == 0,
+            "single-file use-case leaf folders (OVER_FOLDERED): " + string.Join(", ", offenders));
+    }
+
+    [Fact]
+    public void Payment_application_request_sources_are_colocated_on_capability_axes()
+    {
+        var applicationRoot = Path.Combine(PaymentRoot(), "Tooba.Payment.Application");
+
+        var expected = new (string Capability, string Axis, string[] Files)[]
+        {
+            ("Admin", "Commands", [
+                "ConfirmAdminDepositCommand.cs", "ReconcileAdminPaymentCommand.cs", "RejectAdminDepositCommand.cs"]),
+            ("Admin", "Models", ["AdminPaymentGridDtos.cs"]),
+            ("Admin", "Queries", ["GetAdminPaymentQuery.cs", "QueryAdminPaymentsGridQuery.cs"]),
+            ("Admin", "Validators", [
+                "ConfirmAdminDepositCommandValidator.cs", "GetAdminPaymentQueryValidator.cs",
+                "QueryAdminPaymentsGridQueryValidator.cs", "ReconcileAdminPaymentCommandValidator.cs",
+                "RejectAdminDepositCommandValidator.cs"]),
+            ("Storefront", "Commands", [
+                "CompleteSandboxPaymentCommand.cs", "InitiateStorefrontPaymentCommand.cs",
+                "RetryManualPaymentCommand.cs", "RetryUnpaidPaymentCommand.cs",
+                "SubmitManualPaymentEvidenceCommand.cs", "UploadManualPaymentProofCommand.cs"]),
+            ("Storefront", "Queries", [
+                "GetStorefrontPaymentQuery.cs", "GetStorefrontPaymentSandboxContextQuery.cs",
+                "GetStorefrontWalletQuoteQuery.cs", "ListStorefrontPaymentMethodsQuery.cs"]),
+            ("Storefront", "Validators", [
+                "CompleteSandboxPaymentCommandValidator.cs", "GetStorefrontPaymentQueryValidator.cs",
+                "GetStorefrontPaymentSandboxContextQueryValidator.cs", "GetStorefrontWalletQuoteQueryValidator.cs",
+                "InitiateStorefrontPaymentCommandValidator.cs", "RetryManualPaymentCommandValidator.cs",
+                "RetryUnpaidPaymentCommandValidator.cs", "SubmitManualPaymentEvidenceCommandValidator.cs",
+                "UploadManualPaymentProofCommandValidator.cs"]),
+            ("Storefront", "Models", ["StorefrontPaymentDtos.cs"]),
+            ("Storefront", "Orchestration", ["GlobalUsings.cs", "StorefrontPaymentOrchestrator.cs"]),
+            ("Webhooks", "Commands", ["ProcessPaymentWebhookCommand.cs"]),
+            ("Webhooks", "Validators", ["ProcessPaymentWebhookCommandValidator.cs"]),
+            ("Reconciliation", "Commands", ["ReconcileStalePaymentsCommand.cs"]),
+        };
+
+        foreach (var (capability, axis, files) in expected)
+        {
+            var axisRoot = Path.Combine(applicationRoot, capability, axis);
+            Assert.True(Directory.Exists(axisRoot), $"{capability}/{axis}");
+            var actual = Directory.GetFiles(axisRoot, "*.cs")
+                .Select(Path.GetFileName!)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray();
+            Assert.Equal(files.OrderBy(x => x, StringComparer.Ordinal).ToArray(), actual);
+            // Requests are colocated directly on the axis — no per-use-case child folder remains.
+            Assert.Empty(Directory.GetDirectories(axisRoot));
+        }
+
+        var shared = new (string Folder, string[] Files)[]
+        {
+            ("Composition", ["PaymentOperation.cs"]),
+            ("Models", ["PaymentGatewayActorContext.cs", "PaymentGatewayOutcomes.cs"]),
+            ("Ports", [
+                "CommerceHoldPolicyPorts.cs", "PaymentDirectoryPorts.cs", "PaymentQueryPorts.cs",
+                "PaymentStorefrontBoundaryPorts.cs", "PaymentWebhookPorts.cs"]),
+            ("Validators", ["PaymentFluentRules.cs", "PaymentValidationCodes.cs"]),
+        };
+        foreach (var (folder, files) in shared)
+        {
+            var actual = Directory.GetFiles(Path.Combine(applicationRoot, folder), "*.cs")
+                .Select(Path.GetFileName!)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray();
+            Assert.Equal(files.OrderBy(x => x, StringComparer.Ordinal).ToArray(), actual);
+        }
+    }
+
     private static void AssertNoRootDump(string project, string[] allowedFolders)
     {
         var root = Path.Combine(PaymentRoot(), project);
@@ -639,15 +804,15 @@ public sealed class PaymentArchitectureGuardTests
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
         Assert.Equal(
-            new[] { "src/backend/Modules/Payment/Tooba.Payment.Application/Orchestration/GlobalUsings.cs" },
+            new[] { "src/backend/Modules/Payment/Tooba.Payment.Application/Storefront/Orchestration/GlobalUsings.cs" },
             globalUsingsFiles);
 
         var globalUsings = File.ReadAllText(Path.Combine(
-            PaymentRoot(), "Tooba.Payment.Application", "Orchestration", "GlobalUsings.cs"));
+            PaymentRoot(), "Tooba.Payment.Application", "Storefront", "Orchestration", "GlobalUsings.cs"));
         var aliases = Regex.Matches(globalUsings, @"global\s+using\s+([\w.]+)\s*;")
             .Select(m => m.Groups[1].Value)
             .ToArray();
-        Assert.Equal(new[] { "Tooba.Payment.Application.Orchestration" }, aliases);
+        Assert.Equal(new[] { "Tooba.Payment.Application.Storefront.Orchestration" }, aliases);
         Assert.DoesNotContain("=", globalUsings, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Payment.Infrastructure", globalUsings, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host", globalUsings, StringComparison.Ordinal);

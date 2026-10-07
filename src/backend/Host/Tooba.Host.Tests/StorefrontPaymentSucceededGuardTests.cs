@@ -1,4 +1,4 @@
-﻿using Xunit;
+using Xunit;
 
 namespace Tooba.Host.Tests;
 
@@ -14,7 +14,7 @@ public sealed class StorefrontPaymentSucceededGuardTests
         var directory = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Infrastructure", "Directories", "PaymentDirectory.cs"));
         var composer = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Orchestration", "StorefrontPaymentOrchestrator.cs"));
+            root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Storefront", "Orchestration", "StorefrontPaymentOrchestrator.cs"));
         var endpoints = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Contracts", "Errors", "PaymentErrorCodes.cs"));
         var contracts = File.ReadAllText(Path.Combine(

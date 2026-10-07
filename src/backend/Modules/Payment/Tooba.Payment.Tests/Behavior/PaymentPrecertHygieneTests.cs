@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Payment.Application.Models;
+using Tooba.Payment.Application.Admin.Models;
 using Tooba.Payment.Contracts.Checkout;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Domain.Aggregates;
@@ -277,12 +278,12 @@ public sealed class PaymentPrecertHygieneTests
     public async Task Admin_grid_missing_enrichment_returns_empty_display_strings()
     {
         var checkoutId = Guid.Parse("01900000-0000-7000-8000-000000000903");
-        var handler = new Tooba.Payment.Application.Queries.QueryAdminPaymentsGrid.QueryAdminPaymentsGridHandler(
+        var handler = new Tooba.Payment.Application.Admin.Queries.QueryAdminPaymentsGridHandler(
             new StubQueryDirectory(checkoutId),
             new StubEnrichmentReader());
 
         var result = await handler.Handle(
-            new Tooba.Payment.Application.Queries.QueryAdminPaymentsGrid.QueryAdminPaymentsGridQuery(
+            new Tooba.Payment.Application.Admin.Queries.QueryAdminPaymentsGridQuery(
                 new AdminPaymentGridQueryInput(null, [], "created", "desc", 1, 20)),
             CancellationToken.None);
 

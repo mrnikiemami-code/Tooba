@@ -893,7 +893,11 @@
     "verdict": "READY_FOR_STRUCTURE",
     "lockVersion": "ARCH-COMPLETE-002",
     "productionCodeChanged": true,
-    "changedProjects": ["Tooba.Party.Contracts", "Tooba.Party.Infrastructure", "Tooba.Promotion.Infrastructure"],
+    "changedProjects": [
+      "Tooba.Party.Contracts",
+      "Tooba.Party.Infrastructure",
+      "Tooba.Promotion.Infrastructure"
+    ],
     "canonicalSeamsAdded": {
       "declaredCodeGuard": "Contracts/Errors/PartyErrorCodes.cs KnownCodes set (11 codes) + IsKnown(string?) — certified Media/Inventory/OperatorProfile/PageComposition precedent",
       "typedFaultSeam": "Application/Composition/PartyOperation.cs dual-mechanism mapping: ContractOperationException with IsKnown filter + SemanticException; value-less ExecuteAsync(Func<Task>) overload added with ArgumentNullException guards; unknown codes/exceptions propagate untouched to the global boundary",
@@ -904,7 +908,9 @@
     "migrationFilesChanged": 0,
     "hostTouched": false,
     "frontendState": "FROZEN_UNTOUCHED",
-    "durableGuardsAdded": ["PartyModuleAmsc001W1MigrateGuardTests"],
+    "durableGuardsAdded": [
+      "PartyModuleAmsc001W1MigrateGuardTests"
+    ],
     "focusedValidation": "dotnet build Tooba.Party.Endpoints chain = 0 errors; dotnet build Tooba.Promotion.Infrastructure = 0 errors; dotnet build Tooba.Host.Tests = 0 errors; PartyModuleAmc* + PartyModuleAmsc001* guard family = 15/15 PASS",
     "commit": "29012df0",
     "commitFull": "29012df08590550d3171722895d988bd59e3c2fa",
@@ -1034,7 +1040,9 @@
     "rootDumpState": "ZERO",
     "endpointsImportHygieneState": "APPLICATION_CONTRACTS_BUILDINGBLOCKS_ONLY",
     "hostFinalClosureState": "PRESERVED",
-    "durableGuardsAdded": ["PartyModuleAmsc001W2StructureGuardTests"],
+    "durableGuardsAdded": [
+      "PartyModuleAmsc001W2StructureGuardTests"
+    ],
     "focusedValidation": "Party guard family 20/20 PASS (W2 structure guard 5 facts + W1 migrate guard + legacy Amc W1/W2/W3/W4 guards + Host tests); Host.Tests build = 0 errors",
     "commit": "ffff7100",
     "commitFull": "ffff7100bc119a76c472ba77e27a658b1f18f129",
@@ -11344,7 +11352,14 @@
     "verdict": "READY_FOR_STRUCTURE",
     "lockVersion": "ARCH-COMPLETE-002",
     "productionCodeChanged": true,
-    "changedProjects": ["Tooba.Notification.Contracts", "Tooba.Notification.Application", "Tooba.Notification.Infrastructure", "Tooba.Notification.Endpoints", "Tooba.Notification.Tests", "Tooba.Host.Tests"],
+    "changedProjects": [
+      "Tooba.Notification.Contracts",
+      "Tooba.Notification.Application",
+      "Tooba.Notification.Infrastructure",
+      "Tooba.Notification.Endpoints",
+      "Tooba.Notification.Tests",
+      "Tooba.Host.Tests"
+    ],
     "canonicalSeamsAdded": {
       "typedFaultSeam": "Application/Composition/NotificationOperation.cs (ContractOperationException, IsKnown filter, unknown codes propagate)",
       "stableCodeOwner": "Contracts/Errors/NotificationErrorCodes.cs (5 declared codes + IsKnown; relocated from Application/Errors)",
@@ -11410,11 +11425,42 @@
       "w2": "e2f23975"
     },
     "physicalTree": {
-      "contracts": ["Commands", "Copy", "Dtos", "Errors", "Ports", "Resources", "Routes"],
-      "domain": ["Aggregates", "ValueObjects"],
-      "application": ["Composition", "Customer", "Models", "Ports", "Rendering", "Seller", "Validators"],
-      "infrastructure": ["DependencyInjection", "Directories", "Handlers", "Messaging", "Observability", "Projectors", "Persistence"],
-      "endpoints": ["Customer", "Seller", "Errors"]
+      "contracts": [
+        "Commands",
+        "Copy",
+        "Dtos",
+        "Errors",
+        "Ports",
+        "Resources",
+        "Routes"
+      ],
+      "domain": [
+        "Aggregates",
+        "ValueObjects"
+      ],
+      "application": [
+        "Composition",
+        "Customer",
+        "Models",
+        "Ports",
+        "Rendering",
+        "Seller",
+        "Validators"
+      ],
+      "infrastructure": [
+        "DependencyInjection",
+        "Directories",
+        "Handlers",
+        "Messaging",
+        "Observability",
+        "Projectors",
+        "Persistence"
+      ],
+      "endpoints": [
+        "Customer",
+        "Seller",
+        "Errors"
+      ]
     },
     "httpApplicability": "HTTP_OWNING",
     "endpointOwnershipState": "MODULE_OWNED",
@@ -11671,7 +11717,10 @@
     "verdict": "READY_FOR_STRUCTURE",
     "lockVersion": "ARCH-COMPLETE-002",
     "productionCodeChanged": true,
-    "changedProjects": ["Tooba.OperatorProfile.Contracts", "Tooba.OperatorProfile.Application"],
+    "changedProjects": [
+      "Tooba.OperatorProfile.Contracts",
+      "Tooba.OperatorProfile.Application"
+    ],
     "canonicalSeamsAdded": {
       "declaredCodeGuard": "Contracts/Errors/OperatorProfileErrorCodes.cs KnownCodes set (6 codes) + IsKnown(string?) — certified Media/Inventory precedent",
       "typedFaultSeam": "Application/Composition/OperatorProfileOperation.cs dual-mechanism mapping: ContractOperationException with IsKnown filter + SemanticException; value-less ExecuteAsync(Func<Task>) overload added; unknown codes/exceptions propagate untouched to the global boundary",
@@ -11768,7 +11817,12 @@
     "foreignAppInfraDomainCoupling": "ZERO",
     "crossModuleJoinState": "NONE",
     "crossModuleConsumerSeam": "CONTRACTS_ONLY_IActorDisplayLookup",
-    "crossModuleConsumers": ["Order.Application", "AccessControl.Application", "Catalog.Endpoints", "ProductWorkspace.Endpoints"],
+    "crossModuleConsumers": [
+      "Order.Application",
+      "AccessControl.Application",
+      "Catalog.Endpoints",
+      "ProductWorkspace.Endpoints"
+    ],
     "persistenceOwnershipState": "CORRECT_OWN_OPERATOR_PROFILE_SCHEMA",
     "hostResidueState": "ALLOWED_COMPOSITION_ROOT_PLUS_THIN_ADMIN_AUTHORIZER_PLUS_DEV_SEED_CALL_PLUS_MIGRATION_DESCRIPTOR",
     "hostOperatorProfileHttpOwnership": "ZERO",
@@ -11950,7 +12004,10 @@
     "verdict": "READY_FOR_STRUCTURE",
     "lockVersion": "ARCH-COMPLETE-002",
     "productionCodeChanged": true,
-    "changedProjects": ["Tooba.PageComposition.Contracts", "Tooba.PageComposition.Application"],
+    "changedProjects": [
+      "Tooba.PageComposition.Contracts",
+      "Tooba.PageComposition.Application"
+    ],
     "canonicalSeamsAdded": {
       "declaredCodeGuard": "Contracts/Errors/PageCompositionErrorCodes.cs KnownCodes set (8 codes) + IsKnown(string?) — certified Media/Inventory/OperatorProfile precedent",
       "typedFaultSeam": "Application/Composition/PageCompositionOperation.cs dual-mechanism mapping: ContractOperationException with IsKnown filter + SemanticException; value-less ExecuteAsync(Func<Task>) overload added with ArgumentNullException guards; unknown codes/exceptions propagate untouched to the global boundary; sync Execute<T> (tenant resolution path) keeps its certified minimal SemanticException mapping because the module raises no ContractOperationException today"
@@ -11960,7 +12017,9 @@
     "migrationFilesChanged": 0,
     "hostTouched": false,
     "frontendState": "FROZEN_UNTOUCHED",
-    "durableGuardsAdded": ["PageCompositionModuleAmsc001W1MigrateGuardTests"],
+    "durableGuardsAdded": [
+      "PageCompositionModuleAmsc001W1MigrateGuardTests"
+    ],
     "focusedValidation": "dotnet build Tooba.PageComposition.Endpoints chain = 0 errors; PageCompositionModuleAmsc001W1MigrateGuardTests + PageCompositionModuleAmcW2StructureGuardTests + PageCompositionModuleAmcW4CertGuardTests + HostPageCompositionAmcGuardTests = 12/12 PASS; TmarCompleteReferenceStructureGateTests = 1 pre-existing Catalog Contracts namespace-debt red (Catalog-owned, disclosed, out of W1 scope)",
     "commit": "6a28c921",
     "waveOutcome": "STRUCTURE_READY",
@@ -11991,7 +12050,9 @@
     "rootDumpState": "ZERO",
     "endpointsImportHygieneState": "APPLICATION_CONTRACTS_BUILDINGBLOCKS_ONLY",
     "hostFinalClosureState": "PRESERVED",
-    "durableGuardsAdded": ["PageCompositionModuleAmsc001W2StructureGuardTests"],
+    "durableGuardsAdded": [
+      "PageCompositionModuleAmsc001W2StructureGuardTests"
+    ],
     "focusedValidation": "PageComposition guard family 18/18 PASS (W2 structure guard 5 facts + W1 migrate guard + legacy W2 layer guard + AmcW4 cert guard + Host guard); TmarCompleteReferenceStructureGateTests red = disclosed pre-existing Catalog Contracts namespace debt (Catalog-owned, out of scope)",
     "commit": "361a1837",
     "waveOutcome": "CERTIFY_UNBLOCKED",
@@ -12261,5 +12322,55 @@
     "workflowStop": "USER_REVIEW_PAYMENT_AMSC_001_W1",
     "automaticNextImplementationTask": "NONE",
     "evidence": "docs/architecture/evidence/TB-TMAR-PAYMENT-AMSC-001-W1/migrate.md"
+  },
+  "paymentAmsc001W2": {
+    "task": "TB-TMAR-PAYMENT-AMSC-001-W2",
+    "mode": "ARCHITECT_DIRECT_AMSC",
+    "skill": "tooba-architecture-structure",
+    "target": "src/backend/Modules/Payment/Tooba.Payment.*",
+    "parentTask": "TB-TMAR-PAYMENT-AMSC-001-W1",
+    "parentCommit": "2d69d828",
+    "state": "STRUCTURE_COMPLETE",
+    "verdict": "READY_FOR_CERTIFY",
+    "lockVersion": "ARCH-COMPLETE-002",
+    "priorCertificationState": "PAYMENT_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED_3E403AAF_PRESERVED_AS_BASELINE",
+    "folderGranularityStateBefore": "TECHNICAL_AXIS_FIRST_PLUS_17_OVER_FOLDERED_SINGLE_FILE_REQUEST_LEAVES",
+    "folderGranularityState": "PROFESSIONAL_SHALLOW",
+    "applicationCapabilities": "Admin,Storefront,Webhooks,Reconciliation",
+    "applicationSharedFolders": "Composition,Models,Ports,Validators",
+    "technicalAxisFirstRootsRemoved": "Commands,Queries,Orchestration",
+    "capabilityAxes": "Admin/{Commands(3),Models(1),Queries(2),Validators(5)}; Storefront/{Commands(6),Queries(4),Validators(9),Models(1),Orchestration(2)}; Webhooks/{Commands(1),Validators(1)}; Reconciliation/{Commands(1)}",
+    "movedFileCount": 35,
+    "gitMvRenames": 35,
+    "emptiedLegacyDirectoriesRemoved": "Commands,Queries,Orchestration,Validators/Admin,Validators/Storefront,Validators/Webhooks",
+    "mixedContractsBundleSplit": "Application/Models/StorefrontPaymentDtos.cs -> Storefront/Models/StorefrontPaymentDtos.cs + Admin/Models/AdminPaymentGridDtos.cs (member-preserving)",
+    "orchestratorHome": "src/backend/Modules/Payment/Tooba.Payment.Application/Storefront/Orchestration/StorefrontPaymentOrchestrator.cs",
+    "globalUsingsHome": "src/backend/Modules/Payment/Tooba.Payment.Application/Storefront/Orchestration/GlobalUsings.cs",
+    "globalUsingsAlias": "Tooba.Payment.Application.Storefront.Orchestration",
+    "solutionExplorerState": "CANONICAL",
+    "solutionGrouping": "/Modules/Payment/ with 6 projects matching disk",
+    "pathNamespaceState": "EXACT",
+    "physicalCopyState": "CLEAN",
+    "rootAllowlistState": "ENFORCED",
+    "fileCohesionState": "COHESIVE",
+    "hostFinalClosure": "PRESERVED",
+    "schemaMigrationState": "UNCHANGED",
+    "behaviorPreservation": "PRESERVED",
+    "crossModuleCouplingState": "LEGAL_CONTRACTS_ONLY",
+    "microserviceExtractable": "TRUE_CAPABILITY_FIRST_EXTRACTABLE",
+    "guardTestsAdded": "Tooba.Payment.Tests/Architecture/PaymentModuleAmsc001W2StructureGuardTests.cs (8 tests)",
+    "guardTestsUpdated": "PaymentArchitectureGuardTests (+3 capability-first/leaf/colocation guards), PaymentValidatorCoverageGuardTests (capability-first shallow layout), Host PaymentModuleAmsc001W1MigrateGuardTests (recursive request scan)",
+    "manifestMutation": "Payment.Application forbiddenTopLevelFolders=Commands,Queries,Orchestration; forbiddenRootFiles extended",
+    "paymentTestsResult": "107_OF_107_PASSED",
+    "hostPaymentTestsResult": "90_PASSED_2_SKIPPED",
+    "preExistingUnrelatedFailures": "HostStorefrontAmcR1GuardTests (Catalog Results.Json WIP) + HostStorefrontAmcR3GuardTests (missing Modules/Wishlist file) - not Payment, unchanged",
+    "jsonParseState": "PASS",
+    "productionCodeChanged": true,
+    "schemaChange": "NONE",
+    "guardsWeakened": "NONE",
+    "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PAYMENT-AMSC-001-W2/",
+    "workflowStop": "USER_REVIEW_PAYMENT_AMSC_001_W2",
+    "automaticNextImplementationTask": "NONE",
+    "evidence": "docs/architecture/evidence/TB-TMAR-PAYMENT-AMSC-001-W2/structure.md"
   }
 }

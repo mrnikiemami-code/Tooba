@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
-using Tooba.Payment.Application.Commands.ReconcileStalePayments;
+using Tooba.Payment.Application.Reconciliation.Commands;
 using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Persistence;
 
