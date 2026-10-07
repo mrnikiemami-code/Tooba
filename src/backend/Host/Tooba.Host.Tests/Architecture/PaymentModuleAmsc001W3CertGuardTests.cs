@@ -106,6 +106,10 @@ public sealed class PaymentModuleAmsc001W3CertGuardTests
         Assert.Equal("6839bb4a", lineage.GetProperty("w0").GetString());
         Assert.Equal("2d69d828", lineage.GetProperty("w1").GetString());
         Assert.Equal("a138ec61", lineage.GetProperty("w2").GetString());
+        Assert.Equal("502d73e0", lineage.GetProperty("w3").GetString());
+        Assert.Equal(
+            "502d73e0e9ccfb277a06ad397b1f0a511f586921",
+            lineage.GetProperty("w3CertificationCommit").GetString());
     }
 
     [Fact]

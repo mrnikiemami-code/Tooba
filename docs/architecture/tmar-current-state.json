@@ -12451,7 +12451,8 @@
       "w0": "6839bb4a",
       "w1": "2d69d828",
       "w2": "a138ec61",
-      "w3": "this-commit"
+      "w3": "502d73e0",
+      "w3CertificationCommit": "502d73e0e9ccfb277a06ad397b1f0a511f586921"
     },
     "priorCertificationState": "PAYMENT_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED_3E403AAF_PRESERVED_AS_BASELINE",
     "durableGuards": [
@@ -12462,7 +12463,7 @@
       "PaymentValidatorCoverageGuardTests",
       "ErrorCatalogUniqueCodeGuardTests"
     ],
-    "focusedValidation": "dotnet build Tooba.Payment.Tests chain = 0 errors; Tooba.Host.Tests build = 0 errors; Tooba.Payment.Tests 107/107 PASS; Host Payment filter 90 passed/2 skipped; composed catalog uniqueness guard PASS",
+    "focusedValidation": "dotnet build Tooba.Payment.Tests chain = 0 errors; Tooba.Host.Tests build = 0 errors; Tooba.Payment.Tests 107/107 PASS; Host Payment filter 99 passed/2 skipped (90 pre-existing + 9 new W3 cert guards); PaymentModuleAmsc001W3CertGuardTests 9/9 PASS; composed catalog uniqueness guard PASS",
     "preExistingUnrelatedFailures": "HostStorefrontAmcR1GuardTests (Catalog Results.Json WIP) + HostStorefrontAmcR3GuardTests (missing Modules/Wishlist file) - not Payment, unchanged",
     "residualNonBlockingDebt": "OrderErrorResourceSet still carries equality Owns() entries for the three Payment-owned keys (byte-identical text, no descriptor duplicate); PaymentErrorCodes declares 4 foreign-owned codes for the known-code guard (never re-registered); CustomerPayment.cs 501 LOC cohesive single aggregate",
     "jsonParseState": "PASS",
