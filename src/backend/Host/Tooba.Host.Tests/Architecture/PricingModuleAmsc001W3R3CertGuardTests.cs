@@ -145,7 +145,7 @@ public sealed class PricingModuleAmsc001W3R3CertGuardTests
             w3.GetProperty("supersededCertificationCommit").GetString());
         Assert.Equal("USER_REVIEW_PRICING_AMSC_001_W3_R3", w3.GetProperty("workflowStop").GetString());
         Assert.Equal("NONE", w3.GetProperty("automaticNextImplementationTask").GetString());
-        Assert.Equal("POST_CERT_RECOVERY_RECONCILIATION_REQUIRED",
+        Assert.Equal("POST_CERT_RECOVERY_RECONCILIATION_REQUIRED_CLOSED_BY_W3_R4",
             w3.GetProperty("postCertRecoveryState").GetString());
         Assert.Equal("NONE", w3.GetProperty("guardsWeakened").GetString());
         Assert.Equal("NONE", w3.GetProperty("baselinesWidened").GetString());
@@ -156,13 +156,17 @@ public sealed class PricingModuleAmsc001W3R3CertGuardTests
         Assert.Equal("ZERO_BUSINESS_ZERO_HTTP", w3.GetProperty("hostAuthorityState").GetString());
         Assert.Equal("PRESERVED", w3.GetProperty("hostFinalClosure").GetString());
 
-        // A self-referential placeholder must never be recorded as the certification commit; the
-        // reported SHA lives in the Bridge result and the post-cert reconciliation disclosure.
-        Assert.Equal(
-            "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
-            w3.GetProperty("certificationCommitState").GetString());
-        Assert.False(w3.TryGetProperty("commit", out _));
-        Assert.False(w3.TryGetProperty("commitFull", out _));
+        // The certification commit is recorded by the W3-R4 recovery reconciliation; the W3-R3 block
+        // itself never carried a self-referential placeholder.
+        Assert.Equal("RECORDED_A1CA9B5A", w3.GetProperty("certificationCommitState").GetString());
+        Assert.Equal("a1ca9b5afab181da74fe6db0efbb38f43a3a9721", w3.GetProperty("commit").GetString());
+        Assert.Equal("a1ca9b5afab181da74fe6db0efbb38f43a3a9721", w3.GetProperty("commitFull").GetString());
+        Assert.Equal("127c596aba7abefe6bdd0a1edb7c69c064267762",
+            w3.GetProperty("postCertificationEvidenceCommit").GetString());
+        Assert.Equal("EVIDENCE_ONLY_NOT_CERTIFICATION_AUTHORITY",
+            w3.GetProperty("postCertificationEvidenceCommitState").GetString());
+        Assert.Equal("EVIDENCE_ONLY_NOT_CERTIFICATION_AUTHORITY",
+            w3.GetProperty("postResultEvidenceCommitState").GetString());
 
         // The repository-global Host root checkpoint is not displaced by a module-local certification.
         Assert.Equal("TB-TMAR-HOST-ROOT-FINAL-CERT-001", sot.RootElement.GetProperty("lastAcceptedTask").GetString());
@@ -501,7 +505,8 @@ public sealed class PricingModuleAmsc001W3R3CertGuardTests
         Assert.Contains("TB-TMAR-PRICING-AMSC-001-W3` Certify `3c2cc61e`", recovery, StringComparison.Ordinal);
         Assert.Contains("Pricing AMSC W3-R2 structure repair (module-local)", recovery, StringComparison.Ordinal);
         Assert.Contains("Pricing AMSC W3-R3 fresh certification (module-local)", recovery, StringComparison.Ordinal);
-        Assert.Contains("POST_CERT_RECOVERY_RECONCILIATION_REQUIRED", recovery, StringComparison.Ordinal);
+        Assert.Contains("Pricing AMSC W3-R4 final recovery lineage closure (module-local)", recovery, StringComparison.Ordinal);
+        Assert.Contains("EVIDENCE_ONLY_NOT_AUTHORITY", recovery, StringComparison.Ordinal);
     }
 
     private static string Repo()

@@ -12589,8 +12589,8 @@
     "target": "src/backend/Modules/Pricing/Tooba.Pricing.*",
     "parentTask": null,
     "startingHead": "a1d9ecfb",
-    "commit": "PENDING_THIS_COMMIT",
-    "commitFull": "PENDING_THIS_COMMIT",
+    "commit": "08d47b6a4af3e4e2102712b93f27185ac15a23ac",
+    "commitFull": "08d47b6a4af3e4e2102712b93f27185ac15a23ac",
     "state": "ANALYZE_COMPLETE",
     "verdict": "READY_TO_MIGRATE",
     "lockVersion": "ARCH-COMPLETE-002",
@@ -12648,7 +12648,8 @@
     "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W0/",
     "workflowStop": "USER_REVIEW_PRICING_AMSC_001_W0",
     "automaticNextImplementationTask": "NONE",
-    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W0/analyze.md"
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W0/analyze.md",
+    "selfCommitPlaceholderState": "RESOLVED_BY_TB-TMAR-PRICING-AMSC-001-W3-R4"
   },
   "pricingAmsc001W1": {
     "task": "TB-TMAR-PRICING-AMSC-001-W1",
@@ -12714,7 +12715,9 @@
     "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W1/",
     "workflowStop": "USER_REVIEW_PRICING_AMSC_001_W1",
     "automaticNextImplementationTask": "NONE",
-    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W1/migrate.md"
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W1/migrate.md",
+    "commit": "069f77d2fa5b2c2cec3bb078147c3559a571bd64",
+    "commitFull": "069f77d2fa5b2c2cec3bb078147c3559a571bd64"
   },
   "pricingAmsc001W2": {
     "task": "TB-TMAR-PRICING-AMSC-001-W2",
@@ -12785,7 +12788,9 @@
     "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W2/",
     "workflowStop": "USER_REVIEW_PRICING_AMSC_001_W2",
     "automaticNextImplementationTask": "NONE",
-    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W2/structure.md"
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W2/structure.md",
+    "commit": "f7f6abfec455b771952852e8627df4c57b698caf",
+    "commitFull": "f7f6abfec455b771952852e8627df4c57b698caf"
   },
   "pricingAmsc001W3": {
     "task": "TB-TMAR-PRICING-AMSC-001-W3",
@@ -12936,7 +12941,9 @@
     "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3/",
     "workflowStop": "USER_REVIEW_PRICING_AMSC_001_W3_R1",
     "automaticNextImplementationTask": "NONE",
-    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3/certification.md"
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3/certification.md",
+    "commit": "2e664bb336f45b8304818b7e5754f9b0fc364f20",
+    "commitFull": "2e664bb336f45b8304818b7e5754f9b0fc364f20"
   },
   "pricingAmsc001W3R2": {
     "task": "TB-TMAR-PRICING-AMSC-001-W3-R2",
@@ -12980,7 +12987,9 @@
     "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3-R2/",
     "workflowStop": "USER_REVIEW_PRICING_AMSC_001_W3_R2",
     "automaticNextImplementationTask": "NONE",
-    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3-R2/structure-repair.md"
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3-R2/structure-repair.md",
+    "commit": "7159c8f773c1faa9b4b6d425b19067f50ca27572",
+    "commitFull": "7159c8f773c1faa9b4b6d425b19067f50ca27572"
   },
   "pricingAmsc001W3R3": {
     "task": "TB-TMAR-PRICING-AMSC-001-W3-R3",
@@ -12989,7 +12998,7 @@
     "skill": "tooba-architecture-certify",
     "target": "src/backend/Modules/Pricing/Tooba.Pricing.*",
     "startingHead": "7159c8f773c1faa9b4b6d425b19067f50ca27572",
-    "certificationCommitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
+    "certificationCommitState": "RECORDED_A1CA9B5A",
     "state": "PRICING_AMSC_001_RECERTIFIED",
     "verdict": "COMPLETE_REFERENCE_PATTERN",
     "lockVersion": "ARCH-COMPLETE-002",
@@ -13040,11 +13049,61 @@
     "durableGuard": "src/backend/Host/Tooba.Host.Tests/Architecture/PricingModuleAmsc001W3R3CertGuardTests.cs",
     "manifestCertificationState": "PROMOTED_TO_CERTIFIED_MODULES_26_PRICING_ENTRY_REFRESHED",
     "structureLockState": "PRICING_PRESENT_EXACTLY_ONCE",
-    "postCertRecoveryState": "POST_CERT_RECOVERY_RECONCILIATION_REQUIRED",
-    "postCertRecoveryDetail": "Deliberately not repaired in this Certify wave: pricingAmsc001W0 still carries PENDING_THIS_COMMIT placeholders in commit/commitFull, pricingAmsc001W1 and pricingAmsc001W2 carry parentCommit only with no final commit/commitFull field, and the historical pricingAmsc001W3R1 block has no final commit SHA of its own.",
+    "postCertRecoveryState": "POST_CERT_RECOVERY_RECONCILIATION_REQUIRED_CLOSED_BY_W3_R4",
+    "postCertRecoveryDetail": "RECOVERY_DEBT_CLOSED_BY_TB-TMAR-PRICING-AMSC-001-W3-R4: the pricingAmsc001W0 commit/commitFull placeholders are resolved, pricingAmsc001W1/W2 and the historical pricingAmsc001W3R1/W3R2 now carry their own final commit/commitFull, and the W3-R3 certification commit plus the evidence-only hop are recorded. Certification semantics, manifest truth and schema/migration state are unchanged.",
     "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3-R3/",
     "workflowStop": "USER_REVIEW_PRICING_AMSC_001_W3_R3",
     "automaticNextImplementationTask": "NONE",
-    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3-R3/certification.md"
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3-R3/certification.md",
+    "commit": "a1ca9b5afab181da74fe6db0efbb38f43a3a9721",
+    "commitFull": "a1ca9b5afab181da74fe6db0efbb38f43a3a9721",
+    "postCertificationEvidenceCommit": "127c596aba7abefe6bdd0a1edb7c69c064267762",
+    "postCertificationEvidenceCommitState": "EVIDENCE_ONLY_NOT_CERTIFICATION_AUTHORITY",
+    "postCertificationEvidenceDetail": "a1ca9b5a -> 127c596a (recovery-debt.md only) -> 549f1ac5 (RESULT.bridge.txt + post-result.js only). Both hops are evidence-only documentation commits; neither is certification authority and neither alters architecture certification facts. Classified by TB-TMAR-PRICING-AMSC-001-W3-R4.",
+    "postResultEvidenceCommit": "549f1ac535e37e4e8c9e3c44b88768c575dfeb5e",
+    "postResultEvidenceCommitState": "EVIDENCE_ONLY_NOT_CERTIFICATION_AUTHORITY"
+  },
+  "pricingAmsc001W3R4": {
+    "task": "TB-TMAR-PRICING-AMSC-001-W3-R4",
+    "parentTask": "TB-TMAR-PRICING-AMSC-001-W3-R3",
+    "mode": "FINAL_RECOVERY_LINEAGE_RECONCILIATION",
+    "skill": "tooba-architecture-certify",
+    "target": "src/backend/Modules/Pricing/Tooba.Pricing.*",
+    "startingHead": "127c596a",
+    "startingHeadFull": "127c596aba7abefe6bdd0a1edb7c69c064267762",
+    "commitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
+    "state": "PRICING_AMSC_001_RECOVERY_FINAL_CLOSED",
+    "productionCodeChanged": false,
+    "currentCertificationAuthority": "TB-TMAR-PRICING-AMSC-001-W3-R3",
+    "currentCertifiedCommit": "a1ca9b5afab181da74fe6db0efbb38f43a3a9721",
+    "currentStructureAuthority": "TB-TMAR-PRICING-AMSC-001-W3-R2",
+    "currentStructureCommit": "7159c8f773c1faa9b4b6d425b19067f50ca27572",
+    "w0Commit": "08d47b6a4af3e4e2102712b93f27185ac15a23ac",
+    "w1Commit": "069f77d2fa5b2c2cec3bb078147c3559a571bd64",
+    "w2Commit": "f7f6abfec455b771952852e8627df4c57b698caf",
+    "supersededW3Commit": "3c2cc61e7c61813ac72773ccdb8bb16317cafe70",
+    "historicalW3R1Commit": "2e664bb336f45b8304818b7e5754f9b0fc364f20",
+    "w3R2StructureCommit": "7159c8f773c1faa9b4b6d425b19067f50ca27572",
+    "w3R3CertificationCommit": "a1ca9b5afab181da74fe6db0efbb38f43a3a9721",
+    "w3R3EvidenceOnlyCommit": "127c596aba7abefe6bdd0a1edb7c69c064267762",
+    "w3R3PostResultEvidenceCommit": "549f1ac535e37e4e8c9e3c44b88768c575dfeb5e",
+    "evidenceOnlyCommitClassification": "EVIDENCE_ONLY_NOT_AUTHORITY",
+    "actualParentChainState": "RECONCILED",
+    "actualParentChain": "08d47b6a <- a1d9ecfb; 069f77d2 <- 08d47b6a; f7f6abfe <- 069f77d2; 3c2cc61e <- f7f6abfe; 2e664bb3 <- 3c2cc61e; 7159c8f7 <- 2e664bb3; a1ca9b5a <- 7159c8f7; 127c596a <- a1ca9b5a; 549f1ac5 <- 127c596a",
+    "certificationAuthorityState": "W3_R3_A1CA9B5A",
+    "structureAuthorityState": "W3_R2_7159C8F7",
+    "httpApplicability": "NOT_HTTP_OWNING_INTERNAL_CAPABILITY_PROVIDER",
+    "endpointProjectState": "ABSENT",
+    "structureState": "CERTIFIED",
+    "manifestStructuralState": "NOT_TOUCHED_THIS_WAVE",
+    "schemaMigrationState": "UNCHANGED",
+    "globalHostCheckpointState": "PRESERVED",
+    "guardsWeakened": "NONE",
+    "baselinesWidened": "NONE",
+    "recoveryDebtState": "CLOSED",
+    "workflowStop": "USER_REVIEW_PRICING_AMSC_001_W3_R4",
+    "automaticNextImplementationTask": "NONE",
+    "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3-R4/",
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3-R4/recovery-reconciliation.md"
   }
 }
