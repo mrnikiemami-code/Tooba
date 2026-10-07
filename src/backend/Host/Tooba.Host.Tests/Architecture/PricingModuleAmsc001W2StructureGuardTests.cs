@@ -256,23 +256,24 @@ public sealed class PricingModuleAmsc001W2StructureGuardTests
         }
     }
 
-    /// <summary>The manifest carries Pricing in the pre-cert structure state (W3-R2 repair).</summary>
+    /// <summary>The manifest carries Pricing in the certified modules array (W3-R3 promotion).</summary>
     [Fact]
     public void Root_allowlists_and_forbidden_lists_match_the_manifest()
     {
         var root = Repo();
         using var manifest = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, ManifestPath)).Replace("\uFEFF", string.Empty));
-        // W3-R2 demoted Pricing out of the certified modules array into the pre-cert state because the
-        // former W3 certification retained a ceremonial Endpoints project. The structural allowlists
-        // asserted below are unchanged; only the certification claim is honest again.
-        Assert.DoesNotContain(
-            manifest.RootElement.GetProperty("modules").EnumerateArray(),
-            m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
-        var module = manifest.RootElement.GetProperty("preCertModules").EnumerateArray()
+        // W3-R2 demoted Pricing into the pre-cert state while the former W3 certification still claimed
+        // a ceremonial Endpoints project; W3-R3 independently re-certified the repaired INTERNAL_ONLY
+        // surface and promoted Pricing back into the certified modules array. The structural allowlists
+        // asserted below are unchanged by the promotion.
+        var module = manifest.RootElement.GetProperty("modules").EnumerateArray()
             .Single(m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
-        Assert.False(module.GetProperty("structureCertified").GetBoolean());
-        Assert.Equal("READY_FOR_CERTIFY", module.GetProperty("structureState").GetString());
+        Assert.True(module.GetProperty("structureCertified").GetBoolean());
+        Assert.Equal("ARCH-COMPLETE-002", module.GetProperty("lockVersion").GetString());
+        Assert.DoesNotContain(
+            manifest.RootElement.GetProperty("preCertModules").EnumerateArray(),
+            m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
 
         foreach (var project in module.GetProperty("projects").EnumerateArray())
         {

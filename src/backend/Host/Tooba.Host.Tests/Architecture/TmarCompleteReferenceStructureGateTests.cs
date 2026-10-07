@@ -29,7 +29,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
             {
                 "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile",
                 "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
-                "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "ProductQnA",
+                "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
                 "Settlement", "StoreContext", "Story", "UserPreference", "Wishlist",
             },
             modules.Select(m => m.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray());
@@ -47,7 +47,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "Order", "Cart", "StoreContext", "Offer", "Payment", "Settlement", "Fulfillment",
                 "AccessControl", "AddressBook", "Content", "Identity", "Media", "Localization", "Notification",
                 "OperatorProfile", "Party", "ProductQnA", "PageComposition", "BulkInquiry", "Wishlist",
-                "UserPreference", "Story", "Catalog", "CustomerProfile", "Inventory",
+                "UserPreference", "Story", "Catalog", "CustomerProfile", "Inventory", "Pricing",
             }, StringComparer.Ordinal);
         }
     }
@@ -199,7 +199,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
             {
                 "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile",
                 "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
-                "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "ProductQnA",
+                "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
                 "Settlement", "StoreContext", "UserPreference", "Wishlist",
             },
             certified);

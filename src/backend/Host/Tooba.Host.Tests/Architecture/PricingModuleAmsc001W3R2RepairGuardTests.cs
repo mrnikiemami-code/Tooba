@@ -20,7 +20,12 @@ namespace Tooba.Host.Tests.Architecture;
 /// mapping/registration ceremony. This guard pins the repaired truth: Pricing is an INTERNAL_ONLY
 /// capability provider with <b>no</b> Endpoints project, zero HTTP routes, presentation registration
 /// moved into the Pricing Infrastructure composition root (Inventory precedent), exactly four
-/// production projects, and honest pre-cert manifest/SoT state pending a fresh Certify wave.
+/// production projects, and an honest W3-R2 SoT/manifest lineage record.
+/// </para>
+/// <para>
+/// TB-TMAR-PRICING-AMSC-001-W3-R3 then independently re-certified the repaired surface and promoted
+/// Pricing back into the certified manifest set, so the manifest/certified-set assertions below are
+/// repointed to the promoted truth while every structural assertion is unchanged.
 /// </para>
 /// <para>
 /// The still-valid certification semantics (single declared-code home, typed-fault seam, one catalog
@@ -51,8 +56,14 @@ public sealed class PricingModuleAmsc001W3R2RepairGuardTests
         [new FoundationErrorResourceSet(), new PricingErrorResourceSet()],
         Array.Empty<IErrorMessageContributor>());
 
+    /// <summary>
+    /// TB-TMAR-PRICING-AMSC-001-W3-R2 repaired the structure and demoted Pricing to the pre-cert state;
+    /// TB-TMAR-PRICING-AMSC-001-W3-R3 independently re-certified the repaired INTERNAL_ONLY surface and
+    /// promoted Pricing back into the certified set. The historical W3-R2 SoT block stays intact as the
+    /// superseded lineage record.
+    /// </summary>
     [Fact]
-    public void Prior_w3_certification_is_superseded_and_pricing_is_precert_ready_for_certify()
+    public void Prior_w3_certification_is_superseded_and_pricing_is_recertified()
     {
         var root = Repo();
 
@@ -60,20 +71,17 @@ public sealed class PricingModuleAmsc001W3R2RepairGuardTests
             File.ReadAllText(Path.Combine(root, "docs/architecture/tmar-module-structure-manifests.json"))
                 .Replace("\uFEFF", string.Empty));
 
-        // Pricing must NOT remain currently structureCertified during this repair.
+        // Pricing is currently structureCertified again, and no pre-cert duplicate lingers.
+        var certifiedEntry = manifest.RootElement.GetProperty("modules").EnumerateArray()
+            .Single(m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
+        Assert.True(certifiedEntry.GetProperty("structureCertified").GetBoolean());
+        Assert.Equal("ARCH-COMPLETE-002", certifiedEntry.GetProperty("lockVersion").GetString());
         Assert.DoesNotContain(
-            manifest.RootElement.GetProperty("modules").EnumerateArray(),
+            manifest.RootElement.GetProperty("preCertModules").EnumerateArray(),
             m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
 
-        var preCert = manifest.RootElement.GetProperty("preCertModules").EnumerateArray()
-            .Single(m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
-        Assert.False(preCert.GetProperty("structureCertified").GetBoolean());
-        Assert.Equal("ARCH-COMPLETE-002", preCert.GetProperty("lockVersion").GetString());
-        Assert.Equal("READY_FOR_CERTIFY", preCert.GetProperty("structureState").GetString());
-        Assert.Equal("TB-TMAR-PRICING-AMSC-001-W3-R2", preCert.GetProperty("structureRepairTask").GetString());
-
         // Exactly five projects (four production + Tests): the Endpoints project entry is gone.
-        var projects = preCert.GetProperty("projects").EnumerateArray()
+        var projects = certifiedEntry.GetProperty("projects").EnumerateArray()
             .Select(p => p.GetProperty("projectName").GetString()!)
             .OrderBy(x => x, StringComparer.Ordinal).ToArray();
         Assert.Equal(
@@ -103,6 +111,7 @@ public sealed class PricingModuleAmsc001W3R2RepairGuardTests
         var w3 = sot.RootElement.GetProperty("pricingAmsc001W3");
         Assert.Equal("PRICING_AMSC_001_CERTIFIED", w3.GetProperty("state").GetString());
 
+        // The W3-R2 structure-repair record stays intact.
         var r2 = sot.RootElement.GetProperty("pricingAmsc001W3R2");
         Assert.Equal("TB-TMAR-PRICING-AMSC-001-W3-R2", r2.GetProperty("task").GetString());
         Assert.Equal("TB-TMAR-PRICING-AMSC-001-W3-R1", r2.GetProperty("parentTask").GetString());
@@ -129,10 +138,13 @@ public sealed class PricingModuleAmsc001W3R2RepairGuardTests
         Assert.Equal("NONE", r2.GetProperty("automaticNextImplementationTask").GetString());
         Assert.Equal("USER_REVIEW_PRICING_AMSC_001_W3_R2", r2.GetProperty("workflowStop").GetString());
 
-        // Pricing is temporarily removed from structureLock.certifiedModules until fresh Certify passes.
+        // W3-R3 is the current certification authority; Pricing is present exactly once in the lock.
+        var r3 = sot.RootElement.GetProperty("pricingAmsc001W3R3");
+        Assert.Equal("PRICING_AMSC_001_RECERTIFIED", r3.GetProperty("state").GetString());
+        Assert.Equal("COMPLETE_REFERENCE_PATTERN", r3.GetProperty("verdict").GetString());
         var certified = sot.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
             .EnumerateArray().Select(x => x.GetString()).ToArray();
-        Assert.DoesNotContain("Pricing", certified, StringComparer.Ordinal);
+        Assert.Equal(1, certified.Count(x => string.Equals(x, "Pricing", StringComparison.Ordinal)));
     }
 
     [Fact]
