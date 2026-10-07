@@ -399,6 +399,18 @@ Recorded by `TB-TMAR-PARTY-AMSC-001-W3-R1` (recovery/SoT/evidence reconciliation
 - Evidence root: `docs/architecture/evidence/TB-TMAR-PARTY-AMSC-001-W3-R1/`.
 - Stop gate: `USER_REVIEW_PARTY_AMSC_001_W3_R1`.
 
+Party AMSC W3-R2 recovery closure (authoritative, module-local)
+
+Recorded by `TB-TMAR-PARTY-AMSC-001-W3-R2` (recovery lineage + historical-truth reconciliation only; zero production change, zero manifest mutation, zero schema change). W3 certification authority is preserved unchanged: `TB-TMAR-PARTY-AMSC-001-W3` at `d1cc2f480619ce1ec68cd730650018883684e6c7` (`COMPLETE_REFERENCE_PATTERN` / `ARCH-COMPLETE-002` / `STRUCTURE_CERTIFIED`); the historical AMC-001 W4 baseline and the repository-global Host root checkpoint remain preserved, not displaced.
+- Semantic waves (implementation/authority): W0 `2477bbb3` → W1 `29012df0` → W2 `ffff7100` → W3 `d1cc2f48`.
+- Actual parent chain (handoff commits included, all parent links git-verified): `2477bbb3` → `29012df0` → `ee9ba997` (W1 SHA metadata) → `ffff7100` → `f0621ca6` (W2 SHA metadata) → `d1cc2f48` → `548a7829` (W3 SHA metadata) → `a75e3bf4` (W3-R1 recovery). The three metadata reconciliation commits are `METADATA_ONLY_NOT_IMPLEMENTATION_WAVES` — they record wave SHAs in SoT and carry no production/manifest change.
+- W0 unresolved commit placeholder resolved additively: `partyAmsc001W0.commit = 2477bbb3` (`2477bbb30224c0976b7b02a3d12be9e1b72248db`).
+- R1 final SHA recorded: `partyAmsc001W3R1.commit = a75e3bf4` (`a75e3bf4390c7950ce8fa0e9462b786aecefe9c1`), with `certifiedCommit d1cc2f48` and all certification fields preserved.
+- Historical W0 error-count reconciliation (additive, no history rewrite): the W0 field `CATALOGUED_10_OF_10_MISSING_ISKNOWN_DECLARED_CODE_GUARD` was stale analysis metadata — the actual catalog at the W0/W1 tree already declared 11 stable constants and the contributor already carried 11 descriptors; W1 did not add/remove error constants (it added the `IsKnown` declared-code guard + the typed seam). Current authoritative count = 11/11 (`PartyErrorCodes` 11 constants, `PartyErrorCatalogContributor` 11 descriptors), consistent with W1/W3 truth. Original W0 field preserved with an explicit R2 reconciliation note; `productionCatalogChangedByR2 = false`.
+- Recovery state closed: `partyAmsc001W3R2.state = PARTY_AMSC_001_RECOVERY_CLOSED_RECONCILED`; structure still `CERTIFIED` / `PROFESSIONAL_SHALLOW` (zero per-use-case request leaves); validator matrix `EXHAUSTIVE_2_REQUIRED_2_NO_VALIDATOR`; cross-module boundary `LEGAL_CONTRACTS_ONLY_BOTH_DIRECTIONS` with `promotionPartyApplicationCouplingState = ZERO`; guards weakened NONE; baselines widened NONE; `automaticNextImplementationTask = NONE`.
+- Evidence root: `docs/architecture/evidence/TB-TMAR-PARTY-AMSC-001-W3-R2/`.
+- Stop gate: `USER_REVIEW_PARTY_AMSC_001_W3_R2`.
+
 Identity AMSC module recovery checkpoint (authoritative, module-local)
 
 Recorded by `TB-TMAR-IDENTITY-AMSC-001-W3` (Certify). This is the AMSC-001 ARCH-COMPLETE-002 certification for Identity; the earlier AMC-001 lineage (`TB-TMAR-IDENTITY-AMC-001` W1→W6, implementation `aafd14e0` / docs stamp `c7e473cd`) stays in the repository as historical evidence only and is explicitly marked `HISTORICAL / SUPERSEDED FOR CURRENT IDENTITY MODULE RECOVERY`.
