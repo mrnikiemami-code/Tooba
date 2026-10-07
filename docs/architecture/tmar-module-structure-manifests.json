@@ -718,7 +718,7 @@
       "module": "Party",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Certified by TB-TMAR-PARTY-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first Admin/Sellers + Seller CQRS; Result+PartyOperation+ApiResponseFactory; exhaustive 4-request validator matrix (2 required present + 2 NO_VALIDATOR); Contracts.Ports for foreign consumers and Contracts.Errors/Resources catalog; Offer/Order Contracts-only Admin composition; Host thin seller authorizer retained; /Modules/Party/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "certificationNote": "Re-certified by TB-TMAR-PARTY-AMSC-001-W3 under ARCH-COMPLETE-002 (prior AMC-001 W4 baseline preserved). Capability-first Admin/Sellers + Seller CQRS; Result+PartyOperation dual-mechanism seam (ContractOperationException under IsKnown filter + SemanticException, value-less overload) + ApiResponseFactory; IsKnown declared-code guard over all 11 codes; exhaustive 4-request validator matrix (2 required present + 2 NO_VALIDATOR); Contracts.Ports for foreign consumers and Contracts.Errors/Resources catalog; Offer/Order Contracts-only Admin composition; inbound dev-seed boundary Contracts-only (Promotion consumes Party.Contracts IPartyDevelopmentDirectory, zero Party.Application coupling); Host thin seller authorizer retained; /Modules/Party/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
       "projects": [
         {
           "projectName": "Tooba.Party.Application",
