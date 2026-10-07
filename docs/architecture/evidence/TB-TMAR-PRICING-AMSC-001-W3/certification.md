@@ -168,3 +168,32 @@ missing `Modules/Wishlist`, Host/Admin count drift, missing `TaxDomain.cs`, miss
 `Verdict = COMPLETE_REFERENCE_PATTERN`; `structureCertified = true`; `microserviceExtractable = true`;
 `guardsWeakened = NONE`; `automaticNextImplementationTask = NONE`;
 `workflowStop = USER_REVIEW_PRICING_AMSC_001_W3`.
+
+## 13. W3-R1 recovery reconciliation (module-local)
+
+`TB-TMAR-PRICING-AMSC-001-W3-R1` is a documentation + guard-only recovery wave: zero production code
+change, zero manifest structural change, zero schema change. The W3 certification commit cannot reference
+its own hash, so W3 published `PENDING_THIS_COMMIT` placeholders; W3-R1 reconciles them to the exact
+certification commit and adds the durable guard that keeps the reconciliation honest.
+
+**Wave commit grid (authoritative, module-local)**
+
+| Wave | Skill | Commit (short) | Commit (full) |
+| --- | --- | --- | --- |
+| `TB-TMAR-PRICING-AMSC-001-W0` | Analyze | `08d47b6a` | `08d47b6a…` |
+| `TB-TMAR-PRICING-AMSC-001-W1` | Migrate | `069f77d2` | `069f77d2…` |
+| `TB-TMAR-PRICING-AMSC-001-W2` | Structure | `f7f6abfe` | `f7f6abfec455b771952852e8627df4c57b698caf` |
+| `TB-TMAR-PRICING-AMSC-001-W3` | Certify | `3c2cc61e` | `3c2cc61e7c61813ac72773ccdb8bb16317cafe70` |
+
+- Reconciled: `pricingAmsc001W3.commit` / `commitFull` → `3c2cc61e` /
+  `3c2cc61e7c61813ac72773ccdb8bb16317cafe70`; `acceptedLineage.w3` / `w3CertificationCommit` populated.
+- New `pricingAmsc001W3R1` block: `state = PRICING_AMSC_001_RECOVERY_RECONCILED`,
+  `certifiedCommit = 3c2cc61e…`, `masterRecoveryW3ShaBefore = PENDING_THIS_COMMIT` →
+  `masterRecoveryW3ShaState = RECORDED_3C2CC61E`, `manifestStructuralState = NOT_TOUCHED`,
+  `productionCodeChanged = false`, `guardsWeakened = NONE`.
+- Not displaced: the manifest certification state (`Pricing` promoted, `structureCertified: true`,
+  25 certified modules), `structureLock.certifiedModules` (25 members, `Pricing` present exactly once) and
+  the repository-global Host root checkpoint `TB-TMAR-HOST-ROOT-FINAL-CERT-001` /
+  `HOST_ROOT_FINAL_CERTIFIED`.
+- Guard: `PricingModuleAmsc001W3CertGuardTests.W3_r1_recovery_reconciliation_is_recorded`.
+- Stop gate `USER_REVIEW_PRICING_AMSC_001_W3_R1`; `automaticNextImplementationTask = NONE`.

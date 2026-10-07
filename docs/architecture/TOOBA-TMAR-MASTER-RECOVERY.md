@@ -1501,3 +1501,16 @@ Recorded by `TB-TMAR-PRICING-AMSC-001-W3` (Certify; **zero production code chang
 - Host final closure preserved (`HOST_ROOT_FINAL_CERTIFIED`); `microserviceExtractable = TRUE`; zero unrelated files touched.
 - Stop gate `USER_REVIEW_PRICING_AMSC_001_W3`; `automaticNextImplementationTask = NONE`; evidence `docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3/certification.md`.
 
+Pricing AMSC W3-R1 recovery reconciliation (module-local)
+
+Recorded by `TB-TMAR-PRICING-AMSC-001-W3-R1` (documentation + guard only: zero production code change, zero manifest structural change, zero schema change). The W3 certification commit cannot reference its own hash, so W3 published `PENDING_THIS_COMMIT` placeholders; this recovery wave reconciles the durable SoT lineage to the exact certification commit and adds the guard that keeps the reconciliation honest. `TB-TMAR-PRICING-AMSC-001-W3` remains the sole certification authority.
+- **Wave commit grid (authoritative, module-local)**:
+  - `TB-TMAR-PRICING-AMSC-001-W0` Analyze `08d47b6a`
+  - `TB-TMAR-PRICING-AMSC-001-W1` Migrate `069f77d2`
+  - `TB-TMAR-PRICING-AMSC-001-W2` Structure `f7f6abfe`
+  - `TB-TMAR-PRICING-AMSC-001-W3` Certify `3c2cc61e`
+- **Reconciled**: `pricingAmsc001W3.commit`/`commitFull` → `3c2cc61e` / `3c2cc61e7c61813ac72773ccdb8bb16317cafe70`; `pricingAmsc001W3.acceptedLineage.w3`/`w3CertificationCommit` populated; new `pricingAmsc001W3R1` block records `certifiedCommit`, `masterRecoveryW3ShaBefore = PENDING_THIS_COMMIT` → `masterRecoveryW3ShaState = RECORDED_3C2CC61E`, `manifestStructuralState = NOT_TOUCHED`, `productionCodeChanged = false` and `guardsWeakened = NONE`.
+- **Not displaced**: the manifest certification state (`Pricing` promoted, `structureCertified: true`, 25 certified modules), `structureLock.certifiedModules` (25 members, `Pricing` present exactly once) and the repository-global Host root checkpoint `TB-TMAR-HOST-ROOT-FINAL-CERT-001` / `HOST_ROOT_FINAL_CERTIFIED` are all preserved. `automaticNextImplementationTask = NONE`.
+- **Guard**: `PricingModuleAmsc001W3CertGuardTests.W3_r1_recovery_reconciliation_is_recorded` pins the exact certified commit, the `RECORDED_3C2CC61E` state, the four wave SHAs in this file, the untouched manifest/Host checkpoint and the absence of any self-referential placeholder.
+- Stop gate `USER_REVIEW_PRICING_AMSC_001_W3_R1`; `automaticNextImplementationTask = NONE`; evidence `docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3/certification.md`.
+

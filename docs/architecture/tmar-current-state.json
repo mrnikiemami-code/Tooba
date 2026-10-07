@@ -12794,8 +12794,8 @@
     "target": "src/backend/Modules/Pricing/Tooba.Pricing.*",
     "parentTask": "TB-TMAR-PRICING-AMSC-001-W2",
     "parentCommit": "f7f6abfe",
-    "commit": "PENDING_THIS_COMMIT",
-    "commitFull": "PENDING_THIS_COMMIT",
+    "commit": "3c2cc61e",
+    "commitFull": "3c2cc61e7c61813ac72773ccdb8bb16317cafe70",
     "state": "PRICING_AMSC_001_CERTIFIED",
     "verdict": "COMPLETE_REFERENCE_PATTERN",
     "lockVersion": "ARCH-COMPLETE-002",
@@ -12878,8 +12878,8 @@
       "w1": "069f77d2",
       "w2": "f7f6abfe",
       "w2StructureCommit": "f7f6abfec455b771952852e8627df4c57b698caf",
-      "w3": "PENDING_THIS_COMMIT",
-      "w3CertificationCommit": "PENDING_THIS_COMMIT"
+      "w3": "3c2cc61e",
+      "w3CertificationCommit": "3c2cc61e7c61813ac72773ccdb8bb16317cafe70"
     },
     "priorCertificationState": "NONE_PRICING_HAS_NO_PRIOR_ARCH_COMPLETE_002_CERTIFICATION_AND_WAS_NOT_A_MEMBER_OF_STRUCTURELOCK_CERTIFIEDMODULES_BEFORE_THIS_WAVE",
     "durableGuards": [
@@ -12902,6 +12902,39 @@
     "baselinesWidened": "NONE",
     "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3/",
     "workflowStop": "USER_REVIEW_PRICING_AMSC_001_W3",
+    "automaticNextImplementationTask": "NONE",
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3/certification.md"
+  },
+  "pricingAmsc001W3R1": {
+    "task": "TB-TMAR-PRICING-AMSC-001-W3-R1",
+    "mode": "RECOVERY_SOT_RECONCILIATION_ONLY",
+    "skill": "tooba-architecture-certify",
+    "target": "src/backend/Modules/Pricing/Tooba.Pricing.*",
+    "parentTask": "TB-TMAR-PRICING-AMSC-001-W3",
+    "state": "PRICING_AMSC_001_RECOVERY_RECONCILED",
+    "purpose": "Record the final W3 certification commit SHA in the SoT lineage and Master Recovery (the W3 commit cannot reference its own hash) and add the durable W3-R1 reconciliation guard. Documentation and guard only: zero production code change, zero manifest structural change, zero schema change.",
+    "certifiedCommit": "3c2cc61e7c61813ac72773ccdb8bb16317cafe70",
+    "certifiedCommitShort": "3c2cc61e",
+    "certificationAuthority": "TB-TMAR-PRICING-AMSC-001-W3",
+    "acceptedLineage": {
+      "w0": "08d47b6a",
+      "w1": "069f77d2",
+      "w2": "f7f6abfe",
+      "w3": "3c2cc61e"
+    },
+    "masterRecoveryW3ShaBefore": "PENDING_THIS_COMMIT",
+    "masterRecoveryW3ShaState": "RECORDED_3C2CC61E",
+    "manifestStructuralState": "NOT_TOUCHED",
+    "manifestCertifiedState": "PRICING_CERTIFIED_TRUE_25_CERTIFIED_MODULES",
+    "sotCertifiedModulesState": "PRICING_PRESENT_ONCE_25_MEMBERS",
+    "globalHostCheckpointState": "PRESERVED",
+    "productionCodeChanged": false,
+    "schemaChange": "NONE",
+    "guardsWeakened": "NONE",
+    "baselinesWidened": "NONE",
+    "guardsAdded": "PricingModuleAmsc001W3CertGuardTests.W3_r1_recovery_reconciliation_is_recorded",
+    "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3/",
+    "workflowStop": "USER_REVIEW_PRICING_AMSC_001_W3_R1",
     "automaticNextImplementationTask": "NONE",
     "evidence": "docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3/certification.md"
   }

@@ -142,6 +142,57 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
         Assert.Equal(
             "f7f6abfec455b771952852e8627df4c57b698caf",
             lineage.GetProperty("w2StructureCommit").GetString());
+        Assert.Equal("3c2cc61e", lineage.GetProperty("w3").GetString());
+        Assert.Equal(
+            "3c2cc61e7c61813ac72773ccdb8bb16317cafe70",
+            lineage.GetProperty("w3CertificationCommit").GetString());
+        Assert.Equal("3c2cc61e", sot.RootElement.GetProperty("pricingAmsc001W3").GetProperty("commit").GetString());
+        Assert.Equal(
+            "3c2cc61e7c61813ac72773ccdb8bb16317cafe70",
+            sot.RootElement.GetProperty("pricingAmsc001W3").GetProperty("commitFull").GetString());
+    }
+
+    [Fact]
+    public void W3_r1_recovery_reconciliation_is_recorded()
+    {
+        using var sot = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(Repo(), "docs/architecture/tmar-current-state.json"))
+                .Replace("\uFEFF", string.Empty));
+
+        var r1 = sot.RootElement.GetProperty("pricingAmsc001W3R1");
+        Assert.Equal("TB-TMAR-PRICING-AMSC-001-W3-R1", r1.GetProperty("task").GetString());
+        Assert.Equal("TB-TMAR-PRICING-AMSC-001-W3", r1.GetProperty("parentTask").GetString());
+        Assert.Equal("RECOVERY_SOT_RECONCILIATION_ONLY", r1.GetProperty("mode").GetString());
+        Assert.Equal("PRICING_AMSC_001_RECOVERY_RECONCILED", r1.GetProperty("state").GetString());
+        Assert.Equal("3c2cc61e7c61813ac72773ccdb8bb16317cafe70", r1.GetProperty("certifiedCommit").GetString());
+        Assert.Equal("PENDING_THIS_COMMIT", r1.GetProperty("masterRecoveryW3ShaBefore").GetString());
+        Assert.Equal("RECORDED_3C2CC61E", r1.GetProperty("masterRecoveryW3ShaState").GetString());
+        Assert.False(r1.GetProperty("productionCodeChanged").GetBoolean());
+        Assert.Equal("PRESERVED", r1.GetProperty("globalHostCheckpointState").GetString());
+        Assert.Equal("NOT_TOUCHED", r1.GetProperty("manifestStructuralState").GetString());
+        Assert.Equal("NONE", r1.GetProperty("guardsWeakened").GetString());
+        Assert.Equal("NONE", r1.GetProperty("automaticNextImplementationTask").GetString());
+
+        // The W3 certification itself stays untouched by the recovery wave.
+        var w3 = sot.RootElement.GetProperty("pricingAmsc001W3");
+        Assert.Equal("PRICING_AMSC_001_CERTIFIED", w3.GetProperty("state").GetString());
+        Assert.Equal("COMPLETE_REFERENCE_PATTERN", w3.GetProperty("verdict").GetString());
+        Assert.True(w3.GetProperty("structureCertified").GetBoolean());
+        Assert.Equal("NOT_HTTP_OWNING_INTERNAL_CAPABILITY_PROVIDER", w3.GetProperty("httpApplicability").GetString());
+        Assert.Equal(0, w3.GetProperty("endpointReachableRequests").GetInt32());
+        Assert.Equal("3c2cc61e", w3.GetProperty("commit").GetString());
+
+        // The repository-global Host root checkpoint is not displaced by a module-local recovery wave.
+        Assert.Equal("TB-TMAR-HOST-ROOT-FINAL-CERT-001", sot.RootElement.GetProperty("lastAcceptedTask").GetString());
+        Assert.Equal("NONE", sot.RootElement.GetProperty("automaticNextImplementationTask").GetString());
+
+        var recovery = File.ReadAllText(Path.Combine(Repo(), "docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md"));
+        Assert.Contains("TB-TMAR-PRICING-AMSC-001-W0` Analyze `08d47b6a`", recovery, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-PRICING-AMSC-001-W1` Migrate `069f77d2`", recovery, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-PRICING-AMSC-001-W2` Structure `f7f6abfe`", recovery, StringComparison.Ordinal);
+        Assert.Contains("TB-TMAR-PRICING-AMSC-001-W3` Certify `3c2cc61e`", recovery, StringComparison.Ordinal);
+        Assert.Contains("USER_REVIEW_PRICING_AMSC_001_W3_R1", recovery, StringComparison.Ordinal);
+        Assert.Contains("Pricing AMSC W3-R1 recovery reconciliation (module-local)", recovery, StringComparison.Ordinal);
     }
 
     [Fact]
