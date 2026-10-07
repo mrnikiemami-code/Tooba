@@ -36,11 +36,23 @@ public sealed class PricingArchitectureGuardTests
     }
 
     [Fact]
-    public void Endpoints_csproj_does_not_reference_infrastructure()
+    public void Ceremonial_endpoints_project_stays_retired_internal_only()
     {
-        var refs = ProjectRefs("Tooba.Pricing.Endpoints");
-        Assert.DoesNotContain(refs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(refs, r => r.Contains("Tooba.Pricing.Application", StringComparison.Ordinal));
+        // Pricing is INTERNAL_ONLY (zero HTTP routes): the ceremonial Endpoints project, its empty
+        // /v1/pricing route group and its presentation extension must not resurrect. The error
+        // catalog/resource registration lives in the Pricing Infrastructure composition root.
+        Assert.False(Directory.Exists(Path.Combine(PricingRoot(), "Tooba.Pricing.Endpoints")));
+        Assert.False(Directory.Exists(Path.Combine(PricingRoot(), "Tooba.Pricing.Tests", "Endpoints")));
+
+        var module = File.ReadAllText(Path.Combine(
+            PricingRoot(), "Tooba.Pricing.Infrastructure", "DependencyInjection", "PricingModule.cs"));
+        Assert.Contains("IErrorCatalogContributor, PricingErrorCatalogContributor", module, StringComparison.Ordinal);
+        Assert.Contains("IErrorResourceSet, PricingErrorResourceSet", module, StringComparison.Ordinal);
+
+        var program = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
+        Assert.DoesNotContain("MapPricingModule", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("AddPricingEndpointPresentation", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Pricing.Endpoints", program, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -69,10 +81,11 @@ public sealed class PricingArchitectureGuardTests
     }
 
     [Fact]
-    public void Program_maps_pricing_module()
+    public void Program_no_longer_maps_a_pricing_module_route_group()
     {
         var program = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
-        Assert.Contains("MapPricingModule()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPricingModule()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"/v1/pricing\"", program, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -173,8 +186,7 @@ public sealed class PricingArchitectureGuardTests
         Sources("Tooba.Pricing.Domain")
             .Concat(Sources("Tooba.Pricing.Application"))
             .Concat(Sources("Tooba.Pricing.Contracts"))
-            .Concat(Sources("Tooba.Pricing.Infrastructure"))
-            .Concat(Sources("Tooba.Pricing.Endpoints"));
+            .Concat(Sources("Tooba.Pricing.Infrastructure"));
 
     private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)
     {

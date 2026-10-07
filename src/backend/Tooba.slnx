@@ -142,7 +142,6 @@
     <Project Path="Modules/Pricing/Tooba.Pricing.Application/Tooba.Pricing.Application.csproj" />
     <Project Path="Modules/Pricing/Tooba.Pricing.Contracts/Tooba.Pricing.Contracts.csproj" />
     <Project Path="Modules/Pricing/Tooba.Pricing.Domain/Tooba.Pricing.Domain.csproj" />
-    <Project Path="Modules/Pricing/Tooba.Pricing.Endpoints/Tooba.Pricing.Endpoints.csproj" />
     <Project Path="Modules/Pricing/Tooba.Pricing.Infrastructure/Tooba.Pricing.Infrastructure.csproj" />
     <Project Path="Modules/Pricing/Tooba.Pricing.Tests/Tooba.Pricing.Tests.csproj" />
   </Folder>

@@ -6,11 +6,15 @@ namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
 /// TB-TMAR-PRICING-AMSC-001-W2 — scoped structure gate (tooba-architecture-structure).
-/// Pins the capability-first shallow physical tree, the exact path↔namespace rule for all five
+/// Pins the capability-first shallow physical tree, the exact path↔namespace rule for the four
 /// production projects, the manifest root allowlists/forbidden lists, the canonical
 /// <c>/Modules/Pricing/</c> solution grouping and the absence of stale/duplicate physical copies of
 /// the relocated Contracts localization surface. Behavior is unchanged by W2; this guard only locks
 /// the physical shape.
+///
+/// TB-TMAR-PRICING-AMSC-001-W3-R2 demoted Pricing to the pre-cert structure state and removed the
+/// ceremonial Endpoints project, so the Endpoints ceremony assertions are retired and the module is
+/// now pinned as INTERNAL_ONLY (four production projects + Tests).
 /// </summary>
 public sealed class PricingModuleAmsc001W2StructureGuardTests
 {
@@ -23,7 +27,6 @@ public sealed class PricingModuleAmsc001W2StructureGuardTests
         "Tooba.Pricing.Domain",
         "Tooba.Pricing.Application",
         "Tooba.Pricing.Infrastructure",
-        "Tooba.Pricing.Endpoints",
     ];
 
     /// <summary>
@@ -135,24 +138,48 @@ public sealed class PricingModuleAmsc001W2StructureGuardTests
             "migrations must live under Persistence/Migrations");
     }
 
-    /// <summary>Endpoints keeps only the composition entry at root; the localized surface moved to Contracts.</summary>
+    /// <summary>
+    /// W3-R2 retired the ceremonial Endpoints project: Pricing is INTERNAL_ONLY, owns zero HTTP
+    /// routes and must not resurrect an Endpoints project, an empty route group or its presentation
+    /// extension. The Contracts localization surface stays the single authoritative home.
+    /// </summary>
     [Fact]
-    public void Endpoints_root_holds_only_the_composition_entry()
+    public void Ceremonial_endpoints_project_is_retired()
     {
-        var endpoints = Path.Combine(Repo(), ModuleRoot, "Tooba.Pricing.Endpoints");
-        Assert.Equal(
-            new[] { "PricingEndpointModule.cs" },
-            Directory.GetFiles(endpoints, "*.cs", SearchOption.TopDirectoryOnly)
-                .Select(Path.GetFileName!)
-                .OrderBy(x => x, StringComparer.Ordinal)
-                .ToArray());
+        var root = Repo();
+        Assert.False(Directory.Exists(Path.Combine(root, ModuleRoot, "Tooba.Pricing.Endpoints")),
+            "the ceremonial Tooba.Pricing.Endpoints project must stay retired (INTERNAL_ONLY)");
+        Assert.False(Directory.Exists(Path.Combine(root, ModuleRoot, "Tooba.Pricing.Tests", "Endpoints")),
+            "the Endpoints test folder must stay retired");
 
-        // W2 relocated the error catalog/resource surface into Contracts so Pricing owns one
-        // self-contained code+text boundary; the Endpoints duplicates must stay retired.
-        Assert.False(Directory.Exists(Path.Combine(endpoints, "Errors")));
-        Assert.False(Directory.Exists(Path.Combine(endpoints, "Resources")));
-        Assert.False(File.Exists(Path.Combine(endpoints, "PricingErrorCatalogContributor.cs")));
-        Assert.False(File.Exists(Path.Combine(endpoints, "PricingErrorResources.cs")));
+        foreach (var file in ProductionSources(root))
+        {
+            var text = File.ReadAllText(file);
+            Assert.DoesNotContain("namespace Tooba.Pricing.Endpoints", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("MapPricingModule", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("AddPricingEndpointPresentation", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("PricingEndpointModule", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("\"/v1/pricing\"", text, StringComparison.Ordinal);
+        }
+
+        // The Host composition path is retired too.
+        var program = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Program.cs"));
+        Assert.DoesNotContain("MapPricingModule", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("AddPricingEndpointPresentation", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Pricing.Endpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"/v1/pricing\"", program, StringComparison.Ordinal);
+
+        var hostCsproj = File.ReadAllText(Path.Combine(root, "src/backend/Host/Tooba.Host/Tooba.Host.csproj"));
+        Assert.DoesNotContain("Tooba.Pricing.Endpoints", hostCsproj, StringComparison.Ordinal);
+        Assert.Contains("Tooba.Pricing.Infrastructure.csproj", hostCsproj, StringComparison.Ordinal);
+
+        // The presentation registration moved to the Pricing Infrastructure composition root, exactly
+        // once, following the certified Inventory precedent.
+        var module = File.ReadAllText(Path.Combine(
+            root, ModuleRoot, "Tooba.Pricing.Infrastructure", "DependencyInjection", "PricingModule.cs"));
+        Assert.Equal(1, Regex.Matches(module, @"AddSingleton<\s*IErrorCatalogContributor,\s*PricingErrorCatalogContributor>").Count);
+        Assert.Equal(1, Regex.Matches(module, @"AddSingleton<\s*IErrorResourceSet,\s*PricingErrorResourceSet>").Count);
+        Assert.Contains("using Tooba.Pricing.Contracts.Errors;", module, StringComparison.Ordinal);
     }
 
     /// <summary>The moved localization surface has exactly one authoritative physical home.</summary>
@@ -229,21 +256,23 @@ public sealed class PricingModuleAmsc001W2StructureGuardTests
         }
     }
 
-    /// <summary>Manifest physical allowlists/forbidden lists match disk for every Pricing project.</summary>
+    /// <summary>The manifest carries Pricing in the pre-cert structure state (W3-R2 repair).</summary>
     [Fact]
     public void Root_allowlists_and_forbidden_lists_match_the_manifest()
     {
         var root = Repo();
         using var manifest = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, ManifestPath)).Replace("\uFEFF", string.Empty));
-        // Promoted by TB-TMAR-PRICING-AMSC-001-W3 from preCertModules to the certified modules
-        // array (structureCertified true). The structural allowlists asserted below are unchanged.
-        var module = manifest.RootElement.GetProperty("modules").EnumerateArray()
-            .Single(m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
-        Assert.True(module.GetProperty("structureCertified").GetBoolean());
+        // W3-R2 demoted Pricing out of the certified modules array into the pre-cert state because the
+        // former W3 certification retained a ceremonial Endpoints project. The structural allowlists
+        // asserted below are unchanged; only the certification claim is honest again.
         Assert.DoesNotContain(
-            manifest.RootElement.GetProperty("preCertModules").EnumerateArray(),
+            manifest.RootElement.GetProperty("modules").EnumerateArray(),
             m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
+        var module = manifest.RootElement.GetProperty("preCertModules").EnumerateArray()
+            .Single(m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
+        Assert.False(module.GetProperty("structureCertified").GetBoolean());
+        Assert.Equal("READY_FOR_CERTIFY", module.GetProperty("structureState").GetString());
 
         foreach (var project in module.GetProperty("projects").EnumerateArray())
         {
@@ -271,7 +300,7 @@ public sealed class PricingModuleAmsc001W2StructureGuardTests
         }
     }
 
-    /// <summary>The canonical <c>/Modules/Pricing/</c> solution grouping holds all six projects.</summary>
+    /// <summary>The canonical <c>/Modules/Pricing/</c> solution grouping holds exactly five projects.</summary>
     [Fact]
     public void Solution_grouping_is_canonical_modules_pricing()
     {
@@ -284,20 +313,23 @@ public sealed class PricingModuleAmsc001W2StructureGuardTests
         {
             Assert.Contains($"Modules/Pricing/{project}/{project}.csproj", group, StringComparison.Ordinal);
         }
+
+        Assert.Equal(5, Regex.Matches(group, @"<Project Path=").Count);
+        Assert.DoesNotContain("Tooba.Pricing.Endpoints", group, StringComparison.Ordinal);
     }
 
-    /// <summary>Endpoints stays a thin Application/Contracts/BuildingBlocks consumer.</summary>
-    [Fact]
-    public void Endpoints_import_hygiene_stays_application_contracts_and_buildingblocks_only()
+    /// <summary>
+    /// Every Pricing <c>.cs</c> outside the Test project and outside <c>bin</c>/<c>obj</c>. The Test
+    /// project is excluded because the durable guards necessarily name the retired identifiers as
+    /// negative assertions.
+    /// </summary>
+    private static IEnumerable<string> ProductionSources(string root)
     {
-        var csproj = File.ReadAllText(Path.Combine(
-            Repo(), ModuleRoot, "Tooba.Pricing.Endpoints", "Tooba.Pricing.Endpoints.csproj"));
-        Assert.Contains("Tooba.Pricing.Application.csproj", csproj, StringComparison.Ordinal);
-        Assert.Contains("Tooba.Pricing.Contracts.csproj", csproj, StringComparison.Ordinal);
-        Assert.Contains("Tooba.BuildingBlocks.csproj", csproj, StringComparison.Ordinal);
-        Assert.DoesNotContain("Tooba.Pricing.Infrastructure.csproj", csproj, StringComparison.Ordinal);
-        Assert.DoesNotContain("Tooba.Pricing.Domain.csproj", csproj, StringComparison.Ordinal);
-        Assert.DoesNotContain("Tooba.Host", csproj, StringComparison.Ordinal);
+        var testsRoot = Path.Combine(root, ModuleRoot, "Tooba.Pricing.Tests") + Path.DirectorySeparatorChar;
+        return Directory.EnumerateFiles(Path.Combine(root, ModuleRoot), "*.cs", SearchOption.AllDirectories)
+            .Where(file => !file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                           && !file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                           && !file.StartsWith(testsRoot, StringComparison.Ordinal));
     }
 
     private static string Repo()

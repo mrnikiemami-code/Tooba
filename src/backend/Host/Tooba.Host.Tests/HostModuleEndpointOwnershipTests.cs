@@ -58,13 +58,15 @@ public sealed class HostModuleEndpointOwnershipTests
     }
 
     [Fact]
-    public void Program_maps_offer_tax_pricing_modules()
+    public void Program_maps_offer_and_tax_modules()
     {
         var path = Path.Combine(FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs");
         var text = File.ReadAllText(path);
         Assert.Contains("MapOfferModule()", text, StringComparison.Ordinal);
         Assert.Contains("MapTaxModule()", text, StringComparison.Ordinal);
-        Assert.Contains("MapPricingModule()", text, StringComparison.Ordinal);
+        // Pricing is INTERNAL_ONLY (W3-R2): no Endpoints project and no Host Pricing route group.
+        Assert.DoesNotContain("MapPricingModule()", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Pricing.Endpoints", text, StringComparison.Ordinal);
     }
 
     [Fact]

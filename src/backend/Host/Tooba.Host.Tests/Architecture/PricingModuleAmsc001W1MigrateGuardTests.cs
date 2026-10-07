@@ -20,7 +20,6 @@ public sealed class PricingModuleAmsc001W1MigrateGuardTests
         "Tooba.Pricing.Domain",
         "Tooba.Pricing.Application",
         "Tooba.Pricing.Infrastructure",
-        "Tooba.Pricing.Endpoints",
     ];
 
     [Fact]
@@ -47,7 +46,6 @@ public sealed class PricingModuleAmsc001W1MigrateGuardTests
             .Concat(ProductionSources("Tooba.Pricing.Domain"))
             .Concat(ProductionSources("Tooba.Pricing.Application"))
             .Concat(ProductionSources("Tooba.Pricing.Infrastructure"))
-            .Concat(ProductionSources("Tooba.Pricing.Endpoints"))
             .Count(file => File.ReadAllText(file).Contains(
                 "class PricingErrorCodes", StringComparison.Ordinal));
         Assert.Equal(1, declarations);

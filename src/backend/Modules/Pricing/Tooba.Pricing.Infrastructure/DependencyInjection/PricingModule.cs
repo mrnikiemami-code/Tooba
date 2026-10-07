@@ -3,8 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.ModuleContracts;
 using Tooba.Pricing.Application.Ports;
+using Tooba.Pricing.Contracts.Errors;
 using Tooba.Pricing.Contracts.Ports;
 using Tooba.Pricing.Contracts.Seller;
 using Tooba.Pricing.Infrastructure.Adapters;
@@ -30,6 +33,11 @@ public sealed class PricingModule : IToobaModule
         ArgumentNullException.ThrowIfNull(environment);
 
         services.AddSingleton<IOutboxModuleRegistration, PricingOutboxRegistration>();
+        // Pricing is INTERNAL_ONLY (zero HTTP routes, no Endpoints project): the module-owned error
+        // catalog contributor and resource set are registered by the Infrastructure composition root,
+        // exactly as the certified Inventory precedent. Both concrete types stay Contracts-owned.
+        services.AddSingleton<IErrorCatalogContributor, PricingErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, PricingErrorResourceSet>();
         services.AddScoped<IPricingUseCaseGuard, OpenPricingUseCaseGuard>();
         services.AddScoped<IPriceDirectory, PriceDirectory>();
         services.AddScoped<IPricingDevelopmentSeedGateway, PricingDevelopmentSeedGateway>();

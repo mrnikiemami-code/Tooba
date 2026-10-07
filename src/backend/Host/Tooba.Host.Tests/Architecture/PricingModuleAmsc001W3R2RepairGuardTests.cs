@@ -12,15 +12,24 @@ using Xunit;
 namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
-/// TB-TMAR-PRICING-AMSC-001-W3 — ARCH-COMPLETE-002 certification lock.
-/// Pins the AMSC certification lineage (W0 analyze / W1 migrate / W2 structure SHAs + certified
-/// verdict), the structure-gate fields handed off by W2, the canonical seam single-ownership
-/// (single declared-code home + typed-fault seam + one catalog contributor + one resource set),
-/// composed-catalog uniqueness, bilingual composed resolution, the empty module-owned HTTP surface,
-/// the Contracts-only / own-schema boundaries, zero foreign Application-Infrastructure-Domain reach
-/// and Host final closure.
+/// TB-TMAR-PRICING-AMSC-001-W3-R2 — INTERNAL_ONLY structure-repair lock (tooba-architecture-structure).
+/// <para>
+/// The former W3 certification was structurally stale: it certified Pricing as
+/// <c>NOT_HTTP_OWNING_INTERNAL_CAPABILITY_PROVIDER</c> while the module still carried a ceremonial
+/// <c>Tooba.Pricing.Endpoints</c> project, an empty <c>/v1/pricing</c> route group and Host
+/// mapping/registration ceremony. This guard pins the repaired truth: Pricing is an INTERNAL_ONLY
+/// capability provider with <b>no</b> Endpoints project, zero HTTP routes, presentation registration
+/// moved into the Pricing Infrastructure composition root (Inventory precedent), exactly four
+/// production projects, and honest pre-cert manifest/SoT state pending a fresh Certify wave.
+/// </para>
+/// <para>
+/// The still-valid certification semantics (single declared-code home, typed-fault seam, one catalog
+/// contributor + one resource set, composed-catalog uniqueness, bilingual composed resolution,
+/// Contracts-only boundaries, own schema/migration) are re-asserted here so the repair cannot erode
+/// them.
+/// </para>
 /// </summary>
-public sealed class PricingModuleAmsc001W3CertGuardTests
+public sealed class PricingModuleAmsc001W3R2RepairGuardTests
 {
     private const string ModuleRoot = "src/backend/Modules/Pricing";
 
@@ -30,7 +39,6 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
         "Tooba.Pricing.Domain",
         "Tooba.Pricing.Application",
         "Tooba.Pricing.Infrastructure",
-        "Tooba.Pricing.Endpoints",
     ];
 
     private static readonly ErrorDefinitionCatalog Catalog = new(
@@ -44,31 +52,43 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
         Array.Empty<IErrorMessageContributor>());
 
     [Fact]
-    public void Pricing_is_amsc001_certified_in_manifest_and_sot()
+    public void Prior_w3_certification_is_superseded_and_pricing_is_precert_ready_for_certify()
     {
         var root = Repo();
 
         using var manifest = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "docs/architecture/tmar-module-structure-manifests.json"))
                 .Replace("\uFEFF", string.Empty));
-        var entries = manifest.RootElement.GetProperty("modules").EnumerateArray()
-            .Where(m => m.GetProperty("module").GetString() == "Pricing")
-            .ToArray();
-        Assert.Single(entries);
-        var moduleEntry = entries[0];
-        Assert.True(moduleEntry.GetProperty("structureCertified").GetBoolean());
-        Assert.Equal("ARCH-COMPLETE-002", moduleEntry.GetProperty("lockVersion").GetString());
-        Assert.Contains(
-            "TB-TMAR-PRICING-AMSC-001",
-            moduleEntry.GetProperty("certificationNote").GetString(),
-            StringComparison.Ordinal);
-        Assert.Equal(5, moduleEntry.GetProperty("projects").GetArrayLength());
 
-        // The pre-cert entry is retired by the promotion; Pricing owns no HTTP route so it is not an
-        // uncertified HTTP-owning module either.
+        // Pricing must NOT remain currently structureCertified during this repair.
         Assert.DoesNotContain(
-            manifest.RootElement.GetProperty("preCertModules").EnumerateArray(),
+            manifest.RootElement.GetProperty("modules").EnumerateArray(),
             m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
+
+        var preCert = manifest.RootElement.GetProperty("preCertModules").EnumerateArray()
+            .Single(m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
+        Assert.False(preCert.GetProperty("structureCertified").GetBoolean());
+        Assert.Equal("ARCH-COMPLETE-002", preCert.GetProperty("lockVersion").GetString());
+        Assert.Equal("READY_FOR_CERTIFY", preCert.GetProperty("structureState").GetString());
+        Assert.Equal("TB-TMAR-PRICING-AMSC-001-W3-R2", preCert.GetProperty("structureRepairTask").GetString());
+
+        // Exactly five projects (four production + Tests): the Endpoints project entry is gone.
+        var projects = preCert.GetProperty("projects").EnumerateArray()
+            .Select(p => p.GetProperty("projectName").GetString()!)
+            .OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        Assert.Equal(
+            new[]
+            {
+                "Tooba.Pricing.Application",
+                "Tooba.Pricing.Contracts",
+                "Tooba.Pricing.Domain",
+                "Tooba.Pricing.Infrastructure",
+                "Tooba.Pricing.Tests",
+            },
+            projects);
+        Assert.DoesNotContain("Tooba.Pricing.Endpoints", projects);
+
+        // Pricing owns no HTTP route so it is not an uncertified HTTP-owning module either.
         Assert.DoesNotContain(
             "Pricing",
             manifest.RootElement.GetProperty("uncertifiedHttpOwningModules").EnumerateArray()
@@ -78,34 +98,86 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
         using var sot = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "docs/architecture/tmar-current-state.json"))
                 .Replace("\uFEFF", string.Empty));
-        var block = sot.RootElement.GetProperty("pricingAmsc001W3");
-        Assert.Equal("COMPLETE_REFERENCE_PATTERN", block.GetProperty("verdict").GetString());
-        Assert.Equal("ARCH-COMPLETE-002", block.GetProperty("lockVersion").GetString());
-        Assert.True(block.GetProperty("structureCertified").GetBoolean());
-        Assert.True(block.GetProperty("microserviceExtractable").GetBoolean());
-        Assert.Equal("NOT_HTTP_OWNING_INTERNAL_CAPABILITY_PROVIDER", block.GetProperty("httpApplicability").GetString());
-        Assert.Equal("MODULE_ENDPOINTS_EMPTY_GROUP_HOST_ZERO", block.GetProperty("endpointOwnership").GetString());
-        Assert.Equal(0, block.GetProperty("endpointReachableRequests").GetInt32());
-        Assert.Equal(0, block.GetProperty("validatorRequiredCount").GetInt32());
-        Assert.Equal("EXHAUSTIVE_0_OF_0_NO_VALIDATOR_REQUIRED", block.GetProperty("validatorCoverageState").GetString());
-        Assert.Equal("NOT_APPLICABLE_TODAY", block.GetProperty("cqrs").GetString());
-        Assert.Equal("EXACT", block.GetProperty("pathNamespaceState").GetString());
-        Assert.Equal("ENFORCED", block.GetProperty("rootAllowlistState").GetString());
-        Assert.Equal("CLEAN", block.GetProperty("physicalCopyState").GetString());
-        Assert.Equal("PROFESSIONAL_SHALLOW", block.GetProperty("folderGranularityState").GetString());
-        Assert.Equal("NONE", block.GetProperty("aliasWorkaroundState").GetString());
-        Assert.Equal("NONE", block.GetProperty("crossModuleJoinState").GetString());
-        Assert.Equal("ZERO", block.GetProperty("foreignAppInfraDomainCoupling").GetString());
-        Assert.Equal("UNCHANGED", block.GetProperty("schemaMigrationState").GetString());
-        Assert.Equal(0, block.GetProperty("migrationFilesChanged").GetInt32());
-        Assert.Equal("ALLOWED_COMPOSITION_ROOT", block.GetProperty("hostResidueState").GetString());
-        Assert.Equal("PRESERVED", block.GetProperty("behaviorPreservation").GetString());
-        Assert.Equal("NONE", block.GetProperty("guardsWeakened").GetString());
-        Assert.Equal("NONE", block.GetProperty("automaticNextImplementationTask").GetString());
 
+        // The historical W3 block is preserved as history but is explicitly superseded.
+        var w3 = sot.RootElement.GetProperty("pricingAmsc001W3");
+        Assert.Equal("PRICING_AMSC_001_CERTIFIED", w3.GetProperty("state").GetString());
+
+        var r2 = sot.RootElement.GetProperty("pricingAmsc001W3R2");
+        Assert.Equal("TB-TMAR-PRICING-AMSC-001-W3-R2", r2.GetProperty("task").GetString());
+        Assert.Equal("TB-TMAR-PRICING-AMSC-001-W3-R1", r2.GetProperty("parentTask").GetString());
+        Assert.Equal("STRUCTURE_REPAIR_INTERNAL_ONLY_APPLICABILITY", r2.GetProperty("mode").GetString());
+        Assert.Equal("PRICING_AMSC_001_STRUCTURE_REPAIRED_READY_FOR_CERTIFY", r2.GetProperty("state").GetString());
+        Assert.Equal("READY_FOR_CERTIFY", r2.GetProperty("verdict").GetString());
+        Assert.Equal("SUPERSEDED_PENDING_FRESH_CERTIFY", r2.GetProperty("priorCertificationState").GetString());
+        Assert.Equal("CANONICAL_NO_ENDPOINTS_PROJECT", r2.GetProperty("internalOnlyApplicabilityState").GetString());
+        Assert.Equal("NOT_HTTP_OWNING_INTERNAL_CAPABILITY_PROVIDER", r2.GetProperty("httpApplicability").GetString());
+        Assert.Equal("ABSENT", r2.GetProperty("endpointProjectState").GetString());
+        Assert.Equal(0, r2.GetProperty("endpointRouteCount").GetInt32());
+        Assert.Equal(0, r2.GetProperty("endpointReachableRequests").GetInt32());
+        Assert.Equal("INFRASTRUCTURE_MODULE_COMPOSITION", r2.GetProperty("presentationRegistrationState").GetString());
+        Assert.Equal(5, r2.GetProperty("solutionProjectCount").GetInt32());
+        Assert.Equal("EXACT", r2.GetProperty("pathNamespaceState").GetString());
+        Assert.Equal("ENFORCED", r2.GetProperty("rootAllowlistState").GetString());
+        Assert.Equal("CLEAN", r2.GetProperty("physicalCopyState").GetString());
+        Assert.Equal("PROFESSIONAL_SHALLOW", r2.GetProperty("folderGranularityState").GetString());
+        Assert.Equal("ZERO", r2.GetProperty("foreignAppInfraDomainCoupling").GetString());
+        Assert.Equal("UNCHANGED", r2.GetProperty("schemaMigrationState").GetString());
+        Assert.Equal("PRESERVED", r2.GetProperty("productionBehaviorState").GetString());
+        Assert.Equal("NONE", r2.GetProperty("guardsWeakened").GetString());
+        Assert.Equal("NONE", r2.GetProperty("baselinesWidened").GetString());
+        Assert.Equal("NONE", r2.GetProperty("automaticNextImplementationTask").GetString());
+        Assert.Equal("USER_REVIEW_PRICING_AMSC_001_W3_R2", r2.GetProperty("workflowStop").GetString());
+
+        // Pricing is temporarily removed from structureLock.certifiedModules until fresh Certify passes.
         var certified = sot.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
             .EnumerateArray().Select(x => x.GetString()).ToArray();
-        Assert.Equal(1, certified.Count(x => x == "Pricing"));
+        Assert.DoesNotContain("Pricing", certified, StringComparer.Ordinal);
+    }
+
+    [Fact]
+    public void Endpoints_ceremony_is_absent_and_registration_lives_in_infrastructure_composition()
+    {
+        var root = Repo();
+
+        Assert.False(Directory.Exists(Path.Combine(root, ModuleRoot, "Tooba.Pricing.Endpoints")));
+        Assert.False(Directory.Exists(Path.Combine(root, ModuleRoot, "Tooba.Pricing.Tests", "Endpoints")));
+
+        foreach (var file in ProductionSources(root))
+        {
+            var text = File.ReadAllText(file);
+            Assert.DoesNotContain("Tooba.Pricing.Endpoints", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("MapPricingModule", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("AddPricingEndpointPresentation", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("\"/v1/pricing\"", text, StringComparison.Ordinal);
+        }
+
+        // The single registration site is the Pricing Infrastructure composition root.
+        var module = Read("src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/DependencyInjection/PricingModule.cs");
+        Assert.Contains("using Tooba.Pricing.Contracts.Errors;", module, StringComparison.Ordinal);
+        Assert.Equal(1, Regex.Matches(module, @"AddSingleton<\s*IErrorCatalogContributor,\s*PricingErrorCatalogContributor>").Count);
+        Assert.Equal(1, Regex.Matches(module, @"AddSingleton<\s*IErrorResourceSet,\s*PricingErrorResourceSet>").Count);
+        Assert.DoesNotContain("ISender", module, StringComparison.Ordinal);
+        Assert.DoesNotContain("ApiResponseFactory", module, StringComparison.Ordinal);
+
+        // Host composition carries no Pricing Endpoints reference and no Pricing route group.
+        var program = Read("src/backend/Host/Tooba.Host/Program.cs");
+        Assert.DoesNotContain("Tooba.Pricing.Endpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPricingModule", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("AddPricingEndpointPresentation", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"/v1/pricing\"", program, StringComparison.Ordinal);
+
+        var hostCsproj = Read("src/backend/Host/Tooba.Host/Tooba.Host.csproj");
+        Assert.DoesNotContain("Tooba.Pricing.Endpoints", hostCsproj, StringComparison.Ordinal);
+        Assert.Contains("Tooba.Pricing.Infrastructure.csproj", hostCsproj, StringComparison.Ordinal);
+
+        // /Modules/Pricing/ groups exactly five projects (four production + Tests).
+        var slnx = File.ReadAllText(Path.Combine(root, "src/backend/Tooba.slnx"));
+        var folderStart = slnx.IndexOf("<Folder Name=\"/Modules/Pricing/\">", StringComparison.Ordinal);
+        Assert.True(folderStart >= 0);
+        var group = slnx[folderStart..slnx.IndexOf("</Folder>", folderStart, StringComparison.Ordinal)];
+        Assert.Equal(5, Regex.Matches(group, @"<Project Path=").Count);
+        Assert.DoesNotContain("Tooba.Pricing.Endpoints", group, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -173,16 +245,13 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
         Assert.Equal("NONE", r1.GetProperty("guardsWeakened").GetString());
         Assert.Equal("NONE", r1.GetProperty("automaticNextImplementationTask").GetString());
 
-        // The W3 certification itself stays untouched by the recovery wave.
-        var w3 = sot.RootElement.GetProperty("pricingAmsc001W3");
-        Assert.Equal("PRICING_AMSC_001_CERTIFIED", w3.GetProperty("state").GetString());
-        Assert.Equal("COMPLETE_REFERENCE_PATTERN", w3.GetProperty("verdict").GetString());
-        Assert.True(w3.GetProperty("structureCertified").GetBoolean());
-        Assert.Equal("NOT_HTTP_OWNING_INTERNAL_CAPABILITY_PROVIDER", w3.GetProperty("httpApplicability").GetString());
-        Assert.Equal(0, w3.GetProperty("endpointReachableRequests").GetInt32());
-        Assert.Equal("3c2cc61e", w3.GetProperty("commit").GetString());
+        // The W3-R2 repair records the R2 parent as the superseded W3 lineage.
+        var r2 = sot.RootElement.GetProperty("pricingAmsc001W3R2");
+        Assert.Equal("3c2cc61e7c61813ac72773ccdb8bb16317cafe70", r2.GetProperty("supersededCertificationCommit").GetString());
+        Assert.Equal("TB-TMAR-PRICING-AMSC-001-W3", r2.GetProperty("supersededCertificationTask").GetString());
+        Assert.Equal("2e664bb3", r2.GetProperty("startingHead").GetString());
 
-        // The repository-global Host root checkpoint is not displaced by a module-local recovery wave.
+        // The repository-global Host root checkpoint is not displaced by a module-local repair wave.
         Assert.Equal("TB-TMAR-HOST-ROOT-FINAL-CERT-001", sot.RootElement.GetProperty("lastAcceptedTask").GetString());
         Assert.Equal("NONE", sot.RootElement.GetProperty("automaticNextImplementationTask").GetString());
 
@@ -192,7 +261,7 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
         Assert.Contains("TB-TMAR-PRICING-AMSC-001-W2` Structure `f7f6abfe`", recovery, StringComparison.Ordinal);
         Assert.Contains("TB-TMAR-PRICING-AMSC-001-W3` Certify `3c2cc61e`", recovery, StringComparison.Ordinal);
         Assert.Contains("USER_REVIEW_PRICING_AMSC_001_W3_R1", recovery, StringComparison.Ordinal);
-        Assert.Contains("Pricing AMSC W3-R1 recovery reconciliation (module-local)", recovery, StringComparison.Ordinal);
+        Assert.Contains("Pricing AMSC W3-R2 structure repair (module-local)", recovery, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -200,7 +269,7 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
     {
         var root = Repo();
 
-        // Root-Allowlist-State: only Endpoints carries a root source file (the composition entry).
+        // Root-Allowlist-State: only Domain carries a root source file (the namespace bridge).
         foreach (var project in ProductionProjects)
         {
             var projectPath = Path.Combine(root, ModuleRoot, project);
@@ -208,12 +277,9 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
                 .Select(Path.GetFileName!)
                 .OrderBy(x => x, StringComparer.Ordinal)
                 .ToArray();
-            var expected = project switch
-            {
-                "Tooba.Pricing.Domain" => new[] { "GlobalUsings.cs" },
-                "Tooba.Pricing.Endpoints" => new[] { "PricingEndpointModule.cs" },
-                _ => Array.Empty<string>(),
-            };
+            var expected = project == "Tooba.Pricing.Domain"
+                ? new[] { "GlobalUsings.cs" }
+                : Array.Empty<string>();
             Assert.Equal(expected, rootFiles);
         }
 
@@ -247,45 +313,6 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
         {
             Assert.False(Directory.Exists(Path.Combine(root, ModuleRoot, "Tooba.Pricing.Application", banned)),
                 $"Application/{banned} must not exist: Pricing owns zero endpoint-reachable requests");
-        }
-
-        foreach (var project in new[] { "Tooba.Pricing.Application", "Tooba.Pricing.Endpoints" })
-        {
-            foreach (var dir in Directory.EnumerateDirectories(Path.Combine(root, ModuleRoot, project), "*", SearchOption.AllDirectories))
-            {
-                if (dir.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
-                    || dir.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                var files = Directory.EnumerateFiles(dir, "*.cs", SearchOption.TopDirectoryOnly).ToList();
-                if (files.Count != 1 || Directory.EnumerateDirectories(dir).Any())
-                {
-                    continue;
-                }
-
-                var folderName = Path.GetFileName(dir.TrimEnd(Path.DirectorySeparatorChar));
-                Assert.False(
-                    folderName.EndsWith("Command", StringComparison.Ordinal)
-                        || folderName.EndsWith("Query", StringComparison.Ordinal)
-                        || folderName.EndsWith("UseCase", StringComparison.Ordinal),
-                    $"per-use-case request leaf folder {dir}");
-            }
-        }
-
-        // Physical-Copy-State: the retired Endpoints localization home must never resurrect.
-        Assert.False(Directory.Exists(Path.Combine(root, ModuleRoot, "Tooba.Pricing.Endpoints", "Errors")));
-        Assert.False(Directory.Exists(Path.Combine(root, ModuleRoot, "Tooba.Pricing.Endpoints", "Resources")));
-
-        // Solution-Explorer-State: canonical /Modules/Pricing/ grouping for all six projects.
-        var slnx = File.ReadAllText(Path.Combine(root, "src/backend/Tooba.slnx"));
-        var folderStart = slnx.IndexOf("<Folder Name=\"/Modules/Pricing/\">", StringComparison.Ordinal);
-        Assert.True(folderStart >= 0);
-        var group = slnx[folderStart..slnx.IndexOf("</Folder>", folderStart, StringComparison.Ordinal)];
-        foreach (var project in ProductionProjects.Concat(["Tooba.Pricing.Tests"]))
-        {
-            Assert.Contains($"Modules/Pricing/{project}/{project}.csproj", group, StringComparison.Ordinal);
         }
     }
 
@@ -355,20 +382,9 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
             Directory.EnumerateFiles(
                     Path.Combine(root, ModuleRoot, "Tooba.Pricing.Contracts", "Errors"), "*ResourceSet.cs")
                 .Select(Path.GetFileName).ToArray());
-        var module = Read("src/backend/Modules/Pricing/Tooba.Pricing.Endpoints/PricingEndpointModule.cs");
+        var module = Read("src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/DependencyInjection/PricingModule.cs");
         Assert.Contains("IErrorCatalogContributor, PricingErrorCatalogContributor>", module, StringComparison.Ordinal);
         Assert.Contains("IErrorResourceSet, PricingErrorResourceSet>", module, StringComparison.Ordinal);
-        Assert.Equal(1, Regex.Matches(module, @"AddSingleton<\s*IErrorCatalogContributor").Count);
-        Assert.Equal(1, Regex.Matches(module, @"AddSingleton<\s*IErrorResourceSet").Count);
-        Assert.DoesNotContain("Tooba.Pricing.Endpoints.Errors", module, StringComparison.Ordinal);
-        Assert.DoesNotContain("Tooba.Pricing.Endpoints.Resources", module, StringComparison.Ordinal);
-
-        // Pricing owns zero module HTTP routes: the composition entry maps only the empty group.
-        Assert.Equal(1, Regex.Matches(module, @"\.MapGroup\(").Count);
-        Assert.Contains("MapGroup(\"/v1/pricing\")", module, StringComparison.Ordinal);
-        Assert.Equal(0, Regex.Matches(module, @"\.Map(Get|Post|Put|Delete|Patch)\(").Count);
-        Assert.DoesNotContain("ISender", module, StringComparison.Ordinal);
-        Assert.DoesNotContain("ApiResponseFactory", module, StringComparison.Ordinal);
 
         // The boundary types are still reachable through their certified path-derived namespaces.
         Assert.Equal("Tooba.Pricing.Contracts.Ports", typeof(IPriceDirectory).Namespace);
@@ -474,11 +490,6 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
             }
         }
 
-        // Endpoints must not reach Infrastructure or Domain.
-        var endpointsCsproj = Read("src/backend/Modules/Pricing/Tooba.Pricing.Endpoints/Tooba.Pricing.Endpoints.csproj");
-        Assert.DoesNotContain("Tooba.Pricing.Infrastructure.csproj", endpointsCsproj, StringComparison.Ordinal);
-        Assert.DoesNotContain("Tooba.Pricing.Domain.csproj", endpointsCsproj, StringComparison.Ordinal);
-
         // Own schema + own DbContext + own outbox + own migration tooling.
         var db = Read("src/backend/Modules/Pricing/Tooba.Pricing.Infrastructure/Persistence/PricingDbContext.cs");
         Assert.Contains("\"pricing\"", db, StringComparison.Ordinal);
@@ -515,13 +526,10 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
         // No Host-owned Pricing business folder and no Host-owned Pricing route.
         Assert.False(Directory.Exists(Path.Combine(root, "src/backend/Host/Tooba.Host/Pricing")));
         var program = Read("src/backend/Host/Tooba.Host/Program.cs");
-        Assert.Contains("MapPricingModule()", program, StringComparison.Ordinal);
-        Assert.Contains("AddPricingEndpointPresentation()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapPricingModule", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("AddPricingEndpointPresentation", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Pricing.Endpoints", program, StringComparison.Ordinal);
         Assert.DoesNotContain("MapGroup(\"/v1/pricing\")", program, StringComparison.Ordinal);
-
-        // Host registers the module exactly once and never re-declares its route group.
-        Assert.Equal(1, Regex.Matches(program, @"MapPricingModule\(\)").Count);
-        Assert.Equal(1, Regex.Matches(program, @"AddPricingEndpointPresentation\(\)").Count);
 
         // No Host file may own Pricing persistence or Pricing business policy.
         var hostRoot = Path.Combine(root, "src/backend/Host/Tooba.Host");
@@ -538,13 +546,6 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
             .ToList();
         Assert.Empty(hostHits);
 
-        // The Endpoints module owns the empty group and the single registration site; it never
-        // dispatches a request and never maps a Pricing route.
-        var module = Read("src/backend/Modules/Pricing/Tooba.Pricing.Endpoints/PricingEndpointModule.cs");
-        Assert.Contains("MapGroup(\"/v1/pricing\")", module, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapGet", module, StringComparison.Ordinal);
-        Assert.DoesNotContain("MapPost", module, StringComparison.Ordinal);
-
         // Host final closure flags stay certified.
         using var sot = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, "docs/architecture/tmar-current-state.json"))
@@ -554,6 +555,20 @@ public sealed class PricingModuleAmsc001W3CertGuardTests
 
     private static string Read(string relativePath) =>
         File.ReadAllText(Path.Combine(Repo(), relativePath));
+
+    /// <summary>
+    /// Every Pricing <c>.cs</c> outside the Test project and outside <c>bin</c>/<c>obj</c> — i.e. the
+    /// production surface the retired ceremony must never reappear on. The Test project is excluded
+    /// because the durable guards necessarily name the retired identifiers as negative assertions.
+    /// </summary>
+    private static IEnumerable<string> ProductionSources(string root)
+    {
+        var testsRoot = Path.Combine(root, ModuleRoot, "Tooba.Pricing.Tests") + Path.DirectorySeparatorChar;
+        return Directory.EnumerateFiles(Path.Combine(root, ModuleRoot), "*.cs", SearchOption.AllDirectories)
+            .Where(file => !file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                           && !file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                           && !file.StartsWith(testsRoot, StringComparison.Ordinal));
+    }
 
     private static IReadOnlyList<string> ProjectRefs(string project)
     {

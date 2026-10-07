@@ -1783,108 +1783,6 @@
           "forbiddenTopLevelFolders": []
         }
       ]
-    },
-    {
-      "module": "Pricing",
-      "structureCertified": true,
-      "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "TB-TMAR-PRICING-AMSC-001-W3 (tooba-architecture-certify) CERTIFIED under ARCH-COMPLETE-002: Pricing is an internal capability provider that owns zero HTTP routes (MapPricingModule maps the deliberately empty /v1/pricing group) and zero endpoint-reachable requests, so it is certified as NOT_HTTP_OWNING_INTERNAL_CAPABILITY_PROVIDER rather than through the CQRS/validator matrix. Certified evidence: capability-first shallow trees, exact path<->namespace for all five production projects, ENFORCED per-project root allowlist, a single authoritative Contracts code+text boundary (Contracts/Errors + Contracts/Resources, one declared-code guard, one catalog contributor, one resource set), zero foreign Application/Infrastructure/Domain/Endpoints coupling and Contracts-only inbound/outbound edges. AMSC lineage: W0 Analyze 08d47b6a -> W1 Migrate 069f77d2 -> W2 Structure f7f6abfe -> W3 Certify. Pricing owns no module HTTP route, so it is correctly absent from uncertifiedHttpOwningModules.",
-      "projects": [
-        {
-          "projectName": "Tooba.Pricing.Contracts",
-          "rootAllowlist": [],
-          "rootAllowlistJustification": "No root .cs. Boundary vocabulary lives under Dtos/ (CurrencyCode), Errors/ (the single canonical PricingErrorCodes home plus the ErrorCatalog contributor and the ErrorResourceSet), Ports/ (IPriceDirectory, PriceLookupContracts, PriceQueryContracts, CampaignCartPriceAuthority, IPricingDevelopmentSeedGateway, IPricingSchemaMigrator), Seller/ (the seller offer pricing boundary) and Resources/ (bilingual PricingErrors.resx/.fa.resx). The W0/W1 root dumps are retired and forbidden; path<->namespace is exact.",
-          "forbiddenRootFiles": [
-            "PricingErrorCodes.cs",
-            "SellerOfferPricingContracts.cs",
-            "PriceLookupContracts.cs",
-            "PriceQueryContracts.cs",
-            "CurrencyCode.cs",
-            "IPriceDirectory.cs"
-          ],
-          "forbiddenTopLevelFolders": []
-        },
-        {
-          "projectName": "Tooba.Pricing.Domain",
-          "rootAllowlist": [
-            "GlobalUsings.cs"
-          ],
-          "rootAllowlistJustification": "GlobalUsings.cs only: the single namespace bridge that keeps the capability-first Domain (Aggregates/ Enums/ Events/ ValueObjects/) cohesive after the god-file split, exactly as the certified Catalog/Order Domain precedent. No capability/implementation type lives at the root; the duplicated Domain/Errors stable-code folder is retired and forbidden; path<->namespace is exact for every type file.",
-          "forbiddenRootFiles": [
-            "AuthoredPrice.cs",
-            "PriceChannel.cs",
-            "PriceEnums.cs",
-            "PricingDomainEvents.cs",
-            "Money.cs",
-            "MarketCode.cs",
-            "AuthoredCurrency.cs"
-          ],
-          "forbiddenTopLevelFolders": [
-            "Errors"
-          ]
-        },
-        {
-          "projectName": "Tooba.Pricing.Application",
-          "rootAllowlist": [],
-          "rootAllowlistJustification": "No root .cs. Pricing owns zero endpoint-reachable requests, so the Application surface stays deliberately shallow: Composition/ holds the typed-fault seam PricingOperation and Ports/ holds the module-internal IPricingUseCaseGuard. No Commands/Queries/Validators/Models ceremony may be invented; path<->namespace is exact.",
-          "forbiddenRootFiles": [
-            "PricingContracts.cs",
-            "PricingHandlers.cs",
-            "PricingRequests.cs",
-            "PricingOperation.cs",
-            "PricingErrorCodes.cs"
-          ],
-          "forbiddenTopLevelFolders": [
-            "Commands",
-            "Queries",
-            "Validators",
-            "Models",
-            "Handlers",
-            "Requests"
-          ]
-        },
-        {
-          "projectName": "Tooba.Pricing.Infrastructure",
-          "rootAllowlist": [],
-          "rootAllowlistJustification": "No root .cs. Module DI lives under DependencyInjection/, the four-port adapter implementations and the migration tooling entrypoint under Adapters/, the outbox translation under Outbox/, the outbox poll targets under Events/ and the EF model plus the single unchanged migration under Persistence/Migrations; path<->namespace is exact.",
-          "forbiddenRootFiles": [
-            "PricingModule.cs",
-            "PriceDirectory.cs",
-            "PricingDbContext.cs",
-            "PricingEvents.cs",
-            "PricingOutboxRegistration.cs",
-            "PricingModuleMigration.cs",
-            "PricingSchemaMigrator.cs",
-            "PricingDevelopmentSeedGateway.cs"
-          ],
-          "forbiddenTopLevelFolders": [
-            "Migrations",
-            "Repositories",
-            "Directories",
-            "Messaging"
-          ]
-        },
-        {
-          "projectName": "Tooba.Pricing.Endpoints",
-          "rootAllowlist": [
-            "PricingEndpointModule.cs"
-          ],
-          "rootAllowlistJustification": "Composition entry only: MapPricingModule maps the deliberately empty /v1/pricing group and AddPricingEndpointPresentation registers the single error catalog contributor and the single error resource set (both Contracts-owned). Pricing owns zero module HTTP routes and zero endpoint-reachable requests, so no Admin/Seller/Storefront capability folder may appear; path<->namespace is exact.",
-          "forbiddenRootFiles": [
-            "PricingEndpoints.cs",
-            "PricingErrorCatalogContributor.cs",
-            "PricingErrorResources.cs",
-            "PricingEndpointLocalizer.cs"
-          ],
-          "forbiddenTopLevelFolders": [
-            "Admin",
-            "Seller",
-            "Storefront",
-            "Errors",
-            "Resources"
-          ]
-        }
-      ]
     }
   ],
   "uncertifiedHttpOwningModules": [
@@ -1947,6 +1845,99 @@
           ],
           "forbiddenRootFiles": [],
           "forbiddenTopLevelFolders": []
+        }
+      ]
+    },
+    {
+      "module": "Pricing",
+      "structureCertified": false,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "structureState": "READY_FOR_CERTIFY",
+      "structureRepairTask": "TB-TMAR-PRICING-AMSC-001-W3-R2",
+      "certificationNote": "DEMOTED by TB-TMAR-PRICING-AMSC-001-W3-R2 (tooba-architecture-structure repair). The prior TB-TMAR-PRICING-AMSC-001-W3 certification (commit 3c2cc61e) is SUPERSEDED_PENDING_FRESH_CERTIFY: it certified Pricing as NOT_HTTP_OWNING_INTERNAL_CAPABILITY_PROVIDER while the module still carried a ceremonial Tooba.Pricing.Endpoints project, an empty /v1/pricing route group and Host mapping/registration ceremony - a concrete contradiction with the current migrate/structure skills and the certified Inventory INTERNAL_ONLY precedent. W3-R2 removed the Endpoints project entirely, moved the single error catalog/resource registration into the Pricing Infrastructure composition root (PricingModule.AddServices) and reduced /Modules/Pricing/ to exactly five projects (Contracts, Domain, Application, Infrastructure, Tests). Pricing is INTERNAL_ONLY with zero HTTP routes and zero endpoint-reachable requests; it must NOT be re-promoted to modules[]/structureLock.certifiedModules until a fresh Certify wave passes. Schema/migrations unchanged; behavior preserved.",
+      "projects": [
+        {
+          "projectName": "Tooba.Pricing.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Boundary vocabulary lives under Dtos/ (CurrencyCode), Errors/ (the single canonical PricingErrorCodes home plus the ErrorCatalog contributor and the ErrorResourceSet), Ports/ (IPriceDirectory, PriceLookupContracts, PriceQueryContracts, CampaignCartPriceAuthority, IPricingDevelopmentSeedGateway, IPricingSchemaMigrator), Seller/ (the seller offer pricing boundary) and Resources/ (bilingual PricingErrors.resx/.fa.resx). The W0/W1 root dumps are retired and forbidden; path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "PricingErrorCodes.cs",
+            "SellerOfferPricingContracts.cs",
+            "PriceLookupContracts.cs",
+            "PriceQueryContracts.cs",
+            "CurrencyCode.cs",
+            "IPriceDirectory.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Pricing.Domain",
+          "rootAllowlist": [
+            "GlobalUsings.cs"
+          ],
+          "rootAllowlistJustification": "GlobalUsings.cs only: the single namespace bridge that keeps the capability-first Domain (Aggregates/ Enums/ Events/ ValueObjects/) cohesive after the god-file split, exactly as the certified Catalog/Order Domain precedent. No capability/implementation type lives at the root; the duplicated Domain/Errors stable-code folder is retired and forbidden; path<->namespace is exact for every type file.",
+          "forbiddenRootFiles": [
+            "AuthoredPrice.cs",
+            "PriceChannel.cs",
+            "PriceEnums.cs",
+            "PricingDomainEvents.cs",
+            "Money.cs",
+            "MarketCode.cs",
+            "AuthoredCurrency.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Errors"
+          ]
+        },
+        {
+          "projectName": "Tooba.Pricing.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Pricing owns zero endpoint-reachable requests, so the Application surface stays deliberately shallow: Composition/ holds the typed-fault seam PricingOperation and Ports/ holds the module-internal IPricingUseCaseGuard. No Commands/Queries/Validators/Models ceremony may be invented; path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "PricingContracts.cs",
+            "PricingHandlers.cs",
+            "PricingRequests.cs",
+            "PricingOperation.cs",
+            "PricingErrorCodes.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Validators",
+            "Models",
+            "Handlers",
+            "Requests"
+          ]
+        },
+        {
+          "projectName": "Tooba.Pricing.Infrastructure",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Module DI lives under DependencyInjection/ (PricingModule.cs also carries the single error catalog/resource registration after W3-R2 removed the Endpoints presentation extension), the four-port adapter implementations and the migration tooling entrypoint under Adapters/, the outbox translation under Outbox/, the outbox poll targets under Events/ and the EF model plus the single unchanged migration under Persistence/Migrations; path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "PricingModule.cs",
+            "PriceDirectory.cs",
+            "PricingDbContext.cs",
+            "PricingEvents.cs",
+            "PricingOutboxRegistration.cs",
+            "PricingModuleMigration.cs",
+            "PricingSchemaMigrator.cs",
+            "PricingDevelopmentSeedGateway.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations",
+            "Repositories",
+            "Directories",
+            "Messaging"
+          ]
+        },
+        {
+          "projectName": "Tooba.Pricing.Tests",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Test-only project with Architecture/ durable guards, Contracts/ Domain/ Infrastructure/ Observability/ behavior suites and no root .cs. The retired Endpoints/ test folder must not resurrect (W3-R2 removed the ceremonial Endpoints project).",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": [
+            "Endpoints"
+          ]
         }
       ]
     }
