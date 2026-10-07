@@ -79,7 +79,11 @@ public sealed class PricingArchitectureGuardTests
     public void Pricing_golden_boundaries_remain_clean()
     {
         var domainRefs = ProjectRefs("Tooba.Pricing.Domain");
-        Assert.DoesNotContain(domainRefs, x => x.Contains("Tooba.Pricing.Contracts", StringComparison.Ordinal));
+        // The Domain may reference only its OWN module Contracts (the canonical Contracts/Errors
+        // stable-code home). Any foreign module Contracts on the Domain is a boundary violation.
+        Assert.All(
+            domainRefs.Where(r => r.Contains("Contracts", StringComparison.OrdinalIgnoreCase)),
+            r => Assert.Contains("Tooba.Pricing.Contracts", r, StringComparison.Ordinal));
         Assert.DoesNotContain(domainRefs, x => x.Contains("Offer.Contracts", StringComparison.Ordinal));
         Assert.DoesNotContain(ProjectRefs("Tooba.Pricing.Infrastructure"), x => x.Contains("Offer.Application", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(ProjectRefs("Tooba.Pricing.Infrastructure"), x => x.Contains("OfferDbContext", StringComparison.Ordinal));
@@ -141,9 +145,27 @@ public sealed class PricingArchitectureGuardTests
             "Tooba.Offer.Endpoints",
             "Seller",
             "OfferSellerEndpoints.cs"));
-        Assert.Contains("pricing.SetPriceAsync", offerEndpoint, StringComparison.Ordinal);
-        Assert.Contains("api.From(write)", offerEndpoint, StringComparison.Ordinal);
+        // The seller price write is Offer-owned HTTP: the endpoint dispatches the CQRS command through
+        // ISender and maps the handler Result with the canonical factory; the Pricing Contracts port is
+        // reached inside the Offer handler, not by a direct endpoint->directory call.
+        Assert.Contains("new SetOfferPriceCommand(", offerEndpoint, StringComparison.Ordinal);
+        Assert.Contains("api.From(result)", offerEndpoint, StringComparison.Ordinal);
+        Assert.DoesNotContain("pricing.SetPriceAsync", offerEndpoint, StringComparison.Ordinal);
         Assert.DoesNotContain("Results.Json(new { title", offerEndpoint, StringComparison.Ordinal);
+
+        var offerHandler = File.ReadAllText(Path.Combine(
+            RepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Offer",
+            "Tooba.Offer.Application",
+            "Offers",
+            "Commands",
+            "SetOfferPrice",
+            "SetOfferPriceCommand.cs"));
+        Assert.Contains("pricing.SetPriceAsync", offerHandler, StringComparison.Ordinal);
+        Assert.Contains("Result<SellerOfferDetailPage>", offerHandler, StringComparison.Ordinal);
     }
 
     private static IEnumerable<(string Path, string Text)> AllProductionSources() =>

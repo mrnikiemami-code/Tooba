@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
-using Tooba.Pricing.Application;
+using Tooba.Pricing.Application.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Infrastructure.Adapters;
 using Tooba.Pricing.Infrastructure.Persistence;

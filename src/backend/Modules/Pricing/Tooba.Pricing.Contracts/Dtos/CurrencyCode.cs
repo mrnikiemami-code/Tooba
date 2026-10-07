@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Pricing.Contracts.Errors;
 
 namespace Tooba.Pricing.Contracts;
 

@@ -1,14 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Pricing.Application;
+using Tooba.Pricing.Application.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Errors;
 using Tooba.Pricing.Domain;
-using PricingErrorCodes = Tooba.Pricing.Contracts.PricingErrorCodes;
 using Tooba.Pricing.Infrastructure.Persistence;
 
 namespace Tooba.Pricing.Infrastructure;

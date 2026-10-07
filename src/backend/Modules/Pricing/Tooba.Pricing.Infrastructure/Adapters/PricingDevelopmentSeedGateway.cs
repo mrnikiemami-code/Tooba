@@ -3,7 +3,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Pricing.Application;
+using Tooba.Pricing.Application.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Domain;
 using Tooba.Pricing.Infrastructure.Persistence;

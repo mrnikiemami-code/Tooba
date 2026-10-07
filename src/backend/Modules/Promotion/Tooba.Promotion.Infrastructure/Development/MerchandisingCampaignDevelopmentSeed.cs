@@ -18,7 +18,6 @@ using Tooba.Inventory.Domain.Events;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Contracts.Ports;
-using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;

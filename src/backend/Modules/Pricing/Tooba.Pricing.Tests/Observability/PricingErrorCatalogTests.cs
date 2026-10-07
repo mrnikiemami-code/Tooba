@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Reflection;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Errors;
 using Tooba.Pricing.Endpoints.Errors;
 using Tooba.Pricing.Endpoints.Resources;
 using Xunit;

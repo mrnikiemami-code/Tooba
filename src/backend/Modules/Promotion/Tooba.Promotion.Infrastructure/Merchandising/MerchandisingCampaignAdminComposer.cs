@@ -5,7 +5,6 @@ using Tooba.Inventory.Contracts.Availability;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Contracts.Ports;
-using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Application.Merchandising;
