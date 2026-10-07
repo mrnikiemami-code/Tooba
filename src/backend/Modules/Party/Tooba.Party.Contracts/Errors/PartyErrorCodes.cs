@@ -1,7 +1,9 @@
 namespace Tooba.Party.Contracts.Errors;
 
 /// <summary>
-/// Stable Party-owned semantic error codes.
+/// Stable semantic error codes owned by Party. Values are the machine codes emitted by the
+/// Party Domain/Application/Infrastructure and mapped by the canonical composed error catalog;
+/// they must never be renamed or repurposed.
 /// <para>
 /// Seller settings wire codes keep Host parity:
 /// <c>seller.settings.missing</c> (404), <c>seller.settings.rejected</c> (400).
@@ -10,6 +12,29 @@ namespace Tooba.Party.Contracts.Errors;
 /// </summary>
 public static class PartyErrorCodes
 {
+    private static readonly HashSet<string> KnownCodes = new(StringComparer.Ordinal)
+    {
+        SellerSettingsMissing,
+        SellerSettingsRejected,
+        OperationRejected,
+        DisplayNameRequired,
+        DisplayNameLength,
+        LegalNameShape,
+        DescriptionShape,
+        SupportPhoneShape,
+        SupportEmailShape,
+        AddressLineShape,
+        AdminSellersGridRequestRequired,
+    };
+
+    /// <summary>
+    /// True when <paramref name="code"/> is a stable code declared by this Party catalog.
+    /// Used by the module composition seam so Party faults map to <c>Result</c> while codes
+    /// owned by another module propagate untouched to the canonical global exception boundary.
+    /// </summary>
+    public static bool IsKnown(string? code) =>
+        !string.IsNullOrWhiteSpace(code) && KnownCodes.Contains(code);
+
     /// <summary>Organization seller profile missing.</summary>
     public const string SellerSettingsMissing = "seller.settings.missing";
 

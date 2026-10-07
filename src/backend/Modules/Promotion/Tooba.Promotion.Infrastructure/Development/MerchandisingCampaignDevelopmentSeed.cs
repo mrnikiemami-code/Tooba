@@ -17,8 +17,6 @@ using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Domain.Events;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
-using Tooba.Party.Application.Models;
-using Tooba.Party.Application.Ports;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
@@ -63,8 +61,7 @@ public static class MerchandisingCampaignDevelopmentSeed
         var offerSeeds = provider.GetRequiredService<IOfferDevelopmentSeedGateway>();
         var inventoryQuery = provider.GetRequiredService<IInventoryQueryGateway>();
         var inventory = provider.GetRequiredService<IInventoryDirectory>();
-        var parties = provider.GetRequiredService<IPartyDirectory>();
-        var partyLookup = provider.GetRequiredService<IPartyLookup>();
+        var parties = provider.GetRequiredService<IPartyDevelopmentDirectory>();
         var prices = provider.GetRequiredService<IPriceDirectory>();
         var priceQuery = provider.GetRequiredService<IPriceQueryGateway>();
         var now = DateTimeOffset.UtcNow;
@@ -95,7 +92,6 @@ public static class MerchandisingCampaignDevelopmentSeed
             inventoryQuery,
             inventory,
             parties,
-            partyLookup,
             cancellationToken);
         var primaryMembers = activeOffers.ToList();
         if (oosOfferId is not null)
@@ -304,16 +300,15 @@ public static class MerchandisingCampaignDevelopmentSeed
         IOfferDevelopmentSeedGateway offerSeeds,
         IInventoryQueryGateway inventoryQuery,
         IInventoryDirectory inventory,
-        IPartyDirectory parties,
-        IPartyLookup partyLookup,
+        IPartyDevelopmentDirectory parties,
         CancellationToken cancellationToken)
     {
         const string oosSellerName = "DEV-SEED OOS Seller";
-        var matches = await partyLookup.SearchIdsByDisplayNameAsync(oosSellerName, 5, cancellationToken);
+        var matches = await parties.SearchIdsByDisplayNameAsync(oosSellerName, 5, cancellationToken);
         var sellerPartyId = matches.FirstOrDefault();
         if (sellerPartyId == Guid.Empty)
         {
-            var createdSeller = await parties.CreateOrganizationAsync(
+            var createdSeller = await parties.EnsureDevelopmentOrganizationAsync(
                 oosSellerName,
                 "DEV-SEED OOS Seller Legal",
                 cancellationToken);

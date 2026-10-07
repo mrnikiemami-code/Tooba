@@ -42,6 +42,7 @@ public sealed class PartyModule : IToobaModule
         services.AddScoped<IPartyDirectory, PartyDirectory>();
         services.AddScoped<IPartySellerSettings, Tooba.Party.Infrastructure.Seller.PartySellerSettingsAdapter>();
         services.AddScoped<IPartyDevelopmentSeedGateway, PartyDevelopmentSeedGateway>();
+        services.AddScoped<IPartyDevelopmentDirectory, PartyDevelopmentDirectoryAdapter>();
         services.AddScoped<IPartyLookupGateway>(sp => (PartyDirectory)sp.GetRequiredService<IPartyDirectory>());
         services.AddScoped<IPartyLookup>(sp => (PartyDirectory)sp.GetRequiredService<IPartyDirectory>());
         services.AddScoped<IPartyAdminSellerReadGateway, PartyAdminSellerReadGateway>();
