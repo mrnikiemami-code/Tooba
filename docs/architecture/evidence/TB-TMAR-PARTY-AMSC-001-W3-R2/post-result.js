@@ -1,0 +1,80 @@
+// TB-TMAR-PARTY-AMSC-001-W3-R2 — post the complete Task Result to Bridge and close the lifecycle.
+const TASK_ROW_ID = "3b5c0c0a-ce61-4228-a6b1-357392c1be32";
+const TASK_ID = "TB-TMAR-PARTY-AMSC-001-W3-R2";
+
+const content = `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-PARTY-AMSC-001-W3-R2
+Parent-Task: TB-TMAR-PARTY-AMSC-001-W3-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Bounded recovery-lineage and historical-truth reconciliation only (zero production, zero manifest, zero schema/migration, zero behavior change; global recovery lock preserved). PRECHECK PASS: branch main, HEAD == origin/main == a75e3bf4390c7950ce8fa0e9462b786aecefe9c1 (required starting HEAD); exact parent relationships git-verified: 29012df0 parent = 2477bbb3, ee9ba997 parent = 29012df0, ffff7100 parent = ee9ba997, f0621ca6 parent = ffff7100, d1cc2f48 parent = f0621ca6, 548a7829 parent = d1cc2f48, a75e3bf4 parent = 548a7829. SoT (tmar-current-state.json) repaired additively: partyAmsc001W0.commit resolved PENDING_THIS_COMMIT -> 2477bbb3 and commitFull = 2477bbb30224c0976b7b02a3d12be9e1b72248db (all other W0 fields preserved verbatim); partyAmsc001W3R1.commit = a75e3bf4 and commitFull = a75e3bf4390c7950ce8fa0e9462b786aecefe9c1 added (certifiedCommit preserved verbatim d1cc2f480619ce1ec68cd730650018883684e6c7; R1 state PARTY_AMSC_001_RECOVERY_CLOSED, verdict COMPLETE_REFERENCE_PATTERN, lockVersion ARCH-COMPLETE-002, productionChange ZERO, schemaChange ZERO, microserviceExtractable true, automaticNextImplementationTask NONE all preserved); new partyAmsc001W3R2 closure block recorded (task/parentTask per contract, mode RECOVERY_LINEAGE_AND_HISTORICAL_TRUTH_RECONCILIATION_ONLY, startingHead a75e3bf4, state PARTY_AMSC_001_RECOVERY_CLOSED_RECONCILED, productionCodeChanged false, currentCertificationAuthority TB-TMAR-PARTY-AMSC-001-W3, currentCertifiedCommit d1cc2f480619ce1ec68cd730650018883684e6c7, w0ImplementationCommit 2477bbb30224c0976b7b02a3d12be9e1b72248db, w1ImplementationCommit 29012df08590550d3171722895d988bd59e3c2fa, w1MetadataReconciliationCommit ee9ba997ccc2c70009a71dc242a983335d098a19, w2StartingHead ee9ba997, w2ImplementationCommit ffff7100bc119a76c472ba77e27a658b1f18f129, w2MetadataReconciliationCommit f0621ca6dd2ba7abb4e2feaa1fbdf5ce2c8eb711, w3StartingHead f0621ca6, w3CertificationCommit d1cc2f480619ce1ec68cd730650018883684e6c7, w3MetadataReconciliationCommit 548a7829e3c40b9158589118e521add67eaec6a7, w3R1StartingHead 548a7829, w3R1Commit a75e3bf4390c7950ce8fa0e9462b786aecefe9c1, metadataReconciliationClassification METADATA_ONLY_NOT_IMPLEMENTATION_WAVES, actualParentChainState RECONCILED, r1CommitState RECORDED_A75E3BF4, workflowStop USER_REVIEW_PARTY_AMSC_001_W3_R2, automaticNextImplementationTask NONE; no self-referential PENDING commit added to R2). Historical W0 error-count truth reconciled additively, no history rewrite: original W0 field stableErrorCodeState CATALOGUED_10_OF_10_MISSING_ISKNOWN_DECLARED_CODE_GUARD preserved verbatim; new additive field stableErrorCodeStateReconciledByR2 records it as HISTORICAL_ANALYSIS_METADATA_STALE; repository verification proves current PartyErrorCodes declares exactly 11 public const string codes (SellerSettingsMissing, SellerSettingsRejected, OperationRejected, DisplayNameRequired, DisplayNameLength, LegalNameShape, DescriptionShape, SupportPhoneShape, SupportEmailShape, AddressLineShape, AdminSellersGridRequestRequired), current PartyErrorCatalogContributor registers exactly 11 descriptors, git show 29012df0 proves W1 added zero public const string declarations (only KnownCodes HashSet + IsKnown guard + doc-comment, +26/-1), so the actual catalog at the W0/W1 tree already had 11 constants/descriptors and W0 undercounted; authoritative count = 11/11 consistent with W1/W3 truth and the W3 cert guard assertion Assert.Equal(11, ...); productionCatalogChangedByR2 false. Master Recovery: appended Party AMSC W3-R2 recovery closure checkpoint (authoritative, module-local) distinguishing semantic AMSC waves W0 2477bbb3 -> W1 29012df0 -> W2 ffff7100 -> W3 d1cc2f48 from the actual git/recovery handoff chain 2477bbb3 -> 29012df0 -> ee9ba997 -> ffff7100 -> f0621ca6 -> d1cc2f48 -> 548a7829 -> a75e3bf4, stating explicitly that ee9ba997/f0621ca6/548a7829 are metadata-only reconciliation commits that do not replace implementation-wave authority, that W3 d1cc2f48 remains the current certification authority (COMPLETE_REFERENCE_PATTERN / ARCH-COMPLETE-002 / STRUCTURE_CERTIFIED), that the historical AMC-001 W4 baseline (partyAmc001) is preserved not rewritten, that the repository-global Host root checkpoint is preserved not displaced, and that automaticNextImplementationTask is NONE. Manifest: zero bytes touched in R2 (Party entry remains structureCertified true / ARCH-COMPLETE-002 within the single merged modules array). Bounded validation PASS: JSON parse SoT OK after edits; exact W0 SHA before-after assertion PASS (PENDING_THIS_COMMIT -> 2477bbb3); exact R1 SHA assertion PASS (absent -> a75e3bf4); exact 11-code/11-descriptor counts PASS via rg counts; W1-zero-added-constants proof PASS; Promotion.Infrastructure has exactly one Party reference (Tooba.Party.Contracts.csproj) and zero Party.Application references (guard Foreign_development_seeds_consume_party_contracts_only green); focused Party AMSC guard family dotnet test filter PartyModuleAmsc001 = 13/13 PASS at the starting HEAD with no guard modified (guardsWeakened NONE, baselinesWidened NONE); git diff scope proof shows this R2 commit touches only allowed files (SoT json, Master Recovery, R2 evidence 4 files, persisted task artifact); all other dirty/untracked files are pre-existing unrelated artifacts preserved untouched. Global recovery lock preserved exactly: lastAcceptedTask, lastAcceptedCommit, latestAcceptedImplementationWave, currentHostCheckpoint, nextHostFolder, repository-global workflowStop and automaticNextImplementationTask unchanged. Final certification authority remains W3 at d1cc2f480619ce1ec68cd730650018883684e6c7: COMPLETE_REFERENCE_PATTERN / ARCH-COMPLETE-002 STRUCTURE_CERTIFIED. Exactly one R2 commit 3eb6e722179d50e308a986b20a4040b45a15555d pushed, HEAD == origin/main verified by fetch + rev-parse. STOP completely: no R3, no W4, no next module; waiting for Architect review.
+Starting-HEAD-State: A75E3BF4
+Production-Scope-State: RECOVERY_LINEAGE_HISTORICAL_TRUTH_ONLY
+Production-Code-Changed-State: ZERO
+Current-Certification-Authority-State: W3_D1CC2F48
+W0-Commit-State: RECORDED_2477BBB3
+R1-Commit-State: RECORDED_A75E3BF4
+W1-Metadata-Reconciliation-State: RECORDED_EE9BA997_METADATA_ONLY
+W2-Metadata-Reconciliation-State: RECORDED_F0621CA6_METADATA_ONLY
+W3-Metadata-Reconciliation-State: RECORDED_548A7829_METADATA_ONLY
+Actual-Parent-Chain-State: RECONCILED
+Historical-W0-Error-Count-State: STALE_10_RECONCILED_TO_AUTHORITATIVE_11
+Stable-Error-Catalog-State: AUTHORITATIVE_11_OF_11
+Structure-State: CERTIFIED
+Folder-Granularity-State: PROFESSIONAL_SHALLOW
+Per-UseCase-Request-Leaf-State: ZERO
+Validator-State: EXHAUSTIVE_2_REQUIRED_2_NO_VALIDATOR
+Cross-Module-Boundary-State: LEGAL_CONTRACTS_ONLY_BOTH_DIRECTIONS
+Promotion-Party-Application-Coupling-State: ZERO
+Manifest-Structural-State: NOT_TOUCHED
+Schema-Migration-State: UNCHANGED
+Global-Host-Checkpoint-State: PRESERVED
+Guards-Weakened-State: NONE
+Baselines-Widened-State: NONE
+Json-Parse-State: PASS
+Evidence-State: COMPLETE
+Recovery-SoT-State: CLOSED_RECONCILED
+Commit-SHA: 3eb6e722179d50e308a986b20a4040b45a15555d
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_ARTIFACTS
+User-Work-Preserved: YES
+Final-Certification-State: COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_PARTY_AMSC_001_W3_R2
+STOP
+END_TOOBA_WORKER_RESULT`;
+
+async function main() {
+    if (!content.includes("BEGIN_TOOBA_WORKER_RESULT") || !content.includes("END_TOOBA_WORKER_RESULT") || !content.includes(`Task-ID: ${TASK_ID}`)) {
+        throw new Error("result contract markers missing");
+    }
+
+    const results = await fetch("http://127.0.0.1:17321/api/results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channelId: "tooba-main", taskId: TASK_ID, content }),
+    });
+    console.log("RESULTS", results.status, await results.text());
+    if (results.status < 200 || results.status >= 300) {
+        throw new Error("result post failed");
+    }
+
+    const complete = await fetch(`http://127.0.0.1:17321/api/tasks/${TASK_ROW_ID}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+    });
+    console.log("COMPLETE", complete.status, await complete.text());
+
+    const hb = await fetch("http://127.0.0.1:17321/api/workers/heartbeat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workerId: "tooba-worker-01", channelId: "tooba-main", agentType: "cursor", status: "Idle" }),
+    });
+    console.log("IDLE", hb.status, await hb.text());
+}
+
+main().catch(err => { console.error(err); process.exit(1); });
