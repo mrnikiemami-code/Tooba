@@ -113,6 +113,68 @@ public sealed class PaymentModuleAmsc001W3CertGuardTests
     }
 
     [Fact]
+    public void Recovery_closure_pins_exact_semantic_lineage_and_error_code_truth()
+    {
+        using var sot = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(Repo(), "docs/architecture/tmar-current-state.json"))
+                .Replace("\uFEFF", string.Empty));
+
+        // Durable semantic commit truth on the historical wave blocks (no history rewrite).
+        Assert.Equal("6839bb4a", sot.RootElement.GetProperty("paymentAmsc001W0").GetProperty("commit").GetString());
+        Assert.Equal(
+            "6839bb4a5f75a954817719386de04e36ff96c305",
+            sot.RootElement.GetProperty("paymentAmsc001W0").GetProperty("commitFull").GetString());
+        Assert.Equal("2d69d828", sot.RootElement.GetProperty("paymentAmsc001W1").GetProperty("commit").GetString());
+        Assert.Equal(
+            "2d69d82808178e786f0673dc725baeb238987829",
+            sot.RootElement.GetProperty("paymentAmsc001W1").GetProperty("commitFull").GetString());
+        Assert.Equal("a138ec61", sot.RootElement.GetProperty("paymentAmsc001W2").GetProperty("commit").GetString());
+        Assert.Equal(
+            "a138ec61bcbbb719fed2949c60e21fa77104cfd1",
+            sot.RootElement.GetProperty("paymentAmsc001W2").GetProperty("commitFull").GetString());
+
+        // W3-R1 must be recorded as an explicit recovery block with its own SHA.
+        var r1 = sot.RootElement.GetProperty("paymentAmsc001W3R1");
+        Assert.Equal("PAYMENT_AMSC_001_RECOVERY_RECONCILED", r1.GetProperty("state").GetString());
+        Assert.Equal("affdfba4", r1.GetProperty("commit").GetString());
+        Assert.Equal(
+            "affdfba4fc5fce402d05e68131bdb4a01899b93c",
+            r1.GetProperty("commitFull").GetString());
+        Assert.Equal(
+            "502d73e0e9ccfb277a06ad397b1f0a511f586921",
+            r1.GetProperty("certifiedCommit").GetString());
+
+        // R2 closes the recovery with exact error-code truth; W3 stays the certification authority.
+        var r2 = sot.RootElement.GetProperty("paymentAmsc001W3R2");
+        Assert.Equal("PAYMENT_AMSC_001_RECOVERY_CLOSED_RECONCILED", r2.GetProperty("state").GetString());
+        Assert.Equal("RECONCILED", r2.GetProperty("actualParentChainState").GetString());
+        Assert.Equal(
+            "502d73e0e9ccfb277a06ad397b1f0a511f586921",
+            r2.GetProperty("currentCertifiedCommit").GetString());
+        Assert.Equal("TB-TMAR-PAYMENT-AMSC-001-W3", r2.GetProperty("currentCertificationAuthority").GetString());
+        Assert.Equal(28, r2.GetProperty("declaredStableCodeCount").GetInt32());
+        Assert.Equal(27, r2.GetProperty("knownCodeGuardMemberCount").GetInt32());
+        Assert.Equal(24, r2.GetProperty("paymentOwnedDescriptorCount").GetInt32());
+        Assert.Equal(4, r2.GetProperty("foreignOwnedDeclaredConsumedCount").GetInt32());
+        Assert.Equal(3, r2.GetProperty("foreignOwnedKnownGuardCount").GetInt32());
+        Assert.Equal("admin.authorization.denied", r2.GetProperty("foreignOwnedNotInKnownGuard").GetString());
+        Assert.False(r2.GetProperty("productionErrorCatalogChangedByR2").GetBoolean());
+        Assert.False(r2.GetProperty("productionCodeChanged").GetBoolean());
+        Assert.Equal("AUTHORITATIVE_28_DECLARED_27_KNOWN_24_OWNED_DESCRIPTORS", r2.GetProperty("stableErrorTruthState").GetString());
+        Assert.Equal("UNCHANGED", r2.GetProperty("schemaMigrationState").GetString());
+        Assert.Equal("PRESERVED", r2.GetProperty("globalHostCheckpointState").GetString());
+        Assert.Equal("NONE", r2.GetProperty("guardsWeakened").GetString());
+        Assert.Equal("NONE", r2.GetProperty("baselinesWidened").GetString());
+        Assert.Equal("NONE", r2.GetProperty("automaticNextImplementationTask").GetString());
+
+        // Production truth: 28 declared / 27 KnownCodes / 3 foreign codes admitted, admin auth excluded.
+        Assert.True(PaymentErrorCodes.IsKnown(PaymentErrorCodes.ReservationRetryLimit));
+        Assert.True(PaymentErrorCodes.IsKnown(PaymentErrorCodes.SupplyUnavailable));
+        Assert.True(PaymentErrorCodes.IsKnown(PaymentErrorCodes.CheckoutAuthenticationRequired));
+        Assert.False(PaymentErrorCodes.IsKnown(PaymentErrorCodes.AdminAuthorizationDenied));
+    }
+
+    [Fact]
     public void Structure_gate_fields_are_ready_for_certify_on_disk()
     {
         var applicationRoot = Path.Combine(Repo(), ModuleRoot, "Tooba.Payment.Application");
