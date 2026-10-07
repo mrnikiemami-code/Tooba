@@ -1,0 +1,37 @@
+TB-TMAR-PRODUCTQNA-AMSC-001-W3: ARCH-COMPLETE-002 certification and SoT promotion (Certify)
+
+Final wave of the ProductQnA AMSC-001 four-wave pipeline. No production code, project structure,
+schema, migration, error, localization or Contracts API change: W3 independently re-verified the
+W1-migrated / W2-structured surface and promoted it honestly.
+
+- Verdict COMPLETE_REFERENCE_PATTERN / ARCH-COMPLETE-002 / structureState CERTIFIED /
+  httpApplicability HTTP_OWNING. Supersedes the AMC-001 lineage for the current module recovery.
+- Architecture sequence: e7e28c49 (W0) -> b29340de (W1) -> 70c7b46b (W2) -> W3.
+- Structure re-verified: 5 projects, capability-first shallow folders, path-namespace EXACT,
+  root allowlists ENFORCED, physical copies CLEAN, /Modules/ProductQnA/ grouping with 5 entries,
+  zero single-file request leaf, zero technical-axis-first tree, zero root dump.
+- Certified seams re-verified: 2 declared semantic codes + 2 registered descriptors (unique owner),
+  7 Application-owned uncatalogued transport validation codes, bilingual resx pair intact,
+  ProductQnAOperation dual typed-fault seam, zero raw Results.*, zero ex.Message classification,
+  zero Console.WriteLine / StartActivity / traceparent / custom correlation / sensitive logging.
+- CQRS EXHAUSTIVE_2_REQUIRED_0_NO_VALIDATOR_REQUIRED; endpoint ownership MODULE_OWNED (2 routes);
+  Contracts-only boundary (Catalog.Contracts port only); own product_qna schema / DbContext / outbox;
+  single unchanged migration 20260826120000_InitialProductQnA.
+- Host checkpoint preserved: no Host/ProductQnA folder, no new Host production file; Host keeps only
+  ALLOWED_COMPOSITION_ROOT. currentHostCheckpoint = HOST_ROOT_FINAL_CERTIFIED and
+  lastAcceptedTask = TB-TMAR-HOST-ROOT-FINAL-CERT-001 are unchanged.
+- Promotion: ProductQnA manifest entry refreshed to the AMSC-001 lineage (structureCertified true,
+  W0->W3 lineage note, 5 project entries, Commands/Queries/Validators triplet kept); new
+  productQnAAmsc001W3 SoT block; productQnAAmsc001W0/W1/W2 commit SHAs reconciled to
+  e7e28c49/b29340de/70c7b46b; "ProductQnA" present exactly once in structureLock.certifiedModules.
+- New durable guard: ProductQnAModuleAmsc001W3CertGuardTests. Guards repointed, never weakened;
+  guardsWeakened = NONE; baselinesWidened = NONE.
+- Evidence: docs/architecture/evidence/TB-TMAR-PRODUCTQNA-AMSC-001-W3/certification.md.
+
+Focused validation: ProductQnAModuleAmsc001W3CertGuardTests 5/5 PASS; ProductQnA filter
+37 passed / 0 failed / 2 skipped (Postgres Testcontainers). Known pre-existing failures unrelated to
+ProductQnA (TmarCompleteReferenceStructureGateTests stale Catalog namespace expectation and two
+TmarDurableGuardTests repository-global recovery/SoT expectations) were reproduced identically at the
+W1 baseline with the ProductQnA changes stashed and are disclosed, not repaired here.
+
+Stop gate USER_REVIEW_PRODUCTQNA_AMSC_001_W3; automaticNextImplementationTask = NONE.
