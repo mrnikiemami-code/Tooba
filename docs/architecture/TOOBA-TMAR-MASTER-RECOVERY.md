@@ -390,6 +390,15 @@ Recorded by `TB-TMAR-PARTY-AMSC-001-W3` (Certify). This is the AMSC-001 ARCH-COM
 - Focused validation: Party.Endpoints chain build 0 errors; Promotion.Infrastructure build 0 errors; Host.Tests build 0 errors; Party guard family 25/25 PASS.
 - Stop gate `USER_REVIEW_PARTY_AMSC_001_W3`; evidence `docs/architecture/evidence/TB-TMAR-PARTY-AMSC-001-W3/certification.md`.
 
+Party AMSC W3-R1 recovery reconciliation (module-local)
+
+Recorded by `TB-TMAR-PARTY-AMSC-001-W3-R1` (recovery/SoT/evidence reconciliation only; zero production change). W3 certification is preserved unchanged.
+- W3 final commit SHA recorded explicitly: `d1cc2f48` (`d1cc2f480619ce1ec68cd730650018883684e6c7`). Accepted lineage preserved exactly: W0 `2477bbb3` → W1 `29012df0` → W2 `ffff7100` → W3 `d1cc2f48` (with the accepted metadata-only reconciliation companions `ee9ba997`/`f0621ca6`/`548a7829`).
+- Historical Party AMC-001 W4 lineage preserved as accepted baseline: `TB-TMAR-PARTY-AMC-001` (`partyAmc001` SoT block + prior manifest certification) is NOT superseded or rewritten — the AMSC-001 W0→W3 lineage is the current authoritative re-certification layered on that baseline, while the repository-global Host root checkpoint is NOT displaced.
+- Certified commit: `d1cc2f480619ce1ec68cd730650018883684e6c7`; `automaticNextImplementationTask = NONE`.
+- Evidence root: `docs/architecture/evidence/TB-TMAR-PARTY-AMSC-001-W3-R1/`.
+- Stop gate: `USER_REVIEW_PARTY_AMSC_001_W3_R1`.
+
 Identity AMSC module recovery checkpoint (authoritative, module-local)
 
 Recorded by `TB-TMAR-IDENTITY-AMSC-001-W3` (Certify). This is the AMSC-001 ARCH-COMPLETE-002 certification for Identity; the earlier AMC-001 lineage (`TB-TMAR-IDENTITY-AMC-001` W1→W6, implementation `aafd14e0` / docs stamp `c7e473cd`) stays in the repository as historical evidence only and is explicitly marked `HISTORICAL / SUPERSEDED FOR CURRENT IDENTITY MODULE RECOVERY`.

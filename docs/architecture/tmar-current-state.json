@@ -911,6 +911,31 @@
     "automaticNextImplementationTask": "NONE",
     "evidence": "docs/architecture/evidence/TB-TMAR-PARTY-AMSC-001-W1/migrate.md"
   },
+  "partyAmsc001W3R1": {
+    "task": "TB-TMAR-PARTY-AMSC-001-W3-R1",
+    "parentTask": "TB-TMAR-PARTY-AMSC-001-W3",
+    "mode": "RECOVERY_SOT_RECONCILIATION_ONLY",
+    "skill": "recovery-reconciliation",
+    "target": "docs/architecture (documentation/SoT/guard truth only)",
+    "startingHead": "548a7829",
+    "state": "PARTY_AMSC_001_RECOVERY_CLOSED",
+    "verdict": "COMPLETE_REFERENCE_PATTERN",
+    "lockVersion": "ARCH-COMPLETE-002",
+    "certifiedCommit": "d1cc2f48",
+    "certifiedCommitFull": "d1cc2f480619ce1ec68cd730650018883684e6c7",
+    "acceptedLineage": {
+      "w0": "2477bbb3",
+      "w1": "29012df0",
+      "w2": "ffff7100",
+      "w3": "d1cc2f48"
+    },
+    "priorAmc001CertificationState": "ACCEPTED_BASELINE_PRESERVED_NOT_REWRITTEN",
+    "productionChange": "ZERO",
+    "schemaChange": "ZERO",
+    "microserviceExtractable": true,
+    "automaticNextImplementationTask": "NONE",
+    "evidence": "docs/architecture/evidence/TB-TMAR-PARTY-AMSC-001-W3-R1/recovery-reconciliation.md"
+  },
   "partyAmsc001W2": {
     "task": "TB-TMAR-PARTY-AMSC-001-W2",
     "mode": "ARCHITECT_DIRECT_AMSC",
