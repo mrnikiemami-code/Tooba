@@ -880,6 +880,37 @@
     "automaticNextImplementationTask": "NONE",
     "evidence": "docs/architecture/evidence/TB-TMAR-PARTY-AMSC-001-W0/analyze.md"
   },
+  "partyAmsc001W1": {
+    "task": "TB-TMAR-PARTY-AMSC-001-W1",
+    "mode": "ARCHITECT_DIRECT_AMSC",
+    "skill": "tooba-architecture-migrate",
+    "target": "src/backend/Modules/Party/Tooba.Party.* (+ inbound consumer src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure dev seed)",
+    "parentTask": "TB-TMAR-PARTY-AMSC-001-W0",
+    "startingHead": "2477bbb3",
+    "state": "MIGRATE_COMPLETE",
+    "verdict": "READY_FOR_STRUCTURE",
+    "lockVersion": "ARCH-COMPLETE-002",
+    "productionCodeChanged": true,
+    "changedProjects": ["Tooba.Party.Contracts", "Tooba.Party.Infrastructure", "Tooba.Promotion.Infrastructure"],
+    "canonicalSeamsAdded": {
+      "declaredCodeGuard": "Contracts/Errors/PartyErrorCodes.cs KnownCodes set (11 codes) + IsKnown(string?) — certified Media/Inventory/OperatorProfile/PageComposition precedent",
+      "typedFaultSeam": "Application/Composition/PartyOperation.cs dual-mechanism mapping: ContractOperationException with IsKnown filter + SemanticException; value-less ExecuteAsync(Func<Task>) overload added with ArgumentNullException guards; unknown codes/exceptions propagate untouched to the global boundary",
+      "inboundBoundaryRepair": "New Contracts/Ports/IPartyDevelopmentDirectory.cs (+ stable PartyDevelopmentOrganization record) and Infrastructure/Development/PartyDevelopmentDirectoryAdapter.cs registered in PartyModule; Promotion.Infrastructure now references Party.Contracts only — Tooba.Party.Application ProjectReference removed from Tooba.Promotion.Infrastructure.csproj and MerchandisingCampaignDevelopmentSeed repointed (IPartyDirectory+IPartyLookup pair → single IPartyDevelopmentDirectory; identical lookup-then-create seed semantics)"
+    },
+    "behaviorDelta": "ACCEPTED_NO_BEHAVIOR_DELTA — module raises only SemanticException today; ContractOperationException mapping is a dormant safety seam; HTTP routes/shapes/status/codes/localization unchanged; Promotion dev-seed performs the same operations through the new Contracts port; module has zero log call sites so no log-field change exists",
+    "schemaMigrationState": "UNCHANGED",
+    "migrationFilesChanged": 0,
+    "hostTouched": false,
+    "frontendState": "FROZEN_UNTOUCHED",
+    "durableGuardsAdded": ["PartyModuleAmsc001W1MigrateGuardTests"],
+    "focusedValidation": "dotnet build Tooba.Party.Endpoints chain = 0 errors; dotnet build Tooba.Promotion.Infrastructure = 0 errors; dotnet build Tooba.Host.Tests = 0 errors; PartyModuleAmc* + PartyModuleAmsc001* guard family = 15/15 PASS",
+    "commit": "29012df0",
+    "commitFull": "29012df08590550d3171722895d988bd59e3c2fa",
+    "waveOutcome": "STRUCTURE_READY",
+    "stopGate": "USER_REVIEW_PARTY_AMSC_001_W1",
+    "automaticNextImplementationTask": "NONE",
+    "evidence": "docs/architecture/evidence/TB-TMAR-PARTY-AMSC-001-W1/migrate.md"
+  },
   "productQnAAmc001": {
     "task": "TB-TMAR-PRODUCTQNA-AMC-001",
     "mode": "ARCHITECT_DIRECT_AMSC",
