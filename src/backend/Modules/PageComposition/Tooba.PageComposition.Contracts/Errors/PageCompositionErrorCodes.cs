@@ -1,8 +1,32 @@
 namespace Tooba.PageComposition.Contracts.Errors;
 
-/// <summary>Stable semantic error codes owned by PageComposition.</summary>
+/// <summary>
+/// Stable semantic error codes owned by PageComposition. Values are the machine codes emitted by the
+/// PageComposition Domain/Application/Endpoints and mapped by the canonical composed error catalog;
+/// they must never be renamed or repurposed.
+/// </summary>
 public static class PageCompositionErrorCodes
 {
+    private static readonly HashSet<string> KnownCodes = new(StringComparer.Ordinal)
+    {
+        TenantMissing,
+        SectionMissing,
+        SectionTypeRejected,
+        ConfigRejected,
+        MutationRejected,
+        SectionTypeRequired,
+        SectionIdsRequired,
+        SectionIdRequired,
+    };
+
+    /// <summary>
+    /// True when <paramref name="code"/> is a stable code declared by this PageComposition catalog.
+    /// Used by the module composition seam so PageComposition faults map to <c>Result</c> while codes
+    /// owned by another module propagate untouched to the canonical global exception boundary.
+    /// </summary>
+    public static bool IsKnown(string? code) =>
+        !string.IsNullOrWhiteSpace(code) && KnownCodes.Contains(code);
+
     /// <summary>Tenant could not be resolved for Page Composition.</summary>
     public const string TenantMissing = "page-composition.tenant.missing";
 
