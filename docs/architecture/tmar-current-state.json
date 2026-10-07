@@ -1236,9 +1236,63 @@
     "guardAdded": "ProductQnAModuleAmsc001W1MigrateGuardTests",
     "focusedValidation": "ProductQnAModuleAmsc001W1MigrateGuardTests 6/6 PASS; ProductQnA filter 27 passed / 0 failed / 2 skipped (Postgres Testcontainers)",
     "structureHandoffState": "REQUIRED",
-    "commit": "PENDING_RECORDED_AT_W2",
+    "commit": "b29340de",
     "commitState": "RECORDED_AT_W2_RECONCILIATION_NO_SELF_REFERENTIAL_SOT_SHA",
     "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTQNA-AMSC-001-W1/migrate.md"
+  },
+  "productQnAAmsc001W2": {
+    "task": "TB-TMAR-PRODUCTQNA-AMSC-001-W2",
+    "mode": "ARCHITECT_DIRECT_AMSC",
+    "skill": "tooba-architecture-structure",
+    "target": "src/backend/Modules/ProductQnA/Tooba.ProductQnA.*",
+    "startingHead": "b29340de",
+    "parentTask": "TB-TMAR-PRODUCTQNA-AMSC-001-W1",
+    "state": "STRUCTURE_COMPLETE",
+    "structureState": "READY_FOR_CERTIFY",
+    "moduleApplicability": "HTTP_OWNING",
+    "httpRouteCount": 2,
+    "endpointReachableRequests": 2,
+    "folderGranularity": "PROFESSIONAL_SHALLOW",
+    "solutionExplorer": "CANONICAL_MODULES_PRODUCTQNA",
+    "solutionProjectCount": 5,
+    "pathNamespace": "EXACT",
+    "pathNamespaceExemption": "EF Persistence/Migrations declares Tooba.ProductQnA.Infrastructure.Persistence by repository lock",
+    "physicalCopyState": "CLEAN",
+    "rootAllowlist": "ENFORCED",
+    "fileCohesionState": "COHESIVE",
+    "largestProductionFileLoc": 108,
+    "capabilities": [
+      "Customer",
+      "Storefront"
+    ],
+    "sharedTechnicalAxes": [
+      "Validation",
+      "Composition",
+      "Models",
+      "Ports"
+    ],
+    "retiredTechnicalAxisHomes": [
+      "Application/Customer/Validators",
+      "Application/Storefront/Validators"
+    ],
+    "productionFilesMoved": 0,
+    "manifestChange": "Application.forbiddenTopLevelFolders gains Validators; certificationNote refreshed to the AMSC-001 lineage; no allowlist widened, no forbidden entry removed",
+    "manifestCertifiedFlip": "DEFERRED_TO_W3",
+    "hostFinalClosureState": "PRESERVED_NO_NEW_HOST_PRODUCTION_FILE",
+    "hostResidueState": "ALLOWED_COMPOSITION_ROOT_ONLY",
+    "schemaChange": "NONE",
+    "behaviorChange": "NONE",
+    "guardAdded": "ProductQnAModuleAmsc001W2StructureGuardTests",
+    "focusedValidation": "ProductQnAModuleAmsc001W2StructureGuardTests 5/5 PASS",
+    "knownPreExistingFailures": [
+      "TmarCompleteReferenceStructureGateTests.Certified_modules_satisfy_root_allowlists_and_namespace_alignment (Tooba.Catalog.Contracts/Cart project-level namespace, unrelated to ProductQnA)",
+      "TmarDurableGuardTests.Recovery_current_state_is_fresh_and_machine_readable",
+      "TmarDurableGuardTests.Recovery_sot_sync_001_current_checkpoint_is_unique_and_stop_is_authoritative"
+    ],
+    "knownPreExistingFailuresNote": "All three reproduced identically at the W1 baseline b29340de with the ProductQnA changes stashed; pre-existing and out of scope.",
+    "commit": "PENDING_RECORDED_AT_W3",
+    "commitState": "RECORDED_AT_W3_RECONCILIATION_NO_SELF_REFERENTIAL_SOT_SHA",
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTQNA-AMSC-001-W2/structure.md"
   },
   "pageCompositionAmc001": {
     "task": "TB-TMAR-PAGECOMPOSITION-AMC-001",

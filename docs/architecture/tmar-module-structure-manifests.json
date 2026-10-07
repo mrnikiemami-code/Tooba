@@ -292,18 +292,19 @@
       "module": "ProductQnA",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Certified by TB-TMAR-PRODUCTQNA-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first Customer/Storefront CQRS; Result+ProductQnAOperation+ApiResponseFactory; exhaustive 2-request validator matrix (2 required present); Contracts.Errors/Resources catalog; Catalog.Contracts-only foreign seam; Host ProductQnA CLOSED_HOST_ZERO; /Modules/ProductQnA/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "certificationNote": "Certified by TB-TMAR-PRODUCTQNA-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN; re-standardized by the TB-TMAR-PRODUCTQNA-AMSC-001 four-wave pipeline (W0 Analyze -> W1 Migrate -> W2 Structure -> W3 Certify) under ARCH-COMPLETE-002. Capability-first shallow Customer/Storefront CQRS; code-carrying ContractOperationException + SemanticException mapped by ProductQnAOperation to Result + ApiResponseFactory; exhaustive 2-request validator matrix (2 VALIDATOR_REQUIRED, 0 NO_VALIDATOR_REQUIRED) with validator codes owned by Application/Validation/ProductQnAValidationCodes; Contracts.Errors/Resources catalog (2 semantic descriptors); Catalog.Contracts-only foreign seam; Host ProductQnA CLOSED_HOST_ZERO; /Modules/ProductQnA/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
       "projects": [
         {
           "projectName": "Tooba.ProductQnA.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "ProductQnA.Application has no root .cs: Customer/Storefront capability trees plus Composition/Models/Ports; path↔namespace exact.",
+          "rootAllowlistJustification": "ProductQnA.Application has no root .cs: Customer/Storefront capability trees plus shared Validation/Composition/Models/Ports; path↔namespace exact.",
           "forbiddenRootFiles": [
             "ProductQaContracts.cs"
           ],
           "forbiddenTopLevelFolders": [
             "Commands",
-            "Queries"
+            "Queries",
+            "Validators"
           ]
         },
         {

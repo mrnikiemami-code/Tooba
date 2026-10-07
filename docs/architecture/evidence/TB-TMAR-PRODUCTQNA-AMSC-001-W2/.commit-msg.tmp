@@ -1,0 +1,33 @@
+TB-TMAR-PRODUCTQNA-AMSC-001-W2: capability-first structure gate and durable guard (Structure)
+
+Structure wave for the ProductQnA module under ARCH-COMPLETE-002. Zero production .cs moved:
+after W1's Application/Validation consolidation the tree already satisfied every structural gate.
+
+- Structure-State = READY_FOR_CERTIFY; Module-Applicability = HTTP_OWNING (2 real module-owned
+  routes + 2 real CQRS use cases).
+- Folder-Granularity = PROFESSIONAL_SHALLOW: Customer/Commands + Storefront/Queries capabilities
+  plus shared technical axes (Validation/Composition/Models/Ports); no use-case leaf folders and
+  no Application/Commands|Queries|Validators technical-axis roots.
+- Solution-Explorer = CANONICAL: /Modules/ProductQnA/ in Tooba.slnx with exactly 5 projects.
+- Path-Namespace = EXACT (only the repository-locked EF Persistence/Migrations exemption).
+- Physical-Copy = CLEAN; Root-Allowlist = ENFORCED; File-Cohesion = COHESIVE (largest 108 LOC).
+- Retired technical-axis homes verified absent: Application/Customer/Validators,
+  Application/Storefront/Validators, Infrastructure/Migrations.
+- Manifest reconciliation (honesty only): Application.forbiddenTopLevelFolders gains Validators;
+  certificationNote refreshed to the AMSC-001 lineage. No allowlist widened, no forbidden entry
+  removed; whole-module structureCertified promotion deferred to W3.
+- Host final closure preserved: no new Host production file or folder.
+- New durable guard: ProductQnAModuleAmsc001W2StructureGuardTests.
+- SoT: productQnAAmsc001W2 block, W1 commit reconciliation (b29340de) and Master Recovery
+  checkpoint. Evidence: docs/architecture/evidence/TB-TMAR-PRODUCTQNA-AMSC-001-W2/structure.md.
+
+No schema, behavior, route, status code, error code, localization key, DTO or Contracts change.
+Foreign App/Infra/Domain coupling remains ZERO; the only cross-module seam stays
+Tooba.Catalog.Contracts.Ports.ICatalogReviewProductLookup.
+
+Focused validation: ProductQnAModuleAmsc001W2StructureGuardTests 5/5 PASS. Three known pre-existing
+repository failures unrelated to ProductQnA were reproduced identically at the W1 baseline with the
+ProductQnA changes stashed (TmarCompleteReferenceStructureGateTests.Certified_modules_...,
+TmarDurableGuardTests.Recovery_current_state_..., TmarDurableGuardTests.Recovery_sot_sync_001_...).
+
+Structure-State = READY_FOR_CERTIFY (hand off to W3 Certify).
