@@ -11639,10 +11639,39 @@
     "hostTouched": false,
     "productionCodeChanged": false,
     "manifestRepairedThisWave": "NONE — manifest already carries the single merged 25-module modules array (repaired by OperatorProfile W0); no repo-global regression exists at this head",
-    "commit": "PENDING",
+    "commit": "652036cc",
     "waveOutcome": "MIGRATE_UNBLOCKED",
     "stopGate": "USER_REVIEW_PAGECOMPOSITION_AMSC_001_W0",
     "automaticNextImplementationTask": "NONE",
     "evidence": "docs/architecture/evidence/TB-TMAR-PAGECOMPOSITION-AMSC-001-W0/analyze.md"
+  },
+  "pageCompositionAmsc001W1": {
+    "task": "TB-TMAR-PAGECOMPOSITION-AMSC-001-W1",
+    "mode": "ARCHITECT_DIRECT_AMSC",
+    "skill": "tooba-architecture-migrate",
+    "target": "src/backend/Modules/PageComposition/Tooba.PageComposition.*",
+    "parentTask": "TB-TMAR-PAGECOMPOSITION-AMSC-001-W0",
+    "startingHead": "652036cc",
+    "state": "MIGRATE_COMPLETE",
+    "verdict": "READY_FOR_STRUCTURE",
+    "lockVersion": "ARCH-COMPLETE-002",
+    "productionCodeChanged": true,
+    "changedProjects": ["Tooba.PageComposition.Contracts", "Tooba.PageComposition.Application"],
+    "canonicalSeamsAdded": {
+      "declaredCodeGuard": "Contracts/Errors/PageCompositionErrorCodes.cs KnownCodes set (8 codes) + IsKnown(string?) — certified Media/Inventory/OperatorProfile precedent",
+      "typedFaultSeam": "Application/Composition/PageCompositionOperation.cs dual-mechanism mapping: ContractOperationException with IsKnown filter + SemanticException; value-less ExecuteAsync(Func<Task>) overload added with ArgumentNullException guards; unknown codes/exceptions propagate untouched to the global boundary; sync Execute<T> (tenant resolution path) keeps its certified minimal SemanticException mapping because the module raises no ContractOperationException today"
+    },
+    "behaviorDelta": "ACCEPTED_NO_BEHAVIOR_DELTA — module raises only SemanticException today; ContractOperationException mapping is a dormant safety seam; HTTP routes/shapes/status/codes/localization unchanged; module has zero log call sites so no log-field change exists",
+    "schemaMigrationState": "UNCHANGED",
+    "migrationFilesChanged": 0,
+    "hostTouched": false,
+    "frontendState": "FROZEN_UNTOUCHED",
+    "durableGuardsAdded": ["PageCompositionModuleAmsc001W1MigrateGuardTests"],
+    "focusedValidation": "dotnet build Tooba.PageComposition.Endpoints chain = 0 errors; PageCompositionModuleAmsc001W1MigrateGuardTests + PageCompositionModuleAmcW2StructureGuardTests + PageCompositionModuleAmcW4CertGuardTests + HostPageCompositionAmcGuardTests = 12/12 PASS; TmarCompleteReferenceStructureGateTests = 1 pre-existing Catalog Contracts namespace-debt red (Catalog-owned, disclosed, out of W1 scope)",
+    "commit": "PENDING",
+    "waveOutcome": "STRUCTURE_READY",
+    "stopGate": "USER_REVIEW_PAGECOMPOSITION_AMSC_001_W1",
+    "automaticNextImplementationTask": "NONE",
+    "evidence": "docs/architecture/evidence/TB-TMAR-PAGECOMPOSITION-AMSC-001-W1/migrate.md"
   }
 }
