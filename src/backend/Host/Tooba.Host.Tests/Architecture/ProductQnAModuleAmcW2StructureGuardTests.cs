@@ -27,7 +27,7 @@ public sealed class ProductQnAModuleAmcW2StructureGuardTests
         Assert.True(File.Exists(Path.Combine(app, "Ports", "IProductQaDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(app, "Models", "ProductQaModels.cs")));
         Assert.True(File.Exists(Path.Combine(app, "Customer", "Commands", "SubmitProductQuestionCommand.cs")));
-        Assert.True(File.Exists(Path.Combine(app, "Customer", "Validators", "SubmitProductQuestionCommandValidator.cs")));
+        Assert.True(File.Exists(Path.Combine(app, "Validation", "SubmitProductQuestionCommandValidator.cs")));
         Assert.True(File.Exists(Path.Combine(app, "Storefront", "Queries", "GetPublishedQuestionsQuery.cs")));
         Assert.True(File.Exists(Path.Combine(infra, "Directories", "ProductQaDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(infra, "Development", "ProductQnADevelopmentSeed.cs")));

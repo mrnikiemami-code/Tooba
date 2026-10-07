@@ -2,9 +2,8 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.ProductQnA.Application.Customer.Commands;
-using Tooba.ProductQnA.Application.Customer.Validators;
 using Tooba.ProductQnA.Application.Storefront.Queries;
-using Tooba.ProductQnA.Application.Storefront.Validators;
+using Tooba.ProductQnA.Application.Validation;
 using Tooba.ProductQnA.Contracts.Errors;
 using Xunit;
 

@@ -52,11 +52,11 @@ public sealed class ProductQuestion
     public static ProductQuestion Create(Guid productId, Guid authorUserId, string authorDisplayName, string body, DateTimeOffset now)
     {
         if (productId == Guid.Empty || authorUserId == Guid.Empty)
-            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+            throw Rejected();
         if (string.IsNullOrWhiteSpace(authorDisplayName) || authorDisplayName.Trim().Length > AuthorDisplayNameMaxLength)
-            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+            throw Rejected();
         if (string.IsNullOrWhiteSpace(body) || body.Trim().Length > BodyMaxLength)
-            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+            throw Rejected();
         return new ProductQuestion
         {
             QuestionId = UuidV7.New(),
@@ -86,7 +86,7 @@ public sealed class ProductQuestion
     {
         EnsurePending();
         if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 500)
-            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+            throw Rejected();
         Status = ProductQuestionStatus.Rejected;
         ModeratedByUserId = moderatorUserId;
         ModeratedAt = now;
@@ -97,6 +97,9 @@ public sealed class ProductQuestion
     private void EnsurePending()
     {
         if (Status != ProductQuestionStatus.Pending)
-            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+            throw Rejected();
     }
+
+    private static ContractOperationException Rejected() =>
+        new(ProductQnAErrorCodes.Rejected);
 }

@@ -29,7 +29,7 @@ public sealed class ProductQaDirectory : IProductQaDirectory
     {
         var product = await _catalog.FindByIdAsync(request.ProductId, cancellationToken);
         if (product is null || !IsPublished(product.Status))
-            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+            throw Rejected();
 
         var now = DateTimeOffset.UtcNow;
         var question = ProductQuestion.Create(product.ProductId, actorUserId, "مشتری توبا", request.Body, now);
@@ -87,7 +87,7 @@ public sealed class ProductQaDirectory : IProductQaDirectory
     {
         var product = await _catalog.FindByIdAsync(productId, cancellationToken);
         if (product is null || !IsPublished(product.Status))
-            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+            throw Rejected();
 
         var now = DateTimeOffset.UtcNow;
         var moderator = Guid.Parse("12000000-0000-4000-8000-000000000099");
@@ -104,4 +104,7 @@ public sealed class ProductQaDirectory : IProductQaDirectory
 
     private static bool IsPublished(string status) =>
         string.Equals(status, "Published", StringComparison.Ordinal);
+
+    private static ContractOperationException Rejected() =>
+        new(ProductQnAErrorCodes.Rejected);
 }

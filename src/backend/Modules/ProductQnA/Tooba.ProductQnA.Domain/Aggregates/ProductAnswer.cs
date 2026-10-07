@@ -37,11 +37,11 @@ public sealed class ProductAnswer
     public static ProductAnswer Create(Guid questionId, string authorDisplayName, string body, DateTimeOffset now)
     {
         if (questionId == Guid.Empty)
-            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+            throw Rejected();
         if (string.IsNullOrWhiteSpace(authorDisplayName) || authorDisplayName.Trim().Length > AuthorDisplayNameMaxLength)
-            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+            throw Rejected();
         if (string.IsNullOrWhiteSpace(body) || body.Trim().Length > BodyMaxLength)
-            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+            throw Rejected();
         return new ProductAnswer
         {
             AnswerId = UuidV7.New(),
@@ -57,7 +57,10 @@ public sealed class ProductAnswer
     public void Publish()
     {
         if (Status != ProductAnswerStatus.Pending)
-            throw new SemanticException(new SemanticError(ProductQnAErrorCodes.Rejected));
+            throw Rejected();
         Status = ProductAnswerStatus.Published;
     }
+
+    private static ContractOperationException Rejected() =>
+        new(ProductQnAErrorCodes.Rejected);
 }

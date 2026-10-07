@@ -82,10 +82,11 @@ public sealed class ProductQnAModuleAmcW4CertGuardTests
         Assert.False(Directory.Exists(Path.Combine(app, "Commands")));
         Assert.False(Directory.Exists(Path.Combine(app, "Queries")));
         Assert.True(Directory.Exists(Path.Combine(app, "Customer", "Commands")));
-        Assert.True(Directory.Exists(Path.Combine(app, "Customer", "Validators")));
+        Assert.True(Directory.Exists(Path.Combine(app, "Validation")));
         Assert.True(Directory.Exists(Path.Combine(app, "Storefront", "Queries")));
-        Assert.True(Directory.Exists(Path.Combine(app, "Storefront", "Validators")));
         Assert.True(Directory.Exists(Path.Combine(app, "Composition")));
+        Assert.False(Directory.Exists(Path.Combine(app, "Customer", "Validators")));
+        Assert.False(Directory.Exists(Path.Combine(app, "Storefront", "Validators")));
 
         Assert.Equal(
             new[] { "ProductQnAModule.cs" },
