@@ -12303,7 +12303,7 @@
     "domainContractsReference": "Tooba.Payment.Domain -> Tooba.Payment.Contracts (own-module Contracts/Errors stable-code home only; foreign Contracts forbidden)",
     "localizationState": "OWNED_BY_PAYMENT",
     "contractsBoundaryState": "COMPLIANT",
-    "stableErrorCodeState": "CONTRACTS_OWNED_28_DECLARED_24_REGISTERED_4_INTENTIONALLY_CONSUMED_ISKNOWN_GUARDED",
+    "stableErrorCodeState": "CONTRACTS_OWNED_28_DECLARED_24_REGISTERED_3_INTENTIONALLY_CONSUMED_ISKNOWN_GUARDED",
     "stableErrorCodeStateReconciliation": "HISTORICAL_W1_TEXT_SAID_3_CONSUMED; AUTHORITATIVE_COUNT_IS_4_FOREIGN_DECLARED_CONSUMED (W3-R2 reconciliation; see paymentAmsc001W3R2.stableErrorTruthState)",
     "crossModuleCouplingState": "LEGAL_CONTRACTS_ONLY",
     "crossModuleJoinState": "NONE",
@@ -12556,5 +12556,29 @@
     "workflowStop": "USER_REVIEW_PAYMENT_AMSC_001_W3_R2",
     "automaticNextImplementationTask": "NONE",
     "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PAYMENT-AMSC-001-W3-R2/"
+  },
+  "paymentAmsc001W3R3": {
+    "task": "TB-TMAR-PAYMENT-AMSC-001-W3-R3",
+    "parentTask": "TB-TMAR-PAYMENT-AMSC-001-W3-R2",
+    "mode": "RECOVERY_HISTORICAL_TRUTH_PRESERVATION_ONLY",
+    "startingHead": "83bc2217",
+    "state": "PAYMENT_AMSC_001_RECOVERY_FINAL_CLOSED",
+    "productionCodeChanged": false,
+    "currentCertificationAuthority": "TB-TMAR-PAYMENT-AMSC-001-W3",
+    "currentCertifiedCommit": "502d73e0e9ccfb277a06ad397b1f0a511f586921",
+    "recoveryAuthority": "TB-TMAR-PAYMENT-AMSC-001-W3-R2",
+    "recoveryCommit": "83bc22175d92e53b838c3039cc09ee3e790c509c",
+    "historicalW1StableErrorCodeState": "CONTRACTS_OWNED_28_DECLARED_24_REGISTERED_3_INTENTIONALLY_CONSUMED_ISKNOWN_GUARDED",
+    "historicalW1FieldState": "RESTORED_AND_PRESERVED",
+    "additiveReconciliationState": "PRESERVED",
+    "authoritativeStableErrorTruth": "AUTHORITATIVE_28_DECLARED_27_KNOWN_24_OWNED_DESCRIPTORS",
+    "manifestStructuralState": "NOT_TOUCHED",
+    "schemaMigrationState": "UNCHANGED",
+    "globalHostCheckpointState": "PRESERVED",
+    "guardsWeakened": "NONE",
+    "baselinesWidened": "NONE",
+    "workflowStop": "USER_REVIEW_PAYMENT_AMSC_001_W3_R3",
+    "automaticNextImplementationTask": "NONE",
+    "evidenceRoot": "docs/architecture/evidence/TB-TMAR-PAYMENT-AMSC-001-W3-R3/"
   }
 }

@@ -1373,6 +1373,10 @@ Recorded by `TB-TMAR-PAYMENT-AMSC-001-W3-R1` then `TB-TMAR-PAYMENT-AMSC-001-W3-R
 - **Preserved**: W3 `COMPLETE_REFERENCE_PATTERN` / `ARCH-COMPLETE-002` / `structureCertified = true`; structure `CERTIFIED` / `PROFESSIONAL_SHALLOW`; validator matrix `15 required + 1 no-validator + 1 worker-only`; `LEGAL_CONTRACTS_ONLY_BOTH_DIRECTIONS` with `foreignAppInfraDomainCoupling = ZERO`; schema/migrations `UNCHANGED`; global Host checkpoint `PRESERVED`; `guardsWeakened = NONE`; `baselinesWidened = NONE`.
 - Stop gate `USER_REVIEW_PAYMENT_AMSC_001_W3_R2`; `automaticNextImplementationTask = NONE`; evidence `docs/architecture/evidence/TB-TMAR-PAYMENT-AMSC-001-W3-R2/`.
 
+Payment AMSC recovery final closure R3 (authoritative, module-local)
+
+Recorded by `TB-TMAR-PAYMENT-AMSC-001-W3-R3` (recovery/history-integrity repair only). R2 authoritative truth `28 declared / 27 KnownCodes / 24 Payment-owned descriptors / 4 foreign declared-consumed / 3 foreign in KnownCodes / admin.authorization.denied excluded` remains unchanged; R3 only restores the historical W1 `stableErrorCodeState` field to its original `..._3_INTENTIONALLY_CONSUMED_...` value so recorded history matches the actual W1 record (R2 had rewritten it in place, contradicting its own additive-preservation claim). The additive R2 reconciliation field `stableErrorCodeStateReconciliation` remains and stays authoritative for current truth; W3 remains the certification authority (`502d73e0`); production/manifest/schema unchanged; global Host checkpoint preserved; `guardsWeakened = NONE`; `baselinesWidened = NONE`; `automaticNextImplementationTask = NONE`; stop gate `USER_REVIEW_PAYMENT_AMSC_001_W3_R3`; evidence `docs/architecture/evidence/TB-TMAR-PAYMENT-AMSC-001-W3-R3/`.
+
 ## TMAR Host Evacuation — Historical Live State Snapshot (AddressBook / AccessControl)
 
 The following AddressBook/AccessControl block is HISTORICAL sequencing context and is no longer the authoritative Host-folder checkpoint (see the historical Content R4 note above and the current authoritative checkpoint at the top of this file).
