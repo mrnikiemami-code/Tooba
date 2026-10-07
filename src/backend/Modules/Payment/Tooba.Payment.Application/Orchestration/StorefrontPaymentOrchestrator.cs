@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Tooba.BuildingBlocks;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Contracts.Errors;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Contracts.Checkout;
@@ -67,7 +67,7 @@ public sealed class StorefrontPaymentOrchestrator
     {
         await _actorPolicy.EnsureCheckoutActorAsync(cancellationToken);
         var checkout = await _checkouts.GetForMutationAsync(checkoutId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
 
         var actor = ResolvePaymentActor(authenticatedUserId);
         var quote = await _wallets.QuoteForPayableAsync(
@@ -119,7 +119,7 @@ public sealed class StorefrontPaymentOrchestrator
     {
         await _actorPolicy.EnsureCheckoutActorAsync(cancellationToken);
         var checkout = await _checkouts.GetForMutationAsync(checkoutId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
 
         var providerCode = _catalog.DefaultProvider;
         var actor = ResolvePaymentActor(authenticatedUserId);
@@ -131,7 +131,7 @@ public sealed class StorefrontPaymentOrchestrator
                 checkout.Currency,
                 cancellationToken);
             if (!quote.CanPayFullyWithWallet || quote.RemainingPayable > 0)
-                throw new InvalidOperationException(PaymentErrorCodes.WalletMixedDeferred);
+                throw new ContractOperationException(PaymentErrorCodes.WalletMixedDeferred);
 
             providerCode = PaymentProviderCodes.Wallet;
         }
@@ -139,7 +139,7 @@ public sealed class StorefrontPaymentOrchestrator
             && PaymentProviderCodes.IsManual(providerCodeOverride))
         {
             if (!_catalog.ManualCardToCardEnabled)
-                throw new InvalidOperationException(PaymentErrorCodes.MethodUnavailable);
+                throw new ContractOperationException(PaymentErrorCodes.MethodUnavailable);
 
             providerCode = PaymentProviderCodes.Manual;
         }
@@ -147,13 +147,13 @@ public sealed class StorefrontPaymentOrchestrator
             && providerCodeOverride.Trim().Equals(PaymentProviderCodes.GatewayCatalog, StringComparison.OrdinalIgnoreCase))
         {
             if (!_catalog.IsOnlineGatewayOffered())
-                throw new InvalidOperationException(PaymentErrorCodes.MethodUnavailable);
+                throw new ContractOperationException(PaymentErrorCodes.MethodUnavailable);
             providerCode = _catalog.DefaultProvider;
         }
         else if (!useWallet && string.IsNullOrWhiteSpace(providerCodeOverride))
         {
             if (!_catalog.IsOnlineGatewayOffered())
-                throw new InvalidOperationException(PaymentErrorCodes.MethodUnavailable);
+                throw new ContractOperationException(PaymentErrorCodes.MethodUnavailable);
         }
 
         var initiated = await _payments.InitiateAsync(
@@ -183,7 +183,7 @@ public sealed class StorefrontPaymentOrchestrator
                 verified.NewlySucceeded);
 
             var after = await _payments.GetAsync(initiated.PaymentId, actor, null, cancellationToken)
-                ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+                ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
 
             return new StorefrontPaymentInitiationDto(
                 after.PaymentId,
@@ -261,7 +261,7 @@ public sealed class StorefrontPaymentOrchestrator
             authenticatedUserId,
             cancellationToken);
         if (checkout is null)
-            throw new InvalidOperationException(PaymentErrorCodes.GuestInvalid);
+            throw new ContractOperationException(PaymentErrorCodes.GuestInvalid);
 
         return MapPaymentPage(payment, checkout);
     }
@@ -274,12 +274,12 @@ public sealed class StorefrontPaymentOrchestrator
         CancellationToken cancellationToken)
     {
         if (!_catalog.IsSandboxSimulatorEnabled())
-            throw new InvalidOperationException(PaymentErrorCodes.SandboxUnavailable);
+            throw new ContractOperationException(PaymentErrorCodes.SandboxUnavailable);
 
         var payment = await GetAsync(paymentId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         var checkout = await _checkouts.GetOwnedAsync(payment.CheckoutId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         var orderNumber = checkout.OrderNumber
             ?? checkout.CheckoutId.ToString("N")[..12];
         return new StorefrontSandboxContextDto(
@@ -304,10 +304,10 @@ public sealed class StorefrontPaymentOrchestrator
         CancellationToken cancellationToken)
     {
         if (!_catalog.IsSandboxSimulatorEnabled())
-            throw new InvalidOperationException(PaymentErrorCodes.SandboxUnavailable);
+            throw new ContractOperationException(PaymentErrorCodes.SandboxUnavailable);
 
         _ = await GetAsync(paymentId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
 
         var successRequested = string.Equals(outcome, "success", StringComparison.OrdinalIgnoreCase);
         if (!successRequested)
@@ -325,7 +325,7 @@ public sealed class StorefrontPaymentOrchestrator
             !verified.NewlySucceeded && string.Equals(verified.Status.ToString(), "Succeeded", StringComparison.Ordinal));
 
         return await GetAsync(paymentId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
     }
 
     public async Task<Guid> UploadManualProofAsync(
@@ -339,7 +339,7 @@ public sealed class StorefrontPaymentOrchestrator
         CancellationToken cancellationToken)
     {
         _ = await GetAsync(paymentId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         var actor = ResolvePaymentActor(authenticatedUserId);
         var mediaAssetId = await _media.UploadAsync(stream, fileName, contentType, actor, cancellationToken);
         await _payments.RegisterProofAssetAsync(paymentId, actor, null, mediaAssetId, cancellationToken);
@@ -356,16 +356,16 @@ public sealed class StorefrontPaymentOrchestrator
         CancellationToken cancellationToken)
     {
         var opened = await GetAsync(paymentId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         if (string.Equals(opened.Status, "Succeeded", StringComparison.Ordinal)
             || await _payments.HasSucceededPaymentForCheckoutAsync(opened.CheckoutId, cancellationToken))
         {
-            throw new InvalidOperationException(PaymentErrorCodes.AlreadySucceeded);
+            throw new ContractOperationException(PaymentErrorCodes.AlreadySucceeded);
         }
 
         var requirement = _catalog.ManualProofRequirement;
         if (requirement.Equals("Required", StringComparison.OrdinalIgnoreCase) && proofMediaAssetId is null)
-            throw new InvalidOperationException(PaymentErrorCodes.ProofRequired);
+            throw new ContractOperationException(PaymentErrorCodes.ProofRequired);
 
         if (requirement.Equals("Disabled", StringComparison.OrdinalIgnoreCase))
             proofMediaAssetId = null;
@@ -381,14 +381,14 @@ public sealed class StorefrontPaymentOrchestrator
 
         var reviewExpiresAt = _clock.UtcNow.AddHours(_catalog.ManualPaymentReviewHoldHours);
         var payment = await _payments.GetAsync(paymentId, actor, null, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         await _orderPayments.PromoteReservationsForManualPaymentReviewAsync(
             payment.CheckoutId,
             reviewExpiresAt,
             cancellationToken);
 
         return await GetAsync(paymentId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
     }
 
     public async Task<StorefrontPaymentDto> RetryManualAsync(
@@ -399,11 +399,11 @@ public sealed class StorefrontPaymentOrchestrator
         CancellationToken cancellationToken)
     {
         var current = await GetAsync(paymentId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         if (string.Equals(current.Status, "Succeeded", StringComparison.Ordinal)
             || await _payments.HasSucceededPaymentForCheckoutAsync(current.CheckoutId, cancellationToken))
         {
-            throw new InvalidOperationException(PaymentErrorCodes.AlreadySucceeded);
+            throw new ContractOperationException(PaymentErrorCodes.AlreadySucceeded);
         }
 
         await _payments.RetryManualAfterRejectionAsync(
@@ -412,7 +412,7 @@ public sealed class StorefrontPaymentOrchestrator
             null,
             cancellationToken);
         return await GetAsync(paymentId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
     }
 
     public async Task<StorefrontPaymentDto> RetryUnpaidAsync(
@@ -423,16 +423,16 @@ public sealed class StorefrontPaymentOrchestrator
         CancellationToken cancellationToken)
     {
         var page = await GetAsync(paymentId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         if (string.Equals(page.Status, "Succeeded", StringComparison.Ordinal)
             || await _payments.HasSucceededPaymentForCheckoutAsync(page.CheckoutId, cancellationToken))
         {
-            throw new InvalidOperationException(PaymentErrorCodes.AlreadySucceeded);
+            throw new ContractOperationException(PaymentErrorCodes.AlreadySucceeded);
         }
 
         await RetryUnpaidCoreAsync(paymentId, page.CheckoutId, page.Status, authenticatedUserId, cancellationToken);
         return await GetAsync(paymentId, cartId, guestSecret, authenticatedUserId, cancellationToken)
-            ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
     }
 
     public async Task RetryUnpaidCoreAsync(
@@ -446,13 +446,13 @@ public sealed class StorefrontPaymentOrchestrator
         {
             await _supply.EnsureRetrySupplyAsync(checkoutId, cancellationToken);
         }
-        catch (ContractOperationException ex) when (PaymentExceptionMapper.TryMapExact(ex.Code, out _))
+        catch (ContractOperationException ex) when (PaymentErrorCodes.IsKnown(ex.Code))
         {
             throw;
         }
         catch (Exception ex) when (ex is InvalidOperationException or ContractOperationException)
         {
-            throw new InvalidOperationException(PaymentErrorCodes.UnpaidSupplyUnavailable);
+            throw new ContractOperationException(PaymentErrorCodes.UnpaidSupplyUnavailable);
         }
 
         if (string.Equals(paymentStatus, "Expired", StringComparison.OrdinalIgnoreCase))

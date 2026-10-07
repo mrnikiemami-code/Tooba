@@ -16,7 +16,7 @@ public sealed class StorefrontPaymentSucceededGuardTests
         var composer = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Orchestration", "StorefrontPaymentOrchestrator.cs"));
         var endpoints = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Errors", "PaymentErrorCodes.cs"));
+            root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Contracts", "Errors", "PaymentErrorCodes.cs"));
         var contracts = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Ports", "PaymentDirectoryPorts.cs"));
 
@@ -25,7 +25,7 @@ public sealed class StorefrontPaymentSucceededGuardTests
         Assert.Contains("HasSucceededPaymentForCheckoutAsync", composer, StringComparison.Ordinal);
         Assert.Contains("AlreadySucceeded()", directory, StringComparison.Ordinal);
         Assert.Contains("payment.already_succeeded", endpoints, StringComparison.Ordinal);
-        Assert.Contains("payment.already_succeeded", directory, StringComparison.Ordinal);
+        Assert.Contains("PaymentErrorCodes.AlreadySucceeded", directory, StringComparison.Ordinal);
         Assert.Contains("CanInitiatePayment", File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Models", "StorefrontOrderModels.cs")), StringComparison.Ordinal);
     }

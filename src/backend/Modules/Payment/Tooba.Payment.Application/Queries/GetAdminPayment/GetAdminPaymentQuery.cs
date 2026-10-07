@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Contracts.Errors;
 using Tooba.Payment.Application.Ports;
 
 namespace Tooba.Payment.Application.Queries.GetAdminPayment;

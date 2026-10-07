@@ -1,6 +1,7 @@
 using Tooba.Payment.Domain.ValueObjects;
 
 using Tooba.BuildingBlocks;
+using Tooba.Payment.Contracts.Errors;
 
 namespace Tooba.Payment.Domain.Aggregates;
 
@@ -137,7 +138,7 @@ public sealed class PaymentAttempt
         var trimmed = (transferReference ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(trimmed))
         {
-            throw new ContractOperationException("payment.tracking_reference.required");
+            throw new ContractOperationException(PaymentErrorCodes.TrackingRequired);
         }
 
         if (trimmed.Length > CustomerTransferReferenceMaxLength)

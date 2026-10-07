@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
+using Tooba.Payment.Contracts.Errors;
 using Tooba.Payment.Endpoints.Admin;
 using Tooba.Payment.Endpoints.Errors;
 using Tooba.Payment.Endpoints.Storefront;
@@ -22,11 +24,12 @@ public static class PaymentEndpointModule
         return app;
     }
 
-    /// <summary>Registers Payment error catalog and module-owned admin grid normalizer.</summary>
+    /// <summary>Registers Payment error catalog, module-owned localization and admin grid normalizer.</summary>
     public static IServiceCollection AddPaymentEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton<IErrorCatalogContributor, PaymentErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, PaymentErrorResourceSet>();
         services.AddSingleton<IPaymentAdminGridQueryNormalizer, PaymentAdminGridQueryNormalizer>();
         return services;
     }

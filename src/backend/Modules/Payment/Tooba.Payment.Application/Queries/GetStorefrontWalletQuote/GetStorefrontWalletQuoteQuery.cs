@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Application.Composition;
 using Tooba.Payment.Application.Models;
 
 namespace Tooba.Payment.Application.Queries.GetStorefrontWalletQuote;
@@ -16,6 +16,6 @@ public sealed class GetStorefrontWalletQuoteHandler(StorefrontPaymentOrchestrato
 {
     public Task<Result<StorefrontWalletQuoteDto>> Handle(
         GetStorefrontWalletQuoteQuery request, CancellationToken cancellationToken) =>
-        PaymentExceptionMapper.TryAsync(() => orchestrator.GetWalletQuoteAsync(
+        PaymentOperation.ExecuteAsync(() => orchestrator.GetWalletQuoteAsync(
             request.CheckoutId, request.CartId, request.GuestSecret, request.AuthenticatedUserId, cancellationToken));
 }

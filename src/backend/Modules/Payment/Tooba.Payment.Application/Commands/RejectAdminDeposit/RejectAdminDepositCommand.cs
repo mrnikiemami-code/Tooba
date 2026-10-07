@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Application.Composition;
 using Tooba.Payment.Application.Ports;
 
 namespace Tooba.Payment.Application.Commands.RejectAdminDeposit;
@@ -15,5 +15,5 @@ public sealed class RejectAdminDepositHandler(IPaymentAdminDirectory payments)
 {
     public Task<Result<PaymentVerificationResult>> Handle(
         RejectAdminDepositCommand request, CancellationToken cancellationToken) =>
-        PaymentExceptionMapper.TryAsync(() => payments.RejectDepositAsync(request.PaymentId, cancellationToken));
+        PaymentOperation.ExecuteAsync(() => payments.RejectDepositAsync(request.PaymentId, cancellationToken));
 }

@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Application.Composition;
 using Tooba.Payment.Application.Models;
 
 namespace Tooba.Payment.Application.Commands.RetryManualPayment;
@@ -16,6 +16,6 @@ public sealed class RetryManualPaymentHandler(StorefrontPaymentOrchestrator orch
 {
     public Task<Result<StorefrontPaymentDto>> Handle(
         RetryManualPaymentCommand request, CancellationToken cancellationToken) =>
-        PaymentExceptionMapper.TryAsync(() => orchestrator.RetryManualAsync(
+        PaymentOperation.ExecuteAsync(() => orchestrator.RetryManualAsync(
             request.PaymentId, request.CartId, request.GuestSecret, request.AuthenticatedUserId, cancellationToken));
 }

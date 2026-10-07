@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Application.Composition;
 using Tooba.Payment.Application.Ports;
 
 namespace Tooba.Payment.Application.Commands.ConfirmAdminDeposit;
@@ -15,5 +15,5 @@ public sealed class ConfirmAdminDepositHandler(IPaymentAdminDirectory payments)
 {
     public Task<Result<PaymentVerificationResult>> Handle(
         ConfirmAdminDepositCommand request, CancellationToken cancellationToken) =>
-        PaymentExceptionMapper.TryAsync(() => payments.ConfirmDepositAsync(request.PaymentId, cancellationToken));
+        PaymentOperation.ExecuteAsync(() => payments.ConfirmDepositAsync(request.PaymentId, cancellationToken));
 }

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="payment.already_succeeded" xml:space="preserve">
+    <value>This order has already been paid successfully.</value>
+  </data>
+  <data name="payment.missing" xml:space="preserve">
+    <value>Payment was not found.</value>
+  </data>
+  <data name="payment.attempt.missing" xml:space="preserve">
+    <value>Payment attempt was not found.</value>
+  </data>
+  <data name="payment.access.denied" xml:space="preserve">
+    <value>Access to this payment was denied.</value>
+  </data>
+  <data name="payment.guest.invalid" xml:space="preserve">
+    <value>Guest access to this payment is no longer valid.</value>
+  </data>
+  <data name="payment.wallet.mixed_deferred" xml:space="preserve">
+    <value>Paying partly with the wallet and partly with another method is not available.</value>
+  </data>
+  <data name="payment.method.unavailable" xml:space="preserve">
+    <value>This payment method is not available right now.</value>
+  </data>
+  <data name="payment.tracking.required" xml:space="preserve">
+    <value>Enter the transfer reference number.</value>
+  </data>
+  <data name="payment.proof.required" xml:space="preserve">
+    <value>Attaching the payment receipt is required.</value>
+  </data>
+  <data name="payment.proof.foreign" xml:space="preserve">
+    <value>This receipt belongs to another payment.</value>
+  </data>
+  <data name="payment.sandbox.unavailable" xml:space="preserve">
+    <value>The sandbox payment simulator is not enabled.</value>
+  </data>
+  <data name="payment.unpaid.supply_unavailable" xml:space="preserve">
+    <value>This order cannot be supplied right now.</value>
+  </data>
+  <data name="payment.unpaid.retry.invalid" xml:space="preserve">
+    <value>This payment cannot be retried in its current state.</value>
+  </data>
+  <data name="payment.rejected" xml:space="preserve">
+    <value>This operation is not available right now.</value>
+  </data>
+  <data name="payment.webhook.invalid_signature" xml:space="preserve">
+    <value>The payment notification signature is invalid.</value>
+  </data>
+  <data name="payment.webhook.invalid_payload" xml:space="preserve">
+    <value>The payment notification payload is invalid.</value>
+  </data>
+  <data name="payment.webhook.amount_mismatch" xml:space="preserve">
+    <value>The payment notification amount does not match the payment.</value>
+  </data>
+  <data name="payment.webhook.attempt_mismatch" xml:space="preserve">
+    <value>The payment notification does not match the payment attempt.</value>
+  </data>
+  <data name="payment.webhook.provider_mismatch" xml:space="preserve">
+    <value>The payment notification provider does not match the payment provider.</value>
+  </data>
+  <data name="payment.gateway.unconfigured" xml:space="preserve">
+    <value>The online payment gateway is not configured.</value>
+  </data>
+  <data name="admin.payment.missing" xml:space="preserve">
+    <value>Payment was not found.</value>
+  </data>
+  <data name="payment.method.not_manual" xml:space="preserve">
+    <value>This payment is not a manual card-to-card payment.</value>
+  </data>
+  <data name="payment.confirm.invalid_state" xml:space="preserve">
+    <value>The deposit cannot be confirmed in the current payment state.</value>
+  </data>
+  <data name="payment.reject.invalid_state" xml:space="preserve">
+    <value>The deposit cannot be rejected in the current payment state.</value>
+  </data>
+</root>

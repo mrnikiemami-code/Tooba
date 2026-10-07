@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Payment.Application.Models;
+using Tooba.Payment.Contracts.Errors;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Contracts.Returns;
 using Tooba.Payment.Domain.Aggregates;
@@ -109,7 +110,7 @@ public sealed class PaymentAdminDirectory(
             ?? throw new ContractOperationException("payment.attempt.missing");
         if (string.IsNullOrWhiteSpace(attempt.CustomerTransferReference))
         {
-            throw new ContractOperationException("payment.tracking_reference.required");
+            throw new ContractOperationException(PaymentErrorCodes.TrackingRequired);
         }
 
         payment.AttachLoadedAttempt(attempt);

@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Application.Composition;
 using Tooba.Payment.Application.Models;
 
 namespace Tooba.Payment.Application.Commands.RetryUnpaidPayment;
@@ -16,6 +16,6 @@ public sealed class RetryUnpaidPaymentHandler(StorefrontPaymentOrchestrator orch
 {
     public Task<Result<StorefrontPaymentDto>> Handle(
         RetryUnpaidPaymentCommand request, CancellationToken cancellationToken) =>
-        PaymentExceptionMapper.TryAsync(() => orchestrator.RetryUnpaidAsync(
+        PaymentOperation.ExecuteAsync(() => orchestrator.RetryUnpaidAsync(
             request.PaymentId, request.CartId, request.GuestSecret, request.AuthenticatedUserId, cancellationToken));
 }

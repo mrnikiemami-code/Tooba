@@ -224,7 +224,7 @@ public sealed class StorefrontPendingPaymentTests
     {
         var root = FindRepoRoot();
         var locks = File.ReadAllText(Path.Combine(root, "docs", "architecture", "TOOBA-LOCKS.md"));
-        var paymentCodes = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Errors", "PaymentErrorCodes.cs"));
+        var paymentCodes = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Contracts", "Errors", "PaymentErrorCodes.cs"));
         var reservation = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "ReservationCycle", "Contracts", "ReservationCycleContracts.cs"));
         var pendingApi = File.ReadAllText(Path.Combine(root, "src", "frontend", "app", "storefront", "storefront-pending-payment-api.ts"));
         var payment = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Endpoints", "Errors", "PaymentErrorCatalogContributor.cs"));

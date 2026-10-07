@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Application.Composition;
 using Tooba.Payment.Application.Models;
 
 namespace Tooba.Payment.Application.Queries.GetStorefrontPaymentSandboxContext;
@@ -16,6 +16,6 @@ public sealed class GetStorefrontPaymentSandboxContextHandler(StorefrontPaymentO
 {
     public Task<Result<StorefrontSandboxContextDto>> Handle(
         GetStorefrontPaymentSandboxContextQuery request, CancellationToken cancellationToken) =>
-        PaymentExceptionMapper.TryAsync(() => orchestrator.GetSandboxContextAsync(
+        PaymentOperation.ExecuteAsync(() => orchestrator.GetSandboxContextAsync(
             request.PaymentId, request.CartId, request.GuestSecret, request.AuthenticatedUserId, cancellationToken));
 }

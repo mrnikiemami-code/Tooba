@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Application.Composition;
 using Tooba.Payment.Application.Models;
 
 namespace Tooba.Payment.Application.Commands.UploadManualPaymentProof;
@@ -19,7 +19,7 @@ public sealed class UploadManualPaymentProofHandler(StorefrontPaymentOrchestrato
 {
     public Task<Result<Guid>> Handle(
         UploadManualPaymentProofCommand request, CancellationToken cancellationToken) =>
-        PaymentExceptionMapper.TryAsync(() => orchestrator.UploadManualProofAsync(
+        PaymentOperation.ExecuteAsync(() => orchestrator.UploadManualProofAsync(
             request.PaymentId,
             request.CartId,
             request.GuestSecret,

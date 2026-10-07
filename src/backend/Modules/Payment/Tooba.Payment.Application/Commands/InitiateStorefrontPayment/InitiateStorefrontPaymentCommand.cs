@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Application.Composition;
 using Tooba.Payment.Application.Models;
 
 namespace Tooba.Payment.Application.Commands.InitiateStorefrontPayment;
@@ -19,7 +19,7 @@ public sealed class InitiateStorefrontPaymentHandler(StorefrontPaymentOrchestrat
 {
     public Task<Result<StorefrontPaymentInitiationDto>> Handle(
         InitiateStorefrontPaymentCommand request, CancellationToken cancellationToken) =>
-        PaymentExceptionMapper.TryAsync(() => orchestrator.InitiateAsync(
+        PaymentOperation.ExecuteAsync(() => orchestrator.InitiateAsync(
             request.CheckoutId,
             request.CartId,
             request.GuestSecret,

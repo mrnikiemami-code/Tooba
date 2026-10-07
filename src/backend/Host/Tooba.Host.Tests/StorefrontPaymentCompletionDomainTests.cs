@@ -1,4 +1,5 @@
 ﻿using Tooba.BuildingBlocks;
+using Tooba.Payment.Contracts.Errors;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
 using Xunit;
@@ -19,7 +20,7 @@ public sealed class StorefrontPaymentCompletionDomainTests
             payment.SubmitManualEvidence("   ", null, DateTimeOffset.UtcNow));
         var missing = Assert.Throws<ContractOperationException>(() =>
             payment.SubmitManualEvidence("   ", null, DateTimeOffset.UtcNow));
-        Assert.Equal("payment.tracking_reference.required", missing.Message);
+        Assert.Equal(PaymentErrorCodes.TrackingRequired, missing.Code);
 
         payment.SubmitManualEvidence("  ABC123  ", null, DateTimeOffset.UtcNow);
         Assert.Equal(PaymentStatus.Pending, payment.Status);

@@ -1,7 +1,9 @@
 ﻿using MediatR;
+using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Application.Composition;
 using Tooba.Payment.Application.Models;
+using Tooba.Payment.Contracts.Errors;
 
 namespace Tooba.Payment.Application.Queries.GetStorefrontPayment;
 
@@ -16,10 +18,10 @@ public sealed class GetStorefrontPaymentHandler(StorefrontPaymentOrchestrator or
 {
     public Task<Result<StorefrontPaymentDto>> Handle(
         GetStorefrontPaymentQuery request, CancellationToken cancellationToken) =>
-        PaymentExceptionMapper.TryAsync(async () =>
+        PaymentOperation.ExecuteAsync(async () =>
         {
             var page = await orchestrator.GetAsync(
                 request.PaymentId, request.CartId, request.GuestSecret, request.AuthenticatedUserId, cancellationToken);
-            return page ?? throw new InvalidOperationException(PaymentErrorCodes.Missing);
+            return page ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         });
 }

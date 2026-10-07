@@ -4,7 +4,8 @@ using Tooba.Payment.Application.Commands.ProcessPaymentWebhook;
 using Tooba.Payment.Application.Commands.ReconcileAdminPayment;
 using Tooba.Payment.Application.Commands.ReconcileStalePayments;
 using Tooba.Payment.Application.Commands.RejectAdminDeposit;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Application.Composition;
+using Tooba.Payment.Contracts.Errors;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Application.Queries.GetAdminPayment;
 using Tooba.Payment.Domain.ValueObjects;
@@ -87,12 +88,33 @@ public sealed class PaymentR1CqrsContractTests
     }
 
     [Fact]
-    public void Exception_mapper_exact_codes_only()
+    public void Declared_codes_are_known_and_foreign_codes_are_not()
     {
-        Assert.True(PaymentExceptionMapper.TryMapExact(PaymentErrorCodes.Missing, out var mapped));
-        Assert.Equal(PaymentErrorCodes.Missing, mapped.Code);
-        Assert.False(PaymentExceptionMapper.TryMapExact("payment missing somewhere", out _));
-        Assert.False(PaymentExceptionMapper.TryMapExact("پرداخت پیدا نشد", out _));
+        Assert.True(PaymentErrorCodes.IsKnown(PaymentErrorCodes.Missing));
+        Assert.True(PaymentErrorCodes.IsKnown(PaymentErrorCodes.UnpaidSupplyUnavailable));
+        Assert.True(PaymentErrorCodes.IsKnown(PaymentErrorCodes.SupplyUnavailable));
+        Assert.False(PaymentErrorCodes.IsKnown("payment missing somewhere"));
+        Assert.False(PaymentErrorCodes.IsKnown("پرداخت پیدا نشد"));
+        Assert.False(PaymentErrorCodes.IsKnown(null));
+        Assert.False(PaymentErrorCodes.IsKnown(" "));
+    }
+
+    [Fact]
+    public void Operation_seam_maps_declared_codes_and_rethrows_foreign_codes()
+    {
+        var mapped = PaymentOperation
+            .ExecuteAsync(() => Task.FromException<string>(new ContractOperationException(PaymentErrorCodes.Missing)))
+            .GetAwaiter().GetResult();
+        Assert.True(mapped.IsFailure);
+        Assert.Equal(PaymentErrorCodes.Missing, mapped.Errors[0].Code);
+
+        var foreign = Assert.ThrowsAsync<ContractOperationException>(() => PaymentOperation
+            .ExecuteAsync(() => Task.FromException<string>(new ContractOperationException("order.some_foreign_code"))));
+        Assert.Equal("order.some_foreign_code", foreign.Result.Code);
+
+        var unknown = Assert.ThrowsAsync<InvalidOperationException>(() => PaymentOperation
+            .ExecuteAsync(() => Task.FromException<string>(new InvalidOperationException("unexpected"))));
+        Assert.Equal("unexpected", unknown.Result.Message);
     }
 
     private sealed class StubSignatures(bool ok, string error) : IPaymentWebhookSignatureVerifier
@@ -147,7 +169,7 @@ public sealed class PaymentR1CqrsContractTests
         private Task<PaymentVerificationResult> ThrowOrDefault(Guid paymentId)
         {
             if (ThrowCode is not null)
-                throw new InvalidOperationException(ThrowCode);
+                throw new ContractOperationException(ThrowCode);
             return Task.FromResult(new PaymentVerificationResult(paymentId, PaymentStatus.Pending, false));
         }
     }

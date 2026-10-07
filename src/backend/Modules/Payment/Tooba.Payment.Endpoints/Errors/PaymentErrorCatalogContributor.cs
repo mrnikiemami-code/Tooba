@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Contracts.Errors;
 
 namespace Tooba.Payment.Endpoints.Errors;
 

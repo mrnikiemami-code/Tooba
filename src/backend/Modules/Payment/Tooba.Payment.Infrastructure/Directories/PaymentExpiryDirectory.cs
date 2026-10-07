@@ -2,6 +2,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Contracts.Checkout;
+using Tooba.Payment.Contracts.Errors;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
@@ -113,11 +114,11 @@ public sealed class PaymentExpiryDirectory : IPaymentExpiryDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            ?? throw new ContractOperationException("payment.not_found");
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         await _actorAccess.EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         if (payment.Status != PaymentStatus.Expired)
         {
-            throw new ContractOperationException("payment.unpaid.retry.invalid_state");
+            throw new ContractOperationException(PaymentErrorCodes.UnpaidRetryInvalid);
         }
 
         var attempts = await _db.Attempts.Where(x => x.PaymentId == paymentId).ToListAsync(cancellationToken);

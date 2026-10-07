@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Application.Composition;
 using Tooba.Payment.Application.Ports;
 
 namespace Tooba.Payment.Application.Commands.ReconcileAdminPayment;
@@ -15,5 +15,5 @@ public sealed class ReconcileAdminPaymentHandler(IPaymentAdminDirectory payments
 {
     public Task<Result<PaymentVerificationResult>> Handle(
         ReconcileAdminPaymentCommand request, CancellationToken cancellationToken) =>
-        PaymentExceptionMapper.TryAsync(() => payments.ReconcileAsync(request.PaymentId, cancellationToken));
+        PaymentOperation.ExecuteAsync(() => payments.ReconcileAsync(request.PaymentId, cancellationToken));
 }

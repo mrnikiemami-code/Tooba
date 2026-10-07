@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="payment.already_succeeded" xml:space="preserve">
+    <value>پرداخت این سفارش قبلاً با موفقیت انجام شده است.</value>
+  </data>
+  <data name="payment.missing" xml:space="preserve">
+    <value>پرداخت پیدا نشد.</value>
+  </data>
+  <data name="payment.attempt.missing" xml:space="preserve">
+    <value>تلاش پرداخت پیدا نشد.</value>
+  </data>
+  <data name="payment.access.denied" xml:space="preserve">
+    <value>دسترسی به این پرداخت مجاز نیست.</value>
+  </data>
+  <data name="payment.guest.invalid" xml:space="preserve">
+    <value>دسترسی مهمان به این پرداخت دیگر معتبر نیست.</value>
+  </data>
+  <data name="payment.wallet.mixed_deferred" xml:space="preserve">
+    <value>پرداخت ترکیبی از کیف پول و روش دیگر در حال حاضر امکان‌پذیر نیست.</value>
+  </data>
+  <data name="payment.method.unavailable" xml:space="preserve">
+    <value>این روش پرداخت در حال حاضر در دسترس نیست.</value>
+  </data>
+  <data name="payment.tracking.required" xml:space="preserve">
+    <value>شماره پیگیری انتقال را وارد کنید.</value>
+  </data>
+  <data name="payment.proof.required" xml:space="preserve">
+    <value>بارگذاری رسید پرداخت الزامی است.</value>
+  </data>
+  <data name="payment.proof.foreign" xml:space="preserve">
+    <value>این رسید به پرداخت دیگری تعلق دارد.</value>
+  </data>
+  <data name="payment.sandbox.unavailable" xml:space="preserve">
+    <value>شبیه‌ساز پرداخت آزمایشی فعال نیست.</value>
+  </data>
+  <data name="payment.unpaid.supply_unavailable" xml:space="preserve">
+    <value>این سفارش در حال حاضر قابل تأمین نیست.</value>
+  </data>
+  <data name="payment.unpaid.retry.invalid" xml:space="preserve">
+    <value>این پرداخت در وضعیت فعلی قابل تلاش مجدد نیست.</value>
+  </data>
+  <data name="payment.rejected" xml:space="preserve">
+    <value>امکان انجام این عملیات در حال حاضر وجود ندارد.</value>
+  </data>
+  <data name="payment.webhook.invalid_signature" xml:space="preserve">
+    <value>امضای اعلان پرداخت نامعتبر است.</value>
+  </data>
+  <data name="payment.webhook.invalid_payload" xml:space="preserve">
+    <value>محتوای اعلان پرداخت نامعتبر است.</value>
+  </data>
+  <data name="payment.webhook.amount_mismatch" xml:space="preserve">
+    <value>مبلغ اعلان پرداخت با پرداخت مطابقت ندارد.</value>
+  </data>
+  <data name="payment.webhook.attempt_mismatch" xml:space="preserve">
+    <value>اعلان پرداخت با تلاش پرداخت مطابقت ندارد.</value>
+  </data>
+  <data name="payment.webhook.provider_mismatch" xml:space="preserve">
+    <value>درگاه اعلان پرداخت با درگاه پرداخت مطابقت ندارد.</value>
+  </data>
+  <data name="payment.gateway.unconfigured" xml:space="preserve">
+    <value>درگاه پرداخت آنلاین پیکربندی نشده است.</value>
+  </data>
+  <data name="admin.payment.missing" xml:space="preserve">
+    <value>پرداخت پیدا نشد.</value>
+  </data>
+  <data name="payment.method.not_manual" xml:space="preserve">
+    <value>این پرداخت از نوع کارت به کارت دستی نیست.</value>
+  </data>
+  <data name="payment.confirm.invalid_state" xml:space="preserve">
+    <value>در وضعیت فعلی پرداخت، تأیید واریز امکان‌پذیر نیست.</value>
+  </data>
+  <data name="payment.reject.invalid_state" xml:space="preserve">
+    <value>در وضعیت فعلی پرداخت، رد واریز امکان‌پذیر نیست.</value>
+  </data>
+</root>

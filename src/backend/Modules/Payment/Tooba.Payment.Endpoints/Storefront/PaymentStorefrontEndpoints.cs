@@ -11,7 +11,7 @@ using Tooba.Payment.Application.Commands.RetryManualPayment;
 using Tooba.Payment.Application.Commands.RetryUnpaidPayment;
 using Tooba.Payment.Application.Commands.SubmitManualPaymentEvidence;
 using Tooba.Payment.Application.Commands.UploadManualPaymentProof;
-using Tooba.Payment.Application.Errors;
+using Tooba.Payment.Contracts.Errors;
 using Tooba.Payment.Application.Queries.GetStorefrontPayment;
 using Tooba.Payment.Application.Queries.GetStorefrontPaymentSandboxContext;
 using Tooba.Payment.Application.Queries.GetStorefrontWalletQuote;

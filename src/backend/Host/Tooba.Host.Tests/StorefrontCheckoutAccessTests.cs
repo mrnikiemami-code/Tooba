@@ -15,7 +15,7 @@ public sealed class StorefrontCheckoutAccessTests
         var orderErrors = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs"));
         var paymentCodes = File.ReadAllText(Path.Combine(
-            root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Errors", "PaymentErrorCodes.cs"));
+            root, "src", "backend", "Modules", "Payment", "Tooba.Payment.Contracts", "Errors", "PaymentErrorCodes.cs"));
         var checkout = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontCheckoutService.cs"));
         var cart = File.ReadAllText(Path.Combine(

@@ -7,7 +7,7 @@ namespace Tooba.Payment.Tests.Architecture;
 public sealed class PaymentArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors", "Orchestration", "Validators"];    private static readonly string[] AllowedContractsFolders = ["Admin", "Customer", "Events", "Dtos", "Hold", "Ports", "Returns", "Settlement", "Storefront", "Checkout"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Composition", "Orchestration", "Validators"];    private static readonly string[] AllowedContractsFolders = ["Admin", "Customer", "Events", "Dtos", "Errors", "Resources", "Hold", "Ports", "Returns", "Settlement", "Storefront", "Checkout"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Providers", "Events", "Messaging", "DependencyInjection", "Gateways", "Migrations", "Workers"];
     private static readonly string[] AllowedEndpointsFolders = ["Storefront", "Admin", "Webhooks", "Errors", "Resources"];
@@ -47,8 +47,12 @@ public sealed class PaymentArchitectureGuardTests
         Assert.DoesNotContain(refs, r => r.Contains("Application", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Endpoints", StringComparison.OrdinalIgnoreCase));
-        Assert.DoesNotContain(refs, r => r.Contains("Contracts", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Wallet.", StringComparison.OrdinalIgnoreCase));
+
+        // The only Contracts reference the Domain may hold is its own module Contracts (the canonical
+        // Contracts/Errors stable-code home); any foreign module Contracts is a boundary violation.
+        Assert.All(refs.Where(r => r.Contains("Contracts", StringComparison.OrdinalIgnoreCase)), r =>
+            Assert.Contains("Tooba.Payment.Contracts", r, StringComparison.Ordinal));
     }
 
     [Fact]
@@ -191,9 +195,10 @@ public sealed class PaymentArchitectureGuardTests
         Assert.Contains(application, x => x.Text.Contains("QueryAdminPaymentsGridQuery", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
-        Assert.Contains(application, x => x.Text.Contains("PaymentExceptionMapper", StringComparison.Ordinal));
-        Assert.DoesNotContain(application, x =>
-            x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("PaymentOperation", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Text.Contains("PaymentExceptionMapper", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Text.Contains("using Tooba.Payment.Application.Errors", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Text.Contains("catch (InvalidOperationException ex) when (ex.Message", StringComparison.Ordinal));
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         Assert.False(File.Exists(Path.Combine(hostRoot, "Payments", "PaymentWebhookEndpoints.cs")));
@@ -572,6 +577,18 @@ public sealed class PaymentArchitectureGuardTests
     [Fact]
     public void Payment_root_allowlists_and_forbidden_root_files_are_enforced()
     {
+        // W1: stable Payment codes moved to the Contracts error home (single source of truth).
+        Assert.True(File.Exists(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Contracts", "Errors", "PaymentErrorCodes.cs")));
+        Assert.True(File.Exists(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Contracts", "Errors", "PaymentErrorResourceSet.cs")));
+        Assert.False(File.Exists(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Application", "Errors", "PaymentErrorCodes.cs")),
+            "Application/Errors/PaymentErrorCodes.cs duplicate home must not resurrect");
+        Assert.False(File.Exists(Path.Combine(
+            PaymentRoot(), "Tooba.Payment.Application", "Errors", "PaymentExceptionMapper.cs")),
+            "legacy PaymentExceptionMapper must not resurrect");
+
         var expected = new (string Project, string[] Allowlist, string[] Forbidden)[]
         {
             ("Tooba.Payment.Application", [], [

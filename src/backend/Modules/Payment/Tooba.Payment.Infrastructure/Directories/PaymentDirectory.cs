@@ -2,6 +2,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Contracts.Checkout;
+using Tooba.Payment.Contracts.Errors;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
@@ -213,7 +214,7 @@ public sealed class PaymentDirectory : IPaymentDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == command.PaymentId, cancellationToken)
-            ?? throw new ContractOperationException("payment.not_found");
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         var attempt = await _db.Attempts.SingleOrDefaultAsync(
             x => x.AttemptId == command.AttemptId && x.PaymentId == payment.PaymentId,
             cancellationToken)
@@ -314,8 +315,8 @@ public sealed class PaymentDirectory : IPaymentDirectory
         _db.Payments.AsNoTracking()
             .AnyAsync(x => x.CheckoutId == checkoutId && x.Status == PaymentStatus.Succeeded, cancellationToken);
 
-    internal static InvalidOperationException AlreadySucceeded() =>
-        new("payment.already_succeeded");
+    internal static ContractOperationException AlreadySucceeded() =>
+        new(PaymentErrorCodes.AlreadySucceeded);
 
     /// <inheritdoc />
     public async Task RegisterProofAssetAsync(
@@ -327,7 +328,7 @@ public sealed class PaymentDirectory : IPaymentDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            ?? throw new ContractOperationException("payment.not_found");
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         await _actorAccess.EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
         {
@@ -368,7 +369,7 @@ public sealed class PaymentDirectory : IPaymentDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            ?? throw new ContractOperationException("payment.not_found");
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         await _actorAccess.EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         if (payment.Status == PaymentStatus.Succeeded)
         {
@@ -407,7 +408,7 @@ public sealed class PaymentDirectory : IPaymentDirectory
         CancellationToken cancellationToken)
     {
         var payment = await _db.Payments.AsNoTracking().SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
-            ?? throw new ContractOperationException("payment.not_found");
+            ?? throw new ContractOperationException(PaymentErrorCodes.Missing);
         await _actorAccess.EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         if (_adminDirectory is null)
         {

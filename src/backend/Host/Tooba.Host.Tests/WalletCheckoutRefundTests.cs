@@ -109,7 +109,7 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
         Assert.Contains("wallet-quote", File.ReadAllText(Path.Combine(FindRepoRoot(),
             "src", "backend", "Modules", "Payment", "Tooba.Payment.Endpoints", "Storefront", "PaymentStorefrontEndpoints.cs")), StringComparison.Ordinal);
         Assert.Contains("payment.wallet.mixed_deferred", File.ReadAllText(Path.Combine(FindRepoRoot(),
-            "src", "backend", "Modules", "Payment", "Tooba.Payment.Application", "Errors", "PaymentErrorCodes.cs")), StringComparison.Ordinal);
+            "src", "backend", "Modules", "Payment", "Tooba.Payment.Contracts", "Errors", "PaymentErrorCodes.cs")), StringComparison.Ordinal);
         Assert.Contains("WalletPaymentSucceeded", File.ReadAllText(Path.Combine(FindRepoRoot(),
             "src", "backend", "Modules", "Notification", "Tooba.Notification.Contracts", "Copy",
             "NotificationSemanticTypes.cs")), StringComparison.Ordinal);
