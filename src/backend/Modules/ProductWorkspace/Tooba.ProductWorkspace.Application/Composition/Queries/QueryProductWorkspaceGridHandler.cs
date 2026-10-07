@@ -7,6 +7,7 @@ using Tooba.Catalog.Contracts.Ports;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Tooba.ProductWorkspace.Application.Composition.Grid;
 using Tooba.ProductWorkspace.Application.Composition.Models;
 
@@ -48,3 +49,4 @@ public sealed class QueryProductWorkspaceGridHandler(
             items, normalized.Page, normalized.PageSize, totalCount));
     }
 }
+

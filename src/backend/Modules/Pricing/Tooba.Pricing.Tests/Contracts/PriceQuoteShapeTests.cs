@@ -2,6 +2,7 @@ using System.Text.Json;
 using Xunit;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 
 namespace Tooba.Pricing.Tests.Contracts;
 
@@ -25,3 +26,4 @@ public sealed class PriceQuoteShapeTests
         Assert.Equal(original, copy);
     }
 }
+

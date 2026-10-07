@@ -1,4 +1,4 @@
-namespace Tooba.Pricing.Contracts;
+namespace Tooba.Pricing.Contracts.Ports;
 
 /// <summary>Pricing-owned schema migration entrypoint so Host bootstraps never type PricingDbContext.</summary>
 public interface IPricingSchemaMigrator

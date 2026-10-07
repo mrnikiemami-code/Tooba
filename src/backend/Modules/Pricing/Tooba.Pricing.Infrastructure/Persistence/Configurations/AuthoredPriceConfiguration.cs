@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Tooba.Pricing.Domain;
+using Tooba.Pricing.Domain.Aggregates;
 
 namespace Tooba.Pricing.Infrastructure.Persistence.Configurations;
 
@@ -26,3 +27,4 @@ public sealed class AuthoredPriceConfiguration : IEntityTypeConfiguration<Author
         entity.HasIndex(x => new { x.OfferId, x.Market, x.Channel, x.Currency, x.QualifierKind, x.ValidFrom });
     }
 }
+

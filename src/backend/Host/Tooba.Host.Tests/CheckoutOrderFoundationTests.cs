@@ -1,4 +1,4 @@
-﻿using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Directories;
@@ -71,6 +71,8 @@ using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Infrastructure;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Pricing.Infrastructure.Adapters;
+using Tooba.Pricing.Infrastructure.Outbox;
 using Tooba.Tax.Application;
 using Tooba.Tax.Domain;
 using Tooba.Tax.Infrastructure;
@@ -717,3 +719,4 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             Task.FromResult<SellerOrderCancelFulfillmentSnapshot?>(null);
     }
 }
+

@@ -1,7 +1,7 @@
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Pricing.Contracts.Errors;
 
-namespace Tooba.Pricing.Contracts;
+namespace Tooba.Pricing.Contracts.Ports;
 
 /// <summary>
 /// Pricing-owned authored-price write port. It is the supported cross-module boundary for creating,

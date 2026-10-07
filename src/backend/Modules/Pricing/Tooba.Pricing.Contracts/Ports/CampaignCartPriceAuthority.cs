@@ -1,6 +1,6 @@
 using Tooba.Offer.Contracts.Dtos;
 
-namespace Tooba.Pricing.Contracts;
+namespace Tooba.Pricing.Contracts.Ports;
 
 /// <summary>
 /// مرجع قیمت کمپین مرچندایزینگ برای Cart/Checkout؛ مبلغ را از AuthoredPrice کمپین می‌خواند نه از کلاینت.

@@ -17,6 +17,8 @@ using Tooba.Inventory.Contracts.Cart;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Dtos;
+using Tooba.Pricing.Contracts.Ports;
 
 namespace Tooba.Cart.Infrastructure.Directories;
 
@@ -656,3 +658,4 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         }
     }
 }
+

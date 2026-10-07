@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks.Results;
 using Tooba.Offer.Contracts.Dtos;
 
-namespace Tooba.Pricing.Contracts;
+namespace Tooba.Pricing.Contracts.Ports;
 
 /// <summary>Pricing-owned Development-support request for the base offer price.</summary>
 public sealed record SetDevelopmentBasePrice(

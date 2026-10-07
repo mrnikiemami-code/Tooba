@@ -1,10 +1,13 @@
 using Tooba.BuildingBlocks;
-using Tooba.Pricing.Domain;
+using Tooba.Pricing.Contracts.Dtos;
+using Tooba.Pricing.Domain.Aggregates;
+using Tooba.Pricing.Domain.Events;
+using Tooba.Pricing.Domain.ValueObjects;
 using Tooba.Pricing.Infrastructure.Events;
 using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Persistence;
 
-namespace Tooba.Pricing.Infrastructure;
+namespace Tooba.Pricing.Infrastructure.Outbox;
 
 /// <summary>
 /// ثبت Outbox ماژول Pricing. ترجمه فقط رویدادهای صریح قیمت نوشته‌شده است.

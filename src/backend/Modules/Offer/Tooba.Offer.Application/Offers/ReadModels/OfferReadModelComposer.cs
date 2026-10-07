@@ -1,4 +1,4 @@
-﻿using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Inventory.Contracts.Availability;
@@ -14,6 +14,7 @@ using Tooba.Offer.Domain.Aggregates;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 
 namespace Tooba.Offer.Application.Offers.ReadModels;
 
@@ -85,3 +86,4 @@ public sealed class OfferReadModelComposer(
     public static Result NotFoundResult() =>
         Result.Failure(new SemanticError(OfferErrorCodes.NotFound));
 }
+

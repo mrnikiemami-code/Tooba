@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Tooba.Pricing.Infrastructure.Persistence;
 
 namespace Tooba.Pricing.Infrastructure.Adapters;

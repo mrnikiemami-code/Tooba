@@ -9,6 +9,7 @@ using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Tooba.ProductWorkspace.Application.Composition.Models;
 using Tooba.Tax.Contracts;
 
@@ -206,3 +207,4 @@ public sealed class GetProductWorkspaceHandler(
     private static ProductHistoryItem MapHistory(CatalogAdminHistoryItem x) =>
         new(x.Kind, x.Summary, x.At, x.Actor, x.Section, x.BeforeSummary, x.AfterSummary, x.HistoryId);
 }
+

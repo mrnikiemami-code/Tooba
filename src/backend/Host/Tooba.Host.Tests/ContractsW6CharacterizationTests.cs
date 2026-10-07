@@ -1,4 +1,4 @@
-﻿using Tooba.Offer.Contracts.ReturnPolicy;
+using Tooba.Offer.Contracts.ReturnPolicy;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
@@ -11,6 +11,8 @@ using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Domain;
+using Tooba.Pricing.Contracts.Dtos;
+using Tooba.Pricing.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -41,7 +43,10 @@ public sealed class ContractsW6CharacterizationTests
     [Fact]
     public void Campaign_cart_price_authority_and_currency_are_pricing_contracts_owned()
     {
-        Assert.Equal("Tooba.Pricing.Contracts", typeof(ICampaignCartPriceAuthority).Namespace);
+        // TB-TMAR-PRICING-AMSC-001-W2: the W2 structure wave made every Pricing Contracts namespace
+        // path-derived, so the cart price authority boundary now declares Tooba.Pricing.Contracts.Ports
+        // while still being owned by the Tooba.Pricing.Contracts assembly.
+        Assert.Equal("Tooba.Pricing.Contracts.Ports", typeof(ICampaignCartPriceAuthority).Namespace);
         Assert.Equal("Tooba.Pricing.Contracts", typeof(CurrencyCode).Assembly.GetName().Name);
         Assert.Equal("IRR", CurrencyCode.Parse("irr").Value);
     }
@@ -68,3 +73,4 @@ public sealed class ContractsW6CharacterizationTests
         throw new InvalidOperationException("Repository root not found.");
     }
 }
+

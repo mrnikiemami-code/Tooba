@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
+using Tooba.Pricing.Domain.Aggregates;
 using Tooba.Pricing.Infrastructure.Persistence.Configurations;
 
 namespace Tooba.Pricing.Infrastructure.Persistence;
@@ -60,3 +61,4 @@ public sealed class PricingDbContextFactory : IDesignTimeDbContextFactory<Pricin
         return new PricingDbContext(options.Options);
     }
 }
+

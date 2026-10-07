@@ -1,4 +1,4 @@
-﻿using Tooba.Offer.Contracts.ReturnPolicy;
+using Tooba.Offer.Contracts.ReturnPolicy;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
@@ -24,6 +24,7 @@ using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Domain.ValueObjects;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Xunit;
 using ContractChannel = Tooba.Offer.Contracts.Dtos.SalesChannel;
 using ContractStatus = Tooba.Offer.Contracts.Dtos.OfferStatus;
@@ -169,3 +170,4 @@ public sealed class OfferHandlerTests
     private sealed class FixedIds(Guid id) : IIdGenerator
     { public Guid NewId() => id; }
 }
+

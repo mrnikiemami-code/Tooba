@@ -3,8 +3,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Pricing.Endpoints.Errors;
-using Tooba.Pricing.Endpoints.Resources;
+using Tooba.Pricing.Contracts.Errors;
 
 namespace Tooba.Pricing.Endpoints;
 

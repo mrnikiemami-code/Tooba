@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Pricing.Contracts.Errors;
 
-namespace Tooba.Pricing.Domain;
+namespace Tooba.Pricing.Domain.ValueObjects;
 
 /// <summary>
 /// ISO currency owned by the Pricing domain. Display units such as toman are rejected.

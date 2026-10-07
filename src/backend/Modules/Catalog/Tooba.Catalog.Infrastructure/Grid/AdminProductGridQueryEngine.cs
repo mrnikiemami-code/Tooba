@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -9,6 +9,7 @@ using Tooba.Inventory.Contracts.Orders;
 using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Persistence.Grid;
@@ -785,3 +786,4 @@ internal sealed class AdminProductGridQueryEngine
         return min == max ? $"{min:0} {currency}".Trim() : $"{min:0}–{max:0} {currency}".Trim();
     }
 }
+

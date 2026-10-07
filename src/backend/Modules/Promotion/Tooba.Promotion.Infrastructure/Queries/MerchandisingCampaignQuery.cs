@@ -1,4 +1,4 @@
-﻿using Tooba.Promotion.Domain.Merchandising;
+using Tooba.Promotion.Domain.Merchandising;
 using Tooba.Promotion.Contracts.Merchandising;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
@@ -11,6 +11,7 @@ using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Domain.Aggregates;
@@ -376,3 +377,4 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
         return (hit.Title, hit.Subtitle, hit.BadgeText);
     }
 }
+

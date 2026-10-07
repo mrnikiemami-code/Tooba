@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Pricing.Contracts.Errors;
 
-namespace Tooba.Pricing.Domain;
+namespace Tooba.Pricing.Domain.Aggregates;
 
 /// <summary>
 /// قیمت نوشته‌شده برای یک Offer در بازار و کانال و ارز. موجودی و مالیات محاسبه‌شده اینجا نیست.

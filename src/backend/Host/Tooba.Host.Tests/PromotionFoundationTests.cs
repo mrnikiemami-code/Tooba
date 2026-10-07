@@ -1,4 +1,4 @@
-﻿using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Directories;
@@ -10,6 +10,7 @@ using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
+using Tooba.Pricing.Domain.Aggregates;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
@@ -209,3 +210,4 @@ public sealed class PromotionFoundationTests : IAsyncLifetime
         throw new InvalidOperationException("Repository root not found.");
     }
 }
+

@@ -7,6 +7,7 @@ using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Tooba.ProductWorkspace.Application.Composition.Models;
 using Tooba.ProductWorkspace.Application.Composition.Queries;
 using Tooba.Tax.Contracts;
@@ -362,3 +363,4 @@ public sealed class ProductWorkspaceAggregateGetW19Tests
             Task.FromResult<IReadOnlyList<Guid>>([]);
     }
 }
+

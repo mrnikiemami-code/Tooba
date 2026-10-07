@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
@@ -25,9 +25,16 @@ using Tooba.Persistence;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Domain;
+using Tooba.Pricing.Contracts.Dtos;
+using Tooba.Pricing.Contracts.Ports;
+using Tooba.Pricing.Domain.Aggregates;
+using Tooba.Pricing.Domain.Enums;
+using Tooba.Pricing.Domain.ValueObjects;
 using Tooba.Pricing.Infrastructure;
 using Tooba.Pricing.Infrastructure.Events;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Pricing.Infrastructure.Adapters;
+using Tooba.Pricing.Infrastructure.Outbox;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -90,7 +97,6 @@ public sealed class PricingFoundationTests : IAsyncLifetime
         Assert.ThrowsAny<Exception>(() => CurrencyCode.Parse("TOMAN"));
         Assert.ThrowsAny<Exception>(() => CurrencyCode.Parse("fa-IR"));
     }
-
     [Fact]
     public void Pricing_projects_do_not_reference_masstransit_authzed_or_foreign_infrastructure()
     {
@@ -115,7 +121,7 @@ public sealed class PricingFoundationTests : IAsyncLifetime
         Assert.Equal("pricing", PricingDbContext.Schema);
         Assert.DoesNotContain("MassTransit", typeof(AuthoredPrice).Assembly.GetReferencedAssemblies().Select(a => a.Name));
         Assert.DoesNotContain("MassTransit", typeof(IPriceDirectory).Assembly.GetReferencedAssemblies().Select(a => a.Name));
-        Assert.Equal(typeof(SalesChannel), typeof(AuthoredPrice).GetProperty("Channel")!.PropertyType);
+        Assert.Equal(typeof(PriceChannel), typeof(AuthoredPrice).GetProperty("Channel")!.PropertyType);
     }
 
     [SkippableFact]
@@ -318,3 +324,5 @@ public sealed class PricingFoundationTests : IAsyncLifetime
         throw new InvalidOperationException("Repository root not found.");
     }
 }
+
+

@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Pricing.Contracts.Errors;
 
-namespace Tooba.Pricing.Domain;
+namespace Tooba.Pricing.Domain.ValueObjects;
 
 /// <summary>
 /// مبلغ نوشته‌شده با ارز صریح. ممیز شناور نیست و مالیات داخل مبلغ نیست.

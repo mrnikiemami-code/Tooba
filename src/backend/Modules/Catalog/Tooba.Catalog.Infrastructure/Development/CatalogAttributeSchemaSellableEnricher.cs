@@ -8,6 +8,7 @@ using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Tax.Contracts;
 
@@ -142,3 +143,4 @@ public sealed class CatalogAttributeSchemaSellableEnricher(
         }
     }
 }
+

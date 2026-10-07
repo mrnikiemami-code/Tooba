@@ -39,9 +39,11 @@ using Tooba.Party.Application.Models;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
+using Tooba.Pricing.Domain.Enums;
 using Tooba.Pricing.Infrastructure;
 using Tooba.Pricing.Infrastructure.Adapters;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Pricing.Infrastructure.Outbox;
 using Tooba.Tax.Infrastructure;
 using Tooba.Tax.Infrastructure.Adapters;
 using Tooba.Tax.Infrastructure.Persistence;
@@ -360,3 +362,5 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
         return new OutboxSaveChangesInterceptor(commerce, modules, new JsonIntegrationEventSerializer(modules));
     }
 }
+
+

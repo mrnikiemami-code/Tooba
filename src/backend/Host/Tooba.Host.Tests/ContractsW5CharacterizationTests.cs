@@ -1,5 +1,6 @@
 using Tooba.Offer.Domain;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -30,7 +31,10 @@ public sealed class ContractsW5CharacterizationTests
     [Fact]
     public void Price_lookup_gateway_is_pricing_contracts_owned()
     {
-        Assert.Equal("Tooba.Pricing.Contracts", typeof(IPriceLookupGateway).Namespace);
+        // TB-TMAR-PRICING-AMSC-001-W2: the W2 structure wave made every Pricing Contracts namespace
+        // path-derived, so the price-lookup boundary now declares Tooba.Pricing.Contracts.Ports while
+        // still being owned by the Tooba.Pricing.Contracts assembly.
+        Assert.Equal("Tooba.Pricing.Contracts.Ports", typeof(IPriceLookupGateway).Namespace);
         Assert.Equal("Tooba.Pricing.Contracts", typeof(PriceQuote).Assembly.GetName().Name);
         var quote = new PriceQuote(Guid.NewGuid(), Guid.NewGuid(), "IR", SalesChannel.Marketplace, 100m, "IRR", true, true);
         Assert.Equal(100m, quote.Amount);
@@ -50,3 +54,4 @@ public sealed class ContractsW5CharacterizationTests
         throw new InvalidOperationException("Repository root not found.");
     }
 }
+

@@ -5,12 +5,14 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Pricing.Application.Ports;
-using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
+using Tooba.Pricing.Contracts.Seller;
 using Tooba.Pricing.Infrastructure.Adapters;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Pricing.Infrastructure.Outbox;
 using Tooba.Persistence;
 
-namespace Tooba.Pricing.Infrastructure;
+namespace Tooba.Pricing.Infrastructure.DependencyInjection;
 
 /// <summary>
 /// ماژول Pricing: حقیقت مبلغ نوشته‌شده برای Offer. Product و Offer مبلغ ندارند؛ مالیات و FX اینجا محاسبه نمی‌شوند.

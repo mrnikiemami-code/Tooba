@@ -8,6 +8,8 @@ using Tooba.Offer.Domain.Aggregates;
 using Tooba.Order.Domain;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
+using Tooba.Pricing.Domain.Aggregates;
+using Tooba.Pricing.Domain.ValueObjects;
 using Tooba.Tax.Application;
 using Tooba.Tax.Contracts;
 using Tooba.Tax.Domain;
@@ -187,3 +189,4 @@ public sealed class TaxFoundationTests : IAsyncLifetime
         throw new InvalidOperationException("Repository root not found.");
     }
 }
+

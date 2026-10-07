@@ -4,8 +4,11 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Application.Ports;
-using Tooba.Pricing.Contracts;
-using Tooba.Pricing.Domain;
+using Tooba.Pricing.Contracts.Dtos;
+using Tooba.Pricing.Contracts.Ports;
+using Tooba.Pricing.Domain.Aggregates;
+using Tooba.Pricing.Domain.Enums;
+using Tooba.Pricing.Domain.ValueObjects;
 using Tooba.Pricing.Infrastructure.Persistence;
 using OfferChannel = Tooba.Offer.Contracts.Dtos.SalesChannel;
 

@@ -108,7 +108,7 @@ namespace Tooba.Pricing.Infrastructure.Persistence.Migrations
                     b.ToTable("outbox_messages", "pricing");
                 });
 
-            modelBuilder.Entity("Tooba.Pricing.Domain.AuthoredPrice", b =>
+            modelBuilder.Entity("Tooba.Pricing.Domain.Aggregates.AuthoredPrice", b =>
                 {
                     b.Property<Guid>("PriceId")
                         .HasColumnType("uuid")

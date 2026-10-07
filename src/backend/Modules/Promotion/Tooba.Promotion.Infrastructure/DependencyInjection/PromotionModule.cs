@@ -1,4 +1,5 @@
 ﻿using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Queries;
@@ -44,7 +45,7 @@ public sealed class PromotionModule : IToobaModule
         services.AddScoped<IMerchandisingCampaignDirectory, MerchandisingCampaignDirectory>();
         services.AddScoped<IMerchandisingCampaignQuery, MerchandisingCampaignQuery>();
         services.AddScoped<IMerchandisingCampaignAdminComposer, MerchandisingCampaignAdminComposer>();
-        services.AddScoped<Tooba.Pricing.Contracts.ICampaignCartPriceAuthority, CampaignCartPriceAuthority>();
+        services.AddScoped<ICampaignCartPriceAuthority, CampaignCartPriceAuthority>();
         services.AddScoped<IPromotionSchemaMigrator, Adapters.PromotionSchemaMigrator>();
         services.AddModuleSchemaMigrator("Promotion", ModuleSchemaMigrationOrder.Promotion, (sp, ct) => sp.GetRequiredService<IPromotionSchemaMigrator>().MigrateAsync(ct));
         services.AddModuleSchemaMigrationStep(

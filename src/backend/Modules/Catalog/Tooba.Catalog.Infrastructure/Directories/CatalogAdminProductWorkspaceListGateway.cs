@@ -8,6 +8,7 @@ using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 
 namespace Tooba.Catalog.Infrastructure.Directories;
 
@@ -149,3 +150,4 @@ public sealed class CatalogAdminProductWorkspaceListGateway(
                 g => g.OrderBy(x => x.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1).First().Value);
     }
 }
+

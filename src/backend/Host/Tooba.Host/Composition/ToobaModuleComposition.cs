@@ -4,7 +4,7 @@ using Tooba.ModuleContracts;
 using Tooba.Offer.Infrastructure;
 using Tooba.Offer.Infrastructure.DependencyInjection;
 using Tooba.Party.Infrastructure;
-using Tooba.Pricing.Infrastructure;
+using Tooba.Pricing.Infrastructure.DependencyInjection;
 using Tooba.Inventory.Infrastructure.DependencyInjection;
 using Tooba.Cart.Infrastructure.DependencyInjection;
 using Tooba.Order.Infrastructure;

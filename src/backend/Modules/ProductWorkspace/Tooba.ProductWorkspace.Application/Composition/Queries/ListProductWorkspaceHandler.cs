@@ -5,6 +5,7 @@ using Tooba.Catalog.Contracts.Ports;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Tooba.ProductWorkspace.Application.Composition.Models;
 
 namespace Tooba.ProductWorkspace.Application.Composition.Queries;
@@ -28,3 +29,4 @@ public sealed class ListProductWorkspaceHandler(
         return Result.Success(items);
     }
 }
+

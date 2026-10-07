@@ -1,4 +1,4 @@
-﻿using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
@@ -51,6 +51,8 @@ using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Infrastructure;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Pricing.Infrastructure.Adapters;
+using Tooba.Pricing.Infrastructure.Outbox;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -267,3 +269,4 @@ public sealed class CartExpiryPostgresTests : IAsyncLifetime
 
     private sealed record CartExpiryStack(CartDbContext CartDb, ICartDirectory Carts, Guid OfferId);
 }
+

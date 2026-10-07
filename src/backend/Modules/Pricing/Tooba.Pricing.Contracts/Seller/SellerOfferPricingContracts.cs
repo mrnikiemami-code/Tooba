@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks.Results;
 
-namespace Tooba.Pricing.Contracts;
+namespace Tooba.Pricing.Contracts.Seller;
 
 /// <summary>Pricing-owned seller price write request.</summary>
 public sealed record SetSellerOfferPrice(

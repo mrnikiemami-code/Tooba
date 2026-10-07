@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Pricing.Contracts.Errors;
 
-namespace Tooba.Pricing.Domain;
+namespace Tooba.Pricing.Domain.Enums;
 
 /// <summary>
 /// وضعیت رکورد قیمت نوشته‌شده. موجودی، انتشار Catalog، و نرخ FX را نشان نمی‌دهد.

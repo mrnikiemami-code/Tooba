@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Pricing.Contracts.Errors;
 
-namespace Tooba.Pricing.Endpoints.Errors;
+namespace Tooba.Pricing.Contracts.Errors;
 
 /// <summary>Explicit Pricing error catalog for HTTP-reachable seller and campaign price writes.</summary>
 public sealed class PricingErrorCatalogContributor : IErrorCatalogContributor

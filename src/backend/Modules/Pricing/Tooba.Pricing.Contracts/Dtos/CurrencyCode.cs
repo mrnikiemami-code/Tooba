@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Pricing.Contracts.Errors;
 
-namespace Tooba.Pricing.Contracts;
+namespace Tooba.Pricing.Contracts.Dtos;
 
 /// <summary>
 /// کد ارز ISO. از Locale یا Market حدس زده نمی‌شود و تومان نمایشی با ریال مخلوط نمی‌شود.

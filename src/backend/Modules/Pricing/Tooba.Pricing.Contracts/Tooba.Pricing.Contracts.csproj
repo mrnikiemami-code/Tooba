@@ -7,6 +7,14 @@
     <AssemblyName>Tooba.Pricing.Contracts</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Update="Resources\PricingErrors.resx">
+      <LogicalName>Tooba.Pricing.Contracts.Resources.PricingErrors.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\PricingErrors.fa.resx">
+      <LogicalName>Tooba.Pricing.Contracts.Resources.PricingErrors.fa.resources</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />
   </ItemGroup>

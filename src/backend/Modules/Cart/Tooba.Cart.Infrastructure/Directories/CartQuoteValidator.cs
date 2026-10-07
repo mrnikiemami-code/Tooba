@@ -7,6 +7,7 @@ using Tooba.Catalog.Contracts.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 
 namespace Tooba.Cart.Infrastructure.Directories;
 
@@ -101,3 +102,4 @@ internal sealed class CartQuoteValidator(
         return (offer, quote, quantity, null);
     }
 }
+

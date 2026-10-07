@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Xunit;
-using Tooba.Pricing.Domain;
+using Tooba.Pricing.Domain.Aggregates;
 using Tooba.Pricing.Infrastructure.Persistence;
 
 namespace Tooba.Pricing.Tests.Infrastructure;

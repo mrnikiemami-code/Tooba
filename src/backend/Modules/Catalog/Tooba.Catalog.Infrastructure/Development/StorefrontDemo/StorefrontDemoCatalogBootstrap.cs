@@ -8,6 +8,7 @@ using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Tooba.Tax.Contracts;
 
 namespace Tooba.Catalog.Infrastructure.Development.StorefrontDemo;
@@ -613,3 +614,4 @@ public static class StorefrontDemoCatalogBootstrap
         }
     }
 }
+

@@ -1,10 +1,11 @@
-﻿using Tooba.Offer.Application.Validation;
+using Tooba.Offer.Application.Validation;
 using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Application.Offers.ReadModels;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Seller;
 
 namespace Tooba.Offer.Application.Offers.Commands.SetOfferPrice;
 
@@ -42,3 +43,4 @@ internal sealed class SetOfferPriceCommandHandler(
         return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
     }
 }
+

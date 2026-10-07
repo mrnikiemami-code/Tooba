@@ -1,4 +1,4 @@
-namespace Tooba.Pricing.Domain;
+namespace Tooba.Pricing.Domain.Enums;
 
 /// <summary>
 /// Sales channel stored with an authored price. Names match Offer channel labels so existing rows stay valid.

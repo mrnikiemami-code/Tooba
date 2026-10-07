@@ -1,6 +1,10 @@
 using Xunit;
 using Tooba.BuildingBlocks;
 using Tooba.Pricing.Domain;
+using Tooba.Pricing.Domain.Aggregates;
+using Tooba.Pricing.Domain.Enums;
+using Tooba.Pricing.Domain.Events;
+using Tooba.Pricing.Domain.ValueObjects;
 
 namespace Tooba.Pricing.Tests.Domain;
 
@@ -37,3 +41,4 @@ public sealed class AuthoredPriceInvariantTests
         Assert.Throws<SemanticException>(() => MarketCode.Parse(" "));
     }
 }
+

@@ -1,4 +1,4 @@
-﻿using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Directories;
@@ -15,6 +15,8 @@ using Tooba.Offer.Domain;
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
+using Tooba.Pricing.Domain.Aggregates;
+using Tooba.Pricing.Domain.Enums;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
@@ -330,3 +332,4 @@ public sealed class MerchandisingCampaignFoundationTests : IAsyncLifetime
         throw new InvalidOperationException("Repository root not found.");
     }
 }
+

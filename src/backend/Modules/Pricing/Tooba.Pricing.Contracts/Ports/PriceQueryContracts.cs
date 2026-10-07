@@ -1,6 +1,6 @@
 using Tooba.Offer.Contracts.Dtos;
 
-namespace Tooba.Pricing.Contracts;
+namespace Tooba.Pricing.Contracts.Ports;
 
 /// <summary>One authored amount used by admin grids. Not a resolved quote.</summary>
 public sealed record OfferAmountRow(Guid OfferId, decimal Amount);

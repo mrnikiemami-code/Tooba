@@ -7,11 +7,17 @@ using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Pricing.Application.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
+using Tooba.Pricing.Contracts.Seller;
+using Tooba.Pricing.Contracts.Dtos;
 using Tooba.Pricing.Contracts.Errors;
-using Tooba.Pricing.Domain;
+using Tooba.Pricing.Domain.Aggregates;
+using Tooba.Pricing.Domain.Enums;
+using Tooba.Pricing.Domain.Events;
+using Tooba.Pricing.Domain.ValueObjects;
 using Tooba.Pricing.Infrastructure.Persistence;
 
-namespace Tooba.Pricing.Infrastructure;
+namespace Tooba.Pricing.Infrastructure.Adapters;
 
 /// <summary>Open use-case guard. Pricing admin matrix is not implemented here.</summary>
 public sealed class OpenPricingUseCaseGuard : IPricingUseCaseGuard
@@ -475,3 +481,4 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
     private static SalesChannel ToSalesChannel(PriceChannel channel) =>
         Enum.Parse<SalesChannel>(channel.ToString());
 }
+

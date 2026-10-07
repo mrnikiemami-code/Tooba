@@ -9,6 +9,7 @@ using Tooba.Inventory.Contracts.Orders;
 using Tooba.Inventory.Contracts.Seller;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 
 namespace Tooba.Offer.Infrastructure.Adapters.Tracing;
 
@@ -72,3 +73,4 @@ public static class OfferModuleCallTracingRegistration
         throw new InvalidOperationException($"Cannot decorate {typeof(TService).Name}: unsupported descriptor.");
     }
 }
+

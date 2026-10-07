@@ -94,9 +94,10 @@ public sealed class PricingArchitectureGuardTests
         Assert.Contains("IModuleCallTracer", directory, StringComparison.Ordinal);
         Assert.Contains("IOfferLookupGateway", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("OfferDbContext", directory, StringComparison.Ordinal);
-        Assert.True(File.Exists(Path.Combine(PricingRoot(), "Tooba.Pricing.Endpoints", "Errors", "PricingErrorCatalogContributor.cs")));
-        Assert.True(File.Exists(Path.Combine(PricingRoot(), "Tooba.Pricing.Endpoints", "Resources", "PricingErrors.resx")));
-        Assert.True(File.Exists(Path.Combine(PricingRoot(), "Tooba.Pricing.Endpoints", "Resources", "PricingErrors.fa.resx")));
+        Assert.True(File.Exists(Path.Combine(PricingRoot(), "Tooba.Pricing.Contracts", "Errors", "PricingErrorCatalogContributor.cs")));
+        Assert.True(File.Exists(Path.Combine(PricingRoot(), "Tooba.Pricing.Contracts", "Errors", "PricingErrorResourceSet.cs")));
+        Assert.True(File.Exists(Path.Combine(PricingRoot(), "Tooba.Pricing.Contracts", "Resources", "PricingErrors.resx")));
+        Assert.True(File.Exists(Path.Combine(PricingRoot(), "Tooba.Pricing.Contracts", "Resources", "PricingErrors.fa.resx")));
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         var hostHits = Directory.EnumerateFiles(hostRoot, "*.cs", SearchOption.AllDirectories)
             .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
@@ -119,7 +120,7 @@ public sealed class PricingArchitectureGuardTests
     public void Seller_price_write_uses_result_not_expected_semantic_exception_control_flow()
     {
         var contracts = File.ReadAllText(Path.Combine(
-            PricingRoot(), "Tooba.Pricing.Contracts", "SellerOfferPricingContracts.cs"));
+            PricingRoot(), "Tooba.Pricing.Contracts", "Seller", "SellerOfferPricingContracts.cs"));
         Assert.Contains("Task<Result> SetPriceAsync", contracts, StringComparison.Ordinal);
 
         var directory = File.ReadAllText(Path.Combine(

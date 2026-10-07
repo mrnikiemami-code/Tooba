@@ -1,4 +1,4 @@
-﻿using Tooba.Offer.Contracts.ReturnPolicy;
+using Tooba.Offer.Contracts.ReturnPolicy;
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
@@ -22,6 +22,7 @@ using Tooba.Offer.Domain.Aggregates;
 using Tooba.Offer.Infrastructure.Adapters;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Xunit;
 using DomainChannel = Tooba.Offer.Domain.ValueObjects.SalesChannel;
 
@@ -232,3 +233,4 @@ public sealed class OfferTraceTopologyTests
             => Task.FromResult<IReadOnlyList<SellerOffer>>(_offers.Where(x => x.SellerPartyId == sellerPartyId).ToList());
     }
 }
+

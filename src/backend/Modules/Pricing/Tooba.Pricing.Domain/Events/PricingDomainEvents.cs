@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Pricing.Contracts.Errors;
 
-namespace Tooba.Pricing.Domain;
+namespace Tooba.Pricing.Domain.Events;
 
 /// <summary>
 /// رویداد ایجاد قیمت نوشته‌شده.

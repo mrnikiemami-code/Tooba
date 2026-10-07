@@ -3,6 +3,7 @@ using Tooba.Cart.Contracts.Errors;
 using Tooba.Cart.Domain.Aggregates;
 using Tooba.Cart.Domain.Entities;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Dtos;
 
 namespace Tooba.Cart.Infrastructure.Directories;
 
@@ -36,3 +37,4 @@ internal static class CartLineCurrency
         return line.QuotedCurrency;
     }
 }
+

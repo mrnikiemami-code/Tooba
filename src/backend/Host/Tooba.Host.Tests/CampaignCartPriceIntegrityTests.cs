@@ -1,4 +1,4 @@
-﻿using Tooba.Promotion.Infrastructure.Queries;
+using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
 using Tooba.Promotion.Infrastructure.Directories;
@@ -42,8 +42,11 @@ using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Tooba.Pricing.Infrastructure;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Pricing.Infrastructure.Adapters;
+using Tooba.Pricing.Infrastructure.Outbox;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
@@ -419,3 +422,5 @@ public sealed class CampaignCartPriceIntegrityTests : IAsyncLifetime
         return new CartDbContext(options.Options);
     }
 }
+
+

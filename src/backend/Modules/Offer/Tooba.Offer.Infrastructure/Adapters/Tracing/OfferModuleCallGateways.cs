@@ -10,6 +10,7 @@ using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 
 namespace Tooba.Offer.Infrastructure.Adapters.Tracing;
 
@@ -301,3 +302,4 @@ internal sealed class TracedSellerOfferInventoryGateway(ISellerOfferInventoryGat
         }
     }
 }
+

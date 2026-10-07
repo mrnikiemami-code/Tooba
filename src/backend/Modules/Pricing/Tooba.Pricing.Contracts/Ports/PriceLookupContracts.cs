@@ -1,6 +1,6 @@
 using Tooba.Offer.Contracts.Dtos;
 
-namespace Tooba.Pricing.Contracts;
+namespace Tooba.Pricing.Contracts.Ports;
 
 /// <summary>
 /// نتیجهٔ انتخاب قیمت پایه. مالیات محاسبه‌شده و نرخ FX نیست و قابل‌خرید بودن را تضمین نمی‌کند.

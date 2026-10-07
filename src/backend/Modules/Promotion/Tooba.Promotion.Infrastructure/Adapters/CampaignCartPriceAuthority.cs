@@ -1,8 +1,9 @@
-﻿using Tooba.Promotion.Contracts.Merchandising;
+using Tooba.Promotion.Contracts.Merchandising;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts.Ports;
 using Tooba.Promotion.Domain.Aggregates;
 using Tooba.Promotion.Domain.ValueObjects;
 using Tooba.Promotion.Domain.Events;
@@ -100,3 +101,4 @@ public sealed class CampaignCartPriceAuthority : ICampaignCartPriceAuthority
         return Guid.TryParse(tenantId, out var parsed) && parsed != Guid.Empty ? parsed : null;
     }
 }
+

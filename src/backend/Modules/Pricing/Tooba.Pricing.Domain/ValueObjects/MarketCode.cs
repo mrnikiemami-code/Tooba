@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Pricing.Contracts.Errors;
 
-namespace Tooba.Pricing.Domain;
+namespace Tooba.Pricing.Domain.ValueObjects;
 
 /// <summary>
 /// هویت بازار تجاری. زبان UI نیست و لزوماً یک ارز یکتا ندارد.
