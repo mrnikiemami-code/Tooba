@@ -236,13 +236,13 @@ public sealed class PricingModuleAmsc001W2StructureGuardTests
         var root = Repo();
         using var manifest = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, ManifestPath)).Replace("\uFEFF", string.Empty));
-        var module = manifest.RootElement.GetProperty("preCertModules").EnumerateArray()
+        // Promoted by TB-TMAR-PRICING-AMSC-001-W3 from preCertModules to the certified modules
+        // array (structureCertified true). The structural allowlists asserted below are unchanged.
+        var module = manifest.RootElement.GetProperty("modules").EnumerateArray()
             .Single(m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
-
-        // W2 prepares for certification and must not self-issue the W3 verdict.
-        Assert.False(module.GetProperty("structureCertified").GetBoolean());
+        Assert.True(module.GetProperty("structureCertified").GetBoolean());
         Assert.DoesNotContain(
-            manifest.RootElement.GetProperty("modules").EnumerateArray(),
+            manifest.RootElement.GetProperty("preCertModules").EnumerateArray(),
             m => string.Equals(m.GetProperty("module").GetString(), "Pricing", StringComparison.Ordinal));
 
         foreach (var project in module.GetProperty("projects").EnumerateArray())

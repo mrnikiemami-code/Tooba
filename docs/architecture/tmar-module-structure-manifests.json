@@ -1783,76 +1783,12 @@
           "forbiddenTopLevelFolders": []
         }
       ]
-    }
-  ],
-  "uncertifiedHttpOwningModules": [
-    "Returns",
-    "Support",
-    "Wallet",
-    "Promotion"
-  ],
-  "preCertModules": [
-    {
-      "module": "ProductWorkspace",
-      "structureCertified": false,
-      "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "W19: aggregate GET owned by ProductWorkspace (Contracts composition). NOT_CERTIFIED for ARCH-COMPLETE-002. Host retains 18 ProductWorkspace routes. Do not promote to structureLock.certifiedModules until ARCH-COMPLETE-002.",
-      "projects": [
-        {
-          "projectName": "Tooba.ProductWorkspace.Contracts",
-          "rootAllowlist": [
-            "ProductWorkspaceContractsMarker.cs"
-          ],
-          "rootAllowlistJustification": "Contracts marker retained; Errors deferred until broader module certification.",
-          "forbiddenRootFiles": [
-            "ProductWorkspaceContracts.cs"
-          ],
-          "forbiddenTopLevelFolders": []
-        },
-        {
-          "projectName": "Tooba.ProductWorkspace.Domain",
-          "rootAllowlist": [],
-          "rootAllowlistJustification": "Empty-but-valid Domain assembly; no invented domain types.",
-          "forbiddenRootFiles": [],
-          "forbiddenTopLevelFolders": []
-        },
-        {
-          "projectName": "Tooba.ProductWorkspace.Application",
-          "rootAllowlist": [],
-          "rootAllowlistJustification": "Composition/{Models,Queries} owns aggregate GET; Validators/Ports reserved; no root .cs.",
-          "forbiddenRootFiles": [
-            "ProductWorkspaceContracts.cs"
-          ],
-          "forbiddenTopLevelFolders": [
-            "Commands",
-            "Queries",
-            "Models",
-            "Ports"
-          ]
-        },
-        {
-          "projectName": "Tooba.ProductWorkspace.Endpoints",
-          "rootAllowlist": [
-            "ProductWorkspaceEndpointModule.cs"
-          ],
-          "forbiddenRootFiles": [],
-          "forbiddenTopLevelFolders": []
-        },
-        {
-          "projectName": "Tooba.ProductWorkspace.Infrastructure",
-          "rootAllowlist": [
-            "ProductWorkspaceModule.cs"
-          ],
-          "forbiddenRootFiles": [],
-          "forbiddenTopLevelFolders": []
-        }
-      ]
     },
     {
       "module": "Pricing",
-      "structureCertified": false,
+      "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "TB-TMAR-PRICING-AMSC-001-W2 (tooba-architecture-structure) PRE-CERT ENTRY, structureCertified false: the W2 structure wave normalized Pricing to capability-first shallow trees, exact path<->namespace, an ENFORCED root allowlist per project and a single authoritative Contracts localization home. Pricing owns zero HTTP routes (MapPricingModule maps the empty /v1/pricing group) and zero endpoint-reachable requests, so its Endpoints root holds the composition entry only and no CQRS/request tree may exist. Promotion is NOT claimed here: W3 Certify owns the verdict, the manifest promotion into the certified modules array and the structureLock.certifiedModules membership.",
+      "certificationNote": "TB-TMAR-PRICING-AMSC-001-W3 (tooba-architecture-certify) CERTIFIED under ARCH-COMPLETE-002: Pricing is an internal capability provider that owns zero HTTP routes (MapPricingModule maps the deliberately empty /v1/pricing group) and zero endpoint-reachable requests, so it is certified as NOT_HTTP_OWNING_INTERNAL_CAPABILITY_PROVIDER rather than through the CQRS/validator matrix. Certified evidence: capability-first shallow trees, exact path<->namespace for all five production projects, ENFORCED per-project root allowlist, a single authoritative Contracts code+text boundary (Contracts/Errors + Contracts/Resources, one declared-code guard, one catalog contributor, one resource set), zero foreign Application/Infrastructure/Domain/Endpoints coupling and Contracts-only inbound/outbound edges. AMSC lineage: W0 Analyze 08d47b6a -> W1 Migrate 069f77d2 -> W2 Structure f7f6abfe -> W3 Certify. Pricing owns no module HTTP route, so it is correctly absent from uncertifiedHttpOwningModules.",
       "projects": [
         {
           "projectName": "Tooba.Pricing.Contracts",
@@ -1947,6 +1883,70 @@
             "Errors",
             "Resources"
           ]
+        }
+      ]
+    }
+  ],
+  "uncertifiedHttpOwningModules": [
+    "Returns",
+    "Support",
+    "Wallet",
+    "Promotion"
+  ],
+  "preCertModules": [
+    {
+      "module": "ProductWorkspace",
+      "structureCertified": false,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "W19: aggregate GET owned by ProductWorkspace (Contracts composition). NOT_CERTIFIED for ARCH-COMPLETE-002. Host retains 18 ProductWorkspace routes. Do not promote to structureLock.certifiedModules until ARCH-COMPLETE-002.",
+      "projects": [
+        {
+          "projectName": "Tooba.ProductWorkspace.Contracts",
+          "rootAllowlist": [
+            "ProductWorkspaceContractsMarker.cs"
+          ],
+          "rootAllowlistJustification": "Contracts marker retained; Errors deferred until broader module certification.",
+          "forbiddenRootFiles": [
+            "ProductWorkspaceContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.ProductWorkspace.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Empty-but-valid Domain assembly; no invented domain types.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.ProductWorkspace.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Composition/{Models,Queries} owns aggregate GET; Validators/Ports reserved; no root .cs.",
+          "forbiddenRootFiles": [
+            "ProductWorkspaceContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Models",
+            "Ports"
+          ]
+        },
+        {
+          "projectName": "Tooba.ProductWorkspace.Endpoints",
+          "rootAllowlist": [
+            "ProductWorkspaceEndpointModule.cs"
+          ],
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.ProductWorkspace.Infrastructure",
+          "rootAllowlist": [
+            "ProductWorkspaceModule.cs"
+          ],
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
         }
       ]
     }
