@@ -988,7 +988,7 @@
       "w0": "2477bbb3",
       "w1": "29012df0",
       "w2": "ffff7100",
-      "w3": "PENDING_THIS_COMMIT"
+      "w3": "d1cc2f48"
     },
     "priorAmc001CertificationState": "ACCEPTED_BASELINE_PRESERVED_NOT_REWRITTEN",
     "durableGuards": [
