@@ -1,0 +1,49 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-PRICING-AMSC-001-W3-R3
+Parent-Task: TB-TMAR-PRICING-AMSC-001-W3-R2
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Fresh independent Certify wave (tooba-architecture-certify) over the repaired 5-project INTERNAL_ONLY Pricing surface at starting head 7159c8f7. Precheck confirmed branch main and HEAD == origin/main == 7159c8f773c1faa9b4b6d425b19067f50ca27572; no truth divergence, so no CERTIFICATION_BLOCKED. Every Certify axis was independently re-enumerated from disk by certify-audit.cjs (audit-after.json) and is durably re-asserted by the new PricingModuleAmsc001W3R3CertGuardTests (8 tests): INTERNAL_ONLY applicability with zero module-owned and zero Host-owned Pricing routes and zero endpoint-reachable requests; Tooba.Pricing.Endpoints project/namespace/directory ABSENT; no MapPricingModule, no AddPricingEndpointPresentation, no /v1/pricing group, no Host Pricing.Endpoints ProjectReference; exactly 5 project directories and exactly 5 /Modules/Pricing/ .slnx entries; PROFESSIONAL_SHALLOW folders with zero path<->namespace mismatch across the 4 production projects; root allowlists ENFORCED and forbidden root files/folders absent; CLEAN physical copies; single stable-code home Tooba.Pricing.Contracts.Errors.PricingErrorCodes with 11 declared codes + KnownCodes + IsKnown; one PricingErrorCatalogContributor with exactly 11 descriptor factories; one PricingErrorResourceSet with 11 EN and 11 FA keys and identical key sets; registration exactly once in PricingModule.AddServices (Infrastructure/DependencyInjection) for both IErrorCatalogContributor and IErrorResourceSet with both concrete types staying Contracts-owned; PricingOperation dual typed-fault seam (ContractOperationException filtered by PricingErrorCodes.IsKnown + SemanticException) with zero ex.Message classification anywhere in production; Contracts-only boundary in both directions with foreign App/Infra/Domain coupling ZERO and the Promotion -> Pricing.Application edge still absent while Promotion -> Pricing.Contracts remains the single legal inbound seam; no cross-module join; own pricing schema, own PricingDbContext, own schema migrator, own outbox and the unchanged 20260823085546_InitialPricing migration set; Host business/persistence/HTTP authority ZERO with the HOST_ROOT_FINAL_CERTIFIED checkpoint and lastAcceptedTask TB-TMAR-HOST-ROOT-FINAL-CERT-001 preserved; CQRS/validators correctly NOT_APPLICABLE_INTERNAL_ONLY with no invented MediatR/IRequest/Validators ceremony. Only after all checks passed was Pricing promoted honestly: moved from preCertModules into the certified modules array (structureCertified true, lockVersion ARCH-COMPLETE-002, structureAuthorityTask TB-TMAR-PRICING-AMSC-001-W3-R2, structureAuthorityCommit 7159c8f7..., exactly 5 project entries, no Endpoints entry, refreshed W3-R3 certification note) so the certified module count is 25 -> 26 and preCertModules holds only ProductWorkspace, and "Pricing" re-added exactly once to structureLock.certifiedModules (24 -> 25, alphabetical position after Payment); the Pricing entry's structural allowlists/forbidden lists were byte-preserved. New additive pricingAmsc001W3R3 SoT block records state PRICING_AMSC_001_RECERTIFIED, verdict COMPLETE_REFERENCE_PATTERN, lockVersion ARCH-COMPLETE-002, structureCertified true, currentStructureAuthority/Commit = W3-R2 @ 7159c8f7, supersededCertificationTask/Commit = W3 @ 3c2cc61e, httpApplicability NOT_HTTP_OWNING_INTERNAL_CAPABILITY_PROVIDER, endpointProjectState ABSENT, moduleOwnedRouteCount 0, hostOwnedRouteCount 0, endpointReachableRequests 0, cqrsState/validatorCoverageState NOT_APPLICABLE_INTERNAL_ONLY, solutionProjectCount 5, presentationRegistrationState INFRASTRUCTURE_MODULE_EXACTLY_ONCE, declaredCodeCount/registeredDescriptorCount 11/11, resourceKeyCountEn/Fa 11/11, messageClassification ZERO, crossModuleBoundaryState LEGAL_CONTRACTS_ONLY_BOTH_DIRECTIONS, foreignAppInfraDomainCoupling ZERO, crossModuleJoinState NONE, schemaMigrationState UNCHANGED, microserviceExtractable true, hostFinalClosure PRESERVED, productionCodeChanged false, guardsWeakened NONE, baselinesWidened NONE, postCertRecoveryState POST_CERT_RECOVERY_RECONCILIATION_REQUIRED, workflowStop USER_REVIEW_PRICING_AMSC_001_W3_R3, automaticNextImplementationTask NONE; no fabricated commit SHA and no self-referential PENDING placeholder was introduced, recorded instead as certificationCommitState REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA. Master Recovery appended the fresh W3-R3 checkpoint (original W3 3c2cc61e historical/superseded, W3-R2 7159c8f7 current Structure authority, zero Endpoints/zero HTTP routes, presentation registration in the Infrastructure composition root, promotion back into the certified set only by W3-R3, Host checkpoint preserved, schema/migrations unchanged, automatic next NONE). Historical recovery debt was disclosed, not hidden and not repaired: pricingAmsc001W0 still carries unresolved historical self-commit placeholders, the pricingAmsc001W1 and pricingAmsc001W2 blocks record only parentCommit with no final commit/commitFull of their own, and the historical pricingAmsc001W3R1 block has no final commit SHA of its own - all recorded as POST_CERT_RECOVERY_RECONCILIATION_REQUIRED with a dedicated recovery-debt.md, and no historical block was edited. Guards repointed, never weakened: PricingModuleAmsc001W2StructureGuardTests.Root_allowlists_and_forbidden_lists_match_the_manifest now reads the certified modules entry and asserts Pricing is absent from preCertModules (test count unchanged), PricingModuleAmsc001W3R2RepairGuardTests supersession test renamed to ..._is_superseded_and_pricing_is_recertified with every W3-R2 history assertion kept verbatim plus two new pins (9 -> 11), and TmarCompleteReferenceStructureGateTests re-added Pricing to the expected certified-module lists (manifest 26, structureLock 25). Evidence package docs/architecture/evidence/TB-TMAR-PRICING-AMSC-001-W3-R3/ is COMPLETE (certification.md, internal-only-applicability.md, structure-verification.md, boundary-verification.md, validation.md, recovery-debt.md, certify-audit.cjs, audit-after.json, task-receipt.json, task.md, promote-manifest.cjs, apply-sot.cjs, append-recovery.cjs, debug-sot.cjs, claim-task.js). Bounded validation: solution build 0 errors; Tooba.Pricing.Tests 13/13 passed; the Pricing AMSC + ownership guard family 42/42 passed (PricingModuleAmsc001W3R3CertGuardTests 8, PricingModuleAmsc001W3R2RepairGuardTests 11, PricingModuleAmsc001W2StructureGuardTests 8, PricingModuleAmsc001W1MigrateGuardTests 9, ErrorCatalogUniqueCodeGuardTests 3, HostModuleEndpointOwnershipTests 3); full Tooba.Host.Tests Failed 79 / Passed 2044 / Skipped 130 / Total 2253 against the measured starting-head baseline Failed 79 / Passed 2036 / Skipped 130 / Total 2245, so zero new failures with the +8 passed delta exactly the new cert guard suite and every remaining failure byte-identical to baseline and unrelated to Pricing. One pre-existing repository-global failure was explicitly probed on the stashed starting-head tree and confirmed identical before and after W3-R3 (TmarCompleteReferenceStructureGateTests.Certified_modules_satisfy_root_allowlists_and_namespace_alignment, caused by the out-of-scope Tooba.Catalog.Contracts/Cart path<->namespace deviation) - it was not weakened, widened or repaired. Zero production code, zero project structure, zero schema/migration, zero error/localization and zero Contracts API change in this wave.
+Starting-HEAD-State: 7159C8F7
+Structure-Authority-State: W3_R2_7159C8F7
+Prior-W3-State: SUPERSEDED
+Certification-State: COMPLETE_REFERENCE_PATTERN
+Structure-State: CERTIFIED
+Http-Applicability-State: INTERNAL_ONLY_NO_ENDPOINTS
+Pricing-Endpoints-Project-State: ABSENT
+Pricing-Http-Route-State: ZERO
+Pricing-Project-Count-State: EXACT_5
+Solution-Grouping-State: CANONICAL_5
+Folder-Granularity-State: PROFESSIONAL_SHALLOW
+Path-Namespace-State: EXACT
+Physical-Copy-State: CLEAN
+Root-Allowlist-State: ENFORCED
+Stable-Error-State: EXACT_11
+Descriptor-State: EXACT_11
+Localization-State: EXACT_11_EN_11_FA
+Presentation-Registration-State: INFRASTRUCTURE_MODULE_EXACTLY_ONCE
+Typed-Fault-State: CANONICAL_NO_MESSAGE_CLASSIFICATION
+Cross-Module-Boundary-State: LEGAL_CONTRACTS_ONLY_BOTH_DIRECTIONS
+Foreign-App-Infra-Domain-Coupling-State: ZERO
+Cross-Module-Join-State: NONE
+Persistence-State: OWN_PRICING_SCHEMA_OUTBOX_MIGRATION
+Host-Authority-State: ZERO_BUSINESS_ZERO_HTTP
+Schema-Migration-State: UNCHANGED
+Manifest-Certification-State: CERTIFIED_5_PROJECT_INTERNAL_ONLY
+StructureLock-Pricing-State: PRESENT_ONCE
+Global-Host-Checkpoint-State: PRESERVED
+Guards-Weakened-State: NONE
+Baselines-Widened-State: NONE
+Post-Cert-Recovery-State: REQUIRED
+Evidence-State: COMPLETE
+Commit-SHA: 127c596aba7abefe6bdd0a1edb7c69c064267762
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_ARTIFACTS
+User-Work-Preserved: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_PRICING_AMSC_001_W3_R3
+STOP
+END_TOOBA_WORKER_RESULT
