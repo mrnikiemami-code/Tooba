@@ -1,0 +1,169 @@
+{
+  "task": "TB-TMAR-PROMOTION-AMSC-001-W3-R1",
+  "parentTask": "TB-TMAR-PROMOTION-AMSC-001-W3",
+  "mode": "INDEPENDENT_CERTIFICATION_EVIDENCE_AUDIT_ONLY",
+  "channel": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "startingHead": "6bf747455b0ab0d8468595ecf42fb73a4d15a52b",
+  "authoritiesUnderAudit": {
+    "w0Analyze": "d00cf666b58ede6c950bdfdd12f95bfd8a0335b3",
+    "w1Migrate": "068589331283aac32c25da62b24b372ac1e61331",
+    "w2Structure": "597147ea8cc3fa4a0f9d6e301133a7237fc68e43",
+    "w3Certify": "6bf747455b0ab0d8468595ecf42fb73a4d15a52b"
+  },
+  "verdict": "CERTIFICATION_REVIEW_BLOCKED",
+  "gates": {
+    "endpointRouteState": "VERIFIED_21",
+    "requestValidatorMatrixState": "CONFLICT",
+    "boundaryState": "VERIFIED_CONTRACTS_ONLY",
+    "errorCatalogState": "VERIFIED",
+    "structureState": "VERIFIED_ARCH_COMPLETE_002",
+    "schemaMigrationState": "UNCHANGED",
+    "hostCheckpointState": "PRESERVED",
+    "hostFailureBaselineState": "SAME_FAILED_NAME_SET",
+    "extractabilityState": "ARCHITECTURAL_ONLY_RUNTIME_UNPROVEN",
+    "certificationReviewState": "BLOCKED",
+    "productionCodeChangedState": "ZERO",
+    "sotManifestChangedState": "ZERO",
+    "guardsWeakenedState": "NONE",
+    "baselinesWidenedState": "NONE"
+  },
+  "endpointInventory": {
+    "routeRegistrations": 21,
+    "distinctVerbPathPairs": 21,
+    "isenderDispatches": 21,
+    "concreteHandlerInvocations": 0,
+    "hostOwnedPromotionRoutes": 0,
+    "hostPromotionProductionFolder": "ABSENT"
+  },
+  "validatorMatrix": {
+    "claimedByW3": {
+      "validatorCount": 18,
+      "validatorRequired": 18,
+      "noValidatorRequired": 3,
+      "noValidatorRequiredSet": [
+        "ListSellerPromotionsQuery",
+        "ListAdminPromotionsQuery",
+        "ListMerchandisingCampaignTypesQuery"
+      ]
+    },
+    "independentFinding": {
+      "validatorCount": 18,
+      "validatorRequired": 19,
+      "noValidatorRequired": 2,
+      "noValidatorRequiredSet": [
+        "ListSellerPromotionsQuery",
+        "ListAdminPromotionsQuery"
+      ],
+      "wronglyExemptedRequest": "ListMerchandisingCampaignTypesQuery"
+    }
+  },
+  "blockingFindings": [
+    {
+      "id": "A",
+      "severity": "BLOCKING",
+      "title": "ListMerchandisingCampaignTypesQuery is VALIDATOR_REQUIRED but classified NO_VALIDATOR_REQUIRED",
+      "evidence": [
+        "src/backend/Modules/Promotion/Tooba.Promotion.Endpoints/Admin/MerchandisingCampaignAdminEndpoints.cs:40 — ListTypesAsync binds string? locale from the query string",
+        "src/backend/Modules/Promotion/Tooba.Promotion.Application/Merchandising/Admin/Queries/ListMerchandisingCampaignTypesQuery.cs:12 — record ListMerchandisingCampaignTypesQuery(string? Locale)",
+        "src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Merchandising/MerchandisingCampaignAdminComposer.cs:126 — ListPromotionTypeOptionsAsync(locale ?? \"fa-IR\", ct)",
+        "src/backend/Modules/Promotion/Tooba.Promotion.Application/Validation/PromotionRequestValidators.cs:118-121 and :157-160 — the module already validates Locale with BeWellFormedLocale + PromotionValidationCodes.LocaleInvalid for two other requests",
+        "module-wide grep for any validator referencing ListMerchandisingCampaignTypesQuery returns NONE",
+        "docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md:101-103 — transport primitive-shape validation belongs to FluentValidation; every endpoint-reachable request is classified in a durable guard"
+      ],
+      "implicatedW3Records": [
+        "docs/architecture/evidence/TB-TMAR-PROMOTION-AMSC-001-W3/certify.md:19,81-84",
+        "docs/architecture/tmar-module-structure-manifests.json (Promotion certificationNote: EXHAUSTIVE 21 (18 VALIDATOR_REQUIRED + 3 NO_VALIDATOR_REQUIRED))",
+        "docs/architecture/tmar-current-state.json (promotionAmsc001W3.validatorMatrixState)",
+        "src/backend/Host/Tooba.Host.Tests/Architecture/PromotionModuleAmsc001W3CertGuardTests.cs:150-166"
+      ],
+      "proposedRepair": "Add ListMerchandisingCampaignTypesQueryValidator with the existing BeWellFormedLocale rule + LocaleInvalid code; reclassify to 19+2; record the W1->W3 reclassification."
+    }
+  ],
+  "nonBlockingFindings": [
+    {
+      "id": "B",
+      "severity": "NON_BLOCKING",
+      "title": "Undocumented W1->W3 reclassification of the validator matrix",
+      "evidence": [
+        "docs/architecture/evidence/TB-TMAR-PROMOTION-AMSC-001-W1/migrate.md:99 — 18 validators covering 19 of 21; ListSellerPromotionsQuery and ListAdminPromotionsQuery stay NO_VALIDATOR_REQUIRED",
+        "docs/architecture/evidence/TB-TMAR-PROMOTION-AMSC-001-W1/migrate.md:243 — 18_VALIDATORS_19_COVERED_2_NO_VALIDATOR_REQUIRED",
+        "docs/architecture/evidence/TB-TMAR-PROMOTION-AMSC-001-W3/certify.md:19 — EXHAUSTIVE_18_VALIDATOR_REQUIRED_3_NO_VALIDATOR_REQUIRED"
+      ]
+    },
+    {
+      "id": "C",
+      "severity": "NON_BLOCKING",
+      "title": "W3 cert guard cannot detect a wrongly exempted request",
+      "evidence": [
+        "src/backend/Host/Tooba.Host.Tests/Architecture/PromotionModuleAmsc001W3CertGuardTests.cs:150-166 — matrix derived as 18 AbstractValidator types plus the hardcoded constant 3, so the no-validator set is never asserted by request identity"
+      ]
+    },
+    {
+      "id": "D",
+      "severity": "NON_BLOCKING",
+      "title": "W3 guard generic source enumeration omits Endpoints",
+      "evidence": [
+        "src/backend/Host/Tooba.Host.Tests/Architecture/PromotionModuleAmsc001W3CertGuardTests.cs:18-24 — ProductionProjects omits Tooba.Promotion.Endpoints; only the W1 guard (its ProductionProjects also omits it) plus PromotionArchitectureGuardTests cover the Endpoints project"
+      ]
+    }
+  ],
+  "verifiedEvidence": {
+    "boundary": {
+      "endpointsProjectRefs": ["Tooba.Promotion.Application", "Tooba.BuildingBlocks"],
+      "foreignAppInfraDomainSourceScan": "NO_FOREIGN_APP_INFRA_DOMAIN_REFERENCE",
+      "foreignTypesInContracts": "NONE",
+      "crossModuleJoins": "NONE",
+      "crossModuleTransactions": "NONE"
+    },
+    "errorCatalog": {
+      "declaredCodes": 40,
+      "distinctCodes": 40,
+      "registeredDescriptors": 13,
+      "bilingualEnKeys": 40,
+      "bilingualFaKeys": 40,
+      "messageBasedClassification": "NONE",
+      "rawResultsPayloadMapping": "NONE",
+      "apiCreatedUsages": 1
+    },
+    "structure": {
+      "onDiskProjects": 6,
+      "endpointsRootAllowlist": ["PromotionEndpointModule.cs"],
+      "slnxGrouping": "CANONICAL_MODULES_PROMOTION_6_PROJECTS",
+      "applicationMaxFolderDepth": 3,
+      "useCaseLeafFolders": 0,
+      "manifestMembership": "modules[]_structureCertified_true_once",
+      "preCertModules": "EMPTY"
+    },
+    "schema": {
+      "w3ProductionDiff": "EMPTY",
+      "migrationsUnchangedSinceW0": true,
+      "promotionSchema": "promotion"
+    },
+    "hostFailureBaseline": {
+      "method": "full Host suite at HEAD and in a clean worktree at 597147ea, failure name sets compared with Compare-Object",
+      "baselineFailed": 77,
+      "currentFailed": 77,
+      "newFailures": 0,
+      "fixedFailures": 0,
+      "promotionGuardFailures": 0,
+      "note": "3 TmarSourceSizeAndInfraAppTests failures are environment pollution from a stray .tmp-baseline/ directory and are identical in both runs"
+    }
+  },
+  "extractability": {
+    "architecturalExtractability": "VERIFIED_COMPILE_TIME_CONTRACTS_ONLY",
+    "runtimeDeployability": "NOT_PROVEN"
+  },
+  "artifacts": [
+    "docs/ai/tasks/TB-TMAR-PROMOTION-AMSC-001-W3-R1.task.md",
+    "docs/architecture/evidence/TB-TMAR-PROMOTION-AMSC-001-W3-R1/audit.md",
+    "docs/architecture/evidence/TB-TMAR-PROMOTION-AMSC-001-W3-R1/audit.json"
+  ],
+  "productionCodeChanged": false,
+  "sotManifestChanged": false,
+  "guardsWeakened": false,
+  "baselinesWidened": false,
+  "automaticNextImplementationTask": "NONE",
+  "workflowStop": "USER_REVIEW_PROMOTION_AMSC_001_W3_R1"
+}
