@@ -187,6 +187,10 @@ Record every applicable state explicitly.
 | `BLOCKED` | Needs Architect decision / Host closure risk / out-of-scope |
 | `RECOVERY_CONFLICT` | Unsafe git/SoT divergence |
 
+### 4b. Validator Evidence Preservation (NON-OWNERSHIP RULE)
+
+Structure does **not** decide transport semantics or reclassify requests. Preserve the Analyze/Migrate route → request → input-provenance → validator/policy matrix, the concrete validator files, namespace alignment, DI discoverability and durable guard linkage through physical moves. Verify no request, validator or classification evidence is lost, duplicated or made unreachable by folder/namespace changes. If the upstream evidence is absent/inconsistent, return `STRUCTURE_HANDOFF_BLOCKED_VALIDATION_EVIDENCE` rather than manufacturing a `NO_VALIDATOR_REQUIRED` exemption or declaring semantic certification. Certify independently verifies the semantics.
+
 ## 5. Capability Discovery
 
 Capabilities are **business responsibility axes**, not invented folder names.
