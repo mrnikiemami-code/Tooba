@@ -1,0 +1,1 @@
+﻿Passed!  - Failed:     0, Passed:    18, Skipped:     0, Total:    18, Duration: 111 ms - Tooba.Host.Tests.dll (net8.0)

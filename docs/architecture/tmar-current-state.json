@@ -2195,7 +2195,8 @@
       "CustomerProfile",
       "Inventory",
       "Notification",
-      "Pricing"
+      "Pricing",
+      "ProductWorkspace"
     ],
     "manifest": "docs/architecture/tmar-module-structure-manifests.json",
     "standard": "docs/architecture/TMAR-COMPLETE-REFERENCE-STRUCTURE-STANDARD.md",
@@ -13454,8 +13455,8 @@
       "No Host/Admin/ProductWorkspace*.cs shell remains; Tooba.MigrationRunner/ModuleMigrationRegistry.cs has no ProductWorkspace entry (no schema)."
     ],
     "structureHandoffState": "REQUIRED",
-    "commit": null,
-    "commitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
+    "commit": "56909122",
+    "commitState": "RECORDED_IN_W3_SOT_LINEAGE",
     "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W0/analyze.md"
   },
   "productWorkspaceAmsc001W1": {
@@ -13575,8 +13576,91 @@
       "Host/Admin file count drift and legacy Catalog domain guards, unchanged by this wave and reproduced identically at the pre-W2 baseline."
     ],
     "structureHandoffState": "READY_FOR_CERTIFY",
+    "commit": "592c346e",
+    "commitState": "RECORDED_IN_W3_SOT_LINEAGE",
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W2/structure.md"
+  },
+  "productWorkspaceAmsc001W3": {
+    "task": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3",
+    "mode": "ARCHITECT_DIRECT_AMSC",
+    "skill": "tooba-architecture-certify",
+    "target": "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.*",
+    "startingHead": "592c346e",
+    "parentTask": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W2",
+    "state": "CERTIFY_COMPLETE",
+    "verdict": "COMPLETE_REFERENCE_PATTERN",
+    "lockVersion": "ARCH-COMPLETE-002",
+    "structureState": "CERTIFIED",
+    "folderGranularityState": "PROFESSIONAL_SHALLOW",
+    "solutionExplorerState": "CANONICAL",
+    "pathNamespaceState": "EXACT",
+    "rootAllowlistState": "ENFORCED",
+    "physicalCopyState": "CLEAN",
+    "fileCohesionState": "COHESIVE",
+    "moduleApplicabilityState": "HTTP_OWNING",
+    "endpointOwnershipState": "MODULE_OWNED",
+    "endpointReachableRequests": 18,
+    "validatorCoverageState": "EXHAUSTIVE_0_REQUIRED_0_NO_VALIDATOR_REQUIRED_BY_CONSTRUCTION_CATALOG_OWNS_TRANSPORT_SHAPE",
+    "stableErrorCodeState": "DECLARED_AND_LOCALIZED_HERE_DESCRIPTOR_OWNED_ONCE_BY_CATALOG",
+    "localizationState": "CANONICAL_SPLIT_OWNER_DESCRIPTOR_MODULE_LOCALIZATION",
+    "apiResultPatternState": "CANONICAL",
+    "cqrsState": "MODULE_LOCAL_MEDIATR_CQRS_14_COMMANDS_4_QUERIES",
+    "contractsBoundaryState": "COMPLIANT_CONTRACTS_ONLY_MUTATION_GATEWAY",
+    "crossModuleCouplingState": "LEGAL_CONTRACTS_ONLY",
+    "crossModuleJoinState": "NONE",
+    "persistenceOwnershipState": "CORRECT_NO_PERSISTENCE",
+    "emptyDomainState": "DECLARED_BOUNDARY_JUSTIFIED",
+    "gitkeepCeremonyState": "NONE",
+    "hostResidueState": "ALLOWED_COMPOSITION_ROOT_ONLY",
+    "schemaMigrationState": "UNCHANGED",
+    "loggingState": "CANONICAL",
+    "sensitiveLoggingState": "NONE",
+    "openTelemetryState": "CANONICAL",
+    "correlationTraceState": "CANONICAL",
+    "microserviceExtractable": true,
+    "microserviceExtractabilityState": "TRUE_HTTP_SURFACE_DEPENDS_ON_CONTRACTS_ONLY",
+    "blockingResidualDebt": "ZERO",
+    "certificationChecklist": {
+      "applicationCapabilityFolders": "PASS",
+      "endpointsCapabilityFolders": "PASS",
+      "infrastructureCapabilityFolders": "PASS",
+      "contractsCapabilityFolders": "PASS",
+      "domainCapabilityFolders": "PASS_DECLARED_EMPTY_BOUNDARY",
+      "pathNamespaceExact": "PASS",
+      "rootAllowlists": "PASS",
+      "cqrsMediatR": "PASS",
+      "validatorCoverage": "PASS_BY_CONSTRUCTION",
+      "apiResultPattern": "PASS",
+      "stableErrorCodeOwner": "PASS",
+      "localization": "PASS",
+      "typedFaults": "PASS",
+      "loggingTelemetryCorrelation": "PASS",
+      "contractsOnlyBoundaries": "PASS",
+      "noCrossModulePersistenceOrJoin": "PASS",
+      "schemaPreservation": "PASS",
+      "durableGuards": "PASS",
+      "manifestAndSot": "PASS",
+      "hostClosure": "PASS"
+    },
+    "manifestPromotion": [
+      "preCertModules[ProductWorkspace] promoted to modules[ProductWorkspace] with structureCertified true and lockVersion ARCH-COMPLETE-002.",
+      "preCertModules is now an empty array (ProductWorkspace was its only member).",
+      "uncertifiedHttpOwningModules unchanged (Returns, Support, Wallet, Promotion)."
+    ],
+    "sotPromotion": [
+      "structureLock.certifiedModules gained ProductWorkspace exactly once (26 certified modules).",
+      "W1 commit e0fe2885 and W2 commit 592c346e reconciled into their wave blocks.",
+      "Repository-global Host root checkpoint, lastAcceptedTask, workflowStop and automaticNextImplementationTask unchanged."
+    ],
+    "durableGuards": [
+      "ProductWorkspaceModuleAmsc001W3CertGuardTests (new)",
+      "ProductWorkspaceModuleAmsc001W2StructureGuardTests (6 passed)",
+      "ProductWorkspaceModuleAmsc001W1MigrateGuardTests (6 passed)",
+      "ErrorCatalogUniqueCodeGuardTests (3 passed)"
+    ],
+    "structureHandoffState": "CLOSED_CERTIFIED",
     "commit": null,
     "commitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
-    "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W2/structure.md"
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3/certification.md"
   }
 }

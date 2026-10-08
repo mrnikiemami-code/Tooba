@@ -1877,20 +1877,12 @@
       ],
       "structureAuthorityTask": "TB-TMAR-PRICING-AMSC-001-W3-R2",
       "structureAuthorityCommit": "7159c8f773c1faa9b4b6d425b19067f50ca27572"
-    }
-  ],
-  "uncertifiedHttpOwningModules": [
-    "Returns",
-    "Support",
-    "Wallet",
-    "Promotion"
-  ],
-  "preCertModules": [
+    },
     {
       "module": "ProductWorkspace",
-      "structureCertified": false,
+      "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "AMSC-001 lineage: W0 Analyze (56909122) -> W1 Migrate (e0fe2885) -> W2 Structure (this wave) -> W3 Certify pending. Composition/Admin BFF owning 17 module routes over /v1/admin/products; reaches the Catalog product write capability only through the Tooba.Catalog.Contracts port ICatalogAdminProductWorkspaceMutationGateway (zero foreign Application/Infrastructure/Domain project edge). W2 normalized Application to capability-first shallow (ProductManagement/{Commands,Queries,Models,Grid} + shared Composition/ProductWorkspaceOperation.cs), removed the .gitkeep ceremony and the empty Composition/{Models,Ports,Queries,Validators} shells, and closed F4 by declaring Tooba.ProductWorkspace.Domain an explicitly justified empty boundary assembly. NOT_CERTIFIED for ARCH-COMPLETE-002 until W3; do not promote to structureLock.certifiedModules yet.",
+      "certificationNote": "Certified by TB-TMAR-PRODUCTWORKSPACE-AMSC-001 W0 56909122 -> W1 e0fe2885 -> W2 592c346e -> W3 under ARCH-COMPLETE-002. Composition/Admin BFF owning 17 module-owned routes over /v1/admin/products through 3 module-local CQRS read requests + 14 module-local CQRS write commands. Contracts-only boundaries: the product write capability is reached exclusively through the Tooba.Catalog.Contracts port ICatalogAdminProductWorkspaceMutationGateway (owner-side adapter binds actor attribution; narrow transport DTOs; acting admin an explicit stateless parameter) and the actor display seam through Tooba.OperatorProfile.Contracts IActorDisplayLookup - zero foreign Application/Infrastructure/Domain project edge, zero cross-module join, zero DbContext/EF/Host usage. Stable codes: workspace.product.missing / workspace.permission.denied / catalog.category.assignment.stale declared with an ordinal IsKnown declared-code guard and a module-owned bilingual ProductWorkspaceErrorResourceSet + Resources/ProductWorkspaceErrors.resx/.fa.resx, while descriptor ownership stays unique with CatalogErrorCatalogContributor (no duplicate descriptor, no module contributor). Typed faults: ProductWorkspaceOperation maps ContractOperationException only when IsKnown and SemanticException, by code never by message text. Validator matrix EXHAUSTIVE 0-REQUIRED 0-NO_VALIDATOR_REQUIRED by construction (transport shape is owned by the Catalog write capability behind the Contracts boundary; no module-local validator tree was invented). W2 structure: capability-first shallow Composition/ProductManagement/{Commands,Queries,Models,Grid} with the single shared typed-fault seam Composition/ProductWorkspaceOperation.cs, zero technical-axis Application roots, zero use-case leaf folders, zero .gitkeep ceremony; path<->namespace EXACT for all 5 projects; root allowlists ENFORCED and equal to disk; /Modules/ProductWorkspace/ solution group with exactly 5 projects; Tooba.ProductWorkspace.Domain retained as an explicitly justified empty boundary assembly (zero .cs, zero ProjectReference). Host ProductWorkspace closure preserved (composition root only: Program.cs DI + route map, ToobaModuleComposition module-list entry; no Host schema descriptor because the module owns no schema). Microservice-extractable: the HTTP surface depends on Contracts only. Durable guards: ProductWorkspaceModuleAmsc001W3CertGuardTests (6), ProductWorkspaceModuleAmsc001W2StructureGuardTests (6), ProductWorkspaceModuleAmsc001W1MigrateGuardTests (6), ErrorCatalogUniqueCodeGuardTests (3) and the repointed HostAdminAmcW16/W19/W26/W27/W29/W30/W31 guards.",
       "projects": [
         {
           "projectName": "Tooba.ProductWorkspace.Contracts",
@@ -1944,5 +1936,12 @@
         }
       ]
     }
-  ]
+  ],
+  "uncertifiedHttpOwningModules": [
+    "Returns",
+    "Support",
+    "Wallet",
+    "Promotion"
+  ],
+  "preCertModules": []
 }

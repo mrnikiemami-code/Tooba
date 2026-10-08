@@ -132,7 +132,7 @@ public sealed class HostAdminAmcW18GuardTests
     }
 
     [Fact]
-    public void ProductWorkspace_is_not_structure_certified_and_SoT_records_W18_checkpoint()
+    public void ProductWorkspace_is_now_structure_certified_and_SoT_still_records_W18_checkpoint()
     {
         var root = FindRepoRoot();
         var sot = File.ReadAllText(Path.Combine(root, "docs/architecture/tmar-current-state.json"));
@@ -141,20 +141,28 @@ public sealed class HostAdminAmcW18GuardTests
         Assert.Contains("SKELETON_ESTABLISHED", sot, StringComparison.Ordinal);
         Assert.Contains("\"nextHostFolderStarted\": false", sot, StringComparison.Ordinal);
 
+        // W18 recorded ProductWorkspace as NOT structure certified. That verdict was superseded by
+        // TB-TMAR-PRODUCTWORKSPACE-AMSC-001 W3 (ARCH-COMPLETE-002), so the lock now carries the module
+        // exactly once. The W18 checkpoint assertions above are preserved unchanged.
         var structureLock = sot[
             sot.IndexOf("\"structureLock\"", StringComparison.Ordinal)
             ..sot.IndexOf("\"recoveryPhrase\"", StringComparison.Ordinal)];
-        Assert.DoesNotContain("ProductWorkspace", structureLock, StringComparison.Ordinal);
+        Assert.Equal(
+            1,
+            Regex.Matches(structureLock, "\"ProductWorkspace\"").Count);
 
         var manifest = File.ReadAllText(Path.Combine(root, "docs/architecture/tmar-module-structure-manifests.json"));
         Assert.Contains("\"preCertModules\"", manifest, StringComparison.Ordinal);
         Assert.Contains("\"module\": \"ProductWorkspace\"", manifest, StringComparison.Ordinal);
-        Assert.Contains("\"structureCertified\": false", manifest, StringComparison.Ordinal);
 
         var modulesSectionStart = manifest.IndexOf("\"modules\":", StringComparison.Ordinal);
         var uncertifiedStart = manifest.IndexOf("\"uncertifiedHttpOwningModules\"", StringComparison.Ordinal);
         var certifiedModulesSection = manifest[modulesSectionStart..uncertifiedStart];
-        Assert.DoesNotContain("\"module\": \"ProductWorkspace\"", certifiedModulesSection, StringComparison.Ordinal);
+        Assert.Contains("\"module\": \"ProductWorkspace\"", certifiedModulesSection, StringComparison.Ordinal);
+        Assert.Contains("\"structureCertified\": true", certifiedModulesSection, StringComparison.Ordinal);
+
+        var preCertSection = manifest[manifest.IndexOf("\"preCertModules\"", StringComparison.Ordinal)..];
+        Assert.DoesNotContain("\"module\": \"ProductWorkspace\"", preCertSection, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -189,13 +189,13 @@ public sealed class ProductWorkspaceModuleAmsc001W2StructureGuardTests
         // The declared-empty justification is recorded in the manifest, not invented at guard time.
         using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(
             root, "docs/architecture/tmar-module-structure-manifests.json")));
-        var entry = PreCertEntry(manifest, "ProductWorkspace");
+        var entry = CertifiedEntry(manifest, "ProductWorkspace");
         var domain = entry.GetProperty("projects").EnumerateArray()
             .Single(p => p.GetProperty("projectName").GetString() == "Tooba.ProductWorkspace.Domain");
         Assert.Empty(domain.GetProperty("rootAllowlist").EnumerateArray());
         Assert.Contains(
             "explicitly justified empty boundary assembly",
-            domain.GetProperty("rootAllowlistJustification").GetString(),
+            domain.GetProperty("rootAllowlistJustification").GetString()!,
             StringComparison.OrdinalIgnoreCase);
     }
 
@@ -205,9 +205,14 @@ public sealed class ProductWorkspaceModuleAmsc001W2StructureGuardTests
         var root = Repo();
         using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(
             root, "docs/architecture/tmar-module-structure-manifests.json")));
-        var entry = PreCertEntry(manifest, "ProductWorkspace");
 
-        Assert.False(entry.GetProperty("structureCertified").GetBoolean());
+        // ProductWorkspace was promoted by TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3 from preCertModules to the
+        // certified modules array (structureCertified true). The structural allowlists below are unchanged.
+        var entry = CertifiedEntry(manifest, "ProductWorkspace");
+        Assert.True(entry.GetProperty("structureCertified").GetBoolean());
+        Assert.DoesNotContain(
+            manifest.RootElement.GetProperty("preCertModules").EnumerateArray(),
+            m => m.GetProperty("module").GetString() == "ProductWorkspace");
         Assert.Equal("ARCH-COMPLETE-002", entry.GetProperty("lockVersion").GetString());
         Assert.Equal(
             Projects.OrderBy(x => x, StringComparer.Ordinal).ToArray(),
@@ -249,8 +254,8 @@ public sealed class ProductWorkspaceModuleAmsc001W2StructureGuardTests
                 .OrderBy(x => x, StringComparer.Ordinal).ToArray());
     }
 
-    private static JsonElement PreCertEntry(JsonDocument manifest, string module) =>
-        manifest.RootElement.GetProperty("preCertModules").EnumerateArray()
+    private static JsonElement CertifiedEntry(JsonDocument manifest, string module) =>
+        manifest.RootElement.GetProperty("modules").EnumerateArray()
             .Single(m => m.GetProperty("module").GetString() == module);
 
     private static string[] RootCs(string root, string projectRelativePath) =>
