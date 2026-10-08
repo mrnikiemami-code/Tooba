@@ -28,10 +28,12 @@ public sealed class HostAdminAmcW26PwLifecycleGuardTests
         Assert.Contains("MapPost(\"/{productId:guid}/unpublish\"", module, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/{productId:guid}/archive\"", module, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/{productId:guid}/restore\"", module, StringComparison.Ordinal);
-        Assert.Contains("PublishProductCommand", module, StringComparison.Ordinal);
+        Assert.Contains("PublishWorkspaceProductCommand", module, StringComparison.Ordinal);
         Assert.Contains("GetProductWorkspaceQuery", module, StringComparison.Ordinal);
         Assert.Contains("ApiResponseFactory", module, StringComparison.Ordinal);
         Assert.Contains("CanPublish", module, StringComparison.Ordinal);
+        Assert.Contains("ICatalogAdminProductWorkspaceMutationGateway", module, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Catalog.Application", module, StringComparison.Ordinal);
         Assert.DoesNotContain("PlatformHttpException", module, StringComparison.Ordinal);
         Assert.DoesNotContain("ICatalogDirectory", module, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", module, StringComparison.Ordinal);

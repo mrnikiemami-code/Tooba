@@ -25,10 +25,12 @@ public sealed class HostAdminAmcW27PwVariantsGuardTests
         Assert.Equal(17, MapRouteRegex.Matches(module).Count);
         Assert.Contains("MapPost(\"/{productId:guid}/variants\"", module, StringComparison.Ordinal);
         Assert.Contains("MapPatch(\"/{productId:guid}/variants/{variantId:guid}\"", module, StringComparison.Ordinal);
-        Assert.Contains("CreateProductWorkspaceVariantCommand", module, StringComparison.Ordinal);
-        Assert.Contains("PatchProductWorkspaceVariantCommand", module, StringComparison.Ordinal);
+        Assert.Contains("CreateWorkspaceProductVariantCommand", module, StringComparison.Ordinal);
+        Assert.Contains("PatchWorkspaceProductVariantCommand", module, StringComparison.Ordinal);
         Assert.Contains("CanEditCatalog", module, StringComparison.Ordinal);
         Assert.Contains("Status201Created", module, StringComparison.Ordinal);
+        Assert.Contains("ICatalogAdminProductWorkspaceMutationGateway", module, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Catalog.Application", module, StringComparison.Ordinal);
         Assert.DoesNotContain("PlatformHttpException", module, StringComparison.Ordinal);
         Assert.DoesNotContain("ICatalogDirectory", module, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", module, StringComparison.Ordinal);

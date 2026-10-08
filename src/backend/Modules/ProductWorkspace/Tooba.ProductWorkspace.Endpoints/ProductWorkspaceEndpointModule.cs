@@ -7,19 +7,12 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Catalog.Application;
-using Tooba.Catalog.Application.Shared;
-using Tooba.Catalog.Application.ProductIdentity.Commands;
-using Tooba.Catalog.Application.ProductIdentity.Models;
-using Tooba.Catalog.Application.ProductPublishing.Commands;
-using Tooba.Catalog.Application.ProductTaxonomy.Commands;
-using Tooba.Catalog.Application.ProductTaxonomy.Models;
-using Tooba.Catalog.Application.Variants.Commands;
-using Tooba.Catalog.Application.Variants.Models;
-using Tooba.Catalog.Contracts.Errors;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.OperatorProfile.Contracts.Ports;
+using Tooba.ProductWorkspace.Application.Composition.Commands;
 using Tooba.ProductWorkspace.Application.Composition.Models;
 using Tooba.ProductWorkspace.Application.Composition.Queries;
+using Tooba.ProductWorkspace.Contracts.Errors;
 using Tooba.ProductWorkspace.Endpoints.Admin;
 
 namespace Tooba.ProductWorkspace.Endpoints;
@@ -30,9 +23,17 @@ namespace Tooba.ProductWorkspace.Endpoints;
 /// W29: create / catalog-title / core / quantity-policy.
 /// W30: category / additional categories / brand.
 /// W31: list + grid query.
+/// <para>
+/// Every mutation is dispatched to a module-local CQRS command that reaches the Catalog write capability
+/// through the Contracts-only <see cref="ICatalogAdminProductWorkspaceMutationGateway"/>. The endpoints
+/// never reference Catalog Application commands, Catalog Application write models or the Catalog actor
+/// context, so the module stays microservice-extractable.
+/// </para>
 /// </summary>
 public static class ProductWorkspaceEndpointModule
 {
+    private const string DefaultActorDisplayName = "اپراتور";
+
     /// <summary>Maps module-owned ProductWorkspace endpoints.</summary>
     public static IEndpointRouteBuilder MapProductWorkspaceModuleEndpoints(this IEndpointRouteBuilder app)
     {
@@ -100,31 +101,25 @@ public static class ProductWorkspaceEndpointModule
         return new ProductWorkspacePermissions(true, true, true, true, true);
     }
 
-
-    private static async Task BindCatalogActorAsync(
+    private static async Task<CatalogAdminProductWorkspaceActor> ResolveActorAsync(
         HttpContext http,
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
-        var actor = http.RequestServices.GetRequiredService<ICatalogActorContext>();
-        actor.ActorUserId = actorUserId;
-
         var displays = http.RequestServices.GetService<IActorDisplayLookup>();
         if (displays is null)
         {
-            actor.ActorDisplayName = "اپراتور";
-            return;
+            return new CatalogAdminProductWorkspaceActor(actorUserId, DefaultActorDisplayName);
         }
 
         var map = await displays.GetActorDisplaysAsync([actorUserId], cancellationToken);
         if (map.TryGetValue(actorUserId, out var projection)
             && !string.IsNullOrWhiteSpace(projection.DisplayName))
         {
-            actor.ActorDisplayName = projection.DisplayName.Trim();
-            return;
+            return new CatalogAdminProductWorkspaceActor(actorUserId, projection.DisplayName.Trim());
         }
 
-        actor.ActorDisplayName = "اپراتور";
+        return new CatalogAdminProductWorkspaceActor(actorUserId, DefaultActorDisplayName);
     }
 
     private static async Task<IResult> GetProductWorkspaceAsync(
@@ -143,7 +138,7 @@ public static class ProductWorkspaceEndpointModule
     }
 
     private static async Task<IResult> CreateProductAsync(
-        WorkspaceProductCreateWriteModel body,
+        CatalogAdminProductWorkspaceCreateRequest body,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
@@ -154,11 +149,13 @@ public static class ProductWorkspaceEndpointModule
         var permissions = ReadPermissions(httpContext.Request);
         if (!permissions.CanEditCatalog)
         {
-            return api.FromFailure(new SemanticError(CatalogErrorCodes.WorkspacePermissionDenied));
+            return api.FromFailure(new SemanticError(ProductWorkspaceErrorCodes.WorkspacePermissionDenied));
         }
 
-        await BindCatalogActorAsync(httpContext, actorUserId, cancellationToken);
-        var mutation = await sender.Send(new CreateWorkspaceProductCommand(body), cancellationToken);
+        var actor = await ResolveActorAsync(httpContext, actorUserId, cancellationToken);
+        var mutation = await sender.Send(
+            new CreateWorkspaceProductCommand(actor, body),
+            cancellationToken);
         if (mutation.IsFailure)
         {
             return api.From(mutation);
@@ -175,102 +172,102 @@ public static class ProductWorkspaceEndpointModule
         return Results.Json(workspace.Value, statusCode: StatusCodes.Status201Created);
     }
 
-    private static async Task<IResult> PatchCatalogTitleAsync(
+    private static Task<IResult> PatchCatalogTitleAsync(
         Guid productId,
-        WorkspaceProductCatalogTitleWriteModel body,
+        CatalogAdminProductWorkspaceCatalogTitleRequest body,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new UpdateProductCatalogTitleCommand(productId, body),
+            actor => new UpdateWorkspaceProductCatalogTitleCommand(productId, actor, body),
             p => p.CanEditCatalog,
             created: false);
 
-    private static async Task<IResult> PatchCoreAsync(
+    private static Task<IResult> PatchCoreAsync(
         Guid productId,
-        WorkspaceProductCoreUpdateWriteModel body,
+        CatalogAdminProductWorkspaceCoreRequest body,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new UpdateProductCoreCommand(productId, body),
+            actor => new UpdateWorkspaceProductCoreCommand(productId, actor, body),
             p => p.CanEditCatalog,
             created: false);
 
-    private static async Task<IResult> PatchQuantityPolicyAsync(
+    private static Task<IResult> PatchQuantityPolicyAsync(
         Guid productId,
-        WorkspaceProductQuantityPolicyWriteModel body,
+        CatalogAdminProductWorkspaceQuantityPolicyRequest body,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new UpdateProductQuantityPolicyCommand(productId, body),
+            actor => new UpdateWorkspaceProductQuantityPolicyCommand(productId, actor, body),
             p => p.CanEditCatalog,
             created: false);
 
-    private static async Task<IResult> AssignCategoryAsync(
+    private static Task<IResult> AssignCategoryAsync(
         Guid productId,
-        WorkspaceProductCategoryAssignWriteModel body,
+        CatalogAdminProductWorkspaceCategoryRequest body,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new AssignProductCategoryCommand(productId, body),
+            actor => new AssignWorkspaceProductCategoryCommand(productId, actor, body),
             p => p.CanEditCatalog,
             created: false);
 
-    private static async Task<IResult> AddAdditionalCategoryAsync(
+    private static Task<IResult> AddAdditionalCategoryAsync(
         Guid productId,
-        WorkspaceProductAdditionalCategoryWriteModel body,
+        CatalogAdminProductWorkspaceAdditionalCategoryRequest body,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new AddAdditionalCategoryCommand(productId, body),
+            actor => new AddWorkspaceProductAdditionalCategoryCommand(productId, actor, body),
             p => p.CanEditCatalog,
             created: false);
 
-    private static async Task<IResult> RemoveAdditionalCategoryAsync(
+    private static Task<IResult> RemoveAdditionalCategoryAsync(
         Guid productId,
         Guid categoryId,
         DateTimeOffset? expectedUpdatedAt,
@@ -282,148 +279,153 @@ public static class ProductWorkspaceEndpointModule
     {
         if (expectedUpdatedAt is null)
         {
-            return api.FromFailure(new SemanticError(CatalogErrorCodes.CategoryAssignmentStale));
+            return Task.FromResult(
+                api.FromFailure(new SemanticError(ProductWorkspaceErrorCodes.CategoryAssignmentStale)));
         }
 
-        return await MutateAsync(
+        return MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new RemoveAdditionalCategoryCommand(productId, categoryId, expectedUpdatedAt.Value),
+            actor => new RemoveWorkspaceProductAdditionalCategoryCommand(
+                productId,
+                categoryId,
+                actor,
+                expectedUpdatedAt.Value),
             p => p.CanEditCatalog,
             created: false);
     }
 
-    private static async Task<IResult> AssignBrandAsync(
+    private static Task<IResult> AssignBrandAsync(
         Guid productId,
-        WorkspaceProductBrandAssignWriteModel body,
+        CatalogAdminProductWorkspaceBrandRequest body,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new AssignProductBrandCommand(productId, body),
+            actor => new AssignWorkspaceProductBrandCommand(productId, actor, body),
             p => p.CanEditCatalog,
             created: false);
 
-    private static async Task<IResult> PublishAsync(
+    private static Task<IResult> PublishAsync(
         Guid productId,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new PublishProductCommand(productId),
+            actor => new PublishWorkspaceProductCommand(productId, actor),
             p => p.CanPublish,
             created: false);
 
-    private static async Task<IResult> UnpublishAsync(
+    private static Task<IResult> UnpublishAsync(
         Guid productId,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new UnpublishProductCommand(productId),
+            actor => new UnpublishWorkspaceProductCommand(productId, actor),
             p => p.CanPublish,
             created: false);
 
-    private static async Task<IResult> ArchiveAsync(
+    private static Task<IResult> ArchiveAsync(
         Guid productId,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new ArchiveProductCommand(productId),
+            actor => new ArchiveWorkspaceProductCommand(productId, actor),
             p => p.CanPublish,
             created: false);
 
-    private static async Task<IResult> RestoreAsync(
+    private static Task<IResult> RestoreAsync(
         Guid productId,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new RestoreProductCommand(productId),
+            actor => new RestoreWorkspaceProductCommand(productId, actor),
             p => p.CanPublish,
             created: false);
 
-    private static async Task<IResult> CreateVariantAsync(
+    private static Task<IResult> CreateVariantAsync(
         Guid productId,
-        WorkspaceVariantCreateWriteModel body,
+        CatalogAdminProductWorkspaceVariantCreateRequest body,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new CreateProductWorkspaceVariantCommand(productId, body),
+            actor => new CreateWorkspaceProductVariantCommand(productId, actor, body),
             p => p.CanEditCatalog,
             created: true);
 
-    private static async Task<IResult> PatchVariantAsync(
+    private static Task<IResult> PatchVariantAsync(
         Guid productId,
         Guid variantId,
-        WorkspaceVariantPatchWriteModel body,
+        CatalogAdminProductWorkspaceVariantPatchRequest body,
         ISender sender,
         IProductWorkspaceAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken) =>
-        await MutateAsync(
+        MutateAsync(
             productId,
             sender,
             authorizer,
             api,
             httpContext,
             cancellationToken,
-            new PatchProductWorkspaceVariantCommand(productId, variantId, body),
+            actor => new PatchWorkspaceProductVariantCommand(productId, variantId, actor, body),
             p => p.CanEditCatalog,
             created: false);
 
@@ -434,7 +436,7 @@ public static class ProductWorkspaceEndpointModule
         ApiResponseFactory api,
         HttpContext httpContext,
         CancellationToken cancellationToken,
-        IRequest<Result> command,
+        Func<CatalogAdminProductWorkspaceActor, IRequest<Result>> commandFactory,
         Func<ProductWorkspacePermissions, bool> allow,
         bool created)
     {
@@ -442,11 +444,11 @@ public static class ProductWorkspaceEndpointModule
         var permissions = ReadPermissions(httpContext.Request);
         if (!allow(permissions))
         {
-            return api.FromFailure(new SemanticError(CatalogErrorCodes.WorkspacePermissionDenied));
+            return api.FromFailure(new SemanticError(ProductWorkspaceErrorCodes.WorkspacePermissionDenied));
         }
 
-        await BindCatalogActorAsync(httpContext, actorUserId, cancellationToken);
-        var mutation = await sender.Send(command, cancellationToken);
+        var actor = await ResolveActorAsync(httpContext, actorUserId, cancellationToken);
+        var mutation = await sender.Send(commandFactory(actor), cancellationToken);
         if (mutation.IsFailure)
         {
             return api.From(mutation);

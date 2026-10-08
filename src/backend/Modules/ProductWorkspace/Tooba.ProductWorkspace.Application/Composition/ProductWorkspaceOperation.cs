@@ -1,0 +1,53 @@
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Results;
+using Tooba.ProductWorkspace.Contracts.Errors;
+
+namespace Tooba.ProductWorkspace.Application.Composition;
+
+/// <summary>
+/// Maps the module's typed faults into <see cref="Result"/> failures by their declared stable code.
+/// <see cref="ContractOperationException"/> is the expected-failure fault raised at the
+/// Contracts/Infrastructure boundary and is mapped only when its code is a declared
+/// ProductWorkspace code; an uncatalogued contract code and every unknown exception propagate
+/// untouched to the canonical global exception boundary.
+/// <see cref="SemanticException"/> stays mapped for the Application/Infrastructure guard sites.
+/// Classification is by typed code only — never by message/prose heuristics.
+/// </summary>
+public static class ProductWorkspaceOperation
+{
+    /// <summary>Executes an operation and maps typed faults to <see cref="Result"/>.</summary>
+    public static async Task<Result> ExecuteAsync(Func<Task<Result>> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        try
+        {
+            return await action();
+        }
+        catch (ContractOperationException ex) when (ProductWorkspaceErrorCodes.IsKnown(ex.Code))
+        {
+            return Result.Failure(new SemanticError(ex.Code));
+        }
+        catch (SemanticException ex)
+        {
+            return Result.Failure(ex.Error);
+        }
+    }
+
+    /// <summary>Executes an operation and maps typed faults to <see cref="Result{T}"/>.</summary>
+    public static async Task<Result<T>> ExecuteAsync<T>(Func<Task<Result<T>>> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        try
+        {
+            return await action();
+        }
+        catch (ContractOperationException ex) when (ProductWorkspaceErrorCodes.IsKnown(ex.Code))
+        {
+            return Result.Failure<T>(new SemanticError(ex.Code));
+        }
+        catch (SemanticException ex)
+        {
+            return Result.Failure<T>(ex.Error);
+        }
+    }
+}

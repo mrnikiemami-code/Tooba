@@ -13457,5 +13457,72 @@
     "commit": null,
     "commitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
     "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W0/analyze.md"
+  },
+  "productWorkspaceAmsc001W1": {
+    "task": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W1",
+    "mode": "ARCHITECT_DIRECT_AMSC",
+    "skill": "tooba-architecture-migrate",
+    "target": "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.*",
+    "touchedDestination": "src/backend/Modules/Catalog/Tooba.Catalog.Contracts + Tooba.Catalog.Infrastructure (write-capability seam only)",
+    "startingHead": "56909122",
+    "parentTask": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W0",
+    "state": "MIGRATE_COMPLETE",
+    "verdict": "READY_TO_STRUCTURE",
+    "ownershipState": "MODULE_OWNED_PRESENTATION_COMPOSER_WITH_CONTRACTS_ONLY_MUTATION_GATEWAY",
+    "contractsBoundaryState": "COMPLIANT_CONTRACTS_ONLY_MUTATION_GATEWAY",
+    "crossModuleCouplingState": "LEGAL_CONTRACTS_ONLY",
+    "crossModuleJoinState": "NONE",
+    "stableErrorCodeState": "DECLARED_AND_LOCALIZED_HERE_DESCRIPTOR_OWNED_ONCE_BY_CATALOG",
+    "localizationState": "CANONICAL_SPLIT_OWNER_DESCRIPTOR_MODULE_LOCALIZATION",
+    "apiResultPatternState": "CANONICAL",
+    "cqrsState": "MODULE_LOCAL_MEDIATR_CQRS_14_COMMANDS",
+    "validatorCoverageState": "EXHAUSTIVE_0_OF_14_NO_VALIDATOR_REQUIRED_CATALOG_OWNS_TRANSPORT_SHAPE",
+    "endpointOwnershipState": "MODULE_OWNED_17_ROUTES_PRESERVED",
+    "hostResidueState": "ALLOWED_COMPOSITION_ROOT_ONLY",
+    "persistenceOwnershipState": "CORRECT_NO_PERSISTENCE",
+    "schemaMigrationState": "UNCHANGED",
+    "fileCohesionState": "COHESIVE",
+    "oversizedGodFileState": "NONE",
+    "loggingState": "CANONICAL",
+    "sensitiveLoggingState": "NONE",
+    "openTelemetryState": "CANONICAL",
+    "correlationTraceState": "CANONICAL",
+    "microserviceExtractable": true,
+    "microserviceExtractabilityState": "TRUE_HTTP_SURFACE_DEPENDS_ON_CONTRACTS_ONLY",
+    "repairedBlockers": [
+      "F1 REPAIRED: removed the illegal <ProjectReference> to Tooba.Catalog.Application from Tooba.ProductWorkspace.Endpoints.csproj; the endpoint module no longer compiles against 14 Catalog Application commands, 7 workspace write models or ICatalogActorContext.",
+      "F2 REPAIRED: workspace.* descriptor ownership is unique again. ProductWorkspace declares workspace.product.missing / workspace.permission.denied / catalog.category.assignment.stale with an IsKnown declared-code guard and owns their bilingual localization (ProductWorkspaceErrorResourceSet + resx), while CatalogErrorCatalogContributor remains the single descriptor owner (404 / 403 / 400). The first W1 attempt created a duplicate ProductWorkspaceErrorCatalogContributor; it was deleted inside this wave after ErrorCatalogUniqueCodeGuardTests proved the duplicate.",
+      "F3 REPAIRED: mutations now travel through the Contracts Result boundary (ICatalogAdminProductWorkspaceMutationGateway) instead of in-process Catalog Application dispatch, so no foreign ValidationException surfaces in ProductWorkspace request handling."
+    ],
+    "deferredBlockers": [
+      "F4: Tooba.ProductWorkspace.Domain remains an empty declared boundary project; explicit manifest allowlist justification is a W2 Structure obligation.",
+      "F5: Application/Composition/{Models,Ports,Queries,Validators} .gitkeep ceremony and capability-first normalization are W2 Structure obligations."
+    ],
+    "created": [
+      "src/backend/Modules/Catalog/Tooba.Catalog.Contracts/Ports/CatalogAdminProductWorkspaceMutationContracts.cs",
+      "src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Adapters/CatalogAdminProductWorkspaceMutationGateway.cs",
+      "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Application/Composition/ProductWorkspaceOperation.cs",
+      "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Application/Composition/Commands/ (14 module-local MediatR commands)",
+      "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Contracts/Errors/ProductWorkspaceErrorCodes.cs",
+      "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Contracts/Errors/ProductWorkspaceErrorResourceSet.cs",
+      "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Contracts/Resources/ProductWorkspaceErrors.resx + ProductWorkspaceErrors.fa.resx",
+      "src/backend/Host/Tooba.Host.Tests/Architecture/ProductWorkspaceModuleAmsc001W1MigrateGuardTests.cs"
+    ],
+    "deleted": [
+      "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Contracts/Errors/ProductWorkspaceErrorCatalogContributor.cs (duplicate descriptor ownership)"
+    ],
+    "durableGuards": [
+      "ProductWorkspaceModuleAmsc001W1MigrateGuardTests: 6 passed / 0 failed",
+      "ErrorCatalogUniqueCodeGuardTests: 3 passed / 0 failed (composed catalog registers each machine code exactly once)",
+      "HostAdminAmcW26PwLifecycleGuardTests / W27PwVariantsGuardTests / W29PwIdentityGuardTests / W30PwTaxonomyGuardTests updated to the module-local command shape (strengthened, not weakened)"
+    ],
+    "preExistingUnrelatedFailures": [
+      "Host/Admin file count is 17 while legacy guards assert 15/52 (unrelated Catalog/Admin evacuation drift).",
+      "Several legacy Catalog/Admin guards read non-existent Tooba.Catalog.Domain/CatalogDomain.cs and CatalogCategoryTreeRules.cs."
+    ],
+    "structureHandoffState": "REQUIRED",
+    "commit": null,
+    "commitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W1/migrate.md"
   }
 }

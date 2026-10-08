@@ -8,6 +8,7 @@
     <AssemblyName>Tooba.ProductWorkspace.Infrastructure</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\Tooba.ProductWorkspace.Application\Tooba.ProductWorkspace.Application.csproj" />
     <ProjectReference Include="..\Tooba.ProductWorkspace.Contracts\Tooba.ProductWorkspace.Contracts.csproj" />

@@ -28,12 +28,14 @@ public sealed class HostAdminAmcW29PwIdentityGuardTests
         Assert.Contains("MapPatch(\"/{productId:guid}/core\"", module, StringComparison.Ordinal);
         Assert.Contains("MapPatch(\"/{productId:guid}/quantity-policy\"", module, StringComparison.Ordinal);
         Assert.Contains("CreateWorkspaceProductCommand", module, StringComparison.Ordinal);
-        Assert.Contains("UpdateProductCatalogTitleCommand", module, StringComparison.Ordinal);
-        Assert.Contains("UpdateProductCoreCommand", module, StringComparison.Ordinal);
-        Assert.Contains("UpdateProductQuantityPolicyCommand", module, StringComparison.Ordinal);
+        Assert.Contains("UpdateWorkspaceProductCatalogTitleCommand", module, StringComparison.Ordinal);
+        Assert.Contains("UpdateWorkspaceProductCoreCommand", module, StringComparison.Ordinal);
+        Assert.Contains("UpdateWorkspaceProductQuantityPolicyCommand", module, StringComparison.Ordinal);
         Assert.Contains("GetProductWorkspaceQuery", module, StringComparison.Ordinal);
         Assert.Contains("Status201Created", module, StringComparison.Ordinal);
         Assert.Contains("CanEditCatalog", module, StringComparison.Ordinal);
+        Assert.Contains("ICatalogAdminProductWorkspaceMutationGateway", module, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Catalog.Application", module, StringComparison.Ordinal);
         Assert.DoesNotContain("PlatformHttpException", module, StringComparison.Ordinal);
         Assert.DoesNotContain("ICatalogDirectory", module, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", module, StringComparison.Ordinal);
