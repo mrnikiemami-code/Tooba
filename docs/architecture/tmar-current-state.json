@@ -13673,8 +13673,12 @@
       "ErrorCatalogUniqueCodeGuardTests (3 passed)"
     ],
     "structureHandoffState": "CLOSED_CERTIFIED",
-    "commit": null,
-    "commitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
+    "commit": "35c371c6",
+    "commitFull": "35c371c6bf08b2362ad6c97572666b7077146678",
+    "commitState": "RECORDED_BY_ARCHITECT_POST_CERT_RECONCILIATION",
+    "postCertificationResultArtifactCommit": "a67ec8e696585f56fbe136aafe9c6416cbf7bb88",
+    "postCertificationResultArtifactState": "DOCS_ONLY_NOT_CERTIFICATION_AUTHORITY",
+    "recoveryReconciliationState": "FINAL_CLOSED",
     "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3/certification.md"
   },
   "productWorkspaceAmsc001W3R1": {

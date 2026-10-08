@@ -1706,3 +1706,15 @@ Recorded by `TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R2` (tooba-architecture-certif
 - **Explicitly not changed**: production code, routes, verbs, DTO shapes, permission predicates, error-code values, resources, project structure, `.slnx` grouping, allowlists, schema/migrations, Host composition, the repository-global Host checkpoint, and any other module.
 - **Global recovery lock preserved exactly**: `currentHostCheckpoint = HOST_ROOT_FINAL_CERTIFIED`, `lastAcceptedTask = TB-TMAR-HOST-ROOT-FINAL-CERT-001`, `lastAcceptedCommit = 7a6c353a98a761df9124beb1fce23ed8424230de`, repository-global `workflowStop = USER_REVIEW_HOST_ROOT_FINAL_CERT_001`, `automaticNextImplementationTask = NONE`. `structureLock.certifiedModules` unchanged (`ProductWorkspace` present exactly once).
 - Stop gate `USER_REVIEW_PRODUCTWORKSPACE_AMSC_001_W3_R2`; `automaticNextImplementationTask = NONE`; evidence `docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R2/certification.md`. No recovery follow-up, no next module.
+
+ProductWorkspace AMSC W3-R2 Architect recovery reconciliation (final)
+
+Architect post-cert reconciliation after independent repository verification:
+- Fresh certification authority is `TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R2 @ 35c371c6bf08b2362ad6c97572666b7077146678`.
+- Structure authority remains `TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W2 @ 592c346e91d22cb5c31fb50f560a049a4883f19e`.
+- Blocker-repair authority remains `TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R1 @ f0500c29d9d97e8761f70ce0036452d50bdeefe8`.
+- Historical W3 `c0b86feacd897d26172fef7dff47b93db75d8e9d` remains superseded.
+- Immediate follow-up `a67ec8e696585f56fbe136aafe9c6416cbf7bb88` is docs/result-artifact only and is NOT certification authority.
+- Current certified truth remains: HTTP_OWNING, 17 routes, 17 endpoint-reachable requests (3 queries + 14 commands), exhaustive 0 REQUIRED / 17 NO_VALIDATOR_REQUIRED matrix, canonical ApiResponseFactory result mapping with zero raw Results.Json, structure certified under ARCH-COMPLETE-002, Contracts-only foreign boundaries, schema/migrations unchanged, Host business/persistence authority ZERO.
+- This reconciliation changes only recovery metadata/docs; manifest, production code, guards, schema/migrations and repository-global Host checkpoint are untouched.
+- Recovery state: FINAL_CLOSED. automaticNextImplementationTask = NONE.
