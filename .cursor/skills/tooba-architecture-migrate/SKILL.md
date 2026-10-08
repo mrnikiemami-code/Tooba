@@ -487,6 +487,12 @@ Validators must emit **stable machine codes** (e.g. `offer.validation.*`), never
 
 Where the canonical structure requires a durable validator-coverage guard, add/update it (see section 23).
 
+### 14a. Provenance-Driven Validator Completion Gate
+
+Before claiming `READY_TO_STRUCTURE`, re-derive the endpoint → `ISender.Send` → request/handler inventory from shipped code and carry the Analyze per-input provenance matrix forward. For every route/query/body/header value controlled by the caller, inspect its format/range/requiredness and actual validation path. A nullable/optional locale, filter or identifier is **not** automatically `NO_VALIDATOR_REQUIRED`. Add a module-local FluentValidation validator where canonical transport-shape validation belongs to this request; reuse the owning stable machine code and sibling semantics instead of creating parallel codes or different parsers. Do not duplicate domain rules or a proven canonical shared-policy boundary.
+
+For every exemption, prove the value is server-derived, has no malformable transport shape, or is validated by a specific invoked canonical policy that maps failures correctly. Verify handler, DI registration and pipeline discovery, and execute focused valid/invalid/absent-input tests when applicable. Require exact set equality between endpoint-reachable requests and the durable classification matrix; fail closed with `VALIDATOR_COVERAGE_BLOCKED` on a missing/unsupported row. Never satisfy the gate by increasing counts, copying the previous wave's exceptions, or weakening tests/guards. Include the matrix as durable handoff evidence to Structure and Certify.
+
 ## 15. Localization Repair (V2)
 
 When migrating, repair any non-canonical user-facing text using the repository's canonical mechanism (do not invent one):
