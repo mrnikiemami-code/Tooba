@@ -1,0 +1,1 @@
+﻿baseline: Failed!  - Failed:    79, Passed:  2066, Skipped:   130, Total:  2275, Duration: 1 m 20 s - Tooba.Host.Tests.dll (net8.0)

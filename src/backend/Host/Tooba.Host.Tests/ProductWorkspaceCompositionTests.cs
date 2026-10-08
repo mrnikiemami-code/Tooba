@@ -1,5 +1,5 @@
-using System.Text.Json;
-using Tooba.ProductWorkspace.Application.Composition.Models;
+﻿using System.Text.Json;
+using Tooba.ProductWorkspace.Application.Composition.ProductManagement.Models;
 using Xunit;
 
 namespace Tooba.Host.Tests;

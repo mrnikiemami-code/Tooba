@@ -17,7 +17,7 @@ public sealed class ProductWorkspaceModuleAmsc001W1MigrateGuardTests
     private const string Contracts = ModuleRoot + "/Tooba.ProductWorkspace.Contracts";
     private const string Endpoints = ModuleRoot + "/Tooba.ProductWorkspace.Endpoints";
     private const string Infra = ModuleRoot + "/Tooba.ProductWorkspace.Infrastructure";
-    private const string Commands = App + "/Composition/Commands";
+    private const string Commands = App + "/Composition/ProductManagement/Commands";
     private const string EndpointModule = Endpoints + "/ProductWorkspaceEndpointModule.cs";
     private const string CatalogContracts = "src/backend/Modules/Catalog/Tooba.Catalog.Contracts";
 

@@ -1890,14 +1890,14 @@
       "module": "ProductWorkspace",
       "structureCertified": false,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "W19: aggregate GET owned by ProductWorkspace (Contracts composition). NOT_CERTIFIED for ARCH-COMPLETE-002. Host retains 18 ProductWorkspace routes. Do not promote to structureLock.certifiedModules until ARCH-COMPLETE-002.",
+      "certificationNote": "AMSC-001 lineage: W0 Analyze (56909122) -> W1 Migrate (e0fe2885) -> W2 Structure (this wave) -> W3 Certify pending. Composition/Admin BFF owning 17 module routes over /v1/admin/products; reaches the Catalog product write capability only through the Tooba.Catalog.Contracts port ICatalogAdminProductWorkspaceMutationGateway (zero foreign Application/Infrastructure/Domain project edge). W2 normalized Application to capability-first shallow (ProductManagement/{Commands,Queries,Models,Grid} + shared Composition/ProductWorkspaceOperation.cs), removed the .gitkeep ceremony and the empty Composition/{Models,Ports,Queries,Validators} shells, and closed F4 by declaring Tooba.ProductWorkspace.Domain an explicitly justified empty boundary assembly. NOT_CERTIFIED for ARCH-COMPLETE-002 until W3; do not promote to structureLock.certifiedModules yet.",
       "projects": [
         {
           "projectName": "Tooba.ProductWorkspace.Contracts",
           "rootAllowlist": [
             "ProductWorkspaceContractsMarker.cs"
           ],
-          "rootAllowlistJustification": "Contracts marker retained; Errors deferred until broader module certification.",
+          "rootAllowlistJustification": "Contracts root holds the module marker only; Errors/ carries the declared workspace.* declared-code guard + resource set and Resources/ the bilingual pair.",
           "forbiddenRootFiles": [
             "ProductWorkspaceContracts.cs"
           ],
@@ -1906,22 +1906,24 @@
         {
           "projectName": "Tooba.ProductWorkspace.Domain",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Empty-but-valid Domain assembly; no invented domain types.",
+          "rootAllowlistJustification": "Explicitly justified empty boundary assembly (F4): a composition/Admin BFF owns no domain types, so Domain stays an empty-but-valid project rather than being silently filled with a fake domain or removed; no ProjectReference at all.",
           "forbiddenRootFiles": [],
           "forbiddenTopLevelFolders": []
         },
         {
           "projectName": "Tooba.ProductWorkspace.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Composition/{Models,Queries} owns aggregate GET; Validators/Ports reserved; no root .cs.",
+          "rootAllowlistJustification": "Application has no root .cs: the single ProductManagement capability carries Commands/Queries/Models/Grid and the shared Composition/ holds only the ProductWorkspaceOperation typed-fault seam; the W1 flat Composition/{Commands,Queries,Models,Grid} layout and the empty Composition/{Ports,Validators} .gitkeep shells were retired in W2; path↔namespace exact.",
           "forbiddenRootFiles": [
             "ProductWorkspaceContracts.cs"
           ],
           "forbiddenTopLevelFolders": [
             "Commands",
-            "Queries",
+            "Grid",
             "Models",
-            "Ports"
+            "Ports",
+            "Queries",
+            "Validators"
           ]
         },
         {

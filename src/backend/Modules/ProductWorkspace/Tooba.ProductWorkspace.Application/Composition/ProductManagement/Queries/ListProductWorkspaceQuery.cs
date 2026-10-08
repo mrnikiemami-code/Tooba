@@ -1,0 +1,9 @@
+﻿using MediatR;
+using Tooba.BuildingBlocks.Results;
+using Tooba.ProductWorkspace.Application.Composition.ProductManagement.Models;
+
+namespace Tooba.ProductWorkspace.Application.Composition.ProductManagement.Queries;
+
+/// <summary>Lists recent Admin products for ProductWorkspace entry.</summary>
+public sealed record ListProductWorkspaceQuery
+    : IRequest<Result<IReadOnlyList<AdminProductListItem>>>;

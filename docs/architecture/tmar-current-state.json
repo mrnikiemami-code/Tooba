@@ -13521,8 +13521,62 @@
       "Several legacy Catalog/Admin guards read non-existent Tooba.Catalog.Domain/CatalogDomain.cs and CatalogCategoryTreeRules.cs."
     ],
     "structureHandoffState": "REQUIRED",
+    "commit": "e0fe2885",
+    "commitState": "RECORDED_IN_W2_SOT_LINEAGE",
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W1/migrate.md"
+  },
+  "productWorkspaceAmsc001W2": {
+    "task": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W2",
+    "mode": "ARCHITECT_DIRECT_AMSC",
+    "skill": "tooba-architecture-structure",
+    "target": "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.*",
+    "startingHead": "e0fe2885",
+    "parentTask": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W1",
+    "state": "STRUCTURE_COMPLETE",
+    "verdict": "READY_FOR_CERTIFY",
+    "moduleApplicabilityState": "HTTP_OWNING",
+    "folderGranularityState": "PROFESSIONAL_SHALLOW",
+    "solutionExplorerState": "CANONICAL",
+    "pathNamespaceState": "EXACT",
+    "physicalCopyState": "CLEAN",
+    "rootAllowlistState": "ENFORCED",
+    "fileCohesionState": "COHESIVE",
+    "emptyDomainState": "DECLARED_BOUNDARY_JUSTIFIED",
+    "gitkeepCeremonyState": "NONE",
+    "aliasWorkaroundState": "NONE",
+    "hostFinalClosureState": "PRESERVED",
+    "foreignCouplingState": "ZERO",
+    "schemaMigrationState": "UNCHANGED",
+    "behaviorPreservationRisk": "NONE",
+    "capabilityFirstApplication": "Composition/ProductWorkspaceOperation.cs (shared typed-fault seam) + Composition/ProductManagement/{Commands,Queries,Models,Grid}; Application root has no technical-axis folder and no root .cs",
+    "restructure": "23 production files moved and re-namespaced: Composition/{Commands,Queries,Models,Grid} -> Composition/ProductManagement/{Commands,Queries,Models,Grid}; the empty Composition/{Ports,Validators} shells and all four .gitkeep placeholders (Models/Ports/Queries/Validators) deleted; 13 external consumer references repointed (Endpoints module, Host Program.cs CQRS scan, 9 test files, 3 legacy Host/Admin guards) - every assertion preserved or strengthened, none weakened.",
+    "repairedBlockers": [
+      "F4 CLOSED: Tooba.ProductWorkspace.Domain is now an explicitly declared empty boundary assembly - zero .cs, zero ProjectReference, with the justification recorded in the manifest rootAllowlistJustification instead of being silently filled with a fake domain or deleted.",
+      "F5 CLOSED: the .gitkeep ceremony is gone (zero .gitkeep anywhere in the module) and the Application tree is capability-first shallow with a single visible ProductManagement capability; the retired Composition/{Commands,Queries,Models,Grid,Ports,Validators} shells are guarded against resurrection."
+    ],
+    "manifestReconciliation": [
+      "preCertModules[ProductWorkspace].certificationNote replaced the stale W19 note with the AMSC-001 W0->W3 lineage, the Contracts-only write seam, the W2 normalization and the explicit not-certified-until-W3 lock.",
+      "preCertModules[ProductWorkspace].projects[Application].forbiddenTopLevelFolders widened from [Commands,Queries,Models,Ports] to [Commands,Grid,Models,Ports,Queries,Validators]; rootAllowlistJustification refreshed.",
+      "preCertModules[ProductWorkspace].projects[Contracts].rootAllowlistJustification refreshed (Errors/Resources now described).",
+      "preCertModules[ProductWorkspace].projects[Domain].rootAllowlistJustification upgraded to the explicit F4 declaration.",
+      "No rootAllowlist widened, no forbidden entry removed, structureCertified stays false (whole-module promotion is a W3 obligation)."
+    ],
+    "durableGuards": [
+      "ProductWorkspaceModuleAmsc001W2StructureGuardTests: 6 passed / 0 failed (path<->namespace EXACT, capability-first shallow, root allowlists + no .gitkeep ceremony, canonical /Modules/ProductWorkspace/ solution grouping, declared empty Domain boundary, manifest allowlists equal to disk)",
+      "ProductWorkspaceModuleAmsc001W1MigrateGuardTests repointed to Composition/ProductManagement/Commands: 6 passed / 0 failed",
+      "HostAdminAmcW16GuardTests / W19GuardTests / W31PwListGridGuardTests repointed to the new physical paths (strengthened, not weakened)",
+      "Focused family ProductWorkspace* + ErrorCatalogUniqueCodeGuardTests: 43 passed / 0 failed"
+    ],
+    "validation": [
+      "dotnet build src/backend/Tooba.slnx: Build succeeded, 0 errors.",
+      "full Tooba.Host.Tests suite after the restructure: 2066 passed / 79 failed / 130 skipped (2275) - the failing set is byte-identical to the pre-W2 baseline captured before any file was moved (79/79 same names, no new failure, none silently fixed)."
+    ],
+    "preExistingUnrelatedFailures": [
+      "Host/Admin file count drift and legacy Catalog domain guards, unchanged by this wave and reproduced identically at the pre-W2 baseline."
+    ],
+    "structureHandoffState": "READY_FOR_CERTIFY",
     "commit": null,
     "commitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
-    "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W1/migrate.md"
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W2/structure.md"
   }
 }

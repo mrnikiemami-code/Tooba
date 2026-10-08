@@ -1,6 +1,6 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.ProductWorkspace.Application.Composition.Grid;
+using Tooba.ProductWorkspace.Application.Composition.ProductManagement.Grid;
 using Xunit;
 
 namespace Tooba.Host.Tests;

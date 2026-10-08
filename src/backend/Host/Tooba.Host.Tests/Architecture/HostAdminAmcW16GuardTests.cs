@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -17,7 +17,7 @@ public sealed class HostAdminAmcW16GuardTests
 
         var models = File.ReadAllText(Path.Combine(
             root,
-            "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Application/Composition/Models/ProductWorkspaceModels.cs"));
+            "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Application/Composition/ProductManagement/Models/ProductWorkspaceModels.cs"));
         Assert.Contains("record ProductPublishReadinessView", models, StringComparison.Ordinal);
         Assert.Contains("record ProductPublishMissingRequirementView", models, StringComparison.Ordinal);
         Assert.Contains("AggregateReadiness", models, StringComparison.Ordinal);

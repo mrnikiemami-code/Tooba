@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks.Results;
+﻿using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Catalog.Contracts.Errors;
@@ -8,8 +8,8 @@ using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
-using Tooba.ProductWorkspace.Application.Composition.Models;
-using Tooba.ProductWorkspace.Application.Composition.Queries;
+using Tooba.ProductWorkspace.Application.Composition.ProductManagement.Models;
+using Tooba.ProductWorkspace.Application.Composition.ProductManagement.Queries;
 using Tooba.Tax.Contracts;
 using Xunit;
 

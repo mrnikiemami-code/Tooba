@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xunit;
 
@@ -54,7 +54,7 @@ public sealed class HostAdminAmcW19GuardTests
 
         var handler = File.ReadAllText(Path.Combine(
             moduleRoot,
-            "Tooba.ProductWorkspace.Application/Composition/Queries/GetProductWorkspaceHandler.cs"));
+            "Tooba.ProductWorkspace.Application/Composition/ProductManagement/Queries/GetProductWorkspaceHandler.cs"));
         Assert.Contains("ICatalogAdminProductWorkspaceReadGateway", handler, StringComparison.Ordinal);
         Assert.Contains("IOfferQueryGateway", handler, StringComparison.Ordinal);
         Assert.Contains("IPriceQueryGateway", handler, StringComparison.Ordinal);

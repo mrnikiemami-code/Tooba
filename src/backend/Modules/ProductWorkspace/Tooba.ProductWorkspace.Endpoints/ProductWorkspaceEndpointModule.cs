@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -9,9 +9,9 @@ using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.OperatorProfile.Contracts.Ports;
-using Tooba.ProductWorkspace.Application.Composition.Commands;
-using Tooba.ProductWorkspace.Application.Composition.Models;
-using Tooba.ProductWorkspace.Application.Composition.Queries;
+using Tooba.ProductWorkspace.Application.Composition.ProductManagement.Commands;
+using Tooba.ProductWorkspace.Application.Composition.ProductManagement.Models;
+using Tooba.ProductWorkspace.Application.Composition.ProductManagement.Queries;
 using Tooba.ProductWorkspace.Contracts.Errors;
 using Tooba.ProductWorkspace.Endpoints.Admin;
 

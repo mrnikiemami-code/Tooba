@@ -1,6 +1,6 @@
-using Tooba.Catalog.Application.ProductIdentity.Models;
+﻿using Tooba.Catalog.Application.ProductIdentity.Models;
 using Tooba.Catalog.Application.ProductTaxonomy.Models;
-using Tooba.ProductWorkspace.Application.Composition.Models;
+using Tooba.ProductWorkspace.Application.Composition.ProductManagement.Models;
 using Xunit;
 
 namespace Tooba.Host.Tests;
