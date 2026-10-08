@@ -344,6 +344,14 @@ Do not duplicate:
 
 These belong in Application/Domain.
 
+### 8a. Request Input Provenance & Validator Proof (MANDATORY)
+
+For every real HTTP route, trace **each input field** from its actual binding source (route, query, body, header, cookie, or server-derived context) through endpoint construction into the authoritative MediatR request and handler. Do not infer provenance from request/class names, optionality, or presence of existing validators. Include implicit/minimal-API binding and values forwarded to composers/ports.
+
+Produce one auditable row per endpoint-reachable request: route+verb, request type, each input and source, transport-shape constraints and their owner, validator type or justified equivalent canonical policy, DI/pipeline discovery, and classification. Classify a request `NO_VALIDATOR_REQUIRED` only after demonstrating that its actual caller-controlled inputs have no malformed transport shape or are already validated at an explicitly proven canonical boundary. Optional query/header values are still caller-controlled; optional does not mean trusted. A shared policy exemption must identify its exact execution path and failure mapping, not merely cite its existence.
+
+**Set equality gate:** derive the reachable request set from shipped route mappings and `ISender.Send` calls, independently derive covered requests from validators/policies, and prove every reachable request has exactly one classification; no orphan/missing/duplicate classification. Report `GAPS` and block progression if any provenance, binding, validation ownership or runtime discovery is unproven. Raw counts and hard-coded exemptions never suffice. Preserve this matrix as the handoff evidence to Migrate and Certify.
+
 ### 9. Localization / User-Facing Text Audit
 
 Detect and report:
