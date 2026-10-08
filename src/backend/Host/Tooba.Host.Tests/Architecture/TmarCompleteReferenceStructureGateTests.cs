@@ -30,7 +30,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile",
                 "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
                 "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
-                "ProductWorkspace", "Promotion", "Settlement", "StoreContext", "Story", "UserPreference", "Wishlist",
+                "ProductWorkspace", "Promotion", "Returns", "Settlement", "StoreContext", "Story", "UserPreference", "Wishlist",
             },
             modules.Select(m => m.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
@@ -48,7 +48,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "AccessControl", "AddressBook", "Content", "Identity", "Media", "Localization", "Notification",
                 "OperatorProfile", "Party", "ProductQnA", "PageComposition", "BulkInquiry", "Wishlist",
                 "UserPreference", "Story", "Catalog", "CustomerProfile", "Inventory", "Pricing",
-                "ProductWorkspace", "Promotion",
+                "ProductWorkspace", "Promotion", "Returns",
             }, StringComparer.Ordinal);
         }
     }
@@ -191,6 +191,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
         Assert.DoesNotContain("Inventory", uncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("ProductWorkspace", uncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("Promotion", uncertified, StringComparer.Ordinal);
+        Assert.DoesNotContain("Returns", uncertified, StringComparer.Ordinal);
         Assert.NotEmpty(uncertified);
 
         var statePath = Path.Combine(RepoRoot(), "docs", "architecture", "tmar-current-state.json");
@@ -203,7 +204,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile",
                 "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
                 "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
-                "ProductWorkspace", "Promotion", "Settlement", "StoreContext", "UserPreference", "Wishlist",
+                "ProductWorkspace", "Promotion", "Returns", "Settlement", "StoreContext", "UserPreference", "Wishlist",
             },
             certified);
     }

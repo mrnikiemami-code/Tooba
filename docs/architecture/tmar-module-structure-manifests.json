@@ -2034,18 +2034,11 @@
           "forbiddenTopLevelFolders": []
         }
       ]
-    }
-  ],
-  "uncertifiedHttpOwningModules": [
-    "Support",
-    "Wallet"
-  ],
-  "preCertModules": [
+    },
     {
       "module": "Returns",
-      "structureCertified": false,
+      "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Pre-certification structure record for TB-TMAR-RETURNS-AMSC-001 W2 (tooba-architecture-structure). Wave lineage W0 f5c5a6db -> W1 0a573864 -> W2 this commit. Structure: Application is capability-first shallow (ReturnRequests/{Commands,Queries,Models,Ports} + Composition/ (ReturnsOperation typed-fault seam + ReturnRefundDestinationParser) + Validation/ (transport validators + validation codes)); the W0 technical-axis roots Commands/Queries/Models/Ports/Errors and the eleven single-file use-case leaf folders are retired and forbidden. Contracts/{Errors,Events,History,Operations,Resources,Settlement}, Domain/{Aggregates,Events,ValueObjects}, Infrastructure/{Adapters,Bridges,DependencyInjection,Directories,Errors,Evaluators,Gateways,Messaging,Observability,Persistence(+Migrations),Queries} and Endpoints/{Admin,Customer,Seller} + root composition ReturnEndpointModule.cs. Folder-Granularity-State = PROFESSIONAL_SHALLOW; Solution-Explorer-State = CANONICAL (/Modules/Returns/ with all six projects); Path-Namespace-State = EXACT (0 mismatches); Physical-Copy-State = CLEAN; Root-Allowlist-State = ENFORCED. This is a Structure wave only: it does not certify the module (structureCertified stays false); promotion to the certified modules[] array is the exclusive authority of the W3 tooba-architecture-certify wave.",
       "projects": [
         {
           "projectName": "Tooba.Returns.Contracts",
@@ -2129,7 +2122,18 @@
           "forbiddenRootFiles": [],
           "forbiddenTopLevelFolders": []
         }
-      ]
+      ],
+      "certificationState": "RETURNS_AMSC_001_CERTIFIED",
+      "currentCertificationTask": "TB-TMAR-RETURNS-AMSC-001-W3",
+      "currentVerdict": "COMPLETE_REFERENCE_PATTERN",
+      "currentValidatorMatrixState": "EXHAUSTIVE_4_VALIDATOR_REQUIRED_7_NO_VALIDATOR_REQUIRED",
+      "certificationNote": "CERTIFIED by TB-TMAR-RETURNS-AMSC-001-W3 (tooba-architecture-certify) after the Structure wave W2 (6cab1b87). Wave lineage W0 f5c5a6db -> W1 0a573864 -> W2 6cab1b87 -> W3. All applicable ARCH-COMPLETE-002 gates re-derived from disk and PASS: HTTP_OWNING module owning 11 module-owned routes (Host Returns route count ZERO) over /v1/customer/returns x3, /v1/seller/returns x4 and /v1/admin/returns x4, dispatched to 11 endpoint-reachable MediatR requests through ISender with a real IRequestHandler for each; the exhaustive 4 VALIDATOR_REQUIRED + 7 NO_VALIDATOR_REQUIRED input-provenance matrix under the certify 6a HARD BLOCKER gate with the four transport validators discoverable through AddToobaCqrsFoundation AddValidatorsFromAssembly over the Returns Application assembly; canonical ApiResponseFactory.From results with zero raw Results.*, zero catch-and-map and zero ex.Message classification (the typed ReturnsOperation seam filters on ReturnsErrorCodes.IsKnown only); the single canonical Contracts error-code home (20 HTTP-reachable + 1 platform fault) with 20 descriptors registered exactly once and 21 EN + 21 FA bilingual resources owned and registered once by ReturnsErrorResourceSet; PROFESSIONAL_SHALLOW capability-first structure (ReturnRequests/{Commands,Queries,Models,Ports} + Composition/ + Validation/) with six solution projects under /Modules/Returns/, exact path<->namespace (0 mismatches over 71 production .cs) and enforced root allowlists; Contracts-only boundaries with zero foreign Application/Infrastructure/Domain edge and zero cross-module persistence or join; the three migrations byte-identical to the W0 baseline; and the preserved HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED / HOST_ROOT_FINAL_CERTIFIED checkpoints. Verdict COMPLETE_REFERENCE_PATTERN; structureCertified true; microserviceExtractable = ARCHITECTURAL_READY_RUNTIME_UNPROVEN.",
+      "evidence": "docs/architecture/evidence/TB-TMAR-RETURNS-AMSC-001-W3/certification.md"
     }
-  ]
+  ],
+  "uncertifiedHttpOwningModules": [
+    "Support",
+    "Wallet"
+  ],
+  "preCertModules": []
 }

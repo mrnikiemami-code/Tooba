@@ -107,7 +107,9 @@ public sealed class ReturnsModuleAmsc001W2StructureGuardTests
     public void Root_allowlists_match_disk_and_forbidden_entries_are_absent()
     {
         var manifest = LoadManifest();
-        var entry = manifest.GetProperty("preCertModules").EnumerateArray()
+        // Returns was promoted from preCertModules into the certified modules[] array by the W3
+        // certify wave (structureCertified true); the structural allowlists below are unchanged.
+        var entry = manifest.GetProperty("modules").EnumerateArray()
             .Single(x => x.GetProperty("module").GetString() == "Returns");
 
         foreach (var project in entry.GetProperty("projects").EnumerateArray())
@@ -147,16 +149,15 @@ public sealed class ReturnsModuleAmsc001W2StructureGuardTests
                 .Any(x => x.GetString() == "Returns"),
             "Returns must be removed from uncertifiedHttpOwningModules after the W2 structure wave");
 
-        var entry = manifest.GetProperty("preCertModules").EnumerateArray()
+        var entry = manifest.GetProperty("modules").EnumerateArray()
             .Single(x => x.GetProperty("module").GetString() == "Returns");
-        Assert.False(entry.GetProperty("structureCertified").GetBoolean());
+        Assert.True(entry.GetProperty("structureCertified").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", entry.GetProperty("lockVersion").GetString());
         Assert.Equal(6, entry.GetProperty("projects").GetArrayLength());
 
-        Assert.False(
-            manifest.GetProperty("modules").EnumerateArray()
-                .Any(x => x.GetProperty("module").GetString() == "Returns"),
-            "promotion into the certified modules[] array is the exclusive authority of the W3 Certify wave");
+        Assert.DoesNotContain(
+            manifest.GetProperty("preCertModules").EnumerateArray(),
+            x => x.GetProperty("module").GetString() == "Returns");
     }
 
     [Fact]
