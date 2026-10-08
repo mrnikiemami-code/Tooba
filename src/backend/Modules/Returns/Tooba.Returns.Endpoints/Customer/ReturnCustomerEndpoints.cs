@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.BuildingBlocks.Results;
-using Tooba.Returns.Application.Errors;
-using Tooba.Returns.Application.Models;
-using Tooba.Returns.Application.Queries.GetCustomerReturn;
-using Tooba.Returns.Application.Queries.ListCustomerReturns;
+using Tooba.BuildingBlocks.Presentation.Errors;
+using Tooba.Returns.Application.Composition;
+using Tooba.Returns.Application.ReturnRequests.Commands;
+using Tooba.Returns.Application.ReturnRequests.Models;
+using Tooba.Returns.Application.ReturnRequests.Queries;
 
 namespace Tooba.Returns.Endpoints.Customer;
 
@@ -44,7 +44,7 @@ public static class ReturnCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError("customer.actor.missing"));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(new ListCustomerReturnsQuery(actor.Value), cancellationToken));
     }
 
@@ -54,7 +54,7 @@ public static class ReturnCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError("customer.actor.missing"));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(new GetCustomerReturnQuery(actor.Value, returnRequestId), cancellationToken));
     }
 
@@ -64,13 +64,13 @@ public static class ReturnCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError("customer.actor.missing"));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
 
-        var destination = ReturnsExceptionMapper.ParseDestination(body.EffectiveRefundDestination);
+        var destination = ReturnRefundDestinationParser.Parse(body.EffectiveRefundDestination);
         if (destination.IsFailure)
             return api.From(destination);
 
-        var command = new Application.Commands.CreateReturn.CreateReturnCommand(
+        var command = new CreateReturnCommand(
             body.SellerOrderId,
             actor.Value,
             body.IdempotencyKey,

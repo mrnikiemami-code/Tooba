@@ -4,8 +4,9 @@ using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Contracts.Returns;
 using Tooba.Order.Contracts.Returns;
 using Tooba.Payment.Contracts.Returns;
-using Tooba.Returns.Application.Models;
-using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.ReturnRequests.Commands;
+using Tooba.Returns.Application.ReturnRequests.Models;
+using Tooba.Returns.Application.ReturnRequests.Ports;
 using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Returns.Infrastructure.Directories;
 using Tooba.Returns.Infrastructure.Evaluators;
@@ -94,7 +95,7 @@ public sealed class ReturnsCharacterizationTests
         Assert.Equal("IRR", first.Currency);
 
         var approved = await directory.ApproveAsync(
-            new ApproveReturnCommand(first.ReturnRequestId, Guid.NewGuid()),
+            new ApproveReturnCommand(first.ReturnRequestId, Guid.NewGuid(), Guid.NewGuid()),
             CancellationToken.None);
         Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
         Assert.Single(refunds.Calls);
@@ -146,7 +147,7 @@ public sealed class ReturnsCharacterizationTests
                 RefundDestination.Wallet),
             CancellationToken.None);
         var approved = await directory.ApproveAsync(
-            new ApproveReturnCommand(created.ReturnRequestId, Guid.NewGuid()),
+            new ApproveReturnCommand(created.ReturnRequestId, Guid.NewGuid(), Guid.NewGuid()),
             CancellationToken.None);
         Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
         Assert.Empty(refunds.Calls);

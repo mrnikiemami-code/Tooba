@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Endpoints.Admin;
 using Tooba.Returns.Endpoints.Customer;
 using Tooba.Returns.Endpoints.Seller;
@@ -23,11 +25,12 @@ public static class ReturnEndpointModule
         return app;
     }
 
-    /// <summary>Registers module-owned Returns customer authorizer.</summary>
+    /// <summary>Registers module-owned Returns customer authorizer and error resource set.</summary>
     public static IServiceCollection AddReturnEndpointPresentation(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<IReturnCustomerAuthorizer, ReturnCustomerAuthorizer>();
+        services.AddSingleton<IErrorResourceSet, ReturnsErrorResourceSet>();
         return services;
     }
 }

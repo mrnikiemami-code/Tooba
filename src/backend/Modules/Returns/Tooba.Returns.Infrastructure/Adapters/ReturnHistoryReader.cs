@@ -1,5 +1,5 @@
-using Tooba.Returns.Application.Models;
-using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.ReturnRequests.Models;
+using Tooba.Returns.Application.ReturnRequests.Ports;
 using Tooba.Returns.Contracts.History;
 
 namespace Tooba.Returns.Infrastructure.Adapters;

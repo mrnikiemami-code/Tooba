@@ -7,6 +7,14 @@
     <AssemblyName>Tooba.Returns.Contracts</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Update="Resources\ReturnsErrors.resx">
+      <LogicalName>Tooba.Returns.Contracts.Resources.ReturnsErrors.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\ReturnsErrors.fa.resx">
+      <LogicalName>Tooba.Returns.Contracts.Resources.ReturnsErrors.fa.resources</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
 </Project>

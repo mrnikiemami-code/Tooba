@@ -7,8 +7,8 @@ namespace Tooba.Returns.Tests.Architecture;
 public sealed class ReturnsArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors"];
-    private static readonly string[] AllowedContractsFolders = ["Events", "Settlement", "Errors", "History", "Operations"];
+    private static readonly string[] AllowedApplicationFolders = ["ReturnRequests", "Composition", "Validation"];
+    private static readonly string[] AllowedContractsFolders = ["Events", "Settlement", "Errors", "History", "Operations", "Resources"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations",
             "Gateways", "Bridges", "Evaluators", "Observability", "Queries", "Errors"];
@@ -181,14 +181,14 @@ public sealed class ReturnsArchitectureGuardTests
         Assert.Contains(application, x => x.Text.Contains("RetryReturnRefundCommand", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("QueryAdminReturnsGridQuery", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("AdminReturnGridQueryPolicy", StringComparison.Ordinal));
-        Assert.Contains(application, x => x.Text.Contains("ReturnsExceptionMapper", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("ReturnsOperation", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
+        Assert.DoesNotContain(application, x => x.Text.Contains("ex.Message", StringComparison.Ordinal));
         Assert.DoesNotContain(application, x =>
             x.Text.Contains("StartsWith(\"return.\"", StringComparison.Ordinal)
             || x.Text.Contains("StartsWith(\"returns.\"", StringComparison.Ordinal)
-            || x.Text.Contains("StartsWith(\"refund.\"", StringComparison.Ordinal)
-            || (x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal)));
+            || x.Text.Contains("StartsWith(\"refund.\"", StringComparison.Ordinal));
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         var endpointsRoot = Path.Combine(ModuleRoot(), "Tooba.Returns.Endpoints");

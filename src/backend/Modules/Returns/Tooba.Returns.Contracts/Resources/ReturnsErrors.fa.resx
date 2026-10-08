@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="return.missing" xml:space="preserve"><value>درخواست مرجوعی پیدا نشد.</value></data>
+  <data name="return.rejected" xml:space="preserve"><value>درخواست مرجوعی رد شد.</value></data>
+  <data name="return.expired" xml:space="preserve"><value>مهلت مرجوعی به پایان رسیده است.</value></data>
+  <data name="return.non_returnable" xml:space="preserve"><value>این کالا قابل مرجوعی نیست.</value></data>
+  <data name="return.quantity_exceeded" xml:space="preserve"><value>تعداد مرجوعی از مقدار قابل بازگشت بیشتر است.</value></data>
+  <data name="return.quantity_invalid" xml:space="preserve"><value>تعداد مرجوعی نامعتبر است.</value></data>
+  <data name="return.not_delivered" xml:space="preserve"><value>این سفارش تحویل نشده است.</value></data>
+  <data name="return.not_paid" xml:space="preserve"><value>این سفارش پرداخت نشده است.</value></data>
+  <data name="return.fulfillment_missing" xml:space="preserve"><value>اطلاعات تحویل برای مرجوعی پیدا نشد.</value></data>
+  <data name="return.stale" xml:space="preserve"><value>وضعیت مرجوعی تغییر کرده است؛ صفحه را تازه کنید و دوباره تلاش کنید.</value></data>
+  <data name="return.already_approved" xml:space="preserve"><value>این مرجوعی قبلاً تأیید شده است.</value></data>
+  <data name="return.already_rejected" xml:space="preserve"><value>این مرجوعی قبلاً رد شده است.</value></data>
+  <data name="return.line_missing" xml:space="preserve"><value>خط سفارش پیدا نشد.</value></data>
+  <data name="return.not_owner" xml:space="preserve"><value>شما مالک این مرجوعی نیستید.</value></data>
+  <data name="return.idempotency_required" xml:space="preserve"><value>کلید یکتایی درخواست الزامی است.</value></data>
+  <data name="refund.destination.invalid" xml:space="preserve"><value>مقصد بازگشت وجه نامعتبر است.</value></data>
+  <data name="refund.retry.invalid_state" xml:space="preserve"><value>بازگشت وجه در وضعیت فعلی قابل تلاش دوباره نیست.</value></data>
+  <data name="refund.already_started" xml:space="preserve"><value>بازگشت وجه قبلاً آغاز شده است.</value></data>
+  <data name="refund.already_completed" xml:space="preserve"><value>بازگشت وجه قبلاً تکمیل شده است.</value></data>
+  <data name="refund.payment_missing" xml:space="preserve"><value>پرداخت مرتبط با بازگشت وجه پیدا نشد.</value></data>
+  <data name="return.outbox.unmapped_event" xml:space="preserve"><value>نوع رویداد یکپارچه ثبت نشده است.</value></data>
+</root>

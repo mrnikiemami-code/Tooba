@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="return.missing" xml:space="preserve"><value>Return was not found.</value></data>
+  <data name="return.rejected" xml:space="preserve"><value>The return request was rejected.</value></data>
+  <data name="return.expired" xml:space="preserve"><value>The return window has expired.</value></data>
+  <data name="return.non_returnable" xml:space="preserve"><value>The item is not returnable.</value></data>
+  <data name="return.quantity_exceeded" xml:space="preserve"><value>The return quantity exceeds the remaining returnable amount.</value></data>
+  <data name="return.quantity_invalid" xml:space="preserve"><value>The return quantity is invalid.</value></data>
+  <data name="return.not_delivered" xml:space="preserve"><value>The order has not been delivered.</value></data>
+  <data name="return.not_paid" xml:space="preserve"><value>The order is not paid.</value></data>
+  <data name="return.fulfillment_missing" xml:space="preserve"><value>Fulfillment information for the return was not found.</value></data>
+  <data name="return.stale" xml:space="preserve"><value>The return status changed; refresh and try again.</value></data>
+  <data name="return.already_approved" xml:space="preserve"><value>The return was already approved.</value></data>
+  <data name="return.already_rejected" xml:space="preserve"><value>The return was already rejected.</value></data>
+  <data name="return.line_missing" xml:space="preserve"><value>The order line was not found.</value></data>
+  <data name="return.not_owner" xml:space="preserve"><value>You are not the owner of this return.</value></data>
+  <data name="return.idempotency_required" xml:space="preserve"><value>An idempotency key is required.</value></data>
+  <data name="refund.destination.invalid" xml:space="preserve"><value>The refund destination is invalid.</value></data>
+  <data name="refund.retry.invalid_state" xml:space="preserve"><value>The refund cannot be retried from its current state.</value></data>
+  <data name="refund.already_started" xml:space="preserve"><value>The refund has already started.</value></data>
+  <data name="refund.already_completed" xml:space="preserve"><value>The refund has already completed.</value></data>
+  <data name="refund.payment_missing" xml:space="preserve"><value>The payment for the refund was not found.</value></data>
+  <data name="return.outbox.unmapped_event" xml:space="preserve"><value>The integration event type is not registered.</value></data>
+</root>

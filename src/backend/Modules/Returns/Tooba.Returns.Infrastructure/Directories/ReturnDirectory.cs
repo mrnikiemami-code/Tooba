@@ -3,8 +3,10 @@ using Tooba.BuildingBlocks;
 using Microsoft.Extensions.Logging;
 using Tooba.Order.Contracts.Returns;
 using Tooba.Payment.Contracts.Returns;
-using Tooba.Returns.Application.Ports;
-using Tooba.Returns.Application.Models;
+using Tooba.Returns.Application.ReturnRequests.Commands;
+using Tooba.Returns.Application.ReturnRequests.Models;
+using Tooba.Returns.Application.ReturnRequests.Ports;
+using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Returns.Infrastructure.Persistence;
@@ -14,15 +16,6 @@ using Tooba.Wallet.Contracts.Payments;
 using Tooba.Wallet.Contracts.Refunds;
 
 namespace Tooba.Returns.Infrastructure.Directories;
-
-/// <summary>
-/// نگهبان باز موردکاربرد Returns.
-/// </summary>
-public sealed class OpenReturnUseCaseGuard : IReturnUseCaseGuard
-{
-    /// <inheritdoc />
-    public Task EnsureCanMutateAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-}
 
 /// <summary>
 /// ارکستراسیون مرجوعی در schema returns.
@@ -103,16 +96,16 @@ public sealed class ReturnDirectory : IReturnDirectory
         }
 
         var orderContext = await _orders.GetReturnContextAsync(command.SellerOrderId, cancellationToken)
-            ?? throw new ContractOperationException("returns." + ReturnEligibilityReasonCodes.OrderMissing);
+            ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
         if (requireOwner && orderContext.PlacedByUserId != command.ActorUserId)
         {
-            throw new ContractOperationException("returns.actor.not_owner");
+            throw new ContractOperationException(ReturnsErrorCodes.NotOwner);
         }
 
         var eligibility = await _eligibility.EvaluateAsync(command.SellerOrderId, cancellationToken);
         if (!eligibility.Eligible)
         {
-            throw new ContractOperationException("returns." + eligibility.ReasonCode);
+            throw new ContractOperationException(ReturnEligibilityReasonCodes.ToErrorCode(eligibility.ReasonCode));
         }
 
         var remainingByLine = eligibility.Lines.ToDictionary(x => x.OrderLineId, x => x.RemainingReturnableQuantity);
@@ -120,11 +113,11 @@ public sealed class ReturnDirectory : IReturnDirectory
         foreach (var item in command.Items)
         {
             var orderLine = orderContext.Lines.SingleOrDefault(x => x.OrderLineId == item.OrderLineId)
-                ?? throw new ContractOperationException("returns.order_line.not_found");
+                ?? throw new ContractOperationException(ReturnsErrorCodes.LineMissing);
             remainingByLine.TryGetValue(item.OrderLineId, out var remaining);
             if (item.Quantity <= 0 || item.Quantity > remaining)
             {
-                throw new ContractOperationException("returns.qty.exceeds_remaining");
+                throw new ContractOperationException(ReturnsErrorCodes.QuantityExceeded);
             }
 
             lineSnapshots.Add((item.OrderLineId, item.Quantity, orderLine.UnitPriceSnapshot, orderLine.ReservationId));
@@ -229,10 +222,10 @@ public sealed class ReturnDirectory : IReturnDirectory
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
         var payment = await ResolvePaymentAsync(request, cancellationToken)
-            ?? throw new ContractOperationException("returns.payment.not_found");
+            ?? throw new ContractOperationException(ReturnsErrorCodes.RefundPaymentMissing);
         if (!string.Equals(payment.Status, "Succeeded", StringComparison.Ordinal))
         {
-            throw new ContractOperationException("returns.payment.not_succeeded");
+            throw new ContractOperationException(ReturnsErrorCodes.RefundAlreadyStarted);
         }
 
         request.Approve(payment.PaymentId, _clock.UtcNow, command.RefundDestination);
@@ -260,17 +253,17 @@ public sealed class ReturnDirectory : IReturnDirectory
     }
 
     /// <inheritdoc />
-    public async Task<ReturnSnapshot> RetryRefundAsync(RetryRefundCommand command, CancellationToken cancellationToken)
+    public async Task<ReturnSnapshot> RetryRefundAsync(RetryReturnRefundCommand command, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
         if (request.Status != ReturnRequestStatus.RefundFailed)
         {
-            throw new ContractOperationException("returns.retry.invalid_status");
+            throw new ContractOperationException(ReturnsErrorCodes.RefundRetryInvalidState);
         }
 
         var paymentId = request.PaymentId
-            ?? throw new ContractOperationException("returns.payment.reference_missing");
+            ?? throw new ContractOperationException(ReturnsErrorCodes.RefundPaymentMissing);
         request.MarkRefundProcessing(_clock.UtcNow);
         var attempt = request.BeginRefundAttempt(
             _ids.NewId(),
@@ -360,7 +353,7 @@ public sealed class ReturnDirectory : IReturnDirectory
     private async Task<ReturnRequest> LoadMutableAsync(Guid returnRequestId, CancellationToken cancellationToken)
     {
         var request = await _db.ReturnRequests.SingleOrDefaultAsync(x => x.ReturnRequestId == returnRequestId, cancellationToken)
-            ?? throw new ContractOperationException("returns.request.not_found");
+            ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
         var items = await _db.ReturnItems.Where(x => x.ReturnRequestId == returnRequestId).ToListAsync(cancellationToken);
         var attempts = await _db.RefundAttempts.Where(x => x.ReturnRequestId == returnRequestId).ToListAsync(cancellationToken);
         request.AttachLoadedItems(items);

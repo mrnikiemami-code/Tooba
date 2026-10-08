@@ -1,7 +1,9 @@
 using Tooba.Order.Application.Admin.Operations.Policies;
-using Tooba.Returns.Application.Errors;
-using Tooba.Returns.Application.Models;
-using Tooba.Returns.Application.Ports;
+using Tooba.BuildingBlocks;
+using Tooba.Returns.Application.Composition;
+using Tooba.Returns.Application.ReturnRequests.Models;
+using Tooba.Returns.Application.ReturnRequests.Ports;
+using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
 using Xunit;
@@ -100,21 +102,19 @@ public sealed class AdminReturnWorkQueueTests
         Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("ReturnErrorMapper", endpoints, StringComparison.Ordinal);
 
-        var composer = File.ReadAllText(Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host", "Admin", "AdminOrderOperationsPolicy.cs")));
-        Assert.Contains("isReturnLifecycleOp", composer, StringComparison.Ordinal);
-        Assert.Contains("ToErrorCode(eligibility.ReasonCode)", composer, StringComparison.Ordinal);
+        var reasonCatalog = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Modules", "Returns",
+            "Tooba.Returns.Contracts", "Operations", "ReturnAdminOperationsContracts.cs")));
+        Assert.Contains("ToErrorCode", reasonCatalog, StringComparison.Ordinal);
+        Assert.Contains("return.expired", reasonCatalog, StringComparison.Ordinal);
 
-        var expired = ReturnsExceptionMapper.ToSemanticError(
-            new InvalidOperationException("returns.window_expired"));
+        var expired = ReturnsOperation.ToSemanticError(new ContractOperationException(ReturnsErrorCodes.Expired));
         Assert.Equal("return.expired", expired.Code);
 
-        var stale = ReturnsExceptionMapper.ToSemanticError(
-            new InvalidOperationException("fulfillment.status.transition_invalid"));
+        var stale = ReturnsOperation.ToSemanticError(new ContractOperationException(ReturnsErrorCodes.Stale));
         Assert.Equal("return.stale", stale.Code);
 
-        var qty = ReturnsExceptionMapper.ToSemanticError(
-            new InvalidOperationException("returns.qty.exceeds_remaining"));
+        var qty = ReturnsOperation.ToSemanticError(new ContractOperationException(ReturnsErrorCodes.QuantityExceeded));
         Assert.Equal("return.quantity_exceeded", qty.Code);
     }
 }

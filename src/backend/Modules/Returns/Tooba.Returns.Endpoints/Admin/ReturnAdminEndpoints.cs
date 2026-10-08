@@ -4,10 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Returns.Application.Commands.RetryReturnRefund;
-using Tooba.Returns.Application.Queries.GetAdminReturn;
-using Tooba.Returns.Application.Queries.ListAdminReturns;
-using Tooba.Returns.Application.Queries.QueryAdminReturnsGrid;
+using Tooba.Returns.Application.ReturnRequests.Commands;
+using Tooba.Returns.Application.ReturnRequests.Queries;
 
 namespace Tooba.Returns.Endpoints.Admin;
 

@@ -11,7 +11,7 @@ using Tooba.Order.Domain;
 using Tooba.Payment.Domain.Aggregates;
 using Tooba.Payment.Domain.ValueObjects;
 using Tooba.Payment.Domain.Events;
-using Tooba.Returns.Application.Models;
+using Tooba.Returns.Application.ReturnRequests.Models;
 using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Settlement.Application;

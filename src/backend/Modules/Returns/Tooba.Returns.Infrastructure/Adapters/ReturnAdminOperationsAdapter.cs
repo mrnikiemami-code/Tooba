@@ -1,6 +1,10 @@
-using Tooba.Returns.Application.Ports;
+using Tooba.BuildingBlocks;
+using Tooba.Returns.Application.ReturnRequests.Commands;
+using Tooba.Returns.Application.ReturnRequests.Ports;
+using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Contracts.Operations;
-using AppModels = Tooba.Returns.Application.Models;
+using Tooba.Returns.Domain.ValueObjects;
+using AppModels = Tooba.Returns.Application.ReturnRequests.Models;
 using ReturnStatusOverlayRow = Tooba.Returns.Contracts.Operations.ReturnStatusOverlayRow;
 
 namespace Tooba.Returns.Infrastructure.Adapters;
@@ -8,8 +12,10 @@ namespace Tooba.Returns.Infrastructure.Adapters;
 /// <summary>
 /// Contract-facing adapter over <see cref="IReturnDirectory"/> and <see cref="IReturnEligibilityEvaluator"/>
 /// so admin order callers never reference Returns Application/Domain types.
-/// Expected failures originate as <see cref="Tooba.BuildingBlocks.ContractOperationException"/> at
-/// owning Directory; this adapter does not parse Message or promote InvalidOperationException.
+/// The module's internal port consumes the authoritative MediatR request shapes, so this adapter composes
+/// the seller scope from the owning snapshot (admin callers never carry it) and never duplicates a
+/// command record. Expected failures originate as <see cref="ContractOperationException"/> at the owning
+/// Directory; this adapter does not parse Message or promote InvalidOperationException.
 /// </summary>
 internal sealed class ReturnAdminOperationsAdapter(
     IReturnDirectory directory,
@@ -42,12 +48,13 @@ internal sealed class ReturnAdminOperationsAdapter(
         CreateAdminReturnCommand command,
         CancellationToken cancellationToken) =>
         Map(await directory.CreateAdminInitiatedAsync(
-            new AppModels.CreateReturnCommand(
+            new CreateReturnCommand(
                 command.SellerOrderId,
                 command.ActorUserId,
                 command.IdempotencyKey,
                 command.Reason,
-                command.Items.Select(x => new AppModels.ReturnLineCommand(x.OrderLineId, x.Quantity)).ToList()),
+                command.Items.Select(x => new AppModels.ReturnLineCommand(x.OrderLineId, x.Quantity)).ToList(),
+                RefundDestination.OriginalPayment),
             cancellationToken));
 
     public async Task<ReturnSnapshot> ApproveAsync(
@@ -55,7 +62,11 @@ internal sealed class ReturnAdminOperationsAdapter(
         Guid actorUserId,
         CancellationToken cancellationToken) =>
         Map(await directory.ApproveAsync(
-            new AppModels.ApproveReturnCommand(returnRequestId, actorUserId), cancellationToken));
+            new ApproveReturnCommand(
+                returnRequestId,
+                actorUserId,
+                await RequireSellerPartyAsync(returnRequestId, cancellationToken)),
+            cancellationToken));
 
     public async Task<ReturnSnapshot> RejectAsync(
         Guid returnRequestId,
@@ -63,14 +74,28 @@ internal sealed class ReturnAdminOperationsAdapter(
         string? reason,
         CancellationToken cancellationToken) =>
         Map(await directory.RejectAsync(
-            new AppModels.RejectReturnCommand(returnRequestId, actorUserId, reason), cancellationToken));
+            new RejectReturnCommand(
+                returnRequestId,
+                actorUserId,
+                await RequireSellerPartyAsync(returnRequestId, cancellationToken),
+                reason),
+            cancellationToken));
 
     public async Task<ReturnSnapshot> RetryRefundAsync(
         Guid returnRequestId,
         Guid actorUserId,
         CancellationToken cancellationToken) =>
         Map(await directory.RetryRefundAsync(
-            new AppModels.RetryRefundCommand(returnRequestId, actorUserId), cancellationToken));
+            new RetryReturnRefundCommand(returnRequestId, actorUserId), cancellationToken));
+
+    /// <summary>
+    /// Admin callers address a return by identifier only; the authoritative command shape also carries
+    /// the owning seller scope (used by the seller use case). The adapter resolves it from the owning
+    /// snapshot so the same <c>return.missing</c> fault is raised for an unknown identifier.
+    /// </summary>
+    private async Task<Guid> RequireSellerPartyAsync(Guid returnRequestId, CancellationToken cancellationToken) =>
+        (await directory.GetAsync(returnRequestId, cancellationToken))?.SellerPartyId
+        ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
 
     private static ReturnSnapshot Map(AppModels.ReturnSnapshot snapshot) =>
         new(

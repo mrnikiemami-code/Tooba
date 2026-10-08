@@ -1,5 +1,5 @@
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Returns.Application.Queries.QueryAdminReturnsGrid;
+using Tooba.Returns.Application.ReturnRequests.Queries;
 using Xunit;
 
 namespace Tooba.Returns.Tests.Behavior;

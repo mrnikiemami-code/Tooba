@@ -3,11 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Returns.Application.Commands.ApproveReturn;
-using Tooba.Returns.Application.Commands.RejectReturn;
-using Tooba.Returns.Application.Errors;
-using Tooba.Returns.Application.Queries.GetSellerReturn;
-using Tooba.Returns.Application.Queries.ListSellerReturns;
+using Tooba.Returns.Application.Composition;
+using Tooba.Returns.Application.ReturnRequests.Commands;
+using Tooba.Returns.Application.ReturnRequests.Queries;
 using Tooba.Returns.Domain.ValueObjects;
 
 namespace Tooba.Returns.Endpoints.Seller;
@@ -57,7 +55,7 @@ public static class ReturnSellerEndpoints
         RefundDestination? destination = null;
         if (!string.IsNullOrWhiteSpace(body?.EffectiveRefundDestination))
         {
-            var parsed = ReturnsExceptionMapper.ParseDestination(body.EffectiveRefundDestination);
+            var parsed = ReturnRefundDestinationParser.Parse(body.EffectiveRefundDestination);
             if (parsed.IsFailure)
                 return api.From(parsed);
             destination = parsed.Value;

@@ -53,8 +53,9 @@ using Tooba.Payment.Infrastructure.Messaging;
 using Tooba.Payment.Infrastructure.Providers;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
-using Tooba.Returns.Application.Ports;
-using Tooba.Returns.Application.Models;
+using Tooba.Returns.Application.ReturnRequests.Commands;
+using Tooba.Returns.Application.ReturnRequests.Ports;
+using Tooba.Returns.Application.ReturnRequests.Models;
 using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Returns.Infrastructure.Directories;
@@ -137,6 +138,10 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
             File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")),
             StringComparison.Ordinal);
         Assert.Contains(
+            "Tooba.Returns.Application",
+            File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Returns", "Tooba.Returns.Infrastructure", "Tooba.Returns.Infrastructure.csproj")),
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
             "Tooba.Order.Application",
             File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Returns", "Tooba.Returns.Infrastructure", "Tooba.Returns.Infrastructure.csproj")),
             StringComparison.Ordinal);
@@ -286,7 +291,7 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
                 CancellationToken.None));
 
         var rejected = await returnDirectory.RejectAsync(
-            new RejectReturnCommand(created.ReturnRequestId, actor, "Not eligible"),
+            new RejectReturnCommand(created.ReturnRequestId, actor, created.SellerPartyId, "Not eligible"),
             CancellationToken.None);
         Assert.Equal(ReturnRequestStatus.Rejected, rejected.Status);
 
@@ -299,7 +304,7 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
                 [new ReturnLineCommand(lineId, 1)]),
             CancellationToken.None);
         var approved = await returnDirectory.ApproveAsync(
-            new ApproveReturnCommand(second.ReturnRequestId, actor),
+            new ApproveReturnCommand(second.ReturnRequestId, actor, second.SellerPartyId),
             CancellationToken.None);
         Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
         Assert.Single(approved.RefundAttempts);

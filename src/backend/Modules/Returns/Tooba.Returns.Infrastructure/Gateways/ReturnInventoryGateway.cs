@@ -1,5 +1,5 @@
 using Tooba.Inventory.Contracts.Returns;
-using Tooba.Returns.Application.Ports;
+using Tooba.Returns.Application.ReturnRequests.Ports;
 
 namespace Tooba.Returns.Infrastructure.Gateways;
 

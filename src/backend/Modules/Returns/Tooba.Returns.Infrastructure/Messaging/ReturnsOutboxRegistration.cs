@@ -1,8 +1,9 @@
+using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Contracts.Events;
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
-using Tooba.Returns.Application.Ports;
-using Tooba.Returns.Application.Models;
+using Tooba.Returns.Application.ReturnRequests.Ports;
+using Tooba.Returns.Application.ReturnRequests.Models;
 using Tooba.Returns.Domain.Events;
 using Tooba.Returns.Infrastructure.Persistence;
 
@@ -61,7 +62,7 @@ public sealed class ReturnsOutboxRegistration : IOutboxModuleRegistration
             _ when integrationEventType == typeof(ReturnRequestedIntegrationEvent) => ReturnRequestedIntegrationEvent.EventTypeName,
             _ when integrationEventType == typeof(ReturnApprovedIntegrationEvent) => ReturnApprovedIntegrationEvent.EventTypeName,
             _ when integrationEventType == typeof(RefundSucceededIntegrationEvent) => RefundSucceededIntegrationEvent.EventTypeName,
-            _ => throw new InvalidOperationException("returns.outbox.unmapped_event"),
+            _ => throw new InvalidOperationException(ReturnsErrorCodes.OutboxUnmappedEvent),
         };
 
     /// <inheritdoc />
