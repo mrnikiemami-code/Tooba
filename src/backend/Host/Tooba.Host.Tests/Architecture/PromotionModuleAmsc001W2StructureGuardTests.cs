@@ -192,14 +192,18 @@ public sealed class PromotionModuleAmsc001W2StructureGuardTests
         using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(
             root, "docs/architecture/tmar-module-structure-manifests.json")));
 
-        // Promotion moved out of the uncertified list and into the pre-cert structure record in W2.
+        // Promotion was promoted by TB-TMAR-PROMOTION-AMSC-001-W3 from preCertModules to the certified
+        // modules array (structureCertified true). The structural allowlists below are unchanged.
         Assert.DoesNotContain(
             manifest.RootElement.GetProperty("uncertifiedHttpOwningModules").EnumerateArray(),
             m => m.GetString() == "Promotion");
 
-        var entry = manifest.RootElement.GetProperty("preCertModules").EnumerateArray()
+        var entry = manifest.RootElement.GetProperty("modules").EnumerateArray()
             .Single(m => m.GetProperty("module").GetString() == "Promotion");
-        Assert.False(entry.GetProperty("structureCertified").GetBoolean());
+        Assert.True(entry.GetProperty("structureCertified").GetBoolean());
+        Assert.DoesNotContain(
+            manifest.RootElement.GetProperty("preCertModules").EnumerateArray(),
+            m => m.GetProperty("module").GetString() == "Promotion");
         Assert.Equal("ARCH-COMPLETE-002", entry.GetProperty("lockVersion").GetString());
         Assert.Equal(
             Projects.OrderBy(x => x, StringComparer.Ordinal).ToArray(),
