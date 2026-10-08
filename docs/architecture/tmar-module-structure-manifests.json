@@ -2037,9 +2037,99 @@
     }
   ],
   "uncertifiedHttpOwningModules": [
-    "Returns",
     "Support",
     "Wallet"
   ],
-  "preCertModules": []
+  "preCertModules": [
+    {
+      "module": "Returns",
+      "structureCertified": false,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Pre-certification structure record for TB-TMAR-RETURNS-AMSC-001 W2 (tooba-architecture-structure). Wave lineage W0 f5c5a6db -> W1 0a573864 -> W2 this commit. Structure: Application is capability-first shallow (ReturnRequests/{Commands,Queries,Models,Ports} + Composition/ (ReturnsOperation typed-fault seam + ReturnRefundDestinationParser) + Validation/ (transport validators + validation codes)); the W0 technical-axis roots Commands/Queries/Models/Ports/Errors and the eleven single-file use-case leaf folders are retired and forbidden. Contracts/{Errors,Events,History,Operations,Resources,Settlement}, Domain/{Aggregates,Events,ValueObjects}, Infrastructure/{Adapters,Bridges,DependencyInjection,Directories,Errors,Evaluators,Gateways,Messaging,Observability,Persistence(+Migrations),Queries} and Endpoints/{Admin,Customer,Seller} + root composition ReturnEndpointModule.cs. Folder-Granularity-State = PROFESSIONAL_SHALLOW; Solution-Explorer-State = CANONICAL (/Modules/Returns/ with all six projects); Path-Namespace-State = EXACT (0 mismatches); Physical-Copy-State = CLEAN; Root-Allowlist-State = ENFORCED. This is a Structure wave only: it does not certify the module (structureCertified stays false); promotion to the certified modules[] array is the exclusive authority of the W3 tooba-architecture-certify wave.",
+      "projects": [
+        {
+          "projectName": "Tooba.Returns.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Boundary vocabulary lives under Errors/ (the single canonical ReturnsErrorCodes home + the ReturnsErrorResourceSet), Resources/ (the bilingual ReturnsErrors.resx/.fa.resx pair), Events/ (the three integration events), History/, Operations/ (the IReturnAdminOperations boundary port + ReturnEligibilityReasons) and Settlement/. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "ReturnsContracts.cs",
+            "ReturnsErrorCodes.cs",
+            "ReturnsErrorResourceSet.cs",
+            "ReturnAdminOperationsContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Returns.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. The ReturnRequest/ReturnItem/RefundAttempt aggregates live under Aggregates/, domain events under Events/ and the status/destination value objects under ValueObjects/. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "ReturnRequest.cs",
+            "ReturnDomainEvents.cs",
+            "ReturnRequestStatus.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Returns.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Application is capability-first shallow: ReturnRequests/ carries the Commands/, Queries/, Models/ and Ports/ of the return-request capability, and only the genuinely shared Composition/ (the single ReturnsOperation typed-fault seam + the transport ReturnRefundDestinationParser) and Validation/ (transport validators + validation codes) stay at the capability root. The W0/W1 technical-axis roots Commands/Queries/Models/Ports/Validators/Errors and the single-file use-case leaf folders are retired and forbidden. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "ReturnsOperation.cs",
+            "ReturnRefundDestinationParser.cs",
+            "ReturnsRequestValidators.cs",
+            "ReturnsValidationCodes.cs",
+            "CreateReturnCommand.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Models",
+            "Ports",
+            "Validators",
+            "Errors",
+            "Handlers",
+            "Requests"
+          ]
+        },
+        {
+          "projectName": "Tooba.Returns.Infrastructure",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Module DI lives under DependencyInjection/, the orchestration directory and its OpenReturnUseCaseGuard under Directories/, the history/admin-operations adapters under Adapters/, the settlement snapshot bridge under Bridges/, the eligibility evaluator under Evaluators/, the inventory restock gateway under Gateways/, the error catalog contributor under Errors/, the outbox translation under Messaging/, metrics under Observability/, the DB-native admin grid engine under Queries/ and the EF model plus the three unchanged migrations under Persistence/Migrations. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "ReturnsModule.cs",
+            "ReturnsDbContext.cs",
+            "ReturnDirectory.cs",
+            "ReturnsOutboxRegistration.cs",
+            "AdminReturnGridQueryEngine.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations",
+            "Repositories"
+          ]
+        },
+        {
+          "projectName": "Tooba.Returns.Endpoints",
+          "rootAllowlist": [
+            "ReturnEndpointModule.cs"
+          ],
+          "rootAllowlistJustification": "Endpoints root holds only the composition entry ReturnEndpointModule.cs (route mapping + the single error-resource-set registration + the module customer authorizer). The audience capability folders are Admin/ (admin routes + admin authorizer), Seller/ (seller routes + seller authorizer) and Customer/ (customer routes + customer authorizer). Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "ReturnAdminEndpoints.cs",
+            "ReturnSellerEndpoints.cs",
+            "ReturnCustomerEndpoints.cs",
+            "ReturnsErrorCatalogContributor.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Returns.Tests",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Test-only project with Architecture/ durable guards, Behavior/ characterization/error/grid/semantic suites and Endpoints/ ownership tests, and no root .cs.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    }
+  ]
 }
