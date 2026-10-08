@@ -13587,7 +13587,21 @@
     "target": "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.*",
     "startingHead": "592c346e",
     "parentTask": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W2",
-    "state": "CERTIFY_COMPLETE",
+    "state": "SUPERSEDED_PENDING_FRESH_CERTIFY",
+    "supersededBy": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R1",
+    "supersededReason": "Architect review of TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3 refused final certification on two hard ARCH-COMPLETE-002 rules: (1) the endpoint-reachable request inventory was recorded inconsistently - this block recorded 18 requests / 4 queries while the module owns exactly 17 endpoint-reachable CQRS requests (3 queries + 14 commands), and validatorCoverageState classified 0 REQUIRED / 0 NO_VALIDATOR_REQUIRED instead of classifying every one of the 17 requests exactly once; (2) ProductWorkspaceEndpointModule still mapped both successful 201 paths with raw Results.Json(..., statusCode: StatusCodes.Status201Created) instead of the canonical ApiResponseFactory.Created. Both blockers are repaired by TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R1 (productWorkspaceAmsc001W3R1). This block is retained verbatim as the superseded historical record; the corrections are enumerated in historicalRecordCorrection.",
+    "historicalRecordCorrection": {
+      "state": "SUPERSEDED_PENDING_FRESH_CERTIFY (was CERTIFY_COMPLETE)",
+      "endpointReachableRequests": "18 -> 17 (the module maps 17 routes over exactly 17 distinct endpoint-reachable CQRS request types: 3 queries + 14 commands)",
+      "cqrsState": "MODULE_LOCAL_MEDIATR_CQRS_14_COMMANDS_4_QUERIES -> MODULE_LOCAL_MEDIATR_CQRS_14_COMMANDS_3_QUERIES (the 4th 'query' was a miscount: GetProductWorkspaceQuery, ListProductWorkspaceQuery and QueryProductWorkspaceGridQuery are the only three)",
+      "validatorCoverageState": "EXHAUSTIVE_0_REQUIRED_0_NO_VALIDATOR_REQUIRED_BY_CONSTRUCTION -> EXHAUSTIVE_0_REQUIRED_17_NO_VALIDATOR_REQUIRED_CATALOG_OWNS_MUTATION_BOUNDARY (0/0 is not a classification; all 17 requests are explicitly classified)",
+      "apiResultPatternState": "recorded CANONICAL but was NON_CANONICAL on disk (2 raw Results.Json 201 mappings in ProductWorkspaceEndpointModule); repaired to CANONICAL in W3-R1",
+      "certificationChecklist.validatorCoverage": "PASS_BY_CONSTRUCTION was invalid (no explicit per-request classification existed); corrected in W3-R1",
+      "certificationChecklist.apiResultPattern": "PASS was invalid (2 raw Results.Json 201 mappings existed); corrected in W3-R1"
+    },
+    "certificationChecklistSupersededBy": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R1",
+    "manifestCertificationNoteForwardObligation": "modules[ProductWorkspace].certificationNote in docs/architecture/tmar-module-structure-manifests.json still carries the pre-repair wording 'Validator matrix EXHAUSTIVE 0-REQUIRED 0-NO_VALIDATOR_REQUIRED by construction' and the 4-queries phrasing. W3-R1 is CERT_BLOCKER_REPAIR_ONLY and is forbidden from manifest promotion/demotion, so the manifest note is left byte-identical here; refreshing it is an explicit obligation of the fresh Certify wave that owns manifest promotion.",
+    "w3EvidenceForwardObligation": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3/certification.md still records 'Endpoint-reachable requests 18 (4 read + 14 write)'. That file is the historical W3 evidence artifact and is not rewritten; docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R1/cert-repair.md is the authoritative corrected record.",
     "verdict": "COMPLETE_REFERENCE_PATTERN",
     "lockVersion": "ARCH-COMPLETE-002",
     "structureState": "CERTIFIED",
@@ -13662,5 +13676,99 @@
     "commit": null,
     "commitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
     "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3/certification.md"
+  },
+  "productWorkspaceAmsc001W3R1": {
+    "task": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R1",
+    "parentTask": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3",
+    "mode": "CERT_BLOCKER_REPAIR_ONLY",
+    "skill": "tooba-architecture-certify",
+    "target": "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.*",
+    "startingHead": "c0b86fea",
+    "startingHeadFull": "c0b86feacd897d26172fef7dff47b93db75d8e9d",
+    "state": "READY_FOR_FRESH_CERTIFY",
+    "verdict": "BLOCKERS_REPAIRED_AWAITING_FRESH_CERTIFY",
+    "priorCertificationTask": "TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3",
+    "priorCertificationState": "SUPERSEDED_PENDING_FRESH_CERTIFY",
+    "priorCertificationCommit": "c0b86feacd897d26172fef7dff47b93db75d8e9d",
+    "priorCertificationCommitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
+
+    "blockerB1": {
+      "title": "request inventory inconsistent + validator coverage 0/0",
+      "status": "CLOSED",
+      "repair": "Exhaustive 17-request matrix built and durably guarded; SoT records endpointReachableRequests = 17 with an explicit per-request classification instead of 0/0."
+    },
+    "blockerB2": {
+      "title": "raw Results.Json(..., statusCode: 201) on the successful CreateProduct / CreateVariant paths",
+      "status": "CLOSED",
+      "repair": "Both 201 mappings replaced with the canonical ApiResponseFactory.Created(location, result); zero Results.Json remains anywhere under the module."
+    },
+
+    "endpointReachableRequests": 17,
+    "endpointReachableQueries": 3,
+    "endpointReachableCommands": 14,
+    "moduleOwnedRoutes": 17,
+    "requestInventoryState": "EXACT_17",
+    "validatorRequiredCount": 0,
+    "noValidatorRequiredCount": 17,
+    "validatorMatrixState": "EXHAUSTIVE_17",
+    "validatorCoverageState": "EXHAUSTIVE_0_REQUIRED_17_NO_VALIDATOR_REQUIRED_CATALOG_OWNS_MUTATION_BOUNDARY",
+    "validatorCoverageRationale": "All 17 endpoint-reachable requests are NO_VALIDATOR_REQUIRED, each for a concrete structural reason rather than a blanket 0/0 claim: the 14 mutation commands reach the owning Catalog write capability exclusively through the Contracts port ICatalogAdminProductWorkspaceMutationGateway, whose Catalog-owned adapter maps each request onto the owning Catalog Application command that already owns transport shape and returns the stable workspace.* codes; the aggregate GET takes only a route-bound Guid plus a server-resolved permission scope; the list GET takes no transport input at all; and the grid POST envelope is normalized and validated by the module's own canonical AdminProductGridQueryPolicy, which throws GridQueryValidationException mapped to a SemanticError. Inventing a module-local validator tree would fork the canonical code set and duplicate the policy, so none was added.",
+    "validatorMatrix": {
+      "queries": [
+        { "request": "GetProductWorkspaceQuery", "route": "GET /v1/admin/products/{productId:guid}", "classification": "NO_VALIDATOR_REQUIRED", "reason": "ROUTE_BOUND_GUID_AND_SERVER_RESOLVED_PERMISSION_SCOPE", "detail": "The only transport-derived input is the route constraint-validated Guid productId plus ProductWorkspacePermissions that the endpoint itself derives server-side from the X-Tooba-Workspace-Scope header; no request-body shape exists for a validator to own." },
+        { "request": "ListProductWorkspaceQuery", "route": "GET /v1/admin/products/", "classification": "NO_VALIDATOR_REQUIRED", "reason": "NO_TRANSPORT_INPUT", "detail": "Parameterless request: it carries no route, query-string, header or body value, so there is no transport shape to validate." },
+        { "request": "QueryProductWorkspaceGridQuery", "route": "POST /v1/admin/products/query", "classification": "NO_VALIDATOR_REQUIRED", "reason": "VALIDATED_BY_CANONICAL_MODULE_POLICY_NOT_FLUENTVALIDATION", "detail": "The grid envelope is normalized and validated by the module-owned AdminProductGridQueryPolicy (paging bounds, search length, sortable/filterable field allowlists, per-field operator allowlists, advanced-filter connectors), which throws GridQueryValidationException and is mapped by QueryProductWorkspaceGridHandler to a SemanticError carrying the stable grid code. A FluentValidation validator here would duplicate that canonical policy." }
+      ],
+      "commands": [
+        { "request": "CreateWorkspaceProductCommand", "route": "POST /v1/admin/products/", "classification": "NO_VALIDATOR_REQUIRED", "reason": "CATALOG_WRITE_CAPABILITY_OWNS_TRANSPORT_SHAPE", "detail": "Dispatched through ICatalogAdminProductWorkspaceMutationGateway.CreateProductAsync -> Catalog CreateWorkspaceProductCommand; the owning module returns stable workspace.* codes (e.g. workspace.product.title.missing, workspace.product.create.rejected, workspace.product.slug.invalid)." },
+        { "request": "UpdateWorkspaceProductCatalogTitleCommand", "route": "PATCH /v1/admin/products/{productId:guid}/catalog-title", "classification": "NO_VALIDATOR_REQUIRED", "reason": "CATALOG_WRITE_CAPABILITY_OWNS_TRANSPORT_SHAPE", "detail": "Gateway.UpdateCatalogTitleAsync -> Catalog UpdateProductCatalogTitleCommand; locale/title/staleness owned owner-side." },
+        { "request": "UpdateWorkspaceProductCoreCommand", "route": "PATCH /v1/admin/products/{productId:guid}/core", "classification": "NO_VALIDATOR_REQUIRED", "reason": "CATALOG_WRITE_CAPABILITY_OWNS_TRANSPORT_SHAPE", "detail": "Gateway.UpdateCoreAsync -> Catalog UpdateProductCoreCommand; slug/SEO/localized core shape owned owner-side (workspace.product.slug.invalid, workspace.product.seo.rejected)." },
+        { "request": "UpdateWorkspaceProductQuantityPolicyCommand", "route": "PATCH /v1/admin/products/{productId:guid}/quantity-policy", "classification": "NO_VALIDATOR_REQUIRED", "reason": "CATALOG_WRITE_CAPABILITY_OWNS_TRANSPORT_SHAPE", "detail": "Gateway.UpdateQuantityPolicyAsync -> Catalog UpdateProductQuantityPolicyCommand; unit-of-measure and decimal policy owned owner-side (workspace.quantity.rejected)." },
+        { "request": "AssignWorkspaceProductCategoryCommand", "route": "PUT /v1/admin/products/{productId:guid}/category", "classification": "NO_VALIDATOR_REQUIRED", "reason": "CATALOG_WRITE_CAPABILITY_OWNS_TRANSPORT_SHAPE", "detail": "Gateway.AssignPrimaryCategoryAsync -> Catalog AssignProductCategoryCommand; category existence and schema-impact confirmation owned owner-side (workspace.product.category.missing/invalid/schema-impact)." },
+        { "request": "AddWorkspaceProductAdditionalCategoryCommand", "route": "POST /v1/admin/products/{productId:guid}/categories/additional", "classification": "NO_VALIDATOR_REQUIRED", "reason": "CATALOG_WRITE_CAPABILITY_OWNS_TRANSPORT_SHAPE", "detail": "Gateway.AddAdditionalCategoryAsync -> Catalog AddAdditionalCategoryCommand; category id and concurrency stamp owned owner-side." },
+        { "request": "RemoveWorkspaceProductAdditionalCategoryCommand", "route": "DELETE /v1/admin/products/{productId:guid}/categories/additional/{categoryId:guid}", "classification": "NO_VALIDATOR_REQUIRED", "reason": "ROUTE_BOUND_GUIDS_PLUS_ENDPOINT_ENFORCED_CONCURRENCY_STAMP", "detail": "Both identifiers are route constraints; the endpoint rejects a missing expectedUpdatedAt before dispatch with the declared ProductWorkspaceErrorCodes.CategoryAssignmentStale, and the link/staleness rules stay owner-side (workspace.catalog.stale)." },
+        { "request": "AssignWorkspaceProductBrandCommand", "route": "PUT /v1/admin/products/{productId:guid}/brand", "classification": "NO_VALIDATOR_REQUIRED", "reason": "CATALOG_WRITE_CAPABILITY_OWNS_TRANSPORT_SHAPE", "detail": "Gateway.AssignBrandAsync -> Catalog AssignProductBrandCommand; brand existence/clearing semantics owned owner-side (workspace.product.brand.invalid)." },
+        { "request": "PublishWorkspaceProductCommand", "route": "POST /v1/admin/products/{productId:guid}/publish", "classification": "NO_VALIDATOR_REQUIRED", "reason": "NO_BODY_ROUTE_GUID_PLUS_SERVER_RESOLVED_ACTOR", "detail": "No request body; the only inputs are the route Guid and the actor resolved server-side from the authenticated admin. Publish preconditions are owner-side (workspace.product.publish.rejected)." },
+        { "request": "UnpublishWorkspaceProductCommand", "route": "POST /v1/admin/products/{productId:guid}/unpublish", "classification": "NO_VALIDATOR_REQUIRED", "reason": "NO_BODY_ROUTE_GUID_PLUS_SERVER_RESOLVED_ACTOR", "detail": "No request body; unpublish preconditions are owner-side (workspace.product.unpublish.rejected)." },
+        { "request": "ArchiveWorkspaceProductCommand", "route": "POST /v1/admin/products/{productId:guid}/archive", "classification": "NO_VALIDATOR_REQUIRED", "reason": "NO_BODY_ROUTE_GUID_PLUS_SERVER_RESOLVED_ACTOR", "detail": "No request body; archive preconditions are owner-side (workspace.product.archive.rejected)." },
+        { "request": "RestoreWorkspaceProductCommand", "route": "POST /v1/admin/products/{productId:guid}/restore", "classification": "NO_VALIDATOR_REQUIRED", "reason": "NO_BODY_ROUTE_GUID_PLUS_SERVER_RESOLVED_ACTOR", "detail": "No request body; restore preconditions are owner-side (workspace.product.restore.rejected)." },
+        { "request": "CreateWorkspaceProductVariantCommand", "route": "POST /v1/admin/products/{productId:guid}/variants", "classification": "NO_VALIDATOR_REQUIRED", "reason": "CATALOG_WRITE_CAPABILITY_OWNS_TRANSPORT_SHAPE", "detail": "Gateway.CreateVariantAsync -> Catalog CreateProductWorkspaceVariantCommand; axes presence/validity owned owner-side (workspace.variant.axes.missing, workspace.variant.create.rejected)." },
+        { "request": "PatchWorkspaceProductVariantCommand", "route": "PATCH /v1/admin/products/{productId:guid}/variants/{variantId:guid}", "classification": "NO_VALIDATOR_REQUIRED", "reason": "CATALOG_WRITE_CAPABILITY_OWNS_TRANSPORT_SHAPE", "detail": "Gateway.PatchVariantAsync -> Catalog PatchProductWorkspaceVariantCommand; variant existence and status transition owned owner-side (workspace.variant.missing, workspace.variant.status.invalid)." }
+      ]
+    },
+    "classificationSumCheck": "0 VALIDATOR_REQUIRED + 17 NO_VALIDATOR_REQUIRED = 17 = endpointReachableRequests = distinct IRequest types = mapped routes",
+    "moduleLocalValidatorTreeState": "ABSENT_BY_DESIGN",
+    "moduleLocalValidationCodesState": "NONE_INTRODUCED",
+    "rawResultsJsonState": "ZERO",
+    "rawResultsJsonOccurrencesBefore": 2,
+    "rawResultsJsonOccurrencesAfter": 0,
+    "apiResultPatternState": "CANONICAL",
+    "apiResultRepair": "ProductWorkspaceEndpointModule.CreateProductAsync and ProductWorkspaceEndpointModule.MutateAsync(created: true) (the CreateVariantAsync path) previously returned Results.Json(workspace.Value, statusCode: StatusCodes.Status201Created); both now return api.Created($\"/v1/admin/products/{workspace.Value.ProductId}\", workspace).",
+    "apiResultContractPreservation": "The existing canonical ApiResponseFactory.Created<T> already returned Microsoft.AspNetCore.Http.Results.Created(location, result.Value), i.e. status 201 plus a JSON body, so the repair removes a duplicated mapping rather than changing the wire contract. The only additive wire change is the Location header now set to /v1/admin/products/{productId} on the two 201 paths, which is the documented contract of ApiResponseFactory.Created (Created: موفقیت → 201 + Location + JSON خام) and was missing before.",
+    "apiResultFailurePathState": "UNCHANGED_PROBLEM_DETAILS_WITHOUT_LOCATION",
+    "structureState": "UNCHANGED_W2_ACCEPTED",
+    "structureHandoffState": "READY_FOR_FRESH_CERTIFY",
+    "manifestStructuralState": "NOT_TOUCHED_THIS_WAVE",
+    "manifestCertificationNoteRefreshObligation": "Deferred to the fresh Certify wave: modules[ProductWorkspace].certificationNote still carries the pre-repair 0/0 validator phrasing and the 4-queries phrasing. This repair task is forbidden from manifest promotion/demotion and did not touch the manifest.",
+    "sotPromotion": [
+      "productWorkspaceAmsc001W3.state = SUPERSEDED_PENDING_FRESH_CERTIFY with supersededBy/supersededReason and a historicalRecordCorrection block enumerating each corrected field (18->17 requests, 14_COMMANDS_4_QUERIES->14_COMMANDS_3_QUERIES, 0/0->exhaustive 17, apiResultPatternState).",
+      "productWorkspaceAmsc001W3R1 added with endpointReachableRequests = 17, the explicit 3-query + 14-command classification matrix, validatorCoverageState = EXHAUSTIVE_0_REQUIRED_17_NO_VALIDATOR_REQUIRED_CATALOG_OWNS_MUTATION_BOUNDARY and apiResultPatternState = CANONICAL.",
+      "structureLock.certifiedModules unchanged (ProductWorkspace stays present exactly once; this repair does not promote or demote).",
+      "Repository-global Host root checkpoint, lastAcceptedTask, workflowStop and automaticNextImplementationTask unchanged."
+    ],
+    "durableGuards": [
+      "ProductWorkspaceModuleAmsc001W3R1CertRepairGuardTests (new): exact 17-request inventory, classification sum = 17 with each request exactly once, zero Results.Json in ProductWorkspace.Endpoints, api.Created on both 201 paths, module-local validator tree absent, superseded W3 SoT record, W3-R1 SoT coherence, global Host checkpoint preserved"
+    ],
+    "guardsWeakened": "NONE",
+    "baselinesWidened": "NONE",
+    "schemaMigrationState": "UNCHANGED",
+    "productionBehaviorState": "PRESERVED_EXCEPT_THE_TWO_CANONICAL_201_LOCATION_HEADERS",
+    "globalHostCheckpointState": "PRESERVED",
+    "freshCertifyState": "READY",
+    "commit": null,
+    "commitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
+    "automaticNextImplementationTask": "NONE",
+    "workflowStop": "USER_REVIEW_PRODUCTWORKSPACE_AMSC_001_W3_R1",
+    "evidence": "docs/architecture/evidence/TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R1/cert-repair.md"
   }
 }

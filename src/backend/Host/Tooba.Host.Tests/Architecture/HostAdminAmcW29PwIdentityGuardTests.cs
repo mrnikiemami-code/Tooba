@@ -32,7 +32,11 @@ public sealed class HostAdminAmcW29PwIdentityGuardTests
         Assert.Contains("UpdateWorkspaceProductCoreCommand", module, StringComparison.Ordinal);
         Assert.Contains("UpdateWorkspaceProductQuantityPolicyCommand", module, StringComparison.Ordinal);
         Assert.Contains("GetProductWorkspaceQuery", module, StringComparison.Ordinal);
-        Assert.Contains("Status201Created", module, StringComparison.Ordinal);
+        // W3-R1 (TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R1): the successful 201 path must be produced by
+        // the canonical ApiResponseFactory.Created, never by a raw Results.Json(..., Status201Created).
+        Assert.Contains("api.Created(", module, StringComparison.Ordinal);
+        Assert.DoesNotContain("Status201Created", module, StringComparison.Ordinal);
+        Assert.DoesNotContain("Results.Json", module, StringComparison.Ordinal);
         Assert.Contains("CanEditCatalog", module, StringComparison.Ordinal);
         Assert.Contains("ICatalogAdminProductWorkspaceMutationGateway", module, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Catalog.Application", module, StringComparison.Ordinal);

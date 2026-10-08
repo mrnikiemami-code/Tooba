@@ -169,7 +169,7 @@ public static class ProductWorkspaceEndpointModule
             return api.From(workspace);
         }
 
-        return Results.Json(workspace.Value, statusCode: StatusCodes.Status201Created);
+        return api.Created($"/v1/admin/products/{workspace.Value.ProductId}", workspace);
     }
 
     private static Task<IResult> PatchCatalogTitleAsync(
@@ -463,7 +463,7 @@ public static class ProductWorkspaceEndpointModule
         }
 
         return created
-            ? Results.Json(workspace.Value, statusCode: StatusCodes.Status201Created)
+            ? api.Created($"/v1/admin/products/{workspace.Value.ProductId}", workspace)
             : api.From(workspace);
     }
 }
