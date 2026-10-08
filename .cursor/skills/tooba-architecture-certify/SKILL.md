@@ -268,6 +268,14 @@ Do not certify from an informal count only.
 
 Validators must emit stable machine codes, not localized text.
 
+### 6a. Independent Input-Provenance and Set-Equality Gate (HARD BLOCKER)
+
+Do not adopt Analyze/Migrate's reported matrix or a frozen validator count as proof. Independently enumerate **all shipped routes** and actual `ISender.Send` call sites; follow request construction to authoritative `IRequest`/handler, including bound nullable/optional query, route, body, header, cookie and server-derived values forwarded through composers and ports. Build a fresh per-request/per-input matrix with: route+verb, source and trust, transport-shape risks, required validator or executed canonical policy, stable error code, discovery/pipeline evidence, and explicit exemption reasoning.
+
+Prove exact set equality: (1) shipped endpoint-reachable request types = classified request types, with each exactly once; (2) all `VALIDATOR_REQUIRED` types have an actual discoverable and executed validator/canonical equivalent; (3) every `NO_VALIDATOR_REQUIRED` row has independently verified provenance and a non-circular, testable reason. Optional input is **not** evidence of server derivation or safety. Verify invalid/valid/omitted transport input reaches the expected canonical Result/error path for representative or changed cases; no new business validation, error-code ownership or parsing scheme is implied.
+
+A guard that merely counts validators, searches text, pins named exceptions, or reads SoT claims is **insufficient** for this gate. The durable guard must compare the actual route/request universe against the complete classification manifest and prevent unmapped newly added requests; manual review must verify semantic provenance that static checks cannot establish. Any unproven input/exception, missing validator registration, wrong execution order, or set mismatch is `CERTIFICATION_BLOCKED` — never `COMPLETE_REFERENCE_PATTERN`. Do not broaden to unrelated modules or change already certified manifests solely to install this process rule.
+
 ### 7. Localization Compliance (V2)
 
 Verify:
