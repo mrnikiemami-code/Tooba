@@ -1,4 +1,5 @@
-
+using Tooba.BuildingBlocks;
+using Tooba.Promotion.Contracts.Errors;
 
 namespace Tooba.Promotion.Domain.Merchandising;
 
@@ -39,17 +40,17 @@ public sealed class MerchandisingCampaignTranslation
     {
         if (campaignId == Guid.Empty)
         {
-            throw new InvalidOperationException("promotion.campaign.id_required");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignIdRequired);
         }
 
         if (string.IsNullOrWhiteSpace(locale))
         {
-            throw new InvalidOperationException("promotion.translation.locale_required");
+            throw new ContractOperationException(PromotionErrorCodes.TranslationLocaleRequired);
         }
 
         if (string.IsNullOrWhiteSpace(title))
         {
-            throw new InvalidOperationException("promotion.translation.title_required");
+            throw new ContractOperationException(PromotionErrorCodes.TranslationTitleRequired);
         }
 
         return new MerchandisingCampaignTranslation
@@ -69,7 +70,7 @@ public sealed class MerchandisingCampaignTranslation
     {
         if (string.IsNullOrWhiteSpace(title))
         {
-            throw new InvalidOperationException("promotion.translation.title_required");
+            throw new ContractOperationException(PromotionErrorCodes.TranslationTitleRequired);
         }
 
         Title = title.Trim();

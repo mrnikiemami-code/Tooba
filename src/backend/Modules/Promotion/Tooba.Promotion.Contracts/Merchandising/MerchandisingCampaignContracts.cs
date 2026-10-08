@@ -1,6 +1,30 @@
-using Tooba.Offer.Contracts.Dtos;
-
 namespace Tooba.Promotion.Contracts.Merchandising;
+
+/// <summary>
+/// کانال فروش Promotion-owned برای projection کمپین. Promotion عمداً enum فروشگاه Offer را در
+/// امضای عمومی خود مصرف نمی‌کند تا مرز Contracts این ماژول بدون ارجاع به ماژول دیگر قابل‌مصرف باشد؛
+/// نگاشت به کانال Pricing/Offer در Infrastructure انجام می‌شود.
+/// </summary>
+public enum MerchandisingSalesChannel
+{
+    /// <summary>فروش مستقیم فروشگاه.</summary>
+    Direct = 0,
+
+    /// <summary>مارکت‌پلیس چندفروشنده‌ای.</summary>
+    Marketplace = 1,
+
+    /// <summary>فروش نمایندگی.</summary>
+    Agency = 2,
+
+    /// <summary>فروش سازمانی.</summary>
+    Corporate = 3,
+
+    /// <summary>فروش وابسته.</summary>
+    Affiliate = 4,
+
+    /// <summary>فروش از طریق API یکپارچه.</summary>
+    Api = 5,
+}
 
 /// <summary>
 /// سقف take اعضای کمپین؛ هم‌تراز Product Showcase / MaxTake=48.
@@ -79,33 +103,18 @@ public sealed record MerchandisingCampaignMemberRuntimeModel(
     decimal? CompareAtAmount = null);
 
 /// <summary>
-/// واجدشرایطی نمایش در source فروشگاهی «پیشنهاد شگفت‌انگیز».
-/// </summary>
-public static class MerchandisingCampaignStorefrontEligibility
-{
-    /// <summary>
-    /// عضو قابل‌فروش + موجود + قیمت کمپین معتبر اکیداً کمتر از قیمت عادی.
-    /// </summary>
-    public static bool IsAmazingRailEligible(MerchandisingCampaignMemberRuntimeModel member) =>
-        member.IsMarketable
-        && member.AvailableQuantity > 0
-        && member.PriceAmount is decimal selling and > 0
-        && member.CompareAtAmount is decimal compareAt and > 0
-        && selling < compareAt;
-}
-
-/// <summary>
-/// پارامترهای حل قیمت برای projection کمپین.
+/// پارامترهای حل قیمت برای projection کمپین. کانال Promotion-owned است و در Infrastructure به
+/// کانال Pricing/Offer نگاشت می‌شود.
 /// </summary>
 public sealed record MerchandisingPriceScope(
     string Market,
-    SalesChannel Channel,
+    MerchandisingSalesChannel Channel,
     string Currency)
 {
     /// <summary>پیش‌فرض IR / Marketplace / IRR.</summary>
     public static MerchandisingPriceScope Default { get; } = new(
         MerchandisingCampaignRuntimeLimits.DefaultMarket,
-        SalesChannel.Marketplace,
+        MerchandisingSalesChannel.Marketplace,
         MerchandisingCampaignRuntimeLimits.DefaultCurrency);
 }
 

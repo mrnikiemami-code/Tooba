@@ -1,4 +1,5 @@
-
+using Tooba.BuildingBlocks;
+using Tooba.Promotion.Contracts.Errors;
 
 namespace Tooba.Promotion.Domain.Merchandising;
 
@@ -39,17 +40,17 @@ public sealed class MerchandisingCampaignOffer
     {
         if (id == Guid.Empty)
         {
-            throw new InvalidOperationException("promotion.campaign_offer.id_required");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignOfferIdRequired);
         }
 
         if (campaignId == Guid.Empty)
         {
-            throw new InvalidOperationException("promotion.campaign.id_required");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignIdRequired);
         }
 
         if (sellerOfferId == Guid.Empty)
         {
-            throw new InvalidOperationException("promotion.campaign_offer.offer_required");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignOfferRequired);
         }
 
         return new MerchandisingCampaignOffer

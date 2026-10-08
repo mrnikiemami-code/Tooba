@@ -3,6 +3,7 @@ using Tooba.Promotion.Domain.Aggregates;
 using Tooba.Promotion.Application.Ports;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Promotion.Contracts.Errors;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Domain.Events;
@@ -12,26 +13,8 @@ using Tooba.Promotion.Infrastructure.Persistence;
 namespace Tooba.Promotion.Infrastructure.Directories;
 
 /// <summary>
-/// نگهبان باز نوشتن پروموشن. ماتریس SpiceDB اینجا قفل نمی‌شود.
-/// </summary>
-public sealed class OpenPromotionUseCaseGuard : IPromotionUseCaseGuard
-{
-    /// <inheritdoc />
-    public Task EnsureCanMutateAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-}
-
-/// <summary>
-/// دفتر مصرف آینده. سقف هم‌زمان در این foundation قفل و شمرده نمی‌شود.
-/// </summary>
-public sealed class DeferredPromotionRedemptionLedger : IPromotionRedemptionLedger
-{
-    /// <inheritdoc />
-    public Task<bool> CanRedeemAsync(Guid promotionId, Guid? customerPartyId, CancellationToken cancellationToken) =>
-        Task.FromResult(true);
-}
-
-/// <summary>
 /// مالک schema promotion: تعریف، فعال‌سازی و ارزیابی قطعی. Pricing را بازنویسی نمی‌کند.
+/// نقض قاعده با کد پایدار نوع‌دار اعلام می‌شود — نه با متن و نه با heuristic روی Message.
 /// </summary>
 public sealed class PromotionDirectory : IPromotionDirectory
 {
@@ -189,7 +172,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
         _ = tenantId;
         if (sellerPartyId == Guid.Empty)
         {
-            throw new InvalidOperationException("seller_id_required");
+            throw new ContractOperationException(PromotionErrorCodes.MutationRejected);
         }
 
         return await CreateAsync(
@@ -324,7 +307,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
         var promotion = await _db.Promotions.SingleOrDefaultAsync(
             x => x.PromotionId == promotionId,
             cancellationToken)
-            ?? throw new InvalidOperationException("promotion_not_found");
+            ?? throw new ContractOperationException(PromotionErrorCodes.Missing);
         promotion.Expire(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
@@ -428,7 +411,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
             cancellationToken);
         if (promotion is null)
         {
-            throw new InvalidOperationException("promotion_not_owned_or_missing");
+            throw new ContractOperationException(PromotionErrorCodes.Missing);
         }
 
         return promotion;

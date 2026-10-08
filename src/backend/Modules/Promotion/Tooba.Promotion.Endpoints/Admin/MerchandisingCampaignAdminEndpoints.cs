@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Application.Merchandising;
-using Tooba.Promotion.Application.Merchandising.Admin;
+using Tooba.Promotion.Application.Merchandising.Admin.Commands;
+using Tooba.Promotion.Application.Merchandising.Admin.Queries;
 
 namespace Tooba.Promotion.Endpoints.Admin;
 

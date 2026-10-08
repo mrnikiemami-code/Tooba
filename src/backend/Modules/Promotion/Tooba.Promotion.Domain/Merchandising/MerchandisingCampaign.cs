@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Promotion.Contracts.Errors;
 
 namespace Tooba.Promotion.Domain.Merchandising;
 
@@ -53,17 +54,17 @@ public sealed class MerchandisingCampaign
     {
         if (id == Guid.Empty)
         {
-            throw new InvalidOperationException("promotion.campaign.id_required");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignIdRequired);
         }
 
         if (promotionTypeId == Guid.Empty)
         {
-            throw new InvalidOperationException("promotion.campaign.type_required");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignTypeRequired);
         }
 
         if (storeId == Guid.Empty)
         {
-            throw new InvalidOperationException("promotion.campaign.store_required");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignStoreRequired);
         }
 
         ValidateWindow(startAt, endAt);
@@ -110,7 +111,7 @@ public sealed class MerchandisingCampaign
     {
         if (LifecycleStatus == MerchandisingCampaignLifecycleStatus.Archived)
         {
-            throw new InvalidOperationException("promotion.campaign.archived_cannot_publish");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignArchivedCannotPublish);
         }
 
         LifecycleStatus = MerchandisingCampaignLifecycleStatus.Published;
@@ -138,7 +139,7 @@ public sealed class MerchandisingCampaign
     {
         if (endAt is not null && endAt <= startAt)
         {
-            throw new InvalidOperationException("promotion.campaign.window_invalid");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignWindowInvalid);
         }
     }
 }

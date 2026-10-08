@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="promotion.missing" xml:space="preserve"><value>پروموشن پیدا نشد.</value></data>
+  <data name="promotion.name.required" xml:space="preserve"><value>نام پروموشن الزامی است.</value></data>
+  <data name="promotion.coupon.required" xml:space="preserve"><value>کد کوپن پروموشن الزامی است.</value></data>
+  <data name="promotion.mutation.rejected" xml:space="preserve"><value>تغییر پروموشن پذیرفته نشد.</value></data>
+  <data name="promotion.activate.rejected" xml:space="preserve"><value>فعال‌سازی پروموشن ممکن نشد.</value></data>
+  <data name="promotion.deactivate.rejected" xml:space="preserve"><value>غیرفعال‌سازی پروموشن ممکن نشد.</value></data>
+  <data name="merchandising.campaign.missing" xml:space="preserve"><value>کمپین مرچندایزینگ پیدا نشد.</value></data>
+  <data name="campaign.validation" xml:space="preserve"><value>اطلاعات کمپین نامعتبر است.</value></data>
+  <data name="campaign.publish" xml:space="preserve"><value>انتشار کمپین ممکن نیست.</value></data>
+  <data name="campaign.member" xml:space="preserve"><value>عملیات عضو کمپین پذیرفته نشد.</value></data>
+  <data name="campaign.reorder" xml:space="preserve"><value>ترتیب اعضای کمپین نامعتبر است.</value></data>
+  <data name="campaign.price" xml:space="preserve"><value>قیمت کمپین نامعتبر است.</value></data>
+  <data name="promotion.outbox.unmapped_event_type" xml:space="preserve"><value>نوع رخداد یکپارچه ثبت نشده است.</value></data>
+  <data name="promotion.definition.id_required" xml:space="preserve"><value>شناسه پروموشن الزامی است.</value></data>
+  <data name="promotion.definition.name_required" xml:space="preserve"><value>نام پروموشن الزامی است.</value></data>
+  <data name="promotion.definition.window_invalid" xml:space="preserve"><value>بازه اعتبار پروموشن نامعتبر است.</value></data>
+  <data name="promotion.definition.percent_invalid" xml:space="preserve"><value>درصد تخفیف نامعتبر است.</value></data>
+  <data name="promotion.definition.percent_no_fixed" xml:space="preserve"><value>تخفیف درصدی نمی‌تواند مبلغ ثابت هم داشته باشد.</value></data>
+  <data name="promotion.definition.fixed_amount_invalid" xml:space="preserve"><value>مبلغ ثابت تخفیف باید بزرگ‌تر از صفر باشد.</value></data>
+  <data name="promotion.definition.fixed_currency_required" xml:space="preserve"><value>مبلغ ثابت تخفیف به ارز نیاز دارد.</value></data>
+  <data name="promotion.definition.fixed_no_percent" xml:space="preserve"><value>تخفیف مبلغ ثابت نمی‌تواند درصد هم داشته باشد.</value></data>
+  <data name="promotion.definition.min_qty_invalid" xml:space="preserve"><value>حداقل تعداد نامعتبر است.</value></data>
+  <data name="promotion.definition.min_subtotal_invalid" xml:space="preserve"><value>حداقل مبلغ سبد نامعتبر است.</value></data>
+  <data name="promotion.definition.active_immutable" xml:space="preserve"><value>پروموشن فعال قابل ویرایش نیست.</value></data>
+  <data name="promotion.campaign.id_required" xml:space="preserve"><value>شناسه کمپین الزامی است.</value></data>
+  <data name="promotion.campaign.type_required" xml:space="preserve"><value>گونه کمپین الزامی است.</value></data>
+  <data name="promotion.campaign.store_required" xml:space="preserve"><value>فروشگاه کمپین الزامی است.</value></data>
+  <data name="promotion.campaign.store_mismatch" xml:space="preserve"><value>کمپین به این فروشگاه تعلق ندارد.</value></data>
+  <data name="promotion.campaign.archived_cannot_publish" xml:space="preserve"><value>کمپین بایگانی‌شده قابل انتشار نیست.</value></data>
+  <data name="promotion.campaign.window_invalid" xml:space="preserve"><value>بازه زمانی کمپین نامعتبر است.</value></data>
+  <data name="promotion.campaign_offer.id_required" xml:space="preserve"><value>شناسه عضویت کمپین الزامی است.</value></data>
+  <data name="promotion.campaign_offer.offer_required" xml:space="preserve"><value>پیشنهاد عضو کمپین الزامی است.</value></data>
+  <data name="promotion.type.id_required" xml:space="preserve"><value>شناسه گونه مرچندایزینگ الزامی است.</value></data>
+  <data name="promotion.type.code_required" xml:space="preserve"><value>کد گونه مرچندایزینگ الزامی است.</value></data>
+  <data name="promotion.type.not_found" xml:space="preserve"><value>گونه مرچندایزینگ پیدا نشد.</value></data>
+  <data name="promotion.type.system_code_immutable" xml:space="preserve"><value>کد گونه سیستمی قابل تغییر نیست.</value></data>
+  <data name="promotion.type.system_delete_forbidden" xml:space="preserve"><value>گونه سیستمی قابل حذف نیست.</value></data>
+  <data name="promotion.translation.locale_required" xml:space="preserve"><value>زبان ترجمه الزامی است.</value></data>
+  <data name="promotion.translation.title_required" xml:space="preserve"><value>عنوان ترجمه الزامی است.</value></data>
+  <data name="promotion.translation.name_required" xml:space="preserve"><value>نام نمایشی ترجمه الزامی است.</value></data>
+</root>

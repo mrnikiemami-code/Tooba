@@ -2,6 +2,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Promotion.Domain.ValueObjects;
 using Tooba.Promotion.Domain.Events;
+using Tooba.Promotion.Contracts.Errors;
 
 namespace Tooba.Promotion.Domain.Aggregates;
 
@@ -180,57 +181,57 @@ public sealed class PromotionDefinition : IHasDomainEvents
     {
         if (promotionId == Guid.Empty)
         {
-            throw new InvalidOperationException("promotion.definition.id_required");
+            throw new ContractOperationException(PromotionErrorCodes.DefinitionIdRequired);
         }
 
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new InvalidOperationException("promotion.definition.name_required");
+            throw new ContractOperationException(PromotionErrorCodes.DefinitionNameRequired);
         }
 
         if (effectiveTo is not null && effectiveTo <= effectiveFrom)
         {
-            throw new InvalidOperationException("promotion.definition.window_invalid");
+            throw new ContractOperationException(PromotionErrorCodes.DefinitionWindowInvalid);
         }
 
         if (discountKind == PromotionDiscountKind.PercentageOff)
         {
             if (percentageRate <= 0 || percentageRate > 1)
             {
-                throw new InvalidOperationException("promotion.definition.percent_invalid");
+                throw new ContractOperationException(PromotionErrorCodes.DefinitionPercentInvalid);
             }
 
             if (fixedAmount != 0)
             {
-                throw new InvalidOperationException("promotion.definition.percent_no_fixed");
+                throw new ContractOperationException(PromotionErrorCodes.DefinitionPercentNoFixed);
             }
         }
         else
         {
             if (fixedAmount <= 0)
             {
-                throw new InvalidOperationException("promotion.definition.fixed_amount_invalid");
+                throw new ContractOperationException(PromotionErrorCodes.DefinitionFixedAmountInvalid);
             }
 
             if (string.IsNullOrWhiteSpace(fixedAmountCurrency))
             {
-                throw new InvalidOperationException("promotion.definition.fixed_currency_required");
+                throw new ContractOperationException(PromotionErrorCodes.DefinitionFixedCurrencyRequired);
             }
 
             if (percentageRate != 0)
             {
-                throw new InvalidOperationException("promotion.definition.fixed_no_percent");
+                throw new ContractOperationException(PromotionErrorCodes.DefinitionFixedNoPercent);
             }
         }
 
         if (minimumQuantity is <= 0)
         {
-            throw new InvalidOperationException("promotion.definition.min_qty_invalid");
+            throw new ContractOperationException(PromotionErrorCodes.DefinitionMinQtyInvalid);
         }
 
         if (minimumSubtotal is < 0)
         {
-            throw new InvalidOperationException("promotion.definition.min_subtotal_invalid");
+            throw new ContractOperationException(PromotionErrorCodes.DefinitionMinSubtotalInvalid);
         }
 
         var promotion = new PromotionDefinition
@@ -286,7 +287,7 @@ public sealed class PromotionDefinition : IHasDomainEvents
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new InvalidOperationException("promotion.definition.name_required");
+            throw new ContractOperationException(PromotionErrorCodes.DefinitionNameRequired);
         }
 
         Name = name.Trim();
@@ -312,52 +313,52 @@ public sealed class PromotionDefinition : IHasDomainEvents
     {
         if (Status == PromotionStatus.Active)
         {
-            throw new InvalidOperationException("promotion.definition.active_immutable");
+            throw new ContractOperationException(PromotionErrorCodes.DefinitionActiveImmutable);
         }
 
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new InvalidOperationException("promotion.definition.name_required");
+            throw new ContractOperationException(PromotionErrorCodes.DefinitionNameRequired);
         }
 
         if (effectiveTo is not null && effectiveTo <= effectiveFrom)
         {
-            throw new InvalidOperationException("promotion.definition.window_invalid");
+            throw new ContractOperationException(PromotionErrorCodes.DefinitionWindowInvalid);
         }
 
         if (discountKind == PromotionDiscountKind.PercentageOff)
         {
             if (percentageRate <= 0 || percentageRate > 1)
             {
-                throw new InvalidOperationException("promotion.definition.percent_invalid");
+                throw new ContractOperationException(PromotionErrorCodes.DefinitionPercentInvalid);
             }
 
             if (fixedAmount != 0)
             {
-                throw new InvalidOperationException("promotion.definition.percent_no_fixed");
+                throw new ContractOperationException(PromotionErrorCodes.DefinitionPercentNoFixed);
             }
         }
         else
         {
             if (fixedAmount <= 0)
             {
-                throw new InvalidOperationException("promotion.definition.fixed_amount_invalid");
+                throw new ContractOperationException(PromotionErrorCodes.DefinitionFixedAmountInvalid);
             }
 
             if (string.IsNullOrWhiteSpace(fixedAmountCurrency))
             {
-                throw new InvalidOperationException("promotion.definition.fixed_currency_required");
+                throw new ContractOperationException(PromotionErrorCodes.DefinitionFixedCurrencyRequired);
             }
 
             if (percentageRate != 0)
             {
-                throw new InvalidOperationException("promotion.definition.fixed_no_percent");
+                throw new ContractOperationException(PromotionErrorCodes.DefinitionFixedNoPercent);
             }
         }
 
         if (minimumSubtotal is < 0)
         {
-            throw new InvalidOperationException("promotion.definition.min_subtotal_invalid");
+            throw new ContractOperationException(PromotionErrorCodes.DefinitionMinSubtotalInvalid);
         }
 
         Name = name.Trim();

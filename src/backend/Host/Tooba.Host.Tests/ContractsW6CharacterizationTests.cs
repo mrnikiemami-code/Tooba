@@ -21,13 +21,18 @@ namespace Tooba.Host.Tests;
 public sealed class ContractsW6CharacterizationTests
 {
     [Fact]
-    public void Promotion_application_references_offer_contracts_not_offer_application()
+    public void Promotion_application_is_self_contained_and_never_reaches_foreign_modules()
     {
+        // TB-TMAR-PROMOTION-AMSC-001-W1: the migrate wave de-foreigned the Promotion boundary, so the
+        // Application layer no longer consumes Tooba.Offer.Contracts (or any other module) at all. The
+        // legal Offer edge now lives only in Infrastructure, where cross-module reads belong.
         var root = FindRepoRoot();
         var csproj = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Modules", "Promotion", "Tooba.Promotion.Application", "Tooba.Promotion.Application.csproj"));
-        Assert.Contains("Tooba.Offer.Contracts", csproj);
+        Assert.DoesNotContain("Tooba.Offer.Contracts", csproj);
         Assert.DoesNotContain("Tooba.Offer.Application", csproj);
+        Assert.DoesNotContain("Tooba.Pricing.", csproj);
+        Assert.DoesNotContain("Tooba.Inventory.", csproj);
     }
 
     [Fact]

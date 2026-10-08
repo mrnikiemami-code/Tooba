@@ -4,6 +4,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
+using Tooba.Promotion.Domain.Merchandising;
 using Xunit;
 
 namespace Tooba.Host.Tests;

@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Inventory.Contracts.Availability;
@@ -9,6 +10,7 @@ using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Contracts.Errors;
 using Tooba.Promotion.Domain.Merchandising;
 
 namespace Tooba.Promotion.Infrastructure.Merchandising;
@@ -28,6 +30,8 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
     private readonly ICatalogVariantLookup _catalog;
     private readonly IPartyLookup _parties;
     private readonly ICurrentCommerceContext _commerce;
+    private readonly IModuleCallTracer _tracer;
+    private readonly IClock _clock;
 
     public MerchandisingCampaignAdminComposer(
         IMerchandisingCampaignDirectory campaigns,
@@ -37,7 +41,9 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
         IOfferQueryGateway offers,
         ICatalogVariantLookup catalog,
         IPartyLookup parties,
-        ICurrentCommerceContext commerce)
+        ICurrentCommerceContext commerce,
+        IModuleCallTracer tracer,
+        IClock clock)
     {
         _campaigns = campaigns;
         _prices = prices;
@@ -47,6 +53,10 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
         _catalog = catalog;
         _parties = parties;
         _commerce = commerce;
+        ArgumentNullException.ThrowIfNull(tracer);
+        _tracer = tracer;
+        ArgumentNullException.ThrowIfNull(clock);
+        _clock = clock;
     }
 
     public Guid ResolveStoreId()
@@ -76,7 +86,7 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
         CancellationToken cancellationToken)
     {
         var storeId = ResolveStoreId();
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
         MerchandisingCampaignLifecycleStatus? life = null;
         if (!string.IsNullOrWhiteSpace(lifecycle)
             && Enum.TryParse<MerchandisingCampaignLifecycleStatus>(lifecycle, true, out var parsedLife))
@@ -129,8 +139,8 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
         var typeName = types.FirstOrDefault(t => t.Id == campaign.PromotionTypeId)?.DisplayName ?? "—";
         var translations = await _campaigns.ListCampaignTranslationsAsync(campaignId, cancellationToken);
         var members = await _campaigns.ResolveOrderedMembersAsync(campaignId, cancellationToken);
-        var enriched = await EnrichMembersAsync(campaignId, members, campaign.StartAt, campaign.EndAt, cancellationToken);
-        var now = DateTimeOffset.UtcNow;
+        var enriched = await EnrichMembersAsync(campaignId, members, cancellationToken);
+        var now = _clock.UtcNow;
         var runtime = DeriveRuntime(campaign.LifecycleStatus, campaign.StartAt, campaign.EndAt, now);
         return new AdminMerchCampaignDetail(
             campaign.Id,
@@ -215,12 +225,12 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
         var translations = await _campaigns.ListCampaignTranslationsAsync(campaignId, cancellationToken);
         if (!translations.Any(t => !string.IsNullOrWhiteSpace(t.Title)))
         {
-            throw new InvalidOperationException("برای انتشار حداقل یک عنوان ترجمه لازم است.");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignPublish);
         }
 
         if (existing.EndAt is { } end && end <= existing.StartAt)
         {
-            throw new InvalidOperationException("بازهٔ زمانی کمپین نامعتبر است.");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignPublish);
         }
 
         await _campaigns.PublishCampaignAsync(campaignId, cancellationToken);
@@ -253,16 +263,16 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
         }
 
         var offer = await _offers.FindOfferAsync(sellerOfferId, cancellationToken)
-            ?? throw new InvalidOperationException("Offer یافت نشد.");
+            ?? throw new ContractOperationException(PromotionErrorCodes.CampaignMember);
         if (offer.Status != OfferStatus.Active)
         {
-            throw new InvalidOperationException("فقط Offer فعال قابل افزودن است.");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignMember);
         }
 
         var members = await _campaigns.ResolveOrderedMembersAsync(campaignId, cancellationToken);
         if (members.Any(m => m.SellerOfferId == sellerOfferId))
         {
-            throw new InvalidOperationException("این کالا قبلاً به کمپین اضافه شده است.");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignMember);
         }
 
         var nextOrder = members.Count == 0 ? 0 : members.Max(m => m.SortOrder) + 1;
@@ -308,7 +318,7 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
     {
         if (body.Amount <= 0)
         {
-            throw new InvalidOperationException("مبلغ کمپین باید بزرگ‌تر از صفر باشد.");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignPrice);
         }
 
         var storeId = ResolveStoreId();
@@ -321,21 +331,24 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
         var members = await _campaigns.ResolveOrderedMembersAsync(campaignId, cancellationToken);
         if (!members.Any(m => m.SellerOfferId == sellerOfferId))
         {
-            throw new InvalidOperationException("این Offer عضو کمپین نیست.");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignMember);
         }
 
         var market = string.IsNullOrWhiteSpace(body.Market) ? "IR" : body.Market.Trim();
         var currency = string.IsNullOrWhiteSpace(body.Currency) ? "IRR" : body.Currency.Trim().ToUpperInvariant();
         var channel = ParseChannel(body.Channel);
-        var now = DateTimeOffset.UtcNow;
-        var existing = await _priceLookup.ResolveCampaignPricesBatchAsync(
-            [sellerOfferId],
-            campaignId,
-            market,
-            channel,
-            currency,
-            now,
-            cancellationToken);
+        var now = _clock.UtcNow;
+        var existing = await TraceAsync(
+            "Pricing",
+            "ResolveCampaignPricesBatchAsync",
+            () => _priceLookup.ResolveCampaignPricesBatchAsync(
+                [sellerOfferId],
+                campaignId,
+                market,
+                channel,
+                currency,
+                now,
+                cancellationToken));
         if (existing.TryGetValue(sellerOfferId, out var quote) && quote.PriceId != Guid.Empty)
         {
             await _prices.ChangeAmountAsync(quote.PriceId, body.Amount, currency, cancellationToken);
@@ -366,19 +379,31 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
     {
         skip = Math.Max(0, skip);
         take = Math.Clamp(take, 1, 50);
-        var offers = await _offers.ListRecentActiveOffersAsync(200, cancellationToken);
+        var offers = await TraceAsync(
+            "Offer",
+            "ListRecentActiveOffersAsync",
+            () => _offers.ListRecentActiveOffersAsync(200, cancellationToken));
         var variantIds = offers.Select(o => o.CatalogVariantId).Distinct().ToArray();
-        var variantTitles = await _catalog.GetVariantTitlesAsync(variantIds, cancellationToken);
+        var variantTitles = await TraceAsync(
+            "Catalog",
+            "GetVariantTitlesAsync",
+            () => _catalog.GetVariantTitlesAsync(variantIds, cancellationToken));
         var sellerIds = offers.Select(o => o.SellerPartyId).Distinct().ToArray();
-        var sellerName = await _parties.GetDisplayNamesAsync(sellerIds, cancellationToken);
+        var sellerName = await TraceAsync(
+            "Party",
+            "GetDisplayNamesAsync",
+            () => _parties.GetDisplayNamesAsync(sellerIds, cancellationToken));
         var offerIds = offers.Select(o => o.OfferId).ToArray();
-        var priceMap = await _priceLookup.ResolvePricesBatchAsync(
-            offerIds,
-            "IR",
-            SalesChannel.Marketplace,
-            "IRR",
-            DateTimeOffset.UtcNow,
-            cancellationToken);
+        var priceMap = await TraceAsync(
+            "Pricing",
+            "ResolvePricesBatchAsync",
+            () => _priceLookup.ResolvePricesBatchAsync(
+                offerIds,
+                "IR",
+                SalesChannel.Marketplace,
+                "IRR",
+                _clock.UtcNow,
+                cancellationToken));
 
         var rows = new List<AdminMerchOfferCandidate>();
         foreach (var offer in offers)
@@ -420,8 +445,6 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
     private async Task<IReadOnlyList<AdminMerchCampaignMemberDto>> EnrichMembersAsync(
         Guid campaignId,
         IReadOnlyList<MerchandisingCampaignMemberReference> members,
-        DateTimeOffset startAt,
-        DateTimeOffset? endAt,
         CancellationToken cancellationToken)
     {
         if (members.Count == 0)
@@ -430,16 +453,31 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
         }
 
         var offerIds = members.Select(m => m.SellerOfferId).ToArray();
-        var offerMap = await _offers.FindOffersBatchAsync(offerIds, cancellationToken);
+        var offerMap = await TraceAsync(
+            "Offer",
+            "FindOffersBatchAsync",
+            () => _offers.FindOffersBatchAsync(offerIds, cancellationToken));
         var variantIds = offerMap.Values.Select(o => o.CatalogVariantId).Distinct().ToArray();
-        var variantTitles = await _catalog.GetVariantTitlesAsync(variantIds, cancellationToken);
+        var variantTitles = await TraceAsync(
+            "Catalog",
+            "GetVariantTitlesAsync",
+            () => _catalog.GetVariantTitlesAsync(variantIds, cancellationToken));
         var sellerIds = offerMap.Values.Select(o => o.SellerPartyId).Distinct().ToArray();
-        var sellerName = await _parties.GetDisplayNamesAsync(sellerIds, cancellationToken);
-        var now = DateTimeOffset.UtcNow;
-        var basePrices = await _priceLookup.ResolvePricesBatchAsync(
-            offerIds, "IR", SalesChannel.Marketplace, "IRR", now, cancellationToken);
-        var campaignPrices = await _priceLookup.ResolveCampaignPricesBatchAsync(
-            offerIds, campaignId, "IR", SalesChannel.Marketplace, "IRR", now, cancellationToken);
+        var sellerName = await TraceAsync(
+            "Party",
+            "GetDisplayNamesAsync",
+            () => _parties.GetDisplayNamesAsync(sellerIds, cancellationToken));
+        var now = _clock.UtcNow;
+        var basePrices = await TraceAsync(
+            "Pricing",
+            "ResolvePricesBatchAsync",
+            () => _priceLookup.ResolvePricesBatchAsync(
+                offerIds, "IR", SalesChannel.Marketplace, "IRR", now, cancellationToken));
+        var campaignPrices = await TraceAsync(
+            "Pricing",
+            "ResolveCampaignPricesBatchAsync",
+            () => _priceLookup.ResolveCampaignPricesBatchAsync(
+                offerIds, campaignId, "IR", SalesChannel.Marketplace, "IRR", now, cancellationToken));
 
         var result = new List<AdminMerchCampaignMemberDto>(members.Count);
         foreach (var member in members.OrderBy(m => m.SortOrder).ThenBy(m => m.MembershipId))
@@ -474,7 +512,7 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
     {
         if (endAt is { } end && end <= startAt)
         {
-            throw new InvalidOperationException("زمان پایان باید بعد از زمان شروع باشد.");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignValidation);
         }
     }
 
@@ -482,7 +520,7 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
     {
         if (translations is null || translations.Count == 0 || translations.All(t => string.IsNullOrWhiteSpace(t.Title)))
         {
-            throw new InvalidOperationException("عنوان کمپین الزامی است.");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignValidation);
         }
     }
 
@@ -516,5 +554,24 @@ public sealed class MerchandisingCampaignAdminComposer : IMerchandisingCampaignA
         if (endAt is { } end && end <= now) return "expired";
         return "active";
     }
-}
 
+    /// <summary>
+    /// فراخوانی هم‌فرآیند به ماژول مقصد را با canonical <see cref="IModuleCallTracer"/> تزئین می‌کند
+    /// (بدون ActivitySource دوم و بدون payload/PII).
+    /// </summary>
+    private async Task<T> TraceAsync<T>(string targetModule, string operation, Func<Task<T>> action)
+    {
+        using var trace = _tracer.Begin("Promotion", targetModule, operation);
+        try
+        {
+            var result = await action().ConfigureAwait(false);
+            trace.SetOk();
+            return result;
+        }
+        catch (Exception ex)
+        {
+            trace.SetError(ex);
+            throw;
+        }
+    }
+}

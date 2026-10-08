@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Promotion.Contracts.Errors;
 
 namespace Tooba.Promotion.Domain.Merchandising;
 
@@ -47,12 +48,12 @@ public sealed class MerchandisingPromotionType
     {
         if (id == Guid.Empty)
         {
-            throw new InvalidOperationException("promotion.type.id_required");
+            throw new ContractOperationException(PromotionErrorCodes.TypeIdRequired);
         }
 
         if (string.IsNullOrWhiteSpace(code))
         {
-            throw new InvalidOperationException("promotion.type.code_required");
+            throw new ContractOperationException(PromotionErrorCodes.TypeCodeRequired);
         }
 
         return new MerchandisingPromotionType
@@ -79,12 +80,12 @@ public sealed class MerchandisingPromotionType
     {
         if (id == Guid.Empty)
         {
-            throw new InvalidOperationException("promotion.type.id_required");
+            throw new ContractOperationException(PromotionErrorCodes.TypeIdRequired);
         }
 
         if (string.IsNullOrWhiteSpace(code))
         {
-            throw new InvalidOperationException("promotion.type.code_required");
+            throw new ContractOperationException(PromotionErrorCodes.TypeCodeRequired);
         }
 
         return new MerchandisingPromotionType
@@ -106,12 +107,12 @@ public sealed class MerchandisingPromotionType
     {
         if (IsSystem)
         {
-            throw new InvalidOperationException("promotion.type.system_code_immutable");
+            throw new ContractOperationException(PromotionErrorCodes.TypeSystemCodeImmutable);
         }
 
         if (string.IsNullOrWhiteSpace(newCode))
         {
-            throw new InvalidOperationException("promotion.type.code_required");
+            throw new ContractOperationException(PromotionErrorCodes.TypeCodeRequired);
         }
 
         Code = newCode.Trim().ToUpperInvariant();
@@ -125,7 +126,7 @@ public sealed class MerchandisingPromotionType
     {
         if (IsSystem)
         {
-            throw new InvalidOperationException("promotion.type.system_delete_forbidden");
+            throw new ContractOperationException(PromotionErrorCodes.TypeSystemDeleteForbidden);
         }
     }
 

@@ -51,6 +51,34 @@ public sealed class InventoryDevelopmentSeedGateway(
     }
 
     /// <inheritdoc />
+    public async Task<Result> DrainDevelopmentStockAsync(
+        SeedDevelopmentStockDrain request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var stockItemId = await inventory.OpenPositionAsync(request.OfferId, request.LocationId, cancellationToken);
+        var position = await queries.FindPositionByStockItemIdAsync(stockItemId, cancellationToken);
+        if (position is null)
+        {
+            return Result.Failure(new SemanticError(InventoryErrorCodes.PositionNotFound));
+        }
+
+        if (position.Available <= 0)
+        {
+            return Result.Success();
+        }
+
+        await inventory.AdjustAsync(
+            stockItemId,
+            StockAdjustmentKind.Decrease,
+            position.Available,
+            request.Reason,
+            request.Reason,
+            cancellationToken);
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
     public async Task<Result> ReserveDevelopmentHoldAsync(
         SeedDevelopmentStockHold request,
         CancellationToken cancellationToken)

@@ -70,9 +70,16 @@ public sealed class HostAdminAmcW33MerchandisingGuardTests
     public void Merchandising_CQRS_and_contracts_enrichment_ports_exist()
     {
         var root = FindRepoRoot();
-        Assert.True(File.Exists(Path.Combine(
-            root,
-            "src/backend/Modules/Promotion/Tooba.Promotion.Application/Merchandising/Admin/MerchandisingCampaignAdminCqrs.cs")));
+        // TB-TMAR-PROMOTION-AMSC-001-W1: the technical-axis MerchandisingCampaignAdminCqrs.cs bundle was
+        // split into capability-first per-request homes; the guard now pins the real CQRS surface instead
+        // of the retired bundle (same intent, no weakening).
+        var adminCqrsRoot = Path.Combine(
+            root, "src/backend/Modules/Promotion/Tooba.Promotion.Application/Merchandising/Admin");
+        Assert.True(Directory.Exists(Path.Combine(adminCqrsRoot, "Commands")));
+        Assert.True(Directory.Exists(Path.Combine(adminCqrsRoot, "Queries")));
+        Assert.True(File.Exists(Path.Combine(adminCqrsRoot, "Commands", "CreateMerchandisingCampaignCommand.cs")));
+        Assert.True(File.Exists(Path.Combine(adminCqrsRoot, "Queries", "GetMerchandisingCampaignQuery.cs")));
+        Assert.False(File.Exists(Path.Combine(adminCqrsRoot, "MerchandisingCampaignAdminCqrs.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
             "src/backend/Modules/Promotion/Tooba.Promotion.Application/Merchandising/IMerchandisingCampaignAdminComposer.cs")));

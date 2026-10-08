@@ -3,8 +3,6 @@
     "edges": [
         "Tooba.Cart.Application -> Tooba.Catalog.Application",
         "Tooba.Cart.Application -> Tooba.Inventory.Application",
-        "Tooba.Inventory.Application -> Tooba.Catalog.Application",
-        "Tooba.Promotion.Application -> Tooba.Inventory.Application",
-        "Tooba.Promotion.Application -> Tooba.Pricing.Application"
+        "Tooba.Inventory.Application -> Tooba.Catalog.Application"
     ]
 }

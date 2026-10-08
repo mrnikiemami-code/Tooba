@@ -195,15 +195,21 @@ public sealed class PromotionPanelTests : IAsyncLifetime
     [Fact]
     public void Host_registers_seller_and_admin_promotion_routes_with_panel_access()
     {
+        // TB-TMAR-PROMOTION-AMSC-001-W1: promotion HTTP is module-owned (Tooba.Promotion.Endpoints);
+        // the historical Host/Promotion/PromotionEndpoints.cs was evacuated long ago and must stay absent.
         var root = FindRepoRoot();
-        var endpoints = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Promotion", "PromotionEndpoints.cs"));
+        Assert.False(File.Exists(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Promotion", "PromotionEndpoints.cs")));
+        var module = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Promotion", "Tooba.Promotion.Endpoints", "PromotionEndpointModule.cs"));
+        var seller = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Promotion", "Tooba.Promotion.Endpoints", "Seller", "PromotionSellerEndpoints.cs"));
+        var admin = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Promotion", "Tooba.Promotion.Endpoints", "Admin", "PromotionAdminEndpoints.cs"));
+        var adminAuth = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Promotion", "Tooba.Promotion.Endpoints", "Admin", "IPromotionAdminAuthorizer.cs"));
         var program = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         var checkout = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontCheckoutService.cs"));
-        Assert.Contains("/v1/seller/promotions", endpoints, StringComparison.Ordinal);
-        Assert.Contains("/v1/admin/promotions", endpoints, StringComparison.Ordinal);
-        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
-        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
+        Assert.Contains("/v1/seller/promotions", seller, StringComparison.Ordinal);
+        Assert.Contains("/v1/admin/promotions", admin, StringComparison.Ordinal);
+        Assert.Contains("IAdminPanelAccess", adminAuth, StringComparison.Ordinal);
         Assert.Contains("MapPromotionEndpoints", program, StringComparison.Ordinal);
+        Assert.Contains("MapPromotionEndpoints", module, StringComparison.Ordinal);
         Assert.Contains("couponCode", checkout, StringComparison.Ordinal);
         Assert.DoesNotContain("CouponCode: null", checkout, StringComparison.Ordinal);
     }

@@ -265,10 +265,11 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
         var offerIds = memberships.Select(x => x.SellerOfferId).Distinct().ToArray();
         var offers = await _offers.FindOffersBatchAsync(offerIds, cancellationToken);
         var stock = await _inventory.GetAvailabilityBatchAsync(offerIds, cancellationToken);
+        var channel = ToOfferChannel(priceScope.Channel);
         var basePrices = await _prices.ResolvePricesBatchAsync(
             offerIds,
             priceScope.Market,
-            priceScope.Channel,
+            channel,
             priceScope.Currency,
             now,
             cancellationToken);
@@ -277,7 +278,7 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
                 offerIds,
                 campaignId,
                 priceScope.Market,
-                priceScope.Channel,
+                channel,
                 priceScope.Currency,
                 now,
                 cancellationToken)
@@ -376,5 +377,20 @@ public sealed class MerchandisingCampaignQuery : IMerchandisingCampaignQuery
 
         return (hit.Title, hit.Subtitle, hit.BadgeText);
     }
+
+    /// <summary>
+    /// نگاشت کانال Promotion-owned به کانال Offer/Pricing. تنها نقطهٔ تبدیل در Infrastructure است؛
+    /// امضای عمومی Contracts هیچ نوع ماژول خارجی را حمل نمی‌کند.
+    /// </summary>
+    private static SalesChannel ToOfferChannel(MerchandisingSalesChannel channel) =>
+        channel switch
+        {
+            MerchandisingSalesChannel.Direct => SalesChannel.Direct,
+            MerchandisingSalesChannel.Agency => SalesChannel.Agency,
+            MerchandisingSalesChannel.Corporate => SalesChannel.Corporate,
+            MerchandisingSalesChannel.Affiliate => SalesChannel.Affiliate,
+            MerchandisingSalesChannel.Api => SalesChannel.Api,
+            _ => SalesChannel.Marketplace,
+        };
 }
 

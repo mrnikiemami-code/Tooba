@@ -1,8 +1,9 @@
-using Tooba.Promotion.Domain.Merchandising;
+﻿using Tooba.Promotion.Domain.Merchandising;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Application.Merchandising;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Promotion.Contracts.Errors;
 using Tooba.Promotion.Application.Ports;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Domain.Aggregates;
@@ -81,7 +82,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
             .AnyAsync(x => x.Id == promotionTypeId, cancellationToken);
         if (!typeExists)
         {
-            throw new InvalidOperationException("promotion.type.not_found");
+            throw new ContractOperationException(PromotionErrorCodes.TypeNotFound);
         }
 
         var campaign = MerchandisingCampaign.Create(
@@ -170,7 +171,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
         var campaign = await RequireCampaignAsync(campaignId, cancellationToken);
         if (campaign.StoreId != expectedStoreId)
         {
-            throw new InvalidOperationException("merchandising.campaign.store_mismatch");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignStoreMismatch);
         }
 
         var exists = await _db.MerchandisingCampaignOffers.AnyAsync(
@@ -178,7 +179,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
             cancellationToken);
         if (exists)
         {
-            throw new InvalidOperationException("domain.invariant");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignWindowInvalid);
         }
 
         var membership = MerchandisingCampaignOffer.Create(
@@ -225,7 +226,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
             || members.Select(x => x.SellerOfferId).ToHashSet().Count != orderedSellerOfferIds.Count
             || orderedSellerOfferIds.Any(id => members.All(m => m.SellerOfferId != id)))
         {
-            throw new InvalidOperationException("domain.invariant");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignWindowInvalid);
         }
 
         for (var i = 0; i < orderedSellerOfferIds.Count; i++)
@@ -301,7 +302,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
             .AnyAsync(x => x.Id == promotionTypeId, cancellationToken);
         if (!typeExists)
         {
-            throw new InvalidOperationException("promotion.type.not_found");
+            throw new ContractOperationException(PromotionErrorCodes.TypeNotFound);
         }
 
         var now = _clock.UtcNow;
@@ -324,7 +325,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
         {
             if (existing.StoreId != storeId || existing.PromotionTypeId != promotionTypeId)
             {
-                throw new InvalidOperationException("domain.invariant");
+                throw new ContractOperationException(PromotionErrorCodes.CampaignWindowInvalid);
             }
 
             existing.UpdateWindow(startAt, endAt, priority, now);
@@ -346,7 +347,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
         var campaign = await RequireCampaignAsync(campaignId, cancellationToken);
         if (campaign.StoreId != expectedStoreId)
         {
-            throw new InvalidOperationException("merchandising.campaign.store_mismatch");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignStoreMismatch);
         }
 
         var members = await _db.MerchandisingCampaignOffers
@@ -599,7 +600,7 @@ public sealed class MerchandisingCampaignDirectory : IMerchandisingCampaignDirec
             cancellationToken);
         if (campaign is null)
         {
-            throw new InvalidOperationException("domain.invariant");
+            throw new ContractOperationException(PromotionErrorCodes.CampaignWindowInvalid);
         }
 
         return campaign;

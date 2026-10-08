@@ -3,18 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
-using Tooba.Inventory.Application.Ports;
-using Tooba.Inventory.Application.Checkout;
-using Tooba.Inventory.Application.Orders;
-using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Contracts.Availability;
-using Tooba.Inventory.Contracts.Checkout;
-using Tooba.Inventory.Contracts.Errors;
-using Tooba.Inventory.Contracts.Orders;
-using Tooba.Inventory.Contracts.Seller;
-using Tooba.Inventory.Domain.Aggregates;
-using Tooba.Inventory.Domain.ValueObjects;
-using Tooba.Inventory.Domain.Events;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Contracts.Ports;
@@ -34,10 +23,12 @@ namespace Tooba.Promotion.Infrastructure.Development;
 /// <summary>
 /// دانهٔ idempotent کمپین‌های AMAZING برای Development؛ Production را لمس نمی‌کند.
 /// پنجره‌ها نسبت به UtcNow تازه می‌شوند تا سناریوهای active/future/expired پایدار بمانند.
+/// دسترسی به Inventory فقط از طریق قرارداد <see cref="IInventoryDevelopmentSeedGateway"/> است.
 /// </summary>
 public static class MerchandisingCampaignDevelopmentSeed
 {
     internal const string OosSellerSku = "DEV-SEED-OOS";
+    internal const string OosLocationCode = "WH-DEV-OOS";
     internal const string MarkerActivePrimary = "[DEV-SEED] Amazing Active Primary";
     internal const string MarkerActiveLoser = "[DEV-SEED] Amazing Active Loser";
     internal const string MarkerFuture = "[DEV-SEED] Amazing Future Teasing";
@@ -60,11 +51,12 @@ public static class MerchandisingCampaignDevelopmentSeed
         var offerQueries = provider.GetRequiredService<IOfferQueryGateway>();
         var offerSeeds = provider.GetRequiredService<IOfferDevelopmentSeedGateway>();
         var inventoryQuery = provider.GetRequiredService<IInventoryQueryGateway>();
-        var inventory = provider.GetRequiredService<IInventoryDirectory>();
+        var inventory = provider.GetRequiredService<IInventoryDevelopmentSeedGateway>();
         var parties = provider.GetRequiredService<IPartyDevelopmentDirectory>();
         var prices = provider.GetRequiredService<IPriceDirectory>();
         var priceQuery = provider.GetRequiredService<IPriceQueryGateway>();
-        var now = DateTimeOffset.UtcNow;
+        var clock = provider.GetRequiredService<IClock>();
+        var now = clock.UtcNow;
 
         // Prefer offers whose Catalog Product is Published so Storefront ProductCards can project promo prices.
         var catalogLookup = provider.GetRequiredService<ICatalogVariantLookup>();
@@ -299,7 +291,7 @@ public static class MerchandisingCampaignDevelopmentSeed
     private static async Task<Guid?> EnsureOosOfferAsync(
         IOfferDevelopmentSeedGateway offerSeeds,
         IInventoryQueryGateway inventoryQuery,
-        IInventoryDirectory inventory,
+        IInventoryDevelopmentSeedGateway inventory,
         IPartyDevelopmentDirectory parties,
         CancellationToken cancellationToken)
     {
@@ -331,29 +323,30 @@ public static class MerchandisingCampaignDevelopmentSeed
     private static async Task EnsureZeroStockAsync(
         Guid offerId,
         IInventoryQueryGateway inventoryQuery,
-        IInventoryDirectory inventory,
+        IInventoryDevelopmentSeedGateway inventory,
         CancellationToken cancellationToken)
     {
         var locationId = await inventoryQuery.FindFirstActiveLocationIdAsync(cancellationToken) ?? Guid.Empty;
         if (locationId == Guid.Empty)
         {
-            locationId = await inventory.CreateLocationAsync("WH-DEV-OOS", "Dev OOS bin", cancellationToken);
+            var ensured = await inventory.EnsureDevelopmentLocationAsync(
+                OosLocationCode,
+                "Dev OOS bin",
+                cancellationToken);
+            if (ensured.IsFailure)
+            {
+                throw new SemanticException(ensured.FirstError);
+            }
+
+            locationId = ensured.Value;
         }
 
-        var stockItemId = await inventory.OpenPositionAsync(offerId, locationId, cancellationToken);
-        var position = await inventoryQuery.FindPositionByStockItemIdAsync(stockItemId, cancellationToken)
-            ?? throw new InvalidOperationException("dev-seed-oos position missing");
-        var available = position.Available;
-        if (available > 0)
+        var drained = await inventory.DrainDevelopmentStockAsync(
+            new SeedDevelopmentStockDrain(offerId, locationId, "dev-seed-oos-drain"),
+            cancellationToken);
+        if (drained.IsFailure)
         {
-            await inventory.AdjustAsync(
-                stockItemId,
-                StockAdjustmentKind.Decrease,
-                available,
-                "dev-seed-oos-drain",
-                "dev-seed-oos-drain",
-                cancellationToken);
+            throw new SemanticException(drained.FirstError);
         }
     }
 }
-

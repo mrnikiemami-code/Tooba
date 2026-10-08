@@ -30,7 +30,12 @@ public static class PromotionSellerEndpoints
     private static async Task<IResult> Create(UpsertSellerPromotionBody b, ISender s, IPromotionSellerAuthorizer a, ApiResponseFactory api, HttpContext c, CancellationToken ct) 
     { 
         var r = await s.Send(new CreateSellerPromotionCommand(await a.RequireSellerPartyIdAsync(c, ct), b.ToInput()), ct); 
-        return r.IsSuccess ? Results.Json(r.Value, statusCode: 201) : api.From(r); 
+        if (r.IsFailure) 
+        { 
+            return api.From(r); 
+        } 
+
+        return api.Created($"/v1/seller/promotions/{r.Value.PromotionId}", r); 
     }
     private static async Task<IResult> Update(Guid id, UpsertSellerPromotionBody b, ISender s, IPromotionSellerAuthorizer a, ApiResponseFactory api, HttpContext c, CancellationToken ct) => 
         api.From(await s.Send(new UpdateSellerPromotionCommand(await a.RequireSellerPartyIdAsync(c, ct), id, b.ToInput()), ct));

@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
-using Tooba.Promotion.Application.Errors;
+using Tooba.Promotion.Application.Composition;
 using Tooba.Promotion.Application.Models;
+using Tooba.Promotion.Contracts.Errors;
 using Tooba.Promotion.Domain.ValueObjects;
 using Xunit;
 
@@ -39,15 +40,33 @@ public sealed class PromotionCqrsNormalizationTests
     }
 
     [Fact]
-    public void Validation_and_exception_mapping_are_exact_codes_only()
+    public void Normalizer_raises_declared_typed_codes_only()
     {
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<ContractOperationException>(() =>
             PromotionMutationNormalizer.Normalize(
                 new("", "SAVE", "fixed", 1m, null, null),
                 new FixedClock(DateTimeOffset.UnixEpoch)));
-        Assert.Equal(PromotionErrorCodes.NameRequired, ex.Message);
-        Assert.True(PromotionExceptionMapper.TryMapExact(PromotionErrorCodes.NameRequired, out _));
-        Assert.False(PromotionExceptionMapper.TryMapExact("promotion.name.required extra", out _));
-        Assert.False(PromotionExceptionMapper.TryMapExact("نام لازم است", out _));
+        Assert.Equal(PromotionErrorCodes.NameRequired, ex.Code);
+        Assert.True(PromotionErrorCodes.IsKnown(ex.Code));
+    }
+
+    [Fact]
+    public async Task Typed_fault_seam_maps_declared_codes_and_lets_foreign_codes_escape()
+    {
+        var mapped = await PromotionOperation.ExecuteAsync(async () =>
+        {
+            await Task.CompletedTask;
+            throw new ContractOperationException(PromotionErrorCodes.MutationRejected);
+        });
+        Assert.True(mapped.IsFailure);
+        Assert.Equal(PromotionErrorCodes.MutationRejected, mapped.FirstError.Code);
+
+        var foreign = await Assert.ThrowsAsync<ContractOperationException>(() =>
+            PromotionOperation.ExecuteAsync(async () =>
+            {
+                await Task.CompletedTask;
+                throw new ContractOperationException("offer.not_found");
+            }));
+        Assert.Equal("offer.not_found", foreign.Code);
     }
 }

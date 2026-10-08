@@ -7,10 +7,10 @@ namespace Tooba.Promotion.Tests.Architecture;
 public sealed class PromotionArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "ValueObjects", "Events", "Policies", "Merchandising"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Checkout", "Merchandising", "Promotions", "Commands", "Queries", "Errors"];
-    private static readonly string[] AllowedContractsFolders = ["Checkout", "Merchandising", "Pricing", "Errors"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Checkout", "Merchandising", "Promotions", "Commands", "Queries", "Errors", "Composition", "Validation"];
+    private static readonly string[] AllowedContractsFolders = ["Checkout", "Merchandising", "Pricing", "Errors", "Resources"];
     private static readonly string[] AllowedInfrastructureFolders =
-        ["Persistence", "Directories", "Queries", "Adapters", "Events", "Messaging", "DependencyInjection"];
+        ["Persistence", "Directories", "Queries", "Adapters", "Events", "Messaging", "DependencyInjection", "Development", "Merchandising"];
 
     private static string RepoRoot()
     {
@@ -39,9 +39,12 @@ public sealed class PromotionArchitectureGuardTests
         Assert.DoesNotContain(refs, r => r.Contains("Application", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Endpoints", StringComparison.OrdinalIgnoreCase));
-        Assert.DoesNotContain(refs, r => r.Contains("Contracts", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Offer.", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Pricing.", StringComparison.OrdinalIgnoreCase));
+        // The Domain may reference ONLY its own module Contracts (the canonical Contracts/Errors home).
+        Assert.All(
+            refs.Where(r => r.Contains("Contracts", StringComparison.OrdinalIgnoreCase)),
+            r => Assert.Contains("Tooba.Promotion.Contracts", r, StringComparison.Ordinal));
     }
 
     [Fact]
@@ -59,7 +62,6 @@ public sealed class PromotionArchitectureGuardTests
     [Fact]
     public void Promotion_golden_boundaries_and_physical_layout_remain_clean()
     {
-        Assert.DoesNotContain(ProjectRefs("Tooba.Promotion.Domain"), x => x.Contains("Tooba.Promotion.Contracts", StringComparison.Ordinal));
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("OfferDbContext", StringComparison.Ordinal));
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("PricingDbContext", StringComparison.Ordinal));

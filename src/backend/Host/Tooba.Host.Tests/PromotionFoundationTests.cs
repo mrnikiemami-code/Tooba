@@ -86,7 +86,11 @@ public sealed class PromotionFoundationTests : IAsyncLifetime
         }
 
         Assert.DoesNotContain("Tooba.Pricing.Infrastructure", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Promotion", "Tooba.Promotion.Infrastructure", "Tooba.Promotion.Infrastructure.csproj")), StringComparison.Ordinal);
-        Assert.Contains("IPromotionEvaluator", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Promotion", "Tooba.Promotion.Application", "PromotionContracts.cs")));
+        // TB-TMAR-PROMOTION-AMSC-001-W1: the stable-code/evaluator seam now lives in Contracts/Errors +
+        // Application/Ports (the historical single PromotionContracts.cs dump is retired).
+        Assert.Contains(
+            "IPromotionEvaluator",
+            File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Promotion", "Tooba.Promotion.Application", "Ports", "IPromotionEvaluator.cs")));
     }
 
     /// <summary>

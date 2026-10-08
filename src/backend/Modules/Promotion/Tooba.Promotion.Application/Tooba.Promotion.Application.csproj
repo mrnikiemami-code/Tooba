@@ -12,6 +12,5 @@
     <ProjectReference Include="..\Tooba.Promotion.Domain\Tooba.Promotion.Domain.csproj" />
     <ProjectReference Include="..\Tooba.Promotion.Contracts\Tooba.Promotion.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
-    <ProjectReference Include="..\..\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />
   </ItemGroup>
 </Project>

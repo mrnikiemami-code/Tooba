@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
+using Tooba.Promotion.Contracts.Errors;
 using Tooba.Promotion.Domain.Aggregates;
 using Tooba.Promotion.Domain.ValueObjects;
 using Tooba.Promotion.Domain.Events;
@@ -75,7 +76,7 @@ public sealed class PromotionOutboxRegistration : IOutboxModuleRegistration
             return PromotionExpiredIntegrationEvent.EventTypeName;
         }
 
-        throw new InvalidOperationException("promotion.outbox.unmapped_event_type");
+        throw new ContractOperationException(PromotionErrorCodes.OutboxUnmappedEventType);
     }
 
     /// <inheritdoc />

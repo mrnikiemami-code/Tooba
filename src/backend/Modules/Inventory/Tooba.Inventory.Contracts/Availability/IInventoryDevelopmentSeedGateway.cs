@@ -17,6 +17,12 @@ public sealed record SeedDevelopmentStockHold(
     string ExternalReference,
     string IdempotencyKey);
 
+/// <summary>Inventory-owned Development-support request to drain an offer position to zero.</summary>
+public sealed record SeedDevelopmentStockDrain(
+    Guid OfferId,
+    Guid LocationId,
+    string Reason);
+
 /// <summary>
 /// Inventory-owned Development-support capability used by module-owned Development seeds
 /// so they can ensure demo location/position/stock without touching Inventory persistence.
@@ -32,6 +38,14 @@ public interface IInventoryDevelopmentSeedGateway
     /// <summary>Opens the offer position when absent and increases on-hand by the given quantity.</summary>
     Task<Result> IncreaseDevelopmentStockAsync(
         SeedDevelopmentStock request,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Opens the offer position at the location when absent and reduces on-hand to zero so the offer
+    /// demonstrates an out-of-stock scenario. The "drain to zero" semantics are Inventory-owned.
+    /// </summary>
+    Task<Result> DrainDevelopmentStockAsync(
+        SeedDevelopmentStockDrain request,
         CancellationToken cancellationToken);
 
     /// <summary>

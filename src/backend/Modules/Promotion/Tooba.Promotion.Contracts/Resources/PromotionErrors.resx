@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="promotion.missing" xml:space="preserve"><value>Promotion was not found.</value></data>
+  <data name="promotion.name.required" xml:space="preserve"><value>The promotion name is required.</value></data>
+  <data name="promotion.coupon.required" xml:space="preserve"><value>The promotion coupon code is required.</value></data>
+  <data name="promotion.mutation.rejected" xml:space="preserve"><value>The promotion change was rejected.</value></data>
+  <data name="promotion.activate.rejected" xml:space="preserve"><value>The promotion could not be activated.</value></data>
+  <data name="promotion.deactivate.rejected" xml:space="preserve"><value>The promotion could not be deactivated.</value></data>
+  <data name="merchandising.campaign.missing" xml:space="preserve"><value>Merchandising campaign was not found.</value></data>
+  <data name="campaign.validation" xml:space="preserve"><value>The campaign data is invalid.</value></data>
+  <data name="campaign.publish" xml:space="preserve"><value>The campaign cannot be published.</value></data>
+  <data name="campaign.member" xml:space="preserve"><value>The campaign member operation was rejected.</value></data>
+  <data name="campaign.reorder" xml:space="preserve"><value>The campaign member order is invalid.</value></data>
+  <data name="campaign.price" xml:space="preserve"><value>The campaign price is invalid.</value></data>
+  <data name="promotion.outbox.unmapped_event_type" xml:space="preserve"><value>Integration event type is not registered.</value></data>
+  <data name="promotion.definition.id_required" xml:space="preserve"><value>The promotion identifier is required.</value></data>
+  <data name="promotion.definition.name_required" xml:space="preserve"><value>The promotion name is required.</value></data>
+  <data name="promotion.definition.window_invalid" xml:space="preserve"><value>The promotion validity window is invalid.</value></data>
+  <data name="promotion.definition.percent_invalid" xml:space="preserve"><value>The discount percentage is invalid.</value></data>
+  <data name="promotion.definition.percent_no_fixed" xml:space="preserve"><value>A percentage discount cannot also set a fixed amount.</value></data>
+  <data name="promotion.definition.fixed_amount_invalid" xml:space="preserve"><value>The fixed discount amount must be greater than zero.</value></data>
+  <data name="promotion.definition.fixed_currency_required" xml:space="preserve"><value>A fixed discount amount requires a currency.</value></data>
+  <data name="promotion.definition.fixed_no_percent" xml:space="preserve"><value>A fixed discount cannot also set a percentage.</value></data>
+  <data name="promotion.definition.min_qty_invalid" xml:space="preserve"><value>The minimum quantity is invalid.</value></data>
+  <data name="promotion.definition.min_subtotal_invalid" xml:space="preserve"><value>The minimum subtotal is invalid.</value></data>
+  <data name="promotion.definition.active_immutable" xml:space="preserve"><value>An active promotion cannot be edited.</value></data>
+  <data name="promotion.campaign.id_required" xml:space="preserve"><value>The campaign identifier is required.</value></data>
+  <data name="promotion.campaign.type_required" xml:space="preserve"><value>The campaign type is required.</value></data>
+  <data name="promotion.campaign.store_required" xml:space="preserve"><value>The campaign store is required.</value></data>
+  <data name="promotion.campaign.store_mismatch" xml:space="preserve"><value>The campaign does not belong to this store.</value></data>
+  <data name="promotion.campaign.archived_cannot_publish" xml:space="preserve"><value>An archived campaign cannot be published.</value></data>
+  <data name="promotion.campaign.window_invalid" xml:space="preserve"><value>The campaign time window is invalid.</value></data>
+  <data name="promotion.campaign_offer.id_required" xml:space="preserve"><value>The campaign membership identifier is required.</value></data>
+  <data name="promotion.campaign_offer.offer_required" xml:space="preserve"><value>The campaign member offer is required.</value></data>
+  <data name="promotion.type.id_required" xml:space="preserve"><value>The promotion type identifier is required.</value></data>
+  <data name="promotion.type.code_required" xml:space="preserve"><value>The promotion type code is required.</value></data>
+  <data name="promotion.type.not_found" xml:space="preserve"><value>The promotion type was not found.</value></data>
+  <data name="promotion.type.system_code_immutable" xml:space="preserve"><value>A system promotion type code cannot be changed.</value></data>
+  <data name="promotion.type.system_delete_forbidden" xml:space="preserve"><value>A system promotion type cannot be deleted.</value></data>
+  <data name="promotion.translation.locale_required" xml:space="preserve"><value>The translation locale is required.</value></data>
+  <data name="promotion.translation.title_required" xml:space="preserve"><value>The translation title is required.</value></data>
+  <data name="promotion.translation.name_required" xml:space="preserve"><value>The translation display name is required.</value></data>
+</root>
