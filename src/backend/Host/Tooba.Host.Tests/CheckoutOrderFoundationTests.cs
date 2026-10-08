@@ -77,7 +77,7 @@ using Tooba.Tax.Application;
 using Tooba.Tax.Domain;
 using Tooba.Tax.Infrastructure;
 using Tooba.Tax.Infrastructure.Persistence;
-using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Promotions.Ports;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Contracts.Checkout;

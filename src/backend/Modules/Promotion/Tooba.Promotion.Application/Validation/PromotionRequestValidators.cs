@@ -1,13 +1,8 @@
 using FluentValidation;
-using Tooba.Promotion.Application.Commands.ActivateSellerPromotion;
-using Tooba.Promotion.Application.Commands.CreateSellerPromotion;
-using Tooba.Promotion.Application.Commands.DeactivateAdminPromotion;
-using Tooba.Promotion.Application.Commands.DeactivateSellerPromotion;
-using Tooba.Promotion.Application.Commands.UpdateSellerPromotion;
 using Tooba.Promotion.Application.Merchandising.Admin.Commands;
 using Tooba.Promotion.Application.Merchandising.Admin.Queries;
-using Tooba.Promotion.Application.Queries.GetAdminPromotion;
-using Tooba.Promotion.Application.Queries.GetSellerPromotion;
+using Tooba.Promotion.Application.Promotions.Commands;
+using Tooba.Promotion.Application.Promotions.Queries;
 
 namespace Tooba.Promotion.Application.Validation;
 

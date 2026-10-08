@@ -1,4 +1,4 @@
-﻿using Tooba.Pricing.Contracts;
+using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
@@ -8,8 +8,8 @@ using Tooba.Promotion.Infrastructure.Merchandising;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Contracts.Checkout;
 using Tooba.Promotion.Application.Checkout;
-using Tooba.Promotion.Application.Merchandising;
-using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Merchandising.Ports;
+using Tooba.Promotion.Application.Promotions.Ports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

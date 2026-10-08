@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using MediatR;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Promotion.Application.Commands.DeactivateAdminPromotion;
-using Tooba.Promotion.Application.Queries.GetAdminPromotion;
-using Tooba.Promotion.Application.Queries.ListAdminPromotions;
+using Tooba.Promotion.Application.Promotions.Commands;
+using Tooba.Promotion.Application.Promotions.Queries;
 namespace Tooba.Promotion.Endpoints.Admin;
 
 public static class PromotionAdminEndpoints

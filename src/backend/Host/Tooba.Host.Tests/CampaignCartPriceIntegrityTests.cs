@@ -47,7 +47,7 @@ using Tooba.Pricing.Infrastructure;
 using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Pricing.Infrastructure.Adapters;
 using Tooba.Pricing.Infrastructure.Outbox;
-using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Promotions.Ports;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Domain.Aggregates;

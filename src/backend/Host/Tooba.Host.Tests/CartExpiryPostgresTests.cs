@@ -1,4 +1,4 @@
-using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Promotions.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;

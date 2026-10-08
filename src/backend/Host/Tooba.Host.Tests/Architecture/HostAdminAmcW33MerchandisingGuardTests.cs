@@ -70,11 +70,13 @@ public sealed class HostAdminAmcW33MerchandisingGuardTests
     public void Merchandising_CQRS_and_contracts_enrichment_ports_exist()
     {
         var root = FindRepoRoot();
-        // TB-TMAR-PROMOTION-AMSC-001-W1: the technical-axis MerchandisingCampaignAdminCqrs.cs bundle was
-        // split into capability-first per-request homes; the guard now pins the real CQRS surface instead
-        // of the retired bundle (same intent, no weakening).
-        var adminCqrsRoot = Path.Combine(
-            root, "src/backend/Modules/Promotion/Tooba.Promotion.Application/Merchandising/Admin");
+        // TB-TMAR-PROMOTION-AMSC-001-W1 split the technical-axis MerchandisingCampaignAdminCqrs.cs bundle
+        // into per-request homes; W2 then placed them under the capability-first Merchandising/Admin
+        // surface and moved the merchandising ports/models into their own folders. The guard pins the real
+        // surface instead of the retired bundle (same intent, no weakening).
+        var merchandisingRoot = Path.Combine(
+            root, "src/backend/Modules/Promotion/Tooba.Promotion.Application/Merchandising");
+        var adminCqrsRoot = Path.Combine(merchandisingRoot, "Admin");
         Assert.True(Directory.Exists(Path.Combine(adminCqrsRoot, "Commands")));
         Assert.True(Directory.Exists(Path.Combine(adminCqrsRoot, "Queries")));
         Assert.True(File.Exists(Path.Combine(adminCqrsRoot, "Commands", "CreateMerchandisingCampaignCommand.cs")));
@@ -82,7 +84,7 @@ public sealed class HostAdminAmcW33MerchandisingGuardTests
         Assert.False(File.Exists(Path.Combine(adminCqrsRoot, "MerchandisingCampaignAdminCqrs.cs")));
         Assert.True(File.Exists(Path.Combine(
             root,
-            "src/backend/Modules/Promotion/Tooba.Promotion.Application/Merchandising/IMerchandisingCampaignAdminComposer.cs")));
+            "src/backend/Modules/Promotion/Tooba.Promotion.Application/Merchandising/Ports/IMerchandisingCampaignAdminComposer.cs")));
 
         var composer = File.ReadAllText(Path.Combine(
             root,

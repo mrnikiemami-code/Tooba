@@ -1,4 +1,4 @@
-using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Promotions.Ports;
 
 namespace Tooba.Promotion.Infrastructure.Directories;
 

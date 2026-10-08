@@ -1,6 +1,6 @@
-﻿using Tooba.Promotion.Domain.ValueObjects;
+using Tooba.Promotion.Domain.ValueObjects;
 using Tooba.Promotion.Domain.Aggregates;
-using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Promotions.Ports;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Promotion.Contracts.Errors;

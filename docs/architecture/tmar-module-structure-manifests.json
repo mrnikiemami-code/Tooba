@@ -1940,8 +1940,98 @@
   "uncertifiedHttpOwningModules": [
     "Returns",
     "Support",
-    "Wallet",
-    "Promotion"
+    "Wallet"
   ],
-  "preCertModules": []
+  "preCertModules": [
+    {
+      "module": "Promotion",
+      "structureCertified": false,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "AMSC-001 lineage: W0 Analyze (d00cf666) -> W1 Migrate (06858933) -> W2 Structure (this wave) -> W3 Certify pending. HTTP_OWNING module owning 21 routes (/v1/seller/promotions x6, /v1/admin/promotions x3, /v1/admin/merchandising-campaigns x12) and 21 endpoint-reachable CQRS requests. W2 normalized Application to capability-first shallow: Application/Promotions/{Commands,Queries,Models,Ports} + Application/Merchandising/{Ports,Models,Admin/{Commands,Queries}} + shared Application/Composition/PromotionOperation.cs and Application/Validation/. The W0/W1 technical-axis roots Application/Commands/<UseCase> and Application/Queries/<UseCase> (9 single-file use-case leaf folders) were flattened onto the Promotions capability axes, and the mixed bundles Application/Ports/PromotionDirectoryPorts.cs, Application/Merchandising/MerchandisingCampaignPorts.cs and Application/Errors/ are retired and forbidden. Folder-Granularity-State TECHNICAL_AXIS_FIRST -> PROFESSIONAL_SHALLOW; Path-Namespace-State EXACT; Physical-Copy-State CLEAN; Root-Allowlist-State ENFORCED; /Modules/Promotion/ solution grouping with exactly 6 projects. NOT_CERTIFIED for ARCH-COMPLETE-002 until W3; do not promote to structureLock.certifiedModules yet.",
+      "projects": [
+        {
+          "projectName": "Tooba.Promotion.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Boundary vocabulary lives under Checkout/ (the checkout promotion port), Errors/ (the single canonical PromotionErrorCodes home + the ErrorResourceSet), Merchandising/ (the merchandising boundary contracts + the schema-migrator port) and Resources/ (the bilingual PromotionErrors.resx/.fa.resx pair). Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "PromotionContracts.cs",
+            "MerchandisingCampaignContracts.cs",
+            "PromotionErrorCodes.cs",
+            "PromotionErrorResourceSet.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Promotion.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. The promotion aggregate lives under Aggregates/, the merchandising campaign aggregate and its value objects under Merchandising/, domain events under Events/, and the coupon/rounding rules under Policies/ with the remaining value objects under ValueObjects/. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "PromotionDefinition.cs",
+            "MerchandisingCampaign.cs",
+            "PromotionDomainEvents.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Promotion.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Application is capability-first shallow: Promotions/ carries the promotion use-case Commands/Queries plus its Models/ and Ports/, Merchandising/ carries the merchandising Ports/ and Models/ with the Admin/{Commands,Queries} write/read surface, and only the genuinely shared Checkout/, Composition/ (the single PromotionOperation typed-fault seam) and Validation/ (transport validators + validation codes) stay at the capability root. The W0/W1 technical-axis roots Commands/Queries/Models/Ports/Errors are retired and forbidden. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "PromotionContracts.cs",
+            "PromotionDirectoryPorts.cs",
+            "MerchandisingCampaignPorts.cs",
+            "PromotionErrorCodes.cs",
+            "PromotionOperation.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Models",
+            "Ports",
+            "Validators",
+            "Errors",
+            "Handlers",
+            "Requests"
+          ]
+        },
+        {
+          "projectName": "Tooba.Promotion.Infrastructure",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Module DI lives under DependencyInjection/, the four directory implementations and their guards under Directories/, the migration tooling and cart-price authority adapters under Adapters/, the merchandising composer under Merchandising/, the outbox translation under Messaging/, the integration-event poll targets under Events/, the runtime read model under Queries/, the development seed under Development/ and the EF model plus the two unchanged migrations under Persistence/Migrations. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "PromotionModule.cs",
+            "PromotionDbContext.cs",
+            "PromotionDirectory.cs",
+            "MerchandisingCampaignAdminComposer.cs",
+            "PromotionOutboxRegistration.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations",
+            "Repositories"
+          ]
+        },
+        {
+          "projectName": "Tooba.Promotion.Endpoints",
+          "rootAllowlist": [
+            "PromotionEndpointModule.cs"
+          ],
+          "rootAllowlistJustification": "Endpoints root holds only the composition entry PromotionEndpointModule.cs (route mapping + the single error-resource-set registration). The audience capability folders are Admin/ (admin promotion + merchandising campaign routes and the admin authorizer) and Seller/ (seller routes and the seller authorizer) with Errors/ carrying the error-catalog contributor. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "PromotionAdminEndpoints.cs",
+            "PromotionSellerEndpoints.cs",
+            "MerchandisingCampaignAdminEndpoints.cs",
+            "PromotionErrorCatalogContributor.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Promotion.Tests",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Test-only project with Architecture/ durable guards and Behavior/ CQRS normalization suites and no root .cs.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    }
+  ]
 }

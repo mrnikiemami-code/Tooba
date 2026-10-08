@@ -3,13 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Promotion.Application.Commands.ActivateSellerPromotion;
-using Tooba.Promotion.Application.Commands.CreateSellerPromotion;
-using Tooba.Promotion.Application.Commands.DeactivateSellerPromotion;
-using Tooba.Promotion.Application.Commands.UpdateSellerPromotion;
-using Tooba.Promotion.Application.Models;
-using Tooba.Promotion.Application.Queries.GetSellerPromotion;
-using Tooba.Promotion.Application.Queries.ListSellerPromotions;
+using Tooba.Promotion.Application.Promotions.Commands;
+using Tooba.Promotion.Application.Promotions.Models;
+using Tooba.Promotion.Application.Promotions.Queries;
 namespace Tooba.Promotion.Endpoints.Seller;
 
 public static class PromotionSellerEndpoints

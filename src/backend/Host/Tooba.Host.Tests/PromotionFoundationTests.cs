@@ -11,7 +11,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
 using Tooba.Pricing.Domain.Aggregates;
-using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Promotions.Ports;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Domain.Aggregates;
@@ -86,11 +86,12 @@ public sealed class PromotionFoundationTests : IAsyncLifetime
         }
 
         Assert.DoesNotContain("Tooba.Pricing.Infrastructure", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Promotion", "Tooba.Promotion.Infrastructure", "Tooba.Promotion.Infrastructure.csproj")), StringComparison.Ordinal);
-        // TB-TMAR-PROMOTION-AMSC-001-W1: the stable-code/evaluator seam now lives in Contracts/Errors +
-        // Application/Ports (the historical single PromotionContracts.cs dump is retired).
+        // TB-TMAR-PROMOTION-AMSC-001-W1 moved the stable-code/evaluator seam to Contracts/Errors +
+        // Application/Promotions/Ports (the historical single PromotionContracts.cs dump is retired);
+        // TB-TMAR-PROMOTION-AMSC-001-W2 placed the promotion capability ports under Promotions/Ports.
         Assert.Contains(
             "IPromotionEvaluator",
-            File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Promotion", "Tooba.Promotion.Application", "Ports", "IPromotionEvaluator.cs")));
+            File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Promotion", "Tooba.Promotion.Application", "Promotions", "Ports", "IPromotionEvaluator.cs")));
     }
 
     /// <summary>

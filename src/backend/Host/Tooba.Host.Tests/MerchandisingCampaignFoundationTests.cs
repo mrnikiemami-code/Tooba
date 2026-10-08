@@ -17,7 +17,7 @@ using Tooba.Persistence;
 using Tooba.Pricing.Domain;
 using Tooba.Pricing.Domain.Aggregates;
 using Tooba.Pricing.Domain.Enums;
-using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Promotions.Ports;
 using Tooba.Promotion.Application.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Domain.Aggregates;

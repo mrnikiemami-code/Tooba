@@ -1,6 +1,8 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
 
+using Tooba.Promotion.Application.Merchandising.Ports;
+
 namespace Tooba.Promotion.Application.Merchandising.Admin.Commands;
 
 /// <summary>انتشار کمپین.</summary>

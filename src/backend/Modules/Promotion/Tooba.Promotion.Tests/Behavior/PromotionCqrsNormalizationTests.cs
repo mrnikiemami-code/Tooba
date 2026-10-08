@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Promotion.Application.Composition;
-using Tooba.Promotion.Application.Models;
+using Tooba.Promotion.Application.Promotions.Models;
 using Tooba.Promotion.Contracts.Errors;
 using Tooba.Promotion.Domain.ValueObjects;
 using Xunit;

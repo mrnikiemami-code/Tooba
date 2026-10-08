@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Tooba.Promotion.Application.Merchandising;
+using Microsoft.Extensions.DependencyInjection;
+using Tooba.Promotion.Application.Merchandising.Ports;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Infrastructure.Development;
 

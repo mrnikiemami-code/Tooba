@@ -1,6 +1,10 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
 
+using Tooba.Promotion.Application.Merchandising.Ports;
+
+using Tooba.Promotion.Application.Merchandising.Models;
+
 namespace Tooba.Promotion.Application.Merchandising.Admin.Queries;
 
 /// <summary>جزئیات یک کمپین Store-scoped.</summary>

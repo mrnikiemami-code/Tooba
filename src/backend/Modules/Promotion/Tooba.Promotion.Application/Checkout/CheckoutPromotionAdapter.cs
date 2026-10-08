@@ -1,6 +1,6 @@
 using Tooba.Promotion.Domain.ValueObjects;
 using Tooba.Promotion.Contracts.Checkout;
-using Tooba.Promotion.Application.Ports;
+using Tooba.Promotion.Application.Promotions.Ports;
 using Tooba.Promotion.Contracts.Merchandising;
 using Tooba.Promotion.Domain.Aggregates;
 using Tooba.Promotion.Domain.Events;

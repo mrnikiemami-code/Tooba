@@ -9,9 +9,11 @@ using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
 using Tooba.Promotion.Contracts.Merchandising;
-using Tooba.Promotion.Application.Merchandising;
+using Tooba.Promotion.Application.Merchandising.Ports;
 using Tooba.Promotion.Contracts.Errors;
 using Tooba.Promotion.Domain.Merchandising;
+
+using Tooba.Promotion.Application.Merchandising.Models;
 
 namespace Tooba.Promotion.Infrastructure.Merchandising;
 

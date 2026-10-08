@@ -7,7 +7,7 @@ namespace Tooba.Promotion.Tests.Architecture;
 public sealed class PromotionArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "ValueObjects", "Events", "Policies", "Merchandising"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Checkout", "Merchandising", "Promotions", "Commands", "Queries", "Errors", "Composition", "Validation"];
+    private static readonly string[] AllowedApplicationFolders = ["Checkout", "Composition", "Merchandising", "Promotions", "Validation"];
     private static readonly string[] AllowedContractsFolders = ["Checkout", "Merchandising", "Pricing", "Errors", "Resources"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Queries", "Adapters", "Events", "Messaging", "DependencyInjection", "Development", "Merchandising"];
