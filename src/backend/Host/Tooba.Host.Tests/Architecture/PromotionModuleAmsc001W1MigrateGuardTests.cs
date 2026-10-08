@@ -198,6 +198,7 @@ public sealed class PromotionModuleAmsc001W1MigrateGuardTests
                      "GetAdminPromotionQueryValidator",
                      "DeactivateAdminPromotionCommandValidator",
                      "ListMerchandisingCampaignsQueryValidator",
+                     "ListMerchandisingCampaignTypesQueryValidator",
                      "ListMerchandisingOfferCandidatesQueryValidator",
                      "GetMerchandisingCampaignQueryValidator",
                      "CreateMerchandisingCampaignCommandValidator",

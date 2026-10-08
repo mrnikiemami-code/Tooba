@@ -51,14 +51,14 @@ public sealed class PromotionModuleAmsc001W3CertGuardTests
             root, "docs/architecture/tmar-current-state.json")));
         var w3 = sot.RootElement.GetProperty("promotionAmsc001W3");
         Assert.Equal("COMPLETE_REFERENCE_PATTERN", w3.GetProperty("verdict").GetString());
-        Assert.Equal("CERTIFIED", w3.GetProperty("state").GetString());
+        Assert.Equal("CERTIFICATION_SUPERSEDED_STRUCTURE_VERIFIED", w3.GetProperty("state").GetString());
         Assert.Equal("ARCH-COMPLETE-002", w3.GetProperty("lockVersion").GetString());
         Assert.Equal("EXACT", w3.GetProperty("pathNamespaceState").GetString());
         Assert.Equal("ENFORCED", w3.GetProperty("rootAllowlistState").GetString());
         Assert.Equal("ZERO", w3.GetProperty("foreignAppInfraDomainCoupling").GetString());
         Assert.Equal("MODULE_OWNED_21_ROUTES_HOST_ZERO", w3.GetProperty("endpointOwnershipState").GetString());
         Assert.Equal(21, w3.GetProperty("endpointReachableRequests").GetInt32());
-        Assert.Equal("EXHAUSTIVE_18_VALIDATOR_REQUIRED_3_NO_VALIDATOR_REQUIRED", w3.GetProperty("validatorMatrixState").GetString());
+        Assert.Equal("EXHAUSTIVE_19_VALIDATOR_REQUIRED_2_NO_VALIDATOR_REQUIRED", w3.GetProperty("validatorMatrixState").GetString());
         Assert.Equal("ZERO", w3.GetProperty("blockingResidualDebt").GetString());
         Assert.True(w3.GetProperty("microserviceExtractable").GetBoolean());
         Assert.Equal("NONE", w3.GetProperty("automaticNextImplementationTask").GetString());
@@ -67,6 +67,16 @@ public sealed class PromotionModuleAmsc001W3CertGuardTests
         var certified = sot.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
             .EnumerateArray().Select(x => x.GetString()!).ToArray();
         Assert.Equal(1, certified.Count(x => x == "Promotion"));
+
+        // W3-R1 independently found the W3 validator classification false, so the W3 certification verdict
+        // is explicitly BLOCKED / superseded pending a fresh Certify wave. Structure stays verified.
+        Assert.Equal("BLOCKED_SUPERSEDED_BY_W3_R1_PENDING_FRESH_CERTIFY", w3.GetProperty("certificationState").GetString());
+        Assert.Equal("BLOCKED_PENDING_FRESH_CERTIFY", w3.GetProperty("verdictState").GetString());
+        Assert.Equal("TB-TMAR-PROMOTION-AMSC-001-W3-R1", w3.GetProperty("supersededByTask").GetString());
+        Assert.Equal("TB-TMAR-PROMOTION-AMSC-001-W3-R2", w3.GetProperty("repairTask").GetString());
+        Assert.Equal("EXHAUSTIVE_19_VALIDATOR_REQUIRED_2_NO_VALIDATOR_REQUIRED", w3.GetProperty("validatorMatrixState").GetString());
+        Assert.Equal("PENDING_FRESH_CERTIFY", w3.GetProperty("freshCertifyState").GetString());
+        Assert.True(entries[0].GetProperty("certificationState").GetString() == "BLOCKED_SUPERSEDED_BY_W3_R1_PENDING_FRESH_CERTIFY");
 
         // Wave lineage is recorded with its own commit SHAs (W0/W1 were recorded as result-only and are
         // reconciled here from the accepted wave commits).
@@ -147,23 +157,29 @@ public sealed class PromotionModuleAmsc001W3CertGuardTests
         Assert.DoesNotContain("SendAsync", joined, StringComparison.Ordinal);
         Assert.Equal(21, Regex.Matches(joined, @"await (sender|s)\.Send\(new ").Count);
 
-        // The validator matrix is EXHAUSTIVE: 18 validators cover the 18 shape-bearing requests; the 3
-        // remaining endpoint-reachable requests take no malformable transport shape.
+        // The validator matrix is EXHAUSTIVE: 19 validators cover the 19 shape-bearing requests; the 2
+        // remaining endpoint-reachable requests take no malformable transport shape. The third historical
+        // exemption (ListMerchandisingCampaignTypesQuery) was a W3 classification defect repaired by
+        // TB-TMAR-PROMOTION-AMSC-001-W3-R2 because that read binds a client-supplied locale.
         var validatorFile = File.ReadAllText(Path.Combine(
             root, ModuleRoot, "Tooba.Promotion.Application", "Validation", "PromotionRequestValidators.cs"));
         var validatorTypes = Regex.Matches(validatorFile, @"public sealed class (?<n>\w+Validator) : AbstractValidator<")
             .Select(m => m.Groups["n"].Value).ToArray();
-        Assert.Equal(18, validatorTypes.Length);
+        Assert.Equal(19, validatorTypes.Length);
         Assert.Equal(validatorTypes.Length, validatorTypes.Distinct(StringComparer.Ordinal).Count());
 
-        // Exactly the 3 unvalidated requests are the ones with no malformable transport shape.
+        // Exactly the 2 unvalidated requests are the ones with no malformable transport shape.
         var validatedRequests = Regex.Matches(validatorFile, @"AbstractValidator<(?<t>\w+)>")
             .Select(m => m.Groups["t"].Value).ToHashSet(StringComparer.Ordinal);
-        Assert.Equal(18, validatedRequests.Count);
+        Assert.Equal(19, validatedRequests.Count);
         Assert.DoesNotContain("ListSellerPromotionsQuery", validatedRequests);
         Assert.DoesNotContain("ListAdminPromotionsQuery", validatedRequests);
-        Assert.DoesNotContain("ListMerchandisingCampaignTypesQuery", validatedRequests);
-        Assert.Equal(21, validatedRequests.Count + 3);
+        Assert.Contains("ListMerchandisingCampaignTypesQuery", validatedRequests);
+        Assert.Equal(21, validatedRequests.Count + 2);
+
+        // The repaired locale-bearing read is covered by the canonical locale code only.
+        Assert.Contains("ListMerchandisingCampaignTypesQueryValidator", validatorFile, StringComparison.Ordinal);
+        Assert.Contains("PromotionValidationCodes.LocaleInvalid", validatorFile, StringComparison.Ordinal);
 
         // Validators emit machine codes only and never duplicate a business rule.
         Assert.DoesNotContain("WithMessage(", validatorFile, StringComparison.Ordinal);

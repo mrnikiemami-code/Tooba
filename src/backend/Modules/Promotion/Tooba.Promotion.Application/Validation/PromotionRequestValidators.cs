@@ -134,6 +134,18 @@ public sealed class ListMerchandisingCampaignsQueryValidator : AbstractValidator
         || value.Trim().All(c => char.IsLetter(c) || c == '-' || c == '_');
 }
 
+public sealed class ListMerchandisingCampaignTypesQueryValidator : AbstractValidator<ListMerchandisingCampaignTypesQuery>
+{
+    public ListMerchandisingCampaignTypesQueryValidator()
+        => RuleFor(x => x.Locale)
+            .Must(BeWellFormedLocale)
+            .WithErrorCode(PromotionValidationCodes.LocaleInvalid);
+
+    private static bool BeWellFormedLocale(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+        || value.Trim().All(c => char.IsLetter(c) || c == '-' || c == '_');
+}
+
 public sealed class ListMerchandisingOfferCandidatesQueryValidator : AbstractValidator<ListMerchandisingOfferCandidatesQuery>
 {
     public ListMerchandisingOfferCandidatesQueryValidator()
