@@ -4,8 +4,9 @@ using Tooba.BuildingBlocks.Grid;
 namespace Tooba.Story.Infrastructure.Grid;
 
 /// <summary>
-/// سیاست Normalize گرید Admin استوری — مالک ماژول، بدون وابستگی به Host.Grid.
-/// فیلدها و پیش‌فرض‌ها با رفتار قبلی AdminListGridPolicies.Stories یکسان است.
+/// سیاست Normalize گرید Admin استوری — مالکیت کامل ماژول Story و بدون هیچ وابستگی به Host.Grid.
+/// فیلدها، اپراتورهای مجاز و پیش‌فرض‌ها با رفتار قبلی AdminListGridPolicies.Stories یکسان است
+/// تا قرارداد بیرونی گرید تغییر نکند.
 /// </summary>
 public static class StoryAdminGridPolicies
 {

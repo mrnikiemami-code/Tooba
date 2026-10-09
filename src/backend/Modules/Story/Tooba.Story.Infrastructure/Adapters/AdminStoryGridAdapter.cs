@@ -9,7 +9,10 @@ using Tooba.Story.Infrastructure.Persistence;
 
 namespace Tooba.Story.Infrastructure.Adapters;
 
-/// <summary>Application port over admin story grid engine + Story-owned normalize policy.</summary>
+/// <summary>
+/// پیاده‌سازی درز گرید استوری Admin روی موتور گرید داخلی ماژول و سیاست normalize مالک Story.
+/// این Adapter تنها لایهٔ اتصال Application به Infrastructure است و هیچ منطق HTTP یا Endpoint در آن نیست.
+/// </summary>
 public sealed class AdminStoryGridAdapter(StoryDbContext db) : IAdminStoryGridPort
 {
     /// <inheritdoc />

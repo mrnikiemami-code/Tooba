@@ -15,7 +15,9 @@ namespace Tooba.Host.Tests.Architecture;
 
 /// <summary>
 /// TB-TMAR-STORY-AMC-001-W5 — exhaustive Story endpoint-reachable request/validator coverage.
-/// 25 MediatR requests: 15 VALIDATOR_REQUIRED + 10 NO_VALIDATOR_REQUIRED.
+/// TB-TMAR-STORY-AMSC-001-W1 closed the single provenance gap: GetPublicStoriesQuery's caller-controlled
+/// locale/market now carry a transport-shape validator, so the matrix is 16 VALIDATOR_REQUIRED + 9
+/// NO_VALIDATOR_REQUIRED over the same 25 endpoint-reachable requests.
 /// </summary>
 public sealed class StoryModuleAmcW5ValidatorGuardTests
 {
@@ -48,7 +50,7 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
         ("UpdateSellerStoryItemCommand", "PUT /v1/seller/stories/{id}/items/{itemId}", ValidatorRequired),
         ("RemoveSellerStoryItemCommand", "DELETE /v1/seller/stories/{id}/items/{itemId}", NoValidatorRequired),
         ("ReorderSellerStoryItemsCommand", "PUT /v1/seller/stories/{id}/items/reorder", ValidatorRequired),
-        ("GetPublicStoriesQuery", "GET /v1/storefront/stories", NoValidatorRequired),
+        ("GetPublicStoriesQuery", "GET /v1/storefront/stories", ValidatorRequired),
     ];
 
     private static readonly (string Request, Type Validator)[] RequiredValidators =
@@ -68,14 +70,15 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
         ("AddSellerStoryItemCommand", typeof(AddSellerStoryItemCommandValidator)),
         ("UpdateSellerStoryItemCommand", typeof(UpdateSellerStoryItemCommandValidator)),
         ("ReorderSellerStoryItemsCommand", typeof(ReorderSellerStoryItemsCommandValidator)),
+        ("GetPublicStoriesQuery", typeof(GetPublicStoriesQueryValidator)),
     ];
 
     [Fact]
-    public void Complete_endpoint_inventory_is_exactly_25_with_15_required_and_10_no_validator()
+    public void Complete_endpoint_inventory_is_exactly_25_with_16_required_and_9_no_validator()
     {
         Assert.Equal(25, Manifest.Length);
-        Assert.Equal(15, Manifest.Count(x => x.Classification == ValidatorRequired));
-        Assert.Equal(10, Manifest.Count(x => x.Classification == NoValidatorRequired));
+        Assert.Equal(16, Manifest.Count(x => x.Classification == ValidatorRequired));
+        Assert.Equal(9, Manifest.Count(x => x.Classification == NoValidatorRequired));
         Assert.Equal(Manifest.Length, Manifest.Select(x => x.RequestTypeName).Distinct(StringComparer.Ordinal).Count());
     }
 
@@ -93,7 +96,7 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
     }
 
     [Fact]
-    public void Fifteen_required_validators_resolve_via_foundation_DI_and_ten_have_none()
+    public void Sixteen_required_validators_resolve_via_foundation_DI_and_nine_have_none()
     {
         var services = new ServiceCollection();
         services.AddLogging();

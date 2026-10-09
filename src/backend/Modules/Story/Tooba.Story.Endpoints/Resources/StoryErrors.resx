@@ -10,4 +10,12 @@
   <data name="story.tenant.missing" xml:space="preserve"><value>Story tenant was missing.</value></data>
   <data name="story.reviewStatus.invalid" xml:space="preserve"><value>Story review status is invalid.</value></data>
   <data name="story.title.required" xml:space="preserve"><value>Story title is required.</value></data>
+  <data name="story.ids.required" xml:space="preserve"><value>At least one story id is required.</value></data>
+  <data name="story.itemIds.required" xml:space="preserve"><value>At least one story item id is required.</value></data>
+  <data name="story.mediaType.required" xml:space="preserve"><value>Story item media type is required.</value></data>
+  <data name="story.grid.request.required" xml:space="preserve"><value>Story grid request body is required.</value></data>
+  <data name="story.rejectionReason.required" xml:space="preserve"><value>Rejection reason is required.</value></data>
+  <data name="story.schedule.range.invalid" xml:space="preserve"><value>Story schedule range is invalid.</value></data>
+  <data name="story.locale.invalid" xml:space="preserve"><value>Story locale value is invalid.</value></data>
+  <data name="story.market.invalid" xml:space="preserve"><value>Story market value is invalid.</value></data>
 </root>
