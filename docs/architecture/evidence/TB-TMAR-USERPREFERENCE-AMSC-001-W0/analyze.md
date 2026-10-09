@@ -247,40 +247,41 @@ W1.
 
 ## 9. Localization findings
 
-**Current state: `CANONICAL_WITH_BROKEN_RUNTIME_RESOLUTION`.**
+**Current state: `CANONICAL_RUNTIME_CORRECT_LOGICAL_NAME_IMPLICIT`.**
 
 The *shape* is canonical — 9 `ErrorDescriptor`s registered once by
 `UserPreferenceErrorCatalogContributor`, `LocalizationKey = code`, and a single
-`UserPreferenceErrorResourceSet` owning the `preference.` / `ui_preference.` keyspace. Two real
-defects remain.
+`UserPreferenceErrorResourceSet` owning the `preference.` / `ui_preference.` keyspace. EN **and** FA
+both resolve at runtime. One hardening gap remains.
 
-### 9.1 Defect A — the bilingual resource set is never loaded (functional defect)
+### 9.1 Defect A — the embedded-resource logical names are implicit, not locked
 
 `Tooba.UserPreference.Contracts.csproj` has **no** `EmbeddedResource` item and **no**
 `LogicalName`, unlike every certified sibling (`Tax`, `Pricing`, `Wishlist`, …):
 
 ```text
-# Tooba.UserPreference.Contracts.csproj — actual (defective)
+# Tooba.UserPreference.Contracts.csproj — actual
 <ItemGroup>
   <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
 </ItemGroup>
 ```
 
-Machine proof (reflection over the built assembly):
+Machine proof (reflection over the **actually built** assemblies — this supersedes the W0 draft
+claim that the Persian resource was dead):
 
 ```text
 DLL: Tooba.UserPreference.Contracts.dll
 GetManifestResourceNames() -> [ "Tooba.UserPreference.Contracts.Resources.UserPreferenceErrors.resources" ]
+
+DLL: fa/Tooba.UserPreference.Contracts.resources.dll   (culture = fa)
+GetManifestResourceNames() -> [ "Tooba.UserPreference.Contracts.Resources.UserPreferenceErrors.fa.resources" ]
 ```
 
-The `fa` satellite resource is **absent**, and the neutral resource is present only under the
-default derived name. Because `ResourceErrorMessageLocalizer` resolves through
-`UserPreferenceErrorResources.Manager = new ResourceManager("Tooba.UserPreference.Contracts.Resources.UserPreferenceErrors", ...)`,
-the neutral resource currently resolves, but:
-
-- `UserPreferenceErrors.fa.resx` is **dead content** — Persian text never reaches a client;
-- the logical-name contract is implicit (breaks if `EmbeddedResourceUseDependentUponConvention`
-  changes) instead of the explicit, locked convention every certified module uses.
+Both names happen to equal the exact names
+`UserPreferenceErrorResources.Manager = new ResourceManager("Tooba.UserPreference.Contracts.Resources.UserPreferenceErrors", ...)`
+resolves, so EN/FA localization **works today**. The real, narrower defect is that this equality is
+an *implicit* side effect of the SDK convention (`EmbeddedResourceUseDependentUponConvention` +
+default culture suffixing) rather than an explicit, locked contract. Certified siblings pin it:
 
 Canonical comparison (`Tax`):
 
@@ -292,6 +293,10 @@ Canonical comparison (`Tax`):
   <LogicalName>Tooba.Tax.Contracts.Resources.TaxErrors.fa.resources</LogicalName>
 </EmbeddedResource>
 ```
+
+W1 adds the same explicit pair so the logical-name contract becomes a locked, durable invariant
+(and so a future change to `EmbeddedResourceUseDependentUponConvention` cannot silently break
+Persian). This is behavior-preserving: the resolved names are byte-identical to the current ones.
 
 ### 9.2 Defect B — the shared cross-cutting session code is misclassified by the module guard
 
@@ -326,7 +331,8 @@ not a module use-case fault) while the constant stays for the endpoint's `api.Fr
   than exact-code-based; W1 makes it derive from the declared-code set (the certified
   `TaxErrorResourceSet` shape) so a future foreign `preference.*` code cannot be silently claimed.
 - **No test asserts the UserPreference error text** (verified by scan); therefore switching the
-  resource set to code-set ownership and fixing the embedding changes **no** asserted behavior.
+  resource set to code-set ownership and making the logical names explicit changes **no** asserted
+  behavior and **no** resolved string.
 
 ---
 
@@ -532,8 +538,9 @@ manifest entry — never create a parallel structure, and never weaken an existi
 4. `Contracts/Resources/UserPreferenceErrors.resx` / `.fa.resx` — add the
    `user_preference.outbox.unmapped_event_type` key (EN + FA).
 5. `Contracts/Tooba.UserPreference.Contracts.csproj` — add the explicit `EmbeddedResource` +
-   `LogicalName` pair for both `.resx` files (canonical `Tax`/`Pricing` shape). **This repairs the
-   dead Persian satellite resource.**
+   `LogicalName` pair for both `.resx` files (canonical `Tax`/`Pricing` shape) so the EN/FA
+   logical-name contract is locked rather than implicit. Behavior-preserving (resolved names are
+   byte-identical to the currently built ones).
 6. `Application/Composition/UserPreferenceOperation.cs` — expand to the dual-mechanism certified seam:
    value + value-less overloads, `ContractOperationException ex when UserPreferenceErrorCodes.IsKnown(ex.Code)`
    → `Result.Failure(new SemanticError(ex.Code))`, plus the existing `SemanticException` mapping;
@@ -559,8 +566,8 @@ manifest entry — never create a parallel structure, and never weaken an existi
    lineage, HTTP_OWNING route ownership, CQRS/validator set equality, single stable-code owner with
    declared-code guard + bilingual resource set equality + composed-catalog uniqueness, canonical
    typed seam, Contracts-only boundary, schema/migration set, Host closure, evidence tree).
-2. Refresh the manifest `certificationNote` to record the AMSC-001 W0→W3 lineage and the repaired
-   localization surface (staying a single certified `modules[]` entry — no pre-cert duplicate).
+2. Refresh the manifest `certificationNote` to record the AMSC-001 W0→W3 lineage and the now-locked
+   explicit localization surface (staying a single certified `modules[]` entry — no pre-cert duplicate).
 3. Record the W0/W1/W2/W3 lineage in `tmar-current-state.json`.
 4. Master Recovery checkpoint in `docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md`.
 
@@ -585,9 +592,9 @@ the previous head to prove `NEW = 0`.
 3. No declared-code guard (`KnownCodes` / `IsKnown`) on the Contracts error home, and the
    Foundation-owned `customer.session.required` constant is not explicitly excluded from the
    module-owned set (§9.2).
-4. `UserPreferenceErrors.fa.resx` is dead content and the embedded-resource logical names are
-   implicit because the Contracts csproj lacks the canonical `EmbeddedResource`/`LogicalName` pair
-   (§9.1).
+4. The embedded-resource logical names are implicit because the Contracts csproj lacks the
+   canonical `EmbeddedResource`/`LogicalName` pair — EN/FA both resolve today only via SDK
+   convention, so the bilingual contract is unlocked (§9.1).
 5. `UserPreferenceErrorResourceSet.Owns` is prefix-based rather than declared-code-set-based (§9.3).
 
 ---
@@ -599,7 +606,7 @@ Foundation-State            : FOUNDATION_READY
 Ownership-State             : correct
 File-Cohesion-State         : COHESIVE
 Oversized/God-File-State    : NONE (largest production file 77 LOC, ceiling 800)
-Localization-State          : CANONICAL_WITH_BROKEN_RUNTIME_RESOLUTION (fa satellite dead, implicit logical names)
+Localization-State          : CANONICAL_RUNTIME_CORRECT_LOGICAL_NAME_IMPLICIT (EN+FA both resolve; names unlocked)
 API-Result-Pattern-State    : CANONICAL (zero raw Results.*, zero catch-and-map, zero ex.Message classification)
 Stable-Error-Code-State     : PARTIAL (9 declared+registered; 1 raw prose fault unregistered; no declared-code guard)
 Typed-Fault-Seam-State      : INCOMPLETE (SemanticException only; no value-less overload; no ContractOperationException)

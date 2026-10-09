@@ -13,4 +13,5 @@
   <data name="ui_preference.validation.actor_required" xml:space="preserve"><value>Actor الزامی است.</value></data>
   <data name="ui_preference.validation.key_required" xml:space="preserve"><value>کلید ترجیح UI الزامی است.</value></data>
   <data name="ui_preference.validation.json_required" xml:space="preserve"><value>JSON ترجیح UI الزامی است.</value></data>
+  <data name="user_preference.outbox.unmapped_event_type" xml:space="preserve"><value>نوع رویداد یکپارچه‌سازی ثبت نشده است.</value></data>
 </root>

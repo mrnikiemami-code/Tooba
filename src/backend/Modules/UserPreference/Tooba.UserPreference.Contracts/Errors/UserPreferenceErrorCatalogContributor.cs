@@ -3,7 +3,16 @@ using Tooba.BuildingBlocks.Presentation.Errors;
 
 namespace Tooba.UserPreference.Contracts.Errors;
 
-/// <summary>کاتالوگ کدهای خطای UserPreference.</summary>
+/// <summary>
+/// UserPreference-owned error catalog. Registers one descriptor per UserPreference-emitted machine
+/// code so the canonical <c>SafeErrorMapper</c> classifies them instead of falling back to a generic
+/// 400. Classification is by stable machine code only.
+/// <para>
+/// <c>customer.session.required</c> is deliberately absent: it is declared and owned by Foundation
+/// (<c>FoundationErrorCatalogContributor</c>), so UserPreference must not claim its descriptor. The
+/// module still consumes the constant at its HTTP boundary.
+/// </para>
+/// </summary>
 public sealed class UserPreferenceErrorCatalogContributor : IErrorCatalogContributor
 {
     /// <inheritdoc />
@@ -27,6 +36,8 @@ public sealed class UserPreferenceErrorCatalogContributor : IErrorCatalogContrib
             "UI preference key is required."),
         D(UserPreferenceErrorCodes.UiJsonRequiredValidation, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
             "UI preference JSON is required."),
+        D(UserPreferenceErrorCodes.OutboxUnmappedEventType, ErrorClassification.Platform, StatusCodes.Status500InternalServerError,
+            "Integration event type is not registered."),
         // customer.session.required is owned by FoundationErrorCatalogContributor.
     ];
 

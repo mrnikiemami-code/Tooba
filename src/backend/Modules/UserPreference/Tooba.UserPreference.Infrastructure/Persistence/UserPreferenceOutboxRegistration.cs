@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
+using Tooba.UserPreference.Contracts.Errors;
 
 namespace Tooba.UserPreference.Infrastructure.Persistence;
 
@@ -20,8 +21,9 @@ public sealed class UserPreferenceOutboxRegistration : IOutboxModuleRegistration
 
     /// <inheritdoc />
     public string GetEventTypeName(Type integrationEventType) =>
-        throw new InvalidOperationException("UserPreference integration event is not registered.");
+        throw new ContractOperationException(UserPreferenceErrorCodes.OutboxUnmappedEventType);
 
     /// <inheritdoc />
     public Type? ResolveEventClrType(string eventTypeName) => null;
 }
+

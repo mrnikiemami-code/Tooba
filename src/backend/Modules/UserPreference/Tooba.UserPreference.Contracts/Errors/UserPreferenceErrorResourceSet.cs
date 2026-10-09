@@ -4,15 +4,20 @@ using Tooba.BuildingBlocks.Localization;
 
 namespace Tooba.UserPreference.Contracts.Errors;
 
-/// <summary>نشانگر منبع خطاهای UserPreference.</summary>
+/// <summary>Resource manager marker for the UserPreference bilingual error resources.</summary>
 public static class UserPreferenceErrorResources
 {
-    /// <summary>ResourceManager.</summary>
+    /// <summary>ResourceManager for UserPreferenceErrors.resx.</summary>
     public static ResourceManager Manager { get; } =
         new("Tooba.UserPreference.Contracts.Resources.UserPreferenceErrors", typeof(UserPreferenceErrorResources).Assembly);
 }
 
-/// <summary>مجموعهٔ منبع UserPreference.</summary>
+/// <summary>
+/// UserPreference-owned error resource set for the <c>preference.</c> and <c>ui_preference.</c>
+/// keyspaces. UserPreference owns the user-facing text for its own stable codes so the module can be
+/// extracted as an isolated microservice without leaving its copy behind in another module. Locale
+/// selection stays in the central localizer.
+/// </summary>
 public sealed class UserPreferenceErrorResourceSet : IErrorResourceSet
 {
     /// <inheritdoc />
