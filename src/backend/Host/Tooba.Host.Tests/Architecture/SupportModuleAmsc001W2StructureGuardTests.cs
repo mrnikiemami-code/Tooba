@@ -121,7 +121,9 @@ public sealed class SupportModuleAmsc001W2StructureGuardTests
     public void Root_allowlists_match_disk_and_forbidden_entries_are_absent()
     {
         var manifest = LoadManifest();
-        var entry = manifest.GetProperty("preCertModules").EnumerateArray()
+        // Support was promoted from preCertModules into the certified modules[] array by the W3
+        // certify wave (structureCertified true); the structural allowlists below are unchanged.
+        var entry = manifest.GetProperty("modules").EnumerateArray()
             .Single(x => x.GetProperty("module").GetString() == "Support");
 
         foreach (var project in entry.GetProperty("projects").EnumerateArray())
@@ -152,7 +154,7 @@ public sealed class SupportModuleAmsc001W2StructureGuardTests
     }
 
     [Fact]
-    public void Manifest_records_support_as_pre_cert_not_certified()
+    public void Manifest_records_support_as_certified_after_the_w3_promotion()
     {
         var manifest = LoadManifest();
 
@@ -161,14 +163,15 @@ public sealed class SupportModuleAmsc001W2StructureGuardTests
                 .Any(x => x.GetString() == "Support"),
             "Support must be removed from uncertifiedHttpOwningModules after the W2 structure wave");
 
-        // Promotion into the certified modules[] array is the exclusive authority of the W3 wave.
+        // Promotion into the certified modules[] array is the exclusive authority of the W3 wave; the
+        // pre-cert duplicate must be gone.
         Assert.DoesNotContain(
-            manifest.GetProperty("modules").EnumerateArray(),
+            manifest.GetProperty("preCertModules").EnumerateArray(),
             x => x.GetProperty("module").GetString() == "Support");
 
-        var entry = manifest.GetProperty("preCertModules").EnumerateArray()
+        var entry = manifest.GetProperty("modules").EnumerateArray()
             .Single(x => x.GetProperty("module").GetString() == "Support");
-        Assert.False(entry.GetProperty("structureCertified").GetBoolean());
+        Assert.True(entry.GetProperty("structureCertified").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", entry.GetProperty("lockVersion").GetString());
         Assert.Equal(6, entry.GetProperty("projects").GetArrayLength());
     }

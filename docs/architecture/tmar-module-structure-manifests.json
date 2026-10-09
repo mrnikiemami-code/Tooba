@@ -2141,17 +2141,17 @@
       "currentValidatorMatrixState": "EXHAUSTIVE_4_VALIDATOR_REQUIRED_7_NO_VALIDATOR_REQUIRED",
       "certificationNote": "CERTIFIED by TB-TMAR-RETURNS-AMSC-001-W3 (tooba-architecture-certify) after the Structure wave W2 (6cab1b87). Wave lineage W0 f5c5a6db -> W1 0a573864 -> W2 6cab1b87 -> W3. All applicable ARCH-COMPLETE-002 gates re-derived from disk and PASS: HTTP_OWNING module owning 11 module-owned routes (Host Returns route count ZERO) over /v1/customer/returns x3, /v1/seller/returns x4 and /v1/admin/returns x4, dispatched to 11 endpoint-reachable MediatR requests through ISender with a real IRequestHandler for each; the exhaustive 4 VALIDATOR_REQUIRED + 7 NO_VALIDATOR_REQUIRED input-provenance matrix under the certify 6a HARD BLOCKER gate with the four transport validators discoverable through AddToobaCqrsFoundation AddValidatorsFromAssembly over the Returns Application assembly; canonical ApiResponseFactory.From results with zero raw Results.*, zero catch-and-map and zero ex.Message classification (the typed ReturnsOperation seam filters on ReturnsErrorCodes.IsKnown only); the single canonical Contracts error-code home (20 HTTP-reachable + 1 platform fault) with 20 descriptors registered exactly once and 21 EN + 21 FA bilingual resources owned and registered once by ReturnsErrorResourceSet; PROFESSIONAL_SHALLOW capability-first structure (ReturnRequests/{Commands,Queries,Models,Ports} + Composition/ + Validation/) with six solution projects under /Modules/Returns/, exact path<->namespace (0 mismatches over 71 production .cs) and enforced root allowlists; Contracts-only boundaries with zero foreign Application/Infrastructure/Domain edge and zero cross-module persistence or join; the three migrations byte-identical to the W0 baseline; and the preserved HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED / HOST_ROOT_FINAL_CERTIFIED checkpoints. Verdict COMPLETE_REFERENCE_PATTERN; structureCertified true; microserviceExtractable = ARCHITECTURAL_READY_RUNTIME_UNPROVEN.",
       "evidence": "docs/architecture/evidence/TB-TMAR-RETURNS-AMSC-001-W3/certification.md"
-    }
-  ],
-  "uncertifiedHttpOwningModules": [
-    "Wallet"
-  ],
-  "preCertModules": [
+    },
     {
       "module": "Support",
-      "structureCertified": false,
+      "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Pre-certification structure record for TB-TMAR-SUPPORT-AMSC-001 W2 (tooba-architecture-structure). Wave lineage W0 567ac400 -> W1 5e8c86ef -> W2 this commit. Structure: Application is capability-first shallow (Tickets/{Commands,Queries,Models,Ports} + Composition/ (the single SupportOperation typed-fault seam + the transport SupportEnumParsing) + Validation/ (the nine transport validators + validation codes)); the W0/W1 technical-axis roots Commands/Queries/Models/Ports/Validators/Errors and the seventeen single-file use-case leaf folders are retired and forbidden. Domain/{Aggregates,Entities,Enums}, Infrastructure/{Adapters,DependencyInjection,Development,Directories,Messaging,Persistence(+Migrations)}, Endpoints/{Admin,Customer,Errors,Resources,Seller} + root composition SupportEndpointModule.cs and Contracts/{Errors}. Folder-Granularity-State = PROFESSIONAL_SHALLOW; Solution-Explorer-State = CANONICAL (/Modules/Support/ with all six projects); Path-Namespace-State = EXACT (0 mismatches); Physical-Copy-State = CLEAN; Root-Allowlist-State = ENFORCED. structureCertified stays false until the W3 Certify wave.",
+      "certificationState": "SUPPORT_AMSC_001_CERTIFIED",
+      "currentCertificationTask": "TB-TMAR-SUPPORT-AMSC-001-W3",
+      "currentVerdict": "COMPLETE_REFERENCE_PATTERN",
+      "currentValidatorMatrixState": "EXHAUSTIVE_9_VALIDATOR_REQUIRED_8_NO_VALIDATOR_REQUIRED",
+      "certificationNote": "CERTIFIED by TB-TMAR-SUPPORT-AMSC-001-W3 (tooba-architecture-certify) after the Structure wave W2 (aaa15b03). Wave lineage W0 567ac400 -> W1 5e8c86ef -> W2 aaa15b03 -> W3. All applicable ARCH-COMPLETE-002 gates re-derived from disk and PASS: HTTP_OWNING module owning 17 module-owned routes (Host Support route count ZERO) over /v1/customer/support x6, /v1/seller/support x6 and /v1/admin/support x5, dispatched to 17 endpoint-reachable MediatR requests through ISender with a real IRequestHandler for each; the exhaustive 9 VALIDATOR_REQUIRED + 8 NO_VALIDATOR_REQUIRED input-provenance matrix under the certify 6a HARD BLOCKER gate with the nine transport validators discoverable through AddToobaCqrsFoundation AddValidatorsFromAssembly over the Support Application assembly; canonical ApiResponseFactory.From results with zero Results.BadRequest/Problem/ProblemDetails, zero catch-and-map and zero message-text classification (the typed SupportOperation seam filters on SupportErrorCodes.IsKnown only; the two 201 raw-DTO create responses and the single Development-gated Results.NotFound() are the locked shipped shapes); the single canonical Contracts error-code home (7 HTTP-reachable + 21 domain invariants = 28 declared) with 7 descriptors registered exactly once and 28 EN + 28 FA bilingual resources owned and registered once by SupportErrorResourceSet; PROFESSIONAL_SHALLOW capability-first structure (Tickets/{Commands,Queries,Models,Ports} + Composition/ + Validation/) with six solution projects under /Modules/Support/, exact path<->namespace and enforced root allowlists; Contracts-only boundaries with zero foreign Application/Infrastructure/Domain edge and zero cross-module persistence or join; the three migrations byte-identical to the W0 baseline; and the preserved HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED / HOST_ROOT_FINAL_CERTIFIED checkpoints. Verdict COMPLETE_REFERENCE_PATTERN; structureCertified true; microserviceExtractable = ARCHITECTURAL_READY_RUNTIME_UNPROVEN.",
+      "evidence": "docs/architecture/evidence/TB-TMAR-SUPPORT-AMSC-001-W3/certification.md",
       "projects": [
         {
           "projectName": "Tooba.Support.Contracts",
@@ -2239,5 +2239,9 @@
         }
       ]
     }
-  ]
+  ],
+  "uncertifiedHttpOwningModules": [
+    "Wallet"
+  ],
+  "preCertModules": []
 }
