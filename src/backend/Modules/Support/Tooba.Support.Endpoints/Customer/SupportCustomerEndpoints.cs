@@ -6,12 +6,8 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Support.Application.Commands.CloseCustomerTicket;
-using Tooba.Support.Application.Commands.CreateCustomerTicket;
-using Tooba.Support.Application.Commands.ReopenCustomerTicket;
-using Tooba.Support.Application.Commands.ReplyCustomerTicket;
-using Tooba.Support.Application.Queries.GetCustomerTicket;
-using Tooba.Support.Application.Queries.ListCustomerTickets;
+using Tooba.Support.Application.Tickets.Commands;
+using Tooba.Support.Application.Tickets.Queries;
 
 namespace Tooba.Support.Endpoints.Customer;
 

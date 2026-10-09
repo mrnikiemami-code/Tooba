@@ -1,5 +1,5 @@
 using Tooba.BuildingBlocks;
-using Tooba.Support.Domain.ValueObjects;
+using Tooba.Support.Domain.Enums;
 using Tooba.Support.Contracts.Errors;
 
 namespace Tooba.Support.Application.Composition;

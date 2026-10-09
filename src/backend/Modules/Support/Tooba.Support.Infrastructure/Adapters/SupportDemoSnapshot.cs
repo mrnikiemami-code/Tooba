@@ -1,5 +1,5 @@
-using Tooba.Support.Application.Models;
-using Tooba.Support.Application.Ports;
+using Tooba.Support.Application.Tickets.Models;
+using Tooba.Support.Application.Tickets.Ports;
 
 namespace Tooba.Support.Infrastructure.Adapters;
 

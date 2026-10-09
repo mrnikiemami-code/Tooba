@@ -3,7 +3,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Notification.Contracts.Commands;
 using Tooba.Notification.Contracts.Copy;
 using Tooba.Notification.Contracts.Ports;
-using Tooba.Support.Application.Models;
+using Tooba.Support.Application.Tickets.Models;
 using Tooba.Support.Infrastructure.Directories;
 using Tooba.Support.Infrastructure.Persistence;
 using Xunit;

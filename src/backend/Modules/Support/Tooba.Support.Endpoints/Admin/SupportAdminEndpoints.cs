@@ -4,11 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Support.Application.Commands.PatchAdminTicket;
-using Tooba.Support.Application.Commands.ReplyAdminTicket;
-using Tooba.Support.Application.Queries.GetAdminTicket;
-using Tooba.Support.Application.Queries.GetSupportDemoPreview;
-using Tooba.Support.Application.Queries.ListAdminTickets;
+using Tooba.Support.Application.Tickets.Commands;
+using Tooba.Support.Application.Tickets.Queries;
 using Tooba.Support.Endpoints.Customer;
 
 namespace Tooba.Support.Endpoints.Admin;

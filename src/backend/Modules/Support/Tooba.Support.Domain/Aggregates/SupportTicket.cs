@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Support.Contracts.Errors;
-using Tooba.Support.Domain.ValueObjects;
+using Tooba.Support.Domain.Enums;
 
 namespace Tooba.Support.Domain.Aggregates;
 

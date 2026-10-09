@@ -2144,8 +2144,100 @@
     }
   ],
   "uncertifiedHttpOwningModules": [
-    "Support",
     "Wallet"
   ],
-  "preCertModules": []
+  "preCertModules": [
+    {
+      "module": "Support",
+      "structureCertified": false,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Pre-certification structure record for TB-TMAR-SUPPORT-AMSC-001 W2 (tooba-architecture-structure). Wave lineage W0 567ac400 -> W1 5e8c86ef -> W2 this commit. Structure: Application is capability-first shallow (Tickets/{Commands,Queries,Models,Ports} + Composition/ (the single SupportOperation typed-fault seam + the transport SupportEnumParsing) + Validation/ (the nine transport validators + validation codes)); the W0/W1 technical-axis roots Commands/Queries/Models/Ports/Validators/Errors and the seventeen single-file use-case leaf folders are retired and forbidden. Domain/{Aggregates,Entities,Enums}, Infrastructure/{Adapters,DependencyInjection,Development,Directories,Messaging,Persistence(+Migrations)}, Endpoints/{Admin,Customer,Errors,Resources,Seller} + root composition SupportEndpointModule.cs and Contracts/{Errors}. Folder-Granularity-State = PROFESSIONAL_SHALLOW; Solution-Explorer-State = CANONICAL (/Modules/Support/ with all six projects); Path-Namespace-State = EXACT (0 mismatches); Physical-Copy-State = CLEAN; Root-Allowlist-State = ENFORCED. structureCertified stays false until the W3 Certify wave.",
+      "projects": [
+        {
+          "projectName": "Tooba.Support.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. The single canonical Support stable-code home lives under Errors/ (SupportErrorCodes). Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "SupportContracts.cs",
+            "SupportErrorCodes.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Support.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. The SupportTicket aggregate lives under Aggregates/, the TicketMessage entity under Entities/ and the ticket/message enums under Enums/. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "SupportTicket.cs",
+            "TicketMessage.cs",
+            "SupportEnums.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "ValueObjects"
+          ]
+        },
+        {
+          "projectName": "Tooba.Support.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Application is capability-first shallow: Tickets/ carries the Commands/, Queries/, Models/ and Ports/ of the ticket capability, and only the genuinely shared Composition/ (the single SupportOperation typed-fault seam + the transport SupportEnumParsing) and Validation/ (the nine transport validators + validation codes) stay at the capability root. The W0/W1 technical-axis roots Commands/Queries/Models/Ports/Validators/Errors and the seventeen single-file use-case leaf folders are retired and forbidden. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "SupportOperation.cs",
+            "SupportEnumParsing.cs",
+            "SupportRequestValidators.cs",
+            "SupportValidationCodes.cs",
+            "CreateCustomerTicketCommand.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Models",
+            "Ports",
+            "Validators",
+            "Errors",
+            "Handlers",
+            "Requests"
+          ]
+        },
+        {
+          "projectName": "Tooba.Support.Infrastructure",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Module DI lives under DependencyInjection/, the ticket directory under Directories/, the demo-preview adapter under Adapters/, the development seed + migrate/seed bootstrap under Development/, the outbox translation under Messaging/ and the EF model plus the three unchanged migrations under Persistence/Migrations. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "SupportModule.cs",
+            "SupportDbContext.cs",
+            "SupportDirectory.cs",
+            "SupportOutboxRegistration.cs",
+            "SupportDevelopmentSeed.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations",
+            "Seeds",
+            "Repositories"
+          ]
+        },
+        {
+          "projectName": "Tooba.Support.Endpoints",
+          "rootAllowlist": [
+            "SupportEndpointModule.cs"
+          ],
+          "rootAllowlistJustification": "Endpoints root holds only the composition entry SupportEndpointModule.cs (route mapping + the single error-resource-set registration + the module customer authorizer). The audience capability folders are Customer/ (customer routes + customer authorizer), Seller/ (seller routes + seller authorizer) and Admin/ (admin routes + admin authorizer), with the module error catalog under Errors/ and the bilingual resource pair under Resources/. Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "SupportCustomerEndpoints.cs",
+            "SupportSellerEndpoints.cs",
+            "SupportAdminEndpoints.cs",
+            "SupportErrorCatalogContributor.cs",
+            "SupportErrorResources.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Support.Tests",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Test-only project with Architecture/ durable guards, Behavior/ characterization/CQRS/semantic suites and no root .cs.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": []
+        }
+      ]
+    }
+  ]
 }

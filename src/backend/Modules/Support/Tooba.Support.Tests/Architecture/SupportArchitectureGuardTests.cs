@@ -6,10 +6,10 @@ namespace Tooba.Support.Tests.Architecture;
 
 public sealed class SupportArchitectureGuardTests
 {
-    private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Composition", "Validation"];
+    private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "Enums", "Events", "Policies"];
+    private static readonly string[] AllowedApplicationFolders = ["Tickets", "Composition", "Validation"];
     private static readonly string[] AllowedInfrastructureFolders =
-        ["Persistence", "Directories", "Adapters", "Seeds", "Messaging", "DependencyInjection", "Migrations", "Development"];
+        ["Persistence", "Directories", "Adapters", "Messaging", "DependencyInjection", "Development"];
     private static readonly string[] AllowedEndpointsFolders = ["Customer", "Seller", "Admin", "Errors", "Resources"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)

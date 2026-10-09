@@ -1,16 +1,9 @@
 using FluentValidation;
-using Tooba.Support.Application.Commands.CreateCustomerTicket;
-using Tooba.Support.Application.Commands.CreateSellerTicket;
-using Tooba.Support.Application.Commands.PatchAdminTicket;
-using Tooba.Support.Application.Commands.ReplyAdminTicket;
-using Tooba.Support.Application.Commands.ReplyCustomerTicket;
-using Tooba.Support.Application.Commands.ReplySellerTicket;
-using Tooba.Support.Application.Queries.ListAdminTickets;
-using Tooba.Support.Application.Queries.ListCustomerTickets;
-using Tooba.Support.Application.Queries.ListSellerTickets;
+using Tooba.Support.Application.Tickets.Commands;
+using Tooba.Support.Application.Tickets.Queries;
 using Tooba.Support.Domain.Aggregates;
 using Tooba.Support.Domain.Entities;
-using Tooba.Support.Domain.ValueObjects;
+using Tooba.Support.Domain.Enums;
 
 namespace Tooba.Support.Application.Validation;
 

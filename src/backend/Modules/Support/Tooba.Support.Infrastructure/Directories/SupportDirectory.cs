@@ -6,12 +6,12 @@ using Tooba.Notification.Contracts.Dtos;
 using Tooba.Notification.Contracts.Ports;
 using Tooba.Notification.Contracts.Routes;
 using Tooba.Support.Application.Composition;
-using Tooba.Support.Application.Models;
-using Tooba.Support.Application.Ports;
+using Tooba.Support.Application.Tickets.Models;
+using Tooba.Support.Application.Tickets.Ports;
 using Tooba.Support.Contracts.Errors;
 using Tooba.Support.Domain.Aggregates;
 using Tooba.Support.Domain.Entities;
-using Tooba.Support.Domain.ValueObjects;
+using Tooba.Support.Domain.Enums;
 using Tooba.Support.Infrastructure.Persistence;
 
 namespace Tooba.Support.Infrastructure.Directories;

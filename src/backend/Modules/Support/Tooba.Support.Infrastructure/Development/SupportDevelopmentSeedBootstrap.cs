@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.Support.Infrastructure.Persistence;
-using Tooba.Support.Infrastructure.Seeds;
+using Tooba.Support.Infrastructure.Development;
 
 namespace Tooba.Support.Infrastructure.Development;
 

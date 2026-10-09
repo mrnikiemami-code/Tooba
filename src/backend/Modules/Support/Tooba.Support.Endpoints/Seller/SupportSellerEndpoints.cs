@@ -3,12 +3,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Support.Application.Commands.CloseSellerTicket;
-using Tooba.Support.Application.Commands.CreateSellerTicket;
-using Tooba.Support.Application.Commands.ReopenSellerTicket;
-using Tooba.Support.Application.Commands.ReplySellerTicket;
-using Tooba.Support.Application.Queries.GetSellerTicket;
-using Tooba.Support.Application.Queries.ListSellerTickets;
+using Tooba.Support.Application.Tickets.Commands;
+using Tooba.Support.Application.Tickets.Queries;
 using Tooba.Support.Endpoints.Customer;
 
 namespace Tooba.Support.Endpoints.Seller;

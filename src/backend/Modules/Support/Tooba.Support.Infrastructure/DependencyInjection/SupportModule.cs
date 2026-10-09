@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
-using Tooba.Support.Application.Ports;
+using Tooba.Support.Application.Tickets.Ports;
 using Tooba.Support.Infrastructure.Adapters;
 using Tooba.Support.Infrastructure.Directories;
 using Tooba.Support.Infrastructure.Messaging;
