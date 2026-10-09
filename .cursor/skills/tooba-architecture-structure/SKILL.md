@@ -17,6 +17,9 @@ This skill is the fourth architecture skill. The workflow is four distinct skill
 This skill owns **filesystem + Solution Explorer organization**. It does not absorb Analyze/Migrate/Certify concerns.
 
 
+## Narrow Canonicality Handoff (no redundant audit)
+Structure owns physical layout, not a second API response migration. Preserve the Analyze/Migrate per-route success-response disposition as handoff evidence; do not reinterpret an unresolved non-canonical response as an approved exception. If an unresolved ARCHITECT_DECISION_REQUIRED item affects certification, carry its exact one-time blocker into Certify rather than refactoring it, starting another wave, or re-auditing certified modules. No new global tests or baseline/pin changes are implied by this handoff.
+
 ## Four-Skill Handoff Contract
 
 The canonical workflow is:
