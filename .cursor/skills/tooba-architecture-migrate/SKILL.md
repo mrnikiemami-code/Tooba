@@ -10,6 +10,9 @@ Use this skill when the user wants actual architecture migration, Host evacuatio
 This skill MAY modify production code.
 
 
+## Bounded HTTP Success-Response Repair (prospective; no loop)
+For HTTP-owning targets, close Analyze's success-response findings once before READY_TO_STRUCTURE: use the existing `ApiResponseFactory` where its behavior matches the approved wire contract, and check both success and failure paths. In particular, `Results.Json(..., 201)` is not automatically canonical because the raw DTO is unchanged: `Created` also adds Location. Never silently introduce an additive Location header, change status/body, invent a factory overload, or infer an exception from another module. If authorization for the exact delta or a narrow existing lock is absent, record one explicit ARCHITECT_DECISION_REQUIRED blocker with route, current/candidate wire contract and lowest-risk options; STOP that issue until Architect decides. Once decided, implement only the bounded approved repair, with focused tests; do not re-run AMSC, re-open unrelated modules or repeatedly escalate unchanged evidence.
+
 ## Four-Skill Workflow Integration
 
 The canonical architecture workflow is:
