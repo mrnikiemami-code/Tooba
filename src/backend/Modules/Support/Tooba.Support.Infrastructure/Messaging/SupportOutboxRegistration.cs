@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
+using Tooba.Support.Contracts.Errors;
 using Tooba.Support.Infrastructure.Persistence;
 
 namespace Tooba.Support.Infrastructure.Messaging;
@@ -21,7 +22,7 @@ public sealed class SupportOutboxRegistration : IOutboxModuleRegistration
 
     /// <inheritdoc />
     public string GetEventTypeName(Type integrationEventType) =>
-        throw new InvalidOperationException("support.outbox.emit_not_supported");
+        throw new ContractOperationException(SupportErrorCodes.OutboxEmitNotSupported);
 
     /// <inheritdoc />
     public Type? ResolveEventClrType(string eventTypeName) => null;

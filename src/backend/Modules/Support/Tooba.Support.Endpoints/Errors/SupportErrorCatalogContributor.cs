@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Support.Application.Errors;
+using Tooba.Support.Contracts.Errors;
 using Tooba.Support.Endpoints.Admin;
 
 namespace Tooba.Support.Endpoints.Errors;

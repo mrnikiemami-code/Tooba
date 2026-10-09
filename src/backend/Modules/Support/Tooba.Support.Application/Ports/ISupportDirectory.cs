@@ -1,5 +1,4 @@
 using Tooba.Support.Application.Models;
-using Tooba.Support.Domain.ValueObjects;
 
 namespace Tooba.Support.Application.Ports;
 
@@ -62,44 +61,4 @@ public interface ISupportDirectory
 
     /// <summary>پچ وضعیت/اولویت/ارجاع Admin.</summary>
     Task<TicketSnapshotDto> PatchForAdminAsync(Guid ticketId, AdminTicketPatchCommand command, CancellationToken cancellationToken);
-}
-
-/// <summary>کمک‌های پارس enum برای مرز Application.</summary>
-public static class SupportEnumParsing
-{
-    /// <summary>دسته را پارس می‌کند.</summary>
-    public static TicketCategory ParseCategory(string value) =>
-        Enum.TryParse<TicketCategory>(value, ignoreCase: true, out var parsed)
-            ? parsed
-            : throw new InvalidOperationException("support.category_invalid");
-
-    /// <summary>اولویت را پارس می‌کند؛ پیش‌فرض Normal.</summary>
-    public static TicketPriority ParsePriority(string? value) =>
-        string.IsNullOrWhiteSpace(value)
-            ? TicketPriority.Normal
-            : Enum.TryParse<TicketPriority>(value, ignoreCase: true, out var parsed)
-                ? parsed
-                : throw new InvalidOperationException("support.priority_invalid");
-
-    /// <summary>وضعیت اختیاری فیلتر را پارس می‌کند.</summary>
-    public static TicketStatus? TryParseStatus(string? value) =>
-        string.IsNullOrWhiteSpace(value)
-            ? null
-            : Enum.TryParse<TicketStatus>(value, ignoreCase: true, out var parsed)
-                ? parsed
-                : throw new InvalidOperationException("support.status_invalid");
-
-    /// <summary>وضعیت اجباری پچ را پارس می‌کند.</summary>
-    public static TicketStatus ParseStatus(string value) =>
-        Enum.TryParse<TicketStatus>(value, ignoreCase: true, out var parsed)
-            ? parsed
-            : throw new InvalidOperationException("support.status_invalid");
-
-    /// <summary>RequesterKind فیلتر را پارس می‌کند.</summary>
-    public static RequesterKind? TryParseRequesterKind(string? value) =>
-        string.IsNullOrWhiteSpace(value)
-            ? null
-            : Enum.TryParse<RequesterKind>(value, ignoreCase: true, out var parsed)
-                ? parsed
-                : throw new InvalidOperationException("support.requester_kind_invalid");
 }

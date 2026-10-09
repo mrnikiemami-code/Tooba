@@ -1,24 +1,23 @@
 using MediatR;
-using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Support.Application.Errors;
+using Tooba.Support.Application.Composition;
 using Tooba.Support.Application.Models;
 using Tooba.Support.Application.Ports;
+using Tooba.Support.Contracts.Errors;
 
 namespace Tooba.Support.Application.Queries.GetAdminTicket;
 
-/// <summary>MediatR get admin ticket use case.</summary>
+/// <summary>مورد استفادهٔ MediatR برای دریافت تیکت مدیر (شامل یادداشت داخلی).</summary>
 public sealed record GetAdminTicketQuery(Guid TicketId) : IRequest<Result<TicketSnapshotDto>>;
 
-/// <summary>Gets one admin ticket including internal notes; missing → SemanticError.</summary>
+/// <summary>یک تیکت را با دید مدیر می‌خواند؛ حالت یافت‌نشدن به <c>Result</c> نگاشت می‌شود.</summary>
 public sealed class GetAdminTicketHandler(ISupportDirectory directory)
     : IRequestHandler<GetAdminTicketQuery, Result<TicketSnapshotDto>>
 {
+    /// <inheritdoc />
     public async Task<Result<TicketSnapshotDto>> Handle(GetAdminTicketQuery request, CancellationToken cancellationToken)
     {
         var snapshot = await directory.GetForAdminAsync(request.TicketId, cancellationToken);
-        return snapshot is null
-            ? Result.Failure<TicketSnapshotDto>(new SemanticError(SupportErrorCodes.Missing))
-            : Result.Success(snapshot);
+        return SupportOperation.NotFoundIfNull(snapshot, SupportErrorCodes.Missing);
     }
 }

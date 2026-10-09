@@ -11,7 +11,12 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Update="Resources\SupportErrors.resx"><Generator></Generator></EmbeddedResource>
+    <EmbeddedResource Update="Resources\SupportErrors.fa.resx"><Generator></Generator></EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Tooba.Support.Application\Tooba.Support.Application.csproj" />
+    <ProjectReference Include="..\Tooba.Support.Contracts\Tooba.Support.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
 </Project>

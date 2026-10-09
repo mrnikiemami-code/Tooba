@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks;
+using Tooba.Support.Contracts.Errors;
 using Tooba.Support.Domain.ValueObjects;
 
 namespace Tooba.Support.Domain.Entities;
@@ -50,17 +52,17 @@ public sealed class TicketMessage
         DateTimeOffset now)
     {
         if (messageId == Guid.Empty || ticketId == Guid.Empty || authorActorUserId == Guid.Empty)
-            throw new InvalidOperationException("support.message.ids_required");
+            throw new ContractOperationException(SupportErrorCodes.MessageIdsRequired);
         if (string.IsNullOrWhiteSpace(body) || body.Trim().Length > BodyMaxLength)
-            throw new InvalidOperationException("support.message.body_invalid");
+            throw new ContractOperationException(SupportErrorCodes.MessageBodyInvalid);
         if (isInternalNote && authorKind != AuthorKind.Admin)
-            throw new InvalidOperationException("support.message.internal_admin_only");
+            throw new ContractOperationException(SupportErrorCodes.MessageInternalAdminOnly);
         string? key = null;
         if (!string.IsNullOrWhiteSpace(idempotencyKey))
         {
             key = idempotencyKey.Trim();
             if (key.Length > IdempotencyKeyMaxLength)
-                throw new InvalidOperationException("support.idempotency_key_invalid");
+                throw new ContractOperationException(SupportErrorCodes.IdempotencyKeyInvalid);
         }
 
         return new TicketMessage
@@ -88,15 +90,15 @@ public sealed class TicketMessage
         DateTimeOffset now)
     {
         if (messageId == Guid.Empty || ticketId == Guid.Empty || authorActorUserId == Guid.Empty)
-            throw new InvalidOperationException("support.message.ids_required");
+            throw new ContractOperationException(SupportErrorCodes.MessageIdsRequired);
         if (string.IsNullOrWhiteSpace(body) || body.Trim().Length > BodyMaxLength)
-            throw new InvalidOperationException("support.message.body_invalid");
+            throw new ContractOperationException(SupportErrorCodes.MessageBodyInvalid);
         string? key = null;
         if (!string.IsNullOrWhiteSpace(idempotencyKey))
         {
             key = idempotencyKey.Trim();
             if (key.Length > IdempotencyKeyMaxLength)
-                throw new InvalidOperationException("support.idempotency_key_invalid");
+                throw new ContractOperationException(SupportErrorCodes.IdempotencyKeyInvalid);
         }
 
         return new TicketMessage

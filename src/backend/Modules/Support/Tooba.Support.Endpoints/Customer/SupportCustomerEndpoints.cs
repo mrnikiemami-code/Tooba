@@ -1,15 +1,15 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Support.Application.Commands.CloseCustomerTicket;
 using Tooba.Support.Application.Commands.CreateCustomerTicket;
 using Tooba.Support.Application.Commands.ReopenCustomerTicket;
 using Tooba.Support.Application.Commands.ReplyCustomerTicket;
-using Tooba.Support.Application.Errors;
 using Tooba.Support.Application.Queries.GetCustomerTicket;
 using Tooba.Support.Application.Queries.ListCustomerTickets;
 
@@ -49,7 +49,7 @@ public static class SupportCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(SupportErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(
             new ListCustomerTicketsQuery(actor.Value, status, page, pageSize), cancellationToken));
     }
@@ -60,7 +60,7 @@ public static class SupportCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(SupportErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         var result = await sender.Send(
             new CreateCustomerTicketCommand(
                 actor.Value,
@@ -83,7 +83,7 @@ public static class SupportCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(SupportErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(
             new GetCustomerTicketQuery(actor.Value, ticketId), cancellationToken));
     }
@@ -94,7 +94,7 @@ public static class SupportCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(SupportErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(
             new ReplyCustomerTicketCommand(
                 actor.Value, ticketId, body.Body, ReadIdempotencyKey(context.Request)),
@@ -107,7 +107,7 @@ public static class SupportCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(SupportErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(
             new CloseCustomerTicketCommand(actor.Value, ticketId), cancellationToken));
     }
@@ -118,7 +118,7 @@ public static class SupportCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(SupportErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(
             new ReopenCustomerTicketCommand(actor.Value, ticketId), cancellationToken));
     }

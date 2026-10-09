@@ -1,12 +1,13 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Support.Application.Errors;
+using Tooba.Support.Application.Composition;
 using Tooba.Support.Application.Models;
 using Tooba.Support.Application.Ports;
+using Tooba.Support.Contracts.Errors;
 
 namespace Tooba.Support.Application.Queries.ListAdminTickets;
 
-/// <summary>MediatR list admin tickets use case.</summary>
+/// <summary>مورد استفادهٔ MediatR برای فهرست تیکت‌های مدیر.</summary>
 public sealed record ListAdminTicketsQuery(
     string? Status,
     string? RequesterKind,
@@ -16,12 +17,13 @@ public sealed record ListAdminTicketsQuery(
     int Page,
     int PageSize) : IRequest<Result<TicketListPageDto>>;
 
-/// <summary>Lists tickets for Admin with filters.</summary>
+/// <summary>تیکت‌ها را با فیلتر برای مدیر فهرست می‌کند.</summary>
 public sealed class ListAdminTicketsHandler(ISupportDirectory directory)
     : IRequestHandler<ListAdminTicketsQuery, Result<TicketListPageDto>>
 {
+    /// <inheritdoc />
     public Task<Result<TicketListPageDto>> Handle(ListAdminTicketsQuery request, CancellationToken cancellationToken) =>
-        SupportExceptionMapper.TryAsync(
+        SupportOperation.ExecuteAsync(
             () => directory.ListForAdminAsync(
                 new AdminTicketListQuery(
                     request.Status,

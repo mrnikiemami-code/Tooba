@@ -1,19 +1,20 @@
 using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Support.Application.Errors;
 using Tooba.Support.Application.Models;
 using Tooba.Support.Application.Ports;
+using Tooba.Support.Contracts.Errors;
 
 namespace Tooba.Support.Application.Queries.GetSupportDemoPreview;
 
-/// <summary>MediatR Support admin demo-preview use case.</summary>
+/// <summary>مورد استفادهٔ MediatR برای پیش‌نمایش demo پشتیبانی (مدیر).</summary>
 public sealed record GetSupportDemoPreviewQuery : IRequest<Result<SupportDemoSnapshotDto>>;
 
-/// <summary>Reads published demo snapshot; not-ready → SemanticError.</summary>
+/// <summary>snapshot منتشرشدهٔ demo را می‌خواند؛ حالت آماده‌نبودن → <c>SemanticError</c>.</summary>
 public sealed class GetSupportDemoPreviewHandler(ISupportDemoPreviewPort demo)
     : IRequestHandler<GetSupportDemoPreviewQuery, Result<SupportDemoSnapshotDto>>
 {
+    /// <inheritdoc />
     public Task<Result<SupportDemoSnapshotDto>> Handle(
         GetSupportDemoPreviewQuery request, CancellationToken cancellationToken)
     {

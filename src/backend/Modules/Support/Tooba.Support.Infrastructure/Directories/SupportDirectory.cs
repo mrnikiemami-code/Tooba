@@ -5,8 +5,10 @@ using Tooba.Notification.Contracts.Copy;
 using Tooba.Notification.Contracts.Dtos;
 using Tooba.Notification.Contracts.Ports;
 using Tooba.Notification.Contracts.Routes;
+using Tooba.Support.Application.Composition;
 using Tooba.Support.Application.Models;
 using Tooba.Support.Application.Ports;
+using Tooba.Support.Contracts.Errors;
 using Tooba.Support.Domain.Aggregates;
 using Tooba.Support.Domain.Entities;
 using Tooba.Support.Domain.ValueObjects;
@@ -255,7 +257,7 @@ public sealed class SupportDirectory : ISupportDirectory
         CancellationToken cancellationToken)
     {
         var ticket = await _db.Tickets.SingleOrDefaultAsync(t => t.TicketId == ticketId, cancellationToken)
-            ?? throw new InvalidOperationException("support.ticket_not_found");
+            ?? throw new ContractOperationException(SupportErrorCodes.TicketNotFound);
         TicketStatus? status = string.IsNullOrWhiteSpace(command.Status)
             ? null
             : SupportEnumParsing.ParseStatus(command.Status);
@@ -337,9 +339,9 @@ public sealed class SupportDirectory : ISupportDirectory
         }
 
         var ticket = await _db.Tickets.SingleOrDefaultAsync(predicate, cancellationToken)
-            ?? throw new InvalidOperationException("support.ticket_not_found");
+            ?? throw new ContractOperationException(SupportErrorCodes.TicketNotFound);
         if (ticket.Status == TicketStatus.Closed)
-            throw new InvalidOperationException("support.reply_closed");
+            throw new ContractOperationException(SupportErrorCodes.ReplyClosed);
 
         var now = _clock.UtcNow;
         var message = TicketMessage.Create(
@@ -370,7 +372,7 @@ public sealed class SupportDirectory : ISupportDirectory
         CancellationToken cancellationToken)
     {
         var ticket = await _db.Tickets.SingleOrDefaultAsync(predicate, cancellationToken)
-            ?? throw new InvalidOperationException("support.ticket_not_found");
+            ?? throw new ContractOperationException(SupportErrorCodes.TicketNotFound);
         mutate(ticket);
         await _db.SaveChangesAsync(cancellationToken);
         return (await MapSnapshotAsync(ticket, includeInternal: false, cancellationToken))!;
@@ -506,6 +508,6 @@ public sealed class SupportDirectory : ISupportDirectory
         if (string.IsNullOrWhiteSpace(relatedEntityType)) return;
         if (!relatedEntityType.Equals("Order", StringComparison.OrdinalIgnoreCase)) return;
         if (relatedEntityId is null || relatedEntityId == Guid.Empty)
-            throw new InvalidOperationException("support.related_order_id_invalid");
+            throw new ContractOperationException(SupportErrorCodes.RelatedOrderIdInvalid);
     }
 }

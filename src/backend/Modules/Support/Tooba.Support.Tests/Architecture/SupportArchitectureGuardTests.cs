@@ -7,7 +7,7 @@ namespace Tooba.Support.Tests.Architecture;
 public sealed class SupportArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Composition", "Validation"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Seeds", "Messaging", "DependencyInjection", "Migrations", "Development"];
     private static readonly string[] AllowedEndpointsFolders = ["Customer", "Seller", "Admin", "Errors", "Resources"];
@@ -61,7 +61,11 @@ public sealed class SupportArchitectureGuardTests
     [Fact]
     public void Support_golden_boundaries_and_physical_layout_remain_clean()
     {
-        Assert.DoesNotContain(ProjectRefs("Tooba.Support.Domain"), x => x.Contains("Contracts", StringComparison.OrdinalIgnoreCase));
+        var domainRefs = ProjectRefs("Tooba.Support.Domain");
+        Assert.Contains(domainRefs, r => r.Contains("Tooba.Support.Contracts", StringComparison.Ordinal));
+        Assert.DoesNotContain(domainRefs, r => r.Contains("Support.Application", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(domainRefs, r => r.Contains("Support.Infrastructure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(domainRefs, r => r.Contains("Support.Endpoints", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
 
         var directory = File.ReadAllText(Path.Combine(SupportRoot(), "Tooba.Support.Infrastructure", "Directories", "SupportDirectory.cs"));
@@ -163,10 +167,12 @@ public sealed class SupportArchitectureGuardTests
         Assert.Contains(application, x => x.Text.Contains("GetSupportDemoPreviewQuery", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
-        Assert.Contains(application, x => x.Text.Contains("SupportExceptionMapper", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("SupportOperation", StringComparison.Ordinal));
         Assert.DoesNotContain(application, x =>
-            x.Text.Contains("StartsWith(\"support.\"", StringComparison.Ordinal)
-            || (x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal)));
+            x.Text.Contains("SupportExceptionMapper", StringComparison.Ordinal)
+            || x.Text.Contains(".Message.Contains(", StringComparison.Ordinal)
+            || x.Text.Contains(".Message.StartsWith(", StringComparison.Ordinal)
+            || x.Text.Contains(".Message ==", StringComparison.Ordinal));
 
         Assert.False(File.Exists(Path.Combine(SupportRoot(), "Tooba.Support.Application", "Commands", "SupportCommands.cs")));
         Assert.False(File.Exists(Path.Combine(SupportRoot(), "Tooba.Support.Application", "Queries", "SupportQueries.cs")));

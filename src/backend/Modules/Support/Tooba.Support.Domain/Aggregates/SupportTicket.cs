@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks;
+using Tooba.Support.Contracts.Errors;
 using Tooba.Support.Domain.ValueObjects;
 
 namespace Tooba.Support.Domain.Aggregates;
@@ -86,13 +88,13 @@ public sealed class SupportTicket
         DateTimeOffset now)
     {
         if (ticketId == Guid.Empty)
-            throw new InvalidOperationException("support.ticket.id_required");
+            throw new ContractOperationException(SupportErrorCodes.TicketIdRequired);
         if (requesterActorUserId == Guid.Empty)
-            throw new InvalidOperationException("support.requester_required");
+            throw new ContractOperationException(SupportErrorCodes.RequesterRequired);
         if (requesterKind == RequesterKind.Seller && (sellerPartyId is null || sellerPartyId == Guid.Empty))
-            throw new InvalidOperationException("support.seller_party_required");
+            throw new ContractOperationException(SupportErrorCodes.SellerPartyRequired);
         if (string.IsNullOrWhiteSpace(subject) || subject.Trim().Length > SubjectMaxLength)
-            throw new InvalidOperationException("support.subject_invalid");
+            throw new ContractOperationException(SupportErrorCodes.SubjectInvalid);
         SoftValidateRelated(relatedEntityType, relatedEntityId);
         var key = NormalizeIdempotency(idempotencyKey);
         return new SupportTicket
@@ -132,13 +134,13 @@ public sealed class SupportTicket
         DateTimeOffset now)
     {
         if (ticketId == Guid.Empty)
-            throw new InvalidOperationException("support.ticket.id_required");
+            throw new ContractOperationException(SupportErrorCodes.TicketIdRequired);
         if (requesterActorUserId == Guid.Empty)
-            throw new InvalidOperationException("support.requester_required");
+            throw new ContractOperationException(SupportErrorCodes.RequesterRequired);
         if (requesterKind == RequesterKind.Seller && (sellerPartyId is null || sellerPartyId == Guid.Empty))
-            throw new InvalidOperationException("support.seller_party_required");
+            throw new ContractOperationException(SupportErrorCodes.SellerPartyRequired);
         if (string.IsNullOrWhiteSpace(subject) || subject.Trim().Length > SubjectMaxLength)
-            throw new InvalidOperationException("support.subject_invalid");
+            throw new ContractOperationException(SupportErrorCodes.SubjectInvalid);
         SoftValidateRelated(relatedEntityType, relatedEntityId);
         return new SupportTicket
         {
@@ -173,7 +175,7 @@ public sealed class SupportTicket
     public void CloseByRequester(DateTimeOffset now)
     {
         if (Status is not (TicketStatus.Open or TicketStatus.Resolved))
-            throw new InvalidOperationException("support.close_not_allowed");
+            throw new ContractOperationException(SupportErrorCodes.CloseNotAllowed);
         Status = TicketStatus.Closed;
         ClosedAt = now;
         UpdatedAt = now;
@@ -183,7 +185,7 @@ public sealed class SupportTicket
     public void ReopenByRequester(DateTimeOffset now)
     {
         if (Status != TicketStatus.Closed)
-            throw new InvalidOperationException("support.reopen_not_allowed");
+            throw new ContractOperationException(SupportErrorCodes.ReopenNotAllowed);
         Status = TicketStatus.Open;
         ClosedAt = null;
         UpdatedAt = now;
@@ -223,14 +225,14 @@ public sealed class SupportTicket
         if (string.IsNullOrWhiteSpace(relatedEntityType))
         {
             if (relatedEntityId is not null)
-                throw new InvalidOperationException("support.related_id_without_type");
+                throw new ContractOperationException(SupportErrorCodes.RelatedIdWithoutType);
             return;
         }
 
         if (relatedEntityType.Trim().Length > RelatedEntityTypeMaxLength)
-            throw new InvalidOperationException("support.related_type_invalid");
+            throw new ContractOperationException(SupportErrorCodes.RelatedTypeInvalid);
         if (relatedEntityId is null || relatedEntityId == Guid.Empty)
-            throw new InvalidOperationException("support.related_id_required");
+            throw new ContractOperationException(SupportErrorCodes.RelatedIdRequired);
     }
 
     private static string? NormalizeIdempotency(string? key)
@@ -238,7 +240,7 @@ public sealed class SupportTicket
         if (string.IsNullOrWhiteSpace(key)) return null;
         var trimmed = key.Trim();
         if (trimmed.Length > IdempotencyKeyMaxLength)
-            throw new InvalidOperationException("support.idempotency_key_invalid");
+            throw new ContractOperationException(SupportErrorCodes.IdempotencyKeyInvalid);
         return trimmed;
     }
 }

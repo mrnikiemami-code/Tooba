@@ -1,12 +1,13 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Support.Application.Errors;
+using Tooba.Support.Application.Composition;
 using Tooba.Support.Application.Models;
 using Tooba.Support.Application.Ports;
+using Tooba.Support.Contracts.Errors;
 
 namespace Tooba.Support.Application.Commands.ReplyAdminTicket;
 
-/// <summary>MediatR reply admin ticket use case.</summary>
+/// <summary>مورد استفادهٔ MediatR برای پاسخ مدیر.</summary>
 public sealed record ReplyAdminTicketCommand(
     Guid ActorUserId,
     Guid TicketId,
@@ -14,12 +15,13 @@ public sealed record ReplyAdminTicketCommand(
     bool IsInternalNote,
     string? IdempotencyKey) : IRequest<Result<TicketSnapshotDto>>;
 
-/// <summary>Adds an admin reply (public may notify).</summary>
+/// <summary>پاسخ مدیر را اضافه می‌کند؛ پاسخ عمومی ممکن است اعلان بسازد.</summary>
 public sealed class ReplyAdminTicketHandler(ISupportDirectory directory)
     : IRequestHandler<ReplyAdminTicketCommand, Result<TicketSnapshotDto>>
 {
+    /// <inheritdoc />
     public Task<Result<TicketSnapshotDto>> Handle(ReplyAdminTicketCommand request, CancellationToken cancellationToken) =>
-        SupportExceptionMapper.TryAsync(
+        SupportOperation.ExecuteAsync(
             () => directory.ReplyForAdminAsync(
                 request.ActorUserId,
                 request.TicketId,

@@ -1,12 +1,13 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Support.Application.Errors;
+using Tooba.Support.Application.Composition;
 using Tooba.Support.Application.Models;
 using Tooba.Support.Application.Ports;
+using Tooba.Support.Contracts.Errors;
 
 namespace Tooba.Support.Application.Commands.CreateCustomerTicket;
 
-/// <summary>MediatR create customer ticket use case.</summary>
+/// <summary>مورد استفادهٔ MediatR برای ایجاد تیکت مشتری.</summary>
 public sealed record CreateCustomerTicketCommand(
     Guid ActorUserId,
     string Subject,
@@ -17,12 +18,13 @@ public sealed record CreateCustomerTicketCommand(
     Guid? RelatedEntityId,
     string? IdempotencyKey) : IRequest<Result<TicketSnapshotDto>>;
 
-/// <summary>Creates a customer support ticket.</summary>
+/// <summary>تیکت پشتیبانی مشتری را ایجاد می‌کند.</summary>
 public sealed class CreateCustomerTicketHandler(ISupportDirectory directory)
     : IRequestHandler<CreateCustomerTicketCommand, Result<TicketSnapshotDto>>
 {
+    /// <inheritdoc />
     public Task<Result<TicketSnapshotDto>> Handle(CreateCustomerTicketCommand request, CancellationToken cancellationToken) =>
-        SupportExceptionMapper.TryAsync(
+        SupportOperation.ExecuteAsync(
             () => directory.CreateForCustomerAsync(
                 request.ActorUserId,
                 new CreateTicketCommand(

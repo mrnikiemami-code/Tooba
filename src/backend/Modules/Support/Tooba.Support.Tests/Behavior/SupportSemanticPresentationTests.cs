@@ -1,61 +1,93 @@
+using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Support.Application.Errors;
+using Tooba.Support.Application.Composition;
+using Tooba.Support.Contracts.Errors;
 using Xunit;
 
 namespace Tooba.Support.Tests.Behavior;
 
+/// <summary>
+/// شواهد رفتار درز خطای نوع‌دار Support: ناورداهای اعلام‌شدهٔ دامنه/دایرکتوری به کد نتیجهٔ عمومی
+/// پایدار همان عملیات نگاشت می‌شوند، کد ناشناخته هرگز پنهان نمی‌شود و هیچ‌گاه بر پایهٔ متن پیام
+/// تصمیم‌گیری نمی‌شود.
+/// </summary>
 public sealed class SupportSemanticPresentationTests
 {
     [Fact]
-    public void Stable_directory_codes_map_to_public_outcome()
+    public async Task Declared_invariants_map_to_the_stable_public_outcome_code()
     {
-        var rejected = SupportExceptionMapper.ToSemanticError(
-            new InvalidOperationException("support.category_invalid"),
+        var rejected = await SupportOperation.ExecuteAsync<int>(
+            () => throw new ContractOperationException(SupportErrorCodes.CategoryInvalid),
             SupportErrorCodes.Rejected);
-        Assert.Equal(SupportErrorCodes.Rejected, rejected.Code);
+        Assert.True(rejected.IsFailure);
+        Assert.Equal(SupportErrorCodes.Rejected, rejected.Errors[0].Code);
 
-        var reply = SupportExceptionMapper.ToSemanticError(
-            new InvalidOperationException("support.reply_closed"),
+        var reply = await SupportOperation.ExecuteAsync<int>(
+            () => throw new ContractOperationException(SupportErrorCodes.ReplyClosed),
             SupportErrorCodes.ReplyRejected);
-        Assert.Equal(SupportErrorCodes.ReplyRejected, reply.Code);
+        Assert.Equal(SupportErrorCodes.ReplyRejected, reply.Errors[0].Code);
 
-        var action = SupportExceptionMapper.ToSemanticError(
-            new InvalidOperationException("support.close_not_allowed"),
+        var action = await SupportOperation.ExecuteAsync<int>(
+            () => throw new ContractOperationException(SupportErrorCodes.CloseNotAllowed),
             SupportErrorCodes.ActionRejected);
-        Assert.Equal(SupportErrorCodes.ActionRejected, action.Code);
+        Assert.Equal(SupportErrorCodes.ActionRejected, action.Errors[0].Code);
 
-        var patch = SupportExceptionMapper.ToSemanticError(
-            new InvalidOperationException("support.status_invalid"),
+        var patch = await SupportOperation.ExecuteAsync<int>(
+            () => throw new ContractOperationException(SupportErrorCodes.StatusInvalid),
             SupportErrorCodes.PatchRejected);
-        Assert.Equal(SupportErrorCodes.PatchRejected, patch.Code);
+        Assert.Equal(SupportErrorCodes.PatchRejected, patch.Errors[0].Code);
     }
 
     [Fact]
-    public void Prose_and_unknown_codes_are_not_swallowed()
+    public async Task Client_reachable_codes_are_reflected_without_a_public_override()
     {
-        Assert.False(SupportExceptionMapper.TryMapExact("تیکت پیدا نشد.", SupportErrorCodes.Rejected, out _));
-        Assert.False(SupportExceptionMapper.TryMapExact("support.unknown.future_code", SupportErrorCodes.Rejected, out _));
-        Assert.Throws<InvalidOperationException>(() =>
-            SupportExceptionMapper.ToSemanticError(
-                new InvalidOperationException("پیدا نشد"),
+        var missing = await SupportOperation.ExecuteAsync<int>(
+            () => throw new ContractOperationException(SupportErrorCodes.TicketNotFound),
+            SupportErrorCodes.Missing);
+        Assert.Equal(SupportErrorCodes.Missing, missing.Errors[0].Code);
+
+        var demo = await SupportOperation.ExecuteAsync<int>(
+            () => throw new ContractOperationException(SupportErrorCodes.DemoNotReady),
+            SupportErrorCodes.Rejected);
+        Assert.Equal(SupportErrorCodes.DemoNotReady, demo.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task Unknown_contract_codes_and_prose_are_never_swallowed()
+    {
+        var unknown = new ContractOperationException("support.unknown.future_code");
+        await Assert.ThrowsAsync<ContractOperationException>(() =>
+            SupportOperation.ExecuteAsync<int>(() => throw unknown, SupportErrorCodes.Rejected));
+
+        var prose = new ContractOperationException("تیکت پیدا نشد.");
+        await Assert.ThrowsAsync<ContractOperationException>(() =>
+            SupportOperation.ExecuteAsync<int>(() => throw prose, SupportErrorCodes.Rejected));
+
+        var unexpected = new InvalidOperationException("support.ticket_not_found");
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            SupportOperation.ExecuteAsync<int>(() => throw unexpected, SupportErrorCodes.Rejected));
+    }
+
+    [Fact]
+    public void ToSemanticError_uses_the_typed_code_and_rethrows_unknowns()
+    {
+        var mapped = SupportOperation.ToSemanticError(
+            new ContractOperationException(SupportErrorCodes.TicketNotFound),
+            SupportErrorCodes.Missing);
+        Assert.Equal(SupportErrorCodes.Missing, mapped.Code);
+
+        Assert.Throws<ContractOperationException>(() =>
+            SupportOperation.ToSemanticError(
+                new ContractOperationException("support.unknown.future_code"),
                 SupportErrorCodes.Rejected));
     }
 
     [Fact]
-    public async Task Unexpected_InvalidOperationException_propagates_from_TryAsync()
+    public async Task Semantic_exceptions_map_through_their_own_error()
     {
-        var unknown = new InvalidOperationException("support.unknown.future_code");
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            SupportExceptionMapper.TryAsync<int>(() => throw unknown, SupportErrorCodes.Rejected));
-    }
-
-    [Fact]
-    public async Task Known_InvalidOperationException_maps_in_TryAsync()
-    {
-        var result = await SupportExceptionMapper.TryAsync<int>(
-            () => throw new InvalidOperationException("support.ticket_not_found"),
-            SupportErrorCodes.ReplyRejected);
+        var result = await SupportOperation.ExecuteAsync<int>(
+            () => throw new SemanticException(new SemanticError(SupportErrorCodes.Rejected)));
         Assert.True(result.IsFailure);
-        Assert.Equal(SupportErrorCodes.ReplyRejected, result.Errors[0].Code);
+        Assert.Equal(SupportErrorCodes.Rejected, result.Errors[0].Code);
     }
 }

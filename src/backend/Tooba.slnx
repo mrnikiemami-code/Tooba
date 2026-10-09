@@ -237,6 +237,7 @@
     <Project Path="Modules/Notification/Tooba.Notification.Tests/Tooba.Notification.Tests.csproj" />
   </Folder>
   <Folder Name="/Modules/Support/">
+    <Project Path="Modules/Support/Tooba.Support.Contracts/Tooba.Support.Contracts.csproj" />
     <Project Path="Modules/Support/Tooba.Support.Domain/Tooba.Support.Domain.csproj" />
     <Project Path="Modules/Support/Tooba.Support.Application/Tooba.Support.Application.csproj" />
     <Project Path="Modules/Support/Tooba.Support.Infrastructure/Tooba.Support.Infrastructure.csproj" />

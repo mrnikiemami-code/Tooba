@@ -1,21 +1,23 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Support.Application.Errors;
+using Tooba.Support.Application.Composition;
 using Tooba.Support.Application.Models;
 using Tooba.Support.Application.Ports;
+using Tooba.Support.Contracts.Errors;
 
 namespace Tooba.Support.Application.Commands.CloseCustomerTicket;
 
-/// <summary>MediatR close customer ticket use case.</summary>
+/// <summary>مورد استفادهٔ MediatR برای بستن تیکت مشتری.</summary>
 public sealed record CloseCustomerTicketCommand(Guid ActorUserId, Guid TicketId)
     : IRequest<Result<TicketSnapshotDto>>;
 
-/// <summary>Closes a customer ticket.</summary>
+/// <summary>تیکت مشتری را می‌بندد.</summary>
 public sealed class CloseCustomerTicketHandler(ISupportDirectory directory)
     : IRequestHandler<CloseCustomerTicketCommand, Result<TicketSnapshotDto>>
 {
+    /// <inheritdoc />
     public Task<Result<TicketSnapshotDto>> Handle(CloseCustomerTicketCommand request, CancellationToken cancellationToken) =>
-        SupportExceptionMapper.TryAsync(
+        SupportOperation.ExecuteAsync(
             () => directory.CloseForCustomerAsync(request.ActorUserId, request.TicketId, cancellationToken),
             SupportErrorCodes.ActionRejected);
 }
