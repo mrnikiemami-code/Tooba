@@ -10,6 +10,9 @@ Use this skill when the user asks to analyze a Host file, legacy service, compos
 This skill is ANALYSIS-ONLY unless the user explicitly asks to migrate.
 
 
+## Bounded HTTP Success-Response Canonicality Check (prospective; no re-audit)
+For HTTP-owning targets only, inventory non-canonical success mappings (including `Results.Json(..., 201)`), compare each to the actual current `ApiResponseFactory` method and its wire contract (status, body, Content-Type, Location). A sibling-module precedent or a green test is **not** an exception authority. Classify once as: CANONICAL; EXPLICIT_LOCK (cite exact current architecture lock and scope); SAFE_CANONICAL_MIGRATION (identify any additive wire delta for Architect approval); or ARCHITECT_DECISION_REQUIRED. Hand this finding to Migrate; do not create a new wave or re-open certified modules solely for this check.
+
 ## Four-Skill Workflow Integration
 
 The canonical architecture workflow is:
