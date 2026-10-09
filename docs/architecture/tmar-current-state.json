@@ -15425,7 +15425,7 @@
     "validatorDiscoveryState": "DISCOVERABLE_AND_EXECUTED",
     "validatorDiscoveryEvidence": "AddToobaCqrsFoundation(typeof(Tooba.Support.Application.Tickets.Commands.CreateCustomerTicketCommand).Assembly) runs AddValidatorsFromAssembly over the Support Application assembly and registers ValidationBehavior<,>; the nine validators live in Application/Validation/SupportRequestValidators.cs.",
     "apiResultMappingState": "CANONICAL_APIRESPONSEFACTORY_ZERO_AD_HOC",
-    "rawResultsState": "TWO_201_CREATE_JSON_PLUS_ONE_DEVELOPMENT_GATED_NOTFOUND_LOCKED_SHIPPED_SHAPES",
+    "rawResultsState": "ZERO_CANONICAL_CREATED_ON_TWO_TICKET_CREATE_PATHS",
     "messageClassificationState": "ZERO_TYPED_CODE_ONLY",
     "errorCodeState": "SINGLE_CANONICAL_CONTRACTS_HOME",
     "declaredCodeCount": 28,
@@ -15451,5 +15451,43 @@
     "evidence": "docs/architecture/evidence/TB-TMAR-SUPPORT-AMSC-001-W3/certification.md",
     "stopGate": "USER_REVIEW_SUPPORT_AMSC_001_W3",
     "automaticNextImplementationTask": "NONE"
+  },
+  "supportAmsc001W3R2": {
+    "task": "TB-TMAR-SUPPORT-AMSC-001-W3-R2",
+    "parentTask": "TB-TMAR-SUPPORT-AMSC-001-W3-R1",
+    "mode": "BOUNDED_CANONICAL_201_CREATED_REPAIR",
+    "skill": "tooba-architecture-certify",
+    "target": "src/backend/Modules/Support/Tooba.Support.Endpoints/{Customer,Seller}",
+    "startingHead": "e097a5d5a6c497b9590362a6bc52f3357cc9c08f",
+    "authorityAncestry": "W0 567ac400 -> W1 5e8c86ef -> W2 aaa15b03 -> W3 c632da65 -> W3-R1 e097a5d5 -> W3-R2 (this wave).",
+    "architectDecision": "OPTION_A_APPROVED_EXPLICIT_AUTHORITY",
+    "state": "SUPPORT_AMSC_001_W3_R2_REPAIRED",
+    "apiResultPatternState": "CANONICAL",
+    "rawResultsState": "ZERO",
+    "canonicalCreatedPathCount": 2,
+    "canonicalCreatedPaths": [
+      "SupportCustomerEndpoints.CreateAsync -> api.Created($\"/v1/customer/support/tickets/{result.Value.TicketId}\", result)",
+      "SupportSellerEndpoints.CreateAsync -> api.Created($\"/v1/seller/support/tickets/{result.Value.TicketId}\", result)"
+    ],
+    "wireContractParity": "STATUS_201_BODY_RAW_TICKETSNAPSHOTDTO_JSON_CONTENT_TYPE_APPLICATION_JSON_UNCHANGED_FAILURE_PROBLEM_DETAILS_UNCHANGED_ONLY_ADDITIVE_LOCATION_HEADER",
+    "failurePathState": "UNCHANGED_PROBLEM_DETAILS_WITHOUT_LOCATION",
+    "routeState": "UNCHANGED_17_ROUTES",
+    "dtoShapeState": "UNCHANGED",
+    "errorCodeState": "UNCHANGED",
+    "resourceState": "UNCHANGED",
+    "schemaMigrationState": "UNCHANGED",
+    "sharedFactoryChangeState": "ZERO",
+    "frontendChangeState": "ZERO",
+    "durableGuards": [
+      "SupportModuleAmsc001W3CertGuardTests (updated): exactly two canonical api.Created call sites, exact per-audience Location literal with TicketId, zero Results.Json / Status201Created in Support endpoint production, single Development-gated Results.NotFound() preserved",
+      "SupportTicketCreateResponseContractTests (new): executable behavioral proof of 201 + raw TicketSnapshotDto JSON + application/json + per-audience Location with returned TicketId, and ProblemDetails-without-Location on failure"
+    ],
+    "guardsWeakened": "NONE",
+    "baselinesWidened": "NONE",
+    "globalHostCheckpointState": "PRESERVED",
+    "commitState": "REPORTED_IN_BRIDGE_RESULT_ONLY_NO_SELF_REFERENTIAL_SOT_SHA",
+    "workflowStop": "USER_REVIEW_SUPPORT_AMSC_001_W3_R2",
+    "automaticNextImplementationTask": "NONE",
+    "evidence": "docs/architecture/evidence/TB-TMAR-SUPPORT-AMSC-001-W3-R2/"
   }
 }

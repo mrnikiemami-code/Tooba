@@ -1900,3 +1900,17 @@ Recorded by `TB-TMAR-SUPPORT-AMSC-001-W3-R1` (`tooba-architecture-certify`, `BOU
 - Evidence root: `docs/architecture/evidence/TB-TMAR-SUPPORT-AMSC-001-W3-R1/`.
 - Stop gate: `USER_REVIEW_SUPPORT_AMSC_001_W3_R1`.
 - `automaticNextImplementationTask = NONE`.
+
+Support AMSC W3-R2 canonical 201 Created repair (authoritative, module-local)
+
+Recorded by `TB-TMAR-SUPPORT-AMSC-001-W3-R2` (`tooba-architecture-certify`, `BOUNDED_CANONICAL_201_CREATED_REPAIR`; starting head `e097a5d5a6c497b9590362a6bc52f3357cc9c08f`, `HEAD == origin/main`). Architect decision `OPTION A APPROVED` (explicit authority) executed: the two Support ticket-creation success mappings now use the existing canonical `ApiResponseFactory.Created<T>(location, result)` instead of `Results.Json(result.Value, statusCode: StatusCodes.Status201Created)`. No Option B raw-201 exception was created.
+- Exact change (success return only, two endpoint files): `SupportCustomerEndpoints.CreateAsync` returns `api.Created($"/v1/customer/support/tickets/{result.Value.TicketId}", result)`; `SupportSellerEndpoints.CreateAsync` returns `api.Created($"/v1/seller/support/tickets/{result.Value.TicketId}", result)`. The Location is derived from the real returned `TicketSnapshotDto.TicketId` and the matching `/tickets/{ticketId:guid}` GET route template — no URI invented.
+- Wire parity: status 201, raw `TicketSnapshotDto` JSON body, `application/json`, and the failure path (ProblemDetails, `support.rejected`, 400, no Location) are unchanged; the **only** wire delta is the additive per-audience `Location` header, which is the documented contract of `ApiResponseFactory.Created`.
+- Executable proof added: `src/backend/Modules/Support/Tooba.Support.Tests/Behavior/SupportTicketCreateResponseContractTests.cs` (4 facts) drives the real endpoint handler through the real MediatR pipeline + `ApiResponseFactory` + composed catalog and asserts 201 + raw snapshot + content-type + per-audience Location carrying the returned TicketId for both audiences, plus ProblemDetails-without-Location on failure.
+- Durable guard tightened (never weakened): `SupportModuleAmsc001W3CertGuardTests` now asserts zero `Results.Json` / `Status201Created` in Support endpoint production, exactly two canonical `api.Created` call sites with their exact per-audience Location literals, and preserves the single Development-gated `Results.NotFound()`, the 17 `api.From(`, catalog/resource and Contracts-only assertions.
+- Focused validation: Support module tests **17/17 pass**; `SupportModuleAmsc001*` **30/30 pass** (W1 9 + W2 8 + W3 13); the 3 `TmarCompleteReferenceStructureGateTests` / `TmarDurableGuardTests` repository-global failures are pre-existing and byte-identical to the W3-R1 baseline — zero new failure, zero regression.
+- SoT: `supportAmsc001W3.rawResultsState` corrected to `ZERO`; new `supportAmsc001W3R2` repair block recorded; `structureLock.certifiedModules` unchanged; manifest NOT_TOUCHED; schema/migrations UNCHANGED; frontend untouched; guards weakened NONE; baselines widened NONE.
+- Global recovery lock preserved exactly: `currentHostCheckpoint = HOST_ROOT_FINAL_CERTIFIED`, `lastAcceptedTask = TB-TMAR-HOST-ROOT-FINAL-CERT-001`, `automaticNextImplementationTask = NONE`.
+- Evidence root: `docs/architecture/evidence/TB-TMAR-SUPPORT-AMSC-001-W3-R2/`.
+- Stop gate: `USER_REVIEW_SUPPORT_AMSC_001_W3_R2`.
+- `automaticNextImplementationTask = NONE`.

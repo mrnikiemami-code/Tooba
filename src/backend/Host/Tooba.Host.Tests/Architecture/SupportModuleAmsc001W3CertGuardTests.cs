@@ -434,9 +434,11 @@ public sealed class SupportModuleAmsc001W3CertGuardTests
         Assert.Contains("SupportErrorCodes.IsHttpReachable", seam, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", seam, StringComparison.Ordinal);
 
-        // Canonical API-result mapping on the error path only. The two 201 raw-DTO create responses and
-        // the single Development-gated Results.NotFound() are the shipped, locked success/precondition
-        // contract shapes (identical to the certified Identity 201 precedent) and are asserted exactly.
+        // Canonical API-result mapping on the success and error paths. Both 201 ticket-creation responses
+        // now map through the canonical ApiResponseFactory.Created<T>(location, result) with a truthful
+        // per-audience Location built from the returned TicketSnapshotDto.TicketId
+        // (TB-TMAR-SUPPORT-AMSC-001-W3-R2, Architect-approved Option A); the single Development-gated
+        // Results.NotFound() remains the locked demo-preview precondition shape.
         var endpoints = new[] { CustomerFile, SellerFile, AdminFile }
             .Select(f => File.ReadAllText(Path.Combine(root, ModuleRoot, f)))
             .ToArray();
@@ -444,7 +446,17 @@ public sealed class SupportModuleAmsc001W3CertGuardTests
         Assert.DoesNotContain("Results.BadRequest", endpointJoined, StringComparison.Ordinal);
         Assert.DoesNotContain("Results.Problem", endpointJoined, StringComparison.Ordinal);
         Assert.DoesNotContain("ProblemDetails", endpointJoined, StringComparison.Ordinal);
-        Assert.Equal(2, Regex.Matches(endpointJoined, @"Results\.Json\(result\.Value, statusCode: StatusCodes\.Status201Created\)").Count);
+        Assert.DoesNotContain("Results.Json", endpointJoined, StringComparison.Ordinal);
+        Assert.DoesNotContain("Status201Created", endpointJoined, StringComparison.Ordinal);
+
+        // Exactly two canonical Created call sites, each bound to its own audience route + TicketId.
+        Assert.Equal(2, Regex.Matches(endpointJoined, @"api\.Created\(").Count);
+        Assert.Equal(1, Regex.Matches(
+            endpointJoined,
+            Regex.Escape("api.Created($\"/v1/customer/support/tickets/{result.Value.TicketId}\", result)")).Count);
+        Assert.Equal(1, Regex.Matches(
+            endpointJoined,
+            Regex.Escape("api.Created($\"/v1/seller/support/tickets/{result.Value.TicketId}\", result)")).Count);
         Assert.Equal(1, Regex.Matches(endpointJoined, @"Results\.NotFound\(\)").Count);
         Assert.DoesNotContain("catch (", endpointJoined, StringComparison.Ordinal);
         Assert.Equal(17, Regex.Matches(endpointJoined, @"api\.From\(").Count);

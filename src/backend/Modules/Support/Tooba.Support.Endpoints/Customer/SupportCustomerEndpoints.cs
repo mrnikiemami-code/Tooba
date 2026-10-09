@@ -70,7 +70,7 @@ public static class SupportCustomerEndpoints
             cancellationToken);
         if (result.IsFailure)
             return api.From(result);
-        return Results.Json(result.Value, statusCode: StatusCodes.Status201Created);
+        return api.Created($"/v1/customer/support/tickets/{result.Value.TicketId}", result);
     }
 
     private static async Task<IResult> GetAsync(

@@ -1,0 +1,15 @@
+{
+  "task": "TB-TMAR-SUPPORT-AMSC-001-W3-R2",
+  "parentTask": "TB-TMAR-SUPPORT-AMSC-001-W3-R1",
+  "channel": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "skill": "tooba-architecture-certify",
+  "mode": "BOUNDED_CANONICAL_201_CREATED_REPAIR",
+  "startingHead": "e097a5d5a6c497b9590362a6bc52f3357cc9c08f",
+  "bridgeTaskRowId": "a4ecce17-a928-4d7c-9eda-d2947fa2500a",
+  "receivedAtUtc": "2026-10-09T16:32:25.3545061",
+  "architectDecision": "OPTION_A_APPROVED",
+  "artifact": "docs/ai/tasks/TB-TMAR-SUPPORT-AMSC-001-W3-R2.task.md",
+  "automaticNextImplementationTask": "NONE"
+}
