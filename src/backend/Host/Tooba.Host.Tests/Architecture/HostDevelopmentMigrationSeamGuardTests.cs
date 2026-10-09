@@ -36,7 +36,7 @@ public sealed class HostDevelopmentMigrationSeamGuardTests
         "Content/Tooba.Content.Infrastructure/ContentModule.cs",
         "Media/Tooba.Media.Infrastructure/MediaModule.cs",
         "PageComposition/Tooba.PageComposition.Infrastructure/PageCompositionModule.cs",
-        "Story/Tooba.Story.Infrastructure/StoryModule.cs",
+        "Story/Tooba.Story.Infrastructure/DependencyInjection/StoryModule.cs",
         "Notification/Tooba.Notification.Infrastructure/DependencyInjection/NotificationModule.cs",
         "AccessControl/Tooba.AccessControl.Infrastructure/AccessControlModule.cs",
         "Support/Tooba.Support.Infrastructure/DependencyInjection/SupportModule.cs",

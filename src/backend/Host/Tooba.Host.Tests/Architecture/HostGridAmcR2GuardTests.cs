@@ -29,9 +29,9 @@ public sealed class HostGridAmcR2GuardTests
         Assert.True(File.Exists(Path.Combine(storyInfra, "Adapters", "AdminStoryGridAdapter.cs")));
         Assert.True(File.Exists(Path.Combine(
             root, "src", "backend", "Modules", "Story",
-            "Tooba.Story.Application", "Ports", "IAdminStoryGridPort.cs")));
+            "Tooba.Story.Application", "Stories", "Ports", "IAdminStoryGridPort.cs")));
 
-        var module = File.ReadAllText(Path.Combine(storyInfra, "StoryModule.cs"));
+        var module = File.ReadAllText(Path.Combine(storyInfra, "DependencyInjection", "StoryModule.cs"));
         Assert.Contains("IAdminStoryGridPort, AdminStoryGridAdapter", module, StringComparison.Ordinal);
 
         var policy = File.ReadAllText(Path.Combine(storyInfra, "Grid", "StoryAdminGridPolicies.cs"));
@@ -49,6 +49,7 @@ public sealed class HostGridAmcR2GuardTests
             "Modules",
             "Story",
             "Tooba.Story.Application",
+            "Stories",
             "Presentation",
             "StoryPresentationComposer.cs"));
         Assert.Contains("IAdminStoryGridPort", composer, StringComparison.Ordinal);

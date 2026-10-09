@@ -10,7 +10,7 @@ public sealed class StoryModuleAmcW4ResultGuardTests
     {
         var root = Repo();
         var operation = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Story/Tooba.Story.Application/Stories/Composition/StoryOperation.cs"));
+            root, "src/backend/Modules/Story/Tooba.Story.Application/Composition/StoryOperation.cs"));
         Assert.Contains("SemanticException", operation, StringComparison.Ordinal);
         Assert.Contains("Result.Failure", operation, StringComparison.Ordinal);
 

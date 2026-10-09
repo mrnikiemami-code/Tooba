@@ -25,14 +25,21 @@ public sealed class StoryModuleAmcW3StructureGuardTests
         Assert.True(File.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Application/Stories/Ports/IStoryDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Application/Stories/Commands/Admin/AdminStoryCommands.cs")));
         Assert.True(File.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Application/Stories/Queries/Storefront/GetPublicStoriesQuery.cs")));
+        Assert.True(File.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Application/Composition/StoryOperation.cs")));
+        Assert.False(Directory.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Application/Stories/Composition")));
 
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure/Directory/StoryDirectory.cs")));
+        Assert.True(File.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure/Directories/StoryDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure/Development/StoryDevelopmentSeed.cs")));
-        Assert.True(File.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure/StoryModule.cs")));
+        Assert.True(File.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure/DependencyInjection/StoryModule.cs")));
+        Assert.True(File.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure/Messaging/StoryOutboxRegistration.cs")));
+        Assert.False(Directory.Exists(Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure/Directory")));
 
         AssertNs(root, "src/backend/Modules/Story/Tooba.Story.Domain/Aggregates/Story.cs", "namespace Tooba.Story.Domain.Aggregates;");
         AssertNs(root, "src/backend/Modules/Story/Tooba.Story.Application/Stories/Models/StoryModels.cs", "namespace Tooba.Story.Application.Stories.Models;");
-        AssertNs(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure/Directory/StoryDirectory.cs", "namespace Tooba.Story.Infrastructure.Directory;");
+        AssertNs(root, "src/backend/Modules/Story/Tooba.Story.Application/Composition/StoryOperation.cs", "namespace Tooba.Story.Application.Composition;");
+        AssertNs(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure/Directories/StoryDirectory.cs", "namespace Tooba.Story.Infrastructure.Directories;");
+        AssertNs(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure/DependencyInjection/StoryModule.cs", "namespace Tooba.Story.Infrastructure.DependencyInjection;");
+        AssertNs(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure/Messaging/StoryOutboxRegistration.cs", "namespace Tooba.Story.Infrastructure.Messaging;");
 
         var appRootCs = Directory.GetFiles(
                 Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Application"),
@@ -50,7 +57,7 @@ public sealed class StoryModuleAmcW3StructureGuardTests
                 Path.Combine(root, "src/backend/Modules/Story/Tooba.Story.Infrastructure"),
                 "*.cs",
                 SearchOption.TopDirectoryOnly);
-        Assert.Equal(new[] { "StoryModule.cs" }, infraRootCs.Select(Path.GetFileName).OrderBy(x => x).ToArray());
+        Assert.Empty(infraRootCs);
 
         var slnx = File.ReadAllText(Path.Combine(root, "src/backend/Tooba.slnx"));
         Assert.Contains("<Folder Name=\"/Modules/Story/\">", slnx, StringComparison.Ordinal);

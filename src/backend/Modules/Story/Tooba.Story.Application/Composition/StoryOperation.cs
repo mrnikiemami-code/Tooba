@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 
-namespace Tooba.Story.Application.Stories.Composition;
+namespace Tooba.Story.Application.Composition;
 
 /// <summary>
 /// استثنای معناییِ نوع‌دار <see cref="SemanticException"/> را بر اساس کد پایدار به شکست <see cref="Result"/> نگاشت می‌کند.

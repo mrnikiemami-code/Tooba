@@ -15,9 +15,9 @@ using global::Tooba.Story.Domain.Aggregates;
 using global::Tooba.Story.Domain.Enums;
 using global::Tooba.Story.Domain.Rules;
 using global::Tooba.Story.Domain.Tenant;
-using global::Tooba.Story.Infrastructure;
+using global::Tooba.Story.Infrastructure.DependencyInjection;
 using global::Tooba.Story.Infrastructure.Development;
-using global::Tooba.Story.Infrastructure.Directory;
+using global::Tooba.Story.Infrastructure.Directories;
 using global::Tooba.Story.Infrastructure.Persistence;
 using Xunit;
 

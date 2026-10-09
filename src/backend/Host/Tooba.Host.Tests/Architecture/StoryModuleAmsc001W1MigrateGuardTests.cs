@@ -124,7 +124,7 @@ public sealed class StoryModuleAmsc001W1MigrateGuardTests
     [Fact]
     public void Typed_fault_seam_never_classifies_by_message_text()
     {
-        var seam = Read($"{StoryRootRelative}/Tooba.Story.Application/Stories/Composition/StoryOperation.cs");
+        var seam = Read($"{StoryRootRelative}/Tooba.Story.Application/Composition/StoryOperation.cs");
         Assert.Contains("SemanticException", seam, StringComparison.Ordinal);
         Assert.Contains("Task<Result<T>> ExecuteAsync<T>", seam, StringComparison.Ordinal);
         Assert.DoesNotContain("ex.Message", seam, StringComparison.Ordinal);

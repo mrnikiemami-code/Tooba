@@ -28,7 +28,7 @@ public sealed class StoryModuleAmcW1GuardTests
                      "src/backend/Modules/Story/Tooba.Story.Domain/Aggregates/Story.cs",
                      "src/backend/Modules/Story/Tooba.Story.Domain/Aggregates/StoryItem.cs",
                      "src/backend/Modules/Story/Tooba.Story.Domain/Rules/StoryRules.cs",
-                     "src/backend/Modules/Story/Tooba.Story.Infrastructure/Directory/StoryDirectory.cs",
+                     "src/backend/Modules/Story/Tooba.Story.Infrastructure/Directories/StoryDirectory.cs",
                  })
         {
             var text = File.ReadAllText(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));

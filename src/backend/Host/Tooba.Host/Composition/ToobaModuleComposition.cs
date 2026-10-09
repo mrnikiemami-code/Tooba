@@ -28,7 +28,7 @@ using Tooba.Content.Infrastructure;
 using Tooba.Media.Infrastructure;
 using Tooba.PageComposition.Infrastructure;
 using Tooba.ProductWorkspace.Infrastructure;
-using Tooba.Story.Infrastructure;
+using Tooba.Story.Infrastructure.DependencyInjection;
 using Tooba.Story.Infrastructure.Development;
 using Tooba.Fulfillment.Infrastructure.DependencyInjection;
 using Tooba.Returns.Infrastructure.DependencyInjection;

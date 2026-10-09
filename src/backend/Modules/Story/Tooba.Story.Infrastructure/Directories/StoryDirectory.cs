@@ -9,7 +9,7 @@ using Tooba.Story.Domain.Rules;
 using Tooba.Story.Infrastructure.Persistence;
 using StoryEntity = Tooba.Story.Domain.Aggregates.Story;
 
-namespace Tooba.Story.Infrastructure.Directory;
+namespace Tooba.Story.Infrastructure.Directories;
 
 /// <summary>دایرکتوری Story با schema مستقل.</summary>
 public sealed class StoryDirectory : IStoryDirectory

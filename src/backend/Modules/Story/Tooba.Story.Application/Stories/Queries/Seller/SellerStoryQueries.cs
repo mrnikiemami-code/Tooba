@@ -1,6 +1,6 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Story.Application.Stories.Composition;
+using Tooba.Story.Application.Composition;
 using Tooba.Story.Application.Stories.Models;
 using Tooba.Story.Application.Stories.Presentation;
 using Tooba.Story.Contracts.Errors;

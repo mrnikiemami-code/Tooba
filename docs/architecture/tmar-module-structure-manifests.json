@@ -1303,7 +1303,7 @@
       "module": "Story",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Certified by TB-TMAR-STORY-AMC-001-W6 under COMPLETE_REFERENCE_PATTERN. Capability-first Stories foldering; Result<T>+ApiResponseFactory; exhaustive 25-request validator matrix; Contracts-only foreign boundary (ModuleContracts+BuildingBlocks platform only); Host Story CLOSED_HOST_ZERO; /Modules/Story/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "certificationNote": "Certified by TB-TMAR-STORY-AMC-001-W6 under COMPLETE_REFERENCE_PATTERN and re-verified by the AMSC-001 wave line (W0 analyze -> W1 migrate -> W2 structure -> W3 certify). Capability-first shallow Stories foldering; shared fault seam at Application/Composition/; Infrastructure composition entry at DependencyInjection/StoryModule.cs with the outbox registration split to Messaging/StoryOutboxRegistration.cs and Directories/ plural; Result<T>+ApiResponseFactory; exhaustive 25-request validator matrix with all 10 validation codes bilingually localized; Contracts-only foreign boundary (ModuleContracts+BuildingBlocks platform only); Host Story CLOSED_HOST_ZERO; /Modules/Story/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
       "projects": [
         {
           "projectName": "Tooba.Story.Contracts",
@@ -1327,7 +1327,7 @@
         {
           "projectName": "Tooba.Story.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Capability-first Stories/{Commands,Queries,Models,Ports,Presentation,Validators,Composition}; StoryFailureMapper lives under Stories/.",
+          "rootAllowlistJustification": "Capability-first Stories/{Commands,Queries,Models,Ports,Presentation,Validators}; the shared fault seam lives at the shallow Composition/ root (21-module precedent); StoryFailureMapper lives under Stories/.",
           "forbiddenRootFiles": [
             "StoryContracts.cs",
             "StoryPresentationComposer.cs"
@@ -1358,10 +1358,8 @@
         },
         {
           "projectName": "Tooba.Story.Infrastructure",
-          "rootAllowlist": [
-            "StoryModule.cs"
-          ],
-          "rootAllowlistJustification": "Composition entry StoryModule.cs only; Directory/Development/Grid/Adapters/Persistence hold integrations.",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs: the composition entry lives in DependencyInjection/ (21-module precedent), the outbox registration in Messaging/, and Development/Grid/Adapters/Persistence/Directories hold integrations.",
           "forbiddenRootFiles": [
             "StoryDirectory.cs",
             "StoryDevelopmentSeed.cs",

@@ -54,17 +54,19 @@ public sealed class StoryModuleAmcW6CertGuardTests
         AssertRootCs(Path.Combine(story, "Tooba.Story.Domain"), Array.Empty<string>());
         AssertRootCs(Path.Combine(story, "Tooba.Story.Application"), Array.Empty<string>());
         AssertRootCs(Path.Combine(story, "Tooba.Story.Endpoints"), ["StoryEndpointModule.cs"]);
-        AssertRootCs(Path.Combine(story, "Tooba.Story.Infrastructure"), ["StoryModule.cs"]);
+        AssertRootCs(Path.Combine(story, "Tooba.Story.Infrastructure"), Array.Empty<string>());
 
         Assert.False(Directory.Exists(Path.Combine(story, "Tooba.Story.Infrastructure", "Migrations")));
         Assert.True(Directory.Exists(Path.Combine(story, "Tooba.Story.Infrastructure", "Persistence", "Migrations")));
+        Assert.True(File.Exists(Path.Combine(story, "Tooba.Story.Infrastructure", "DependencyInjection", "StoryModule.cs")));
+        Assert.False(Directory.Exists(Path.Combine(story, "Tooba.Story.Infrastructure", "Directory")));
         Assert.False(File.Exists(Path.Combine(story, "Tooba.Story.Endpoints", "StoryHttpErrors.cs")));
         Assert.True(File.Exists(Path.Combine(story, "Tooba.Story.Endpoints", "Errors", "StoryHttpErrors.cs")));
 
         AssertNs(root, "src/backend/Modules/Story/Tooba.Story.Endpoints/Errors/StoryHttpErrors.cs",
             "namespace Tooba.Story.Endpoints.Errors;");
-        AssertNs(root, "src/backend/Modules/Story/Tooba.Story.Application/Stories/Composition/StoryOperation.cs",
-            "namespace Tooba.Story.Application.Stories.Composition;");
+        AssertNs(root, "src/backend/Modules/Story/Tooba.Story.Application/Composition/StoryOperation.cs",
+            "namespace Tooba.Story.Application.Composition;");
     }
 
     [Fact]
