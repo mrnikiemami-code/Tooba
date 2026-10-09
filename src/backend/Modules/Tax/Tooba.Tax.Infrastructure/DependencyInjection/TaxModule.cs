@@ -7,13 +7,14 @@ using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
-using Tooba.Tax.Application;
-using Tooba.Tax.Contracts;
+using Tooba.Tax.Application.Ports;
 using Tooba.Tax.Contracts.Errors;
+using Tooba.Tax.Contracts.Ports;
 using Tooba.Tax.Infrastructure.Adapters;
+using Tooba.Tax.Infrastructure.Outbox;
 using Tooba.Tax.Infrastructure.Persistence;
 
-namespace Tooba.Tax.Infrastructure;
+namespace Tooba.Tax.Infrastructure.DependencyInjection;
 
 /// <summary>
 /// ماژول Tax: قواعد مؤثر به تاریخ و محاسبهٔ جدا از Pricing. فاکتور و پرداخت اینجا نیستند.

@@ -1,0 +1,85 @@
+const fs = require('fs');
+const p = 'docs/architecture/tmar-current-state.json';
+let raw = fs.readFileSync(p, 'utf8');
+const bom = raw.charCodeAt(0) === 0xFEFF ? '\uFEFF' : '';
+const d = JSON.parse(raw.replace(/^\uFEFF/, ''));
+const eol = raw.includes('\r\n') ? '\r\n' : '\n';
+
+d.taxAmsc001W2 = {
+  task: 'TB-TMAR-TAX-AMSC-001-W2',
+  mode: 'ARCHITECT_DIRECT_AMSC',
+  skill: 'tooba-architecture-structure',
+  target: 'src/backend/Modules/Tax/Tooba.Tax.*',
+  parentTask: 'TB-TMAR-TAX-AMSC-001-W1',
+  parentCommit: 'fa87201a',
+  startingHead: 'fa87201a',
+  state: 'STRUCTURE_COMPLETE',
+  verdict: 'READY_FOR_CERTIFY',
+  structureHandoffState: 'READY_FOR_CERTIFY',
+  lockVersion: 'ARCH-COMPLETE-002',
+  httpApplicability: 'INTERNAL_ONLY',
+  internalOnlyApplicabilityState: 'CANONICAL_NO_ENDPOINTS_PROJECT',
+  taxEndpointsProjectState: 'ABSENT',
+  taxHttpRouteState: 'ZERO',
+  presentationRegistrationState: 'INFRASTRUCTURE_MODULE_EXACTLY_ONCE',
+  taxProjectCountState: 'EXACT_5',
+  solutionGroupingState: 'CANONICAL_5',
+  folderGranularityState: 'PROFESSIONAL_SHALLOW',
+  solutionExplorerState: 'CANONICAL',
+  pathNamespaceState: 'EXACT',
+  pathNamespaceDetail: '24 production files declared the project-level namespace instead of the path-derived one; all are now aligned (Contracts.Dtos/Contracts.Ports, Domain.Aggregates/Enums/Events/Policies, Application.Ports, Infrastructure.Adapters/DependencyInjection/Outbox). Machine-verified 0 mismatches across all 5 Tax projects. The Domain capability split needed the root GlobalUsings.cs namespace bridge (no namespace, no type) exactly as the certified Catalog/Order/Pricing Domain precedent.',
+  physicalCopyState: 'CLEAN',
+  rootAllowlistState: 'ENFORCED',
+  fileCohesionState: 'COHESIVE',
+  ceremonyRetired: 'Tooba.Tax.Endpoints project + TaxEndpointModule (empty MapGroup of /v1/tax) + Tooba.Tax.Tests/Endpoints/TaxEndpointModuleTests.cs deleted; Tooba.slnx entry, Tooba.Host.csproj reference, Tooba.Tax.Tests.csproj reference, Program.cs using Tooba.Tax.Endpoints and app.MapTaxModule() removed. No replacement project, alias or type-forward introduced.',
+  applicationPortSplit: 'Application/Ports/ITaxUseCaseGuard.cs split out of the mixed ITaxDirectory.cs for parity with the certified Inventory/Pricing port layout; no member, signature or lifetime changed.',
+  consumerRepointing: 'Order.Infrastructure (CheckoutDirectory + .Access + .Reservations), Catalog.Infrastructure (StorefrontComposer, StorefrontDemoCatalogBootstrap, WorkspaceDemoMarketplaceSeed, CatalogAttributeSchemaSellableEnricher), ProductWorkspace.Application (GetProductWorkspaceHandler), Host (ToobaModuleComposition) and Host.Tests namespace/usings repointed to the path-derived namespaces. Contracts-only foreign boundaries preserved: no foreign module gained a Tax Application/Infrastructure/Domain edge.',
+  crossModuleCouplingState: 'NONE',
+  crossModuleJoinState: 'NONE',
+  persistenceOwnershipState: 'CORRECT_OWN_TAX_SCHEMA_OWN_OUTBOX',
+  endpointOwnershipState: 'MODULE_OWNED_ZERO_ROUTES_HOST_ZERO',
+  hostResidueState: 'ALLOWED_COMPOSITION_ROOT',
+  hostFinalClosureState: 'PRESERVED',
+  hostFinalClosureDetail: 'Zero Host production file added, moved or widened. The only Host edits are reductions: the ceremonial using/MapTaxModule() removal in Program.cs and the Tooba.Tax.Endpoints ProjectReference removal in Tooba.Host.csproj. HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED and HOST_ROOT_FINAL_CERTIFIED are untouched.',
+  schemaMigrationState: 'UNCHANGED',
+  schemaMigrationDetail: 'The single migration 20260823190000_InitialTax (+ designer + snapshot) was not touched. The Tax designer/snapshot carry no entity type name (the migration only calls modelBuilder.HasDefaultSchema of tax), so the Domain namespace split has zero EF model surface consequence. No table, column, index, constraint, migration id or Up/Down semantics changed.',
+  behaviorPreservation: 'PRESERVED',
+  behaviorPreservationDetail: 'Pure physical reorganization plus namespace/using repointing. The 11 stable code string values, the 11 descriptors, the 11 EN + 11 FA resource keys and text, the TaxOperation typed-fault seam, the DI lifetimes, the tax schema, the four calculation outcomes plus CalculationError, the highest-Specificity winner selection, the TaxRounding scale policy, the TrustedInternal override behaviour and the outbox integration event names are byte-identical.',
+  endpointReachableRequests: 0,
+  validatorRequiredCount: 0,
+  validatorsPresentCount: 0,
+  noValidatorRequiredCount: 0,
+  validatorCoverageState: 'EXHAUSTIVE_0_OF_0_NO_VALIDATOR_REQUIRED',
+  cqrsState: 'NOT_APPLICABLE_INTERNAL_ONLY',
+  manifestMutation: 'preCertModules_TAX_ADDED_STRUCTURE_CERTIFIED_FALSE; structureCertified NOT flipped; Tax NOT added to structureLock.certifiedModules (deliberately left open for W3)',
+  structureAuthorityTask: 'TB-TMAR-TAX-AMSC-001-W2',
+  guardTest: 'src/backend/Host/Tooba.Host.Tests/Architecture/TaxModuleAmsc001W2StructureGuardTests.cs',
+  guardTestResult: '8_OF_8_PASSED',
+  w1GuardTestResult: '8_OF_8_PASSED (W1 semantics preserved, not weakened)',
+  taxTestsResult: '11_OF_11_PASSED',
+  solutionBuildResult: 'SUCCEEDED_0_ERRORS',
+  hostFullSuiteResult: '2288_PASSED_130_SKIPPED_71_FAILED',
+  hostFullSuiteBaselineResult: '2287_PASSED_130_SKIPPED_72_FAILED at fa87201a (isolated git worktree)',
+  newFailuresIntroduced: 'ZERO',
+  fixedByW2: 'ContractsW4CharacterizationTests.Tax_outcome_and_calculator_are_contracts_assembly_owned',
+  baselineFailureNote: 'The 51 distinct failing test ids are identical at both heads and all pre-exist the task: Catalog Results.Json WIP, missing Modules/Wishlist file, Host/Admin count drift, the stale HostDevelopmentEnricherClosureGuardTests Party development-gateway path (moved in commit 00c0b9bf, unrelated to Tax), the HostDevelopmentMigrationSeamGuardTests module-count drift, and the repository-global TmarCompleteReferenceStructureGateTests.Certified_modules_satisfy_root_allowlists_and_namespace_alignment failure (the pre-existing Tooba.Catalog.Contracts/Cart and Tooba.Cart.Contracts/{Checkout,Presentation} project-level namespace deviation documented in the Inventory W3 certification as out of scope for a module-local certification).',
+  microserviceExtractable: 'TRUE_CONTRACTS_ONLY_SELF_CONTAINED_ERROR_SURFACE_EXACT_PATH_NAMESPACE',
+  jsonParseState: 'PASS',
+  productionCodeChanged: true,
+  schemaChange: 'NONE',
+  guardsWeakened: 'NONE',
+  baselinesWidened: 'NONE',
+  evidenceRoot: 'docs/architecture/evidence/TB-TMAR-TAX-AMSC-001-W2/',
+  workflowStop: 'USER_REVIEW_TAX_AMSC_001_W2',
+  automaticNextImplementationTask: 'NONE',
+  evidence: 'docs/architecture/evidence/TB-TMAR-TAX-AMSC-001-W2/structure.md',
+  commit: 'PENDING_W2_COMMIT',
+  commitFull: 'PENDING_W2_COMMIT',
+};
+
+if (d.taxAmsc001W1) { d.taxAmsc001W1.commit = 'fa87201a'; d.taxAmsc001W1.commitFull = 'fa87201a'; }
+if (d.taxAmsc001W0) { d.taxAmsc001W0.commit = '36d243cc'; }
+
+fs.writeFileSync(p, bom + JSON.stringify(d, null, 2).replace(/\n/g, eol), 'utf8');
+JSON.parse(fs.readFileSync(p, 'utf8').replace(/^\uFEFF/, ''));
+console.log('taxAmsc001W2 written; json parse ok');

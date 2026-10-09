@@ -1,12 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
-using Tooba.Tax.Application;
-using Tooba.Tax.Contracts;
+using Tooba.Tax.Application.Ports;
+using Tooba.Tax.Contracts.Dtos;
 using Tooba.Tax.Contracts.Errors;
-using Tooba.Tax.Domain;
+using Tooba.Tax.Contracts.Ports;
+using Tooba.Tax.Domain.Aggregates;
+using Tooba.Tax.Domain.Enums;
+using Tooba.Tax.Domain.Policies;
 using Tooba.Tax.Infrastructure.Persistence;
 
-namespace Tooba.Tax.Infrastructure;
+namespace Tooba.Tax.Infrastructure.Adapters;
 
 /// <summary>Open Tax use-case guard.</summary>
 public sealed class OpenTaxUseCaseGuard : ITaxUseCaseGuard

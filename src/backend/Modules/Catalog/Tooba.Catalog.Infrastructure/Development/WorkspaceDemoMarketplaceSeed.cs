@@ -1,11 +1,11 @@
-#pragma warning disable CS1591
+﻿#pragma warning disable CS1591
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
-using Tooba.Tax.Contracts;
+using Tooba.Tax.Contracts.Ports;
 
 namespace Tooba.Catalog.Infrastructure.Development;
 

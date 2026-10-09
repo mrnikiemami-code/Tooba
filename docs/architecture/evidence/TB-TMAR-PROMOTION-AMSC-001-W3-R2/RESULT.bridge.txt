@@ -1,0 +1,29 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-PROMOTION-AMSC-001-W3-R2
+Parent-Task: TB-TMAR-PROMOTION-AMSC-001-W3-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: One behavior-preserving transport-shape repair: ListMerchandisingCampaignTypesQueryValidator added in the canonical Application/Validation home using the existing PromotionValidationCodes.LocaleInvalid and BeWellFormedLocale semantics identical to the two sibling locale validators (no new code, descriptor, parser, normalization or business rule). The recorded matrix is corrected honestly to EXHAUSTIVE_19_VALIDATOR_REQUIRED_2_NO_VALIDATOR_REQUIRED and the historical W3 certification is flagged BLOCKED_SUPERSEDED_BY_W3_R1_PENDING_FRESH_CERTIFY in the Promotion-specific SoT block and manifest note without rewriting historical evidence. structureCertified and structureLock membership retained because structure is verified and removal would force edits to repository-global certified-module locks. Routes, DTOs, schema, migrations, project graph and Host closure unchanged.
+Route-State: EXACT_21
+Request-Validator-Matrix-State: EXHAUSTIVE_19_REQUIRED_2_NO_VALIDATOR_REQUIRED
+Locale-Validator-State: CANONICAL_LOCALE_INVALID_DISCOVERED_AND_TESTED
+Behavior-Preservation-State: VERIFIED
+Historical-W3-Certification-State: BLOCKED_PENDING_FRESH_CERTIFY
+Structure-State: W2_PRESERVED
+Boundary-State: CONTRACTS_ONLY_PRESERVED
+Schema-Migration-State: UNCHANGED
+Host-Checkpoint-State: PRESERVED
+Production-Code-Changed-State: BOUNDED_VALIDATOR_ONLY
+Guards-Weakened-State: NONE
+Baselines-Widened-State: NONE
+Focused-Validation-State: Tooba.Promotion.Tests 23 passed/0 failed/0 skipped (14 new locale tests); Promotion architecture guards (W1+W2+W3+PromotionArchitectureGuardTests+ErrorCatalogUniqueCodeGuardTests) 26 passed/0 failed; broader Promotion+global-structure run 61 passed/3 failed/2 skipped where the 3 failures are pre-existing unrelated (Catalog.Contracts/Cart namespace deviation + stale recovery-text pins) reproduced byte-identically on a clean 85d9818d worktree; Promotion-adjacent guards (PromotionFoundation/PromotionPanel/HostAdminAmcW33/ContractsW6) 10 passed/0 failed/2 skipped
+Evidence-Path: docs/architecture/evidence/TB-TMAR-PROMOTION-AMSC-001-W3-R2/
+Commit-SHA: b002d4596dbec4851bc77c6810c7c4b3e3a1b08c
+HEAD-Equals-Origin-Main: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_PROMOTION_AMSC_001_W3_R2
+STOP
+END_TOOBA_WORKER_RESULT

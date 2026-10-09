@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Xunit;
-using Tooba.Tax.Contracts;
-using Tooba.Tax.Domain;
+using Tooba.Tax.Contracts.Dtos;
+using Tooba.Tax.Contracts.Ports;
 
 namespace Tooba.Tax.Tests.Contracts;
 

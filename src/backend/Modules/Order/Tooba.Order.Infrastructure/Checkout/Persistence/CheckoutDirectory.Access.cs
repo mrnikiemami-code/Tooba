@@ -1,4 +1,4 @@
-using Tooba.Order.Contracts.Fulfillment;
+﻿using Tooba.Order.Contracts.Fulfillment;
 using System.Linq.Expressions;
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +29,6 @@ using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
 using Tooba.Promotion.Contracts.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
-using Tooba.Tax.Contracts;
 namespace Tooba.Order.Infrastructure.Checkout.Persistence;
 
 public sealed partial class CheckoutDirectory : ICheckoutDirectory

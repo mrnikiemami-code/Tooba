@@ -1,0 +1,27 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-RETURNS-AMSC-001-W3-R1
+Parent-Task: TB-TMAR-RETURNS-AMSC-001-W3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Repaired ONLY the durable verification gap. The historical ReturnsModuleAmsc001W3CertGuardTests counted 11 route mappings and 11 ISender.Send call sites and separately asserted 11 hard-coded request names, but never derived the ACTUAL dispatched request-type set from endpoint code; counts and even the dispatched type set can be preserved while a dispatch is silently replaced. Added ReturnsModuleAmsc001W3R1SetEqualityGuardTests (9 tests) that derives real provenance from disk: audience prefixes from ReturnEndpointModule.MapGroup, verb+path+handler from every group.Map{Verb} mapping, and the dispatched request from each handler's ISender.Send argument (inline Send(new T(...)) read directly; variable Send(x) traced to its local x = new T(...) construction; untraceable/ambiguous dispatch throws fail-closed). Independently re-derived 11 routes -> 11 sends -> 11 distinct actual requests -> 11 matching handlers with exact route-to-request equality, exact set equality against the 4+7 partition with no orphan/duplicate, validator targets from concrete AbstractValidator<T> definitions, and non-circular runtime DI discoverability. All seven exemptions re-verified on disk and the GridQuery dual validation (transport validator + module-owned AdminReturnGridQueryPolicy executed in the handler with typed error mapping) confirmed. Mutation negative proof recorded in memory and on disk: replacing the customer GET-by-id dispatch preserves the Send count and the dispatched set, yet the historical W3 guard still passed 6/6 (blind) while the new guard failed 4/9 (caught); the temporary production edit was restored byte-identically and never committed. No production defect found; no production file changed.
+Route-Request-Set-State: EXACT_11_MATCH
+Handler-Set-State: EXACT_11_MATCH
+Validator-Matrix-State: EXHAUSTIVE_4_REQUIRED_7_NO_VALIDATOR_REQUIRED
+Input-Provenance-State: VERIFIED
+Mutation-Negative-Guard-State: PASS
+Boundary-State: CONTRACTS_ONLY
+Schema-Migration-State: UNCHANGED
+Host-Checkpoint-State: PRESERVED
+Production-Code-Changed-State: ZERO
+Guards-Weakened-State: NONE
+Baselines-Widened-State: NONE
+Focused-Validation-State: ReturnsModuleAmsc001 34 passed/0 failed/0 skipped; Tooba.Returns.Tests 16 passed/0 failed/0 skipped; ErrorCatalogUniqueCodeGuardTests 3 passed/0 failed/0 skipped; wider Returns+global-gate 93 passed/3 failed/2 skipped (same three pre-existing unrelated names as the W3 baseline: Tooba.Catalog.Contracts.Cart namespace deviation + the two stale TmarDurableGuardTests repository-global recovery pins)
+Commit-SHA: 26942519d2ffda8043ca55590de4bdbefce44a54
+HEAD-Equals-Origin-Main: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_RETURNS_AMSC_001_W3_R1
+STOP
+END_TOOBA_WORKER_RESULT

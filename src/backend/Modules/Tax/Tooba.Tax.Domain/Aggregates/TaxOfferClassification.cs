@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Tax.Domain;
+namespace Tooba.Tax.Domain.Aggregates;
 
 /// <summary>
 /// انتساب طبقه به Offer. نرخ و مبلغ مالیات اینجا ذخیره نمی‌شود.

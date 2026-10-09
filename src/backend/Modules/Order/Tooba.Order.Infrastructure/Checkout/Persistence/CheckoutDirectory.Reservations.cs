@@ -28,7 +28,8 @@ using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Pricing.Contracts;
 using Tooba.Promotion.Contracts.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
-using Tooba.Tax.Contracts;
+using Tooba.Tax.Contracts.Dtos;
+using Tooba.Tax.Contracts.Ports;
 namespace Tooba.Order.Infrastructure.Checkout.Persistence;
 
 public sealed partial class CheckoutDirectory : ICheckoutDirectory

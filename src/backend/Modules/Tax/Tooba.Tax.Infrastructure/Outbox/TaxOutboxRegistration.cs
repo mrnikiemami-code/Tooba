@@ -1,11 +1,11 @@
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
 using Tooba.Tax.Contracts.Errors;
-using Tooba.Tax.Domain;
+using Tooba.Tax.Domain.Events;
 using Tooba.Tax.Infrastructure.Events;
 using Tooba.Tax.Infrastructure.Persistence;
 
-namespace Tooba.Tax.Infrastructure;
+namespace Tooba.Tax.Infrastructure.Outbox;
 
 /// <summary>
 /// ثبت Outbox ماژول Tax.

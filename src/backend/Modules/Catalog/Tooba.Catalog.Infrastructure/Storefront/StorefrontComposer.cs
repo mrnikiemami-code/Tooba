@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 using Tooba.Catalog.Application;
@@ -15,7 +15,7 @@ using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
 using Tooba.Promotion.Contracts.Checkout;
-using Tooba.Tax.Contracts;
+using Tooba.Tax.Contracts.Ports;
 using Tooba.Reviews.Contracts.Storefront;
 using Tooba.Content.Contracts.Storefront;
 

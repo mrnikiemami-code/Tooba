@@ -1,7 +1,10 @@
 using Xunit;
 using Tooba.BuildingBlocks;
 using Tooba.Tax.Contracts.Errors;
-using Tooba.Tax.Domain;
+using Tooba.Tax.Domain.Aggregates;
+using Tooba.Tax.Domain.Enums;
+using Tooba.Tax.Domain.Events;
+using Tooba.Tax.Domain.Policies;
 
 namespace Tooba.Tax.Tests.Domain;
 

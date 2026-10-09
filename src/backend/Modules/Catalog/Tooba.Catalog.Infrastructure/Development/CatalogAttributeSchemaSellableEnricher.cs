@@ -1,4 +1,4 @@
-#pragma warning disable CS1591
+﻿#pragma warning disable CS1591
 using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Application.Development;
@@ -10,7 +10,7 @@ using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
 using Tooba.Inventory.Contracts.Availability;
-using Tooba.Tax.Contracts;
+using Tooba.Tax.Contracts.Ports;
 
 namespace Tooba.Catalog.Infrastructure.Development;
 

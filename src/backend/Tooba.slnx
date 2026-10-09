@@ -149,7 +149,6 @@
     <Project Path="Modules/Tax/Tooba.Tax.Application/Tooba.Tax.Application.csproj" />
     <Project Path="Modules/Tax/Tooba.Tax.Contracts/Tooba.Tax.Contracts.csproj" />
     <Project Path="Modules/Tax/Tooba.Tax.Domain/Tooba.Tax.Domain.csproj" />
-    <Project Path="Modules/Tax/Tooba.Tax.Endpoints/Tooba.Tax.Endpoints.csproj" />
     <Project Path="Modules/Tax/Tooba.Tax.Infrastructure/Tooba.Tax.Infrastructure.csproj" />
     <Project Path="Modules/Tax/Tooba.Tax.Tests/Tooba.Tax.Tests.csproj" />
   </Folder>

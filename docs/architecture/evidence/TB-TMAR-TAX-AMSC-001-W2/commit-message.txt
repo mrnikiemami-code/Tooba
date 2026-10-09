@@ -1,0 +1,39 @@
+structure(tax): TB-TMAR-TAX-AMSC-001-W2 retire INTERNAL_ONLY ceremony + exact path<->namespace
+
+TB-TMAR-TAX-AMSC-001 W2 (tooba-architecture-structure), behavior-preserving.
+Baseline: main @ fa87201a (W1 Migrate). Wave lineage W0 36d243cc -> W1 fa87201a -> W2.
+Host final closure PRESERVED (HOST_ROOT_FINAL_CERTIFIED untouched; zero Host production file added).
+
+Classification states:
+  Module Applicability Gate  = INTERNAL_ONLY (now structurally honest)
+  Folder-Granularity-State   = PROFESSIONAL_SHALLOW
+  Solution-Explorer-State    = CANONICAL (/Modules/Tax/, 5 projects)
+  Path-Namespace-State       = EXACT (0 mismatches)
+  Physical-Copy-State        = CLEAN
+  Root-Allowlist-State       = ENFORCED
+  File-Cohesion-State        = COHESIVE
+  Structure-State            = READY_FOR_CERTIFY
+
+Ceremony retired (W0 proved 0 module routes / 0 endpoint-reachable requests):
+  - deleted Tooba.Tax.Endpoints/TaxEndpointModule.cs and Tooba.Tax.Endpoints.csproj
+  - deleted Tooba.Tax.Tests/Endpoints/TaxEndpointModuleTests.cs
+  - removed the Tooba.slnx entry, the Tooba.Host.csproj ProjectReference,
+    the Tooba.Tax.Tests.csproj reference, the Program.cs using and app.MapTaxModule()
+  - presentation registration stays exactly once in TaxModule.AddServices
+    (certified Inventory/Pricing INTERNAL_ONLY precedent)
+
+Path<->namespace exactness (24 production files):
+  - Contracts.Dtos / Contracts.Ports
+  - Domain.Aggregates / Enums / Events / Policies (+ root GlobalUsings.cs bridge)
+  - Application.Ports
+  - Infrastructure.Adapters / DependencyInjection / Outbox
+  - Application/Ports/ITaxUseCaseGuard.cs split out of the mixed ITaxDirectory.cs
+  - Order/Catalog/ProductWorkspace/Host consumers repointed (Contracts-only preserved)
+
+Guards: new TaxModuleAmsc001W2StructureGuardTests (8); W1 guard + TaxArchitectureGuardTests +
+HostModuleEndpointOwnershipTests + ContractsW4CharacterizationTests updated without weakening.
+
+Validation: slnx build 0 errors; Tooba.Tax.Tests 11/11; AMSC guards 16/16;
+Host full suite 2288 passed / 71 failed vs baseline 2287 / 72 -> NEW FAILURES ZERO.
+Schema/migrations UNCHANGED; guards weakened NONE; baselines widened NONE.
+Stop gate USER_REVIEW_TAX_AMSC_001_W2; automaticNextImplementationTask NONE.

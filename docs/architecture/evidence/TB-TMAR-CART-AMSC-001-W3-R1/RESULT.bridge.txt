@@ -1,0 +1,41 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-CART-AMSC-001-W3-R1
+Parent-Task: TB-TMAR-CART-AMSC-001-W3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Certification truth reconciled (documentation/SoT/test only; zero runtime change). W3's stale behaviorChange=NONE replaced by BOUNDED_DEFECT_REPAIR_EXPECTED_FAILURE_MAPPING with a new statusCodesChanged=BOUNDED_EXPECTED_FAILURE_REMAP_500_TO_400_409_503, matching the accepted W1 repair (unexpected 500 platform.unexpected -> catalogued 400/409/503; success payloads, previously-mapped expected failures, routes, DTO shapes and schema unchanged). W3's own runtime behavior change is recorded separately as NONE. The Cart manifest certificationNote was corrected (note wording only; structural fields untouched). One focused guard was extended with a cross-record consistency lock. IMPORTANT VARIANCE: disk truth for Cart-registered descriptors is 25, not the task's expected 26. Re-discovery shows CartErrorCodes declares 27 constants; CartErrorCatalogContributor registers 25 descriptors; checkout.authentication_required is Foundation-owned (FoundationErrorCodes.CheckoutAuthenticationRequired) and consumed-not-registered by Cart; cart.line.currency_missing is declared+localized+thrown but registered by no contributor. W1's "26" refers to 26 localization keys (both resx), not 26 descriptors, so there is no internal repository disagreement — only a task-expectation variance, resolved to disk truth. The prior W3 SoT field cartOwnedCodeCount=27 (misleading) became declaredOrConsumedCodeCount=27, and cartOwnedDescriptorCount is 25. No production/schema/migration/resource delta; manifest structure unchanged; certification preserved.
+Starting-HEAD-State: 3C2119D7
+W3-Implementation-State: PRESERVED
+Production-Code-Change-State: ZERO
+Schema-Migration-Change-State: ZERO
+Resource-Change-State: ZERO
+Manifest-Structural-Change-State: ZERO
+W1-Behavior-Repair-State: VERIFIED
+Behavior-Change-Truth-State: BOUNDED_DEFECT_REPAIR_RECORDED
+Status-Code-Truth-State: BOUNDED_EXPECTED_FAILURE_REMAP_RECORDED
+Declared-Or-Consumed-Code-Count-State: TWENTY_SEVEN
+Cart-Owned-Descriptor-Count-State: CONFLICT
+Shared-Checkout-Authentication-State: FOUNDATION_OWNED_CONSUMED_NOT_REGISTERED
+Duplicate-Descriptor-Ownership-State: ZERO
+Routes-State: UNCHANGED
+Dto-Shape-State: UNCHANGED
+Error-Code-Value-State: UNCHANGED
+Cross-Module-Boundary-State: CONTRACTS_ONLY
+Foreign-App-Infra-Domain-Coupling-State: ZERO
+Manifest-Disk-State: EXACT
+Focused-Guard-State: PASS
+Focused-Build-State: PASS
+Evidence-State: COMPLETE
+Recovery-SoT-State: RECONCILED
+Commit-SHA: b5721b0f10c9f79319f329d7b97df9153f02eee9
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_ARTIFACTS
+User-Work-Preserved: YES
+Final-Certification-State: COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_CART_AMSC_001_W3_R1
+STOP
+END_TOOBA_WORKER_RESULT

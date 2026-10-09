@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Tax.Contracts;
+using Tooba.Tax.Contracts.Ports;
 using Tooba.Tax.Infrastructure.Persistence;
 
 namespace Tooba.Tax.Infrastructure.Adapters;

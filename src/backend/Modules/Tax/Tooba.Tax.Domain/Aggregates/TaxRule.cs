@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Tax.Contracts.Errors;
 
-namespace Tooba.Tax.Domain;
+namespace Tooba.Tax.Domain.Aggregates;
 
 /// <summary>
 /// قاعدهٔ مؤثر به تاریخ با حوزهٔ مالیاتی صریح. نرخ ایران یا تاریخ قانون در کد قفل نیست.

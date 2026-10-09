@@ -1,0 +1,58 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-SUPPORT-AMSC-001-W3-R1
+Parent-Task: TB-TMAR-SUPPORT-AMSC-001-W3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Skill: tooba-architecture-certify
+Mode: BOUNDED_SUPPORT_201_RESPONSE_CONTRACT_REVIEW
+Status: ARCHITECT_DECISION_REQUIRED
+Summary: Bounded review of the two raw 201 create responses in Support's customer/seller ticket-creation endpoints. No production change; no shared factory edit; no guard weakened; no baseline widened. The canonical ApiResponseFactory.Created<T> reproduces the exact 201 status, raw TicketSnapshotDto body and Content-Type; the only wire delta is the additive Location header. No existing canonical member yields 201 + raw DTO without a Location, and no explicit architecture lock permits a raw-201 success mapping, so neither migration nor exception can be self-authorized.
+Starting-HEAD-State: C632DA653D4A34CC6172313A9EF3EF61346E99C0
+Preflight-State: PASS
+Preflight-Detail: branch main; HEAD == origin/main == c632da653d4a34cc6172313a9ef3ef61346e99c0; tracked working tree clean; W0 567ac400, W1 5e8c86ef, W2 aaa15b03, W3 c632da65 all ancestors of HEAD.
+Verified-201-Contract-State: TWO_ROUTES_201_RAW_TICKETSNAPSHOTDTO_JSON_APPLICATION_JSON_NO_LOCATION
+Verified-201-Routes: POST /v1/customer/support/tickets (SupportCustomerEndpoints.CreateAsync) and POST /v1/seller/support/tickets (SupportSellerEndpoints.CreateAsync)
+Verified-201-Source-Locations: src/backend/Modules/Support/Tooba.Support.Endpoints/Customer/SupportCustomerEndpoints.cs:71-73 and src/backend/Modules/Support/Tooba.Support.Endpoints/Seller/SupportSellerEndpoints.cs:55-57
+Verified-201-Failure-Path-State: CANONICAL_APIRESPONSEFACTORY_FROM_UNCHANGED
+Canonical-Equivalence-State: CREATED_REPRODUCES_STATUS_201_BODY_AND_CONTENTTYPE_WITH_ADDITIVE_LOCATION_ONLY
+Canonical-Gap-State: NO_EXISTING_CANONICAL_MEMBER_YIELDS_201_RAW_DTO_WITHOUT_LOCATION
+New-Factory-Capability-Needed-State: YES_FOR_LOCATION_FREE_201_BUT_OUT_OF_SCOPE_THIS_TASK
+Consumer-Location-Dependency-State: ZERO_CONSUMERS_READ_LOCATION
+Consumer-Evidence-State: customer BFF proxy (src/frontend/app/api/customer/support/tickets/route.ts) forwards status + Content-Type only; src/frontend/app/support/support-api.ts create clients read response.ok + JSON body only; docs/evidence/TB-P06-T029 records status 201 only.
+Existing-201-Precedent-State: IDENTITY_REGISTER_AND_REVIEWS_SUBMIT_ARE_CERTIFICATION_NOTES_NOT_EXPLICIT_LOCKS
+Exception-Authority-State: ABSENT
+Exception-Authority-Search-Scope: TMAR-architecture-locks.md, TOOBA-LOCKS.md, AMSC skills, tmar-current-state.json, tmar-module-structure-manifests.json
+Decision-Rationale: The raw 201 is not a necessary compatibility exception (the canonical Created reproduces status/body/Content-Type exactly), but that canonical member also adds a Location header, so migrating does alter the HTTP contract additively - which the objective scopes out and the task forbids doing silently. Symmetrically, keeping the raw 201 needs an explicit lock that does not exist and the task forbids self-authorizing. Therefore the Architect must choose Option A (canonical api.Created migration with additive Location only) or Option B (explicit narrow Architect-authored lock).
+Option-A-State: CANONICAL_MIGRATION_TO_API_CREATED_ADDITIVE_LOCATION_ONLY_MIRRORS_PRODUCTWORKSPACE_W3_R1_PROMOTION_W1_CONTENT_R2
+Option-B-State: ARCHITECT_AUTHORED_EXPLICIT_NARROW_RAW_201_LOCK_FOR_TWO_CREATE_RESPONSES_ONLY
+Proposed-Repair-State: DOCUMENTED_NOT_IMPLEMENTED
+Support-Route-Validator-Proof-State: INTACT_17_ROUTES_9_VALIDATOR_REQUIRED_8_NO_VALIDATOR_REQUIRED
+Production-Change-State: ZERO
+Shared-Factory-Change-State: ZERO
+Schema-Migration-Change-State: ZERO
+Endpoint-Contract-Change-State: ZERO
+Frontend-Change-State: ZERO
+Guard-Weakening-State: NONE
+Baseline-Widening-State: NONE
+Global-Pin-Change-State: NONE
+Manifest-Structural-State: NOT_TOUCHED
+Final-Certification-State: NOT_ALTERED_SUPPORT_AMSC_001_W3_REMAINS_SUPPORT_AMSC_001_CERTIFIED
+Focused-Support-Guard-State: 30_PASSED_0_FAILED_0_SKIPPED
+Focused-Repo-Global-Guard-State: 7_PASSED_3_FAILED_0_SKIPPED
+Pre-Existing-Failure-State: THREE_REPO_GLOBAL_PINS_PREEXISTING_UNRELATED_ZERO_REGRESSION
+Pre-Existing-Failure-Names: TmarCompleteReferenceStructureGateTests.Certified_modules_satisfy_root_allowlists_and_namespace_alignment; TmarDurableGuardTests.Recovery_current_state_is_fresh_and_machine_readable; TmarDurableGuardTests.Recovery_sot_sync_001_current_checkpoint_is_unique_and_stop_is_authoritative
+Changed-Files: docs/ai/tasks/TB-TMAR-SUPPORT-AMSC-001-W3-R1.task.md; docs/architecture/evidence/TB-TMAR-SUPPORT-AMSC-001-W3-R1/{task-receipt.json,review.md,proposed-repair.md,validation.md}; docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md (additive module-local note)
+Evidence-Path: docs/architecture/evidence/TB-TMAR-SUPPORT-AMSC-001-W3-R1/review.md
+Evidence-Root: docs/architecture/evidence/TB-TMAR-SUPPORT-AMSC-001-W3-R1/
+Commit-SHA: e097a5d5a6c497b9590362a6bc52f3357cc9c08f
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_UNTRACKED_ARTIFACTS
+User-Work-Preserved: YES
+Global-Host-Checkpoint-State: PRESERVED
+Global-Host-Checkpoint-Detail: currentHostCheckpoint = HOST_ROOT_FINAL_CERTIFIED; lastAcceptedTask = TB-TMAR-HOST-ROOT-FINAL-CERT-001
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop: USER_REVIEW_SUPPORT_AMSC_001_W3_R1
+STOP
+END_TOOBA_WORKER_RESULT

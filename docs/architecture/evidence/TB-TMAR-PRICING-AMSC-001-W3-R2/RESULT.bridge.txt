@@ -1,0 +1,42 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-PRICING-AMSC-001-W3-R2
+Parent-Task: TB-TMAR-PRICING-AMSC-001-W3-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Bounded INTERNAL_ONLY structure repair only. Removed the ceremonial Tooba.Pricing.Endpoints project (PricingEndpointModule.cs + csproj), its empty /v1/pricing route group and all Host ceremony (using Tooba.Pricing.Endpoints, AddPricingEndpointPresentation(), MapPricingModule(), the Tooba.Pricing.Endpoints ProjectReference), and moved the single IErrorCatalogContributor -> PricingErrorCatalogContributor plus IErrorResourceSet -> PricingErrorResourceSet registrations into PricingModule.AddServices (Infrastructure/DependencyInjection) following the certified Inventory INTERNAL_ONLY precedent - both concrete types stay Contracts-owned in Tooba.Pricing.Contracts.Errors and the registration count is exactly one before and after. /Modules/Pricing/ in Tooba.slnx now groups exactly 5 projects (Application, Contracts, Domain, Infrastructure, Tests). Manifest/SoT made honest: Pricing demoted out of modules[] back to preCertModules (structureCertified false, structureState READY_FOR_CERTIFY, Endpoints project entry removed, Tests entry with forbidden Endpoints folder) so certified count is 25; "Pricing" temporarily removed from structureLock.certifiedModules (24 members) pending a fresh Certify wave; new additive pricingAmsc001W3R2 SoT block plus a module-local Master Recovery checkpoint. Zero business/domain change, zero error-code/descriptor/status/localization change, zero Contracts API redesign, zero schema/migration change, zero new route/request/handler/validator, zero new Endpoints project under another name, zero unrelated module cleanup. Guards repointed, never weakened.
+Starting-HEAD-State: 2E664BB3
+Prior-W3-Certification-State: SUPERSEDED_PENDING_FRESH_CERTIFY
+Structure-State: READY_FOR_CERTIFY
+Http-Applicability-State: INTERNAL_ONLY_NO_ENDPOINTS
+Pricing-Endpoints-Project-State: ABSENT
+Pricing-Http-Route-State: ZERO
+Presentation-Registration-State: INFRASTRUCTURE_MODULE_EXACTLY_ONCE
+Pricing-Project-Count-State: EXACT_5
+Solution-Grouping-State: CANONICAL_5
+Folder-Granularity-State: PROFESSIONAL_SHALLOW
+Path-Namespace-State: EXACT
+Physical-Copy-State: CLEAN
+Root-Allowlist-State: ENFORCED
+Stable-Error-State: PRESERVED_11_OF_11
+Localization-State: PRESERVED_11_EN_11_FA
+Cross-Module-Boundary-State: LEGAL_CONTRACTS_ONLY_BOTH_DIRECTIONS
+Foreign-App-Infra-Domain-Coupling-State: ZERO
+Schema-Migration-State: UNCHANGED
+Behavior-Preservation-State: PRESERVED
+Manifest-Certification-State: PRECERT_READY_FOR_CERTIFY
+StructureLock-Pricing-State: TEMPORARILY_REMOVED_PENDING_CERTIFY
+Global-Host-Checkpoint-State: PRESERVED
+Guards-Weakened-State: NONE
+Baselines-Widened-State: NONE
+Evidence-State: COMPLETE
+Commit-SHA: 7159c8f773c1faa9b4b6d425b19067f50ca27572
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_ARTIFACTS
+User-Work-Preserved: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_PRICING_AMSC_001_W3_R2
+STOP
+END_TOOBA_WORKER_RESULT

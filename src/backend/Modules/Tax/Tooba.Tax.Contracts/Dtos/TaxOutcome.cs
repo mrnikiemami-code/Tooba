@@ -1,4 +1,4 @@
-namespace Tooba.Tax.Contracts;
+namespace Tooba.Tax.Contracts.Dtos;
 
 /// <summary>
 /// نتیجهٔ محاسبهٔ مالیات. معافیت، نرخ صفر، نبودن قاعده و خطای محاسبه یکی نیستند.

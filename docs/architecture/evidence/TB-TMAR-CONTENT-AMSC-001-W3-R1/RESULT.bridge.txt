@@ -1,0 +1,44 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-CONTENT-AMSC-001-W3-R1
+Parent-Task: TB-TMAR-CONTENT-AMSC-001-W3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Bounded recovery/SoT/evidence reconciliation only; zero production change; W3 certification preserved. Recorded the W3 final commit c012345d explicitly in the Master Recovery Content checkpoint and appended a module-local W3-R1 reconciliation block. Reconciled the stale 54-vs-66 focused Content validation metadata to the deterministic certified-HEAD truth: dotnet test Tooba.Host.Tests --filter FullyQualifiedName~Content at HEAD c012345d = 66 passed / 0 failed / 14 skipped (80 total; skips are Postgres Testcontainers), and 67 passed / 0 failed / 14 skipped (81 total) on the final R1 tree after the R1 reconciliation guard fact was added; the 54 value was stale descriptive metadata, and historical W1/W2 wave-local numbers were left untouched. Explicitly marked the historical Host-evacuation Content AMC-001 R4 lineage as HISTORICAL / SUPERSEDED FOR CURRENT CONTENT MODULE RECOVERY while preserving it as evidence, and confirmed the repository-global Host root checkpoint is not displaced. Added one durable R1 reconciliation guard fact locking the R1 SoT record, the Master Recovery W3 SHA, the historical-lineage marker, the preserved W3 architectural truth and automaticNextImplementationTask=NONE. Manifest structure untouched; evidence written under docs/architecture/evidence/TB-TMAR-CONTENT-AMSC-001-W3-R1/.
+Starting-HEAD-State: C012345D
+Production-Scope-State: RECOVERY_SOT_EVIDENCE_ONLY
+Production-Code-Changed-State: ZERO
+W3-Certification-State: CONTENT_AMSC_001_CERTIFIED
+W3-Structure-State: CERTIFIED
+Master-Recovery-W3-SHA-Before-State: MISSING
+Master-Recovery-W3-SHA-After-State: RECORDED_C012345D
+Focused-Validation-Metadata-Before-State: DRIFT_54_VS_66
+Focused-Content-Test-State: PASS
+Focused-Content-Test-Count-State: 66_PASSED_0_FAILED_14_SKIPPED_AT_CERTIFIED_HEAD_80_TOTAL__67_PASSED_0_FAILED_14_SKIPPED_ON_FINAL_R1_TREE_81_TOTAL
+Focused-Validation-Metadata-After-State: RECONCILED
+Historical-Content-Lineage-State: PRESERVED
+Historical-Content-Lineage-Authority-State: SUPERSEDED_FOR_CURRENT_MODULE_RECOVERY
+Global-Host-Checkpoint-State: PRESERVED
+Routes-State: UNCHANGED
+Dto-Shape-State: UNCHANGED
+Error-Code-State: UNCHANGED
+Resource-State: UNCHANGED
+Schema-Migration-State: UNCHANGED
+Manifest-Structural-State: NOT_TOUCHED
+Cross-Module-Boundary-State: CONTRACTS_ONLY
+Foreign-App-Infra-Domain-Coupling-State: ZERO
+Focused-Cert-Guard-State: PASS
+Json-Parse-State: PASS
+Evidence-State: COMPLETE
+Recovery-SoT-State: RECONCILED
+Commit-SHA: 147a6f2c111a0c641774700da9fb7414167c98b8
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_ARTIFACTS
+User-Work-Preserved: YES
+Final-Certification-State: COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_CONTENT_AMSC_001_W3_R1
+STOP
+END_TOOBA_WORKER_RESULT

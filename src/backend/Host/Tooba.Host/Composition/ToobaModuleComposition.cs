@@ -8,7 +8,7 @@ using Tooba.Pricing.Infrastructure.DependencyInjection;
 using Tooba.Inventory.Infrastructure.DependencyInjection;
 using Tooba.Cart.Infrastructure.DependencyInjection;
 using Tooba.Order.Infrastructure;
-using Tooba.Tax.Infrastructure;
+using Tooba.Tax.Infrastructure.DependencyInjection;
 using Tooba.Promotion.Infrastructure.DependencyInjection;
 using Tooba.Payment.Infrastructure.Adapters;
 using Tooba.Payment.Infrastructure.DependencyInjection;

@@ -1,5 +1,5 @@
 using Tooba.BuildingBlocks;
-using Tooba.Tax.Domain;
+using Tooba.Tax.Domain.Events;
 
 namespace Tooba.Tax.Infrastructure.Events;
 

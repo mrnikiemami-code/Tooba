@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Xunit;
-using Tooba.Tax.Domain;
+using Tooba.Tax.Domain.Aggregates;
 using Tooba.Tax.Infrastructure.Persistence;
 
 namespace Tooba.Tax.Tests.Infrastructure;

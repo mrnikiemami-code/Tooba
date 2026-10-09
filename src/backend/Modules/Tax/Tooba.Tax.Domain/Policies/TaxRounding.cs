@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Tax.Domain;
+namespace Tooba.Tax.Domain.Policies;
 
 /// <summary>
 /// گرد کردن قطعی مبلغ مالیات طبق مقیاس ارز. ممیز شناور نیست.

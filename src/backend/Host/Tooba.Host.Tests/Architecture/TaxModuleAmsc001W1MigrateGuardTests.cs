@@ -11,6 +11,9 @@ namespace Tooba.Host.Tests.Architecture;
 /// Locks the single canonical Contracts stable-code home with its declared-code guard, the canonical
 /// typed-fault seam, the localization surface (catalog + bilingual resources) and the zero-foreign
 /// coupling boundary established by the migrate wave.
+///
+/// TB-TMAR-TAX-AMSC-001-W2 made every production namespace path-derived, so the physical paths pinned
+/// here follow the post-W2 tree while keeping every W1 assertion intact (never weakened).
 /// </summary>
 public sealed class TaxModuleAmsc001W1MigrateGuardTests
 {

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
-using Tooba.Tax.Domain;
+using Tooba.Tax.Domain.Aggregates;
 using Tooba.Tax.Infrastructure.Persistence.Configurations;
 
 namespace Tooba.Tax.Infrastructure.Persistence;

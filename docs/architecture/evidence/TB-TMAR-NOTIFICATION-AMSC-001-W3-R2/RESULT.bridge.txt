@@ -1,0 +1,39 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-NOTIFICATION-AMSC-001-W3-R2
+Parent-Task: TB-TMAR-NOTIFICATION-AMSC-001-W3-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Structure repair per tooba-architecture-structure: ALL TEN Notification use-case leaf folders flattened into the existing Customer/Seller Commands/Queries axes (16 git mv renames, ten emptied leaf dirs deleted, two stale empty Customer/Seller Validators shells removed); namespaces repointed to exactly Tooba.Notification.Application.{Customer|Seller}.{Commands|Queries}; references repointed (Endpoints x2 usings, Host Program.cs CQRS scan anchor, module behavior test usings); zero child directories now under the four request axes; all ten request sources + six validators directly colocated; stale leaf path scan zero hits; new durable guard NotificationModuleAmsc001W3R2StructureRepairGuardTests (6 tests) added; W1/W3 guard paths repointed where they hard-coded the old leaf paths, no guard weakened; NotificationFoundationTests route-fault assertions repointed InvalidOperationException -> ContractOperationException (expected exception type only, W1 typed-fault truth preserved); additive SoT notificationModuleAmsc001W3R2 recorded with structureState READY_FOR_CERTIFY and recoveryFollowupRequired W3_R1_FINAL_SHA_7B8AB79E_NOT_YET_RECORDED; manifest NOT modified (physical allowlist truth unchanged), certification membership untouched, no certification verdict issued; full evidence set (11 docs) under docs/architecture/evidence/TB-TMAR-NOTIFICATION-AMSC-001-W3-R2/. Focused validation: Notification.Application/Endpoints/Tests/Host builds 0 errors; Tooba.Notification.Tests 18/18; --filter NotificationModuleAmsc001 26/26; all Notification Host guards 29 passed / 2 skipped (Testcontainers). Behaviour, routes, validator semantics, schema, DI untouched.
+Starting-HEAD-State: 7B8AB79E
+Prior-W3-Certification-State: STRUCTURE_DRIFT_FOUND
+Structure-Skill-State: READY_FOR_CERTIFY
+Folder-Granularity-Before-State: OVER_FOLDERED
+Folder-Granularity-After-State: PROFESSIONAL_SHALLOW
+Single-File-Request-Leaf-Before-Count: 4
+Single-File-Request-Leaf-After-Count: 0
+Per-UseCase-Request-Leaf-After-Count: 0
+Path-Namespace-State: EXACT
+Physical-Copy-State: CLEAN
+Root-Allowlist-State: ENFORCED
+Solution-Explorer-State: CANONICAL
+Production-Behavior-Changed-State: ZERO
+Routes-State: UNCHANGED
+Validator-Semantics-State: UNCHANGED
+Schema-Migration-State: UNCHANGED
+Cross-Module-Boundary-State: CONTRACTS_ONLY
+Foreign-App-Infra-Domain-Coupling-State: ZERO
+Host-Final-Closure-State: PRESERVED
+Recovery-Followup-State: W3_R1_SHA_7B8AB79E_PENDING_FOR_POST_CERT_RECOVERY
+Focused-Validation-State: PASS
+Evidence-State: COMPLETE
+Commit-SHA: 028ef769c4face48308a9dffb7f9714826e1be7c
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_ARTIFACTS
+User-Work-Preserved: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_NOTIFICATION_AMSC_001_W3_R2
+STOP
+END_TOOBA_WORKER_RESULT

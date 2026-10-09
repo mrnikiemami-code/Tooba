@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Tooba.Tax.Domain;
+using Tooba.Tax.Domain.Aggregates;
 
 namespace Tooba.Tax.Infrastructure.Persistence.Configurations;
 

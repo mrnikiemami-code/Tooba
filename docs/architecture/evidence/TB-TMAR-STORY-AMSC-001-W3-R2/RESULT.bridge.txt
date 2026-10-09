@@ -1,0 +1,83 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-STORY-AMSC-001-W3-R2
+Parent-Task: TB-TMAR-STORY-AMSC-001-W3-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Mode: BOUNDED_DURABLE_ROUTE_REQUEST_SET_EQUALITY_PROOF
+Skill: tooba-architecture-certify
+Target: src/backend/Modules/Story (test/evidence only)
+Starting-HEAD: 47284caad070b28ae79e803946dd19aed4b1678c
+Expected-Branch: main
+
+Preflight:
+- git fetch origin; branch main; HEAD == origin/main == 47284caad070b28ae79e803946dd19aed4b1678c before work; no unrelated working-tree edits.
+- Ancestry verified: W0 0c73390a3211e0ee9057e9234d62d3e4f14b5e4e -> W1 2a09e7bb7f1ab687435007951160b4bcfefb4c18 -> W2 4cd9a6cc543ccd307d775dfe703459de7b12c95d -> W3 39ab324e9c57e342516202bdd8df95953dda6439 -> W3-R1 47284caa.
+- AGENTS.md, tooba-architecture-certify (§6a), Story AMSC W0-W3/W3-R1 evidence, StoryModuleAmsc001W3CertGuardTests, StoryModuleAmsc001W3R1RecoveryGuardTests and StoryModuleAmcW5ValidatorGuardTests read; the 25/16/9 classification was re-verified against disk and preserved.
+- No production defect found: no incorrect dispatch, unclassified client input, missing validator or forbidden boundary. No CERTIFICATION_REVIEW_BLOCKED condition arose.
+
+Route-Request-Exact-Map-State: EXACT_25_ROUTES_25_SENDS_25_REQUESTS_25_HANDLERS
+- Full audience + verb + full route + handler -> actual dispatched request map re-derived from endpoint source (MapGroup prefix per audience; inline Send(new T(...)) and traced variable Send).
+- storefront 1 + seller 9 + admin 15 = 25 routes; 25 ISender.Send call sites (exactly one per route); 25 distinct actual request types; exactly one real IRequestHandler<,> and exactly one record declaration per request; zero orphan, duplicate or unmapped route; zero Host-owned Story route.
+- Parser fails closed on: absent Send, more than one Send, unrecognised Send expression, untraceable variable dispatch, route-registration-looking .Map* outside the five known verbs, a .Map* call not matched by the route regex, and an unextractable member body.
+
+Request-Validator-Matrix-State: EXHAUSTIVE_16_VALIDATOR_REQUIRED_9_NO_VALIDATOR_REQUIRED_CONCRETE_ABSTRACTVALIDATOR_DI_VERIFIED
+- Dispatched request set derived from disk equals the 16 VALIDATOR_REQUIRED + 9 NO_VALIDATOR_REQUIRED partition exactly: disjoint halves, exact union 25, no orphan/duplicate/unclassified/phantom.
+- 16 concrete AbstractValidator<T> targets read from Stories/Validators/StoryValidators.cs equal the required half one-to-one.
+- Non-circular DI proof: a real ServiceCollection built via AddToobaCqrsFoundation(typeof(IStoryDirectory).Assembly) resolves each required request to its expected validator type, resolves null for each of the nine exemptions, every classified request is a real IBaseRequest, and ValidationBehavior<,> is installed exactly once.
+- Validators emit stable machine codes only (no WithMessage).
+
+Exemption-Provenance-State: NON_CIRCULAR_ALL_NINE_ROUTE_GUID_SERVER_DERIVED_ACTOR_NO_CLIENT_INPUT
+- Every route {..} segment in all three endpoint files carries the :guid constraint.
+- TenantId resolved fail-closed via StoryHttpErrors.ResolveTenantId(ICurrentTenant tenant); actor and sellerPartyId only from auth.RequireAuthorizedAsync(...); no X-Tooba-Dev-Actor-User-Id and no Request.Headers shortcut.
+- Every constructor argument of every exempt request is a route-bound identifier or a server-derived value, never a client-bound body.
+- Caller-controlled optional locale/market on GetPublicStoriesQuery remain VALIDATOR_REQUIRED with shape-only rules (StoryRules.LocaleMaxLength/MarketMaxLength); optionality was not treated as safety.
+
+Mutation-Negative-Guard-State: IN_MEMORY_WITHIN_SET_SWAP_PRESERVES_ROUTE_AND_SEND_COUNTS_AND_TYPE_SET_EXACT_MAP_FAILS
+- Mutation A: remap admin "/reorder" to AdminUpdateAsync. Route count (15/25), sender.Send count and the distinct constructed-name set are all preserved; the legacy count-only and set-only Story guards still pass, yet the exact route -> request map fails (the route now dispatches UpdateAdminStoryCommand and AdminReorderAsync is orphaned).
+- Mutation B: replace a seller dispatch; route/send counts preserved while the constructed-name set changes.
+- The shipped source is re-read afterwards and still passes the exact map; no production byte was modified and no on-disk mutation was required (the parser is a pure function over source text). Nothing mutated was committed.
+
+Fail-Closed-State: ABSENT_SEND_MULTI_SEND_UNRECOGNISED_EXPRESSION_UNTRACEABLE_VARIABLE_UNKNOWN_MAP_SYNTAX_UNEXTRACTABLE_BODY_ALL_THROW
+
+Production-Code-Changed-State: ZERO
+Guards-Weakened-State: NONE
+Baselines-Widened-State: NONE
+Manifest-State: NOT_TOUCHED (no false claim found; no correction required)
+Schema-Migration-State: UNCHANGED
+Frontend-State: FROZEN_UNTOUCHED
+Certified-Truth-Preserved-State: STORY_AMSC_001_W3_AND_W3_R1_UNCHANGED
+Historical-Lineage-State: PRESERVED_HISTORICAL_NOT_REWRITTEN
+Global-Host-Checkpoint-State: PRESERVED (lastAcceptedTask TB-TMAR-HOST-ROOT-FINAL-CERT-001; currentHostCheckpoint HOST_ROOT_FINAL_CERTIFIED; workflowStop USER_REVIEW_HOST_ROOT_FINAL_CERT_001; automaticNextImplementationTask NONE)
+Json-Parse-State: PASS
+
+Focused-Validation-State:
+- dotnet build src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj -> Build succeeded, 0 errors.
+- StoryModuleAmsc001W3R2SetEqualityGuardTests -> 10/10 passed.
+- Story + HostStory + StoryFoundation + ErrorCatalog focused filter -> 60 tests, 58 passed, 2 pre-existing Skipped (live-DB facts), 0 failed.
+- FullyQualifiedName~Architecture -> Failed 43 / Passed 1267 / Total 1310. The exact pre-existing failure-name set is byte-identical to the clean starting HEAD: newly-failing [] and no-longer-failing []. No Story-owned fact fails.
+
+Unrelated-Baseline-Failure-Names: UNCHANGED_EXACTLY_25_DISTINCT_NAMES_IDENTICAL_TO_STARTING_HEAD (HostAdminAmc* W6-W36 + HostGrid/HostSeller/HostDevelopmentEnricher + TmarDurable/TmarCompleteReferenceStructureGate/TmarSourceSizeAndInfraApp + ProductWorkspace/Pricing certify guards). None newly caused; none repaired; no guard relaxed and no baseline widened.
+
+Evidence-Path: docs/architecture/evidence/TB-TMAR-STORY-AMSC-001-W3-R2/
+- route-request-set-equality.md (derived 25-row map, matrix, exemption provenance, mutation proof, verdict)
+- task.md, task-receipt.json (claimed artifact), patch-sot.js (reproducible SoT patch with preservation assertions)
+- Guard: src/backend/Host/Tooba.Host.Tests/Architecture/StoryModuleAmsc001W3R2SetEqualityGuardTests.cs
+- SoT: docs/architecture/tmar-current-state.json storyAmsc001W3R2 (additive; no self-referential commit placeholder)
+- Master Recovery: docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md "Story AMSC W3-R2 route-to-dispatch set-equality proof"
+
+Changed-Files:
+- src/backend/Host/Tooba.Host.Tests/Architecture/StoryModuleAmsc001W3R2SetEqualityGuardTests.cs (added)
+- docs/architecture/tmar-current-state.json (storyAmsc001W3R2 appended)
+- docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md (module-local W3-R2 checkpoint)
+- docs/ai/tasks/TB-TMAR-STORY-AMSC-001-W3-R2.task.md (added)
+- docs/architecture/evidence/TB-TMAR-STORY-AMSC-001-W3-R2/{route-request-set-equality.md,task.md,task-receipt.json,patch-sot.js,recover-claim.js} (added)
+
+Commit-SHA: c886698dd644088a2b3a5b31cbd3ec24d492c23d
+HEAD-Equals-Origin-Main: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_STORY_AMSC_001_W3_R2
+STOP
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,43 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-CART-AMSC-001-W3-R2
+Parent-Task: TB-TMAR-CART-AMSC-001-W3-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Registered exactly one Cart error descriptor for the reachable fail-closed CartErrorCodes.LineCurrencyMissing (cart.line.currency_missing) as ErrorClassification.Business / HTTP 409, mirroring the existing cart.pricing.quote_missing line-truth convention, so the fault no longer falls back to platform.unexpected 500. Cart-owned descriptors 25 -> 26; duplicate descriptor ownership ZERO; checkout.authentication_required remains Foundation-owned consumed-not-registered. Reconcile-only SoT/evidence/guard updates; exactly one production file changed; no route/DTO/error-code-value/resx/schema/migration/manifest-structure change.
+Starting-HEAD-State: B5721B0F
+Production-Scope-State: EXACT_ONE_ALLOWED_CART_CONTRIBUTOR
+Line-Currency-Reachability-State: VERIFIED
+Line-Currency-Descriptor-Before-State: ABSENT
+Line-Currency-Descriptor-After-State: EXACTLY_ONE
+Line-Currency-Classification-State: Business
+Line-Currency-Http-Status-State: 409
+Declared-Or-Consumed-Code-Count-State: TWENTY_SEVEN
+Cart-Owned-Descriptor-Count-State: TWENTY_SIX
+Shared-Checkout-Authentication-State: FOUNDATION_OWNED_CONSUMED_NOT_REGISTERED
+Unregistered-Reachable-Cart-Code-State: ZERO
+Duplicate-Descriptor-Ownership-State: ZERO
+Routes-State: UNCHANGED
+Dto-Shape-State: UNCHANGED
+Error-Code-Value-State: UNCHANGED
+Resource-State: UNCHANGED
+Schema-Migration-State: UNCHANGED
+Manifest-Structural-State: UNCHANGED
+Cross-Module-Boundary-State: CONTRACTS_ONLY
+Foreign-App-Infra-Domain-Coupling-State: ZERO
+Focused-Cart-Guard-State: PASS
+Error-Catalog-Unique-Guard-State: PASS
+Focused-Build-State: PASS
+Evidence-State: COMPLETE
+Recovery-SoT-State: RECONCILED
+Commit-SHA: 5e11b529de72ad04862405c5ac07b68b63892714
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_ARTIFACTS
+User-Work-Preserved: YES
+Final-Certification-State: COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_CART_AMSC_001_W3_R2
+STOP
+END_TOOBA_WORKER_RESULT

@@ -15,7 +15,7 @@ using Tooba.Order.Infrastructure.Integrations.Fulfillment;
 using Tooba.Order.Infrastructure.Integrations.Payment;
 using Tooba.Order.Infrastructure.Messaging;
 using Tooba.Order.Infrastructure.ReservationCycle;
-using Tooba.Tax.Infrastructure;
+using Tooba.Tax.Infrastructure.DependencyInjection;
 using Tooba.Promotion.Infrastructure.DependencyInjection;
 using Tooba.Payment.Infrastructure.Adapters;
 using Tooba.Payment.Infrastructure.DependencyInjection;

@@ -2243,5 +2243,100 @@
   "uncertifiedHttpOwningModules": [
     "Wallet"
   ],
-  "preCertModules": []
+  "preCertModules": [
+    {
+      "module": "Tax",
+      "structureCertified": false,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "Pre-certification structure record for TB-TMAR-TAX-AMSC-001 W2 (tooba-architecture-structure). Wave lineage W0 36d243cc -> W1 fa87201a -> W2 this commit. Tax is INTERNAL_ONLY: the W0 applicability gate proved 0 module HTTP routes, 0 endpoint-reachable requests and a deliberately empty /v1/tax MapGroup, so the ceremonial Tooba.Tax.Endpoints project, its TaxEndpointModule, the empty route group, the Host using/AddTaxEndpointPresentation/MapTaxModule composition call and the Host/Tests project references were retired; the INTERNAL_ONLY shape is the certified Inventory/Pricing precedent (four production projects + Tests, presentation registration owned by the Infrastructure composition root). Capability-first shallow folders: Contracts/{Dtos,Errors,Ports,Resources} (the single canonical stable-code home + the bilingual TaxErrors.resx/.fa.resx pair), Domain/{Aggregates,Enums,Events,Policies} with the single GlobalUsings namespace bridge at the root, Application/{Composition,Ports} (the TaxOperation typed-fault seam + the module-internal port/guard; zero CQRS ceremony because zero requests are endpoint-reachable), Infrastructure/{Adapters,DependencyInjection,Events,Outbox,Persistence(+Configurations,+Migrations)}. Path-Namespace-State = EXACT (0 mismatches across all production projects); Physical-Copy-State = CLEAN; Root-Allowlist-State = ENFORCED; Solution-Explorer-State = CANONICAL (/Modules/Tax/ with exactly five projects). structureCertified stays false until the W3 Certify wave.",
+      "projects": [
+        {
+          "projectName": "Tooba.Tax.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Boundary vocabulary lives under Dtos/ (TaxOutcome), Errors/ (the single canonical TaxErrorCodes home plus the ErrorCatalog contributor and the ErrorResourceSet), Ports/ (ITaxCalculator/TaxCalculationRequest/TaxCalculationResult, ITaxQueryGateway, ITaxDevelopmentSeedGateway, ITaxSchemaMigrator) and Resources/ (bilingual TaxErrors.resx/.fa.resx). Path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "TaxErrorCodes.cs",
+            "TaxCalculatorContracts.cs",
+            "TaxQueryContracts.cs",
+            "ITaxDevelopmentSeedGateway.cs",
+            "ITaxSchemaMigrator.cs",
+            "TaxOutcome.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Tax.Domain",
+          "rootAllowlist": [
+            "GlobalUsings.cs"
+          ],
+          "rootAllowlistJustification": "GlobalUsings.cs only: the single namespace bridge that keeps the capability-first Domain (Aggregates/ Enums/ Events/ Policies/) cohesive after the path<->namespace split, exactly as the certified Catalog/Order/Pricing Domain precedent. No capability/implementation type lives at the root; path<->namespace is exact for every type file.",
+          "forbiddenRootFiles": [
+            "TaxDomain.cs",
+            "TaxRule.cs",
+            "TaxCategory.cs",
+            "TaxOfferClassification.cs",
+            "TaxRuleEnums.cs",
+            "TaxDomainEvents.cs",
+            "TaxRounding.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Errors",
+            "ValueObjects"
+          ]
+        },
+        {
+          "projectName": "Tooba.Tax.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Tax owns zero endpoint-reachable requests, so the Application surface stays deliberately shallow: Composition/ holds the typed-fault seam TaxOperation and Ports/ holds ITaxDirectory plus the module-internal ITaxUseCaseGuard. No Commands/Queries/Validators/Models/Handlers/Requests ceremony may be invented; path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "TaxOperation.cs",
+            "ITaxDirectory.cs",
+            "ITaxUseCaseGuard.cs",
+            "TaxContracts.cs",
+            "TaxErrorCodes.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Validators",
+            "Models",
+            "Handlers",
+            "Requests"
+          ]
+        },
+        {
+          "projectName": "Tooba.Tax.Infrastructure",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No root .cs. Module DI lives under DependencyInjection/ (TaxModule.cs, which also carries the single error catalog/resource registration because Tax is INTERNAL_ONLY), the four-port adapter implementations and the migration tooling entrypoint under Adapters/, the outbox translation under Outbox/, the outbox poll targets under Events/ and the EF model plus the single unchanged migration under Persistence/(Configurations,Migrations); path<->namespace is exact.",
+          "forbiddenRootFiles": [
+            "TaxModule.cs",
+            "TaxDirectory.cs",
+            "TaxDbContext.cs",
+            "TaxEvents.cs",
+            "TaxOutboxRegistration.cs",
+            "TaxModuleMigration.cs",
+            "TaxSchemaMigrator.cs",
+            "TaxDevelopmentSeedGateway.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations",
+            "Repositories",
+            "Directories",
+            "Messaging"
+          ]
+        },
+        {
+          "projectName": "Tooba.Tax.Tests",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Test-only project with Architecture/ durable guards plus Contracts/ Domain/ Infrastructure/ behavior suites and no root .cs. The retired Endpoints/ test folder must not resurrect (W2 removed the ceremonial Endpoints project).",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": [
+            "Endpoints"
+          ]
+        }
+      ],
+      "structureState": "READY_FOR_CERTIFY",
+      "structureAuthorityTask": "TB-TMAR-TAX-AMSC-001-W2"
+    }
+  ]
 }

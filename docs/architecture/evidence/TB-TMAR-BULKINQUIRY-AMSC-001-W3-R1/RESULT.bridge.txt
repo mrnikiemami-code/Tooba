@@ -1,0 +1,42 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-BULKINQUIRY-AMSC-001-W3-R1
+Parent-Task: TB-TMAR-BULKINQUIRY-AMSC-001-W3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Bounded recovery/SoT/evidence reconciliation only; zero production change; W3 certification preserved. Corrected the historical W1 false claim that Domain -> Contracts was removed: commit 9e9e37df never modified Tooba.BulkInquiry.Domain.csproj, so the Domain project keeps its legitimate own-module reference to Tooba.BulkInquiry.Contracts for the single stable constant BulkInquiryErrorCodes.Rejected (self-module layering, not cross-module coupling; foreign App/Infra/Domain coupling ZERO). Recorded W3 final commit 67b5b55a explicitly in the Master Recovery BulkInquiry checkpoint and appended a module-local W3-R1 reconciliation block. Reconciled focused validation metadata from deterministic runs (23 passed / 0 failed / 2 skipped at certified HEAD; 24 passed / 0 failed / 2 skipped on the final R1 tree after the R1 guard fact was added). Added a durable R1 reconciliation guard fact locking Domain reference allowlist, W1 truth, R1 SoT record, Master Recovery W3 SHA, preserved global Host checkpoint and automaticNextImplementationTask=NONE.
+Starting-HEAD-State: 67B5B55A
+Production-Scope-State: RECOVERY_SOT_EVIDENCE_ONLY
+Production-Code-Changed-State: ZERO
+W1-Domain-Contracts-Claim-Before-State: FALSE_REMOVED_CLAIM
+W1-Domain-Contracts-Claim-After-State: PRESERVED_OWN_MODULE_CONTRACTS_REFERENCE
+W1-Domain-Csproj-Commit-Diff-State: NOT_CHANGED_BY_W1
+Current-Domain-Reference-State: BUILDINGBLOCKS_PLUS_OWN_BULKINQUIRY_CONTRACTS
+Cross-Module-Boundary-State: CONTRACTS_ONLY
+Foreign-App-Infra-Domain-Coupling-State: ZERO
+Master-Recovery-W3-SHA-State: RECORDED_67B5B55A
+Historical-AMC-Lineage-State: PRESERVED
+Focused-BulkInquiry-Test-State: PASS
+Focused-BulkInquiry-Test-Count-State: 24_0_2
+Focused-Cert-Guard-State: PASS
+Json-Parse-State: PASS
+Routes-State: UNCHANGED
+Dto-Shape-State: UNCHANGED
+Error-Code-State: UNCHANGED
+Resource-State: UNCHANGED
+Schema-Migration-State: UNCHANGED
+Manifest-Structural-State: NOT_TOUCHED
+Global-Host-Checkpoint-State: PRESERVED
+Evidence-State: COMPLETE
+Recovery-SoT-State: RECONCILED
+Commit-SHA: 4de556b565ddc49185b1904907f09718d56faf5a
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_ARTIFACTS
+User-Work-Preserved: YES
+Final-Certification-State: COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_BULKINQUIRY_AMSC_001_W3_R1
+STOP
+END_TOOBA_WORKER_RESULT

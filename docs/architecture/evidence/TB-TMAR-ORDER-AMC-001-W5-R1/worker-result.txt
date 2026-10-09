@@ -1,0 +1,38 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-ORDER-AMC-001-W5-R1
+Parent-Task: TB-TMAR-ORDER-AMC-001-W5
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Reconciled the single Order structure-manifest entry to the already-certified disk state: exactly five production projects with rootAllowlist equal to real top-level production .cs files, added a durable manifest-disk guard, corrected W5 shipping_service wording, and reasserted final certification. Zero production change.
+Starting-HEAD-State: E648F32E
+W5-Implementation-State: PRESERVED
+Production-Code-Change-State: ZERO
+Order-Manifest-Entry-Count-State: ONE
+Order-Manifest-Project-Count-State: FIVE
+Order-Domain-Manifest-State: EXACT
+Order-Contracts-Manifest-State: EXACT
+Order-Application-Manifest-State: EXACT
+Order-Endpoints-Manifest-State: EXACT
+Order-Infrastructure-Manifest-State: EXACT
+Manifest-Disk-Equality-State: EXACT
+Structure-Certified-State: TRUE
+Lock-Version-State: ARCH-COMPLETE-002
+Message-Classification-State: ZERO
+Foreign-App-Infra-Domain-Coupling-State: ZERO
+W5-Evidence-Wording-State: CORRECTED
+Recovery-SoT-State: RECONCILED
+Focused-Guard-State: PASS
+Focused-Build-State: PASS
+Evidence-State: COMPLETE
+Docs-Commit-SHA: 922bffa1b52f81ea4f6734684c54ad4932375fc0
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN
+User-Work-Preserved: YES
+Final-Certification-State: COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_ORDER_AMC_001_W5_R1
+STOP
+END_TOOBA_WORKER_RESULT

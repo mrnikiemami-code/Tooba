@@ -99,7 +99,7 @@ public sealed class HostDevelopmentEnricherClosureGuardTests
         var root = FindRepoRoot();
         foreach (var relative in new[]
                  {
-                     "src/backend/Modules/Party/Tooba.Party.Contracts/IPartyDevelopmentSeedGateway.cs",
+                     "src/backend/Modules/Party/Tooba.Party.Contracts/Ports/IPartyDevelopmentSeedGateway.cs",
                      "src/backend/Modules/Pricing/Tooba.Pricing.Contracts/Ports/IPricingDevelopmentSeedGateway.cs",
                      "src/backend/Modules/Inventory/Tooba.Inventory.Contracts/Availability/IInventoryDevelopmentSeedGateway.cs",
                      "src/backend/Modules/Tax/Tooba.Tax.Contracts/Ports/ITaxDevelopmentSeedGateway.cs",

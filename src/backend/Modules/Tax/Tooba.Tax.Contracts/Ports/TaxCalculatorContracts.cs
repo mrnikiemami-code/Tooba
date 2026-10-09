@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
+using Tooba.Tax.Contracts.Dtos;
 
-namespace Tooba.Tax.Contracts;
+namespace Tooba.Tax.Contracts.Ports;
 
 /// <summary>
 /// ورودی محاسبه. نرخ را مشتری تزریق نمی‌کند؛ حوزه از Locale حدس زده نمی‌شود.

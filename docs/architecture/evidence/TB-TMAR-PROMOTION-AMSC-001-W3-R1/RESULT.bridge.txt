@@ -1,0 +1,30 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-PROMOTION-AMSC-001-W3-R1
+Parent-Task: TB-TMAR-PROMOTION-AMSC-001-W3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: CERTIFICATION_REVIEW_BLOCKED
+Summary: Independent W3 audit confirms routes 21/21 (distinct, ISender-only), Contracts-only boundary, 40-code catalog (13 HTTP descriptors, 40/40 bilingual), ARCH-COMPLETE-002 structure, migrations unchanged, Host checkpoint preserved and a byte-identical Host failure name set vs W2. BLOCKED on one classification defect: ListMerchandisingCampaignTypesQuery binds a client-supplied locale (endpoint line 40, request line 12, composer line 126) and is not validator-covered, so it is VALIDATOR_REQUIRED and the true matrix is 19+2, not 18+3; the module already validates Locale via BeWellFormedLocale+LocaleInvalid elsewhere. W3 manifest/SoT cert text, certify.md and the W3 guard all repeat the wrong 18+3 and must be corrected by a narrowly scoped repair.
+Endpoint-Route-State: VERIFIED_21
+Request-Validator-Matrix-State: CONFLICT
+Boundary-State: VERIFIED_CONTRACTS_ONLY
+Error-Catalog-State: VERIFIED
+Structure-State: VERIFIED_ARCH_COMPLETE_002
+Schema-Migration-State: UNCHANGED
+Host-Checkpoint-State: PRESERVED
+Host-Failure-Baseline-State: SAME_FAILED_NAME_SET
+Extractability-State: ARCHITECTURAL_ONLY_RUNTIME_UNPROVEN
+Certification-Review-State: BLOCKED
+Production-Code-Changed-State: ZERO
+SoT-Manifest-Changed-State: ZERO
+Guards-Weakened-State: NONE
+Baselines-Widened-State: NONE
+Evidence-Path: docs/architecture/evidence/TB-TMAR-PROMOTION-AMSC-001-W3-R1/
+Commit-SHA: 85d9818d79fa0b1b906c52af16b1a33f1c2149ce
+HEAD-Equals-Origin-Main: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_PROMOTION_AMSC_001_W3_R1
+STOP
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,35 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-PAYMENT-AMSC-001-W3-R3
+Parent-Task: TB-TMAR-PAYMENT-AMSC-001-W3-R2
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Recovery/history-integrity repair only. Restored paymentAmsc001W1.stableErrorCodeState to its exact historical 3-consumed value (CONTRACTS_OWNED_28_DECLARED_24_REGISTERED_3_INTENTIONALLY_CONSUMED_ISKNOWN_GUARDED), which R2 had rewritten in place while claiming additive preservation; kept the R2 additive stableErrorCodeStateReconciliation field pointing to R2 current authoritative truth; preserved R2 authoritative 28 declared / 27 KnownCodes / 24 Payment-owned descriptors / 4 foreign declared-consumed / 3 foreign in KnownCodes / admin.authorization.denied excluded; preserved R1 lineage and all W3 authority; added paymentAmsc001W3R3 final closure block and one short Master Recovery R3 closure note. Zero production behavior change, zero manifest structural change, zero schema/migration change.
+Starting-HEAD-State: 83BC2217
+Production-Code-Changed-State: ZERO
+Current-Certification-Authority-State: W3_502D73E0
+Recovery-Authority-State: R2_83BC2217
+Historical-W1-Field-State: RESTORED_3_CONSUMED
+Additive-Reconciliation-State: PRESERVED
+Authoritative-Error-Truth-State: EXACT_28_27_24_4_3_ADMIN_EXCLUDED
+R1-Lineage-State: PRESERVED
+R2-Lineage-State: PRESERVED
+Manifest-Structural-State: NOT_TOUCHED
+Schema-Migration-State: UNCHANGED
+Global-Host-Checkpoint-State: PRESERVED
+Guards-Weakened-State: NONE
+Baselines-Widened-State: NONE
+Json-Parse-State: PASS
+Evidence-State: COMPLETE
+Recovery-SoT-State: FINAL_CLOSED
+Commit-SHA: a1d9ecfbf099ae1c6b80479a6dc2d476266cfc7c
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_ARTIFACTS
+User-Work-Preserved: YES
+Final-Certification-State: COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_PAYMENT_AMSC_001_W3_R3
+STOP
+END_TOOBA_WORKER_RESULT

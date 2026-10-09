@@ -1,0 +1,39 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-ADDRESSBOOK-AMSC-001-W3-R1
+Parent-Task: TB-TMAR-ADDRESSBOOK-AMSC-001-W3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Reconciled the W3 certification truth only. W3 no longer claims behaviorChange=NONE/statusCodesChanged=NONE; it now records BOUNDED_DEFECT_REPAIR_EXPECTED_FAILURE_MAPPING and BOUNDED_EXPECTED_FAILURE_REMAP_500_TO_404_400, matching the accepted W1 bounded expected-failure repair (unexpected 500 platform.unexpected -> catalogued 404 customer.address.missing; actor/escaped field-shape 500 -> catalogued 400 customer.address.*). Count truth re-discovered from disk: 11 new owned codes + 1 pre-existing retained = 12 owned; customer.session.required shared/Foundation-owned, consumed not registered; duplicate descriptor ownership ZERO. Production source, routes, DTO shapes, error-code values, resources, schema and migrations untouched; the structure manifest was not modified. Certification preserved. Focused AddressBook guard 34 passed / 4 skipped / 0 failed; focused build 0 errors.
+Starting-HEAD-State: 3312A436
+W3-Implementation-State: PRESERVED
+Production-Code-Change-State: ZERO
+Schema-Migration-Change-State: ZERO
+Manifest-Structure-Change-State: ZERO
+W1-Behavior-Repair-State: VERIFIED
+Behavior-Change-Truth-State: BOUNDED_DEFECT_REPAIR_RECORDED
+Status-Code-Truth-State: BOUNDED_500_TO_404_400_RECORDED
+AddressBook-New-Code-Count-State: ELEVEN
+AddressBook-Owned-Descriptor-Count-State: TWELVE
+Shared-Session-Code-State: CONSUMED_NOT_OWNED
+Duplicate-Descriptor-Ownership-State: ZERO
+Routes-State: UNCHANGED
+Dto-Shape-State: UNCHANGED
+Cross-Module-Boundary-State: CONTRACTS_ONLY
+Foreign-App-Infra-Domain-Coupling-State: ZERO
+Manifest-Disk-State: EXACT
+Focused-Guard-State: PASS
+Focused-Build-State: PASS
+Evidence-State: COMPLETE
+Recovery-SoT-State: RECONCILED
+Commit-SHA: 17e95804aa0f261a2a98f55278f671aafd5e41d9
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_ARTIFACT
+User-Work-Preserved: YES
+Final-Certification-State: COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_ADDRESSBOOK_AMSC_001_W3_R1
+STOP
+END_TOOBA_WORKER_RESULT

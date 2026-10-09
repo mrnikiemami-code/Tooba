@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
@@ -9,7 +9,7 @@ using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
-using Tooba.Tax.Contracts;
+using Tooba.Tax.Contracts.Ports;
 
 namespace Tooba.Catalog.Infrastructure.Development.StorefrontDemo;
 

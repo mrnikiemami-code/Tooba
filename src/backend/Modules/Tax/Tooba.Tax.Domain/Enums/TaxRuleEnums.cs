@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Tax.Domain;
+namespace Tooba.Tax.Domain.Enums;
 
 /// <summary>
 /// گونهٔ قاعده. نرخ درصد در کد حوزهٔ مالیاتی قفل نمی‌شود.

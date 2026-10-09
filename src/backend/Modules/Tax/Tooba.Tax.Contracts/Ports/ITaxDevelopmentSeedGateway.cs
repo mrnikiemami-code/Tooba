@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks.Results;
 
-namespace Tooba.Tax.Contracts;
+namespace Tooba.Tax.Contracts.Ports;
 
 /// <summary>Tax-owned Development-support request for demo offer classification.</summary>
 public sealed record EnsureDevelopmentOfferCategory(

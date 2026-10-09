@@ -30,7 +30,7 @@ using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
 using Tooba.Promotion.Contracts.Checkout;
 using Tooba.Promotion.Contracts.Merchandising;
-using Tooba.Tax.Contracts;
+using Tooba.Tax.Contracts.Ports;
 namespace Tooba.Order.Infrastructure.Checkout.Persistence;
 
 /// <summary>

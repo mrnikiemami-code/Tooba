@@ -1,4 +1,4 @@
-using Tooba.Promotion.Application.Promotions.Ports;
+﻿using Tooba.Promotion.Application.Promotions.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
 using Tooba.Promotion.Infrastructure.Adapters;
@@ -44,8 +44,8 @@ using Tooba.Pricing.Infrastructure;
 using Tooba.Pricing.Infrastructure.Adapters;
 using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Pricing.Infrastructure.Outbox;
-using Tooba.Tax.Infrastructure;
 using Tooba.Tax.Infrastructure.Adapters;
+using Tooba.Tax.Infrastructure.Outbox;
 using Tooba.Tax.Infrastructure.Persistence;
 using Xunit;
 

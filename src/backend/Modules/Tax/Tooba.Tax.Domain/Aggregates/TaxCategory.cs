@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Tax.Contracts.Errors;
 
-namespace Tooba.Tax.Domain;
+namespace Tooba.Tax.Domain.Aggregates;
 
 /// <summary>
 /// طبقهٔ مالیاتی مات برای ارجاع Catalog/Offer؛ نرخ روی کالا ذخیره نمی‌شود.

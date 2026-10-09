@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
@@ -10,10 +10,12 @@ using Tooba.Persistence;
 using Tooba.Pricing.Domain;
 using Tooba.Pricing.Domain.Aggregates;
 using Tooba.Pricing.Domain.ValueObjects;
-using Tooba.Tax.Application;
-using Tooba.Tax.Contracts;
-using Tooba.Tax.Domain;
-using Tooba.Tax.Infrastructure;
+using Tooba.Tax.Application.Ports;
+using Tooba.Tax.Contracts.Dtos;
+using Tooba.Tax.Contracts.Ports;
+using Tooba.Tax.Domain.Enums;
+using Tooba.Tax.Infrastructure.Adapters;
+using Tooba.Tax.Infrastructure.Outbox;
 using Tooba.Tax.Infrastructure.Persistence;
 using Xunit;
 

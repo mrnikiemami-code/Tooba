@@ -1,4 +1,4 @@
-namespace Tooba.Tax.Contracts;
+namespace Tooba.Tax.Contracts.Ports;
 
 /// <summary>Opaque tax category row for Host labels and development seeds.</summary>
 public sealed record TaxCategorySnapshot(Guid CategoryId, string Code, string DisplayName);

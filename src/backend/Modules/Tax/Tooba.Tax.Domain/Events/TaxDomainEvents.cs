@@ -1,6 +1,6 @@
 using Tooba.BuildingBlocks;
 
-namespace Tooba.Tax.Domain;
+namespace Tooba.Tax.Domain.Events;
 
 /// <summary>
 /// رویداد ایجاد قاعده.

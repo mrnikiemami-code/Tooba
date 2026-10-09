@@ -1,7 +1,7 @@
 using Tooba.BuildingBlocks.Results;
-using Tooba.Tax.Application;
-using Tooba.Tax.Contracts;
-using Tooba.Tax.Domain;
+using Tooba.Tax.Application.Ports;
+using Tooba.Tax.Contracts.Ports;
+using Tooba.Tax.Domain.Enums;
 
 namespace Tooba.Tax.Infrastructure.Adapters;
 

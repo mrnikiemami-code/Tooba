@@ -21,6 +21,5 @@
     <ProjectReference Include="..\Tooba.Tax.Application\Tooba.Tax.Application.csproj" />
     <ProjectReference Include="..\Tooba.Tax.Contracts\Tooba.Tax.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Tax.Infrastructure\Tooba.Tax.Infrastructure.csproj" />
-    <ProjectReference Include="..\Tooba.Tax.Endpoints\Tooba.Tax.Endpoints.csproj" />
   </ItemGroup>
 </Project>

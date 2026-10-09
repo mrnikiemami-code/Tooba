@@ -1,7 +1,7 @@
-using Tooba.Tax.Contracts;
-using Tooba.Tax.Domain;
+using Tooba.Tax.Contracts.Ports;
+using Tooba.Tax.Domain.Enums;
 
-namespace Tooba.Tax.Application;
+namespace Tooba.Tax.Application.Ports;
 
 /// <summary>
 /// مرجع طبقه برای Catalog/Offer بدون مبلغ مالیات.
@@ -22,17 +22,6 @@ public sealed record TaxRuleReference(
     DateTimeOffset? EffectiveTo,
     TaxRuleStatus Status,
     int Specificity);
-
-/// <summary>
-/// نگهبان موردکاربرد Tax.
-/// </summary>
-public interface ITaxUseCaseGuard
-{
-    /// <summary>
-    /// اجازهٔ نوشتن قاعده و طبقه را بررسی می‌کند.
-    /// </summary>
-    Task EnsureCanMutateAsync(CancellationToken cancellationToken);
-}
 
 /// <summary>
 /// نوشتن پیکربندی مالیات. فاکتور B2B و درگاه پرداخت اینجا نیستند.

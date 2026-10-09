@@ -1,0 +1,32 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-PROMOTION-AMSC-001-W3-R3
+Parent-Task: TB-TMAR-PROMOTION-AMSC-001-W3-R2
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Fresh independent ARCH-COMPLETE-002 certification of Modules/Promotion from disk. Precheck: task STARTING HEAD b002d459 was local main and a strict ancestor of origin/main, which had advanced four documentation-only skill commits enforcing the input-provenance validator-coverage gate; local main was fast-forwarded to origin/main 3737b4d5 (no reset/stash/rebase/force-push), so HEAD == origin/main and b002d459 remains in ancestry; all authority SHAs verified with git merge-base --is-ancestor. Every applicable gate re-derived from disk and PASS under the new certify 6a input-provenance HARD BLOCKER: exactly 21 module-owned routes (Host Promotion routes ZERO), 21/21 ISender requests with real matching handlers, the exhaustive 19 VALIDATOR_REQUIRED + 2 NO_VALIDATOR_REQUIRED provenance matrix (exact set equality, repaired ListMerchandisingCampaignTypesQueryValidator using PromotionValidationCodes.LocaleInvalid), canonical ApiResponseFactory results with the preserved 201 Location path, the unique 40-code/13-descriptor/40 EN + 40 FA catalog, PROFESSIONAL_SHALLOW structure with six solution projects, Contracts-only zero-foreign-App/Infra/Domain boundary, unchanged migrations and the preserved HOST_ROOT_FINAL_CERTIFIED checkpoint. No production file changed (certify only); guard added; verdict COMPLETE_REFERENCE_PATTERN reinstated.
+Certification-State: COMPLETE_REFERENCE_PATTERN
+Route-State: EXACT_21
+Request-State: EXACT_21_ISENDER
+Validator-Matrix-State: EXHAUSTIVE_19_REQUIRED_2_NO_VALIDATOR_REQUIRED
+Locale-Validator-State: VERIFIED_CANONICAL
+Api-Result-State: CANONICAL
+Error-Catalog-State: UNIQUE_40_CODES_13_DESCRIPTORS_40_BILINGUAL
+Structure-State: CERTIFIED_ARCH_COMPLETE_002
+Boundary-State: CONTRACTS_ONLY_ZERO_FOREIGN_APP_INFRA_DOMAIN
+Extractability-State: ARCHITECTURAL_READY_RUNTIME_UNPROVEN
+Schema-Migration-State: UNCHANGED
+Host-Checkpoint-State: PRESERVED
+Focused-Validation-State: Promotion.Tests 23 passed/0 failed/0 skipped; Promotion architecture guards 32 passed/0 failed/2 skipped; broader Promotion+global-structure run 61 passed/3 failed/2 skipped with 3 pre-existing unrelated failures (TmarCompleteReferenceStructureGateTests.Certified_modules_satisfy_root_allowlists_and_namespace_alignment = known Tooba.Catalog.Contracts/Cart deviation; TmarDurableGuardTests.Recovery_current_state_is_fresh_and_machine_readable and Recovery_sot_sync_001_current_checkpoint_is_unique_and_stop_is_authoritative = stale recovery pins) byte-identical to the W3-R2 baseline; new W3R3 guard 3 passed
+Production-Code-Changed-State: ZERO
+Guards-Weakened-State: NONE
+Baselines-Widened-State: NONE
+Evidence-Path: docs/architecture/evidence/TB-TMAR-PROMOTION-AMSC-001-W3-R3/
+Commit-SHA: 8b1b80430222d688d6a26466bd75d9ad93b427c9
+HEAD-Equals-Origin-Main: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_PROMOTION_AMSC_001_W3_R3
+STOP
+END_TOOBA_WORKER_RESULT

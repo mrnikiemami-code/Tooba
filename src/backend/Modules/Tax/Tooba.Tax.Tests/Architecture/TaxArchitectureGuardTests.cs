@@ -35,11 +35,17 @@ public sealed class TaxArchitectureGuardTests
     }
 
     [Fact]
-    public void Endpoints_csproj_does_not_reference_infrastructure()
+    public void Ceremonial_endpoints_project_stays_retired_internal_only()
     {
-        var refs = ProjectRefs("Tooba.Tax.Endpoints");
-        Assert.DoesNotContain(refs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(refs, r => r.Contains("Tooba.Tax.Application", StringComparison.Ordinal));
+        // Tax owns zero HTTP routes and zero endpoint-reachable requests (AMSC-001 W0): the
+        // ceremonial Endpoints project, its empty /v1/tax route group and its Host mapping were
+        // removed by AMSC-001 W2. Tax is INTERNAL_ONLY and must not resurrect the ceremony.
+        Assert.False(
+            Directory.Exists(Path.Combine(TaxRoot(), "Tooba.Tax.Endpoints")),
+            "the ceremonial Tooba.Tax.Endpoints project must stay retired");
+        Assert.False(
+            Directory.Exists(Path.Combine(TaxRoot(), "Tooba.Tax.Tests", "Endpoints")),
+            "the Endpoints test folder must stay retired");
     }
 
     [Fact]
@@ -89,10 +95,12 @@ public sealed class TaxArchitectureGuardTests
     }
 
     [Fact]
-    public void Program_maps_tax_module()
+    public void Program_no_longer_maps_a_tax_module_route_group()
     {
         var program = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
-        Assert.Contains("MapTaxModule()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("MapTaxModule()", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Tax.Endpoints", program, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"/v1/tax\"", program, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -122,16 +130,13 @@ public sealed class TaxArchitectureGuardTests
             .Select(x => x.Path)
             .ToList();
         Assert.True(bypass.Count == 0, string.Join("; ", bypass));
-        var endpoints = Sources("Tooba.Tax.Endpoints");
-        Assert.DoesNotContain(endpoints, x => x.Text.Contains("ex.Message", StringComparison.Ordinal) || x.Text.Contains("AcceptLanguage", StringComparison.Ordinal));
     }
 
     private static IEnumerable<(string Path, string Text)> AllProductionSources() =>
         Sources("Tooba.Tax.Domain")
             .Concat(Sources("Tooba.Tax.Application"))
             .Concat(Sources("Tooba.Tax.Contracts"))
-            .Concat(Sources("Tooba.Tax.Infrastructure"))
-            .Concat(Sources("Tooba.Tax.Endpoints"));
+            .Concat(Sources("Tooba.Tax.Infrastructure"));
 
     private static IEnumerable<(string Path, string Text)> Sources(string projectFolder)
     {

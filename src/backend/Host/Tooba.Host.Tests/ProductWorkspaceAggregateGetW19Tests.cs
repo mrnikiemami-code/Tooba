@@ -10,7 +10,8 @@ using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
 using Tooba.ProductWorkspace.Application.Composition.ProductManagement.Models;
 using Tooba.ProductWorkspace.Application.Composition.ProductManagement.Queries;
-using Tooba.Tax.Contracts;
+using Tooba.Tax.Contracts.Dtos;
+using Tooba.Tax.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Host.Tests;

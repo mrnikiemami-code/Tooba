@@ -1,0 +1,42 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-PAYMENT-AMSC-001-W3-R2
+Parent-Task: TB-TMAR-PAYMENT-AMSC-001-W3-R1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Bounded recovery/truth reconciliation only. Recorded durable semantic commit truth (W0 6839bb4a / W1 2d69d828 / W2 a138ec61 + full SHAs) on the historical wave blocks without rewriting their verdict/state; created the previously-missing explicit paymentAmsc001W3R1 recovery block with R1 own SHA affdfba4; added final paymentAmsc001W3R2 closure (PAYMENT_AMSC_001_RECOVERY_CLOSED_RECONCILED); reconciled Payment error-code truth to exact 28 declared / 27 KnownCodes / 24 Payment-owned descriptors with 4 foreign declared-consumed codes of which exactly 3 are admitted by PaymentErrorCodes.IsKnown and admin.authorization.denied is excluded; corrected the inaccurate "all four for the known-code guard" wording; preserved W3 as current certification authority. Zero production behavior change, zero manifest structural change, zero schema/migration change.
+Starting-HEAD-State: AFFDFBA4
+Production-Scope-State: RECOVERY_LINEAGE_ERROR_TRUTH_ONLY
+Production-Code-Changed-State: ZERO
+Current-Certification-Authority-State: W3_502D73E0
+W3-R1-Recovery-Block-State: RECORDED_AFFDFBA4
+Semantic-Lineage-State: RECONCILED
+Declared-Code-State: EXACT_28
+Known-Code-Guard-State: EXACT_27
+Payment-Owned-Descriptor-State: EXACT_24
+Foreign-Declared-Consumed-State: EXACT_4
+Foreign-Known-Guard-State: EXACT_3_ADMIN_AUTH_EXCLUDED
+Descriptor-Ownership-State: UNIQUE
+Structure-State: CERTIFIED
+Folder-Granularity-State: PROFESSIONAL_SHALLOW
+Validator-State: EXHAUSTIVE_15_REQUIRED_1_NO_VALIDATOR_PLUS_1_WORKER
+Cross-Module-Boundary-State: LEGAL_CONTRACTS_ONLY_BOTH_DIRECTIONS
+Manifest-Structural-State: NOT_TOUCHED
+Schema-Migration-State: UNCHANGED
+Global-Host-Checkpoint-State: PRESERVED
+Guards-Weakened-State: NONE
+Baselines-Widened-State: NONE
+Json-Parse-State: PASS
+Evidence-State: COMPLETE
+Recovery-SoT-State: CLOSED_RECONCILED
+Commit-SHA: 83bc22175d92e53b838c3039cc09ee3e790c509c
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PREEXISTING_UNRELATED_ARTIFACTS
+User-Work-Preserved: YES
+Final-Certification-State: COMPLETE_REFERENCE_PATTERN_ARCH_COMPLETE_002_STRUCTURE_CERTIFIED
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_PAYMENT_AMSC_001_W3_R2
+STOP
+END_TOOBA_WORKER_RESULT
