@@ -498,7 +498,7 @@
       "module": "UserPreference",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Certified by TB-TMAR-USERPREFERENCE-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first LocalePreferences/UiPreferences CQRS; Result+UserPreferenceOperation+ApiResponseFactory; exhaustive validator matrix (3 required + 1 Actor-only not required); Contracts.Errors/Resources catalog; Order.Contracts.Fulfillment session seam in Customer actor resolver only; Host Preferences CLOSED_HOST_ZERO; /Modules/UserPreference/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "certificationNote": "Certified by TB-TMAR-USERPREFERENCE-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN. Capability-first LocalePreferences/UiPreferences CQRS; Result+UserPreferenceOperation+ApiResponseFactory; exhaustive validator matrix (3 required + 1 Actor-only not required); Contracts.Errors/Resources catalog; Order.Contracts.Fulfillment session seam in Customer actor resolver only; Host Preferences CLOSED_HOST_ZERO; /Modules/UserPreference/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling. Re-certified by TB-TMAR-USERPREFERENCE-AMSC-001-W3 (tooba-architecture-certify) under ARCH-COMPLETE-002: HTTP_OWNING, 6 module-owned routes across 3 groups (/v1/customer/preferences, /v1/admin/operator/preferences, /v1/admin/ui-preferences/{key}), exhaustive 4/4 validator matrix (3 VALIDATOR_REQUIRED + 1 NO_VALIDATOR_REQUIRED), single canonical Contracts stable-code home (10 declared / 10 registered / 10 localized with the declared-code guard and the Foundation-owned customer.session.required deliberately excluded), dual-mechanism typed-fault seam (ContractOperationException via IsKnown + SemanticException), explicit locked bilingual LogicalName resource pair, zero raw prose faults, structure authority TB-TMAR-USERPREFERENCE-AMSC-001-W2 (commit 2547037e), own user_preference schema + outbox with both migrations unchanged, Contracts-only microservice-extractable, Host closure preserved. Prior certification: TB-TMAR-USERPREFERENCE-AMC-001-W4 (historical evidence, superseded for current module authority by the AMSC-001 lineage).",
       "projects": [
         {
           "projectName": "Tooba.UserPreference.Application",
@@ -568,8 +568,13 @@
         }
       ],
       "structureAuthorityTask": "TB-TMAR-USERPREFERENCE-AMSC-001-W2",
-      "structureAuthorityCommit": "PENDING_W2_COMMIT",
-      "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3"
+      "structureAuthorityCommit": "2547037e79cb2154872c0bfef036ee812c4b037b",
+      "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3",
+      "certificationState": "USERPREFERENCE_AMSC_001_CERTIFIED",
+      "currentCertificationTask": "TB-TMAR-USERPREFERENCE-AMSC-001-W3",
+      "currentVerdict": "COMPLETE_REFERENCE_PATTERN",
+      "currentValidatorMatrixState": "EXHAUSTIVE_4_OF_4_3_VALIDATOR_REQUIRED_1_NO_VALIDATOR_REQUIRED",
+      "evidence": "docs/architecture/evidence/TB-TMAR-USERPREFERENCE-AMSC-001-W3/certification.md"
     },
     {
       "module": "PageComposition",

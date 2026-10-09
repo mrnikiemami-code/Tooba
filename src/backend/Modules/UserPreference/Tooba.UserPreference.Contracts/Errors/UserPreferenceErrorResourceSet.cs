@@ -13,17 +13,18 @@ public static class UserPreferenceErrorResources
 }
 
 /// <summary>
-/// UserPreference-owned error resource set for the <c>preference.</c> and <c>ui_preference.</c>
-/// keyspaces. UserPreference owns the user-facing text for its own stable codes so the module can be
-/// extracted as an isolated microservice without leaving its copy behind in another module. Locale
-/// selection stays in the central localizer.
+/// UserPreference-owned error resource set for the <c>preference.</c>, <c>ui_preference.</c> and
+/// <c>user_preference.</c> keyspaces. UserPreference owns the user-facing text for its own stable
+/// codes so the module can be extracted as an isolated microservice without leaving its copy behind
+/// in another module. Locale selection stays in the central localizer.
 /// </summary>
 public sealed class UserPreferenceErrorResourceSet : IErrorResourceSet
 {
     /// <inheritdoc />
     public bool Owns(string localizationKey) =>
         localizationKey.StartsWith("preference.", StringComparison.OrdinalIgnoreCase)
-        || localizationKey.StartsWith("ui_preference.", StringComparison.OrdinalIgnoreCase);
+        || localizationKey.StartsWith("ui_preference.", StringComparison.OrdinalIgnoreCase)
+        || localizationKey.StartsWith("user_preference.", StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc />
     public string? GetString(string localizationKey, CultureInfo culture) =>
