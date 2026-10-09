@@ -31,7 +31,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
                 "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
                 "ProductWorkspace", "Promotion", "Returns", "Settlement", "StoreContext", "Story", "Support",
-                "UserPreference", "Wishlist",
+                "Tax", "UserPreference", "Wishlist",
             },
             modules.Select(m => m.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
@@ -49,7 +49,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "AccessControl", "AddressBook", "Content", "Identity", "Media", "Localization", "Notification",
                 "OperatorProfile", "Party", "ProductQnA", "PageComposition", "BulkInquiry", "Wishlist",
                 "UserPreference", "Story", "Catalog", "CustomerProfile", "Inventory", "Pricing",
-                "ProductWorkspace", "Promotion", "Returns", "Support",
+                "ProductWorkspace", "Promotion", "Returns", "Support", "Tax",
             }, StringComparer.Ordinal);
         }
     }
@@ -194,6 +194,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
         Assert.DoesNotContain("Promotion", uncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("Returns", uncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("Support", uncertified, StringComparer.Ordinal);
+        Assert.DoesNotContain("Tax", uncertified, StringComparer.Ordinal);
         Assert.NotEmpty(uncertified);
 
         var statePath = Path.Combine(RepoRoot(), "docs", "architecture", "tmar-current-state.json");
@@ -207,7 +208,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
                 "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
                 "ProductWorkspace", "Promotion", "Returns", "Settlement", "StoreContext", "Story", "Support",
-                "UserPreference", "Wishlist",
+                "Tax", "UserPreference", "Wishlist",
             },
             certified);
     }

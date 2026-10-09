@@ -2238,17 +2238,12 @@
           "forbiddenTopLevelFolders": []
         }
       ]
-    }
-  ],
-  "uncertifiedHttpOwningModules": [
-    "Wallet"
-  ],
-  "preCertModules": [
+    },
     {
       "module": "Tax",
-      "structureCertified": false,
+      "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Pre-certification structure record for TB-TMAR-TAX-AMSC-001 W2 (tooba-architecture-structure). Wave lineage W0 36d243cc -> W1 fa87201a -> W2 this commit. Tax is INTERNAL_ONLY: the W0 applicability gate proved 0 module HTTP routes, 0 endpoint-reachable requests and a deliberately empty /v1/tax MapGroup, so the ceremonial Tooba.Tax.Endpoints project, its TaxEndpointModule, the empty route group, the Host using/AddTaxEndpointPresentation/MapTaxModule composition call and the Host/Tests project references were retired; the INTERNAL_ONLY shape is the certified Inventory/Pricing precedent (four production projects + Tests, presentation registration owned by the Infrastructure composition root). Capability-first shallow folders: Contracts/{Dtos,Errors,Ports,Resources} (the single canonical stable-code home + the bilingual TaxErrors.resx/.fa.resx pair), Domain/{Aggregates,Enums,Events,Policies} with the single GlobalUsings namespace bridge at the root, Application/{Composition,Ports} (the TaxOperation typed-fault seam + the module-internal port/guard; zero CQRS ceremony because zero requests are endpoint-reachable), Infrastructure/{Adapters,DependencyInjection,Events,Outbox,Persistence(+Configurations,+Migrations)}. Path-Namespace-State = EXACT (0 mismatches across all production projects); Physical-Copy-State = CLEAN; Root-Allowlist-State = ENFORCED; Solution-Explorer-State = CANONICAL (/Modules/Tax/ with exactly five projects). structureCertified stays false until the W3 Certify wave.",
+      "certificationNote": "CERTIFIED by TB-TMAR-TAX-AMSC-001-W3 (tooba-architecture-certify) after the Structure wave W2 (eff3cf5b). Wave lineage W0 36d243cc -> W1 fa87201a -> W2 eff3cf5b -> W3. Tax is INTERNAL_ONLY: the W0 applicability gate proved 0 module HTTP routes and 0 endpoint-reachable requests, so under the certify 0b applicability gate the endpoint ownership, CQRS and validator matrices are NOT_APPLICABLE_INTERNAL_ONLY while the ceremonial Tooba.Tax.Endpoints project, its empty /v1/tax route group, its Host using/MapTaxModule composition call and its Host/Tests project references were retired by W2 (the certified Inventory/Pricing precedent: four production projects + Tests, presentation registration owned exactly once by the Infrastructure composition root TaxModule.AddServices). All applicable ARCH-COMPLETE-002 gates re-derived from disk and PASS: the single canonical Contracts stable-code home (11 declared tax.* codes) with 11 descriptors registered exactly once by TaxErrorCatalogContributor and 11 EN + 11 FA bilingual resources owned and registered once by TaxErrorResourceSet (checkout.tax.unavailable stays Order-owned and is deliberately absent); the typed TaxOperation seam classifying by typed code only (TaxErrorCodes.IsKnown) with zero message-prose classification; PROFESSIONAL_SHALLOW capability-first structure (Contracts/{Dtos,Errors,Ports,Resources}, Domain/{Aggregates,Enums,Events,Policies} with the single GlobalUsings namespace bridge at the root, Application/{Composition,Ports}, Infrastructure/{Adapters,DependencyInjection,Events,Outbox,Persistence}) with five solution projects under /Modules/Tax/, exact path<->namespace and enforced root allowlists; Contracts-only boundaries with zero foreign Application/Infrastructure/Domain edge, zero cross-module persistence and zero cross-module join; the single migration 20260823190000_InitialTax byte-identical to the W0 baseline; and the preserved HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED / HOST_ROOT_FINAL_CERTIFIED checkpoints. Verdict COMPLETE_REFERENCE_PATTERN; structureCertified true; microserviceExtractable = TRUE_CONTRACTS_ONLY_SELF_CONTAINED_ERROR_SURFACE_EXACT_PATH_NAMESPACE.",
       "projects": [
         {
           "projectName": "Tooba.Tax.Contracts",
@@ -2335,8 +2330,18 @@
           ]
         }
       ],
-      "structureState": "READY_FOR_CERTIFY",
-      "structureAuthorityTask": "TB-TMAR-TAX-AMSC-001-W2"
+      "structureAuthorityTask": "TB-TMAR-TAX-AMSC-001-W2",
+      "certificationState": "TAX_AMSC_001_CERTIFIED",
+      "currentCertificationTask": "TB-TMAR-TAX-AMSC-001-W3",
+      "currentVerdict": "COMPLETE_REFERENCE_PATTERN",
+      "currentValidatorMatrixState": "NOT_APPLICABLE_INTERNAL_ONLY_ZERO_ENDPOINT_REACHABLE_REQUESTS",
+      "evidence": "docs/architecture/evidence/TB-TMAR-TAX-AMSC-001-W3/certification.md",
+      "structureAuthorityCommit": "eff3cf5b846d33f90652ee691fa23048ffa45f48",
+      "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3"
     }
-  ]
+  ],
+  "uncertifiedHttpOwningModules": [
+    "Wallet"
+  ],
+  "preCertModules": []
 }

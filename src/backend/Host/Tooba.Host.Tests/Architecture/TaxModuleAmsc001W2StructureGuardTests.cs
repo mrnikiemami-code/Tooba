@@ -239,11 +239,15 @@ public sealed class TaxModuleAmsc001W2StructureGuardTests
         using var manifest = JsonDocument.Parse(
             File.ReadAllText(Path.Combine(root, ManifestPath)).Replace("\uFEFF", string.Empty));
 
-        // W2 records Tax in the pre-cert state; the W3 Certify wave promotes it into modules[].
-        var module = manifest.RootElement.GetProperty("preCertModules").EnumerateArray()
+        // W2 recorded Tax in the pre-cert state; the W3 Certify wave promoted it into modules[].
+        // The certified entry is the same structure record, so the allowlists below are unchanged.
+        var module = manifest.RootElement.GetProperty("modules").EnumerateArray()
             .Single(m => string.Equals(m.GetProperty("module").GetString(), "Tax", StringComparison.Ordinal));
-        Assert.False(module.GetProperty("structureCertified").GetBoolean());
+        Assert.True(module.GetProperty("structureCertified").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", module.GetProperty("lockVersion").GetString());
+        Assert.DoesNotContain(
+            manifest.RootElement.GetProperty("preCertModules").EnumerateArray(),
+            m => string.Equals(m.GetProperty("module").GetString(), "Tax", StringComparison.Ordinal));
 
         foreach (var project in module.GetProperty("projects").EnumerateArray())
         {
