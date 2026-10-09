@@ -3,9 +3,9 @@ using Tooba.StoreContext.Contracts.Current;
 namespace Tooba.StoreContext.Infrastructure.Current;
 
 /// <summary>
-/// Scoped accessor for the effective store commerce context. It implements both the read seam and
-/// the assignment seam, holds no static mutable state, depends on no HttpContext, and uses no
-/// AsyncLocal: the lifecycle is one DI scope (request or worker cycle).
+/// accessor در scope برای زمینهٔ تجارت مؤثر فروشگاه. هم درز خواندن و هم درز تخصیص را پیاده می‌کند،
+/// هیچ حالت قابل‌تغییر static نگه نمی‌دارد، به <c>HttpContext</c> وابسته نیست و از <c>AsyncLocal</c>
+/// استفاده نمی‌کند: طول عمر آن دقیقاً یک scope از DI است (یک درخواست یا یک چرخهٔ کارگر).
 /// </summary>
 public sealed class StoreCommerceContextAccessor : ICurrentStoreCommerceContext, IStoreCommerceContextAssigner
 {

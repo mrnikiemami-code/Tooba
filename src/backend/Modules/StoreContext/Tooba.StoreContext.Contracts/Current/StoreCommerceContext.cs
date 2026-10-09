@@ -3,58 +3,60 @@ using Tooba.BuildingBlocks;
 namespace Tooba.StoreContext.Contracts.Current;
 
 /// <summary>
-/// Effective storefront/store commerce context for the current request or worker cycle.
-/// The platform control plane owns it; consumer modules only read. Null means unresolved and the
-/// consumer must fail closed instead of inventing Market/DefaultCurrency/SalesChannel.
+/// زمینهٔ تجارت مؤثر فروشگاه برای چرخهٔ جاری درخواست یا کارگر.
+/// این زمینه در اختیار control plane پلتفرم است و ماژول‌های مصرف‌کننده فقط آن را می‌خوانند؛
+/// هیچ مصرف‌کننده‌ای مجاز نیست Market/DefaultCurrency/SalesChannel را از خود بسازد.
+/// مقدار <c>null</c> یعنی زمینه resolve نشده است و مصرف‌کننده باید fail-closed شود.
 /// </summary>
-/// <param name="Market">Effective market reference.</param>
+/// <param name="Market">مرجع بازار مؤثر.</param>
 /// <param name="DefaultCurrency">
-/// Default storefront currency only: the default/preferred currency a use-case may use when it
-/// needs an initial currency. It is NOT a transaction/line/order/settlement/payment-group currency
-/// and does NOT impose single-currency Cart/Order semantics; consumer transaction lines may carry
-/// their own currency.
+/// فقط ارز پیش‌فرض فروشگاه: ارز پیش‌فرض/مرجحی که یک use-case در صورت نیاز به ارز اولیه به کار می‌برد.
+/// این مقدار ارز تراکنش/خط/سفارش/تسویه/گروه پرداخت نیست و هیچ invariant تک‌ارزی روی Cart/Order تحمیل نمی‌کند؛
+/// خطوط تراکنش مصرف‌کننده می‌توانند ارز مستقل خود را داشته باشند.
 /// </param>
-/// <param name="SalesChannel">Stable sales-channel name; still a string at this boundary.</param>
+/// <param name="SalesChannel">نام پایدار کانال فروش؛ در این مرز همچنان یک رشته است.</param>
 public sealed record StoreCommerceContext(
     string? Market,
     string? DefaultCurrency,
     string? SalesChannel);
 
 /// <summary>
-/// Read access to the current effective store commerce context. Absent until the platform boundary
-/// assigns it for a resolved request or background worker cycle.
+/// دسترسی خواندنی به زمینهٔ تجارت مؤثر فروشگاه برای scope جاری.
+/// تا زمانی که مرز پلتفرم آن را برای یک درخواست resolve‌شده یا چرخهٔ کارگر پس‌زمینه تخصیص ندهد، وجود ندارد.
 /// </summary>
 public interface ICurrentStoreCommerceContext
 {
     /// <summary>
-    /// The effective store commerce context for this scope, or null when unresolved/skipped.
+    /// زمینهٔ تجارت مؤثر این scope، یا <c>null</c> وقتی resolve نشده/رد شده است.
+    /// نبود مقدار یعنی زمینه معتبر نیست؛ مصرف‌کننده باید شکست بدهد و مقدار پیش‌فرض نسازد.
     /// </summary>
     StoreCommerceContext? Current { get; }
 }
 
 /// <summary>
-/// Assignment seam for the effective store commerce context. Host/control-plane composition and
-/// background workers assign it; consumer modules never assign their own authority.
+/// درز تخصیص زمینهٔ تجارت مؤثر فروشگاه.
+/// ترکیب Host/control-plane و کارگرهای پس‌زمینه آن را تخصیص می‌دهند؛
+/// ماژول‌های مصرف‌کننده هرگز اختیار تخصیص زمینهٔ خود را ندارند.
 /// </summary>
 public interface IStoreCommerceContextAssigner
 {
     /// <summary>
-    /// Assigns the effective store commerce context for the current scope.
+    /// زمینهٔ تجارت مؤثر را برای scope جاری تخصیص می‌دهد.
     /// </summary>
-    /// <param name="context">Effective context resolved by the platform boundary.</param>
+    /// <param name="context">زمینهٔ مؤثری که مرز پلتفرم resolve کرده است.</param>
     void Assign(StoreCommerceContext context);
 }
 
 /// <summary>
-/// Generic platform seam that rebuilds the effective store commerce context for a background
-/// worker target (edition + optional tenant) without reading HTTP headers.
+/// درز عمومی پلتفرم که زمینهٔ تجارت مؤثر فروشگاه را برای هدف یک کارگر پس‌زمینه
+/// (edition و tenant اختیاری) بازسازی می‌کند و هیچ سرآیند HTTP را نمی‌خواند.
 /// </summary>
 public interface IWorkerStoreCommerceContextFactory
 {
     /// <summary>
-    /// Selects the effective store commerce context for the given edition/tenant target.
+    /// زمینهٔ تجارت مؤثر را برای هدف edition/tenant داده‌شده انتخاب می‌کند.
     /// </summary>
-    /// <param name="edition">Process edition resolved from the control plane.</param>
-    /// <param name="tenantId">Single-Store tenant id; null for Marketplace.</param>
+    /// <param name="edition">edition فرآیند که از control plane resolve شده است.</param>
+    /// <param name="tenantId">شناسهٔ tenant در حالت Single-Store؛ در Marketplace مقدار null است.</param>
     StoreCommerceContext FromTarget(ToobaEdition edition, string? tenantId);
 }

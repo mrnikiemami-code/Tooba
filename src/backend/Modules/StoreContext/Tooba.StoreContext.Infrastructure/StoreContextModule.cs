@@ -8,9 +8,9 @@ using Tooba.StoreContext.Infrastructure.Current;
 namespace Tooba.StoreContext.Infrastructure;
 
 /// <summary>
-/// StoreContext module composition: registers the scoped effective store commerce context accessor
-/// and exposes it through both Contracts seams (read + assign). No DB, schema, migration, endpoint,
-/// or application use-case in this foundation phase.
+/// ترکیب ماژول StoreContext: ثبت accessor زمینهٔ تجارت مؤثر فروشگاه در scope و ارائهٔ آن
+/// از طریق هر دو درز Contracts (خواندن و تخصیص).
+/// در این فاز foundation هیچ DB، schema، migration، endpoint یا application use-case وجود ندارد.
 /// </summary>
 public sealed class StoreContextModule : IToobaModule
 {
