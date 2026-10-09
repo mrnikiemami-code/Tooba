@@ -1836,7 +1836,7 @@ Recorded by `TB-TMAR-STORECONTEXT-AMSC-001-W3` (`tooba-architecture-certify`), t
 Story AMSC module recovery checkpoint (authoritative, module-local)
 
 Recorded by `TB-TMAR-STORY-AMSC-001-W3` (`tooba-architecture-certify`), the fourth and final wave of the AMSC re-standardization of `src/backend/Modules/Story` over the structure authority of W2. The earlier AMC-001 lineage (`TB-TMAR-STORY-AMC-001` .. `TB-TMAR-STORY-AMC-001-W6-CERT`) stays in the repository as historical evidence only and is not the current module authority.
-- Accepted lineage: `TB-TMAR-STORY-AMSC-001-W0` Analyze `0c73390a3211e0ee9057e9234d62d3e4f14b5e4e` -> `TB-TMAR-STORY-AMSC-001-W1` Migrate `2a09e7bb7f1ab687435007951160b4bcfefb4c18` -> `TB-TMAR-STORY-AMSC-001-W2` Structure `4cd9a6cc543ccd307d775dfe703459de7b12c95d` -> `TB-TMAR-STORY-AMSC-001-W3` Certify *(this commit, reported in the Bridge Result only; the Architect reconciles the final SHA separately)*. Each wave's recorded `startingHead` equals its parent wave's commit, so the chain is verifiable end to end.
+- Accepted lineage: `TB-TMAR-STORY-AMSC-001-W0` Analyze `0c73390a3211e0ee9057e9234d62d3e4f14b5e4e` -> `TB-TMAR-STORY-AMSC-001-W1` Migrate `2a09e7bb7f1ab687435007951160b4bcfefb4c18` -> `TB-TMAR-STORY-AMSC-001-W2` Structure `4cd9a6cc543ccd307d775dfe703459de7b12c95d` -> `TB-TMAR-STORY-AMSC-001-W3` Certify `39ab324e` (`39ab324e9c57e342516202bdd8df95953dda6439`). Each wave's recorded `startingHead` equals its parent wave's commit, so the chain is verifiable end to end.
 - Final verdict: `COMPLETE_REFERENCE_PATTERN` / `ARCH-COMPLETE-002` `STRUCTURE_CERTIFIED`; final `structureState = CERTIFIED` (the W2 `READY_FOR_CERTIFY` verdict is preserved as historical W2 truth).
 - Applicability: `HTTP_OWNING` — 25 module-owned routes over `/v1/admin/stories` (15), `/v1/seller/stories` (9) and `/v1/storefront/stories` (1); Host-owned route count `ZERO`; `endpointOwnership = MODULE_OWNED`; CQRS is 25 real `IRequest`/`IRequestHandler` dispatched through `ISender` on MediatR 12.5; the validator matrix is exhaustive at `16 VALIDATOR_REQUIRED + 9 NO_VALIDATOR_REQUIRED` with 17 discoverable `AbstractValidator` classes and zero unmapped endpoint-reachable request.
 - Canonical mechanisms: `Result<T>` + `ApiResponseFactory` `From`/`Created` only with zero ad-hoc `Results.*`/`ProblemDetails` and zero message-text classification; all 10 `story.*` validation codes and all 5 stable error codes are bilingually resourced in `StoryErrors.resx` / `StoryErrors.fa.resx` with exactly one descriptor owner for the 5 stable codes and no first/last-wins suppression; logging is canonical with zero `ILogger`/`Console`/`Debug`; OpenTelemetry and correlation are canonical with no parallel correlation and no manual `traceparent` handling.
@@ -1852,4 +1852,17 @@ Recorded by `TB-TMAR-STORY-AMSC-001-W3` (`tooba-architecture-certify`), the four
 - Certification promotion: `Story` is now listed once in `structureLock.certifiedModules` (29 entries).
 - Evidence root: `docs/architecture/evidence/TB-TMAR-STORY-AMSC-001-W0..W3/`.
 - Stop gate: `USER_REVIEW_STORY_AMSC_001_W3`.
+- `automaticNextImplementationTask = NONE`.
+
+Story AMSC W3-R1 recovery reconciliation (authoritative, module-local)
+
+Recorded by `TB-TMAR-STORY-AMSC-001-W3-R1` (bounded recovery / SoT reconciliation). The W3 certification commit could not contain its own SHA, so the W3 checkpoint recorded it as a self-reference; this wave records the authoritative value and closes the Story AMSC-001 chain.
+- Reconciled W3 SHA: `39ab324e` (`39ab324e9c57e342516202bdd8df95953dda6439`); `storyAmsc001W3.commit` moved from `PENDING_W3_COMMIT` to the real SHA and `storyAmsc001W3R1` was appended (state `STORY_AMSC_001_RECOVERY_RECONCILED`, `masterRecoveryW3ShaBefore = PLACEHOLDER_THIS_COMMIT`, `masterRecoveryW3ShaState = RECORDED_39AB324E`).
+- W3 self-description repair (truth only): `guardsAdded` 9 facts -> 8 facts and the focused-validation claim 9/9 -> 8/8, reconciled to the verified `StoryModuleAmsc001W3CertGuardTests` `[Fact]` count on disk. No assertion was removed and no guard was weakened.
+- Accepted lineage (final): `W0` Analyze `0c73390a` -> `W1` Migrate `2a09e7bb` -> `W2` Structure `4cd9a6cc` -> `W3` Certify `39ab324e` -> `W3-R1` Recovery *(this commit)*.
+- Production change: ZERO. Manifest structural state NOT_TOUCHED; schema/migrations UNCHANGED; frontend FROZEN_UNTOUCHED; guards weakened NONE; baselines widened NONE.
+- Historical AMC-001 lineage (`storyModuleAmc001` .. `storyModuleAmc001W6Cert`) is preserved verbatim as historical and is superseded for current Story authority by AMSC-001 W0->W3.
+- Global recovery lock preserved exactly: `currentHostCheckpoint = HOST_ROOT_FINAL_CERTIFIED`, `lastAcceptedTask = TB-TMAR-HOST-ROOT-FINAL-CERT-001`, repository-global `workflowStop = USER_REVIEW_HOST_ROOT_FINAL_CERT_001`, `automaticNextImplementationTask = NONE`.
+- Evidence root: `docs/architecture/evidence/TB-TMAR-STORY-AMSC-001-W3-R1/`.
+- Stop gate: `USER_REVIEW_STORY_AMSC_001_W3_R1`.
 - `automaticNextImplementationTask = NONE`.

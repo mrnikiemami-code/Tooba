@@ -204,7 +204,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "AccessControl", "AddressBook", "BulkInquiry", "Cart", "Catalog", "Content", "CustomerProfile",
                 "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
                 "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
-                "ProductWorkspace", "Promotion", "Returns", "Settlement", "StoreContext", "UserPreference", "Wishlist",
+                "ProductWorkspace", "Promotion", "Returns", "Settlement", "StoreContext", "Story", "UserPreference", "Wishlist",
             },
             certified);
     }
