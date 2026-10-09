@@ -566,7 +566,10 @@
           ],
           "forbiddenTopLevelFolders": []
         }
-      ]
+      ],
+      "structureAuthorityTask": "TB-TMAR-USERPREFERENCE-AMSC-001-W2",
+      "structureAuthorityCommit": "PENDING_W2_COMMIT",
+      "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3"
     },
     {
       "module": "PageComposition",
