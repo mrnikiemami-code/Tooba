@@ -1,5 +1,5 @@
 using Tooba.Payment.Contracts.Settlement;
-using Tooba.Settlement.Application.Ports;
+using Tooba.Settlement.Application.Payouts.Ports;
 
 namespace Tooba.Settlement.Infrastructure.Bridges;
 

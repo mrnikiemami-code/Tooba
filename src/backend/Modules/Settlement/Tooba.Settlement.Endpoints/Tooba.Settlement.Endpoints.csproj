@@ -3,6 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);1591</NoWarn>
     <RootNamespace>Tooba.Settlement.Endpoints</RootNamespace>
     <AssemblyName>Tooba.Settlement.Endpoints</AssemblyName>
   </PropertyGroup>
@@ -11,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Settlement.Application\Tooba.Settlement.Application.csproj" />
+    <ProjectReference Include="..\Tooba.Settlement.Contracts\Tooba.Settlement.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
 </Project>

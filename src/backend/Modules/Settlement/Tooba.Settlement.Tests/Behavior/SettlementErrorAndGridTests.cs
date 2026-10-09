@@ -1,50 +1,90 @@
+﻿using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Settlement.Application.Errors;
-using Tooba.Settlement.Application.Queries.QueryAdminPayoutGrid;
+using Tooba.BuildingBlocks.Results;
+using Tooba.Settlement.Application.Composition;
+using Tooba.Settlement.Application.Payouts.Queries;
+using Tooba.Settlement.Contracts.Errors;
 using Xunit;
 
 namespace Tooba.Settlement.Tests.Behavior;
 
+/// <summary>
+/// TB-TMAR-SETTLEMENT-AMSC-001-W1 — behavior tests for the canonical typed-fault seam
+/// (<see cref="SettlementOperation"/>) that replaced the retired message-text exception mapper.
+/// </summary>
 public sealed class SettlementErrorAndGridTests
 {
     [Fact]
-    public void Exception_mapper_maps_exact_stable_codes_only()
+    public async Task Operation_maps_declared_typed_contract_faults_to_Result_failures()
     {
-        Assert.Equal(
-            SettlementErrorCodes.AccountMissing,
-            SettlementExceptionMapper.ToSemanticError(new InvalidOperationException(SettlementErrorCodes.AccountMissing)).Code);
-        Assert.Equal(
-            SettlementErrorCodes.PayoutInvalidAmount,
-            SettlementExceptionMapper.ToSemanticError(new InvalidOperationException(SettlementErrorCodes.AmountInvalid)).Code);
-        Assert.Equal(
-            SettlementErrorCodes.PayoutMissing,
-            SettlementExceptionMapper.ToSemanticError(new InvalidOperationException(SettlementErrorCodes.PayoutMissing)).Code);
-        Assert.Equal(
-            SettlementErrorCodes.GatewayUnconfigured,
-            SettlementExceptionMapper.ToSemanticError(new InvalidOperationException(SettlementErrorCodes.GatewayUnconfigured)).Code);
-        Assert.Equal(
-            "settlement.restore.payout_completed",
-            SettlementExceptionMapper.ToSemanticError(new InvalidOperationException("settlement.restore.payout_completed")).Code);
+        foreach (var code in SettlementErrorCodes.HttpReachable)
+        {
+            var value = await SettlementOperation.ExecuteAsync<int>(
+                () => throw new ContractOperationException(code));
+            Assert.False(value.IsSuccess);
+            Assert.Equal(code, value.FirstError.Code);
+
+            var plain = await SettlementOperation.ExecuteAsync(
+                () => throw new ContractOperationException(code));
+            Assert.False(plain.IsSuccess);
+            Assert.Equal(code, plain.FirstError.Code);
+
+            Assert.Equal(code, SettlementOperation.ToSemanticError(new ContractOperationException(code)).Code);
+        }
     }
 
     [Fact]
-    public void Exception_mapper_does_not_parse_localized_or_prose_messages()
+    public async Task Operation_maps_the_platform_fault_code_without_cataloguing_it()
     {
-        Assert.False(SettlementExceptionMapper.TryMapExact("پیدا نشد", out _));
-        Assert.False(SettlementExceptionMapper.TryMapExact("Payout failed somehow", out _));
-        Assert.False(SettlementExceptionMapper.TryMapExact("settlement.unknown.future_code", out _));
-        Assert.Throws<InvalidOperationException>(() =>
-            SettlementExceptionMapper.ToSemanticError(new InvalidOperationException("پیدا نشد")));
+        Assert.True(SettlementErrorCodes.IsPlatformFault(SettlementErrorCodes.OutboxUnmapped));
+        Assert.False(SettlementErrorCodes.IsHttpReachable(SettlementErrorCodes.OutboxUnmapped));
+
+        var value = await SettlementOperation.ExecuteAsync<int>(
+            () => throw new ContractOperationException(SettlementErrorCodes.OutboxUnmapped));
+        Assert.False(value.IsSuccess);
+        Assert.Equal(SettlementErrorCodes.OutboxUnmapped, value.FirstError.Code);
     }
 
     [Fact]
-    public async Task Exception_mapper_propagates_unknown_InvalidOperationException()
+    public async Task Operation_maps_SemanticException_by_its_typed_error()
     {
-        var unknown = new InvalidOperationException("settlement.pricing.unexpected");
-        var thrown = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            SettlementExceptionMapper.TryAsync<int>(() => throw unknown));
-        Assert.Same(unknown, thrown);
-        Assert.Equal("settlement.pricing.unexpected", thrown.Message);
+        var error = new SemanticError(SettlementErrorCodes.PayoutMissing);
+        var value = await SettlementOperation.ExecuteAsync<int>(() => throw new SemanticException(error));
+        Assert.False(value.IsSuccess);
+        Assert.Equal(SettlementErrorCodes.PayoutMissing, value.FirstError.Code);
+
+        var plain = await SettlementOperation.ExecuteAsync(() => throw new SemanticException(error));
+        Assert.False(plain.IsSuccess);
+        Assert.Equal(SettlementErrorCodes.PayoutMissing, plain.FirstError.Code);
+    }
+
+    [Fact]
+    public async Task Operation_never_classifies_by_message_text()
+    {
+        // Localized prose, English prose and a foreign/unknown stable code must all propagate
+        // untouched to the canonical global exception boundary.
+        foreach (var message in new[] { "پیدا نشد", "Payout failed somehow", "settlement.unknown.future_code" })
+        {
+            var unknown = new ContractOperationException(message);
+            var thrown = await Assert.ThrowsAsync<ContractOperationException>(
+                () => SettlementOperation.ExecuteAsync<int>(() => throw unknown));
+            Assert.Same(unknown, thrown);
+        }
+
+        var unexpected = new InvalidOperationException("settlement.pricing.unexpected");
+        var propagated = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => SettlementOperation.ExecuteAsync<int>(() => throw unexpected));
+        Assert.Same(unexpected, propagated);
+
+        var foreign = new ContractOperationException("pricing.unknown.future_code");
+        Assert.Throws<ContractOperationException>(() => SettlementOperation.ToSemanticError(foreign));
+    }
+
+    [Fact]
+    public async Task Operation_returns_success_for_a_clean_action()
+    {
+        Assert.True((await SettlementOperation.ExecuteAsync(() => Task.FromResult(7))).IsSuccess);
+        Assert.True((await SettlementOperation.ExecuteAsync(() => Task.CompletedTask)).IsSuccess);
     }
 
     [Fact]

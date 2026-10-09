@@ -1,23 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using Tooba.Settlement.Application;
+using Tooba.BuildingBlocks;
+using Tooba.Settlement.Application.Payouts.Ports;
+using Tooba.Settlement.Contracts.Errors;
 using Tooba.Settlement.Domain.Aggregates;
 using Tooba.Settlement.Domain.Entities;
 using Tooba.Settlement.Domain.Events;
 using Tooba.Settlement.Domain.ValueObjects;
+using Tooba.Settlement.Infrastructure.Observability;
 using Tooba.Settlement.Infrastructure.Persistence;
 
-using Tooba.BuildingBlocks;
-
 namespace Tooba.Settlement.Infrastructure.Directories;
-
-/// <summary>
-/// نگهبان باز موردکاربرد Settlement.
-/// </summary>
-public sealed class OpenSettlementUseCaseGuard : ISettlementUseCaseGuard
-{
-    /// <inheritdoc />
-    public Task EnsureCanMutateAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-}
 
 /// <summary>
 /// ارکستراسیون تسویه و payout در schema settlement.
@@ -72,10 +64,10 @@ public sealed class SettlementDirectory : ISettlementDirectory
         }
 
         var payment = await _payments.GetPaymentAsync(paymentId, cancellationToken)
-            ?? throw new ContractOperationException("settlement.accrual.payment_missing");
+            ?? throw new ContractOperationException(SettlementErrorCodes.AccrualPaymentMissing);
         if (!payment.IsSucceeded)
         {
-            throw new ContractOperationException("settlement.accrual.payment_not_succeeded");
+            throw new ContractOperationException(SettlementErrorCodes.AccrualPaymentNotSucceeded);
         }
 
         var policy = await GetDefaultCommissionPolicyAsync(cancellationToken);
@@ -98,10 +90,10 @@ public sealed class SettlementDirectory : ISettlementDirectory
             }
 
             var order = await _orders.GetAsync(sellerOrderId, cancellationToken)
-                ?? throw new ContractOperationException("settlement.accrual.order_missing");
+                ?? throw new ContractOperationException(SettlementErrorCodes.AccrualOrderMissing);
             if (!order.IsPaid)
             {
-                throw new ContractOperationException("settlement.accrual.order_not_paid");
+                throw new ContractOperationException(SettlementErrorCodes.AccrualOrderNotPaid);
             }
 
             var account = await EnsureAccountAsync(order.SellerPartyId, allocation.Currency, now, cancellationToken);
@@ -156,11 +148,11 @@ public sealed class SettlementDirectory : ISettlementDirectory
         }
 
         var refund = await _returns.GetAsync(returnRequestId, cancellationToken)
-            ?? throw new ContractOperationException("settlement.refund.missing");
+            ?? throw new ContractOperationException(SettlementErrorCodes.RefundMissing);
         if (!string.Equals(refund.Currency, currency, StringComparison.OrdinalIgnoreCase)
             || refund.RefundAmount != refundAmount)
         {
-            throw new ContractOperationException("settlement.refund.mismatch");
+            throw new ContractOperationException(SettlementErrorCodes.RefundMismatch);
         }
 
         var policy = await GetDefaultCommissionPolicyAsync(cancellationToken);
@@ -329,12 +321,12 @@ public sealed class SettlementDirectory : ISettlementDirectory
 
         var account = await _db.SettlementAccounts.AsNoTracking()
             .SingleOrDefaultAsync(x => x.SellerPartyId == command.SellerPartyId, cancellationToken)
-            ?? throw new ContractOperationException("settlement.account.missing");
+            ?? throw new ContractOperationException(SettlementErrorCodes.AccountMissing);
 
         var balance = await BuildBalanceAsync(account, cancellationToken);
         if (command.Amount > balance.AvailableBalance)
         {
-            throw new ContractOperationException("settlement.payout.invalid_amount");
+            throw new ContractOperationException(SettlementErrorCodes.PayoutInvalidAmount);
         }
 
         var now = _clock.UtcNow;
@@ -415,7 +407,7 @@ public sealed class SettlementDirectory : ISettlementDirectory
         var gates = await GetRestoreSettlementGatesAsync(sellerOrderIds, cancellationToken);
         if (gates.Values.Any(x => x.HasCompletedPayoutEffect))
         {
-            throw new ContractOperationException("settlement.unconfirm.payout_completed");
+            throw new ContractOperationException(SettlementErrorCodes.UnconfirmPayoutCompleted);
         }
 
         var entries = await _db.SettlementEntries
@@ -450,7 +442,7 @@ public sealed class SettlementDirectory : ISettlementDirectory
         var gates = await GetRestoreSettlementGatesAsync(ids, cancellationToken);
         if (gates.Values.Any(x => x.HasCompletedPayoutEffect))
         {
-            throw new ContractOperationException("settlement.cancel.payout_completed");
+            throw new ContractOperationException(SettlementErrorCodes.CancelPayoutCompleted);
         }
 
         var now = _clock.UtcNow;
@@ -525,7 +517,7 @@ public sealed class SettlementDirectory : ISettlementDirectory
         var gates = await GetRestoreSettlementGatesAsync(ids, cancellationToken);
         if (gates.Values.Any(x => x.HasCompletedPayoutEffect))
         {
-            throw new ContractOperationException("settlement.restore.payout_completed");
+            throw new ContractOperationException(SettlementErrorCodes.RestorePayoutCompleted);
         }
 
         var now = _clock.UtcNow;
@@ -610,7 +602,7 @@ public sealed class SettlementDirectory : ISettlementDirectory
     {
         var request = await _db.PayoutRequests
             .SingleOrDefaultAsync(x => x.PayoutRequestId == payoutRequestId, cancellationToken)
-            ?? throw new ContractOperationException("settlement.payout.missing");
+            ?? throw new ContractOperationException(SettlementErrorCodes.PayoutMissing);
         if (request.Status == PayoutStatus.Succeeded)
         {
             return await MapPayoutAsync(request, cancellationToken);

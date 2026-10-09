@@ -1,11 +1,8 @@
 using FluentValidation.TestHelper;
 using Tooba.BuildingBlocks.Grid;
-using Tooba.Settlement.Application.Commands.ProcessAdminPayout;
-using Tooba.Settlement.Application.Commands.RequestSellerPayout;
-using Tooba.Settlement.Application.Commands.RetryAdminPayout;
-using Tooba.Settlement.Application.Queries.QueryAdminPayoutGrid;
-using Tooba.Settlement.Application.Validators.Admin;
-using Tooba.Settlement.Application.Validators.Seller;
+using Tooba.Settlement.Application.Payouts.Commands;
+using Tooba.Settlement.Application.Payouts.Queries;
+using Tooba.Settlement.Application.Validation;
 using Xunit;
 
 namespace Tooba.Settlement.Tests.Validation;

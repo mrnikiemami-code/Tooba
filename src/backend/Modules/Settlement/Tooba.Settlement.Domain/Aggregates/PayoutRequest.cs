@@ -1,4 +1,5 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
+using Tooba.Settlement.Contracts.Errors;
 using Tooba.Settlement.Domain.ValueObjects;
 using Tooba.Settlement.Domain.Events;
 
@@ -64,12 +65,12 @@ public sealed class PayoutRequest : IHasDomainEvents
     {
         if (amount <= 0)
         {
-            throw new ContractOperationException("settlement.amount.invalid");
+            throw new ContractOperationException(SettlementErrorCodes.AmountInvalid);
         }
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
-            throw new ContractOperationException("settlement.idempotency.required");
+            throw new ContractOperationException(SettlementErrorCodes.IdempotencyRequired);
         }
 
         return new PayoutRequest
@@ -98,7 +99,7 @@ public sealed class PayoutRequest : IHasDomainEvents
     {
         if (Status is PayoutStatus.Succeeded)
         {
-            throw new ContractOperationException("settlement.payout.invalid_state");
+            throw new ContractOperationException(SettlementErrorCodes.PayoutInvalidState);
         }
 
         Status = PayoutStatus.Processing;

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="settlement.account.missing" xml:space="preserve"><value>Settlement account was not found.</value></data>
+  <data name="settlement.payout.rejected" xml:space="preserve"><value>Payout was rejected.</value></data>
+  <data name="settlement.payout.invalid_amount" xml:space="preserve"><value>Payout amount is invalid.</value></data>
+  <data name="settlement.payout.missing" xml:space="preserve"><value>Payout request was not found.</value></data>
+  <data name="settlement.payout.invalid_state" xml:space="preserve"><value>Payout state is invalid for this operation.</value></data>
+  <data name="settlement.idempotency.required" xml:space="preserve"><value>Idempotency key is required.</value></data>
+  <data name="settlement.amount.invalid" xml:space="preserve"><value>Amount must be positive.</value></data>
+  <data name="settlement.accrual.payment_missing" xml:space="preserve"><value>Payment for accrual was not found.</value></data>
+  <data name="settlement.accrual.payment_not_succeeded" xml:space="preserve"><value>Accrual requires a succeeded payment.</value></data>
+  <data name="settlement.accrual.order_missing" xml:space="preserve"><value>Order for accrual was not found.</value></data>
+  <data name="settlement.accrual.order_not_paid" xml:space="preserve"><value>Accrual requires a paid order.</value></data>
+  <data name="settlement.refund.missing" xml:space="preserve"><value>Refund snapshot was not found.</value></data>
+  <data name="settlement.refund.mismatch" xml:space="preserve"><value>Refund snapshot does not match the event.</value></data>
+  <data name="payout.gateway.unconfigured" xml:space="preserve"><value>Payout gateway is unconfigured.</value></data>
+  <data name="settlement.unconfirm.payout_completed" xml:space="preserve"><value>Cannot unconfirm accrual after completed payout.</value></data>
+  <data name="settlement.cancel.payout_completed" xml:space="preserve"><value>Cannot cancel accrual after completed payout.</value></data>
+  <data name="settlement.restore.payout_completed" xml:space="preserve"><value>Cannot restore after completed payout.</value></data>
+  <data name="settlement.outbox.unmapped_event" xml:space="preserve"><value>The integration event type is not registered.</value></data>
+</root>

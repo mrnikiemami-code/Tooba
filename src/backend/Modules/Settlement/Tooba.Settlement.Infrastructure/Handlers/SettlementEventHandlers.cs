@@ -1,9 +1,7 @@
 using Tooba.Returns.Contracts.Events;
 using Tooba.Payment.Contracts.Events;
-using Tooba.Payment.Contracts.Settlement;
 using Tooba.BuildingBlocks;
-using Tooba.Returns.Contracts.Settlement;
-using Tooba.Settlement.Application;
+using Tooba.Settlement.Infrastructure.Directories;
 
 namespace Tooba.Settlement.Infrastructure.Handlers;
 

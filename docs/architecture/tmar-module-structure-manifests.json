@@ -1235,22 +1235,21 @@
       "lockVersion": "ARCH-COMPLETE-002",
       "projects": [
         {
-          "projectName": "Tooba.Settlement.Application",
-          "rootAllowlist": [
-            "GlobalUsings.Domain.cs",
-            "GlobalUsings.Layout.cs"
-          ],
-          "rootAllowlistJustification": "Both are genuine project-wide Settlement imports only; no foreign module Application/Infrastructure/Domain coupling and no namespace-workaround behavior.",
-          "forbiddenRootFiles": [
-            "SettlementContracts.cs",
-            "SettlementCommands.cs",
-            "SettlementQueries.cs",
-            "SettlementHandlers.cs",
-            "SettlementErrorCodes.cs",
-            "SettlementAdminModels.cs",
-            "RequestSellerPayoutCommand.cs",
-            "QueryAdminPayoutGridQuery.cs"
-          ],
+      "projectName": "Tooba.Settlement.Application",
+      "rootAllowlist": [],
+      "rootAllowlistJustification": "No project-root .cs file remains after the AMSC-001 W1 migrate wave retired GlobalUsings.Domain.cs / GlobalUsings.Layout.cs; exact path<->namespace is enforced instead of alias aggregation.",
+      "forbiddenRootFiles": [
+        "SettlementContracts.cs",
+        "SettlementCommands.cs",
+        "SettlementQueries.cs",
+        "SettlementHandlers.cs",
+        "SettlementErrorCodes.cs",
+        "SettlementAdminModels.cs",
+        "RequestSellerPayoutCommand.cs",
+        "QueryAdminPayoutGridQuery.cs",
+        "GlobalUsings.Domain.cs",
+        "GlobalUsings.Layout.cs"
+      ],
           "forbiddenTopLevelFolders": []
         },
         {
@@ -1267,20 +1266,19 @@
           "forbiddenTopLevelFolders": []
         },
         {
-          "projectName": "Tooba.Settlement.Infrastructure",
-          "rootAllowlist": [
-            "GlobalUsings.Domain.cs",
-            "GlobalUsings.Layout.cs"
-          ],
-          "rootAllowlistJustification": "Both are genuine project-wide Settlement Domain/Application-port/internal integration imports; no foreign module Application/Infrastructure/Domain coupling and no alias workaround.",
-          "forbiddenRootFiles": [
-            "SettlementModule.cs",
-            "SettlementDbContext.cs",
-            "SettlementDirectory.cs",
-            "SettlementOutboxRegistration.cs",
-            "SettlementEventHandlers.cs",
-            "AdminPayoutGridQueryEngine.cs"
-          ],
+      "projectName": "Tooba.Settlement.Infrastructure",
+      "rootAllowlist": [],
+      "rootAllowlistJustification": "No project-root .cs file remains after the AMSC-001 W1 migrate wave retired GlobalUsings.Domain.cs / GlobalUsings.Layout.cs; every infrastructure responsibility now lives in its own capability/integration folder with exact path<->namespace.",
+      "forbiddenRootFiles": [
+        "SettlementModule.cs",
+        "SettlementDbContext.cs",
+        "SettlementDirectory.cs",
+        "SettlementOutboxRegistration.cs",
+        "SettlementEventHandlers.cs",
+        "AdminPayoutGridQueryEngine.cs",
+        "GlobalUsings.Domain.cs",
+        "GlobalUsings.Layout.cs"
+      ],
           "forbiddenTopLevelFolders": []
         }
       ]

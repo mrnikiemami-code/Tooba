@@ -2,18 +2,9 @@ using System.Text.RegularExpressions;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
-using Tooba.Settlement.Application.Commands.ProcessAdminPayout;
-using Tooba.Settlement.Application.Commands.RequestSellerPayout;
-using Tooba.Settlement.Application.Commands.RetryAdminPayout;
-using Tooba.Settlement.Application.Queries.GetSellerSettlementBalance;
-using Tooba.Settlement.Application.Queries.ListAdminPayoutQueue;
-using Tooba.Settlement.Application.Queries.ListAdminSettlementBalances;
-using Tooba.Settlement.Application.Queries.ListSellerPayoutRequests;
-using Tooba.Settlement.Application.Queries.ListSellerSettlementEntries;
-using Tooba.Settlement.Application.Queries.ListSellerSettlementStatements;
-using Tooba.Settlement.Application.Queries.QueryAdminPayoutGrid;
-using Tooba.Settlement.Application.Validators.Admin;
-using Tooba.Settlement.Application.Validators.Seller;
+using Tooba.Settlement.Application.Payouts.Commands;
+using Tooba.Settlement.Application.Payouts.Queries;
+using Tooba.Settlement.Application.Validation;
 using Xunit;
 
 namespace Tooba.Settlement.Tests.Architecture;
@@ -166,15 +157,20 @@ public sealed class SettlementValidatorCoverageGuardTests
     [Fact]
     public void Validator_folder_layout_is_exactly_seller_and_admin()
     {
-        var validatorsRoot = Path.Combine(SettlementRoot(), "Tooba.Settlement.Application", "Validators");
-        var folders = Directory.GetDirectories(validatorsRoot)
-            .Select(Path.GetFileName)
-            .OrderBy(x => x, StringComparer.Ordinal)
-            .ToArray();
-        Assert.Equal(new[] { "Admin", "Seller" }, folders);
+        var validatorsRoot = Path.Combine(SettlementRoot(), "Tooba.Settlement.Application", "Validation");
+        Assert.True(File.Exists(Path.Combine(validatorsRoot, "SettlementValidationCodes.cs")));
+        Assert.True(File.Exists(Path.Combine(validatorsRoot, "SettlementRequestValidators.cs")));
 
-        Assert.Equal(1, Directory.GetFiles(Path.Combine(validatorsRoot, "Seller"), "*Validator.cs").Length);
-        Assert.Equal(3, Directory.GetFiles(Path.Combine(validatorsRoot, "Admin"), "*Validator.cs").Length);
+        var text = File.ReadAllText(Path.Combine(validatorsRoot, "SettlementRequestValidators.cs"));
+        Assert.Contains("RequestSellerPayoutCommandValidator", text, StringComparison.Ordinal);
+        Assert.Contains("ProcessAdminPayoutCommandValidator", text, StringComparison.Ordinal);
+        Assert.Contains("RetryAdminPayoutCommandValidator", text, StringComparison.Ordinal);
+        Assert.Contains("QueryAdminPayoutGridQueryValidator", text, StringComparison.Ordinal);
+
+        // The retired per-surface Validators/{Seller,Admin} tree must stay retired: the four
+        // transport validators now live in the single capability-first Validation leaf.
+        Assert.False(Directory.Exists(Path.Combine(validatorsRoot, "Seller")));
+        Assert.False(Directory.Exists(Path.Combine(validatorsRoot, "Admin")));
     }
 
     [Fact]

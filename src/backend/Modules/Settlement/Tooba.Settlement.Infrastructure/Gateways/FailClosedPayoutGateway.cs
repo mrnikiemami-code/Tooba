@@ -1,4 +1,6 @@
-using Tooba.Settlement.Application;
+using Tooba.BuildingBlocks;
+using Tooba.Settlement.Application.Payouts.Ports;
+using Tooba.Settlement.Contracts.Errors;
 
 namespace Tooba.Settlement.Infrastructure.Gateways;
 
@@ -28,6 +30,6 @@ public sealed class FailClosedPayoutGateway : IPayoutGateway
         _ = currency;
         _ = idempotencyKey;
         _ = cancellationToken;
-        throw new InvalidOperationException("payout.gateway.unconfigured");
+        throw new ContractOperationException(SettlementErrorCodes.GatewayUnconfigured);
     }
 }

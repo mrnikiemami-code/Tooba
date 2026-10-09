@@ -6,4 +6,15 @@
     <RootNamespace>Tooba.Settlement.Contracts</RootNamespace>
     <AssemblyName>Tooba.Settlement.Contracts</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\SettlementErrors.resx">
+      <LogicalName>Tooba.Settlement.Contracts.Resources.SettlementErrors.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\SettlementErrors.fa.resx">
+      <LogicalName>Tooba.Settlement.Contracts.Resources.SettlementErrors.fa.resources</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+  </ItemGroup>
 </Project>

@@ -2,8 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Persistence.Grid;
-using Tooba.Settlement.Application.Models;
-using Tooba.Settlement.Application.Ports;
+using Tooba.Settlement.Application.Payouts.Models;
+using Tooba.Settlement.Application.Payouts.Ports;
 using Tooba.Settlement.Domain.Aggregates;
 using Tooba.Settlement.Domain.ValueObjects;
 using Tooba.Settlement.Infrastructure.Persistence;
@@ -133,7 +133,7 @@ public sealed class AdminPayoutGridQueryEngine : IAdminPayoutGridQuery
                 request.PayoutRequestId,
                 request.SettlementAccountId,
                 request.SellerPartyId,
-                sellerName ?? "فروشنده",
+                string.IsNullOrWhiteSpace(sellerName) ? SettlementDisplayLabels.UnknownSeller : sellerName,
                 request.Amount,
                 request.Currency,
                 request.Status.ToString(),

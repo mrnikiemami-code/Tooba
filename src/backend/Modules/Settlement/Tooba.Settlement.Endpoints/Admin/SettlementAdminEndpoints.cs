@@ -4,11 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Settlement.Application.Commands.ProcessAdminPayout;
-using Tooba.Settlement.Application.Commands.RetryAdminPayout;
-using Tooba.Settlement.Application.Queries.ListAdminPayoutQueue;
-using Tooba.Settlement.Application.Queries.ListAdminSettlementBalances;
-using Tooba.Settlement.Application.Queries.QueryAdminPayoutGrid;
+using Tooba.Settlement.Application.Payouts.Commands;
+using Tooba.Settlement.Application.Payouts.Queries;
 
 namespace Tooba.Settlement.Endpoints.Admin;
 

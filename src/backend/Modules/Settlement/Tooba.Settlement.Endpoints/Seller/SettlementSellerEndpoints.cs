@@ -3,12 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Settlement.Application.Commands.RequestSellerPayout;
-using Tooba.Settlement.Application.Models;
-using Tooba.Settlement.Application.Queries.GetSellerSettlementBalance;
-using Tooba.Settlement.Application.Queries.ListSellerPayoutRequests;
-using Tooba.Settlement.Application.Queries.ListSellerSettlementEntries;
-using Tooba.Settlement.Application.Queries.ListSellerSettlementStatements;
+using Tooba.Settlement.Application.Payouts.Commands;
+using Tooba.Settlement.Application.Payouts.Models;
+using Tooba.Settlement.Application.Payouts.Queries;
 
 namespace Tooba.Settlement.Endpoints.Seller;
 

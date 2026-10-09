@@ -101,6 +101,7 @@ builder.Services.AddPromotionEndpointPresentation();
 builder.Services.AddOrderEndpointPresentation();
 builder.Services.AddFulfillmentEndpointPresentation();
 builder.Services.AddReturnEndpointPresentation();
+builder.Services.AddSettlementEndpointPresentation();
 builder.Services.AddAddressBookEndpointPresentation();
 builder.Services.AddWishlistEndpointPresentation();
 builder.Services.AddStoryEndpointPresentation();
@@ -170,7 +171,7 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.Catalog.Application.StoreLandingPages.Commands.CreateStoreLandingPageCommand).Assembly,
     typeof(Tooba.Fulfillment.Application.Shipping.Commands.CreateShippingServiceCommand).Assembly,
     typeof(Tooba.Offer.Application.Offers.Commands.CreateOffer.CreateOfferCommand).Assembly,
-    typeof(Tooba.Settlement.Application.Queries.GetSellerSettlementBalance.GetSellerSettlementBalanceQuery).Assembly,
+    typeof(Tooba.Settlement.Application.Payouts.Queries.GetSellerSettlementBalanceQuery).Assembly,
     typeof(Tooba.Cart.Application.Carts.Commands.CreateGuestCartCommand).Assembly,
     typeof(Tooba.Returns.Application.ReturnRequests.Commands.CreateReturnCommand).Assembly,
     typeof(Tooba.Notification.Application.Customer.Commands.MarkCustomerNotificationReadCommand).Assembly,

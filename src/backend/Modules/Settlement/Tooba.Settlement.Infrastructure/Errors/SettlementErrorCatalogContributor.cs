@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Settlement.Application.Errors;
+using Tooba.Settlement.Contracts.Errors;
 
 namespace Tooba.Settlement.Infrastructure.Errors;
 
-/// <summary>کاتالوگ صریح کدهای خطای Settlement.</summary>
+/// <summary>
+/// کاتالوگ صریح کدهای خطای Settlement. تنها مالک descriptor برای keyspace ماژول است و دقیقاً
+/// یک descriptor برای هر کد HTTP-reachable ثبت می‌کند؛ fault پلتفرمی outbox عمداً کاتالوگ نمی‌شود.
+/// </summary>
 public sealed class SettlementErrorCatalogContributor : IErrorCatalogContributor
 {
     /// <inheritdoc />
@@ -38,13 +41,11 @@ public sealed class SettlementErrorCatalogContributor : IErrorCatalogContributor
             "Refund snapshot does not match the event."),
         D(SettlementErrorCodes.GatewayUnconfigured, ErrorClassification.Business, StatusCodes.Status503ServiceUnavailable,
             "Payout gateway is unconfigured."),
-        D(SettlementErrorCodes.OutboxUnmapped, ErrorClassification.Business, StatusCodes.Status500InternalServerError,
-            "Settlement outbox event type is unmapped."),
-        D("settlement.unconfirm.payout_completed", ErrorClassification.Business, StatusCodes.Status400BadRequest,
+        D(SettlementErrorCodes.UnconfirmPayoutCompleted, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Cannot unconfirm accrual after completed payout."),
-        D("settlement.cancel.payout_completed", ErrorClassification.Business, StatusCodes.Status400BadRequest,
+        D(SettlementErrorCodes.CancelPayoutCompleted, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Cannot cancel accrual after completed payout."),
-        D("settlement.restore.payout_completed", ErrorClassification.Business, StatusCodes.Status400BadRequest,
+        D(SettlementErrorCodes.RestorePayoutCompleted, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Cannot restore after completed payout."),
     ];
 

@@ -1,10 +1,9 @@
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
-using Tooba.Settlement.Application;
+using Tooba.Settlement.Contracts.Errors;
+using Tooba.Settlement.Contracts.Events;
 using Tooba.Settlement.Domain.Aggregates;
-using Tooba.Settlement.Domain.Entities;
 using Tooba.Settlement.Domain.Events;
-using Tooba.Settlement.Domain.ValueObjects;
 using Tooba.Settlement.Infrastructure.Persistence;
 
 namespace Tooba.Settlement.Infrastructure.Messaging;
@@ -33,7 +32,7 @@ public sealed class SettlementOutboxRegistration : IOutboxModuleRegistration
                 EntryId = posted.EntryId,
                 SettlementAccountId = posted.SettlementAccountId,
                 SellerPartyId = posted.SellerPartyId,
-                EntryType = posted.EntryType,
+                EntryType = (int)posted.EntryType,
                 NetAmount = posted.NetAmount,
                 Currency = posted.Currency,
                 SourceType = posted.SourceType,
@@ -68,7 +67,7 @@ public sealed class SettlementOutboxRegistration : IOutboxModuleRegistration
             _ when integrationEventType == typeof(SettlementEntryPostedIntegrationEvent) => SettlementEntryPostedIntegrationEvent.EventTypeName,
             _ when integrationEventType == typeof(PayoutSucceededIntegrationEvent) => PayoutSucceededIntegrationEvent.EventTypeName,
             _ when integrationEventType == typeof(PayoutFailedIntegrationEvent) => PayoutFailedIntegrationEvent.EventTypeName,
-            _ => throw new InvalidOperationException("settlement.outbox.unmapped_event"),
+            _ => throw new ContractOperationException(SettlementErrorCodes.OutboxUnmapped),
         };
 
     /// <inheritdoc />
