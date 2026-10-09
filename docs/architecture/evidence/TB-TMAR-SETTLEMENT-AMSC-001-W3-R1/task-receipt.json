@@ -1,0 +1,8 @@
+{
+  "id": "3189d789-38ac-4cb9-a5a8-e7dcdf793e5a",
+  "taskId": "TB-TMAR-SETTLEMENT-AMSC-001-W3-R1",
+  "channelId": "tooba-main",
+  "createdAtUtc": "2026-10-09T00:37:26.0715518",
+  "claimedVia": "GET /api/tasks/next?channelId=tooba-main",
+  "claimNote": "The task was returned by the protocol BRIDGE-WAKE health/claim probe; a second GET returned HTTP 204 (single-active-task lifecycle), so the payload was persisted from the claim response captured in the same session."
+}

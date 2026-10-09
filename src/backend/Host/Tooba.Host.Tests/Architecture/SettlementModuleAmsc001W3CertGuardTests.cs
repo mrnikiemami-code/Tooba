@@ -93,7 +93,12 @@ public sealed class SettlementModuleAmsc001W3CertGuardTests
         // Wave lineage: each wave's starting head is the parent wave's commit.
         Assert.Equal("bac4dbe3", sot.RootElement.GetProperty("settlementAmsc001W0").GetProperty("commit").GetString());
         Assert.Equal("4ca4aafc", sot.RootElement.GetProperty("settlementAmsc001W1").GetProperty("commit").GetString());
-        Assert.Equal("4ca4aafc0acc3b5bc62c6cc366a9e50d07b11d05", w3.GetProperty("startingHead").GetString());
+        Assert.Equal("86ebb4dd", sot.RootElement.GetProperty("settlementAmsc001W2").GetProperty("commit").GetString());
+
+        // W3-R1 provenance correction: the historical W3 wave started from the W2 structure commit, not
+        // from W1. The historical W3 evidence stays immutable; the corrected current SoT value is locked
+        // here so the wrong lineage cannot silently return.
+        Assert.Equal("86ebb4ddb0ba85da480f44a7e797cf1791233f2a", w3.GetProperty("startingHead").GetString());
         Assert.Equal("TB-TMAR-SETTLEMENT-AMSC-001-W2", w3.GetProperty("parentTask").GetString());
     }
 
