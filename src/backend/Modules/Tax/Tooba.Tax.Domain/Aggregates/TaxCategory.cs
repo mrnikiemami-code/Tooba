@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Tax.Contracts.Errors;
 
 namespace Tooba.Tax.Domain;
 
@@ -41,12 +42,12 @@ public sealed class TaxCategory
     {
         if (categoryId == Guid.Empty)
         {
-            throw new InvalidOperationException("tax.category.id_required");
+            throw new SemanticException(new SemanticError(TaxErrorCodes.CategoryIdRequired));
         }
 
         if (string.IsNullOrWhiteSpace(code))
         {
-            throw new InvalidOperationException("tax.category.code_required");
+            throw new SemanticException(new SemanticError(TaxErrorCodes.CategoryCodeRequired));
         }
 
         return new TaxCategory

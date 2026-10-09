@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Tax.Contracts.Errors;
 
 namespace Tooba.Tax.Domain;
 
@@ -102,34 +103,34 @@ public sealed class TaxRule : IHasDomainEvents
     {
         if (ruleId == Guid.Empty)
         {
-            throw new InvalidOperationException("tax.rule.id_required");
+            throw new SemanticException(new SemanticError(TaxErrorCodes.RuleIdRequired));
         }
 
         if (string.IsNullOrWhiteSpace(jurisdiction))
         {
-            throw new InvalidOperationException("tax.jurisdiction.required");
+            throw new SemanticException(new SemanticError(TaxErrorCodes.JurisdictionRequired));
         }
 
         if (string.IsNullOrWhiteSpace(market))
         {
-            throw new InvalidOperationException("tax.market.required");
+            throw new SemanticException(new SemanticError(TaxErrorCodes.MarketRequired));
         }
 
         if (effectiveTo is not null && effectiveTo <= effectiveFrom)
         {
-            throw new InvalidOperationException("tax.validity.inverted");
+            throw new SemanticException(new SemanticError(TaxErrorCodes.ValidityInverted));
         }
 
         if (kind == TaxRuleKind.Percentage)
         {
             if (rate < 0 || rate > 1)
             {
-                throw new InvalidOperationException("tax.rate.out_of_range");
+                throw new SemanticException(new SemanticError(TaxErrorCodes.RateOutOfRange));
             }
         }
         else if (rate != 0)
         {
-            throw new InvalidOperationException("tax.rate.not_applicable");
+            throw new SemanticException(new SemanticError(TaxErrorCodes.RateNotApplicable));
         }
 
         var rule = new TaxRule
@@ -169,12 +170,12 @@ public sealed class TaxRule : IHasDomainEvents
     {
         if (Kind != TaxRuleKind.Percentage)
         {
-            throw new InvalidOperationException("tax.rate.kind_mismatch");
+            throw new SemanticException(new SemanticError(TaxErrorCodes.RateKindMismatch));
         }
 
         if (rate < 0 || rate > 1)
         {
-            throw new InvalidOperationException("tax.rate.out_of_range");
+            throw new SemanticException(new SemanticError(TaxErrorCodes.RateOutOfRange));
         }
 
         Rate = rate;

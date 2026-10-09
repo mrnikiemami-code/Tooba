@@ -1,4 +1,6 @@
 using Xunit;
+using Tooba.BuildingBlocks;
+using Tooba.Tax.Contracts.Errors;
 using Tooba.Tax.Domain;
 
 namespace Tooba.Tax.Tests.Domain;
@@ -27,7 +29,7 @@ public sealed class TaxRuleInvariantTests
     [Fact]
     public void Create_rejects_percentage_rate_above_one()
     {
-        Assert.Throws<InvalidOperationException>(() => TaxRule.Create(
+        var error = Assert.Throws<SemanticException>(() => TaxRule.Create(
             Guid.NewGuid(),
             "IR-NAT",
             "IR",
@@ -39,6 +41,7 @@ public sealed class TaxRuleInvariantTests
             1,
             TaxOverridePolicy.Disabled,
             DateTimeOffset.UtcNow));
+        Assert.Equal(TaxErrorCodes.RateOutOfRange, error.Error.Code);
     }
 
     [Fact]

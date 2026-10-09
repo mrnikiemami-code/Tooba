@@ -71,10 +71,14 @@ public sealed class TaxFoundationTests : IAsyncLifetime
         Assert.NotEqual(TaxOutcome.ZeroRated, TaxOutcome.NoApplicableRule);
         Assert.NotEqual(TaxOutcome.NoApplicableRule, TaxOutcome.CalculationError);
         Assert.Equal("tax", TaxDbContext.Schema);
-        var domain = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Tax", "Tooba.Tax.Domain", "TaxDomain.cs"));
+        var domainRoot = Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Tax", "Tooba.Tax.Domain");
+        var aggregates = Path.Combine(domainRoot, "Aggregates");
+        var domain = string.Join(
+            Environment.NewLine,
+            Directory.EnumerateFiles(aggregates, "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText));
         Assert.DoesNotContain("0.09", domain, StringComparison.Ordinal);
         Assert.DoesNotContain("1405", domain, StringComparison.Ordinal);
-        Assert.DoesNotContain("MassTransit", File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "backend", "Modules", "Tax", "Tooba.Tax.Domain", "Tooba.Tax.Domain.csproj")), StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("MassTransit", File.ReadAllText(Path.Combine(domainRoot, "Tooba.Tax.Domain.csproj")), StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

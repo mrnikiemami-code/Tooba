@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
+using Tooba.Tax.Contracts.Errors;
 using Tooba.Tax.Domain;
 using Tooba.Tax.Infrastructure.Events;
 using Tooba.Tax.Infrastructure.Persistence;
@@ -72,7 +73,7 @@ public sealed class TaxOutboxRegistration : IOutboxModuleRegistration
             return TaxCalculationFailedIntegrationEvent.EventTypeName;
         }
 
-        throw new InvalidOperationException("Unmapped Tax integration event type.");
+        throw new ContractOperationException(TaxErrorCodes.OutboxUnmappedEventType);
     }
 
     /// <inheritdoc />

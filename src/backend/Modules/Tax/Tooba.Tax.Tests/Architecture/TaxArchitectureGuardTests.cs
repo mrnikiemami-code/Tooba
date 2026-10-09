@@ -98,7 +98,12 @@ public sealed class TaxArchitectureGuardTests
     [Fact]
     public void Tax_golden_boundaries_remain_clean()
     {
-        Assert.DoesNotContain(ProjectRefs("Tooba.Tax.Domain"), x => x.Contains("Tooba.Tax.Contracts", StringComparison.Ordinal));
+        // The Domain may reference only its OWN module Contracts (the canonical Contracts/Errors
+        // stable-code home introduced by AMSC-001 W1); a foreign module Contracts reference stays forbidden.
+        var domainRefs = ProjectRefs("Tooba.Tax.Domain");
+        Assert.All(
+            domainRefs.Where(x => x.Contains("Contracts", StringComparison.OrdinalIgnoreCase)),
+            x => Assert.Contains("Tooba.Tax.Contracts", x, StringComparison.Ordinal));
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
         Assert.DoesNotContain(Sources("Tooba.Tax.Contracts"), x => x.Text.Contains("namespace Tooba.Tax.Domain", StringComparison.Ordinal));
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");

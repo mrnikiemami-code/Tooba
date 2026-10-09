@@ -7,6 +7,14 @@
     <AssemblyName>Tooba.Tax.Contracts</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Update="Resources\TaxErrors.resx">
+      <LogicalName>Tooba.Tax.Contracts.Resources.TaxErrors.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\TaxErrors.fa.resx">
+      <LogicalName>Tooba.Tax.Contracts.Resources.TaxErrors.fa.resources</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
 </Project>

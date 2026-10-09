@@ -2,6 +2,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Tax.Application;
 using Tooba.Tax.Contracts;
+using Tooba.Tax.Contracts.Errors;
 using Tooba.Tax.Domain;
 using Tooba.Tax.Infrastructure.Persistence;
 
@@ -47,7 +48,7 @@ public sealed class TaxDirectory : ITaxDirectory, ITaxQueryGateway
         await _guard.EnsureCanMutateAsync(cancellationToken);
         if (!await _db.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
         {
-            throw new InvalidOperationException("tax.category.missing");
+            throw new ContractOperationException(TaxErrorCodes.CategoryMissing);
         }
 
         var existing = await _db.OfferClassifications.SingleOrDefaultAsync(x => x.OfferId == offerId, cancellationToken);
@@ -76,7 +77,7 @@ public sealed class TaxDirectory : ITaxDirectory, ITaxQueryGateway
         await _guard.EnsureCanMutateAsync(cancellationToken);
         if (!await _db.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
         {
-            throw new InvalidOperationException("tax.category.missing");
+            throw new ContractOperationException(TaxErrorCodes.CategoryMissing);
         }
 
         var rule = TaxRule.Create(

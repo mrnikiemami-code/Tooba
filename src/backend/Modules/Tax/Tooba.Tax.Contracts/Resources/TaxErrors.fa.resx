@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="tax.rule.id_required" xml:space="preserve"><value>شناسهٔ قاعدهٔ مالیاتی الزامی است.</value></data>
+  <data name="tax.jurisdiction.required" xml:space="preserve"><value>حوزهٔ مالیاتی صریح الزامی است.</value></data>
+  <data name="tax.market.required" xml:space="preserve"><value>بازار تجاری الزامی است.</value></data>
+  <data name="tax.validity.inverted" xml:space="preserve"><value>بازهٔ اعتبار قاعدهٔ مالیاتی نامعتبر است.</value></data>
+  <data name="tax.rate.out_of_range" xml:space="preserve"><value>نرخ مالیات خارج از بازهٔ مجاز است.</value></data>
+  <data name="tax.rate.not_applicable" xml:space="preserve"><value>قاعدهٔ غیردرصدی نباید نرخ داشته باشد.</value></data>
+  <data name="tax.rate.kind_mismatch" xml:space="preserve"><value>فقط قاعدهٔ درصدی نرخ قابل ویرایش دارد.</value></data>
+  <data name="tax.category.id_required" xml:space="preserve"><value>شناسهٔ طبقهٔ مالیاتی الزامی است.</value></data>
+  <data name="tax.category.code_required" xml:space="preserve"><value>کد پایدار طبقهٔ مالیاتی الزامی است.</value></data>
+  <data name="tax.category.missing" xml:space="preserve"><value>طبقهٔ مالیاتی پیدا نشد.</value></data>
+  <data name="tax.outbox.unmapped_event_type" xml:space="preserve"><value>نوع رویداد یکپارچه‌سازی ثبت نشده است.</value></data>
+</root>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="tax.rule.id_required" xml:space="preserve"><value>A tax rule id is required.</value></data>
+  <data name="tax.jurisdiction.required" xml:space="preserve"><value>A tax jurisdiction is required.</value></data>
+  <data name="tax.market.required" xml:space="preserve"><value>A tax market is required.</value></data>
+  <data name="tax.validity.inverted" xml:space="preserve"><value>The tax rule validity window is invalid.</value></data>
+  <data name="tax.rate.out_of_range" xml:space="preserve"><value>The tax rate is out of range.</value></data>
+  <data name="tax.rate.not_applicable" xml:space="preserve"><value>A non-percentage tax rule must not carry a rate.</value></data>
+  <data name="tax.rate.kind_mismatch" xml:space="preserve"><value>Only a percentage tax rule carries an editable rate.</value></data>
+  <data name="tax.category.id_required" xml:space="preserve"><value>A tax category id is required.</value></data>
+  <data name="tax.category.code_required" xml:space="preserve"><value>A tax category code is required.</value></data>
+  <data name="tax.category.missing" xml:space="preserve"><value>The tax category was not found.</value></data>
+  <data name="tax.outbox.unmapped_event_type" xml:space="preserve"><value>Integration event type is not registered.</value></data>
+</root>

@@ -3,10 +3,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Localization;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
 using Tooba.Tax.Application;
 using Tooba.Tax.Contracts;
+using Tooba.Tax.Contracts.Errors;
 using Tooba.Tax.Infrastructure.Adapters;
 using Tooba.Tax.Infrastructure.Persistence;
 
@@ -28,6 +31,11 @@ public sealed class TaxModule : IToobaModule
         ArgumentNullException.ThrowIfNull(environment);
 
         services.AddSingleton<IOutboxModuleRegistration, TaxOutboxRegistration>();
+        // Tax is INTERNAL_ONLY (zero HTTP routes, no Endpoints project): the module-owned error
+        // catalog contributor and resource set are registered by the Infrastructure composition root,
+        // exactly as the certified Inventory/Pricing precedent. Both concrete types stay Contracts-owned.
+        services.AddSingleton<IErrorCatalogContributor, TaxErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, TaxErrorResourceSet>();
         services.AddScoped<ITaxUseCaseGuard, OpenTaxUseCaseGuard>();
         services.AddScoped<ITaxDirectory, TaxDirectory>();
         services.AddScoped<ITaxCalculator>(sp => sp.GetRequiredService<ITaxDirectory>());
