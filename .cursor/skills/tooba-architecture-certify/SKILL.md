@@ -10,6 +10,9 @@ Use this skill only after a module/capability migration is believed complete.
 This skill verifies and locks architecture. It is not a redesign task.
 
 
+## One-Pass HTTP Success-Response Acceptance Gate (prospective)
+For HTTP-owning targets, verify actual shipped success and failure mappings once against the current `ApiResponseFactory` and approved architecture locks. Specifically, raw `Results.Json(..., statusCode: 201)` is non-canonical by default when the standard `Created` path is applicable; a precedent, unchanged DTO, SoT declaration, or green guard cannot authorize it. Compare status, raw body/envelope, Content-Type and Location before accepting any conversion. If canonical migration would add Location or otherwise change the wire contract, require an explicit Architect-approved decision for that delta, or an exact existing architecture lock for a narrow exception. With neither, issue one CERTIFICATION_REVIEW_BLOCKED report containing affected routes, evidence and two bounded options, then STOP; never manufacture an exception or lock non-canonical behavior with a test. After an Architect decision, require only the minimal affected endpoint/guard proof; do not restart four waves, open unrelated certified modules, widen baselines or create repeated review loops. This gate is prospective for active work and does not retroactively invalidate existing certifications.
+
 ## Four-Skill Workflow Integration — Mandatory Structure Gate
 
 The canonical architecture workflow is:
