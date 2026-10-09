@@ -5,7 +5,7 @@ using Tooba.ModuleContracts;
 using Tooba.StoreContext.Contracts.Current;
 using Tooba.StoreContext.Infrastructure.Current;
 
-namespace Tooba.StoreContext.Infrastructure;
+namespace Tooba.StoreContext.Infrastructure.DependencyInjection;
 
 /// <summary>
 /// ترکیب ماژول StoreContext: ثبت accessor زمینهٔ تجارت مؤثر فروشگاه در scope و ارائهٔ آن

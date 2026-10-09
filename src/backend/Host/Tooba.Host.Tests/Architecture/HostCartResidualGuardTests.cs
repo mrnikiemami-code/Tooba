@@ -257,12 +257,14 @@ public sealed class HostCartResidualGuardTests
         Assert.True(Directory.Exists(contractsRoot), contractsRoot);
         Assert.True(Directory.Exists(infraRoot), infraRoot);
 
-        // Infrastructure root may only contain the module composition entry.
+        // TB-TMAR-STORECONTEXT-AMSC-001-W2: the Infrastructure root is empty; the module composition
+        // entry lives under DependencyInjection/ like the newest ARCH-COMPLETE-002 certified modules.
         var infraRootFiles = Directory.GetFiles(infraRoot, "*.cs", SearchOption.TopDirectoryOnly)
             .Select(Path.GetFileName!)
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
-        Assert.Equal(new[] { "StoreContextModule.cs" }, infraRootFiles);
+        Assert.Empty(infraRootFiles);
+        Assert.True(File.Exists(Path.Combine(infraRoot, "DependencyInjection", "StoreContextModule.cs")));
 
         // Contracts must not depend on Cart or Host, and must expose the three seams.
         var contractsProject = File.ReadAllText(Path.Combine(contractsRoot, "Tooba.StoreContext.Contracts.csproj"));
@@ -325,7 +327,8 @@ public sealed class HostCartResidualGuardTests
         Assert.DoesNotContain(storeContextSources, path =>
             File.ReadAllText(path).Contains("MediatR", StringComparison.Ordinal));
 
-        // 4. Contracts root has zero .cs; Infrastructure root only the module entry.
+        // 4. Contracts root has zero .cs; Infrastructure root has zero .cs (composition entry moved
+        //    to DependencyInjection/ by TB-TMAR-STORECONTEXT-AMSC-001-W2).
         var contractsRootFiles = Directory.GetFiles(
             Path.Combine(storeContextRoot, "Tooba.StoreContext.Contracts"), "*.cs", SearchOption.TopDirectoryOnly);
         Assert.Empty(contractsRootFiles);
@@ -335,7 +338,9 @@ public sealed class HostCartResidualGuardTests
             .Select(Path.GetFileName!)
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
-        Assert.Equal(new[] { "StoreContextModule.cs" }, infraRootFiles);
+        Assert.Empty(infraRootFiles);
+        Assert.True(File.Exists(Path.Combine(
+            storeContextRoot, "Tooba.StoreContext.Infrastructure", "DependencyInjection", "StoreContextModule.cs")));
 
         // 5. Path <-> namespace alignment for the capability folder.
         var contractText = File.ReadAllText(Path.Combine(

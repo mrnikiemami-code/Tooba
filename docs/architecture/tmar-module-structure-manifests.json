@@ -1047,6 +1047,7 @@
         {
           "projectName": "Tooba.StoreContext.Contracts",
           "rootAllowlist": [],
+          "rootAllowlistJustification": "Boundary semantics only: the capability folder Current/ carries the effective store commerce context record plus the read, assign and worker-factory seams. No root .cs remains and namespace alignment is exact path-derived equality.",
           "forbiddenRootFiles": [
             "StoreCommerceContext.cs"
           ],
@@ -1054,10 +1055,10 @@
         },
         {
           "projectName": "Tooba.StoreContext.Infrastructure",
-          "rootAllowlist": [
-            "StoreContextModule.cs"
-          ],
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "TB-TMAR-STORECONTEXT-AMSC-001-W2 aligned the module composition entry with the newest ARCH-COMPLETE-002 certified precedent: StoreContextModule.cs moved from the project root to DependencyInjection/ (namespace Tooba.StoreContext.Infrastructure.DependencyInjection), so the Infrastructure root now has zero .cs while Current/ keeps the scoped StoreCommerceContextAccessor. Exact path-derived namespace equality holds for both files.",
           "forbiddenRootFiles": [
+            "StoreContextModule.cs",
             "StoreCommerceContextAccessor.cs"
           ],
           "forbiddenTopLevelFolders": []
