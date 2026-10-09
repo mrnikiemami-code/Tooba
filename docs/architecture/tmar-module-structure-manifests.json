@@ -1233,24 +1233,35 @@
       "module": "Settlement",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "CERTIFIED by TB-TMAR-SETTLEMENT-AMSC-001-W3 (tooba-architecture-certify) after the Structure wave W2. Wave lineage W0 bac4dbe3 (analyze) -> W1 4ca4aafc (migrate) -> W2 (structure) -> W3 (this certify wave). All applicable ARCH-COMPLETE-002 gates re-derived from disk and PASS: HTTP_OWNING module owning 10 module-owned routes (Host Settlement route count ZERO) over /v1/seller/settlements x5 and /v1/admin/settlements x5, dispatched to 10 endpoint-reachable MediatR requests through ISender with a real IRequestHandler for each; the exhaustive 4 VALIDATOR_REQUIRED + 6 NO_VALIDATOR_REQUIRED input-provenance matrix under the certify 6a HARD BLOCKER gate with the four transport validators discoverable through AddToobaCqrsFoundation AddValidatorsFromAssembly over the Settlement Application assembly; canonical ApiResponseFactory.From results with zero raw Results.*, zero catch-and-map and zero ex.Message classification (the typed SettlementOperation seam filters on SettlementErrorCodes.IsKnown only); the single canonical Contracts error-code home (17 HTTP-reachable + 1 platform fault) with 17 descriptors registered exactly once and 18 EN + 18 FA bilingual resources owned and registered once by SettlementErrorResourceSet; PROFESSIONAL_SHALLOW capability-first structure (Payouts/{Commands,Queries,Models,Ports} + Composition/ + Validation/) with six solution projects under /Modules/Settlement/, exact path<->namespace (0 mismatches over 66 production .cs) and enforced root allowlists; Contracts-only boundaries with zero foreign Application/Infrastructure/Domain edge and zero cross-module persistence or join; the single InitialSettlement migration byte-identical to the W0 baseline; and the preserved HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED / HOST_ROOT_FINAL_CERTIFIED checkpoints. Verdict COMPLETE_REFERENCE_PATTERN; structureCertified true; microserviceExtractable = ARCHITECTURAL_READY_RUNTIME_UNPROVEN.",
+      "evidence": "docs/architecture/evidence/TB-TMAR-SETTLEMENT-AMSC-001-W3/certification.md",
       "projects": [
         {
-      "projectName": "Tooba.Settlement.Application",
-      "rootAllowlist": [],
-      "rootAllowlistJustification": "No project-root .cs file remains after the AMSC-001 W1 migrate wave retired GlobalUsings.Domain.cs / GlobalUsings.Layout.cs; exact path<->namespace is enforced instead of alias aggregation.",
-      "forbiddenRootFiles": [
-        "SettlementContracts.cs",
-        "SettlementCommands.cs",
-        "SettlementQueries.cs",
-        "SettlementHandlers.cs",
-        "SettlementErrorCodes.cs",
-        "SettlementAdminModels.cs",
-        "RequestSellerPayoutCommand.cs",
-        "QueryAdminPayoutGridQuery.cs",
-        "GlobalUsings.Domain.cs",
-        "GlobalUsings.Layout.cs"
-      ],
-          "forbiddenTopLevelFolders": []
+          "projectName": "Tooba.Settlement.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No project-root .cs file remains after the AMSC-001 W1 migrate wave retired GlobalUsings.Domain.cs / GlobalUsings.Layout.cs; exact path<->namespace is enforced instead of alias aggregation.",
+          "forbiddenRootFiles": [
+            "SettlementContracts.cs",
+            "SettlementCommands.cs",
+            "SettlementQueries.cs",
+            "SettlementHandlers.cs",
+            "SettlementErrorCodes.cs",
+            "SettlementAdminModels.cs",
+            "RequestSellerPayoutCommand.cs",
+            "QueryAdminPayoutGridQuery.cs",
+            "GlobalUsings.Domain.cs",
+            "GlobalUsings.Layout.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Models",
+            "Ports",
+            "Validators",
+            "Errors",
+            "Handlers",
+            "Requests"
+          ]
         },
         {
           "projectName": "Tooba.Settlement.Endpoints",
@@ -1266,20 +1277,23 @@
           "forbiddenTopLevelFolders": []
         },
         {
-      "projectName": "Tooba.Settlement.Infrastructure",
-      "rootAllowlist": [],
-      "rootAllowlistJustification": "No project-root .cs file remains after the AMSC-001 W1 migrate wave retired GlobalUsings.Domain.cs / GlobalUsings.Layout.cs; every infrastructure responsibility now lives in its own capability/integration folder with exact path<->namespace.",
-      "forbiddenRootFiles": [
-        "SettlementModule.cs",
-        "SettlementDbContext.cs",
-        "SettlementDirectory.cs",
-        "SettlementOutboxRegistration.cs",
-        "SettlementEventHandlers.cs",
-        "AdminPayoutGridQueryEngine.cs",
-        "GlobalUsings.Domain.cs",
-        "GlobalUsings.Layout.cs"
-      ],
-          "forbiddenTopLevelFolders": []
+          "projectName": "Tooba.Settlement.Infrastructure",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "No project-root .cs file remains after the AMSC-001 W1 migrate wave retired GlobalUsings.Domain.cs / GlobalUsings.Layout.cs; every infrastructure responsibility now lives in its own capability/integration folder with exact path<->namespace.",
+          "forbiddenRootFiles": [
+            "SettlementModule.cs",
+            "SettlementDbContext.cs",
+            "SettlementDirectory.cs",
+            "SettlementOutboxRegistration.cs",
+            "SettlementEventHandlers.cs",
+            "AdminPayoutGridQueryEngine.cs",
+            "GlobalUsings.Domain.cs",
+            "GlobalUsings.Layout.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations",
+            "Repositories"
+          ]
         }
       ]
     },
