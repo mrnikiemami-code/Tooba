@@ -430,7 +430,7 @@
       "module": "Wishlist",
       "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "Certified by TB-TMAR-WISHLIST-AMC-001-W4 under COMPLETE_REFERENCE_PATTERN (semantic-fault repair W4-R1). Capability-first Customer CQRS; Result+WishlistOperation+ApiResponseFactory; exhaustive validator matrix (3 required + 1 Actor-only not required); Contracts.Errors/Resources catalog; Catalog.Contracts ports in Application/Infrastructure; Order.Contracts.Fulfillment session seam in production Customer actor resolver AND Development seed; Host Wishlist CLOSED_HOST_ZERO; /Modules/Wishlist/ solution group; microservice-extractable with zero foreign Application/Infrastructure/Domain coupling.",
+      "certificationNote": "CERTIFIED by TB-TMAR-WISHLIST-AMSC-001-W3 (tooba-architecture-certify) after the Structure wave W2 (03871df6). Wave lineage W0 e80045ca (analyze) -> W1 d7fa18f7 (migrate) -> W2 03871df6 (structure) -> W3 (this certify wave). Wishlist is HTTP_OWNING: the W0 applicability gate and the certify 6a hard blocker re-derived from disk prove exactly 4 module-owned HTTP routes under the single group /v1/customer/wishlist (GET list, POST /{productId:guid}, DELETE /{productId:guid}, POST /membership) with Host owning ZERO Wishlist routes; 4 endpoint-reachable requests each mapped 1:1 to exactly one MediatR request record and one IRequestHandler and all routed through the WishlistOperation seam (4/4); the exhaustive validator matrix is 3 VALIDATOR_REQUIRED (AddWishlistItemCommand, RemoveWishlistItemCommand, GetWishlistMembershipQuery) + 1 NO_VALIDATOR_REQUIRED (ListWishlistPageQuery, whose only argument is the server-derived actor and whose route binds no client-controlled shape); the single canonical Contracts stable-code home declares 4 Wishlist-owned codes plus the shared Foundation-owned customer.session.required with a KnownCodes/IsKnown declared-code guard, 4 descriptors registered exactly once by WishlistErrorCatalogContributor and 4 EN + 4 FA bilingual resources owned once by WishlistErrorResourceSet with explicit locked LogicalName values; the typed WishlistOperation seam classifies by typed code only (ContractOperationException + SemanticException) with zero message-prose classification and zero raw InvalidOperationException literals; PROFESSIONAL_SHALLOW capability-first structure with exact path<->namespace and enforced root allowlists across all five production projects under the canonical /Modules/Wishlist/ solution folder; Contracts-only boundaries (zero foreign Application/Infrastructure/Domain edge, zero cross-module persistence, zero cross-module join; the only foreign edges are the Catalog.Contracts lookup seams and the Order.Contracts.Fulfillment session seam); the wishlist schema and the single migration 20260825162434_InitialWishlist are byte-identical to the W0 baseline; and the HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED / HOST_ROOT_FINAL_CERTIFIED checkpoints are preserved. Verdict COMPLETE_REFERENCE_PATTERN; structureCertified true; microserviceExtractable = TRUE_CONTRACTS_ONLY_SELF_CONTAINED_ERROR_SURFACE_EXACT_PATH_NAMESPACE.",
       "projects": [
         {
           "projectName": "Tooba.Wishlist.Application",
@@ -496,8 +496,13 @@
         }
       ],
       "structureAuthorityTask": "TB-TMAR-WISHLIST-AMSC-001-W2",
-      "structureAuthorityCommit": "PENDING_W2_COMMIT",
-      "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3"
+      "structureAuthorityCommit": "03871df68d3204214680afec9aae7992dc481b2e",
+      "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3",
+      "certificationState": "WISHLIST_AMSC_001_CERTIFIED",
+      "currentCertificationTask": "TB-TMAR-WISHLIST-AMSC-001-W3",
+      "currentVerdict": "COMPLETE_REFERENCE_PATTERN",
+      "currentValidatorMatrixState": "EXHAUSTIVE_3_VALIDATOR_REQUIRED_1_NO_VALIDATOR_REQUIRED",
+      "evidence": "docs/architecture/evidence/TB-TMAR-WISHLIST-AMSC-001-W3/certification.md"
     },
     {
       "module": "UserPreference",
