@@ -22,7 +22,7 @@ public sealed class HostWishlistAmcGuardTests
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Endpoints/Customer/WishlistCustomerEndpoints.cs")));
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/Development/WishlistDevelopmentSeed.cs")));
+            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/Adapters/WishlistDevelopmentSeed.cs")));
     }
 
     [Fact]
@@ -30,7 +30,7 @@ public sealed class HostWishlistAmcGuardTests
     {
         var root = FindRepoRoot();
         var directory = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/Directories/WishlistDirectory.cs"));
+            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/Persistence/WishlistDirectory.cs"));
         Assert.Contains("ICatalogReviewProductLookup", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("ICatalogLookupGateway", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogPublicationStatus", directory, StringComparison.Ordinal);
@@ -43,7 +43,7 @@ public sealed class HostWishlistAmcGuardTests
         Assert.DoesNotContain("IStorefrontComposer", composer, StringComparison.Ordinal);
 
         var seed = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/Development/WishlistDevelopmentSeed.cs"));
+            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/Adapters/WishlistDevelopmentSeed.cs"));
         Assert.Contains("ICatalogDevelopmentPublishedProductSampler", seed, StringComparison.Ordinal);
         Assert.Contains("StorefrontGuestActor", seed, StringComparison.Ordinal);
         Assert.DoesNotContain("CatalogDbContext", seed, StringComparison.Ordinal);
@@ -74,7 +74,7 @@ public sealed class HostWishlistAmcGuardTests
     {
         var migrator = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src/backend/Host/Tooba.Host/Development/DevelopmentSchemaMigrator.cs"));
-        Assert.Contains("Tooba.Wishlist.Infrastructure.Development", migrator, StringComparison.Ordinal);
+        Assert.Contains("Tooba.Wishlist.Infrastructure.Adapters", migrator, StringComparison.Ordinal);
         Assert.Contains("WishlistDevelopmentSeed.ApplyAsync", migrator, StringComparison.Ordinal);
         Assert.DoesNotContain("Tooba.Host.Wishlist", migrator, StringComparison.Ordinal);
     }

@@ -29,8 +29,10 @@ public sealed class WishlistModuleAmcW2StructureGuardTests
         Assert.True(File.Exists(Path.Combine(app, "Composition", "WishlistPresentationComposer.cs")));
         Assert.True(File.Exists(Path.Combine(app, "Customer", "Commands", "AddWishlistItemCommand.cs")));
         Assert.True(File.Exists(Path.Combine(app, "Customer", "Queries", "ListWishlistPageQuery.cs")));
-        Assert.True(File.Exists(Path.Combine(app, "Customer", "Validators", "WishlistValidators.cs")));
-        Assert.True(File.Exists(Path.Combine(infra, "Directories", "WishlistDirectory.cs")));
+        Assert.True(File.Exists(Path.Combine(app, "Validation", "AddWishlistItemCommandValidator.cs")));
+        Assert.True(File.Exists(Path.Combine(app, "Validation", "RemoveWishlistItemCommandValidator.cs")));
+        Assert.True(File.Exists(Path.Combine(app, "Validation", "GetWishlistMembershipQueryValidator.cs")));
+        Assert.True(File.Exists(Path.Combine(infra, "Persistence", "WishlistDirectory.cs")));
         Assert.True(File.Exists(Path.Combine(infra, "Persistence", "Migrations", "20260825162434_InitialWishlist.cs")));
         Assert.True(File.Exists(Path.Combine(contracts, "Ports", "IWishlistCountPort.cs")));
         Assert.True(File.Exists(Path.Combine(contracts, "Errors", "WishlistErrorCodes.cs")));

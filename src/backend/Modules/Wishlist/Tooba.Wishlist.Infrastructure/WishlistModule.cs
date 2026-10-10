@@ -10,7 +10,6 @@ using Tooba.Wishlist.Application.Composition;
 using Tooba.Wishlist.Application.Ports;
 using Tooba.Wishlist.Contracts.Errors;
 using Tooba.Wishlist.Contracts.Ports;
-using Tooba.Wishlist.Infrastructure.Directories;
 using Tooba.Wishlist.Infrastructure.Persistence;
 
 namespace Tooba.Wishlist.Infrastructure;

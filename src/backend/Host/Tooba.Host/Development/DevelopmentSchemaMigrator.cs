@@ -13,7 +13,7 @@ using Tooba.Content.Infrastructure.Development;
 using Tooba.PageComposition.Infrastructure.Development;
 using Tooba.Story.Infrastructure;
 using Tooba.Story.Infrastructure.Development;
-using Tooba.Wishlist.Infrastructure.Development;
+using Tooba.Wishlist.Infrastructure.Adapters;
 
 namespace Tooba.Host.Development;
 

@@ -84,7 +84,8 @@ public sealed class WishlistModuleAmcW4CertGuardTests
         Assert.False(Directory.Exists(Path.Combine(app, "Presentation")));
         Assert.True(Directory.Exists(Path.Combine(app, "Customer", "Commands")));
         Assert.True(Directory.Exists(Path.Combine(app, "Customer", "Queries")));
-        Assert.True(Directory.Exists(Path.Combine(app, "Customer", "Validators")));
+        Assert.False(Directory.Exists(Path.Combine(app, "Customer", "Validators")));
+        Assert.True(Directory.Exists(Path.Combine(app, "Validation")));
         Assert.True(Directory.Exists(Path.Combine(app, "Composition")));
 
         Assert.Equal(
@@ -96,7 +97,9 @@ public sealed class WishlistModuleAmcW4CertGuardTests
         Assert.False(Directory.Exists(Path.Combine(infra, "Migrations")));
         Assert.True(Directory.Exists(Path.Combine(infra, "Persistence", "Migrations")));
         Assert.True(File.Exists(Path.Combine(infra, "Persistence", "WishlistOutboxRegistration.cs")));
-        Assert.True(Directory.Exists(Path.Combine(infra, "Directories")));
+        Assert.True(Directory.Exists(Path.Combine(infra, "Adapters")));
+        Assert.False(Directory.Exists(Path.Combine(infra, "Directories")));
+        Assert.False(Directory.Exists(Path.Combine(infra, "Development")));
 
         Assert.Equal(
             new[] { "WishlistEndpointModule.cs" },
@@ -135,7 +138,7 @@ public sealed class WishlistModuleAmcW4CertGuardTests
         Assert.DoesNotContain("شناسهٔ مالک و محصول الزامی است", aggregate, StringComparison.Ordinal);
 
         var directory = File.ReadAllText(Path.Combine(
-            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/Directories/WishlistDirectory.cs"));
+            root, "src/backend/Modules/Wishlist/Tooba.Wishlist.Infrastructure/Persistence/WishlistDirectory.cs"));
         var ensureActorStart = directory.IndexOf("EnsureActor", StringComparison.Ordinal);
         Assert.True(ensureActorStart >= 0);
         var ensureActor = directory[ensureActorStart..];

@@ -218,9 +218,17 @@ public sealed class WishlistModuleAmsc001W1MigrateGuardTests
     [Fact]
     public void Transport_validators_cover_the_three_caller_controlled_requests()
     {
-        var validators = FindFile("Tooba.Wishlist.Application", "WishlistValidators.cs");
-        Assert.NotNull(validators);
-        var text = File.ReadAllText(validators!);
+        // The three transport validators live in the shared Application/Validation seam, one cohesive
+        // file per request (the W2 structure wave split the former merged Customer/Validators file).
+        var validators = Directory
+            .EnumerateFiles(
+                Path.Combine(Repo(), ModuleRootRelative, "Tooba.Wishlist.Application", "Validation"),
+                "*Validator.cs",
+                SearchOption.TopDirectoryOnly)
+            .Select(File.ReadAllText)
+            .ToArray();
+        Assert.Equal(3, validators.Length);
+        var text = string.Join("\n", validators);
 
         foreach (var type in new[]
                  {

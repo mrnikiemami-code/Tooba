@@ -7,9 +7,8 @@ using Tooba.Wishlist.Application.Ports;
 using Tooba.Wishlist.Contracts.Errors;
 using Tooba.Wishlist.Contracts.Ports;
 using Tooba.Wishlist.Domain.Aggregates;
-using Tooba.Wishlist.Infrastructure.Persistence;
 
-namespace Tooba.Wishlist.Infrastructure.Directories;
+namespace Tooba.Wishlist.Infrastructure.Persistence;
 
 /// <summary>پیاده‌سازی Wishlist که فقط schema خود و درگاه Contracts Catalog را مصرف می‌کند.</summary>
 public sealed class WishlistDirectory : IWishlistDirectory, IWishlistCountPort

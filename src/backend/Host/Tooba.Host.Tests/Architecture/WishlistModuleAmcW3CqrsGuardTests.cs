@@ -34,7 +34,9 @@ public sealed class WishlistModuleAmcW3CqrsGuardTests
             Assert.DoesNotContain("catch (SemanticException", text, StringComparison.Ordinal);
         }
 
-        var validators = File.ReadAllText(Path.Combine(app, "Customer", "Validators", "WishlistValidators.cs"));
+        var validators = File.ReadAllText(Path.Combine(app, "Validation", "AddWishlistItemCommandValidator.cs"))
+            + File.ReadAllText(Path.Combine(app, "Validation", "RemoveWishlistItemCommandValidator.cs"))
+            + File.ReadAllText(Path.Combine(app, "Validation", "GetWishlistMembershipQueryValidator.cs"));
         Assert.Contains("WishlistErrorCodes.", validators, StringComparison.Ordinal);
         Assert.DoesNotContain("\"customer.wishlist.", validators, StringComparison.Ordinal);
 

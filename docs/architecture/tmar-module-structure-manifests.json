@@ -435,7 +435,7 @@
         {
           "projectName": "Tooba.Wishlist.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Wishlist.Application has no root .cs: Customer capability tree plus Composition/Models/Ports; path↔namespace exact.",
+          "rootAllowlistJustification": "Wishlist.Application has no root .cs: the Customer capability tree plus the shared Composition/Models/Ports and the module transport Validation/ seam; path<->namespace exact.",
           "forbiddenRootFiles": [],
           "forbiddenTopLevelFolders": [
             "Commands",
@@ -472,14 +472,16 @@
           "rootAllowlist": [
             "WishlistModule.cs"
           ],
-          "rootAllowlistJustification": "Composition entry WishlistModule.cs only; Directories/Persistence/Development hold integrations; Migrations and Outbox under Persistence/.",
+          "rootAllowlistJustification": "Composition entry WishlistModule.cs only; Adapters/ holds the module-owned Development seed adapter, Persistence/ holds the EF model plus the outbox registration plus the wishlist directory and the single migration under Persistence/Migrations; path<->namespace is exact.",
           "forbiddenRootFiles": [
             "WishlistDirectory.cs",
             "WishlistDbContext.cs",
             "WishlistOutboxRegistration.cs"
           ],
           "forbiddenTopLevelFolders": [
-            "Migrations"
+            "Migrations",
+            "Directories",
+            "Development"
           ]
         },
         {
@@ -492,7 +494,10 @@
           ],
           "forbiddenTopLevelFolders": []
         }
-      ]
+      ],
+      "structureAuthorityTask": "TB-TMAR-WISHLIST-AMSC-001-W2",
+      "structureAuthorityCommit": "PENDING_W2_COMMIT",
+      "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3"
     },
     {
       "module": "UserPreference",

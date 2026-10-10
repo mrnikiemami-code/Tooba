@@ -6,7 +6,7 @@ using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Wishlist.Domain.Aggregates;
 using Tooba.Wishlist.Infrastructure.Persistence;
 
-namespace Tooba.Wishlist.Infrastructure.Development;
+namespace Tooba.Wishlist.Infrastructure.Adapters;
 
 /// <summary>دانهٔ قطعی Development که مرزهای مستقل Catalog و Wishlist را از طریق Contracts هماهنگ می‌کند.</summary>
 public static class WishlistDevelopmentSeed
