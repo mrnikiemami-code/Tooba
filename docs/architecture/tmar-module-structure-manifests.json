@@ -2350,19 +2350,12 @@
       "evidence": "docs/architecture/evidence/TB-TMAR-TAX-AMSC-001-W3/certification.md",
       "structureAuthorityCommit": "eff3cf5b846d33f90652ee691fa23048ffa45f48",
       "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3"
-    }
-  ],
-  "uncertifiedHttpOwningModules": [
-    "Wallet"
-  ],
-  "preCertModules": [
+    },
     {
       "module": "Wallet",
-      "structureCertified": false,
+      "structureCertified": true,
       "lockVersion": "ARCH-COMPLETE-002",
-      "structureState": "READY_FOR_CERTIFY",
-      "structureAuthorityTask": "TB-TMAR-WALLET-AMSC-001-W2",
-      "certificationNote": "AMSC re-standardization of src/backend/Modules/Wallet (W0 Analyze -> W1 Migrate -> W2 Structure). W2 is a behavior-preserving physical reorganization only: the Application tree is now capability-first shallow (Admin/{Commands,Queries,Models}, Customer/{Commands,Queries,Models}, Payments/Models, Refunds/Models) with the shared Composition/Ports/Models/Validation seams at root and zero single-file request leaf folders; the technical-axis-first Commands/<UseCase>/ + Queries/<UseCase>/ tree is retired. The 157-LOC mixed Application/Models/WalletDtos.cs bundle was split by capability (Admin.Models / Customer.Models / Payments.Models / Refunds.Models) with no type, member or wire-shape change. The 682-LOC multi-interface WalletDirectory god-file was MOVED from Infrastructure/Directories into Infrastructure/Persistence (namespace Tooba.Wallet.Infrastructure.Persistence) next to its DbContext AND split by capability into five cohesive partial files (WalletDirectory.cs account/ledger core + mapping helpers, WalletDirectory.Customer.cs, WalletDirectory.Admin.cs, WalletDirectory.Payments.cs, WalletDirectory.Refunds.cs) so no single file mixes customer/admin/order-payment/refund responsibilities (ARCH-MODULE-FILE-001); the public type, its three interface implementations, DI registration, ctor signature and every member signature are unchanged. The single-file Infrastructure/Development and Infrastructure/Migrations technical folders were retired by moving WalletDevelopmentSeedBootstrap.cs into Adapters and the InitialWallet migration into Persistence/Migrations. The Endpoints error catalog + resource set + bilingual resx moved into Contracts/Errors/Resources with path-exact namespaces (Tooba.Wallet.Endpoints.Contracts.Errors[.Resources]) and the two locked EmbeddedResource LogicalName values were repointed accordingly. WalletModule.cs stays in Infrastructure/DependencyInjection so no single-file composition-root ceremony folder is invented and the two callers (ToobaModuleComposition, ArchitectureBoundaryTests) keep their existing using. PATH_NAMESPACE_ALIGNMENT is now EXACT for every Wallet production .cs file across all five projects. Cross-module boundaries stay Contracts-only (the single legal foreign edge remains Tooba.Wallet.Infrastructure -> Tooba.Notification.Contracts); schema and migrations are byte-identical; no behavior changed. Wallet remains uncertified until the W3 Certify wave.",
+      "certificationNote": "CERTIFIED by TB-TMAR-WALLET-AMSC-001-W3 (tooba-architecture-certify) after the Structure wave W2 (779cd2f4). Wave lineage W0 7ab117fb (analyze) -> W1 c802fe81 (migrate) -> W2 779cd2f4 (structure) -> W3 (this certify wave). Wallet is HTTP_OWNING: the W0 applicability gate and the certify 6a hard blocker re-derived from disk prove exactly 11 module-owned HTTP routes in three groups (/v1/customer/wallet x3, /v1/admin/gift-cards x4, /v1/admin/wallets/{customerActorUserId:guid} x3 + /v1/admin/wallet/demo-preview x1) with Host owning ZERO Wallet routes; 11 endpoint-reachable requests each mapped 1:1 to exactly one MediatR request record and one IRequestHandler and all routed through the WalletOperation seam (11/11); the exhaustive validator matrix is 4 VALIDATOR_REQUIRED (RedeemCustomerGiftCardCommand, IssueAdminGiftCardCommand, ListAdminGiftCardsQuery, AdjustAdminWalletCommand) + 7 NO_VALIDATOR_REQUIRED (route-constrained :guid identifiers, server-derived actors, the Development-gated demo-preview); the single canonical Contracts stable-code home declares 50 wallet.*/giftcard.* codes split 10 HTTP-reachable + 40 domain invariants with 10 descriptors registered exactly once by WalletErrorCatalogContributor and 50 EN + 50 FA bilingual resources owned once by WalletErrorResourceSet with explicit locked LogicalName values; the typed WalletOperation seam classifies by typed code only (WalletErrorCodes.IsKnown/IsHttpReachable) with zero message-prose classification and zero raw InvalidOperationException literals; PROFESSIONAL_SHALLOW capability-first structure with exact path<->namespace and enforced root allowlists across all five production projects plus the Test project under the canonical /Modules/Wallet/ solution folder; Contracts-only boundaries (zero foreign Application/Infrastructure/Domain edge, zero cross-module persistence, zero cross-module join; the single legal foreign edge remains Tooba.Wallet.Infrastructure -> Tooba.Notification.Contracts); the wallet schema and the single migration 20260827180000_InitialWallet are byte-identical to the W0 baseline; and the HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED / HOST_ROOT_FINAL_CERTIFIED checkpoints are preserved. Verdict COMPLETE_REFERENCE_PATTERN; structureCertified true; microserviceExtractable = TRUE_CONTRACTS_ONLY_SELF_CONTAINED_ERROR_SURFACE_EXACT_PATH_NAMESPACE.",
       "projects": [
         {
           "projectName": "Tooba.Wallet.Application",
@@ -2448,7 +2441,16 @@
           "forbiddenTopLevelFolders": []
         }
       ],
-      "evidence": "docs/architecture/evidence/TB-TMAR-WALLET-AMSC-001-W2/structure.md"
+      "structureAuthorityTask": "TB-TMAR-WALLET-AMSC-001-W2",
+      "certificationState": "WALLET_AMSC_001_CERTIFIED",
+      "currentCertificationTask": "TB-TMAR-WALLET-AMSC-001-W3",
+      "currentVerdict": "COMPLETE_REFERENCE_PATTERN",
+      "currentValidatorMatrixState": "EXHAUSTIVE_4_VALIDATOR_REQUIRED_7_NO_VALIDATOR_REQUIRED",
+      "evidence": "docs/architecture/evidence/TB-TMAR-WALLET-AMSC-001-W3/certification.md",
+      "structureAuthorityCommit": "779cd2f4f08cbc5bd90741384d8cef7d4a049e96",
+      "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3"
     }
-  ]
+  ],
+  "uncertifiedHttpOwningModules": [],
+  "preCertModules": []
 }

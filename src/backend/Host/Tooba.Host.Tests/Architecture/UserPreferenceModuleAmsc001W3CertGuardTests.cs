@@ -50,7 +50,7 @@ public sealed class UserPreferenceModuleAmsc001W3CertGuardTests
         "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
         "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
         "ProductWorkspace", "Promotion", "Returns", "Settlement", "StoreContext", "Story", "Support",
-        "Tax", "UserPreference", "Wishlist",
+        "Tax", "UserPreference", "Wallet", "Wishlist",
     ];
 
     /// <summary>The ten UserPreference-owned stable machine codes.</summary>
@@ -133,7 +133,7 @@ public sealed class UserPreferenceModuleAmsc001W3CertGuardTests
             .EnumerateArray().Select(x => x.GetString()!)
             .OrderBy(x => x, StringComparer.Ordinal).ToArray();
         Assert.Equal(LockCertifiedModules, certified);
-        Assert.Equal(31, certified.Length);
+        Assert.Equal(32, certified.Length);
         Assert.Equal(1, certified.Count(x => string.Equals(x, "UserPreference", StringComparison.Ordinal)));
 
         var w3 = sot.RootElement.GetProperty("userPreferenceAmsc001W3");

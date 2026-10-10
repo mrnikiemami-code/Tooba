@@ -47,7 +47,7 @@ public sealed class PricingModuleAmsc001W3R3CertGuardTests
         "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
         "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
         "ProductWorkspace", "Promotion", "Returns", "Settlement", "StoreContext", "Story", "Support",
-        "Tax", "UserPreference", "Wishlist",
+        "Tax", "UserPreference", "Wallet", "Wishlist",
     ];
 
     private static readonly string[] LockCertifiedModules =
@@ -56,7 +56,7 @@ public sealed class PricingModuleAmsc001W3R3CertGuardTests
         "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
         "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
         "ProductWorkspace", "Promotion", "Returns", "Settlement", "StoreContext", "Story", "Support",
-        "Tax", "UserPreference", "Wishlist",
+        "Tax", "UserPreference", "Wallet", "Wishlist",
     ];
 
     private static readonly ErrorDefinitionCatalog Catalog = new(

@@ -213,13 +213,16 @@ public sealed class WalletModuleAmsc001W2StructureGuardTests
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(
             Repo(), "docs", "architecture", "tmar-module-structure-manifests.json")));
 
-        var wallet = doc.RootElement.GetProperty("preCertModules").EnumerateArray()
+        // Wallet was promoted from preCertModules into the certified modules[] array by the W3
+        // certify wave (structureCertified true); the structural allowlists below are unchanged.
+        var wallet = doc.RootElement.GetProperty("modules").EnumerateArray()
             .Single(m => string.Equals(m.GetProperty("module").GetString(), "Wallet", StringComparison.Ordinal));
 
-        Assert.False(wallet.GetProperty("structureCertified").GetBoolean());
+        Assert.True(wallet.GetProperty("structureCertified").GetBoolean());
         Assert.Equal("ARCH-COMPLETE-002", wallet.GetProperty("lockVersion").GetString());
         Assert.Equal("TB-TMAR-WALLET-AMSC-001-W2", wallet.GetProperty("structureAuthorityTask").GetString());
-        Assert.Equal("READY_FOR_CERTIFY", wallet.GetProperty("structureState").GetString());
+        Assert.Equal("READY_FOR_CERTIFY_CONSUMED_BY_W3", wallet.GetProperty("structureHandoffState").GetString());
+        Assert.Equal("779cd2f4f08cbc5bd90741384d8cef7d4a049e96", wallet.GetProperty("structureAuthorityCommit").GetString());
 
         var projects = wallet.GetProperty("projects").EnumerateArray()
             .ToDictionary(p => p.GetProperty("projectName").GetString()!, p => p);
@@ -249,16 +252,20 @@ public sealed class WalletModuleAmsc001W2StructureGuardTests
             }
         }
 
-        // Wallet remains the honest uncertified HTTP-owning module until W3.
-        Assert.Contains(
+        // Wallet was removed from uncertifiedHttpOwningModules by the W3 certify wave and its
+        // pre-cert duplicate is gone (promotion is a move, not a copy).
+        Assert.DoesNotContain(
             "Wallet",
             doc.RootElement.GetProperty("uncertifiedHttpOwningModules").EnumerateArray().Select(x => x.GetString()!));
+        Assert.DoesNotContain(
+            doc.RootElement.GetProperty("preCertModules").EnumerateArray(),
+            m => string.Equals(m.GetProperty("module").GetString(), "Wallet", StringComparison.Ordinal));
 
         using var state = JsonDocument.Parse(File.ReadAllText(Path.Combine(
             Repo(), "docs", "architecture", "tmar-current-state.json")));
         var certified = state.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
             .EnumerateArray().Select(x => x.GetString()!).ToArray();
-        Assert.DoesNotContain("Wallet", certified);
+        Assert.Contains("Wallet", certified);
     }
 
     [Fact]
@@ -270,6 +277,7 @@ public sealed class WalletModuleAmsc001W2StructureGuardTests
         Assert.Equal("TB-TMAR-WALLET-AMSC-001-W2", w2.GetProperty("task").GetString());
         Assert.Equal("tooba-architecture-structure", w2.GetProperty("skill").GetString());
         Assert.Equal("READY_FOR_CERTIFY", w2.GetProperty("structureState").GetString());
+        Assert.Equal("779cd2f4", w2.GetProperty("commit").GetString());
     }
 
     private static string Repo()

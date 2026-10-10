@@ -31,7 +31,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
                 "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
                 "ProductWorkspace", "Promotion", "Returns", "Settlement", "StoreContext", "Story", "Support",
-                "Tax", "UserPreference", "Wishlist",
+                "Tax", "UserPreference", "Wallet", "Wishlist",
             },
             modules.Select(m => m.GetProperty("module").GetString()!).OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
@@ -49,7 +49,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "AccessControl", "AddressBook", "Content", "Identity", "Media", "Localization", "Notification",
                 "OperatorProfile", "Party", "ProductQnA", "PageComposition", "BulkInquiry", "Wishlist",
                 "UserPreference", "Story", "Catalog", "CustomerProfile", "Inventory", "Pricing",
-                "ProductWorkspace", "Promotion", "Returns", "Support", "Tax",
+                "ProductWorkspace", "Promotion", "Returns", "Support", "Tax", "Wallet",
             }, StringComparer.Ordinal);
         }
     }
@@ -195,7 +195,8 @@ public sealed class TmarCompleteReferenceStructureGateTests
         Assert.DoesNotContain("Returns", uncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("Support", uncertified, StringComparer.Ordinal);
         Assert.DoesNotContain("Tax", uncertified, StringComparer.Ordinal);
-        Assert.NotEmpty(uncertified);
+        Assert.DoesNotContain("Wallet", uncertified, StringComparer.Ordinal);
+        Assert.Empty(uncertified);
 
         var statePath = Path.Combine(RepoRoot(), "docs", "architecture", "tmar-current-state.json");
         using var state = JsonDocument.Parse(File.ReadAllText(statePath));
@@ -208,7 +209,7 @@ public sealed class TmarCompleteReferenceStructureGateTests
                 "Fulfillment", "Identity", "Inventory", "Localization", "Media", "Notification", "Offer",
                 "OperatorProfile", "Order", "PageComposition", "Party", "Payment", "Pricing", "ProductQnA",
                 "ProductWorkspace", "Promotion", "Returns", "Settlement", "StoreContext", "Story", "Support",
-                "Tax", "UserPreference", "Wishlist",
+                "Tax", "UserPreference", "Wallet", "Wishlist",
             },
             certified);
     }
