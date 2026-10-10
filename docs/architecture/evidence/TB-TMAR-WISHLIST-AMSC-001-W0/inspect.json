@@ -1,0 +1,192 @@
+﻿{
+  "task": "TB-TMAR-WISHLIST-AMSC-001-W0",
+  "projects": [
+    "Tooba.Wishlist.Application",
+    "Tooba.Wishlist.Contracts",
+    "Tooba.Wishlist.Domain",
+    "Tooba.Wishlist.Endpoints",
+    "Tooba.Wishlist.Infrastructure"
+  ],
+  "productionCsCount": 25,
+  "countsByProject": {
+    "Tooba.Wishlist.Application": 9,
+    "Tooba.Wishlist.Contracts": 4,
+    "Tooba.Wishlist.Domain": 1,
+    "Tooba.Wishlist.Endpoints": 3,
+    "Tooba.Wishlist.Infrastructure": 8
+  },
+  "pathNamespaceMismatches": [],
+  "rootFiles": {
+    "Tooba.Wishlist.Application": [],
+    "Tooba.Wishlist.Contracts": [],
+    "Tooba.Wishlist.Domain": [],
+    "Tooba.Wishlist.Endpoints": [
+      "WishlistEndpointModule.cs"
+    ],
+    "Tooba.Wishlist.Infrastructure": [
+      "WishlistModule.cs"
+    ]
+  },
+  "singleSourceFolders": {
+    "Tooba.Wishlist.Application": [
+      {
+        "folder": "Customer/Validators",
+        "sourceCount": 1,
+        "directFileCount": 1
+      },
+      {
+        "folder": "Models",
+        "sourceCount": 1,
+        "directFileCount": 1
+      },
+      {
+        "folder": "Ports",
+        "sourceCount": 1,
+        "directFileCount": 1
+      }
+    ],
+    "Tooba.Wishlist.Contracts": [
+      {
+        "folder": "Ports",
+        "sourceCount": 1,
+        "directFileCount": 1
+      }
+    ],
+    "Tooba.Wishlist.Domain": [
+      {
+        "folder": "Aggregates",
+        "sourceCount": 1,
+        "directFileCount": 1
+      }
+    ],
+    "Tooba.Wishlist.Endpoints": [],
+    "Tooba.Wishlist.Infrastructure": [
+      {
+        "folder": "Development",
+        "sourceCount": 1,
+        "directFileCount": 1
+      },
+      {
+        "folder": "Directories",
+        "sourceCount": 1,
+        "directFileCount": 1
+      }
+    ]
+  },
+  "routeGroupPrefix": "/v1/customer/wishlist",
+  "moduleOwnedRouteCount": 4,
+  "routes": [
+    {
+      "verb": "Get",
+      "path": "",
+      "fullPath": "/v1/customer/wishlist",
+      "handler": "ListAsync"
+    },
+    {
+      "verb": "Post",
+      "path": "/{productId:guid}",
+      "fullPath": "/v1/customer/wishlist/{productId:guid}",
+      "handler": "AddAsync"
+    },
+    {
+      "verb": "Delete",
+      "path": "/{productId:guid}",
+      "fullPath": "/v1/customer/wishlist/{productId:guid}",
+      "handler": "RemoveAsync"
+    },
+    {
+      "verb": "Post",
+      "path": "/membership",
+      "fullPath": "/v1/customer/wishlist/membership",
+      "handler": "MembershipAsync"
+    }
+  ],
+  "dispatchedRequests": [
+    "ListWishlistPageQuery",
+    "AddWishlistItemCommand",
+    "RemoveWishlistItemCommand",
+    "GetWishlistMembershipQuery"
+  ],
+  "resxKeys": {
+    "en": [
+      "customer.wishlist.product_unavailable",
+      "customer.wishlist.product_id_required",
+      "customer.wishlist.product_ids_required"
+    ],
+    "fa": [
+      "customer.wishlist.product_unavailable",
+      "customer.wishlist.product_id_required",
+      "customer.wishlist.product_ids_required"
+    ]
+  },
+  "declaredCodes": [
+    {
+      "name": "SessionRequired",
+      "code": "customer.session.required"
+    },
+    {
+      "name": "ProductUnavailable",
+      "code": "customer.wishlist.product_unavailable"
+    },
+    {
+      "name": "ProductIdRequired",
+      "code": "customer.wishlist.product_id_required"
+    },
+    {
+      "name": "ProductIdsRequired",
+      "code": "customer.wishlist.product_ids_required"
+    }
+  ],
+  "rawInvalidOperationFaults": [
+    {
+      "file": "Tooba.Wishlist.Infrastructure/Persistence/WishlistOutboxRegistration.cs",
+      "literal": "Wishlist integration event is not registered."
+    }
+  ],
+  "semanticFaults": [
+    {
+      "file": "Tooba.Wishlist.Domain/Aggregates/WishlistItem.cs",
+      "code": "WishlistErrorCodes.SessionRequired"
+    },
+    {
+      "file": "Tooba.Wishlist.Domain/Aggregates/WishlistItem.cs",
+      "code": "WishlistErrorCodes.ProductIdRequired"
+    },
+    {
+      "file": "Tooba.Wishlist.Infrastructure/Directories/WishlistDirectory.cs",
+      "code": "WishlistErrorCodes.ProductUnavailable"
+    },
+    {
+      "file": "Tooba.Wishlist.Infrastructure/Directories/WishlistDirectory.cs",
+      "code": "WishlistErrorCodes.SessionRequired"
+    }
+  ],
+  "messageTextClassificationSites": [],
+  "inventory": [
+    "Tooba.Wishlist.Application/Composition/WishlistOperation.cs",
+    "Tooba.Wishlist.Application/Composition/WishlistPresentationComposer.cs",
+    "Tooba.Wishlist.Application/Customer/Commands/AddWishlistItemCommand.cs",
+    "Tooba.Wishlist.Application/Customer/Commands/RemoveWishlistItemCommand.cs",
+    "Tooba.Wishlist.Application/Customer/Queries/GetWishlistMembershipQuery.cs",
+    "Tooba.Wishlist.Application/Customer/Queries/ListWishlistPageQuery.cs",
+    "Tooba.Wishlist.Application/Customer/Validators/WishlistValidators.cs",
+    "Tooba.Wishlist.Application/Models/WishlistModels.cs",
+    "Tooba.Wishlist.Application/Ports/IWishlistDirectory.cs",
+    "Tooba.Wishlist.Contracts/Errors/WishlistErrorCatalogContributor.cs",
+    "Tooba.Wishlist.Contracts/Errors/WishlistErrorCodes.cs",
+    "Tooba.Wishlist.Contracts/Errors/WishlistErrorResourceSet.cs",
+    "Tooba.Wishlist.Contracts/Ports/IWishlistCountPort.cs",
+    "Tooba.Wishlist.Domain/Aggregates/WishlistItem.cs",
+    "Tooba.Wishlist.Endpoints/Customer/WishlistCustomerActorResolver.cs",
+    "Tooba.Wishlist.Endpoints/Customer/WishlistCustomerEndpoints.cs",
+    "Tooba.Wishlist.Endpoints/WishlistEndpointModule.cs",
+    "Tooba.Wishlist.Infrastructure/Development/WishlistDevelopmentSeed.cs",
+    "Tooba.Wishlist.Infrastructure/Directories/WishlistDirectory.cs",
+    "Tooba.Wishlist.Infrastructure/Persistence/Migrations/20260825162434_InitialWishlist.cs",
+    "Tooba.Wishlist.Infrastructure/Persistence/Migrations/20260825162434_InitialWishlist.Designer.cs",
+    "Tooba.Wishlist.Infrastructure/Persistence/Migrations/WishlistDbContextModelSnapshot.cs",
+    "Tooba.Wishlist.Infrastructure/Persistence/WishlistDbContext.cs",
+    "Tooba.Wishlist.Infrastructure/Persistence/WishlistOutboxRegistration.cs",
+    "Tooba.Wishlist.Infrastructure/WishlistModule.cs"
+  ]
+}
