@@ -21,4 +21,7 @@
   <data name="customer.wishlist.product_ids_required" xml:space="preserve">
     <value>Product ids are required.</value>
   </data>
+  <data name="wishlist.outbox.unmapped_event_type" xml:space="preserve">
+    <value>Integration event type is not registered.</value>
+  </data>
 </root>

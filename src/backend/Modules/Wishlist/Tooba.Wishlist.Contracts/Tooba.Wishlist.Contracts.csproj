@@ -7,6 +7,14 @@
     <AssemblyName>Tooba.Wishlist.Contracts</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Update="Resources\WishlistErrors.resx">
+      <LogicalName>Tooba.Wishlist.Contracts.Resources.WishlistErrors.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\WishlistErrors.fa.resx">
+      <LogicalName>Tooba.Wishlist.Contracts.Resources.WishlistErrors.fa.resources</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>
 </Project>

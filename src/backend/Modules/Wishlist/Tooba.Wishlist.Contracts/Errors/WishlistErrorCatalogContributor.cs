@@ -15,6 +15,8 @@ public sealed class WishlistErrorCatalogContributor : IErrorCatalogContributor
             "Product id is required."),
         D(WishlistErrorCodes.ProductIdsRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
             "Product ids are required."),
+        D(WishlistErrorCodes.OutboxUnmappedEventType, ErrorClassification.Platform, StatusCodes.Status500InternalServerError,
+            "Integration event type is not registered."),
         // customer.session.required is owned by FoundationErrorCatalogContributor.
     ];
 

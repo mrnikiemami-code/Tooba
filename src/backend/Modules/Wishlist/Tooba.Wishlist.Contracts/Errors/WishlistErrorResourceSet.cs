@@ -12,12 +12,17 @@ public static class WishlistErrorResources
         new("Tooba.Wishlist.Contracts.Resources.WishlistErrors", typeof(WishlistErrorResources).Assembly);
 }
 
-/// <summary>مجموعهٔ منبع Wishlist — مالکیت محدود به <c>customer.wishlist.</c>.</summary>
+/// <summary>
+/// مجموعهٔ منبع Wishlist — مالکیت محدود به <c>customer.wishlist.</c> و <c>wishlist.</c>.
+/// Wishlist متن خطاهای کدهای پایدار خود را مالک است تا به‌صورت میکروسرویس مستقل بدون جاگذاشتن
+/// متن در ماژول دیگر استخراج شود. انتخاب زبان در localizer مرکزی می‌ماند.
+/// </summary>
 public sealed class WishlistErrorResourceSet : IErrorResourceSet
 {
     /// <inheritdoc />
     public bool Owns(string localizationKey) =>
-        localizationKey.StartsWith("customer.wishlist.", StringComparison.OrdinalIgnoreCase);
+        localizationKey.StartsWith("customer.wishlist.", StringComparison.OrdinalIgnoreCase)
+        || localizationKey.StartsWith("wishlist.", StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc />
     public string? GetString(string localizationKey, CultureInfo culture) =>

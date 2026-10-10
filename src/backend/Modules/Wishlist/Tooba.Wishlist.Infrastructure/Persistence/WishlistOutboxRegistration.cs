@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
+using Tooba.Wishlist.Contracts.Errors;
 
 namespace Tooba.Wishlist.Infrastructure.Persistence;
 
@@ -20,7 +21,7 @@ public sealed class WishlistOutboxRegistration : IOutboxModuleRegistration
 
     /// <inheritdoc />
     public string GetEventTypeName(Type integrationEventType) =>
-        throw new InvalidOperationException("Wishlist integration event is not registered.");
+        throw new ContractOperationException(WishlistErrorCodes.OutboxUnmappedEventType);
 
     /// <inheritdoc />
     public Type? ResolveEventClrType(string eventTypeName) => null;

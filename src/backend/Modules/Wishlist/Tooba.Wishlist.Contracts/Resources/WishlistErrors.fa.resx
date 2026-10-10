@@ -21,4 +21,7 @@
   <data name="customer.wishlist.product_ids_required" xml:space="preserve">
     <value>فهرست شناسهٔ محصولات الزامی است.</value>
   </data>
+  <data name="wishlist.outbox.unmapped_event_type" xml:space="preserve">
+    <value>نوع رویداد یکپارچه ثبت نشده است.</value>
+  </data>
 </root>
