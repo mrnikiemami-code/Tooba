@@ -574,7 +574,11 @@
       "currentCertificationTask": "TB-TMAR-USERPREFERENCE-AMSC-001-W3",
       "currentVerdict": "COMPLETE_REFERENCE_PATTERN",
       "currentValidatorMatrixState": "EXHAUSTIVE_4_OF_4_3_VALIDATOR_REQUIRED_1_NO_VALIDATOR_REQUIRED",
-      "evidence": "docs/architecture/evidence/TB-TMAR-USERPREFERENCE-AMSC-001-W3/certification.md"
+      "setEqualityGateTask": "TB-TMAR-USERPREFERENCE-AMSC-001-W3-R1",
+      "setEqualityGateState": "EXACT_SOURCE_DERIVED_ROUTE_TO_REQUEST_6_OF_6_ENFORCED",
+      "setEqualityGateDetail": "Additive post-certification proof (tooba-architecture-certify 6a): 6 shipped routes, exactly one ISender.Send per route, 4 distinct dispatched requests (two locale requests each shared by two routes), exact source-derived route->request map, fail-closed parser, pure in-memory negative mutation. Zero production change; W3 certification preserved unrewritten.",
+      "evidence": "docs/architecture/evidence/TB-TMAR-USERPREFERENCE-AMSC-001-W3/certification.md",
+      "setEqualityGateEvidence": "docs/architecture/evidence/TB-TMAR-USERPREFERENCE-AMSC-001-W3-R1/set-equality-gate.md"
     },
     {
       "module": "PageComposition",
