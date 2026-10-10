@@ -11,11 +11,11 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Update="Resources\WalletErrors.resx">
-      <LogicalName>Tooba.Wallet.Endpoints.Resources.WalletErrors.resources</LogicalName>
+    <EmbeddedResource Update="Contracts\Errors\Resources\WalletErrors.resx">
+      <LogicalName>Tooba.Wallet.Endpoints.Contracts.Errors.Resources.WalletErrors.resources</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Update="Resources\WalletErrors.fa.resx">
-      <LogicalName>Tooba.Wallet.Endpoints.Resources.WalletErrors.fa.resources</LogicalName>
+    <EmbeddedResource Update="Contracts\Errors\Resources\WalletErrors.fa.resx">
+      <LogicalName>Tooba.Wallet.Endpoints.Contracts.Errors.Resources.WalletErrors.fa.resources</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

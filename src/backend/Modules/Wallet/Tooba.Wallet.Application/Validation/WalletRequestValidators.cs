@@ -1,9 +1,9 @@
-using FluentValidation;
-using Tooba.Wallet.Application.Commands.AdjustAdminWallet;
-using Tooba.Wallet.Application.Commands.IssueAdminGiftCard;
-using Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard;
-using Tooba.Wallet.Application.Models;
-using Tooba.Wallet.Application.Queries.ListAdminGiftCards;
+﻿using FluentValidation;
+using Tooba.Wallet.Application.Admin.Commands;
+
+using Tooba.Wallet.Application.Customer.Commands;
+using Tooba.Wallet.Application.Admin.Models;
+using Tooba.Wallet.Application.Admin.Queries;
 using Tooba.Wallet.Domain.Aggregates;
 using Tooba.Wallet.Domain.ValueObjects;
 

@@ -18,7 +18,7 @@ public sealed class HostWalletAmcGuardTests
         Assert.DoesNotContain("Tooba.Host.Wallet", program, StringComparison.Ordinal);
 
         Assert.True(File.Exists(Path.Combine(
-            root, "src/backend/Modules/Wallet/Tooba.Wallet.Infrastructure/Development/WalletDevelopmentSeedBootstrap.cs")));
+            root, "src/backend/Modules/Wallet/Tooba.Wallet.Infrastructure/Adapters/WalletDevelopmentSeedBootstrap.cs")));
         Assert.True(File.Exists(Path.Combine(
             root, "src/backend/Host/Tooba.Host/Composition/WalletDevelopmentSeedHost.cs")));
 

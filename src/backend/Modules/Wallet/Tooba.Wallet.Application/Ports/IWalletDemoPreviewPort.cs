@@ -1,4 +1,4 @@
-using Tooba.Wallet.Application.Models;
+using Tooba.Wallet.Application.Admin.Models;
 
 namespace Tooba.Wallet.Application.Ports;
 

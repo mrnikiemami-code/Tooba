@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Tooba.Wallet.Application.Composition;
 using Tooba.Wallet.Contracts.Errors;
-using Tooba.Wallet.Endpoints.Resources;
+using Tooba.Wallet.Endpoints.Contracts.Errors.Resources;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -138,7 +138,7 @@ public sealed class WalletModuleAmsc001W1MigrateGuardTests
         Assert.Contains("\"wallet.\"", setText, StringComparison.Ordinal);
         Assert.Contains("\"giftcard.\"", setText, StringComparison.Ordinal);
 
-        Assert.Equal("Tooba.Wallet.Endpoints.Resources", typeof(WalletErrorResourceSet).Namespace);
+        Assert.Equal("Tooba.Wallet.Endpoints.Contracts.Errors.Resources", typeof(WalletErrorResourceSet).Namespace);
 
         var en = FindFile("Tooba.Wallet.Endpoints", "WalletErrors.resx");
         var fa = FindFile("Tooba.Wallet.Endpoints", "WalletErrors.fa.resx");
@@ -166,8 +166,8 @@ public sealed class WalletModuleAmsc001W1MigrateGuardTests
 
         // The bilingual logical names are explicit and locked (not left to SDK convention).
         var endpointsCsproj = Read("Tooba.Wallet.Endpoints");
-        Assert.Contains("Tooba.Wallet.Endpoints.Resources.WalletErrors.resources", endpointsCsproj, StringComparison.Ordinal);
-        Assert.Contains("Tooba.Wallet.Endpoints.Resources.WalletErrors.fa.resources", endpointsCsproj, StringComparison.Ordinal);
+        Assert.Contains("Tooba.Wallet.Endpoints.Contracts.Errors.Resources.WalletErrors.resources", endpointsCsproj, StringComparison.Ordinal);
+        Assert.Contains("Tooba.Wallet.Endpoints.Contracts.Errors.Resources.WalletErrors.fa.resources", endpointsCsproj, StringComparison.Ordinal);
 
         // The module contributor registers the client-observable codes exactly once and never
         // catalogues a domain-only invariant.

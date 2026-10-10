@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Configuration;
 using Tooba.Host.Admin.Development;
-using Tooba.Wallet.Infrastructure.Development;
+using Tooba.Wallet.Infrastructure.Adapters;
 
 namespace Tooba.Host.Composition;
 

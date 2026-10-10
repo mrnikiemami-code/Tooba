@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -6,9 +6,9 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard;
-using Tooba.Wallet.Application.Queries.GetCustomerWalletSummary;
-using Tooba.Wallet.Application.Queries.ListCustomerWalletLedger;
+using Tooba.Wallet.Application.Customer.Commands;
+using Tooba.Wallet.Application.Customer.Queries;
+
 
 namespace Tooba.Wallet.Endpoints.Customer;
 

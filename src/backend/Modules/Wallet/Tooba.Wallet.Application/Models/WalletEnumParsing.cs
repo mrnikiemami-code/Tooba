@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Wallet.Contracts.Errors;
+using Tooba.Wallet.Application.Customer.Models;
 using Tooba.Wallet.Domain.ValueObjects;
 
 namespace Tooba.Wallet.Application.Models;

@@ -5,9 +5,11 @@ using Tooba.Notification.Contracts.Copy;
 using Tooba.Notification.Contracts.Dtos;
 using Tooba.Notification.Contracts.Ports;
 using Tooba.Notification.Contracts.Routes;
-using Tooba.Wallet.Application.Models;
+using Tooba.Wallet.Application.Admin.Models;
+using Tooba.Wallet.Application.Customer.Models;
+using Tooba.Wallet.Application.Payments.Models;
+using Tooba.Wallet.Application.Refunds.Models;
 using Tooba.Wallet.Domain.ValueObjects;
-using Tooba.Wallet.Infrastructure.Directories;
 using Tooba.Wallet.Infrastructure.Persistence;
 using Xunit;
 

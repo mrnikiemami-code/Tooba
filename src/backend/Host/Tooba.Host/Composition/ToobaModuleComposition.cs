@@ -38,7 +38,7 @@ using Tooba.AccessControl.Infrastructure;
 using Tooba.Support.Infrastructure.DependencyInjection;
 using Tooba.Wallet.Infrastructure.Adapters;
 using Tooba.Wallet.Infrastructure.DependencyInjection;
-using Tooba.Wallet.Infrastructure.Directories;
+using Tooba.Wallet.Infrastructure.Persistence;
 using Tooba.StoreContext.Infrastructure.DependencyInjection;
 
 namespace Tooba.Host.Composition;

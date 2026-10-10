@@ -7,11 +7,12 @@ namespace Tooba.Wallet.Tests.Architecture;
 public sealed class WalletArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Composition", "Validation"];
+    private static readonly string[] AllowedApplicationFolders =
+        ["Admin", "Customer", "Payments", "Refunds", "Ports", "Models", "Composition", "Validation"];
     private static readonly string[] AllowedContractsFolders = ["Payments", "Refunds", "Dtos", "Ports", "Errors"];
     private static readonly string[] AllowedInfrastructureFolders =
-        ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations", "Development"];
-    private static readonly string[] AllowedEndpointsFolders = ["Customer", "Admin", "Errors", "Resources"];
+        ["Persistence", "Adapters", "Events", "Messaging", "DependencyInjection"];
+    private static readonly string[] AllowedEndpointsFolders = ["Customer", "Admin", "Contracts"];
 
     private static readonly HashSet<string> HostDbContextAllowlist = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -103,7 +104,7 @@ public sealed class WalletArchitectureGuardTests
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("PaymentDbContext", StringComparison.Ordinal));
         Assert.DoesNotContain(Sources("Tooba.Wallet.Contracts"), x => x.Text.Contains("namespace Tooba.Wallet.Domain", StringComparison.Ordinal));
 
-        var directory = File.ReadAllText(Path.Combine(WalletRoot(), "Tooba.Wallet.Infrastructure", "Directories", "WalletDirectory.cs"));
+        var directory = File.ReadAllText(Path.Combine(WalletRoot(), "Tooba.Wallet.Infrastructure", "Persistence", "WalletDirectory.cs"));
         Assert.Contains("IClock", directory, StringComparison.Ordinal);
         Assert.Contains("IIdGenerator", directory, StringComparison.Ordinal);
         Assert.DoesNotContain("?? new SystemUtcClock()", directory, StringComparison.Ordinal);
@@ -222,7 +223,7 @@ public sealed class WalletArchitectureGuardTests
         Assert.False(Directory.Exists(Path.Combine(hostRoot, "Wallet")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Wallet", "WalletEndpoints.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Wallet", "WalletDevelopmentSeedHost.cs")));
-        Assert.True(File.Exists(Path.Combine(WalletRoot(), "Tooba.Wallet.Infrastructure", "Development", "WalletDevelopmentSeedBootstrap.cs")));
+        Assert.True(File.Exists(Path.Combine(WalletRoot(), "Tooba.Wallet.Infrastructure", "Adapters", "WalletDevelopmentSeedBootstrap.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Composition", "WalletDevelopmentSeedHost.cs")));
         Assert.False(File.Exists(Path.Combine(hostRoot, "Customer", "HostWalletCustomerAuthorizer.cs")));
         Assert.True(File.Exists(Path.Combine(hostRoot, "Admin", "Access", "Authorizers", "HostWalletAdminAuthorizer.cs")));

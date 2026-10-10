@@ -89,7 +89,7 @@ public sealed class HostAdminCanon009GuardTests
         var supportCatalog = ReadRepo("src/backend/Modules/Support/Tooba.Support.Endpoints/Errors/SupportErrorCatalogContributor.cs");
         AssertDescriptorOnce(supportCatalog, "SupportAdminAuthorizationCodes.AuthorizationUnavailable");
 
-        var walletCatalog = ReadRepo("src/backend/Modules/Wallet/Tooba.Wallet.Endpoints/Errors/WalletErrorCatalogContributor.cs");
+        var walletCatalog = ReadRepo("src/backend/Modules/Wallet/Tooba.Wallet.Endpoints/Contracts/Errors/WalletErrorCatalogContributor.cs");
         AssertDescriptorOnce(walletCatalog, "WalletAdminAuthorizationCodes.AuthorizationUnavailable");
 
         Assert.Equal(0, CountDescriptors(supportCatalog, "admin.authorization.denied"));

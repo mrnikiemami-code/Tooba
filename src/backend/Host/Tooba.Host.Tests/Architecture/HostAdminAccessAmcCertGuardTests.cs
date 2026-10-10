@@ -9,8 +9,8 @@ using Tooba.Support.Endpoints.Admin;
 using Tooba.Support.Endpoints.Errors;
 using Tooba.Support.Endpoints.Resources;
 using Tooba.Wallet.Endpoints.Admin;
-using Tooba.Wallet.Endpoints.Errors;
-using Tooba.Wallet.Endpoints.Resources;
+using Tooba.Wallet.Endpoints.Contracts.Errors;
+using Tooba.Wallet.Endpoints.Contracts.Errors.Resources;
 using Xunit;
 
 namespace Tooba.Host.Tests.Architecture;
@@ -226,9 +226,9 @@ public sealed class HostAdminAccessAmcCertGuardTests
             SupportAdminAuthorizationCodes.AuthorizationUnavailable);
         AssertResxHas(Repo("src/backend/Modules/Support/Tooba.Support.Endpoints/Resources/SupportErrors.fa.resx"),
             SupportAdminAuthorizationCodes.AuthorizationUnavailable);
-        AssertResxHas(Repo("src/backend/Modules/Wallet/Tooba.Wallet.Endpoints/Resources/WalletErrors.resx"),
+        AssertResxHas(Repo("src/backend/Modules/Wallet/Tooba.Wallet.Endpoints/Contracts/Errors/Resources/WalletErrors.resx"),
             WalletAdminAuthorizationCodes.AuthorizationUnavailable);
-        AssertResxHas(Repo("src/backend/Modules/Wallet/Tooba.Wallet.Endpoints/Resources/WalletErrors.fa.resx"),
+        AssertResxHas(Repo("src/backend/Modules/Wallet/Tooba.Wallet.Endpoints/Contracts/Errors/Resources/WalletErrors.fa.resx"),
             WalletAdminAuthorizationCodes.AuthorizationUnavailable);
 
         var en = CultureInfo.GetCultureInfo("en");

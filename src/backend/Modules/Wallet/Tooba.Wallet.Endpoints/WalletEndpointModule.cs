@@ -5,8 +5,8 @@ using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Wallet.Endpoints.Admin;
 using Tooba.Wallet.Endpoints.Customer;
-using Tooba.Wallet.Endpoints.Errors;
-using Tooba.Wallet.Endpoints.Resources;
+using Tooba.Wallet.Endpoints.Contracts.Errors;
+using Tooba.Wallet.Endpoints.Contracts.Errors.Resources;
 
 namespace Tooba.Wallet.Endpoints;
 

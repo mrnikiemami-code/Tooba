@@ -1,4 +1,4 @@
-using Tooba.Wallet.Application.Models;
+using Tooba.Wallet.Application.Admin.Models;
 using Tooba.Wallet.Application.Ports;
 using Tooba.Wallet.Domain.Aggregates;
 using Tooba.Wallet.Domain.ValueObjects;

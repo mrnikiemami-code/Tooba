@@ -1,18 +1,18 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
-using Tooba.Wallet.Application.Commands.AdjustAdminWallet;
-using Tooba.Wallet.Application.Commands.IssueAdminGiftCard;
-using Tooba.Wallet.Application.Commands.RevokeAdminGiftCard;
-using Tooba.Wallet.Application.Queries.GetAdminGiftCard;
-using Tooba.Wallet.Application.Queries.GetAdminWallet;
-using Tooba.Wallet.Application.Queries.GetWalletDemoPreview;
-using Tooba.Wallet.Application.Queries.ListAdminGiftCards;
-using Tooba.Wallet.Application.Queries.ListAdminWalletLedger;
+using Tooba.Wallet.Application.Admin.Commands;
+
+
+using Tooba.Wallet.Application.Admin.Queries;
+
+
+
+
 
 namespace Tooba.Wallet.Endpoints.Admin;
 

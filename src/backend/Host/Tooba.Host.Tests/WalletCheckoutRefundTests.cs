@@ -45,13 +45,13 @@ using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
-using Tooba.Wallet.Application.Models;
+using Tooba.Wallet.Application.Admin.Models;
+using Tooba.Wallet.Application.Customer.Models;
 using Tooba.Wallet.Application.Ports;
 using Tooba.Wallet.Domain.Aggregates;
 using Tooba.Wallet.Domain.ValueObjects;
 using Tooba.Wallet.Infrastructure.Adapters;
 using Tooba.Wallet.Infrastructure.DependencyInjection;
-using Tooba.Wallet.Infrastructure.Directories;
 using Tooba.Wallet.Infrastructure.Persistence;
 using Xunit;
 

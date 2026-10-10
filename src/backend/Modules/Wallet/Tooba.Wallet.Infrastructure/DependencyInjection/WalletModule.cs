@@ -1,11 +1,12 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Persistence;
-using Tooba.Wallet.Application.Models;
+using Tooba.Wallet.Application.Admin.Models;
+using Tooba.Wallet.Application.Customer.Models;
 using Tooba.Wallet.Application.Ports;
 using Tooba.Wallet.Contracts.Dtos;
 using Tooba.Wallet.Contracts.Errors;
@@ -13,7 +14,6 @@ using Tooba.Wallet.Contracts.Payments;
 using Tooba.Wallet.Contracts.Refunds;
 using Tooba.Wallet.Infrastructure.Adapters;
 using Tooba.Wallet.Infrastructure.Persistence;
-using Tooba.Wallet.Infrastructure.Directories;
 
 namespace Tooba.Wallet.Infrastructure.DependencyInjection;
 

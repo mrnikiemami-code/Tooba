@@ -90,7 +90,7 @@ public sealed class HostAdminCanon003GuardTests
         Assert.Contains("SupportAdminAuthorizationCodes.AuthorizationUnavailable", support, StringComparison.Ordinal);
 
         var wallet = File.ReadAllText(RepoFile(
-            "src/backend/Modules/Wallet/Tooba.Wallet.Endpoints/Errors/WalletErrorCatalogContributor.cs"));
+            "src/backend/Modules/Wallet/Tooba.Wallet.Endpoints/Contracts/Errors/WalletErrorCatalogContributor.cs"));
         Assert.Contains("WalletAdminAuthorizationCodes.AuthorizationUnavailable", wallet, StringComparison.Ordinal);
     }
 
