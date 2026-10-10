@@ -1,9 +1,9 @@
 using MediatR;
-using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Wallet.Application.Errors;
+using Tooba.Wallet.Application.Composition;
 using Tooba.Wallet.Application.Models;
 using Tooba.Wallet.Application.Ports;
+using Tooba.Wallet.Contracts.Errors;
 
 namespace Tooba.Wallet.Application.Queries.GetAdminGiftCard;
 
@@ -18,8 +18,6 @@ public sealed class GetAdminGiftCardHandler(IWalletDirectory directory)
     public async Task<Result<GiftCardDetailDto>> Handle(GetAdminGiftCardQuery request, CancellationToken cancellationToken)
     {
         var detail = await directory.GetGiftCardForAdminAsync(request.CardId, cancellationToken);
-        return detail is null
-            ? Result.Failure<GiftCardDetailDto>(new SemanticError(WalletErrorCodes.GiftCardMissing))
-            : Result.Success(detail);
+        return WalletOperation.NotFoundIfNull(detail, WalletErrorCodes.GiftCardMissing);
     }
 }

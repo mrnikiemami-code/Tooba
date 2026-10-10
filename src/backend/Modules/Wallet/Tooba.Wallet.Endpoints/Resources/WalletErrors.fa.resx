@@ -12,7 +12,154 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="wallet.rejected" xml:space="preserve">
+    <value>درخواست کیف پول رد شد.</value>
+  </data>
+  <data name="wallet.redeem.rejected" xml:space="preserve">
+    <value>بازخرید کارت هدیه رد شد.</value>
+  </data>
+  <data name="giftcard.rejected" xml:space="preserve">
+    <value>درخواست کارت هدیه رد شد.</value>
+  </data>
+  <data name="giftcard.issue.rejected" xml:space="preserve">
+    <value>صدور کارت هدیه رد شد.</value>
+  </data>
+  <data name="giftcard.revoke.rejected" xml:space="preserve">
+    <value>ابطال کارت هدیه رد شد.</value>
+  </data>
+  <data name="giftcard.missing" xml:space="preserve">
+    <value>کارت هدیه یافت نشد.</value>
+  </data>
+  <data name="wallet.missing" xml:space="preserve">
+    <value>کیف پول یافت نشد.</value>
+  </data>
+  <data name="wallet.adjust.rejected" xml:space="preserve">
+    <value>تعدیل کیف پول رد شد.</value>
+  </data>
   <data name="wallet.authorization.unavailable" xml:space="preserve">
     <value>سرویس مجوز کیف پول در دسترس نیست.</value>
+  </data>
+  <data name="wallet.demo.not_ready" xml:space="preserve">
+    <value>دادهٔ نمایشی کیف پول آماده نیست.</value>
+  </data>
+  <data name="wallet.account.ids_required" xml:space="preserve">
+    <value>شناسه‌های حساب کیف پول و مالک الزامی است.</value>
+  </data>
+  <data name="wallet.ids_required" xml:space="preserve">
+    <value>شناسه‌های هویت الزامی است.</value>
+  </data>
+  <data name="wallet.currency_required" xml:space="preserve">
+    <value>واحد پول الزامی است.</value>
+  </data>
+  <data name="wallet.currency_invalid" xml:space="preserve">
+    <value>کد واحد پول نامعتبر است.</value>
+  </data>
+  <data name="wallet.currency_mismatch" xml:space="preserve">
+    <value>واحد پول با واحد پول حساب کیف پول هم‌خوانی ندارد.</value>
+  </data>
+  <data name="wallet.account.not_mutable" xml:space="preserve">
+    <value>حساب کیف پول برای تغییرات دفتر باز نیست.</value>
+  </data>
+  <data name="wallet.account.not_found" xml:space="preserve">
+    <value>حساب کیف پول یافت نشد.</value>
+  </data>
+  <data name="wallet.amount.positive" xml:space="preserve">
+    <value>مبلغ باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="wallet.idempotency_required" xml:space="preserve">
+    <value>کلید idempotency الزامی است.</value>
+  </data>
+  <data name="wallet.idempotency_invalid" xml:space="preserve">
+    <value>کلید idempotency نامعتبر است.</value>
+  </data>
+  <data name="wallet.idempotency_conflict" xml:space="preserve">
+    <value>کلید idempotency با عملیات دیگری تعارض دارد.</value>
+  </data>
+  <data name="wallet.metadata_too_long" xml:space="preserve">
+    <value>فرادادهٔ دفتر بیش از حد مجاز است.</value>
+  </data>
+  <data name="wallet.giftcard.ids_required" xml:space="preserve">
+    <value>شناسه‌های کارت هدیه و صادرکننده الزامی است.</value>
+  </data>
+  <data name="wallet.giftcard.amount_positive" xml:space="preserve">
+    <value>مبلغ کارت هدیه باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="wallet.giftcard.issuer_required" xml:space="preserve">
+    <value>صادرکنندهٔ کارت هدیه الزامی است.</value>
+  </data>
+  <data name="wallet.giftcard.expiry_future" xml:space="preserve">
+    <value>تاریخ انقضای کارت هدیه باید در آینده باشد.</value>
+  </data>
+  <data name="wallet.giftcard.amounts_invalid" xml:space="preserve">
+    <value>مبالغ کارت هدیه ناسازگار است.</value>
+  </data>
+  <data name="wallet.giftcard.not_revocable" xml:space="preserve">
+    <value>کارت هدیه در وضعیت فعلی قابل ابطال نیست.</value>
+  </data>
+  <data name="wallet.giftcard.redeem_amount_invalid" xml:space="preserve">
+    <value>مبلغ بازخرید برای ماندهٔ موجود نامعتبر است.</value>
+  </data>
+  <data name="wallet.giftcard.revoked" xml:space="preserve">
+    <value>کارت هدیه ابطال شده است.</value>
+  </data>
+  <data name="wallet.giftcard.fully_redeemed" xml:space="preserve">
+    <value>کارت هدیه به‌طور کامل بازخرید شده است.</value>
+  </data>
+  <data name="wallet.giftcard.expired" xml:space="preserve">
+    <value>کارت هدیه منقضی شده است.</value>
+  </data>
+  <data name="wallet.giftcard.status_invalid" xml:space="preserve">
+    <value>وضعیت کارت هدیه قابل بازخرید نیست.</value>
+  </data>
+  <data name="wallet.giftcard.zero_remaining" xml:space="preserve">
+    <value>کارت هدیه ماندهٔ موجودی ندارد.</value>
+  </data>
+  <data name="wallet.giftcard.code_required" xml:space="preserve">
+    <value>کد کارت هدیه الزامی است.</value>
+  </data>
+  <data name="wallet.giftcard.code_length" xml:space="preserve">
+    <value>طول کد کارت هدیه نامعتبر است.</value>
+  </data>
+  <data name="wallet.giftcard.code_not_found" xml:space="preserve">
+    <value>برای کد ارسالی کارت هدیه‌ای وجود ندارد.</value>
+  </data>
+  <data name="wallet.giftcard.not_found" xml:space="preserve">
+    <value>کارت هدیه یافت نشد.</value>
+  </data>
+  <data name="wallet.giftcard.status_parse" xml:space="preserve">
+    <value>فیلتر وضعیت کارت هدیه یک وضعیت شناخته‌شده نیست.</value>
+  </data>
+  <data name="wallet.giftcard.redemption_ids" xml:space="preserve">
+    <value>شناسه‌های بازخرید، کارت و حساب الزامی است.</value>
+  </data>
+  <data name="wallet.giftcard.redemption_amount" xml:space="preserve">
+    <value>مبلغ بازخرید باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="wallet.giftcard.redemption_id" xml:space="preserve">
+    <value>شناسهٔ بازخرید الزامی است.</value>
+  </data>
+  <data name="wallet.redemption.owner_mismatch" xml:space="preserve">
+    <value>بازپخش idempotent بازخرید به کیف پول دیگری تعلق دارد.</value>
+  </data>
+  <data name="wallet.ledger.ids_required" xml:space="preserve">
+    <value>شناسه‌های سطر دفتر، حساب و منبع الزامی است.</value>
+  </data>
+  <data name="wallet.ledger.amount_positive" xml:space="preserve">
+    <value>مبلغ دفتر باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="wallet.ledger.source_type_invalid" xml:space="preserve">
+    <value>نوع منبع دفتر خالی یا بیش از حد مجاز است.</value>
+  </data>
+  <data name="wallet.adjustment.direction_invalid" xml:space="preserve">
+    <value>جهت تعدیل یک جهت شناخته‌شده نیست.</value>
+  </data>
+  <data name="wallet.adjustment.reason_invalid" xml:space="preserve">
+    <value>دلیل تعدیل خالی یا بیش از حد مجاز است.</value>
+  </data>
+  <data name="wallet.balance.insufficient" xml:space="preserve">
+    <value>موجودی کیف پول برای این برداشت کافی نیست.</value>
+  </data>
+  <data name="wallet.outbox.unmapped_event_type" xml:space="preserve">
+    <value>انتشار رویداد بیرونی از outbox کیف پول پشتیبانی نمی‌شود.</value>
   </data>
 </root>

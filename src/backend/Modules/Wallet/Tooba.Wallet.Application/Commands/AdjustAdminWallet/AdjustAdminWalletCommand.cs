@@ -1,8 +1,9 @@
 using MediatR;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Wallet.Application.Errors;
+using Tooba.Wallet.Application.Composition;
 using Tooba.Wallet.Application.Models;
 using Tooba.Wallet.Application.Ports;
+using Tooba.Wallet.Contracts.Errors;
 
 namespace Tooba.Wallet.Application.Commands.AdjustAdminWallet;
 
@@ -15,7 +16,7 @@ public sealed class AdjustAdminWalletHandler(IWalletDirectory directory)
     : IRequestHandler<AdjustAdminWalletCommand, Result<AdminWalletAdjustmentResultDto>>
 {
     public Task<Result<AdminWalletAdjustmentResultDto>> Handle(AdjustAdminWalletCommand request, CancellationToken cancellationToken) =>
-        WalletExceptionMapper.TryAsync(
+        WalletOperation.ExecuteAsync(
             () => directory.AdjustWalletForAdminAsync(
                 request.CustomerActorUserId,
                 request.AdminActorUserId,

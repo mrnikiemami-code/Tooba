@@ -1,9 +1,9 @@
 using MediatR;
-using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Wallet.Application.Errors;
+using Tooba.Wallet.Application.Composition;
 using Tooba.Wallet.Application.Models;
 using Tooba.Wallet.Application.Ports;
+using Tooba.Wallet.Contracts.Errors;
 
 namespace Tooba.Wallet.Application.Queries.GetCustomerWalletSummary;
 
@@ -16,7 +16,7 @@ public sealed class GetCustomerWalletSummaryHandler(IWalletDirectory directory)
     : IRequestHandler<GetCustomerWalletSummaryQuery, Result<WalletSummaryDto>>
 {
     public Task<Result<WalletSummaryDto>> Handle(GetCustomerWalletSummaryQuery request, CancellationToken cancellationToken) =>
-        WalletExceptionMapper.TryAsync(
+        WalletOperation.ExecuteAsync(
             () => directory.GetOrCreateSummaryForCustomerAsync(request.CustomerActorUserId, cancellationToken),
             WalletErrorCodes.WalletRejected);
 }

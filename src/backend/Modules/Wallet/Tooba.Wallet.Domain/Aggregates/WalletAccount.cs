@@ -1,3 +1,6 @@
+using Tooba.BuildingBlocks;
+using Tooba.Wallet.Contracts.Dtos;
+using Tooba.Wallet.Contracts.Errors;
 using Tooba.Wallet.Domain.ValueObjects;
 
 namespace Tooba.Wallet.Domain.Aggregates;
@@ -31,7 +34,7 @@ public sealed class WalletAccount
     public static WalletAccount Create(Guid accountId, Guid customerActorUserId, string currency, DateTimeOffset now)
     {
         if (accountId == Guid.Empty || customerActorUserId == Guid.Empty)
-            throw new InvalidOperationException("wallet.account.ids_required");
+            throw new ContractOperationException(WalletErrorCodes.AccountIdsRequired);
         var cur = NormalizeCurrency(currency);
         return new WalletAccount
         {
@@ -52,7 +55,7 @@ public sealed class WalletAccount
         DateTimeOffset now)
     {
         if (accountId == Guid.Empty || customerActorUserId == Guid.Empty)
-            throw new InvalidOperationException("wallet.ids_required");
+            throw new ContractOperationException(WalletErrorCodes.IdsRequired);
         return new WalletAccount
         {
             AccountId = accountId,
@@ -66,14 +69,7 @@ public sealed class WalletAccount
     /// <summary>آیا حساب برای اعتبار/بدهکار باز است.</summary>
     public bool CanMutateLedger => Status == WalletAccountStatus.Active;
 
-    /// <summary>ارز را نرمال و اعتبارسنجی می‌کند (delegate به Wallet.Contracts).</summary>
-    public static string NormalizeCurrency(string currency)
-    {
-        if (string.IsNullOrWhiteSpace(currency))
-            throw new InvalidOperationException("wallet.currency_required");
-        var trimmed = currency.Trim().ToUpperInvariant();
-        if (trimmed.Length is < 3 or > 8)
-            throw new InvalidOperationException("wallet.currency_invalid");
-        return trimmed;
-    }
+    /// <summary>ارز را نرمال و اعتبارسنجی می‌کند (قرارداد مشترک Wallet.Contracts).</summary>
+    public static string NormalizeCurrency(string currency) =>
+        WalletCurrency.Normalize(currency);
 }

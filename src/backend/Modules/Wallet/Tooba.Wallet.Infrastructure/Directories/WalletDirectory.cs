@@ -9,6 +9,7 @@ using Tooba.Notification.Contracts.Routes;
 using Tooba.Wallet.Application.Models;
 using Tooba.Wallet.Application.Ports;
 using Tooba.Wallet.Contracts.Dtos;
+using Tooba.Wallet.Contracts.Errors;
 using Tooba.Wallet.Contracts.Payments;
 using Tooba.Wallet.Contracts.Refunds;
 using Tooba.Wallet.Domain.Aggregates;
@@ -61,7 +62,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
-            throw new InvalidOperationException("wallet.rejected.SWRlbXBv");
+            throw new ContractOperationException(WalletErrorCodes.IdempotencyRequired);
 
         var existing = await _db.Redemptions.AsNoTracking()
             .SingleOrDefaultAsync(x => x.IdempotencyKey == command.IdempotencyKey.Trim(), cancellationToken);
@@ -70,7 +71,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
             var accountReplay = await _db.Accounts.AsNoTracking()
                 .SingleAsync(x => x.AccountId == existing.AccountId, cancellationToken);
             if (accountReplay.CustomerActorUserId != customerActorUserId)
-                throw new InvalidOperationException("wallet.rejected.2KjYp9iy");
+                throw new ContractOperationException(WalletErrorCodes.RedemptionOwnerMismatch);
             var cardReplay = await _db.GiftCards.AsNoTracking()
                 .SingleAsync(x => x.CardId == existing.CardId, cancellationToken);
             var balanceReplay = await DeriveBalanceAsync(accountReplay.AccountId, cancellationToken);
@@ -88,16 +89,16 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
         var now = _clock.UtcNow;
         var codeHash = GiftCard.HashCode(command.Code);
         var card = await _db.GiftCards.SingleOrDefaultAsync(x => x.CodeHash == codeHash, cancellationToken)
-                   ?? throw new InvalidOperationException("wallet.rejected.2qnYryDa");
+                   ?? throw new ContractOperationException(WalletErrorCodes.GiftCardCodeNotFound);
         card.EnsureRedeemable(now);
         if (!string.Equals(card.Currency, WalletAccount.DefaultCurrency, StringComparison.Ordinal))
-            throw new InvalidOperationException("wallet.rejected.2KfYsdiy");
+            throw new ContractOperationException(WalletErrorCodes.CurrencyMismatch);
 
         var account = await EnsureAccountTrackedAsync(customerActorUserId, cancellationToken);
         if (!account.CanMutateLedger)
-            throw new InvalidOperationException("wallet.rejected.2K3Ys9in");
+            throw new ContractOperationException(WalletErrorCodes.AccountNotMutable);
         if (!string.Equals(account.Currency, card.Currency, StringComparison.Ordinal))
-            throw new InvalidOperationException("wallet.rejected.2KfYsdiy");
+            throw new ContractOperationException(WalletErrorCodes.CurrencyMismatch);
 
         var amount = card.RemainingAmount;
         card.ApplyRedemption(amount, now);
@@ -190,7 +191,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
-            throw new InvalidOperationException("wallet.rejected.SWRlbXBv");
+            throw new ContractOperationException(WalletErrorCodes.IdempotencyRequired);
 
         var existing = await _db.GiftCards.AsNoTracking()
             .SingleOrDefaultAsync(x => x.IdempotencyKey == command.IdempotencyKey.Trim(), cancellationToken);
@@ -219,7 +220,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
     public async Task<GiftCardDetailDto> RevokeGiftCardForAdminAsync(Guid cardId, CancellationToken cancellationToken)
     {
         var card = await _db.GiftCards.SingleOrDefaultAsync(x => x.CardId == cardId, cancellationToken)
-                   ?? throw new InvalidOperationException("wallet.rejected.2qnYp9ix");
+                   ?? throw new ContractOperationException(WalletErrorCodes.GiftCardNotFound);
         card.Revoke(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         var redemptions = await _db.Redemptions.AsNoTracking()
@@ -246,7 +247,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
     {
         var account = await _db.Accounts.AsNoTracking()
             .SingleOrDefaultAsync(x => x.CustomerActorUserId == customerActorUserId, cancellationToken)
-            ?? throw new InvalidOperationException("wallet.rejected.2K3Ys9in");
+            ?? throw new ContractOperationException(WalletErrorCodes.AccountNotFound);
         return await ListLedgerAsync(account, page, pageSize, cancellationToken);
     }
 
@@ -258,9 +259,9 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
-            throw new InvalidOperationException("wallet.rejected.SWRlbXBv");
+            throw new ContractOperationException(WalletErrorCodes.IdempotencyRequired);
         if (string.IsNullOrWhiteSpace(command.Reason) || command.Reason.Trim().Length > 500)
-            throw new InvalidOperationException("wallet.rejected.2K_ZhNuM");
+            throw new ContractOperationException(WalletErrorCodes.AdjustmentReasonInvalid);
 
         var existing = await _db.LedgerEntries.AsNoTracking()
             .SingleOrDefaultAsync(x => x.IdempotencyKey == command.IdempotencyKey.Trim(), cancellationToken);
@@ -274,13 +275,13 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
         var now = _clock.UtcNow;
         var account = await EnsureAccountTrackedAsync(customerActorUserId, cancellationToken);
         if (!account.CanMutateLedger)
-            throw new InvalidOperationException("wallet.rejected.2K3Ys9in");
+            throw new ContractOperationException(WalletErrorCodes.AccountNotMutable);
 
         if (direction == LedgerDirection.Debit)
         {
             var balance = await DeriveBalanceAsync(account.AccountId, cancellationToken);
             if (command.Amount > balance)
-                throw new InvalidOperationException("wallet.rejected.2YXZiNis");
+                throw new ContractOperationException(WalletErrorCodes.BalanceInsufficient);
         }
 
         var adjustmentId = _ids.NewId();
@@ -323,11 +324,11 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
         CancellationToken cancellationToken)
     {
         if (customerActorId == Guid.Empty || paymentId == Guid.Empty)
-            throw new ContractOperationException("wallet.rejected.2YfZiNuM");
+            throw new ContractOperationException(WalletErrorCodes.IdsRequired);
         if (amount <= 0)
-            throw new ContractOperationException("wallet.rejected.2YXYqNmE");
+            throw new ContractOperationException(WalletErrorCodes.AmountPositive);
         if (string.IsNullOrWhiteSpace(idempotencyKey))
-            throw new ContractOperationException("wallet.rejected.SWRlbXBv");
+            throw new ContractOperationException(WalletErrorCodes.IdempotencyRequired);
 
         var key = idempotencyKey.Trim();
         var normalizedCurrency = WalletAccount.NormalizeCurrency(currency);
@@ -340,7 +341,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
                 || existing.Amount != decimal.Round(amount, 0, MidpointRounding.AwayFromZero)
                 || !string.Equals(existing.Currency, normalizedCurrency, StringComparison.Ordinal))
             {
-                throw new ContractOperationException("wallet.rejected.2qnZhNuM");
+                throw new ContractOperationException(WalletErrorCodes.IdempotencyConflict);
             }
 
             var balanceReplay = await DeriveBalanceAsync(existing.AccountId, cancellationToken);
@@ -363,14 +364,14 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
 
             var account = await EnsureAccountTrackedAsync(customerActorId, cancellationToken);
             if (!account.CanMutateLedger)
-                throw new ContractOperationException("wallet.rejected.2K3Ys9in");
+                throw new ContractOperationException(WalletErrorCodes.AccountNotMutable);
             if (!string.Equals(account.Currency, normalizedCurrency, StringComparison.Ordinal))
-                throw new ContractOperationException("wallet.rejected.2KfYsdiy");
+                throw new ContractOperationException(WalletErrorCodes.CurrencyMismatch);
 
             var balance = await DeriveBalanceAsync(account.AccountId, cancellationToken);
             var rounded = decimal.Round(amount, 0, MidpointRounding.AwayFromZero);
             if (rounded > balance)
-                throw new ContractOperationException("wallet.rejected.2YXZiNis");
+                throw new ContractOperationException(WalletErrorCodes.BalanceInsufficient);
 
             var now = _clock.UtcNow;
             var entry = WalletLedgerEntry.PostOrderPaymentDebit(
@@ -433,16 +434,16 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
         CancellationToken cancellationToken)
     {
         if (customerActorId == Guid.Empty || returnRequestId == Guid.Empty)
-            throw new InvalidOperationException("wallet.rejected.2YfZiNuM");
+            throw new ContractOperationException(WalletErrorCodes.IdsRequired);
         if (amount <= 0)
-            throw new InvalidOperationException("wallet.rejected.2YXYqNmE");
+            throw new ContractOperationException(WalletErrorCodes.AmountPositive);
         if (string.IsNullOrWhiteSpace(idempotencyKey))
-            throw new InvalidOperationException("wallet.rejected.SWRlbXBv");
+            throw new ContractOperationException(WalletErrorCodes.IdempotencyRequired);
 
         var key = idempotencyKey.Trim();
         var expectedKey = $"wallet-refund-credit:{returnRequestId:D}";
         if (!string.Equals(key, expectedKey, StringComparison.Ordinal))
-            throw new InvalidOperationException("wallet.rejected.2qnZhNuM");
+            throw new ContractOperationException(WalletErrorCodes.IdempotencyConflict);
 
         var normalizedCurrency = WalletAccount.NormalizeCurrency(currency);
         var existing = await _db.LedgerEntries.AsNoTracking()
@@ -454,7 +455,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
                 || existing.Amount != decimal.Round(amount, 0, MidpointRounding.AwayFromZero)
                 || !string.Equals(existing.Currency, normalizedCurrency, StringComparison.Ordinal))
             {
-                throw new InvalidOperationException("wallet.rejected.2qnZhNuM");
+                throw new ContractOperationException(WalletErrorCodes.IdempotencyConflict);
             }
 
             var balanceReplay = await DeriveBalanceAsync(existing.AccountId, cancellationToken);
@@ -477,9 +478,9 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
 
             var account = await EnsureAccountTrackedAsync(customerActorId, cancellationToken);
             if (!account.CanMutateLedger)
-                throw new InvalidOperationException("wallet.rejected.2K3Ys9in");
+                throw new ContractOperationException(WalletErrorCodes.AccountNotMutable);
             if (!string.Equals(account.Currency, normalizedCurrency, StringComparison.Ordinal))
-                throw new InvalidOperationException("wallet.rejected.2KfYsdiy");
+                throw new ContractOperationException(WalletErrorCodes.CurrencyMismatch);
 
             var now = _clock.UtcNow;
             var rounded = decimal.Round(amount, 0, MidpointRounding.AwayFromZero);
@@ -540,7 +541,7 @@ public sealed class WalletDirectory : IWalletDirectory, IWalletOrderPaymentPort,
         CancellationToken cancellationToken)
     {
         if (payableAmount < 0)
-            throw new InvalidOperationException("wallet.rejected.2YXYqNmE");
+            throw new ContractOperationException(WalletErrorCodes.AmountPositive);
         var normalizedCurrency = WalletAccount.NormalizeCurrency(currency);
         var summary = await GetOrCreateSummaryForCustomerAsync(customerActorId, cancellationToken);
         if (!string.Equals(summary.Currency, normalizedCurrency, StringComparison.Ordinal))

@@ -1,4 +1,6 @@
+using Tooba.BuildingBlocks;
 using Tooba.Wallet.Contracts.Dtos;
+using Tooba.Wallet.Contracts.Errors;
 using Tooba.Wallet.Contracts.Payments;
 using Tooba.Wallet.Contracts.Refunds;
 using Tooba.Wallet.Domain.Aggregates;
@@ -29,10 +31,10 @@ public sealed class WalletCurrencyContractsTests
     [InlineData("   ")]
     public void Normalize_rejects_missing_currency(string? input)
     {
-        var ex1 = Assert.Throws<InvalidOperationException>(() => WalletCurrency.Normalize(input!));
-        Assert.Equal("wallet.currency_required", ex1.Message);
-        var ex2 = Assert.Throws<InvalidOperationException>(() => WalletAccount.NormalizeCurrency(input!));
-        Assert.Equal("wallet.currency_required", ex2.Message);
+        var ex1 = Assert.Throws<ContractOperationException>(() => WalletCurrency.Normalize(input!));
+        Assert.Equal(WalletErrorCodes.CurrencyRequired, ex1.Code);
+        var ex2 = Assert.Throws<ContractOperationException>(() => WalletAccount.NormalizeCurrency(input!));
+        Assert.Equal(WalletErrorCodes.CurrencyRequired, ex2.Code);
     }
 
     [Theory]
@@ -40,10 +42,10 @@ public sealed class WalletCurrencyContractsTests
     [InlineData("ABCDEFGHI")]
     public void Normalize_rejects_invalid_length(string input)
     {
-        var ex1 = Assert.Throws<InvalidOperationException>(() => WalletCurrency.Normalize(input));
-        Assert.Equal("wallet.currency_invalid", ex1.Message);
-        var ex2 = Assert.Throws<InvalidOperationException>(() => WalletAccount.NormalizeCurrency(input));
-        Assert.Equal("wallet.currency_invalid", ex2.Message);
+        var ex1 = Assert.Throws<ContractOperationException>(() => WalletCurrency.Normalize(input));
+        Assert.Equal(WalletErrorCodes.CurrencyInvalid, ex1.Code);
+        var ex2 = Assert.Throws<ContractOperationException>(() => WalletAccount.NormalizeCurrency(input));
+        Assert.Equal(WalletErrorCodes.CurrencyInvalid, ex2.Code);
     }
 
     [Fact]

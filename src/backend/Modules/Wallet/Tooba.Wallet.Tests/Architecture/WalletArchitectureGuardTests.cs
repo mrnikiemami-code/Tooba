@@ -7,7 +7,7 @@ namespace Tooba.Wallet.Tests.Architecture;
 public sealed class WalletArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
-    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Errors"];
+    private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Commands", "Queries", "Composition", "Validation"];
     private static readonly string[] AllowedContractsFolders = ["Payments", "Refunds", "Dtos", "Ports", "Errors"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection", "Migrations", "Development"];
@@ -47,7 +47,7 @@ public sealed class WalletArchitectureGuardTests
         Assert.DoesNotContain(refs, r => r.Contains("Application", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Endpoints", StringComparison.OrdinalIgnoreCase));
-        Assert.DoesNotContain(refs, r => r.Contains("Contracts", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(refs, r => r.Contains("Tooba.Wallet.Contracts", StringComparison.Ordinal));
         Assert.DoesNotContain(refs, r => r.Contains("Payment.", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Order.", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Returns.", StringComparison.OrdinalIgnoreCase));
@@ -99,7 +99,6 @@ public sealed class WalletArchitectureGuardTests
     [Fact]
     public void Wallet_golden_boundaries_and_physical_layout_remain_clean()
     {
-        Assert.DoesNotContain(ProjectRefs("Tooba.Wallet.Domain"), x => x.Contains("Tooba.Wallet.Contracts", StringComparison.Ordinal));
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("TypeForwardedTo", StringComparison.Ordinal));
         Assert.DoesNotContain(AllProductionSources(), x => x.Text.Contains("PaymentDbContext", StringComparison.Ordinal));
         Assert.DoesNotContain(Sources("Tooba.Wallet.Contracts"), x => x.Text.Contains("namespace Tooba.Wallet.Domain", StringComparison.Ordinal));
@@ -153,8 +152,6 @@ public sealed class WalletArchitectureGuardTests
             .SelectMany(x => Regex.Matches(x.Text, @"throw new \w+Exception\(\s*""([^""]*)""\s*\)")
                 .Select(m => (x.Path, Msg: m.Groups[1].Value)))
             .Where(x => Regex.IsMatch(x.Msg, @"[\u0600-\u06FF]") || x.Msg.Contains(' ', StringComparison.Ordinal))
-            .Where(x => !x.Msg.StartsWith("wallet.", StringComparison.Ordinal)
-                        && !x.Msg.StartsWith("domain.", StringComparison.Ordinal))
             .Select(x => $"{x.Path}:{x.Msg}")
             .ToList();
         Assert.True(localized.Count == 0, "localized exception prose: " + string.Join("; ", localized));
@@ -213,10 +210,12 @@ public sealed class WalletArchitectureGuardTests
         Assert.Contains(application, x => x.Text.Contains("GetWalletDemoPreviewQuery", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("IRequestHandler<", StringComparison.Ordinal));
         Assert.Contains(application, x => x.Text.Contains("using MediatR", StringComparison.Ordinal));
-        Assert.Contains(application, x => x.Text.Contains("WalletExceptionMapper", StringComparison.Ordinal));
+        Assert.Contains(application, x => x.Text.Contains("WalletOperation", StringComparison.Ordinal));
         Assert.DoesNotContain(application, x =>
-            x.Text.Contains("StartsWith(\"wallet.\"", StringComparison.Ordinal)
-            || (x.Text.Contains(".Contains(\"", StringComparison.Ordinal) && x.Path.Contains("ExceptionMapper", StringComparison.Ordinal)));
+            x.Text.Contains("WalletExceptionMapper", StringComparison.Ordinal)
+            || x.Text.Contains(".Message.Contains(", StringComparison.Ordinal)
+            || x.Text.Contains(".Message.StartsWith(", StringComparison.Ordinal)
+            || x.Text.Contains(".Message ==", StringComparison.Ordinal));
 
         var hostRoot = Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host");
         var endpointsRoot = Path.Combine(WalletRoot(), "Tooba.Wallet.Endpoints");

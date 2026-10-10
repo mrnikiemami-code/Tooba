@@ -9,7 +9,7 @@ using Tooba.Wallet.Application.Commands.AdjustAdminWallet;
 using Tooba.Wallet.Application.Commands.IssueAdminGiftCard;
 using Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard;
 using Tooba.Wallet.Application.Commands.RevokeAdminGiftCard;
-using Tooba.Wallet.Application.Errors;
+using Tooba.Wallet.Application.Composition;
 using Tooba.Wallet.Application.Ports;
 using Tooba.Wallet.Application.Queries.GetAdminGiftCard;
 using Tooba.Wallet.Application.Queries.GetAdminWallet;
@@ -18,6 +18,7 @@ using Tooba.Wallet.Application.Queries.GetWalletDemoPreview;
 using Tooba.Wallet.Application.Queries.ListAdminGiftCards;
 using Tooba.Wallet.Application.Queries.ListAdminWalletLedger;
 using Tooba.Wallet.Application.Queries.ListCustomerWalletLedger;
+using Tooba.Wallet.Contracts.Errors;
 using Tooba.Wallet.Infrastructure.Adapters;
 using Tooba.Wallet.Infrastructure.Directories;
 using Tooba.Wallet.Infrastructure.Persistence;
@@ -217,46 +218,50 @@ public sealed class WalletSemanticPresentationTests
     [Fact]
     public void Stable_directory_codes_map_to_public_outcome()
     {
-        var rejected = WalletExceptionMapper.ToSemanticError(
-            new InvalidOperationException("wallet.rejected.2YXZiNis"),
+        var rejected = WalletOperation.ToSemanticError(
+            new ContractOperationException(WalletErrorCodes.BalanceInsufficient),
             WalletErrorCodes.WalletRejected);
         Assert.Equal(WalletErrorCodes.WalletRejected, rejected.Code);
 
-        var redeem = WalletExceptionMapper.ToSemanticError(
-            new InvalidOperationException("wallet.giftcard.expired"),
+        var redeem = WalletOperation.ToSemanticError(
+            new ContractOperationException(WalletErrorCodes.GiftCardExpired),
             WalletErrorCodes.RedeemRejected);
         Assert.Equal(WalletErrorCodes.RedeemRejected, redeem.Code);
 
-        var issue = WalletExceptionMapper.ToSemanticError(
-            new InvalidOperationException("wallet.giftcard.amount_positive"),
+        var issue = WalletOperation.ToSemanticError(
+            new ContractOperationException(WalletErrorCodes.GiftCardAmountPositive),
             WalletErrorCodes.GiftCardIssueRejected);
         Assert.Equal(WalletErrorCodes.GiftCardIssueRejected, issue.Code);
+
+        // A client-observable typed code is surfaced as-is, never remapped onto the outcome code.
+        var httpReachable = WalletOperation.ToSemanticError(
+            new ContractOperationException(WalletErrorCodes.GiftCardMissing),
+            WalletErrorCodes.WalletRejected);
+        Assert.Equal(WalletErrorCodes.GiftCardMissing, httpReachable.Code);
     }
 
     [Fact]
-    public void Prose_and_unknown_codes_are_not_swallowed()
+    public void Unknown_codes_are_not_swallowed()
     {
-        Assert.False(WalletExceptionMapper.TryMapExact("موجودی کافی نیست.", WalletErrorCodes.WalletRejected, out _));
-        Assert.False(WalletExceptionMapper.TryMapExact("wallet.unknown.future_code", WalletErrorCodes.WalletRejected, out _));
-        Assert.Throws<InvalidOperationException>(() =>
-            WalletExceptionMapper.ToSemanticError(
-                new InvalidOperationException("پیدا نشد"),
+        Assert.Throws<ContractOperationException>(() =>
+            WalletOperation.ToSemanticError(
+                new ContractOperationException("wallet.unknown.future_code"),
                 WalletErrorCodes.WalletRejected));
     }
 
     [Fact]
-    public async Task Unexpected_InvalidOperationException_propagates_from_TryAsync()
+    public async Task Unexpected_InvalidOperationException_propagates_from_ExecuteAsync()
     {
         var unknown = new InvalidOperationException("wallet.unknown.future_code");
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            WalletExceptionMapper.TryAsync<int>(() => throw unknown, WalletErrorCodes.WalletRejected));
+            WalletOperation.ExecuteAsync<int>(() => throw unknown, WalletErrorCodes.WalletRejected));
     }
 
     [Fact]
-    public async Task Known_InvalidOperationException_maps_in_TryAsync()
+    public async Task Known_typed_fault_maps_in_ExecuteAsync()
     {
-        var result = await WalletExceptionMapper.TryAsync<int>(
-            () => throw new InvalidOperationException("wallet.adjustment.direction_invalid"),
+        var result = await WalletOperation.ExecuteAsync<int>(
+            () => throw new ContractOperationException(WalletErrorCodes.AdjustmentDirectionInvalid),
             WalletErrorCodes.AdjustRejected);
         Assert.True(result.IsFailure);
         Assert.Equal(WalletErrorCodes.AdjustRejected, result.Errors[0].Code);

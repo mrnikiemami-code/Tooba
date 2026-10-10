@@ -42,6 +42,8 @@
     <ProjectReference Include="..\..\Modules\BulkInquiry\Tooba.BulkInquiry.Endpoints\Tooba.BulkInquiry.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Wallet\Tooba.Wallet.Contracts\Tooba.Wallet.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Wallet\Tooba.Wallet.Domain\Tooba.Wallet.Domain.csproj" />
+    <ProjectReference Include="..\..\Modules\Wallet\Tooba.Wallet.Application\Tooba.Wallet.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Wallet\Tooba.Wallet.Endpoints\Tooba.Wallet.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Catalog\Tooba.Catalog.Contracts\Tooba.Catalog.Contracts.csproj" />
     <ProjectReference Include="..\..\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj" />

@@ -1,21 +1,23 @@
+using Tooba.BuildingBlocks;
+using Tooba.Wallet.Contracts.Errors;
 using Tooba.Wallet.Domain.ValueObjects;
 
 namespace Tooba.Wallet.Application.Models;
 
-/// <summary>پارس enumهای مرز Application.</summary>
+/// <summary>Parses Application-boundary enums.</summary>
 public static class WalletEnumParsing
 {
-    /// <summary>وضعیت کارت فیلتر.</summary>
+    /// <summary>Gift-card status filter.</summary>
     public static GiftCardStatus? TryParseGiftCardStatus(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? null
             : Enum.TryParse<GiftCardStatus>(value, ignoreCase: true, out var parsed)
                 ? parsed
-                : throw new InvalidOperationException("wallet.giftcard.status_parse");
+                : throw new ContractOperationException(WalletErrorCodes.GiftCardStatusParse);
 
-    /// <summary>جهت تعدیل.</summary>
+    /// <summary>Adjustment direction.</summary>
     public static LedgerDirection ParseDirection(string value) =>
         Enum.TryParse<LedgerDirection>(value, ignoreCase: true, out var parsed)
             ? parsed
-            : throw new InvalidOperationException("wallet.adjustment.direction_invalid");
+            : throw new ContractOperationException(WalletErrorCodes.AdjustmentDirectionInvalid);
 }

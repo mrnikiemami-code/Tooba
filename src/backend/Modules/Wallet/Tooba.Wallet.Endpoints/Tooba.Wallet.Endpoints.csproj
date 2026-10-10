@@ -11,6 +11,14 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Update="Resources\WalletErrors.resx">
+      <LogicalName>Tooba.Wallet.Endpoints.Resources.WalletErrors.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\WalletErrors.fa.resx">
+      <LogicalName>Tooba.Wallet.Endpoints.Resources.WalletErrors.fa.resources</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Tooba.Wallet.Application\Tooba.Wallet.Application.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>

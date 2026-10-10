@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks;
+using Tooba.Wallet.Contracts.Errors;
 using Tooba.Wallet.Domain.ValueObjects;
 
 namespace Tooba.Wallet.Domain.Aggregates;
@@ -189,19 +191,19 @@ public sealed class WalletLedgerEntry
         string? metadata)
     {
         if (entryId == Guid.Empty || accountId == Guid.Empty || sourceId == Guid.Empty)
-            throw new InvalidOperationException("wallet.ledger.ids_required");
+            throw new ContractOperationException(WalletErrorCodes.LedgerIdsRequired);
         if (amount <= 0)
-            throw new InvalidOperationException("wallet.ledger.amount_positive");
+            throw new ContractOperationException(WalletErrorCodes.LedgerAmountPositive);
         if (string.IsNullOrWhiteSpace(sourceType) || sourceType.Trim().Length > SourceTypeMaxLength)
-            throw new InvalidOperationException("wallet.ledger.source_type_invalid");
+            throw new ContractOperationException(WalletErrorCodes.LedgerSourceTypeInvalid);
         var key = NormalizeIdempotency(idempotencyKey)
-                  ?? throw new InvalidOperationException("wallet.idempotency_required");
+                  ?? throw new ContractOperationException(WalletErrorCodes.IdempotencyRequired);
         string? meta = null;
         if (!string.IsNullOrWhiteSpace(metadata))
         {
             meta = metadata.Trim();
             if (meta.Length > MetadataMaxLength)
-                throw new InvalidOperationException("wallet.metadata_too_long");
+                throw new ContractOperationException(WalletErrorCodes.MetadataTooLong);
         }
 
         return new WalletLedgerEntry
@@ -228,7 +230,7 @@ public sealed class WalletLedgerEntry
         if (string.IsNullOrWhiteSpace(key)) return null;
         var trimmed = key.Trim();
         if (trimmed.Length > IdempotencyKeyMaxLength)
-            throw new InvalidOperationException("wallet.idempotency_invalid");
+            throw new ContractOperationException(WalletErrorCodes.IdempotencyInvalid);
         return trimmed;
     }
 }

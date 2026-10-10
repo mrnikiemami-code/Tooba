@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
-using Tooba.Wallet.Application.Errors;
+using Tooba.Wallet.Contracts.Errors;
 using Tooba.Wallet.Endpoints.Admin;
 
 namespace Tooba.Wallet.Endpoints.Errors;

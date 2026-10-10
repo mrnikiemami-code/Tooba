@@ -1,4 +1,7 @@
-﻿namespace Tooba.Wallet.Contracts.Dtos;
+﻿using Tooba.BuildingBlocks;
+using Tooba.Wallet.Contracts.Errors;
+
+namespace Tooba.Wallet.Contracts.Dtos;
 
 /// <summary>
 /// Wallet-owned currency normalization for ledger/account identity.
@@ -11,10 +14,10 @@ public static class WalletCurrency
     public static string Normalize(string currency)
     {
         if (string.IsNullOrWhiteSpace(currency))
-            throw new InvalidOperationException("wallet.currency_required");
+            throw new ContractOperationException(WalletErrorCodes.CurrencyRequired);
         var trimmed = currency.Trim().ToUpperInvariant();
         if (trimmed.Length is < 3 or > 8)
-            throw new InvalidOperationException("wallet.currency_invalid");
+            throw new ContractOperationException(WalletErrorCodes.CurrencyInvalid);
         return trimmed;
     }
 }

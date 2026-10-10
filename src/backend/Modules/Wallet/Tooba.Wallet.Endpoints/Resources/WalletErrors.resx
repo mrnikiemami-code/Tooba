@@ -12,7 +12,154 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="wallet.rejected" xml:space="preserve">
+    <value>The wallet request was rejected.</value>
+  </data>
+  <data name="wallet.redeem.rejected" xml:space="preserve">
+    <value>The gift-card redemption was rejected.</value>
+  </data>
+  <data name="giftcard.rejected" xml:space="preserve">
+    <value>The gift-card request was rejected.</value>
+  </data>
+  <data name="giftcard.issue.rejected" xml:space="preserve">
+    <value>Issuing the gift card was rejected.</value>
+  </data>
+  <data name="giftcard.revoke.rejected" xml:space="preserve">
+    <value>Revoking the gift card was rejected.</value>
+  </data>
+  <data name="giftcard.missing" xml:space="preserve">
+    <value>The gift card was not found.</value>
+  </data>
+  <data name="wallet.missing" xml:space="preserve">
+    <value>The wallet was not found.</value>
+  </data>
+  <data name="wallet.adjust.rejected" xml:space="preserve">
+    <value>The wallet adjustment was rejected.</value>
+  </data>
   <data name="wallet.authorization.unavailable" xml:space="preserve">
     <value>Wallet authorization service is unavailable.</value>
+  </data>
+  <data name="wallet.demo.not_ready" xml:space="preserve">
+    <value>The wallet demo seed is not ready.</value>
+  </data>
+  <data name="wallet.account.ids_required" xml:space="preserve">
+    <value>The wallet account and owner identifiers are required.</value>
+  </data>
+  <data name="wallet.ids_required" xml:space="preserve">
+    <value>The identity identifiers are required.</value>
+  </data>
+  <data name="wallet.currency_required" xml:space="preserve">
+    <value>The currency is required.</value>
+  </data>
+  <data name="wallet.currency_invalid" xml:space="preserve">
+    <value>The currency code is invalid.</value>
+  </data>
+  <data name="wallet.currency_mismatch" xml:space="preserve">
+    <value>The currency does not match the wallet account currency.</value>
+  </data>
+  <data name="wallet.account.not_mutable" xml:space="preserve">
+    <value>The wallet account is not open for ledger changes.</value>
+  </data>
+  <data name="wallet.account.not_found" xml:space="preserve">
+    <value>The wallet account was not found.</value>
+  </data>
+  <data name="wallet.amount.positive" xml:space="preserve">
+    <value>The amount must be greater than zero.</value>
+  </data>
+  <data name="wallet.idempotency_required" xml:space="preserve">
+    <value>The idempotency key is required.</value>
+  </data>
+  <data name="wallet.idempotency_invalid" xml:space="preserve">
+    <value>The idempotency key is invalid.</value>
+  </data>
+  <data name="wallet.idempotency_conflict" xml:space="preserve">
+    <value>The idempotency key conflicts with a different operation.</value>
+  </data>
+  <data name="wallet.metadata_too_long" xml:space="preserve">
+    <value>The ledger metadata is too long.</value>
+  </data>
+  <data name="wallet.giftcard.ids_required" xml:space="preserve">
+    <value>The gift-card and issuer identifiers are required.</value>
+  </data>
+  <data name="wallet.giftcard.amount_positive" xml:space="preserve">
+    <value>The gift-card amount must be greater than zero.</value>
+  </data>
+  <data name="wallet.giftcard.issuer_required" xml:space="preserve">
+    <value>The gift-card issuer is required.</value>
+  </data>
+  <data name="wallet.giftcard.expiry_future" xml:space="preserve">
+    <value>The gift-card expiry must be in the future.</value>
+  </data>
+  <data name="wallet.giftcard.amounts_invalid" xml:space="preserve">
+    <value>The gift-card amounts are inconsistent.</value>
+  </data>
+  <data name="wallet.giftcard.not_revocable" xml:space="preserve">
+    <value>The gift card cannot be revoked in its current status.</value>
+  </data>
+  <data name="wallet.giftcard.redeem_amount_invalid" xml:space="preserve">
+    <value>The redemption amount is invalid for the remaining balance.</value>
+  </data>
+  <data name="wallet.giftcard.revoked" xml:space="preserve">
+    <value>The gift card is revoked.</value>
+  </data>
+  <data name="wallet.giftcard.fully_redeemed" xml:space="preserve">
+    <value>The gift card is fully redeemed.</value>
+  </data>
+  <data name="wallet.giftcard.expired" xml:space="preserve">
+    <value>The gift card is expired.</value>
+  </data>
+  <data name="wallet.giftcard.status_invalid" xml:space="preserve">
+    <value>The gift-card status is not redeemable.</value>
+  </data>
+  <data name="wallet.giftcard.zero_remaining" xml:space="preserve">
+    <value>The gift card has no remaining balance.</value>
+  </data>
+  <data name="wallet.giftcard.code_required" xml:space="preserve">
+    <value>The gift-card code is required.</value>
+  </data>
+  <data name="wallet.giftcard.code_length" xml:space="preserve">
+    <value>The gift-card code length is invalid.</value>
+  </data>
+  <data name="wallet.giftcard.code_not_found" xml:space="preserve">
+    <value>No gift card exists for the supplied code.</value>
+  </data>
+  <data name="wallet.giftcard.not_found" xml:space="preserve">
+    <value>The gift card was not found.</value>
+  </data>
+  <data name="wallet.giftcard.status_parse" xml:space="preserve">
+    <value>The gift-card status filter is not a known status.</value>
+  </data>
+  <data name="wallet.giftcard.redemption_ids" xml:space="preserve">
+    <value>The redemption, card and account identifiers are required.</value>
+  </data>
+  <data name="wallet.giftcard.redemption_amount" xml:space="preserve">
+    <value>The redemption amount must be greater than zero.</value>
+  </data>
+  <data name="wallet.giftcard.redemption_id" xml:space="preserve">
+    <value>The redemption identifier is required.</value>
+  </data>
+  <data name="wallet.redemption.owner_mismatch" xml:space="preserve">
+    <value>The idempotent redemption replay belongs to another wallet.</value>
+  </data>
+  <data name="wallet.ledger.ids_required" xml:space="preserve">
+    <value>The ledger entry, account and source identifiers are required.</value>
+  </data>
+  <data name="wallet.ledger.amount_positive" xml:space="preserve">
+    <value>The ledger amount must be greater than zero.</value>
+  </data>
+  <data name="wallet.ledger.source_type_invalid" xml:space="preserve">
+    <value>The ledger source type is missing or too long.</value>
+  </data>
+  <data name="wallet.adjustment.direction_invalid" xml:space="preserve">
+    <value>The adjustment direction is not a known direction.</value>
+  </data>
+  <data name="wallet.adjustment.reason_invalid" xml:space="preserve">
+    <value>The adjustment reason is missing or too long.</value>
+  </data>
+  <data name="wallet.balance.insufficient" xml:space="preserve">
+    <value>The wallet balance is insufficient for this debit.</value>
+  </data>
+  <data name="wallet.outbox.unmapped_event_type" xml:space="preserve">
+    <value>External event emission from the wallet outbox is not supported.</value>
   </data>
 </root>

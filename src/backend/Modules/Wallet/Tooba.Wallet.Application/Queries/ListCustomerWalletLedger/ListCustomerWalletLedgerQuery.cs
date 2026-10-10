@@ -1,9 +1,9 @@
 using MediatR;
-using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Wallet.Application.Errors;
+using Tooba.Wallet.Application.Composition;
 using Tooba.Wallet.Application.Models;
 using Tooba.Wallet.Application.Ports;
+using Tooba.Wallet.Contracts.Errors;
 
 namespace Tooba.Wallet.Application.Queries.ListCustomerWalletLedger;
 
@@ -16,7 +16,7 @@ public sealed class ListCustomerWalletLedgerHandler(IWalletDirectory directory)
     : IRequestHandler<ListCustomerWalletLedgerQuery, Result<WalletLedgerPageDto>>
 {
     public Task<Result<WalletLedgerPageDto>> Handle(ListCustomerWalletLedgerQuery request, CancellationToken cancellationToken) =>
-        WalletExceptionMapper.TryAsync(
+        WalletOperation.ExecuteAsync(
             () => directory.ListLedgerForCustomerAsync(request.CustomerActorUserId, request.Page, request.PageSize, cancellationToken),
             WalletErrorCodes.WalletRejected);
 }

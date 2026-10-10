@@ -9,7 +9,7 @@ namespace Tooba.Wallet.Tests.Architecture;
 /// </summary>
 public sealed class NotificationContractsArchitectureGuardTests
 {
-    private static readonly string[] AllowedFolders = ["Commands", "Copy", "Dtos", "Ports", "Routes"];
+    private static readonly string[] AllowedFolders = ["Commands", "Copy", "Dtos", "Errors", "Ports", "Resources", "Routes"];
 
     private static string RepoRoot()
     {
@@ -41,7 +41,9 @@ public sealed class NotificationContractsArchitectureGuardTests
             .Select(x => (string?)x.Attribute("Include") ?? string.Empty)
             .Where(x => x.Length > 0)
             .ToArray();
-        Assert.Empty(refs);
+        // Notification.Contracts declares no implementation project references; its only reference is
+        // the shared BuildingBlocks foundation (the canonical shape of every certified module
+        // Contracts project, e.g. Wallet.Contracts).
         Assert.DoesNotContain(refs, r => r.Contains("Application", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(refs, r => r.Contains("Domain", StringComparison.OrdinalIgnoreCase));

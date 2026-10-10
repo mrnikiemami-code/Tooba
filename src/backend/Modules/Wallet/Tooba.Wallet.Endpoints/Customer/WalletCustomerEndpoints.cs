@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Wallet.Application.Commands.RedeemCustomerGiftCard;
-using Tooba.Wallet.Application.Errors;
 using Tooba.Wallet.Application.Queries.GetCustomerWalletSummary;
 using Tooba.Wallet.Application.Queries.ListCustomerWalletLedger;
 
@@ -33,7 +33,7 @@ public static class WalletCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(WalletErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(new GetCustomerWalletSummaryQuery(actor.Value), cancellationToken));
     }
 
@@ -44,7 +44,7 @@ public static class WalletCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(WalletErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(
             new ListCustomerWalletLedgerQuery(actor.Value, page, pageSize), cancellationToken));
     }
@@ -55,7 +55,7 @@ public static class WalletCustomerEndpoints
     {
         var actor = authorizer.TryResolveActor(context);
         if (actor is null)
-            return api.FromFailure(new SemanticError(WalletErrorCodes.CustomerSessionRequired));
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         var idem = ResolveIdempotencyKey(body.IdempotencyKey, context.Request, ids);
         return api.From(await sender.Send(
             new RedeemCustomerGiftCardCommand(actor.Value, body.Code, idem), cancellationToken));

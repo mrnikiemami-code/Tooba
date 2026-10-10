@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
+using Tooba.BuildingBlocks;
+using Tooba.Wallet.Contracts.Errors;
 using Tooba.Wallet.Domain.ValueObjects;
 
 namespace Tooba.Wallet.Domain.Aggregates;
@@ -63,15 +65,15 @@ public sealed class GiftCard
         string? plaintextCode = null)
     {
         if (cardId == Guid.Empty)
-            throw new InvalidOperationException("wallet.giftcard.ids_required");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardIdsRequired);
         if (initialAmount <= 0)
-            throw new InvalidOperationException("wallet.giftcard.amount_positive");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardAmountPositive);
         if (createdByActorUserId == Guid.Empty)
-            throw new InvalidOperationException("wallet.giftcard.issuer_required");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardIssuerRequired);
         if (expiresAt is { } exp && exp <= now)
-            throw new InvalidOperationException("wallet.giftcard.expiry_future");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardExpiryFuture);
         var key = NormalizeIdempotency(idempotencyKey)
-                  ?? throw new InvalidOperationException("wallet.idempotency_required");
+                  ?? throw new ContractOperationException(WalletErrorCodes.IdempotencyRequired);
         var display = string.IsNullOrWhiteSpace(plaintextCode)
             ? GenerateDisplayCode()
             : NormalizeCode(plaintextCode);
@@ -108,9 +110,9 @@ public sealed class GiftCard
         Guid? recipientActorUserId = null)
     {
         if (cardId == Guid.Empty || createdByActorUserId == Guid.Empty)
-            throw new InvalidOperationException("wallet.giftcard.ids_required");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardIdsRequired);
         if (initialAmount <= 0 || remainingAmount < 0 || remainingAmount > initialAmount)
-            throw new InvalidOperationException("wallet.giftcard.amounts_invalid");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardAmountsInvalid);
         return new GiftCard
         {
             CardId = cardId,
@@ -124,7 +126,7 @@ public sealed class GiftCard
             RecipientActorUserId = recipientActorUserId,
             CreatedByActorUserId = createdByActorUserId,
             IdempotencyKey = NormalizeIdempotency(idempotencyKey)
-                             ?? throw new InvalidOperationException("wallet.idempotency_required"),
+                             ?? throw new ContractOperationException(WalletErrorCodes.IdempotencyRequired),
         };
     }
 
@@ -133,7 +135,7 @@ public sealed class GiftCard
     {
         _ = now;
         if (Status is GiftCardStatus.Revoked or GiftCardStatus.Redeemed)
-            throw new InvalidOperationException("wallet.giftcard.not_revocable");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardNotRevocable);
         Status = GiftCardStatus.Revoked;
         RemainingAmount = 0;
     }
@@ -143,7 +145,7 @@ public sealed class GiftCard
     {
         EnsureRedeemable(now);
         if (amount <= 0 || amount > RemainingAmount)
-            throw new InvalidOperationException("wallet.giftcard.redeem_amount_invalid");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardRedeemAmountInvalid);
         RemainingAmount -= decimal.Round(amount, 0, MidpointRounding.AwayFromZero);
         Status = RemainingAmount == 0 ? GiftCardStatus.Redeemed : GiftCardStatus.PartiallyRedeemed;
     }
@@ -152,19 +154,19 @@ public sealed class GiftCard
     public void EnsureRedeemable(DateTimeOffset now)
     {
         if (Status is GiftCardStatus.Revoked)
-            throw new InvalidOperationException("wallet.giftcard.revoked");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardRevoked);
         if (Status is GiftCardStatus.Redeemed)
-            throw new InvalidOperationException("wallet.giftcard.fully_redeemed");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardFullyRedeemed);
         if (Status is GiftCardStatus.Expired || (ExpiresAt is { } exp && exp <= now))
         {
             Status = GiftCardStatus.Expired;
-            throw new InvalidOperationException("wallet.giftcard.expired");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardExpired);
         }
 
         if (Status is not (GiftCardStatus.Active or GiftCardStatus.PartiallyRedeemed))
-            throw new InvalidOperationException("wallet.giftcard.status_invalid");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardStatusInvalid);
         if (RemainingAmount <= 0)
-            throw new InvalidOperationException("wallet.giftcard.zero_remaining");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardZeroRemaining);
     }
 
     /// <summary>هش پایدار کد نرمال‌شده.</summary>
@@ -179,10 +181,10 @@ public sealed class GiftCard
     public static string NormalizeCode(string code)
     {
         if (string.IsNullOrWhiteSpace(code))
-            throw new InvalidOperationException("wallet.giftcard.code_required");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardCodeRequired);
         var trimmed = code.Trim().ToUpperInvariant();
         if (trimmed.Length is < 6 or > 64)
-            throw new InvalidOperationException("wallet.giftcard.code_length");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardCodeLength);
         return trimmed;
     }
 
@@ -199,7 +201,7 @@ public sealed class GiftCard
         if (string.IsNullOrWhiteSpace(key)) return null;
         var trimmed = key.Trim();
         if (trimmed.Length > IdempotencyKeyMaxLength)
-            throw new InvalidOperationException("wallet.idempotency_invalid");
+            throw new ContractOperationException(WalletErrorCodes.IdempotencyInvalid);
         return trimmed;
     }
 }

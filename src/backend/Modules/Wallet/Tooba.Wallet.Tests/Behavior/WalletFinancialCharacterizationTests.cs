@@ -80,7 +80,7 @@ public sealed class WalletFinancialCharacterizationTests
                 paymentId,
                 $"wallet-order-debit:{paymentId:D}",
                 CancellationToken.None));
-        Assert.Equal("wallet.rejected.2YXZiNis", ex.Code);
+        Assert.Equal(Tooba.Wallet.Contracts.Errors.WalletErrorCodes.BalanceInsufficient, ex.Code);
         Assert.Empty(notes.Commands);
     }
 

@@ -1,8 +1,8 @@
-using Tooba.Wallet.Domain.ValueObjects;
+using Tooba.Wallet.Application.Models;
 
 namespace Tooba.Wallet.Application.Models;
 
-/// <summary>خلاصهٔ کیف پول با موجودی مشتق‌شده از دفتر.</summary>
+/// <summary>Wallet summary with a balance derived from the ledger.</summary>
 public sealed record WalletSummaryDto(
     Guid AccountId,
     Guid CustomerActorUserId,
@@ -14,7 +14,7 @@ public sealed record WalletSummaryDto(
     int EntryCount,
     DateTimeOffset CreatedAt);
 
-/// <summary>سطر دفتر برای تاریخچه.</summary>
+/// <summary>Ledger row for history.</summary>
 public sealed record WalletLedgerEntryDto(
     Guid EntryId,
     Guid AccountId,
@@ -27,7 +27,7 @@ public sealed record WalletLedgerEntryDto(
     DateTimeOffset CreatedAt,
     string? Metadata);
 
-/// <summary>صفحهٔ دفتر.</summary>
+/// <summary>Ledger page.</summary>
 public sealed record WalletLedgerPageDto(
     IReadOnlyList<WalletLedgerEntryDto> Items,
     int Total,
@@ -35,7 +35,7 @@ public sealed record WalletLedgerPageDto(
     int PageSize,
     decimal Balance);
 
-/// <summary>نتیجهٔ بازخرید کارت هدیه.</summary>
+/// <summary>Gift-card redemption result.</summary>
 public sealed record GiftCardRedeemResultDto(
     Guid RedemptionId,
     Guid CardId,
@@ -46,10 +46,10 @@ public sealed record GiftCardRedeemResultDto(
     decimal CardRemainingAmount,
     bool IdempotentReplay);
 
-/// <summary>ورودی بازخرید مشتری.</summary>
+/// <summary>Customer redemption input.</summary>
 public sealed record RedeemGiftCardCommand(string Code, string IdempotencyKey);
 
-/// <summary>خلاصهٔ کارت هدیه برای Admin (بدون plaintext).</summary>
+/// <summary>Gift-card summary for Admin (no plaintext).</summary>
 public sealed record GiftCardSummaryDto(
     Guid CardId,
     string Currency,
@@ -62,7 +62,7 @@ public sealed record GiftCardSummaryDto(
     Guid CreatedByActorUserId,
     int RedemptionCount);
 
-/// <summary>جزئیات کارت شامل تاریخچهٔ بازخرید.</summary>
+/// <summary>Gift-card detail including redemption history.</summary>
 public sealed record GiftCardDetailDto(
     Guid CardId,
     string Currency,
@@ -75,7 +75,7 @@ public sealed record GiftCardDetailDto(
     Guid CreatedByActorUserId,
     IReadOnlyList<GiftCardRedemptionDto> Redemptions);
 
-/// <summary>سطر بازخرید.</summary>
+/// <summary>Redemption row.</summary>
 public sealed record GiftCardRedemptionDto(
     Guid RedemptionId,
     Guid CardId,
@@ -83,20 +83,20 @@ public sealed record GiftCardRedemptionDto(
     decimal Amount,
     DateTimeOffset CreatedAt);
 
-/// <summary>صفحهٔ فهرست کارت.</summary>
+/// <summary>Gift-card list page.</summary>
 public sealed record GiftCardListPageDto(
     IReadOnlyList<GiftCardSummaryDto> Items,
     int Total,
     int Page,
     int PageSize);
 
-/// <summary>نتیجهٔ صدور؛ DisplayCode فقط یک‌بار برمی‌گردد.</summary>
+/// <summary>Issue result; DisplayCode is returned only once.</summary>
 public sealed record GiftCardIssueResultDto(
     GiftCardSummaryDto Card,
     string DisplayCode,
     bool IdempotentReplay);
 
-/// <summary>ورودی صدور Admin.</summary>
+/// <summary>Admin issue input.</summary>
 public sealed record IssueGiftCardCommand(
     decimal InitialAmount,
     string? Currency,
@@ -104,39 +104,39 @@ public sealed record IssueGiftCardCommand(
     Guid? RecipientActorUserId,
     string IdempotencyKey);
 
-/// <summary>فیلتر فهرست Admin.</summary>
+/// <summary>Admin list filter.</summary>
 public sealed record AdminGiftCardListQuery(
     string? Status,
     string? Q,
     int Page,
     int PageSize);
 
-/// <summary>ورودی تعدیل Admin.</summary>
+/// <summary>Admin adjustment input.</summary>
 public sealed record AdminWalletAdjustmentCommand(
     decimal Amount,
     string Direction,
     string Reason,
     string IdempotencyKey);
 
-/// <summary>نتیجهٔ تعدیل.</summary>
+/// <summary>Adjustment result.</summary>
 public sealed record AdminWalletAdjustmentResultDto(
     WalletLedgerEntryDto Entry,
     decimal Balance,
     bool IdempotentReplay);
 
-/// <summary>نتیجهٔ بدهکار پرداخت سفارش از کیف پول.</summary>
+/// <summary>Order-payment debit result.</summary>
 public sealed record WalletSpendResultDto(
     WalletLedgerEntryDto Entry,
     decimal Balance,
     bool IdempotentReplay);
 
-/// <summary>نتیجهٔ اعتبار refund به کیف پول.</summary>
+/// <summary>Refund-credit result.</summary>
 public sealed record WalletCreditResultDto(
     WalletLedgerEntryDto Entry,
     decimal Balance,
     bool IdempotentReplay);
 
-/// <summary>snapshot پیش‌نمایش توسعه (matches prior Host demo JSON shape).</summary>
+/// <summary>Development demo snapshot (matches the prior Host demo JSON shape).</summary>
 public sealed record WalletDemoPreviewDto(
     Guid CustomerActorUserId,
     Guid AccountId,

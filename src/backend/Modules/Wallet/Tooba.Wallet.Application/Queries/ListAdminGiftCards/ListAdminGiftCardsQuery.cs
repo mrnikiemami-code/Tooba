@@ -1,9 +1,9 @@
 using MediatR;
-using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Wallet.Application.Errors;
+using Tooba.Wallet.Application.Composition;
 using Tooba.Wallet.Application.Models;
 using Tooba.Wallet.Application.Ports;
+using Tooba.Wallet.Contracts.Errors;
 
 namespace Tooba.Wallet.Application.Queries.ListAdminGiftCards;
 
@@ -16,7 +16,8 @@ public sealed class ListAdminGiftCardsHandler(IWalletDirectory directory)
     : IRequestHandler<ListAdminGiftCardsQuery, Result<GiftCardListPageDto>>
 {
     public Task<Result<GiftCardListPageDto>> Handle(ListAdminGiftCardsQuery request, CancellationToken cancellationToken) =>
-        WalletExceptionMapper.TryAsync(
-            () => directory.ListGiftCardsForAdminAsync(new AdminGiftCardListQuery(request.Status, request.Q, request.Page, request.PageSize), cancellationToken),
+        WalletOperation.ExecuteAsync(
+            () => directory.ListGiftCardsForAdminAsync(
+                new AdminGiftCardListQuery(request.Status, request.Q, request.Page, request.PageSize), cancellationToken),
             WalletErrorCodes.GiftCardRejected);
 }

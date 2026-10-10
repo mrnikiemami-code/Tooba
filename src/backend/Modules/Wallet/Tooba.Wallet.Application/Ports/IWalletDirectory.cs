@@ -1,54 +1,57 @@
 using Tooba.Wallet.Application.Models;
 using Tooba.Wallet.Contracts.Payments;
-using Tooba.Wallet.Contracts.Refunds;
 
 namespace Tooba.Wallet.Application.Ports;
 
-/// <summary>دایرکتوری کاربردی کیف پول و کارت هدیه.</summary>
+/// <summary>
+/// Wallet capability directory owned by the Infrastructure layer. Contract identity only: the
+/// Infrastructure implementation and every consumer depend on this abstraction, so the module can be
+/// extracted as an isolated microservice without leaking persistence into callers.
+/// </summary>
 public interface IWalletDirectory
 {
-    /// <summary>خلاصهٔ کیف پول مالک؛ در صورت نبود حساب، حساب Active می‌سازد.</summary>
+    /// <summary>Owner wallet summary; creates an Active account when none exists.</summary>
     Task<WalletSummaryDto> GetOrCreateSummaryForCustomerAsync(Guid customerActorUserId, CancellationToken cancellationToken);
 
-    /// <summary>دفتر صفحه‌بندی‌شدهٔ مالک.</summary>
+    /// <summary>Paged owner ledger.</summary>
     Task<WalletLedgerPageDto> ListLedgerForCustomerAsync(
         Guid customerActorUserId,
         int page,
         int pageSize,
         CancellationToken cancellationToken);
 
-    /// <summary>بازخرید کارت هدیه به کیف پول مالک.</summary>
+    /// <summary>Gift-card redemption into the owner wallet.</summary>
     Task<GiftCardRedeemResultDto> RedeemGiftCardForCustomerAsync(
         Guid customerActorUserId,
         RedeemGiftCardCommand command,
         CancellationToken cancellationToken);
 
-    /// <summary>فهرست Admin کارت‌ها.</summary>
+    /// <summary>Admin gift-card list.</summary>
     Task<GiftCardListPageDto> ListGiftCardsForAdminAsync(AdminGiftCardListQuery query, CancellationToken cancellationToken);
 
-    /// <summary>جزئیات Admin.</summary>
+    /// <summary>Admin gift-card detail.</summary>
     Task<GiftCardDetailDto?> GetGiftCardForAdminAsync(Guid cardId, CancellationToken cancellationToken);
 
-    /// <summary>صدور کارت.</summary>
+    /// <summary>Issues a gift card.</summary>
     Task<GiftCardIssueResultDto> IssueGiftCardForAdminAsync(
         Guid adminActorUserId,
         IssueGiftCardCommand command,
         CancellationToken cancellationToken);
 
-    /// <summary>ابطال کارت.</summary>
+    /// <summary>Revokes a gift card.</summary>
     Task<GiftCardDetailDto> RevokeGiftCardForAdminAsync(Guid cardId, CancellationToken cancellationToken);
 
-    /// <summary>بازرسی کیف پول مشتری توسط Admin.</summary>
+    /// <summary>Admin inspection of a customer wallet.</summary>
     Task<WalletSummaryDto?> GetWalletForAdminAsync(Guid customerActorUserId, CancellationToken cancellationToken);
 
-    /// <summary>دفتر Admin.</summary>
+    /// <summary>Admin ledger page.</summary>
     Task<WalletLedgerPageDto> ListLedgerForAdminAsync(
         Guid customerActorUserId,
         int page,
         int pageSize,
         CancellationToken cancellationToken);
 
-    /// <summary>تعدیل immutable دفتر توسط Admin.</summary>
+    /// <summary>Immutable ledger adjustment by Admin.</summary>
     Task<AdminWalletAdjustmentResultDto> AdjustWalletForAdminAsync(
         Guid customerActorUserId,
         Guid adminActorUserId,
@@ -56,7 +59,7 @@ public interface IWalletDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// بدهکار اتمی برای پرداخت سفارش؛ IdempotentReplay امن؛ بدون overdraw.
+    /// Atomic debit for an order payment; idempotent replay safe; no overdraw.
     /// </summary>
     Task<WalletSpendResultDto> SpendForOrderPaymentAsync(
         Guid customerActorId,
@@ -67,7 +70,7 @@ public interface IWalletDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// اعتبار refund به کیف پول؛ یک‌بار برای هر ReturnRequestId.
+    /// Credits a refund into the wallet; once per ReturnRequestId.
     /// </summary>
     Task<WalletCreditResultDto> CreditRefundAsync(
         Guid customerActorId,
@@ -77,7 +80,7 @@ public interface IWalletDirectory
         string idempotencyKey,
         CancellationToken cancellationToken);
 
-    /// <summary>نقل قول موجودی در برابر مبلغ قابل پرداخت سفارش.</summary>
+    /// <summary>Quotes the balance against an order payable amount.</summary>
     Task<WalletCheckoutQuoteDto> QuoteForPayableAsync(
         Guid customerActorId,
         decimal payableAmount,

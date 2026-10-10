@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks;
+using Tooba.Wallet.Contracts.Errors;
 using Tooba.Wallet.Domain.ValueObjects;
 
 namespace Tooba.Wallet.Domain.Aggregates;
@@ -40,11 +42,11 @@ public sealed class GiftCardRedemption
         DateTimeOffset now)
     {
         if (redemptionId == Guid.Empty || cardId == Guid.Empty || accountId == Guid.Empty)
-            throw new InvalidOperationException("wallet.giftcard.redemption_ids");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardRedemptionIds);
         if (amount <= 0)
-            throw new InvalidOperationException("wallet.giftcard.redemption_amount");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardRedemptionAmount);
         if (string.IsNullOrWhiteSpace(idempotencyKey) || idempotencyKey.Trim().Length > IdempotencyKeyMaxLength)
-            throw new InvalidOperationException("wallet.idempotency_invalid");
+            throw new ContractOperationException(WalletErrorCodes.IdempotencyInvalid);
         return new GiftCardRedemption
         {
             RedemptionId = redemptionId,
@@ -66,7 +68,7 @@ public sealed class GiftCardRedemption
         DateTimeOffset now)
     {
         if (redemptionId == Guid.Empty)
-            throw new InvalidOperationException("wallet.giftcard.redemption_id");
+            throw new ContractOperationException(WalletErrorCodes.GiftCardRedemptionId);
         var created = Create(redemptionId, cardId, accountId, amount, idempotencyKey, now);
         return new GiftCardRedemption
         {

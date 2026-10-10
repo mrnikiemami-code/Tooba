@@ -12,12 +12,13 @@ public static class WalletErrorResources
         new("Tooba.Wallet.Endpoints.Resources.WalletErrors", typeof(WalletErrorResources).Assembly);
 }
 
-/// <summary>مجموعهٔ منبع Wallet — مالک کلیدهای wallet.*.</summary>
+/// <summary>مجموعهٔ منبع Wallet — مالک کلیدهای wallet.* و giftcard.*.</summary>
 public sealed class WalletErrorResourceSet : IErrorResourceSet
 {
     /// <inheritdoc />
     public bool Owns(string localizationKey) =>
-        localizationKey.StartsWith("wallet.", StringComparison.OrdinalIgnoreCase);
+        localizationKey.StartsWith("wallet.", StringComparison.OrdinalIgnoreCase)
+        || localizationKey.StartsWith("giftcard.", StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc />
     public string? GetString(string localizationKey, CultureInfo culture) =>

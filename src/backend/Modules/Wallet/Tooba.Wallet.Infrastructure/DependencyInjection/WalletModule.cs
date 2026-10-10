@@ -8,6 +8,7 @@ using Tooba.Persistence;
 using Tooba.Wallet.Application.Models;
 using Tooba.Wallet.Application.Ports;
 using Tooba.Wallet.Contracts.Dtos;
+using Tooba.Wallet.Contracts.Errors;
 using Tooba.Wallet.Contracts.Payments;
 using Tooba.Wallet.Contracts.Refunds;
 using Tooba.Wallet.Infrastructure.Adapters;
@@ -58,7 +59,7 @@ public sealed class WalletOutboxRegistration : IOutboxModuleRegistration
 
     /// <inheritdoc />
     public string GetEventTypeName(Type integrationEventType) =>
-        throw new InvalidOperationException("wallet.outbox.unmapped_event_type");
+        throw new ContractOperationException(WalletErrorCodes.OutboxUnmappedEventType);
 
     /// <inheritdoc />
     public Type? ResolveEventClrType(string eventTypeName) => null;

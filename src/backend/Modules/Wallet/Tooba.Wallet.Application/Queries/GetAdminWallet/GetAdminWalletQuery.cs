@@ -1,9 +1,9 @@
 using MediatR;
-using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Wallet.Application.Errors;
+using Tooba.Wallet.Application.Composition;
 using Tooba.Wallet.Application.Models;
 using Tooba.Wallet.Application.Ports;
+using Tooba.Wallet.Contracts.Errors;
 
 namespace Tooba.Wallet.Application.Queries.GetAdminWallet;
 
@@ -18,8 +18,6 @@ public sealed class GetAdminWalletHandler(IWalletDirectory directory)
     public async Task<Result<WalletSummaryDto>> Handle(GetAdminWalletQuery request, CancellationToken cancellationToken)
     {
         var summary = await directory.GetWalletForAdminAsync(request.CustomerActorUserId, cancellationToken);
-        return summary is null
-            ? Result.Failure<WalletSummaryDto>(new SemanticError(WalletErrorCodes.WalletMissing))
-            : Result.Success(summary);
+        return WalletOperation.NotFoundIfNull(summary, WalletErrorCodes.WalletMissing);
     }
 }
