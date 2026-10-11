@@ -3,9 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { StorefrontCartApiError } from "./storefront-cart-api.ts";
+import { StorefrontCartApiError, resolveCommittedCheckoutAccess } from "./storefront-cart-api.ts";
 import {
   canDismissPendingCard,
+  ensurePendingItemCheckoutAccess,
   excludeDismissedPendingItems,
   formatCountdown,
   formatCountdownAccessibleLabel,
@@ -98,6 +99,89 @@ test("customer pending errors never use checkout registration copy", () => {
     toCustomerPendingPaymentMessage(new StorefrontCartApiError(409, "order.cancel.forbidden", "x")),
     /پس از ارسال کالا/,
   );
+});
+
+test("expired reservation retry is checkout-scoped and never a silent no-op", () => {
+  const ui = fs.readFileSync(path.join(root, "app/storefront/storefront-pending-payments.tsx"), "utf8");
+  const api = fs.readFileSync(path.join(root, "app/storefront/storefront-pending-payment-api.ts"), "utf8");
+  // نشانهٔ باگ قبلی: بازگشت خاموش وقتی ردیف پرداختی وجود ندارد.
+  assert.doesNotMatch(ui, /primaryAction !== "retryAfterExpiry" \|\| !item\.paymentId/);
+  assert.match(ui, /if \(item\.primaryAction !== "retryAfterExpiry"\) \{/);
+  assert.match(ui, /await retryStorefrontPendingReservation\(item\)/);
+  assert.match(ui, /await retryStorefrontUnpaidPayment\(item\.paymentId, item\.checkoutId\)/);
+  assert.match(ui, /ensurePendingItemCheckoutAccess\(item\)/);
+  assert.match(api, /retryStorefrontPendingReservation/);
+  assert.match(api, /\/checkout\/\$\{encodeURIComponent\(item\.checkoutId\)\}\/retry-reservation/);
+  assert.match(api, /ensurePendingItemCheckoutAccess/);
+  assert.match(api, /cacheServerConfirmedCheckoutAccess/);
+  assert.doesNotMatch(api, /readCartSession\(\)/);
+});
+
+test("expired reservation retry copy is localized and never invents a paid order", () => {
+  assert.equal(
+    toCustomerPendingPaymentMessage(new StorefrontCartApiError(409, "payment.unpaid.supply_unavailable", "x")),
+    "این سفارش در حال حاضر قابل تأمین نیست.",
+  );
+  assert.match(
+    toCustomerPendingPaymentMessage(new StorefrontCartApiError(409, "inventory.reservation.retry_limit_reached", "x")),
+    /به پایان رسیده/,
+  );
+  assert.match(
+    toCustomerPendingPaymentMessage(new StorefrontCartApiError(409, "pending.retry.not_allowed", "x")),
+    /امکان بررسی مجدد موجودی/,
+  );
+  assert.match(
+    toCustomerPendingPaymentMessage(new StorefrontCartApiError(401, "checkout.authentication_required", "x"), "en"),
+    /Sign in/,
+  );
+  assert.notEqual(
+    toCustomerPendingPaymentMessage(new StorefrontCartApiError(409, "inventory.reservation.retry_limit_reached", "x")),
+    "امکان ادامه پرداخت این سفارش نیست.",
+  );
+});
+
+test("pending card access hint is checkout-scoped and never copies the active cart secret", () => {
+  const store = new Map<string, string>();
+  const previous = (globalThis as { window?: unknown }).window;
+  (globalThis as { window?: unknown }).window = {
+    sessionStorage: {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => void store.set(key, value),
+    },
+  };
+  try {
+    ensurePendingItemCheckoutAccess({
+      checkoutId: "chk-hint",
+      cartId: "cart-committed",
+      paymentId: null,
+      orderReference: "SO-1",
+      payableAmount: 1000,
+      currency: "IRR",
+      items: [],
+      paymentPresentation: "expiredRetryable",
+      canInitiatePayment: false,
+      canRetryPayment: true,
+      isManualAwaitingReview: false,
+      primaryAction: "retryAfterExpiry",
+      reservationPresentation: "ended",
+      cycleNumber: 1,
+      secondsRemaining: 0,
+      serverTime: "2026-09-13T10:00:00Z",
+      holdEndsAt: null,
+      maxCycles: 3,
+      retryCountRemaining: 2,
+      supplyStatus: null,
+      hasReachedRetryLimit: false,
+    });
+    const stored = store.get("tooba.storefront.committedCheckoutProofs") ?? "";
+    assert.match(stored, /chk-hint/);
+    assert.match(stored, /cart-committed/);
+    assert.match(stored, /"guestSecret":""/);
+    assert.equal(resolveCommittedCheckoutAccess("chk-hint").cartId, "cart-committed");
+    assert.equal(resolveCommittedCheckoutAccess("chk-other").cartId, null);
+  } finally {
+    (globalThis as { window?: unknown }).window = previous;
+  }
 });
 
 test("pending UX source keeps FA RTL EN LTR and no raw cycle enums", () => {

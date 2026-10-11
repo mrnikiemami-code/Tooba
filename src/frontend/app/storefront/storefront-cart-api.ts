@@ -80,7 +80,7 @@ export function clearCartSession(): void {
 
 const PAYMENT_RESULT_PROOF_KEY = "tooba.storefront.paymentResultProof";
 const COMMITTED_CHECKOUT_PROOFS_KEY = "tooba.storefront.committedCheckoutProofs";
-const COMMITTED_PROOF_STORE_KEY = "storefront";
+export const COMMITTED_PROOF_STORE_KEY = "storefront";
 
 export type StorefrontPaymentResultProof = {
   paymentId: string;

@@ -220,6 +220,75 @@ public sealed class StorefrontPendingPaymentTests
     }
 
     [Fact]
+    public void Expired_cycle_without_any_payment_row_stays_retryable()
+    {
+        var checkout = Guid.NewGuid();
+        var page = StorefrontPendingPaymentProjector.Project(
+            [Checkout(checkout, "SO-NOPAY")],
+            new Dictionary<Guid, StorefrontPendingPaymentProjector.PaymentInput>(),
+            Cycle(checkout, 1, ReservationCycleStatus.Expired, 0, created: 1, remaining: 2, expires: Now.AddMinutes(-2)),
+            Now);
+        var item = Assert.Single(page.Items);
+        Assert.Equal("retryAfterExpiry", item.PrimaryAction);
+        Assert.True(item.CanRetryPayment);
+        Assert.False(item.CanInitiatePayment);
+        Assert.Null(item.PaymentId);
+        Assert.Equal("expiredRetryable", item.PaymentPresentation);
+        Assert.Equal("ended", item.ReservationPresentation);
+    }
+
+    [Fact]
+    public void Expired_cycle_with_failed_payment_stays_retryable_with_its_payment()
+    {
+        var checkout = Guid.NewGuid();
+        var page = StorefrontPendingPaymentProjector.Project(
+            [Checkout(checkout, "SO-FAILED-EXP")],
+            Pay(checkout, "Failed", "sandbox"),
+            Cycle(checkout, 1, ReservationCycleStatus.Expired, 0, created: 1, remaining: 2, expires: Now.AddMinutes(-1)),
+            Now);
+        var item = Assert.Single(page.Items);
+        Assert.Equal("retryAfterExpiry", item.PrimaryAction);
+        Assert.True(item.CanRetryPayment);
+        Assert.NotNull(item.PaymentId);
+    }
+
+    [Fact]
+    public void Expired_reservation_retry_is_checkout_scoped_and_wired_end_to_end()
+    {
+        var root = FindRepoRoot();
+        var endpoints = ReadSource(root, "src", "backend", "Modules", "Order", "Tooba.Order.Endpoints", "Storefront", "StorefrontOrderEndpoints.cs");
+        var composer = ReadSource(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "Services", "StorefrontPendingPaymentService.cs");
+        var errors = ReadSource(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "StorefrontOrderErrors.cs");
+        var command = ReadSource(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "PendingPayment", "Commands", "RetryPendingCheckoutReservation", "RetryPendingCheckoutReservationCommand.cs");
+        var validator = ReadSource(root, "src", "backend", "Modules", "Order", "Tooba.Order.Application", "Storefront", "PendingPayment", "Commands", "RetryPendingCheckoutReservation", "RetryPendingCheckoutReservationCommandValidator.cs");
+        var pendingApi = ReadSource(root, "src", "frontend", "app", "storefront", "storefront-pending-payment-api.ts");
+        var pendingUi = ReadSource(root, "src", "frontend", "app", "storefront", "storefront-pending-payments.tsx");
+
+        // مسیر سرور: checkout-scoped و از چرخهٔ رزرو سفارش، بدون جعل paymentId.
+        Assert.Contains("/checkout/{checkoutId:guid}/retry-reservation", endpoints, StringComparison.Ordinal);
+        Assert.Contains("RetryPendingCheckoutReservationCommand", endpoints, StringComparison.Ordinal);
+        Assert.Contains("EnsureCheckoutActorAsync", endpoints, StringComparison.Ordinal);
+        Assert.Contains("RetryExpiredReservationAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("EnsureRetryAfterExpiryAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("GetProjectionsAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("ReservationCycleErrors.RetryLimitReached", composer, StringComparison.Ordinal);
+        Assert.Contains("PaymentUnpaidSupplyUnavailable", composer, StringComparison.Ordinal);
+        Assert.Contains("pending.retry.not_allowed", errors, StringComparison.Ordinal);
+        Assert.DoesNotContain("pending.retry.supply_unavailable", errors, StringComparison.Ordinal);
+        Assert.DoesNotContain("pending.retry.limit_reached", errors, StringComparison.Ordinal);
+        Assert.Contains("CheckoutIdRequired", validator, StringComparison.Ordinal);
+        Assert.Contains("Result<object>", command, StringComparison.Ordinal);
+        // لایهٔ فنی: retry اسکوپ checkout و حذف no-op خاموش.
+        Assert.Contains("retry-reservation", pendingApi, StringComparison.Ordinal);
+        Assert.Contains("retryStorefrontPendingReservation", pendingUi, StringComparison.Ordinal);
+        Assert.Contains("ensurePendingItemCheckoutAccess", pendingUi, StringComparison.Ordinal);
+        Assert.DoesNotContain("!item.paymentId", pendingUi, StringComparison.Ordinal);
+    }
+
+    private static string ReadSource(string root, params string[] parts) =>
+        File.ReadAllText(Path.Combine([root, .. parts]));
+
+    [Fact]
     public void Locks_and_error_copy_are_wired()
     {
         var root = FindRepoRoot();

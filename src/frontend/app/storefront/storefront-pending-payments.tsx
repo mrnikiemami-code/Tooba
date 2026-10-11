@@ -9,6 +9,7 @@ import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import {
   canDismissPendingCard,
   cancelStorefrontPendingCheckout,
+  ensurePendingItemCheckoutAccess,
   hideStorefrontPendingCard,
   dismissPendingCheckout,
   excludeDismissedPendingItems,
@@ -16,6 +17,7 @@ import {
   formatCountdown,
   formatCountdownAccessibleLabel,
   remainingSecondsFromServer,
+  retryStorefrontPendingReservation,
   shouldRefreshOnceAtZero,
   toCustomerPendingPaymentMessage,
   type StorefrontPendingPaymentItem,
@@ -130,16 +132,24 @@ export function StorefrontPendingPayments({
       return next;
     });
     if (item.primaryAction === "pay") {
+      ensurePendingItemCheckoutAccess(item);
       router.push(localizePath(`/payment?checkoutId=${encodeURIComponent(item.checkoutId)}`));
       return;
     }
-    if (item.primaryAction !== "retryAfterExpiry" || !item.paymentId) {
+    if (item.primaryAction !== "retryAfterExpiry") {
       return;
     }
     setBusyId(item.checkoutId);
     try {
-      await retryStorefrontUnpaidPayment(item.paymentId, item.checkoutId);
-      router.push(localizePath(`/payment?checkoutId=${encodeURIComponent(item.checkoutId)}`));
+      if (item.paymentId) {
+        await retryStorefrontUnpaidPayment(item.paymentId, item.checkoutId);
+        ensurePendingItemCheckoutAccess(item);
+        router.push(localizePath(`/payment?checkoutId=${encodeURIComponent(item.checkoutId)}`));
+        return;
+      }
+      // سفارش unpaid ممکن است هیچ ردیف پرداختی نداشته باشد؛ retry اسکوپ checkout با تصمیم سرور.
+      await retryStorefrontPendingReservation(item);
+      onRefresh();
     } catch (cause) {
       setMessages((current) => ({
         ...current,

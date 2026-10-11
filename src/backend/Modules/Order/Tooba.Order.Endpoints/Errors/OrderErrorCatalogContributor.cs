@@ -98,6 +98,8 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست."),
         D(StorefrontOrderErrors.PendingHideActiveHold, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             "تا پایان مهلت رزرو نمی‌توان این کارت را پنهان کرد."),
+        D(StorefrontOrderErrors.PendingRetryNotAllowed, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "برای این سفارش امکان بررسی مجدد موجودی وجود ندارد."),
         // payment.missing / payment.rejected / payment.unpaid.supply_unavailable descriptors are
         // Payment-owned (PaymentErrorCatalogContributor): Payment is the natural bounded context and
         // the primary producer. Order consumes the same stable machine codes on storefront/customer

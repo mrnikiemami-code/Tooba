@@ -11,6 +11,7 @@ using Tooba.Order.Application.Storefront.Geography;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.PendingPayment.Commands.CancelPendingCheckout;
 using Tooba.Order.Application.Storefront.PendingPayment.Commands.HidePendingPaymentCard;
+using Tooba.Order.Application.Storefront.PendingPayment.Commands.RetryPendingCheckoutReservation;
 using Tooba.Order.Application.Storefront.PendingPayment.Queries;
 using Tooba.Order.Contracts.Storefront;
 using Tooba.Order.Application.Storefront.Shipping.Commands.CommitStorefrontShipping;
@@ -28,6 +29,7 @@ internal static class StorefrontOrderEndpoints
         group.MapPost("/pending-payments", ListPendingPaymentsAsync);
         group.MapPost("/checkout/{checkoutId:guid}/cancel", CancelPendingCheckoutAsync);
         group.MapPost("/checkout/{checkoutId:guid}/hide-pending-card", HidePendingCardAsync);
+        group.MapPost("/checkout/{checkoutId:guid}/retry-reservation", RetryPendingCheckoutReservationAsync);
         group.MapPost("/checkout/preview", PreviewCheckoutAsync);
         group.MapPost("/checkout", SubmitCheckoutAsync);
         group.MapGet("/checkout/{checkoutId:guid}", GetCheckoutAsync);
@@ -70,6 +72,23 @@ internal static class StorefrontOrderEndpoints
                 await ReadOptionalCartIdAsync(request, ct),
                 ReadGuestSecret(request)),
             ct));
+
+    private static async Task<IResult> RetryPendingCheckoutReservationAsync(
+        Guid checkoutId,
+        HttpRequest request,
+        ISender sender,
+        IOrderStorefrontCheckoutIdentityGate gate,
+        ApiResponseFactory api,
+        CancellationToken ct)
+    {
+        await gate.EnsureCheckoutActorAsync(ct);
+        return api.From(await sender.Send(
+            new RetryPendingCheckoutReservationCommand(
+                checkoutId,
+                await ReadOptionalCartIdAsync(request, ct),
+                ReadGuestSecret(request)),
+            ct));
+    }
 
     private static async Task<IResult> PreviewCheckoutAsync(
         Guid cartId,

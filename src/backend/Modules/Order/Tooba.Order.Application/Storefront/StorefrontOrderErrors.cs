@@ -48,6 +48,17 @@ public static class StorefrontOrderErrors
     public const string OrderCancelUnpaidOnly = "order.cancel.unpaid_only";
     public const string OrderCancelForbidden = "order.cancel.forbidden";
     public const string PendingHideActiveHold = "pending.hide.active_hold";
+
+    /// <summary>
+    /// «بررسی موجودی و پرداخت مجدد» نتوانست موجودی را تأمین کند.
+    /// کد پایدار متعلق به Payment است و در سطح‌های Customer/Storefront مصرف می‌شود؛
+    /// Order آن را بازتعریف/دوباره ثبت نمی‌کند (LOCK-SF-078/095).
+    /// </summary>
+    public const string PaymentUnpaidSupplyUnavailable = "payment.unpaid.supply_unavailable";
+
+    /// <summary>سفارش paid/cancelled است؛ retry موجودی مجاز نیست (LOCK-SF-073).</summary>
+    public const string PendingRetryNotAllowed = "pending.retry.not_allowed";
+
     public const string PaymentMissing = "payment.missing";
     public const string PaymentRejected = "payment.rejected";
 

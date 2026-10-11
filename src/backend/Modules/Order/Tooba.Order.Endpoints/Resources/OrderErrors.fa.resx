@@ -126,6 +126,9 @@
   <data name="pending.hide.active_hold" xml:space="preserve">
     <value>تا پایان مهلت رزرو نمی‌توان این کارت را پنهان کرد.</value>
   </data>
+  <data name="pending.retry.not_allowed" xml:space="preserve">
+    <value>برای این سفارش امکان بررسی مجدد موجودی وجود ندارد.</value>
+  </data>
   <data name="payment.missing" xml:space="preserve">
     <value>پرداخت پیدا نشد.</value>
   </data>

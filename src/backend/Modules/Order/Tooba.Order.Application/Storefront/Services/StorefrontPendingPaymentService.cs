@@ -4,6 +4,7 @@ using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Order.Application.Admin.Operations.Policies;
+using Tooba.Order.Application.Admin.Supply.Models;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Ports;
 using Tooba.Order.Contracts.Storefront;
@@ -32,6 +33,7 @@ public sealed class StorefrontPendingPaymentService
     private readonly ICatalogCartPresentationLookup _catalog;
     private readonly ICartPresentationGateway _carts;
     private readonly IReservationCycleDirectory _cycles;
+    private readonly IReservationCycleCoordinator _coordinator;
     private readonly ICheckoutDirectory _checkout;
     private readonly IFulfillmentAdminOperations _fulfillment;
     private readonly ISettlementOrderAccrualPort _settlement;
@@ -44,6 +46,7 @@ public sealed class StorefrontPendingPaymentService
         ICatalogCartPresentationLookup catalog,
         ICartPresentationGateway carts,
         IReservationCycleDirectory cycles,
+        IReservationCycleCoordinator coordinator,
         ICheckoutDirectory checkout,
         IFulfillmentAdminOperations fulfillment,
         ISettlementOrderAccrualPort settlement,
@@ -55,6 +58,7 @@ public sealed class StorefrontPendingPaymentService
         _catalog = catalog;
         _carts = carts;
         _cycles = cycles;
+        _coordinator = coordinator;
         _checkout = checkout;
         _fulfillment = fulfillment;
         _settlement = settlement;
@@ -207,6 +211,81 @@ public sealed class StorefrontPendingPaymentService
 
         await _payments.CloseOrStartRefundForOrderCancelAsync(group.CheckoutId, cancellationToken);
         return new { ok = true, checkoutId = group.CheckoutId, alreadyCancelled = false };
+    }
+
+    /// <summary>
+    /// «بررسی موجودی و پرداخت مجدد» برای سفارش unpaid که مهلت رزروش تمام شده است.
+    /// مالکیت (actor یا proof سبد) و رفتار چرخه از سرور است؛ paymentId ساخته یا جعل نمی‌شود.
+    /// چرخهٔ جدید فقط بعد از reacquire معتبر روی همان checkout ساخته می‌شود (LOCK-SF-078/087).
+    /// </summary>
+    public async Task<object> RetryExpiredReservationAsync(
+        Guid checkoutId,
+        Guid cartId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        var group = await ResolveOwnedGroupForCancelAsync(checkoutId, cartId, guestSecret, cancellationToken);
+        await EnsureRetryEligibleAsync(group, cancellationToken);
+
+        EnsureOrderSupplyResult supply;
+        try
+        {
+            supply = await _coordinator.EnsureRetryAfterExpiryAsync(group.CheckoutId, cancellationToken);
+        }
+        catch (ContractOperationException exception)
+            when (exception.Code == ReservationCycleErrors.RetryLimitReached)
+        {
+            // کد پایدار سقف retry همان کد Order-owned است که Customer/Admin هم مصرف می‌کنند.
+            // StorefrontOrderException لازم است تا بازنگاشت عمومی inventory.* به
+            // checkout.inventory.unavailable معنای «سقف retry» را از بین نبرد.
+            throw new StorefrontOrderException(ReservationCycleErrors.RetryLimitReached);
+        }
+
+        if (supply.Status is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable
+            || supply.Outcome is OrderSupplyOutcome.Unavailable or OrderSupplyOutcome.PartiallyUnavailable)
+        {
+            throw new StorefrontOrderException(StorefrontOrderErrors.PaymentUnpaidSupplyUnavailable);
+        }
+
+        var now = _clock.UtcNow;
+        var cycle = (await _cycles.GetProjectionsAsync([group.CheckoutId], now, null, cancellationToken))
+            .GetValueOrDefault(group.CheckoutId);
+        return new
+        {
+            ok = true,
+            checkoutId = group.CheckoutId,
+            cycleNumber = cycle?.CurrentCycleNumber,
+            holdEndsAt = cycle?.ExpiresAt,
+            secondsRemaining = cycle?.SecondsRemaining ?? 0,
+        };
+    }
+
+    /// <summary>
+    /// پرداخت Succeeded یا سفارش paid/cancelled اجازهٔ retry موجودی ندارد (LOCK-SF-073).
+    /// </summary>
+    private async Task EnsureRetryEligibleAsync(CheckoutGroup group, CancellationToken cancellationToken)
+    {
+        if (group.SellerOrders.Count == 0)
+        {
+            throw new StorefrontOrderException(StorefrontOrderErrors.PaymentMissing);
+        }
+
+        if (AdminOrderOperationsPolicy.IsCheckoutCancelled(group.SellerOrders.Select(x => x.Status)))
+        {
+            throw new StorefrontOrderException(StorefrontOrderErrors.PendingRetryNotAllowed);
+        }
+
+        if (group.SellerOrders.Any(x => x.Status == SellerOrderStatus.Paid))
+        {
+            throw new StorefrontOrderException(StorefrontOrderErrors.PendingRetryNotAllowed);
+        }
+
+        var payment = await _payments.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
+        if (payment is not null
+            && payment.Status is "Succeeded" or "RefundPending" or "Refunded" or "RefundFailed")
+        {
+            throw new StorefrontOrderException(StorefrontOrderErrors.PendingRetryNotAllowed);
+        }
     }
 
     private async Task<CheckoutGroup> ResolveOwnedGroupForCancelAsync(

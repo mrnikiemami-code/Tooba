@@ -4,10 +4,13 @@ import {
   customerAuthHeaders,
 } from "../customer-panel/customer-api.ts";
 import {
+  COMMITTED_PROOF_STORE_KEY,
   cartHeadersFromAccess,
   listCommittedCheckoutProofs,
+  readCommittedCheckoutProof,
   resolveCommittedCheckoutAccess,
   StorefrontCartApiError,
+  writeCommittedCheckoutProof,
 } from "./storefront-cart-api.ts";
 
 const DISMISSED_PENDING_KEY = "tooba.storefront.dismissedPendingCheckouts";
@@ -105,6 +108,14 @@ export function toCustomerPendingPaymentMessage(error: unknown, locale: "fa" | "
         return fa
           ? "تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است."
           : "No more inventory reservation retries remain for this order.";
+      case "pending.retry.not_allowed":
+        return fa
+          ? "برای این سفارش امکان بررسی مجدد موجودی وجود ندارد."
+          : "Inventory cannot be rechecked for this order.";
+      case "checkout.authentication_required":
+        return fa
+          ? "برای بررسی مجدد موجودی و ادامهٔ پرداخت، وارد حساب خود شوید."
+          : "Sign in to recheck availability and continue payment.";
       case "payment.already_succeeded":
       case "payment.already-paid":
         return fa
@@ -344,4 +355,77 @@ export async function cancelStorefrontPendingCheckout(item: StorefrontPendingPay
       record ? asString(readProp(record, "detail", "Detail")) || null : null,
     );
   }
+}
+
+/**
+ * «بررسی موجودی و پرداخت مجدد» اسکوپ checkout.
+ * سفارش unpaid می‌تواند هنوز هیچ ردیف پرداختی نداشته باشد؛ پس paymentId پیش‌شرط نیست.
+ * تصمیم reacquire و ساخت چرخه فقط در سرور است (LOCK-SF-078/087) و نتیجه با refresh خوانده می‌شود.
+ */
+export async function retryStorefrontPendingReservation(item: StorefrontPendingPaymentItem): Promise<void> {
+  const access = resolveCommittedCheckoutAccess(item.checkoutId, item.paymentId);
+  const cartId = access.cartId || item.cartId;
+  const headers: Record<string, string> = {
+    ...customerAuthHeaders(true),
+    ...(cartHeadersFromAccess({
+      cartId: cartId || null,
+      guestSecret: access.guestSecret,
+    }) as Record<string, string>),
+  };
+  if (typeof window !== "undefined") {
+    headers[CUSTOMER_DEV_ACTOR_HEADER] =
+      window.localStorage.getItem("tooba.customerActorUserId") || DEFAULT_CUSTOMER_DEV_ACTOR_ID;
+  }
+  const query = cartId ? `?cartId=${encodeURIComponent(cartId)}` : "";
+  const response = await fetch(
+    `/v1/storefront/checkout/${encodeURIComponent(item.checkoutId)}/retry-reservation${query}`,
+    {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+      headers,
+      body: JSON.stringify(cartId ? { cartId } : {}),
+    },
+  );
+  const payload: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const record = asRecord(payload);
+    throw new StorefrontCartApiError(
+      response.status,
+      record ? asString(readProp(record, "errorCode", "ErrorCode")) || null : null,
+      record ? asString(readProp(record, "detail", "Detail")) || null : null,
+    );
+  }
+}
+
+/**
+ * کارت «در انتظار پرداخت» ممکن است در نشستی دیده شود که اثبات محلی checkout را از دست داده است
+ * (تب/نشست تازه) در حالی که Host مالکیت را با session پذیرفته است. پاسخ فهرست، checkoutId/cartId
+ * معتبر همین checkout را برمی‌گرداند؛ آن را به‌عنوان اثبات اسکوپ‌شدهٔ همان checkout ذخیره می‌کنیم
+ * تا مسیر پرداخت موجود (که cartId می‌خواهد) قفل نشود.
+ * proof فقط checkout-scoped است (LOCK-SF-071) و هیچ‌گاه راز سبد فعال را کپی نمی‌کند (LOCK-SF-085).
+ */
+export function ensurePendingItemCheckoutAccess(item: StorefrontPendingPaymentItem): void {
+  if (resolveCommittedCheckoutAccess(item.checkoutId, item.paymentId).cartId) {
+    return;
+  }
+  cacheServerConfirmedCheckoutAccess(item.checkoutId, item.cartId);
+}
+
+/**
+ * اثبات اسکوپ‌شدهٔ checkout را از یک پاسخ معتبر سرور ثبت می‌کند و اثبات موجود را بازنویسی نمی‌کند.
+ * راز سبد فعال هرگز کپی نمی‌شود (LOCK-SF-085) و این اثبات فقط همین checkout را مجاز می‌کند (LOCK-SF-071).
+ */
+function cacheServerConfirmedCheckoutAccess(checkoutId: string, cartId: string): void {
+  const id = checkoutId?.trim();
+  const cart = cartId?.trim();
+  if (!id || !cart || readCommittedCheckoutProof(id)) {
+    return;
+  }
+  writeCommittedCheckoutProof({
+    checkoutId: id,
+    cartId: cart,
+    guestSecret: "",
+    storeKey: COMMITTED_PROOF_STORE_KEY,
+  });
 }
