@@ -93,7 +93,7 @@ Canonical mechanisms in this repository (verify current state before relying on 
 - **ProblemDetails / trace**: `IProblemDetailsContextProvider` supplies `errorCode`, `traceId`, `correlationId`, `requestId`.
 - **Global exception boundary**: `Tooba.BuildingBlocks.Presentation.IExceptionPresentationService` registered by Host.
 - **Stable error codes**: `Tooba.<Module>.Contracts.Errors.<Module>ErrorCodes`; validation codes in `Tooba.<Module>.Application.Validators.<Module>ValidationCodes`.
-- **Localization**: `IErrorResourceSet` (module resource set) + `.resx` (`<Module>Errors.resx` + `<Module>Errors.fa.resx`) + `IErrorMessageLocalizer` / `ResourceErrorMessageLocalizer` + `IRequestLocaleResolver`.
+- **Localization**: `IErrorResourceSet` + neutral/default `.resx` and locale-specific resources per centrally configured languages and fallback policy (`.fa.resx` is just an example) + `IErrorMessageLocalizer` / `ResourceErrorMessageLocalizer` + `IRequestLocaleResolver`. Never assume FA/EN-only.
 - **CQRS foundation**: `Tooba.BuildingBlocks.ToobaCqrsRegistration.AddToobaCqrsFoundation` (MediatR 12.5.0, `ValidationBehavior`, `LoggingBehavior`, `TracingBehavior`).
 - **Logging**: `ILogger<T>` + `ObservabilityLogScope` + `ObservabilityLogScopeKeys`.
 - **Tracing/correlation**: `ToobaTelemetry` (`ActivitySource`/`Meter` named `Tooba`), `IModuleCallTracer` / `ModuleCallTracer`, `CorrelationIdConstants.HeaderName` (`X-Correlation-Id`), `ICorrelationIdProvider`.
