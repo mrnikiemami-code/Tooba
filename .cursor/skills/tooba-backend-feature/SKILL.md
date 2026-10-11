@@ -10,7 +10,8 @@ Scope: `src/backend/**`. Trigger for each authorized backend feature implementat
 ## Before coding — decide ownership
 1. Read `AGENTS.md`, active task, relevant module architecture/Contracts, existing endpoint/request/handler, registration, error catalog, and focused tests. Confirm branch, scope and locks.
 2. Identify ONE canonical owning module and reuse its current capability folders and APIs. Trace consumers and public contract expectations. Never place feature business authority in Host or add foreign Application/Infrastructure/Domain references.
-3. Plan only the smallest coherent change. If cross-module redesign, schema migration, architecture recertification or approved-contract change is needed, STOP for Architect decision. Do not silently start AMSC waves.
+3. Before implementing a business decision or algorithm, search for the existing canonical policy, service, or contract and reuse it. Never independently duplicate a business rule, including in Development/Seed code. If reuse requires an unauthorized dependency or wider change, STOP and report options.
+4. Plan only the smallest coherent change. If cross-module redesign, schema migration, architecture recertification or approved-contract change is needed, STOP for Architect decision. Do not silently start AMSC waves.
 
 ## Implement without introducing new debt
 - HTTP ownership stays in module Endpoints; use `ISender` → real MediatR request and handler, canonical `Result`/`SemanticError` and `ApiResponseFactory` (`From`/`Created` etc.). Preserve actual HTTP status, body and Location contracts.
@@ -23,6 +24,7 @@ Scope: `src/backend/**`. Trigger for each authorized backend feature implementat
 
 ## Prove and report
 1. Run smallest relevant compile, tests and DI/service-resolution verification for modified paths; add focused regression coverage for new/changed behavior. Never claim an unrun test passed.
-2. Check the actual diff for unwanted dependencies, hardcoded UI/error prose, HTTP mapping drift, duplicate service registrations, schema changes, unapproved files and broken architecture guards.
-3. Report owner/capability, exact changed files, contract and behavior impacts, tests actually run, known pre-existing failures, and any unresolved debt. `Worker PASS != Architect ACCEPT`.
-4. STOP when task scope, a frozen surface, current architecture lock, or a business contract cannot be preserved. Do not auto-issue another task, restart AMSC, or call a feature `ARCH-COMPLETE-002` certified just because tests pass.
+2. For changes involving time windows, money, lifecycle states, availability, or similar invariants, test relevant boundary and negative cases as well as the happy path; keep coverage proportional to the change.
+3. Check the actual diff for unwanted dependencies, hardcoded UI/error prose, HTTP mapping drift, duplicate service registrations, schema changes, unapproved files and broken architecture guards.
+4. Report owner/capability, exact changed files, contract and behavior impacts, tests actually run, known pre-existing failures, and any unresolved debt. `Worker PASS != Architect ACCEPT`.
+5. STOP when task scope, a frozen surface, current architecture lock, or a business contract cannot be preserved. Do not auto-issue another task, restart AMSC, or call a feature `ARCH-COMPLETE-002` certified just because tests pass.
