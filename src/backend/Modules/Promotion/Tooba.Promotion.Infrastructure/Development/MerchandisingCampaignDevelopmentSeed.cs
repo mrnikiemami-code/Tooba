@@ -35,6 +35,14 @@ public static class MerchandisingCampaignDevelopmentSeed
     internal const string MarkerExpired = "[DEV-SEED] Amazing Expired";
     internal const string MarkerDraft = "[DEV-SEED] Amazing Draft";
 
+    /// <summary>سقف Productهای کمپین فعال اصلی؛ هر Product با Offer ای که Storefront رندر می‌کند عضو می‌شود.</summary>
+    private const int MaxPrimaryMemberProducts = 8;
+
+    /// <summary>
+    /// کسرهای ثابت Base برای هر محصول تا ریل تخفیف یکنواخت نباشد؛ ثابت‌اند تا دانه قطعی بماند.
+    /// </summary>
+    private static readonly decimal[] PromoFractions = [0.70m, 0.75m, 0.65m, 0.80m, 0.60m, 0.72m, 0.68m, 0.78m];
+
     /// <summary>
     /// کمپین‌های AMAZING را فقط در Development upsert می‌کند.
     /// </summary>
@@ -60,24 +68,29 @@ public static class MerchandisingCampaignDevelopmentSeed
 
         // Prefer offers whose Catalog Product is Published so Storefront ProductCards can project promo prices.
         var catalogLookup = provider.GetRequiredService<ICatalogVariantLookup>();
+        var offerRead = provider.GetRequiredService<ICatalogOfferReadGateway>();
         var publishedVariantSet = (await catalogLookup.GetPublishedVariantIdsAsync(cancellationToken)).ToHashSet();
         var allActive = await offerQueries.ListActiveOffersAsync(cancellationToken);
-        var activeOffers = allActive
+        var candidates = allActive
             .Where(x => x.SellerSku != OosSellerSku && publishedVariantSet.Contains(x.CatalogVariantId))
-            .OrderBy(x => x.OfferId)
-            .Take(8)
-            .Select(x => x.OfferId)
             .ToList();
-        if (activeOffers.Count < 4)
+        if (candidates.Count < 4)
         {
             // Fallback: any active offers if published set is thin.
-            activeOffers = allActive
-                .Where(x => x.SellerSku != OosSellerSku)
-                .OrderBy(x => x.OfferId)
-                .Take(8)
-                .Select(x => x.OfferId)
-                .ToList();
+            candidates = allActive.Where(x => x.SellerSku != OosSellerSku).ToList();
         }
+
+        // اعضا همان Offerهایی هستند که Storefront واقعاً به‌عنوان Primary کارت رندر می‌کند؛
+        // اگر قیمت کمپین روی Offer دیگری از همان Product بنشیند، هیچ کارتی تخفیف نشان نمی‌دهد.
+        var primaryOffers = await ResolveStorefrontPrimaryOffersAsync(
+            offerRead,
+            priceQuery,
+            inventoryQuery,
+            candidates,
+            MaxPrimaryMemberProducts,
+            now,
+            cancellationToken);
+        var activeOffers = primaryOffers.Select(x => x.OfferId).ToList();
 
         var oosOfferId = await EnsureOosOfferAsync(
             offerSeeds,
@@ -167,13 +180,13 @@ public static class MerchandisingCampaignDevelopmentSeed
             cancellationToken);
 
         // R18: campaign-scoped AuthoredPrice seeds (not PromoAmount scalar).
-        // Active primary: first 3 members get promo < base; 4th (if present) keeps base-only fallback.
+        // Active primary: هر عضو قیمت کمپین کمتر از Base می‌گیرد جز آخرین عضو که عمداً
+        // base-only می‌ماند تا شاخهٔ fallback (فقط قیمت پایه) در دانهٔ Development پوشش داده شود.
         await EnsureCampaignPromoPricesAsync(
             prices,
             priceQuery,
             MerchandisingDevelopmentIds.ActivePrimaryId,
-            activeOffers.Take(3).ToList(),
-            fractionOfBase: 0.7m,
+            BuildPromoTargets(primaryOffers, skipLast: true),
             validFrom: now.AddHours(-2),
             validTo: now.AddDays(7),
             cancellationToken);
@@ -182,61 +195,166 @@ public static class MerchandisingCampaignDevelopmentSeed
             prices,
             priceQuery,
             MerchandisingDevelopmentIds.FutureId,
-            activeOffers.Take(1).ToList(),
-            fractionOfBase: 0.5m,
+            BuildPromoTargets(primaryOffers.Take(1).ToList(), skipLast: false, fractionOverride: 0.5m),
             validFrom: now.AddDays(1),
             validTo: now.AddDays(2),
             cancellationToken);
     }
 
     /// <summary>
-    /// برای هر Offer، در صورت نبود قیمت کمپین، مبلغی کمتر از پایه می‌نویسد و فعال می‌کند.
+    /// هدف‌های نوشتن قیمت کمپین را از Offerهای Primary می‌سازد؛ مبلغ همیشه اکیداً کمتر از Base است
+    /// تا <c>IsAmazingRailEligible</c> و overlay فروشگاه بتوانند تخفیف را بپذیرند.
+    /// </summary>
+    private static IReadOnlyList<CampaignPromoTarget> BuildPromoTargets(
+        IReadOnlyList<StorefrontPrimaryOffer> offers,
+        bool skipLast,
+        decimal? fractionOverride = null)
+    {
+        var take = skipLast && offers.Count > 1 ? offers.Count - 1 : offers.Count;
+        var targets = new List<CampaignPromoTarget>(take);
+        for (var i = 0; i < take; i++)
+        {
+            var offer = offers[i];
+            var fraction = fractionOverride ?? PromoFractions[i % PromoFractions.Length];
+            var amount = decimal.Round(offer.BaseAmount * fraction, 0, MidpointRounding.AwayFromZero);
+            if (amount <= 0 || amount >= offer.BaseAmount)
+            {
+                amount = Math.Max(1, offer.BaseAmount - 1);
+            }
+
+            targets.Add(new CampaignPromoTarget(
+                offer.OfferId,
+                amount,
+                offer.Market,
+                offer.Channel,
+                offer.Currency));
+        }
+
+        return targets;
+    }
+
+    /// <summary>
+    /// برای هر Product منتشرشده همان Offer را برمی‌گرداند که Storefront به‌عنوان Primary انتخاب می‌کند:
+    /// موجودی مثبت، سپس ارزان‌ترین Base معتبر، سپس OfferId — یعنی همان ترتیب
+    /// <c>IPrimaryOfferSelectionPolicy</c>. Base برگشتی همان ردیفی است که کارت فروشگاه نمایش می‌دهد،
+    /// پس Market/Currency/Channel قیمت کمپین هم با آن یکی می‌شود.
+    /// </summary>
+    private static async Task<IReadOnlyList<StorefrontPrimaryOffer>> ResolveStorefrontPrimaryOffersAsync(
+        ICatalogOfferReadGateway offerRead,
+        IPriceQueryGateway priceQuery,
+        IInventoryQueryGateway inventoryQuery,
+        IReadOnlyList<OfferReference> candidates,
+        int maxProducts,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (candidates.Count == 0)
+        {
+            return [];
+        }
+
+        var presentations = await offerRead.GetOfferPresentationsAsync(
+            candidates.Select(x => x.CatalogVariantId).Distinct().ToArray(),
+            cancellationToken);
+        var selected = new List<StorefrontPrimaryOffer>();
+        var byProduct = candidates
+            .Where(x => presentations.ContainsKey(x.CatalogVariantId))
+            .GroupBy(x => presentations[x.CatalogVariantId].ProductId)
+            .OrderBy(group => group.Key)
+            .Take(maxProducts);
+
+        foreach (var group in byProduct)
+        {
+            var offerIds = group.Select(x => x.OfferId).Distinct().ToArray();
+            var prices = await priceQuery.ListByOfferIdsAsync(offerIds, cancellationToken);
+            var positions = await inventoryQuery.ListPositionsByOfferIdsAsync(offerIds, cancellationToken);
+
+            var primary = group
+                .Select(offer => new
+                {
+                    Offer = offer,
+                    Available = positions.Where(p => p.OfferId == offer.OfferId).Sum(p => p.Available),
+                    Base = prices
+                        .Where(p => p.OfferId == offer.OfferId
+                            && p.Status == "Active"
+                            && p.QualifierKind == "Base"
+                            && p.ValidFrom <= now
+                            && (p.ValidTo is null || p.ValidTo >= now))
+                        .OrderBy(p => p.Amount)
+                        .FirstOrDefault(),
+                })
+                .Where(x => x.Base is not null)
+                .OrderByDescending(x => x.Available > 0)
+                .ThenBy(x => x.Base!.Amount)
+                .ThenBy(x => x.Offer.OfferId)
+                .FirstOrDefault();
+            if (primary is null)
+            {
+                continue;
+            }
+
+            selected.Add(new StorefrontPrimaryOffer(
+                primary.Offer.OfferId,
+                primary.Base!.Amount,
+                primary.Base.Market,
+                primary.Base.Channel,
+                primary.Base.Currency));
+        }
+
+        return selected;
+    }
+
+    /// <summary>
+    /// قیمت کمپین را upsert می‌کند. ردیف فعالِ داخل بازه رد می‌شود؛ ردیف فعالی که بازه‌اش
+    /// پنجرهٔ فعلی را پوشش نمی‌دهد اول Expire می‌شود تا ردیف تازه ساخته شود — بدون این بازآفرینی،
+    /// دانهٔ idempotent بعد از گذشت پنجرهٔ قبلی هیچ‌وقت تخفیف را برنمی‌گرداند.
     /// </summary>
     private static async Task EnsureCampaignPromoPricesAsync(
         IPriceDirectory prices,
         IPriceQueryGateway priceQuery,
         Guid campaignId,
-        IReadOnlyList<Guid> offerIds,
-        decimal fractionOfBase,
+        IReadOnlyList<CampaignPromoTarget> targets,
         DateTimeOffset validFrom,
         DateTimeOffset? validTo,
         CancellationToken cancellationToken)
     {
-        if (offerIds.Count == 0)
+        if (targets.Count == 0)
         {
             return;
         }
 
         var key = campaignId.ToString("D");
-        var existing = await priceQuery.ListActiveCampaignOfferIdsAsync(offerIds, key, cancellationToken);
-        var have = existing.ToHashSet();
+        var rows = await priceQuery.ListByOfferIdsAsync(
+            targets.Select(x => x.OfferId).Distinct().ToArray(),
+            cancellationToken);
+        var campaignRows = rows
+            .Where(x => x.QualifierKind == "MerchandisingCampaign"
+                && string.Equals(x.QualifierKey, key, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
-        foreach (var offerId in offerIds)
+        foreach (var target in targets)
         {
-            if (have.Contains(offerId))
+            var existing = campaignRows.Where(x => x.OfferId == target.OfferId).ToList();
+            var covered = existing.Any(x => x.Status == "Active"
+                && x.ValidFrom <= validFrom
+                && (x.ValidTo is null || x.ValidTo >= validFrom));
+            if (covered)
             {
                 continue;
             }
 
-            var basePrice = await priceQuery.FindLatestActiveBaseAsync(offerId, "IR", "IRR", cancellationToken);
-            if (basePrice is null || basePrice.Amount <= 0)
+            foreach (var stale in existing.Where(x => x.Status == "Active"))
             {
-                continue;
-            }
-
-            var promoAmount = decimal.Round(basePrice.Amount * fractionOfBase, 0, MidpointRounding.AwayFromZero);
-            if (promoAmount <= 0 || promoAmount >= basePrice.Amount)
-            {
-                promoAmount = Math.Max(1, basePrice.Amount - 1);
+                await prices.ExpireAsync(stale.PriceId, cancellationToken);
             }
 
             var created = await prices.CreateCampaignPriceAsync(
-                offerId,
+                target.OfferId,
                 campaignId,
-                basePrice.Market,
-                basePrice.Channel,
-                promoAmount,
-                basePrice.Currency,
+                target.Market,
+                target.Channel,
+                target.Amount,
+                target.Currency,
                 validFrom,
                 validTo,
                 cancellationToken);
@@ -349,4 +467,20 @@ public static class MerchandisingCampaignDevelopmentSeed
             throw new SemanticException(drained.FirstError);
         }
     }
+
+    /// <summary>Offer ای که Storefront به‌عنوان Primary کارت Product انتخاب می‌کند، همراه با Base نمایش‌داده‌شده.</summary>
+    private sealed record StorefrontPrimaryOffer(
+        Guid OfferId,
+        decimal BaseAmount,
+        string Market,
+        SalesChannel Channel,
+        string Currency);
+
+    /// <summary>مبلغ و قیمت‌گذاری نوشته‌شده برای یک Offer در کمپین.</summary>
+    private sealed record CampaignPromoTarget(
+        Guid OfferId,
+        decimal Amount,
+        string Market,
+        SalesChannel Channel,
+        string Currency);
 }
