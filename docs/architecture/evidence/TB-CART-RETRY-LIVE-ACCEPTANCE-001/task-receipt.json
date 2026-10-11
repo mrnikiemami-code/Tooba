@@ -1,0 +1,17 @@
+{
+  "id": "90ff96e2-bc7a-4d99-acf1-7ed3d3cd2dcf",
+  "taskId": "TB-CART-RETRY-LIVE-ACCEPTANCE-001",
+  "parentTask": "TOOBA-CART-EXPIRED-RESERVATION-RETRY-FIX",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "createdAtUtc": "2026-10-11T17:45:02.9960332",
+  "claimedVia": "GET /api/tasks/next?channelId=tooba-main",
+  "claimedAtLocalUtc": "2026-10-11T17:49:00Z",
+  "baselineHead": "1ae919f2cee5cdf326571813936121edd3b61be1",
+  "originMainAtClaim": "1ae919f2cee5cdf326571813936121edd3b61be1",
+  "mode": "VERIFY_LIVE_BOUNDED",
+  "verdict": "LIVE_PASS",
+  "productionCodeChanged": false,
+  "stop": "USER_REVIEW_AFTER_LIVE_ACCEPTANCE"
+}
