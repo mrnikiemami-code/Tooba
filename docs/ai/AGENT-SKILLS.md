@@ -21,6 +21,7 @@ they survive any Cursor reinstall, cache clear, or machine change.
 | Skill | Trigger phrases | File |
 | --- | --- | --- |
 | `asli-grid` | «اصلی‌گرید», `asli-grid`, «نمای اصلی را پیش‌فرض کن» | `.cursor/skills/asli-grid/SKILL.md` |
+| `tooba-backend-feature` | backend feature/add/fix, توسعه فیچر بک‌اند، رفع باگ بک‌اند | `.cursor/skills/tooba-backend-feature/SKILL.md` |
 | `tooba-frontend-feature` | frontend feature/add/fix, توسعه فیچر فرانت، اصلاح صفحه | `.cursor/skills/tooba-frontend-feature/SKILL.md` |
 | `tooba-architecture-analyze` | analyze a file/capability, decide true module ownership, migration plan | `.cursor/skills/tooba-architecture-analyze/SKILL.md` |
 | `tooba-architecture-migrate` | migrate / Host evacuation / ownership correction / decoupling | `.cursor/skills/tooba-architecture-migrate/SKILL.md` |
