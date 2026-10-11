@@ -212,7 +212,7 @@ For each module-owned machine code:
 - `IErrorCatalogContributor`;
 - `IErrorResourceSet`;
 - default `.resx`;
-- localized `.fa.resx` where applicable;
+- locale-specific resources under the configured-language and fallback policy (`.fa.resx` is one example, not an exhaustive language list);
 - `IErrorMessageLocalizer`;
 - no duplicate descriptor ownership;
 - no localized text embedded in Application/Endpoints error creation.
