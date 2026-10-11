@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
+using Tooba.Catalog.Application.StoreLandingPages.Ports;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Contracts.Availability;
@@ -47,6 +49,9 @@ public sealed class StorefrontComposer : IStorefrontComposer
     private readonly IContentStorefrontArticlesPort _content;
     private readonly ICatalogDirectory _catalogDirectory;
     private readonly IPrimaryOfferSelectionPolicy _primaryOffers;
+    private readonly IStoreLandingMerchandisingPort _merchandising;
+    private bool _activeCampaignResolved;
+    private Guid? _activeCampaignId;
 
     /// <summary>
     /// سازندهٔ ترکیب فروشگاه. نام فروشنده از Party جدا از Offer خوانده می‌شود.
@@ -62,7 +67,8 @@ public sealed class StorefrontComposer : IStorefrontComposer
         IReviewsStorefrontLookup reviews,
         IContentStorefrontArticlesPort content,
         ICatalogDirectory catalogDirectory,
-        IPrimaryOfferSelectionPolicy primaryOffers)
+        IPrimaryOfferSelectionPolicy primaryOffers,
+        IStoreLandingMerchandisingPort merchandising)
     {
         _catalog = catalog;
         _offers = offers;
@@ -75,6 +81,7 @@ public sealed class StorefrontComposer : IStorefrontComposer
         _content = content;
         _catalogDirectory = catalogDirectory;
         _primaryOffers = primaryOffers;
+        _merchandising = merchandising;
     }
 
     /// <summary>
@@ -969,6 +976,15 @@ public sealed class StorefrontComposer : IStorefrontComposer
         var promotionLabel = promotion.Applied.Count == 0
             ? null
             : string.Join("، ", promotion.Applied.Select(applied => applied.Name));
+        var automaticPromotionalAmount = promotion.DiscountAmount > 0
+            ? promotion.PostDiscountTaxExclusiveAmount
+            : (decimal?)null;
+        var activeCampaignId = await GetActiveStorefrontCampaignIdAsync(now, cancellationToken);
+        var campaignPromotionalAmount = ResolveCampaignPromotionalAmount(prices, primary, activeCampaignId, now);
+        var promotionalAmount =
+            automaticPromotionalAmount is decimal automatic && campaignPromotionalAmount is decimal campaign
+                ? Math.Min(automatic, campaign)
+                : automaticPromotionalAmount ?? campaignPromotionalAmount;
         var card = new StorefrontProductCard(
             product.ProductId,
             slug,
@@ -980,12 +996,13 @@ public sealed class StorefrontComposer : IStorefrontComposer
             primary.SellerPartyId,
             primary.SellerDisplayName,
             primary.AmountExclusiveOfTax,
-            promotion.DiscountAmount > 0 ? promotion.PostDiscountTaxExclusiveAmount : null,
+            promotionalAmount,
             primary.Currency,
             primary.AvailableUnits,
             primary.AvailableUnits > 0,
             promotionLabel,
-            BrandId: product.BrandId);
+            BrandId: product.BrandId,
+            MerchandisingCampaignId: campaignPromotionalAmount is null ? null : activeCampaignId);
         var specifications = cardOnly
             ? Array.Empty<StorefrontProductSpecification>()
             : await BuildSpecificationsAsync(product.ProductId, chosenVariantId.Value, cancellationToken);
@@ -997,6 +1014,84 @@ public sealed class StorefrontComposer : IStorefrontComposer
         var fullDescription = fullDescriptions.GetValueOrDefault(product.ProductId)
             ?? legacyDescriptions.GetValueOrDefault(product.ProductId);
         return (card, primary, others, shortDescription, fullDescription, brandName, media, chosenVariantId.Value, specifications, variantViews);
+    }
+
+    /// <summary>
+    /// کمپین Amazing فعال فروشگاه را یک‌بار برای کل request حل می‌کند تا خانه و فهرست به N+1 نرسند.
+    /// فقط شناسهٔ کمپین لازم است؛ مبلغ هر Offer از ردیف‌های قیمت همان Offer خوانده می‌شود.
+    /// </summary>
+    private async Task<Guid?> GetActiveStorefrontCampaignIdAsync(
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (_activeCampaignResolved)
+        {
+            return _activeCampaignId;
+        }
+
+        _activeCampaignResolved = true;
+        try
+        {
+            var storeId = _merchandising.ResolveStoreId();
+            if (storeId is null)
+            {
+                return null;
+            }
+
+            // زبان فقط متن ترجمهٔ کمپین را تعیین می‌کند؛ Storefront تنها مبلغ کمپین را مصرف می‌کند.
+            var active = await _merchandising.ResolveActiveByTypeAsync(
+                storeId.Value,
+                _merchandising.AmazingTypeCode,
+                "fa-IR",
+                now,
+                _merchandising.MaxMemberTake,
+                cancellationToken);
+            _activeCampaignId = active?.CampaignId;
+            return _activeCampaignId;
+        }
+        catch (SemanticException)
+        {
+            // overlay صرفاً نمایشی است (سبد و Checkout مرجع نهایی‌اند) و صفحهٔ فروشگاه را نمی‌شکند.
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// قیمت کمپین شگفت‌انگیزِ <b>همین</b> Offer را از ردیف‌های قیمتِ همین محصول می‌خواند.
+    /// گره‌خوردن به Offer (نه گونه) لازم است تا مبلغی که نمایش داده می‌شود همان چیزی باشد
+    /// که سبد برای همین Offer ارزیابی می‌کند؛ فروشندهٔ دیگر روی همان گونه قیمت کمپین ندارد.
+    /// </summary>
+    private static decimal? ResolveCampaignPromotionalAmount(
+        IReadOnlyList<AuthoredPriceSnapshot> prices,
+        StorefrontOfferCandidate primary,
+        Guid? activeCampaignId,
+        DateTimeOffset now)
+    {
+        if (activeCampaignId is not Guid campaignId)
+        {
+            return null;
+        }
+
+        var campaignKey = campaignId.ToString("D");
+        var amounts = prices
+            .Where(item => item.OfferId == primary.OfferId
+                && item.Status == "Active"
+                && item.QualifierKind == "MerchandisingCampaign"
+                && string.Equals(item.QualifierKey, campaignKey, StringComparison.OrdinalIgnoreCase)
+                && item.Market == primary.Market
+                && item.Currency == primary.Currency
+                && item.ValidFrom <= now
+                && (item.ValidTo is null || item.ValidTo >= now))
+            .Select(item => item.Amount)
+            .ToList();
+        if (amounts.Count == 0)
+        {
+            return null;
+        }
+
+        // چند ردیف مؤثر روی یک کلید، تعارض داده است؛ ارزان‌ترین نمایش داده می‌شود تا صفحه نشکند.
+        var amount = amounts.Min();
+        return amount > 0 && amount < primary.AmountExclusiveOfTax ? amount : null;
     }
 
     /// <summary>

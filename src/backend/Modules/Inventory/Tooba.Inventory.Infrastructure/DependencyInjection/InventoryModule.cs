@@ -7,6 +7,7 @@ using Tooba.Inventory.Contracts.Checkout;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Contracts.Fulfillment;
+using Tooba.Inventory.Contracts.Cart;
 using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Application.Checkout;
 using Tooba.Inventory.Application.Ports;
@@ -48,6 +49,7 @@ public sealed class InventoryModule : IToobaModule
         services.AddScoped<IInventoryAvailabilityGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<ISellerOfferInventoryGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<IFulfillmentInventoryLifecyclePort>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
+        services.AddScoped<ICartInventoryHoldPort>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<IInventoryQueryGateway, Adapters.InventoryQueryGateway>();
         services.AddScoped<IInventoryDevelopmentSeedGateway, Adapters.InventoryDevelopmentSeedGateway>();
         services.AddScoped<IInventorySchemaMigrator, Adapters.InventorySchemaMigrator>();
