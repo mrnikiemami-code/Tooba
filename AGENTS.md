@@ -116,6 +116,16 @@ Preserve `ARCH-FE-FREEZE-001`, existing visual/API/behavior locks and Task scope
 A conflict or out-of-scope refactor requires STOP and Architect approval.
 Never claim a page is certified just because a feature builds.
 
+## Backend feature architecture — mandatory
+
+For EVERY authorized feature addition or bug fix under `src/backend/**`, BEFORE
+coding read `.cursor/skills/tooba-backend-feature/SKILL.md` and follow its
+module ownership, CQRS, Result/error/localization, validation, Contracts-only,
+DI, security, and focused-test rules. The feature skill prevents new debt; it
+does not replace the architecture skills or authorize AMSC recertification.
+Preserve existing contracts and locked state; conflicts require STOP and
+Architect approval. Never silently broaden scope or weaken architectural guards.
+
 ## Agent skills
 
 Repository-owned skills live under `.cursor/skills/<name>/SKILL.md` and are
