@@ -107,6 +107,7 @@ Unsafe divergence is `RECOVERY_CONFLICT`.
 ## Frontend feature architecture — mandatory
 
 For EVERY feature addition or change under `src/frontend/**`, BEFORE coding read
+`.cursor/skills/tooba-frontend-feature/SKILL.md` and
 `docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md` and follow its ownership,
 dependency-direction, API/state/UI, type-safety, focused validation, and stop rules.
 This is required even when a task only says "fix" or "add a feature"; merely asking
