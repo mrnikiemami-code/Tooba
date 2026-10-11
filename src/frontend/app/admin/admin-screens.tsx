@@ -242,6 +242,7 @@ function truncatedCell(content: ReactNode, title?: string) {
   );
 }
 
+/** عرض/ترتیب پیش‌فرض ستون‌های سفارش از نمای مرجع «اصلی» ارتقا یافته و آن نما حذف شده است. */
 function createOrderColumns(onOperationCompleted?: () => void): GridColumnDef<AdminOrderRow>[] {
   return [
   {
@@ -259,7 +260,7 @@ function createOrderColumns(onOperationCompleted?: () => void): GridColumnDef<Ad
     header: "مشتری / گیرنده",
     accessor: (row) => row.customerDisplayName,
     cell: (row) => truncatedCell(row.customerDisplayName, row.customerDisplayName),
-    width: 150,
+    width: 163.636474609375,
     minWidth: 110,
     filterKind: "text",
     sortable: true,
@@ -277,7 +278,7 @@ function createOrderColumns(onOperationCompleted?: () => void): GridColumnDef<Ad
     filterKind: "text",
     sortable: true,
   },
-  { id: "lines", header: "تعداد اقلام", accessor: (row) => row.lineCount, cell: (row) => row.lineCount.toLocaleString("fa-IR"), width: 96, minWidth: 80, filterKind: "number", sortable: true },
+  { id: "lines", header: "تعداد اقلام", accessor: (row) => row.lineCount, cell: (row) => row.lineCount.toLocaleString("fa-IR"), width: 127.81817626953125, minWidth: 80, filterKind: "number", sortable: true },
   { id: "payment", header: "پرداخت", accessor: (row) => row.paymentState, cell: (row) => <Status value={row.paymentState} />, width: 130, minWidth: 105, filterKind: "status", enumOptions: orderPaymentEnumOptions },
   { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 120, minWidth: 100, filterKind: "status", enumOptions: orderStatusEnumOptions },
   {
@@ -289,7 +290,7 @@ function createOrderColumns(onOperationCompleted?: () => void): GridColumnDef<Ad
         {formatAdminSupplyStatus(row.supplyStatus)}
       </span>
     ),
-    width: 140,
+    width: 150,
     minWidth: 120,
     filterKind: "status",
     enumOptions: supplyStatusEnumOptions,
@@ -304,7 +305,7 @@ function createOrderColumns(onOperationCompleted?: () => void): GridColumnDef<Ad
         {row.reservationLabel || "—"}
       </span>
     ),
-    width: 140,
+    width: 145.45455932617188,
     minWidth: 118,
     filterKind: "status",
     enumOptions: reservationStateEnumOptions,
@@ -338,7 +339,6 @@ function createOrderColumns(onOperationCompleted?: () => void): GridColumnDef<Ad
 }
 
 const orderColumns = createOrderColumns();
-
 
 
 
