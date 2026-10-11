@@ -99,7 +99,7 @@ Discover, at minimum:
 2. **Localization / user-facing text** — look for resource-based localization, error catalog with `LocalizationKey`, and `IErrorMessageLocalizer`. In this repository the canonical mechanism is:
    - machine-stable codes in `*.Contracts.Errors.<Module>ErrorCodes` and validation codes in `*.Application.Validators.<Module>ValidationCodes`;
    - `IErrorCatalogContributor` + `IErrorResourceSet` (e.g. `OfferErrorCatalogContributor`, `OfferErrorResourceSet`);
-   - `.resx` + `.resx` localized resources (e.g. `OfferErrors.resx`, `OfferErrors.fa.resx`);
+   - neutral/default `.resx` plus locale-specific resources following centrally configured languages and fallback (`OfferErrors.fa.resx` is one example, not a two-language limit);
    - `IErrorMessageLocalizer` / `ResourceErrorMessageLocalizer` / `IRequestLocaleResolver`.
 3. **Observability / logging** — look for the logging foundation and log scope. In this repository:
    - `Tooba.BuildingBlocks.ToobaTelemetry` (`ActivitySource` / `Meter` named `Tooba`);
