@@ -104,6 +104,17 @@ clean working tree
 
 Unsafe divergence is `RECOVERY_CONFLICT`.
 
+## Frontend feature architecture — mandatory
+
+For EVERY feature addition or change under `src/frontend/**`, BEFORE coding read
+`docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md` and follow its ownership,
+dependency-direction, API/state/UI, type-safety, focused validation, and stop rules.
+This is required even when a task only says "fix" or "add a feature"; merely asking
+the agent to act as a senior architect does not replace the repository contract.
+Preserve `ARCH-FE-FREEZE-001`, existing visual/API/behavior locks and Task scope.
+A conflict or out-of-scope refactor requires STOP and Architect approval.
+Never claim a page is certified just because a feature builds.
+
 ## Agent skills
 
 Repository-owned skills live under `.cursor/skills/<name>/SKILL.md` and are
