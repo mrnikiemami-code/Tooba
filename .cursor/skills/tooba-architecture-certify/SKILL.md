@@ -286,7 +286,7 @@ Verify:
 - every stable error code used by the certified surface resolves to exactly one canonical `ErrorDescriptor` in the composed `IErrorDefinitionCatalog`;
 - module-owned error codes have their descriptor in the natural owning module; a module consuming a code owned elsewhere does not re-register that descriptor;
 - **duplicate usage is allowed; duplicate descriptor ownership is not**;
-- Persian resources exist for the module's user-facing error set where the module owns such errors;
+- module-owned error keys resolve through central configured-language resources and fallback policy; Persian is one possible locale, not the exhaustive language list;
 - no hard-coded Persian/English user-facing strings in Domain/Application/Endpoints/Infrastructure;
 - no `exception.Message` / `ex.Message` used as a localized or user-facing contract;
 - no endpoint-level `Accept-Language` parsing instead of the canonical locale resolver;
