@@ -104,8 +104,16 @@ clean working tree
 
 Unsafe divergence is `RECOVERY_CONFLICT`.
 
+## Agent skills
+
+Repository-owned skills live under `.cursor/skills/<name>/SKILL.md` and are
+versioned in git, so they survive a Cursor reset, cache clear, or machine change.
+After a reset, read the durable registry `docs/ai/AGENT-SKILLS.md`, then open the
+matching `.cursor/skills/<name>/SKILL.md` and follow it exactly.
+
 ## References
 
+- `docs/ai/AGENT-SKILLS.md`
 - `docs/ai/TOOBA-PIPELINE-PROTOCOL.md`
 - `docs/ai/TOOBA-PIPELINE-CONTROLLER.md`
 - `docs/ai/TOOBA-RECOVERY-CONTEXT.md`
