@@ -16,7 +16,7 @@ Scope: `src/frontend/**`. This skill implements, but NEVER overrides, `docs/arch
 ## 2 — Implement one cohesive change
 - Keep route/page composition, feature behavior, typed API adapter/state, and shared UI responsibilities separated according to existing local conventions.
 - Reuse established clients, `design-system/`, `AppDataGrid`, forms and tokens. Prevent circular/cross-feature internal imports and new client/server boundary violations.
-- Address loading/empty/error, accessibility and FA/EN/RTL where relevant. No hardcoded fake prices, stock, discounts or ratings.
+- Address loading/empty/error, accessibility and configured-locale translations, formatting and RTL/LTR support where relevant. No hardcoded fake prices, stock, discounts or ratings.
 - If the architecture fix needs broader changes than the requested feature: fix only approved scope and record the debt; do not silently enlarge the task.
 
 ## 3 — Proof and handoff
