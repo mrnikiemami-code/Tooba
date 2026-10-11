@@ -21,5 +21,7 @@
     <ProjectReference Include="..\Tooba.Promotion.Contracts\Tooba.Promotion.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Promotion.Infrastructure\Tooba.Promotion.Infrastructure.csproj" />
     <ProjectReference Include="..\Tooba.Promotion.Endpoints\Tooba.Promotion.Endpoints.csproj" />
+    <!-- test-only: the real primary-offer selection policy that the storefront and the seed must agree on -->
+    <ProjectReference Include="..\..\Offer\Tooba.Offer.Application\Tooba.Offer.Application.csproj" />
   </ItemGroup>
 </Project>

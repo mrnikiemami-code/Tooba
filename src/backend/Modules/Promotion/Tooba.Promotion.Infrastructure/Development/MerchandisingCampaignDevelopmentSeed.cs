@@ -86,6 +86,7 @@ public static class MerchandisingCampaignDevelopmentSeed
             offerRead,
             priceQuery,
             inventoryQuery,
+            provider.GetRequiredService<IPrimaryOfferSelectionPolicy>(),
             candidates,
             MaxPrimaryMemberProducts,
             now,
@@ -234,15 +235,17 @@ public static class MerchandisingCampaignDevelopmentSeed
     }
 
     /// <summary>
-    /// برای هر Product منتشرشده همان Offer را برمی‌گرداند که Storefront به‌عنوان Primary انتخاب می‌کند:
-    /// موجودی مثبت، سپس ارزان‌ترین Base معتبر، سپس OfferId — یعنی همان ترتیب
-    /// <c>IPrimaryOfferSelectionPolicy</c>. Base برگشتی همان ردیفی است که کارت فروشگاه نمایش می‌دهد،
-    /// پس Market/Currency/Channel قیمت کمپین هم با آن یکی می‌شود.
+    /// برای هر Product منتشرشده همان Offer را برمی‌گرداند که Storefront به‌عنوان Primary انتخاب می‌کند.
+    /// ترتیب انتخاب دوباره پیاده‌سازی نمی‌شود؛ همین کاندیداها به درز مالک Offer یعنی
+    /// <see cref="IPrimaryOfferSelectionPolicy"/> داده می‌شوند تا فروشگاه و دانه یک حکم واحد بگیرند.
+    /// Base برگشتی همان ردیفی است که کارت فروشگاه نمایش می‌دهد، پس Market/Currency/Channel
+    /// قیمت کمپین هم با آن یکی می‌شود.
     /// </summary>
-    private static async Task<IReadOnlyList<StorefrontPrimaryOffer>> ResolveStorefrontPrimaryOffersAsync(
+    internal static async Task<IReadOnlyList<StorefrontPrimaryOffer>> ResolveStorefrontPrimaryOffersAsync(
         ICatalogOfferReadGateway offerRead,
         IPriceQueryGateway priceQuery,
         IInventoryQueryGateway inventoryQuery,
+        IPrimaryOfferSelectionPolicy primaryOffers,
         IReadOnlyList<OfferReference> candidates,
         int maxProducts,
         DateTimeOffset now,
@@ -269,47 +272,58 @@ public static class MerchandisingCampaignDevelopmentSeed
             var prices = await priceQuery.ListByOfferIdsAsync(offerIds, cancellationToken);
             var positions = await inventoryQuery.ListPositionsByOfferIdsAsync(offerIds, cancellationToken);
 
-            var primary = group
-                .Select(offer => new
+            // همان زمینهٔ فروشگاه: فقط Offerهایی که Base معتبر دارند کاندیدا می‌شوند و
+            // Available همان جمع موقعیت‌های انبار است؛ انتخاب به‌عهدهٔ سیاست مالک Offer است.
+            var priceByOffer = new Dictionary<Guid, AuthoredPriceSnapshot>();
+            var selectionCandidates = new List<OfferSelectionCandidate>();
+            foreach (var offer in group)
+            {
+                var candidateBase = prices
+                    .Where(p => p.OfferId == offer.OfferId
+                        && p.Status == "Active"
+                        && p.QualifierKind == "Base"
+                        && p.ValidFrom <= now
+                        && (p.ValidTo is null || p.ValidTo >= now))
+                    .OrderBy(p => p.Amount)
+                    .FirstOrDefault();
+                if (candidateBase is null)
                 {
-                    Offer = offer,
-                    Available = positions.Where(p => p.OfferId == offer.OfferId).Sum(p => p.Available),
-                    Base = prices
-                        .Where(p => p.OfferId == offer.OfferId
-                            && p.Status == "Active"
-                            && p.QualifierKind == "Base"
-                            && p.ValidFrom <= now
-                            && (p.ValidTo is null || p.ValidTo >= now))
-                        .OrderBy(p => p.Amount)
-                        .FirstOrDefault(),
-                })
-                .Where(x => x.Base is not null)
-                .OrderByDescending(x => x.Available > 0)
-                .ThenBy(x => x.Base!.Amount)
-                .ThenBy(x => x.Offer.OfferId)
-                .FirstOrDefault();
+                    continue;
+                }
+
+                priceByOffer[offer.OfferId] = candidateBase;
+                selectionCandidates.Add(new OfferSelectionCandidate(
+                    offer.OfferId,
+                    offer.CatalogVariantId,
+                    offer.SellerPartyId,
+                    candidateBase.Amount,
+                    positions.Where(p => p.OfferId == offer.OfferId).Sum(p => p.Available)));
+            }
+
+            var primary = primaryOffers.Resolve(selectionCandidates);
             if (primary is null)
             {
                 continue;
             }
 
+            var basePrice = priceByOffer[primary.OfferId];
             selected.Add(new StorefrontPrimaryOffer(
-                primary.Offer.OfferId,
-                primary.Base!.Amount,
-                primary.Base.Market,
-                primary.Base.Channel,
-                primary.Base.Currency));
+                primary.OfferId,
+                basePrice.Amount,
+                basePrice.Market,
+                basePrice.Channel,
+                basePrice.Currency));
         }
 
         return selected;
     }
 
     /// <summary>
-    /// قیمت کمپین را upsert می‌کند. ردیف فعالِ داخل بازه رد می‌شود؛ ردیف فعالی که بازه‌اش
-    /// پنجرهٔ فعلی را پوشش نمی‌دهد اول Expire می‌شود تا ردیف تازه ساخته شود — بدون این بازآفرینی،
-    /// دانهٔ idempotent بعد از گذشت پنجرهٔ قبلی هیچ‌وقت تخفیف را برنمی‌گرداند.
+    /// قیمت کمپین را upsert می‌کند. ردیف فعالی که کل پنجرهٔ درخواستی را پوشش دهد دست‌نخورده
+    /// رد می‌شود؛ ردیفی که فقط بخشی از پنجره را می‌پوشاند اول Expire می‌شود تا ردیف تازه ساخته شود.
+    /// بدون این بازآفرینی، دانهٔ idempotent بعد از کوتاه‌شدن پنجرهٔ قبلی هیچ‌وقت تخفیف را کامل نمی‌کند.
     /// </summary>
-    private static async Task EnsureCampaignPromoPricesAsync(
+    internal static async Task EnsureCampaignPromoPricesAsync(
         IPriceDirectory prices,
         IPriceQueryGateway priceQuery,
         Guid campaignId,
@@ -336,8 +350,7 @@ public static class MerchandisingCampaignDevelopmentSeed
         {
             var existing = campaignRows.Where(x => x.OfferId == target.OfferId).ToList();
             var covered = existing.Any(x => x.Status == "Active"
-                && x.ValidFrom <= validFrom
-                && (x.ValidTo is null || x.ValidTo >= validFrom));
+                && CoversRequiredWindow(x.ValidFrom, x.ValidTo, validFrom, validTo));
             if (covered)
             {
                 continue;
@@ -361,6 +374,22 @@ public static class MerchandisingCampaignDevelopmentSeed
             await prices.ActivateAsync(created.PriceId, cancellationToken);
         }
     }
+
+    /// <summary>
+    /// آیا بازهٔ ردیف موجود، تمام پنجرهٔ درخواستی را پوشش می‌دهد؟ بازهٔ قیمت نوشته‌شده در Pricing
+    /// نیم‌باز <c>[ValidFrom, ValidTo)</c> است — شروع شامل، پایان انحصاری — مطابق
+    /// <c>AuthoredPrice.IsEffectiveAt</c>. پس پوشش کامل یعنی شروع ردیف نه‌دیرتر از شروع درخواست
+    /// و پایان ردیف نه‌زودتر از پایان درخواست؛ پنجرهٔ بدون پایان فقط با ردیف بدون پایان پوشش می‌یابد.
+    /// </summary>
+    internal static bool CoversRequiredWindow(
+        DateTimeOffset rowValidFrom,
+        DateTimeOffset? rowValidTo,
+        DateTimeOffset requiredFrom,
+        DateTimeOffset? requiredTo) =>
+        rowValidFrom <= requiredFrom
+        && (requiredTo is null
+            ? rowValidTo is null
+            : rowValidTo is null || rowValidTo >= requiredTo);
 
     private static async Task UpsertCampaignAsync(
         IMerchandisingCampaignDirectory dir,
@@ -469,7 +498,7 @@ public static class MerchandisingCampaignDevelopmentSeed
     }
 
     /// <summary>Offer ای که Storefront به‌عنوان Primary کارت Product انتخاب می‌کند، همراه با Base نمایش‌داده‌شده.</summary>
-    private sealed record StorefrontPrimaryOffer(
+    internal sealed record StorefrontPrimaryOffer(
         Guid OfferId,
         decimal BaseAmount,
         string Market,
@@ -477,7 +506,7 @@ public static class MerchandisingCampaignDevelopmentSeed
         string Currency);
 
     /// <summary>مبلغ و قیمت‌گذاری نوشته‌شده برای یک Offer در کمپین.</summary>
-    private sealed record CampaignPromoTarget(
+    internal sealed record CampaignPromoTarget(
         Guid OfferId,
         decimal Amount,
         string Market,

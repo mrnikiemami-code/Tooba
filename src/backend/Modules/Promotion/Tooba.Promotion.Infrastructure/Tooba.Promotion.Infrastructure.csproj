@@ -13,6 +13,12 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <!-- focused seed regression tests exercise the Development seed decision points in place -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Tooba.Promotion.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Tooba.Promotion.Application\Tooba.Promotion.Application.csproj" />
     <ProjectReference Include="..\Tooba.Promotion.Contracts\Tooba.Promotion.Contracts.csproj" />
     <ProjectReference Include="..\..\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />
