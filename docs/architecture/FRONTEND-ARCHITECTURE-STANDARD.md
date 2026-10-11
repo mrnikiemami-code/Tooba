@@ -21,7 +21,7 @@ Priority: existing accepted visual locks, `ARCH-FE-FREEZE-001`, task scope, and 
 - **Data and state:** use the existing API adapter, error handling, loading/empty/failure flows, cache and URL/query conventions. Preserve server authority for pricing, inventory, permissions and other business decisions. Avoid duplicated sources of truth and redundant request loops.
 - **Reusable UI:** reuse existing `design-system/` components, `AppDataGrid`, established form/workspace patterns and design tokens before creating a new variant. Do not duplicate a shared component to solve one page issue.
 - **Maintainability:** keep components and hooks cohesive; extract when a genuine independent responsibility emerges, not to satisfy arbitrary line limits. No speculative abstraction, invented architecture framework or unrelated refactor.
-- **Compatibility:** preserve public routes, query params, payload shapes, accessibility, responsiveness, RTL/FA/EN where relevant, existing feature flows and approved layouts. Do not invent test data, promotional prices, ratings or availability.
+- **Compatibility:** preserve public routes, query params, payload shapes, accessibility, responsiveness, locale-aware formatting, directionality (RTL/LTR), and all configured languages where relevant, existing feature flows and approved layouts. Do not invent test data, promotional prices, ratings or availability.
 
 ## Change workflow (a feature task is NOT an automatic redesign)
 
