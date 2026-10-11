@@ -1,0 +1,29 @@
+{
+  "taskId": "TB-PROMOTION-AMAZING-SEED-REPAIR-001",
+  "channelId": "tooba-main",
+  "taskRowId": "45872446-bc55-488b-afd1-13d47c8886d7",
+  "createdAtUtc": "2026-10-11T05:12:57.4446938",
+  "protocol": "BRIDGE-WAKE-V1",
+  "mode": "IMPLEMENT_BOUNDED_REPAIR",
+  "parentTask": "fix(seed) 3fb106c4e3382bcb09426748cf251be6dfca5f9c (Architect review REPAIR REQUIRED)",
+  "codeCommit": "7562c65b47aa693961dfea929bac5522d396fb98",
+  "branch": "main",
+  "filesChanged": [
+    "src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Development/MerchandisingCampaignDevelopmentSeed.cs",
+    "src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Tooba.Promotion.Infrastructure.csproj",
+    "src/backend/Modules/Promotion/Tooba.Promotion.Tests/Tooba.Promotion.Tests.csproj",
+    "src/backend/Modules/Promotion/Tooba.Promotion.Tests/Development/MerchandisingCampaignSeedPricingTests.cs"
+  ],
+  "verdict": {
+    "repair1DuplicatedSelection": "FIXED",
+    "repair2WindowCoverage": "FIXED",
+    "focusedTests": "PASS (30/30; 7 new)",
+    "buildInfrastructure": "PASS (0 errors)",
+    "buildHost": "PASS (0 errors)",
+    "hostRuntime": "PASS (/health 200)",
+    "storefrontApi": "PASS (specialOffers=8, featuredProducts=24, brands=20)",
+    "storefrontVisualBaseline": "NOT RUN",
+    "fullHostTestSuite": "NOT RUN AS GATE (pre-existing unrelated failures on origin/main)"
+  },
+  "verifiedAt": "2026-10-11T05:40:00Z"
+}

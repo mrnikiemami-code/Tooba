@@ -1,0 +1,127 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-PROMOTION-AMAZING-SEED-REPAIR-001
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Mode: IMPLEMENT_BOUNDED_REPAIR
+
+Commit: 7562c65b47aa693961dfea929bac5522d396fb98 (code+tests; evidence commit follows in the same task)
+Branch: main
+Base-branch: main
+Starting-point verified: origin/main was advanced after 3fb106c4 by unrelated docs commits
+(66279918) and the local Repair commit was rebased on top before pushing. HEAD != 3fb106c4 at start
+of repair; the seed file was re-read from disk, not assumed unchanged.
+
+FILES CHANGED (4, all in-scope)
+1. src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Development/MerchandisingCampaignDevelopmentSeed.cs (modified)
+2. src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Tooba.Promotion.Infrastructure.csproj (modified, test-visibility only)
+3. src/backend/Modules/Promotion/Tooba.Promotion.Tests/Tooba.Promotion.Tests.csproj (modified, test-only reference)
+4. src/backend/Modules/Promotion/Tooba.Promotion.Tests/Development/MerchandisingCampaignSeedPricingTests.cs (new, 7 focused tests)
+
+REPAIR 1 — duplicated primary-offer selection removed
+Before: ResolveStorefrontPrimaryOffersAsync re-implemented the ranking
+(OrderByDescending(Available>0) / ThenBy(Base.Amount) / ThenBy(OfferId)) as a private copy,
+so the seed could drift from the storefront decision it is required to mirror.
+After: the method composes the identical selection context the storefront composes
+(only offers with an Active, in-window Base row; Available = summed position Available;
+that offer's own market/currency/channel) and delegates the decision to the Offer-owned
+Contracts seam IPrimaryOfferSelectionPolicy.Resolve(...). No ordering copy remains.
+
+Boundary legality: IPrimaryOfferSelectionPolicy and OfferSelectionCandidate live in
+Tooba.Offer.Contracts (Ports/Dtos). Tooba.Promotion.Infrastructure already references
+Tooba.Offer.Contracts, so no new project edge was added. No foreign
+Application/Infrastructure/Domain reference was introduced and no contract change was
+required — therefore no STOP/Architect escalation was needed for this half.
+Verified by PromotionArchitectureGuardTests.Infrastructure_uses_contracts_not_foreign_application.
+
+REPAIR 2 — campaign-price window coverage is now complete
+Before: `covered` only compared the *start* (`x.ValidFrom <= validFrom`), so a row that
+covered the start but expired before the required end was treated as covered and the
+discount was never restored.
+After: `covered` requires full span of the required window via CoversRequiredWindow:
+    rowValidFrom <= requiredFrom
+    && (requiredTo is null ? rowValidTo is null : rowValidTo is null || rowValidTo >= requiredTo)
+Endpoint semantics are the existing Pricing convention (AuthoredPrice.IsEffectiveAt:
+`at >= ValidFrom && (ValidTo is null || at < ValidTo)`), i.e. the authored window is
+half-open [ValidFrom, ValidTo): start inclusive, end exclusive. Start-inclusive coverage
+therefore means `rowValidFrom <= requiredFrom`, end-exclusive coverage means
+`rowValidTo >= requiredTo`, and an unbounded required window is satisfied only by an
+unbounded row. Scope is unchanged: only rows matching the same OfferId + QualifierKind=
+MerchandisingCampaign + QualifierKey=CampaignId are expired/replaced; unrelated prices
+are never touched. A fully covering row is left untouched (no Expire, no Create).
+
+OBSERVED BEFORE/AFTER (live host, same DB)
+Before this repair, re-running the Development bootstrap against rows seeded earlier left
+5 rows whose window no longer spanned the required window; after the repair the same
+bootstrap retired those rows and wrote fresh full-window rows:
+    pricing.prices, qualifier_key=019a16a0-0001-7000-8000-000000000001
+    before: Active 12 (of which 7 did not span the required window)
+    after:  Active 12, Retired 7
+Storefront effect unchanged and still correct:
+    GET /v1/storefront/home?locale=fa-IR -> specialOffers=8, featuredProducts=24, brands=20
+    (8 discounted cards; e.g. 5639376 < 8056251, 4738588 < 6769412 ...)
+
+TESTS — ACTUAL
+Command: dotnet test src/backend/Modules/Promotion/Tooba.Promotion.Tests/Tooba.Promotion.Tests.csproj
+Result: PASS — Failed 0, Passed 30, Skipped 0, Total 30 (23 pre-existing + 7 new)
+New regression tests in Development/MerchandisingCampaignSeedPricingTests.cs:
+  (a) Campaign_price_targets_the_storefront_primary_offer_not_the_lowest_offer_id
+      — several active sellers on one product where the lowest OfferId is out of stock and
+        more expensive; asserts the campaign target is the storefront primary (cheaper,
+        in stock), not the lowest OfferId, and that the target carries that offer's Base amount.
+  (a-tie) Stock_and_price_tie_breaks_follow_the_canonical_policy
+      — stock beats a cheaper offer; equal stock+price resolves on the lower OfferId.
+  (b) Row_covering_the_start_but_ending_early_is_expired_and_replaced
+  (c) Fully_covering_row_is_left_untouched (no Expire, no Create)
+  (d) Rerun_after_creation_writes_nothing_new (no Expire, no Create, no Activate)
+  (endpoints) Window_coverage_uses_the_half_open_pricing_endpoint_semantics
+  (e) Seed_does_not_run_outside_development — EnsureAsync against a non-Development
+      IHostEnvironment resolves no other dependency and mutates nothing.
+The tests exercise the production decision points in place through an
+InternalsVisibleTo edge (TestedInternalsVisibility); no production member was made public.
+
+BUILD — ACTUAL
+  dotnet build src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure -> 0 errors (2 pre-existing CS1574 warnings in Tooba.Promotion.Domain)
+  dotnet build src/backend/Host/Tooba.Host -> 0 errors
+  Tooba.Host started in Development on http://127.0.0.1:5088 -> /health 200
+
+NOT RUN (explicitly)
+- Storefront visual/visual-baseline verification (npm run test:critical-storefront) was NOT run;
+  no frontend file changed and no visual claim is made. Runtime evidence is API/database only.
+- Full Tooba.Host.Tests suite was NOT used as a gate. It contains many pre-existing failures
+  unrelated to this repair (missing files such as WishlistPresentationComposer.cs, baseline/
+  source-size drift, DB-backed suites) and was already red on origin/main before this task.
+- Merchant/Admin UI creation path for the campaign was not exercised (out of scope).
+
+DIFF INSPECTION
+- Contracts-only references: yes — Promotion.Infrastructure gained no new project reference;
+  it consumes IPrimaryOfferSelectionPolicy/OfferSelectionCandidate from Tooba.Offer.Contracts.
+- Primary selection consistency: single decision site (the Offer policy); no ordering copy left
+  in the seed.
+- Time-window semantics: single predicate CoversRequiredWindow with half-open pricing semantics,
+  asserted by a dedicated test.
+- Unintended changed files: none. Unrelated untracked artifacts under
+  docs/architecture/evidence/TB-TMAR-USERPREFERENCE-AMSC-001-W3-R1/ were deliberately excluded.
+- No guard, baseline, schema, migration, Host, frontend, pricing-behaviour or store-data change.
+
+RISKS / NOTES
+1. MULTILINGUAL SEED CONTENT (pre-existing, recorded separately, NOT repaired per hard scope):
+   the campaign translations seeded here are fa-IR/en-US only. Per the repository's configured
+   multilingual rule this seed content is not locale-general.
+2. Tooba.Promotion.Infrastructure.csproj now carries an InternalsVisibleTo entry for
+   Tooba.Promotion.Tests. This is test-visibility only; if the Architect prefers evidence-only
+   boundaries this can be replaced by an explicit internal test seam.
+3. Tooba.Promotion.Tests.csproj gained a test-only ProjectReference to Tooba.Offer.Application so
+   the tests use the real PrimaryOfferSelectionPolicy rather than a stub. Test-project edges are
+   not part of the Infrastructure->foreign-Application baseline.
+4. The Development seed still runs only from ProductWorkspaceDevelopmentBootstrap (cold start);
+   the seed remains Development-only and idempotent, but a live campaign created through the
+   Admin/Seller path is not seeded here.
+
+EVIDENCE
+docs/architecture/evidence/TB-PROMOTION-AMAZING-SEED-REPAIR-001/task-receipt.json
+docs/architecture/evidence/TB-PROMOTION-AMAZING-SEED-REPAIR-001/RESULT.bridge.txt
+
+Stop: USER_REVIEW_AFTER_BOUNDED_REPAIR
+END_TOOBA_WORKER_RESULT
