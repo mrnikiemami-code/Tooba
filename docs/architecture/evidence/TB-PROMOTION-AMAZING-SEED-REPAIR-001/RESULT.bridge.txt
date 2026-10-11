@@ -6,7 +6,11 @@ AgentType: cursor
 Status: PASS
 Mode: IMPLEMENT_BOUNDED_REPAIR
 
-Commit: 7562c65b47aa693961dfea929bac5522d396fb98 (code+tests; evidence commit follows in the same task)
+Commit: 154a83b5da5dd021aed6aff8df2f47fcc46fac32 (code+tests)
+Evidence commit: acd973bf0 (docs/evidence; rebase-folded in the same task)
+Rebase note: origin/main advanced twice during execution with unrelated docs/skill
+commits (66279918, a5ca1987c). Local Repair commits were rebased on top and re-pushed;
+the pre-rebase code SHA was 7562c65b.
 Branch: main
 Base-branch: main
 Starting-point verified: origin/main was advanced after 3fb106c4 by unrelated docs commits

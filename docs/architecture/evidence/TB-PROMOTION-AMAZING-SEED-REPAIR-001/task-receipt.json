@@ -6,7 +6,10 @@
   "protocol": "BRIDGE-WAKE-V1",
   "mode": "IMPLEMENT_BOUNDED_REPAIR",
   "parentTask": "fix(seed) 3fb106c4e3382bcb09426748cf251be6dfca5f9c (Architect review REPAIR REQUIRED)",
-  "codeCommit": "7562c65b47aa693961dfea929bac5522d396fb98",
+  "codeCommit": "154a83b5da5dd021aed6aff8df2f47fcc46fac32",
+  "evidenceCommit": "acd973bf0",
+  "preRebaseCodeCommit": "7562c65b47aa693961dfea929bac5522d396fb98",
+  "rebaseNote": "origin/main advanced with unrelated docs/skill commits (66279918, a5ca1987c) during execution; local commits were rebased and re-pushed.",
   "branch": "main",
   "filesChanged": [
     "src/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Development/MerchandisingCampaignDevelopmentSeed.cs",
