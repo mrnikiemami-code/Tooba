@@ -3,9 +3,14 @@ import { localePath, stripLocalePrefix } from "../i18n/routing.ts";
 
 const SECRET_QUERY = /(guestSecret|refreshToken|accessToken|tooba_session|password|otp|secret)/i;
 
+/** نشانی canonical صفحهٔ خانه برای locale. مقصد خروج و fallback بازگشت. */
+export function homePath(locale: Locale): string {
+  return localePath(locale, "/");
+}
+
 /** مسیر بازگشت داخلی امن؛ locale حفظ می‌شود و redirect باز رد می‌شود. */
 export function sanitizeReturnTo(raw: string | null | undefined, locale: Locale): string {
-  const fallback = `/${locale}`;
+  const fallback = homePath(locale);
   if (!raw) {
     return fallback;
   }

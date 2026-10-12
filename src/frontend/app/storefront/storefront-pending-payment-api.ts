@@ -168,6 +168,15 @@ export function canDismissPendingCard(item: Pick<StorefrontPendingPaymentItem, "
   return item.reservationPresentation === "ended";
 }
 
+/**
+ * لغو سفارش فقط وقتی معنا دارد که سفارش هنوز قابل پرداخت/بازگردانی باشد.
+ * سفارشی که سقف رزرو مجددش تمام شده عملاً بسته است؛ نگه‌داشتن دکمهٔ لغو فقط
+ * کاربر را به عملی بی‌اثر دعوت می‌کند. تنها راه باقی‌مانده «دیگر نمایش نده» است.
+ */
+export function canCancelPendingCard(item: Pick<StorefrontPendingPaymentItem, "hasReachedRetryLimit">): boolean {
+  return !item.hasReachedRetryLimit;
+}
+
 export function excludeDismissedPendingItems(
   items: StorefrontPendingPaymentItem[],
   dismissedIds: Iterable<string> = listDismissedPendingCheckoutIds(),

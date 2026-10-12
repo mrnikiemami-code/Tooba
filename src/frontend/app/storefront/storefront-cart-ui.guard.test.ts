@@ -76,8 +76,14 @@ test("cart page recommendations use live feed cards with working ATC reuse", () 
   assert.match(cartPageSource, /pickCartRecommendations/);
   assert.match(cartPageSource, /newArrivals/);
   assert.match(cartPageSource, /featuredProducts/);
-  assert.match(cartSource, /cart-shipping-honest/);
-  assert.match(cartSource, /ارسال رایگان یا نرخ چندحامل جعلی/);
+  // Shipping honesty is an invariant, not a disclaimer block: the cart defers the shipping
+  // amount to checkout and never fabricates a rate or free shipping in the browser.
+  assert.match(cartSource, /هزینه ارسال/);
+  assert.match(cartSource, /در تسویه/);
+  assert.doesNotMatch(cartSource, /ارسال رایگان/);
+  // اصطلاح داخلی «Host» نباید در متن مشتری‌پسند سبد ظاهر شود.
+  assert.doesNotMatch(cartSource, /ارسال از Host/);
+  assert.doesNotMatch(cartSource, /حقیقت Host/);
   assert.match(cartSource, /CART_CHANGED_EVENT/);
   assert.match(cartSource, /AUTH_CHANGED_EVENT/);
   assert.match(cartSource, /addEventListener\(CART_CHANGED_EVENT/);

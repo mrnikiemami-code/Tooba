@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Smartphone } from "lucide-react";
 import { useLocale } from "../../lib/i18n/locale-context.tsx";
-import { sanitizeReturnTo } from "../../lib/auth/login-return-to.ts";
+import { sanitizeReturnTo, homePath } from "../../lib/auth/login-return-to.ts";
 import { bffFetchHeaders, ensureCsrfCookie } from "../../lib/auth/browser-session.ts";
 import { mergeStorefrontCartAfterLogin, resetStorefrontMergeTransition } from "../storefront/storefront-cart-api.ts";
 import { invalidateStorefrontSession, markStorefrontSessionAnonymous, notifyAuthChanged } from "../storefront/storefront-identity-api.ts";
@@ -130,6 +130,8 @@ export function StorefrontCustomerLogin() {
       setStep("mobile");
       setOtp("");
       setChallengeId("");
+      // خروج همیشه به خانهٔ همان locale می‌رسد، از هر صفحه‌ای.
+      router.replace(homePath(locale));
     } finally {
       setBusy(false);
     }

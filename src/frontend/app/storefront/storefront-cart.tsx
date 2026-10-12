@@ -301,16 +301,6 @@ export function StorefrontShopeivaCart({
                 </div>
               ))}
 
-              <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="cart-shipping-honest">
-                <h4 className="text-xs md:text-sm font-bold text-gray-900 flex items-center gap-2 mb-2">
-                  <Truck className="w-4 h-4 text-primary" />
-                  روش ارسال
-                </h4>
-                <p className="text-xs text-gray-500 leading-6">
-                  هزینه و روش ارسال در مرحلهٔ ارسال از حقیقت Host محاسبه می‌شود. در سبد، ارسال رایگان یا نرخ چندحامل جعلی
-                  نمایش داده نمی‌شود.
-                </p>
-              </div>
             </div>
 
             <div className="lg:col-span-1">
@@ -334,7 +324,7 @@ export function StorefrontShopeivaCart({
                       <span className="font-bold text-gray-500">در تسویه</span>
                     </div>
                     <div className="border-t border-gray-200 pt-2.5 flex justify-between">
-                      <span className="font-black">قابل پرداخت (برآورد)</span>
+                      <span className="font-black">قابل پرداخت</span>
                       <span className="font-black text-primary">
                         {formatOfferAmount(cart.subtotalExclusiveOfTax, cart.currency)}
                       </span>
@@ -354,9 +344,6 @@ export function StorefrontShopeivaCart({
                   <div className="flex items-center justify-center gap-3 mt-3 text-[10px] text-gray-400">
                     <span className="flex items-center gap-1">
                       <Shield className="w-3 h-3" /> پرداخت امن
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Truck className="w-3 h-3" /> ارسال از Host
                     </span>
                   </div>
                 </div>
@@ -388,11 +375,7 @@ export function StorefrontShopeivaCart({
                     <p className={`text-[10px] md:text-xs mt-2 leading-5 ${couponDiscount && couponDiscount > 0 ? "text-emerald-700" : "text-amber-700"}`}>
                       {couponMessage}
                     </p>
-                  ) : (
-                    <p className="text-[10px] md:text-xs mt-2 text-gray-500 leading-5">
-                      تخفیف فقط پس از ارزیابی Host اعمال می‌شود؛ مبلغ جعلی در مرورگر ساخته نمی‌شود.
-                    </p>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -405,14 +388,9 @@ export function StorefrontShopeivaCart({
       {recommendationCards.length > 0 ? (
         <section className="pt-8 md:pt-10" data-testid="cart-recommendations" aria-labelledby="cart-recommendations-title">
           <div className="flex items-end justify-between gap-3 mb-4">
-            <div>
-              <h2 id="cart-recommendations-title" className="text-lg md:text-xl font-black text-gray-900">
-                پیشنهاد برای شما
-              </h2>
-              <p className="text-xs md:text-sm text-gray-500 mt-1">
-                کالاهای زنده از ویترین فروشگاه؛ افزودن به سبد همان مسیر Host است.
-              </p>
-            </div>
+            <h2 id="cart-recommendations-title" className="text-lg md:text-xl font-black text-gray-900">
+              پیشنهاد برای شما
+            </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {recommendationCards.map((card) => (
@@ -622,7 +600,7 @@ function CartEmpty({
 
 function CartBenefits() {
   const benefits = [
-    { icon: Truck, title: "ارسال از Host", desc: "هزینه و روش در تسویه مشخص می‌شود" },
+    { icon: Truck, title: "ارسال مطمئن", desc: "هزینه و روش در تسویه مشخص می‌شود" },
     { icon: RotateCcw, title: "بازگشت کالا", desc: "طبق سیاست فروشنده و سفارش" },
     { icon: ShieldCheck, title: "ضمانت اصالت", desc: "Offer زنده از کاتالوگ Tooba" },
     { icon: HeadphonesIcon, title: "پشتیبانی", desc: "پیگیری از پنل مشتری" },

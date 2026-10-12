@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { StorefrontCartApiError, resolveCommittedCheckoutAccess } from "./storefront-cart-api.ts";
 import {
+  canCancelPendingCard,
   canDismissPendingCard,
   ensurePendingItemCheckoutAccess,
   excludeDismissedPendingItems,
@@ -272,4 +273,24 @@ test("hide is only available after the reservation timer ends", () => {
   assert.equal(canDismissPendingCard({ reservationPresentation: "held" }), false);
   assert.equal(canDismissPendingCard({ reservationPresentation: "none" }), false);
   assert.equal(canDismissPendingCard({ reservationPresentation: "ended" }), true);
+});
+
+test("dead pending card keeps only dismiss: cancel is gated on the retry limit", () => {
+  // سقف رزرو مجدد تمام شده → سفارش مرده است؛ «لغو سفارش» فقط کاربر را به عملی بی‌اثر دعوت می‌کند.
+  assert.equal(canCancelPendingCard({ hasReachedRetryLimit: true }), false);
+  assert.equal(canCancelPendingCard({ hasReachedRetryLimit: false }), true);
+
+  const ui = fs.readFileSync(path.join(root, "app/storefront/storefront-pending-payments.tsx"), "utf8");
+  assert.match(ui, /const canCancel = canCancelPendingCard\(item\);/);
+  const gateAt = ui.indexOf("const canCancel = canCancelPendingCard(item);");
+  const cancelButtonAt = ui.indexOf('data-testid="pending-payment-cancel"');
+  const hideButtonAt = ui.indexOf('data-testid="pending-payment-hide"');
+  assert.ok(gateAt >= 0, "cancel payability gate missing");
+  assert.ok(
+    cancelButtonAt > gateAt,
+    "cancel button must be rendered under the payability gate, not unconditionally",
+  );
+  assert.ok(hideButtonAt > cancelButtonAt, "dismiss stays available on a dead card");
+  assert.match(ui, /\{canCancel \? \(/);
+  assert.match(ui, /\{canHide \? \(/);
 });

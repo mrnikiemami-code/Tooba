@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronLeft, LogOut, Package, User, X } from "lucide-react";
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useLocale } from "../../lib/i18n/locale-context.tsx";
-import { canonicalReturnTo, loginPath } from "../../lib/auth/login-return-to.ts";
+import { canonicalReturnTo, homePath, loginPath } from "../../lib/auth/login-return-to.ts";
 import { bffFetchHeaders, ensureCsrfCookie } from "../../lib/auth/browser-session.ts";
 import { clearCartSession, loadStorefrontCart, notifyCartChanged, resetStorefrontMergeTransition } from "./storefront-cart-api.ts";
 import { AUTH_CHANGED_EVENT, loadStorefrontSession, markStorefrontSessionAnonymous, notifyAuthChanged } from "./storefront-identity-api.ts";
@@ -17,6 +17,7 @@ import { AUTH_CHANGED_EVENT, loadStorefrontSession, markStorefrontSessionAnonymo
 export function StorefrontAccountMenu({ compact = false }: { compact?: boolean }) {
   const locale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
   const [authenticated, setAuthenticated] = useState(false);
   const [accountLabel, setAccountLabel] = useState("");
   const [open, setOpen] = useState(false);
@@ -112,6 +113,8 @@ export function StorefrontAccountMenu({ compact = false }: { compact?: boolean }
     setAuthenticated(false);
     setOpen(false);
     setConfirmOpen(false);
+    // خروج از هر صفحه‌ای باید کاربر را به خانهٔ همان locale برگرداند؛ نه روی صفحهٔ محافظت‌شده باقی بگذارد.
+    router.replace(homePath(locale));
   }
 
   async function requestLogout() {

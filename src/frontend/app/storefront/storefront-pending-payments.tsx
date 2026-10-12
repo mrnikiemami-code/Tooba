@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { useLocale, useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import {
+  canCancelPendingCard,
   canDismissPendingCard,
   cancelStorefrontPendingCheckout,
   ensurePendingItemCheckoutAccess,
@@ -224,6 +225,7 @@ export function StorefrontPendingPayments({
               ?? (item.paymentPresentation === "failedRetryable" ? labels.failed : null)
               ?? (item.reservationPresentation === "ended" ? labels.expired : null);
           const canHide = canDismissPendingCard(item);
+          const canCancel = canCancelPendingCard(item);
           return (
             <article
               key={item.checkoutId}
@@ -284,16 +286,18 @@ export function StorefrontPendingPayments({
                     {labels.retry}
                   </button>
                 ) : null}
-                <button
-                  type="button"
-                  data-testid="pending-payment-cancel"
-                  disabled={busyId === item.checkoutId}
-                  className="inline-flex h-9 items-center justify-center gap-1.5 px-3 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
-                  onClick={() => void onCancel(item)}
-                >
-                  <Ban className="w-3.5 h-3.5" />
-                  {labels.cancel}
-                </button>
+                {canCancel ? (
+                  <button
+                    type="button"
+                    data-testid="pending-payment-cancel"
+                    disabled={busyId === item.checkoutId}
+                    className="inline-flex h-9 items-center justify-center gap-1.5 px-3 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+                    onClick={() => void onCancel(item)}
+                  >
+                    <Ban className="w-3.5 h-3.5" />
+                    {labels.cancel}
+                  </button>
+                ) : null}
                 {canHide ? (
                   <button
                     type="button"
