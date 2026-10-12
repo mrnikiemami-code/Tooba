@@ -4,8 +4,8 @@ import {
   parseInvalidLocalePrefix,
   parseLocalePrefix,
   resolvePreferredLocale,
-  type Locale,
 } from "./routing.ts";
+import type { Locale } from "./locale.ts";
 
 export type LocaleMiddlewarePlan =
   | { type: "pass" }

@@ -1,0 +1,51 @@
+﻿node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm 
+help npmrc` for supported config options.
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> tooba-web@0.0.1 test:i18n
+> node --experimental-strip-types --test lib/i18n/locale.test.ts lib/i18n/routing.test.ts lib/i18n/middleware-locale.test.ts
+
+(node:40852) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/i18n/locale.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ dirForLocale: fa is rtl, en is ltr (0.4573ms)
+✔ langForLocale and openGraph locale tags (0.0738ms)
+✔ parseLocale defaults to fa and accepts en (0.0708ms)
+✔ locale does NOT imply currency or market (0.1863ms)
+✔ cookie reader parses tooba_locale (0.1172ms)
+✔ chrome messages share retry key style (0.0534ms)
+✔ active locale maps to a concrete Accept-Language tag (0.0502ms)
+✔ server detail is only displayable in the active locale script (0.223ms)
+(node:38996) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/i18n/middleware-locale.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ prefixed public routes rewrite instead of redirect (0.9038ms)
+✔ internal public path after rewrite does not 308 back to itself (0.1674ms)
+✔ admin stays unprefixed (0.0587ms)
+✔ login is a locale-prefixed public storefront path (0.0849ms)
+✔ host API stays unprefixed (0.0643ms)
+(node:33828) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/i18n/routing.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ localePath prefixes internal routes (0.4525ms)
+✔ parseLocalePrefix extracts locale and internal path (0.4727ms)
+✔ stripLocalePrefix removes prefix (0.0694ms)
+✔ invalid locale prefix detected (0.0966ms)
+✔ public vs excluded paths (0.1513ms)
+✔ canonical and hreflang alternates (0.1004ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 98.2504
