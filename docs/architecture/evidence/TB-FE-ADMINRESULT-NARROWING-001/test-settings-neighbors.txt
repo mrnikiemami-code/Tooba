@@ -1,0 +1,32 @@
+﻿(node:33080) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-nav-integrity.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ admin shell marks settings nav live and clears settings from deferred (0.5451ms)
+✔ technical category-schema is not in live nav group (0.0815ms)
+✔ product list and add-product never double-active (0.2272ms)
+✔ category and attribute library active independently (0.1073ms)
+✔ deep category routes keep category leaf active (0.0649ms)
+✔ landing pages live in ops after home composition (0.104ms)
+✔ menus live in ops after landing pages (0.0956ms)
+✔ sales campaigns live in moderation after promotions (0.0972ms)
+✔ content group sits between ops and finance with Articles label (0.1946ms)
+✔ content articles categories and authors active independently (0.1587ms)
+(node:35160) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/reservation-policy-admin.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ store settings expose reservation fields with save/cancel (0.549ms)
+✔ category inherit/override surface exists (0.0963ms)
+✔ offer inherit/override/effective preview and flash-sale copy (0.1056ms)
+✔ FA RTL and EN LTR without raw config keys (0.0747ms)
+✔ seller mutation is not exposed; effective is read-only (0.094ms)
+✔ mapper uses backend effective source and integer parse (0.1447ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 81.8786

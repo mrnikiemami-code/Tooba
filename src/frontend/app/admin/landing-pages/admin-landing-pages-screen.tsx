@@ -124,10 +124,16 @@ export function AdminLandingPagesScreen() {
       listAdminLandingSections(row.pageId),
       getAdminLandingHome(),
     ]);
-    if (!pageResult.ok || !sectionResult.ok) {
+    if (!pageResult.ok) {
       setBusy(false);
       setMessageTone("error");
-      setMessage(pageResult.ok ? sectionResult.message : pageResult.message);
+      setMessage(pageResult.message);
+      return;
+    }
+    if (!sectionResult.ok) {
+      setBusy(false);
+      setMessageTone("error");
+      setMessage(sectionResult.message);
       return;
     }
     const homeId = home.ok ? home.data.homePageId : homePageId;
@@ -428,7 +434,7 @@ export function AdminLandingPagesScreen() {
     return (
       <main className="rounded-2xl border border-border bg-surface-elevated p-8" data-testid="admin-landing-pages">
         <p>دسترسی به صفحات فروشگاه مجاز نیست.</p>
-        <button type="button" className="mt-3 rounded-xl border px-4 py-2" onClick={refresh}>تلاش دوباره</button>
+        <button type="button" className="mt-3 rounded-xl border px-4 py-2" onClick={() => refresh()}>تلاش دوباره</button>
       </main>
     );
   }

@@ -241,7 +241,7 @@ export default function AdminSettingsPage() {
     setError(null);
     setSuccess(null);
     const result = await saveStoreQuantitySettings(roundingMode);
-    if (result.denied) {
+    if (!result.ok && result.denied) {
       setDenied(true);
       setBusy(false);
       return;
@@ -274,7 +274,7 @@ export default function AdminSettingsPage() {
       methods: methodDraft,
       ...reservation.body,
     });
-    if (result.denied) {
+    if (!result.ok && result.denied) {
       setDenied(true);
       setBusy(false);
       return;
@@ -294,7 +294,7 @@ export default function AdminSettingsPage() {
     setError(null);
     setSuccess(null);
     const result = await saveCheckoutIdentitySettings(identityDraft);
-    if (result.denied) {
+    if (!result.ok && result.denied) {
       setDenied(true);
       setBusy(false);
       return;
@@ -327,7 +327,7 @@ export default function AdminSettingsPage() {
       reservationCommitWindowMinutes: windowMinutes,
       maxCheckoutCommitsPerCustomerInWindow: maxCommits,
     });
-    if (result.denied) {
+    if (!result.ok && result.denied) {
       setDenied(true);
       setBusy(false);
       return;
@@ -352,7 +352,7 @@ export default function AdminSettingsPage() {
     setError(null);
     setSuccess(null);
     const result = await saveAppearanceSettings(appearanceDraft, appearanceThemeDraft, appearanceSkinDraft, appearanceBackgroundDraft);
-    if (result.denied) {
+    if (!result.ok && result.denied) {
       setDenied(true);
       setBusy(false);
       return;

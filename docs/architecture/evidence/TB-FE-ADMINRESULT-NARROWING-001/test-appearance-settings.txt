@@ -1,0 +1,18 @@
+﻿(node:32020) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-appearance-settings.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ settings page has appearance tab on existing shell (0.5742ms)
+✔ current palette dirty cancel save states are wired (0.238ms)
+✔ preview uses canonical registry tokens and leaves status colors (0.6057ms)
+✔ save posts paletteKey only once per helper (0.1022ms)
+✔ save failure leaves dirty draft and surfaces error (0.1058ms)
+✔ TB-FE-ADMINRESULT-NARROWING-001 denied reads are narrowed behind !result.ok (0.0913ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 100.8869

@@ -55,3 +55,15 @@ test("TB-P10-T022 ordinary-user Admin UX: no technical leakage + empty category/
   assert.match(catalog, /بدون قالب‌بندی خام/);
   assert.doesNotMatch(catalog, /بدون HTML/);
 });
+
+test("TB-FE-ADMINRESULT-NARROWING-001 failure messages come from the result that actually failed", () => {
+  // پیش‌تر پیام از شاخهٔ ok خوانده می‌شد؛ باید هر AdminResult مستقل narrow شود.
+  assert.doesNotMatch(list, /pageResult\.ok \? sectionResult\.message : pageResult\.message/);
+  assert.match(list, /if \(!pageResult\.ok\) \{\s*setBusy\(false\);\s*setMessageTone\("error"\);\s*setMessage\(pageResult\.message\);/);
+  assert.match(list, /if \(!sectionResult\.ok\) \{\s*setBusy\(false\);\s*setMessageTone\("error"\);\s*setMessage\(sectionResult\.message\);/);
+});
+
+test("TB-FE-ADMINRESULT-NARROWING-001 retry button does not leak a MouseEvent into refresh", () => {
+  assert.doesNotMatch(list, /onClick=\{refresh\}/);
+  assert.match(list, /onClick=\{\(\) => refresh\(\)\}/);
+});

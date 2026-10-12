@@ -91,3 +91,10 @@ test("save failure leaves dirty draft and surfaces error", () => {
   assert.doesNotMatch(page, /setAppearanceDraft\(\"tooba-blue\"\)/);
   assert.match(form, /admin-settings-appearance-error/);
 });
+
+test("TB-FE-ADMINRESULT-NARROWING-001 denied reads are narrowed behind !result.ok", () => {
+  // خواندن result.denied قبل از بررسی discriminant، شاخهٔ ok:true را هم شامل می‌شد.
+  assert.doesNotMatch(page, /if \(result\.denied\)/);
+  const narrowed = page.match(/if \(!result\.ok && result\.denied\) \{/g) ?? [];
+  assert.equal(narrowed.length, 5);
+});

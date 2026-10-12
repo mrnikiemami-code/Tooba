@@ -1,0 +1,42 @@
+﻿56-error baseline = 56
+after TB-FE-ADMINRESULT-NARROWING-001 = 49
+removed = 7
+added (regressions) = 0
+
+=== ADDED (must be empty) ===
+
+=== REMOVED ===
+app/admin/landing-pages/admin-landing-pages-screen.tsx|130|TS2339 | Property 'message' does not exist on type 'AdminResult<AdminLandingSection[]>'.
+app/admin/landing-pages/admin-landing-pages-screen.tsx|431|TS2322 | Type '(opts?: { notice?: string; tone?: "error" | "success"; }) => void' is not assignable to type 'MouseEventHandler<HTMLButtonElement>'.
+app/admin/settings/page.tsx|244|TS2339 | Property 'denied' does not exist on type '{ ok: true; data: StoreQuantitySettingsView; } | { ok: false; denied?: boolean | undefined; }'.
+app/admin/settings/page.tsx|277|TS2339 | Property 'denied' does not exist on type '{ ok: true; data: HoldPolicySettingsView; } | { ok: false; denied?: boolean | undefined; message?:
+app/admin/settings/page.tsx|297|TS2339 | Property 'denied' does not exist on type '{ ok: true; data: CheckoutIdentitySettingsView; } | { ok: false; denied?: boolean | undefined; mes
+app/admin/settings/page.tsx|330|TS2339 | Property 'denied' does not exist on type '{ ok: true; data: CheckoutAbuseSettingsView; } | { ok: false; denied?: boolean | undefined; messag
+app/admin/settings/page.tsx|355|TS2339 | Property 'denied' does not exist on type '{ ok: true; data: AppearanceSettingsView; } | { ok: false; denied?: boolean | undefined; message?:
+
+=== REMAINING grouped by file ===
+  9  lib/storefront-composition/shared-composition-renderer.tsx
+  6  app/admin/category-admin-screen.tsx
+  4  app/admin/admin-create-shipment-modal.tsx
+  3  app/admin/menus/admin-menus-api.ts
+  3  app/admin/shipping-services-screen.tsx
+  3  features/admin-languages/components/language-list.tsx
+  2  app/admin/catalog-attribute-ui.tsx
+  2  app/admin/category-admin-form.test.ts
+  2  app/admin/landing-pages/admin-landing-page-composer.tsx
+  1  app/admin/admin-api.test.ts
+  1  app/admin/admin-screens.tsx
+  1  app/admin/content-category-admin-screen.tsx
+  1  app/admin/content-list.tsx
+  1  app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts
+  1  app/admin/landing-pages/admin-resource-selector.tsx
+  1  app/admin/product-rich-text-editor.tsx
+  1  app/admin/reservation-policy-editor.tsx
+  1  app/storefront/storefront-landing-blocks.tsx
+  1  app/template-preview/fashion/fashion-template-preview-view.tsx
+  1  app/wallet/wallet-ui.tsx
+  1  design-system/app-data-grid/legacy-grid-bridge.ts
+  1  features/admin-receipts/components/receipts-screen.tsx
+  1  lib/i18n/middleware-locale.ts
+  1  lib/storefront-composition/fashion-demo-preview.ts
+
