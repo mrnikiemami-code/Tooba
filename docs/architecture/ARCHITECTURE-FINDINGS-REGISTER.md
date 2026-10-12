@@ -55,6 +55,30 @@ Owner: Architect review. All changes are versioned on main; keep findings after 
 - **Proposed bounded plan:** locate new owning module/file via git history, update test assertions to canonical boundary (not merely an old path replacement); retain negative proof for prohibited Host ownership. Do not recreate legacy Host code to satisfy stale tests.
 - **Acceptance:** test passes with both required positive and negative ownership assertions.
 
+### TF-006 — Multiple tooltip owners in admin order grid
+- **Status / priority:** OPEN_DEFERRED / P2 (predictability and UX).
+- **Surface:** `app-grid-row-actions.tsx` title, `AdminOrderOperationsMenu` CSS tooltip, and `AppDataGrid` `tooltipValueGetter`/`tooltipShowMode="whenTruncated"`.
+- **Evidence:** WORKER_REPORTED during October 12 order-grid tooltip repair; consumer ownership has not been independently audited.
+- **Harm:** duplicate/overlapping tooltips, mouse-position-dependent behavior.
+- **Proposed bounded plan:** inventory all three paths and consumers; select the canonical owner per semantic trigger and retire redundant rendering without changing accessible names. Test hover, focus, RTL/LTR and truncation.
+- **Acceptance:** one clear tooltip source per trigger; focused grid/design-system regression and browser proof. Not authorized for immediate repair.
+
+### TF-007 — Shared portal tooltip accessibility and dialog/top-layer boundary
+- **Status / priority:** OPEN_DEFERRED / P2 (accessibility and future component integration).
+- **Surface:** `src/frontend/design-system/primitives/overlays.tsx`.
+- **Evidence:** WORKER_REPORTED, uncommitted +88/−5 tooltip portal change: tooltip not associated with trigger by `aria-describedby`; default `document.body` portal may appear beneath native `<dialog>` top layer.
+- **Harm:** inaccessible descriptions for assistive technology; future dialog usage may hide tooltip.
+- **Proposed bounded plan:** review established overlay primitives and real consumers; add accessible relation and only necessary configurable portal host if an authorized use case requires it, avoiding a parallel overlay system. Check focus, hover, scroll, resize, unmount and stacking boundaries.
+- **Acceptance:** accessible trigger/tooltip relationship and tested dialog case where applicable; regression on current admin grid and showcase.
+
+### TF-008 — Residual admin-grid TypeScript and header ownership defects
+- **Status / priority:** OPEN_DEFERRED / P2 (type/build and UI ownership).
+- **Surface:** `admin-screens.tsx` (reported missing `ReactNode` import at ~line 237); actions/checkbox grid columns reportedly lack app-owned header.
+- **Evidence:** WORKER_REPORTED from October 12 tooltip audit; no independent TypeScript run or contract inspection for this entry.
+- **Harm:** persistent TS2304 noise and incomplete header contract usage.
+- **Proposed bounded plan:** reproduce on current HEAD, inspect canonical column/header interfaces, repair owning consumers with focused tests; do not weaken type checks or modify unrelated columns.
+- **Acceptance:** affected TS errors and headers fixed, no new architecture or grid regression.
+
 ## Related observations (not separate authorized tasks)
 
 - **Admin order operations:** earlier assessment noted that pending-payment plus expired reservation may expose only cancel on the admin operations menu. Customer-facing checkout-scoped retry was subsequently fixed and live-accepted (`1ae919f2`, `c1dab07c`), but this **does not** establish that an admin operation should exist or is authorized. Treat as `NEEDS_REPRODUCTION` before filing an implementation task.
@@ -62,5 +86,7 @@ Owner: Architect review. All changes are versioned on main; keep findings after 
 - **Global test baseline:** test-suite failure counts are Worker reports until independently reproduced; no global regeneration or self-authorized cleanup.
 
 ## Review log
+
+- 2026-10-12 — Recorded tooltip ownership, accessibility/top-layer and admin-grid type/header risks (TF-006..008) from Cursor's still-uncommitted tooltip report; status WORKER_REPORTED pending code review.
 
 - 2026-10-12 — Created from audit findings surfaced during `5aba09f8` (reservation-cycle card moved to page bottom; movement itself accepted). Initial findings deferred; no repairs authorized or run.
