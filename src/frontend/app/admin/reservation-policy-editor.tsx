@@ -17,6 +17,13 @@ export interface ReservationPolicyDraft {
   inheritMax: boolean;
 }
 
+/**
+ * کلیدهای مقدار متنی در draft (سه فیلد عددی). این سه فیلد همیشه رشته‌اند و
+ * کلیدهای inherit… بولین هستند؛ جدا کردن این دو گروه، جلوی رسیدن مقدار بولین
+ * به ورودی متنی را می‌گیرد و شکل واقعی ReservationPolicyDraft دست‌نخورده می‌ماند.
+ */
+type ReservationPolicyValueKey = "initial" | "retry" | "max";
+
 export function draftFromView(view: ReservationPolicyEditorView): ReservationPolicyDraft {
   return {
     initial: view.initialHold.overrideValue == null ? "" : String(view.initialHold.overrideValue),
@@ -50,7 +57,7 @@ export function ReservationPolicyEditor({
   testId?: string;
 }) {
   const dir = locale === "en" ? "ltr" : "rtl";
-  const fields: Array<{ key: keyof ReservationPolicyDraft; field: ReservationPolicyFieldView; unitFa: string; unitEn: string }> = [
+  const fields: Array<{ key: ReservationPolicyValueKey; field: ReservationPolicyFieldView; unitFa: string; unitEn: string }> = [
     { key: "initial", field: view.initialHold, unitFa: "دقیقه", unitEn: "minutes" },
     { key: "retry", field: view.retryHold, unitFa: "دقیقه", unitEn: "minutes" },
     { key: "max", field: view.maxCycles, unitFa: "دفعه", unitEn: "cycles" },
