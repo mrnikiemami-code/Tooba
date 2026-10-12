@@ -41,7 +41,16 @@ export function FashionTemplatePreviewView({
   const uiLocale = localeCode.toLowerCase().startsWith("en") ? "en" : "fa";
   const [context, setContext] = useState<LandingRenderContext | null>(null);
   const [page, setPage] = useState<StorefrontLandingPage | null>(null);
-  const [origin, setOrigin] = useState(source === "store" ? FASHION_STORE_ORIGIN : FASHION_DEMO_ORIGIN);
+  /**
+   * منبع نمایشی پیش‌نمایش — فقط در data-demo-origin مصرف می‌شود و هیچ‌گاه مبنای
+   * انتخاب داده یا تشخیص اعتماد sample/store نیست؛ آن تصمیم‌ها از sourceMode و
+   * result.kind/result.purity می‌آیند. چون loadFashionTemplatePreview مقدار origin را
+   * از Host به‌صورت string می‌خواند (fashion-demo-preview.ts:588)، این state صریحاً
+   * string است؛ همان چیزی که view مشترک صنایع هم عملاً دارد.
+   */
+  const [origin, setOrigin] = useState<string>(
+    source === "store" ? FASHION_STORE_ORIGIN : FASHION_DEMO_ORIGIN,
+  );
   const [error, setError] = useState<string | null>(null);
   const [purityOk, setPurityOk] = useState(source === "sample");
 

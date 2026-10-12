@@ -1,0 +1,82 @@
+﻿(node:5124) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-builder-ux-r4.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+node:fs:441
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\TemplateCatalog.cs'
+    at readFileSync (node:fs:441:20)
+    at file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-builder-ux-r4.guard.test.ts:25:23
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async node:internal/modules/esm/loader:639:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'D:\\Users\\User\\source\\repos\\SarvNewVer\\src\\backend\\Modules\\Catalog\\Tooba.Catalog.Domain\\TemplateCatalog.cs'
+}
+
+Node.js v24.15.0
+✖ app\admin\landing-pages\admin-builder-ux-r4.guard.test.ts (104.8844ms)
+(node:26172) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-builder-ux-r7.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+node:fs:441
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Media\Tooba.Media.Domain\MediaAsset.cs'
+    at readFileSync (node:fs:441:20)
+    at file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-builder-ux-r7.guard.test.ts:23:20
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async node:internal/modules/esm/loader:639:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'D:\\Users\\User\\source\\repos\\SarvNewVer\\src\\backend\\Modules\\Media\\Tooba.Media.Domain\\MediaAsset.cs'
+}
+
+Node.js v24.15.0
+✖ app\admin\landing-pages\admin-builder-ux-r7.guard.test.ts (106.5381ms)
+(node:11492) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ PreviewFillPolicy module exists and is centralized (0.6231ms)
+✔ zero Store data uses fake fill, not PreviewPlaceholderSurface as primary path (0.4103ms)
+✔ partial Store data preserves real items and fills only missing slots (0.132ms)
+✔ Store fill never queries Template Catalog / Sample Fashion origin (0.9202ms)
+✔ fake preview items are non-persistent and use preview-fake id prefix (0.1661ms)
+✔ published storefront path does not enable fill (0.0931ms)
+✔ variant contract controls preview cardinality (0.0661ms)
+✔ Banner Store preview with no Store banner uses fake fill not Template banner (0.1626ms)
+✔ localized fake preview resources follow selected locale (0.1112ms)
+✔ same Variant geometry contract used for Sample and Store-empty preview (0.1688ms)
+✔ R8 locks registered (0.2028ms)
+✔ Store Preview fake fill uses dedicated Preview-Fake media, not Template Fashion assets (0.3648ms)
+✔ Sample mode still uses Template Catalog Fashion media paths (0.1912ms)
+✔ R8-R2 Preview-Fake isolation locks registered (0.1464ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 14
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 137.7034
+
+✖ failing tests:
+
+test at app\admin\landing-pages\admin-builder-ux-r4.guard.test.ts:1:1
+✖ app\admin\landing-pages\admin-builder-ux-r4.guard.test.ts (104.8844ms)
+  'test failed'
+
+test at app\admin\landing-pages\admin-builder-ux-r7.guard.test.ts:1:1
+✖ app\admin\landing-pages\admin-builder-ux-r7.guard.test.ts (106.5381ms)
+  'test failed'
