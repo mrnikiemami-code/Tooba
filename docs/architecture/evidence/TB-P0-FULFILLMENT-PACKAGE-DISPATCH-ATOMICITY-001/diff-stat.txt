@@ -1,0 +1,3 @@
+﻿ .../Tooba.Host.Tests/ConsolidatedPackageTests.cs   | 237 ++++++++++++++++++++-
+ .../Directories/FulfillmentDirectory.Packages.cs   | 134 ++++++++++--
+ 2 files changed, 349 insertions(+), 22 deletions(-)

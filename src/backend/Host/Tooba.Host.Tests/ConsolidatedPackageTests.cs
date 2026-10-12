@@ -337,6 +337,218 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         Assert.Equal(ConsolidatedPackageStatus.Dispatched, idempotent.Status);
     }
 
+    // TB-P0-FULFILLMENT-PACKAGE-DISPATCH-ATOMICITY-001 — Gate A: قطعیت کد رهگیری اعضا.
+    [SkippableFact]
+    public async Task Package_dispatch_generates_collision_free_member_tracking_for_uuidv7_prefix_twins()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+        var (directory, _, checkoutId, actor, ready) = await SeedTwoSellerReadyShipmentsAsync(dbSuffix: "tracking-twin");
+
+        // پیش‌شرط: دو شناسهٔ UUIDv7 هم‌زمان در ۳۲ بیت اول (۸ کاراکتر hex) یکسان‌اند؛ پیشوند زمانی
+        // در بازهٔ حدوداً ۶۵ ثانیه‌ای تغییر نمی‌کند. پسوند ۸ کاراکتری قبلی قطعاً تصادم می‌ساخت.
+        var prefixA = ready[0].ShipmentId.ToString("N")[..8].ToUpperInvariant();
+        var prefixB = ready[1].ShipmentId.ToString("N")[..8].ToUpperInvariant();
+        Assert.Equal(prefixA, prefixB);
+
+        var created = await directory.CreateConsolidatedPackageAsync(
+            checkoutId,
+            [ready[0].ShipmentId, ready[1].ShipmentId],
+            "post",
+            "UNIQ-CENTRAL",
+            null,
+            actor,
+            CancellationToken.None);
+
+        var dispatched = await directory.DispatchConsolidatedPackageAsync(
+            created.ConsolidatedPackageId,
+            actor,
+            CancellationToken.None);
+        Assert.Equal(ConsolidatedPackageStatus.Dispatched, dispatched.Status);
+
+        foreach (var member in ready)
+        {
+            var expected = $"UNIQ-CENTRAL-{member.ShipmentId:N}".ToUpperInvariant();
+            var snapshot = await directory.GetAsync(member.FulfillmentId, CancellationToken.None);
+            var shipment = Assert.Single(snapshot!.Shipments, x => x.ShipmentId == member.ShipmentId);
+            Assert.Equal(ShipmentStatus.Dispatched, shipment.Status);
+            Assert.Equal(expected, shipment.TrackingReference);
+        }
+
+        // تکرار idempotent نباید کد موجود را بازنویسی کند.
+        var retried = await directory.DispatchConsolidatedPackageAsync(
+            created.ConsolidatedPackageId,
+            actor,
+            CancellationToken.None);
+        Assert.Equal(ConsolidatedPackageStatus.Dispatched, retried.Status);
+        foreach (var member in ready)
+        {
+            var expected = $"UNIQ-CENTRAL-{member.ShipmentId:N}".ToUpperInvariant();
+            var snapshot = await directory.GetAsync(member.FulfillmentId, CancellationToken.None);
+            var shipment = Assert.Single(snapshot!.Shipments, x => x.ShipmentId == member.ShipmentId);
+            Assert.Equal(expected, shipment.TrackingReference);
+        }
+    }
+
+    // TB-P0-FULFILLMENT-PACKAGE-DISPATCH-ATOMICITY-001 — Gate A: حفظ کد موجود اعضا.
+    [SkippableFact]
+    public async Task Package_dispatch_preserves_pre_assigned_member_tracking()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+        var (directory, _, checkoutId, actor, ready) = await SeedTwoSellerReadyShipmentsAsync(dbSuffix: "preserve");
+        var assigned = new Dictionary<Guid, string>();
+        foreach (var member in ready)
+        {
+            var code = $"KEEP-{member.ShipmentId:N}".ToUpperInvariant();
+            assigned[member.ShipmentId] = code;
+            await directory.AssignTrackingAsync(
+                member.FulfillmentId,
+                member.ShipmentId,
+                actor,
+                code,
+                CancellationToken.None);
+        }
+
+        var created = await directory.CreateConsolidatedPackageAsync(
+            checkoutId,
+            [ready[0].ShipmentId, ready[1].ShipmentId],
+            "post",
+            null,
+            null,
+            actor,
+            CancellationToken.None);
+
+        var dispatched = await directory.DispatchConsolidatedPackageAsync(
+            created.ConsolidatedPackageId,
+            actor,
+            CancellationToken.None);
+        Assert.Equal(ConsolidatedPackageStatus.Dispatched, dispatched.Status);
+
+        foreach (var member in ready)
+        {
+            var snapshot = await directory.GetAsync(member.FulfillmentId, CancellationToken.None);
+            var shipment = Assert.Single(snapshot!.Shipments, x => x.ShipmentId == member.ShipmentId);
+            Assert.Equal(ShipmentStatus.Dispatched, shipment.Status);
+            Assert.Equal(assigned[member.ShipmentId], shipment.TrackingReference);
+        }
+    }
+
+    // TB-P0-FULFILLMENT-PACKAGE-DISPATCH-ATOMICITY-001 — Gate B: نبود ارسال جزئی ثبت‌شده.
+    [SkippableFact]
+    public async Task Package_dispatch_rejects_pre_taken_generated_code_without_partial_dispatch()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+        var (directory, _, checkoutId, actor, ready) = await SeedTwoSellerReadyShipmentsAsync(dbSuffix: "precheck");
+        var (decoyDirectory, _, _, decoyActor, decoyReady) =
+            await SeedTwoSellerReadyShipmentsAsync(dbSuffix: "precheck-decoy");
+
+        // کدی که عضو دوم تولید می‌کند را روی مرسوله‌ای بیرون بسته از پیش ثبت می‌کنیم.
+        var takenCode = $"PRECHECK-CENTRAL-{ready[1].ShipmentId:N}".ToUpperInvariant();
+        await decoyDirectory.AssignTrackingAsync(
+            decoyReady[0].FulfillmentId,
+            decoyReady[0].ShipmentId,
+            decoyActor,
+            takenCode,
+            CancellationToken.None);
+
+        var created = await directory.CreateConsolidatedPackageAsync(
+            checkoutId,
+            [ready[0].ShipmentId, ready[1].ShipmentId],
+            "post",
+            "PRECHECK-CENTRAL",
+            null,
+            actor,
+            CancellationToken.None);
+
+        var failure = await Assert.ThrowsAsync<ContractOperationException>(() =>
+            directory.DispatchConsolidatedPackageAsync(
+                created.ConsolidatedPackageId,
+                actor,
+                CancellationToken.None));
+        Assert.Equal("fulfillment.tracking.duplicate", failure.Code);
+
+        // هیچ ارسال جزئی ثبت نشده: هر دو عضو Created و بدون کد رهگیری، بسته همچنان Created.
+        foreach (var member in ready)
+        {
+            var snapshot = await directory.GetAsync(member.FulfillmentId, CancellationToken.None);
+            var shipment = Assert.Single(snapshot!.Shipments, x => x.ShipmentId == member.ShipmentId);
+            Assert.Equal(ShipmentStatus.Created, shipment.Status);
+            Assert.Null(shipment.TrackingReference);
+        }
+
+        var packages = await directory.GetPackagesForCheckoutAsync(checkoutId, CancellationToken.None);
+        Assert.Equal(ConsolidatedPackageStatus.Created, Assert.Single(packages).Status);
+
+        // کد از پیش ثبت‌شده دست‌نخورده است.
+        var decoySnapshot = await decoyDirectory.GetAsync(decoyReady[0].FulfillmentId, CancellationToken.None);
+        Assert.Equal(
+            takenCode,
+            Assert.Single(decoySnapshot!.Shipments, x => x.ShipmentId == decoyReady[0].ShipmentId).TrackingReference);
+    }
+
+    // TB-P0-FULFILLMENT-PACKAGE-DISPATCH-ATOMICITY-001 — Gate B: تک‌کامیت بودن بستهٔ تجمیعی.
+    [SkippableFact]
+    public async Task Package_dispatch_is_single_commit_and_leaves_no_partial_state_on_late_failure()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+        var (directory, _, checkoutId, actor, ready) = await SeedTwoSellerReadyShipmentsAsync(
+            dbSuffix: "atomic",
+            inventoryGateway: new ThrowingInventoryGateway(failOnConsumeCall: 2));
+
+        var created = await directory.CreateConsolidatedPackageAsync(
+            checkoutId,
+            [ready[0].ShipmentId, ready[1].ShipmentId],
+            "post",
+            "ATOMIC-CENTRAL",
+            null,
+            actor,
+            CancellationToken.None);
+
+        // شکست تزریقی روی مصرف رزرو عضو دوم — یعنی پس از اعتبارسنجی موفق و اعمال درون‌حافظه‌ای عضو اول.
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            directory.DispatchConsolidatedPackageAsync(
+                created.ConsolidatedPackageId,
+                actor,
+                CancellationToken.None));
+
+        foreach (var member in ready)
+        {
+            var snapshot = await directory.GetAsync(member.FulfillmentId, CancellationToken.None);
+            var shipment = Assert.Single(snapshot!.Shipments, x => x.ShipmentId == member.ShipmentId);
+            Assert.Equal(ShipmentStatus.Created, shipment.Status);
+            Assert.Null(shipment.TrackingReference);
+        }
+
+        var packages = await directory.GetPackagesForCheckoutAsync(checkoutId, CancellationToken.None);
+        Assert.Equal(ConsolidatedPackageStatus.Created, Assert.Single(packages).Status);
+
+        // مسیر سالم پس از شکست: کل بسته در یک کامیت کامل می‌شود.
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("store-pkg-atomic", "tenant-pkg-atomic"));
+        var cs = _container!.GetConnectionString();
+        var retryDirectory = new FulfillmentDirectory(
+            CreateFulfillmentDb(cs, commerce),
+            new OpenFulfillmentUseCaseGuard(),
+            new OrderFulfillmentBridge(CreateOrderDb(cs, commerce)),
+            new NoopInventoryGateway(),
+            new FulfillmentInstrumentation(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator());
+
+        var completed = await retryDirectory.DispatchConsolidatedPackageAsync(
+            created.ConsolidatedPackageId,
+            actor,
+            CancellationToken.None);
+        Assert.Equal(ConsolidatedPackageStatus.Dispatched, completed.Status);
+        foreach (var member in ready)
+        {
+            var expected = $"ATOMIC-CENTRAL-{member.ShipmentId:N}".ToUpperInvariant();
+            var snapshot = await retryDirectory.GetAsync(member.FulfillmentId, CancellationToken.None);
+            var shipment = Assert.Single(snapshot!.Shipments, x => x.ShipmentId == member.ShipmentId);
+            Assert.Equal(ShipmentStatus.Dispatched, shipment.Status);
+            Assert.Equal(expected, shipment.TrackingReference);
+        }
+    }
+
     [SkippableFact]
     public async Task Deliver_orchestrates_members_and_order_cancel_voids_package()
     {
@@ -410,7 +622,8 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         Guid CheckoutId,
         Guid Actor,
         IReadOnlyList<(Guid FulfillmentId, Guid ShipmentId)> Ready)> SeedTwoSellerReadyShipmentsAsync(
-        string dbSuffix = "main")
+        string dbSuffix = "main",
+        IFulfillmentInventoryGateway? inventoryGateway = null)
     {
         var cs = _container!.GetConnectionString();
         var commerce = new FixedCommerceContext();
@@ -451,7 +664,7 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         var directory = new FulfillmentDirectory(fulfillmentDb,
             new OpenFulfillmentUseCaseGuard(),
             new OrderFulfillmentBridge(orderDb),
-            new NoopInventoryGateway(), new FulfillmentInstrumentation(), new SystemUtcClock(), new UuidV7IdGenerator());
+            inventoryGateway ?? new NoopInventoryGateway(), new FulfillmentInstrumentation(), new SystemUtcClock(), new UuidV7IdGenerator());
 
         await directory.CreateFromPaidSellerOrdersAsync(
             Guid.NewGuid(),
@@ -601,6 +814,26 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
     {
         public Task ConsumeReservationAsync(Guid reservationId, CancellationToken cancellationToken) =>
             Task.CompletedTask;
+
+        public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+    }
+
+    /// <summary>درز موجودی با شکست تزریقی روی n‑امین مصرف رزرو (برای آزمون اتمیک‌بودن).</summary>
+    private sealed class ThrowingInventoryGateway(int failOnConsumeCall) : IFulfillmentInventoryGateway
+    {
+        private int _calls;
+
+        public Task ConsumeReservationAsync(Guid reservationId, CancellationToken cancellationToken)
+        {
+            _calls++;
+            if (_calls == failOnConsumeCall)
+            {
+                throw new InvalidOperationException("inventory.consume.injected_failure");
+            }
+
+            return Task.CompletedTask;
+        }
 
         public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken) =>
             Task.CompletedTask;

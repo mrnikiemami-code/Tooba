@@ -1,0 +1,280 @@
+﻿Test run for D:\temp\tooba-verify\bin\Tooba.Host.Tests\debug\Tooba.Host.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.3+b1b99bdeb3 (64-bit .NET 8.0.24)
+[xUnit.net 00:00:00.12]   Discovering: Tooba.Host.Tests
+[xUnit.net 00:00:00.25]   Discovered:  Tooba.Host.Tests
+[xUnit.net 00:00:00.27]   Starting:    Tooba.Host.Tests
+[testcontainers.org 00:00:00.10] Connected to Docker:
+  Host: npipe://./pipe/docker_engine
+  Server Version: 29.4.2
+  Kernel Version: 6.6.87.2-microsoft-standard-WSL2
+  API Version: 1.54
+  Operating System: Docker Desktop
+  Total Memory: 31.22 GB
+  Labels: 
+    com.docker.desktop.address=npipe://\\.\pipe\docker_cli
+[testcontainers.org 00:00:00.20] Docker container d015650aa615 created
+[testcontainers.org 00:00:00.23] Start Docker container d015650aa615
+[testcontainers.org 00:00:00.40] Wait for Docker container d015650aa615 to complete readiness checks
+[testcontainers.org 00:00:00.40] Docker container d015650aa615 ready
+[testcontainers.org 00:00:02.50] Docker container 41876b41a705 created
+[testcontainers.org 00:00:02.51] Start Docker container 41876b41a705
+[testcontainers.org 00:00:02.67] Wait for Docker container 41876b41a705 to complete readiness checks
+[testcontainers.org 00:00:02.68] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 41876b41a705
+[testcontainers.org 00:00:03.76] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 41876b41a705
+[testcontainers.org 00:00:03.82] Docker container 41876b41a705 ready
+[testcontainers.org 00:00:05.31] Delete Docker container 41876b41a705
+dotnet : [xUnit.net 00:00:05.97]     Tooba.Host.Tests.ConsolidatedPackageTests.Direct_member_dispatch_blocked_while_loc
+ked_and_package_dispatch_orchestrates [FAIL]
+At C:\Users\User\AppData\Local\Temp\ps-script-3c33c965-2727-4223-a5b0-20e6a6b1552a.ps1:111 char:1
++ dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...estrates [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[xUnit.net 00:00:05.98]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:05.98]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:05.98]       Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+[xUnit.net 00:00:05.98]       ---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.shipment.locked_by_consolidated_package
+[xUnit.net 00:00:05.98]       Stack Trace:
+[xUnit.net 00:00:05.98]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs(312,0): at Tooba.Host.Tests.ConsolidatedPackageTests.Direct_member_dispatch_blocked_while_locked_and_package_dispatch_orchestrates()
+[xUnit.net 00:00:05.98]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:05.98]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:05.98]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Directories\FulfillmentDirectory.Packages.cs(469,0): at Tooba.Fulfillment.Infrastructure.Directories.FulfillmentDirectory.EnsureShipmentNotLockedByPackageAsync(Guid shipmentId, CancellationToken cancellationToken)
+[xUnit.net 00:00:05.98]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Directories\FulfillmentDirectory.cs(451,0): at Tooba.Fulfillment.Infrastructure.Directories.FulfillmentDirectory.DispatchShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken)
+  Failed Tooba.Host.Tests.ConsolidatedPackageTests.Direct_member_dispatch_blocked_while_locked_and_package_dispatch_orchestrates [1 s]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.InvalidOperationException)
+Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.shipment.locked_by_consolidated_package
+  Stack Trace:
+     at Tooba.Host.Tests.ConsolidatedPackageTests.Direct_member_dispatch_blocked_while_locked_and_package_dispatch_orchestrates() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs:line 312
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Tooba.Fulfillment.Infrastructure.Directories.FulfillmentDirectory.EnsureShipmentNotLockedByPackageAsync(Guid shipmentId, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Directories\FulfillmentDirectory.Packages.cs:line 469
+   at Tooba.Fulfillment.Infrastructure.Directories.FulfillmentDirectory.DispatchShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Directories\FulfillmentDirectory.cs:line 451
+[testcontainers.org 00:00:05.72] Docker container 871e328908ee created
+[testcontainers.org 00:00:05.72] Start Docker container 871e328908ee
+[testcontainers.org 00:00:05.87] Wait for Docker container 871e328908ee to complete readiness checks
+[testcontainers.org 00:00:05.87] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 871e328908ee
+[testcontainers.org 00:00:06.93] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 871e328908ee
+[testcontainers.org 00:00:06.98] Docker container 871e328908ee ready
+[testcontainers.org 00:00:06.99] Delete Docker container 871e328908ee
+[xUnit.net 00:00:07.61]     Tooba.Host.Tests.ConsolidatedPackageTests.Domain_assign_tracking_only_while_created [FAIL]
+[xUnit.net 00:00:07.61]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:07.61]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:07.61]       Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+[xUnit.net 00:00:07.61]       ---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.package.tracking_locked
+[xUnit.net 00:00:07.61]       Stack Trace:
+[xUnit.net 00:00:07.61]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs(786,0): at Tooba.Host.Tests.ConsolidatedPackageTests.Domain_assign_tracking_only_while_created()
+[xUnit.net 00:00:07.61]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:07.61]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:07.61]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:07.61]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Domain\Aggregates\ConsolidatedPackage.cs(223,0): at Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackage.AssignTracking(String trackingReference, DateTimeOffset now)
+[xUnit.net 00:00:07.61]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs(787,0): at Tooba.Host.Tests.ConsolidatedPackageTests.<>c__DisplayClass18_0.<Domain_assign_tracking_only_while_created>b__1()
+  Failed Tooba.Host.Tests.ConsolidatedPackageTests.Domain_assign_tracking_only_while_created [2 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.InvalidOperationException)
+Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.package.tracking_locked
+  Stack Trace:
+     at Tooba.Host.Tests.ConsolidatedPackageTests.Domain_assign_tracking_only_while_created() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs:line 786
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+----- Inner Stack Trace -----
+   at Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackage.AssignTracking(String trackingReference, DateTimeOffset now) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Domain\Aggregates\ConsolidatedPackage.cs:line 223
+   at Tooba.Host.Tests.ConsolidatedPackageTests.<>c__DisplayClass18_0.<Domain_assign_tracking_only_while_created>b__1() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs:line 787
+[testcontainers.org 00:00:07.35] Docker container b8cd7abac12d created
+[testcontainers.org 00:00:07.35] Start Docker container b8cd7abac12d
+[testcontainers.org 00:00:07.53] Wait for Docker container b8cd7abac12d to complete readiness checks
+[testcontainers.org 00:00:07.53] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container b8cd7abac12d
+[testcontainers.org 00:00:08.61] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container b8cd7abac12d
+[testcontainers.org 00:00:08.66] Docker container b8cd7abac12d ready
+[testcontainers.org 00:00:09.00] Delete Docker container b8cd7abac12d
+[xUnit.net 00:00:09.60]     
+Tooba.Host.Tests.ConsolidatedPackageTests.Deliver_orchestrates_members_and_order_cancel_voids_package [FAIL]
+[xUnit.net 00:00:09.60]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:09.60]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:09.60]       Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+[xUnit.net 00:00:09.60]       ---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.shipment.locked_by_consolidated_package
+[xUnit.net 00:00:09.60]       Stack Trace:
+[xUnit.net 00:00:09.60]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs(577,0): at Tooba.Host.Tests.ConsolidatedPackageTests.Deliver_orchestrates_members_and_order_cancel_voids_package()
+[xUnit.net 00:00:09.60]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:09.60]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:09.60]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Directories\FulfillmentDirectory.Packages.cs(469,0): at Tooba.Fulfillment.Infrastructure.Directories.FulfillmentDirectory.EnsureShipmentNotLockedByPackageAsync(Guid shipmentId, CancellationToken cancellationToken)
+[xUnit.net 00:00:09.60]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Directories\FulfillmentDirectory.cs(462,0): at Tooba.Fulfillment.Infrastructure.Directories.FulfillmentDirectory.DeliverShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken)
+  Failed Tooba.Host.Tests.ConsolidatedPackageTests.Deliver_orchestrates_members_and_order_cancel_voids_package [341 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.InvalidOperationException)
+Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.shipment.locked_by_consolidated_package
+  Stack Trace:
+     at Tooba.Host.Tests.ConsolidatedPackageTests.Deliver_orchestrates_members_and_order_cancel_voids_package() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs:line 577
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Tooba.Fulfillment.Infrastructure.Directories.FulfillmentDirectory.EnsureShipmentNotLockedByPackageAsync(Guid shipmentId, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Directories\FulfillmentDirectory.Packages.cs:line 469
+   at Tooba.Fulfillment.Infrastructure.Directories.FulfillmentDirectory.DeliverShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Directories\FulfillmentDirectory.cs:line 462
+[testcontainers.org 00:00:09.33] Docker container 94d137f1ea11 created
+[testcontainers.org 00:00:09.34] Start Docker container 94d137f1ea11
+[testcontainers.org 00:00:09.50] Wait for Docker container 94d137f1ea11 to complete readiness checks
+[testcontainers.org 00:00:09.50] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 94d137f1ea11
+[testcontainers.org 00:00:10.58] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 94d137f1ea11
+[testcontainers.org 00:00:10.65] Docker container 94d137f1ea11 ready
+[testcontainers.org 00:00:10.95] Delete Docker container 94d137f1ea11
+  Passed Tooba.Host.Tests.ConsolidatedPackageTests.Cancel_releases_lock_and_allows_rebuild [293 ms]
+[testcontainers.org 00:00:11.30] Docker container d0181f248c11 created
+[testcontainers.org 00:00:11.30] Start Docker container d0181f248c11
+[testcontainers.org 00:00:11.46] Wait for Docker container d0181f248c11 to complete readiness checks
+[testcontainers.org 00:00:11.46] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container d0181f248c11
+[testcontainers.org 00:00:12.52] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container d0181f248c11
+[testcontainers.org 00:00:12.59] Docker container d0181f248c11 ready
+[testcontainers.org 00:00:12.94] Delete Docker container d0181f248c11
+  Passed Tooba.Host.Tests.ConsolidatedPackageTests.Package_dispatch_rejects_pre_taken_generated_code_without_partial_dispatch [346 ms]
+[testcontainers.org 00:00:13.35] Docker container cb141278cdd6 created
+[testcontainers.org 00:00:13.36] Start Docker container cb141278cdd6
+[testcontainers.org 00:00:13.53] Wait for Docker container cb141278cdd6 to complete readiness checks
+[testcontainers.org 00:00:13.54] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container cb141278cdd6
+[testcontainers.org 00:00:14.60] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container cb141278cdd6
+[testcontainers.org 00:00:15.67] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container cb141278cdd6
+[testcontainers.org 00:00:15.74] Docker container cb141278cdd6 ready
+[testcontainers.org 00:00:16.02] Delete Docker container cb141278cdd6
+  Passed Tooba.Host.Tests.ConsolidatedPackageTests.Package_dispatch_is_single_commit_and_leaves_no_partial_state_on_late_failure [268 ms]
+[testcontainers.org 00:00:16.39] Docker container 4acfdcf1d2f2 created
+[testcontainers.org 00:00:16.39] Start Docker container 4acfdcf1d2f2
+[testcontainers.org 00:00:16.57] Wait for Docker container 4acfdcf1d2f2 to complete readiness checks
+[testcontainers.org 00:00:16.58] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 4acfdcf1d2f2
+[testcontainers.org 00:00:17.64] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 4acfdcf1d2f2
+[testcontainers.org 00:00:17.71] Docker container 4acfdcf1d2f2 ready
+[testcontainers.org 00:00:17.71] Delete Docker container 4acfdcf1d2f2
+[xUnit.net 00:00:18.32]     Tooba.Host.Tests.ConsolidatedPackageTests.Domain_create_requires_two_distinct_sellers 
+[FAIL]
+[xUnit.net 00:00:18.32]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:18.32]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:18.32]       Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+[xUnit.net 00:00:18.32]       ---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.package.requires_multi_seller
+[xUnit.net 00:00:18.32]       Stack Trace:
+[xUnit.net 00:00:18.32]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs(89,0): at Tooba.Host.Tests.ConsolidatedPackageTests.Domain_create_requires_two_distinct_sellers()
+[xUnit.net 00:00:18.32]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:18.32]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:18.32]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:18.32]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Domain\Aggregates\ConsolidatedPackage.cs(104,0): at Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackage.Create(Guid packageId, Func`1 newId, Guid checkoutId, IReadOnlyList`1 members, String shippingMethodCode, String shippingMethodLabel, String trackingReference, String note, Nullable`1 createdBy, DateTimeOffset now)
+[xUnit.net 00:00:18.32]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs(90,0): at Tooba.Host.Tests.ConsolidatedPackageTests.<>c__DisplayClass4_0.<Domain_create_requires_two_distinct_sellers>b__1()
+  Failed Tooba.Host.Tests.ConsolidatedPackageTests.Domain_create_requires_two_distinct_sellers [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.InvalidOperationException)
+Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.package.requires_multi_seller
+  Stack Trace:
+     at Tooba.Host.Tests.ConsolidatedPackageTests.Domain_create_requires_two_distinct_sellers() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs:line 89
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+----- Inner Stack Trace -----
+   at Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackage.Create(Guid packageId, Func`1 newId, Guid checkoutId, IReadOnlyList`1 members, String shippingMethodCode, String shippingMethodLabel, String trackingReference, String note, Nullable`1 createdBy, DateTimeOffset now) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Domain\Aggregates\ConsolidatedPackage.cs:line 104
+   at Tooba.Host.Tests.ConsolidatedPackageTests.<>c__DisplayClass4_0.<Domain_create_requires_two_distinct_sellers>b__1() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs:line 90
+[testcontainers.org 00:00:18.06] Docker container f8caf67931e9 created
+[testcontainers.org 00:00:18.06] Start Docker container f8caf67931e9
+[testcontainers.org 00:00:18.20] Wait for Docker container f8caf67931e9 to complete readiness checks
+[testcontainers.org 00:00:18.20] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container f8caf67931e9
+[testcontainers.org 00:00:19.28] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container f8caf67931e9
+[testcontainers.org 00:00:19.33] Docker container f8caf67931e9 ready
+[testcontainers.org 00:00:19.60] Delete Docker container f8caf67931e9
+  Passed Tooba.Host.Tests.ConsolidatedPackageTests.Package_dispatch_preserves_pre_assigned_member_tracking [260 ms]
+[testcontainers.org 00:00:19.95] Docker container ef1b351b0be5 created
+[testcontainers.org 00:00:19.96] Start Docker container ef1b351b0be5
+[testcontainers.org 00:00:20.12] Wait for Docker container ef1b351b0be5 to complete readiness checks
+[testcontainers.org 00:00:20.12] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container ef1b351b0be5
+[testcontainers.org 00:00:21.20] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container ef1b351b0be5
+[testcontainers.org 00:00:21.27] Docker container ef1b351b0be5 ready
+[testcontainers.org 00:00:21.27] Delete Docker container ef1b351b0be5
+[xUnit.net 00:00:21.86]     
+Tooba.Host.Tests.ConsolidatedPackageTests.Domain_cancel_releases_membership_and_blocks_after_dispatch [FAIL]
+[xUnit.net 00:00:21.86]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:21.86]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:21.86]       Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+[xUnit.net 00:00:21.86]       ---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.package.cancel_after_dispatch
+[xUnit.net 00:00:21.86]       Stack Trace:
+[xUnit.net 00:00:21.86]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs(137,0): at Tooba.Host.Tests.ConsolidatedPackageTests.Domain_cancel_releases_membership_and_blocks_after_dispatch()
+[xUnit.net 00:00:21.86]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:21.86]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:21.86]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:21.86]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Domain\Aggregates\ConsolidatedPackage.cs(163,0): at Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackage.Cancel(DateTimeOffset now)
+[xUnit.net 00:00:21.86]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs(137,0): at Tooba.Host.Tests.ConsolidatedPackageTests.<>c__DisplayClass5_0.<Domain_cancel_releases_membership_and_blocks_after_dispatch>b__3()
+  Failed Tooba.Host.Tests.ConsolidatedPackageTests.Domain_cancel_releases_membership_and_blocks_after_dispatch [1 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.InvalidOperationException)
+Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.package.cancel_after_dispatch
+  Stack Trace:
+     at Tooba.Host.Tests.ConsolidatedPackageTests.Domain_cancel_releases_membership_and_blocks_after_dispatch() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs:line 137
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+----- Inner Stack Trace -----
+   at Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackage.Cancel(DateTimeOffset now) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Domain\Aggregates\ConsolidatedPackage.cs:line 163
+   at Tooba.Host.Tests.ConsolidatedPackageTests.<>c__DisplayClass5_0.<Domain_cancel_releases_membership_and_blocks_after_dispatch>b__3() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs:line 137
+[testcontainers.org 00:00:21.59] Docker container ab9ffa42b8b5 created
+[testcontainers.org 00:00:21.60] Start Docker container ab9ffa42b8b5
+[testcontainers.org 00:00:21.74] Wait for Docker container ab9ffa42b8b5 to complete readiness checks
+[testcontainers.org 00:00:21.74] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container ab9ffa42b8b5
+[testcontainers.org 00:00:22.81] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container ab9ffa42b8b5
+[testcontainers.org 00:00:22.87] Docker container ab9ffa42b8b5 ready
+[testcontainers.org 00:00:23.14] Delete Docker container ab9ffa42b8b5
+  Passed Tooba.Host.Tests.ConsolidatedPackageTests.Create_rejects_mixed_shipping_methods_and_inherits_shared_method [272 ms]
+[testcontainers.org 00:00:23.49] Docker container 9825433190c9 created
+[testcontainers.org 00:00:23.50] Start Docker container 9825433190c9
+[testcontainers.org 00:00:23.67] Wait for Docker container 9825433190c9 to complete readiness checks
+[testcontainers.org 00:00:23.67] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 9825433190c9
+[testcontainers.org 00:00:24.74] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 9825433190c9
+[testcontainers.org 00:00:24.79] Docker container 9825433190c9 ready
+[testcontainers.org 00:00:25.05] Delete Docker container 9825433190c9
+  Passed Tooba.Host.Tests.ConsolidatedPackageTests.Package_dispatch_generates_collision_free_member_tracking_for_uuidv7_prefix_twins [256 ms]
+[testcontainers.org 00:00:25.40] Docker container 3924953c7d6c created
+[testcontainers.org 00:00:25.41] Start Docker container 3924953c7d6c
+[testcontainers.org 00:00:25.55] Wait for Docker container 3924953c7d6c to complete readiness checks
+[testcontainers.org 00:00:25.55] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 3924953c7d6c
+[testcontainers.org 00:00:26.60] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container 3924953c7d6c
+[testcontainers.org 00:00:26.66] Docker container 3924953c7d6c ready
+[testcontainers.org 00:00:26.92] Delete Docker container 3924953c7d6c
+  Passed Tooba.Host.Tests.ConsolidatedPackageTests.Concurrent_create_rejects_double_active_membership [257 ms]
+[testcontainers.org 00:00:27.32] Docker container bbfb46dc3fca created
+[testcontainers.org 00:00:27.33] Start Docker container bbfb46dc3fca
+[testcontainers.org 00:00:27.47] Wait for Docker container bbfb46dc3fca to complete readiness checks
+[testcontainers.org 00:00:27.48] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container bbfb46dc3fca
+[testcontainers.org 00:00:28.56] Execute "pg_isready --host localhost --dbname tooba_consolidated_pkg --username tooba" at Docker container bbfb46dc3fca
+[testcontainers.org 00:00:28.63] Docker container bbfb46dc3fca ready
+[testcontainers.org 00:00:28.87] Delete Docker container bbfb46dc3fca
+[xUnit.net 00:00:29.50]     Tooba.Host.Tests.ConsolidatedPackageTests.Create_requires_two_sellers_and_rejects_single_se
+ller_and_duplicate_membership [FAIL]
+[xUnit.net 00:00:29.50]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:29.50]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:29.50]       Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+[xUnit.net 00:00:29.50]       ---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.package.requires_multi_seller
+[xUnit.net 00:00:29.50]       Stack Trace:
+[xUnit.net 00:00:29.50]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs(147,0): at Tooba.Host.Tests.ConsolidatedPackageTests.Create_requires_two_sellers_and_rejects_single_seller_and_duplicate_membership()
+[xUnit.net 00:00:29.50]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:29.50]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:29.50]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Domain\Aggregates\ConsolidatedPackage.cs(92,0): at Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackage.Create(Guid packageId, Func`1 newId, Guid checkoutId, IReadOnlyList`1 members, String shippingMethodCode, String shippingMethodLabel, String trackingReference, String note, Nullable`1 createdBy, DateTimeOffset now)
+[xUnit.net 00:00:29.50]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Directories\FulfillmentDirectory.Packages.cs(186,0): at Tooba.Fulfillment.Infrastructure.Directories.FulfillmentDirectory.CreateConsolidatedPackageAsync(Guid checkoutId, IReadOnlyList`1 shipmentIds, String shippingMethodCode, String trackingReference, String note, Guid actorUserId, CancellationToken cancellationToken)
+[xUnit.net 00:00:29.51]   Finished:    Tooba.Host.Tests
+  Failed Tooba.Host.Tests.ConsolidatedPackageTests.Create_requires_two_sellers_and_rejects_single_seller_and_duplicate_membership [237 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.InvalidOperationException)
+Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException)
+---- Tooba.BuildingBlocks.ContractOperationException : fulfillment.package.requires_multi_seller
+  Stack Trace:
+     at Tooba.Host.Tests.ConsolidatedPackageTests.Create_requires_two_sellers_and_rejects_single_seller_and_duplicate_membership() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\ConsolidatedPackageTests.cs:line 147
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackage.Create(Guid packageId, Func`1 newId, Guid checkoutId, IReadOnlyList`1 members, String shippingMethodCode, String shippingMethodLabel, String trackingReference, String note, Nullable`1 createdBy, DateTimeOffset now) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Domain\Aggregates\ConsolidatedPackage.cs:line 92
+   at Tooba.Fulfillment.Infrastructure.Directories.FulfillmentDirectory.CreateConsolidatedPackageAsync(Guid checkoutId, IReadOnlyList`1 shipmentIds, String shippingMethodCode, String trackingReference, String note, Guid actorUserId, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Directories\FulfillmentDirectory.Packages.cs:line 186
+
+Test Run Failed.
+Total tests: 13
+     Passed: 7
+     Failed: 6
+ Total time: 29.7972 Seconds

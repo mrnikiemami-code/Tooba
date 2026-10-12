@@ -18,6 +18,9 @@ public sealed partial class FulfillmentDirectory
     // Consolidated packages (ARCH-SIZE-001 split, AMSC-001 W2 — cohesive, behavior-preserving)
     // ---------------------------------------------------------------------------------
 
+    /// <summary>سقف طول کد رهگیری مرسوله — هم‌راستا با ستون shipments.tracking_reference.</summary>
+    private const int MaxTrackingReferenceLength = 128;
+
     /// <inheritdoc />
     public async Task<IReadOnlyList<ConsolidatedPackageSnapshot>> GetPackagesForCheckoutAsync(
         Guid checkoutId,
@@ -239,6 +242,11 @@ public sealed partial class FulfillmentDirectory
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// دو فاز: (۱) اعتبارسنجی کامل و ساخت کدهای رهگیری بدون هیچ نوشتن، (۲) اعمال همهٔ
+    /// تغییرات و تنها یک <c>SaveChangesAsync</c> برای کل بسته. پیش از این، هر عضو جداگانه
+    /// ذخیره می‌شد؛ با شکست عضو دوم، ارسال عضو اول به‌صورت جزئی ثبت می‌ماند.
+    /// </remarks>
     public async Task<ConsolidatedPackageSnapshot> DispatchConsolidatedPackageAsync(
         Guid consolidatedPackageId,
         Guid actorUserId,
@@ -262,13 +270,50 @@ public sealed partial class FulfillmentDirectory
             throw new ContractOperationException("fulfillment.package.member_state_changed");
         }
 
+        // فاز ۱ — اعتبارسنجی و محاسبهٔ کدها؛ هیچ نوشتنی انجام نمی‌شود.
+        var steps = await BuildDispatchStepsAsync(package, activeMembers, cancellationToken);
+
+        // فاز ۲ — اعمال همهٔ تغییرات Fulfillment و یک SaveChanges برای کل بسته.
+        foreach (var step in steps.Where(x => x.GeneratedTrackingReference is not null))
+        {
+            step.Unit.AssignTracking(step.Shipment.ShipmentId, step.GeneratedTrackingReference!, _clock.UtcNow);
+        }
+
+        foreach (var step in steps.Where(x => x.NeedsDispatch))
+        {
+            step.Unit.ApplyShipmentDispatched(step.Shipment.ShipmentId, _clock.UtcNow);
+            await ConsumeInventoryForShipmentAsync(step.Unit, step.Shipment, cancellationToken);
+        }
+
+        var statuses = steps.ToDictionary(x => x.Shipment.ShipmentId, x => x.Shipment.Status);
+        package.MarkDispatched(_clock.UtcNow, statuses);
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordTransition("consolidated_package_dispatched");
+        return await MapPackageSnapshotAsync(package, cancellationToken);
+    }
+
+    /// <summary>
+    /// فاز اعتبارسنجی ارسال بستهٔ تجمیعی — کاملاً بدون نوشتن.
+    /// اگر هر عضوی نامعتبر باشد یا کد رهگیری تولیدشده با کد موجودی تصادم کند، پیش از
+    /// هر تغییر پایدار متوقف می‌شویم تا ارسال جزئی ثبت نشود.
+    /// </summary>
+    private async Task<IReadOnlyList<PackageDispatchStep>> BuildDispatchStepsAsync(
+        ConsolidatedPackage package,
+        IReadOnlyList<ConsolidatedPackageMember> activeMembers,
+        CancellationToken cancellationToken)
+    {
+        var steps = new List<PackageDispatchStep>(activeMembers.Count);
+        var generated = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var member in activeMembers)
         {
             var unit = await LoadMutableAsync(member.FulfillmentId, cancellationToken);
             var shipment = unit.Shipments.SingleOrDefault(x => x.ShipmentId == member.ShipmentId)
                 ?? throw new ContractOperationException("fulfillment.package.member_state_changed");
+
             if (shipment.Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.Delivered)
             {
+                steps.Add(new PackageDispatchStep(unit, shipment, null, false));
                 continue;
             }
 
@@ -277,35 +322,84 @@ public sealed partial class FulfillmentDirectory
                 throw new ContractOperationException("fulfillment.package.member_state_changed");
             }
 
+            string? generatedCode = null;
             if (string.IsNullOrWhiteSpace(shipment.TrackingReference)
                 && !string.IsNullOrWhiteSpace(package.TrackingReference))
             {
-                var baseCode = package.TrackingReference!.Trim();
-                var memberCode = $"{baseCode}-{member.ShipmentId.ToString("N")[..8].ToUpperInvariant()}";
-                await AssignTrackingCoreAsync(
-                    member.FulfillmentId,
-                    member.ShipmentId,
-                    actorUserId,
-                    memberCode,
-                    cancellationToken);
+                generatedCode = BuildMemberTrackingReference(package.TrackingReference!, member.ShipmentId);
+                if (!generated.TryAdd(generatedCode, member.ShipmentId))
+                {
+                    throw new ContractOperationException("fulfillment.tracking.duplicate");
+                }
             }
 
-            await DispatchShipmentCoreAsync(
-                member.FulfillmentId,
-                member.ShipmentId,
-                actorUserId,
-                cancellationToken);
+            steps.Add(new PackageDispatchStep(unit, shipment, generatedCode, true));
         }
 
-        var statuses = await LoadMemberShipmentStatusesAsync(
-            activeMembers.Select(x => x.ShipmentId).ToArray(),
-            cancellationToken);
-        package = await LoadMutablePackageAsync(consolidatedPackageId, cancellationToken);
-        package.MarkDispatched(_clock.UtcNow, statuses);
-        await _db.SaveChangesAsync(cancellationToken);
-        _telemetry.RecordTransition("consolidated_package_dispatched");
-        return await MapPackageSnapshotAsync(package, cancellationToken);
+        await EnsureGeneratedTrackingReferencesAreFreeAsync(generated, cancellationToken);
+        return steps;
     }
+
+    /// <summary>
+    /// کدهای رهگیری تولیدشدهٔ کل بسته را با گارد یکتایی سراسری می‌سنجد (یک کوئری).
+    /// </summary>
+    private async Task EnsureGeneratedTrackingReferencesAreFreeAsync(
+        IReadOnlyDictionary<string, Guid> generated,
+        CancellationToken cancellationToken)
+    {
+        if (generated.Count == 0)
+        {
+            return;
+        }
+
+        var codes = generated.Keys.Select(x => x.ToLowerInvariant()).ToArray();
+        var memberShipmentIds = generated.Values.Distinct().ToArray();
+        var alreadyTaken = await _db.Shipments.AsNoTracking()
+            .AnyAsync(
+                x => x.TrackingReference != null
+                    && codes.Contains(x.TrackingReference.ToLower())
+                    && !memberShipmentIds.Contains(x.ShipmentId),
+                cancellationToken);
+        if (alreadyTaken)
+        {
+            throw new ContractOperationException("fulfillment.tracking.duplicate");
+        }
+    }
+
+    /// <summary>
+    /// کد رهگیری قطعی و تصادم‌ناپذیر برای عضو بستهٔ تجمیعی.
+    ///
+    /// پیشوند زمانی UUIDv7 در ۳۲ بیت اول (۸ کاراکتر hex) قرار می‌گیرد و در بازهٔ حدوداً
+    /// ۶۵ ثانیه‌ای یکسان است؛ پس پسوند ۸ کاراکتری برای اعضای هم‌زمانِ یک بسته تکراری
+    /// می‌شد، گارد یکتایی سراسری را می‌شکست و ارسال بسته هرگز کامل نمی‌شد.
+    /// اینجا کل ۳۲ کاراکتر hex شناسهٔ مرسوله استفاده می‌شود که با یکتایی شناسه‌ها تضمین
+    /// ریاضی دارد، و طول نهایی به سقف ستون (۱۲۸) محدود می‌شود. کدهای موجود هیچ‌گاه
+    /// بازنویسی نمی‌شوند.
+    /// </summary>
+    internal static string BuildMemberTrackingReference(string packageTrackingReference, Guid shipmentId)
+    {
+        var baseCode = packageTrackingReference.Trim();
+        var suffix = shipmentId.ToString("N").ToUpperInvariant();
+        var maxBaseLength = MaxTrackingReferenceLength - suffix.Length - 1;
+        if (maxBaseLength < 0)
+        {
+            maxBaseLength = 0;
+        }
+
+        if (baseCode.Length > maxBaseLength)
+        {
+            baseCode = baseCode[..maxBaseLength];
+        }
+
+        return baseCode.Length == 0 ? suffix : $"{baseCode}-{suffix}";
+    }
+
+    /// <summary>یک گام ارسال عضو بسته (نتیجهٔ فاز اعتبارسنجی، پیش از هر نوشتن).</summary>
+    private sealed record PackageDispatchStep(
+        FulfillmentUnit Unit,
+        Shipment Shipment,
+        string? GeneratedTrackingReference,
+        bool NeedsDispatch);
 
     /// <inheritdoc />
     public async Task<ConsolidatedPackageSnapshot> DeliverConsolidatedPackageAsync(

@@ -1,0 +1,8 @@
+﻿=== read-only live state ===
+consolidated_package_id | package_number | status | tracking_reference | checkout_id | dispatched_at
+01a12f79-6ef1-7000-8578-dd7cc841195d | MP-01A12F796EF1 | Created | 125444 | 01a12e97-ee9e-7000-826c-a9eca536b223 | 
+(1 row)
+shipment_id | fulfillment_id | released_at | status | tracking_reference
+01a12f79-1ad4-7000-9174-3237c0d645bf | 01a12e98-77aa-7000-9147-6b2d69ca0ee7 |  | Dispatched | 125444-01A12F79
+01a12f79-33ed-7000-b7ad-e562dcf67be8 | 01a12e98-77d1-7000-aa6c-78f53c983947 |  | Created | 
+(2 rows)

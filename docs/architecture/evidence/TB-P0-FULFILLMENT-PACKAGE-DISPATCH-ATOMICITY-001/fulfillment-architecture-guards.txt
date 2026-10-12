@@ -1,0 +1,26 @@
+﻿Test run for D:\temp\tooba-verify\bin\Tooba.Host.Tests\debug\Tooba.Host.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.3+b1b99bdeb3 (64-bit .NET 8.0.24)
+[xUnit.net 00:00:00.12]   Discovering: Tooba.Host.Tests
+[xUnit.net 00:00:00.26]   Discovered:  Tooba.Host.Tests
+[xUnit.net 00:00:00.28]   Starting:    Tooba.Host.Tests
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_owns_its_http_surface_with_zero_host_http_ownership [9 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_endpoints_use_only_the_canonical_result_factory [1 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_w3_r1_recovery_reconciliation_is_locked [19 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_application_is_capability_first_with_no_single_file_use_case_leaves [2 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_owns_exactly_one_error_descriptor_per_owned_code [73 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_has_no_foreign_module_application_infrastructure_or_domain_dependency [9 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_has_no_prose_classification_or_untyped_expected_fault_residue [6 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_directory_stays_under_the_arch_size_ceiling [< 1 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_error_codes_resolve_to_localized_resources_in_both_cultures [1 ms]
+[xUnit.net 00:00:00.44]   Finished:    Tooba.Host.Tests
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_manifest_entry_is_single_and_disk_reconciled [9 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Master_recovery_records_the_fulfillment_amsc_lineage_and_preserves_history [< 1 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_typed_fault_seam_maps_both_code_carrying_mechanisms [< 1 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_schema_and_migrations_are_unchanged [< 1 ms]
+  Passed Tooba.Host.Tests.Architecture.FulfillmentModuleAmsc001W3CertGuardTests.Fulfillment_certification_state_is_recorded_honestly_in_sot [10 ms]
+
+Test Run Successful.
+Total tests: 14
+     Passed: 14
+ Total time: 0.7349 Seconds
