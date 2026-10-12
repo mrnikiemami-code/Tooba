@@ -8,6 +8,8 @@ import {
   isStorePreviewFillEnabled,
   resolveVariantPreviewCardinality,
 } from "../../../lib/storefront-composition/preview-fill-policy.ts";
+// قرارداد ورودی مصرف‌کنندهٔ fill — همان تایپی که یک آیتم «واقعی» باید داشته باشد.
+import type { StorefrontFeaturedReviewItem } from "../../../app/storefront/storefront-model.ts";
 import {
   createFakeArticle,
   createFakeBanner,
@@ -65,9 +67,26 @@ test("zero Store data uses fake fill, not PreviewPlaceholderSurface as primary p
 });
 
 test("partial Store data preserves real items and fills only missing slots", () => {
-  const real = [createFakeReview(99, "fa")];
-  real[0]!.previewFake = false;
-  real[0]!.publicId = "real-review-1";
+  // آیتم «واقعی» باید با قرارداد مصرف‌کننده تایپ شود، نه با خروجی کارخانهٔ fake:
+  // createFakeReview نوع PreviewFakeMarked را برمی‌گرداند که previewFake را به
+  // literal true می‌دوزد؛ پس mutation به false روی آن ناممکن است (TS2322) و
+  // نمی‌توان آن را با cast یا سست‌کردن PreviewFakeMarked درست کرد.
+  // الگوی ساخت = همان نگاشت صریح فیلدهای قرارداد، مانند industry-template-preview.
+  const fakeContent = createFakeReview(99, "fa");
+  const real: StorefrontFeaturedReviewItem[] = [
+    {
+      publicId: "real-review-1",
+      authorDisplayName: fakeContent.authorDisplayName,
+      rating: fakeContent.rating,
+      title: fakeContent.title,
+      body: fakeContent.body,
+      verifiedPurchase: fakeContent.verifiedPurchase,
+      createdAt: fakeContent.createdAt,
+      productTitle: fakeContent.productTitle,
+      productSlug: fakeContent.productSlug,
+      previewFake: false,
+    },
+  ];
   const mixed = applyPreviewFill({
     enabled: true,
     variantKey: "reviews.card-carousel",
