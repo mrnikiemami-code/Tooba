@@ -28,7 +28,11 @@ internal sealed class CartSnapshotProjector(IInventoryAvailabilityGateway availa
             cart.ExpiresAt,
             (CartContract.CartConversionIntent)(int)cart.ConversionIntent,
             cart.Version,
-            cart.Lines.Select(line =>
+            // ترتیب خطوط قرارداد است، نه ترتیب فیزیکی ردیف‌ها. بدون ORDER BY، PostgreSQL ردیف‌ها را
+            // به ترتیب heap برمی‌گرداند و هر UPDATE (تغییر تعداد) نسخهٔ تازه را به انتهای صفحه می‌برد؛
+            // نتیجه این بود که همان خطِ تغییرکرده در UI به آخر لیست می‌پرید. LineId از UuidV7 است، پس
+            // این ترتیب هم قطعی است و هم با ترتیب افزودن به سبد یکی است.
+            cart.Lines.OrderBy(line => line.LineId).Select(line =>
             {
                 stock.TryGetValue(line.OfferId, out var availabilityForLine);
                 var available = availabilityForLine?.Available ?? 0;
