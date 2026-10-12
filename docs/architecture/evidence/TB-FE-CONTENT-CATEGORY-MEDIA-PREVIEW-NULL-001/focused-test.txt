@@ -1,0 +1,22 @@
+﻿(node:2484) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/content-category-admin-screen.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ content category api targets content-owned endpoints (0.4598ms)
+✔ content category admin uses canonical AppCategoryTree and route selection (0.1322ms)
+✔ content category language tab survives node selection via query and workspace locale (0.0948ms)
+(node:31672) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/media-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapMediaAsset accepts camel and Pascal payloads (0.6442ms)
+✔ media library dialog has library/upload tabs, search, paging, selection modes (0.7382ms)
+✔ mediaUploadStateLabel covers queued/uploading/succeeded/failed in fa and en (0.113ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 121.2299

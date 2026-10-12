@@ -336,6 +336,10 @@ export function ContentCategoryAdminScreen() {
   }, [languageCode, refreshTree, router, workspace]);
 
   const isRtl = languageCode.toLowerCase().startsWith("fa");
+  // mediaPreviewUrl تنها برای شناسهٔ غیرخالی URL می‌سازد و در غیر آن null برمی‌گرداند
+  // (media-api.ts:91). پس پیش‌نمایش را همان‌جا مشتق می‌کنیم تا هیچ‌گاه src نامعتبر/خالی
+  // به <img> نرسد و در نبود رسانهٔ قابل‌استفاده، همان حالت «تصویری اختصاص داده نشده» بماند.
+  const mediaPreview = mediaAsset ? mediaPreviewUrl(mediaAsset.mediaAssetId) : null;
 
   return (
     <main className="w-full" data-testid="admin-content-categories">
@@ -503,8 +507,8 @@ export function ContentCategoryAdminScreen() {
 
               {tab === "media" ? (
                 <div className="space-y-3">
-                  {mediaAsset?.mediaAssetId ? (
-                    <img src={mediaPreviewUrl(mediaAsset.mediaAssetId)} alt="" className="max-h-40 rounded-xl border object-cover" />
+                  {mediaPreview ? (
+                    <img src={mediaPreview} alt="" className="max-h-40 rounded-xl border object-cover" />
                   ) : (
                     <p className="text-sm text-muted">تصویری اختصاص داده نشده است.</p>
                   )}

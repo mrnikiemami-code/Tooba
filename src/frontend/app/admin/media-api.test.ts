@@ -23,6 +23,12 @@ test("mapMediaAsset accepts camel and Pascal payloads", () => {
   assert.equal(mapped?.originalFileName, "hero.png");
   assert.equal(mapped?.byteSize, 2048);
   assert.equal(mediaPreviewUrl(id), `/v1/storefront/media/${id}`);
+  // قرارداد helper: برای شناسهٔ غایب/خالی هیچ URL پیش‌نمایشی وجود ندارد؛ همان پیش‌فرضی که
+  // تب «رسانه» دستهٔ محتوا برای انتخاب بین <img> و حالت «تصویری اختصاص داده نشده» به آن تکیه می‌کند.
+  assert.equal(mediaPreviewUrl(null), null);
+  assert.equal(mediaPreviewUrl(undefined), null);
+  assert.equal(mediaPreviewUrl(""), null);
+  assert.equal(mediaPreviewUrl("   "), null);
   assert.equal(mapMediaAsset({ originalFileName: "x" }), null);
 });
 
