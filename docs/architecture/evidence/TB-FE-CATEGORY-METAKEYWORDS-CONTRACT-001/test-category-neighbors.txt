@@ -1,0 +1,53 @@
+﻿(node:29700) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/catalog-category-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ slugifyCategoryName mirrors kebab + unicode keep (0.7828ms)
+✔ storefront route never appends category id (0.1494ms)
+✔ duplicate slug error maps to Persian message (0.093ms)
+✔ mapCategoryTreeNode reads mixed casing (0.3193ms)
+✔ mapCategoryWorkspace requires categoryId (0.3132ms)
+(node:38812) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/catalog-tag-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapCatalogTag reads camel and Pascal casing with human name (0.5329ms)
+✔ mapCatalogTag rejects payload without identity (0.0802ms)
+✔ filterUnassignedTags excludes already assigned ids (0.1133ms)
+✔ helper text is locked Persian taxonomy copy not SEO keywords (0.1527ms)
+✔ admin-tags-panel: searchable multi-select, create fa/en, removable chips, no comma textbox (0.3372ms)
+✔ catalog-tags-card wraps AdminTagsPanel (0.1661ms)
+✔ product and category General screens host tags card (0.5493ms)
+✔ api client exposes CRUD and assign routes without meta keywords (0.1796ms)
+(node:37688) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-attributes-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ humanizeAttributeCode and attributeCodeFromLabel helpers exist (0.5267ms)
+✔ local vs inherited partition helpers exist (0.0898ms)
+✔ ordinary-user Persian flag labels are defined (0.0739ms)
+✔ behavior chips are independent toggles not checkboxes (0.2354ms)
+✔ inherited vs category-specific human sections (0.1012ms)
+✔ inherited override UX copy and reset-to-parent (0.1391ms)
+✔ create+bind strips invalid variant axis before API (0.0752ms)
+(node:30920) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-products-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ behavior chips use short independent labels without comma-separated UI (1.0374ms)
+✔ admin nav groups Categories and Products distinctly (1.0592ms)
+✔ categorySummaryIncludes matches full taxonomy path leaf (0.2498ms)
+✔ category products panel wires column header filters like product list (0.3125ms)
+✔ category products panel is real and blocks L1/L2 assignment (0.4392ms)
+✔ category products assign dialog uses AppDataGrid tabs not checkbox list (0.2641ms)
+✔ category products picker refreshes membership count and row state after mutation (0.2467ms)
+✔ category products assign dialog has top bulk add selected action (0.2478ms)
+✔ category products panel is membership-only without change-category (0.4198ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 111.4761

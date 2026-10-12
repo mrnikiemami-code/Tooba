@@ -506,3 +506,45 @@ export function slugifyCategoryName(name: string): string {
   }
   return result.replace(/^-+|-+$/g, "");
 }
+
+/**
+ * جداکننده‌های پذیرفته‌شدهٔ کلمات کلیدی SEO: ویرگول فارسی/عربی، ویرگول ASCII،
+ * خط جدید. تگ‌های ورودی کاربر روی همین‌ها شکسته می‌شوند.
+ */
+const META_KEYWORDS_SEPARATORS = /[,\u060C\r\n]+/;
+
+/** جداکنندهٔ متعارف خروجی — ویرگول ASCII به‌همراه فاصله. */
+const META_KEYWORDS_JOINER = ", ";
+
+/**
+ * نرمال‌سازی مشترک کلمات کلیدی: trim، حذف خالی‌ها، حذف تکراری‌ها با حفظ ترتیب اولین ظهور.
+ * مالک آن همین ماژول است، چون `CategoryTranslationDto.metaKeywords` رشتهٔ Host را نگه می‌دارد.
+ */
+function normalizeMetaKeywords(tags: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  for (const tag of tags) {
+    const trimmed = tag.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    normalized.push(trimmed);
+  }
+  return normalized;
+}
+
+/**
+ * رشتهٔ `metaKeywords` سمت Host (`string | null`) را به تگ‌های نرمال‌شده تبدیل می‌کند.
+ * ترتیب پایدار است، خالی‌ها و تکراری‌ها حذف می‌شوند و شکستن روی ویرگول فارسی/ASCII و خط جدید است.
+ */
+export function parseMetaKeywords(value: string | null | undefined): string[] {
+  if (!value) return [];
+  return normalizeMetaKeywords(value.split(META_KEYWORDS_SEPARATORS));
+}
+
+/**
+ * تگ‌ها را به همان رشتهٔ `metaKeywords` سمت Host سریال می‌کند؛ خروجی canonical است تا
+ * `parseMetaKeywords(serializeMetaKeywords(tags))` با نرمال‌سازی ورودی یکسان بماند.
+ */
+export function serializeMetaKeywords(tags: readonly string[]): string {
+  return normalizeMetaKeywords(tags).join(META_KEYWORDS_JOINER);
+}

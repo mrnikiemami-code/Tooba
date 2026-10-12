@@ -1,0 +1,36 @@
+﻿(node:25844) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-admin-form.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ General VIEW default markers and readable cards (1.1805ms)
+✔ General EDIT fields and save/cancel (0.5812ms)
+✔ status localization uses Persian labels in workspace (0.3043ms)
+✔ parent selector is searchable path/name without raw ID labels (0.3395ms)
+✔ category media supports real library select/upload/unassign for image/icon/banner (0.5914ms)
+✔ permission-aware edit action gated by canEdit (0.393ms)
+✔ Translations tab: locale switcher, statuses, create, VIEW/EDIT (0.4647ms)
+✔ translation completeness: missing / partial / complete (0.1843ms)
+✔ dirty locale-switch protection (0.3503ms)
+✔ human slug preview has no CategoryId suffix (0.7387ms)
+✔ slug auto-suggest respects manual edits (0.3969ms)
+✔ duplicate slug maps to Persian UX message (0.3583ms)
+✔ form mode state machine: view default, edit, cancel, save (0.1152ms)
+✔ view-only user cannot enter edit via state machine (0.037ms)
+✔ tree context preservation after current-locale Name save (0.3895ms)
+✔ AppCategoryTree file untouched by T006 workspace work (0.8026ms)
+✔ Attributes tab: per-category assignment flags and customize inherited (0.3212ms)
+✔ Attributes tab: VIEW/EDIT, inherited/local, add/create, labels (0.5879ms)
+✔ visible category tabs are functional — products real; seo/settings/history hidden (0.4098ms)
+✔ mobile layout markers present (0.2376ms)
+✔ no raw AgGridReact in category admin screen (0.2481ms)
+✔ API client exposes updateCore, upsertTranslation with full fields, move (0.1788ms)
+✔ translation meta keywords use removable tag chips not plain textbox (0.2808ms)
+✔ parseMetaKeywords splits commas and drops blanks/duplicates (0.5886ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 126.718
