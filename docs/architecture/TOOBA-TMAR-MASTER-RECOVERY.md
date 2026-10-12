@@ -10,6 +10,11 @@ Canonical Architect ↔ Cursor handoff (recovery-critical)
 - Validation: focused essential builds/tests only; tests are evidence, not navigation.
 - Recovery SoT must stay current so a new chat can resume by reading repo state. Minimal user phrase: `برگردیم به TMAR؛ ریکاوری را انجام بده`.
 
+Deferred architecture/error findings register — opt-in only (2026-10-12)
+- Durable register: `docs/architecture/ARCHITECTURE-FINDINGS-REGISTER.md` tracks deferred audit defects, risks, evidence, priorities and bounded repair plans (including storefront/admin UI findings).
+- Do NOT load or scan the register during normal recovery, ordinary Cursor tasks, feature work or audits. Consult it ONLY if the user/Architect explicitly requests a register entry, update, review or resolution.
+- When explicitly adding a finding, search existing entries narrowly to prevent duplicates and update an existing ID when applicable. No entry is permission for an implementation task or AMSC.
+
 Architect downloadable task presentation contract — user-confirmed 2026-10-10
 - Restore this section before issuing any Cursor task in a new Architect chat. The authoritative Bridge task envelope and worker timebox remain in `docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md#architect--cursor-canonical-task-handoff`; this section records the REQUIRED user-facing delivery format and avoids repeated format corrections.
 - Delivery medium: create a REAL, nonempty UTF-8 plain-text file named EXACTLY `<Task-ID>.task.md` under `/mnt/data/`; verify the exact file exists before returning a download link. The `.task.md` extension is required for Bridge/Cursor, but the payload is plain text with simple labeled lines, not rendered Markdown prose. Do not offer a guessed sandbox path or only describe a file.
