@@ -242,15 +242,21 @@ export function AdminCreateShipmentModal({
       const v = fields[key]?.trim();
       return v ? v : undefined;
     };
+    // فیلدهای اختیاری عددی: نبودِ مقدار معتبر یعنی نبودِ کلید، نه درجِ undefined.
+    // این همان قراردادی است که فیلتر نهایی روی metadata تضمین می‌کند.
+    const optionalNum = (key: string): Record<string, number> => {
+      const value = num(key);
+      return value === undefined ? {} : { [key]: value };
+    };
 
     switch (methodCode) {
       case "post":
         return {
           serviceType: str("serviceType") ?? "",
           packageCount: num("packageCount") ?? 1,
-          weightKg: num("weightKg") ?? undefined,
+          ...optionalNum("weightKg"),
           dimensions: str("dimensions") ?? "",
-          declaredValue: num("declaredValue") ?? undefined,
+          ...optionalNum("declaredValue"),
           recipientName: str("recipientName") ?? "",
           recipientPhone: str("recipientPhone") ?? "",
           postalCode: str("postalCode") ?? "",
@@ -260,9 +266,9 @@ export function AdminCreateShipmentModal({
       case "tipax":
         return {
           packageCount: num("packageCount") ?? 1,
-          weightKg: num("weightKg") ?? undefined,
+          ...optionalNum("weightKg"),
           dimensions: str("dimensions") ?? "",
-          declaredValue: num("declaredValue") ?? undefined,
+          ...optionalNum("declaredValue"),
           senderContact: str("senderContact") ?? "",
           recipientName: str("recipientName") ?? "",
           recipientPhone: str("recipientPhone") ?? "",

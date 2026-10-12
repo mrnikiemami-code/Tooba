@@ -261,6 +261,12 @@ test("create shipment modal sends selections without deferred T005 block", () =>
   assert.doesNotMatch(modal, /admin-create-shipment-deferred|به T005 موکول/);
 });
 
+test("optional shipment metadata is omitted, never serialized as undefined", () => {
+  const modal = readFileSync(join(dir, "admin-create-shipment-modal.tsx"), "utf8");
+  assert.doesNotMatch(modal, /\?\?\s*undefined/);
+  assert.match(modal, /v !== undefined && v !== ""/);
+});
+
 test("mapAdminOrderDetail maps return deadline fields", () => {
   const detail = mapAdminOrderDetail({
     checkoutId: "c1",

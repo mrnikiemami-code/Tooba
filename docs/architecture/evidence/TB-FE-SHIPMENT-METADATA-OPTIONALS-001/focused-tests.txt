@@ -1,0 +1,29 @@
+﻿(node:37772) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-order-items-shipping.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ items-shipping shell is mounted above financial section (1.1113ms)
+✔ seller groups stay separate and selection cannot cross sellers in one op (0.435ms)
+✔ shipments map from additive seller DTO (0.7872ms)
+✔ selected-state labels switch correctly (0.4629ms)
+✔ detail and whole-order menus hide start-processing and pack (0.3195ms)
+✔ row kebab is projection-driven and hidden when empty (0.3066ms)
+✔ exact selection and mixed bulk helpers (0.2061ms)
+✔ single selection never shows mixed and recovers seller-level row actions (0.1508ms)
+✔ return display is shown once when deadline and remaining match (0.2926ms)
+✔ qty input stays exact and pack-selected sends selections (0.3601ms)
+✔ fulfillment sequence errors map to FA (0.134ms)
+✔ panel preserves horizontal scroll and return deadline column (0.2867ms)
+✔ capability projection drives payment lock and start/pack row actions (0.6909ms)
+✔ create shipment modal sends selections without deferred T005 block (0.198ms)
+✔ optional shipment metadata is omitted, never serialized as undefined (0.1665ms)
+✔ mapAdminOrderDetail maps return deadline fields (0.136ms)
+✔ consolidated package section is multi-seller only and maps package lock fields (0.6066ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 127.3027
