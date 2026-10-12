@@ -1,5 +1,7 @@
 import { cartHeaders, cartHeadersFromAccess, persistCommittedCheckoutAndDetachActiveCart, resolveCommittedCheckoutAccess, StorefrontCartApiError, toCustomerCartMessage } from "./storefront-cart-api.ts";
 import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
+import { type Locale } from "../../lib/i18n/locale.ts";
+import { isDisplayableServerDetail } from "../../lib/i18n/displayable-server-detail.ts";
 
 const IDEMPOTENCY_KEY = "tooba.storefront.checkoutIdempotency";
 const COUPON_KEY = "tooba.storefront.couponCode";
@@ -254,38 +256,49 @@ export function humanizeCheckoutRetryAfter(iso: string | null | undefined): stri
   return minutes === 1 ? "حدود یک دقیقه دیگر" : `حدود ${minutes} دقیقه دیگر`;
 }
 
-export function toCustomerCheckoutMessage(error: unknown): string {
+export function toCustomerCheckoutMessage(error: unknown, locale: Locale = "fa"): string {
+  const fa = locale === "fa";
   if (error instanceof StorefrontCartApiError) {
     switch (error.errorCode) {
       case "checkout.open_unpaid_limit_reached":
-        return "شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های قبلی را پرداخت یا لغو کنید.";
+        return fa
+          ? "شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های قبلی را پرداخت یا لغو کنید."
+          : "You have reached the maximum number of open unpaid orders. Pay or cancel a previous order first.";
       case "checkout.reservation_commit_limit_reached": {
         const wait = humanizeCheckoutRetryAfter(error.meta.nextAvailableAt);
+        if (!fa) {
+          return "The limit for starting a reservation in this period has been reached. Try again later.";
+        }
         return wait
           ? `تعداد دفعات مجاز شروع رزرو در بازه زمانی اخیر به پایان رسیده است. ${wait} دوباره تلاش کنید.`
           : "تعداد دفعات مجاز شروع رزرو در بازه زمانی اخیر به پایان رسیده است. کمی بعد دوباره تلاش کنید.";
       }
       case "checkout.price.changed":
-        return "قیمت یکی از کالاها تغییر کرده؛ لطفاً سفارش را دوباره بررسی کنید.";
+        return fa ? "قیمت یکی از کالاها تغییر کرده؛ لطفاً سفارش را دوباره بررسی کنید." : "An item price changed. Please review the order again.";
       case "checkout.cart.expired":
-        return "سبد خرید منقضی شده است.";
+        return fa ? "سبد خرید منقضی شده است." : "The cart has expired.";
       case "checkout.shipping.incomplete":
-        return "اطلاعات ارسال کامل نیست.";
+        return fa ? "اطلاعات ارسال کامل نیست." : "Shipping details are incomplete.";
       case "checkout.cart.empty":
-        return "سبد خرید خالی است.";
+        return fa ? "سبد خرید خالی است." : "The cart is empty.";
+      case "checkout.version.conflict":
+      case "cart.version.conflict":
+        return fa
+          ? "سبد خرید شما هم‌زمان در جای دیگری تغییر کرده است. صفحه را تازه کنید و دوباره تلاش کنید."
+          : "Your cart changed elsewhere. Refresh the page and try again.";
       case "checkout.access.denied":
       case "payment.access.denied":
-        return "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.";
+        return fa
+          ? "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید."
+          : "Access to this order payment was not confirmed. Re-enter payment from your orders.";
       default:
-        if (error.errorCode === "checkout.rejected" && error.detail?.includes("ثبت سفارش انجام نشد")) {
-          return error.detail;
+        if (!error.detail || !isDisplayableServerDetail(error.detail, locale)) {
+          return fa ? "ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید." : "The order was not placed. Please try again.";
         }
-        return error.detail && !/Held|PRICE_CHANGED|TAX_/.test(error.detail)
-          ? error.detail
-          : "ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.";
+        return error.detail;
     }
   }
-  return toCustomerCartMessage(error);
+  return toCustomerCartMessage(error, locale);
 }
 
 export async function previewStorefrontCheckout(

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  acceptLanguageForLocale,
   assertLocaleMarketSeparation,
   DEFAULT_LOCALE,
   dirForLocale,
@@ -9,6 +10,7 @@ import {
   parseLocale,
 } from "./locale.ts";
 import { readLocaleFromCookieString } from "./locale-cookie.ts";
+import { isDisplayableServerDetail } from "./displayable-server-detail.ts";
 import { chromeMessagesFor } from "./messages.ts";
 
 test("dirForLocale: fa is rtl, en is ltr", () => {
@@ -54,4 +56,20 @@ test("cookie reader parses tooba_locale", () => {
 test("chrome messages share retry key style", () => {
   assert.equal(chromeMessagesFor("fa").retry, "تلاش دوباره");
   assert.equal(chromeMessagesFor("en").retry, "Retry");
+});
+
+test("active locale maps to a concrete Accept-Language tag", () => {
+  assert.equal(acceptLanguageForLocale("fa"), "fa-IR");
+  assert.equal(acceptLanguageForLocale("en"), "en-US");
+});
+
+test("server detail is only displayable in the active locale script", () => {
+  assert.equal(isDisplayableServerDetail("سبد هم‌زمان به‌روز شده است.", "fa"), true);
+  assert.equal(isDisplayableServerDetail("Cart was updated concurrently.", "fa"), false);
+  assert.equal(isDisplayableServerDetail("Cart was updated concurrently.", "en"), true);
+  assert.equal(isDisplayableServerDetail("سبد هم‌زمان به‌روز شده است.", "en"), false);
+  assert.equal(isDisplayableServerDetail("PostgresException", "fa"), false);
+  assert.equal(isDisplayableServerDetail("فقط رزرو Held قابل آزادسازی است.", "fa"), false);
+  assert.equal(isDisplayableServerDetail("", "fa"), false);
+  assert.equal(isDisplayableServerDetail(null, "fa"), false);
 });

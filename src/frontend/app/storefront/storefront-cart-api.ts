@@ -1,4 +1,8 @@
 import { loadStorefrontSession } from "./storefront-identity-api.ts";
+import { acceptLanguageForLocale, type Locale } from "../../lib/i18n/locale.ts";
+import { readBrowserLocaleCookie } from "../../lib/i18n/locale-cookie.ts";
+import { isDisplayableServerDetail } from "../../lib/i18n/displayable-server-detail.ts";
+import { cartErrorText } from "./storefront-customer-error-text.ts";
 
 /**
  * نشست انتقال هویت مهمان سبد. حقیقت مبلغ/تعداد در sessionStorage نیست.
@@ -448,40 +452,26 @@ const TECHNICAL_CART_ERROR = /Held|reservation|رزرو|آزادسازی/i;
 const RAW_TECHNICAL_DETAIL = /Exception|Npgsql|Postgres|Microsoft\.|System\.|Tooba\.|\bat\s/i;
 
 /**
- * پیام قابل‌نمایش مشتری. واژگان فنی رزرو موجودی و نام استثنای سرویس را پنهان می‌کند.
+ * پیام قابل‌نمایش مشتری. واژگان فنی رزرو موجودی و نام استثنای سرویس را پنهان می‌کند،
+ * و متن سرور را فقط در خط زبان فعال می‌پذیرد (نشت انگلیسی روی UI فارسی ممنوع).
  */
-export function toCustomerCartMessage(error: unknown): string {
+export function toCustomerCartMessage(error: unknown, locale: Locale = "fa"): string {
   if (error instanceof StorefrontCartApiError) {
-    if (
-      error.detail
-      && !TECHNICAL_CART_ERROR.test(error.detail)
-      && !RAW_TECHNICAL_DETAIL.test(error.detail)
-    ) {
-      return error.detail;
+    if (isDisplayableServerDetail(error.detail, locale)) {
+      return error.detail as string;
     }
-    switch (error.errorCode) {
-      case "cart.inventory.insufficient":
-        return "تعداد انتخاب‌شده بیشتر از موجودی قابل فروش است.";
-      case "cart.inventory.stale":
-        return "موجودی این کالا تغییر کرده است. لطفاً تعداد را دوباره بررسی کنید.";
-      case "cart.quantity.invalid":
-        return "تعداد انتخاب‌شده معتبر نیست.";
-      case "cart.offer.unavailable":
-        return "این کالا در حال حاضر قابل افزودن به سبد نیست.";
-      default:
-        return "عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.";
-    }
+    return cartErrorText(error.errorCode, locale);
   }
   if (error instanceof Error) {
     if (TECHNICAL_CART_ERROR.test(error.message)) {
-      return "موجودی این کالا تغییر کرده است. لطفاً تعداد را دوباره بررسی کنید.";
+      return cartErrorText("cart.inventory.stale", locale);
     }
-    if (RAW_TECHNICAL_DETAIL.test(error.message)) {
-      return "عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.";
+    if (RAW_TECHNICAL_DETAIL.test(error.message) || !isDisplayableServerDetail(error.message, locale)) {
+      return cartErrorText("cart.generic", locale);
     }
     return error.message;
   }
-  return "عملیات سبد شکست خورد.";
+  return cartErrorText("cart.failed", locale);
 }
 
 async function parseCartResponse(response: Response): Promise<StorefrontCartPage> {
@@ -593,7 +583,10 @@ export function cartHeaders(version?: number): HeadersInit {
 }
 
 export function cartHeadersFromAccess(access: StorefrontCommittedAccess, version?: number): HeadersInit {
-  const headers: Record<string, string> = { "content-type": "application/json" };
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    "accept-language": acceptLanguageForLocale(readBrowserLocaleCookie()),
+  };
   if (access.guestSecret) {
     headers["X-Tooba-Guest-Secret"] = access.guestSecret;
   }

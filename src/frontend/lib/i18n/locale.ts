@@ -32,6 +32,15 @@ export function isLocale(value: unknown): value is Locale {
   return value === "fa" || value === "en";
 }
 
+/**
+ * تگ BCP-47 برای هدر Accept-Language از locale نمایش.
+ * سرور (RequestLocaleResolver) زبان عنوان خطا را فقط از این هدر می‌گیرد؛
+ * بدون آن DefaultCulture = "en" می‌شود و متن انگلیسی در UI فارسی ظاهر می‌شود.
+ */
+export function acceptLanguageForLocale(locale: Locale): string {
+  return locale === "fa" ? "fa-IR" : "en-US";
+}
+
 /** پارس امن؛ مقدار نامعتبر → پیش‌فرض فارسی. */
 export function parseLocale(value: string | null | undefined): Locale {
   if (value == null) return DEFAULT_LOCALE;

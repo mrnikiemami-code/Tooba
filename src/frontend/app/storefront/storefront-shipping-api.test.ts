@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { mapShippingProjection, toCustomerShippingMessage } from "./storefront-shipping-api.ts";
+import { StorefrontCartApiError } from "./storefront-cart-api.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 
@@ -45,9 +46,10 @@ test("shipping projection maps store methods and never invents template carriers
 
 test("shipping date chips use Host weekday/date once and do not duplicate Jalali", () => {
   const source = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-shipping.tsx"), "utf8");
+  const chipFormat = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-shipping-format.ts"), "utf8");
   assert.match(source, /deliveryChipParts/);
-  assert.match(source, /option\.label/);
-  assert.match(source, /option\.subLabel/);
+  assert.match(chipFormat, /option\.label/);
+  assert.match(chipFormat, /option\.subLabel/);
   assert.doesNotMatch(source, /function deliveryDateUi/);
   assert.match(source, /overflow-x-auto/);
 });
@@ -84,4 +86,31 @@ test("cart CTA routes to /shipping", () => {
 
 test("customer shipping errors stay localized", () => {
   assert.equal(toCustomerShippingMessage(new Error("امکان ادامهٔ مرحلهٔ ارسال وجود ندارد.")), "امکان ادامهٔ مرحلهٔ ارسال وجود ندارد.");
+});
+
+test("stale cart on shipping never leaks the English server title", () => {
+  const stale = new StorefrontCartApiError(
+    409,
+    "cart.version.conflict",
+    "Cart was updated concurrently. Refresh and retry.",
+  );
+  const fa = toCustomerShippingMessage(stale);
+  assert.equal(fa.includes("Refresh"), false);
+  assert.match(fa, /سبد/);
+  const en = toCustomerShippingMessage(stale, "en");
+  assert.equal(en.includes("سبد"), false);
+  assert.match(en, /cart/i);
+
+  const mappedOrderCode = toCustomerShippingMessage(
+    new StorefrontCartApiError(409, "checkout.version.conflict", "The cart was updated concurrently. Refresh the page."),
+  );
+  assert.equal(mappedOrderCode.includes("Refresh"), false);
+  assert.match(mappedOrderCode, /سبد/);
+});
+
+test("shipping stepper walks back to the cart instead of trapping the customer", () => {
+  const source = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-shipping.tsx"), "utf8");
+  assert.match(source, /label: "سبد خرید", icon: ShoppingBag, href: "\/cart"/);
+  assert.match(source, /data-testid=\{`shipping-step-\$\{s\.id\}`\}/);
+  assert.match(source, /aria-label="بازگشت به سبد خرید"/);
 });

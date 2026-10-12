@@ -1,7 +1,9 @@
-import { cartHeaders, persistCommittedCheckoutAndDetachActiveCart, readCartSession, StorefrontCartApiError } from "./storefront-cart-api.ts";
+import { cartHeaders, persistCommittedCheckoutAndDetachActiveCart, readCartSession, StorefrontCartApiError, toCustomerCartMessage } from "./storefront-cart-api.ts";
 import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
 import { readStoredCouponCode, toCustomerCheckoutMessage } from "./storefront-checkout-api.ts";
 import type { StorefrontCheckoutPage } from "./storefront-checkout-api.ts";
+import { type Locale } from "../../lib/i18n/locale.ts";
+import { isDisplayableServerDetail } from "../../lib/i18n/displayable-server-detail.ts";
 
 const SHIPPING_IDEMPOTENCY_KEY = "tooba.storefront.shippingCommitIdempotency";
 const CHECKOUT_ID_KEY = "tooba.storefront.checkoutId";
@@ -236,24 +238,38 @@ export function mapShippingProjection(value: unknown): StorefrontShippingProject
   };
 }
 
-export function toCustomerShippingMessage(cause: unknown): string {
+export function toCustomerShippingMessage(cause: unknown, locale: Locale = "fa"): string {
+  const fa = locale === "fa";
   if (cause instanceof StorefrontCartApiError) {
     if (
       cause.errorCode === "checkout.open_unpaid_limit_reached"
       || cause.errorCode === "checkout.reservation_commit_limit_reached"
     ) {
-      return toCustomerCheckoutMessage(cause);
+      return toCustomerCheckoutMessage(cause, locale);
     }
-    if (cause.errorCode === "shipping.firstname.required") {
-      return "نام الزامی است.";
+    switch (cause.errorCode) {
+      case "shipping.firstname.required":
+        return fa ? "نام الزامی است." : "First name is required.";
+      case "shipping.lastname.required":
+        return fa ? "نام خانوادگی الزامی است." : "Last name is required.";
+      case "cart.version.conflict":
+      case "checkout.version.conflict":
+        return fa
+          ? "سبد خرید شما هم‌زمان در جای دیگری تغییر کرده است. برای دیدن مبالغ و تعداد به‌روز به سبد برگردید و دوباره تلاش کنید."
+          : "Your cart changed elsewhere. Return to the cart to see updated amounts, then try again.";
+      case "cart.expired":
+      case "checkout.cart.expired":
+        return fa ? "سبد خرید منقضی شده است. لطفاً دوباره از سبد شروع کنید." : "The cart has expired. Please restart from the cart.";
+      case "checkout.cart.empty":
+        return fa ? "سبد خرید خالی است." : "The cart is empty.";
+      default:
+        return toCustomerCartMessage(cause, locale);
     }
-    if (cause.errorCode === "shipping.lastname.required") {
-      return "نام خانوادگی الزامی است.";
-    }
+  }
+  if (cause instanceof Error && isDisplayableServerDetail(cause.message, locale)) {
     return cause.message;
   }
-  if (cause instanceof Error && cause.message) return cause.message;
-  return "امکان ادامهٔ مرحلهٔ ارسال وجود ندارد.";
+  return fa ? "امکان ادامهٔ مرحلهٔ ارسال وجود ندارد." : "The shipping step cannot continue.";
 }
 
 export async function loadShippingProjection(input: {

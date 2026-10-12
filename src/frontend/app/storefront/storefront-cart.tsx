@@ -329,9 +329,6 @@ export function StorefrontShopeivaCart({
                         {formatOfferAmount(cart.subtotalExclusiveOfTax, cart.currency)}
                       </span>
                     </div>
-                    <p className="text-[11px] text-gray-400 leading-6">
-                      مبلغ از نقل‌قول Pricing روی Offer است. مالیات و هزینهٔ ارسال قطعی در Checkout محاسبه می‌شود.
-                    </p>
                   </div>
                   <Link
                     href={checkoutHref}
@@ -600,10 +597,10 @@ function CartEmpty({
 
 function CartBenefits() {
   const benefits = [
-    { icon: Truck, title: "ارسال مطمئن", desc: "هزینه و روش در تسویه مشخص می‌شود" },
-    { icon: RotateCcw, title: "بازگشت کالا", desc: "طبق سیاست فروشنده و سفارش" },
-    { icon: ShieldCheck, title: "ضمانت اصالت", desc: "Offer زنده از کاتالوگ Tooba" },
-    { icon: HeadphonesIcon, title: "پشتیبانی", desc: "پیگیری از پنل مشتری" },
+    { icon: Truck, title: "ارسال مطمئن", desc: "هزینه و روش ارسال در تسویه مشخص می‌شود" },
+    { icon: RotateCcw, title: "بازگشت کالا", desc: "طبق سیاست فروشنده و شرایط سفارش" },
+    { icon: ShieldCheck, title: "ضمانت اصالت", desc: "تضمین اصل بودن کالا" },
+    { icon: HeadphonesIcon, title: "پشتیبانی", desc: "پیگیری سفارش از حساب کاربری شما" },
   ];
   return (
     <section className="pt-8 md:pt-10 bg-section-alternate rounded-2xl px-1" data-testid="cart-benefits" data-storefront-surface-role="alternate">

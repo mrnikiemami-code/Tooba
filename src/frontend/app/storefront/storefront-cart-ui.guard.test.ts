@@ -84,6 +84,13 @@ test("cart page recommendations use live feed cards with working ATC reuse", () 
   // اصطلاح داخلی «Host» نباید در متن مشتری‌پسند سبد ظاهر شود.
   assert.doesNotMatch(cartSource, /ارسال از Host/);
   assert.doesNotMatch(cartSource, /حقیقت Host/);
+  // واژگان داخلی معماری (Offer/Pricing/Catalog/Checkout) هم نباید به مشتری نشت کند.
+  assert.doesNotMatch(cartSource, /نقل‌قول Pricing/);
+  assert.doesNotMatch(cartSource, /Offer زنده/);
+  assert.doesNotMatch(cartSource, /کاتالوگ Tooba/);
+  assert.doesNotMatch(cartSource, /در Checkout/);
+  assert.match(cartSource, /تضمین اصل بودن کالا/);
+  assert.match(cartSource, /ارسال مطمئن/);
   assert.match(cartSource, /CART_CHANGED_EVENT/);
   assert.match(cartSource, /AUTH_CHANGED_EVENT/);
   assert.match(cartSource, /addEventListener\(CART_CHANGED_EVENT/);

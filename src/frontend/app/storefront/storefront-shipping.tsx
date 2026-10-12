@@ -3,7 +3,7 @@
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
+import { useLocale, useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import {
   Calendar,
   Check,
@@ -25,7 +25,8 @@ import {
   User,
   Zap,
 } from "lucide-react";
-import { formatJalaliDate, isoToJalaliDisplay } from "../../design-system/app-data-grid/jalali.ts";
+import { formatJalaliDate } from "../../design-system/app-data-grid/jalali.ts";
+import { deliveryChipParts, toPersianDigits } from "./storefront-shipping-format.ts";
 import { formatOfferAmount } from "./storefront-api.ts";
 import { loadStorefrontCart, StorefrontCartApiError } from "./storefront-cart-api.ts";
 import { StorefrontCheckoutLimitNotice } from "./storefront-checkout-limit-notice.tsx";
@@ -79,38 +80,6 @@ function composeRecipient(form: Pick<AddressForm, "firstName" | "lastName" | "re
   return form.recipientName.trim();
 }
 
-function toPersianDigits(n: string | number): string {
-  return String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]!);
-}
-
-const JALALI_MONTHS = [
-  "فروردین",
-  "اردیبهشت",
-  "خرداد",
-  "تیر",
-  "مرداد",
-  "شهریور",
-  "مهر",
-  "آبان",
-  "آذر",
-  "دی",
-  "بهمن",
-  "اسفند",
-];
-
-/** چیپ تاریخ: روز هفته از Host، روز و ماه جلالی فقط یک‌بار. */
-function deliveryChipParts(option: StorefrontDeliveryDateOption): { weekday: string; day: string; month: string } {
-  const jalaliFull = formatJalaliDate(`${option.value}T12:00:00`, "fa");
-  const parts = isoToJalaliDisplay(`${option.value}T12:00:00`);
-  const weekday =
-    option.label && option.label !== jalaliFull && option.label !== option.subLabel ? option.label : "روز";
-  return {
-    weekday,
-    day: parts ? toPersianDigits(parts.day) : option.subLabel,
-    month: parts ? JALALI_MONTHS[parts.month - 1] ?? "" : "",
-  };
-}
-
 function iconFor(method: StorefrontShippingMethod) {
   const key = method.iconKey || method.serviceCode;
   if (key.includes("zap") || key.includes("express") || method.methodCode.includes("express")) return Zap;
@@ -125,6 +94,7 @@ export function StorefrontShopeivaShipping() {
   useCheckoutAuthGate("/shipping");
   const router = useRouter();
   const localizePath = useLocalizedPath();
+  const locale = useLocale();
   const [projection, setProjection] = useState<StorefrontShippingProjection | null>(null);
   const [address, setAddress] = useState<AddressForm>(emptyAddress);
   const [savedAddresses, setSavedAddresses] = useState<CustomerAddress[] | null>(null);
@@ -192,7 +162,7 @@ export function StorefrontShopeivaShipping() {
   }, []);
 
   useEffect(() => {
-    void refreshProjection().catch((cause: unknown) => setError(toCustomerShippingMessage(cause)));
+    void refreshProjection().catch((cause: unknown) => setError(toCustomerShippingMessage(cause, locale)));
     void listCheckoutSavedAddresses()
       .then((result) => setSavedAddresses(result.addresses))
       .catch(() => setSavedAddresses(null));
@@ -238,7 +208,7 @@ export function StorefrontShopeivaShipping() {
     setUseSavedAddress(true);
     setShowSaved(false);
     void refreshProjection(mapped.provinceName, methodCode).catch((cause: unknown) =>
-      setError(toCustomerShippingMessage(cause)),
+      setError(toCustomerShippingMessage(cause, locale)),
     );
   }
 
@@ -248,7 +218,7 @@ export function StorefrontShopeivaShipping() {
     try {
       await refreshProjection(address.provinceName, code);
     } catch (cause) {
-      setError(toCustomerShippingMessage(cause));
+      setError(toCustomerShippingMessage(cause, locale));
     }
   }
 
@@ -279,7 +249,7 @@ export function StorefrontShopeivaShipping() {
       }
       router.push(localizePath(`/payment?checkoutId=${encodeURIComponent(committed.checkoutId)}`));
     } catch (cause) {
-      setError(toCustomerShippingMessage(cause));
+      setError(toCustomerShippingMessage(cause, locale));
       setLimitCode(cause instanceof StorefrontCartApiError ? cause.errorCode : null);
     } finally {
       setBusy(false);
@@ -317,7 +287,7 @@ export function StorefrontShopeivaShipping() {
       setShowNewDialog(false);
       setNewAddress(emptyAddress);
     } catch (cause) {
-      setError(toCustomerShippingMessage(cause));
+      setError(toCustomerShippingMessage(cause, locale));
     } finally {
       setBusy(false);
     }
@@ -750,7 +720,7 @@ export function StorefrontShopeivaShipping() {
                       <Shield className="w-3 h-3" /> پرداخت امن
                     </span>
                     <span className="flex items-center gap-1">
-                      <Truck className="w-3 h-3" /> ارسال از پیکربندی فروشگاه
+                      <Truck className="w-3 h-3" /> ارسال با روش انتخابی شما
                     </span>
                   </div>
                 </div>
@@ -873,10 +843,10 @@ function ShippingHero({
   subtotalLabel: string;
   shippingDaysLabel: string;
 }) {
-  const steps = [
-    { id: 1, label: "سبد خرید", icon: ShoppingBag },
-    { id: 2, label: "ارسال", icon: Truck },
-    { id: 3, label: "پرداخت", icon: CreditCard },
+  const steps: { id: number; label: string; icon: typeof ShoppingBag; href: string | null }[] = [
+    { id: 1, label: "سبد خرید", icon: ShoppingBag, href: "/cart" },
+    { id: 2, label: "ارسال", icon: Truck, href: null },
+    { id: 3, label: "پرداخت", icon: CreditCard, href: null },
   ];
   return (
     <section className="w-full bg-section-surface" data-storefront-surface-role="section">
@@ -891,25 +861,42 @@ function ShippingHero({
             <p className="text-[10px] md:text-sm text-white/80">آدرس و روش ارسال خود را انتخاب کنید</p>
           </div>
         </div>
-        <div className="flex items-center justify-center gap-2 md:gap-3 -mt-6 relative z-20 mb-9">
-          {steps.map((s, i) => (
-            <div key={s.id} className="flex items-center gap-2">
-              <div
-                className={`flex items-center gap-1.5 md:gap-2 px-4 md:px-5 py-2.5 md:py-3 rounded-xl text-[11px] md:text-sm font-bold ${
-                  s.id === 2
-                    ? "bg-primary text-white shadow-lg shadow-primary/30"
-                    : s.id < 2
-                      ? "bg-red-50 text-red-600"
-                      : "bg-gray-100 text-gray-400"
-                }`}
-              >
+        <div className="flex items-center justify-center gap-2 md:gap-3 -mt-6 relative z-20 mb-9" data-testid="shipping-steps">
+          {steps.map((s, i) => {
+            const className = `flex items-center gap-1.5 md:gap-2 px-4 md:px-5 py-2.5 md:py-3 rounded-xl text-[11px] md:text-sm font-bold ${
+              s.id === 2
+                ? "bg-primary text-white shadow-lg shadow-primary/30"
+                : s.id < 2
+                  ? "bg-red-50 text-red-600 hover:bg-red-100"
+                  : "bg-gray-100 text-gray-400"
+            }`;
+            const content = (
+              <>
                 <s.icon className="w-4 h-4" />
                 {s.id < 2 ? <Check className="w-3.5 h-3.5" /> : null}
                 {s.label}
+              </>
+            );
+            return (
+              <div key={s.id} className="flex items-center gap-2">
+                {s.href ? (
+                  <Link
+                    href={s.href}
+                    className={className}
+                    data-testid={`shipping-step-${s.id}`}
+                    aria-label="بازگشت به سبد خرید"
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <div className={className} data-testid={`shipping-step-${s.id}`}>
+                    {content}
+                  </div>
+                )}
+                {i < steps.length - 1 ? <ChevronLeft className="w-4 h-4 text-red-400" /> : null}
               </div>
-              {i < steps.length - 1 ? <ChevronLeft className="w-4 h-4 text-red-400" /> : null}
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="grid grid-cols-3 gap-1.5 md:gap-4 mb-4">
           <SummaryCard icon={ShoppingBag} value={toPersianDigits(itemCount)} label="تعداد کالا" />

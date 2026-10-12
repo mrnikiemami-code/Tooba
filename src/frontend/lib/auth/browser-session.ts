@@ -1,4 +1,6 @@
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "./constants.ts";
+import { acceptLanguageForLocale } from "../i18n/locale.ts";
+import { readBrowserLocaleCookie } from "../i18n/locale-cookie.ts";
 
 /** Reads readable CSRF cookie for double-submit header. */
 export function readCsrfCookie(): string | null {
@@ -16,6 +18,7 @@ export function readCsrfCookie(): string | null {
 export function bffFetchHeaders(json = false): Record<string, string> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (json) headers["Content-Type"] = "application/json";
+  headers["Accept-Language"] = acceptLanguageForLocale(readBrowserLocaleCookie());
   const csrf = readCsrfCookie();
   if (csrf) headers[CSRF_HEADER_NAME] = csrf;
   return headers;
