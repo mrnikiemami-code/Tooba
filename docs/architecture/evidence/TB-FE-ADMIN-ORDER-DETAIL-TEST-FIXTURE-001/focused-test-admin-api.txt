@@ -1,0 +1,19 @@
+﻿(node:36140) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ maps live dashboard, order, seller and customer DTOs (9.9719ms)
+✔ maps admin order detail seller snapshots (0.6469ms)
+✔ enriches legacy order detail payload without finance projections (0.3662ms)
+✔ enrichAdminOrderDetail keeps explicit server projections (0.0926ms)
+✔ enrichAdminOrderDetail counts lines not summed quantity (0.1646ms)
+✔ uses Persian money and status labels (0.3232ms)
+✔ sends development actor header and exposes denied state (11.515ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 122.2994

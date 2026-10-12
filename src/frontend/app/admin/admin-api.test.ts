@@ -132,6 +132,8 @@ test("enrichAdminOrderDetail keeps explicit server projections", () => {
     postalCode: "",
     shippingMethodLabel: "",
     sellerOrders: [],
+    // این سناریو هیچ بستهٔ تلفیقی ندارد (بدون sellerOrder)، و AdminOrderDetail این projection را الزامی می‌داند.
+    consolidatedPackages: [],
     sellerFinancials: [{ sellerOrderId: "so3", sellerPartyId: "sp3", sellerDisplayName: "آ", lineCount: 4, grossAmount: 1000, commissionAmount: 20, payableAmount: 980, currency: "IRR", settlementStatus: "Settled" }],
     financialEvents: [],
     financialSummary: { totalSellerShare: 1000, totalCommission: 20, grossOrderProfit: 20, payableToSellers: 980, customerGrossAmount: 1000, shippingCost: 0, customerDiscounts: 0, totalReceivedFromCustomer: 1000, currency: "IRR" },
