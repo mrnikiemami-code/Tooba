@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppDataGrid, createClientGridQueryAdapter, useLegacyAdminGridDirectProps } from "../../design-system";
-import type { GridColumnDef } from "../../design-system/data-grid";
+import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
 import { ADMIN_GIFT_CARD_GRID_VIEW_KEY, createHostSavedViewStore } from "../admin/saved-view-store";
 import {
   CheckCircle,
@@ -574,7 +574,7 @@ export function AdminGiftCardsScreen() {
   ], []);
 
   const giftCardQueryAdapter = useCallback(
-    async (query) => createClientGridQueryAdapter(giftCardGridRows, giftCardColumns)(query),
+    async (query: GridServerQuery) => createClientGridQueryAdapter(giftCardGridRows, giftCardColumns)(query),
     [giftCardGridRows, giftCardColumns],
   );
   const giftCardGridProps = useLegacyAdminGridDirectProps({

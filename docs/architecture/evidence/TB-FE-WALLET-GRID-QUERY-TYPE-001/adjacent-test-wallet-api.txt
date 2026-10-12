@@ -1,0 +1,17 @@
+﻿(node:29284) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/wallet/wallet-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapWalletSummary maps camel and Pascal ledger-derived balance (0.5419ms)
+✔ mapWalletLedgerPage accepts paged envelope and labels gift credit (0.1675ms)
+✔ ledger labels localize order debit and refund credit (0.0754ms)
+✔ mapGiftCardRedeemResult and issue/list/detail adapters (0.2622ms)
+✔ mapWalletDemoPreview and FA money helpers (10.3265ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 112.7732
