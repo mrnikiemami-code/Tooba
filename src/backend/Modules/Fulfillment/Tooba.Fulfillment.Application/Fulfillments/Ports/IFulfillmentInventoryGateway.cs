@@ -14,17 +14,22 @@ public interface IFulfillmentInventoryGateway
     /// <summary>
     /// مصرف رزرو با هویت پایدار مصرف‌کننده تا replay پس از شکست commit در Fulfillment ایمن شود.
     /// <para>
-    /// پیاده‌سازی پیش‌فرض برای سازگاریِ درزهای موجود به مسیر بدون کلید برمی‌گردد. فقط
-    /// <c>FulfillmentInventoryGateway</c> این عضو را override می‌کند و کلید را به overload
-    /// کلیددار Inventory می‌رساند؛ مسیرهای غیربستهٔ تجمیعی (dispatch تک‌مرسوله، بازگشت، لغو،
-    /// release) عمداً روی مسیر بدون کلید می‌مانند.
+    /// <b>fail-closed:</b> پیاده‌سازی پیش‌فرض عمداً استثنا می‌دهد و هرگز به مسیر بدون کلید
+    /// برنمی‌گردد. اگر درزی این عضو را override نکند، نبود قابلیت کلیددار نباید به مصرف
+    /// بدون هویت تبدیل شود، چون آن مسیر نمی‌تواند replay را اثبات کند و ممکن است موجودی را
+    /// دوباره کسر کند. فقط <c>FulfillmentInventoryGateway</c> این عضو را override می‌کند و کلید
+    /// را به overload کلیددار Inventory می‌رساند؛ مسیرهای غیربستهٔ تجمیعی (dispatch تک‌مرسوله،
+    /// بازگشت، لغو، release) عمداً روی مسیر بدون کلید می‌مانند و هرگز این عضو را صدا نمی‌زنند.
     /// </para>
     /// </summary>
     /// <param name="reservationId">شناسهٔ رزرو Held.</param>
     /// <param name="consumerKey">هویت پایدار و غیرتهی مصرف‌کننده.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
     Task ConsumeReservationAsync(Guid reservationId, string consumerKey, CancellationToken cancellationToken) =>
-        ConsumeReservationAsync(reservationId, cancellationToken);
+        throw new NotSupportedException(
+            "fulfillment.inventory.keyed_consume_not_supported: this IFulfillmentInventoryGateway "
+            + "implementation does not support keyed reservation consumption; keyed consume must never "
+            + "fall back to the unkeyed path.");
 
     /// <summary>
     /// رزرو Held سفارش پرداخت‌شده را از TTL سبد خارج می‌کند (ExpiresAt=null). Idempotent.
@@ -35,8 +40,9 @@ public interface IFulfillmentInventoryGateway
 /// <summary>
 /// مالک واحد قالب <c>consumer_key</c> برای مصرف رزرو در مسیر بستهٔ تجمیعی.
 /// <para>
-/// قالب: <c>pkg:{packageId:N}:shp:{shipmentId:N}:line:{orderLineId:N}</c> — ۷۸ کاراکتر، زیر سقف
-/// ۱۲۸ ستون <c>inventory.reservation_consumptions.consumer_key</c>. هر سه جزء شناسهٔ پایدار GUID
+/// قالب: <c>pkg:{packageId:N}:shp:{shipmentId:N}:line:{orderLineId:N}</c> — ۱۱۱ کاراکتر
+/// (۴ + ۳۲ + ۵ + ۳۲ + ۶ + ۳۲)، زیر سقف ۱۲۸ ستون
+/// <c>inventory.reservation_consumptions.consumer_key</c>. هر سه جزء شناسهٔ پایدار GUID
 /// هستند (نه زمان، نه تصادف، نه هش)، پس کلید روی retry پس از شکست commit دقیقاً بازتولید می‌شود و
 /// Inventory می‌تواند همان مصرف منطقی را تشخیص دهد. چون هر رزرو به یک خط سفارش یکتا گره خورده و
 /// خطوط سفارش داخل یک shipment تکرار نمی‌شوند، هویت مصرف‌کننده یکتا و بدون تصادم است.

@@ -196,6 +196,76 @@ public sealed class FulfillmentCharacterizationTests
     }
 
     [Fact]
+    public async Task Legacy_gateway_without_keyed_implementation_fails_closed()
+    {
+        // Direct seam proof: the default interface member must never delegate to the unkeyed path.
+        var legacy = new LegacyUnkeyedOnlyInventory();
+        IFulfillmentInventoryGateway legacySeam = legacy;
+        var reservationId = Guid.NewGuid();
+        Assert.Throws<NotSupportedException>(() =>
+        {
+            _ = legacySeam.ConsumeReservationAsync(reservationId, "pkg:x:shp:y:line:z", CancellationToken.None);
+        });
+        Assert.Empty(legacy.Consumed);
+
+        // Full consolidated-package dispatch proof: the missing keyed capability surfaces as a
+        // failure and no reservation is consumed through the unkeyed fallback.
+        await using var db = CreateDb();
+        var checkoutId = Guid.NewGuid();
+        var orderA = Guid.NewGuid();
+        var orderB = Guid.NewGuid();
+        var handoffA = BuildHandoff(orderA, Guid.NewGuid(), checkoutId, Guid.NewGuid());
+        var handoffB = BuildHandoff(orderB, Guid.NewGuid(), checkoutId, Guid.NewGuid());
+        var directory = CreateDirectory(db, legacy, new MapOrderReader(new Dictionary<Guid, OrderFulfillmentHandoffSnapshot>
+        {
+            [orderA] = handoffA,
+            [orderB] = handoffB,
+        }));
+
+        await directory.CreateFromPaidSellerOrdersAsync(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            [orderA, orderB],
+            CancellationToken.None);
+
+        var shipmentByOrder = new Dictionary<Guid, Guid>();
+        foreach (var orderId in new[] { orderA, orderB })
+        {
+            var unit = await directory.GetBySellerOrderAsync(orderId, CancellationToken.None);
+            await directory.MarkProcessingAsync(unit!.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
+            await directory.MarkPackedAsync(unit.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
+            var shipped = await directory.CreateShipmentAsync(
+                unit.FulfillmentId,
+                Guid.NewGuid(),
+                "پست",
+                [new ShipmentLineCommand(unit.Items[0].OrderLineId, 1)],
+                CancellationToken.None,
+                shippingMethodCode: "post",
+                providerMetadataJson: PostMetadata);
+            shipmentByOrder[orderId] = shipped.Shipments.Single(x => x.Status == ShipmentStatus.Created).ShipmentId;
+        }
+
+        var package = await directory.CreateConsolidatedPackageAsync(
+            checkoutId,
+            [shipmentByOrder[orderA], shipmentByOrder[orderB]],
+            "post",
+            "TRK-CENTRAL",
+            null,
+            Guid.NewGuid(),
+            CancellationToken.None);
+
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
+            directory.DispatchConsolidatedPackageAsync(package.ConsolidatedPackageId, Guid.NewGuid(), CancellationToken.None));
+
+        Assert.Empty(legacy.Consumed);
+        foreach (var orderId in new[] { orderA, orderB })
+        {
+            var unit = await directory.GetBySellerOrderAsync(orderId, CancellationToken.None);
+            Assert.Equal(FulfillmentStatus.Packed, unit!.Status);
+        }
+    }
+
+    [Fact]
     public void Cancel_gate_reports_HasDispatchedQuantity()
     {
         var unit = FulfillmentUnit.CreateFromPaidOrder(
@@ -323,6 +393,24 @@ public sealed class FulfillmentCharacterizationTests
 
         public Task ConsumeReservationAsync(Guid reservationId, string consumerKey, CancellationToken cancellationToken) =>
             throw new InvalidOperationException("inventory.consume.injected_failure");
+
+        public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// درز قدیمی بدون قابلیت کلیددار: هیچ overrideی برای عضو کلیددار ندارد، پس باید fail-closed
+    /// بماند و مسیر بدون کلید را هم صدا نزند.
+    /// </summary>
+    private sealed class LegacyUnkeyedOnlyInventory : IFulfillmentInventoryGateway
+    {
+        public List<Guid> Consumed { get; } = [];
+
+        public Task ConsumeReservationAsync(Guid reservationId, CancellationToken cancellationToken)
+        {
+            Consumed.Add(reservationId);
+            return Task.CompletedTask;
+        }
 
         public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken) =>
             Task.CompletedTask;
