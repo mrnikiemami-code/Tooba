@@ -68,7 +68,11 @@ export function buildLegacyGridBridge<T>(
 
     const base: ColDef<T> = {
       colId: col.id,
-      field,
+      // بدون `field`: هویت ستون همان `colId` است و مقدار نمایشی از `cellRenderer`
+      // و accessor خوانده می‌شود. `field` فقط یک مسیر دادهٔ AG Grid بود که برای
+      // شناسه‌های غیرمسیر (مثل options/active/customer) به undefined می‌رسید؛ فیلتر
+      // نیز app-owned است (`filter: false`) و مرتب‌سازی خروجی از موتور کوئری
+      // (accessor + colId) می‌آید، پس حذف آن رفتار visible را عوض نمی‌کند.
       headerName: col.header,
       sortable: col.sortable ?? false,
       width: col.width,
