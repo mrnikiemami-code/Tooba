@@ -1,19 +1,102 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "../cn";
 import { Button } from "./core";
 
+const TOOLTIP_GAP = 8;
+const TOOLTIP_VIEWPORT_MARGIN = 8;
+
+type TooltipAnchor = { top: number; bottom: number; center: number };
+type TooltipPlacement = { top: number; left: number };
+
 /**
  * راهنمای کوتاه روی فوکوس/هاور. برای محتوای پیچیده از Popover استفاده شود.
+ *
+ * حباب با `createPortal` روی `document.body` و با `position: fixed` رندر می‌شود تا
+ * `overflow: hidden` نیاکان (مثل سلول‌های `AppDataGrid`) آن را نبرد و بریده نشود.
+ * مختصات از `getBoundingClientRect` می‌آید، پس مستقل از جهت RTL/LTR یکسان و دقیق
+ * است؛ پیش‌فرض زیر تریگر و اگر جا نشد بالا، و افقی داخل viewport کلمپ می‌شود.
+ * مستقیم از createPortal استفاده می‌شود (نه primitive «Portal» که یک تیک دیرتر mount
+ * می‌شود) تا حباب در همان commit موجود و قابل اندازه‌گیری در useLayoutEffect باشد.
  */
 export function Tooltip({ label, children }: { label: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [anchor, setAnchor] = useState<TooltipAnchor | null>(null);
+  const [placement, setPlacement] = useState<TooltipPlacement | null>(null);
+  const triggerRef = useRef<HTMLSpanElement>(null);
+  const bubbleRef = useRef<HTMLSpanElement>(null);
+
+  const place = useCallback(() => {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setAnchor({ top: rect.top, bottom: rect.bottom, center: rect.left + rect.width / 2 });
+  }, []);
+
+  const show = useCallback(() => {
+    place();
+    setOpen(true);
+  }, [place]);
+
+  const hide = useCallback(() => {
+    setOpen(false);
+    setPlacement(null);
+  }, []);
+
+  // پیش از paint اجرا می‌شود: نه پرش دیده می‌شود و نه فلش.
+  useLayoutEffect(() => {
+    if (!open || !anchor) return;
+    const bubble = bubbleRef.current;
+    if (!bubble) return;
+    const { offsetWidth: width, offsetHeight: height } = bubble;
+    const half = width / 2;
+    // پیش‌فرض زیر تریگر (رفتار اصلی)؛ فقط اگر در viewport جا نشد به بالا فلیپ می‌کند.
+    const below = anchor.bottom + TOOLTIP_GAP;
+    const top =
+      below + height <= window.innerHeight - TOOLTIP_VIEWPORT_MARGIN
+        ? below
+        : Math.max(TOOLTIP_VIEWPORT_MARGIN, anchor.top - TOOLTIP_GAP - height);
+    const center = Math.min(
+      Math.max(anchor.center, TOOLTIP_VIEWPORT_MARGIN + half),
+      window.innerWidth - TOOLTIP_VIEWPORT_MARGIN - half,
+    );
+    setPlacement({ top, left: center - half });
+  }, [open, anchor, label]);
+
+  useEffect(() => {
+    if (!open) return;
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
+    return () => {
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
+    };
+  }, [open, place]);
+
   return (
-    <span className="relative inline-flex group">
+    <span
+      ref={triggerRef}
+      className="relative inline-flex group"
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+    >
       {children}
-      <span role="tooltip" className="pointer-events-none absolute start-1/2 z-[var(--z-overlay)] mt-2 hidden -translate-x-1/2 whitespace-nowrap rounded-ds bg-foreground px-2 py-1 text-xs text-background group-hover:block group-focus-within:block">
-        {label}
-      </span>
+      {open && anchor && typeof document !== "undefined"
+        ? createPortal(
+            <span
+              ref={bubbleRef}
+              role="tooltip"
+              className="pointer-events-none fixed z-[var(--z-overlay)] whitespace-nowrap rounded-ds bg-foreground px-2 py-1 text-xs text-background"
+              style={placement ?? { top: anchor.bottom + TOOLTIP_GAP, left: anchor.center }}
+            >
+              {label}
+            </span>,
+            document.body,
+          )
+        : null}
     </span>
   );
 }
