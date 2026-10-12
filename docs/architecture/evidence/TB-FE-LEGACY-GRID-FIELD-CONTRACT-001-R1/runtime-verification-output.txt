@@ -1,0 +1,50 @@
+﻿
+=== A. id is not a row property (orders-like customer/amount) ===
+sort customer asc
+  engine order            : o2,o3,o1
+  grid visible (field set)     : o2,o3,o1   SAME AS ENGINE
+  grid visible (field absent)  : o2,o3,o1   SAME AS ENGINE
+  ag-grid sort state (with field)    : customer:asc
+  ag-grid sort state (field absent)  : customer:asc
+  visible delta field-set vs field-absent: NONE
+sort amount desc
+  engine order            : o1,o3,o2
+  grid visible (field set)     : o1,o3,o2   SAME AS ENGINE
+  grid visible (field absent)  : o1,o3,o2   SAME AS ENGINE
+  ag-grid sort state (with field)    : amount:desc
+  ag-grid sort state (field absent)  : amount:desc
+  visible delta field-set vs field-absent: NONE
+
+=== B. id is a real row property, accessor returns it (orders-like reference) ===
+sort reference asc
+  engine order            : o2,o3,o1
+  grid visible (field set)     : o2,o3,o1   SAME AS ENGINE
+  grid visible (field absent)  : o2,o3,o1   SAME AS ENGINE
+  ag-grid sort state (with field)    : reference:asc
+  ag-grid sort state (field absent)  : reference:asc
+  visible delta field-set vs field-absent: NONE
+sort reference desc
+  engine order            : o1,o3,o2
+  grid visible (field set)     : o1,o3,o2   SAME AS ENGINE
+  grid visible (field absent)  : o1,o3,o2   SAME AS ENGINE
+  ag-grid sort state (with field)    : reference:desc
+  ag-grid sort state (field absent)  : reference:desc
+  visible delta field-set vs field-absent: NONE
+
+=== C. id is a real row property, accessor differs (landing pages slug -> pathLabel) ===
+sort slug asc
+  engine order            : h,a,z
+  grid visible (field set)     : a,h,z   DIFFERS FROM ENGINE
+  grid visible (field absent)  : h,a,z   SAME AS ENGINE
+  ag-grid sort state (with field)    : slug:asc
+  ag-grid sort state (field absent)  : slug:asc
+  visible delta field-set vs field-absent: PRESENT
+
+=== D. accessor row.<id> ?? "" with a null value ===
+sort reference asc
+  engine order            : o2,o3,o1
+  grid visible (field set)     : o2,o3,o1   SAME AS ENGINE
+  grid visible (field absent)  : o2,o3,o1   SAME AS ENGINE
+  ag-grid sort state (with field)    : reference:asc
+  ag-grid sort state (field absent)  : reference:asc
+  visible delta field-set vs field-absent: NONE

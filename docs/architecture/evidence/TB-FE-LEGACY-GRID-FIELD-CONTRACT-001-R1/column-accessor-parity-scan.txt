@@ -1,0 +1,16 @@
+﻿non-trivial accessors: 62; sortable among them: 15
+sortable id="customer" propertyInFile=no accessor=(row) => row.customerDisplayName <- app\admin\admin-screens.tsx
+sortable id="supply" propertyInFile=no accessor=(row) => row.supplyStatus <- app\admin\admin-screens.tsx
+sortable id="reservation" propertyInFile=no accessor=(row) => row.reservationState <- app\admin\admin-screens.tsx
+sortable id="seller" propertyInFile=no accessor=(row) => row.sellerDisplayName || row.sellerPartyId <- app\admin\admin-screens.tsx
+sortable id="available" propertyInFile=no accessor=(row) => row.availableBalance <- app\admin\admin-screens.tsx
+sortable id="credits" propertyInFile=no accessor=(row) => row.postedCredits <- app\admin\admin-screens.tsx
+sortable id="debits" propertyInFile=no accessor=(row) => row.postedDebits <- app\admin\admin-screens.tsx
+sortable id="reserved" propertyInFile=no accessor=(row) => row.reservedPayouts <- app\admin\admin-screens.tsx
+sortable id="created" propertyInFile=no accessor=(row) => row.createdAt <- app\admin\admin-screens.tsx
+sortable id="slug" propertyInFile=YES accessor=(row) => row.pathLabel <- app\admin\landing-pages\admin-landing-pages-screen.tsx
+sortable id="reference" propertyInFile=no accessor=(row) => row.orderReference <- features\admin-receipts\components\receipts-screen.tsx
+sortable id="customer" propertyInFile=no accessor=(row) => row.customerDisplayName <- features\admin-receipts\components\receipts-screen.tsx
+sortable id="supply" propertyInFile=no accessor=(row) => row.supplyStatus <- features\admin-receipts\components\receipts-screen.tsx
+sortable id="reservation" propertyInFile=no accessor=(row) => row.reservationState <- features\admin-receipts\components\receipts-screen.tsx
+sortable id="created" propertyInFile=no accessor=(row) => row.createdAt <- features\admin-receipts\components\receipts-screen.tsx
