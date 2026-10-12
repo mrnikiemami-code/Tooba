@@ -259,7 +259,10 @@ function buildColumnDefs(
     }),
     buildPinnedActionsColumnDef<AdminContentArticle>({
       direction: "rtl",
-      actionSlots: 5,
+      // actionSlots فقط عرض پیشفرض فشرده را میسازد (۱–۳ جایگاه) و اینجا هندسهٔ ستون
+      // کاملاً با width/minWidth/maxWidth صریح تعیین شده است؛ پس اشارهگر جایگاه نه
+      // اعمال میشود و نه معتبر است. تعداد واقعی دکمهها را AppGridRowActionsCell
+      // بدون سقف رندر میکند.
       width: 200,
       minWidth: 180,
       maxWidth: 200,
