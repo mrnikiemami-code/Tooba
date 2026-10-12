@@ -79,6 +79,38 @@ Owner: Architect review. All changes are versioned on main; keep findings after 
 - **Proposed bounded plan:** reproduce on current HEAD, inspect canonical column/header interfaces, repair owning consumers with focused tests; do not weaken type checks or modify unrelated columns.
 - **Acceptance:** affected TS errors and headers fixed, no new architecture or grid regression.
 
+### TF-009 — Storefront locale inventory is hard-coded to two languages
+- **Status / priority:** OPEN_DEFERRED / P1 (multilingual architecture).
+- **Surface:** `src/frontend/lib/i18n/locale.ts`; storefront locale routing, UI formatting and fallback.
+- **Evidence:** CODE_VERIFIED against `e8abc83787b7f16bed9e3c89d741346b4374f84e`: `LOCALES = ["fa", "en"] as const`, `isLocale`, `parseLocale`, `langForLocale`, `dirForLocale`, and `acceptLanguageForLocale` encode FA/EN only. This predates the shipping language fix. Related to TF-002 (admin) but different owner/surface; do not duplicate an admin issue.
+- **Harm:** centrally configured additional languages cannot flow end-to-end through storefront; URL, headers, direction, fallback and formatting may disagree.
+- **Proposed plan (NOT authorized):** first map Backend language registry and frontend route/locale ownership, enabled locales and fallback; design one canonical locale resolution contract; migrate existing frontend consumers in small bounded batches while preserving `/fa` and `/en`, SEO, RTL/LTR and Shopeiva locks. No invented language list or broad rewrite.
+- **Acceptance:** configured-language and fallback integration tests, correct Accept-Language/URL/formatting/direction, no regression to existing locales. Requires explicit task authorization.
+
+### TF-010 — Server error display inferred from script instead of localized error contract
+- **Status / priority:** OPEN_DEFERRED / P1 (user-facing error correctness).
+- **Surface:** `src/frontend/lib/i18n/displayable-server-detail.ts` and storefront error adapters.
+- **Evidence:** CODE_VERIFIED against `e8abc8378`: `isDisplayableServerDetail` tests Persian vs Latin Unicode script and rejects broad technical-keyword patterns. Worker reports other cart/PDP/product-card error mappers default to Persian (not independently traced here).
+- **Harm:** Latin-script non-English locales and mixed-script/technical-safe messages may be misclassified; user may see wrong language or generic fallback despite valid server localization.
+- **Proposed plan (NOT authorized):** inspect canonical error code/catalog, locale resolution and fallback; select display messages by stable error code and centralized localization with server authority; retain safe sanitization independent of script; add tests for all configured locales, neutral/mixed scripts and unknown codes. Do not bypass security sanitization.
+- **Acceptance:** localized errors chosen by contract, not Unicode script guess; focused negative/fallback tests and preserved HTTP error handling.
+
+### TF-011 — Shipping payload fixes language to fa
+- **Status / priority:** OPEN_DEFERRED / P1 (shipping multilingual correctness).
+- **Surface:** `src/frontend/app/storefront/storefront-shipping-api.ts`.
+- **Evidence:** CODE_VERIFIED at `e8abc8378`: request body uses `language: "fa"` despite new Accept-Language propagation.
+- **Harm:** active locale and submitted shipping language can differ, even with correct header.
+- **Proposed plan (NOT authorized):** verify backend DTO language semantics (language vs locale, required support), use canonical current locale in payload through existing adapter and test request under multiple configured locales; avoid hardcoding any two-language assumption.
+- **Acceptance:** body/header carry consistent language per contract and tests cover fallback.
+
+### TF-012 — Customer-facing shared storefront footer exposes internal implementation jargon
+- **Status / priority:** OPEN_DEFERRED / P2 (product copy / visual lock).
+- **Surface:** shared Shopeiva footer, exact owner to locate during an authorized task.
+- **Evidence:** WORKER_REPORTED during `e8abc8378`: footer displays `ویترین Tooba روی قالب خریداری‌شدهٔ Shopeiva · دادهٔ زنده Catalog/Offer`. Not independently reproduced. Shared storefront and visual lock require caution.
+- **Harm:** confusing internal jargon visible to customers and possible visual regression if corrected without review.
+- **Proposed plan (NOT authorized):** locate shared footer owner, verify live copy and approved visual baseline, replace only copy with product-facing localized resources under existing design tokens, run mandatory critical storefront/visual tests.
+- **Acceptance:** customer copy without internal technology names and unchanged accepted Home/PDP visuals.
+
 ## Related observations (not separate authorized tasks)
 
 - **Admin order operations:** earlier assessment noted that pending-payment plus expired reservation may expose only cancel on the admin operations menu. Customer-facing checkout-scoped retry was subsequently fixed and live-accepted (`1ae919f2`, `c1dab07c`), but this **does not** establish that an admin operation should exist or is authorized. Treat as `NEEDS_REPRODUCTION` before filing an implementation task.
@@ -86,6 +118,8 @@ Owner: Architect review. All changes are versioned on main; keep findings after 
 - **Global test baseline:** test-suite failure counts are Worker reports until independently reproduced; no global regeneration or self-authorized cleanup.
 
 ## Review log
+
+- 2026-10-12 — Explicit user-requested registration of storefront i18n and customer-copy findings TF-009..012 after shipping bugfix `e8abc8378`; no production repair authorized.
 
 - 2026-10-12 — Recorded tooltip ownership, accessibility/top-layer and admin-grid type/header risks (TF-006..008) from Cursor's still-uncommitted tooltip report; status WORKER_REPORTED pending code review.
 
