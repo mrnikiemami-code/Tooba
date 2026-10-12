@@ -126,14 +126,17 @@ does not replace the architecture skills or authorize AMSC recertification.
 Preserve existing contracts and locked state; conflicts require STOP and
 Architect approval. Never silently broaden scope or weaken architectural guards.
 
-## Deferred audit findings and architectural risks
+## Deferred audit findings — opt-in only
 
-Before editing a previously audited surface, consult
-`docs/architecture/ARCHITECTURE-FINDINGS-REGISTER.md` for related deferred
-findings. Record newly verified high-impact audit findings there when their
-repair is outside the authorized Task; distinguish verified code facts from
-Worker reports, and retain an actionable bounded remediation plan. Register
-entries do not authorize new tasks, AMSC waves, baseline resets, or scope expansion.
+Do NOT read or scan `docs/architecture/ARCHITECTURE-FINDINGS-REGISTER.md`
+during ordinary tasks, feature development, bug fixes, or screen audits.
+Do NOT automatically add audit findings to it. The register is consulted
+ONLY when the Architect/user explicitly requests adding, updating, reviewing,
+or resolving entries in that register. Before adding an entry, search existing
+entries for duplicates and update the existing ID rather than creating another.
+Keep access targeted (search relevant IDs/terms before reading large sections)
+to minimize context usage. The register never authorizes tasks, AMSC waves,
+baseline resets, or scope expansion.
 
 ## Agent skills
 
