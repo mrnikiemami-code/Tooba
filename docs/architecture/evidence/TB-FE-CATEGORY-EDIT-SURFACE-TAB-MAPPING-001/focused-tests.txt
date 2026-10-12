@@ -1,0 +1,27 @@
+﻿(node:37972) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-reservation-cycle.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ order detail covers required reservation states and history (0.9303ms)
+✔ countdown uses server ExpiresAt and refreshes once at zero (0.2377ms)
+✔ grids show compact reservation without per-row fetch (0.2904ms)
+✔ capabilities forbid extend timer and invented retry (0.1183ms)
+✔ mapped order detail keeps reservation projection without raw enums (0.4674ms)
+(node:20648) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/reservation-policy-admin.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ store settings expose reservation fields with save/cancel (0.5988ms)
+✔ category inherit/override surface exists (0.1042ms)
+✔ offer inherit/override/effective preview and flash-sale copy (0.1134ms)
+✔ FA RTL and EN LTR without raw config keys (0.0786ms)
+✔ seller mutation is not exposed; effective is read-only (0.0986ms)
+✔ mapper uses backend effective source and integer parse (0.1587ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 101.0022

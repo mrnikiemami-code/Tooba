@@ -1,0 +1,28 @@
+﻿app/admin/product-rich-text-editor.tsx(162,9): error TS2345: Argument of type 'Node<ImageOptions, any>' is not assignable to parameter of type 'Extension<any, any> | Extension<StarterKitOptions, any> | Mark<UnderlineOptions, any> | Mark<TextStyleOptions, any> | ... 5 more ... | Extension<...>'.
+  Type 'Node<ImageOptions, any>' is not assignable to type 'Node<TableOptions, any>'.
+    The types of 'config.addNodeView' are incompatible between these types.
+      Type '((this: { name: string; options: ImageOptions; storage: any; editor: Editor; type: NodeType; parent: ... | null | undefined; }) => NodeViewRenderer | null) | null | undefined' is not assignable to type '((this: { name: string; options: TableOptions; storage: any; editor: Editor; type: NodeType; parent: ... | null | undefined; }) => NodeViewRenderer | null) | null | undefined'.
+        Type '(this: { name: string; options: ImageOptions; storage: any; editor: Editor; type: NodeType; parent: ... | null | undefined; }) => NodeViewRenderer | null' is not assignable to type '(this: { name: string; options: TableOptions; storage: any; editor: Editor; type: NodeType; parent: ... | null | undefined; }) => NodeViewRenderer | null'.
+          The 'this' types of each signature are incompatible.
+            Type '{ name: string; options: TableOptions; storage: any; editor: Editor; type: NodeType; parent: ((this: ...) => NodeViewRenderer | null) | null | undefined; }' is not assignable to type '{ name: string; options: ImageOptions; storage: any; editor: Editor; type: NodeType; parent: ((this: ...) => NodeViewRenderer | null) | null | undefined; }'.
+              Types of property 'options' are incompatible.
+                Type 'TableOptions' is missing the following properties from type 'ImageOptions': inline, allowBase64, resize
+app/storefront/storefront-landing-blocks.tsx(722,9): error TS2740: Type '{ mediaAssetId: string; imageUrl: string; title: string; alt: string; description: string; ctaLabel: string; destinationType: "all-products" | "custom-url"; targetId: string; targetSlug: string; targetLabel: string; customUrl: string; href: string; }' is missing the following properties from type 'HeroSlideConfig': panelMediaAssetId, panelImageUrl, panelColor, panelSize, and 2 more.
+app/template-preview/fashion/fashion-template-preview-view.tsx(60,19): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<"operational-store-catalog" | "fashion-template-catalog-persisted">'.
+features/admin-languages/components/language-list.tsx(41,102): error TS2353: Object literal may only specify known properties, and 'flex' does not exist in type 'GridColumnDef<AdminLanguageRow>'.
+features/admin-languages/components/language-list.tsx(42,111): error TS2353: Object literal may only specify known properties, and 'flex' does not exist in type 'GridColumnDef<AdminLanguageRow>'.
+features/admin-languages/components/language-list.tsx(112,7): error TS2353: Object literal may only specify known properties, and 'pinned' does not exist in type 'GridColumnDef<AdminLanguageRow>'.
+lib/storefront-composition/fashion-demo-preview.ts(216,9): error TS2322: Type '{ brandId: string; slug: string; name: string; productCount: number; logoMediaAssetId: string | undefined; }[]' is not assignable to type 'StorefrontBrandItem[]'.
+  Type '{ brandId: string; slug: string; name: string; productCount: number; logoMediaAssetId: string | undefined; }' is not assignable to type 'StorefrontBrandItem'.
+    Types of property 'logoMediaAssetId' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string | null'.
+        Type 'undefined' is not assignable to type 'string | null'.
+lib/storefront-composition/shared-composition-renderer.tsx(244,23): error TS2339: Property 'bannerImageUrl' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(244,61): error TS2339: Property 'bannerImageUrl' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(245,20): error TS2339: Property 'bannerImageUrl' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(246,27): error TS2339: Property 'bannerMediaAssetId' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(246,69): error TS2339: Property 'bannerMediaAssetId' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(247,46): error TS2339: Property 'bannerMediaAssetId' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(256,37): error TS2339: Property 'bannerHref' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(256,70): error TS2339: Property 'bannerHref' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(819,32): error TS2741: Property 'alt' is missing in type 'PreviewFakeBannerItem' but required in type '{ src: string | undefined; href: string | undefined; title: string | undefined; alt: string | undefined; objectPosition: string; previewFake: boolean | undefined; }'.

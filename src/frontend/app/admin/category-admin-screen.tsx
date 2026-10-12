@@ -81,6 +81,24 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 type EditSurface = "general" | "translations" | "attributes" | "facets" | "mega-menu";
 
+/**
+ * نگاشت صریح تب → سطح ویرایش.
+ * فقط پنج تب، سطح ویرایش دارند. «محصولات» صفحهٔ مستقل است و «سیاست رزرو»
+ * ویرایشگر مستقل خودش را دارد؛ handleHeaderEdit هم برای رزرو return می‌کند و
+ * navigateToCategory سطح ویرایش را به general بازنشانی می‌کند.
+ * کلیدها به TabId قفل‌اند تا افزودن تب جدید در آینده بی‌صدا از قلم نیفتد و
+ * هیچ‌گاه یک سطح ویرایش ساختگی (مثل «reservation») به editSurface نرسد.
+ */
+const EDIT_SURFACE_BY_TAB: Record<TabId, EditSurface | null> = {
+  general: "general",
+  translations: "translations",
+  attributes: "attributes",
+  facets: "facets",
+  "mega-menu": "mega-menu",
+  products: null,
+  reservation: null,
+};
+
 interface GeneralDraft {
   name: string;
   slug: string;
@@ -1796,10 +1814,7 @@ export function CategoryAdminScreen() {
     formMode.onCancel();
   };
 
-  const tabToEditSurface = (tab: TabId): EditSurface | null => {
-    if (tab === "products") return null;
-    return tab;
-  };
+  const tabToEditSurface = (tab: TabId): EditSurface | null => EDIT_SURFACE_BY_TAB[tab];
 
   const selectedNode = categoryId ? flatNodes.find((n) => n.id === categoryId) : undefined;
   const pathNames = categoryId ? buildCategoryPath(flatNodes, categoryId) : [];

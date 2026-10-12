@@ -1,0 +1,44 @@
+﻿(node:20212) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-admin-form.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ General VIEW default markers and readable cards (1.2615ms)
+✔ General EDIT fields and save/cancel (0.5061ms)
+✔ status localization uses Persian labels in workspace (0.288ms)
+✔ parent selector is searchable path/name without raw ID labels (0.3482ms)
+✔ category media supports real library select/upload/unassign for image/icon/banner (0.6008ms)
+✔ permission-aware edit action gated by canEdit (0.3598ms)
+✔ Translations tab: locale switcher, statuses, create, VIEW/EDIT (0.4497ms)
+✔ translation completeness: missing / partial / complete (0.1793ms)
+✔ dirty locale-switch protection (0.3461ms)
+✔ human slug preview has no CategoryId suffix (0.777ms)
+✔ slug auto-suggest respects manual edits (0.3968ms)
+✔ duplicate slug maps to Persian UX message (0.397ms)
+✔ form mode state machine: view default, edit, cancel, save (0.1206ms)
+✔ view-only user cannot enter edit via state machine (0.0358ms)
+✔ tree context preservation after current-locale Name save (0.387ms)
+✔ AppCategoryTree file untouched by T006 workspace work (0.6821ms)
+✔ Attributes tab: per-category assignment flags and customize inherited (0.2557ms)
+✔ Attributes tab: VIEW/EDIT, inherited/local, add/create, labels (0.5576ms)
+✔ visible category tabs are functional — products real; seo/settings/history hidden (0.4108ms)
+✔ mobile layout markers present (0.2422ms)
+✔ no raw AgGridReact in category admin screen (0.2525ms)
+✔ API client exposes updateCore, upsertTranslation with full fields, move (0.1548ms)
+✔ translation meta keywords use removable tag chips not plain textbox (0.2666ms)
+✔ parseMetaKeywords splits commas and drops blanks/duplicates (0.5788ms)
+(node:36424) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/t038-category-grid-ux.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ additional chips helper keeps +N remainder from payload only (0.7346ms)
+✔ product list uses separate primary and additional category columns (0.2738ms)
+✔ category products panel shows leaf primary and comma list for additional categories (0.2506ms)
+✔ category tree selection follows route and scrolls selected node (0.502ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 123.9334
