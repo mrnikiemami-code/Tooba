@@ -1,0 +1,24 @@
+﻿(node:33324) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/menus/admin-menus-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ menu requests carry the canonical admin headers (16.7459ms)
+✔ menu mutations stay on the admin menus route (0.5927ms)
+✔ denied menu calls use the canonical denied contract (0.2593ms)
+✔ known menu error codes resolve to their localized menu message (0.2834ms)
+✔ unmapped failures never leak technical text to the admin (0.5641ms)
+(node:13876) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/menus/admin-menus.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ menu admin list is human-readable and hides technical ids (0.4796ms)
+✔ menu editor is hierarchical with Persian destinations (0.1301ms)
+✔ menu API stays on admin menus routes (0.0708ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 128.8626

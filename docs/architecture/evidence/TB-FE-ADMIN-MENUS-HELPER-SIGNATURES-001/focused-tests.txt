@@ -1,0 +1,61 @@
+﻿(node:23956) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ maps live dashboard, order, seller and customer DTOs (9.9834ms)
+✔ maps admin order detail seller snapshots (1.141ms)
+✔ enriches legacy order detail payload without finance projections (0.4235ms)
+✔ enrichAdminOrderDetail keeps explicit server projections (0.105ms)
+✔ enrichAdminOrderDetail counts lines not summed quantity (0.163ms)
+✔ uses Persian money and status labels (0.2832ms)
+✔ sends development actor header and exposes denied state (12.2067ms)
+(node:22832) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-error-map.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ maps known catalog attribute duplicate codes in fa and en (0.5863ms)
+✔ unknown fallback never exposes Bad Request / HTTP / raw codes (0.5732ms)
+✔ extracts code from legacy title (code) payloads (0.074ms)
+✔ parseAdminProblemErrorCode prefers stable errorCode never title (0.1807ms)
+✖ content article update and media errors are humanized (0.6415ms)
+(node:38608) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/menus/admin-menus.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ menu admin list is human-readable and hides technical ids (0.5707ms)
+✔ menu editor is hierarchical with Persian destinations (0.1585ms)
+✔ menu API stays on admin menus routes (0.0715ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 14
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 126.7627
+
+✖ failing tests:
+
+test at app\admin\admin-error-map.test.ts:111:1
+✖ content article update and media errors are humanized (0.6415ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'زبان دسته‌بندی باید با زبان مقاله یکسان باشد.'
+  - 'دستهٔ انتخاب‌شده با زبان مقاله هم‌خوان نیست.'
+  
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-error-map.test.ts:116:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'زبان دسته‌بندی باید با زبان مقاله یکسان باشد.',
+    expected: 'دستهٔ انتخاب‌شده با زبان مقاله هم‌خوان نیست.',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

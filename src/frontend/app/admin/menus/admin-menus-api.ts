@@ -81,14 +81,17 @@ function mapItem(raw: unknown): AdminMenuItem | null {
 }
 
 async function readJson(path: string, init?: RequestInit): Promise<{ status: number; body: unknown }> {
-  const response = await fetch(path, { ...init, headers: { ...adminHeaders(Boolean(init?.method && init.method !== "GET")), ...(init?.headers ?? {}) } });
+  const response = await fetch(path, { ...init, headers: { ...adminHeaders(), ...(init?.headers ?? {}) } });
   const body = await response.json().catch(() => null);
   return { status: response.status, body };
 }
 
 function fail(status: number, body: unknown): AdminResult<never> {
-  const code = parseAdminProblemErrorCode(body);
-  return { ok: false, message: mapAdminErrorMessage(code, status === 401 || status === 403 ? "دسترسی مجاز نیست." : "درخواست منو انجام نشد."), denied: status === 401 || status === 403 };
+  if (status === 401 || status === 403) {
+    return { ok: false, message: mapAdminErrorMessage("admin.authorization.denied", "fa"), denied: true };
+  }
+  const code = parseAdminProblemErrorCode(body, status);
+  return { ok: false, message: mapAdminErrorMessage(code, "fa") };
 }
 
 export async function listAdminMenus(): Promise<AdminResult<AdminMenu[]>> {
