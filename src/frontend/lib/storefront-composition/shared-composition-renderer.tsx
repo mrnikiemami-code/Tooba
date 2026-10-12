@@ -240,20 +240,18 @@ export function renderSharedHomeSection(
           : context.specialOffers.length > 0
             ? context.specialOffers
             : context.mostViewedProducts;
-      const bannerImageUrl =
-        typeof config.bannerImageUrl === "string" && config.bannerImageUrl.trim()
-          ? config.bannerImageUrl.trim()
-          : typeof config.bannerMediaAssetId === "string" && config.bannerMediaAssetId.trim()
-            ? `/v1/storefront/media/${config.bannerMediaAssetId.trim()}`
-            : undefined;
+      // مسیر Home با config وایت‌لیست‌شدهٔ parseSectionDisplayConfig کار می‌کند
+      // (composition-api.ts:215-231) که فقط title/subtitle/href/itemCount/sourceKind
+      // را برمی‌گرداند؛ پس bannerImageUrl/bannerMediaAssetId/bannerHref در این مسیر
+      // هرگز وجود ندارند و خواندنشان همیشه undefined بود (بنر پنل Explorer فقط در
+      // مسیر landing از رکورد خام config خوانده می‌شود: همین فایل، شاخهٔ مشابه ~:682).
+      // حذف این خوانده‌های مرده، خروجی رندر را عوض نمی‌کند.
       return (
         <ProductShowcaseEmblaRail
           variant={emblaVariant}
           products={products}
           title={config.title}
           href={config.href ?? "/products"}
-          bannerImageUrl={bannerImageUrl}
-          bannerHref={typeof config.bannerHref === "string" ? config.bannerHref : undefined}
           enableAutoplay
         />
       );
@@ -793,7 +791,20 @@ export function renderSharedLandingSection(input: SharedLandingRenderInput): Rea
     case "banner.one-large-four-small":
     case "banner.eight-compact": {
       const rawItems = Array.isArray(config.items) ? config.items : [];
-      const realItems = rawItems
+      /**
+       * قرارداد عنصر مصرف‌کنندهٔ واقعی CompositionBannerGrid است
+       * (storefront-home-blocks.tsx:551) که alt را نمی‌خواند و alt تصویر را از
+       * title می‌سازد (:595). بدون این حاشیه‌نویسی، نوع عنصر از literal استنتاج
+       * می‌شد، `alt` اجباری می‌گشت و PreviewFakeBannerItem (بدون alt) رد می‌شد.
+       */
+      const realItems: Array<{
+        src?: string;
+        href?: string;
+        title?: string;
+        alt?: string;
+        objectPosition: string;
+        previewFake?: boolean;
+      }> = rawItems
         .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
         .map((item) => {
           const mediaId = typeof item.mediaAssetId === "string" ? item.mediaAssetId : undefined;

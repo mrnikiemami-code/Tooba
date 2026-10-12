@@ -14,6 +14,7 @@ import { StorefrontMenuLinks } from "./storefront-menu-tree.tsx";
 import type { StorefrontMenuItem } from "./storefront-menu-api.ts";
 import { heightPresetBannerClass } from "../../lib/storefront-composition/size-presets.ts";
 import {
+  emptyHeroSlide,
   heroDiagonalImageClip,
   heroDiagonalPanelClip,
   heroHeightClass,
@@ -720,6 +721,12 @@ export function LandingHero({
       variant={variant}
       slides={[
         {
+          // مسیر سازگاری با config قدیمی تک‌تصویری هیچ داده‌ای برای پنل دوم ندارد.
+          // شش فیلد اجباری پنل از سازندهٔ کانونیک emptyHeroSlide می‌آیند
+          // (hero-slider-config.ts:253-273) که دقیقاً همان مقادیر fallback همین فایل
+          // در safeSlides است (panelColor === HERO_DIAGONAL_PANEL_DEFAULT_COLOR === "#0f172a").
+          // تصویر/عنوان/href/metadata هیچ تغییری نمی‌کنند و هیچ پنل تازه‌ای ساخته نمی‌شود.
+          ...emptyHeroSlide(),
           mediaAssetId: mediaId,
           imageUrl: configuredImage || "/images/sliders/slider-1.jpg",
           title,

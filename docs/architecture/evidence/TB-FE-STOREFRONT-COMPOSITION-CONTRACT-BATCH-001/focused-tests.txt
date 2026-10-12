@@ -1,0 +1,289 @@
+﻿node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm 
+help npmrc` for supported config options.
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> tooba-web@0.0.1 test:composition-engine
+> node --experimental-strip-types --test lib/storefront-composition/composition-registry.guard.test.ts lib/storefront-composition/shared-composition-renderer.guard.test.ts lib/storefront-composition/industry-templates.guard.test.ts lib/storefront-composition/completeness-matrix.guard.test.ts
+
+(node:30528) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/storefront-composition/completeness-matrix.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ TB-P10-T022 selectable-variant completeness matrix
+  ✔ every implemented variant has preview metadata + responsive contract + renderer/shared path (1.0767ms)
+  ✔ hides accidental alias banner.mosaic-2x2 from selectable catalog (0.1671ms)
+  ✔ admin catalog surfaces only implemented variants (no orphan selectable) (0.293ms)
+  ✔ does not expose technical composition identifiers in variant FA labels (0.4897ms)
+✔ TB-P10-T022 selectable-variant completeness matrix (2.9053ms)
+(node:37936) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/storefront-composition/composition-registry.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ storefront composition registry
+  ✔ has unique section and variant keys with valid defaults (0.6349ms)
+  ✔ keeps SectionType ↔ Variant compatibility (0.3855ms)
+  ✔ requires a responsive contract for every variant (0.151ms)
+  ✔ rejects arbitrary and CSS settings (0.5915ms)
+  ✔ adapts existing Landing section types including native StoryRail/BannerShowcase (0.412ms)
+  ✔ every implemented variant has renderer case presence and contract (0.2534ms)
+  ✔ templates use only implemented truthful variants and stay distinct (0.4191ms)
+  ✔ implemented variants do not share identical responsive classification (0.1556ms)
+  ✔ does not expand user color model beyond four global roles (1.3097ms)
+✔ storefront composition registry (5.1178ms)
+(node:37004) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/storefront-composition/industry-templates.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ industry templates + native contracts
+  ✔ seeds 10 distinct templates from implemented variants and truthful sources (0.7045ms)
+  ✔ builds normal editable draft section payloads (0.5508ms)
+  ✔ banner slot counts match layout variants (0.1997ms)
+  ✔ every implemented variant has responsive contract (0.1758ms)
+✔ industry templates + native contracts (2.2874ms)
+(node:9728) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/storefront-composition/shared-composition-renderer.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ shared composition renderer
+  ✔ resolves registered SectionType+Variant (0.6315ms)
+  ✔ rejects invalid Variant for SectionType (1.3298ms)
+  ✔ rejects unimplemented variants when strict (0.1555ms)
+  ✔ wave-2 variants are implemented with distinct layout metadata (0.1853ms)
+  ✔ implemented variants expose distinct preview fingerprints (0.5812ms)
+  ✔ maps native StoryRail and BannerShowcase without CategoryGrid/PromoBanner proxy (0.9215ms)
+  ✔ migrates T019 proxy configs carrying story/banner variantKey (0.1391ms)
+  ✔ legacy Landing adapter is deterministic (0.1826ms)
+  ✔ only implemented variants appear in admin selectable helper (0.3626ms)
+  ✔ responsive contract present for every implemented variant (0.1712ms)
+  ✔ unsupported setting rejected (0.1307ms)
+✔ shared composition renderer (5.6349ms)
+ℹ tests 28
+ℹ suites 4
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 130.6113
+node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm 
+help npmrc` for supported config options.
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> tooba-web@0.0.1 test:composition
+> node --experimental-strip-types --test app/composition/composition-api.test.ts
+
+(node:22180) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/composition/composition-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapHomeComposition maps PascalCase storefront payload (0.5401ms)
+✔ mapAdminHomeComposition includes visibility (0.1834ms)
+✔ mapSectionCatalog maps catalog entries (0.3ms)
+✔ parseSectionDisplayConfig reads safe keys only (0.6365ms)
+✔ defaultHomeCompositionSections preserves canonical order (0.1168ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 99.5209
+node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm 
+help npmrc` for supported config options.
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> tooba-web@0.0.1 test:home
+> node --experimental-strip-types --test app/storefront/storefront-home.test.ts app/storefront/home-structure.guard.test.ts
+
+(node:34824) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/home-structure.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home guard keeps Shopeiva section markers (0.9136ms)
+✔ home guard preserves canonical default section order (0.7143ms)
+✔ home guard rejects giant catalog dump on Home rail (0.1746ms)
+✔ home guard keeps composition renderer switch cases (0.1045ms)
+✔ home stories use live Host binding without fake STORY_IMAGES (0.1067ms)
+(node:38588) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-home.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home mapper prefers homeCategories rail and does not require dumping all categories (0.9225ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 113.0542
+node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm 
+help npmrc` for supported config options.
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> tooba-web@0.0.1 test:storefront
+> node --experimental-strip-types --test app/storefront/storefront-api.test.ts app/storefront/storefront-cart-api.test.ts app/storefront/storefront-checkout-api.test.ts app/storefront/storefront-payment-api.test.ts app/storefront/storefront-shipping-api.test.ts app/storefront/storefront-pending-payment-api.test.ts app/storefront/storefront-cart-ui.guard.test.ts app/storefront/storefront-identity-api.test.ts app/storefront/storefront-landing.guard.test.ts
+
+(node:22356) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home mapper keeps offer amount off a product price field (1.4349ms)
+✔ detail mapper reads amount from primary offer only (13.4407ms)
+✔ maps only public review contract and backend aggregate (0.4584ms)
+✔ zero reviews do not emit aggregate rating (0.1823ms)
+✔ review submission sends exact payload and exposes auth/conflict statuses (24.4344ms)
+✔ detail loader sends selected variant only to the authoritative endpoint (0.2832ms)
+✔ listing mapper keeps backend discovery facets and pagination (0.2127ms)
+✔ unsupported merchandising remains empty and explicit (0.1292ms)
+✔ public seller mapper ignores private and internal party fields (0.1502ms)
+(node:31800) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-cart-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cart mapper keeps offer identity and ignores product price fields (1.2417ms)
+✔ bootstrapCartSessionFromQuery writes session when both ids present (1.5768ms)
+✔ customer cart message hides Held reservation wording (0.5716ms)
+✔ customer cart message hides raw exception type names (0.2228ms)
+✔ cart mapper defaults missing status to Active (0.2293ms)
+✔ committed checkout proofs are keyed by checkout and survive active cart detach (0.7122ms)
+✔ ensureStorefrontCart rotates Converted cart and never posts lines to it (21.7273ms)
+✔ addOfferToCart rotates when Host omits status and rejects Converted mutation (1.0717ms)
+✔ authenticated ensure prefers current cart and does not POST a guest cart (0.8722ms)
+✔ cart mapper keeps quantity policy fields for mini-cart and /cart (0.8477ms)
+✔ one login transition posts merge at most once even when callers race (0.6279ms)
+✔ refresh and navigation after merge do not post a second merge (0.5405ms)
+(node:37020) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-cart-ui.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ product card ATC is a real button wired to addOfferToCart (1.2346ms)
+✔ header opens mini-cart drawer instead of bare /cart link (0.1548ms)
+✔ canonical account menu reuses Shopeiva dropdown and logout (0.4094ms)
+✔ mini-cart drawer preserves Shopeiva structure on Host cart APIs (0.1373ms)
+✔ cart page recommendations use live feed cards with working ATC reuse (0.2563ms)
+(node:28344) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-checkout-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ checkout mapper keeps backend totals and pending payment (0.7544ms)
+✔ paid checkout capability disables initiation (0.1203ms)
+✔ post-commit ownership failure is never order-registration-failed (0.1917ms)
+✔ open unpaid and churn messages stay business-safe (0.1072ms)
+✔ customer checkout message hides technical tax codes (0.1798ms)
+✔ checkout shipping body includes savedAddressId only when selected (0.097ms)
+✔ checkout submit sends savedAddressId for actor and omits it on guest inline path (18.2779ms)
+(node:35532) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-identity-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ logged-in with profile name uses name (1.386ms)
+✔ logged-in without name uses mobile (0.1547ms)
+✔ generic account label is last fallback only (0.1014ms)
+✔ first and last compose when displayName is absent (0.1021ms)
+✔ account label never uses shipping recipient fields (0.614ms)
+✔ concurrent session consumers share one auth/me request (18.0346ms)
+✔ expected anonymous 401 is cached and not retried (0.4567ms)
+✔ invalidate allows one new auth/me after login transition (1.2571ms)
+(node:23060) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-landing.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ landing route uses one canonical section renderer (0.8932ms)
+✔ home uses selected published landing or canonical home (0.2412ms)
+✔ renderer maps approved types and fails unknown types safely (0.1608ms)
+(node:26376) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-payment-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ payment initiation mapper keeps host redirect and amount (1.6702ms)
+✔ wallet initiation allows empty redirect and skips provider redirect (0.1542ms)
+✔ non-wallet initiation without redirect is rejected by mapper (0.0665ms)
+✔ wallet quote mapper keeps host-calculated balances and deferred mixed flag (0.1433ms)
+✔ wallet quote mapper accepts Host wallet-quote field names without cartId (0.0865ms)
+✔ payment mapper does not invent succeeded (0.1326ms)
+✔ already succeeded payment message is customer-safe (0.1233ms)
+✔ post-commit payment ownership is not order-registration-failed (0.0853ms)
+✔ customer payment message hides gateway codes (0.1134ms)
+✔ customer payment message maps wallet insufficient (0.1104ms)
+✔ customer payment message maps unavailable method (0.0753ms)
+✔ shouldPoll stops for Succeeded Failed Cancelled (0.2208ms)
+✔ shouldPoll stops for manual AwaitingAdmin and awaiting customer form (0.1064ms)
+✔ shouldPoll continues for transient online Pending/Processing/Verifying (0.0945ms)
+(node:16316) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-pending-payment-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ countdown is derived from server ExpiresAt and counts locally (0.8149ms)
+✔ failed payment mapping does not invent a new timer (0.287ms)
+✔ customer pending errors never use checkout registration copy (0.1648ms)
+✔ expired reservation retry is checkout-scoped and never a silent no-op (0.4445ms)
+✔ expired reservation retry copy is localized and never invents a paid order (0.146ms)
+✔ pending card access hint is checkout-scoped and never copies the active cart secret (0.2406ms)
+✔ pending UX source keeps FA RTL EN LTR and no raw cycle enums (0.8433ms)
+✔ dismissed pending checkouts are excluded from the visible list (0.1739ms)
+✔ hide is only available after the reservation timer ends (0.1063ms)
+✔ dead pending card keeps only dismiss: cancel is gated on the retry limit (0.3282ms)
+(node:24336) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ shipping projection maps store methods and never invents template carriers (1.873ms)
+✔ shipping date chips use Host weekday/date once and do not duplicate Jalali (0.5543ms)
+✔ shipping continue commits before navigation and does not pre-clear cart (0.2785ms)
+✔ shipping UI source has no hardcoded Shopeiva template method list (0.6412ms)
+✔ cart CTA routes to /shipping (0.2452ms)
+✔ customer shipping errors stay localized (0.2187ms)
+✔ stale cart on shipping never leaks the English server title (0.1142ms)
+✔ shipping stepper walks back to the cart instead of trapping the customer (0.2355ms)
+ℹ tests 76
+ℹ suites 0
+ℹ pass 76
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 168.6217
+(node:4004) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-hero-slider-r13r1.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Hero picker exposes exactly six canonical variants (0.8994ms)
+✔ single HeroSlider/Swiper engine — no second library (0.2351ms)
+✔ height presets only — no raw pixel admin input (0.1078ms)
+✔ image guidance differs by variant and height (9.4008ms)
+✔ slide SEO fake fields removed; visible title/description used (0.3011ms)
+✔ structured CTA destination model (0.1451ms)
+✔ validation summary + live contract (0.5445ms)
+✔ legacy slide seo* and href remain adaptable (0.0775ms)
+✔ optional CTA and none destination do not error (0.1466ms)
+✔ LOCK-SF-367…374 present (0.697ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 106.2914
