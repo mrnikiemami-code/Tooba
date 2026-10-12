@@ -1,0 +1,100 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-KEYED-CONSUME-FAIL-CLOSED-004R
+Parent-Task: TB-P0-FULFILLMENT-KEYED-CONSUME-WIRING-004
+Program: TOOBA-FULFILLMENT-DISPATCH-INTEGRITY-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_MINIMAL_FAIL_CLOSED_CORRECTION_STOP_FOR_ACCEPTANCE
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_READY_FOR_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: 5f9e4d0fcb332317ce5c4d0089a6b43f301e9765
+Starting-HEAD:          5f9e4d0fcb332317ce5c4d0089a6b43f301e9765
+Starting-origin/main:   5f9e4d0fcb332317ce5c4d0089a6b43f301e9765
+Tracked-worktree-clean: YES; HEAD == origin/main == Expected-Starting-HEAD; no reset/rebase/stash/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, the two direct code seams.
+Deferred ARCHITECTURE-FINDINGS-REGISTER.md NOT opened.
+LIVE-DATA SAFETY: no DB access, no migration, no deployment, no live Host mutation, no restart,
+no package dispatch. Change set is source + receipt + evidence only.
+
+CORRECTION 1 — FAIL-CLOSED DEFAULT INTERFACE MEMBER
+Before: IFulfillmentInventoryGateway.ConsumeReservationAsync(Guid, string consumerKey, CancellationToken)
+        default member silently delegated to ConsumeReservationAsync(Guid, CancellationToken).
+        An implementation lacking keyed capability therefore consumed through a path that cannot
+        prove replay identity and could deduct inventory without consumer identity.
+After : the default member throws a deterministic explicit failure:
+          NotSupportedException
+          "fulfillment.inventory.keyed_consume_not_supported: this IFulfillmentInventoryGateway
+           implementation does not support keyed reservation consumption; keyed consume must never
+           fall back to the unkeyed path."
+        * signatures unchanged
+        * no error-catalog code invented (stable explicit NotSupportedException text, consistent with
+          the repository's unsupported-capability convention)
+        * a missing implementation now FAILS CLOSED and can never deduct inventory
+        * non-consolidated-package flows never call this member, so their unkeyed semantics are
+          unchanged (individual dispatch, returns, cancel, reservation release)
+
+CORRECTION 2 — ACCURATE KEY-LENGTH CLAIM
+The comment claiming pkg:{packageId:N}:shp:{shipmentId:N}:line:{orderLineId:N} is 78 characters was
+wrong. Corrected to 111 characters (4 + 32 + 5 + 32 + 6 + 32), still <= 128 (the
+inventory.reservation_consumptions.consumer_key ceiling). The actual key format is UNCHANGED.
+
+MANDATORY GATES
+G1 concrete gateway overrides keyed member and calls Inventory keyed overload: PASS
+   FulfillmentInventoryGateway.ConsumeReservationAsync(Guid, string, ct)
+     -> IFulfillmentInventoryLifecyclePort.ConsumeAsync(reservationId, consumerKey, ct)
+G2 other implementations (narrow search): RecordingInventory + ThrowingKeyedInventory (this module's
+   tests) override it; new LegacyUnkeyedOnlyInventory deliberately does NOT. No production
+   implementation besides FulfillmentInventoryGateway. No sweeping refactor.
+G3 focused test command (ONE): dotnet test --filter "FullyQualifiedName~FulfillmentCharacterizationTests"
+   => 6/6 passed, including the new Legacy_gateway_without_keyed_implementation_fails_closed.
+G4 focused build command (ONE): dotnet build Tooba.Fulfillment.Infrastructure
+   => Build succeeded, 0 Warning(s), 0 Error(s).
+No complete Host suite, no AMSC, no broad repo tests, no retries, no multi-run loops.
+
+REGRESSION TEST — WHAT IT PROVES (both layers)
+1) Direct seam: invoking the keyed member on a legacy double (no override) throws
+   NotSupportedException and its unkeyed method records ZERO calls.
+2) End-to-end dispatch: DispatchConsolidatedPackageAsync on a package whose gateway lacks the keyed
+   capability fails with NotSupportedException, the unkeyed path is never used, and no member
+   fulfillment is persisted as Dispatched (both remain Packed).
+Production gateway keyed forwarding and deterministic key generation stay covered by the two
+existing 004 tests, green in the same run.
+
+FILES TOUCHED (one production + one test, inside the cap)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Fulfillments/Ports/IFulfillmentInventoryGateway.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/FulfillmentCharacterizationTests.cs
+  docs/ai/tasks/TB-P0-KEYED-CONSUME-FAIL-CLOSED-004R.task.md
+  docs/architecture/evidence/TB-P0-KEYED-CONSUME-FAIL-CLOSED-004R/summary.md
+
+NOT CHANGED (by instruction)
+Inventory schema/port/journal, Fulfillment package routing, W6 held/consumed reconciliation, locked
+guards, baselines, config, key format. No W6 change and no new workflow.
+
+COMMIT / PUSH
+Starting-HEAD: 5f9e4d0fcb332317ce5c4d0089a6b43f301e9765
+Ending-HEAD:   67776052b07465c599e6a8454ce99d5553b25051
+origin/main:   67776052b07465c599e6a8454ce99d5553b25051
+Commit: 67776052b "fix(fulfillment): fail-closed keyed consume default + correct key length
+(TB-P0-KEYED-CONSUME-FAIL-CLOSED-004R)"
+
+ROLLBACK
+Revert this single commit (or restore the 004 default member and drop the new test). No schema,
+migration, journal, routing, W6, guard, baseline or config change is involved, so rollback is a pure
+source revert with no data migration.
+
+REMAINING P0 RISKS
+R1 Cross-module atomicity is still not claimed: the Fulfillment commit and the Inventory consume
+   remain two transactions; this task only makes the Inventory side replay-safe.
+R2 The key is only as stable as the member shipment identity (cancel + re-create shipment yields a
+   new key, which is the correct semantic).
+R3 Journal-003's migration is still undeployed in the live Host, so this wiring stays dormant until
+   the Architect authorizes that deployment.
+
+VERDICT
+COMPLETE within the bounded scope. Minimal fail-closed correction + comment accuracy fix + one
+targeted regression test. STOP for Architect independent acceptance. DO NOT start the next task.
+END_TOOBA_WORKER_RESULT
