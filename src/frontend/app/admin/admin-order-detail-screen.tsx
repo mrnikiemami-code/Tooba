@@ -580,11 +580,6 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
       {docError ? <p className="mb-3 text-sm text-red-600">{docError}</p> : null}
       <InventoryRecoveryBanner checkoutId={checkoutId} />
       <OrderSupplyCard supply={supply} />
-      <OrderReservationCycleCard
-        audit={detail?.reservationCycle ?? null}
-        locale={reservationLocale()}
-        onExpiredRefresh={refresh}
-      />
 
       {result.state === "error" ? (
         <ErrorState title="سفارش خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
@@ -827,6 +822,8 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
               ) : null}
             </div>
           </section>
+
+          <OrderReservationCycleCard audit={detail?.reservationCycle ?? null} locale={reservationLocale()} onExpiredRefresh={refresh} />
         </div>
       ) : (
         <p className="text-sm text-gray-500">در حال بارگذاری…</p>
