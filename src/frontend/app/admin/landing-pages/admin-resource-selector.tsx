@@ -738,7 +738,7 @@ function ArticleResourceGrid({
         id: "publishDate",
         header: "تاریخ انتشار",
         accessor: (row) => row.publishDate,
-        cell: (row) => (row.publishDate ? formatJalaliDate(row.publishDate) : "—"),
+        cell: (row) => (row.publishDate ? formatJalaliDate(row.publishDate, "fa") : "—"),
         width: 140,
         minWidth: 120,
         filterKind: "date",

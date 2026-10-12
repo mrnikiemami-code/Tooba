@@ -1,0 +1,800 @@
+﻿### RUN: nearest suites that DO read the changed file (admin-resource-selector.tsx) + formatter suites
+(node:27812) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-builder-ux-r1.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ section wizard replaces modal+drawer fragmentation (0.8745ms)
+✔ page language is page-level only (0.2252ms)
+✔ story builder is display-settings only (0.101ms)
+✔ resource selector uses orders-canonical AppDataGrid profile (0.0774ms)
+✔ wizard step validation covers source requirements (0.5521ms)
+✔ truthful dynamic sources exclude HeuristicHomeOnly kinds (0.1505ms)
+✖ template/variant previews: banner slots stay layout-aware; picker uses live components (0.8024ms)
+✔ operations column metadata remains icon-only tooltip pattern (0.1157ms)
+(node:33308) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/ag-filter-mapper.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ fromAgFilterModel maps text/number/date/set filters without AG leakage to host (1.3881ms)
+✔ fromAgFilterModel ignores empty filters (0.1063ms)
+(node:28832) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/jalali-date-ui.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ jalaliInputToIso converts Persian date input to ISO (1.7867ms)
+✔ filterChipLabel renders Jalali date without raw ISO tokens (0.4217ms)
+✔ filterChipLabel maps enum values to human labels (0.1078ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 12
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 112.2007
+
+✖ failing tests:
+
+test at app\admin\landing-pages\admin-builder-ux-r1.guard.test.ts:69:1
+✖ template/variant previews: banner slots stay layout-aware; picker uses live components (0.8024ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /data-layout-aware/. Input:
+  
+  '"use client";\r\n' +
+    '\r\n' +
+    'import type { VariantPreviewKind } from "../../../lib/storefront-composition/types.ts";\r\n' +
+    'import { getVariant } from "../../../lib/storefront-composition/registry.ts";\r\n' +
+    'import type { IndustryTemplateSeed } from "../../../lib/storefront-composition/industry-templates.ts";\r\n' +
+    'import { templateCompositionMiniature } from "../../../lib/storefront-composition/industry-templates.ts";\r\n' +
+    '\r\n' +
+    '/** Layout-aware miniature cells — not generic colored bars. */\r\n' +
+    'export type PreviewCell = {\r\n' +
+    '  className: string;\r\n' +
+    '  kind?: string;\r\n' +
+    '};\r\n' +
+    '\r\n' +
+    'const INDUSTRY_ACCENT: Record<string, string> = {\r\n' +
+    '  fashion: "bg-rose-100/90",\r\n' +
+    '  autoparts: "bg-slate-200/95",\r\n' +
+    '  building: "bg-stone-200/90",\r\n' +
+    '  tools: "bg-orange-100/90",\r\n' +
+    '  tile: "bg-teal-100/90",\r\n' +
+    '  interior: "bg-amber-100/90",\r\n' +
+    '  appliance: "bg-sky-100/90",\r\n' +
+    '  shoes: "bg-violet-100/90",\r\n' +
+    '  plants: "bg-lime-100/90",\r\n' +
+    '  beauty: "bg-fuchsia-100/80",\r\n' +
+    '  grocery: "bg-lime-100/90",\r\n' +
+    '  electronics: "bg-sky-100/90",\r\n' +
+    '  sports: "bg-orange-100/90",\r\n' +
+    '  kids: "bg-yellow-100/90",\r\n' +
+    '  books: "bg-stone-200/90",\r\n' +
+    '  general: "bg-slate-100/90",\r\n' +
+    '};\r\n' +
+    '\r\n' +
+    'function industryTone(industry: string): string {\r\n' +
+    '  const key = industry.toLowerCase();\r\n' +
+    '  if (key.includes("fashion") || key.includes("مدا") || key.includes("کفش") || key.includes("shoe")) {\r\n' +
+    '    if (key.includes("shoe") || key.includes("کفش")) return INDUSTRY_ACCENT.shoes!;\r\n' +
+    '    return INDUSTRY_ACCENT.fashion!;\r\n' +
+    '  }\r\n' +
+    '  if (key.includes("auto") || key.includes("قطعه")) return INDUSTRY_ACCENT.autoparts!;\r\n' +
+    '  if (key.includes("build") || key.includes("ساختمان") || key.includes("مصالح")) return INDUSTRY_ACCENT.building!;\r\n' +
+    '  if (key.includes("tool") || key.includes("ابزار")) return INDUSTRY_ACCENT.tools!;\r\n' +
+    '  if (key.includes("tile") || key.includes("سرامیک") || key.includes("کاشی")) return INDUSTRY_ACCENT.tile!;\r\n' +
+    '  if (key.includes("interior") || key.includes("دکور") || key.includes("منزل") || key.includes("decor")) return INDUSTRY_ACCENT.interior!;\r\n' +
+    '  if (key.includes("appliance") || key.includes("لوازم خانگی")) return INDUSTRY_ACCENT.appliance!;\r\n' +
+    '  if (key.includes("plant") || key.includes("گیاه") || key.includes("گل")) return INDUSTRY_ACCENT.plants!;\r\n' +
+    '  if (key.includes("beauty") || key.includes("زیبایی")) return INDUSTRY_ACCENT.beauty!;\r\n' +
+    '  return INDUSTRY_ACCENT.general!;\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    '/** Distinct layout miniature for a Variant — structure communicates the real layout. */\r\n' +
+    'export function layoutAwareVariantPreview(variantKey: string): PreviewCell[] {\r\n' +
+    '  switch (variantKey) {\r\n' +
+    '    case "hero.fullscreen":\r\n' +
+    '      return [{ className: "col-span-6 row-span-2 rounded-md bg-sky-600/80 border border-sky-300/50" }];\r\n' +
+    '    case "hero.shapes":\r\n' +
+    '      return [{ className: "col-span-6 row-span-2 rounded-md bg-fuchsia-500/75 border border-fuchsia-200/60" }];\r\n' +
+    '    case "hero.diagonal":\r\n' +
+    '      return [\r\n' +
+    '        { className: "col-span-3 row-span-2 rounded-md bg-amber-500/80 border border-amber-200/50 skew-y-1" },\r\n' +
+    '        { className: "col-span-3 row-span-2 rounded-md bg-amber-100/90 border border-amber-300/40 -skew-y-1" },\r\n' +
+    '      ];\r\n' +
+    '    case "hero.cinematic":\r\n' +
+    '      return [{ className: "col-span-6 row-span-2 rounded-md bg-indigo-700/85 border border-indigo-300/40 shadow-inner" }];\r\n' +
+    '    case "hero.split":\r\n' +
+    '      return [\r\n' +
+    '        { className: "col-span-3 row-span-2 rounded-md bg-emerald-600/80 border border-emerald-300/40" },\r\n' +
+    '        { className: "col-span-3 row-span-2 rounded-md bg-emerald-50/95 border border-emerald-200/60 space-y-1 p-1 flex flex-col justify-center" },\r\n' +
+    '      ];\r\n' +
+    '    case "hero.editorial":\r\n' +
+    '      return [\r\n' +
+    '        { className: "col-span-6 row-span-2 rounded-md bg-gradient-to-l from-rose-400/50 to-rose-700/85 border border-rose-300/40 relative" },\r\n' +
+    '      ];\r\n' +
+    '    // legacy aliases still referenced by older miniature helpers\r\n' +
+    '    case "hero.full-width":\r\n' +
+    '      return [{ className: "col-span-6 row-span-2 rounded-md bg-sky-600/80 border border-sky-300/50" }];\r\n' +
+    '    case "hero.contained":\r\n' +
+    '      return [{ className: "col-span-6 row-span-2 rounded-md bg-fuchsia-500/75 border border-fuchsia-200/60" }];\r\n' +
+    '    case "hero.side-promos":\r\n' +
+    '      return [\r\n' +
+    '        { className: "col-span-4 row-span-2 rounded-md bg-amber-500/70" },\r\n' +
+    '        { className: "col-span-2 rounded-sm bg-amber-300/40" },\r\n' +
+    '        { className: "col-span-2 rounded-sm bg-amber-200/35" },\r\n' +
+    '      ];\r\n' +
+    '    case "story.circle":\r\n' +
+    '    case "story.image-circles":\r\n' +
+    '      return Array.from({ length: 6 }, () => ({\r\n' +
+    '        className: "rounded-full aspect-square bg-white border-2 border-rose-300/70 shadow-sm",\r\n' +
+    '        kind: "story-circle",\r\n' +
+    '      }));\r\n' +
+    '    case "story.rounded-cards":\r\n' +
+    '      return Array.from({ length: 4 }, () => ({\r\n' +
+    '        className: "rounded-xl h-10 bg-white border border-rose-200/80",\r\n' +
+    '        kind: "story-card",\r\n' +
+    '      }));\r\n' +
+    '    case "story.icon-shortcuts":\r\n' +
+    '      return Array.from({ length: 5 }, () => ({\r\n' +
+    '        className: "rounded-lg aspect-square bg-white border border-slate-300 flex items-center justify-center",\r\n' +
+    '        kind: "story-icon",\r\n' +
+    '      }));\r\n' +
+    '    case "product.grid":\r\n' +
+    '    case "product.large-cards":\r\n' +
+    '      return Array.from({ length: 4 }, () => ({\r\n' +
+    '        className: "rounded-md h-12 bg-white border border-amber-200/80 flex flex-col p-0.5 gap-0.5",\r\n' +
+    '        kind: "product-card",\r\n' +
+    '      }));\r\n' +
+    '    case "product.compact-rows":\r\n' +
+    '    case "product.minimal-list":\r\n' +
+    '      return Array.from({ length: 4 }, () => ({\r\n' +
+    '        className: "col-span-6 h-3 rounded bg-white border border-amber-100",\r\n' +
+    '        kind: "product-row",\r\n' +
+    '      }));\r\n' +
+    '    case "product.category-columns":\r\n' +
+    '    case "ranked.multi-column":\r\n' +
+    '      return Array.from({ length: 3 }, () => ({\r\n' +
+    '        className: "rounded-md h-14 bg-white border border-amber-200/70 flex flex-col gap-0.5 p-0.5",\r\n' +
+    '        kind: "product-column",\r\n' +
+    '      }));\r\n' +
+    '    case "product.featured-plus-rail":\r\n' +
+    '      return [\r\n' +
+    '        { className: "col-span-2 row-span-2 rounded-md bg-white border-2 border-amber-300/80", kind: "featured" },\r\n' +
+    '        { className: "col-span-4 h-5 rounded bg-white border border-amber-100" },\r\n' +
+    '        { className: "col-span-4 h-5 rounded bg-white border border-amber-100" },\r\n' +
+    '      ];\r\n' +
+    '    case "product.card-carousel":\r\n' +
+    '    case "product.amazing":\r\n' +
+    '    case "product.mahoor":\r\n' +
+    '    case "product.tabbed":\r\n' +
+    '      return Array.from({ length: 4 }, () => ({\r\n' +
+    '        className: "rounded-md h-11 bg-white border border-amber-200/70",\r\n' +
+    '        kind: "product-rail",\r\n' +
+    '      }));\r\n' +
+    '    case "product.zohreh":\r\n' +
+    '      return Array.from({ length: 3 }, () => ({\r\n' +
+    '        className: "col-span-6 h-8 rounded bg-white border border-amber-100 flex gap-1 p-0.5",\r\n' +
+    '        kind: "product-row",\r\n' +
+    '      }));\r\n' +
+    '    case "ranked.horizontal":\r\n' +
+    '    case "ranked.ticker":\r\n' +
+    '      return Array.from({ length: 5 }, (_, i) => ({\r\n' +
+    '        className: `rounded-md h-8 bg-white border border-orange-200/70 ${i === 0 ? "ring-1 ring-orange-300" : ""}`,\r\n' +
+    '        kind: "ranked",\r\n' +
+    '      }));\r\n' +
+    '    case "ranked.grid":\r\n' +
+    '      return Array.from({ length: 4 }, () => ({\r\n' +
+    '        className: "rounded-md h-10 bg-white border border-orange-200/70",\r\n' +
+    '        kind: "ranked-grid",\r\n' +
+    '      }));\r\n' +
+    '    case "banner.single":\r\n' +
+    '      return [{ className: "col-span-6 h-12 rounded-xl bg-violet-200/50 border border-violet-300/60" }];\r\n' +
+    '    case "banner.two-equal":\r\n' +
+    '    case "banner.two-asymmetric":\r\n' +
+    '      return [\r\n' +
+    '        { className: "col-span-3 h-12 rounded-lg bg-violet-200/50 border border-violet-300/50" },\r\n' +
+    '        { className: "col-span-3 h-12 rounded-lg bg-violet-200/40 border border-violet-300/40" },\r\n' +
+    '      ];\r\n' +
+    '    case "banner.four-grid":\r\n' +
+    '      return Array.from({ length: 4 }, () => ({\r\n' +
+    '        className: "col-span-3 h-7 rounded-md bg-violet-200/45 border border-violet-300/40",\r\n' +
+    '      }));\r\n' +
+    '    case "banner.one-large-two-small":\r\n' +
+    '      return [\r\n' +
+    '        { className: "col-span-4 row-span-2 rounded-lg bg-violet-300/50 border border-violet-400/40" },\r\n' +
+    '        { className: "col-span-2 h-5 rounded-md bg-violet-200/40" },\r\n' +
+    '        { className: "col-span-2 h-5 rounded-md bg-violet-200/35" },\r\n' +
+    '      ];\r\n' +
+    '    case "banner.eight-compact":\r\n' +
+    '      return Array.from({ length: 8 }, () => ({\r\n' +
+    '        className: "col-span-1.5 h-5 rounded-sm bg-violet-200/40 border border-violet-300/30",\r\n' +
+    '      })).map((cell, i) => ({\r\n' +
+    '        ...cell,\r\n' +
+    '        className: `col-span-3 h-4 rounded-sm bg-violet-200/40 border border-violet-300/30 ${i >= 4 ? "opacity-80" : ""}`,\r\n' +
+    '      }));\r\n' +
+    '    case "banner.mosaic-2x2":\r\n' +
+    '      return [\r\n' +
+    '        { className: "col-span-3 row-span-2 rounded-lg bg-violet-300/55 border border-violet-400/40" },\r\n' +
+    '        { className: "col-span-3 h-5 rounded-md bg-violet-200/45" },\r\n' +
+    '        { className: "col-span-3 h-5 rounded-md bg-violet-200/35" },\r\n' +
+    '      ];\r\n' +
+    '    case "banner.three":\r\n' +
+    '      return Array.from({ length: 3 }, () => ({\r\n' +
+    '        className: "col-span-2 h-10 rounded-md bg-violet-200/45 border border-violet-300/40",\r\n' +
+    '      }));\r\n' +
+    '    case "banner.one-large-four-small":\r\n' +
+    '      return [\r\n' +
+    '        { className: "col-span-3 row-span-2 rounded-lg bg-violet-300/50" },\r\n' +
+    '        ...Array.from({ length: 4 }, () => ({\r\n' +
+    '          className: "col-span-1.5 h-4 rounded-sm bg-violet-200/40",\r\n' +
+    '        })),\r\n' +
+    '      ].map((cell, i) => (i === 0 ? cell : { ...cell, className: "col-span-3 h-4 rounded-sm bg-violet-200/40" }));\r\n' +
+    '    case "brand.logo-rail":\r\n' +
+    '      return Array.from({ length: 5 }, () => ({\r\n' +
+    '        className: "rounded-full h-8 w-8 bg-white border border-slate-300",\r\n' +
+    '        kind: "brand-logo",\r\n' +
+    '      }));\r\n' +
+    '    case "brand.logo-grid":\r\n' +
+    '    case "brand.grid":\r\n' +
+    '      return Array.from({ length: 6 }, () => ({\r\n' +
+    '        className: "rounded-md h-7 bg-white border border-slate-300",\r\n' +
+    '        kind: "brand-tile",\r\n' +
+    '      }));\r\n' +
+    '    case "brand.featured":\r\n' +
+    '      return [\r\n' +
+    '        { className: "col-span-3 row-span-2 rounded-lg bg-white border-2 border-slate-400/50", kind: "brand-featured" },\r\n' +
+    '        { className: "col-span-3 h-5 rounded-md bg-white border border-slate-300" },\r\n' +
+    '        { className: "col-span-3 h-5 rounded-md bg-white border border-slate-300" },\r\n' +
+    '      ];\r\n' +
+    '    case "article.magazine-rail":\r\n' +
+    '      return Arra'... 7920 more characters
+  
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-builder-ux-r1.guard.test.ts:73:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '"use client";\r\n\r\nimport type { VariantPreviewKind } from "../../../lib/storefront-composition/types.ts";\r\nimport { getVariant } from "../../../lib/storefront-composition/registry.ts";\r\nimport type { IndustryTemplateSeed } from "../../../lib/storefront-composition/industry-templates.ts";\r\nimport { templateCompositionMiniature } from "../../../lib/storefront-composition/industry-templates.ts";\r\n\r\n/** Layout-aware miniature cells — not generic colored bars. */\r\nexport type PreviewCell = {\r\n  className: string;\r\n  kind?: string;\r\n};\r\n\r\nconst INDUSTRY_ACCENT: Record<string, string> = {\r\n  fashion: "bg-rose-100/90",\r\n  autoparts: "bg-slate-200/95",\r\n  building: "bg-stone-200/90",\r\n  tools: "bg-orange-100/90",\r\n  tile: "bg-teal-100/90",\r\n  interior: "bg-amber-100/90",\r\n  appliance: "bg-sky-100/90",\r\n  shoes: "bg-violet-100/90",\r\n  plants: "bg-lime-100/90",\r\n  beauty: "bg-fuchsia-100/80",\r\n  grocery: "bg-lime-100/90",\r\n  electronics: "bg-sky-100/90",\r\n  sports: "bg-orange-100/90",\r\n  kids: "bg-yellow-100/90",\r\n  books: "bg-stone-200/90",\r\n  general: "bg-slate-100/90",\r\n};\r\n\r\nfunction industryTone(industry: string): string {\r\n  const key = industry.toLowerCase();\r\n  if (key.includes("fashion") || key.includes("مدا") || key.includes("کفش") || key.includes("shoe")) {\r\n    if (key.includes("shoe") || key.includes("کفش")) return INDUSTRY_ACCENT.shoes!;\r\n    return INDUSTRY_ACCENT.fashion!;\r\n  }\r\n  if (key.includes("auto") || key.includes("قطعه")) return INDUSTRY_ACCENT.autoparts!;\r\n  if (key.includes("build") || key.includes("ساختمان") || key.includes("مصالح")) return INDUSTRY_ACCENT.building!;\r\n  if (key.includes("tool") || key.includes("ابزار")) return INDUSTRY_ACCENT.tools!;\r\n  if (key.includes("tile") || key.includes("سرامیک") || key.includes("کاشی")) return INDUSTRY_ACCENT.tile!;\r\n  if (key.includes("interior") || key.includes("دکور") || key.includes("منزل") || key.includes("decor")) return INDUSTRY_ACCENT.interior!;\r\n  if (key.includes("appliance") || key.includes("لوازم خانگی")) return INDUSTRY_ACCENT.appliance!;\r\n  if (key.includes("plant") || key.includes("گیاه") || key.includes("گل")) return INDUSTRY_ACCENT.plants!;\r\n  if (key.includes("beauty") || key.includes("زیبایی")) return INDUSTRY_ACCENT.beauty!;\r\n  return INDUSTRY_ACCENT.general!;\r\n}\r\n\r\n/** Distinct layout miniature for a Variant — structure communicates the real layout. */\r\nexport function layoutAwareVariantPreview(variantKey: string): PreviewCell[] {\r\n  switch (variantKey) {\r\n    case "hero.fullscreen":\r\n      return [{ className: "col-span-6 row-span-2 rounded-md bg-sky-600/80 border border-sky-300/50" }];\r\n    case "hero.shapes":\r\n      return [{ className: "col-span-6 row-span-2 rounded-md bg-fuchsia-500/75 border border-fuchsia-200/60" }];\r\n    case "hero.diagonal":\r\n      return [\r\n        { className: "col-span-3 row-span-2 rounded-md bg-amber-500/80 border border-amber-200/50 skew-y-1" },\r\n        { className: "col-span-3 row-span-2 rounded-md bg-amber-100/90 border border-amber-300/40 -skew-y-1" },\r\n      ];\r\n    case "hero.cinematic":\r\n      return [{ className: "col-span-6 row-span-2 rounded-md bg-indigo-700/85 border border-indigo-300/40 shadow-inner" }];\r\n    case "hero.split":\r\n      return [\r\n        { className: "col-span-3 row-span-2 rounded-md bg-emerald-600/80 border border-emerald-300/40" },\r\n        { className: "col-span-3 row-span-2 rounded-md bg-emerald-50/95 border border-emerald-200/60 space-y-1 p-1 flex flex-col justify-center" },\r\n      ];\r\n    case "hero.editorial":\r\n      return [\r\n        { className: "col-span-6 row-span-2 rounded-md bg-gradient-to-l from-rose-400/50 to-rose-700/85 border border-rose-300/40 relative" },\r\n      ];\r\n    // legacy aliases still referenced by older miniature helpers\r\n    case "hero.full-width":\r\n      return [{ className: "col-span-6 row-span-2 rounded-md bg-sky-600/80 border border-sky-300/50" }];\r\n    case "hero.contained":\r\n      return [{ className: "col-span-6 row-span-2 rounded-md bg-fuchsia-500/75 border border-fuchsia-200/60" }];\r\n    case "hero.side-promos":\r\n      return [\r\n        { className: "col-span-4 row-span-2 rounded-md bg-amber-500/70" },\r\n        { className: "col-span-2 rounded-sm bg-amber-300/40" },\r\n        { className: "col-span-2 rounded-sm bg-amber-200/35" },\r\n      ];\r\n    case "story.circle":\r\n    case "story.image-circles":\r\n      return Array.from({ length: 6 }, () => ({\r\n        className: "rounded-full aspect-square bg-white border-2 border-rose-300/70 shadow-sm",\r\n        kind: "story-circle",\r\n      }));\r\n    case "story.rounded-cards":\r\n      return Array.from({ length: 4 }, () => ({\r\n        className: "rounded-xl h-10 bg-white border border-rose-200/80",\r\n        kind: "story-card",\r\n      }));\r\n    case "story.icon-shortcuts":\r\n      return Array.from({ length: 5 }, () => ({\r\n        className: "rounded-lg aspect-square bg-white border border-slate-300 flex items-center justify-center",\r\n        kind: "story-icon",\r\n      }));\r\n    case "product.grid":\r\n    case "product.large-cards":\r\n      return Array.from({ length: 4 }, () => ({\r\n        className: "rounded-md h-12 bg-white border border-amber-200/80 flex flex-col p-0.5 gap-0.5",\r\n        kind: "product-card",\r\n      }));\r\n    case "product.compact-rows":\r\n    case "product.minimal-list":\r\n      return Array.from({ length: 4 }, () => ({\r\n        className: "col-span-6 h-3 rounded bg-white border border-amber-100",\r\n        kind: "product-row",\r\n      }));\r\n    case "product.category-columns":\r\n    case "ranked.multi-column":\r\n      return Array.from({ length: 3 }, () => ({\r\n        className: "rounded-md h-14 bg-white border border-amber-200/70 flex flex-col gap-0.5 p-0.5",\r\n        kind: "product-column",\r\n      }));\r\n    case "product.featured-plus-rail":\r\n      return [\r\n        { className: "col-span-2 row-span-2 rounded-md bg-white border-2 border-amber-300/80", kind: "featured" },\r\n        { className: "col-span-4 h-5 rounded bg-white border border-amber-100" },\r\n        { className: "col-span-4 h-5 rounded bg-white border border-amber-100" },\r\n      ];\r\n    case "product.card-carousel":\r\n    case "product.amazing":\r\n    case "product.mahoor":\r\n    case "product.tabbed":\r\n      return Array.from({ length: 4 }, () => ({\r\n        className: "rounded-md h-11 bg-white border border-amber-200/70",\r\n        kind: "product-rail",\r\n      }));\r\n    case "product.zohreh":\r\n      return Array.from({ length: 3 }, () => ({\r\n        className: "col-span-6 h-8 rounded bg-white border border-amber-100 flex gap-1 p-0.5",\r\n        kind: "product-row",\r\n      }));\r\n    case "ranked.horizontal":\r\n    case "ranked.ticker":\r\n      return Array.from({ length: 5 }, (_, i) => ({\r\n        className: `rounded-md h-8 bg-white border border-orange-200/70 ${i === 0 ? "ring-1 ring-orange-300" : ""}`,\r\n        kind: "ranked",\r\n      }));\r\n    case "ranked.grid":\r\n      return Array.from({ length: 4 }, () => ({\r\n        className: "rounded-md h-10 bg-white border border-orange-200/70",\r\n        kind: "ranked-grid",\r\n      }));\r\n    case "banner.single":\r\n      return [{ className: "col-span-6 h-12 rounded-xl bg-violet-200/50 border border-violet-300/60" }];\r\n    case "banner.two-equal":\r\n    case "banner.two-asymmetric":\r\n      return [\r\n        { className: "col-span-3 h-12 rounded-lg bg-violet-200/50 border border-violet-300/50" },\r\n        { className: "col-span-3 h-12 rounded-lg bg-violet-200/40 border border-violet-300/40" },\r\n      ];\r\n    case "banner.four-grid":\r\n      return Array.from({ length: 4 }, () => ({\r\n        className: "col-span-3 h-7 rounded-md bg-violet-200/45 border border-violet-300/40",\r\n      }));\r\n    case "banner.one-large-two-small":\r\n      return [\r\n        { className: "col-span-4 row-span-2 rounded-lg bg-violet-300/50 border border-violet-400/40" },\r\n        { className: "col-span-2 h-5 rounded-md bg-violet-200/40" },\r\n        { className: "col-span-2 h-5 rounded-md bg-violet-200/35" },\r\n      ];\r\n    case "banner.eight-compact":\r\n      return Array.from({ length: 8 }, () => ({\r\n        className: "col-span-1.5 h-5 rounded-sm bg-violet-200/40 border border-violet-300/30",\r\n      })).map((cell, i) => ({\r\n        ...cell,\r\n        className: `col-span-3 h-4 rounded-sm bg-violet-200/40 border border-violet-300/30 ${i >= 4 ? "opacity-80" : ""}`,\r\n      }));\r\n    case "banner.mosaic-2x2":\r\n      return [\r\n        { className: "col-span-3 row-span-2 rounded-lg bg-violet-300/55 border border-violet-400/40" },\r\n        { className: "col-span-3 h-5 rounded-md bg-violet-200/45" },\r\n        { className: "col-span-3 h-5 rounded-md bg-violet-200/35" },\r\n      ];\r\n    case "banner.three":\r\n      return Array.from({ length: 3 }, () => ({\r\n        className: "col-span-2 h-10 rounded-md bg-violet-200/45 border border-violet-300/40",\r\n      }));\r\n    case "banner.one-large-four-small":\r\n      return [\r\n        { className: "col-span-3 row-span-2 rounded-lg bg-violet-300/50" },\r\n        ...Array.from({ length: 4 }, () => ({\r\n          className: "col-span-1.5 h-4 rounded-sm bg-violet-200/40",\r\n        })),\r\n      ].map((cell, i) => (i === 0 ? cell : { ...cell, className: "col-span-3 h-4 rounded-sm bg-violet-200/40" }));\r\n    case "brand.logo-rail":\r\n      return Array.from({ length: 5 }, () => ({\r\n        className: "rounded-full h-8 w-8 bg-white border border-slate-300",\r\n        kind: "brand-logo",\r\n      }));\r\n    case "brand.logo-grid":\r\n    case "brand.grid":\r\n      return Array.from({ length: 6 }, () => ({\r\n        className: "rounded-md h-7 bg-white border border-slate-300",\r\n        kind: "brand-tile",\r\n      }));\r\n    case "brand.featured":\r\n      return [\r\n        { className: "col-span-3 row-span-2 rounded-lg bg-white border-2 border-slate-400/50", kind: "brand-featured" },\r\n        { className: "col-span-3 h-5 rounded-md bg-white border border-slate-300" },\r\n        { className: "col-span-3 h-5 rounded-md bg-white border border-slate-300" },\r\n      ];\r\n    case "article.magazine-rail":\r\n      return Arra'... 7920 more characters,
+    expected: /data-layout-aware/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+### RUN: landing-pages guard suite (never reads admin-resource-selector.tsx)
+(node:40076) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-landing-pages.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ landing admin list is human-readable and hides page ids (0.565ms)
+✔ composer uses wizard + resource selector (no fake sources) (0.3446ms)
+✖ section chooser has Persian labels and no raw JSON editor (0.8765ms)
+✖ TB-P10-T022 ordinary-user Admin UX: no technical leakage + empty category/brand hints (0.4091ms)
+✔ TB-FE-ADMINRESULT-NARROWING-001 failure messages come from the result that actually failed (0.1379ms)
+✔ TB-FE-ADMINRESULT-NARROWING-001 retry button does not leak a MouseEvent into refresh (0.068ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 4
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 84.5139
+
+✖ failing tests:
+
+test at app\admin\landing-pages\admin-landing-pages.guard.test.ts:40:1
+✖ section chooser has Persian labels and no raw JSON editor (0.8765ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /بنر اصلی/. Input:
+  
+  'import { getVariant } from "../../../lib/storefront-composition/registry.ts";\r\n' +
+    'import { bannerSlotCountForVariant } from "../../../lib/storefront-composition/industry-templates.ts";\r\n' +
+    'import { defaultHeroSliderConfig } from "../../../lib/storefront-composition/hero-slider-config.ts";\r\n' +
+    '\r\n' +
+    'export { bannerSlotCountForVariant };\r\n' +
+    '\r\n' +
+    'export const LANDING_SECTION_TYPES = [\r\n' +
+    '  "Hero",\r\n' +
+    '  "ProductCollection",\r\n' +
+    '  "CategoryGrid",\r\n' +
+    '  "BrandStrip",\r\n' +
+    '  "PromoBanner",\r\n' +
+    '  "ArticleList",\r\n' +
+    '  "Reviews",\r\n' +
+    '  "RichText",\r\n' +
+    '  "NavigationMenu",\r\n' +
+    '  "StoryRail",\r\n' +
+    '  "BannerShowcase",\r\n' +
+    '] as const;\r\n' +
+    '\r\n' +
+    'export type LandingSectionType = (typeof LANDING_SECTION_TYPES)[number];\r\n' +
+    '\r\n' +
+    'export type LandingSectionChoice = {\r\n' +
+    '  type: LandingSectionType;\r\n' +
+    '  label: string;\r\n' +
+    '  description: string;\r\n' +
+    '  testId: string;\r\n' +
+    '};\r\n' +
+    '\r\n' +
+    'export const LANDING_SECTION_CHOICES: LandingSectionChoice[] = [\r\n' +
+    '  { type: "Hero", label: "اسلایدر اصلی", description: "چند اسلاید با تصویر، عنوان و Alt", testId: "add-section-hero" },\r\n' +
+    '  { type: "ProductCollection", label: "مجموعه کالا", description: "نمایش کالا از انتخاب دستی، دسته، برند، تازه‌ها یا پیشنهاد شگفت‌انگیز", testId: "add-section-products" },\r\n' +
+    '  { type: "CategoryGrid", label: "شبکهٔ دسته‌ها", description: "چند دستهٔ فروشگاه را در یک ردیف نشان می‌دهد", testId: "add-section-categories" },\r\n' +
+    '  { type: "BrandStrip", label: "نوار برند", description: "برندهای انتخاب‌شده را در ویترین می‌چیند", testId: "add-section-brands" },\r\n' +
+    '  { type: "PromoBanner", label: "بنر تبلیغاتی", description: "یک بنر با عنوان و پیوند کنترل‌شده", testId: "add-section-promo" },\r\n' +
+    '  { type: "ArticleList", label: "فهرست مطالب", description: "آخرین مقاله‌های منتشرشده", testId: "add-section-articles" },\r\n' +
+    '  { type: "Reviews", label: "نظر خریداران", description: "نظرهای تأییدشدهٔ فروشگاه", testId: "add-section-reviews" },\r\n' +
+    '  { type: "RichText", label: "متن آزاد", description: "یک بلوک متن ساده بدون قالب‌بندی خام", testId: "add-section-text" },\r\n' +
+    '  { type: "NavigationMenu", label: "فهرست پیوند", description: "نمایش یک منوی فعال فروشگاه در بدنهٔ صفحه", testId: "add-section-menu" },\r\n' +
+    '  { type: "StoryRail", label: "میانبر استوری", description: "میانبرهای دایره‌ای یا کارت‌گرد", testId: "add-section-stories" },\r\n' +
+    '  { type: "BannerShowcase", label: "نمایش بنر", description: "شبکه‌های بنر کنترل‌شده با جایگاه مشخص", testId: "add-section-banners" },\r\n' +
+    '];\r\n' +
+    '\r\n' +
+    'export const PRODUCT_SOURCE_CHOICES = [\r\n' +
+    '  { value: "Manual", label: "انتخاب دستی" },\r\n' +
+    '  { value: "Category", label: "از یک دسته" },\r\n' +
+    '  { value: "Brand", label: "از یک برند" },\r\n' +
+    '  { value: "Newest", label: "جدیدترین کالاها" },\r\n' +
+    '  { value: "PromotionCampaign", label: "پیشنهاد شگفت‌انگیز" },\r\n' +
+    '] as const;\r\n' +
+    '\r\n' +
+    '/** برچسب انسانی منبع کالا برای Review (بدون کد فنی). */\r\n' +
+    'export function productSourceLabelFa(source: unknown): string {\r\n' +
+    '  if (typeof source !== "string") return "جدیدترین کالاها";\r\n' +
+    '  return PRODUCT_SOURCE_CHOICES.find((item) => item.value === source)?.label ?? "منبع کالا";\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'export function landingSectionLabel(type: string): string {\r\n' +
+    '  return LANDING_SECTION_CHOICES.find((item) => item.type === type)?.label ?? "بخش";\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'export function defaultLandingSectionConfig(type: LandingSectionType): Record<string, unknown> {\r\n' +
+    '  switch (type) {\r\n' +
+    '    case "Hero":\r\n' +
+    '      return defaultHeroSliderConfig();\r\n' +
+    '    case "ProductCollection":\r\n' +
+    '      return { title: "کالاها", source: "Newest", take: 8, productIds: [] };\r\n' +
+    '    case "CategoryGrid":\r\n' +
+    '      return { title: "دسته‌ها", categoryIds: [] };\r\n' +
+    '    case "BrandStrip":\r\n' +
+    '      return { title: "برندها", brandIds: [] };\r\n' +
+    '    case "PromoBanner":\r\n' +
+    '      return { title: "پیشنهاد ویژه", href: "/offers" };\r\n' +
+    '    case "ArticleList":\r\n' +
+    '      return { title: "آخرین مطالب", source: "Latest", take: 6 };\r\n' +
+    '    case "Reviews":\r\n' +
+    '      return { title: "نظر خریداران" };\r\n' +
+    '    case "RichText":\r\n' +
+    '      return { title: "متن صفحه", text: "متن ساده برای این بخش" };\r\n' +
+    '    case "NavigationMenu":\r\n' +
+    '      return { title: "فهرست پیوندها", menuId: "" };\r\n' +
+    '    case "StoryRail":\r\n' +
+    '      return {\r\n' +
+    '        title: "استوری‌ها",\r\n' +
+    '        variantKey: "story.circle",\r\n' +
+    '        take: 12,\r\n' +
+    '        enabled: true,\r\n' +
+    '        items: [],\r\n' +
+    '      };\r\n' +
+    '    case "BannerShowcase":\r\n' +
+    '      return {\r\n' +
+    '        title: "بنرها",\r\n' +
+    '        variantKey: "banner.single",\r\n' +
+    '        heightPreset: "Medium",\r\n' +
+    '        items: [{ imageUrl: "", href: "/offers", title: "بنر ۱" }],\r\n' +
+    '      };\r\n' +
+    '  }\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'export function parseLandingConfig(raw: string | null | undefined): Record<string, unknown> {\r\n' +
+    '  if (!raw) return {};\r\n' +
+    '  try {\r\n' +
+    '    const value = JSON.parse(raw) as unknown;\r\n' +
+    '    return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};\r\n' +
+    '  } catch {\r\n' +
+    '    return {};\r\n' +
+    '  }\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'export function summarizeLandingSection(type: string, config: Record<string, unknown>): string {\r\n' +
+    '  const title = typeof config.title === "string" && config.title.trim() ? config.title.trim() : null;\r\n' +
+    '  const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;\r\n' +
+    '  const variantFa = variantKey ? getVariant(variantKey)?.nameFa ?? null : null;\r\n' +
+    '  const variantSuffix = variantFa ? ` · ${variantFa}` : "";\r\n' +
+    '  if (type === "ProductCollection") {\r\n' +
+    '    const source = productSourceLabelFa(config.source);\r\n' +
+    '    const take = typeof config.take === "number" ? config.take : 8;\r\n' +
+    '    return title ? `${title}${variantSuffix} · ${source} · ${take} کالا` : `${source} · ${take} کالا${variantSuffix}`;\r\n' +
+    '  }\r\n' +
+    '  if (type === "ArticleList") {\r\n' +
+    '    const take = typeof config.take === "number" ? config.take : 6;\r\n' +
+    '    const source = typeof config.source === "string" ? config.source : "Latest";\r\n' +
+    '    const sourceLabel = source === "Manual" ? "انتخاب دستی" : "جدیدترین مطالب";\r\n' +
+    '    const manualCount = Array.isArray(config.articleIds) ? config.articleIds.length : 0;\r\n' +
+    '    if (source === "Manual") {\r\n' +
+    '      return title\r\n' +
+    '        ? `${title}${variantSuffix} · ${sourceLabel} · ${manualCount.toLocaleString("fa-IR")} مطلب`\r\n' +
+    '        : `${sourceLabel} · ${manualCount.toLocaleString("fa-IR")} مطلب${variantSuffix}`;\r\n' +
+    '    }\r\n' +
+    '    return title ? `${title}${variantSuffix} · ${sourceLabel} · ${take} مورد` : `${sourceLabel} · ${take} مورد${variantSuffix}`;\r\n' +
+    '  }\r\n' +
+    '  if (type === "BannerShowcase" || (variantKey?.startsWith("banner.") ?? false)) {\r\n' +
+    '    const slots = bannerSlotCountForVariant(variantKey);\r\n' +
+    '    return title ? `${title}${variantSuffix} · ${slots} جایگاه` : `بنر${variantSuffix} · ${slots} جایگاه`;\r\n' +
+    '  }\r\n' +
+    '  if (type === "StoryRail" || (variantKey?.startsWith("story.") ?? false)) {\r\n' +
+    '    const take = typeof config.take === "number" ? config.take : 12;\r\n' +
+    '    return title\r\n' +
+    '      ? `${title}${variantSuffix} · نمایش تا ${take.toLocaleString("fa-IR")} استوری تأییدشده`\r\n' +
+    '      : `نمایش استوری تأییدشده${variantSuffix} · تا ${take.toLocaleString("fa-IR")}`;\r\n' +
+    '  }\r\n' +
+    '  if (type === "CategoryGrid") {\r\n' +
+    '    const count = Array.isArray(config.categoryIds)\r\n' +
+    '      ? config.categoryIds.length\r\n' +
+    '      : Array.isArray(config.ids)\r\n' +
+    '        ? config.ids.length\r\n' +
+    '        : 0;\r\n' +
+    '    const countLabel = count > 0 ? `${count.toLocaleString("fa-IR")} دسته` : "بدون دسته";\r\n' +
+    '    return title ? `${title}${variantSuffix} · ${countLabel}` : `${countLabel}${variantSuffix}`;\r\n' +
+    '  }\r\n' +
+    '  if (type === "BrandStrip") {\r\n' +
+    '    const count = Array.isArray(config.brandIds)\r\n' +
+    '      ? config.brandIds.length\r\n' +
+    '      : Array.isArray(config.ids)\r\n' +
+    '        ? config.ids.length\r\n' +
+    '        : 0;\r\n' +
+    '    const countLabel = count > 0 ? `${count.toLocaleString("fa-IR")} برند` : "بدون برند";\r\n' +
+    '    return title ? `${title}${variantSuffix} · ${countLabel}` : `${countLabel}${variantSuffix}`;\r\n' +
+    '  }\r\n' +
+    '  if (title) return `${title}${variantSuffix}`;\r\n' +
+    '  return `${landingSectionLabel(type)}${variantSuffix}`;\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    '/** هشدار منبع ناقص برای فضای کار بخش‌ها (بدون مسدود کردن ذخیره). */\r\n' +
+    'export function incompleteSourceWarning(type: string, config: Record<string, unknown>): string | null {\r\n' +
+    '  if (type === "ProductCollection") {\r\n' +
+    '    const source = typeof config.source === "string" ? config.source : "Newest";\r\n' +
+    '    if (source === "Manual" && (!Array.isArray(config.productIds) || config.productIds.length === 0)) {\r\n' +
+    '      return "منبع کالا ناقص است — حداقل یک کالا انتخاب کنید.";\r\n' +
+    '    }\r\n' +
+    '    if (source === "Category" && !(typeof config.categoryId === "string" && config.categoryId)) {\r\n' +
+    '      return "منبع کالا ناقص است — یک دسته انتخاب کنید.";\r\n' +
+    '    }\r\n' +
+    '    if (source === "Brand" && !(typeof config.brandId === "string" && config.brandId)) {\r\n' +
+    '      return "منبع کالا ناقص است — یک برند انتخاب کنید.";\r\n' +
+    '    }\r\n' +
+    '  }\r\n' +
+    '  if (type === "ArticleList") {\r\n' +
+    '    const source = typeof config.source === "string" ? config.source : "Latest";\r\n' +
+    '    if (source === "Manual" && (!Array.isArray(config.articleIds) || config.articleIds.length === 0)) {\r\n' +
+    '      return "منبع مطلب ناقص است.";\r\n' +
+    '    }\r\n' +
+    '  }\r\n' +
+    '  if (type === "CategoryGrid") {\r\n' +
+    '    const ids = Array.isArray(config.categoryIds) ? config.categoryIds : Array.isArray(config.ids) ? config.ids : [];\r\n' +
+    '    if (ids.length === 0) return "هنوز دسته‌ای انتخاب نشده است.";\r\n' +
+    '  }\r\n' +
+    '  if (type === "BrandStrip") {\r\n' +
+    '    const ids = Array.isArray(config.brandIds) ? config.brandIds : Array.isArray(config.ids) ? config.ids : [];\r\n' +
+    '    if (ids.length === 0) return "هنوز برندی انتخاب نشده است.";\r\n' +
+    '  }\r\n' +
+    '  if (type === "BannerShowcase") {\r\n' +
+    '    const items = Array.isArray(config.items) ? config.items : [];\r\n' +
+    '    const empty = items.length === 0 || items.every((item) => {\r\n' +
+    '      if (!item || typeof item !== "object") return true;\r\n' +
+    '      const imageUrl = (item as { imageUrl?: unknown }).imageUrl;\r\n' +
+    '      return typeof imageUrl !== "string" || !imageUrl.trim();\r\n' +
+    '    });\r\n' +
+    '    if (empty) return "تصویر بنر هنوز کامل نشده است.";\r\n' +
+    '  }\r\n' +
+    '  return null;\r\n' +
+    '}\r\n'
+  
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-landing-pages.guard.test.ts:41:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'import { getVariant } from "../../../lib/storefront-composition/registry.ts";\r\nimport { bannerSlotCountForVariant } from "../../../lib/storefront-composition/industry-templates.ts";\r\nimport { defaultHeroSliderConfig } from "../../../lib/storefront-composition/hero-slider-config.ts";\r\n\r\nexport { bannerSlotCountForVariant };\r\n\r\nexport const LANDING_SECTION_TYPES = [\r\n  "Hero",\r\n  "ProductCollection",\r\n  "CategoryGrid",\r\n  "BrandStrip",\r\n  "PromoBanner",\r\n  "ArticleList",\r\n  "Reviews",\r\n  "RichText",\r\n  "NavigationMenu",\r\n  "StoryRail",\r\n  "BannerShowcase",\r\n] as const;\r\n\r\nexport type LandingSectionType = (typeof LANDING_SECTION_TYPES)[number];\r\n\r\nexport type LandingSectionChoice = {\r\n  type: LandingSectionType;\r\n  label: string;\r\n  description: string;\r\n  testId: string;\r\n};\r\n\r\nexport const LANDING_SECTION_CHOICES: LandingSectionChoice[] = [\r\n  { type: "Hero", label: "اسلایدر اصلی", description: "چند اسلاید با تصویر، عنوان و Alt", testId: "add-section-hero" },\r\n  { type: "ProductCollection", label: "مجموعه کالا", description: "نمایش کالا از انتخاب دستی، دسته، برند، تازه‌ها یا پیشنهاد شگفت‌انگیز", testId: "add-section-products" },\r\n  { type: "CategoryGrid", label: "شبکهٔ دسته‌ها", description: "چند دستهٔ فروشگاه را در یک ردیف نشان می‌دهد", testId: "add-section-categories" },\r\n  { type: "BrandStrip", label: "نوار برند", description: "برندهای انتخاب‌شده را در ویترین می‌چیند", testId: "add-section-brands" },\r\n  { type: "PromoBanner", label: "بنر تبلیغاتی", description: "یک بنر با عنوان و پیوند کنترل‌شده", testId: "add-section-promo" },\r\n  { type: "ArticleList", label: "فهرست مطالب", description: "آخرین مقاله‌های منتشرشده", testId: "add-section-articles" },\r\n  { type: "Reviews", label: "نظر خریداران", description: "نظرهای تأییدشدهٔ فروشگاه", testId: "add-section-reviews" },\r\n  { type: "RichText", label: "متن آزاد", description: "یک بلوک متن ساده بدون قالب‌بندی خام", testId: "add-section-text" },\r\n  { type: "NavigationMenu", label: "فهرست پیوند", description: "نمایش یک منوی فعال فروشگاه در بدنهٔ صفحه", testId: "add-section-menu" },\r\n  { type: "StoryRail", label: "میانبر استوری", description: "میانبرهای دایره‌ای یا کارت‌گرد", testId: "add-section-stories" },\r\n  { type: "BannerShowcase", label: "نمایش بنر", description: "شبکه‌های بنر کنترل‌شده با جایگاه مشخص", testId: "add-section-banners" },\r\n];\r\n\r\nexport const PRODUCT_SOURCE_CHOICES = [\r\n  { value: "Manual", label: "انتخاب دستی" },\r\n  { value: "Category", label: "از یک دسته" },\r\n  { value: "Brand", label: "از یک برند" },\r\n  { value: "Newest", label: "جدیدترین کالاها" },\r\n  { value: "PromotionCampaign", label: "پیشنهاد شگفت‌انگیز" },\r\n] as const;\r\n\r\n/** برچسب انسانی منبع کالا برای Review (بدون کد فنی). */\r\nexport function productSourceLabelFa(source: unknown): string {\r\n  if (typeof source !== "string") return "جدیدترین کالاها";\r\n  return PRODUCT_SOURCE_CHOICES.find((item) => item.value === source)?.label ?? "منبع کالا";\r\n}\r\n\r\nexport function landingSectionLabel(type: string): string {\r\n  return LANDING_SECTION_CHOICES.find((item) => item.type === type)?.label ?? "بخش";\r\n}\r\n\r\nexport function defaultLandingSectionConfig(type: LandingSectionType): Record<string, unknown> {\r\n  switch (type) {\r\n    case "Hero":\r\n      return defaultHeroSliderConfig();\r\n    case "ProductCollection":\r\n      return { title: "کالاها", source: "Newest", take: 8, productIds: [] };\r\n    case "CategoryGrid":\r\n      return { title: "دسته‌ها", categoryIds: [] };\r\n    case "BrandStrip":\r\n      return { title: "برندها", brandIds: [] };\r\n    case "PromoBanner":\r\n      return { title: "پیشنهاد ویژه", href: "/offers" };\r\n    case "ArticleList":\r\n      return { title: "آخرین مطالب", source: "Latest", take: 6 };\r\n    case "Reviews":\r\n      return { title: "نظر خریداران" };\r\n    case "RichText":\r\n      return { title: "متن صفحه", text: "متن ساده برای این بخش" };\r\n    case "NavigationMenu":\r\n      return { title: "فهرست پیوندها", menuId: "" };\r\n    case "StoryRail":\r\n      return {\r\n        title: "استوری‌ها",\r\n        variantKey: "story.circle",\r\n        take: 12,\r\n        enabled: true,\r\n        items: [],\r\n      };\r\n    case "BannerShowcase":\r\n      return {\r\n        title: "بنرها",\r\n        variantKey: "banner.single",\r\n        heightPreset: "Medium",\r\n        items: [{ imageUrl: "", href: "/offers", title: "بنر ۱" }],\r\n      };\r\n  }\r\n}\r\n\r\nexport function parseLandingConfig(raw: string | null | undefined): Record<string, unknown> {\r\n  if (!raw) return {};\r\n  try {\r\n    const value = JSON.parse(raw) as unknown;\r\n    return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};\r\n  } catch {\r\n    return {};\r\n  }\r\n}\r\n\r\nexport function summarizeLandingSection(type: string, config: Record<string, unknown>): string {\r\n  const title = typeof config.title === "string" && config.title.trim() ? config.title.trim() : null;\r\n  const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;\r\n  const variantFa = variantKey ? getVariant(variantKey)?.nameFa ?? null : null;\r\n  const variantSuffix = variantFa ? ` · ${variantFa}` : "";\r\n  if (type === "ProductCollection") {\r\n    const source = productSourceLabelFa(config.source);\r\n    const take = typeof config.take === "number" ? config.take : 8;\r\n    return title ? `${title}${variantSuffix} · ${source} · ${take} کالا` : `${source} · ${take} کالا${variantSuffix}`;\r\n  }\r\n  if (type === "ArticleList") {\r\n    const take = typeof config.take === "number" ? config.take : 6;\r\n    const source = typeof config.source === "string" ? config.source : "Latest";\r\n    const sourceLabel = source === "Manual" ? "انتخاب دستی" : "جدیدترین مطالب";\r\n    const manualCount = Array.isArray(config.articleIds) ? config.articleIds.length : 0;\r\n    if (source === "Manual") {\r\n      return title\r\n        ? `${title}${variantSuffix} · ${sourceLabel} · ${manualCount.toLocaleString("fa-IR")} مطلب`\r\n        : `${sourceLabel} · ${manualCount.toLocaleString("fa-IR")} مطلب${variantSuffix}`;\r\n    }\r\n    return title ? `${title}${variantSuffix} · ${sourceLabel} · ${take} مورد` : `${sourceLabel} · ${take} مورد${variantSuffix}`;\r\n  }\r\n  if (type === "BannerShowcase" || (variantKey?.startsWith("banner.") ?? false)) {\r\n    const slots = bannerSlotCountForVariant(variantKey);\r\n    return title ? `${title}${variantSuffix} · ${slots} جایگاه` : `بنر${variantSuffix} · ${slots} جایگاه`;\r\n  }\r\n  if (type === "StoryRail" || (variantKey?.startsWith("story.") ?? false)) {\r\n    const take = typeof config.take === "number" ? config.take : 12;\r\n    return title\r\n      ? `${title}${variantSuffix} · نمایش تا ${take.toLocaleString("fa-IR")} استوری تأییدشده`\r\n      : `نمایش استوری تأییدشده${variantSuffix} · تا ${take.toLocaleString("fa-IR")}`;\r\n  }\r\n  if (type === "CategoryGrid") {\r\n    const count = Array.isArray(config.categoryIds)\r\n      ? config.categoryIds.length\r\n      : Array.isArray(config.ids)\r\n        ? config.ids.length\r\n        : 0;\r\n    const countLabel = count > 0 ? `${count.toLocaleString("fa-IR")} دسته` : "بدون دسته";\r\n    return title ? `${title}${variantSuffix} · ${countLabel}` : `${countLabel}${variantSuffix}`;\r\n  }\r\n  if (type === "BrandStrip") {\r\n    const count = Array.isArray(config.brandIds)\r\n      ? config.brandIds.length\r\n      : Array.isArray(config.ids)\r\n        ? config.ids.length\r\n        : 0;\r\n    const countLabel = count > 0 ? `${count.toLocaleString("fa-IR")} برند` : "بدون برند";\r\n    return title ? `${title}${variantSuffix} · ${countLabel}` : `${countLabel}${variantSuffix}`;\r\n  }\r\n  if (title) return `${title}${variantSuffix}`;\r\n  return `${landingSectionLabel(type)}${variantSuffix}`;\r\n}\r\n\r\n/** هشدار منبع ناقص برای فضای کار بخش‌ها (بدون مسدود کردن ذخیره). */\r\nexport function incompleteSourceWarning(type: string, config: Record<string, unknown>): string | null {\r\n  if (type === "ProductCollection") {\r\n    const source = typeof config.source === "string" ? config.source : "Newest";\r\n    if (source === "Manual" && (!Array.isArray(config.productIds) || config.productIds.length === 0)) {\r\n      return "منبع کالا ناقص است — حداقل یک کالا انتخاب کنید.";\r\n    }\r\n    if (source === "Category" && !(typeof config.categoryId === "string" && config.categoryId)) {\r\n      return "منبع کالا ناقص است — یک دسته انتخاب کنید.";\r\n    }\r\n    if (source === "Brand" && !(typeof config.brandId === "string" && config.brandId)) {\r\n      return "منبع کالا ناقص است — یک برند انتخاب کنید.";\r\n    }\r\n  }\r\n  if (type === "ArticleList") {\r\n    const source = typeof config.source === "string" ? config.source : "Latest";\r\n    if (source === "Manual" && (!Array.isArray(config.articleIds) || config.articleIds.length === 0)) {\r\n      return "منبع مطلب ناقص است.";\r\n    }\r\n  }\r\n  if (type === "CategoryGrid") {\r\n    const ids = Array.isArray(config.categoryIds) ? config.categoryIds : Array.isArray(config.ids) ? config.ids : [];\r\n    if (ids.length === 0) return "هنوز دسته‌ای انتخاب نشده است.";\r\n  }\r\n  if (type === "BrandStrip") {\r\n    const ids = Array.isArray(config.brandIds) ? config.brandIds : Array.isArray(config.ids) ? config.ids : [];\r\n    if (ids.length === 0) return "هنوز برندی انتخاب نشده است.";\r\n  }\r\n  if (type === "BannerShowcase") {\r\n    const items = Array.isArray(config.items) ? config.items : [];\r\n    const empty = items.length === 0 || items.every((item) => {\r\n      if (!item || typeof item !== "object") return true;\r\n      const imageUrl = (item as { imageUrl?: unknown }).imageUrl;\r\n      return typeof imageUrl !== "string" || !imageUrl.trim();\r\n    });\r\n    if (empty) return "تصویر بنر هنوز کامل نشده است.";\r\n  }\r\n  return null;\r\n}\r\n',
+    expected: /بنر اصلی/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at app\admin\landing-pages\admin-landing-pages.guard.test.ts:49:1
+✖ TB-P10-T022 ordinary-user Admin UX: no technical leakage + empty category/brand hints (0.4091ms)
+  AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /breakpoint|JSON\.stringify|customCss/i. Input:
+  
+  '"use client";\r\n' +
+    '\r\n' +
+    'import Link from "next/link";\r\n' +
+    'import { useRouter } from "next/navigation";\r\n' +
+    'import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";\r\n' +
+    'import {\r\n' +
+    '  AlertTriangle,\r\n' +
+    '  ChevronDown,\r\n' +
+    '  ChevronUp,\r\n' +
+    '  Eye,\r\n' +
+    '  EyeOff,\r\n' +
+    '  GripVertical,\r\n' +
+    '  Pencil,\r\n' +
+    '  Plus,\r\n' +
+    '  Trash2,\r\n' +
+    '} from "lucide-react";\r\n' +
+    'import {\r\n' +
+    '  addAdminLandingSection,\r\n' +
+    '  createAdminLandingPage,\r\n' +
+    '  deleteAdminLandingPage,\r\n' +
+    '  deleteAdminLandingSection,\r\n' +
+    '  getAdminLandingHome,\r\n' +
+    '  getAdminLandingPage,\r\n' +
+    '  listAdminLandingSections,\r\n' +
+    '  reorderAdminLandingSections,\r\n' +
+    '  replaceAdminLandingComposition,\r\n' +
+    '  setAdminLandingHome,\r\n' +
+    '  setAdminLandingPageStatus,\r\n' +
+    '  setAdminLandingSectionEnabled,\r\n' +
+    '  updateAdminLandingPage,\r\n' +
+    '  updateAdminLandingSection,\r\n' +
+    '  publicPathForStorePage,\r\n' +
+    '  type AdminLandingPage,\r\n' +
+    '  type AdminLandingSection,\r\n' +
+    '  type StorePageType,\r\n' +
+    '} from "./admin-landing-pages-api.ts";\r\n' +
+    'import {\r\n' +
+    '  LANDING_SECTION_CHOICES,\r\n' +
+    '  incompleteSourceWarning,\r\n' +
+    '  landingSectionLabel,\r\n' +
+    '  parseLandingConfig,\r\n' +
+    '  summarizeLandingSection,\r\n' +
+    '} from "./landing-section-catalog.ts";\r\n' +
+    'import {\r\n' +
+    '  defaultConfigForCompositionSection,\r\n' +
+    '} from "./admin-composition-catalog.ts";\r\n' +
+    'import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";\r\n' +
+    'import { getSectionType, getVariant } from "../../../lib/storefront-composition/registry.ts";\r\n' +
+    'import {\r\n' +
+    '  buildTemplateSectionPayloads,\r\n' +
+    '  getIndustryTemplate,\r\n' +
+    '  listIndustryTemplates,\r\n' +
+    '} from "../../../lib/storefront-composition/industry-templates.ts";\r\n' +
+    'import { AdminSectionWizard } from "./admin-section-wizard.tsx";\r\n' +
+    'import { AdminTemplateSelectionWorkspace } from "./admin-template-selection-workspace.tsx";\r\n' +
+    'import { buildLandingPublishReadiness } from "./admin-landing-page-readiness.ts";\r\n' +
+    'import {\r\n' +
+    '  LandingChecklistModal,\r\n' +
+    '  LandingPublishIssuesModal,\r\n' +
+    '  LandingPublishReadinessCard,\r\n' +
+    '} from "./admin-landing-page-readiness-ui.tsx";\r\n' +
+    'import { Dialog } from "../../../design-system/index.ts";\r\n' +
+    '\r\n' +
+    'type Meta = {\r\n' +
+    '  title: string;\r\n' +
+    '  slug: string;\r\n' +
+    '  locale: string;\r\n' +
+    '  pageType: StorePageType;\r\n' +
+    '  seoTitle: string;\r\n' +
+    '  seoDescription: string;\r\n' +
+    '  robotsIndex: boolean;\r\n' +
+    '  robotsFollow: boolean;\r\n' +
+    '  canonicalUrl: string;\r\n' +
+    '  ogTitle: string;\r\n' +
+    '  ogDescription: string;\r\n' +
+    '  ogImageUrl: string;\r\n' +
+    '  primaryH1: string;\r\n' +
+    '};\r\n' +
+    '\r\n' +
+    'function toMeta(page?: AdminLandingPage | null): Meta {\r\n' +
+    '  return {\r\n' +
+    '    title: page?.title ?? "",\r\n' +
+    '    slug: page?.slug ?? "",\r\n' +
+    '    locale: page?.locale ?? "fa",\r\n' +
+    '    pageType: page?.pageType ?? "Landing",\r\n' +
+    '    seoTitle: page?.seoTitle ?? "",\r\n' +
+    '    seoDescription: page?.seoDescription ?? "",\r\n' +
+    '    robotsIndex: page?.robotsIndex ?? true,\r\n' +
+    '    robotsFollow: page?.robotsFollow ?? true,\r\n' +
+    '    canonicalUrl: page?.canonicalUrl ?? "",\r\n' +
+    '    ogTitle: page?.ogTitle ?? "",\r\n' +
+    '    ogDescription: page?.ogDescription ?? "",\r\n' +
+    '    ogImageUrl: page?.ogImageUrl ?? "",\r\n' +
+    '    primaryH1: page?.primaryH1 ?? "",\r\n' +
+    '  };\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'function resolveSectionTypeKey(hostType: string, config: Record<string, unknown>): string | null {\r\n' +
+    '  const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;\r\n' +
+    '  if (variantKey) {\r\n' +
+    '    const fromVariant = getVariant(variantKey);\r\n' +
+    '    if (fromVariant) return fromVariant.sectionTypeKey;\r\n' +
+    '  }\r\n' +
+    '  return null;\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'function localeLabel(locale: string): string {\r\n' +
+    '  return locale === "en" ? "انگلیسی" : "فارسی";\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'function slugifyTemplate(templateKey: string): string {\r\n' +
+    '  const base = templateKey.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "page";\r\n' +
+    '  const suffix = Date.now().toString(36).slice(-5);\r\n' +
+    '  return `${base}-${suffix}`;\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {\r\n' +
+    '  const router = useRouter();\r\n' +
+    '  const [page, setPage] = useState<AdminLandingPage | null>(null);\r\n' +
+    '  const pageRef = useRef<AdminLandingPage | null>(null);\r\n' +
+    '  const [meta, setMeta] = useState<Meta>(toMeta());\r\n' +
+    '  const [sections, setSections] = useState<AdminLandingSection[]>([]);\r\n' +
+    '  const [homePageId, setHomePageId] = useState<string | null>(null);\r\n' +
+    '  const [busy, setBusy] = useState(false);\r\n' +
+    '  const [saved, setSaved] = useState(true);\r\n' +
+    '  const [wizardOpen, setWizardOpen] = useState(false);\r\n' +
+    '  const [wizardMode, setWizardMode] = useState<"create" | "edit">("create");\r\n' +
+    '  const [editing, setEditing] = useState<AdminLandingSection | null>(null);\r\n' +
+    '  const [insertAt, setInsertAt] = useState<number | null>(null);\r\n' +
+    '  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);\r\n' +
+    '  const [deletePageConfirmOpen, setDeletePageConfirmOpen] = useState(false);\r\n' +
+    '  const [focusedSectionId, setFocusedSectionId] = useState<string | null>(null);\r\n' +
+    '  const [createMode, setCreateMode] = useState<"blank" | "template" | null>(pageId ? "blank" : null);\r\n' +
+    '  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | null>(null);\r\n' +
+    '  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);\r\n' +
+    '  const [metaTab, setMetaTab] = useState<"page" | "seo">("page");\r\n' +
+    '  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);\r\n' +
+    '  const [checklistOpen, setChecklistOpen] = useState(false);\r\n' +
+    '  const [issuesModal, setIssuesModal] = useState<{\r\n' +
+    '    mode: "publish-block" | "save-as-draft";\r\n' +
+    '    issues: ReturnType<typeof buildLandingPublishReadiness>["missing"];\r\n' +
+    '  } | null>(null);\r\n' +
+    '  const [errorModal, setErrorModal] = useState<{ title: string; description: string } | null>(null);\r\n' +
+    '  const [dragId, setDragId] = useState<string | null>(null);\r\n' +
+    '  const [dragOverId, setDragOverId] = useState<string | null>(null);\r\n' +
+    '  const [pendingReplaceTemplateKey, setPendingReplaceTemplateKey] = useState<string | null>(null);\r\n' +
+    '  const industryTemplates = useMemo(() => listIndustryTemplates(), []);\r\n' +
+    '  void LANDING_SECTION_CHOICES;\r\n' +
+    '\r\n' +
+    '  useEffect(() => {\r\n' +
+    '    pageRef.current = page;\r\n' +
+    '  }, [page]);\r\n' +
+    '\r\n' +
+    '  const dirty = useMemo(() => {\r\n' +
+    '    if (!page) return Boolean(meta.title);\r\n' +
+    '    const homeLocked = page.pageType === "Home" || homePageId === page.pageId;\r\n' +
+    '    const slugHidden = page.pageType === "Landing" || homeLocked;\r\n' +
+    '    return meta.title !== page.title\r\n' +
+    '      || (!slugHidden && meta.slug !== page.slug)\r\n' +
+    '      || meta.seoTitle !== (page.seoTitle ?? "")\r\n' +
+    '      || meta.seoDescription !== (page.seoDescription ?? "")\r\n' +
+    '      || meta.robotsIndex !== page.robotsIndex\r\n' +
+    '      || meta.robotsFollow !== page.robotsFollow\r\n' +
+    '      || meta.canonicalUrl !== (page.canonicalUrl ?? "")\r\n' +
+    '      || meta.ogTitle !== (page.ogTitle ?? "")\r\n' +
+    '      || meta.ogDescription !== (page.ogDescription ?? "")\r\n' +
+    '      || meta.ogImageUrl !== (page.ogImageUrl ?? "")\r\n' +
+    '      || meta.primaryH1 !== (page.primaryH1 ?? "");\r\n' +
+    '  }, [meta, page, homePageId]);\r\n' +
+    '\r\n' +
+    '  const readiness = useMemo(\r\n' +
+    '    () =>\r\n' +
+    '      buildLandingPublishReadiness({\r\n' +
+    '        title: meta.title,\r\n' +
+    '        slug: meta.slug,\r\n' +
+    '        pageType: page?.pageType ?? meta.pageType,\r\n' +
+    '        isHome: (page?.pageType ?? meta.pageType) === "Home" || (page != null && homePageId === page.pageId),\r\n' +
+    '        seoTitle: meta.seoTitle,\r\n' +
+    '        seoDescription: meta.seoDescription,\r\n' +
+    '        sections,\r\n' +
+    '      }),\r\n' +
+    '    [meta, page, homePageId, sections],\r\n' +
+    '  );\r\n' +
+    '\r\n' +
+    '  const uiLocale = page?.locale ?? meta.locale ?? "fa";\r\n' +
+    '\r\n' +
+    '  useEffect(() => {\r\n' +
+    '    if (!dirty) return;\r\n' +
+    '    const onBeforeUnload = (event: BeforeUnloadEvent) => {\r\n' +
+    '      event.preventDefault();\r\n' +
+    '      event.returnValue = "";\r\n' +
+    '    };\r\n' +
+    '    window.addEventListener("beforeunload", onBeforeUnload);\r\n' +
+    '    return () => window.removeEventListener("beforeunload", onBeforeUnload);\r\n' +
+    '  }, [dirty]);\r\n' +
+    '\r\n' +
+    '  const showError = useCallback((title: string, description: string) => {\r\n' +
+    '    setErrorModal({ title, description });\r\n' +
+    '  }, []);\r\n' +
+    '\r\n' +
+    '  const load = useCallback(async (id: string) => {\r\n' +
+    '    const [pageResult, sectionResult, home] = await Promise.all([\r\n' +
+    '      getAdminLandingPage(id),\r\n' +
+    '      listAdminLandingSections(id),\r\n' +
+    '      getAdminLandingHome(),\r\n' +
+    '    ]);\r\n' +
+    '    if (!pageResult.ok) {\r\n' +
+    '      showError("بارگذاری ناموفق بود", pageResult.message);\r\n' +
+    '      return;\r\n' +
+    '    }\r\n' +
+    '    setPage(pageResult.data);\r\n' +
+    '    pageRef.current = pageResult.data;\r\n' +
+    '    setMeta(toMeta(pageResult.data));\r\n' +
+    '    setSaved(true);\r\n' +
+    '    if (sectionResult.ok) setSections(sectionResult.data);\r\n' +
+    '    if (home.ok) setHomePageId(home.data.homePageId);\r\n' +
+    '\r\n' +
+    '    const pendingKey = `tooba.landing.openWizard.${id}`;\r\n' +
+    '    try {\r\n' +
+    '      const raw = sessionStorage.getItem(pendingKey);\r\n' +
+    '      if (!raw) return;\r\n' +
+    '      sessionStorage.removeItem(pendingKey);\r\n' +
+    '      const pending = JSON.parse(raw) as { insertAt?: number | null; mode?: "create" | "edit" };\r\n' +
+    '      setWizardMode(pending.mode === "edit" ? "edit" : "create");\r\n' +
+    '      setEditing(null);\r\n' +
+    '      setInsertAt(typeof pending.insertAt === "number" ? pending.insertAt : null);\r\n' +
+    '      setWizardOpen(true);\r\n' +
+    '    } catch {\r\n' +
+    '      try {\r\n' +
+    '        sessionStorage.removeItem(pendingKey);\r\n' +
+    '      } catch {\r\n' +
+    '        /* ignore */\r\n' +
+    '      }\r\n' +
+    '    }\r\n' +
+    '  }, [showError]);\r\n' +
+    '\r\n' +
+    '  useEffect(() => {\r\n' +
+    '    if (pageId) void load(pageId);\r\n' +
+    '  }, [load, pageId]);\r\n' +
+    '\r\n' +
+    '  const persistOrder = useCallback(async (next: AdminLandingSection[]) => {\r\n' +
+    '    const activePage = pageRef.current;\r\n' +
+    '    if (!activePage) return false;\r\n' +
+    '    const previous = sections;\r\n' +
+    '    setSections(next);\r\n' +
+    '    setBusy(true);\r\n' +
+    '    const result = await reorderAdminLandingSections(activePage.pageId, next.map((row) => row.pageSectionId));\r\n' +
+    '    setBusy(false);\r\n' +
+    '    if (!result.ok) {\r\n' +
+    '      setSections(previous);\r\n' +
+    '      showError("ذخیرهٔ ترتیب ناموفق بود", result.message);\r\n' +
+    '      void load(activePage.pageId);\r\n' +
+    '      return false;\r\n' +
+    '    }\r\n' +
+    '    setSections(result.data);\r\n' +
+    '    return true;\r\n' +
+    '  }, [load, sections, showError]);\r\n' +
+    '\r\n' +
+    '  const materializeTemplate = async (\r\n' +
+    '    activePage: AdminLandingPage,\r\n' +
+    '    templateKey: string,\r\n' +
+    '  ): Promise<AdminLandingSection[] | null> => {\r\n' +
+    '    const payloads = buildTemplateSectionPayloads(templateKey);\r\n' +
+    '    const result = await replaceAdminLandingComposition(\r\n' +
+    '      activePage.pageId,\r\n' +
+    '      payloads.map((item) => ({ sectionType: item.hostType, config: item.config, isEnabled: true })),\r\n' +
+    '    );\r\n' +
+    '    if (!result.ok) {\r\n' +
+    '      showError("عملیات ناموف'... 52582 more characters
+  
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-landing-pages.guard.test.ts:51:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '"use client";\r\n\r\nimport Link from "next/link";\r\nimport { useRouter } from "next/navigation";\r\nimport { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";\r\nimport {\r\n  AlertTriangle,\r\n  ChevronDown,\r\n  ChevronUp,\r\n  Eye,\r\n  EyeOff,\r\n  GripVertical,\r\n  Pencil,\r\n  Plus,\r\n  Trash2,\r\n} from "lucide-react";\r\nimport {\r\n  addAdminLandingSection,\r\n  createAdminLandingPage,\r\n  deleteAdminLandingPage,\r\n  deleteAdminLandingSection,\r\n  getAdminLandingHome,\r\n  getAdminLandingPage,\r\n  listAdminLandingSections,\r\n  reorderAdminLandingSections,\r\n  replaceAdminLandingComposition,\r\n  setAdminLandingHome,\r\n  setAdminLandingPageStatus,\r\n  setAdminLandingSectionEnabled,\r\n  updateAdminLandingPage,\r\n  updateAdminLandingSection,\r\n  publicPathForStorePage,\r\n  type AdminLandingPage,\r\n  type AdminLandingSection,\r\n  type StorePageType,\r\n} from "./admin-landing-pages-api.ts";\r\nimport {\r\n  LANDING_SECTION_CHOICES,\r\n  incompleteSourceWarning,\r\n  landingSectionLabel,\r\n  parseLandingConfig,\r\n  summarizeLandingSection,\r\n} from "./landing-section-catalog.ts";\r\nimport {\r\n  defaultConfigForCompositionSection,\r\n} from "./admin-composition-catalog.ts";\r\nimport { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";\r\nimport { getSectionType, getVariant } from "../../../lib/storefront-composition/registry.ts";\r\nimport {\r\n  buildTemplateSectionPayloads,\r\n  getIndustryTemplate,\r\n  listIndustryTemplates,\r\n} from "../../../lib/storefront-composition/industry-templates.ts";\r\nimport { AdminSectionWizard } from "./admin-section-wizard.tsx";\r\nimport { AdminTemplateSelectionWorkspace } from "./admin-template-selection-workspace.tsx";\r\nimport { buildLandingPublishReadiness } from "./admin-landing-page-readiness.ts";\r\nimport {\r\n  LandingChecklistModal,\r\n  LandingPublishIssuesModal,\r\n  LandingPublishReadinessCard,\r\n} from "./admin-landing-page-readiness-ui.tsx";\r\nimport { Dialog } from "../../../design-system/index.ts";\r\n\r\ntype Meta = {\r\n  title: string;\r\n  slug: string;\r\n  locale: string;\r\n  pageType: StorePageType;\r\n  seoTitle: string;\r\n  seoDescription: string;\r\n  robotsIndex: boolean;\r\n  robotsFollow: boolean;\r\n  canonicalUrl: string;\r\n  ogTitle: string;\r\n  ogDescription: string;\r\n  ogImageUrl: string;\r\n  primaryH1: string;\r\n};\r\n\r\nfunction toMeta(page?: AdminLandingPage | null): Meta {\r\n  return {\r\n    title: page?.title ?? "",\r\n    slug: page?.slug ?? "",\r\n    locale: page?.locale ?? "fa",\r\n    pageType: page?.pageType ?? "Landing",\r\n    seoTitle: page?.seoTitle ?? "",\r\n    seoDescription: page?.seoDescription ?? "",\r\n    robotsIndex: page?.robotsIndex ?? true,\r\n    robotsFollow: page?.robotsFollow ?? true,\r\n    canonicalUrl: page?.canonicalUrl ?? "",\r\n    ogTitle: page?.ogTitle ?? "",\r\n    ogDescription: page?.ogDescription ?? "",\r\n    ogImageUrl: page?.ogImageUrl ?? "",\r\n    primaryH1: page?.primaryH1 ?? "",\r\n  };\r\n}\r\n\r\nfunction resolveSectionTypeKey(hostType: string, config: Record<string, unknown>): string | null {\r\n  const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;\r\n  if (variantKey) {\r\n    const fromVariant = getVariant(variantKey);\r\n    if (fromVariant) return fromVariant.sectionTypeKey;\r\n  }\r\n  return null;\r\n}\r\n\r\nfunction localeLabel(locale: string): string {\r\n  return locale === "en" ? "انگلیسی" : "فارسی";\r\n}\r\n\r\nfunction slugifyTemplate(templateKey: string): string {\r\n  const base = templateKey.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "page";\r\n  const suffix = Date.now().toString(36).slice(-5);\r\n  return `${base}-${suffix}`;\r\n}\r\n\r\nexport function AdminLandingPageComposer({ pageId }: { pageId?: string }) {\r\n  const router = useRouter();\r\n  const [page, setPage] = useState<AdminLandingPage | null>(null);\r\n  const pageRef = useRef<AdminLandingPage | null>(null);\r\n  const [meta, setMeta] = useState<Meta>(toMeta());\r\n  const [sections, setSections] = useState<AdminLandingSection[]>([]);\r\n  const [homePageId, setHomePageId] = useState<string | null>(null);\r\n  const [busy, setBusy] = useState(false);\r\n  const [saved, setSaved] = useState(true);\r\n  const [wizardOpen, setWizardOpen] = useState(false);\r\n  const [wizardMode, setWizardMode] = useState<"create" | "edit">("create");\r\n  const [editing, setEditing] = useState<AdminLandingSection | null>(null);\r\n  const [insertAt, setInsertAt] = useState<number | null>(null);\r\n  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);\r\n  const [deletePageConfirmOpen, setDeletePageConfirmOpen] = useState(false);\r\n  const [focusedSectionId, setFocusedSectionId] = useState<string | null>(null);\r\n  const [createMode, setCreateMode] = useState<"blank" | "template" | null>(pageId ? "blank" : null);\r\n  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | null>(null);\r\n  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);\r\n  const [metaTab, setMetaTab] = useState<"page" | "seo">("page");\r\n  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);\r\n  const [checklistOpen, setChecklistOpen] = useState(false);\r\n  const [issuesModal, setIssuesModal] = useState<{\r\n    mode: "publish-block" | "save-as-draft";\r\n    issues: ReturnType<typeof buildLandingPublishReadiness>["missing"];\r\n  } | null>(null);\r\n  const [errorModal, setErrorModal] = useState<{ title: string; description: string } | null>(null);\r\n  const [dragId, setDragId] = useState<string | null>(null);\r\n  const [dragOverId, setDragOverId] = useState<string | null>(null);\r\n  const [pendingReplaceTemplateKey, setPendingReplaceTemplateKey] = useState<string | null>(null);\r\n  const industryTemplates = useMemo(() => listIndustryTemplates(), []);\r\n  void LANDING_SECTION_CHOICES;\r\n\r\n  useEffect(() => {\r\n    pageRef.current = page;\r\n  }, [page]);\r\n\r\n  const dirty = useMemo(() => {\r\n    if (!page) return Boolean(meta.title);\r\n    const homeLocked = page.pageType === "Home" || homePageId === page.pageId;\r\n    const slugHidden = page.pageType === "Landing" || homeLocked;\r\n    return meta.title !== page.title\r\n      || (!slugHidden && meta.slug !== page.slug)\r\n      || meta.seoTitle !== (page.seoTitle ?? "")\r\n      || meta.seoDescription !== (page.seoDescription ?? "")\r\n      || meta.robotsIndex !== page.robotsIndex\r\n      || meta.robotsFollow !== page.robotsFollow\r\n      || meta.canonicalUrl !== (page.canonicalUrl ?? "")\r\n      || meta.ogTitle !== (page.ogTitle ?? "")\r\n      || meta.ogDescription !== (page.ogDescription ?? "")\r\n      || meta.ogImageUrl !== (page.ogImageUrl ?? "")\r\n      || meta.primaryH1 !== (page.primaryH1 ?? "");\r\n  }, [meta, page, homePageId]);\r\n\r\n  const readiness = useMemo(\r\n    () =>\r\n      buildLandingPublishReadiness({\r\n        title: meta.title,\r\n        slug: meta.slug,\r\n        pageType: page?.pageType ?? meta.pageType,\r\n        isHome: (page?.pageType ?? meta.pageType) === "Home" || (page != null && homePageId === page.pageId),\r\n        seoTitle: meta.seoTitle,\r\n        seoDescription: meta.seoDescription,\r\n        sections,\r\n      }),\r\n    [meta, page, homePageId, sections],\r\n  );\r\n\r\n  const uiLocale = page?.locale ?? meta.locale ?? "fa";\r\n\r\n  useEffect(() => {\r\n    if (!dirty) return;\r\n    const onBeforeUnload = (event: BeforeUnloadEvent) => {\r\n      event.preventDefault();\r\n      event.returnValue = "";\r\n    };\r\n    window.addEventListener("beforeunload", onBeforeUnload);\r\n    return () => window.removeEventListener("beforeunload", onBeforeUnload);\r\n  }, [dirty]);\r\n\r\n  const showError = useCallback((title: string, description: string) => {\r\n    setErrorModal({ title, description });\r\n  }, []);\r\n\r\n  const load = useCallback(async (id: string) => {\r\n    const [pageResult, sectionResult, home] = await Promise.all([\r\n      getAdminLandingPage(id),\r\n      listAdminLandingSections(id),\r\n      getAdminLandingHome(),\r\n    ]);\r\n    if (!pageResult.ok) {\r\n      showError("بارگذاری ناموفق بود", pageResult.message);\r\n      return;\r\n    }\r\n    setPage(pageResult.data);\r\n    pageRef.current = pageResult.data;\r\n    setMeta(toMeta(pageResult.data));\r\n    setSaved(true);\r\n    if (sectionResult.ok) setSections(sectionResult.data);\r\n    if (home.ok) setHomePageId(home.data.homePageId);\r\n\r\n    const pendingKey = `tooba.landing.openWizard.${id}`;\r\n    try {\r\n      const raw = sessionStorage.getItem(pendingKey);\r\n      if (!raw) return;\r\n      sessionStorage.removeItem(pendingKey);\r\n      const pending = JSON.parse(raw) as { insertAt?: number | null; mode?: "create" | "edit" };\r\n      setWizardMode(pending.mode === "edit" ? "edit" : "create");\r\n      setEditing(null);\r\n      setInsertAt(typeof pending.insertAt === "number" ? pending.insertAt : null);\r\n      setWizardOpen(true);\r\n    } catch {\r\n      try {\r\n        sessionStorage.removeItem(pendingKey);\r\n      } catch {\r\n        /* ignore */\r\n      }\r\n    }\r\n  }, [showError]);\r\n\r\n  useEffect(() => {\r\n    if (pageId) void load(pageId);\r\n  }, [load, pageId]);\r\n\r\n  const persistOrder = useCallback(async (next: AdminLandingSection[]) => {\r\n    const activePage = pageRef.current;\r\n    if (!activePage) return false;\r\n    const previous = sections;\r\n    setSections(next);\r\n    setBusy(true);\r\n    const result = await reorderAdminLandingSections(activePage.pageId, next.map((row) => row.pageSectionId));\r\n    setBusy(false);\r\n    if (!result.ok) {\r\n      setSections(previous);\r\n      showError("ذخیرهٔ ترتیب ناموفق بود", result.message);\r\n      void load(activePage.pageId);\r\n      return false;\r\n    }\r\n    setSections(result.data);\r\n    return true;\r\n  }, [load, sections, showError]);\r\n\r\n  const materializeTemplate = async (\r\n    activePage: AdminLandingPage,\r\n    templateKey: string,\r\n  ): Promise<AdminLandingSection[] | null> => {\r\n    const payloads = buildTemplateSectionPayloads(templateKey);\r\n    const result = await replaceAdminLandingComposition(\r\n      activePage.pageId,\r\n      payloads.map((item) => ({ sectionType: item.hostType, config: item.config, isEnabled: true })),\r\n    );\r\n    if (!result.ok) {\r\n      showError("عملیات ناموف'... 52582 more characters,
+    expected: /breakpoint|JSON\.stringify|customCss/i,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
