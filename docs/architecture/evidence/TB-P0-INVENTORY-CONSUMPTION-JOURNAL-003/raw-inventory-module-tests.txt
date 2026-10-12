@@ -1,0 +1,40 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Tooba.ModuleContracts -> D:\temp\tooba-verify\bin\Tooba.ModuleContracts\debug\Tooba.ModuleContracts.dll
+  Tooba.BuildingBlocks -> D:\temp\tooba-verify\bin\Tooba.BuildingBlocks\debug\Tooba.BuildingBlocks.dll
+  Tooba.Catalog.Contracts -> D:\temp\tooba-verify\bin\Tooba.Catalog.Contracts\debug\Tooba.Catalog.Contracts.dll
+  Tooba.Offer.Contracts -> D:\temp\tooba-verify\bin\Tooba.Offer.Contracts\debug\Tooba.Offer.Contracts.dll
+  Tooba.Persistence -> D:\temp\tooba-verify\bin\Tooba.Persistence\debug\Tooba.Persistence.dll
+  Tooba.Inventory.Contracts -> D:\temp\tooba-verify\bin\Tooba.Inventory.Contracts\debug\Tooba.Inventory.Contracts.dll
+  Tooba.Inventory.Domain -> D:\temp\tooba-verify\bin\Tooba.Inventory.Domain\debug\Tooba.Inventory.Domain.dll
+  Tooba.Inventory.Application -> D:\temp\tooba-verify\bin\Tooba.Inventory.Application\debug\Tooba.Inventory.Application.dll
+  Tooba.Inventory.Infrastructure -> D:\temp\tooba-verify\bin\Tooba.Inventory.Infrastructure\debug\Tooba.Inventory.Infrastructure.dll
+  Tooba.Inventory.Tests -> D:\temp\tooba-verify\bin\Tooba.Inventory.Tests\debug\Tooba.Inventory.Tests.dll
+Test run for D:\temp\tooba-verify\bin\Tooba.Inventory.Tests\debug\Tooba.Inventory.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.24)
+[xUnit.net 00:00:00.05]   Discovering: Tooba.Inventory.Tests
+[xUnit.net 00:00:00.07]   Discovered:  Tooba.Inventory.Tests
+[xUnit.net 00:00:00.07]   Starting:    Tooba.Inventory.Tests
+  Passed Tooba.Inventory.Tests.Behavior.InventoryReleaseIdempotencyTests.Directory_release_source_treats_released_and_consumed_as_successful_noop [2 ms]
+  Passed Tooba.Inventory.Tests.Architecture.InventoryArchitectureGuardTests.Seller_inventory_write_returns_result_without_direct_semantic_exception [2 ms]
+  Passed Tooba.Inventory.Tests.Architecture.InventoryAmcW1MigrateGuardTests.Known_code_ownership_does_not_claim_foreign_reservation_retry_code [2 ms]
+  Passed Tooba.Inventory.Tests.Architecture.InventoryAmcW1MigrateGuardTests.No_raw_inventory_machine_code_literal_outside_the_contract_owner [64 ms]
+  Passed Tooba.Inventory.Tests.Architecture.InventoryAmcW1MigrateGuardTests.No_raw_InvalidOperationException_fault_remains_in_production [6 ms]
+  Passed Tooba.Inventory.Tests.Architecture.InventoryAmcW1MigrateGuardTests.Single_typed_fault_to_result_composition_seam_exists [< 1 ms]
+  Passed Tooba.Inventory.Tests.Architecture.InventoryAmcW1MigrateGuardTests.Every_declared_inventory_code_is_catalogued_and_localized [2 ms]
+[xUnit.net 00:00:00.48]   Finished:    Tooba.Inventory.Tests
+  Passed Tooba.Inventory.Tests.Architecture.InventoryAmcW1MigrateGuardTests.Resource_set_owns_the_inventory_keyspace_and_is_registered [< 1 ms]
+  Passed Tooba.Inventory.Tests.Behavior.InventoryReleaseIdempotencyTests.Domain_move_to_released_rejects_already_terminal_status [200 ms]
+  Passed Tooba.Inventory.Tests.Architecture.InventoryArchitectureGuardTests.Internal_only_http_applicability_remains_explicit_and_offer_owned [333 ms]
+  Passed Tooba.Inventory.Tests.Architecture.InventoryArchitectureGuardTests.Checkout_release_adapter_has_no_silent_catch_and_directory_release_is_idempotent [< 1 ms]
+  Passed Tooba.Inventory.Tests.Architecture.InventoryArchitectureGuardTests.Inventory_golden_boundaries_and_physical_layout_remain_clean [44 ms]
+  Passed Tooba.Inventory.Tests.Architecture.InventoryArchitectureGuardTests.Domain_csproj_has_no_application_infrastructure_or_endpoints_reference [< 1 ms]
+
+Test Run Successful.
+Total tests: 13
+     Passed: 13
+ Total time: 0.7984 Seconds

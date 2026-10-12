@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Domain.ValueObjects;
@@ -43,6 +43,11 @@ public sealed class InventoryDbContext : DbContext
     /// dedup restock مرجوعی.
     /// </summary>
     public DbSet<ReturnRestockInboxRecord> ReturnRestockInbox => Set<ReturnRestockInboxRecord>();
+
+    /// <summary>
+    /// ژورنال پایدار مصرف رزرو؛ منبع حقیقت replay و exactly-once.
+    /// </summary>
+    public DbSet<ReservationConsumptionRecord> ReservationConsumptions => Set<ReservationConsumptionRecord>();
 
     /// <summary>
     /// Outbox همین ماژول.
@@ -92,6 +97,14 @@ public sealed class InventoryDbContext : DbContext
             entity.HasKey(x => x.IdempotencyKey);
             entity.Property(x => x.IdempotencyKey).HasMaxLength(128);
             entity.HasIndex(x => x.ReservationId);
+        });
+        modelBuilder.Entity<ReservationConsumptionRecord>(entity =>
+        {
+            entity.ToTable("reservation_consumptions");
+            entity.HasKey(x => x.ReservationId);
+            entity.Property(x => x.ReservationId).ValueGeneratedNever();
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.ConsumerKey).HasMaxLength(128);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }
