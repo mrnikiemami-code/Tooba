@@ -1,0 +1,6 @@
+﻿file	pristine	current
+admin-builder-hardening-r13.guard.test.ts	ℹ pass 6 ℹ fail 1	ℹ pass 6 ℹ fail 1	IDENTICAL
+admin-builder-ux-r1.guard.test.ts	ℹ pass 7 ℹ fail 1	ℹ pass 7 ℹ fail 1	IDENTICAL
+admin-builder-ux-r2.guard.test.ts	ℹ pass 8 ℹ fail 1	ℹ pass 8 ℹ fail 1	IDENTICAL
+admin-builder-ux-r3.guard.test.ts	ℹ pass 8 ℹ fail 0	ℹ pass 8 ℹ fail 0	IDENTICAL
+admin-store-pages-r9.guard.test.ts	ℹ pass 4 ℹ fail 0	ℹ pass 4 ℹ fail 0	IDENTICAL

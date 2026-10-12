@@ -472,13 +472,15 @@ export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {
     event.dataTransfer.setData("text/plain", sectionId);
   };
 
-  const onSectionDragOver = (event: DragEvent<HTMLLIElement>, sectionId: string) => {
+  // گیرندهٔ واقعی dragover/drop کارت بخش، <div> داخلی لیست است (نه خود <li>)؛
+  // هر دو هندلر روی همان div بایند شده‌اند، پس نوع رخداد باید HTMLDivElement باشد.
+  const onSectionDragOver = (event: DragEvent<HTMLDivElement>, sectionId: string) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
     if (dragOverId !== sectionId) setDragOverId(sectionId);
   };
 
-  const onSectionDrop = async (event: DragEvent<HTMLLIElement>, targetId: string) => {
+  const onSectionDrop = async (event: DragEvent<HTMLDivElement>, targetId: string) => {
     event.preventDefault();
     const sourceId = dragId || event.dataTransfer.getData("text/plain");
     setDragId(null);
