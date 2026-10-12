@@ -1,0 +1,55 @@
+﻿node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm 
+help npmrc` for supported config options.
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> tooba-web@0.0.1 test:architecture
+> node --experimental-strip-types --test lib/architecture/frontend-source-size.guard.test.ts lib/architecture/frontend-import-boundary.guard.test.ts lib/architecture/frontend-flat-folder.guard.test.ts lib/architecture/frontend-feature-boundary.guard.test.ts lib/architecture/frontend-test-discovery.guard.test.ts lib/architecture/seo-rendering.guard.test.ts
+
+(node:28276) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-feature-boundary.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-BOUNDARY: external code must not deep-import migrated feature internals (58.5489ms)
+(node:32864) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-flat-folder.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-FOLDER-001: no new business-feature files directly under app/admin (6.0909ms)
+✔ FE-FOLDER-002: no new capability exports on admin-api dumping ground (0.7006ms)
+(node:22396) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-import-boundary.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-BOUNDARY-001: no new shared→feature reverse imports beyond baseline (28.2927ms)
+(node:30460) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-source-size.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-SIZE: oversized frontend files are shrink-only against baseline (48.3699ms)
+(node:17432) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-test-discovery.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ architecture guard files exist and package.json wires test:architecture (0.8335ms)
+✔ canonical discovery lists every on-disk frontend test file (72.5959ms)
+✔ package.json test scripts still invoke critical storefront suite (0.2417ms)
+(node:32272) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/seo-rendering.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-SEO-001 characterization: home route remains async server entry with generateMetadata (0.6747ms)
+✔ FE-SEO-001 characterization: PDP and listing routes are not client-only entrypoints (0.3657ms)
+✔ FE-SEO-001 characterization: blog article page keeps server metadata capability (0.1813ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 165.8583

@@ -1,0 +1,482 @@
+﻿node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm 
+help npmrc` for supported config options.
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> tooba-web@0.0.1 test:grid
+> node --experimental-strip-types --test design-system/data-grid/grid-state.test.ts design-system/app-data-grid/grid-query-mapper.test.ts design-system/app-data-grid/ag-filter-mapper.test.ts design-system/app-data-grid/community-filter-audit.test.ts design-system/app-data-grid/saved-view-state.test.ts design-system/app-data-grid/advanced-filter-expression.test.ts design-system/app-data-grid/jalali-date-ui.test.ts design-system/app-data-grid/saved-view-multiplicity.test.ts design-system/app-data-grid/filter-commit.test.ts design-system/app-data-grid/grid-overlay.test.ts design-system/app-data-grid/clear-all-filters.test.ts design-system/app-data-grid/column-manager.test.ts design-system/app-data-grid/pinned-column.test.ts design-system/app-data-grid/search-commit.test.ts design-system/app-data-grid/saved-view-dirty.test.ts design-system/app-data-grid/locale-text.test.ts design-system/app-data-grid/product-grid-filter-matrix.test.ts design-system/app-data-grid/filter-icon-system.test.ts design-system/app-data-grid/text-filter-operators.test.ts design-system/app-data-grid/use-overflow-tooltip.test.ts design-system/app-data-grid/app-grid-canonical.test.ts
+
+(node:31312) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/advanced-filter-expression.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ A AND B left-to-right (1.7674ms)
+✔ A OR B left-to-right (0.1698ms)
+✔ A AND B OR C left-to-right (0.0974ms)
+✔ A OR B AND C left-to-right (0.0781ms)
+✔ normalizeAdvancedFilterExpression pads connectors with AND (0.7258ms)
+✔ validateAdvancedFilterExpression rejects invalid connector (0.1433ms)
+✔ validateAdvancedFilterExpression rejects connector count mismatch (0.0964ms)
+✔ advanced filter serialization round-trip preserves connectors (0.1654ms)
+✔ migrateAdvancedFiltersRecord defaults legacy views to AND connectors (2.0847ms)
+(node:12616) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/ag-filter-mapper.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ fromAgFilterModel maps text/number/date/set filters without AG leakage to host (1.9008ms)
+✔ fromAgFilterModel ignores empty filters (0.2132ms)
+(node:30088) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/app-grid-canonical.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ resolveAppGridCapabilities merges overrides with defaults (0.6612ms)
+✔ default capabilities match professional grid baseline (0.6572ms)
+✔ canonical exports include row actions and filter header helpers (0.4005ms)
+✔ AppDataGrid exposes gridId and capabilities props (0.3633ms)
+✔ product list uses canonical row actions instead of inline action markup (1.0488ms)
+(node:35824) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/clear-all-filters.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ clearAllFilters resets every filter partition in one load call (1.0864ms)
+✔ toolbar clear-all is visible when filtering is active (0.3959ms)
+(node:34212) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/column-manager.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ selection column label only in column manager not grid header (1.4861ms)
+✔ column manager uses drag handle and no arrow reorder controls (0.6101ms)
+✖ page size options include 1000 (2.6811ms)
+(node:29668) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/community-filter-audit.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Community AG filters whitelist excludes Enterprise set/multi filters (0.8345ms)
+(node:34552) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/filter-commit.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ COLUMN_FILTER_APPLY_PARAMS requires explicit apply (0.8322ms)
+✔ filtersEqual suppresses duplicate commits for same filter (0.1288ms)
+✔ shouldCommitGridQuery returns false when only draft would match applied (0.0941ms)
+✔ shouldCommitGridQuery returns true when filter value changes (0.077ms)
+✔ gridQueryCommitKey includes page for pagination dedup (0.0966ms)
+✔ theme uses opaque header tokens without structural AG overrides (0.9541ms)
+✔ AppDataGrid registers app column header and apply-only filter params (0.3996ms)
+✔ product list externalizes updatedAt via filter matrix (0.3797ms)
+(node:25692) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/filter-icon-system.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ app column header uses shared lucide filter icon (1.0906ms)
+✔ toolbar advanced filter has no detached magnifier glyph (0.3853ms)
+✔ toolbar has no detached search icon button (0.8148ms)
+✔ active filter trigger exposes data-filter-active state (0.2439ms)
+✔ number header filter panel supports Enter commit without live typing requests (0.25ms)
+✔ text header filter panel supports full text operator set (0.3758ms)
+(node:29392) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/grid-overlay.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ theme uses official AG Grid legacy variables for header and borders (1.046ms)
+✔ AppDataGrid uses app-owned header filters and external filter fields (0.3219ms)
+✔ product list externalizes all matrix filter fields (0.1983ms)
+✔ Jalali header filter uses portal popover outside AG root (1.1847ms)
+✔ text header filter preserves Enter-to-apply draft semantics (0.2924ms)
+✔ Advanced filter drawer rebuilt at 520px with portal (0.3505ms)
+✔ globals define explicit overlay layering tokens (0.3505ms)
+(node:27988) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/grid-query-mapper.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ toHostGridQuery maps UI contract without AG Grid leakage (1.3749ms)
+(node:31804) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/jalali-date-ui.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ jalaliInputToIso converts Persian date input to ISO (2.5157ms)
+✔ filterChipLabel renders Jalali date without raw ISO tokens (0.5614ms)
+✔ filterChipLabel maps enum values to human labels (0.1156ms)
+(node:40388) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/locale-text.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ fa AG Grid locale maps number operators to Persian without English leftovers (0.8141ms)
+✔ fa locale exposes no raw English operator labels (0.273ms)
+(node:21772) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/pinned-column.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ theme sets explicit chrome background for header and pinned body cells (1.2249ms)
+✔ theme reinforces AG v36 pinned cell containers with opaque surfaces (0.4745ms)
+✔ pinnedGridEdge maps rtl end to left pin (0.1355ms)
+✔ theme applies visible row separators (0.3136ms)
+✔ product list keeps actions column pinned to rtl grid end (0.8547ms)
+✔ legacy bridge pins actions like product list (rtl end = left pin) (0.201ms)
+(node:39024) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/product-grid-filter-matrix.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ filter matrix marks business columns filterable (0.4821ms)
+✔ filter matrix marks non-filterable columns (0.1097ms)
+✔ offerAmountRange uses number filter kind (0.6534ms)
+✔ applyProductGridFilterHeader wires app column header for filterable fields (0.123ms)
+✔ product list uses unified external filter fields (0.4224ms)
+✔ external filter field list includes price column (0.1167ms)
+(node:30432) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/saved-view-dirty.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ hasActiveTransientFilters detects search and column filters (1.1797ms)
+✔ isSelectedViewDirty when filters diverge from saved view (0.3567ms)
+✔ resolveViewApplyQuery preserves active filters when switching views (0.239ms)
+✔ resolveViewApplyQuery restores saved filters when none active (0.1758ms)
+✔ AppDataGrid does not deselect saved view on filter/search commit (0.7492ms)
+(node:23788) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/saved-view-multiplicity.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ AppDataGrid registers legacy theme to avoid AG error #239 (1.6208ms)
+✔ saved view collection keeps multiple distinct views on create (0.5052ms)
+✔ saved view update changes only targeted view (0.1752ms)
+✔ delete view removes only targeted view and clears default when needed (0.0989ms)
+✔ set default view id persists separately from views array (0.0842ms)
+(node:34940) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/saved-view-state.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ prepareSavedViewForPersistence stores advancedFilterExpression with connectors (1.1758ms)
+✔ migrateSavedView upgrades legacy advancedFilters to AND expression (2.0933ms)
+✔ toHostGridQuery maps advancedFilter without AG leakage (0.3965ms)
+✔ sanitizeSavedView drops unknown fields from advanced expression (0.8512ms)
+✔ toAgFilterModel round-trips text filters (0.4493ms)
+(node:9204) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/search-commit.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ commitSearchQuery returns null when search unchanged (0.9798ms)
+✔ commitSearchQuery returns next query when search changes (0.2779ms)
+✔ commitSearchQuery clears search on empty draft (0.1502ms)
+✔ AppDataGrid search uses draft commit not debounced load (0.7437ms)
+(node:23180) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/text-filter-operators.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ TEXT_OPERATORS includes all backend-supported text operators (0.7201ms)
+✔ textFilterNeedsValue excludes blank operators (0.0899ms)
+✔ isFilterActive treats text blank/notBlank as active (0.0841ms)
+✔ toHostGridQuery maps text blank/notBlank without value (0.2223ms)
+✔ ag text filter round-trips all standard operators (0.2062ms)
+✔ fromAgFilterModel maps text blank filters (0.0862ms)
+(node:20052) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/use-overflow-tooltip.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ gridTooltipText returns undefined for empty values (0.8663ms)
+✔ gridTooltipText prefers formatted value (0.9551ms)
+✔ product list uses shared overflow tooltip cells (0.7622ms)
+(node:22088) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/data-grid/grid-state.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ filter and sort serialization round-trips (1.1419ms)
+✔ saved view round-trips (0.1526ms)
+✔ column order and visibility persist (0.4426ms)
+✔ page state and money/date normalization (0.1335ms)
+✔ uncapped column resize applies no maximum and never yields NaN (0.0852ms)
+✔ rtl sticky uses logical inline start (0.0638ms)
+✔ selection and export columns (0.1128ms)
+✔ server query adapter pages and filters (6.0072ms)
+✔ sort cycle and filter activity (0.1559ms)
+ℹ tests 98
+ℹ suites 0
+ℹ pass 97
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 268.6755
+
+✖ failing tests:
+
+test at design-system\app-data-grid\column-manager.test.ts:30:1
+✖ page size options include 1000 (2.6811ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /PAGE_SIZES = \[10, 25, 50, 100, 1000\]/. Input:
+  
+  '"use client";\r\n' +
+    '\r\n' +
+    'import { useCallback, useEffect, useMemo, useRef, useState } from "react";\r\n' +
+    'import { AgGridReact } from "ag-grid-react";\r\n' +
+    'import {\r\n' +
+    '  AllCommunityModule,\r\n' +
+    '  ModuleRegistry,\r\n' +
+    '  type ColDef,\r\n' +
+    '  type ColumnState,\r\n' +
+    '  type FilterChangedEvent,\r\n' +
+    '  type GridApi,\r\n' +
+    '  type GridReadyEvent,\r\n' +
+    '  type SortChangedEvent,\r\n' +
+    '} from "ag-grid-community";\r\n' +
+    'import "ag-grid-community/styles/ag-grid.css";\r\n' +
+    'import "ag-grid-community/styles/ag-theme-quartz.css";\r\n' +
+    'import "./theme.css";\r\n' +
+    '\r\n' +
+    'import { FileDown, FileSpreadsheet, Filter, FilterX } from "lucide-react";\r\n' +
+    'import { Button } from "../primitives/core";\r\n' +
+    'import { moveColumn } from "../data-grid/serialize";\r\n' +
+    'import type {\r\n' +
+    '  AdvancedFilterExpression,\r\n' +
+    '  GridBulkAction,\r\n' +
+    '  GridColumnLayout,\r\n' +
+    '  GridFilterValue,\r\n' +
+    '  GridQueryAdapter,\r\n' +
+    '  GridServerQuery,\r\n' +
+    '  SavedGridView,\r\n' +
+    '  SavedViewStore,\r\n' +
+    '} from "../data-grid/types";\r\n' +
+    'import { isFilterActive } from "../data-grid/serialize";\r\n' +
+    'import { DEFAULT_GRID_QUERY } from "./grid-query-mapper";\r\n' +
+    'import { filterChipLabel, fromAgFilterModel } from "./ag-filter-mapper";\r\n' +
+    'import {\r\n' +
+    '  activeAdvancedConditions,\r\n' +
+    '  createAdvancedCondition,\r\n' +
+    '  normalizeAdvancedFilterExpression,\r\n' +
+    '} from "./advanced-filter-expression";\r\n' +
+    'import { AdvancedFilterBuilder } from "./AdvancedFilterBuilder";\r\n' +
+    'import { AdvancedFilterDrawer } from "./AdvancedFilterDrawer";\r\n' +
+    'import { ColumnManagerDrawer } from "./ColumnManagerDrawer";\r\n' +
+    'import { SavedViewsToolbar } from "./SavedViewsToolbar";\r\n' +
+    'import {\r\n' +
+    '  agFilterModelForSavedView,\r\n' +
+    '  buildAgColumnApplyState,\r\n' +
+    '  captureColumnLayoutFromApi,\r\n' +
+    '  mergeSavedViewFilters,\r\n' +
+    '  prepareSavedViewForPersistence,\r\n' +
+    '  sanitizeSavedView,\r\n' +
+    '  type SavedViewSanitizeContext,\r\n' +
+    '} from "./saved-view-state";\r\n' +
+    'import type { AppGridFilterColumnDef } from "./filter-column-def";\r\n' +
+    'import { buildAgGridLocaleText, resolveGridLocale } from "./locale-text";\r\n' +
+    'import { exportRowsToCsv, exportRowsToXlsx } from "./export";\r\n' +
+    'import { COLUMN_FILTER_APPLY_PARAMS, filtersEqual, shouldCommitGridQuery } from "./filter-commit";\r\n' +
+    'import { commitSearchQuery } from "./search-commit";\r\n' +
+    'import { isSelectedViewDirty, resolveViewApplyQuery } from "./saved-view-dirty";\r\n' +
+    'import type { StatusFilterOption } from "./status-header-filter-panel";\r\n' +
+    'import { AppColumnHeader } from "./app-column-header";\r\n' +
+    'import { gridTooltipText } from "./use-overflow-tooltip";\r\n' +
+    'import { resolveAppGridCapabilities, type AppGridCapabilities } from "./app-grid-capabilities";\r\n' +
+    'import type { LocaleKey } from "./locale-text";\r\n' +
+    '\r\n' +
+    'ModuleRegistry.registerModules([AllCommunityModule]);\r\n' +
+    '\r\n' +
+    'export interface AppDataGridProps<T extends { id: string }> {\r\n' +
+    '  /** شناسه پایدار گرید — برای Saved View isolation و telemetry (مثلاً grid.admin.products) */\r\n' +
+    '  gridId?: string;\r\n' +
+    '  columnDefs: ColDef<T>[];\r\n' +
+    '  queryAdapter: GridQueryAdapter<T>;\r\n' +
+    '  locale?: "fa" | "en";\r\n' +
+    '  direction?: "rtl" | "ltr";\r\n' +
+    '  capabilities?: AppGridCapabilities;\r\n' +
+    '  /** اسم موجودیت در footer صفحه‌بندی */\r\n' +
+    '  rowCountNoun?: { fa: string; en: string };\r\n' +
+    '  /** override پیام‌های toolbar/drawer بدون fork CSS */\r\n' +
+    '  messageOverrides?: Partial<Record<LocaleKey, string>>;\r\n' +
+    '  savedViewStore?: SavedViewStore;\r\n' +
+    '  bulkActions?: GridBulkAction<T>[];\r\n' +
+    '  getExportRow?: (row: T) => string[];\r\n' +
+    '  exportHeaders?: string[];\r\n' +
+    '  exportFilenameBase?: string;\r\n' +
+    '  /** فیلتر پیشرفته Community-safe (کشو) — enum/status/date جلالی و غیره */\r\n' +
+    '  advancedFilterColumns?: AppGridFilterColumnDef[];\r\n' +
+    '  /** پرس‌وجوی پیش‌فرض برای restore system default */\r\n' +
+    '  defaultQuery?: GridServerQuery;\r\n' +
+    '  /** ستون‌هایی که فیلتر app-owned دارند (خارج از AG popup) */\r\n' +
+    '  externalFilterFields?: string[];\r\n' +
+    '  /** گزینه‌های فیلتر وضعیت برای header filter */\r\n' +
+    '  statusFilterOptions?: StatusFilterOption[];\r\n' +
+    '  /** برچسب صادقانه: انتخاب فقط صفحهٔ جاری */\r\n' +
+    '  pageSelectionOnly?: boolean;\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'const PAGE_SIZES = [10, 20, 25, 50, 100, 1000];\r\n' +
+    'const GRID_ROW_HEIGHT = 56;\r\n' +
+    'const GRID_HEADER_HEIGHT = 48;\r\n' +
+    '\r\n' +
+    '/**\r\n' +
+    ' * گرید reusable مبتنی بر AG Grid Community با قرارداد GridServerQuery/project.\r\n' +
+    ' * AG Grid state به queryAdapter نگاشت می‌شود؛ backend مدل خام AG Grid نمی‌بیند.\r\n' +
+    ' */\r\n' +
+    'export function AppDataGrid<T extends { id: string }>({\r\n' +
+    '  gridId,\r\n' +
+    '  columnDefs,\r\n' +
+    '  queryAdapter,\r\n' +
+    '  locale = "fa",\r\n' +
+    '  direction = "rtl",\r\n' +
+    '  capabilities: capabilitiesInput,\r\n' +
+    '  rowCountNoun,\r\n' +
+    '  messageOverrides,\r\n' +
+    '  savedViewStore,\r\n' +
+    '  bulkActions = [],\r\n' +
+    '  getExportRow,\r\n' +
+    '  exportHeaders = [],\r\n' +
+    '  exportFilenameBase = "export",\r\n' +
+    '  advancedFilterColumns = [],\r\n' +
+    '  pageSelectionOnly = true,\r\n' +
+    '  defaultQuery = DEFAULT_GRID_QUERY,\r\n' +
+    '  externalFilterFields = [],\r\n' +
+    '  statusFilterOptions = [],\r\n' +
+    '}: AppDataGridProps<T>) {\r\n' +
+    '  const capabilities = useMemo(() => resolveAppGridCapabilities(capabilitiesInput), [capabilitiesInput]);\r\n' +
+    '  const messages = useMemo(\r\n' +
+    '    () => ({ ...resolveGridLocale(locale), ...messageOverrides }) as Record<LocaleKey, string>,\r\n' +
+    '    [locale, messageOverrides],\r\n' +
+    '  );\r\n' +
+    '  const localeText = useMemo(() => buildAgGridLocaleText(locale), [locale]);\r\n' +
+    '  const [query, setQuery] = useState<GridServerQuery>(DEFAULT_GRID_QUERY);\r\n' +
+    '  const [rows, setRows] = useState<T[]>([]);\r\n' +
+    '  const [total, setTotal] = useState(0);\r\n' +
+    '  const [loading, setLoading] = useState(true);\r\n' +
+    '  const [error, setError] = useState<string | undefined>();\r\n' +
+    '  const [searchInput, setSearchInput] = useState("");\r\n' +
+    '  const [selected, setSelected] = useState<T[]>([]);\r\n' +
+    '  const [savedViews, setSavedViews] = useState<SavedGridView[]>([]);\r\n' +
+    '  const [defaultViewId, setDefaultViewId] = useState<string | null>(null);\r\n' +
+    '  const [activeViewId, setActiveViewId] = useState<string | null>(null);\r\n' +
+    '  const [filtersOpen, setFiltersOpen] = useState(false);\r\n' +
+    '  const [draftAdvancedFilter, setDraftAdvancedFilter] = useState<AdvancedFilterExpression>(\r\n' +
+    '    DEFAULT_GRID_QUERY.advancedFilter ?? { conditions: [], connectors: [] },\r\n' +
+    '  );\r\n' +
+    '  const [columnsOpen, setColumnsOpen] = useState(false);\r\n' +
+    '  const [columnManagerState, setColumnManagerState] = useState<ColumnState[]>([]);\r\n' +
+    '  const [layoutRevision, setLayoutRevision] = useState(0);\r\n' +
+    '  const gridApiRef = useRef<GridApi<T> | null>(null);\r\n' +
+    '  const abortRef = useRef<AbortController | null>(null);\r\n' +
+    '  const [popupParent, setPopupParent] = useState<HTMLElement | null>(null);\r\n' +
+    '  const queryRef = useRef(query);\r\n' +
+    '  queryRef.current = query;\r\n' +
+    '  const suppressGridEventsRef = useRef(false);\r\n' +
+    '  const defaultLayoutRef = useRef<GridColumnLayout | null>(null);\r\n' +
+    '\r\n' +
+    '  const defaultColumnIds = useMemo(\r\n' +
+    '    () => columnDefs.map((col) => col.colId ?? col.field).filter((id): id is string => Boolean(id)),\r\n' +
+    '    [columnDefs],\r\n' +
+    '  );\r\n' +
+    '\r\n' +
+    '  const columnLabels = useMemo(() => {\r\n' +
+    '    const labels: Record<string, string> = {};\r\n' +
+    '    for (const col of columnDefs) {\r\n' +
+    '      const id = col.colId ?? col.field;\r\n' +
+    '      if (id) {\r\n' +
+    '        labels[id] = col.headerName ?? id;\r\n' +
+    '      }\r\n' +
+    '    }\r\n' +
+    '    return labels;\r\n' +
+    '  }, [columnDefs]);\r\n' +
+    '\r\n' +
+    '  const activeFilterEntries = useMemo(() => {\r\n' +
+    '    const columnEntries = Object.entries(query.filters).filter(([, value]) => isFilterActive(value));\r\n' +
+    '    const advancedEntries = activeAdvancedConditions(query.advancedFilter).map(\r\n' +
+    '      (condition) => [condition.id, condition.value, condition.field] as const,\r\n' +
+    '    );\r\n' +
+    '    return { columnEntries, advancedEntries };\r\n' +
+    '  }, [query.filters, query.advancedFilter]);\r\n' +
+    '\r\n' +
+    '  const activeFilterCount =\r\n' +
+    '    activeFilterEntries.columnEntries.length + activeFilterEntries.advancedEntries.length;\r\n' +
+    '\r\n' +
+    '  const enumLabels = useMemo(() => {\r\n' +
+    '    const labels: Record<string, string> = {};\r\n' +
+    '    for (const column of advancedFilterColumns) {\r\n' +
+    '      for (const option of column.enumOptions ?? []) {\r\n' +
+    '        labels[option.value] = option.label;\r\n' +
+    '      }\r\n' +
+    '    }\r\n' +
+    '    return labels;\r\n' +
+    '  }, [advancedFilterColumns]);\r\n' +
+    '\r\n' +
+    '  const hasActiveFiltering =\r\n' +
+    '    activeFilterCount > 0 || Boolean(query.search?.trim());\r\n' +
+    '\r\n' +
+    '  const activeSavedView = useMemo(\r\n' +
+    '    () => (activeViewId ? savedViews.find((view) => view.id === activeViewId) : undefined),\r\n' +
+    '    [activeViewId, savedViews],\r\n' +
+    '  );\r\n' +
+    '\r\n' +
+    '  const currentColumnLayout = useMemo(() => {\r\n' +
+    '    void layoutRevision;\r\n' +
+    '    return captureColumnLayoutFromApi(gridApiRef.current, defaultColumnIds);\r\n' +
+    '  }, [defaultColumnIds, layoutRevision]);\r\n' +
+    '\r\n' +
+    '  const isActiveViewDirty = useMemo(() => {\r\n' +
+    '    if (!activeSavedView) return false;\r\n' +
+    '    return isSelectedViewDirty(activeSavedView, query, currentColumnLayout);\r\n' +
+    '  }, [activeSavedView, query, currentColumnLayout]);\r\n' +
+    '\r\n' +
+    '  const advancedFieldIds = useMemo(\r\n' +
+    '    () => new Set(advancedFilterColumns.map((column) => column.id)),\r\n' +
+    '    [advancedFilterColumns],\r\n' +
+    '  );\r\n' +
+    '\r\n' +
+    '  const externalFilterFieldIds = useMemo(\r\n' +
+    '    () => new Set(externalFilterFields),\r\n' +
+    '    [externalFilterFields],\r\n' +
+    '  );\r\n' +
+    '\r\n' +
+    '  const agExcludedFilterFieldIds = useMemo(() => {\r\n' +
+    '    const combined = new Set(advancedFieldIds);\r\n' +
+    '    for (const field of externalFilterFieldIds) combined.add(field);\r\n' +
+    '    return combined;\r\n' +
+    '  }, [advancedFieldIds, externalFilterFieldIds]);\r\n' +
+    '\r\n' +
+    '  const sanitizeContext = useMemo((): SavedViewSanitizeContext => {\r\n' +
+    '    const knownColumnIds = new Set(defaultColumnIds);\r\n' +
+    '    const knownFilterFields = new Set([\r\n' +
+    '      ...defaultColumnIds,\r\n' +
+    '      ...advancedFilterColumns.map((column) => column.id),\r\n' +
+    '    ]);\r\n' +
+    '    const enumOptionsByField: Record<string, Set<string>> = {};\r\n' +
+    '    for (const column of advancedFilterColumns) {\r\n' +
+    '      if (column.enumOptions?.length) {\r\n' +
+    '        enumOptionsByField[column.id] = new Set(column.enumOptions.map((option) => option.value));\r\n' +
+    '      }\r\n' +
+    '    }\r\n' +
+    '    return {\r\n' +
+    '      knownColumnIds,\r\n' +
+    '      knownFilterFields,\r\n' +
+    '      advancedFieldIds,\r\n' +
+    '      enumOptionsByField,\r\n' +
+    '      advancedFieldOrder: advancedFilterColumns.map((column) => column.id),\r\n' +
+    '    };\r\n' +
+    '  }, [advancedFieldIds, advancedFilterColumns, defaultColumnIds]);\r\n' +
+    '\r\n' +
+    '  useEffect(() => {\r\n' +
+    '    if (!filtersOpen) return;\r\n' +
+    '    const current = normalizeAdvancedFilterExpression(query.advancedFilter);\r\n' +
+    '    if (current.conditions.length === 0 && advancedFilterColumns[0]) {\r\n' +
+    '      setDraftAdvancedFilter({\r\n' +
+    '        conditions: [createAdvancedCondition(advancedFilterColumns[0].id)],\r\n' +
+    '        connectors: [],\r\n' +
+    '      });\r\n' +
+    '      return;\r\n' +
+    '    }\r\n' +
+    '    setDraftAdvanced'... 31768 more characters
+  
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/column-manager.test.ts:32:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '"use client";\r\n\r\nimport { useCallback, useEffect, useMemo, useRef, useState } from "react";\r\nimport { AgGridReact } from "ag-grid-react";\r\nimport {\r\n  AllCommunityModule,\r\n  ModuleRegistry,\r\n  type ColDef,\r\n  type ColumnState,\r\n  type FilterChangedEvent,\r\n  type GridApi,\r\n  type GridReadyEvent,\r\n  type SortChangedEvent,\r\n} from "ag-grid-community";\r\nimport "ag-grid-community/styles/ag-grid.css";\r\nimport "ag-grid-community/styles/ag-theme-quartz.css";\r\nimport "./theme.css";\r\n\r\nimport { FileDown, FileSpreadsheet, Filter, FilterX } from "lucide-react";\r\nimport { Button } from "../primitives/core";\r\nimport { moveColumn } from "../data-grid/serialize";\r\nimport type {\r\n  AdvancedFilterExpression,\r\n  GridBulkAction,\r\n  GridColumnLayout,\r\n  GridFilterValue,\r\n  GridQueryAdapter,\r\n  GridServerQuery,\r\n  SavedGridView,\r\n  SavedViewStore,\r\n} from "../data-grid/types";\r\nimport { isFilterActive } from "../data-grid/serialize";\r\nimport { DEFAULT_GRID_QUERY } from "./grid-query-mapper";\r\nimport { filterChipLabel, fromAgFilterModel } from "./ag-filter-mapper";\r\nimport {\r\n  activeAdvancedConditions,\r\n  createAdvancedCondition,\r\n  normalizeAdvancedFilterExpression,\r\n} from "./advanced-filter-expression";\r\nimport { AdvancedFilterBuilder } from "./AdvancedFilterBuilder";\r\nimport { AdvancedFilterDrawer } from "./AdvancedFilterDrawer";\r\nimport { ColumnManagerDrawer } from "./ColumnManagerDrawer";\r\nimport { SavedViewsToolbar } from "./SavedViewsToolbar";\r\nimport {\r\n  agFilterModelForSavedView,\r\n  buildAgColumnApplyState,\r\n  captureColumnLayoutFromApi,\r\n  mergeSavedViewFilters,\r\n  prepareSavedViewForPersistence,\r\n  sanitizeSavedView,\r\n  type SavedViewSanitizeContext,\r\n} from "./saved-view-state";\r\nimport type { AppGridFilterColumnDef } from "./filter-column-def";\r\nimport { buildAgGridLocaleText, resolveGridLocale } from "./locale-text";\r\nimport { exportRowsToCsv, exportRowsToXlsx } from "./export";\r\nimport { COLUMN_FILTER_APPLY_PARAMS, filtersEqual, shouldCommitGridQuery } from "./filter-commit";\r\nimport { commitSearchQuery } from "./search-commit";\r\nimport { isSelectedViewDirty, resolveViewApplyQuery } from "./saved-view-dirty";\r\nimport type { StatusFilterOption } from "./status-header-filter-panel";\r\nimport { AppColumnHeader } from "./app-column-header";\r\nimport { gridTooltipText } from "./use-overflow-tooltip";\r\nimport { resolveAppGridCapabilities, type AppGridCapabilities } from "./app-grid-capabilities";\r\nimport type { LocaleKey } from "./locale-text";\r\n\r\nModuleRegistry.registerModules([AllCommunityModule]);\r\n\r\nexport interface AppDataGridProps<T extends { id: string }> {\r\n  /** شناسه پایدار گرید — برای Saved View isolation و telemetry (مثلاً grid.admin.products) */\r\n  gridId?: string;\r\n  columnDefs: ColDef<T>[];\r\n  queryAdapter: GridQueryAdapter<T>;\r\n  locale?: "fa" | "en";\r\n  direction?: "rtl" | "ltr";\r\n  capabilities?: AppGridCapabilities;\r\n  /** اسم موجودیت در footer صفحه‌بندی */\r\n  rowCountNoun?: { fa: string; en: string };\r\n  /** override پیام‌های toolbar/drawer بدون fork CSS */\r\n  messageOverrides?: Partial<Record<LocaleKey, string>>;\r\n  savedViewStore?: SavedViewStore;\r\n  bulkActions?: GridBulkAction<T>[];\r\n  getExportRow?: (row: T) => string[];\r\n  exportHeaders?: string[];\r\n  exportFilenameBase?: string;\r\n  /** فیلتر پیشرفته Community-safe (کشو) — enum/status/date جلالی و غیره */\r\n  advancedFilterColumns?: AppGridFilterColumnDef[];\r\n  /** پرس‌وجوی پیش‌فرض برای restore system default */\r\n  defaultQuery?: GridServerQuery;\r\n  /** ستون‌هایی که فیلتر app-owned دارند (خارج از AG popup) */\r\n  externalFilterFields?: string[];\r\n  /** گزینه‌های فیلتر وضعیت برای header filter */\r\n  statusFilterOptions?: StatusFilterOption[];\r\n  /** برچسب صادقانه: انتخاب فقط صفحهٔ جاری */\r\n  pageSelectionOnly?: boolean;\r\n}\r\n\r\nconst PAGE_SIZES = [10, 20, 25, 50, 100, 1000];\r\nconst GRID_ROW_HEIGHT = 56;\r\nconst GRID_HEADER_HEIGHT = 48;\r\n\r\n/**\r\n * گرید reusable مبتنی بر AG Grid Community با قرارداد GridServerQuery/project.\r\n * AG Grid state به queryAdapter نگاشت می‌شود؛ backend مدل خام AG Grid نمی‌بیند.\r\n */\r\nexport function AppDataGrid<T extends { id: string }>({\r\n  gridId,\r\n  columnDefs,\r\n  queryAdapter,\r\n  locale = "fa",\r\n  direction = "rtl",\r\n  capabilities: capabilitiesInput,\r\n  rowCountNoun,\r\n  messageOverrides,\r\n  savedViewStore,\r\n  bulkActions = [],\r\n  getExportRow,\r\n  exportHeaders = [],\r\n  exportFilenameBase = "export",\r\n  advancedFilterColumns = [],\r\n  pageSelectionOnly = true,\r\n  defaultQuery = DEFAULT_GRID_QUERY,\r\n  externalFilterFields = [],\r\n  statusFilterOptions = [],\r\n}: AppDataGridProps<T>) {\r\n  const capabilities = useMemo(() => resolveAppGridCapabilities(capabilitiesInput), [capabilitiesInput]);\r\n  const messages = useMemo(\r\n    () => ({ ...resolveGridLocale(locale), ...messageOverrides }) as Record<LocaleKey, string>,\r\n    [locale, messageOverrides],\r\n  );\r\n  const localeText = useMemo(() => buildAgGridLocaleText(locale), [locale]);\r\n  const [query, setQuery] = useState<GridServerQuery>(DEFAULT_GRID_QUERY);\r\n  const [rows, setRows] = useState<T[]>([]);\r\n  const [total, setTotal] = useState(0);\r\n  const [loading, setLoading] = useState(true);\r\n  const [error, setError] = useState<string | undefined>();\r\n  const [searchInput, setSearchInput] = useState("");\r\n  const [selected, setSelected] = useState<T[]>([]);\r\n  const [savedViews, setSavedViews] = useState<SavedGridView[]>([]);\r\n  const [defaultViewId, setDefaultViewId] = useState<string | null>(null);\r\n  const [activeViewId, setActiveViewId] = useState<string | null>(null);\r\n  const [filtersOpen, setFiltersOpen] = useState(false);\r\n  const [draftAdvancedFilter, setDraftAdvancedFilter] = useState<AdvancedFilterExpression>(\r\n    DEFAULT_GRID_QUERY.advancedFilter ?? { conditions: [], connectors: [] },\r\n  );\r\n  const [columnsOpen, setColumnsOpen] = useState(false);\r\n  const [columnManagerState, setColumnManagerState] = useState<ColumnState[]>([]);\r\n  const [layoutRevision, setLayoutRevision] = useState(0);\r\n  const gridApiRef = useRef<GridApi<T> | null>(null);\r\n  const abortRef = useRef<AbortController | null>(null);\r\n  const [popupParent, setPopupParent] = useState<HTMLElement | null>(null);\r\n  const queryRef = useRef(query);\r\n  queryRef.current = query;\r\n  const suppressGridEventsRef = useRef(false);\r\n  const defaultLayoutRef = useRef<GridColumnLayout | null>(null);\r\n\r\n  const defaultColumnIds = useMemo(\r\n    () => columnDefs.map((col) => col.colId ?? col.field).filter((id): id is string => Boolean(id)),\r\n    [columnDefs],\r\n  );\r\n\r\n  const columnLabels = useMemo(() => {\r\n    const labels: Record<string, string> = {};\r\n    for (const col of columnDefs) {\r\n      const id = col.colId ?? col.field;\r\n      if (id) {\r\n        labels[id] = col.headerName ?? id;\r\n      }\r\n    }\r\n    return labels;\r\n  }, [columnDefs]);\r\n\r\n  const activeFilterEntries = useMemo(() => {\r\n    const columnEntries = Object.entries(query.filters).filter(([, value]) => isFilterActive(value));\r\n    const advancedEntries = activeAdvancedConditions(query.advancedFilter).map(\r\n      (condition) => [condition.id, condition.value, condition.field] as const,\r\n    );\r\n    return { columnEntries, advancedEntries };\r\n  }, [query.filters, query.advancedFilter]);\r\n\r\n  const activeFilterCount =\r\n    activeFilterEntries.columnEntries.length + activeFilterEntries.advancedEntries.length;\r\n\r\n  const enumLabels = useMemo(() => {\r\n    const labels: Record<string, string> = {};\r\n    for (const column of advancedFilterColumns) {\r\n      for (const option of column.enumOptions ?? []) {\r\n        labels[option.value] = option.label;\r\n      }\r\n    }\r\n    return labels;\r\n  }, [advancedFilterColumns]);\r\n\r\n  const hasActiveFiltering =\r\n    activeFilterCount > 0 || Boolean(query.search?.trim());\r\n\r\n  const activeSavedView = useMemo(\r\n    () => (activeViewId ? savedViews.find((view) => view.id === activeViewId) : undefined),\r\n    [activeViewId, savedViews],\r\n  );\r\n\r\n  const currentColumnLayout = useMemo(() => {\r\n    void layoutRevision;\r\n    return captureColumnLayoutFromApi(gridApiRef.current, defaultColumnIds);\r\n  }, [defaultColumnIds, layoutRevision]);\r\n\r\n  const isActiveViewDirty = useMemo(() => {\r\n    if (!activeSavedView) return false;\r\n    return isSelectedViewDirty(activeSavedView, query, currentColumnLayout);\r\n  }, [activeSavedView, query, currentColumnLayout]);\r\n\r\n  const advancedFieldIds = useMemo(\r\n    () => new Set(advancedFilterColumns.map((column) => column.id)),\r\n    [advancedFilterColumns],\r\n  );\r\n\r\n  const externalFilterFieldIds = useMemo(\r\n    () => new Set(externalFilterFields),\r\n    [externalFilterFields],\r\n  );\r\n\r\n  const agExcludedFilterFieldIds = useMemo(() => {\r\n    const combined = new Set(advancedFieldIds);\r\n    for (const field of externalFilterFieldIds) combined.add(field);\r\n    return combined;\r\n  }, [advancedFieldIds, externalFilterFieldIds]);\r\n\r\n  const sanitizeContext = useMemo((): SavedViewSanitizeContext => {\r\n    const knownColumnIds = new Set(defaultColumnIds);\r\n    const knownFilterFields = new Set([\r\n      ...defaultColumnIds,\r\n      ...advancedFilterColumns.map((column) => column.id),\r\n    ]);\r\n    const enumOptionsByField: Record<string, Set<string>> = {};\r\n    for (const column of advancedFilterColumns) {\r\n      if (column.enumOptions?.length) {\r\n        enumOptionsByField[column.id] = new Set(column.enumOptions.map((option) => option.value));\r\n      }\r\n    }\r\n    return {\r\n      knownColumnIds,\r\n      knownFilterFields,\r\n      advancedFieldIds,\r\n      enumOptionsByField,\r\n      advancedFieldOrder: advancedFilterColumns.map((column) => column.id),\r\n    };\r\n  }, [advancedFieldIds, advancedFilterColumns, defaultColumnIds]);\r\n\r\n  useEffect(() => {\r\n    if (!filtersOpen) return;\r\n    const current = normalizeAdvancedFilterExpression(query.advancedFilter);\r\n    if (current.conditions.length === 0 && advancedFilterColumns[0]) {\r\n      setDraftAdvancedFilter({\r\n        conditions: [createAdvancedCondition(advancedFilterColumns[0].id)],\r\n        connectors: [],\r\n      });\r\n      return;\r\n    }\r\n    setDraftAdvanced'... 31768 more characters,
+    expected: /PAGE_SIZES = \[10, 25, 50, 100, 1000\]/,
+    operator: 'match',
+    diff: 'simple'
+  }

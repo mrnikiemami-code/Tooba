@@ -72,6 +72,15 @@ test("page state and money/date normalization", () => {
   assert.equal(clampWidth(10, 80, 200), 80);
 });
 
+test("uncapped column resize applies no maximum and never yields NaN", () => {
+  // مسیر resize در DataGrid برای ستون بدون maxWidth از Infinity استفاده می‌کند.
+  const uncapped = clampWidth(900, 80, Number.POSITIVE_INFINITY);
+  assert.equal(Number.isNaN(uncapped), false);
+  assert.equal(uncapped, 900);
+  assert.equal(clampWidth(10, 80, Number.POSITIVE_INFINITY), 80);
+  assert.equal(clampWidth(900, 80, 200), 200);
+});
+
 test("rtl sticky uses logical inline start", () => {
   assert.equal(stickyLogicalSide("start"), "inline-start");
   assert.equal(stickyLogicalSide("end"), "inline-end");

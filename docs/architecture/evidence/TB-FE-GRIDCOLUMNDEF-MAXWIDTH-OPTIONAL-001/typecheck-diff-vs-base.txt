@@ -1,0 +1,44 @@
+﻿base=155 after=56 removed=99 added=0
+
+=== ADDED (regressions, must be empty) ===
+
+=== REMAINING after (grouped by file) ===
+   9 lib/storefront-composition/shared-composition-renderer.tsx
+   6 app/admin/category-admin-screen.tsx
+   5 app/admin/settings/page.tsx
+   4 app/admin/admin-create-shipment-modal.tsx
+   3 app/admin/menus/admin-menus-api.ts
+   3 app/admin/shipping-services-screen.tsx
+   3 features/admin-languages/components/language-list.tsx
+   2 app/admin/catalog-attribute-ui.tsx
+   2 app/admin/category-admin-form.test.ts
+   2 app/admin/landing-pages/admin-landing-page-composer.tsx
+   2 app/admin/landing-pages/admin-landing-pages-screen.tsx
+   1 app/admin/admin-api.test.ts
+   1 app/admin/admin-screens.tsx
+   1 app/admin/content-category-admin-screen.tsx
+   1 app/admin/content-list.tsx
+   1 app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts
+   1 app/admin/landing-pages/admin-resource-selector.tsx
+   1 app/admin/product-rich-text-editor.tsx
+   1 app/admin/reservation-policy-editor.tsx
+   1 app/storefront/storefront-landing-blocks.tsx
+   1 app/template-preview/fashion/fashion-template-preview-view.tsx
+   1 app/wallet/wallet-ui.tsx
+   1 design-system/app-data-grid/legacy-grid-bridge.ts
+   1 features/admin-receipts/components/receipts-screen.tsx
+   1 lib/i18n/middleware-locale.ts
+   1 lib/storefront-composition/fashion-demo-preview.ts
+
+=== REMOVED grouped by file ===
+  16 app/admin/landing-pages/admin-resource-selector.tsx
+  13 app/admin/admin-fulfillment-work-queue-screen.tsx
+  12 app/admin/admin-returns-work-queue-screen.tsx
+  11 app/admin/admin-screens.tsx
+   9 app/admin/landing-pages/admin-landing-pages-screen.tsx
+   8 app/admin/admin-order-detail-screen.tsx
+   8 features/admin-languages/components/language-list.tsx
+   7 app/admin/catalog-units-screen.tsx
+   7 features/admin-receipts/components/receipts-screen.tsx
+   6 app/admin/shipping-services-screen.tsx
+   2 design-system/app-data-grid/legacy-grid-bridge.test.ts

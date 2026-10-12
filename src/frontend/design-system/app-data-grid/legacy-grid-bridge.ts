@@ -73,7 +73,8 @@ export function buildLegacyGridBridge<T>(
       sortable: col.sortable ?? false,
       width: col.width,
       minWidth: col.minWidth,
-      maxWidth: col.maxWidth,
+      // سقف فقط وقتی صریح تعیین شده باشد — همان الگوی ستون actions.
+      ...(col.maxWidth != null ? { maxWidth: col.maxWidth } : {}),
       hide: col.defaultVisible === false,
       pinned: mapPinned(col.sticky, direction),
       cellRenderer: (params: ICellRendererParams<T>) => renderLegacyCell(col, params),

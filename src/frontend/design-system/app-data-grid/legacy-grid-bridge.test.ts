@@ -82,3 +82,30 @@ test("buildLegacyGridBridge leaves actions maxWidth open when not provided", () 
   assert.equal(actions?.maxWidth, undefined);
   assert.equal(actions?.resizable, true);
 });
+
+const uncappedColumns: GridColumnDef<Row>[] = [
+  {
+    id: "name",
+    header: "نام",
+    accessor: (row) => row.name,
+    width: 120,
+    minWidth: 80,
+    filterKind: "text",
+    sortable: true,
+  },
+];
+
+test("buildLegacyGridBridge passes through defined caps only", () => {
+  const bridge = buildLegacyGridBridge(columns);
+  assert.equal(bridge.columnDefs[0]?.maxWidth, 200);
+  assert.equal(bridge.columnDefs[1]?.maxWidth, 140);
+});
+
+test("buildLegacyGridBridge imposes no maximum for uncapped data columns", () => {
+  const bridge = buildLegacyGridBridge(uncappedColumns);
+  const column = bridge.columnDefs[0];
+  assert.equal(column?.colId, "name");
+  assert.equal(column?.width, 120);
+  assert.equal(column?.minWidth, 80);
+  assert.equal(column?.maxWidth, undefined);
+});

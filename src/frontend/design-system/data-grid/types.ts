@@ -99,7 +99,11 @@ export interface GridColumnDef<T> {
   align?: GridAlign;
   width: number;
   minWidth: number;
-  maxWidth: number;
+  /**
+   * سقف اختیاری عرض. نبودنش یعنی هیچ حداکثری اعمال نمی‌شود — همان قرارداد واقعی
+   * `ColDef.maxWidth` در AG Grid که اختیاری است و `undefined` را نادیده می‌گیرد.
+   */
+  maxWidth?: number;
   exportable?: boolean;
   enumOptions?: { value: string; label: string }[];
   /** اگر false باشد ستون در نمای پیش‌فرض مخفی است و از انتخابگر ستون برمی‌گردد. */

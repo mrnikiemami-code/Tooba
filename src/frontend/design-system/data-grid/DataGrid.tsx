@@ -36,6 +36,11 @@ import type {
 /** عرض ثابت ستون انتخاب — با آفست چسبان ستون‌های sticky هماهنگ است. */
 const SELECTION_COLUMN_WIDTH = 44;
 
+/**
+ * ستون بدون `maxWidth` هیچ سقفی ندارد؛ resize باید بدون سقف ادامه دهد و هرگز NaN نسازد.
+ */
+const UNCAPPED_COLUMN_MAX_WIDTH = Number.POSITIVE_INFINITY;
+
 export interface DataGridProps<T extends { id: string }> {
   columns: GridColumnDef<T>[];
   queryAdapter: GridQueryAdapter<T>;
@@ -529,7 +534,11 @@ export function DataGrid<T extends { id: string }>({
                                 ...current,
                                 widths: {
                                   ...current.widths,
-                                  [column.id]: clampWidth(initial + delta, column.minWidth, column.maxWidth),
+                                  [column.id]: clampWidth(
+                                    initial + delta,
+                                    column.minWidth,
+                                    column.maxWidth ?? UNCAPPED_COLUMN_MAX_WIDTH,
+                                  ),
                                 },
                               }));
                               setActiveViewId(null);
