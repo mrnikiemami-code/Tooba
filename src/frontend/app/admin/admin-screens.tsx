@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronUp, Eye, EyeOff, LayoutTemplate } from "lucide-react";
 import { ErrorState, faWorkspaceMessages, AppDataGrid, adminGridQueryAdapter, createClientGridQueryAdapter, useLegacyAdminGridDirectProps } from "../../design-system";
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
