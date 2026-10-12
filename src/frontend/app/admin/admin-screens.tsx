@@ -129,9 +129,6 @@ function ServerGridPage<T extends { id: string }>({
     <main data-testid={testId}>
       <PageHeading title={title} description={description} />
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
-        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
-          <span className="text-sm text-muted">دادهٔ زندهٔ فروشگاه — server GridQuery</span>
-        </div>
         <div className="p-2 md:p-4">
           {gridError ? (
             <ErrorState title="فروشگاه در دسترس نیست" detail={gridError} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />

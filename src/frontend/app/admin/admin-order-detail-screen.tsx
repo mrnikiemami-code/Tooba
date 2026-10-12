@@ -665,7 +665,7 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
                   ) : null}
                 </dl>
               ) : (
-                <p className="mt-3 text-sm text-gray-500">پرداخت ثبت‌شده‌ای برای این checkout وجود ندارد.</p>
+                <p className="mt-3 text-sm text-gray-500">پرداختی برای این سفارش ثبت نشده است</p>
               )}
             </section>
           </div>
