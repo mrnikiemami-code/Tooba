@@ -9,6 +9,8 @@ import {
   executeAdminOrderOperation,
   filterOperationsForScope,
   loadAdminOrderOperations,
+  orderOperationBodyFromAction,
+  requiresTrackingInput,
   type AdminOrderOperationAction,
   type AdminOrderOperationsScope,
 } from "./admin-order-operations";
@@ -127,18 +129,13 @@ export function AdminOrderOperationsMenu({
     setPending(true);
     setError(null);
     const result = await executeAdminOrderOperation(checkoutId, {
-      code: action.code,
-      sellerOrderId: action.sellerOrderId,
-      fulfillmentId: action.fulfillmentId,
-      shipmentId: action.shipmentId,
-      returnRequestId: action.returnRequestId,
+      ...orderOperationBodyFromAction(action),
       carrierDisplayName: extras?.carrierDisplayName,
       trackingReference: extras?.trackingReference,
     });
     setPending(false);
     if (result.state !== "ok") {
-      const raw = result.message ?? "order.operation.failed";
-      const fa = /^[a-z0-9._-]+$/i.test(raw) ? mapAdminErrorMessage(raw, "fa") : raw;
+      const fa = mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa");
       setError(fa);
       toast.error(fa);
       return;
@@ -166,7 +163,7 @@ export function AdminOrderOperationsMenu({
       setCarrierAction(action);
       return;
     }
-    if (action.code === "assign_tracking" || action.code === "correct_tracking") {
+    if (requiresTrackingInput(action.code)) {
       setTrackingValue("");
       setTrackingAction(action);
       return;

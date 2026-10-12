@@ -8,8 +8,36 @@ export type AdminOrderOperationActionLike = {
   code: string;
   fulfillmentId?: string | null;
   sellerOrderId?: string | null;
+  shipmentId?: string | null;
   returnRequestId?: string | null;
+  consolidatedPackageId?: string | null;
 };
+
+/**
+ * بدنهٔ هویتی عملیات از اقدام پروجکت‌شدهٔ سرور.
+ *
+ * هر شناسه‌ای که سرور در `action` برگردانده همان چیزی است که برای اجرای همان عملیات
+ * لازم است؛ حذف یکی از آن‌ها (مثل `consolidatedPackageId`) درخواست را در سرور بی‌اعتبار
+ * می‌کند و پاسخ `order.operation.invalid` می‌دهد. پس همهٔ شناسه‌های هویتی عیناً برگردانده
+ * می‌شوند و توسعهٔ سرور با افزودن شناسهٔ جدید فقط یک نقطهٔ به‌روزرسانی دارد.
+ */
+export function orderOperationBodyFromAction(action: AdminOrderOperationActionLike): {
+  code: string;
+  sellerOrderId: string | null;
+  fulfillmentId: string | null;
+  shipmentId: string | null;
+  returnRequestId: string | null;
+  consolidatedPackageId: string | null;
+} {
+  return {
+    code: action.code,
+    sellerOrderId: action.sellerOrderId ?? null,
+    fulfillmentId: action.fulfillmentId ?? null,
+    shipmentId: action.shipmentId ?? null,
+    returnRequestId: action.returnRequestId ?? null,
+    consolidatedPackageId: action.consolidatedPackageId ?? null,
+  };
+}
 
 /** عملیات‌هایی که فقط در اقلام و ارسال / جزئیات معنا دارند — از Grid کل‌سفارش حذف می‌شوند. */
 export const GRID_EXCLUDED_OPERATION_CODES = new Set([

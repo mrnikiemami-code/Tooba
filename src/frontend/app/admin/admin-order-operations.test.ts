@@ -36,7 +36,7 @@ test("orders grid order reference is non-navigation text; View is canonical", ()
   const screens = readFileSync(join(dir, "admin-screens.tsx"), "utf8");
   const orderColumnsBlock = screens.slice(
     screens.indexOf("function createOrderColumns"),
-    screens.indexOf("const sellerColumns"),
+    screens.indexOf("const orderColumns"),
   );
   assert.match(orderColumnsBlock, /id:\s*"reference"/);
   assert.match(orderColumnsBlock, /truncatedCell\(row\.reference/);
@@ -51,7 +51,7 @@ test("orders grid exposes filters on all data columns including amount/date/line
   const screens = readFileSync(join(dir, "admin-screens.tsx"), "utf8");
   const orderColumnsBlock = screens.slice(
     screens.indexOf("function createOrderColumns"),
-    screens.indexOf("const sellerColumns"),
+    screens.indexOf("const orderColumns"),
   );
   assert.match(orderColumnsBlock, /id:\s*"reference"[\s\S]*filterKind:\s*"text"/);
   assert.match(orderColumnsBlock, /id:\s*"customer"[\s\S]*filterKind:\s*"text"/);
@@ -140,6 +140,47 @@ test("maps order operation errors to FA without raw codes", () => {
   assert.match(client, /detail\.trim\(\)/);
 });
 
+test("order operation error never shows the Host text in another language", async () => {
+  const { mapOrderOperationError } = await import("./admin-order-operations.ts");
+  const invalidFa = "این عملیات در وضعیت فعلی سفارش مجاز نیست.";
+  // مشاهدهٔ زندهٔ باگ: عنوان انگلیسی Host نباید در UI فارسی نشت کند.
+  assert.equal(mapOrderOperationError("order.operation.invalid", "Order was not found.", "fa"), invalidFa);
+  assert.equal(mapOrderOperationError("order.operation.invalid", "سفارش پیدا نشد.", "fa"), invalidFa);
+  assert.equal(mapOrderOperationError("order.operation.invalid", null, "fa"), invalidFa);
+  assert.equal(mapOrderOperationError("order.operation.invalid", null, "en"), "This operation is not valid for the current order state.");
+  assert.equal(mapOrderOperationError("order.operation.denied", "This order operation is not permitted.", "fa"), "مجوز انجام این عملیات وجود ندارد.");
+  // کد ناشناخته: متن سرور فقط وقتی به زبان UI است پذیرفته می‌شود.
+  assert.equal(mapOrderOperationError("some.new.code", "سفارش در وضعیت نامعتبر است.", "fa"), "سفارش در وضعیت نامعتبر است.");
+  assert.equal(mapOrderOperationError("some.new.code", "Something failed.", "fa"), "خطایی رخ داد. لطفاً دوباره تلاش کنید.");
+  const client = readFileSync(join(dir, "admin-order-operations.ts"), "utf8");
+  assert.match(client, /isDisplayableServerDetail/);
+  // heuristic قدیمی «شبیه جمله است → به سرور اعتماد کن» حذف شده است.
+  for (const file of [
+    "admin-order-operations-menu.tsx",
+    "admin-order-items-shipping-panel.tsx",
+    "admin-create-shipment-modal.tsx",
+  ]) {
+    assert.doesNotMatch(readFileSync(join(dir, file), "utf8"), /\^\[a-z0-9\._-\]\+\$/);
+  }
+});
+
+test("consolidated package actions keep the projected package identity", async () => {
+  const { orderOperationBodyFromAction } = await import("./admin-order-operations-scope.ts");
+  const packageId = "01a12f79-6ef1-7000-8578-dd7cc841195d";
+  assert.deepEqual(orderOperationBodyFromAction({ code: "dispatch_consolidated_package", consolidatedPackageId: packageId }), {
+    code: "dispatch_consolidated_package",
+    sellerOrderId: null,
+    fulfillmentId: null,
+    shipmentId: null,
+    returnRequestId: null,
+    consolidatedPackageId: packageId,
+  });
+  assert.equal(orderOperationBodyFromAction({ code: "cancel" }).consolidatedPackageId, null);
+  const menu = readFileSync(join(dir, "admin-order-operations-menu.tsx"), "utf8");
+  assert.match(menu, /orderOperationBodyFromAction\(action\)/);
+  assert.doesNotMatch(menu, /consolidatedPackageId: action\./);
+});
+
 test("whole-order scope filters fulfillment/return actions from grid", () => {
   const actions = [
     sampleAction("cancel"),
@@ -225,11 +266,22 @@ test("whole-order menu shows one cancel and payment restore", () => {
   assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("correct_tracking"), true);
 });
 
-test("operations menu uses tracking dialog for correct_tracking and confirm Dialog", () => {
+test("operations menu asks for a tracking code exactly for the codes that need it", async () => {
   const menu = readFileSync(join(dir, "admin-order-operations-menu.tsx"), "utf8");
-  assert.match(menu, /action\.code === "assign_tracking" \|\| action\.code === "correct_tracking"/);
+  const { requiresTrackingInput } = await import("./admin-order-operations.ts");
+  assert.match(menu, /requiresTrackingInput\(action\.code\)/);
   assert.match(menu, /اصلاح کد رهگیری/);
   assert.match(menu, /confirmAction\?\.confirmMessageFa/);
+  // سرور برای این سه عملیات کد رهگیری در بدنه الزام می‌کند؛ منو باید بپرسد.
+  assert.equal(requiresTrackingInput("assign_tracking"), true);
+  assert.equal(requiresTrackingInput("correct_tracking"), true);
+  assert.equal(requiresTrackingInput("assign_consolidated_package_tracking"), true);
+  // این‌ها فقط شناسهٔ هویتی می‌خواهند و نباید فرم اضافه باز کنند.
+  assert.equal(requiresTrackingInput("dispatch_consolidated_package"), false);
+  assert.equal(requiresTrackingInput("dispatch_shipment"), false);
+  assert.equal(requiresTrackingInput("cancel"), false);
+  // فهرست hardcode قدیمی در منو حذف شده و منبع واحد شده است.
+  assert.doesNotMatch(menu, /action\.code === "assign_tracking" \|\| action\.code === "correct_tracking"/);
 });
 
 test("maps corrective action errors to FA", () => {

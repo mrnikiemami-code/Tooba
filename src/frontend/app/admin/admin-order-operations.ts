@@ -1,20 +1,28 @@
 /**
  * کلاینت عملیات lifecycle سفارش Admin — فقط API-driven actions.
  */
-import { adminHeaders, type AdminResult } from "./admin-api";
+import { adminHeaders, type AdminResult } from "./admin-api.ts";
 import {
+  extractAdminErrorCode,
   mapAdminErrorMessage,
   type AdminErrorLocale,
-} from "./admin-error-map";
+} from "./admin-error-map.ts";
 import {
   filterOperationsForScope,
   GRID_EXCLUDED_OPERATION_CODES,
+  orderOperationBodyFromAction,
   sellerQuickActionLabels,
   type AdminOrderOperationsScope,
-} from "./admin-order-operations-scope";
+} from "./admin-order-operations-scope.ts";
+import { isDisplayableServerDetail } from "../../lib/i18n/displayable-server-detail.ts";
 
 export type { AdminOrderOperationsScope };
-export { filterOperationsForScope, GRID_EXCLUDED_OPERATION_CODES, sellerQuickActionLabels };
+export {
+  filterOperationsForScope,
+  GRID_EXCLUDED_OPERATION_CODES,
+  orderOperationBodyFromAction,
+  sellerQuickActionLabels,
+};
 
 export type AdminOrderOperationAction = {
   code: string;
@@ -75,6 +83,25 @@ export type AdminOrderOperationsPage = {
   }>;
 };
 
+/**
+ * کدهایی که بدنهٔ درخواستشان «کد رهگیری» می‌خواهد.
+ *
+ * این‌ها تنها عملیاتی هستند که اجرایشان بدون ورودی کاربر ناقص است؛ بقیهٔ اقدام‌های
+ * پراجکت‌شده فقط با شناسه‌های هویتی همان `action` اجرا می‌شوند. منبع قواعد:
+ * `AdminOrderOperationsOrchestrator.Fulfillment.cs` (assign/correct tracking و
+ * ثبت کد رهگیری بستهٔ تجمیعی). افزودن کد جدید سرور = یک سطر اینجا.
+ */
+export const TRACKING_INPUT_OPERATION_CODES = new Set([
+  "assign_tracking",
+  "correct_tracking",
+  "assign_consolidated_package_tracking",
+]);
+
+/** آیا این عملیات پیش از اجرا کد رهگیری از کاربر می‌خواهد؟ */
+export function requiresTrackingInput(code: string): boolean {
+  return TRACKING_INPUT_OPERATION_CODES.has(code);
+}
+
 export type AdminOrderOperationRequest = {
   code: string;
   sellerOrderId?: string | null;
@@ -93,23 +120,27 @@ export type AdminOrderOperationRequest = {
   note?: string | null;
 };
 
-/** نگاشت خطای عملیات سفارش به FA. */
+/**
+ * نگاشت خطای عملیات سفارش به متن قابل نمایش (چندزبانه).
+ *
+ * ۱) کد پایدارِ شناخته‌شده در دیکشنری Admin → متن همان locale (قرارداد چندزبانه UI؛
+ *    متن سرور نمی‌تواند زبان فالبک دیگری را روی UI فارسی تحمیل کند).
+ * ۲) کد ناشناخته → عنوان/جزئیات سرور، فقط اگر به زبان locale فعال نوشته شده و واژهٔ
+ *    فنی داخلی نداشته باشد.
+ * ۳) وگرنه پیام عمومی همان locale — هیچ‌گاه کد خام، انگلیسی، یا متن فنی نمایش داده نمی‌شود.
+ */
 export function mapOrderOperationError(
   codeOrMessage: string | null | undefined,
   detail?: string | null,
   locale: AdminErrorLocale = "fa",
 ): string {
-  const code = codeOrMessage ?? null;
-  if (code && (code === "order.operation.denied" || code === "order.operation.invalid" || code === "order.operation.failed")) {
-    if (detail && detail.trim() && !/bad request|http\s*\d|exception|stack/i.test(detail)) {
-      return detail.trim();
-    }
-    return mapAdminErrorMessage(code, locale);
+  const code = codeOrMessage ?? "";
+  const serverDetail = detail ? detail.trim() : "";
+  const knownCode = extractAdminErrorCode(code);
+  if (!knownCode && serverDetail && isDisplayableServerDetail(serverDetail, locale)) {
+    return serverDetail;
   }
-  if (detail && detail.trim() && !/bad request|http\s*\d|exception|stack/i.test(detail)) {
-    return detail.trim();
-  }
-  return mapAdminErrorMessage(codeOrMessage, locale);
+  return mapAdminErrorMessage(code || null, locale);
 }
 
 function asString(value: unknown): string | null {

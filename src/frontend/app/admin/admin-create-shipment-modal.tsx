@@ -336,8 +336,7 @@ export function AdminCreateShipmentModal({
     });
     setPending(false);
     if (result.state !== "ok") {
-      const raw = result.message ?? "order.operation.failed";
-      const fa = /^[a-z0-9._-]+$/i.test(raw) ? mapAdminErrorMessage(raw, "fa") : raw;
+      const fa = mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa");
       setError(fa);
       toast.error(fa);
       return;

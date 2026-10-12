@@ -23,6 +23,7 @@ import {
 import {
   executeAdminOrderOperation,
   loadAdminOrderOperations,
+  orderOperationBodyFromAction,
   type AdminOrderLineCapability,
   type AdminOrderOperationAction,
   type AdminSellerCapability,
@@ -264,20 +265,15 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
     }
     setPendingCode(`${seller.id}:${code}:${opts?.shipmentId ?? ""}`);
     const result = await executeAdminOrderOperation(checkoutId, {
-      code: action.code,
-      sellerOrderId: action.sellerOrderId,
-      fulfillmentId: action.fulfillmentId,
+      ...orderOperationBodyFromAction(action),
       shipmentId: opts?.shipmentId ?? action.shipmentId,
-      returnRequestId: action.returnRequestId,
       carrierDisplayName: opts?.carrierDisplayName,
       trackingReference: opts?.trackingReference,
       selections: opts?.selections,
     });
     setPendingCode(null);
     if (result.state !== "ok") {
-      const raw = result.message ?? "order.operation.failed";
-      const fa = /^[a-z0-9._-]+$/i.test(raw) ? mapAdminErrorMessage(raw, "fa") : raw;
-      toast.error(fa);
+      toast.error(mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"));
       return false;
     }
     toast.success(`عملیات ${action.labelFa} انجام شد.`);

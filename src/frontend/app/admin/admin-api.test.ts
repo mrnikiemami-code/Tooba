@@ -191,3 +191,11 @@ test("sends development actor header and exposes denied state", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test("admin requests negotiate the display locale so Host error text stays in UI language", async () => {
+  const { adminHeaders } = await import("./admin-api.ts");
+  const headers = adminHeaders();
+  assert.equal(headers["Accept-Language"], "fa-IR");
+  assert.equal(adminHeaders({ "content-type": "application/json" })["Accept-Language"], "fa-IR");
+  assert.ok(ADMIN_DEV_ACTOR_HEADER in headers);
+});

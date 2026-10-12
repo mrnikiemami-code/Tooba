@@ -15,6 +15,7 @@ import {
   ADMIN_DEV_ACTOR_HEADER,
   ADMIN_ACTOR_STORAGE_KEY,
   DEFAULT_ADMIN_ACTOR_ID,
+  adminRequestHeaders,
   type AdminLoadState,
   type AdminResult,
 } from "../../lib/admin/admin-result.ts";
@@ -890,9 +891,7 @@ export async function prepareAdminDevActor(): Promise<boolean> {
 
 async function read(path: string): Promise<AdminResult<unknown>> {
   try {
-    const response = await fetch(path, {
-      headers: { Accept: "application/json", [ADMIN_DEV_ACTOR_HEADER]: actorId() },
-    });
+    const response = await fetch(path, { headers: adminHeaders() });
     const payload = await response.json().catch(() => null);
     if (response.status === 401 || response.status === 403) {
       return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
@@ -997,5 +996,5 @@ export function queryAdminOrdersGrid(query: GridServerQuery): Promise<AdminGridQ
 
 /** هدر Admin را برای کلاینت قدیمی Product Workspace فراهم می‌کند. */
 export function adminHeaders(extra?: Record<string, string>): Record<string, string> {
-  return { Accept: "application/json", [ADMIN_DEV_ACTOR_HEADER]: actorId(), ...(extra ?? {}) };
+  return { ...adminRequestHeaders(), [ADMIN_DEV_ACTOR_HEADER]: actorId(), ...(extra ?? {}) };
 }
