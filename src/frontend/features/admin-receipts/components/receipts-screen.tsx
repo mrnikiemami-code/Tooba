@@ -224,6 +224,10 @@ const receiptColumns: GridColumnDef<AdminReceiptRow>[] = [
     header: "عملیات",
     accessor: () => "",
     cell: (row) => <AppGridRowActionsCell row={row} actions={receiptRowActions} compact />,
+    // GridColumnDef این دو را الزامی می‌داند؛ همان مقادیری که پل گرید برای ستون actions
+    // به‌کار می‌بَرد (width ?? 108 و minWidth ?? 100) صریح می‌شوند تا رفتار visible عوض نشود.
+    width: 108,
+    minWidth: 100,
     exportable: false,
     sortable: false,
   },
