@@ -25,16 +25,19 @@ public sealed class CheckoutAbuseGate : ICheckoutAbuseGate
     private readonly OrderDbContext _orders;
     private readonly IStoreCheckoutAbuseSettingsReader _settings;
     private readonly IClock _clock;
+    private readonly IReservationCycleDirectory _cycles;
 
-    /// <summary>Order DbContext + Catalog settings contract + IClock.</summary>
+    /// <summary>Order DbContext + Catalog settings contract + reservation-cycle state + IClock.</summary>
     public CheckoutAbuseGate(
         OrderDbContext orders,
         IStoreCheckoutAbuseSettingsReader settings,
-        IClock clock)
+        IClock clock,
+        IReservationCycleDirectory cycles)
     {
         _orders = orders;
         _settings = settings;
         _clock = clock;
+        _cycles = cycles;
     }
 
     /// <inheritdoc />
@@ -162,15 +165,39 @@ public sealed class CheckoutAbuseGate : ICheckoutAbuseGate
         await _orders.SaveChangesAsync(cancellationToken);
     }
 
-    private Task<int> CountOpenUnpaidAsync(Guid customerId, CancellationToken cancellationToken) =>
-        _orders.SellerOrders
+    /// <summary>
+    /// سهم «سفارش باز» را می‌شمارد؛ سفارش‌هایی که سقف رزرو مجددشان تمام شده و دیگر
+    /// قابل پرداخت نیستند سهم نمی‌گیرند. در غیر این صورت یک سفارش مرده، مشتری را برای همیشه
+    /// از ثبت سفارش تازه باز می‌داشت بی‌آنکه راه بازی باقی باشد.
+    /// </summary>
+    private async Task<int> CountOpenUnpaidAsync(Guid customerId, CancellationToken cancellationToken)
+    {
+        var openUnpaidCheckoutIds = await _orders.SellerOrders
             .Where(order => OpenUnpaidOrderPredicate.OpenUnpaidStatuses.Contains(order.Status))
             .Join(
                 _orders.Checkouts,
                 order => order.CheckoutId,
                 checkout => checkout.CheckoutId,
                 (order, checkout) => checkout)
-            .CountAsync(checkout => checkout.PlacedByUserId == customerId, cancellationToken);
+            .Where(checkout => checkout.PlacedByUserId == customerId)
+            .Select(checkout => checkout.CheckoutId)
+            .ToListAsync(cancellationToken);
+        if (openUnpaidCheckoutIds.Count == 0)
+        {
+            return 0;
+        }
+
+        var distinctCheckoutIds = openUnpaidCheckoutIds.Distinct().ToArray();
+        var cycles = await _cycles.GetProjectionsAsync(
+            distinctCheckoutIds,
+            _clock.UtcNow,
+            null,
+            cancellationToken);
+        var unpayable = distinctCheckoutIds
+            .Where(id => ReservationCyclePayabilityPolicy.HasReachedRetryLimit(cycles.GetValueOrDefault(id)))
+            .ToHashSet();
+        return openUnpaidCheckoutIds.Count(id => !unpayable.Contains(id));
+    }
 
     private static bool IsCustomer(Guid placedByUserId) =>
         placedByUserId != Guid.Empty && placedByUserId != StorefrontCheckoutService.StorefrontGuestActorId;

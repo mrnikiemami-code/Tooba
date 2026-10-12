@@ -107,6 +107,55 @@ public sealed class CheckoutAbusePolicyTests
         Assert.DoesNotContain("MaxReservationCommitsPerCustomerPerOfferInWindow", gate, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// TB-CART-EXPIRED-RESERVATION-RETRY — تنها منبع حقیقت «قابل پرداخت بودن» و اثر آن
+    /// بر سقف سفارش‌های باز: سفارشی که سقف رزرو مجددش تمام شده، مرده است و نباید
+    /// سهم «سفارش باز» بگیرد؛ وگرنه مشتری برای همیشه از ثبت سفارش تازه باز می‌ماند.
+    /// </summary>
+    [Fact]
+    public void Dead_reservation_cycle_is_unpayable_and_excluded_from_open_unpaid_quota()
+    {
+        var checkoutId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+
+        var dead = Projection(checkoutId, now, ReservationCycleStatus.Expired, totalCycles: 3, maxCycles: 3, retryRemaining: 0, secondsRemaining: 0);
+        var alive = Projection(checkoutId, now, ReservationCycleStatus.Active, totalCycles: 1, maxCycles: 3, retryRemaining: 2, secondsRemaining: 900);
+        var retryable = Projection(checkoutId, now, ReservationCycleStatus.Expired, totalCycles: 1, maxCycles: 3, retryRemaining: 2, secondsRemaining: 0);
+
+        Assert.True(ReservationCyclePayabilityPolicy.HasReachedRetryLimit(dead));
+        Assert.False(ReservationCyclePayabilityPolicy.HasReachedRetryLimit(alive));
+        Assert.False(ReservationCyclePayabilityPolicy.HasReachedRetryLimit(retryable));
+        Assert.False(ReservationCyclePayabilityPolicy.HasReachedRetryLimit(null));
+
+        var root = FindRepoRoot();
+        var gate = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Checkout", "Abuse", "CheckoutAbuseGate.cs"));
+        Assert.Contains("ReservationCyclePayabilityPolicy.HasReachedRetryLimit", gate, StringComparison.Ordinal);
+        Assert.Contains("IReservationCycleDirectory", gate, StringComparison.Ordinal);
+        Assert.DoesNotContain("openUnpaidCheckoutIds.Count;", gate, StringComparison.Ordinal);
+    }
+
+    private static ReservationCycleProjection Projection(
+        Guid checkoutId,
+        DateTimeOffset now,
+        ReservationCycleStatus status,
+        int totalCycles,
+        int maxCycles,
+        int retryRemaining,
+        int secondsRemaining) =>
+        new(
+            checkoutId,
+            CurrentCycleNumber: status == ReservationCycleStatus.Active ? 1 : (int?)null,
+            CurrentStatus: status,
+            StartedAt: now,
+            ExpiresAt: secondsRemaining > 0 ? now.AddSeconds(secondsRemaining) : null,
+            ServerTime: now,
+            SecondsRemaining: secondsRemaining,
+            TotalCyclesCreated: totalCycles,
+            EffectiveMaxCycles: maxCycles,
+            RetryCountRemaining: retryRemaining,
+            History: Array.Empty<ReservationCycleSnapshot>(),
+            SupplyStatus: null);
+
     [Fact]
     public void Concurrent_last_slot_uses_row_lock_not_sleep()
     {

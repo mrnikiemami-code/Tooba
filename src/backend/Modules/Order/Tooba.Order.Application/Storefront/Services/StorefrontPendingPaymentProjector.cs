@@ -3,6 +3,7 @@ using Tooba.Order.Domain;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Payment.Contracts.Storefront;
 using Tooba.Order.Application.ReservationCycle.Contracts;
+using Tooba.Order.Application.ReservationCycle.Policies;
 
 namespace Tooba.Order.Application.Storefront.Services;
 
@@ -42,7 +43,7 @@ public static class StorefrontPendingPaymentProjector
         DateTimeOffset serverNow)
     {
         var items = new List<StorefrontPendingPaymentItemView>();
-        foreach (var checkout in checkouts.OrderByDescending(x => x.SubmittedAt))
+        foreach (var checkout in checkouts.OrderByDescending(x => x.SubmittedAt).ThenBy(x => x.CheckoutId))
         {
             var mapped = MapOne(checkout, payments.GetValueOrDefault(checkout.CheckoutId), cycles.GetValueOrDefault(checkout.CheckoutId), serverNow);
             if (mapped is not null)
@@ -75,10 +76,10 @@ public static class StorefrontPendingPaymentProjector
             return null;
         }
 
-        var cycleActive = cycle is { CurrentStatus: ReservationCycleStatus.Active, SecondsRemaining: > 0 };
+        var cycleActive = ReservationCyclePayabilityPolicy.IsActive(cycle);
         var retryRemaining = cycle?.RetryCountRemaining ?? 0;
         var maxCycles = cycle?.EffectiveMaxCycles ?? 3;
-        var retryLimit = !cycleActive && retryRemaining <= 0 && (cycle?.TotalCyclesCreated ?? 0) >= maxCycles;
+        var retryLimit = ReservationCyclePayabilityPolicy.HasReachedRetryLimit(cycle);
         var isManual = PaymentProviderCodes.IsManual(payment?.ProviderCode);
         var awaitingReview = isManual
             && payment is not null
