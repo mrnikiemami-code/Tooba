@@ -13,7 +13,7 @@ import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import Placeholder from "@tiptap/extension-placeholder";
 import Image from "@tiptap/extension-image";
-import { Extension } from "@tiptap/core";
+import { Extension, type Extensions } from "@tiptap/core";
 import { useEffect, useMemo } from "react";
 import { sanitizeProductRichHtml } from "./product-rich-html";
 import { articleDamImageSrc } from "./article-rich-html.ts";
@@ -136,7 +136,12 @@ export function ProductRichTextEditor({
   onPickDamImage?: () => Promise<{ mediaAssetId: string; alt?: string; title?: string } | null>;
 }) {
   const extensions = useMemo(() => {
-    const base = [
+    // نوع عمومی خود tiptap: `Extensions = AnyExtension[]` و `AnyExtension = Extendable`
+    // (@tiptap/core dist/index.d.ts:1387-1388) و Node/Mark/Extension هر سه از Extendable
+    // ارث می‌برند (:504, :802, :1325). بدون این حاشیه‌نویسی، آرایه به اتحادِ انواع دقیقِ
+    // هر extension استنتاج می‌شد و `Image.configure(...)` (از نوع Node<ImageOptions, any>)
+    // در `base.push` رد می‌شد. این همان نوعی است که useEditor هم انتظار دارد (:1644).
+    const base: Extensions = [
       StarterKit.configure({
         heading: { levels: [2, 3, 4] },
         codeBlock: false,

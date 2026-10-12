@@ -1,0 +1,24 @@
+﻿node : (node:29968) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of 
+file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/legacy-grid-bridge.ts is not 
+specified and it doesn't parse as CommonJS.
+At C:\Users\User\AppData\Local\Temp\ps-script-5c32f691-3a70-429f-aa21-84a81d8e1cb3.ps1:112 char:1
++ node --experimental-strip-types "$ev\probe-inert-legacy-fields.ts" 2> ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:29968) [M...se as CommonJS.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[rtl] columnDefs (post-repair input):
+   {"colId":"name","headerName":"نام","sortable":false,"width":140,"minWidth":120,"hide":false,"cellRenderer":"[fn]","filter":false}
+   {"colId":"code","headerName":"کد","sortable":false,"width":110,"minWidth":100,"hide":false,"cellRenderer":"[fn]","filter":false}
+   {"colId":"actions","headerName":"عملیات","width":88,"minWidth":72,"maxWidth":96,"sortable":false,"filter":false,"resizable":true,"lockVisible":true,"lockPinned":true,"lockPosition":"left","pinned":"left","cellClass":"app-grid-cell-align-center app-grid-actions-cell","cellRenderer":"[fn]"}
+
+[ltr] columnDefs (post-repair input):
+   {"colId":"name","headerName":"نام","sortable":false,"width":140,"minWidth":120,"hide":false,"cellRenderer":"[fn]","filter":false}
+   {"colId":"code","headerName":"کد","sortable":false,"width":110,"minWidth":100,"hide":false,"cellRenderer":"[fn]","filter":false}
+   {"colId":"actions","headerName":"عملیات","width":88,"minWidth":72,"maxWidth":96,"sortable":false,"filter":false,"resizable":true,"lockVisible":true,"lockPinned":true,"lockPosition":"right","pinned":"right","cellClass":"app-grid-cell-align-center app-grid-actions-cell","cellRenderer":"[fn]"}
+
+PROBE OK — flex/pinned/filter are inert; pinning, filtering and widths unchanged.

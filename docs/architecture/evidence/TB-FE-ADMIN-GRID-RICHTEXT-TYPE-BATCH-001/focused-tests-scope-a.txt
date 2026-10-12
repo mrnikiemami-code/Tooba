@@ -1,0 +1,27 @@
+﻿(node:35564) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/legacy-grid-bridge.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ buildLegacyGridBridge maps legacy columns to ColDef with external filters (0.9189ms)
+✔ buildLegacyGridBridge export row uses accessors (0.6885ms)
+✔ buildLegacyGridBridge pins actions column at rtl grid end (0.1123ms)
+✔ buildLegacyGridBridge leaves actions maxWidth open when not provided (0.0881ms)
+✔ buildLegacyGridBridge passes through defined caps only (0.0963ms)
+✔ buildLegacyGridBridge imposes no maximum for uncapped data columns (0.0715ms)
+(node:37212) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/features/admin-languages/admin-languages.characterization.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ admin-languages public boundary exports screen and API (0.6564ms)
+✔ admin languages route stays thin composition (0.2157ms)
+✔ language API uses shared admin-result and languages Host routes (0.2067ms)
+✔ language list keeps edit modal and grid markers (0.1989ms)
+✔ flat admin no longer owns language implementation files (0.1412ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 83.9406

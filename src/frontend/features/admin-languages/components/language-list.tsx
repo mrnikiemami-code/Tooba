@@ -37,9 +37,14 @@ function mapRows(defs: SupportedLocaleDefinition[]): AdminLanguageRow[] {
 }
 
 function buildColumns(onEdit: (row: AdminLanguageRow) => void): GridColumnDef<AdminLanguageRow>[] {
+  // ستون «عملیات» با همین `id` توسط buildLegacyGridBridge شناسایی و همیشه روی لبهٔ
+  // انتهایی گرید پین می‌شود (legacy-grid-bridge.ts:99-112)؛ پس نه `pinned` لازم است
+  // و نه `sticky`. `flex` و `filter` هم بخشی از GridColumnDef نیستند و هیچ‌جا خوانده
+  // نمی‌شوند: bridge فقط width/minWidth/maxWidth را نگاشت می‌کند و برای همین ستون
+  // `filter: false` را خودش قطعی می‌کند (:105).
   return [
-    { id: "nativeName", header: "نام", accessor: (row) => row.nativeName, width: 140, minWidth: 120, flex: 1.2 },
-    { id: "displayName", header: "نام نمایشی", accessor: (row) => row.displayName, width: 160, minWidth: 140, flex: 1.4 },
+    { id: "nativeName", header: "نام", accessor: (row) => row.nativeName, width: 140, minWidth: 120 },
+    { id: "displayName", header: "نام نمایشی", accessor: (row) => row.displayName, width: 160, minWidth: 140 },
     {
       id: "urlPrefix",
       header: "پیشوند مسیر",
@@ -109,12 +114,10 @@ function buildColumns(onEdit: (row: AdminLanguageRow) => void): GridColumnDef<Ad
       id: "actions",
       header: "عملیات",
       accessor: () => "",
-      pinned: "left",
       width: 88,
       minWidth: 72,
       maxWidth: 96,
       sortable: false,
-      filter: false,
       cell: (row) => (
         <button
           type="button"

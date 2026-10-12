@@ -1,0 +1,10 @@
+﻿app/storefront/storefront-landing-blocks.tsx(722,9): error TS2740: Type '{ mediaAssetId: string; imageUrl: string; title: string; alt: string; description: string; ctaLabel: string; destinationType: "all-products" | "custom-url"; targetId: string; targetSlug: string; targetLabel: string; customUrl: string; href: string; }' is missing the following properties from type 'HeroSlideConfig': panelMediaAssetId, panelImageUrl, panelColor, panelSize, and 2 more.
+lib/storefront-composition/shared-composition-renderer.tsx(244,23): error TS2339: Property 'bannerImageUrl' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(244,61): error TS2339: Property 'bannerImageUrl' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(245,20): error TS2339: Property 'bannerImageUrl' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(246,27): error TS2339: Property 'bannerMediaAssetId' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(246,69): error TS2339: Property 'bannerMediaAssetId' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(247,46): error TS2339: Property 'bannerMediaAssetId' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(256,37): error TS2339: Property 'bannerHref' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(256,70): error TS2339: Property 'bannerHref' does not exist on type 'SectionDisplayConfig'.
+lib/storefront-composition/shared-composition-renderer.tsx(819,32): error TS2741: Property 'alt' is missing in type 'PreviewFakeBannerItem' but required in type '{ src: string | undefined; href: string | undefined; title: string | undefined; alt: string | undefined; objectPosition: string; previewFake: boolean | undefined; }'.
