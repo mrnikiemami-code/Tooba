@@ -1,0 +1,55 @@
+TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002 — targeted test evidence
+Recorded: 2026-10-12 (local), base HEAD 04e3aa79f1fcf26c2c4c17f10ea1d3fce99dac91
+Runner: dotnet test with isolated artifacts (-p:UseArtifactsOutput=true -p:ArtifactsPath=D:\temp\tooba-verify)
+Reason for isolation: the running Tooba.Host process (PID 15068) locks the default bin/obj outputs.
+
+PURPOSE
+No implementation was authorized (Gate B/D blocked), so this run is NOT new-behaviour coverage.
+It records the *existing, locked* behaviour that a future fix must preserve, namely:
+  * MoveTo/Commit/Promote reject a terminal (Consumed/Released) reservation  -> "terminal state is not resurrectable"
+  * Release is the only already-sanctioned replay no-op
+  * the current consume path performs exactly one deduction for a single (non-replayed) call
+and it proves the base tree is green for these focus areas before any decision.
+
+------------------------------------------------------------------
+1) Tooba.Inventory.Tests (whole module project: architecture guards + release idempotency)
+------------------------------------------------------------------
+Command:
+  dotnet test src/backend/Modules/Inventory/Tooba.Inventory.Tests/Tooba.Inventory.Tests.csproj -p:UseArtifactsOutput=true -p:ArtifactsPath=D:\temp\tooba-verify --nologo
+
+Result:
+  Passed!  - Failed: 0, Passed: 13, Skipped: 0, Total: 13, Duration: 359 ms - Tooba.Inventory.Tests.dll (net8.0)
+  EXITCODE_INVENTORY=0
+
+Includes (relevant to this gate):
+  InventoryReleaseIdempotencyTests.Domain_move_to_released_rejects_already_terminal_status
+  InventoryReleaseIdempotencyTests.Directory_release_source_treats_released_and_consumed_as_successful_noop
+  InventoryArchitectureGuardTests.* (source-slice guard between ReleaseAsync and ConsumeAsync)
+
+------------------------------------------------------------------
+2) Tooba.Host.Tests :: PaidOrderReservationLifecycleTests + InventoryFoundationTests
+------------------------------------------------------------------
+Command:
+  dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj -p:UseArtifactsOutput=true -p:ArtifactsPath=D:\temp\tooba-verify --nologo --filter "FullyQualifiedName~PaidOrderReservationLifecycleTests|FullyQualifiedName~InventoryFoundationTests"
+
+Result:
+  Passed!  - Failed: 0, Passed: 13, Skipped: 0, Total: 13, Duration: 29 s - Tooba.Host.Tests.dll (net8.0)
+  EXITCODE_HOST_FILTERED=0
+
+Includes (relevant to this gate):
+  PaidOrderReservationLifecycleTests.CommitForPaidOrder_rejects_consumed_without_resurrect
+  PaidOrderReservationLifecycleTests.Commit_on_released_reservation_throws_not_active
+  InventoryFoundationTests.<consume + outbox + availability flow>  (single-consume baseline; asserts OnHand 4 / Reserved 0 after one consume)
+
+------------------------------------------------------------------
+NOT EXECUTED (deliberately)
+------------------------------------------------------------------
+  * No new tests were written: the only provable fix needs a schema migration and/or a
+    cross-module contract change (Gate D decision), and the task forbids speculative
+    production changes while blocked.
+  * No full-suite / AMSC run (task: avoid full suites unless repo policy requires them).
+  * No live mutation, no migration, no service restart, no dispatch/retry of
+    order 01a12e97-ee9e-7000-826c-a9eca536b223 or package 01a12f79-6ef1-7000-8578-dd7cc841195d.
+    Live database access in this task was SELECT-only (see boundary-map.md / failure-matrix.md).
+
+Full raw log: D:\temp\tb002-tests.log (session-local; not committed).
