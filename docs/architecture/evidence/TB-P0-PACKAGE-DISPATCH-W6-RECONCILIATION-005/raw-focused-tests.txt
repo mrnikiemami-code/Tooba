@@ -1,0 +1,20 @@
+﻿
+  Passed 
+Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.Dispatch_consumes_reservation_via_inventory_gateway 
+[546 ms]
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.Cancel_gate_reports_HasDispatchedQuantity 
+[1 ms]
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.Legacy_gateway_without_keyed_implementation_
+fails_closed [94 ms]
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.Consolidated_package_dispatch_propagates_key
+ed_consume_failure [10 ms]
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.Consolidated_package_dispatch_forwards_deter
+ministic_consumer_key [10 ms]
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.Consolidated_package_dispatch_consumes_pre_d
+ispatched_member_reservation_via_keyed_seam [15 ms]
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.CreateFromPaid_is_idempotent_on_event_inbox 
+[4 ms]
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.Consolidated_package_dispatch_leaves_already
+_consumed_pre_dispatched_member_unchanged [4 ms]
+
+

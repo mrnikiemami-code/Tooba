@@ -280,9 +280,19 @@ public sealed partial class FulfillmentDirectory
             step.Unit.AssignTracking(step.Shipment.ShipmentId, step.GeneratedTrackingReference!, _clock.UtcNow);
         }
 
-        foreach (var step in steps.Where(x => x.NeedsDispatch))
+        foreach (var step in steps)
         {
-            step.Unit.ApplyShipmentDispatched(step.Shipment.ShipmentId, _clock.UtcNow);
+            if (step.NeedsDispatch)
+            {
+                step.Unit.ApplyShipmentDispatched(step.Shipment.ShipmentId, _clock.UtcNow);
+            }
+
+            // W6 — عضوِ از قبل ارسال/تحویل‌شده دوباره ارسال نمی‌شود و کد رهگیری‌اش بازنویسی
+            // نمی‌گردد، اما خطی که رزروش هنوز مصرف نشده از همان درز کلیددارِ اثبات‌محور رد
+            // می‌شود. پس رزرو Held بی‌صدا نادیده گرفته نمی‌شود و مصرف کورکورانه هم رخ نمی‌دهد:
+            // replay با همان کلید پایدار idempotent است و نبود ژورنال/عدم تطابق، خطای نوع‌دار
+            // می‌دهد. اعضای کاملاً مصرف‌شده به‌صورت idempotent رد می‌شوند و چون این مرحله پیش از
+            // تک SaveChanges همان بسته اجرا می‌شود، شکست آن هیچ ارسال جزئی ثبت نمی‌کند.
             await ConsumeInventoryForShipmentAsync(
                 step.Unit,
                 step.Shipment,

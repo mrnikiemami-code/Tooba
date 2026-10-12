@@ -265,6 +265,208 @@ public sealed class FulfillmentCharacterizationTests
         }
     }
 
+    // W6 — عضوِ از قبل ارسال‌شده‌ای که رزروش هنوز مصرف نشده نباید بی‌صدا رد شود.
+    [Fact]
+    public async Task Consolidated_package_dispatch_consumes_pre_dispatched_member_reservation_via_keyed_seam()
+    {
+        await using var db = CreateDb();
+        var inventory = new RecordingInventory();
+        var checkoutId = Guid.NewGuid();
+        var reservationA = Guid.NewGuid();
+        var reservationB = Guid.NewGuid();
+        var lineA = Guid.NewGuid();
+        var lineB = Guid.NewGuid();
+        var orderA = Guid.NewGuid();
+        var orderB = Guid.NewGuid();
+        var handoffA = BuildHandoff(orderA, reservationA, checkoutId, lineA);
+        var handoffB = BuildHandoff(orderB, reservationB, checkoutId, lineB);
+        var directory = CreateDirectory(db, inventory, new MapOrderReader(new Dictionary<Guid, OrderFulfillmentHandoffSnapshot>
+        {
+            [orderA] = handoffA,
+            [orderB] = handoffB,
+        }));
+
+        await directory.CreateFromPaidSellerOrdersAsync(
+            Guid.NewGuid(), Guid.NewGuid(), [orderA, orderB], CancellationToken.None);
+
+        var shipmentByOrder = new Dictionary<Guid, Guid>();
+        foreach (var orderId in new[] { orderA, orderB })
+        {
+            var unit = await directory.GetBySellerOrderAsync(orderId, CancellationToken.None);
+            await directory.MarkProcessingAsync(unit!.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
+            await directory.MarkPackedAsync(unit.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
+            var shipped = await directory.CreateShipmentAsync(
+                unit.FulfillmentId,
+                Guid.NewGuid(),
+                "پست",
+                [new ShipmentLineCommand(unit.Items[0].OrderLineId, 1)],
+                CancellationToken.None,
+                shippingMethodCode: "post",
+                providerMetadataJson: PostMetadata);
+            shipmentByOrder[orderId] = shipped.Shipments.Single(x => x.Status == ShipmentStatus.Created).ShipmentId;
+        }
+
+        // کد رهگیری عضو اول پیش از عضویت بسته تخصیص می‌یابد (پس از عضویت قفل می‌شود) و باید دست‌نخورده بماند.
+        const string memberTracking = "W6-KEEP-MEMBER-A";
+        await directory.AssignTrackingAsync(
+            (await directory.GetBySellerOrderAsync(orderA, CancellationToken.None))!.FulfillmentId,
+            shipmentByOrder[orderA],
+            Guid.NewGuid(),
+            memberTracking,
+            CancellationToken.None);
+
+        var package = await directory.CreateConsolidatedPackageAsync(
+            checkoutId,
+            [shipmentByOrder[orderA], shipmentByOrder[orderB]],
+            "post",
+            "W6-CENTRAL",
+            null,
+            Guid.NewGuid(),
+            CancellationToken.None);
+
+        // بازتولید وضعیت تاریخی جزئی: عضو اول ارسال‌شده اما رزروش مصرف‌نشده (flag=false).
+        var fulfillmentA = (await directory.GetBySellerOrderAsync(orderA, CancellationToken.None))!.FulfillmentId;
+        var fulfillmentB = (await directory.GetBySellerOrderAsync(orderB, CancellationToken.None))!.FulfillmentId;
+        await SimulatePreDispatchedMemberAsync(db, fulfillmentA, shipmentByOrder[orderA], markReservationConsumed: false);
+
+        var dispatched = await directory.DispatchConsolidatedPackageAsync(
+            package.ConsolidatedPackageId, Guid.NewGuid(), CancellationToken.None);
+        Assert.Equal(ConsolidatedPackageStatus.Dispatched, dispatched.Status);
+
+        // رزرو Held عضوِ از قبل ارسال‌شده بی‌صدا رد نمی‌شود: همان درز کلیددار با کلید پایدار صدا زده می‌شود.
+        var expectedA = FulfillmentInventoryConsumptionKey.For(
+            package.ConsolidatedPackageId, shipmentByOrder[orderA], lineA);
+        var expectedB = FulfillmentInventoryConsumptionKey.For(
+            package.ConsolidatedPackageId, shipmentByOrder[orderB], lineB);
+        Assert.Contains((reservationA, expectedA), inventory.KeyedConsumed);
+        Assert.Contains((reservationB, expectedB), inventory.KeyedConsumed);
+
+        // و پرچم مصرف در همان تک SaveChanges بسته پایدار می‌شود (نشتی موجودی بسته می‌شود).
+        var itemA = await db.Items.SingleAsync(x => x.FulfillmentId == fulfillmentA);
+        Assert.True(itemA.ReservationConsumed);
+
+        // ارسال دوباره یا بازنویسی کد رهگیری عضوِ از قبل ارسال‌شده رخ نمی‌دهد.
+        var snapshotA = await directory.GetAsync(fulfillmentA, CancellationToken.None);
+        var shipmentA = Assert.Single(snapshotA!.Shipments, x => x.ShipmentId == shipmentByOrder[orderA]);
+        Assert.Equal(ShipmentStatus.Dispatched, shipmentA.Status);
+        Assert.Equal(memberTracking, shipmentA.TrackingReference);
+
+        var snapshotB = await directory.GetAsync(fulfillmentB, CancellationToken.None);
+        var shipmentB = Assert.Single(snapshotB!.Shipments, x => x.ShipmentId == shipmentByOrder[orderB]);
+        Assert.Equal(ShipmentStatus.Dispatched, shipmentB.Status);
+        Assert.Equal($"W6-CENTRAL-{shipmentByOrder[orderB]:N}".ToUpperInvariant(), shipmentB.TrackingReference);
+    }
+
+    // W6 — عضوِ از قبل ارسال‌شده‌ای که رزروش واقعاً مصرف شده باید idempotent رد شود و تغییر نکند.
+    [Fact]
+    public async Task Consolidated_package_dispatch_leaves_already_consumed_pre_dispatched_member_unchanged()
+    {
+        await using var db = CreateDb();
+        var inventory = new RecordingInventory();
+        var checkoutId = Guid.NewGuid();
+        var reservationA = Guid.NewGuid();
+        var reservationB = Guid.NewGuid();
+        var orderA = Guid.NewGuid();
+        var orderB = Guid.NewGuid();
+        var handoffA = BuildHandoff(orderA, reservationA, checkoutId, Guid.NewGuid());
+        var handoffB = BuildHandoff(orderB, reservationB, checkoutId, Guid.NewGuid());
+        var directory = CreateDirectory(db, inventory, new MapOrderReader(new Dictionary<Guid, OrderFulfillmentHandoffSnapshot>
+        {
+            [orderA] = handoffA,
+            [orderB] = handoffB,
+        }));
+
+        await directory.CreateFromPaidSellerOrdersAsync(
+            Guid.NewGuid(), Guid.NewGuid(), [orderA, orderB], CancellationToken.None);
+
+        var shipmentByOrder = new Dictionary<Guid, Guid>();
+        foreach (var orderId in new[] { orderA, orderB })
+        {
+            var unit = await directory.GetBySellerOrderAsync(orderId, CancellationToken.None);
+            await directory.MarkProcessingAsync(unit!.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
+            await directory.MarkPackedAsync(unit.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
+            var shipped = await directory.CreateShipmentAsync(
+                unit.FulfillmentId,
+                Guid.NewGuid(),
+                "پست",
+                [new ShipmentLineCommand(unit.Items[0].OrderLineId, 1)],
+                CancellationToken.None,
+                shippingMethodCode: "post",
+                providerMetadataJson: PostMetadata);
+            shipmentByOrder[orderId] = shipped.Shipments.Single(x => x.Status == ShipmentStatus.Created).ShipmentId;
+        }
+
+        const string memberTracking = "W6-CONSUMED-MEMBER-A";
+        await directory.AssignTrackingAsync(
+            (await directory.GetBySellerOrderAsync(orderA, CancellationToken.None))!.FulfillmentId,
+            shipmentByOrder[orderA],
+            Guid.NewGuid(),
+            memberTracking,
+            CancellationToken.None);
+
+        var package = await directory.CreateConsolidatedPackageAsync(
+            checkoutId,
+            [shipmentByOrder[orderA], shipmentByOrder[orderB]],
+            "post",
+            "W6-CONSUMED-CENTRAL",
+            null,
+            Guid.NewGuid(),
+            CancellationToken.None);
+
+        var fulfillmentA = (await directory.GetBySellerOrderAsync(orderA, CancellationToken.None))!.FulfillmentId;
+        await SimulatePreDispatchedMemberAsync(db, fulfillmentA, shipmentByOrder[orderA], markReservationConsumed: true);
+        inventory.KeyedConsumed.Clear();
+
+        var dispatched = await directory.DispatchConsolidatedPackageAsync(
+            package.ConsolidatedPackageId, Guid.NewGuid(), CancellationToken.None);
+        Assert.Equal(ConsolidatedPackageStatus.Dispatched, dispatched.Status);
+
+        // عضوِ کاملاً مصرف‌شده دوباره مصرف نمی‌شود (نه کلیددار و نه بدون کلید) و وضعیتش تغییر نمی‌کند.
+        Assert.DoesNotContain(inventory.KeyedConsumed, x => x.ReservationId == reservationA);
+        Assert.Empty(inventory.Consumed);
+        Assert.Contains(inventory.KeyedConsumed, x => x.ReservationId == reservationB);
+
+        var itemA = await db.Items.SingleAsync(x => x.FulfillmentId == fulfillmentA);
+        Assert.True(itemA.ReservationConsumed);
+        var snapshotA = await directory.GetAsync(fulfillmentA, CancellationToken.None);
+        var shipmentA = Assert.Single(snapshotA!.Shipments, x => x.ShipmentId == shipmentByOrder[orderA]);
+        Assert.Equal(ShipmentStatus.Dispatched, shipmentA.Status);
+        Assert.Equal(memberTracking, shipmentA.TrackingReference);
+    }
+
+    /// <summary>
+    /// وضعیت تاریخی «عضو از قبل ارسال‌شده» را بازتولید می‌کند: مرسوله Dispatched و پرچم مصرف
+    /// دست‌نخورده (یا مصرف‌شده) — دقیقاً همان حالتی که پیش از تک‌کامیتی‌شدن ارسال بسته ثبت می‌شد.
+    /// </summary>
+    private static async Task SimulatePreDispatchedMemberAsync(
+        FulfillmentDbContext db,
+        Guid fulfillmentId,
+        Guid shipmentId,
+        bool markReservationConsumed)
+    {
+        var unit = await db.Fulfillments.SingleAsync(x => x.FulfillmentId == fulfillmentId);
+        var items = await db.Items.Where(x => x.FulfillmentId == fulfillmentId).ToListAsync();
+        var shipments = await db.Shipments.Where(x => x.FulfillmentId == fulfillmentId).ToListAsync();
+        foreach (var shipment in shipments)
+        {
+            shipment.AttachLoadedItems(
+                await db.ShipmentItems.Where(x => x.ShipmentId == shipment.ShipmentId).ToListAsync());
+        }
+
+        unit.AttachLoadedItems(items);
+        unit.AttachLoadedShipments(shipments);
+        unit.ApplyShipmentDispatched(shipmentId, DateTimeOffset.UtcNow);
+        if (markReservationConsumed)
+        {
+            foreach (var item in items)
+            {
+                item.MarkReservationConsumed();
+            }
+        }
+
+        await db.SaveChangesAsync();
+    }
+
     [Fact]
     public void Cancel_gate_reports_HasDispatchedQuantity()
     {

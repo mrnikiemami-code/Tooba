@@ -1,0 +1,131 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-PACKAGE-DISPATCH-W6-RECONCILIATION-005
+Parent-Task: TB-P0-FULFILLMENT-KEYED-CONSUME-WIRING-004
+Program: TOOBA-FULFILLMENT-DISPATCH-INTEGRITY-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_SINGLE_BOUNDED_W6_SAFETY_GATE_STOP_FOR_ACCEPTANCE
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_READY_FOR_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: eca66731f96ebb181ef3bfa9db37eacb07971b26
+Starting-HEAD:          eca66731f96ebb181ef3bfa9db37eacb07971b26
+Starting-origin/main:   eca66731f96ebb181ef3bfa9db37eacb07971b26
+Tracked-worktree-clean: YES; HEAD == origin/main == Expected-Starting-HEAD; no reset/rebase/stash/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, journal-003, wiring-004, fix-004R and the
+W6 evidence (TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002/failure-matrix.md).
+Deferred ARCHITECTURE-FINDINGS-REGISTER.md NOT opened.
+LIVE-DATA SAFETY: no DB access, no migration, no deployment, no live Host mutation, no restart, no
+package dispatch/retry/cancel, no SQL write, no manipulation of the identified real order/package.
+
+STOP CONDITION CHECK (was NOT triggered)
+The task STOP required BLOCKED_ARCHITECT_DECISION only if proving Held-vs-Consumed needed a NEW
+cross-module read contract, journal semantics, historical backfill or an ambiguous replay identity.
+Existing verified state is sufficient:
+- FulfillmentItem.ReservationId (stable per-line identity, not an Inventory FK)
+- FulfillmentItem.ReservationConsumed (durable Fulfillment-side marker that this line's reservation was
+  consumed through the dispatch seam)
+- FulfillmentItem.QuantityShipped / QuantityOrdered, Shipment.Status/DispatchedAt
+- the keyed Inventory port with a durable consumption journal and proven replay/typed-conflict semantics
+  (journal-003, e7d0bf978)
+- the deterministic collision-free key (wiring-004, 8f70763bb) made fail-closed (fix-004R, 67776052b)
+No new contract, journal semantic, backfill or ambiguous replay identity was needed => bounded
+implementation executed. W6 = FIXED (not BLOCKED).
+
+AUTHORITATIVE STATE TRACED BEFORE EDITING
+All package dispatch early returns/skip paths were checked:
+(1) package already Dispatched/Delivered -> whole command idempotent no-op;
+(2) member shipment already Dispatched/InTransit/Delivered -> BuildDispatchStepsAsync step with
+    NeedsDispatch=false (the W6 branch, FulfillmentDirectory.Packages.cs:319-323);
+(3) per-line gate in ConsumeInventoryForShipmentAsync: ReservationId is null || ReservationConsumed
+    -> skip (FulfillmentDirectory.cs:515-528).
+Fulfillment can distinguish its OWN durable marker; Inventory owns the Inventory truth (Held /
+Consumed+journal / Consumed without matching journal). No flag was assumed to prove Inventory state.
+
+BOUNDED IMPLEMENTATION (1 production file)
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Directories/FulfillmentDirectory.Packages.cs
+DispatchConsolidatedPackageAsync phase 2 now iterates EVERY step:
+  - ApplyShipmentDispatched stays guarded by step.NeedsDispatch (no re-dispatch, no status/tracking
+    change, no extra domain event for pre-dispatched members);
+  - ConsumeInventoryForShipmentAsync now runs for every step and keeps its UNCHANGED per-line gate,
+    so a pre-dispatched member's still-Held reservation is no longer silently skipped: it goes through
+    the same keyed, proof-based seam (stable key pkg:{packageId:N}:shp:{shipmentId:N}:line:{orderLineId:N}).
+Because this still happens BEFORE the package's single SaveChangesAsync, a keyed failure persists no
+partial dispatch (parent two-phase + one-commit guarantee preserved).
+Behaviour delta:
+  - pre-dispatched member, ReservationConsumed=true  -> still skipped, idempotent, unchanged;
+  - pre-dispatched member, ReservationId=null        -> skipped, unchanged;
+  - pre-dispatched member, Held reservation, line fully shipped -> CONSUMED ONCE (was a silent leak);
+  - pre-dispatched member, Held reservation, line not fully shipped -> skipped, unchanged rule;
+  - newly dispatched member -> unchanged (keyed consume);
+  - Consumed reservation with no/mismatched journal row -> typed conflict (inventory.reservation.
+    consume_mismatch), never silent success and never blind success;
+  - retry after a Fulfillment-commit failure -> proven replay via the same stable key (no re-deduction).
+
+NOT CHANGED (by instruction / preserved invariants)
+Parent two-phase validation and exactly ONE Fulfillment SaveChangesAsync per package; existing
+already-dispatched member tracking/status and generated codes; retry-safe keyed journal semantics; the
+key format; the fail-closed default interface member; the unkeyed seam (never used from the package
+path); non-consolidated-package paths (single dispatch, returns, cancel, release stay unkeyed); no
+Inventory schema/migration/journal/DTO/UI/auth/index/config/guard-baseline/AMSC-manifest change; no
+unrelated file.
+
+FOCUSED VALIDATION (ONE build + ONE focused test run; no loops)
+dotnet build src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Tooba.Fulfillment.Infrastructure.csproj
+  => Build succeeded. 0 Warning(s) 0 Error(s)
+dotnet test src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Tooba.Fulfillment.Tests.csproj
+  --filter "FullyQualifiedName~FulfillmentCharacterizationTests"
+  => Passed! - Failed: 0, Passed: 8, Skipped: 0, Total: 8
+Two new targeted tests (1 test file, plus a small test-only pre-dispatched-state builder):
+  T1 Consolidated_package_dispatch_consumes_pre_dispatched_member_reservation_via_keyed_seam
+     -> W6 Held/unconsumed member is detected and prevented from silent success: exact deterministic
+        key asserted, ReservationConsumed persisted, member NOT re-dispatched, pre-existing tracking
+        NOT rewritten, other member dispatched normally.
+  T2 Consolidated_package_dispatch_leaves_already_consumed_pre_dispatched_member_unchanged
+     -> already consumed pre-dispatched member is not changed: zero consume calls (keyed or unkeyed),
+        flag stays true, status/tracking unchanged, only the other member consumed.
+
+ENVIRONMENTAL BLOCK (recorded, NOT chased; no task failure)
+Tooba.Host.Tests (owner of ConsolidatedPackageTests, the only real-PostgreSQL consolidated-package
+dispatch suite) could NOT be built in this session: the running live Host process (Tooba.Host, PID
+15068) holds its own output directory, producing MSB3027/MSB3021 copy failures. Stopping/restarting
+the live Host is forbidden by this task, so no attempt was made. Consequently the 6 pre-existing
+ConsolidatedPackageTests assertion mismatches recorded by the previous task remain un-re-verified in
+this session; they are unrelated to this change (baseline tracking / NoopInventoryGateway assertions)
+and the pre-existing baseline is unchanged. Not run (by instruction): full suite, AMSC, broad
+architecture guards, retry cascades, browser tests, migrations, deployment.
+
+RESIDUAL RISKS
+R1 Cross-module atomicity still NOT claimed: Fulfillment commit and Inventory consume remain two
+   transactions; this task only closes the silent skip and relies on the already proven Inventory-side
+   replay safety.
+R2 W6 is reconciled on the next package-dispatch attempt. A package already in Dispatched state returns
+   idempotently before phase 2, so a package completed BEFORE this change still needs one explicit
+   re-dispatch attempt (or an authorized repair) to close its leak. No live repair performed here.
+R3 journal-003's migration is still undeployed in the live Host, so the keyed path stays dormant until
+   the Architect authorizes that deployment; in the live environment a W6 member would surface as the
+   fail-closed typed failure rather than a silent success.
+R4 Historical Consumed rows without a journal row remain a typed conflict on the keyed path
+   (intentional, inherited from journal-003; no blanket Consumed=>success shortcut added).
+R5 Non-fully-shipped pre-dispatched lines keep the existing skip (unchanged rule, not widened).
+
+FILES TOUCHED (1 production + 1 test + receipt + evidence; inside the 2+1 cap)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Directories/FulfillmentDirectory.Packages.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/FulfillmentCharacterizationTests.cs
+  docs/ai/tasks/TB-P0-PACKAGE-DISPATCH-W6-RECONCILIATION-005.task.md
+  docs/architecture/evidence/TB-P0-PACKAGE-DISPATCH-W6-RECONCILIATION-005/summary.md
+  docs/architecture/evidence/TB-P0-PACKAGE-DISPATCH-W6-RECONCILIATION-005/raw-focused-tests.txt
+
+ROLLBACK
+Revert this single commit. No schema, migration, journal, DTO, UI, config or baseline change is
+involved, so rollback is a pure source revert with no data migration.
+
+VERDICT
+W6 FIXED within the bounded scope: the previously dispatched member is no longer silently classified
+as consumed and its Held reservation is no longer silently leaked; already consumed members stay
+idempotently skipped; single-commit package atomicity and keyed journal retry safety are preserved.
+STOP for independent Architect ACCEPT. Do NOT start 006.
+END_TOOBA_WORKER_RESULT
