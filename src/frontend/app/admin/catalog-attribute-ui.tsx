@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppDataGrid, createClientGridQueryAdapter, useLegacyAdminGridDirectProps } from "../../design-system";
-import type { GridColumnDef } from "../../design-system/data-grid";
+import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
 import { useSearchParams } from "next/navigation";
 import {
   addAttributeOption,
@@ -234,7 +234,7 @@ export function AttributeDefinitionsScreen() {
   ], []);
 
   const definitionQueryAdapter = useCallback(
-    async (query) => createClientGridQueryAdapter(definitionGridRows, definitionColumns)(query),
+    async (query: GridServerQuery) => createClientGridQueryAdapter(definitionGridRows, definitionColumns)(query),
     [definitionGridRows, definitionColumns],
   );
   const definitionGridProps = useLegacyAdminGridDirectProps({
@@ -830,7 +830,7 @@ export function CategorySchemaScreen() {
   ], [busy]);
 
   const schemaQueryAdapter = useCallback(
-    async (query) => createClientGridQueryAdapter(schemaGridRows, schemaColumns)(query),
+    async (query: GridServerQuery) => createClientGridQueryAdapter(schemaGridRows, schemaColumns)(query),
     [schemaGridRows, schemaColumns],
   );
   const schemaGridProps = useLegacyAdminGridDirectProps({
