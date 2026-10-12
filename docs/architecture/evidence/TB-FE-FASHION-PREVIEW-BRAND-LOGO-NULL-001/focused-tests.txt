@@ -1,0 +1,41 @@
+﻿(node:39900) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ PreviewFillPolicy module exists and is centralized (0.6694ms)
+✔ zero Store data uses fake fill, not PreviewPlaceholderSurface as primary path (0.3999ms)
+✔ partial Store data preserves real items and fills only missing slots (0.1379ms)
+✔ Store fill never queries Template Catalog / Sample Fashion origin (0.9168ms)
+✔ fake preview items are non-persistent and use preview-fake id prefix (0.1564ms)
+✔ published storefront path does not enable fill (0.1014ms)
+✔ variant contract controls preview cardinality (0.066ms)
+✔ Banner Store preview with no Store banner uses fake fill not Template banner (0.1711ms)
+✔ localized fake preview resources follow selected locale (0.1106ms)
+✔ same Variant geometry contract used for Sample and Store-empty preview (0.1783ms)
+✔ R8 locks registered (0.2172ms)
+✔ Store Preview fake fill uses dedicated Preview-Fake media, not Template Fashion assets (0.4236ms)
+✔ Sample mode still uses Template Catalog Fashion media paths (0.2476ms)
+✔ R8-R2 Preview-Fake isolation locks registered (0.1677ms)
+(node:27968) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-home.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home mapper prefers homeCategories rail and does not require dumping all categories (1.9374ms)
+(node:35332) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/storefront-composition/industry-templates.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ industry templates + native contracts
+  ✔ seeds 10 distinct templates from implemented variants and truthful sources (1.0835ms)
+  ✔ builds normal editable draft section payloads (0.8935ms)
+  ✔ banner slot counts match layout variants (0.1069ms)
+  ✔ every implemented variant has responsive contract (0.1676ms)
+✔ industry templates + native contracts (3.8487ms)
+ℹ tests 19
+ℹ suites 1
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 150.1523

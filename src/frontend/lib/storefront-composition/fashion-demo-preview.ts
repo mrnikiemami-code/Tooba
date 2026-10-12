@@ -213,12 +213,18 @@ function mapContext(preview: HostFashionPreview): LandingRenderContext {
     reviewCount: p.reviewCount,
     brandId: p.brandId ?? undefined,
   }));
+  /**
+   * logoMediaAssetId در HostFashionPreview اختیاری/Nullable است (:148) ولی
+   * normalizePreview همین حالا مقدار غایب را به null تبدیل می‌کند (:533)، پس در
+   * زمان اجرا هرگز undefined نمی‌رسد. این پروجکشن هم مثل category.imageMediaAssetId
+   * (:191) و مسیر فروشگاه (:684 از storefront-api.ts:406) نبود را null اعلام می‌کند.
+   */
   const brands: StorefrontBrandItem[] = preview.brands.map((b) => ({
     brandId: b.brandId,
     slug: b.slug,
     name: b.name,
     productCount: b.productCount,
-    logoMediaAssetId: b.logoMediaAssetId ?? undefined,
+    logoMediaAssetId: b.logoMediaAssetId ?? null,
   }));
   const articles: StorefrontArticleItem[] = preview.compositionFillers.articles.map((a) => ({
     articleId: a.articleId,
