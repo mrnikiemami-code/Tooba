@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Fulfillments.Models;
+using Tooba.Fulfillment.Application.Fulfillments.Ports;
 using Tooba.Fulfillment.Application.Shipping;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
@@ -282,7 +283,11 @@ public sealed partial class FulfillmentDirectory
         foreach (var step in steps.Where(x => x.NeedsDispatch))
         {
             step.Unit.ApplyShipmentDispatched(step.Shipment.ShipmentId, _clock.UtcNow);
-            await ConsumeInventoryForShipmentAsync(step.Unit, step.Shipment, cancellationToken);
+            await ConsumeInventoryForShipmentAsync(
+                step.Unit,
+                step.Shipment,
+                cancellationToken,
+                consolidatedPackageId: package.ConsolidatedPackageId);
         }
 
         var statuses = steps.ToDictionary(x => x.Shipment.ShipmentId, x => x.Shipment.Status);
@@ -338,6 +343,25 @@ public sealed partial class FulfillmentDirectory
 
         await EnsureGeneratedTrackingReferencesAreFreeAsync(generated, cancellationToken);
         return steps;
+    }
+
+    /// <summary>
+    /// یک خط را مصرف می‌کند. در مسیر بستهٔ تجمیعی کلید پایدار مصرف‌کننده فرستاده می‌شود تا replay
+    /// پس از شکست commit اثبات‌شده باشد؛ سایر مسیرها روی درز بدون کلید می‌مانند.
+    /// </summary>
+    private Task ConsumeReservationAsync(
+        FulfillmentItem fulfillmentItem,
+        Shipment shipment,
+        Guid? consolidatedPackageId,
+        CancellationToken cancellationToken)
+    {
+        var reservationId = fulfillmentItem.ReservationId!.Value;
+        return consolidatedPackageId is { } packageId
+            ? _inventory.ConsumeReservationAsync(
+                reservationId,
+                FulfillmentInventoryConsumptionKey.For(packageId, shipment.ShipmentId, fulfillmentItem.OrderLineId),
+                cancellationToken)
+            : _inventory.ConsumeReservationAsync(reservationId, cancellationToken);
     }
 
     /// <summary>

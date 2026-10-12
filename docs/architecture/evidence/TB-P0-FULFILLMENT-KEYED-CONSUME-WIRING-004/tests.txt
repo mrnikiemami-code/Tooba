@@ -1,0 +1,81 @@
+TB-P0-FULFILLMENT-KEYED-CONSUME-WIRING-004 — test evidence (commands run at most once)
+
+================================================================================
+[1] FOCUSED COMPILE — impacted backend project
+================================================================================
+$ dotnet build src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Tooba.Fulfillment.Infrastructure.csproj
+
+  Tooba.Fulfillment.Application -> .../Tooba.Fulfillment.Application.dll
+  Tooba.Fulfillment.Infrastructure -> .../Tooba.Fulfillment.Infrastructure.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+================================================================================
+[2] FOCUSED TEST COMMAND — key forwarding/stability + error propagation
+================================================================================
+$ dotnet test src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Tooba.Fulfillment.Tests.csproj
+
+Passed!  - Failed:     0, Passed:    72, Skipped:     0, Total:    72, Duration: 1 s - Tooba.Fulfillment.Tests.dll (net8.0)
+
+New targeted tests included in that run:
+
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.Consolidated_package_dispatch_forwards_deterministic_consumer_key
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.Consolidated_package_dispatch_propagates_keyed_consume_failure
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.Dispatch_consumes_reservation_via_inventory_gateway
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.CreateFromPaid_is_idempotent_on_event_inbox
+  Passed Tooba.Fulfillment.Tests.Behavior.FulfillmentCharacterizationTests.Cancel_gate_reports_HasDispatchedQuantity
+
+What the two new tests prove:
+  * key forwarding : consolidated dispatch consumes through the KEYED overload only
+                     (Assert.Empty(inventory.Consumed) + 2 keyed calls with the exact
+                     FulfillmentInventoryConsumptionKey.For(package, shipment, orderLine) values)
+  * stability      : the same stable inputs reproduce the identical key on repeat (no time/random/hash),
+                     distinct members produce distinct keys, every key length <= 128
+  * error propagation : a keyed consume failure surfaces as the typed exception and NO member
+                     shipment is persisted as Dispatched (both fulfillments remain Packed)
+
+================================================================================
+[3] HOST COMPILE — existing gateway doubles still compile (default interface member)
+================================================================================
+$ dotnet build src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj
+
+    209 Warning(s)   (pre-existing xUnit analyzer warnings, unrelated)
+    0 Error(s)
+
+================================================================================
+[4] PRE-EXISTING BASELINE FAILURES — recorded, NOT debugged (no-loop budget)
+================================================================================
+$ dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj --filter "FullyQualifiedName~ConsolidatedPackageTests"
+
+Failed!  - Failed:     6, Passed:     7, Skipped:     0, Total:    13, Duration: 28 s
+
+  Direct_member_dispatch_blocked_while_locked_and_package_dispatch_orchestrates [FAIL]
+  Domain_assign_tracking_only_while_created [FAIL]
+  Deliver_orchestrates_members_and_order_cancel_voids_package [FAIL]
+  Domain_create_requires_two_distinct_sellers [FAIL]
+  Domain_cancel_releases_membership_and_blocks_after_dispatch [FAIL]
+  Create_requires_two_sellers_and_rejects_single_seller_and_duplicate_membership [FAIL]
+
+All six are domain/exception-shape assertions inside an UNMODIFIED test file, e.g.:
+
+  Assert.Throws() Failure: Exception type was not an exact match
+  Expected: typeof(System.InvalidOperationException)
+  Actual:   typeof(Tooba.BuildingBlocks.ContractOperationException) : fulfillment.package.requires_multi_seller
+
+Reproduced IDENTICALLY on a pristine detached worktree at the task's Expected-Starting-HEAD
+(e7d0bf978fcf8b3f90bd0300474ab23e486d3289) with none of this task's edits:
+
+$ git worktree add .../SarvNewVer-baseline004 e7d0bf978... --detach
+$ dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj --filter "FullyQualifiedName~ConsolidatedPackageTests"
+  ... the same six [FAIL] lines ...
+
+=> baseline, environmental/legacy test-shape failures, out of this task's bounded scope.
+
+================================================================================
+[5] ARCH-SIZE-001 CEILING (enforced by FulfillmentArchitectureGuardTests)
+================================================================================
+  FulfillmentDirectory.cs          : 726 LOC  (< 800)
+  FulfillmentDirectory.Packages.cs : 500 LOC  (< 800)
+  (both asserted by Fulfillment_directory_stays_under_the_arch_size_ceiling, green in [2])

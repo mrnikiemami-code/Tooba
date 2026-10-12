@@ -509,7 +509,8 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
     private async Task ConsumeInventoryForShipmentAsync(
         FulfillmentUnit unit,
         Shipment shipment,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? consolidatedPackageId = null)
     {
         foreach (var shipmentLine in shipment.Items)
         {
@@ -521,7 +522,7 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
 
             if (fulfillmentItem.QuantityShipped >= fulfillmentItem.QuantityOrdered)
             {
-                await _inventory.ConsumeReservationAsync(fulfillmentItem.ReservationId.Value, cancellationToken);
+                await ConsumeReservationAsync(fulfillmentItem, shipment, consolidatedPackageId, cancellationToken);
                 fulfillmentItem.MarkReservationConsumed();
             }
         }
