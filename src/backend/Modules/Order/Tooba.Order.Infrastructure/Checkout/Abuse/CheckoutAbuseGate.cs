@@ -169,6 +169,7 @@ public sealed class CheckoutAbuseGate : ICheckoutAbuseGate
     /// سهم «سفارش باز» را می‌شمارد؛ سفارش‌هایی که سقف رزرو مجددشان تمام شده و دیگر
     /// قابل پرداخت نیستند سهم نمی‌گیرند. در غیر این صورت یک سفارش مرده، مشتری را برای همیشه
     /// از ثبت سفارش تازه باز می‌داشت بی‌آنکه راه بازی باقی باشد.
+    /// واحد شمارش، checkout است نه سفارش فروشنده: یک checkout چندفروشنده‌ای فقط یک سهم می‌گیرد.
     /// </summary>
     private async Task<int> CountOpenUnpaidAsync(Guid customerId, CancellationToken cancellationToken)
     {
@@ -181,19 +182,19 @@ public sealed class CheckoutAbuseGate : ICheckoutAbuseGate
                 (order, checkout) => checkout)
             .Where(checkout => checkout.PlacedByUserId == customerId)
             .Select(checkout => checkout.CheckoutId)
+            .Distinct()
             .ToListAsync(cancellationToken);
         if (openUnpaidCheckoutIds.Count == 0)
         {
             return 0;
         }
 
-        var distinctCheckoutIds = openUnpaidCheckoutIds.Distinct().ToArray();
         var cycles = await _cycles.GetProjectionsAsync(
-            distinctCheckoutIds,
+            openUnpaidCheckoutIds,
             _clock.UtcNow,
             null,
             cancellationToken);
-        var unpayable = distinctCheckoutIds
+        var unpayable = openUnpaidCheckoutIds
             .Where(id => ReservationCyclePayabilityPolicy.HasReachedRetryLimit(cycles.GetValueOrDefault(id)))
             .ToHashSet();
         return openUnpaidCheckoutIds.Count(id => !unpayable.Contains(id));
