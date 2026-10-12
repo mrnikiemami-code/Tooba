@@ -1,0 +1,107 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-FULFILLMENT-KEYED-CONSUME-WIRING-004
+Parent-Task: TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003
+Program: TOOBA-FULFILLMENT-DISPATCH-INTEGRITY-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_ONE_BOUNDED_CROSS_MODULE_WIRING_WITH_STOP_GATES
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_READY_FOR_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: e7d0bf978fcf8b3f90bd0300474ab23e486d3289
+Starting-HEAD:          e7d0bf978fcf8b3f90bd0300474ab23e486d3289
+Starting-origin/main:   e7d0bf978fcf8b3f90bd0300474ab23e486d3289
+Tracked-worktree-clean: YES (all task-owned paths); HEAD == origin/main == Expected-Starting-HEAD.
+Read: AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, Journal-003 evidence, parent
+04e3aa79 Gate-B evidence, and the exact caller/port/adapter/source types.
+LIVE-DATA SAFETY: zero live Host write, no deploy, no migration execution, no restart, no direct
+SQL, no dispatch/cancel. Change set is git-only (code + tests + receipt + evidence).
+
+A. STABLE IDENTITY PROVEN FROM THE ACTUAL MODEL
+All four identities exist at the consolidated-package call site, so no weaker fallback was needed:
+  packageId   -> package.ConsolidatedPackageId
+  shipmentId  -> step.Shipment.ShipmentId (per active member shipment)
+  reservationId -> FulfillmentItem.ReservationId
+  orderLineId -> FulfillmentItem.OrderLineId (also ShipmentItem.OrderLineId)
+consumerKey format (single owner FulfillmentInventoryConsumptionKey.For):
+  pkg:{packageId:N}:shp:{shipmentId:N}:line:{orderLineId:N}
+  * 78 chars < 128-char inventory.reservation_consumptions.consumer_key ceiling
+  * three persisted GUID identities; no clock, no randomness, no hash => no collision rationale needed
+  * unique per reservation: a reservation is bound to exactly one order line and order lines are not
+    duplicated inside a single shipment
+  * retry-stable: byte-identical on every attempt, so a retry after a Fulfillment SaveChangesAsync
+    failure is recognised by Inventory as the same logical consumption (no double stock deduction)
+
+B. ROUTING (KEYED ONLY WHERE REQUIRED)
+FulfillmentDirectory.ConsumeInventoryForShipmentAsync gained an OPTIONAL
+Guid? consolidatedPackageId = null and delegates the single-line consume to a cohesive helper
+ConsumeReservationAsync(fulfillmentItem, shipment, consolidatedPackageId, ct).
+DispatchConsolidatedPackageAsync passes consolidatedPackageId: package.ConsolidatedPackageId.
+Every other caller (individual DispatchShipmentAsync, returns, cancel, reservation release) leaves
+it unset and therefore stays on the UNKEYED seam unchanged.
+IFulfillmentInventoryGateway gained an ADDITIVE overload
+ConsumeReservationAsync(Guid, string consumerKey, CancellationToken) with a DEFAULT INTERFACE
+IMPLEMENTATION falling back to the unkeyed member, so all existing implementations and test doubles
+compile untouched. Only FulfillmentInventoryGateway overrides it and forwards to Journal-003's
+existing additive IFulfillmentInventoryLifecyclePort.ConsumeAsync(reservationId, consumerKey, ct).
+No Inventory journal, migration or shared schema edit; no contract change beyond Journal-003.
+
+C. PARENT GUARANTEES PRESERVED
+Two-phase package validation (BuildDispatchStepsAsync writes nothing) and exactly ONE Fulfillment
+SaveChangesAsync per package remain as delivered in 04e3aa79. Pre-dispatched members are not
+mutated; the NeedsDispatch filter is unchanged; W6 held/consumed reconciliation and tracking
+generation untouched. NO global cross-module transaction is claimed. A keyed-consume failure still
+propagates before the Fulfillment commit, so no member is persisted as dispatched.
+
+FILES (production 3 + test 1, inside the hard cap of 3 + 2)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Fulfillments/Ports/IFulfillmentInventoryGateway.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Gateways/FulfillmentInventoryGateway.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Directories/FulfillmentDirectory.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Directories/FulfillmentDirectory.Packages.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/FulfillmentCharacterizationTests.cs
+  docs/ai/tasks/TB-P0-FULFILLMENT-KEYED-CONSUME-WIRING-004.task.md
+  docs/architecture/evidence/TB-P0-FULFILLMENT-KEYED-CONSUME-WIRING-004/summary.md
+  docs/architecture/evidence/TB-P0-FULFILLMENT-KEYED-CONSUME-WIRING-004/tests.txt
+
+TESTS (each command run AT MOST ONCE)
+1) Focused compile Tooba.Fulfillment.Infrastructure: Build succeeded, 0 Warning(s), 0 Error(s).
+2) Focused test Tooba.Fulfillment.Tests: Passed! Failed 0, Passed 72, Skipped 0, Total 72.
+   New targeted tests:
+     Consolidated_package_dispatch_forwards_deterministic_consumer_key  (key forwarding + stability
+       + <=128 length + only keyed path used)
+     Consolidated_package_dispatch_propagates_keyed_consume_failure     (typed error surfaces; no
+       member persisted as Dispatched)
+3) Host compile Tooba.Host.Tests: 0 Error(s) -> default interface member kept every existing
+   gateway double compiling untouched.
+ARCH-SIZE-001: FulfillmentDirectory.cs 726 LOC, FulfillmentDirectory.Packages.cs 500 LOC, both < 800.
+
+BASELINE / ENVIRONMENTAL (recorded, NOT debugged; no-loop budget)
+Tooba.Host.Tests.ConsolidatedPackageTests: 6 failures, all domain/exception-shape assertions in an
+UNMODIFIED file (Assert.Throws<InvalidOperationException> while the domain throws the typed
+ContractOperationException). Reproduced IDENTICALLY on a pristine detached worktree at
+e7d0bf978 with none of this task's edits => pre-existing baseline failures, out of bounded scope.
+
+COMMIT / PUSH
+Starting-HEAD: e7d0bf978fcf8b3f90bd0300474ab23e486d3289
+Ending-HEAD:   8f70763bbafac204e3d6fc2289c65c7cdefaa424
+origin/main:   8f70763bbafac204e3d6fc2289c65c7cdefaa424
+Commit: 8f70763bb "feat(fulfillment): route consolidated-package dispatch consume to Inventory keyed
+overload (TB-P0-FULFILLMENT-KEYED-CONSUME-WIRING-004)"
+
+REMAINING P0 RISKS / GAPS
+R1 Cross-module atomicity is still NOT claimed: Fulfillment commit and Inventory consume remain two
+   transactions. This task only makes the Inventory side replay-safe; W6 reconciliation is out of scope.
+R2 The key is only as stable as the member shipment identity. Cancel + re-create shipment yields a new
+   shipmentId and therefore a new key (correct semantics: a new physical shipment is a new logical
+   consumption), so cancellation-then-redispatch does not reuse the old journal row.
+R3 Journal-003's migration is still UNDEPLOYED in the live Host, so this wiring is dormant in
+   production until the Architect authorizes that deployment.
+
+VERDICT
+COMPLETE within the bounded scope. No speculative widening, no W6 work, no cross-module transaction
+claim, no Inventory journal/migration/schema edit, no live Host mutation. STOP for independent
+Architect ACCEPT. NO automatic next task.
+END_TOOBA_WORKER_RESULT
