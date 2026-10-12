@@ -36,6 +36,15 @@ import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales
 
 const GRID_VIEW_KEY = "admin-shipping-services";
 
+/**
+ * ردیف گرید = آیتم API + هویت ردیف اجباری گرید.
+ * `AppDataGrid` و `useLegacyAdminGridDirectProps` روی `{ id: string }` قید دارند و
+ * شناسهٔ پایدار canonical همین `shippingServiceId` است؛ پس `id` فقط یک پرتابِ
+ * هویتی است و نام فیلد API/DTO تغییر نمی‌کند. عملیات ردیف همچنان با
+ * `shippingServiceId` هدف می‌گیرد (همان الگوی admin-campaigns-screen).
+ */
+type ShippingServiceGridRow = ShippingServiceListItem & { id: string };
+
 const ICON_OPTIONS = [
   { value: "post", label: "پست" },
   { value: "tipax", label: "تیپاکس" },
@@ -93,7 +102,7 @@ function ServiceIcon({ iconKey, colorKey }: { iconKey: string; colorKey: string 
 
 export function ShippingServicesScreen() {
   const [state, setState] = useState<"loading" | "ok" | "denied" | "error">("loading");
-  const [rows, setRows] = useState<ShippingServiceListItem[]>([]);
+  const [rows, setRows] = useState<ShippingServiceGridRow[]>([]);
   const [languages, setLanguages] = useState<SupportedLocaleDefinition[]>([]);
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -125,7 +134,7 @@ export function ShippingServicesScreen() {
       setMessage(listResult.message ?? langsResult.message);
       return;
     }
-    setRows(listResult.data);
+    setRows(listResult.data.map((item) => ({ ...item, id: item.shippingServiceId })));
     setLanguages(langsResult.data.filter((row) => row.active && row.languageId));
     setState("ok");
   }, []);
@@ -227,7 +236,7 @@ export function ShippingServicesScreen() {
     await refresh();
   }
 
-  const columns = useMemo<GridColumnDef<ShippingServiceListItem>[]>(() => [
+  const columns = useMemo<GridColumnDef<ShippingServiceGridRow>[]>(() => [
     {
       id: "icon",
       header: "",
@@ -342,7 +351,7 @@ export function ShippingServicesScreen() {
       ) : (
         <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
           <div className="overflow-x-auto p-2 md:p-4">
-            <AppDataGrid<ShippingServiceListItem> {...gridProps} />
+            <AppDataGrid<ShippingServiceGridRow> {...gridProps} />
           </div>
         </section>
       )}

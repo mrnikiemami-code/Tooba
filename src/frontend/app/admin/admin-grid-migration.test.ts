@@ -12,6 +12,7 @@ const storyScreen = fs.readFileSync(path.join(root, "app/stories/management/Stor
 const bridge = fs.readFileSync(path.join(root, "design-system/app-data-grid/legacy-grid-bridge.ts"), "utf8");
 const adapters = fs.readFileSync(path.join(root, "design-system/app-data-grid/legacy-grid-adapters.ts"), "utf8");
 const designIndex = fs.readFileSync(path.join(root, "design-system/app-data-grid/index.ts"), "utf8");
+const shippingServices = fs.readFileSync(path.join(root, "app/admin/shipping-services-screen.tsx"), "utf8");
 
 test("admin-screens uses direct AppDataGrid not LegacyAppDataGrid", () => {
   assert.match(adminScreens, /AppDataGrid/);
@@ -26,6 +27,15 @@ test("catalog attribute definitions and schema use direct AppDataGrid", () => {
   assert.match(catalogAttr, /admin-category-schema-grid/);
   assert.match(catalogAttr, /createClientGridQueryAdapter/);
   assert.doesNotMatch(catalogAttr, /LegacyAppDataGrid/);
+});
+
+test("shipping services list keeps its stable row identity and direct grid wiring", () => {
+  assert.match(shippingServices, /AppDataGrid<ShippingServiceGridRow>/);
+  assert.match(shippingServices, /createClientGridQueryAdapter/);
+  assert.doesNotMatch(shippingServices, /LegacyAppDataGrid/);
+  // هویت ردیف گرید باید روی shippingServiceId سوار شود، نه یک id ساختگی.
+  assert.match(shippingServices, /type ShippingServiceGridRow = ShippingServiceListItem & \{ id: string \}/);
+  assert.match(shippingServices, /id: item\.shippingServiceId/);
 });
 
 test("gift cards admin list uses direct AppDataGrid", () => {
