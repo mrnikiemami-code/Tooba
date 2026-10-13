@@ -174,6 +174,49 @@ public sealed class StorefrontStartPaymentComposerTests
     }
 
     [Fact]
+    public async Task Selected_neutral_gateway_selector_resolves_to_the_concrete_provider_before_hold_preparation()
+    {
+        var gateway = Harness.Create(useWallet: false, providerCode: PaymentProviderCodes.GatewayCatalog);
+        var gatewayResult = await gateway.StartAsync();
+        Assert.True(gatewayResult.Started);
+
+        // رزولوشن یک‌بار و پیش از هر لمس سفارش/مهلت/پول.
+        Assert.Equal(1, gateway.Selection.Calls);
+        Assert.False(gateway.Selection.LastUseWallet);
+        Assert.Equal(PaymentProviderCodes.GatewayCatalog, gateway.Selection.LastRequestedSelector);
+
+        // ۰۱۸ هرگز bare «gateway» نمی‌گیرد؛ Provider متعارف نهایی می‌گیرد.
+        Assert.Equal(Harness.ConcreteGatewayProvider, gateway.Preparation.LastRequest!.ProviderCode);
+        Assert.NotEqual(PaymentProviderCodes.GatewayCatalog, gateway.Preparation.LastRequest.ProviderCode);
+
+        // Payment همان انتخاب‌گر اصلی را می‌گیرد تا بررسی صلاحیت معتبر در مالکیت Payment بماند.
+        Assert.Equal(PaymentProviderCodes.GatewayCatalog, gateway.Payments.LastRequest!.ProviderCode);
+        Assert.False(gateway.Payments.LastRequest.UseWallet);
+    }
+
+    [Fact]
+    public async Task Unresolvable_selector_fails_closed_before_any_commit_hold_or_payment()
+    {
+        var harness = Harness.Create(
+            useWallet: false,
+            providerCode: "unknown-provider",
+            providerSelectionResolvable: false);
+
+        var result = await harness.StartAsync();
+
+        Assert.Equal(StorefrontStartPaymentOutcome.InvalidRequest, result.Outcome);
+        Assert.Equal(StorefrontStartPaymentFault.ProviderUnavailable, result.Fault);
+        Assert.Null(result.CheckoutId);
+        Assert.False(result.Started);
+
+        // رزولوشن پیش از commit است: هیچ سفارش/مهلت/پولی لمس نشد.
+        Assert.Equal(1, harness.Selection.Calls);
+        Assert.Equal(0, harness.Directory.SubmitCalls);
+        Assert.Equal(0, harness.Preparation.Calls);
+        Assert.Equal(0, harness.Payments.Calls);
+    }
+
+    [Fact]
     public async Task Selected_method_is_forwarded_to_preparation_unchanged_and_wallet_is_mapped_to_its_stable_code()
     {
         var manual = Harness.Create(useWallet: false, providerCode: PaymentProviderCodes.Manual);
@@ -182,12 +225,6 @@ public sealed class StorefrontStartPaymentComposerTests
         Assert.Equal(PaymentProviderCodes.Manual, manual.Preparation.LastRequest!.ProviderCode);
         Assert.Equal(PaymentProviderCodes.Manual, manual.Payments.LastRequest!.ProviderCode);
         Assert.False(manual.Payments.LastRequest.UseWallet);
-
-        var gateway = Harness.Create(useWallet: false, providerCode: PaymentProviderCodes.GatewayCatalog);
-        var gatewayResult = await gateway.StartAsync();
-        Assert.True(gatewayResult.Started);
-        Assert.Equal(PaymentProviderCodes.GatewayCatalog, gateway.Preparation.LastRequest!.ProviderCode);
-        Assert.Equal(PaymentProviderCodes.GatewayCatalog, gateway.Payments.LastRequest!.ProviderCode);
 
         var wallet = Harness.Create(useWallet: true, providerCode: null);
         var walletResult = await wallet.StartAsync();
@@ -317,6 +354,8 @@ public sealed class StorefrontStartPaymentComposerTests
     /// <summary>سیم‌کشی مسیر واقعی: commit متعارف با پورت‌های fake، بقیه رفتارها ثبت‌کننده.</summary>
     private sealed class Harness
     {
+        public const string ConcreteGatewayProvider = "concrete-gateway-provider";
+
         public required Guid CartId { get; init; }
         public required Guid CheckoutId { get; init; }
         public required Guid PaymentId { get; init; }
@@ -326,6 +365,7 @@ public sealed class StorefrontStartPaymentComposerTests
         public required TrackerFake Tracker { get; init; }
         public required PreparationFake Preparation { get; init; }
         public required PaymentsFake Payments { get; init; }
+        public required ProviderSelectionFake Selection { get; init; }
         public required Guid? AuthenticatedUserId { get; init; }
 
         public Task<StorefrontStartPaymentResult> StartAsync() =>
@@ -353,6 +393,7 @@ public sealed class StorefrontStartPaymentComposerTests
             OrderPaymentHoldPreparationOutcome preparationOutcome = OrderPaymentHoldPreparationOutcome.Prepared,
             bool useWallet = true,
             string? providerCode = null,
+            bool providerSelectionResolvable = true,
             Guid? authenticatedUserId = null,
             bool withoutTracker = false)
         {
@@ -378,6 +419,7 @@ public sealed class StorefrontStartPaymentComposerTests
                 replaying ? SucceededProcess(checkoutId, cartId, CommitKeyFor(RawKey)) : null);
             var preparation = new PreparationFake(checkoutId, preparationOutcome);
             var payments = new PaymentsFake(checkoutId, paymentFailureCode);
+            var selection = new ProviderSelectionFake(ConcreteGatewayProvider, providerSelectionResolvable);
             return new Harness
             {
                 CartId = cartId,
@@ -389,11 +431,13 @@ public sealed class StorefrontStartPaymentComposerTests
                     checkout,
                     preparation,
                     payments,
+                    selection,
                     withoutTracker ? null : tracker),
                 Directory = directory,
                 Tracker = tracker,
                 Preparation = preparation,
                 Payments = payments,
+                Selection = selection,
                 UseWallet = useWallet,
                 ProviderCode = providerCode,
                 AuthenticatedUserId = authenticatedUserId,
@@ -569,6 +613,52 @@ public sealed class StorefrontStartPaymentComposerTests
         public void MarkPaymentPending(CheckoutProcess process, DateTimeOffset now) => throw new NotSupportedException();
 
         public void MarkFailed(CheckoutProcess process, string failureCode, DateTimeOffset now) => throw new NotSupportedException();
+    }
+
+    /// <summary>آینهٔ دقیق قاعدهٔ رزولوشن: wallet/manual پایدار، bare «gateway» به Provider متعارف، بقیه رد.</summary>
+    private sealed class ProviderSelectionFake(string concreteGatewayProvider, bool resolvable)
+        : IPaymentProviderSelectionPort
+    {
+        public int Calls { get; private set; }
+
+        public string? LastRequestedSelector { get; private set; }
+
+        public bool? LastUseWallet { get; private set; }
+
+        public Task<StorefrontProviderSelection?> ResolveAsync(
+            string? requestedProviderCode,
+            bool useWallet,
+            CancellationToken cancellationToken)
+        {
+            Calls++;
+            LastRequestedSelector = requestedProviderCode;
+            LastUseWallet = useWallet;
+            if (!resolvable)
+            {
+                return Task.FromResult<StorefrontProviderSelection?>(null);
+            }
+
+            var selector = requestedProviderCode?.Trim() ?? string.Empty;
+            if (useWallet)
+            {
+                return Task.FromResult<StorefrontProviderSelection?>(
+                    new StorefrontProviderSelection(selector, PaymentProviderCodes.Wallet));
+            }
+
+            if (PaymentProviderCodes.IsManual(selector))
+            {
+                return Task.FromResult<StorefrontProviderSelection?>(
+                    new StorefrontProviderSelection(selector, PaymentProviderCodes.Manual));
+            }
+
+            if (string.Equals(selector, PaymentProviderCodes.GatewayCatalog, StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult<StorefrontProviderSelection?>(
+                    new StorefrontProviderSelection(selector, concreteGatewayProvider));
+            }
+
+            return Task.FromResult<StorefrontProviderSelection?>(null);
+        }
     }
 
     private sealed class PreparationFake(Guid checkoutId, OrderPaymentHoldPreparationOutcome outcome)

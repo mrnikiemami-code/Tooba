@@ -96,6 +96,10 @@ public sealed class PaymentModule : IToobaModule
         services.AddScoped<IPaymentWebhookHandler, PaymentWebhookHandler>();
         services.AddScoped<IPaymentWebhookSignatureVerifier, PaymentWebhookSignatureVerifierAdapter>();
         services.AddScoped<IPaymentGatewayCatalogPort, PaymentGatewayCatalogAdapter>();
+        // Pre-commit provider resolution lives with the catalog authority that owns the storefront
+        // provider decision, so the caller's hold policy and the payment's concrete provider agree
+        // without duplicating any provider/default/duration rule outside Payment.
+        services.AddScoped<IPaymentProviderSelectionPort, PaymentProviderSelectionAdapter>();
         services.AddScoped<IPaymentHoldSettingsDirectory, PaymentHoldSettingsDirectory>();
         services.AddScoped<IPaymentQueryDirectory, PaymentQueryDirectory>();
         services.AddScoped<IPendingPaymentReader, PendingPaymentBridge>();

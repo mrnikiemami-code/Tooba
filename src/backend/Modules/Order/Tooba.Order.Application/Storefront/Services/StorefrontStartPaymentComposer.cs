@@ -46,6 +46,12 @@ public enum StorefrontStartPaymentFault
 
     /// <summary>کلید + namespace از سقف ستون‌های idempotency (۱۲۸) بلندتر می‌شود.</summary>
     IdempotencyKeyTooLong = 3,
+
+    /// <summary>
+    /// انتخاب‌گر روش پرداخت قابل‌رزولوشن نبود (کد درگاه ناشناخته/مسدود، روش دستی خاموش، درگاه آنلاین
+    /// خاموش یا روش مشخصی انتخاب نشده). پیش از هر commit/مهلت/پرداخت امن‌بسته رد می‌شود.
+    /// </summary>
+    ProviderUnavailable = 4,
 }
 
 /// <summary>سرنوشت کلیک نهایی؛ همهٔ حالت‌ها امن‌بسته‌اند جز <see cref="Initiated"/>.</summary>
@@ -126,24 +132,25 @@ public sealed record StorefrontStartPaymentResult(
 /// ترتیب ثابت:
 /// <list type="number">
 /// <item>اعتبارسنجی نحوی درخواست (سبد + کلید idempotency + سقف طول با namespace)؛</item>
+/// <item>رزولوشن انتخاب‌گر روش پرداخت به Provider متعارف (درز Contracts-only ماژول Payment) <b>پیش از</b>
+/// هر commit؛ عدم رزولوشن = رد امن‌بسته بدون هیچ لمس سفارش/مهلت/پول؛</item>
 /// <item>تشخیص بازگشت پذیری: ردیاب پایدار فرآیند checkout با همان کلید commit؛ اگر submit قبلی موفق
 /// بوده باشد فقط مالکیت همان checkout بازبررسی می‌شود و <b>هیچ commit دوباره‌ای انجام نمی‌شود</b>؛</item>
 /// <item>در غیر این صورت همان مسیر commit متعارف Order
 /// (<see cref="StorefrontShippingService.CommitAsync"/> → <c>ICheckoutDirectory.SubmitAsync</c>) دقیقاً یک‌بار؛
 /// سبد، رزرو، سهمیه، تبدیل سبد و وضعیت چرخه هیچ‌کدام اینجا بازپیاده‌سازی نمی‌شوند؛</item>
-/// <item>آماده‌سازی مهلت رزرو ۰۱۸ برای روش انتخاب‌شده؛ فقط <c>Prepared</c> اجازهٔ ادامه دارد؛</item>
-/// <item>یک‌بار فراخوانی درز متعارف Payment (<see cref="IPaymentInitiationPort"/>) — بدون مسیر جانبی برای
-/// کیف پول/درگاه/دستی.</item>
+/// <item>آماده‌سازی مهلت رزرو ۰۱۸ با <b>Provider متعارف رزولوشن‌شده</b>؛ فقط <c>Prepared</c> اجازهٔ ادامه دارد؛</item>
+/// <item>یک‌بار فراخوانی درز متعارف Payment (<see cref="IPaymentInitiationPort"/>) با همان انتخاب‌گر اصلی،
+/// تا بررسی صلاحیت/روش/idempotency معتبر در مالکیت Payment بماند — بدون مسیر جانبی برای کیف پول/درگاه/دستی.</item>
 /// </list>
 ///
 /// تضمین‌ها: «دقیقاً یک checkout برای یک سبد» با کلید commit پایدار و replay متعارف Order؛ همان کلید در
 /// هر دو مرحله پایدار می‌ماند؛ شکست commit مسیر پولی را اجرا نمی‌کند؛ شکست آماده‌سازی/شروع، سفارش موجود را
-/// دست‌نخورده و قابل‌بازیابی می‌گذارد.
+/// دست‌نخورده و قابل‌بازیابی می‌گذارد؛ سیاست مهلت ۰۱۸ و Provider نهایی Payment از یک authority واحد
+/// (کاتالوگ درگاه Payment) می‌آیند، پس override همان Provider نهایی است و هیچ Provider دیگری «ساکت» انتخاب نمی‌شود.
 ///
 /// تضمین‌نشده‌ها: هیچ ACID بین Order و Inventory ادعا نمی‌شود؛ بازهٔ بین تمدید مهلت و فراخوانی درگاه
-/// (و کال‌بک دیرهنگام) بسته نمی‌شود؛ مهلت‌های ستون‌های idempotency یکسان فرض نمی‌شوند بلکه صریحاً بررسی می‌شوند؛
-/// اگر انتخاب‌گر روش «درگاه پیش‌فرض» باشد، Provider نهایی داخل Payment انتخاب می‌شود، پس سیاست مهلت
-/// استفاده‌شده در این درز لایهٔ store/platform است و override همان Provider نهایی نیست.
+/// (و کال‌بک دیرهنگام) بسته نمی‌شود؛ مهلت‌های ستون‌های idempotency یکسان فرض نمی‌شوند بلکه صریحاً بررسی می‌شوند.
 ///
 /// خطاها: شکست commit/replay با کد تایپ‌شدهٔ خودِ تولیدکننده و بدون بازنویسی گزارش می‌شود؛ شکست
 /// آماده‌سازی با سرنوشت تایپ‌شدهٔ ۰۱۸ گزارش می‌شود؛ خطاهای Payment دست‌نخورده propagate می‌شوند تا هیچ کد
@@ -167,25 +174,29 @@ public sealed class StorefrontStartPaymentComposer
     private readonly StorefrontCheckoutService _checkouts;
     private readonly IOrderPaymentHoldPreparationPort _preparation;
     private readonly IPaymentInitiationPort _payments;
+    private readonly IPaymentProviderSelectionPort _providerSelection;
     private readonly ICheckoutProcessTracker? _processes;
 
-    /// <summary>ترکیب‌کننده را به روزنه‌های متعارف commit، مالکیت، آماده‌سازی ۰۱۸ و شروع Payment وصل می‌کند.</summary>
+    /// <summary>ترکیب‌کننده را به روزنه‌های متعارف commit، مالکیت، رزولوشن Provider، آماده‌سازی ۰۱۸ و شروع Payment وصل می‌کند.</summary>
     /// <param name="shipping">مسیر commit متعارف Order (انتخاب ارسال + <c>ICheckoutDirectory.SubmitAsync</c>).</param>
     /// <param name="checkouts">قاعدهٔ موجود مالکیت checkout برای مسیر بازگشت پذیری.</param>
     /// <param name="preparation">درز آماده‌سازی مهلت ۰۱۸.</param>
     /// <param name="payments">درز Contracts-only شروع پرداخت ۰۱۲R.</param>
+    /// <param name="providerSelection">درز Contracts-only رزولوشن Provider متعارف پیش از commit (مالکیت Payment).</param>
     /// <param name="processes">ردیاب پایدار فرآیند checkout؛ اگر غایب باشد فقط replay متعارف commit باقی می‌ماند.</param>
     public StorefrontStartPaymentComposer(
         StorefrontShippingService shipping,
         StorefrontCheckoutService checkouts,
         IOrderPaymentHoldPreparationPort preparation,
         IPaymentInitiationPort payments,
+        IPaymentProviderSelectionPort providerSelection,
         ICheckoutProcessTracker? processes = null)
     {
         _shipping = shipping;
         _checkouts = checkouts;
         _preparation = preparation;
         _payments = payments;
+        _providerSelection = providerSelection;
         _processes = processes;
     }
 
@@ -220,9 +231,18 @@ public sealed class StorefrontStartPaymentComposer
 
         var commitKey = CommitKeyPrefix + rawKey;
         var paymentKey = PaymentKeyPrefix + rawKey;
-        var methodSelector = request.UseWallet
-            ? PaymentProviderCodes.Wallet
-            : request.ProviderCode?.Trim() ?? string.Empty;
+
+        // رزولوشن Provider پیش از هر commit/مهلت: انتخاب‌گر مسدود/ناشناخته/غایب امن‌بسته رد می‌شود و
+        // Provider متعارف همان است که سیاست مهلت ۰۱۸ و Payment واقعاً استفاده می‌کنند.
+        var selection = await _providerSelection
+            .ResolveAsync(request.ProviderCode, request.UseWallet, cancellationToken)
+            .ConfigureAwait(false);
+        if (selection is null)
+        {
+            return Reject(StorefrontStartPaymentFault.ProviderUnavailable);
+        }
+
+        var canonicalProviderCode = selection.CanonicalProviderCode;
 
         // بازگشت پذیری پیش از هر commit: ردیاب پایدار با همان کلید commit.
         var replayed = false;
@@ -286,7 +306,7 @@ public sealed class StorefrontStartPaymentComposer
                 request.CartId,
                 request.GuestSecret,
                 request.AuthenticatedUserId,
-                methodSelector),
+                canonicalProviderCode),
             cancellationToken).ConfigureAwait(false);
         if (!preparation.Prepared)
         {
@@ -314,6 +334,9 @@ public sealed class StorefrontStartPaymentComposer
         }
 
         // مسیر متعارف Payment. خطاهای Payment دست‌نخورده propagate می‌شوند (بدون کد ساختگی).
+        // انتخاب‌گر اصلی (نه Provider متعارف) فرستاده می‌شود تا بررسی صلاحیت/روش معتبر و idempotency (۰۲۱)
+        // در مالکیت Payment بماند؛ Payment همان Provider متعارف را از همان کاتالوگ درگاه resolve می‌کند،
+        // پس با Provider استفاده‌شده در آماده‌سازی ۰۱۸ یکی است و هیچ سیاستی دوباره پیاده نشده است.
         var initiated = await _payments.InitiateForCheckoutAsync(
             new StorefrontPaymentInitiationRequest(
                 checkoutId,
