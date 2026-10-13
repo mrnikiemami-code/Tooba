@@ -1,4 +1,4 @@
-BEGIN_TOOBA_WORKER_RESULT
+﻿BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-P0-ORDER-PAYMENT-HOLD-COORDINATION-018
 Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
 Parent-Task: TB-P0-INVENTORY-ATOMIC-HOLD-EXTENSION-017
@@ -13,7 +13,7 @@ BASE-SHA: f9d87199d61c39655ea2873f2d4c7e620c62dd50
 BASE-CHECK: HEAD == origin/main == Expected-Base-SHA verified before work (no drift).
 COMMIT(S):
   A = f942c293958a94ce400fd05766f82b50630b1fda  Order seam + focused tests + received task artifact + analysis.md
-  B = <EVIDENCE-SHA>  evidence only: RESULT.bridge.txt and post-result.js
+  B = 0530bd4d3114ae6d83065b2dce999fe4f87c6ad6  evidence only: RESULT.bridge.txt and post-result.js
 AFTER-HEAD: A is the last commit that changes production or test source. Branch HEAD is C, the single
 documentation-only commit that replaces the EVIDENCE-SHA placeholder in this file with B; C changes nothing
 except that field, and C's own SHA cannot be embedded in the file it rewrites.
