@@ -1,0 +1,165 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-PAYMENT-FRESH-ENTRY-GUARD-023
+Parent-Task: TB-P0-PAYMENT-ENTRY-RESERVATION-GATE-022
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Bridge-Task-Row: 80121d53-9497-44ed-93ff-8006fd887c13
+Starting-SHA (base): 8187ddde120918f22e31bac6bc80ea89dfe0cbc5 (== origin/main == Expected-Base-SHA at claim; verified before any write)
+Code-Commit: NONE — zero production and zero test files changed
+Evidence-Commit: 3f74779b582e404b7672b8f139ae7e63dd70f5b7 (task artifact + analysis + evidence post script)
+Result-Carrier-Commit: this RESULT.bridge.txt commit (docs-only; HEAD follows Evidence-Commit)
+Repo-Branch: main
+Status: BLOCKED_ARCHITECT_DECISION — AUTHORIZED SLICE DESIGNED TO THE FILE/CODE LEVEL, BUT TWO DECISIVE CONSTRAINTS MAKE A PROVEN DELIVERY IMPOSSIBLE INSIDE THE 20-MINUTE BOX; NO PARTIAL/OPTIMISTIC CALL PATH PUBLISHED
+Verdict: BLOCKED (analysis complete; endpoint behaviour unchanged)
+automaticNextImplementationTask=NONE
+
+== 0. PREFLIGHT ==
+
+HEAD == origin/main == 8187ddde120918f22e31bac6bc80ea89dfe0cbc5, confirmed before any file write; no drift.
+Read AGENTS.md, the BRIDGE-WAKE-V1 protocol and the 017-022 evidence; 022's analysis was NOT re-derived, only its
+conclusions reused. Host, Program.cs, :5088, live DB, frontend, settings, migrations and providers untouched; no
+PSP/wallet call, no real order. Host.Tests neither built nor executed. Pre-existing tracked dirty paths
+(INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, CheckoutAbuseGate.cs, admin-order-detail-screen.tsx,
+storefront-landing-blocks.tsx, untracked bin/obj and other evidence folders) were preserved untouched.
+
+== 1. NEW BLOCKER #1 (decisive for the SHAPE of the gate) — Host.Tests compose the real bridge without the cycle authority ==
+
+The directed boundary (extend IPayableCheckoutReader/GetPayableAsync + PayableCheckoutSnapshot, avoid a required
+PaymentDirectory ctor parameter) puts the verdict inside OrderPaymentBridge.GetPayableAsync. Six
+forbidden-to-edit Host.Tests files construct that bridge with ONLY the first two arguments, i.e. cycles: null and
+cyclePolicy: null, and then perform real fresh initiations that they assert succeed:
+  PaymentFoundationTests.cs:188            (init -- ok, then asserts Pending + amount 207100m + /payment/sandbox + same-key replay at :193-208)
+  MarketplaceSettlementEventPathTests.cs:169
+  R2LiveMarketplaceSmokeTests.cs:100
+  ReturnFoundationTests.cs:183
+  SettlementFoundationTests.cs:157
+  WalletCheckoutRefundTests.cs:196
+Every one of them injects new OrderInventoryLifecycleAdapter(new UnusedInventoryDirectory()), whose Inventory
+methods throw, and seeds its checkouts by hand (PaymentFoundationTests.SeedCheckout:304+) with no reservation cycle
+and no Inventory reservations. Therefore a fail-closed verdict on (a) a null cycle authority, (b) a line without a
+ReservationId, or (c) any Inventory read would break all six files, and I am forbidden to edit or run them.
+The only shape that keeps the composed app guarded AND those files green is an explicit NotEvaluated state when
+the Order cycle authority is absent, with PaymentDirectory blocking every state except Payable and NotEvaluated.
+Production keeps the gate live because the composed Host injects the authority through DI (OrderModule.cs:90
+registers IReservationCycleDirectory; OrderModule.cs:99 registers IPayableCheckoutReader, OrderPaymentBridge), so
+_cycles is never null in the deployed application. The concession is real and must be approved, not assumed: in
+any composition that omits IReservationCycleDirectory the guard is inert BY DESIGN. A checkout that has the
+authority but no payable cycle stays fail-closed (CycleNotPayable -> 409), which satisfies "no cycle -> explicit
+policy-safe outcome, never silent bypass".
+
+== 2. NEW BLOCKER #2 (decisive for DELIVERY) — the Order-side truth cannot be proved in this slice ==
+
+The gate's authority is the Order-side computation, so that is the part that must be proven, and the architect's
+rule is explicit: "If tests cannot prove these claims in time/scope, implement no publicly reachable change and
+report BLOCKED with exact minimal next files" and "NEVER publish an optimistic gate".
+Tooba.Order.Tests.csproj has NO Microsoft.EntityFrameworkCore.InMemory package, NO ProjectReference to
+Tooba.Order.Infrastructure, and the project contains NO UseInMemoryDatabase harness anywhere (verified by scan).
+OrderPaymentBridge lives in Tooba.Order.Infrastructure and needs an OrderDbContext with
+CheckoutGroup -> SellerOrders -> Lines. Proving the verdict therefore needs, at minimum: two test-csproj additions
+(package + project reference), a new in-memory Order harness, and fakes for IReservationCycleDirectory and
+IOrderInventoryLifecyclePort -- plus a second suite in Tooba.Payment.Tests for the enforcement side. Payment.Tests
+can only prove the Payment-side enforcement (block/permit, no row creation, check ordering); it cannot prove the
+Order-side verdict, so shipping the enforcement alone would place untested logic on the money path.
+Timebox: about 16 of the 20 HARD minutes were consumed by the investigation above; the residual budget cannot
+produce the csproj additions, the Order harness, two fakes, two suites and two focused runs. Consequence: zero
+files changed, and the public route keeps exactly its previous behaviour rather than gaining a partially proven gate.
+
+== 3. READY-TO-APPLY SLICE (exact files + code shapes; analysis.md sections 1-5) ==
+
+S1 Payment.Contracts/Checkout/OrderPaymentProjectionContracts.cs (additive):
+   enum FreshPaymentPayability { NotEvaluated = 0, Payable = 1, ReservationSetIncomplete = 2, CycleNotPayable = 3,
+   RetryLimitReached = 4, HoldUnavailable = 5 }, plus an OPTIONAL trailing
+   PayableCheckoutSnapshot parameter FreshPaymentPayability FreshPaymentPayability = NotEvaluated so every existing
+   construction site (Host.Tests StubPayableReader PaymentFoundationTests.cs:270, Payment tests) compiles unchanged.
+S2 Order.Infrastructure/Integrations/Payment/OrderPaymentBridge.cs: add .ThenInclude(x => x.Lines) to the existing
+   read and compute READ-ONLY: _cycles is null => NotEvaluated; else reservation set from persisted lines only
+   (missing/empty/one-id-on-two-lines => ReservationSetIncomplete); IReservationCycleDirectory.GetProjectionAsync
+   + ReservationCyclePayabilityPolicy.IsActive (false => CycleNotPayable; HasReachedRetryLimit => RetryLimitReached);
+   then per distinct reservation IOrderInventoryLifecyclePort.FindReservationAsync requiring
+   Status == "Held" (Inventory's own projection of StockReservationStatus.Held) and ExpiresAt is null || > now
+   (else HoldUnavailable). No write, no extension, no new TTL, and never a throw merely because the cycle expired
+   (verification/refund reads keep working).
+S3 Payment.Infrastructure/Directories/PaymentDirectory.cs: fresh path (after the 021 conflict gate and the mode
+   check, before amount/allocation/gateway.InitiateAsync) rejects every state except Payable/NotEvaluated with the
+   new typed code; the FAILED-prior branch (PaymentDirectory.cs:112-149) reads
+   _orders.GetPayableAsync(existing.CheckoutId, ...) before its own gateway.InitiateAsync and applies the same
+   rule (null => not payable), so a failed prior cannot bypass the fresh-money rule. Succeeded/pending same-key
+   replay and the 021 cross-checkout/cross-provider conflict semantics stay untouched.
+S4 Error surface (authorized additive): PaymentErrorCodes.ReservationNotPayable = "payment.reservation.not_payable"
+   added to KnownCodes; catalog descriptor with ErrorClassification.Conflict / StatusCodes.Status409Conflict /
+   "Conflict"; one key in PaymentErrors.resx and PaymentErrors.fa.resx; count-only alignment in ONLY the two
+   already-permitted Host guard files (PaymentModuleAmsc001W1MigrateGuardTests.cs:237 29->30;
+   PaymentModuleAmsc001W3CertGuardTests.cs:253 29->30, :288 25->26, :320 25->26). No assertion deleted or
+   weakened, no other Host file touched, and historical tmar R1/R2/R3 records stay byte-identical (additive R4
+   remains a separate governance follow-up, as already reported in 021 section 4).
+S5 Tests (the reason this slice is blocked, see section 2): Order.Tests harness + IReservationCycleDirectory /
+   IOrderInventoryLifecyclePort fakes proving valid Held + active cycle => Payable; expired cycle =>
+   CycleNotPayable; cycle Active but hold Released => HoldUnavailable; retry-exhausted => RetryLimitReached; no
+   cycle with the authority present => CycleNotPayable; _cycles null => NotEvaluated. Payment.Tests: Payable /
+   NotEvaluated proceed; every blocked state => payment.reservation.not_payable with NO gateway invocation and NO
+   payment/attempt row; failed-prior retry cannot bypass; 021 cases and identical-method replay stay green.
+
+== 4. TOCTOU / TRUTHFULNESS (declared) ==
+
+The verdict would be a point-in-time read, not a capacity reservation: the Inventory row can be released or expire
+between GetPayableAsync and the gateway call, and the cycle can close in the same window. It is truthful about the
+instant it is taken (real Inventory row state through the owner-provided read port; real cycle projection through
+the canonical Order policy) and is NOT presented as atomic. Closing that residue needs the existing Order-owned
+authoritative reacquisition path (already reachable via POST /payments/{paymentId}/unpaid-retry ->
+RetryUnpaidCoreAsync -> IOrderUnpaidRetrySupplyPort.EnsureRetrySupplyAsync, Orchestrator.cs:446) or a future
+correlated attempt+hold contract, not a larger optimistic check. No PostgreSQL locking or cross-module atomicity
+claim is made or faked.
+
+== 5. ANSWERS TO THE REQUIRED QUESTIONS ==
+
+* Is the old direct endpoint actually guarded? NO. POST /v1/storefront/checkout/{checkoutId}/payments is
+  byte-identical to before this task: fresh initiation still reaches provider initiation / wallet debit without
+  active supply-backed reservation payability proof. This remains a LIVE, DISCLOSED P0 blocker — nothing was
+  mitigated, and no half-gate was published (PaymentDirectory, OrderPaymentBridge, the catalogs and the resx files
+  were all left untouched).
+* Are all three payment methods covered? No gate was shipped, so none. The designed location (S3) covers all three
+  by construction: wallet is debited only after a successful initiation (Orchestrator.cs:169-198) and manual/online
+  share the same fresh path.
+* New endpoint / frontend? Still absent — none added, no frontend change, no route change.
+* Residual races/risks: 021-L1 unchanged (concurrent distinct-method initiations with the same key still lose at
+  the unique index rather than at the pre-write comparison); R1 no runtime/live/PSP/wallet proof;
+  payment.checkout.not_payable and payment.initiate.reservation_forbidden still surface as 500; the 021 frozen-SoT
+  divergence (28/27/24 recorded vs 29/28/25 live) is still recorded and unrewritten; and the D1 concession below.
+* Host untouched? YES — zero Host production edits, zero Host.Tests edits, no Host build, Host.Tests not run,
+  :5088 not contacted.
+
+== 6. DECISIONS REQUESTED ==
+
+D1 Approve the NotEvaluated concession of section 1 (the only shape that keeps the six certified Host.Tests files
+   green without editing them), OR authorize the alternative: a required new port registration plus authorized
+   edits to those six Host.Tests files, which this task forbids.
+D2 Authorize the two Tooba.Order.Tests.csproj additions (Microsoft.EntityFrameworkCore.InMemory and
+   ProjectReference -> Tooba.Order.Infrastructure) needed to prove the Order-side verdict, or designate another
+   seam for that proof.
+D3 Confirm the error surface in S4 (code, 409, the two guard files, counts 30/30/26) and that the additive R4 SoT
+   follow-up stays out of this wave.
+
+== 7. VERIFICATION / CHANGED FILES / HYGIENE ==
+
+Verification actually performed: static reads only — OrderPaymentProjectionContracts.cs, OrderPaymentBridge.cs
+(:50-79), PaymentDirectory.cs (:61-222), PaymentStorefrontEndpoints.cs (:22-55), StorefrontPaymentOrchestrator.cs
+(:57-198), OrderPaymentHoldPreparationService.cs (:80-205), ReservationCycleContracts.cs,
+ReservationCyclePayabilityPolicy.cs, ReservationCycle.cs (status values), OrderInventoryLifecycleContracts.cs
+(:136), OrderInventoryLifecycleAdapter.cs (:174-242), InventoryDirectory.cs (:216-238), StockReservationStatus.cs,
+OrderModule.cs (:90-101), PaymentModule.cs (:40-105), the six Host.Tests construction sites,
+PaymentFoundationTests.cs (:180-300), and the Order/Payment test csproj contents.
+Honest counts: 0 production files changed, 0 test files changed, 0 tests added, 0 tests run, 0 builds — the gate
+was NOT implemented, precisely so that no unproven money-path logic ships.
+Changed files (4, docs/evidence only):
+  A docs/ai/tasks/TB-P0-PAYMENT-FRESH-ENTRY-GUARD-023.task.md
+  A docs/architecture/evidence/TB-P0-PAYMENT-FRESH-ENTRY-GUARD-023/analysis.md
+  A docs/architecture/evidence/TB-P0-PAYMENT-FRESH-ENTRY-GUARD-023/post-result.js
+  A docs/architecture/evidence/TB-P0-PAYMENT-FRESH-ENTRY-GUARD-023/RESULT.bridge.txt (this result)
+Hygiene: exactly those 4 docs paths were staged/committed; unrelated dirty and untracked paths were left
+untouched; no historical task replayed, no other worker/subagent started, no Bridge probe posted (this is the
+single complete Result contract).
+STOP_FOR_ARCHITECT. automaticNextImplementationTask=NONE.
+END_TOOBA_WORKER_RESULT
