@@ -1,0 +1,191 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-PAYMENT-IDEMPOTENCY-METHOD-BINDING-020
+Parent-Task: TB-P0-CHECKOUT-START-PAYMENT-COMPOSER-019
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Bridge-Task-Row: b5cb6f9a-a24a-4e46-ad73-ee4c31732e79
+Starting-SHA (base): 4b605be1cd713a9a33b8618c3c8d08479bdd54e4 (== origin/main == Expected-Base-SHA at claim)
+After-SHA (evidence): 43b34972a20b8bedd785f43f385ffb4e1d7dfbfa (docs-only; the result-carrier commit follows it)
+Code-Commit: NONE — zero production and zero test files were changed
+Repo-Branch: main
+Status: BLOCKED_ARCHITECT_DECISION — DEFECT CONFIRMED AND LOCALIZED; NO SAFE TYPED ERROR EXISTS; NO PARTIAL/UNSAFE SEAM PUBLISHED
+Verdict: BLOCKED (audit complete, fix withheld by explicit task rule)
+automaticNextImplementationTask=NONE
+
+Preflight: HEAD == origin/main == 4b605be1cd713a9a33b8618c3c8d08479bdd54e4 (verified before any file write).
+Read: AGENTS.md, BRIDGE-WAKE-V1 protocol, and the 012R / 018 / 019 evidence.
+Host: CLOSED and untouched (no Host file edited, no build/stop/restart/deploy, no 5088 contact);
+Host.Tests were NOT executed — their guard assertions below are cited as source evidence.
+Working tree after this slice: no staged/unstaged production change (only pre-existing unrelated
+CRLF/index-stat dirty paths, left untouched).
+
+Changed-Files (3, docs/evidence only):
+  A docs/ai/tasks/TB-P0-PAYMENT-IDEMPOTENCY-METHOD-BINDING-020.task.md
+  A docs/architecture/evidence/TB-P0-PAYMENT-IDEMPOTENCY-METHOD-BINDING-020/analysis.md
+  A docs/architecture/evidence/TB-P0-PAYMENT-IDEMPOTENCY-METHOD-BINDING-020/post-result.js
+  A docs/architecture/evidence/TB-P0-PAYMENT-IDEMPOTENCY-METHOD-BINDING-020/RESULT.bridge.txt (this result)
+Production-Files-Changed: 0
+Test-Files-Changed: 0
+Schema/Migration/Config-Changes: 0
+Endpoint-Changes: 0
+Host-Changes: 0
+
+== 1. DEFECT CONFIRMED (source line evidence) ==
+
+PaymentDirectory.InitiateAsync (src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs:61-210):
+  :64   var key = command.IdempotencyKey.Trim();
+  :65   var existing = await _db.Payments.FirstOrDefaultAsync(x => x.IdempotencyKey == key, ...)   <- lookup by KEY ONLY
+  :79   var replayGateway = _gateways.Resolve(existing.ProviderCode);                              <- gateway from PERSISTED provider
+  :88   var retryInitiation = await replayGateway.InitiateAsync(existing.PaymentId, ...)           <- Failed prior: NEW provider
+                                                                                                      initiation + new attempt + SaveChanges
+  :101, :115, :132   ... existing.ProviderCode ...                                                 <- every replay response reports the
+                                                                                                      PERSISTED method
+  :166  var gateway = _gateways.Resolve(command.ProviderCode);                                     <- command.ProviderCode is used ONLY in
+                                                                                                      the fresh path; it is never compared
+                                                                                                      anywhere in the replay block
+Consequences for the SAME key with a DIFFERENT selected method:
+  - prior Pending  -> silent wrong-method replay: the caller receives the previous method's payment and
+                      ProviderCode as a new-method success (:128-136). This is exactly the defect the
+                      task names.
+  - prior Failed   -> money-path action under the OLD method: a new gateway initiation + attempt +
+                      SaveChanges (:86-105), with the requested method silently discarded.
+  - prior Succeeded-> returns the paid payment (benign: the checkout is genuinely paid; :109-120).
+Secondary gap of the same conflict class: checkout identity is never compared. Access is validated
+against the PERSISTED payment's checkout (:68 -> PaymentActorAccess.EnsureActorCanSeeAsync ->
+orders.GetPayableAsync(payment.CheckoutId, ...)), while command.CheckoutId is used only in the fresh
+path (:139, :144). A same-actor caller reusing a key across two of their own checkouts is returned the
+first checkout's payment with no identity comparison.
+Reachability: PaymentStorefrontEndpoints.InitiateAsync accepts a client Idempotency-Key
+(PaymentStorefrontEndpoints.cs:44) and body.ProviderCode (:51) and forwards both unchanged; 019's
+composer derives the Payment key as "start-payment:payment:<callerKey>" (spaceless by layer, NOT by
+method) precisely because method authority stays in Payment. One client key reused with another
+method therefore reaches the defective branch from the existing HTTP surface.
+
+== 2. WHY NO DECLARED PAYMENT CODE CAN BE USED (exhaustive, not assumed) ==
+
+Declared set = 24 registered descriptors (PaymentErrorCatalogContributor.Contribute()) + 4 consumed
+foreign-owned codes (inventory.reservation.retry_limit_reached, inventory.supply.unavailable,
+admin.authorization.denied, checkout.authentication_required). PaymentErrorCodes.KnownCodes holds
+those 28 and nothing else; PaymentErrors.resx / PaymentErrors.fa.resx hold the same 24 keys.
+NO declared code has idempotency/key-binding semantics. Rejections:
+  payment.already_succeeded     -> means "a payment for this checkout already succeeded"; nothing
+                                   succeeded in the failing cases (copy: "این سفارش قبلاً با موفقیت پرداخت شده است").
+  payment.method.unavailable    -> means the method is not OFFERED by store config ("این روش پرداخت در
+                                   حال حاضر در دسترس نیست"); the offered method IS available, so this is
+                                   exactly the code repurposing the task forbids, and it would misreport
+                                   an available method.
+  payment.rejected              -> declared as the GENERIC rejected operation ("امکان انجام این عملیات در
+                                   حال حاضر وجود ندارد"); the task forbids a generic error.
+  payment.unpaid.retry.invalid / confirm.invalid_state / reject.invalid_state -> manual/retry state
+                                   machines, not key binding.
+  payment.access.denied / guest.invalid -> actor/guest visibility, not key binding.
+Repository precedent settles the design question: Wallet owns the identical defect class and solves it
+with a DEDICATED code — wallet.idempotency_conflict ("Idempotency key conflicts with a different stored
+operation", WalletErrorCodes.cs:212), thrown when the same key maps to a different stored operation
+(WalletDirectory.Payments.cs:46, WalletDirectory.Refunds.cs:38,50), with en/fa resources.
+Unsafe shortcut also rejected on evidence: an unregistered code does NOT fail closed with a domain
+error. PaymentOperation maps only KnownCodes (PaymentOperation.cs:29,45); anything else reaches the
+global boundary and SafeErrorMapper.MapUnexpected (SafeErrorMapper.cs:162-179) yields
+"platform.unexpected" with HTTP 500 through ApiResponseFactory (ApiResponseFactory.cs:91) — explicitly
+forbidden. (A SemanticException is mapped without IsKnown, but its code is still absent from the
+catalog and still ends as platform.unexpected/500.)
+Also rejected: method-scoping the key inside Payment (would create a SECOND payment/charge for one
+click — the opposite defect) and adding a persisted column (schema/migration forbidden).
+
+== 3. EXACT FILE-LEVEL BLOCKER ==
+
+The only correct fail-closed requires a NEW Payment-owned typed code, which must be (a) declared,
+(b) registered, (c) localized. All three are pinned by certified Host.Tests guards that this task
+forbids editing:
+  src/backend/Host/Tooba.Host.Tests/Architecture/PaymentModuleAmsc001W1MigrateGuardTests.cs:237
+      Assert.Equal(28, declared.Length);                     (declared 28 -> 29)
+  src/backend/Host/Tooba.Host.Tests/Architecture/PaymentModuleAmsc001W3CertGuardTests.cs:288
+      Assert.Equal(24, codes.Length);                        (registered 24 -> 25)
+  src/backend/Host/Tooba.Host.Tests/Architecture/PaymentModuleAmsc001W3CertGuardTests.cs:320
+      Assert.Equal(24, codes.Length);                        (registered 24 -> 25)
+      + en/fa resource presence and non-fallback localization for every registered code
+No equivalent guard exists in the editable Payment test project, and no partial/unsafe seam was
+published instead.
+
+== 4. EXACT FILE-LEVEL CHANGE PROPOSAL (Architect authorization required) ==
+
+R1 src/backend/Modules/Payment/Tooba.Payment.Contracts/Errors/PaymentErrorCodes.cs
+   + public const string IdempotencyConflict = "payment.idempotency.conflict";
+     doc: "the reused idempotency key is already bound to a different payment operation";
+   + add IdempotencyConflict to KnownCodes.                                  (declared 28 -> 29)
+R2 src/backend/Modules/Payment/Tooba.Payment.Endpoints/Errors/PaymentErrorCatalogContributor.cs
+   + D(PaymentErrorCodes.IdempotencyConflict, ErrorClassification.Conflict,
+       StatusCodes.Status409Conflict, "Conflict");                            (registered 24 -> 25)
+R3 src/backend/Modules/Payment/Tooba.Payment.Contracts/Resources/PaymentErrors.resx      (one key)
+R4 src/backend/Modules/Payment/Tooba.Payment.Contracts/Resources/PaymentErrors.fa.resx   (one key)
+R5 src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs
+   in the replay block, immediately after :79 and BEFORE :80 (so before HasSucceeded..., before the
+   Failed gateway call and before every return):
+       var requestedProvider = _gateways.Resolve(command.ProviderCode).ProviderCode;
+       if (!string.Equals(requestedProvider, existing.ProviderCode, StringComparison.OrdinalIgnoreCase)
+           || command.CheckoutId != existing.CheckoutId)
+       {
+           throw new ContractOperationException(PaymentErrorCodes.IdempotencyConflict);
+       }
+   The comparison MUST use the registry-resolved canonical code, not the raw string: the storefront
+   orchestrator resolves the "gateway" selector to _catalog.DefaultProvider at
+   StorefrontPaymentOrchestrator.cs:151 BEFORE persistence, and the registry is keyed by each gateway's
+   own ProviderCode (PaymentGatewayRegistry in FakePaymentGateway.cs:107-127). Verified: identical
+   selector clicks resolve identically, so legitimate exact-method replays are NOT denied; and no
+   gateway is registered under the literal selector "gateway" (registered codes: fake, fake-fail,
+   manual, wallet, webhook, fail-closed); non-orchestrator callers already pass concrete codes
+   (Host.Tests: "fake", "fake-fail").
+R6 Guard updates in the SAME authorized wave (forbidden in this slice):
+   PaymentModuleAmsc001W1MigrateGuardTests.cs:237  28 -> 29
+   PaymentModuleAmsc001W3CertGuardTests.cs:288     24 -> 25
+   PaymentModuleAmsc001W3CertGuardTests.cs:320     24 -> 25
+R7 Test-seam caveat: the editable Payment test project has NO DB-backed PaymentDirectory seam today
+   (only validator/component tests mention IdempotencyKey). The required behaviour tests (exact-method
+   repeat returns the existing payment/attempt with ZERO gateway invocation; changed-method repeat
+   rejected BEFORE money movement; Failed-prior + changed method -> no gateway call and no new attempt;
+   unauthorized replay still fails closed; wallet/manual paths unchanged) need an approved in-memory
+   PaymentDbContext seam in Tooba.Payment.Tests, or another authorized seam. Host.Tests must not be
+   used for this.
+
+== 5. VERIFICATION PERFORMED / NOT PERFORMED ==
+
+Performed: static source audit of PaymentDirectory.InitiateAsync, the Payment error-code/catalog/
+resource set, PaymentOperation error mapping, SafeErrorMapper unknown-code fallback, the gateway
+registry and its registrations, the storefront initiation surface, the Wallet idempotency-conflict
+precedent, and the three certified Host.Tests guard assertions.
+NOT performed (deliberately): no build, no test run, no Host.Tests run. Rationale: zero production and
+zero test files were changed, so there is nothing new to verify; the task says to avoid repeated
+builds/tests and to STOP when no safe typed error / trustworthy seam exists. This is an honest
+zero-test slice, not an unverified claim: every statement above is a citation of existing source
+lines.
+
+== 6. SCOPE HONESTY / LIMITATIONS ==
+
+L1 No ACID/race claim: the key is protected by ix_payments_idempotency_key (PaymentDbContext.cs:77;
+   migration 20260823140000_InitialPayment.cs:121). Two simultaneous distinct-method initiations with
+   the same key can both pass the pre-read and the loser fails on insert (DbUpdateException) rather
+   than persisting a second method — but that race is NOT closed by the R5 pre-write comparison and
+   remains an honest unresolved risk.
+L2 Observation only (out of scope, left unchanged): PaymentDirectory already throws unregistered
+   payment.* literals — payment.checkout.not_payable (:145), payment.initiate.reservation_forbidden
+   (:148), payment.currency.mismatch (:160), and payment.access.order_identity_required via
+   PaymentActorAccess. Because they are absent from KnownCodes they bypass PaymentOperation mapping and
+   surface as platform.unexpected / 500 today. Recorded for the Architect; untouched.
+L3 No provider eligibility, wallet/manual/online routing, timeout rule, hold duration, actor policy,
+   Order commit, Inventory extension or endpoint behaviour was modified.
+L4 No PSP/wallet call, no SQL/DB mutation, no frontend change, no schema/migration/config change, no
+   new endpoint.
+L5 The three Host.Tests guard assertions are cited from source (static), not executed, since running
+   Host.Tests is forbidden and the live executable must not be disturbed.
+
+== 7. HYGIENE ==
+
+Only docs/ai/tasks and docs/architecture/evidence for this task were added. Pre-existing unrelated
+dirty paths (INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, CheckoutAbuseGate.cs,
+admin-order-detail-screen.tsx, storefront-landing-blocks.tsx, untracked bin/obj) were NOT staged,
+committed, reverted or stashed. No historical task was replayed and no other worker was started.
+STOP for independent Architect decision. automaticNextImplementationTask=NONE.
+END_TOOBA_WORKER_RESULT
