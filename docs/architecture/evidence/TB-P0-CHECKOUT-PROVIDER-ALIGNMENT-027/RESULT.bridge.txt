@@ -1,0 +1,163 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-PROVIDER-ALIGNMENT-027
+Parent-Task: TB-P0-CHECKOUT-FINAL-CLICK-API-026
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Bridge-Task-Row: ea1ebbd6-cd15-4b68-be17-18047abc4781
+Starting-SHA (base): d6dde48974f5b4c315aa868179c33d7df7be9da7 (== origin/main == Expected-Base-SHA, verified before any write)
+Code-Commit: 67ba8fc8ba1ab4d276161126b66d7188a4fe9b03
+Result-Carrier-Commit: this RESULT.bridge.txt commit (docs-only)
+Repo-Branch: main
+Status: IMPLEMENTED — 026 BLOCKER #2 CLOSED IN PRODUCTION CODE; 026 BLOCKER #1 STILL OPEN (ROUTE NOT PUBLISHED)
+Verdict: PASS (bounded slice complete; focused Payment + Order module tests green; zero Host changes; STOP_FOR_ARCHITECT)
+automaticNextImplementationTask=NONE
+
+== 0. PREFLIGHT ==
+
+HEAD == origin/main == d6dde48974f5b4c315aa868179c33d7df7be9da7, confirmed before any file write; no drift, no rebase, no
+stash. Read AGENTS.md, BRIDGE-WAKE-V1, the 026 analysis/result, and the 018/019/025 sources plus the Payment storefront
+orchestrator/catalog sources. No Host or Host.Tests edit/build/test/stop/restart/deploy; no live DB write; no PSP or
+wallet transaction; Host at :5088 untouched. Pre-existing tracked dirty paths (Tooba.Order.Infrastructure/Checkout/
+Abuse/CheckoutAbuseGate.cs, docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md,
+src/frontend/app/admin/admin-order-detail-screen.tsx, src/frontend/app/storefront/storefront-landing-blocks.tsx) and all
+untracked bin/obj/unrelated evidence folders were preserved untouched and are not part of this commit.
+
+== 1. WHAT CHANGED (exact paths) ==
+
+Production:
+  M src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontStartPaymentComposer.cs
+  M src/backend/Modules/Payment/Tooba.Payment.Infrastructure/DependencyInjection/PaymentModule.cs
+  A src/backend/Modules/Payment/Tooba.Payment.Contracts/Storefront/ProviderSelectionContracts.cs
+  A src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Adapters/PaymentProviderSelectionAdapter.cs
+Tests:
+  M src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontStartPaymentComposerTests.cs
+  A src/backend/Modules/Payment/Tooba.Payment.Tests/Behavior/PaymentProviderSelectionAdapterTests.cs
+Docs:
+  A docs/ai/tasks/TB-P0-CHECKOUT-PROVIDER-ALIGNMENT-027.task.md
+  A docs/architecture/evidence/TB-P0-CHECKOUT-PROVIDER-ALIGNMENT-027/analysis.md
+  A docs/architecture/evidence/TB-P0-CHECKOUT-PROVIDER-ALIGNMENT-027/RESULT.bridge.txt (this carrier)
+Host files changed: NONE. Schemas/migrations/config/frontend changed: NONE. Endpoints published: NONE.
+
+== 2. BLOCKER #2 OF 026 — CLOSED (production code, not docs) ==
+
+Defect (was): the 019 composer passed the bare selector to 018 while Payment resolved the alias to a concrete provider.
+  018 anchor: OrderPaymentHoldPreparationService -> CommerceHoldPolicySource.FindMethod(providerCode) keyed by the raw
+  selector string. Payment anchor: StorefrontPaymentOrchestrator.cs:124 "var providerCode = _catalog.DefaultProvider;"
+  and :146-152 "providerCode = _catalog.DefaultProvider;" for the `gateway` alias, then PaymentUnpaidTimeoutAssigner
+  calls ResolveUnpaidTimeoutAt(payment.ProviderCode, now). Therefore a per-provider override configured for the
+  concrete provider applied to Payment but not to the 018 hold → potentially undersized hold for the default gateway.
+
+Fix:
+  A) New minimal additive Payment.Contracts resolver (Payment-owned, Contracts-only for Order):
+     - StorefrontProviderSelection(string RequestedSelector, string CanonicalProviderCode)
+     - IPaymentProviderSelectionPort.ResolveAsync(string? requestedProviderCode, bool useWallet, CancellationToken)
+       returning null == FAIL CLOSED.
+     - PaymentProviderSelectionAdapter (Infrastructure/Adapters) reads ONLY the already-existing catalog authority:
+       wallet -> PaymentProviderCodes.Wallet; manual -> PaymentProviderCodes.Manual only if
+       IPaymentGatewayCatalogPort.ManualCardToCardEnabled; `gateway` alias -> IPaymentGatewayCatalogPort.DefaultProvider
+       only if IPaymentGatewayCatalogPort.IsOnlineGatewayOffered() and the value is non-blank; absent/unknown -> null.
+     - DI: PaymentModule.AddServices registers
+       "services.AddScoped<IPaymentProviderSelectionPort, PaymentProviderSelectionAdapter>();" right after
+       IPaymentGatewayCatalogPort (its only dependency).
+     - No hardcoded default provider, vendor name, duration, fallback hour or TTL was introduced. No new error code.
+  B) Composer: the selector is resolved BEFORE any commit/replay (inserted immediately after the syntactic checks and
+     before the process-tracker/commit block). Resolution failure returns outcome InvalidRequest with the new typed
+     fault StorefrontStartPaymentFault.ProviderUnavailable, touching nothing. On success, 018 receives
+     selection.CanonicalProviderCode (never bare `gateway`); the canonical value is not hardcoded and comes from the
+     Payment resolver.
+
+== 3. SELECTOR-VS-CONCRETE PROOF ==
+
+Single authority, no duplicated policy. Both the resolver and StorefrontPaymentOrchestrator derive the concrete
+provider from the SAME member `IPaymentGatewayCatalogPort.DefaultProvider`, guarded by the SAME
+`IsOnlineGatewayOffered()` call:
+  - Orchestrator (unchanged): default at :124; gateway-alias branch at :149-151 re-assigns `_catalog.DefaultProvider`
+    after the `IsOnlineGatewayOffered()` guard; manual branch at :141-144 gates on `ManualCardToCardEnabled`;
+    wallet branch at :126-137 assigns PaymentProviderCodes.Wallet.
+  - Adapter (new): identical decisions, proven by the source-level test
+    The_single_provider_authority_is_the_orchestrator_catalog_and_the_adapter_reuses_it, which pins
+    "var providerCode = _catalog.DefaultProvider;" and "providerCode = _catalog.DefaultProvider;" in the orchestrator and
+    "catalog.DefaultProvider" / "catalog.IsOnlineGatewayOffered()" / "catalog.ManualCardToCardEnabled" in the adapter,
+    and forbids any provider/duration literal ("fake"/"gateway"/"wallet"/"manual"/AddHours/TimeSpan.From/Environment.)
+    in the adapter.
+  - Behavioural proof for `gateway`: test Neutral_gateway_alias_resolves_to_the_exact_catalog_default_provider asserts
+    CanonicalProviderCode == catalog.DefaultProvider, RequestedSelector == "gateway", and
+    CanonicalProviderCode != "gateway".
+  - Order-side behavioural proof: test
+    Selected_neutral_gateway_selector_resolves_to_the_concrete_provider_before_hold_preparation asserts
+    preparation.LastRequest.ProviderCode == concrete provider (!= "gateway") and
+    payments.LastRequest.ProviderCode == "gateway" (trusted original selector preserved).
+
+Why the trusted original selector is preserved at Payment initiation (the task's explicit escape hatch). Passing an
+already-concrete code into IPaymentInitiationPort would enter the orchestrator's opaque fall-through branch
+(non-manual, non-gateway, non-empty) at :153, and thus SKIP the authoritative `IsOnlineGatewayOffered()` gate and any
+`_gateways.Resolve(concreteCode)` would depend on the configured default being a registered gateway. Preserving the
+selector keeps Payment as the final eligibility/method authority and keeps 021 idempotency canonicalisation identical
+to the direct route. The typed resolution therefore carries BOTH the canonical provider (for 018) and the trusted
+original selector (for Payment); no policy is duplicated.
+
+Fail-closed on an absent selector. The composer rejects `UseWallet=false` with a null/blank selector instead of falling
+back to the default online gateway, because the mission lists "absent method" as a defended threat and demands
+fail-closed on an unavailable/disallowed selector. Unknown non-empty selectors are likewise rejected instead of hitting
+the orchestrator's silent DefaultProvider fall-through. The published direct payment route is unchanged. No provider is
+ever silently substituted.
+
+== 4. ORDERING / FAIL-CLOSED GUARANTEE ==
+
+Provider resolution is step 2 of the composer's documented order, before the process-tracker replay lookup and before
+StreamService.CommitAsync. Test Unresolvable_selector_fails_closed_before_any_commit_hold_or_payment proves, with a
+non-resolvable selector, that: outcome == InvalidRequest, fault == ProviderUnavailable, CheckoutId == null,
+Selection.Calls == 1, Directory.SubmitCalls == 0, Preparation.Calls == 0, Payments.Calls == 0 — i.e. no checkout
+commit, no hold extension, no money, and no PSP/wallet call.
+
+== 5. PRESERVED SEMANTICS ==
+
+  wallet: useWallet==true -> 018 gets the stable "wallet" code; Payment still receives UseWallet==true (test
+    Selected_method_is_forwarded... wallet branch).
+  manual: enabled-only resolution; 018 gets "manual" and Payment still re-checks ManualCardToCardEnabled (manual branch
+    of the same test; adapter test Manual_selector_resolves_only_while_card_to_card_is_enabled).
+  021 idempotency: the composer still sends the caller's original selector and the unchanged namespaced payment key;
+    identity/actor/guest handling untouched; a changed chosen method on the same key therefore still reaches Payment's
+    conflict logic instead of being wrongly replayed. No composer key logic was modified.
+  existing storefront provider-offering rules: unchanged (Payment remains the enforcement point; the resolver only
+    mirrors the offering gate earlier, pre-commit).
+  No new duration/TTL/fallback literal anywhere (composer unchanged in that respect; adapter provably literal-free).
+
+== 6. TEST COUNTS (focused Payment and Order module tests only; no Host build/test) ==
+
+  Tooba.Payment.Tests (full module): 150 passed / 0 failed / 0 skipped — includes 11 new cases in
+    Behavior/PaymentProviderSelectionAdapterTests.cs (8 [Fact] + 1 [Theory] with 3 cases), covering wallet, gateway ->
+    DefaultProvider, gateway with the online gateway not offered, gateway with a blank default, manual enabled/disabled,
+    absent selector fail-closed, 3 unknown/foreign selectors, single-authority proof, and module DI registration.
+  Tooba.Order.Tests (full module): 232 passed / 0 failed / 0 skipped.
+  Focused filter "FullyQualifiedName~StorefrontStartPayment": 33 passed / 0 failed — includes the added
+    Selected_neutral_gateway_selector_resolves_to_the_concrete_provider_before_hold_preparation and
+    Unresolvable_selector_fails_closed_before_any_commit_hold_or_payment, and the revised
+    Selected_method_is_forwarded_to_preparation_unchanged_and_wallet_is_mapped_to_its_stable_code (the gateway-leg
+    assertion changed from the bare alias to the concrete provider, because bare `gateway` must no longer reach 018).
+  No Host runtime proof is claimed from fakes. Both module suites were executed on the exact commit SHA above.
+
+== 7. GOVERNANCE RECORD FOR 026 BLOCKER #1 (temporary guard, NOT touched here) ==
+
+StorefrontStartPaymentComposerGuardTests.No_module_or_host_route_publishes_start_payment is a TEMPORARY
+inertness-phase guard. Recorded here: in the FUTURE API-publication task it must be transitioned to assert exactly ONE
+approved Order storefront final-click route and ZERO Host routes. It was neither weakened nor edited in this task
+because no route is published. The OrderStorefrontArchitectureGuardTests ISender-only storefront route guard likewise
+requires a targeted contract transition at that future step, not blanket deletion. No route, endpoint, frontend, Host
+file, schema, migration or config was touched in this task.
+
+== 8. REMAINING BLOCKERS ==
+
+  Blocker #2 of 026: CLOSED (production code, tests green).
+  Blocker #1 of 026: STILL OPEN — the accepted 019 guard forbids the `start-payment` route string in Tooba.Order.Endpoints
+    and Host, so the final-click API cannot be published until the Architect authorizes that guard transition (section 7).
+  Residual risk: the final-click API remains unreachable; however the previously latent undersized-hold mismatch on the
+    `gateway` selector is now removed in the composer path, and the composer's former XML disclosure of that gap has
+    been rewritten to state the single-authority guarantee.
+
+STOP_FOR_ARCHITECT: awaiting ACCEPT / REPAIR / next .task.md. No further work performed after this Result. No automatic
+next task started.
+END_TOOBA_WORKER_RESULT
