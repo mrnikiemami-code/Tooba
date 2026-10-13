@@ -1,0 +1,185 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-TRANSACTION-BOUNDARY-016
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Pipeline-Protocol: BRIDGE-WAKE-V1
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Parent-Task: TB-P0-INVENTORY-PAYMENT-HOLD-GATE-015
+Mode: READ_ONLY_ARCHITECTURE_PROOF
+Verdict: PASS (proof delivered)
+Stop-State: STOP_FOR_ARCHITECT
+ReadOnly-Attestation: READ_ONLY — NO_CHANGES
+Expected-Base-SHA: 2d7597b778ce256f3c54c4c0989bd72915ba0675
+Base-SHA-Match: YES (HEAD == origin/main == 2d7597b778ce256f3c54c4c0989bd72915ba0675 at claim)
+Referenced-015-Implementation: 60ea9e8481a8e4dc2fb8afdd4486d8dab7647aa6
+Referenced-015-Evidence-Followup: 2d7597b778ce256f3c54c4c0989bd72915ba0675
+Evidence-Path: docs/architecture/evidence/TB-P0-CHECKOUT-TRANSACTION-BOUNDARY-016/analysis.md
+automaticNextImplementationTask: NONE
+
+READ_ONLY — NO_CHANGES
+
+No production, test, governance, migration, configuration, database or runtime value was written.
+No build, no test run, no HTTP mutation, no Host stop/rebuild/restart, no Host.Tests or frontend touch,
+no order/payment/stock mutation, no external PSP call. Only this task's own evidence artifacts were
+created: docs/architecture/evidence/TB-P0-CHECKOUT-TRANSACTION-BOUNDARY-016/{analysis.md,RESULT.bridge.txt,post-result.js}
+and the persisted task artifact docs/ai/tasks/TB-P0-CHECKOUT-TRANSACTION-BOUNDARY-016.task.md.
+No pre-existing file was modified.
+
+FACT
+
+F1 Payment initiation interleaves an external provider call with the Payment write, with no transaction.
+   src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs:166 resolves
+   the gateway, :194 calls gateway.InitiateAsync (external), :195-200 then builds the aggregate and
+   SaveChangesAsync. Nothing wraps :61-209. Any design putting initiation inside a DB transaction
+   freezes a network call under locks, and a failure after :194 leaves a provider intent with no row.
+
+F2 The wallet debit is not in initiation. StorefrontPaymentOrchestrator.cs:159 calls _payments.InitiateAsync
+   and, for the wallet provider, :170-176 immediately calls _payments.VerifyAsync; the debit is
+   WalletPaymentGateway.cs:76 -> _wallets.SpendForOrderPaymentAsync -> WalletDirectory.SpendForOrderPaymentAsync
+   (Wallet/Tooba.Wallet.Infrastructure/Persistence/WalletDirectory.Payments.cs:20, :116). So one storefront
+   request moves money across the Payment and Wallet module databases with no transaction and no ambient scope.
+
+F3 The only ambient TransactionScope in the system is cart->checkout submit, and it spans several module
+   DbContexts. CheckoutProcessManager.cs:95-98 opens TransactionScope(Required, ReadCommitted, AsyncFlow);
+   inside it :119 calls Inventory (_inventory.ReserveForCheckoutAsync -> InventoryDbContext),
+   :124 calls the Order host (_host.PersistCheckoutAsync -> CheckoutSubmitHost.cs:193
+   OrderDbContext.SaveChangesAsync), :146 calls Cart conversion. That is >= 2 physical connections in one
+   ambient scope. A repo-wide grep for Enlist|max_prepared_transactions|AmbientTransaction over
+   src/backend matches only the new 015 gate text; ToobaNpgsql.ConfigureModuleContext (ToobaNpgsql.cs:33)
+   passes the connection string through unchanged.
+
+F4 Order already owns late-capture and re-acquisition compensation. OrderPaymentBridge.cs:112-125 keeps
+   late captured money as Paid and deliberately swallows the supply failure ("Late captured money stays
+   Paid; SupplyStatus remains Unavailable"). OrderUnpaidRetrySupplyBridge.cs:28-84 re-acquires inventory
+   via EnsureUnpaidRetryHoldAsync and opens a retry cycle. OrderPaymentBridge.cs:149-177 promotes or
+   re-acquires holds via IOrderInventoryLifecyclePort.PromoteOrReacquireForManualPaymentReviewAsync.
+   StockReservation.cs:102-121 CommitForPaidOrder clears the TTL (ExpiresAt = null) for a paid order.
+
+F5 The 015 gate requires an ambient transaction and deliberately leaves its connection open:
+   InventoryDirectory.PaymentHoldGate.cs:41-48 (refuses without Transaction.Current or if the connection
+   is already open), :56 opens the connection inside the scope, :76 refuses unless
+   txid_current_if_assigned() confirms a transaction block. 015 evidence proved lock lifetime equals the
+   caller transaction (H_COMPETING_FOR_UPDATE=BLOCKED_BY_HELD_ROW_LOCKS,
+   I_AFTER_SCOPE_FOR_UPDATE=NOT_BLOCKED_LOCKS_RELEASED).
+
+F6 Hold expiry and cycle expiry are independent and use different clocks. InventoryDirectory.Reclaimer.cs:36-46
+   releases Held rows where expires_at <= {utcNow} under FOR UPDATE SKIP LOCKED, using the APPLICATION
+   clock parameter; the 015 gate compares with clock_timestamp() (database clock).
+   ReservationCycleDirectory.cs:165-169 closes cycles only when the 15s poller sees ExpiresAt <= now.
+
+F7 A dedicated money-entry endpoint already exists: POST /v1/storefront/checkout/{checkoutId}/payments
+   (Payment/Tooba.Payment.Endpoints/Storefront/PaymentStorefrontEndpoints.cs:22), a separate request from
+   checkout submit. The "composite endpoint" is therefore a server-side gap inside Payment's own route,
+   not a new route.
+
+RISK
+
+R1 A multi-DbContext ambient scope is not a safe boundary here. 015 measured on this server (PostgreSQL
+   17.10, max_prepared_transactions = 0) that a second enlisting connection inside one scope promotes it
+   and the commit fails with 55000 "prepared transactions are disabled". F3 shows the existing submit path
+   already holds several module connections in one scope. Whatever currently protects that path is
+   provider/pool behaviour that 015 proved fragile, and must not be extended to the money path. No naive
+   multi-DbContext TransactionScope is offered.
+R2 Row locks cannot cross the PSP call (F1), so "keeping the hold" must be state, not locking.
+R3 Gate input has no ownership binding: IInventoryPaymentHoldGate only proves the supplied distinct ids are
+   Held and unexpired; a caller passing foreign Held ids gets Verified.
+R4 The gate returns with its DbContext connection deliberately still open, invisibly to the scope owner; the
+   next module DbContext in that scope is what triggers R1.
+R5 Inconsistent time authority: reclaimer compares against an application-clock parameter, the gate against
+   the database clock; skew can make a row simultaneously live-for-gate and release-eligible.
+R6 For the online provider success arrives later through PaymentWebhookEndpoints
+   (Webhooks/PaymentWebhookEndpoints.cs:19) and nothing owns the checkout in flight; only the TTL keeps stock.
+
+UNKNOWN
+
+U1 Why the existing multi-connection submit scope commits at all (F3 vs 015's measured promotion failure).
+   Not resolvable by reading; needs a runtime probe of Npgsql enlist/delist when a pooled connection closes
+   inside an ambient scope, and of whether promotion actually occurs in the Host. This is the single most
+   important missing evidence and decides whether the platform may rely on ambient scopes anywhere on the
+   money path.
+U2 Whether PaymentDirectory.InitiateAsync can fail after the provider call (:194 -> :200), leaving a
+   provider intent with no local row; no reconciliation of that window was found by reading.
+U3 Whether the online gateway timeout (_timeoutAssigner.Assign, PaymentDirectory.cs:197) exceeds the
+   reservation TTL; the two values live in different modules and nothing ties them together.
+
+REVIEW OF 015 (defects / subtle issues found)
+
+1 Connection left open on the success path (PaymentHoldGate.cs:56) is required but undisclosed to the scope
+  owner; see R4. Needs a returned disposable handle or an explicit one-connection-per-scope rule.
+2 EvaluatePaymentHoldGate and NormalizePaymentHoldGateIds are public static on the Infrastructure class
+  only for database-free testing, widening the module surface with a decision function.
+3 The fail-closed catch is narrow (PostgresException only, :86/:213); other provider failures propagate as an
+  untyped fault instead of AmbientTransactionRequired.
+4 HeldCount is a verdict projection, not a count: NotHeld always reports 0 and Verified reports
+  RequestedCount; the contract does not say so.
+5 Guid.Empty is reported as "unavailable" rather than "invalid"; the contract does not distinguish a caller
+  bug from a released hold.
+6 No in-repo controlled lock-contention test; the decisive evidence came from an external throwaway harness
+  (probe/program.cs.txt). A regression in the locking shape would not be caught by CI, and the end-to-end
+  path against a genuinely Held row is still UNVERIFIED (dev inventory: Consumed=6, Released=25, zero Held).
+7 Duplicate/missing/NULL-TTL handling is tested only at the pure-verdict level; the SQL predicate
+  (expires_at IS NULL OR expires_at > clock_timestamp()) and the = ANY($1) binding have no repository test.
+
+Note: 015's guarantee is real but narrow — it proves liveness at one instant and holds the rows only until
+the caller's transaction ends. It must not be presented as an end-to-end payability guarantee.
+
+THE THREE GUARANTEES, SEPARATED
+
+(a) Authorizing an attempt on valid reserved stock at one linearization point — ACHIEVABLE, but the gate
+    alone does not create it: the verdict dies with its transaction, so the authorization is durable only
+    if that same transaction also writes the durable fact protecting the stock. Verified-but-not-persisted
+    is worth nothing.
+(b) Keeping a hold during asynchronous PSP operation — NOT achievable with locks (R2); achievable by making
+    the hold durable for a window that provably covers the PSP worst case (TTL extension/promotion written
+    in the transaction of (a)), with the window longer than the provider timeout (U3) and the reclaimer
+    poll interval.
+(c) Reconciliation for late success — ALREADY owned by Order (F4); the gap is before the charge, not after it.
+
+DECISION (one bounded next implementation task)
+
+Do not implement a cross-module ambient scope, and do not put initiation inside a transaction. Make the
+linearization point a single-connection, single-module Inventory write that both proves and extends, and
+keep the PSP call outside any transaction.
+
+Candidate: Inventory-owned atomic payability proof + hold extension.
+1) One new Inventory Contracts member beside the 015 gate (same Contracts/Orders capability, no new error
+   code) that inside a SINGLE Inventory-owned transaction (its own connection; no ambient scope required,
+   so no enlistment and no promotion) proves every supplied distinct reservation is Held and unexpired
+   under FOR UPDATE in deterministic order, then raises expires_at to max(existing, db_now + window) for
+   exactly those rows, returning per-id Applied/Unavailable proof plus the effective deadline.
+2) Order (already owner of the checkout and cycle) calls it before POST /v1/storefront/checkout/{checkoutId}/
+   payments, deriving ids from its own persisted lines; Payment then initiates exactly as today, outside any
+   transaction.
+3) Keep the 015 gate unchanged for callers that genuinely own an ambient scope.
+
+Pros: no distributed transaction (one connection, one module, one SaveChanges); no migration and no new
+status (reuses expires_at and the existing promote semantics); no network call under locks; an unused
+extension is harmless (reclaimed at the new deadline); cycle-status lag (F6) stops mattering because the
+stock hold outlives the cycle row; (c) unchanged and already safe.
+Cons: the stock is protected by a time window, not a lock, so the window must be sized from the provider
+timeout; a failed initiation costs one window of availability; Inventory must refuse rather than invent a
+deadline when the caller cannot supply the policy window.
+
+Three essential tests: (1) all-or-none — one released/consumed/missing/expired id means no row extended and
+no Applied proof; (2) idempotent and monotonic — a second application never shortens expires_at and never
+lowers the deadline; (3) NULL-TTL preservation — a durable hold (expires_at IS NULL) stays NULL and is still
+Applied. Plus one source guard extending task 015's guard file: the new method opens no ambient scope, uses
+one connection, and is never called inside a TransactionScope.
+
+Explicit refusal condition: STOP and return to the Architect instead of implementing if extending
+expires_at requires a new column, a new status, a migration, or a new typed error code beyond the pinned
+set; if any of the three tests cannot be written without a live Host or a running database; if the caller
+must be a module other than Inventory (cross-module write); or if Host/Host.Tests would have to change. In
+each case the correct next artefact is a durable claim/lease design (explicitly owned state), not a widened
+transaction.
+
+NEXT OWNER WORK
+
+Architect decision needed on (i) U1 — whether the platform may rely on ambient scopes at all on the money
+path, and (ii) whether the money path is protected by a time window (this proposal) or by a durable claim
+with its own state and migration.
+
+automaticNextImplementationTask=NONE. No next task started.
+
+END_TOOBA_WORKER_RESULT
