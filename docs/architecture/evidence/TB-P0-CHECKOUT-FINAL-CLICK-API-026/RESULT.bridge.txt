@@ -1,0 +1,116 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-FINAL-CLICK-API-026
+Parent-Task: TB-P0-PAYMENT-FRESH-GATE-WIRING-025
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Bridge-Task-Row: 7158f50a-55e7-44eb-8da3-90026d418a31
+Starting-SHA (base): 27ff280320ec5b510e3934953538f28164bf06d4 (== origin/main == Expected-Base-SHA, verified before any write)
+Code-Commit: NONE — zero production and zero test/guard files changed
+Evidence-Commit: docs-only (task artifact + analysis; see carrier commit)
+Result-Carrier-Commit: this RESULT.bridge.txt commit (docs-only)
+Repo-Branch: main
+Status: BLOCKED_ARCHITECT_DECISION — TWO INDEPENDENT DECISIVE BLOCKERS; NO ENDPOINT PUBLISHED, NO LOCKED GUARD WEAKENED
+Verdict: BLOCKED (analysis complete; behaviour unchanged, route absent)
+automaticNextImplementationTask=NONE
+
+== 0. PREFLIGHT ==
+
+HEAD == origin/main == 27ff280320ec5b510e3934953538f28164bf06d4, confirmed before any file write; no drift, no rebase,
+no stash. Read AGENTS.md, the BRIDGE-WAKE-V1 protocol, and the 019/021/024/025 evidence plus the Order storefront
+endpoint conventions and the accepted 019 composer. Host production, Host.Tests, Program.cs, :5088, config, the live
+database, schemas, migrations, providers and the frontend were not edited, built, stopped, restarted or deployed; no
+payment, PSP or wallet call; no database write. Pre-existing tracked dirty paths (CheckoutAbuseGate.cs,
+INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, admin-order-detail-screen.tsx, storefront-landing-blocks.tsx,
+untracked bin/obj and unrelated evidence folders) were preserved untouched and are not part of any commit here.
+
+== 1. BLOCKER #1 (decisive) — an ACCEPTED 019 guard forbids the required route location by string ==
+
+StorefrontStartPaymentComposerGuardTests.No_module_or_host_route_publishes_start_payment (added by accepted task 019,
+commit fefc4f428, file
+src/backend/Modules/Order/Tooba.Order.Tests/Architecture/StorefrontStartPaymentComposerGuardTests.cs:25-41) asserts
+that EVERY .cs file under Tooba.Order.Endpoints AND under src/backend/Host/Tooba.Host contains neither the literal
+"start-payment" nor the type name "StorefrontStartPaymentComposer".
+
+The mission's own mandated path POST /v1/storefront/cart/{cartId:guid}/start-payment contains "start-payment", and any
+handler must reference StorefrontStartPaymentComposer. The route therefore cannot be published anywhere in its
+authorized location without relaxing an accepted, tracked, durable architecture guard. That is a locked-governance
+weakening and is not authorized by this task's budget ("focused Order module tests and endpoint route/source guards"
+does not authorize rewriting an accepted forbidding guard). Same class, secondary:
+OrderStorefrontArchitectureGuardTests.Order_endpoints_own_nine_storefront_routes_via_ISender certifies
+StorefrontOrderEndpoints.cs as the ISender-only surface; the final-click handler is service-based, not MediatR, so it
+would also contradict that guard's certified statement even if #1 were relaxed.
+(The composer's own guards — no MapPost/ISender/MediatR inside the composer, and the module registering the inert
+composer — are satisfiable; the blocker is the route/publishing guard, not the composer.)
+
+== 2. BLOCKER #2 (decisive) — selector-vs-concrete-provider makes the hold provably undersized ==
+
+Exact chain (file:line):
+  a) Composer 019 passes the method SELECTOR to 018: StorefrontStartPaymentComposer.cs:223-226 builds
+     methodSelector = useWallet ? Wallet : ProviderCode?.Trim() ?? "", and :283-289 sends it as
+     OrderPaymentHoldPreparationRequest(..., methodSelector).
+  b) 018 computes the reservation deadline from that string ONLY: OrderPaymentHoldPreparationService.cs:87 (providerCode
+     from request) and :153 _holdPolicy.ResolveUnpaidTimeoutAt(providerCode, now).
+  c) The policy lookup is keyed by that string: CommerceHoldPolicySource.cs:87-88 loads PaymentMethodHoldOverrideDto
+     rows keyed by x.ProviderCode, and :92-99 FindMethod(providerCode) does a TryGetValue on the trimmed string.
+  d) Payment resolves the CONCRETE provider for the catalog alias: StorefrontPaymentOrchestrator.cs:124 default and
+     :141-153 replace selector PaymentProviderCodes.GatewayCatalog ("gateway", PaymentProviderCodes.cs:8) with
+     _catalog.DefaultProvider (PaymentGatewayCatalogAdapter.cs:23; default "fake", PaymentGatewayOptions.cs:21).
+  e) Payment assigns its unpaid timeout from the CONCRETE code: PaymentUnpaidTimeoutAssigner.cs:20
+     holdPolicy.ResolveUnpaidTimeoutAt(payment.ProviderCode, now).
+Therefore, for the default-gateway selection, 018 prepares the reservation hold under key "gateway" while Payment's own
+unpaid timeout uses the concrete provider key (e.g. "fake"). A per-provider hold override configured for the concrete
+provider applies to Payment but NOT to the 018 reservation hold, so the reservation hold can be SHORTER than the
+selected provider's policy — an undersized hold. The composer's own XML remarks already disclose this
+(StorefrontStartPaymentComposer.cs remarks: with the default-gateway selector the used deadline policy is the
+store/platform layer and is NOT the final provider override). Task 026 explicitly instructed: verify this policy
+consistency and "do not allow initiation with an undersized hold versus selected provider's policy. If unsafe, STOP
+with pinpoint evidence rather than enabling an endpoint."
+
+== 3. EXACT DIFF ==
+
+Production: none. Tests/guards: none. Docs added only:
+  A docs/ai/tasks/TB-P0-CHECKOUT-FINAL-CLICK-API-026.task.md
+  A docs/architecture/evidence/TB-P0-CHECKOUT-FINAL-CLICK-API-026/analysis.md
+  A docs/architecture/evidence/TB-P0-CHECKOUT-FINAL-CLICK-API-026/RESULT.bridge.txt (this carrier)
+No test run was performed and none was needed: because no production or test file changed, and because publishing the
+route is blocked before any code can be written, running Order module tests would not have proved anything new. The
+Order module suite was NOT built or executed; Host.Tests were neither built nor run.
+
+== 4. MISSION ANSWER FIELDS ==
+
+Endpoint publicly registered: NO — no route exists, and none was added.
+Identity source: N/A (no endpoint). Had it been published, it would have had to derive the actor from
+IOrderStorefrontCheckoutIdentityGate (the canonical gate already used by every committing Order storefront route) and
+the guest proof from the X-Tooba-Guest-Secret header / tooba_guest_secret cookie convention, never from the body;
+StorefrontStartPaymentRequest already accepts AuthenticatedUserId, which the endpoint must fill from trusted context
+only.
+Method policy consistency: NOT consistent (see blocker #2) — selector-keyed 018 policy vs concrete-provider Payment
+policy.
+Failure codes/statuses: unchanged; no new code invented, no repropurpose, no generic 500 introduced (nothing was
+published).
+Lost-response replay: unchanged; 019's namespaced commit/payment idempotency keys and the persistent process tracker
+replay path remain intact and untouched.
+Residual risk: the final-click API remains UNREACHABLE (no route), so the original gap is unclosed; the previously
+flagged undersized-hold risk on the default-gateway selector remains latent in the accepted 019 composer.
+Host CLOSED: proven — no Host path touched, no Host/Host.Tests build or run, no deploy/restart.
+
+== 5. MINIMUM REPAIR FOR ARCHITECT DECISION ==
+
+R1. Authorize narrowing StorefrontStartPaymentComposerGuardTests
+    .No_module_or_host_route_publishes_start_payment to permit exactly one approved route + one handler, and decide the
+    file: StorefrontOrderEndpoints.cs (also retire/rewrite the ISender-only certification there) or a new dedicated
+    file under Tooba.Order.Endpoints/Storefront (then also add its OrderEndpointOrganizationGuardTests entry).
+R2. Decide the method-policy authority so 018 and Payment use the same provider key: (a) the route resolves the
+    selector to the concrete provider through an Order.Contracts port before calling 018; or (b) the route refuses the
+    "gateway" alias and requires an explicit concrete provider code; or (c) Payment exposes the effective
+    selector→provider policy for 018 to consume. All three touch the 018/025 safety contract and need a decision.
+R3. Decide the existing registered 4xx code for InvalidRequest (CartRequired / IdempotencyKeyRequired /
+    IdempotencyKeyTooLong) and for HoldPreparationFailed, without forging a Payment code; CheckoutCommitFailed already
+    carries the owner's typed code and must keep propagating it.
+
+STOP_FOR_ARCHITECT: awaiting ACCEPT / REPAIR / next .task.md. No further work performed after this Result. No automatic
+next task started.
+END_TOOBA_WORKER_RESULT
