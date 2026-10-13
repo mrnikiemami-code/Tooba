@@ -1,0 +1,132 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-PAYABILITY-GATE-013
+Parent-Task: TB-P0-CHECKOUT-START-PAYMENT-S2-012R
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION — STOP_FOR_ARCHITECT
+Bridge-Task-Row: 693d8030-86a5-4e6c-8e49-32f14a7de32b
+Expected-Base-SHA: f1c050013406ce3f8c9f3bbaadbda0c26f71d0f9
+HEAD-Before: f1c050013406ce3f8c9f3bbaadbda0c26f71d0f9
+origin/main-Before: f1c050013406ce3f8c9f3bbaadbda0c26f71d0f9  -> MATCH (no drift)
+HEAD-After (docs-only evidence commit): see commit list below
+Status: BLOCKED_ARCHITECT_DECISION — NO PRODUCTION CODE CHANGED
+
+Production-Files-Changed: 0
+Test-Files-Changed: 0
+Schema/Migration-Changes: 0
+DB-Writes: 0
+Host-Edits: 0
+Host-Restarted: NO
+Frontend/Cart/Inventory sources: UNTOUCHED
+Endpoint-Added: NO (POST /v1/storefront/cart/{cartId}/start-payment still absent, as required)
+Tests-Executed: 0 (no code change exists to test; no pass is claimed)
+automaticNextImplementationTask: NONE (no next task started; worker returns to Idle)
+
+== WHY BLOCKED: the guard is small, but its required typed error is not declarable in scope ==
+
+The objective is mechanically 3 files. It is blocked by a certified-guard collision, not by difficulty.
+
+(1) SINGLE MONEY-ENTRY CHOKE POINT — proven, all three methods
+  StorefrontPaymentOrchestrator.InitiateAsync  Tooba.Payment.Application/Storefront/Orchestration/StorefrontPaymentOrchestrator.cs:110-241
+    :120 actor gate; :121 ownership + payable amount (GetForMutationAsync); :125-158 method selection
+    :159 _payments.InitiateAsync(new InitiatePaymentCommand(...))  <-- single entry, only production caller
+         -> PaymentDirectory.InitiateAsync  Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs:60-210
+            :61-135 idempotency-key replay branch (returns the persisted payment/attempt)
+            :139 HasSucceededPaymentForCheckoutAsync
+            :143-149 _orders.GetPayableAsync -> mode/currency checks
+            :167 _gateways.Resolve(providerCode)
+            :192 gateway.InitiateAsync(...)        (provider request)
+            :193-201 RecordInitiation + Assign(timeout) + SaveChanges
+    :168-198 wallet verify -> WalletPaymentGateway.VerifyAsync -> IWalletOrderPaymentPort.SpendForOrderPaymentAsync (actual wallet debit)
+  WalletPaymentGateway.InitiateAsync (Providers/WalletPaymentGateway.cs:40) performs NO debit; the debit is in VerifyAsync (:70-76).
+  => one gate in PaymentDirectory.InitiateAsync covers online + wallet + manual; no unguarded alternative path exists.
+
+(2) THE "OBVIOUS" PLACEMENT IS WRONG — must not throw inside GetPayableAsync
+  IPayableCheckoutReader.GetPayableAsync (OrderPaymentBridge.cs:50-78) is also the ownership/read seam:
+    PaymentDirectory.cs:288   GetLatestForCheckoutAsync
+    Directories/Shared/PaymentActorAccess.cs:12-25  EnsureActorCanSeeAsync (authorizes payment reads/verify)
+  Throwing payability there would reject verification of a payment for which money was actually taken
+  once a cycle expired -> financial correctness regression. Payability must therefore be REPORTED AS DATA
+  and enforced only at the initiation call site.
+
+(3) THE BLOCKER — both certified guards that pin the Payment code surface are Host.Tests (forbidden)
+  PaymentOperation.ExecuteAsync (Payment.Application/Composition/PaymentOperation.cs:19-51) maps a fault to
+  Result ONLY when PaymentErrorCodes.IsKnown(code); an undeclared code propagates to the global boundary.
+  PaymentErrorCodes.cs:1-21 states a consumed cross-module code must still be declared in PaymentErrorCodes.
+  Two Host.Tests guards pin exactly that surface:
+    src/backend/Host/Tooba.Host.Tests/Architecture/PaymentModuleAmsc001W1MigrateGuardTests.cs:238
+      Assert.Equal(28, declared.Length)   <-- Payment currently has exactly 28 declared codes (counted)
+    same file :89-127  hard-coded list of every localized key required in BOTH PaymentErrors.resx and PaymentErrors.fa.resx
+  This task forbids Host edits ("Only Order/Payment module and their Contracts/tests may change. NO Host/...").
+  Therefore:
+   a new Payment-owned code  -> 28->29 (guard :238 fails) + 2 resx keys (guard :89-127 fails) + catalog descriptor
+   a new consumed Order/Inventory code -> still must be declared in PaymentErrorCodes (28->29) and localized -> same two failures
+   reuse of a declared code -> semantic repurposing: payment.unpaid.supply_unavailable is registered as
+     "unpaid retry cannot be supplied"; inventory.reservation.retry_limit_reached is exact ONLY for the
+     retry-limit sub-case, not for a plain expired cycle (PaymentErrorCodes.cs:5-8 forbids repurposing)
+   inventory.reservation.not_active is registered+localized by Inventory (InventoryErrorCatalogContributor.cs:52)
+     but Payment.Infrastructure does not reference Inventory.Contracts; adding that edge is a dependency-direction
+     change outside this task, and a raw literal contradicts the declared-code doctrine.
+  A correct, fully guarded change is therefore 7 production files (below) PLUS two authorized Host.Tests edits.
+  That exceeds the task limit ("Max 3 production files preferred; if a correct fully guarded change needs
+  more, STOP and submit exact minimal proposed file set; no partial unsafe path"). No partial path implemented.
+
+== EXACT MINIMAL PROPOSED FILE SET (for Architect authorization) ==
+
+ 1 Tooba.Payment.Contracts/Checkout/OrderPaymentProjectionContracts.cs
+   extend PayableCheckoutSnapshot with trailing optional members (CanInitiatePayment = true, PayabilityBlocker = null)
+ 2 Tooba.Order.Infrastructure/Integrations/Payment/OrderPaymentBridge.cs
+   compute the flag from the EXISTING Order-owned policy: IReservationCycleDirectory.GetProjectionAsync
+   (already injected as optional _cycles) + ReservationCyclePayabilityPolicy.IsActive/HasReachedRetryLimit
+   (Order.Application/ReservationCycle/Policies/ReservationCyclePayabilityPolicy.cs:10-24); ctor gains IClock
+ 3 Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs
+   guard between :148 (mode check) and :167 (gateway resolve), i.e. after the replay branch:
+   if (!payable.CanInitiatePayment) throw new ContractOperationException(payable.PayabilityBlocker ?? <new code>);
+ 4 Tooba.Payment.Contracts/Errors/PaymentErrorCodes.cs   declare payment.reservation.not_payable + KnownCodes
+ 5 Tooba.Payment.Endpoints/Errors/PaymentErrorCatalogContributor.cs   descriptor (Conflict / 409)
+ 6 Tooba.Payment.Contracts/Resources/PaymentErrors.resx      en text
+ 7 Tooba.Payment.Contracts/Resources/PaymentErrors.fa.resx   fa text
+ 8+9 HOST-OWNED (out of scope, must be explicitly authorized):
+   PaymentModuleAmsc001W1MigrateGuardTests.cs:238 count 28 -> 29
+   same file :89-127 add payment.reservation.not_payable to the pinned bilingual key list
+ Focused tests to add with it (one Payment.Tests run): active cycle accepted; expired cycle rejected with
+ ZERO payment/attempt rows written; wallet and manual rejected identically; idempotent replay unchanged;
+ ownership failure still wins over payability.
+
+== RESIDUAL RACE — explicitly not an invariant proof ==
+
+The flag design is read-payability -> insert payment/attempt -> call provider. The cycle can expire
+(observed alpha policy initial_reservation_hold_minutes = 1) between the read and the insert. This
+reduces but does NOT eliminate the window. It is NOT atomic and must never be described as race-free;
+no single-transaction/lock/CAS proof exists today.
+
+Atomic coordination designs (required before the final-click endpoint can follow):
+ A (preferred) CAS in Order, verified inside a shared transaction: make the existing
+   IReservationCycleDirectory.CorrelatePaymentAttemptAsync conditional
+   (WHERE status = Active AND expires_at > now -> returns false instead of no-op) and have Payment call it
+   inside an ambient TransactionScope around its own SaveChangesAsync. Single physical database, same
+   mechanism the checkout commit already uses (CheckoutProcessManager.cs:95-99). Needs an Order Contracts
+   change and an explicit Payment transaction boundary — separately authorized work.
+ B Order-owned composite call: commit + payability + correlation inside the existing commit transaction,
+   returning a token Payment must validate at initiation. Same Order Contracts change; still needs the typed error.
+
+Until one is authorized, the 012R IPaymentInitiationPort has no production caller and no endpoint exists,
+so the missing gate is not reachable.
+
+== VERIFICATION PERFORMED ==
+
+Source inspection only, with file:line evidence above (call graph, DI, error surfaces, localization,
+certification guards). Production code, schema, config, frontend and DB were not touched. No build, no
+test run, no Host restart; the locked Host.Tests guards were read, not executed (the running Development
+Host still locks Host.Tests output DLLs; not stopped, not retried in a loop). No hold duration or timeout
+floor was introduced. Evidence: docs/architecture/evidence/TB-P0-CHECKOUT-PAYABILITY-GATE-013/analysis.md.
+
+== ACCEPTANCE REQUEST ==
+ Authorize ONE of: (i) the 7-file implementation + the two Host.Tests guard edits (recommended), or
+ (ii) design A/B atomic coordination as a separate task, or (iii) an explicit decision to reuse a named
+ existing code for this rejection. No production change was made pending that decision.
+
+BLOCKED_ARCHITECT_DECISION — STOP, no next task started, worker Idle.
+END_TOOBA_WORKER_RESULT
