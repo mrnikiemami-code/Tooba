@@ -10,10 +10,11 @@ Bridge-Task-Row: c5726df0-6014-419e-a9b3-ffa09860640e
 Expected-Base-SHA: 20b7c0627972dd27337ec1e1091a5508f7308db2
 Preflight-HEAD: 20b7c0627972dd27337ec1e1091a5508f7308db2  -> MATCH (no drift, no rebase/stash)
 Code-Commit: 71cd5ad16e841687b30febed69f6a47f527d64c8
-Carrier-Commit: docs-only carrier; first carrier commit ec0ef12e22d3e37aa13dd44081d87fb3156a215b was amended
-  in place to 07a1beb701a80cec364af6580708f0ae04ddc5a8 and pushed, then corrected by ONE additional docs-only
-  commit appended linearly on top (NO force-push, NO history rewrite); final HEAD == origin/main == that
-  appended docs-only carrier, and it adds only RESULT.bridge.txt + post-result.js after the code commit
+Carrier-Commit: docs-only carrier commits appended linearly on top of the code commit (NO force-push, NO
+  history rewrite); they add only RESULT.bridge.txt + post-result.js. First carrier ec0ef12e22d3e37aa13dd44081d87fb3156a215b
+  was amended in place to 07a1beb701a80cec364af6580708f0ae04ddc5a8 and pushed; subsequent docs-only commits corrected
+  this file's own text. The exact final HEAD SHA is intentionally NOT embedded here (a self-referential SHA cannot be
+  written without another commit) and is reported by Bridge / `git log -1 --format=%H` on main.
 Status: WORKER_COMPLETE — PASS — STOP_FOR_ARCHITECT
 
 Host-Edits: 0 (no file under src/backend/Host/** touched, no Host build/test, no :5088 contact, no Program.cs edit)
