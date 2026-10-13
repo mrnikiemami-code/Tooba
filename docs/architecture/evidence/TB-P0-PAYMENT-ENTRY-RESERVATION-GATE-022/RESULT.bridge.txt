@@ -1,0 +1,180 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-PAYMENT-ENTRY-RESERVATION-GATE-022
+Parent-Task: TB-P0-CHECKOUT-FINISH-PAYMENT-021
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Bridge-Task-Row: 23560935-ecc8-4e42-addd-14d845b6d6c1
+Starting-SHA (base): 8667e5bc6aa84ef02c95db26e4c3e5e41ba806ad (== origin/main == Expected-Base-SHA at claim; verified before any write)
+Code-Commit: NONE — zero production and zero test files changed
+Evidence-Commit: 89d597727fae04293f52c6c7551c8cafaea4d2de (task artifact + analysis + evidence post script)
+Result-Carrier-Commit: this RESULT.bridge.txt commit (docs-only; HEAD follows Evidence-Commit)
+Repo-Branch: main
+Status: BLOCKED_ARCHITECT_DECISION — P0 DEFECT CONFIRMED AND LOCALIZED; SOUND FIX NOT IMPLEMENTABLE IN THE 20-MINUTE BOX WITHOUT ARCHITECT DECISIONS; NO UNSAFE PARTIAL GATE PUBLISHED
+Verdict: BLOCKED (analysis complete; endpoint behaviour unchanged)
+automaticNextImplementationTask=NONE
+
+== 0. PREFLIGHT ==
+
+HEAD == origin/main == 8667e5bc6aa84ef02c95db26e4c3e5e41ba806ad, confirmed before any file write; no drift, no
+auto-rebase. Read AGENTS.md, the BRIDGE-WAKE-V1 protocol, and the 017/018/019/020/021 evidence. Tracked dirty
+paths (INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, CheckoutAbuseGate.cs, admin-order-detail-screen.tsx,
+storefront-landing-blocks.tsx plus untracked bin/obj and other evidence folders) were inspected and left
+untouched: not staged, committed, reverted or stashed. Host and :5088 not contacted; no build, no Host.Tests, no
+live DB write, no PSP, no wallet debit, no deploy/restart/stop.
+On the 021 result-carrier check: 021's own two doc-only commits were already pushed and its carrier HEAD was
+8667e5bc6, i.e. exactly this task's Expected-Base-SHA, so no divergence to report.
+
+== 1. MONEY-ENTRY PATHS (required evidence, complete) ==
+
+A. PUBLIC FRESH-INITIATION PATH (the route named by the task) — the only publicly reachable one:
+   POST /v1/storefront/checkout/{checkoutId:guid}/payments
+     PaymentStorefrontEndpoints.cs:22 (route) -> :34-55 (handler -> InitiateStorefrontPaymentCommand, key from
+     header/body) -> StorefrontPaymentOrchestrator.InitiateAsync (StorefrontPaymentOrchestrator.cs:111-243).
+   Exact order:
+     1) actor policy                                        Orchestrator:120
+     2) cart-scoped ownership proof ICheckoutPaymentAccessReader.GetForMutationAsync(checkoutId, cartId,
+        guestSecret, authenticatedUserId); null -> payment.missing                  Orchestrator:121-122
+     3) method selection with NO cycle/stock read at all: wallet quote + full coverage else
+        payment.wallet.mixed_deferred; manual requires ManualCardToCardEnabled else payment.method.unavailable;
+        selector 'gateway' requires IsOnlineGatewayOffered() else payment.method.unavailable; concrete provider
+        = _catalog.DefaultProvider                                  Orchestrator:125-156
+     4) _payments.InitiateAsync(InitiatePaymentCommand(checkoutId, actor, null, key, providerCode))
+                                                                              Orchestrator:159-164
+     5) wallet only: immediate VerifyAsync -> WalletPaymentGateway.VerifyAsync ->
+        IWalletOrderPaymentPort.SpendForOrderPaymentAsync (THIS is the wallet debit)  Orchestrator:169-198
+   Inside (4), PaymentDirectory.InitiateAsync (PaymentDirectory.cs:61):
+     4a load by key + actor visibility                                              :64-70
+     4b 021 gate: canonical requested provider vs persisted provider AND CheckoutId equality -> 
+        payment.idempotency.conflict before any gateway call/retry/return             :70-84
+     4c existing-key replay / Failed-prior retry (may itself call the provider)       :112-149
+     4d FRESH PATH: HasSucceededPaymentForCheckoutAsync :151 -> _orders.GetPayableAsync :155 -> mode must be
+        OnlinePurchase else payment.initiate.reservation_forbidden :157-160 -> pending orders :162 ->
+        currency parity :169 -> amount :175 -> gateway.InitiateAsync :204 -> RecordInitiation :205 ->
+        SaveChangesAsync :211
+   The ONLY pre-money authority on the fresh path is IPayableCheckoutReader.GetPayableAsync, implemented by
+   OrderPaymentBridge.GetPayableAsync (OrderPaymentBridge.cs:50-79), which reads only the checkout group, its
+   seller orders, and CanBeViewedBy; it performs NO reservation-cycle, hold, expiry or stock/supply read and its
+   _inventoryLifecycle / _cycles fields are not touched there. Hence a checkout with an expired/closed cycle, or
+   with Inventory holds Released/expired (the 014 case: Inventory Released while Order shows Active), still
+   reaches gateway.InitiateAsync — and, for wallet, the debit at step 5.
+
+B. CANONICAL PAYMENT INITIATION SEAM — no second public path:
+   IPaymentInitiationPort (PaymentInitiationContracts.cs:36) is implemented by PaymentInitiationAdapter
+   (PaymentInitiationAdapter.cs:19) as Func<StorefrontPaymentOrchestrator> (PaymentModule.cs:101), i.e. the SAME
+   orchestrator. Its only consumer is Order's 019 StorefrontStartPaymentComposer (:169,:182), registered at
+   OrderModule.cs:119 and referenced only by tests; StorefrontStartPaymentComposerGuardTests.cs:37 asserts no
+   endpoint surface mentions it. No endpoint consumes the composer or the port, so there is no alternate
+   publicly reachable initiation route today.
+
+C. OTHER MONEY-TOUCHING PATHS (no new charge creation; unchanged):
+   sandbox complete -> VerifyAsync of an EXISTING attempt; unpaid-retry -> RetryUnpaidCoreAsync
+   (Orchestrator.cs:438-463) which ALREADY calls the Order-owned authoritative _supply.EnsureRetrySupplyAsync
+   (:446) BEFORE ReopenExpiredForRetryAsync (:460) and maps supply faults to payment.unpaid.supply_unavailable;
+   manual evidence / manual retry / admin confirm-reject-reconcile.
+   Therefore the defect is exactly and only path A/step 4d, and a gate there covers all three methods
+   (wallet debit requires a successful initiation first).
+
+== 2. P0 BLOCKERS (four independent; details and file:line evidence in analysis.md) ==
+
+B1 018 IOrderPaymentHoldPreparationPort.PrepareAsync — the only existing cycle+Inventory proof — cannot be called
+   from the payment boundary: its step [1] ownership proof is ICheckoutPaymentAccessReader.GetForMutationAsync
+   with request.CartId/request.GuestSecret (OrderPaymentHoldPreparationService.cs:80-97), which
+   InitiatePaymentCommand does not carry (guests are the fixed sentinel of Orchestrator.cs:57-59, buyerPartyId
+   null). Calling it from PaymentDirectory would return AccessDenied for EVERY guest checkout — a storefront
+   outage. It also extends every hold, which is more than a gate.
+B2 The gate must live inside PaymentDirectory's fresh path (after 4a/4b), not in the orchestrator: an
+   orchestrator-level pre-gate would break same-key replay, because a paid capture closes the cycle to
+   CommittedPaid (OrderPaymentBridge.CommitPaidCycleAsync :250-292) so ReservationCyclePayabilityPolicy.IsActive
+   (:12) is false immediately after success — a duplicate click would 409 instead of returning the succeeded
+   payment. The task explicitly requires preserving that replay.
+B3 Error mapping conflict requiring architect authority: the not-payable outcome must be a registered/localized
+   4xx. payment.checkout.not_payable (:155) and payment.initiate.reservation_forbidden (:157) exist only as
+   literals outside KnownCodes/the catalog, so they already degrade to platform.unexpected HTTP 500 (021-L2) —
+   forbidden. The only candidate existing registered code is payment.unpaid.supply_unavailable (409), whose
+   declared purpose documents the unpaid-RETRY supply failure. The mission says "fail closed with a meaningful
+   existing owner-defined result"; the delivery constraints say "never repurpose an existing code". A NEW code
+   additionally requires the certified guard pins (PaymentModuleAmsc001W1MigrateGuardTests.cs:237 = 29;
+   PaymentModuleAmsc001W3CertGuardTests.cs:288/320 = 25) and collides with the frozen tmar-current-state.json
+   R2/R3 records still at 28/27/24 (021 follow-up). Not a worker decision.
+B4 Coverage/regression decision requiring architect/live-data knowledge: gating on an Active cycle denies
+   payment for any checkout with no active cycle, including open live checkouts created before the cycle feature
+   and any flow that never starts an InitialPayment cycle. The task also forbids trusting cycle status alone
+   ("014 showed Inventory can be Released while Order shows Active"), so a cycle-only gate is not acceptable and
+   a hold-proof gate cannot be shipped without knowing live cycle coverage. Live-DB inspection is forbidden here.
+Timebox: ~13 of 20 minutes were consumed producing the inventory above; implementing B1-B4 correctly (Order
+contract + Order service + Payment call site + required DI + focused tests in two modules + test runs) is not
+achievable, and the task instructs: deliver a precise blocker with the smallest follow-up and NO unsafe partial
+endpoint.
+
+== 3. SMALLEST NEEDED FOLLOW-UP (ready-to-apply; 4 production files + authorized tests; analysis.md §3) ==
+
+F1 Order contract, additive in the SAME file (OrderPaymentHoldPreparationContracts.cs): a read-only
+   OrderPaymentPayabilityOutcome/PayabilityRequest/PayabilityResult plus a second method on the existing port,
+   EnsurePayableAsync(request, ct), documented as performing no Inventory/Order write, no extension, no TTL and
+   deliberately no ownership re-proof (it mutates nothing; the request was already authenticated at the
+   storefront layer). This is what removes B1.
+F2 Implement EnsurePayableAsync in the existing OrderPaymentHoldPreparationService.cs reusing the same private
+   steps: cycle projection + ReservationCyclePayabilityPolicy.IsActive, RetryLimitReached via HasReachedRetryLimit
+   (:23), and a READ-ONLY per-reservation Held+unexpired proof through
+   IOrderInventoryLifecyclePort.FindReservationAsync (OrderInventoryLifecycleContracts.cs:136, returns Released
+   too). No stock-logic duplication, no new TTL, no write.
+F3 PaymentDirectory.cs: call EnsurePayableAsync(checkoutId, registry-canonical provider) in the FRESH PATH only,
+   after the 021 conflict gate and before gateway.InitiateAsync; fail closed on every non-Payable outcome; pass
+   the canonical provider (never the bare selector 'gateway') so the effective per-method policy override is
+   enforced (021 §2). Replay/retry branches untouched.
+F4 PaymentModule.cs:56-67 must inject the port as a REQUIRED dependency so the gate cannot silently fail open.
+F5 Host.Tests consequence needing explicit architect authorization (why F1-F4 cannot be finished here): a
+   required ctor argument breaks the eight new PaymentDirectory( sites in Host.Tests
+   (MarketplaceSettlementEventPathTests.cs:170, PaymentFoundationTests.cs:190/265/276,
+   R2LiveMarketplaceSmokeTests.cs:101, ReturnFoundationTests.cs:185, SettlementFoundationTests.cs:158,
+   WalletCheckoutRefundTests.cs:199), and Host.Tests edits are forbidden by this task; the alternative is an
+   optional parameter plus a Host-composition guard test.
+F6 Focused tests after authorization: Order.Tests (expired cycle; Released hold while the cycle is Active; valid
+   hold; renewal allowed vs retry-exhausted; no active cycle; wallet/manual/online selection) and Payment.Tests
+   (proof failure => no gateway invocation and no payment/attempt row; identical-method replay and the 021
+   conflict cases stay green). No PostgreSQL locking or cross-module atomicity claim is made or faked.
+F7 Architect must pick the result code: (a) authorize reuse of payment.unpaid.supply_unavailable with an updated
+   declared-purpose comment, or (b) authorize a new Payment-owned code, which pulls in the 2 certified Host
+   guards, 2 .resx files and the R2/R3 SoT follow-up from 021.
+
+== 4. ANSWERS TO THE REQUIRED FINAL-RESULT QUESTIONS ==
+
+* Is the old direct endpoint actually guarded? NO. POST /v1/storefront/checkout/{checkoutId}/payments still
+  reaches provider initiation / wallet debit with no reservation-cycle and no Inventory-hold proof (path A/4d).
+  This is a LIVE, DISCLOSED P0 blocker; the only way it changed in this task is: it did not.
+* Are all three payment methods covered? No gate was shipped, so none. The documented fix location (F3) covers
+  all three by construction: wallet is charged only after a successful initiation (Orchestrator:169-198), manual
+  and online share the same fresh path.
+* New endpoint / frontend? Still absent — none added, no frontend change, no new route.
+* Residual races/risks: 021-L1 unchanged (two concurrent distinct-method initiations with the same key are still
+  rejected by the unique index at insert rather than by the pre-write comparison); R1 no runtime/live/PSP/wallet
+  proof; R3 payment.checkout.not_payable and payment.initiate.reservation_forbidden still surface as 500;
+  R4 the 021 frozen-SoT drift (28/27/24 vs live 29/28/25) is recorded, not rewritten.
+* Host untouched? YES — zero Host production edits, zero Host.Tests edits, no Host build, Host.Tests not run,
+  :5088 not contacted.
+
+== 5. CHANGED FILES / VERIFICATION / HYGIENE ==
+
+Changed (3, docs/evidence only):
+  A docs/ai/tasks/TB-P0-PAYMENT-ENTRY-RESERVATION-GATE-022.task.md
+  A docs/architecture/evidence/TB-P0-PAYMENT-ENTRY-RESERVATION-GATE-022/analysis.md
+  A docs/architecture/evidence/TB-P0-PAYMENT-ENTRY-RESERVATION-GATE-022/post-result.js
+  A docs/architecture/evidence/TB-P0-PAYMENT-ENTRY-RESERVATION-GATE-022/RESULT.bridge.txt (this result)
+Production-Files-Changed: 0. Test-Files-Changed: 0. Schema/Migration/Config: 0. Endpoint: 0. Frontend: 0.
+Verification actually performed: static reads of every cited file plus consumer scans for
+IOrderPaymentHoldPreparationPort, IPaymentInitiationPort, StorefrontStartPaymentComposer, new PaymentDirectory(
+and all IPayableCheckoutReader implementors. No build and no test run — deliberately, because zero production
+and zero test files changed (there is nothing new to verify) and this task forbids building/running Host and
+Host.Tests. Honest counts: 0 tests added, 0 tests run, 0 production lines changed.
+Deliberately NOT added: a Payment-module characterization test asserting that a fresh initiation reaches the
+gateway while no hold proof is consulted — it would pin the defective behaviour as a contract, and the Payment
+side cannot express expired/Released-hold scenarios truthfully because IPayableCheckoutReader's snapshot has no
+reservation/hold field at all.
+Hygiene: exactly the 4 docs paths above were staged/committed; all pre-existing unrelated dirty and untracked
+paths were left untouched. No historical task was replayed, no other worker/subagent started, no Bridge probe
+posted (this is the single complete Result contract).
+STOP_FOR_ARCHITECT. automaticNextImplementationTask=NONE.
+END_TOOBA_WORKER_RESULT
