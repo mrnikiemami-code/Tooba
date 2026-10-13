@@ -13,7 +13,7 @@ BASE-SHA: 08338e8647eca4b0cac3b5d43486fc6d436c489d
 BASE-CHECK: HEAD == origin/main verified before work (no drift); 015 primitive unchanged.
 COMMIT(S):
   A = 5fe49412285463519f6d3a25ffa268d65077a852  code+tests: atomic all-or-none Inventory hold extension
-  B = <EVIDENCE-SHA>  evidence: task artifact, analysis.md, RESULT.bridge.txt, post-result.js
+  B = 46dc2e8c4e2ef5ae3e35fff41f28f7fa58f91dc7  evidence: task artifact, analysis.md, RESULT.bridge.txt, post-result.js
 AFTER-HEAD: A is the last commit that changes production or test source. Branch HEAD is C, the single
 documentation-only commit that replaces the EVIDENCE-SHA placeholder in this file with B; C changes
 nothing except those fields, and C's own SHA cannot be embedded in the file it rewrites.
