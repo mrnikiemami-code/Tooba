@@ -1,0 +1,183 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-PAYABILITY-ATOMIC-014
+Parent-Task: TB-P0-CHECKOUT-PAYABILITY-GATE-013
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_ANALYZE_AND_SAFE_IMPLEMENT — STOP_FOR_ARCHITECT
+Bridge-Task-Row: fb75fb4b-1d8c-4ca1-bec2-cd6e14d9b3b1
+Expected-Base-SHA: d6ce094c0cfe344cf0e26ac3138b564058163938
+HEAD-Before: d6ce094c0cfe344cf0e26ac3138b564058163938
+origin/main-Before: d6ce094c0cfe344cf0e26ac3138b564058163938  -> MATCH (no drift)
+HEAD-After (docs-only blocker evidence commit): see commit list below
+Status: BLOCKED_ARCHITECT_DECISION — NO PRODUCTION CODE CHANGED, NO ENDPOINT ADDED
+
+Production-Files-Changed: 0
+Test-Files-Changed: 0
+Schema/Migration-Changes: 0
+DB-Writes: 0 (SELECT-only probes against tooba_alpha)
+Provider/Payment/Order calls: 0
+Host-Files-Touched: 0 ; Host-Restarted/Stopped: NO (must remain running)
+Config/Duration/Quota changes: 0
+Frontend changes: 0
+Tests-Executed: 0 (no code change exists; no PASS claimed)
+automaticNextImplementationTask: NONE — STOP_FOR_ARCHITECT, no next task started
+
+== HEADLINE ==
+
+Design A is the correct direction, and the concrete linearization point is now pinned down. It cannot be
+completed inside the allowed file set, and — decisive new finding — a cycle-only CAS would NOT satisfy the
+task's own requirement ("must not authorize money on stale released stock"): the Order cycle row and the
+Inventory hold expire INDEPENDENTLY in different modules/workers, and the live database shows a 6–15 s
+window per cycle where the cycle row is still 'Active' while the stock hold is already 'Released'.
+
+== 1. MONEY-ENTRY MAP (re-verified, unchanged) ==
+
+StorefrontPaymentOrchestrator.InitiateAsync  Tooba.Payment.Application/Storefront/Orchestration/StorefrontPaymentOrchestrator.cs:110-241
+  :120 actor gate | :121 ownership + payable amount | :125-158 method selection (wallet | manual | gateway)
+  :159 -> PaymentDirectory.InitiateAsync  Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs:60-210
+      :61-135 idempotency replay (returns persisted payment; NOT treated as new charge)
+      :139 succeeded guard | :143-149 GetPayableAsync (mode/currency) | :167 gateway resolve
+      :192 gateway.InitiateAsync  <-- provider money movement | :193-201 Record + Assign(timeout) + SaveChanges
+  :168-198 wallet immediate verify -> WalletPaymentGateway.VerifyAsync -> IWalletOrderPaymentPort.SpendForOrderPaymentAsync (wallet debit)
+=> exactly ONE choke point (PaymentDirectory.InitiateAsync) covers online + wallet + manual. No unguarded alternative path.
+
+== 2. THE ATOMIC LINEARIZATION POINT THAT DESIGN A REQUIRES ==
+
+Single statement, no provider call inside a DB transaction:
+
+  UPDATE order.reservation_cycles
+     SET payment_attempt_id = @paymentId
+   WHERE checkout_id = @checkoutId AND status = 'Active' AND expires_at > @serverNow
+  -- affected rows = 0  =>  fail closed (no Payment row, no provider request, no debit)
+  PLUS  an authoritative, locking verification that the cycle's bound Inventory reservations are still Held.
+
+The second half is the blocker (see 3 and 4).
+
+== 3. LIVE EVIDENCE: CYCLE ROW vs INVENTORY HOLD ARE INDEPENDENT (SELECT-only, tooba_alpha) ==
+
+Release path is a different module and a different worker:
+  InventoryDirectory.ReleaseExpiredHoldsAsync  Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.Reclaimer.cs:14-63
+     WHERE status='Held' AND expires_at <= now  ORDER BY expires_at  FOR UPDATE SKIP LOCKED   (Cart worker, 5 s poll)
+  ReservationCycleDirectory.CloseExpiredDueAsync  Tooba.Order.Infrastructure/ReservationCycle/ReservationCycleDirectory.cs:165-186
+     closes cycle rows only; touches no Inventory row (Order worker, 15 s poll)
+
+Measured:
+ checkout 01a13309-f587..  cycle expires 02:15:13.127436  row closed 02:15:24.021494  => Active-for-10.89s-after-expiry ; reservation Released 02:15:17.431506
+ checkout 01a09b8b-3e28..2 cycle expires 17:53:32.259181  row closed 17:53:46.797934  => 14.54 s ; reservation Released 17:53:33.025213
+ checkout 01a09b8b-3e28..1 cycle expires 16:14:09.032498  row closed 16:14:21.671370  => 12.64 s ; reservation Released 16:14:13.945904
+ checkout 01a09b33-751e..  cycle expires 14:38:15.934186  row closed 14:38:29.609072  => 13.67 s ; reservation Released 14:38:17.745835
+ checkout 01a09b2e-8848..  cycle expires 14:32:53.160405  row closed 14:32:59.395605  =>  6.24 s ; reservation Released 14:32:56.987029
+ checkout 01a09b2b-4e35..  cycle expires 14:29:21.685807  row closed 14:29:29.215954  =>  7.53 s ; reservation Released 14:29:26.410354
+ inventory.reservations today: 25 Released, 6 Consumed, 0 Held.
+
+FINDINGS
+ F1 A gate that trusts the cycle row STATUS alone authorizes money on released stock for 6–15 s per cycle.
+    The canonical ReservationCyclePayabilityPolicy.IsActive (Order.Application/ReservationCycle/Policies/ReservationCyclePayabilityPolicy.cs:10-14:
+    Active && SecondsRemaining > 0) does reject inside that window; a status-only check does not.
+ F2 reservation.expires_at == cycle.expires_at in all observed rows is a CONFIGURATION COINCIDENCE, not an
+    enforced invariant: both derive from the same `now` + store policy here (policy_source='store',
+    effective_hold_minutes=1 on all 11 cycles), but they are computed by different calls with different
+    fallbacks — reservation: CheckoutDirectory.Reservations.cs:42 -> :114-131 (cycle policy, else
+    _holdPolicy.ResolveInitialExpiresAt(now), else +2 h); cycle: :83-111 with policy from :133-146 whose
+    FALLBACK is new ReservationCyclePolicySnapshot(120, 120, 3, "platform"). If the cycle-policy resolver is
+    absent while a store/category setting clamps the reservation TTL to minutes, the cycle stays Active for
+    up to 120 min after the hold is gone. Nothing in code or schema ties the two deadlines.
+ F3 Neither worker coordinates: the Inventory release is not subordinate to the cycle row, and the cycle
+    row is not closed by the Inventory release. There is no shared row, lock, or CAS today.
+
+== 4. GAP 1 — NO LOCKING SEAM EXISTS IN INVENTORY (new Inventory surface required) ==
+
+IOrderInventoryLifecyclePort (Tooba.Inventory.Contracts/Orders/OrderInventoryLifecycleContracts.cs:91-163)
+exposes only NON-LOCKING reads for this concern: FindReservationAsync (:135-138) and GetSupplyStatusDetailAsync
+(:155-158). A Held check without a row lock is TOCTOU against the reclaimer's FOR UPDATE SKIP LOCKED release
+(:39-48). Closing it requires an Inventory-owned primitive, e.g.
+  TryLockHeldForPaymentAsync(reservationIds, now)  ->  SELECT .. FOR UPDATE  /  conditional UPDATE returning affected rows
+inside one short transaction — i.e. a new Inventory Contracts file + Inventory implementation file.
+That is OUTSIDE the allowed file set (Payment/Order and their Contracts), and it implicitly decides whether
+initiation may freeze/consume a hold — an Inventory state-machine decision (today: consumption only on
+verified success, CommitReservationForPaidOrderAsync; reacquisition on paid supply, EnsurePaidDurableSupplyAsync).
+
+== 5. GAP 2 — TYPED ERROR SURFACE IS PINNED BY Host.Tests (unchanged from 013) ==
+
+PaymentOperation.ExecuteAsync maps a fault to Result only when PaymentErrorCodes.IsKnown(code)
+(Tooba.Payment.Application/Composition/PaymentOperation.cs:19-51); a foreign code propagates (proven by
+Tooba.Payment.Tests/Behavior/PaymentR1CqrsContractTests.cs:109-110 "order.some_foreign_code"). Pinned by
+Host.Tests (forbidden): PaymentModuleAmsc001W1MigrateGuardTests.cs:238 Assert.Equal(28, declared.Length)
+and :89-127 the bilingual key list for PaymentErrors.resx / PaymentErrors.fa.resx. Reuse is possible only by
+repurposing a code's meaning (payment.unpaid.supply_unavailable is registered as "unpaid retry cannot be
+supplied"; inventory.reservation.retry_limit_reached covers the retry-limit sub-case only), which
+PaymentErrorCodes.cs:5-8 forbids. Governance options are in the 013 evidence and repeated in section 7 below.
+
+== 6. NEW CONSTRAINT FOUND IN 014: PaymentDirectory HAS POSITIONAL CONSTRUCTION SITES IN Host.Tests ==
+
+PaymentDirectory is built positionally in 7 forbidden Host.Tests files:
+ PaymentFoundationTests.cs:190,265,276 ; SettlementFoundationTests.cs:158 ; ReturnFoundationTests.cs:185 ;
+ WalletCheckoutRefundTests.cs:199 ; MarketplaceSettlementEventPathTests.cs:170 ; R2LiveMarketplaceSmokeTests.cs:101
+A REQUIRED ctor parameter breaks Host.Tests compilation; an OPTIONAL one introduces a fail-open default
+(guard skipped) = the "optimistic guard" the task forbids. Clean alternative: place the gate in the
+DI-only StorefrontPaymentOrchestrator ctor ("new StorefrontPaymentOrchestrator(" -> 0 hits; registered by DI
+at Host/Program.cs:221), which covers wallet/manual/online at :125-159 without touching PaymentDirectory.
+
+== 7. MINIMAL SPLIT PROPOSAL (needs Architect authorization) ==
+
+ S1 Inventory (new, ~2 files + tests): Inventory.Contracts locking primitive (name/semantics Architect's choice)
+    + InventoryDirectory implementation (single conditional UPDATE or SELECT..FOR UPDATE in one short transaction),
+    returning false rather than throwing for "not held". Explicit decision required: verify-only lock (recommended)
+    vs freeze/consume at initiation.
+ S2 Order (~3 files): Order.Contracts port IOrderCheckoutInitiationPayabilityPort.EnsureInitiationPayableAsync(
+    checkoutId, paymentId, ct); Order.Infrastructure adapter performing the section-2 conditional cycle UPDATE
+    AND the S1 Inventory verify; Order module DI registration. Needs the error-surface decision
+    (Order-owned code + OrderErrorCatalogContributor descriptor + OrderErrors.resx/.fa.resx, OR an explicitly
+    named code reuse) — the former does NOT require any Payment code change (foreign codes propagate typed
+    through the composed global catalog).
+ S3 Payment (~2 files): orchestrator ctor gains the Order.Contracts port; call it after :121 ownership and before
+    :159 _payments.InitiateAsync. Provider call remains outside any DB transaction; the Order CAS commits in its
+    own short transaction before the provider request (no long lock, no unrollbackable side effect inside a tx).
+ S4 Verification (one Host.Tests PostgreSQL test -> requires explicitly lifting the Host.Tests restriction for
+    that task): expired cycle => 0 payment rows + 0 provider calls; reservation Released while cycle row still
+    Active => rejected; valid active cycle => accepted; idempotent replay unchanged. Without S4 the invariant
+    stays UNVERIFIED and the final-click endpoint must still not ship.
+
+== 8. WHY NOT IMPLEMENTED NOW (no dead/optimistic guard was written) ==
+
+ 1. A cycle-only CAS is provably insufficient (section 3 F1/F2/F3) — shipping it would be exactly the
+    misrepresented guard the task forbids, and the final-click endpoint must not follow it.
+ 2. The complete gate needs a new Inventory locking seam (section 4) outside the allowed files.
+ 3. The only PostgreSQL-backed harness is in Host.Tests (forbidden, DLL-locked by the running Host); every module
+    test project is EF InMemory (Tooba.Payment.Tests.csproj -> Microsoft.EntityFrameworkCore.InMemory), which has
+    no row locks / FOR UPDATE / cross-context TransactionScope enlistment, so "simultaneous worker expiry" cannot
+    be behaviourally proven. Implementing now would ship an invariant that cannot be verified in-environment and
+    whose atomicity must not be asserted from source text alone.
+
+== 9. RESIDUAL RACES (even after S1-S3; must not be called race-free) ==
+
+Between the CAS commit and the provider request the hold can elapse by wall clock (inherent; today handled by the
+paid-supply reacquisition path EnsurePaidDurableSupplyAsync), and the cycle close worker may mark the cycle Expired
+right after our CAS (harmless ordering, same reason). The CAS closes the COMPETING-TRANSACTION race; it is not a
+global "no money after expiry" proof.
+
+== 10. INVARIANTS: PROVEN vs UNKNOWN ==
+
+ PROVEN (source + live SELECT evidence): single money-entry choke point for all three methods; independent expiry
+   of cycle row vs Inventory hold with a measured 6-15 s skew; release gating is Inventory's FOR UPDATE SKIP LOCKED
+   on its own expires_at; canonical IsActive also requires expires_at > now; no locking read exists for the cycle's
+   bound reservations; Payment error surface is pinned by Host.Tests; PaymentDirectory has 7 positional Host.Tests
+   construction sites; module test projects are InMemory-only.
+ UNKNOWN / UNVERIFIED: end-to-end atomic behaviour of any candidate CAS (no PostgreSQL harness available to this
+   task); whether a freeze-at-initiation inventory transition is acceptable to Inventory's state machine;
+   whether production deployments other than this alpha store can have reservation TTL != cycle TTL (code path
+   F2 says yes when the cycle-policy resolver is absent; only this deployment was read).
+
+== 11. VERIFICATION PERFORMED ==
+ Source inspection with file:line evidence; SELECT-only probes on tooba_alpha (order.reservation_cycles,
+ inventory.reservations, information_schema) through the already-running postgres-db container. No writes, no
+ migrations, no build, no Host restart/stop, no test run, no config/duration/quota change, no frontend change,
+ no payment/order API mutation. Existing dirty tracked files were NOT touched, staged, committed or reverted.
+ Evidence: docs/architecture/evidence/TB-P0-CHECKOUT-PAYABILITY-ATOMIC-014/analysis.md
+
+BLOCKED_ARCHITECT_DECISION — authorize S1 (Inventory locking seam + freeze-vs-verify decision), the error-surface
+decision of section 5, and an S4 verification environment (Host.Tests PostgreSQL), then S2+S3 can be completed in
+one bounded follow-up (~8 files). STOP_FOR_ARCHITECT; no next task started; worker Idle.
+END_TOOBA_WORKER_RESULT
