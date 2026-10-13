@@ -11,6 +11,7 @@ Base-SHA-Verified: 19818212c1f33adaaeddd1aeb28b939594710072 (== origin/main; con
 Repo-Branch: main
 Status: BLOCKED_ARCHITECT_DECISION — STOP_FOR_ARCHITECT — NO MUTATION SEAM SHIPPED
 Code-Commit: none (0 production/test files changed by this task)
+Evidence-Commit: 1cd131b96877f46a5393cc4826b4274137da61d9 (docs only, == origin/main)
 
 Reason (one line): a single backend final-click operation requires a NEW cross-module port in one direction, and the
 direction of that port decides who owns Order-creation vs charge-initiation authority — which the task text
