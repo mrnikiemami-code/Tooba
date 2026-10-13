@@ -1,0 +1,170 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-WALLET-ENDTOEND-031
+Parent-Task: TB-P0-CHECKOUT-WALLET-FINAL-CLICK-030
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_END_TO_END_IMPLEMENTATION — WALLET SELECTABLE BEFORE COMMIT (server-proven) + DELIVERED
+Stop-State: STOP_FOR_ARCHITECT
+Bridge-Task-Row: 2873e2e0-c6f8-414c-b803-b6529c3ef162
+Base-SHA (== origin/main at claim): 3450ea647966cb19f9c81490a92c5ba43822e4dc
+Code-Commit-SHA: 651ea8864fd3ea612d7517bf9716b403bcf77354
+Evidence-Commit-SHA: dbcf469aaa628355662c93aa7f8fcb09b2fbdf0b (evidence.md + post-result.js); final HEAD includes this file
+Repo-Branch: main
+Host-CLOSED-Proof: no file under src/backend/Host/** was read for execution, edited, built, tested, stopped,
+  restarted or deployed; the running Development Host :5088 was never touched; zero csproj/migration/config/
+  schema changes; no live DB write, no wallet debit, no PSP request. Nothing under
+  SarvNewVerRequirment/reference/shopeiva was touched. Unrelated dirty/untracked files were preserved
+  (staged/committed files are exactly the 12 code files + 3 evidence files listed below).
+
+== 0. HEADLINE: WALLET IS NOW TRULY SELECTABLE BEFORE COMMIT — AND ONLY WHEN THE SERVER PROVES IT ==
+
+`GET /v1/storefront/cart/{cartId:guid}/wallet-quote` is now public, read-only and cart-scoped. It values
+the cart with Order's authoritative 011 pre-order evaluation and quotations the wallet through the
+canonical `IWalletOrderPaymentPort.QuoteForPayableAsync`. The browser receives `walletEligible` +
+`canPayFullyWithWallet` from the server and otherwise fails closed. Actual spending still happens ONLY
+after the 028 final click and the canonical 025 gate; no commit, reservation, conversion or debit exists
+before the user clicks Pay.
+
+== 1. CHANGED FILES (12 code + 3 evidence) ==
+
+Backend (Order):
+ - A src/backend/Modules/Order/Tooba.Order.Contracts/Payments/CartPaymentQuoteContracts.cs
+ - A src/backend/Modules/Order/Tooba.Order.Infrastructure/Integrations/Payment/CartPaymentQuoteBridge.cs
+ - M src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs            (+1 additive DI line)
+Backend (Payment):
+ - M .../Tooba.Payment.Application/Storefront/Queries/GetStorefrontWalletQuoteQuery.cs
+ - M .../Tooba.Payment.Application/Storefront/Validators/GetStorefrontWalletQuoteQueryValidator.cs
+ - M .../Tooba.Payment.Application/Storefront/Orchestration/StorefrontPaymentOrchestrator.cs
+ - M .../Tooba.Payment.Application/Storefront/Models/StorefrontPaymentDtos.cs      (additive fields)
+ - M .../Tooba.Payment.Endpoints/Storefront/PaymentStorefrontEndpoints.cs          (+1 route +1 thin handler)
+ - A src/backend/Modules/Payment/Tooba.Payment.Tests/Validation/PaymentCartWalletQuoteValidatorTests.cs
+Frontend:
+ - M src/frontend/app/storefront/storefront-payment-api.ts        (loadStorefrontCartWalletQuote)
+ - M src/frontend/app/payment/storefront-payment-handoff.tsx      (cart-mode quote + wallet gating)
+ - M src/frontend/app/storefront/storefront-final-click-api.test.ts (031 invariants)
+Evidence:
+ - A docs/architecture/evidence/TB-P0-CHECKOUT-WALLET-ENDTOEND-031/evidence.md
+ - A docs/architecture/evidence/TB-P0-CHECKOUT-WALLET-ENDTOEND-031/post-result.js
+ - A docs/architecture/evidence/TB-P0-CHECKOUT-WALLET-ENDTOEND-031/RESULT.bridge.txt (this file)
+
+== 2. CART-WALLET PUBLIC ROUTE ==
+
+GET /v1/storefront/cart/{cartId:guid}/wallet-quote
+  src/backend/Modules/Payment/Tooba.Payment.Endpoints/Storefront/PaymentStorefrontEndpoints.cs
+    group.MapGet("/cart/{cartId:guid}/wallet-quote", CartWalletQuoteAsync);
+    handler: thin ISender + IPaymentStorefrontAuthorizer.TryResolveAuthenticatedUserId + ApiResponseFactory,
+    guest secret from the canonical X-Tooba-Guest-Secret header; sends
+    GetStorefrontWalletQuoteQuery(CheckoutId: null, CartId, GuestSecret, AuthenticatedUserId, CartScoped: true).
+  Application: Tooba.Payment.Application/Storefront/Queries/GetStorefrontWalletQuoteQuery.cs
+    (one request contract, two explicit owner modes; CartScoped flag)
+  Validator: .../Storefront/Validators/GetStorefrontWalletQuoteQueryValidator.cs
+    checkout mode -> CheckoutId required and non-empty (unchanged); cart mode -> CartId required,
+    CheckoutId forbidden; guest secret / authenticated user id stay optional-shape only.
+  DI: no new registration needed (MediatR foundation already registers the handler/validator);
+    the new Order port is registered once in OrderModule.
+
+== 3. SECURITY / QUOTE PROOF (server-authoritative, read-only, fail-closed) ==
+
+1. Amount authority: payable + currency + cartVersion come verbatim from the Order 011 snapshot
+   (persisted shipping selection + effective commerce context, coupon-free read). Neither Payment nor
+   the browser recomputes or accepts an amount. Request body carries no amount/currency/balance at all.
+2. Ownership: Order validates cart ownership before any value is returned
+   (`RequireCartAsync` + draft guest-secret hash ownership in the reused 011 path); the Payment actor
+   policy (`_actorPolicy.EnsureCheckoutActorAsync`) gates the whole endpoint.
+3. Guest rule: with no authenticated buyer the response is `walletEligible=false`,
+   `canPayFullyWithWallet=false`, balance 0, remainingPayable = cart payable, and NO wallet balance is
+   exposed. Wallet can never be initiated for a guest because selection/validation require
+   `canPayFullyWithWallet === true` from the server.
+4. Read-only: the slice adds no order/checkout/reservation/conversion and no debit. It reuses the exact
+   011 read path; `CartPaymentQuoteBridge` maps every Order fault to a typed status, so no Order stable
+   code leaks and no `PaymentErrorCodes` entry, descriptor, resource or count changed.
+5. Fail-closed statuses: CartMissing / CartForbidden / CartEmpty / ShippingSelectionRequired /
+   CartNotActive / Unavailable are returned as `cartQuoteStatus` with zeros and eligibility false.
+   Unknown-owner codes fail closed instead of guessing.
+6. No fabricated numbers anywhere: `mixedTenderAvailable` stays false (partial wallet tender deferred),
+   `manualCardToCardEnabled` is read from the canonical catalog port.
+
+== 4. FINAL-CLICK WALLET PROOF (nothing spends before the click) ==
+
+- The frontend loads the cart wallet quote read-only; `setQuote(cartQuote)` only ever stores the server
+  response; `wallet` is offered/pre-selected only when `cartQuote?.canPayFullyWithWallet === true`;
+  `validateMethod()` rejects a forced cart-mode `wallet` without that server proof
+  ("پرداخت با کیف پول برای این سبد در دسترس نیست؛ یکی از روش‌های فعال فروشگاه را انتخاب کنید.").
+- `loadStorefrontCartWalletQuote` returns a quote ONLY for `walletEligible === true` AND
+  `canPayFullyWithWallet === true`; non-OK response, malformed payload, thrown fetch and `catch` all
+  return null (a fetch failure can never become eligibility). No client-side balance math
+  (no Math.min/max, no payable-balance) and no client-side eligibility.
+- Wallet selection sends `useWallet: method === "wallet"` through the single money boundary
+  `POST /v1/storefront/cart/{cartId}/start-payment` (Order 028) with the stable per-cart+method
+  idempotency key; the wire body still contains exactly
+  [expectedCartVersion, idempotencyKey, useWallet, providerCode, couponCode] — no money, order id,
+  user id, deadline or guest secret. Server remains authoritative if the quote changed between preview
+  and click: a refusal debits nothing and a post-commit failure still exposes the persisted
+  `checkoutId` for same-order recovery.
+- Zero Order calls happen before that click: shipping continue still saves the draft and navigates to
+  `/payment?cartId=...` (029 invariant re-asserted by test).
+
+== 5. ACTUAL TESTS RUN (local, module-scoped; no Host build/test, no live HTTP) ==
+
+ - dotnet test Modules/Payment/Tooba.Payment.Tests  -> Passed! Failed: 0, Passed: 152, Total: 152
+   (includes new Validation/PaymentCartWalletQuoteValidatorTests: cart-scope requires cart and forbids
+   checkout id; checkout-scope still requires checkout id; guest-secret/user-id shape preserved)
+ - dotnet test Modules/Order/Tooba.Order.Tests      -> Passed! Failed: 0, Passed: 255, Total: 255
+ - npm run typecheck (src/frontend)                 -> clean
+ - npm run test:storefront                          -> tests 76, pass 76, fail 0
+ - node --test app/storefront/storefront-final-click-api.test.ts -> tests 9, pass 9, fail 0
+   (new 031 invariants: server-proof-only wallet, fetch-failure-never-eligibility, cart-addressed
+   draft, exclusivity of the single click, no-commit shipping continue, recovery, localization)
+ - Payment validator coverage guard, Payment architecture guards and the Payment storefront validator
+   suite all pass unchanged (16 requests / 15 validators / 10 storefront / 9 storefront validators,
+   26 descriptors, 30 declared consts untouched).
+ - Pre-existing unrelated failures in the wider `npm run test:discovered` / `npm run test:architecture`
+   runs (files not touched by this task, already dirty in the tree before claim):
+   lib/architecture/frontend-source-size.guard.test.ts (category-admin-screen.tsx 2230>2215,
+   admin-landing-page-composer.tsx 1442>1440, storefront-landing-blocks.tsx 1033>1026,
+   shared-composition-renderer.tsx 918>907) plus admin/content/sitemap/home test files. Not caused by
+   this change and not "fixed" here (out of scope).
+
+== 6. BOUNDED DEVIATION DISCLOSED: route delivered, request type reused instead of a new one ==
+
+The objective route exists exactly as requested (GET /v1/storefront/cart/{cartId:guid}/wallet-quote, own
+query/handler/validator/DI resolution). The request contract is the existing
+GetStorefrontWalletQuoteQuery extended with an explicit cart mode rather than a brand-new MediatR
+request + validator, because Payment's certification counts are frozen in CLOSED Host guards and in the
+archived certification JSON that those guards read:
+ - src/backend/Host/Tooba.Host.Tests/Architecture/PaymentModuleAmsc001W3CertGuardTests.cs
+   (30 public const string in PaymentErrorCodes, 26 composed descriptors, 15 validator files,
+   16 endpoint-reachable requests, 10 storefront requests, 28/27/24/4/3 stable-code ledgers)
+ - src/backend/Host/Tooba.Host.Tests/TmarDurableGuardTests.cs (reads the archived artifacts:
+   16 requests, 15 required + 1 no-input, 10 storefront, 9 storefront validators,
+   NO_VALIDATOR_REQUIRED_NO_INPUT for ListStorefrontPaymentMethodsQuery)
+ - src/backend/Modules/Payment/Tooba.Payment.Tests/Architecture/PaymentValidatorCoverageGuardTests.cs
+   (16/15/10/9 + exact endpoint construction lists)
+A new request type + validator (and a new foreign-consumed error code for cart faults) would have
+required rewriting those certification records, which is forbidden by the task ("do not weaken
+architecture tests", "do not rewrite historical R1-R3") and by AGENTS.md. Keeping the existing request
+type preserves every count/classification byte-identically and keeps Host CLOSED. If the Architect wants
+a dedicated request type, the exact files needing authorized alignment are the three above plus the
+archived JSON they assert; no production behaviour changes with either choice.
+
+== 7. REMAINING RELEASE PREREQUISITES / HONEST LIMITS ==
+
+1. Live end-to-end acceptance is NOT performed in this task: Host CLOSED, no build/restart/deploy of
+   :5088, no live DB, no real wallet debit, no PSP call. A live acceptance (signed-in buyer, full
+   coverage, wallet debit through 028 + canonical 025 gate, refusal path on changed quote) remains for
+   the Architect/live-deploy step.
+2. `QuoteForPayableAsync` calls `GetOrCreateSummaryForCustomerAsync`, so a signed-in buyer with no
+   wallet row can have a summary row created by this GET. This is identical to the existing
+   checkoutId wallet-quote GET behaviour (no ledger entry, no order mutation, no debit) but is reported
+   as a read-path side effect rather than hidden.
+3. Cart-mode mixed tender (partial wallet + gateway) remains deferred exactly as before
+   (`mixedTenderAvailable=false`); no fake partial-payment UI was added.
+4. A Wallet/Payment module-level behavioural test that drives the full orchestrator for the cart quote
+   was not added in this timebox (no existing orchestrator harness; 13 ctor dependencies). Coverage
+   added: transport validation for both owner modes + source-level fail-closed invariants for the
+   client and handoff. This is the main test-completeness gap.
+
+STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT
