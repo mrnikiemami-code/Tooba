@@ -1,4 +1,4 @@
-BEGIN_TOOBA_WORKER_RESULT
+﻿BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-P0-CHECKOUT-WALLET-FINAL-CLICK-030
 Parent-Task: TB-P0-CHECKOUT-FRONTEND-FINAL-CLICK-029
 Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
@@ -9,7 +9,7 @@ Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED — BOUNDED NON-MONEY SLICE DELIVERED + 
 Stop-State: STOP_FOR_ARCHITECT
 Bridge-Task-Row: 2fd4a0b4-4720-4ca7-988c-223e811288aa
 Base-SHA (== origin/main at claim): 0460533acfb8af2a70781f046ee7a086231e2bf3
-Code-Commit-SHA: 3a4c9d3c1 (see final SHA line below)
+Code-Commit-SHA: 66fb5af9e (code/guard) + f1011feb5 (artifact/evidence)
 Repo-Branch: main
 Host-CLOSED-Proof: no file under src/backend/Host/** was read for execution, edited, built, tested, stopped,
   restarted or deployed; the running Development Host :5088 was never touched; no backend source file was
