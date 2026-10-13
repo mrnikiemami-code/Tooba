@@ -116,6 +116,7 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Storefront.Services.StorefrontCheckoutService>();
         services.AddScoped<Application.Storefront.Services.StorefrontShippingService>();
         services.AddScoped<Application.Storefront.Services.StorefrontPendingPaymentService>();
+        services.AddScoped<Application.Storefront.Services.StorefrontStartPaymentComposer>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();
         services.AddModuleSchemaMigrator<OrderDbContext>("Order", ModuleSchemaMigrationOrder.Order);
         services.AddDbContext<OrderDbContext>((sp, options) =>
