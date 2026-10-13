@@ -92,14 +92,34 @@ test("cart wallet quote client never turns a fetch failure into wallet eligibili
     paymentApi.indexOf("export async function startStorefrontPayment"),
   );
   assert.ok(branch.length > 0, "cart wallet quote loader not found");
+  // شکست HTTP/شبکه/پاسخ نامعتبر و سبد اثبات‌نشده → null (fail-closed).
   assert.match(branch, /if \(!response\.ok\) \{\s*return null;/);
   assert.match(branch, /readProp\(item, "walletEligible", "WalletEligible"\) !== true\) \{\s*return null;/);
-  assert.match(branch, /readProp\(item, "canPayFullyWithWallet", "CanPayFullyWithWallet"\) !== true\) \{\s*return null;/);
   assert.match(branch, /catch \{\s*return null;/);
+  // پوشش کامل مبلغ فقط از سرور کپی می‌شود و هرگز در مرورگر true/ساخته نمی‌شود.
+  assert.match(
+    branch,
+    /canPayFullyWithWallet: Boolean\(readProp\(item, "canPayFullyWithWallet", "CanPayFullyWithWallet"\)\)/,
+  );
+  assert.doesNotMatch(branch, /canPayFullyWithWallet: true/);
   // هیچ محاسبهٔ موجودی/اهلیت در مرورگر انجام نمی‌شود.
   assert.doesNotMatch(branch, /Math\.(min|max)\(/);
   assert.doesNotMatch(branch, /payableAmount\s*-\s*/);
   assert.doesNotMatch(branch, /walletEligible\s*=\s*true/);
+});
+
+test("a wallet refusal on the final click is localized and never leaks the technical code", () => {
+  const refused = toCustomerFinalClickMessage(
+    new StorefrontCartApiError(409, "payment.wallet.mixed_deferred", "WalletMixedDeferred"),
+  );
+  assert.match(refused, /کیف پول/);
+  assert.doesNotMatch(refused, /WalletMixedDeferred|mixed_deferred|wallet\./);
+
+  const insufficient = toCustomerFinalClickMessage(
+    new StorefrontCartApiError(409, "payment.wallet.insufficient", "payment.wallet.insufficient"),
+  );
+  assert.match(insufficient, /کیف پول/);
+  assert.doesNotMatch(insufficient, /wallet\.insufficient/);
 });
 
 test("post-commit failure keeps the persisted checkout for recovery on the same order", () => {

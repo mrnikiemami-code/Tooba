@@ -233,6 +233,16 @@ export function toCustomerFinalClickMessage(error: unknown, locale: Locale = "fa
         return fa
           ? "مهلت نگه‌داری موجودی این سفارش دیگر قابل شروع نیست. به سبد خرید برگردید، سفارش را بازبینی کنید و دوباره تلاش کنید."
           : "The stock hold for this order can no longer be started. Return to the cart, review it, then try again.";
+      case "payment.wallet.mixed_deferred":
+        // نقل‌قول کیف‌پول بین پیش‌نمایش و کلیک نهایی تغییر کرده است (سرور همچنان authoritative است و هیچ
+        // برداشتی رخ نداده). پیام فقط مسیر عملی «بازگشت به سبد/انتخاب روش دیگر» را پیشنهاد می‌کند.
+        return fa
+          ? "موجودی کیف پول برای پرداخت کامل این سبد کافی نیست یا تغییر کرده است. به سبد خرید برگردید و روش دیگری انتخاب کنید یا موجودی را بررسی کنید."
+          : "Your wallet balance no longer covers this cart in full. Return to the cart and choose another method or review your balance.";
+      case "payment.wallet.insufficient":
+        return fa
+          ? "موجودی کیف پول برای پرداخت کامل این سبد کافی نیست. روش دیگری انتخاب کنید."
+          : "Your wallet balance is not enough to pay for this cart in full. Choose another method.";
       case "checkout.inventory.unavailable":
         return fa
           ? "موجودی یکی از کالاها در دسترس نیست. به سبد خرید برگردید و سبد را بازبینی کنید."

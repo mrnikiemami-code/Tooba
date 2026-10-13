@@ -400,16 +400,18 @@ export async function loadStorefrontWalletQuote(checkoutId: string): Promise<Sto
 /**
  * نقل‌قول کیف‌پول سبد را از Host می‌خواند (مسیر پیش‌از‌سفارش /payment?cartId=...).
  *
- * قراداد امنیتی: هیچ محاسبهٔ اهلیت/موجودی در مرورگر انجام نمی‌شود. نقل‌قول وقتی بازگردانده می‌شود که
- * سرور هم مالکیت خریدار احراز‌شده را اثبات کرده باشد (walletEligible) و هم پوشش کامل مبلغ را
- * (canPayFullyWithWallet). هر خطای شبکه/پاسخ → null؛ شکست fetch هرگز به اهلیت کیف‌پول تبدیل نمی‌شود.
+ * قراداد امنیتی: هیچ محاسبهٔ اهلیت/موجودی در مرورگر انجام نمی‌شود. نقل‌قول فقط وقتی بازگردانده می‌شود که
+ * سرور مالکیت خریدار کیف‌پول‌دار را اثبات کرده باشد (walletEligible). پوشش کامل مبلغ (canPayFullyWithWallet)
+ * عیناً از سرور کپی می‌شود و هیچ‌جا true ساخته نمی‌شود؛ انتخاب کیف‌پول در UI تنها با همان مقدار سرور ممکن است،
+ * پس موجودی ناکافی هم قابل‌مشاهده است (همان اعلان «موجودی کافی نیست» موجود) و هم غیرقابل‌انتخاب.
+ * مهمان/سبد اثبات‌نشده/خطای شبکه/پاسخ نامعتبر → null؛ شکست fetch هرگز به اهلیت کیف‌پول تبدیل نمی‌شود.
  */
 export async function loadStorefrontCartWalletQuote(cartId: string): Promise<StorefrontWalletQuote | null> {
   if (!cartId) {
     return null;
   }
-  const session = readCartSession();
   try {
+    const session = readCartSession();
     const response = await fetch(`/v1/storefront/cart/${encodeURIComponent(cartId)}/wallet-quote`, {
       cache: "no-store",
       headers: storefrontActorHeaders({ cartId, guestSecret: session.guestSecret ?? null }),
@@ -422,10 +424,8 @@ export async function loadStorefrontCartWalletQuote(cartId: string): Promise<Sto
     if (!item) {
       return null;
     }
+    // اهلیت کیف‌پول فقط با اثبات سرور (مالکیت خریدار احراز‌شده). مهمان/سبد اثبات‌نشده → null.
     if (readProp(item, "walletEligible", "WalletEligible") !== true) {
-      return null;
-    }
-    if (readProp(item, "canPayFullyWithWallet", "CanPayFullyWithWallet") !== true) {
       return null;
     }
     const maxUsable = asNumber(readProp(item, "maxUsable", "MaxUsable"));
@@ -438,7 +438,7 @@ export async function loadStorefrontCartWalletQuote(cartId: string): Promise<Sto
       selectedWalletAmount: maxUsable,
       remainingPayable: asNumber(readProp(item, "remainingPayable", "RemainingPayable")),
       payableAmount: asNumber(readProp(item, "payableAmount", "PayableAmount")),
-      canPayFullyWithWallet: true,
+      canPayFullyWithWallet: Boolean(readProp(item, "canPayFullyWithWallet", "CanPayFullyWithWallet")),
       mixedTenderAvailable: false,
       manualCardToCardEnabled: Boolean(readProp(item, "manualCardToCardEnabled", "ManualCardToCardEnabled")),
     };
