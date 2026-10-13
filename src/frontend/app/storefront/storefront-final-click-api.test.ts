@@ -67,6 +67,21 @@ test("shipping continue saves the draft and navigates cart-addressed without any
   assert.match(shipping, /saveShippingSelection\(projection\.cartId, projection\.cartVersion/);
 });
 
+test("cart mode keeps the wallet tender fail-closed until a canonical cart-scoped quote exists", () => {
+  const cartBranch = handoff.slice(handoff.indexOf('if (cartId) {'), handoff.indexOf('setMode("checkout")'));
+  assert.ok(cartBranch.length > 0, "cart branch not found");
+  // هیچ نقل‌قول کیف‌پول سبد-محور وجود ندارد: مقدار صفر/جعلی ساخته نمی‌شود و نقل‌قول checkoutId-محور صدا زده نمی‌شود.
+  assert.match(cartBranch, /setQuote\(null\)/);
+  assert.doesNotMatch(cartBranch, /loadStorefrontWalletQuote/);
+  // wallet هرگز در حالت سبد پیش‌فرض/انتخاب نمی‌شود؛ فقط کاتالوگ متعارف فروشگاه.
+  assert.doesNotMatch(cartBranch, /setMethod\("wallet"\)/);
+  assert.match(cartBranch, /loadStorefrontPaymentMethods\(\)/);
+  // حتی اگر UI دستکاری شود، اعتبارسنجی قبل از درخواست، wallet را در حالت سبد رد می‌کند.
+  assert.match(handoff, /method === "wallet"\) return "پرداخت با کیف پول پیش از ثبت سفارش در دسترس نیست/);
+  // useWallet فقط از روش انتخاب‌شده سرور-مجاز می‌آید، نه از یک پرچم کلاینتی.
+  assert.match(finalClick, /useWallet: input\.method === "wallet"/);
+});
+
 test("post-commit failure keeps the persisted checkout for recovery on the same order", () => {
   assert.match(handoff, /payment-recovery-same-order/);
   assert.match(handoff, /\/payment\?checkoutId=\$\{encodeURIComponent\(recoveryCheckoutId\)\}/);
