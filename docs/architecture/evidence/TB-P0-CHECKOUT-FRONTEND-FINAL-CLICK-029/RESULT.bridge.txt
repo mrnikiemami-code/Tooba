@@ -1,0 +1,132 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-FRONTEND-FINAL-CLICK-029
+Parent-Task: TB-P0-CHECKOUT-FINAL-CLICK-API-028
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION — STOP_FOR_ARCHITECT
+Bridge-Task-Row: f0d53ea8-98ec-447a-a960-054d63e50849
+Base-SHA (Expected-Base-SHA == origin/main at claim): 47f4d8f0ed86cf28efa67111f5e5e50b1ca7f83a
+Code-Commit-SHA: 789983b3d9d43f52b28840892637d1664693f9ec
+Repo-Branch: main
+Host-Changes: 0 (src/backend/Host/** never edited, built, stopped, restarted, tested or deployed; running :5088 untouched)
+Backend-Changes: 0 (no Order/Payment/Inventory C# change, no schema/migration, no provider API, no duration/expiry/retry setting)
+Frontend-Changes: 7 files (2 new, 5 modified) — frontend only, no deployment
+
+Changed-Files:
+  A src/frontend/app/storefront/storefront-final-click-api.ts            (+271)  client for Order 011 draft + Order 028 final click
+  A src/frontend/app/storefront/storefront-final-click-api.test.ts       (+109, 7 focused tests)
+  M src/frontend/app/payment/storefront-payment-handoff.tsx              (dual mode: cart-addressed draft + legacy committed recovery)
+  M src/frontend/app/storefront/storefront-shipping.tsx                  (draft-only save + cart-addressed navigation; -9/+? net shrink 945→928)
+  M src/frontend/app/storefront/storefront-shipping-api.ts               (+6 doc only: legacy eager-commit wrapper marked explicit-only, no caller)
+  M src/frontend/app/storefront/storefront-shipping-api.test.ts          (guard transitioned to the new no-commit invariant)
+  M src/frontend/app/storefront/storefront-cart-api.ts                   (+2 additive optional meta.checkoutId)
+
+== 1. EXACT SHIPPING -> PAYMENT -> FINAL-CLICK BEHAVIOUR ==
+
+Shipping continue (app/storefront/storefront-shipping.tsx:224 persistAndContinue):
+  1) PUT /v1/storefront/shipping/selection (saveShippingSelection, line 230) — draft only;
+  2) router.push(localizePath("/payment?cartId=" + cartId)) (line 247).
+  No POST /v1/storefront/shipping/commit, no commitShippingToPayment call, no cart conversion, no
+  clearCartSession / notifyCartChanged, no checkoutId in this step. The cart stays Active and its
+  sessionStorage pointer/guest secret are preserved.
+
+Payment load, cart mode (/payment?cartId=..., storefront-payment-handoff.tsx:61-75):
+  GET /v1/storefront/cart/{cartId}/payment-draft?couponCode=   (Order 011, read-only quote, checkoutId=null)
+  GET /v1/storefront/payment-methods                            (Payment, store-enabled tender catalog)
+  Both are GET-only reads: zero shipping/commit, zero start-payment, zero payment initiation, zero cart
+  conversion before the Pay click. Persisted shipping (method/label/recipient/city/amount) and payable come
+  verbatim from the 011 draft response; no fabricated quote, no wallet quote is invented (wallet-quote is
+  checkoutId-addressed and does not exist pre-order — see limits).
+
+Final click (storefront-payment-handoff.tsx:190 -> storefront-final-click-api.ts:147):
+  POST /v1/storefront/cart/{cartId}/start-payment with body keys exactly:
+    expectedCartVersion (from the 011 draft response), idempotencyKey, useWallet, providerCode, couponCode.
+  - cart id only in the route; guest proof only from cartHeaders()/X-Tooba-Guest-Secret/cookie; no amount,
+    no payable, no shippingAmount, no checkoutId, no userId, no deadline, no guestSecret in the wire body
+    (asserted by exact key-list equality in storefront-final-click-api.test.ts).
+  - idempotency key is stable: sessionStorage["tooba.storefront.finalClickIdempotency.{cartId}.{provider}"]
+    (storefront-final-click-api.ts:103) — same key across React re-renders and retries of the same
+    operation; a deliberate method (or cart) change scopes a new key. Never generated per request.
+  - duplicate-click UI: button disabled while paying + `if (!page || paid || paying) return;` guard.
+  - outcomes: gateway redirect (internal push / external assign) unchanged from the existing flow;
+    wallet/manual -> /payment/result with the returned paymentId + checkoutId; 4xx -> localized text via
+    toCustomerFinalClickMessage (hold/availability/stale/expired/selection/access); post-commit failure ->
+    ProblemDetails checkoutId preserved in error meta + committed proof written WITHOUT detaching the active
+    cart, and the page offers "ادامهٔ پرداخت همین سفارش" -> /payment?checkoutId=... (recovery on the SAME
+    order, no second commit, no automatic cancel, no invented renewal limit).
+  - expired/released hold: no silent re-initiation; the message returns the user to the cart/order and the
+    only offered action is an explicit user click.
+
+Committed mode (/payment?checkoutId=... , also reachable from the checkoutId in sessionStorage): byte-for-byte
+the previous experience (loadStorefrontCheckout + wallet-quote + POST /v1/storefront/checkout/{id}/payments),
+so existing persisted-checkout recovery is preserved and shipping is never automatically re-committed.
+
+Single-initiation guarantee: one useEffect branch selects the mode (cartId first, else checkoutId) and the Pay
+handler uses a single exclusive ternary (`mode === "cart" ? startFinalClickPayment : startStorefrontPayment`);
+each route appears exactly once in the page (asserted). No service worker, no timeout loop, no unconditional
+side effect was added.
+
+== 2. ROUTE MAP / EAGER-COMMIT CALLERS (source-grounded) ==
+See docs/architecture/evidence/TB-P0-CHECKOUT-FRONTEND-FINAL-CLICK-029/analysis.md §1-§3.
+Remaining eager-commit/money paths, reported honestly:
+  - app/storefront/storefront-shipping-api.ts:369 commitShippingToPayment (POST /v1/storefront/shipping/commit)
+    is now UNCALLED; export kept and documented as legacy/explicit-recovery only (no automatic caller).
+  - app/checkout/page.tsx -> app/storefront/storefront-checkout.tsx:116 submitStorefrontCheckout
+    (POST /v1/storefront/checkout) still commits on its own explicit form submit. Pre-existing legacy route,
+    out of this task's bounded scope, and NOT on the Shipping->Payment path: no frontend link targets
+    `/checkout` (grep returns no href match). Left untouched.
+  - app/storefront/storefront-cart.tsx:147 previewStorefrontCheckout is a read-only 011 quote (no order /
+    reservation / conversion). Unchanged.
+
+== 3. SAFETY GATES ==
+Before Pay click: 0 shipping/commit calls, 0 start-payment calls, 0 payment-initiation calls, 0 cart
+conversions (cart mode performs exactly 2 GET reads). No money amount or checkout id is ever accepted from
+the browser: only expectedCartVersion comes from the server draft, all amounts are rendered from server payloads.
+No Host/backend/schema/provider/settings change, no deployment, no live database access, no real orders,
+no PSP/wallet call made by this task's verification.
+
+== 4. VERIFICATION (real commands, real counts) ==
+1) Focused slice:
+   node --experimental-strip-types --test app/storefront/storefront-final-click-api.test.ts
+     app/storefront/storefront-shipping-api.test.ts app/payment/storefront-payment-page.test.ts
+     app/storefront/storefront-checkout-api.test.ts app/storefront/storefront-payment-api.test.ts
+     app/storefront/storefront-cart-api.test.ts
+   -> 52 tests, 52 pass, 0 fail (new file alone: 7 pass).
+   Covers: exactly-once/stable-key start-payment request on the cart route, exact body key list (no money/
+   order/identity), draft load on the cart URL, one-click one-initiation exclusivity, shipping continue
+   saves draft + navigates cart-addressed with zero commit, post-commit checkoutId recovery, localized
+   hold/stale/access/method/limit/selection failures.
+2) npm run test:storefront -> 76 tests, 76 pass, 0 fail.
+3) npm run typecheck (tsc --noEmit) -> clean, exit 0.
+4) npm run test:architecture -> 5/6 guard files pass. frontend-source-size.guard.test.ts reports 4
+   PRE-EXISTING violations in files this task did not touch (category-admin-screen.tsx 2230>2215,
+   admin-landing-page-composer.tsx 1442>1440, shared-composition-renderer.tsx 918>907 — all unmodified in
+   git — and the pre-existing dirty storefront-landing-blocks.tsx 1033>1026). None of the 7 changed files
+   is flagged; storefront-shipping.tsx SHRANK 945->928.
+5) npm run test:critical-storefront -> test:home / test:pdp-guard / test:listing-guard /
+   test:category-plp-guard all pass; test:surface-coverage fails on component-compliance.guard.test.ts with
+   the PRE-EXISTING dirty file app/storefront/storefront-landing-blocks.tsx:286 raw `bg-white` — a
+   pre-existing unrelated working-tree change, not introduced by this task (that file is untouched here).
+6) UNVERIFIED (declared, not claimed as PASS): no live HTTP/runtime proof against the Development Host.
+   The Host is CLOSED (no build/restart), so the browser-level flow and the 011/028 wire behaviour were not
+   exercised end-to-end in this task; verification is source-level + unit tests + typecheck.
+
+== 5. HYGIENE ==
+1 code commit (789983b3d) + 1 evidence commit (this result). Unrelated pre-existing dirty entries were NOT
+staged/committed/reverted/stashed: src/frontend/app/admin/admin-order-detail-screen.tsx,
+src/frontend/app/storefront/storefront-landing-blocks.tsx, docs/architecture/evidence/
+TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, src/backend/.../CheckoutAbuseGate.cs.
+No force-push, no history rewrite, no stash, no unrelated file touched. No historical task resumed.
+
+== 6. DELIBERATE LIMITS ==
+L1 Wallet is not offered before commit: /v1/storefront/payment-methods is store-scoped and wallet-quote is
+   checkoutId-addressed (011 evidence L1), so a pre-order cart has no canonical wallet eligibility. No fake
+   wallet quote or fabricated balance is shown; wallet remains available on the committed-order recovery path.
+   A Payment-owned cart-addressed tender/quote contract would be the correct future step (not invented here).
+L2 The legacy /checkout page still contains an eager-commit submit path (unlinked, out of bounded scope).
+L3 storefront-payment-handoff.tsx was extended in place (same route, both modes) instead of being split.
+
+STOP_FOR_ARCHITECT. automaticNextImplementationTask=NONE. No further task started.
+END_TOOBA_WORKER_RESULT
