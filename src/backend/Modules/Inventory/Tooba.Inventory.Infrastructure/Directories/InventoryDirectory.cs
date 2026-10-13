@@ -26,7 +26,7 @@ namespace Tooba.Inventory.Infrastructure.Directories;
 /// رزرو با UPDATE اتمی PostgreSQL است تا آخرین واحد دو بار فروخته نشود.
 /// همکارهای تخصصی (موتور تأمین سفارش، بازپس‌گیر رزرو منقضی، lookupهای بین‌ماژولی) در partialهای مجاور جدا شده‌اند.
 /// </summary>
-public sealed partial class InventoryDirectory : IInventoryDirectory, IInventoryAvailabilityGateway, ISellerOfferInventoryGateway, IFulfillmentInventoryLifecyclePort, Tooba.Inventory.Contracts.Cart.ICartInventoryHoldPort, IInventoryPaymentHoldGate
+public sealed partial class InventoryDirectory : IInventoryDirectory, IInventoryAvailabilityGateway, ISellerOfferInventoryGateway, IFulfillmentInventoryLifecyclePort, Tooba.Inventory.Contracts.Cart.ICartInventoryHoldPort, IInventoryPaymentHoldGate, IInventoryPaymentHoldExtensionPort
 {
     private readonly InventoryDbContext _db;
     private readonly IInventoryUseCaseGuard _guard;
