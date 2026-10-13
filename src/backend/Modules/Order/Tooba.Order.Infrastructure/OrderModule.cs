@@ -85,6 +85,8 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Admin.Operations.Services.AdminOrderOperationsOrchestrator>();
         services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
         services.AddScoped<IOrderPaymentHoldPreparationPort, Application.Checkout.Process.OrderPaymentHoldPreparationService>();
+        services.AddScoped<IOrderCheckoutReservationSetReader, OrderCheckoutReservationSetReader>();
+        services.AddScoped<IOrderPaymentFreshPayabilityPort, Application.Checkout.Process.OrderPaymentFreshPayabilityService>();
         services.AddScoped<ICheckoutAbuseGate, CheckoutAbuseGate>();
         services.AddScoped<ICheckoutProcessTracker, CheckoutProcessTracker>();
         services.AddScoped<IReservationCycleDirectory, ReservationCycleDirectory>();
