@@ -1,0 +1,177 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-START-PAYMENT-COMPOSER-019
+Parent-Task: TB-P0-ORDER-PAYMENT-HOLD-COORDINATION-018
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION — STOP_FOR_ARCHITECT
+Bridge-Task-Row: cb2d7760-b7cb-484b-ab44-b29e2b9ea5d0
+Starting-SHA: 2992b7bb6dd423ff8fef21d8c987fb5ec29ee410 (== origin/main == Expected-Base-SHA at claim)
+Code-Commit: fefc4f428c6e5c17cbfc8c20958f242f6333a900
+Repo-Branch: main
+Status: WORKER_COMPLETE — IMPLEMENTED + FOCUSED TESTS PASSED — STOP FOR ARCHITECT ACCEPTANCE
+Verdict: PASS (implementation complete, inert, no forbidden edit required — NOT BLOCKED)
+automaticNextImplementationTask=NONE
+
+Preflight: HEAD == origin/main == 2992b7bb6dd423ff8fef21d8c987fb5ec29ee410 (verified before any edit).
+Read: AGENTS.md, BRIDGE-WAKE-V1 protocol, 011 (payment draft), 012R (Payment initiation seam),
+017 (atomic hold extension), 018 (IOrderPaymentHoldPreparationPort).
+Host: CLOSED. Not built, not stopped, not restarted, not deployed. Host.Tests not run.
+
+Changed-Files: 2 production (1 new, 1 line) + 2 new test files + 1 task artifact + 1 evidence doc
+  A src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontStartPaymentComposer.cs   (401 lines)
+  M src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs                                      (+1 line, :119)
+  A src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontStartPaymentComposerTests.cs            (747 lines, 22 tests)
+  A src/backend/Modules/Order/Tooba.Order.Tests/Architecture/StorefrontStartPaymentComposerGuardTests.cs     (9 source guards)
+  A docs/ai/tasks/TB-P0-CHECKOUT-START-PAYMENT-COMPOSER-019.task.md
+  A docs/architecture/evidence/TB-P0-CHECKOUT-START-PAYMENT-COMPOSER-019/analysis.md
+Host-Changes: 0
+Endpoint-Changes: 0 (composer is inert; no route published or registered)
+Frontend-Changes: 0
+Schema/Migration/Settings-Changes: 0
+Inventory/015/017/018 production-changes: 0 (018 seam consumed through its existing Contracts port only)
+Unrelated-file-changes: 0 (pre-existing CRLF/index-stat entries left unstaged/untouched)
+
+== 1. WHAT WAS BUILT (source line evidence) ==
+
+OrderModule.cs:119
+  services.AddScoped<Application.Storefront.Services.StorefrontStartPaymentComposer>();
+
+StorefrontStartPaymentComposer.cs — fixed five-step sequence:
+   48  IdempotencyKeyTooLong = 3,                     (typed request fault; no invented error code)
+  155  public const string CommitKeyPrefix = "start-payment:commit:";
+  158  public const string PaymentKeyPrefix = "start-payment:payment:";
+  164  private const int SharedIdempotencyKeyMaxLength = 128;
+  198  public async Task<StorefrontStartPaymentResult> StartPaymentAsync(
+  218  return Reject(StorefrontStartPaymentFault.IdempotencyKeyTooLong);
+  232  : await _processes.FindSucceededBySubmissionKeyAsync(commitKey, cancellationToken)   (1+2 replay)
+  237  .GetOwnedForPaymentResultAsync(priorCheckoutId, request.GuestSecret, cancellationToken)
+  252  page = await _shipping.CommitAsync(                     (3 canonical Order commit, exactly once)
+  264  catch (ContractOperationException exception)            (producer code passed through untouched)
+  283  var preparation = await _preparation.PrepareAsync(      (4 018 hold preparation)
+  291  if (!preparation.Prepared)                              (only Prepared may continue)
+  317  var initiated = await _payments.InitiateForCheckoutAsync( (5 012R Payment port, once)
+
+Step 1 — ownership + cart/draft + method selection:
+  cart identity is the only address; the chosen method is forwarded unchanged (wallet -> stable code
+  "wallet", otherwise the caller's provider code verbatim). No method availability rule is duplicated
+  in Order; blank selection fails closed at preparation (PolicyUnavailable), not by inventing a default.
+Step 2 — canonical commit once, or secure replay:
+  replay is detected through the durable Order-owned pointer ICheckoutProcessTracker
+  .FindSucceededBySubmissionKeyAsync(commitKey) (Status == PaymentPending); only the EXISTING
+  ownership rule StorefrontCheckoutService.GetOwnedForPaymentResultAsync is re-checked, and NO second
+  commit happens. Otherwise StorefrontShippingService.CommitAsync -> StorefrontCheckoutService
+  .SubmitAsync -> ICheckoutDirectory.SubmitAsync (canonical CheckoutProcessManager) runs exactly once.
+  Zero reproduction of stock checking, TransactionScope, cart conversion, quota accounting or cycle
+  state (guard-asserted: the composer contains no TransactionScope/ReserveForCheckout/ConvertForCheckout/
+  EnsureCanStartInitialReservation/ReleaseAsync/SaveChanges/OrderDbContext).
+Step 3 — 018 preparation on the persisted checkout with the selected method selector; all eight
+  non-Prepared outcomes return HoldPreparationFailed with the typed 018 outcome and detail.
+Step 4 — a single IPaymentInitiationPort call for wallet / gateway / manual (no side channel).
+
+Idempotency-key ownership (§ namespace/length compatibility, explicit):
+  caller supplies ONE stable key; the composer derives
+    commit  key = "start-payment:commit:"  + key  -> order.checkouts.idempotency_key (128)
+                                                     order.checkout_processes.submission_idempotency_key (128)
+    payment key = "start-payment:payment:" + key  -> payment.payments.idempotency_key (128)
+  length is validated explicitly (21+len <= 128 AND 22+len <= 128) so a key over 106 chars is rejected
+  before any order/money touch instead of relying on a column to truncate. Both directions asserted:
+  106-char key accepted (127/128 derived lengths), 107-char key rejected (InvalidRequest).
+  Repeated-click dedupe = canonical checkout replay on the stable commit key + Payment's own
+  idempotency replay on the stable payment key; the composer adds no second dedupe mechanism.
+
+Typed failure policy (no generic 500, no forged/repurposed code):
+  pre-flight  -> InvalidRequest + StorefrontStartPaymentFault (NO new error-code string invented -> the
+                 Order error catalog, its .resx resources and the guarded error-resource parity are untouched)
+  commit fail -> CheckoutCommitFailed with the producer's OWN code (StorefrontOrderException.Code,
+                 ContractOperationException.Code, SemanticException.Error.Code);
+                 commit yielding no persisted checkout id -> existing code checkout.rejected
+  018 != Prepared -> HoldPreparationFailed + OrderPaymentHoldPreparationOutcome (+ reservation count,
+                 deadlines, unavailable ids)
+  Payment faults are NOT caught and NOT rewritten: they propagate as Payment-owned typed faults, which is
+  why no payment.* code can be forged here (guard: no "payment./"checkout./"shipping. literal in the composer).
+
+== 2. VERIFICATION ==
+
+Commands + counts (Order module focused project only, no broad suites, no Host.Tests):
+  dotnet build src/backend/Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj -v:m
+    -> Build succeeded. 0 Error(s)
+  dotnet test  src/backend/Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj
+    -> Passed! - Failed: 0, Passed: 214, Skipped: 0, Total: 214 — Tooba.Order.Tests.dll (net8.0)
+  dotnet test  ... --filter "FullyQualifiedName~StorefrontStartPaymentComposerTests"
+    -> Passed! - Failed: 0, Passed: 22, Skipped: 0, Total: 22
+
+Covered gates (StorefrontStartPaymentComposerTests, 22 cases):
+  - successful one-shot composition: 1 SubmitAsync + 1 PrepareAsync + 1 InitiateForCheckoutAsync on the
+    same persisted checkout; commit command carries the derived commit key, CartId and ExpectedCartVersion;
+    shipping amount is backend-authoritative (150,000) and overwrites the client-saved 45,000.
+  - lost-response same-key replay: two clicks -> SubmitCalls == 0, same checkout id, identical payment key
+    both times, CheckoutReplayed == true (no second order, no new quota, no duplicated reservation).
+  - selected method flows through unchanged (wallet -> "wallet"; manual/gateway verbatim, UseWallet
+    unchanged) and a repeated click keeps the same payment key (Payment owns final dedupe).
+  - commit failure runs no money path: theory over checkout.cart.expired / checkout.version.conflict /
+    shipping.cart.stale -> CheckoutCommitFailed with that exact producer code, 0 preparation, 0 payment;
+    plus commit-without-persisted-checkout -> checkout.rejected, 0 preparation, 0 payment.
+  - post-commit preparation failure: theory over ALL eight non-Prepared 018 outcomes -> HoldPreparationFailed
+    with the same persisted checkout id, 1 commit, 1 preparation, 0 payment (no re-commit, no auto-cancel).
+  - actor/guest fail-closed: foreign guest secret on replay -> checkout.access.denied with 0 commit/0
+    preparation/0 payment; preparation AccessDenied for a foreign actor never starts payment; authenticated
+    identity is forwarded to both preparation and Payment (guest secret stays null).
+  - payment fault propagation: ContractOperationException("payment.method.unavailable") propagates untouched
+    while the committed checkout remains (1 commit, 1 preparation, 1 payment attempt).
+  - request/key hygiene: empty cart / blank key -> typed InvalidRequest with zero touches; 106-char key
+    accepted, 107-char rejected; missing process tracker falls back to the canonical commit replay only.
+  Test wiring runs the REAL StorefrontShippingService + StorefrontCheckoutService over a faked
+  ICheckoutDirectory (draft re-validation, version guard and command construction are exercised, not
+  simulated); every other dependency is a recording fake.
+
+Source guards (StorefrontStartPaymentComposerGuardTests, 9 cases, all PASS):
+  zero endpoint publishing (no MapPost/MapGet/IEndpointRouteBuilder/ISender/MediatR in the composer);
+  "start-payment"/"StorefrontStartPaymentComposer" absent from Tooba.Order.Endpoints and the entire
+  src/backend/Host/Tooba.Host tree => zero Host edits; canonical seams reused with no reproduced
+  commit/quota/reservation mechanics; no invented error-code literals; request contract carries no
+  ReservationId/CheckoutId/Amount/ExpiresAt/Deadline (caller cannot fabricate identifiers or money);
+  ZERO fixed hold durations and no wall clock (no AddHours(/AddMinutes(/AddSeconds(/TimeSpan.From and no
+  DateTime*.UtcNow; deadlines only come from 018); Contracts-only foreign references; DI registration
+  present; commit/payment key namespaces stable.
+
+31 total new checks (22 behavioural + 9 guards) all green inside the 214-case module suite.
+
+== 3. INHERENT GAP / NO ACID CLAIM ==
+
+The 018 hold extension and the Payment provider initiation remain two separate steps; the composer only
+orders them and adds no atomicity. The window between extension and initiation (and late PSP callbacks)
+is NOT closed and is NOT claimed closed. This task proves NO real DB transaction enlistment — that
+remains the separate 017 PostgreSQL/2PC evidence, and it is not re-asserted from mocks here.
+The live direct Payment endpoint is a separate money-entry guard concern for a follow-up (unchanged here,
+since no route was published). 013's payability gate is likewise untouched.
+
+== 4. LIMITATIONS / DELIBERATE OMISSIONS ==
+
+L1 Inert by design: the composer is registered in Order DI but has NO HTTP endpoint, so a caller cannot
+   reach it from outside the process yet. Publishing it needs the Architect's decision on how the eight
+   018 preparation outcomes map to API error codes — a mapping this task deliberately did not invent
+   (inventing it would have required new Order error codes / resources and a Host/Host.Tests-guarded change).
+L2 Default-gateway selector: when the caller passes the catalog selector "gateway", the concrete provider
+   code is chosen INSIDE Payment, so the hold policy resolved for the extension is the store/platform layer
+   rather than that provider's specific override. An explicit provider code (or wallet) is exact.
+L3 A request with neither UseWallet nor a provider code fails closed with PolicyUnavailable; Order does not
+   invent a default method or TTL. Real method availability stays Payment's decision (no duplicate rule).
+L4 No HTTP-level / live verification (nothing to call) and no frontend change: Shipping still commits and
+   /payment still requires a checkout id. The F4 frontend switch is not started.
+L5 Mocks do not prove real DB/2PC enlistment; the canonical commit path's PostgreSQL evidence stays 017's.
+L6 The running Development Host was not built/stopped/restarted; output DLL locks were not disturbed.
+
+== 5. HYGIENE ==
+
+Edits confined to Tooba.Order.Application (1 new file), Tooba.Order.Infrastructure (1 line), the Order test
+project (2 new files), the received .task.md artifact and this evidence folder. Pre-existing unrelated
+working-tree entries (CRLF/index-stat artifacts in CheckoutAbuseGate.cs, admin-order-detail-screen.tsx,
+storefront-landing-blocks.tsx, INVENTORY-CONSUMPTION-JOURNAL-003/summary.md and untracked bin/obj) were NOT
+staged, committed, reverted or stashed. No build of the whole solution, no DB/migration, no Host restart, no
+HTTP call, no payment/order/cart mutation, no Host.Tests run. No historical task or unrelated worker started.
+
+Docs/evidence commit (this result) follows the code commit fefc4f428c6e5c17cbfc8c20958f242f6333a900.
+STOP for independent Architect acceptance. automaticNextImplementationTask=NONE.
+END_TOOBA_WORKER_RESULT
