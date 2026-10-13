@@ -1,0 +1,88 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-DEV-CUTOVER-SMOKE-032
+Pipeline-Protocol: BRIDGE-WAKE-V1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Mode: BOUNDED_FINAL_INTEGRATION_OR_BLOCKED
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+Base-SHA: a271e7efd5028694af69d80bf12d64582c984dab
+Code-SHA: 2d1bc170e38370f3e59cb48c9da9cf8aa4fb317b
+Final-HEAD: <this commit>
+Preflight: HEAD == origin/main == Expected-Base-SHA verified before any edit; no drift, no rebase/stash/reset. Unrelated dirty files preserved and NOT committed (src/backend/.../CheckoutAbuseGate.cs, src/frontend/app/admin/admin-order-detail-screen.tsx, src/frontend/app/storefront/storefront-landing-blocks.tsx). No new Host, port, database, container or parallel environment was created.
+
+SUMMARY
+Completed the bounded final integration verification of the real Shipping -> Payment -> final Pay wiring for online gateway, manual card transfer and FULL wallet, on the existing Development topology. Two directly established frontend integration defects were fixed; no backend file was changed. Live cutover was NOT executed: the task stops at READY_FOR_CUTOVER with exact current binary/version, one-time change list, backup/rollback and smoke plan.
+
+CHANGED PATHS (exactly 3 files + evidence)
+- src/frontend/app/storefront/storefront-payment-api.ts (Fix A)
+- src/frontend/app/storefront/storefront-final-click-api.ts (Fix B)
+- src/frontend/app/storefront/storefront-final-click-api.test.ts (invariant update + new regression)
+- docs/architecture/evidence/TB-P0-CHECKOUT-DEV-CUTOVER-SMOKE-032/evidence.md (full verification matrix + cutover plan)
+- docs/architecture/evidence/TB-P0-CHECKOUT-DEV-CUTOVER-SMOKE-032/post-result.js
+No Order/Payment/Wallet/Cart/Shipping backend file, no Host file, no migration, no seed, no unrelated frontend baseline was touched.
+
+WIRE VERIFICATION (source-level, all PASS)
+- Shipping continue only saves its selection and navigates to /payment?cartId; no shipping/commit call and no checkoutId redirect.
+- Read-only pre-click calls only: GET /v1/storefront/cart/{cartId:guid}/payment-draft (StorefrontOrderEndpoints.cs:40), GET /v1/storefront/payment-methods, GET /v1/storefront/cart/{cartId:guid}/wallet-quote (PaymentStorefrontEndpoints.cs:24). Nothing mutates checkout/reservation/ledger before the click.
+- Final click alone calls POST /v1/storefront/cart/{cartId:guid}/start-payment (StorefrontStartPaymentEndpoints.cs:39) with body keys exactly [expectedCartVersion, idempotencyKey, useWallet, providerCode, couponCode]; no amount, order, identity, deadline or guest secret in the body.
+- JSON naming: the cart wallet quote DTO (camelCase) matches every client read (walletEligible, canPayFullyWithWallet, walletBalance, maxUsable, remainingPayable, payableAmount, cartId, currency, manualCardToCardEnabled).
+- Cart version: expectedCartVersion comes from the 011 draft and is re-validated server-side in StorefrontShippingService.CommitAsync (fail-closed checkout.version.conflict).
+- Stable idempotency: finalClickIdempotencyKey is scoped per cart+method and the backend derives its start-payment:commit: / start-payment:payment: namespaces from the same raw key, so a repeated click replays.
+- Coupon: stored coupon code is sent to both the draft read and the final click; totals/amounts are never computed client-side.
+- Actor/guest headers: canonical X-Tooba-Guest-Secret header; both IPaymentStorefrontAuthorizer and IOrderStorefrontActor resolve identity from CurrentAuthenticatedSession, so the wallet-quote buyer and the debiting buyer are the same session identity.
+- Proxy/discovery: next.config.ts rewrites /v1/:path* to TOOBA_HOST_ORIGIN (default http://127.0.0.1:5088), so the new wallet-quote route is already covered; no config change and no new dependency.
+
+WALLET / GATEWAY / MANUAL OUTCOMES
+- Wallet: selectable only with server-proven walletEligible AND canPayFullyWithWallet; quote is read-only (011 evaluation + canonical QuoteForPayableAsync); debit only inside the 028 click; Payment re-quotes at initiation and refuses with payment.wallet.mixed_deferred when coverage moved (no debit, no silent gateway fallback); guests get walletEligible=false with zero balance exposure and cannot initiate a wallet debit.
+- Gateway: selector gateway resolves before commit to the same concrete DefaultProvider used by the 018 hold policy and Payment initiation (single authority: PaymentProviderSelectionAdapter).
+- Manual: selector manual resolves only when ManualCardToCardEnabled; otherwise the click fails closed with payment.method.unavailable before any commit/hold/payment.
+
+REPLAY / RECOVERY (verified unchanged)
+- Same key + recovered response: ICheckoutProcessTracker replay re-checks ownership and performs NO second commit (StorefrontStartPaymentComposer.cs:249-266; covered by StorefrontStartPaymentComposerTests.Lost_response_with_the_same_key_replays_the_checkout_without_a_second_commit). Changed-method identity is a distinct intent by design and fails closed on a no-longer-Active cart instead of double-charging.
+- Post-commit failure: ProblemDetails extension checkoutId (endpoint Failure(...)) drives the frontend recovery banner to the same order; no recommit, no auto-cancel.
+- Expired/released reservations fail closed through the existing 018/Order retry/reacquire authority only.
+
+DEFECTS FOUND AND FIXED (2, frontend only; both directly established)
+- Fix A: loadStorefrontCartWalletQuote returned null whenever coverage was incomplete and forced canPayFullyWithWallet=true, so the existing Payment UX notice payment-wallet-insufficient could never render in cart mode. It now returns the server quote whenever the server proves buyer ownership (walletEligible === true) and copies canPayFullyWithWallet verbatim; wallet stays non-selectable and validateMethod() still refuses it without server coverage. The session read moved inside try so a storage failure cannot reject the page-level Promise.all that also loads the draft and methods. Fail-closed invariants preserved: !response.ok -> null, walletEligible !== true -> null, catch -> null, no client math, no fabricated eligibility.
+- Fix B: toCustomerFinalClickMessage had no wallet case, so a quote-change refusal (payment.wallet.mixed_deferred) fell through to the generic branch. It now returns explicit, actionable cart-mode Persian messages for payment.wallet.mixed_deferred and payment.wallet.insufficient, with no technical code or raw detail leakage.
+
+TESTS ACTUALLY RUN (focused, local; no Host build/test, no live HTTP, no PSP call, no wallet debit)
+- dotnet test Modules/Order/Tooba.Order.Tests: Passed! Failed 0, Passed 255, Skipped 0 (net8.0)
+- dotnet test Modules/Payment/Tooba.Payment.Tests: Passed! Failed 0, Passed 152, Skipped 0 (net8.0)
+- npm run typecheck (src/frontend): clean
+- npm run test:storefront: tests 76, pass 76, fail 0
+- node --test app/storefront/storefront-final-click-api.test.ts: tests 10, pass 10, fail 0 (updated Fix A invariant + new Fix B regression)
+Pre-existing unrelated failures, untouched by this task: lib/architecture/frontend-source-size.guard.test.ts (category-admin-screen.tsx 2230>2215, admin-landing-page-composer.tsx 1442>1440, storefront-landing-blocks.tsx 1033>1026, shared-composition-renderer.tsx 918>907) and the admin/content/sitemap/home suites.
+
+HARD GATE COMPLIANCE
+- Existing Development Host :5088 and its DB fully untouched: no Host/** edit/build/test, no Program.cs, no stop/restart/deploy, no live DB write/migration/seed, no real PSP request, no wallet debit. No different environment created. No runtime PASS is claimed or faked.
+
+OLD HOST STATUS (read-only inspection)
+- Running Host: PID 39992, src/backend/Host/Tooba.Host/bin/Debug/net8.0/Tooba.Host.exe on :5088, binary version 1.0.0+207dae32fd899584d8057405901593aecf222e45, built 2026-10-13T01:44:47Z, from commit 207dae32 (2026-10-12T20:25:52+03:30) which is 49 commits behind current HEAD (ancestor).
+- Frontend dev: node on :3000 (next dev), /v1/:path* -> http://127.0.0.1:5088. Dependencies: postgres-db (postgres:17, :5432) and rabbitmq (:5672) already up. Bridge on :17321.
+- Consequence: the new routes (cart/{cartId}/payment-draft, cart/{cartId}/start-payment, cart/{cartId}/wallet-quote) and the wallet tender are NOT live until the authorized cutover.
+
+READY_FOR_CUTOVER (reversible, same environment; NOT executed)
+1. Confirm authorization and a quiescent checkout window.
+2. Rollback anchor: back up src/backend/Host/Tooba.Host/bin/Debug/net8.0/ (commit 207dae32), or restore later via git checkout 207dae32 + rebuild.
+3. git fetch && git checkout main && git pull; expect HEAD == origin/main == Final-HEAD; stop on drift.
+4. dotnet build src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug (stop on any error).
+5. Stop only PID 39992 (leave postgres-db, rabbitmq and the frontend up), then start Tooba.Host.exe from the same output folder with ASPNETCORE_ENVIRONMENT=Development on :5088.
+6. Smoke (read-only): GET /v1/storefront/payment-methods -> 200; authenticated GET /v1/storefront/cart/{cartId}/wallet-quote -> 200 with walletEligible/canPayFullyWithWallet; guest call -> walletEligible=false and no balance.
+7. Click smoke: signed-in buyer with full coverage -> cart -> shipping continue (cart stays Active, no order) -> /payment?cartId=... -> wallet row visible -> Pay -> exactly one order + one payment, wallet debited once; repeat same click with same key -> same checkout/payment, no second debit; then gateway and manual variants.
+8. Rollback: stop the new process, restore/rebuild 207dae32, start on :5088. No DB restore needed (no schema change); smoke orders are normal business data.
+One-time change list for this cutover: the 49 pending commits on main (010-032 checkout/commit-boundary program), which include the new storefront cart routes and the wallet tender wiring. No migration, no config, no new port, no new dependency.
+
+RESIDUAL RISKS / HONESTLY UNTESTED
+- No live HTTP, browser, PSP request or wallet debit was performed (Host/DB untouched by instruction); steps 6-8 above are acceptance that only the authorized live run can prove.
+- Wallet replay across a method switch is not a same-key replay; the frontend clears the cart session after a successful click, so a switch is only reachable after a failed attempt and then fails closed on the no-longer-Active cart.
+- QuoteForPayableAsync may lazily create a wallet summary row for a signed-in buyer with none (same canonical behaviour as the existing checkoutId wallet quote; no ledger entry, no debit).
+- Pre-existing unrelated frontend source-size guard failures remain and were deliberately not repaired in this task.
+
+automaticNextImplementationTask: NONE
+STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT
