@@ -1,0 +1,166 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-START-PAYMENT-012
+Parent-Task: TB-P0-CHECKOUT-PAYMENT-DRAFT-011
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION — STOP_FOR_ARCHITECT
+Bridge-Task-Row: 9e4ad533-e409-4959-a311-26fb13488087
+Base-SHA-Verified: 19818212c1f33adaaeddd1aeb28b939594710072 (== origin/main; contains 011 63b5b9a41)
+Repo-Branch: main
+Status: BLOCKED_ARCHITECT_DECISION — STOP_FOR_ARCHITECT — NO MUTATION SEAM SHIPPED
+Code-Commit: none (0 production/test files changed by this task)
+
+Reason (one line): a single backend final-click operation requires a NEW cross-module port in one direction, and the
+direction of that port decides who owns Order-creation vs charge-initiation authority — which the task text
+explicitly reserves for the Architect ("If this requires new cross-module port ... STOP_FOR_ARCHITECT with precise
+blocker and minimal proposed split rather than shipping a partial unsafe mutation endpoint").
+
+Evidence artifacts (this task's only changed files):
+  A docs/ai/tasks/TB-P0-CHECKOUT-START-PAYMENT-012.task.md
+  A docs/architecture/evidence/TB-P0-CHECKOUT-START-PAYMENT-012/analysis.md
+  A docs/architecture/evidence/TB-P0-CHECKOUT-START-PAYMENT-012/RESULT.bridge.txt
+
+== 1. FACT — the blocker, with file:line ==
+
+Both operations the seam must join are module-Application-internal and unreachable across the boundary:
+
+commit  : ICheckoutDirectory.SubmitAsync
+          Tooba.Order.Application/Checkout/Contracts/CheckoutDirectoryPorts.cs:36,41
+          impl Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs:121
+          orchestration Tooba.Order.Application/Checkout/Process/CheckoutProcessManager.cs:51
+          storefront entry Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs:309
+initiate: StorefrontPaymentOrchestrator.InitiateAsync
+          Tooba.Payment.Application/Storefront/Orchestration/StorefrontPaymentOrchestrator.cs:110-244
+
+Boundaries are guard-enforced, so neither module may reference the other's Application layer:
+  Tooba.Order.Tests/Architecture/OrderStorefrontArchitectureGuardTests.cs:128
+    Assert.DoesNotContain("Tooba.Payment.Application", text)  (whole Order.Application/Storefront subtree)
+  Tooba.Payment.Application/Tooba.Payment.Application.csproj:14-17 references only Payment.Contracts, Payment.Domain,
+    Wallet.Contracts, Order.Contracts  -> no Order.Application/Infrastructure reference exists.
+
+No Contracts-level seam exists to reuse (verified by enumeration, not inference):
+  Tooba.Order.Contracts exposes read surfaces only: Payments/OrderPaymentContracts.cs:5 ICheckoutPaymentAccessReader,
+    :28 IOrderUnpaidRetrySupplyPort, :31 IOrderPaymentProjectionPort + admin/customer/fulfillment/returns/notifications
+    read contracts. There is NO commit/reserve-from-cart contract.
+  Tooba.Payment.Contracts exposes Checkout/OrderPaymentProjectionContracts.cs:41 IPayableCheckoutReader (read-only),
+    Ports/ICheckoutActorPolicyPort.cs, Hold/PaymentHoldContracts.cs, Storefront/PendingPaymentContracts.cs,
+    Storefront/PaymentProviderCodes.cs. There is NO initiate-payment-for-payable contract.
+  No Contracts-level mediated request exists either: searching IRequest<|IMediator|ISender across BOTH Contracts
+    projects returns 0 matches.
+  No Host composer can hide the gap: OrderStorefrontArchitectureGuardTests.cs:20-27 asserts the Host storefront
+    composer files are absent, and this task forbids Host edits.
+
+Consequence: today the two steps are joined only by the FRONTEND (two HTTP calls) — the coupling this program
+exists to remove:
+  POST /v1/storefront/shipping/commit                      (src/frontend/app/storefront/storefront-shipping-api.ts)
+  POST /v1/storefront/checkout/{checkoutId}/payments       (src/frontend/app/storefront/storefront-payment-api.ts:424)
+
+== 2. FACT — second blocker: payability is unreadable from Payment ==
+
+Task rule: "Payability should use one Order-owned reservation-cycle policy, before beginning charge."
+Canonical policy: Tooba.Order.Application/ReservationCycle/Policies/ReservationCyclePayabilityPolicy.cs:13 IsActive,
+  :20 HasReachedRetryLimit.
+Its only consumers are Order-internal: Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs:198 and
+  Tooba.Order.Application/Storefront/Services/StorefrontPendingPaymentProjector.cs:79,82. Payment reads none of it.
+StorefrontPaymentOrchestrator.InitiateAsync (StorefrontPaymentOrchestrator.cs:110-163) validates actor policy,
+  payable snapshot, wallet quote and method availability — NOT payability.
+CheckoutPaymentAccessSnapshot (Tooba.Order.Contracts/Payments/OrderPaymentContracts.cs:5) carries only
+  CheckoutId, PayableAmount, Currency, OrderNumber.
+=> A Payment-owned final-click would need a SECOND new cross-module read (or a widened existing contract) to avoid
+   duplicating or ignoring payability. An Order-owned final-click gets payability for free (same module).
+
+== 3. FACT — atomicity the task asks to prove ALREADY has a real-Postgres proof in-repo ==
+
+src/backend/Host/Tooba.Host.Tests/CheckoutOrderFoundationTests.cs ([Collection("PostgresSerial")] :101;
+Testcontainers postgres:16-alpine; real Database.MigrateAsync() for Cart/Catalog/Party/Offer/Pricing/Inventory/
+Order/Tax/Promotion :262-280; real CheckoutDirectory + real CheckoutProcessManager :293):
+  :349-373 multi-seller/multi-line commit -> 2 SellerOrders all PendingPayment, every line has ReservationId
+  :463-474 forced mid-commit failure via FailOnceCartDirectory -> InvalidOperationException
+  :474-476 Cart stays Active + 0 checkout rows for that cart  => reservation+Order+conversion rolled back
+  :477-479 same-key replay after fault commits once and reuses
+  :482-485 DIFFERENT idempotency key after successful commit -> SAME CheckoutId, exactly 1 row
+  :487-520 concurrent double-submit with two independent CheckoutDirectory/DbContext sets -> equal CheckoutId, 1 row
+Ordering guard: Host/Tooba.Host.Tests/AtomicCheckoutCommitTests.cs:42-47 asserts
+  EnsureCanStartInitialReservationAsync precedes ReserveForCheckoutAsync.
+Unique constraint that makes re-commit for the same cart impossible: ix_checkouts_cart_id
+  (Migrations/20260823140000_UniqueCheckoutCartId.cs:21-27; EF OrderDbContext.cs:126) plus the
+  already-converted-cart winner resolution at CheckoutProcessManager.cs:157-172.
+
+== 4. UNKNOWN — the focused run could NOT be executed in this session (environment, not code) ==
+
+Command: dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj --nologo -v q \
+           --filter "FullyQualifiedName~CheckoutOrderFoundationTests"
+Result : BUILD FAILED after 481s — MSB3021/MSB3027 "Unable to copy file ... Tooba.Host.dll ... because it is being
+         used by another process. The file is locked by: Tooba.Host (39992)"
+Cause  : Tooba.Host.Tests references the Host project (WebApplicationFactory), so building it must overwrite
+         src/backend/Host/Tooba.Host/bin/Debug/net8.0/*.dll, which the RUNNING live dev Host (PID 39992) holds open.
+         Stopping/restarting the live Host is outside this task's authorization ("no service restart"), so I did NOT
+         kill it.
+Effect : the current PASS/FAIL state of that (pre-existing) real-Postgres test on THIS machine is UNVERIFIED here.
+         I do NOT claim it passed. The test exists, is source-verified, and asserts the above; that is a FACT.
+Note   : the Order module test project DOES build and run cleanly here (157/157 in the previous task), so an
+         Order-side endpoint would be locally testable once the seam direction is decided.
+Also UNKNOWN: live HTTP behaviour of any new route (running Host binary is pre-change; rebuild/restart not authorized).
+
+== 5. ARCHITECT DECISION REQUESTED — minimal proposed split (both add exactly ONE Contracts interface) ==
+
+Option S2 (recommended) — Order-owned final-click, new Payment.Contracts initiation port
+  Route (Order.Endpoints, own module, no Host change):
+    POST /v1/storefront/cart/{cartId:guid}/start-payment
+    body { expectedCartVersion, idempotencyKey, providerCode?, useWallet? }
+    identity: existing IOrderStorefrontCheckoutIdentityGate + guest secret (same as /shipping/commit)
+  1. Order: command + validator + handler; resolve draft/ownership (reuse StorefrontShippingService
+     ProjectPaymentDraftAsync / EnsureDraftOwnership), commit via existing StorefrontShippingService.CommitAsync()
+     -> ICheckoutDirectory.SubmitAsync  (NO new reserve logic, NO read-then-reserve).
+  2. NEW Tooba.Payment.Contracts port: IPaymentInitiationPort.InitiateForPayableAsync(InitiateForPayableRequest, ct)
+     + adapter in Tooba.Payment.Infrastructure that forwards to the existing StorefrontPaymentOrchestrator
+     .InitiateAsync (DI line in PaymentModule; no Host change); returns a Contracts DTO mirror of
+     StorefrontPaymentInitiationDto. Payment keeps ALL provider/wallet/manual routing
+     (StorefrontPaymentOrchestrator.cs:124-158) — no rule duplication.
+  3. Payability before charge: checked inside Order with ReservationCyclePayabilityPolicy.IsActive(:13) via the
+     existing IReservationCycleDirectory — NO second new port.
+  4. Idempotency: one cart-scoped key for both steps; ix_checkouts_cart_id already forces a second commit to return
+     the winner (CheckoutProcessManager.cs:157-172).
+  5. Initiation fails AFTER commit: PendingPayment order persists; the existing
+     POST /checkout/{checkoutId}/payments retry stays valid — no re-commit, no orphan reserve, no re-consumed quota.
+     Commit fails: TransactionScope (CheckoutProcessManager.cs:95) leaves Cart Active and releases holds.
+  Why: Order keeps "when an Order may exist" authority; Payment keeps "when/with which provider a charge starts"
+     authority; payability needs no extra port; guest/version/draft policy reused verbatim.
+
+Option S1 (alternative) — Payment-owned final-click, new Order.Contracts commit port
+  Payment gets IStorefrontCheckoutCommitPort.CommitFromCartAsync(...) in Tooba.Order.Contracts + Order adapter
+  (DI in OrderModule). Smaller in files, but a Payment endpoint would create Orders/reserve stock/convert carts,
+  and it still needs a SECOND new read for payability (§2) — larger authority transfer.
+
+Open questions for the Architect:
+  Q1 Which direction (S1 or S2), or is the composite backend seam not wanted at all (frontend keeps 2 calls)?
+  Q2 May the existing CheckoutPaymentAccessSnapshot (OrderPaymentContracts.cs:5) be widened instead of adding a
+     separate payability read?
+  Q3 Approve the resulting Contracts change (contract change, no schema change).
+
+Explicitly NOT done (unchanged by this task): no frontend/shipping cutover; no Host edit; no schema/DDL/migration;
+no live cart/order/payment/inventory mutation; no service restart; /shipping/commit untouched; GET payment-draft
+(011) stays read-only and is never read as a persisted Order.
+
+== 6. Before/After guarantees ==
+
+BEFORE: cart->payment is a 2-call frontend choreography (shipping/commit then checkout/{id}/payments); no
+  backend atomic final-click exists.
+AFTER : identical to BEFORE. This task shipped no mutation seam, so there is nothing new to guarantee and no
+  half-functional endpoint exists. The commit path, its atomicity, its idempotency and its unique constraints are
+  untouched (0 code changes).
+
+== 7. Hygiene ==
+
+Changed files: 3 evidence/task docs only. No production/test/schema/Host/frontend change.
+Unrelated pre-existing working-tree entries were NOT staged, NOT committed, NOT reverted, NOT stashed
+  (docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md,
+   src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs,
+   src/frontend/app/admin/admin-order-detail-screen.tsx,
+   src/frontend/app/storefront/storefront-landing-blocks.tsx — CRLF/index-stat artifacts, empty content diff).
+No historical Task resumed or replayed; no unrelated worker started; no Bridge probing.
+automaticNextImplementationTask=NONE (unchanged).
+STOP for Architect decision.
+END_TOOBA_WORKER_RESULT
