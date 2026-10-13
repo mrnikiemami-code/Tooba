@@ -1,0 +1,137 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-WALLET-FINAL-CLICK-030
+Parent-Task: TB-P0-CHECKOUT-FRONTEND-FINAL-CLICK-029
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED — BOUNDED NON-MONEY SLICE DELIVERED + WALLET CART-MODE BLOCKED
+Stop-State: STOP_FOR_ARCHITECT
+Bridge-Task-Row: 2fd4a0b4-4720-4ca7-988c-223e811288aa
+Base-SHA (== origin/main at claim): 0460533acfb8af2a70781f046ee7a086231e2bf3
+Code-Commit-SHA: 3a4c9d3c1 (see final SHA line below)
+Repo-Branch: main
+Host-CLOSED-Proof: no file under src/backend/Host/** was read for execution, edited, built, tested, stopped,
+  restarted or deployed; the running Development Host :5088 was never touched; no backend source file was
+  modified at all in this task (0 backend edits, 0 csproj edits, 0 migrations, 0 config/schema changes);
+  no live DB access, no wallet debit, no PSP call.
+
+== 0. HEADLINE: WALLET CANNOT BE MADE AVAILABLE BEFORE COMMIT WITH THE EXISTING CONTRACTS ==
+
+Answer to "can the user truly use wallet before checkout commit today?": NO — and it cannot be done safely
+inside this bounded slice. There is no cart-scoped wallet eligibility/quote contract anywhere in the backend,
+and Payment has no seam to obtain an Active cart's payable amount. Per the task's own rule ("If a correct
+cart-scoped quote would require more than one coherent bounded slice, do NOT add optimistic client wallet
+enablement: report exact missing owner contract and the minimum next slice, with no unsafe public feature"),
+I BLOCKED the wallet enablement and left it disabled, with no fabricated quote and no unsafe public feature.
+I did NOT enable wallet optimistically and did NOT compute eligibility in the browser.
+
+== 1. AUTHORITY MAP (file:line) — no secure cart-scoped wallet eligibility endpoint exists ==
+
+Payment storefront routes — src/backend/Modules/Payment/Tooba.Payment.Endpoints/Storefront/PaymentStorefrontEndpoints.cs:22-24:
+  POST /v1/storefront/checkout/{checkoutId:guid}/payments
+  GET  /v1/storefront/checkout/{checkoutId:guid}/wallet-quote   <- wallet quote; checkoutId-keyed ONLY
+  GET  /v1/storefront/payment-methods                           <- store-scoped catalog (gateway/manual; no wallet)
+Wallet quote owner path:
+  Tooba.Payment.Application/Storefront/Queries/GetStorefrontWalletQuoteQuery.cs:6-9
+    GetStorefrontWalletQuoteQuery(CheckoutId, CartId, GuestSecret, AuthenticatedUserId)
+  Tooba.Payment.Application/Storefront/Orchestration/StorefrontPaymentOrchestrator.cs:61-86
+    GetWalletQuoteAsync -> _checkouts.GetForMutationAsync(checkoutId, cartId, guestSecret, userId)
+    => without a PERSISTED CHECKOUT there is no payable amount; unreachable for an Active cart.
+  Tooba.Wallet.Contracts/Payments/WalletOrderPaymentPort.cs:4 WalletCheckoutQuoteDto, :32 QuoteForPayableAsync
+    (actor, payableAmount, currency) — a correct owner port, but it needs a server-authoritative payable.
+Order -> Payment owner seams (ALL checkoutId-addressed):
+  Tooba.Order.Contracts/Payments/OrderPaymentContracts.cs:6-10
+    ICheckoutPaymentAccessReader.GetForMutationAsync / GetOwnedForPaymentResultAsync / GetOwnedAsync
+  => NO cart-scoped payable/quote contract is exposed to Payment.
+  Only the Order 011 cart draft (GET /v1/storefront/cart/{cartId}/payment-draft) computes an Active-cart
+  payable, and it is Order-owned.
+Existing references already present (consumer side needs no new coupling):
+  Tooba.Payment.Application.csproj:15 Wallet.Contracts, :16 Order.Contracts.
+Wallet customer read (owner-verified, no guest fallback): GET /v1/customer/wallet —
+  Tooba.Wallet.Endpoints/Customer/WalletCustomerEndpoints.cs:26 with WalletCustomerAuthorizer.cs:13-36
+  (authenticated session or Development dev-actor header only).
+Frontend: app/storefront/storefront-payment-api.ts:376 loadStorefrontWalletQuote(checkoutId) -> :383
+  GET /v1/storefront/checkout/{checkoutId}/wallet-quote?cartId=...
+Verdict: no cart-scoped eligibility endpoint exists; wallet pre-commit requires a NEW owner contract plus a new
+read-only endpoint + validators + DI + guard manifests + tests across two modules (> one coherent slice in a
+20-minute HARD box) — and a new cross-module owner contract is an Architect authorization, not a worker call.
+
+Why I did NOT close the gap with a client composition: combining GET /v1/customer/wallet with the 011 draft
+payable would compute the wallet quote in the browser (browser-side amount/balance authority), diverge from
+the Payment wallet policy, and risk becoming a bypass around the registered fresh-money gate. Explicitly
+rejected.
+
+== 2. WHAT I DELIVERED (bounded, non-money, no production-behaviour change) ==
+
+Durable fail-closed guards added to src/frontend/app/storefront/storefront-final-click-api.test.ts (new test:
+"cart mode keeps the wallet tender fail-closed until a canonical cart-scoped quote exists"):
+  - cart mode must set quote = null and must NOT call the checkoutId-addressed wallet quote with a cart id;
+  - cart mode must never auto-select/enable the wallet tender (only the server catalog's tenders);
+  - a forced wallet selection is rejected by validateMethod() before any request is sent;
+  - useWallet is derived only from the server-authorized method (`useWallet: input.method === "wallet"`).
+Changed-Files (frontend only, 2 files):
+  M src/frontend/app/storefront/storefront-final-click-api.test.ts   (+guard test, 7 -> 8 tests)
+  (evidence/artifact commits: docs/ai/tasks/TB-P0-CHECKOUT-WALLET-FINAL-CLICK-030.task.md,
+   docs/architecture/evidence/TB-P0-CHECKOUT-WALLET-FINAL-CLICK-030/**)
+Zero production source changes: no .tsx/.ts production file, no backend file, no contract, no schema.
+
+== 3. WALLET FINAL-CLICK EVIDENCE (unchanged, re-verified) ==
+- Pre-click money calls: 0. The cart-mode visit performs exactly two GET reads (Order 011 payment-draft +
+  Payment payment-methods); no start-payment, no checkout creation, no reservation, no wallet debit.
+- Final click: POST /v1/storefront/cart/{cartId}/start-payment (028) with body keys exactly
+  expectedCartVersion, idempotencyKey, useWallet, providerCode, couponCode and one stable
+  sessionStorage key per cart+method. useWallet can only become true if the selected method is `wallet`, which
+  cart mode currently never offers and validation rejects.
+- Gateway/manual: byte-for-byte unchanged. Committed-order recovery (/payment?checkoutId=...) unchanged,
+  including its wallet-quote + wallet tender.
+- Money authority remains the 028 server commit + 025 fresh-payability gate, never the read-only quote.
+
+== 4. VERIFICATION (real commands, real counts) ==
+1) cd src/frontend && node --experimental-strip-types --test app/storefront/storefront-final-click-api.test.ts
+   app/storefront/storefront-shipping-api.test.ts app/payment/storefront-payment-page.test.ts
+   app/storefront/storefront-payment-api.test.ts -> 34 tests, 34 pass, 0 fail
+   (storefront-final-click-api.test.ts alone: 8 pass).
+2) cd src/frontend && npm run test:storefront -> 76 tests, 76 pass, 0 fail.
+3) cd src/frontend && npm run typecheck (tsc --noEmit) -> clean, exit 0.
+4) Backend module tests: NOT RUN — no backend file was changed, so there is nothing new to validate; running
+   them would be unrelated work (and Host/Host.Tests are forbidden by the task).
+5) UNVERIFIED (declared): no runtime/live HTTP proof (Host CLOSED). No browser-level wallet flow exists to
+   prove because wallet remains intentionally disabled pre-commit.
+6) Unrelated pre-existing baseline failures (documented, NOT repaired): frontend-source-size.guard.test.ts
+   reports 4 violations in files untouched by this task (category-admin-screen.tsx 2230>2215,
+   admin-landing-page-composer.tsx 1442>1440, shared-composition-renderer.tsx 918>907 — all unmodified in git —
+   plus the pre-existing dirty storefront-landing-blocks.tsx 1033>1026); and test:surface-coverage fails on the
+   pre-existing dirty storefront-landing-blocks.tsx:286 raw `bg-white`.
+
+== 5. SECURITY / RESIDUAL RACES ==
+- No new public surface was published, so no new attack surface, no balance disclosure, no guest wallet.
+- Cash race unchanged: 028 commit + 025 fresh-payability remain the only money authority; a read-only quote
+  (whenever it exists) is point-in-time and must never be presented as a guarantee.
+- When the next slice lands, a wallet attempt rejected at Pay time must keep surfacing the persisted
+  ProblemDetails checkoutId for same-order recovery (029 already implements this) with no second commit.
+
+== 6. MINIMUM NEXT SLICE (needs Architect authorization; exact) ==
+1) Tooba.Order.Contracts: add a read-only cart quote contract, e.g.
+   ICartPaymentQuoteReader.GetForCartAsync(cartId, guestSecret, authenticatedUserId, ct) ->
+   CartPaymentQuoteSnapshot(CartId, CartVersion, PayableAmount, Currency, ItemCount, ShippingMethodCode),
+   implemented in Order.Infrastructure by reusing the 011 quote path (persisted shipping selection; no order,
+   no reservation, no conversion).
+2) Tooba.Payment.Application: GetStorefrontCartWalletQuoteQuery(cartId, guestSecret, authenticatedUserId)
+   + validator + handler -> IWalletOrderPaymentPort.QuoteForPayableAsync(actor, snapshot.PayableAmount,
+   snapshot.Currency); fail closed for guest/unavailable/insufficient.
+3) Tooba.Payment.Endpoints: GET /v1/storefront/cart/{cartId:guid}/wallet-quote behind the existing
+   EnsureCheckoutActorAsync policy.
+4) Frontend cart mode consumes it; wallet offered only on canonical canPayFullyWithWallet; final click stays 028
+   with the stable key and zero pre-click money calls.
+5) Guards/tests: Payment validator-coverage manifest entry, endpoint organization guard, and focused tests for
+   unauthorized guest/actor, insufficient funds, full coverage, stale cart version, zero money movement.
+
+== 7. HYGIENE ==
+2 commits (1 code/guard + 1 task artifact/evidence). Pre-existing dirty/untracked files NOT staged, committed,
+reverted or stashed (admin-order-detail-screen.tsx, storefront-landing-blocks.tsx, CheckoutAbuseGate.cs,
+TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md). No force-push, no history rewrite, no stash, no Host work,
+no deployment, no historical task resumed. No automatic next task started.
+
+STOP_FOR_ARCHITECT. automaticNextImplementationTask=NONE.
+END_TOOBA_WORKER_RESULT
