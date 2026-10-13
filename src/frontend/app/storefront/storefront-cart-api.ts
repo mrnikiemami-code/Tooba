@@ -431,6 +431,8 @@ export type StorefrontCartApiErrorMeta = {
   currentCount?: number;
   maxCount?: number;
   nextAvailableAt?: string | null;
+  /** شناسهٔ سفارشِ پایدارشده در ProblemDetails برای بازیابی همان سفارش پس از شکست پس از commit. */
+  checkoutId?: string | null;
 };
 
 export class StorefrontCartApiError extends Error {

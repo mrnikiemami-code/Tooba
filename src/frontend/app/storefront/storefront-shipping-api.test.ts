@@ -54,13 +54,20 @@ test("shipping date chips use Host weekday/date once and do not duplicate Jalali
   assert.match(source, /overflow-x-auto/);
 });
 
-test("shipping continue commits before navigation and does not pre-clear cart", () => {
+test("shipping continue persists the draft, keeps the cart active and never commits", () => {
   const source = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-shipping.tsx"), "utf8");
-  const commitIndex = source.indexOf("commitShippingToPayment");
-  const pushIndex = source.indexOf("router.push(localizePath(`/payment");
   const persistFn = source.slice(source.indexOf("async function persistAndContinue"), source.indexOf("async function submitNewAddress"));
-  assert.ok(commitIndex > 0 && pushIndex > commitIndex);
+  assert.ok(persistFn.length > 0);
+  // پیش‌نویس ارسال ذخیره می‌شود و ناوبری به پرداخت با آدرس سبد است.
+  const saveIndex = persistFn.indexOf("saveShippingSelection");
+  const pushIndex = persistFn.indexOf("router.push(localizePath(`/payment?cartId=");
+  assert.ok(saveIndex > 0 && pushIndex > saveIndex, "draft must be saved before navigating to the cart-addressed payment");
+  // کلیک «ادامه به پرداخت» نباید هیچ commit/رزرو/ساخت سفارش یا پاک‌کردن سبد ایجاد کند.
+  assert.doesNotMatch(persistFn, /commitShippingToPayment/);
+  assert.doesNotMatch(persistFn, /shipping\/commit/);
+  assert.doesNotMatch(persistFn, /checkoutId/);
   assert.doesNotMatch(persistFn, /clearCartSession|notifyCartChanged|setCartCount\(0\)/);
+  assert.doesNotMatch(source, /commitShippingToPayment/);
 });
 
 test("shipping UI source has no hardcoded Shopeiva template method list", () => {
@@ -70,8 +77,8 @@ test("shipping UI source has no hardcoded Shopeiva template method list", () => 
   assert.doesNotMatch(source, /ارسال اکسپرس/);
   assert.doesNotMatch(source, /دریافت حضوری/);
   assert.match(source, /loadShippingProjection/);
-  assert.match(source, /commitShippingToPayment/);
-  assert.match(source, /\/payment/);
+  assert.match(source, /saveShippingSelection/);
+  assert.match(source, /\/payment\?cartId=/);
   assert.match(source, /shipping-first-name/);
   assert.match(source, /shipping-last-name/);
   assert.doesNotMatch(source, /نام و نام خانوادگی/);

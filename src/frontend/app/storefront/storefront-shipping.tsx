@@ -38,7 +38,6 @@ import {
   type CustomerAddress,
 } from "../customer-panel/customer-address-api.ts";
 import {
-  commitShippingToPayment,
   loadShippingProjection,
   saveShippingSelection,
   toCustomerShippingMessage,
@@ -243,11 +242,9 @@ export function StorefrontShopeivaShipping() {
         selectedDeliveryTimeWindow: deliveryTime,
         customerNote: notes,
       });
-      const committed = await commitShippingToPayment(projection.cartId, projection.cartVersion);
-      if (!committed.checkoutId) {
-        throw new Error("شناسهٔ سفارش برنگشت.");
-      }
-      router.push(localizePath(`/payment?checkoutId=${encodeURIComponent(committed.checkoutId)}`));
+      // ارسال فقط «پیش‌نویس» می‌شود و سبد Active می‌ماند. commit/رزرو/ساخت سفارش فقط با کلیک نهایی
+      // پرداخت در صفحهٔ پرداخت رخ می‌دهد؛ اینجا هیچ درخواست commit ارسال نمی‌شود.
+      router.push(localizePath(`/payment?cartId=${encodeURIComponent(projection.cartId)}`));
     } catch (cause) {
       setError(toCustomerShippingMessage(cause, locale));
       setLimitCode(cause instanceof StorefrontCartApiError ? cause.errorCode : null);

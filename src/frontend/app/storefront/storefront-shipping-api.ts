@@ -360,6 +360,12 @@ export function readStoredCheckoutId(): string | null {
   return window.sessionStorage.getItem(CHECKOUT_ID_KEY);
 }
 
+/**
+ * مسیر قدیمی commit زودهنگام ارسال (checkoutId-محور). دیگر در مسیر عادی «ادامه به پرداخت» استفاده
+ * نمی‌شود: ناوبری ارسال → پرداخت فقط پیش‌نویس را ذخیره می‌کند و سبد Active را نگه می‌دارد، و ساخت
+ * سفارش/رزرو تنها با کلیک نهایی پرداخت (start-payment سبد-محور) انجام می‌شود.
+ * فقط برای بازیابی صریح جریان قدیمی نگه داشته شده است — هیچ فراخوان خودکار ندارد.
+ */
 export async function commitShippingToPayment(
   cartId: string,
   expectedCartVersion: number,

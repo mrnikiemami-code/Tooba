@@ -10,6 +10,7 @@ import {
   toCustomerCheckoutMessage,
   type StorefrontCheckoutPage,
 } from "../storefront/storefront-checkout-api.ts";
+import { StorefrontCartApiError } from "../storefront/storefront-cart-api.ts";
 import { readStoredCheckoutId } from "../storefront/storefront-shipping-api.ts";
 import { StorefrontPaymentMethodPicker } from "../storefront/storefront-payment-methods.tsx";
 import {
@@ -19,27 +20,76 @@ import {
   startStorefrontPayment,
   toCustomerPaymentMessage,
   WALLET_PROVIDER_CODE,
+  type StorefrontPaymentInitiation,
   type StorefrontPaymentMethodId,
   type StorefrontWalletQuote,
 } from "../storefront/storefront-payment-api.ts";
+import {
+  loadCartPaymentDraft,
+  startFinalClickPayment,
+  toCustomerFinalClickMessage,
+} from "../storefront/storefront-final-click-api.ts";
 import { useCheckoutAuthGate } from "../storefront/use-checkout-auth-gate.ts";
 
 /**
- * پرداخت ویترین — handoff معتبر از Shipping + روش‌های Store-enabled واقعی.
+ * پرداخت ویترین — دو حالت صریح و ناسازگار (هرگز هم‌زمان):
+ *
+ * ۱) «سبد-محور» (`/payment?cartId=...`): خواندن پیش‌نویس خواندنی ORDER 011 و شروع پرداخت فقط با کلیک
+ *    نهایی روی مسیر ORDER 028 (`/cart/{cartId}/start-payment`). تا آن کلیک نه commit ارسال، نه رزرو
+ *    موجودی و نه ساخت سفارش رخ می‌دهد و مبلغ از پیش‌نویس بک‌اند می‌آید (هیچ نقل‌قول جعلی ساخته نمی‌شود).
+ * ۲) «سفارش-محور» (`/payment?checkoutId=...`): بازیابی سفارش پایداری که قبلاً ثبت شده؛ همان جریان
+ *    موجود حفظ می‌شود و هیچ commit/رزرو تازه‌ای تحمیل نمی‌کند.
+ *
  * فرم ورود شماره کارت / کد امنیتی / تاریخ انقضای قالب Shopeiva اینجا نیست و عمداً اضافه نمی‌شود.
  */
 export function StorefrontPaymentHandoff() {
   useCheckoutAuthGate("/payment");
   const params = useSearchParams();
   const router = useRouter();
+  const [mode, setMode] = useState<"cart" | "checkout">("checkout");
   const [page, setPage] = useState<StorefrontCheckoutPage | null>(null);
   const [quote, setQuote] = useState<StorefrontWalletQuote | null>(null);
   const [enabledCodes, setEnabledCodes] = useState<string[]>([]);
   const [method, setMethod] = useState<StorefrontPaymentMethodId | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [recoveryCheckoutId, setRecoveryCheckoutId] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
 
   useEffect(() => {
+    const cartId = params.get("cartId");
+    if (cartId) {
+      setMode("cart");
+      let cancelled = false;
+      void (async () => {
+        try {
+          const [draft, methodsPage] = await Promise.all([
+            loadCartPaymentDraft(cartId),
+            loadStorefrontPaymentMethods(),
+          ]);
+          if (cancelled) return;
+          setPage(draft);
+          // نقل‌قول کیف پول فقط checkoutId-محور است و پیش از commit وجود ندارد؛ مقدار جعلی ساخته نمی‌شود.
+          setQuote(null);
+          const codes = methodsPage.methods.map((m) => m.code.toLowerCase());
+          setEnabledCodes(codes);
+          if (codes.includes("gateway")) {
+            setMethod("gateway");
+          } else if (codes.includes("manual") || methodsPage.manualCardToCardEnabled) {
+            setMethod("manual");
+          } else {
+            setMethod(null);
+          }
+          setError(null);
+        } catch (cause: unknown) {
+          if (!cancelled) setError(toCustomerFinalClickMessage(cause));
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setMode("checkout");
     const checkoutId = params.get("checkoutId") || readStoredCheckoutId();
     if (!checkoutId) {
       setError("سفارش ارسال‌شده پیدا نشد. از مرحلهٔ ارسال ادامه دهید.");
@@ -84,45 +134,72 @@ export function StorefrontPaymentHandoff() {
     return enabledCodes.includes("gateway") || enabledCodes.includes("manual");
   }, [enabledCodes, quote]);
 
-  async function pay() {
-    if (!page?.checkoutId || !method || paid) return;
-    if (method === "wallet" && !quote?.canPayFullyWithWallet) {
-      setError("پرداخت کامل با کیف پول برای این سفارش ممکن نیست.");
+  /** پس از شروع موفق پرداخت: درگاه → redirect؛ کیف پول/دستی → صفحهٔ نتیجه. مبلغ از Host است. */
+  function routeAfterInitiation(initiated: StorefrontPaymentInitiation): void {
+    if (requiresProviderRedirect(initiated)) {
+      // مسیر داخلی (sandbox): push تا Back مرورگر به /payment برگردد.
+      // درگاه خارجی: assign کامل لازم است.
+      const redirectUrl = initiated.redirectUrl;
+      if (redirectUrl.startsWith("/") && !redirectUrl.startsWith("//")) {
+        router.push(redirectUrl);
+        return;
+      }
+      window.location.assign(redirectUrl);
       return;
+    }
+    const awaiting = initiated.providerCode.toLowerCase() === "manual" || method === "manual" ? "&awaitingManual=1" : "";
+    window.location.assign(
+      `/payment/result?paymentId=${encodeURIComponent(initiated.paymentId)}&checkoutId=${encodeURIComponent(initiated.checkoutId || page?.checkoutId || "")}${awaiting}`,
+    );
+  }
+
+  /** اعتبارسنجی روش انتخاب‌شده با همان کاتالوگ فعال فروشگاه؛ هیچ روشی حدس زده نمی‌شود. */
+  function validateMethod(): string | null {
+    if (!method) return "روش پرداخت را انتخاب کنید.";
+    if (mode === "cart") {
+      if (method === "wallet") return "پرداخت با کیف پول پیش از ثبت سفارش در دسترس نیست؛ یکی از روش‌های فعال فروشگاه را انتخاب کنید.";
+      if (method === "gateway" && !enabledCodes.includes("gateway")) return "روش پرداخت درگاه برای این فروشگاه فعال نیست.";
+      if (method === "manual" && !enabledCodes.includes("manual")) return "پرداخت کارت به کارت برای این فروشگاه فعال نیست.";
+      return null;
+    }
+    if (method === "wallet" && !quote?.canPayFullyWithWallet) {
+      return "پرداخت کامل با کیف پول برای این سفارش ممکن نیست.";
     }
     if (method === "gateway" && !enabledCodes.includes("gateway")) {
-      setError("روش پرداخت درگاه برای این فروشگاه فعال نیست.");
-      return;
+      return "روش پرداخت درگاه برای این فروشگاه فعال نیست.";
     }
     if (method === "manual" && !enabledCodes.includes("manual") && !quote?.manualCardToCardEnabled) {
-      setError("پرداخت کارت به کارت برای این فروشگاه فعال نیست.");
+      return "پرداخت کارت به کارت برای این فروشگاه فعال نیست.";
+    }
+    return null;
+  }
+
+  async function pay() {
+    if (!page || paid || paying) return;
+    const invalid = validateMethod();
+    if (invalid) {
+      setError(invalid);
       return;
     }
     setPaying(true);
     setError(null);
+    setRecoveryCheckoutId(null);
     try {
-      const initiated = await startStorefrontPayment(page.checkoutId, {
-        providerCode:
-          method === "wallet" ? WALLET_PROVIDER_CODE : method === "manual" ? "manual" : "gateway",
-      });
-      if (requiresProviderRedirect(initiated)) {
-        // مسیر داخلی (sandbox): push تا Back مرورگر به /payment برگردد.
-        // درگاه خارجی: assign کامل لازم است.
-        const redirectUrl = initiated.redirectUrl;
-        if (redirectUrl.startsWith("/") && !redirectUrl.startsWith("//")) {
-          router.push(redirectUrl);
-          return;
-        }
-        window.location.assign(redirectUrl);
-        return;
-      }
-      const awaiting =
-        initiated.providerCode.toLowerCase() === "manual" || method === "manual" ? "&awaitingManual=1" : "";
-      window.location.assign(
-        `/payment/result?paymentId=${encodeURIComponent(initiated.paymentId)}&checkoutId=${encodeURIComponent(initiated.checkoutId || page.checkoutId)}${awaiting}`,
-      );
+      const initiated =
+        mode === "cart"
+          ? await startFinalClickPayment({
+              cartId: page.cartId,
+              expectedCartVersion: page.cartVersion,
+              method: method as StorefrontPaymentMethodId,
+            })
+          : await startStorefrontPayment(page.checkoutId as string, {
+              providerCode: method === "wallet" ? WALLET_PROVIDER_CODE : method === "manual" ? "manual" : "gateway",
+            });
+      routeAfterInitiation(initiated);
     } catch (cause: unknown) {
-      setError(toCustomerPaymentMessage(cause));
+      setError(mode === "cart" ? toCustomerFinalClickMessage(cause) : toCustomerPaymentMessage(cause));
+      // شکست پس از commit: ارجاع سفارش پایدار برای بازیابی همان سفارش (بدون commit دوباره، بدون لغو خودکار).
+      setRecoveryCheckoutId(cause instanceof StorefrontCartApiError ? cause.meta.checkoutId ?? null : null);
       setPaying(false);
     }
   }
@@ -166,9 +243,15 @@ export function StorefrontPaymentHandoff() {
         {error && !page ? (
           <div className="text-center py-10">
             <p className="text-sm text-red-600 mb-4">{error}</p>
-            <Link href="/shipping" className="inline-flex px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold">
-              بازگشت به ارسال
-            </Link>
+            {mode === "cart" ? (
+              <Link href="/cart" className="inline-flex px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold">
+                بازگشت به سبد خرید
+              </Link>
+            ) : (
+              <Link href="/shipping" className="inline-flex px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold">
+                بازگشت به ارسال
+              </Link>
+            )}
           </div>
         ) : !page ? (
           <p className="text-center text-sm text-gray-500 py-10">در حال بارگذاری وضعیت سفارش…</p>
@@ -177,7 +260,7 @@ export function StorefrontPaymentHandoff() {
             <div className="lg:col-span-5 space-y-4">
               <div
                 className="bg-surface rounded-2xl border border-gray-200 p-5 shadow-sm space-y-3" data-storefront-surface-role="card"
-                data-testid="payment-handoff-summary"
+                data-testid={mode === "cart" ? "payment-cart-draft-summary" : "payment-handoff-summary"}
               >
                 <h2 className="font-black text-gray-900">خلاصهٔ سفارش</h2>
                 <p className="text-sm text-gray-600">
@@ -201,8 +284,13 @@ export function StorefrontPaymentHandoff() {
                   وضعیت پرداخت:{" "}
                   <span className="font-bold text-gray-800">{paid ? "پرداخت‌شده" : "در انتظار پرداخت"}</span>
                 </p>
+                {mode === "cart" ? (
+                  <p className="text-[11px] text-gray-500" data-testid="payment-cart-draft-notice">
+                    این سفارش هنوز ثبت نشده است. سفارش و رزرو موجودی فقط با کلیک روی دکمهٔ پرداخت نهایی ساخته می‌شود.
+                  </p>
+                ) : null}
                 <Link href="/shipping" className="inline-flex text-sm text-primary font-bold">
-                  بازگشت به ارسال
+                  {mode === "cart" ? "ویرایش اطلاعات ارسال" : "بازگشت به ارسال"}
                 </Link>
               </div>
             </div>
@@ -248,15 +336,40 @@ export function StorefrontPaymentHandoff() {
                       ? method === "wallet"
                         ? "در حال پرداخت از کیف پول…"
                         : "در حال ثبت پرداخت…"
-                      : method === "wallet"
-                        ? "پرداخت با کیف پول"
-                        : method === "manual"
-                          ? "ثبت پرداخت کارت به کارت"
-                          : "پرداخت آنلاین"}
+                      : mode === "cart"
+                        ? "پرداخت نهایی و ثبت سفارش"
+                        : method === "wallet"
+                          ? "پرداخت با کیف پول"
+                          : method === "manual"
+                            ? "ثبت پرداخت کارت به کارت"
+                            : "پرداخت آنلاین"}
                   </button>
                 </>
               )}
-              {error ? <p className="text-sm text-red-600">{error}</p> : null}
+              {error ? <p className="text-sm text-red-600" data-testid="payment-error">{error}</p> : null}
+              {error && mode === "cart" ? (
+                <div className="flex flex-wrap gap-2">
+                  <Link href="/cart" className="inline-flex px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-700">
+                    بازگشت به سبد خرید
+                  </Link>
+                </div>
+              ) : null}
+              {recoveryCheckoutId ? (
+                <div
+                  className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900"
+                  data-testid="payment-recovery-same-order"
+                >
+                  این پرداخت شروع نشد، اما سفارش شما ثبت شده است. می‌توانید همان سفارش را بدون ساخت سفارش تازه ادامه دهید.
+                  <div className="mt-2">
+                    <Link
+                      href={`/payment?checkoutId=${encodeURIComponent(recoveryCheckoutId)}`}
+                      className="inline-flex px-4 py-2 rounded-xl bg-amber-600 text-white text-xs font-bold"
+                    >
+                      ادامهٔ پرداخت همین سفارش
+                    </Link>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         )}
