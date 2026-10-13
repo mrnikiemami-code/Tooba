@@ -1,0 +1,142 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-FINAL-CLICK-API-028
+Parent-Task: TB-P0-CHECKOUT-PROVIDER-ALIGNMENT-027
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Bridge-Task-Row: c5726df0-6014-419e-a9b3-ffa09860640e
+Expected-Base-SHA: 20b7c0627972dd27337ec1e1091a5508f7308db2
+Preflight-HEAD: 20b7c0627972dd27337ec1e1091a5508f7308db2  -> MATCH (no drift, no rebase/stash)
+Code-Commit: 71cd5ad16e841687b30febed69f6a47f527d64c8
+Carrier-Commit: ec0ef12e22d3e37aa13dd44081d87fb3156a215b
+Status: WORKER_COMPLETE — PASS — STOP_FOR_ARCHITECT
+
+Host-Edits: 0 (no file under src/backend/Host/** touched, no Host build/test, no :5088 contact, no Program.cs edit)
+Frontend-Edits: 0
+Inventory-Money-Logic-Changes: 0
+Payment-Money-Logic-Changes: 0
+Schema/Migration/Config/Worker/PSP/Wallet-Actions: 0
+DB-Writes: 0
+Live-Host-Restarted: NO
+Solution-Wide-Build: NO (focused Order projects only)
+Host.Tests-Run: NO
+Unrelated-Dirty-Files-Preserved: YES (CheckoutAbuseGate.cs, admin-order-detail-screen.tsx, storefront-landing-blocks.tsx, prior evidence/task docs left untouched and unstaged)
+
+== CHANGED PATHS (committed) ==
+A  src/backend/Modules/Order/Tooba.Order.Endpoints/Storefront/StorefrontStartPaymentEndpoints.cs   (NEW, Order-owned HTTP surface)
+M  src/backend/Modules/Order/Tooba.Order.Endpoints/OrderEndpointModule.cs                          (+1 line: StorefrontStartPaymentEndpoints.Map(app))
+M  src/backend/Modules/Order/Tooba.Order.Endpoints/Tooba.Order.Endpoints.csproj                    (+1 explicit ProjectReference: Tooba.Payment.Contracts)
+M  src/backend/Modules/Order/Tooba.Order.Application/Storefront/Models/StorefrontOrderModels.cs    (+StorefrontStartPaymentBody / +StorefrontStartPaymentResponse)
+M  src/backend/Modules/Order/Tooba.Order.Tests/Architecture/OrderEndpointOrganizationGuardTests.cs (RequiredAlignments: new capability file, mapped exactly once)
+M  src/backend/Modules/Order/Tooba.Order.Tests/Architecture/StorefrontStartPaymentComposerGuardTests.cs (019 guard transitioned to durable dual invariant + 2 new positive guards)
+A  src/backend/Modules/Order/Tooba.Order.Tests/Endpoints/StorefrontStartPaymentEndpointTests.cs    (NEW, 21 focused endpoint tests)
+A  docs/ai/tasks/TB-P0-CHECKOUT-FINAL-CLICK-API-028.task.md                                        (claim artifact, persisted as received)
+
+== ROUTE REGISTRATION EVIDENCE ==
+Route: POST /v1/storefront/cart/{cartId:guid}/start-payment
+Publisher (single): Tooba.Order.Endpoints/Storefront/StorefrontStartPaymentEndpoints.cs
+  group = app.MapGroup("/v1/storefront"); group.MapPost("/cart/{cartId:guid}/start-payment", StartPaymentAsync);
+Registration path (unchanged public chain, NO Host edit):
+  Tooba.Host Program.cs -> MapOrderEndpoints()  (pre-existing call, untouched)
+  -> OrderEndpointModule.MapOrderEndpoints -> StorefrontStartPaymentEndpoints.Map(app)  (+1 line)
+Discoverability proven by OrderEndpointOrganizationGuardTests (RequiredAlignments + OrderEndpointModule_maps_each_capability_exactly_once)
+and by StorefrontStartPaymentEndpointTests.Final_click_route_is_registered_once_through_the_order_module.
+
+== DELEGATION BOUNDARY (no internals re-implemented) ==
+The handler is thin and delegates the whole combination to the accepted StorefrontStartPaymentComposer (019 + 027):
+  1. IOrderStorefrontCheckoutIdentityGate.EnsureCheckoutActorAsync(ct)  -> canonical storefront checkout identity policy (trusted boundary)
+  2. body -> StorefrontStartPaymentRequest(cartId-from-route, guestSecret-from-header/cookie, ExpectedCartVersion,
+     IdempotencyKey, UseWallet, ProviderCode, actor.AuthenticatedUserId, CouponCode)
+  3. composer.StartPaymentAsync -> 027 selector resolution BEFORE commit, canonical commit/replay via ICheckoutDirectory,
+     Order-owned 018 hold preparation with the CONCRETE canonical provider, then the canonical Payment initiation seam
+     with the ORIGINAL selector.
+No catalog/policy/reservation/order/cart/Payment internals, no DbContext, no PSender/MediatR re-plumbing, no money logic.
+
+== SECURITY / API CONTRACT ==
+- Actor identity: only IOrderStorefrontActor.AuthenticatedUserId (trusted HttpContext seam) + EnsureCheckoutActorAsync.
+  The wire body has NO identity/CheckoutId/ReservationId/Amount/Deadline/CartId field (guard-asserted + runtime-asserted).
+- Guest proof: X-Tooba-Guest-Secret header or `tooba_guest_secret` cookie (existing Order convention), passed to the composer only.
+- CartId: route-only (`{cartId:guid}`); Guid.Empty route identity fails closed (404 checkout.cart.missing) and is never committed.
+- Idempotency-Key: required and NEVER generated (no IIdGenerator / Guid.NewGuid) — body field first, then `Idempotency-Key` header
+  (the convention already used by Payment/Wallet/Support endpoints). Missing key -> 400 before any commit.
+  Two clicks with the same key: no second commit, same checkout, same namespaced Payment key (runtime-proven).
+- Selected payment method required: useWallet (wallet) or providerCode (manual/gateway); unresolvable/unknown selector fails closed
+  with 0 commit / 0 hold / 0 payment.
+
+== FAILURE -> HTTP MAPPING (genuine, registered, localized; no raw code, no 409-as-200) ==
+Only a successful StorefrontStartPaymentOutcome.Initiated is HTTP 200 (+ raw StorefrontStartPaymentResponse with checkout + payment refs).
+InvalidRequest:
+  CartRequired         -> checkout.cart.missing   (Order-owned, 404)
+  ProviderUnavailable  -> payment.method.unavailable (Payment-owned registered descriptor, 400)  [Order consumes, does not re-register]
+  IdempotencyKey*      -> checkout.rejected       (Order-owned, 400)
+CheckoutCommitFailed: producer-owned typed FailureCode passed through unchanged (e.g. checkout.version.conflict -> 409;
+  checkout.rejected fallback when a producer returns no code). Nothing is rewritten or guessed.
+HoldPreparationFailed:
+  AccessDenied                                     -> checkout.access.denied            (403)
+  ReservationSetIncomplete | HoldUnavailable | DeadlineRejected -> checkout.inventory.unavailable (409)
+  CycleNotPayable | CycleClosedAfterExtension | PolicyUnavailable -> payment.reservation.not_payable (409)
+  AmbientTransactionUnsupported                    -> platform.error (500, registered Foundation Platform descriptor)
+Payment exceptions (ContractOperationException) are NOT caught: existing typed boundary is preserved (proven by test).
+Business failures never emit platform.unexpected.
+
+== RECOVERABILITY ==
+For HoldPreparationFailed/CheckoutCommitFailed the failure is emitted through the central ApiResponseFactory
+(problem.Extensions["checkoutId"] added only when an authorized persisted checkout exists) so the committed Order stays
+recoverable. No auto-cancel, no re-commit, no second checkout, cart ownership/Active state untouched.
+
+== 019 GUARD TRANSITION (only the authorized one) ==
+StorefrontStartPaymentComposerGuardTests.No_module_or_host_route_publishes_start_payment (method name preserved for guard identity):
+  BEFORE: inert-phase prohibition — Order.Endpoints AND Host must contain no "start-payment" / no composer reference.
+  AFTER : durable dual invariant —
+    * Order.Endpoints: exactly ONE file contains "start-payment" (Storefront/StorefrontStartPaymentEndpoints.cs),
+      exactly ONE file references StorefrontStartPaymentComposer, exactly ONE MapPost in that file and exactly the approved
+      route "/cart/{cartId:guid}/start-payment" (regex-counted, positively asserted);
+    * Host/Tooba.Host: ZERO "start-payment" and ZERO composer references (per-file assertion retained).
+Composer_publishes_no_http_endpoint_and_stays_inert and every other guard in that file were kept intact (not skipped/loosened/deleted).
+Narrow updates elsewhere:
+  * OrderEndpointOrganizationGuardTests.RequiredAlignments += ("Storefront/StorefrontStartPaymentEndpoints.cs",
+    "Tooba.Order.Endpoints.Storefront", "StorefrontStartPaymentEndpoints.Map") — the new route is positively asserted and mapped
+    exactly once; root-file allowlist and prior route counts unchanged.
+  * Two additive positive guards (new tests, no prior assertion removed):
+      Published_final_click_route_derives_identity_from_the_trusted_boundary_and_delegates
+      Published_final_click_body_accepts_no_identity_checkout_amount_or_deadline
+  * Order_endpoints_own_nine_storefront_routes_via_ISender is untouched and still true: the ninth-route ISender surface
+    (StorefrontOrderEndpoints.cs) is unchanged; the new handler is a separate, service-based capability file.
+
+== FOCUSED VERIFICATION (actual) ==
+Builds:
+  dotnet build Modules/Order/Tooba.Order.Endpoints/Tooba.Order.Endpoints.csproj  -> Build succeeded, 0 errors
+  dotnet build Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj          -> Build succeeded, 0 errors
+Tests (dotnet test, Order module project only):
+  Full Order module suite: Passed 255 / Failed 0 / Skipped 0 (incl. all Order architecture guards)
+  New endpoint tests     : 21 / 21 Passed (StorefrontStartPaymentEndpointTests)
+Coverage actually exercised end-to-end with the REAL composer + REAL ApiResponseFactory/catalog + fake ports (no DB, no PSP):
+  guest header + guest cookie identity, authenticated actor seam (body identity impossible by construction),
+  success 200 with checkout+payment refs, 027 concrete-provider alignment into 018 while Payment keeps the original selector,
+  unresolvable selector -> 400 with 0 commit/0 hold/0 payment, missing key -> 400, absent body -> 400, empty route cart -> 404,
+  7 HoldPreparationFailed outcome mappings incl. checkoutId retention, AmbientTransactionUnsupported -> platform.error (not unexpected),
+  producer commit code pass-through, replay same key (0 second commit, same keys/ownership), replay ownership mismatch -> 403,
+  Payment fault propagation untouched, single-route registration.
+
+== RESIDUAL RISKS / OPEN ITEMS (for Architect) ==
+R1. Tooba.Order.Endpoints now declares an explicit ProjectReference to Tooba.Payment.Contracts so the endpoint can reference the
+    Payment-owned stable code payment.method.unavailable / payment.reservation.not_payable instead of a raw literal. Direction is
+    Contracts-only (Payment.Contracts -> BuildingBlocks only), no cycle, but the Architect may prefer re-homing those two codes as
+    Order-consumed constants (mirroring the existing StorefrontOrderErrors.PaymentMissing/PaymentRejected precedent) to drop the reference.
+R2. Because Order.Tests may only reference foreign *Contracts*, the endpoint test mirrors the two Payment-owned descriptors
+    (400 method.unavailable / 409 reservation.not_payable) in a documented test-only IErrorCatalogContributor. Runtime statuses come
+    from PaymentErrorCatalogContributor; the mirror could drift if Payment ever changes those statuses.
+R3. AmbientTransactionUnsupported is an internal invariant (the HTTP route creates no ambient TransactionScope) and is deliberately
+    mapped to a registered Platform 500 (platform.error) rather than masquerading as a client 4xx. Business failures never map to 500.
+R4. Host compilation was intentionally NOT verified (STRICT Host CLOSED). Host only gains a new route through the pre-existing
+    MapOrderEndpoints() call and needs no DI change (composer + IOrderStorefrontActor already registered), but a fresh
+    Host build/test is left to the authorized Host step.
+R5. This endpoint makes reservation commit atomicity a user-visible outcome, but it does NOT close the TOCTOU window between hold
+    extension and PSP initiation; task 025 remains the enforced current money gate, and no ACID claim is made between Order and Inventory.
+R6. The frontend still drives Shipping -> Payment through /v1/storefront/shipping/commit; switching the UI to this final-click route
+    is explicitly out of scope for 028 (no frontend edits).
+
+STOP_FOR_ARCHITECT — awaiting ACCEPT / REPAIR / BLOCK. No next task started, no polling loop, worker returns to IDLE.
+END_TOOBA_WORKER_RESULT
