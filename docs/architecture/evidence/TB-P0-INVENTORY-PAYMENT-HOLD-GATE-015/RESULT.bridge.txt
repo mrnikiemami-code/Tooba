@@ -1,0 +1,139 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-INVENTORY-PAYMENT-HOLD-GATE-015
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Pipeline-Protocol: BRIDGE-WAKE-V1
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Parent-Task: TB-P0-CHECKOUT-PAYABILITY-ATOMIC-014
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Verdict: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: ba424e68a9f9eca11ede109da2b26b5c7279fed6
+Base-SHA-Match: YES (HEAD == origin/main == ba424e68a9f9eca11ede109da2b26b5c7279fed6 before work)
+Implementation-Commit: 60ea9e8481a8e4dc2fb8afdd4486d8dab7647aa6
+Evidence-Path: docs/architecture/evidence/TB-P0-INVENTORY-PAYMENT-HOLD-GATE-015/
+automaticNextImplementationTask: NONE
+
+SUMMARY
+
+Implemented the smallest Inventory-owned, Contracts-only primitive that verifies, under PostgreSQL row
+locks and inside a caller-owned ambient transaction, that every supplied reservation is still Held and
+unexpired. Building block only: no endpoint, no Payment wiring, no charging authority, read-only.
+
+DELIVERED
+
+1) src/backend/Modules/Inventory/Tooba.Inventory.Contracts/Orders/InventoryPaymentHoldGateContracts.cs (new)
+   - InventoryPaymentHoldGateOutcome { Verified, NotHeld, AmbientTransactionRequired }
+   - InventoryPaymentHoldGateResult(Outcome, RequestedCount, HeldCount, UnavailableReservationIds) with
+     AllHeld => Outcome == Verified
+   - IInventoryPaymentHoldGate.VerifyHeldForPaymentAsync(IReadOnlyCollection<Guid>, CancellationToken)
+   - No new typed error code, no Payment-owned code, no new dependency.
+2) src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.PaymentHoldGate.cs (new, 132 LOC)
+   - fail-closed layers: empty/Guid.Empty input never verifies; missing ambient transaction refuses;
+     already-open (unprovable enlistment) refuses; unconfirmed transaction block refuses
+   - locks only live rows in deterministic order: r.reservation_id = ANY($1) AND r.status='Held' AND
+     (r.expires_at IS NULL OR r.expires_at > clock_timestamp()) ORDER BY r.reservation_id FOR UPDATE
+   - database clock only; NULL expires_at = existing durable-hold policy; no caller/app time
+   - never opens its own transaction, performs no write/journal/SaveChanges, calls no external provider
+   - pure verdict EvaluatePaymentHoldGate(...) exposed for DB-free tests
+3) InventoryDirectory.cs: interface list only (+IInventoryPaymentHoldGate).
+4) InventoryModule.cs: one DI line
+   services.AddScoped<IInventoryPaymentHoldGate>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
+5) Tests: 9 verdict tests (Behavior) + 5 durable source guards (Architecture).
+
+STRUCTURE-LOCK CONFORMANCE
+
+- Contracts port placed in the existing Contracts/Orders capability folder; namespace
+  Tooba.Inventory.Contracts.Orders (exact path<->namespace).
+- Implementation in Infrastructure/Directories (allowed; Domain/Policies is FORBIDDEN by the Inventory
+  manifest, so the pure verdict lives beside the implementation).
+- New partial is 132 LOC (Directories ceiling 500).
+- No Host root, Host.Tests, Program.cs, frontend, schema, migration, setting, worker or checkout-commit
+  change. No SQL write on business data, no external provider call, no guard weakened.
+
+ROW-LOCK AND AMBIENT-TRANSACTION EVIDENCE (isolated read-only harness)
+
+Harness: temporary console app OUTSIDE the repository, Npgsql 8.0.7 against Development database
+tooba_alpha on 127.0.0.1:5432. The live Development Host on :5088 was NOT stopped, rebuilt or
+restarted, and was not touched at all; the harness only reads and takes row locks it rolls back.
+Copied for reproducibility to evidence/probe/program.cs.txt. Server: PostgreSQL 17.10.
+The xid/lock probes used the same FOR UPDATE shape without the status predicate, because the
+Development inventory currently holds no live rows at all.
+
+Observed:
+- BINDING_ANY_COUNT=3                  Guid[] -> = ANY($1) array parameter binding works
+- E_XID_ASSIGNED=True                  explicit connection transaction + FOR UPDATE => real block
+- F_XID_ASSIGNED=False                 NO transaction + FOR UPDATE => implicit single-statement
+                                       transaction, locks already released
+- G_XID_ASSIGNED=True                  ambient TransactionScope + connection opened inside it =>
+                                       Npgsql ENLISTED the connection
+- J_NO_TRANSACTION_CONFIRMATION=0      shipped confirmation query, no transaction => fail closed
+- K_AMBIENT_CONFIRMATION=1             shipped confirmation query, ambient scope => proceed
+- H_COMPETING_FOR_UPDATE=BLOCKED_BY_HELD_ROW_LOCKS
+                                       second backend with lock_timeout=750ms is blocked => locks
+                                       persist BEYOND the statement and block other writers
+- I_AFTER_SCOPE_FOR_UPDATE=NOT_BLOCKED_LOCKS_RELEASED
+                                       after the scope ends => lock lifetime == caller transaction
+Conclusion: row locks are taken inside the caller transaction, released exactly when it ends, and the
+shipped confirmer discriminates that state from an implicit single-statement transaction.
+
+NEGATIVE FINDING THAT CHANGED THE DESIGN (reported for the record)
+
+The first implementation confirmed the guarantee via pg_locks granted locktype='tuple' rows. The
+harness proved that observation unusable: pg_locks reported NO tuple locks in every case (explicit
+transaction included), because PostgreSQL only materialises tuple-lock entries under contention. That
+check would have made the primitive permanently return AmbientTransactionRequired. It was replaced by
+a read-only txid_current_if_assigned() observation, which the harness shows is both reachable (K=1)
+and discriminating (J=0).
+
+INTEGRATION CONSTRAINT DISCOVERED
+
+Enlisting TWO connections in one ambient scope promotes it to a distributed transaction; on commit the
+server attempted two-phase commit and failed (55000 prepared transactions are disabled,
+max_prepared_transactions = 0 in Development). Callers must keep ONE connection per ambient scope when
+using this gate. Recorded in the code documentation.
+
+SAFETY / SCOPE ATTESTATION
+
+- No new typed error, no guard weakening, no invented code, no changed reservation status, no TTL
+  extension, no fabricated journal, no schema/migration change.
+- No stop/build/restart of the live Host; Host.Tests was NOT built or run because the running Host
+  holds its DLLs. The affected Host.Tests guards were read and reconciled by inspection:
+  InventoryModuleAmsc001W2StructureGuardTests requires the listed partials to exist (not a
+  set-equality check) and caps Directories/*.cs at 500 LOC (satisfied);
+  OrderSupplyFoundationTests.InvInfra() forbids the literal "Status = StockReservationStatus.Held",
+  which does not appear (SQL uses r.status = 'Held');
+  InventoryModuleAmsc001W3CertGuardTests pins 29 declared error codes and rejects raw
+  ContractOperationException("...") literals — unchanged.
+
+VALIDATION (commands and output)
+
+dotnet build src/backend/Modules/Inventory/Tooba.Inventory.Tests/Tooba.Inventory.Tests.csproj -v q --nologo
+  Build succeeded. 0 Warning(s) 0 Error(s)
+
+dotnet test src/backend/Modules/Inventory/Tooba.Inventory.Tests/Tooba.Inventory.Tests.csproj --no-build --nologo
+  Passed! - Failed: 0, Passed: 27, Skipped: 0, Total: 27
+
+UNVERIFIED / REMAINING RISK
+
+- End-to-end gate against a genuinely Held reservation is UNVERIFIED: the Development tooba_alpha
+  inventory has no live rows (STATUS_TALLY Consumed=6, Released=25, zero Held). Needed later: an
+  isolated harness that seeds a Held reservation with a future expires_at in a throwaway database and
+  asserts Verified, one-released => NotHeld, one-expired => NotHeld, one-missing => NotHeld, and
+  all-or-none across several lines.
+- The gate does NOT prevent the hold from expiring after the caller's commit; Payment capture must
+  clear the TTL or settle before that transaction closes, or Order must re-verify.
+- Order-side reservation_cycles status still lags Inventory holds by 6-15s (TB-P0-CHECKOUT-PAYABILITY-
+  ATOMIC-014), so a status-only Order check remains insufficient.
+- No PSP/external call may run inside the ambient transaction that holds these locks.
+
+NEXT OWNER WORK (not this task)
+
+Order must open the ambient transaction, call IInventoryPaymentHoldGate with ONE connection per scope,
+and only then hand off to Payment initiation inside the same transaction, with the payability
+error-surface decision from TB-P0-CHECKOUT-PAYABILITY-GATE-013 still open.
+
+automaticNextImplementationTask=NONE. Task not started beyond the assigned scope.
+
+END_TOOBA_WORKER_RESULT
