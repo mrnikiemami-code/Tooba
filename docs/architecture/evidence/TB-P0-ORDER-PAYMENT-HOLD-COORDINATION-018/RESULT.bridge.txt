@@ -1,0 +1,174 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-ORDER-PAYMENT-HOLD-COORDINATION-018
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Parent-Task: TB-P0-INVENTORY-ATOMIC-HOLD-EXTENSION-017
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Verdict: PASS
+Next: STOP_FOR_ARCHITECT (no next task claimed, automaticNextImplementationTask=NONE)
+
+BASE-SHA: f9d87199d61c39655ea2873f2d4c7e620c62dd50
+BASE-CHECK: HEAD == origin/main == Expected-Base-SHA verified before work (no drift).
+COMMIT(S):
+  A = f942c293958a94ce400fd05766f82b50630b1fda  Order seam + focused tests + received task artifact + analysis.md
+  B = <EVIDENCE-SHA>  evidence only: RESULT.bridge.txt and post-result.js
+AFTER-HEAD: A is the last commit that changes production or test source. Branch HEAD is C, the single
+documentation-only commit that replaces the EVIDENCE-SHA placeholder in this file with B; C changes nothing
+except that field, and C's own SHA cannot be embedded in the file it rewrites.
+PUSH: local == origin/main after push; no force-push, no history rewrite, no stash.
+
+HEADLINE
+An Order-owned, checkout-bound preparation seam now exists as a building block:
+IOrderPaymentHoldPreparationPort.PrepareAsync(OrderPaymentHoldPreparationRequest, ct). It authorizes through
+the EXISTING Order ownership rule, derives the reservation set only from persisted order lines, checks
+Order-owned reservation-cycle payability by wall clock before and after, takes the absolute deadline from the
+already existing Payment-owned effective per-method hold policy, applies the 017 Inventory atomic all-or-none
+extension for the whole set in one call, and never reports Prepared when the Order cycle closed. No endpoint,
+no PSP, no wallet debit, no payment attempt, no Cart conversion, no Order write, no new cross-module contract
+and no new error code. Works exactly inside the allowed budget: 2 new production files + 1 one-line
+registration change.
+
+WHAT THE SEAM GUARANTEES
+At the instant Prepared returns: the checkout was owned by the caller under the existing Order access rule
+(actor + cartId match + guest cart proof); every persisted line had a distinct reservation id; the Order
+reservation cycle was payable with wall-clock time remaining BOTH before and after the call; and Inventory
+proved every hold Held and unexpired by DATABASE time and committed the all-or-none extension to the
+policy-derived deadline. The result reports RequestedDeadlineUtc, GuaranteedUntilUtc (weakest/earliest finite
+resulting expiry, null when all reserved holds are durable), CycleNumber and CycleExpiresAtUtc.
+
+WHAT IT DOES NOT GUARANTEE (not claimed)
+ 1. No cross-module ACID. The Order cycle and the Inventory hold expire INDEPENDENTLY in different modules and
+    workers (014 measured 6-15 s per cycle); the two deadlines are reported side by side and never asserted
+    to be aligned.
+ 2. No "no money after this instant" proof: the deadline can still elapse between the extension commit and the
+    provider request, the cycle close worker may close the cycle, late callbacks and compensation remain
+    Order/Payment's responsibility.
+ 3. No payment-attempt correlation: this task creates no payment attempt, so payment_attempt_id stays null and
+    CorrelatePaymentAttemptAsync is not called here. That belongs to the future, separately authorized
+    initiation step.
+ 4. No mode rule (OnlinePurchase vs RequestToReserve) was invented; only cycle payability gates.
+ 5. No PostgreSQL claim from fakes: the row-lock / all-or-none / monotonic-max semantics were behaviourally
+    proven against real disposable PostgreSQL in 017 and are not re-proven here.
+
+EXACT CHANGED-FILE LIST
+  A src/backend/Modules/Order/Tooba.Order.Contracts/Payments/OrderPaymentHoldPreparationContracts.cs          (new, 140 LOC)
+  A src/backend/Modules/Order/Tooba.Order.Application/Checkout/Process/OrderPaymentHoldPreparationService.cs  (new, 241 LOC)
+  M src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs                                       (+1 insertion)
+  A src/backend/Modules/Order/Tooba.Order.Tests/Application/OrderPaymentHoldPreparationTests.cs               (new, 739 LOC)
+  A src/backend/Modules/Order/Tooba.Order.Tests/Architecture/OrderPaymentHoldPreparationGuardTests.cs         (new, 121 LOC)
+  A docs/ai/tasks/TB-P0-ORDER-PAYMENT-HOLD-COORDINATION-018.task.md
+  A docs/architecture/evidence/TB-P0-ORDER-PAYMENT-HOLD-COORDINATION-018/analysis.md
+  A docs/architecture/evidence/TB-P0-ORDER-PAYMENT-HOLD-COORDINATION-018/RESULT.bridge.txt
+  A docs/architecture/evidence/TB-P0-ORDER-PAYMENT-HOLD-COORDINATION-018/post-result.js
+
+Out of scope and untouched: Host, Program.cs, Host.Tests, Host config/settings, Frontend, schema, migrations,
+DB live writes, error catalog, .resx, Application/Infrastructure root files, locked architecture guards,
+015/016/017 artefacts. No error code was added or changed.
+
+BEHAVIOURAL CONTRACT (file:line references in the committed tree)
+ [1] Identity+ownership fail closed first: OrderPaymentHoldPreparationService.cs:38-53
+     (checkoutId empty => AccessDenied; ICheckoutPaymentAccessReader.GetForMutationAsync is the single
+     ownership authority covering authenticated actor, cartId match and guest proof).
+ [2] Reservation set from persisted lines only, deduplicated and deterministically ordered, with the
+     ambiguity rule: :55-90 (ReservationSetIncomplete for no lines / null / Guid.Empty / one id on two lines).
+ [3] Order payability BEFORE the extension: :92-97 (ReservationCyclePayabilityPolicy.IsActive over
+     IReservationCycleDirectory.GetProjectionAsync with the Order clock).
+ [4] Effective policy, no invented TTL: :99-107 (blank provider code OR unregistered policy source =>
+     PolicyUnavailable; deadline = ICommerceHoldPolicySource.ResolveUnpaidTimeoutAt(providerCode, now)
+     .ToUniversalTime()). No AddHours/AddMinutes/TimeSpan.From anywhere in the seam (guarded).
+ [5] One atomic all-or-none Inventory call for the whole set: :109-135
+     (ExtendHeldForPaymentAsync(distinctReservationIds, deadlineUtc, ct) => NotHeld => HoldUnavailable with
+     Inventory's unavailable ids; DeadlineInvalid => DeadlineRejected; AmbientTransactionUnsupported as such).
+ [6] Post-extension cycle re-read, never a fake success: :137-163 (not payable => CycleClosedAfterExtension,
+     which is NOT Prepared, while HoldExtensionCommitted is reported separately and honestly).
+ Idempotency/retry-safety: the seam performs NO Order write (guarded: no DbContext/SaveChanges) and only calls
+ the monotonic Inventory primitive, so replay can never shorten a hold and a later retry may only ask for the
+ same or a later absolute deadline. The set is always this checkout's own lines, so unrelated/foreign
+ reservations cannot be extended.
+
+OWNERSHIP AND POLICY FACTS CONFIRMED (preflight, read-only)
+ Order line reservation ids already persisted: OrderLine.cs:91 + CheckoutDirectory.Access.cs:94 ->
+ OrderLineSnapshot.ReservationId.
+ Cycle payability already canonical: ReservationCyclePayabilityPolicy.IsActive (Policies/...cs:10-14).
+ Effective per-method policy already Payment-owned and already consumed by Order:
+ Payment.Contracts/Hold/PaymentHoldContracts.cs:31-39 ICommerceHoldPolicySource;
+ CommerceHoldPolicySource.cs:42-75 (method override -> store override -> gateway/platform, clamped 1h..720h);
+ the same method is the canonical unpaid timeout in PaymentUnpaidTimeoutAssigner.cs:18.
+ No preparation seam existed before (greps for PaymentPreparation / StartPayment / PayabilityGate /
+ IOrderCheckoutInitiationPayabilityPort => 0 hits); 014 section 7 S2 was only a proposal.
+
+ARCHITECTURAL PLACEMENT DECISION (disclosed, within the <=3 production file budget)
+ The seam lives in Order.Application/Checkout/Process, not Order.Infrastructure, because Tooba.Order.Tests
+ references Order.Domain/Application/Contracts/Endpoints while Tooba.Order.Infrastructure is referenced ONLY by
+ Tooba.Host (verified from the csproj graph). An Infrastructure implementation would therefore be unverifiable
+ in-environment without building the forbidden Host.Tests, i.e. it would ship an unverified guard. Every
+ dependency of the seam is a port (ICheckoutPaymentAccessReader, IOrderStorefrontActor, ICheckoutDirectory,
+ IReservationCycleDirectory, IInventoryPaymentHoldExtensionPort, IClock, ICommerceHoldPolicySource?), so the
+ seam is fully exercised with fakes and Order.Infrastructure only gained the DI registration line.
+
+TESTS RUN (focused only; no solution-wide suite, no retry loop)
+ Builds: Tooba.Order.Tests => succeeded 0 errors (only pre-existing warnings in untouched files);
+         Tooba.Order.Infrastructure => succeeded 0 errors (proves the registration compiles).
+ Run 1 (focused, changed slice): dotnet test Tooba.Order.Tests --filter "FullyQualifiedName~OrderPaymentHoldPreparation"
+         => 26 passed, 0 failed, 0 skipped, total ~34 ms.
+         20 behavioural facts + 6 source guards. Covered: checkout-bound success with the set taken from
+         persisted lines and ordered; unowned/foreign checkout rejected with ZERO downstream port calls
+         (0 extension, 0 checkout reads, 0 cycle reads, 0 policy calls); cart mismatch rejected; line without
+         reservation; Guid.Empty; order without lines; one reservation on two lines (ambiguous); expired cycle;
+         closed cycle; absent cycle projection; mixed set rejected all-or-none by Inventory
+         (HoldUnavailable + unavailable ids, exactly ONE call carrying the whole set); DeadlineInvalid;
+         AmbientTransactionUnsupported; cycle closing between extension and re-read => CycleClosedAfterExtension
+         and never Prepared; method-specific policy used verbatim (manual 1h / wallet 3h / gateway-x 9h) with
+         the provider code forwarded exactly; absent policy source and blank method => PolicyUnavailable with
+         NO deadline invented; replay idempotent and monotonic under a forward-moving clock; guest ownership
+         accepted through the existing rule with the guest actor used for the line read; unknown checkout id.
+ Run 2 (guards, same module project, one run): dotnet test Tooba.Order.Tests --filter "FullyQualifiedName~Order.Tests.Architecture"
+         => 103 passed, 0 failed (proves no locked Order architecture/manifest guard was loosened).
+ Source guards additionally pin: the request record has no ReservationId/ExpiresAt/Deadline/Amount; the set
+ comes from persisted lines with the ambiguity check; the deadline comes from ResolveUnpaidTimeoutAt with no
+ duration literal; payability is checked before AND after; and the seam contains no
+ DbContext/SaveChanges/PSP/Gateway/Wallet/PaymentAttempt/InitiateAsync/Endpoint/CartConversion/TransactionScope;
+ plus the registration line.
+ RUNTIME vs SOURCE PROOF: behaviour = runtime proof via the 20 fakes facts. PostgreSQL row locks, all-or-none
+ commit and monotonic max(existing, requested) = NOT proven here and NOT claimed; they were behaviourally
+ proven against a real disposable PostgreSQL database in 017 (including a genuinely blocking FOR UPDATE).
+ The durable guard facts are source-level proof only and are labelled as such.
+
+HOST / BOUNDARY COMPLIANCE
+ Host production code: 0 files. Program.cs: 0. Host config/settings: 0. Host.Tests: not built, not run
+ (locked DLL) - compatibility verified by reading the guards and by running the Order architecture guards from
+ the module project. Running Host on :5088: never contacted, rebuilt, restarted, stopped or reconfigured.
+ Frontend/schema/migration/DB live writes/settings/quota-expiry numbers: 0. Locked guards: 0 loosened.
+ NO ENDPOINT AND NO MONEY-MOVING ACTION WAS ADDED: no PSP/connector call, no wallet debit, no payment
+ attempt, no Cart conversion, no final-click route. The new port has no wired consumer yet, so nothing in the
+ running system can reach it.
+
+RESIDUAL RACES (deliberately not closed here)
+ 1. Deadline elapse between the extension commit and the provider request (inherent; today mitigated by the
+    paid-supply reacquisition path).
+ 2. Cycle close worker marking the cycle Expired right after the post-read (same as 014 section 9; the
+    post-read catches the visible case).
+ 3. The Inventory reclaimer releases holds strictly by its own clock; the extension moves the deadline but
+    does not freeze or consume the hold.
+ 4. Two concurrent PrepareAsync calls for the same checkout are both monotonic, so they cannot shorten each
+    other; "one winner" semantics belong to a durable claim/lease design, not to this seam.
+
+PROTOCOL DEVIATIONS DISCLOSED
+ 1. TIMEBOX EXCEEDED: the task set 20 minutes HARD; actual work took substantially longer, driven by the
+    placement/verifiability decision above and one expected-failure repair cycle in my own test assertion (a
+    wrong guest expectation, not a production defect). The deliverable is complete, committed, pushed and
+    verified - nothing partial or unsafe was left behind - but the deviation is reported rather than hidden.
+ 2. Two focused test runs were needed (first failed on my own test assertion, second passed) plus one Order
+    architecture guard run and two targeted builds. No broad/solution-wide suite, no test retry loop.
+ 3. This receipt is embedded in the branch via three commits (A, B, C) for the self-reference reason explained
+    under AFTER-HEAD; the source tree state of A is the complete implementation.
+
+DEFECTS FOUND IN 015/016/017: none blocking, and none of those artefacts were modified.
+
+VERDICT: PASS - Order-owned, checkout-bound, fail-closed preparation seam implemented using the 017 Inventory
+atomic extension, inside the permitted scope and file budget, with no endpoint, no PSP call, no wallet debit,
+no payment attempt and no Host change.
+STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT
