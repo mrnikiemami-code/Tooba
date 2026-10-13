@@ -1,0 +1,348 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Transactions;
+using Npgsql;
+
+const string ConnectionString =
+    "Host=127.0.0.1;Port=5432;Username=admin;Password=123456;Database=tooba_alpha";
+
+const string GateSql = """
+    SELECT r.reservation_id
+    FROM inventory.reservations AS r
+    WHERE r.reservation_id = ANY($1)
+      AND r.status = 'Held'
+      AND (r.expires_at IS NULL OR r.expires_at > clock_timestamp())
+    ORDER BY r.reservation_id
+    FOR UPDATE
+    """;
+
+static async Task<int> LockRowsAsync(NpgsqlConnection connection)
+{
+    await using var command = new NpgsqlCommand(
+        "SELECT count(*)::int FROM pg_locks WHERE pid = pg_backend_pid() AND locktype = 'tuple' AND granted",
+        connection);
+    return (int)(await command.ExecuteScalarAsync())!;
+}
+
+static async Task<int> LiveRowsAsync(NpgsqlConnection connection, NpgsqlTransaction? transaction, Guid[] ids)
+{
+    await using var command = new NpgsqlCommand(GateSql, connection, transaction)
+    {
+        Parameters = { new NpgsqlParameter { Value = ids } },
+    };
+    var count = 0;
+    await using var reader = await command.ExecuteReaderAsync();
+    while (await reader.ReadAsync())
+    {
+        count++;
+    }
+
+    return count;
+}
+
+static async Task<bool> HasAssignedXidAsync(NpgsqlConnection connection, NpgsqlTransaction? transaction)
+{
+    await using var command = new NpgsqlCommand(
+        "SELECT (pg_current_xact_id_if_assigned() IS NOT NULL)::text", connection, transaction);
+    return (string)(await command.ExecuteScalarAsync())! == "true";
+}
+
+Guid[] existingIds;
+await using (var discovery = new NpgsqlConnection(ConnectionString))
+{
+    await discovery.OpenAsync();
+    await using var command = new NpgsqlCommand(
+        "SELECT reservation_id FROM inventory.reservations ORDER BY reservation_id LIMIT 4", discovery);
+    var list = new System.Collections.Generic.List<Guid>();
+    await using var reader = await command.ExecuteReaderAsync();
+    while (await reader.ReadAsync())
+    {
+        list.Add(reader.GetGuid(0));
+    }
+
+    existingIds = list.ToArray();
+}
+
+Console.WriteLine($"DISCOVERED={existingIds.Length}");
+if (existingIds.Length == 0)
+{
+    Console.WriteLine("NO_ROWS");
+    return;
+}
+
+await using (var version = new NpgsqlConnection(ConnectionString))
+{
+    await version.OpenAsync();
+    await using var versionCommand = new NpgsqlCommand("SHOW server_version", version);
+    Console.WriteLine($"SERVER_VERSION={await versionCommand.ExecuteScalarAsync()}");
+}
+
+var probeIds = existingIds.Take(3).ToArray();
+var missingId = Guid.Parse("99999999-9999-7999-8999-999999999999");
+var withMissing = probeIds.Append(missingId).ToArray();
+
+// --- parameter-binding control against the same table ---
+await using (var control = new NpgsqlConnection(ConnectionString))
+{
+    await control.OpenAsync();
+    await using (var statusCommand = new NpgsqlCommand(
+        "SELECT reservation_id, status, expires_at, (expires_at IS NULL OR expires_at > clock_timestamp()) AS live FROM inventory.reservations ORDER BY reservation_id LIMIT 4",
+        control))
+    await using (var statusReader = await statusCommand.ExecuteReaderAsync())
+    {
+        while (await statusReader.ReadAsync())
+        {
+            Console.WriteLine($"ROW {statusReader.GetGuid(0)} status={statusReader.GetString(1)} expires={statusReader.GetValue(2)} live={statusReader.GetBoolean(3)}");
+        }
+    }
+
+    await using (var countCommand = new NpgsqlCommand(
+        "SELECT status, count(*)::int FROM inventory.reservations GROUP BY status ORDER BY status", control))
+    await using (var countReader = await countCommand.ExecuteReaderAsync())
+    {
+        while (await countReader.ReadAsync())
+        {
+            Console.WriteLine($"STATUS_TALLY {countReader.GetString(0)}={countReader.GetInt32(1)}");
+        }
+    }
+
+    await using var bindingCommand = new NpgsqlCommand(
+        "SELECT count(*)::int FROM inventory.reservations WHERE reservation_id = ANY($1)", control)
+    {
+        Parameters = { new NpgsqlParameter { Value = probeIds } },
+    };
+    Console.WriteLine($"BINDING_ANY_COUNT={await bindingCommand.ExecuteScalarAsync()}");
+}
+
+// --- A: caller-owned ambient transaction ---
+using (var scope = new TransactionScope(
+           TransactionScopeOption.Required,
+           new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+           TransactionScopeAsyncFlowOption.Enabled))
+{
+    await using var connection = new NpgsqlConnection(ConnectionString);
+    await connection.OpenAsync();
+    Console.WriteLine($"A_AMBIENT_PRESENT={Transaction.Current is not null}");
+    Console.WriteLine($"A_LIVE_ROWS={await LiveRowsAsync(connection, null, withMissing)}");
+    Console.WriteLine($"A_HAS_ROW_LOCKS={(await LockRowsAsync(connection)) > 0}");
+    scope.Complete();
+}
+
+// --- B: no ambient transaction at all ---
+await using (var connection = new NpgsqlConnection(ConnectionString))
+{
+    await connection.OpenAsync();
+    Console.WriteLine($"B_LIVE_ROWS={await LiveRowsAsync(connection, null, probeIds)}");
+    Console.WriteLine($"B_HAS_ROW_LOCKS={(await LockRowsAsync(connection)) > 0}");
+}
+
+// --- C: caller-owned explicit connection transaction ---
+await using (var connection = new NpgsqlConnection(ConnectionString))
+{
+    await connection.OpenAsync();
+    await using var transaction = await connection.BeginTransactionAsync();
+    Console.WriteLine($"C_LIVE_ROWS={await LiveRowsAsync(connection, transaction, probeIds)}");
+    Console.WriteLine($"C_HAS_ROW_LOCKS={(await LockRowsAsync(connection)) > 0}");
+    await transaction.RollbackAsync();
+}
+
+// --- D: missing id never appears live ---
+await using (var connection = new NpgsqlConnection(ConnectionString))
+{
+    await connection.OpenAsync();
+    await using var transaction = await connection.BeginTransactionAsync();
+    Console.WriteLine($"D_MISSING_LIVE_ROWS={await LiveRowsAsync(connection, transaction, new[] { missingId })}");
+    await transaction.RollbackAsync();
+}
+
+// --- E: locking mechanism control (status filter removed on purpose) ---
+const string UnfilteredForUpdateSql = """
+    SELECT r.reservation_id
+    FROM inventory.reservations AS r
+    WHERE r.reservation_id = ANY($1)
+    ORDER BY r.reservation_id
+    FOR UPDATE
+    """;
+
+await using (var connection = new NpgsqlConnection(ConnectionString))
+{
+    await connection.OpenAsync();
+    await using var transaction = await connection.BeginTransactionAsync();
+    await using (var command = new NpgsqlCommand(UnfilteredForUpdateSql, connection, transaction)
+               {
+                   Parameters = { new NpgsqlParameter { Value = probeIds } },
+               })
+    await using (var reader = await command.ExecuteReaderAsync())
+    {
+        var locked = 0;
+        while (await reader.ReadAsync())
+        {
+            locked++;
+        }
+
+        Console.WriteLine($"E_FOR_UPDATE_ROWS={locked}");
+    }
+
+    Console.WriteLine($"E_HAS_ROW_LOCKS={(await LockRowsAsync(connection)) > 0}");
+    Console.WriteLine($"E_XID_ASSIGNED={await HasAssignedXidAsync(connection, transaction)}");
+    await transaction.RollbackAsync();
+}
+
+// --- F: same unfiltered FOR UPDATE without any transaction ---
+await using (var connection = new NpgsqlConnection(ConnectionString))
+{
+    await connection.OpenAsync();
+    await using (var command = new NpgsqlCommand(UnfilteredForUpdateSql, connection)
+               {
+                   Parameters = { new NpgsqlParameter { Value = probeIds } },
+               })
+    await using (var reader = await command.ExecuteReaderAsync())
+    {
+        while (await reader.ReadAsync())
+        {
+        }
+    }
+
+    Console.WriteLine($"F_HAS_ROW_LOCKS={(await LockRowsAsync(connection)) > 0}");
+    Console.WriteLine($"F_XID_ASSIGNED={await HasAssignedXidAsync(connection, null)}");
+}
+
+// --- G: ambient TransactionScope + FOR UPDATE, then xid-assignment proof ---
+using (var scope = new TransactionScope(
+           TransactionScopeOption.Required,
+           new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+           TransactionScopeAsyncFlowOption.Enabled))
+{
+    await using var connection = new NpgsqlConnection(ConnectionString);
+    await connection.OpenAsync();
+    await using (var command = new NpgsqlCommand(UnfilteredForUpdateSql, connection)
+               {
+                   Parameters = { new NpgsqlParameter { Value = probeIds } },
+               })
+    await using (var reader = await command.ExecuteReaderAsync())
+    {
+        while (await reader.ReadAsync())
+        {
+        }
+    }
+
+    Console.WriteLine($"G_XID_ASSIGNED={await HasAssignedXidAsync(connection, null)}");
+    Console.WriteLine($"G_ROW_LOCKS={(await LockRowsAsync(connection)) > 0}");
+
+    await using (var legacy = new NpgsqlCommand("SELECT (txid_current_if_assigned() IS NOT NULL)::text", connection))
+    {
+        Console.WriteLine($"G_LEGACY_XID_FN={await legacy.ExecuteScalarAsync()}");
+    }
+
+    // H: a competing FOR UPDATE on the same rows must block, proving the locks outlive the statement.
+    // The competitor connection must not enlist in the ambient transaction: a second enlisted
+    // connection would promote the scope to a distributed transaction (two-phase commit).
+    using (new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+    {
+        await using var competitor = new NpgsqlConnection(ConnectionString);
+        await competitor.OpenAsync();
+        await using (var lockTimeout = new NpgsqlCommand("SET lock_timeout = '750ms'", competitor))
+        {
+            await lockTimeout.ExecuteNonQueryAsync();
+        }
+
+        try
+        {
+            await using var blocked = new NpgsqlCommand(UnfilteredForUpdateSql, competitor)
+            {
+                Parameters = { new NpgsqlParameter { Value = probeIds } },
+            };
+            await using var blockedReader = await blocked.ExecuteReaderAsync();
+            while (await blockedReader.ReadAsync())
+            {
+            }
+
+            Console.WriteLine("H_COMPETING_FOR_UPDATE=NOT_BLOCKED");
+        }
+        catch (PostgresException ex) when (ex.SqlState == "55P03")
+        {
+            Console.WriteLine("H_COMPETING_FOR_UPDATE=BLOCKED_BY_HELD_ROW_LOCKS");
+        }
+    }
+
+    scope.Complete();
+}
+
+// --- I: after the ambient scope ends, its row locks must be gone (lock lifetime == scope lifetime) ---
+using (new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+{
+    await using var after = new NpgsqlConnection(ConnectionString);
+    await after.OpenAsync();
+    await using (var lockTimeout = new NpgsqlCommand("SET lock_timeout = '750ms'", after))
+    {
+        await lockTimeout.ExecuteNonQueryAsync();
+    }
+
+    try
+    {
+        await using var command = new NpgsqlCommand(UnfilteredForUpdateSql, after)
+        {
+            Parameters = { new NpgsqlParameter { Value = probeIds } },
+        };
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+        }
+
+        Console.WriteLine("I_AFTER_SCOPE_FOR_UPDATE=NOT_BLOCKED_LOCKS_RELEASED");
+    }
+    catch (PostgresException ex) when (ex.SqlState == "55P03")
+    {
+        Console.WriteLine("I_AFTER_SCOPE_FOR_UPDATE=STILL_BLOCKED");
+    }
+}
+
+// --- J/K: the shipped confirmation query must discriminate the two transaction states ---
+const string ConfirmationSql =
+    "SELECT (CASE WHEN txid_current_if_assigned() IS NOT NULL THEN 1 ELSE 0 END)::int";
+
+using (new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+{
+    await using var connection = new NpgsqlConnection(ConnectionString);
+    await connection.OpenAsync();
+    await using (var command = new NpgsqlCommand(UnfilteredForUpdateSql, connection)
+               {
+                   Parameters = { new NpgsqlParameter { Value = probeIds } },
+               })
+    await using (var reader = await command.ExecuteReaderAsync())
+    {
+        while (await reader.ReadAsync())
+        {
+        }
+    }
+
+    await using var confirmation = new NpgsqlCommand(ConfirmationSql, connection);
+    Console.WriteLine($"J_NO_TRANSACTION_CONFIRMATION={await confirmation.ExecuteScalarAsync()}");
+}
+
+using (var scope = new TransactionScope(
+           TransactionScopeOption.Required,
+           new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+           TransactionScopeAsyncFlowOption.Enabled))
+{
+    await using var connection = new NpgsqlConnection(ConnectionString);
+    await connection.OpenAsync();
+    await using (var command = new NpgsqlCommand(UnfilteredForUpdateSql, connection)
+               {
+                   Parameters = { new NpgsqlParameter { Value = probeIds } },
+               })
+    await using (var reader = await command.ExecuteReaderAsync())
+    {
+        while (await reader.ReadAsync())
+        {
+        }
+    }
+
+    await using (var confirmation = new NpgsqlCommand(ConfirmationSql, connection))
+    {
+        Console.WriteLine($"K_AMBIENT_CONFIRMATION={await confirmation.ExecuteScalarAsync()}");
+    }
+
+    scope.Complete();
+}
