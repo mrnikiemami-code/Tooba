@@ -75,6 +75,7 @@ public sealed class OrderEndpointValidatorCoverageGuardTests
         ("PreviewStorefrontCheckoutQuery", "VALIDATOR_REQUIRED"),
         ("SubmitStorefrontCheckoutCommand", "VALIDATOR_REQUIRED"),
         ("GetStorefrontCheckoutQuery", "VALIDATOR_REQUIRED"),
+        ("GetStorefrontPaymentDraftQuery", "VALIDATOR_REQUIRED"),
         ("ListStorefrontPendingPaymentsQuery", "NO_VALIDATOR_REQUIRED"),
         ("CancelPendingCheckoutCommand", "VALIDATOR_REQUIRED"),
         ("HidePendingPaymentCardCommand", "VALIDATOR_REQUIRED"),

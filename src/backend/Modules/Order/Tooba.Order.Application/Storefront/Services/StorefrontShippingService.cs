@@ -130,6 +130,48 @@ public sealed class StorefrontShippingService
             StorefrontIranGeography.Provinces);
     }
 
+    /// <summary>
+    /// پیش‌نویس پرداخت پیش از سفارش برای سبد فعال: انتخاب ارسال ذخیره‌شده + قیمت authoritative بک‌اند
+    /// (همان ارزیابی تجاری <c>/checkout/preview</c>). هیچ CheckoutGroup/سفارش/رزروی ساخته نمی‌شود،
+    /// سبد Convert نمی‌شود، سهمیهٔ abuse مصرف نمی‌شود و خروجی <c>CheckoutId = null</c> دارد.
+    /// </summary>
+    public async Task<StorefrontCheckoutPage> ProjectPaymentDraftAsync(
+        Guid cartId,
+        string? guestSecret,
+        string? couponCode,
+        CancellationToken cancellationToken)
+    {
+        // دسترسی سبد اول بررسی می‌شود تا cartId ناشناس/بیگانه پیش از هر خواندن پیش‌نویس یکسان ۴۰۴ بگیرد.
+        await RequireCartAsync(cartId, guestSecret, cancellationToken);
+
+        var draft = await _drafts.GetByCartIdAsync(cartId, cancellationToken)
+            ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
+        EnsureDraftOwnership(draft, guestSecret);
+
+        return await _checkouts.PreviewAsync(
+            cartId,
+            guestSecret,
+            couponCode,
+            cancellationToken,
+            shipping: new StorefrontCheckoutShippingInput(
+                draft.RecipientName,
+                draft.ContactMobile,
+                draft.ProvinceName,
+                draft.CityName,
+                draft.PostalAddress,
+                draft.PostalCode,
+                draft.SavedAddressId,
+                draft.FirstName,
+                draft.LastName),
+            shippingMethodCode: draft.ShippingMethodCode,
+            shippingMethodLabel: draft.ShippingMethodLabel,
+            shippingAmount: draft.ShippingAmount,
+            minimumDeliveryDate: draft.MinimumDeliveryDate,
+            requestedDeliveryDate: draft.SelectedDeliveryDate,
+            requestedDeliveryTimeWindow: draft.SelectedDeliveryTimeWindow,
+            customerNote: draft.CustomerNote);
+    }
+
     /// <summary>پیش‌نویس ارسال را ذخیره و اعتبارسنجی می‌کند.</summary>
     public async Task<StorefrontShippingDraftView> SaveSelectionAsync(
         StorefrontShippingSelectionRequest request,

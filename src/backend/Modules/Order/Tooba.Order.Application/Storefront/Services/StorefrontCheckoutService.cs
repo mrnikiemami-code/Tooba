@@ -45,15 +45,41 @@ public sealed class StorefrontCheckoutService
         _actor = actor;
     }
 
+    /// <summary>
+    /// ارزیابی تجاری سبد فعال بدون ماندگاری CheckoutGroup. وقتی انتخاب ارسال ذخیره‌شده داده شود،
+    /// همان مقادیر backend-authoritative روی quote اعمال می‌شوند تا «پیش‌نویس پرداخت» قبل از سفارش ساخته شود.
+    /// فراخوانی بدون پارامترهای اختیاری، رفتار قبلی را بدون تغییر نگه می‌دارد.
+    /// </summary>
     public async Task<StorefrontCheckoutPage> PreviewAsync(
         Guid cartId,
         string? guestSecret,
         string? couponCode,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        StorefrontCheckoutShippingInput? shipping = null,
+        string? shippingMethodCode = null,
+        string? shippingMethodLabel = null,
+        decimal? shippingAmount = null,
+        DateOnly? minimumDeliveryDate = null,
+        DateOnly? requestedDeliveryDate = null,
+        string? requestedDeliveryTimeWindow = null,
+        string? customerNote = null)
     {
         var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
         var quoted = await _checkouts.PreviewAsync(
-            BuildCommand(cart, guestSecret, "preview", _actor.GuestActorId, shipping: null, couponCode),
+            BuildCommand(
+                cart,
+                guestSecret,
+                "preview",
+                _actor.GuestActorId,
+                shipping: shipping,
+                couponCode: couponCode,
+                shippingMethodCode: shippingMethodCode,
+                shippingMethodLabel: shippingMethodLabel,
+                shippingAmount: shippingAmount,
+                minimumDeliveryDate: minimumDeliveryDate,
+                requestedDeliveryDate: requestedDeliveryDate,
+                requestedDeliveryTimeWindow: requestedDeliveryTimeWindow,
+                customerNote: customerNote),
             cancellationToken);
         return MapPage(quoted, cart, persisted: false);
     }

@@ -6,6 +6,7 @@ using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Order.Application.Storefront.Checkout.Commands.SubmitStorefrontCheckout;
 using Tooba.Order.Application.Storefront.Checkout.Queries.GetStorefrontCheckout;
+using Tooba.Order.Application.Storefront.Checkout.Queries.GetStorefrontPaymentDraft;
 using Tooba.Order.Application.Storefront.Checkout.Queries.PreviewStorefrontCheckout;
 using Tooba.Order.Application.Storefront.Geography;
 using Tooba.Order.Application.Storefront.Models;
@@ -36,6 +37,7 @@ internal static class StorefrontOrderEndpoints
         group.MapPost("/shipping/projection", ProjectShippingAsync);
         group.MapPut("/shipping/selection", SaveShippingSelectionAsync);
         group.MapPost("/shipping/commit", CommitShippingAsync);
+        group.MapGet("/cart/{cartId:guid}/payment-draft", GetPaymentDraftAsync);
         group.MapGet("/geography/provinces", (ApiResponseFactory api) =>
             api.From(Result.Success(StorefrontIranGeography.Provinces)));
     }
@@ -169,6 +171,23 @@ internal static class StorefrontOrderEndpoints
         await gate.EnsureCheckoutActorAsync(ct);
         return api.From(await sender.Send(
             new SaveStorefrontShippingSelectionCommand(body, ReadGuestSecret(request)),
+            ct));
+    }
+
+    private static async Task<IResult> GetPaymentDraftAsync(
+        Guid cartId,
+        ISender sender,
+        IOrderStorefrontCheckoutIdentityGate gate,
+        ApiResponseFactory api,
+        HttpRequest request,
+        CancellationToken ct)
+    {
+        await gate.EnsureCheckoutActorAsync(ct);
+        return api.From(await sender.Send(
+            new GetStorefrontPaymentDraftQuery(
+                cartId,
+                ReadGuestSecret(request),
+                request.Query["couponCode"].FirstOrDefault()),
             ct));
     }
 
