@@ -234,8 +234,9 @@ public sealed class PaymentModuleAmsc001W1MigrateGuardTests
             .Select(f => (string)f.GetRawConstantValue()!)
             .ToArray();
 
-        Assert.Equal(28, declared.Length);
+        Assert.Equal(29, declared.Length);
         Assert.Contains("payment.missing", declared);
+        Assert.Contains("payment.idempotency.conflict", declared);
         Assert.Contains("payment.unpaid.supply_unavailable", declared);
         Assert.Contains("inventory.reservation.retry_limit_reached", declared);
         Assert.Contains("admin.authorization.denied", declared);

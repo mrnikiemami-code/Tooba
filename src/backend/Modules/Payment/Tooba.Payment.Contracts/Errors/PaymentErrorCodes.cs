@@ -25,6 +25,7 @@ public static class PaymentErrorCodes
     private static readonly HashSet<string> KnownCodes = new(StringComparer.Ordinal)
     {
         AlreadySucceeded,
+        IdempotencyConflict,
         Missing,
         AttemptMissing,
         AccessDenied,
@@ -64,6 +65,13 @@ public static class PaymentErrorCodes
 
     /// <summary>A payment for this checkout has already succeeded; new initiation is terminal.</summary>
     public const string AlreadySucceeded = "payment.already_succeeded";
+
+    /// <summary>
+    /// The reused idempotency key is already bound to a different payment operation — another checkout,
+    /// or another canonical provider than the persisted one. Fail closed (409) instead of replaying the
+    /// previous payment, minting a second key, or charging through the previously bound provider.
+    /// </summary>
+    public const string IdempotencyConflict = "payment.idempotency.conflict";
 
     /// <summary>Payment record was not found.</summary>
     public const string Missing = "payment.missing";

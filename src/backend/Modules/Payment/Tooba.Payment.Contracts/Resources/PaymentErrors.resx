@@ -15,6 +15,9 @@
   <data name="payment.already_succeeded" xml:space="preserve">
     <value>This order has already been paid successfully.</value>
   </data>
+  <data name="payment.idempotency.conflict" xml:space="preserve">
+    <value>This payment request conflicts with a previous payment attempt. Please reload the checkout and try again.</value>
+  </data>
   <data name="payment.missing" xml:space="preserve">
     <value>Payment was not found.</value>
   </data>

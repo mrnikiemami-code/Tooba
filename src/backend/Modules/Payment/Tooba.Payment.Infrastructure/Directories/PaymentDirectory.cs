@@ -76,6 +76,18 @@ public sealed class PaymentDirectory : IPaymentDirectory
             }
 
             _actorContext.ActorUserId = command.ActorUserId;
+            // Fail closed BEFORE any replay, retry, provider call, or return: a reused key must describe
+            // the very same payment operation. The requested provider is canonicalized through the gateway
+            // registry so an identical-method replay (including the catalog default alias resolved upstream)
+            // still matches the persisted concrete provider, while a cross-method or cross-checkout reuse is
+            // rejected instead of silently replaying the previous payment or charging the previous provider.
+            var requestedProviderCode = _gateways.Resolve(command.ProviderCode).ProviderCode;
+            if (existing.CheckoutId != command.CheckoutId
+                || !string.Equals(requestedProviderCode, existing.ProviderCode, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ContractOperationException(PaymentErrorCodes.IdempotencyConflict);
+            }
+
             var replayGateway = _gateways.Resolve(existing.ProviderCode);
             if (existing.Status != PaymentStatus.Succeeded
                 && await HasSucceededPaymentForCheckoutAsync(existing.CheckoutId, cancellationToken))

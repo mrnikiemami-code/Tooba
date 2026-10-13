@@ -15,6 +15,9 @@
   <data name="payment.already_succeeded" xml:space="preserve">
     <value>پرداخت این سفارش قبلاً با موفقیت انجام شده است.</value>
   </data>
+  <data name="payment.idempotency.conflict" xml:space="preserve">
+    <value>این درخواست پرداخت با تلاش پرداخت قبلی این سفارش هم‌خوانی ندارد. لطفاً صفحه پرداخت را دوباره بارگذاری کنید و مجدداً تلاش کنید.</value>
+  </data>
   <data name="payment.missing" xml:space="preserve">
     <value>پرداخت پیدا نشد.</value>
   </data>

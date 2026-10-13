@@ -250,7 +250,7 @@ public sealed class PaymentModuleAmsc001W3CertGuardTests
         var codes = Read("src/backend/Modules/Payment/Tooba.Payment.Contracts/Errors/PaymentErrorCodes.cs");
         Assert.Contains("public static bool IsKnown(string? code)", codes, StringComparison.Ordinal);
         Assert.Contains("private static readonly HashSet<string> KnownCodes", codes, StringComparison.Ordinal);
-        Assert.Equal(28, Regex.Matches(codes, "public const string ").Count);
+        Assert.Equal(29, Regex.Matches(codes, "public const string ").Count);
 
         var operation = Read("src/backend/Modules/Payment/Tooba.Payment.Application/Composition/PaymentOperation.cs");
         Assert.Contains(
@@ -285,7 +285,7 @@ public sealed class PaymentModuleAmsc001W3CertGuardTests
         var contributor = new PaymentErrorCatalogContributor();
         var codes = contributor.Contribute().Select(d => d.Code).ToArray();
 
-        Assert.Equal(24, codes.Length);
+        Assert.Equal(25, codes.Length);
         Assert.Equal(codes.Length, codes.Distinct(StringComparer.OrdinalIgnoreCase).Count());
 
         // Descriptor ownership is unique: the four declared foreign-owned codes are never re-registered.
@@ -317,7 +317,7 @@ public sealed class PaymentModuleAmsc001W3CertGuardTests
         var fa = File.ReadAllText(Path.Combine(contractsRoot, "Resources", "PaymentErrors.fa.resx"));
 
         var codes = new PaymentErrorCatalogContributor().Contribute().Select(d => d.Code).ToArray();
-        Assert.Equal(24, codes.Length);
+        Assert.Equal(25, codes.Length);
 
         var cultureEn = CultureInfo.GetCultureInfo("en");
         var cultureFa = CultureInfo.GetCultureInfo("fa");
