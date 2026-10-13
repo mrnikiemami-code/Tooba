@@ -12,6 +12,7 @@ const read = (rel: string): string => fs.readFileSync(path.join(root, rel), "utf
 const finalClick = read("src/frontend/app/storefront/storefront-final-click-api.ts");
 const handoff = read("src/frontend/app/payment/storefront-payment-handoff.tsx");
 const shipping = read("src/frontend/app/storefront/storefront-shipping.tsx");
+const paymentApi = read("src/frontend/app/storefront/storefront-payment-api.ts");
 
 function requestBody(source: string): string {
   const marker = "body: JSON.stringify({";
@@ -49,7 +50,10 @@ test("cart-addressed payment loads the read-only Order draft and invents no chec
   assert.match(finalClick, /\/v1\/storefront\/cart\/\$\{encodeURIComponent\(cartId\)\}\/payment-draft/);
   assert.match(finalClick, /mapStorefrontCheckout\(payload\)/);
   assert.match(handoff, /loadCartPaymentDraft\(cartId\)/);
-  assert.match(handoff, /setQuote\(null\)/);
+  // نقل‌قول کیف‌پول سبد فقط از پاسخ خام سرور ست می‌شود (هیچ مقدار محاسبه‌شده/جعلی در UI).
+  assert.match(handoff, /setQuote\(cartQuote\)/);
+  assert.match(handoff, /loadStorefrontCartWalletQuote\(cartId\)/);
+  assert.doesNotMatch(handoff, /setQuote\(\{\s*checkoutId/);
 });
 
 test("one click can start exactly one payment: cart draft path and committed checkout path are exclusive", () => {
@@ -67,19 +71,35 @@ test("shipping continue saves the draft and navigates cart-addressed without any
   assert.match(shipping, /saveShippingSelection\(projection\.cartId, projection\.cartVersion/);
 });
 
-test("cart mode keeps the wallet tender fail-closed until a canonical cart-scoped quote exists", () => {
+test("cart mode offers wallet only when the server proves buyer ownership and full coverage", () => {
   const cartBranch = handoff.slice(handoff.indexOf('if (cartId) {'), handoff.indexOf('setMode("checkout")'));
   assert.ok(cartBranch.length > 0, "cart branch not found");
-  // هیچ نقل‌قول کیف‌پول سبد-محور وجود ندارد: مقدار صفر/جعلی ساخته نمی‌شود و نقل‌قول checkoutId-محور صدا زده نمی‌شود.
-  assert.match(cartBranch, /setQuote\(null\)/);
-  assert.doesNotMatch(cartBranch, /loadStorefrontWalletQuote/);
-  // wallet هرگز در حالت سبد پیش‌فرض/انتخاب نمی‌شود؛ فقط کاتالوگ متعارف فروشگاه.
-  assert.doesNotMatch(cartBranch, /setMethod\("wallet"\)/);
-  assert.match(cartBranch, /loadStorefrontPaymentMethods\(\)/);
-  // حتی اگر UI دستکاری شود، اعتبارسنجی قبل از درخواست، wallet را در حالت سبد رد می‌کند.
-  assert.match(handoff, /method === "wallet"\) return "پرداخت با کیف پول پیش از ثبت سفارش در دسترس نیست/);
+  // نقل‌قول سبد فقط از مسیر سبد-محور سرور می‌آید؛ نقل‌قول checkoutId-محور هرگز در این حالت صدا زده نمی‌شود.
+  assert.match(cartBranch, /loadStorefrontCartWalletQuote\(cartId\)/);
+  assert.doesNotMatch(cartBranch, /loadStorefrontWalletQuote\(/);
+  // wallet فقط با اثبات سرور (پوشش کامل مبلغ) پیش‌فرض/فعال می‌شود.
+  assert.match(cartBranch, /const walletOk = Boolean\(cartQuote\?\.canPayFullyWithWallet\)/);
+  assert.match(cartBranch, /if \(walletOk\) \{\s*setMethod\("wallet"\);/);
+  // حتی اگر UI دستکاری شود، اعتبارسنجی قبل از درخواست، wallet بدون اثبات سرور را رد می‌کند.
+  assert.match(handoff, /method === "wallet" && !quote\?\.canPayFullyWithWallet/);
   // useWallet فقط از روش انتخاب‌شده سرور-مجاز می‌آید، نه از یک پرچم کلاینتی.
   assert.match(finalClick, /useWallet: input\.method === "wallet"/);
+});
+
+test("cart wallet quote client never turns a fetch failure into wallet eligibility", () => {
+  const branch = paymentApi.slice(
+    paymentApi.indexOf("export async function loadStorefrontCartWalletQuote"),
+    paymentApi.indexOf("export async function startStorefrontPayment"),
+  );
+  assert.ok(branch.length > 0, "cart wallet quote loader not found");
+  assert.match(branch, /if \(!response\.ok\) \{\s*return null;/);
+  assert.match(branch, /readProp\(item, "walletEligible", "WalletEligible"\) !== true\) \{\s*return null;/);
+  assert.match(branch, /readProp\(item, "canPayFullyWithWallet", "CanPayFullyWithWallet"\) !== true\) \{\s*return null;/);
+  assert.match(branch, /catch \{\s*return null;/);
+  // هیچ محاسبهٔ موجودی/اهلیت در مرورگر انجام نمی‌شود.
+  assert.doesNotMatch(branch, /Math\.(min|max)\(/);
+  assert.doesNotMatch(branch, /payableAmount\s*-\s*/);
+  assert.doesNotMatch(branch, /walletEligible\s*=\s*true/);
 });
 
 test("post-commit failure keeps the persisted checkout for recovery on the same order", () => {

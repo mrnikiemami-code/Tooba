@@ -16,6 +16,7 @@ import { StorefrontPaymentMethodPicker } from "../storefront/storefront-payment-
 import {
   loadStorefrontPaymentMethods,
   loadStorefrontWalletQuote,
+  loadStorefrontCartWalletQuote,
   requiresProviderRedirect,
   startStorefrontPayment,
   toCustomerPaymentMessage,
@@ -62,17 +63,22 @@ export function StorefrontPaymentHandoff() {
       let cancelled = false;
       void (async () => {
         try {
-          const [draft, methodsPage] = await Promise.all([
+          const [draft, methodsPage, cartQuote] = await Promise.all([
             loadCartPaymentDraft(cartId),
             loadStorefrontPaymentMethods(),
+            loadStorefrontCartWalletQuote(cartId),
           ]);
           if (cancelled) return;
           setPage(draft);
-          // نقل‌قول کیف پول فقط checkoutId-محور است و پیش از commit وجود ندارد؛ مقدار جعلی ساخته نمی‌شود.
-          setQuote(null);
+          // نقل‌قول کیف‌پول سبد فقط از سرور می‌آید: هم مالکیت خریدار احراز‌شده و هم پوشش کامل مبلغ باید
+          // اثبات شده باشد. شکست fetch یا سبد اثبات‌نشده → null (fail-closed) و هیچ مقدار جعلی ساخته نمی‌شود.
+          setQuote(cartQuote);
           const codes = methodsPage.methods.map((m) => m.code.toLowerCase());
-          setEnabledCodes(codes);
-          if (codes.includes("gateway")) {
+          const walletOk = Boolean(cartQuote?.canPayFullyWithWallet);
+          setEnabledCodes(walletOk && !codes.includes("wallet") ? [...codes, "wallet"] : codes);
+          if (walletOk) {
+            setMethod("wallet");
+          } else if (codes.includes("gateway")) {
             setMethod("gateway");
           } else if (codes.includes("manual") || methodsPage.manualCardToCardEnabled) {
             setMethod("manual");
@@ -157,7 +163,9 @@ export function StorefrontPaymentHandoff() {
   function validateMethod(): string | null {
     if (!method) return "روش پرداخت را انتخاب کنید.";
     if (mode === "cart") {
-      if (method === "wallet") return "پرداخت با کیف پول پیش از ثبت سفارش در دسترس نیست؛ یکی از روش‌های فعال فروشگاه را انتخاب کنید.";
+      if (method === "wallet" && !quote?.canPayFullyWithWallet) {
+        return "پرداخت با کیف پول برای این سبد در دسترس نیست؛ یکی از روش‌های فعال فروشگاه را انتخاب کنید.";
+      }
       if (method === "gateway" && !enabledCodes.includes("gateway")) return "روش پرداخت درگاه برای این فروشگاه فعال نیست.";
       if (method === "manual" && !enabledCodes.includes("manual")) return "پرداخت کارت به کارت برای این فروشگاه فعال نیست.";
       return null;

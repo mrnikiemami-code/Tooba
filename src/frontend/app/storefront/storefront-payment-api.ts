@@ -6,6 +6,7 @@ import {
   cartHeaders,
   cartHeadersFromAccess,
   persistPaymentResultProofFromAccess,
+  readCartSession,
   readPaymentResultProof,
   resolveCommittedCheckoutAccess,
   resolvePaymentResultAccess,
@@ -391,6 +392,56 @@ export async function loadStorefrontWalletQuote(checkoutId: string): Promise<Sto
       return null;
     }
     return mapStorefrontWalletQuote(payload);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * نقل‌قول کیف‌پول سبد را از Host می‌خواند (مسیر پیش‌از‌سفارش /payment?cartId=...).
+ *
+ * قراداد امنیتی: هیچ محاسبهٔ اهلیت/موجودی در مرورگر انجام نمی‌شود. نقل‌قول وقتی بازگردانده می‌شود که
+ * سرور هم مالکیت خریدار احراز‌شده را اثبات کرده باشد (walletEligible) و هم پوشش کامل مبلغ را
+ * (canPayFullyWithWallet). هر خطای شبکه/پاسخ → null؛ شکست fetch هرگز به اهلیت کیف‌پول تبدیل نمی‌شود.
+ */
+export async function loadStorefrontCartWalletQuote(cartId: string): Promise<StorefrontWalletQuote | null> {
+  if (!cartId) {
+    return null;
+  }
+  const session = readCartSession();
+  try {
+    const response = await fetch(`/v1/storefront/cart/${encodeURIComponent(cartId)}/wallet-quote`, {
+      cache: "no-store",
+      headers: storefrontActorHeaders({ cartId, guestSecret: session.guestSecret ?? null }),
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const payload = await parseJson(response);
+    const item = asRecord(payload);
+    if (!item) {
+      return null;
+    }
+    if (readProp(item, "walletEligible", "WalletEligible") !== true) {
+      return null;
+    }
+    if (readProp(item, "canPayFullyWithWallet", "CanPayFullyWithWallet") !== true) {
+      return null;
+    }
+    const maxUsable = asNumber(readProp(item, "maxUsable", "MaxUsable"));
+    return {
+      checkoutId: null,
+      cartId: asString(readProp(item, "cartId", "CartId")) || cartId,
+      currency: asString(readProp(item, "currency", "Currency"), "IRR"),
+      balance: asNumber(readProp(item, "walletBalance", "WalletBalance")),
+      maxUsableAmount: maxUsable,
+      selectedWalletAmount: maxUsable,
+      remainingPayable: asNumber(readProp(item, "remainingPayable", "RemainingPayable")),
+      payableAmount: asNumber(readProp(item, "payableAmount", "PayableAmount")),
+      canPayFullyWithWallet: true,
+      mixedTenderAvailable: false,
+      manualCardToCardEnabled: Boolean(readProp(item, "manualCardToCardEnabled", "ManualCardToCardEnabled")),
+    };
   } catch {
     return null;
   }

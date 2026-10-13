@@ -21,6 +21,7 @@ public static class PaymentStorefrontEndpoints
         var group = app.MapGroup("/v1/storefront");
         group.MapPost("/checkout/{checkoutId:guid}/payments", InitiateAsync);
         group.MapGet("/checkout/{checkoutId:guid}/wallet-quote", WalletQuoteAsync);
+        group.MapGet("/cart/{cartId:guid}/wallet-quote", CartWalletQuoteAsync);
         group.MapGet("/payment-methods", MethodsAsync);
         group.MapGet("/payments/{paymentId:guid}", GetAsync);
         group.MapGet("/payments/{paymentId:guid}/sandbox", SandboxContextAsync);
@@ -68,6 +69,26 @@ public static class PaymentStorefrontEndpoints
                 cartId,
                 ReadGuestSecret(context.Request),
                 authorizer.TryResolveAuthenticatedUserId(context)),
+            cancellationToken));
+
+    /// <summary>
+    /// نقل‌قول کیف‌پول آدرس‌دهی‌شده با سبد (پیش‌از‌سفارش). فقط-خواندن: مبلغ از سبد authoritative و
+    /// موجودی/اهلیت از سرور می‌آید؛ مهمان و سبد اثبات‌نشده بدون افشای موجودی fail-closed می‌شوند.
+    /// </summary>
+    private static async Task<IResult> CartWalletQuoteAsync(
+        Guid cartId,
+        ISender sender,
+        IPaymentStorefrontAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken) =>
+        api.From(await sender.Send(
+            new GetStorefrontWalletQuoteQuery(
+                null,
+                cartId,
+                ReadGuestSecret(context.Request),
+                authorizer.TryResolveAuthenticatedUserId(context),
+                CartScoped: true),
             cancellationToken));
 
     private static async Task<IResult> MethodsAsync(

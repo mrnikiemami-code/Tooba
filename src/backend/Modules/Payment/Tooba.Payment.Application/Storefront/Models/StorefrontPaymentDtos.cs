@@ -21,14 +21,19 @@ public static class PaymentStorefrontActors
 }
 
 public sealed record StorefrontWalletQuoteDto(
-    Guid CheckoutId,
+    Guid? CheckoutId,
     decimal WalletBalance,
     decimal MaxUsable,
     decimal RemainingPayable,
     bool CanPayFullyWithWallet,
     string Currency,
     bool MixedTenderDeferred,
-    bool ManualCardToCardEnabled = false);
+    bool ManualCardToCardEnabled = false,
+    Guid? CartId = null,
+    int CartVersion = 0,
+    decimal PayableAmount = 0m,
+    string? CartQuoteStatus = null,
+    bool WalletEligible = false);
 
 public sealed record StorefrontPaymentMethodOptionDto(
     string Code,

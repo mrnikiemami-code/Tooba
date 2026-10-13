@@ -20,6 +20,7 @@ public sealed class StorefrontPaymentOrchestrator
     private readonly IPaymentDirectory _payments;
     private readonly IOrderPaymentProjection _orderPayments;
     private readonly IWalletOrderPaymentPort _wallets;
+    private readonly ICartPaymentQuoteReader _cartQuotes;
     private readonly IPaymentGatewayCatalogPort _catalog;
     private readonly IMediaAssetUploadPort _media;
     private readonly IOrderUnpaidRetrySupplyPort _supply;
@@ -33,6 +34,7 @@ public sealed class StorefrontPaymentOrchestrator
         IPaymentDirectory payments,
         IOrderPaymentProjection orderPayments,
         IWalletOrderPaymentPort wallets,
+        ICartPaymentQuoteReader cartQuotes,
         IPaymentGatewayCatalogPort catalog,
         IMediaAssetUploadPort media,
         IOrderUnpaidRetrySupplyPort supply,
@@ -45,6 +47,7 @@ public sealed class StorefrontPaymentOrchestrator
         _payments = payments;
         _orderPayments = orderPayments;
         _wallets = wallets;
+        _cartQuotes = cartQuotes;
         _catalog = catalog;
         _media = media;
         _supply = supply;
@@ -84,6 +87,87 @@ public sealed class StorefrontPaymentOrchestrator
             quote.Currency,
             MixedTenderDeferred: true,
             ManualCardToCardEnabled: _catalog.ManualCardToCardEnabled);
+    }
+
+    /// <summary>
+    /// نقل‌قول کیف‌پول آدرس‌دهی‌شده با سبد برای سطح پیش‌از‌سفارش <c>/payment?cartId=...</c>.
+    ///
+    /// فقط-خواندن: مبلغ قابل‌پرداخت از ارزیابی authoritative مالکِ Order می‌آید و اعداد کیف‌پول از قرارداد
+    /// متعارف <see cref="IWalletOrderPaymentPort"/>؛ هیچ سفارش/رزرو/تبدیل سبدی ساخته نمی‌شود و هیچ
+    /// برداشتی از کیف‌پول انجام نمی‌شود. کیف‌پول فقط وقتی به مشتری نشان داده می‌شود که خرچ‌کنندهٔ احراز‌شده
+    /// مالک سبد باشد و سرور پوشش کامل مبلغ را اثبات کند؛ مهمان و سبد اثبات‌نشده بدون افشای موجودی
+    /// fail-closed می‌شوند.
+    /// </summary>
+    public async Task<StorefrontWalletQuoteDto> GetCartWalletQuoteAsync(
+        Guid cartId,
+        string? guestSecret,
+        Guid? authenticatedUserId,
+        CancellationToken cancellationToken)
+    {
+        await _actorPolicy.EnsureCheckoutActorAsync(cancellationToken);
+
+        var buyer = authenticatedUserId is { } id && id != Guid.Empty ? id : (Guid?)null;
+        var cart = await _cartQuotes.GetForCartAsync(cartId, guestSecret, cancellationToken);
+        var snapshot = cart.Snapshot;
+
+        if (!cart.IsReady || snapshot is null)
+        {
+            // سبد ناشناس/بیگانه/غیرفعال یا بدون انتخاب ارسال: هیچ عددی ادعا نمی‌شود.
+            return new StorefrontWalletQuoteDto(
+                CheckoutId: null,
+                WalletBalance: 0m,
+                MaxUsable: 0m,
+                RemainingPayable: 0m,
+                CanPayFullyWithWallet: false,
+                Currency: string.Empty,
+                MixedTenderDeferred: true,
+                ManualCardToCardEnabled: _catalog.ManualCardToCardEnabled,
+                CartId: null,
+                CartVersion: 0,
+                PayableAmount: 0m,
+                CartQuoteStatus: cart.Status.ToString(),
+                WalletEligible: false);
+        }
+
+        if (buyer is null)
+        {
+            // مهمان کیف‌پول ندارد؛ مبلغ سبد گزارش می‌شود اما کیف‌پول و موجودی افشا نمی‌شود.
+            return new StorefrontWalletQuoteDto(
+                CheckoutId: null,
+                WalletBalance: 0m,
+                MaxUsable: 0m,
+                RemainingPayable: snapshot.PayableAmount,
+                CanPayFullyWithWallet: false,
+                Currency: snapshot.Currency,
+                MixedTenderDeferred: true,
+                ManualCardToCardEnabled: _catalog.ManualCardToCardEnabled,
+                CartId: snapshot.CartId,
+                CartVersion: snapshot.CartVersion,
+                PayableAmount: snapshot.PayableAmount,
+                CartQuoteStatus: cart.Status.ToString(),
+                WalletEligible: false);
+        }
+
+        var quote = await _wallets.QuoteForPayableAsync(
+            buyer.Value,
+            snapshot.PayableAmount,
+            snapshot.Currency,
+            cancellationToken);
+
+        return new StorefrontWalletQuoteDto(
+            CheckoutId: null,
+            quote.WalletBalance,
+            quote.MaxUsable,
+            quote.RemainingPayable,
+            quote.CanPayFullyWithWallet,
+            quote.Currency,
+            MixedTenderDeferred: true,
+            ManualCardToCardEnabled: _catalog.ManualCardToCardEnabled,
+            CartId: snapshot.CartId,
+            CartVersion: snapshot.CartVersion,
+            PayableAmount: snapshot.PayableAmount,
+            CartQuoteStatus: cart.Status.ToString(),
+            WalletEligible: true);
     }
 
     public StorefrontPaymentMethodsDto ListPaymentMethods()
