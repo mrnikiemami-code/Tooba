@@ -1,0 +1,170 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-START-PAYMENT-S2-012R
+Parent-Task: TB-P0-CHECKOUT-START-PAYMENT-012
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION — STOP_FOR_ARCHITECT
+Bridge-Task-Row: 63b6b0b5-d2fd-4a44-b662-e8a2959323d0
+HEAD-Before: 77c28e62fcf01251ae15ea36eb5f369aea4518a4
+origin/main-Before: 77c28e62fcf01251ae15ea36eb5f369aea4518a4  -> MATCH (no drift, no unexpected dirty tracked changes)
+HEAD-After (implementation commit): 1bd707131d005babe23ea2f8b1a7df818b1260d9
+origin/main-After: 1bd707131d005babe23ea2f8b1a7df818b1260d9  -> MATCH (pushed)
+Status: BLOCKED_ARCHITECT_DECISION — S2 CONTRACTS SEAM DELIVERED AND GREEN; FINAL-CLICK ENDPOINT WITHHELD BY DESIGN
+
+Endpoint-Published: NO  (POST /v1/storefront/cart/{cartId}/start-payment deliberately NOT created)
+Contracts-Seam: DELIVERED
+Schema/Migration-Changes: 0
+DB-Writes: 0
+Host-Edits: 0
+Host-Restarted: NO
+Frontend-Changes: 0
+Actual-Payment/Order-Calls: 0
+AMSC-Sweep: NO
+Test-Runs: 2 (same project: one filtered focused run, then one full-project run — no repeats)
+automaticNextImplementationTask: NONE (no next task started; worker returns to Idle)
+
+== WHY THE ENDPOINT IS WITHHELD (the STOP the task pre-authorized) ==
+
+The task authorized the endpoint "ONLY if it can be completed safely" and required:
+"If code cannot enforce the invariant with existing seams, STOP with a precise proposed remedy rather
+than asserting safety."
+
+Guard ordering required: successful commit -> active-cycle payability -> begin money movement.
+Commit + cart replay are already single-shot and owner-checked by existing code. The payability ->
+initiation link is NOT enforceable:
+
+ F1 Order commit opens its OWN ambient TransactionScope inside CheckoutProcessManager.SubmitAsync and
+    exposes no post-commit hook or injectable payability guard.
+    src/backend/Modules/Order/Tooba.Order.Application/Checkout/Process/CheckoutProcessManager.cs:95-99,179-182
+ F2 Payability is Order-Application-owned and never crosses into Payment.
+    Tooba.Order.Application/ReservationCycle/Contracts/ReservationCycleContracts.cs:119,176,182
+ F3 Payment initiation reads NO reservation-cycle state. Its inputs are exactly
+    checkoutId, cartId, guestSecret, idempotencyKey, useWallet, providerCodeOverride, authenticatedUserId.
+    Tooba.Payment.Application/Storefront/Orchestration/StorefrontPaymentOrchestrator.cs:110-121
+ F4 The Order->Payment payability image carries no cycle state, so Payment cannot verify a caller's
+    payability claim even if Order asserted it.
+    Tooba.Payment.Contracts/Checkout/OrderPaymentProjectionContracts.cs:32
+    PayableCheckoutSnapshot(CheckoutId, Mode, Currency, SellerOrders, ShippingAmount)
+
+=> Between "Order observes an active cycle" and "Payment records the attempt" the cycle can expire
+   (observed alpha policy: initial_reservation_hold_minutes = 1). No existing seam closes that window;
+   asserting it is safe would be exactly the unproven claim the task forbids. Per the pre-authorized
+   fallback, only the minimal Payment.Contracts port + adapter + focused tests were delivered.
+
+== DELIVERED (all task-scoped; single commit) ==
+
+ A src/backend/Modules/Payment/Tooba.Payment.Contracts/Storefront/PaymentInitiationContracts.cs (NEW)
+   StorefrontPaymentInitiationRequest(CheckoutId, CartId, GuestSecret, IdempotencyKey, UseWallet,
+     ProviderCode, AuthenticatedUserId)      -- mirrors InitiateStorefrontPaymentCommand inputs exactly;
+                                                the customer never supplies an amount.
+   StorefrontPaymentInitiationSnapshot(PaymentId, AttemptId, CheckoutId, Status, ProviderCode,
+     ProviderRequestReference, RedirectUrl, Amount, Currency, RequiresPspRedirect)
+   interface IPaymentInitiationPort.InitiateForCheckoutAsync(request, cancellationToken)
+ B src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Adapters/PaymentInitiationAdapter.cs (NEW)
+   Delegates to the single canonical StorefrontPaymentOrchestrator.InitiateAsync and maps the result
+   one-to-one. Online / wallet / manual routing, provider eligibility, actor policy, idempotency and
+   persistence stay owned by Payment. Payment faults (payment.*) pass through untouched.
+ C src/backend/Modules/Payment/Tooba.Payment.Infrastructure/DependencyInjection/PaymentModule.cs (+7)
+   services.AddScoped<IPaymentInitiationPort>(sp => new PaymentInitiationAdapter(
+       () => sp.GetRequiredService<StorefrontPaymentOrchestrator>()));
+   Deferred Func<> follows the module's existing precedent (Func<IPaymentAdminDirectory> in
+   PaymentDirectory, PaymentModule.cs:52-54). NOT cosmetic: the first non-deferred attempt failed the
+   locked guard PaymentPrecertHygieneTests.Directory_ports_resolve_to_distinct_focused_implementations
+   (ValidateOnBuild = true on the module graph alone) because StorefrontPaymentOrchestrator is
+   registered by the Host (Program.cs:221), not by the module. The deferral keeps module DI validation
+   independent of Host registration WITHOUT touching Host.
+ D src/backend/Modules/Payment/Tooba.Payment.Tests/Behavior/PaymentInitiationPortTests.cs (NEW, 5 tests)
+ E docs/architecture/evidence/TB-P0-CHECKOUT-START-PAYMENT-S2-012R/analysis.md
+ F docs/ai/tasks/TB-P0-CHECKOUT-START-PAYMENT-S2-012R.task.md (claimed artifact)
+
+No endpoint, no Endpoints/Application file, no schema, no Host, no frontend change. Because no route
+exists, the port is currently inert: nothing in the running system can call it.
+
+== OWNERSHIP / IDEMPOTENCY / REPLAY PROOF (facts the endpoint WOULD have relied on) ==
+
+ W1 single-shot commit + converted-cart replay already exist and are NOT re-implemented:
+    CheckoutProcessManager.SubmitAsync:53-59 -> FindExistingCheckoutAsync matches
+    (IdempotencyKey == key) OR (CartId == cartId) — CheckoutSubmitHost.cs:34-42 — then
+    EnsureCheckoutAccess (BuyerPartyId/PlacedByUserId) at :53-58 and ReconcileCartConversionAsync
+    at :60-70. A Converted cart therefore replays its OWN persisted checkout; a different actor fails
+    closed in EnsureAccess. Reusing the canonical StorefrontShippingService.CommitAsync would inherit
+    this instead of duplicating reservation logic; the withheld design did NOT call LoadActiveCartAsync
+    for the replay path.
+ W2 actor/ownership at initiation is enforced by the canonical orchestrator itself:
+    _actorPolicy.EnsureCheckoutActorAsync(...) before any state change (:120), plus
+    _checkouts.GetForMutationAsync(checkoutId, cartId, guestSecret, authenticatedUserId) (:121-122)
+    -> checkoutId + cartId + guest secret + actor must all agree. The port inherits both; it adds no
+    parallel authority and no bypass.
+ W3 the SQL unique-key conflict was NOT treated as successful replay anywhere in the delivered change;
+    no replay logic was added at all.
+
+== EXPIRED-HOLD RACE — HONEST STATUS ==
+
+NOT closed, NOT asserted safe; endpoint withheld (see F1-F4). Concurrency at the DB level of the
+commit path (ix_checkouts_cart_id / ux_checkout_processes_submission_key / cart version token,
+CheckoutProcessManager.cs:158-173,186-205) is untouched by this change and unchanged.
+
+Proposed remedy (needs Architect approval; exceeds this task's authorized Contracts surface):
+ R1 (preferred) Make Payment ENFORCE payability itself: extend the Order-implemented read
+    IPayableCheckoutReader.GetPayableAsync / PayableCheckoutSnapshot
+    (Tooba.Payment.Contracts/Checkout/OrderPaymentProjectionContracts.cs:32,42) with the
+    reservation-cycle deadline + state, and re-verify it inside StorefrontPaymentOrchestrator.InitiateAsync
+    immediately before recording the attempt. The invariant then holds inside the module that owns
+    initiation and no caller assertion is trusted. The Order endpoint then becomes a thin
+    "commit once -> initiate once" composer over the already-delivered IPaymentInitiationPort.
+ R2 (fallback) Expose a commit+payability primitive from the Order commit path evaluated inside the
+    existing TransactionScope, returning a short-lived payability token that Payment must validate
+    against the persisted cycle at initiation. Larger Order blast radius; still needs the Payment-side
+    validator, so R1 remains necessary.
+
+Also unchanged/unaddressed (out of scope, not claimed): the 1-minute dev override vs two-hour payment
+timeout stay separate; no duration, floor or settings change was introduced.
+
+== TESTS RUN (exactly two commands, one project; no repeats) ==
+
+ #1 dotnet test src/backend/Modules/Payment/Tooba.Payment.Tests/Tooba.Payment.Tests.csproj --filter "FullyQualifiedName~PaymentInitiationPortTests"
+    Passed! - Failed: 0, Passed: 5, Skipped: 0, Total: 5
+ #2 dotnet test src/backend/Modules/Payment/Tooba.Payment.Tests/Tooba.Payment.Tests.csproj
+    Passed! - Failed: 0, Passed: 112, Skipped: 0, Total: 112
+
+New focused tests (5) prove:
+ t1 every identity/money/redirect field is carried unchanged (nothing fabricated, dropped or redefined)
+ t2 a declined PSP redirect is reported as declined, not assumed
+ t3 mapping fails closed on a missing orchestrator result (ArgumentNullException)
+ t4 the adapter implements the Contracts port, depends only on the canonical orchestrator (deferred func),
+    and exposes exactly one public operation — no second initiation path
+ t5 the Payment module exposes the port from its own registrations, scoped, resolvable WITHOUT the Host graph
+The other 107 pre-existing Payment tests (including the locked DI/runtime precert hygiene proof) stay
+green: no guard, baseline or locked rule was relaxed or edited.
+
+NOTE (transparency): run #2 was executed because run #1 could not see the locked module-DI guard; the
+first DI attempt (non-deferred) failed there and was fixed, then the full project re-run once. No test
+was retried in a loop.
+
+== EXPLICITLY UNCOVERED / UNVERIFIED ==
+
+ U1 POST /v1/storefront/cart/{cartId:guid}/start-payment absent -> NONE of the five required endpoint
+    behaviours (actor rejection, one-shot success, same-key replay after commit, initiation-failure
+    retry on the same checkout, fail-closed expired cycle) is verified here.
+ U2 No Order+Payment end-to-end composition test exists for this seam (endpoint withheld).
+ U3 Real-PostgreSQL atomicity test CheckoutOrderFoundationTests still cannot run: the running
+    Development Host locks the output DLLs. Per the task, the Host was NOT stopped and the build was NOT
+    retried in a loop. Reported as UNVERIFIED runtime evidence. No cross-module TransactionScope proof
+    is claimed from source inspection.
+ U4 No test proves Payment-side payability enforcement, because that seam does not exist yet (R1/R2).
+ U5 No actual payment or order was created; no DB write, migration or service restart was performed.
+
+== WORKING-TREE HYGIENE ==
+
+Staged/committed: only A-F above. The pre-existing unrelated dirty tracked paths
+(CheckoutAbuseGate.cs, admin-order-detail-screen.tsx, storefront-landing-blocks.tsx,
+TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md) and the untracked evidence/task files of earlier
+tasks were NOT touched, NOT staged, NOT committed, NOT reverted. No force-push, no history rewrite,
+no stash. No historical task was resumed or launched.
+
+ACCEPTANCE_REQUESTED for the delivered Contracts seam.
+BLOCKED_ARCHITECT_DECISION for the final-click endpoint, with remedy R1 preferred.
+STOP — no next task started; worker Idle.
+END_TOOBA_WORKER_RESULT
