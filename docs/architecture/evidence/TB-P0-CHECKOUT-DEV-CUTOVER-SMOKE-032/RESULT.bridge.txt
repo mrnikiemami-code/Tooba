@@ -11,7 +11,7 @@ automaticNextImplementationTask: NONE
 
 Base-SHA: a271e7efd5028694af69d80bf12d64582c984dab
 Code-SHA: 2d1bc170e38370f3e59cb48c9da9cf8aa4fb317b
-Final-HEAD: <this commit>
+Evidence-SHA: 11300f1bbbf8e9649296ee6a867363ae6e2224db (evidence.md + post-result.js; the final result-contract commit carries this file and is the tree posted to Bridge)
 Preflight: HEAD == origin/main == Expected-Base-SHA verified before any edit; no drift, no rebase/stash/reset. Unrelated dirty files preserved and NOT committed (src/backend/.../CheckoutAbuseGate.cs, src/frontend/app/admin/admin-order-detail-screen.tsx, src/frontend/app/storefront/storefront-landing-blocks.tsx). No new Host, port, database, container or parallel environment was created.
 
 SUMMARY
@@ -69,7 +69,7 @@ OLD HOST STATUS (read-only inspection)
 READY_FOR_CUTOVER (reversible, same environment; NOT executed)
 1. Confirm authorization and a quiescent checkout window.
 2. Rollback anchor: back up src/backend/Host/Tooba.Host/bin/Debug/net8.0/ (commit 207dae32), or restore later via git checkout 207dae32 + rebuild.
-3. git fetch && git checkout main && git pull; expect HEAD == origin/main == Final-HEAD; stop on drift.
+3. git fetch && git checkout main && git pull; expect HEAD == origin/main == the result-contract commit that carries this file (code commit 2d1bc170e38370f3e59cb48c9da9cf8aa4fb317b); stop on drift.
 4. dotnet build src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug (stop on any error).
 5. Stop only PID 39992 (leave postgres-db, rabbitmq and the frontend up), then start Tooba.Host.exe from the same output folder with ASPNETCORE_ENVIRONMENT=Development on :5088.
 6. Smoke (read-only): GET /v1/storefront/payment-methods -> 200; authenticated GET /v1/storefront/cart/{cartId}/wallet-quote -> 200 with walletEligible/canPayFullyWithWallet; guest call -> walletEligible=false and no balance.
