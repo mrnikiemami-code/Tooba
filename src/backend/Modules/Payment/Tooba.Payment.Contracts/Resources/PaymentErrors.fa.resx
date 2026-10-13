@@ -18,6 +18,9 @@
   <data name="payment.idempotency.conflict" xml:space="preserve">
     <value>این درخواست پرداخت با تلاش پرداخت قبلی این سفارش هم‌خوانی ندارد. لطفاً صفحه پرداخت را دوباره بارگذاری کنید و مجدداً تلاش کنید.</value>
   </data>
+  <data name="payment.reservation.not_payable" xml:space="preserve">
+    <value>این سفارش دیگر قابل پرداخت نیست: مهلت نگه‌داشتن کالا تمام شده یا آزاد شده است. لطفاً فرایند خرید را از ابتدا شروع کنید تا کالاها دوباره رزرو شوند.</value>
+  </data>
   <data name="payment.missing" xml:space="preserve">
     <value>پرداخت پیدا نشد.</value>
   </data>

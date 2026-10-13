@@ -26,6 +26,7 @@ public static class PaymentErrorCodes
     {
         AlreadySucceeded,
         IdempotencyConflict,
+        ReservationNotPayable,
         Missing,
         AttemptMissing,
         AccessDenied,
@@ -72,6 +73,14 @@ public static class PaymentErrorCodes
     /// previous payment, minting a second key, or charging through the previously bound provider.
     /// </summary>
     public const string IdempotencyConflict = "payment.idempotency.conflict";
+
+    /// <summary>
+    /// A fresh money attempt was refused because the checkout's reservation cycle / holds are not
+    /// provably payable right now (absent authority, incomplete/duplicated reservation set, expired or
+    /// closed cycle, retry quota exhausted, or a released/expired/missing hold). Fail closed (409)
+    /// BEFORE any gateway initiation, attempt row or wallet debit. Never a permissive bypass.
+    /// </summary>
+    public const string ReservationNotPayable = "payment.reservation.not_payable";
 
     /// <summary>Payment record was not found.</summary>
     public const string Missing = "payment.missing";

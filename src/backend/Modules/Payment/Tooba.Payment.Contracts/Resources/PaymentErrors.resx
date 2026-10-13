@@ -18,6 +18,9 @@
   <data name="payment.idempotency.conflict" xml:space="preserve">
     <value>This payment request conflicts with a previous payment attempt. Please reload the checkout and try again.</value>
   </data>
+  <data name="payment.reservation.not_payable" xml:space="preserve">
+    <value>This checkout is no longer payable: the reservation hold has expired or been released. Please restart the checkout to reserve the items again.</value>
+  </data>
   <data name="payment.missing" xml:space="preserve">
     <value>Payment was not found.</value>
   </data>

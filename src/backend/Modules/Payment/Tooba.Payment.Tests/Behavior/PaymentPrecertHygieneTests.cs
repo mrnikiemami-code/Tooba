@@ -136,6 +136,7 @@ public sealed class PaymentPrecertHygieneTests
         services.AddSingleton<IClock, SystemUtcClock>();
         services.AddSingleton<IIdGenerator, UuidV7IdGenerator>();
         services.AddScoped<IPayableCheckoutReader, PermissivePayableCheckoutReader>();
+        services.AddScoped<Tooba.Order.Contracts.Payments.IOrderPaymentFreshPayabilityPort, PermissiveFreshPayabilityPort>();
         services.AddScoped<ICommerceHoldPolicySource, PermissiveCommerceHoldPolicySource>();
         services.AddScoped<Tooba.Catalog.Contracts.Reservation.IStoreHoldPolicyHoursReader, PermissiveStoreHoldPolicyHoursReader>();
         services.AddScoped<Tooba.Payment.Application.Ports.IPaymentHoldSettingsDirectory, PermissivePaymentHoldSettingsDirectory>();
@@ -147,7 +148,7 @@ public sealed class PaymentPrecertHygieneTests
 
         foreach (var (serviceType, implementationType) in new[]
         {
-            (typeof(IPaymentDirectory), typeof(PaymentDirectory)),
+            (typeof(IPaymentDirectory), typeof(FreshPaymentGateDirectory)),
             (typeof(IPaymentReconciliationDirectory), typeof(PaymentReconciliationDirectory)),
             (typeof(IPaymentAdminDirectory), typeof(PaymentAdminDirectory)),
             (typeof(IPaymentExpiryDirectory), typeof(PaymentExpiryDirectory)),
@@ -163,7 +164,7 @@ public sealed class PaymentPrecertHygieneTests
         var ports = new[] { typeof(IPaymentDirectory), typeof(IPaymentReconciliationDirectory), typeof(IPaymentAdminDirectory), typeof(IPaymentExpiryDirectory) };
         foreach (var (port, implementation) in new[]
         {
-            (typeof(IPaymentDirectory), typeof(PaymentDirectory)),
+            (typeof(IPaymentDirectory), typeof(FreshPaymentGateDirectory)),
             (typeof(IPaymentReconciliationDirectory), typeof(PaymentReconciliationDirectory)),
             (typeof(IPaymentAdminDirectory), typeof(PaymentAdminDirectory)),
             (typeof(IPaymentExpiryDirectory), typeof(PaymentExpiryDirectory)),
@@ -201,10 +202,25 @@ public sealed class PaymentPrecertHygieneTests
             Admin = adminFirst,
         };
 
-        Assert.IsType<PaymentDirectory>(resolved.Core);
+        Assert.IsType<FreshPaymentGateDirectory>(resolved.Core);
         Assert.IsType<PaymentReconciliationDirectory>(resolved.Reconciliation);
         Assert.IsType<PaymentAdminDirectory>(resolved.Admin);
         Assert.IsType<PaymentExpiryDirectory>(resolved.Expiry);
+
+        // The registered money entry is the gate decorator and it holds the concrete directory plus the
+        // Order fresh-payability port as a REQUIRED dependency (no fail-open/optional path).
+        var gate = Assert.IsType<FreshPaymentGateDirectory>(resolved.Core);
+        var innerField = typeof(FreshPaymentGateDirectory).GetField(
+            "_inner",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.NotNull(innerField);
+        Assert.IsType<PaymentDirectory>(innerField!.GetValue(gate));
+        var gateCtorTypes = typeof(FreshPaymentGateDirectory)
+            .GetConstructors()
+            .SelectMany(c => c.GetParameters())
+            .Select(p => p.ParameterType)
+            .ToArray();
+        Assert.Contains(typeof(Tooba.Order.Contracts.Payments.IOrderPaymentFreshPayabilityPort), gateCtorTypes);
 
         var resolvedInstances = new object[] { resolved.Core, resolved.Reconciliation, resolved.Admin, resolved.Expiry };
         Assert.Equal(4, resolvedInstances.Distinct(ReferenceEqualityComparer.Instance).Count());
@@ -587,6 +603,24 @@ public sealed class PaymentPrecertHygieneTests
     {
         public CommerceContext FromPollTarget(OutboxPollTarget target, string traceId) =>
             throw new InvalidOperationException("commerce.context.not_expected_in_test");
+    }
+
+    /// <summary>پورت مالک سفارش؛ در این تست فقط گراف DI را کامل می‌کند و حکم Payable می‌دهد.</summary>
+    private sealed class PermissiveFreshPayabilityPort
+        : Tooba.Order.Contracts.Payments.IOrderPaymentFreshPayabilityPort
+    {
+        public Task<Tooba.Order.Contracts.Payments.OrderFreshPaymentPayabilityResult> GetFreshPaymentPayabilityAsync(
+            Guid checkoutId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new Tooba.Order.Contracts.Payments.OrderFreshPaymentPayabilityResult(
+                Tooba.Order.Contracts.Payments.OrderFreshPaymentPayability.Payable,
+                checkoutId,
+                1,
+                [],
+                null,
+                null,
+                null,
+                null));
     }
 
     private sealed class EnvironmentStub : IHostEnvironment

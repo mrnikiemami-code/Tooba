@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
+using Tooba.Order.Contracts.Payments;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Contracts.Checkout;
 using Tooba.Payment.Application.Ports;
@@ -53,7 +54,7 @@ public sealed class PaymentModule : IToobaModule
         // Focused directory decomposition: each port resolves to its own focused implementation.
         // PaymentDirectory still needs the admin directory for RetryManualAfterRejectionAsync; the
         // deferred Func breaks the PaymentAdminDirectory -> IPaymentDirectory -> PaymentAdminDirectory cycle.
-        services.AddScoped<IPaymentDirectory>(sp => new PaymentDirectory(
+        services.AddScoped<PaymentDirectory>(sp => new PaymentDirectory(
             sp.GetRequiredService<PaymentDbContext>(),
             sp.GetRequiredService<IPaymentUseCaseGuard>(),
             sp.GetRequiredService<IPayableCheckoutReader>(),
@@ -63,6 +64,15 @@ public sealed class PaymentModule : IToobaModule
             sp.GetRequiredService<IIdGenerator>(),
             () => sp.GetRequiredService<IPaymentAdminDirectory>(),
             sp.GetRequiredService<ICommerceHoldPolicy>()));
+        // The single registered money-entry directory is the fail-closed fresh-payment gate wrapper:
+        // the injected Order fresh-payability port is a REQUIRED dependency, so the composed application
+        // cannot reach the fresh path without a provable reservation verdict.
+        services.AddScoped<IPaymentDirectory>(sp => new FreshPaymentGateDirectory(
+            sp.GetRequiredService<PaymentDirectory>(),
+            sp.GetRequiredService<PaymentDbContext>(),
+            sp.GetRequiredService<IPayableCheckoutReader>(),
+            sp.GetRequiredService<IPaymentGatewayRegistry>(),
+            sp.GetRequiredService<IOrderPaymentFreshPayabilityPort>()));
         services.AddScoped<IPaymentReconciliationDirectory>(sp => new PaymentReconciliationDirectory(
             sp.GetRequiredService<PaymentDbContext>(),
             sp.GetRequiredService<IPaymentDirectory>()));

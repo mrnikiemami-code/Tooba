@@ -12,6 +12,7 @@ public sealed class PaymentErrorCatalogContributor : IErrorCatalogContributor
     [
         D(PaymentErrorCodes.AlreadySucceeded, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Conflict"),
         D(PaymentErrorCodes.IdempotencyConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Conflict"),
+        D(PaymentErrorCodes.ReservationNotPayable, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Conflict"),
         D(PaymentErrorCodes.Missing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(PaymentErrorCodes.AttemptMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
         D(PaymentErrorCodes.AdminPaymentMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Not Found"),
