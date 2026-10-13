@@ -1,0 +1,134 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-INVENTORY-ATOMIC-HOLD-EXTENSION-017
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Parent-Task: TB-P0-CHECKOUT-TRANSACTION-BOUNDARY-016
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Verdict: PASS
+Next: STOP_FOR_ARCHITECT (no next task claimed, no automatic implementation task)
+
+BASE-SHA: 08338e8647eca4b0cac3b5d43486fc6d436c489d
+BASE-CHECK: HEAD == origin/main verified before work (no drift); 015 primitive unchanged.
+COMMIT(S):
+  A = 5fe49412285463519f6d3a25ffa268d65077a852  code+tests: atomic all-or-none Inventory hold extension
+  B = <EVIDENCE-SHA>  evidence: task artifact, analysis.md, RESULT.bridge.txt, post-result.js
+AFTER-HEAD: A is the last commit that changes production or test source. Branch HEAD is C, the single
+documentation-only commit that replaces the EVIDENCE-SHA placeholder in this file with B; C changes
+nothing except those fields, and C's own SHA cannot be embedded in the file it rewrites.
+PUSH: local == origin/main after push; no force-push, no history rewrite, no stash.
+
+DELIVERABLE
+One Inventory-owned building block: IInventoryPaymentHoldExtensionPort.ExtendHeldForPaymentAsync(
+IReadOnlyCollection<Guid> reservationIds, DateTimeOffset payWindowDeadlineUtc, CancellationToken) with
+InventoryPaymentHoldExtensionResult(Outcome, RequestedCount, GuaranteedUntil, UnavailableReservationIds)
+and Outcome { Extended, NotHeld, DeadlineInvalid, AmbientTransactionUnsupported }.
+It extends the expiry of EXISTING Held reservations, atomically and all-or-none, for a future separately
+authorized payment-initiation orchestration. It is a building block, not payment authorization.
+015 PRESERVED: IInventoryPaymentHoldGate / VerifyHeldForPaymentAsync / InventoryPaymentHoldGateOutcome /
+its registration and its guard tests are byte-for-byte unchanged in behaviour and signatures. No defect
+in 015 blocked this task, so it was not touched.
+
+EXACT CHANGED-FILE LIST
+  A src/backend/Modules/Inventory/Tooba.Inventory.Contracts/Orders/InventoryPaymentHoldExtensionContracts.cs   (new, 109 LOC)
+  A src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.HoldExtension.cs (new, 243 LOC; cohesion ceiling 500)
+  M src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.cs            (interface list only: + IInventoryPaymentHoldExtensionPort)
+  M src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/DependencyInjection/InventoryModule.cs      (+1 registration line)
+  A src/backend/Modules/Inventory/Tooba.Inventory.Tests/Behavior/InventoryHoldExtensionTestContext.cs         (new)
+  A src/backend/Modules/Inventory/Tooba.Inventory.Tests/Behavior/InventoryPaymentHoldExtensionTests.cs        (new)
+  A src/backend/Modules/Inventory/Tooba.Inventory.Tests/Behavior/InventoryHoldExtensionPostgresTests.cs       (new)
+  A src/backend/Modules/Inventory/Tooba.Inventory.Tests/Architecture/InventoryPaymentHoldExtensionGuardTests.cs (new)
+  A docs/ai/tasks/TB-P0-INVENTORY-ATOMIC-HOLD-EXTENSION-017.task.md
+  A docs/architecture/evidence/TB-P0-INVENTORY-ATOMIC-HOLD-EXTENSION-017/analysis.md
+  A docs/architecture/evidence/TB-P0-INVENTORY-ATOMIC-HOLD-EXTENSION-017/RESULT.bridge.txt
+  A docs/architecture/evidence/TB-P0-INVENTORY-ATOMIC-HOLD-EXTENSION-017/post-result.js
+
+
+Out of scope and untouched: Host, Host.Tests, Program.cs, Frontend, Order, Payment, migrations, DB
+schema, runtime settings, the running Host on :5088, migrations of any module, locked architecture
+guards, 015 artifacts. No error code was added or changed.
+
+NO PAYMENT ACTIVITY, HOST UNTOUCHED
+No payment endpoint, no PSP/connector call, no wallet debit, no payment initiation, no Order or Cart
+mutation, no new Host endpoint and no DI change in Host was added. The Development Host on :5088 was
+never rebuilt, restarted, stopped, reconfigured or contacted by any query of this task; no test would
+overwrite its locked binaries because only the Inventory module test project was built and run.
+
+TESTS RUN (one focused run, no retries, no solution-wide run)
+  Build:  dotnet build src/backend/Modules/Inventory/Tooba.Inventory.Tests/Tooba.Inventory.Tests.csproj
+          -> succeeded, 0 warnings, 0 errors (CS1591 XML-doc gate satisfied).
+  Run:    dotnet test ... --no-build --filter "FullyQualifiedName~HoldExtension"
+          -> 19 passed, 0 failed, 0 skipped, total 4.32 s.
+          (4 fail-closed outcome facts + 6 source-guard facts + 9 PostgreSQL behavioural facts.)
+  Guard facts assert: exactly one BeginTransactionAsync/CommitAsync/RollbackAsync with
+  "Transaction.Current is not null" refusal and no TransactionScope/EnlistTransaction; deterministic
+  "ORDER BY r.reservation_id ... FOR UPDATE" with clock_timestamp(); rollback on both the
+  live-count gate and the deadline gate; "expires_at = CASE WHEN expires_at IS NULL THEN NULL ELSE
+  GREATEST(expires_at, @deadline) END"; no SaveChangesAsync/OpenConnectionAsync/foreign lookups/
+  DateTimeOffset.UtcNow/Guid.NewGuid()/new InvalidOperationException; and the module registration line.
+
+TRANSACTION AND LOCKING BEHAVIOUR EVIDENCE (behavioural, real PostgreSQL)
+Method shape: refuse ambient scope -> _guard -> _db.Database.BeginTransactionAsync (exactly one
+connection, opened and closed by EF; the method never calls OpenConnectionAsync and never mutates
+connection ownership) -> lock+read live held ids -> all-or-none gate -> database-clock deadline gate ->
+conditional UPDATE with RETURNING -> CommitAsync. Every gate failure rolls back before returning.
+ 1. Extends_every_finite_hold_to_the_requested_deadline: two Held rows raised to max(existing,
+    deadline); GuaranteedUntil == deadline; DbConnection.State == Closed after the call (no hidden
+    ownership change, connection released).
+ 2. One_released_hold_rejects_the_whole_set_and_changes_nothing: one Released id -> NotHeld with
+    unavailable =[released] and BOTH provable Held rows still at their seed expiry (all-or-none, no
+    partial commit).
+ 3. Expired_and_consumed_and_missing_holds_fail_closed: expired / Consumed / absent id / Guid.Empty each
+    -> NotHeld reporting exactly that id; the expired row was not revived, the Held row was not
+    extended, status remained Held.
+ 4. Replay_is_monotonic_and_never_shortens_a_hold: after a +6h extension a later +20min request leaves
+    the stored expiry at +6h; a +9h request then moves it forward. max(existing, requested) proven.
+ 5. Durable_null_expiry_is_preserved_and_never_given_a_deadline: expires_at IS NULL remains NULL while
+    the finite sibling is extended; Only_durable_holds_report_no_guaranteed_deadline: an all-durable set
+    returns Extended with GuaranteedUntil == null.
+ 6. Deadline_already_past_the_database_clock_fails_closed: now-1h and default -> DeadlineInvalid with the
+    stored expiry unchanged (validity is database time, never caller-supplied "now").
+ 7. Ambient_scope_is_refused_and_leaves_the_hold_untouched: inside a live TransactionScope ->
+    AmbientTransactionUnsupported with the hold unchanged; no distributed/2PC promotion is attempted
+    (016 proved that promotion fails with 55000 on this server).
+ 8. Row_lock_blocks_a_competitor_for_the_whole_call_and_is_released_afterwards (decisive lock proof):
+    a competitor transaction held the row with FOR UPDATE first; after 700 ms the extension call had
+    still NOT completed (IsCompleted == false), so it genuinely waits on a blocking row lock instead of
+    proceeding or skipping; after the competitor rolled back the call returned Extended, the DbContext
+    connection was Closed, and a competing "SELECT ... FOR UPDATE" with lock_timeout=750ms then
+    succeeded immediately -> no row lock survives the method return.
+Isolation: each PostgreSQL fact creates and drops its OWN disposable database tooba_hold017_<hex> on the
+local server (CREATE DATABASE / DROP DATABASE ... WITH (FORCE)) with a minimal inventory.reservations
+table. Development settings are read only for server credentials. The proof never connects to, seeds or
+locks the live tooba_alpha database, never touches the running Host, and adds no migration or schema
+change to the repository. Post-run check: PostgreSQL 127.0.0.1:5432 reachable, zero tooba_hold017*
+databases left behind. Isolation was available, so no BLOCKED claim was needed.
+Note: Host.Tests were deliberately NOT built/run — compiling Tooba.Host.Tests would overwrite Host
+binaries locked by the running Development Host. Compatibility with the Inventory structure guards was
+verified by reading them (500-LOC ceiling in Directories, canonical Infrastructure folder allowlist,
+one-capability-per-port-file, unchanged 015 guard assertions).
+
+KNOWN LIMITATIONS (explicitly not claimed)
+ 1. This primitive alone does NOT eliminate expiry during PSP processing and does NOT make payment
+    initiation race-free; Order/Payment must still make the deadline window meaningful and handle late
+    callbacks and compensation.
+ 2. It does NOT prove ownership: it proves only "these ids are Held and unexpired now", never that they
+    belong to a checkout. Order must supply authoritative, actor-checked, checkout-bound ids.
+ 3. The deadline is only as good as the effective configured policy the caller derives; the seam
+    validates absoluteness/future-ness against the database clock but invents no policy or duration.
+ 4. Lock contention is not converted into a business outcome: an unexpected provider fault (including a
+    caller-imposed lock_timeout) propagates and rolls back. No new error code and no lock_timeout policy
+    were introduced (out of scope).
+ 5. updated_at uses the module clock while validity uses the database clock — deliberate, consistent
+    with the module convention.
+ 6. The PostgreSQL proof skips silently when no local PostgreSQL is reachable (it then proves nothing);
+    in this run it executed for real, as the timings and the blocking-lock fact show.
+DEFECTS FOUND IN 015: none blocking. The 016-noted narrow-catch observation is unchanged and still
+applies only to 015, which this task was instructed to leave alone.
+
+VERDICT: PASS — Inventory-owned atomic, all-or-none hold extension implemented inside the permitted
+scope and behaviourally verified against real PostgreSQL in isolation, with no payment endpoint, no PSP
+call and no Host change.
+STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT
