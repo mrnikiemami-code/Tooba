@@ -57,6 +57,7 @@ public static class OrderEndpointModule
         app.MapReservationPolicyAdminEndpoints();
         app.MapReservationPolicySellerEndpoints();
         StorefrontOrderEndpoints.Map(app);
+        StorefrontStartPaymentEndpoints.Map(app);
         CustomerOrderEndpoints.Map(app);
         SellerOrderEndpoints.Map(app);
         SellerDashboardEndpoints.Map(app);

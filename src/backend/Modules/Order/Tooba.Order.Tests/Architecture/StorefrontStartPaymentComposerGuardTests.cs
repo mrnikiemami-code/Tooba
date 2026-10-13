@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Tooba.Order.Tests.Architecture;
@@ -24,19 +25,109 @@ public sealed class StorefrontStartPaymentComposerGuardTests
     [Fact]
     public void No_module_or_host_route_publishes_start_payment()
     {
-        foreach (var root in new[]
-                 {
-                     Path.Combine(OrderRoot(), "Tooba.Order.Endpoints"),
-                     Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host"),
-                 })
+        // این گارد در فاز بی‌اثری ۰۱۹ هر مسیری را ممنوع می‌کرد. اکنون که مسیر کلیک نهایی منتشر شده،
+        // همان گارد به یک ناوردای پایدار ارتقا یافته است: دقیقاً یک مسیر تأییدشده در Order.Endpoints و
+        // صفر مسیر/ارجاع در Host.
+        var endpointsRoot = Path.Combine(OrderRoot(), "Tooba.Order.Endpoints");
+        var endpointSources = Sources(endpointsRoot).ToArray();
+
+        var publishers = endpointSources
+            .Where(path => File.ReadAllText(path).Contains("start-payment", StringComparison.Ordinal))
+            .Select(path => Path.GetRelativePath(endpointsRoot, path).Replace('\\', '/'))
+            .ToArray();
+        Assert.Equal(["Storefront/StorefrontStartPaymentEndpoints.cs"], publishers);
+
+        var referenced = endpointSources
+            .Where(path => File.ReadAllText(path).Contains("StorefrontStartPaymentComposer", StringComparison.Ordinal))
+            .Select(path => Path.GetRelativePath(endpointsRoot, path).Replace('\\', '/'))
+            .ToArray();
+        Assert.Equal(["Storefront/StorefrontStartPaymentEndpoints.cs"], referenced);
+
+        // دقیقاً یک مسیر منتشر می‌شود و همان مسیر تأییدشده است.
+        var publisher = File.ReadAllText(Path.Combine(
+            endpointsRoot, "Storefront", "StorefrontStartPaymentEndpoints.cs"));
+        Assert.Equal(1, Regex.Matches(publisher, @"MapPost\(").Count);
+        Assert.Equal(
+            1,
+            Regex.Matches(publisher, @"MapPost\(""/cart/\{cartId:guid\}/start-payment""").Count);
+
+        // Host هیچ مسیر یا ارجاعی از این قابلیت ندارد.
+        foreach (var path in Sources(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host")))
         {
-            foreach (var path in Sources(root))
-            {
-                var text = File.ReadAllText(path);
-                Assert.DoesNotContain("start-payment", text, StringComparison.Ordinal);
-                Assert.DoesNotContain("StorefrontStartPaymentComposer", text, StringComparison.Ordinal);
-            }
+            var text = File.ReadAllText(path);
+            Assert.DoesNotContain("start-payment", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("StorefrontStartPaymentComposer", text, StringComparison.Ordinal);
         }
+    }
+
+    [Fact]
+    public void Published_final_click_route_derives_identity_from_the_trusted_boundary_and_delegates()
+    {
+        var endpoints = File.ReadAllText(EndpointPath());
+
+        // مسیر دقیقاً یک‌بار و به‌صورت مثبت اعلام می‌شود.
+        Assert.Equal(
+            1,
+            Regex.Matches(endpoints, @"MapPost\(""/cart/\{cartId:guid\}/start-payment""").Count);
+
+        // ترکیب فقط به کامپوزر تأییدشده واگذار می‌شود و نگاشت خطا از مرز مرکزی است.
+        Assert.Contains("StorefrontStartPaymentComposer", endpoints, StringComparison.Ordinal);
+        Assert.Contains("StartPaymentAsync", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ApiResponseFactory", endpoints, StringComparison.Ordinal);
+
+        // هویت و گواه مهمان از مرز اعتماد و قرارداد متعارف می‌آیند، نه از بدنه.
+        Assert.Contains("IOrderStorefrontCheckoutIdentityGate", endpoints, StringComparison.Ordinal);
+        Assert.Contains("EnsureCheckoutActorAsync", endpoints, StringComparison.Ordinal);
+        Assert.Contains("IOrderStorefrontActor", endpoints, StringComparison.Ordinal);
+        Assert.Contains("actor.AuthenticatedUserId", endpoints, StringComparison.Ordinal);
+        Assert.Contains("X-Tooba-Guest-Secret", endpoints, StringComparison.Ordinal);
+        Assert.Contains("tooba_guest_secret", endpoints, StringComparison.Ordinal);
+
+        // کلید idempotency الزامی است و ساخته نمی‌شود.
+        Assert.Contains("ResolveIdempotencyKey", endpoints, StringComparison.Ordinal);
+        Assert.Contains("Idempotency-Key", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("ids.NewId()", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("Guid.NewGuid().ToString", endpoints, StringComparison.Ordinal);
+
+        // خطاهای تایپ‌شدهٔ Order/Payment جذب/بازنویسی نمی‌شوند و هیچ خطای پلتفرم ۵۰۰ برای شکست کسب‌وکار جعل نمی‌شود.
+        Assert.Contains("StorefrontOrderErrors.", endpoints, StringComparison.Ordinal);
+        Assert.Contains("PaymentErrorCodes", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("payment.unexpected", endpoints, StringComparison.Ordinal);
+
+        // هیچ بازپیاده‌سازی موجودی/دیتابیس/Payment داخلی و هیچ کد خطای خام در لایهٔ ارائه.
+        Assert.DoesNotContain("OrderDbContext", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Payment.Application", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Payment.Infrastructure", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("ex.Message", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"checkout.", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"shipping.", endpoints, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Published_final_click_body_accepts_no_identity_checkout_amount_or_deadline()
+    {
+        var models = File.ReadAllText(ModelPath());
+        var body = Slice(
+            models,
+            "public sealed record StorefrontStartPaymentBody(",
+            "public sealed record StorefrontStartPaymentResponse(");
+
+        Assert.DoesNotContain("CheckoutId", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("ReservationId", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("Amount", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("ExpiresAt", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("Deadline", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("AuthenticatedUserId", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("GuestSecret", body, StringComparison.Ordinal);
+        // CartId تنها از مسیر می‌آید، هرگز از بدنه.
+        Assert.DoesNotContain("CartId", body, StringComparison.Ordinal);
+
+        Assert.Contains("ExpectedCartVersion", body, StringComparison.Ordinal);
+        Assert.Contains("IdempotencyKey", body, StringComparison.Ordinal);
+        Assert.Contains("UseWallet", body, StringComparison.Ordinal);
+        Assert.Contains("ProviderCode", body, StringComparison.Ordinal);
+        Assert.Contains("CouponCode", body, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -153,6 +244,19 @@ public sealed class StorefrontStartPaymentComposerGuardTests
         "Storefront",
         "Services",
         "StorefrontStartPaymentComposer.cs"));
+
+    private static string EndpointPath() => Path.Combine(
+        OrderRoot(),
+        "Tooba.Order.Endpoints",
+        "Storefront",
+        "StorefrontStartPaymentEndpoints.cs");
+
+    private static string ModelPath() => Path.Combine(
+        OrderRoot(),
+        "Tooba.Order.Application",
+        "Storefront",
+        "Models",
+        "StorefrontOrderModels.cs");
 
     private static string Slice(string source, string start, string end)
     {

@@ -182,9 +182,34 @@ public sealed record StorefrontShippingCommitRequest(
     string? CouponCode = null);
 
 /// <summary>
-/// ورودی شروع پرداخت فروشگاهی. مبلغ در بدنه نیست.
-/// UseWallet یا ProviderCode=wallet فقط وقتی موجودی کل مبلغ را پوشش دهد مجاز است (mixed deferred).
+/// ورودی «کلیک نهایی پرداخت» فروشگاهی. مبلغ/شناسهٔ سفارش/رزرو/مهلت در بدنه نیست؛ CartId تنها از مسیر
+/// می‌آید، هویت تنها از مرز اعتماد، و روش پرداخت انتخاب‌شده با <see cref="UseWallet"/> یا
+/// <see cref="ProviderCode"/> اعلام می‌شود (UseWallet یا ProviderCode=wallet فقط وقتی موجودی کل مبلغ را
+/// پوشش دهد مجاز است؛ mixed deferred). کلید idempotency باید پایدار و از سمت فراخوان باشد.
 /// </summary>
+public sealed record StorefrontStartPaymentBody(
+    int ExpectedCartVersion,
+    string IdempotencyKey,
+    bool UseWallet = false,
+    string? ProviderCode = null,
+    string? CouponCode = null);
+
+/// <summary>
+/// پاسخ موفق «کلیک نهایی پرداخت»: مرجع پایدار سفارش و پرداخت. هیچ فیلد مشتق/حدسی اضافه نمی‌شود.
+/// </summary>
+public sealed record StorefrontStartPaymentResponse(
+    Guid CheckoutId,
+    bool CheckoutReplayed,
+    Guid PaymentId,
+    Guid AttemptId,
+    string PaymentStatus,
+    string ProviderCode,
+    string RedirectUrl,
+    decimal Amount,
+    string Currency,
+    bool RequiresPspRedirect,
+    int ReservationCount,
+    DateTimeOffset? GuaranteedUntilUtc);
 
 /// <summary>درخواست وابسته به سبد برای لغو/پنهان کارت.</summary>
 public sealed record StorefrontPaymentCartRequest(Guid CartId);

@@ -35,6 +35,7 @@ public sealed class OrderEndpointOrganizationGuardTests
         ("Customer/CustomerOrderEndpoints.cs", "Tooba.Order.Endpoints.Customer", "CustomerOrderEndpoints.Map"),
         ("Seller/SellerOrderEndpoints.cs", "Tooba.Order.Endpoints.Seller", "SellerOrderEndpoints.Map"),
         ("Storefront/StorefrontOrderEndpoints.cs", "Tooba.Order.Endpoints.Storefront", "StorefrontOrderEndpoints.Map"),
+        ("Storefront/StorefrontStartPaymentEndpoints.cs", "Tooba.Order.Endpoints.Storefront", "StorefrontStartPaymentEndpoints.Map"),
     ];
 
     [Fact]
