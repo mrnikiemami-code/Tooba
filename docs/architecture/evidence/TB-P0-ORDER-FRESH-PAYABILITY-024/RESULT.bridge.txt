@@ -1,0 +1,104 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-ORDER-FRESH-PAYABILITY-024
+Parent-Task: TB-P0-PAYMENT-FRESH-ENTRY-GUARD-023
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Bridge-Task-Row: 4340c5af-12ce-4c24-8a40-ccae10e4279c
+Starting-SHA (base): 586a831c03cfdf34a865a377c11467b003077a21 (== origin/main == Expected-Base-SHA, verified before any write)
+Code-Commit: 78a8d99ae1b7d2d64c7fefcaa77ce72d3c435710 (bounded Order-only code + tests + task artifact + analysis)
+Evidence-Commit: 78a8d99ae1b7d2d64c7fefcaa77ce72d3c435710
+Result-Carrier-Commit: this RESULT.bridge.txt commit (docs-only; HEAD follows Code/Evidence-Commit)
+Repo-Branch: main
+Status: DONE — ORDER-SIDE READ-ONLY TRUTH DELIVERED AND VERIFIED BY FOCUSED TESTS; NOT CONSUMED, NOT REACHABLE FROM MONEY ENTRY YET
+Verdict: PASS (bounded slice); old public Payment money-entry route remains UNGUARDED (expected YES)
+automaticNextImplementationTask=NONE
+
+== 0. PREFLIGHT ==
+
+HEAD == origin/main == 586a831c03cfdf34a865a377c11467b003077a21, confirmed before any file write; no drift, no rebase,
+no stash. Read AGENTS.md, the BRIDGE-WAKE-V1 protocol and evidence 017-023 (023's conclusions reused, not re-derived).
+Host production, Program.cs, :5088, live DB, schemas, migrations, frontend, settings and providers untouched; zero PSP
+or wallet calls; zero real orders. Host.Tests were neither modified nor built nor run. Pre-existing tracked dirty paths
+(CheckoutAbuseGate.cs, INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, admin-order-detail-screen.tsx,
+storefront-landing-blocks.tsx, untracked bin/obj and other evidence folders) were preserved untouched and are NOT part
+of any commit here. No solution build was run; only one focused Order test build/run plus one guard filter (single run).
+
+== 1. WHAT WAS BUILT (additive, read-only, Order-owned) ==
+
+  src/backend/Modules/Order/Tooba.Order.Contracts/Payments/OrderPaymentFreshPayabilityContracts.cs        (new)
+  src/backend/Modules/Order/Tooba.Order.Application/Checkout/Process/OrderPaymentFreshPayabilityService.cs (new)
+  src/backend/Modules/Order/Tooba.Order.Infrastructure/Integrations/Payment/OrderCheckoutReservationSetReader.cs (new)
+  src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs                                    (+2 DI lines)
+  src/backend/Modules/Order/Tooba.Order.Tests/Application/OrderPaymentFreshPayabilityTests.cs            (new, 16 tests)
+
+Shape: a NEW Order-owned port IOrderPaymentFreshPayabilityPort with typed, documented outcomes and a narrow read port
+IOrderCheckoutReservationSetReader. GetPayableAsync / IPayableCheckoutReader were deliberately NOT extended, so the
+architect's "preserve readable/verifyable historical payments after reservation expiry" is structurally guaranteed:
+payment read, verification, callback and refund cannot start failing on an expired cycle because they do not touch the
+new port at all. Nothing consumes the new port yet, so the blast radius of this slice is zero runtime behaviour change.
+
+Typed outcomes: Payable=0, CheckoutUnavailable=1, ReservationSetIncomplete=2, CycleNotPayable=3, RetryExhausted=4,
+HoldUnavailable=5, AuthorityUnavailable=6. No new error strings, no Payment error-catalog edit, no new public route,
+no DI re-pointing of existing money ports.
+
+== 2. ARCHITECT DECISIONS HONOURED ==
+
+- Absence is NOT authorization: no cycle authority -> AuthorityUnavailable; no payable cycle -> CycleNotPayable/RetryExhausted.
+  There is no permissive NotEvaluated and no fail-open branch anywhere in the new code.
+- No reliance on legacy Host.Tests fixtures: the concession proposed in 023 was NOT implemented and was NOT needed;
+  production composition stays strict because the evaluator is only reachable through the new, explicit port.
+- No TTL/extension change: expiry is only compared to IClock.UtcNow; no AddHours/AddMinutes/AddDays/TimeSpan.From in the
+  evaluator (asserted by a source guard test). Nothing renews, releases, commits or writes (no SaveChanges in source).
+- Historical payment reads stay readable after expiry: GetPayableAsync text is asserted unchanged by a guard test
+  (no ReservationCyclePayabilityPolicy, no IsActive, no new payment.* code inside OrderPaymentBridge).
+- No duplicated inventory mutation logic: the hold truth is read through the existing owner-provided
+  IOrderInventoryLifecyclePort.FindReservationAsync projection, unmodified.
+- Retry-limit distinction without an invented ceiling: ReservationCyclePayabilityPolicy.HasReachedRetryLimit drives
+  RetryExhausted, and RetryCountRemaining/EffectiveMaxCycles are echoed from the effective policy projection; no literal 3.
+- Authorization for later initiation stays at Payment storefront orchestration and ownership was NOT re-implemented here.
+
+Decision logic: (1) enumerate reservation ids from persisted seller-order lines, ordered deterministically; (2) require
+non-empty, non-null, duplicate-free ids else ReservationSetIncomplete; (3) require authority then an IsActive cycle;
+(4) require every id to be Held and unexpired in Inventory; all-green -> Payable, otherwise the specific non-payable outcome.
+
+== 3. VERIFICATION (VERIFIED vs UNVERIFIED) ==
+
+Command (one run, focused filter only, no Host.Tests, no solution build, no PostgreSQL):
+  dotnet test src/backend/Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj
+    --filter "FullyQualifiedName~OrderPaymentFreshPayability|FullyQualifiedName~Architecture"
+  -> Passed! Failed: 0, Passed: 128, Skipped: 0 (16 new tests + all existing Order architecture guards green).
+
+VERIFIED by those tests: active cycle with all holds Held/unexpired -> Payable with full reservation coverage; wall-clock
+expired cycle -> CycleNotPayable (Inventory never read); closed cycle -> CycleNotPayable; configured renewal quota
+exhausted -> RetryExhausted with the policy's own numbers; Active cycle but a Released hold -> HoldUnavailable naming only
+that id; hold expiring exactly at now -> HoldUnavailable; missing reservation row -> HoldUnavailable; absent cycle
+authority -> AuthorityUnavailable and neither cycle nor Inventory is read; zero lines -> ReservationSetIncomplete; a line
+without a reservation id -> ReservationSetIncomplete; duplicate reservation id across two lines -> ReservationSetIncomplete
+(ambiguity, not a second hold) with Inventory never read; unknown checkout -> CheckoutUnavailable; Guid.Empty ->
+CheckoutUnavailable without a read; cancellation propagates as OperationCanceledException and is never reported as Payable;
+plus source guards (no TTL arithmetic / no write / no payment call in the evaluator, port and reader registered exactly
+once, OrderPaymentBridge text unchanged).
+
+UNVERIFIED / DISCLOSED LIMITS:
+- Fakes prove decision logic only. The reader -> OrderDbContext EF mapping (Include SellerOrders -> Lines), row locking
+  and true ACID/race behaviour are NOT proven; no EF in-memory harness was added (deliberately, to avoid the authorized
+  but riskier csproj/InMemory wiring for a stronger but still fake claim).
+- The Inventory-side atomic all-or-none hold guarantees remain Inventory's own certified claim (017); this projection
+  consumes them, it does not restate them.
+- A TOCTOU residual window is inherent and explicitly NOT closed here: between this read and a later initiation, a cycle
+  or hold may expire or be released. Closing that window belongs to the canonical reacquire/refund path.
+
+== 4. REMAINING PAYMENT INTEGRATION WORK (next slice; NOT authorized here) ==
+
+The money-entry route POST /v1/storefront/checkout/{checkoutId}/payments -> StorefrontPaymentOrchestrator ->
+PaymentDirectory.InitiateAsync is still completely unguarded: this slice is not wired into it, so a fresh payment attempt
+with an expired/no cycle still reaches the provider today. Next slice must (a) inject IOrderPaymentFreshPayabilityPort
+into that orchestration only (never into result/verification/callback/refund reads), (b) map each non-Payable outcome to a
+typed, catalogued Payment refusal, (c) keep ownership enforcement in Payment, and (d) add the mapping/localization entries
+in the Payment catalog which this slice deliberately did not touch. Per the task, no automatic next task was started.
+
+STOP_FOR_ARCHITECT: awaiting ACCEPT / REPAIR / next .task.md. No further work performed after this Result.
+END_TOOBA_WORKER_RESULT
