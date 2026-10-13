@@ -7,6 +7,7 @@ using Tooba.ModuleContracts;
 using Tooba.Payment.Application.Models;
 using Tooba.Payment.Contracts.Checkout;
 using Tooba.Payment.Application.Ports;
+using Tooba.Payment.Application.Storefront.Orchestration;
 using Tooba.Payment.Contracts.Settlement;
 using Tooba.Payment.Contracts.Storefront;
 using Tooba.Payment.Contracts.Returns;
@@ -93,6 +94,12 @@ public sealed class PaymentModule : IToobaModule
         services.AddScoped<IPaymentCustomerGateway>(sp => sp.GetRequiredService<PaymentContractBridge>());
         services.AddScoped<IPaymentHoldSettingsGateway>(sp => sp.GetRequiredService<PaymentContractBridge>());
         services.AddScoped<IPaymentReturnReader, PaymentReturnBridge>();
+        // Contracts-only initiation seam for the owning Order module. Delegates to the single canonical
+        // StorefrontPaymentOrchestrator initiation path. Resolution is deferred through the module's
+        // established Func<> pattern so module DI validation stays independent of the Host-owned
+        // orchestrator registration.
+        services.AddScoped<IPaymentInitiationPort>(sp => new PaymentInitiationAdapter(
+            () => sp.GetRequiredService<StorefrontPaymentOrchestrator>()));
 
         if (environment.IsProduction())
         {
