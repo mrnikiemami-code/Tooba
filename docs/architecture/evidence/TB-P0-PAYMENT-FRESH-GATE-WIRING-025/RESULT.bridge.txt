@@ -1,0 +1,162 @@
+TB-P0-PAYMENT-FRESH-GATE-WIRING-025
+
+Task-ID: TB-P0-PAYMENT-FRESH-GATE-WIRING-025
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Parent-Task: TB-P0-ORDER-FRESH-PAYABILITY-024
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 21d1089e63f526e583ca4e45b961b68e196ccb4c
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Timebox: 20 minutes HARD; automaticNextImplementationTask=NONE
+
+Mandatory preflight
+Verify HEAD == origin/main == Expected-Base-SHA before editing; on drift STOP and report (no automatic rebase). Read AGENTS.md, BRIDGE-WAKE-V1 and 021-024 findings. Keep the deployed Development Host at :5088 untouched: no Host production edits, no Program.cs, no build/test of Host or Host.Tests, no restart/stop/deploy, no live database writes, no PSP/wallet real calls.
+
+Mission
+Wire the ACCEPTED Order.Contracts IOrderPaymentFreshPayabilityPort from task 024 into the canonical Payment fresh-money entry so POST /v1/storefront/checkout/{checkoutId}/payments refuses new attempts on expired/released/unprovable reservation cycles BEFORE any gateway initiation, attempt persistence or wallet debit. Preserve legitimate same-key completed/pending replay, and require fresh payability BEFORE a FAILED-prior retry that would call the gateway. Keep actor/guest checks and task 021 cross-checkout/cross-method idempotency conflict ordering intact. No new endpoint and no frontend change.
+
+Architectural decisions already made
+
+Strict FAIL CLOSED: AuthorityUnavailable / absent cycle / incomplete reservation set / released or expired hold / retry exhausted are NOT payable. Absolutely no NotEvaluated bypass, nullable/optional fail-open dependency or fallback-to-legacy payment.
+Do not add gate to GetPayableAsync or to verify/callback/refund/read paths; these must remain accessible even after cycle expiry.
+Fresh payment 409 error can be NEW Payment-owned payment.reservation.not_payable with matching KnownCodes, catalog and bilingual resources. Count-only maintenance of ONLY the two Payment-related certified architecture guard files under Host.Tests is permitted; no weakening/removal. Historical R1-R3 SoT records MUST NOT be rewritten; if necessary add an additive current-state record only within the remaining time budget and explicit permitted docs scope.
+Prefer direct REQUIRED Order.Contracts IOrderPaymentFreshPayabilityPort in PaymentDirectory or a mandatory dedicated Payment-owned wrapper if its construction sites require compatibility work; never silently bypass the gate. If required positional constructor callers in Host.Tests cannot be updated WITHOUT touching additional Host.Tests or production Host, STOP and report exact blockers; do not force a partial fix. No new dependency from Payment to Order.Infrastructure or Application.
+024 point-in-time read is NOT an atomic stock promise. Do not call it race-free or confuse payment retry with reservation-cycle renewal. Do not invent a fixed three-attempt limit, alter TTLs, or auto-extend a released reservation.
+
+Minimum implementation if safe within timebox
+
+Enforce 024 Payable verdict for the fresh path in PaymentDirectory AFTER authorization/method identity and BEFORE gateway call or any payment/attempt write.
+Enforce it in FAILED-prior same-key path BEFORE another provider initiation; preserve Succeeded/Pending identical-key replay without rechecking an expired cycle.
+Wire DI fail-closed, with the Order port as a REQUIRED dependency; if legacy Host.Tests constructors block compilation and cannot be safely accommodated within explicitly permitted scope, STOP; do not implement a permissive default.
+If introducing payment.reservation.not_payable, register catalog HTTP 409, KnownCodes, en/fa localization, and align only the already authorized two Payment-certified Host.Tests guard files. No other Host file.
+Focused Payment.Tests tests using fakes: valid cycle+holds -> gateway call once; each invalid 024 verdict -> ZERO provider call, ZERO new payment/attempt row; FAILED prior invalid -> zero retry; identical-key Pending/Succeeded replay unchanged; task 021 idempotency conflict unchanged; wallet/manual path covered through same choke point. Run Payment module tests only; DO NOT build Host.Tests.
+
+STOP conditions
+If true enforcement needs more than these module interfaces or breaks mandatory legacy constructors outside allowed scope, stop with BLOCKED and an exact minimum repair, not an optimistic guard. Preserve Host, existing working tree changes, and all locked governance. Do not open a public new endpoint or claim frontend bug solved in this task. No migrations, real payments, database writes or new TTL policy.
+
+Worker result
+Return BEGIN_TOOBA_WORKER_RESULT / END_TOOBA_WORKER_RESULT, exact SHAs and changed-file list, tests (actual counts), fresh+replay behaviour, whether old public money path is now guarded, any unresolved 500/error catalog or race, and Host CLOSED proof. STOP_FOR_ARCHITECT. Never start another task automatically.
+
+== DECISION RECORD (why the decorator, not an extra PaymentDirectory constructor parameter) ==
+
+The architect's preferred location ("REQUIRED ... in PaymentDirectory") is provably closed for this task:
+  * docs/architecture/tmar-current-state.json holds paymentPrecertDirectorySplit.paymentDirectoryLines = 476 and
+    TmarDurableGuardTests.cs:304 asserts Assert.Equal(476, ...paymentDirectoryLines) plus < 700. That guard is a
+    Host.Tests file OUTSIDE the permitted two-file count-only scope, so any line-count change to
+    Directories/PaymentDirectory.cs breaks a certified durable guard that cannot be aligned here.
+  * Eight positional construction sites across six further Host.Tests files construct `new PaymentDirectory(...)`
+    with seven arguments (MarketplaceSettlementEventPathTests.cs:170, PaymentFoundationTests.cs:190/265/276,
+    R2LiveMarketplaceSmokeTests.cs:101, ReturnFoundationTests.cs:185, SettlementFoundationTests.cs:158,
+    WalletCheckoutRefundTests.cs:199). A new REQUIRED parameter is a compile break in files that are forbidden to
+    edit; an optional/defaulted parameter is exactly the permitted-fail-open configuration the architect banned.
+  * Those same fixtures also perform genuine fresh initiations on hand-seeded checkouts with no reservation cycle,
+    so any strict fail-closed gate reachable from a hand-constructed PaymentDirectory fails them at runtime too.
+The architect pre-authorized the alternative: "or a mandatory dedicated Payment-owned wrapper if its construction
+sites require compatibility work". That is what was implemented. PaymentDirectory.cs is byte-for-byte untouched.
+
+== WHAT WAS CHANGED (10 files) ==
+
+Production (6):
+  A src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/FreshPaymentGateDirectory.cs
+  M src/backend/Modules/Payment/Tooba.Payment.Infrastructure/DependencyInjection/PaymentModule.cs
+  M src/backend/Modules/Payment/Tooba.Payment.Contracts/Errors/PaymentErrorCodes.cs
+  M src/backend/Modules/Payment/Tooba.Payment.Endpoints/Errors/PaymentErrorCatalogContributor.cs
+  M src/backend/Modules/Payment/Tooba.Payment.Contracts/Resources/PaymentErrors.resx
+  M src/backend/Modules/Payment/Tooba.Payment.Contracts/Resources/PaymentErrors.fa.resx
+Tests (4):
+  A src/backend/Modules/Payment/Tooba.Payment.Tests/Behavior/PaymentFreshPayabilityGateTests.cs
+  M src/backend/Modules/Payment/Tooba.Payment.Tests/Behavior/PaymentPrecertHygieneTests.cs
+  M src/backend/Host/Tooba.Host.Tests/Architecture/PaymentModuleAmsc001W1MigrateGuardTests.cs (count only)
+  M src/backend/Host/Tooba.Host.Tests/Architecture/PaymentModuleAmsc001W3CertGuardTests.cs (count only)
+
+== GATE SEMANTICS (fail closed, no bypass) ==
+
+FreshPaymentGateDirectory is the single DI-registered IPaymentDirectory and takes the Order port as a REQUIRED
+constructor parameter (IOrderPaymentFreshPayabilityPort), so the composed application cannot reach the fresh path
+without a verdict. InitiateAsync ordering, deliberately mirroring the inner directory which stays authoritative:
+  1. Existing idempotency key resolved first; the SAME shared PaymentActorAccess helper runs, so actor/guest
+     visibility still precedes any refusal (payment.access.order_identity_required).
+  2. A reused key that no longer describes this exact operation (another checkout, or another canonical provider
+     via IPaymentGatewayRegistry) is delegated untouched, so the task-021 cross-checkout/cross-method conflict
+     still wins with payment.idempotency.conflict.
+  3. A checkout with an already-succeeded payment is delegated, so payment.already_succeeded is never masked by
+     the reservation verdict.
+  4. Only the two provider-reaching paths are gated: no persisted key (fresh), and a same-operation Failed prior
+     about to be re-initiated. Pending/Succeeded identical-key replay is delegated and never rechecked against an
+     expired cycle.
+  5. Any non-Payable verdict throws payment.reservation.not_payable (409) BEFORE the inner gateway call, before
+     any payment/attempt row and before any wallet debit.
+No new endpoint; verify/callback/refund/read paths and GetPayableAsync are untouched, so historical payments stay
+readable and verifiable after cycle expiry.
+
+== VERIFICATION (actual counts) ==
+
+Command (module-only, one project, Host/Host.Tests NOT built and NOT run):
+  dotnet test src/backend/Modules/Payment/Tooba.Payment.Tests/Tooba.Payment.Tests.csproj
+  -> Passed! Failed: 0, Passed: 139, Skipped: 0 (was 124 pre-change; +15 new, existing 021 conflict guard and
+     PaymentArchitectureGuard still green).
+
+VERIFIED by those tests: Payable -> exactly one gateway call and one payment row; each of the six non-Payable
+verdicts (CheckoutUnavailable, ReservationSetIncomplete, CycleNotPayable, RetryExhausted, HoldUnavailable,
+AuthorityUnavailable) -> payment.reservation.not_payable with ZERO provider calls and ZERO payment/attempt rows;
+FAILED same-operation prior -> gated before the provider retry (zero retries) and still retries once when payable;
+Pending and Succeeded identical-key replay delegated unchanged (gate never consulted); cross-checkout and
+cross-method key reuse still produce payment.idempotency.conflict with the gate never consulted; actor visibility
+still reported before the verdict; cancellation propagates; all non-InitiateAsync members delegate; new code is
+KnownCodes-registered with 409 + localization key; DI source guard proves the decorator is the single registered
+IPaymentDirectory with a required Order fresh-payability dependency and that PaymentDirectory.cs gained no verdict.
+
+UNVERIFIED / DISCLOSED LIMITS:
+  * Fakes and the in-memory PaymentDbContext prove ordering and refusal behaviour, not PostgreSQL row locking or
+    cross-module atomicity. The 024 projection remains a point-in-time read: a cycle/hold can expire or be
+    released immediately after the verdict. The residual window is NOT closed here.
+  * Payment.Tests cannot prove that the composed Host graph resolves the gate end-to-end (Host closed). The tested
+    proof is the module-level ServiceProvider graph (ValidateOnBuild + ValidateScopes) inside
+    PaymentPrecertHygieneTests, which now also asserts the gate wraps the concrete PaymentDirectory.
+  * The unpaid-retry re-open path (PaymentExpiryDirectory -> gateway.InitiateAsync via StorefrontPaymentOrchestrator
+    .RetryUnpaidCoreAsync) is NOT gated by this task: it first reacquires supply through the canonical reacquire
+    path, and the task did not authorize changing it. Reported, not silently ignored.
+
+== SCOPE DECISIONS THE ARCHITECT MUST RATIFY (or REPAIR) ==
+
+S1. PaymentModule.cs DI is module composition, not global Host DI/Program.cs. The registration was split into a
+    concrete `AddScoped<PaymentDirectory>(sp => new PaymentDirectory(...))` plus
+    `AddScoped<IPaymentDirectory>(sp => new FreshPaymentGateDirectory(...))`. `new PaymentDirectory(` is preserved
+    verbatim, so PaymentArchitectureGuardTests:552/556 and the W3Cert migrations assertion still pass.
+S2. PaymentPrecertHygieneTests.cs (a Payment MODULE guard, not Host.Tests) was aligned, not weakened: the expected
+    IPaymentDirectory implementation is now FreshPaymentGateDirectory, a permissive IOrderPaymentFreshPayabilityPort
+    fake was added for the DI graph, and the assertion was STRENGTHENED to prove the gate holds the concrete
+    PaymentDirectory and a required Order port parameter.
+S3. The two permitted Host.Tests count files were bumped from 29->30 declared/public-const codes and 25->26
+    registered descriptors. No other Host file was touched. The historical r2 manifest record (28/27/24) was left
+    untouched as required; tmar-current-state.json was left untouched (PaymentDirectory.cs line count unchanged).
+S4. Because those six legacy Host.Tests fixtures hand-construct PaymentDirectory, they remain outside the gate by
+    construction. That is a test-only bypass: the composed application has exactly one IPaymentDirectory and it is
+    the gate. If the architect wants those fixtures to exercise the gate, that is a separate authorized scope
+    (they would also need a real reservation cycle + Held inventory, which their hand-seeded checkouts lack).
+
+== MONEY-PATH STATUS ==
+
+Guarded now: POST /v1/storefront/checkout/{checkoutId}/payments (PaymentStorefrontEndpoints) -> PaymentOperation ->
+StorefrontPaymentOrchestrator -> IPaymentDirectory (gate) -> PaymentDirectory, and the IPaymentInitiationPort ->
+StorefrontPaymentOrchestrator -> IPaymentDirectory (gate) route. All three tender kinds (online gateway, wallet,
+manual card-to-card) pass the same choke point because they all reach InitiateAsync.
+Still unguarded: the expired/unpaid-retry re-open path in PaymentExpiryDirectory (see limits above).
+
+== HOST CLOSED PROOF ==
+
+Host production, Program.cs, :5088, the live database, schemas, migrations, settings, providers and the frontend
+were not edited, built, stopped, restarted or deployed. Host and Host.Tests were not built or executed; only the
+Payment module test project was built and run (twice: one focused filter, one full module run). No real payment,
+wallet or PSP call was made; no database write occurred. Pre-existing tracked dirty paths
+(CheckoutAbuseGate.cs, INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, admin-order-detail-screen.tsx,
+storefront-landing-blocks.tsx, untracked bin/obj and unrelated evidence folders) were preserved untouched and are
+not part of any commit here.
+
+STOP_FOR_ARCHITECT: awaiting ACCEPT / REPAIR / next .task.md. No further work performed after this Result.
+END_TOOBA_WORKER_RESULT
