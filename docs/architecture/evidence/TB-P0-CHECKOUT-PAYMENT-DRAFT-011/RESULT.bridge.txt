@@ -1,0 +1,181 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-PAYMENT-DRAFT-011
+Parent-Task: TB-P0-CHECKOUT-PAYMENT-BOUNDARY-ANALYZE-010
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION — STOP_FOR_ARCHITECT
+Bridge-Task-Row: fba75567-40b1-4f23-bffe-853af11cb2a8
+Starting-SHA: 207dae32fd899584d8057405901593aecf222e45 (== origin/main at claim)
+Code-Commit: 63b5b9a41a849359072f99670726980b279391de
+Repo-Branch: main
+Status: WORKER_COMPLETE — IMPLEMENTED + FOCUSED TESTS PASSED — STOP FOR ARCHITECT ACCEPTANCE
+
+Changed-Files: 7 (5 production/test code, 1 guard manifest, 1 new focused test)
+  A src/backend/Modules/Order/Tooba.Order.Application/Storefront/Checkout/Queries/GetStorefrontPaymentDraft/GetStorefrontPaymentDraftQuery.cs
+  A src/backend/Modules/Order/Tooba.Order.Application/Storefront/Checkout/Queries/GetStorefrontPaymentDraft/GetStorefrontPaymentDraftQueryValidator.cs
+  M src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs            (+42/-0)
+  M src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontCheckoutService.cs            (+28/-2)
+  M src/backend/Modules/Order/Tooba.Order.Endpoints/Storefront/StorefrontOrderEndpoints.cs                        (+19/-0)
+  M src/backend/Modules/Order/Tooba.Order.Tests/Validation/OrderEndpointValidatorCoverageGuardTests.cs             (+1/-0, guard manifest entry)
+  A src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontPaymentDraftTests.cs                          (5 focused tests)
+Host-Changes: 0
+Schema/Migration-Changes: 0
+DI-Registration-Changes: 0 (StorefrontShippingService/StorefrontCheckoutService already scoped in OrderModule.cs:115-116)
+Frontend-Changes: 0 (per task)
+Settings-Changes: 0 (no Catalog/Store/Offer/Payment override, no hold duration, no static time, no cross-duration floor)
+Inventory/CheckoutProcessManager/PaymentDirectory/shipping-commit edits: 0
+
+== 1. WHAT WAS BUILT (exact endpoint shape) ==
+
+Route: GET /v1/storefront/cart/{cartId:guid}/payment-draft
+       optional query: couponCode
+       identity: X-Tooba-Guest-Secret header or tooba_guest_secret cookie (existing ReadGuestSecret seam)
+       gate: IOrderStorefrontCheckoutIdentityGate.EnsureCheckoutActorAsync (same as /checkout/preview)
+Owner: Order module only (Tooba.Order.Endpoints/Storefront + Tooba.Order.Application/Storefront).
+
+Response body = the existing canonical quote contract StorefrontCheckoutPage from
+`_checkouts.PreviewAsync(...)` (StorefrontCheckoutService.MapPage(..., persisted: false)) with:
+  checkoutId = null           <= THE proof that no Order/CheckoutGroup was created
+  cartId, cartVersion
+  market, currency, channel
+  paymentState = "PendingPayment", canInitiatePayment = true
+  shippingMethodCode/Label/Amount  <= the PERSISTED shipping selection, applied to the quote
+  recipientName/contactMobile/province/city/postalAddress/postalCode/firstName/lastName <= persisted selection
+  subtotalExclusiveOfTax, discountAmount, taxAmount, shippingAmount, payableAmount <= backend-authoritative quote
+  sellerOrders[].lines[]      <= offer/pricing/promotion/tax evaluated by the Order quote path
+
+No new DTO, no new error code, no new port, no new cross-module contract was introduced.
+
+Typed errors returned for the required cases (all pre-existing stable codes + existing descriptors/resources):
+  shipping.cart.missing   404  cart id unknown OR not accessible to this actor (gateway access check)
+  shipping.cart.empty     400  active cart without lines
+  shipping.selection.required 400  no persisted shipping selection for that cart
+  shipping.cart.forbidden 403  draft exists but belongs to a different guest secret
+  checkout.cart.expired   409  cart is not Active (e.g. already Converted)
+  checkout.version.conflict / checkout.price.changed / checkout.inventory.unavailable / checkout.multicurrency.not_supported
+                              409/409/409/400  from the canonical quote re-evaluation
+
+== 2. REUSED CONTRACTS (file:line) — no duplicated business rule ==
+
+- Cart access + missing/empty guard: StorefrontShippingService.RequireCartAsync
+  (src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs:452-462)
+  -> ICartPresentationGateway.GetAsync (src/backend/Modules/Cart/Tooba.Cart.Contracts/Presentation/CartPresentationContracts.cs:52-55)
+- Draft ownership (guest-secret hash rule): StorefrontShippingService.EnsureDraftOwnership (:447-459) + HashGuestSecret (:487-495)
+- Draft read: IStorefrontShippingDraftStore.GetByCartIdAsync
+  (src/backend/Modules/Order/Tooba.Order.Application/Storefront/Ports/StorefrontOrderPorts.cs:6-11)
+- Authoritative quote: StorefrontCheckoutService.PreviewAsync (StorefrontCheckoutService.cs:48-80) -> ICheckoutDirectory.PreviewAsync
+  (src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs:132-185)
+- Quote internals are read-only: CheckoutDirectory.Reservations.cs:153-... QuoteSellerOrdersAsync with requireReservation:false,
+  Offer/Pricing/Promotion/Tax lookups only; no _db.Add, no SaveChanges, no reservation, no cart conversion.
+- Sole-currency fail-closed rule: StorefrontCartCurrencyCompatibility.ResolveSoleCurrency (reused inside the quote path).
+- Validation rule: OrderFluentRules.RequireCartId (same as /checkout/preview).
+- CartAccess identity: IOrderStorefrontActor.BuildCartAccess (Tooba.Order.Contracts/Storefront/OrderStorefrontActorContracts.cs:27).
+
+StorefrontCheckoutService.PreviewAsync gained OPTIONAL shipping/method/amount/date parameters
+(defaults null). The pre-existing caller (PreviewStorefrontCheckoutHandler) passes only the original 4 arguments,
+so /checkout/preview behaviour is byte-for-byte unchanged — proven by the unchanged existing tests.
+
+== 3. SAFETY PROOF (focused test) ==
+
+Command:  dotnet test src/backend/Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj
+Result:   Passed! - Failed: 0, Passed: 157, Skipped: 0, Total: 157 - Tooba.Order.Tests.dll (net8.0)
+New file: src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontPaymentDraftTests.cs (5 tests, all PASS)
+Narrow re-run of just the new class: Passed 5 / Failed 0.
+
+Test wiring is a write-detector harness: only the ports on the real draft path are fakes; every other
+dependency is `null!` and every ICheckoutDirectory member except PreviewAsync throws, so any accidental
+cart/order/reservation/quota touch or mutation fails loudly instead of silently passing.
+
+Asserted (test 1, Active cart + saved shipping selection):
+  - result.CheckoutId == null                      => no Order/CheckoutGroup created
+  - exactly 1 ICheckoutDirectory.PreviewAsync call, 0 SubmitAsync calls
+  - IStorefrontShippingDraftStore: 1 read, 0 SaveAsync (zero writes to the Order shipping-draft table)
+  - command.IdempotencyKey == "preview" and Mode == OnlinePurchase  => the canonical read-only quote seam,
+    not the commit path (no reserve, no abuse quota, no cart conversion)
+  - the persisted selection is what reaches the quote: methodCode=post, label=پست, shippingAmount=45,000,
+    province/city from the draft; money comes from the quote (subtotal 2,000,000 + tax 180,000 + shipping 45,000 = 2,225,000)
+  - guest secret is propagated to CartAccess (no forged identity)
+Asserted (tests 2-5):
+  - no shipping selection  -> shipping.selection.required, 0 quote calls, 0 writes
+  - foreign guest secret   -> shipping.cart.forbidden, 0 quote calls
+  - inaccessible cart      -> shipping.cart.missing BEFORE any draft read (no draft-existence enumeration)
+  - transport validation   -> OrderValidationCodes.CartIdRequired
+
+Zero DB writes in this task: no SQL was executed by this Task at all (no SELECT, no DDL, no mutation);
+no HTTP request was issued; no runtime operation was triggered.
+
+== 4. REPOSITORY GUARDS — ALL SATISFIED ==
+
+- OrderEndpointValidatorCoverageGuardTests (manifest exact-set equality + DI validator resolution):
+  GetStorefrontPaymentDraftQuery added as VALIDATOR_REQUIRED; the concrete IValidator resolves via
+  AddToobaCqrsFoundation DI. PASSED.
+- OrderStorefrontArchitectureGuardTests (ISender-only endpoints, no DbContext/infrastructure text in endpoints,
+  Contracts-only storefront boundary, no DateTime.UtcNow in storefront Application, every *Query.cs contains IRequestHandler). PASSED.
+- OrderApplicationFolderGranularityGuardTests (no single-file Command/Query leaf folder): the new leaf has
+  2 files (Query + QueryValidator). PASSED.
+- OrderApplicationOrganizationGuardTests / OrderEndpointOrganizationGuardTests (root allowlists, path↔namespace
+  alignment, namespace forms). New namespace Tooba.Order.Application.Storefront.Checkout.Queries.GetStorefrontPaymentDraft
+  matches its path exactly. PASSED.
+- OrderManifestDiskReconciliationGuardTests (root .cs allowlists) — no root file added. PASSED.
+- OrderEndpointPresentationTests (error catalog/resource completeness). PASSED (no new codes).
+- Full Order module test project: 157/157 PASSED.
+
+== 5. MODULE BOUNDARY / OWNERSHIP HONESTY ==
+
+- Order owns this surface: the shipping draft, the checkout quote seam, abuse/quota authority and payability are
+  Order-owned. Cart stays the owner of cart reads (used through ICartPresentationGateway only) and of ConvertAsync.
+- The chosen route lives under the /v1/storefront/cart/{cartId} segment that the Cart module also uses for
+  cart CRUD (Cart module: GET /cart/{cartId:guid}, POST/PATCH/DELETE /cart/{cartId:guid}/lines...). There is no
+  ASP.NET route conflict (extra literal segment) and no test enforces prefix exclusivity, but if the Architect
+  prefers strict resource-namespace separation the route can be renamed to GET /v1/storefront/payment-draft/{cartId:guid}
+  without any logic change — this is a naming decision, not an implementation blocker.
+- Host remains CLOSED: no Host file, Program.cs, or root wiring was touched; the route is mapped by the existing
+  MapOrderEndpoints() -> StorefrontOrderEndpoints.Map registration.
+
+== 6. LIMITATIONS / DELIBERATE OMISSIONS (reported, not hidden) ==
+
+L1 Payment methods + wallet quote were OMITTED. They are Payment-owned and Tooba.Payment.Contracts exposes no
+   payment-method/wallet read contract for a pre-order cart (contracts present: Admin, Checkout, Customer, Hold,
+   Ports, Returns, Settlement, Storefront/PaymentProviderCodes + Storefront/PendingPaymentContracts, Errors, Events).
+   The existing storefront methods endpoint GET /v1/storefront/payment-methods is Payment-scoped and not cart-aware
+   (src/frontend/app/storefront/storefront-payment-api.ts:222-223). Including it would require a NEW cross-module
+   read authority, which the task explicitly told me to omit rather than invent. Its natural home is a Payment-owned
+   cart-addressed draft if the Architect wants it, or a later task, not this one.
+L2 canStartPayment / blockers[] and an "existing checkout/order for this cartId" read were OMITTED: the failures the
+   draft can suffer are already typed errors (table above), and a cartId→checkout lookup needs a new
+   IStorefrontPendingCheckoutStore method (only checkoutId-addressed reads exist today: StorefrontOrderPorts.cs:14-28).
+L3 HTTP-level verification was NOT performed. The running Host process is the pre-change binary (PID 39992, loaded
+   revision 207dae32...), and rebuilding/restarting it is outside this task's authorization. Endpoint binding is
+   therefore verified by (a) successful compile of Endpoints+Application, (b) the endpoint-construction manifest
+   set-equality guard, (c) DI validator/handler resolution guard, (d) the 5 behavioural tests. A live GET of the new
+   route remains UNKNOWN until an authorized rebuild/restart.
+L4 The cross-module TransactionScope ACID question was NOT asserted or re-litigated here, per instruction. The draft
+   path never enters TransactionScope (it is a quote-only read); the commit boundary question stays deferred to the
+   Architect as stated in TB-P0-CHECKOUT-PAYMENT-BOUNDARY-ANALYZE-010 §(c)/(f).
+L5 The draft deliberately returns the canonical quote shape, so it contains in-memory sellerOrderId/orderNumber
+   values that are NOT persisted (identical to today's POST /v1/storefront/checkout/preview). If the Architect
+   wants those fields suppressed so the frontend cannot mistake the draft for an Order, that is a small follow-up
+   (new flat DTO) — I chose maximum contract reuse instead of a new DTO.
+L6 Existing checkout/payment flows and the frontend were intentionally left unchanged (task instruction), so the
+   frontend still cannot open /payment without a checkoutId. The switch is the next bounded step (F4), not started.
+
+== 7. HYGIENE ==
+
+Code edits: 7 files (listed above), all inside the Order module + its test project.
+Commits: 1 code/guard/test commit (63b5b9a41); a following docs/evidence commit carries this result.
+Unrelated pre-existing working-tree entries were NOT staged, NOT committed, NOT reverted, NOT stashed:
+  docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md,
+  src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs,
+  src/frontend/app/admin/admin-order-detail-screen.tsx,
+  src/frontend/app/storefront/storefront-landing-blocks.tsx
+  (they show as " M" with an EMPTY content diff — CRLF/index-stat artifacts only, unchanged by me).
+No build of the whole solution, no DB/migration run, no Host restart, no live HTTP call, no order/cart/payment mutation.
+No historical Task was resumed or replayed; no unrelated worker was started.
+
+Smallest next action (NOT started, needs Architect authorization):
+  F2 — POST /v1/storefront/checkout/{cartId}/start-payment that calls the existing commit path once and then
+  initiates the selected method, reusing ix_checkouts_cart_id + one CartId-scoped idempotency key.
+STOP for independent Architect acceptance.
+END_TOOBA_WORKER_RESULT
