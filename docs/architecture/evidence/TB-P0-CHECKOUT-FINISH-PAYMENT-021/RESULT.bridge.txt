@@ -1,0 +1,182 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-FINISH-PAYMENT-021
+Parent-Task: TB-P0-PAYMENT-IDEMPOTENCY-METHOD-BINDING-020
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_IMPLEMENTATION_OR_BLOCKED
+Bridge-Task-Row: 62fa8a4b-6ba6-4b0c-b3e7-fc2bcd9b716a
+Starting-SHA (base): b8b2c33f79fc6952acc1adbf1a7dd66933328f6e (== origin/main == Expected-Base-SHA at claim)
+Code-Commit: 2f58c049992d9cdbc8857c1b36be893a98709b5e (8 files: 5 production + 1 focused module test + 2 permitted Host architecture guards)
+Evidence-Commit: 74f0758755490b39c9ea25583cfcba1da9d17707 (task artifact + evidence post script)
+Result-Carrier-Commit: this RESULT.bridge.txt commit (docs-only; HEAD follows Evidence-Commit)
+Repo-Branch: main
+Status: PRIORITY A COMPLETE AND PUSHED; PRIORITY B/C NOT ATTEMPTED (TIMEBOX) — STOP_FOR_ARCHITECT
+Verdict: A PASS (module-level proof only)
+automaticNextImplementationTask=NONE
+
+Preflight: HEAD == origin/main == b8b2c33f79fc6952acc1adbf1a7dd66933328f6e verified BEFORE any edit.
+Read: AGENTS.md, BRIDGE-WAKE-V1 protocol, and the 018 / 019 / 020 evidence.
+Host production: CLOSED and untouched — zero edits/build/restart/deploy under src/backend/Host except
+the two explicitly permitted architecture-test files. Host.Tests were NOT executed and Host was NOT
+built (forbidden). No contact with localhost:5088, live DB, schema, migration, settings, workers,
+frontend or Cart commit. No real PSP/wallet call.
+
+== 1. PRIORITY A — WHAT WAS CHANGED (5 production files, all within the allowed list) ==
+
+A1 src/backend/Modules/Payment/Tooba.Payment.Contracts/Errors/PaymentErrorCodes.cs
+   + public const string IdempotencyConflict = "payment.idempotency.conflict";  (documented intent)
+   + IdempotencyConflict added to KnownCodes  (KnownCodes members 27 -> 28; declared constants 28 -> 29)
+   Note: because the code is in KnownCodes, PaymentOperation maps it to a typed Result instead of
+   leaking it to the global boundary; if it were NOT known, it would surface as
+   platform.unexpected / HTTP 500 (SafeErrorMapper), which the task forbids.
+
+A2 src/backend/Modules/Payment/Tooba.Payment.Endpoints/Errors/PaymentErrorCatalogContributor.cs
+   + D(PaymentErrorCodes.IdempotencyConflict, ErrorClassification.Conflict,
+       StatusCodes.Status409Conflict, "Conflict");     (registered descriptors 24 -> 25)
+
+A3 src/backend/Modules/Payment/Tooba.Payment.Contracts/Resources/PaymentErrors.resx      (+1 key, en)
+A4 src/backend/Modules/Payment/Tooba.Payment.Contracts/Resources/PaymentErrors.fa.resx   (+1 key, fa)
+   Both files are UTF-8 without BOM before and after the edit (3C 3F 78), and both now literally
+   contain "payment.idempotency.conflict"; the fa value is Persian, so the composed localizer resolves
+   a real message (never the fallback) in both cultures.
+
+A5 src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs
+   In the existing-idempotency branch, immediately after actor visibility (:68) and BEFORE the
+   HasSucceeded check (:80), before the Failed-prior gateway retry (:88) and before every return
+   (:101/:115/:132):
+       var requestedProviderCode = _gateways.Resolve(command.ProviderCode).ProviderCode;
+       if (existing.CheckoutId != command.CheckoutId
+           || !string.Equals(requestedProviderCode, existing.ProviderCode, StringComparison.OrdinalIgnoreCase))
+       {
+           throw new ContractOperationException(PaymentErrorCodes.IdempotencyConflict);
+       }
+   Both required comparisons are present (persisted-vs-requested CheckoutId AND canonical
+   persisted-vs-requested provider). The requested provider is canonicalized through the gateway
+   registry (the registry is keyed by each gateway's own ProviderCode, OrdinalIgnoreCase) — the same
+   authority the fresh path uses. Nothing else in the replay block was reordered or removed, so
+   actor/guest authorization, wallet and manual flows, the same-key succeeded replay and the
+   same-method Failed retry keep their previous behaviour.
+
+== 2. THE 25-MINUTE "SELECTOR 'gateway'" HAZARD — RESOLVED BY EVIDENCE, NOT ASSUMED ==
+
+The literal catalog selector "gateway" never reaches PaymentDirectory:
+ - the storefront orchestrator resolves the selector to _catalog.DefaultProvider
+   (StorefrontPaymentOrchestrator.cs:151) BEFORE the command is built, and the command carries the
+   resolved concrete code;
+ - the registry is keyed by each gateway's own ProviderCode; no gateway is registered under the
+   literal string "gateway" (registered codes: fake, fake-fail, manual, wallet, webhook, fail-closed);
+ - every non-orchestrator caller already passes a concrete code (Host.Tests use "fake"/"fake-fail").
+Therefore a legitimate exact-method replay (including a selector click that resolves to the same
+default provider) matches canonically and is NOT denied, while a genuinely different method or a
+different checkout is rejected. Case-insensitive comparison additionally absorbs provider-code casing.
+
+== 3. AUTHORIZED HOST GUARD EXCEPTION — SCOPE RESPECTED (2 files, counts only) ==
+
+src/backend/Host/Tooba.Host.Tests/Architecture/PaymentModuleAmsc001W1MigrateGuardTests.cs
+  Assert.Equal(28, declared.Length)            -> Assert.Equal(29, declared.Length)
+  + Assert.Contains("payment.idempotency.conflict", declared)   (added, not weakened)
+src/backend/Host/Tooba.Host.Tests/Architecture/PaymentModuleAmsc001W3CertGuardTests.cs
+  Assert.Equal(28, Regex.Matches(codes, "public const string ").Count) -> 29
+  Assert.Equal(24, codes.Length) x2            -> Assert.Equal(25, codes.Length) x2
+No assertion was removed or disabled, no Host production file was touched, and the edit did NOT exceed
+the two permitted files. en/fa parity is satisfied by A3/A4 (the guard's own per-code loop requires a
+literal key in both resx plus a Persian localized value).
+
+== 4. THE ONE JSON-BACKED PIN I DELIBERATELY DID NOT MUTATE (ARCHITECT DECISION NEEDED) ==
+
+PaymentModuleAmsc001W3CertGuardTests.cs:155-163 also asserts values READ FROM
+docs/architecture/tmar-current-state.json, namely the paymentAmsc001W3R2 recovery record:
+  declaredStableCodeCount = 28, knownCodeGuardMemberCount = 27, paymentOwnedDescriptorCount = 24,
+  stableErrorTruthState = "AUTHORITATIVE_28_DECLARED_27_KNOWN_24_OWNED_DESCRIPTORS", plus
+  productionCodeChanged = false / productionErrorCatalogChangedByR2 = false / guardsWeakened = NONE,
+and paymentAmsc001W3R3 re-states authoritativeStableErrorTruth for the same 28/27/24.
+Those are FROZEN HISTORICAL recovery records with their own commit lineage (R1 affdfba4, R2 83bc2217,
+R3), created by waves whose mode was literally RECOVERY_HISTORICAL_TRUTH_PRESERVATION_ONLY with
+"historicalW1StableErrorCodeState ... RESTORED_AND_PRESERVED". Editing 28->29 / 27->28 / 24->25 inside
+the R2/R3 blocks would rewrite certified historical truth (and would falsify productionCodeChanged =
+false for those waves), i.e. exactly what AGENTS.md and the R3 wave forbid — and the task's own rule
+says: if the necessary guard edit exceeds the two permitted files, STOP.
+So I did NOT touch the SoT JSON, and lines 155-163 still pass unchanged (they read the untouched
+historical block). Consequence, stated openly: the durable SoT's recorded Payment error-code counts
+(28/27/24) are now one behind production (29/28/25) and its "authoritativeStableErrorTruth" label no
+longer describes the live module. This is a documentation-vs-code divergence, NOT a code defect, and
+it is the one decision I am handing to the Architect:
+  OPTION 1 (recommended, additive): append a new block (e.g. paymentAmsc001W3R4) recording
+    29/28/25 and the new truth string, leaving R1/R2/R3 byte-identical, and point the W3 guard's
+    JSON-backed assertions at that new block. That keeps history immutable and restores the pin.
+  OPTION 2: declare the wave records purely historical in the guard comments and rely on the live
+    reflection/regex counts (already 29/25) as the authority. No SoT write at all.
+I did not self-authorize either option inside a bounded feature task.
+
+== 5. FOCUSED MODULE VERIFICATION (no Host test, no Host build) ==
+
+New focused test (added, 285 lines, module project only):
+  src/backend/Modules/Payment/Tooba.Payment.Tests/Behavior/PaymentIdempotencyConflictGuardTests.cs
+  8 facts, all passing:
+   1 same key + same checkout + same method -> replays the existing payment/attempt, 0 gateway
+     initiations, still exactly 1 attempt row (no duplicate payment/money path);
+   2 canonical alias casing ("FAKE" vs persisted "fake") -> replay still allowed, 0 initiations;
+   3 same key + DIFFERENT provider, prior Pending -> payment.idempotency.conflict, 0 gateway
+     initiations, still 1 attempt row;
+   4 same key + DIFFERENT provider, prior FAILED -> conflict raised BEFORE the gateway retry:
+     0 gateway initiations, still 1 attempt row (the old code would have initiated a new payment
+     attempt against the previously bound provider);
+   5 same key + SAME method, prior FAILED -> legitimate retry still allowed: 1 initiation, 2 attempts
+     (proves legitimate retries inside the configured allowance are not quietly blocked);
+   6 same key + same method on ANOTHER checkout, same actor -> conflict, 0 initiations, exactly
+     1 payment row in the store;
+   7 conflict check never precedes actor visibility: an actor who cannot see the checkout gets the
+     existing payment.access.order_identity_required fault (not the conflict), 0 initiations;
+   8 the new code is in KnownCodes, present in the composed catalog with HTTP 409 / Conflict, and its
+     LocalizationKey equals the code.
+  Recorded commands (module project only; both invocations together constitute the focused module run):
+   dotnet test src/backend/Modules/Payment/Tooba.Payment.Tests/Tooba.Payment.Tests.csproj
+     --filter "FullyQualifiedName~PaymentIdempotencyConflictGuardTests"   -> Failed 0, Passed 8
+   dotnet test src/backend/Modules/Payment/Tooba.Payment.Tests/Tooba.Payment.Tests.csproj --no-build
+     -> Failed 0, Passed 120 (whole Payment module suite, including its architecture guards)
+  Static verification of the permitted Host-guard edits (NOT executed, since running/building Host is
+  forbidden): PaymentErrorCodes.cs contains 29 "public const string " occurrences, the catalog
+  contributor contains 25 registered descriptors, KnownCodes has 28 members, and both resx files
+  contain the new key — i.e. the edited expectations 29/29/25/25 match the shipped source exactly.
+
+== 6. PRIORITY B AND C — NOT ATTEMPTED (HONEST) ==
+
+B (money-entry + unpaid-retry hold review) and C (endpoint/frontend cutover) were NOT started.
+Reason: A consumed the 25-minute HARD box (base validation, the selector/canonicalization hazard
+analysis, 5 production edits, the guard scope check that surfaced the frozen-SoT pin, the new test
+seam, and two module test runs). Per the task's own stop rule I committed and pushed A only and did
+NOT publish any partial or publicly reachable path:
+ - no Order endpoint was wired to the 019 StorefrontStartPaymentComposer;
+ - no frontend Shipping/payment change;
+ - POST /v1/storefront/checkout/{checkoutId}/payments is byte-identical to before this task.
+So the previously reported B/C surfaces remain exactly as they were: unknown/expired-reservation money
+entry is UNREVIEWED in this slice, and the 020 L1 note (two concurrent distinct-method initiations
+with the same key can still race and be rejected by the unique index at insert rather than by the
+pre-write comparison) is unchanged. B is the next bounded piece of work, unchanged in scope from this
+task's PRIORITY B text.
+
+== 7. LIMITATIONS / NOT CLAIMED ==
+
+L1 No runtime Host proof and no real PSP/wallet proof was produced or claimed.
+L2 The Host guard files were edited but NOT executed (running Host.Tests is forbidden); their new
+   expectations were verified statically against the shipped source counts.
+L3 The frozen SoT divergence in section 4 is disclosed, not hidden, and is left for the Architect.
+L4 The conflict comparison is a pre-write check; it does not by itself make the key a transactional
+   lock (see section 6, 020-L1).
+L5 No business-contract value was altered: no TTL/timeout/retry-cap/anti-abuse/hold policy, no
+   attempt-vs-renewal counter semantics, no Cart commit, no schema/migration/config, no new endpoint.
+L6 Wallet/manual/online routing behaviour was not changed; only the reused-key branch gained the
+   two comparisons.
+
+== 8. HYGIENE ==
+
+Staged/committed exactly 10 intended paths (5 production, 1 focused test, 2 permitted Host guards,
+task artifact, evidence script+result). Pre-existing unrelated dirty/untracked paths
+(INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, CheckoutAbuseGate.cs, admin-order-detail-screen.tsx,
+storefront-landing-blocks.tsx, the untracked bin/obj and other task evidence folders) were NOT staged,
+committed, reverted or stashed. No historical task was replayed, no other subagent was started, no
+Bridge probe was posted (this is the single complete Result contract).
+STOP_FOR_ARCHITECT. automaticNextImplementationTask=NONE.
+END_TOOBA_WORKER_RESULT
