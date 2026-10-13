@@ -1,0 +1,64 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-DEV-LIVE-CUTOVER-033
+Pipeline-Protocol: BRIDGE-WAKE-V1
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Mode: AUTHORIZED_SAME_ENVIRONMENT_CUTOVER_AND_SMOKE_OR_ROLLBACK
+Stop-State: USER_REVIEW
+
+Base-SHA: fd17e4b623916e0820caf278b4f7ece35de54774
+Code-SHA: fd17e4b623916e0820caf278b4f7ece35de54774 (no source change in this task)
+Evidence-SHA: <this result-contract commit> (docs/architecture/evidence/TB-P0-CHECKOUT-DEV-LIVE-CUTOVER-033/evidence.md, post-result.js, RESULT.bridge.txt)
+Preflight: HEAD == origin/main == Expected-Base-SHA confirmed; no drift; no rebase/stash/reset/force-push. Unrelated dirty files preserved and NOT committed. No new environment, port, database or container created.
+
+OUTCOME: NEW HOST IS LIVE AND HEALTHY — READY_FOR_USER_REVIEW
+
+CHANGED PATHS: evidence only (docs/architecture/evidence/TB-P0-CHECKOUT-DEV-LIVE-CUTOVER-033/{evidence.md,post-result.js,RESULT.bridge.txt}). No source, build or configuration file changed.
+
+RUNNING BINARY BEFORE / AFTER
+- Old: PID 39992, src/backend/Host/Tooba.Host/bin/Debug/net8.0/Tooba.Host.exe, version 1.0.0+207dae32fd899584d8057405901593aecf222e45, bind 127.0.0.1:5088, launched by cmd /c %TEMP%\tooba-host-008-launch.cmd -> dotnet run --project src\backend\Host\Tooba.Host --no-launch-profile --no-build (parent dotnet.exe PID 10512), env ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5088.
+- New: PID 37028, same path and same bind 127.0.0.1:5088, version 1.0.0+fd17e4b623916e0820caf278b4f7ece35de54774, launched by a byte-identical copy of the 008 launcher (same cd, same env vars, same --no-launch-profile --no-build, same port; only the log file name differs: tooba-host-033.log). Listening within 12 s; MassTransit transport consuming pricing.* integration events; no startup error in the launch log.
+- Exactly ONE Host process runs on 5088.
+
+VERIFIED BACKUP + ROLLBACK
+- External backup: D:\Users\User\cutover-backups\TB-P0-CHECKOUT-DEV-LIVE-CUTOVER-033\old-host-207dae32\net8.0 — full robocopy of the live output, 583 files / 88.1 MB (identical count and size to source). Tooba.Host.dll SHA256 src == backup: DCB520C1B7C93933D26524E2F3FD25F9DD2A6E365DAA944ECDA3DB515B92483B.
+- Launch script preserved at ...\old-host-207dae32\tooba-host-008-launch.cmd.
+- Instant in-place rollback source kept: src/backend/Host/Tooba.Host/bin/Debug/net8.0.pre-033-20261013-181119.
+- Rollback: Stop-Process -Id <new pid> -Force; cd src\backend\Host\Tooba.Host\bin\Debug; Move-Item net8.0 net8.0.failed-033; Move-Item net8.0.pre-033-20261013-181119 net8.0 (or robocopy the external backup back); Start-Process cmd.exe -ArgumentList "/c","%TEMP%\tooba-host-008-launch.cmd" -WindowStyle Hidden; verify 127.0.0.1:5088 + version 1.0.0+207dae32. No DB restore needed (no schema change); business rows created later are NOT rolled back by this.
+
+ACTUAL COMMANDS USED (no secrets)
+- Inspect: Get-CimInstance Win32_Process -Filter "ProcessId = 39992"; Get-NetTCPConnection -LocalPort 5088 -State Listen; Get-Content %TEMP%\tooba-host-008-launch.cmd
+- Backup: robocopy "<live net8.0>" "D:\Users\User\cutover-backups\TB-P0-CHECKOUT-DEV-LIVE-CUTOVER-033\old-host-207dae32\net8.0" /E /R:1 /W:1
+- Staging build (live PID kept serving): New-Item -ItemType Directory -Force -Path D:\Users\User\cutover-staging\TB-033\net8.0 ; dotnet build src\backend\Host\Tooba.Host\Tooba.Host.csproj -c Debug -o D:\Users\User\cutover-staging\TB-033\net8.0 --nologo
+- Cutover: Stop-Process -Id 39992 -Force ; Move-Item <live net8.0> <net8.0.pre-033-20261013-181119> ; Move-Item D:\Users\User\cutover-staging\TB-033\net8.0 <live net8.0> (same volume, atomic rename) ; Start-Process cmd.exe -ArgumentList "/c","C:\Users\User\AppData\Local\Temp\tooba-host-033-launch.cmd" -WindowStyle Hidden
+- Smoke: Invoke-WebRequest GET/POST against http://127.0.0.1:5088 and http://127.0.0.1:3000
+
+HOST BUILD RESULT
+dotnet build Tooba.Host.csproj -c Debug -o <staging>: 0 Error(s), 11 Warning(s) (pre-existing XML-doc/duplicate-using warnings only), 34.4 s, exit 0. Staged output complete: Tooba.Host.exe present, 776 files / 90.5 MB, all three appsettings*.json copied, identical 163-name Tooba.*.dll set as the live output, ProductVersion 1.0.0+fd17e4b623916e0820caf278b4f7ece35de54774 (matches HEAD). Live binaries were not modified during the build.
+
+HTTP STATUS MATRIX FOR NEW ROUTES (read-only, random non-existent cart GUID, no mutation)
+- GET /v1/storefront/payment-methods (5088) -> 200, body offers "gateway" and "manual" (no fabricated wallet).
+- GET /v1/storefront/cart/{random}/payment-draft (5088) -> 401 checkout.authentication_required (route registered; not 404).
+- GET /v1/storefront/cart/{random}/wallet-quote (5088) -> 401 (route registered; not 404).
+- POST /v1/storefront/cart/{random}/start-payment body {} (5088) -> 401 (route registered; rejected before any commit/hold/payment).
+- Control GET /v1/storefront/cart/{random}/definitely-not-a-route -> 404, proving the three 401s are route presence, not a catch-all.
+- Through the Next proxy: GET :3000/v1/storefront/payment-methods -> 200; GET :3000/v1/storefront/cart/{random}/wallet-quote -> 401. next.config.ts rewrite /v1/:path* -> 127.0.0.1:5088 unchanged and correct.
+- 031/032 source state re-confirmed before cutover: cart wallet-quote route, cart payment-draft route, cart start-payment route, and both frontend fixes (canPayFullyWithWallet copied from server; payment.wallet.mixed_deferred localized) are present in source.
+
+SERVICE STATUS
+- :5088 updated Host (PID 37028) healthy; :3000 Next dev (PID 31580) untouched; :17321 Bridge (PID 23716) untouched; postgres-db (postgres:17, :5432) and rabbitmq (:5672/:15672) up 2 days and untouched. No additional port was opened; the only listener for the app is 127.0.0.1:5088.
+
+EXPLICIT NON-ACTIONS
+No database migration/seed/write, no schema change, no business-data deletion, no real PSP request, no gateway call, no manual-evidence submit, no wallet debit, no checkout commit, and no fake order. PostgreSQL, RabbitMQ, the Next dev server and Bridge were never stopped or restarted; only the single verified Tooba Development Host process was replaced. No feature or architecture change was made in this task.
+
+LIVE / RESTORED VERDICT
+NEW HOST LIVE (no rollback required). Read-only smoke passed on all new routes and the frontend proxy.
+
+TEST READINESS VERDICT
+READY_FOR_USER_REVIEW: the updated Development Host is live on the same :5088 with the new payment-draft, wallet-quote and start-payment routes registered and the proxy working, so the user can run the real Checkout / Wallet / PSP hands-on tests. The worker performed read-only probes only and claims NO live-money PASS; real checkout, wallet debit and gateway behaviour remain to be verified by the user.
+
+automaticNextImplementationTask: NONE
+STOP_FOR_ARCHITECT at Stop-State USER_REVIEW — no further task started.
+END_TOOBA_WORKER_RESULT
