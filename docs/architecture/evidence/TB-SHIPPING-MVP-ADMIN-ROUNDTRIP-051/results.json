@@ -1,0 +1,68 @@
+{
+  "taskId": "TB-SHIPPING-MVP-ADMIN-ROUNDTRIP-051",
+  "parentTask": "TB-SHIPPING-MVP-ADMIN-050",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "program": "TOOBA-SHIPPING-MVP-SIX-TASK-CLOSURE",
+  "mode": "BOUNDED_ADMIN_SHIPPING_SERVICE_MUTATION_ROUNDTRIP_VERIFICATION",
+  "milestone": "2 OF 6",
+  "status": "PASS",
+  "bridgeTaskRow": "a3ecdea0-a914-41e0-bdb4-d5918b496db3",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "expectedBaseSha": "427bcad72d750561beac0322d7cae52081f9c8fe",
+  "baseSha": "02aaf242c33089a85fb7eb1abfada1d98ecfc6fb",
+  "baseShaDrift": {
+    "safe": true,
+    "classification": "HARMLESS_FAST_FORWARD",
+    "detail": "Expected-Base-SHA is the grandparent of HEAD; the two intervening commits are the parent task's own evidence artifacts (TB-SHIPPING-MVP-ADMIN-050 RESULT.bridge.txt/post-result.js/results.json). No source, contract, migration or config differs. Pre-existing unrelated dirty files preserved; no reset/stash/rebase/force-push."
+  },
+  "codeSha": "NONE",
+  "evidenceSha": "<filled after push>",
+  "actualElapsed": "~28 minutes (claim 2026-10-14T14:33:32Z; inside the 30-minute HARD timebox)",
+  "automaticNextImplementationTask": "NONE",
+  "verificationOnly": true,
+  "productionCodeChanged": false,
+  "isolationMethod": "CDP Runtime.evaluate injected in-page interception of window.fetch for /v1/admin/shipping-services* plus window.confirm, into the already-running dev page; every other request (including /v1/admin/languages) passed through to the real backend. Durable in-repo equivalent: an in-memory Fulfillment fixture installed on globalThis.fetch.",
+  "inspectedPaths": [
+    "src/frontend/app/admin/shipping-services-screen.tsx",
+    "src/frontend/app/admin/shipping-services-api.ts",
+    "src/frontend/app/admin/shipping-services/shipping-services-form-model.ts",
+    "src/frontend/design-system/app-data-grid/app-grid-row-actions.tsx",
+    "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Endpoints/Shipping/ShippingServiceEndpoints.cs",
+    "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingServiceDirectory.cs",
+    "src/frontend/features/admin-languages/api/language-api.ts"
+  ],
+  "roundtripsProven": {
+    "create": "POST /v1/admin/shipping-services/ — exact body captured (canonical code, real languageIds, options with shippingServiceOptionId null); 201; list refresh; role=status success notice; grid 3 rows",
+    "loadEdit": "GET /v1/admin/shipping-services/{id} — form hydrated from server detail (code, name, option codes/names/active)",
+    "saveUpdateWithOptionEdit": "PUT /v1/admin/shipping-services/{id} — single write; loaded option identity preserved (dddddddd-...-001/002); name+option code+option name+isActive=false all in payload; success notice",
+    "confirmDeactivate": "window.confirm message captured verbatim; on accept POST /v1/admin/shipping-services/{id}/deactivate + list refresh + success notice; row becomes خیر and its deactivate action disappears"
+  },
+  "negativePathsProven": {
+    "validationNoRequest": "clearing the active-language display name issued ZERO requests, kept the dialog open, showed the Persian inline error and left the fixture catalog untouched (the 050 silent-strip regression)",
+    "confirmDeclinedNoMutation": "declining the confirmation issued ZERO requests; service stayed active",
+    "loadFailureVisible": "role=alert «سرویس ارسال خوانده نشد؛ دوباره تلاش کنید.» visible while the dialog is closed",
+    "writeFailureVisible": "PUT rejected -> role=alert «این کد سرویس قبلاً ثبت شده است…»; raw shipping_service.* code never leaked; dialog stays open; catalog unchanged",
+    "deactivateFailureVisible": "POST deactivate rejected -> role=alert fallback «غیرفعال‌سازی ناموفق بود…»; service stayed active"
+  },
+  "requestLogSummary": "16 requests total for the whole run, each explained by a user action; no phantom writes, no duplicate writes, and zero writes on validation failure or declined confirmation.",
+  "noLiveSideEffects": "Fixture removed and original fetch/confirm restored after the run; the page reloaded against the real API still shows the untouched Development catalog (post 1/2 بله, tipax 2/2 بله, snapp_courier 0/0 خیر, store_courier 0/0 بله, in_person 0/0 بله). No DB write, no Host restart, no new route, no backend/contract/migration/checkout change, no fake Shipping rate or coverage control.",
+  "changedPaths": [
+    "A src/frontend/app/admin/shipping-services/shipping-services-roundtrip.test.ts",
+    "A docs/planning/shipping/SHIPPING-MVP-ADMIN-ROUNDTRIP-051.md",
+    "A docs/architecture/evidence/TB-SHIPPING-MVP-ADMIN-ROUNDTRIP-051/**"
+  ],
+  "focusedValidation": {
+    "typecheck": "cd src/frontend && npx tsc --noEmit -> exit 0, no diagnostics",
+    "focusedTests": "node --experimental-strip-types --test app/admin/shipping-services/shipping-services-roundtrip.test.ts app/admin/shipping-services/shipping-services-form-model.test.ts app/admin/admin-grid-migration.test.ts -> 22/22 pass",
+    "browserRoundtrip": "9 flows observed in the isolated in-page run (browser-roundtrip.txt)"
+  },
+  "harnessLimitation": "Tests run on node --experimental-strip-types, which cannot import .tsx JSX, and jsdom/Playwright/React Testing Library are not part of the existing frontend test setup; adding a framework was out of scope, so no durable React-render test could be added. The durable regression is the fetch-level roundtrip test, and the UI-level proof is the isolated browser run.",
+  "limitations": [
+    "Responses came from an in-memory fixture; the Postgres persistence of the same contract is covered by existing backend tests, not by this run.",
+    "The native confirm dialog rendering was not exercised (its boundary, message text and both answers were).",
+    "New services still accept free-text code/providerKind although the shipment path only accepts the five ShippingMethodRegistry codes - belongs to the rate/coverage milestone."
+  ],
+  "workerPassEqualsArchitectAccept": "Worker PASS reported for the verification scope of this task; this is not an AMSC/visual certification and no Architect ACCEPT is claimed."
+}

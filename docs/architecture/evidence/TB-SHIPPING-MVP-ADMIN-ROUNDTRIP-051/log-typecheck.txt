@@ -1,0 +1,1 @@
+﻿npx tsc --noEmit -> exit 0, no diagnostics (src/frontend, 2026-10-14)

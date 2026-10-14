@@ -1,0 +1,104 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-ADMIN-ROUNDTRIP-051
+Parent-Task: TB-SHIPPING-MVP-ADMIN-050
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-SIX-TASK-CLOSURE
+Mode: BOUNDED_ADMIN_SHIPPING_SERVICE_MUTATION_ROUNDTRIP_VERIFICATION
+Bridge-Task-Row: a3ecdea0-a914-41e0-bdb4-d5918b496db3
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 427bcad72d750561beac0322d7cae52081f9c8fe
+Base-SHA: 02aaf242c33089a85fb7eb1abfada1d98ecfc6fb
+Code-SHA: NONE (verification-only task; no production file changed)
+Evidence-SHA: <filled after push>
+automaticNextImplementationTask: NONE
+
+BASELINE: safe HARMLESS_FAST_FORWARD. Expected-Base-SHA is the grandparent of HEAD; the two
+intervening commits carry only the parent task's own evidence artifacts
+(TB-SHIPPING-MVP-ADMIN-050 RESULT.bridge.txt / post-result.js / results.json). Pre-existing unrelated
+dirty work preserved; no reset/stash/rebase/force-push.
+
+INSPECTED: src/frontend/app/admin/shipping-services-screen.tsx, app/admin/shipping-services-api.ts,
+app/admin/shipping-services/shipping-services-form-model.ts,
+design-system/app-data-grid/app-grid-row-actions.tsx, Fulfillment ShippingServiceEndpoints.cs,
+Fulfillment Infrastructure Shipping/ShippingServiceDirectory.cs, features/admin-languages/api/language-api.ts.
+
+ISOLATION METHOD: via CDP Runtime.evaluate I injected in-page interception of window.fetch for
+/v1/admin/shipping-services* and of window.confirm into the already-running dev page. Every other
+request - including /v1/admin/languages, so translations key off real language ids - passed through to
+the real backend, and the real React screen, API client, DTO mapping and grid render were exercised
+unmodified. The in-memory Fulfillment catalog lives only in the page; the shared Development database
+was never written, so real checkout shipping options were never changed. Injection script:
+docs/architecture/evidence/TB-SHIPPING-MVP-ADMIN-ROUNDTRIP-051/browser-fixture.js.
+
+PROVEN ROUNDTRIPS (exact requests/bodies in browser-roundtrip.txt)
+- CREATE: dialog -> POST /v1/admin/shipping-services/ with canonical code (bike_courier), sortOrder 70,
+  translations for all three real language ids, two options with shippingServiceOptionId null for new
+  rows; 201; list GET refresh; role=status notice «سرویس «پیک دوچرخه» ایجاد شد.»; grid 3 rows.
+- LOAD-EDIT: row action -> GET /v1/admin/shipping-services/{id}; form hydrated from the server detail.
+- SAVE-UPDATE + OPTION EDIT: one PUT /v1/admin/shipping-services/{id} with the loaded option identity
+  preserved (dddddddd-...-001 and -002), changed service name, option code same_day_plus, option name
+  and isActive=false; list refresh; notice «… ذخیره شد.».
+- CONFIRM-DEACTIVATE: confirm message captured verbatim
+  («سرویس «پست» غیرفعال شود؟ پس از غیرفعال‌سازی در فروشگاه نمایش داده نمی‌شود.»); on accept
+  POST /v1/admin/shipping-services/{id}/deactivate + list GET refresh + notice «… غیرفعال شد.»; row
+  flips to خیر and its deactivate action disappears (visible guard).
+
+PROVEN NEGATIVE PATHS
+- Validation: clearing the active-language display name issued ZERO requests, kept the dialog open,
+  showed the Persian inline error and left the catalog untouched - the exact 050 silent-strip case.
+- Declined confirmation: ZERO requests, service stayed active.
+- Load failure: role=alert «سرویس ارسال خوانده نشد؛ دوباره تلاش کنید.» visible while the dialog is
+  closed (the 050 "message only inside a closed dialog" defect).
+- Write failure: PUT rejected -> role=alert «این کد سرویس قبلاً ثبت شده است؛ کد دیگری انتخاب کنید.»,
+  raw shipping_service.* code never leaked, dialog stayed open, catalog unchanged.
+- Deactivate failure: rejected -> role=alert fallback «غیرفعال‌سازی ناموفق بود؛ دوباره تلاش کنید.»,
+  service stayed active.
+
+REQUEST LOG: 16 requests for the whole run, each explained by a user action - no phantom writes, no
+duplicate writes, and zero writes on validation failure or a declined confirmation.
+
+NO LIVE SIDE EFFECTS: fixture removed, original fetch/confirm restored, page reloaded against the real
+API still shows the untouched Development catalog (post ۱/۲ بله, tipax ۲/۲ بله, snapp_courier ۰/۰ خیر,
+store_courier ۰/۰ بله, in_person ۰/۰ بله). No DB write, no Host restart/reconfiguration, no new route,
+no backend/contract/migration/seed change, no checkout or shared storefront change, and no fake
+Shipping rate/coverage control was added (048 rates remain non-persisted).
+
+DURABLE REGRESSION ADDED (the only repo change besides docs):
+src/frontend/app/admin/shipping-services/shipping-services-roundtrip.test.ts - in-memory Fulfillment
+fixture on globalThis.fetch asserting path, method, DTO shape, option identity preservation, the
+untouched-catalog guarantee after a rejected mutation, and the denied/host-unreachable mappings.
+
+VALIDATION RUN
+- cd src/frontend && npx tsc --noEmit -> exit 0, no diagnostics.
+- node --experimental-strip-types --test app/admin/shipping-services/shipping-services-roundtrip.test.ts
+  app/admin/shipping-services/shipping-services-form-model.test.ts app/admin/admin-grid-migration.test.ts
+  -> 22/22 pass.
+- Isolated browser run: all 9 flows above observed.
+Broad suites were not re-run: this task adds no production code, and their pre-existing failures
+(shrink-only source-size baseline drift and three unrelated landing/content admin tests) were already
+documented in 050 and are neither introduced nor repaired here.
+
+HARNESS LIMITATION (stated explicitly, not worked around): frontend tests run on
+node --experimental-strip-types, which cannot import .tsx JSX, and jsdom / Playwright / React Testing
+Library are not part of the existing test setup, so no durable React-render test could be added without
+introducing a framework, which the task forbids. The durable regression is the fetch-level roundtrip
+test; the UI-level proof is the isolated browser run.
+
+FURTHER LIMITATIONS: fixture responses, not real Postgres rows (persistence of the same contract is
+covered by existing backend tests); the native confirm dialog rendering itself was not exercised
+(its boundary, message and both answers were); new services still accept free-text code/providerKind
+although the shipment path only accepts the five ShippingMethodRegistry codes - that belongs to the
+rate/coverage milestone.
+
+EVIDENCE: docs/architecture/evidence/TB-SHIPPING-MVP-ADMIN-ROUNDTRIP-051/ (results.json,
+RESULT.bridge.txt, browser-fixture.js, browser-roundtrip.txt, log-typecheck.txt, log-test-focused.txt)
+and docs/planning/shipping/SHIPPING-MVP-ADMIN-ROUNDTRIP-051.md.
+
+ELAPSED: ~28 minutes (claim 2026-10-14T14:33:32Z), inside the 30-minute HARD timebox.
+
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK

@@ -1,0 +1,42 @@
+﻿(node:41808) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-grid-migration.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ admin-screens uses direct AppDataGrid not LegacyAppDataGrid (0.4752ms)
+✔ catalog attribute definitions and schema use direct AppDataGrid (0.1102ms)
+✔ shipping services list keeps its stable row identity and direct grid wiring (0.0772ms)
+✔ gift cards admin list uses direct AppDataGrid (0.0688ms)
+✔ stories management uses direct AppDataGrid (0.0668ms)
+✔ legacy wrapper removed from design-system exports (0.0525ms)
+✔ pure legacy grid adapters exist without render wrapper component (0.0517ms)
+(node:41788) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-services-form-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a complete form produces no issues (0.9433ms)
+✔ service code is required, must stay canonical, and must be unique (0.1714ms)
+✔ sort order must be a non-negative integer instead of silently becoming zero (0.0853ms)
+✔ a display name for the active language is required (0.0993ms)
+✔ option rows are validated instead of being dropped silently (0.1ms)
+✔ write request is canonical and keeps option identity (0.2413ms)
+✔ active helpers resolve the active language only (0.0644ms)
+✔ known fulfillment failure codes map to fa and unknown codes fall back (0.1128ms)
+✔ screen wires validation, page-level feedback, and confirmed row actions (0.5778ms)
+(node:7524) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-services-roundtrip.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ create roundtrip: POST path, method, DTO shape and list refresh (15.5174ms)
+✔ load-edit then save-update roundtrip: GET detail, PUT with preserved option identity (0.7328ms)
+✔ confirmed deactivate roundtrip: POST deactivate and inactive row (0.3671ms)
+✔ rejected mutations surface a stable code and leave the catalog untouched (0.5219ms)
+✔ denied and unreachable responses map to denied/host-unreachable (0.2906ms)
+✔ generic endpoint failure keeps a non-empty message for the UI fallback (0.2428ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 147.9467

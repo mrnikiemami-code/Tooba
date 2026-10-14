@@ -1,0 +1,137 @@
+TB-SHIPPING-MVP-ADMIN-ROUNDTRIP-051 — isolated UI/API roundtrip transcript
+==========================================================================
+Target: http://127.0.0.1:3000/admin/shipping-services (already-running dev frontend, real Next build)
+Isolation: in-page `window.fetch` interception of `/v1/admin/shipping-services*` only (browser-fixture.js)
+           + `window.confirm` interception to drive both confirmation answers deterministically.
+Live Dev database: NOT touched. Real catalog verified identical before/after (see §10).
+Date: 2026-10-14 (UTC). Browser viewId 3c94ab.
+
+Fixture: in-memory Fulfillment catalog seeded with `post` (1 active option `express`) and `in_person`
+(0 options), names keyed by the REAL active language ids returned by the untouched
+`GET /v1/admin/languages` pass-through (3 active languages observed). The screen, the API client and
+the DTO mapping are the unmodified production code paths.
+
+§1 — mount
+Real requests after mount (fixture active): GET /v1/admin/shipping-services?language=fa (x4)
+Grid rendered from the fixture:
+  پست / post / ۱ از ۱ / بله
+  تحویل حضوری / in_person / ۰ از ۰ / بله
+  نمایش ۱ تا ۲ از ۲ ردیف
+(An earlier mount rendered 0 rows because the first list GET raced the languages GET that seeds the
+ fixture; the screen itself was correct. Re-mounting after seeding rendered both rows.)
+
+§2 — CREATE roundtrip
+Clicked "سرویس جدید" (data-testid=admin-shipping-service-create).
+Filled: کد سرویس = bike_courier, Provider Kind = bike_courier, ترتیب = 70,
+        نام نمایشی (فارسی tab) = «پیک دوچرخه», option#1 = same_day / «همان‌روز», option#2 kept standard.
+Clicked "ذخیره". Exactly ONE write issued:
+  POST /v1/admin/shipping-services/
+  body: {
+    "code":"bike_courier","providerKind":"bike_courier","iconKey":"post","colorKey":"blue",
+    "isActive":true,"sortOrder":70,
+    "translations":[{"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"پیک دوچرخه","description":null}],
+    "options":[
+      {"shippingServiceOptionId":null,"code":"same_day","isActive":true,"sortOrder":10,
+       "translations":[{"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"همان‌روز"},
+                       {"languageId":"01a06a53-4196-7000-9b98-fb3706490005","name":"Express"},
+                       {"languageId":"01a0844c-829e-7000-ab25-64b381896053","name":"پیشتاز"}]},
+      {"shippingServiceOptionId":null,"code":"standard","isActive":true,"sortOrder":20,
+       "translations":[{"languageId":"01a06a53-4139-...","name":"معمولی"},
+                       {"languageId":"01a06a53-4196-...","name":"Standard"},
+                       {"languageId":"01a0844c-829e-...","name":"معمولی"}]}]}
+  → fixture returned 201 with the created detail (real server-assigned option id dddddddd-…-001).
+Then: GET /v1/admin/shipping-services?language=fa (list refresh).
+Page notice (role=status): «سرویس «پیک دوچرخه» ایجاد شد.»
+Grid: نمایش ۱ تا ۳ از ۳ ردیف. code canonicalised to `bike_courier`, no silent drops.
+
+§3 — LOAD-EDIT + SAVE-UPDATE (incl. option edit) roundtrip
+Clicked row action ویرایش (testid shipping-service-edit-cccccccc-1111-4111-8111-000000000001):
+  GET /v1/admin/shipping-services/cccccccc-1111-4111-8111-000000000001
+Form populated from the server detail: code=bike_courier, name=«پیک دوچرخه»,
+options same_day/«همان‌روز» (active) and standard/«معمولی» (active).
+Edited: name → «پیک دوچرخه ویژه», option#1 code → same_day_plus, name → «همان‌روز ویژه», active → off.
+Clicked "ذخیره". Exactly ONE write issued:
+  PUT /v1/admin/shipping-services/cccccccc-1111-4111-8111-000000000001
+  body.options[0].shippingServiceOptionId = "dddddddd-1111-4111-8111-000000000001"  ← loaded identity preserved
+  body.options[0].code = "same_day_plus", isActive = false, name = «همان‌روز ویژه»
+  body.options[1].shippingServiceOptionId = "dddddddd-1111-4111-8111-000000000002"
+Then: GET list refresh. Notice: «سرویس «پیک دوچرخه ویژه» ذخیره شد.» Catalog + grid updated.
+
+§4 — VALIDATION blocks the request (no silent stripping)
+Re-opened ویرایش for the same service, cleared نام نمایشی to whitespace, clicked "ذخیره":
+  newly logged requests: []            (log length unchanged 10 → 10)
+  inline errors: ["نام نمایشی برای زبان فعال الزامی است؛ بدون آن نام سرویس در فروشگاه با کد آن نمایش داده می‌شود."]
+  dialog remained visible; page notice null; fixture name unchanged («پیک دوچرخه ویژه»).
+This is the exact 050 regression: previously this action silently dropped the translation and wrote a
+nameless service.
+
+§5 — DESTRUCTIVE DEACTIVATE: decline
+Set confirmAnswer=false, clicked غیرفعال‌سازی on `post`:
+  confirm message captured: «سرویس «پست» غیرفعال شود؟ پس از غیرفعال‌سازی در فروشگاه نمایش داده نمی‌شود.»
+  newly logged requests: []     → no mutation on decline; fixture `post` still active.
+
+§6 — DESTRUCTIVE DEACTIVATE: accept
+confirmAnswer=true, clicked غیرفعال‌سازی on `post`:
+  confirm message captured (same text)
+  POST /v1/admin/shipping-services/aaaaaaaa-0000-4000-8000-000000000001/deactivate
+  then GET list refresh; fixture post.isActive=false; notice (role=status): «سرویس «پست» غیرفعال شد.»
+  Grid row for post shows فعال = خیر and the غیرفعال‌سازی action disappears (visible guard), leaving
+  only ویرایش — exactly the intended inactive-row behaviour.
+
+§7 — NEGATIVE: detail load failure stays visible outside a closed dialog
+failNext='load'; clicked ویرایش on `in_person`:
+  GET /v1/admin/shipping-services/aaaaaaaa-0000-4000-8000-000000000002 → fixture 500
+  notice (role=alert): «سرویس ارسال خوانده نشد؛ دوباره تلاش کنید.»
+  dialog NOT visible (height 0) yet the message is on screen — the 050 defect (message rendered only
+  inside a closed dialog) is fixed.
+
+§8 — NEGATIVE: write failure
+Opened ویرایش on `in_person` (load ok), changed نام نمایشی → «تحویل حضوری ویرایش‌شده», forced the
+fixture to reject the write, clicked "ذخیره":
+  PUT /v1/admin/shipping-services/aaaaaaaa-0000-4000-8000-000000000002 → 409 {errorCode:"shipping_service.code_duplicate"}
+  notice (role=alert): «این کد سرویس قبلاً ثبت شده است؛ کد دیگری انتخاب کنید.»
+  leaksRawCode=false (no `shipping_service.` substring anywhere in the notice)
+  dialog stayed visible so the admin can correct and retry; fixture translation unchanged.
+
+§9 — NEGATIVE: deactivate failure
+failNext='deactivate'; confirmAnswer=true; clicked غیرفعال‌سازی on `in_person`:
+  POST /v1/admin/shipping-services/aaaaaaaa-0000-4000-8000-000000000002/deactivate → 503
+  notice (role=alert): «غیرفعال‌سازی ناموفق بود؛ دوباره تلاش کنید.» (fallback; raw code not leaked)
+  fixture in_person.isActive still true.
+
+§10 — Complete request log for the whole run (16 requests, no phantom/duplicate writes)
+  GET  /v1/admin/shipping-services?language=fa   (x4 — mount + remounts)
+  POST /v1/admin/shipping-services/                                    (create)
+  GET  /v1/admin/shipping-services?language=fa                         (refresh after create)
+  GET  /v1/admin/shipping-services/cccccccc-1111-4111-8111-000000000001 (load edit)
+  PUT  /v1/admin/shipping-services/cccccccc-1111-4111-8111-000000000001 (update)
+  GET  /v1/admin/shipping-services?language=fa                         (refresh after update)
+  GET  /v1/admin/shipping-services/cccccccc-1111-4111-8111-000000000001 (load for validation case)
+  POST /v1/admin/shipping-services/aaaaaaaa-0000-4000-8000-000000000001/deactivate (accept confirm)
+  GET  /v1/admin/shipping-services?language=fa                         (refresh after deactivate)
+  GET  /v1/admin/shipping-services/aaaaaaaa-0000-4000-8000-000000000002 (failed load)
+  GET  /v1/admin/shipping-services/aaaaaaaa-0000-4000-8000-000000000002 (load before write failure)
+  PUT  /v1/admin/shipping-services/aaaaaaaa-0000-4000-8000-000000000002 (rejected write)
+  POST /v1/admin/shipping-services/aaaaaaaa-0000-4000-8000-000000000002/deactivate (rejected deactivate)
+
+§11 — Cleanup and no-live-side-effect proof
+Fixture removed (original fetch and confirm restored: fixtureGone=true) and the page fully reloaded
+against the REAL API. Real Development catalog afterwards (unchanged):
+  پست / post / ۱ از ۲ / بله
+  تیپاکس / tipax / ۲ از ۲ / بله
+  اسنپ / پیک آنلاین / snapp_courier / ۰ از ۰ / خیر
+  پیک فروشگاه / store_courier / ۰ از ۰ / بله
+  تحویل حضوری / in_person / ۰ از ۰ / بله
+  نمایش ۱ تا ۵ از ۵ ردیف
+→ zero live mutation; checkout shipping options unaffected.
+
+§12 — Limitations of this evidence
+- Requests were fulfilled by an in-page fixture, not the real Fulfillment database. The wire contract,
+  path, method, DTO shape and the screen's own code are real; the persistence of that contract in
+  Postgres is covered by the existing backend tests, not by this run.
+- `window.confirm` was replaced by an equivalent probe, so the native dialog's own rendering was not
+  exercised; the confirm boundary (message text + both answers) was.
+- No Playwright/jsdom component harness exists in this repo (node --experimental-strip-types cannot
+  import .tsx JSX), so a durable in-repo React render test was not added; the durable in-repo
+  regression is the fetch-level roundtrip test shipping-services-roundtrip.test.ts.
+- Screenshot (temp, outside repo): cursor/screenshots/shipping-roundtrip-051-after-deactivate-error.png
