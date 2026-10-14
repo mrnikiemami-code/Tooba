@@ -12,7 +12,7 @@ Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: 0e9d99df85efc919080d4d9b17256cffc6e5e802
 Base-SHA: b44889b92b42ef3b300530bd8a8825f1792c4fb2
 Code-SHA: 427bcad72d750561beac0322d7cae52081f9c8fe
-Evidence-SHA: 427bcad72d750561beac0322d7cae52081f9c8fe
+Evidence-SHA: 3d64945a057db663023d578cc4fc75829836e1b9
 automaticNextImplementationTask: NONE
 
 BASELINE: safe HARMLESS_FAST_FORWARD. Expected-Base-SHA is the parent of b44889b92; the only

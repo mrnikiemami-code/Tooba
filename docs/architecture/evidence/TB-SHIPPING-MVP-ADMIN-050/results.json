@@ -9,7 +9,7 @@
   "milestone": "1 OF 6",
   "status": "PARTIAL",
   "codeSha": "427bcad72d750561beac0322d7cae52081f9c8fe",
-  "evidenceSha": "427bcad72d750561beac0322d7cae52081f9c8fe",
+  "evidenceSha": "3d64945a057db663023d578cc4fc75829836e1b9",
   "actualElapsed": "~12 minutes (claim 2026-10-14T14:17:44Z, code push 2026-10-14T14:29Z; inside the 30-minute HARD timebox)",
   "stopState": "STOP_FOR_ARCHITECT",
   "expectedBaseSha": "0e9d99df85efc919080d4d9b17256cffc6e5e802",
