@@ -1,0 +1,125 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-ISOLATED-HTTP-061
+Parent-Task: TB-SHIPPING-MVP-SAFETY-REPAIR-060
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE
+Mode: STRICTLY_ISOLATED_AUTHENTICATED_HTTP_AND_NULL_SCOPE_REGRESSION
+Bridge-Task-Row: ca7e2ede-786e-49e9-8708-506e84c7e65d
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 60ce0b14d53be693d6d9d53d4119adfa16ec5d37
+Base-SHA: 4d50587cc3c001f7146b6c3ccb54fba671ebcf96
+Code-SHA: NONE
+Evidence-SHA: 5b83c7c826fa494ae2d838ddf88b8e45c41561a3
+automaticNextImplementationTask: NONE
+
+PREFLIGHT / DRIFT
+git fetch origin; HEAD == origin/main == 4d50587cc3c001f7146b6c3ccb54fba671ebcf96 before the run.
+Expected-Base-SHA 60ce0b14d is an ancestor; `git diff --name-only 60ce0b14d..4d50587cc` is exactly two paths, both under
+docs/architecture/evidence/TB-SHIPPING-MVP-SAFETY-REPAIR-060/ (RESULT.bridge.txt, post-result.js) — an evidence-only
+bookkeeping commit with a path-by-path zero-source-overlap proof. No RECOVERY_CONFLICT. No reset, stash, rebase or
+force-push. Received artifact preserved verbatim as the unstaged receipt
+docs/ai/tasks/TB-SHIPPING-MVP-ISOLATED-HTTP-061.task.md (never staged). Unrelated pre-existing dirty/untracked paths
+were never staged: the commit contains only docs/planning/shipping/SHIPPING-MVP-ISOLATED-HTTP-061.md and
+docs/architecture/evidence/TB-SHIPPING-MVP-ISOLATED-HTTP-061/** (27 files, 215 KB bounded logs).
+
+ISOLATION AND SAFETY PROOF (MANDATORY GATE — PASSED BEFORE ANY REQUEST)
+Task-exclusive target: NEW container tooba-061-scratch (postgres:17) with its own data volume, published only as
+127.0.0.1:55432, fresh role scratch061, database tooba_061_scratch_k7q2m9zd. tooba_alpha does not exist inside that
+container, so it was unreachable by construction. The task-owned launch directory replaced appsettings.Development.json
+with an isolated overlay declaring exactly one Active tenant (store-alpha) and exactly one reference
+(tenant-061-scratch, canonical HYPHENATED key in both the definition and the reference map), and the launcher cleared
+all inherited Tooba__*/ASPNETCORE__*/DOTNET__*/ConnectionStrings__* before setting only the isolated values; there is no
+UserSecretsId in the Host project, so no ambient configuration could reintroduce a real connection.
+
+Three independent proofs, all captured in evidence:
+1. OFFLINE, before launch — the copied 060 guard run over the exact (effective merged config, launch override file)
+   pair: RESULT=PASS EXIT_CODE=0 TENANT=store-alpha CONNECTION_REFERENCE=tenant-061-scratch HOST=127.0.0.1 PORT=55432
+   DATABASE=tooba_061_scratch_k7q2m9zd SENTINEL=k7q2m9zd CONFIG_OVERRIDE_KEYS_APPLIED=1 CREDENTIALS_PRINTED=false
+   DATABASE_CONTACTED=false FINGERPRINT=e813068fcb66a4843d8e0fd6de13c9095e35a1a09362edd16350ed049c9c48db
+   CONFIG_SHA256=5880c439f53fca20ac4c907d19162b54ff7d35eefa009ceed23f10832ab0132a — and the caller recomputed SHA-256 of
+   the launched config bytes and required equality, binding the judged bytes to the launched bytes. The prepare step
+   additionally refused to continue unless the base appsettings.json declared 0 tenants / 0 references, asserted the
+   merged effective config still had exactly 1 tenant / 1 reference, and rejected any effective connection string that
+   was not loopback, not port 55432 and not exactly the scratch database. The guard copy also re-passed its own
+   synthetic suite 12/12 (FIXTURE_PROOFS=PASS), so it is not a weakened guard.
+2. RUNTIME, from the launched process — GET /__platform-commerce -> 200
+   {"edition":"SingleStore","deploymentId":"isolated-061","tenantId":"store-alpha","connectionReference":"tenant-061-scratch","resolvedHost":"127.0.0.1"}.
+3. DATABASE-SIDE barrier — the scratch container's pg_stat_activity shows the Host's own backends (identified by the
+   unique Application Name tooba-061-isolated) only against tooba_061_scratch_k7q2m9zd (2 idle, client 172.17.0.1).
+No secret was printed anywhere; the offline guard reports PASSWORD_PRESENT=true and CREDENTIALS_PRINTED=false, and all
+committed configuration copies are redacted.
+
+REAL HTTP STATUS/CODE OUTCOMES
+GET  /health -> 200 {"status":"ok"}
+GET  /__platform-commerce -> 200 (provenance above)
+GET  /v1/admin/dev-context -> 200 {"actorUserId":"01a13c32-ec9d-7000-93cf-3c67cf29674f","actorLabel":"admin-actor@tooba.local","tenantId":"store-alpha"}
+GET  /v1/admin/geography/countries  no credential -> 401 admin.actor.missing
+GET  /v1/admin/geography/countries  dev actor     -> 403 admin.authorization.denied
+GET  /v1/admin/shipping-services/iso-061-post/rates dev actor       -> 403 admin.authorization.denied
+POST /v1/admin/shipping-services/iso-061-post/rates           body WITHOUT scope -> 403 admin.authorization.denied
+POST /v1/admin/shipping-services/iso-061-post/coverage-grants body WITHOUT scope -> 403 admin.authorization.denied
+POST /v1/admin/access-control/bootstrap -> 403; GET /v1/admin/access-control/me/capabilities -> 403
+BOTH NULL-SCOPE POSTS COULD NOT BE MEASURED OVER HTTP. They are rejected by authorization before the request reaches
+the MediatR validation pipeline, so the 060 repair is unobservable over HTTP in this environment. This does NOT
+contradict the 060 repair; it means the task's central regression condition is UNMET — no PASS is claimed from mocks or
+offline tests.
+
+AUTHENTICATED CRUD
+NOT PERFORMED. No rate, no coverage grant, no dup/cross-service denial and no read-after-write comparison could be
+exercised, and nothing was written anywhere (no invented commercial or nationwide default exists as a result).
+
+BLOCKERS (directly reproduced, NOT repaired — reported instead of widening scope)
+B1. A fresh isolated database receives NO capabilities from the supported Development admin bootstrap. After two clean
+    starts the actor and its membership tuple exist (GET /v1/admin/dev-context -> 200) but
+    access_control.roles = 0, access_control.role_permissions = 0, access_control.user_role_assignments = 0, so every
+    admin surface correctly answers 403 fail-closed. The supported HTTP route cannot break the deadlock because it
+    requires the capability it is meant to create (POST /v1/admin/access-control/bootstrap -> 403). Reusing/inventing
+    roles or tuples directly was explicitly forbidden, so authorization could not be established.
+B2. The alternative supported Development seeding switch is broken: Tooba:CatalogDemo:RunLegacyBootstraps=true aborts
+    the Host during startup with System.InvalidOperationException: "محصول برای انتشار آماده نیست." from
+    CatalogAttributeSchemaDevelopmentSeed.ApplyAsync -> CatalogDevelopmentSeed.PostMigration.EnsureAsync ->
+    DevelopmentSchemaMigrator.ApplyCoreAsync (Program.cs:366).
+B3. Environment observation for the Architect: DevelopmentSchemaMigrator.MigrateSchemaOnlyAsync created 29 schemas but
+    not geography, shipping, returns or settlement, and the Outbox dispatcher repeatedly logged missing
+    returns.outbox_messages / settlement.outbox_messages. A fresh isolated database therefore cannot exercise the
+    Shipping/Geography admin surface even with an authorized actor.
+
+CLEANUP (PROVEN)
+Task-owned Host on :5098 stopped and the port verified free; container tooba-061-scratch deleted with zero remaining
+containers and zero volumes of that name; temp launch directory and credential file removed; no Tooba__*/ASPNETCORE__*
+leftover in the shell environment. The user's :5088 Host was verified untouched — same listener PID 37028 before and
+after, /health -> {"status":"ok"} — and no browser or user process was addressed. No existing database was queried,
+edited or cleaned; tooba_alpha and 127.0.0.1:5432 were never contacted.
+
+TESTS
+node isolated/run-fixture-proofs.js -> FIXTURE_PROOFS=PASS (12/12) on the copied guard.
+node isolated/prepare-isolated-target.js -> RESULT=PASS, EFFECTIVE_TENANTS=1, EFFECTIVE_REFERENCES=1, GUARD_EXIT=0.
+Host build of the current code succeeded (0 errors, isolated -o output directory so the user's running process files
+were not touched). No production test suite was run: it was not required and the environment could not support the
+HTTP regression.
+
+CHANGED PATHS
+docs/planning/shipping/SHIPPING-MVP-ISOLATED-HTTP-061.md
+docs/architecture/evidence/TB-SHIPPING-MVP-ISOLATED-HTTP-061/** (27 files)
+docs/ai/tasks/TB-SHIPPING-MVP-ISOLATED-HTTP-061.task.md (unstaged receipt only, never committed)
+Code-SHA: NONE — no production source, configuration, schema, migration, service catalog, permission or guard file was
+modified. The 060 guard at its original path is byte-identical to before this task (its copy lives under 061 evidence).
+
+GIT
+commit 5b83c7c826fa494ae2d838ddf88b8e45c41561a3 pushed to origin/main; HEAD == origin/main confirmed after fetch.
+
+ACTUAL ELAPSED
+12.2 minutes from bridge claim (20:52:17Z) to result preparation (21:04:28Z) — within the 30-minute hard timebox, with
+testing stopped at the blocker rather than overrunning.
+
+VERDICT
+PARTIAL. Of the acceptance conditions: isolated effective target independently proven before requests = PASS;
+unauthorized access denied = PASS; cleanup proven and no existing Host/database touched = PASS; BOTH missing-scope
+POSTs returning 400 with the stable validation code = NOT MEASURED; authenticated rate/grant CRUD roundtrip inside
+scratch = NOT MEASURED. PASS requires all conditions, so PASS is explicitly NOT claimed.
+
+END_TOOBA_WORKER_RESULT
