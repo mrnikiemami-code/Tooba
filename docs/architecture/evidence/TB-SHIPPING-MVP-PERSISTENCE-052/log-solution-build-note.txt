@@ -1,0 +1,25 @@
+=== S1: `dotnet build src/backend/Tooba.slnx` is blocked by the RUNNING Host, not by this change ===
+Result: 320 errors, all of them MSB3027/MSB3021 file-copy locks, e.g.
+  "Tooba.Wishlist.Contracts.dll ... The file is locked by: Tooba.Host (37028)"
+  "Tooba.Order.Endpoints.resources.dll ... The file is locked by: Tooba.Host (37028)"
+Every error names `Tooba.Host/bin/Debug/net8.0` as the destination, i.e. the already-running Development
+Host holds its own output directory open. Zero errors are compiler diagnostics (CS####).
+The Task forbids reconfiguring or restarting the running Host, so the Host output was NOT touched and no
+Host process was stopped; the locked build was left exactly as found.
+
+=== S2: builds that matter for this change are clean (0 warnings, 0 errors) ===
+`dotnet build src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Tooba.Shipping.Infrastructure.csproj`
+  -> Build succeeded. 0 Warning(s) 0 Error(s)   (log-build-shipping-infrastructure.txt)
+`dotnet build src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj`
+  -> Build succeeded. 0 Warning(s) 0 Error(s)   (log-build-order-application.txt)
+`dotnet build src/backend/Modules/Shipping/Tooba.Shipping.Tests/Tooba.Shipping.Tests.csproj`
+  -> Build succeeded. 0 Warning(s) 0 Error(s)
+
+=== S3: no project outside the Shipping module depends on the changed assembly ===
+Search over every `*.csproj` in the repository for the changed project reference:
+  Tooba.Shipping.Infrastructure is referenced ONLY by Tooba.Shipping.Tests.
+  The only external consumer of anything Shipping is
+  `Modules/Order/Tooba.Order.Application` referencing `Tooba.Shipping.Contracts` (the 049
+  read-only shadow contract), and that project is untouched by and clean under this change (S2).
+Therefore the Host-locked solution build cannot hide a compile error introduced here: the changed
+assembly has one consumer, and that consumer built and ran green.

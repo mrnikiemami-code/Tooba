@@ -1,0 +1,78 @@
+{
+  "taskId": "TB-SHIPPING-MVP-PERSISTENCE-052",
+  "parentTask": "TB-SHIPPING-MVP-ADMIN-ROUNDTRIP-051",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "program": "TOOBA-SHIPPING-MVP-SIX-TASK-CLOSURE",
+  "mode": "BOUNDED_SHIPPING_PERSISTENCE_MIGRATION_NO_DEPLOY",
+  "milestone": "3 OF 6",
+  "status": "PASS",
+  "bridgeTaskRow": "c9415b3e-b403-4163-b225-caaec030c314",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "expectedBaseSha": "446a3982e99373d3bb85ab652be5c69583493dd5",
+  "baseSha": "98d8ec4ab7d3f99da79d02f80cc2b05da53c2d0f",
+  "baseShaDrift": {
+    "safe": true,
+    "classification": "HARMLESS_FAST_FORWARD",
+    "detail": "Expected-Base-SHA is the parent of HEAD; the single intervening commit (98d8ec4ab) is the parent task's own evidence-SHA bookkeeping under TB-SHIPPING-MVP-ADMIN-ROUNDTRIP-051. No source, contract, migration or config differs. Pre-existing unrelated dirty/untracked files preserved; no reset/stash/rebase/force-push."
+  },
+  "codeSha": "<filled after push>",
+  "evidenceSha": "<filled after push>",
+  "actualElapsed": "~18 minutes (claim 2026-10-14T14:44:42Z; inside the 30-minute HARD timebox)",
+  "automaticNextImplementationTask": "NONE",
+  "migrationProduced": "src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261014144742_InitialShipping.cs (+ .Designer.cs + ShippingDbContextModelSnapshot.cs) — scaffolded with `dotnet ef migrations add InitialShipping` through the existing 048 design-time factory; no csproj or factory change was needed.",
+  "invariantsEnforced": {
+    "primaryKeys": "ValueGeneratedNever on ShippingRatePolicy.RatePolicyId and ShippingCoverageGrant.CoverageGrantId (application-assigned UuidV7, replay-deterministic)",
+    "notNull": "service_code, currency_code, country_id, charge_amount, preparation_days, lead_days, is_active (rate) and service_code, country_id, is_active (grant); the four destination-scope columns stay nullable by design",
+    "checkConstraints": [
+      "ck_rate_policies_charge_amount_non_negative: charge_amount >= 0",
+      "ck_rate_policies_charge_amount_within_max: charge_amount <= 1000000000",
+      "ck_rate_policies_free_above_threshold_non_negative: free_above_threshold IS NULL OR >= 0",
+      "ck_rate_policies_preparation_days_range: 0..365",
+      "ck_rate_policies_lead_days_range: 0..365",
+      "ck_rate_policies_service_code_canonical: non-empty and btrim-equal (the engine matches trimmed codes)",
+      "ck_rate_policies_currency_code_canonical: char_length = 3 and upper-case",
+      "ck_rate_policies_scope_coherent / ck_coverage_grants_scope_coherent: service_area_id IS NULL OR city_id IS NOT NULL",
+      "ck_coverage_grants_service_code_canonical"
+    ],
+    "trueScopeUniqueness": "ux_rate_policies_service_scope and ux_coverage_grants_service_scope on (service_code, country_id, administrative_area_id, city_id, service_area_id) are NULLS-NOT-DISTINCT unique indexes (EF: AreNullsDistinct(false) -> Npgsql:NullsDistinct=false -> literal `NULLS NOT DISTINCT` in DDL, confirmed by pg_index.indnullsnotdistinct = true). Without this, same-scope rows differing only by a NULL level would both insert and the engine would answer ScopeConflict for every request. Requires PostgreSQL 15+ (verified on 17.10, same major as the Development container); on an older server the migration fails loudly rather than degrading to a partial constraint.",
+    "lookupIndexes": [
+      "ix_rate_policies_service_active (service_code, is_active)",
+      "ix_coverage_grants_service_country_active (service_code, country_id, is_active)",
+      "ix_outbox_messages_pending (occurred_at, filtered)"
+    ],
+    "crossModule": "no foreign key and no cross-schema reference: destination identity and service code remain plain ID/key values; asserted to be zero outbound FKs in both the model test and the applied schema."
+  },
+  "noWeakening": "The 048 pure fail-closed engine, the aggregates, the Contracts, the Fulfillment-owned /admin/shipping-services CRUD and the legacy checkout prices were not modified. No default rate/grant was seeded and no coverage was inferred from the legacy empty AllowedProvinces, so absent-row-is-uncovered is preserved. The new Shipping module remains UNWIRED from Host and MigrationRunner (no IModuleSchemaMigrator in the assembly, asserted by test).",
+  "isolatedDatabase": {
+    "destination": "task-exclusive disposable container ship052-verify (postgres:17, database ship052, host port 55433), created for this run and removed at the end",
+    "guard": "run-isolated-verification.ps1 refuses to start unless the connection string targets 127.0.0.1:55433; the container credential is read from the environment so no credential value is committed (verified: 0 hits)",
+    "lifecycle": "UP -> 1 row in shipping.__ef_migrations_history (product version 8.0.11), 4 tables, 4 primary keys, 10 CHECK constraints, 9 indexes with indnullsnotdistinct=true on both ux_ indexes, 0 outbound FKs; DOWN -> only __ef_migrations_history remains, residual_module_tables = 0; UP again -> identical schema and applied_migrations = 1",
+    "acceptedScenarios": "country-scope policy with NULL deeper levels; a different scope depth for the same service (area-level and city-level); the same country scope for a DIFFERENT service; a city-scope coverage grant beside the country-scope grant; a coverage grant whose service has no policy yet",
+    "rejectedScenarios": "duplicate country-scope policy (23505 ux_rate_policies_service_scope); duplicate country-scope coverage grant (23505 ux_coverage_grants_service_scope); negative charge; charge above maximum; negative preparation days; lead days > 365; negative free-above threshold; whitespace-padded service code; two-letter currency code; service area without its owning city — all 23514 on the named CHECK constraint",
+    "proofNoRealDbTouched": "tooba_alpha, MyDatabase and tooba_codex_dev inside the pre-existing postgres-db container all report shipping_schema=0 and rate_policies_or_coverage_grants=0 after the run; the Host was neither restarted nor reconfigured"
+  },
+  "focusedValidation": {
+    "shippingTests": "dotnet build Tooba.Shipping.Tests -> 0 warnings 0 errors; dotnet test -> Passed! 58 passed, 0 failed (34 pre-existing remain green, +24 new cases in ShippingPersistenceModelTests)",
+    "testDesign": "all offline (no PostgreSQL needed in CI): the model is read through IDesignTimeModel because the runtime model is read-optimized and drops check constraints; the migration script is generated in memory and asserted for the literal NULLS NOT DISTINCT plus every constraint name; HasPendingModelChanges() pins model/snapshot sync",
+    "otherBuilds": "Tooba.Shipping.Infrastructure -> 0/0; Tooba.Order.Application (the only external project referencing Shipping.Contracts) -> 0/0",
+    "solutionBuild": "dotnet build Tooba.slnx cannot complete while the Development Host runs: all 320 errors are MSB3027/MSB3021 file-copy locks naming Tooba.Host/bin/Debug/net8.0, with zero compiler diagnostics. The Task forbids restarting the Host, so it was left running. Tooba.Shipping.Infrastructure has exactly one consumer (the green test project) and the only external Shipping reference is the untouched Order.Application -> Shipping.Contracts edge, so the lock cannot hide a compile error here."
+  },
+  "changedPaths": [
+    "M src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/ShippingDbContext.cs",
+    "A src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261014144742_InitialShipping.cs",
+    "A src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261014144742_InitialShipping.Designer.cs",
+    "A src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/ShippingDbContextModelSnapshot.cs",
+    "A src/backend/Modules/Shipping/Tooba.Shipping.Tests/Persistence/ShippingPersistenceModelTests.cs",
+    "A docs/planning/shipping/SHIPPING-MVP-PERSISTENCE-052.md",
+    "A docs/architecture/evidence/TB-SHIPPING-MVP-PERSISTENCE-052/**"
+  ],
+  "forbiddenPathsUntouched": "No edits to Order/Checkout, Fulfillment, Geography, Host, MigrationRunner, shared BuildingBlocks, payments, settlements, frontend, appsettings, architecture guards or source-of-truth manifests; no Host DI registration, no MigrationRunner apply, no real tenant migration or seed, no shipping policy activation, no gate flips, no customer-facing rate or promise change, no new admin screen, no duplicated catalog CRUD.",
+  "limitations": [
+    "The migration is review-only. Until the Architect authorizes Host wiring, ShippingModule registration, ModuleSchemaMigrationOrder insertion and an actual database update against the Development database, no Shipping rate or coverage can be stored, so 048's engine still has no data source and ship-time rates remain non-persisted.",
+    "NULLS NOT DISTINCT requires PostgreSQL 15+ (verified on 17.10). A future deployment on an older server would need an alternative formulation rather than the current migration.",
+    "No coverage grant row was created by design; the fail-closed default (uncovered) is preserved and grant authoring is still a separate deliverable."
+  ],
+  "workerPassEqualsArchitectAccept": "Worker PASS for this task's scope only; no AMSC certification, no visual certification and no Architect ACCEPT is claimed."
+}
