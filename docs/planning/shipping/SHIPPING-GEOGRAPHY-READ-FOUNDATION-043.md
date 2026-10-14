@@ -114,8 +114,8 @@ The harness (`harness/Program.cs`, kept as evidence) built the `GeographyDbConte
 
 ## 7. Time, commit, push
 
-- Claim (`12:02:30Z`) → validated commit: **≈8 minutes** of the 30-minute hard timebox.
-- Exactly one bounded commit of task-owned paths only; `git push origin main`; `git fetch origin`; SHA equality verified.
+- Claim (`12:02:30Z`) → validated commit: **≈9 minutes** of the 30-minute hard timebox.
+- Two bounded commits, task-owned paths only: code + report `38019b3e3`, local evidence (seed SQL, verification log, destination proof, harness copy) in the evidence commit that follows it. `git push origin main`; `git fetch origin`; `HEAD == origin/main` verified.
 - Disposable container removed; no Tooba database touched; no Results-API probe; no automatic next task; no idle polling.
 
 ## 8. Recommendation (exactly one next step)

@@ -1,0 +1,16 @@
+﻿   db   |            started            
+--------+-------------------------------
+ geo043 | 2026-10-14 12:06:03.667619+00
+(1 row)
+
+  datname  
+-----------
+ geo043
+ postgres
+ template0
+ template1
+(4 rows)
+
+fdc0c224405d09cf8335f27564276f297a3cfdf4e04f735f752b818f557f8d01 /geo043-verify running postgres:17
+01d8067a30ce965c2ffc80296c5568c63f8e48eb1b2c5c2d1d3f7963b7b48d9f /postgres-db running
+5432/tcp -> 127.0.0.1:55433

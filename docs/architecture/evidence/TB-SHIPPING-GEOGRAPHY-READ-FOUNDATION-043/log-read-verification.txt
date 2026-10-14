@@ -1,0 +1,49 @@
+﻿PASS  L1 ListCountries: 3 rows ordered by code incl. inactive FRA :: DEU:True,FRA:False,IRN:True
+PASS  L2 ListAdministrativeAreas(IRN): 4 rows ordered by code, parents surfaced :: ALB,MZK1,MZK2,THR
+PASS  L3 ListCities(IRN): 7 rows ordered by code with correct area links, other country excluded :: EN1,INA,KAR,NOTR,SV1,SV2,TEH1
+PASS  L4 ListCities(IRN, MZK1): exactly SV1
+PASS  L5 ListCities(empty country): empty, no exception
+PASS  L6 ListServiceAreas(TEH1): SA1, SA2 only (SA3 belongs to another city) :: SA1,SA2
+PASS  L7 ListServiceAreas(empty city): empty, no exception
+PASS  G1 GetByIds full valid chain accepted :: DestinationIdentifiers { CountryId = 10000000-0000-0000-0000-000000000001, AdministrativeAreaId = 20000000-0000-0000-0000-000000000001, CityId = 30000000-0000-0000-0000-000000000001, ServiceAreaId = 40000000-0000-0000-0000-000000000001 }
+PASS  G2 GetByIds without service area accepted
+PASS  G3 GetByIds country only accepted
+PASS  G4 GetByIds inactive country rejected
+PASS  G5 GetByIds inactive city rejected
+PASS  G6 GetByIds city from another country rejected
+PASS  G7 GetByIds area/city mismatch rejected
+PASS  G8 GetByIds service area of another city rejected
+PASS  G9 GetByIds service area without owning city rejected
+PASS  G10 GetByIds Guid.Empty rejected (country and optional slots)
+PASS  G11 GetByIds unknown ids rejected
+PASS  B1 labels(requested=en): requested language wins; en-only label kept; code fallback; missing id omitted :: 30000000=Tehran; 30000000=EnOnlyCity; 30000000=NOTR
+PASS  B2 labels(requested=fa): fa label for TEH1, en-only city falls back to its stable code :: 30000000=تهران; 30000000=EN1
+PASS  B3 labels(languageId=null): default language (fa) used
+PASS  B4 labels(languageId=Guid.Empty): treated as default language (fa)
+PASS  B5 labels(unknown language): not honoured, falls through to default (fa)
+PASS  B6 labels(empty id set): empty dictionary, no query side effect
+PASS  B7 country labels: label from translation, unknown id omitted
+PASS  B8 administrative area labels(FA)
+PASS  B9 administrative area labels(EN)
+PASS  B10 service area labels(EN): translated SA1 in the requested language, untranslated SA2 falls through to the default language (fa) :: 40000000=Zone 1; 40000000=منطقه ۲
+PASS  B11 no `IsDefault` language: null request cannot pick a language, stable code is used
+PASS  B12 empty language set: requested language not honoured, stable code used
+PASS  R1 area+city labels resolve exactly :: (Resolved, 10000000-0000-0000-0000-000000000001, 20000000-0000-0000-0000-000000000002, 30000000-0000-0000-0000-000000000002, , 1)
+PASS  R2 duplicated city label in two different areas => Ambiguous(2), not collapsed :: (Ambiguous, , , , , 2)
+PASS  R3 supplying the area disambiguates the duplicated city label :: (Resolved, 10000000-0000-0000-0000-000000000001, 20000000-0000-0000-0000-000000000003, 30000000-0000-0000-0000-000000000003, , 1)
+PASS  R4 duplicated area label => Ambiguous(2) :: (Ambiguous, , , , , 2)
+PASS  R5 stable code accepted as exact key; area filled from the city's own row :: (Resolved, 10000000-0000-0000-0000-000000000001, 20000000-0000-0000-0000-000000000001, 30000000-0000-0000-0000-000000000001, , 1)
+PASS  R6 service-area label without a city => Unresolved (never guessed across cities) :: (Unresolved, , , , , 0)
+PASS  R7 full legacy text resolves to the 4 stable ids :: (Resolved, 10000000-0000-0000-0000-000000000001, 20000000-0000-0000-0000-000000000001, 30000000-0000-0000-0000-000000000001, 40000000-0000-0000-0000-000000000002, 1)
+PASS  R8 country alone resolves to the country id :: (Resolved, 10000000-0000-0000-0000-000000000001, , , , 1)
+PASS  R9 blank/missing country => Unresolved (no cross-country search)
+PASS  R10 unknown country code => Unresolved
+PASS  R11 trim + case-insensitive normalisation (country code and labels) :: (Resolved, 10000000-0000-0000-0000-000000000001, 20000000-0000-0000-0000-000000000002, 30000000-0000-0000-0000-000000000002, , 1)
+PASS  R12 area resolvable by stable code with no city :: (Resolved, 10000000-0000-0000-0000-000000000001, 20000000-0000-0000-0000-000000000001, , , 1)
+PASS  R13 city outside the supplied area => Unresolved (area is a real scope) :: (Unresolved, , , , , 0)
+PASS  R14 unknown service-area label => Unresolved :: (Unresolved, , , , , 0)
+PASS  R15 city without any label still resolvable by stable code :: (Resolved, 10000000-0000-0000-0000-000000000001, 20000000-0000-0000-0000-000000000001, 30000000-0000-0000-0000-000000000006, , 1)
+PASS  R16 resolution is deterministic across runs
+PASS  D1 read surface performed no write (row counts unchanged) :: 24 -> 24
+
+ALL CHECKS PASSED
