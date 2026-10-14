@@ -1,0 +1,89 @@
+{
+  "taskId": "TB-SHIPPING-MVP-ADMIN-050",
+  "parentTask": "TB-SHIPPING-CHECKOUT-BINDING-049",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "program": "TOOBA-SHIPPING-MVP-SIX-TASK-CLOSURE",
+  "mode": "BOUNDED_EXISTING_ADMIN_SHIPPING_SERVICES_VERTICAL_SLICE",
+  "milestone": "1 OF 6",
+  "status": "PARTIAL",
+  "codeSha": "427bcad72d750561beac0322d7cae52081f9c8fe",
+  "evidenceSha": "427bcad72d750561beac0322d7cae52081f9c8fe",
+  "actualElapsed": "~12 minutes (claim 2026-10-14T14:17:44Z, code push 2026-10-14T14:29Z; inside the 30-minute HARD timebox)",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "expectedBaseSha": "0e9d99df85efc919080d4d9b17256cffc6e5e802",
+  "baseSha": "b44889b92b42ef3b300530bd8a8825f1792c4fb2",
+  "baseShaDrift": {
+    "safe": true,
+    "classification": "HARMLESS_FAST_FORWARD",
+    "detail": "Expected-Base-SHA is the parent of b44889b92. The single intervening commit is the previous task's own artifact bookkeeping (docs/architecture/evidence/TB-SHIPPING-CHECKOUT-BINDING-049/RESULT.bridge.txt + results.json). No source, contract, migration or config file differs. Pre-existing unrelated dirty/untracked files were preserved untouched; no reset, stash, rebase or force-push."
+  },
+  "automaticNextImplementationTask": "NONE",
+  "inspectedPaths": [
+    "src/frontend/app/admin/shipping-services/page.tsx",
+    "src/frontend/app/admin/shipping-services-screen.tsx",
+    "src/frontend/app/admin/shipping-services-api.ts",
+    "src/frontend/app/admin/admin-grid-migration.test.ts",
+    "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Endpoints/Shipping/ShippingServiceEndpoints.cs",
+    "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingServiceDirectory.cs",
+    "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Validators/CreateShippingServiceCommandValidator.cs",
+    "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Validators/UpdateShippingServiceCommandValidator.cs",
+    "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Persistence/FulfillmentDbContext.cs",
+    "src/backend/Modules/Fulfillment/Tooba.Fulfillment.Contracts/Errors/FulfillmentErrorCodes.cs",
+    "src/frontend/app/admin/campaigns/admin-campaigns-screen.tsx"
+  ],
+  "findings": [
+    "Silent failures: action feedback was rendered only inside the dialog, so a failed edit-load or a failed deactivate showed nothing to the user, and the stale message leaked into later dialogs.",
+    "Silent data loss/invalid input: save() silently dropped empty-name translations and blank-coded option rows, coerced a non-numeric sortOrder to 0, and let a duplicate service code reach the database as a raw error code.",
+    "Destructive deactivate had no confirmation and used bespoke text buttons instead of the admin-standard AppGridRowActionsCell with confirm."
+  ],
+  "changedPaths": [
+    "M src/frontend/app/admin/shipping-services-screen.tsx",
+    "A src/frontend/app/admin/shipping-services/shipping-services-form-model.ts",
+    "A src/frontend/app/admin/shipping-services/shipping-services-form-model.test.ts",
+    "A docs/planning/shipping/SHIPPING-MVP-ADMIN-050.md",
+    "A docs/architecture/evidence/TB-SHIPPING-MVP-ADMIN-050/**"
+  ],
+  "delivered": [
+    "New pure module shipping-services-form-model.ts: validateShippingServiceForm (code required/canonical/unique/max-64, numeric non-negative sortOrder, active-language display name required, option code required/canonical/unique, option active-language name required), buildShippingServiceWriteRequest (canonical payload, no silent dropping), mapShippingServiceErrorFa (stable Fulfillment codes to fa text, raw codes never reach the UI).",
+    "Screen: page-level success/error notice banner (admin-shipping-services-notice, role=status/alert) visible with the dialog open or closed, cleared on plain refresh/dialog open; inline issue list (admin-shipping-service-form-errors) produced before any API call; deactivate and save surface mapped fa messages; one resolved activeLanguageId drives the tab, service name and level-2 option name inputs (append-if-missing on option name); sortOrder input inputMode=numeric; save button no longer pre-disabled by !code.trim().",
+    "Row actions replaced with design-system AppGridRowActionsCell + AppGridRowAction[] (edit, destructive deactivate with confirm and disabled:busy), matching admin-campaigns-screen.tsx; grid row identity and saved-view wiring preserved."
+  ],
+  "unchangedSurfaces": [
+    "Route/URL /admin/shipping-services stays the sole admin shipping-service surface; no second page or duplicated CRUD.",
+    "shipping-services-api.ts contracts and the Fulfillment endpoints/validators were read but not modified.",
+    "No Shipping rate/coverage control was added or implied (048 model still unpersisted).",
+    "Checkout amounts, promises and enabled shipping options untouched; no Host/DI, Program, Geography, Order, Payment, Settlement, MigrationRunner, schema, seed or production data change."
+  ],
+  "focusedValidation": {
+    "typecheck": "cd src/frontend && npx tsc --noEmit -> exit 0, no diagnostics",
+    "focusedTests": "node --experimental-strip-types --test app/admin/shipping-services/shipping-services-form-model.test.ts app/admin/admin-grid-migration.test.ts -> 16/16 pass",
+    "architectureGuards": "npm run test:architecture -> 10/11; the single failure is the pre-existing shrink-only source-size baseline drift on four untouched files (category-admin-screen.tsx 2230>2215, admin-landing-page-composer.tsx 1442>1440, shared-composition-renderer.tsx 918>907, storefront-landing-blocks.tsx 1033>1026) whose HEAD content already equals the working tree.",
+    "adminSuite": "npm run test:admin -> 131/134; the 3 failures are pre-existing and unrelated (admin-error-map content-article copy, landing section-chooser labels, TB-P10-T022 landing-composer leak guard).",
+    "criticalStorefront": "NOT run and NOT required: no shared storefront/design-system/Home/PDP file was touched (changes confined to app/admin/**)."
+  },
+  "liveBrowserVerification": {
+    "performed": true,
+    "environment": "already-running dev frontend http://127.0.0.1:3000/admin/shipping-services against the real backend",
+    "verified": [
+      "List renders 5 services with the new icon row actions; inactive snapp_courier exposes only ویرایش (visible guard works).",
+      "Create dialog opens; active tab فارسی; both level-2 option name labels render 'نام (فارسی)' (activeLanguageId fix).",
+      "Submitting an empty form shows exactly the expected two Persian validation issues, keeps the dialog open and issues no request.",
+      "Cancel closes the dialog."
+    ],
+    "notPerformed": [
+      "successful create/edit save round-trip and the success notice banner",
+      "deactivate flow including the native window.confirm text",
+      "error-tone notice for a failed save/deactivate"
+    ],
+    "whyNotPerformed": "All three require writing Fulfillment catalog rows in the shared dev database, which would change the live checkout shipping option list - forbidden by the task's no-live-side-effects and no-checkout-change constraints. They are covered by the pure validator/builder tests plus the screen wiring guard."
+  },
+  "noLiveSideEffects": "No create/update/deactivate request was sent; no database write; no worker/heartbeat or Host restart beyond the required Bridge lifecycle calls.",
+  "remainingForArchitect": [
+    "One real round-trip (create/edit/option edit/deactivate) with a disposable service in an environment where changing Fulfillment catalog rows is acceptable.",
+    "New services keep free-text code/providerKind although the shipment path only accepts the five ShippingMethodRegistry codes; constraining that belongs to the task that integrates rates/coverage.",
+    "Shipping rate/coverage admin remains intentionally absent."
+  ],
+  "workerPassEqualsArchitectAccept": "PARTIAL reported; this is not an AMSC/visual certification and no Architect ACCEPT is claimed."
+}
