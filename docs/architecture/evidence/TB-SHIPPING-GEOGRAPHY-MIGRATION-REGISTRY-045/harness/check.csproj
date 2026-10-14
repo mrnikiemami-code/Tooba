@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NuGetAudit>false</NuGetAudit>
+    <AssemblyName>geo045check</AssemblyName>
+    <RootNamespace>Geo045Check</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Geography\Tooba.Geography.Infrastructure\Tooba.Geography.Infrastructure.csproj" />
+    <ProjectReference Include="D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
+  </ItemGroup>
+</Project>

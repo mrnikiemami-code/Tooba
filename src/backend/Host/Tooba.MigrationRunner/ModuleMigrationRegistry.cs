@@ -15,6 +15,7 @@ using Tooba.Identity.Infrastructure.Persistence;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Fulfillment.Infrastructure.Persistence;
+using Tooba.Geography.Infrastructure.Persistence;
 using Tooba.Returns.Infrastructure.Persistence;
 using Tooba.Settlement.Infrastructure.Persistence;
 using Tooba.Notification.Infrastructure.Persistence;
@@ -78,6 +79,11 @@ internal static class ModuleMigrationRegistry
         Descriptor<MediaDbContext>("Media", MediaDbContext.Schema),
         Descriptor<PageCompositionDbContext>("PageComposition", PageCompositionDbContext.Schema),
         Descriptor<StoryDbContext>("Story", StoryDbContext.Schema),
+        // Geography is an independent reference-data module appended last: its schema has no foreign key
+        // outside itself, so it neither reorders nor constrains any existing descriptor. Registering this
+        // descriptor only makes the module visible to the explicit CLI (status/plan/apply); it executes
+        // nothing by itself and is never reached by Host startup (see SHIPPING-GEOGRAPHY-MIGRATION-REGISTRY-045).
+        Descriptor<GeographyDbContext>("Geography", GeographyDbContext.Schema),
     ];
 
     private static ModuleMigrationDescriptor Descriptor<TContext>(string module, string schema)

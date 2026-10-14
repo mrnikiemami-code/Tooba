@@ -65,6 +65,8 @@ public static class ModuleSchemaMigrationOrder
     public const int AccessControl = 28;
     /// <summary>Support migration order.</summary>
     public const int Support = 29;
+    /// <summary>Geography migration order (independent reference-data module; appended after Support).</summary>
+    public const int Geography = 30;
 }
 
 /// <summary>
