@@ -33,14 +33,23 @@ internal sealed class AccessControlDevelopmentSeedPrelude : IAccessControlDevelo
 
         await _sellerDevContexts.EnsureAsync(cancellationToken).ConfigureAwait(false);
         var seller = _sellerDevContexts.Current;
-        if (seller is null)
-            return null;
+
+        // TB-SHIPPING-MVP-SCRATCH-BOOTSTRAP-062: bootstrap نقش مدیر پلتفرم به Context فروشنده وابسته نیست.
+        // در یک فروشگاه Development تازه، سازمان‌های فروشنده ممکن است هنوز seed نشده باشند؛ پیش‌تر در آن حالت
+        // این متد پیش از فراخوانی EnsureBootstrapAsync بازمی‌گشت و نقش platform-admin، role_permissions و
+        // assignment مدیر هرگز ساخته نمی‌شد و همهٔ سطوح admin به‌صورت fail-closed با 403 باقی می‌ماندند.
+        // اکنون bootstrap کاتالوگ/نقش مدیر همیشه و با همان منطق قرارداد اجرا می‌شود؛ تنها seed نمایشی Support
+        // به حضور Context فروشنده گره خورده است.
+        IReadOnlyList<Guid> sellerPartyIds = seller is null ? [] : [seller.ActorA.SellerPartyId];
 
         await _access.EnsureBootstrapAsync(
             adminActorUserId,
-            [seller.ActorA.SellerPartyId],
+            sellerPartyIds,
             tenantId,
             cancellationToken).ConfigureAwait(false);
+
+        if (seller is null)
+            return null;
 
         await _access.SyncUserCapabilityTuplesAsync(
             seller.ActorA.ActorUserId,

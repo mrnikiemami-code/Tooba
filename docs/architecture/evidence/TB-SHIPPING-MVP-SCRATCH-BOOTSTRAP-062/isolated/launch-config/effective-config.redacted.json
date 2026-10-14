@@ -1,0 +1,157 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "Tooba": {
+    "Edition": "SingleStore",
+    "DeploymentId": "isolated-061",
+    "TrustedProxies": [],
+    "Marketplace": {
+      "ConnectionReference": ""
+    },
+    "SingleStore": {
+      "Tenants": [
+        {
+          "TenantId": "store-alpha",
+          "DisplayName": "Isolated 061 Store",
+          "Status": "Active",
+          "ConnectionReference": "tenant-062-scratch",
+          "ThemeReference": "theme-alpha",
+          "DefaultMarketReference": "IR",
+          "StoreCommerce": {
+            "DefaultCurrency": "IRR",
+            "SalesChannel": "Marketplace"
+          },
+          "PrimaryDomain": "alpha.localhost",
+          "Hosts": [
+            "alpha.localhost",
+            "alpha.localtest.me",
+            "localhost",
+            "127.0.0.1"
+          ]
+        }
+      ]
+    },
+    "PostgreSQL": {
+      "ConnectionReferences": {
+        "tenant-062-scratch": "Host=127.0.0.1;Port=55433;Username=scratch062;Password=***REDACTED***;Database=tooba_062_scratch_r4v8c1tp;Application Name=tooba-061-isolated;Timeout=15;Command Timeout=120;Maximum Pool Size=20"
+      }
+    },
+    "Messaging": {
+      "Enabled": false,
+      "Transport": "PostgreSql",
+      "ConnectionReference": "",
+      "Schema": "transport",
+      "UseInProcessTestDouble": false
+    },
+    "Outbox": {
+      "Enabled": true,
+      "PollIntervalSeconds": 2,
+      "BatchSize": 20,
+      "RetryBaseDelaySeconds": 2,
+      "MaxAttempts": 5,
+      "LockSeconds": 30
+    },
+    "CartExpiry": {
+      "Enabled": true,
+      "PollIntervalSeconds": 5,
+      "BatchSize": 20
+    },
+    "PaymentReconciliation": {
+      "Enabled": true,
+      "PollIntervalSeconds": 60,
+      "PendingAgeMinutes": 5,
+      "BatchSize": 20
+    },
+    "Observability": {
+      "ServiceName": "Tooba.Host",
+      "OtlpEndpoint": "",
+      "EnableTracing": true,
+      "EnableMetrics": true
+    },
+    "Cache": {
+      "Enabled": true,
+      "Provider": "Memory",
+      "EntryCountLimit": 10000,
+      "StampedeProtection": true
+    },
+    "Authorization": {
+      "Mode": "InMemory",
+      "ApplySchemaOnStartup": false,
+      "SpiceDb": {
+        "Endpoint": "",
+        "Token": "",
+        "UseTls": true,
+        "TimeoutSeconds": 5,
+        "RetryMaxAttempts": 3,
+        "RetryBaseDelayMilliseconds": 100,
+        "ConsistencyMode": "FullyConsistent",
+        "ReadinessProbeEnabled": true
+      }
+    },
+    "AuthSecurity": {
+      "CorsAllowedOrigins": [],
+      "EnableSecurityHeaders": true,
+      "EnableHsts": true,
+      "EnableCspReportOnly": true,
+      "AuthRateLimitPermitLimit": 30,
+      "AuthRateLimitWindowSeconds": 60,
+      "MaxRequestBodyBytes": 10485760
+    },
+    "ExternalProviders": {},
+    "CatalogDemo": {
+      "AllowResetAndSeed": true,
+      "RunLegacyBootstraps": false
+    }
+  },
+  "Identity": {
+    "PasswordPolicy": {
+      "MinimumLength": 10,
+      "RequireLetterAndDigit": false
+    },
+    "Lifecycle": {
+      "SessionLifetimeHours": 336,
+      "ChallengeLifetimeMinutes": 15,
+      "MaxChallengeAttempts": 5
+    },
+    "OtpDelivery": {
+      "Mode": "Capturing",
+      "WebhookUrl": "",
+      "WebhookApiKey": "",
+      "TimeoutSeconds": 10
+    }
+  },
+  "Payment": {
+    "Gateway": {
+      "Mode": "Sandbox",
+      "DefaultProvider": "fake",
+      "ManualCardToCardEnabled": true,
+      "ManualProofRequirement": "Optional",
+      "ManualPaymentInstructions": "مبلغ را به حساب اعلام‌شده فروشگاه واریز کنید و شماره پیگیری پرداخت را ثبت کنید.",
+      "ManualPaymentReviewHoldHours": 24,
+      "ManualPaymentInitialHoldHours": 2,
+      "OnlinePaymentHoldHours": 2,
+      "CartHoldMinutes": 30,
+      "StoreDisplayName": "Tooba",
+      "WebhookSigningSecret": "",
+      "InitiateBaseUrl": "",
+      "StatusQueryBaseUrl": "",
+      "StatusQueryApiKey": "",
+      "AllowedStatusQueryHosts": [],
+      "TimeoutSeconds": 15,
+      "VerifyMaxAttempts": 3
+    }
+  },
+  "Cart": {
+    "PersistenceHours": 168
+  },
+  "ReservationCycle": {
+    "InitialReservationHoldMinutes": 120,
+    "RetryReservationHoldMinutes": 120,
+    "MaxReservationCycles": 3
+  }
+}

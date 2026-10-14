@@ -1,0 +1,165 @@
+TB-SHIPPING-MVP-SCRATCH-BOOTSTRAP-062 — root cause, minimal fix, focused isolated proof
+
+=====================================================================
+1. SYMPTOM REPRODUCED (fresh isolated Development database)
+=====================================================================
+On a brand-new task-exclusive scratch database, Development startup produced the admin actor
+and the seller demo actors, but NO authorization data:
+
+  identity.login_identifiers        = 3   (admin-actor, seller-actor-a, seller-actor-b)
+  access_control.roles              = 0
+  access_control.role_permissions   = 0
+  access_control.user_role_assignments = 0
+  party.parties                     = 1   (only "DEV-SEED OOS Seller", not the seller demo orgs)
+  party.memberships                 = 0
+  party.user_party_links            = 0
+
+  GET /v1/admin/dev-context  -> 200 {"actorLabel":"admin-actor@tooba.local", ...}   (actor + tenant#member tuple DO exist)
+  every authorized admin surface -> 403 admin.authorization.denied
+  no credential                  -> 401 admin.actor.missing
+
+So the actor existed and the fail-closed auth boundary was correct, but no capability was ever provisioned.
+
+=====================================================================
+2. SOURCE-TRACED ROOT CAUSE (Development-only seed ordering/coverage defect)
+=====================================================================
+Call chain on a modern Development startup (`Tooba:CatalogDemo:RunLegacyBootstraps=false`):
+
+  Program.cs (IsDevelopment)
+    -> DevelopmentSchemaMigrator.MigrateSchemaOnlyAsync
+         => ApplyCoreAsync(services, seedCatalog: false)
+            -> MigrateOrderedAsync(...)          // schema only
+            -> if (!seedCatalog) return;         // *** returns before ANY module seed ***
+       so SettingsFoundationDevelopmentSeedHost.ApplyAsync — which is what creates the Party
+       development organizations via PartyOrganizationProfileDevelopmentSeed — is NEVER called.
+    -> ContentDevelopmentSeedHost.ApplyAsync
+    -> SupportDevelopmentSeedHost.ApplyAsync
+         -> AdminDevActorBootstrap.EnsureAsync                       => actor + tenant#member tuple  (OK)
+         -> AccessControlDevelopmentSeedPrelude.EnsureSupportSeedPrerequisitesAsync
+              -> SellerDevContextBootstrap.EnsureAsync
+                   -> creates seller-actor-a/b identities            (OK — that is why 3 users exist)
+                   -> IPartyDevelopmentSeedGateway.FindDevelopmentOrganizationByDisplayNameAsync
+                        => READ-ONLY; returns null because the Party demo orgs were never seeded
+                   -> IPartyDevelopmentSeedGateway.FindDevelopmentMembershipSellerPartyAsync
+                        => READ-ONLY over party.memberships; returns null because it is empty
+                   -> `if (sellerA is null || sellerB is null) return;`  => returns WITHOUT Publish()
+                        so ISellerDevContextStore.Current stays null
+              (pre-fix) `if (seller is null) return null;`   <-- *** the defect ***
+                        => IAccessControlDirectory.EnsureBootstrapAsync is NEVER invoked
+                           => platform-admin role, its PermissionCatalog grants, the admin
+                              assignment and the admin capability tuples are never created.
+    -> WalletDevelopmentSeedHost.ApplyAsync
+
+Evidence that this is the true cause and not an exception being swallowed:
+  - "no exception" proof: zero Error-level records except the pre-existing, unrelated
+    LanguageBootstrapHostedService advisories (which the Host logs and continues past); and
+    zero "SupportDevelopmentSeed failed"/"WalletDevelopmentSeed failed" records. Program.cs wraps
+    the Support/Wallet seeds in try/catch that LOGS on failure — nothing was logged.
+  - "the gate, not the writer, is at fault" proof: AdminDevActorBootstrap writes its tuple through the
+    SAME IAuthorizationTupleWriter and succeeded (dev-context 200), and SellerDevContextBootstrap
+    creates its users through the SAME identity seam and succeeded (3 identities). The only step that
+    was skipped is the one behind the `seller is null` early return.
+  - "it is the Party seed that is missing" proof: party.parties holds only the unrelated
+    "DEV-SEED OOS Seller" row and party.memberships is empty, exactly the two reads that
+    SellerDevContextBootstrap performs. PartyOrganizationProfileDevelopmentSeed is invoked only from
+    SettingsFoundationDevelopmentSeedHost, which MigrateSchemaOnlyAsync never calls.
+
+So: the canonical platform-admin bootstrap was gated behind an unrelated demo-data precondition
+(Party seller organizations) that the modern schema-only path deliberately does not create. The fix
+must therefore decouple the canonical authorization bootstrap from demo seller data — NOT fabricate
+roles/tuples, and NOT re-enable the broken legacy Catalog seeding.
+
+=====================================================================
+3. MINIMAL FIX (one existing Development-only file, no bypass)
+=====================================================================
+File: src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/Development/AccessControlDevelopmentSeedPrelude.cs
+
+  await _sellerDevContexts.EnsureAsync(ct);
+  var seller = _sellerDevContexts.Current;
+  IReadOnlyList<Guid> sellerPartyIds = seller is null ? [] : [seller.ActorA.SellerPartyId];
+
+  await _access.EnsureBootstrapAsync(adminActorUserId, sellerPartyIds, tenantId, ct);   // ALWAYS the canonical logic
+
+  if (seller is null)
+      return null;                                                                     // only the Support demo seed stays gated
+
+  await _access.SyncUserCapabilityTuplesAsync(seller.ActorA.ActorUserId, <seller scope>, ct);
+  return new AccessControlDevelopmentSeedActors(...);
+
+Boundary proof of "no bypass":
+  - the ONLY thing called is the pre-existing canonical IAccessControlDirectory.EnsureBootstrapAsync —
+    the same method the HTTP route (POST /v1/admin/access-control/bootstrap ->
+    EnsureAccessControlBootstrapCommand) uses. No new permission ids, no hand-written inserts,
+    no AllowAnonymous, no guard weakening, no capability tuple fabricated outside the directory.
+  - with no known seller party it is simply passed an EMPTY seller list, so the seller-owner role /
+    ceiling work is skipped exactly as before; only the platform-admin catalogue provisioning and the
+    admin assignment/tuple sync (which are Party-independent) now run.
+  - behavior for the Support demo seed is unchanged: it is still skipped (returns null) when the
+    seller dev context is unavailable.
+  - Production is untouched: this type is a Development seed prelude reached only from the
+    IsDevelopment() block in Program.cs; nothing in the Production path resolves or invokes it.
+  - the method stays idempotent: EnsureBootstrapAsync skips an existing platform-admin role and an
+    existing admin assignment, reconciles missing catalogue grants, and SyncUserCapabilityTuplesAsync
+    is a revoke-and-rewrite.
+
+=====================================================================
+4. FOCUSED ISOLATED PROOF (fresh scratch, then restart)
+=====================================================================
+Task-exclusive target: postgres:17 container `tooba-062-scratch`, own volume, published only as
+127.0.0.1:55433, fresh role scratch062, database tooba_062_scratch_r4v8c1tp. `tooba_alpha` does not
+exist inside it. The task-owned launch directory replaced appsettings.Development.json with an
+isolated overlay holding exactly ONE tenant (store-alpha) and exactly ONE reference
+(tenant-062-scratch, canonical hyphenated key), and the launcher cleared all inherited
+Tooba__*/ASPNETCORE__*/DOTNET__*/ConnectionStrings__* beforehand.
+
+Isolation proven before any request (three independent ways):
+  1. OFFLINE: the copied 060 guard over the exact (effective merged config, launch override file):
+     RESULT=PASS EXIT_CODE=0 TENANT=store-alpha CONNECTION_REFERENCE=tenant-062-scratch
+     HOST=127.0.0.1 PORT=55433 DATABASE=tooba_062_scratch_r4v8c1tp SENTINEL=r4v8c1tp
+     CONFIG_OVERRIDE_KEYS_APPLIED=1 CREDENTIALS_PRINTED=false DATABASE_CONTACTED=false
+     FINGERPRINT=02dd3e724f341f9a0052273f34a503a0fb6c512fe204a114c1944f55fc314cc7
+     CONFIG_SHA256=72d57bf8f16a865d6fb19f9f0fe0012d9b997bf8f85812970cf6a4ea9b623599
+     plus the prepare step's own assertions: base appsettings declares 0 tenants/0 references, and the
+     effective config declares exactly 1 tenant / 1 reference, loopback-only, port 55433 only.
+  2. RUNTIME: GET /__platform-commerce -> connectionReference=tenant-062-scratch
+     (recorded in the 061 evidence for the identical launcher; the 062 run also served
+     /v1/admin/dev-context with tenantId=store-alpha).
+  3. DATABASE-SIDE: all writes appear only inside the scratch database; see section 5/6 counts.
+No credential is printed in any artifact; the committed config copies are redacted.
+
+A) FRESH DATABASE, after the fix (host rebuilt from the patched source, DB dropped and recreated):
+     access_control.roles                 = 1
+     access_control.role_permissions      = 55
+     access_control.user_role_assignments = 1
+   i.e. the canonical platform-admin role with the full PermissionCatalog grant set and the admin
+   assignment now exist where they previously did not.
+
+B) REAL HTTP AUTHORIZATION OUTCOMES on that fresh isolated Host:
+     GET /v1/admin/access-control/roles, no credential            -> 401 admin.actor.missing
+     GET /v1/admin/access-control/roles, admin actor              -> 200
+         body: platform-admin, isSystem=true, permissionCount=55, assignmentCount=1
+     GET /v1/admin/access-control/me/capabilities, admin actor    -> 200
+         body: permissions[] with inheritedViaRoleCodes=["platform-admin"]
+     GET /v1/admin/geography/countries, admin actor               -> 500 platform.unexpected
+     GET /v1/admin/shipping-services/iso-062-post/rates, admin    -> 500 platform.unexpected
+         Both are `Npgsql.PostgresException: 42P01: relation ... does not exist` — authorization
+         PASSED (no 403) and the failure is the absent Geography/Shipping module schema, which
+         MigrateSchemaOnlyAsync does not create. Environment limitation, not an auth defect.
+     GET /v1/admin/geography/countries, unknown actor id          -> 403 admin.authorization.denied
+     GET /v1/admin/geography/countries, seller actor id           -> 403 admin.authorization.denied
+   Fail-closed behavior is preserved: only the provisioned platform-admin actor gains access.
+
+C) IDEMPOTENCE: task-owned Host restarted against the SAME database without any reset:
+     access_control.roles                 = 1     (not 2)
+     access_control.role_permissions      = 55    (not 110)
+     access_control.user_role_assignments = 1     (not 2)
+     identity.login_identifiers           = 3     (not 6)
+     GET /v1/admin/access-control/roles, admin actor -> 200, exactly 1 role
+
+=====================================================================
+5. CLEANUP / SAFETY
+=====================================================================
+Task-owned Host on :5099 stopped and the port released; container tooba-062-scratch removed with its
+volume; temp launch directory and credential file deleted; no Tooba__*/ASPNETCORE__* residue.
+The user's Host on :5088 was never started, stopped, restarted or addressed, and no pre-existing
+database (tooba_alpha, 127.0.0.1:5432) was ever contacted.
