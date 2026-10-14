@@ -1,0 +1,68 @@
+TB-SHIPPING-MVP-AUTHORIZED-ADMIN-059 — authenticated real-HTTP results (raw output in probe/*.txt)
+
+Every line below is a real HTTP response from the isolated current-code instance on `127.0.0.1:5099`
+(`Tooba.Host` built from `2c243d2d`, `ASPNETCORE_ENVIRONMENT=Development`), authenticated with a real
+session token from `POST /v1/auth/login`. Nothing is mocked and nothing is claimed that was not observed.
+
+## REAL_AUTHENTICATED_HTTP_PASS
+
+| Operation | Route | Status | Observed |
+| --- | --- | --- | --- |
+| login | `POST /v1/auth/login` (Email `admin-actor@tooba.local`) | 200 | real `userId`/`sessionId`/`accessToken`/`refreshToken` |
+| geography countries | `GET /v1/admin/geography/countries` | 200 | real stable id `e3451206-e503-51a8-91ad-afa9ab70e330`, code `IR`, label `ایران` |
+| geography areas | `GET /v1/admin/geography/countries/{id}/administrative-areas` | 200 | 12 real areas, e.g. `1f8050a8-c325-59fa-959f-82d76b5b2bc5` (`alborz`, parent = country id) |
+| geography cities | `GET /v1/admin/geography/countries/{id}/cities` | 200 | 47 real cities, e.g. `68255340-c69f-5d20-bf33-e8e0b24edde9` (`کرج`, parent = area id) |
+| geography service areas | `GET /v1/admin/geography/cities/{id}/service-areas` | 200 | `[]` — real empty answer (0 service areas), not fabricated |
+| rates read (before) | `GET /v1/admin/shipping-services/post/rates` | 200 | `{"ratePolicies":[],"coverageGrants":[]}` |
+| rate create | `POST /v1/admin/shipping-services/post/rates` | 200 | `ratePolicyId=01a13c1b-b335-7000-9cec-842c94cd5683`, scope = real country id, `chargeAmount:0`, `currencyCode:"IRR"`, `preparationDays:1`, `leadDays:2`, `isActive:true` |
+| grant create | `POST /v1/admin/shipping-services/post/coverage-grants` | 200 | `coverageGrantId=01a13c1b-b35f-7000-b36c-042adc85d4f4`, same real country id |
+| read-after-write | `GET /v1/admin/shipping-services/post/rates` | 200 | both the rate policy and the grant returned with the real ids |
+| rate update | `PUT /v1/admin/shipping-services/post/rates/{id}` | 200 | `leadDays` 2 -> 5 and `updatedAt` moved to `20:30:10.837589+00` |
+| rate activate/deactivate | `PATCH /v1/admin/shipping-services/post/rates/{id}/active` `{isActive:false}` | 200 | `isActive:false`, `updatedAt` moved again |
+| grant activate/deactivate | `PATCH /v1/admin/shipping-services/post/coverage-grants/{id}/active` `{isActive:false}` | 200 | `isActive:false` |
+| second scope | `POST` rate + grant for the real area id `1f8050a8-…` | 200 | `ratePolicyId=01a13c1c-892c-…`, `coverageGrantId=01a13c1c-8945-…`, `level:"AdministrativeArea"` |
+| read after all mutations | `GET /v1/admin/shipping-services/post/rates` | 200 | both rows with final `isActive`/`leadDays` values — read-after-write holds |
+| CHECKOUT legacy path | `GET /v1/storefront/geography/provinces` | 200 | the legacy province/city catalogue unchanged (the only storefront destination input) |
+| CHECKOUT legacy path | `GET /v1/storefront/cart/{unknown}/payment-draft` | 401 `checkout.authentication_required` | the legacy Order path is untouched and still guarded |
+
+## REAL_HTTP_DENIED (fail-closed behaviour, all real)
+
+| Probe | Expected | Observed |
+| --- | --- | --- |
+| `GET` rates with no credential | deny | `401 admin.actor.missing` |
+| `POST` rate for an invented country id | deny | `400 shipping.destination_scope.invalid` |
+| `PUT`/`PATCH` a post-owned row **through the tipax route** (cross-service mutation) | deny | `400 shipping.service_scope.mismatch` (all three: rate PUT, rate PATCH, grant PATCH) |
+| `PUT` an existing policy with a **different scope** | deny | `400 shipping.coverage.scope.invalid` |
+| `POST` a duplicate `(service, scope)` rate | deny | `400 shipping.rate_policy.scope_duplicate` |
+| `POST` a duplicate `(service, scope)` grant | deny | `400 shipping.coverage_grant.scope_duplicate` |
+| `PUT` an unknown `ratePolicyId` | deny | `400 shipping.rate_policy.not_found` |
+| `PATCH` an unknown `coverageGrantId` | deny | `400 shipping.coverage_grant.not_found` |
+| `GET` tipax view after all post activity | no leakage | `200 {"ratePolicies":[],"coverageGrants":[]}` |
+
+Empty coverage continues to read as **no coverage**, never as unrestricted: the view returns explicit empty
+arrays and there is no code path that interprets emptiness as a nationwide grant.
+
+## REPRODUCED DEFECT (recorded, not fixed — outside this task's necessity test)
+
+`POST /v1/admin/shipping-services/post/rates` with a body that omits `scope` returns
+`500 platform.unexpected / NullReferenceException` instead of a `400` validation failure. Host log:
+
+```text
+NullReferenceException occurred when executing rule for x => x.Scope.CountryId.
+If this property can be null you should add a null check using a When condition
+  at lambda_method2393(Closure, ShippingRatePolicyWriteRequest)
+  at FluentValidation.Internal.PropertyRule`2...PropertyRule.cs:line 43/149/152
+```
+
+Cause: a validator rule dereferences `ShippingRatePolicyWriteRequest.Scope` although the record property is
+non-nullable but not required by the JSON binder, so an omitted member deserialises to `null`.
+Reproduction is deterministic (2/2 attempts). **Not fixed here**: the mission's acceptance criteria were met
+without it, it is not architecture- or security-boundary related, and the task authorises a code change only
+for a directly reproduced *blocking* defect. Recommended follow-up: a `NotNull`/`When` guard in the
+`ShippingRatePolicyWriteRequest` validator so a missing scope fails as `400`.
+
+## TEST-ONLY data marker
+
+The rates/grants above were created with `chargeAmount: 0`, `currencyCode: "IRR"`, explicitly as scratch-only
+synthetic functional data for this verification. They were deleted during rollback and MUST NOT be treated as
+commercial values. No tariff, coverage grant or default was invented for any real tenant.

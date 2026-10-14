@@ -1,0 +1,6 @@
+﻿BEGIN
+DELETE 3
+DELETE 2
+DELETE 5
+COMMIT
+rate_policies_after=0 coverage_grants_after=0 auth_sessions_after=170

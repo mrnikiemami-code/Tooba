@@ -1,0 +1,5 @@
+﻿--- final tooba_alpha state (read-only) ---
+rate_policies=0 coverage_grants=0 auth_sessions=170 geo_countries=1 geo_areas=12 geo_cities=47 shipping_outbox=0 support_tickets_untouched=n/a
+pricing_prices=3372 pricing_outbox=638
+access_roles=3 access_assignments=3 identity_users=47
+running_host_sessions=2

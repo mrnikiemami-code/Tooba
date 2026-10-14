@@ -1,0 +1,154 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-AUTHORIZED-ADMIN-059
+Parent-Task: TB-SHIPPING-MVP-OPERATIONAL-VERIFY-058
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE
+Mode: BOUNDED_AUTHORIZED_ADMIN_REAL_HTTP_ROUNDTRIP
+Bridge-Task-Row: 12b989e4-967f-411a-8ae4-bb19f28ae0ae
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 2c243d2dbc83a17a3967a244637012ff1da857b8
+Base-SHA: 2c243d2dbc83a17a3967a244637012ff1da857b8
+Code-SHA: NONE
+Evidence-SHA: (filled after push)
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- Claimed exactly one Pending row on tooba-main: 12b989e4-967f-411a-8ae4-bb19f28ae0ae.
+- Read AGENTS.md, TOOBA-PIPELINE-PROTOCOL, the tooba-backend-feature skill, the master recovery Shipping
+  checkpoint (commit 2c243d2d), the 058 report and proof logs, and the current auth/role/permission sources.
+  Findings register not consulted.
+- git fetch origin; HEAD was 580df2512 and origin/main had advanced to the Expected-Base-SHA by exactly one
+  docs-only commit (2c243d2db, docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md, +37 lines, no source).
+  Verified HEAD was an ancestor and fast-forwarded. HEAD == origin/main == 2c243d2dbc83a17a3967a244637012ff1da857b8.
+  No stash/reset/rebase/force-push; all dirty user work preserved.
+
+AUTH PROVENANCE (real, supported mechanism only)
+- Chain used, no bypass: (1) AdminDevActorBootstrap.EnsureAsync (Host Development seam called from
+  SupportDevelopmentSeedHost) registers Identity user admin-actor@tooba.local and writes user->tenant#member
+  (that is tenant#view, the Host admin-panel gate); (2) AccessControlDevelopmentSeedPrelude ->
+  AccessControlDirectory.EnsureBootstrapAsync creates the system role platform-admin with ALL 55 PermissionCatalog
+  entries (including exactly fulfillment.view and fulfillment.manage), assigns the actor and calls
+  SyncUserCapabilityTuplesAsync to write user->permission#granted tuples into the authorization engine;
+  (3) POST /v1/auth/login issues a real session token; (4) ShippingAdminAuthorizer/GeographyAdminAuthorizer run
+  IAdminPanelAccess + IAuthorizationService.CanAsync, fail-closed. No AllowAnonymous, no hand-written tuple, no
+  fabricated identity/permission, no arbitrary credential.
+- Provisioning verified in the database: roles=3 (mobile-order-op, platform-admin[IsSystem], seller-owner),
+  assignments=3, platform-admin role_permissions=55 with fulfillment.view+fulfillment.manage present,
+  login_identifiers include admin-actor@tooba.local -> 01a036c2-970e-7000-8eb7-94bf5cc2d8db.
+- Development actor header, re-tested: GET rates with no credential -> 401 admin.actor.missing; with the header
+  carrying the PROVISIONED platform-admin user -> 200; with the header of an unprovisioned user (058) -> 403
+  admin.authorization.denied. So the header is an actor-RESOLUTION seam only (activating it requires a real
+  provisioned principal); the capability itself always comes from IAuthorizationService. Every result below used
+  the real Bearer session, not the header.
+
+REAL AUTHENTICATED HTTP + PERSISTENCE (isolated current-code Host, built from 2c243d2d, Development,
+127.0.0.1:5099) — REAL_AUTHENTICATED_HTTP_PASS
+- POST /v1/auth/login -> 200 (real userId/sessionId/accessToken/refreshToken).
+- GET /v1/admin/geography/countries -> 200, real stable id e3451206-e503-51a8-91ad-afa9ab70e330 (code IR, label ایران).
+- GET /v1/admin/geography/countries/{id}/administrative-areas -> 200, 12 real areas, e.g. 1f8050a8-c325-59fa-959f-82d76b5b2bc5 (alborz).
+- GET /v1/admin/geography/countries/{id}/cities -> 200, 47 real cities, e.g. 68255340-c69f-5d20-bf33-e8e0b24edde9 (کرج).
+- GET /v1/admin/geography/cities/{id}/service-areas -> 200 [] (real zero, not fabricated).
+- GET /v1/admin/shipping-services/post/rates -> 200 {"ratePolicies":[],"coverageGrants":[]} before writes.
+- POST /v1/admin/shipping-services/post/rates -> 200 ratePolicyId 01a13c1b-b335-7000-9cec-842c94cd5683 with the
+  real country id, chargeAmount 0, currencyCode IRR, preparationDays 1, leadDays 2, isActive true.
+- POST /v1/admin/shipping-services/post/coverage-grants -> 200 coverageGrantId 01a13c1b-b35f-7000-b36c-042adc85d4f4.
+- GET read-after-write -> both rows returned with the real ids.
+- PUT /v1/admin/shipping-services/post/rates/{id} -> 200, leadDays 2->5 and updatedAt moved.
+- PATCH .../rates/{id}/active {isActive:false} -> 200 isActive false; PATCH .../coverage-grants/{id}/active -> 200 isActive false.
+- Second area-scoped pair created and read back: ratePolicyId 01a13c1c-892c-7000-b311-78f8a1aa1d10,
+  coverageGrantId 01a13c1c-8945-7000-8de8-adb61d2ff926, level AdministrativeArea.
+- GET after all mutations -> final values consistent (read-after-write holds).
+
+REAL_HTTP_DENIED (guards are real, cross-service mutation denied)
+- No credential -> 401 admin.actor.missing.
+- POST invented country id -> 400 shipping.destination_scope.invalid.
+- Cross-service mutation (post-owned row through the tipax route): PUT rate -> 400 shipping.service_scope.mismatch;
+  PATCH rate -> 400 shipping.service_scope.mismatch; PATCH grant -> 400 shipping.service_scope.mismatch.
+- Existing-policy scope change -> 400 shipping.coverage.scope.invalid.
+- Duplicate (service, scope): rate -> 400 shipping.rate_policy.scope_duplicate; grant -> 400 shipping.coverage_grant.scope_duplicate.
+- Unknown ids: PUT rate -> 400 shipping.rate_policy.not_found; PATCH grant -> 400 shipping.coverage_grant.not_found.
+- GET tipax after all post activity -> 200 with empty arrays: no cross-service leakage. Empty coverage keeps
+  reading as NO COVERAGE, never as unrestricted.
+- Checkout legacy paths untouched: GET /v1/storefront/geography/provinces -> 200 (province-only, unchanged);
+  GET /v1/storefront/cart/{unknown}/payment-draft -> 401 checkout.authentication_required. Shadow remains OFF by
+  default and no cutover switch exists.
+
+RESTRICTED-VALUE INCIDENT — DISCLOSED IN FULL (my error, not a product defect)
+- Cause: I redirected the isolated instance with Tooba__PostgreSQL__ConnectionReferences__tenant_alpha, but the
+  configuration key is Tooba:PostgreSQL:ConnectionReferences:tenant-alpha (hyphen). The underscore override never
+  matched, so the instance resolved tenant-alpha from appsettings.Development.json -> Database=tooba_alpha. The
+  authorized roundtrip therefore wrote to the REAL Development database instead of the scratch clone.
+- Exposure, measured with a full 247-table row-count diff against the clone taken BEFORE the instance started
+  (so a byte-exact pre-task image of tooba_alpha): shipping.rate_policies 0->3, shipping.coverage_grants 0->2,
+  identity.auth_sessions 170->175. All identified by exact id / user+window.
+- Rollback: probe/rollback-alpha-accidental-writes.sql deleted exactly those 3 rate policies, 2 coverage grants
+  and 5 sessions. Output: BEGIN / DELETE 3 / DELETE 2 / DELETE 5 / COMMIT and
+  rate_policies_after=0 coverage_grants_after=0 auth_sessions_after=170 (auth_sessions equals the snapshot
+  exactly). Final alpha state: rate_policies=0, coverage_grants=0, auth_sessions=170, geography 1/12/47,
+  shipping_outbox=0, access_roles=3, access_assignments=3, identity_users=47.
+- NOT attributable to this task: pricing.prices +8 and pricing.outbox_messages +24. The +8 prices are a ~150 ms
+  burst at 20:28:44.93-20:28:45.08Z (~2.5 s after my instance's first log line), but the same burst pattern
+  occurs at 20:02:54Z when no task-owned Host process existed, my instance's 11,914-line startup log contains no
+  pricing write or pricing seed operation, and no task request touched any pricing route. Most probable cause is
+  the user's own long-running Host (PID 37028) or their browser. I deliberately did NOT delete these rows because
+  they are not proven to be mine and deleting unattributable commercial data would be a worse write.
+- Consequence: this task does NOT prove "no writes to tooba_alpha". It proves the writes were bounded to five
+  tables, fully identified and reverted. This is why the status is PARTIAL rather than PASS.
+
+REPRODUCED DEFECT (recorded, deliberately not fixed)
+- POST /v1/admin/shipping-services/post/rates with a body that omits scope -> 500 platform.unexpected,
+  NullReferenceException in the FluentValidation rule for x => x.Scope.CountryId
+  (PropertyRule.cs:43/149/152), deterministic 2/2. The record property is non-nullable but the JSON binder allows
+  an omitted member, so Scope arrives null and the rule dereferences it. Not fixed: it is not a blocking defect
+  for these acceptance criteria and is not architecture/security-boundary related; the task authorises a code
+  change only for a directly reproduced BLOCKING defect. Recommended follow-up is a NotNull/When guard producing 400.
+- No guard was weakened, no allow-list widened, no fake response produced.
+
+TEST-ONLY DATA
+- The rates/grants were created with chargeAmount 0 and currencyCode IRR explicitly as scratch-only synthetic
+  functional data, clearly marked, and were deleted during rollback. They are not commercial values and must not
+  be treated as a tariff. No default/nationwide coverage or invented tariff was introduced anywhere.
+
+CLEANUP PROVEN
+- Isolated instance stopped (PID 27688); remaining Tooba.Host process = 37028 only (the user's); listener 5099 = 0;
+  user's listener 5088 = 1 (never restarted or touched, PID unchanged since 2026-10-13).
+- Scratch database tooba_059_scratch dropped (scratch_dbs_remaining=0); %TEMP%\host059 removed
+  (TEMP_HOST_REMAINS=False); session env leftovers (Tooba__*/ASPNETCORE_*) = 0.
+
+UI
+- No frontend file was changed and no UI roundtrip was attempted; the direct authenticated HTTP roundtrip is the
+  proof, and no UI PASS is claimed from any mocked fetch.
+
+FOCUSED TESTS / GUARDS
+- Isolated Host build: dotnet build Tooba.Host -c Debug -> Build succeeded, 0 errors (whole Host incl. the
+  Order/Shipping/Geography wiring).
+- No test suite was re-run and no new test was authored in 059, so 057's base-SHA results (Order 281, Shipping 82,
+  shadow 18 passed) remain the latest. Host architecture guards were not executed: they need a Host restart,
+  which was forbidden. No guard weakened.
+
+RELEASE VERDICT: NOT_READY_FOR_CHECKOUT_CUTOVER (unchanged, now better supported)
+- Rates/coverage authority is usable and provably guarded by a real authenticated admin, but commercial values
+  and coverage grants are absent again after rollback (0/0), destination input is province-only, shadow parity has
+  never been measured, and no cutover authorization exists.
+
+OPERATOR PREREQUISITES (concise)
+1. Approve a controlled Development Host restart so the running :5088 process carries the 055-057 code, with rollback.
+2. Decide the real commercial values and coverage grants per active service code; the verified admin surface can
+   seed them (create/read/update/activate all proven).
+3. Add city/service-area destination input at checkout; then run the shadow seam on representative real routes and
+   record parity before requesting any cutover.
+
+CHANGED PATHS: docs/planning/shipping/SHIPPING-MVP-AUTHORIZED-ADMIN-059.md and
+docs/architecture/evidence/TB-SHIPPING-MVP-AUTHORIZED-ADMIN-059/** only. No production source, migration,
+appsettings, registry, seed, Host composition, Identity/AccessControl rule or guard was modified.
+ELAPSED: claimed 2026-10-14T20:25:45Z; the 30-minute HARD box was EXCEEDED (~20:37Z runtime, plus evidence
+finalisation) because the incident had to be found, attributed and rolled back before an honest result could be
+posted. Work stopped immediately after cleanup and evidence capture.
+BLOCKERS: (a) my own env-var mistake caused the scratch containment to fail, so scratch-only verification is not
+demonstrable for this run; (b) the running Development Host still predates the new routes and was not restarted;
+(c) no commercial rates/coverage exist.
+END_TOOBA_WORKER_RESULT

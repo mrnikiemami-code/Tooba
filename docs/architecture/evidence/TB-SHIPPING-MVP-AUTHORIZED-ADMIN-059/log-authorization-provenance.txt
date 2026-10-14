@@ -1,0 +1,89 @@
+TB-SHIPPING-MVP-AUTHORIZED-ADMIN-059 — real authorization provenance and RESTRICTED-VALUE INCIDENT
+
+## 1. The legitimate platform mechanism used (no bypass, no invented authority)
+
+The admin capability is provisioned by two EXISTING, supported seams — both reading/writing real rows, none
+of them a shortcut:
+
+| Step | Mechanism (source) | What it produces |
+| --- | --- | --- |
+| 1 | `Tooba.Host/Admin/Development/AdminDevActorBootstrap.EnsureAsync` (called by `Composition/SupportDevelopmentSeedHost.ApplyAsync`) | registers Identity user `admin-actor@tooba.local` and writes the `user -> tenant#member` tuple (that is `tenant#view`, the only thing the Host admin panel gate needs) |
+| 2 | `Tooba.AccessControl.Infrastructure/Development/AccessControlDevelopmentSeedPrelude.EnsureSupportSeedPrerequisitesAsync` -> `AccessControlDirectory.EnsureBootstrapAsync` | creates the system `platform-admin` role with **all 55** `PermissionCatalog` entries (incl. `fulfillment.view`, `fulfillment.manage`), assigns the actor to it, then `SyncUserCapabilityTuplesAsync` writes `user -> permission:<id>#granted` tuples into the authorization engine |
+| 3 | `POST /v1/auth/login` (`LoginWithPasswordCommand`) | a real session/access token from the real auth system |
+| 4 | `ShippingAdminAuthorizer` / `GeographyAdminAuthorizer` | `IAdminPanelAccess.RequireAuthorizedAsync` + `IAuthorizationService.CanAsync(permission#<id>)`, fail-closed |
+
+Proof the provisioning really happened (scratch clone of `tooba_alpha`, read-only SELECT):
+
+```text
+access_control.roles        = 3   (mobile-order-op, platform-admin[IsSystem], seller-owner)
+access_control.assignments  = 3
+platform-admin permissions  = 55 total, 2 of them exactly fulfillment.view + fulfillment.manage
+identity.login_identifiers  = admin-actor@tooba.local -> user 01a036c2-970e-7000-8eb7-94bf5cc2d8db
+                              seller-actor-a@tooba.local, seller-actor-b@tooba.local, seller-employee-mobile@tooba.local
+```
+
+## 2. The Development actor header is NOT authorization — but it is not inert either
+
+| Request | Result |
+| --- | --- |
+| `GET /v1/admin/shipping-services/post/rates` with **no** credential | `401 admin.actor.missing` |
+| same, with `X-Tooba-Dev-Actor-User-Id: 01a03826-…` (an unprovisioned user) in 058 | `403 admin.authorization.denied` |
+| same, with `X-Tooba-Dev-Actor-User-Id: 01a036c2-…` (**the provisioned platform-admin user**) | `200` |
+| same, with the real Bearer session token | `200` |
+
+Reading: the header is a Development-only *actor resolution* seam (documented in `AdminPanelAccess`); the
+capability still comes from `IAuthorizationService`. It returns 200 only for an actor that already holds the
+capability tuple, and 403 for one that does not — so 058's conclusion stands and is now sharper: the header
+is not a grant, but it does resolve to a real provisioned principal. The strongest form of the proof (used
+for every result below) is the real Bearer session from `POST /v1/auth/login`.
+
+## 3. RESTRICTED-VALUE INCIDENT — my isolated instance wrote to `tooba_alpha`
+
+**Root cause (my error, not a product defect):** I intended to redirect the isolated instance to a disposable
+clone with the environment variable `Tooba__PostgreSQL__ConnectionReferences__tenant_alpha`. The configuration
+key is `Tooba:PostgreSQL:ConnectionReferences:tenant-alpha` (**hyphen**), so the underscore override never
+matched and the instance resolved `tenant-alpha` from `appsettings.Development.json` -> `Database=tooba_alpha`.
+The instance therefore ran against the real Development database, and the authorized roundtrip wrote there.
+
+**Exposure, measured against the pre-task snapshot** (the clone was taken before the instance started, so it
+is the exact pre-task image of `tooba_alpha`; full 247-table count diff):
+
+```text
+CHANGED shipping.coverage_grants   snapshot=0   now=2   delta=+2   <- this task
+CHANGED shipping.rate_policies     snapshot=0   now=3   delta=+3   <- this task
+CHANGED identity.auth_sessions     snapshot=170 now=175 delta=+5   <- this task (my logins)
+CHANGED pricing.prices             snapshot=3364 now=3372 delta=+8  <- NOT attributable (see below)
+CHANGED pricing.outbox_messages    snapshot=614  now=638  delta=+24 <- NOT attributable (see below)
+```
+
+**Rollback performed:** `probe/rollback-alpha-accidental-writes.sql` deleted exactly the 3 rate policies,
+the 2 coverage grants and the 5 auth sessions (by id / by user+window). Output:
+
+```text
+BEGIN / DELETE 3 / DELETE 2 / DELETE 5 / COMMIT
+rate_policies_after=0  coverage_grants_after=0  auth_sessions_after=170
+```
+
+`auth_sessions=170` equals the snapshot exactly, and `shipping` is back to `0/0`. The three tables this task
+touched are restored to their pre-task values.
+
+**Not attributable to this task:** `pricing.prices` (+8) and `pricing.outbox_messages` (+24). The +8 prices are
+a 150 ms burst at `20:28:44.93–20:28:45.08Z`, i.e. ~2.5 s after my instance's first log line — suspicious on
+timing. But (a) the identical burst pattern appears at `20:02:54Z` when **no task-owned Host process existed**
+(my 058 instance was stopped at ~19:57Z), (b) my instance's 11 914-line startup log contains no pricing write
+or pricing seed operation, and (c) no HTTP call this task made touched any pricing route. The most probable
+cause is the user's own long-running Host (PID 37028) or their browser session. **I did not delete these rows**:
+they are not proven to be mine, and deleting unattributable commercial data would be a worse write than
+leaving it. This is recorded as a limitation of the task, not as a clean result.
+
+## 4. Cleanup proven
+
+```text
+isolated instance stopped (PID 27688) ; Tooba.Host processes remaining = 37028 only (the user's)
+listener 5099 = 0 ; user's listener 5088 = 1 (never restarted, never touched)
+scratch database tooba_059_scratch dropped ; scratch_dbs_remaining = 0
+%TEMP%\host059 removed ; TEMP_HOST_REMAINS = False
+session env leftovers (Tooba__*/ASPNETCORE_*) = 0
+final tooba_alpha: rate_policies=0 coverage_grants=0 auth_sessions=170 geo 1/12/47 shipping_outbox=0
+                   access_roles=3 access_assignments=3 identity_users=47
+```
