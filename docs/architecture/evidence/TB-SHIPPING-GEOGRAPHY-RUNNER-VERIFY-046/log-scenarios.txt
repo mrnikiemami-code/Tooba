@@ -1,0 +1,37 @@
+﻿=== behavioural invariant scenarios (disposable DB only) ===
+Pager usage is off.
+                             ?column?                              
+-------------------------------------------------------------------
+ P1 fixture accepted: countries=2 areas=2 cities=1 service_areas=1
+(1 row)
+
+docker : psql:/tmp/scenarios.sql:46: NOTICE:  N1 cross_country_parent -> sqlstate=23503
+At C:\Users\User\AppData\Local\Temp\ps-script-75e52bbe-0cc9-4e91-9d75-5ceaba4fa656.ps1:94 char:341
++ ... arios.txt"; docker exec geo046-verify psql -U geo046 -d geo046_scratc ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (psql:/tmp/scena... sqlstate=23503:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+psql:/tmp/scenarios.sql:60: NOTICE:  N2 self_parent -> sqlstate=23514
+psql:/tmp/scenarios.sql:77: NOTICE:  N3 multirow_insert_cycle -> sqlstate=23514
+psql:/tmp/scenarios.sql:93: NOTICE:  N4 update_cycle -> sqlstate=23514
+                                  ?column?                                   
+-----------------------------------------------------------------------------
+ N5 stored graph intact after rejected writes: root_parent=null area_count=2
+(1 row)
+
+psql:/tmp/scenarios.sql:111: NOTICE:  N6 city_cross_country_area -> sqlstate=23503
+psql:/tmp/scenarios.sql:125: NOTICE:  N7 service_area_missing_city -> sqlstate=23503
+                 ?column?                  
+-------------------------------------------
+ P2 valid child area accepted: VALID-CHILD
+(1 row)
+
+                 ?column?                 
+------------------------------------------
+ P3 localized country name accepted: Iran
+(1 row)
+
+psql:/tmp/scenarios.sql:148: NOTICE:  N8 duplicate_place_language -> sqlstate=23505
+psql:/tmp/scenarios.sql:158: NOTICE:  N9 delete_country_with_areas -> sqlstate=23503
+EXIT=0

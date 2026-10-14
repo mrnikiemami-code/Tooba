@@ -1,0 +1,161 @@
+{
+  "taskId": "TB-SHIPPING-GEOGRAPHY-RUNNER-VERIFY-046",
+  "parentTask": "TB-SHIPPING-GEOGRAPHY-MIGRATION-REGISTRY-045",
+  "channel": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "mode": "BOUNDED_DISPOSABLE_GEOGRAPHY_MIGRATION_VERIFICATION",
+  "expectedBaseSha": "6746ca5ae835fa96ef67b99d0ba94095c782b2c2",
+  "status": "PASS",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "elapsedMinutesApprox": 8,
+  "disposableEnvironment": {
+    "container": "geo046-verify",
+    "image": "postgres:17",
+    "serverVersion": "PostgreSQL 17.10",
+    "binding": "127.0.0.1:55433->5432/tcp",
+    "database": "geo046_scratch",
+    "createdByThisTaskUtc": "2026-10-14T12:35:52Z",
+    "toobaContainersContacted": [],
+    "runnerEnvFileGuard": "isolated build output had appsettings.Development.json and appsettings.Production.json deleted before execution",
+    "removedAtEnd": true
+  },
+  "runnerCli": {
+    "commands": ["status", "plan", "apply"],
+    "selectors": ["--tenant", "--tenants", "--all-tenants"],
+    "moduleSelectorSupported": false,
+    "moduleSelectorEvidence": "status --module Geography -> \"Unknown argument '--module'.\" exit 3",
+    "applyScope": "all registered descriptors of the resolved target database"
+  },
+  "metadata": {
+    "runnerDescriptorCount": 32,
+    "geographyDescriptorOccurrences": 1,
+    "geographyDescriptorIndex": 31,
+    "geographyDescriptorIsLast": true,
+    "moduleSchemaMigrationOrderGeography": 30,
+    "duplicateOrderSlots": [],
+    "geographyMigrations": ["20261014113949_InitialGeography"],
+    "hostReferencesMigrationRunner": false,
+    "hostComposedModules": 34,
+    "hostGeographyModuleOccurrences": 1,
+    "hostModuleSchemaMigratorRegistrationsForGeography": 0,
+    "geographyLookupRegistrations": 2,
+    "harnessChecks": 8,
+    "harnessFailures": 0
+  },
+  "runnerRun": {
+    "statusBeforeApply": {
+      "exitCode": 0,
+      "geographyCurrentMigration": null,
+      "geographyPendingMigrations": ["20261014113949_InitialGeography"],
+      "schemaCreated": false
+    },
+    "planNonMutating": {
+      "exitCode": 0,
+      "schemasBeforeAndAfter": ["public"],
+      "ddlEmitted": false
+    },
+    "apply": {
+      "exitCode": 0,
+      "wallClockSeconds": 4.1,
+      "modulesApplied": 32,
+      "failedModules": 0,
+      "targetDatabase": "geo046_scratch @ 127.0.0.1:55433"
+    },
+    "statusAfterApply": {
+      "exitCode": 0,
+      "geographyOccurrences": 1,
+      "geographyCurrentMigration": "20261014113949_InitialGeography",
+      "geographyPendingMigrations": [],
+      "succeeded": true,
+      "modulesWithPending": 0
+    }
+  },
+  "databaseObjectsAfterApply": {
+    "schema": "geography",
+    "tableCount": 10,
+    "domainTables": [
+      "countries",
+      "administrative_areas",
+      "cities",
+      "service_areas",
+      "outbox_messages",
+      "country_name_translations",
+      "administrative_area_name_translations",
+      "city_name_translations",
+      "service_area_name_translations"
+    ],
+    "historyTable": "__ef_migrations_history",
+    "historyRows": ["20261014113949_InitialGeography"],
+    "ancestryFunction": "administrative_areas_ancestry_guard",
+    "ancestryTriggers": [
+      "trg_administrative_areas_ancestry_guard_insert",
+      "trg_administrative_areas_ancestry_guard_update"
+    ],
+    "foreignKeyCount": 9,
+    "cascadingForeignKeyCount": 5,
+    "alternateKeyPresent": "ak_administrative_areas_id_country",
+    "uniqueIndexCount": 19,
+    "outboxPartialIndexPresent": true
+  },
+  "invariants": {
+    "P1_fixture_accepted": true,
+    "N1_cross_country_parent_sqlstate": "23503",
+    "N2_self_parent_sqlstate": "23514",
+    "N3_multirow_insert_cycle_sqlstate": "23514",
+    "N4_update_cycle_sqlstate": "23514",
+    "N5_graph_intact_after_rejections": true,
+    "N6_city_cross_country_area_sqlstate": "23503",
+    "N7_service_area_missing_city_sqlstate": "23503",
+    "N8_duplicate_place_language_sqlstate": "23505",
+    "N9_delete_country_with_areas_sqlstate": "23503",
+    "N10_repeatable_read_ancestry_write_sqlstate": "0A000",
+    "P2_valid_child_area_accepted": true,
+    "P3_localized_country_name_accepted": true
+  },
+  "efToolsRoundTrip": {
+    "migrationsListCount": 1,
+    "down": {
+      "command": "dotnet ef database update 0",
+      "exitCode": 0,
+      "seconds": 1.5,
+      "tablesBefore": 10,
+      "tablesAfter": 1,
+      "residualTable": "__ef_migrations_history",
+      "triggersBefore": 2,
+      "triggersAfter": 0,
+      "functionBefore": 1,
+      "functionAfter": 0,
+      "historyRowsAfter": 0,
+      "otherModuleSchemasUnchanged": true,
+      "noteSchemaRetained": "EF keeps the geography schema and the emptied history table; Down drops tables only."
+    },
+    "upAgain": {
+      "command": "dotnet ef database update",
+      "exitCode": 0,
+      "tablesAfter": 10,
+      "triggersAfter": 2,
+      "historyRowRestored": "20261014113949_InitialGeography"
+    },
+    "crossToolAgreement": {
+      "runnerStatusAfterEfUp": "Geography current=20261014113949_InitialGeography pendingCount=0"
+    }
+  },
+  "cleanup": {
+    "containerRemoved": true,
+    "anonymousVolumeRemoved": true,
+    "tempBuildAndHarnessDirsRemoved": true,
+    "tempSecretsRemoved": true,
+    "residualGeo046Containers": [],
+    "residualGeo046Volumes": [],
+    "toobaDevContainerStatus": "postgres-db Up (never contacted, never restarted)",
+    "hostProcess": "PID 37028 started 2026-10-13T18:11 local, never restarted"
+  },
+  "remainingActivationBlockers": [
+    "No module-scoped runner invocation: apply always targets every registered descriptor of the resolved database.",
+    "Tooba.Host startup executes no geography DDL (no MigrationRunner reference; GeographyModule registers 0 IModuleSchemaMigrator).",
+    "The running Host binary predates the GeographyModule composition and order-30 constant; a restart/redeploy would be required and is not authorized.",
+    "The migrated geography schema is empty: no reference data load and no wired read path.",
+    "Only SingleStore with one synthetic tenant was exercised; --all-tenants fan-out and Marketplace targets were not run."
+  ],
+  "recommendedNextTask": "TB-SHIPPING-GEOGRAPHY-DEPLOY-AUTHORIZATION-BOUNDARY-047"
+}

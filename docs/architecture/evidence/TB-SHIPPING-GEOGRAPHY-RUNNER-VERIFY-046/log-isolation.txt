@@ -1,0 +1,17 @@
+﻿=== isolation fail-closed check ===
+BEGIN
+DO
+docker : psql:/tmp/iso.sql:12: NOTICE:  N10 repeatable_read_ancestry_write -> sqlstate=0A000
+At C:\Users\User\AppData\Local\Temp\ps-script-d50f6945-dc33-4592-be3d-d553f1c14ad7.ps1:109 char:227
++ ... ation.txt"; docker exec geo046-verify psql -U geo046 -d geo046_scratc ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (psql:/tmp/iso.s... sqlstate=0A000:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+COMMIT
+                                ?column?                                
+------------------------------------------------------------------------
+ N11 isolation level back to default for this statement: read committed
+(1 row)
+
+EXIT=0

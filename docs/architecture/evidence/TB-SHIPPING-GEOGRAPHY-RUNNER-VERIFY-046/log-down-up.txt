@@ -1,0 +1,89 @@
+﻿=== schemas BEFORE down ===
+access_control
+address_book
+bulk_inquiry
+cart
+catalog
+content
+customer_profile
+fulfillment
+geography
+identity
+inventory
+localization
+media
+notification
+offer
+operator_profile
+order
+page_composition
+party
+payment
+pricing
+product_qna
+promotion
+public
+returns
+reviews
+settlement
+story
+support
+tax
+user_preference
+wallet
+wishlist
+=== EF tools: list migrations ===
+20261014113949_InitialGeography
+EXIT=0
+=== EF tools: database update 0 (DOWN) ===
+Reverting migration '20261014113949_InitialGeography'.
+Done.
+EXIT=0 ELAPSED_SECONDS=1.5
+=== DB state AFTER down ===
+schemas: access_control,address_book,bulk_inquiry,cart,catalog,content,customer_profile,fulfillment,geography,identity,inventory,localization,media,notification,offer,operator_profile,order,page_composition,party,payment,pricing,product_qna,promotion,public,returns,reviews,settlement,story,support,tax,user_preference,wallet,wishlist
+geography tables: 1
+geography triggers: 0
+ancestry function rows: 0
+=== residual objects after down ===
+residual table in geography: __ef_migrations_history
+history rows after down: 0
+=== EF tools: database update (UP again) ===
+Applying migration '20261014113949_InitialGeography'.
+Done.
+EXIT=0
+=== DB state AFTER up (EF only) ===
+geography tables: 10
+ancestry triggers: 2
+history rows after up: 20261014113949_InitialGeography
+schemas count: 33
+=== runner status after EF re-up (cross-tool agreement) ===
+
+> {"Timestamp":"2026-10-14T12:38:27.3202814\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.Migratio
+nRunner.MigrationOrchestrator","Message":"Migration Status module=Geography edition=SingleStore tenantId=geo046 
+database=geo046_scratch connectionRef=geo046scratch schema=geography current=20261014113949_InitialGeography 
+pendingCount=0 durationMs=37 result=ok traceId=363dabe6647e1d76e7fdd4f4b7dc48d9","State":{"Message":"Migration Status 
+module=Geography edition=SingleStore tenantId=geo046 database=geo046_scratch connectionRef=geo046scratch 
+schema=geography current=20261014113949_InitialGeography pendingCount=0 durationMs=37 result=ok traceId=363dabe6647e1d7
+6e7fdd4f4b7dc48d9","Command":"Status","Module":"Geography","Edition":"SingleStore","TenantId":"geo046","Database":"geo0
+46_scratch","ConnectionReference":"geo046scratch","Schema":"geography","CurrentMigration":"20261014113949_InitialGeogra
+phy","PendingCount":0,"DurationMs":37,"Result":"ok","TraceId":"363dabe6647e1d76e7fdd4f4b7dc48d9","{OriginalFormat}":"Mi
+gration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} 
+connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} 
+durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+  {
+    "command": "Status",
+    "edition": "SingleStore",
+    "tenantId": "geo046",
+    "database": "geo046_scratch",
+    "connectionReference": "geo046scratch",
+>       "module": "Geography",
+>       "schema": "geography",
+>       "currentMigration": "20261014113949_InitialGeography",
+        "pendingMigrations": [],
+        "succeeded": true,
+        "durationMs": 37
+      }
+    ]
+  }
+
+

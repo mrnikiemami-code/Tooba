@@ -1,0 +1,25 @@
+﻿=== provenance and isolation proof ===
+--- was this container created by this task? ---
+geo046-verify | 2026-10-14 16:05:52 +0330 +0330 | 127.0.0.1:55433->5432/tcp
+postgres-db | 2026-05-27 18:53:18 +0330 +0330 | 0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+--- Tooba dev container untouched (not connected to, not restarted) ---
+postgres-db | Up 3 days | 0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+--- no Tooba connection string referenced by this task ---
+connection references used: geo046scratch -> 127.0.0.1:55433/geo046_scratch only
+name=/geo046-verify image=postgres:17 id=47ca629690eda40363586ac03e1d074bc4e9492e4c099f68ec1bed723f4c799e created=2026-10-14T12:35:52.997796794Z ports={"5432/tcp":[{"HostIp":"127.0.0.1","HostPort":"55433"}]} mounts=[{"Destination":"/var/lib/postgresql/data","Driver":"local","Mode":"","Name":"c552498d6272d6a67026de963da0cee8fb4cd56691311f5bbe757796d380feef","Propagation":"","RW":true,"Source":"/var/lib/docker/volumes/c552498d6272d6a67026de963da0cee8fb4cd56691311f5bbe757796d380feef/_data","Type":"volume"}]
+=== Host process identity (must be unchanged; no restart) ===
+
+
+Id          : 37028
+ProcessName : Tooba.Host
+StartTime   : 10/13/2026 6:11:34 PM
+
+
+
+=== cleanup ===
+geo046-verify
+c552498d6272d6a67026de963da0cee8fb4cd56691311f5bbe757796d380feef
+residual containers matching geo046: []
+residual volumes matching geo046: []
+temp harness dir exists: False ; temp runner dir exists: False ; password file exists: False
+Tooba dev container still up: postgres-db Up 3 days

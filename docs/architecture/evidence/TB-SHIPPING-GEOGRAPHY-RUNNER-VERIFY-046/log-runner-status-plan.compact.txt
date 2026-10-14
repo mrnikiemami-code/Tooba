@@ -1,0 +1,766 @@
+﻿=== CLI usage (no args) ===
+EXIT=3
+=== CLI rejects --module (module filtering does not exist) ===
+EXIT=3
+=== status (non-mutating) ===
+  "command": "Status",
+  "edition": "SingleStore",
+  "tenantId": "geo046",
+  "database": "geo046_scratch",
+  "connectionReference": "geo046scratch",
+  "modules": [
+    {
+      "module": "Catalog",
+      "schema": "catalog",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823080421_InitialCatalog",
+        "20260826172058_AddBrandLogoMediaAssetId",
+        "20260826173000_EnsureBrandLogoMediaAssetIdColumn",
+        "20260827222906_AddCategoryAttributeSchemaFoundation",
+        "20260828080000_AddProductMediaGalleryColumns",
+        "20260828172727_AddCategoryFoundation",
+        "20260828203000_AddCategoryAttributeBindingBehavior",
+        "20260828210000_AddCategoryFacetConfigurations",
+        "20260828220000_AddMegaMenuItems",
+        "20260829050000_AddCatalogVariantSortOrderAndDefault",
+        "20260829140000_AddProductHistoryEntries",
+        "20260830010000_AddProductCategoryAssignmentRole",
+        "20260830070000_AddCategoryBannerMedia",
+        "20260830090000_AddCatalogTagFoundation",
+        "20260909130000_AddQuantityFoundation",
+        "20260912080000_AddStoreHoldPolicySettings",
+        "20260913033100_AddReservationCyclePolicy",
+        "20260913080000_AddReservationPolicyAudit",
+        "20260913120000_AddStoreCheckoutIdentitySettings",
+        "20260913140000_AddStoreCheckoutAbuseSettings",
+        "20260914010000_AddStoreAppearanceSettings",
+        "20260914040000_AddProductCardSkin",
+        "20260914053000_AddStoreLandingPages",
+        "20260914060000_AddStoreLandingPageSections",
+        "20260914083000_AddStoreMenus",
+        "20260914140000_AddBackgroundStyle",
+        "20260915150000_AddTemplateCatalog",
+        "20260915180000_AddTemplateCatalogParity",
+        "20260916093000_AddStorePageTypeAndSeo"
+      "succeeded": true,
+      "durationMs": 608
+    },
+    {
+      "module": "Offer",
+      "schema": "offer",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823082919_InitialOffer",
+        "20260907120000_AddOfferReturnPolicy",
+        "20260909130100_AddOfferQuantityLimits"
+      "succeeded": true,
+      "durationMs": 37
+    },
+    {
+      "module": "Pricing",
+      "schema": "pricing",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823085546_InitialPricing"
+      "succeeded": true,
+      "durationMs": 49
+    },
+    {
+      "module": "Inventory",
+      "schema": "inventory",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823092444_InitialInventory",
+        "20260823100153_ReservationExpiry",
+        "20260827023000_ReturnRestockInbox",
+        "20260909130400_DecimalInventoryQuantity",
+        "20261012110133_AddReservationConsumptions"
+      "succeeded": true,
+      "durationMs": 26
+    },
+    {
+      "module": "Tax",
+      "schema": "tax",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823190000_InitialTax"
+      "succeeded": true,
+      "durationMs": 24
+    },
+    {
+      "module": "Party",
+      "schema": "party",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823062413_InitialParty",
+        "20260827215300_OrganizationProfileFields"
+      "succeeded": true,
+      "durationMs": 31
+    },
+    {
+      "module": "Identity",
+      "schema": "identity",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823023657_InitialIdentity",
+        "20260823064756_SessionCredentialLifecycle"
+      "succeeded": true,
+      "durationMs": 67
+    },
+    {
+      "module": "Cart",
+      "schema": "cart",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823100150_InitialCart",
+        "20260909130200_DecimalCartQuantity",
+        "20260919183000_CartLineMerchandisingCampaignId"
+      "succeeded": true,
+      "durationMs": 33
+    },
+    {
+      "module": "Order",
+      "schema": "order",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823113256_InitialOrder",
+        "20260823140000_UniqueCheckoutCartId",
+        "20260823180000_OrderTaxLineSnapshots",
+        "20260823190000_OrderPaymentInbox",
+        "20260823210000_OrderPromotionSnapshots",
+        "20260824120000_CheckoutShippingSnapshot",
+        "20260827180000_AddOrderLineCategoryIdSnapshot",
+        "20260907010000_CheckoutOperationalNotes",
+        "20260907053000_CheckoutNoteDeleteAndViewAcks",
+        "20260907091000_AddOrderLineReturnPolicySnapshot",
+        "20260908010000_SellerOrderCancelSnapshot",
+        "20260909130300_DecimalOrderQuantity",
+        "20260909140000_AddInvoiceHeaderAggregates",
+        "20260910190000_StorefrontShippingDraftAndCheckoutFields",
+        "20260913033000_AddReservationCycles",
+        "20260913090000_AddPendingPaymentCardHides",
+        "20260913140000_AddCheckoutAbuseLimits",
+        "20260913180000_AddRecipientNameParts",
+        "20260920120000_AddCheckoutProcesses"
+      "succeeded": true,
+      "durationMs": 92
+    },
+    {
+      "module": "Payment",
+      "schema": "payment",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823140000_InitialPayment",
+        "20260910180000_AddPaymentAllocationTargetKind",
+        "20260911080000_AddManualPaymentEvidence",
+        "20260912080000_AddUnpaidTimeoutAndMethodHolds"
+      "succeeded": true,
+      "durationMs": 35
+    },
+    {
+      "module": "Fulfillment",
+      "schema": "fulfillment",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827010000_InitialFulfillment",
+        "20260907090000_AddFulfillmentItemQuantityPacked",
+        "20260907121000_AddShipmentProviderMetadata",
+        "20260908010000_ShipmentPreviousTracking",
+        "20260908120000_AddFulfillmentItemQuantityProcessing",
+        "20260909130500_DecimalFulfillmentQuantity",
+        "20260910120000_AddConsolidatedPackages",
+        "20260910170000_AddShippingServiceCatalog"
+      "succeeded": true,
+      "durationMs": 44
+    },
+    {
+      "module": "Returns",
+      "schema": "returns",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827020000_InitialReturns",
+        "20260827200000_AddRefundDestination",
+        "20260909130600_DecimalReturnQuantity"
+      "succeeded": true,
+      "durationMs": 34
+    },
+    {
+      "module": "Settlement",
+      "schema": "settlement",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827030000_InitialSettlement"
+      "succeeded": true,
+      "durationMs": 55
+    },
+    {
+      "module": "Support",
+      "schema": "support",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827120000_InitialSupport"
+      "succeeded": true,
+      "durationMs": 34
+    },
+    {
+      "module": "Wallet",
+      "schema": "wallet",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827180000_InitialWallet"
+      "succeeded": true,
+      "durationMs": 31
+    },
+    {
+      "module": "Notification",
+      "schema": "notification",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827111240_InitialNotification"
+      "succeeded": true,
+      "durationMs": 22
+    },
+    {
+      "module": "AccessControl",
+      "schema": "access_control",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827140753_InitialAccessControl",
+        "20260827181000_AddSellerCeilingScope"
+      "succeeded": true,
+      "durationMs": 35
+    },
+    {
+      "module": "Promotion",
+      "schema": "promotion",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823210000_InitialPromotion",
+        "20260919134400_MerchandisingCampaignFoundation"
+      "succeeded": true,
+      "durationMs": 44
+    },
+    {
+      "module": "Reviews",
+      "schema": "reviews",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260825151244_InitialReviews"
+      "succeeded": true,
+      "durationMs": 20
+    },
+    {
+      "module": "ProductQnA",
+      "schema": "product_qna",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260826120000_InitialProductQnA"
+      "succeeded": true,
+      "durationMs": 23
+    },
+    {
+      "module": "BulkInquiry",
+      "schema": "bulk_inquiry",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260826120000_InitialBulkInquiry",
+        "20260909130700_DecimalBulkInquiryQuantity"
+      "succeeded": true,
+      "durationMs": 19
+    },
+    {
+      "module": "Wishlist",
+      "schema": "wishlist",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260825162434_InitialWishlist"
+      "succeeded": true,
+      "durationMs": 15
+    },
+    {
+      "module": "AddressBook",
+      "schema": "address_book",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260825171858_InitialAddressBook",
+        "20260913180000_AddRecipientNameParts"
+      "succeeded": true,
+      "durationMs": 17
+    },
+    {
+      "module": "CustomerProfile",
+      "schema": "customer_profile",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260825225000_InitialCustomerProfile"
+      "succeeded": true,
+      "durationMs": 15
+    },
+    {
+      "module": "UserPreference",
+      "schema": "user_preference",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827215300_InitialUserPreference",
+        "20260828020000_AddUiPreferences"
+      "succeeded": true,
+      "durationMs": 19
+    },
+    {
+      "module": "OperatorProfile",
+      "schema": "operator_profile",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827215300_InitialOperatorProfile"
+      "succeeded": true,
+      "durationMs": 17
+    },
+    {
+      "module": "Localization",
+      "schema": "localization",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260901220000_InitialLocalization"
+      "succeeded": true,
+      "durationMs": 21
+    },
+    {
+      "module": "Content",
+      "schema": "content",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260826172101_InitialContent",
+        "20260827043200_InitialContentExpand",
+        "20260902010000_AddContentCategories",
+        "20260902020000_AddContentAuthors",
+        "20260902030000_AddArticleMedia",
+        "20260902040000_ArticleSlugLocaleUnique",
+        "20260904070000_AddContentTags",
+        "20260904100000_AddArticleHistory",
+        "20260904110000_AddArticleComments"
+      "succeeded": true,
+      "durationMs": 48
+    },
+    {
+      "module": "Media",
+      "schema": "media",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260830060000_InitialMedia",
+        "20260916053000_AddMediaFocalPoint"
+      "succeeded": true,
+      "durationMs": 28
+    },
+    {
+      "module": "PageComposition",
+      "schema": "page_composition",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827021507_InitialPageComposition"
+      "succeeded": true,
+      "durationMs": 33
+    },
+    {
+      "module": "Story",
+      "schema": "story",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827070104_InitialStory",
+        "20260827080717_AddStoryReviewOwnership"
+      "succeeded": true,
+      "durationMs": 28
+    },
+    {
+      "module": "Geography",
+      "schema": "geography",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20261014113949_InitialGeography"
+      "succeeded": true,
+      "durationMs": 43
+    }
+}
+EXIT=0
+=== schemas in scratch DB BEFORE plan ===
+=== plan (non-mutating) ===
+  "command": "Plan",
+  "edition": "SingleStore",
+  "tenantId": "geo046",
+  "database": "geo046_scratch",
+  "connectionReference": "geo046scratch",
+  "modules": [
+    {
+      "module": "Catalog",
+      "schema": "catalog",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823080421_InitialCatalog",
+        "20260826172058_AddBrandLogoMediaAssetId",
+        "20260826173000_EnsureBrandLogoMediaAssetIdColumn",
+        "20260827222906_AddCategoryAttributeSchemaFoundation",
+        "20260828080000_AddProductMediaGalleryColumns",
+        "20260828172727_AddCategoryFoundation",
+        "20260828203000_AddCategoryAttributeBindingBehavior",
+        "20260828210000_AddCategoryFacetConfigurations",
+        "20260828220000_AddMegaMenuItems",
+        "20260829050000_AddCatalogVariantSortOrderAndDefault",
+        "20260829140000_AddProductHistoryEntries",
+        "20260830010000_AddProductCategoryAssignmentRole",
+        "20260830070000_AddCategoryBannerMedia",
+        "20260830090000_AddCatalogTagFoundation",
+        "20260909130000_AddQuantityFoundation",
+        "20260912080000_AddStoreHoldPolicySettings",
+        "20260913033100_AddReservationCyclePolicy",
+        "20260913080000_AddReservationPolicyAudit",
+        "20260913120000_AddStoreCheckoutIdentitySettings",
+        "20260913140000_AddStoreCheckoutAbuseSettings",
+        "20260914010000_AddStoreAppearanceSettings",
+        "20260914040000_AddProductCardSkin",
+        "20260914053000_AddStoreLandingPages",
+        "20260914060000_AddStoreLandingPageSections",
+        "20260914083000_AddStoreMenus",
+        "20260914140000_AddBackgroundStyle",
+        "20260915150000_AddTemplateCatalog",
+        "20260915180000_AddTemplateCatalogParity",
+        "20260916093000_AddStorePageTypeAndSeo"
+      "succeeded": true,
+      "durationMs": 604
+    },
+    {
+      "module": "Offer",
+      "schema": "offer",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823082919_InitialOffer",
+        "20260907120000_AddOfferReturnPolicy",
+        "20260909130100_AddOfferQuantityLimits"
+      "succeeded": true,
+      "durationMs": 39
+    },
+    {
+      "module": "Pricing",
+      "schema": "pricing",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823085546_InitialPricing"
+      "succeeded": true,
+      "durationMs": 49
+    },
+    {
+      "module": "Inventory",
+      "schema": "inventory",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823092444_InitialInventory",
+        "20260823100153_ReservationExpiry",
+        "20260827023000_ReturnRestockInbox",
+        "20260909130400_DecimalInventoryQuantity",
+        "20261012110133_AddReservationConsumptions"
+      "succeeded": true,
+      "durationMs": 29
+    },
+    {
+      "module": "Tax",
+      "schema": "tax",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823190000_InitialTax"
+      "succeeded": true,
+      "durationMs": 27
+    },
+    {
+      "module": "Party",
+      "schema": "party",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823062413_InitialParty",
+        "20260827215300_OrganizationProfileFields"
+      "succeeded": true,
+      "durationMs": 30
+    },
+    {
+      "module": "Identity",
+      "schema": "identity",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823023657_InitialIdentity",
+        "20260823064756_SessionCredentialLifecycle"
+      "succeeded": true,
+      "durationMs": 60
+    },
+    {
+      "module": "Cart",
+      "schema": "cart",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823100150_InitialCart",
+        "20260909130200_DecimalCartQuantity",
+        "20260919183000_CartLineMerchandisingCampaignId"
+      "succeeded": true,
+      "durationMs": 30
+    },
+    {
+      "module": "Order",
+      "schema": "order",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823113256_InitialOrder",
+        "20260823140000_UniqueCheckoutCartId",
+        "20260823180000_OrderTaxLineSnapshots",
+        "20260823190000_OrderPaymentInbox",
+        "20260823210000_OrderPromotionSnapshots",
+        "20260824120000_CheckoutShippingSnapshot",
+        "20260827180000_AddOrderLineCategoryIdSnapshot",
+        "20260907010000_CheckoutOperationalNotes",
+        "20260907053000_CheckoutNoteDeleteAndViewAcks",
+        "20260907091000_AddOrderLineReturnPolicySnapshot",
+        "20260908010000_SellerOrderCancelSnapshot",
+        "20260909130300_DecimalOrderQuantity",
+        "20260909140000_AddInvoiceHeaderAggregates",
+        "20260910190000_StorefrontShippingDraftAndCheckoutFields",
+        "20260913033000_AddReservationCycles",
+        "20260913090000_AddPendingPaymentCardHides",
+        "20260913140000_AddCheckoutAbuseLimits",
+        "20260913180000_AddRecipientNameParts",
+        "20260920120000_AddCheckoutProcesses"
+      "succeeded": true,
+      "durationMs": 85
+    },
+    {
+      "module": "Payment",
+      "schema": "payment",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823140000_InitialPayment",
+        "20260910180000_AddPaymentAllocationTargetKind",
+        "20260911080000_AddManualPaymentEvidence",
+        "20260912080000_AddUnpaidTimeoutAndMethodHolds"
+      "succeeded": true,
+      "durationMs": 36
+    },
+    {
+      "module": "Fulfillment",
+      "schema": "fulfillment",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827010000_InitialFulfillment",
+        "20260907090000_AddFulfillmentItemQuantityPacked",
+        "20260907121000_AddShipmentProviderMetadata",
+        "20260908010000_ShipmentPreviousTracking",
+        "20260908120000_AddFulfillmentItemQuantityProcessing",
+        "20260909130500_DecimalFulfillmentQuantity",
+        "20260910120000_AddConsolidatedPackages",
+        "20260910170000_AddShippingServiceCatalog"
+      "succeeded": true,
+      "durationMs": 44
+    },
+    {
+      "module": "Returns",
+      "schema": "returns",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827020000_InitialReturns",
+        "20260827200000_AddRefundDestination",
+        "20260909130600_DecimalReturnQuantity"
+      "succeeded": true,
+      "durationMs": 41
+    },
+    {
+      "module": "Settlement",
+      "schema": "settlement",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827030000_InitialSettlement"
+      "succeeded": true,
+      "durationMs": 59
+    },
+    {
+      "module": "Support",
+      "schema": "support",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827120000_InitialSupport"
+      "succeeded": true,
+      "durationMs": 38
+    },
+    {
+      "module": "Wallet",
+      "schema": "wallet",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827180000_InitialWallet"
+      "succeeded": true,
+      "durationMs": 33
+    },
+    {
+      "module": "Notification",
+      "schema": "notification",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827111240_InitialNotification"
+      "succeeded": true,
+      "durationMs": 21
+    },
+    {
+      "module": "AccessControl",
+      "schema": "access_control",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827140753_InitialAccessControl",
+        "20260827181000_AddSellerCeilingScope"
+      "succeeded": true,
+      "durationMs": 33
+    },
+    {
+      "module": "Promotion",
+      "schema": "promotion",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260823210000_InitialPromotion",
+        "20260919134400_MerchandisingCampaignFoundation"
+      "succeeded": true,
+      "durationMs": 42
+    },
+    {
+      "module": "Reviews",
+      "schema": "reviews",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260825151244_InitialReviews"
+      "succeeded": true,
+      "durationMs": 21
+    },
+    {
+      "module": "ProductQnA",
+      "schema": "product_qna",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260826120000_InitialProductQnA"
+      "succeeded": true,
+      "durationMs": 23
+    },
+    {
+      "module": "BulkInquiry",
+      "schema": "bulk_inquiry",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260826120000_InitialBulkInquiry",
+        "20260909130700_DecimalBulkInquiryQuantity"
+      "succeeded": true,
+      "durationMs": 21
+    },
+    {
+      "module": "Wishlist",
+      "schema": "wishlist",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260825162434_InitialWishlist"
+      "succeeded": true,
+      "durationMs": 15
+    },
+    {
+      "module": "AddressBook",
+      "schema": "address_book",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260825171858_InitialAddressBook",
+        "20260913180000_AddRecipientNameParts"
+      "succeeded": true,
+      "durationMs": 17
+    },
+    {
+      "module": "CustomerProfile",
+      "schema": "customer_profile",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260825225000_InitialCustomerProfile"
+      "succeeded": true,
+      "durationMs": 16
+    },
+    {
+      "module": "UserPreference",
+      "schema": "user_preference",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827215300_InitialUserPreference",
+        "20260828020000_AddUiPreferences"
+      "succeeded": true,
+      "durationMs": 17
+    },
+    {
+      "module": "OperatorProfile",
+      "schema": "operator_profile",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827215300_InitialOperatorProfile"
+      "succeeded": true,
+      "durationMs": 18
+    },
+    {
+      "module": "Localization",
+      "schema": "localization",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260901220000_InitialLocalization"
+      "succeeded": true,
+      "durationMs": 27
+    },
+    {
+      "module": "Content",
+      "schema": "content",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260826172101_InitialContent",
+        "20260827043200_InitialContentExpand",
+        "20260902010000_AddContentCategories",
+        "20260902020000_AddContentAuthors",
+        "20260902030000_AddArticleMedia",
+        "20260902040000_ArticleSlugLocaleUnique",
+        "20260904070000_AddContentTags",
+        "20260904100000_AddArticleHistory",
+        "20260904110000_AddArticleComments"
+      "succeeded": true,
+      "durationMs": 42
+    },
+    {
+      "module": "Media",
+      "schema": "media",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260830060000_InitialMedia",
+        "20260916053000_AddMediaFocalPoint"
+      "succeeded": true,
+      "durationMs": 21
+    },
+    {
+      "module": "PageComposition",
+      "schema": "page_composition",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827021507_InitialPageComposition"
+      "succeeded": true,
+      "durationMs": 20
+    },
+    {
+      "module": "Story",
+      "schema": "story",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20260827070104_InitialStory",
+        "20260827080717_AddStoryReviewOwnership"
+      "succeeded": true,
+      "durationMs": 26
+    },
+    {
+      "module": "Geography",
+      "schema": "geography",
+      "currentMigration": null,
+      "pendingMigrations": [
+        "20261014113949_InitialGeography"
+      "succeeded": true,
+      "durationMs": 43
+    }
+}
+EXIT=0
+=== schemas in scratch DB AFTER status+plan ===

@@ -1,0 +1,4 @@
+﻿REMOVING copied Tooba env config files so the runner can never bind a real Tooba DB
+removed: appsettings.Development.json
+removed: appsettings.Production.json
+remaining appsettings: appsettings.json
