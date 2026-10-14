@@ -13,7 +13,7 @@ Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: 49a1fd195e8d734122d99e8352cec6886c3aeff4
 Base-SHA: ba7d179175bf7c0f5903e41a532116a75ecf31ed
 Code-SHA: NONE
-Evidence-SHA: 7632707c3047c5c913e8572bd4b7be473b407e9f
+Evidence-SHA: 7632707c3047c5c913e8572bd4b7be473b407e9f (substantive evidence commit; this result file is added by the bookkeeping commit that follows, per the 062 convention)
 automaticNextImplementationTask: NONE
 
 TARGET / CONFIG / DATABASE-SIDE PROVENANCE
