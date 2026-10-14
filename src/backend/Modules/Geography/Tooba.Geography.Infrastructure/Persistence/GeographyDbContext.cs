@@ -36,8 +36,19 @@ public sealed class GeographyDbContext : DbContext
     /// <summary>ناحیه‌های خدمت زیر شهر.</summary>
     public DbSet<ServiceArea> ServiceAreas => Set<ServiceArea>();
 
-    /// <summary>سطرهای نام محلی‌شده؛ کلید یکتایی (نوع مکان، شناسهٔ مکان، شناسهٔ زبان).</summary>
-    public DbSet<PlaceNameTranslation> PlaceNameTranslations => Set<PlaceNameTranslation>();
+    /// <summary>سطرهای نام محلی‌شدهٔ کشورها؛ کلید یکتایی (کشور، زبان) و کلید خارجی واقعی.</summary>
+    public DbSet<CountryNameTranslation> CountryNameTranslations => Set<CountryNameTranslation>();
+
+    /// <summary>سطرهای نام محلی‌شدهٔ ناحیه‌های اداری؛ کلید یکتایی (ناحیه، زبان) و کلید خارجی واقعی.</summary>
+    public DbSet<AdministrativeAreaNameTranslation> AdministrativeAreaNameTranslations =>
+        Set<AdministrativeAreaNameTranslation>();
+
+    /// <summary>سطرهای نام محلی‌شدهٔ شهرها؛ کلید یکتایی (شهر، زبان) و کلید خارجی واقعی.</summary>
+    public DbSet<CityNameTranslation> CityNameTranslations => Set<CityNameTranslation>();
+
+    /// <summary>سطرهای نام محلی‌شدهٔ ناحیه‌های خدمت؛ کلید یکتایی (ناحیهٔ خدمت، زبان) و کلید خارجی واقعی.</summary>
+    public DbSet<ServiceAreaNameTranslation> ServiceAreaNameTranslations =>
+        Set<ServiceAreaNameTranslation>();
 
     /// <summary>Outbox همین ماژول؛ پیروی از اسکلت متعارف DbContext ماژول‌ها، بدون هیچ مصرف فعلی.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -72,7 +83,7 @@ public sealed class GeographyDbContext : DbContext
 
             // Scoped code: a code is unique inside its country. Codes are admin-assigned,
             // case-sensitive-stable identifiers; equal display names never collide because
-            // names live only in place_name_translations.
+            // names live only in administrative_area_name_translations.
             entity.HasIndex(x => new { x.CountryId, x.Code }).IsUnique();
             entity.HasIndex(x => new { x.CountryId, x.IsActive });
 
@@ -132,19 +143,75 @@ public sealed class GeographyDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // ---- PlaceNameTranslation ------------------------------------------
-        modelBuilder.Entity<PlaceNameTranslation>(entity =>
+        // ---- Per-kind localized names ---------------------------------------
+        // Each place kind owns its own translation table with a REAL parent foreign key, so a
+        // localized name can never reference a nonexistent place and the polymorphic orphan path
+        // that an unchecked (PlaceKind, PlaceId) pair would allow no longer exists in the model.
+        modelBuilder.Entity<CountryNameTranslation>(entity =>
         {
-            entity.ToTable("place_name_translations");
+            entity.ToTable("country_name_translations");
             entity.HasKey(x => x.TranslationId);
             entity.Property(x => x.TranslationId).ValueGeneratedNever();
-            entity.Property(x => x.PlaceKind).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.Name)
-                .HasMaxLength(PlaceNameTranslation.NameMaxLength)
+                .HasMaxLength(CountryNameTranslation.NameMaxLength)
                 .IsRequired();
 
-            // One display name per (place kind, place id, language id).
-            entity.HasIndex(x => new { x.PlaceKind, x.PlaceId, x.LanguageId }).IsUnique();
+            // One display name per (place, language).
+            entity.HasIndex(x => new { x.CountryId, x.LanguageId }).IsUnique();
+
+            // Cascade matches the established repo translation convention (Catalog category /
+            // attribute translations): a name row is a strictly owned child with no independent
+            // identity, so it must never outlive its place. Places themselves are never physically
+            // deleted (IsActive lifecycle, Restrict elsewhere), so this cascade is inert today.
+            entity.HasOne<Country>()
+                .WithMany()
+                .HasForeignKey(x => x.CountryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AdministrativeAreaNameTranslation>(entity =>
+        {
+            entity.ToTable("administrative_area_name_translations");
+            entity.HasKey(x => x.TranslationId);
+            entity.Property(x => x.TranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Name)
+                .HasMaxLength(AdministrativeAreaNameTranslation.NameMaxLength)
+                .IsRequired();
+            entity.HasIndex(x => new { x.AdministrativeAreaId, x.LanguageId }).IsUnique();
+            entity.HasOne<AdministrativeArea>()
+                .WithMany()
+                .HasForeignKey(x => x.AdministrativeAreaId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CityNameTranslation>(entity =>
+        {
+            entity.ToTable("city_name_translations");
+            entity.HasKey(x => x.TranslationId);
+            entity.Property(x => x.TranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Name)
+                .HasMaxLength(CityNameTranslation.NameMaxLength)
+                .IsRequired();
+            entity.HasIndex(x => new { x.CityId, x.LanguageId }).IsUnique();
+            entity.HasOne<City>()
+                .WithMany()
+                .HasForeignKey(x => x.CityId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ServiceAreaNameTranslation>(entity =>
+        {
+            entity.ToTable("service_area_name_translations");
+            entity.HasKey(x => x.TranslationId);
+            entity.Property(x => x.TranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Name)
+                .HasMaxLength(ServiceAreaNameTranslation.NameMaxLength)
+                .IsRequired();
+            entity.HasIndex(x => new { x.ServiceAreaId, x.LanguageId }).IsUnique();
+            entity.HasOne<ServiceArea>()
+                .WithMany()
+                .HasForeignKey(x => x.ServiceAreaId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Conventional module outbox skeleton (shared physical contract, module-owned schema).

@@ -1,36 +1,31 @@
 using Tooba.BuildingBlocks;
 using Tooba.Geography.Contracts.Errors;
-using Tooba.Geography.Domain.Enums;
 
 namespace Tooba.Geography.Domain.Aggregates;
 
 /// <summary>
-/// سطر نام محلی‌شدهٔ یک مکان. هویت مکان شناسهٔ پایدار است و این سطر فقط برچسب نمایشی را
-/// با کلید <c>LanguageId</c> نگه‌داری می‌کند. تا زمانی که تصمیم D9 به‌طور کامل روشن شود،
-/// مالکیت ترجمه در همین ماژول است و هیچ سرویس ترجمهٔ عمومی ساخته نمی‌شود.
+/// نام محلی‌شدهٔ یک ناحیهٔ اداری. هویت مکان شناسهٔ پایدار ناحیه است و این موجودیت فقط برچسب
+/// نمایشی را با کلید <c>LanguageId</c> نگه‌داری می‌کند؛ مالکیت فهرست زبان‌ها بر عهدهٔ Localization است.
 /// </summary>
-public sealed class PlaceNameTranslation
+public sealed class AdministrativeAreaNameTranslation
 {
     /// <summary>حداکثر طول نام محلی‌شده.</summary>
     public const int NameMaxLength = 128;
 
-    private PlaceNameTranslation()
+    private AdministrativeAreaNameTranslation()
     {
     }
 
     /// <summary>شناسهٔ پایدار سطر ترجمه.</summary>
     public Guid TranslationId { get; init; }
 
-    /// <summary>نوع مکان مرجعی که این سطر نام آن را ترجمه می‌کند.</summary>
-    public GeographyPlaceKind PlaceKind { get; private set; }
+    /// <summary>ناحیهٔ اداری مالک؛ کلید خارجی واقعی به <c>administrative_areas</c>.</summary>
+    public Guid AdministrativeAreaId { get; private set; }
 
-    /// <summary>شناسهٔ پایدار مکان مرجع.</summary>
-    public Guid PlaceId { get; private set; }
-
-    /// <summary>شناسهٔ زبان؛ مالکیت فهرست زبان‌ها بر عهدهٔ ماژول Localization است.</summary>
+    /// <summary>شناسهٔ زبان متنی؛ یک هویت خارجی اسکالر، نه وابستگی به DbContext دیگر.</summary>
     public Guid LanguageId { get; private set; }
 
-    /// <summary>نام محلی‌شدهٔ مکان.</summary>
+    /// <summary>نام محلی‌شدهٔ ناحیه.</summary>
     public string Name { get; private set; } = string.Empty;
 
     /// <summary>زمان ایجاد UTC.</summary>
@@ -39,16 +34,14 @@ public sealed class PlaceNameTranslation
     /// <summary>زمان آخرین ویرایش UTC.</summary>
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    /// <summary>سطر ترجمهٔ جدید می‌سازد. یکتایی (PlaceKind، PlaceId، LanguageId) در لایهٔ پایدارسازی اعمال می‌شود.</summary>
-    /// <param name="placeKind">نوع مکان مرجع.</param>
-    /// <param name="placeId">شناسهٔ پایدار مکان مرجع.</param>
+    /// <summary>سطر ترجمهٔ جدید می‌سازد؛ یکتایی (ناحیه، زبان) در لایهٔ پایدارسازی اعمال می‌شود.</summary>
+    /// <param name="administrativeAreaId">شناسهٔ ناحیهٔ اداری مالک.</param>
     /// <param name="languageId">شناسهٔ زبان.</param>
     /// <param name="name">نام محلی‌شده.</param>
     /// <param name="now">زمان UTC ایجاد.</param>
     /// <param name="translationId">شناسهٔ قطعی اختیاری.</param>
-    public static PlaceNameTranslation Create(
-        GeographyPlaceKind placeKind,
-        Guid placeId,
+    public static AdministrativeAreaNameTranslation Create(
+        Guid administrativeAreaId,
         Guid languageId,
         string name,
         DateTimeOffset now,
@@ -56,8 +49,7 @@ public sealed class PlaceNameTranslation
         => new()
         {
             TranslationId = translationId is { } id && id != Guid.Empty ? id : UuidV7.New(),
-            PlaceKind = placeKind,
-            PlaceId = RequirePlace(placeId),
+            AdministrativeAreaId = RequireOwner(administrativeAreaId),
             LanguageId = RequireLanguage(languageId),
             Name = NormalizeName(name),
             CreatedAt = now,
@@ -73,14 +65,14 @@ public sealed class PlaceNameTranslation
         UpdatedAt = now;
     }
 
-    private static Guid RequirePlace(Guid placeId)
+    private static Guid RequireOwner(Guid administrativeAreaId)
     {
-        if (placeId == Guid.Empty)
+        if (administrativeAreaId == Guid.Empty)
         {
             throw new SemanticException(new SemanticError(GeographyErrorCodes.TranslationPlaceIdRequired));
         }
 
-        return placeId;
+        return administrativeAreaId;
     }
 
     private static Guid RequireLanguage(Guid languageId)
