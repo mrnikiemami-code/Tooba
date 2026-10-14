@@ -20,6 +20,7 @@
     <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Contracts\Tooba.Catalog.Contracts.csproj" />
     <ProjectReference Include="..\..\Payment\Tooba.Payment.Contracts\Tooba.Payment.Contracts.csproj" />
     <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Contracts\Tooba.Fulfillment.Contracts.csproj" />
+    <ProjectReference Include="..\..\Shipping\Tooba.Shipping.Contracts\Tooba.Shipping.Contracts.csproj" />
     <ProjectReference Include="..\..\Returns\Tooba.Returns.Contracts\Tooba.Returns.Contracts.csproj" />
     <ProjectReference Include="..\..\Settlement\Tooba.Settlement.Contracts\Tooba.Settlement.Contracts.csproj" />
     <ProjectReference Include="..\..\Identity\Tooba.Identity.Contracts\Tooba.Identity.Contracts.csproj" />

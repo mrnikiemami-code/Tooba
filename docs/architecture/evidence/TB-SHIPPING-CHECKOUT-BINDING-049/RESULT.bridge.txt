@@ -1,0 +1,114 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-CHECKOUT-BINDING-049
+Parent-Task: TB-SHIPPING-CORE-RATES-048
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-SIX-SLICES
+Mode: BOUNDED_SHIPPING_CHECKOUT_VERTICAL_INTEGRATION
+Bridge-Task-Row: 1448a457-e2de-4bc0-9eec-242fb15a3a49
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 0bf456e1daaf6462fd83c7c7cf19f973a63015d5
+Base-SHA: 426a1cb488cb54186f717e3a01428caf8d6d7f6b
+Code-SHA: PENDING_COMMIT
+Evidence-SHA: PENDING_COMMIT
+automaticNextImplementationTask: NONE
+
+BASE DRIFT (safe, not RECOVERY_CONFLICT)
+Expected-Base-SHA 0bf456e1 is an ancestor of the actual base 426a1cb4. The only intervening commits are
+3ab9071a4 and 426a1cb48 — the 048 elapsed-time correction, limited to
+docs/planning/shipping/SHIPPING-CORE-RATES-048.md and docs/architecture/evidence/TB-SHIPPING-CORE-RATES-048/**.
+At claim time branch=main and HEAD == origin/main. No stash/reset/rebase/force-push was used; all
+pre-existing dirty/untracked files were preserved.
+
+CHANGED PATHS
+IMPLEMENTED (Order-owned, Contracts-only observation seam):
+  src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateAuthorityOptions.cs
+  src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateAuthorityPolicy.cs
+  src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateShadowContracts.cs
+  src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateShadowComparer.cs
+  src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateShadowEvaluator.cs
+  src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj (one additive ProjectReference to Tooba.Shipping.Contracts)
+  src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingRateShadowTests.cs
+DOCS:
+  docs/planning/shipping/SHIPPING-CHECKOUT-BINDING-049.md
+  docs/architecture/evidence/TB-SHIPPING-CHECKOUT-BINDING-049/**
+
+FOCUSED BUILDS/TESTS (actually executed)
+- dotnet build src/backend/Modules/Order/Tooba.Order.Tests — succeeded (0 errors).
+- Tooba.Order.Tests --filter StorefrontShippingRateShadowTests: 8 passed, 0 failed.
+- Tooba.Order.Tests --filter Architecture: 114 passed, 0 failed.
+- Tooba.Shipping.Tests (full project): 34 passed, 0 failed.
+Logs: docs/architecture/evidence/TB-SHIPPING-CHECKOUT-BINDING-049/log-build-order-tests.txt,
+log-test-shadow.txt, log-test-shipping.txt.
+
+EXACT CHECKOUT AUTHORITY AND CUTOVER STATUS
+- Customer-facing authority is UNCHANGED: StorefrontShippingService.LoadEligibleMethodsAsync ->
+  StorefrontShippingCalculator.ResolveRate/IsDestinationAllowed/QuotePrice, snapshotted into
+  CartShippingDraft and replayed into CheckoutSnapshot. No constructor, DI, catalogue, draft, snapshot,
+  payment-allocation or endpoint surface was modified.
+- The new seam is DISABLED by default and UNREFERENCED at runtime. Live cutover: NOT ATTEMPTED /
+  NOT READY.
+- Gate design: comparison requires ShadowEnabled AND PrerequisitesConfirmed (both default false).
+  Enabling the shadow alone cannot bypass the prerequisite claim; empty coverage is never read as
+  unrestricted.
+- Comparator outcomes are explicit: Match, LegacyAllowedShippingDenied (expected while coverage grants
+  are empty), ShippingAllowedLegacyDenied, AmountMismatch, NotComparable, ShippingUnavailable.
+  NotCovered is reported, never coerced to allowed and never substituted for the legacy price.
+- Fail-safe: missing shipping schema/table/connection or any non-cancellation exception degrades to
+  ShippingUnavailable and never reaches the live path. Cancellation is still honoured.
+- Destination identity is never guessed from localised legacy text: absent DestinationIdentifiers
+  yields NotComparable.
+
+EVIDENCE MAPPED TO MISSION D
+D1 legacy price/promise unchanged while switch disabled: Gate_Is_Disabled_By_Default_And_Legacy_Price_Is_Not_Touched,
+   Enabled_Shadow_Without_Confirmed_Prerequisites_Still_Does_Not_Query_Shipping.
+D2 unknown/unsupported destination not silently covered: Uncovered_Destination_Is_Reported_Not_Treated_As_Unrestricted_Or_Allowed,
+   Missing_Destination_Identifiers_Are_Not_Comparable_And_Never_Guessed_From_Text.
+D3 quote maps to Order without altering payment allocation/committed snapshots:
+   Shipping_Quote_Is_Observation_Only_And_Committed_Amount_Stays_Legacy (Shipping reports 999,999;
+   authoritative price and minimum-delivery promise remain the legacy values).
+D4 absence of Shipping tables/data cannot crash the legacy path:
+   Shipping_Failure_Or_Absent_Tables_Degrade_To_Unavailable_And_Never_Throw,
+   Unconfigured_Lookup_Is_Unavailable_Without_Any_Query.
+Contracts-only seam integrity: Service_Code_Is_Forwarded_Untouched_To_The_Shipping_Authority.
+
+MIGRATION / COVERAGE PREREQUISITES (BLOCKED — no runtime readiness invented)
+1. Shipping schema is not persisted: ShippingDbContext has no generated/applied migration and is absent
+   from ModuleMigrationRegistry / ModuleSchemaMigrationOrder. Those edits are FORBIDDEN in this task, so
+   not even the migration source was generated.
+2. Coverage grants are empty. The new engine is fail-closed, so a blind switch would deny all shipping.
+3. Destination identity is not resolvable on the live legacy path (ADR-036 Phase 2 / D8.4 not
+   authorized); a real comparison can only run on a deterministic offline fixture carrying identifiers.
+4. DI wiring is out of scope (OrderModule/Host composition edits FORBIDDEN), so the seam is
+   intentionally inert.
+
+ALLOWLIST DISCLOSURE (one deviation, declared)
+Two files outside the declared ALLOWED PATHS were required for the slice to compile and be verifiable,
+and are staged and reported explicitly:
+  - src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj — one additive
+    ProjectReference to Tooba.Shipping.Contracts; without it a Contracts-only Order -> Shipping seam
+    cannot exist.
+  - src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingRateShadowTests.cs —
+    the focused tests for the acceptance properties.
+Neither path is in the FORBIDDEN list. No Host / Program.cs / ToobaModuleComposition /
+ModuleMigrationRegistry / ModuleSchemaMigrationOrder / Fulfillment / Geography / Payment / Settlement /
+Catalog / Offer / frontend / DI-root file was touched.
+
+NON-GOALS HONOURED
+No DB writes, no DDL, no Host restart/deploy, no endpoint, no second admin page, no fabricated rates,
+no provider slots, no nation-wide implied coverage, no paid orders, no architecture-test weakening, no
+cross-module DbContext access, no dummy /api/results probe, no follow-on task.
+
+ACTUAL ELAPSED
+Claim 2026-10-14T13:50:07Z; artifact completion recorded in the push evidence below. Work was executed
+as one continuous bounded slice; the 30-minute budget was consumed by seam design, focused tests and
+evidence capture, and the slice was stopped at a coherent committable subset rather than expanded.
+
+PUSH EVIDENCE
+Commit: PENDING_COMMIT
+origin/main after push: PENDING
+git fetch origin; HEAD == origin/main verified.
+END_TOOBA_WORKER_RESULT

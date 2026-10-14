@@ -1,0 +1,100 @@
+{
+  "taskId": "TB-SHIPPING-CHECKOUT-BINDING-049",
+  "parentTask": "TB-SHIPPING-CORE-RATES-048",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "program": "TOOBA-SHIPPING-MVP-SIX-SLICES",
+  "mode": "BOUNDED_SHIPPING_CHECKOUT_VERTICAL_INTEGRATION",
+  "milestone": "4 OF 6",
+  "status": "PARTIAL",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "expectedBaseSha": "0bf456e1daaf6462fd83c7c7cf19f973a63015d5",
+  "baseSha": "426a1cb488cb54186f717e3a01428caf8d6d7f6b",
+  "baseShaDrift": {
+    "safe": true,
+    "reason": "Expected-Base-SHA is an ancestor of the actual base. The two intervening commits (3ab9071a4, 426a1cb48) are the 048 elapsed-time correction limited to docs/planning/shipping/SHIPPING-CORE-RATES-048.md and docs/architecture/evidence/TB-SHIPPING-CORE-RATES-048/**. HEAD == origin/main at claim time."
+  },
+  "automaticNextImplementationTask": "NONE",
+  "implemented": [
+    "Order-owned Contracts-only observation seam: StorefrontShippingRateAuthorityOptions, StorefrontShippingRateAuthorityPolicy (gate enum + policy), StorefrontShippingRateShadowContracts, StorefrontShippingRateShadowComparer, StorefrontShippingRateShadowEvaluator.",
+    "Two-key fail-safe gate: ShadowEnabled (default false) AND PrerequisitesConfirmed (default false); enabling the shadow alone cannot bypass the prerequisite claim.",
+    "Explicit comparator outcomes incl. LegacyAllowedShippingDenied for the expected empty-coverage gap; no coercion of NotCovered to allowed.",
+    "Fail-safe on absent shipping schema/tables/data: non-cancellation exceptions degrade to ShippingUnavailable and never propagate.",
+    "Destination identity is never guessed from legacy text; absent DestinationIdentifiers yields NotComparable."
+  ],
+  "prepared": [
+    "Single additive ProjectReference Tooba.Order.Application -> Tooba.Shipping.Contracts (Contracts-only).",
+    "Seam is a drop-in unit for a later authorized task to register IShippingRateQuoteLookup + options and call EvaluateAsync for telemetry; no live service signature change required."
+  ],
+  "blocked": [
+    "Shipping schema not persisted: ShippingDbContext has no migration and is absent from ModuleMigrationRegistry/ModuleSchemaMigrationOrder; those edits are FORBIDDEN in this task.",
+    "Coverage grants empty: new engine is fail-closed, so switching checkout would deny all shipping.",
+    "Destination identity not resolvable on the live path (ADR-036 Phase 2 / D8.4 not authorized).",
+    "DI wiring out of scope: OrderModule/Host composition edits are FORBIDDEN, so the seam is intentionally unreferenced at runtime."
+  ],
+  "liveCutoverStatus": "NOT ATTEMPTED / NOT READY — legacy StorefrontShippingCalculator authority is unchanged and remains the sole customer-facing price and promise source.",
+  "unchangedSurfaces": [
+    "StorefrontShippingService (no constructor/signature/behaviour change)",
+    "CartShippingDraft, CheckoutSnapshot, payment allocation",
+    "Fulfillment shipping service/option catalogue and /admin/shipping-services",
+    "AddressBook, Geography, Payment, Settlement, Catalog, Offer, frontend",
+    "Host, Program.cs, module composition, migration registry"
+  ],
+  "changedPaths": [
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateAuthorityOptions.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateAuthorityPolicy.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateShadowContracts.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateShadowComparer.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateShadowEvaluator.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj",
+    "src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingRateShadowTests.cs",
+    "docs/planning/shipping/SHIPPING-CHECKOUT-BINDING-049.md",
+    "docs/architecture/evidence/TB-SHIPPING-CHECKOUT-BINDING-049/**"
+  ],
+  "allowlistDisclosure": [
+    "src/backend/Modules/Order/Tooba.Order.Application/Tooba.Order.Application.csproj — additive ProjectReference to Tooba.Shipping.Contracts; required for any Contracts-only Order -> Shipping seam to exist.",
+    "src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingRateShadowTests.cs — focused tests for the acceptance properties.",
+    "Neither is in the FORBIDDEN list; no Host/Program.cs/composition/migration-registry/Fulfillment/Geography/frontend/DI-root file was touched."
+  ],
+  "focusedValidation": {
+    "build": "dotnet build src/backend/Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj — succeeded",
+    "tests": [
+      {
+        "project": "Tooba.Order.Tests",
+        "filter": "FullyQualifiedName~StorefrontShippingRateShadowTests",
+        "passed": 8,
+        "failed": 0,
+        "total": 8
+      },
+      {
+        "project": "Tooba.Order.Tests",
+        "filter": "FullyQualifiedName~Architecture",
+        "passed": 114,
+        "failed": 0,
+        "total": 114
+      },
+      {
+        "project": "Tooba.Shipping.Tests",
+        "filter": null,
+        "passed": 34,
+        "failed": 0,
+        "total": 34
+      }
+    ]
+  },
+  "noLiveSideEffects": {
+    "databaseWrites": false,
+    "ddlApplied": false,
+    "hostRestart": false,
+    "endpointsAdded": false,
+    "hostWiringChanged": false
+  },
+  "nextPrerequisitesMilestone5": [
+    "Generate + register + apply the Shipping initial migration under an authorized task.",
+    "Seed explicit coverage grants for every effective enabled legacy service/destination pair; never imply nationwide coverage.",
+    "Authorize ADR-036 Phase 2 destination text->id resolution (D8.4), or run the shadow only against deterministic offline fixtures.",
+    "Register IShippingRateQuoteLookup + StorefrontShippingRateAuthorityOptions and wire EvaluateAsync as observe-only telemetry before any customer-facing switch."
+  ],
+  "workerPassEqualsArchitectAccept": false
+}
