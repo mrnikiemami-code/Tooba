@@ -1,0 +1,49 @@
+TB-SHIPPING-MVP-ADMIN-050 — live browser verification (read-only)
+=================================================================
+Target: http://127.0.0.1:3000/admin/shipping-services (already-running dev frontend, real backend)
+Date: 2026-10-14 (UTC)
+Mode: inspection + one non-mutating submit attempt. NO create/update/deactivate request was sent.
+
+Observed — list
+----------------
+data-testid="admin-shipping-services-screen" present; grid rendered 5 services:
+  پست / post               1 / 2   فعال: بله
+  تیپاکس / tipax           2 / 2   فعال: بله
+  اسنپ / پیک آنلاین / snapp_courier  0 / 0   فعال: خیر
+  پیک فروشگاه / store_courier        0 / 0   فعال: بله
+  تحویل حضوری / in_person            0 / 0   فعال: بله
+Row actions are the admin-standard icon cell (AppGridRowActionsCell):
+  aria-label "ویرایش" (refs e44,e47,e50,e52,e55) and aria-label "غیرفعال‌سازی" (e45,e48,e53,e56);
+  the inactive row exposes only "ویرایش" -> visible(row) guard works.
+
+Observed — create dialog
+-------------------------
+Click "سرویس جدید" -> dialog admin-shipping-service-dialog opened:
+  کد سرویس: empty | Provider Kind: post | آیکن: پست | رنگ آیکن: آبی | ترتیب: 60 | فعال: on
+  tabs: فارسی (selected) | English | Русский
+  option rows: express/پیشتاز and standard/معمولی; option name label rendered "نام (فارسی)"
+  (confirms activeLanguageId drives the level-2 name input, previously raw langTab)
+
+Observed — client-side validation blocks the call
+-------------------------------------------------
+Clicked "ذخیره" with an empty form (no mutation attempted):
+  document.querySelectorAll('[data-testid="admin-shipping-service-form-errors"] li') ->
+    ["کد سرویس الزامی است.",
+     "نام نمایشی برای زبان فعال الزامی است؛ بدون آن نام سرویس در فروشگاه با کد آن نمایش داده می‌شود."]
+  dialog remained open, page-level notice element absent (null), grid unchanged.
+
+Observed — cancel
+-----------------
+Click "انصراف" -> accessibility tree no longer exposes any dialog control (Dialog stays mounted but
+hidden), page returns to the grid. No notice banner was produced (nothing was mutated).
+
+NOT verified in browser (deliberately avoided to keep dev data untouched)
+-------------------------------------------------------------------------
+1. successful create/edit save round-trip and the success notice banner;
+2. deactivate flow including the native window.confirm text;
+3. error-tone notice for a failed save/deactivate.
+These paths are covered by the pure validator/builder unit tests and by the screen wiring guard
+(app/admin/shipping-services/shipping-services-form-model.test.ts,
+ test "screen wires validation, page-level feedback, and confirmed row actions").
+
+Screenshot (outside the repo, temp): cursor/screenshots/shipping-services-validation.png

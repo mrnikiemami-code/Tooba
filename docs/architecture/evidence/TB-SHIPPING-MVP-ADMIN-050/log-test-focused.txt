@@ -1,0 +1,32 @@
+﻿(node:16736) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-grid-migration.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ admin-screens uses direct AppDataGrid not LegacyAppDataGrid (0.4986ms)
+✔ catalog attribute definitions and schema use direct AppDataGrid (0.113ms)
+✔ shipping services list keeps its stable row identity and direct grid wiring (0.0777ms)
+✔ gift cards admin list uses direct AppDataGrid (0.064ms)
+✔ stories management uses direct AppDataGrid (0.0602ms)
+✔ legacy wrapper removed from design-system exports (0.0467ms)
+✔ pure legacy grid adapters exist without render wrapper component (0.05ms)
+(node:24452) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-services-form-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a complete form produces no issues (1.0256ms)
+✔ service code is required, must stay canonical, and must be unique (0.174ms)
+✔ sort order must be a non-negative integer instead of silently becoming zero (0.0855ms)
+✔ a display name for the active language is required (0.0996ms)
+✔ option rows are validated instead of being dropped silently (0.106ms)
+✔ write request is canonical and keeps option identity (0.263ms)
+✔ active helpers resolve the active language only (0.1142ms)
+✔ known fulfillment failure codes map to fa and unknown codes fall back (0.133ms)
+✔ screen wires validation, page-level feedback, and confirmed row actions (0.5633ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 90.0183

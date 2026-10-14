@@ -20,6 +20,10 @@ import {
   useLegacyAdminGridDirectProps,
 } from "../../design-system";
 import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
+import {
+  AppGridRowActionsCell,
+  type AppGridRowAction,
+} from "../../design-system/app-data-grid/app-grid-row-actions";
 import { resolveAdminChromeLocale } from "./admin-chrome-messages.ts";
 import { loadAdminLanguages } from "../../features/admin-languages";
 import {
@@ -31,6 +35,14 @@ import {
   type ShippingServiceOptionWrite,
   type ShippingServiceTranslationWrite,
 } from "./shipping-services-api.ts";
+import {
+  activeTranslationName,
+  buildShippingServiceWriteRequest,
+  mapShippingServiceErrorFa,
+  normalizeShippingServiceCode,
+  validateShippingServiceForm,
+  type ShippingServiceFormIssue,
+} from "./shipping-services/shipping-services-form-model.ts";
 import { createHostSavedViewStore } from "./saved-view-store";
 import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 
@@ -104,7 +116,14 @@ export function ShippingServicesScreen() {
   const [state, setState] = useState<"loading" | "ok" | "denied" | "error">("loading");
   const [rows, setRows] = useState<ShippingServiceGridRow[]>([]);
   const [languages, setLanguages] = useState<SupportedLocaleDefinition[]>([]);
+  // پیام خطای بارگذاری اولیه (فقط برای ErrorState صفحه).
   const [message, setMessage] = useState<string | undefined>(undefined);
+  // بازخورد عملیات (ذخیره/غیرفعال‌سازی/خواندن) — همیشه در سطح صفحه دیده می‌شود،
+  // چون خطای عملیات گرید تا پیش از این داخل مودال بسته رندر می‌شد و بی‌صدا می‌ماند.
+  const [notice, setNotice] = useState<{ tone: "success" | "error"; text: string } | undefined>(undefined);
+  // ایرادهای اعتبارسنجی فرم؛ تا پیش از این مقادیر ناقص با filter بی‌صدا حذف می‌شدند.
+  const [formIssues, setFormIssues] = useState<ShippingServiceFormIssue[]>([]);
+  const [busy, setBusy] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [code, setCode] = useState("");
@@ -118,7 +137,14 @@ export function ShippingServicesScreen() {
   const [langTab, setLangTab] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const refresh = useCallback(async () => {
+  /**
+   * زبان فعال فرم. تک‌منبع حقیقت برای نام سرویس و نام نوع سرویس؛ پیش از این نام نوع سرویس
+   * فقط به `langTab` بسته بود و در نبود تب فعال، تایپ کاربر بی‌اثر می‌شد.
+   */
+  const activeLanguageId =
+    translations.find((t) => t.languageId === langTab)?.languageId ?? translations[0]?.languageId ?? "";
+
+  const refresh = useCallback(async (opts?: { notice?: string; tone?: "success" | "error" }) => {
     setState("loading");
     const locale = resolveAdminChromeLocale();
     const [listResult, langsResult] = await Promise.all([
@@ -137,6 +163,11 @@ export function ShippingServicesScreen() {
     setRows(listResult.data.map((item) => ({ ...item, id: item.shippingServiceId })));
     setLanguages(langsResult.data.filter((row) => row.active && row.languageId));
     setState("ok");
+    setNotice(
+      opts?.notice
+        ? { tone: opts.tone ?? "success", text: opts.notice }
+        : undefined,
+    );
   }, []);
 
   useEffect(() => {
@@ -171,13 +202,20 @@ export function ShippingServicesScreen() {
         name: languages.find((l) => l.languageId === t.languageId)?.urlPrefix === "en" ? "Standard" : "معمولی",
       })),
     }]);
+    setFormIssues([]);
+    setNotice(undefined);
     setDialogOpen(true);
   }
 
-  async function openEdit(serviceId: string) {
+  const openEdit = useCallback(async (serviceId: string) => {
+    setFormIssues([]);
     const result = await loadAdminShippingService(serviceId);
     if (result.state !== "ok" || !result.data) {
-      setMessage(result.message ?? "سرویس خوانده نشد");
+      // پیش از این پیام فقط داخل مودالِ بسته رندر می‌شد و کاربر هیچ بازخوردی نمی‌گرفت.
+      setNotice({
+        tone: "error",
+        text: mapShippingServiceErrorFa(result.message, "سرویس ارسال خوانده نشد؛ دوباره تلاش کنید."),
+      });
       return;
     }
     const merged = emptyServiceTranslations(languages).map((blank) => {
@@ -203,38 +241,96 @@ export function ShippingServicesScreen() {
         return existing ?? blank;
       }),
     })));
+    setNotice(undefined);
     setDialogOpen(true);
-  }
+  }, [languages]);
 
   async function save() {
-    setSaving(true);
-    const result = await writeAdminShippingService(editingId, {
+    const fields = {
       code,
       providerKind,
       iconKey,
       colorKey,
       isActive,
-      sortOrder: Number(sortOrder) || 0,
-      translations: translations.filter((t) => t.name.trim()),
-      options: options.filter((o) => o.code.trim()),
+      sortOrder,
+      translations,
+      options,
+    };
+    // اعتبارسنجی پیش از فراخوانی API: ورودی نامعتبر نباید بی‌صدا حذف شود یا به خطای پایگاه‌داده برسد.
+    const issues = validateShippingServiceForm(fields, {
+      activeLanguageId,
+      otherServiceCodes: rows
+        .filter((row) => row.shippingServiceId !== editingId)
+        .map((row) => row.code),
     });
+    if (issues.length > 0) {
+      setFormIssues(issues);
+      setNotice(undefined);
+      return;
+    }
+
+    setFormIssues([]);
+    setSaving(true);
+    const result = await writeAdminShippingService(editingId, buildShippingServiceWriteRequest(fields));
     setSaving(false);
     if (result.state !== "ok") {
-      setMessage(result.message ?? "ذخیره ناموفق بود");
+      setNotice({
+        tone: "error",
+        text: mapShippingServiceErrorFa(result.message, "ذخیره ناموفق بود؛ دوباره تلاش کنید."),
+      });
       return;
     }
+
+    const savedName = activeTranslationName(translations, activeLanguageId)
+      || normalizeShippingServiceCode(code);
     setDialogOpen(false);
-    await refresh();
+    setNotice(undefined);
+    await refresh({
+      notice: editingId ? `سرویس «${savedName}» ذخیره شد.` : `سرویس «${savedName}» ایجاد شد.`,
+      tone: "success",
+    });
   }
 
-  async function deactivate(serviceId: string) {
-    const result = await deactivateAdminShippingService(serviceId);
+  const deactivate = useCallback(async (row: ShippingServiceGridRow) => {
+    setBusy(true);
+    const result = await deactivateAdminShippingService(row.shippingServiceId);
+    setBusy(false);
     if (result.state !== "ok") {
-      setMessage(result.message ?? "غیرفعال‌سازی ناموفق بود");
+      setNotice({
+        tone: "error",
+        text: mapShippingServiceErrorFa(result.message, "غیرفعال‌سازی ناموفق بود؛ دوباره تلاش کنید."),
+      });
       return;
     }
-    await refresh();
-  }
+
+    await refresh({ notice: `سرویس «${row.name}» غیرفعال شد.`, tone: "success" });
+  }, [refresh]);
+
+  const rowActions = useMemo<AppGridRowAction<ShippingServiceGridRow>[]>(
+    () => [
+      {
+        id: "edit",
+        label: "ویرایش",
+        icon: Pencil,
+        testId: (row) => `shipping-service-edit-${row.shippingServiceId}`,
+        onClick: (row) => openEdit(row.shippingServiceId),
+      },
+      {
+        id: "deactivate",
+        label: "غیرفعال‌سازی",
+        icon: Ban,
+        variant: "destructive",
+        visible: (row) => row.isActive,
+        disabled: () => busy,
+        // غیرفعال‌سازی، سرویس را از فهرست ارسال فروشگاه بیرون می‌برد؛ پس تأیید صریح لازم دارد.
+        confirm: (row) =>
+          `سرویس «${row.name}» غیرفعال شود؟ پس از غیرفعال‌سازی در فروشگاه نمایش داده نمی‌شود.`,
+        testId: (row) => `shipping-service-deactivate-${row.shippingServiceId}`,
+        onClick: (row) => deactivate(row),
+      },
+    ],
+    [busy, deactivate, openEdit],
+  );
 
   const columns = useMemo<GridColumnDef<ShippingServiceGridRow>[]>(() => [
     {
@@ -277,33 +373,15 @@ export function ShippingServicesScreen() {
     {
       id: "actions",
       header: "عملیات",
-      accessor: (row) => row.shippingServiceId,
-      cell: (row) => (
-        <div className="flex flex-wrap gap-1">
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 rounded border border-gray-200 px-2 py-1 text-[11px] font-bold text-gray-700"
-            onClick={() => void openEdit(row.shippingServiceId)}
-          >
-            <Pencil className="size-3.5 text-blue-600" aria-hidden />
-            ویرایش
-          </button>
-          {row.isActive ? (
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 rounded border border-red-200 px-2 py-1 text-[11px] font-bold text-red-700"
-              onClick={() => void deactivate(row.shippingServiceId)}
-            >
-              <Ban className="size-3.5" aria-hidden />
-              غیرفعال
-            </button>
-          ) : null}
-        </div>
-      ),
-      width: 160,
-      minWidth: 140,
+      accessor: () => "",
+      exportable: false,
+      sortable: false,
+      width: 150,
+      minWidth: 130,
+      maxWidth: 200,
+      cell: (row) => <AppGridRowActionsCell row={row} actions={rowActions} compact />,
     },
-  ], [languages]);
+  ], [rowActions]);
 
   const queryAdapter = useCallback(
     async (query: GridServerQuery) => createClientGridQueryAdapter(rows, columns)(query),
@@ -324,7 +402,7 @@ export function ShippingServicesScreen() {
     return <ErrorState title="خطا" detail={message ?? faWorkspaceMessages.retry} onRetry={() => void refresh()} retryLabel={faWorkspaceMessages.retry} />;
   }
 
-  const activeLang = translations.find((t) => t.languageId === langTab) ?? translations[0];
+  const activeLang = translations.find((t) => t.languageId === activeLanguageId);
 
   return (
     <main className="space-y-4" data-testid="admin-shipping-services-screen">
@@ -355,6 +433,20 @@ export function ShippingServicesScreen() {
           </div>
         </section>
       )}
+
+      {notice ? (
+        <p
+          role={notice.tone === "error" ? "alert" : "status"}
+          className={
+            notice.tone === "error"
+              ? "rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+              : "rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700"
+          }
+          data-testid="admin-shipping-services-notice"
+        >
+          {notice.text}
+        </p>
+      ) : null}
 
       <Dialog
         open={dialogOpen}
@@ -414,6 +506,7 @@ export function ShippingServicesScreen() {
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                inputMode="numeric"
                 dir="ltr"
               />
             </label>
@@ -438,9 +531,9 @@ export function ShippingServicesScreen() {
                   key={lang.languageId}
                   type="button"
                   role="tab"
-                  aria-selected={langTab === lang.languageId}
+                  aria-selected={activeLanguageId === lang.languageId}
                   className={
-                    langTab === lang.languageId
+                    activeLanguageId === lang.languageId
                       ? "rounded-full bg-blue-600 px-3 py-1 text-[11px] font-bold text-white"
                       : "rounded-full border border-gray-200 px-3 py-1 text-[11px] font-semibold text-gray-600"
                   }
@@ -502,17 +595,23 @@ export function ShippingServicesScreen() {
                       </label>
                       <label className="block space-y-1">
                         <span className="text-[11px] font-bold text-gray-600">
-                          نام ({languages.find((l) => l.languageId === langTab)?.nativeName || "زبان"})
+                          نام ({languages.find((l) => l.languageId === activeLanguageId)?.nativeName || "زبان"})
                         </span>
                         <input
-                          value={option.translations.find((t) => t.languageId === langTab)?.name ?? ""}
+                          value={option.translations.find((t) => t.languageId === activeLanguageId)?.name ?? ""}
                           onChange={(e) => setOptions((prev) => prev.map((o, i) => {
                             if (i !== index) return o;
+                            const next = e.target.value;
+                            const hasActiveLanguage = o.translations.some(
+                              (t) => t.languageId === activeLanguageId,
+                            );
                             return {
                               ...o,
-                              translations: o.translations.map((t) => (
-                                t.languageId === langTab ? { ...t, name: e.target.value } : t
-                              )),
+                              translations: hasActiveLanguage
+                                ? o.translations.map((t) => (
+                                  t.languageId === activeLanguageId ? { ...t, name: next } : t
+                                ))
+                                : [...o.translations, { languageId: activeLanguageId, name: next }],
                             };
                           }))}
                           className="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm"
@@ -544,7 +643,18 @@ export function ShippingServicesScreen() {
             )}
           </div>
 
-          {message ? <p className="text-xs font-semibold text-red-600">{message}</p> : null}
+          {formIssues.length > 0 ? (
+            <ul
+              className="space-y-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700"
+              data-testid="admin-shipping-service-form-errors"
+            >
+              {formIssues.map((issue) => (
+                <li key={`${issue.field}-${issue.optionIndex ?? "service"}-${issue.message}`}>
+                  {issue.message}
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
           <div className="flex justify-end gap-2 border-t border-gray-100 pt-3">
             <button
@@ -556,7 +666,7 @@ export function ShippingServicesScreen() {
             </button>
             <button
               type="button"
-              disabled={saving || !code.trim()}
+              disabled={saving}
               className="rounded-lg bg-[#2563EB] px-3 py-2 text-sm font-bold text-white disabled:opacity-50"
               onClick={() => void save()}
             >
