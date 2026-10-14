@@ -47,6 +47,19 @@ import {
   type StorefrontShippingProjection,
 } from "./storefront-shipping-api.ts";
 import { useCheckoutAuthGate } from "./use-checkout-auth-gate.ts";
+import {
+  loadStorefrontGeographyAreas,
+  loadStorefrontGeographyCities,
+  loadStorefrontGeographyCountries,
+  type StorefrontGeographyPlace,
+} from "./storefront-geography-api.ts";
+import {
+  buildDestinationIdentifiers,
+  findCountryByCode,
+  matchAreaForLegacyProvince,
+  matchCityInArea,
+  type GeographyDestinationIdentifiers,
+} from "./storefront-shipping-destination-model.ts";
 
 type AddressForm = {
   firstName: string;
@@ -110,7 +123,20 @@ export function StorefrontShopeivaShipping() {
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [newAddress, setNewAddress] = useState<AddressForm>(emptyAddress);
 
-  const refreshProjection = useCallback(async (province?: string, method?: string | null, city?: string) => {
+  // انتخاب مکانی مبتنی بر Geography: شناسهٔ پایدار کشور و ناحیه‌های اداری از مسیر عمومی خوانده می‌شود.
+  // استان نمایشی همان کاتالوگ قدیمی می‌ماند تا `provinceName` (که قیمت/eligibility قدیمی را تعیین
+  // می‌کند) دست‌نخورده بماند؛ Geography فقط هویت پایدار و فهرست شهر واقعی همان استان را اضافه می‌کند.
+  const [geoCountryId, setGeoCountryId] = useState<string | null>(null);
+  const [geoAreas, setGeoAreas] = useState<StorefrontGeographyPlace[]>([]);
+  const [geoCities, setGeoCities] = useState<StorefrontGeographyPlace[]>([]);
+  const LEGACY_STOREFRONT_COUNTRY = "IR";
+
+  const refreshProjection = useCallback(async (
+    province?: string,
+    method?: string | null,
+    city?: string,
+    destination?: GeographyDestinationIdentifiers | null,
+  ) => {
     const cart = await loadStorefrontCart();
     if (!cart?.cartId) {
       setError("سبد خرید پیدا نشد.");
@@ -121,6 +147,7 @@ export function StorefrontShopeivaShipping() {
       cartId: cart.cartId,
       provinceName: province || undefined,
       cityName: city || undefined,
+      destination: destination ?? null,
       methodCode: method || undefined,
     });
     setProjection(page);
@@ -170,10 +197,85 @@ export function StorefrontShopeivaShipping() {
 
   const provinces: StorefrontProvinceOption[] = projection?.provinces ?? [];
   const provinceOptions = provinces.map((p) => ({ value: p.label, label: p.label, cities: p.cities }));
+
+  // --- Geography-backed destination identity (067) ----------------------------------------------
+  // کشور پایهٔ فروشگاه (ایران) با تطبیق دقیق کد؛ سپس ناحیهٔ اداری منطبق با استان انتخاب‌شده، و در
+  // نهایت شهرهای همان ناحیه. هر مرحله فقط با شناسهٔ پایدار کار می‌کند و هیچ‌جا حدس زده نمی‌شود.
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const countries = await loadStorefrontGeographyCountries();
+      if (!active) return;
+      const country = countries.state === "ok"
+        ? findCountryByCode(countries.data, LEGACY_STOREFRONT_COUNTRY)
+        : null;
+      if (!country) {
+        // خواندن عمومی Geography در دسترس نیست: مسیر قدیمی دست‌نخورده ادامه می‌یابد.
+        setGeoCountryId(null);
+        setGeoAreas([]);
+        return;
+      }
+      setGeoCountryId(country.id);
+      const areas = await loadStorefrontGeographyAreas(country.id);
+      if (!active) return;
+      setGeoAreas(areas.state === "ok" ? areas.data : []);
+    })();
+    return () => { active = false; };
+  }, []);
+
+  const legacyProvinceForSelection = provinces.find(
+    (p) => p.label === address.provinceName || p.code === address.provinceName,
+  ) ?? null;
+
+  const selectedArea = useMemo(
+    () => (geoAreas.length > 0
+      ? matchAreaForLegacyProvince(geoAreas, {
+          code: legacyProvinceForSelection?.code ?? null,
+          label: address.provinceName || null,
+        })
+      : null),
+    [geoAreas, legacyProvinceForSelection, address.provinceName],
+  );
+
+  useEffect(() => {
+    let active = true;
+    if (!geoCountryId || !selectedArea) {
+      setGeoCities([]);
+      return () => { active = false; };
+    }
+    void (async () => {
+      const cities = await loadStorefrontGeographyCities(geoCountryId, selectedArea.id);
+      if (!active) return;
+      setGeoCities(cities.state === "ok" ? cities.data : []);
+    })();
+    return () => { active = false; };
+  }, [geoCountryId, selectedArea]);
+
+  /** شهر انتخاب‌شده در فهرست Geography همان ناحیه؛ ابهام/عدم تطبیق ⇒ null (بدون حدس). */
+  const selectedCity = useMemo(
+    () => (geoCities.length > 0
+      ? matchCityInArea(geoCities, { label: address.cityName || null })
+      : null),
+    [geoCities, address.cityName],
+  );
+
+  const destinationIdentifiers = useMemo(
+    () => buildDestinationIdentifiers({
+      countryId: geoCountryId,
+      area: selectedArea,
+      city: selectedCity,
+    }),
+    [geoCountryId, selectedArea, selectedCity],
+  );
+
+  /** فهرست شهر: اگر Geography برای این استان شهر واقعی داد از آن، وگرنه همان کاتالوگ قدیمی. */
   const cityOptions = useMemo(() => {
+    if (selectedArea && geoCities.length > 0) {
+      return geoCities.map((c) => c.label);
+    }
     const match = provinces.find((p) => p.label === address.provinceName || p.code === address.provinceName);
     return match?.cities ?? [];
-  }, [provinces, address.provinceName]);
+  }, [selectedArea, geoCities, provinces, address.provinceName]);
 
   const selectedMethod = projection?.methods.find((m) => m.methodCode === methodCode) ?? null;
   const shippingAmount = selectedMethod?.priceAmount ?? projection?.selectedShippingAmount ?? 0;
@@ -216,7 +318,7 @@ export function StorefrontShopeivaShipping() {
     setMethodCode(code);
     setError(null);
     try {
-      await refreshProjection(address.provinceName, code, address.cityName);
+      await refreshProjection(address.provinceName, code, address.cityName, destinationIdentifiers);
     } catch (cause) {
       setError(toCustomerShippingMessage(cause, locale));
     }
@@ -462,6 +564,7 @@ export function StorefrontShopeivaShipping() {
                       disabled={!address.provinceName}
                       onChange={(e) => setAddress((a) => ({ ...a, cityName: e.target.value }))}
                       className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                      data-testid="shipping-city-select"
                     >
                       <option value="">{address.provinceName ? "انتخاب شهر" : "ابتدا استان را انتخاب کنید"}</option>
                       {cityOptions.map((c) => (

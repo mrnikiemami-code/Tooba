@@ -1,0 +1,12 @@
+﻿=== TB-SHIPPING-MVP-DESTINATION-LIVE-067 :: Development host identity and controlled restart (2026-10-15T03:17:36.9469785+03:30) ===
+
+--- BEFORE restart ---
+pid=38716 name=Tooba.Host.exe start=10/15/2026 02:27:45
+cmdline="D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe"
+listening: 127.0.0.1:5088 and [::1]:5088 owned by pid 38716 (only Tooba.Host process on this machine)
+
+Reason: the running process hosts the pre-066/pre-067 binary and locks Host output DLLs, so the 067 code cannot be loaded without a controlled restart. Task 067 explicitly authorizes restarting ONLY the positively identified Development host.
+
+--- graceful stop ---
+stop observed=True
+remaining Tooba.Host processes=0

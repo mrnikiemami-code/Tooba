@@ -1,0 +1,56 @@
+﻿=== TB-SHIPPING-MVP-DESTINATION-LIVE-067 :: focused validation (2026-10-15T03:21:20.3295549+03:30) ===
+
+--- 1) dotnet build Tooba.Geography.Endpoints ---
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.85
+
+--- 2) dotnet build Tooba.Host ---
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.05
+
+--- 3) dotnet test Tooba.Shipping.Tests: geography ownership guards ---
+
+Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 6 ms - Tooba.Shipping.Tests.dll (net8.0)
+
+--- 4) dotnet test Tooba.Order.Tests: storefront shipping shadow observer (066 regression) ---
+
+Passed!  - Failed:     0, Passed:    19, Skipped:     0, Total:    19, Duration: 37 ms - Tooba.Order.Tests.dll (net8.0)
+
+--- 5) node --test (new destination model + shipping api + admin picker race) ---
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 119.4979
+
+--- 6) npx tsc --noEmit (src/frontend) ---
+clean (no diagnostics)
+
+--- 7) frontend architecture guards ---
+[frontend-import-boundary.guard.test.ts]
+ℹ tests 1
+ℹ pass 1
+ℹ fail 0
+[frontend-flat-folder.guard.test.ts]
+ℹ tests 2
+ℹ pass 2
+ℹ fail 0
+[frontend-feature-boundary.guard.test.ts]
+ℹ tests 1
+ℹ pass 1
+ℹ fail 0
+[frontend-test-discovery.guard.test.ts]
+ℹ tests 3
+ℹ pass 3
+ℹ fail 0
+
+NOTE: frontend-source-size.guard.test.ts remains a PRE-EXISTING failure in files this task did not touch
+  (category-admin-screen.tsx, admin-landing-page-composer.tsx, storefront-landing-blocks.tsx,
+  shared-composition-renderer.tsx). The baseline was not widened.

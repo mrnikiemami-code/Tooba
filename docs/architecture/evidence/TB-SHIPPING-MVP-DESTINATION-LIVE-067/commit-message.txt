@@ -1,0 +1,7 @@
+TB-SHIPPING-MVP-DESTINATION-LIVE-067: customer-readable Geography ids in the existing storefront shipping projection
+
+- add Geography-owned public read-only storefront routes (countries / administrative-areas / parent-scoped cities); GET only, Contracts-only, no admin authorizer, no service areas
+- register the storefront Geography surface from Host with a single line; admin geography read untouched
+- read the public Geography catalogue from the customer shipping screen and resolve IR/province/city to stable ids by exact code/label only (ambiguity and inconsistent hierarchy collapse to null)
+- carry cityName + validated DestinationIdentifiers through the existing projection body while keeping the legacy province label and the whole legacy quote path unchanged
+- focused tests: valid city path, old client, malformed hierarchy, ambiguity/fuzzy rejection; ownership guards for the new public surface

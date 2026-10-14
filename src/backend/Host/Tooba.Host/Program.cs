@@ -57,6 +57,7 @@ using Tooba.UserPreference.Endpoints;
 using Tooba.OperatorProfile.Endpoints;
 using Tooba.Localization.Endpoints;
 using Tooba.Geography.Endpoints.Admin;
+using Tooba.Geography.Endpoints.Storefront;
 using Tooba.Shipping.Endpoints.Admin;
 using Tooba.Support.Endpoints;
 using Tooba.Wallet.Endpoints;
@@ -450,6 +451,7 @@ app.MapStoryModuleEndpoints();
 app.MapPromotionEndpoints();
 app.MapShippingEndpoints();
 app.MapGeographyEndpoints();
+app.MapGeographyStorefrontEndpoints();
 
 HostHealthEndpoints.Map(app, enableCors: true);
 

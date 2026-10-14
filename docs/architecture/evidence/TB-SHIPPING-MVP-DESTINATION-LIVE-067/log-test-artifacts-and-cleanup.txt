@@ -1,0 +1,19 @@
+﻿=== task-owned test artifacts and cleanup ===
+
+Proof customer identifiers created (additive rows only; no existing row was read-modify-written):
+  - 067.probe.20261015031909@tooba.local (registration probe; login probe only)
+  - 067.probe.20261015032043@tooba.local (add-line attempt that returned cart.version.conflict; no line written)
+  - 067.probe.20261015032058@tooba.local (the successful live proof session)
+  - 067.cleanup.20261015032111@tooba.local (this cleanup session)
+  All are disposable development customers in the authorized Development database tooba_alpha.
+
+Carts created by the proof sessions are guest carts owned by those customers; the only cart line was added to
+  the successful proof cart. It is a disposable Active dev cart and is not attached to any order.
+
+No order was placed, no payment was made, no pre-existing cart/order/customer/shipping row was modified.
+No Shipping rate policy or coverage grant was created, enabled or changed.
+No migration, schema change, seed change or appsettings change was made.
+
+Cleanup: cleanup session 067.cleanup.20261015032111@tooba.local authenticated successfully above (proving the canonical flow is repeatable).
+The disposable rows are left in place deliberately: the platform exposes no customer-delete surface, and deleting
+directly in the database would exceed this task's write authority. They are inert dev data.

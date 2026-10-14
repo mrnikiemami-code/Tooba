@@ -1,0 +1,27 @@
+﻿register 201 userId=01a13cd3-8a0e-7000-9c75-a63767112b17
+login 200 sessionId=01a13cd3-8a79-7000-99ac-18419675ae7b
+cart 01a13cd3-8a82-7000-bfb0-bd08ad52073e version=1 currency=IRR
+
+--- add line ---
+added version=3 itemCount=1 lines=1
+
+--- projection BEFORE (legacy province only, old-client shape) ---
+methods=5 codes=post:standard:120000,tipax:express:260000,tipax:standard:180000,store_courier:75000,in_person:0
+selected= amount=0 min= subtotal=8702542.0000000000
+provinces=12
+
+--- projection AFTER (validated country+area+city ids from the live public Geography read) ---
+methods=5 codes=post:standard:120000,tipax:express:260000,tipax:standard:180000,store_courier:75000,in_person:0
+selected= amount=0 min= subtotal=8702542.0000000000
+provinces=12
+
+--- projection with MALFORMED city id (must not become a trusted identity) ---
+methods=5 selected= amount=0
+
+--- legacy quote invariance (BEFORE vs AFTER) ---
+identical projection payload: True
+
+--- task-owned artifacts ---
+disposable customer: 067.probe.20261015032058@tooba.local (created for this proof only)
+disposable cart: 01a13cd3-8a82-7000-bfb0-bd08ad52073e
+no order placed, no payment made

@@ -1,0 +1,13 @@
+﻿=== attempt: canonical customer session + authenticated cart projection (through the same-origin flow) ===
+
+disposable customer identifier: 067.probe.20261015031909@tooba.local (task-owned; no existing data mutated)
+
+register => 201
+{"userId":"01a13cd1-e034-7000-8d1b-d7e4e6f142e7"}
+
+login => 200
+{"userId":"01a13cd1-e034-7000-8d1b-d7e4e6f142e7","sessionId":"01a13cd1-e0e0-7000-8f00-f01ec50c479c","accessToken":"01a13cd1-e0e0-7000-8f00-f01ec50c479c","refreshToken":"GyrcmwYkfunOR2pAoPipFqdM7Sadkam49FiW60AZs8E="}
+cookies: 
+
+GET /v1/auth/me:
+  401 {"type":"about:blank","title":"Unauthorized","status":401,"instance":"/v1/auth/me","errorCode":"identity.session.invalid","traceId":"a7fdf290213572b4a23b35e6dc897305","correlationId":"6fd66f303e064a9da7caed5a04597956","requestId":"0HNPA9MD0TB2H:00000003"}

@@ -276,6 +276,11 @@ export async function loadShippingProjection(input: {
   cartId: string;
   provinceName?: string;
   cityName?: string;
+  destination?: {
+    countryId: string;
+    administrativeAreaId?: string | null;
+    cityId?: string | null;
+  } | null;
   methodCode?: string;
 }): Promise<StorefrontShippingProjection> {
   const response = await fetch("/v1/storefront/shipping/projection", {
@@ -290,6 +295,13 @@ export async function loadShippingProjection(input: {
       cartId: input.cartId,
       provinceName: input.provinceName || null,
       cityName: input.cityName || null,
+      destination: input.destination
+        ? {
+            countryId: input.destination.countryId,
+            administrativeAreaId: input.destination.administrativeAreaId || null,
+            cityId: input.destination.cityId || null,
+          }
+        : null,
       methodCode: input.methodCode || null,
       language: "fa",
     }),
