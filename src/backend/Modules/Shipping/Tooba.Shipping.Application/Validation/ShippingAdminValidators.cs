@@ -46,6 +46,12 @@ public static class ShippingValidationCodes
 
     /// <summary>کد خدمت بدنه با کد خدمت مسیر یکسان نیست.</summary>
     public const string BodyServiceCodeMismatch = "shipping.validation.body_service_code_mismatch";
+
+    /// <summary>
+    /// بدنهٔ درخواست خوانا نیست: JSON نامعتبر، contentType غیر-JSON، شناسهٔ نامعتبر/تهی یا بدنهٔ
+    /// کاملاً غایب. ورودی سطح کلاینت است و باید ۴۰۰ اعلام‌شده بدهد، نه خطای بستر.
+    /// </summary>
+    public const string BodyInvalid = "shipping.validation.body_invalid";
 }
 
 /// <summary>

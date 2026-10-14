@@ -1,11 +1,8 @@
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Tooba.Localization.Application.Composition;
-using Tooba.Localization.Application.Models;
-using Tooba.Localization.Application.Ports;
-using Tooba.Localization.Infrastructure.Persistence;
+using Tooba.BuildingBlocks;
 
 namespace Tooba.Localization.Infrastructure.Bootstrap;
 
@@ -26,10 +23,18 @@ public sealed class LanguageBootstrapHostedService : IHostedService
         try
         {
             using var scope = _scopeFactory.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<LocalizationDbContext>();
-            await db.Database.MigrateAsync(cancellationToken);
-            var directory = scope.ServiceProvider.GetRequiredService<ILanguageDirectory>();
-            await directory.BootstrapAsync(cancellationToken);
+            await LanguageBootstrapRunner.MigrateAndSeedAsync(scope.ServiceProvider, cancellationToken);
+        }
+        catch (PlatformHttpException ex) when (ex.StatusCode == StatusCodes.Status503ServiceUnavailable)
+        {
+            // در استارت میزبان هیچ زمینهٔ تجاری درخواستی تثبیت نشده است، پس resolve کردن اتصال
+            // به‌درستی fail-closed می‌شود. این وضعیت «خطای نامنتظر» نیست: در Development گام
+            // مالک Localization (LanguageBootstrapDevelopmentSeed.PostMigration) دانه را داخل
+            // scope تثبیت‌شده اجرا می‌کند و این سرویس دیگر هشدار کاذب تولید نمی‌کند.
+            _logger.LogInformation(
+                ex,
+                "Language bootstrap skipped: no commerce context is bound at host startup. "
+                + "Development initialization order is owned by the Localization post-migration seed step.");
         }
         catch (Exception ex)
         {

@@ -1,8 +1,12 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using System.Text.Json;
+using FluentValidation;
+using FluentValidation.Results;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.Shipping.Application.Rates.Commands;
+using Tooba.Shipping.Application.Validation;
 using Tooba.Shipping.Contracts.Admin;
 
 namespace Tooba.Shipping.Endpoints.Admin;
@@ -38,6 +42,12 @@ public static class ShippingAdminPermissions
 /// <summary>مارس‌کنندهٔ نرخ و پوشش ارسال؛ فقط شکل HTTP را به پیام می‌نگارد.</summary>
 public static class ShippingRateCoverageEndpoints
 {
+    /// <summary>
+    /// کلید فیلد بدنه در پوشش اعتبارسنجی. یک بدنهٔ خوانانشدنی به هیچ خصیصهٔ خاصی نسبت داده
+    /// نمی‌شود، پس با همان کلید عمومی <c>request</c> گزارش می‌شود.
+    /// </summary>
+    private const string BodyField = "request";
+
     /// <summary>مسیرهای نویسندگی نرخ/پوشش را زیر گروه ادمین می‌نگارد.</summary>
     /// <param name="group">گروه مسیر ادمین.</param>
     public static void Map(RouteGroupBuilder group)
@@ -67,7 +77,6 @@ public static class ShippingRateCoverageEndpoints
 
     private static async Task<IResult> CreateRateAsync(
         string serviceCode,
-        ShippingRatePolicyWriteRequest body,
         MediatR.ISender sender,
         IShippingAdminAuthorizer authorizer,
         ApiResponseFactory api,
@@ -75,6 +84,12 @@ public static class ShippingRateCoverageEndpoints
         CancellationToken cancellationToken)
     {
         await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ReadBodyAsync<ShippingRatePolicyWriteRequest>(context, api, cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
         return api.From(await sender.Send(
             new CreateShippingRatePolicyCommand(serviceCode, body),
             cancellationToken));
@@ -83,7 +98,6 @@ public static class ShippingRateCoverageEndpoints
     private static async Task<IResult> UpdateRateAsync(
         string serviceCode,
         Guid ratePolicyId,
-        ShippingRatePolicyWriteRequest body,
         MediatR.ISender sender,
         IShippingAdminAuthorizer authorizer,
         ApiResponseFactory api,
@@ -91,6 +105,12 @@ public static class ShippingRateCoverageEndpoints
         CancellationToken cancellationToken)
     {
         await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ReadBodyAsync<ShippingRatePolicyWriteRequest>(context, api, cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
         return api.From(await sender.Send(
             new UpdateShippingRatePolicyCommand(ratePolicyId, serviceCode, body),
             cancellationToken));
@@ -99,7 +119,6 @@ public static class ShippingRateCoverageEndpoints
     private static async Task<IResult> SetRateActiveAsync(
         string serviceCode,
         Guid ratePolicyId,
-        ShippingRatePolicyActiveRequest body,
         MediatR.ISender sender,
         IShippingAdminAuthorizer authorizer,
         ApiResponseFactory api,
@@ -107,6 +126,12 @@ public static class ShippingRateCoverageEndpoints
         CancellationToken cancellationToken)
     {
         await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ReadBodyAsync<ShippingRatePolicyActiveRequest>(context, api, cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
         return api.From(await sender.Send(
             new SetShippingRatePolicyActiveCommand(ratePolicyId, serviceCode, body.IsActive),
             cancellationToken));
@@ -114,7 +139,6 @@ public static class ShippingRateCoverageEndpoints
 
     private static async Task<IResult> CreateGrantAsync(
         string serviceCode,
-        ShippingCoverageGrantWriteRequest body,
         MediatR.ISender sender,
         IShippingAdminAuthorizer authorizer,
         ApiResponseFactory api,
@@ -122,6 +146,12 @@ public static class ShippingRateCoverageEndpoints
         CancellationToken cancellationToken)
     {
         await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ReadBodyAsync<ShippingCoverageGrantWriteRequest>(context, api, cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
         return api.From(await sender.Send(
             new CreateShippingCoverageGrantCommand(serviceCode, body),
             cancellationToken));
@@ -130,7 +160,6 @@ public static class ShippingRateCoverageEndpoints
     private static async Task<IResult> SetGrantActiveAsync(
         string serviceCode,
         Guid coverageGrantId,
-        ShippingCoverageGrantActiveRequest body,
         MediatR.ISender sender,
         IShippingAdminAuthorizer authorizer,
         ApiResponseFactory api,
@@ -138,10 +167,67 @@ public static class ShippingRateCoverageEndpoints
         CancellationToken cancellationToken)
     {
         await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ReadBodyAsync<ShippingCoverageGrantActiveRequest>(context, api, cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
         return api.From(await sender.Send(
             new SetShippingCoverageGrantActiveCommand(coverageGrantId, serviceCode, body.IsActive),
             cancellationToken));
     }
+
+    /// <summary>
+    /// بدنه را می‌خواند و اگر بدنهٔ ارسالی خوانا نباشد (JSON نامعتبر، contentType غیر-JSON،
+    /// شناسهٔ نامعتبر/تهی یا بدنهٔ کاملاً غایب) شکست اعتبارسنجی اعلام‌شده می‌سازد.
+    /// </summary>
+    /// <remarks>
+    /// مرز اتصال پیش‌فرض بدنه را پیش از اجرای handler تفسیر می‌کند؛ شکست تفسیر به‌صورت
+    /// <c>BadHttpRequestException</c> از کنترل خارج می‌شد و در handler سراسری به
+    /// <c>platform.unexpected</c> ۵۰۰ نگاشت می‌گشت. ورودی بدشکل، خطای سطح کلاینت است: اینجا
+    /// به همان پوشش اعلام‌شدهٔ <c>validation.failed</c> (۴۰۰) با کد فرزند پایدار تبدیل می‌شود و
+    /// هیچ خطای واقعی زیرساخت/برنامه‌نویسی پوشانده نمی‌شود.
+    /// </remarks>
+    private static async Task<(T Body, IResult? Failure)> ReadBodyAsync<T>(
+        HttpContext context,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken)
+        where T : class
+    {
+        var body = await TryReadBodyAsync<T>(context, cancellationToken);
+        return body is null
+            ? (default!, api.FromException(InvalidBodyException()))
+            : (body, null);
+    }
+
+    private static async Task<T?> TryReadBodyAsync<T>(HttpContext context, CancellationToken cancellationToken)
+        where T : class
+    {
+        if (!context.Request.HasJsonContentType())
+        {
+            return null;
+        }
+
+        try
+        {
+            return await context.Request.ReadFromJsonAsync<T>(cancellationToken);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+        catch (BadHttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    private static ValidationException InvalidBodyException() =>
+        new([new ValidationFailure(BodyField, ShippingValidationCodes.BodyInvalid)
+        {
+            ErrorCode = ShippingValidationCodes.BodyInvalid,
+        }]);
 }
 
 /// <summary>ترکیب نازک HTTP برای Shipping: نگاشت مسیر و ثبت وابستگی‌های لایهٔ ارائه.</summary>
