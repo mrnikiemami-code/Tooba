@@ -1,0 +1,8 @@
+﻿=== SEED RUN 2 (idempotency: expect 0 new rows, same shape) ===
+                                          ?column?                                          
+--------------------------------------------------------------------------------------------
+ countries=1 areas=12 cities=47 service_areas=0 country_names=1 area_names=12 city_names=47
+(1 row)
+
+EXIT=0
+after_rerun: countries=1 areas=12 cities=47 translations=60

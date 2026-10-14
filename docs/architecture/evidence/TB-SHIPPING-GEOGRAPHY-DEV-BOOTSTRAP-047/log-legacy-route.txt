@@ -1,0 +1,11 @@
+﻿=== legacy route runtime check (read-only GET on the RUNNING dev Host, pre-existing binary) ===
+HTTP 200
+[{"code":"tehran","label":"تهران","cities":["تهران","ری","شهریار","اسلامشهر","ملارد","پاکدشت"]},{"code":"alborz","label":"البرز","cities":["کرج","فردیس","نظرآباد","ساوجبلاغ"]},{"code":"isfahan","label":"اصفهان","cities":["اصفهان","کاشان","خمینی‌شهر","شاهین‌شهر","نجف‌آباد"]},{"code":"razavi_khorasan","label":"خراسان رضوی","cities":["مشهد","نیشابور","سبزوار","تربت حیدریه"]},{"code":"fars","label":"فارس","cities":["شیراز","مرودشت","جهرم","فسا","کازرون"]},{"code":"east_azerbaijan","label":"آذربایجان شرقی","cities":["تبریز","مرند","مراغه","اهر"]},{"code":"khuzestan","label":"خوزستان","cities":["اهواز","آبادان","دزفول","بندر ماهشهر"]},{"code":"mazandaran","label":"مازندران","cities":["ساری","بابل","آمل","قائم‌شهر"]},{"code":"gilan","label":"گیلان","cities":["رشت","بندرانزلی","لاهیجان","رودسر"]},{"code":"qom","label":"قم","cities":["قم"]},{"code":"yazd","label":"یزد","cities":["یزد","اردکان","میبد"]},{"code":"kerman","label":"کرمان","cities":["کرمان","رفسنجان","سیرجان"]}]
+province_count=0
+province_codes=,,,,,,,,,,,
+city_count=0
+legacy_provinces=12
+legacy_cities=47
+db_areas=12
+db_cities=47
+legacy_vs_seed_mismatches=0

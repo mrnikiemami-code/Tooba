@@ -1,0 +1,62 @@
+﻿=== POST-BOOTSTRAP VERIFICATION (local DEV db; probes rolled back + self-cleaning) ===
+                                               ?column?                                               
+------------------------------------------------------------------------------------------------------
+ V1 shape: countries=1 areas=12 cities=47 service_areas=0 country_names=1 area_names=12 city_names=47
+(1 row)
+
+            ?column?             
+---------------------------------
+ V2 country: code=IR active=true
+(1 row)
+
+                      ?column?                       
+-----------------------------------------------------
+ V3 area_roots=12 areas_with_parent=0 self_parents=0
+(1 row)
+
+                                            ?column?                                            
+------------------------------------------------------------------------------------------------
+ V4 cities_without_area=0 cross_country_city_area=0 cities_per_area_min=1 cities_per_area_max=6
+(1 row)
+
+                                     ?column?                                      
+-----------------------------------------------------------------------------------
+ V5 distinct_area_codes=12 distinct_city_codes=47 ascii_codes=47 non_ascii_codes=0
+(1 row)
+
+                                       ?column?                                        
+---------------------------------------------------------------------------------------
+ V6 language_code=fa-IR is_default=true area_labels=12 city_labels=47 country_labels=1
+(1 row)
+
+           ?column?            
+-------------------------------
+ V6b non_persian_area_labels=0
+(1 row)
+
+            ?column?             
+---------------------------------
+ V7 ancestry_function=1 guards=2
+(1 row)
+
+                   ?column?                    
+-----------------------------------------------
+ V8 cities.administrative_area_id nullable=YES
+(1 row)
+
+docker : psql:/tmp/geo047-verify.sql:99: NOTICE:  V9 self_parent -> sqlstate=23514
+At C:\Users\User\AppData\Local\Temp\ps-script-e3259304-ef3c-4144-87b9-5951ecfaa6fa.ps1:96 char:328
++ ... erify.txt"; docker exec postgres-db psql -U admin -d tooba_alpha -v O ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (psql:/tmp/geo04... sqlstate=23514:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+psql:/tmp/geo047-verify.sql:99: NOTICE:  V10 city_cross_country_area -> sqlstate=23503
+psql:/tmp/geo047-verify.sql:99: NOTICE:  V11 duplicate_city_label -> sqlstate=23505
+psql:/tmp/geo047-verify.sql:99: NOTICE:  V12 delete_country_with_places -> sqlstate=23503
+                                      ?column?                                      
+------------------------------------------------------------------------------------
+ V13 probe_residue=0 countries=1 areas=12 cities=47 service_areas=0 translations=60
+(1 row)
+
+EXIT=0

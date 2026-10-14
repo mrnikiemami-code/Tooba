@@ -1,0 +1,11 @@
+﻿=== pre-existing dirty tracked files (NOT touched by this task; mtime predates task claim 12:55Z) ===
+ M docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md
+ M src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs
+ M src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx
+ M src/frontend/app/admin/admin-order-detail-screen.tsx
+ M src/frontend/app/storefront/storefront-landing-blocks.tsx
+docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md :: last write 10/12/2026 22:02:58
+src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs :: last write 10/12/2026 22:02:58
+src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx :: last write 10/13/2026 16:35:45
+src/frontend/app/admin/admin-order-detail-screen.tsx :: last write 10/12/2026 22:02:58
+src/frontend/app/storefront/storefront-landing-blocks.tsx :: last write 10/12/2026 22:02:58

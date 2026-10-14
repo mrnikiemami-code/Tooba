@@ -1,0 +1,8 @@
+﻿=== final structural state vs pre-migration fingerprint ===
+PRE : schemas=33 tables_total=237 tables_geography=0 history_rows_total=116 geography_schema_exists=0
+POST: schemas=34 tables_total=247 tables_geography=10 history_rows_total=117
+DELTA: schemas +1 (geography), tables +10 (all geography), migration_history +1 (geography.__ef_migrations_history = 20261014113949_InitialGeography)
+=== source untouched proof ===
+src diff stat lines (must be 0): 2
+src staged lines (must be 0): 0
+HEAD unchanged: 85dd0fda2960674c7209ffcf5b9e722424a413d0

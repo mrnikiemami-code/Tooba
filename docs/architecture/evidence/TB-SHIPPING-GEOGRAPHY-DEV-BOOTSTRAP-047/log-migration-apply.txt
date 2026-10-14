@@ -1,0 +1,12 @@
+﻿=== TARGET: local DEV tenant database (store-alpha) via dedicated EF Geography-scoped context only ===
+=== pending state before apply (EF list) ===
+Build started...
+Build succeeded.
+20261014113949_InitialGeography (Pending)
+=== apply: dotnet ef database update (Geography context only) ===
+Build started...
+Build succeeded.
+Applying migration '20261014113949_InitialGeography'.
+Done.
+EXIT=0 ELAPSED_SECONDS=2.8
+

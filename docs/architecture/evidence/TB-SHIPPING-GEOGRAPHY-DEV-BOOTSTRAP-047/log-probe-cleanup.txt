@@ -1,0 +1,4 @@
+﻿=== probe residue cleanup (my own verification artifact only) ===
+before: probe_rows=1
+DELETE 1
+after: probe_rows=0 cities=47 areas=12

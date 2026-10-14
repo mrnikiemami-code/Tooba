@@ -1,0 +1,6 @@
+﻿=== PRE-MIGRATION STRUCTURAL FINGERPRINT (read-only) ===
+schemas=33
+tables_total=237
+tables_geography=0
+history_rows_total=116
+geography_schema_exists=0

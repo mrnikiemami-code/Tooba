@@ -1,0 +1,7 @@
+﻿=== SEED RUN 1 (local DEV tenant db tooba_alpha) ===
+                                          ?column?                                          
+--------------------------------------------------------------------------------------------
+ countries=1 areas=12 cities=47 service_areas=0 country_names=1 area_names=12 city_names=47
+(1 row)
+
+EXIT=0

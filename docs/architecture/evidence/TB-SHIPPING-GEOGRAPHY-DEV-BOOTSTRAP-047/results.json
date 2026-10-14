@@ -1,0 +1,102 @@
+{
+  "taskId": "TB-SHIPPING-GEOGRAPHY-DEV-BOOTSTRAP-047",
+  "parentTask": "TB-SHIPPING-GEOGRAPHY-RUNNER-VERIFY-046",
+  "channel": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "mode": "BOUNDED_GEOGRAPHY_DEVELOPMENT_BOOTSTRAP_ONLY",
+  "status": "PASS",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "expectedBaseSha": "85dd0fda2960674c7209ffcf5b9e722424a413d0",
+  "codeSha": "NONE",
+  "elapsedMinutesApprox": 17,
+  "destinationProof": {
+    "database": "tooba_alpha",
+    "tenant": "store-alpha",
+    "endpoint": "127.0.0.1:5432",
+    "container": "postgres-db (postgres:17)",
+    "role": "admin",
+    "configurationSource": "src/backend/Host/Tooba.Host/appsettings.Development.json (only file naming tooba_alpha)",
+    "liveProcessEvidence": "running Tooba.Host PID 37028 (http://localhost:5088) holds idle connections to tooba_alpha in pg_stat_activity from 172.18.0.1",
+    "excludedDatabases": ["tooba_marketplace", "tooba_disabled", "tooba_codex_dev", "tooba_easy_test", "tooba_first_test", "MyDatabase", "ShopDb", "TravelCore", "sarvdb", "travelcore"],
+    "productionEvidence": "appsettings.json and appsettings.Production.json carry empty ConnectionReferences and no tenant list"
+  },
+  "backup": {
+    "method": "pg_dump -Fc",
+    "createdAtUtc": "2026-10-14T12:57:08Z",
+    "bytes": 2392659,
+    "sha256": "e5036fe7c726f9afa47af73cbc21b9ccd48f8b4588a5b48739967b697458dad2",
+    "tocEntries": 1088,
+    "restorabilityChecked": "pg_restore -l (no error)",
+    "keptOutsideRepository": true
+  },
+  "preState": {
+    "schemas": 33,
+    "tablesTotal": 237,
+    "tablesGeography": 0,
+    "geographySchemaExists": false,
+    "migrationHistoryRowsTotal": 116
+  },
+  "ddl": {
+    "operation": "dotnet ef database update (design-time connection to tooba_alpha; Geography context only)",
+    "migration": "20261014113949_InitialGeography",
+    "pendingBefore": true,
+    "exitCode": 0,
+    "seconds": 2.8,
+    "runnerApplyUsed": false,
+    "hostRestarted": false
+  },
+  "postState": {
+    "schemas": 34,
+    "tablesTotal": 247,
+    "tablesGeography": 10,
+    "migrationHistoryRowsTotal": 117,
+    "geographyHistory": ["20261014113949_InitialGeography"],
+    "geographyTriggers": ["trg_administrative_areas_ancestry_guard_insert", "trg_administrative_areas_ancestry_guard_update"],
+    "delta": "+1 schema (geography), +10 tables (all geography), +1 migration history row, 0 changes elsewhere"
+  },
+  "seed": {
+    "generator": "seed-generate.ps1 (parses StorefrontIranGeography.Provinces verbatim; self-tests UUIDv5 against the RFC vector)",
+    "script": "seed-geography.sql",
+    "idScheme": "RFC 4122 UUIDv5 over the DNS namespace with ASCII name strings (seed-id-map.txt)",
+    "cityCodeScheme": "positional IR-<legacy province code>-<NN> (legacy catalogue has no city codes; transliteration would be a guess)",
+    "languageSource": "read-only SELECT of localization.languages code='fa-IR'",
+    "rowsApplied": { "countries": 1, "administrativeAreas": 12, "cities": 47, "serviceAreas": 0, "translations": 60 },
+    "provincesAreRoots": true,
+    "idempotentRerun": "inserted 0 rows, identical shape",
+    "failLoudGuards": ["GEO047_LANGUAGE_MISSING", "GEO047_AMBIGUOUS_COUNTRY", "GEO047_AMBIGUOUS_AREA", "GEO047_AMBIGUOUS_CITY", "GEO047_CONFLICTING_*_LABEL", "GEO047_POST_*"]
+  },
+  "verification": {
+    "shape": { "countries": 1, "areas": 12, "cities": 47, "serviceAreas": 0, "translations": 60 },
+    "parentIntegrity": { "areaRoots": 12, "areasWithParent": 0, "selfParents": 0 },
+    "cityAreaIntegrity": { "citiesWithoutArea": 0, "crossCountryCityArea": 0, "minCitiesPerArea": 1, "maxCitiesPerArea": 6 },
+    "codes": { "distinctAreaCodes": 12, "distinctCityCodes": 47, "nonAsciiCodes": 0 },
+    "labels": { "language": "fa-IR", "isDefault": true, "nonPersianAreaLabels": 0 },
+    "constraintProbes": { "selfParentSqlstate": "23514", "crossCountryCityAreaSqlstate": "23503", "duplicateCityLabelSqlstate": "23505", "deleteCountryWithPlacesSqlstate": "23503", "probeResidue": 0 },
+    "schemaFactNotTightened": "cities.administrative_area_id is nullable by design (CitySnapshot.AdministrativeAreaId is Guid?)",
+    "legacyRouteRuntimeCheck": {
+      "request": "GET http://127.0.0.1:5088/v1/storefront/geography/provinces (running pre-change Host binary)",
+      "httpStatus": 200,
+      "legacyProvinces": 12,
+      "legacyCities": 47,
+      "mismatchesAgainstSeededRows": 0
+    },
+    "checkoutOrPaymentExercised": false,
+    "sourceFilesChanged": 0
+  },
+  "limitations": [
+    "HostStorefrontAmcR3GuardTests could not be executed: the running Host locks Tooba.Host/bin/Debug/net8.0 (MSB3027/MSB3021); redirecting test output outside the repo makes all 7 tests fail in 18ms with 'Repository root not found' (harness artifact). The Host was not restarted, per task prohibition.",
+    "One verification probe asserted the wrong expectation and was not rolled back; it was detected by the run's own residue query, deleted immediately, and the script now self-cleans (residue 0).",
+    "MigrationRunner apply remains unusable for a single module (no --module selector, proven in 046).",
+    "Geographic read path is still not composed into the running Host binary, so seeded data is not yet served."
+  ],
+  "rollback": {
+    "preciseSchemaOnly": "drop schema geography cascade;  -- returns to the recorded pre-state (33 schemas / 237 tables / 116 history rows)",
+    "dataOnly": "delete translations, then cities, then administrative_areas, then countries",
+    "fullFallback": "restore tooba_alpha_pre047.dump (sha256 e5036fe7...dad2)",
+    "note": "dotnet ef database update 0 alone leaves the empty geography schema and emptied history table (measured in 046)"
+  },
+  "recommendedNextTask": {
+    "id": "TB-SHIPPING-GEOGRAPHY-READ-ACTIVATION-BOUNDARY-048",
+    "scope": "bounded activation path for the seeded catalogue: composition/registration change needed for IGeographyLookup/IGeographyLabelLookup to be served, Host restart/redeploy window with rollback, explicit Architect authorization, and proof the legacy provinces route and its guard stay untouched. No checkout cutover, no coverage semantics."
+  }
+}
