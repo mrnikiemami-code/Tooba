@@ -7,6 +7,7 @@
 | Repository / Branch | `mrnikiemami-code/Tooba` / `main` |
 | Expected-Base-SHA | `5e07617c04c4098efb7d1a4af99f5d6a619c8448` |
 | Base-SHA (verified `HEAD == origin/main`) | `5e07617c04c4098efb7d1a4af99f5d6a619c8448` |
+| Code-SHA / Evidence-SHA | `c316c7f46d2ba55226bdcc8dc5157833bda82263` |
 | Parent task | `TB-SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044` |
 | Mode | `BOUNDED_GEOGRAPHY_MIGRATION_METADATA_NO_APPLY` |
 | Status | `PASS` |
@@ -100,8 +101,8 @@ Consequence to be explicit about: the next explicit `Tooba.MigrationRunner apply
 
 ## 6. Time, commit, push
 
-- Claim `12:23:29Z` → validated push: see the Result block (≈**14 minutes** of the 30-minute hard timebox).
-- Task-owned paths only; `git push origin main`; `git fetch origin`; `HEAD == origin/main` verified.
+- Claim `12:23:29Z` → validated push `12:28:41Z`: **≈5 minutes** of the 30-minute hard timebox.
+- One bounded commit of task-owned paths only: `c316c7f46d2ba55226bdcc8dc5157833bda82263` (order constant + runner descriptor + report + evidence). `git push origin main`; `git fetch origin`; `HEAD == origin/main` verified.
 - No force-push, no history rewrite, no unrelated staging, no `MigrationRunner apply`, no SQL, no Tooba database connection, no Host restart, no Results-API probe, no automatic next task, no idle polling.
 
 ## 7. Residual risks and the single next recommendation
