@@ -17,8 +17,8 @@
     "classification": "HARMLESS_FAST_FORWARD",
     "detail": "Expected-Base-SHA is the parent of HEAD; the single intervening commit (98d8ec4ab) is the parent task's own evidence-SHA bookkeeping under TB-SHIPPING-MVP-ADMIN-ROUNDTRIP-051. No source, contract, migration or config differs. Pre-existing unrelated dirty/untracked files preserved; no reset/stash/rebase/force-push."
   },
-  "codeSha": "<filled after push>",
-  "evidenceSha": "<filled after push>",
+  "codeSha": "92b8653e2f03e1bca8d182bd12b71ae9cff7c728",
+  "evidenceSha": "92b8653e2f03e1bca8d182bd12b71ae9cff7c728",
   "actualElapsed": "~18 minutes (claim 2026-10-14T14:44:42Z; inside the 30-minute HARD timebox)",
   "automaticNextImplementationTask": "NONE",
   "migrationProduced": "src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261014144742_InitialShipping.cs (+ .Designer.cs + ShippingDbContextModelSnapshot.cs) — scaffolded with `dotnet ef migrations add InitialShipping` through the existing 048 design-time factory; no csproj or factory change was needed.",
