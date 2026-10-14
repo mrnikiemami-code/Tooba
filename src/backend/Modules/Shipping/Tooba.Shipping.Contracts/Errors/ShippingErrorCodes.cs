@@ -35,4 +35,19 @@ public static class ShippingErrorCodes
 
     /// <summary>سطح دامنهٔ پوشش نامعتبر است (ترکیب شناسه‌های مقصد ناسازگار).</summary>
     public const string CoverageScopeInvalid = "shipping.coverage.scope.invalid";
+
+    /// <summary>سیاست نرخ با این شناسه یافت نشد.</summary>
+    public const string RatePolicyNotFound = "shipping.rate_policy.not_found";
+
+    /// <summary>مجوز پوشش با این شناسه یافت نشد.</summary>
+    public const string CoverageGrantNotFound = "shipping.coverage_grant.not_found";
+
+    /// <summary>برای همین کد خدمت و همین دامنهٔ مقصد از قبل یک سیاست نرخ وجود دارد.</summary>
+    public const string RatePolicyScopeDuplicate = "shipping.rate_policy.scope_duplicate";
+
+    /// <summary>برای همین کد خدمت و همین دامنهٔ مقصد از قبل یک مجوز پوشش وجود دارد.</summary>
+    public const string CoverageGrantScopeDuplicate = "shipping.coverage_grant.scope_duplicate";
+
+    /// <summary>کد خدمت در هیچ ردیف کاتالوگ خدمت Fulfillment وجود ندارد.</summary>
+    public const string ServiceCodeUnknown = "shipping.service_code.unknown";
 }

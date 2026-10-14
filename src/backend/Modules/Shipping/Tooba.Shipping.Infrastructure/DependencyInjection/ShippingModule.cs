@@ -4,10 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
+using Tooba.ModuleContracts;
+using Tooba.Shipping.Application.Rates.Ports;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Infrastructure.Persistence;
 using Tooba.Shipping.Infrastructure.Rates;
-using Tooba.ModuleContracts;
 
 namespace Tooba.Shipping.Infrastructure.DependencyInjection;
 
@@ -47,6 +48,10 @@ public sealed class ShippingModule : IToobaModule
         IHostEnvironment environment)
     {
         services.AddScoped<IShippingRateQuoteLookup, ShippingRateQuoteLookup>();
+        // Admin authoring seam for Shipping-owned rate policies and coverage grants. Registered here
+        // (module-owned DI) so no Host edit is needed for the data path; the HTTP layer stays in
+        // Tooba.Shipping.Endpoints and is wired by the Host at 055.
+        services.AddScoped<IShippingRateCoverageDirectory, ShippingRateCoverageDirectory>();
         services.AddDbContext<ShippingDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

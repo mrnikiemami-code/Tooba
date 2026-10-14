@@ -250,8 +250,10 @@
   </Folder>
   <Folder Name="/Modules/Shipping/">
     <Project Path="Modules/Shipping/Tooba.Shipping.Contracts/Tooba.Shipping.Contracts.csproj" />
+    <Project Path="Modules/Shipping/Tooba.Shipping.Application/Tooba.Shipping.Application.csproj" />
     <Project Path="Modules/Shipping/Tooba.Shipping.Domain/Tooba.Shipping.Domain.csproj" />
     <Project Path="Modules/Shipping/Tooba.Shipping.Infrastructure/Tooba.Shipping.Infrastructure.csproj" />
+    <Project Path="Modules/Shipping/Tooba.Shipping.Endpoints/Tooba.Shipping.Endpoints.csproj" />
     <Project Path="Modules/Shipping/Tooba.Shipping.Tests/Tooba.Shipping.Tests.csproj" />
   </Folder>
 </Solution>
