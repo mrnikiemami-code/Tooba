@@ -1,0 +1,53 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-ADMIN-LIVE-WIRING-055
+Parent-Task: TB-SHIPPING-MVP-RATE-COVERAGE-ADMIN-054
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-SIX-TASK-CLOSURE
+Mode: BOUNDED_SHIPPING_ADMIN_ENDPOINT_AND_EXISTING_SCREEN_INTEGRATION
+Bridge-Task-Row: 1f6b9e8f-5768-44c9-bb53-42e84cf399eb
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: ee072ad7e513f3778c8bd40e7104bda7b70a10ab
+Base-SHA: ea106f82bc5bdcaff09d94d840fae18a2e55053b
+Code-SHA: 3c6088538e11bf8c3a7adac286074103d9ed3536
+Evidence-SHA: 3c6088538e11bf8c3a7adac286074103d9ed3536
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- Expected-Base-SHA ee072ad is ancestor of the actual base ea106f8; the only intervening commits are the two 054 bookkeeping/evidence commits (4122fd4f7, ea106f82b) recorded in the ARCHITECT ruling. No intervening source change overlaps the intended paths. No stash/reset/rebase/force-push.
+- Read AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, 050-054 results, the actual Shipping endpoint/application/infrastructure classes, ShippingModule, Host Program.cs authorization + MediatR conventions, the Support admin authorizer reference (HostSupportAdminAuthorizer) and the frontend shipping-services-screen.tsx / shipping-services-api.ts.
+- Geography admin query availability was inspected before UI work: Geography has Contracts/Domain/Persistence only, no Endpoints project and no authorized stable-id read; the Order storefront route /v1/storefront/geography/provinces returns a constant name catalogue, not Geography ids. This decided item B's blocker.
+
+A. HOST ENDPOINT ACTIVATION — DONE (live in code; not live in the running process)
+- Tooba.Host.csproj: additive-only ProjectReference to Tooba.Shipping.Endpoints.
+- Program.cs: using Tooba.Shipping.Endpoints.Admin; Shipping Application assembly added to the existing AddToobaCqrsFoundation list (no parallel composition path); app.MapShippingEndpoints(); appended after the existing module maps so established map order is preserved; the module authorizer registered through the existing DI convention.
+- IModuleSchemaMigrator<ShippingDbContext> is NOT registered, so startup DDL stays off. No Host restart/redeploy, no MigrationRunner apply, no DDL/DML on any Tooba database.
+- Authorization is real and fail-closed. Deviation that must be ruled on: the Host adapter file was NOT added under Host/Admin/Access/Authorizers, because the frozen AMSC guards (HostAdminCanon001..009, HostAdminCanonicalCertificationGuardTests: Admin = exactly 17 recursive .cs files; HostSecurityAmcCertGuardTests: Security = exactly 19 files and directories exactly [Checkout, Payment, Seller]) fail on any new Host file in those trees. Weakening those guards is forbidden, so the module keeps the abstract seam IShippingAdminAuthorizer and its default implementation ShippingAdminAuthorizer uses the same platform seams the Host adapters use (IAdminPanelAccess + IAuthorizationService + ICurrentTenant from Tooba.BuildingBlocks) with identical semantics: admin.authorization.denied on deny and admin.authorization.unavailable (503) when the authorization service is unavailable. Host Admin/Security file counts verified unchanged: Admin recursive = 17, Security recursive = 19.
+- Permissions: no new permission id was invented and no AccessControl file was touched (out of the task's allowed paths, and PermissionCatalog is frozen). The rates/coverage routes are part of the existing Fulfillment-owned shipping-services admin surface, so they are gated by the existing catalog ids only: GET => fulfillment.view, writes => fulfillment.manage. All six mapped routes call RequireAuthorizedAsync exactly once (source-locked by a test); AllowAnonymous appears nowhere; no public or anonymous access path exists.
+
+C. SERVICE BOUNDARY CORRECTNESS — DONE
+- Route service code is authoritative: the body service code is accepted only when it equals the route value, otherwise shipping.validation.body_service_code_mismatch. A client cannot bypass {serviceCode} through the body.
+- Cross-service mutation guard added in Shipping Infrastructure/Application (no foreign DbContext): UpdateRate, SetRateActive and SetGrantActive compare the stored ServiceCode with the route service code and refuse with the new stable code shipping.service_scope.mismatch; the scope of an existing row cannot be re-pointed through this seam (shipping.coverage_grant.scope_invalid); duplicate scope and missing row keep their existing stable codes; an empty coverage set stays explicit NO COVERAGE and never implies unlimited coverage.
+- Proof: Tooba.Shipping.Tests 73/73 passed, including new Cross_service_mutation_is_denied_with_stable_code, Body_service_code_cannot_bypass_the_route_service_code and the source-level ownership/auth guards.
+
+B. EXISTING SCREEN INTEGRATION — PARTIAL (one genuine vertical flow; creation blocked and visible)
+- /admin/shipping-services keeps its single canonical page: a new row action opens ShippingRatesCoverageDialog for that row's stable Fulfillment code (no second page, no duplicated Fulfillment CRUD, no fake in-memory save).
+- The dialog reads the real GET /v1/admin/shipping-services/{serviceCode}/rates and shows amount+currency, preparation days and lead days separately, free-above threshold (empty stays "no threshold", never 0), active state, per-row coverage, and the explicit coverage summary text "بدون پوشش — ..." when the set is empty.
+- Update of an existing rate (PUT .../rates/{id}) and activate/deactivate of rates and coverage grants (PATCH .../active) run against the real HTTP endpoints and re-read from the server afterwards; transport-shape issues are rejected client-side before any call.
+- Unfinished control, reported honestly: creating a NEW rate/grant needs a destination scope, and no authorized API returns stable Geography ids, so the create control is visibly disabled with an explicit inline blocker (GEOGRAPHY_ID_LOOKUP_BLOCKED_FA) and no user can submit an imaginary id or ad-hoc UUID. Closing this needs a minimal authorized Geography read (Contracts/Endpoints + real auth), i.e. a further stage beyond these six tasks. All other Shipping MVP items that remain (checkout rate-authority cutover, operational/DB verification) are unchanged and still blocked; nothing was represented as live.
+
+VERIFICATION
+- Tooba.Shipping.Tests: 73/73 pass (log-shipping-tests.txt).
+- Host compile: Build succeeded (log-host-build.txt) using a redirected output path, because the running Host process (PID 37028) holds Tooba.Host/bin locks; the running process was deliberately NOT restarted, so the new routes are code-ready but not live and no runtime proof is claimed.
+- Host structural guards (Admin/Security): 115/116 pass (log-host-structural-guards.txt). The single failure, HostAdminCanon001GuardTests.Contract_files_expose_no_persistence_types, reads src/backend/Modules/Party/Tooba.Party.Contracts/IPartyAdminSellerReadGateway.cs, a path that does not exist at HEAD (moved by 00c0b9bf0) and that 055 never touched (0 changed Party paths) => pre-existing and unrelated, recorded in pre-existing-guard-note.txt.
+- Frontend: npx tsc --noEmit clean (log-frontend-tsc.txt); focused tests 23/23 pass (log-frontend-tests.txt) including the new model test (empty threshold stays null, empty/inactive coverage is never unlimited, malformed money/lead-time inputs rejected, separate preparation vs lead days).
+- No Order/Checkout/Payment/Settlement path touched, no price or snapshot change, no automatic cutover, no default nationwide grant, no Geography schema/seed mutation, no appsettings change, no Results.Json, no unrelated dirty file staged (changed-paths.txt).
+- Timebox deviation, stated plainly: elapsed was about 82 minutes against a 30-minute HARD timebox. The overrun came from discovering the frozen 17/19-file Host Admin/Security guards when the Host adapter was added, then verifying and relocating that authorizer instead of weakening a certification guard, plus the structural-guard re-run. A+C compile and are secure; B is delivered as the read/update/activate vertical with creation blocked.
+
+ELAPSED: ~82 minutes
+PUSHED: 3c6088538e11bf8c3a7adac286074103d9ed3536 (origin/main == HEAD)
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
