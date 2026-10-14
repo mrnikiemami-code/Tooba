@@ -1,0 +1,56 @@
+﻿=== RUNTIME NON-ACTION PROOF ===
+- Host references Shipping? (must be empty): 
+- Shipping migration files generated? (must be 0): 
+0
+- git diff --stat for forbidden trees (Host/MigrationRunner/Order/Fulfillment/Payment/Settlement/AddressBook/Geography/Catalog/Offer/frontend): 
+ src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
+- files changed under those trees (must be 0): 
+1
+- admin shipping-services page touched? (must be empty): 
+src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx
+- slnx diff (additive entries only): 
+diff --git a/src/backend/Tooba.slnx b/src/backend/Tooba.slnx
+index 6a559b83f..ade2d337a 100644
+--- a/src/backend/Tooba.slnx
++++ b/src/backend/Tooba.slnx
+@@ -248,5 +248,11 @@
+     <Project Path="Modules/Geography/Tooba.Geography.Domain/Tooba.Geography.Domain.csproj" />
+     <Project Path="Modules/Geography/Tooba.Geography.Infrastructure/Tooba.Geography.Infrastructure.csproj" />
+   </Folder>
++  <Folder Name="/Modules/Shipping/">
++    <Project Path="Modules/Shipping/Tooba.Shipping.Contracts/Tooba.Shipping.Contracts.csproj" />
++    <Project Path="Modules/Shipping/Tooba.Shipping.Domain/Tooba.Shipping.Domain.csproj" />
++    <Project Path="Modules/Shipping/Tooba.Shipping.Infrastructure/Tooba.Shipping.Infrastructure.csproj" />
++    <Project Path="Modules/Shipping/Tooba.Shipping.Tests/Tooba.Shipping.Tests.csproj" />
++  </Folder>
+ </Solution>
+ 
+- new Shipping files: 
+src\backend\Modules\Shipping\Tooba.Shipping.Contracts\Errors\ShippingErrorCodes.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Contracts\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Contracts\obj\Debug\net8.0\Tooba.Shipping.Contracts.AssemblyInfo.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Contracts\obj\Debug\net8.0\Tooba.Shipping.Contracts.GlobalUsings.g.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Contracts\Rates\ShippingRatePolicyContracts.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Contracts\Tooba.Shipping.Contracts.csproj
+src\backend\Modules\Shipping\Tooba.Shipping.Domain\Aggregates\ShippingCoverageGrant.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Domain\Aggregates\ShippingRatePolicy.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Domain\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Domain\obj\Debug\net8.0\Tooba.Shipping.Domain.AssemblyInfo.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Domain\obj\Debug\net8.0\Tooba.Shipping.Domain.GlobalUsings.g.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Domain\Rates\ShippingRatePolicyEngine.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Domain\Tooba.Shipping.Domain.csproj
+src\backend\Modules\Shipping\Tooba.Shipping.Infrastructure\DependencyInjection\ShippingModule.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Infrastructure\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Infrastructure\obj\Debug\net8.0\Tooba.Shipping.Infrastructure.AssemblyInfo.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Infrastructure\obj\Debug\net8.0\Tooba.Shipping.Infrastructure.GlobalUsings.g.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Infrastructure\Persistence\ShippingDbContext.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Infrastructure\Rates\ShippingRateQuoteLookup.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Infrastructure\Tooba.Shipping.Infrastructure.csproj
+src\backend\Modules\Shipping\Tooba.Shipping.Tests\Compatibility\ServiceCodeCompatibilityTests.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Tests\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Tests\obj\Debug\net8.0\Tooba.Shipping.Tests.AssemblyInfo.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Tests\obj\Debug\net8.0\Tooba.Shipping.Tests.GlobalUsings.g.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Tests\Rates\ShippingRatePolicyEngineTests.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Tests\Rates\ShippingRatePolicyValidationTests.cs
+src\backend\Modules\Shipping\Tooba.Shipping.Tests\Tooba.Shipping.Tests.csproj

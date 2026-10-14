@@ -248,5 +248,11 @@
     <Project Path="Modules/Geography/Tooba.Geography.Domain/Tooba.Geography.Domain.csproj" />
     <Project Path="Modules/Geography/Tooba.Geography.Infrastructure/Tooba.Geography.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/Modules/Shipping/">
+    <Project Path="Modules/Shipping/Tooba.Shipping.Contracts/Tooba.Shipping.Contracts.csproj" />
+    <Project Path="Modules/Shipping/Tooba.Shipping.Domain/Tooba.Shipping.Domain.csproj" />
+    <Project Path="Modules/Shipping/Tooba.Shipping.Infrastructure/Tooba.Shipping.Infrastructure.csproj" />
+    <Project Path="Modules/Shipping/Tooba.Shipping.Tests/Tooba.Shipping.Tests.csproj" />
+  </Folder>
 </Solution>
 

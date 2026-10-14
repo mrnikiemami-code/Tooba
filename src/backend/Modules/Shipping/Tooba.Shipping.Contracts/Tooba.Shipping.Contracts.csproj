@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Tooba.Shipping.Contracts</RootNamespace>
+    <AssemblyName>Tooba.Shipping.Contracts</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+    <!-- Destination identity is Geography's, not Shipping's: this is a Contracts-to-Contracts seam
+         (ADR-036 §3.4), and it is the only foreign reference in this project. -->
+    <ProjectReference Include="..\..\Geography\Tooba.Geography.Contracts\Tooba.Geography.Contracts.csproj" />
+  </ItemGroup>
+</Project>

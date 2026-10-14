@@ -1,0 +1,8 @@
+﻿=== build Shipping module (Domain, Contracts, Infrastructure, Tests) ===
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.06
+BUILD_EXIT=0

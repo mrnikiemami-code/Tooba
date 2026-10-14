@@ -1,0 +1,96 @@
+{
+  "taskId": "TB-SHIPPING-CORE-RATES-048",
+  "parentTask": "TB-SHIPPING-GEOGRAPHY-DEV-BOOTSTRAP-047",
+  "milestone": "3 OF 6",
+  "channel": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "mode": "BOUNDED_SHIPPING_RATE_AUTHORITY_FOUNDATION",
+  "status": "PASS",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "expectedBaseSha": "fcf91e30e21675c94d40bd7eab6df55127e52f6f",
+  "baseSha": "fcf91e30e21675c94d40bd7eab6df55127e52f6f",
+  "codeSha": "see RESULT.bridge.txt",
+  "elapsedMinutesApprox": 46,
+  "timeboxExceeded": true,
+  "timeboxExceededReason": "Acceptance requires a compiling foundation with focused evidence; the module plus a real build/test cycle cost about 10 minutes beyond the 30-minute box. A coherent verifiable slice was preferred over stopping with an uncompiled tree. No path outside the authorized allowlist was touched.",
+  "ownership": {
+    "ShippingOwns": ["commercial base charge", "preparation days", "lead days", "free-above threshold", "coverage grant", "fail-closed eligibility decision"],
+    "UnchangedOwners": {
+      "Fulfillment": "service/option identity, display, catalog CRUD, /admin/shipping-services",
+      "Order": "customer-facing promise and frozen snapshot",
+      "Geography": "destination identity"
+    },
+    "duplicatedCatalogRows": false,
+    "serviceCodeRole": "opaque compatibility key; exactly the codes Fulfillment already publishes",
+    "newAdminPageCreated": false
+  },
+  "newProjects": [
+    "src/backend/Modules/Shipping/Tooba.Shipping.Contracts",
+    "src/backend/Modules/Shipping/Tooba.Shipping.Domain",
+    "src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure",
+    "src/backend/Modules/Shipping/Tooba.Shipping.Tests"
+  ],
+  "contracts": {
+    "destinationScope": "ShippingDestinationScope(CountryId, AdministrativeAreaId?, CityId?, ServiceAreaId?) with explicit levels",
+    "outcomes": ["Quoted", "NotCovered", "UnknownService", "ScopeConflict", "CurrencyMismatch"],
+    "reasonCodes": ["shipping.quote.quoted", "shipping.quote.free_above_threshold", "shipping.coverage.missing", "shipping.service.not_priced", "shipping.scope.ambiguous", "shipping.currency.mismatch"],
+    "readSeam": "IShippingRateQuoteLookup.QuoteAsync (read-only; returns a decision, never the policy)",
+    "writeSeamForOtherModules": "none"
+  },
+  "domain": {
+    "aggregates": ["ShippingRatePolicy", "ShippingCoverageGrant"],
+    "engine": "ShippingRatePolicyEngine (pure, deterministic, no IO, no clock)",
+    "amountRules": "non-negative, max 1,000,000,000; currency 3 ASCII letters; preparation and lead days separate and each non-negative; threshold non-negative; half-scope (service area without owning city) rejected",
+    "deepestScopeWins": true,
+    "ambiguityReportedNotResolved": true,
+    "failClosed": "missing OR null coverage collection yields NotCovered"
+  },
+  "persistence": {
+    "ownedSchema": "shipping",
+    "tables": ["rate_policies", "coverage_grants", "outbox_messages"],
+    "migrationGenerated": false,
+    "migrationApplied": false,
+    "wiredToHost": false,
+    "moduleSchemaMigratorRegistered": false,
+    "hostProjectReferenceAdded": false,
+    "endpointAdded": false,
+    "databaseReadOrWrite": false
+  },
+  "validation": {
+    "build": "dotnet build Tooba.Shipping.Tests -> Build succeeded, 0 Warnings, 0 Errors",
+    "tests": "Passed! - Failed: 0, Passed: 34, Skipped: 0, Total: 34, Duration: 25 ms",
+    "scopeOfTests": "Shipping module only; no broad suite",
+    "compatibilityProof": "every code in ShippingMethodRegistry.All and every code in ShippingMethodsOptions.Rates is expressible as a Shipping policy, read from Fulfillment Contracts in the TEST project only",
+    "legacySemanticsPin": "empty AllowedProvinces = unrestricted is NOT reused by Shipping; a test pins the divergence",
+    "catalogDuplicationPin": "no display-name/icon/colour/sort/translation property exists on the Shipping aggregates"
+  },
+  "runtimeNonActions": {
+    "hostCsprojShippingReference": "none",
+    "moduleCompositionEdited": false,
+    "slnxDiff": "additive entries only (one new /Modules/Shipping/ folder with four project lines)",
+    "modifiedOrDeletedExistingProductionFiles": 0,
+    "migrationRunnerInvoked": false,
+    "hostRestarted": false,
+    "checkoutOrPaymentTouched": false,
+    "frontendTouched": false,
+    "preExistingDirtyFilesPreserved": 5
+  },
+  "deferred": [
+    "EF migration generation/application",
+    "Host composition and DI registration",
+    "endpoint and Admin surface",
+    "Order/Checkout binding",
+    "coverage-grant seeding",
+    "legacy AllowedProvinces bridge",
+    "carrier payables, international polygon coverage, full scheduling, subsidy ledger"
+  ],
+  "risk": [
+    "The new authority is not yet what checkout reads; runtime pricing is NOT DB-backed today.",
+    "Two rate sources will coexist during transition and must be reconciled by explicit tasks.",
+    "Fail-closed coverage means a premature cutover without seeded grants would deny everything."
+  ],
+  "recommendedNextTask": {
+    "id": "TB-SHIPPING-CHECKOUT-RATE-BINDING-DESIGN-049",
+    "scope": "design (without switching) the milestone-4/6 binding: how IShippingRateQuoteLookup replaces the configuration-derived storefront rate path, the explicit coverage-grant seeding fail-closed eligibility requires, and the shadow-compare evidence that every destination resolvable today still quotes the same amount, with the legacy route and its guard untouched."
+  }
+}

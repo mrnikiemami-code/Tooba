@@ -1,0 +1,45 @@
+﻿=== PRE-EXISTING DIRTY FILES (NOT touched by this task) ===
+ M docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md
+ M src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs
+ M src/backend/Tooba.slnx
+ M src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx
+ M src/frontend/app/admin/admin-order-detail-screen.tsx
+ M src/frontend/app/storefront/storefront-landing-blocks.tsx
+---
+content diff for the one path reported by git diff --stat (empty diff = stat-only/line-ending dirty, mtime predates this task):
+admin-fulfillment-work-queue-screen.tsx last write: 10/13/2026 16:35:45
+task claim time: 2026-10-14T13:29:12Z
+=== my own touched surface (tracked) ===
+ M src/backend/Tooba.slnx
+?? docs/ai/tasks/TB-SHIPPING-AUDIT-034.task.md
+?? docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-BOUNDARY-036.task.md
+?? docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-DESIGN-035.task.md
+?? docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-DEV-BOOTSTRAP-047.task.md
+?? docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-INTEGRITY-MIGRATION-041.task.md
+?? docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-MIGRATION-REGISTRY-045.task.md
+?? docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044.task.md
+?? docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-READ-FOUNDATION-043.task.md
+?? docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-RUNNER-VERIFY-046.task.md
+?? docs/architecture/evidence/TB-FE-SHIPPING-SERVICES-GRID-ROW-IDENTITY-001/RESULT.bridge.txt
+?? docs/architecture/evidence/TB-FE-SHIPPING-SERVICES-GRID-ROW-IDENTITY-001/post-result.js
+?? docs/architecture/evidence/TB-SHIPPING-AUDIT-034/
+?? docs/architecture/evidence/TB-SHIPPING-CORE-RATES-048/
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-ANCESTRY-REPAIR-042/
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-BOUNDARY-036/
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-COUNTRY-INTEGRITY-040/
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-DESIGN-035/
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-DEV-BOOTSTRAP-047/RESULT.bridge.txt
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-DEV-BOOTSTRAP-047/post-result.js
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-INTEGRITY-MIGRATION-041/
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-MIGRATION-REGISTRY-045/RESULT.bridge.txt
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-MIGRATION-REGISTRY-045/post-result.js
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044/RESULT.bridge.txt
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044/post-result.js
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-MODULE-FOUNDATION-037/
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-PERSISTENCE-MODEL-038/
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-READ-FOUNDATION-043/RESULT.bridge.txt
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-READ-FOUNDATION-043/post-result.js
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-RUNNER-VERIFY-046/RESULT.bridge.txt
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-RUNNER-VERIFY-046/post-result.js
+?? docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-TRANSLATION-INTEGRITY-039/
+?? src/backend/Modules/Shipping/
