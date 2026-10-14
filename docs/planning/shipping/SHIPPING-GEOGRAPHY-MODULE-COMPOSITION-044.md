@@ -8,6 +8,7 @@
 | Repository / Branch | `mrnikiemami-code/Tooba` / `main` |
 | Expected-Base-SHA | `85509d7aa00535d18968099d4d961d5a81c9af61` |
 | Base-SHA (verified `HEAD == origin/main`) | `85509d7aa00535d18968099d4d961d5a81c9af61` |
+| Code-SHA / Evidence-SHA | `4bb0047976195716a3523582a38768b06bf1c24c` |
 | Parent task | `TB-SHIPPING-GEOGRAPHY-READ-FOUNDATION-043` |
 | Mode | `BOUNDED_GEOGRAPHY_MODULE_COMPOSITION_WITHOUT_RUNTIME_MIGRATION` |
 | Status | `PARTIAL` (A PASS · B prepared-only) |
@@ -110,8 +111,8 @@ The Development startup path resolves **every** registered `IModuleSchemaMigrato
 
 ## 9. Time, commit, push
 
-- Claim `12:13:35Z` → validated push: see the Result block (≈22 minutes of the 30-minute hard timebox).
-- Task-owned changes only; `git push origin main`; `git fetch origin`; `HEAD == origin/main` verified. No force-push, no history rewrite, no unrelated staging.
+- Claim `12:13:35Z` → validated push `12:20:17Z`: **≈7 minutes** of the 30-minute hard timebox.
+- One bounded commit of task-owned paths only: `4bb0047976195716a3523582a38768b06bf1c24c` (code + Host composition + report + evidence). `git push origin main`; `git fetch origin`; `HEAD == origin/main` verified.
 - Temp verification project and redirected build output both deleted; the running Development Host (PID 37028) was never stopped or restarted; no Tooba database was connected to; no Results-API probe; no automatic next task.
 
 ## 10. Recommendation (exactly one next step)
