@@ -1,0 +1,32 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Tooba.AddressBook.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AddressBook\Tooba.AddressBook.Contracts\bin\Debug\net8.0\Tooba.AddressBook.Contracts.dll
+  Tooba.BuildingBlocks -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.BuildingBlocks\bin\Debug\net8.0\Tooba.BuildingBlocks.dll
+  Tooba.Catalog.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Contracts\bin\Debug\net8.0\Tooba.Catalog.Contracts.dll
+  Tooba.Offer.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Offer\Tooba.Offer.Contracts\bin\Debug\net8.0\Tooba.Offer.Contracts.dll
+  Tooba.Inventory.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Contracts\bin\Debug\net8.0\Tooba.Inventory.Contracts.dll
+  Tooba.Payment.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Payment\Tooba.Payment.Contracts\bin\Debug\net8.0\Tooba.Payment.Contracts.dll
+  Tooba.OperatorProfile.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\OperatorProfile\Tooba.OperatorProfile.Contracts\bin\Debug\net8.0\Tooba.OperatorProfile.Contracts.dll
+  Tooba.Identity.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Identity\Tooba.Identity.Contracts\bin\Debug\net8.0\Tooba.Identity.Contracts.dll
+  Tooba.Tax.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Tax\Tooba.Tax.Contracts\bin\Debug\net8.0\Tooba.Tax.Contracts.dll
+  Tooba.Returns.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Returns\Tooba.Returns.Contracts\bin\Debug\net8.0\Tooba.Returns.Contracts.dll
+  Tooba.Settlement.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Settlement\Tooba.Settlement.Contracts\bin\Debug\net8.0\Tooba.Settlement.Contracts.dll
+  Tooba.Geography.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Geography\Tooba.Geography.Contracts\bin\Debug\net8.0\Tooba.Geography.Contracts.dll
+  Tooba.Fulfillment.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Contracts\bin\Debug\net8.0\Tooba.Fulfillment.Contracts.dll
+  Tooba.Party.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Party\Tooba.Party.Contracts\bin\Debug\net8.0\Tooba.Party.Contracts.dll
+  Tooba.Localization.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Localization\Tooba.Localization.Contracts\bin\Debug\net8.0\Tooba.Localization.Contracts.dll
+  Tooba.Cart.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Cart\Tooba.Cart.Contracts\bin\Debug\net8.0\Tooba.Cart.Contracts.dll
+  Tooba.Pricing.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Pricing\Tooba.Pricing.Contracts\bin\Debug\net8.0\Tooba.Pricing.Contracts.dll
+  Tooba.Order.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Domain\bin\Debug\net8.0\Tooba.Order.Domain.dll
+  Tooba.Shipping.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Contracts\bin\Debug\net8.0\Tooba.Shipping.Contracts.dll
+  Tooba.Order.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Contracts\bin\Debug\net8.0\Tooba.Order.Contracts.dll
+  Tooba.Order.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\bin\Debug\net8.0\Tooba.Order.Application.dll
+  Tooba.Order.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Endpoints\bin\Debug\net8.0\Tooba.Order.Endpoints.dll
+  Tooba.Order.Tests -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Tests\bin\Debug\net8.0\Tooba.Order.Tests.dll
+Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Tests\bin\Debug\net8.0\Tooba.Order.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   281, Skipped:     0, Total:   281, Duration: 301 ms - Tooba.Order.Tests.dll (net8.0)

@@ -118,6 +118,24 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Storefront.Ports.IStorefrontPendingCheckoutStore, Storefront.StorefrontPendingCheckoutStore>();
         services.AddScoped<Application.Storefront.Services.StorefrontCheckoutService>();
         services.AddScoped<Application.Storefront.Services.StorefrontShippingService>();
+
+        // مشاهدهٔ سایهٔ نرخ ارسال: دروازهٔ پیش‌فرض خاموش است (appsettings هیچ بخشی ندارد، پس مقادیر
+        // امن پیش‌فرض اعمال می‌شود) و اتصال فقط برای مشاهده است؛ هیچ قیمت/انتخاب/draft/snapshot تغییر نمی‌کند.
+        services.Configure<Application.Storefront.Shipping.RateAuthority.StorefrontShippingRateAuthorityOptions>(
+            configuration.GetSection(
+                Application.Storefront.Shipping.RateAuthority.StorefrontShippingRateAuthorityOptions.SectionName));
+        services.AddScoped(
+            sp => new Application.Storefront.Shipping.RateAuthority.StorefrontShippingRateShadowEvaluator(
+                sp.GetService<Tooba.Shipping.Contracts.Rates.IShippingRateQuoteLookup>()));
+        services.AddScoped(
+            sp => new Application.Storefront.Shipping.RateAuthority.StorefrontShippingShadowObserver(
+                sp.GetService<Application.Storefront.Shipping.RateAuthority.StorefrontShippingRateShadowEvaluator>(),
+                sp.GetService<Tooba.Geography.Contracts.Places.IGeographyLookup>(),
+                sp.GetService<Microsoft.Extensions.Options.IOptions<
+                    Application.Storefront.Shipping.RateAuthority.StorefrontShippingRateAuthorityOptions>>(),
+                sp.GetService<Microsoft.Extensions.Logging.ILogger<
+                    Application.Storefront.Shipping.RateAuthority.StorefrontShippingShadowObserver>>()));
+
         services.AddScoped<Application.Storefront.Services.StorefrontPendingPaymentService>();
         services.AddScoped<Application.Storefront.Services.StorefrontStartPaymentComposer>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();
