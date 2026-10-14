@@ -1,0 +1,17 @@
+﻿PASS  C1 module identity is exactly "Geography" :: Geography
+PASS  C2 exactly one IGeographyLookup registration, scoped, implemented by GeographyPlaceLookup :: GeographyPlaceLookup
+PASS  C3 exactly one IGeographyLabelLookup registration, scoped, implemented by GeographyLabelLookup :: GeographyLabelLookup
+PASS  C4 exactly one GeographyDbContext registration, scoped
+PASS  C5 module registers zero IModuleSchemaMigrator (no implicit DDL path)
+PASS  C6 module registers zero IOutboxModuleRegistration (no background worker can poll geography tables)
+PASS  C7 module registers no hosted service (nothing runs at startup)
+PASS  C8 module registers no IModuleSchemaMigrationStep
+PASS  D1 IGeographyLookup resolves to GeographyPlaceLookup :: GeographyPlaceLookup
+PASS  D2 IGeographyLabelLookup resolves to GeographyLabelLookup :: GeographyLabelLookup
+PASS  D3 GeographyDbContext resolves without any database contact :: Host=127.0.0.1;Port=1;Username=none;Password=none;Database=none
+PASS  D4 resolved schema is the module-owned "geography" schema :: geography
+PASS  D5 model contains the nine geography tables the initial migration created :: administrative_area_name_translations,administrative_areas,cities,city_name_translations,countries,country_name_translations,outbox_messages,service_area_name_translations,service_areas
+PASS  D6 two lookups resolved from the same scope share the same context instance
+PASS  D7 BuildServiceProvider with ValidateOnBuild+ValidateScopes succeeded (graph is complete)
+
+ALL CHECKS PASSED

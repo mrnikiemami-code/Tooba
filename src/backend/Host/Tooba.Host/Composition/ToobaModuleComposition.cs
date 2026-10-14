@@ -40,6 +40,7 @@ using Tooba.Wallet.Infrastructure.Adapters;
 using Tooba.Wallet.Infrastructure.DependencyInjection;
 using Tooba.Wallet.Infrastructure.Persistence;
 using Tooba.StoreContext.Infrastructure.DependencyInjection;
+using Tooba.Geography.Infrastructure.DependencyInjection;
 
 namespace Tooba.Host.Composition;
 
@@ -87,6 +88,7 @@ internal static class ToobaModuleComposition
         new WalletModule(),
         new NotificationModule(),
         new AccessControlModule(),
+        new GeographyModule(),
     ];
 
     /// <summary>

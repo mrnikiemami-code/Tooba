@@ -93,6 +93,9 @@
     <ProjectReference Include="..\..\Modules\Notification\Tooba.Notification.Endpoints\Tooba.Notification.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\AccessControl\Tooba.AccessControl.Infrastructure\Tooba.AccessControl.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\AccessControl\Tooba.AccessControl.Endpoints\Tooba.AccessControl.Endpoints.csproj" />
+    <!-- Geography composition only: the module is registered so its read seams are resolvable, while it
+         deliberately registers no schema migrator yet (see GeographyModule / SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044). -->
+    <ProjectReference Include="..\..\Modules\Geography\Tooba.Geography.Infrastructure\Tooba.Geography.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MassTransit" Version="8.5.10" />

@@ -16,6 +16,7 @@
     <ProjectReference Include="..\Tooba.Geography.Contracts\Tooba.Geography.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Geography.Domain\Tooba.Geography.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
     <!-- Language set/default for label fallback only: the sanctioned Contracts seam (ADR-036 D9/E14),
          exactly as Catalog/Content/Fulfillment Infrastructure already consume ILanguageLookup. -->

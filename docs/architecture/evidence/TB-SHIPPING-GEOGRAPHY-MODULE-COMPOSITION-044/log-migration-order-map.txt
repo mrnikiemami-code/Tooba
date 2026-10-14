@@ -1,0 +1,47 @@
+﻿=== order values ===
+public const int Catalog = 1;
+public const int Offer = 2;
+public const int Pricing = 3;
+public const int Inventory = 4;
+public const int Tax = 5;
+public const int Party = 6;
+public const int Identity = 7;
+public const int Cart = 8;
+public const int Order = 9;
+public const int Payment = 10;
+public const int Fulfillment = 11;
+public const int Promotion = 12;
+public const int Reviews = 14;
+public const int ProductQnA = 15;
+public const int BulkInquiry = 16;
+public const int Wishlist = 17;
+public const int AddressBook = 18;
+public const int CustomerProfile = 19;
+public const int UserPreference = 20;
+public const int OperatorProfile = 21;
+public const int Localization = 22;
+public const int Content = 23;
+public const int Media = 24;
+public const int PageComposition = 25;
+public const int Story = 26;
+public const int Notification = 27;
+public const int AccessControl = 28;
+public const int Support = 29;
+
+=== dev startup auto-migrate path (Host) ===
+Program.cs:359: if (catalogDemoOptions.RunLegacyBootstraps)
+Program.cs:361: await DevelopmentSchemaMigrator.ApplyAsync(app.Services);
+Program.cs:367: "Legacy Catalog Development bootstraps skipped (Tooba:CatalogDemo:RunLegacyBootstraps=false). Use POST /v1/admin/catalog/demo/reset-and-seed.");
+Program.cs:368: await DevelopmentSchemaMigrator.MigrateSchemaOnlyAsync(app.Services);
+DevelopmentSchemaMigrator.cs:121: var migrators = provider.GetServices<IModuleSchemaMigrator>()
+DevelopmentSchemaMigrator.cs:125: var duplicateOrder = migrators.GroupBy(x => x.Order).FirstOrDefault(g => g.Count() > 1);
+DevelopmentSchemaMigrator.cs:126: if (duplicateOrder is not null)
+DevelopmentSchemaMigrator.cs:129: "Duplicate Development schema migration order: " + duplicateOrder.Key);
+DevelopmentSchemaMigrator.cs:139: await migrator.MigrateAsync(cancellationToken);
+
+=== MigrationRunner production registry: Geography present? ===
+0 Geography hits
+=== structure manifest: Geography present? ===
+0 manifest entries
+=== module list entries in Host composition ===
+34 modules
