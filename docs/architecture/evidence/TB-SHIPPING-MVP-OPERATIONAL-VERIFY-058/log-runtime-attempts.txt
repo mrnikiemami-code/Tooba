@@ -1,0 +1,98 @@
+TB-SHIPPING-MVP-OPERATIONAL-VERIFY-058 — runtime verification (real process + isolated clone)
+
+## 1. Existing running Host (PID 37028, port 5088) — REAL HTTP, read-only
+
+Discriminating probe set (a control route that exists, a control route that does not, and the new routes):
+
+```text
+GET  http://127.0.0.1:5088/v1/storefront/geography/provinces        -> 200 (LEN=979)   control: tenant resolves, storefront route live
+GET  http://127.0.0.1:5088/v1/admin/orders                          -> 401             control: admin route exists, auth boundary real
+GET  http://127.0.0.1:5088/v1/admin/zzz-definitely-not-a-route      -> 404             negative control
+GET  http://127.0.0.1:5088/v1/admin/geography/countries             -> 404             same as the negative control
+GET  http://127.0.0.1:5088/v1/admin/shipping-services/post/rates    -> 404             same as the negative control
+```
+
+Because a registered admin route answers `401` while an unregistered path answers an empty `404`, the two
+`404`s prove the new admin routes are **absent** from the running process: it was started `2026-10-13
+18:11:34`, before the 055/056/057 wiring. PID 37028 remained alive and listening on 5088 for the whole task.
+The running Host was **not** restarted and no process was terminated.
+
+## 2. Isolated disposable instance — REAL HTTP on the NEW code
+
+Setup (all disposable, all cleaned up):
+
+```text
+1. create database tooba_058_scratch; pg_dump tooba_alpha | psql tooba_058_scratch   (identical counts)
+2. dotnet build src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug -o %TEMP%\host058  -> Build succeeded, 0 errors
+3. Tooba.Host.exe (new code) with
+     ASPNETCORE_ENVIRONMENT=Development
+     ASPNETCORE_URLS=http://127.0.0.1:5099
+     Tooba:PostgreSQL:ConnectionReferences:tenant-alpha -> tooba_058_scratch
+     Tooba:Messaging:Enabled=false            (no RabbitMQ contact, no SQL transport infrastructure)
+   -> HEALTH 200 after 2s  (instance serves)
+```
+
+Probe matrix against that instance (`probe/host058d-http-probe.txt`):
+
+| Request | Status | errorCode | Reading |
+| --- | --- | --- | --- |
+| `GET /health` | 200 | — | instance live |
+| `GET /v1/storefront/geography/provinces` | 200 | — | control: tenant resolution + legacy storefront route live |
+| `GET /v1/admin/orders` | 401 | `admin.actor.missing` | control: pre-existing admin route, auth boundary |
+| `GET /v1/admin/zzz-not-a-route` | 404 | — | negative control |
+| `GET /v1/admin/geography/countries` | **401** | `admin.actor.missing` | **new route registered + guarded** |
+| `GET /v1/admin/geography/countries/{countryId:guid}/administrative-areas` | **401** | `admin.actor.missing` | **new route registered + guarded** |
+| `GET /v1/admin/geography/countries/{countryId:guid}/cities` | **401** | `admin.actor.missing` | **new route registered + guarded** |
+| `GET /v1/admin/shipping-services/post/rates` | **401** | `admin.actor.missing` | **new route registered + guarded** |
+| `POST /v1/admin/shipping-services/post/rates` (no body) | 415 | — | route matched; content type required before the handler (route presence only, auth not exercised) |
+| `GET /v1/admin/geography/countries` + documented Development actor header | **403** | `admin.authorization.denied` | the Development actor seam does NOT grant capability: fail-closed |
+| `GET /v1/admin/shipping-services/post/rates` + same header | **403** | `admin.authorization.denied` | same for the Shipping surface |
+
+Conclusions from real HTTP on the new code:
+
+* all four Geography read routes and the Shipping rate/coverage routes are **registered and reachable**;
+* every one of them is behind the admin authorization boundary: unauthenticated -> `401
+  admin.actor.missing`, and even with the Development actor seam the capability check denies
+  (`403 admin.authorization.denied`) because `Authorization:Mode=InMemory` starts with an empty tuple
+  store. There is **no bypass** and the boundary is fail-closed;
+* consequently no authenticated admin CRUD flow (GET list with data, POST create, PUT update, PATCH
+  deactivate) could be exercised: no admin credential and no authorization tuple source exist, and
+  inventing one is forbidden. Those flows remain **BLOCKED / UNVERIFIED**, as does the frontend
+  `/admin/shipping-services` authorized round-trip that depends on them.
+
+## 3. Root cause of the first two failed startup attempts (disclosed, not a repo defect)
+
+The first two clone attempts failed with `Development seed requires Active tenant store-alpha`. The cause was
+**stale environment variables left in my own shell session by an earlier unrelated task (046)**:
+
+```text
+Tooba__Edition=SingleStore
+Tooba__DeploymentId=geo046-verify
+Tooba__SingleStore__Tenants__0__TenantId=geo046
+Tooba__SingleStore__Tenants__0__Status=Active
+Tooba__SingleStore__Tenants__0__ConnectionReference=geo046scratch
+Tooba__SingleStore__Tenants__0__Hosts__0=geo046.localhost
+Tooba__PostgreSQL__ConnectionReferences__geo046scratch=Host=127.0.0.1;Port=55433;...
+```
+
+Environment-variable configuration overrides the JSON tenant array, so the process saw a single tenant
+`geo046` and no `store-alpha`. After clearing every `Tooba__*`/`ASPNETCORE_*` variable from the session the
+same binary started normally (section 2). No repository file, migration, appsettings or Host configuration
+was at fault, and none was changed. The stale password-bearing variable was removed as part of cleanup
+(session leftover count after cleanup = 0).
+
+## 4. Cleanup and integrity proof
+
+```text
+isolated instance stopped (PID 30980 terminated) ; Tooba.Host processes remaining = 37028 only
+listener on 5099 = 0 ; user's listener on 5088 = 1
+scratch database dropped ; scratch databases remaining = 0 ; scratch connections = 0
+%TEMP%\host058 removed (TEMP_HOST_REMAINS False)
+tooba_alpha after everything: rate_policies=0 coverage_grants=0 geo_countries=1 geo_cities=47  (identical to pre-task)
+scratch clone after the HTTP session: rate_policies=0 coverage_grants=0  (no rate/grant was created anywhere)
+env leftovers in the session = 0
+```
+
+No write of any kind reached `tooba_alpha`: the only writes in this task's lifetime were inside the
+disposable clone, which was then dropped. No migration, seed, catalog or rate/grant mutation occurred in the
+real Development database.

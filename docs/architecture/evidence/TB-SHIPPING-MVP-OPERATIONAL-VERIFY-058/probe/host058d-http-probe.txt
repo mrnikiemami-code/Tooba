@@ -1,0 +1,12 @@
+﻿== isolated instance 127.0.0.1:5099 (new code, scratch DB) ==
+GET http://127.0.0.1:5099/health -> 200 LEN=15
+GET http://127.0.0.1:5099/v1/storefront/geography/provinces -> 200 LEN=979
+GET http://127.0.0.1:5099/v1/admin/orders -> 401 BODY={"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/orders","errorCode":"admin.actor.missing","traceId":"f8d3e15b65379db8c3ef0a37baf39a12","correlationId":"4955
+GET http://127.0.0.1:5099/v1/admin/zzz-not-a-route -> 404 BODY=
+GET http://127.0.0.1:5099/v1/admin/geography/countries -> 401 BODY={"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/geography/countries","errorCode":"admin.actor.missing","traceId":"7ba695a185412a003e5833a46a82058d","correla
+GET http://127.0.0.1:5099/v1/admin/geography/countries/11111111-1111-4111-8111-111111111111/administrative-areas -> 401 BODY={"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/geography/countries/11111111-1111-4111-8111-111111111111/administrative-areas","errorCode":"admin.actor.miss
+GET http://127.0.0.1:5099/v1/admin/geography/countries/11111111-1111-4111-8111-111111111111/cities -> 401 BODY={"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/geography/countries/11111111-1111-4111-8111-111111111111/cities","errorCode":"admin.actor.missing","traceId"
+GET http://127.0.0.1:5099/v1/admin/shipping-services/post/rates -> 401 BODY={"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/shipping-services/post/rates","errorCode":"admin.actor.missing","traceId":"899fada7b65792451c40b529bf44c529"
+POST http://127.0.0.1:5099/v1/admin/shipping-services/post/rates -> 415 BODY=
+GET http://127.0.0.1:5099/v1/admin/geography/countries -> 403 BODY={"type":"about:blank","title":"Access to manage this store is not permitted.","status":403,"instance":"/v1/admin/geography/countries","errorCode":"admin.authorization.denied","traceId":"917191a4833d03a62716647896c1a193",
+GET http://127.0.0.1:5099/v1/admin/shipping-services/post/rates -> 403 BODY={"type":"about:blank","title":"Access to manage this store is not permitted.","status":403,"instance":"/v1/admin/shipping-services/post/rates","errorCode":"admin.authorization.denied","traceId":"f037d38bd019ecfa962148fd6

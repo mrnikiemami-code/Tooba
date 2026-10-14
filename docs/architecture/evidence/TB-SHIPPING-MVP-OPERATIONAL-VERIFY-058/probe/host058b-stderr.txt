@@ -1,0 +1,5 @@
+Unhandled exception. System.InvalidOperationException: Development seed requires Active tenant store-alpha.
+   at Tooba.Host.Development.DevelopmentSchemaMigrator.ApplyCoreAsync(IServiceProvider services, Boolean seedCatalog) in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Development\DevelopmentSchemaMigrator.cs:line 52
+   at Tooba.Host.Development.DevelopmentSchemaMigrator.ApplyCoreAsync(IServiceProvider services, Boolean seedCatalog) in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Development\DevelopmentSchemaMigrator.cs:line 112
+   at Program.<Main>$(String[] args) in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Program.cs:line 373
+   at Program.<Main>(String[] args)

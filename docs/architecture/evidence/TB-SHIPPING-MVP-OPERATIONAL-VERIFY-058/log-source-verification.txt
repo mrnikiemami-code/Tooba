@@ -1,0 +1,94 @@
+TB-SHIPPING-MVP-OPERATIONAL-VERIFY-058 — source-level verification (offline)
+
+All findings below are from the actual files on `main` at `54a9f6e99e887781966a027fdfd12008c163dc19`.
+
+## Endpoint registration (Host composition)
+
+| Location | Fact |
+| --- | --- |
+| `src/backend/Host/Tooba.Host/Program.cs:424` | `app.MapOrderEndpoints();` |
+| `src/backend/Host/Tooba.Host/Program.cs:451` | `app.MapShippingEndpoints();` |
+| `src/backend/Host/Tooba.Host/Program.cs:452` | `app.MapGeographyEndpoints();` |
+| `Program.cs:244` | `AddScoped<IShippingAdminAuthorizer, ShippingAdminAuthorizer>()` |
+| `Program.cs:245` | `AddScoped<IGeographyAdminAuthorizer, GeographyAdminAuthorizer>()` |
+
+## Shipping admin surface (routes + authorization)
+
+`src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingRateCoverageEndpoints.cs`
+
+```text
+group  (rooted at /v1/admin)
+  GET    /shipping-services/{serviceCode}/rates                        -> ShippingAdminPermissions.View   = "fulfillment.view"
+  POST   /shipping-services/{serviceCode}/rates                        -> ShippingAdminPermissions.Manage = "fulfillment.manage"
+  PUT    /shipping-services/{serviceCode}/rates/{ratePolicyId:guid}    -> Manage
+  PATCH  /shipping-services/{serviceCode}/rates/{ratePolicyId:guid}/active -> Manage
+  POST   /shipping-services/{serviceCode}/coverage-grants               -> Manage
+  PATCH  /shipping-services/{serviceCode}/coverage-grants/{grantId:guid}/active -> Manage
+```
+
+Every handler calls `authorizer.RequireAuthorizedAsync(...)` before touching the directory — no
+`AllowAnonymous`, no route without a permission check.
+
+## Geography admin surface (read-only, stable IDs)
+
+`src/backend/Modules/Geography/Tooba.Geography.Endpoints/Admin/GeographyAdminEndpoints.cs`
+
+```text
+app.MapGroup("/v1/admin")
+  GET /geography/countries
+  GET /geography/countries/{countryId:guid}/administrative-areas
+  GET /geography/countries/{countryId:guid}/cities
+  GET /geography/cities/{cityId:guid}/service-areas
+```
+
+All four are reads backed by `IGeographyLookup` / `IGeographyLabelLookup` (Geography Contracts) and the
+`IGeographyAdminAuthorizer` gate.
+
+## Authorization boundary (fail-closed, existing platform seams only)
+
+`ShippingAdminAuthorizer` / `GeographyAdminAuthorizer`:
+
+* gate 1: `IAdminPanelAccess.RequireAuthorizedAsync(request, ct)` — the same Host-owned seam every other
+  admin authorizer uses; server-derived actor + tenant, not a route/body identifier;
+* gate 2: `IAuthorizationService.CanAsync(Subject=user, Resource=permission#<id>, check)` where
+  `Allow` passes, `Unavailable` throws `admin.authorization.unavailable` (fail-closed 503),
+  anything else throws `admin.authorization.denied` (403).
+
+`AdminPanelAccess` (Host) documents the Development-only actor header `X-Tooba-Dev-Actor-User-Id`
+(ignored outside Development) — the existing contract used by Development tooling; no bypass exists for
+the capability check that follows it.
+
+## Runtime configuration for the new price authority (057) — OFF
+
+* `StorefrontShippingRateAuthorityOptions`: `ShadowEnabled` and `PrerequisitesConfirmed` both default
+  `false` (no initializer to `true` anywhere).
+* `appsettings.json`, `appsettings.Development.json`, `appsettings.Production.json`: **no**
+  `Tooba:ShippingRateAuthority` section exists, so the bound options are the safe defaults -> gate
+  `Disabled` -> the observer returns before any Geography/Shipping lookup.
+* No cutover switch for customer pricing exists in the codebase; the legacy
+  `ShippingMethodsOptions`/`Fulfillment` catalog remains the only price + promise authority.
+
+## CQRS discovery / DI composition
+
+* `Tooba.Order.Infrastructure/OrderModule.cs` registers the storefront shipping service, the shadow
+  evaluator and the shadow observer once, and binds the options section (057).
+* `Tooba.Geography.Infrastructure/DependencyInjection/GeographyModule.cs` registers
+  `IGeographyLookup`/`IGeographyLabelLookup` + `GeographyDbContext` (no migrator: deliberate, documented).
+* `Tooba.Shipping.Infrastructure/DependencyInjection/ShippingModule.cs` registers
+  `IShippingRateQuoteLookup` once.
+* Both modules are composed in `ToobaModuleComposition` lines 92-98 (Geography, Shipping) and the Shipping
+  module deliberately registers no migrator.
+
+## Build / test evidence available at this base
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Order infrastructure build (057) | `dotnet build Tooba.Order.Infrastructure` | succeeded, 0 errors |
+| Order module tests (057) | `dotnet test Tooba.Order.Tests` | 281 passed / 0 failed |
+| Shadow observer suite (057) | `... --filter FullyQualifiedName~StorefrontShippingShadow` | 18 passed / 0 failed |
+| Shipping module tests (057) | `dotnet test Tooba.Shipping.Tests` | 82 passed / 0 failed |
+| Host (058, this task) | `dotnet build src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug -o %TEMP%\host058` | succeeded, 0 errors |
+
+No NEW test was authored in 058; the timebox was consumed by the isolated-runtime attempt and the
+read-only database proof. No test was re-run in 058, so the 057 results above are cited as of the same
+base SHA.

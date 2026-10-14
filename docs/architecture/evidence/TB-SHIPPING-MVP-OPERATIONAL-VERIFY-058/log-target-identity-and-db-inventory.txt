@@ -1,0 +1,69 @@
+TB-SHIPPING-MVP-OPERATIONAL-VERIFY-058 — target identity + read-only database inventory
+Timestamp: 2026-10-14T19:47Z..19:57Z (UTC)
+
+## Proven local Development target (not assumed)
+
+| Question | Evidence |
+| --- | --- |
+| Edition / deployment | `appsettings.Development.json` -> `Tooba:Edition=SingleStore`, `DeploymentId=dev-singlestore` |
+| Tenant | single Active tenant `store-alpha` (DisplayName "Alpha Dev Store"), ConnectionReference `tenant-alpha`, DefaultMarket `IR`, DefaultCurrency `IRR`, PrimaryDomain `alpha.localhost` |
+| Database | `tenant-alpha` -> `Database=tooba_alpha` (only DB named by any Development reference) |
+| Server | local container `postgres-db` (postgres:17) on `127.0.0.1:5432`, owner `admin`, reached over loopback |
+| Not production/staging/shared | `appsettings.json` + `appsettings.Production.json` carry no tenant list / empty connection references; `tooba_alpha` appears only in `appsettings.Development.json` |
+| Running process | `Tooba.Host` PID 37028, launched `2026-10-13 18:11:34` local from `src/backend/Host/Tooba.Host/bin/Debug/net8.0/Tooba.Host.exe`, listening on `127.0.0.1:5088` (verified alive + listening before and after every probe) |
+| Credentials | none written to any log; psql ran with the container-local role only |
+
+Read-only probe commands used (no DDL/DML of any kind against tooba_alpha):
+
+```
+docker exec -e PGPASSWORD=*** postgres-db psql -U admin -d tooba_alpha -t -A -c "<SELECT ...>"
+```
+
+## Server / database baseline (READ-ONLY)
+
+```text
+current_database=tooba_alpha | PostgreSQL 17.10 (Debian 17.10-1.pgdg13+1)
+schemas=54   geography_schema=1   shipping_schema=1
+tables_total(non-system)=247
+```
+
+### Geography schema (real rows, from the 047 bootstrap)
+
+```text
+geo_countries=1  geo_administrative_areas=12  geo_cities=47  geo_service_areas=0
+geo_country_name_translations=1  geo_area_name_translations=12  geo_city_name_translations=47  geo_service_area_name_translations=0
+country=IR active=true
+geography.__ef_migrations_history rows=1  -> 20261014113949_InitialGeography
+geography tables: administrative_areas, administrative_area_name_translations, cities, city_name_translations,
+                   countries, country_name_translations, service_areas, service_area_name_translations,
+                   outbox_messages, __ef_migrations_history
+```
+
+### Shipping schema (created by 052/053)
+
+```text
+shipping.__ef_migrations_history rows=1  -> 20261014144742_InitialShipping
+shipping tables: coverage_grants, rate_policies, outbox_messages, __ef_migrations_history
+rate_policies=0      <-- NO rate policy exists
+coverage_grants=0    <-- NO coverage grant exists (empty coverage, engine fail-closed)
+```
+
+### Existing Fulfillment shipping catalog (legacy authority, untouched)
+
+```text
+shipping_services: in_person active=true sort=50 | post active=true sort=10 | snapp_courier active=false sort=30
+                   store_courier active=true sort=40 | tipax active=true sort=20
+shipping_service_options: post/express active=false | post/standard active=true | tipax/express active=true | tipax/standard active=true
+shipping_service_translations=10   shipping_service_option_translations=8
+localization.languages=3 (fa=1)
+```
+
+## Post-probe integrity re-check of tooba_alpha (after all scratch work)
+
+```text
+rate_policies=0  coverage_grants=0  geo_countries=1  geo_cities=47
+ship_history_rows=1  geo_history_rows=1
+sessions from the scratch instance to tooba_alpha = 0
+```
+
+Every value is identical to the pre-probe read: the scratch work changed nothing in `tooba_alpha`.

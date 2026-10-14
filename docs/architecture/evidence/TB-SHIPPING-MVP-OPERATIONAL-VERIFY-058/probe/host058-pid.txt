@@ -1,0 +1,1 @@
+﻿pid=41060 started=2026-10-14T19:51:27.5571831Z env=Development urls=http://127.0.0.1:5099 tenant-alpha->tooba_058_scratch messaging=false

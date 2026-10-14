@@ -1,0 +1,131 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-OPERATIONAL-VERIFY-058
+Parent-Task: TB-SHIPPING-MVP-CHECKOUT-SHADOW-057
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-FINAL-THREE
+Mode: BOUNDED_SHIPPING_OPERATIONAL_READINESS_VERIFICATION
+Bridge-Task-Row: 9845e3ac-637a-4b4e-b666-8c7151f53862
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 716717464ead027de98e8a0ca1150e8a62579457
+Base-SHA: 54a9f6e99e887781966a027fdfd12008c163dc19
+Code-SHA: NONE
+Evidence-SHA: (filled after push)
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- Claimed exactly one Pending row on tooba-main: 9845e3ac-637a-4b4e-b666-8c7151f53862.
+- Read AGENTS.md, TOOBA-PIPELINE-PROTOCOL, tooba-backend-feature skill, reports 047/053/054/055/056/057 and the
+  running Host launch method; no unrelated findings register was consulted.
+- git fetch origin; HEAD == origin/main == 54a9f6e99e887781966a027fdfd12008c163dc19; Expected-Base-SHA
+  716717464ead027de98e8a0ca1150e8a62579457 is an ancestor and the only intervening commit is 057
+  evidence/bookkeeping (RESULT.bridge.txt + post-result.js) -> no source overlap, no RECOVERY_CONFLICT.
+  Pre-existing dirty/untracked files preserved; no stash/reset/rebase/force-push.
+
+RUNTIME PROVENANCE (real, not assumed)
+- Local Development target: appsettings.Development.json -> Edition SingleStore, DeploymentId dev-singlestore,
+  single Active tenant store-alpha -> ConnectionReference tenant-alpha -> Database=tooba_alpha on the local
+  container postgres-db (postgres:17) at 127.0.0.1:5432, role admin, loopback only. appsettings.json and
+  appsettings.Production.json carry no tenant list / empty connection references, so no remote, production,
+  staging, shared or unknown database is expressible. No credential value was written to any log.
+- Running process: Tooba.Host PID 37028, started 2026-10-13 18:11:34, exe under
+  src/backend/Host/Tooba.Host/bin/Debug/net8.0, listener on 127.0.0.1:5088. Verified alive and listening
+  before and after every probe; it was NOT restarted and no process was terminated.
+
+READ-ONLY DATABASE PROOF (tooba_alpha, SELECT only, no DDL/DML)
+- schemas=54, geography schema present, shipping schema present, tables(non-system)=247.
+- geography: 1 country (IR, active), 12 administrative areas, 47 cities, 0 service areas; translations
+  1/12/47/0; geography migration history rows=1 -> 20261014113949_InitialGeography.
+- shipping: tables coverage_grants, rate_policies (+outbox, history); shipping migration history rows=1 ->
+  20261014144742_InitialShipping; rate_policies=0 and coverage_grants=0 -> NO rate policy and NO coverage
+  grant exists; the engine is fail-closed with nothing to price with.
+- legacy Fulfillment catalog intact: shipping_services in_person/post/store_courier/tipax active=true,
+  snapp_courier active=false; options post/standard, tipax/express, tipax/standard active, post/express
+  inactive; 10 service translations, 8 option translations; localization.languages=3 (fa=1).
+- After all work: rate_policies=0, coverage_grants=0, geo_countries=1, geo_cities=47 and history rows 1/1 —
+  identical to the pre-task read. Zero writes reached tooba_alpha.
+
+AUTH / API COVERAGE
+- Running process (real HTTP, read-only): GET /health 200; GET /v1/storefront/geography/provinces 200
+  (control: tenant resolves and legacy storefront route is live); GET /v1/admin/orders 401 (control: an
+  existing admin route answers 401); GET /v1/admin/zzz-definitely-not-a-route 404 (negative control);
+  GET /v1/admin/geography/countries 404 and GET /v1/admin/shipping-services/post/rates 404 — identical to the
+  negative control, therefore the new routes are ABSENT from the running process (it predates 055-057).
+- Isolated disposable instance of the CURRENT code (allowed by mission A/C): database tooba_058_scratch
+  created and populated from tooba_alpha (identical counts); Tooba.Host built to %TEMP%\host058
+  (Build succeeded, 0 errors) and started on 127.0.0.1:5099 with Development, tenant-alpha -> scratch DB and
+  Tooba:Messaging:Enabled=false (no RabbitMQ contact, no SQL transport infrastructure). HEALTH 200.
+  Real HTTP matrix: GET /v1/admin/geography/countries -> 401 admin.actor.missing;
+  GET .../countries/{id}/administrative-areas -> 401; GET .../countries/{id}/cities -> 401;
+  GET /v1/admin/shipping-services/post/rates -> 401; POST /v1/admin/shipping-services/post/rates -> 415
+  (route matched, body/content-type required before the handler); with the documented Development-only actor
+  header (X-Tooba-Dev-Actor-User-Id) both admin routes -> 403 admin.authorization.denied. So: every new route
+  is registered, served and behind the fail-closed admin authorization boundary, and the Development actor
+  seam grants no capability.
+- BLOCKED: no authenticated admin CRUD flow could be exercised. There is no admin credential and
+  Authorization:Mode=InMemory starts with an empty authorization-tuple store, so the capability check denies;
+  inventing a bypass/tuple is forbidden. GET list-with-data, POST rate, POST grant, PUT update and PATCH
+  deactivate are therefore UNVERIFIED, not PASS.
+- Root cause of the first two clone startups failing ("requires Active tenant store-alpha"), disclosed:
+  stale Tooba__* environment variables left in my shell session by an earlier unrelated task (046:
+  Tooba__Edition, Tooba__DeploymentId=geo046-verify, Tooba__SingleStore__Tenants__0__*,
+  Tooba__PostgreSQL__ConnectionReferences__geo046scratch -> port 55433). Env config overrode the JSON tenant
+  array. No repository defect; after clearing the session variables the same binary started normally. The
+  password-bearing stale variable was removed during cleanup (session leftovers now 0).
+
+UI AND CHECKOUT RESULT
+- Frontend: src/frontend/app/admin/shipping-services/** exists (page.tsx, geography-admin-api.ts,
+  shipping-destination-picker.tsx, shipping-rates-coverage-api.ts, rates-coverage dialog + model + unit
+  tests). Because G8 is BLOCKED, no real authorized round-trip could be exercised; the UI is UNVERIFIED and no
+  fake-save behaviour is claimed either way. No frontend file was modified.
+- Checkout: legacy ShippingMethodsOptions + Fulfillment catalog remain the only price/promise authority.
+  StorefrontShippingRateAuthorityOptions defaults ShadowEnabled=false and PrerequisitesConfirmed=false, and no
+  appsettings file contains a Tooba:ShippingRateAuthority section, so the gate is Disabled and the observer
+  returns before any Geography/Shipping lookup; no cutover switch exists anywhere. Draft, CheckoutSnapshot,
+  payment allocations and historical orders untouched. No shadow equivalence is claimed — coverage is empty.
+
+TEST / GUARD OUTCOMES
+- dotnet build src/backend/Host/Tooba.Host -c Debug -o %TEMP%\host058: Build succeeded, 0 errors (the whole
+  Host, including the new Order/Shipping/Geography wiring, compiles).
+- No new test was authored and no test suite was re-run in 058; the timebox was consumed by the read-only
+  database proof and the isolated-runtime work, so 057's base-SHA results (Order 281 passed, Shipping 82
+  passed, shadow suite 18 passed) stand as the latest evidence at this shared base.
+- Host architecture guard tests were not run: executing them from a redirected output path breaks their
+  repo-root walk, and running them from the real path requires a Host restart, which is forbidden here. No
+  guard was weakened.
+
+ISOLATED DB PROOF / CLEANUP
+- Isolated instance stopped (PID 30980); only the user's Tooba.Host PID 37028 remains; listener on 5099 = 0,
+  listener on 5088 = 1. Scratch database dropped (scratch databases remaining 0, scratch connections 0);
+  %TEMP%\host058 removed; session env leftovers 0. The clone's own rate_policies/coverage_grants are 0/0 —
+  no rate or grant was created anywhere, no blanket/nationwide default grant, no invented tariff.
+
+RELEASE VERDICT: NOT_READY_FOR_CHECKOUT_CUTOVER
+Missing preconditions: real per-service rate policies and explicit coverage grants (currently 0 and 0); a
+city/service-area-bearing destination input on the storefront projection path (today only a province); measured
+zero-mismatch shadow parity from the 057 seam; and an explicit Architect-authorized cutover task.
+
+CLOSURE VERDICT (six-task + final three)
+- MVP admin usability: surfaces exist with real HTTP clients, but usability is UNVERIFIED (no authorized
+  round-trip possible).
+- Backend activation/live status: code-complete, compiling, and served on an isolated instance of the current
+  tree; the user-facing Development process is NOT activated (pre-055/057) and was deliberately not restarted.
+- Pricing authority: unchanged, legacy-owned, new authority permanently OFF by default, no cutover switch.
+- Known failing guard: the previously noted Host guard path issue persists; no guard weakened.
+- Smallest necessary next steps: (1) seed per-service rates + coverage grants via the verified admin surface,
+  (2) add city/service-area destination input, (3) run the shadow seam live with prerequisites confirmed and
+  record parity, (4) request cutover authorization.
+
+CHANGED PATHS (task-owned only): docs/planning/shipping/SHIPPING-MVP-OPERATIONAL-VERIFY-058.md and
+docs/architecture/evidence/TB-SHIPPING-MVP-OPERATIONAL-VERIFY-058/** (1 planning doc, summary + 3 logs +
+probe logs). No production source, migration, registry, appsettings, seed, Host composition or guard was
+modified. No other tenant/database was touched.
+ELAPSED: ~24 minutes of the 30-minute box (claimed 2026-10-14T19:47:41Z; work stopped after cleanup and
+evidence capture).
+BLOCKERS: authenticated admin CRUD and the frontend authorized round-trip (no credential / no authorization
+tuples; bypass forbidden), and the running Development process activation (restart deliberately not
+performed).
+END_TOOBA_WORKER_RESULT
