@@ -1,0 +1,116 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-CHECKOUT-SHADOW-057
+Parent-Task: TB-SHIPPING-MVP-GEOGRAPHY-ADMIN-056
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-FINAL-THREE
+Mode: BOUNDED_CHECKOUT_SHADOW_INTEGRATION_NO_UNPROVEN_CUTOVER
+Bridge-Task-Row: 9a5f5a6c-cc8c-49a8-bb06-cd9424af05bb
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: d734802ed6a7c823c778714cabd6376762d3fa6f
+Base-SHA: ba13a97a5678fb86953882d4913ef46a9f4d1878
+Code-SHA: 716717464ead027de98e8a0ca1150e8a62579457
+Evidence-SHA: 716717464ead027de98e8a0ca1150e8a62579457
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- Claimed exactly one row on tooba-main after BRIDGE-WAKE: 9a5f5a6c-cc8c-49a8-bb06-cd9424af05bb.
+- Read AGENTS.md, TOOBA-PIPELINE-PROTOCOL, tooba-backend-feature skill, reports 043/047/048/049/053/055/056,
+  the real Order storefront shipping service + projection handler, existing 049 shadow files, Order DI, Shipping
+  and Geography Contracts, active Host composition (ToobaModuleComposition -> GeographyModule + ShippingModule)
+  and the architecture guard tests.
+- git fetch origin; HEAD == origin/main == ba13a97a5678fb86953882d4913ef46a9f4d1878; Expected-Base-SHA
+  d734802ed6a7c823c778714cabd6376762d3fa6f is an ancestor and the only intervening commit is 056
+  evidence/bookkeeping (docs/architecture/evidence/TB-SHIPPING-MVP-GEOGRAPHY-ADMIN-056/**), so no overlapping
+  source changed -> no RECOVERY_CONFLICT. Pre-existing dirty/untracked files preserved; no reset/stash/rebase/force.
+
+REAL CALL GRAPH (traced before editing; behaviour unchanged)
+StorefrontOrderEndpoints (POST /storefront/shipping/projection, StorefrontShippingProjectionRequest)
+  -> ProjectStorefrontShippingQuery{CartId,GuestSecret,ProvinceName,MethodCode,Language}
+    -> StorefrontShippingService.ProjectAsync
+      -> LoadEligibleMethodsAsync -> TryAddMethod -> StorefrontShippingCalculator.ResolveRate /
+         IsDestinationAllowed / QuotePrice  (legacy rate authority = ShippingMethodsOptions config)
+Legacy destination input on this path is ProvinceName ONLY (no country/city/service area); cart subtotal +
+currency come from the returned StorefrontShippingProjection (SubtotalExclusiveOfTax / Currency).
+049 had installed the evaluator but nothing in live composition reached it - that is the gap closed here.
+
+CHANGED PATHS
+src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingShadowObservation.cs (added)
+src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingShadowObserver.cs (added)
+src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/Queries/ProjectStorefrontShipping/ProjectStorefrontShippingQuery.cs (edited)
+src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs (edited)
+src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingShadowObserverTests.cs (added)
+docs/planning/shipping/SHIPPING-MVP-CHECKOUT-SHADOW-057.md (added)
+docs/architecture/evidence/TB-SHIPPING-MVP-CHECKOUT-SHADOW-057/** (added: summary.md + 7 logs)
+No forbidden path was touched: no Shipping price/eligibility/promise authority, no draft/committed snapshot, no
+payment allocation, no historical order, no Fulfillment catalog, no Host Program.cs/composition file, no
+migration/registry/schema, no Seed, no appsettings, no database, no running process, no guard weakening,
+no Results.Json, no parallel engine, no direct foreign-module DbContext.
+
+GATE + DI PROOF
+- The REAL projection handler now awaits the shadow observer after a successful projection and returns the
+  projection result untouched (no field is read back from the observation).
+- Contracts-only: IGeographyLookup.ResolveLegacyAsync (Tooba.Geography.Contracts) for destination identity and
+  IShippingRateQuoteLookup.QuoteAsync (Tooba.Shipping.Contracts) for rate/coverage. No foreign DbContext, no
+  re-implemented rate rule.
+- OrderModule (existing Order composition root) binds options section "Tooba:ShippingRateAuthority" and
+  registers StorefrontShippingRateShadowEvaluator (IShippingRateQuoteLookup via GetService, optional) and
+  StorefrontShippingShadowObserver exactly once. appsettings*.json is untouched and contains no such section,
+  so bound options are the safe defaults -> gate Disabled. Gate requires BOTH ShadowEnabled AND
+  PrerequisitesConfirmed; a single flag enables nothing and there is no cutover switch anywhere.
+- Disabled path returns before any Geography or Shipping call: no extra query, no logging.
+
+SHADOW COMPARISONS / BOUNDED DECISIONS
+- Exactly one stable low-cardinality code per projection: Disabled | PrerequisitesUnconfirmed |
+  ShadowUnavailable | DestinationNotComparable | Observed; per-candidate StorefrontShippingRateShadowOutcome
+  names appended as a bounded set (<=7 values) in one structured log entry. No address, person name, raw
+  customer text or destination identifier is logged.
+- Source gap documented: province is the only destination input, so the observer passes the documented legacy
+  country key ("IR", the country the legacy catalog is explicitly limited to) plus the province text verbatim
+  and lets Geography resolve/validate it; Ambiguous/Unresolved -> DestinationNotComparable, never guessed.
+- No province chosen -> DestinationNotComparable with NO lookup (a destination-free legacy offer cannot be
+  compared to a country-level rate).
+- Failure containment: Geography failure/absent schema -> ShadowUnavailable; Shipping failure/absent tables ->
+  per-candidate ShippingUnavailable; neither escapes the seam. OperationCanceledException with a cancelled
+  token is re-thrown; cancellation semantics preserved. No blanket catch outside the shadow-only code.
+- No rate policy or coverage grant was created, no fake production rate, no nationwide default grant, and no
+  Assert of production equivalence without grants: the only "Match" case in the harness runs against an
+  in-memory test double and is explicitly documented as observation-only.
+
+TEST OUTCOMES
+- dotnet build Tooba.Order.Infrastructure: Build succeeded, 0 errors (1 pre-existing CS0105 warning).
+- dotnet test Tooba.Order.Tests (whole module): 281 passed / 0 failed.
+- dotnet test Tooba.Order.Tests --filter FullyQualifiedName~StorefrontShippingShadow (new suite: 14 observer
+  tests + 4 composition/text guards): 18 passed / 0 failed. Proves: shadow OFF by default => 0 geography and 0
+  shipping lookups; enabled-without-prerequisites => 0 lookups; ambiguous/unresolved/absent legacy destination
+  => NotComparable and never guessed; missing coverage never becomes allowed or free; amount + free-threshold
+  mismatch changes neither legacy price nor derived minimum-delivery promise; service code/cart facts/currency
+  forwarded untouched; throwing geography <=> ShadowUnavailable; throwing shipping => per-candidate
+  ShippingUnavailable without escaping; uncomposed seams => ShadowUnavailable; cancellation re-thrown; report
+  has no path to CartShippingDraft/CheckoutSnapshot/StorefrontShippingMethodView/SelectedShippingAmount.
+- dotnet test Tooba.Shipping.Tests: 82 passed / 0 failed.
+- dotnet build Tooba.Host.Tests -o %TEMP% (redirected because the running Host locks Tooba.Host/bin): Build
+  succeeded, 0 errors - the whole Host still compiles with the new Order composition.
+- Host architecture guard tests were NOT runnable: running the redirected Host.Tests assembly makes the
+  file-path-based guards walk up from %TEMP% (1383 path-relative failures, not real regressions). Executing
+  them from their real output path requires restarting the Host, which this task forbids.
+
+CURRENT PRICE AUTHORITY UNCHANGED / NON-LIVE STATUS
+Legacy ShippingMethodsOptions remains the only customer price/promise authority; the draft, CheckoutSnapshot,
+payment allocations and historical orders are untouched. No database was contacted, no DDL/DML executed, no
+Host restart or deploy, no rate/coverage data created. Therefore no claim is made that checkout traffic has
+switched to the new authority - it has not, and 057 introduces no way to switch it.
+Remaining gate for final release: (1) explicit non-empty Shipping rate policies + coverage grants for every
+active storefront service code; (2) zero shadow mismatches over representative destinations/service codes
+(mismatch blocks cutover); (3) a city/service-area-bearing destination input on the checkout path; (4) a
+separate Architect-authorized task to collect live shadow evidence and, only then, consider any cutover flag.
+
+ELAPSED: ~11 minutes (claimed 2026-10-14T19:33:17Z, result authored 2026-10-14T19:44Z), well inside the
+30-minute HARD box. PUSH: 716717464ead027de98e8a0ca1150e8a62579457 to origin/main; after fetch
+HEAD == origin/main.
+BLOCKERS: none for this task. Residual evidence gap: Host-level architecture guard tests could not be
+executed without a Host restart (forbidden); compile verification of the full Host.Tests project passed.
+END_TOOBA_WORKER_RESULT
