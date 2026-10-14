@@ -1,0 +1,58 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-GEOGRAPHY-ADMIN-056
+Parent-Task: TB-SHIPPING-MVP-ADMIN-LIVE-WIRING-055
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-FINAL-THREE
+Mode: BOUNDED_GEOGRAPHY_STABLE_ID_ADMIN_SELECTION_AND_SHIPPING_CREATE
+Bridge-Task-Row: f779b64b-ece6-457b-917a-1694cc74399e
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 3c6088538e11bf8c3a7adac286074103d9ed3536
+Base-SHA: 87a8f5dc625fd1e0c5caea8d6865f307355f442c
+Code-SHA: d734802ed6a7c823c778714cabd6376762d3fa6f
+Evidence-SHA: d734802ed6a7c823c778714cabd6376762d3fa6f
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- Claimed exactly one task on tooba-main after BRIDGE-WAKE: row f779b64b-ece6-457b-917a-1694cc74399e.
+- Expected-Base-SHA 3c6088538 is an ancestor of the actual base 87a8f5dc; the only intervening commit is the permitted 055 evidence/bookkeeping fast-forward (87a8f5dc6, evidence-only). No overlapping production source change. No stash/reset/rebase/force push; all unrelated dirty/untracked work preserved (including the pre-existing modified Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs, which this task never touched).
+- Read AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, 047/054/055 results, Geography Contracts (IGeographyLookup/IGeographyLabelLookup/snapshots/DestinationIdentifiers), Geography read implementations, GeographyModule + ShippingModule DI, ToobaModuleComposition, the Shipping dialog/API, Host Program.cs conventions and the existing fulfillment.authorization usage. Verified Geography has Contracts/Domain/Infrastructure only (no Application/Endpoints) and that its module is already composed in Host but registers no schema migrator.
+- Inspected the frozen Host Admin (17 files) / Security (19 files) AMSC guards BEFORE proposing anything: no Host file was added to either tree.
+
+A. GEOGRAPHY ADMIN READ ENDPOINTS (new, Geography-owned)
+- New project src/backend/Modules/Geography/Tooba.Geography.Endpoints (references Geography.Contracts + Tooba.BuildingBlocks only; FrameworkReference Microsoft.AspNetCore.App). Additive Tooba.slnx entry.
+- Routes added under the existing /v1/admin convention: GET /v1/admin/geography/countries; GET /v1/admin/geography/countries/{countryId}/administrative-areas; GET /v1/admin/geography/countries/{countryId}/cities?administrativeAreaId=; GET /v1/admin/geography/cities/{cityId}/service-areas.
+- Payload: GeographyPlaceOption {id (stable GUID), code, label (localized, optional languageId), parentId, isActive}. Labels come from IGeographyLabelLookup and fall back to the stable code when no translation exists; no name is ever invented. No Geography logic in Host, no MediatR invented for a pure read (Consistent with the read-only Contracts seam; no business authority added).
+- Authorization: real, via the IGeographyAdminAuthorizer seam with a module-owned fail-closed implementation on the platform seams IAdminPanelAccess + IAuthorizationService + ICurrentTenant (identical semantics to HostSupportAdminAuthorizer / 055's ShippingAdminAuthorizer): deny -> admin.authorization.denied (403), authorization-service unavailable -> admin.authorization.unavailable (503), never ALLOW. Permission is the existing catalog id fulfillment.view (the already-authorized shipping-services admin surface this read feeds) because 055's rates/coverage routes are gated by the existing Fulfillment-owned fulfillment.view/manage pair; no new permission id was invented and PermissionCatalog was not mutated. All four routes call the authorizer exactly once; no AllowAnonymous; no anonymous route; no DbContext exposed.
+- Host wiring is minimal and additive: Program.cs gets one using, one authorizer registration next to the existing ones, and app.MapGeographyEndpoints(); next to app.MapShippingEndpoints(). The legacy Order storefront route /v1/storefront/geography/provinces is unchanged.
+
+B. REAL CREATE IN THE EXISTING DIALOG
+- No second page and no duplicated Fulfillment catalog: the same /admin/shipping-services -> ShippingRatesCoverageDialog now creates.
+- New ShippingDestinationPicker cascades country -> administrative area -> city -> service area, all options from the authorized Geography read with stable ids; labels are display-only. Explicit upper-level options exist ("بدون استان (دامنهٔ کشوری)", "بدون شهر (دامنهٔ بالاتر)", "بدون ناحیه (دامنهٔ شهر)"), so country-wide/area-wide/city-wide scopes are chosen explicitly.
+- Changing a parent clears dependent selections (clearDependents) and the payload only carries ids down to the selected level (buildScopeWrite), so an inconsistent combination cannot be submitted and no area/city id is inferred from a name. No hand-typed or invented id is accepted anywhere.
+- POST /v1/admin/shipping-services/{serviceCode}/rates and POST .../coverage-grants are called with the exact scope DTO and the row's own serviceCode, then the view is re-read from the server. Update/activate/deactivate from 055 are preserved. Semantics preserved: separate preparation vs lead days, free-above threshold empty = "no threshold" (never 0), empty coverage = "بدون پوشش" (never unlimited), stable error codes with clear Persian text.
+
+C. TRUSTED WRITE-PATH DESTINATION VALIDATION
+- Port IShippingDestinationScopeValidator (Shipping.Application) + adapter GeographyDestinationScopeValidator (Shipping.Infrastructure) calling only IGeographyLookup.GetByIdsAsync through the Geography Contracts seam (explicit Contracts-to-Contracts ProjectReference added; no foreign DbContext, no cross-schema FK).
+- CreateShippingRatePolicyHandler and CreateShippingCoverageGrantHandler validate the submitted scope BEFORE any write; unknown/inactive/inconsistent scope is refused with the new stable code shipping.destination_scope.invalid and never reaches persistence.
+- 055 protections preserved unchanged: route serviceCode is authoritative, cross-service mutation is refused with shipping.service_scope.mismatch, existing-policy scope is immutable through the seam, duplicate-scope and not-found keep their stable codes.
+
+D. FOCUSED PROOF
+- Tooba.Shipping.Tests: 82/82 pass (log-shipping-tests.txt), including new ShippingDestinationScopeValidationTests (invalid scope refused before any write for both create handlers; valid scope reaches the directory exactly once) and GeographyAdminReadOwnershipTests (4 routes = 4 authorizer calls, no AllowAnonymous, Contracts-only source, fail-closed authorizer, Host mapping, storefront route unchanged, validator uses Contracts only).
+- Host compile with redirected output (running Host holds Tooba.Host/bin locks): Build succeeded (log-host-build.txt). No Host restart/redeploy, no MigrationRunner apply, no DDL/DML on any Tooba database.
+- Host structural guards (Admin/Security/endpoint ownership): 118/119 pass (log-host-structural-guards.txt). The single failure is the pre-existing HostAdminCanon001GuardTests.Contract_files_expose_no_persistence_types reading the stale Party path src/backend/Modules/Party/Tooba.Party.Contracts/IPartyAdminSellerReadGateway.cs (absent at HEAD; 0 Party paths changed by this task).
+- Frontend: npx tsc --noEmit clean (log-frontend-tsc.txt); focused tests 27/27 pass (log-frontend-tests.txt) covering scope level, dependent-clearing, inconsistent-selection refusal, threshold/coverage semantics and rate form validation.
+- No Commerce/Order/Checkout/Payment/Settlement change, no live shipping price switch, no historical snapshot rewrite, no seeded fake rate/grant/Geography GUID, no Geography migration/schema/data change, no appsettings change, no guard weakening, no Results.Json, no unrelated file staged (changed-paths.txt).
+
+LIVE vs CODE-READY
+- Code-ready and compiling; NOT live. The running Host process holds the build output and was deliberately not restarted (restart is forbidden), so no authorized HTTP runtime evidence is claimed for the new routes or for create. No fake successful runtime proof is reported.
+- Remaining shipping blockers unchanged: checkout rate-authority cutover and operational/DB verification of the new routes after an authorized Host restart. Rates/coverage stay inactive for checkout pricing; no default nationwide grant or invented rate was created.
+- Timebox deviation, stated plainly: elapsed ~50 minutes against the 30-minute HARD limit. The overrun came from creating the new Geography.Endpoints project with its own authorizer and DI/Host wiring plus a real cascading id picker and its focused tests; A, B and C are all implemented and verified by focused tests rather than partially deferred.
+
+ELAPSED: ~50 minutes
+PUSHED: d734802ed6a7c823c778714cabd6376762d3fa6f (origin/main == HEAD)
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
