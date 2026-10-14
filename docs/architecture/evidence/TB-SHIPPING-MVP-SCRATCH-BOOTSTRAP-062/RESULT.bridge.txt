@@ -1,0 +1,155 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-SCRATCH-BOOTSTRAP-062
+Parent-Task: TB-SHIPPING-MVP-ISOLATED-HTTP-061
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE
+Mode: BOUNDED_ISOLATED_DEV_AUTH_BOOTSTRAP_REPAIR
+Bridge-Task-Row: 36ddcdd6-905d-4ee6-800e-552a916a8cb1
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 5b83c7c826fa494ae2d838ddf88b8e45c41561a3
+Base-SHA: 239a26dbfb18c888981110d6b82c03d7605e0794
+Code-SHA: 49a1fd195e8d734122d99e8352cec6886c3aeff4
+Evidence-SHA: 49a1fd195e8d734122d99e8352cec6886c3aeff4
+automaticNextImplementationTask: NONE
+
+PREFLIGHT / DRIFT
+git fetch origin; HEAD == origin/main == 239a26dbfb18c888981110d6b82c03d7605e0794 before the run.
+Expected-Base-SHA 5b83c7c8 is an ancestor; `git diff --name-only 5b83c7c8..239a26db` is exactly two paths, both under
+docs/architecture/evidence/TB-SHIPPING-MVP-ISOLATED-HTTP-061/ (RESULT.bridge.txt, post-result.js) — the 061 result
+record, an evidence-only commit with path-by-path zero source overlap. No RECOVERY_CONFLICT. No reset, stash, rebase or
+force-push. Received artifact preserved verbatim as the unstaged receipt
+docs/ai/tasks/TB-SHIPPING-MVP-SCRATCH-BOOTSTRAP-062.task.md (never staged). Every unrelated pre-existing dirty path was
+left untouched; the commit contains only the one repaired source file, the planning document and the evidence folder.
+
+EXACT ROOT CAUSE (source-traced and reproduced)
+With Tooba:CatalogDemo:RunLegacyBootstraps=false (the modern Development default), Program.cs calls
+DevelopmentSchemaMigrator.MigrateSchemaOnlyAsync -> ApplyCoreAsync(services, seedCatalog: false), which migrates schema
+and then returns at `if (!seedCatalog) return;` BEFORE any module seed. Therefore
+SettingsFoundationDevelopmentSeedHost.ApplyAsync — the only caller of PartyOrganizationProfileDevelopmentSeed and thus
+the only producer of the Party development organizations — never runs.
+SupportDevelopmentSeedHost.ApplyAsync then runs the canonical admin bootstrap chain:
+ 1. AdminDevActorBootstrap.EnsureAsync -> succeeds: actor identity + tenant#member tuple exist
+    (GET /v1/admin/dev-context -> 200, three login identifiers in total).
+ 2. AccessControlDevelopmentSeedPrelude.EnsureSupportSeedPrerequisitesAsync ->
+    SellerDevContextBootstrap.EnsureAsync creates the two seller demo identities, then performs two READ-ONLY Party
+    lookups: FindDevelopmentOrganizationByDisplayNameAsync (no Party demo organization was ever seeded) and
+    FindDevelopmentMembershipSellerPartyAsync (party.memberships empty) -> it returns without Publish(), so
+    ISellerDevContextStore.Current stays null.
+ 3. Pre-repair the prelude then executed `if (seller is null) return null;` BEFORE calling
+    IAccessControlDirectory.EnsureBootstrapAsync, so the platform-admin role, its PermissionCatalog grants, the admin
+    user_role_assignment and the admin capability tuples were never created. Every admin surface therefore stayed
+    fail-closed 403 while the actor existed.
+Reproduction on a fresh task-exclusive database: identities = 3, party.parties = 1 (only the unrelated
+"DEV-SEED OOS Seller"), party.memberships = 0, access_control.roles = 0, role_permissions = 0,
+user_role_assignments = 0, while GET /v1/admin/dev-context returned 200.
+Proof that this is a gate defect and not a swallowed exception: Program.cs wraps the Support/Wallet seeds in try/catch
+that LOGS on failure and no "SupportDevelopmentSeed failed"/"WalletDevelopmentSeed failed" record exists; zero
+unexpected Error-level records were produced; and the two steps that DID run used the very same IAuthorizationTupleWriter
+and the same identity seam successfully. This is a Development-only seed ordering/coverage defect: the canonical
+authorization bootstrap was gated behind unrelated demo seller data that the schema-only path deliberately omits.
+
+MINIMAL SAFE FIX
+Changed exactly one existing Development-only file:
+src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/Development/AccessControlDevelopmentSeedPrelude.cs
+The canonical `_access.EnsureBootstrapAsync(adminActorUserId, sellerPartyIds, tenantId, ct)` call was moved ahead of the
+`seller is null` early return and now receives the seller party list actually known (an empty list when the seller dev
+context is unavailable); only the Support demo seed remains gated on the seller context.
+Boundary proof of "no bypass": the only call is the pre-existing canonical IAccessControlDirectory.EnsureBootstrapAsync —
+the same method behind the HTTP route POST /v1/admin/access-control/bootstrap (EnsureAccessControlBootstrapCommand). No
+fabricated role/tuple insert, no manual DB seed, no AllowAnonymous, no capability bypass, no new permission identifier,
+no permission-catalog change, no guard weakening, no Architecture-boundary move, no Host/Admin or Host/Security edit, no
+Catalog-demo change, and no Production-path change (the prelude is reached only from the IsDevelopment() block). With an
+empty seller list the seller-owner/ceiling work is skipped exactly as before, behavior for the Support demo seed is
+unchanged, and EnsureBootstrapAsync remains idempotent (existing role/assignment short-circuit, catalogue grants are
+reconciled, tuple sync is revoke-and-rewrite).
+
+FOCUSED ISOLATED PROOF (fresh scratch, then restart)
+Task-exclusive postgres:17 container `tooba-062-scratch`, own volume, published only as 127.0.0.1:55433, fresh role
+scratch062, database tooba_062_scratch_r4v8c1tp; tooba_alpha does not exist inside it. A task-owned launch directory
+replaced appsettings.Development.json with an isolated overlay holding exactly ONE tenant (store-alpha) and exactly ONE
+reference (tenant-062-scratch, canonical hyphenated key), and the launcher cleared all inherited
+Tooba__*/ASPNETCORE__*/DOTNET__*/ConnectionStrings__* first.
+Isolation was proven BEFORE any request, three independent ways:
+ 1. OFFLINE — the copied 060 guard over the exact (effective merged config, launch override file):
+    RESULT=PASS EXIT_CODE=0 TENANT=store-alpha CONNECTION_REFERENCE=tenant-062-scratch HOST=127.0.0.1 PORT=55433
+    DATABASE=tooba_062_scratch_r4v8c1tp SENTINEL=r4v8c1tp CONFIG_OVERRIDE_KEYS_APPLIED=1 CREDENTIALS_PRINTED=false
+    DATABASE_CONTACTED=false FINGERPRINT=02dd3e724f341f9a0052273f34a503a0fb6c512fe204a114c1944f55fc314cc7
+    CONFIG_SHA256=72d57bf8f16a865d6fb19f9f0fe0012d9b997bf8f85812970cf6a4ea9b623599; plus the prepare step's own
+    assertions that the base config declares 0 tenants/0 references and the effective config exactly 1 of each,
+    loopback-only on port 55433 only.
+ 2. RUNTIME — the Host served /v1/admin/dev-context with tenantId=store-alpha under the isolated deploymentId; the
+    identical launcher's provenance endpoint was recorded in 061 evidence as connectionReference=tenant-061-scratch.
+ 3. DATABASE-SIDE — all resulting rows appear only inside the scratch database (counts below).
+No credential is printed or committed; committed configuration copies are redacted.
+
+Fresh database, host rebuilt from the patched source, database dropped and recreated:
+  access_control.roles                 = 1
+  access_control.role_permissions      = 55
+  access_control.user_role_assignments = 1
+
+Real HTTP authorization outcomes on that fresh isolated Host:
+  GET /v1/admin/access-control/roles, no credential         -> 401 admin.actor.missing
+  GET /v1/admin/access-control/roles, admin actor           -> 200 (platform-admin, isSystem=true, permissionCount=55,
+                                                                    assignmentCount=1)
+  GET /v1/admin/access-control/me/capabilities, admin actor -> 200 (permissions[] with
+                                                                    inheritedViaRoleCodes=["platform-admin"])
+  GET /v1/admin/geography/countries, admin actor            -> 500 platform.unexpected
+  GET /v1/admin/shipping-services/{code}/rates, admin actor -> 500 platform.unexpected
+      Both are `Npgsql.PostgresException: 42P01: relation ... does not exist`: authorization PASSED (no 403) and the
+      failure is the Geography/Shipping module schema, which MigrateSchemaOnlyAsync does not create. Environment
+      limitation carried over from 061, not an authorization defect.
+  GET /v1/admin/geography/countries, unknown actor id       -> 403 admin.authorization.denied
+  GET /v1/admin/geography/countries, seller actor id        -> 403 admin.authorization.denied
+So the canonical Development bootstrap now provisions the established admin capability, while unauthorized users remain
+denied.
+
+Idempotence: task-owned Host restarted against the SAME database with no reset -> roles stays 1, role_permissions stays
+55, user_role_assignments stays 1, login_identifiers stays 3 (no duplicates), and the authorized GET still returns 200
+with exactly one role.
+
+FOCUSED/REGRESSION TESTS AND AN ENVIRONMENT OBSTACLE
+  dotnet build src/backend/Host/Tooba.Host/Tooba.Host.csproj -> 0 errors with the fix.
+  dotnet build src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj -> 0 errors (209 warnings, pre-existing).
+  Running the architecture guard suite in place is NOT possible without stopping the user's running Host, which is
+  forbidden: the user's Host process (PID 37028, port 5088) holds locks on
+  src/backend/Host/Tooba.Host/bin/Debug/net8.0/*.dll, so the in-place test build fails with MSB3027/MSB3021 file-lock
+  errors (83 s, exit 1). Running the suite from an out-of-tree or relocated output directory is not usable either,
+  because those guard tests resolve the repository root relative to the test assembly and then fail with
+  "repo root not found" (1382 of 1456 failed on that infrastructure error alone; a narrower run of 31 guards gave 30
+  passes and that single repo-root infrastructure failure). No guard assertion was observed to fail. The user's Host was
+  deliberately left running and untouched; no local test processes were left behind.
+
+CLEANUP / SAFETY PROVEN
+Task-owned Host on :5099 stopped and the port released; container tooba-062-scratch deleted with zero remaining
+containers and volumes of that name; temp launch directory, credentials and relocated test output removed; no
+Tooba__*/ASPNETCORE__* residue. The user's :5088 Host was never started, stopped, restarted or addressed — same listener
+PID 37028 before and after, /health -> {"status":"ok"}. No existing database (tooba_alpha, 127.0.0.1:5432) was queried,
+edited or cleaned; the scratch database name and its sentinel were unique per run.
+
+CHANGED PATHS
+src/backend/Modules/AccessControl/Tooba.AccessControl.Infrastructure/Development/AccessControlDevelopmentSeedPrelude.cs
+docs/planning/shipping/SHIPPING-MVP-SCRATCH-BOOTSTRAP-062.md
+docs/architecture/evidence/TB-SHIPPING-MVP-SCRATCH-BOOTSTRAP-062/** (21 files, 75 KB bounded logs)
+docs/ai/tasks/TB-SHIPPING-MVP-SCRATCH-BOOTSTRAP-062.task.md (unstaged receipt only, never committed)
+
+GIT
+commit 49a1fd195e8d734122d99e8352cec6886c3aeff4 pushed to origin/main; HEAD == origin/main confirmed after fetch.
+
+ACTUAL ELAPSED
+Approximately 26 minutes from bridge claim (21:07:38Z) to result preparation — reported inside the 30-minute hard stop;
+verification stopped at the environment obstacles rather than overrunning.
+
+REMAINING BLOCKERS / OUT OF SCOPE
+ 1. The two seller demo organizations are still not provisioned when RunLegacyBootstraps=false, so the Support demo
+    seed still no-ops on a fresh database. That is pre-existing intended gating, not the defect repaired here.
+ 2. Geography/Shipping module schemas are absent from the schema-only Development path, so authorized HTTP calls to
+    those admin surfaces still fail with 500 for a missing relation. This is the next blocking environment fact if live
+    Shipping HTTP CRUD regression is required; it is out of this task's scope.
+ 3. In-place execution of the repository's architecture guard suite requires the user's running Host to be stopped;
+    Architect guidance is needed on an approved way to run it without touching that process.
+
+END_TOOBA_WORKER_RESULT
