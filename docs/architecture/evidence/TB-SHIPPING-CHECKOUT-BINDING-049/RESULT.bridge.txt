@@ -12,8 +12,8 @@ Status: PARTIAL
 Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: 0bf456e1daaf6462fd83c7c7cf19f973a63015d5
 Base-SHA: 426a1cb488cb54186f717e3a01428caf8d6d7f6b
-Code-SHA: PENDING_COMMIT
-Evidence-SHA: PENDING_COMMIT
+Code-SHA: 0e9d99df85efc919080d4d9b17256cffc6e5e802
+Evidence-SHA: 0e9d99df85efc919080d4d9b17256cffc6e5e802
 automaticNextImplementationTask: NONE
 
 BASE DRIFT (safe, not RECOVERY_CONFLICT)
@@ -103,12 +103,11 @@ no provider slots, no nation-wide implied coverage, no paid orders, no architect
 cross-module DbContext access, no dummy /api/results probe, no follow-on task.
 
 ACTUAL ELAPSED
-Claim 2026-10-14T13:50:07Z; artifact completion recorded in the push evidence below. Work was executed
-as one continuous bounded slice; the 30-minute budget was consumed by seam design, focused tests and
-evidence capture, and the slice was stopped at a coherent committable subset rather than expanded.
+Claim 2026-10-14T13:50:07Z; push completed 2026-10-14T13:55:46Z. Actual elapsed: ~6 minutes, well inside
+the 30-minute HARD timebox (no overrun). All work was completed before the Bridge Result POST.
 
 PUSH EVIDENCE
-Commit: PENDING_COMMIT
-origin/main after push: PENDING
+Commit: 0e9d99df85efc919080d4d9b17256cffc6e5e802
+origin/main after push: 0e9d99df85efc919080d4d9b17256cffc6e5e802 (HEAD == origin/main verified after git fetch origin)
 git fetch origin; HEAD == origin/main verified.
 END_TOOBA_WORKER_RESULT
