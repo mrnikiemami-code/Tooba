@@ -7,7 +7,7 @@
 | Repository / Branch | `mrnikiemami-code/Tooba` / `main` |
 | Expected-Base-SHA | `5e07617c04c4098efb7d1a4af99f5d6a619c8448` |
 | Base-SHA (verified `HEAD == origin/main`) | `5e07617c04c4098efb7d1a4af99f5d6a619c8448` |
-| Code-SHA / Evidence-SHA | `d9d598d074dfc4047b0cdc3d29392d2f5cd6b26d` |
+| Code-SHA / Evidence-SHA | final HEAD of this task's commit chain — recorded in the Bridge Result for this Task |
 | Parent task | `TB-SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044` |
 | Mode | `BOUNDED_GEOGRAPHY_MIGRATION_METADATA_NO_APPLY` |
 | Status | `PASS` |
@@ -102,7 +102,7 @@ Consequence to be explicit about: the next explicit `Tooba.MigrationRunner apply
 ## 6. Time, commit, push
 
 - Claim `12:23:29Z` → first validated push `12:28:41Z`, final validated push `12:29:4xZ`: **≈6 minutes** of the 30-minute hard timebox.
-- Two bounded commits of task-owned paths only: `c316c7f46d2ba55226bdcc8dc5157833bda82263` (order constant + runner descriptor + report + evidence) and `d9d598d074dfc4047b0cdc3d29392d2f5cd6b26d` (report: exact elapsed time and SHA). `git push origin main`; `git fetch origin`; `HEAD == origin/main` verified.
+- Two bounded commits of task-owned paths only: `c316c7f46d2ba55226bdcc8dc5157833bda82263` (order constant + runner descriptor + report + evidence) and `d9d598d074dfc4047b0cdc3d29392d2f5cd6b26d` (report: exact elapsed time and SHA), followed by one documentation-only commit that removes the self-referential SHA from this document. The final HEAD of the chain is recorded in the Bridge Result for this Task. `git push origin main`; `git fetch origin`; `HEAD == origin/main` verified.
 - No force-push, no history rewrite, no unrelated staging, no `MigrationRunner apply`, no SQL, no Tooba database connection, no Host restart, no Results-API probe, no automatic next task, no idle polling.
 
 ## 7. Residual risks and the single next recommendation
