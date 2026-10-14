@@ -92,10 +92,22 @@ public sealed class GeographyDbContext : DbContext
                 .HasForeignKey(x => x.CountryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Composite principal key (AdministrativeAreaId, CountryId) exists only so the
+            // self-parent reference below can be constrained to the SAME country. It is trivially
+            // unique (AdministrativeAreaId is already the PK) and is a database-enforced unique
+            // constraint, which PostgreSQL requires to be a foreign-key target.
+            entity.HasAlternateKey(x => new { x.AdministrativeAreaId, x.CountryId })
+                .HasName("ak_administrative_areas_id_country");
+
             // Self hierarchy: reference-locked (never cascade-delete a subtree of reference data).
+            // Composite FK: a parent in a DIFFERENT country is impossible at the relational
+            // boundary. Postgres MATCH SIMPLE semantics mean the check applies whenever a parent is
+            // present; the only accepted "skip" is ParentAdministrativeAreaId IS NULL, i.e. a root
+            // area with no parent link at all (CountryId itself is NOT NULL).
             entity.HasOne<AdministrativeArea>()
                 .WithMany()
-                .HasForeignKey(x => x.ParentAdministrativeAreaId)
+                .HasForeignKey(x => new { x.ParentAdministrativeAreaId, x.CountryId })
+                .HasPrincipalKey(x => new { x.AdministrativeAreaId, x.CountryId })
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -117,10 +129,15 @@ public sealed class GeographyDbContext : DbContext
                 .HasForeignKey(x => x.CountryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // AdministrativeAreaId is optional: a city may exist without an owning area.
+            // AdministrativeAreaId is optional: a city may exist without an owning area. The
+            // composite FK (AdministrativeAreaId, CountryId) -> (AdministrativeAreaId, CountryId)
+            // makes an area in a DIFFERENT country impossible at the relational boundary; with
+            // Postgres MATCH SIMPLE semantics the check applies whenever an area is present, and the
+            // only accepted "skip" is AdministrativeAreaId IS NULL (CountryId itself is NOT NULL).
             entity.HasOne<AdministrativeArea>()
                 .WithMany()
-                .HasForeignKey(x => x.AdministrativeAreaId)
+                .HasForeignKey(x => new { x.AdministrativeAreaId, x.CountryId })
+                .HasPrincipalKey(x => new { x.AdministrativeAreaId, x.CountryId })
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
