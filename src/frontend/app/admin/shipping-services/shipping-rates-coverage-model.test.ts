@@ -173,13 +173,24 @@ test("an empty or inconsistent destination selection is refused before submit", 
   assert.deepEqual(validateDestinationSelection(EMPTY_DESTINATION_SELECTION), [
     "کشور مقصد را از فهرست انتخاب کنید.",
   ]);
+  // ناحیهٔ خدمت بدون شهر مالک ترکیب ناهم‌بسته است و رد می‌شود.
   assert.ok(
     validateDestinationSelection({
       countryId: "c1",
       administrativeAreaId: "a1",
-      cityId: "ci1",
+      cityId: null,
       serviceAreaId: "s1",
     }).length > 0,
+  );
+  // دامنهٔ شهر والدِ استان خود را حمل می‌کند؛ این ترکیب معتبر است و هیچ ایرادی ندارد.
+  assert.deepEqual(
+    validateDestinationSelection({
+      countryId: "c1",
+      administrativeAreaId: "a1",
+      cityId: "ci1",
+      serviceAreaId: null,
+    }),
+    [],
   );
   assert.deepEqual(
     validateDestinationSelection({ countryId: "c1", administrativeAreaId: null, cityId: null, serviceAreaId: null }),

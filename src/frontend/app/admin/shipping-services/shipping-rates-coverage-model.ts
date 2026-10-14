@@ -248,7 +248,14 @@ export function buildScopeWrite(selection: DestinationSelection): {
   };
 }
 
-/** آیا دامنه برای نوشتن آماده است؟ (کشور الزامی است و ناحیهٔ خدمت بدون شهر پذیرفته نمی‌شود) */
+/**
+ * آیا دامنه برای نوشتن آماده است؟ (کشور الزامی است و ناحیهٔ خدمت بدون شهر پذیرفته نمی‌شود)
+ *
+ * یک دامنهٔ شهر، استان مالک خود را نیز به‌عنوان والد حمل می‌کند؛ قرارداد دامنه می‌گوید هر شیء
+ * دامنه‌دار باید همیشه همهٔ والدها را داشته باشد. پس «استان + شهر» یک ترکیب نامعتبر نیست، بلکه
+ * همان دامنهٔ سطح شهر با والد درست است و بک‌اند آن را می‌پذیرد. تنها ترکیب نامعتبر، ناحیهٔ خدمت
+ * بدون شهر مالک است.
+ */
 export function validateDestinationSelection(selection: DestinationSelection): string[] {
   const issues: string[] = [];
   if (!selection.countryId) {
@@ -256,9 +263,6 @@ export function validateDestinationSelection(selection: DestinationSelection): s
   }
   if (selection.serviceAreaId && !selection.cityId) {
     issues.push("ناحیهٔ خدمت بدون شهر مالک معتبر نیست.");
-  }
-  if (selection.cityId && selection.administrativeAreaId) {
-    issues.push("شهر و استان هم‌زمان قابل انتخاب نیستند؛ سطح دامنه را یکی کنید.");
   }
   return issues;
 }

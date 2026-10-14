@@ -1,0 +1,41 @@
+﻿=== TB-SHIPPING-MVP-DEV-ADMIN-UI-065 :: fixtures created and controlled cleanup ===
+
+Fixtures created on the Development DB (tooba_alpha), service code 'post' (existing ACTIVE fulfillment service):
+  HTTP path  : ratePolicyId=01a13ca4-4281-7000-bb23-76edd8f68818  scope=city IR-alborz-01 (alborz/karaj)
+  HTTP path  : coverageGrantId=01a13ca4-42f6-7000-b2b4-8318c1572792  same scope
+  UI path #1 : ratePolicyId=01a13ca8-3a0a-7000-8ddc-23b0c11bd871  scope=country IR (created before the fix; the requested city scope was refused by the client rule)
+  UI path #1 : coverageGrantId=01a13ca8-7fac-7000-9248-dbab79feedd1  scope=country IR
+  UI path #2 : ratePolicyId=01a13cb1-22a3-7000-9f3d-8cf18b7cbdc8  scope=city IR-east_azerbaijan-02 (marand) -- after the fix
+  UI path #2 : coverageGrantId=01a13cb1-8c4a-7000-8e00-be5de12ac374  same scope -- after the fix
+
+Marker: every fixture is scoped to a single real city (or, for the pre-fix run, the country) and carries a
+deliberately unusual synthetic amount (65000/71000/111111/222222/123456) -- no live tariff is reproduced.
+
+Cleanup mode: the Shipping admin surface exposes six routes (GET, POST rate, PUT rate, PATCH rate active,
+POST grant, PATCH grant active). There is NO delete route and no schema-level soft-delete, so a fixture
+cannot be removed over the API. Controlled cleanup therefore deactivates every fixture, which is the
+strongest available state: an inactive policy/grant is not coverage and does not quote (fail-closed).
+Database rows are intentionally NOT deleted by hand: the user stated the Development data is disposable,
+but nothing in this task authorises silent row deletion.
+
+DEACTIVATE rate 01a13ca4-4281-7000-bb23-76edd8f68818 -> HTTP 200
+DEACTIVATE grant 01a13ca4-42f6-7000-b2b4-8318c1572792 -> HTTP 200
+DEACTIVATE rate 01a13cb1-22a3-7000-9f3d-8cf18b7cbdc8 -> HTTP 200
+DEACTIVATE grant 01a13cb1-8c4a-7000-8e00-be5de12ac374 -> HTTP 200
+DEACTIVATE rate 01a13ca8-3a0a-7000-8ddc-23b0c11bd871 -> HTTP 200
+DEACTIVATE grant 01a13ca8-7fac-7000-9248-dbab79feedd1 -> HTTP 200
+
+=== final authorized state for service 'post' ===
+ratePolicies=3 activeRates=0
+coverageGrants=3 activeGrants=0
+RATE   01a13ca4-4281-7000-bb23-76edd8f68818 level=City city=68255340-c69f-5d20-bf33-e8e0b24edde9 charge=71000.00 active=False
+RATE   01a13cb1-22a3-7000-9f3d-8cf18b7cbdc8 level=City city=ebf0cb15-c2a0-5366-a08e-2283d9c71f97 charge=111111.00 active=False
+RATE   01a13ca8-3a0a-7000-8ddc-23b0c11bd871 level=Country city= charge=222222.00 active=False
+GRANT  01a13ca4-42f6-7000-b2b4-8318c1572792 level=City city=68255340-c69f-5d20-bf33-e8e0b24edde9 active=False
+GRANT  01a13cb1-8c4a-7000-8e00-be5de12ac374 level=City city=ebf0cb15-c2a0-5366-a08e-2283d9c71f97 active=False
+GRANT  01a13ca8-7fac-7000-9248-dbab79feedd1 level=Country city= active=False
+
+=== untouched-service fail-closed recheck (no implicit nationwide coverage) ===
+tipax : ratePolicies=0 coverageGrants=0 -> no coverage, quote must stay NotCovered
+store_courier : ratePolicies=0 coverageGrants=0 -> no coverage, quote must stay NotCovered
+in_person : ratePolicies=0 coverageGrants=0 -> no coverage, quote must stay NotCovered

@@ -1,0 +1,16 @@
+﻿=== TB-SHIPPING-MVP-DEV-ADMIN-UI-065 :: Development host identity (pre-restart) ===
+GIT_HEAD=6f87d7dd54b2aa2e2904361b52af24330a8b538e
+GIT_ORIG=6f87d7dd54b2aa2e2904361b52af24330a8b538e
+NOW_UTC=2026-10-14T22:52:25.0626203Z
+PROCESS PID=36540 :: dotnet  run --project src\backend\Host\Tooba.Host --no-launch-profile --no-build 
+PROCESS PID=37028 :: "D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe"
+LISTEN_5088 PID=37028
+PROVENANCE={"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"4e09bb96b0e5832e0c7bd33b7d522539"}
+DEV_CONTEXT_STATUS=200 (Development-only endpoint -> hard Development proof)
+SHIPPING_ROUTE_ON_OLD_HOST_STATUS=404 (stale binary: shipping endpoints not mapped)
+DB_TARGET=tooba_alpha @ 127.0.0.1:5432 (docker container postgres-db) via connectionReference tenant-alpha
+ENV_PROOF=app.Environment.IsDevelopment() gate satisfied; RunLegacyBootstraps=false -> MigrateSchemaOnlyAsync only
+=== graceful stop of identified Development host ===
+STOPPING PID=37028 NAME=Tooba.Host
+STOPPING PID=36540 NAME=dotnet
+PORT_5088_LISTENING_AFTER_STOP=False

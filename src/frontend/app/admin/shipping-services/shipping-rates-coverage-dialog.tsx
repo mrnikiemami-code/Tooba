@@ -57,6 +57,9 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
   // انتخاب دامنهٔ مقصد برای ایجاد نرخ/پوشش جدید؛ فقط شناسه‌های برگشتی Geography.
   const [selection, setSelection] = useState<DestinationSelection>(EMPTY_DESTINATION_SELECTION);
   const [scopeIssues, setScopeIssues] = useState<string[]>([]);
+  // ایرادهای شکلِ نرخِ در حال ایجاد، جدا از ایرادهای دامنه گزارش می‌شوند تا کاربر بفهمد کدام بخش
+  // مشکل دارد (پیش از این هر دو زیر فهرست دامنه نمایش داده می‌شد).
+  const [createFormIssues, setCreateFormIssues] = useState<string[]>([]);
   const [createRateForm, setCreateRateForm] = useState<ShippingRateFormValues>(rateFormFromPolicy(null));
 
   const refresh = useCallback(async () => {
@@ -91,10 +94,12 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
     const scopeProblems = validateDestinationSelection(selection);
     const formProblems = validateShippingRateForm(createRateForm).map((issue) => issue.messageFa);
     if (scopeProblems.length > 0 || formProblems.length > 0) {
-      setScopeIssues([...scopeProblems, ...formProblems]);
+      setScopeIssues(scopeProblems);
+      setCreateFormIssues(formProblems);
       return;
     }
     setScopeIssues([]);
+    setCreateFormIssues([]);
     setBusy(true);
     const result = await createAdminShippingRate(serviceCode, {
       scope: buildScopeWrite(selection),
@@ -115,9 +120,11 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
     const scopeProblems = validateDestinationSelection(selection);
     if (scopeProblems.length > 0) {
       setScopeIssues(scopeProblems);
+      setCreateFormIssues([]);
       return;
     }
     setScopeIssues([]);
+    setCreateFormIssues([]);
     setBusy(true);
     const result = await createAdminShippingCoverageGrant(serviceCode, {
       scope: buildScopeWrite(selection),
@@ -442,6 +449,12 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
                   />
                 </label>
               </div>
+
+              {createFormIssues.length > 0 && (
+                <ul className="list-inside list-disc text-[11px] text-red-600" data-testid="shipping-create-rate-issues">
+                  {createFormIssues.map((issue) => <li key={issue}>{issue}</li>)}
+                </ul>
+              )}
 
               <div className="flex flex-wrap gap-2">
                 <button
