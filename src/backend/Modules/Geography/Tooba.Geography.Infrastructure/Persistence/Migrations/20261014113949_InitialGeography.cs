@@ -343,8 +343,11 @@ namespace Tooba.Geography.Infrastructure.Persistence.Migrations
 
             // Ancestry integrity: the model alone cannot express "no ancestor cycle" (a CHECK or FK
             // cannot hold a recursive property), so the invariant is carried by a module-owned
-            // PostgreSQL constraint trigger. See AdministrativeAreaAncestryGuard for the strategy,
-            // the concurrency serialization rule and its transactional assumptions.
+            // PostgreSQL trigger. It fires on INSERT as well as UPDATE - a pair of rows created by one
+            // multi-row INSERT can reference each other, and the composite FK (an end-of-statement
+            // check) accepts that pair - and it is an immediate trigger so no deferred/commit-time
+            // window exists. See AdministrativeAreaAncestryGuard for the strategy, the concurrency
+            // serialization rule and its transactional assumptions.
             migrationBuilder.Sql(AdministrativeAreaAncestryGuard.FunctionSql);
 
             migrationBuilder.Sql(AdministrativeAreaAncestryGuard.TriggerSql);
