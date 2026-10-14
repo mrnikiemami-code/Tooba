@@ -1,0 +1,50 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Tooba.ModuleContracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.ModuleContracts\bin\Debug\net8.0\Tooba.ModuleContracts.dll
+  Tooba.BuildingBlocks -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.BuildingBlocks\bin\Debug\net8.0\Tooba.BuildingBlocks.dll
+  Tooba.Geography.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Geography\Tooba.Geography.Contracts\bin\Debug\net8.0\Tooba.Geography.Contracts.dll
+  Tooba.Persistence -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.Persistence\bin\Debug\net8.0\Tooba.Persistence.dll
+  Tooba.Fulfillment.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Contracts\bin\Debug\net8.0\Tooba.Fulfillment.Contracts.dll
+  Tooba.Shipping.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Contracts\bin\Debug\net8.0\Tooba.Shipping.Contracts.dll
+  Tooba.Shipping.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Domain\bin\Debug\net8.0\Tooba.Shipping.Domain.dll
+  Tooba.Shipping.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Application\bin\Debug\net8.0\Tooba.Shipping.Application.dll
+  Tooba.Shipping.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Infrastructure\bin\Debug\net8.0\Tooba.Shipping.Infrastructure.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Tests\Admin\ShippingRateCoverageAdminTests.cs(144,111): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Tests\Tooba.Shipping.Tests.csproj]
+  Tooba.Shipping.Tests -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Tests\bin\Debug\net8.0\Tooba.Shipping.Tests.dll
+Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Tests\bin\Debug\net8.0\Tooba.Shipping.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.24)
+[xUnit.net 00:00:00.05]   Discovering: Tooba.Shipping.Tests
+[xUnit.net 00:00:00.08]   Discovered:  Tooba.Shipping.Tests
+[xUnit.net 00:00:00.09]   Starting:    Tooba.Shipping.Tests
+  Passed Tooba.Shipping.Tests.Admin.ShippingDestinationScopeValidationTests.Unknown_or_inactive_scope_is_refused_with_stable_code [3 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingDestinationScopeValidationTests.Invalid_scope_stops_the_create_grant_handler_before_any_write [3 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingDestinationScopeValidationTests.Valid_scope_reaches_the_directory_exactly_once [1 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingDestinationScopeValidationTests.Valid_scope_is_accepted_and_passed_through_unchanged [2 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingDestinationScopeValidationTests.Invalid_scope_stops_the_create_rate_handler_before_any_write [< 1 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingAdminScopeGuardRepairTests.Omitted_scope_on_rate_policy_write_is_rejected_with_declared_code_never_throws [39 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingAdminScopeGuardRepairTests.Omitted_scope_on_coverage_grant_write_is_rejected_with_declared_code_never_throws [2 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingAdminScopeGuardRepairTests.Unguarded_nested_scope_rule_reproduces_the_historical_null_reference_defect [1 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingAdminScopeGuardRepairTests.Omitted_scope_translates_to_the_canonical_validation_envelope_not_a_platform_error [9 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingAdminScopeGuardRepairTests.Valid_scope_still_passes_both_write_validators_unchanged [1 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingAdminScopeGuardRepairTests.Omitted_scope_translates_to_the_canonical_validation_envelope_for_grant_write [1 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingAdminScopeGuardRepairTests.Wrong_nested_scope_data_is_still_denied_with_the_existing_stable_codes [1 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingRateCoverageAdminTests.Create_update_and_deactivate_rate_policy_roundtrip_through_real_context [322 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingRateCoverageAdminTests.Duplicate_scope_for_same_service_is_denied_with_stable_code [30 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingRateCoverageAdminTests.Body_service_code_cannot_bypass_the_route_service_code [< 1 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingRateCoverageAdminTests.Empty_coverage_set_is_returned_as_no_coverage_never_unrestricted [7 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingRateCoverageAdminTests.Handler_wraps_transport_message_and_returns_directory_result [< 1 ms]
+[xUnit.net 00:00:00.48]   Finished:    Tooba.Shipping.Tests
+  Passed Tooba.Shipping.Tests.Admin.ShippingRateCoverageAdminTests.Cross_service_mutation_is_denied_with_stable_code [5 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingRateCoverageAdminTests.Transport_shape_invalid_requests_are_denied [2 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingRateCoverageAdminTests.Missing_record_is_reported_with_stable_not_found_code [< 1 ms]
+
+Test Run Successful.
+Total tests: 20
+     Passed: 20
+ Total time: 0.7525 Seconds
+===== FULL PROJECT RUN =====
+Passed!  - Failed:     0, Passed:    89, Skipped:     0, Total:    89, Duration: 482 ms - Tooba.Shipping.Tests.dll (net8.0)

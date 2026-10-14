@@ -1,0 +1,84 @@
+TB-SHIPPING-MVP-SAFETY-REPAIR-060 — null-scope 500 repair + wrong-target scratch preflight
+
+Status: PARTIAL (both bounded defects repaired and proven offline; no live/runtime re-verification performed,
+per the Mission's own "no DB connections / no HTTP" constraint)
+
+BASE / CODE / EVIDENCE
+  Expected-Base-SHA : cf48f77fdddd11dba8267ba2b0a143d2dc0b8b3b
+  Base-SHA (observed): 458d1b7df4e8c03e86e7d503dfa9733edeb5f702
+  delta base..HEAD before work: 1 commit, docs-only (TB-SHIPPING-MVP-AUTHORIZED-ADMIN-059/RESULT.bridge.txt)
+                               -> evidence-only fast-forward, no source overlap, no RECOVERY_CONFLICT
+  Code-SHA / Evidence-SHA: see RESULT.bridge.txt (post-commit)
+
+MISSION A — REPAIR THE VERIFIED 500                      [DONE]
+  Cause reproduced from source: RuleFor(x => x.Scope).NotNull() plus RuleFor(x => x.Scope.CountryId) under
+  the default CascadeMode.Continue -> the nested property expression is dereferenced while scope is null ->
+  NullReferenceException -> escapes the canonical validation.failed 4xx path as a platform 500.
+  Repair: ShippingValidationCodes.ScopeRequired = "shipping.validation.scope_required" + NotNull with that
+  code + all nested-property rules moved behind When(x => x.Scope is not null, ...) in BOTH
+  ShippingRatePolicyWriteRequestValidator and ShippingCoverageGrantWriteRequestValidator.
+  Existing scope-shape codes (country_required, service_area_requires_city) and the Geography domain
+  validator are unchanged. No request DTO, rate, permission, service-catalog, geo or checkout change.
+  In-memory translation proof: ValidationBehavior -> FluentValidation.ValidationException ->
+  SafeErrorMapper.MapValidation -> 400 / "validation.failed" (never platform.unexpected) with the declared
+  code under the Scope key. NOT a live HTTP claim.
+
+MISSION B — PREVENT WRONG-TARGET SCRATCH VERIFICATION       [DONE]
+  Root mistake isolated exactly: the reference key is hyphenated (tenant-alpha) and the options dictionary
+  is OrdinalIgnoreCase, so Tooba__PostgreSQL__ConnectionReferences__tenant_alpha could never apply and the
+  tenant kept resolving Database=tooba_alpha.
+  Guard: docs/architecture/evidence/TB-SHIPPING-MVP-SAFETY-REPAIR-060/assert-scratch-target.js
+  (dependency-free, offline, fail-closed; resolves the effective config for one tenant from an explicit
+  config file + explicit KEY=VALUE override file with ASP.NET __ -> : precedence, then refuses unless the
+  exact host/port/database match, the database is an exact tooba_<nnn>_scratch_<unique sentinel> name, no
+  known-live or foreign database is targeted, no override is shadowed/unused, and the emitted fingerprint
+  matches --expect-fingerprint. Never prints credentials; never contacts a database, Host or network.)
+  Trust boundary documented in the script header and in the planning doc: configuration-only preflight; the
+  launched process must not be able to re-override these values, and must be given --expect-fingerprint.
+
+  Fixture proofs (synthetic fixtures only, no appsettings/live credentials as inputs):
+    059 faulty underscore override  -> 5 (shadowed_override_key named)   EXPECTED, caught
+    safe scratch-only configuration -> 0                                 EXPECTED, accepted
+    production-like target          -> 7                                 EXPECTED, refused
+    no override (config's own db)   -> 7                                 EXPECTED, refused
+    override no tenant references   -> 5                                 EXPECTED, refused
+    unknown tenant                  -> 3                                 EXPECTED, refused
+    ambiguous tenant declaration    -> 4                                 EXPECTED, refused
+    non-unique sentinel             -> 2                                 EXPECTED, refused
+    fingerprint agrees / differs    -> 0 / 6                             EXPECTED
+    static: no db/network client; never reads process env -> 0            EXPECTED
+    FIXTURE_PROOFS=PASS (12/12), runner exit 0
+  No live clone, no Host startup, no write experiment was performed in this task.
+
+COMMANDS + EXIT CODES
+  git fetch origin; HEAD == origin/main == 458d1b7df4e8c03e86e7d503dfa9733edeb5f702                    exit 0
+  dotnet build src/backend/Modules/Shipping/Tooba.Shipping.Application  ... Build succeeded, 0 Errors       exit 0
+  dotnet build src/backend/Modules/Shipping/Tooba.Shipping.Tests        ... Build succeeded, 0 Errors       exit 0
+  dotnet test  Tooba.Shipping.Tests (focused Shipping admin filter)     ... Passed 20, Failed 0             exit 0
+  dotnet test  Tooba.Shipping.Tests (whole project)                     ... Passed 89, Failed 0             exit 0
+  node docs/architecture/evidence/TB-SHIPPING-MVP-SAFETY-REPAIR-060/run-fixture-proofs.js
+                                                                        ... FIXTURE_PROOFS=PASS            exit 0
+  node .../assert-scratch-target.js (059 faulty / safe / prod / missing / unused cases)
+                                                                        ... 5 / 0 / 7 / 7 / 5               exit 5/0/7/7/5
+
+CHANGED PATHS (authorized only)
+  src/backend/Modules/Shipping/Tooba.Shipping.Application/Validation/ShippingAdminValidators.cs
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/ShippingAdminScopeGuardRepairTests.cs
+  docs/planning/shipping/SHIPPING-MVP-SAFETY-REPAIR-060.md
+  docs/architecture/evidence/TB-SHIPPING-MVP-SAFETY-REPAIR-060/** (guard, fixtures, proof runners, logs)
+
+FORBIDDEN ITEMS CONFIRMED NOT DONE
+  no DB connection (incl. read-only live), no Docker, no Host start/restart/deploy, no HTTP request to any
+  running backend, no appsettings/user-environment/tenant-registry change, no DB restoration/deletion, no
+  touching of the unattributable pricing anomalies, no schema/migration/DI/Endpoint/Auth/Fulfillment/
+  Geography/frontend change, no guard weakening, no Results.Json/bypass/invented coverage/new tariff/cutover,
+  no broad unrelated suite, no automatic next task. docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md untouched.
+
+REMAINING RISK
+  059 rollback is Worker evidence only, not Architect-verified; pricing.prices (+8) / pricing.outbox_messages
+  (+24) remain UNATTRIBUTED and were not touched; the user's own Host process remains unmodified; Checkout
+  shadow is OFF and no rate/grant data is assumed; the new guard is offline and configuration-scoped, so any
+  future live test still needs independently checked target provenance.
+
+Timebox: 30 minutes HARD. Elapsed at first commit: see RESULT.bridge.txt (within budget).
+Stop-State: STOP_FOR_ARCHITECT. automaticNextImplementationTask: NONE.

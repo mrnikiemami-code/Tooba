@@ -14,6 +14,12 @@ public static class ShippingValidationCodes
     /// <summary>کد خدمت از طول مجاز بیشتر است.</summary>
     public const string ServiceCodeTooLong = "shipping.validation.service_code_too_long";
 
+    /// <summary>
+    /// دامنهٔ مقصد الزامی است. کد اعلام‌شدهٔ پایدار برای شکست اعتبارسنجی دامنهٔ غایب؛ بدون آن،
+    /// خواندن خصیصه‌های تودرتوی دامنه استثنای مرجع‌نشده می‌داد و به‌جای ۴xx به خطای بستر می‌رسید.
+    /// </summary>
+    public const string ScopeRequired = "shipping.validation.scope_required";
+
     /// <summary>کد کشور الزامی است.</summary>
     public const string CountryRequired = "shipping.validation.country_required";
 
@@ -77,12 +83,21 @@ public sealed class ShippingRatePolicyWriteRequestValidator : AbstractValidator<
             .NotEmpty().WithErrorCode(ShippingValidationCodes.ServiceCodeRequired)
             .MaximumLength(ShippingRatePolicy.ServiceCodeMaxLength)
             .WithErrorCode(ShippingValidationCodes.ServiceCodeTooLong);
-        RuleFor(x => x.Scope).NotNull();
-        RuleFor(x => x.Scope.CountryId)
-            .NotEmpty().WithErrorCode(ShippingValidationCodes.CountryRequired);
-        RuleFor(x => x.Scope.ServiceAreaId)
-            .Null().When(x => x.Scope is not null && x.Scope.CityId is null)
-            .WithErrorCode(ShippingValidationCodes.ServiceAreaRequiresCity);
+
+        // دامنهٔ غایب یک شکست اعتبارسنجی اعلام‌شده است، نه استثنا: قواعد خصیصه‌های تودرتو فقط
+        // وقتی ارزیابی می‌شوند که خود دامنه وجود داشته باشد، وگرنه دسترسی تودرتو استثنای
+        // مرجع‌نشده می‌داد و درخواست به‌جای ۴xx به خطای بستر می‌رسید.
+        RuleFor(x => x.Scope)
+            .NotNull().WithErrorCode(ShippingValidationCodes.ScopeRequired);
+        When(x => x.Scope is not null, () =>
+        {
+            RuleFor(x => x.Scope.CountryId)
+                .NotEmpty().WithErrorCode(ShippingValidationCodes.CountryRequired);
+            RuleFor(x => x.Scope.ServiceAreaId)
+                .Null().When(x => x.Scope.CityId is null)
+                .WithErrorCode(ShippingValidationCodes.ServiceAreaRequiresCity);
+        });
+
         RuleFor(x => x.ChargeAmount)
             .GreaterThanOrEqualTo(0m).WithErrorCode(ShippingValidationCodes.ChargeNegative)
             .LessThanOrEqualTo(ShippingRatePolicy.ChargeAmountMaxValue)
@@ -117,12 +132,18 @@ public sealed class ShippingCoverageGrantWriteRequestValidator : AbstractValidat
             .NotEmpty().WithErrorCode(ShippingValidationCodes.ServiceCodeRequired)
             .MaximumLength(ShippingRatePolicy.ServiceCodeMaxLength)
             .WithErrorCode(ShippingValidationCodes.ServiceCodeTooLong);
-        RuleFor(x => x.Scope).NotNull();
-        RuleFor(x => x.Scope.CountryId)
-            .NotEmpty().WithErrorCode(ShippingValidationCodes.CountryRequired);
-        RuleFor(x => x.Scope.ServiceAreaId)
-            .Null().When(x => x.Scope is not null && x.Scope.CityId is null)
-            .WithErrorCode(ShippingValidationCodes.ServiceAreaRequiresCity);
+
+        // همان مرز دامنه در درخواست پوشش: نبود دامنه باید ۴xx اعلام‌شده بدهد، نه استثنای مرجع‌نشده.
+        RuleFor(x => x.Scope)
+            .NotNull().WithErrorCode(ShippingValidationCodes.ScopeRequired);
+        When(x => x.Scope is not null, () =>
+        {
+            RuleFor(x => x.Scope.CountryId)
+                .NotEmpty().WithErrorCode(ShippingValidationCodes.CountryRequired);
+            RuleFor(x => x.Scope.ServiceAreaId)
+                .Null().When(x => x.Scope.CityId is null)
+                .WithErrorCode(ShippingValidationCodes.ServiceAreaRequiresCity);
+        });
     }
 }
 

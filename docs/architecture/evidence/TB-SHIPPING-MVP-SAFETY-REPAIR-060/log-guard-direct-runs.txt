@@ -1,0 +1,67 @@
+﻿# direct runs of assert-scratch-target.js (synthetic fixtures only; no database, no Host, no HTTP)
+
+===== case=059-faulty =====
+COMMAND: node assert-scratch-target.js --config fixtures/base.appsettings.json --env fixtures/059-faulty.env.txt --tenant store-alpha --host 127.0.0.1 --port 55432 --database tooba_060_scratch_abcd1234 --sentinel abcd1234
+
+RESULT=FAIL
+EXIT_CODE=5
+REASON=override_did_not_apply_to_the_target_tenant
+DETAIL=tenant=store-alpha
+DETAIL=effective_reference=tenant-alpha
+DETAIL=shadowed_override_key=Tooba__PostgreSQL__ConnectionReferences__tenant_alpha
+DETAIL=shadowed_override_reason=normalizes_to_the_target_reference_name
+TRUST_BOUNDARY=configuration-only preflight; see script header for the full boundary
+EXIT=5
+
+===== case=safe-scratch =====
+COMMAND: node assert-scratch-target.js --config fixtures/base.appsettings.json --env fixtures/safe-scratch.env.txt --tenant store-alpha --host 127.0.0.1 --port 55432 --database tooba_060_scratch_abcd1234 --sentinel abcd1234
+RESULT=PASS
+EXIT_CODE=0
+TENANT=store-alpha
+CONNECTION_REFERENCE=tenant-060-scratch
+HOST=127.0.0.1
+PORT=55432
+DATABASE=tooba_060_scratch_abcd1234
+SENTINEL=abcd1234
+CONFIG_OVERRIDE_KEYS_APPLIED=2
+USERNAME_PRESENT=true
+PASSWORD_PRESENT=true
+CREDENTIALS_PRINTED=false
+DATABASE_CONTACTED=false
+FINGERPRINT=11cbd62ce772d6483c35dc6357715cbaf7ec02a4caf0a30658bb0b881f88d684
+TRUST_BOUNDARY=configuration-only preflight; the launched process must not be able to override
+TRUST_BOUNDARY=these values again, and must receive --expect-fingerprint with the value above
+EXIT=0
+
+===== case=production-like =====
+COMMAND: node assert-scratch-target.js --config fixtures/base.appsettings.json --env fixtures/production-like.env.txt --tenant store-alpha --host db.prod.internal --port 5432 --database tooba_prod --sentinel abcd1234
+
+RESULT=FAIL
+EXIT_CODE=7
+REASON=resolved_database_is_a_known_live_database
+DETAIL=database=tooba_prod
+TRUST_BOUNDARY=configuration-only preflight; see script header for the full boundary
+EXIT=7
+
+===== case=missing =====
+COMMAND: node assert-scratch-target.js --config fixtures/base.appsettings.json --env fixtures/missing.env.txt --tenant store-alpha --host 10.255.255.9 --port 5432 --database tooba_alpha --sentinel abcd1234
+
+RESULT=FAIL
+EXIT_CODE=7
+REASON=resolved_database_is_a_known_live_database
+DETAIL=database=tooba_alpha
+TRUST_BOUNDARY=configuration-only preflight; see script header for the full boundary
+EXIT=7
+
+===== case=unused-override =====
+COMMAND: node assert-scratch-target.js --config fixtures/base.appsettings.json --env fixtures/unused-override.env.txt --tenant store-alpha --host 127.0.0.1 --port 55432 --database tooba_060_scratch_abcd1234 --sentinel abcd1234
+
+RESULT=FAIL
+EXIT_CODE=5
+REASON=override_did_not_apply_to_the_target_tenant
+DETAIL=tenant=store-alpha
+DETAIL=effective_reference=tenant-alpha
+DETAIL=shadowed_override_key=Tooba__PostgreSQL__ConnectionReferences__tenant-alphax
+DETAIL=shadowed_override_reason=not_referenced_by_any_tenant
+TRUST_BOUNDARY=configuration-only preflight; see script header for the full boundary
+EXIT=5
