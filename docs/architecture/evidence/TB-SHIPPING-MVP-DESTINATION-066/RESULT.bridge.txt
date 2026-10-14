@@ -1,0 +1,89 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-DESTINATION-066
+Parent-Task: TB-SHIPPING-MVP-DEV-ADMIN-UI-065
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE
+Mode: BOUNDED_REAL_CHECKOUT_DESTINATION_IDENTITY_PROPAGATION_NO_CUTOVER
+Bridge-Task-Row: 818761fa-ce0c-4a83-91e0-30657b7858b6
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 9f297f43fb8b7faa9290bfb39dd85aef71095a99
+Base-SHA: 9f297f43fb8b7faa9290bfb39dd85aef71095a99
+Code-SHA: 144564a2cf1b8f48cca5656cc56520b354e9b495
+Evidence-SHA: (filled by the follow-up evidence commit)
+automaticNextImplementationTask: NONE
+
+DESTINATION FLOW BEFORE
+- storefront-shipping.tsx city <select> only mutated local form state; the city never left the browser.
+- loadShippingProjection body = { cartId, provinceName, methodCode, language }.
+- StorefrontShippingProjectionRequest / ProjectStorefrontShippingQuery carried only ProvinceName.
+- StorefrontShippingShadowObservationInput had only ProvinceName.
+- StorefrontShippingShadowObserver hard-wired ResolveLegacyAsync(LegacyCountryCode, ProvinceName, cityName: null, serviceAreaName: null), so the observation identity could never be finer than the administrative area even though the canonical resolver already accepted a city.
+
+DESTINATION FLOW AFTER
+- The existing projection calls in storefront-shipping.tsx (method select, saved-address select, new-address save) now also pass the selected city via refreshProjection(province, method, city). No new HTTP call was added; a city change alone does not trigger one.
+- loadShippingProjection sends nullable cityName in the same PUT/POST body it already sent.
+- StorefrontShippingProjectionRequest and ProjectStorefrontShippingQuery gained optional CityName and optional Destination (Contracts DestinationIdentifiers); StorefrontOrderEndpoints passes both through unchanged otherwise.
+- StorefrontShippingShadowObservationInput gained optional CityName and optional Destination as init-only properties, so every existing positional construction still compiles.
+- New StorefrontShippingShadowObserver.ResolveDestinationAsync: (1) when a caller supplies explicit ids they are validated with IGeographyLookup.GetByIdsAsync first and an empty country or invalid hierarchy yields null -> DestinationNotComparable with NO fallback to text; (2) otherwise the legacy text now includes the city, and ResolveLegacyAsync matches stored Code or any localised label exactly, scopes the city by the resolved area, derives the city's real parent area, and reports Ambiguous/Unresolved rather than guessing. Anything other than Resolved becomes DestinationNotComparable.
+- No stable city id exists in the legacy storefront surface (StorefrontIranGeography is a static catalogue of province codes + city names), so the id seam is exercised by tests and the real precision gain today comes from the validated city name.
+
+LEGACY QUOTE INVARIANCE
+- StorefrontShippingService.ProjectAsync receives exactly its original five arguments; the handler deliberately does not forward CityName or Destination.
+- ShadowEnabled and PrerequisitesConfirmed remain false, so the gate returns Disabled before any destination work: zero extra Geography and zero extra Shipping queries on the live checkout path (existing test Shadow_off_by_default_performs_no_geography_and_no_shipping_lookup still green).
+- No Checkout, payment, order-snapshot, pricing, eligibility, promise or persistence file was touched. No cutover, no shadow parity claim. Destination identity remains observational metadata consumed only by StorefrontShippingRateShadowInput.Destination.
+
+PICKER RACE PROOF (065 residual)
+- Before: loadCities(country, area) ran from both the effect and the country onChange with no ordering guard, so a slow country-wide response could land after a newer area-scoped one and repopulate the list with every city of the country.
+- After: new pure helper createLatestRequestGuard() in shipping-destination-picker-model.ts; two independent guards (cascade for areas+cities, service-area) so one level cannot invalidate the other; every loader checks isCurrent() before writing state so stale responses are dropped; clearDependents behaviour unchanged; the country onChange no longer starts a duplicate fetch (the effect owns loading).
+- Proof: shipping-destination-picker.test.ts - newest generation wins, a stale area response cannot overwrite a newer list, independent guards do not invalidate each other.
+
+TARGETED TESTS
+- dotnet build Tooba.Order.Application: 0 warnings 0 errors; Tooba.Order.Endpoints: 0 warnings 0 errors.
+- dotnet test Tooba.Order.Tests --filter FullyQualifiedName~Storefront: 121 passed / 0 failed.
+- focused observer + rate-shadow subset: 27 passed / 0 failed (5 new: city forwarded at city precision, province-only still area-precision with no invented city, validated explicit ids win and skip text resolution, invalid ids NotComparable with no text fallback, ambiguous city NotComparable).
+- node --test app/admin/shipping-services/shipping-destination-picker.test.ts + shipping-rates-coverage-model.test.ts + app/storefront/storefront-shipping-api.test.ts: 23 passed / 0 failed.
+- npx tsc --noEmit (src/frontend): clean.
+- Architecture guards import-boundary, flat-folder, feature-boundary, test-discovery: pass. frontend-source-size.guard.test.ts fails on PRE-EXISTING oversized growth in category-admin-screen.tsx (2230 > 2215), admin-landing-page-composer.tsx (1442 > 1440), storefront-landing-blocks.tsx (1033 > 1026) and shared-composition-renderer.tsx (918 > 907); none of these files was touched by this task and the baseline was not widened.
+- 063-065 long CRUD suites were not rerun.
+
+LIVE CHECK (honest scope)
+- The Development host on :5088 was identified in 065 and was deliberately NOT restarted, so it still hosts pre-066 binaries. health returned 200 {"status":"ok"}; POST /v1/storefront/shipping/projection with provinceName+cityName+destination returned 401 checkout.authentication_required with traceId/correlationId, i.e. the route is alive and still fails closed before any write. No live end-to-end projection with a real cart was performed; the new-field behaviour is proven by the focused tests, not by the deployed host.
+
+PROCESS AND DATA SAFETY
+- No service restarted, no process killed, no scratch or parallel database created, no synthetic server started.
+- Zero database writes: no cart, order, shipping rate or coverage grant row created or modified; no migration run; no schema change.
+- No reset, stash, rebase, force-push or history rewrite. Unrelated pre-existing dirty files preserved untouched (admin-fulfillment-work-queue-screen.tsx, admin-order-detail-screen.tsx, storefront-landing-blocks.tsx, docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md).
+- Base matched exactly (git fetch origin; HEAD == origin/main == 9f297f43fb8b7faa9290bfb39dd85aef71095a99); no overlapping source drift, so no RECOVERY_CONFLICT.
+
+CHANGED PATHS
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingShadowObservation.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingShadowObserver.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/Queries/ProjectStorefrontShipping/ProjectStorefrontShippingQuery.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Models/StorefrontOrderModels.cs
+- src/backend/Modules/Order/Tooba.Order.Endpoints/Storefront/StorefrontOrderEndpoints.cs
+- src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingShadowObserverTests.cs
+- src/frontend/app/storefront/storefront-shipping-api.ts
+- src/frontend/app/storefront/storefront-shipping.tsx
+- src/frontend/app/admin/shipping-services/shipping-destination-picker.tsx
+- src/frontend/app/admin/shipping-services/shipping-destination-picker-model.ts (new)
+- src/frontend/app/admin/shipping-services/shipping-destination-picker.test.ts (new)
+- docs/planning/shipping/SHIPPING-MVP-DESTINATION-066.md (new)
+- docs/architecture/evidence/TB-SHIPPING-MVP-DESTINATION-066/** (new); task receipt left untracked
+
+ELAPSED
+- Approximately 45 minutes of bounded work within the hard timebox.
+
+COMMIT AND PUSH
+- Code+evidence commit: 144564a2cf1b8f48cca5656cc56520b354e9b495
+- Evidence-SHA follows in the post-result evidence commit; pushed to origin/main, HEAD == origin/main verified after push.
+
+BLOCKERS AND HONEST LIMITATIONS
+- The legacy storefront destination surface still has no stable city id; the DestinationIdentifiers seam added here has no producer in the storefront UI today and is exercised only by tests. Replacing StorefrontIranGeography with a Geography-backed picker is a separate, larger task and was not attempted.
+- ResolveLegacyAsync resolves a city only with its area as scope. The UI now sends the province so the scope is real; a client sending a city without a province relies on the city's own parent and stays comparable only when the city label is unique in the country, otherwise it is Ambiguous -> DestinationNotComparable.
+- No live end-to-end checkout projection with a real cart, for the reason recorded above.
+- No shadow parity and no checkout cutover is claimed.
+END_TOOBA_WORKER_RESULT
