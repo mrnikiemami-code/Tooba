@@ -1,0 +1,33 @@
+﻿=== local Development target identity (2026-10-14T15:13:58Z) ===
+--- container ---
+01d8067a30ce965c2ffc80296c5568c63f8e48eb1b2c5c2d1d3f7963b7b48d9f name=/postgres-db status=running image=postgres:17 started=2026-10-11T03:43:06.299251946Z
+5432/tcp -> 0.0.0.0:5432
+5432/tcp -> [::]:5432
+--- appsettings.Development.json tenant records (password redacted) ---
+"TenantId": "store-alpha",
+"ConnectionReference": "tenant-alpha",
+"tenant-alpha": "Host=127.0.0.1;Port=5432;Username=admin;Password=***;Database=tooba_alpha",
+"tenant-disabled": "Host=127.0.0.1;Port=5432;Username=admin;Password=***;Database=tooba_disabled",
+"marketplace": "Host=127.0.0.1;Port=5432;Username=admin;Password=***;Database=tooba_marketplace",
+"messaging": "Host=127.0.0.1;Port=5432;Username=admin;Password=***;Database=tooba_messaging"
+--- appsettings.json / appsettings.Production.json: ConnectionReferences / tenant list ---
+[src/backend/Host/Tooba.Host/appsettings.json]
+"ConnectionReference": ""
+"Tenants": []
+"ConnectionReferences": {}
+"ConnectionReference": "",
+[src/backend/Host/Tooba.Host/appsettings.Production.json]
+"ConnectionReference": ""
+"Tenants": []
+"ConnectionReferences": {}
+"ConnectionReference": "",
+--- running Host connections to tooba_alpha (pg_stat_activity) ---
+datname|client_addr|usename|state
+tooba_alpha|172.18.0.1|admin|idle
+tooba_alpha|172.18.0.1|admin|idle
+tooba_alpha||admin|active
+(3 rows)
+--- pre-apply fingerprint ---
+schemas=53 tables_total=243 shipping_schema=0 geography_tables=10 history_tables=33 history_rows=117
+--- backup ---
+file=D:\Users\User\tooba-backups\tooba_alpha_pre053.dump size=2427186 sha256=c8601b76c22bb6231d386045d0bd5c0a54e9f35fc28e27c6c7437ccd6bbcebad createdUtc=2026-10-14T15:13:11Z tocLines=1158 tableDataEntries=243 dbname=tooba_alpha (pg_restore -l validated)

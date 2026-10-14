@@ -1,0 +1,81 @@
+﻿     db      | schemas | tables_total | shipping_schema | geography_tables 
+-------------+---------+--------------+-----------------+------------------
+ tooba_alpha |      54 |          247 |               1 |               10
+(1 row)
+
+                       tbl                       
+-------------------------------------------------
+ geography.__ef_migrations_history
+ geography.administrative_area_name_translations
+ geography.administrative_areas
+ geography.cities
+ geography.city_name_translations
+ geography.countries
+ geography.country_name_translations
+ geography.outbox_messages
+ geography.service_area_name_translations
+ geography.service_areas
+ shipping.__ef_migrations_history
+ shipping.coverage_grants
+ shipping.outbox_messages
+ shipping.rate_policies
+(14 rows)
+
+ history_tables | history_rows 
+----------------+--------------
+             34 |          118
+(1 row)
+
+docker : ERROR:  column "MigrationId" does not exist
+At C:\Users\User\AppData\Local\Temp\ps-script-9825a425-7916-444f-90f8-c1179130344c.ps1:110 char:10
++ '@; $q | docker exec -i postgres-db psql -U admin -d tooba_alpha -v O ...
++          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ERROR:  column ... does not exist:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+LINE 1: select "MigrationId" from shipping.__ef_migrations_history o...
+               ^
+HINT:  Perhaps you meant to reference the column "__ef_migrations_history.migration_id".
+          migration_id          
+--------------------------------
+ 20261014144742_InitialShipping
+(1 row)
+
+ rate_policies | coverage_grants | outbox_messages 
+---------------+-----------------+-----------------
+             0 |               0 |               0
+(1 row)
+
+                      conname                       | contype 
+----------------------------------------------------+---------
+ ck_coverage_grants_scope_coherent                  | c
+ ck_coverage_grants_service_code_canonical          | c
+ ck_rate_policies_charge_amount_non_negative        | c
+ ck_rate_policies_charge_amount_within_max          | c
+ ck_rate_policies_currency_code_canonical           | c
+ ck_rate_policies_free_above_threshold_non_negative | c
+ ck_rate_policies_lead_days_range                   | c
+ ck_rate_policies_preparation_days_range            | c
+ ck_rate_policies_scope_coherent                    | c
+ ck_rate_policies_service_code_canonical            | c
+ pk___ef_migrations_history                         | p
+ pk_coverage_grants                                 | p
+ pk_outbox_messages                                 | p
+ pk_rate_policies                                   | p
+(14 rows)
+
+                 indexname                 
+-------------------------------------------
+ ix_coverage_grants_service_country_active
+ ix_outbox_messages_pending
+ ix_rate_policies_service_active
+ pk___ef_migrations_history
+ pk_coverage_grants
+ pk_outbox_messages
+ pk_rate_policies
+ ux_coverage_grants_service_scope
+ ux_rate_policies_service_scope
+(9 rows)
+
+ux_coverage_grants_service_scope :: CREATE UNIQUE INDEX ux_coverage_grants_service_scope ON shipping.coverage_grants USING btree (service_code, country_id, administrative_area_id, city_id, service_area_id) NULLS NOT DISTINCT
+ux_rate_policies_service_scope :: CREATE UNIQUE INDEX ux_rate_policies_service_scope ON shipping.rate_policies USING btree (service_code, country_id, administrative_area_id, city_id, service_area_id) NULLS NOT DISTINCT

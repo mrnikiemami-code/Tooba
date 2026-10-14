@@ -1,0 +1,87 @@
+﻿{
+  "task": "TB-SHIPPING-MVP-ACTIVATION-053",
+  "parentTask": "TB-SHIPPING-MVP-PERSISTENCE-052",
+  "program": "TOOBA-SHIPPING-MVP-SIX-TASK-CLOSURE",
+  "milestone": "4 of 6",
+  "mode": "BOUNDED_SHIPPING_MODULE_COMPOSITION_AND_DEV_SCHEMA_ACTIVATION",
+  "status": "PASS",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "baseSha": "a194e5a2e3d6b028e50c8f8d6dc33bfc637e3ada",
+  "expectedBaseSha": "92b8653e2f03e1bca8d182bd12b71ae9cff7c728",
+  "codeSha": "fb1126d1a56b60a77f3d842799383e3ca22767d3",
+  "evidenceSha": "PENDING_COMMIT_B",
+  "automaticNextImplementationTask": "NONE",
+  "allowedPathsUsed": [
+    "src/backend/Host/Tooba.Host/Tooba.Host.csproj",
+    "src/backend/Host/Tooba.Host/Composition/ToobaModuleComposition.cs",
+    "src/backend/BuildingBlocks/Tooba.Persistence/ModuleSchemaMigrator.cs",
+    "src/backend/Host/Tooba.MigrationRunner/ModuleMigrationRegistry.cs",
+    "src/backend/Modules/Shipping/Tooba.Shipping.Tests/Composition/ShippingModuleCompositionGuardTests.cs",
+    "docs/planning/shipping/SHIPPING-MVP-ACTIVATION-053.md",
+    "docs/architecture/evidence/TB-SHIPPING-MVP-ACTIVATION-053/**"
+  ],
+  "notUsed": [
+    "src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/DependencyInjection/ShippingModule.cs (no DI issue arose; left byte-identical)",
+    "src/backend/Host/Tooba.MigrationRunner/Tooba.MigrationRunner.csproj (transitive Host reference was sufficient)"
+  ],
+  "implementation": {
+    "composition": "ToobaModuleComposition registers new ShippingModule() exactly once, appended after new GeographyModule(); Tooba.Host.csproj gained the minimal ProjectReference to Tooba.Shipping.Infrastructure. ShippingModule keeps registering ShippingDbContext + IShippingRateQuoteLookup scoped and registers NO IModuleSchemaMigrator, so the running Development Host has no implicit DDL path.",
+    "order": "ModuleSchemaMigrationOrder.Shipping = 31 appended after Geography = 30 in the single authoritative order source; all values remain unique.",
+    "cliDescriptor": "ModuleMigrationRegistry.All gains Descriptor<ShippingDbContext>(\"Shipping\", ShippingDbContext.Schema) appended last (after Geography). Metadata only: nothing is applied automatically and this descriptor is unreachable from Host startup. MigrationRunner apply (all descriptors) was never invoked.",
+    "noDuplicates": "Exactly one `new ShippingModule()` exists in the whole backend; exactly one ShippingDbContext descriptor; no IModuleSchemaMigrator<ShippingDbContext> registration anywhere."
+  },
+  "devSchemaActivation": {
+    "applied": true,
+    "target": "tooba_alpha (local Development tenant store-alpha), container postgres-db (postgres:17, 127.0.0.1:5432)",
+    "targetProof": "appsettings.Development.json tenant store-alpha -> ConnectionReference tenant-alpha -> Database=tooba_alpha; appsettings.json and appsettings.Production.json have \"Tenants\": [] and \"ConnectionReferences\": {}; the running Host holds live pg_stat_activity connections to tooba_alpha from 172.18.0.1",
+    "method": "context-scoped `dotnet ef database update --project src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure --project-context ShippingDbContext` via the module's existing design-time factory (TOOBA_DESIGN_TIME_CONNECTION). MigrationRunner apply was NOT used (it targets all 34 descriptors).",
+    "migrationApplied": "20261014144742_InitialShipping",
+    "baseline": "schemas=53 tables_total=243 shipping_schema=0 geography_tables=10 history_tables=33 history_rows=117",
+    "postState": "schemas=54 tables_total=247 shipping_schema=1 geography_tables=10 history_tables=34 history_rows=118",
+    "delta": "+1 schema (shipping), +4 tables (rate_policies, coverage_grants, outbox_messages, __ef_migrations_history) all inside shipping, +1 migration history row. No other module's tables or history rows changed.",
+    "pendingMigrations": 0,
+    "failClosed": "rate_policies=0, coverage_grants=0, outbox_messages=0",
+    "storageInvariants": "10 shipping check constraints; ux_rate_policies_service_scope and ux_coverage_grants_service_scope created with NULLS NOT DISTINCT",
+    "backup": {
+      "method": "pg_dump -Fc",
+      "file": "D:\\Users\\User\\tooba-backups\\tooba_alpha_pre053.dump (outside the repository)",
+      "size": 2427186,
+      "sha256": "c8601b76c22bb6231d386045d0bd5c0a54e9f35fc28e27c6c7437ccd6bbcebad",
+      "createdUtc": "2026-10-14T15:13:11Z",
+      "validated": "pg_restore -l -> 1158 TOC lines, 243 TABLE DATA entries, dbname tooba_alpha"
+    },
+    "rollback": "drop schema shipping cascade; returns to 53 schemas / 243 tables / 117 history rows. EF `database update 0` alone is not a complete rollback (leaves the empty schema and emptied history table). Full fallback: restore tooba_alpha_pre053.dump."
+  },
+  "build": {
+    "command": "dotnet build src/backend/Host/Tooba.MigrationRunner -c Debug -p:OutputPath=<outside repo>",
+    "result": "Build succeeded, 0 errors, 11 warnings (all pre-existing, none in touched files); Tooba.Host and Tooba.MigrationRunner compiled with Shipping composed."
+  },
+  "tests": {
+    "project": "src/backend/Modules/Shipping/Tooba.Shipping.Tests",
+    "command": "dotnet test src/backend/Modules/Shipping/Tooba.Shipping.Tests/Tooba.Shipping.Tests.csproj -c Debug",
+    "result": "Passed! Failed: 0, Passed: 63, Skipped: 0, Total: 63",
+    "newGuards": [
+      "ShippingModule registers one ShippingDbContext + one IShippingRateQuoteLookup (scoped) and zero IModuleSchemaMigrator descriptors",
+      "no AddModuleSchemaMigrator<ShippingDbContext> registration exists anywhere in src/backend",
+      "exactly one `new ShippingModule()` in src/backend and it is the Host composition; Host csproj references Shipping.Infrastructure",
+      "ModuleSchemaMigrationOrder has exactly one Shipping = 31 slot after Geography = 30 and all values are unique",
+      "CLI registry appends the Shipping descriptor last, exactly once"
+    ],
+    "notExecuted": "Tooba.Host.Tests could not run in-session: the running Host locks Tooba.Host/bin/Debug/net8.0 and redirecting output outside the repo breaks that suite's FindRepoRoot() walk-up (same harness artifact as 047/052). Reviewed statically: the composition guards assert Contains/DoesNotContain membership, not an exact module count, so an appended module cannot break them."
+  },
+  "runtimeActivation": {
+    "hostRestarted": false,
+    "deployed": false,
+    "binaryLive": false,
+    "note": "Composing the module changes no running process until an authorized restart/redeploy. The legacy checkout authority still serves customer prices; StorefrontShippingRateShadowEvaluator stays unwired in DI (it appears only in its own file and its tests), so no customer-facing rate, Order snapshot, shipping eligibility, enabled method or payment behaviour changed.",
+    "noStartupDdl": "Zero Shipping/Geography IModuleSchemaMigrator registrations; DevelopmentSchemaMigrator was not modified."
+  },
+  "knownDocumentationDebt": "ShippingModule's XML remarks still state the module is not wired to the Host ('in this Task deliberately not connected'). The file was allowed only if a DI issue required it, and no DI change was needed, so the remark was left untouched and is recorded here as stale text for a later authorized doc touch.",
+  "unchanged": [
+    "Shipping migration/snapshot sources",
+    "Geography data/guards",
+    "Order/Checkout/AddressBook/Fulfillment/Payment/Settlement/Storefront/frontend",
+    "appsettings, Program.cs, DevelopmentSchemaMigrator, tenant configuration, rate/coverage model",
+    "no default rates, grants or seeds were written"
+  ]
+}
