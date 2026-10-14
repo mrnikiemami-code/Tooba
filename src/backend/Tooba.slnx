@@ -246,6 +246,7 @@
   <Folder Name="/Modules/Geography/">
     <Project Path="Modules/Geography/Tooba.Geography.Contracts/Tooba.Geography.Contracts.csproj" />
     <Project Path="Modules/Geography/Tooba.Geography.Domain/Tooba.Geography.Domain.csproj" />
+    <Project Path="Modules/Geography/Tooba.Geography.Infrastructure/Tooba.Geography.Infrastructure.csproj" />
   </Folder>
 </Solution>
 
