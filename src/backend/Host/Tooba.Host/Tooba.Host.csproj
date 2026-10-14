@@ -96,6 +96,10 @@
     <!-- Geography composition only: the module is registered so its read seams are resolvable, while it
          deliberately registers no schema migrator yet (see GeographyModule / SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044). -->
     <ProjectReference Include="..\..\Modules\Geography\Tooba.Geography.Infrastructure\Tooba.Geography.Infrastructure.csproj" />
+    <!-- Shipping composition only: the module is registered so its ShippingDbContext and existing
+         IShippingRateQuoteLookup seam are resolvable, while it deliberately registers no schema migrator
+         yet (see ShippingModule / SHIPPING-MVP-ACTIVATION-053). -->
+    <ProjectReference Include="..\..\Modules\Shipping\Tooba.Shipping.Infrastructure\Tooba.Shipping.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MassTransit" Version="8.5.10" />

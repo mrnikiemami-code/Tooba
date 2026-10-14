@@ -21,6 +21,7 @@ using Tooba.Settlement.Infrastructure.Persistence;
 using Tooba.Notification.Infrastructure.Persistence;
 using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.Support.Infrastructure.Persistence;
+using Tooba.Shipping.Infrastructure.Persistence;
 using Tooba.Wallet.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.ProductQnA.Infrastructure.Persistence;
@@ -84,6 +85,12 @@ internal static class ModuleMigrationRegistry
         // descriptor only makes the module visible to the explicit CLI (status/plan/apply); it executes
         // nothing by itself and is never reached by Host startup (see SHIPPING-GEOGRAPHY-MIGRATION-REGISTRY-045).
         Descriptor<GeographyDbContext>("Geography", GeographyDbContext.Schema),
+        // Shipping is appended last for the same reason as Geography: its own schema has no foreign key
+        // outside itself, so it neither reorders nor constrains any existing descriptor. This descriptor
+        // is metadata for the explicit CLI (status/plan/apply) only; it executes nothing by itself and is
+        // never reached by Host startup, which registers no Shipping IModuleSchemaMigrator
+        // (see SHIPPING-MVP-ACTIVATION-053).
+        Descriptor<ShippingDbContext>("Shipping", ShippingDbContext.Schema),
     ];
 
     private static ModuleMigrationDescriptor Descriptor<TContext>(string module, string schema)

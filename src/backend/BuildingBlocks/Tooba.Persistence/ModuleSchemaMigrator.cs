@@ -67,6 +67,8 @@ public static class ModuleSchemaMigrationOrder
     public const int Support = 29;
     /// <summary>Geography migration order (independent reference-data module; appended after Support).</summary>
     public const int Geography = 30;
+    /// <summary>Shipping migration order (independent shipping module; appended after Geography).</summary>
+    public const int Shipping = 31;
 }
 
 /// <summary>

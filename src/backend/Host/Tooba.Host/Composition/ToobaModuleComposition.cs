@@ -41,6 +41,7 @@ using Tooba.Wallet.Infrastructure.DependencyInjection;
 using Tooba.Wallet.Infrastructure.Persistence;
 using Tooba.StoreContext.Infrastructure.DependencyInjection;
 using Tooba.Geography.Infrastructure.DependencyInjection;
+using Tooba.Shipping.Infrastructure.DependencyInjection;
 
 namespace Tooba.Host.Composition;
 
@@ -89,6 +90,12 @@ internal static class ToobaModuleComposition
         new NotificationModule(),
         new AccessControlModule(),
         new GeographyModule(),
+        // Shipping is composed so its ShippingDbContext and existing IShippingRateQuoteLookup seam are
+        // resolvable, exactly once and scoped. Like Geography, ShippingModule deliberately registers NO
+        // IModuleSchemaMigrator: the running Development Host auto-applies every registered migrator at
+        // startup, so registering one here would emit shipping DDL implicitly. See
+        // SHIPPING-MVP-ACTIVATION-053 for the activation boundary.
+        new ShippingModule(),
     ];
 
     /// <summary>
