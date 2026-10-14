@@ -18,7 +18,7 @@
     "detail": "Expected-Base-SHA is the grandparent of HEAD; the two intervening commits are the parent task's own evidence artifacts (TB-SHIPPING-MVP-ADMIN-050 RESULT.bridge.txt/post-result.js/results.json). No source, contract, migration or config differs. Pre-existing unrelated dirty files preserved; no reset/stash/rebase/force-push."
   },
   "codeSha": "NONE",
-  "evidenceSha": "<filled after push>",
+  "evidenceSha": "446a3982e99373d3bb85ab652be5c69583493dd5",
   "actualElapsed": "~28 minutes (claim 2026-10-14T14:33:32Z; inside the 30-minute HARD timebox)",
   "automaticNextImplementationTask": "NONE",
   "verificationOnly": true,
