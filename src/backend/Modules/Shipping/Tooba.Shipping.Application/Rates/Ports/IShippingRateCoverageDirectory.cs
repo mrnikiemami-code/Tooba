@@ -21,43 +21,53 @@ public interface IShippingRateCoverageDirectory
     Task<Result<ShippingRatesAndCoverageView>> ListAsync(string serviceCode, CancellationToken cancellationToken);
 
     /// <summary>یک سیاست نرخ جدید می‌سازد؛ دامنهٔ تکراری برای همان خدمت رد می‌شود.</summary>
+    /// <param name="serviceCode">کد خدمت مسیر؛ مرجع قطعی، نه مقدار بدنه.</param>
     /// <param name="request">بدنهٔ درخواست.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
     Task<Result<ShippingRatePolicyAdminItem>> CreateRateAsync(
+        string serviceCode,
         ShippingRatePolicyWriteRequest request,
         CancellationToken cancellationToken);
 
     /// <summary>مبلغ/آستانه/زمان‌های یک سیاست نرخ موجود را ویرایش می‌کند.</summary>
     /// <param name="ratePolicyId">شناسهٔ سیاست.</param>
+    /// <param name="serviceCode">کد خدمت مسیر؛ مالکیت ردیف با آن سنجیده می‌شود.</param>
     /// <param name="request">بدنهٔ درخواست با دامنهٔ یکسان.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
     Task<Result<ShippingRatePolicyAdminItem>> UpdateRateAsync(
         Guid ratePolicyId,
+        string serviceCode,
         ShippingRatePolicyWriteRequest request,
         CancellationToken cancellationToken);
 
     /// <summary>سیاست نرخ را فعال/غیرفعال می‌کند.</summary>
     /// <param name="ratePolicyId">شناسهٔ سیاست.</param>
+    /// <param name="serviceCode">کد خدمت مسیر؛ مالکیت ردیف با آن سنجیده می‌شود.</param>
     /// <param name="isActive">وضعیت هدف.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
     Task<Result<ShippingRatePolicyAdminItem>> SetRateActiveAsync(
         Guid ratePolicyId,
+        string serviceCode,
         bool isActive,
         CancellationToken cancellationToken);
 
     /// <summary>یک مجوز پوشش صریح جدید می‌سازد؛ دامنهٔ تکراری برای همان خدمت رد می‌شود.</summary>
+    /// <param name="serviceCode">کد خدمت مسیر؛ مرجع قطعی، نه مقدار بدنه.</param>
     /// <param name="request">بدنهٔ درخواست.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
     Task<Result<ShippingCoverageGrantAdminItem>> CreateGrantAsync(
+        string serviceCode,
         ShippingCoverageGrantWriteRequest request,
         CancellationToken cancellationToken);
 
     /// <summary>مجوز پوشش را فعال/غیرفعال می‌کند.</summary>
     /// <param name="coverageGrantId">شناسهٔ مجوز.</param>
+    /// <param name="serviceCode">کد خدمت مسیر؛ مالکیت ردیف با آن سنجیده می‌شود.</param>
     /// <param name="isActive">وضعیت هدف.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
     Task<Result<ShippingCoverageGrantAdminItem>> SetGrantActiveAsync(
         Guid coverageGrantId,
+        string serviceCode,
         bool isActive,
         CancellationToken cancellationToken);
 }

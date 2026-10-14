@@ -5,8 +5,11 @@ using Tooba.Shipping.Contracts.Admin;
 
 namespace Tooba.Shipping.Application.Rates.Commands;
 
-/// <summary>ایجاد سیاست نرخ ارسال برای یک کد خدمت.</summary>
-public sealed record CreateShippingRatePolicyCommand(ShippingRatePolicyWriteRequest Request)
+/// <summary>
+/// ایجاد سیاست نرخ ارسال برای یک کد خدمت. <paramref name="ServiceCode"/> از مسیر می‌آید و مرجع
+/// قطعی است؛ هر کد خدمت دیگری در بدنه توسط اعتبارسنجی رد می‌شود.
+/// </summary>
+public sealed record CreateShippingRatePolicyCommand(string ServiceCode, ShippingRatePolicyWriteRequest Request)
     : IRequest<Result<ShippingRatePolicyAdminItem>>;
 
 /// <summary>هندلر ایجاد سیاست نرخ.</summary>
@@ -19,13 +22,16 @@ public sealed class CreateShippingRatePolicyHandler(IShippingRateCoverageDirecto
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return ShippingAdminOperation.ExecuteAsync(() => directory.CreateRateAsync(request.Request, cancellationToken));
+        return ShippingAdminOperation.ExecuteAsync(
+            () => directory.CreateRateAsync(request.ServiceCode, request.Request, cancellationToken));
     }
 }
 
 /// <summary>ویرایش سیاست نرخ موجود.</summary>
-public sealed record UpdateShippingRatePolicyCommand(Guid RatePolicyId, ShippingRatePolicyWriteRequest Request)
-    : IRequest<Result<ShippingRatePolicyAdminItem>>;
+public sealed record UpdateShippingRatePolicyCommand(
+    Guid RatePolicyId,
+    string ServiceCode,
+    ShippingRatePolicyWriteRequest Request) : IRequest<Result<ShippingRatePolicyAdminItem>>;
 
 /// <summary>هندلر ویرایش سیاست نرخ.</summary>
 public sealed class UpdateShippingRatePolicyHandler(IShippingRateCoverageDirectory directory)
@@ -38,12 +44,16 @@ public sealed class UpdateShippingRatePolicyHandler(IShippingRateCoverageDirecto
     {
         ArgumentNullException.ThrowIfNull(request);
         return ShippingAdminOperation.ExecuteAsync(
-            () => directory.UpdateRateAsync(request.RatePolicyId, request.Request, cancellationToken));
+            () => directory.UpdateRateAsync(
+                request.RatePolicyId,
+                request.ServiceCode,
+                request.Request,
+                cancellationToken));
     }
 }
 
 /// <summary>فعال/غیرفعال کردن سیاست نرخ.</summary>
-public sealed record SetShippingRatePolicyActiveCommand(Guid RatePolicyId, bool IsActive)
+public sealed record SetShippingRatePolicyActiveCommand(Guid RatePolicyId, string ServiceCode, bool IsActive)
     : IRequest<Result<ShippingRatePolicyAdminItem>>;
 
 /// <summary>هندلر تغییر وضعیت سیاست نرخ.</summary>
@@ -57,13 +67,18 @@ public sealed class SetShippingRatePolicyActiveHandler(IShippingRateCoverageDire
     {
         ArgumentNullException.ThrowIfNull(request);
         return ShippingAdminOperation.ExecuteAsync(
-            () => directory.SetRateActiveAsync(request.RatePolicyId, request.IsActive, cancellationToken));
+            () => directory.SetRateActiveAsync(
+                request.RatePolicyId,
+                request.ServiceCode,
+                request.IsActive,
+                cancellationToken));
     }
 }
 
 /// <summary>ایجاد مجوز پوشش صریح برای یک کد خدمت.</summary>
-public sealed record CreateShippingCoverageGrantCommand(ShippingCoverageGrantWriteRequest Request)
-    : IRequest<Result<ShippingCoverageGrantAdminItem>>;
+public sealed record CreateShippingCoverageGrantCommand(
+    string ServiceCode,
+    ShippingCoverageGrantWriteRequest Request) : IRequest<Result<ShippingCoverageGrantAdminItem>>;
 
 /// <summary>هندلر ایجاد مجوز پوشش.</summary>
 public sealed class CreateShippingCoverageGrantHandler(IShippingRateCoverageDirectory directory)
@@ -75,12 +90,13 @@ public sealed class CreateShippingCoverageGrantHandler(IShippingRateCoverageDire
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return ShippingAdminOperation.ExecuteAsync(() => directory.CreateGrantAsync(request.Request, cancellationToken));
+        return ShippingAdminOperation.ExecuteAsync(
+            () => directory.CreateGrantAsync(request.ServiceCode, request.Request, cancellationToken));
     }
 }
 
 /// <summary>فعال/غیرفعال کردن مجوز پوشش.</summary>
-public sealed record SetShippingCoverageGrantActiveCommand(Guid CoverageGrantId, bool IsActive)
+public sealed record SetShippingCoverageGrantActiveCommand(Guid CoverageGrantId, string ServiceCode, bool IsActive)
     : IRequest<Result<ShippingCoverageGrantAdminItem>>;
 
 /// <summary>هندلر تغییر وضعیت مجوز پوشش.</summary>
@@ -94,7 +110,11 @@ public sealed class SetShippingCoverageGrantActiveHandler(IShippingRateCoverageD
     {
         ArgumentNullException.ThrowIfNull(request);
         return ShippingAdminOperation.ExecuteAsync(
-            () => directory.SetGrantActiveAsync(request.CoverageGrantId, request.IsActive, cancellationToken));
+            () => directory.SetGrantActiveAsync(
+                request.CoverageGrantId,
+                request.ServiceCode,
+                request.IsActive,
+                cancellationToken));
     }
 }
 

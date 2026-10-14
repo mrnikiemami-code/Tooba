@@ -1,0 +1,12 @@
+﻿Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\bin\Debug\net8.0\Tooba.Host.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+dotnet : [xUnit.net 00:00:00.71]     
+Tooba.Host.Tests.Architecture.HostAdminCanon001GuardTests.Contract_files_expose_no_persistence_types [FAIL]
+At C:\Users\User\AppData\Local\Temp\ps-script-cbd72ea3-e4dd-4eb7-b879-41a3d966a5ca.ps1:99 char:1
++ dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...ce_types [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Failed!  - Failed:     1, Passed:   115, Skipped:     0, Total:   116, Duration: 699 ms - Tooba.Host.Tests.dll (net8.0)

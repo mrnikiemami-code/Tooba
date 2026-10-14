@@ -1,0 +1,36 @@
+﻿CHANGED PATHS (055):
+src/backend/Host/Tooba.Host/Program.cs
+src/backend/Host/Tooba.Host/Tooba.Host.csproj
+src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Errors/ShippingErrorCodes.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Application/Rates/Ports/IShippingRateCoverageDirectory.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Application/Rates/Commands/ShippingRateCoverageCommands.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Application/Validation/ShippingAdminValidators.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Rates/ShippingRateCoverageDirectory.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingRateCoverageEndpoints.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingAdminAuthorizer.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/ShippingRateCoverageAdminTests.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/ShippingAdminEndpointOwnershipTests.cs
+src/frontend/app/admin/shipping-services-screen.tsx
+src/frontend/app/admin/shipping-services/shipping-rates-coverage-api.ts
+src/frontend/app/admin/shipping-services/shipping-rates-coverage-model.ts
+src/frontend/app/admin/shipping-services/shipping-rates-coverage-model.test.ts
+src/frontend/app/admin/shipping-services/shipping-rates-coverage-dialog.tsx
+
+NO CHECKOUT/ORDER/PAYMENT/SETTLEMENT PATHS TOUCHED:
+
+
+NO HOST ADMIN/SECURITY FILE ADDED:
+HostAdminAuthorizers=10
+HostSecurityFiles=19
+ src/backend/Host/Tooba.Host/Program.cs             |  6 +-
+ src/backend/Host/Tooba.Host/Tooba.Host.csproj      |  1 +
+ .../Rates/Commands/ShippingRateCoverageCommands.cs | 46 ++++++++----
+ .../Rates/Ports/IShippingRateCoverageDirectory.cs  | 10 +++
+ .../Validation/ShippingAdminValidators.cs          | 56 +++++++++++++++
+ .../Errors/ShippingErrorCodes.cs                   |  3 +
+ .../Admin/ShippingRateCoverageEndpoints.cs         | 61 ++++++++++------
+ .../Rates/ShippingRateCoverageDirectory.cs         | 50 +++++++++++--
+ .../Admin/ShippingRateCoverageAdminTests.cs        | 81 +++++++++++++++++++---
+ .../app/admin/shipping-services-screen.tsx         | 21 ++++++
+ 10 files changed, 286 insertions(+), 49 deletions(-)
+HostAdminRecursiveCsFiles=17

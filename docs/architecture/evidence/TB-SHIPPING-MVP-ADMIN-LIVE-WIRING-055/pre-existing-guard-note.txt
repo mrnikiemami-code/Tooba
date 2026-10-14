@@ -1,0 +1,6 @@
+﻿PRE-EXISTING UNRELATED GUARD FAILURE (not touched by 055):
+Guard: Tooba.Host.Tests.Architecture.HostAdminCanon001GuardTests.Contract_files_expose_no_persistence_types
+Missing fixture referenced by guard: src/backend/Modules/Party/Tooba.Party.Contracts/IPartyAdminSellerReadGateway.cs
+git ls-files --error-unmatch <path> => no match (file never tracked at HEAD; moved by 00c0b9bf0 refactor(party): AMC-001 W2 split Aggregates Ports Models and Directories)
+Actual current path: src/backend/Modules/Party/Tooba.Party.Contracts/Admin/IPartyAdminSellerReadGateway.cs
+055 changed no Party file: 0 changed party paths

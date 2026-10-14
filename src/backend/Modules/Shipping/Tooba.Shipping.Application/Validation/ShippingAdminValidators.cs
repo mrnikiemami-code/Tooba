@@ -37,6 +37,31 @@ public static class ShippingValidationCodes
 
     /// <summary>آستانهٔ ارسال رایگان نباید منفی باشد.</summary>
     public const string FreeAboveThresholdNegative = "shipping.validation.free_above_threshold_negative";
+
+    /// <summary>کد خدمت بدنه با کد خدمت مسیر یکسان نیست.</summary>
+    public const string BodyServiceCodeMismatch = "shipping.validation.body_service_code_mismatch";
+}
+
+/// <summary>
+/// قاعدهٔ مشترک «کد خدمت مسیر مرجع است»: بدنه اگر کد خدمت بدهد باید همان باشد، وگرنه درخواست رد
+/// می‌شود تا هیچ کلاینتی نتواند با مقدار بدنه، مسیر را دور بزند.
+/// </summary>
+internal static class ShippingCommandScopeRules
+{
+    internal static void Apply<T>(
+        AbstractValidator<T> validator,
+        Func<T, string> routeServiceCode,
+        Func<T, string?> bodyServiceCode)
+    {
+        validator.RuleFor(x => x)
+            .Must(x => SameService(routeServiceCode(x), bodyServiceCode(x)))
+            .WithErrorCode(ShippingValidationCodes.BodyServiceCodeMismatch)
+            .WithName("serviceCode");
+    }
+
+    private static bool SameService(string? routeCode, string? bodyCode) =>
+        string.IsNullOrWhiteSpace(bodyCode)
+        || string.Equals(routeCode?.Trim(), bodyCode.Trim(), StringComparison.OrdinalIgnoreCase);
 }
 
 /// <summary>
@@ -107,6 +132,7 @@ public sealed class CreateShippingRatePolicyCommandValidator : AbstractValidator
     /// <summary>قواعد را تعریف می‌کند.</summary>
     public CreateShippingRatePolicyCommandValidator()
     {
+        ShippingCommandScopeRules.Apply(this, x => x.ServiceCode, x => x.Request?.ServiceCode);
         RuleFor(x => x.Request).NotNull().SetValidator(new ShippingRatePolicyWriteRequestValidator()!);
     }
 }
@@ -118,6 +144,7 @@ public sealed class UpdateShippingRatePolicyCommandValidator : AbstractValidator
     public UpdateShippingRatePolicyCommandValidator()
     {
         RuleFor(x => x.RatePolicyId).NotEmpty();
+        ShippingCommandScopeRules.Apply(this, x => x.ServiceCode, x => x.Request?.ServiceCode);
         RuleFor(x => x.Request).NotNull().SetValidator(new ShippingRatePolicyWriteRequestValidator()!);
     }
 }
@@ -128,7 +155,36 @@ public sealed class CreateShippingCoverageGrantCommandValidator : AbstractValida
     /// <summary>قواعد را تعریف می‌کند.</summary>
     public CreateShippingCoverageGrantCommandValidator()
     {
+        ShippingCommandScopeRules.Apply(this, x => x.ServiceCode, x => x.Request?.ServiceCode);
         RuleFor(x => x.Request).NotNull().SetValidator(new ShippingCoverageGrantWriteRequestValidator()!);
+    }
+}
+
+/// <summary>اعتبارسنج درخواست تغییر وضعیت سیاست نرخ.</summary>
+public sealed class SetShippingRatePolicyActiveCommandValidator : AbstractValidator<SetShippingRatePolicyActiveCommand>
+{
+    /// <summary>قواعد را تعریف می‌کند.</summary>
+    public SetShippingRatePolicyActiveCommandValidator()
+    {
+        RuleFor(x => x.RatePolicyId).NotEmpty();
+        RuleFor(x => x.ServiceCode)
+            .NotEmpty().WithErrorCode(ShippingValidationCodes.ServiceCodeRequired)
+            .MaximumLength(ShippingRatePolicy.ServiceCodeMaxLength)
+            .WithErrorCode(ShippingValidationCodes.ServiceCodeTooLong);
+    }
+}
+
+/// <summary>اعتبارسنج درخواست تغییر وضعیت مجوز پوشش.</summary>
+public sealed class SetShippingCoverageGrantActiveCommandValidator : AbstractValidator<SetShippingCoverageGrantActiveCommand>
+{
+    /// <summary>قواعد را تعریف می‌کند.</summary>
+    public SetShippingCoverageGrantActiveCommandValidator()
+    {
+        RuleFor(x => x.CoverageGrantId).NotEmpty();
+        RuleFor(x => x.ServiceCode)
+            .NotEmpty().WithErrorCode(ShippingValidationCodes.ServiceCodeRequired)
+            .MaximumLength(ShippingRatePolicy.ServiceCodeMaxLength)
+            .WithErrorCode(ShippingValidationCodes.ServiceCodeTooLong);
     }
 }
 

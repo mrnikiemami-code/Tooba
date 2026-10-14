@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Tooba.Shipping.Application.Rates.Commands;
 using Tooba.Shipping.Application.Validation;
@@ -45,20 +45,21 @@ public sealed class ShippingRateCoverageAdminTests
         var directory = Directory(out var context);
         await using var _ = context;
 
-        var created = await directory.CreateRateAsync(RateRequest(), default);
+        var created = await directory.CreateRateAsync("tooba-post", RateRequest(), default);
         Assert.True(created.IsSuccess);
         Assert.Equal(25000m, created.Value.ChargeAmount);
         Assert.True(created.Value.IsActive);
 
         var updated = await directory.UpdateRateAsync(
             created.Value.RatePolicyId,
+            "tooba-post",
             RateRequest(31000m) with { FreeAboveThreshold = null },
             default);
         Assert.True(updated.IsSuccess);
         Assert.Equal(31000m, updated.Value.ChargeAmount);
         Assert.Null(updated.Value.FreeAboveThreshold);
 
-        var deactivated = await directory.SetRateActiveAsync(created.Value.RatePolicyId, false, default);
+        var deactivated = await directory.SetRateActiveAsync(created.Value.RatePolicyId, "tooba-post", false, default);
         Assert.True(deactivated.IsSuccess);
         Assert.False(deactivated.Value.IsActive);
 
@@ -75,16 +76,16 @@ public sealed class ShippingRateCoverageAdminTests
         var directory = Directory(out var context);
         await using var _ = context;
 
-        Assert.True((await directory.CreateRateAsync(RateRequest(), default)).IsSuccess);
-        var duplicate = await directory.CreateRateAsync(RateRequest(99999m), default);
+        Assert.True((await directory.CreateRateAsync("tooba-post", RateRequest(), default)).IsSuccess);
+        var duplicate = await directory.CreateRateAsync("tooba-post", RateRequest(99999m), default);
         Assert.True(duplicate.IsFailure);
         Assert.Equal(ShippingErrorCodes.RatePolicyScopeDuplicate, duplicate.FirstError.Code);
 
         var grant = new ShippingCoverageGrantWriteRequest(
             "tooba-post",
             new ShippingDestinationScopeWrite(CountryId, AreaId, CityId));
-        Assert.True((await directory.CreateGrantAsync(grant, default)).IsSuccess);
-        var duplicateGrant = await directory.CreateGrantAsync(grant, default);
+        Assert.True((await directory.CreateGrantAsync("tooba-post", grant, default)).IsSuccess);
+        var duplicateGrant = await directory.CreateGrantAsync("tooba-post", grant, default);
         Assert.True(duplicateGrant.IsFailure);
         Assert.Equal(ShippingErrorCodes.CoverageGrantScopeDuplicate, duplicateGrant.FirstError.Code);
     }
@@ -107,11 +108,11 @@ public sealed class ShippingRateCoverageAdminTests
         var directory = Directory(out var context);
         await using var _ = context;
 
-        var missing = await directory.SetRateActiveAsync(Guid.NewGuid(), false, default);
+        var missing = await directory.SetRateActiveAsync(Guid.NewGuid(), "tooba-post", false, default);
         Assert.True(missing.IsFailure);
         Assert.Equal(ShippingErrorCodes.RatePolicyNotFound, missing.FirstError.Code);
 
-        var missingGrant = await directory.SetGrantActiveAsync(Guid.NewGuid(), false, default);
+        var missingGrant = await directory.SetGrantActiveAsync(Guid.NewGuid(), "tooba-post", false, default);
         Assert.True(missingGrant.IsFailure);
         Assert.Equal(ShippingErrorCodes.CoverageGrantNotFound, missingGrant.FirstError.Code);
     }
@@ -146,6 +147,63 @@ public sealed class ShippingRateCoverageAdminTests
         Assert.Equal("tooba-post", result.Value.ServiceCode);
     }
 
+    [Fact]
+    public async Task Cross_service_mutation_is_denied_with_stable_code()
+    {
+        var directory = Directory(out var context);
+        await using var _ = context;
+
+        var created = await directory.CreateRateAsync("tooba-post", RateRequest(), default);
+        Assert.True(created.IsSuccess);
+
+        // The route service code is authoritative: reaching the same id through another service path
+        // must fail instead of editing a row that belongs to a different service.
+        var foreignUpdate = await directory.UpdateRateAsync(created.Value.RatePolicyId, "peyk", RateRequest(1m), default);
+        Assert.True(foreignUpdate.IsFailure);
+        Assert.Equal(ShippingErrorCodes.ServiceScopeMismatch, foreignUpdate.FirstError.Code);
+
+        var foreignDeactivate = await directory.SetRateActiveAsync(created.Value.RatePolicyId, "peyk", false, default);
+        Assert.True(foreignDeactivate.IsFailure);
+        Assert.Equal(ShippingErrorCodes.ServiceScopeMismatch, foreignDeactivate.FirstError.Code);
+
+        var grant = await directory.CreateGrantAsync(
+            "tooba-post",
+            new ShippingCoverageGrantWriteRequest("tooba-post", new ShippingDestinationScopeWrite(CountryId)),
+            default);
+        Assert.True(grant.IsSuccess);
+        var foreignGrant = await directory.SetGrantActiveAsync(grant.Value.CoverageGrantId, "peyk", false, default);
+        Assert.True(foreignGrant.IsFailure);
+        Assert.Equal(ShippingErrorCodes.ServiceScopeMismatch, foreignGrant.FirstError.Code);
+
+        // The untouched rows are still owned by the original service.
+        var reloaded = await directory.ListAsync("tooba-post", default);
+        Assert.True(reloaded.IsSuccess);
+        Assert.Equal(25000m, Assert.Single(reloaded.Value.RatePolicies).ChargeAmount);
+    }
+
+    [Fact]
+    public void Body_service_code_cannot_bypass_the_route_service_code()
+    {
+        var validator = new CreateShippingRatePolicyCommandValidator();
+        var command = new CreateShippingRatePolicyCommand("tooba-post", RateRequest());
+
+        Assert.True(validator.Validate(command).IsValid);
+
+        var bodyOverride = new CreateShippingRatePolicyCommand(
+            "tooba-post",
+            RateRequest() with { ServiceCode = "peyk" });
+        var failure = validator.Validate(bodyOverride);
+        Assert.False(failure.IsValid);
+        Assert.Contains(failure.Errors, e => e.ErrorCode == ShippingValidationCodes.BodyServiceCodeMismatch);
+
+        // A blank body service code is still rejected by the transport shape rules, so the body can
+        // never be the source of the service identity; the route value is the only accepted owner.
+        var blankBody = new CreateShippingRatePolicyCommand(
+            "tooba-post",
+            RateRequest() with { ServiceCode = "  " });
+        Assert.False(validator.Validate(blankBody).IsValid);
+    }
+
     private sealed class StubDirectory : Application.Rates.Ports.IShippingRateCoverageDirectory
     {
         public Task<BuildingBlocks.Results.Result<ShippingRatesAndCoverageView>> ListAsync(
@@ -155,29 +213,34 @@ public sealed class ShippingRateCoverageAdminTests
                 new ShippingRatesAndCoverageView(serviceCode, [], [])));
 
         public Task<BuildingBlocks.Results.Result<ShippingRatePolicyAdminItem>> CreateRateAsync(
+            string serviceCode,
             ShippingRatePolicyWriteRequest request,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<BuildingBlocks.Results.Result<ShippingRatePolicyAdminItem>> UpdateRateAsync(
             Guid ratePolicyId,
+            string serviceCode,
             ShippingRatePolicyWriteRequest request,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<BuildingBlocks.Results.Result<ShippingRatePolicyAdminItem>> SetRateActiveAsync(
             Guid ratePolicyId,
+            string serviceCode,
             bool isActive,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<BuildingBlocks.Results.Result<ShippingCoverageGrantAdminItem>> CreateGrantAsync(
+            string serviceCode,
             ShippingCoverageGrantWriteRequest request,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<BuildingBlocks.Results.Result<ShippingCoverageGrantAdminItem>> SetGrantActiveAsync(
             Guid coverageGrantId,
+            string serviceCode,
             bool isActive,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();

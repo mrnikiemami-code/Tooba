@@ -44,6 +44,7 @@ import {
   type ShippingServiceFormIssue,
 } from "./shipping-services/shipping-services-form-model.ts";
 import { createHostSavedViewStore } from "./saved-view-store";
+import { ShippingRatesCoverageDialog } from "./shipping-services/shipping-rates-coverage-dialog.tsx";
 import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 
 const GRID_VIEW_KEY = "admin-shipping-services";
@@ -126,6 +127,8 @@ export function ShippingServicesScreen() {
   const [busy, setBusy] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  // بخش نرخ/پوشش خدمت انتخاب‌شده؛ null یعنی بسته است.
+  const [ratesTarget, setRatesTarget] = useState<{ code: string; name: string } | null>(null);
   const [code, setCode] = useState("");
   const [providerKind, setProviderKind] = useState("post");
   const [iconKey, setIconKey] = useState("post");
@@ -314,6 +317,16 @@ export function ShippingServicesScreen() {
         icon: Pencil,
         testId: (row) => `shipping-service-edit-${row.shippingServiceId}`,
         onClick: (row) => openEdit(row.shippingServiceId),
+      },
+      {
+        id: "rates",
+        label: "نرخ و پوشش",
+        icon: Truck,
+        testId: (row) => `shipping-service-rates-${row.shippingServiceId}`,
+        onClick: (row) => {
+          setNotice(undefined);
+          setRatesTarget({ code: row.code, name: row.name });
+        },
       },
       {
         id: "deactivate",
@@ -675,6 +688,14 @@ export function ShippingServicesScreen() {
           </div>
         </div>
       </Dialog>
+
+      <ShippingRatesCoverageDialog
+        open={ratesTarget !== null}
+        serviceCode={ratesTarget?.code ?? ""}
+        serviceName={ratesTarget?.name ?? ""}
+        onClose={() => setRatesTarget(null)}
+        onNotice={setNotice}
+      />
     </main>
   );
 }

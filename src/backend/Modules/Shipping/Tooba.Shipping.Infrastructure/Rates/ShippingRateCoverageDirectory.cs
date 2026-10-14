@@ -58,11 +58,18 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
 
     /// <inheritdoc />
     public async Task<Result<ShippingRatePolicyAdminItem>> CreateRateAsync(
+        string serviceCode,
         ShippingRatePolicyWriteRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var code = Normalize(request.ServiceCode);
+        var code = Normalize(serviceCode);
+        if (code.Length == 0)
+        {
+            return Result.Failure<ShippingRatePolicyAdminItem>(
+                new SemanticError(ShippingErrorCodes.ServiceCodeRequired));
+        }
+
         var scope = request.Scope.ToScope();
 
         if (await ScopeExistsAsync(context.RatePolicies, code, scope, cancellationToken))
@@ -90,6 +97,7 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
     /// <inheritdoc />
     public async Task<Result<ShippingRatePolicyAdminItem>> UpdateRateAsync(
         Guid ratePolicyId,
+        string serviceCode,
         ShippingRatePolicyWriteRequest request,
         CancellationToken cancellationToken)
     {
@@ -102,10 +110,17 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
                 new SemanticError(ShippingErrorCodes.RatePolicyNotFound));
         }
 
+        // Cross-service mutation guard: the route service code is authoritative, so an id that belongs to
+        // a different service is refused instead of being edited through another service's path.
+        if (!BelongsTo(policy.ServiceCode, serviceCode))
+        {
+            return Result.Failure<ShippingRatePolicyAdminItem>(
+                new SemanticError(ShippingErrorCodes.ServiceScopeMismatch));
+        }
+
         // The destination scope of an existing policy is immutable through this seam: changing it would
         // silently re-point an existing commercial decision, so a mismatch is refused rather than applied.
-        var requestedScope = request.Scope.ToScope();
-        if (!SameScope(policy.Scope, requestedScope) || !string.Equals(policy.ServiceCode, Normalize(request.ServiceCode), StringComparison.Ordinal))
+        if (!SameScope(policy.Scope, request.Scope.ToScope()))
         {
             return Result.Failure<ShippingRatePolicyAdminItem>(
                 new SemanticError(ShippingErrorCodes.CoverageScopeInvalid));
@@ -122,6 +137,7 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
     /// <inheritdoc />
     public async Task<Result<ShippingRatePolicyAdminItem>> SetRateActiveAsync(
         Guid ratePolicyId,
+        string serviceCode,
         bool isActive,
         CancellationToken cancellationToken)
     {
@@ -131,6 +147,12 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
         {
             return Result.Failure<ShippingRatePolicyAdminItem>(
                 new SemanticError(ShippingErrorCodes.RatePolicyNotFound));
+        }
+
+        if (!BelongsTo(policy.ServiceCode, serviceCode))
+        {
+            return Result.Failure<ShippingRatePolicyAdminItem>(
+                new SemanticError(ShippingErrorCodes.ServiceScopeMismatch));
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -149,11 +171,18 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
 
     /// <inheritdoc />
     public async Task<Result<ShippingCoverageGrantAdminItem>> CreateGrantAsync(
+        string serviceCode,
         ShippingCoverageGrantWriteRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var code = Normalize(request.ServiceCode);
+        var code = Normalize(serviceCode);
+        if (code.Length == 0)
+        {
+            return Result.Failure<ShippingCoverageGrantAdminItem>(
+                new SemanticError(ShippingErrorCodes.ServiceCodeRequired));
+        }
+
         var scope = request.Scope.ToScope();
 
         if (await ScopeExistsAsync(context.CoverageGrants, code, scope, cancellationToken))
@@ -171,6 +200,7 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
     /// <inheritdoc />
     public async Task<Result<ShippingCoverageGrantAdminItem>> SetGrantActiveAsync(
         Guid coverageGrantId,
+        string serviceCode,
         bool isActive,
         CancellationToken cancellationToken)
     {
@@ -180,6 +210,12 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
         {
             return Result.Failure<ShippingCoverageGrantAdminItem>(
                 new SemanticError(ShippingErrorCodes.CoverageGrantNotFound));
+        }
+
+        if (!BelongsTo(grant.ServiceCode, serviceCode))
+        {
+            return Result.Failure<ShippingCoverageGrantAdminItem>(
+                new SemanticError(ShippingErrorCodes.ServiceScopeMismatch));
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -195,6 +231,12 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
         await context.SaveChangesAsync(cancellationToken);
         return Result.Success(Map(grant));
     }
+
+    private static bool BelongsTo(string storedServiceCode, string? routeServiceCode) =>
+        string.Equals(
+            storedServiceCode?.Trim() ?? string.Empty,
+            routeServiceCode?.Trim() ?? string.Empty,
+            StringComparison.OrdinalIgnoreCase);
 
     private static async Task<bool> ScopeExistsAsync<TEntity>(
         IQueryable<TEntity> set,

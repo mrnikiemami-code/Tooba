@@ -56,6 +56,7 @@ using Tooba.Story.Endpoints;
 using Tooba.UserPreference.Endpoints;
 using Tooba.OperatorProfile.Endpoints;
 using Tooba.Localization.Endpoints;
+using Tooba.Shipping.Endpoints.Admin;
 using Tooba.Support.Endpoints;
 using Tooba.Wallet.Endpoints;
 using Tooba.Offer.Endpoints;
@@ -195,7 +196,8 @@ builder.Services.AddToobaCqrsFoundation(
     typeof(Tooba.CustomerProfile.Application.Profile.Queries.GetCustomerProfilePageQuery).Assembly,
     typeof(Tooba.Content.Application.Articles.Commands.CreateArticleCommand).Assembly,
     typeof(Tooba.ProductWorkspace.Application.Composition.ProductManagement.Queries.GetProductWorkspaceQuery).Assembly,
-    typeof(Tooba.Party.Application.Seller.Queries.GetSellerSettingsQuery).Assembly);
+    typeof(Tooba.Party.Application.Seller.Queries.GetSellerSettingsQuery).Assembly,
+    typeof(Tooba.Shipping.Application.Rates.Commands.CreateShippingRatePolicyCommand).Assembly);
 builder.Services.AddScoped<IOrderAdminAuthorizer, HostOrderAdminAuthorizer>();
 builder.Services.AddScoped<
     Tooba.Order.Contracts.Admin.Operations.IOrderAdminEffectiveAccessReader,
@@ -238,6 +240,7 @@ builder.Services.AddScoped<Tooba.Returns.Endpoints.Admin.IReturnAdminAuthorizer,
 builder.Services.AddScoped<Tooba.Notification.Endpoints.Seller.INotificationSellerAuthorizer, Tooba.Host.Security.Seller.HostNotificationSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Support.Endpoints.Seller.ISupportSellerAuthorizer, Tooba.Host.Security.Seller.HostSupportSellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Support.Endpoints.Admin.ISupportAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostSupportAdminAuthorizer>();
+builder.Services.AddScoped<Tooba.Shipping.Endpoints.Admin.IShippingAdminAuthorizer, Tooba.Shipping.Endpoints.Admin.ShippingAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Wallet.Endpoints.Admin.IWalletAdminAuthorizer, Tooba.Host.Admin.Access.Authorizers.HostWalletAdminAuthorizer>();
 builder.Services.AddScoped<Tooba.Party.Endpoints.Seller.IPartySellerAuthorizer, Tooba.Host.Security.Seller.HostPartySellerAuthorizer>();
 builder.Services.AddScoped<Tooba.Host.Admin.Panel.AdminPanelComposer>();
@@ -443,6 +446,7 @@ app.MapMediaModuleEndpoints();
 app.MapPageCompositionModuleEndpoints();
 app.MapStoryModuleEndpoints();
 app.MapPromotionEndpoints();
+app.MapShippingEndpoints();
 
 HostHealthEndpoints.Map(app, enableCors: true);
 

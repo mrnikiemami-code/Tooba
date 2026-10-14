@@ -50,4 +50,7 @@ public static class ShippingErrorCodes
 
     /// <summary>کد خدمت در هیچ ردیف کاتالوگ خدمت Fulfillment وجود ندارد.</summary>
     public const string ServiceCodeUnknown = "shipping.service_code.unknown";
+
+    /// <summary>ردیف درخواستی به کد خدمت دیگری تعلق دارد؛ تغییر میان‌خدمتی مجاز نیست.</summary>
+    public const string ServiceScopeMismatch = "shipping.service_scope.mismatch";
 }

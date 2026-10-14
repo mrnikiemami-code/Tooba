@@ -1,23 +1,38 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
+using Tooba.BuildingBlocks.Presentation;
 using Tooba.Shipping.Application.Rates.Commands;
 using Tooba.Shipping.Contracts.Admin;
 
 namespace Tooba.Shipping.Endpoints.Admin;
 
 /// <summary>
-/// مجوزدهی ادمین برای نویسندگی نرخ/پوشش Shipping. درز انتزاعی است تا Host بتواند همان
-/// مجوزدهی موجود پنل ادمین را تزریق کند.
+/// مجوزدهی ادمین برای نویسندگی نرخ/پوشش Shipping. درز انتزاعی است تا Host همان مجوزدهی موجود
+/// پنل ادمین را تزریق کند (پیاده‌سازی مرجع: HostShippingAdminAuthorizer).
 /// </summary>
 public interface IShippingAdminAuthorizer
 {
     /// <summary>دسترسی را بررسی می‌کند و شناسهٔ عامل را برمی‌گرداند.</summary>
     /// <param name="context">زمینهٔ HTTP.</param>
-    /// <param name="permission">نام مجوز.</param>
+    /// <param name="permission">شناسهٔ مجوز موجود پلتفرم.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
     Task<Guid> RequireAuthorizedAsync(HttpContext context, string permission, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// شناسهٔ مجوزهای مصرفی این مسیرها. این ماژول هیچ مجوز تازه‌ای در کاتالوگ پلتفرم نمی‌سازد:
+/// نرخ و پوشش داخل همان سطح ادمین «خدمات ارسال» مدیریت می‌شوند که از قبل با مجوزهای
+/// Fulfillment محافظت شده است، بنابراین همان شناسه‌های موجود دوباره استفاده می‌شوند و هیچ
+/// مسیر بی‌مجوز یا ناشناخته‌ای ایجاد نمی‌شود.
+/// </summary>
+public static class ShippingAdminPermissions
+{
+    /// <summary>مجوز خواندن (موجود در کاتالوگ پلتفرم).</summary>
+    public const string View = "fulfillment.view";
+
+    /// <summary>مجوز نوشتن (موجود در کاتالوگ پلتفرم).</summary>
+    public const string Manage = "fulfillment.manage";
 }
 
 /// <summary>مارس‌کنندهٔ نرخ و پوشش ارسال؛ فقط شکل HTTP را به پیام می‌نگارد.</summary>
@@ -33,18 +48,20 @@ public static class ShippingRateCoverageEndpoints
         group.MapPut("/shipping-services/{serviceCode}/rates/{ratePolicyId:guid}", UpdateRateAsync);
         group.MapPatch("/shipping-services/{serviceCode}/rates/{ratePolicyId:guid}/active", SetRateActiveAsync);
         group.MapPost("/shipping-services/{serviceCode}/coverage-grants", CreateGrantAsync);
-        group.MapPatch("/shipping-services/{serviceCode}/coverage-grants/{coverageGrantId:guid}/active", SetGrantActiveAsync);
+        group.MapPatch(
+            "/shipping-services/{serviceCode}/coverage-grants/{coverageGrantId:guid}/active",
+            SetGrantActiveAsync);
     }
 
     private static async Task<IResult> ListAsync(
         string serviceCode,
         MediatR.ISender sender,
         IShippingAdminAuthorizer authorizer,
-        Tooba.BuildingBlocks.Presentation.ApiResponseFactory api,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken cancellationToken)
     {
-        await authorizer.RequireAuthorizedAsync(context, "shipping.rates.view", cancellationToken);
+        await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.View, cancellationToken);
         return api.From(await sender.Send(new GetShippingRatesAndCoverageQuery(serviceCode), cancellationToken));
     }
 
@@ -53,13 +70,13 @@ public static class ShippingRateCoverageEndpoints
         ShippingRatePolicyWriteRequest body,
         MediatR.ISender sender,
         IShippingAdminAuthorizer authorizer,
-        Tooba.BuildingBlocks.Presentation.ApiResponseFactory api,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken cancellationToken)
     {
-        await authorizer.RequireAuthorizedAsync(context, "shipping.rates.manage", cancellationToken);
+        await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
         return api.From(await sender.Send(
-            new CreateShippingRatePolicyCommand(body with { ServiceCode = serviceCode }),
+            new CreateShippingRatePolicyCommand(serviceCode, body),
             cancellationToken));
     }
 
@@ -69,13 +86,13 @@ public static class ShippingRateCoverageEndpoints
         ShippingRatePolicyWriteRequest body,
         MediatR.ISender sender,
         IShippingAdminAuthorizer authorizer,
-        Tooba.BuildingBlocks.Presentation.ApiResponseFactory api,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken cancellationToken)
     {
-        await authorizer.RequireAuthorizedAsync(context, "shipping.rates.manage", cancellationToken);
+        await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
         return api.From(await sender.Send(
-            new UpdateShippingRatePolicyCommand(ratePolicyId, body with { ServiceCode = serviceCode }),
+            new UpdateShippingRatePolicyCommand(ratePolicyId, serviceCode, body),
             cancellationToken));
     }
 
@@ -85,13 +102,13 @@ public static class ShippingRateCoverageEndpoints
         ShippingRatePolicyActiveRequest body,
         MediatR.ISender sender,
         IShippingAdminAuthorizer authorizer,
-        Tooba.BuildingBlocks.Presentation.ApiResponseFactory api,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken cancellationToken)
     {
-        await authorizer.RequireAuthorizedAsync(context, "shipping.rates.manage", cancellationToken);
+        await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
         return api.From(await sender.Send(
-            new SetShippingRatePolicyActiveCommand(ratePolicyId, body.IsActive),
+            new SetShippingRatePolicyActiveCommand(ratePolicyId, serviceCode, body.IsActive),
             cancellationToken));
     }
 
@@ -100,13 +117,13 @@ public static class ShippingRateCoverageEndpoints
         ShippingCoverageGrantWriteRequest body,
         MediatR.ISender sender,
         IShippingAdminAuthorizer authorizer,
-        Tooba.BuildingBlocks.Presentation.ApiResponseFactory api,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken cancellationToken)
     {
-        await authorizer.RequireAuthorizedAsync(context, "shipping.coverage.manage", cancellationToken);
+        await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
         return api.From(await sender.Send(
-            new CreateShippingCoverageGrantCommand(body with { ServiceCode = serviceCode }),
+            new CreateShippingCoverageGrantCommand(serviceCode, body),
             cancellationToken));
     }
 
@@ -116,13 +133,13 @@ public static class ShippingRateCoverageEndpoints
         ShippingCoverageGrantActiveRequest body,
         MediatR.ISender sender,
         IShippingAdminAuthorizer authorizer,
-        Tooba.BuildingBlocks.Presentation.ApiResponseFactory api,
+        ApiResponseFactory api,
         HttpContext context,
         CancellationToken cancellationToken)
     {
-        await authorizer.RequireAuthorizedAsync(context, "shipping.coverage.manage", cancellationToken);
+        await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
         return api.From(await sender.Send(
-            new SetShippingCoverageGrantActiveCommand(coverageGrantId, body.IsActive),
+            new SetShippingCoverageGrantActiveCommand(coverageGrantId, serviceCode, body.IsActive),
             cancellationToken));
     }
 }
