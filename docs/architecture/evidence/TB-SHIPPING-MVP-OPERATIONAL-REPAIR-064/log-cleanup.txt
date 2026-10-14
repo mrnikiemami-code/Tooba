@@ -1,0 +1,10 @@
+﻿=== stop isolated host and destroy task-owned scratch ===
+PID_ON_5101=29196
+PORT_5101_LISTENING=False
+tooba-064-scratch
+CONTAINER_PRESENT=True
+PORT_55435_LISTENING=False
+LAUNCH_DIR_GONE=True
+USER_HOST_PID_ON_5088=37028 (never stopped or restarted)
+CONTAINER_LISTING=[]
+SCRATCH_GONE=True

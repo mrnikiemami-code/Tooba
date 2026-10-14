@@ -1,0 +1,20 @@
+﻿=== stop isolated host (repeat start check) ===
+PID_ON_5101=38192
+LANG_ROWS_BEFORE_RESTART=2
+RESTART_HEALTH_OK after 0s
+LANG_ROWS_AFTER_RESTART=2
+fa-IR|default=true
+en-US|default=false
+=== second-start bootstrap log ===
+{"Timestamp":"2026-10-14T22:36:51.2005839\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.Localization.Infrastructure.Bootstrap.LanguageBootstrapHostedService","Message":"Language bootstrap skipped: no
+=== final scratch counts ===
+geography.countries=1 areas=12 cities=47 localization.languages=2 shipping.rate_policies=1 shipping.coverage_grants=1
+geography: 20261014113949_InitialGeography
+shipping: 20261014144742_InitialShipping
+=== databases in container ===
+postgres
+template0
+template1
+tooba_064_scratch_r7q4f9kd
+=== port bindings ===
+5432/tcp -> 127.0.0.1:55435

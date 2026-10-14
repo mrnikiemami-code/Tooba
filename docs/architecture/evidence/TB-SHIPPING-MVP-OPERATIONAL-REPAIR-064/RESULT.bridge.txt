@@ -1,0 +1,117 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-OPERATIONAL-REPAIR-064
+Parent-Task: TB-SHIPPING-MVP-SCRATCH-HTTP-063
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE
+Mode: BOUNDED_SHIPPING_MALFORMED_BODY_AND_FRESH_LANGUAGE_BOOTSTRAP_REPAIR
+Bridge-Task-Row: d1286ea8-c2b2-491e-9815-9c654c98c970
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 81dea23234841d6dade3eca6dd0b808080a0933b
+Base-SHA: 81dea23234841d6dade3eca6dd0b808080a0933b
+Code-SHA: 7ff133af6a1f6eb8de4bdf889e9ee63f56a78539
+Evidence-SHA: 7ff133af6a1f6eb8de4bdf889e9ee63f56a78539 (the source commit; the evidence/bookkeeping commit that carries this file follows it, per the 062/063 convention)
+automaticNextImplementationTask: NONE
+
+ROOT CAUSE A — F-063-1, malformed body surfaced as 500 platform.unexpected
+- The five Shipping admin write routes bound the body as a minimal-API parameter (ShippingRatePolicyWriteRequest / ShippingCoverageGrantWriteRequest / the two active-request records). ASP.NET Core resolves that parameter BEFORE the handler runs, so an undeserializable payload (syntax-invalid JSON, non-Guid or empty GUID in scope, non-JSON content type, literal null) threw BadHttpRequestException outside the endpoint.
+- SafeErrorMapper.Map has branches only for SemanticException, ValidationException and PlatformHttpException; everything else falls through to MapUnexpected() -> 500 platform.unexpected. A pure client-input failure therefore became an unexpected server error. 063 log-crud-063.txt probes S1/S2 are the reproduction.
+- Global handler route rejected: SafeErrorMapper / ExceptionPresentationService / ToobaExceptionHandler are Host-owned global mapping and were explicitly forbidden without separate authorization; classifying BadHttpRequestException there would change every module at once.
+- Endpoint-filter route rejected after empirical falsification: a throwaway minimal app proved that minimal-API argument binding runs BEFORE the filter pipeline, so an IEndpointFilter can never observe the binding failure. Evidence: binding failure returned the framework's own 400 and never reached a filter that would have answered 418.
+
+REPAIR A — precise source edits
+- src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingRateCoverageEndpoints.cs
+  - All five write handlers no longer take a body parameter. After authorization they call ReadBodyAsync<T>(context, api, ct).
+  - TryReadBodyAsync<T> reads via HttpRequest.ReadFromJsonAsync<T> (same in-repo precedent as StorefrontOrderEndpoints) and returns null for a non-JSON content type, JsonException and BadHttpRequestException.
+  - ReadBodyAsync<T> converts a null result into the DECLARED validation envelope via the existing public ApiResponseFactory.FromException, carrying ValidationException(ValidationFailure(propertyName "request", errorCode shipping.validation.body_invalid)). No new envelope, no Results.Json, no raw status code, no global handler change.
+  - Authorization now runs before the body read, so an unauthenticated/unauthorized request stays 401/403 even with a malformed body (previously the binding failure pre-empted the access decision).
+- src/backend/Modules/Shipping/Tooba.Shipping.Application/Validation/ShippingAdminValidators.cs: added declared code ShippingValidationCodes.BodyInvalid = "shipping.validation.body_invalid". Not registered as an error-catalog descriptor and no .resx added, matching the documented repository convention for transport validation codes (they travel inside the foundation validation.failed envelope) and Shipping owning no resx pair at all. No localization surface was invented.
+- Existing 055 source-text ownership guard text was preserved verbatim (the command call sites still read "new CreateShippingRatePolicyCommand(serviceCode, body)" etc.; no null-forgiving operator was left in place).
+
+PROOF A — real HTTP on the isolated scratch Host (log-http-064.txt)
+- S1 POST rates "{not-json" -> 400 validation.failed errors.request=[shipping.validation.body_invalid] (063 S1, previously 500 platform.unexpected).
+- S2 POST rates scope.countryId="" -> 400 same declared code (063 S2, previously 500).
+- S3 POST rates scope.countryId="not-a-guid" -> 400 same. S4 literal null body -> 400 same. S5 text/plain body -> 400 same.
+- S6 POST coverage-grants "{oops" -> 400 same. S7 PUT rates/{id} "{bad" -> 400 same. S8 PATCH rates/{id}/active "{bad" -> 400 same. S9 PATCH coverage-grants/{id}/active "{bad" -> 400 same.
+- Auth fail-closed preserved: GET rates no credential -> 401 admin.actor.missing; unknown actor -> 403 admin.authorization.denied; POST with malformed body and no credential -> 401; POST with malformed body and unknown actor -> 403.
+- 063 missing-scope behavior unchanged: POST rates without scope -> 400 Request.Scope=[shipping.validation.scope_required]; POST coverage-grants {} -> 400 shipping.validation.scope_required; POST rates scope:{} -> 400 shipping.validation.country_required.
+- Authorized reads still 200 (no 500): GET rates -> 200 empty sets; GET geography countries -> 200 IR.
+- One valid synthetic scratch roundtrip still works end to end: POST rate -> 200 (Synthetic, 41000 IRR), GET read-after-write -> 200, POST coverage-grant -> 200, GET read-after-write -> 200 with both present.
+- Intentional documented delta: a non-JSON/absent content type now yields 400 shipping.validation.body_invalid instead of the framework's 415. Both are client-error class; authoring a raw 415 would need a non-canonical Results.* in the endpoint, which the repository API-result convention forbids. The 063-mandated cases are unaffected.
+
+ROOT CAUSE B — F-063-2, fresh Development database had zero canonical languages
+- LanguageBootstrapHostedService is an IHostedService: it runs during host start before any commerce context is bound. It resolved LocalizationDbContext, whose factory calls ToobaNpgsql.ResolveForContext, which fail-closes with PlatformHttpException 503 platform.edition.unconfigured when ICurrentCommerceContext.Current is null.
+- The assignment performed by DevelopmentSchemaMigrator.ApplyCoreAsync (ICommerceContextAssigner.Assign) lives in that method's own scope; the hosted service creates a different scope, so its accessor is fresh and empty. The resulting exception was swallowed by the service broad catch, logged at Error level, and the database stayed at zero languages. That is exactly why 063 had to create fa-IR manually over the admin API. Production is no better: the same service also cannot resolve a connection there, because no request context exists at startup either.
+
+REPAIR B — precise source edits (minimum ownership-correct change)
+- New src/backend/Modules/Localization/Tooba.Localization.Infrastructure/Bootstrap/LanguageBootstrapDevelopmentSeed.cs (Localization-owned):
+  - LanguageBootstrapRunner.EnsureSeededAsync / MigrateAndSeedAsync: the idempotent migrate-then-seed body that previously lived inline in the hosted service.
+  - LanguageBootstrapDevelopmentSeed.PostMigration.EnsureAsync: gates on IHostEnvironment.IsDevelopment() (same no-op-outside-Development shape as CatalogDevelopmentSeed.PostMigration) and seeds through the PASSED-IN provider, so the Host-assigned commerce context is the one used. It deliberately does not migrate, because the Localization IModuleSchemaMigrator at order 22 already ran immediately before.
+- src/backend/Modules/Localization/Tooba.Localization.Infrastructure/LocalizationModule.cs: registers it with AddModuleSchemaMigrationStep("Localization", ModuleSchemaMigrationOrder.Localization, ...) — the pre-existing neutral seam owned by Tooba.Persistence, already used by Catalog and Promotion for exactly this purpose (module-owned Development prerequisites that must run inside the assigned-context scope).
+- src/backend/Modules/Localization/Tooba.Localization.Infrastructure/Bootstrap/LanguageBootstrapHostedService.cs: delegates to the runner and distinguishes "no commerce context at startup" (PlatformHttpException with 503 — an expected, by-design condition) as LogInformation, while every other exception still logs as LogError. Nothing is masked. The class and file were kept, not deleted, so the AMC W2 structure guard that asserts Bootstrap/LanguageBootstrapHostedService.cs still holds. No language GUID hardcoded, no DbContext/tenant resolution bypassed, tenant isolation untouched, legacy Catalog bootstraps remain disabled, no Host file touched.
+
+PROOF B — isolated fresh start + repeat start (log-restart-idempotence.txt)
+- Fresh database, FIRST start, NO manual POST anywhere: localization.languages = fa-IR (isDefault true, isActive true) + en-US. 063 equivalent before this repair: 0 rows, fa-IR had to be POSTed by hand.
+- GET /v1/admin/languages with the canonical admin actor -> 200 with both rows (fa-IR default), no manual creation.
+- Second start (stop + start on the same database): still exactly 2 rows, fa-IR default true, en-US default false. No duplicate seeding.
+- Startup log on both starts: Information "Language bootstrap skipped: no commerce context is bound at host startup. Development initialization order is owned by the Localization post-migration seed step." — no Error-level false alarm.
+- Geography reference seed, which requires a genuine fa-IR language id, succeeded with no invented id: countries=1 areas=12 cities=47 (service_areas=0).
+
+TESTS
+- New src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/ShippingAdminInvalidBodyRepairTests.cs, 7 focused tests: reproduces the historical BadHttpRequestException -> 500 platform.unexpected mapping, proves the declared 400 envelope and the exact declared child code under field "request", proves the body code is not conflated with the scope code, and proves valid-JSON absent-scope still maps to shipping.validation.scope_required for both rate and coverage-grant.
+- Tooba.Shipping.Tests full project: 96 passed / 0 failed (includes the unmodified 055 route-ownership source guard and the 060 scope-guard repair tests; the first run failed on the 055 guard text and was fixed by preserving the guard's exact expected call sites, not by weakening the guard).
+- Tooba.Localization.Infrastructure and Tooba.Shipping.Endpoints build clean, 0 warnings, 0 errors.
+- Tooba.Host.Tests (where Localization behavior/structure guards live) could NOT be executed here: its build contended with the user's running Development Host on :5088 (PID 37028) over Tooba.Host/bin/Debug/net8.0/*.dll and produced no output for over nine minutes, so it was stopped without reporting a result. Same environmental constraint as 062. This is the single unverified item; the Localization change is proven by the two real isolated starts instead. No Host tree was modified.
+
+ISOLATION / PROVENANCE (before any write)
+- Task-created disposable container tooba-064-scratch (postgres:17), since DESTROYED. Only Tooba-named DB in it: tooba_064_scratch_r7q4f9kd (plus postgres/template0/template1).
+- Dedicated role scratch064; loopback-only 5432/tcp -> 127.0.0.1:55435 (not 5432). Host 127.0.0.1:5101 (not the user's 5088).
+- Fresh isolated launch dir %TEMP%\host064 with env inheritance scrubbed (Tooba__*, ASPNETCORE__*, DOTNET__*, ConnectionStrings__*, TOOBA_DESIGN_TIME_CONNECTION) before one explicit override.
+- Canonical hyphenated connection reference tenant-064-scratch, single tenant store-alpha; the faulty tenant_alpha override NOT used.
+- 060 offline guard on the real launch config+override: GUARD_EXIT=0, EFFECTIVE_TENANTS=1, EFFECTIVE_REFERENCES=1, CREDENTIALS_PRINTED=false. CONFIG_SHA256=c733af540f2263d4b95468372d05babb86ee05651d6a8b090328ecda25d71958 FINGERPRINT=9d197eec2160e4b0f9920b0f2168a1c1add4d412ee6d20eb161c892cb70f1ab4.
+- Runtime provenance GET /__platform-commerce: connectionReference tenant-064-scratch, resolvedHost 127.0.0.1, tenantId store-alpha.
+- Database-side association: pg_stat_activity -> tooba_064_scratch_r7q4f9kd | tooba-061-isolated | 172.17.0.1. No other database appears for that backend.
+- Cosmetic carry-over (not an isolation defect, unchanged from 063): the launcher diagnostics string still reports deploymentId isolated-061 and application_name tooba-061-isolated because the 062 prepare script was reused verbatim; tenant/database/role/port provenance above is all 064-specific and independently verified.
+- Migrations applied on scratch, each explicitly scoped to its own canonical design-time factory with the exact scratch connection (no all-module MigrationRunner): geography 20261014113949_InitialGeography, shipping 20261014144742_InitialShipping.
+
+SAFETY
+- No access to tooba_alpha, localhost:5432, Marketplace, staging or production — not even read-only. RunLegacyBootstraps left disabled. No migration source/order, Host Program/Startup, appsettings, permission catalog or schema modified.
+- No customer quote, Checkout, order, payment, snapshot or cutover behavior touched. No frontend process restarted. No Host/Admin/Security frozen tree touched. No bypass, no Results.Json, no new page, no custom capability/role inserts, no invented tariffs or nationwide grants.
+- User's own Development Host never stopped or restarted: :5088 still listening, PID 37028.
+- Cleanup executed: container tooba-064-scratch removed (verified empty listing), ports 55435 and 5101 free, temp launch dir with the password file deleted. Credentials never logged or committed.
+- All values created during the HTTP run are explicitly synthetic and scratch-only — not live tariffs, not coverage policy, not checkout parity evidence.
+
+ELAPSED
+- Claim 2026-10-14T22:27:07Z, task completion 2026-10-14T22:56Z => ~29 minutes, inside the 30-minute HARD timebox. No timebox stop was needed; roughly 9 minutes of it were lost to the Tooba.Host.Tests build that never returned.
+
+CHANGED PATHS
+- src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingRateCoverageEndpoints.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Application/Validation/ShippingAdminValidators.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/ShippingAdminInvalidBodyRepairTests.cs (new)
+- src/backend/Modules/Localization/Tooba.Localization.Infrastructure/Bootstrap/LanguageBootstrapDevelopmentSeed.cs (new)
+- src/backend/Modules/Localization/Tooba.Localization.Infrastructure/Bootstrap/LanguageBootstrapHostedService.cs
+- src/backend/Modules/Localization/Tooba.Localization.Infrastructure/LocalizationModule.cs
+- docs/planning/shipping/SHIPPING-MVP-OPERATIONAL-REPAIR-064.md
+- docs/architecture/evidence/TB-SHIPPING-MVP-OPERATIONAL-REPAIR-064/**
+
+EVIDENCE PATHS
+- docs/planning/shipping/SHIPPING-MVP-OPERATIONAL-REPAIR-064.md
+- docs/architecture/evidence/TB-SHIPPING-MVP-OPERATIONAL-REPAIR-064/log-guard-effective-target.txt
+- docs/architecture/evidence/TB-SHIPPING-MVP-OPERATIONAL-REPAIR-064/log-http-064.txt
+- docs/architecture/evidence/TB-SHIPPING-MVP-OPERATIONAL-REPAIR-064/log-restart-idempotence.txt
+- docs/architecture/evidence/TB-SHIPPING-MVP-OPERATIONAL-REPAIR-064/log-cleanup.txt
+- docs/architecture/evidence/TB-SHIPPING-MVP-OPERATIONAL-REPAIR-064/seed-geography-064.sql, seed-id-map-064.txt
+- docs/architecture/evidence/TB-SHIPPING-MVP-OPERATIONAL-REPAIR-064/probe-http.ps1
+- docs/architecture/evidence/TB-SHIPPING-MVP-OPERATIONAL-REPAIR-064/isolated/ (060 guard + 062 prepare, unchanged)
+
+COMMIT / PUSH
+- One source commit plus one evidence/bookkeeping commit on main, pushed to origin/main. Working tree left clean for this task's paths; every pre-existing unrelated dirty/untracked file preserved untouched.
+
+REMAINING BLOCKERS / NOTES
+- None blocking this task. Tooba.Host.Tests could not be run for the environmental DLL-lock reason above; if the Architect wants that suite as evidence, it needs the user's Development Host on :5088 stopped or a separate build output path — both outside this task's authorization.
+- The declared code shipping.validation.body_invalid has no resx entry because Shipping owns no resx pair and its other transport codes follow the same convention; if bilingual text is later required for transport codes, that is a module-wide decision, not a 064 change.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK

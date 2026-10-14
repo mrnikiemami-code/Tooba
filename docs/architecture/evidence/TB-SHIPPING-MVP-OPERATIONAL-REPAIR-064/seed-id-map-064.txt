@@ -1,0 +1,120 @@
+country	IR	e3451206-e503-51a8-91ad-afa9ab70e330
+country_name	IR/fa-IR	6d102556-0173-5ec8-aec3-90db5aa14cdc
+area	tehran	3cefa472-d0ac-5b2e-817b-ae7df7c33382
+area_name	tehran/fa-IR	17b8e82e-60e1-540f-89cf-77947917ab7e
+city	tehran/01	IR-tehran-01	d63c8292-bc14-558a-825f-b39e25c07f61
+city_name	tehran/01/fa-IR	bfdfada4-0b18-50dd-aea0-dda32f1a0788
+city	tehran/02	IR-tehran-02	95a61214-1d7c-5677-99df-0e22d1e621e4
+city_name	tehran/02/fa-IR	7a1bb27a-2bdb-575f-9af2-5a7edacae13c
+city	tehran/03	IR-tehran-03	f57197cd-f2b3-5608-9351-7a3ed445bb97
+city_name	tehran/03/fa-IR	9c5af070-2e64-57f2-8aaa-30a51f8b197c
+city	tehran/04	IR-tehran-04	1d4edd3a-9b55-53f8-bc86-b5999fa2636f
+city_name	tehran/04/fa-IR	85337181-97cb-55c5-8ae3-eb62c5d58e7c
+city	tehran/05	IR-tehran-05	853ddc6c-211c-5f2d-a2d2-315fe8f21481
+city_name	tehran/05/fa-IR	e97e240b-1999-59c7-aef5-61d4fdab11e8
+city	tehran/06	IR-tehran-06	c0b8bd19-6e32-5e78-b9c5-6d432eebba22
+city_name	tehran/06/fa-IR	6c5d7fc9-5802-5441-ae83-c767468eed34
+area	alborz	1f8050a8-c325-59fa-959f-82d76b5b2bc5
+area_name	alborz/fa-IR	2096f2bf-47e2-52e3-93af-9229e382f5a8
+city	alborz/01	IR-alborz-01	68255340-c69f-5d20-bf33-e8e0b24edde9
+city_name	alborz/01/fa-IR	f11c7372-012f-5b63-9abb-c7f5fa2de6b6
+city	alborz/02	IR-alborz-02	2fac2578-84a9-52ee-93ba-7928c2f4ec3b
+city_name	alborz/02/fa-IR	9b460946-ed95-5fb8-8322-62eae98148fd
+city	alborz/03	IR-alborz-03	70d93cc6-25eb-5ac5-8e38-be042ff09cf5
+city_name	alborz/03/fa-IR	9f2c40ae-bece-59f0-9ac8-c30c47b6615b
+city	alborz/04	IR-alborz-04	3d102fb8-cb8d-580a-8a4f-861638510872
+city_name	alborz/04/fa-IR	92bb501a-680e-5d35-a3ba-ad8ea40bf9f4
+area	isfahan	ed83ce72-057e-5222-b05a-12283c27386d
+area_name	isfahan/fa-IR	fb8c08bd-5c26-5221-a245-0d3d30508333
+city	isfahan/01	IR-isfahan-01	d8557233-9cc5-5326-b0d4-c8611b75e55a
+city_name	isfahan/01/fa-IR	524f2c53-96da-5ff5-ad69-2249d140520a
+city	isfahan/02	IR-isfahan-02	bbd665e5-556f-5b85-a584-95a263ff4f24
+city_name	isfahan/02/fa-IR	f3427ba9-4e72-56d0-ab2d-c18975b21c60
+city	isfahan/03	IR-isfahan-03	54748d20-bd46-5246-80a5-901f4aed77fe
+city_name	isfahan/03/fa-IR	8c6b6822-6f93-517e-8c00-c5506b61bf62
+city	isfahan/04	IR-isfahan-04	05802739-e5a4-5513-8810-7c706017575e
+city_name	isfahan/04/fa-IR	9819f250-f236-5e1f-9a79-832c38573aef
+city	isfahan/05	IR-isfahan-05	6a7376fc-ea8c-56d6-8b60-d1c7d0762eb2
+city_name	isfahan/05/fa-IR	7bdef167-bfa6-5f27-9651-8aa4d3a3f98f
+area	razavi_khorasan	47091323-a60a-5e41-b543-1fe898ce97b6
+area_name	razavi_khorasan/fa-IR	f3e74504-b803-54b5-bb6e-db299e5a3dd3
+city	razavi_khorasan/01	IR-razavi_khorasan-01	8000df3d-53cc-5535-a57e-8368a71daf58
+city_name	razavi_khorasan/01/fa-IR	c11a4854-756e-5b35-b548-5c55e4c95a38
+city	razavi_khorasan/02	IR-razavi_khorasan-02	a9e9a5cc-0b2c-567a-9f8c-876aedf1bb5d
+city_name	razavi_khorasan/02/fa-IR	96bb2537-0e0b-5cd0-b24c-1dce4f338d4d
+city	razavi_khorasan/03	IR-razavi_khorasan-03	b0044737-8b6f-570c-9409-dfaeaa30f3c3
+city_name	razavi_khorasan/03/fa-IR	315f066e-3269-54fe-9d19-a5434b516d9f
+city	razavi_khorasan/04	IR-razavi_khorasan-04	395524d0-778b-528c-a38b-9ea713f56109
+city_name	razavi_khorasan/04/fa-IR	6a75ed04-f257-5da0-aadd-b9cae2554970
+area	fars	24e00388-c216-531c-a3ca-11f382508760
+area_name	fars/fa-IR	d15a4a54-c23f-5702-865b-2f09a694611a
+city	fars/01	IR-fars-01	530e5a7f-6839-592b-a2e3-de829619efc4
+city_name	fars/01/fa-IR	95e99370-ac19-5b3f-872d-7253fb28326d
+city	fars/02	IR-fars-02	a75f2a5f-a85e-5a5c-9519-893695990298
+city_name	fars/02/fa-IR	dbcc47cb-735b-504d-bc46-5a25a9c68266
+city	fars/03	IR-fars-03	e9a212c2-e01b-5fad-82e1-8a2d93c19287
+city_name	fars/03/fa-IR	f6059303-22c6-5842-9b03-f801912eaa43
+city	fars/04	IR-fars-04	38fce575-ea36-5f4e-92f1-5848d9387f00
+city_name	fars/04/fa-IR	7e119500-8c67-5521-ab92-f89219a7f851
+city	fars/05	IR-fars-05	e3f1dd5c-9d6a-51cf-8f94-1119dd01e9f3
+city_name	fars/05/fa-IR	e5c71569-2ec4-5631-b744-7393285f5f8a
+area	east_azerbaijan	995347e5-0388-5d1d-8c0f-1fd7660216af
+area_name	east_azerbaijan/fa-IR	7a888e5e-db76-5070-98fe-da04bd22ecd0
+city	east_azerbaijan/01	IR-east_azerbaijan-01	100c649b-5c51-56b0-b384-f8c0ec5062f0
+city_name	east_azerbaijan/01/fa-IR	32302af9-15f7-553e-a4a9-5e72068f0ce7
+city	east_azerbaijan/02	IR-east_azerbaijan-02	ebf0cb15-c2a0-5366-a08e-2283d9c71f97
+city_name	east_azerbaijan/02/fa-IR	a792f3e4-85bd-5b7e-8376-baa8a2e0d8d0
+city	east_azerbaijan/03	IR-east_azerbaijan-03	ac84d520-3676-59fd-a938-02881d1e8023
+city_name	east_azerbaijan/03/fa-IR	004c1477-f9ec-5c95-a3dc-4d12a23f87f1
+city	east_azerbaijan/04	IR-east_azerbaijan-04	ec5f1a00-bddf-5692-9d26-238fdaf8d6c4
+city_name	east_azerbaijan/04/fa-IR	6da6cc63-583b-5cd3-b561-9d1b146b8102
+area	khuzestan	b92c36a7-dd9f-5ea3-8ad7-668083d79695
+area_name	khuzestan/fa-IR	f6e38f0c-c9a8-57a8-af36-1c80d8424951
+city	khuzestan/01	IR-khuzestan-01	114adf3f-d692-5d3e-b801-78fc599e93eb
+city_name	khuzestan/01/fa-IR	af7dea53-5781-51ae-bc69-d5078117bd80
+city	khuzestan/02	IR-khuzestan-02	aaa01fca-d1ab-5228-ae89-08aba0d727a4
+city_name	khuzestan/02/fa-IR	cb1e8c4b-b1ad-5e69-af26-a7c2636f4cae
+city	khuzestan/03	IR-khuzestan-03	c7924a66-0255-5f66-97aa-9503bf971187
+city_name	khuzestan/03/fa-IR	dc610265-6a63-59ee-b1f6-8ce660ed9f8a
+city	khuzestan/04	IR-khuzestan-04	5213e4bf-3f5e-5577-96ff-16bdecd154b0
+city_name	khuzestan/04/fa-IR	2fce930e-2348-5395-aabb-b6c889fda2ce
+area	mazandaran	ee4bc221-5739-5c54-9d27-c0cf5a61f77a
+area_name	mazandaran/fa-IR	96cba60a-003e-5edf-96bb-0aecc2f1d027
+city	mazandaran/01	IR-mazandaran-01	12878f7b-6bf4-5d21-911f-73d7fec3e3d4
+city_name	mazandaran/01/fa-IR	d0c16213-5e42-5c35-8795-d418b05e6ded
+city	mazandaran/02	IR-mazandaran-02	29c5c48e-e63e-5786-8218-85ba992fb453
+city_name	mazandaran/02/fa-IR	27de4a62-03ee-5e3f-b1da-9ae6fa4bfdf1
+city	mazandaran/03	IR-mazandaran-03	16b1245c-6be8-52d0-93bd-f89a514bee0c
+city_name	mazandaran/03/fa-IR	cbf351ec-16b4-54a5-b46e-bcac69bf8392
+city	mazandaran/04	IR-mazandaran-04	21d11dd2-b604-5e01-abaf-f8328f2e633c
+city_name	mazandaran/04/fa-IR	76ab3e33-bdd1-55f3-b768-8bcbc235208c
+area	gilan	fe3fac86-29df-5fa4-9866-7d9c45c3dc78
+area_name	gilan/fa-IR	80c2b0d1-3390-56da-8a06-03c18086e50f
+city	gilan/01	IR-gilan-01	bdaf61f6-32a7-54c0-9ba7-57ecc7093b63
+city_name	gilan/01/fa-IR	068a3a91-6bbb-5a35-b542-9f5e7d0adce3
+city	gilan/02	IR-gilan-02	32d4598e-bc55-572c-acd2-4fff4c10cf85
+city_name	gilan/02/fa-IR	9d10f537-9d5c-5d6a-9365-77b2590c34e2
+city	gilan/03	IR-gilan-03	6386e092-5a07-5a57-924a-eabbe13b6aa3
+city_name	gilan/03/fa-IR	bbb3e848-c646-5ee8-bc13-17a1b529dd6b
+city	gilan/04	IR-gilan-04	bb4f53a6-f93c-5168-b2b2-52142a45b967
+city_name	gilan/04/fa-IR	654efa43-458b-5e18-94e6-157016805f7a
+area	qom	457be1c4-700e-5f6f-b9eb-052938814f0b
+area_name	qom/fa-IR	1357e24a-78bf-583c-871c-0b6383b136be
+city	qom/01	IR-qom-01	d3e9e0bd-0671-5ebd-8bfe-629ec5301df6
+city_name	qom/01/fa-IR	2b4e534c-2bc3-5687-ae8b-e58625c1b446
+area	yazd	76d77bc6-8b83-521f-9454-45587bac738e
+area_name	yazd/fa-IR	2facee22-aecb-572f-94da-7b213f9c4d20
+city	yazd/01	IR-yazd-01	d5a23a97-98b5-543c-9237-3a59f0edda25
+city_name	yazd/01/fa-IR	23cafbb2-3216-5c40-aea5-aeb22aabd1fd
+city	yazd/02	IR-yazd-02	a261ffeb-4be6-5764-b719-1bdd7fa9afbc
+city_name	yazd/02/fa-IR	6ace3a6e-edd6-573a-b233-2521737b1772
+city	yazd/03	IR-yazd-03	268784e6-1b28-5504-bdad-9f4cb68601a8
+city_name	yazd/03/fa-IR	c364414c-29bc-533e-8ee7-0bc7efa013bd
+area	kerman	ba8c5e1a-88d9-5a0c-81ef-c65071b1a525
+area_name	kerman/fa-IR	93ccc1a0-9393-5f60-8cef-de3877b736fc
+city	kerman/01	IR-kerman-01	66f39213-5faf-5676-be09-42732165a5bc
+city_name	kerman/01/fa-IR	c0f60809-cfd9-5819-a2d2-3e0198c765c9
+city	kerman/02	IR-kerman-02	75f468d4-4001-5633-b2ea-61ed12f754f8
+city_name	kerman/02/fa-IR	5f238eb2-b4f7-56db-85e4-6211115575e9
+city	kerman/03	IR-kerman-03	26db84e9-9a34-5877-81b5-b61f335e3a8e
+city_name	kerman/03/fa-IR	d041b663-72d9-50fa-b31a-54e25c5c5795
