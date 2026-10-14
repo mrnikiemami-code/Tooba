@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -52,6 +52,9 @@ public sealed class ShippingModule : IToobaModule
         // (module-owned DI) so no Host edit is needed for the data path; the HTTP layer stays in
         // Tooba.Shipping.Endpoints and is wired by the Host at 055.
         services.AddScoped<IShippingRateCoverageDirectory, ShippingRateCoverageDirectory>();
+        // Destination identity stays Geography-owned: this adapter validates submitted scope ids through
+        // the Geography Contracts read seam only (never a foreign DbContext or cross-schema FK).
+        services.AddScoped<IShippingDestinationScopeValidator, GeographyDestinationScopeValidator>();
         services.AddDbContext<ShippingDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

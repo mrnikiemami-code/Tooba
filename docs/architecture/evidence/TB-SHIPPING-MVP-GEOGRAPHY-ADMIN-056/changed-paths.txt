@@ -1,0 +1,29 @@
+﻿CHANGED PATHS (056):
+src/backend/Modules/Geography/Tooba.Geography.Contracts/Admin/GeographyAdminContracts.cs
+src/backend/Modules/Geography/Tooba.Geography.Endpoints/Tooba.Geography.Endpoints.csproj
+src/backend/Modules/Geography/Tooba.Geography.Endpoints/Admin/GeographyAdminEndpoints.cs
+src/backend/Modules/Geography/Tooba.Geography.Endpoints/Admin/GeographyAdminAuthorizer.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Application/Rates/Ports/IShippingDestinationScopeValidator.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Application/Rates/Commands/ShippingRateCoverageCommands.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Errors/ShippingErrorCodes.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Rates/GeographyDestinationScopeValidator.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/DependencyInjection/ShippingModule.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Tooba.Shipping.Infrastructure.csproj
+src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/ShippingDestinationScopeValidationTests.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/GeographyAdminReadOwnershipTests.cs
+src/backend/Host/Tooba.Host/Program.cs
+src/backend/Host/Tooba.Host/Tooba.Host.csproj
+src/backend/Tooba.slnx
+src/frontend/app/admin/shipping-services/geography-admin-api.ts
+src/frontend/app/admin/shipping-services/shipping-destination-picker.tsx
+src/frontend/app/admin/shipping-services/shipping-rates-coverage-dialog.tsx
+src/frontend/app/admin/shipping-services/shipping-rates-coverage-model.ts
+src/frontend/app/admin/shipping-services/shipping-rates-coverage-model.test.ts
+
+FORBIDDEN-AREA CHECK:
+Commerce/Order/Checkout/Payment/Settlement paths changed: 1
+Frozen Host Admin files: 17 ; Host Security files: 19
+Geography migrations added: 0
+
+PRE-EXISTING UNRELATED GUARD FAILURE:
+HostAdminCanon001GuardTests.Contract_files_expose_no_persistence_types -> stale Party contract path (not touched by 056)

@@ -195,7 +195,85 @@ export function sortGrants(
   });
 }
 
-/** اعلام صریح مانعِ نوشتن دامنهٔ جغرافیایی تا زمانی که خواندن مجاز شناسه‌ها موجود نیست. */
+/** اعلام صریح وضعیت: شناسهٔ دستی یا ساختگی پذیرفته نمی‌شود (خواندن مجاز Geography فعال است). */
 export const GEOGRAPHY_ID_LOOKUP_BLOCKED_FA =
-  "انتخاب دامنهٔ جغرافیایی غیرفعال است: هنوز هیچ API مجاز و امنی شناسه‌های پایدار Geography را برنمی‌گرداند. "
-  + "برای جلوگیری از ثبت شناسهٔ ساختگی، ایجاد نرخ/پوشش جدید تا افزودن آن خواندن باز نمی‌شود.";
+  "دامنهٔ مقصد فقط از فهرست مرجع Geography انتخاب می‌شود؛ شناسهٔ دستی یا ساختگی پذیرفته نمی‌شود.";
+
+/** انتخاب دامنهٔ مقصد از فهرست مرجع Geography؛ همه مقادیر شناسهٔ پایدار یا تهی‌اند. */
+export type DestinationSelection = {
+  countryId: string;
+  administrativeAreaId: string | null;
+  cityId: string | null;
+  serviceAreaId: string | null;
+};
+
+/** انتخاب خالی؛ هیچ شناسه‌ای پیش‌فرض حدس زده نمی‌شود. */
+export const EMPTY_DESTINATION_SELECTION: DestinationSelection = {
+  countryId: "",
+  administrativeAreaId: null,
+  cityId: null,
+  serviceAreaId: null,
+};
+
+export type DestinationScopeLevel = "country" | "administrativeArea" | "city" | "serviceArea";
+
+/** سطح دامنه از عمیق‌ترین انتخابی که کاربر واقعاً انجام داده است. */
+export function scopeLevelOf(selection: DestinationSelection): DestinationScopeLevel | null {
+  if (!selection.countryId) return null;
+  if (selection.serviceAreaId) return "serviceArea";
+  if (selection.cityId) return "city";
+  if (selection.administrativeAreaId) return "administrativeArea";
+  return "country";
+}
+
+/**
+ * تبدیل انتخاب به payload دامنه. شناسه‌های عمیق‌تر از سطح انتخاب‌شده حذف می‌شوند تا ناحیه/شهر
+ * از روی نام یا ترتیب حدس زده نشود؛ هر مقدار یا شناسهٔ واقعی برگشتی است یا تهی.
+ */
+export function buildScopeWrite(selection: DestinationSelection): {
+  countryId: string;
+  administrativeAreaId: string | null;
+  cityId: string | null;
+  serviceAreaId: string | null;
+} {
+  const level = scopeLevelOf(selection);
+  return {
+    countryId: selection.countryId,
+    administrativeAreaId:
+      level === "administrativeArea" || level === "city" || level === "serviceArea"
+        ? selection.administrativeAreaId
+        : null,
+    cityId: level === "city" || level === "serviceArea" ? selection.cityId : null,
+    serviceAreaId: level === "serviceArea" ? selection.serviceAreaId : null,
+  };
+}
+
+/** آیا دامنه برای نوشتن آماده است؟ (کشور الزامی است و ناحیهٔ خدمت بدون شهر پذیرفته نمی‌شود) */
+export function validateDestinationSelection(selection: DestinationSelection): string[] {
+  const issues: string[] = [];
+  if (!selection.countryId) {
+    issues.push("کشور مقصد را از فهرست انتخاب کنید.");
+  }
+  if (selection.serviceAreaId && !selection.cityId) {
+    issues.push("ناحیهٔ خدمت بدون شهر مالک معتبر نیست.");
+  }
+  if (selection.cityId && selection.administrativeAreaId) {
+    issues.push("شهر و استان هم‌زمان قابل انتخاب نیستند؛ سطح دامنه را یکی کنید.");
+  }
+  return issues;
+}
+
+/** تغییر والد، انتخاب‌های وابسته را پاک می‌کند تا شناسهٔ ناهم‌بسته باقی نماند. */
+export function clearDependents(
+  selection: DestinationSelection,
+  changed: "country" | "area" | "city",
+): DestinationSelection {
+  if (changed === "country") {
+    return { countryId: selection.countryId, administrativeAreaId: null, cityId: null, serviceAreaId: null };
+  }
+  if (changed === "area") {
+    return { ...selection, cityId: null, serviceAreaId: null };
+  }
+  return { ...selection, serviceAreaId: null };
+}
+

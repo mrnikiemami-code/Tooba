@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -14,6 +14,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Shipping.Contracts\Tooba.Shipping.Contracts.csproj" />
+    <!-- Contracts-only seam: destination identity is validated through Geography Contracts, never its DbContext. -->
+    <ProjectReference Include="..\..\Geography\Tooba.Geography.Contracts\Tooba.Geography.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Shipping.Application\Tooba.Shipping.Application.csproj" />
     <ProjectReference Include="..\Tooba.Shipping.Domain\Tooba.Shipping.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />

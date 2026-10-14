@@ -6,13 +6,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildScopeWrite,
+  clearDependents,
   coverageStateFa,
   formatFreeAboveThreshold,
   rateFormFromPolicy,
   rateFormToPayload,
+  scopeLevelOf,
   scopeSummary,
   summarizeRatesCoverage,
+  validateDestinationSelection,
   validateShippingRateForm,
+  EMPTY_DESTINATION_SELECTION,
 } from "./shipping-rates-coverage-model.ts";
 import type { ShippingRatesAndCoverageView } from "./shipping-rates-coverage-api.ts";
 
@@ -124,4 +129,87 @@ test("scope summary exposes stable ids, not fabricated placeholders", () => {
   assert.match(summary, /شهر/);
   assert.match(summary, /11111111/);
   assert.match(summary, /33333333/);
+});
+
+test("scope level follows the deepest real selection", () => {
+  const base = { countryId: "c1", administrativeAreaId: null, cityId: null, serviceAreaId: null };
+  assert.equal(scopeLevelOf(base), "country");
+  assert.equal(scopeLevelOf({ ...base, administrativeAreaId: "a1" }), "administrativeArea");
+  assert.equal(scopeLevelOf({ ...base, administrativeAreaId: "a1", cityId: "ci1" }), "city");
+  assert.equal(scopeLevelOf({ ...base, administrativeAreaId: "a1", cityId: "ci1", serviceAreaId: "s1" }), "serviceArea");
+  assert.equal(scopeLevelOf({ ...base, countryId: "" }), null);
+});
+
+test("scope payload drops ids deeper than the chosen level instead of inferring them", () => {
+  const payload = buildScopeWrite({
+    countryId: "c1",
+    administrativeAreaId: "a1",
+    cityId: "ci1",
+    serviceAreaId: null,
+  });
+  assert.deepEqual(payload, {
+    countryId: "c1",
+    administrativeAreaId: "a1",
+    cityId: "ci1",
+    serviceAreaId: null,
+  });
+
+  // A leftover deeper id is never used: only the selected level is written.
+  const countryWide = buildScopeWrite({
+    countryId: "c1",
+    administrativeAreaId: null,
+    cityId: null,
+    serviceAreaId: null,
+  });
+  assert.deepEqual(countryWide, {
+    countryId: "c1",
+    administrativeAreaId: null,
+    cityId: null,
+    serviceAreaId: null,
+  });
+});
+
+test("an empty or inconsistent destination selection is refused before submit", () => {
+  assert.deepEqual(validateDestinationSelection(EMPTY_DESTINATION_SELECTION), [
+    "کشور مقصد را از فهرست انتخاب کنید.",
+  ]);
+  assert.ok(
+    validateDestinationSelection({
+      countryId: "c1",
+      administrativeAreaId: "a1",
+      cityId: "ci1",
+      serviceAreaId: "s1",
+    }).length > 0,
+  );
+  assert.deepEqual(
+    validateDestinationSelection({ countryId: "c1", administrativeAreaId: null, cityId: null, serviceAreaId: null }),
+    [],
+  );
+});
+
+test("changing a parent clears dependent selections so no inconsistent id survives", () => {
+  const selected = {
+    countryId: "c1",
+    administrativeAreaId: "a1",
+    cityId: "ci1",
+    serviceAreaId: "s1",
+  };
+  assert.deepEqual(clearDependents(selected, "country"), {
+    countryId: "c1",
+    administrativeAreaId: null,
+    cityId: null,
+    serviceAreaId: null,
+  });
+  assert.deepEqual(clearDependents(selected, "area"), {
+    countryId: "c1",
+    administrativeAreaId: "a1",
+    cityId: null,
+    serviceAreaId: null,
+  });
+  assert.deepEqual(clearDependents(selected, "city"), {
+    countryId: "c1",
+    administrativeAreaId: "a1",
+    cityId: "ci1",
+    serviceAreaId: null,
+  });
 });

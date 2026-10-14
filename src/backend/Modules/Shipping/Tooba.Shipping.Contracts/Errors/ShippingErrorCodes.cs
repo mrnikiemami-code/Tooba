@@ -53,4 +53,7 @@ public static class ShippingErrorCodes
 
     /// <summary>ردیف درخواستی به کد خدمت دیگری تعلق دارد؛ تغییر میان‌خدمتی مجاز نیست.</summary>
     public const string ServiceScopeMismatch = "shipping.service_scope.mismatch";
+
+    /// <summary>دامنهٔ مقصد در فهرست مرجع Geography ناشناخته، غیرفعال یا ناهم‌بسته است.</summary>
+    public const string DestinationScopeInvalid = "shipping.destination_scope.invalid";
 }

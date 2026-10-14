@@ -1,17 +1,19 @@
 "use client";
 
 /**
- * TB-SHIPPING-MVP-ADMIN-LIVE-WIRING-055 — per-service rates & coverage section, reachable from the
- * existing /admin/shipping-services rows. Reads the real Shipping backend view, and lets the operator
- * update money/lead-time of a rate and toggle activation of rates and coverage grants.
+ * TB-SHIPPING-MVP-GEOGRAPHY-ADMIN-056 — per-service rates & coverage section, reachable from the
+ * existing /admin/shipping-services rows. Reads the real Shipping backend view and can now CREATE,
+ * update and toggle rates and coverage grants end to end.
  *
- * Creating a new rate/grant needs a destination scope. No authorized API currently returns stable
- * Geography ids, so the create controls stay visibly disabled rather than letting an operator submit
- * an invented id; that blocker is shown inline and reported, never faked.
+ * Destination scope is chosen exclusively from the authorized Geography admin read (stable GUID ids
+ * with display labels), so no hand-typed or invented id can be submitted; the backend re-validates the
+ * same ids through the Geography Contracts lookup before writing.
  */
 import { useCallback, useEffect, useState } from "react";
 import { Dialog } from "../../../design-system";
 import {
+  createAdminShippingCoverageGrant,
+  createAdminShippingRate,
   loadAdminShippingRates,
   setAdminShippingCoverageGrantActive,
   setAdminShippingRateActive,
@@ -20,7 +22,6 @@ import {
   type ShippingRatePolicyAdminItem,
 } from "./shipping-rates-coverage-api.ts";
 import {
-  GEOGRAPHY_ID_LOOKUP_BLOCKED_FA,
   coverageStateFa,
   formatCharge,
   formatFreeAboveThreshold,
@@ -29,8 +30,13 @@ import {
   scopeSummary,
   summarizeRatesCoverage,
   validateShippingRateForm,
+  buildScopeWrite,
+  validateDestinationSelection,
+  EMPTY_DESTINATION_SELECTION,
+  type DestinationSelection,
   type ShippingRateFormValues,
 } from "./shipping-rates-coverage-model.ts";
+import { ShippingDestinationPicker } from "./shipping-destination-picker.tsx";
 
 type Props = {
   open: boolean;
@@ -48,6 +54,10 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
   const [form, setForm] = useState<ShippingRateFormValues>(rateFormFromPolicy(null));
   const [issues, setIssues] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  // انتخاب دامنهٔ مقصد برای ایجاد نرخ/پوشش جدید؛ فقط شناسه‌های برگشتی Geography.
+  const [selection, setSelection] = useState<DestinationSelection>(EMPTY_DESTINATION_SELECTION);
+  const [scopeIssues, setScopeIssues] = useState<string[]>([]);
+  const [createRateForm, setCreateRateForm] = useState<ShippingRateFormValues>(rateFormFromPolicy(null));
 
   const refresh = useCallback(async () => {
     if (!serviceCode) return;
@@ -69,9 +79,57 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
       setEditingId(null);
       setIssues([]);
       setForm(rateFormFromPolicy(null));
+      setSelection(EMPTY_DESTINATION_SELECTION);
+      setScopeIssues([]);
+      setCreateRateForm(rateFormFromPolicy(null));
       void refresh();
     }
   }, [open, refresh]);
+
+  /** ایجاد نرخ جدید روی مسیر واقعی؛ دامنه با شناسه‌های Geography و پس از اعتبارسنجی محلی. */
+  async function submitCreateRate() {
+    const scopeProblems = validateDestinationSelection(selection);
+    const formProblems = validateShippingRateForm(createRateForm).map((issue) => issue.messageFa);
+    if (scopeProblems.length > 0 || formProblems.length > 0) {
+      setScopeIssues([...scopeProblems, ...formProblems]);
+      return;
+    }
+    setScopeIssues([]);
+    setBusy(true);
+    const result = await createAdminShippingRate(serviceCode, {
+      scope: buildScopeWrite(selection),
+      ...rateFormToPayload(createRateForm),
+    });
+    setBusy(false);
+    if (result.state !== "ok") {
+      onNotice({ tone: "error", text: errorFa(result.message, "ایجاد نرخ ناموفق بود.") });
+      return;
+    }
+    onNotice({ tone: "success", text: `نرخ «${scopeSummary(result.data!)}» ایجاد شد.` });
+    setCreateRateForm(rateFormFromPolicy(null));
+    await refresh();
+  }
+
+  /** ایجاد مجوز پوشش جدید روی همان دامنهٔ انتخاب‌شده. */
+  async function submitCreateGrant() {
+    const scopeProblems = validateDestinationSelection(selection);
+    if (scopeProblems.length > 0) {
+      setScopeIssues(scopeProblems);
+      return;
+    }
+    setScopeIssues([]);
+    setBusy(true);
+    const result = await createAdminShippingCoverageGrant(serviceCode, {
+      scope: buildScopeWrite(selection),
+    });
+    setBusy(false);
+    if (result.state !== "ok") {
+      onNotice({ tone: "error", text: errorFa(result.message, "ایجاد مجوز پوشش ناموفق بود.") });
+      return;
+    }
+    onNotice({ tone: "success", text: `مجوز پوشش «${scopeSummary(result.data!)}» ایجاد شد.` });
+    await refresh();
+  }
 
   function startEdit(policy: ShippingRatePolicyAdminItem) {
     setEditingId(policy.ratePolicyId);
@@ -156,8 +214,8 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
           )}
         </div>
 
-        <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800" data-testid="shipping-rates-geography-blocker">
-          {GEOGRAPHY_ID_LOOKUP_BLOCKED_FA}
+        <p className="rounded-lg bg-gray-50 p-3 text-[11px] text-gray-600" data-testid="shipping-rates-scope-note">
+          دامنهٔ مقصد فقط از فهرست مرجع Geography انتخاب می‌شود؛ شناسه‌ها پایدارند و شناسهٔ دستی یا ساختگی پذیرفته نمی‌شود.
         </p>
 
         {state === "denied" && (
@@ -327,16 +385,84 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
               ))}
             </section>
 
-            <section className="space-y-2 rounded-lg border border-dashed border-gray-300 p-3">
+            <section className="space-y-3 rounded-lg border border-dashed border-gray-300 p-3">
               <h3 className="text-sm font-bold text-gray-800">افزودن نرخ / پوشش</h3>
-              <button
-                type="button"
-                disabled
-                className="rounded bg-gray-200 px-3 py-1 text-xs font-bold text-gray-500"
-                data-testid="shipping-rates-create-disabled"
-              >
-                افزودن نرخ (غیرفعال تا فراهم‌شدن شناسه‌های Geography)
-              </button>
+              <ShippingDestinationPicker selection={selection} onChange={setSelection} disabled={busy} />
+
+              {scopeIssues.length > 0 && (
+                <ul className="list-inside list-disc text-[11px] text-red-600" data-testid="shipping-destination-issues">
+                  {scopeIssues.map((issue) => <li key={issue}>{issue}</li>)}
+                </ul>
+              )}
+
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-[11px] text-gray-600">
+                  مبلغ هزینه (نرخ جدید)
+                  <input
+                    className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-xs"
+                    value={createRateForm.chargeAmount}
+                    onChange={(e) => setCreateRateForm({ ...createRateForm, chargeAmount: e.target.value })}
+                    data-testid="shipping-create-rate-charge"
+                  />
+                </label>
+                <label className="text-[11px] text-gray-600">
+                  ارز
+                  <input
+                    className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-xs"
+                    value={createRateForm.currencyCode}
+                    onChange={(e) => setCreateRateForm({ ...createRateForm, currencyCode: e.target.value })}
+                    data-testid="shipping-create-rate-currency"
+                  />
+                </label>
+                <label className="text-[11px] text-gray-600">
+                  روزهای آماده‌سازی
+                  <input
+                    className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-xs"
+                    value={createRateForm.preparationDays}
+                    onChange={(e) => setCreateRateForm({ ...createRateForm, preparationDays: e.target.value })}
+                    data-testid="shipping-create-rate-preparation"
+                  />
+                </label>
+                <label className="text-[11px] text-gray-600">
+                  روزهای حمل
+                  <input
+                    className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-xs"
+                    value={createRateForm.leadDays}
+                    onChange={(e) => setCreateRateForm({ ...createRateForm, leadDays: e.target.value })}
+                    data-testid="shipping-create-rate-lead"
+                  />
+                </label>
+                <label className="col-span-2 text-[11px] text-gray-600">
+                  آستانهٔ ارسال رایگان (خالی = بدون آستانه)
+                  <input
+                    className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-xs"
+                    value={createRateForm.freeAboveThreshold}
+                    onChange={(e) => setCreateRateForm({ ...createRateForm, freeAboveThreshold: e.target.value })}
+                    data-testid="shipping-create-rate-threshold"
+                  />
+                </label>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="rounded bg-blue-600 px-3 py-1 text-xs font-bold text-white disabled:opacity-50"
+                  disabled={busy}
+                  onClick={() => void submitCreateRate()}
+                  data-testid="shipping-create-rate-submit"
+                >
+                  افزودن نرخ
+                </button>
+                <button
+                  type="button"
+                  className="rounded border border-gray-300 px-3 py-1 text-xs disabled:opacity-50"
+                  disabled={busy}
+                  onClick={() => void submitCreateGrant()}
+                  data-testid="shipping-create-grant-submit"
+                >
+                  افزودن مجوز پوشش
+                </button>
+              </div>
             </section>
           </>
         )}

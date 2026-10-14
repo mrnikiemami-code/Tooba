@@ -13,16 +13,26 @@ public sealed record CreateShippingRatePolicyCommand(string ServiceCode, Shippin
     : IRequest<Result<ShippingRatePolicyAdminItem>>;
 
 /// <summary>هندلر ایجاد سیاست نرخ.</summary>
-public sealed class CreateShippingRatePolicyHandler(IShippingRateCoverageDirectory directory)
+public sealed class CreateShippingRatePolicyHandler(
+    IShippingRateCoverageDirectory directory,
+    IShippingDestinationScopeValidator scopeValidator)
     : IRequestHandler<CreateShippingRatePolicyCommand, Result<ShippingRatePolicyAdminItem>>
 {
     /// <inheritdoc />
-    public Task<Result<ShippingRatePolicyAdminItem>> Handle(
+    public async Task<Result<ShippingRatePolicyAdminItem>> Handle(
         CreateShippingRatePolicyCommand request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return ShippingAdminOperation.ExecuteAsync(
+
+        // دامنهٔ مقصد پیش از هر نوشتن با فهرست مرجع Geography سنجیده می‌شود؛ شناسهٔ ساختگی هرگز ثبت نمی‌شود.
+        var validated = await scopeValidator.ValidateAsync(request.Request.Scope, cancellationToken);
+        if (validated.IsFailure)
+        {
+            return Result.Failure<ShippingRatePolicyAdminItem>(validated.Errors);
+        }
+
+        return await ShippingAdminOperation.ExecuteAsync(
             () => directory.CreateRateAsync(request.ServiceCode, request.Request, cancellationToken));
     }
 }
@@ -81,16 +91,25 @@ public sealed record CreateShippingCoverageGrantCommand(
     ShippingCoverageGrantWriteRequest Request) : IRequest<Result<ShippingCoverageGrantAdminItem>>;
 
 /// <summary>هندلر ایجاد مجوز پوشش.</summary>
-public sealed class CreateShippingCoverageGrantHandler(IShippingRateCoverageDirectory directory)
+public sealed class CreateShippingCoverageGrantHandler(
+    IShippingRateCoverageDirectory directory,
+    IShippingDestinationScopeValidator scopeValidator)
     : IRequestHandler<CreateShippingCoverageGrantCommand, Result<ShippingCoverageGrantAdminItem>>
 {
     /// <inheritdoc />
-    public Task<Result<ShippingCoverageGrantAdminItem>> Handle(
+    public async Task<Result<ShippingCoverageGrantAdminItem>> Handle(
         CreateShippingCoverageGrantCommand request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return ShippingAdminOperation.ExecuteAsync(
+
+        var validated = await scopeValidator.ValidateAsync(request.Request.Scope, cancellationToken);
+        if (validated.IsFailure)
+        {
+            return Result.Failure<ShippingCoverageGrantAdminItem>(validated.Errors);
+        }
+
+        return await ShippingAdminOperation.ExecuteAsync(
             () => directory.CreateGrantAsync(request.ServiceCode, request.Request, cancellationToken));
     }
 }

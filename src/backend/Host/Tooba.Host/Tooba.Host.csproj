@@ -81,6 +81,7 @@
     <ProjectReference Include="..\..\Modules\Payment\Tooba.Payment.Endpoints\Tooba.Payment.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\Tooba.Fulfillment.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Shipping\Tooba.Shipping.Endpoints\Tooba.Shipping.Endpoints.csproj" />
+    <ProjectReference Include="..\..\Modules\Geography\Tooba.Geography.Endpoints\Tooba.Geography.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Fulfillment\Tooba.Fulfillment.Endpoints\Tooba.Fulfillment.Endpoints.csproj" />
     <ProjectReference Include="..\..\Modules\Returns\Tooba.Returns.Infrastructure\Tooba.Returns.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Returns\Tooba.Returns.Endpoints\Tooba.Returns.Endpoints.csproj" />
