@@ -1,0 +1,29 @@
+﻿case=synthetic-059-faulty-underscore-override expected=5 actual=5 OK
+case=synthetic-safe-scratch-target expected=0 actual=0 OK
+case=synthetic-production-like-target expected=7 actual=7 OK
+case=synthetic-missing-override-leaves-config-target expected=7 actual=7 OK
+case=synthetic-unused-override-never-referenced expected=5 actual=5 OK
+case=synthetic-unknown-tenant expected=3 actual=3 OK
+case=synthetic-ambiguous-tenant-declaration expected=4 actual=4 OK
+case=synthetic-sentinel-not-unique-enough expected=2 actual=2 OK
+case=synthetic-fingerprint-agrees expected=0 actual=0 OK
+case=synthetic-fingerprint-differs expected=6 actual=6 OK
+case=static-guard-source-has-no-database-or-network-client expected=none actual=none OK
+case=static-guard-source-never-reads-process-env expected=false actual=false OK
+
+| case | expected | actual | verdict |
+| --- | --- | --- | --- |
+| synthetic-059-faulty-underscore-override | 5 | 5 | OK |
+| synthetic-safe-scratch-target | 0 | 0 | OK |
+| synthetic-production-like-target | 7 | 7 | OK |
+| synthetic-missing-override-leaves-config-target | 7 | 7 | OK |
+| synthetic-unused-override-never-referenced | 5 | 5 | OK |
+| synthetic-unknown-tenant | 3 | 3 | OK |
+| synthetic-ambiguous-tenant-declaration | 4 | 4 | OK |
+| synthetic-sentinel-not-unique-enough | 2 | 2 | OK |
+| synthetic-fingerprint-agrees | 0 | 0 | OK |
+| synthetic-fingerprint-differs | 6 | 6 | OK |
+| static-guard-source-has-no-database-or-network-client | none | none | OK |
+| static-guard-source-never-reads-process-env | false | false | OK |
+
+FIXTURE_PROOFS=PASS

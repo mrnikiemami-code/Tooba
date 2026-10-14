@@ -1,0 +1,105 @@
+TB-SHIPPING-MVP-ISOLATED-HTTP-061 — strict isolation proof + real-HTTP probe outcomes
+
+All requests were sent to the TASK-OWNED temporary Host on http://127.0.0.1:5098 while it pointed exclusively at
+the task-owned scratch container `tooba-061-scratch` (127.0.0.1:55432, database
+tooba_061_scratch_k7q2m9zd). The user's Host on :5088 was never addressed.
+
+===== 1. MANDATORY ISOLATION GATE (before any request) =====
+
+(a) Offline preflight over the EFFECTIVE launch configuration (copied 060 guard):
+    node .../isolated/assert-scratch-target.js --config <effective-config.json> --env <isolated.env.txt>
+      --tenant store-alpha --host 127.0.0.1 --port 55432 --database tooba_061_scratch_k7q2m9zd --sentinel k7q2m9zd
+    -> RESULT=PASS, EXIT_CODE=0, TENANT=store-alpha, CONNECTION_REFERENCE=tenant-061-scratch,
+       HOST=127.0.0.1, PORT=55432, DATABASE=tooba_061_scratch_k7q2m9zd, SENTINEL=k7q2m9zd,
+       CONFIG_OVERRIDE_KEYS_APPLIED=1, CREDENTIALS_PRINTED=false, DATABASE_CONTACTED=false
+       FINGERPRINT=e813068fcb66a4843d8e0fd6de13c9095e35a1a09362edd16350ed049c9c48db
+       CONFIG_SHA256=5880c439f53fca20ac4c907d19162b54ff7d35eefa009ceed23f10832ab0132a
+    The verify step recomputed SHA-256 of the effective config bytes and required it to equal CONFIG_SHA256, so the
+    exact bytes the guard judged are the bytes the process is launched from.
+    Additional assertions made by the prepare step before anything started:
+      base appsettings.json declares 0 tenants and 0 connection references (refuses otherwise)
+      effective config declares exactly 1 tenant (store-alpha) and exactly 1 reference (tenant-061-scratch)
+      every effective connection string is loopback, non-5432, and exactly the scratch database
+
+(b) Independent RUNTIME proof from the launched process (non-mutating provenance endpoint):
+    GET /__platform-commerce -> 200
+    {"edition":"SingleStore","deploymentId":"isolated-061","tenantId":"store-alpha",
+     "connectionReference":"tenant-061-scratch","resolvedHost":"127.0.0.1",...}
+    The process's own commerce context resolves the reference it actually uses; it is the scratch reference.
+
+(c) Independent DATABASE-SIDE barrier proof (queried on the scratch container only):
+    docker exec tooba-061-scratch psql -c "select datname, application_name, client_addr, state, count(*)
+                                            from pg_stat_activity where datname is not null group by 1,2,3,4"
+    -> tooba_061_scratch_k7q2m9zd | tooba-061-isolated | 172.17.0.1 | idle | 2
+    The Host's own backends are identifiable by the unique Application Name in its scratch connection string and
+    they exist only inside the task-owned container/database. `tooba_alpha` does not exist in that container at
+    all, so the Host had no reachable path to any real Tooba database.
+
+===== 2. AUTH FAILURE PATHS (real HTTP) =====
+
+GET /v1/admin/geography/countries, no credential
+  -> 401 {"errorCode":"admin.actor.missing","title":"Administrator identity is not authenticated.", ...}
+
+GET /v1/admin/geography/countries, with X-Tooba-Dev-Actor-User-Id: <provisioned admin actor user id>
+  -> 403 {"errorCode":"admin.authorization.denied","title":"Access to manage this store is not permitted.", ...}
+
+GET /v1/admin/shipping-services/iso-061-post/rates, with the dev actor header
+  -> 403 admin.authorization.denied
+
+POST /v1/admin/shipping-services/iso-061-post/rates            body without `scope`
+  -> 403 admin.authorization.denied
+POST /v1/admin/shipping-services/iso-061-post/coverage-grants  body without `scope`
+  -> 403 admin.authorization.denied
+
+The 401/403 boundary is fail-closed and correct. However every authorized surface is denied, so the two
+missing-scope POSTs could NOT be measured at the validation layer over HTTP (see section 4). The 403 is emitted
+before the request reaches the MediatR validation pipeline, so it does NOT contradict the 060 repair; it makes the
+repair unmeasurable over HTTP in this environment.
+
+===== 3. WHY AUTHORIZED ACCESS WAS NOT ESTABLISHABLE =====
+
+After two clean starts against a freshly created scratch database, the supported Development admin bootstrap
+produced only the actor identity and its membership tuple:
+
+  GET /v1/admin/dev-context -> 200
+  {"actorUserId":"01a13c32-ec9d-7000-93cf-3c67cf29674f","actorLabel":"admin-actor@tooba.local","tenantId":"store-alpha"}
+
+  access_control.roles                = 0
+  access_control.role_permissions     = 0
+  access_control.user_role_assignments= 0
+
+so `IAuthorizationService.CanAsync(permission#<id>)` correctly denies the actor. The supported HTTP bootstrap path
+is not usable either because it requires the capability it is meant to create:
+
+  POST /v1/admin/access-control/bootstrap -> 403 admin.authorization.denied
+  GET  /v1/admin/access-control/me/capabilities -> 403 admin.authorization.denied
+
+The alternative supported Development seeding switch crashes the Host instead of provisioning:
+
+  Tooba:CatalogDemo:RunLegacyBootstraps=true -> the process aborts during startup with
+  System.InvalidOperationException: "محصول برای انتشار آماده نیست."
+    at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaDevelopmentSeed.ApplyAsync
+    at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentSeed.PostMigration.EnsureAsync
+    at Tooba.Host.Development.DevelopmentSchemaMigrator.ApplyCoreAsync (Program.cs:366)
+
+Both are directly reproduced, pre-existing behaviours of the supported Development seams against a fresh isolated
+database. Per the task instruction ("No production source changes unless a NEW, directly reproduced task-scoped
+blocker is discovered; then STOP_FOR_ARCHITECT and report, rather than widen scope") neither was repaired here.
+
+===== 4. CONSEQUENCES FOR ACCEPTANCE =====
+
+  isolation gate (mandatory before writes)                               PASS
+  real missing-scope POST -> canonical 400 over HTTP                     NOT MEASURABLE (403 before validation)
+  authenticated rate/grant CRUD roundtrip inside scratch                 NOT MEASURABLE (capabilities absent)
+  Geography stable-ID read over HTTP                                     NOT MEASURABLE (denied; also the Geography
+                                                                          EF schema is absent from the scratch
+                                                                          database — see below)
+  auth failure paths 401/403 fail-closed                                 PASS
+  cleanup proven                                                         PASS
+  user Host / existing databases untouched                               PASS
+  no existing commercial or nationwide default written                    PASS (nothing was written at all)
+
+Additional environment observation worth recording: DevelopmentSchemaMigrator.MigrateSchemaOnlyAsync created 29
+schemas but NOT `geography`, `shipping`, `returns` or `settlement`, and the Outbox dispatcher logged 36+36
+"relation returns.outbox_messages / settlement.outbox_messages does not exist" warnings. A fresh isolated
+database therefore cannot exercise the Shipping/Geography admin surface even with an authorized actor.

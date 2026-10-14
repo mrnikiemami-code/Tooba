@@ -1,0 +1,17 @@
+RESULT=PASS
+EXIT_CODE=0
+TENANT=store-alpha
+CONNECTION_REFERENCE=tenant-061-scratch
+HOST=127.0.0.1
+PORT=55432
+DATABASE=tooba_061_scratch_k7q2m9zd
+SENTINEL=k7q2m9zd
+CONFIG_OVERRIDE_KEYS_APPLIED=1
+USERNAME_PRESENT=true
+PASSWORD_PRESENT=true
+CREDENTIALS_PRINTED=false
+DATABASE_CONTACTED=false
+CONFIG_SHA256=5880c439f53fca20ac4c907d19162b54ff7d35eefa009ceed23f10832ab0132a
+FINGERPRINT=e813068fcb66a4843d8e0fd6de13c9095e35a1a09362edd16350ed049c9c48db
+TRUST_BOUNDARY=configuration-only preflight; the launched process must not be able to override
+TRUST_BOUNDARY=these values again, and must receive --expect-fingerprint with the value above

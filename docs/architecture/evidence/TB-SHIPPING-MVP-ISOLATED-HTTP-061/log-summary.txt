@@ -1,0 +1,63 @@
+TB-SHIPPING-MVP-ISOLATED-HTTP-061 — evidence index and command/exit-code record
+
+Status: PARTIAL (isolation gate PASS; missing-scope HTTP regression NOT MEASURABLE; cleanup PASS)
+Effective connection isolation: PROVEN before any request (offline guard + runtime provenance + DB-side barrier)
+Existing Host / existing databases: untouched and independently re-verified
+
+ISOLATED TARGET (task-created, removed again at cleanup)
+  container        tooba-061-scratch (postgres:17), published only as 127.0.0.1:55432, own data volume, no volume left
+  database         tooba_061_scratch_k7q2m9zd
+  role             scratch061 (container-local; cannot reach any other Tooba database)
+  tenant           store-alpha  ->  reference tenant-061-scratch  (canonical HYPHENATED key)
+  launch dir       task-owned %TEMP%\host061, deleted at cleanup
+  isolated host    http://127.0.0.1:5098 (stopped and verified released at cleanup)
+
+COMMANDS AND EXIT CODES
+  git fetch origin; HEAD == origin/main == 4d50587cc3c001f7146b6c3ccb54fba671ebcf96                  exit 0
+  git diff --name-only 60ce0b14d..4d50587cc -> 2 files, both under 060 evidence (zero source overlap)  exit 0
+  docker run -d ... tooba-061-scratch (127.0.0.1:55432)                                               exit 0
+  docker exec ... psql -c "select current_database();" -> tooba_061_scratch_k7q2m9zd                   exit 0
+  node isolated/run-fixture-proofs.js           -> FIXTURE_PROOFS=PASS (12/12)                        exit 0
+  node isolated/prepare-isolated-target.js ...  -> RESULT=PASS, EFFECTIVE_TENANTS=1, EFFECTIVE_REFERENCES=1,
+                                                   GUARD_EXIT=0, CONFIG_SHA256 re-verified              exit 0
+      FINGERPRINT=e813068fcb66a4843d8e0fd6de13c9095e35a1a09362edd16350ed049c9c48db
+      CONFIG_SHA256=5880c439f53fca20ac4c907d19162b54ff7d35eefa009ceed23f10832ab0132a
+  cmd /c launch-isolated.cmd (ASPNETCORE_ENVIRONMENT=Development, :5098)                              exit 0
+  GET  /health                      -> 200 {"status":"ok"}                                            exit 0
+  GET  /__platform-commerce         -> 200 connectionReference=tenant-061-scratch, deploymentId=isolated-061  exit 0
+  GET  /v1/admin/dev-context        -> 200 actorUserId=01a13c32-ec9d-7000-93cf-3c67cf29674f           exit 0
+  GET  /v1/admin/geography/countries (no credential)          -> 401 admin.actor.missing              exit 0
+  GET  /v1/admin/geography/countries (dev actor)              -> 403 admin.authorization.denied       exit 0
+  GET  /v1/admin/shipping-services/iso-061-post/rates         -> 403 admin.authorization.denied       exit 0
+  POST /v1/admin/shipping-services/iso-061-post/rates         (no scope) -> 403 admin.authorization.denied  exit 0
+  POST /v1/admin/shipping-services/iso-061-post/coverage-grants (no scope) -> 403 admin.authorization.denied exit 0
+  POST /v1/admin/access-control/bootstrap                     -> 403 admin.authorization.denied       exit 0
+  GET  /v1/admin/access-control/me/capabilities                -> 403 admin.authorization.denied       exit 0
+  psql: access_control.roles=0 role_permissions=0 user_role_assignments=0                            exit 0
+  psql: pg_stat_activity -> scratch DB, application_name=tooba-061-isolated, 2 idle backends from 172.17.0.1  exit 0
+  run with Tooba:CatalogDemo:RunLegacyBootstraps=true -> Host aborts at startup:
+      System.InvalidOperationException: "محصول برای انتشار آماده نیست."
+      at CatalogAttributeSchemaDevelopmentSeed.ApplyAsync -> CatalogDevelopmentSeed.PostMigration.EnsureAsync
+      at DevelopmentSchemaMigrator.ApplyCoreAsync (Program.cs:366)                                   exit 134
+  psql (informational): schemas created by MigrateSchemaOnlyAsync = 29; geography/shipping/returns/settlement ABSENT
+  docker rm -f tooba-061-scratch  -> removed; remaining containers with that name = 0, volumes = 0            exit 0
+  Stop-Process task-owned :5098 owner -> :5098 listeners afterwards = 0                                exit 0
+  user Host re-check: :5088 listener PID 37028 (unchanged), /health -> {"status":"ok"}                 exit 0
+  Remove-Item %TEMP%\host061 -> TEMP_REMAINS=False, Tooba__*/ASPNETCORE__* leftovers = 0               exit 0
+
+ARTIFACTS
+  isolated/assert-scratch-target.js          copied 060 guard (061 addition: emits CONFIG_SHA256)
+  isolated/run-fixture-proofs.js             synthetic fixture suite for that copy
+  isolated/prepare-isolated-target.js        builds the isolated overlay, the effective merged config, the launch
+                                             override file, and gates all of it with the guard
+  isolated/launch-config/*.redacted.json     redacted launch configuration (password replaced by ***REDACTED***)
+  isolated/launch-config/hashes.txt          SHA-256 of generic base, overlay, effective config, guard, fingerprint
+  log-guard-effective-target.txt             the guard's PASS record for the real isolated target
+  log-guard-copy-fixture-proofs.txt          FIXTURE_PROOFS=PASS (12/12)
+  log-prepare-isolated-target.txt            prepare + gate exit record
+  log-http-probes.txt                        every real-HTTP status/code outcome and the blocker analysis
+  log-isolated-host-final-run.txt            task-owned Host log for the final run
+  log-run1-stderr.txt, log-host061-stderr-run2.txt, log-host061-stdout-run2.txt   earlier runs and the legacy-seed crash
+  summary.md, log-summary.txt, RESULT.bridge.txt, post-result.js
+
+NO CREDENTIALS ARE CONTAINED IN ANY EVIDENCE FILE.
