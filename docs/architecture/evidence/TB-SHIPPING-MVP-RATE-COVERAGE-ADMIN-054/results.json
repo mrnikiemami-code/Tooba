@@ -1,0 +1,54 @@
+﻿{
+  "task": "TB-SHIPPING-MVP-RATE-COVERAGE-ADMIN-054",
+  "parentTask": "TB-SHIPPING-MVP-ACTIVATION-053",
+  "program": "TOOBA-SHIPPING-MVP-SIX-TASK-CLOSURE",
+  "milestone": "5 of 6",
+  "mode": "BOUNDED_SHIPPING_RATE_COVERAGE_AUTHORING_EXISTING_ADMIN",
+  "status": "PARTIAL",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "expectedBaseSha": "742b02e0d5e297979a1b8f26e8d8b354d28e3df3",
+  "baseSha": "4c14604bcbb66cbb7d30bef5a7aa5d55a6107053",
+  "codeSha": "ee072ad7e513f3778c8bd40e7104bda7b70a10ab",
+  "evidenceSha": "PENDING_COMMIT_B",
+  "automaticNextImplementationTask": "NONE",
+  "driftCheck": {
+    "commits": ["4c14604bc", "82ba7de5b"],
+    "paths": "docs/architecture/evidence/TB-SHIPPING-MVP-ACTIVATION-053/{RESULT.bridge.txt,post-result.js,results.json}",
+    "verdict": "harmless 053 evidence/bookkeeping fast-forward; no source drift, no dirty conflict"
+  },
+  "implemented": {
+    "contracts": "src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Admin/ShippingAdminContracts.cs + 5 new stable error codes in ShippingErrorCodes (not_found, scope_duplicate x2, service_code_unknown)",
+    "application": "new project Tooba.Shipping.Application: port IShippingRateCoverageDirectory, 5 commands + 1 query with MediatR 12.5 handlers returning Result<T>, ShippingAdminOperation typed-error seam, FluentValidation transport-shape validators",
+    "infrastructure": "Rates/ShippingRateCoverageDirectory.cs over ShippingDbContext only (shipping schema), pre-write duplicate-scope denial, immutable scope on update, soft activate/deactivate, empty coverage returned as no coverage; registered in ShippingModule.AddServices",
+    "endpoints": "new project Tooba.Shipping.Endpoints: /v1/admin/shipping-services/{serviceCode}/rates... and .../coverage-grants... via ISender + ApiResponseFactory + abstract IShippingAdminAuthorizer",
+    "solution": "src/backend/Tooba.slnx: additive entries for Tooba.Shipping.Application and Tooba.Shipping.Endpoints"
+  },
+  "verified": {
+    "build": "Tooba.Shipping.Endpoints (+Application+Domain+Contracts) - 0 errors, 0 warnings",
+    "tests": "Tooba.Shipping.Tests 69 passed / 0 failed (63 pre-existing + 6 new: create/update/deactivate roundtrip, duplicate rate + duplicate grant denial with stable codes, empty coverage = no coverage, not-found codes, transport-shape denials)",
+    "databaseSafety": "no DB write, no migration, no schema/order change; no shared/production contact"
+  },
+  "blocked": {
+    "httpActivation": "No canonical module-owned endpoint seam exists outside Program.cs. Endpoints are registered/mapped explicitly per module in Program.cs and MediatR handler assemblies are listed there via AddToobaCqrsFoundation; Program.cs is forbidden and Host/Composition/** has no endpoint seam plus a frozen file allowlist (HostCompositionAmcGuardTests). Routes are therefore NOT live and the slice is not claimed as activated.",
+    "exactSeamForNextTask": [
+      "Host csproj: add ProjectReference to Tooba.Shipping.Endpoints (allowed path)",
+      "Program.cs: add typeof(Tooba.Shipping.Application.Rates.Commands.CreateShippingRatePolicyCommand).Assembly to AddToobaCqrsFoundation(...)",
+      "Program.cs: add builder.Services.AddShippingEndpointPresentation() with a Host-side IShippingAdminAuthorizer implementation (Fulfillment/Support precedent)",
+      "Program.cs: add app.MapShippingEndpoints();"
+    ],
+    "frontendSection": "NOT delivered on purpose: with the endpoints unwired a UI save would be a fake save. The existing /admin/shipping-services screen, API client, grid, translations and roundtrip tests are byte-identical; no parallel page, no in-memory fake backend, no misleading controls were added.",
+    "inertRegistration": "IShippingRateCoverageDirectory is registered in module DI but has no HTTP consumer yet; no customer-facing behaviour changes."
+  },
+  "unchanged": [
+    "Program.cs, appsettings, DevelopmentSchemaMigrator, Shipping migration/snapshot, schema order, runner registry",
+    "Fulfillment service CRUD/data/ownership, Geography schema/seed",
+    "checkout price authority, Order snapshots, Payment/Settlement, Storefront/frontend",
+    "no default rates, grants or seeds written"
+  ],
+  "timebox": {
+    "claimUtc": "2026-10-14T15:18:43Z",
+    "resultPostUtc": "2026-10-14T16:00Z",
+    "elapsedMinutes": 41,
+    "note": "30-minute HARD limit exceeded to reach a compiling green slice; no uncompiled commit, no broad suite, no loop."
+  }
+}

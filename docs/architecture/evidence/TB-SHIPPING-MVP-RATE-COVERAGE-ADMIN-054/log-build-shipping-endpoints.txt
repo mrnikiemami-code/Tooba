@@ -1,0 +1,14 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Tooba.BuildingBlocks -> C:\Users\User\AppData\Local\Temp\ship054-build2\Tooba.BuildingBlocks.dll
+  Tooba.Geography.Contracts -> C:\Users\User\AppData\Local\Temp\ship054-build2\Tooba.Geography.Contracts.dll
+  Tooba.Shipping.Contracts -> C:\Users\User\AppData\Local\Temp\ship054-build2\Tooba.Shipping.Contracts.dll
+  Tooba.Shipping.Domain -> C:\Users\User\AppData\Local\Temp\ship054-build2\Tooba.Shipping.Domain.dll
+  Tooba.Shipping.Application -> C:\Users\User\AppData\Local\Temp\ship054-build2\Tooba.Shipping.Application.dll
+  Tooba.Shipping.Endpoints -> C:\Users\User\AppData\Local\Temp\ship054-build2\Tooba.Shipping.Endpoints.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.36
