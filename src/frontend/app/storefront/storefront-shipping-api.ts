@@ -275,6 +275,7 @@ export function toCustomerShippingMessage(cause: unknown, locale: Locale = "fa")
 export async function loadShippingProjection(input: {
   cartId: string;
   provinceName?: string;
+  cityName?: string;
   methodCode?: string;
 }): Promise<StorefrontShippingProjection> {
   const response = await fetch("/v1/storefront/shipping/projection", {
@@ -288,6 +289,7 @@ export async function loadShippingProjection(input: {
     body: JSON.stringify({
       cartId: input.cartId,
       provinceName: input.provinceName || null,
+      cityName: input.cityName || null,
       methodCode: input.methodCode || null,
       language: "fa",
     }),

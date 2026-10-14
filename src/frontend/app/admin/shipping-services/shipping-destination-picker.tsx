@@ -8,7 +8,7 @@
  * submitted. Upper-level scopes (country-wide / area-wide / city-wide) stay selectable by leaving the
  * deeper controls empty.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   loadGeographyAdministrativeAreas,
   loadGeographyCities,
@@ -21,6 +21,7 @@ import {
   scopeLevelOf,
   type DestinationSelection,
 } from "./shipping-rates-coverage-model.ts";
+import { createLatestRequestGuard } from "./shipping-destination-picker-model.ts";
 
 type Props = {
   selection: DestinationSelection;
@@ -42,6 +43,11 @@ export function ShippingDestinationPicker({ selection, onChange, disabled }: Pro
   const [serviceAreas, setServiceAreas] = useState<GeographyPlaceOption[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  // دو نگهبان مستقل: یکی برای استان/شهر (وابسته به کشور و استان) و یکی برای ناحیهٔ خدمت (وابسته به شهر).
+  // هر بار که والد عوض می‌شود نسل تازه‌ای گشوده می‌شود و پاسخ‌های در راه از نسل قبلی باطل می‌شوند.
+  const cascadeGuard = useRef(createLatestRequestGuard());
+  const serviceAreaGuard = useRef(createLatestRequestGuard());
+
   useEffect(() => {
     let active = true;
     void (async () => {
@@ -57,34 +63,40 @@ export function ShippingDestinationPicker({ selection, onChange, disabled }: Pro
     return () => { active = false; };
   }, []);
 
-  const loadAreas = useCallback(async (countryId: string) => {
+  const loadAreas = useCallback(async (countryId: string, isCurrent: () => boolean) => {
     if (!countryId) { setAreas([]); return; }
     const result = await loadGeographyAdministrativeAreas(countryId);
+    if (!isCurrent()) return;
     setAreas(result.state === "ok" && result.data ? result.data : []);
     setError(result.state === "ok" ? null : "فهرست استان‌ها خوانده نشد.");
   }, []);
 
-  const loadCities = useCallback(async (countryId: string, areaId: string | null) => {
+  const loadCities = useCallback(async (countryId: string, areaId: string | null, isCurrent: () => boolean) => {
     if (!countryId) { setCities([]); return; }
     const result = await loadGeographyCities(countryId, areaId);
+    if (!isCurrent()) return;
     setCities(result.state === "ok" && result.data ? result.data : []);
     setError(result.state === "ok" ? null : "فهرست شهرها خوانده نشد.");
   }, []);
 
-  const loadServiceAreas = useCallback(async (cityId: string) => {
+  const loadServiceAreas = useCallback(async (cityId: string, isCurrent: () => boolean) => {
     if (!cityId) { setServiceAreas([]); return; }
     const result = await loadGeographyServiceAreas(cityId);
+    if (!isCurrent()) return;
     setServiceAreas(result.state === "ok" && result.data ? result.data : []);
     setError(result.state === "ok" ? null : "فهرست ناحیه‌های خدمت خوانده نشد.");
   }, []);
 
   useEffect(() => {
-    void loadAreas(selection.countryId);
-    void loadCities(selection.countryId, selection.administrativeAreaId);
+    // هر تغییر کشور/استان نسل تازه‌ای می‌گشاید؛ پاسخ‌های در راه از نسل قبلی نادیده گرفته می‌شوند.
+    const isCurrent = cascadeGuard.current.begin();
+    void loadAreas(selection.countryId, isCurrent);
+    void loadCities(selection.countryId, selection.administrativeAreaId, isCurrent);
   }, [loadAreas, loadCities, selection.countryId, selection.administrativeAreaId]);
 
   useEffect(() => {
-    void loadServiceAreas(selection.cityId ?? "");
+    const isCurrent = serviceAreaGuard.current.begin();
+    void loadServiceAreas(selection.cityId ?? "", isCurrent);
   }, [loadServiceAreas, selection.cityId]);
 
   const level = scopeLevelOf(selection);
@@ -182,8 +194,7 @@ export function ShippingDestinationPicker({ selection, onChange, disabled }: Pro
   );
 
   function onLoadFromCountry(next: DestinationSelection) {
+    // بارگذاری وابسته‌ها را effect انجام می‌دهد تا برای یک تغییر کشور دو درخواست موازی نزنیم.
     onChange(next);
-    void loadAreas(next.countryId);
-    void loadCities(next.countryId, null);
   }
 }

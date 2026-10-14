@@ -156,7 +156,9 @@ internal static class StorefrontOrderEndpoints
                 ReadGuestSecret(request),
                 body.ProvinceName,
                 body.MethodCode,
-                body.Language),
+                body.Language,
+                body.CityName,
+                body.Destination),
             ct));
     }
 

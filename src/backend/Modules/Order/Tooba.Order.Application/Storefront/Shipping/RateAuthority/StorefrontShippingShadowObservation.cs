@@ -1,3 +1,5 @@
+using Tooba.Geography.Contracts.Places;
+
 namespace Tooba.Order.Application.Storefront.Shipping.RateAuthority;
 
 /// <summary>
@@ -21,7 +23,21 @@ public sealed record StorefrontShippingShadowObservationInput(
     string? ProvinceName,
     decimal CartSubtotalExclusive,
     string? CurrencyCode,
-    IReadOnlyList<StorefrontShippingShadowCandidate> Candidates);
+    IReadOnlyList<StorefrontShippingShadowCandidate> Candidates)
+{
+    /// <summary>
+    /// شهر انتخاب‌شدهٔ مشتری در صورت وجود (نام یا کد). همراه استان، Geography را به دقت «شهر» می‌رساند.
+    /// اختیاری و سازگار با مشتریان قدیمی که فقط استان می‌فرستند؛ خودش هویت نمی‌سازد.
+    /// </summary>
+    public string? CityName { get; init; }
+
+    /// <summary>
+    /// شناسه‌های پایدار Geography وقتی فراخوان واقعاً آن‌ها را در اختیار دارد. این مقدار پیش از استفاده
+    /// با <see cref="Tooba.Geography.Contracts.Places.IGeographyLookup.GetByIdsAsync"/> اعتبارسنجی می‌شود و
+    /// در صورت نامعتبر بودن، مشاهده «غیرقابل‌مقایسه» می‌ماند؛ هرگز شناسهٔ حدسی جایگزین نمی‌شود.
+    /// </summary>
+    public DestinationIdentifiers? Destination { get; init; }
+}
 
 /// <summary>
 /// نتیجهٔ مشاهدهٔ سایه به‌صورت یک کد پایدار و کم‌کاردینال.

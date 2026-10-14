@@ -110,7 +110,7 @@ export function StorefrontShopeivaShipping() {
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [newAddress, setNewAddress] = useState<AddressForm>(emptyAddress);
 
-  const refreshProjection = useCallback(async (province?: string, method?: string | null) => {
+  const refreshProjection = useCallback(async (province?: string, method?: string | null, city?: string) => {
     const cart = await loadStorefrontCart();
     if (!cart?.cartId) {
       setError("سبد خرید پیدا نشد.");
@@ -120,6 +120,7 @@ export function StorefrontShopeivaShipping() {
     const page = await loadShippingProjection({
       cartId: cart.cartId,
       provinceName: province || undefined,
+      cityName: city || undefined,
       methodCode: method || undefined,
     });
     setProjection(page);
@@ -206,7 +207,7 @@ export function StorefrontShopeivaShipping() {
     setSavedAddressId(row.addressId);
     setUseSavedAddress(true);
     setShowSaved(false);
-    void refreshProjection(mapped.provinceName, methodCode).catch((cause: unknown) =>
+    void refreshProjection(mapped.provinceName, methodCode, mapped.cityName).catch((cause: unknown) =>
       setError(toCustomerShippingMessage(cause, locale)),
     );
   }
@@ -215,7 +216,7 @@ export function StorefrontShopeivaShipping() {
     setMethodCode(code);
     setError(null);
     try {
-      await refreshProjection(address.provinceName, code);
+      await refreshProjection(address.provinceName, code, address.cityName);
     } catch (cause) {
       setError(toCustomerShippingMessage(cause, locale));
     }
@@ -279,7 +280,7 @@ export function StorefrontShopeivaShipping() {
         setAddress(newAddress);
         setSavedAddressId(null);
         setUseSavedAddress(false);
-        await refreshProjection(newAddress.provinceName, methodCode);
+        await refreshProjection(newAddress.provinceName, methodCode, newAddress.cityName);
       }
       setShowNewDialog(false);
       setNewAddress(emptyAddress);

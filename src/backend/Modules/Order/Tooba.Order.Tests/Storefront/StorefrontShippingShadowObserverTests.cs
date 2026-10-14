@@ -26,14 +26,25 @@ public sealed class StorefrontShippingShadowObserverTests
     private sealed class FakeGeography : IGeographyLookup
     {
         private readonly Func<string?, DestinationResolution> _resolution;
+        private readonly Func<DestinationIdentifiers, DestinationIdentifiers?>? _validate;
 
-        public FakeGeography(Func<string?, DestinationResolution> resolution) => _resolution = resolution;
+        public FakeGeography(
+            Func<string?, DestinationResolution> resolution,
+            Func<DestinationIdentifiers, DestinationIdentifiers?>? validate = null)
+        {
+            _resolution = resolution;
+            _validate = validate;
+        }
 
         public int ResolveCalls { get; private set; }
+
+        public int ValidateCalls { get; private set; }
 
         public string? LastCountryCode { get; private set; }
 
         public string? LastAreaName { get; private set; }
+
+        public string? LastCityName { get; private set; }
 
         public Task<DestinationResolution> ResolveLegacyAsync(
             string? countryCode,
@@ -45,6 +56,7 @@ public sealed class StorefrontShippingShadowObserverTests
             ResolveCalls++;
             LastCountryCode = countryCode;
             LastAreaName = administrativeAreaName;
+            LastCityName = cityName;
             return Task.FromResult(_resolution(administrativeAreaName));
         }
 
@@ -70,7 +82,10 @@ public sealed class StorefrontShippingShadowObserverTests
         public Task<DestinationIdentifiers?> GetByIdsAsync(
             DestinationIdentifiers identifiers,
             CancellationToken cancellationToken)
-            => Task.FromResult<DestinationIdentifiers?>(identifiers);
+        {
+            ValidateCalls++;
+            return Task.FromResult(_validate is null ? identifiers : _validate(identifiers));
+        }
     }
 
     private sealed class ThrowingGeography : IGeographyLookup
@@ -299,6 +314,105 @@ public sealed class StorefrontShippingShadowObserverTests
 
         Assert.Equal(StorefrontShippingShadowObservationCode.DestinationNotComparable, result.Code);
         Assert.Equal(0, geography.ResolveCalls);
+        Assert.Equal(0, lookup.Calls);
+    }
+
+    [Fact]
+    public async Task Selected_city_is_forwarded_to_geography_so_identity_reaches_city_precision()
+    {
+        var geography = new FakeGeography(_ => DestinationResolution.Resolved(
+            new DestinationIdentifiers(CountryId, AreaId, CityId)));
+        var lookup = new RecordingQuoteLookup(
+            _ => Quote(ShippingServiceabilityOutcome.Quoted, 150_000m, ShippingReasonCodes.Quoted));
+        var observer = Observer(geography, lookup, Gate(enabled: true, confirmed: true));
+
+        var result = await observer.ObserveAsync(
+            Input(province: "alborz") with { CityName = "کرج" },
+            CancellationToken.None);
+
+        Assert.Equal(StorefrontShippingShadowObservationCode.Observed, result.Code);
+        Assert.Equal(1, geography.ResolveCalls);
+        Assert.Equal(StorefrontShippingShadowObserver.LegacyCountryCode, geography.LastCountryCode);
+        Assert.Equal("alborz", geography.LastAreaName);
+        Assert.Equal("کرج", geography.LastCityName);
+        Assert.Equal(CityId, lookup.LastRequest!.Destination.CityId);
+        Assert.Equal(AreaId, lookup.LastRequest.Destination.AdministrativeAreaId);
+    }
+
+    [Fact]
+    public async Task Province_only_client_still_resolves_at_area_precision_without_inventing_a_city()
+    {
+        var geography = new FakeGeography(_ => ResolvedIranArea());
+        var lookup = new RecordingQuoteLookup(
+            _ => Quote(ShippingServiceabilityOutcome.Quoted, 150_000m, ShippingReasonCodes.Quoted));
+        var observer = Observer(geography, lookup, Gate(enabled: true, confirmed: true));
+
+        var result = await observer.ObserveAsync(Input(province: "tehran"), CancellationToken.None);
+
+        Assert.Equal(StorefrontShippingShadowObservationCode.Observed, result.Code);
+        Assert.Null(geography.LastCityName);
+        Assert.Equal(0, geography.ValidateCalls);
+        Assert.Null(lookup.LastRequest!.Destination.CityId);
+    }
+
+    [Fact]
+    public async Task Validated_explicit_destination_ids_win_and_skip_legacy_text_resolution()
+    {
+        var geography = new FakeGeography(_ => ResolvedIranArea());
+        var lookup = new RecordingQuoteLookup(
+            _ => Quote(ShippingServiceabilityOutcome.Quoted, 150_000m, ShippingReasonCodes.Quoted));
+        var observer = Observer(geography, lookup, Gate(enabled: true, confirmed: true));
+
+        var result = await observer.ObserveAsync(
+            Input(province: "alborz") with
+            {
+                CityName = "کرج",
+                Destination = new DestinationIdentifiers(CountryId, AreaId, CityId),
+            },
+            CancellationToken.None);
+
+        Assert.Equal(StorefrontShippingShadowObservationCode.Observed, result.Code);
+        Assert.Equal(1, geography.ValidateCalls);
+        Assert.Equal(0, geography.ResolveCalls);
+        Assert.Equal(CityId, lookup.LastRequest!.Destination.CityId);
+    }
+
+    [Fact]
+    public async Task Invalid_explicit_destination_ids_are_not_comparable_and_never_fall_back_to_text_guessing()
+    {
+        var geography = new FakeGeography(_ => ResolvedIranArea(), _ => null);
+        var lookup = new RecordingQuoteLookup(
+            _ => Quote(ShippingServiceabilityOutcome.Quoted, 150_000m, ShippingReasonCodes.Quoted));
+        var observer = Observer(geography, lookup, Gate(enabled: true, confirmed: true));
+
+        var result = await observer.ObserveAsync(
+            Input(province: "alborz") with
+            {
+                CityName = "کرج",
+                Destination = new DestinationIdentifiers(CountryId, AreaId, Guid.NewGuid()),
+            },
+            CancellationToken.None);
+
+        Assert.Equal(StorefrontShippingShadowObservationCode.DestinationNotComparable, result.Code);
+        Assert.Empty(result.Reports);
+        Assert.Equal(1, geography.ValidateCalls);
+        Assert.Equal(0, geography.ResolveCalls);
+        Assert.Equal(0, lookup.Calls);
+    }
+
+    [Fact]
+    public async Task Ambiguous_city_inside_a_resolved_area_is_not_comparable()
+    {
+        var geography = new FakeGeography(_ => DestinationResolution.Ambiguous(2));
+        var lookup = new RecordingQuoteLookup(
+            _ => Quote(ShippingServiceabilityOutcome.Quoted, 150_000m, ShippingReasonCodes.Quoted));
+        var observer = Observer(geography, lookup, Gate(enabled: true, confirmed: true));
+
+        var result = await observer.ObserveAsync(
+            Input(province: "alborz") with { CityName = "کرج" },
+            CancellationToken.None);
+
+        Assert.Equal(StorefrontShippingShadowObservationCode.DestinationNotComparable, result.Code);
         Assert.Equal(0, lookup.Calls);
     }
 

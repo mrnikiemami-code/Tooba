@@ -94,7 +94,8 @@ public sealed class StorefrontShippingShadowObserver
             return Record(StorefrontShippingShadowObservationCode.ShadowUnavailable, [], input);
         }
 
-        if (string.IsNullOrWhiteSpace(input.ProvinceName))
+        if (string.IsNullOrWhiteSpace(input.ProvinceName) && string.IsNullOrWhiteSpace(input.CityName)
+            && input.Destination is null)
         {
             // شکاف منبع: مسیر فروشگاه در این حالت هیچ مقصدی انتخاب نکرده است و Geography فقط می‌تواند
             // هویت سطح کشور بدهد؛ مقایسهٔ نرخ بدون مقصد، مشاهدهٔ معتبری نیست و حدس زده نمی‌شود.
@@ -107,15 +108,8 @@ public sealed class StorefrontShippingShadowObserver
         DestinationIdentifiers destination;
         try
         {
-            var resolution = await _geography.ResolveLegacyAsync(
-                LegacyCountryCode,
-                input.ProvinceName,
-                cityName: null,
-                serviceAreaName: null,
-                cancellationToken);
-
-            if (resolution.Outcome != DestinationResolutionOutcome.Resolved
-                || resolution.Identifiers is null)
+            var resolved = await ResolveDestinationAsync(input, cancellationToken);
+            if (resolved is null)
             {
                 // مبهم یا نامنگاشت: مقایسه بی‌معنا است و نباید حدس زده شود.
                 return Record(
@@ -124,7 +118,7 @@ public sealed class StorefrontShippingShadowObserver
                     input);
             }
 
-            destination = resolution.Identifiers;
+            destination = resolved;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -160,6 +154,51 @@ public sealed class StorefrontShippingShadowObserver
         }
 
         return Record(StorefrontShippingShadowObservationCode.Observed, reports, input);
+    }
+
+    /// <summary>
+    /// هویت پایدار مقصد را با <b>بالاترین دقت اثبات‌شده</b> می‌سازد، یا <c>null</c> وقتی هیچ راه
+    /// قطعی وجود ندارد.
+    /// </summary>
+    /// <remarks>
+    /// <list type="number">
+    /// <item>
+    /// شناسه‌های صریح Geography، اگر فراخوان واقعاً آن‌ها را داشته باشد، اولویت دارند و قبل از مصرف با
+    /// <see cref="IGeographyLookup.GetByIdsAsync"/> اعتبارسنجی می‌شوند؛ شناسهٔ نامعتبر نتیجهٔ <c>null</c>
+    /// می‌دهد و جایگزین حدسی ساخته نمی‌شود.
+    /// </item>
+    /// <item>
+    /// در نبود شناسهٔ صریح، متن قدیمی (استان و در صورت وجود شهر) با کلید کشور قدیمی به Geography داده
+    /// می‌شود. نام/کد شهر، دقت را از «استان» به «شهر» می‌برد و همان سرویس، والد واقعی شهر را برمی‌گرداند.
+    /// </item>
+    /// </list>
+    /// </remarks>
+    private async Task<DestinationIdentifiers?> ResolveDestinationAsync(
+        StorefrontShippingShadowObservationInput input,
+        CancellationToken cancellationToken)
+    {
+        var geography = _geography!;
+
+        if (input.Destination is { } explicitIdentifiers)
+        {
+            if (explicitIdentifiers.CountryId == Guid.Empty)
+            {
+                return null;
+            }
+
+            return await geography.GetByIdsAsync(explicitIdentifiers, cancellationToken);
+        }
+
+        var resolution = await geography.ResolveLegacyAsync(
+            LegacyCountryCode,
+            input.ProvinceName,
+            input.CityName,
+            serviceAreaName: null,
+            cancellationToken);
+
+        return resolution.Outcome == DestinationResolutionOutcome.Resolved
+            ? resolution.Identifiers
+            : null;
     }
 
     private StorefrontShippingShadowObservationResult Record(

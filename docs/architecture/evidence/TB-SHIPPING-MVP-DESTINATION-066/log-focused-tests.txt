@@ -1,0 +1,78 @@
+﻿=== TB-SHIPPING-MVP-DESTINATION-066 :: focused validation (captured 2026-10-15T02:59:28.4338590+03:30) ===
+
+--- 1) dotnet build Tooba.Order.Application ---
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.41
+
+--- 2) dotnet build Tooba.Order.Endpoints ---
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.55
+
+--- 3) dotnet test Tooba.Order.Tests --filter FullyQualifiedName~Storefront ---
+Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Tests\bin\Debug\net8.0\Tooba.Order.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   121, Skipped:     0, Total:   121, Duration: 121 ms - Tooba.Order.Tests.dll (net8.0)
+
+--- 4) dotnet test observer + rate-shadow focused subset ---
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    27, Skipped:     0, Total:    27, Duration: 27 ms - Tooba.Order.Tests.dll (net8.0)
+
+--- 5) node --test (picker race + coverage model + shipping api) ---
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 129.0662
+
+--- 6) npx tsc --noEmit (src/frontend) ---
+clean (no diagnostics)
+
+--- 7) architecture guards ---
+[frontend-import-boundary.guard.test.ts]
+✔ FE-BOUNDARY-001: no new shared→feature reverse imports beyond baseline (62.2177ms)
+ℹ tests 1
+ℹ pass 1
+ℹ fail 0
+[frontend-flat-folder.guard.test.ts]
+✔ FE-FOLDER-001: no new business-feature files directly under app/admin (3.9513ms)
+✔ FE-FOLDER-002: no new capability exports on admin-api dumping ground (1.3145ms)
+ℹ tests 2
+ℹ pass 2
+ℹ fail 0
+[frontend-feature-boundary.guard.test.ts]
+✔ FE-BOUNDARY: external code must not deep-import migrated feature internals (216.1988ms)
+ℹ tests 1
+ℹ pass 1
+ℹ fail 0
+[frontend-test-discovery.guard.test.ts]
+✔ architecture guard files exist and package.json wires test:architecture (0.8008ms)
+✔ canonical discovery lists every on-disk frontend test file (75.7576ms)
+✔ package.json test scripts still invoke critical storefront suite (0.2521ms)
+ℹ tests 3
+ℹ pass 3
+ℹ fail 0
+[frontend-source-size.guard.test.ts]
+✖ FE-SIZE: oversized frontend files are shrink-only against baseline (226.9008ms)
+ℹ tests 1
+ℹ pass 0
+ℹ fail 1
+✖ failing tests:
+✖ FE-SIZE: oversized frontend files are shrink-only against baseline (226.9008ms)
+  AssertionError [ERR_ASSERTION]: OVERSIZED_GROWTH src/frontend/app/admin/category-admin-screen.tsx: 2230 > baseline 2215
+  OVERSIZED_GROWTH src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx: 1442 > baseline 1440
+  OVERSIZED_GROWTH src/frontend/app/storefront/storefront-landing-blocks.tsx: 1033 > baseline 1026
+  OVERSIZED_GROWTH src/frontend/lib/storefront-composition/shared-composition-renderer.tsx: 918 > baseline 907
+
+NOTE: frontend-source-size.guard.test.ts fails on PRE-EXISTING oversized growth in files this task did not touch:
+  category-admin-screen.tsx (2230 > 2215), landing-page-composer.tsx (1442 > 1440),
+  storefront-landing-blocks.tsx (1033 > 1026), shared-composition-renderer.tsx (918 > 907).
+  The baseline was NOT widened and those files were NOT modified.

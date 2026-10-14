@@ -149,12 +149,24 @@ public sealed record StorefrontShippingProjection(
     string? RevalidationMessage,
     IReadOnlyList<StorefrontProvinceOption> Provinces);
 
-/// <summary>درخواست تصویر ارسال (سبد + مقصد اختیاری + روش انتخابی).</summary>
+/// <summary>
+/// درخواست تصویر ارسال (سبد + مقصد اختیاری + روش انتخابی). <c>CityName</c> و <c>Destination</c> فقط
+/// مشاهده‌ای‌اند: هر دو اختیاری و سازگار با مشتریان قدیمی که تنها استان می‌فرستند، و هیچ‌کدام قیمت،
+/// روش انتخاب‌شده یا promise مشتری را تغییر نمی‌دهند.
+/// </summary>
+/// <param name="CartId">شناسهٔ سبد.</param>
+/// <param name="ProvinceName">استان انتخاب‌شده (کد یا برچسب).</param>
+/// <param name="MethodCode">روش انتخابی.</param>
+/// <param name="Language">زبان نمایش.</param>
+/// <param name="CityName">شهر انتخاب‌شده (نام یا کد) در صورت وجود.</param>
+/// <param name="Destination">شناسه‌های پایدار Geography در صورت وجود؛ در نبود آن‌ها از متن استفاده می‌شود.</param>
 public sealed record StorefrontShippingProjectionRequest(
     Guid CartId,
     string? ProvinceName = null,
     string? MethodCode = null,
-    string? Language = null);
+    string? Language = null,
+    string? CityName = null,
+    Tooba.Geography.Contracts.Places.DestinationIdentifiers? Destination = null);
 
 /// <summary>ذخیرهٔ انتخاب ارسال.</summary>
 public sealed record StorefrontShippingSelectionRequest(

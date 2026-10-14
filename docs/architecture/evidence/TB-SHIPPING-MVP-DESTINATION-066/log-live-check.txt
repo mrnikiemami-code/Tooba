@@ -1,0 +1,9 @@
+﻿=== TB-SHIPPING-MVP-DESTINATION-066 :: non-mutating live check against the user's Development host (:5088) ===
+NOTE: the deployed Development host was intentionally NOT restarted (task: do not restart a healthy service merely for convenience).
+      It therefore still runs the pre-066 binary; the checks below only prove the route is alive and that the legacy
+      contract still answers canonically. Behaviour of the new optional fields is proven by the focused tests.
+
+health => 200 {"status":"ok"}
+projection(invalid cart, province+city+ids) => 401 {"type":"about:blank","title":"Sign in to continue.","status":401,"instance":"/v1/storefront/shipping/projection","errorCode":"checkout.authentication_required","traceId":"54a464ce40b3bfd3bcf5ccaa62026324","correlationId":"cbe24f4a5e034eb3b25b6575bfdfc34e","requestId":"0HNPA8QANAI47:00000002"}
+
+DB untouched: no cart/order/shipping row was written by this check (invalid cart id, rejected before any write).
