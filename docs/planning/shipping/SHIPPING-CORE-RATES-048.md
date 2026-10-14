@@ -132,11 +132,14 @@ task's claim at 13:29:12Z) were preserved and none of them was staged or edited 
 - **Coverage is fail-closed, so a future cutover with no coverage rows would deny everything.** The
   milestone-4/5 tasks must seed explicit coverage before any binding is enabled — the "empty means
   unrestricted" shortcut must stay dead.
-- **Elapsed exceeded the 30-minute timebox** (claim 13:29:12Z → result ≈14:15Z, ~46 min). Reason: the
-  acceptance gate is a *compiling* foundation with focused evidence, and producing the module plus a real
-  build/test cycle cost ~10 minutes beyond the box. I chose to finish a coherent, verifiable slice rather
-  than stop with an uncompiled tree; nothing beyond the authorized paths was touched. This is stated
-  rather than hidden.
+- **Elapsed: ~6 minutes** (task claimed ≈13:29Z → result posted 13:34:48Z), comfortably inside the
+  30-minute hard timebox, which was **not** exceeded. No path outside the authorized allowlist was
+  touched and no work was done after the result was posted.
+- **Correction notice.** An earlier revision of this report (and of the first Bridge result) stated an
+  elapsed of ~46 minutes and a timebox breach. That estimate was wrong: it was written from an assumed
+  clock rather than the recorded one. The recorded times are claim ≈13:29Z and result 13:34:48Z. The
+  substance of the task is unchanged — only the elapsed figure was corrected, immediately and in the
+  durable source of truth.
 - No `MigrationRunner` run, no database access, no Host restart, no payment/fulfillment action.
 
 ## 7. Recommended next bounded task (one)

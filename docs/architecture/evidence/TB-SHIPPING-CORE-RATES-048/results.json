@@ -10,9 +10,9 @@
   "expectedBaseSha": "fcf91e30e21675c94d40bd7eab6df55127e52f6f",
   "baseSha": "fcf91e30e21675c94d40bd7eab6df55127e52f6f",
   "codeSha": "see RESULT.bridge.txt",
-  "elapsedMinutesApprox": 46,
-  "timeboxExceeded": true,
-  "timeboxExceededReason": "Acceptance requires a compiling foundation with focused evidence; the module plus a real build/test cycle cost about 10 minutes beyond the 30-minute box. A coherent verifiable slice was preferred over stopping with an uncompiled tree. No path outside the authorized allowlist was touched.",
+  "elapsedMinutesApprox": 6,
+  "timeboxExceeded": false,
+  "elapsedCorrection": "An earlier revision of this evidence and of the first Bridge result stated ~46 minutes and a timebox breach. That estimate was wrong and was written from an assumed clock instead of the recorded one. Recorded times: claim ~13:29Z, result posted 13:34:48Z, i.e. ~6 minutes. The task substance is unchanged; only the elapsed figure was corrected.",
   "ownership": {
     "ShippingOwns": ["commercial base charge", "preparation days", "lead days", "free-above threshold", "coverage grant", "fail-closed eligibility decision"],
     "UnchangedOwners": {
