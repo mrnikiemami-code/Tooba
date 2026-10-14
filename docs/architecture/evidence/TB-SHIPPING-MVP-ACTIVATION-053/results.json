@@ -9,7 +9,7 @@
   "baseSha": "a194e5a2e3d6b028e50c8f8d6dc33bfc637e3ada",
   "expectedBaseSha": "92b8653e2f03e1bca8d182bd12b71ae9cff7c728",
   "codeSha": "fb1126d1a56b60a77f3d842799383e3ca22767d3",
-  "evidenceSha": "PENDING_COMMIT_B",
+  "evidenceSha": "742b02e0d5e297979a1b8f26e8d8b354d28e3df3",
   "automaticNextImplementationTask": "NONE",
   "allowedPathsUsed": [
     "src/backend/Host/Tooba.Host/Tooba.Host.csproj",
