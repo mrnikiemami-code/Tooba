@@ -1,0 +1,97 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-SCRATCH-HTTP-063
+Parent-Task: TB-SHIPPING-MVP-SCRATCH-BOOTSTRAP-062
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE
+Mode: BOUNDED_SCRATCH_GEOGRAPHY_SHIPPING_MIGRATION_AND_AUTHORIZED_HTTP_PROOF
+Bridge-Task-Row: da319a5a-e30c-4afe-9ab2-feb7a697c55d
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 49a1fd195e8d734122d99e8352cec6886c3aeff4
+Base-SHA: ba7d179175bf7c0f5903e41a532116a75ecf31ed
+Code-SHA: NONE
+Evidence-SHA: 7632707c3047c5c913e8572bd4b7be473b407e9f
+automaticNextImplementationTask: NONE
+
+TARGET / CONFIG / DATABASE-SIDE PROVENANCE
+- Task-created disposable container: tooba-063-scratch (postgres:17), since DESTROYED.
+- Scratch database (only Tooba-named DB in container, alongside postgres/template0/template1): tooba_063_scratch_wq3n7b2x
+- Dedicated role: scratch063. Port binding loopback-only: 5432/tcp -> 127.0.0.1:55434 (distinct from 5432). Host port 127.0.0.1:5100 (distinct from user's 5088).
+- Fresh isolated launch directory %TEMP%\host063 with env inheritance scrubbed (Tooba__*, ASPNETCORE__*, DOTNET__*, ConnectionStrings__*, TOOBA_DESIGN_TIME_CONNECTION) before one explicit override.
+- Canonical hyphenated connection reference tenant-063-scratch, single tenant store-alpha; the faulty tenant_alpha override was NOT used.
+- 060 offline guard on the real launch config+override: GUARD_EXIT=0, EFFECTIVE_TENANTS=1, EFFECTIVE_REFERENCES=1, CREDENTIALS_PRINTED=false.
+- CONFIG_SHA256=3dca53a77bf080ecc1ec70a9a733c3d1a22b1be0363d6936e3484f436a66d657 FINGERPRINT=b176a6f6d39a3567f8a37846f21331091f8a7d1e1e697fb997f7d78ea897758a
+- Runtime provenance GET /__platform-commerce on the isolated Host: {"connectionReference":"tenant-063-scratch","resolvedHost":"127.0.0.1","tenantId":"store-alpha"}.
+- Database-side association before/after writes via pg_stat_activity: tooba_063_scratch_wq3n7b2x | tooba-061-isolated | 172.17.0.1. No other database appears for that backend.
+- Cosmetic carry-over (not an isolation defect): deploymentId/application_name still say isolated-061/tooba-061-isolated because the 062 prepare diagnostics string was reused verbatim; tenant/database/role/port provenance above is all 063-specific and independently verified.
+- No connection to tooba_alpha, localhost:5432, Marketplace, staging or production, not even read-only. RunLegacyBootstraps left disabled.
+
+MIGRATIONS (exactly two, each explicitly scoped via its own canonical IDesignTimeDbContextFactory + TOOBA_DESIGN_TIME_CONNECTION)
+- geography: 20261014113949_InitialGeography applied (--context GeographyDbContext). History read back: 20261014113949_InitialGeography
+- shipping : 20261014144742_InitialShipping applied (--context ShippingDbContext). History read back: 20261014144742_InitialShipping
+- The all-module MigrationRunner was NOT invoked. No migration source/order, Host, appsettings, or real tenant data was modified.
+- Geography reference data: localization.languages was EMPTY because LanguageBootstrapHostedService fails on a fresh DB with PlatformHttpException Service Unavailable (ToobaNpgsql.ResolveForContext, no bound commerce context). No language id was invented. The genuine fa-IR row was created through the canonical Localization admin API POST /v1/admin/languages -> 200, languageId 01a13c83-05b3-7000-b161-ca0def4490ed. The existing 047 generator (unmodified, UUIDv5 self-test ok, provinces=12 cities=47) was then applied to scratch only: countries=1 areas=12 cities=47 country_names=1 area_names=12 city_names=47 service_areas=0.
+
+AUTHORIZATION BOUNDARY (fail-closed, real HTTP)
+- GET /v1/admin/shipping-services/svc-063/rates no credential -> 401 admin.actor.missing; unknown actor -> 403 admin.authorization.denied.
+- GET /v1/admin/geography/countries no credential -> 401 admin.actor.missing; unknown actor -> 403 admin.authorization.denied.
+- Authorized reads are 200, not 500: GET .../svc-063/rates -> 200 {"serviceCode":"svc-063","ratePolicies":[],"coverageGrants":[]}; GET /v1/admin/geography/countries -> 200 (IR country after seed). Before this task the Geography module schema did not exist on scratch at all.
+- Admin capability obtained through the existing canonical Development bootstrap (062 fix) from GET /v1/admin/dev-context actor 01a13c82-0273-7000-b75d-82864c944877, tenant store-alpha. No new roles/permissions/capability tuples created outside the canonical path.
+
+MISSING-SCOPE REGRESSION — ACCEPTANCE CONDITION MET
+- POST /v1/admin/shipping-services/svc-063/rates with NO scope -> HTTP 400 validation.failed, stable code shipping.validation.scope_required (NOT 500).
+- POST /v1/admin/shipping-services/svc-063/coverage-grants with {} -> HTTP 400 validation.failed, stable code shipping.validation.scope_required (NOT 500).
+- Same for explicit "scope":null on both routes -> 400 shipping.validation.scope_required.
+- "scope":{} -> 400 shipping.validation.country_required.
+- The originally reported 500 platform.unexpected no longer occurs for any scope shape, absent, null, or empty.
+
+AUTHENTICATED CRUD ROUNDTRIP (scratch-only SYNTHETIC values; NOT live tariffs and NOT checkout parity evidence)
+- Real seeded scope: country IR e3451206-e503-51a8-91ad-afa9ab70e330.
+- create POST rate -> 200, ratePolicyId 01a13c83-9b43-7000-a4de-b3b25c83ea43, level Country, 25000 IRR (synthetic).
+- read-after-write GET -> 200, policy present with the created id.
+- edit PUT -> 200, chargeAmount 25000 -> 31000, preparationDays 2 -> 3, leadDays 3 -> 4 (synthetic).
+- toggle PATCH active -> 200 false, 200 true.
+- create POST coverage-grant -> 200, coverageGrantId 01a13c83-9bd7-7000-9475-ca8be6b8e5e1.
+- read-after-write GET -> 200, both ratePolicies and coverageGrants present.
+- toggle PATCH grant active -> 200 false, 200 true.
+- Cross-service mutation guard: PATCH the svc-063 rate under svc-063-other -> 400 shipping.service_scope.mismatch (not 500).
+- Duplicate scope guard: repeat POST same scope -> 400 shipping.rate_policy.scope_duplicate.
+- Never-touched service GET -> 200 with empty sets, never a default.
+
+FINDINGS RECORDED, NOT FIXED (no production source change authorized)
+- F-063-1: malformed request body is reported as an unexpected 500. POST .../svc-063/rates with non-JSON ({not-json) and with "countryId":"" both returned 500 {"detail":"BadHttpRequestException","errorCode":"platform.unexpected"}. A malformed/undeserializable body is a client error and should surface as a validation 400 with a stable code, consistent with the missing-scope behavior above. Repro probes S1/S2 in log-crud-063.txt. First hit accidentally by an over-eager probe; S1/S2 are the deliberate minimal reproductions. Reported for an Architect-issued repair, not patched here.
+- F-063-2: LanguageBootstrapHostedService depends on a bound commerce context and fails on a fresh database (PlatformHttpException Service Unavailable via ToobaNpgsql.ResolveForContext), leaving localization.languages empty until the canonical admin API is used; every fresh-scratch environment therefore needs a manual language bootstrap step before geography reference data can be seeded.
+
+SAFETY
+- No customer quote, Checkout, order, payment, snapshot or cutover behavior touched. No frontend process restarted. No Host/Admin/Security guard changed. No bypass, no Results.Json, no new page.
+- User's own Development Host never stopped or restarted: :5088 still listening, PID 37028.
+- Cleanup executed: container tooba-063-scratch removed, port 55434 free, temp launch directory (including the password file) deleted. Credentials never logged or committed.
+- Final scratch counts before destruction: geography.countries=1 areas=12 cities=47 city_labels=47 localization.languages=1 shipping.rate_policies=1 shipping.coverage_grants=1 shipping.outbox_messages=0.
+
+ELAPSED
+- Claim 2026-10-14T22:18:35Z, task completion 2026-10-14T22:24:17Z => ~6 minutes, inside the 30-minute HARD timebox. No timebox stop was needed.
+
+EVIDENCE PATHS
+- docs/planning/shipping/SHIPPING-MVP-SCRATCH-HTTP-063.md
+- docs/architecture/evidence/TB-SHIPPING-MVP-SCRATCH-HTTP-063/log-guard-effective-target.txt
+- docs/architecture/evidence/TB-SHIPPING-MVP-SCRATCH-HTTP-063/log-http-probes-063.txt
+- docs/architecture/evidence/TB-SHIPPING-MVP-SCRATCH-HTTP-063/log-crud-063.txt
+- docs/architecture/evidence/TB-SHIPPING-MVP-SCRATCH-HTTP-063/log-final-scratch.txt
+- docs/architecture/evidence/TB-SHIPPING-MVP-SCRATCH-HTTP-063/seed-geography-063.sql
+- docs/architecture/evidence/TB-SHIPPING-MVP-SCRATCH-HTTP-063/seed-id-map-063.txt
+- docs/architecture/evidence/TB-SHIPPING-MVP-SCRATCH-HTTP-063/probe-http.ps1
+- docs/architecture/evidence/TB-SHIPPING-MVP-SCRATCH-HTTP-063/probe-crud.ps1
+- docs/architecture/evidence/TB-SHIPPING-MVP-SCRATCH-HTTP-063/isolated/ (060 guard + 062 prepare, unchanged)
+
+COMMIT / PUSH
+- Single evidence commit on main, pushed to origin/main; Code-SHA NONE because no production source file changed. Working tree clean apart from pre-existing unrelated dirty/untracked files that were preserved untouched.
+
+REMAINING BLOCKERS / NOTES
+- F-063-1 (malformed body -> 500) is a genuine, narrow defect awaiting Architect-issued repair; it does not affect the missing-scope acceptance condition.
+- F-063-2 (fresh-DB language bootstrap) is an environment/startup limitation; it was worked around using only canonical APIs, no inventing of ids.
+- Nothing here claims production availability or shadow parity; the CRUD values are synthetic scratch fixtures only.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK

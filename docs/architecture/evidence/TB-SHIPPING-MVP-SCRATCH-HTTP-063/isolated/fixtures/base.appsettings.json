@@ -1,0 +1,22 @@
+{
+  "Tooba": {
+    "Edition": "SingleStore",
+    "DeploymentId": "fixture-synthetic",
+    "SingleStore": {
+      "Tenants": [
+        {
+          "TenantId": "store-alpha",
+          "Status": "Active",
+          "ConnectionReference": "tenant-alpha",
+          "Hosts": [ "alpha.localhost" ]
+        }
+      ]
+    },
+    "PostgreSQL": {
+      "ConnectionReferences": {
+        "tenant-alpha": "Host=10.255.255.9;Port=5432;Username=fixture_user;Password=fixture_password;Database=tooba_alpha",
+        "marketplace": "Host=10.255.255.9;Port=5432;Username=fixture_user;Password=fixture_password;Database=tooba_marketplace"
+      }
+    }
+  }
+}

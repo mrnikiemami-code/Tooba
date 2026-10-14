@@ -1,0 +1,29 @@
+﻿=== final scratch counts + migration history ===
+ERROR:  relation "shipping.rate_policy" does not exist
+LINE 1: ...||' shipping.rate_policy='||(select count(*) from shipping.r...
+                                                             ^
+geography: 20261014113949_InitialGeography
+shipping: 20261014144742_InitialShipping
+=== databases inside container (must contain no live Tooba DB) ===
+postgres
+template0
+template1
+tooba_063_scratch_wq3n7b2x
+=== container port binding ===
+5432/tcp -> 127.0.0.1:55434
+=== final scratch activity (last writes were task-owned) ===
+tooba_063_scratch_wq3n7b2x|tooba-061-isolated|172.17.0.1
+tooba_063_scratch_wq3n7b2x|tooba-061-isolated|172.17.0.1
+tooba_063_scratch_wq3n7b2x|psql|
+PID_ON_5100=22416
+PORT_5100_STILL_LISTENING=False
+USER_HOST_PID_ON_5088=37028 (untouched)
+__ef_migrations_history
+coverage_grants
+outbox_messages
+rate_policies
+geography.countries=1 areas=12 cities=47 labels=47 localization.languages=1
+ERROR:  relation "shipping.shipping_service_rate_policies" does not exist
+LINE 1: select (select count(*) from shipping.shipping_service_rate_...
+                                     ^
+shipping.rate_policies=1 shipping.coverage_grants=1 shipping.outbox_messages=0

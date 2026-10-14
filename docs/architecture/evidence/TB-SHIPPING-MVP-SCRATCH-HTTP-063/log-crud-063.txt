@@ -1,0 +1,37 @@
+﻿=== TB-SHIPPING-MVP-SCRATCH-HTTP-063 authenticated scratch CRUD roundtrip ===
+ALL VALUES BELOW ARE SYNTHETIC AND SCRATCH-ONLY. They are NOT live tariffs and NOT checkout parity evidence.
+
+ADMIN_ACTOR=01a13c82-0273-7000-b75d-82864c944877
+GEOGRAPHY_COUNTRIES_AFTER_SEED={"id":"e3451206-e503-51a8-91ad-afa9ab70e330","code":"IR","label":"ایران","isActive":true}
+COUNTRY_ID=e3451206-e503-51a8-91ad-afa9ab70e330
+
+--- 1. CREATE rate (valid real geography id) ---
+R1 POST rate valid scope|STATUS=200|BODY={"ratePolicyId":"01a13c83-9b43-7000-a4de-b3b25c83ea43","serviceCode":"svc-063","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","level":"Country","chargeAmount":25000,"currencyCode":"IRR","preparationDays":2,"leadDays":3,"isActive":true,"createdAt":"2026-10-14T22:23:40.3548225+00:00","updatedAt":"2026-10-14T22:23:40.3548225+00:00"}
+RATE_ID=01a13c83-9b43-7000-a4de-b3b25c83ea43
+
+--- 2. READ AFTER WRITE ---
+R2 GET rates (read-after-write)|STATUS=200|BODY={"serviceCode":"svc-063","ratePolicies":[{"ratePolicyId":"01a13c83-9b43-7000-a4de-b3b25c83ea43","serviceCode":"svc-063","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","level":"Country","chargeAmount":25000.00,"currencyCode":"IRR","preparationDays":2,"leadDays":3,"isActive":true,"createdAt":"2026-10-14T22:23:40.354822+00:00","updatedAt":"2026-10-14T22:23:40.354822+00:00"}],"coverageGrants":[]}
+
+--- 3. UPDATE (edit) + ACTIVE TOGGLE ---
+R3 PUT rate edit|STATUS=200|BODY={"ratePolicyId":"01a13c83-9b43-7000-a4de-b3b25c83ea43","serviceCode":"svc-063","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","level":"Country","chargeAmount":31000,"currencyCode":"IRR","preparationDays":3,"leadDays":4,"isActive":true,"createdAt":"2026-10-14T22:23:40.354822+00:00","updatedAt":"2026-10-14T22:23:40.4341519+00:00"}
+R4 PATCH rate active=false|STATUS=200|BODY={"ratePolicyId":"01a13c83-9b43-7000-a4de-b3b25c83ea43","serviceCode":"svc-063","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","level":"Country","chargeAmount":31000.00,"currencyCode":"IRR","preparationDays":3,"leadDays":4,"isActive":false,"createdAt":"2026-10-14T22:23:40.354822+00:00","updatedAt":"2026-10-14T22:23:40.4554872+00:00"}
+R5 PATCH rate active=true|STATUS=200|BODY={"ratePolicyId":"01a13c83-9b43-7000-a4de-b3b25c83ea43","serviceCode":"svc-063","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","level":"Country","chargeAmount":31000.00,"currencyCode":"IRR","preparationDays":3,"leadDays":4,"isActive":true,"createdAt":"2026-10-14T22:23:40.354822+00:00","updatedAt":"2026-10-14T22:23:40.4794311+00:00"}
+
+--- 4. COVERAGE GRANT create + read + toggle ---
+G1 POST grant valid scope|STATUS=200|BODY={"coverageGrantId":"01a13c83-9bd7-7000-9475-ca8be6b8e5e1","serviceCode":"svc-063","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","level":"Country","isActive":true,"createdAt":"2026-10-14T22:23:40.5031084+00:00","updatedAt":"2026-10-14T22:23:40.5031084+00:00"}
+GRANT_ID=01a13c83-9bd7-7000-9475-ca8be6b8e5e1
+G2 GET rates+coverage (read-after-write)|STATUS=200|BODY={"serviceCode":"svc-063","ratePolicies":[{"ratePolicyId":"01a13c83-9b43-7000-a4de-b3b25c83ea43","serviceCode":"svc-063","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","level":"Country","chargeAmount":31000.00,"currencyCode":"IRR","preparationDays":3,"leadDays":4,"isActive":true,"createdAt":"2026-10-14T22:23:40.354822+00:00","updatedAt":"2026-10-14T22:23:40.479431+00:00"}],"coverageGrants":[{"coverageGrantId":"01a13c83-9bd7-7000-9475-ca8be6b8e5e1","serviceCode":"svc-063","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","level":"Country","isActive":true,"createdAt":"2026-10-14T22:23:40.503108+00:00","updatedAt":"2026-10-14T22:23:40.503108+00:00"}]}
+G3 PATCH grant active=false|STATUS=200|BODY={"coverageGrantId":"01a13c83-9bd7-7000-9475-ca8be6b8e5e1","serviceCode":"svc-063","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","level":"Country","isActive":false,"createdAt":"2026-10-14T22:23:40.503108+00:00","updatedAt":"2026-10-14T22:23:40.5516796+00:00"}
+G4 PATCH grant active=true|STATUS=200|BODY={"coverageGrantId":"01a13c83-9bd7-7000-9475-ca8be6b8e5e1","serviceCode":"svc-063","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","level":"Country","isActive":true,"createdAt":"2026-10-14T22:23:40.503108+00:00","updatedAt":"2026-10-14T22:23:40.5680589+00:00"}
+
+--- 5. CROSS-SERVICE / DUPLICATE GUARDS ---
+X1 duplicate rate create (same scope)|STATUS=400|BODY={"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/svc-063/rates","errorCode":"shipping.rate_policy.scope_duplicate","traceId":"c1293f81c972bd78d76877a7ce274fa1","correlationId":"84f72688ef544bd1abc0dbde06726efa","requestId":"0HNPA8682UNC0:0000000C"}
+X2 cross-service mutation of the svc-063 rate|STATUS=400|BODY={"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/svc-063-other/rates/01a13c83-9b43-7000-a4de-b3b25c83ea43/active","errorCode":"shipping.service_scope.mismatch","traceId":"12c22dce660c8aa709241bf46eebe8e0","correlationId":"a4f4edd3b62848df8f7d692cbd7ae64f","requestId":"0HNPA8682UNC0:0000000D"}
+X3 bogus serviceCode in body vs route|STATUS=400|BODY={"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/svc-063/rates","errorCode":"shipping.rate_policy.scope_duplicate","traceId":"51ef58580eb443f6519ee43d06609886","correlationId":"e0f374b1f10b4c6d9a5fabd08194a52e","requestId":"0HNPA8682UNC0:0000000E"}
+
+--- 6. EMPTY COVERAGE SET IS STILL NOT COVERED (a different, never-granted service) ---
+N1 GET an untouched service (must be empty, never a default)|STATUS=200|BODY={"serviceCode":"never-touched-063","ratePolicies":[],"coverageGrants":[]}
+
+--- 7. malformed-body behavior (observation, not fixed here) ---
+S1 malformed JSON body to a POST route|STATUS=500|BODY={"type":"about:blank","title":"An unexpected error occurred.","status":500,"detail":"BadHttpRequestException","instance":"/v1/admin/shipping-services/svc-063/rates","errorCode":"platform.unexpected","traceId":"ce6f4683fe501e8a8bd354b45d4249ad","correlationId":"58564bb76aeb4d95a801f3573297cf31","requestId":"0HNPA8682UNC0:00000010"}
+S2 empty-string geography id in scope|STATUS=500|BODY={"type":"about:blank","title":"An unexpected error occurred.","status":500,"detail":"BadHttpRequestException","instance":"/v1/admin/shipping-services/svc-063/rates","errorCode":"platform.unexpected","traceId":"2bac5d5a93072edf8872d47b4bf178f0","correlationId":"995223e52b6a4d2ab651cf64055c4b34","requestId":"0HNPA8682UNC0:00000011"}
