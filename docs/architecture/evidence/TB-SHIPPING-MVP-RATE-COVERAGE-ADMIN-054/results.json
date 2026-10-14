@@ -9,7 +9,7 @@
   "expectedBaseSha": "742b02e0d5e297979a1b8f26e8d8b354d28e3df3",
   "baseSha": "4c14604bcbb66cbb7d30bef5a7aa5d55a6107053",
   "codeSha": "ee072ad7e513f3778c8bd40e7104bda7b70a10ab",
-  "evidenceSha": "PENDING_COMMIT_B",
+  "evidenceSha": "4122fd4f7ce41ffeaaa243bdeaee5c2fd373a374",
   "automaticNextImplementationTask": "NONE",
   "driftCheck": {
     "commits": ["4c14604bc", "82ba7de5b"],
