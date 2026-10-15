@@ -1,0 +1,231 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-FULL-OPERATIONS-077
+Parent-Task: TB-SHIPPING-FULL-OPERATIONS-076
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FULL-OPERATIONS
+Mode: BOUNDED_ADMIN_PACKAGING_EDITOR_AND_QUOTE_DIAGNOSTICS
+Bridge-Task-Row: 034e9b7d-edcd-4b8d-93fa-a488b511d7ae
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: d51ab7f574b765da787c3ca0ab181f92747fef44
+Base-SHA: d51ab7f574b765da787c3ca0ab181f92747fef44
+Code-SHA: 26977c2cdb1447b0d97a3a2a1f07fd31f636fdc8
+Evidence-SHA: 26977c2cdb1447b0d97a3a2a1f07fd31f636fdc8
+automaticNextImplementationTask: NONE
+
+MISSION GRADING
+Mission A (admin packaging and payer editor, PRIMARY): COMPLETE and live-proven in a real Development
+browser.
+Mission B (admin operational quote inspector, SECONDARY): NOT STARTED, deliberately and per the task's
+own instruction to prioritize Mission A rather than overrun the HARD bound. No code, route, client,
+placeholder or partial file for it was added.
+Overall Status: PASS. The user-facing gap is closed with presentation only: no backend change, no new
+route, no price-authority cutover, no money movement and no capacity claim.
+
+TIMEBOX
+Claimed 2026-10-15T08:43:36Z; closed 2026-10-15T09:08Z. Elapsed approximately 24 minutes, inside the
+45-minute HARD bound. Mission B was cut at the ~21-minute mark because a second API client, model,
+dialog, tests and a live proof could not fit in the remaining budget without overrunning; per the task
+text the inspector was deferred instead of half-built.
+
+PREFLIGHT
+- Claimed exactly one Pending task on tooba-main (row 034e9b7d-edcd-4b8d-93fa-a488b511d7ae) and
+  preserved the received .task.md verbatim at docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-077.task.md,
+  UNSTAGED (never staged, never committed).
+- Expected-Base-SHA d51ab7f574b765da787c3ca0ab181f92747fef44 verified as exactly HEAD == origin/main at
+  claim and as the ancestor of the new commit (push reported d51ab7f57..26977c2cd).
+- Read AGENTS.md and the pipeline protocol; read the 074-076 Shipping planning/evidence; read the
+  current admin shipping-services-screen.tsx and its existing row actions; read the
+  shipping-rates-coverage-{api,model,dialog}.ts*, shipping-destination-picker and schedule editor
+  patterns; and read the backend source for ShippingPackagingContracts.cs,
+  ShippingPackagingPolicyEndpoints.cs and ShippingAdminContracts.cs to take the exact route templates,
+  casing, request DTOs and response envelope from SOURCE rather than from memory.
+- Preserved every unrelated dirty/untracked file. No reset, stash, rebase, force-push or history
+  rewrite. The three pre-existing stashes were left untouched.
+- Positively identified Development before any mutation: GET http://127.0.0.1:5088/__platform-commerce
+  returned edition=SingleStore, deploymentId=dev-singlestore, tenantId=store-alpha,
+  connectionReference=tenant-alpha, resolvedHost=127.0.0.1, defaultMarketReference=IR. UI
+  http://127.0.0.1:3000 rewrites /v1/* to the Host; database tooba_alpha on 127.0.0.1:5432. No
+  staging or production access, no scratch or parallel database, no SQL bypass.
+
+MISSION A - THE ADMIN PACKAGING AND PAYER EDITOR (PRIMARY)
+
+UI PATH
+  /admin/shipping-services -> per-service row action «هزینه بسته‌بندی و پرداخت کرایه» (icon Coins,
+  testId shipping-service-packaging-{shippingServiceId}, present on every service row next to the
+  existing ویرایش / نرخ و پوشش / برنامه کاری ارسال actions) -> dialog
+  «هزینه بسته‌بندی و نحوه پرداخت کرایه — {serviceName}» (testId shipping-packaging-dialog).
+  No new page and no merged rates/schedules mega-form: rates, schedule and packaging remain three
+  distinct surfaces.
+
+EXACT API IDENTITY (the existing 075 routes; read from ShippingPackagingPolicyEndpoints.cs)
+  GET    /v1/admin/shipping-services/{serviceCode}/packaging-policies
+  POST   /v1/admin/shipping-services/{serviceCode}/packaging-policies
+  PUT    /v1/admin/shipping-services/{serviceCode}/packaging-policies/{packagingPolicyId:guid}
+  PATCH  /v1/admin/shipping-services/{serviceCode}/packaging-policies/{packagingPolicyId:guid}/active
+  Write body mirrors ShippingPackagingPolicyWriteRequest exactly: serviceCode, optionCode, scope
+  {countryId, administrativeAreaId, cityId, serviceAreaId}, feeAmount, currencyCode, freightPayerMode.
+  The PATCH body mirrors ShippingPackagingPolicyActiveRequest: { isActive }. Authorization is the
+  module's existing ShippingAdminPermissions.View for the list and .Manage for the writes - no new
+  capability and no permission bypass. No backend file was changed in 077.
+
+FILES (all inside ALLOWED PATHS; no FORBIDDEN path touched)
+  src/frontend/app/admin/shipping-services/shipping-packaging-api.ts        (new, typed client)
+  src/frontend/app/admin/shipping-services/shipping-packaging-model.ts      (new, pure model)
+  src/frontend/app/admin/shipping-services/shipping-packaging-dialog.tsx    (new, dialog)
+  src/frontend/app/admin/shipping-services/shipping-packaging-api.test.ts   (new, 13 focused tests)
+  src/frontend/app/admin/shipping-services-screen.tsx                       (modified, +22 lines:
+    Coins import, packagingTarget state, one row action, one dialog composition - nothing else)
+  docs/planning/shipping/SHIPPING-FULL-OPERATIONS-077.md                    (new)
+  docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-077/**             (new)
+  No dependency was added, no design-system component was invented, and the existing
+  ShippingDestinationPicker and real Fulfillment method tree were reused rather than duplicated.
+
+REAL IDENTITIES ONLY - NO INVENTED DATA, NO MOCK, NO LOCAL PERSISTENCE
+  Destination scope comes only from the existing Geography-backed ShippingDestinationPicker (the picker
+  offered only real options: ایران (IR), the real administrative areas, and the real per-area cities).
+  Option identity comes only from the real admin Fulfillment shipping-method tree
+  (GET /v1/admin/shipping-methods: post -> standard; tipax -> express, standard; store_courier -> none;
+  in_person -> none). A service-level policy is an explicit dropdown choice that maps to
+  optionCode = null on the wire. Every create, update and toggle is followed by a real GET re-read -
+  the client never patches its list in memory - and nothing is stored locally. An unrecognized payer
+  value is never silently coerced on the wire; the persisted server default Prepaid is the only
+  fallback and the raw backend code is what the error map reports.
+
+PRESERVED OPTION IDENTITY ON EDIT
+  The update body re-sends the row's own persisted scope ids and optionCode, so editing a fee can never
+  move a policy to another option or destination. Proven live: editing the fee from 12000 to 15000 and
+  the payer from CollectOnDelivery to Prepaid left optionCode=express and administrativeAreaId
+  unchanged, and a POST of the same scope was then rejected as a duplicate.
+
+VALIDATION AND ERROR HONESTY (all proven live)
+  Client-side before any call: fee must be a non-negative value with at most two decimals and is NEVER
+  silently rounded (12.345 was refused with the Persian message «هزینهٔ بسته‌بندی باید عددی نامنفی با
+  حداکثر دو رقم اعشار باشد...» and no request was issued); currency must be three Latin letters;
+  option identity is validated against the service's real option list so the browser cannot manufacture
+  shipping.service_option.unknown; country is required and a service area without a city is refused.
+  Backend field-adjacent Persian mapping through a stable code table: duplicate scope, negative fee,
+  invalid currency, out-of-contract payer mode, unknown service code, unknown option code, invalid
+  destination scope, admin.authorization.denied, admin.actor.missing and host-unreachable. A
+  validation.failed envelope is unwrapped to its actionable child code. Controls are disabled while a
+  request is pending and a 401/403 renders a visible access-denied state. No path shows a fake success.
+
+DISCLOSURES RENDERED IN THE UI (verbatim from the live DOM)
+  - «نحوهٔ پرداخت کرایه یک «واقعیت نرخ» است: Shipping می‌گوید کرایه پیش‌کرایه است یا هنگام تحویل
+    وصول می‌شود. وصول و تسویهٔ واقعی «پس‌کرایه» هنوز به Checkout/پرداخت متصل نشده است.»
+  - «ارسال رایگان، هزینهٔ بسته‌بندی را رایگان نمی‌کند؛ معافیت ارسال رایگان فقط به کرایهٔ حامل مربوط
+    است.»
+  - «بدون سیاست بسته‌بندی = هزینهٔ بسته‌بندی صفر و طرف پرداخت کرایه پیش‌کرایهٔ پیش‌فرض است؛ هیچ
+    هزینهٔ پنهانی اضافه نمی‌شود.» plus «هزینهٔ صفر یک سیاست واقعی است؛ خالی‌بودن فهرست یعنی «هزینهٔ
+    بسته‌بندی صفر» و نه هزینهٔ پنهان.»
+  Payer modes are labelled exactly «پیش‌کرایه» (Prepaid) and «پس‌کرایه» (CollectOnDelivery). Payer mode
+  is stated to be a quotation fact only: this screen creates no Payment, no ledger entry and no
+  settlement, and Checkout/Payment/Settlement were not touched.
+
+BROWSER EVIDENCE (real Chromium tab, real admin session, real tooba_alpha data)
+  Transcript: docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-077/browser-ui-proof.md
+  Screenshots: .../screenshot-packaging-dialog-top.png and .../screenshot-packaging-dialog-scrolled.png
+  Wire proof:  .../log-live-admin-packaging-proof.txt and the reproducible non-mutating
+               .../probe-admin-packaging.ps1
+  Round-trip performed entirely through the UI:
+   1. Opened the dialog from the tipax row; the three disclosure statements and «کد خدمت: tipax»
+      rendered.
+   2. Chose real scope ایران + فارس, real option پیشتاز (express), payer پس‌کرایه, fee 12.345 ->
+      refused client-side with the two-decimal message, no request issued.
+   3. fee 12000 -> success notice «سیاست بسته‌بندی «پیشتاز · استان · e3451206… / استان 24e00388… ·
+      ۱۲٬۰۰۰ IRR · پس‌کرایه» ایجاد شد.»; new row rendered with scope, ۱۲٬۰۰۰ IRR, گزینه: پیشتاز,
+      کرایه: پس‌کرایه, فعال; summary «سیاست‌های بسته‌بندی فعال: ۱ از ۳».
+   4. ویرایش reopened pre-filled from the persisted row {fee 12000, currency IRR, payer
+      CollectOnDelivery} (not from local state); changed to 15000 / پیش‌کرایه and saved.
+   5. Re-submitting the identical scope showed «برای همین خدمت/گزینه/دامنه از قبل سیاست بسته‌بندی ثبت
+      شده است؛ همان را ویرایش کنید.» and created no second row.
+   6. غیرفعال‌سازی -> isActive=false on the server; فعال‌سازی -> isActive=true.
+   7. Final cleanup returned the row to INACTIVE through the same UI.
+  Wire confirmation of the task-owned row after the round-trip: packagingPolicyId
+  01a13ec9-4e2a-7000-a5cb-428d28a26e8a, feeAmount 15000.00, currencyCode IRR, freightPayerMode
+  Prepaid, optionCode express, administrativeAreaId 24e00388-c216-531c-a3ca-11f382508760,
+  isActive false.
+  Declared 4xx/401 controls re-proved at the wire level with no row created:
+   duplicate scope -> 400 shipping.packaging.policy.scope_duplicate
+   negative fee -> 400 validation.failed / shipping.validation.packaging_fee_negative
+   invalid currency -> 400 validation.failed / shipping.validation.packaging_currency_invalid
+   out-of-contract payer mode -> 400 validation.failed / shipping.validation.packaging_freight_payer_mode_invalid
+   unknown service code -> 400 shipping.service_code.unknown
+   unknown option code -> 400 shipping.service_option.unknown
+   invented country id -> 400 shipping.destination_scope.invalid
+   no credential at all -> 401 admin.actor.missing
+   service with no policy (post) -> 200 {"serviceCode":"post","packagingPolicies":[]} i.e. the explicit
+   zero-fee default, rendered as the documented «بدون سیاست بسته‌بندی» text.
+  No unhandled 5xx appeared anywhere in the run.
+
+FOCUSED TESTS / CHECKS
+  node --experimental-strip-types --test app/admin/shipping-services/shipping-packaging-api.test.ts
+    -> 13 passed, 0 failed (empty set = real zero; exact 075 wire shape and persisted read-back; update
+       keeps option identity; active toggle round-trip; zero fee is a charged policy not "not
+       configured"; stable child failure codes incl. the validation envelope; 401/403 -> denied and
+       unreachable host -> stable error; money parsing refuses silent rounding; canonical payload;
+       payer-mode wording contract and form round-trip; option identity validated before any call;
+       the destination scope builder never guesses a deeper level).
+  Adjacent shipping-services suites (roundtrip, form-model, destination-picker, rates-coverage
+    model+api, operating-schedule model+api, rate-tier model) -> 88 passed, 0 failed.
+  npm run typecheck (tsc --noEmit) -> clean.
+  Architecture guards: frontend-import-boundary, frontend-flat-folder, frontend-feature-boundary and
+    frontend-test-discovery -> 7 passed, 0 failed.
+  PRE-EXISTING FAILURE, DOCUMENTED SEPARATELY AND NOT CAUSED BY THIS TASK: the shrink-only
+    frontend-source-size guard reports 5 OVERSIZED_GROWTH entries
+    (app/admin/category-admin-screen.tsx, app/admin/landing-pages/admin-landing-page-composer.tsx,
+    app/storefront/storefront-landing-blocks.tsx, app/storefront/storefront-shipping.tsx,
+    lib/storefront-composition/shared-composition-renderer.tsx). All five are byte-identical to HEAD
+    (git diff --numstat is empty for each) and none is touched by 077; they are unrelated pre-existing
+    dirty-tree drift. No full test suite and no backend rebuild were run, since no independent blocker
+    required them.
+
+DATA RESTORATION / FIXTURE LEDGER
+  docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-077/fixture-ledger.md
+  Created by this task: 01a13ec9-4e2a-7000-a5cb-428d28a26e8a (tipax / express / IR-Fars), created at
+  12000.00 IRR CollectOnDelivery, edited to 15000.00 IRR Prepaid, left isActive=FALSE.
+  Read but never modified: 01a13e7c-cfde-7000-98cc-f79246cf97b0 and
+  01a13e7b-e198-7000-9753-f417791d20cb (both tipax / Alborz, 15000.00 IRR, Prepaid, inactive, with
+  their original updatedAt values intact).
+  Rate, coverage and operating-schedule fixtures were not touched at all. Final GET for tipax returns
+  all three rows inactive and no ACTIVE synthetic fixture remains. No row was deleted and no existing
+  row's semantics were changed. The Fars area was chosen specifically so the synthetic row could not
+  collide with the pre-existing Alborz fixtures.
+
+SCHEMA / COMPATIBILITY
+  ZERO backend change and ZERO schema change. No existing contract, route, DI registration, rate table,
+  order, checkout, payment, settlement, host, security or permission surface was edited. Legacy
+  Checkout pricing authority and paid-order snapshots are untouched. Capacity remains CONFIGURATION
+  ONLY and is never presented as remaining/reserved.
+
+COMMIT / PUSH
+  Base-SHA     d51ab7f574b765da787c3ca0ab181f92747fef44 (HEAD == origin/main at claim)
+  Code-SHA     26977c2cdb1447b0d97a3a2a1f07fd31f636fdc8
+  Evidence-SHA 26977c2cdb1447b0d97a3a2a1f07fd31f636fdc8 (contains
+               docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-077/** including this result)
+  Pushed to origin/main; after fetch, HEAD == origin/main == 26977c2cdb1447b0d97a3a2a1f07fd31f636fdc8.
+  The unstaged Bridge receipt docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-077.task.md was never staged
+  and never committed. No unrelated dirty path was staged.
+
+ELAPSED
+  Claimed 2026-10-15T08:43:36Z, closed 2026-10-15T09:08Z, approximately 24 minutes. Within the
+  45-minute HARD bound.
+
+EXPLICIT REMAINING BLOCKERS / NEXT INTEGRATION GAPS
+1. Mission B (admin operational quote inspector) is NOT STARTED. The authorized POST
+   /v1/admin/shipping-services/{serviceCode}/operational-quote route exists and is unchanged, but no
+   admin diagnostic view consumes it yet; this is the obvious next UI task if the Architect wants it.
+2. Collect-on-delivery is a persisted quotation fact only. Real COD collection and settlement are NOT
+   wired into Checkout or Payment, and the dialog says so explicitly. Wiring it is a separate
+   Architect-reviewed task.
+3. The packaging fee is a configuration surface; nothing consumes it on a live Checkout path yet.
+   Checkout price authority was deliberately not switched.
+4. Capacity remains configuration-only and is never presented as enforced.
+5. The 5 pre-existing oversized-file guard entries described above remain an unrelated repository
+   condition; they were neither introduced nor repaired here.
+6. Commercial Shipping/Checkout readiness is NOT claimed. Worker PASS is not Architect ACCEPT.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
