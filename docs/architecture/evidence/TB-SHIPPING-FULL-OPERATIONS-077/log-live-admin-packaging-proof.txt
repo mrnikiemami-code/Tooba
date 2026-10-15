@@ -1,0 +1,40 @@
+TB-SHIPPING-FULL-OPERATIONS-077 - wire proof for the admin packaging fee and freight payer surface
+Target provenance (positively identified Development, never staging/production):
+  GET http://127.0.0.1:5088/__platform-commerce => edition=SingleStore, deploymentId=dev-singlestore,
+    tenantId=store-alpha, connectionReference=tenant-alpha
+  Database: tooba_alpha on 127.0.0.1:5432
+  Host: http://127.0.0.1:5088   UI: http://127.0.0.1:3000/admin/shipping-services
+Task-owned synthetic fixture (created/edited/toggled through the real browser UI, left INACTIVE):
+  packagingPolicyId 01a13ec9-4e2a-7000-a5cb-428d28a26e8a
+
+=== target identity ===
+GET /__platform-commerce -> 200 {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"9c6a9fa584715fcb4c5e9205de9d8cf1"}
+
+=== phase 1: real authentication ===
+POST /v1/auth/login (Development bootstrap admin actor) -> 200 {"userId":"01a036c2-970e-7000-8eb7-94bf5cc2d8db","sessionId":"01a13ecc-d4aa-7000-9370-58c652577c72","accessToken":"01a13ecc-d4aa-7000-9370-58c652577c72","refreshToken":"/XvwZZyhGyDTYjUxIDFf/t56cO8jHcgDy1D7x5PcOrY="}
+accessToken acquired: True
+
+=== phase 2: route identity - the exact 075 admin packaging routes ===
+GET /v1/admin/shipping-services/tipax/packaging-policies -> 200 {"serviceCode":"tipax","packagingPolicies":[{"packagingPolicyId":"01a13e7c-cfde-7000-98cc-f79246cf97b0","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","feeAmount":15000.00,"currencyCode":"IRR","freightPayerMode":"Prepaid","isActive":false,"createdAt":"2026-10-15T07:35:29.502972+00:00","updatedAt":"2026-10-15T08:38:28.08484+00:00","optionCode":"express"},{"packagingPolicyId":"01a13e7b-e198-7000-9753-f417791d20cb","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70...(truncated)
+
+=== phase 3: read-after-write state of the task-owned fixture (left INACTIVE) ===
+task-owned row: fee=15000.00 payer=Prepaid option=express active=False area=24e00388-c216-531c-a3ca-11f382508760
+every policy of this service is inactive: True
+
+=== phase 4: declared validation / negative controls (no row is created) ===
+POST duplicate scope (already registered) -> 400 {"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/tipax/packaging-policies","errorCode":"shipping.packaging.policy.scope_duplicate","traceId":"8c22b2fd4a5ead2131f903aed042a4af","correlationId":"2a065382e2f043d68276117ee42d7f00","requestId":"0HNPAIOJ4JDM7:00000005"}
+POST negative fee -> 400 {"type":"about:blank","title":"اعتبارسنجی ناموفق بود.","status":400,"instance":"/v1/admin/shipping-services/tipax/packaging-policies","errorCode":"validation.failed","traceId":"69b0e76107677667e55558c1faf110be","correlationId":"214d03436fcf48aba34e69ff30ac5dea","requestId":"0HNPAIOJ4JDM7:00000006","errors":{"Request.FeeAmount":["shipping.validation.packaging_fee_negative"]}}
+POST invalid currency -> 400 {"type":"about:blank","title":"اعتبارسنجی ناموفق بود.","status":400,"instance":"/v1/admin/shipping-services/tipax/packaging-policies","errorCode":"validation.failed","traceId":"a460a258e38731e4efd046a3e6a91c59","correlationId":"1214bd580d78490ca05d8a86ea076b3d","requestId":"0HNPAIOJ4JDM7:00000007","errors":{"Request.CurrencyCode":["shipping.validation.packaging_currency_invalid"]}}
+POST out-of-contract payer mode -> 400 {"type":"about:blank","title":"اعتبارسنجی ناموفق بود.","status":400,"instance":"/v1/admin/shipping-services/tipax/packaging-policies","errorCode":"validation.failed","traceId":"bbc1178ad0659efe5dc588d9bb203e3e","correlationId":"ba2b1b23c61241c5830d657f2c18e6e9","requestId":"0HNPAIOJ4JDM7:00000008","errors":{"Request.FreightPayerMode":["shipping.validation.packaging_freight_payer_mode_invalid"]}}
+POST unknown service code -> 400 {"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/zzz-not-a-service/packaging-policies","errorCode":"shipping.service_code.unknown","traceId":"9b41c0a4502c5b0649106abed8fe7881","correlationId":"dd436e52a36642ab9f22592a3e877be9","requestId":"0HNPAIOJ4JDM7:00000009"}
+POST unknown option code -> 400 {"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/tipax/packaging-policies","errorCode":"shipping.service_option.unknown","traceId":"cd298c8548230a36e7dca7832165b844","correlationId":"27a812604274418ea299e41a77f186fd","requestId":"0HNPAIOJ4JDM7:0000000A"}
+POST invented country id -> 400 {"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/tipax/packaging-policies","errorCode":"shipping.destination_scope.invalid","traceId":"fb69a1b3bc7f6262fcf9475231371bfa","correlationId":"a0a330c12f5f4ab6ad697bc74567ecf0","requestId":"0HNPAIOJ4JDM7:0000000B"}
+GET with no credential at all (expect 401) -> 401 {"type":"about:blank","title":"هویت مدیر احراز نشده است.","status":401,"instance":"/v1/admin/shipping-services/tipax/packaging-policies","errorCode":"admin.actor.missing","traceId":"e9d1a7c09d601592e1ba77bc23fcf9e5","correlationId":"931c77af826643039f2a2090cb78544e","requestId":"0HNPAIOJ4JDM7:0000000C"}
+
+=== phase 5: default semantics on a non-configured identity (explicit zero, not a hidden charge) ===
+GET packaging-policies for a service with no policy (post) -> 200 {"serviceCode":"post","packagingPolicies":[]}
+
+=== phase 6: final list (no ACTIVE task-owned fixture remains) ===
+GET packaging-policies (final) -> 200 {"serviceCode":"tipax","packagingPolicies":[{"packagingPolicyId":"01a13e7c-cfde-7000-98cc-f79246cf97b0","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","feeAmount":15000.00,"currencyCode":"IRR","freightPayerMode":"Prepaid","isActive":false,"createdAt":"2026-10-15T07:35:29.502972+00:00","updatedAt":"2026-10-15T08:38:28.08484+00:00","optionCode":"express"},{"packagingPolicyId":"01a13e7b-e198-7000-9753-f417791d20cb","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70...(truncated)
+
+DONE

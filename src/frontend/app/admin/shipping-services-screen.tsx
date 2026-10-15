@@ -5,6 +5,7 @@ import {
   Ban,
   Bike,
   Clock,
+  Coins,
   Package,
   Pencil,
   Plus,
@@ -47,6 +48,7 @@ import {
 import { createHostSavedViewStore } from "./saved-view-store";
 import { ShippingRatesCoverageDialog } from "./shipping-services/shipping-rates-coverage-dialog.tsx";
 import { ShippingOperatingScheduleDialog } from "./shipping-services/shipping-operating-schedule-dialog.tsx";
+import { ShippingPackagingDialog } from "./shipping-services/shipping-packaging-dialog.tsx";
 import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 
 const GRID_VIEW_KEY = "admin-shipping-services";
@@ -133,6 +135,8 @@ export function ShippingServicesScreen() {
   const [ratesTarget, setRatesTarget] = useState<{ code: string; name: string } | null>(null);
   // بخش «برنامه کاری ارسال» خدمت انتخاب‌شده؛ null یعنی بسته است.
   const [scheduleTarget, setScheduleTarget] = useState<{ code: string; name: string } | null>(null);
+  // بخش «هزینه بسته‌بندی و نحوه پرداخت کرایه» خدمت انتخاب‌شده؛ null یعنی بسته است.
+  const [packagingTarget, setPackagingTarget] = useState<{ code: string; name: string } | null>(null);
   const [code, setCode] = useState("");
   const [providerKind, setProviderKind] = useState("post");
   const [iconKey, setIconKey] = useState("post");
@@ -340,6 +344,16 @@ export function ShippingServicesScreen() {
         onClick: (row) => {
           setNotice(undefined);
           setScheduleTarget({ code: row.code, name: row.name });
+        },
+      },
+      {
+        id: "packaging",
+        label: "هزینه بسته‌بندی و پرداخت کرایه",
+        icon: Coins,
+        testId: (row) => `shipping-service-packaging-${row.shippingServiceId}`,
+        onClick: (row) => {
+          setNotice(undefined);
+          setPackagingTarget({ code: row.code, name: row.name });
         },
       },
       {
@@ -716,6 +730,14 @@ export function ShippingServicesScreen() {
         serviceCode={scheduleTarget?.code ?? ""}
         serviceName={scheduleTarget?.name ?? ""}
         onClose={() => setScheduleTarget(null)}
+        onNotice={setNotice}
+      />
+
+      <ShippingPackagingDialog
+        open={packagingTarget !== null}
+        serviceCode={packagingTarget?.code ?? ""}
+        serviceName={packagingTarget?.name ?? ""}
+        onClose={() => setPackagingTarget(null)}
         onNotice={setNotice}
       />
     </main>
