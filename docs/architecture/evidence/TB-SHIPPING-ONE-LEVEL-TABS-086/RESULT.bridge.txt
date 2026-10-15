@@ -1,0 +1,163 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-086
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-085
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-TABS
+Mode: BOUNDED_ONE_LEVEL_RATES_AND_COVERAGE_TAB
+Bridge-Task-Row: ced8dde9-9354-4962-8c0e-a9ac98ce5545
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: a0c320953b83f6daf4547c8fa9f3d4223274f825
+Base-SHA: 54430ebb58858cfded26630878918d30e7d1046f
+Code-SHA: 23e92d5e9
+Evidence-SHA: db3849895
+automaticNextImplementationTask: NONE
+
+STATUS JUSTIFICATION (why PARTIAL, not PASS)
+Tab 2 is functionally integrated and all focused tests are green, but PASS is not claimed because
+(a) the gate is OFF and the Development one-level tables are unmigrated, so there is NO live
+UI/database success path to demonstrate — every claim here is source-level plus unit-test proof, and
+(b) the Host architecture guard (FulfillmentModuleAmsc001W3CertGuardTests) could not be executed
+because the running Tooba.Host dev process (pid 33548) holds its output DLLs. Host was not killed or
+restarted per task rules. This is a bounded, additive deliverable with truthful limitations, so
+PARTIAL is the honest verdict.
+
+BASE-SHA PROOF
+Expected-Base-SHA a0c320953 is an ancestor of the claimed tree. The only commits between them were
+a0c320953..54430ebb (2 files, both under docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-085/)
+— strictly non-overlapping bookkeeping with zero src/ drift. No RECOVERY_CONFLICT.
+Dirty/untracked paths from earlier work (src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx,
+admin-order-detail-screen.tsx and several docs/architecture/evidence/** files) were preserved
+untouched: no reset, stash, rebase or force push.
+
+CHANGED PATHS (task-owned only)
+
+Backend — Fulfillment module, additive:
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Ports/IShippingOneLevelCatalogAdminRead.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Queries/ResolveOneLevelShippingMethodBindingQuery.cs (new)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Validators/ResolveOneLevelShippingMethodBindingQueryValidator.cs (new)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Validators/FulfillmentValidationCodes.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelCatalogAdminRead.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Endpoints/Shipping/ShippingServiceEndpoints.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelAdminReadBridgeTests.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Architecture/FulfillmentValidatorCoverageGuardTests.cs
+  src/backend/Host/Tooba.Host.Tests/Architecture/FulfillmentModuleAmsc001W3CertGuardTests.cs
+
+Frontend:
+  src/frontend/app/admin/shipping-services/shipping-one-level-rates-model.ts (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-rates-tab.tsx (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-rates-tab.test.ts (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.tsx
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs-model.ts
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.test.ts
+
+Docs:
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-086.md
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-086/**
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-086.task.md (receipt, kept UNSTAGED)
+
+page.tsx was deliberately NOT changed: the server component already binds tab 2 through the
+one-level shell, and reverting a cosmetic comment edit kept the diff strictly task-owned.
+
+MISSION A — SINGLE-LEVEL CONTEXT (authority mapping)
+Method identity is the canonical persisted method_code (<=32 chars, one optional ':'). Its hidden
+legacy binding is required to reuse the existing Shipping (service_code, option_code?) admin APIs.
+The 085 public DTO deliberately omits that binding, and splitting method_code in the browser is
+unsafe for optionless and composite identities. The narrowest authorized resolution was therefore
+added server-side, Contracts-only, with no EF type leaking:
+
+  GET /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/binding
+  -> IFulfillmentAdminAuthorizer -> ResolveOneLevelShippingMethodBindingQuery
+  -> IShippingOneLevelCatalogAdminRead.ResolveBindingAsync
+  -> OneLevelShippingMethodBindingDto { gate, ready, resolved, methodCode, serviceCode?, optionCode?, isActive }
+
+Hard guarantees enforced and unit-proven:
+  * request carries ONLY methodCode; raw client serviceCode/optionCode can never substitute;
+  * the pair comes exclusively from the catalog row's immutable legacy binding;
+  * gate OFF => resolved=false and ZERO database queries (reader call count asserted = 0);
+  * unmigrated catalog (Postgres 42P01) => ready=false, resolved=false, never 500, never fake success;
+  * malformed/non-canonical code ('post:ex:press', 'post standard;drop', 'post:', blank, 'a!' etc.)
+    is refused BEFORE any lookup, so it can never be normalized into a new identity;
+  * canonical but absent code => resolved=false; 'tipax:express' is never split into (tipax, express);
+  * handler publishes serviceCode/optionCode as null whenever Resolved is false, so a stray pair
+    cannot leak even if a future implementation misbehaves;
+  * provider_kind stays internal metadata and is absent from the wire shape.
+No new selectable merchant level was created. No DI change was needed (the method lives on the
+already-registered port). No Contracts change was needed.
+
+MISSION B — TAB 2 «تعرفه و پوشش»
+shipping-one-level-rates-tab.tsx replaces only the tab-2 placeholder and is scoped to exactly one
+selected one-level method:
+  * context banner names the selected method AND its server-resolved legacy pair;
+  * read: existing loadAdminShippingRates(serviceCode); write: existing create/update/active rate and
+    create/active coverage-grant clients — no new Shipping API was invented;
+  * option identity always comes from the server binding (create: resolvedBinding.optionCode,
+    update: policy.optionCode). There is no option <select>, no option column and no
+    groupRatesByOption grouping, so a service-level policy is never rendered under an
+    option-bearing method and no second level appears;
+  * tier conditions reuse shipping-rate-tier-model.ts unchanged: grams on the wire, kilograms for
+    humans, half-open [min,max), backend ceilings, exact 1.999 kg -> 1999 g;
+  * destination scope reuses ShippingDestinationPicker + buildScopeWrite, so only real Geography ids
+    can be submitted;
+  * selection immutability: createBindingGenerationGuard bumps on every method change and discards
+    in-flight reads AND writes of the previous method, so a stale result can never be shown for or
+    saved onto the new method;
+  * honest states: no-method, binding-loading, binding-unavailable (gate OFF / not migrated /
+    unresolved / invalid response) with explicit Persian text, loading, 403 denied, error,
+    ready-with-empty, plus a service-mismatch guard that refuses a response belonging to another
+    service;
+  * feedback: in-tab success/error notice + optional page-level onNotice, save/cancel, and the edit
+    form is reset when the method changes (conservative unsaved-change handling);
+  * RTL and the five-tab URL/context model, roving tabIndex and arrow-key handling from 084 are
+    untouched; legacy dialogs and row actions are NOT deleted and remain the gate-OFF route.
+
+TESTS RUN (all green unless noted)
+  node --test --experimental-strip-types app/admin/shipping-services/*.test.ts  => 145 passed / 0 failed
+  npm run typecheck (src/frontend)                                             => clean
+  dotnet test (Tooba.Fulfillment.Tests, full project)                          => 116 passed / 0 failed
+  dotnet test --filter ShippingOneLevelAdminReadBridgeTests                    => 21 passed / 0 failed
+  dotnet test --filter FulfillmentValidatorCoverageGuardTests                  => 8 passed / 0 failed
+  dotnet test --filter FulfillmentModuleAmsc001W3CertGuardTests (Tooba.Host.Tests) => BLOCKED (see below)
+
+Focused coverage added: mapping for post:standard, inactive post:express, tipax:standard/express,
+optionless store_courier/in_person, unmapped and malformed codes (all fail-closed); stale method
+selection via the generation guard; rate tier boundaries 1999/2000 grams and [min,max); fallback vs
+option-specific precedence; gate-OFF legacy parity; source-level guards proving tab 2 has no
+<select>, no option grouping and no methodCode.split.
+Validator inventory updated 16 -> 17 endpoint-reachable requests (10 -> 11 with a concrete
+transport validator); Shipping validator folder count 4 -> 5.
+
+GATE / DATABASE EVIDENCE
+Gate: OFF. Tooba:ShippingOneLevelCatalog is absent from configuration and was NOT switched.
+No schema change, no migration, no seed/backfill, no DDL/DML. ShippingRateAuthority,
+ShippingOperationalShadow, Order, Checkout, Payment, Settlement and Geography were not touched.
+The resolver's OFF path was proven to execute zero database reads.
+
+BLOCKER (single, precise)
+Tooba.Host.Tests cannot build while the running Tooba.Host dev process (pid 33548) holds its output
+DLLs; the run failed with MSB3027/MSB3021 on Tooba.Wishlist.* copies. Per task rules the Host was
+not restarted or killed and the command was not retried in a loop. The route-count expectation was
+verified directly against source instead: 23 .Map* calls across the Fulfillment endpoint files
+(Admin 5 + Customer 1 + Seller 8 + ShippingMethods 1 + ShippingService 8), matching the updated
+guard constant. Remaining work: execute FulfillmentModuleAmsc001W3CertGuardTests once the Host is
+not holding the outputs.
+
+OTHER OPEN PREREQUISITES
+  1. Enabling the gate and running the authorized one-level migration is a separate, unauthorized
+     task; until then tab 2 truthfully reports the binding as unavailable.
+  2. Legacy two-level screen remains the operational surface for merchant rate/coverage edits.
+
+ROLLBACK
+Revert commits 23e92d5e9 and db3849895. The new endpoint/query are additive and unreferenced while
+the gate is OFF; reverting the frontend files restores the tab-2 placeholder. No data, schema or
+configuration change needs undoing.
+
+ACTUAL ELAPSED
+Claim 2026-10-15T13:31:45Z -> result ~13:56Z => approximately 25 minutes, inside the 30-minute hard
+timebox. The claim was re-acquired once after the first claimer process was terminated mid-flight
+and the Bridge released the row at its 300s claim timeout; no row was created, mutated or deleted
+outside the protocol.
+END_TOOBA_WORKER_RESULT
