@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-MVP-OPTION-PARITY-069
 Parent-Task: TB-SHIPPING-MVP-SHADOW-PARITY-068
@@ -13,7 +13,7 @@ Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: 59c12a70f66393305f551e6bdaae358430e5713c
 Base-SHA: 59c12a70f66393305f551e6bdaae358430e5713c
 Code-SHA: 1bb91ddaa06ffac050d0857d29f7e387bf14653d
-Evidence-SHA: <TO-BE-FILLED>
+Evidence-SHA: 7209b8cc78dd4e1091fd796aa7ec092dec556998
 automaticNextImplementationTask: NONE
 
 ROOT CAUSE (fixed): a Shipping rate policy was identified only by serviceCode, while the storefront
@@ -132,7 +132,7 @@ the running host writes outside the repo).
 ELAPSED: ~50 minutes wall clock; the 45-minute box was exceeded while finishing the runtime proof, tests
 and evidence. No 070 work was started and no automatic next task is issued.
 COMMIT/PUSH: Code-SHA 1bb91ddaa06ffac050d0857d29f7e387bf14653d (Shipping + Order code and tests).
-Evidence-SHA <TO-BE-FILLED> (planning doc + docs/architecture/evidence/TB-SHIPPING-MVP-OPTION-PARITY-069).
+Evidence-SHA 7209b8cc78dd4e1091fd796aa7ec092dec556998 (planning doc + docs/architecture/evidence/TB-SHIPPING-MVP-OPTION-PARITY-069).
 Unrelated pre-existing dirty files (docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md,
 src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx)
 and the unstaged bridge task receipt were preserved and never staged.
@@ -147,3 +147,4 @@ REMAINING BLOCKERS / NOT DONE:
    tipax row is superseded, so any future commercial activation needs an explicit Architect decision.
 END_TOOBA_WORKER_RESULT
 END_TOOBA_TASK
+
