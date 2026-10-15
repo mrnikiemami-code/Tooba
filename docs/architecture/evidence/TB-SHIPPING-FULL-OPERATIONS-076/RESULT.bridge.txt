@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-FULL-OPERATIONS-076
 Parent-Task: TB-SHIPPING-FULL-OPERATIONS-075
@@ -12,8 +12,8 @@ Status: PASS
 Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: 2c0b7e1adcd15c524ff3311334bd3df1a15e5b3b
 Base-SHA: 2c0b7e1adcd15c524ff3311334bd3df1a15e5b3b
-Code-SHA: __CODE_SHA__
-Evidence-SHA: __EVIDENCE_SHA__
+Code-SHA: 6d62deabf03e0222722d05aff87686564fed1215
+Evidence-SHA: 6d62deabf03e0222722d05aff87686564fed1215
 automaticNextImplementationTask: NONE
 
 MISSION GRADING
@@ -267,9 +267,9 @@ DEVELOPMENT FIXTURE LEDGER (tooba_alpha only, never staging or production)
   row's semantics were changed.
 
 COMMIT / PUSH
-  Base-SHA     __BASE_SHA__ (HEAD == origin/main at claim)
-  Code-SHA     __CODE_SHA__ (all source, planning and evidence, pushed to origin/main)
-  Evidence-SHA __EVIDENCE_SHA__ (contains docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-076/**
+  Base-SHA     2c0b7e1adcd15c524ff3311334bd3df1a15e5b3b (HEAD == origin/main at claim)
+  Code-SHA     6d62deabf03e0222722d05aff87686564fed1215 (all source, planning and evidence, pushed to origin/main)
+  Evidence-SHA 6d62deabf03e0222722d05aff87686564fed1215 (contains docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-076/**
     including this result artifact)
   The unstaged Bridge receipt docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-076.task.md was never staged and
   never committed. No unrelated dirty path was staged.
