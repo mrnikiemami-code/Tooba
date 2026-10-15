@@ -1,0 +1,96 @@
+TB-SHIPPING-ONE-LEVEL-TABS-095 — ACTIVATION AUTHORITY DECISION
+
+DECISION: BLOCKED_ACTIVATION_AUTHORITY — activation controls stay READ-ONLY.
+No activation/deactivation source change was made. No method, service or option row was written.
+
+--- Why a correct implementation is not available inside this task's authority ---------------
+D1. The storefront reads ONLY the legacy two-level catalog (proved in log-activation-authority-map.txt
+    §1). fulfillment.shipping_methods.is_active has no storefront/Checkout/Order/Shipping consumer
+    (§2). Writing that flag alone would show the merchant a green "active" row while the customer sees
+    nothing => explicitly FORBIDDEN by the task ("a misleading apparent activation").
+
+D2. Correct activation therefore REQUIRES writing a legacy column that the one-level surface does not
+    own: fulfillment.shipping_service_options.is_active.
+
+D3. The only existing writer of that column is ShippingServiceDirectory.UpdateAsync, which is a
+    destructive full replacement of the service's options and option translations (delete + re-insert,
+    new ids for any option the client does not echo back). The task FORBIDS touching that path, and no
+    option-level or method-level write endpoint exists (no "options/" route, only a SERVICE-level
+    /deactivate that would kill post:standard too).
+
+D4. DUAL-WRITER HAZARD (the real ownership question). If this task adds a narrow non-destructive writer
+    for shipping_service_options.is_active, the same column would then have TWO independent admin
+    writers with different semantics:
+      - legacy admin  PUT /shipping-services/{id}  : full replace; rewrites option rows/ids and resets
+        every option's active flag to whatever the payload says; knows nothing about shipping_methods;
+      - new one-level toggle                        : narrow single-column flip; knows nothing about the
+        legacy admin payload contract.
+    A merchant (or any legacy save) could silently revert or desynchronize a one-level activation, and
+    the destructive legacy save could delete the very row the new writer just toggled. Upholding the
+    required "transactionally consistent, ownership-preserving" guarantee is therefore impossible
+    without either repairing/replacing the legacy destructive writer or designating a single owner of
+    the activation fact — both are architecture/ownership decisions outside this task's scope, and the
+    task's ALLOWED PATHS note says that a broader ownership change must stop and request scoped
+    authorization rather than being edited silently.
+
+D5. Optionless methods (snapp_courier / store_courier / in_person, LegacyOptionCode = null) map to the
+    legacy SERVICE row itself. Toggling them means ShippingService.SetActive, i.e. the whole service —
+    and activating snapp_courier would mean activating an inactive PARENT service, explicitly forbidden.
+    Deactivating store_courier or in_person would flip a whole legacy service from the one-level admin,
+    a different ownership claim again. Service-level and option-level activation therefore need
+    DISTINCT, explicitly authorized semantics; a single generic "toggle" button would be wrong.
+
+D6. Second divergence: the customer label is «{legacy service name} — {legacy option name}» from LEGACY
+    translations, so the 094 admin display name would not be reflected in the storefront even after a
+    successful activation (log-activation-state-parity.txt, Conclusion 3).
+
+D7. Timebox: 30 minutes HARD. Mission A alone consumed the preponderance of the budget, and a correct
+    Mission B is a seam + frontend toggle + focused tests + live/isolated proof — a superset of 094,
+    which was accepted at ~205 minutes and explicitly must not be repeated. Implementing it now would
+    be exactly the "speculative expansion" the Architect forbade.
+
+--- Safe design that is ready to implement once authority is granted (NOT implemented) --------------
+D8. Smallest correct unit (Fulfillment-owned, all files already inside this task's allowed paths):
+    1. Port  Application/Shipping/Ports/IShippingOneLevelCatalogAdminActivation.cs
+       with an explicit status set: Applied, GateDisabled, CatalogNotReady, InvalidMethodCode,
+       MethodNotFound, NameConflictNone, LegacyBindingMissing, LegacyParentInactive,
+       LegacyOptionMissing, OptionlessRequiresServiceDecision, NoChange.
+    2. Command Application/Shipping/Commands/SetOneLevelShippingMethodActivationCommand.cs
+       (IRequest<Result<...>>, ISender, ApiResponseFactory at the endpoint, module authorizer).
+       Server resolves the immutable binding itself and NEVER trusts a client service/option code.
+    3. Infrastructure in Infrastructure/Shipping/**: in ONE transaction
+         - load the method by canonical method_code;
+         - resolve legacy service by LegacyServiceCode, refuse if missing or !IsActive (fails closed,
+           never activates a parent);
+         - if LegacyOptionCode is set: load that single option row and call the narrow
+           ShippingServiceOption.SetActive(...) — a single-column, identity-preserving update, with NO
+           delete/re-insert and no sibling touched;
+         - if LegacyOptionCode is null: return OptionlessRequiresServiceDecision instead of guessing;
+         - update ShippingMethod.IsActive for that one row; SaveChanges once;
+         - option ids, translations, sort orders, sibling methods and historical codes untouched.
+    4. Endpoint: PUT /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/activation
+       (activation and deactivation as distinct commands), behind the existing admin authorizer + gate.
+    5. Frontend: enable/disable action in tab «سرویسها» with an explicit confirmation on deactivation
+       and an honest note whenever the outcome cannot be presented as customer-eligible.
+    6. Focused tests: one method only; sibling preserved; option identity preserved (row ids unchanged);
+       inactive parent refusal; optionless refusal; gate OFF => zero DB calls; auth denied; identity
+       immutability; historical code safety.
+
+--- EXACT AUTHORIZATION NEEDED FROM THE ARCHITECT ---------------------------------------------
+Q1. Who owns the activation fact: fulfillment.shipping_methods.is_active (one-level admin) or the
+    legacy shipping_services/shipping_service_options rows (storefront)? One must be declared the single
+    source of truth, with the other derived or synchronized.
+Q2. If the one-level surface may write legacy option activation, is a narrow single-column
+    ShippingServiceOption.SetActive, identity-preserving writer authorized — and is the legacy
+    destructive full-service UpdateAsync path also to be repaired/guarded (out of this task's scope),
+    or must the legacy writer be treated as an authoritative override with an explicit, visible
+    "will be overwritten by the legacy catalog screen" warning?
+Q3. What is the authorized semantics for the three OPTIONLESS methods (snapp_courier / store_courier /
+    in_person): refuse (as assumed here), or map to a separately authorized legacy service-level
+    activation, given that activating a currently inactive parent service is forbidden?
+Q4. After activation, is the storefront expected to show the LEGACY label («پست — پیشتاز») or the 094
+    admin display name? If the latter, a separate storefront-label projection task is required.
+
+--- ROLLBACK ----------------------------------------------------------------------------------
+None required: no state was written. The only DB access in this task was two authorized read-only admin
+GETs, and the existing five-tab UI was left exactly as accepted in 094 (activation remains read-only).

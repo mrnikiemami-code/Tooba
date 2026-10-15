@@ -1,0 +1,91 @@
+TB-SHIPPING-ONE-LEVEL-TABS-095 — MISSION A: activation-authority map (code references)
+Read-only. No file under src/** was modified for this mission.
+
+=== 1. WHO decides what the CUSTOMER can choose (storefront shipping eligibility) ===
+src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs
+  :26   private readonly IShippingCatalogReader _shippingCatalog;   // LEGACY two-level catalog
+  :375  private async Task<IReadOnlyList<StorefrontShippingMethodView>> LoadEligibleMethodsAsync(...)
+  :379  var enabled = ShippingMethodRegistry.Enabled(_shippingOptions).Select(x => x.Code).ToHashSet(...)
+  :382  var services = catalog.Where(x => x.IsActive)...                        // legacy shipping_services
+  :389  if (!enabled.Contains(service.Code)) continue;                          // config EnabledCodes
+  :397  var serviceOptions = service.Options.Where(o => o.IsActive).ToList();   // legacy options
+  :399-402  optionless service  => one method, code = service.Code
+  :405-412  optioned service    => one method per ACTIVE option, code = "{service.Code}:{option.Code}"
+  :412  var label = $"{serviceName} — {optionName}"   // label = legacy service + legacy option name
+  :430  StorefrontShippingCalculator.ResolveRate(methodCode, _shippingOptions)
+
+=> The customer-visible method set and labels are computed ENTIRELY from:
+     (a) Tooba:ShippingMethods:EnabledCodes  (config, service-level codes)
+     (b) legacy fulfillment.shipping_services.is_active
+     (c) legacy fulfillment.shipping_service_options.is_active
+     (d) Tooba:ShippingMethods:Rates (per "{service}:{option}")
+
+=== 2. WHO owns fulfillment.shipping_methods.is_active (the one-level flag) ===
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/Aggregates/ShippingMethod.cs
+  :48   public bool IsActive { get; private set; }
+  :87   public void Update(int sortOrder, bool isActive, ...)   // only writer of the flag
+
+Consumers of the one-level catalog (exhaustive, non-test):
+  Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelCatalogReader.cs:15
+  Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelCatalogAdminRead.cs:31,36
+  Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/DependencyInjection/FulfillmentModule.cs:108
+  Modules/Fulfillment/Tooba.Fulfillment.Contracts/Shipping/ShippingOneLevelCatalogContracts.cs:34
+
+DbSet declarations of the one-level tables: ONLY FulfillmentDbContext
+  Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Persistence/FulfillmentDbContext.cs:70,73
+
+Cross-module search for ShippingMethods / ShippingMethodTranslations outside the Fulfillment module:
+  ZERO hits that touch the tables or the reader (only unrelated ShippingMethodsOptions /
+  ShippingMethodRegistry / ListEnabledShippingMethods names appear).
+
+=> fulfillment.shipping_methods.is_active has NO storefront, Checkout, Order or Shipping consumer.
+   It is a shadow flag that today happens to AGREE with the legacy catalog (see parity log).
+
+=== 3. The only existing legacy activation writers ===
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Endpoints/Shipping/ShippingServiceEndpoints.cs:30-52
+  GET  /shipping-services/
+  GET  /shipping-services/{serviceId:guid}
+  POST /shipping-services/
+  PUT  /shipping-services/{serviceId:guid}          <-- full replace (destructive)
+  POST /shipping-services/{serviceId:guid}/deactivate  <-- SERVICE-level only
+  POST /shipping-services/ensure-seed
+  (plus the 085/086 read + 094 name-write one-level routes)
+
+There is NO option-level activation endpoint anywhere (grep for "options/" in the module endpoints
+returns nothing), and no method-level activation endpoint.
+
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingServiceDirectory.cs
+  :67  UpdateAsync(serviceId, model, ...)
+  :87-88  RemoveRange(existingTranslations) + AddTranslations(...)
+  :90-92  RemoveRange(existingOptionTranslations)
+  :92     RemoveRange(existingOptions)                      // ALL option rows deleted
+  :93     AddOptions(serviceId, model.Options, now)          // re-inserted
+  :200-206 AddOptions: option id = option.ShippingServiceOptionId if non-empty else _ids.NewId()
+  :100 DeactivateAsync(serviceId) -> ShippingService.SetActive(false)   // kills the whole service
+
+=> The ONLY way to flip one legacy option today is the destructive full-service PUT, which:
+   * deletes and re-inserts every option row and every option translation of that service;
+   * mints new ids for any option whose id the client does not echo back;
+   * therefore cannot be used for a narrow, identity-preserving activation (forbidden by this task).
+
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/Aggregates/ShippingServiceOption.cs
+  :73  public void SetActive(bool isActive, DateTimeOffset now)   // narrow setter exists (unused by any endpoint)
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/Aggregates/ShippingService.cs
+  :92  public void SetActive(bool isActive, DateTimeOffset now)   // SERVICE-level, affects all its methods
+
+=== 4. Legacy -> one-level binding (immutable) ===
+ShippingMethod.LegacyServiceCode / LegacyOptionCode (init-only, immutable):
+  "post:express"    -> post    / express
+  "post:standard"   -> post    / standard
+  "tipax:express"   -> tipax   / express
+  "tipax:standard"  -> tipax   / standard
+  "snapp_courier"   -> snapp_courier / (null => optionless)
+  "store_courier"   -> store_courier / (null => optionless)
+  "in_person"       -> in_person     / (null => optionless)
+The binding is already resolved server-side (086 binding route) and is never taken from the client.
+
+=== CONCLUSION ===
+A narrow activation of "post:express" cannot be made genuinely customer-visible without also flipping
+fulfillment.shipping_service_options(code=express, service=post).is_active, and the only existing writer
+for that column is the destructive, identity-rewriting legacy UpdateAsync, which this task forbids.
+A method-row-only toggle is therefore a MISLEADING apparent activation and is not implemented.

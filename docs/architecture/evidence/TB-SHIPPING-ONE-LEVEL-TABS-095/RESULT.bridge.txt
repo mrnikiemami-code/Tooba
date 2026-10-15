@@ -1,0 +1,179 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-095
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-094
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_SAFE_INDEPENDENT_METHOD_ACTIVATION
+Bridge-Task-Row: c0bcd41f-bb4b-4243-ac82-79b9f22dec5c
+Status: BLOCKED
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 1bbf2607cb21792282aa3b20c7d55feb66c85a5c
+Base-SHA: ed81ca84a5b900dcf35d04ee18871fc14926497d
+Code-SHA: NONE
+Evidence-SHA: <EVIDENCE_SHA>
+automaticNextImplementationTask: NONE
+
+DECISION: BLOCKED_ACTIVATION_AUTHORITY — activation controls remain READ-ONLY. No activation source
+change was made and no state was written. Mission B was not started, per the task's own directive: "If
+full consistency is not provable in the timebox, document an explicit BLOCKED_ACTIVATION_AUTHORITY
+decision, leave activation controls read-only, and STOP. This is preferable to a misleading green
+button."
+
+=== PREFLIGHT / DRIFT ===
+Claimed exactly one Pending task on tooba-main (row c0bcd41f-bb4b-4243-ac82-79b9f22dec5c, claimed
+2026-10-15T21:53Z) and preserved the received artifact UNSTAGED as
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-095.task.md. Read AGENTS.md, the pipeline protocol, the 093
+master-recovery checkpoint, the 081-094 planning/evidence records, the 094 source changes, the
+Fulfillment ShippingMethod / ShippingService / ShippingServiceOption aggregates,
+ShippingServiceDirectory.UpdateAsync, the store catalog reader, storefront eligibility, the one-level
+gate and the admin auth convention. git fetch origin: HEAD == origin/main ==
+ed81ca84a5b900dcf35d04ee18871fc14926497d and 1bbf2607cb21792282aa3b20c7d55feb66c85a5c is an ancestor
+(merge-base --is-ancestor => 0). src/** drift 1bbf2607c..HEAD is EMPTY, so the drift is
+docs/result-bookkeeping only => no RECOVERY_CONFLICT. All pre-existing dirty/untracked files preserved;
+no reset/stash/rebase/force push.
+
+=== MISSION A — ACTIVATION AUTHORITY (mandatory; decisive) ===
+A1. Storefront eligibility is legacy-only. Modules/Order/Tooba.Order.Application/Storefront/Services/
+StorefrontShippingService.cs:
+  :26  IShippingCatalogReader _shippingCatalog                                   (legacy catalog)
+  :379 ShippingMethodRegistry.Enabled(_shippingOptions) -> Tooba:ShippingMethods:EnabledCodes
+  :382 services.Where(x => x.IsActive)     -> fulfillment.shipping_services.is_active
+  :397 service.Options.Where(o => o.IsActive) -> fulfillment.shipping_service_options.is_active
+  :399-402 optionless service => one method with code = service.Code
+  :405-412 optioned service   => one method per ACTIVE option with code "{service.Code}:{option.Code}"
+  :412 label = "{serviceName} — {optionName}"   -> LEGACY service + option translations
+  :430 StorefrontShippingCalculator.ResolveRate(methodCode, _shippingOptions)  -> Tooba:ShippingMethods:Rates
+So the customer-visible method set and labels come ONLY from the legacy two-level catalog plus the
+EnabledCodes/Rates configuration.
+
+A2. fulfillment.shipping_methods.is_active has NO storefront/Checkout/Order/Shipping consumer. The
+exhaustive non-test consumers of the one-level catalog are: ShippingOneLevelCatalogReader.cs:15,
+ShippingOneLevelCatalogAdminRead.cs:31,36, FulfillmentModule.cs:108,
+Contracts/Shipping/ShippingOneLevelCatalogContracts.cs:34 — all inside Fulfillment and all admin-facing.
+The two one-level tables are declared only in FulfillmentDbContext.cs:70,73, and a cross-module search
+for ShippingMethods/ShippingMethodTranslations outside the Fulfillment module returns ZERO table or
+reader usages. Its only writer is ShippingMethod.Update (Domain/Aggregates/ShippingMethod.cs:87).
+
+A3. Live read-only parity on the shared Development stack (target verified FIRST:
+GET /__platform-commerce => SingleStore / dev-singlestore / store-alpha / tenant-alpha; authorized real
+Development admin session, /api/auth/me = 200; two authorized read-only GETs, NO writes):
+  legacy GET /v1/admin/shipping-services: post active (2 options, 1 active), tipax active (2/2),
+  snapp_courier INACTIVE (0 options), store_courier active (optionless), in_person active (optionless).
+  legacy GET /v1/admin/shipping-services/6e9a4cdf-e40c-4271-aef9-bbe558c4d11e (service "post"):
+    option 638c583e-4bce-4298-bdec-438b680af05e code="express"  isActive=FALSE
+    option a871b290-c499-410d-b15d-e0659fc779ee code="standard" isActive=true
+  one-level GET .../shipping-methods/one-level: post:express false, post:standard true, tipax:express
+  true, tipax:standard true, snapp_courier false, store_courier true, in_person true.
+  PARITY: all 7 methods AGREE with the legacy effective state. The admin list is honest TODAY, but only
+  because the one-level rows were backfilled from the legacy catalog — nothing keeps them in sync.
+
+A4. What activating post:express would actually require:
+  (a) fulfillment.shipping_service_options(638c583e..., post/express).is_active false -> true  [MANDATORY
+      for the storefront, and NOT writable except through the destructive full-service UpdateAsync]
+  (b) fulfillment.shipping_methods(post:express).is_active false -> true   [changes NOTHING visible]
+  (c) Tooba:ShippingMethods:EnabledCodes contains "post"                   [already true]
+  (d) Tooba:ShippingMethods:Rates contains "post:express"                  [already present]
+  (a) alone makes it customer-visible; (b) alone does not. A method-row-only toggle is therefore a
+  MISLEADING apparent activation => FORBIDDEN => not implemented.
+
+A5. The destructive path (explicitly inspected, NOT touched):
+  ShippingServiceDirectory.UpdateAsync (Infrastructure/Shipping/ShippingServiceDirectory.cs):
+  :87-88 RemoveRange(service translations) + AddTranslations(...)
+  :90-92 RemoveRange(option translations); RemoveRange(existingOptions)   -> ALL option rows deleted
+  :93    AddOptions(...) -> re-inserted; :200-206 option id = client-supplied id if non-empty else a
+         NEW id, so option identity is rewritten for any option not echoed back.
+  :100   DeactivateAsync(serviceId) -> ShippingService.SetActive(false)  -> kills the WHOLE service,
+         i.e. would also remove post:standard.
+  There is NO option-level or method-level activation endpoint anywhere (no "options/" route). The narrow
+  setter ShippingServiceOption.SetActive exists (Domain/Aggregates/ShippingServiceOption.cs:73) but no
+  endpoint uses it.
+
+A6. Why this needs an Architect ruling (ownership, not effort):
+  D4 DUAL WRITER HAZARD: adding a narrow non-destructive writer for shipping_service_options.is_active
+     would give that single column two admin writers with different semantics — the legacy full-replace
+     PUT (rewrites option rows/ids and resets every active flag, knows nothing about shipping_methods)
+     and the new narrow toggle (knows nothing about the legacy payload contract). A legacy save could
+     silently revert, or delete, what the one-level admin just activated, so the required
+     "transactionally consistent, ownership-preserving" guarantee cannot be upheld without either
+     repairing the legacy writer or declaring a single owner of the activation fact.
+  D5 OPTIONLESS METHODS: snapp_courier / store_courier / in_person have LegacyOptionCode = null and map
+     to the legacy SERVICE row, so toggling them means ShippingService.SetActive for the whole service —
+     and activating snapp_courier would mean activating an INACTIVE PARENT service, explicitly
+     forbidden. Service-level and option-level activation need DISTINCT authorized semantics; one
+     generic toggle would be wrong for 3 of the 7 methods.
+  D6 LABEL DIVERGENCE: the customer label is "{legacy service} — {legacy option}" from LEGACY
+     translations, so even a correct activation would render «پست — پیشتاز» while the merchant edited
+     «پست پیشتاز» in the 094 one-level editor (that display name is admin-only).
+  D7 TIMEBOX: 30 minutes HARD. Mission A consumed the budget and a correct Mission B is a superset of
+     094, which was accepted at ~205 minutes and must not be repeated. Proceeding would be exactly the
+     "speculative expansion" the ruling forbids.
+
+A7. Safe design prepared but deliberately NOT implemented (all files already inside this task's allowed
+paths): a port IShippingOneLevelCatalogAdminActivation with an explicit status set (Applied,
+GateDisabled, CatalogNotReady, InvalidMethodCode, MethodNotFound, LegacyBindingMissing,
+LegacyParentInactive, LegacyOptionMissing, OptionlessRequiresServiceDecision, NoChange); a command
+SetOneLevelShippingMethodActivationCommand (CQRS/ISender, Result, endpoint ApiResponseFactory, module
+authorizer); an Infrastructure seam that in ONE transaction resolves the immutable binding server-side
+(never trusting a client service/option code), refuses a missing or inactive parent, and for
+option-backed methods calls the narrow ShippingServiceOption.SetActive with NO delete/re-insert and no
+sibling touched, returning OptionlessRequiresServiceDecision for optionless methods instead of guessing;
+a PUT /shipping-methods/one-level/{methodCode}/activation endpoint with distinct activate/deactivate
+commands; a Tab 1 enable/disable action with an explicit deactivation confirmation and an honest
+limitation note; and focused tests (single method only, sibling preserved, option row identity preserved,
+inactive-parent refusal, optionless refusal, gate OFF => zero DB calls, auth denied, identity
+immutability, historical code safety).
+
+A8. EXACT AUTHORIZATION NEEDED: Q1 who owns the activation fact — the one-level shipping_methods.is_active
+or the legacy service/option rows the storefront reads? Q2 is a narrow identity-preserving
+ShippingServiceOption.SetActive writer authorized, and is the legacy destructive UpdateAsync to be
+repaired/guarded or treated as an authoritative override with a visible warning? Q3 what are the
+authorized semantics for the three optionless methods (refuse, or a separately authorized legacy
+service-level activation)? Q4 after activation, should the storefront show the legacy label or the 094
+admin display name (the latter needs a storefront-label projection task)?
+
+=== MISSION B ===
+NOT STARTED. Mission A produced BLOCKED_ACTIVATION_AUTHORITY, the outcome the task prescribes for this
+situation. The five-tab shell, the 094 name editor and both read paths are unchanged; activation stays
+read-only and no enable/disable control was added. No fake toggle, no green button that does nothing.
+
+=== PROOF / TESTS ===
+No source file changed, so no new test was written and no test suite was run; the 094 suites stand by
+reference (20/20 ShippingOneLevelAdminWriteTests, 8/8 FulfillmentValidatorCoverageGuardTests, 14/14 Host
+FulfillmentModuleAmsc001W3CertGuard+ShippingOneLevel, 31/31 focused frontend node tests, tsc --noEmit
+clean). The proof produced is the authorship/authority evidence: log-activation-authority-map.txt
+(file:line map), log-activation-state-parity.txt (live read-only legacy-vs-one-level parity and the
+activation requirement set), log-activation-decision.txt (the decision, D1-D8, safe design,
+authorization questions). No DB write, no migration/seed/backfill, no data change, no Host restart (no
+executable change was needed), no gate change (ShippingRateAuthority and ShippingOperationalShadow
+untouched), no staging/production contact, no auth bypass.
+
+=== TOUCHED PATHS ===
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-095.md
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-095/{summary.md,
+log-activation-authority-map.txt, log-activation-state-parity.txt, log-activation-decision.txt,
+RESULT.bridge.txt, post-result.js, task-receipt.json}
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-095.task.md (receipt, deliberately NEVER staged)
+NO src/** file was modified. The two pre-existing dirty frontend files were left untouched and unstaged.
+
+=== LIMITATIONS ===
+Independent method activation is NOT delivered and is not deliverable within this task's authority; the
+UI is unchanged and read-only. The storefront label mismatch (D6) is documented but not fixed. No live
+activation experiment was performed, deliberately, because doing so would have modified real
+active/inactive service state in the shared Development store. The 094 suites were not re-run because no
+code changed. No elapsed-time overrun: Mission A (map + live parity + decision) finished in ~4 minutes,
+well inside the 30-minute HARD timebox.
+
+=== ROLLBACK ===
+None required: no state was written and no code changed. The only database access in this task was two
+authorized read-only admin GETs. Activation controls remain read-only exactly as accepted in 094.
+
+=== ACCEPTANCE SELF-CHECK ===
+Activation semantics are NOT consistent-with-legacy-provable without touching forbidden/broader-ownership
+behaviour, so no implementation was committed; the root cause, the live evidence, the safe design and the
+exact authorization questions are documented instead. Reported as BLOCKED per the ACCEPTANCE clause
+"BLOCKED if safety or access cannot be proven", with the explicit BLOCKED_ACTIVATION_AUTHORITY decision
+the task asked for. No automatic next task.
+END_TOOBA_WORKER_RESULT

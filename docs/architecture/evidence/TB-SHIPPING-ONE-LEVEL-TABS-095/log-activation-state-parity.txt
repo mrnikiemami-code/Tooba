@@ -1,0 +1,57 @@
+TB-SHIPPING-ONE-LEVEL-TABS-095 — live read-only activation-state parity (shared Development stack)
+Target verified BEFORE probing: GET /__platform-commerce =>
+  {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha"}
+Host: http://127.0.0.1:5088 (script-managed, current code) ; frontend origin: http://localhost:3000
+Session: real authorized Development admin (admin-actor@tooba.local), GET /api/auth/me = 200
+No write of any kind was performed; both reads are the existing authorized admin read routes.
+
+--- (1) LEGACY two-level catalog — THE storefront activation authority -------------
+GET /v1/admin/shipping-services
+post          isActive=true  options=2  activeOptions=1
+tipax         isActive=true  options=2  activeOptions=2
+snapp_courier isActive=FALSE options=0  activeOptions=0
+store_courier isActive=true  options=0  (optionless)
+in_person     isActive=true  options=0  (optionless)
+
+GET /v1/admin/shipping-services/6e9a4cdf-e40c-4271-aef9-bbe558c4d11e   (service "post")
+  service post: isActive=true
+  option 638c583e-4bce-4298-bdec-438b680af05e code="express"  isActive=FALSE  fa="پیشتاز" en="Express"
+  option a871b290-c499-410d-b15d-e0659fc779ee code="standard" isActive=true   fa="معمولی" en="Standard"
+
+--- (2) ONE-LEVEL method rows — the 094 admin surface -------------------------------
+GET /v1/admin/shipping-services/shipping-methods/one-level
+  {"gate":"Enabled","ready":true,"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","methods":[
+    post:express    isActive=false sortOrder=10  name="پیشتاز"
+    post:standard   isActive=true  sortOrder=11  name="معمولی"
+    tipax:express   isActive=true  sortOrder=20  name="پیشتاز"
+    tipax:standard  isActive=true  sortOrder=21  name="معمولی"  ... (7 methods total) ]}
+
+--- (3) PARITY TABLE (method row vs the legacy rows the storefront actually reads) ---
+method_code      | method.is_active | legacy service | legacy option | legacy-effective | agree?
+post:express     | false            | post (true)    | express(false)| INACTIVE         | YES
+post:standard    | true             | post (true)    | standard(true)| ACTIVE           | YES
+tipax:express    | true             | tipax (true)   | express(true) | ACTIVE           | YES
+tipax:standard   | true             | tipax (true)   | standard(true)| ACTIVE           | YES
+snapp_courier    | false            | snapp_courier(FALSE) | (optionless) | INACTIVE   | YES
+store_courier    | true             | store_courier(true)  | (optionless) | ACTIVE     | YES
+in_person        | true             | in_person(true)      | (optionless) | ACTIVE     | YES
+
+Conclusion 1: the one-level shadow flag currently AGREES with the legacy catalog for all 7 methods, so
+the admin list is honest TODAY. It agrees because it was backfilled from the legacy catalog, not because
+anything keeps them in sync.
+
+Conclusion 2 (what "activate post:express" would actually require to be true for the customer):
+  a) fulfillment.shipping_service_options(638c583e...).is_active  false -> true      [NOT WRITABLE except
+     through the destructive full-service UpdateAsync]
+  b) fulfillment.shipping_methods(post:express).is_active        false -> true      [template only]
+  c) Tooba:ShippingMethods:EnabledCodes must contain "post"                          [already true]
+  d) Tooba:ShippingMethods:Rates must contain "post:express"                         [already present]
+  (a) is mandatory for the storefront; (b) alone changes NOTHING customer-visible.
+  Therefore a method-row-only toggle is a MISLEADING apparent activation => refused.
+
+Conclusion 3 (storefront LABEL source, second divergence):
+  the customer label is `"{legacy service name} — {legacy option name}"` =
+  «پست — پیشتاز» / «پست — معمولی», taken from LEGACY translations.
+  The 094 admin display name («پیشتاز» / «پست معمولی», fulfillment.shipping_method_translations.name)
+  is admin-list-only and would NOT reach the storefront.
+  So even a perfectly activated method would show a label the merchant did not set in the 094 editor.
