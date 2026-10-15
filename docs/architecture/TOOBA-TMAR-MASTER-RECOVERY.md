@@ -2204,7 +2204,7 @@ Recorded by `TB-TMAR-WISHLIST-AMSC-001-W3` (`tooba-architecture-certify`), the f
 
 ## Checkpoint — TB-SHIPPING-ONE-LEVEL-TABS-098 (append-only, 2026-10-16)
 
-**Program:** TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE. **Status: PASS** (bounded scope, READ-ONLY proof). `Base-SHA = d6ba104368c974094ff4ab2cd667bcb8ea92bf83` (= Expected-Base-SHA, `HEAD == origin/main`, zero `src/**` drift). `Code-SHA = 3949e4175fbe07e24ab91e9e821718914d76e132`. `automaticNextImplementationTask = NONE`. `Stop-State = STOP_FOR_ARCHITECT`.
+**Program:** TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE. **Status: PASS** (bounded scope, READ-ONLY proof). `Base-SHA = d6ba104368c974094ff4ab2cd667bcb8ea92bf83` (= Expected-Base-SHA, `HEAD == origin/main`, zero `src/**` drift). `Code-SHA = 240497b237a5db752dd3aaade1a3f3adaf06beb6` (evidence commit; this append-only bookkeeping commit only stamps that SHA and changes no evidence). `automaticNextImplementationTask = NONE`. `Stop-State = STOP_FOR_ARCHITECT`.
 
 **Root cause of the 097 gap (proven, not assumed).** The shared `:5088` Host (pid 30756) had been built at 22:27, i.e. *before* the 096 commit at 01:40, so its `Tooba.Fulfillment.Endpoints.dll` did not contain `shipping-methods/one-level/{methodCode}/activation`; `GET`/`OPTIONS`/`PUT` on that path returned **404** while the 094 `translations` route returned `405` (mounted). The gate was already `ShippingOneLevelCatalog=true` in the script PID record, so the missing control was a *build provenance* defect, not a gate defect.
 
