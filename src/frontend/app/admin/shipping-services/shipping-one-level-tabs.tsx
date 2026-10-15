@@ -19,6 +19,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button, EmptyState, ErrorState } from "../../../design-system";
 import { ShippingOneLevelRatesTab } from "./shipping-one-level-rates-tab.tsx";
 import { ShippingOneLevelPackagingTab } from "./shipping-one-level-packaging-tab.tsx";
+import { ShippingOneLevelScheduleTab } from "./shipping-one-level-schedule-tab.tsx";
 import {
   ONE_LEVEL_TAB_IDS,
   ONE_LEVEL_TAB_LABELS,
@@ -188,6 +189,9 @@ export function ShippingOneLevelTabs({
         ) : activeTab === "packaging-fare" ? (
           // TB-SHIPPING-ONE-LEVEL-TABS-087: زبانهٔ ۳ با همان پیوند سرور و همان مدل قدیمی بسته‌بندی.
           <ShippingOneLevelPackagingTab methodCode={selection.methodCode} onNotice={onNotice} />
+        ) : activeTab === "schedule-capacity" ? (
+          // TB-SHIPPING-ONE-LEVEL-TABS-088: زبانهٔ ۴ با همان پیوند سرور و همان مدل قدیمی برنامهٔ کاری.
+          <ShippingOneLevelScheduleTab methodCode={selection.methodCode} onNotice={onNotice} />
         ) : (
           <WiringShell tab={activeTab} />
         )}

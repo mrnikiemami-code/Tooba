@@ -41,7 +41,7 @@ export const ONE_LEVEL_TAB_WIRING_TASK: Record<OneLevelTabId, string | null> = {
   services: null,
   "rates-coverage": null,
   "packaging-fare": null,
-  "schedule-capacity": "088",
+  "schedule-capacity": null,
   "cost-review": "089",
 };
 

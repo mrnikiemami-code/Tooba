@@ -53,7 +53,7 @@ test("the five tab labels are exactly the locked Persian labels", () => {
   assert.equal(DEFAULT_ONE_LEVEL_TAB, "services");
 });
 
-test("only the services, rates and packaging tabs are wired; the other two name their wiring task", () => {
+test("only the services, rates, packaging and schedule tabs are wired; the last names its wiring task", () => {
   assert.equal(ONE_LEVEL_TAB_WIRING_TASK.services, null);
   assert.equal(wiringNoticeFor("services"), null);
   // TB-SHIPPING-ONE-LEVEL-TABS-086 — tab 2 is genuinely wired, so it no longer advertises a task.
@@ -62,7 +62,10 @@ test("only the services, rates and packaging tabs are wired; the other two name 
   // TB-SHIPPING-ONE-LEVEL-TABS-087 — tab 3 is genuinely wired on the same server-owned binding.
   assert.equal(ONE_LEVEL_TAB_WIRING_TASK["packaging-fare"], null);
   assert.equal(wiringNoticeFor("packaging-fare"), null);
-  for (const id of ["schedule-capacity", "cost-review"] as const) {
+  // TB-SHIPPING-ONE-LEVEL-TABS-088 — tab 4 is genuinely wired on the same server-owned binding.
+  assert.equal(ONE_LEVEL_TAB_WIRING_TASK["schedule-capacity"], null);
+  assert.equal(wiringNoticeFor("schedule-capacity"), null);
+  for (const id of ["cost-review"] as const) {
     const task = ONE_LEVEL_TAB_WIRING_TASK[id];
     assert.ok(task, `missing wiring task for ${id}`);
     const notice = wiringNoticeFor(id);
