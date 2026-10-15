@@ -1,0 +1,23 @@
+ISOLATED_DB_CREATED tooba_onelevel083_6b493af5
+PROVENANCE current_db=1 foreign_schemas=0 preexisting_shipping_services=0
+PENDING_MIGRATIONS 9 :: 20260827010000_InitialFulfillment,20260907090000_AddFulfillmentItemQuantityPacked,20260907121000_AddShipmentProviderMetadata,20260908010000_ShipmentPreviousTracking,20260908120000_AddFulfillmentItemQuantityProcessing,20260909130500_DecimalFulfillmentQuantity,20260910120000_AddConsolidatedPackages,20260910170000_AddShippingServiceCatalog,20261015120000_AddShippingOneLevelCatalog
+UP history_total=9 onelevel_applied=1 columns=9 method_code_width=32 indexes=4 checks=2 legacy_catalog_tables=4
+INSERT representative_methods=4 translations=1 OK
+NEGATIVE duplicate_method_code -> 23505/ix_shipping_methods_method_code
+NEGATIVE duplicate_legacy_binding -> 23505/ux_shipping_methods_legacy_binding
+NEGATIVE over_32_chars -> 22001/
+NEGATIVE uppercase_code -> 23514/ck_shipping_methods_code_canonical
+NEGATIVE hyphen_separator -> 23514/ck_shipping_methods_code_canonical
+NEGATIVE blank_option_code -> 23514/ck_shipping_methods_option_code_canonical
+NEGATIVE duplicate_translation_language -> 23505/ix_shipping_method_translations_method_lang
+NEGATIVE fk_missing_method_translation -> 23503/fk_shipping_method_translations_method
+NEGATIVE_SUMMARY rejected=8/8
+OPTIONLESS_ROWS_COEXIST_OK
+READER all=5 active=4 get_case_insensitive=post:standard get_missing=null get_malformed=null post_translation=پست معمولی optionless_binding=null inactive_present=yes
+BOUNDARY persisted_32_chars_readback=32
+BOUNDARY max_persisted_code_length=32
+LEGACY_UNTOUCHED services=0 options=0 new_methods=6
+DOWN new_tables_remaining=0 legacy_tables_remaining=2 onelevel_history_rows=0
+REUP new_tables_after_reapply=2
+ISOLATED_DB_DROPPED tooba_onelevel083_6b493af5
+LEFTOVER_ISOLATED_DATABASES 0
