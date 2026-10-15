@@ -1,0 +1,36 @@
+﻿=== TB-SHIPPING-MVP-FINAL-CLOSURE-070 :: resolver isolation matrix (shadow ON) 2026-10-15T07:14:25.1905273+03:30 ===
+cart=01a13d66-3b5a-7000-b748-bfb2f3680793 (task-owned disposable Development cart)
+
+alborz utf8 = d8a7d984d8a8d8b1d8b2
+karaj  utf8 = daa9d8b1d8ac
+
+--- P1..P5 : body transmitted as REAL UTF-8 bytes (what a browser/JS client does) ---
+P1 province label (utf8) => HTTP 200 methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+P2 province+city labels (utf8) => HTTP 200 methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+P3 validated Geography ids (utf8) => HTTP 200 methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+P4 province code (utf8) => HTTP 200 methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+P5 province+city codes (utf8) => HTTP 200 methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+
+--- Q1..Q2 : SAME bodies transmitted through Latin-1 (the 068/069 probe defect) ---
+Q1 province label (latin1) => HTTP 200 methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+Q2 province+city label (latin1) => HTTP 200 methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+
+--- served bytes proof: the label the server would have received in each case ---
+  browser/JS utf8 body  bytes: d8a7d984d8a8d8b1d8b2
+  PowerShell latin1 body bytes: 3f3f3f3f3f  (0x3f = '?')
+
+--- payload identity check (legacy projection must be invariant) ---
+  P1 province label (utf8) length=2393
+  P2 province+city labels (utf8) length=2393
+  P3 validated Geography ids (utf8) length=2393
+  P4 province code (utf8) length=2393
+  P5 province+city codes (utf8) length=2393
+  Q1 province label (latin1) length=2393
+  Q2 province+city label (latin1) length=2393
+  P1 == P1 province label (utf8) : True
+  P1 == P2 province+city labels (utf8) : True
+  P1 == P3 validated Geography ids (utf8) : True
+  P1 == P4 province code (utf8) : True
+  P1 == P5 province+city codes (utf8) : True
+  P1 == Q1 province label (latin1) : True
+  P1 == Q2 province+city label (latin1) : True

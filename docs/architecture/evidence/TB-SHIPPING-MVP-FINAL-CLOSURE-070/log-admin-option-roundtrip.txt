@@ -1,0 +1,45 @@
+﻿=== TB-SHIPPING-MVP-FINAL-CLOSURE-070 :: option-aware admin editor roundtrip (mission C) ===
+target: existing Development host :5088, tenant store-alpha, DB tooba_alpha
+actor: existing canonical Development admin actor header
+
+--- 1. the option source the dialog select now reads: GET /v1/admin/shipping-methods ---
+GET http://127.0.0.1:5088/v1/admin/shipping-methods?language=fa => 200
+   service=post options=[standard]
+   service=tipax options=[express,standard]
+   service=store_courier options=[]
+   service=in_person options=[]
+   TIPAX_OPTION_SOURCE=express,standard
+   TIPAX_OPTION_LABELS=express:پیشتاز|standard:معمولی
+
+--- 2. read: the dialog view now carries optionCode per policy ---
+GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200
+   RATE 01a13d84-ca7f-7000-a59a-269a1c8ec13d option=express area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 charge=260000.00 lead=1 active=True
+   RATE 01a13d84-ca00-7000-8d86-52803380de4e option=standard area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 charge=180000.00 lead=3 active=True
+   RATE 01a13d65-cf37-7000-ad21-ac8e9b2c89d7 option= area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 charge=180000.00 lead=3 active=False
+   STANDARD_ID=01a13d84-ca00-7000-8d86-52803380de4e charge=180000.00
+   EXPRESS_ID=01a13d84-ca7f-7000-a59a-269a1c8ec13d charge=260000.00
+
+--- 3. edit through the exact payload the dialog builds (scope + optionCode echoed back) ---
+PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates/01a13d84-ca00-7000-8d86-52803380de4e => 200
+
+--- 4. no cross-option leakage + identity preserved ---
+GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200
+   AFTER-EDIT express option=express charge=260000.00 (must be unchanged)
+   AFTER-EDIT standard option=standard charge=185000.00
+
+--- 5. restore the fixture amount (185000 -> 180000.00) ---
+PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates/01a13d84-ca00-7000-8d86-52803380de4e => 200
+
+--- 6. active toggle roundtrip through the same route the toggle button uses ---
+PATCH http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates/01a13d84-ca00-7000-8d86-52803380de4e/active => 200
+PATCH http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates/01a13d84-ca00-7000-8d86-52803380de4e/active => 200
+
+--- 7. an option code the service does not own is refused by the catalog seam ---
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 400 {"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/tipax/rates","errorCode":"shipping.service_option.unknown","traceId":"0dcfe505c7a58d7c100f788e01742798","correlationId":"1e39b92c6269404a9dd835625433d399","requestId":"0HNPADQ9N3ND2:00000008"}
+
+--- 8. final state ---
+GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200
+   FINAL RATE 01a13d84-ca7f-7000-a59a-269a1c8ec13d option=express area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 charge=260000.00 lead=1 active=True
+   FINAL RATE 01a13d84-ca00-7000-8d86-52803380de4e option=standard area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 charge=180000.00 lead=3 active=True
+   FINAL RATE 01a13d65-cf37-7000-ad21-ac8e9b2c89d7 option= area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 charge=180000.00 lead=3 active=False
+   FINAL GRANT 01a13d65-cf8e-7000-a8e5-2205f6167d63 area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 active=True

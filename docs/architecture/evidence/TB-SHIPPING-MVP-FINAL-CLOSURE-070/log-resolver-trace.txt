@@ -1,0 +1,36 @@
+﻿--- step 1: country lookup (CountryCode == 'IR') ---
+    country id=e3451206-e503-51a8-91ad-afa9ab70e330 code='IR' active=True bytes=4952
+--- step 2: administrative areas for IR ---
+    area code='tehran' active=True labels='تهران'[d8aad987d8b1d8a7d986]
+    area code='alborz' active=True labels='البرز'[d8a7d984d8a8d8b1d8b2]
+    area code='isfahan' active=True labels='اصفهان'[d8a7d8b5d981d987d8a7d986]
+    area code='razavi_khorasan' active=True labels='خراسان رضوی'[d8aed8b1d8a7d8b3d8a7d98620d8b1d8b6d988db8c]
+    area code='fars' active=True labels='فارس'[d981d8a7d8b1d8b3]
+    area code='east_azerbaijan' active=True labels='آذربایجان شرقی'[d8a2d8b0d8b1d8a8d8a7db8cd8acd8a7d98620d8b4d8b1d982db8c]
+    area code='khuzestan' active=True labels='خوزستان'[d8aed988d8b2d8b3d8aad8a7d986]
+    area code='mazandaran' active=True labels='مازندران'[d985d8a7d8b2d986d8afd8b1d8a7d986]
+    area code='gilan' active=True labels='گیلان'[daafdb8cd984d8a7d986]
+    area code='qom' active=True labels='قم'[d982d985]
+    area code='yazd' active=True labels='یزد'[db8cd8b2d8af]
+    area code='kerman' active=True labels='کرمان'[daa9d8b1d985d8a7d986]
+--- step 3: exact comparison of the input 'البرز' bytes=d8a7d984d8a8d8b1d8b2 ---
+    area code='tehran' codeMatch=False labelMatch=False
+    area code='alborz' codeMatch=False labelMatch=True
+    area code='isfahan' codeMatch=False labelMatch=False
+    area code='razavi_khorasan' codeMatch=False labelMatch=False
+    area code='fars' codeMatch=False labelMatch=False
+    area code='east_azerbaijan' codeMatch=False labelMatch=False
+    area code='khuzestan' codeMatch=False labelMatch=False
+    area code='mazandaran' codeMatch=False labelMatch=False
+    area code='gilan' codeMatch=False labelMatch=False
+    area code='qom' codeMatch=False labelMatch=False
+    area code='yazd' codeMatch=False labelMatch=False
+    area code='kerman' codeMatch=False labelMatch=False
+--- step 4: the exact observer call ResolveLegacyAsync("IR","البرز",null,null) ---
+    outcome=Resolved candidateCount=1 identifiers=DestinationIdentifiers { CountryId = e3451206-e503-51a8-91ad-afa9ab70e330, AdministrativeAreaId = 1f8050a8-c325-59fa-959f-82d76b5b2bc5, CityId = , ServiceAreaId =  }
+--- step 5: variants ---
+    (IR,البرز,) => Resolved count=1 ids=DestinationIdentifiers { CountryId = e3451206-e503-51a8-91ad-afa9ab70e330, AdministrativeAreaId = 1f8050a8-c325-59fa-959f-82d76b5b2bc5, CityId = , ServiceAreaId =  }
+    (IR,alborz,) => Resolved count=1 ids=DestinationIdentifiers { CountryId = e3451206-e503-51a8-91ad-afa9ab70e330, AdministrativeAreaId = 1f8050a8-c325-59fa-959f-82d76b5b2bc5, CityId = , ServiceAreaId =  }
+    (IR,البرز,کرج) => Resolved count=1 ids=DestinationIdentifiers { CountryId = e3451206-e503-51a8-91ad-afa9ab70e330, AdministrativeAreaId = 1f8050a8-c325-59fa-959f-82d76b5b2bc5, CityId = 68255340-c69f-5d20-bf33-e8e0b24edde9, ServiceAreaId =  }
+    (IR,,کرج) => Resolved count=1 ids=DestinationIdentifiers { CountryId = e3451206-e503-51a8-91ad-afa9ab70e330, AdministrativeAreaId = 1f8050a8-c325-59fa-959f-82d76b5b2bc5, CityId = 68255340-c69f-5d20-bf33-e8e0b24edde9, ServiceAreaId =  }
+    (IR,تهران,) => Resolved count=1 ids=DestinationIdentifiers { CountryId = e3451206-e503-51a8-91ad-afa9ab70e330, AdministrativeAreaId = 3cefa472-d0ac-5b2e-817b-ae7df7c33382, CityId = , ServiceAreaId =  }
