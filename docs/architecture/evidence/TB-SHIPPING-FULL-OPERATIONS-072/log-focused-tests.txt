@@ -1,0 +1,39 @@
+﻿(node:31420) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-operating-schedule-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ read an empty schedule set: a real empty answer, not a fabricated default (15.1867ms)
+✔ create a Sunday 13:00-14:00 plus 16:30-18:00 (capacity 25) schedule with the real wire shape (0.9025ms)
+✔ repeating the same body is idempotent: same schedule id and same window set (0.4931ms)
+✔ service-level and option-level schedules coexist without overwriting each other (6.2561ms)
+✔ active toggle persists and refreshes through PATCH {scheduleId}/active (0.9171ms)
+✔ stable failure codes are surfaced, including the child code of a validation envelope (0.4099ms)
+✔ 401/403 map to denied and unreachable network maps to a stable error (0.4249ms)
+✔ scheduleErrorCode prefers the actionable child code over the validation envelope (0.0755ms)
+(node:35696) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-operating-schedule-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ ISO weekday identity: Sunday is 7 and every Persian label maps to its ISO number (0.5497ms)
+✔ 24-hour parsing is strict and never guesses a time from a malformed value (0.1487ms)
+✔ the wire shape is HH:mm:ss and the editable shape is HH:mm, both round-tripping (0.1336ms)
+✔ a real Sunday 13:00-14:00 window plus a second window is valid and serialises correctly (0.7175ms)
+✔ adjacent windows are accepted while overlapping windows are refused (0.1623ms)
+✔ reversed, zero-length and overnight windows are refused with the range meaning (0.1441ms)
+✔ invalid weekday, invalid time, invalid capacity and empty form are refused locally (0.1459ms)
+✔ option identity: only real options are accepted and the service level is the explicit fallback (0.1467ms)
+✔ a stored schedule becomes editable rows and keeps the server order (0.1461ms)
+✔ sorting is stable by day then start, and an incomplete row never sorts above a complete one (0.1659ms)
+✔ capacity is displayed as configured-only, never as remaining or reserved (9.469ms)
+✔ an empty schedule set is a real answer and its disclosure never reads as a checkout block (0.1303ms)
+✔ summaries count schedules, active rows, windows and configured capacity without inventing values (0.1422ms)
+✔ stable API failure codes map to Persian messages and unknown codes fall back (0.0706ms)
+✔ an empty new row never fabricates a weekday or a time (0.0649ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 145.9556

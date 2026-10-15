@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Ban,
   Bike,
+  Clock,
   Package,
   Pencil,
   Plus,
@@ -45,6 +46,7 @@ import {
 } from "./shipping-services/shipping-services-form-model.ts";
 import { createHostSavedViewStore } from "./saved-view-store";
 import { ShippingRatesCoverageDialog } from "./shipping-services/shipping-rates-coverage-dialog.tsx";
+import { ShippingOperatingScheduleDialog } from "./shipping-services/shipping-operating-schedule-dialog.tsx";
 import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 
 const GRID_VIEW_KEY = "admin-shipping-services";
@@ -129,6 +131,8 @@ export function ShippingServicesScreen() {
   const [dialogOpen, setDialogOpen] = useState(false);
   // بخش نرخ/پوشش خدمت انتخاب‌شده؛ null یعنی بسته است.
   const [ratesTarget, setRatesTarget] = useState<{ code: string; name: string } | null>(null);
+  // بخش «برنامه کاری ارسال» خدمت انتخاب‌شده؛ null یعنی بسته است.
+  const [scheduleTarget, setScheduleTarget] = useState<{ code: string; name: string } | null>(null);
   const [code, setCode] = useState("");
   const [providerKind, setProviderKind] = useState("post");
   const [iconKey, setIconKey] = useState("post");
@@ -326,6 +330,16 @@ export function ShippingServicesScreen() {
         onClick: (row) => {
           setNotice(undefined);
           setRatesTarget({ code: row.code, name: row.name });
+        },
+      },
+      {
+        id: "schedule",
+        label: "برنامه کاری ارسال",
+        icon: Clock,
+        testId: (row) => `shipping-service-schedule-${row.shippingServiceId}`,
+        onClick: (row) => {
+          setNotice(undefined);
+          setScheduleTarget({ code: row.code, name: row.name });
         },
       },
       {
@@ -694,6 +708,14 @@ export function ShippingServicesScreen() {
         serviceCode={ratesTarget?.code ?? ""}
         serviceName={ratesTarget?.name ?? ""}
         onClose={() => setRatesTarget(null)}
+        onNotice={setNotice}
+      />
+
+      <ShippingOperatingScheduleDialog
+        open={scheduleTarget !== null}
+        serviceCode={scheduleTarget?.code ?? ""}
+        serviceName={scheduleTarget?.name ?? ""}
+        onClose={() => setScheduleTarget(null)}
         onNotice={setNotice}
       />
     </main>

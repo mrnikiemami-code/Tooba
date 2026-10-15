@@ -1,0 +1,29 @@
+﻿=== TB-SHIPPING-FULL-OPERATIONS-072 :: read-only operating-schedule isolation probe ===
+target: existing Development host :5088, tenant store-alpha, DB tooba_alpha
+actor: existing canonical Development admin actor header
+This probe performs GET only. It never writes; the live browser proof in ui-*.png did the writes.
+
+--- 1. tipax: the 071 fixture restored by the UI (Sunday 13:00-14:00 + 16:30-18:00, capacity 25) ---
+GET tipax => 200
+   {"serviceCode":"tipax","schedules":[{"scheduleId":"01a13deb-cd7c-7000-a11e-641338237a1a","serviceCode":"tipax","optionCode":"standard","timeZoneId":"Asia/Tehran","isActive":true,"windows":[{"windowId":"01a13e1c-2913-7000-b30a-0d3fb02dfcde","weekday":7,"startTime":"13:00:00","endTime":"14:00:00"},{"windowId":"01a13e1c-2913-7000-bf0f-56d47972df59","weekday":7,"startTime":"16:30:00","endTime":"18:00:00","capacity":25}],"configuredCapacityTotal":25,"createdAt":"2026-10-15T04:57:06.172383+00:00","updatedAt":"2026-10-15T05:49:55.347092+00:00"}]}
+
+--- 2. isolation: the other shipping services must have no schedule row ---
+GET post => 200
+   {"serviceCode":"post","schedules":[]}
+
+GET snapp_courier => 200
+   {"serviceCode":"snapp_courier","schedules":[]}
+
+GET store_courier => 200
+   {"serviceCode":"store_courier","schedules":[]}
+
+GET in_person => 200
+   {"serviceCode":"in_person","schedules":[]}
+
+--- 3. authorization boundary: no actor header must be 401 admin.actor.missing ---
+GET tipax => 401
+   {"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/shipping-services/tipax/operating-schedules","errorCode":"admin.actor.missing","traceId":"4feb9e61cd841f2a4f2987f9ea2bdde0","correlationId":"ec5057f6524b46158d535d0a118410a2","requestId":"0HNPAF2RP9238:00000006"}
+
+--- 4. provenance: Development platform descriptor, never production/staging ---
+GET /__platform-commerce => 200
+   {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"b4ec0d4d33997de69ff1f330cdc1ae61"}

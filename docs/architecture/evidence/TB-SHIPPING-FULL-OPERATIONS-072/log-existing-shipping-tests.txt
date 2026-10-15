@@ -1,0 +1,60 @@
+﻿(node:1368) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-destination-picker.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ only the newest cascade generation may write state (0.4891ms)
+✔ a stale area response cannot overwrite the cities of a newer area (23.9886ms)
+✔ independent guards do not invalidate each other across cascade levels (0.1807ms)
+(node:36184) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-rates-coverage-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ valid form produces a numeric payload with normalised currency (1.3251ms)
+✔ empty free-above threshold stays null instead of becoming zero (0.2768ms)
+✔ negative, non-numeric and malformed entries are rejected before any API call (0.1831ms)
+✔ preparation and lead days stay separate values (0.0727ms)
+✔ policy round-trips into the edit form without inventing values (0.0971ms)
+✔ an empty coverage set is reported as NO COVERAGE, never unlimited (0.2234ms)
+✔ an inactive grant is not coverage (0.0924ms)
+✔ scope summary exposes stable ids, not fabricated placeholders (0.1561ms)
+✔ scope level follows the deepest real selection (0.1034ms)
+✔ scope payload drops ids deeper than the chosen level instead of inferring them (0.1678ms)
+✔ an empty or inconsistent destination selection is refused before submit (0.0966ms)
+✔ changing a parent clears dependent selections so no inconsistent id survives (0.1187ms)
+✔ service-level policy renders as the documented fallback, never as an option (0.082ms)
+✔ an option policy shows its own immutable identity and never a fabricated label (0.0496ms)
+✔ only options really belonging to the service are accepted (0.0812ms)
+✔ rates group by real option order with the service-level group first (0.2113ms)
+✔ an orphaned option code keeps its own group instead of being merged or dropped (0.0892ms)
+✔ no cross-option leakage: two options at one scope stay two separate rows (0.0723ms)
+(node:32436) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-services-form-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a complete form produces no issues (1.9501ms)
+✔ service code is required, must stay canonical, and must be unique (0.488ms)
+✔ sort order must be a non-negative integer instead of silently becoming zero (0.1253ms)
+✔ a display name for the active language is required (0.137ms)
+✔ option rows are validated instead of being dropped silently (0.2237ms)
+✔ write request is canonical and keeps option identity (0.4337ms)
+✔ active helpers resolve the active language only (0.1047ms)
+✔ known fulfillment failure codes map to fa and unknown codes fall back (0.1982ms)
+✔ screen wires validation, page-level feedback, and confirmed row actions (0.6414ms)
+(node:32732) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-services-roundtrip.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ create roundtrip: POST path, method, DTO shape and list refresh (19.4464ms)
+✔ load-edit then save-update roundtrip: GET detail, PUT with preserved option identity (0.7718ms)
+✔ confirmed deactivate roundtrip: POST deactivate and inactive row (0.3783ms)
+✔ rejected mutations surface a stable code and leave the catalog untouched (0.6071ms)
+✔ denied and unreachable responses map to denied/host-unreachable (0.4447ms)
+✔ generic endpoint failure keeps a non-empty message for the UI fallback (0.3166ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 168.5514

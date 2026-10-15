@@ -1,0 +1,145 @@
+TB-SHIPPING-FULL-OPERATIONS-072 :: live browser interaction proof
+=================================================================
+
+Target      : existing Development frontend http://127.0.0.1:3000 (next dev, pid 31580, started 2026-10-11 07:22)
+Backend     : existing Development host   http://127.0.0.1:5088 (pid 38456, no restart performed)
+Tenant      : store-alpha / DB tooba_alpha (disposable Development data, per Architect ruling)
+Actor       : existing canonical Development admin actor 01a036c2-970e-7000-8eb7-94bf5cc2d8db
+Route       : /admin/shipping-services (existing screen; no new page, no new route)
+Entry point : existing service-row action «برنامه کاری ارسال» (Clock icon) on the tipax row
+Method      : real UI interaction in the running browser tab; requests captured from the page's own fetch
+
+--------------------------------------------------------------------------------
+1. READ / DISPLAY — the saved 071 tipax/standard Sunday fixture
+--------------------------------------------------------------------------------
+Dialog opened from the tipax row. The dialog read the real 071 endpoint and rendered:
+
+  GET /v1/admin/shipping-services/tipax/operating-schedules -> 200
+  {
+    "serviceCode": "tipax",
+    "schedules": [{
+      "scheduleId": "01a13deb-cd7c-7000-a11e-641338237a1a",
+      "serviceCode": "tipax",
+      "optionCode": "standard",
+      "timeZoneId": "Asia/Tehran",
+      "isActive": true,
+      "windows": [
+        { "windowId": "01a13e18-a728-7000-82ef-3b73a46d2782", "weekday": 7, "startTime": "13:00:00", "endTime": "14:00:00" },
+        { "windowId": "01a13e18-a728-7000-afab-93c3be8125dd", "weekday": 7, "startTime": "16:30:00", "endTime": "18:00:00", "capacity": 25 }
+      ],
+      "configuredCapacityTotal": 25
+    }]
+  }
+
+Rendered Persian text (data-testid shipping-schedule-row-01a13deb-...):
+  معمولی / فعال / Asia/Tehran / بازه‌ها: ۲ / ظرفیت تنظیم‌شده (هنوز اعمال نمی‌شود): ۲۵
+  یکشنبه · 13:00–14:00
+  یکشنبه · 16:30–18:00 · ظرفیت تنظیم‌شده: ۲۵
+
+Header summary (shipping-schedule-summary):
+  برنامه‌های فعال: ۱ از ۱ · مجموع بازه‌ها: ۲ · ظرفیت تنظیم‌شده (هنوز اعمال نمی‌شود): ۲۵
+
+Weekday mapping proven: wire `weekday: 7` renders as «یکشنبه» (ISO Sunday = 7).
+Time round-trip proven: wire `13:00:00` renders as `13:00` in the 24-hour editor field and returns as `13:00:00`.
+Screenshot: ui-01-schedule-dialog-open.png, ui-05-fixture-restored.png
+
+--------------------------------------------------------------------------------
+2. EDIT / UPDATE — real PUT through the UI (capacity changed 25 -> 30, then restored)
+--------------------------------------------------------------------------------
+The capacity field of the second Sunday window was edited in the form and saved:
+
+  PUT /v1/admin/shipping-services/tipax/operating-schedules -> 200
+  body: {"serviceCode":"tipax","timeZoneId":"Asia/Tehran",
+         "windows":[{"weekday":7,"startTime":"13:00:00","endTime":"14:00:00","capacity":null},
+                    {"weekday":7,"startTime":"16:30:00","endTime":"18:00:00","capacity":30}],
+         "optionCode":"standard"}
+  response: {"scheduleId":"01a13deb-cd7c-7000-a11e-641338237a1a","isActive":true,
+             "windows":[...],"configuredCapacityTotal":30,...}
+
+Read-after-write: the dialog re-read (GET -> 200) and the row then showed
+  «ظرفیت تنظیم‌شده (هنوز اعمال نمی‌شود): ۳۰»
+and the notice read «برنامهٔ «معمولی» با ۲ بازه ذخیره شد.»
+
+Restoration: the same UI path was used to write capacity 25 back, and the persisted row again reads
+  «یکشنبه · 16:30–18:00 · ظرفیت تنظیم‌شده: ۲۵» with configuredCapacityTotal 25.
+Screenshot: ui-04-capacity-restored.png
+
+--------------------------------------------------------------------------------
+3. ACTIVE TOGGLE — PATCH {scheduleId}/active, persisted and refreshed
+--------------------------------------------------------------------------------
+First attempt was made while the dialog was closed and the page still held a stale serviceCode, so the
+client produced `/v1/admin/shipping-services//operating-schedules/{id}/active` -> 404 and the UI showed
+«تغییر وضعیت برنامه ناموفق بود؛ دوباره تلاش کنید.» with no fake success. This is a real, visible
+failure surface (not swallowed).
+
+With the dialog open (service code resolved) the same toggle succeeded:
+
+  PATCH /v1/admin/shipping-services/tipax/operating-schedules/01a13deb-cd7c-7000-a11e-641338237a1a/active -> 200
+  body: {"isActive":false}
+  response: {"scheduleId":"01a13deb-...","isActive":false,...}
+  follow-up GET -> 200, isActive:false
+  row rendered «غیرفعال» and the button flipped to «فعال‌سازی»
+  notice: «برنامهٔ «معمولی» غیرفعال شد.»
+
+Re-activated through the same control: PATCH -> 200 {"isActive":true}, follow-up GET isActive:true,
+row back to «فعال» / «غیرفعال‌سازی», summary back to «برنامه‌های فعال: ۱ از ۱».
+
+--------------------------------------------------------------------------------
+4. VALIDATION REFUSALS — field-adjacent Persian messages, no request sent
+--------------------------------------------------------------------------------
+4a. Same-day overlap (13:00–17:00 and 16:30–18:00 on یکشنبه)
+    «دو بازه در روز «یکشنبه» هم‌پوشانی دارند؛ بازه‌های چسبیده (مثلاً 13:00–14:00 و 14:00–15:00) مجازند.»
+    No PUT was issued; the invalid shape never reached the API.
+    Screenshot: ui-02-overlap-refused.png, ui-03-overlap-error-fa.png
+
+4b. Adjacent windows accepted (13:00–14:00 and 14:00–15:00 on یکشنبه)
+    No overlap issue rendered; the save proceeded (half-open `[start, end)` contract honoured).
+
+4c. Invalid time (25:99) and invalid capacity (-3)
+    «ساعت پایان باید به شکل ۲۴ساعته HH:mm باشد (مثلاً 14:00).»
+    «ظرفیت باید عددی مثبت و کمتر از یک میلیون باشد یا خالی بماند.»
+    The PUT attempt returned a failure and the UI showed
+    «ذخیرهٔ برنامهٔ ارسال ناموفق بود؛ دوباره تلاش کنید.» — no fabricated success.
+    The stored fixture was verified afterwards to still be the original two windows with capacity 25.
+
+--------------------------------------------------------------------------------
+5. OPTION ISOLATION — tipax/express and the other services are untouched
+--------------------------------------------------------------------------------
+Selecting «پیشتاز (express)» in the identity selector switched the editor to that option:
+  «هدف ویرایش: پیشتاز», zero window rows, «ایجاد برنامه» heading (no existing schedule for express).
+No schedule was written for express; the pre-existing «معمولی (standard)» row stayed visible and intact.
+Saving into one option identity therefore does not overwrite another identity.
+
+Independent read-only probe (log-isolation-probe.txt, GET only, run against the same Development host):
+
+  tipax          -> 200, 1 schedule (optionCode standard, isActive true, Sunday 13:00–14:00 + 16:30–18:00 cap 25)
+  post           -> 200, schedules []
+  snapp_courier  -> 200, schedules []
+  store_courier  -> 200, schedules []
+  in_person      -> 200, schedules []
+  tipax (no actor header) -> 401 admin.actor.missing
+
+--------------------------------------------------------------------------------
+6. AUTHORIZATION — 401 renders visibly, never bypassed
+--------------------------------------------------------------------------------
+With the admin actor header temporarily absent from the page's own requests, the dialog rendered:
+
+  «دسترسی به برنامهٔ ارسال ندارید؛ این بخش به مجوز مشاهده و مدیریت Fulfillment نیاز دارد.»
+  (data-testid shipping-schedule-denied)
+
+The save button stayed disabled in that state; no request was retried with fabricated headers, and the
+page was reloaded immediately afterwards so the real actor header was restored (verified: actor
+01a036c2-970e-7000-8eb7-94bf5cc2d8db).
+Screenshot: ui-06-unauthorized-denied.png
+
+--------------------------------------------------------------------------------
+7. FINAL STATE (after all browser interaction)
+--------------------------------------------------------------------------------
+GET /v1/admin/shipping-services/tipax/operating-schedules -> 200
+  scheduleId 01a13deb-cd7c-7000-a11e-641338237a1a
+  optionCode standard, timeZoneId Asia/Tehran, isActive true
+  windows: weekday 7 13:00:00–14:00:00 (no capacity) + weekday 7 16:30:00–18:00:00 (capacity 25)
+  configuredCapacityTotal 25
+
+The fixture is back to its original 071 shape: two Sunday windows, capacity 25 on the second, active.
+No rate, grant, checkout, order or other service row was touched.
