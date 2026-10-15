@@ -13,9 +13,9 @@ Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: f0a7bc36576d27d3d722b151174225aa4671cb13
 Base-SHA: 047f085b26c05cb208bcc445523207ddacefd8ec
 Code-SHA: NONE
-Evidence-SHA: EVIDENCE_COMMIT_091 (the single commit that carries SHIPPING-ONE-LEVEL-UI-091.md, the
-  evidence directory, this file, post-result.js and the append-only master-recovery checkpoint; HEAD ==
-  origin/main == that commit at post time)
+Evidence-SHA: 903c5d839146874af88a5e0ce1bbe7b73b46b445 (the single commit that carries
+  SHIPPING-ONE-LEVEL-UI-091.md, the evidence directory, this file, post-result.js and the append-only
+  master-recovery checkpoint; HEAD == origin/main == 903c5d839 at post time)
 automaticNextImplementationTask: NONE
 
 PREFLIGHT / DRIFT
