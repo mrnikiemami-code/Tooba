@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-099
 Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-098
@@ -14,8 +14,8 @@ Status: PASS
 Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: 0a66c7a2c1c98ba1bee52b3e7a79957020cf3291
 Base-SHA: 0a66c7a2c1c98ba1bee52b3e7a79957020cf3291
-Code-SHA: <EVIDENCE_SHA>
-Evidence-SHA: <EVIDENCE_SHA>
+Code-SHA: 42ac7c2f1d2443374f07cf6a2983a934c243796a
+Evidence-SHA: 42ac7c2f1d2443374f07cf6a2983a934c243796a
 automaticNextImplementationTask: NONE
 Measured-Time: ~42 minutes (02:15 → 02:57 local) — DISCLOSED overrun of the 30-minute hard timebox; the write proof was completed and the isolated environment fully destroyed before this Result, nothing was left mid-flight
 
