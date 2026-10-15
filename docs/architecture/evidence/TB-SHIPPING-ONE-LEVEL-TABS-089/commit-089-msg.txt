@@ -1,0 +1,22 @@
+feat(shipping): wire one-level tab 5 read-only cost inspector on the 086 binding
+
+TB-SHIPPING-ONE-LEVEL-TABS-089
+
+Completes the fifth and last tab of the default-OFF one-level shell as a
+read-only diagnostic cost inspector for exactly one selected one-level method,
+reusing the existing authorized 076/078 operational-quote seam and the proven
+quote model unchanged. No backend source changed and no new endpoint was
+invented: the route, its single authorization call and the declared DTO fields
+were confirmed from backend source before wiring.
+
+- shipping-one-level-quote-model.ts forces the evaluated optionCode to come only
+  from the server-resolved binding (including null for optionless methods),
+  refuses a reply whose service/option differs from the requested identity, and
+  keeps a stale evaluation from being attributed to a newly selected method.
+- shipping-one-level-quote-tab.tsx renders the backend answer field by field with
+  no recomputation, no option selector, no provider level, no method-code
+  splitting, and states the boundary explicitly: «فقط بررسی هزینه؛ مبلغ سفارش یا
+  پرداخت تغییر نمیکند», configured capacity not enforced, and carrier windows are
+  not a promised delivery. Evaluation writes nothing.
+- Tests: 11 new frontend cases (25 with the shell suite, 173 across
+  shipping-services) and a clean frontend typecheck.

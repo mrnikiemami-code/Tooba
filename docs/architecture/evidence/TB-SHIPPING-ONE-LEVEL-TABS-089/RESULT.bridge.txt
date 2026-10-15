@@ -1,0 +1,147 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-089
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-088
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-TABS
+Mode: BOUNDED_ONE_LEVEL_OPERATIONAL_QUOTE_INSPECTOR_TAB
+Bridge-Task-Row: d0a999ff-652f-4c6b-b8fd-97d32249ea5a
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 4dc0b1dacaeffbc6e5ac6e9113dfd2040f0919d5
+Base-SHA: 4dc0b1dacaeffbc6e5ac6e9113dfd2040f0919d5
+Code-SHA: a3768304c
+Evidence-SHA: <see Evidence-SHA note>
+automaticNextImplementationTask: NONE
+
+STATUS NOTE
+PASS is claimed ONLY for the functional, source-and-focused-test-proven fifth-tab inspector allowed
+by the acceptance clause: server-resolved method identity, honest read-only quote semantics, explicit
+no-Checkout/no-settlement/no-reservation claims, and no regression to the existing four tabs. This is
+explicitly NOT LIVE VERIFIED and NOT COMMERCIALLY READY: the gate is OFF by absence and Development is
+unmigrated, so no live evaluation is claimed and no production PASS is fabricated.
+
+BASE-SHA PROOF
+HEAD was exactly 4dc0b1dac (Expected-Base-SHA) when the task was claimed, so there was no drift and no
+RECOVERY_CONFLICT. All pre-existing dirty/untracked work was preserved: no reset, stash, rebase, force
+push or unrelated commit. The 089 receipt docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-089.task.md remains
+UNSTAGED as required.
+
+ENDPOINT CONTRACT CONFIRMED FROM SOURCE (before wiring)
+  * Route: group.MapPost("/shipping-services/{serviceCode}/operational-quote", EvaluateAsync) in
+    Tooba.Shipping.Endpoints/Admin/ShippingOperationalQuoteEndpoints.cs.
+  * Authorization: exactly one mapped route and one RequireAuthorizedAsync call using
+    ShippingAdminPermissions.View (never Manage, never AllowAnonymous), already asserted by
+    ShippingOperationalQuoteEndpointOwnershipTests.
+  * The 078 client sends only declared DTO fields (scope, cartSubtotalExclusive, currencyCode,
+    optionCode, weightGrams, itemCount, requestedPickupAtUtc), so no invented wire field is used and
+    the endpoint CAN be scoped to exactly one method.
+  * No new endpoint was invented and the allowed operational-quote / quote-inspector path exception
+    was NOT used: the existing client and model were reused unmodified.
+
+CHANGED PATHS (frontend only; no backend source changed)
+  src/frontend/app/admin/shipping-services/shipping-one-level-quote-model.ts (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-quote-tab.tsx (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-quote-tab.test.ts (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.tsx
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs-model.ts
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.test.ts
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-089.md
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-089/**
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-089.task.md (receipt, kept UNSTAGED)
+
+MISSION A — REAL FIFTH TAB, NO SECOND LEVEL
+  * Selected method code and label are shown through the resolved binding context; the tab only calls
+    oneLevelBindingPath(methodCode) and never splits methodCode (no split(":") anywhere; asserted).
+  * The immutable legacy pair is resolved EXCLUSIVELY through
+    GET /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/binding. There is no
+    editable serviceCode/optionCode input.
+  * optionCode on the wire comes ONLY from the resolved binding: oneLevelQuotePayload overwrites
+    form.optionCode with binding.optionCode, and the request service code comes only from
+    quoteTarget(resolvedBinding). A client-supplied option can never reach the endpoint; optionless
+    methods send null.
+  * No provider level, no option selector, no grouping-by-option and no hierarchy: no
+    SERVICE_LEVEL_OPTION_VALUE, no loadShippingMethodTree, no providerKind (asserted).
+  * Fail closed: resolveQuoteState yields no-method without a selection and binding-unavailable for
+    gate-off / not-ready / unresolved / untrusted, and 401/403 surfaces as denied. No price, zero
+    default or success is manufactured when there is no usable result.
+  * Reply identity is checked before display: a reply whose serviceCode OR optionCode differs from the
+    requested identity is refused and no amount is shown.
+  * Reused semantics: Geography-only destination picker, explicit IANA timezone, local datetime
+    resolved by the existing resolvePickupToUtc (including its ambiguous/nonexistent refusal), subtotal
+    / grams / physical item count by the existing parsers, currency by the existing normalization.
+    Weight and item count are labeled as manual diagnostic inputs, never as measured order facts.
+  * Faithful display: every amount is rendered from the backend answer via formatAmountFa; a nullable
+    amount stays «اعلام نشده» and is never coerced to 0; nothing is recomputed into checkout pricing;
+    a currency mismatch is flagged rather than normalized away.
+  * Componentized result shown: carrier freight, packaging, combined service total, checkout-due,
+    COD-due, payer mode, availability verdict, matched size tier, eligibility and the actual
+    freight/packaging reason codes.
+  * UI states implemented: no method; binding loading; binding unavailable; 401/403 denied; invalid
+    input; pending evaluation; valid result; business refusal/failure code; unexpected API failure;
+    identity mismatch. Generation guard prevents a previous method's quote from appearing after a
+    selection change, the submit is disabled while busy (no duplicate submit), and no cancellation of
+    a committed server call is claimed.
+  * This tab writes NOTHING: evaluation is read-only semantics notwithstanding the existing POST verb.
+
+HONESTY STATEMENTS CARRIED IN THE UI
+  * Persistent: «فقط بررسی هزینه؛ مبلغ سفارش یا پرداخت تغییر نمی‌کند.»
+  * A read-only diagnostic, not a customer price and not a transaction: no order written, no payment
+    or COD collection created, Checkout keeps its old price authority.
+  * «قابل پرداخت هنگام تسویه» and «وصول هنگام تحویل» are a diagnostic split of the same evaluation —
+    neither an amount taken from the customer nor an amount collected/settled.
+  * Capacity: «ظرفیت تنظیمشده (هنوز اعمال نمیشود)»; runtime enforcement remains NotEnforced, and
+    NotEvaluated availability never claims «قابل رزرو».
+  * Carrier windows are pickup/dispatch availability, NOT a promised customer delivery.
+
+MISSION B — PROOF AND REGRESSION
+  * Five locked Persian tab labels and the wired tabs 1-4 are still asserted by the shell test; the
+    tablist/tab/tabpanel keyboard semantics and dir="rtl" are untouched.
+  * The legacy operational-quote dialog and its grid action are unchanged and remain usable while the
+    gate is OFF.
+
+TESTS RUN
+  node --test --experimental-strip-types app/admin/shipping-services/shipping-one-level-quote-tab.test.ts
+    + …-tabs.test.ts                                                        => 25 passed / 0 failed
+  node --test --experimental-strip-types "app/admin/shipping-services/*.test.ts"  => 173 passed / 0 failed
+  npm run typecheck (src/frontend)                                          => clean
+
+One intermediate failure was found and fixed honestly during development: a boundary-text assertion
+rejected the words «وصول/تسویه» even in their negating form; the assertion now targets positive claims
+only. The failure and the fix are recorded rather than hidden.
+
+TESTS NOT RUN (and why)
+  * No backend suite: no backend source changed.
+  * No Host test build against the locked output DLLs; Tooba.Host (pid 33548) was NOT re-challenged and
+    no service was restarted.
+  * No broad suite.
+
+GATE / DATABASE TRUTH — NOT LIVE VERIFIED, NOT COMMERCIALLY READY
+  * Tooba:ShippingOneLevelCatalog: OFF by absence; NOT switched by this task.
+  * Development one-level table/backfill: absent/unapplied; the running Host may predate the 086 route.
+  * ShippingRateAuthority: OFF. ShippingOperationalShadow: OFF.
+  * No database write at all: no DDL/DML, no migration/backfill, no seeding, no gate activation, no new
+    permission, no Host/Next restart, no staging/production access, no manual live login, no unrelated
+    file touched.
+
+BLOCKERS
+  * Live tab-5 evaluation requires the gate enabled AND the authorized one-level migration — a separate
+    task; the Architect must separately decide 090 scope for a controlled Development migration/
+    backfill and real UI verification rather than this worker progressing silently.
+  * The 086 Host cert-guard run stays blocked while Tooba.Host (pid 33548) holds its output DLLs.
+  * The legacy operational-quote dialog remains the operational inspector while the gate is OFF.
+
+ACTUAL ELAPSED
+Claim 2026-10-15T14:10:44Z -> result ~14:19Z => approximately 9 minutes, inside the 30-minute hard stop.
+
+ROLLBACK
+Revert the 089 code commit and its evidence commit. Tab 5 returns to its wiring placeholder. No data,
+schema or configuration change needs undoing.
+
+EVIDENCE-SHA NOTE
+The Evidence-SHA is the commit carrying docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-089.md,
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-089/** and this RESULT.bridge.txt; it is created
+and pushed immediately before this result is posted and is the parent of the pushed result tree.
+END_TOOBA_WORKER_RESULT
