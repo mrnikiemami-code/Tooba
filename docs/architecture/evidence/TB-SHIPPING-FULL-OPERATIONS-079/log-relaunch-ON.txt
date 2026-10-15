@@ -1,0 +1,8 @@
+﻿=== TB-SHIPPING-FULL-OPERATIONS-079 :: controlled relaunch (ON) : 2026-10-15T13:19:58.7038566+03:30 ===
+STOP pid=24076 name=Tooba.Host.exe start=10/15/2026 13:14:44
+port free: 0 listeners
+override env for THIS process: Tooba__ShippingOperationalShadow__Enabled=true, Tooba__ShippingOperationalShadow__PrerequisitesConfirmed=true, Logging__LogLevel__Default=Information
+no configuration file was created or modified; the override lives only in this process environment
+RUNNING pid=40008 start=10/15/2026 13:20:04
+HEALTH 200 after ~2s : {"status":"ok"}
+ready=True

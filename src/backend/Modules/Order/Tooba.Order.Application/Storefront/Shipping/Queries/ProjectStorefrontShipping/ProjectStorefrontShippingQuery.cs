@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Geography.Contracts.Places;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Shipping.OperationalShadow;
 using Tooba.Order.Application.Storefront.Shipping.RateAuthority;
 
 namespace Tooba.Order.Application.Storefront.Shipping.Queries.ProjectStorefrontShipping;
@@ -30,7 +31,8 @@ public sealed record ProjectStorefrontShippingQuery(
 
 public sealed class ProjectStorefrontShippingHandler(
     StorefrontShippingService shipping,
-    StorefrontShippingShadowObserver shadow)
+    StorefrontShippingShadowObserver shadow,
+    StorefrontShippingOperationalShadowObserver operationalShadow)
     : IRequestHandler<ProjectStorefrontShippingQuery, Result<StorefrontShippingProjection>>
 {
     public async Task<Result<StorefrontShippingProjection>> Handle(
@@ -52,6 +54,31 @@ public sealed class ProjectStorefrontShippingHandler(
                     projection.Currency,
                     projection.Methods
                         .Select(m => new StorefrontShippingShadowCandidate(m.ServiceCode, m.PriceAmount, m.OptionCode))
+                        .ToArray())
+                {
+                    CityName = request.CityName,
+                    Destination = request.Destination,
+                },
+                cancellationToken);
+
+            // سایهٔ عملیاتی درز <b>جدا</b> و پیش‌فرض‌خاموش است: ارزیابی کامل (بسته‌بندی، تفکیک پرداخت،
+            // بازهٔ حامل، ظرفیت). نتیجهٔ آن هم دور ریخته می‌شود و هیچ مبلغ یا وعدهٔ مشتری را تغییر نمی‌دهد.
+            //
+            // اندازهٔ فیزیکی واقعی از این درخواست عمومی خوانده <b>نمی‌شود</b>: مسیر فروشگاه امروز هیچ
+            // منبع اندازهٔ معتبری ندارد و گرفتن آن از بدنهٔ درخواست، یک مقدار دلخواه کاربر را به
+            // ورودی تجاری تبدیل می‌کند. پس اندازه عمداً اعلام‌نشده می‌ماند و اگر سیاست شرط‌دار باشد،
+            // نتیجه صریحاً «اندازه در دسترس نیست» است، نه یک تطابق ساختگی.
+            await operationalShadow.ObserveAsync(
+                new StorefrontShippingOperationalShadowInput(
+                    request.ProvinceName,
+                    projection.SubtotalExclusiveOfTax,
+                    projection.Currency,
+                    projection.Methods
+                        .Select(m => new StorefrontShippingOperationalShadowCandidate(
+                            m.ServiceCode,
+                            m.OptionCode,
+                            m.PriceAmount,
+                            m.LeadDays))
                         .ToArray())
                 {
                     CityName = request.CityName,

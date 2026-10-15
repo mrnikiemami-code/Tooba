@@ -1,0 +1,8 @@
+﻿=== TB-SHIPPING-FULL-OPERATIONS-079 :: controlled relaunch (OFF) : 2026-10-15T13:31:06.6694896+03:30 ===
+STOP pid=36344 name=Tooba.Host.exe start=10/15/2026 13:30:55
+port free: 0 listeners
+NO override env: the restored process runs on the repository's safe defaults (both flags false)
+no configuration file was created or modified; the override lives only in this process environment
+RUNNING pid=33548 start=10/15/2026 13:31:13
+HEALTH 200 after ~4s : {"status":"ok"}
+ready=True

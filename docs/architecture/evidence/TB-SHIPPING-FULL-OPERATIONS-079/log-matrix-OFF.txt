@@ -1,0 +1,39 @@
+﻿reusing the task-owned Development admin token
+reusing the task-owned disposable Development cart/session
+
+=== TB-SHIPPING-FULL-OPERATIONS-079 :: storefront operational-shadow matrix (OFF) : 2026-10-15T13:29:51.8811089+03:30 ===
+cart=01a13ef6-4fb0-7000-8493-2054009122a1 (task-owned disposable Development cart, one real line, no order, no payment)
+  methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+  selected= amount=0 minDelivery= subtotal=8702542.0000000000 currency=IRR
+  methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+  selected= amount=0 minDelivery= subtotal=8702542.0000000000 currency=IRR
+  methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+  selected= amount=0 minDelivery= subtotal=8702542.0000000000 currency=IRR
+
+--- payload identity inside this run ---
+  P1 legacy-client (province only) length=2393
+  P2 city text (no ids) length=2393
+  P3 validated Geography ids length=2393
+  P1 == P1 legacy-client (province only) : True
+  P1 == P2 city text (no ids) : True
+  P1 == P3 validated Geography ids : True
+
+--- admin diagnostic operational-quote (authorized 076 read-only route) ---
+  outcome=Quoted freight=180000.00 packaging=0 total=180000.00 checkoutDue=180000.00 codDue=0 payer=Prepaid packagingPayer=Checkout
+  schedule=Available/shipping.schedule.available capacity=25 enforcement=NotEnforced
+  reason=shipping.operational_quote.quoted matched= carrierReason=shipping.quote.quoted
+  outcome=Quoted freight=180000.00 packaging=0 total=180000.00 checkoutDue=180000.00 codDue=0 payer=Prepaid packagingPayer=Checkout
+  schedule=Available/shipping.schedule.available capacity=25 enforcement=NotEnforced
+  reason=shipping.operational_quote.quoted matched= carrierReason=shipping.quote.quoted
+  outcome=Quoted freight=180000.00 packaging=0 total=180000.00 checkoutDue=180000.00 codDue=0 payer=Prepaid packagingPayer=Checkout
+  schedule=Unavailable/shipping.schedule.outside_windows capacity=25 enforcement=NotEnforced
+  reason=shipping.operational_quote.quoted matched= carrierReason=shipping.quote.quoted
+  outcome=Quoted freight=180000.00 packaging=0 total=180000.00 checkoutDue=180000.00 codDue=0 payer=Prepaid packagingPayer=Checkout
+  schedule=NotEvaluated/shipping.schedule.not_evaluated capacity=25 enforcement=NotEnforced
+  reason=shipping.operational_quote.quoted matched= carrierReason=shipping.quote.quoted
+  outcome=Quoted freight=180000.00 packaging=0 total=180000.00 checkoutDue=180000.00 codDue=0 payer=Prepaid packagingPayer=Checkout
+  schedule=Available/shipping.schedule.available capacity=25 enforcement=NotEnforced
+  reason=shipping.operational_quote.quoted matched= carrierReason=shipping.quote.quoted
+
+--- no-write proof (byte identity of every Shipping surface) ---
+captured rates/packaging/schedules baselines for OFF

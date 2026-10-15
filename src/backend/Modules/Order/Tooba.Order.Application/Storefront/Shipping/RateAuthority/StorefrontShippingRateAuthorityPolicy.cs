@@ -26,13 +26,23 @@ public static class StorefrontShippingRateAuthorityPolicy
     /// <summary>وضعیت دروازه را بر پایهٔ تنظیمات تعیین می‌کند.</summary>
     /// <param name="options">تنظیمات؛ تهی یعنی خاموش.</param>
     public static StorefrontShippingRateAuthorityGate Evaluate(StorefrontShippingRateAuthorityOptions? options)
+        => Evaluate(options?.ShadowEnabled ?? false, options?.PrerequisitesConfirmed ?? false);
+
+    /// <summary>
+    /// همان سیاست fail-closed برای هر درز سایهٔ دیگری که همان دو شرط را لازم دارد (مثلاً سایهٔ
+    /// عملیاتی ارسال). این overload <em>هیچ</em> رفتار تازه‌ای اضافه نمی‌کند: فقط همان قاعده را
+    /// روی دو مقدار صریح اعمال می‌کند تا معنای درز قبلی گسترده نشود.
+    /// </summary>
+    /// <param name="shadowEnabled">آیا سایه روشن است.</param>
+    /// <param name="prerequisitesConfirmed">آیا پیش‌نیازهای واقعی تأیید شده‌اند.</param>
+    public static StorefrontShippingRateAuthorityGate Evaluate(bool shadowEnabled, bool prerequisitesConfirmed)
     {
-        if (options is null || !options.ShadowEnabled)
+        if (!shadowEnabled)
         {
             return StorefrontShippingRateAuthorityGate.Disabled;
         }
 
-        return options.PrerequisitesConfirmed
+        return prerequisitesConfirmed
             ? StorefrontShippingRateAuthorityGate.Allowed
             : StorefrontShippingRateAuthorityGate.PrerequisitesUnconfirmed;
     }

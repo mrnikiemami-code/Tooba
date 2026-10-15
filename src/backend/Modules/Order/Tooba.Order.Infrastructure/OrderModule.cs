@@ -136,6 +136,21 @@ public sealed class OrderModule : IToobaModule
                 sp.GetService<Microsoft.Extensions.Logging.ILogger<
                     Application.Storefront.Shipping.RateAuthority.StorefrontShippingShadowObserver>>()));
 
+        // مشاهدهٔ سایهٔ عملیاتی: درز <b>جدا</b> با دروازهٔ مستقل و پیش‌فرض خاموش، چون این درز ارزیابی
+        // کامل (بسته‌بندی/تفکیک پرداخت/بازهٔ حامل/ظرفیت) را می‌بیند و روشن‌کردن سایهٔ ساده نباید
+        // ناخواسته این ادعای تازه را هم فعال کند. اتصال فقط برای مشاهده است.
+        services.Configure<Application.Storefront.Shipping.OperationalShadow.StorefrontShippingOperationalShadowOptions>(
+            configuration.GetSection(
+                Application.Storefront.Shipping.OperationalShadow.StorefrontShippingOperationalShadowOptions.SectionName));
+        services.AddScoped(
+            sp => new Application.Storefront.Shipping.OperationalShadow.StorefrontShippingOperationalShadowObserver(
+                sp.GetService<Tooba.Shipping.Contracts.Operations.IShippingOperationalQuoteLookup>(),
+                sp.GetService<Tooba.Geography.Contracts.Places.IGeographyLookup>(),
+                sp.GetService<Microsoft.Extensions.Options.IOptions<
+                    Application.Storefront.Shipping.OperationalShadow.StorefrontShippingOperationalShadowOptions>>(),
+                sp.GetService<Microsoft.Extensions.Logging.ILogger<
+                    Application.Storefront.Shipping.OperationalShadow.StorefrontShippingOperationalShadowObserver>>()));
+
         services.AddScoped<Application.Storefront.Services.StorefrontPendingPaymentService>();
         services.AddScoped<Application.Storefront.Services.StorefrontStartPaymentComposer>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();
