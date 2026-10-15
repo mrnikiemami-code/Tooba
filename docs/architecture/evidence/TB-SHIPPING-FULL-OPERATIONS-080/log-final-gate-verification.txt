@@ -1,0 +1,16 @@
+﻿=== TB-SHIPPING-FULL-OPERATIONS-080 :: focused current-state gate verification : 2026-10-15T13:38:06.7307000+03:30 ===
+provenance: edition=SingleStore deploymentId=dev-singlestore tenantId=store-alpha connectionReference=tenant-alpha market=IR
+current host pid=33548 name=Tooba.Host.exe started=10/15/2026 13:31:13
+no gate override is configured in the repository: appsettings carries no Tooba:ShippingRateAuthority and no Tooba:ShippingOperationalShadow section, so both gates run on their safe default (false/false).
+inherited override in THIS shell: none
+
+--- one focused read-only storefront projection call on the CURRENT process ---
+HTTP 200 length=2393 methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+selected= amount=0 minDelivery= subtotal=8702542.0000000000 currency=IRR
+wrote final-current-projection.json
+
+--- gate-OFF proof on the CURRENT process: zero operational-shadow log lines ---
+host stdout capture not present for the current run
+
+--- the same request with the gate ON is recorded in 079 evidence (payloads-OFF.json == payloads-ON.json) ---
+079 captured OFF length=8553 ON length=8553 identical=True
