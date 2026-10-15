@@ -1,0 +1,68 @@
+﻿(node:33244) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-activation.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the activation path is exactly the 096 seam and keeps the method code as the only identity (0.6189ms)
+✔ no service or option identity is ever sent by the activation client (0.5578ms)
+✔ only a server-resolved option-backed method is eligible for activation (0.4865ms)
+✔ optionless methods never get a toggle, no matter how the code looks (0.0955ms)
+✔ an unproven binding is fail-closed and never becomes an activation switch (0.1132ms)
+✔ a server response is accepted only when it confirms the same immutable method and a real boolean (0.1512ms)
+✔ the activation call sends the exact payload and only trusts a confirmed server answer (0.2933ms)
+✔ an invalid method code never reaches the network (0.0859ms)
+✔ denial, refusals and unexpected failures stay explicit and fail closed (0.5282ms)
+✔ the binding read is read-only and maps host truth fail-closed (0.5026ms)
+✔ an in-flight result can never land on another method (0.188ms)
+✔ the current state, the target action and the storefront impact are explicit in Persian (0.2048ms)
+✔ the control shows a functional toggle only for option-backed methods (0.4931ms)
+✔ the control confirms explicitly, guards duplicates and keeps no optimistic state (0.2975ms)
+✔ tab 1 wires the activation control through the binding read and refreshes server truth (0.9613ms)
+✔ the 094 name editor, the five tabs and the RTL tablist semantics are unchanged (1.1405ms)
+✔ the shell declares exactly the two allowed writes and no more (0.399ms)
+(node:15336) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-method-name.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the write path carries only the canonical method code and the language id (1.3955ms)
+✔ a name must be non-blank and within the stable column width (0.1415ms)
+✔ the edit form is prefilled only from the real translation of the selected language (0.1184ms)
+✔ a saved name updates exactly one row/language and never touches identity or activation (0.4638ms)
+✔ a saved name for an unknown row or language leaves the list unchanged (0.1033ms)
+✔ the edit target key distinguishes method+language and the generation guard rejects stale results (0.1027ms)
+✔ method rows are found by canonical code only (0.092ms)
+✔ host rows keep the real per-language translations and never invent a label or a second level (0.3072ms)
+✔ the shell exposes a name editor only and keeps the five-tab contract (0.538ms)
+✔ the dialog writes only the name, keeps the code read-only and never fabricates success (0.3585ms)
+✔ the effective language never stays empty or invalid when the language list arrives late (0.1432ms)
+✔ the dialog resolves the effective language from the real list and never sends an empty one (0.214ms)
+✔ the api client sends only the name and maps denied/error truthfully (0.2069ms)
+✔ the server page passes the real active language id and still fails closed (0.1986ms)
+(node:34804) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-tabs.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the five tab labels are exactly the locked Persian labels (1.2251ms)
+✔ all five tabs are genuinely wired and none advertises a wiring task (0.0986ms)
+✔ method codes are sanitized to the 32-character canonical identity (0.1317ms)
+✔ language ids accept only canonical uuids (0.144ms)
+✔ url selection is parsed safely and never trusts malformed input (0.2121ms)
+✔ url building omits defaults and round-trips sanitized values (0.1339ms)
+✔ tablist keyboard navigation wraps and supports Home/End (0.1296ms)
+✔ method rows keep one row per method and never invent a label (0.1526ms)
+✔ inactive methods stay inactive and are never silently activated or dropped (0.1038ms)
+✔ non-canonical method codes are rejected instead of normalized into new identities (0.1512ms)
+✔ data state is honest and has no legacy fallback path (0.0707ms)
+✔ the frontend gate is disabled by absence and cannot be enabled from the client (0.0998ms)
+✔ host gate response is mapped fail-closed and never enables on anything but an explicit flag (0.0838ms)
+✔ host method rows are mapped defensively and never invent a label or a second level (0.2228ms)
+✔ screen reads the authoritative gate server-side and exposes no client bypass (0.4775ms)
+✔ shell renders server-provided rows without a client fetch and edits only the method name (0.2751ms)
+✔ new shell edits only the method name and contains no second-level configuration (0.3031ms)
+ℹ tests 48
+ℹ suites 0
+ℹ pass 48
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 143.701

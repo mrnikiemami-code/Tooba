@@ -1,0 +1,160 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-097
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-096
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_OPTION_BACKED_ACTIVATION_UI
+Bridge-Task-Row: 73bb1057-8a97-4825-b8a6-60f18de6617e
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+Expected-Base-SHA: d9773e21700ffc3c7ba6d8df75d3e15efc21161f
+Base-SHA: c0055c410a4b186ef25ee9f58f81ce5f72833884
+Code-SHA: <EVIDENCE_SHA>
+Evidence-SHA: <EVIDENCE_SHA>
+
+== PREFLIGHT ==
+- Claimed exactly one pending task on tooba-main (row 73bb1057-8a97-4825-b8a6-60f18de6617e); preserved
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-097.task.md as an UNSTAGED receipt.
+- git fetch origin; HEAD == origin/main == c0055c410a4b186ef25ee9f58f81ce5f72833884.
+- Expected-Base-SHA d9773e21 is an ancestor of HEAD (merge-base --is-ancestor = true). Drift between
+  d9773e21..HEAD is 096 result bookkeeping only: `git diff --stat d9773e21..HEAD -- src/` is EMPTY.
+  => no overlapping source change, no RECOVERY_CONFLICT.
+- Read AGENTS.md, TOOBA-PIPELINE-PROTOCOL/CONTROLLER, 095/096 evidence, 094 tab-1 implementation.
+  No reset/stash/rebase/force push was used; all pre-existing dirty/untracked paths preserved.
+
+== MISSION A — ONE-LEVEL TAB 1 ACTIVATION CONTROL ==
+Endpoint inspected first (not invented): ShippingServiceEndpoints.SetOneLevelMethodActivationAsync
+(TB-096) plus OneLevelShippingMethodActivationWriteRequest, SetOneLevelShippingMethodActivationCommand,
+FulfillmentErrorCodes + FulfillmentErrorCatalogContributor, and IShippingOneLevelCatalogAdminRead
+(admin authorizer gate). Observed contract:
+  success -> raw DTO JSON { methodCode, isActive, changed }
+  fulfillment.rejected                    -> 400 (gate off / catalog not ready)
+  shipping_method.code.invalid            -> 400
+  fulfillment.shipping_method.unsupported -> 400 (option missing / inactive parent / optionless)
+  shipping_service.not_found              -> 404 (legacy binding missing)
+  shipping_method.not_found               -> 404
+  401 / 403                               -> denied
+
+Added ONE concise activation/deactivation action for OPTION-BACKED methods only:
+- Eligibility source: the server-owned 086 resolver
+  GET /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/binding
+  because the admin catalog read deliberately omits legacyOptionCode. No textual inference from the
+  method code is performed. resolved && optionCode != null -> supported; resolved && optionCode == null
+  -> optionless; gate-off/not-ready/unresolved/untrusted -> unavailable (fail-closed, no toggle).
+- Immutable identity: the canonical methodCode is the only identity; the path carries it and the request
+  body is exactly `{ isActive }` — one and only one JSON.stringify body exists in the client, asserted by
+  test to contain no serviceCode/optionCode/shippingServiceOptionId/methodCode.
+- Persian state + target action: current state shown as «فعال»/«غیرفعال» from SERVER truth, action titled
+  «فعال‌سازی»/«غیرفعال‌سازی».
+- Explicit confirmation for BOTH directions via Dialog, stating the storefront-eligibility impact
+  (activation makes the method selectable/storefront-eligible; deactivation removes it).
+- Duplicate submission prevented: `busy` disables the toggle and the confirm submit and sets aria-busy on
+  both. Success is announced ONLY after a confirmed server response, and then a catalog + binding re-read
+  (load + loadBinding + router.refresh) refreshes server truth. No optimistic local isActive state.
+- Fail-closed error states are explicit: denied 401/403, gate off/catalog not ready (fulfillment.rejected),
+  inactive parent / missing option / optionless (fulfillment.shipping_method.unsupported),
+  shipping_method.not_found, shipping_service.not_found, invalid response, host-unreachable.
+- OPTIONLESS methods (snapp_courier, store_courier, in_person) have NO functional toggle; they render
+  «فعال‌سازی این نوع سرویس هنوز پشتیبانی نمی‌شود.» with no button and no onClick (asserted by test on the
+  optionless branch). No automatic parent activation exists anywhere.
+- Stale selection/response races: a generation guard invalidates in-flight results when the target changes,
+  and the resolved methodCode must equal the requested canonical code before any success notice/onCompleted.
+- Unchanged: the 094 name editor path, five tabs + locked Persian labels, RTL, selection and keyboard
+  semantics (role=tablist/tab/panel, Arrow/Home/End), server-provided initial rows, no client-side splitting.
+- No backend/Host/API file was modified; no legacy full-service PUT and no independent write to
+  shipping_methods; no optionless toggle; no fake success.
+
+== MISSION B — FOCUSED VERIFICATION ==
+Test commands and counts (all green):
+1) node --experimental-strip-types --test app/admin/shipping-services/shipping-one-level-activation.test.ts
+   -> tests 17, pass 17, fail 0
+   (exact endpoint + payload, option-backed vs optionless eligibility, confirmation/impact copy,
+    duplicate-prevention + aria-busy + no optimistic state, denial/refusal/unexpected errors,
+    immutable identity, stale-response generation guard, refreshed server truth, optionless no-toggle,
+    094 name editor + five tabs + RTL tablist regression, allowed-writes declaration)
+2) node --experimental-strip-types --test app/admin/shipping-services/*.test.ts
+   -> tests 204, pass 204, fail 0 (whole shipping-services surface, incl. 094 name editor and legacy screen)
+3) npx tsc --noEmit -> exit 0, no diagnostics (typecheck.txt is empty by design)
+Evidence files: docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-097/
+  RESULT.bridge.txt, post-result.js, hazard-activation-ui-map.txt,
+  tests-frontend-focused.txt, tests-shipping-services-all.txt, typecheck.txt
+Backend was NOT rebuilt (no backend change); Host/Next were NOT restarted; no gate was enabled.
+
+Frontend typecheck note: `npx tsc --noEmit` is clean. The broad FE-SIZE architecture guard
+(lib/architecture/frontend-source-size.guard.test.ts) still reports 5 PRE-EXISTING violations in files
+this task never touched (category-admin-screen.tsx 2230>2215, admin-landing-page-composer.tsx 1442>1440,
+storefront-landing-blocks.tsx 1033>1026, storefront-shipping.tsx 1033>945,
+shared-composition-renderer.tsx 918>907). Those files are unmodified in the working tree
+(`git status --porcelain` clean for all five), so the drift predates this task; it is the "known baseline
+failure" the task told us to avoid. All files created/modified here are well under the 800-LOC new-file
+threshold (281/224/448/459/244 physical LOC).
+
+== LIVE GATE / PROVENANCE (read-only, NO live DML) ==
+- Probe target: shared Development Host PID 30756, started 2026-10-15 22:27:33 local, listening on
+  http://127.0.0.1:5088 (Next dev on http://127.0.0.1:3000).
+- Live route inventory (read-only, unauthenticated):
+    GET     .../shipping-methods/one-level                          -> 401 (route present, admin auth required)
+    GET     .../shipping-methods/one-level/post%3Astandard/binding   -> 401 (route present, admin auth required)
+    GET     .../shipping-methods/one-level/post:standard/activation  -> 404 (096 route ABSENT)
+    OPTIONS .../shipping-methods/one-level/post:standard/activation  -> 404 (096 route ABSENT)
+    OPTIONS .../shipping-methods/one-level/post:standard/translations/<uuid> -> 405 (094 route present)
+  => the running Host predates 096, so the current-code activation endpoint is NOT deployed there.
+- Live page probe: GET http://127.0.0.1:3000/admin/shipping-services (and /fa, /en) -> 200 rendering the
+  legacy ShippingServicesScreen; the one-level shell is NOT mounted (element
+  data-testid="admin-shipping-one-level-shell" absent) because Tooba:ShippingOneLevelCatalog evaluates to
+  Disabled (no appsettings section). This is the expected fail-closed behavior.
+- Host was NOT restarted to demonstrate this task.
+
+== NO-LIVE-DML STATEMENT ==
+No live activation write was performed anywhere. `post:express` was NOT toggled, not even temporarily.
+No DML/seed/migration ran against tooba_alpha or any shared Development database. All activation writes
+exercised by this task were against a stubbed `fetch` inside unit tests; the shared Host received only
+unauthenticated read-only GET/OPTIONS probes that (a) never reached a write handler and (b) returned 401/404
+before any persistence. Live activation write proof: NOT VERIFIED (the 096 route is absent on the running
+Host, and live Development activation writes are forbidden by this task).
+
+== UI CONTRACT DECISIONS ==
+1. Reused the existing 096 endpoint verbatim; no new endpoint, no broad service update, no client-supplied
+   legacy identity.
+2. Eligibility is bound to the server-owned 086 binding resolver only; `legacyOptionCode` is never echoed to
+   the client by the catalog read, and no textual splitting of the method code happens in the browser.
+3. One concise control per selected method (tab 1) rather than a per-row toggle, avoiding N binding reads and
+   matching the established "operate on the selected method" pattern of tabs 2–5.
+4. Confirmation is required in both directions (the Architect mandated it for deactivate and asked for a
+   clear impact for activate); each phrasing names the storefront-eligibility effect.
+5. No optimistic UI: the displayed state is server truth, and after a confirmed response the catalog and
+   binding are re-read; the control renders a busy/"در حال به‌روزرسانی وضعیت از سرور…" state meanwhile.
+6. Optionless methods expose an explanatory message only — no disabled-looking fake switch.
+7. The 094 header copy ("no change to activation") was corrected to state the two allowed writes honestly.
+
+== KNOWN LIMITATIONS ==
+- Live end-to-end activation could not be exercised: the shared Development Host predates 096 and the
+  one-level gate is off in Development. Source + focused test + typecheck proof is complete; live write is
+  reported as NOT VERIFIED rather than claimed.
+- The control operates on the selected method; the row-level «وضعیت» column still shows the catalog
+  projection state, while the authoritative activation state for the selected method is shown in the control.
+- ALLOWED-PATH INTERPRETATION: the task listed `shipping-one-level-activation-.ts` / `-.tsx` /
+  `shipping-one-level-.test.ts`, which read as prefix globs. This task interpreted them as
+  `shipping-one-level-activation-<name>.ts(x)` / `shipping-one-level-<name>.test.ts` and created:
+  shipping-one-level-activation-model.ts, shipping-one-level-activation-control.tsx,
+  shipping-one-level-activation.test.ts. No path outside the listed set was touched.
+
+== PATHS CHANGED (exact) ==
+src/frontend/app/admin/shipping-services/shipping-one-level-activation-model.ts   (new, 281 LOC)
+src/frontend/app/admin/shipping-services/shipping-one-level-activation-control.tsx (new, 224 LOC)
+src/frontend/app/admin/shipping-services/shipping-one-level-activation.test.ts    (new, 448 LOC)
+src/frontend/app/admin/shipping-services/shipping-one-level-tabs.tsx              (edit, 459 LOC)
+src/frontend/app/admin/shipping-services/shipping-one-level-tabs-model.ts         (edit, 244 LOC)
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-097.md                               (new)
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-097/*                        (new)
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-097.task.md                               (UNSTAGED receipt only)
+
+== ELAPSED / ROLLBACK ==
+- Elapsed: approximately 26 minutes of the 30-minute hard timebox.
+- Rollback: revert the single commit containing the five frontend paths above (plus docs); no
+  behavioural repair is needed elsewhere because no backend/Host/API code, no schema, no seed and no
+  configuration was changed. The 096 activation authority is untouched and remains the only write path.
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,57 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-097 — option-backed activation UI wiring map (tab 1)
+
+SCOPE
+  Tab 1 (سرویس‌ها) of the one-level shell exposes EXACTLY the existing 096 authority:
+    PUT /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/activation
+    body: { isActive }
+  No other write path is added. No client-supplied legacy identity.
+
+WHY THE BINDING RESOLVER IS THE ONLY ELIGIBILITY SOURCE
+  The admin catalog read (GET .../one-level) deliberately omits legacyServiceCode/legacyOptionCode
+  (OneLevelShippingMethodListItemDto: MethodCode, Name, IsActive, SortOrder, Translations).
+  The only server-owned mapping from methodCode -> (serviceCode, optionCode) is the 086 resolver:
+    GET /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/binding
+  Textual inference from the code is wrong (post:standard, tipax:express and the optionless
+  store_courier/in_person look alike). Therefore:
+    resolved && optionCode non-null  -> supported (toggle allowed; current state from server)
+    resolved && optionCode null      -> optionless (NO functional toggle; explicit Persian notice)
+    gate-off / not-ready / unresolved / untrusted -> unavailable (NO toggle; fail-closed)
+
+DATA / WRITE FLOW ADDED
+  selection.methodCode (immutable canonical code)
+      -> loadOneLevelMethodBinding(code)            [GET, read-only, generation-guarded]
+      -> resolveActivationEligibility(state, code)  [pure]
+      -> ShippingOneLevelActivationControl          [explicit confirmation dialog + busy guard]
+      -> setOneLevelMethodActivation(code, !current) [PUT { isActive }]
+      -> onCompleted -> load() + loadBinding() + router.refresh()   [no optimistic local state]
+
+SERVER-OBSERVED CONTRACT (inspected, not invented)
+  Endpoint:   ShippingServiceEndpoints.SetOneLevelMethodActivationAsync (TB-096)
+  Body DTO:   OneLevelShippingMethodActivationWriteRequest(bool IsActive)
+  Success:    raw DTO JSON { methodCode, isActive, changed } via ApiResponseFactory.From
+  Failures (errorCode -> HTTP, from FulfillmentErrorCatalogContributor):
+    fulfillment.rejected                       -> 400  (gate off / catalog not ready)
+    shipping_method.code.invalid               -> 400
+    fulfillment.shipping_method.unsupported    -> 400  (option missing / inactive parent / optionless)
+    shipping_service.not_found                 -> 404  (legacy binding missing)
+    shipping_method.not_found                  -> 404
+    401 / 403                                  -> denied (IShippingOneLevelCatalogAdminRead gate + RequireAuthorizedAsync)
+
+OPTIONLESS METHODS (no functional toggle, verified by test)
+  snapp_courier, store_courier, in_person  ->  "فعال‌سازی این نوع سرویس هنوز پشتیبانی نمی‌شود."
+  No button, no onClick, no automatic parent activation.
+
+RACE / STALENESS CONTAINMENT
+  - generation guard (createActivationGenerationGuard) invalidates in-flight results after target change
+  - activationTargetKey(methodCode) equality is required before any success notice or onCompleted
+  - busy state disables both the toggle and the confirm submit (aria-busy on both)
+  - state shown to the operator is bound to server truth only (binding read + catalog re-read)
+
+LIVE PROVENANCE (read-only, no DML)
+  Host PID 30756 started 2026-10-15 22:27:33 (localhost:5088)
+    GET .../one-level            -> 401 (route present, auth required)
+    GET .../one-level/post%3Astandard/binding -> 401 (route present, auth required)
+    GET/OPTIONS .../one-level/post:standard/activation -> 404  (096 route ABSENT in running Host)
+    OPTIONS .../one-level/post:standard/translations/<uuid> -> 405 (094 route present)
+  Next dev (localhost:3000) /admin/shipping-services -> 200, one-level shell NOT mounted (gate Disabled)
+  => the current-code endpoint is unavailable on the shared Development Host; no write was attempted.

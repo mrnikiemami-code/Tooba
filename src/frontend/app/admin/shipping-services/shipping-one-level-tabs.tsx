@@ -29,6 +29,14 @@ import {
 } from "./shipping-one-level-method-name-dialog.tsx";
 import { applySavedMethodName, findMethodRow } from "./shipping-one-level-method-name-model.ts";
 import {
+  ShippingOneLevelActivationControl,
+} from "./shipping-one-level-activation-control.tsx";
+import {
+  createActivationGenerationGuard,
+  loadOneLevelMethodBinding,
+} from "./shipping-one-level-activation-model.ts";
+import type { OneLevelBindingState } from "./shipping-one-level-rates-model.ts";
+import {
   ONE_LEVEL_TAB_IDS,
   ONE_LEVEL_TAB_LABELS,
   buildOneLevelSearch,
@@ -82,6 +90,14 @@ export function ShippingOneLevelTabs({
   const [editOpen, setEditOpen] = useState(false);
 
   /**
+   * TB-SHIPPING-ONE-LEVEL-TABS-097: پیوند حل‌شدهٔ سرور برای روش انتخاب‌شده. تنها منبع مجاز
+   * «گزینه‌دار بودن» است؛ بدون آن هیچ سوئیچ فعال‌سازی نشان داده نمی‌شود.
+   */
+  const [bindingState, setBindingState] = useState<OneLevelBindingState | null>(null);
+  const [bindingLoading, setBindingLoading] = useState(false);
+  const bindingGuard = useRef(createActivationGenerationGuard());
+
+  /**
    * زبان‌های واقعی رجیستری از همان درز مشترک Admin خوانده می‌شوند (`GET /v1/admin/languages`).
    * نبود/ردمجوز/خطا ⇒ فهرست خالی ⇒ ویرایش نام غیرفعال می‌ماند (fail-closed)، نه اینکه زبان جعلی بسازیم.
    */
@@ -129,6 +145,31 @@ export function ShippingOneLevelTabs({
     void load();
   }, [load]);
 
+  /**
+   * TB-SHIPPING-ONE-LEVEL-TABS-097: خواندن فقط-خواندنی پیوند روش انتخاب‌شده.
+   *
+   * نگهبان نسل تضمین می‌کند نتیجهٔ در راهِ روش قبلی هرگز روی روش انتخاب‌شدهٔ تازه ننشیند؛ اگر
+   * کاربر وسط خواندن روش را عوض کند، پاسخ باطل می‌شود و هیچ پیوند اشتباهی نمایش داده نمی‌شود.
+   */
+  const loadBinding = useCallback(async () => {
+    const code = selection.methodCode;
+    const stillCurrent = bindingGuard.current.begin();
+    if (!code) {
+      setBindingState(null);
+      setBindingLoading(false);
+      return;
+    }
+    setBindingLoading(true);
+    const state = await loadOneLevelMethodBinding(code);
+    if (!stillCurrent()) return;
+    setBindingState(state);
+    setBindingLoading(false);
+  }, [selection.methodCode]);
+
+  useEffect(() => {
+    void loadBinding();
+  }, [loadBinding]);
+
   /** جایگزینی آدرس با مقادیر امن و بدون افزودن تاریخچه. */
   const replaceSelection = useCallback(
     (next: Partial<{ tab: OneLevelTabId; methodCode: string }>) => {
@@ -171,14 +212,26 @@ export function ShippingOneLevelTabs({
     [load, router],
   );
 
+  /**
+   * TB-SHIPPING-ONE-LEVEL-TABS-097: پس از پاسخ تأییدشدهٔ سرور برای فعال‌سازی، هیچ وضعیت خوش‌بینانهٔ
+   * محلی ساخته نمی‌شود؛ کاتالوگ و پیوند دوباره از سرور خوانده می‌شوند تا وضعیت نمایش‌داده‌شده همان
+   * حقیقت سرور باشد. اگر سرور مقدار دیگری برگردانده باشد، همان دیده می‌شود.
+   */
+  const onActivationCompleted = useCallback(() => {
+    void load();
+    void loadBinding();
+    router.refresh();
+  }, [load, loadBinding, router]);
+
   return (
     <section className="space-y-4" data-testid="admin-shipping-one-level-shell" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">سرویس ارسال — کاتالوگ یک‌سطحی</h2>
           <p className="mt-1 text-sm text-muted">
-            هر روش، یک ردیف مستقل است. تنها ویرایش این صفحه، «نام نمایشی» هر روش است و هیچ تغییری در
-            قیمت، رزرو یا وضعیت فعال‌بودن ایجاد نمی‌کند.
+            هر روش، یک ردیف مستقل است. ویرایش‌های این صفحه: «نام نمایشی» هر روش و فعال/غیرفعال‌سازی
+            روش‌های گزینه‌دار. هیچ تغییر قیمت یا رزروی ایجاد نمی‌شود و فعال‌سازی فقط از طریق سرور اعمال
+            می‌شود.
           </p>
         </div>
         {selection.methodCode ? (
@@ -226,19 +279,30 @@ export function ShippingOneLevelTabs({
         data-testid={`admin-shipping-one-level-panel-${activeTab}`}
       >
         {activeTab === "services" ? (
-          <ServicesTab
-            state={dataState}
-            rows={rows}
-            selectedMethodCode={selection.methodCode}
-            canEditName={editableLanguages.length > 0}
-            onRetry={() => void load()}
-            onSelect={(code) => replaceSelection({ methodCode: code })}
-            onEditName={(code) => {
-              // انتخاب همان روش پیش از باز کردن ویرایش، تا زمینهٔ روش و دیالوگ یکی باشند.
-              replaceSelection({ methodCode: code });
-              setEditOpen(true);
-            }}
-          />
+          <>
+            <ServicesTab
+              state={dataState}
+              rows={rows}
+              selectedMethodCode={selection.methodCode}
+              canEditName={editableLanguages.length > 0}
+              onRetry={() => void load()}
+              onSelect={(code) => replaceSelection({ methodCode: code })}
+              onEditName={(code) => {
+                // انتخاب همان روش پیش از باز کردن ویرایش، تا زمینهٔ روش و دیالوگ یکی باشند.
+                replaceSelection({ methodCode: code });
+                setEditOpen(true);
+              }}
+            />
+            {/* TB-SHIPPING-ONE-LEVEL-TABS-097: تنها عملیات فعال‌سازی، فقط برای روش گزینه‌دار و
+                فقط از روی پیوند حل‌شدهٔ سرور؛ روش بدون گزینه هیچ سوئیچ کاربردی ندارد. */}
+            <ShippingOneLevelActivationControl
+              methodCode={selection.methodCode}
+              bindingState={bindingState}
+              bindingLoading={bindingLoading}
+              onNotice={onNotice}
+              onCompleted={onActivationCompleted}
+            />
+          </>
         ) : activeTab === "rates-coverage" ? (
           // TB-SHIPPING-ONE-LEVEL-TABS-086: زبانهٔ ۲ روی همان روش انتخاب‌شدهٔ زبانهٔ ۱ عمل می‌کند.
           <ShippingOneLevelRatesTab methodCode={selection.methodCode} onNotice={onNotice} />

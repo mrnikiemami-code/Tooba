@@ -218,11 +218,23 @@ export function resolveDataState(input: {
 }
 
 /**
- * TB-SHIPPING-ONE-LEVEL-TABS-094: این شل دیگر «کاملاً فقط-خواندنی» نیست، اما تنها نوشتن مجاز آن
- * «نام نمایشی یک روش در یک زبان» است. هیچ نوشتن دیگری (کد روش، فعال‌بودن، حذف، قیمت، رزرو) مجاز
- * نیست و هیچ سطح دومی ساخته نمی‌شود.
+ * TB-SHIPPING-ONE-LEVEL-TABS-094 · TB-SHIPPING-ONE-LEVEL-TABS-097: این شل دیگر «کاملاً فقط-خواندنی»
+ * نیست، اما دو و تنها دو نوشتن مجاز دارد:
+ *
+ * 1. «نام نمایشی یک روش در یک زبان» (TB-094)؛
+ * 2. «فعال/غیرفعال‌سازی یک روش گزینه‌دار» از طریق تنها درز مجاز ۰۹۶ (TB-097) که همان رکورد
+ *    گزینهٔ قدیمی را در یک تراکنش با فرافکنی یک‌سطحی هم‌راستا می‌کند.
+ *
+ * هیچ نوشتن دیگری (کد روش، حذف، قیمت، رزرو، سطح سرویس بدون گزینه) مجاز نیست، هیچ سطح دومی
+ * ساخته نمی‌شود و هیچ نوشتن مستقل روی `shipping_methods` وجود ندارد.
  */
-export const ONE_LEVEL_UI_ALLOWS_NAME_EDIT_ONLY = true;
+export const ONE_LEVEL_UI_ALLOWED_WRITES = ["method-name", "option-backed-activation"] as const;
+
+/** آیا نوشتن نام روش مجاز است. */
+export const ONE_LEVEL_UI_ALLOWS_NAME_EDIT = true;
+
+/** آیا فعال‌سازی روش گزینه‌دار مجاز است (فقط از درز ۰۹۶ و فقط برای روش گزینه‌دار). */
+export const ONE_LEVEL_UI_ALLOWS_OPTION_BACKED_ACTIVATION = true;
 
 /** متن صادقانهٔ زبانهٔ سیم‌کشی‌نشده. */
 export function wiringNoticeFor(tab: OneLevelTabId): string | null {
