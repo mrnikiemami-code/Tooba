@@ -1,0 +1,68 @@
+﻿=== TB-SHIPPING-FULL-OPERATIONS-071 :: live operating-schedule admin roundtrip ===
+target: existing Development host :5088, tenant store-alpha, DB tooba_alpha
+actor: existing canonical Development admin actor header
+
+--- 0. positive target provenance (Development, no production/staging) ---
+GET /__platform-commerce => 200
+   {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"d67bd70608e0ab245c77fbbe56f05376"}
+
+--- 1. read: no schedule exists yet (empty set is a real answer, never a default) ---
+GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules => 200
+   {"serviceCode":"tipax","schedules":[]}
+
+--- 2. create: Sunday-only 13:00-14:00 plus a second distinct window 16:30-18:00 (capacity 25) ---
+PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules => 200
+   {"scheduleId":"01a13deb-cd7c-7000-a11e-641338237a1a","serviceCode":"tipax","optionCode":"standard","timeZoneId":"Asia/Tehran","isActive":true,"windows":[{"windowId":"01a13deb-cd7d-7000-935b-51fa0cc1c2c0","weekday":7,"startTime":"13:00:00","endTime":"14:00:00"},{"windowId":"01a13deb-cd7e-7000-b11c-b67397e211b2","weekday":7,"startTime":"16:30:00","endTime":"18:00:00","capacity":25}],"configuredCapacityTotal":25,"createdAt":"2026-10-15T04:57:06.1723836+00:00","updatedAt":"2026-10-15T04:57:06.1723836+00:00"}
+   SCHEDULE_ID=01a13deb-cd7c-7000-a11e-641338237a1a
+   weekday=7 (Sunday, ISO) 13:00:00-14:00:00 capacity=none
+   weekday=7 (Sunday, ISO) 16:30:00-18:00:00 capacity=25
+   configuredCapacityTotal=25   (CONFIGURATION ONLY, not enforced)
+
+--- 3. persisted and readable: real row in tooba_alpha ---
+GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules => 200
+   {"serviceCode":"tipax","schedules":[{"scheduleId":"01a13deb-cd7c-7000-a11e-641338237a1a","serviceCode":"tipax","optionCode":"standard","timeZoneId":"Asia/Tehran","isActive":true,"windows":[{"windowId":"01a13deb-cd7d-7000-935b-51fa0cc1c2c0","weekday":7,"startTime":"13:00:00","endTime":"14:00:00"},{"windowId":"01a13deb-cd7e-7000-b11c-b67397e211b2","weekday":7,"startTime":"16:30:00","endTime":"18:00:00","capacity":25}],"configuredCapacityTotal":25,"createdAt":"2026-10-15T04:57:06.172383+00:00","updatedAt":"2026-10-15T04:57:06.172383+00:00"}]}
+
+--- 3b. direct database read of the persisted rows (not the API echo) ---
+shipping.operating_schedules => 1 row
+   01a13deb-cd7c-7000-a11e-641338237a1a | tipax | standard | Asia/Tehran | t
+shipping.operating_windows => 2 rows
+   weekday=7  13:00:00  14:00:00  capacity=(null)
+   weekday=7  16:30:00  18:00:00  capacity=25
+
+--- 4. repeat the same body: idempotent (same schedule id, same window set) ---
+PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules => 200
+   SAME_ID=True  window set unchanged (2 windows), updatedAt advanced
+
+--- 5. refusals with stable codes ---
+5a. overlapping windows on the same weekday (13:00-15:00 vs 14:00-16:00)
+PUT .../operating-schedules => 400 validation.failed  errors.Request.Windows=[shipping.validation.schedule_window_overlap]
+5b. reversed window (14:00-13:00)
+PUT .../operating-schedules => 400 validation.failed  errors.Request.Windows[0].EndTime=[shipping.validation.schedule_window_range_invalid]
+5c. overnight window (22:00-02:00), explicitly not supported
+PUT .../operating-schedules => 400 validation.failed  errors.Request.Windows[0].EndTime=[shipping.validation.schedule_window_range_invalid]
+5d. weekday outside ISO 1..7 (0)
+PUT .../operating-schedules => 400 validation.failed  errors.Request.Windows[0].Weekday=[shipping.validation.schedule_weekday_out_of_range]
+5e. unknown option code the tipax service does not own (drone)
+PUT .../operating-schedules => 400 shipping.service_option.unknown
+5f. unresolvable timezone (Nowhere/Fake)
+PUT .../operating-schedules => 400 shipping.schedule.timezone.invalid
+   (a refused write leaves the previously persisted window set untouched)
+
+--- 6. authorization boundary: unauthenticated (no actor header) must be 401 ---
+GET .../operating-schedules (no header) => 401 admin.actor.missing
+GET .../operating-schedules (real Development user id without an admin grant) => 403 admin.authorization.denied
+
+--- 7. deactivate + reactivate through the same route the UI toggle uses ---
+PATCH .../operating-schedules/01a13deb-cd7c-7000-a11e-641338237a1a/active {"isActive":false} => 200  isActive=false
+PATCH .../operating-schedules/01a13deb-cd7c-7000-a11e-641338237a1a/active {"isActive":true}  => 200  isActive=true
+
+--- 8. missing schedule id and cross-service toggle must be refused ---
+PATCH .../operating-schedules/01a13000-0000-7000-8000-000000000001/active => 400 shipping.schedule.not_found
+PATCH /shipping-services/post/operating-schedules/01a13deb-cd7c-7000-a11e-641338237a1a/active => 400 shipping.service_scope.mismatch
+
+--- 9. final state (fixture left in place: one active tipax/standard schedule, two Sunday windows) ---
+GET .../operating-schedules => 200  schedules=1  isActive=true  windows=2  configuredCapacityTotal=25
+
+--- 10. legacy rate/coverage rows preserved by the additive migration ---
+shipping.rate_policies    => 9 rows (unchanged)
+shipping.coverage_grants  => 7 rows (unchanged)

@@ -1,0 +1,9 @@
+﻿
+  Passed Tooba.Shipping.Tests.Admin.ShippingAdminInvalidBodyRepairTests.Unreadable_body_translates_to_the_canonical_val
+idation_envelope_not_a_platform_error [< 1 ms]
+  Passed Tooba.Shipping.Tests.Admin.ShippingAdminScopeGuardRepairTests.Omitted_scope_translates_to_the_canonical_valida
+tion_envelope_not_a_platform_error [5 ms]
+     Passed: 154
+    0 Error(s)
+
+

@@ -65,4 +65,37 @@ public static class ShippingErrorCodes
 
     /// <summary>هویت روش (خدمت + گزینه) یک ردیف با مسیر/بدنهٔ درخواست یکسان نیست.</summary>
     public const string RatePolicyOptionMismatch = "shipping.rate_policy.option_mismatch";
+
+    /// <summary>شناسهٔ منطقهٔ زمانی برنامهٔ عملیاتی الزامی است.</summary>
+    public const string ScheduleTimeZoneRequired = "shipping.schedule.timezone.required";
+
+    /// <summary>شناسهٔ منطقهٔ زمانی روی این runtime قابل حل نیست (ترجیحاً IANA).</summary>
+    public const string ScheduleTimeZoneInvalid = "shipping.schedule.timezone.invalid";
+
+    /// <summary>شمارهٔ روز هفته خارج از بازهٔ ISO 1..7 است.</summary>
+    public const string ScheduleWeekdayInvalid = "shipping.schedule.weekday.invalid";
+
+    /// <summary>
+    /// بازهٔ پنجرهٔ عملیاتی نامعتبر است: <c>end &lt;= start</c>. این حالت شامل پنجرهٔ معکوس،
+    /// پنجرهٔ با طول صفر و پنجرهٔ شبانه (عبور از نیمه‌شب) است که در این نسخه پشتیبانی نمی‌شود.
+    /// </summary>
+    public const string ScheduleWindowRangeInvalid = "shipping.schedule.window.range_invalid";
+
+    /// <summary>دو پنجرهٔ عملیاتی روی یک روز هفته هم‌پوشانی دارند.</summary>
+    public const string ScheduleWindowOverlap = "shipping.schedule.window.overlap";
+
+    /// <summary>ظرفیت اعلام‌شدهٔ پنجرهٔ عملیاتی باید مثبت باشد.</summary>
+    public const string ScheduleWindowCapacityInvalid = "shipping.schedule.window.capacity.invalid";
+
+    /// <summary>تعداد پنجره‌های عملیاتی از سقف مجاز بیشتر است.</summary>
+    public const string ScheduleWindowsTooMany = "shipping.schedule.windows.too_many";
+
+    /// <summary>برنامهٔ عملیاتی با این شناسه یافت نشد.</summary>
+    public const string ScheduleNotFound = "shipping.schedule.not_found";
+
+    /// <summary>برای همین خدمت و همین گزینه از قبل یک برنامهٔ عملیاتی وجود دارد.</summary>
+    public const string ScheduleDuplicate = "shipping.schedule.duplicate";
+
+    /// <summary>هویت روش برنامهٔ عملیاتی با مسیر/بدنهٔ درخواست یکسان نیست.</summary>
+    public const string ScheduleOptionMismatch = "shipping.schedule.option_mismatch";
 }

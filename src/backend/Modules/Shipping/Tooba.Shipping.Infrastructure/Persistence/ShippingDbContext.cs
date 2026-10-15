@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
 using Tooba.Shipping.Domain.Aggregates;
+using Tooba.Shipping.Domain.Scheduling;
 
 namespace Tooba.Shipping.Infrastructure.Persistence;
 
@@ -44,6 +45,9 @@ public sealed class ShippingDbContext : DbContext
 
     /// <summary>مجوزهای پوشش ارسال.</summary>
     public DbSet<ShippingCoverageGrant> CoverageGrants => Set<ShippingCoverageGrant>();
+
+    /// <summary>برنامه‌های عملیاتی هفتگی ارسال (پنجره‌های محلی تحویل به حامل).</summary>
+    public DbSet<ShippingOperatingSchedule> OperatingSchedules => Set<ShippingOperatingSchedule>();
 
     /// <summary>Outbox همین ماژول؛ پیروی از اسکلت متعارف DbContext ماژول‌ها، بدون هیچ مصرف فعلی.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -152,6 +156,74 @@ public sealed class ShippingDbContext : DbContext
                 .HasDatabaseName("ix_coverage_grants_service_country_active");
         });
 
+        modelBuilder.Entity<ShippingOperatingSchedule>(entity =>
+        {
+            entity.ToTable("operating_schedules", table =>
+            {
+                // The storage mirror of the aggregate guards: a row the domain refuses can never be
+                // persisted by raw SQL, an import, or a future sibling handler.
+                table.HasCheckConstraint(
+                    "ck_operating_schedules_service_code_canonical",
+                    "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+                table.HasCheckConstraint(
+                    "ck_operating_schedules_option_code_canonical",
+                    "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
+                table.HasCheckConstraint(
+                    "ck_operating_schedules_timezone_canonical",
+                    "char_length(time_zone_id) > 0 AND time_zone_id = btrim(time_zone_id)");
+            });
+            entity.HasKey(x => x.ScheduleId);
+            entity.Property(x => x.ScheduleId).ValueGeneratedNever();
+            entity.Property(x => x.ServiceCode)
+                .HasMaxLength(ShippingRatePolicy.ServiceCodeMaxLength)
+                .IsRequired();
+            entity.Property(x => x.OptionCode)
+                .HasMaxLength(ShippingRatePolicy.OptionCodeMaxLength);
+            entity.Property(x => x.TimeZoneId)
+                .HasMaxLength(ShippingRatePolicyLimits.TimeZoneIdMaxLength)
+                .IsRequired();
+
+            // One operating policy per (service, option). Option is a real identity, so a service-level
+            // schedule and an option schedule are distinct rows; NULLS NOT DISTINCT stops a second
+            // option-less row for the same service, which would make "which window applies" ambiguous.
+            // Requires PostgreSQL 15+.
+            entity.HasIndex(x => new { x.ServiceCode, x.OptionCode })
+                .IsUnique()
+                .AreNullsDistinct(false)
+                .HasDatabaseName("ux_operating_schedules_service_option");
+
+            entity.HasMany(x => x.Windows)
+                .WithOne()
+                .HasForeignKey("schedule_id")
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Navigation(x => x.Windows).UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+        modelBuilder.Entity<ShippingOperatingWindow>(entity =>
+        {
+            entity.ToTable("operating_windows", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_operating_windows_weekday_iso_range",
+                    $"weekday >= {ShippingOperatingWindow.MinWeekday.ToString(CultureInfo.InvariantCulture)} AND weekday <= {ShippingOperatingWindow.MaxWeekday.ToString(CultureInfo.InvariantCulture)}");
+                // [start, end) semantics: end must be strictly after start. This single predicate refuses
+                // reversed, zero-length AND overnight windows, exactly like the aggregate.
+                table.HasCheckConstraint(
+                    "ck_operating_windows_range_half_open",
+                    "end_time > start_time");
+                table.HasCheckConstraint(
+                    "ck_operating_windows_capacity_positive",
+                    $"capacity IS NULL OR (capacity > 0 AND capacity <= {ShippingOperatingWindow.CapacityMaxValue.ToString(CultureInfo.InvariantCulture)})");
+            });
+            entity.HasKey(x => x.WindowId);
+            entity.Property(x => x.WindowId).ValueGeneratedNever();
+            entity.Property<Guid>("schedule_id").IsRequired();
+
+            // Windows are read per schedule and per weekday; this index keeps that lookup narrow.
+            entity.HasIndex("schedule_id", nameof(ShippingOperatingWindow.Weekday))
+                .HasDatabaseName("ix_operating_windows_schedule_weekday");
+        });
+
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }
 }
@@ -161,8 +233,8 @@ public sealed class ShippingDbContext : DbContext
 /// رشتهٔ اتصال runtime یا credential در این پروژه وجود ندارد.
 /// </summary>
 /// <remarks>
-/// وجود این کارخانه صرفاً امکان تولید مهاجرت در یک Task مجاز آینده را فراهم می‌کند؛ در این Task
-/// هیچ مهاجرتی ساخته یا اجرا نشده است.
+/// وجود این کارخانه صرفاً امکان تولید مهاجرت را فراهم می‌کند؛ ثبت migrator در Host همچنان انجام
+/// نشده و هیچ DDL در startup اجرا نمی‌شود.
 /// </remarks>
 public sealed class ShippingDbContextFactory : IDesignTimeDbContextFactory<ShippingDbContext>
 {

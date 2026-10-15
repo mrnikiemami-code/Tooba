@@ -6,6 +6,7 @@ using Tooba.Persistence;
 using Tooba.Shipping.Contracts.Errors;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Domain.Aggregates;
+using Tooba.Shipping.Domain.Scheduling;
 using Tooba.Shipping.Infrastructure.Persistence;
 using Xunit;
 
@@ -51,14 +52,21 @@ public sealed class ShippingPersistenceModelTests
         => model.GetEntityTypes().Single(x => x.GetTableName() == tableName);
 
     [Fact]
-    public void Model_keeps_the_module_schema_and_the_three_owned_tables()
+    public void Model_keeps_the_module_schema_and_the_owned_tables()
     {
         using var context = CreateContext();
         var model = DesignModel(context);
 
         Assert.Equal("shipping", model.GetDefaultSchema());
         Assert.Equal(
-            new[] { "coverage_grants", "outbox_messages", "rate_policies" },
+            new[]
+            {
+                "coverage_grants",
+                "operating_schedules",
+                "operating_windows",
+                "outbox_messages",
+                "rate_policies",
+            },
             model.GetEntityTypes().Select(x => x.GetTableName()).OrderBy(x => x, StringComparer.Ordinal).ToArray());
     }
 
@@ -131,6 +139,12 @@ public sealed class ShippingPersistenceModelTests
     [InlineData("rate_policies", "ck_rate_policies_scope_coherent", "service_area_id IS NULL OR city_id IS NOT NULL")]
     [InlineData("coverage_grants", "ck_coverage_grants_service_code_canonical", "btrim(service_code)")]
     [InlineData("coverage_grants", "ck_coverage_grants_scope_coherent", "service_area_id IS NULL OR city_id IS NOT NULL")]
+    [InlineData("operating_schedules", "ck_operating_schedules_service_code_canonical", "btrim(service_code)")]
+    [InlineData("operating_schedules", "ck_operating_schedules_option_code_canonical", "option_code IS NULL")]
+    [InlineData("operating_schedules", "ck_operating_schedules_timezone_canonical", "btrim(time_zone_id)")]
+    [InlineData("operating_windows", "ck_operating_windows_weekday_iso_range", "weekday >= 1 AND weekday <= 7")]
+    [InlineData("operating_windows", "ck_operating_windows_range_half_open", "end_time > start_time")]
+    [InlineData("operating_windows", "ck_operating_windows_capacity_positive", "capacity IS NULL OR (capacity > 0")]
     public void Check_constraints_mirror_the_aggregate_guards(string table, string constraintName, string predicateFragment)
     {
         using var context = CreateContext();
@@ -141,45 +155,47 @@ public sealed class ShippingPersistenceModelTests
     }
 
     [Theory]
-    [InlineData("rate_policies", "ux_rate_policies_service_option_scope", true)]
-    [InlineData("coverage_grants", "ux_coverage_grants_service_scope", false)]
-    public void Scope_identity_index_is_unique_over_nulls_not_distinct_columns(
+    [InlineData("rate_policies", "ux_rate_policies_service_option_scope", new[] { "ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId" })]
+    [InlineData("coverage_grants", "ux_coverage_grants_service_scope", new[] { "ServiceCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId" })]
+    [InlineData("operating_schedules", "ux_operating_schedules_service_option", new[] { "ServiceCode", "OptionCode" })]
+    public void Identity_index_is_unique_over_nulls_not_distinct_columns(
         string table,
         string indexName,
-        bool optionAware)
+        string[] expectedColumns)
     {
         using var context = CreateContext();
         var entity = Entity(DesignModel(context), table);
         var index = Assert.Single(entity.GetIndexes(), x => x.GetDatabaseName() == indexName);
 
         Assert.True(index.IsUnique);
-        Assert.Equal(
-            optionAware
-                ? new[]
-                {
-                    nameof(ShippingRatePolicy.ServiceCode),
-                    nameof(ShippingRatePolicy.OptionCode),
-                    nameof(ShippingRatePolicy.CountryId),
-                    nameof(ShippingRatePolicy.AdministrativeAreaId),
-                    nameof(ShippingRatePolicy.CityId),
-                    nameof(ShippingRatePolicy.ServiceAreaId),
-                }
-                : new[]
-                {
-                    nameof(ShippingRatePolicy.ServiceCode),
-                    nameof(ShippingRatePolicy.CountryId),
-                    nameof(ShippingRatePolicy.AdministrativeAreaId),
-                    nameof(ShippingRatePolicy.CityId),
-                    nameof(ShippingRatePolicy.ServiceAreaId),
-                },
-            index.Properties.Select(x => x.Name).ToArray());
+        Assert.Equal(expectedColumns, index.Properties.Select(x => x.Name).ToArray());
 
-        // Without this annotation PostgreSQL treats every NULL level as distinct and would silently admit
-        // two "country scope" rows for the same service - exactly the duplicate the engine answers with
-        // ScopeConflict at request time.
+        // Without this annotation PostgreSQL treats every NULL as distinct and would silently admit two
+        // option-less rows for the same service - exactly the duplicate that makes "which window applies"
+        // ambiguous at request time.
         var annotation = index.FindAnnotation("Npgsql:NullsDistinct");
         Assert.NotNull(annotation);
-        Assert.False((bool?)annotation!.Value is not false, "the scope unique index must be NULLS NOT DISTINCT");
+        Assert.False((bool?)annotation!.Value is not false, "the identity unique index must be NULLS NOT DISTINCT");
+    }
+
+    [Fact]
+    public void Operating_windows_are_reached_through_an_intra_module_cascade_only()
+    {
+        using var context = CreateContext();
+        var model = DesignModel(context);
+        var window = Entity(model, "operating_windows");
+
+        var foreignKey = Assert.Single(window.GetForeignKeys());
+        Assert.Equal("shipping", foreignKey.PrincipalEntityType.GetSchema());
+        Assert.Equal("operating_schedules", foreignKey.PrincipalEntityType.GetTableName());
+        Assert.True(foreignKey.IsRequired);
+        Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
+
+        var index = Assert.Single(
+            window.GetIndexes(),
+            x => x.GetDatabaseName() == "ix_operating_windows_schedule_weekday");
+        Assert.False(index.IsUnique);
+        Assert.Equal(new[] { "schedule_id", nameof(ShippingOperatingWindow.Weekday) }, index.Properties.Select(x => x.Name).ToArray());
     }
 
     [Theory]
@@ -200,9 +216,14 @@ public sealed class ShippingPersistenceModelTests
     {
         using var context = CreateContext();
 
+        // The only foreign key in the whole model is the intra-module schedule -> windows relation:
+        // Shipping never references another module's schema.
         foreach (var entity in DesignModel(context).GetEntityTypes())
         {
-            Assert.Empty(entity.GetForeignKeys());
+            foreach (var foreignKey in entity.GetForeignKeys())
+            {
+                Assert.Equal("shipping", foreignKey.PrincipalEntityType.GetSchema());
+            }
         }
     }
 
@@ -216,7 +237,7 @@ public sealed class ShippingPersistenceModelTests
     }
 
     [Fact]
-    public void Initial_migration_emits_the_expected_schema_tables_and_constraints()
+    public void Full_migration_script_emits_the_expected_schema_tables_and_constraints()
     {
         using var context = CreateContext();
         var script = context.GetService<IMigrator>().GenerateScript();
@@ -224,6 +245,8 @@ public sealed class ShippingPersistenceModelTests
         Assert.Contains("CREATE SCHEMA shipping;", script);
         Assert.Contains("CREATE TABLE shipping.rate_policies", script);
         Assert.Contains("CREATE TABLE shipping.coverage_grants", script);
+        Assert.Contains("CREATE TABLE shipping.operating_schedules", script);
+        Assert.Contains("CREATE TABLE shipping.operating_windows", script);
         Assert.Contains("CREATE TABLE shipping.outbox_messages", script);
         Assert.Contains("__ef_migrations_history", script);
 
@@ -240,30 +263,45 @@ public sealed class ShippingPersistenceModelTests
                      "ck_rate_policies_option_code_canonical",
                      "ck_coverage_grants_service_code_canonical",
                      "ck_coverage_grants_scope_coherent",
+                     "ck_operating_schedules_service_code_canonical",
+                     "ck_operating_schedules_option_code_canonical",
+                     "ck_operating_schedules_timezone_canonical",
+                     "ck_operating_windows_weekday_iso_range",
+                     "ck_operating_windows_range_half_open",
+                     "ck_operating_windows_capacity_positive",
                      "ux_rate_policies_service_option_scope",
                      "ux_coverage_grants_service_scope",
+                     "ux_operating_schedules_service_option",
                  })
         {
             Assert.Contains(constraint, script);
         }
 
-        // Every scope index must carry the modifier: coverage (1) + the initial rate index (1) + the
-        // option-aware rate index added by the second migration (1).
-        Assert.Equal(3, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
-        Assert.DoesNotContain("FOREIGN KEY", script, StringComparison.OrdinalIgnoreCase);
+        // Every scope/identity index must carry the modifier: coverage (1) + the initial rate index (1)
+        // + the option-aware rate index (1) + the schedule identity index (1).
+        Assert.Equal(4, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
+
+        // The only foreign key in the whole schema is the intra-module schedule -> windows cascade;
+        // nothing points at another module's schema.
+        Assert.Contains("REFERENCES shipping.operating_schedules", script);
+        Assert.Equal(
+            1,
+            script.Split("FOREIGN KEY", StringSplitOptions.None).Length - 1);
     }
 
     [Fact]
-    public void Migrations_are_the_initial_slice_plus_one_additive_option_column_update()
+    public void Migrations_are_the_initial_slice_plus_two_additive_updates()
     {
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        // Two migrations only: the initial slice and the additive option-identity change. Asserting the
-        // exact count is what keeps the schema reviewable as a unit instead of an open-ended chain.
-        Assert.Equal(2, migrations.Length);
+        // Three migrations only: the initial slice, the additive option-identity change and the additive
+        // operating-schedule slice. Asserting the exact count is what keeps the schema reviewable as a
+        // unit instead of an open-ended chain.
+        Assert.Equal(3, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
+        Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
     }
 
     [Fact]
