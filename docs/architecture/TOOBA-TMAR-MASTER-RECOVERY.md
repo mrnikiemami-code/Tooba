@@ -2178,7 +2178,7 @@ Recorded by `TB-TMAR-WISHLIST-AMSC-001-W3` (`tooba-architecture-certify`), the f
 
 ## Checkpoint — TB-SHIPPING-ONE-LEVEL-TABS-093 (append-only, 2026-10-15)
 
-**Program:** TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE. **Status: PASS** (bounded scope). `Code-SHA = 3f7d9c0f2b1e4a6d8c5f0a3b7e9d1c2a4f6b8d0e`-placeholder-to-be-replaced. `automaticNextImplementationTask = NONE`. `Stop-State = STOP_FOR_ARCHITECT`.
+**Program:** TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE. **Status: PASS** (bounded scope). `Code-SHA = fbc02e06baefb43cceb3a7ad7d6b4e3efc24aaf5`. `automaticNextImplementationTask = NONE`. `Stop-State = STOP_FOR_ARCHITECT`.
 
 **Base/drift:** Expected-Base-SHA `4bdd9901a38101fb4160a45cec7de7dee8306684`; observed HEAD/`origin/main` `9a362da1aee719997139a8c9f38fdf1970261328` (equal). Drift is exactly two 092 result-bookkeeping files — non-overlapping, NOT `RECOVERY_CONFLICT`.
 

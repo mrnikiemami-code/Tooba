@@ -1,0 +1,182 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-093
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-092
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_REPRODUCIBLE_DEV_HOST_AND_ADMIN_AUTH_REPAIR
+Bridge-Task-Row: 4d8ad50a-0487-48ac-a937-d03798b4c9ae
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 4bdd9901a38101fb4160a45cec7de7dee8306684
+Base-SHA: 9a362da1aee719997139a8c9f38fdf1970261328
+Code-SHA: fbc02e06baefb43cceb3a7ad7d6b4e3efc24aaf5
+Evidence-SHA: fbc02e06baefb43cceb3a7ad7d6b4e3efc24aaf5
+automaticNextImplementationTask: NONE
+
+=== PREFLIGHT / DRIFT ===
+Claimed exactly one Pending task on tooba-main and persisted the artifact UNSTAGED as
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-093.task.md. Read AGENTS.md, the pipeline protocol, 090-092
+planning/evidence plus the 092 live logs, master recovery, the existing Development hosting artefacts
+(079 relaunch-host.ps1, 065 launch-dev-host.cmd, launchSettings.json), the BFF auth/host-client and the
+existing admin identity/permission code. git fetch origin: HEAD == origin/main ==
+9a362da1aee719997139a8c9f38fdf1970261328. Drift 4bdd9901a..HEAD is exactly two 092 result-bookkeeping
+files (RESULT.bridge.txt, post-result.js) - non-overlapping, NOT RECOVERY_CONFLICT. All pre-existing dirty
+and untracked work preserved; no reset/stash/rebase/force push.
+
+=== MISSION A - REPRODUCIBLE, REVERSIBLE DEVELOPMENT HOST LIFECYCLE ===
+Before: scripts/dev/ did not exist. The only prior "relaunch" helper
+(docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-079/relaunch-host.ps1) stops whatever owns the port
+with Stop-Process -Force and has no PID file, no ownership proof, no health gate and no provenance gate -
+exactly the pattern the ruling forbids. Nothing in the repo gave a repeatable, reversible shared-Host
+lifecycle.
+Added scripts/dev/host-stack.ps1 (single script, actions start|stop|restart|status) with:
+  * deterministic paths: repo root from $PSScriptRoot; project src\backend\Host\Tooba.Host\Tooba.Host.csproj;
+    content root src\backend\Host\Tooba.Host; relative -OutDir normalised to an absolute path so the
+    recorded executable path can be compared exactly;
+  * explicit ASPNETCORE_ENVIRONMENT=Development and ASPNETCORE_URLS=http://127.0.0.1:<Port>;
+  * state: PID file .tmp-dev-host/host-<Port>.pid (pid, url, executablePath, outDir, contentRoot, gate,
+    startedAt) plus stdout/stderr logs beside it; .tmp-* is already git-ignored so no PID/log/secret file
+    can ever be staged;
+  * verification before a run is reported healthy: /health must return 200 AND
+    /__platform-commerce must return the exact tuple SingleStore / dev-singlestore / store-alpha /
+    tenant-alpha, otherwise the script throws;
+  * refusal: start refuses when the port is owned by a process this script did not start, unless the
+    deliberate -TakeOverProvenDevelopmentHost flag is passed;
+  * ownership proof on stop: the recorded PID must be alive, must actually own the port, and its
+    normalised absolute executable path must equal the recorded one - otherwise the script throws and
+    stops nothing;
+  * graceful stop by default; Stop-Process -Force only when -Force is explicitly passed;
+  * gate: -GateShippingOneLevelCatalog sets Tooba__ShippingOneLevelCatalog__Enabled=true in the PROCESS
+    ENVIRONMENT ONLY; no appsettings file is created or modified; ShippingRateAuthority and
+    ShippingOperationalShadow are never set by the script (remain OFF);
+  * no credential, token, connection string or password is written to any file or log.
+The deliberate takeover path additionally requires the current owner to be this repository's
+Tooba.Host.exe (name + executable path under the repo) with the exact Development provenance, and writes
+a prior-process record (pid, executable path, command line, parent pid, creation date, parent-alive, prior
+provenance, rollback command) to .tmp-dev-host/prior-host-<port>-<timestamp>.txt BEFORE terminating
+anything - that record is what makes the takeover reversible.
+MEASURED LIFECYCLE on shared :5088: status before takeover reported pid=33548, exe
+...\bin\Debug\net8.0\Tooba.Host.exe, start 13:31:13, provenance OK, health 200, and correctly flagged as
+NOT script-managed. start -TakeOverProvenDevelopmentHost -GateShippingOneLevelCatalog wrote
+.tmp-dev-host/prior-host-5088-20261015-210438.txt, gracefully stopped 33548, confirmed the port free,
+started the current-code Host (pid=25236), verified health + provenance and wrote the PID file. restart
+without the gate then stopped 25236 and started pid=34512; restart with the gate stopped 34512 and started
+pid=33968. status afterwards: pid=33968, exe .tmp-093-host-out\Tooba.Host.exe, gate=ShippingOneLevelCatalog=true,
+provenance OK, health 200. No blind kill and no Stop-Process -Force was used at any point; the stale
+orphan's full prior state is preserved in the record and its rollback command is the recorded executable
+path.
+
+=== MISSION B - ADMIN AUTH DISCREPANCY EXPLAINED, NO BYPASS ===
+Measured matrix on the OLD shared :5088 (pre-change), GET /v1/admin/shipping-services: real Development
+login session obtained through the :3000 BFF login -> 200; X-Tooba-Dev-Actor-User-Id
+aaaaaaaa-aaaa-4aaa-8aaa-000000000009 -> 403; bootstrapped admin 01a036c2-970e-7000-8eb7-94bf5cc2d8db ->
+200; no credential -> 401.
+Root cause (source-cited): aaaaaaaa-aaaa-4aaa-8aaa-000000000009 is not an admin identity at all - it is
+the storefront/customer GUEST actor, declared in src/backend/Modules/Order/Tooba.Order.Contracts/Fulfillment/
+StorefrontGuestActor.cs, in Payment (StorefrontPaymentDtos.GuestActorId), in Order
+(CheckoutPaymentAccessBridge.GuestActorId) and in Wallet (WalletDevelopmentSeedBootstrap.DemoCustomerActorUserId),
+and mirrored into the frontend as DEFAULT_CUSTOMER_DEV_ACTOR_ID in
+src/frontend/app/customer-panel/customer-api.ts. It is also reused as DEFAULT_DEV_ACTOR_ID in
+src/frontend/lib/auth/constants.ts, which src/frontend/lib/server/host-client.ts sends as
+X-Tooba-Dev-Actor-User-Id ONLY WHEN NO SESSION COOKIE EXISTS (line 32). The Host resolves it to a
+non-admin subject and denies it with 403 admin.authorization.denied - correct fail-closed behaviour, not a
+wiring defect.
+The admin path was already correct and needed no repair: DEFAULT_ADMIN_ACTOR_ID is intentionally the empty
+string (src/frontend/lib/admin/admin-result.ts line 9) and the admin screens call prepareAdminDevActor()
+(src/frontend/app/admin/admin-api.ts) which reads the real actor from the Development-only
+GET /v1/admin/dev-context - guarded by IHostEnvironment.IsDevelopment() plus AdminDevActorBootstrap.Snapshot
+in src/backend/Host/Tooba.Host/Admin/Development/AdminDevContextEndpoints.cs.
+So NO identity wiring was changed. No AllowAnonymous, no permission widening, no ACL disabling, no
+hardcoded production admin, no arbitrary X-Admin header, no committed actor id or password.
+PROOF on the CURRENT-CODE shared :5088, GET .../shipping-methods/one-level: no credential -> 401; guest dev
+actor aaaaaaaa-... -> 403; real BFF login session (bearer) -> 200 with gate=Enabled, ready=true and 7 flat
+method codes; bootstrapped admin actor -> 200. GET /api/auth/me through the shared BFF returns
+userId=01a036c2-970e-7000-8eb7-94bf5cc2d8db, proving the authorized BFF session IS the same actor that
+Fulfillment's admin read endpoints recognize.
+DOCUMENTED RESIDUAL FINDING (deliberately NOT changed - needs an identity decision): the anonymous
+server-side fallback in src/frontend/lib/server/host-client.ts line 32 sends the guest/customer actor id
+for anonymous server-rendered admin reads, so an unauthenticated RSC admin read gets 403 and the one-level
+gate reads as disabled. It fails closed, and fixing it means either giving the RSC a session-independent
+admin identity or having the server call the Development dev-context endpoint - both identity/security
+decisions outside this task's authority. No source file was edited for it.
+
+=== MISSION C - SHARED DEVELOPMENT UI PROOF ===
+Origin used: the SHARED http://localhost:3000 (pre-existing Next dev server, PID 31580, never restarted)
+against the SHARED :5088 now running current code. No isolated pair was used.
+Real browser: Development login through the shared BFF (POST /api/auth/login, admin-actor@tooba.local) ->
+/api/auth/me 200 -> http://localhost:3000/fa/admin/shipping-services.
+Rendered DOM: dir=rtl, lang=fa; five tabs shipping-one-level-tab-services (سرویسها), -rates-coverage
+(تعرفه و پوشش), -packaging-fare (بستهبندی و کرایه), -schedule-capacity (برنامه کاری و ظرفیت), -cost-review
+(بررسی هزینه). Tab 1 rows, flat one per method with no second-level editor: پیشتاز post:express غیرفعال;
+معمولی post:standard فعال; پیشتاز tipax:express فعال; معمولی tipax:standard فعال; اسنپ / پیک آنلاین
+snapp_courier غیرفعال; پیک فروشگاه store_courier فعال; تحویل حضوری in_person فعال. post:express and
+snapp_courier are present, marked inactive and were NOT activated.
+Selecting tipax:standard (selection preserved across tabs) then visiting tabs 2-5 produced real
+server-backed content: tab 2 coverage ۱ از ۱ with ۱۸۰٬۰۰۰ IRR active/unconditional, ۱۲۰٬۰۰۰ IRR inactive
+weight-banded 0-2000g and a third policy - inactive policies are shown, never hidden or activated; tab 3
+packaging ۱۵٬۰۰۰ IRR کرایه: پیشکرایه with the explicit note that real COD/collect-on-delivery settlement is
+not yet connected to Checkout/payment; tab 4 Asia/Tehran, برنامههای فعال ۱ از ۱ · مجموع بازهها ۲, windows
+Sunday 13:00-14:00 and 16:30-18:00, ظرفیت تنظیمشده (هنوز اعمال نمیشود): ۲۵; tab 5 completed a READ-ONLY
+operational quote: داخل بازهٔ فعال حامل, Asia/Tehran, Sunday 13:30, matching window id, ظرفیت: فقط تنظیم
+شده؛ رزرو/اجرای ظرفیت وجود ندارد, کد دلیل کرایه: shipping.service.not_priced, plus the standing note that
+Checkout still prices from its old reference and this number is written to no order.
+NETWORK EVIDENCE from the real browser on the shared origin:
+name=http://localhost:3000/v1/admin/shipping-services/tipax/operational-quote initiatorType=fetch
+duration=124ms transferSize=743. The quote is a read-only POST from the page; no merchant write, no
+financial collection, no order mutation.
+Screenshots: docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-093/01-shared-3000-five-tabs-rtl.png and
+02-shared-3000-cost-review-rtl.png.
+ANSWER TO THE QUESTION: YES - the shared http://localhost:3000/fa/admin/shipping-services genuinely shows
+the five Persian RTL tabs with the seven flat methods for an authenticated Development admin.
+
+=== ROLLBACK PROOF (MEASURED) ===
+restart WITHOUT the gate flag returned the stack to its default: GET .../shipping-methods/one-level
+(authorized) -> 200 {"gate":"Disabled","ready":false,"methods":[]}; legacy GET /v1/admin/shipping-services
+-> 200 (original public catalog preserved); shared GET http://127.0.0.1:3000/fa/admin/shipping-services ->
+200 with oneLevelTabStrip=False (legacy two-level screen back); status -> gate=defaults (all gates off),
+provenance OK, health 200. Documented rollback: scripts/dev/host-stack.ps1 -Action restart -Port 5088
+-OutDir .tmp-093-host-out -NoBuild (omit -GateShippingOneLevelCatalog), or -Action stop.
+
+=== CURRENT OPERATOR STATE (KEPT DELIBERATELY, AND REVERSIBLE) ===
+:5088 pid 33968 running .tmp-093-host-out\Tooba.Host.exe (current code), loopback-only listener;
+ephemeral process env Tooba__ShippingOneLevelCatalog__Enabled=true (no appsettings file touched);
+ShippingRateAuthority and ShippingOperationalShadow remain OFF; provenance SingleStore / dev-singlestore /
+store-alpha / tenant-alpha -> tooba_alpha; :3000 untouched (PID 31580). State file
+.tmp-dev-host/host-5088.pid; prior-process record
+.tmp-dev-host/prior-host-5088-20261015-210438.txt. It is safe to keep because the listener is
+loopback-only, authorization is unchanged (401/403 proofs above), the gate is process-scoped and one flag
+away from off, and the prior process is recorded with its rollback command. Turn off:
+-Action restart without the gate flag. Inspect: -Action status.
+
+=== DATA PARITY (READ-ONLY, AFTER ALL WORK) ===
+fulfillment.shipping_methods=7; shipping_method_translations=14; legacy shipping_services=5 and
+shipping_service_options=4; order.seller_orders=26; order.order_lines=37; fulfillment.fulfillments=9;
+migration AddShippingOneLevelCatalog still applied once. Checkout legacy authority unchanged:
+POST /v1/storefront/shipping/projection -> 401 checkout.authentication_required. No seed, backfill,
+migration, order, payment, reservation or merchant fixture write occurred.
+
+=== FOCUSED TESTS ===
+Tooba.Host.Tests filtered FullyQualifiedName~AdminPanelAuthorization: 4/4 pass. Frontend
+lib/auth/csrf.test.ts + lib/auth/login-return-to.test.ts: 7/7 pass. No production source file changed, so
+no broader suite was required and 092's 56/56 frontend and 45/45 backend one-level results stand by
+reference. No Host DLL-lock retry loop was entered.
+
+=== ELAPSED / CHANGED PATHS ===
+Elapsed ~24 minutes (hard timebox 30 minutes, not exceeded). Changed paths: scripts/dev/host-stack.ps1
+(new); docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-093.md (new);
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-093/** (new);
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md (append-only);
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-093.task.md (receipt, UNSTAGED). No src/** file was modified.
+Leak scan over the new evidence folder and the new script found no password, token, bearer or
+POSTGRES_PASSWORD match.
+
+=== REMAINING BLOCKERS (NONE BLOCKS THE FIVE-TAB UI) ===
+Anonymous server-side admin fallback identity decision (documented above); trusted packed-weight
+provenance; atomic capacity claim/release; COD ledger/settlement; true customer delivery promise;
+merchant-approved real tariffs/packaging/coverage plus an explicit user-authorized Checkout cutover;
+snapp_courier completeness; no coverage-grant read list exists (create-only route).
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
