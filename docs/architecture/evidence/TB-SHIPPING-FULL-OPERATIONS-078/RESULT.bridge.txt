@@ -1,0 +1,154 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-FULL-OPERATIONS-078
+Parent-Task: TB-SHIPPING-FULL-OPERATIONS-077
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FULL-OPERATIONS
+Mode: BOUNDED_ADMIN_OPERATIONAL_QUOTE_INSPECTOR_AND_REAL_DEV_GATES
+Bridge-Task-Row: 6b0a4b13-03a9-49ea-88b5-ddd94d1bf67e
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: ecd9b91ab502dc574845e3c72257343011663d65
+Base-SHA: ecd9b91ab502dc574845e3c72257343011663d65
+Code-SHA: 78af402748b5be31275fd5fd8a63e441c01ea78d
+Evidence-SHA: 78af402748b5be31275fd5fd8a63e441c01ea78d
+automaticNextImplementationTask: NONE
+
+ELAPSED: 10 minutes 45 seconds from Bridge claim to result post (timebox 45 minutes HARD; finished well inside).
+
+MISSION A - WORKING ADMIN INSPECTOR (PRIMARY): DELIVERED
+One discoverable per-service row action «بررسی هزینه و شرایط ارسال» was added on the existing
+/admin/shipping-services grid, sitting next to the existing ویرایش / نرخ و پوشش / برنامه کاری ارسال /
+هزینه بسته‌بندی و پرداخت کرایه actions. It opens one bounded RTL design-system Dialog. No new route,
+no new page, no mega-form, no new permission, no backend change, no new API route. The service code
+always originates from the clicked grid row and is displayed as read-only (کد خدمت: tipax); it cannot
+be typed by hand. Destination scope reuses the real Geography reference picker
+(ShippingDestinationPicker) and option identity reuses the real Fulfillment service/option tree
+(loadShippingMethodTree), so no invented identity is possible.
+
+Explicit inputs offered: currency (default IRR, validated), order subtotal in IRR, measured shipment
+weight in kg, physical shipment item count (not cart lines), optional carrier pickup instant, and an
+explicit IANA timezone.
+
+WIRE DTO - the only backend call is the existing authorized read-only route
+POST /v1/admin/shipping-services/{serviceCode}/operational-quote with the exact 076 body DTO:
+{ scope{countryId,administrativeAreaId,cityId,serviceAreaId}, cartSubtotalExclusive, currencyCode,
+optionCode, weightGrams, itemCount, requestedPickupAtUtc }. Absent optionals are sent as explicit
+null rather than omitted, so the backend never has to guess. Backend source was inspected first
+(ShippingOperationalQuoteEndpoints.cs, OperationalQuote Contracts, validators, query handler):
+outcome/availability enums are encoded as string names, and every monetary part is nullable by
+design. No wire field was invented and no price is computed client-side.
+
+INPUT CONVERSION: weight uses the existing 074 model exactly (parseKilogramsToGrams), so 1.999 kg
+becomes 1999 g with no floating point and no silent rounding; a finer input such as 1.0005 is refused
+rather than rounded. The dialog displays the exact conversion before submitting (observed live:
+«معادل دقیق: ۱٬۹۹۹ گرم (بدون گرد کردن)»). Money parsing refuses more than two decimals and never
+rounds silently. Item count must be a positive integer (zero is refused as an empty shipment).
+
+TIMEZONE: the pickup input is a local wall time plus an explicit IANA zone, converted to UTC by
+resolving the zone offset on both sides of the requested instant. Ambiguous (DST fall-back) and
+nonexistent (DST spring-forward) local times are refused with explicit Persian messages, and an
+unknown zone or an impossible calendar date is refused too. Browser timezone is never assumed. Live
+proof: 2026-10-18T13:30 Asia/Tehran resolved to 2026-10-18T10:00:00.000Z and the dialog showed
+«(UTC+03:30 → UTC)». With no instant supplied the UI shows NotEvaluated and states that «قابل رزرو»
+is not claimed.
+
+MONETARY OUTPUT - faithful, nullable, never a fake zero. Separate rendered lines: carrier freight,
+packaging, total service expense, payable at checkout, collect on delivery, plus payer mode, matched
+tier/rate scope when returned, schedule availability with matched weekday/window, and the explicit
+capacity disclosure. Live Quoted case (tipax/standard, Alborz scope, inside the active window)
+matched the backend byte-for-byte on every amount: freight ۱۸۰٬۰۰۰ IRR, packaging ۰ IRR, total
+۱۸۰٬۰۰۰ IRR, payable at checkout ۱۸۰٬۰۰۰ IRR, collect on delivery ۰ IRR, payer پیش‌کرایه. The quoted
+۰ IRR there is a real amount (no active packaging policy on that identity), not a missing one. A live
+unquoted case rendered «اعلام نشده» for every amount and never ۰. Currency mismatch is surfaced
+visibly (requested USD vs returned IRR) instead of being normalized away. The matched-tier line is
+purely descriptive and never used to compute anything.
+
+SCHEDULE AND CAPACITY HONESTY: availability wording never upgrades NotEvaluated or Ambiguous to
+available. Live matrix showed Available (Sunday 13:30 local, matched window
+01a13e1c-2913-7000-b30a-0d3fb02dfcde), Unavailable (Sunday 14:00 local, half-open end excluded),
+NotEvaluated (no instant), NotConfigured (no schedule row) and InactiveNotEnforced (registered but
+inactive schedule is not a constraint). Capacity is rendered only as
+«ظرفیت: فقط تنظیم شده؛ رزرو/اجرای ظرفیت وجود ندارد.» with the configured total labelled as
+configured, never as remaining. The carrier window is explicitly described as when the carrier
+accepts the parcel, not a customer delivery promise. The dialog states that today's Checkout remains
+under the legacy quote authority and that no amount is written to any order.
+
+FAILURE STATES: 401/403 are distinguished (live 401 admin.actor.missing rendered as a dedicated
+denied message), 400 validation child codes are surfaced ahead of the validation.failed envelope
+(live: shipping.validation.operational_weight_negative, operational_item_count_out_of_range,
+currency_invalid, scope_required, body_invalid), declared domain errors are mapped
+(destination_scope.invalid, service_option.unknown, service_code.unknown), and an unreachable host
+maps to a stable message. Submit is disabled while a request is outstanding, so no double submission
+or fake success is possible.
+
+ARCHITECTURE: pure formatting/validation lives in shipping-operational-quote-model.ts, the API client
+in shipping-operational-quote-api.ts, the dialog in shipping-operational-quote-dialog.tsx, and the
+existing screen file received only a minimal import + one row action + one dialog composition. New
+file sizes: api 375, model 570, dialog 426, api test 327, model test 204 LOC; the touched screen is
+766 LOC (under the 800 threshold). No file exceeds the applicable architecture threshold. Frontend
+feature architecture skill and FRONTEND-ARCHITECTURE-STANDARD were followed.
+
+MISSION B - REAL DEVELOPMENT MATRIX AND INTEGRITY (REQUIRED): DELIVERED
+Provenance was positively verified BEFORE any call: GET /__platform-commerce returned
+edition=SingleStore, deploymentId=dev-singlestore, tenantId=store-alpha,
+connectionReference=tenant-alpha, defaultMarketReference=IR, and the database is tooba_alpha. The
+existing Development Host on http://127.0.0.1:5088 was already running and was NOT stopped, rebuilt,
+restarted or reconfigured by this task. No staging or Production endpoint was contacted and no
+scratch database was created.
+
+Real admin browser evaluation was performed in a real Chromium tab on
+http://127.0.0.1:3000/admin/shipping-services (Next.js Development rewriting /v1/* to the Host) with a
+real admin session against real tooba_alpha data, using PRE-EXISTING fixtures owned by earlier tasks
+without mutating them: the active tipax/standard rate (180000 IRR) and the active tipax/standard
+schedule (Asia/Tehran, Sunday 13:00-14:00 and 16:30-18:00, capacity 25), the inactive tipax/express
+schedule, the absent service-level schedule, and the three inactive tipax packaging policies. HTTP
+request/response envelopes are captured in log-live-operational-quote.txt (16 phases) and the UI
+transcript plus screenshot are in browser-ui-proof.md / screenshot-quote-result-quoted.png. The
+admin view output was verified to match the backend response exactly, including the matched window id
+and the configured capacity total.
+
+NO-WRITE PROOF: the run issued only GETs plus the read-only diagnostic POST. Byte-level comparison in
+phase 16 shows rates, packaging-policies and operating-schedules bodies identical before and after
+the whole matrix (all three True), and GET on the quote route returns 405 because no read route
+exists. No rate, coverage, packaging policy, schedule, order, payment or settlement was created,
+edited or deleted, and no synthetic fixture was introduced for UI cosmetics.
+
+TESTS AND VALIDATION: 16 focused frontend tests pass (8 API-contract, 8 pure-model) covering the
+exact wire body, explicit null for absent optionals, nullable amounts never coerced to zero, quoted
+zero preserved, availability wording, capacity/promise/payer disclosure contracts, exact kg to gram
+conversion, timezone offset/ambiguity/nonexistent handling, form validation and payload canonicity,
+child error-code surfacing, 401/403 vs unreachable host, and invalid-response refusal. The existing
+packaging suite still passes (29 tests together). tsc --noEmit is clean. Architecture guards
+(import-boundary, flat-folder, feature-boundary, test-discovery) pass. The frontend size guard still
+reports the same five PRE-EXISTING unrelated OVERSIZED_GROWTH files
+(category-admin-screen.tsx, admin-landing-page-composer.tsx, storefront-landing-blocks.tsx,
+storefront-shipping.tsx, shared-composition-renderer.tsx); git diff proves those five are byte
+identical to HEAD and they were not touched. No backend build was needed or performed because no
+backend defect blocked the real UI.
+
+HONEST LIMITATIONS (stated, not hidden): Development currently has no active weight-tier rate and no
+active packaging policy on any service, so the live endpoint could not exercise the 1999/2000 winning
+tier boundary or a charged packaging component. Those two branches are covered by focused unit
+fixtures built from the real 076 answer shape, and NO live tier boundary and NO live charged-packaging
+claim is made anywhere. This is recorded in fixture-ledger.md.
+
+CHANGES: new src/frontend/app/admin/shipping-services/shipping-operational-quote-api.ts,
+...-model.ts, ...-dialog.tsx, ...-api.test.ts, ...-model.test.ts; minimal edit to
+src/frontend/app/admin/shipping-services-screen.tsx; new
+docs/planning/shipping/SHIPPING-FULL-OPERATIONS-078.md; new evidence folder
+docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-078/ (task-receipt.json,
+probe-live-operational-quote.ps1, log-live-operational-quote.txt, browser-ui-proof.md,
+fixture-ledger.md, screenshot-quote-result-quoted.png). The task receipt file
+docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-078.task.md is preserved verbatim UNSTAGED.
+
+GIT: committed and pushed to origin/main as 78af402748b5be31275fd5fd8a63e441c01ea78d; after
+git fetch, HEAD equals origin/main. No stash, reset, rebase or force push; all unrelated dirty and
+untracked paths were preserved.
+
+BLOCKERS: none. No customer Checkout cutover was made and no price authority changed. Worker PASS does
+not constitute Architect ACCEPT.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
