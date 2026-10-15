@@ -53,24 +53,11 @@ test("the five tab labels are exactly the locked Persian labels", () => {
   assert.equal(DEFAULT_ONE_LEVEL_TAB, "services");
 });
 
-test("only the services, rates, packaging and schedule tabs are wired; the last names its wiring task", () => {
-  assert.equal(ONE_LEVEL_TAB_WIRING_TASK.services, null);
-  assert.equal(wiringNoticeFor("services"), null);
-  // TB-SHIPPING-ONE-LEVEL-TABS-086 — tab 2 is genuinely wired, so it no longer advertises a task.
-  assert.equal(ONE_LEVEL_TAB_WIRING_TASK["rates-coverage"], null);
-  assert.equal(wiringNoticeFor("rates-coverage"), null);
-  // TB-SHIPPING-ONE-LEVEL-TABS-087 — tab 3 is genuinely wired on the same server-owned binding.
-  assert.equal(ONE_LEVEL_TAB_WIRING_TASK["packaging-fare"], null);
-  assert.equal(wiringNoticeFor("packaging-fare"), null);
-  // TB-SHIPPING-ONE-LEVEL-TABS-088 — tab 4 is genuinely wired on the same server-owned binding.
-  assert.equal(ONE_LEVEL_TAB_WIRING_TASK["schedule-capacity"], null);
-  assert.equal(wiringNoticeFor("schedule-capacity"), null);
-  for (const id of ["cost-review"] as const) {
-    const task = ONE_LEVEL_TAB_WIRING_TASK[id];
-    assert.ok(task, `missing wiring task for ${id}`);
-    const notice = wiringNoticeFor(id);
-    assert.match(notice ?? "", new RegExp(task));
-    assert.match(notice ?? "", /فقط مقصد شل/);
+test("all five tabs are genuinely wired and none advertises a wiring task", () => {
+  // TB-SHIPPING-ONE-LEVEL-TABS-086..089 — every tab is genuinely wired on the server-owned binding.
+  for (const id of ONE_LEVEL_TAB_IDS) {
+    assert.equal(ONE_LEVEL_TAB_WIRING_TASK[id], null, `${id} should be wired`);
+    assert.equal(wiringNoticeFor(id), null, `${id} should not show a wiring notice`);
   }
 });
 

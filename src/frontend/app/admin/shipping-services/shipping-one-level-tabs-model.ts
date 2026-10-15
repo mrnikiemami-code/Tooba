@@ -33,16 +33,19 @@ export const ONE_LEVEL_TAB_LABELS: Record<OneLevelTabId, string> = {
 export const DEFAULT_ONE_LEVEL_TAB: OneLevelTabId = "services";
 
 /**
- * زبانه‌هایی که در این تسک فقط «مقصد شل» هستند؛ توانمندی واقعی‌شان در 085–088
- * سیم‌کشی می‌شود. این فهرست عمداً صریح است تا هیچ زبانه‌ای بی‌سروصدا ادعای
- * آماده‌بودن نکند.
+ * زبانه‌هایی که هنوز «مقصد شل» هستند و توانمندی واقعی‌شان در تسک دیگری سیم‌کشی
+ * می‌شود. این فهرست عمداً صریح است تا هیچ زبانه‌ای بی‌سروصدا ادعای آماده‌بودن نکند.
+ *
+ * TB-SHIPPING-ONE-LEVEL-TABS-089: همهٔ پنج زبانه سیم‌کشی شده‌اند (سرویس‌ها، تعرفه و
+ * پوشش، بسته‌بندی و کرایه، برنامه کاری و ظرفیت، بررسی هزینه) و هیچ مقصد شل باقی نمانده
+ * است؛ نگاشت خالی یعنی هیچ زبانه‌ای متن سیم‌کشی‌نشده نشان نمی‌دهد.
  */
 export const ONE_LEVEL_TAB_WIRING_TASK: Record<OneLevelTabId, string | null> = {
   services: null,
   "rates-coverage": null,
   "packaging-fare": null,
   "schedule-capacity": null,
-  "cost-review": "089",
+  "cost-review": null,
 };
 
 /** حداکثر طول کد روش طبق قرارداد 081/083. */

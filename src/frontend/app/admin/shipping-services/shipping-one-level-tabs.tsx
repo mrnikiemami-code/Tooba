@@ -20,6 +20,7 @@ import { Button, EmptyState, ErrorState } from "../../../design-system";
 import { ShippingOneLevelRatesTab } from "./shipping-one-level-rates-tab.tsx";
 import { ShippingOneLevelPackagingTab } from "./shipping-one-level-packaging-tab.tsx";
 import { ShippingOneLevelScheduleTab } from "./shipping-one-level-schedule-tab.tsx";
+import { ShippingOneLevelQuoteTab } from "./shipping-one-level-quote-tab.tsx";
 import {
   ONE_LEVEL_TAB_IDS,
   ONE_LEVEL_TAB_LABELS,
@@ -193,7 +194,8 @@ export function ShippingOneLevelTabs({
           // TB-SHIPPING-ONE-LEVEL-TABS-088: زبانهٔ ۴ با همان پیوند سرور و همان مدل قدیمی برنامهٔ کاری.
           <ShippingOneLevelScheduleTab methodCode={selection.methodCode} onNotice={onNotice} />
         ) : (
-          <WiringShell tab={activeTab} />
+          // TB-SHIPPING-ONE-LEVEL-TABS-089: زبانهٔ ۵ فقط تشخیص خواندنی هزینه است، نه قیمت مشتری.
+          <ShippingOneLevelQuoteTab methodCode={selection.methodCode} onNotice={onNotice} />
         )}
       </div>
     </section>
