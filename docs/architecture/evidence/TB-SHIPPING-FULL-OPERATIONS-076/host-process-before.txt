@@ -1,0 +1,9 @@
+﻿PID 22068 Tooba.Host exe=D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe start=2026-10-15T11:03:47.4030560+03:30
+
+
+LocalAddress  : 127.0.0.1
+LocalPort     : 5088
+OwningProcess : 22068
+
+
+

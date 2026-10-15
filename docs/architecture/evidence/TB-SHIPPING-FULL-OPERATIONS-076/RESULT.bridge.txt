@@ -1,0 +1,296 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-FULL-OPERATIONS-076
+Parent-Task: TB-SHIPPING-FULL-OPERATIONS-075
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FULL-OPERATIONS
+Mode: BOUNDED_OPERATIONAL_QUOTE_AND_CAPACITY_AUTHORITY
+Bridge-Task-Row: 10842f5f-e08f-456b-907c-e27dede79aec
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 2c0b7e1adcd15c524ff3311334bd3df1a15e5b3b
+Base-SHA: 2c0b7e1adcd15c524ff3311334bd3df1a15e5b3b
+Code-SHA: __CODE_SHA__
+Evidence-SHA: __EVIDENCE_SHA__
+automaticNextImplementationTask: NONE
+
+MISSION GRADING
+Mission A (explicit Shipping operational quote, PRIMARY): COMPLETE.
+Mission B (focused read-only authorized admin consumer, SECONDARY): COMPLETE and live-proven.
+Mission C (capacity authority): DELIBERATELY NOT IMPLEMENTED - kept configuration-only and truthfully
+labelled. Declared below as a KNOWN PROGRAM GAP, not concealed.
+Overall Status: PASS. The additive seam composes real owned inputs deterministically and exposes the
+explicit split. It switches no price authority, moves no money and enforces no capacity.
+
+TIMEBOX DEVIATION - DISCLOSED, NOT CONCEALED
+Claimed 2026-10-15T07:44:07Z; closed 2026-10-15T08:41Z. Elapsed approximately 57 minutes, which
+OVERRAN the 45-minute HARD timebox by approximately 12 minutes. Cause: the seam needed three new
+layers (Contracts, Domain evaluator + schedule evaluator, Infrastructure lookup) plus the Application
+query/validator, the endpoint, five focused test classes and a live Development proof; the one
+authorized stop/rebuild/restart cycle of the Host plus three self-corrections in the probe script (a
+PowerShell hashtable key collision, a stale Development fixture that had to be reused and restored
+instead of created, and a schedule that had to be armed deterministically) consumed the overrun. No
+scope was expanded beyond the two authorized missions and nothing was faked to save time.
+
+PREFLIGHT
+- Claimed exactly one Pending task on tooba-main (row 10842f5f-e08f-456b-907c-e27dede79aec) and
+  preserved the received .task.md verbatim at docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-076.task.md,
+  UNSTAGED (never staged, never committed).
+- Expected-Base-SHA 2c0b7e1adcd15c524ff3311334bd3df1a15e5b3b verified as equal to HEAD == origin/main
+  at claim and as an ancestor of HEAD after the work (git merge-base --is-ancestor exit 0).
+- Read AGENTS.md, the pipeline protocol, the 069-075 Shipping planning/evidence, the Shipping
+  Contracts (Rates, Packaging, Scheduling), the existing ShippingRatePolicyEngine and
+  IShippingRateQuoteLookup, IShippingShipmentCostLookup, the operating-schedule storage and the
+  read-only Fulfillment service/option and Geography seams. Order/Checkout/Payment were inspected ONLY
+  to confirm the existing ownership boundary and were NOT edited.
+- Preserved every unrelated dirty/untracked file. No reset, stash, rebase, force-push or history
+  rewrite.
+- Positive Development identification before any write: GET http://127.0.0.1:5088/__platform-commerce
+  returned edition=SingleStore, deploymentId=dev-singlestore, tenantId=store-alpha,
+  connectionReference=tenant-alpha, resolvedHost=127.0.0.1, themeReference=theme-alpha,
+  defaultMarketReference=IR. Host http://127.0.0.1:5088, database tooba_alpha on 127.0.0.1:5432.
+  No staging or production access, no SQL bypass.
+
+MISSION A - THE OPERATIONAL QUOTE SEAM (PRIMARY)
+One new ADDITIVE, read-only, deterministic seam was added. No existing seam was rewritten and no
+existing caller changed meaning.
+
+Contracts - Tooba.Shipping.Contracts/Operations/ShippingOperationalQuoteContracts.cs:
+  IShippingOperationalQuoteLookup.QuoteAsync(ShippingOperationalQuoteRequest) -> ShippingOperationalQuote
+  ShippingOperationalQuoteRequest: serviceCode, canonical Geography destination ids, cartSubtotalExclusive,
+    optional currencyCode, optional optionCode, optional measured parcel, explicit requestedPickupAtUtc.
+  ShippingOperationalQuote: Outcome, ServiceCode, OptionCode, CurrencyCode, FreightAmount,
+    PackagingAmount, TotalServiceExpense, AmountPayableAtCheckout, AmountCollectOnDelivery,
+    FreightPayerMode, PackagingPayer, the untouched CarrierFreight ShippingQuote, the Packaging
+    ShippingPackagingFeeComponent, the Schedule ShippingScheduleEvaluation, a stable ReasonCode and the
+    matched rate condition.
+  Enums: ShippingOperationalQuoteOutcome (Quoted, FreightNotQuoted, PackagingAmbiguous, CurrencyMismatch);
+    ShippingScheduleAvailability (NotConfigured, InactiveNotEnforced, Available, Unavailable,
+    NotEvaluated, Ambiguous); ShippingCapacityEnforcement (NotEnforced - single member by design).
+  Reason codes: shipping.operational_quote.{quoted,freight_not_quoted,packaging_ambiguous,currency_mismatch}
+    and shipping.schedule.{not_configured,inactive_not_enforced,available,outside_windows,not_evaluated,
+    ambiguous,timezone_unresolvable} plus shipping.capacity.not_enforced.
+
+Composition, not a second engine - Tooba.Shipping.Domain/Operations/ShippingOperationalQuoteEvaluator.cs:
+  Calls the EXISTING ShippingRatePolicyEngine.Quote and ShippingPackagingFeeResolver.Resolve with exactly
+  the inputs the legacy seams receive, then adds ordering, the payment split and the schedule verdict.
+  The existing tier specificity order (option identity, then destination depth, then measurement tier)
+  and the coverage resolution remain owned by the rate engine; the packaging precedence remains owned by
+  the packaging resolver. No tariff was invented and no pricing rule duplicated.
+
+Schedule semantics - Tooba.Shipping.Domain/Scheduling/ShippingScheduleAvailabilityEvaluator.cs:
+  Pure and deterministic over an EXPLICIT instant; it never reads the system clock, so the same request
+  always produces the same verdict. ISO weekday (1 Monday .. 7 Sunday), half-open [start, end) local time
+  in the schedule's configured IANA zone, option-specific schedule first with the service-level schedule
+  as the documented fallback, and a schedule belonging to a DIFFERENT option is never applied.
+  No schedule -> NotConfigured (no restriction). Inactive schedule -> InactiveNotEnforced, the documented
+  safe meaning: "inactive" is NOT an operational restriction and never means "unavailable". Active
+  schedule with the instant inside a window -> Available. Outside every window -> Unavailable with
+  shipping.schedule.outside_windows. No instant supplied -> NotEvaluated (never a success-shaped
+  "available"). Two active schedules for one identity -> Ambiguous. Unresolvable stored time zone ->
+  Ambiguous with timezone_unresolvable (fail-closed). Midnight-crossing windows are rejected by the
+  Domain invariant and the UTC-to-local conversion is total, so DST invalid/ambiguous local times cannot
+  arise on this path. This is explicitly NOT a promised delivery slot: a guard test proves no
+  promise/estimate field exists on the schedule aggregate or on the evaluation result.
+
+Infrastructure - Tooba.Shipping.Infrastructure/Operations/ShippingOperationalQuoteLookup.cs:
+  Read-only EF Core reads of four narrow module-owned sets (rate policies, coverage grants, packaging
+  policies, operating schedules) filtered by service code and, where the table has one, by country. No
+  foreign DbContext, no cross-schema join, no transaction, no write.
+
+PAYMENT SPLIT - A QUOTE FACT, NEVER A TRANSACTION
+  Prepaid            -> payable at checkout = freight + packaging; collect on delivery = 0
+  CollectOnDelivery  -> payable at checkout = packaging only; collect on delivery = freight
+  Packaging is never collectable: the carrier has no packaging contract, so only the freight component
+  can move to collect-on-delivery and PackagingPayer stays Checkout in both rows. Shipping states WHO
+  owes WHAT and WHEN. It creates no Payment transaction, no ledger entry and no settlement. Order,
+  Checkout, Payment and Settlement were not touched.
+
+FAIL-CLOSED MONEY - NEVER A SUCCESS-SHAPED ZERO
+  Every money field is decimal?. FreightNotQuoted, PackagingAmbiguous and CurrencyMismatch all leave the
+  amounts null with a stable reason code. An unpriced freight is never summed with zero, ambiguous
+  packaging is never resolved by picking the first row, and mismatched component currencies are never
+  converted or added. A free-freight threshold waiver applies to carrier freight ONLY; the independent
+  packaging component survives it. IsOperationallyEligible requires both a quoted price and a satisfied
+  schedule constraint, so NotEvaluated and Ambiguous are never eligible.
+
+MISSION B - FOCUSED READ-ONLY ADMIN CONSUMER
+  POST /v1/admin/shipping-services/{serviceCode}/operational-quote
+  One route, one authorization call, and the EXISTING fulfillment.view permission - no new capability,
+  no permission bypass, no Results.Json, no public write route and no customer price cutover. POST is
+  used because the evaluation takes an explicit body (destination, measurement, instant), not because
+  anything is written. The route service code stays authoritative: the body contract deliberately has no
+  ServiceCode property. The read is modelled as a MediatR IRequest query; the handler validates method
+  identity through the Fulfillment Contracts seam and destination identity through the Geography
+  Contracts seam before evaluating, then routes through the existing ApiResponseFactory and error
+  handling. A GET on the route returns 405 because no read route exists.
+
+FOCUSED TEST OUTCOMES
+  dotnet test src/backend/Modules/Shipping/Tooba.Shipping.Tests -> 290 passed, 0 failed, 0 skipped
+  (was 238 after 075; +52 new). Focused coverage actually exercised:
+  - Prepaid split vs CollectOnDelivery split (checkout = 132000 vs 12000; COD = 0 vs 120000).
+  - Free freight above threshold still carries the independent packaging fee.
+  - No packaging policy is an explicit zero, never a hidden charge.
+  - Ambiguous packaging blocks every amount; conflicting component currency is never summed.
+  - Unknown service and missing coverage are reported through the freight component, not as a zero price.
+  - Missing measurement is distinct from a measurement outside every tier.
+  - Weight boundary 1999 vs 2000 selects the lower vs the upper tier; count boundary 5 vs 6 likewise.
+  - Both measurement axes must match the same tier; a weight-only request against a two-axis condition is
+    MeasurementRequired, not ConditionNotMatched.
+  - Option-specific policy wins; the deepest compatible destination scope wins.
+  - The seam is deterministic and never reads the clock.
+  - The Contracts assembly exposes exactly one read-only method on the seam interface.
+  - Endpoint ownership: the operational-quote route is registered by the Shipping module and no other
+    module owns it.
+
+LIVE DEVELOPMENT PROOF
+  Full transcript: docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-076/log-live-operational-quote.txt
+  Reproducible probe: .../probe-operational-quote.ps1
+  Host pipeline excerpt (request/endpoint lines only): .../host-request-log-076.txt
+  Host process evidence: .../host-process-before.txt
+  The proof ran against the running Development host on http://127.0.0.1:5088 with a real Bearer session
+  from POST /v1/auth/login and real Geography and Shipping identities, on tooba_alpha.
+
+  Real stored rate (unchanged, read-only): tipax / express / AdministrativeArea = 260000.00 IRR,
+  preparation 1 day, lead 1 day. Free-freight threshold absent.
+
+  Sunday 13:30 Asia/Tehran, express schedule NOT yet armed (no applicable active policy)
+    -> 200 outcome=Quoted freight=260000.00 packaging=0 total=260000.00 checkout=260000.00 cod=0
+       payer=Prepaid schedule=InactiveNotEnforced/shipping.schedule.inactive_not_enforced eligible=true
+  Sunday 14:00 Asia/Tehran (half-open end), same not-armed state
+    -> 200 identical amounts, schedule=InactiveNotEnforced eligible=true
+
+  With the synthetic express packaging row (12000 IRR, CollectOnDelivery) and the synthetic express
+  schedule (Sunday 13:00-14:00 with capacity 25, and Sunday 16:00-17:00, Asia/Tehran) both ACTIVE:
+  Sunday 13:30 Asia/Tehran, inside the first window
+    -> 200 outcome=Quoted freight=260000.00 packaging=12000.00 total=272000.00
+       checkout=12000.00 cod=260000.00 payer=CollectOnDelivery
+       schedule=Available/shipping.schedule.available weekday=7 local=13:30:00
+       matchedWindow=01a13eb4-1b05-7000-92cf-6fa979e681ba configuredCapacityTotal=25
+       capacityEnforcement=NotEnforced eligible=true
+  Same identity with the payer mode republished as Prepaid
+    -> 200 total=272000.00 checkout=272000.00 cod=0 payer=Prepaid schedule=Available eligible=true
+       (proves the split is driven by the persisted payer fact, not by the request)
+  Sunday 14:00 Asia/Tehran, exactly the half-open end of the first window
+    -> 200 amounts unchanged, schedule=Unavailable/shipping.schedule.outside_windows local=14:00:00
+       eligible=false
+  Sunday 16:30 Asia/Tehran, inside the second window
+    -> 200 schedule=Available local=16:30:00 matchedWindow=01a13eb4-1b05-7000-b378-d93bf50ecb46
+       eligible=true
+  No requested instant supplied
+    -> 200 schedule=NotEvaluated/shipping.schedule.not_evaluated configuredCapacityTotal=25 eligible=false
+  Schedule deactivated, instant outside every window
+    -> 200 schedule=InactiveNotEnforced eligible=true (inactive is not a restriction)
+  weightGrams 1999 and 2000
+    -> 200 both Quoted at the unconditional express rate (no measurement tier exists on this Development
+       rate), schedule=NotEvaluated; the boundary itself is proven by the focused unit tests, which have
+       real tiered policies
+  Invented option code -> 400 shipping.service_option.unknown
+  Invented country id -> 400 shipping.destination_scope.invalid
+  Negative weight -> 400 validation.failed / shipping.validation.operational_weight_negative
+  Zero item count -> 400 validation.failed / shipping.validation.operational_item_count_out_of_range
+  Invalid currency -> 400 validation.failed / shipping.validation.currency_invalid
+  Negative subtotal -> 400 validation.failed / shipping.validation.cart_subtotal_negative
+  Absent scope -> 400 validation.failed / shipping.validation.scope_required
+  Unreadable body -> 400 validation.failed / shipping.validation.body_invalid
+  No credential at all -> 401 admin.actor.missing
+  GET on the route -> 405 (no read route exists)
+  GET /v1/admin/shipping-services/tipax/rates before vs after every evaluation -> byte-identical: true
+  No unhandled 5xx appeared anywhere in the run; the only Error-class lines in the host excerpt are the
+  framework's normal envelope logging for the intentional 400 validation rejections, each immediately
+  followed by the matching handled-business-exception Warning.
+
+HOST RESTART - INTENTIONAL, ONCE, WITH ROLLBACK CAPTURE
+  A rebuild was genuinely required because the running host process locked the output assemblies. The
+  running Development process was positively identified first (PID 22068, Tooba.Host.exe from
+  bin/Debug/net8.0, listening on 127.0.0.1:5088, started 2026-10-15T11:03:47+03:30) and recorded in
+  .../host-process-before.txt. It was stopped ONCE, the Host was rebuilt ONCE, and it was restarted ONCE
+  (PID 13420, started 2026-10-15T11:57:05+03:30) with stdout and stderr redirected to
+  .../host-stdout-076.txt and .../host-stderr-076.txt. The proof was then run against that freshly
+  compiled host, never against an older instance. No scratch database was created and no parallel
+  database was used.
+
+CAPACITY - CONFIGURATION ONLY, HONESTLY LABELLED (KNOWN PROGRAM GAP)
+  No atomic, idempotent shipment-slot reservation or cancellation exists and none was simulated.
+  ShippingCapacityEnforcement has exactly one member, NotEnforced, so the type system prevents a caller
+  from reading the configured numeric cap as a real reservation; a guard test asserts the enum can never
+  grow a second value without an approved design. The configured total is still reported for
+  auditability together with shipping.capacity.not_enforced.
+  KNOWN PROGRAM GAP: capacity commitment and booking cannot rely on this numeric cap. Enforcing it
+  requires a separate, later-approved design with an atomic claim. Order rows were never counted by a
+  naive non-atomic SELECT and no distributed transaction was simulated.
+
+SCHEMA / COMPATIBILITY
+  ZERO schema change and ZERO migration. The seam reads only the existing shipping.rate_policies,
+  shipping.coverage_grants, shipping.packaging_policies and shipping.operating_schedules tables. No
+  existing contract, route or DI registration was replaced. Legacy method listing and legacy Checkout
+  pricing are unchanged: a missing or inactive schedule is fail-open and no-schedule behaviour is
+  preserved. No frontend change in this task (077 owns UI/presentation integration).
+
+CHANGED PATHS (all inside ALLOWED PATHS; no FORBIDDEN path touched)
+  src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Operations/ShippingOperationalQuoteContracts.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Domain/Operations/ShippingOperationalQuoteEvaluator.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Domain/Scheduling/ShippingScheduleAvailabilityEvaluator.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Application/Operations/Queries/ShippingOperationalQuoteQueries.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Application/Validation/ShippingOperationalValidators.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Operations/ShippingOperationalQuoteLookup.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/DependencyInjection/ShippingModule.cs (modified, +6: DI registration and usings)
+  src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingOperationalQuoteEndpoints.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingRateCoverageEndpoints.cs (modified, +1: register the new endpoint map)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Operations/ShippingOperationalQuoteTests.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Operations/ShippingOperationalQuoteLookupTests.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Operations/ShippingOperationalQuoteEndpointOwnershipTests.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Scheduling/ShippingScheduleAvailabilityTests.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Compatibility/OperationalQuoteCompatibilityTests.cs (new)
+  docs/planning/shipping/SHIPPING-FULL-OPERATIONS-076.md (new)
+  docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-076/** (new)
+  Host/Tooba.Host/Program.cs was NOT edited: the existing Shipping endpoint composition already
+  discovers the new endpoint module.
+
+DEVELOPMENT FIXTURE LEDGER (tooba_alpha only, never staging or production)
+  The probe needs one ACTIVE packaging row and one ACTIVE express schedule to prove the composed split
+  and the window verdicts. Both are synthetic Development data and both are returned to the state
+  recorded by 075 before this task closed; the restoration ledger is
+  .../restore-dev-fixtures.ps1 with its transcript .../log-dev-restore.txt.
+  01a13e7c-cfde-7000-98cc-f79246cf97b0  tipax / express / AdministrativeArea (Alborz)  fee 15000 IRR
+    freightPayerMode Prepaid  is_active=false  -> restored to the exact 075 ledger state (the 12000 IRR
+    CollectOnDelivery value used during the proof was temporary and was reverted).
+  01a13eaf-2710-7000-9147-ae5a28967251  tipax / express / Asia/Tehran schedule  isActive=false
+    -> created by this task (the 075-era fixture was a schedule for tipax/standard and was never
+    touched). No delete surface exists for a schedule, so it is left inactive; its windows are Sunday
+    13:00-14:00 with capacity 25 and Sunday 16:00-17:00.
+  01a13deb-cd7c-7000-a11e-641338237a1a  tipax / standard / Asia/Tehran  isActive=true -> PRE-EXISTING,
+    not created and not modified by this task.
+  No ACTIVE synthetic fixture created by this task remains. No existing row was deleted and no existing
+  row's semantics were changed.
+
+COMMIT / PUSH
+  Base-SHA     __BASE_SHA__ (HEAD == origin/main at claim)
+  Code-SHA     __CODE_SHA__ (all source, planning and evidence, pushed to origin/main)
+  Evidence-SHA __EVIDENCE_SHA__ (contains docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-076/**
+    including this result artifact)
+  The unstaged Bridge receipt docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-076.task.md was never staged and
+  never committed. No unrelated dirty path was staged.
+
+ELAPSED
+  Claimed 2026-10-15T07:44:07Z, closed 2026-10-15T08:41Z, approximately 57 minutes. See the TIMEBOX
+  DEVIATION section above for the disclosed overrun of the 45-minute HARD bound.
+
+EXPLICIT REMAINING BLOCKERS / NEXT INTEGRATION GAPS
+1. Checkout/Order integration is NOT done and remains FUTURE-FACING. Nothing consumes the new seam on a
+   live path: no amount is written onto an order and no extra charge is claimed in today's Checkout.
+   Wiring the operational quote into order pricing is a separate Architect-reviewed task.
+2. Capacity enforcement is NOT implemented. It stays configuration-only and is reported as a KNOWN
+   PROGRAM GAP. Commitment/booking must not rely on the configured numeric cap.
+3. Collect-on-delivery is a quote FACT only. No COD financial settlement, ledger or collection is
+   modelled, and Payment/Settlement ownership was not touched.
+4. The carrier operating schedule is an availability seam, NOT a customer delivery promise. Promise
+   ownership stays with Order and was not modified.
+5. The Development express rate has no measurement tier, so the weight/count boundaries are proven by
+   the focused unit tests rather than by the live endpoint; the live proof covers the unconditional rate
+   path, the window verdicts, the payer split and the declared 4xx controls.
+6. Commercial Shipping/Checkout readiness is NOT claimed. Worker PASS is not Architect ACCEPT.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK

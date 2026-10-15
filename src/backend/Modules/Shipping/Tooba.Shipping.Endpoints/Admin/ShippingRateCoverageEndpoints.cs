@@ -242,6 +242,7 @@ public static class ShippingEndpointModule
         ShippingRateCoverageEndpoints.Map(admin);
         ShippingOperatingScheduleEndpoints.Map(admin);
         ShippingPackagingPolicyEndpoints.Map(admin);
+        ShippingOperationalQuoteEndpoints.Map(admin);
         return app;
     }
 }

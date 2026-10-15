@@ -10,6 +10,8 @@ using Tooba.Shipping.Application.Rates.Ports;
 using Tooba.Shipping.Application.Scheduling.Ports;
 using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
+using Tooba.Shipping.Contracts.Operations;
+using Tooba.Shipping.Infrastructure.Operations;
 using Tooba.Shipping.Infrastructure.Packaging;
 using Tooba.Shipping.Infrastructure.Persistence;
 using Tooba.Shipping.Infrastructure.Rates;
@@ -69,6 +71,10 @@ public sealed class ShippingModule : IToobaModule
         // availability). Registered here (module-owned DI) so no Host edit is needed for the data path;
         // the HTTP layer stays in Tooba.Shipping.Endpoints.
         services.AddScoped<IShippingOperatingScheduleDirectory, ShippingOperatingScheduleDirectory>();
+        // Read-only operational evaluation seam: composes the EXISTING rate engine, packaging resolver and
+        // schedule evaluator into one auditable answer. It adds no new pricing rule, writes nothing and has
+        // no live Checkout consumer yet.
+        services.AddScoped<IShippingOperationalQuoteLookup, ShippingOperationalQuoteLookup>();
         // Destination identity stays Geography-owned: this adapter validates submitted scope ids through
         // the Geography Contracts read seam only (never a foreign DbContext or cross-schema FK).
         services.AddScoped<IShippingDestinationScopeValidator, GeographyDestinationScopeValidator>();
