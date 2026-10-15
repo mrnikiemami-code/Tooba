@@ -1,0 +1,10 @@
+﻿[host-stack] provenance OK: SingleStore / dev-singlestore / store-alpha / tenant-alpha
+[host-stack] stopping managed Host pid=30756 exe=D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host-out-5088\Tooba.Host.exe (graceful)
+[host-stack] stopped; port 5088 listeners = 0
+[host-stack] ephemeral gate: Tooba__ShippingOneLevelCatalog__Enabled=true (process env only)
+[host-stack] ShippingRateAuthority and ShippingOperationalShadow are never set by this script (remain OFF)
+[host-stack] started pid=29788; waiting for /health on http://127.0.0.1:5088
+[host-stack] health OK: {"status":"ok"}
+[host-stack] provenance OK: SingleStore / dev-singlestore / store-alpha / tenant-alpha
+[host-stack] PID file written: D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host\host-5088.pid
+[host-stack] rollback: run '-Action stop' then '-Action start' (without the gate) to return to the default gate state

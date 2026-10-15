@@ -1,0 +1,32 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-098 — post-deploy auth + route proof (read-only)
+port=5088 pid=29788 name=Tooba.Host.exe exe=D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host-out-5088-098\Tooba.Host.exe started=10/16/2026 01:56:17
+health={"status":"ok"}
+provenance={"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"eb44a5f70a8b69881522b1b010ba2adb"}
+pidfile={
+    "pid":  29788,
+    "port":  5088,
+    "url":  "http://127.0.0.1:5088",
+    "executablePath":  "D:\\Users\\User\\source\\repos\\SarvNewVer\\.tmp-dev-host-out-5088-098\\Tooba.Host.exe",
+    "outDir":  "D:\\Users\\User\\source\\repos\\SarvNewVer\\.tmp-dev-host-out-5088-098",
+    "contentRoot":  "D:\\Users\\User\\source\\repos\\SarvNewVer\\src\\backend\\Host\\Tooba.Host",
+    "gate":  "ShippingOneLevelCatalog=true",
+    "startedAt":  "2026-10-16T01:56:28.2692948+03:30"
+}
+
+anonymous GET     /v1/admin/shipping-services/shipping-methods/one-level => 401 {"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/shipping-services/shipping-methods/one-level","errorCode":"admin.actor.missing","traceId":"648e32cc561920eed
+devactor  GET     /v1/admin/shipping-services/shipping-methods/one-level => 403 {"type":"about:blank","title":"Access to manage this store is not permitted.","status":403,"instance":"/v1/admin/shipping-services/shipping-methods/one-level","errorCode":"admin.authorization.denied","traceId":"8d17cc08e
+devactor  GET     /v1/admin/shipping-services/shipping-methods/one-level/post%3Astandard/binding => 403 {"type":"about:blank","title":"Access to manage this store is not permitted.","status":403,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/post:standard/binding","errorCode":"admin.authorization.denied
+devactor  GET     /v1/admin/shipping-services/shipping-methods/one-level/post%3Aexpress/binding => 403 {"type":"about:blank","title":"Access to manage this store is not permitted.","status":403,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/post:express/binding","errorCode":"admin.authorization.denied"
+devactor  GET     /v1/admin/shipping-services/shipping-methods/one-level/store_courier/binding => 403 {"type":"about:blank","title":"Access to manage this store is not permitted.","status":403,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/store_courier/binding","errorCode":"admin.authorization.denied
+anonymous OPTIONS /v1/admin/shipping-services/shipping-methods/one-level/post%3Astandard/activation => 405 
+anonymous GET     /v1/admin/shipping-services/shipping-methods/one-level/post%3Astandard/activation => 405 
+devactor  GET     /v1/admin/shipping-services/shipping-methods/one-level/post%3Astandard/activation => 405 
+anonymous OPTIONS /v1/admin/shipping-services/shipping-methods/one-level/post%3Astandard/translations/11111111-1111-4111-8111-111111111111 => 405 
+admin-actor GET   => 200 {"gate":"Enabled","ready":true,"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","methods":[{"methodCode":"post:express","name":"پیشتاز","isActive":false,"sortOrder":10,"translations":[{"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"پیشتاز"},{"languageId":"01a06a53-4196-7000-9b98-fb3706490005","name":"Express"}]},{"methodCode":"post:standard","name":"معمولی","isActive":true,"sortOrd
+admin-actor GET  /post%3Astandard/binding => 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"post:standard","serviceCode":"post","optionCode":"standard","isActive":true}
+admin-actor GET  /post%3Aexpress/binding => 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"post:express","serviceCode":"post","optionCode":"express","isActive":false}
+admin-actor GET  /tipax%3Astandard/binding => 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"tipax:standard","serviceCode":"tipax","optionCode":"standard","isActive":true}
+admin-actor GET  /store_courier/binding => 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"store_courier","serviceCode":"store_courier","isActive":true}
+admin-actor GET  /in_person/binding => 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"in_person","serviceCode":"in_person","isActive":true}
+admin-actor GET  /snapp_courier/binding => 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"snapp_courier","serviceCode":"snapp_courier","isActive":false}
+\n-- post-UI-truth --\nGET    activation => 405 allow= PUT\nOPTIONS activation => 405 allow= PUT\ncatalog gate=Enabled ready=true count=7 codes=post:express,post:standard,tipax:express,tipax:standard,snapp_courier,store_courier,in_person\nactive=post:standard,tipax:express,tipax:standard,store_courier,in_person\ninactive=post:express,snapp_courier\ntranslations_total=14\ncatalog_status_with_locale=200\n

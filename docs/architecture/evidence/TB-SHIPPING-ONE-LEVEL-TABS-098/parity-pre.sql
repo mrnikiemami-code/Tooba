@@ -1,0 +1,13 @@
+select 'legacy_services='||count(*) from fulfillment.shipping_services;
+select 'legacy_options='||count(*) from fulfillment.shipping_service_options;
+select 'legacy_service_translations='||count(*) from fulfillment.shipping_service_translations;
+select 'legacy_option_translations='||count(*) from fulfillment.shipping_service_option_translations;
+select 'one_level_methods='||count(*) from fulfillment.shipping_methods;
+select 'one_level_translations='||count(*) from fulfillment.shipping_method_translations;
+select 'method_codes='||string_agg(method_code, ',' order by method_code) from fulfillment.shipping_methods;
+select 'inactive_methods='||coalesce(string_agg(method_code, ',' order by method_code),'(none)') from fulfillment.shipping_methods where is_active=false;
+select 'active_methods='||coalesce(string_agg(method_code, ',' order by method_code),'(none)') from fulfillment.shipping_methods where is_active=true;
+select 'inactive_options='||coalesce(string_agg(code, ',' order by code),'(none)') from fulfillment.shipping_service_options where is_active=false;
+select 'option_natural_hash='||coalesce(md5(string_agg(coalesce(legacy_service_code,'')||'|'||method_code||'|'||coalesce(legacy_option_code,''), E'\n' order by method_code)),'(none)') from fulfillment.shipping_methods;
+select 'orders='||count(*) from "order".orders;
+select 'fulfillments='||count(*) from "order".fulfillments;

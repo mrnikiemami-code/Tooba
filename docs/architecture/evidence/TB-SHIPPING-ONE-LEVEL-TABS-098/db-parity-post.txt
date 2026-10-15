@@ -1,0 +1,17 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-098 — read-only DB parity (POST UI proof, no writes)
+container=postgres-db db=tooba_alpha user=admin (read-only SELECT only)
+legacy_services=5
+legacy_options=4
+legacy_service_translations=10
+legacy_option_translations=8
+one_level_methods=7
+one_level_translations=14
+method_codes=in_person,post:express,post:standard,snapp_courier,store_courier,tipax:express,tipax:standard
+inactive_methods=post:express,snapp_courier
+active_methods=in_person,post:standard,store_courier,tipax:express,tipax:standard
+inactive_options=express
+option_natural_hash=4fd8872b79e0141c44385b6f44b9f691
+seller_orders=26
+order_lines=37
+fulfillments=9
+legacy_option_flags=express=true,express=false,standard=true,standard=true

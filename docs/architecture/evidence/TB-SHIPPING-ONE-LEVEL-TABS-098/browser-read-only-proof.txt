@@ -1,0 +1,107 @@
+TB-SHIPPING-ONE-LEVEL-TABS-098 — REAL SHARED BROWSER READ-ONLY PROOF
+mode = BOUNDED_SHARED_DEVELOPMENT_ACTIVATION_UI_READ_ONLY_PROOF
+No live activation write was performed. No PUT was issued to /activation. No DML was executed.
+
+ENVIRONMENT (proven before and after)
+- Frontend (shared, untouched process): pid=31580 node.exe, started 10/11/2026 07:22:25,
+  D:\Users\User\source\repos\SarvNewVer\src\frontend (Next dev server) on http://localhost:3000
+- Host (restarted by this task via scripts/dev/host-stack.ps1): pid=29788, Tooba.Host.exe,
+  exe=D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host-out-5088-098\Tooba.Host.exe
+  started 10/16/2026 01:56:17, contentRoot=src\backend\Host\Tooba.Host, http://127.0.0.1:5088
+  /health = {"status":"ok"}
+  /__platform-commerce = edition SingleStore, deploymentId dev-singlestore, tenantId store-alpha,
+  connectionReference tenant-alpha, resolvedHost 127.0.0.1, themeReference theme-alpha,
+  defaultMarketReference IR  => Development tooba_alpha only; staging/production never contacted.
+- Authentication: an existing authenticated Development administrator browser session
+  (session cookie already present in the shared Development browser tab). No credential,
+  password, token or session identifier is recorded in this evidence.
+
+PAGE UNDER TEST
+- http://localhost:3000/fa/admin/shipping-services?method=post%3Astandard (Persian, RTL)
+
+1) SHELL / TABS / LIST (read-only, no interaction)
+- document dir = rtl
+- heading: «سرویس ارسال — کاتالوگ یک‌سطحی»  => one-level shell mounted (server-side gate read
+  returned Enabled for the authenticated admin; no client-side gate override exists)
+- 5 (five) Persian RTL tabs, in order:
+  «سرویس‌ها» / «تعرفه و پوشش» / «بسته‌بندی و کرایه» / «برنامه کاری و ظرفیت» / «بررسی هزینه»
+- flat list = exactly 7 canonical method rows, one row per method (no service→option tree):
+  post:express(غیرفعال) post:standard(فعال) tipax:express(فعال) tipax:standard(فعال)
+  snapp_courier(غیرفعال) store_courier(فعال) in_person(فعال)
+- every row exposes both 094 actions: 7 x «انتخاب» + 7 x «ویرایش نام»
+- 094 name editor re-verified OPEN>READ>CANCEL only: dialog visible for snapp_courier,
+  display name pre-filled from live translation data «اسنپ / پیک آنلاین», 3 language options,
+  «ذخیره» action present. Cancelled; never saved; no mutation recorded.
+
+2) OPTION-BACKED SELECTED METHOD — post:standard (active, server-resolved binding)
+- control context: «روش یک‌سطحی post:standard → سرویس post · standard»
+  => eligibility came from the server-owned 086 binding resolver (serviceCode+optionCode),
+     not from client-side splitting of the method code.
+- current state read from server: «وضعیت فعلی (از سرور): فعال»
+- impact statement: «غیرفعال‌سازی، این روش را از فهرست روش‌های قابل انتخاب فروشگاه خارج می‌کند
+  و واجد شرایط بودن آن را تغییر می‌دهد.»
+- action offered: «غیرفعال‌سازی»
+- confirmation dialog OPENED (visible 478x137):
+  title «غیرفعال‌سازی روش ارسال», immutable code «کد روش (تغییرناپذیر): post:standard»,
+  impact «این روش غیرفعال می‌شود، از فهرست روش‌های قابل انتخاب فروشگاه خارج می‌شود و اثر آن بر
+  واجد شرایط بودن فروشگاه است. ادامه می‌دهید؟», submit «تأیید غیرفعال‌سازی»
+  => explicit confirmation for DEACTIVATION of an active option-backed method.
+- dialog CANCELLED (انصراف). NOT confirmed. Screenshot: shot-01-post-standard-deactivate-confirm.png
+
+3) INACTIVE OPTION-BACKED METHOD — post:express (inactive, server-resolved binding)
+- selected through the in-app row action (URL became ?method=post%3Aexpress)
+- control context: «روش یک‌سطحی post:express → سرویس post · express»
+- current state read from server: «وضعیت فعلی (از سرور): غیرفعال»
+- action offered: «فعال‌سازی»
+- confirmation dialog OPENED (visible):
+  impact «این روش فعال می‌شود و در فروشگاه برای انتخاب مشتری واجد شرایط می‌شود. ادامه می‌دهید؟»,
+  submit «تأیید فعال‌سازی»
+  => explicit confirmation for ACTIVATION of an inactive option-backed method.
+- dialog CANCELLED (انصراف). NOT confirmed. Screenshot: shot-02-post-express-activate-confirm.png
+
+4) OPTIONLESS METHODS — store_courier / in_person / snapp_courier (all three)
+- each shows only the explicit unsupported notice and NO functional toggle:
+  «store_courier — فعال‌سازی این نوع سرویس هنوز پشتیبانی نمی‌شود.»
+  «in_person — فعال‌سازی این نوع سرویس هنوز پشتیبانی نمی‌شود.»
+  «snapp_courier — فعال‌سازی این نوع سرویس هنوز پشتیبانی نمی‌شود.»
+- activation toggle element absent from the DOM for all three (togglePresent=false)
+- the always-mounted confirmation submit is hidden (0x0) and disabled for all three
+- snapp_courier and post:express remain inactive; no implicit/automatic enablement.
+  Screenshot: shot-03-snapp-optionless-no-toggle.png
+
+5) NO FAKE SUCCESS / NO OPTIMISTIC STATE / NO WRITE
+- a page-level fetch interceptor recorded every request during steps 2-4:
+  non-GET requests = [] (zero PUT/POST/PATCH/DELETE)
+- frontend reads observed: GET /v1/admin/shipping-services/shipping-methods/one-level/{code}/binding
+  for post:express, store_courier, in_person, snapp_courier (one read per selection)
+- no success/error alert region rendered at any point (alerts = [])
+- after every cancel, the displayed state still equals server truth:
+  post:standard = «فعال», post:express = «غیرفعال» — no optimistic flip.
+
+6) SERVER TRUTH AFTER THE READ-ONLY UI RUN (authenticated read)
+- catalog: gate=Enabled, ready=true, count=7, translations_total=14
+  active   = post:standard, tipax:express, tipax:standard, store_courier, in_person
+  inactive = post:express, snapp_courier   (both historically inactive stay inactive)
+- bindings resolved: post:standard(post/standard), post:express(post/express),
+  tipax:standard(tipax/standard); optionCode null for store_courier, in_person, snapp_courier
+
+7) ROUTE MOUNTING / AUTHORIZATION PROOF WITHOUT A LIVE WRITE
+- pre-deploy Host (build 22:27, before 096): GET/OPTIONS/PUT on .../activation => 404 (route absent)
+- post-deploy Host (current code): GET  => 405 Allow: PUT ; OPTIONS => 405 Allow: PUT
+  => the 096 PUT route is mounted in the running current-code Host, proven by method-correct
+     route metadata (405 + Allow: PUT) and NOT by issuing a live PUT.
+  Screenshot: shot-04-tab1-post-standard-control.png
+
+LIMITATION (disclosed, not manufactured)
+- No live PUT to the activation endpoint was executed, so the successful-write branch
+  (200 confirmation + catalog/binding re-read) remains NOT VERIFIED live by this task;
+  it is covered only by the 096 backend tests and the 097 frontend unit tests.
+- One method-correct PUT probe was sent to the PRE-deploy Host activation path as a route
+  check; it returned 404 because the route did not exist, reached no handler, and produced
+  no DB change (confirmed by identical pre/post DB parity).
+
+ACTOR CONFIRMATION
+- GET /api/auth/me from the same tab returned the authenticated Development administrator
+  actor 01a036c2-970e-7000-8eb7-94bf5cc2d8db — the same subject that receives 200 on the
+  one-level admin route (guest dev actor aaaaaaaa-…0009 receives 403, anonymous receives 401).
+  No credential or session identifier was read out or recorded.
