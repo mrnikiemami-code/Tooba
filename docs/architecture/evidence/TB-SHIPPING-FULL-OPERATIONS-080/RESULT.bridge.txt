@@ -1,0 +1,177 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-FULL-OPERATIONS-080
+Parent-Task: TB-SHIPPING-FULL-OPERATIONS-079
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FULL-OPERATIONS
+Mode: BOUNDED_FINAL_OPERATIONAL_ACCEPTANCE_AND_RECOVERY
+Bridge-Task-Row: a9469d68-89fa-4b8f-9fbb-b6753bc9ef82
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 247f784c6a4f6d4f0cdd564467c64937be22abfd
+Base-SHA: 247f784c6a4f6d4f0cdd564467c64937be22abfd
+Code-SHA: NONE
+Evidence-SHA: f070d2ac5ce2bad85cd891ce3da54536fb0117da
+automaticNextImplementationTask: NONE
+
+ELAPSED: 4 minutes 22 seconds from Bridge claim to result post (timebox 45 minutes HARD; inside).
+Base was verified equal to the expected SHA before any write, with a safe working tree and no source
+drift; no RECOVERY_CONFLICT. NO SOURCE CODE WAS CHANGED in this task: no severe integration defect
+was demonstrated, so per the task's own instruction no speculative edit was made. This is a
+documentation/evidence-only closing task.
+
+SCOPE AND PROOF
+Independently reconciled tasks 071-079 against actual source and recorded evidence rather than worker
+PASS claims, verified the current Development process state, audited every requested user capability
+one by one, inspected the weight/count provenance path on both sides, and wrote the final decision
+record plus a recovery handoff. Evidence folder
+docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-080/ contains task-receipt.json, task.md,
+claim-task.js, verify-final-gates.ps1, log-final-gate-verification.txt, final-current-projection.json,
+inventory-dev-fixtures.ps1, log-final-dev-inventory.txt, RECOVERY-handoff.md and summary.md. The
+planning record is docs/planning/shipping/SHIPPING-FULL-OPERATIONS-080.md. The task receipt file
+docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-080.task.md is preserved verbatim UNSTAGED.
+
+ACCEPTANCE MATRIX AND OWNERS (source-cited)
+IMPLEMENTED_AND_PROVEN: service+option ownership (Fulfillment catalog: ListEnabledShippingMethodsTreeQuery.cs,
+ShippingProviderMetadata.cs); Geography destination selection (Shipping admin read endpoints +
+Tooba.Geography.Contracts/Places/IGeographyLookup + shipping-destination-picker.tsx); rates with
+half-open weight/count tiers (ShippingRatePolicyContracts.cs, ShippingRatePolicy.cs,
+ShippingAdminContracts.cs, shipping-rate-tier-model.ts); packaging fee + freight payer mode
+(ShippingPackagingContracts.cs, ShippingPackagingPolicyEndpoints.cs, shipping-packaging-dialog.tsx);
+weekly operating windows incl. multiple windows and explicit IANA timezone
+(ShippingOperatingScheduleEndpoints.cs, shipping-operating-schedule-dialog.tsx); admin UI entry points
+(shipping-services-screen.tsx row actions edit/rates/schedule/packaging/quote/deactivate, all five
+dialogs present); operational diagnostic (POST /v1/admin/shipping-services/{serviceCode}/operational-quote,
+read-only, fulfillment.view); read-only real storefront shadow
+(Order/Storefront/Shipping/OperationalShadow/** composed in ProjectStorefrontShippingQuery.cs);
+weekdays, weight intervals, item-count intervals, rate options, prepaid and COD-as-a-rate-fact.
+CONFIGURED_ONLY: capacity (ShippingCapacityEnforcement has exactly one value NotEnforced, guard-tested;
+live capacity=25 enforcement=NotEnforced in every probe); dispatch vs promised delivery (schedule is
+carrier collection availability only, no promise field exists).
+NOT_IMPLEMENTED: atomic capacity reservation; packed weight/count provenance; final checkout pricing
+cutover; COD financial ledger/settlement; delivery promise.
+BUSINESS_APPROVAL_REQUIRED: commercial tariff and destination coverage approval.
+LEGACY/UNCHANGED: current checkout price authority remains StorefrontShippingService +
+ShippingMethodsOptions + StorefrontShippingCalculator, and StorefrontCheckoutService still writes
+shippingAmount from the legacy draft into the paid snapshot. Owner of every incomplete capability is
+recorded in the planning record.
+
+CURRENT OFF GATES AND LEGACY PARITY
+Positively verified target on the CURRENT process (pid 33548, started 13:31:13):
+edition=SingleStore, deploymentId=dev-singlestore, tenantId=store-alpha,
+connectionReference=tenant-alpha -> tooba_alpha on http://127.0.0.1:5088. No production or staging was
+contacted. No restart was performed by this task. The repository carries no
+Tooba:ShippingRateAuthority and no Tooba:ShippingOperationalShadow section in any appsettings, so both
+gates run on their safe defaults false/false; the earlier simple-rate gate was neither renamed nor
+broadened. The current process produced 0 StorefrontShippingOperationalShadowObserver log lines and 0
+StorefrontShippingShadowObserver log lines while serving the projection request. One focused read-only
+projection call returned HTTP 200, length 2393, 5 methods, subtotal 8702542, currency IRR - the same
+legacy shape captured in 079. Byte parity is re-used from 079 rather than re-running the whole matrix:
+payloads-OFF.json == payloads-ON.json at 8553 bytes (all three request shapes equal at 2393 bytes) and
+the Shipping admin surfaces byte-identical OFF/ON (2636/1337/1055 bytes). Zero customer pricing or
+paid-snapshot mutation: no order, payment, settlement, draft or price was written by any call in this
+task.
+
+FRONTEND ADMIN / REAL STOREFRONT PARITY
+The five existing row actions on /admin/shipping-services (ویرایش, نرخ و پوشش, برنامه کاری ارسال,
+هزینه بسته‌بندی و پرداخت کرایه, بررسی هزینه و شرایط ارسال) plus the confirmed غیرفعال‌سازی action are
+confirmed present in source, and their dialogs exist under src/frontend/app/admin/shipping-services/.
+This is SOURCE-INSPECTED, not an interactive browser roundtrip: no real browser session was run in 080
+(timebox), so it is reported as source inspection rather than live UI proof. The 078 real browser
+roundtrip for the operational-quote inspector remains the authoritative interactive evidence for that
+one dialog. Tier-condition CRUD, schedule and packaging settings remain readable and no legacy panel
+action was removed or broken. Focused frontend shipping-admin tests: 117 passed, 0 failed.
+
+WEIGHT/COUNT PROVENANCE STATUS (ARCHITECTURAL BLOCKER, NOT RESOLVED)
+Shipping's input contract exists and is fail-closed: ShippingMeasuredParcel(long? WeightGrams,
+int? ItemCount) in ShippingRatePolicyContracts.cs, with integer grams chosen so tier boundaries cannot
+drift. Fulfillment Contracts expose NO measured packed weight and NO packed-unit count - a targeted
+search of Tooba.Fulfillment.Contracts for weight/grams/parcel/measurement members returns no such
+member, and Catalog has no weight/grams member either. The only package-count concept is an
+operator-entered shipment-metadata field in admin-create-shipment-modal.tsx, which is provider
+metadata and not an authoritative measured shipment aggregate. Therefore the real storefront path
+cannot supply a trustworthy measurement today and the 079 observer correctly reports
+MeasurementUnavailable / FreightNotQuoted instead of inventing one. No weight was derived from cart
+subtotal, cart lines, product count or arbitrary client input, and no placeholder default measurement
+was added. A conditioned active rate therefore fails closed rather than silently pricing the wrong
+tier. OWNER: Fulfillment (measurement source) + Order (packing aggregation); implementation is scoped
+to a future separately authorized program.
+
+CONFIGURED-ONLY CAPACITY AND COD SETTLEMENT
+Atomic capacity is NOT implemented and NOT claimed. Missing concretely: a unique order-window
+relation, a transactional bound inside order placement, an idempotent claim/release pair with replay
+strategy, an expiration/cancellation path that returns a slot, and a ledger owner able to settle a
+sold slot. ConfiguredCapacityTotal is a configuration number and must never be read as remaining
+capacity. Implementing it correctly is a new commitment ledger spanning Order, Shipping and
+Settlement - a separate authorization. OWNER: Order + Shipping + Settlement. COD: the payer split is a
+rate FACT only; CollectOnDelivery creates no Payment/Settlement transaction and those modules were not
+touched. OWNER: Payment + Settlement.
+
+COMMERCIAL TARIFFS AND FIXTURE STATE
+Synthetic Alborz fixtures and the deactivated 079 tier/packaging rows are NOT merchant approved; no
+test policy was activated by this task. Minimum merchant actions are recorded: confirm real tariffs
+per active service/option/scope and deactivate anything not commercially approved; confirm real
+packaging fees and who pays them including whether checkout may ever carry them; confirm collection
+duties, seller preparation promises and lead days per service; confirm which services are actually
+offered; approve the destination coverage grants intended to be sellable. Live read-only inventory for
+all five service codes is in log-final-dev-inventory.txt: post 1 active area rate (120000, prep 1 /
+lead 4) + 1 active grant, no packaging, no schedule; tipax 2 active area rates (standard 180000,
+express 260000) + 1 active grant, 3 packaging rows all INACTIVE, 2 schedules (standard ACTIVE Sun
+13:00-14:00 and 16:30-18:00 cap 25, express inactive); store_courier 1 active area rate (75000) plus
+the two 079 city tiers INACTIVE + 1 active grant, the 079 COD packaging row INACTIVE, no schedule;
+in_person 1 active area rate (0) + 1 active grant; snapp_courier no rates, no grants, no packaging, no
+schedule. snapp_courier remains a configured Fulfillment service with no usable rate/coverage/schedule
+row; its catalog row was NOT verified in this task and is reported UNVERIFIED, not fixed. Every
+task-owned 079 fixture is inactive and the pre-existing area-level rules answer again; the 068/069
+legacy parity fixture and all 071-078 records are preserved. No test policy was activated.
+
+RECOVERY UPDATE
+Mission C.9 authorized an append-only master edit ONLY at docs/planning/RECOVERY.md. That file does
+not exist in this repository, so it was not edited. The verified canonical master is
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md, which is OUTSIDE the allowed paths, so it was not
+modified. Instead a ready-to-merge append-only chronology is provided at
+docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-080/RECOVERY-handoff.md with the exact
+suggested heading and body, the new superseding Shipping ruling, the 071-080 one-line lineage, the six
+open items with owners, the OFF gates and the evidence paths. No unrelated planning decision was
+overwritten.
+
+TARGETED TESTS
+Focused only, no broad suite loop and no migration. Backend:
+dotnet test Tooba.Order.Tests --filter FullyQualifiedName~StorefrontShippingOperationalShadow -> 26
+passed, 0 failed. Frontend: node --test app/admin/shipping-services/*.test.ts -> 117 passed, 0 failed.
+No source changed, so no build/type guard was required beyond these.
+
+CUTOVER VERDICT
+Checkout MUST NOT be switched on. Absent (1) merchant-approved commercial tariffs and destination
+coverage, (2) an authoritative packed weight/count provenance, (3) an explicit human-approved pricing
+cutover decision including the prepaid packaging case, (4) a Payment/Settlement owner for the COD leg,
+(5) an explicit capacity decision, and (6) a separate Architect/user authorization of the switch
+itself, a cutover would sell prices and promises the platform cannot honestly honour. No cutover switch
+exists. SCORING IS SEPARATE: technical program closure is PASS for the bounded scope delivered;
+commercial production go-live is NOT READY and is not 100 percent complete. Task budget consumed: 10
+of 10. No task 081 was created and none is authorized.
+
+SAFETY AND ROLLBACK
+Rollback for the observation seam is a FLAG: leaving Tooba:ShippingRateAuthority and
+Tooba:ShippingOperationalShadow false restores today's exact behaviour. No migration, no schema change
+and no configuration file were introduced by 079 or 080. No force push, rebase, stash or reset was
+used and all unrelated dirty and untracked paths were preserved untouched.
+
+CHANGED PATHS
+New docs/planning/shipping/SHIPPING-FULL-OPERATIONS-080.md; new evidence folder
+docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-080/ (task-receipt.json, task.md, claim-task.js,
+verify-final-gates.ps1, log-final-gate-verification.txt, final-current-projection.json,
+inventory-dev-fixtures.ps1, log-final-dev-inventory.txt, RECOVERY-handoff.md, summary.md). No source
+file under src/backend or src/frontend was modified. docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md was
+NOT modified (outside allowed paths).
+
+GIT
+Committed and pushed to origin/main as f070d2ac5ce2bad85cd891ce3da54536fb0117da; after git fetch,
+HEAD equals origin/main.
+
+BLOCKERS: none for the finishing task itself. The four open capabilities above remain blocked with
+named owners and are not resolved by this record. Worker PASS does not constitute Architect ACCEPT.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
