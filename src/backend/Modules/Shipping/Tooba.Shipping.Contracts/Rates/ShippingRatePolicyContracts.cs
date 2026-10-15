@@ -124,11 +124,16 @@ public static class ShippingReasonCodes
 /// <param name="Destination">شناسه‌های پایدار مقصد.</param>
 /// <param name="CartSubtotalExclusive">جمع سبد بدون هزینهٔ ارسال.</param>
 /// <param name="CurrencyCode">ارز درخواست؛ تهی یعنی بررسی ارز انجام نشود.</param>
+/// <param name="OptionCode">
+/// گزینهٔ روش ارسال در صورت وجود؛ تهی یعنی فراخوان فقط در سطح خدمت می‌پرسد.
+/// این مقدار <em>هرگز</em> به کد خدمت تبدیل نمی‌شود: «tipax:express» خدمت tipax و گزینهٔ express است.
+/// </param>
 public sealed record ShippingQuoteRequest(
     string ServiceCode,
     DestinationIdentifiers Destination,
     decimal CartSubtotalExclusive,
-    string? CurrencyCode = null);
+    string? CurrencyCode = null,
+    string? OptionCode = null);
 
 /// <summary>
 /// نتیجهٔ قطعی و محدود خدمت‌رسانی همراه با جزئیات آمادهٔ promise مشتری. نتیجه هرگز «سرویس‌پذیر
@@ -142,6 +147,7 @@ public sealed record ShippingQuoteRequest(
 /// <param name="LeadDays">روزهای حمل این خدمت.</param>
 /// <param name="FreeAboveThreshold">آستانهٔ ارسال رایگان؛ در صورت وجود، برای شفافیت بازگردانده می‌شود.</param>
 /// <param name="ReasonCode">کد دلیل پایدار.</param>
+/// <param name="OptionCode">گزینهٔ درخواست‌شده؛ فقط برای ردیابی، بدون هیچ معنای قیمتی.</param>
 public sealed record ShippingQuote(
     ShippingServiceabilityOutcome Outcome,
     string ServiceCode,
@@ -150,7 +156,8 @@ public sealed record ShippingQuote(
     int PreparationDays,
     int LeadDays,
     decimal? FreeAboveThreshold,
-    string ReasonCode)
+    string ReasonCode,
+    string? OptionCode = null)
 {
     /// <summary>آیا نرخ قابل اعلام به مشتری است.</summary>
     public bool IsQuoted => Outcome == ShippingServiceabilityOutcome.Quoted;

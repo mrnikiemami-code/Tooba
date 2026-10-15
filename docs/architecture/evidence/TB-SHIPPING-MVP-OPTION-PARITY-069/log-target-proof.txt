@@ -1,0 +1,19 @@
+﻿=== TB-SHIPPING-MVP-OPTION-PARITY-069 :: Development target + migration proof ===
+captured at 2026-10-15T06:41:40.7061617+03:30
+
+--- 1. running host (no PID assumption: resolved from the listening port) ---
+listen=127.0.0.1:5088 ownerPid=41764 start=10/15/2026 06:41:19 cmd="D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe"
+--- 2. environment + health (Development-only route) ---
+GET /v1/admin/dev-context => 200 {"actorUserId":"01a036c2-970e-7000-8eb7-94bf5cc2d8db","actorLabel":"admin-actor@tooba.local","tenantId":"store-alpha"}
+GET /health => 200 {"status":"ok"}
+--- 3. configuration of that host ---
+appsettings.Development.json: Edition=SingleStore DeploymentId=dev-singlestore; tenants=store-alpha(Active, tenant-alpha)
+PostgreSQL refs: tenant-alpha -> Host=127.0.0.1;Port=5432;Database=tooba_alpha (no production reference exists in the config)
+--- 4. independent confirmation of the database the migration touched (container that owns :5432) ---
+--- 5. applied shipping migrations in that database ---
+--- 6. shipping.rate_policies shape after the additive migration ---
+--- 7. rows after migration + fixtures ---
+--- 5b. applied shipping migrations (corrected query) ---
+ 20261014144742_InitialShipping
+ 20261015030159_OptionLevelRatePolicy
+

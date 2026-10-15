@@ -55,6 +55,9 @@ public sealed class ShippingModule : IToobaModule
         // Destination identity stays Geography-owned: this adapter validates submitted scope ids through
         // the Geography Contracts read seam only (never a foreign DbContext or cross-schema FK).
         services.AddScoped<IShippingDestinationScopeValidator, GeographyDestinationScopeValidator>();
+        // Method identity stays Fulfillment-owned: an option code is never hardcoded here, it is looked up
+        // in the real shipping catalog through the Fulfillment Contracts read seam.
+        services.AddScoped<IShippingMethodOptionValidator, FulfillmentShippingMethodOptionValidator>();
         services.AddDbContext<ShippingDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

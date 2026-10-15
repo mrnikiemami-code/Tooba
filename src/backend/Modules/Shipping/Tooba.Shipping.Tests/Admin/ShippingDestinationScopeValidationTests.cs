@@ -51,7 +51,8 @@ public sealed class ShippingDestinationScopeValidationTests
         var directory = new RecordingDirectory();
         var handler = new CreateShippingRatePolicyHandler(
             directory,
-            new GeographyDestinationScopeValidator(new StubGeography(accept: false)));
+            new GeographyDestinationScopeValidator(new StubGeography(accept: false)),
+            new AcceptingMethodOptionValidator());
 
         var result = await handler.Handle(
             new CreateShippingRatePolicyCommand(
@@ -220,5 +221,13 @@ public sealed class ShippingDestinationScopeValidationTests
             bool isActive,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+    }
+
+    private sealed class AcceptingMethodOptionValidator : IShippingMethodOptionValidator
+    {
+        public Task<Result<bool>> ValidateAsync(
+            string serviceCode,
+            string? optionCode,
+            CancellationToken cancellationToken) => Task.FromResult(Result.Success(true));
     }
 }

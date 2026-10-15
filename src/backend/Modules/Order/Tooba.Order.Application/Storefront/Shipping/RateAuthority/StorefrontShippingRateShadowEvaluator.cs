@@ -62,10 +62,11 @@ public sealed class StorefrontShippingRateShadowEvaluator
         {
             quote = await _lookup.QuoteAsync(
                 new ShippingQuoteRequest(
-                    input.MethodCode,
+                    input.EffectiveServiceCode,
                     input.Destination,
                     input.CartSubtotalExclusive,
-                    input.CurrencyCode),
+                    input.CurrencyCode,
+                    input.OptionCode),
                 cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

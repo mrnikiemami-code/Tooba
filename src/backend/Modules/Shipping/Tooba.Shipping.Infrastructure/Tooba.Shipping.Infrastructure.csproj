@@ -16,6 +16,10 @@
     <ProjectReference Include="..\Tooba.Shipping.Contracts\Tooba.Shipping.Contracts.csproj" />
     <!-- Contracts-only seam: destination identity is validated through Geography Contracts, never its DbContext. -->
     <ProjectReference Include="..\..\Geography\Tooba.Geography.Contracts\Tooba.Geography.Contracts.csproj" />
+    <!-- Contracts-only seam: shipping method/service option identity is validated through Fulfillment
+         Contracts (IShippingCatalogReader), never its DbContext. No Fulfillment project references
+         Shipping, so this stays acyclic and one-directional. -->
+    <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Contracts\Tooba.Fulfillment.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Shipping.Application\Tooba.Shipping.Application.csproj" />
     <ProjectReference Include="..\Tooba.Shipping.Domain\Tooba.Shipping.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />

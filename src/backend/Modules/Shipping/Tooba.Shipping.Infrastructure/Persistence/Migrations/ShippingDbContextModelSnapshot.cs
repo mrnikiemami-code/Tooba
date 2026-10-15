@@ -211,6 +211,11 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("lead_days");
 
+                    b.Property<string>("OptionCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("option_code");
+
                     b.Property<int>("PreparationDays")
                         .HasColumnType("integer")
                         .HasColumnName("preparation_days");
@@ -235,11 +240,11 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                     b.HasIndex("ServiceCode", "IsActive")
                         .HasDatabaseName("ix_rate_policies_service_active");
 
-                    b.HasIndex("ServiceCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId")
+                    b.HasIndex("ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId")
                         .IsUnique()
-                        .HasDatabaseName("ux_rate_policies_service_scope");
+                        .HasDatabaseName("ux_rate_policies_service_option_scope");
 
-                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ServiceCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId"), false);
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId"), false);
 
                     b.ToTable("rate_policies", "shipping", t =>
                         {
@@ -252,6 +257,8 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_rate_policies_free_above_threshold_non_negative", "free_above_threshold IS NULL OR free_above_threshold >= 0");
 
                             t.HasCheckConstraint("ck_rate_policies_lead_days_range", "lead_days >= 0 AND lead_days <= 365");
+
+                            t.HasCheckConstraint("ck_rate_policies_option_code_canonical", "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
 
                             t.HasCheckConstraint("ck_rate_policies_preparation_days_range", "preparation_days >= 0 AND preparation_days <= 365");
 

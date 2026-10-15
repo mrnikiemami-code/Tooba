@@ -141,9 +141,12 @@ public sealed class ShippingPersistenceModelTests
     }
 
     [Theory]
-    [InlineData("rate_policies", "ux_rate_policies_service_scope")]
-    [InlineData("coverage_grants", "ux_coverage_grants_service_scope")]
-    public void Scope_identity_index_is_unique_over_nulls_not_distinct_columns(string table, string indexName)
+    [InlineData("rate_policies", "ux_rate_policies_service_option_scope", true)]
+    [InlineData("coverage_grants", "ux_coverage_grants_service_scope", false)]
+    public void Scope_identity_index_is_unique_over_nulls_not_distinct_columns(
+        string table,
+        string indexName,
+        bool optionAware)
     {
         using var context = CreateContext();
         var entity = Entity(DesignModel(context), table);
@@ -151,14 +154,24 @@ public sealed class ShippingPersistenceModelTests
 
         Assert.True(index.IsUnique);
         Assert.Equal(
-            new[]
-            {
-                nameof(ShippingRatePolicy.ServiceCode),
-                nameof(ShippingRatePolicy.CountryId),
-                nameof(ShippingRatePolicy.AdministrativeAreaId),
-                nameof(ShippingRatePolicy.CityId),
-                nameof(ShippingRatePolicy.ServiceAreaId),
-            },
+            optionAware
+                ? new[]
+                {
+                    nameof(ShippingRatePolicy.ServiceCode),
+                    nameof(ShippingRatePolicy.OptionCode),
+                    nameof(ShippingRatePolicy.CountryId),
+                    nameof(ShippingRatePolicy.AdministrativeAreaId),
+                    nameof(ShippingRatePolicy.CityId),
+                    nameof(ShippingRatePolicy.ServiceAreaId),
+                }
+                : new[]
+                {
+                    nameof(ShippingRatePolicy.ServiceCode),
+                    nameof(ShippingRatePolicy.CountryId),
+                    nameof(ShippingRatePolicy.AdministrativeAreaId),
+                    nameof(ShippingRatePolicy.CityId),
+                    nameof(ShippingRatePolicy.ServiceAreaId),
+                },
             index.Properties.Select(x => x.Name).ToArray());
 
         // Without this annotation PostgreSQL treats every NULL level as distinct and would silently admit
@@ -224,28 +237,33 @@ public sealed class ShippingPersistenceModelTests
                      "ck_rate_policies_service_code_canonical",
                      "ck_rate_policies_currency_code_canonical",
                      "ck_rate_policies_scope_coherent",
+                     "ck_rate_policies_option_code_canonical",
                      "ck_coverage_grants_service_code_canonical",
                      "ck_coverage_grants_scope_coherent",
-                     "ux_rate_policies_service_scope",
+                     "ux_rate_policies_service_option_scope",
                      "ux_coverage_grants_service_scope",
                  })
         {
             Assert.Contains(constraint, script);
         }
 
-        // Both scope indexes must carry the modifier, not just one of them.
-        Assert.Equal(2, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
+        // Every scope index must carry the modifier: coverage (1) + the initial rate index (1) + the
+        // option-aware rate index added by the second migration (1).
+        Assert.Equal(3, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
         Assert.DoesNotContain("FOREIGN KEY", script, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public void Only_one_migration_exists_so_the_initial_slice_reviews_as_a_unit()
+    public void Migrations_are_the_initial_slice_plus_one_additive_option_column_update()
     {
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        Assert.Single(migrations);
+        // Two migrations only: the initial slice and the additive option-identity change. Asserting the
+        // exact count is what keeps the schema reviewable as a unit instead of an open-ended chain.
+        Assert.Equal(2, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
+        Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
     }
 
     [Fact]

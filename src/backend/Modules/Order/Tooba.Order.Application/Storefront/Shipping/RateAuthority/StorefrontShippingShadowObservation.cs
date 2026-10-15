@@ -7,9 +7,14 @@ namespace Tooba.Order.Application.Storefront.Shipping.RateAuthority;
 /// </summary>
 /// <param name="ServiceCode">کد خدمت ارسال (کلید موجود Fulfillment؛ همان چیزی که به مرجع جدید داده می‌شود).</param>
 /// <param name="LegacyPriceAmount">مبلغ authoritative مسیر قدیمی؛ تنها مرجع قیمت و مبنای مقایسه.</param>
+/// <param name="OptionCode">
+/// گزینهٔ روش ارسال در صورت وجود؛ تهی یعنی خدمت بدون گزینه است. این هویت گزینه، <em>جدا</em> از
+/// کد خدمت حمل می‌شود تا «tipax:express» هرگز به‌عنوان کد خدمت خوانده نشود.
+/// </param>
 public sealed record StorefrontShippingShadowCandidate(
     string ServiceCode,
-    decimal LegacyPriceAmount);
+    decimal LegacyPriceAmount,
+    string? OptionCode = null);
 
 /// <summary>
 /// واقعیت‌های مسیر واقعی فروشگاه که برای مشاهدهٔ سایه لازم است. همهٔ این‌ها از خروجی همان

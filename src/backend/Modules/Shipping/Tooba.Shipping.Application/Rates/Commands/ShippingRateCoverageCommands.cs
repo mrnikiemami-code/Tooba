@@ -15,7 +15,8 @@ public sealed record CreateShippingRatePolicyCommand(string ServiceCode, Shippin
 /// <summary>هندلر ایجاد سیاست نرخ.</summary>
 public sealed class CreateShippingRatePolicyHandler(
     IShippingRateCoverageDirectory directory,
-    IShippingDestinationScopeValidator scopeValidator)
+    IShippingDestinationScopeValidator scopeValidator,
+    IShippingMethodOptionValidator optionValidator)
     : IRequestHandler<CreateShippingRatePolicyCommand, Result<ShippingRatePolicyAdminItem>>
 {
     /// <inheritdoc />
@@ -24,6 +25,17 @@ public sealed class CreateShippingRatePolicyHandler(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // هویت روش (خدمت + گزینهٔ اختیاری) پیش از هر نوشتن با کاتالوگ واقعی Fulfillment سنجیده می‌شود؛
+        // یک ترکیب ساختگی هرگز به‌عنوان سیاست تجاری ثبت نمی‌شود.
+        var methodValid = await optionValidator.ValidateAsync(
+            request.ServiceCode,
+            request.Request.OptionCode,
+            cancellationToken);
+        if (methodValid.IsFailure)
+        {
+            return Result.Failure<ShippingRatePolicyAdminItem>(methodValid.Errors);
+        }
 
         // دامنهٔ مقصد پیش از هر نوشتن با فهرست مرجع Geography سنجیده می‌شود؛ شناسهٔ ساختگی هرگز ثبت نمی‌شود.
         var validated = await scopeValidator.ValidateAsync(request.Request.Scope, cancellationToken);
@@ -44,16 +56,29 @@ public sealed record UpdateShippingRatePolicyCommand(
     ShippingRatePolicyWriteRequest Request) : IRequest<Result<ShippingRatePolicyAdminItem>>;
 
 /// <summary>هندلر ویرایش سیاست نرخ.</summary>
-public sealed class UpdateShippingRatePolicyHandler(IShippingRateCoverageDirectory directory)
+public sealed class UpdateShippingRatePolicyHandler(
+    IShippingRateCoverageDirectory directory,
+    IShippingMethodOptionValidator optionValidator)
     : IRequestHandler<UpdateShippingRatePolicyCommand, Result<ShippingRatePolicyAdminItem>>
 {
     /// <inheritdoc />
-    public Task<Result<ShippingRatePolicyAdminItem>> Handle(
+    public async Task<Result<ShippingRatePolicyAdminItem>> Handle(
         UpdateShippingRatePolicyCommand request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return ShippingAdminOperation.ExecuteAsync(
+
+        // A rejected option combination must fail before the row is touched, exactly as on create.
+        var methodValid = await optionValidator.ValidateAsync(
+            request.ServiceCode,
+            request.Request.OptionCode,
+            cancellationToken);
+        if (methodValid.IsFailure)
+        {
+            return Result.Failure<ShippingRatePolicyAdminItem>(methodValid.Errors);
+        }
+
+        return await ShippingAdminOperation.ExecuteAsync(
             () => directory.UpdateRateAsync(
                 request.RatePolicyId,
                 request.ServiceCode,

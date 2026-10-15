@@ -39,6 +39,7 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
             .ThenBy(x => x.AdministrativeAreaId)
             .ThenBy(x => x.CityId)
             .ThenBy(x => x.ServiceAreaId)
+            .ThenBy(x => x.OptionCode)
             .Select(x => Map(x))
             .ToListAsync(cancellationToken);
 
@@ -71,8 +72,9 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
         }
 
         var scope = request.Scope.ToScope();
+        var optionCode = NormalizeOption(request.OptionCode);
 
-        if (await ScopeExistsAsync(context.RatePolicies, code, scope, cancellationToken))
+        if (await RateScopeExistsAsync(context.RatePolicies, code, optionCode, scope, cancellationToken))
         {
             return Result.Failure<ShippingRatePolicyAdminItem>(
                 new SemanticError(ShippingErrorCodes.RatePolicyScopeDuplicate));
@@ -87,7 +89,9 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
             request.PreparationDays,
             request.LeadDays,
             request.FreeAboveThreshold,
-            now);
+            now,
+            ratePolicyId: null,
+            optionCode: optionCode);
 
         context.RatePolicies.Add(policy);
         await context.SaveChangesAsync(cancellationToken);
@@ -124,6 +128,14 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
         {
             return Result.Failure<ShippingRatePolicyAdminItem>(
                 new SemanticError(ShippingErrorCodes.CoverageScopeInvalid));
+        }
+
+        // The option identity of an existing policy is immutable for the same reason: re-pointing a
+        // policy from one option to another would move a commercial decision between methods.
+        if (!SameOption(policy.OptionCode, NormalizeOption(request.OptionCode)))
+        {
+            return Result.Failure<ShippingRatePolicyAdminItem>(
+                new SemanticError(ShippingErrorCodes.RatePolicyOptionMismatch));
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -185,7 +197,7 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
 
         var scope = request.Scope.ToScope();
 
-        if (await ScopeExistsAsync(context.CoverageGrants, code, scope, cancellationToken))
+        if (await GrantScopeExistsAsync(context.CoverageGrants, code, scope, cancellationToken))
         {
             return Result.Failure<ShippingCoverageGrantAdminItem>(
                 new SemanticError(ShippingErrorCodes.CoverageGrantScopeDuplicate));
@@ -238,23 +250,49 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
             routeServiceCode?.Trim() ?? string.Empty,
             StringComparison.OrdinalIgnoreCase);
 
-    private static async Task<bool> ScopeExistsAsync<TEntity>(
-        IQueryable<TEntity> set,
+    private static async Task<bool> RateScopeExistsAsync(
+        IQueryable<ShippingRatePolicy> set,
         string serviceCode,
+        string? optionCode,
         Contracts.Rates.ShippingDestinationScope scope,
         CancellationToken cancellationToken)
-        where TEntity : class
     {
         // Comparison is done on the narrow per-service slice rather than with a provider-specific NULL
         // comparison expression, so the same guard behaves identically on PostgreSQL and in focused tests.
         var existing = await set
-            .Where(x => EF.Property<string>(x, nameof(ShippingRatePolicy.ServiceCode)) == serviceCode)
+            .Where(x => x.ServiceCode == serviceCode)
             .Select(x => new
             {
-                CountryId = EF.Property<Guid>(x, nameof(ShippingRatePolicy.CountryId)),
-                AdministrativeAreaId = EF.Property<Guid?>(x, nameof(ShippingRatePolicy.AdministrativeAreaId)),
-                CityId = EF.Property<Guid?>(x, nameof(ShippingRatePolicy.CityId)),
-                ServiceAreaId = EF.Property<Guid?>(x, nameof(ShippingRatePolicy.ServiceAreaId)),
+                x.OptionCode,
+                x.CountryId,
+                x.AdministrativeAreaId,
+                x.CityId,
+                x.ServiceAreaId,
+            })
+            .ToListAsync(cancellationToken);
+
+        return existing.Any(x =>
+            SameOption(x.OptionCode, optionCode)
+            && x.CountryId == scope.CountryId
+            && x.AdministrativeAreaId == scope.AdministrativeAreaId
+            && x.CityId == scope.CityId
+            && x.ServiceAreaId == scope.ServiceAreaId);
+    }
+
+    private static async Task<bool> GrantScopeExistsAsync(
+        IQueryable<ShippingCoverageGrant> set,
+        string serviceCode,
+        Contracts.Rates.ShippingDestinationScope scope,
+        CancellationToken cancellationToken)
+    {
+        var existing = await set
+            .Where(x => x.ServiceCode == serviceCode)
+            .Select(x => new
+            {
+                x.CountryId,
+                x.AdministrativeAreaId,
+                x.CityId,
+                x.ServiceAreaId,
             })
             .ToListAsync(cancellationToken);
 
@@ -271,7 +309,17 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
         && left.CityId == right.CityId
         && left.ServiceAreaId == right.ServiceAreaId;
 
+    private static bool SameOption(string? left, string? right) =>
+        string.Equals(left ?? string.Empty, right ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+
     private static string Normalize(string? serviceCode) => serviceCode?.Trim() ?? string.Empty;
+
+    /// <summary>کد گزینه را به شکل متعارف می‌برد؛ تهی/فاصله یعنی سیاست در سطح خدمت است.</summary>
+    private static string? NormalizeOption(string? optionCode)
+    {
+        var trimmed = optionCode?.Trim();
+        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
+    }
 
     private static ShippingRatePolicyAdminItem Map(ShippingRatePolicy policy) =>
         new(
@@ -289,7 +337,8 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
             policy.FreeAboveThreshold,
             policy.IsActive,
             policy.CreatedAt,
-            policy.UpdatedAt);
+            policy.UpdatedAt,
+            policy.OptionCode);
 
     private static ShippingCoverageGrantAdminItem Map(ShippingCoverageGrant grant) =>
         new(

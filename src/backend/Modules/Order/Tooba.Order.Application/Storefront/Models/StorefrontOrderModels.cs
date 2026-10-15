@@ -86,6 +86,10 @@ public sealed record StorefrontCheckoutPage(
     bool CanInitiatePayment = true);
 
 /// <summary>روش ارسال قابل انتخاب فروشگاهی از کاتالوگ Store-enabled.</summary>
+/// <param name="OptionCode">
+/// گزینهٔ روش ارسال Fulfillment در صورت وجود؛ تهی یعنی خدمت گزینه‌ای ندارد. این هویت گزینه
+/// است، نه بخشی از کد خدمت، و برای قیمت‌گذاری گزینه‌ای مصرف می‌شود.
+/// </param>
 public sealed record StorefrontShippingMethodView(
     string MethodCode,
     string Label,
@@ -94,7 +98,8 @@ public sealed record StorefrontShippingMethodView(
     decimal PriceAmount,
     int LeadDays,
     bool IsFree,
-    string EstimationLabel);
+    string EstimationLabel,
+    string? OptionCode = null);
 
 /// <summary>گزینهٔ تاریخ تحویل.</summary>
 public sealed record StorefrontDeliveryDateOption(

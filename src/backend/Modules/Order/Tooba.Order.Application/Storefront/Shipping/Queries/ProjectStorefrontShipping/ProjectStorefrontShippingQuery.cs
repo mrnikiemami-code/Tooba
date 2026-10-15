@@ -51,7 +51,7 @@ public sealed class ProjectStorefrontShippingHandler(
                     projection.SubtotalExclusiveOfTax,
                     projection.Currency,
                     projection.Methods
-                        .Select(m => new StorefrontShippingShadowCandidate(m.ServiceCode, m.PriceAmount))
+                        .Select(m => new StorefrontShippingShadowCandidate(m.ServiceCode, m.PriceAmount, m.OptionCode))
                         .ToArray())
                 {
                     CityName = request.CityName,

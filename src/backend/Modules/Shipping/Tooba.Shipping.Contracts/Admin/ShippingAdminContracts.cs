@@ -28,6 +28,10 @@ public sealed record ShippingDestinationScopeWrite(
 /// <param name="PreparationDays">روزهای آماده‌سازی فروشنده.</param>
 /// <param name="LeadDays">روزهای حمل این خدمت.</param>
 /// <param name="FreeAboveThreshold">آستانهٔ ارسال رایگان اختیاری.</param>
+/// <param name="OptionCode">
+/// گزینهٔ روش ارسال در صورت وجود؛ تهی یعنی سیاست در سطح خود خدمت است.
+/// این مقدار <em>هویت گزینه</em> است، نه کد خدمت: «tipax:express» خدمت tipax با گزینهٔ express است.
+/// </param>
 public sealed record ShippingRatePolicyWriteRequest(
     string ServiceCode,
     ShippingDestinationScopeWrite Scope,
@@ -35,7 +39,8 @@ public sealed record ShippingRatePolicyWriteRequest(
     string CurrencyCode,
     int PreparationDays,
     int LeadDays,
-    decimal? FreeAboveThreshold = null);
+    decimal? FreeAboveThreshold = null,
+    string? OptionCode = null);
 
 /// <summary>بدنهٔ تغییر وضعیت فعال/غیرفعال یک سیاست نرخ.</summary>
 /// <param name="IsActive">وضعیت هدف.</param>
@@ -68,7 +73,8 @@ public sealed record ShippingRatePolicyAdminItem(
     decimal? FreeAboveThreshold,
     bool IsActive,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    string? OptionCode = null);
 
 /// <summary>یک مجوز پوشش همان‌طور که ادمین می‌بیند.</summary>
 public sealed record ShippingCoverageGrantAdminItem(

@@ -1,0 +1,4 @@
+﻿Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Tests\bin\Debug\net8.0\Tooba.Order.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   286, Skipped:     0, Total:   286, Duration: 641 ms - Tooba.Order.Tests.dll (net8.0)

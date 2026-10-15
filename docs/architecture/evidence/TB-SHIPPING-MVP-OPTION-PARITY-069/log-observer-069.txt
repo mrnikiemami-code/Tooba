@@ -1,0 +1,7 @@
+﻿4 x  Storefront shipping rate shadow observation DestinationNotComparable candidates=5 outcomes=none
+1 x  Storefront shipping rate shadow observation Observed candidates=5 outcomes=Match
+1 x  Storefront shipping rate shadow candidate service=post option=standard legacy=120000 shadow=120000.00 outcome=Match reason=shipping.quote.quoted
+1 x  Storefront shipping rate shadow candidate service=tipax option=express legacy=260000 shadow=260000.00 outcome=Match reason=shipping.quote.quoted
+1 x  Storefront shipping rate shadow candidate service=tipax option=standard legacy=180000 shadow=180000.00 outcome=Match reason=shipping.quote.quoted
+1 x  Storefront shipping rate shadow candidate service=store_courier option=none legacy=75000 shadow=75000.00 outcome=Match reason=shipping.quote.quoted
+1 x  Storefront shipping rate shadow candidate service=in_person option=none legacy=0 shadow=0.00 outcome=Match reason=shipping.quote.quoted

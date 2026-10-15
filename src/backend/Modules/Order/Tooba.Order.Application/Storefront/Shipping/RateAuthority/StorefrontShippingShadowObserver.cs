@@ -148,7 +148,9 @@ public sealed class StorefrontShippingShadowObserver
                     LegacyDestinationAllowed: true,
                     destination,
                     input.CartSubtotalExclusive,
-                    input.CurrencyCode),
+                    input.CurrencyCode,
+                    OptionCode: string.IsNullOrWhiteSpace(candidate.OptionCode) ? null : candidate.OptionCode.Trim(),
+                    ServiceCode: candidate.ServiceCode.Trim()),
                 options,
                 cancellationToken));
         }
@@ -220,6 +222,20 @@ public sealed class StorefrontShippingShadowObserver
                 code.ToString(),
                 input.Candidates.Count,
                 outcomes.Length == 0 ? "none" : string.Join(',', outcomes));
+
+            // یک خط صریح برای هر روش: خدمت، گزینه، مبلغ مسیر قدیمی، مبلغ مرجع جدید و نتیجهٔ مقایسه.
+            // هیچ‌کدام دادهٔ شخصی/آدرسی نیست و تعداد خطوط به تعداد روش‌های مجاز همین مقصد محدود است.
+            foreach (var report in reports)
+            {
+                _logger.LogInformation(
+                    "Storefront shipping rate shadow candidate service={ServiceCode} option={OptionCode} legacy={LegacyAmount} shadow={ShadowAmount} outcome={ShadowOutcome} reason={ShadowReasonCode}",
+                    report.ServiceCode ?? report.MethodCode,
+                    report.OptionCode ?? "none",
+                    report.LegacyPriceAmount,
+                    report.ShippingChargeAmount?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "none",
+                    report.Outcome.ToString(),
+                    report.ShippingReasonCode ?? "none");
+            }
         }
 
         return new StorefrontShippingShadowObservationResult(code, reports);

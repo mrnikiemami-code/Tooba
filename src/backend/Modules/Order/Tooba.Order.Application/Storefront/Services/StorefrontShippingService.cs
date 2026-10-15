@@ -410,7 +410,7 @@ public sealed class StorefrontShippingService
                     ?? option.Code;
                 var code = $"{service.Code}:{option.Code}";
                 var label = $"{serviceName} — {optionName}";
-                TryAddMethod(result, code, label, service.Code, service.IconKey, cartSubtotal, provinceName);
+                TryAddMethod(result, code, label, service.Code, service.IconKey, cartSubtotal, provinceName, option.Code);
             }
         }
 
@@ -424,7 +424,8 @@ public sealed class StorefrontShippingService
         string? serviceCode,
         string iconKey,
         decimal cartSubtotal,
-        string? provinceName)
+        string? provinceName,
+        string? optionCode = null)
     {
         var rate = StorefrontShippingCalculator.ResolveRate(methodCode, _shippingOptions);
         if (!StorefrontShippingCalculator.IsDestinationAllowed(rate, provinceName)
@@ -442,7 +443,10 @@ public sealed class StorefrontShippingService
             price,
             rate.LeadDays,
             price == 0m,
-            rate.LeadDays == 0 ? "آماده امروز" : $"حدود {ToPersianLeadDays(rate.LeadDays)} روز"));
+            rate.LeadDays == 0 ? "آماده امروز" : $"حدود {ToPersianLeadDays(rate.LeadDays)} روز",
+            // The option identity is carried as its own field: the legacy method code composes
+            // "service:option", and consumers must never treat that composite as a service code.
+            string.IsNullOrWhiteSpace(optionCode) ? null : optionCode));
     }
 
     private static string ToPersianLeadDays(int days)

@@ -24,6 +24,9 @@ public sealed class ShippingRatePolicy
     /// <summary>حداکثر طول کد خدمت.</summary>
     public const int ServiceCodeMaxLength = 64;
 
+    /// <summary>حداکثر طول کد گزینهٔ روش ارسال.</summary>
+    public const int OptionCodeMaxLength = 64;
+
     /// <summary>حداکثر مبلغ مجاز هزینه (برای جلوگیری از خطای داده‌ای).</summary>
     public const decimal ChargeAmountMaxValue = 1_000_000_000m;
 
@@ -39,6 +42,16 @@ public sealed class ShippingRatePolicy
 
     /// <summary>کد خدمت ارسال (کلید سازگاری؛ بدون تکرار ردیف کاتالوگ).</summary>
     public string ServiceCode { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// گزینهٔ روش ارسال در صورت وجود؛ تهی یعنی سیاست در سطح خود خدمت است.
+    /// </summary>
+    /// <remarks>
+    /// این یک <em>هویت</em> است، نه بخشی از کد خدمت: سیاست گزینه‌دار فقط همان گزینه را قیمت
+    /// می‌دهد و هیچ‌گاه روی گزینهٔ دیگری اثر نمی‌گذارد. سیاست بدون گزینه یک قاعدهٔ سطح‌خدمت است
+    /// که تنها زمانی به کار می‌آید که برای همان گزینه سیاست اختصاصی‌تری وجود نداشته باشد.
+    /// </remarks>
+    public string? OptionCode { get; private set; }
 
     /// <summary>کشور مالک دامنه.</summary>
     public Guid CountryId { get; private set; }
@@ -80,6 +93,18 @@ public sealed class ShippingRatePolicy
     public ShippingDestinationScope Scope =>
         new(CountryId, AdministrativeAreaId, CityId, ServiceAreaId);
 
+    /// <summary>آیا این سیاست یک گزینهٔ مشخص را قیمت می‌دهد (در مقابل قاعدهٔ سطح‌خدمت).</summary>
+    public bool IsOptionSpecific => OptionCode is not null;
+
+    /// <summary>
+    /// آیا این سیاست برای گزینهٔ درخواست‌شده معتبر است. سیاست سطح‌خدمت (بدون گزینه) برای هر
+    /// درخواست معتبر است؛ سیاست گزینه‌دار فقط برای گزینهٔ خودش.
+    /// </summary>
+    /// <param name="optionCode">گزینهٔ درخواست؛ تهی یعنی درخواست فقط در سطح خدمت است.</param>
+    public bool MatchesOption(string? optionCode)
+        => OptionCode is null
+           || string.Equals(OptionCode, optionCode?.Trim(), StringComparison.OrdinalIgnoreCase);
+
     /// <summary>سیاست نرخ جدید می‌سازد.</summary>
     /// <param name="serviceCode">کد خدمت ارسال.</param>
     /// <param name="scope">دامنهٔ مقصد سیاست.</param>
@@ -90,6 +115,7 @@ public sealed class ShippingRatePolicy
     /// <param name="freeAboveThreshold">آستانهٔ ارسال رایگان اختیاری.</param>
     /// <param name="now">زمان UTC ایجاد.</param>
     /// <param name="ratePolicyId">شناسهٔ قطعی اختیاری برای بازپخش قطعی.</param>
+    /// <param name="optionCode">گزینهٔ روش ارسال اختیاری؛ تهی یعنی سیاست در سطح خدمت است.</param>
     public static ShippingRatePolicy Create(
         string serviceCode,
         ShippingDestinationScope scope,
@@ -99,13 +125,15 @@ public sealed class ShippingRatePolicy
         int leadDays,
         decimal? freeAboveThreshold,
         DateTimeOffset now,
-        Guid? ratePolicyId = null)
+        Guid? ratePolicyId = null,
+        string? optionCode = null)
     {
         ArgumentNullException.ThrowIfNull(scope);
         var policy = new ShippingRatePolicy
         {
             RatePolicyId = ratePolicyId is { } id && id != Guid.Empty ? id : UuidV7.New(),
             ServiceCode = NormalizeServiceCode(serviceCode),
+            OptionCode = NormalizeOptionCode(optionCode),
             CountryId = RequireCountry(scope.CountryId),
             AdministrativeAreaId = Normalize(scope.AdministrativeAreaId),
             CityId = Normalize(scope.CityId),
@@ -221,6 +249,23 @@ public sealed class ShippingRatePolicy
         }
 
         return trimmed;
+    }
+
+    /// <summary>
+    /// کد گزینه را به شکل متعارف می‌برد: فاصله‌های اضافی حذف و مقدار تهی به <c>null</c> نگاشت
+    /// می‌شود تا «بدون گزینه» یک حالت واحد داشته باشد و ردیف‌های هم‌معنا تکراری نشوند.
+    /// </summary>
+    private static string? NormalizeOptionCode(string? optionCode)
+    {
+        var trimmed = optionCode?.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            return null;
+        }
+
+        return trimmed.Length > OptionCodeMaxLength
+            ? throw new SemanticException(new SemanticError(ShippingErrorCodes.OptionCodeInvalid))
+            : trimmed;
     }
 
     private static Guid RequireCountry(Guid countryId)

@@ -47,6 +47,9 @@ public static class ShippingValidationCodes
     /// <summary>کد خدمت بدنه با کد خدمت مسیر یکسان نیست.</summary>
     public const string BodyServiceCodeMismatch = "shipping.validation.body_service_code_mismatch";
 
+    /// <summary>کد گزینهٔ روش ارسال از طول مجاز بیشتر است.</summary>
+    public const string OptionCodeTooLong = "shipping.validation.option_code_too_long";
+
     /// <summary>
     /// بدنهٔ درخواست خوانا نیست: JSON نامعتبر، contentType غیر-JSON، شناسهٔ نامعتبر/تهی یا بدنهٔ
     /// کاملاً غایب. ورودی سطح کلاینت است و باید ۴۰۰ اعلام‌شده بدهد، نه خطای بستر.
@@ -89,6 +92,12 @@ public sealed class ShippingRatePolicyWriteRequestValidator : AbstractValidator<
             .NotEmpty().WithErrorCode(ShippingValidationCodes.ServiceCodeRequired)
             .MaximumLength(ShippingRatePolicy.ServiceCodeMaxLength)
             .WithErrorCode(ShippingValidationCodes.ServiceCodeTooLong);
+
+        // The option code is an identity token, not prose: shape only (length), and the real catalog
+        // lookup stays in the handler through the Fulfillment Contracts seam.
+        RuleFor(x => x.OptionCode)
+            .MaximumLength(ShippingRatePolicy.OptionCodeMaxLength)
+            .WithErrorCode(ShippingValidationCodes.OptionCodeTooLong);
 
         // دامنهٔ غایب یک شکست اعتبارسنجی اعلام‌شده است، نه استثنا: قواعد خصیصه‌های تودرتو فقط
         // وقتی ارزیابی می‌شوند که خود دامنه وجود داشته باشد، وگرنه دسترسی تودرتو استثنای

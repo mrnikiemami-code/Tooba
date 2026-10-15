@@ -80,6 +80,11 @@ public sealed class ShippingDbContext : DbContext
                 table.HasCheckConstraint(
                     "ck_rate_policies_service_code_canonical",
                     "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+                // NULL option_code is the service-level policy and stays legal; a present option code must be
+                // canonical for the same reason as the service code, or it would never match a request.
+                table.HasCheckConstraint(
+                    "ck_rate_policies_option_code_canonical",
+                    "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
                 table.HasCheckConstraint(
                     "ck_rate_policies_currency_code_canonical",
                     "char_length(currency_code) = 3 AND currency_code = upper(currency_code)");
@@ -94,22 +99,25 @@ public sealed class ShippingDbContext : DbContext
             entity.Property(x => x.ServiceCode)
                 .HasMaxLength(ShippingRatePolicy.ServiceCodeMaxLength)
                 .IsRequired();
+            entity.Property(x => x.OptionCode)
+                .HasMaxLength(ShippingRatePolicy.OptionCodeMaxLength);
             entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsRequired();
             entity.Property(x => x.ChargeAmount).HasPrecision(18, 2);
             entity.Property(x => x.FreeAboveThreshold).HasPrecision(18, 2);
 
-            // One commercial policy per (service, scope). Scope is the four-level destination tuple, so a
-            // country-level row is distinguished from a city-level row for the same service. The column
-            // order intentionally mirrors the specificity order used by the engine.
+            // One commercial policy per (service, option, scope). Scope is the four-level destination tuple,
+            // so a country-level row is distinguished from a city-level row for the same service. The column
+            // order intentionally mirrors the specificity order used by the engine (option identity first,
+            // then destination specificity).
             //
             // NULLS NOT DISTINCT is required for this to be a real invariant: with PostgreSQL's default
             // NULLS DISTINCT, two rows that differ only by a NULL level (e.g. two country-scope policies
-            // for the same service) would both be accepted, and the engine would then answer
-            // ScopeConflict for every such request. Requires PostgreSQL 15+.
-            entity.HasIndex(x => new { x.ServiceCode, x.CountryId, x.AdministrativeAreaId, x.CityId, x.ServiceAreaId })
+            // for the same service, or two option-less tipax rows) would both be accepted, and the engine
+            // would then answer ScopeConflict for every such request. Requires PostgreSQL 15+.
+            entity.HasIndex(x => new { x.ServiceCode, x.OptionCode, x.CountryId, x.AdministrativeAreaId, x.CityId, x.ServiceAreaId })
                 .IsUnique()
                 .AreNullsDistinct(false)
-                .HasDatabaseName("ux_rate_policies_service_scope");
+                .HasDatabaseName("ux_rate_policies_service_option_scope");
 
             // Every quote filters by service code + active flag before evaluating scope.
             entity.HasIndex(x => new { x.ServiceCode, x.IsActive })

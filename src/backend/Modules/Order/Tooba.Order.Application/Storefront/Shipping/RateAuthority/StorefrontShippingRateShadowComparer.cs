@@ -44,7 +44,9 @@ public static class StorefrontShippingRateShadowComparer
             input.LegacyPriceAmount,
             shipping.ChargeAmount,
             shipping.Outcome.ToString(),
-            shipping.ReasonCode);
+            shipping.ReasonCode,
+            input.OptionCode,
+            input.EffectiveServiceCode);
     }
 
     /// <summary>گزارش‌های بدون مقایسه را می‌سازد (دروازه بسته یا عدم امکان مقایسه یا خطای مرجع).</summary>
@@ -64,6 +66,8 @@ public static class StorefrontShippingRateShadowComparer
             input.LegacyPriceAmount,
             null,
             null,
-            null);
+            null,
+            input.OptionCode,
+            input.EffectiveServiceCode);
     }
 }

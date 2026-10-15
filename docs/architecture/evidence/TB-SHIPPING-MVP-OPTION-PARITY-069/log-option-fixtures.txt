@@ -1,0 +1,30 @@
+﻿=== TB-SHIPPING-MVP-OPTION-PARITY-069 :: option-level rate fixtures (mission C) ===
+target: Development host :5088, tenant store-alpha, DB tooba_alpha (tenant-alpha connection reference)
+scope: country IR / administrative area alborz (area level) - exactly the 068 evidenced scope
+values are PARITY FIXTURES (mirror the measured legacy amounts), NOT approved commercial tariffs.
+
+--- 1. invalid option combination must be refused by the Fulfillment catalog seam ---
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 400 {"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/tipax/rates","errorCode":"shipping.service_option.unknown","traceId":"ac9fdde79b0ebce3fa1e09795031d04f","correlationId":"515885b46f0b4929abac5e05407bfade","requestId":"0HNPAD3T35CHF:00000001"}
+POST http://127.0.0.1:5088/v1/admin/shipping-services/ghost_service/rates => 400 {"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/ghost_service/rates","errorCode":"shipping.service_code.unknown","traceId":"b0fe69b88c367494c5fcf4f555d8265b","correlationId":"a95ea6912f1d4a9fae8698c964bfc635","requestId":"0HNPAD3T35CHF:00000002"}
+
+--- 2. pre-state of tipax (generic service-level row to be superseded) ---
+GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200 {"serviceCode":"tipax","ratePolicies":[{"ratePolicyId":"01a13d65-cf37-7000-ad21-ac8e9b2c89d7","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":true,"createdAt":"2026-10-15T02:30:44.791242+00:00","updatedAt":"2026-10-15T02:33:23.228022+00:00"}],"coverageGrants":[{"coverageGrantId":"01a13d65-cf8e-7000-a8e5-2205f6167d63","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","isActive":true,"createdAt":"2026-10-15T02:30:44.878728+00:00","updatedAt":"2026-10-15T02:33:23.241766+00:00"}]}
+   PRE RATE 01a13d65-cf37-7000-ad21-ac8e9b2c89d7 option= area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= charge=180000.00 lead=3 active=True
+GENERIC_TIPAX_ID=
+
+--- 3. option-level tipax fixtures: standard 180000/lead3 and express 260000/lead1 ---
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200 {"ratePolicyId":"01a13d84-ca00-7000-8d86-52803380de4e","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":true,"createdAt":"2026-10-15T03:04:35.0723603+00:00","updatedAt":"2026-10-15T03:04:35.0723603+00:00","optionCode":"standard"}
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200 {"ratePolicyId":"01a13d84-ca7f-7000-a59a-269a1c8ec13d","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":260000,"currencyCode":"IRR","preparationDays":1,"leadDays":1,"isActive":true,"createdAt":"2026-10-15T03:04:35.1997045+00:00","updatedAt":"2026-10-15T03:04:35.1997045+00:00","optionCode":"express"}
+
+--- 4. supersede the 068 generic tipax service-level row (only after both options exist) ---
+   SKIP: generic tipax row not found
+
+--- 5. post-state of tipax (two option-level rows active, generic superseded) ---
+GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200 {"serviceCode":"tipax","ratePolicies":[{"ratePolicyId":"01a13d84-ca7f-7000-a59a-269a1c8ec13d","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":260000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":1,"isActive":true,"createdAt":"2026-10-15T03:04:35.199704+00:00","updatedAt":"2026-10-15T03:04:35.199704+00:00","optionCode":"express"},{"ratePolicyId":"01a13d84-ca00-7000-8d86-52803380de4e","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":true,"createdAt":"2026-10-15T03:04:35.07236+00:00","updatedAt":"2026-10-15T03:04:35.07236+00:00","optionCode":"standard"},{"ratePolicyId":"01a13d65-cf37-7000-ad21-ac8e9b2c89d7","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":true,"createdAt":"2026-10-15T02:30:44.791242+00:00","updatedAt":"2026-10-15T02:33:23.228022+00:00"}],"coverageGrants":[{"coverageGrantId":"01a13d65-cf8e-7000-a8e5-2205f6167d63","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","isActive":true,"createdAt":"2026-10-15T02:30:44.878728+00:00","updatedAt":"2026-10-15T02:33:23.241766+00:00"}]}
+   POST RATE 01a13d84-ca7f-7000-a59a-269a1c8ec13d option=express area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= charge=260000.00 lead=1 active=True
+   POST RATE 01a13d84-ca00-7000-8d86-52803380de4e option=standard area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= charge=180000.00 lead=3 active=True
+   POST RATE 01a13d65-cf37-7000-ad21-ac8e9b2c89d7 option= area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= charge=180000.00 lead=3 active=True
+   POST GRANT 01a13d65-cf8e-7000-a8e5-2205f6167d63 option-scope=service area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 active=True
+
+ROLLBACK (bounded): deactivate both option rows by id and reactivate the generic row;
+the model change itself is reverted by the migration Down() (drops option_code).

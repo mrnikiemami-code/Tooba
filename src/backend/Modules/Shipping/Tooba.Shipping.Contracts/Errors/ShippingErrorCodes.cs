@@ -56,4 +56,13 @@ public static class ShippingErrorCodes
 
     /// <summary>دامنهٔ مقصد در فهرست مرجع Geography ناشناخته، غیرفعال یا ناهم‌بسته است.</summary>
     public const string DestinationScopeInvalid = "shipping.destination_scope.invalid";
+
+    /// <summary>کد گزینهٔ روش ارسال خارج از محدودهٔ مجاز طول است.</summary>
+    public const string OptionCodeInvalid = "shipping.option_code.invalid";
+
+    /// <summary>کد گزینهٔ ارسال در کاتالوگ خدمت Fulfillment برای این خدمت وجود ندارد.</summary>
+    public const string ServiceOptionUnknown = "shipping.service_option.unknown";
+
+    /// <summary>هویت روش (خدمت + گزینه) یک ردیف با مسیر/بدنهٔ درخواست یکسان نیست.</summary>
+    public const string RatePolicyOptionMismatch = "shipping.rate_policy.option_mismatch";
 }

@@ -5,19 +5,30 @@ namespace Tooba.Order.Application.Storefront.Shipping.RateAuthority;
 /// <summary>
 /// ورودی یک ارزیابی سایه: واقعیت‌های مسیر قدیمی (قیمت و مجازبودن) به‌همراه هویت مقصد در صورت وجود.
 /// </summary>
-/// <param name="MethodCode">کد متد فروشگاهی (همان کد خدمت/گزینهٔ موجود).</param>
+/// <param name="MethodCode">کد متد فروشگاهی؛ فقط برای ردیابی در گزارش.</param>
 /// <param name="LegacyPriceAmount">قیمتی که مسیر قدیمی امروز به مشتری می‌دهد؛ مبنای مقایسه و مرجع نهایی.</param>
 /// <param name="LegacyDestinationAllowed">آیا مسیر قدیمی این مقصد را مجاز می‌داند.</param>
 /// <param name="Destination">هویت پایدار مقصد؛ تهی یعنی امروز قابل استخراج نیست (مرحلهٔ ۲ ADR-036 اجرا نشده).</param>
 /// <param name="CartSubtotalExclusive">جمع سبد بدون هزینهٔ ارسال.</param>
 /// <param name="CurrencyCode">ارز سبد در صورت وجود.</param>
+/// <param name="OptionCode">گزینهٔ روش ارسال در صورت وجود؛ تهی یعنی درخواست فقط در سطح خدمت است.</param>
+/// <param name="ServiceCode">
+/// کد خدمت authoritative در صورت وجود. وقتی مقدار داشته باشد بر <paramref name="MethodCode"/> اولویت
+/// دارد، چون کد متد فروشگاهی می‌تواند «خدمت:گزینه» باشد و معادل‌گرفتن آن با کد خدمت ممنوع است.
+/// </param>
 public sealed record StorefrontShippingRateShadowInput(
     string MethodCode,
     decimal LegacyPriceAmount,
     bool LegacyDestinationAllowed,
     DestinationIdentifiers? Destination,
     decimal CartSubtotalExclusive,
-    string? CurrencyCode);
+    string? CurrencyCode,
+    string? OptionCode = null,
+    string? ServiceCode = null)
+{
+    /// <summary>کلید خدمتی که واقعاً به مرجع نرخ داده می‌شود (خدمت صریح، وگرنه کد متد).</summary>
+    public string EffectiveServiceCode => string.IsNullOrWhiteSpace(ServiceCode) ? MethodCode : ServiceCode;
+}
 
 /// <summary>نتیجهٔ مقایسهٔ سایه. هیچ‌کدام از این مقادیر قیمت مشتری را تعیین نمی‌کند.</summary>
 public enum StorefrontShippingRateShadowOutcome
@@ -54,6 +65,8 @@ public enum StorefrontShippingRateShadowOutcome
 /// <param name="ShippingChargeAmount">مبلغ اعلامی مرجع جدید؛ فقط مشاهده‌ای.</param>
 /// <param name="ShippingOutcome">وضعیت خدمت‌رسانی مرجع جدید؛ فقط مشاهده‌ای.</param>
 /// <param name="ShippingReasonCode">کد دلیل پایدار مرجع جدید؛ فقط مشاهده‌ای.</param>
+/// <param name="OptionCode">گزینهٔ روش ارسال این مقایسه؛ فقط برای ردیابی.</param>
+/// <param name="ServiceCode">کد خدمت authoritative که به مرجع نرخ داده شد؛ فقط برای ردیابی.</param>
 public sealed record StorefrontShippingRateShadowReport(
     string MethodCode,
     StorefrontShippingRateAuthorityGate Gate,
@@ -61,4 +74,6 @@ public sealed record StorefrontShippingRateShadowReport(
     decimal LegacyPriceAmount,
     decimal? ShippingChargeAmount,
     string? ShippingOutcome,
-    string? ShippingReasonCode);
+    string? ShippingReasonCode,
+    string? OptionCode = null,
+    string? ServiceCode = null);
