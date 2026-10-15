@@ -1,0 +1,19 @@
+feat(shipping): wire one-level tab 2 rates and coverage behind server-owned binding
+
+TB-SHIPPING-ONE-LEVEL-TABS-086
+
+Adds a bounded, additive server-side legacy-binding resolver for one-level
+shipping methods and wires tab 2 «تعرفه و پوشش» of the default-OFF one-level
+shell to the existing Shipping rate/coverage APIs.
+
+- Fulfillment: IShippingOneLevelCatalogAdminRead.ResolveBindingAsync, the
+  ResolveOneLevelShippingMethodBindingQuery handler/DTO and its shape validator,
+  plus the additive admin route GET .../shipping-methods/one-level/{code}/binding.
+  Gate OFF => zero DB reads; malformed code => refused before any lookup;
+  42P01 => not-ready; unknown code => unresolved. method_code is never split
+  client-side and raw serviceCode/optionCode are never accepted.
+- Frontend: shipping-one-level-rates-tab.tsx scoped to exactly one selected
+  method with a generation guard for stale selection, honest gate/not-ready/
+  denied/error states, no second-level option picker and no option grouping.
+- Tests: 21 Fulfillment behavior cases, updated 17-request validator inventory
+  and route manifest, 11 new frontend cases (145 shipping-services tests green).
