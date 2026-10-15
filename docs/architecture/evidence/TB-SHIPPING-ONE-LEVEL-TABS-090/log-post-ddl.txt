@@ -1,0 +1,56 @@
+﻿Pager usage is off.
+== one-level history rows ==
+               migration_id                
+-------------------------------------------
+ 20261015120000_AddShippingOneLevelCatalog
+(1 row)
+
+== new tables ==
+                 ?column?                 
+------------------------------------------
+ fulfillment.shipping_method_translations
+ fulfillment.shipping_methods
+(2 rows)
+
+== shipping_methods columns ==
+     column_name     |        data_type         | character_maximum_length | is_nullable 
+---------------------+--------------------------+--------------------------+-------------
+ shipping_method_id  | uuid                     |                          | NO
+ method_code         | character varying        |                       32 | NO
+ provider_kind       | character varying        |                       64 | NO
+ legacy_service_code | character varying        |                       64 | NO
+ legacy_option_code  | character varying        |                       64 | YES
+ sort_order          | integer                  |                          | NO
+ is_active           | boolean                  |                          | NO
+ created_at          | timestamp with time zone |                          | NO
+ updated_at          | timestamp with time zone |                          | NO
+(9 rows)
+
+== indexes ==
+                  indexname                  
+---------------------------------------------
+ ix_shipping_method_translations_method_lang
+ ix_shipping_methods_legacy_service_code
+ ix_shipping_methods_method_code
+ ux_shipping_methods_legacy_binding
+(4 rows)
+
+== checks ==
+                  conname                  
+-------------------------------------------
+ ck_shipping_methods_code_canonical
+ ck_shipping_methods_option_code_canonical
+(2 rows)
+
+== fk ==
+                conname                 
+----------------------------------------
+ fk_shipping_method_translations_method
+(1 row)
+
+== row counts (new vs legacy) ==
+ methods | method_translations | legacy_services | legacy_options 
+---------+---------------------+-----------------+----------------
+       0 |                   0 |               5 |              4
+(1 row)
+

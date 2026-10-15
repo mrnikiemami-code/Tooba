@@ -1,0 +1,11 @@
+﻿TARGET database=1 db_name=1
+PRE methods=0 method_translations=0 legacy_services=5 legacy_options=4
+GUARD violating_plan REFUSED:shipping.one_level.backfill.plan_not_executable methods_after=0
+ATOMICITY colliding_plan ROLLED_BACK:DbUpdateException methods_after=0
+DRYRUN executable=True items=7 violations=0 creates=7 skips=0 aligns=0
+APPLIED methods=7 method_translations=14
+RERUN executable=True items=7 all_skip=True violations=0
+RERUN_APPLIED methods=7 method_translations=14
+LEGACY_UNTOUCHED services=5 options=4 service_translations=10 option_translations=8
+HISTORICAL_UNTOUCHED fulfillments=9 shipments=5 drafts=14
+NO_SERVICE_LEVEL_ROW bare_post=0 bare_tipax=0

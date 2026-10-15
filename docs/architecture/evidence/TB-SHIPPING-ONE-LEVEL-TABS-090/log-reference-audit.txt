@@ -1,0 +1,59 @@
+﻿Pager usage is off.
+== service translations ==
+     code      |             language_id              |          name          
+---------------+--------------------------------------+------------------------
+ post          | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پست
+ post          | 01a06a53-4196-7000-9b98-fb3706490005 | Post
+ tipax         | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | تیپاکس
+ tipax         | 01a06a53-4196-7000-9b98-fb3706490005 | Tipax
+ snapp_courier | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | اسنپ / پیک آنلاین
+ snapp_courier | 01a06a53-4196-7000-9b98-fb3706490005 | Snapp / Online courier
+ store_courier | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیک فروشگاه
+ store_courier | 01a06a53-4196-7000-9b98-fb3706490005 | Store courier
+ in_person     | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | تحویل حضوری
+ in_person     | 01a06a53-4196-7000-9b98-fb3706490005 | In person
+(10 rows)
+
+== option translations ==
+ service_code | option_code | option_active | option_sort |             language_id              |   name   
+--------------+-------------+---------------+-------------+--------------------------------------+----------
+ post         | express     | f             |          10 | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیشتاز
+ post         | express     | f             |          10 | 01a06a53-4196-7000-9b98-fb3706490005 | Express
+ post         | standard    | t             |          20 | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | معمولی
+ post         | standard    | t             |          20 | 01a06a53-4196-7000-9b98-fb3706490005 | Standard
+ tipax        | express     | t             |          10 | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیشتاز
+ tipax        | express     | t             |          10 | 01a06a53-4196-7000-9b98-fb3706490005 | Express
+ tipax        | standard    | t             |          20 | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | معمولی
+ tipax        | standard    | t             |          20 | 01a06a53-4196-7000-9b98-fb3706490005 | Standard
+(8 rows)
+
+== languages referenced ==
+             language_id              
+--------------------------------------
+ 01a06a53-4139-7000-bb9b-3078a0d2e5c4
+ 01a06a53-4196-7000-9b98-fb3706490005
+(2 rows)
+
+== cart drafts referencing shipping method codes ==
+ shipping_method_code | count 
+----------------------+-------
+ post:express         |    12
+ tipax:express        |     1
+ tipax:standard       |     1
+(3 rows)
+
+== fulfillment shipments/consolidated codes ==
+ shipping_method_code | count 
+----------------------+-------
+ post                 |     3
+ snapp_courier        |     2
+(2 rows)
+
+== legacy codes referenced by fulfillment units ==
+ shipping_method_code | count 
+----------------------+-------
+ post:express         |     4
+ tipax:express        |     2
+ tipax:standard       |     3
+(3 rows)
+

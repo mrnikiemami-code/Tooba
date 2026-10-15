@@ -10,6 +10,9 @@ public sealed record ShippingMethodExistingRow(
     string? LegacyOptionCode,
     bool IsActive);
 
+/// <summary>ترجمهٔ مطلوب یک روش؛ نام هر زبان جدا نگه داشته می‌شود تا backfill نام‌ها را قاطی نکند.</summary>
+public sealed record ShippingMethodDesiredTranslation(Guid LanguageId, string Name, string? Description);
+
 /// <summary>یک روش مطلوب که از کاتالوگ دوسطحی موجود استخراج شده است.</summary>
 public sealed record ShippingMethodDesiredRow(
     string MethodCode,
@@ -20,7 +23,8 @@ public sealed record ShippingMethodDesiredRow(
     bool IsActive,
     IReadOnlyList<Guid> LanguageIds,
     string DisplayName,
-    string? Description);
+    string? Description,
+    IReadOnlyList<ShippingMethodDesiredTranslation> Translations);
 
 /// <summary>تصمیم backfill برای یک روش مطلوب.</summary>
 public enum ShippingMethodPlanAction
@@ -204,6 +208,12 @@ public static class ShippingMethodBackfillPlanner
             isActive,
             translations.Select(t => t.LanguageId).ToArray(),
             string.IsNullOrWhiteSpace(primary?.Name) ? displayName : primary!.Name,
-            primary?.Description));
+            primary?.Description,
+            // هر زبان ترجمهٔ خودش را می‌گیرد؛ fallback فقط وقتی هیچ ترجمه‌ای نیست و هرگز یک نام
+            // را به همهٔ زبان‌ها نمی‌چسباند.
+            translations
+                .Where(t => t.LanguageId != Guid.Empty && !string.IsNullOrWhiteSpace(t.Name))
+                .Select(t => new ShippingMethodDesiredTranslation(t.LanguageId, t.Name.Trim(), t.Description))
+                .ToArray()));
     }
 }

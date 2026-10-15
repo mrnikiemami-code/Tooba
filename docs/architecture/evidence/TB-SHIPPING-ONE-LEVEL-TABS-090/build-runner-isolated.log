@@ -1,0 +1,221 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Tooba.AddressBook.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.AddressBook.Contracts.dll
+  Tooba.CustomerProfile.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.CustomerProfile.Contracts.dll
+  Tooba.Reviews.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Reviews.Contracts.dll
+  Tooba.ModuleContracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.ModuleContracts.dll
+  Tooba.Content.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Content.Contracts.dll
+  Tooba.ProductWorkspace.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.ProductWorkspace.Domain.dll
+  Tooba.BuildingBlocks -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.BuildingBlocks.dll
+  Tooba.Story.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Story.Contracts.dll
+  Tooba.Support.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Support.Contracts.dll
+  Tooba.Offer.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Offer.Domain.dll
+  Tooba.Tax.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Tax.Contracts.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\TemplateCatalog\IndustryBatchBTemplateCatalogIds.cs(4,41): warning CS1570: XML comment has badly formed XML -- 'Whitespace is not allowed at this location.' [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\Tooba.Catalog.Domain.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\TemplateCatalog\IndustryBatchBTemplateParityIds.cs(4,49): warning CS1570: XML comment has badly formed XML -- 'Whitespace is not allowed at this location.' [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\Tooba.Catalog.Domain.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\ValueObjects\CatalogEffectiveSchemaBinding.cs(17,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\Tooba.Catalog.Domain.csproj]
+  Tooba.Geography.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Geography.Contracts.dll
+  Tooba.Offer.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Offer.Contracts.dll
+  Tooba.Notification.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Notification.Domain.dll
+  Tooba.Inventory.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Inventory.Contracts.dll
+  Tooba.Media.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Media.Domain.dll
+  Tooba.ProductWorkspace.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.ProductWorkspace.Contracts.dll
+  Tooba.Localization.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Localization.Contracts.dll
+  Tooba.Fulfillment.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Fulfillment.Contracts.dll
+  Tooba.Catalog.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Catalog.Domain.dll
+  Tooba.ProductQnA.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.ProductQnA.Contracts.dll
+  Tooba.PageComposition.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.PageComposition.Contracts.dll
+  Tooba.StoreContext.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.StoreContext.Contracts.dll
+  Tooba.AccessControl.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.AccessControl.Contracts.dll
+  Tooba.Settlement.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Settlement.Contracts.dll
+  Tooba.Reviews.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Reviews.Domain.dll
+  Tooba.AddressBook.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.AddressBook.Domain.dll
+  Tooba.Payment.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Payment.Contracts.dll
+  Tooba.Persistence -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Persistence.dll
+  Tooba.UserPreference.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.UserPreference.Contracts.dll
+  Tooba.Pricing.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Pricing.Contracts.dll
+  Tooba.Returns.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Returns.Contracts.dll
+  Tooba.Identity.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Identity.Contracts.dll
+  Tooba.Media.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Media.Contracts.dll
+  Tooba.Order.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Order.Domain.dll
+  Tooba.Shipping.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Shipping.Contracts.dll
+  Tooba.Fulfillment.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Fulfillment.Domain.dll
+  Tooba.Notification.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Notification.Contracts.dll
+  Tooba.AddressBook.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.AddressBook.Application.dll
+  Tooba.Wallet.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Wallet.Contracts.dll
+  Tooba.Cart.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Cart.Contracts.dll
+  Tooba.Returns.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Returns.Domain.dll
+  Tooba.OperatorProfile.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.OperatorProfile.Contracts.dll
+  Tooba.Support.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Support.Domain.dll
+  Tooba.CustomerProfile.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.CustomerProfile.Domain.dll
+  Tooba.Geography.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Geography.Endpoints.dll
+  Tooba.Party.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Party.Contracts.dll
+  Tooba.Story.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Story.Domain.dll
+  Tooba.Content.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Content.Domain.dll
+  Tooba.Pricing.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Pricing.Domain.dll
+  Tooba.Localization.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Localization.Domain.dll
+  Tooba.ProductQnA.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.ProductQnA.Domain.dll
+  Tooba.Geography.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Geography.Domain.dll
+  Tooba.Promotion.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Promotion.Contracts.dll
+  Tooba.Wishlist.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Wishlist.Contracts.dll
+  Tooba.Returns.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Returns.Application.dll
+  Tooba.Shipping.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Shipping.Domain.dll
+  Tooba.Catalog.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Catalog.Contracts.dll
+  Tooba.Identity.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Identity.Domain.dll
+  Tooba.Party.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Party.Domain.dll
+  Tooba.BulkInquiry.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.BulkInquiry.Contracts.dll
+  Tooba.AccessControl.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.AccessControl.Domain.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Domain\Merchandising\MerchandisingCampaign.cs(7,70): warning CS1574: XML comment has cref attribute 'PromotionDefinition' that could not be resolved [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Domain\Tooba.Promotion.Domain.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Domain\Merchandising\MerchandisingCampaignLifecycleStatus.cs(6,63): warning CS1574: XML comment has cref attribute 'PromotionStatus' that could not be resolved [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Domain\Tooba.Promotion.Domain.csproj]
+  Tooba.Inventory.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Inventory.Domain.dll
+  Tooba.Returns.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Returns.Endpoints.dll
+  Tooba.Notification.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Notification.Application.dll
+  Tooba.Wallet.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Wallet.Domain.dll
+  Tooba.UserPreference.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.UserPreference.Domain.dll
+  Tooba.Order.Contracts -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Order.Contracts.dll
+  Tooba.Tax.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Tax.Domain.dll
+  Tooba.BulkInquiry.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.BulkInquiry.Domain.dll
+  Tooba.Pricing.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Pricing.Application.dll
+  Tooba.Promotion.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Promotion.Domain.dll
+  Tooba.PageComposition.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.PageComposition.Domain.dll
+  Tooba.ProductQnA.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.ProductQnA.Application.dll
+  Tooba.Media.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Media.Application.dll
+  Tooba.Offer.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Offer.Application.dll
+  Tooba.Support.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Support.Application.dll
+  Tooba.Story.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Story.Application.dll
+  Tooba.Fulfillment.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Fulfillment.Application.dll
+  Tooba.BulkInquiry.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.BulkInquiry.Application.dll
+  Tooba.Inventory.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Inventory.Application.dll
+  Tooba.Shipping.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Shipping.Application.dll
+  Tooba.OperatorProfile.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.OperatorProfile.Domain.dll
+  Tooba.CustomerProfile.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.CustomerProfile.Application.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Checkout\Process\CheckoutProcessManager.cs(14,7): warning CS0105: The using directive for 'Tooba.Order.Application.Checkout.Abuse' appeared previously in this namespace [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(94,12): warning CS1573: Parameter 'MethodCode' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(95,12): warning CS1573: Parameter 'Label' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(96,12): warning CS1573: Parameter 'ServiceCode' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(97,12): warning CS1573: Parameter 'IconKey' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(98,13): warning CS1573: Parameter 'PriceAmount' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(99,9): warning CS1573: Parameter 'LeadDays' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(100,10): warning CS1573: Parameter 'IsFree' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(101,12): warning CS1573: Parameter 'EstimationLabel' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+  Tooba.Identity.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Identity.Application.dll
+  Tooba.Content.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Content.Application.dll
+  Tooba.Offer.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Offer.Endpoints.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Models\EffectiveSchemaEntry.cs(23,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Models\EffectiveSchemaEntry.cs(25,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj]
+  Tooba.PageComposition.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.PageComposition.Application.dll
+  Tooba.Returns.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Returns.Infrastructure.dll
+  Tooba.Cart.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Cart.Domain.dll
+  Tooba.Shipping.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Shipping.Endpoints.dll
+  Tooba.Offer.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Offer.Infrastructure.dll
+  Tooba.Tax.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Tax.Application.dll
+  Tooba.AddressBook.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.AddressBook.Infrastructure.dll
+  Tooba.CustomerProfile.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.CustomerProfile.Infrastructure.dll
+  Tooba.Content.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Content.Endpoints.dll
+  Tooba.Shipping.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Shipping.Infrastructure.dll
+  Tooba.ProductWorkspace.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.ProductWorkspace.Application.dll
+  Tooba.Wishlist.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Wishlist.Domain.dll
+  Tooba.Payment.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Payment.Domain.dll
+  Tooba.Order.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Order.Application.dll
+  Tooba.Identity.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Identity.Endpoints.dll
+  Tooba.Catalog.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Catalog.Application.dll
+  Tooba.Localization.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Localization.Application.dll
+  Tooba.Fulfillment.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Fulfillment.Endpoints.dll
+  Tooba.CustomerProfile.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.CustomerProfile.Endpoints.dll
+  Tooba.Promotion.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Promotion.Application.dll
+  Tooba.StoreContext.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.StoreContext.Infrastructure.dll
+  Tooba.Notification.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Notification.Infrastructure.dll
+  Tooba.Fulfillment.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Fulfillment.Infrastructure.dll
+  Tooba.Content.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Content.Infrastructure.dll
+  Tooba.ProductQnA.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.ProductQnA.Endpoints.dll
+  Tooba.Media.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Media.Endpoints.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Identity\Tooba.Identity.Infrastructure\Contacts\EfIdentityContactLookup.cs(9,7): warning CS0105: The using directive for 'Tooba.Identity.Contracts.Auth' appeared previously in this namespace [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Identity\Tooba.Identity.Infrastructure\Tooba.Identity.Infrastructure.csproj]
+  Tooba.Media.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Media.Infrastructure.dll
+  Tooba.Identity.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Identity.Infrastructure.dll
+  Tooba.Pricing.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Pricing.Infrastructure.dll
+  Tooba.BulkInquiry.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.BulkInquiry.Infrastructure.dll
+  Tooba.BulkInquiry.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.BulkInquiry.Endpoints.dll
+  Tooba.Support.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Support.Infrastructure.dll
+  Tooba.Support.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Support.Endpoints.dll
+  Tooba.Reviews.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Reviews.Application.dll
+  Tooba.Story.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Story.Infrastructure.dll
+  Tooba.Wallet.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Wallet.Application.dll
+  Tooba.Notification.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Notification.Endpoints.dll
+  Tooba.ProductQnA.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.ProductQnA.Infrastructure.dll
+  Tooba.Inventory.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Inventory.Infrastructure.dll
+  Tooba.Settlement.Domain -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Settlement.Domain.dll
+  Tooba.Story.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Story.Endpoints.dll
+  Tooba.Payment.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Payment.Application.dll
+  Tooba.Cart.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Cart.Application.dll
+  Tooba.Wishlist.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Wishlist.Application.dll
+  Tooba.PageComposition.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.PageComposition.Infrastructure.dll
+  Tooba.AccessControl.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.AccessControl.Application.dll
+  Tooba.OperatorProfile.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.OperatorProfile.Application.dll
+  Tooba.Tax.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Tax.Infrastructure.dll
+  Tooba.Geography.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Geography.Infrastructure.dll
+  Tooba.Reviews.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Reviews.Endpoints.dll
+  Tooba.Reviews.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Reviews.Infrastructure.dll
+  Tooba.AddressBook.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.AddressBook.Endpoints.dll
+  Tooba.Party.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Party.Application.dll
+  Tooba.ProductWorkspace.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.ProductWorkspace.Endpoints.dll
+  Tooba.PageComposition.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.PageComposition.Endpoints.dll
+  Tooba.Localization.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Localization.Infrastructure.dll
+  Tooba.AccessControl.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.AccessControl.Endpoints.dll
+  Tooba.Party.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Party.Endpoints.dll
+  Tooba.OperatorProfile.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.OperatorProfile.Endpoints.dll
+  Tooba.OperatorProfile.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.OperatorProfile.Infrastructure.dll
+  Tooba.Order.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Order.Endpoints.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AccessControl\Tooba.AccessControl.Infrastructure\Development\Seller\SellerDevContextBootstrap.cs(6,7): warning CS0105: The using directive for 'Tooba.Identity.Contracts.Auth' appeared previously in this namespace [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AccessControl\Tooba.AccessControl.Infrastructure\Tooba.AccessControl.Infrastructure.csproj]
+  Tooba.Localization.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Localization.Endpoints.dll
+  Tooba.Party.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Party.Infrastructure.dll
+  Tooba.AccessControl.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.AccessControl.Infrastructure.dll
+  Tooba.Wallet.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Wallet.Infrastructure.dll
+  Tooba.Settlement.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Settlement.Application.dll
+  Tooba.Catalog.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Catalog.Endpoints.dll
+  Tooba.ProductWorkspace.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.ProductWorkspace.Infrastructure.dll
+  Tooba.Wallet.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Wallet.Endpoints.dll
+  Tooba.UserPreference.Application -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.UserPreference.Application.dll
+  Tooba.Order.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Order.Infrastructure.dll
+  Tooba.Wishlist.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Wishlist.Endpoints.dll
+  Tooba.Payment.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Payment.Endpoints.dll
+  Tooba.Settlement.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Settlement.Endpoints.dll
+  Tooba.Cart.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Cart.Endpoints.dll
+  Tooba.UserPreference.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.UserPreference.Endpoints.dll
+  Tooba.Payment.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Payment.Infrastructure.dll
+  Tooba.Cart.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Cart.Infrastructure.dll
+  Tooba.UserPreference.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.UserPreference.Infrastructure.dll
+  Tooba.Promotion.Endpoints -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Promotion.Endpoints.dll
+  Tooba.Wishlist.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Wishlist.Infrastructure.dll
+  Tooba.Promotion.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Promotion.Infrastructure.dll
+  Tooba.Settlement.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Settlement.Infrastructure.dll
+  Tooba.Catalog.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Catalog.Infrastructure.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Admin\Development\AdminDevActorBootstrap.cs(5,7): warning CS0105: The using directive for 'Tooba.Identity.Contracts.Auth' appeared previously in this namespace [D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Tooba.Host.csproj]
+  Tooba.Host -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.Host.dll
+  Tooba.MigrationRunner -> D:\Users\User\source\repos\SarvNewVer\.tmp-090-runner\Tooba.MigrationRunner.dll
+
+Build succeeded.
+
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\TemplateCatalog\IndustryBatchBTemplateCatalogIds.cs(4,41): warning CS1570: XML comment has badly formed XML -- 'Whitespace is not allowed at this location.' [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\Tooba.Catalog.Domain.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\TemplateCatalog\IndustryBatchBTemplateParityIds.cs(4,49): warning CS1570: XML comment has badly formed XML -- 'Whitespace is not allowed at this location.' [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\Tooba.Catalog.Domain.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\ValueObjects\CatalogEffectiveSchemaBinding.cs(17,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\Tooba.Catalog.Domain.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Domain\Merchandising\MerchandisingCampaign.cs(7,70): warning CS1574: XML comment has cref attribute 'PromotionDefinition' that could not be resolved [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Domain\Tooba.Promotion.Domain.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Domain\Merchandising\MerchandisingCampaignLifecycleStatus.cs(6,63): warning CS1574: XML comment has cref attribute 'PromotionStatus' that could not be resolved [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Domain\Tooba.Promotion.Domain.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Checkout\Process\CheckoutProcessManager.cs(14,7): warning CS0105: The using directive for 'Tooba.Order.Application.Checkout.Abuse' appeared previously in this namespace [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(94,12): warning CS1573: Parameter 'MethodCode' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(95,12): warning CS1573: Parameter 'Label' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(96,12): warning CS1573: Parameter 'ServiceCode' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(97,12): warning CS1573: Parameter 'IconKey' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(98,13): warning CS1573: Parameter 'PriceAmount' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(99,9): warning CS1573: Parameter 'LeadDays' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(100,10): warning CS1573: Parameter 'IsFree' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Storefront\Models\StorefrontOrderModels.cs(101,12): warning CS1573: Parameter 'EstimationLabel' has no matching param tag in the XML comment for 'StorefrontShippingMethodView.StorefrontShippingMethodView(string, string, string, string, decimal, int, bool, string, string?)' (but other parameters do) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\Tooba.Order.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Models\EffectiveSchemaEntry.cs(23,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Models\EffectiveSchemaEntry.cs(25,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Identity\Tooba.Identity.Infrastructure\Contacts\EfIdentityContactLookup.cs(9,7): warning CS0105: The using directive for 'Tooba.Identity.Contracts.Auth' appeared previously in this namespace [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Identity\Tooba.Identity.Infrastructure\Tooba.Identity.Infrastructure.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AccessControl\Tooba.AccessControl.Infrastructure\Development\Seller\SellerDevContextBootstrap.cs(6,7): warning CS0105: The using directive for 'Tooba.Identity.Contracts.Auth' appeared previously in this namespace [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AccessControl\Tooba.AccessControl.Infrastructure\Tooba.AccessControl.Infrastructure.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Admin\Development\AdminDevActorBootstrap.cs(5,7): warning CS0105: The using directive for 'Tooba.Identity.Contracts.Auth' appeared previously in this namespace [D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Tooba.Host.csproj]
+    19 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:29.07
+EXIT=0

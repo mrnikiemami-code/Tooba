@@ -1,0 +1,5 @@
+﻿Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Tests\bin\Debug\net8.0\Tooba.Fulfillment.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   120, Skipped:     0, Total:   120, Duration: 599 ms - Tooba.Fulfillment.Tests.dll (net8.0)
+EXIT=0
