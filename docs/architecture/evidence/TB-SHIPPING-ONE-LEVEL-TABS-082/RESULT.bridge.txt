@@ -1,0 +1,164 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-082
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-081
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-TABS
+Mode: BOUNDED_FULFILLMENT_ONE_LEVEL_CATALOG_FOUNDATION
+Bridge-Task-Row: 5d7f2d27-5ed4-4146-a679-adfc5207dc10
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 0d83659238f9a1b668c6f61bb7d505192a2effc7
+Base-SHA: 0d83659238f9a1b668c6f61bb7d505192a2effc7
+Code-SHA: 64ff456bf547dc5cdbdee8ffb60a397b25addf67
+Evidence-SHA: 64ff456bf547dc5cdbdee8ffb60a397b25addf67
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+Claimed exactly one Pending task on tooba-main under BRIDGE-WAKE-V1 (row 5d7f2d27-5ed4-4146-a679-
+adfc5207dc10, created 2026-10-15T11:31:06Z). The received downloadable task was persisted to
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-082.task.md and kept UNSTAGED. Fetched origin/main and verified
+HEAD == origin/main == Expected-Base-SHA 0d83659238f9a1b668c6f61bb7d505192a2effc7 before any edit. Read
+AGENTS.md, TOOBA-PIPELINE-PROTOCOL, SHIPPING-ONE-LEVEL-UI-081, the Fulfillment shipping catalog entities,
+DbContext, EF migration conventions, contracts and their focused tests. No overlapping source drift was
+found; all pre-existing dirty/untracked paths were preserved (no reset/stash/rebase/force push). No Host
+or database restart was performed and no production/staging system was contacted. The live Development
+database tooba_alpha was NOT touched: 082 performed no database write of any kind.
+
+DECISION B1 — IDENTITY MODEL (Option B)
+Fulfillment now owns an additive one-level method catalog beside the existing two-level catalog. New
+domain aggregate Tooba.Fulfillment.Domain/Aggregates/ShippingMethod.cs carries: shipping_method_id;
+method_code (stable public code); provider_kind (hidden internal metadata — never a second merchant
+configuration level); immutable legacy_service_code plus nullable legacy_option_code; sort_order;
+is_active; created_at/updated_at. Localized names live in ShippingMethodTranslation. Identity is keyed on
+method_code, NEVER on the option UUID: ShippingServiceDirectory.UpdateAsync deletes and re-creates option
+rows, so option IDs are unstable, and ShippingMethod.Update therefore exposes only sortOrder + isActive
+while code and legacy binding stay immutable.
+Uniqueness encodes the architecture: ix_shipping_methods_method_code is unique on method_code (the
+aggregate lower-cases, so case-insensitive collision is impossible) and
+ux_shipping_methods_legacy_binding is unique on (legacy_service_code, legacy_option_code) WHERE
+legacy_option_code IS NOT NULL — the partial predicate is deliberate so a service-level fallback policy
+(NULL option) is never treated as, or colliding with, a second sellable method.
+Legacy persisted codes are preserved byte-identically: post:standard; post:express (inactive);
+tipax:standard; tipax:express; store_courier; in_person; snapp_courier (inactive). A service that owns
+option rows does NOT receive a bare-service method row. Existing service and option rows were not
+removed, renamed, or rewritten.
+
+DECISION B2 — 32-CHARACTER WIDTH AND CODE SHAPE
+ShippingMethod.MaxCodeLength = 32, matching the narrowest known paid column
+(checkouts.shipping_method_code varchar(32)). No order/checkout table was widened or altered and no
+historical cart/order/shipment code was rewritten. Shape rules (ShippingMethod.TryNormalizeCode, mirrored
+by DB CHECK constraints): length 1..32 after trim + lower-case; at most one ':' separator (the legacy
+composite form); every segment [a-z0-9_]+. Consequently '-', ' ', '/', '.', '::', leading/trailing ':'
+and triple composites are rejected rather than silently rewritten, and Create throws a typed
+SemanticException on an invalid code instead of normalizing it into something else. The 32-character
+boundary is proven exactly (a 32-char code is accepted, 33 is not; a composite filling the boundary is
+accepted, one more character is not).
+
+BACKFILL / MAPPING (PRESERVATION-SAFE, IDEMPOTENT)
+Tooba.Fulfillment.Application/Shipping/ShippingMethodBackfillPlanner.cs is a PURE function (no DbContext,
+no writes) returning an ordered plan of Create / Skip / AlignActivation items plus violations. It never
+calls the destructive UpdateAsync routine. Rules implemented and test-proven: every option of every
+service is mapped including inactive options (fixture post:retired), because a persisted historical code
+must keep resolving, and inactive stays inactive; an option-less service yields exactly one method with
+legacy_option_code = NULL carrying the service's own activation (snapp_courier inactive;
+store_courier/in_person active); activation is service.IsActive && option.IsActive, never invented or
+widened; re-running the planner against an already-mapped catalog yields ALL Skip (idempotent) and
+identical decisions on a third run; violations are reported instead of silently applied (case-insensitive
+duplicate existing code, duplicate binding, duplicate method code, invalid/over-length code, and
+binding_mismatch when an existing row's legacy binding disagrees with the desired one); a pre-existing
+bare-service row such as 'post' is neither consumed nor repurposed — the planner simply has no desired
+method for it and leaves it alone.
+LIVE DEVELOPMENT IS UNMIGRATED. The task forbade live tooba_alpha mutation, so no backfill was executed
+against any database; the plan was proven against in-memory fixtures only. The live rollout procedure is
+documented for later authorization and was NOT performed.
+
+CONTRACT AND DEFAULT-OFF GATE
+Tooba.Fulfillment.Contracts/Shipping/ShippingOneLevelCatalogContracts.cs adds read-only Contracts types
+(no EF model leakage): ShippingOneLevelMethodSnapshot / TranslationSnapshot and
+IShippingOneLevelCatalogReader (ListAsync / ListActiveAsync / GetByCodeAsync), implemented by
+Infrastructure ShippingOneLevelCatalogReader. ShippingOneLevelCatalogOptions.SectionName =
+"Tooba:ShippingOneLevelCatalog" with Enabled = false by default, and NO appsettings section exists
+anywhere, so the option binds to its safe default and the gate evaluates Disabled BY ABSENCE.
+ShippingOneLevelCatalogPolicy.Evaluate is fail-closed: null => Disabled, and only an explicit
+Enabled = true yields Enabled. The gate is wired in FulfillmentModule (Fulfillment is the correct
+configuration owner) and is scoped solely to the future catalog-read/UI path. It does not read, imply or
+flip Tooba:ShippingRateAuthority or Tooba:ShippingOperationalShadow — a focused test asserts the three
+section names are distinct. NO storefront behaviour changed: no consumer was wired to the new reader and
+the legacy Checkout path, paid snapshots, rate authority and operational shadow are exactly as before.
+Shipping's existing internal (service_code, option_code) key and Order's projection were not changed, and
+all legacy read APIs remain backward compatible.
+
+TESTS ACTUALLY RUN
+- dotnet build src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests — Build succeeded, 0 warnings,
+  0 errors.
+- dotnet test src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests — Passed! Failed: 0, Passed: 94,
+  Skipped: 0. This includes the 12 new focused tests in
+  Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelMethodCatalogTests.cs covering identity stability,
+  byte-identical legacy composites, shape/collision rejection, the exact 32-char boundary, hidden
+  provider kind + immutable binding, option-less null binding, idempotent mapping, activation alignment,
+  inactive-option handling, binding mismatch, the bare-service-row non-repurposing rule and the
+  default-OFF gate.
+- Static re-baseline check of the durable guard: declared constants = 91 and registered D(...) = 89,
+  matching the edited FulfillmentModuleAmsc001W3CertGuardTests.
+- NOT RUN (honest limitation): dotnet test src/backend/Host/Tooba.Host.Tests --filter
+  FulfillmentModuleAmsc001W3CertGuardTests was BLOCKED by MSB3027/MSB3021 file locks held by the running
+  Development Host process Tooba.Host (pid 33548) over src/backend/Host/Tooba.Host/bin/Debug/net8.0/*.dll.
+  Restarting that Host is outside this task's authorization, so the guard was not executed; its two
+  affected assertions (migration file list, error-code counts) were instead verified by direct
+  inspection of the real files.
+
+CHANGED PATHS
+Production: Domain/Aggregates/ShippingMethod.cs (new); Domain/Aggregates/ShippingMethodTranslation.cs
+(new); Contracts/Shipping/ShippingOneLevelCatalogContracts.cs (new); Contracts/Errors/
+FulfillmentErrorCodes.cs (+5 codes); Application/Shipping/ShippingMethodBackfillPlanner.cs (new);
+Infrastructure/Persistence/FulfillmentDbContext.cs (+2 DbSet, +2 entity mappings);
+Infrastructure/Persistence/Migrations/20261015120000_AddShippingOneLevelCatalog.cs (new);
+Infrastructure/Shipping/ShippingOneLevelCatalogReader.cs (new); Infrastructure/DependencyInjection/
+FulfillmentModule.cs (+reader registration, +gate options binding); Infrastructure/Errors/
+FulfillmentErrorCatalogContributor.cs (+5 descriptors); Endpoints/Resources/FulfillmentErrors.resx and
+FulfillmentErrors.fa.resx (+5 entries each).
+Tests: Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelMethodCatalogTests.cs (new);
+Host/Tooba.Host.Tests/Architecture/FulfillmentModuleAmsc001W3CertGuardTests.cs (migration list and
+error-code counts re-baselined to reality).
+Docs: docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-082.md (new) and this evidence set.
+
+MIGRATION AND ROLLBACK
+20261015120000_AddShippingOneLevelCatalog is additive and reversible. Up creates
+fulfillment.shipping_methods and fulfillment.shipping_method_translations with IF NOT EXISTS plus the
+canonical-code and option-code CHECK constraints and the two indexes. Down drops
+shipping_method_translations then shipping_methods. Rollback options: (1) keep the gate OFF, which
+restores the pre-task read path with zero data change; (2) revert the single migration, which is safe
+because no other module references these tables. The migration was NOT applied to any database, so no
+isolated-DB up/down execution evidence exists — this is stated as a limitation, not claimed as proven.
+
+KNOWN GAP (DOCUMENTED, NOT HIDDEN)
+FulfillmentDbContextModelSnapshot.cs was NOT extended. This matches the pre-existing repository state,
+where the snapshot already omits shipping_services / shipping_service_options (the
+20260910170000_AddShippingServiceCatalog migration is likewise raw SQL with no snapshot delta).
+Consequence: the next EF-generated migration for this DbContext must be hand-authored/verified rather
+than purely scaffolded. Repairing the stale snapshot is out of 082 scope.
+
+GUARDRAILS HONOURED
+Legacy shipping_services / shipping_service_options rows not removed, renamed or rewritten; legacy
+(serviceCode, optionCode?) key and nullable option fallback retained internally; no frontend, Host,
+Order, Shipping, Geography, Payment, Settlement, Checkout, pricing, capacity-reservation, COD-settlement
+or delivery-promise change; no paid-snapshot or shipment historical method-code rewrite; no invented
+weight or item-count; Tooba:ShippingRateAuthority and Tooba:ShippingOperationalShadow remain OFF and were
+not renamed or broadened; Tooba:ShippingOneLevelCatalog is default OFF by absence and was not activated;
+no live rate or grant was seeded; no blanket test suite was run. All pre-existing dirty/untracked paths
+were preserved and only task-owned paths were staged.
+
+ELAPSED AND DEPENDENCY
+Elapsed from claim (2026-10-15T11:31:59Z) to push (HEAD 64ff456bf) approximately 26 minutes, inside the
+30-minute timebox. Task 083 may build on the persisted one-level table, the stable <=32-character code
+contract, the read-only IShippingOneLevelCatalogReader and the default-OFF Tooba:ShippingOneLevelCatalog
+gate. It must not enable the gate, must not touch Tooba:ShippingRateAuthority /
+Tooba:ShippingOperationalShadow, and must not widen checkouts.shipping_method_code. Two items still need
+an explicit Architect ruling before 083 goes wide: whether the legacy catalog remains dual-written once
+the one-level catalog becomes authoritative, and the live backfill authorization with its exact execution
+window.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
