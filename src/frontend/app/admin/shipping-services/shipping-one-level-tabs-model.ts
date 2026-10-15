@@ -40,9 +40,9 @@ export const DEFAULT_ONE_LEVEL_TAB: OneLevelTabId = "services";
 export const ONE_LEVEL_TAB_WIRING_TASK: Record<OneLevelTabId, string | null> = {
   services: null,
   "rates-coverage": null,
-  "packaging-fare": "086",
-  "schedule-capacity": "087",
-  "cost-review": "088",
+  "packaging-fare": null,
+  "schedule-capacity": "088",
+  "cost-review": "089",
 };
 
 /** حداکثر طول کد روش طبق قرارداد 081/083. */

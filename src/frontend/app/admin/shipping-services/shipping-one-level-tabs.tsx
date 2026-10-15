@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, EmptyState, ErrorState } from "../../../design-system";
 import { ShippingOneLevelRatesTab } from "./shipping-one-level-rates-tab.tsx";
+import { ShippingOneLevelPackagingTab } from "./shipping-one-level-packaging-tab.tsx";
 import {
   ONE_LEVEL_TAB_IDS,
   ONE_LEVEL_TAB_LABELS,
@@ -184,6 +185,9 @@ export function ShippingOneLevelTabs({
         ) : activeTab === "rates-coverage" ? (
           // TB-SHIPPING-ONE-LEVEL-TABS-086: زبانهٔ ۲ روی همان روش انتخاب‌شدهٔ زبانهٔ ۱ عمل می‌کند.
           <ShippingOneLevelRatesTab methodCode={selection.methodCode} onNotice={onNotice} />
+        ) : activeTab === "packaging-fare" ? (
+          // TB-SHIPPING-ONE-LEVEL-TABS-087: زبانهٔ ۳ با همان پیوند سرور و همان مدل قدیمی بسته‌بندی.
+          <ShippingOneLevelPackagingTab methodCode={selection.methodCode} onNotice={onNotice} />
         ) : (
           <WiringShell tab={activeTab} />
         )}
