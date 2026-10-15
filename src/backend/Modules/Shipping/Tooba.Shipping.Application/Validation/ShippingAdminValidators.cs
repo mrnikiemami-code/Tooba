@@ -64,6 +64,18 @@ public static class ShippingValidationCodes
 
     /// <summary>کران پلهٔ اندازه خارج از سقف متعارف است.</summary>
     public const string TierOutOfRange = "shipping.validation.tier_out_of_range";
+
+    /// <summary>هزینهٔ بسته‌بندی نباید منفی باشد.</summary>
+    public const string PackagingFeeNegative = "shipping.validation.packaging_fee_negative";
+
+    /// <summary>هزینهٔ بسته‌بندی خارج از محدودهٔ مجاز است.</summary>
+    public const string PackagingFeeOutOfRange = "shipping.validation.packaging_fee_out_of_range";
+
+    /// <summary>کد ارز هزینهٔ بسته‌بندی باید سه حرف باشد.</summary>
+    public const string PackagingCurrencyInvalid = "shipping.validation.packaging_currency_invalid";
+
+    /// <summary>طرف پرداخت‌کنندهٔ حمل خارج از قرارداد پایدار است.</summary>
+    public const string PackagingFreightPayerModeInvalid = "shipping.validation.packaging_freight_payer_mode_invalid";
 }
 
 /// <summary>

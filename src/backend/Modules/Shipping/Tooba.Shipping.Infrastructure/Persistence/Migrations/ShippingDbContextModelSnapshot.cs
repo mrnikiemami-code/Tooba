@@ -165,6 +165,96 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Aggregates.ShippingPackagingPolicy", b =>
+                {
+                    b.Property<Guid>("PackagingPolicyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("packaging_policy_id");
+
+                    b.Property<Guid?>("AdministrativeAreaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("administrative_area_id");
+
+                    b.Property<Guid?>("CityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("city_id");
+
+                    b.Property<Guid>("CountryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("country_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<decimal>("FeeAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("fee_amount");
+
+                    b.Property<int>("FreightPayerMode")
+                        .HasColumnType("integer")
+                        .HasColumnName("freight_payer_mode");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("OptionCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("option_code");
+
+                    b.Property<Guid?>("ServiceAreaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("service_area_id");
+
+                    b.Property<string>("ServiceCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("service_code");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("PackagingPolicyId")
+                        .HasName("pk_packaging_policies");
+
+                    b.HasIndex("ServiceCode", "IsActive")
+                        .HasDatabaseName("ix_packaging_policies_service_active");
+
+                    b.HasIndex("ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_packaging_policies_service_option_scope");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId"), false);
+
+                    b.ToTable("packaging_policies", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_packaging_policies_currency_code_canonical", "char_length(currency_code) = 3 AND currency_code = upper(currency_code)");
+
+                            t.HasCheckConstraint("ck_packaging_policies_fee_amount_non_negative", "fee_amount >= 0");
+
+                            t.HasCheckConstraint("ck_packaging_policies_fee_amount_within_max", "fee_amount <= 1000000000");
+
+                            t.HasCheckConstraint("ck_packaging_policies_freight_payer_mode_known", "freight_payer_mode IN (0, 1)");
+
+                            t.HasCheckConstraint("ck_packaging_policies_option_code_canonical", "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
+
+                            t.HasCheckConstraint("ck_packaging_policies_scope_coherent", "service_area_id IS NULL OR city_id IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_packaging_policies_service_code_canonical", "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+                        });
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Aggregates.ShippingRatePolicy", b =>
                 {
                     b.Property<Guid>("RatePolicyId")

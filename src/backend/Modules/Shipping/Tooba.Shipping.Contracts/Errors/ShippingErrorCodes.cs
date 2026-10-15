@@ -119,4 +119,31 @@ public static class ShippingErrorCodes
 
     /// <summary>سیاست نرخ با این شناسه یافت نشد (برای شرط/پله).</summary>
     public const string RatePolicyConditionNotFound = "shipping.rate_policy.condition.not_found";
+
+    /// <summary>هزینهٔ بسته‌بندی نباید منفی باشد.</summary>
+    public const string PackagingFeeNegative = "shipping.packaging.fee.negative";
+
+    /// <summary>هزینهٔ بسته‌بندی خارج از محدودهٔ مجاز است.</summary>
+    public const string PackagingFeeOutOfRange = "shipping.packaging.fee.out_of_range";
+
+    /// <summary>کد ارز هزینهٔ بسته‌بندی الزامی است و باید کد سه‌حرفی باشد.</summary>
+    public const string PackagingCurrencyInvalid = "shipping.packaging.currency.invalid";
+
+    /// <summary>سیاست هزینهٔ بسته‌بندی با این شناسه یافت نشد.</summary>
+    public const string PackagingPolicyNotFound = "shipping.packaging.policy.not_found";
+
+    /// <summary>برای همین کد خدمت/گزینه/دامنه از قبل یک سیاست هزینهٔ بسته‌بندی وجود دارد.</summary>
+    public const string PackagingPolicyScopeDuplicate = "shipping.packaging.policy.scope_duplicate";
+
+    /// <summary>هویت روش (خدمت + گزینه) یک سیاست بسته‌بندی با مسیر/بدنهٔ درخواست یکسان نیست.</summary>
+    public const string PackagingPolicyOptionMismatch = "shipping.packaging.policy.option_mismatch";
+
+    /// <summary>
+    /// دو سیاست فعال بسته‌بندی روی همان هویت (خدمت/گزینه/دامنه) با هم مبهم‌اند؛ انتخاب سطر اول
+    /// یک تصمیم تجاری پنهان است، پس نوشتن/حل صریحاً رد می‌شود.
+    /// </summary>
+    public const string PackagingPolicyAmbiguous = "shipping.packaging.policy.ambiguous";
+
+    /// <summary>طرف پرداخت‌کنندهٔ حمل نامعتبر است (مقدار خارج از قرارداد پایدار).</summary>
+    public const string PackagingFreightPayerModeInvalid = "shipping.packaging.freight_payer_mode.invalid";
 }

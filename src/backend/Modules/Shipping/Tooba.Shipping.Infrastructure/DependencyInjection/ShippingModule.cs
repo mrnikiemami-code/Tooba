@@ -5,9 +5,12 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
 using Tooba.ModuleContracts;
+using Tooba.Shipping.Application.Packaging.Ports;
 using Tooba.Shipping.Application.Rates.Ports;
 using Tooba.Shipping.Application.Scheduling.Ports;
+using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
+using Tooba.Shipping.Infrastructure.Packaging;
 using Tooba.Shipping.Infrastructure.Persistence;
 using Tooba.Shipping.Infrastructure.Rates;
 using Tooba.Shipping.Infrastructure.Scheduling;
@@ -50,10 +53,18 @@ public sealed class ShippingModule : IToobaModule
         IHostEnvironment environment)
     {
         services.AddScoped<IShippingRateQuoteLookup, ShippingRateQuoteLookup>();
+        // Packaging fee is a Shipping-owned commercial fact kept SEPARATE from the freight charge:
+        // this read-only seam answers "what is the packaging component" without ever mutating a quote.
+        services.AddScoped<IShippingPackagingFeeLookup, ShippingPackagingFeeLookup>();
+        // Forward-looking read-only composition of the two existing components (carrier freight +
+        // packaging). It adds no new business rule and has no live Checkout consumer yet.
+        services.AddScoped<IShippingShipmentCostLookup, ShippingShipmentCostLookup>();
         // Admin authoring seam for Shipping-owned rate policies and coverage grants. Registered here
         // (module-owned DI) so no Host edit is needed for the data path; the HTTP layer stays in
         // Tooba.Shipping.Endpoints and is wired by the Host at 055.
         services.AddScoped<IShippingRateCoverageDirectory, ShippingRateCoverageDirectory>();
+        // Admin authoring seam for Shipping-owned packaging fee policies, separate from rate policies.
+        services.AddScoped<IShippingPackagingPolicyDirectory, ShippingPackagingPolicyDirectory>();
         // Admin authoring seam for the Shipping-owned weekly operating schedule (carrier pickup/dispatch
         // availability). Registered here (module-owned DI) so no Host edit is needed for the data path;
         // the HTTP layer stays in Tooba.Shipping.Endpoints.

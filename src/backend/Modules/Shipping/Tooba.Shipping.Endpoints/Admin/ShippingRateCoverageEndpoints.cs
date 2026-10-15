@@ -241,6 +241,7 @@ public static class ShippingEndpointModule
         var admin = app.MapGroup("/v1/admin");
         ShippingRateCoverageEndpoints.Map(admin);
         ShippingOperatingScheduleEndpoints.Map(admin);
+        ShippingPackagingPolicyEndpoints.Map(admin);
         return app;
     }
 }

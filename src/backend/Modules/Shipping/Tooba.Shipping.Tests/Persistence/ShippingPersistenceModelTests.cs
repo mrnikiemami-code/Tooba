@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Tooba.Persistence;
 using Tooba.Shipping.Contracts.Errors;
+using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Domain.Aggregates;
 using Tooba.Shipping.Domain.Scheduling;
@@ -65,6 +66,7 @@ public sealed class ShippingPersistenceModelTests
                 "operating_schedules",
                 "operating_windows",
                 "outbox_messages",
+                "packaging_policies",
                 "rate_policies",
             },
             model.GetEntityTypes().Select(x => x.GetTableName()).OrderBy(x => x, StringComparer.Ordinal).ToArray());
@@ -121,6 +123,20 @@ public sealed class ShippingPersistenceModelTests
         Assert.True(coverage.FindProperty(nameof(ShippingCoverageGrant.CityId))!.IsNullable);
         Assert.True(coverage.FindProperty(nameof(ShippingCoverageGrant.ServiceAreaId))!.IsNullable);
 
+        var packaging = Entity(model, "packaging_policies");
+        foreach (var required in new[]
+                 {
+                     nameof(ShippingPackagingPolicy.ServiceCode),
+                     nameof(ShippingPackagingPolicy.CountryId),
+                     nameof(ShippingPackagingPolicy.FeeAmount),
+                     nameof(ShippingPackagingPolicy.CurrencyCode),
+                     nameof(ShippingPackagingPolicy.FreightPayerMode),
+                     nameof(ShippingPackagingPolicy.IsActive),
+                 })
+        {
+            Assert.False(packaging.FindProperty(required)!.IsNullable, $"packaging_policies.{required} must be NOT NULL");
+        }
+
         Assert.Equal(ShippingRatePolicy.ServiceCodeMaxLength, rate.FindProperty(nameof(ShippingRatePolicy.ServiceCode))!.GetMaxLength());
         Assert.Equal(3, rate.FindProperty(nameof(ShippingRatePolicy.CurrencyCode))!.GetMaxLength());
         Assert.Equal(18, rate.FindProperty(nameof(ShippingRatePolicy.ChargeAmount))!.GetPrecision());
@@ -148,6 +164,13 @@ public sealed class ShippingPersistenceModelTests
     [InlineData("operating_windows", "ck_operating_windows_weekday_iso_range", "weekday >= 1 AND weekday <= 7")]
     [InlineData("operating_windows", "ck_operating_windows_range_half_open", "end_time > start_time")]
     [InlineData("operating_windows", "ck_operating_windows_capacity_positive", "capacity IS NULL OR (capacity > 0")]
+    [InlineData("packaging_policies", "ck_packaging_policies_fee_amount_non_negative", "fee_amount >= 0")]
+    [InlineData("packaging_policies", "ck_packaging_policies_fee_amount_within_max", "1000000000")]
+    [InlineData("packaging_policies", "ck_packaging_policies_service_code_canonical", "btrim(service_code)")]
+    [InlineData("packaging_policies", "ck_packaging_policies_option_code_canonical", "option_code IS NULL")]
+    [InlineData("packaging_policies", "ck_packaging_policies_currency_code_canonical", "char_length(currency_code) = 3")]
+    [InlineData("packaging_policies", "ck_packaging_policies_scope_coherent", "service_area_id IS NULL OR city_id IS NOT NULL")]
+    [InlineData("packaging_policies", "ck_packaging_policies_freight_payer_mode_known", "freight_payer_mode IN (0, 1)")]
     public void Check_constraints_mirror_the_aggregate_guards(string table, string constraintName, string predicateFragment)
     {
         using var context = CreateContext();
@@ -161,6 +184,7 @@ public sealed class ShippingPersistenceModelTests
     [InlineData("rate_policies", "ux_rate_policies_service_option_scope", new[] { "ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId", "MinWeightGrams", "MaxWeightGrams", "MinItemCount", "MaxItemCount" })]
     [InlineData("coverage_grants", "ux_coverage_grants_service_scope", new[] { "ServiceCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId" })]
     [InlineData("operating_schedules", "ux_operating_schedules_service_option", new[] { "ServiceCode", "OptionCode" })]
+    [InlineData("packaging_policies", "ux_packaging_policies_service_option_scope", new[] { "ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId" })]
     public void Identity_index_is_unique_over_nulls_not_distinct_columns(
         string table,
         string indexName,
@@ -204,6 +228,7 @@ public sealed class ShippingPersistenceModelTests
     [Theory]
     [InlineData("rate_policies", "ix_rate_policies_service_active", new[] { "ServiceCode", "IsActive" })]
     [InlineData("coverage_grants", "ix_coverage_grants_service_country_active", new[] { "ServiceCode", "CountryId", "IsActive" })]
+    [InlineData("packaging_policies", "ix_packaging_policies_service_active", new[] { "ServiceCode", "IsActive" })]
     [InlineData("outbox_messages", "ix_outbox_messages_pending", new[] { "OccurredAt" })]
     public void Quote_lookup_indexes_exist_and_are_not_unique(string table, string indexName, string[] columns)
     {
@@ -250,6 +275,7 @@ public sealed class ShippingPersistenceModelTests
         Assert.Contains("CREATE TABLE shipping.coverage_grants", script);
         Assert.Contains("CREATE TABLE shipping.operating_schedules", script);
         Assert.Contains("CREATE TABLE shipping.operating_windows", script);
+        Assert.Contains("CREATE TABLE shipping.packaging_policies", script);
         Assert.Contains("CREATE TABLE shipping.outbox_messages", script);
         Assert.Contains("__ef_migrations_history", script);
 
@@ -278,6 +304,14 @@ public sealed class ShippingPersistenceModelTests
                      "ux_rate_policies_service_option_scope",
                      "ux_coverage_grants_service_scope",
                      "ux_operating_schedules_service_option",
+                     "ux_packaging_policies_service_option_scope",
+                     "ck_packaging_policies_fee_amount_non_negative",
+                     "ck_packaging_policies_fee_amount_within_max",
+                     "ck_packaging_policies_service_code_canonical",
+                     "ck_packaging_policies_option_code_canonical",
+                     "ck_packaging_policies_currency_code_canonical",
+                     "ck_packaging_policies_scope_coherent",
+                     "ck_packaging_policies_freight_payer_mode_known",
                  })
         {
             Assert.Contains(constraint, script);
@@ -285,9 +319,9 @@ public sealed class ShippingPersistenceModelTests
 
         // Every scope/identity index must carry the modifier: the initial slice (rate + coverage = 2),
         // then one re-created rate index in each of the three additive migrations (option identity,
-        // tier) plus the schedule identity index. The drops do not emit the modifier, so this counts
-        // CREATE statements only.
-        Assert.Equal(5, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
+        // tier) plus the schedule identity index, plus the packaging policy identity index. The drops
+        // do not emit the modifier, so this counts CREATE statements only.
+        Assert.Equal(6, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
 
         // The only foreign key in the whole schema is the intra-module schedule -> windows cascade;
         // nothing points at another module's schema.
@@ -298,19 +332,20 @@ public sealed class ShippingPersistenceModelTests
     }
 
     [Fact]
-    public void Migrations_are_the_initial_slice_plus_three_additive_updates()
+    public void Migrations_are_the_initial_slice_plus_four_additive_updates()
     {
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        // Four migrations only: the initial slice and three additive changes (option identity,
-        // operating schedule, weight/count tiers). Asserting the exact count is what keeps the schema
-        // reviewable as a unit instead of an open-ended chain.
-        Assert.Equal(4, migrations.Length);
+        // Five migrations only: the initial slice and four additive changes (option identity,
+        // operating schedule, weight/count tiers, packaging policy). Asserting the exact count is what
+        // keeps the schema reviewable as a unit instead of an open-ended chain.
+        Assert.Equal(5, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
         Assert.EndsWith("_WeightAndCountRateTiers", migrations[3], StringComparison.Ordinal);
+        Assert.EndsWith("_ShippingPackagingPolicy", migrations[4], StringComparison.Ordinal);
     }
 
     [Fact]

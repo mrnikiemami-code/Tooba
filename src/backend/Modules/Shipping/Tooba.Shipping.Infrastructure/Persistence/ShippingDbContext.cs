@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
+using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Domain.Aggregates;
 using Tooba.Shipping.Domain.Scheduling;
 
@@ -48,6 +49,9 @@ public sealed class ShippingDbContext : DbContext
 
     /// <summary>برنامه‌های عملیاتی هفتگی ارسال (پنجره‌های محلی تحویل به حامل).</summary>
     public DbSet<ShippingOperatingSchedule> OperatingSchedules => Set<ShippingOperatingSchedule>();
+
+    /// <summary>سیاست‌های هزینهٔ بسته‌بندی، جدا از سیاست نرخ حمل.</summary>
+    public DbSet<ShippingPackagingPolicy> PackagingPolicies => Set<ShippingPackagingPolicy>();
 
     /// <summary>Outbox همین ماژول؛ پیروی از اسکلت متعارف DbContext ماژول‌ها، بدون هیچ مصرف فعلی.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -184,6 +188,70 @@ public sealed class ShippingDbContext : DbContext
             // narrow without introducing any cross-schema reference.
             entity.HasIndex(x => new { x.ServiceCode, x.CountryId, x.IsActive })
                 .HasDatabaseName("ix_coverage_grants_service_country_active");
+        });
+
+        modelBuilder.Entity<ShippingPackagingPolicy>(entity =>
+        {
+            entity.ToTable("packaging_policies", table =>
+            {
+                // The storage mirror of the aggregate guards: a row the domain refuses can never be
+                // persisted by raw SQL, an import, or a future sibling handler.
+                table.HasCheckConstraint(
+                    "ck_packaging_policies_fee_amount_non_negative",
+                    "fee_amount >= 0");
+                table.HasCheckConstraint(
+                    "ck_packaging_policies_fee_amount_within_max",
+                    $"fee_amount <= {ShippingPackagingPolicy.FeeAmountMaxValue.ToString(CultureInfo.InvariantCulture)}");
+                table.HasCheckConstraint(
+                    "ck_packaging_policies_service_code_canonical",
+                    "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+                table.HasCheckConstraint(
+                    "ck_packaging_policies_option_code_canonical",
+                    "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
+                table.HasCheckConstraint(
+                    "ck_packaging_policies_currency_code_canonical",
+                    "char_length(currency_code) = 3 AND currency_code = upper(currency_code)");
+                table.HasCheckConstraint(
+                    "ck_packaging_policies_scope_coherent",
+                    "service_area_id IS NULL OR city_id IS NOT NULL");
+                // The payer mode is a stable code, never free-form prose: the two documented values are
+                // the only ones a writer may persist, so no row can exist with no responsible party.
+                table.HasCheckConstraint(
+                    "ck_packaging_policies_freight_payer_mode_known",
+                    $"freight_payer_mode IN ({(int)ShippingFreightPayerMode.Prepaid}, {(int)ShippingFreightPayerMode.CollectOnDelivery})");
+            });
+            entity.HasKey(x => x.PackagingPolicyId);
+            entity.Property(x => x.PackagingPolicyId).ValueGeneratedNever();
+            entity.Property(x => x.ServiceCode)
+                .HasMaxLength(ShippingRatePolicy.ServiceCodeMaxLength)
+                .IsRequired();
+            entity.Property(x => x.OptionCode)
+                .HasMaxLength(ShippingRatePolicy.OptionCodeMaxLength);
+            entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.FeeAmount).HasPrecision(18, 2);
+            entity.Property(x => x.FreightPayerMode);
+
+            // One packaging policy per (service, option, exact scope). Scope is the four-level destination
+            // tuple, so a country-level policy is distinguished from a city-level one for the same service.
+            // NULLS NOT DISTINCT is required for this to be a real invariant: with PostgreSQL's default
+            // NULLS DISTINCT, two option-less rows for the same service would both be accepted and the
+            // resolver would then answer Ambiguous for every request. Requires PostgreSQL 15+.
+            entity.HasIndex(x => new
+                {
+                    x.ServiceCode,
+                    x.OptionCode,
+                    x.CountryId,
+                    x.AdministrativeAreaId,
+                    x.CityId,
+                    x.ServiceAreaId,
+                })
+                .IsUnique()
+                .AreNullsDistinct(false)
+                .HasDatabaseName("ux_packaging_policies_service_option_scope");
+
+            // Every packaging resolve filters by service code + active flag before evaluating scope.
+            entity.HasIndex(x => new { x.ServiceCode, x.IsActive })
+                .HasDatabaseName("ix_packaging_policies_service_active");
         });
 
         modelBuilder.Entity<ShippingOperatingSchedule>(entity =>
