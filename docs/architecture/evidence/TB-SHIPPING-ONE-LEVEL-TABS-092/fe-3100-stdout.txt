@@ -1,0 +1,46 @@
+   ▲ Next.js 15.5.23
+   - Local:        http://127.0.0.1:3100
+   - Network:      http://127.0.0.1:3100
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 7.1s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 638ms (120 modules)
+ ○ Compiling /api/auth/csrf ...
+ ✓ Compiled /api/auth/csrf in 1324ms (300 modules)
+ GET /api/auth/csrf 200 in 1882ms
+ ✓ Compiled /api/auth/login in 204ms (310 modules)
+ POST /api/auth/login 200 in 390ms
+ ✓ Compiled /api/auth/me in 53ms (312 modules)
+ GET /api/auth/me 200 in 151ms
+ GET /api/auth/csrf 200 in 39ms
+ POST /api/auth/login 200 in 121ms
+ ○ Compiling /admin/shipping-services ...
+ ✓ Compiled /admin/shipping-services in 17.3s (2210 modules)
+ GET /admin/shipping-services 200 in 18075ms
+ GET /admin/shipping-services 200 in 321ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 722ms (2259 modules)
+ GET /login 200 in 6076ms
+ GET /api/auth/me 401 in 97ms
+ GET /api/auth/csrf 200 in 46ms
+ POST /api/auth/login 200 in 99ms
+ GET /api/auth/me 200 in 32ms
+ GET /admin/shipping-services 200 in 151ms
+ GET /login 200 in 5213ms
+ GET /api/auth/me 200 in 55ms
+ GET /admin/shipping-services?tab=rates-coverage 200 in 56ms
+ GET /admin/shipping-services?tab=packaging-fare 200 in 50ms
+ GET /admin/shipping-services?tab=schedule-capacity 200 in 50ms
+ GET /admin/shipping-services?tab=cost-review 200 in 45ms
+ GET /admin/shipping-services 200 in 47ms
+ GET /admin/shipping-services?method=tipax%3Astandard 200 in 74ms
+ GET /admin/shipping-services?tab=rates-coverage&method=tipax%3Astandard 200 in 45ms
+ GET /admin/shipping-services?tab=packaging-fare&method=tipax%3Astandard 200 in 46ms
+ GET /admin/shipping-services?tab=schedule-capacity&method=tipax%3Astandard 200 in 47ms
+ GET /admin/shipping-services?tab=cost-review&method=tipax%3Astandard 200 in 42ms
+ GET /admin/shipping-services?method=tipax%3Astandard 200 in 75ms
+ GET /admin/shipping-services?method=tipax%3Astandard 200 in 45ms
+ GET /admin/shipping-services?tab=cost-review&method=tipax%3Astandard 200 in 48ms
+ GET /admin/shipping-services?tab=cost-review&method=tipax%3Astandard 200 in 67ms

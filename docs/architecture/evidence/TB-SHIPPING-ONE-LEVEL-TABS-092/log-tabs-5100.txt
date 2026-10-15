@@ -1,0 +1,25 @@
+﻿===== binding resolver (server-owned pair) =====
+GET binding/post:standard -> 200 :: {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"post:standard","serviceCode":"post","optionCode":"standard","isActive":true}
+GET binding/post:express -> 200 :: {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"post:express","serviceCode":"post","optionCode":"express","isActive":false}
+GET binding/snapp_courier -> 200 :: {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"snapp_courier","serviceCode":"snapp_courier","isActive":false}
+GET binding/unknown:code -> 200 :: {"gate":"Enabled","ready":true,"resolved":false,"methodCode":"","isActive":false}
+GET binding/post -> 200 :: {"gate":"Enabled","ready":true,"resolved":false,"methodCode":"","isActive":false}
+
+===== tab 2 rates / coverage (per bound service code) =====
+GET /v1/admin/shipping-services/post/rates -> 200 :: {"serviceCode":"post","ratePolicies":[{"ratePolicyId":"01a13ca4-4281-7000-bb23-76edd8f68818","serviceCode":"post","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","cityId":"68255340-c69f-5d20-bf33-e8e0b24edde9","level":"City","chargeAmount":71000.00,"currencyCode":"IRR","preparationDays":3,"leadDays":5,"freeAboveThreshold":950000.00,"
+GET /v1/admin/shipping-services/post/coverage-grants -> 405
+GET /v1/admin/shipping-services/tipax/rates -> 200 :: {"serviceCode":"tipax","ratePolicies":[{"ratePolicyId":"01a13d84-ca7f-7000-a59a-269a1c8ec13d","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":260000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":1,"isActive":true,"createdAt":"2026-10-15T03:04:35.199704+00:00",
+
+===== tab 3 packaging / payer =====
+GET packaging-policies -> 200 :: {"serviceCode":"tipax","packagingPolicies":[{"packagingPolicyId":"01a13e7c-cfde-7000-98cc-f79246cf97b0","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","feeAmount":15000.00,"currencyCode":"IRR","freightPayerMode":"Prepaid","isActive":false,"createdAt":"2026-10-15T07:35:29.502972+00:0
+
+===== tab 4 schedule / capacity =====
+GET operating-schedules -> 200 :: {"serviceCode":"tipax","schedules":[{"scheduleId":"01a13eaf-2710-7000-9147-ae5a28967251","serviceCode":"tipax","optionCode":"express","timeZoneId":"Asia/Tehran","isActive":false,"windows":[{"windowId":"01a13eb4-1b05-7000-92cf-6fa979e681ba","weekday":7,"startTime":"13:00:00","endTime":"14:00:00","capacity":25},{"windowId":"01a13eb4-1b05-7000-8f44-1288fb84ee5a","weekday":7,"startTime":"16:00:00","endTime":"17:00:00"}],"configuredCapacityTotal":25,"createdAt":"2026-10-15T08:30:28.624505+00:00","updatedAt":"2026-10-15T08:38:28.118099+00:00"},{"scheduleId":"01a13deb-cd7c-7000-a11e-641338237a1a","se
+===== tab 5 cost inspector (read-only operational quote; no order writes) =====
+POST operational-quote/post -> 200
+{"outcome":"Quoted","serviceCode":"post","optionCode":"standard","currencyCode":"IRR","freightAmount":120000.00,"packagingAmount":0,"totalServiceExpense":120000.00,"amountPayableAtCheckout":120000.00,"amountCollectOnDelivery":0,"freightPayerMode":"Prepaid","packagingPayer":"Checkout","carrierFreight":{"outcome":"Quoted","serviceCode":"post","chargeAmount":120000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":4,"reasonCode":"shipping.quote.quoted","optionCode":"standard","isQuoted":true},"packaging":{"isCharged":false,"feeAmount":0,"freightPayerMode":"Prepaid","packagingPayer":"Checkout","reasonCode":"shipping.packaging.not_configured"},"schedule":{"availability":"NotConfigured","reasonCode":"shipping.schedule.not_configured","capacityEnforcement":"NotEnforced","isConstraintSatisfied":true},"reasonCode":"shipping.operational_quote.quoted","isQuoted":true,"isOperationallyEligible":true}
+POST operational-quote/tipax -> 200
+{"outcome":"Quoted","serviceCode":"tipax","optionCode":"standard","currencyCode":"IRR","freightAmount":180000.00,"packagingAmount":0,"totalServiceExpense":180000.00,"amountPayableAtCheckout":180000.00,"amountCollectOnDelivery":0,"freightPayerMode":"Prepaid","packagingPayer":"Checkout","carrierFreight":{"outcome":"Quoted","serviceCode":"tipax","chargeAmount":180000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"reasonCode":"shipping.quote.quoted","optionCode":"standard","isQuoted":true},"packaging":{"isCharged":false,"feeAmount":0,"freightPayerMode":"Prepaid","packagingPayer":"Checkout","reasonCode":"shipping.packaging.not_configured"},"schedule":{"availability":"Unavailable","reasonCode":"shipping.schedule.outside_windows","timeZoneId":"Asia/Tehran","localWeekday":2,"localTime":"13:00:00","configuredCapacityTotal":25,"capacityEnforcement":"NotEnforced","isConstraintSatisfied":false},"reasonCode":"shipping.operational_quote.quoted","isQuoted":true,"isOperationallyEligible":false}
+
+===== unauthorized quote =====
+POST unauth -> 401

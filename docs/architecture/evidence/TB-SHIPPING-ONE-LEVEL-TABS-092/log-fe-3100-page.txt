@@ -1,0 +1,14 @@
+﻿GET /fa/admin/shipping-services -> 200 len=51196
+  contains [post:express]
+  contains [post:standard]
+  contains [tipax:express]
+  contains [snapp_courier]
+  contains [store_courier]
+  contains [in_person]
+GET /en/admin/shipping-services -> 200 len=51296
+  contains [post:express]
+  contains [post:standard]
+  contains [tipax:express]
+  contains [snapp_courier]
+  contains [store_courier]
+  contains [in_person]

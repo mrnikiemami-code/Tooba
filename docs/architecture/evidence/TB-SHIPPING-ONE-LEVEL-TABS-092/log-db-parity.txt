@@ -1,0 +1,16 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-092 — read-only DB parity + gate scoping (no writes)
+container=postgres-db  db=tooba_alpha  user=admin
+
+-- legacy catalog (public shipping services / options) --
+legacy_services=5
+legacy_options=4
+-- one-level catalog --
+one_level_methods=7
+one_level_translations=14
+method_codes=post:express,post:standard,tipax:express,tipax:standard,snapp_courier,store_courier,in_person
+inactive_methods=post:express,snapp_courier
+-- migration applied once --
+migration_rows=ERROR:  column "migrationid" does not exist LINE 1: ...*) from fulfillment.__ef_migrations_history where MigrationI...                                                              ^ HINT:  Perhaps you meant to reference the column "__ef_migrations_history.migration_id".
+-- historical orders / fulfillments untouched --
+orders=ERROR:  syntax error at or near "order" LINE 1: select count(*) from order.orders;                              ^
+fulfillments=ERROR:  syntax error at or near "order" LINE 1: select count(*) from order.fulfillments;                              ^

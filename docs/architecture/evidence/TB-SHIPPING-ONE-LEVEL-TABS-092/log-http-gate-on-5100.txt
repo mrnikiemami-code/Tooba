@@ -1,0 +1,13 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-092 — real authenticated reads on task-scoped current-code Host :5100
+Host :5100 = current code (isolated build) + REAL Development config (dev-singlestore/store-alpha/tenant-alpha -> tooba_alpha)
+Ephemeral gate: Tooba__ShippingOneLevelCatalog__Enabled=true (process env only, NOT committed). Background jobs disabled.
+
+===== unauthorized (no credential) =====
+GET /v1/admin/shipping-services/shipping-methods/one-level -> 401
+GET /v1/admin/shipping-services/shipping-methods/one-level/post:standard/binding -> 401
+
+===== authorized (dev admin actor) — gate ON =====
+GET /v1/admin/dev-context -> 200
+{"actorUserId":"01a036c2-970e-7000-8eb7-94bf5cc2d8db","actorLabel":"admin-actor@tooba.local","tenantId":"store-alpha"}
+GET /v1/admin/shipping-services/shipping-methods/one-level -> 200
+{"gate":"Enabled","ready":true,"methods":[{"methodCode":"post:express","name":"پیشتاز","isActive":false,"sortOrder":10},{"methodCode":"post:standard","name":"معمولی","isActive":true,"sortOrder":11},{"methodCode":"tipax:express","name":"پیشتاز","isActive":true,"sortOrder":20},{"methodCode":"tipax:standard","name":"معمولی","isActive":true,"sortOrder":21},{"methodCode":"snapp_courier","name":"اسنپ / پیک آنلاین","isActive":false,"sortOrder":30},{"methodCode":"store_courier","name":"پیک فروشگاه","isActive":true,"sortOrder":40},{"methodCode":"in_person","name":"تحویل حضوری","isActive":true,"sortOrder":50}]}
