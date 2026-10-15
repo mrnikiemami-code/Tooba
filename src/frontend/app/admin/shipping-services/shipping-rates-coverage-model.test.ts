@@ -10,12 +10,16 @@ import {
   clearDependents,
   coverageStateFa,
   formatFreeAboveThreshold,
+  groupRatesByOption,
   rateFormFromPolicy,
   rateFormToPayload,
+  rateOptionKey,
+  rateOptionLabelFa,
   scopeLevelOf,
   scopeSummary,
   summarizeRatesCoverage,
   validateDestinationSelection,
+  validateRateOption,
   validateShippingRateForm,
   EMPTY_DESTINATION_SELECTION,
 } from "./shipping-rates-coverage-model.ts";
@@ -65,6 +69,7 @@ test("policy round-trips into the edit form without inventing values", () => {
   const form = rateFormFromPolicy({
     ratePolicyId: "r1",
     serviceCode: "tooba-post",
+    optionCode: null,
     countryId: "11111111-1111-1111-1111-111111111111",
     administrativeAreaId: null,
     cityId: null,
@@ -223,4 +228,61 @@ test("changing a parent clears dependent selections so no inconsistent id surviv
     cityId: "ci1",
     serviceAreaId: null,
   });
+});
+
+/* TB-SHIPPING-MVP-FINAL-CLOSURE-070 - option dimension of a rate policy. */
+
+const tipaxOptions = [
+  { code: "standard", labelFa: "استاندارد" },
+  { code: "express", labelFa: "پیشتاز" },
+];
+
+test("service-level policy renders as the documented fallback, never as an option", () => {
+  assert.equal(rateOptionLabelFa(null, tipaxOptions), "سطح خدمت (پیش‌فرض خدمت)");
+  assert.equal(rateOptionLabelFa(null, []), "سطح خدمت (پیش‌فرض خدمت)");
+  assert.equal(rateOptionKey(null), "");
+});
+
+test("an option policy shows its own immutable identity and never a fabricated label", () => {
+  assert.equal(rateOptionLabelFa("express", tipaxOptions), "پیشتاز");
+  assert.equal(rateOptionKey("express"), "express");
+  // a stored code the current tree no longer lists stays visible as the raw code
+  assert.equal(rateOptionLabelFa("drone", tipaxOptions), "drone");
+});
+
+test("only options really belonging to the service are accepted", () => {
+  assert.deepEqual(validateRateOption(null, tipaxOptions), []);
+  assert.deepEqual(validateRateOption("standard", tipaxOptions), []);
+  assert.equal(validateRateOption("drone", tipaxOptions).length, 1);
+  assert.equal(validateRateOption("standard", []).length, 1);
+});
+
+test("rates group by real option order with the service-level group first", () => {
+  const groups = groupRatesByOption(
+    [
+      { optionCode: "express", id: "e" },
+      { optionCode: null, id: "s" },
+      { optionCode: "standard", id: "n" },
+    ],
+    tipaxOptions,
+  );
+  assert.deepEqual(groups.map((g) => g.optionCode), [null, "standard", "express"]);
+  assert.deepEqual(groups.map((g) => g.rates.map((r) => r.id)), [["s"], ["n"], ["e"]]);
+});
+
+test("an orphaned option code keeps its own group instead of being merged or dropped", () => {
+  const groups = groupRatesByOption([{ optionCode: null, id: "s" }, { optionCode: "drone", id: "d" }], tipaxOptions);
+  assert.deepEqual(groups.map((g) => g.optionCode), [null, "drone"]);
+});
+
+test("no cross-option leakage: two options at one scope stay two separate rows", () => {
+  const groups = groupRatesByOption(
+    [
+      { optionCode: "standard", id: "n" },
+      { optionCode: "express", id: "e" },
+    ],
+    tipaxOptions,
+  );
+  assert.equal(groups.length, 2);
+  assert.equal(groups.flatMap((g) => g.rates).length, 2);
 });

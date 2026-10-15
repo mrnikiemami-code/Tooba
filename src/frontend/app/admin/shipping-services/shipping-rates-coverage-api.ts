@@ -16,6 +16,12 @@ export type ShippingDestinationScopeWrite = {
 
 export type ShippingRatePolicyWriteRequest = {
   scope: ShippingDestinationScopeWrite;
+  /**
+   * TB-SHIPPING-MVP-FINAL-CLOSURE-070 — the Fulfillment option this rate prices, or `null` for the
+   * service-level policy that applies to single-option/no-option services and acts as the fallback.
+   * The value is never derived from the service code; it is chosen from the real service tree.
+   */
+  optionCode?: string | null;
   chargeAmount: number;
   currencyCode: string;
   preparationDays: number;
@@ -30,6 +36,8 @@ export type ShippingCoverageGrantWriteRequest = {
 export type ShippingRatePolicyAdminItem = {
   ratePolicyId: string;
   serviceCode: string;
+  /** Option this policy prices; `null` means the service-level fallback policy. */
+  optionCode: string | null;
   countryId: string;
   administrativeAreaId: string | null;
   cityId: string | null;
@@ -93,6 +101,7 @@ function mapRate(raw: unknown): ShippingRatePolicyAdminItem | null {
   return {
     ratePolicyId,
     serviceCode,
+    optionCode: optionalText(pick(row, "optionCode", "OptionCode")),
     countryId,
     administrativeAreaId: optionalText(pick(row, "administrativeAreaId", "AdministrativeAreaId")),
     cityId: optionalText(pick(row, "cityId", "CityId")),
@@ -219,7 +228,7 @@ export function createAdminShippingRate(
   return sendJson(
     `${base(serviceCode)}/rates`,
     "POST",
-    { serviceCode, scope: body.scope, chargeAmount: body.chargeAmount, currencyCode: body.currencyCode, preparationDays: body.preparationDays, leadDays: body.leadDays, freeAboveThreshold: body.freeAboveThreshold ?? null },
+    { serviceCode, optionCode: body.optionCode ?? null, scope: body.scope, chargeAmount: body.chargeAmount, currencyCode: body.currencyCode, preparationDays: body.preparationDays, leadDays: body.leadDays, freeAboveThreshold: body.freeAboveThreshold ?? null },
     "shipping_rate.create_failed",
     mapRate,
   );
@@ -234,7 +243,7 @@ export function updateAdminShippingRate(
   return sendJson(
     `${base(serviceCode)}/rates/${encodeURIComponent(ratePolicyId)}`,
     "PUT",
-    { serviceCode, scope: body.scope, chargeAmount: body.chargeAmount, currencyCode: body.currencyCode, preparationDays: body.preparationDays, leadDays: body.leadDays, freeAboveThreshold: body.freeAboveThreshold ?? null },
+    { serviceCode, optionCode: body.optionCode ?? null, scope: body.scope, chargeAmount: body.chargeAmount, currencyCode: body.currencyCode, preparationDays: body.preparationDays, leadDays: body.leadDays, freeAboveThreshold: body.freeAboveThreshold ?? null },
     "shipping_rate.update_failed",
     mapRate,
   );

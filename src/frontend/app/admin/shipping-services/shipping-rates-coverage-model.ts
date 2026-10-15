@@ -158,8 +158,7 @@ export type RatesCoverageSummary = {
 };
 
 /** خلاصهٔ شمارشی نما برای هدر بخش. */
-export function summarizeRatesCoverage(view: ShippingRatesAndCoverageView | null): RatesCoverageSummary {
-  const rates = view?.ratePolicies ?? [];
+export function summarizeRatesCoverage(view: ShippingRatesAndCoverageView | null): RatesCoverageSummary {  const rates = view?.ratePolicies ?? [];
   const grants = view?.coverageGrants ?? [];
   const activeGrants = grants.filter((g) => g.isActive).length;
   return {
@@ -280,4 +279,95 @@ export function clearDependents(
   }
   return { ...selection, serviceAreaId: null };
 }
+
+/* ---------------------------------------------------------------------------------------------
+ * TB-SHIPPING-MVP-FINAL-CLOSURE-070 — option dimension of a rate policy.
+ *
+ * A multi-option service (for example tipax with `standard` / `express`) needs one rate per
+ * option. The option list is never invented here: it comes from the real Fulfillment service
+ * tree (`GET /v1/admin/shipping-methods`) and only the codes that tree returns are offered.
+ * The empty selection means the service-level policy — the documented fallback that already
+ * applies to single-option and no-option services.
+ * ------------------------------------------------------------------------------------------- */
+
+/** One selectable option of a shipping service, exactly as the Fulfillment service tree returns it. */
+export type ShippingServiceOptionChoice = {
+  code: string;
+  labelFa: string;
+};
+
+/** مقدار نگه‌دارندهٔ سیاست سطح خدمت در `<select>`؛ معادل `optionCode = null` روی سیم. */
+export const SERVICE_LEVEL_OPTION_VALUE = "";
+
+/** رشتهٔ قابل استفاده در کلید React برای یک سیاست (سطح خدمت مقدار تهی می‌گیرد). */
+export function rateOptionKey(optionCode: string | null): string {
+  return optionCode ?? SERVICE_LEVEL_OPTION_VALUE;
+}
+
+/**
+ * برچسب نمایش یک سیاست: گزینهٔ شناخته‌شده با نام فارسی خودش، سیاست سطح خدمت با متن صریح
+ * «سطح خدمت»، و یک کد ناشناخته با خود کد خام نمایش داده می‌شود تا هویت تغییرناپذیرش پنهان نماند.
+ */
+export function rateOptionLabelFa(
+  optionCode: string | null,
+  options: ShippingServiceOptionChoice[],
+): string {
+  if (!optionCode) return "سطح خدمت (پیش‌فرض خدمت)";
+  const found = options.find((option) => option.code === optionCode);
+  return found && found.labelFa ? found.labelFa : optionCode;
+}
+
+/** متن اعلام اینکه یک نرخ روی سطح خدمت است و نه روی یک گزینه. */
+export const SERVICE_LEVEL_RATE_FA = "سطح خدمت — برای همهٔ گزینه‌های این خدمت اعمال می‌شود تا زمانی که نرخ اختصاصی گزینه موجود باشد.";
+
+/**
+ * آیا گزینهٔ انتخابی واقعاً متعلق به همین خدمت است؟ کد ناشناخته پیش از هر فراخوانی API رد
+ * می‌شود تا `shipping.service_option.unknown` هرگز از سمت مرورگر ساخته نشود.
+ */
+export function validateRateOption(
+  optionCode: string | null,
+  options: ShippingServiceOptionChoice[],
+): string[] {
+  if (!optionCode) return [];
+  if (options.length === 0) {
+    return ["این خدمت هیچ گزینه‌ای ندارد؛ نرخ باید روی سطح خدمت ثبت شود."];
+  }
+  if (!options.some((option) => option.code === optionCode)) {
+    return ["گزینهٔ انتخابی به این خدمت تعلق ندارد (shipping.service_option.unknown)."];
+  }
+  return [];
+}
+
+/**
+ * نرخ‌های یک خدمت را بر اساس گزینه گروه‌بندی می‌کند: ابتدا سیاست‌های سطح خدمت، سپس هر گزینه
+ * بهترتیب فهرست واقعی سرویس. هیچ نرخی با حدس جابجا نمی‌شود.
+ */
+export function groupRatesByOption<T extends { optionCode: string | null }>(
+  rates: T[],
+  options: ShippingServiceOptionChoice[],
+): Array<{ optionCode: string | null; rates: T[] }> {
+  const groups: Array<{ optionCode: string | null; rates: T[] }> = [
+    { optionCode: null, rates: rates.filter((rate) => !rate.optionCode) },
+  ];
+  for (const option of options) {
+    const matching = rates.filter((rate) => rate.optionCode === option.code);
+    if (matching.length > 0) groups.push({ optionCode: option.code, rates: matching });
+  }
+  const known = new Set(options.map((option) => option.code));
+  const orphaned = rates.filter((rate) => rate.optionCode && !known.has(rate.optionCode));
+  if (orphaned.length > 0) {
+    const seen = new Set<string>();
+    for (const rate of orphaned) {
+      const code = rate.optionCode as string;
+      if (seen.has(code)) continue;
+      seen.add(code);
+      groups.push({ optionCode: code, rates: rates.filter((r) => r.optionCode === code) });
+    }
+  }
+  return groups.filter((group) => group.rates.length > 0);
+}
+
+/** برچسب فارسی خطای گزینهٔ ناشناخته که بک‌اند نیز با همان کد ثابت برمی‌گرداند. */
+export const SERVICE_OPTION_UNKNOWN_CODE = "shipping.service_option.unknown";
+
 

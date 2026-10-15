@@ -25,17 +25,25 @@ import {
   coverageStateFa,
   formatCharge,
   formatFreeAboveThreshold,
+  groupRatesByOption,
   rateFormFromPolicy,
   rateFormToPayload,
+  rateOptionKey,
+  rateOptionLabelFa,
   scopeSummary,
+  SERVICE_LEVEL_RATE_FA,
+  SERVICE_OPTION_UNKNOWN_CODE,
   summarizeRatesCoverage,
+  validateRateOption,
   validateShippingRateForm,
   buildScopeWrite,
   validateDestinationSelection,
   EMPTY_DESTINATION_SELECTION,
   type DestinationSelection,
   type ShippingRateFormValues,
+  type ShippingServiceOptionChoice,
 } from "./shipping-rates-coverage-model.ts";
+import { loadShippingMethodTree } from "../shipping-services-api.ts";
 import { ShippingDestinationPicker } from "./shipping-destination-picker.tsx";
 
 type Props = {
@@ -61,6 +69,11 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
   // مشکل دارد (پیش از این هر دو زیر فهرست دامنه نمایش داده می‌شد).
   const [createFormIssues, setCreateFormIssues] = useState<string[]>([]);
   const [createRateForm, setCreateRateForm] = useState<ShippingRateFormValues>(rateFormFromPolicy(null));
+  // گزینه‌های واقعی همین خدمت از درخت سرویس Fulfillment؛ هیچ گزینه‌ای اختراع نمی‌شود.
+  const [options, setOptions] = useState<ShippingServiceOptionChoice[]>([]);
+  // گزینهٔ نرخ در حال ایجاد: تهی یعنی سیاست سطح خدمت (رفتار فعلی تک‌گزینه‌ای‌ها دست‌نخورده می‌ماند).
+  const [createOptionCode, setCreateOptionCode] = useState<string>("");
+  const [createOptionIssues, setCreateOptionIssues] = useState<string[]>([]);
 
   const refresh = useCallback(async () => {
     if (!serviceCode) return;
@@ -77,6 +90,21 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
     setMessage(undefined);
   }, [serviceCode]);
 
+  // فهرست گزینه‌ها از همان درخت سرویس مجاز admin خوانده می‌شود؛ نبود نتیجه یعنی خدمت بدون گزینه.
+  const loadOptions = useCallback(async () => {
+    const tree = await loadShippingMethodTree();
+    if (tree.state !== "ok" || !tree.data) {
+      setOptions([]);
+      return;
+    }
+    const mine = tree.data.find((item) => item.code === serviceCode);
+    setOptions(
+      (mine?.options ?? [])
+        .filter((option) => option.code.trim().length > 0)
+        .map((option) => ({ code: option.code, labelFa: option.labelFa || option.name || option.code })),
+    );
+  }, [serviceCode]);
+
   useEffect(() => {
     if (open) {
       setEditingId(null);
@@ -85,24 +113,31 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
       setSelection(EMPTY_DESTINATION_SELECTION);
       setScopeIssues([]);
       setCreateRateForm(rateFormFromPolicy(null));
+      setCreateOptionCode("");
+      setCreateOptionIssues([]);
       void refresh();
+      void loadOptions();
     }
-  }, [open, refresh]);
+  }, [open, refresh, loadOptions]);
 
   /** ایجاد نرخ جدید روی مسیر واقعی؛ دامنه با شناسه‌های Geography و پس از اعتبارسنجی محلی. */
   async function submitCreateRate() {
     const scopeProblems = validateDestinationSelection(selection);
     const formProblems = validateShippingRateForm(createRateForm).map((issue) => issue.messageFa);
-    if (scopeProblems.length > 0 || formProblems.length > 0) {
+    const optionProblems = validateRateOption(createOptionCode || null, options);
+    if (scopeProblems.length > 0 || formProblems.length > 0 || optionProblems.length > 0) {
       setScopeIssues(scopeProblems);
       setCreateFormIssues(formProblems);
+      setCreateOptionIssues(optionProblems);
       return;
     }
     setScopeIssues([]);
     setCreateFormIssues([]);
+    setCreateOptionIssues([]);
     setBusy(true);
     const result = await createAdminShippingRate(serviceCode, {
       scope: buildScopeWrite(selection),
+      optionCode: createOptionCode || null,
       ...rateFormToPayload(createRateForm),
     });
     setBusy(false);
@@ -110,7 +145,10 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
       onNotice({ tone: "error", text: errorFa(result.message, "ایجاد نرخ ناموفق بود.") });
       return;
     }
-    onNotice({ tone: "success", text: `نرخ «${scopeSummary(result.data!)}» ایجاد شد.` });
+    onNotice({
+      tone: "success",
+      text: `نرخ «${rateOptionLabelFa(result.data!.optionCode, options)} · ${scopeSummary(result.data!)}» ایجاد شد.`,
+    });
     setCreateRateForm(rateFormFromPolicy(null));
     await refresh();
   }
@@ -161,6 +199,9 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
         cityId: policy.cityId,
         serviceAreaId: policy.serviceAreaId,
       },
+      // هویت گزینه نیز تغییرناپذیر است: همان مقدار ذخیره‌شده بازگردانده می‌شود تا نرخ هرگز
+      // در سکوت به گزینهٔ دیگری منتقل نشود.
+      optionCode: policy.optionCode,
       ...payload,
     });
     setBusy(false);
@@ -169,7 +210,10 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
       return;
     }
     setEditingId(null);
-    onNotice({ tone: "success", text: `نرخ «${scopeSummary(result.data!)}» ذخیره شد.` });
+    onNotice({
+      tone: "success",
+      text: `نرخ «${rateOptionLabelFa(result.data!.optionCode, options)} · ${scopeSummary(result.data!)}» ذخیره شد.`,
+    });
     await refresh();
   }
 
@@ -238,27 +282,45 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
           <>
             <section className="space-y-2">
               <h3 className="text-sm font-bold text-gray-800">سیاست‌های نرخ</h3>
+              {options.length > 0 && (
+                <p className="rounded-lg bg-gray-50 p-3 text-[11px] text-gray-600" data-testid="shipping-rate-service-level-note">
+                  {SERVICE_LEVEL_RATE_FA}
+                </p>
+              )}
               {view && view.ratePolicies.length === 0 && (
                 <p className="text-xs text-gray-500">هیچ سیاست نرخی ثبت نشده است.</p>
               )}
-              {view?.ratePolicies.map((policy) => (
-                <div
-                  key={policy.ratePolicyId}
-                  className="space-y-2 rounded-lg border border-gray-200 p-3"
-                  data-testid={`shipping-rate-row-${policy.ratePolicyId}`}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-700">
-                    <span>{scopeSummary(policy)}</span>
-                    <span className="font-bold">{formatCharge(policy.chargeAmount, policy.currencyCode)}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-3 text-[11px] text-gray-600">
-                    <span>آماده‌سازی: {policy.preparationDays.toLocaleString("fa-IR")} روز</span>
-                    <span>حمل: {policy.leadDays.toLocaleString("fa-IR")} روز</span>
-                    <span>ارسال رایگان از: {formatFreeAboveThreshold(policy.freeAboveThreshold, policy.currencyCode)}</span>
-                    <span className={policy.isActive ? "font-bold text-emerald-700" : "font-bold text-gray-500"}>
-                      {policy.isActive ? "فعال" : "غیرفعال"}
-                    </span>
-                  </div>
+              {groupRatesByOption(view?.ratePolicies ?? [], options).map((group) => (
+                <div key={rateOptionKey(group.optionCode)} className="space-y-2">
+                  {options.length > 0 && (
+                    <p
+                      className="text-[11px] font-bold text-gray-700"
+                      data-testid={`shipping-rate-option-group-${rateOptionKey(group.optionCode) || "service"}`}
+                    >
+                      گزینه: {rateOptionLabelFa(group.optionCode, options)}
+                    </p>
+                  )}
+                  {group.rates.map((policy) => (
+                    <div
+                      key={policy.ratePolicyId}
+                      className="space-y-2 rounded-lg border border-gray-200 p-3"
+                      data-testid={`shipping-rate-row-${policy.ratePolicyId}`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-700">
+                        <span>{scopeSummary(policy)}</span>
+                        <span className="font-bold">{formatCharge(policy.chargeAmount, policy.currencyCode)}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-3 text-[11px] text-gray-600">
+                        <span data-testid={`shipping-rate-option-${policy.ratePolicyId}`}>
+                          گزینه: {rateOptionLabelFa(policy.optionCode, options)}
+                        </span>
+                        <span>آماده‌سازی: {policy.preparationDays.toLocaleString("fa-IR")} روز</span>
+                        <span>حمل: {policy.leadDays.toLocaleString("fa-IR")} روز</span>
+                        <span>ارسال رایگان از: {formatFreeAboveThreshold(policy.freeAboveThreshold, policy.currencyCode)}</span>
+                        <span className={policy.isActive ? "font-bold text-emerald-700" : "font-bold text-gray-500"}>
+                          {policy.isActive ? "فعال" : "غیرفعال"}
+                        </span>
+                      </div>
 
                   {editingId === policy.ratePolicyId ? (
                     <div className="grid grid-cols-2 gap-2">
@@ -358,6 +420,8 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
                       </>
                     )}
                   </div>
+                    </div>
+                  ))}
                 </div>
               ))}
             </section>
@@ -399,6 +463,31 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
               {scopeIssues.length > 0 && (
                 <ul className="list-inside list-disc text-[11px] text-red-600" data-testid="shipping-destination-issues">
                   {scopeIssues.map((issue) => <li key={issue}>{issue}</li>)}
+                </ul>
+              )}
+
+              {options.length > 0 && (
+                <label className="block text-[11px] text-gray-600">
+                  گزینهٔ خدمت (برای خدمات چندگزینه‌ای)
+                  <select
+                    className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-xs"
+                    value={createOptionCode}
+                    onChange={(e) => { setCreateOptionCode(e.target.value); setCreateOptionIssues([]); }}
+                    disabled={busy}
+                    data-testid="shipping-create-rate-option"
+                  >
+                    <option value="">سطح خدمت (پیش‌فرض خدمت)</option>
+                    {options.map((option) => (
+                      <option key={option.code} value={option.code}>{option.labelFa}</option>
+                    ))}
+                  </select>
+                  <span className="mt-1 block text-[10px] text-gray-500">{SERVICE_LEVEL_RATE_FA}</span>
+                </label>
+              )}
+
+              {createOptionIssues.length > 0 && (
+                <ul className="list-inside list-disc text-[11px] text-red-600" data-testid="shipping-create-rate-option-issues">
+                  {createOptionIssues.map((issue) => <li key={issue}>{issue}</li>)}
                 </ul>
               )}
 
@@ -498,5 +587,6 @@ function errorFa(code: string | undefined, fallback: string): string {
   if (code === "shipping.coverage_grant.not_found") return "مجوز پوشش پیدا نشد.";
   if (code === "shipping.rate_policy.scope_duplicate") return "برای این دامنه از قبل نرخی ثبت شده است.";
   if (code === "shipping.coverage_grant.scope_duplicate") return "برای این دامنه از قبل مجوز پوشش ثبت شده است.";
+  if (code === SERVICE_OPTION_UNKNOWN_CODE) return "گزینهٔ انتخابی برای این خدمت شناخته‌شده نیست.";
   return fallback;
 }
