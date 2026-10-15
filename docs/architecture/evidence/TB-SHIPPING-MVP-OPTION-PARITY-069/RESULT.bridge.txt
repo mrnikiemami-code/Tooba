@@ -1,0 +1,149 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-OPTION-PARITY-069
+Parent-Task: TB-SHIPPING-MVP-SHADOW-PARITY-068
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE
+Mode: BOUNDED_OPTION_LEVEL_RATE_PARITY_AND_DESTINATION_REPAIR
+Bridge-Task-Row: 2babab2d-f070-4ac6-943f-502c4b23faf3
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 59c12a70f66393305f551e6bdaae358430e5713c
+Base-SHA: 59c12a70f66393305f551e6bdaae358430e5713c
+Code-SHA: 1bb91ddaa06ffac050d0857d29f7e387bf14653d
+Evidence-SHA: <TO-BE-FILLED>
+automaticNextImplementationTask: NONE
+
+ROOT CAUSE (fixed): a Shipping rate policy was identified only by serviceCode, while the storefront
+exposes methods as {serviceCode}:{optionCode}. A service with two options at two legacy prices therefore
+had no reachable parity path: 068 measured tipax:standard 180000 matching a single service-level tipax
+policy, and tipax:express 260000 structurally unreachable -> AmountMismatch. This was a policy-identity
+defect, not a data gap.
+
+CANONICAL IDENTITY + PRECEDENCE: policy identity is now (serviceCode, optionCode?, destination scope);
+a null optionCode is the service-level policy and keeps the exact meaning it had for every pre-existing
+row. Resolution order is deterministic and total: (1) option tier first - if any active, covering,
+option-matching policy is option-specific, resolution happens inside that tier alone; (2) deepest
+destination scope inside the winning tier; (3) two equally specific rows in the winning tier remain
+ScopeConflict (never "first row wins"). A policy for one option can never price another option, and a
+request with no optionCode never matches an option-specific policy, so every pre-069 caller is
+byte-for-byte unchanged. methodCode is never equated with serviceCode anywhere: the projection carries
+OptionCode as its own field (StorefrontShippingMethodView.OptionCode), the shadow candidate carries it
+separately, and the observer passes ServiceCode + OptionCode to ShippingQuoteRequest.ShippingQuoteOptionCode.
+COVERAGE SEMANTICS PRESERVED (explicit): coverage stays a service+destination grant; one grant authorizes
+the whole service at that destination including all of its options. Options are a price dimension, not an
+authorization dimension; per-option grants would silently shrink already-authorized coverage. Coverage is
+NOT widened by option identity and the engine stays fail-closed (NotCovered without a grant).
+
+MIGRATION AND BACKUP: 20261015030159_OptionLevelRatePolicy, additive only - ADD COLUMN
+shipping.rate_policies.option_code varchar(64) NULL; DROP INDEX ux_rate_policies_service_scope; CREATE
+UNIQUE INDEX ux_rate_policies_service_option_scope (service_code, option_code, country_id,
+administrative_area_id, city_id, service_area_id) NULLS NOT DISTINCT; ADD CHECK
+ck_rate_policies_option_code_canonical (NULL or trimmed non-empty). Down() drops column/constraint/index
+and restores the original index, so schema rollback is one migration revert. Applied with the module-owned
+design-time path (`dotnet ef database update` scoped to Tooba.Shipping.Infrastructure) - NOT the CLI
+runner, which would have applied every module. No row was rewritten: all 7 pre-existing rows kept
+option_code NULL and identical behaviour (proved by the row dump in log-target-proof.txt). Bounded
+rollback ledger for the data is the tipax pre-state captured before any write plus the deactivate/reactivate
+PATCH operations below; no full clone, no scratch database.
+
+EXACT CHANGED PATHS (code, Code-SHA 1bb91ddaa06ffac050d0857d29f7e387bf14653d):
+- src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Rates/ShippingRatePolicyContracts.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Admin/ShippingAdminContracts.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Errors/ShippingErrorCodes.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Domain/Aggregates/ShippingRatePolicy.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Domain/Rates/ShippingRatePolicyEngine.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Application/Rates/Ports/IShippingMethodOptionValidator.cs (new)
+- src/backend/Modules/Shipping/Tooba.Shipping.Application/Rates/Commands/ShippingRateCoverageCommands.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Application/Validation/ShippingAdminValidators.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Rates/FulfillmentShippingMethodOptionValidator.cs (new)
+- src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Rates/ShippingRateCoverageDirectory.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/ShippingDbContext.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261015030159_OptionLevelRatePolicy.cs (+Designer, +ModelSnapshot)
+- src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/DependencyInjection/ShippingModule.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Tooba.Shipping.Infrastructure.csproj (one new Contracts-only reference: Tooba.Fulfillment.Contracts)
+- src/backend/Modules/Shipping/Tooba.Shipping.Tests/Rates/ShippingOptionLevelRatePolicyTests.cs (new)
+- src/backend/Modules/Shipping/Tooba.Shipping.Tests/Persistence/ShippingPersistenceModelTests.cs
+- src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/ShippingDestinationScopeValidationTests.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Models/StorefrontOrderModels.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/Queries/ProjectStorefrontShipping/ProjectStorefrontShippingQuery.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingShadowObservation.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateShadowContracts.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateShadowComparer.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateShadowEvaluator.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingShadowObserver.cs
+No Host code/config change. No Checkout change. No customer-facing amount change.
+
+REAL PER-METHOD PARITY MATRIX (Development tooba_alpha, alborz area scope, validated Geography ids,
+explicit numbers from the structured observer log - log-observer-069.txt):
+  post          option=standard  legacy=120000  shadow=120000.00  outcome=Match  reason=shipping.quote.quoted
+  tipax         option=standard  legacy=180000  shadow=180000.00  outcome=Match  reason=shipping.quote.quoted
+  tipax         option=express   legacy=260000  shadow=260000.00  outcome=Match  reason=shipping.quote.quoted
+  store_courier option=none      legacy=75000   shadow=75000.00   outcome=Match  reason=shipping.quote.quoted
+  in_person     option=none      legacy=0       shadow=0.00       outcome=Match  reason=shipping.quote.quoted
+  summary line: "observation Observed candidates=5 outcomes=Match" - a single distinct outcome, no
+  AmountMismatch anywhere. Cross-method leakage check: standard priced 180000 and express 260000 from rows
+  at the same scope, so neither option borrowed the other's rate.
+VALID/INVALID OPTION GUARDS (live HTTP, log-option-fixtures.txt):
+  POST /v1/admin/shipping-services/tipax/rates body optionCode=ghost  -> 400 shipping.service_option.unknown
+  POST /v1/admin/shipping-services/ghost_service/rates               -> 400 shipping.service_code.unknown
+  Both are produced by the EXISTING Fulfillment Contracts seam (IShippingCatalogReader via the new
+  Shipping-owned adapter); no option name is hardcoded and no cross-module EF reference was added.
+  Fulfillment.Contracts does not reference Shipping, so the new Infrastructure -> Fulfillment.Contracts
+  edge stays acyclic; no Fulfillment/Geography/Host project gained a reference.
+ADMIN AUTHORING: two tipax option rates were authored and edited live through the source-owned API at the
+same scope (standard 180000 lead3, express 260000 lead1) - which also proves the new unique index accepts
+separate options at one scope; the 068 generic tipax area row
+(01a13d65-cf37-7000-ad21-ac8e9b2c89d7) was deactivated immediately after both replacements existed
+(PATCH .../active {"isActive":false} -> 200), so no two ambiguous active rules remain for that service.
+ROLLBACK for the fixtures: activate 01a13d65-.../active=true, deactivate 01a13d84-ca00-7000-8d86-52803380de4e
+(standard) and 01a13d84-ca7f-7000-a59a-269a1c8ec13d (express) by the same PATCH route.
+DESTINATION RESOLVER FINDING (mission D): NOT diagnosed. The observer still reports
+"observation DestinationNotComparable candidates=5 outcomes=none" for the four shapes without explicit
+validated ids, i.e. Geography.ResolveLegacyAsync('IR','البرز',null,null) does not return Resolved from the
+observer path. The validated-ids shape wins as before and produced the full matrix above. Per the task
+instruction this is handed to 070 as a NAMED BLOCKER instead of looping; fuzzy text was not made
+authoritative anywhere.
+FOCUSED TESTS: Shipping 109/109 passed (log-test-shipping.txt), Order 286/286 passed including the 31
+shadow tests (log-test-order.txt, log-test-order-shadow.txt). New focused coverage:
+ShippingOptionLevelRatePolicyTests (option-only pricing, service-level fallback, option-beats-service,
+no cross-service/no cross-option leakage, deepest-scope inside one option tier, equal-specificity stays
+ScopeConflict, coverage not widened by option, canonicalization/over-long option refusal, catalog seam
+refusals incl. the composite "tipax:express" being rejected as a service code).
+ENVIRONMENT + RESTORE: target proved positive, not remembered - host resolved from the listening socket on
+:5088, GET /v1/admin/dev-context -> tenantId store-alpha, GET /health ok, appsettings.Development.json maps
+tenant-alpha to Database=tooba_alpha with no production reference, and the database the migration touched
+was independently confirmed inside the container owning :5432 (log-target-proof.txt). Applied migrations in
+tooba_alpha.shipping.__ef_migrations_history: InitialShipping + OptionLevelRatePolicy. Shadow was enabled
+ONLY in the Development process via Tooba__ShippingRateAuthority__ShadowEnabled / __PrerequisitesConfirmed
+environment variables (no file touched), never globally. Final state: those variables are removed, the
+host was restarted and is healthy on :5088 (listen 127.0.0.1:5088 ownerPid 40020), and post-restore logs
+contain ZERO shadow lines (shadow disabled). Legacy storefront projection stayed byte-identical between
+OFF and ON: payloads-OFF.json == payloads-ON.json and all five request shapes were identical to each other
+(2393 bytes each). Host was stopped before every build; the only build error seen was the transient
+DLL-copy lock while the previous host was still up, cleared by stopping the host first - the final
+solution build is "Build succeeded, 0 Error(s)" (log-build.txt).
+COST CONTROL: two host restarts, one module-scoped migration, four admin HTTP writes, no mass suite, no
+scratch DB, no 100MB logs (evidence dir total 0.15 MB; raw host stdout logs were filtered to excerpts and
+the running host writes outside the repo).
+ELAPSED: ~50 minutes wall clock; the 45-minute box was exceeded while finishing the runtime proof, tests
+and evidence. No 070 work was started and no automatic next task is issued.
+COMMIT/PUSH: Code-SHA 1bb91ddaa06ffac050d0857d29f7e387bf14653d (Shipping + Order code and tests).
+Evidence-SHA <TO-BE-FILLED> (planning doc + docs/architecture/evidence/TB-SHIPPING-MVP-OPTION-PARITY-069).
+Unrelated pre-existing dirty files (docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md,
+src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx)
+and the unstaged bridge task receipt were preserved and never staged.
+
+REMAINING BLOCKERS / NOT DONE:
+1. Geography ResolveLegacyAsync('IR','البرز',null,null) unresolved from the observer path - named blocker
+   for 070; it is the only reason 4 of 5 projection shapes stay DestinationNotComparable.
+2. The admin rates dialog (frontend) does not yet expose the option field. The source-owned API DTOs are
+   already sufficient to author and edit two tipax rates (proved live), but an operator cannot do it from
+   the grid UI yet. This is a bounded UI follow-up, deliberately not started here to protect the timebox.
+3. Fixture amounts (180000/260000) are parity fixtures, NOT approved commercial tariffs; the generic 068
+   tipax row is superseded, so any future commercial activation needs an explicit Architect decision.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
