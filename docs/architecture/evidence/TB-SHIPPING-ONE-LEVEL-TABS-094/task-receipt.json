@@ -1,0 +1,20 @@
+{
+  "bridgeTaskRowId": "9a41c065-6112-4f80-9917-6c19093b9aa7",
+  "channelId": "tooba-main",
+  "taskId": "TB-SHIPPING-ONE-LEVEL-TABS-094",
+  "parentTask": "TB-SHIPPING-ONE-LEVEL-TABS-093",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "program": "TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE",
+  "mode": "BOUNDED_INDEPENDENT_METHOD_NAMES_AND_ADMIN_EDIT",
+  "expectedBaseSha": "fbc02e06baefb43cceb3a7ad7d6b4e3efc24aaf5",
+  "baseSha": "486e8f2820a1944c33eebc830ea34fe3e4a8e15d",
+  "codeSha": "1bbf2607cb21792282aa3b20c7d55feb66c85a5c",
+  "claimedAtUtc": "2026-10-15T18:24:17.4163102",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "automaticNextImplementationTask": "NONE",
+  "timebox": "30 minutes HARD",
+  "elapsedMinutes": 205,
+  "timeboxExceeded": true,
+  "status": "PASS"
+}

@@ -1,0 +1,214 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-094
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-093
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_INDEPENDENT_METHOD_NAMES_AND_ADMIN_EDIT
+Bridge-Task-Row: 9a41c065-6112-4f80-9917-6c19093b9aa7
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: fbc02e06baefb43cceb3a7ad7d6b4e3efc24aaf5
+Base-SHA: 486e8f2820a1944c33eebc830ea34fe3e4a8e15d
+Code-SHA: 1bbf2607cb21792282aa3b20c7d55feb66c85a5c
+Evidence-SHA: 1bbf2607cb21792282aa3b20c7d55feb66c85a5c
+automaticNextImplementationTask: NONE
+
+=== PREFLIGHT / DRIFT ===
+Claimed exactly one Pending task on tooba-main (row 9a41c065-6112-4f80-9917-6c19093b9aa7, claimed
+2026-10-15T18:24:17Z) and persisted the artifact UNSTAGED as
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-094.task.md. Read AGENTS.md, the pipeline protocol, the 093
+recovery checkpoint, 081-093 planning/evidence, the Fulfillment one-level method/translation entities,
+the gate/admin read contracts, the five-tab frontend shell and the existing admin auth conventions.
+git fetch origin: HEAD == origin/main == 486e8f2820a1944c33eebc830ea34fe3e4a8e15d at preflight, and
+fbc02e06baefb43cceb3a7ad7d6b4e3efc24aaf5 is an ancestor (git merge-base --is-ancestor => 0).
+Drift fbc02e06b..HEAD is 093 result bookkeeping only; no src/** file differed at base => no
+RECOVERY_CONFLICT. Two frontend files were already dirty and are NOT task-owned
+(app/admin/admin-fulfillment-work-queue-screen.tsx, and app/admin/admin-order-detail-screen.tsx which
+differs only in line endings); they were left untouched and unstaged. No reset/stash/rebase/force push.
+The pre-existing shared :5088 and :3000 processes were kept; the only restart used the repo-owned
+scripts/dev/host-stack.ps1 with its own PID/provenance/rollback checks (no blind Stop-Process).
+
+=== MISSION A — METHOD LABEL AUTHORITY (traced, then the smallest authorized seam) ===
+Root cause, established by reading the data path and confirmed by read-back: the visible label of a
+one-level method IS the fulfillment.shipping_method_translations.name row for the active language.
+post:standard / post:express were seeded with the short legacy option-oriented names «معمولی» /
+«پیشتاز», and the flat catalog surfaces exactly that persisted name. There was NO admin write path for
+it at all: the 085/086 one-level endpoints are read-only, and the legacy CRUD addresses
+shipping_services / shipping_service_options, which are different tables. Nothing auto-mutated the names.
+
+Added the smallest authorized Fulfillment-owned write seam:
+- Application/Shipping/Ports/IShippingOneLevelCatalogAdminWrite.cs: UpdateMethodNameAsync(methodCode,
+  languageId, name) returning an explicit ShippingOneLevelMethodNameWriteStatus
+  (Updated, GateDisabled, CatalogNotReady, InvalidMethodCode, MethodNotFound, NameRequired, NameTooLong);
+  ShippingOneLevelMethodNameLimits.MaxNameLength = 128 (the durable column width).
+- Application/Shipping/Commands/UpdateOneLevelShippingMethodTranslationCommand.cs: MediatR
+  IRequest<Result<OneLevelShippingMethodNameDto>>; the handler validates the language against the
+  module language registry (ILanguageLookup) and maps every non-Updated status to a stable
+  FulfillmentErrorCodes code (ShippingServiceLanguageInvalid, ShippingMethodCodeInvalid,
+  ShippingMethodNotFound, ShippingMethodNameRequired, Rejected), i.e. nothing is ever a 500.
+- Application/Shipping/Validators/UpdateOneLevelShippingMethodTranslationCommandValidator.cs:
+  primitive shape of the method code only (FulfillmentFluentRules.OptionalNonBlankShape); existence,
+  gate, language and label rules stay in Application/Domain per the module conventions.
+- Infrastructure/Shipping/ShippingOneLevelCatalogAdminWrite.cs: reads the SAME
+  ShippingOneLevelCatalogPolicy gate as the read path; gate off => zero DB access; gate not
+  Explicit-true => no query and no write. The method is resolved ONLY by its canonical MethodCode
+  (ShippingMethod.TryNormalizeCode; a raw/invalid code is refused, never re-normalised into a new
+  identity). Upsert is driven by the canonical unique (shipping_method_id, language_id); an existing
+  row has ONLY Name modified via Entry(...).Property(x => x.Name).IsModified = true, so an optional
+  description survives and no identity column is touched; Npgsql UndefinedTable becomes a controlled
+  CatalogNotReady, and every other exception propagates (nothing hidden).
+- Endpoints/Shipping/ShippingServiceEndpoints.cs:
+  PUT /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/translations/{languageId:guid}
+  with body OneLevelShippingMethodTranslationWriteRequest(string? Name), behind the existing
+  IFulfillmentAdminAuthorizer and ApiResponseFactory (so 401/403 stay fail-closed and unchanged).
+- Infrastructure/DependencyInjection/FulfillmentModule.cs: one additive registration.
+Identity invariants: method_code (<=32, immutable), legacy_service_code, legacy_option_code,
+provider_kind, sort_order and is_active are never written by this seam; the request body carries only a
+name, so no client-provided legacy service/option binding is trusted or even accepted; no child options,
+no provider grouping, no second-level edit control.
+
+Guard bookkeeping for the additive endpoint only: FulfillmentValidatorCoverageGuardTests manifest
+17 -> 18 requests and 11 -> 12 required validators; FulfillmentModuleAmsc001W3CertGuardTests route
+count 23 -> 24.
+
+=== MISSION B — REAL TAB 1 EDIT UX ===
+Frontend (allowed path app/admin/shipping-services/** only), three new units plus wiring:
+- shipping-one-level-method-name-model.ts: pure name model — validateOneLevelMethodName (blank and
+  >128 rejected), initialMethodName (prefill ONLY from the real translation of that language),
+  applySavedMethodName (never creates a row and never changes identity), methodNameTargetKey,
+  createMethodNameGenerationGuard (a stale in-flight result can never land on a new method/language
+  target), oneLevelMethodTranslationPath, and resolveEffectiveLanguageId.
+- shipping-one-level-method-name-api.ts: the single client call saveOneLevelMethodName(methodCode,
+  languageId, name), mapping ok / denied / error truthfully.
+- shipping-one-level-method-name-dialog.tsx: explicit method context (the immutable code is shown
+  read-only), language select, prefilled current name, Save/Cancel, loading state, validation text and
+  denied/error notice. Success is announced only after the server confirms Updated.
+- shipping-one-level-tabs.tsx wiring: per-row «ویرایش نام» action (disabled until a usable language list
+  exists) — data-testid admin-shipping-one-level-edit-<methodCode> — the language list read through the
+  shared admin languages feature (loadAdminLanguages() => GET /v1/admin/languages), the dialog, and
+  onSaved => apply the server-confirmed value, re-read the source of truth (load()) and router.refresh().
+Behaviour preserved: the five locked tabs and their Persian labels, method selection, RTL, tablist
+keyboard navigation (Arrow/Home/End wrap), row selection, the gate-off legacy fallback and tabs 2-5 API
+behaviour were not touched. No fabricated success anywhere.
+Defect found by live proof and fixed inside the same unit: the language list arrives asynchronously, so
+a dialog mounted before it resolved could keep an empty language and a disabled Save button.
+resolveEffectiveLanguageId now falls back to the effective default and then to the first valid language,
+and returns empty (fail-closed, editing stays disabled) only for a genuinely empty list. No synthetic
+language is ever created.
+
+=== MISSION C — FOCUSED PROOF ===
+Tests actually run (all green):
+- Tooba.Fulfillment.Tests ShippingOneLevelAdminWriteTests: 20/20 pass.
+- Tooba.Fulfillment.Tests FulfillmentValidatorCoverageGuardTests: 8/8 pass.
+- Tooba.Host.Tests FulfillmentModuleAmsc001W3CertGuard + ShippingOneLevel*: 14/14 pass.
+- frontend node --test on shipping-one-level-method-name.test.ts + shipping-one-level-tabs.test.ts:
+  31/31 pass.
+- frontend npm run typecheck (tsc --noEmit): clean, exit 0.
+- frontend npm run test:admin: 134 tests, 131 pass, 3 fail. The 3 failures (admin-error-map content
+  article humanisation, landing section chooser, TB-P10-T022 ordinary-user Admin UX) are PRE-EXISTING
+  and OUT OF SCOPE: their input files are byte-identical to HEAD (git diff --quiet HEAD => unchanged),
+  so the same assertions fail at HEAD, before this task; this task touched no landing-pages, no
+  admin-error-map and no composer file. They were deliberately NOT repaired (repairing them would edit
+  unrelated files) and are recorded in
+  evidence/log-preexisting-fe-admin-failures.txt + evidence/log-fe-admin-suite.txt. This result
+  therefore does not claim a fully green frontend admin suite.
+
+Deployment of the new route on the shared Host: the shared :5088 was reloaded with the 093 repo-owned
+procedure `scripts/dev/host-stack.ps1 -Action restart -Port 5088 -OutDir .tmp-093-host-out -NoBuild
+-GateShippingOneLevelCatalog` (owned PID + provenance verification + recorded state, no blind
+Stop-Process). :3000 was not touched. The gate is set in the process environment only; no appsettings
+file was written, and Tooba:ShippingRateAuthority / Tooba:ShippingOperationalShadow were never set.
+
+Live proof in a real browser on the SHARED stack (authorized Development admin session):
+Session: real login admin-actor@tooba.local through the shared BFF; GET /api/auth/me = 200.
+Origin http://localhost:3000, Host http://127.0.0.1:5088 (current code), page
+/fa/admin/shipping-services. Every step below was performed by clicking/typing in the rendered DOM
+(React controlled inputs driven through the native value setter plus an input event), not by calling the
+HTTP API directly.
+1. Tab 1 after reload: the five locked tabs; 7 flat rows, one per method, each with «ویرایش نام»:
+   پیشتاز/post:express/inactive, معمولی/post:standard/active, پیشتاز/tipax:express/active,
+   معمولی/tipax:standard/active, اسنپ پیک آنلاین/snapp_courier/inactive, پیک فروشگاه/store_courier/active,
+   تحویل حضوری/in_person/active.
+2. Opened the editor on post:standard: dialog visible, language فارسی selected (id
+   01a06a53-4139-7000-bb9b-3078a0d2e5c4), options فارسی/English/Русский, name prefilled «معمولی»
+   (the real current translation), Save ENABLED.
+3. Typed a TASK-OWNED SAMPLE label «پست معمولی» and pressed Save through the UI => the BFF accepted it,
+   the dialog closed, and the row became: پست معمولی | post:standard | فعال | انتخاب‌شده | ویرایش نام.
+   method_code unchanged (post:standard), isActive unchanged (true).
+4. Reopened the editor: prefilled «پست معمولی» => the saved value is the new source of truth.
+5. ROLLBACK through the same UI: typed «معمولی», Save, dialog closed, row back to
+   معمولی | post:standard | فعال | انتخاب‌شده | ویرایش نام.
+6. Authorized read-back of the raw catalog: gate "Enabled", ready true, 7 methods, languageId fa;
+   post:standard name معمولی isActive true sortOrder 11, translations [en "Standard", fa "معمولی"];
+   post:express name پیشتاز isActive false sortOrder 10, translations [fa "پیشتاز", en "Express"].
+Result: byte-for-byte parity with the pre-task state; no other row touched, no activation change, no
+method_code change, no historical order/draft/shipment code written. No merchant-entered label was
+edited: the only live writes used a task-owned sample and were rolled back.
+
+Data parity (read-only): one-level methods/translations 7/14 (same count and content), legacy
+shipping_services/shipping_service_options 5/4, order.seller_orders/order.order_lines/
+fulfillment.fulfillments 26/37/9. No migration, seed, backfill, order, payment or reservation write
+occurred; no new migration was added.
+
+Stack health after all work: GET /health => 200; GET /__platform-commerce => SingleStore /
+dev-singlestore / store-alpha / tenant-alpha (matching the required Development provenance). :3000
+untouched.
+
+=== CHANGED PATHS (task-owned, committed) ===
+Backend: Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/{Ports/IShippingOneLevelCatalogAdminWrite.cs,
+Commands/UpdateOneLevelShippingMethodTranslationCommand.cs,
+Validators/UpdateOneLevelShippingMethodTranslationCommandValidator.cs,
+Queries/ListOneLevelShippingMethodsQuery.cs},
+Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelCatalogAdminWrite.cs,
+Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/DependencyInjection/FulfillmentModule.cs,
+Modules/Fulfillment/Tooba.Fulfillment.Endpoints/Shipping/ShippingServiceEndpoints.cs,
+Modules/Fulfillment/Tooba.Fulfillment.Tests/{Behavior/ShippingOneLevelAdminWriteTests.cs,
+Architecture/FulfillmentValidatorCoverageGuardTests.cs},
+Host/Tooba.Host.Tests/Architecture/FulfillmentModuleAmsc001W3CertGuardTests.cs.
+Frontend: app/admin/shipping-services/{shipping-one-level-method-name-model.ts,
+shipping-one-level-method-name-api.ts, shipping-one-level-method-name-dialog.tsx,
+shipping-one-level-method-name.test.ts, shipping-one-level-tabs.tsx, shipping-one-level-tabs-model.ts,
+shipping-one-level-tabs.test.ts, shipping-one-level-gate.ts, page.tsx}.
+Docs/evidence: docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-094.md and
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-094/**.
+NOT staged (deliberately): docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-094.task.md (receipt) and the
+pre-existing non-task-owned dirty files. docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md was read but
+NOT appended, because it is outside this task's ALLOWED PATHS and appending would silently expand scope.
+
+=== LIMITATIONS (not over-claimed) ===
+- Display-name management ONLY. Independent method CREATION is NOT implemented: this task lets the user
+  label «پست معمولی» for post:standard and «پست پیشتاز» for post:express without renaming any
+  method_code and without activating an inactive method, but it does not create new methods, provide the
+  full commercial cutover, or wire rates/coverage/capacity/COD.
+- No Checkout authority or rate cutover: no Tooba:ShippingRateAuthority / Tooba:ShippingOperationalShadow
+  change; existing checkout, cart_shipping_drafts, shipments and public catalog behaviour is untouched.
+- Historical orders/drafts/shipments keep their previously stored codes and labels byte-for-byte; the
+  seam never rewrites historical rows.
+- post:express and snapp_courier remain inactive; nothing here activates them.
+- The three frontend admin-suite failures are pre-existing and unfixed (see Mission C).
+- The 30-minute HARD timebox was EXCEEDED: claimed 2026-10-15T18:24:17Z, evidence written
+  2026-10-15T21:49:41Z => ~205 minutes (~3 h 25 m). Reported as-is.
+
+=== ROLLBACK ===
+- Label rollback: already executed and verified through the same admin UI (log-live-ui-write-rollback.txt);
+  the catalog is back to name «معمولی» with identical translations and activation flags.
+- Gate rollback (one documented flag):
+  powershell -File scripts/dev/host-stack.ps1 -Action restart -Port 5088 -OutDir .tmp-093-host-out -NoBuild
+- No migration/seed/backfill was added, so there is no schema rollback.
+
+=== EVIDENCE (docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-094/) ===
+summary.md, log-live-ui-write-rollback.txt, log-live-write-rollback.txt, log-live-write-rollback-2.txt,
+log-fe-admin-suite.txt, log-preexisting-fe-admin-failures.txt, log-host-stack-restart.txt,
+log-final-operator-state.txt, log-final-operator-state-094.txt,
+01-shared-3000-one-level-methods-and-name-edit-action-rtl.png,
+02-shared-3000-name-edit-dialog-prefilled-rtl.png
+
+=== ACCEPTANCE SELF-CHECK ===
+Names are editable independently per method and per language through a REAL authorized
+Fulfillment-owned write seam; the five-tab UI remains intact and unmodified in structure; focused tests
+pass; the live Development edit/read-back/rollback is demonstrated in a real browser; the pre-existing
+frontend failures and the exceeded timebox are stated rather than hidden. No automatic next task.
+END_TOOBA_WORKER_RESULT
