@@ -1,0 +1,194 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-FULL-OPERATIONS-075
+Parent-Task: TB-SHIPPING-FULL-OPERATIONS-074
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FULL-OPERATIONS
+Mode: BOUNDED_PACKAGING_POLICY_AND_FREIGHT_PAYER_CONTRACT
+Bridge-Task-Row: 1c18e11c-70c1-458c-b69d-278fcc830c80
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: d2c9680f8b7b1fba2b5ca656b6a1334061142bcd
+Base-SHA: d2c9680f8b7b1fba2b5ca656b6a1334061142bcd
+Code-SHA: 8f07475a4ecce613b24256f667d8cf8b77af0fc5
+Evidence-SHA: 8f07475a4ecce613b24256f667d8cf8b77af0fc5
+automaticNextImplementationTask: NONE
+
+MISSION GRADING
+Mission A (Shipping-owned packaging fee policy, PRIMARY): COMPLETE.
+Mission B (freight payer / collection mode semantics, SECONDARY): PERSISTED, not contract-only.
+Mission C (focused live Development proof): COMPLETE against the running Development host and tooba_alpha.
+Overall Status: PASS. Payer mode is PERSISTED. Packaging quote integration is FUTURE-FACING and is
+explicitly declared below; no live Checkout consumer was added and no extra charge is claimed in
+today's Checkout.
+
+PREFLIGHT
+- Claimed exactly one Pending task on tooba-main (row 1c18e11c-70c1-458c-b69d-278fcc830c80) and
+  preserved the received .task.md verbatim at docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-075.task.md,
+  UNSTAGED (never committed, never staged).
+- Expected-Base-SHA d2c9680f8b7b1fba2b5ca656b6a1334061142bcd was verified as an ancestor of HEAD and
+  equal to HEAD == origin/main at claim time.
+- Read AGENTS.md, the pipeline protocol, the 069-074 Shipping planning/evidence, the existing Shipping
+  rate/coverage aggregate, contracts, quote engine, module migration and admin endpoints, plus the
+  Order/Payment freight-money boundary, WITHOUT modifying those modules.
+- Preserved every unrelated dirty/untracked file. No reset, stash, rebase or force-push.
+- Positive Development identification before any write: GET http://127.0.0.1:5088/__platform-commerce
+  returned {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha",
+  "connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha",
+  "defaultMarketReference":"IR"}. Host http://127.0.0.1:5088, database tooba_alpha
+  (docker container postgres-db on 127.0.0.1:5432). No staging or production access, no SQL bypass.
+
+MISSION A - PACKAGING OWNERSHIP AND DATA CONTRACT
+A second, independent Shipping commercial aggregate was added; a packaging fee can never be hidden
+inside the carrier freight chargeAmount.
+
+Ownership map:
+  ShippingPackagingPolicy aggregate + payer enum semantics -> Tooba.Shipping.Domain / .Contracts
+  Pure deterministic resolver (no I/O)                   -> Tooba.Shipping.Domain/Packaging/ShippingPackagingFeeResolver.cs
+  Admin CRUD + read-only seams (CQRS over ISender)       -> Tooba.Shipping.Application + .Infrastructure
+  HTTP routes under /v1/admin                            -> Tooba.Shipping.Endpoints/Admin/ShippingPackagingPolicyEndpoints.cs
+  Storage                                                -> shipping.packaging_policies (own schema, no cross-module FK)
+
+New table shipping.packaging_policies: packaging_policy_id, service_code, option_code (nullable =
+service-level), four-level destination scope (country_id / administrative_area_id / city_id /
+service_area_id), fee_amount numeric(18,2) >= 0, currency_code (ISO 3 letters), freight_payer_mode
+(0 = Prepaid, 1 = CollectOnDelivery), is_active, created_at, updated_at.
+
+Contracts added (Tooba.Shipping.Contracts/Packaging/ShippingPackagingContracts.cs):
+ShippingFreightPayerMode, ShippingPackagingChargePayer, ShippingPackagingPolicyWriteRequest,
+ShippingPackagingPolicyActiveRequest, ShippingPackagingPolicyAdminItem, ShippingPackagingPoliciesView,
+IShippingPackagingFeeLookup / ShippingPackagingFeeRequest / ShippingPackagingFeeComponent, and
+IShippingShipmentCostLookup / ShippingShipmentCostRequest / ShippingShipmentCost.
+
+Keyed by the real Fulfillment serviceCode (validated against the existing Shipping service seam) and an
+optional real optionCode, with a destination scope that must resolve to a real Geography identity.
+Currency is required and validated as a 3-letter ISO code; a fee is a non-negative fixed amount. A
+policy is explicitly active or inactive. No matching policy means a packaging fee of ZERO.
+
+DETERMINISTIC PRECEDENCE (never first-row-wins)
+1. Option identity first: an option-specific policy wins over the service-level policy; the
+   service-level policy is the documented fallback only when no option-specific policy matches.
+2. Deepest destination scope wins: ServiceArea > City > AdministrativeArea > Country.
+3. Ambiguity fails closed: two equally specific active policies produce the stable error code
+   shipping.packaging.policy.ambiguous and ZERO fee is claimed - never an arbitrary pick.
+Zero default: no matching policy yields shipping.packaging.not_configured with fee 0, never a hidden
+extra charge. An explicitly configured zero-fee policy is still an explicit charged component.
+
+FREE-SHIPPING BEHAVIOUR (explicit decision, as required)
+Carrier freight waived by the existing FreeAboveThreshold does NOT waive packaging. Free shipping is a
+freight rule; packaging is an independent commercial fact. Proven by
+A_free_freight_quote_does_not_remove_the_packaging_component and
+A_free_freight_quote_keeps_the_packaging_component_in_the_combination. No configurable exception was
+invented, because the bounded slice does not need one.
+
+MISSION B - PAYER MODE SEMANTICS (PERSISTED)
+ShippingFreightPayerMode { Prepaid = 0, CollectOnDelivery = 1 } is a stable enum persisted as an
+integer code with a SQL CHECK constraint (freight_payer_mode IN (0,1)), so no row can exist with no
+responsible paying party. Free-form Persian strings are never stored. Prepaid means freight is payable
+at checkout by the customer; CollectOnDelivery means freight is collected by the carrier/recipient at
+delivery. Shipping states WHO owes freight and WHEN - it creates no Payment transaction and no
+settlement. An omitted value persists as Prepaid, preserving legacy checkout behaviour exactly.
+ShippingPackagingChargePayer.Checkout exists as a single-value contract so a carrier can never be
+recorded as collecting a packaging fee. Order, Checkout, Payment and Settlement were not touched.
+
+MISSION C - FOCUSED LIVE DEV PROOF (running Development host, tooba_alpha)
+Full transcript: docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-075/log-live-packaging-proof.txt
+Reproducible probe: .../probe-packaging.ps1
+
+  POST /v1/auth/login (Development bootstrap admin actor)                    -> 200, real Bearer session
+  POST /v1/admin/shipping-services/tipax/packaging-policies 12,000 IRR COD   -> 200, id 01a13e7c-cfde-7000-98cc-f79246cf97b0
+  GET  .../tipax/packaging-policies read-after-write                         -> 200, exact row returned
+  PUT  .../{id} fee 15,000 + Prepaid                                         -> 200, fee and payer mode changed, scope/option immutable
+  PATCH .../{id}/active {false} then {true}                                  -> 200 both, flag flipped, row preserved
+  negative fee                                                               -> 400 shipping.validation.packaging_fee_negative
+  invalid currency                                                           -> 400 shipping.validation.packaging_currency_invalid
+  out-of-contract payer mode                                                 -> 400 shipping.validation.packaging_freight_payer_mode_invalid
+  unknown service code                                                       -> 400 shipping.service_code.unknown
+  unknown option code                                                        -> 400 shipping.service_option.unknown
+  invented country id                                                        -> 400 shipping.destination_scope.invalid
+  duplicate service/option/scope                                             -> 400 shipping.packaging.policy.scope_duplicate, no partial write
+  no credential at all                                                       -> 401 admin.actor.missing
+  non-configured identity (service "post")                                   -> 200 empty set = zero fee
+  cleanup                                                                    -> task-owned fixtures deactivated
+
+Fixture ledger (task-owned, deactivated, never deleted - no delete surface exists):
+  01a13e7b-e198-7000-9753-f417791d20cb  tipax / standard / AdministrativeArea (Alborz)  15,000 IRR  is_active=false
+  01a13e7c-cfde-7000-98cc-f79246cf97b0  tipax / express  / AdministrativeArea (Alborz)  15,000 IRR  is_active=false
+No ACTIVE synthetic fixture remains.
+
+Preservation proof: shipping.rate_policies still has 11 rows with identical ids/amounts/conditions,
+coverage_grants 7, operating_schedules 1. No existing row was altered or deleted.
+
+MIGRATION / ROLLBACK / COMPATIBILITY
+Migration 20261015071836_ShippingPackagingPolicy is purely additive: it creates the table, its 7 CHECK
+constraints and its 2 indexes (including the NULLS NOT DISTINCT unique index over
+(service_code, option_code, scope)). It was applied to Development through the canonical design-time
+context (TOOBA_DESIGN_TIME_CONNECTION); shipping migration history now shows 5 entries. Rollback is
+the migration Down() (drop shipping.packaging_policies); it is safe because nothing references the
+table and no live reader exists yet.
+Compatibility: existing rate/coverage/tier/schedule rows are untouched; an omitted freightPayerMode
+persists as Prepaid so legacy checkout semantics are unchanged; the new surface is additive with no
+replaced route, contract or DI registration. No frontend change in this task.
+
+TESTS ACTUALLY RUN
+- dotnet test Modules/Shipping/Tooba.Shipping.Tests -> 238 passed, 0 failed (was 215; +23 new packaging
+  tests across the resolver, admin directory, shipment-cost composition and endpoint ownership).
+- dotnet build Host/Tooba.Host -> 0 errors, 0 warnings.
+- dotnet build Tooba.Shipping.Tests -> 0 errors (1 pre-existing xUnit1031 warning in an untouched file).
+- dotnet ef database update on the Shipping context -> migration applied.
+- No Host.Tests locking loops, no broad guards, no scratch database, no repetitive restart/test loops.
+
+CHANGED PATHS (all inside ALLOWED PATHS; no forbidden path touched)
+  src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Packaging/ShippingPackagingContracts.cs        (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Errors/ShippingErrorCodes.cs                   (modified)
+  src/backend/Modules/Shipping/Tooba.Shipping.Domain/Aggregates/ShippingPackagingPolicy.cs             (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Domain/Packaging/ShippingPackagingFeeResolver.cs         (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Application/Packaging/Ports/IShippingPackagingPolicyDirectory.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Application/Packaging/Commands/ShippingPackagingPolicyCommands.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Application/Packaging/Validation/ShippingPackagingValidators.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Application/Validation/ShippingAdminValidators.cs        (modified)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Packaging/ShippingPackagingPolicyDirectory.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Packaging/ShippingPackagingFeeLookup.cs   (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Packaging/ShippingShipmentCostLookup.cs   (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/DependencyInjection/ShippingModule.cs    (modified)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/ShippingDbContext.cs         (modified)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261015071836_ShippingPackagingPolicy.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261015071836_ShippingPackagingPolicy.Designer.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/ShippingDbContextModelSnapshot.cs (modified)
+  src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingPackagingPolicyEndpoints.cs     (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingRateCoverageEndpoints.cs        (modified)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Packaging/ShippingPackagingFeeResolverTests.cs     (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Packaging/ShippingPackagingPolicyAdminTests.cs     (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Packaging/ShippingShipmentCostLookupTests.cs       (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Packaging/ShippingPackagingEndpointOwnershipTests.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Persistence/ShippingPersistenceModelTests.cs      (modified)
+  docs/planning/shipping/SHIPPING-FULL-OPERATIONS-075.md                                              (new)
+  docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-075/**                                       (new)
+Host/Tooba.Host/Program.cs was NOT edited; the existing Shipping endpoint composition already discovers
+the new endpoint module, so no Host change was needed.
+
+COMMIT / PUSH
+  Base-SHA     d2c9680f8b7b1fba2b5ca656b6a1334061142bcd (HEAD == origin/main at claim)
+  Code-SHA     8f07475a4ecce613b24256f667d8cf8b77af0fc5 (source + planning + live-proof evidence, pushed to origin/main)
+  Evidence-SHA 8f07475a4ecce613b24256f667d8cf8b77af0fc5 (contains docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-075/**)
+  The unstaged Bridge receipt docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-075.task.md was never staged
+  or committed. No unrelated dirty path was staged.
+
+ELAPSED
+Approximately 29 minutes of the 45-minute HARD timebox (claimed 2026-10-15T07:10:11Z, closed
+2026-10-15T07:39Z). Stopped well inside the bound; no automatic next task was started.
+
+EXPLICIT REMAINING BLOCKERS / NEXT INTEGRATION GAPS
+1. Checkout/Order integration is NOT done and is FUTURE-FACING. IShippingShipmentCostLookup composes
+   the existing carrier rate quote with the packaging component and returns the currency and final
+   combined amount, but NOTHING consumes it yet. Wiring a packaging line into Order pricing is a
+   separate Architect-reviewed task. Today's Checkout behaviour is deliberately unchanged and no
+   extra charge is claimed there.
+2. IShippingRateQuoteLookup semantics and the customer amount were NOT overwritten.
+3. No delete surface exists for packaging policies; cleanup uses deactivation plus the id ledger above.
+4. No carrier-cost/subsidy ledger and no COD settlement is modeled - payer mode is a quote fact only.
+5. Commercial Shipping/Checkout readiness is NOT claimed. Worker PASS != Architect ACCEPT.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
