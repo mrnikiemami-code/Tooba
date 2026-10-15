@@ -1,0 +1,164 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-FULL-OPERATIONS-074
+Parent-Task: TB-SHIPPING-FULL-OPERATIONS-073
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FULL-OPERATIONS
+Mode: BOUNDED_TIERED_RATE_ADMIN_UI_AND_PACKAGING_FOUNDATION
+Bridge-Task-Row: 4022272d-61e2-46d3-b95b-977e28cb5e9b
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: d6c9d5ec2d21331c34cf22f414ecdc1bea5d4606
+Base-SHA: d6c9d5ec2d21331c34cf22f414ecdc1bea5d4606
+Code-SHA: 91307760d2d32372534ed9828b45f7ea529eae2d
+Evidence-SHA: 91307760d2d32372534ed9828b45f7ea529eae2d
+automaticNextImplementationTask: NONE
+
+MISSION GRADING
+Mission A (tier editor over the existing 073 API): COMPLETE.
+Mission B (packaging cost foundation): NOT STARTED. Overall Status is therefore PARTIAL, as the
+task requires when both missions are claimed but packaging is not complete. No packaging contract,
+domain, persistence, migration, admin API or UI was written, and packaging was not marked complete
+merely because a UI input exists. The exact open gap is handed to the next Architect decision below.
+
+PREFLIGHT
+- Claimed exactly one Pending task on tooba-main (row 4022272d-61e2-46d3-b95b-977e28cb5e9b) and
+  preserved the received .task.md verbatim at docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-074.task.md,
+  UNSTAGED (never committed).
+- Expected-Base-SHA matched HEAD == origin/main == d6c9d5ec2d21331c34cf22f414ecdc1bea5d4606.
+- Read AGENTS.md, the pipeline protocol, 070-073 planning/evidence, the frontend
+  shipping-rates-coverage-{api,model,dialog} surface and its tests, ShippingAdminContracts.cs,
+  ShippingRatePolicy.cs, the rate engine, validation and the 073 migration.
+- Preserved every unrelated dirty/untracked file. No reset, stash, rebase or force-push.
+- Positive Development identification before any write: GET /__platform-commerce returned
+  {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha",
+   "connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha",
+   "defaultMarketReference":"IR"}. Frontend http://127.0.0.1:3000, Host http://127.0.0.1:5088,
+  database tooba_alpha (docker postgres-db). No Production/staging write, no permission bypass.
+
+MISSION A - FRONTEND TIER CRUD EVIDENCE (REAL DEVELOPMENT UI)
+Canonical 073 contract consumed verbatim; not recreated, not redefined, no competing rule engine:
+condition: {weightGrams:{min,max}, itemCount:{min,max}} or null, half-open [min,max), integer grams,
+non-negative integer physical shipment-item count.
+
+- New cohesive model src/frontend/app/admin/shipping-services/shipping-rate-tier-model.ts (300 LOC,
+  below the 800 threshold): exact kilogram->gram conversion using string/integer arithmetic only so
+  1.999 is exactly 1999 and is refused rather than rounded when finer than a gram; exact gram->kg
+  rendering; half-open validation (missing/negative/over-ceiling/zero-width/reversed); lossless
+  condition round trip; Persian «از شامل، تا غیرشامل» descriptions with both grams and kilograms;
+  explicit «بدون کران بالا» for an open upper bound; intersection wording when both axes are set;
+  and adjacent Persian guidance for the stable tier error codes.
+- shipping-rates-coverage-api.ts now reads and writes the exact condition shape (camelCase and
+  PascalCase mapping; absent/empty condition maps to null, never to an invented [0,...) tier).
+- shipping-rates-coverage-dialog.tsx renders «شرایط مرسوله: ...» plus a «پلهای» badge on every rate
+  row, and hosts a shared ConditionEditor in BOTH the create form and the inline edit form with
+  separate state, so an edit form can never mirror another row. Dialog is 733 LOC, below threshold,
+  not a baseline shrink-only entry. No new page, no giant monolithic file.
+- The count hint states the count is the physical shipment item count, not cart lines and not an
+  inferred cart Quantity.
+
+CREATE (two adjacent synthetic weight tiers at a real, non-colliding identity):
+  Identity: service tipax, option standard, scope country e3451206-e503-51a8-91ad-afa9ab70e330 /
+  administrative area 1f8050a8-c325-59fa-959f-82d76b5b2bc5 (Alborz). Chosen because the existing
+  tipax/standard/area row was unconditioned, so no active conditioned row collided.
+  Tier A: weight axis enabled, from 0 kg, to 2 kg, charge 120000 IRR, preparation 1, lead 2.
+    UI preview: «نتیجه: وزن از ۰ گرم (0 کیلوگرم) شامل، تا ۲٬۰۰۰ گرم (2 کیلوگرم) غیرشامل»
+    POST /v1/admin/shipping-services/tipax/rates => 200, persisted 01a13e5d-22a9-7000-a15e-24fd90e25954
+  Tier B: from 2 kg, to 5 kg, charge 260000 IRR.
+    UI preview: «نتیجه: وزن از ۲٬۰۰۰ گرم (2 کیلوگرم) شامل، تا ۵٬۰۰۰ گرم (5 کیلوگرم) غیرشامل»
+    POST => 200, persisted 01a13e5d-4aa8-7000-9521-23e0ac3505ae
+  READ / REOPEN: both rows re-rendered from the server with their exact condition text and badge.
+
+1999/2000 BOUNDARY PROOF: tier A upper bound 2000 g renders «تا ۲٬۰۰۰ گرم غیرشامل»; tier B lower
+bound 2000 g renders «از ۲٬۰۰۰ گرم شامل». So 1999 g matches A only and 2000 g matches B only, with
+no gap and no double match. The human enters kilograms ("2") while the wire carries exactly 2000
+grams, proven at the database level (min_weight_grams=2000, not 1999 or 2001).
+
+OVERLAP PROOF (deliberate refusal, no write): attempted a third tier [1500,3000) g on the same
+tipax/standard/Alborz identity. POST returned 400 with errorCode
+shipping.rate_policy.tier_overlap, and the UI surfaced the adjacent Persian guidance «این بازهٔ
+اندازه با یک پلهٔ فعال دیگر در همان خدمت/گزینه/دامنه همپوشانی دارد؛ بازهٔ نیمباز را طوری تغییر دهید
+که با پلههای موجود تلاقی نکند.» The tipax row list was unchanged afterwards (3 unconditioned + 2
+synthetic), confirming no partial write. No business approval was invented.
+
+EDIT / TOGGLE: opened edit on the pre-existing unconditioned row 01a13d84-ca00-7000-8d86-52803380de4e
+(standard, 180000). Both axis checkboxes rendered unchecked and the preview read «بدون شرط اندازه».
+Pressed ذخیره without touching the condition: PUT => 200 and the row still rendered unconditioned.
+Database confirmation: min_weight_grams/max_weight_grams/min_item_count/max_item_count all NULL. A
+previously unconditioned rate was NOT transformed into a restricted tier. Then toggled synthetic
+tier A inactive: PATCH .../active => 200 and the row re-rendered «غیرفعال» with its condition intact.
+
+COMPATIBILITY / UNCHANGED BEHAVIOR: destination scope, optionCode, free-above-threshold and currency
+handling are untouched; the update path still echoes the stored scope and option identity so nothing
+can be silently re-pointed. A pre-074 client body without `condition` still means unconditioned.
+Coverage still authorizes a destination only; the tier section prices a shipment and claims no live
+Checkout quote. No magic client-side price preview that claims a live Checkout quote.
+
+DATA PROVENANCE / CLEANUP / ROLLBACK
+- All writes went only to the disposable Development database tooba_alpha via the authorized admin
+  API; no direct SQL bypass, no parallel database, no schema-wide migrator, no new permissions.
+- No delete surface exists for rate policies, so the two task-owned synthetic fixtures were
+  deactivated through the approved API (PATCH active {"isActive":false} => 200 each) and are ledgered
+  by id: 01a13e5d-22a9-7000-a15e-24fd90e25954 (weight [0,2000), charge 120000, active=false) and
+  01a13e5d-4aa8-7000-9521-23e0ac3505ae (weight [2000,5000), charge 260000, active=false).
+- No ACTIVE synthetic fixture remains. Rollback = keep them inactive, or deactivate/delete via the
+  same admin API; nothing else was mutated.
+- The 068/069 parity fixtures were not damaged: the tipax express and service-level rows are
+  unchanged in condition, charge and active state. The pre-existing unconditioned standard row is
+  unchanged in condition. All 7 coverage grants and all 9 baseline rate policies are otherwise intact.
+- A count-only tier was deliberately NOT forced onto Development: on tipax/standard/Alborz an active
+  weight-only sibling already exists, and a weight-only + count-only pair genuinely intersects (a
+  1500 g / 3-item parcel matches both), so the 073 guard correctly refuses it as tier_overlap.
+  Count-only and both-axis handling are covered by the focused model/API tests instead of an invalid
+  Development row.
+
+CHANGED PATHS (all within ALLOWED PATHS; no forbidden path touched)
+  src/frontend/app/admin/shipping-services/shipping-rate-tier-model.ts        (new)
+  src/frontend/app/admin/shipping-services/shipping-rate-tier-model.test.ts   (new)
+  src/frontend/app/admin/shipping-services/shipping-rates-coverage-api.ts     (modified)
+  src/frontend/app/admin/shipping-services/shipping-rates-coverage-api.test.ts(new)
+  src/frontend/app/admin/shipping-services/shipping-rates-coverage-dialog.tsx (modified)
+  src/frontend/app/admin/shipping-services/shipping-rates-coverage-model.test.ts (modified, added condition:null to a fixture)
+  docs/planning/shipping/SHIPPING-FULL-OPERATIONS-074.md                      (new)
+  docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-074/**               (new)
+
+TESTS ACTUALLY RUN
+- Focused frontend tests (shipping-rate-tier-model, shipping-rates-coverage-model,
+  shipping-rates-coverage-api, shipping-services-roundtrip): 53 tests, 53 pass, 0 fail.
+- cd src/frontend && npx tsc --noEmit: exit 0, clean.
+- Architecture guards (frontend-import-boundary, frontend-feature-boundary, frontend-flat-folder,
+  frontend-test-discovery): 7 pass, 0 fail.
+- frontend-source-size guard: 5 failures, ALL pre-existing and in files this task never touched
+  (category-admin-screen.tsx, admin-landing-page-composer.tsx, storefront-landing-blocks.tsx,
+  storefront-shipping.tsx, shared-composition-renderer.tsx) — unmodified baseline god-files that
+  already exceed their baseline at the expected base SHA. None of this task's files appear in the
+  violation list; the largest new file is 300 LOC against a threshold of 800.
+- No backend change was made, so no Shipping backend test and no migration was run; no Host.Tests
+  against locked DLLs, no broad full-repo suite, no scratch database, no iterative test torture.
+- Development UI proof executed through a real browser against the running Development frontend and
+  Host. Full log: docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-074/log-live-ui-proof.txt.
+  Screenshot: .../tier-editor-live.png. Summary: .../summary.md.
+
+COMMIT / PUSH
+  Base-SHA   d6c9d5ec2d21331c34cf22f414ecdc1bea5d4606 (HEAD == origin/main at claim)
+  Code-SHA   91307760d2d32372534ed9828b45f7ea529eae2d (source + evidence + planning, pushed to origin/main)
+  Evidence-SHA 91307760d2d32372534ed9828b45f7ea529eae2d (contains docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-074/**)
+  The unstaged Bridge receipt docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-074.task.md was never staged
+  or committed. No unrelated dirty path was staged.
+
+EXPLICIT REMAINING BLOCKERS
+1. Mission B (packaging cost foundation) is NOT STARTED and remains open. A safe slice requires: a
+   Shipping-owned packaging fee representation in Contracts/Domain/persistence distinct from carrier
+   freight rate, discount/free-freight threshold and payer mode; an explicit currency and nonnegative
+   fixed fee; service/option/scope ownership; zero/default semantics (NO packaging fee when no policy
+   is configured, never silently charged by existing Checkout); deterministic precedence; an explicit
+   decision on whether free shipping waives packaging; and it must not be hidden inside chargeAmount
+   nor share Host/Payment logic. That slice also needs an additive Shipping-scoped EF migration, an
+   authorized admin read/write surface and limited tests, plus documentation of exactly what is and
+   is not integrated into quote. None of this was attempted within the timebox.
+2. No delete surface exists for rate policies; cleanup relies on deactivation plus the id ledger above.
+3. Commercial Shipping/Checkout readiness is NOT claimed. Worker PASS != Architect ACCEPT.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
