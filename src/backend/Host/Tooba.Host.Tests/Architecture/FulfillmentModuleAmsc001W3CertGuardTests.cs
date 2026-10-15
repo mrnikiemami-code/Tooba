@@ -173,7 +173,7 @@ public sealed class FulfillmentModuleAmsc001W3CertGuardTests
     public void Fulfillment_owns_exactly_one_error_descriptor_per_owned_code()
     {
         var constants = DeclaredCodes();
-        Assert.Equal(86, constants.Count);
+        Assert.Equal(91, constants.Count);
         Assert.Equal(constants.Count, constants.Values.Distinct(StringComparer.Ordinal).Count());
 
         var contributor = File.ReadAllText(Path.Combine(
@@ -184,7 +184,7 @@ public sealed class FulfillmentModuleAmsc001W3CertGuardTests
         // customer.order.missing. Every other Fulfillment-declared code is registered exactly once.
         var foreignOwned = new[] { "SellerOrderMissing", "CustomerOrderMissing" };
         var locallyOwned = constants.Where(kv => !foreignOwned.Contains(kv.Key)).ToArray();
-        Assert.Equal(84, locallyOwned.Length);
+        Assert.Equal(89, locallyOwned.Length);
         Assert.Equal(locallyOwned.Length, Regex.Matches(contributor, @"^\s*D\(", RegexOptions.Multiline).Count);
 
         foreach (var (name, _) in locallyOwned)
@@ -440,6 +440,7 @@ public sealed class FulfillmentModuleAmsc001W3CertGuardTests
                 "20260909130500_DecimalFulfillmentQuantity.cs",
                 "20260910120000_AddConsolidatedPackages.cs",
                 "20260910170000_AddShippingServiceCatalog.cs",
+                "20261015120000_AddShippingOneLevelCatalog.cs",
                 "FulfillmentDbContextModelSnapshot.cs",
             ],
             files);

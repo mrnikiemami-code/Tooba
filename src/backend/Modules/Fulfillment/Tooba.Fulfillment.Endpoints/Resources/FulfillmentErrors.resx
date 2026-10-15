@@ -262,4 +262,19 @@
   <data name="shipping_service_option.name.required" xml:space="preserve">
     <value>Shipping service option name is required.</value>
   </data>
+  <data name="shipping_method.code.invalid" xml:space="preserve">
+    <value>Shipping method code is invalid or too long.</value>
+  </data>
+  <data name="shipping_method.code.duplicate" xml:space="preserve">
+    <value>Shipping method code already exists.</value>
+  </data>
+  <data name="shipping_method.binding.duplicate" xml:space="preserve">
+    <value>Shipping method legacy binding already exists.</value>
+  </data>
+  <data name="shipping_method.not_found" xml:space="preserve">
+    <value>Shipping method was not found.</value>
+  </data>
+  <data name="shipping_method.name.required" xml:space="preserve">
+    <value>Shipping method name is required.</value>
+  </data>
 </root>

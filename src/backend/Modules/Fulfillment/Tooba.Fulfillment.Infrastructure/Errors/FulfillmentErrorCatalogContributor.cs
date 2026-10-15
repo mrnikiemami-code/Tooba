@@ -186,6 +186,16 @@ public sealed class FulfillmentErrorCatalogContributor : IErrorCatalogContributo
             "Shipping service option code is required."),
         D(FulfillmentErrorCodes.ShippingServiceOptionNameRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
             "Shipping service option name is required."),
+        D(FulfillmentErrorCodes.ShippingMethodCodeInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Shipping method code is invalid or too long."),
+        D(FulfillmentErrorCodes.ShippingMethodCodeDuplicate, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Shipping method code already exists."),
+        D(FulfillmentErrorCodes.ShippingMethodBindingDuplicate, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Shipping method legacy binding already exists."),
+        D(FulfillmentErrorCodes.ShippingMethodNotFound, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Shipping method was not found."),
+        D(FulfillmentErrorCodes.ShippingMethodNameRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Shipping method name is required."),
     ];
 
     private static ErrorDescriptor D(

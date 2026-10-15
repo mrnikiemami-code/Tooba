@@ -273,4 +273,19 @@ public static class FulfillmentErrorCodes
 
     /// <summary>Shipping service option name required.</summary>
     public const string ShippingServiceOptionNameRequired = "shipping_service_option.name.required";
+
+    /// <summary>One-level shipping method code is invalid or exceeds the 32-character paid-checkout width.</summary>
+    public const string ShippingMethodCodeInvalid = "shipping_method.code.invalid";
+
+    /// <summary>Duplicate one-level shipping method code.</summary>
+    public const string ShippingMethodCodeDuplicate = "shipping_method.code.duplicate";
+
+    /// <summary>Duplicate legacy (service, option) binding for a one-level shipping method.</summary>
+    public const string ShippingMethodBindingDuplicate = "shipping_method.binding.duplicate";
+
+    /// <summary>One-level shipping method was not found.</summary>
+    public const string ShippingMethodNotFound = "shipping_method.not_found";
+
+    /// <summary>One-level shipping method name required.</summary>
+    public const string ShippingMethodNameRequired = "shipping_method.name.required";
 }

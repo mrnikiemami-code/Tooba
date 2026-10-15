@@ -66,6 +66,12 @@ public sealed class FulfillmentDbContext : DbContext
     /// <summary>ترجمه‌های نوع سرویس فرزند.</summary>
     public DbSet<ShippingServiceOptionTranslation> ShippingServiceOptionTranslations => Set<ShippingServiceOptionTranslation>();
 
+    /// <summary>روش‌های ارسال یک‌سطحی (کاتالوگ تازه، افزودنی و مستقل از سرویس/گزینه).</summary>
+    public DbSet<ShippingMethod> ShippingMethods => Set<ShippingMethod>();
+
+    /// <summary>ترجمه‌های روش ارسال یک‌سطحی.</summary>
+    public DbSet<ShippingMethodTranslation> ShippingMethodTranslations => Set<ShippingMethodTranslation>();
+
     /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
@@ -198,6 +204,31 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.TranslationId).ValueGeneratedNever();
             entity.Property(x => x.Name).HasMaxLength(128);
             entity.HasIndex(x => new { x.ShippingServiceOptionId, x.LanguageId }).IsUnique();
+        });
+        modelBuilder.Entity<ShippingMethod>(entity =>
+        {
+            entity.ToTable("shipping_methods");
+            entity.HasKey(x => x.ShippingMethodId);
+            entity.Property(x => x.ShippingMethodId).ValueGeneratedNever();
+            entity.Property(x => x.MethodCode).HasMaxLength(ShippingMethod.MaxCodeLength);
+            entity.Property(x => x.ProviderKind).HasMaxLength(64);
+            entity.Property(x => x.LegacyServiceCode).HasMaxLength(ShippingMethod.MaxLegacyCodeLength);
+            entity.Property(x => x.LegacyOptionCode).HasMaxLength(ShippingMethod.MaxLegacyCodeLength);
+            entity.HasIndex(x => x.MethodCode).IsUnique();
+            // پیوند قدیمی یکتا نگه داشته می‌شود تا یک سیاست fallback سطح سرویس هرگز به روش دوم تبدیل نشود.
+            entity.HasIndex(x => new { x.LegacyServiceCode, x.LegacyOptionCode })
+                .IsUnique()
+                .HasFilter("legacy_option_code IS NOT NULL");
+            entity.HasIndex(x => x.LegacyServiceCode);
+        });
+        modelBuilder.Entity<ShippingMethodTranslation>(entity =>
+        {
+            entity.ToTable("shipping_method_translations");
+            entity.HasKey(x => x.TranslationId);
+            entity.Property(x => x.TranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Name).HasMaxLength(128);
+            entity.Property(x => x.Description).HasMaxLength(512);
+            entity.HasIndex(x => new { x.ShippingMethodId, x.LanguageId }).IsUnique();
         });
         modelBuilder.Entity<FulfillmentPaymentInboxRecord>(entity =>
         {

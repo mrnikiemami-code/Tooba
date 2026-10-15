@@ -262,4 +262,19 @@
   <data name="shipping_service_option.name.required" xml:space="preserve">
     <value>نام گزینهٔ سرویس ارسال الزامی است.</value>
   </data>
+  <data name="shipping_method.code.invalid" xml:space="preserve">
+    <value>کد روش ارسال نامعتبر است یا بیش از حد بلند است.</value>
+  </data>
+  <data name="shipping_method.code.duplicate" xml:space="preserve">
+    <value>کد روش ارسال از قبل وجود دارد.</value>
+  </data>
+  <data name="shipping_method.binding.duplicate" xml:space="preserve">
+    <value>پیوند قدیمی روش ارسال از قبل وجود دارد.</value>
+  </data>
+  <data name="shipping_method.not_found" xml:space="preserve">
+    <value>روش ارسال یافت نشد.</value>
+  </data>
+  <data name="shipping_method.name.required" xml:space="preserve">
+    <value>نام روش ارسال الزامی است.</value>
+  </data>
 </root>
