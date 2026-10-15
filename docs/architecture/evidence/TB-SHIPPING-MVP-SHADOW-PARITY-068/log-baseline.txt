@@ -1,0 +1,29 @@
+﻿=== TB-SHIPPING-MVP-SHADOW-PARITY-068 :: target provenance + baseline (mission preflight/B) ===
+captured at 2026-10-15T05:58:43.3345416+03:30
+
+PROCESS pid=11540 start=10/15/2026 03:17:57
+  cmdline="D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe"
+LISTEN ::1:5088 ownerPid=11540
+LISTEN 127.0.0.1:5088 ownerPid=11540
+
+--- environment / tenant / edition proof (Development-only route) ---
+GET /v1/admin/dev-context => 200
+{"actorUserId":"01a036c2-970e-7000-8eb7-94bf5cc2d8db","actorLabel":"admin-actor@tooba.local","tenantId":"store-alpha"}
+GET /health => 200 {"status":"ok"}
+
+--- baseline Shipping rate policies / coverage grants per active service code ---
+post : ratePolicies=3 activeRates=0 coverageGrants=3 activeGrants=0
+   RATE  01a13ca4-4281-7000-bb23-76edd8f68818 level=City area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city=68255340-c69f-5d20-bf33-e8e0b24edde9 charge=71000.00 IRR prep=3 lead=5 free=950000.00 active=False
+   RATE  01a13cb1-22a3-7000-9f3d-8cf18b7cbdc8 level=City area=995347e5-0388-5d1d-8c0f-1fd7660216af city=ebf0cb15-c2a0-5366-a08e-2283d9c71f97 charge=111111.00 IRR prep=1 lead=2 free= active=False
+   RATE  01a13ca8-3a0a-7000-8ddc-23b0c11bd871 level=Country area= city= charge=222222.00 IRR prep=2 lead=4 free=7770000.00 active=False
+   GRANT 01a13ca4-42f6-7000-b2b4-8318c1572792 level=City area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city=68255340-c69f-5d20-bf33-e8e0b24edde9 active=False
+   GRANT 01a13cb1-8c4a-7000-8e00-be5de12ac374 level=City area=995347e5-0388-5d1d-8c0f-1fd7660216af city=ebf0cb15-c2a0-5366-a08e-2283d9c71f97 active=False
+   GRANT 01a13ca8-7fac-7000-9248-dbab79feedd1 level=Country area= city= active=False
+tipax : ratePolicies=0 activeRates=0 coverageGrants=0 activeGrants=0
+store_courier : ratePolicies=0 activeRates=0 coverageGrants=0 activeGrants=0
+in_person : ratePolicies=0 activeRates=0 coverageGrants=0 activeGrants=0
+snapp_courier : ratePolicies=0 activeRates=0 coverageGrants=0 activeGrants=0
+
+--- policy/grant state BEFORE this task (065 fixtures must be accounted for) ---
+065 fixtures known from evidence: 3 rate policies + 3 coverage grants on service 'post', all INACTIVE.
+

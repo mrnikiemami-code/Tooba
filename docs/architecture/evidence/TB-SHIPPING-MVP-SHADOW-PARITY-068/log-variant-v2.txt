@@ -1,0 +1,18 @@
+﻿=== TB-SHIPPING-MVP-SHADOW-PARITY-068 :: controlled data variant V2 (isolate the tipax service) ===
+purpose: the shadow quotes ONE rate per service, but legacy 'tipax' exposes TWO priced options
+(tipax:express 260000 / tipax:standard 180000). V2 removes tipax coverage so both tipax candidates must
+fail closed while the four single-amount services keep matching -> proves both tipax candidates were really
+evaluated and that the service/option collapse, not a missing evaluation, is the mismatch cause.
+
+--- V1 state (tipax fixture active, charge 180000) already recorded; switching to V2 ---
+V2 deactivate tipax rate => 200
+V2 deactivate tipax grant => 200
+
+--- V2 projection request (same cart, same validated Geography ids) ---
+V2 legacy projection unchanged: methods=5 [post:standard=120000 tipax:express=260000 tipax:standard=180000 store_courier=75000 in_person=0] subtotal=8702542.0000000000
+
+--- restore V1 state exactly (charge 180000, both active) ---
+V1 reactivate tipax rate => 200
+V1 reactivate tipax grant => 200
+
+post-restore tipax state: {"serviceCode":"tipax","ratePolicies":[{"ratePolicyId":"01a13d65-cf37-7000-ad21-ac8e9b2c89d7","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":true,"createdAt":"2026-10-15T02:30:44.791242+00:00","updatedAt":"2026-10-15T02:33:23.228022+00:00"}],"coverageGrants":[{"coverageGrantId":"01a13d65-cf8e-7000-a8e5-2205f6167d63","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","isActive":true,"createdAt":"2026-10-15T02:30:44.878728+00:00","updatedAt":"2026-10-15T02:33:23.241766+00:00"}]}

@@ -1,0 +1,14 @@
+﻿=== post-restore verification (shadow must be OFF again) ===
+OFF(M3) == ON(M3)          : True
+OFF(M3) == post-restore(M3): False
+post-restore methods: post:standard=120000 tipax:express=260000 tipax:standard=180000 store_courier=75000 in_person=0
+
+restored host log size=5210959 ; shadow lines=0
+restored host log shadow category lines=0
+
+--- flag proof by environment of the running process (checked independently) ---
+pid=35696 cmdline="D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe"
+
+--- gate behaviour recap: with the override process gone, the projection is served by the default OFF gate ---
+reasoning: the shadow observer returns the Disabled code BEFORE any logging when the gate is disabled,
+so a zero count of observer lines on the restored process is positive evidence the flags are OFF again.

@@ -1,0 +1,13 @@
+﻿=== TB-SHIPPING-MVP-SHADOW-PARITY-068 :: controlled override relaunch #2 (diagnostic-corrected) ===
+why a second override relaunch: the first one set 'Logging__LogLevel__Default=Warning' successfully but the
+category-specific override could not be set with the '$env:' syntax because the category name contains dots
+(PowerShell raised 'The property RateAuthority cannot be found on this object'), so the observer's Information
+diagnostic was suppressed and the shadow could not be *shown* to have run. Correcting only the log level.
+
+STOP pid=18172 start=10/15/2026 06:01:28
+stop observed=True
+HEALTH 200 after ~2s
+ready=True
+RUNNING pid=28836 start=10/15/2026 06:02:15
+override env for THIS relaunch: Tooba__ShippingRateAuthority__ShadowEnabled=true, Tooba__ShippingRateAuthority__PrerequisitesConfirmed=true, Logging__LogLevel__Default=Information
+no configuration file was modified; the override lives only in this process environment and dies with it

@@ -1,0 +1,27 @@
+﻿created disposable customer 068.probe.20261015060112@tooba.local ; cart 01a13d66-3b5a-7000-b748-bfb2f3680793 ; line added, version=3 itemCount=1
+
+=== TB-SHIPPING-MVP-SHADOW-PARITY-068 :: storefront projection matrix (shadow OFF) : 2026-10-15T06:01:12.5325103+03:30 ===
+cart=01a13d66-3b5a-7000-b748-bfb2f3680793  (task-owned disposable Development cart, one real line, no order, no payment)
+
+  methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+  selected= amount=0 minDelivery= subtotal=8702542.0000000000 currency=IRR provinces=12
+  methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+  selected= amount=0 minDelivery= subtotal=8702542.0000000000 currency=IRR provinces=12
+  methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+  selected= amount=0 minDelivery= subtotal=8702542.0000000000 currency=IRR provinces=12
+  methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+  selected= amount=0 minDelivery= subtotal=8702542.0000000000 currency=IRR provinces=12
+  methods=5 [post:standard=120000/L4 tipax:express=260000/L1 tipax:standard=180000/L3 store_courier=75000/L1 in_person=0/L0]
+  selected= amount=0 minDelivery= subtotal=8702542.0000000000 currency=IRR provinces=12
+
+--- payload identity check inside this run ---
+  M1 legacy-client (province only) length=2322
+  M2 city text (no ids) length=2322
+  M3 validated Geography ids length=2322
+  M4 malformed city id length=2322
+  M5 incoherent hierarchy length=2322
+  M1 == M1 legacy-client (province only) : True
+  M1 == M2 city text (no ids) : True
+  M1 == M3 validated Geography ids : True
+  M1 == M4 malformed city id : True
+  M1 == M5 incoherent hierarchy : True

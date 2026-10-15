@@ -1,0 +1,7 @@
+﻿=== TB-SHIPPING-MVP-SHADOW-PARITY-068 :: RESTORE to pre-existing baseline (shadow OFF) ===
+override env still present after cleanup: ShadowEnabled='' Prereq=''
+STOP pid=28836 start=10/15/2026 06:02:15
+stop observed=True
+HEALTH 200 {"status":"ok"} after ~2s
+ready=True
+RUNNING pid=35696 start=10/15/2026 06:03:38 cmdline="D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe"

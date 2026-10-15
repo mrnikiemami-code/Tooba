@@ -1,0 +1,58 @@
+﻿=== TB-SHIPPING-MVP-SHADOW-PARITY-068 :: SYNTHETIC DEVELOPMENT-ONLY parity fixtures (mission B) ===
+target: Development host :5088, tenant store-alpha, DB tooba_alpha (tenant-alpha connection reference)
+scope: country IR e3451206-e503-51a8-91ad-afa9ab70e330 / administrative area alborz 1f8050a8-c325-59fa-959f-82d76b5b2bc5  (area level, NOT the 065 city-level rows)
+representative city for the projection matrix: karaj 68255340-c69f-5d20-bf33-e8e0b24edde9
+
+These amounts are TEST FIXTURES chosen to reproduce the MEASURED legacy amounts so parity can be
+compared. They are NOT user-approved commercial tariffs and must never be described as such.
+
+--- rate policies (POST /v1/admin/shipping-services/{service}/rates) ---
+fixture post: mirrors measured legacy post:standard (base 120000, lead 4)
+  CREATE rate post => 200 {"ratePolicyId":"01a13d65-cebe-7000-8b67-50096b8b8a4d","serviceCode":"post","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":120000,"currencyCode":"IRR","preparationDays":1,"leadDays":4,"isActive":true,"createdAt":"2026-10-15T02:30:44.6708235+00:00","updatedAt":"2026-10-15T02:30:44.6708235+00:00"}
+  FIXTURE_RATE_POST_ID=01a13d65-cebe-7000-8b67-50096b8b8a4d
+fixture store_courier: mirrors measured legacy store_courier (base 75000, lead 1)
+  CREATE rate store_courier => 200 {"ratePolicyId":"01a13d65-cf13-7000-b9bb-d73f95c9b65f","serviceCode":"store_courier","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":75000,"currencyCode":"IRR","preparationDays":1,"leadDays":1,"isActive":true,"createdAt":"2026-10-15T02:30:44.7552212+00:00","updatedAt":"2026-10-15T02:30:44.7552212+00:00"}
+  FIXTURE_RATE_STORE_COURIER_ID=01a13d65-cf13-7000-b9bb-d73f95c9b65f
+fixture in_person: mirrors measured legacy in_person (base 0, lead 0)
+  CREATE rate in_person => 200 {"ratePolicyId":"01a13d65-cf25-7000-8064-f76ca9186f76","serviceCode":"in_person","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":0,"currencyCode":"IRR","preparationDays":1,"leadDays":0,"isActive":true,"createdAt":"2026-10-15T02:30:44.7733529+00:00","updatedAt":"2026-10-15T02:30:44.7733529+00:00"}
+  FIXTURE_RATE_IN_PERSON_ID=01a13d65-cf25-7000-8064-f76ca9186f76
+fixture tipax: mirrors measured legacy tipax:standard; tipax:express (260000) cannot match by construction
+  CREATE rate tipax => 200 {"ratePolicyId":"01a13d65-cf37-7000-ad21-ac8e9b2c89d7","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":true,"createdAt":"2026-10-15T02:30:44.7912429+00:00","updatedAt":"2026-10-15T02:30:44.7912429+00:00"}
+  FIXTURE_RATE_TIPAX_ID=01a13d65-cf37-7000-ad21-ac8e9b2c89d7
+
+--- coverage grants (POST /v1/admin/shipping-services/{service}/coverage-grants) ---
+  CREATE grant post => 200 {"coverageGrantId":"01a13d65-cf50-7000-9436-100faa454cc0","serviceCode":"post","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","isActive":true,"createdAt":"2026-10-15T02:30:44.8167686+00:00","updatedAt":"2026-10-15T02:30:44.8167686+00:00"}
+  FIXTURE_GRANT_POST_ID=01a13d65-cf50-7000-9436-100faa454cc0
+  CREATE grant store_courier => 200 {"coverageGrantId":"01a13d65-cf6d-7000-89ee-01e58d680d09","serviceCode":"store_courier","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","isActive":true,"createdAt":"2026-10-15T02:30:44.8454545+00:00","updatedAt":"2026-10-15T02:30:44.8454545+00:00"}
+  FIXTURE_GRANT_STORE_COURIER_ID=01a13d65-cf6d-7000-89ee-01e58d680d09
+  CREATE grant in_person => 200 {"coverageGrantId":"01a13d65-cf7d-7000-a9e5-efcf060f0a90","serviceCode":"in_person","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","isActive":true,"createdAt":"2026-10-15T02:30:44.8619243+00:00","updatedAt":"2026-10-15T02:30:44.8619243+00:00"}
+  FIXTURE_GRANT_IN_PERSON_ID=01a13d65-cf7d-7000-a9e5-efcf060f0a90
+  CREATE grant tipax => 200 {"coverageGrantId":"01a13d65-cf8e-7000-a8e5-2205f6167d63","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","isActive":true,"createdAt":"2026-10-15T02:30:44.8787286+00:00","updatedAt":"2026-10-15T02:30:44.8787286+00:00"}
+  FIXTURE_GRANT_TIPAX_ID=01a13d65-cf8e-7000-a8e5-2205f6167d63
+
+--- AFTER counts (must show exactly one active area-level policy+grant per fixture service) ---
+post : ratePolicies=4 activeRates=1 coverageGrants=4 activeGrants=1
+   RATE  01a13ca4-4281-7000-bb23-76edd8f68818 level=City area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city=68255340-c69f-5d20-bf33-e8e0b24edde9 charge=71000.00 IRR prep=3 lead=5 active=False
+   RATE  01a13d65-cebe-7000-8b67-50096b8b8a4d level=AdministrativeArea area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= charge=120000.00 IRR prep=1 lead=4 active=True
+   RATE  01a13cb1-22a3-7000-9f3d-8cf18b7cbdc8 level=City area=995347e5-0388-5d1d-8c0f-1fd7660216af city=ebf0cb15-c2a0-5366-a08e-2283d9c71f97 charge=111111.00 IRR prep=1 lead=2 active=False
+   RATE  01a13ca8-3a0a-7000-8ddc-23b0c11bd871 level=Country area= city= charge=222222.00 IRR prep=2 lead=4 active=False
+   GRANT 01a13ca4-42f6-7000-b2b4-8318c1572792 level=City area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city=68255340-c69f-5d20-bf33-e8e0b24edde9 active=False
+   GRANT 01a13d65-cf50-7000-9436-100faa454cc0 level=AdministrativeArea area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= active=True
+   GRANT 01a13cb1-8c4a-7000-8e00-be5de12ac374 level=City area=995347e5-0388-5d1d-8c0f-1fd7660216af city=ebf0cb15-c2a0-5366-a08e-2283d9c71f97 active=False
+   GRANT 01a13ca8-7fac-7000-9248-dbab79feedd1 level=Country area= city= active=False
+tipax : ratePolicies=1 activeRates=1 coverageGrants=1 activeGrants=1
+   RATE  01a13d65-cf37-7000-ad21-ac8e9b2c89d7 level=AdministrativeArea area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= charge=180000.00 IRR prep=1 lead=3 active=True
+   GRANT 01a13d65-cf8e-7000-a8e5-2205f6167d63 level=AdministrativeArea area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= active=True
+store_courier : ratePolicies=1 activeRates=1 coverageGrants=1 activeGrants=1
+   RATE  01a13d65-cf13-7000-b9bb-d73f95c9b65f level=AdministrativeArea area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= charge=75000.00 IRR prep=1 lead=1 active=True
+   GRANT 01a13d65-cf6d-7000-89ee-01e58d680d09 level=AdministrativeArea area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= active=True
+in_person : ratePolicies=1 activeRates=1 coverageGrants=1 activeGrants=1
+   RATE  01a13d65-cf25-7000-8064-f76ca9186f76 level=AdministrativeArea area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= charge=0.00 IRR prep=1 lead=0 active=True
+   GRANT 01a13d65-cf7d-7000-a9e5-efcf060f0a90 level=AdministrativeArea area=1f8050a8-c325-59fa-959f-82d76b5b2bc5 city= active=True
+snapp_courier : ratePolicies=0 activeRates=0 coverageGrants=0 activeGrants=0
+
+REVERSIBILITY: every fixture is a single area-level row. Deactivation (the strongest available state,
+because the Shipping admin surface exposes no delete route) is one PATCH per row:
+  PATCH /v1/admin/shipping-services/<service>/rates/<ratePolicyId>/active   body {\
+  PATCH /v1/admin/shipping-services/<service>/coverage-grants/<grantId>/active body {\
+An inactive policy/grant is not coverage and never quotes (engine filters on IsActive).

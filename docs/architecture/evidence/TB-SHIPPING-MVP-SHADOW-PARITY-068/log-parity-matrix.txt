@@ -1,0 +1,32 @@
+﻿=== TB-SHIPPING-MVP-SHADOW-PARITY-068 :: legacy projection identity, shadow OFF vs shadow ON ===
+same task-owned cart, same authenticated session, same five request shapes, one request each per gate state.
+
+M1 legacy-client (province only)   len=2322 identical(OFF,ON)=True
+M2 city text (no ids)              len=2322 identical(OFF,ON)=True
+M3 validated Geography ids         len=2322 identical(OFF,ON)=True
+M4 malformed city id               len=2322 identical(OFF,ON)=True
+M5 incoherent hierarchy            len=2322 identical(OFF,ON)=True
+
+ALL FIVE SHAPES IDENTICAL WITH SHADOW OFF AND ON: True
+cross-process recheck: OFF(M3) == ON(M3) == post-restore live(M3) -> True (byte-identical, len=2322)
+
+method codes / amounts observed identically in every shape:
+  post:standard=120000/Lead4  tipax:express=260000/Lead1  tipax:standard=180000/Lead3  store_courier=75000/Lead1  in_person=0/Lead0
+  subtotalExclusiveOfTax=8702542.0000000000 IRR ; methods=5 ; provinces=12 ; selectedMethodCode=null
+
+=== shadow diagnostic excerpt (temporary override process ONLY) ===
+observer log lines captured: 6  (expect 5 base-matrix requests + 1 tipax-isolation request = 6)
+  [1] code=DestinationNotComparable candidates=5 outcomes=none path=/v1/storefront/shipping/projection
+  [2] code=DestinationNotComparable candidates=5 outcomes=none path=/v1/storefront/shipping/projection
+  [3] code=Observed                 candidates=5 outcomes=AmountMismatch,Match path=/v1/storefront/shipping/projection
+  [4] code=DestinationNotComparable candidates=5 outcomes=none path=/v1/storefront/shipping/projection
+  [5] code=DestinationNotComparable candidates=5 outcomes=none path=/v1/storefront/shipping/projection
+  [6] code=Observed                 candidates=5 outcomes=LegacyAllowedShippingDenied,Match path=/v1/storefront/shipping/projection
+
+request order in the base matrix: [1]=M1 province only  [2]=M2 city text  [3]=M3 validated ids  [4]=M4 malformed city id  [5]=M5 incoherent hierarchy ; [6]=tipax-isolation variant
+
+=== gate proof ===
+override process: Tooba__ShippingRateAuthority__ShadowEnabled=true + ...__PrerequisitesConfirmed=true (process env only;
+no configuration file changed) -> the observer produced real 'Observed' lines with candidate counts and outcome sets.
+restored process: the same projection produced 0 observer lines because the observer returns the Disabled code
+before touching the logger when the gate is closed -> positive evidence that the flags are OFF again.

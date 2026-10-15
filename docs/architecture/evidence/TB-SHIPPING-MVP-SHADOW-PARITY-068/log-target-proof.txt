@@ -1,0 +1,44 @@
+﻿=== TB-SHIPPING-MVP-SHADOW-PARITY-068 :: positive proof of the Development target (no PID assumption) ===
+
+--- 1. process actually listening on :5088 ---
+pid=35696 start=10/15/2026 06:03:38 cmdline="D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe"
+listen=::1:5088 ownerPid=35696
+listen=127.0.0.1:5088 ownerPid=35696
+
+--- 2. environment = Development (the route is mapped only inside if (app.Environment.IsDevelopment())) ---
+GET /v1/admin/dev-context => 200 {"actorUserId":"01a036c2-970e-7000-8eb7-94bf5cc2d8db","actorLabel":"admin-actor@tooba.local","tenantId":"store-alpha"}
+GET /health => 200 {"status":"ok"}
+
+--- 3. configuration of the running host (appsettings.Development.json) ---
+Tooba:Edition            = SingleStore
+Tooba:DeploymentId       = dev-singlestore
+Tooba:SingleStore Tenants= store-alpha (Active, ConnectionReference=tenant-alpha)
+Tooba:PostgreSQL refs    = tenant-alpha -> Host=127.0.0.1;Port=5432;Database=tooba_alpha   (tenant-disabled -> tooba_disabled, marketplace -> tooba_marketplace, messaging -> tooba_messaging)
+=> the only tenant this host serves is store-alpha against database tooba_alpha; no production connection reference exists in this configuration.
+
+--- 4. independent database confirmation (read-only queries against the container that owns :5432) ---
+docker ps -> postgres-db  postgres:17  0.0.0.0:5432->5432/tcp
+
+current_database():
+  tooba_alpha
+
+shipping.rate_policies / shipping.coverage_grants row counts per service_code (read-only):
+   service_code  | active | total |       src       
+  ---------------+--------+-------+-----------------
+   in_person     |      1 |     1 | coverage_grants
+   post          |      1 |     4 | coverage_grants
+   store_courier |      1 |     1 | coverage_grants
+   tipax         |      1 |     1 | coverage_grants
+   in_person     |      1 |     1 | rate_policies
+   post          |      1 |     4 | rate_policies
+   store_courier |      1 |     1 | rate_policies
+   tipax         |      1 |     1 | rate_policies
+  (8 rows)
+  
+
+geography reference rows used by the matrix (read-only):
+  country IR id=e3451206-e503-51a8-91ad-afa9ab70e330 active=true
+  area alborz id=1f8050a8-c325-59fa-959f-82d76b5b2bc5 label=البرز
+  city IR-alborz-01 id=68255340-c69f-5d20-bf33-e8e0b24edde9 label=کرج parent=1f8050a8-c325-59fa-959f-82d76b5b2bc5
+
+--- 5. no write of any kind was performed against the database in this task (DB edits were all through authorized Shipping admin HTTP routes) ---
