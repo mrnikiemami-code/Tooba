@@ -18,10 +18,13 @@
  * برگرداند و در صفحهٔ سرور مصرف شود.
  */
 
-import type { OneLevelMethodRow } from "./shipping-one-level-tabs-model.ts";
+import { sanitizeMethodCode, type OneLevelMethodRow } from "./shipping-one-level-tabs-model.ts";
 
 /** نام دقیق بخش تنظیمات سمت سرور که مرجع دروازه است. */
 export const ONE_LEVEL_CATALOG_SERVER_SECTION = "Tooba:ShippingOneLevelCatalog";
+
+/** مسیر فقط-خواندنی ادمین که دروازه/کاتالوگ را به صفحهٔ سرور می‌دهد (TB-085). */
+export const ONE_LEVEL_CATALOG_ADMIN_READ_PATH = "/v1/admin/shipping-services/shipping-methods/one-level";
 
 /** توضیح صریح بایند غایب؛ در نتیجهٔ تسک و شواهد نقل می‌شود. */
 export const ONE_LEVEL_CATALOG_MISSING_BINDING =
@@ -29,7 +32,7 @@ export const ONE_LEVEL_CATALOG_MISSING_BINDING =
   "پس درز فرانت پیش‌فرض-خاموش می‌ماند و UI جدید mount نمی‌شود.";
 
 export type OneLevelCatalogGate =
-  | { state: "disabled"; reason: "absent" | "explicitly-off" | "untrusted-source" }
+  | { state: "disabled"; reason: "absent" | "explicitly-off" | "untrusted-source" | "catalog-not-ready" }
   | { state: "enabled"; source: "server-flag" };
 
 /**
@@ -53,3 +56,64 @@ export function canRenderOneLevelMethods(gate: OneLevelCatalogGate): boolean {
 
 /** وضعیت اولیهٔ داده وقتی دروازه روشن است ولی خواندن هنوز آغاز نشده. */
 export const ONE_LEVEL_INITIAL_METHODS: readonly OneLevelMethodRow[] = [];
+
+/**
+ * TB-SHIPPING-ONE-LEVEL-TABS-085 — نگاشت ناب پاسخ خواندن سرور به وضعیت دروازه.
+ *
+ * این تابع عمداً خالص است تا در Server Component و در تست بدون هیچ وابستگی به Next اجرا شود.
+ * تنها منبع روشن‌شدن دروازه، پرچم صریح سرور است:
+ *
+ *   - `gate === "Enabled"` و `ready === true` ⇒ enabled (کاتالوگ واقعاً خوانده شده است)؛
+ *   - `gate === "Enabled"` ولی `ready === false` ⇒ disabled با دلیل `catalog-not-ready`؛
+ *     «آماده‌نبودن» هرگز به‌عنوان «فعال» یا «خالی» جا زده نمی‌شود؛
+ *   - `Disabled`، پاسخ نامعتبر، خطای شبکه/مجوز یا هر چیز دیگر ⇒ disabled (fail-closed).
+ */
+export function resolveOneLevelCatalogGateFromHost(input: {
+  status: number;
+  payload: unknown;
+}): OneLevelCatalogGate {
+  if (input.status !== 200) return { state: "disabled", reason: "untrusted-source" };
+  const payload = input.payload;
+  if (!payload || typeof payload !== "object") return { state: "disabled", reason: "untrusted-source" };
+  const record = payload as Record<string, unknown>;
+  const gate = record.gate ?? record.Gate;
+  const ready = record.ready ?? record.Ready;
+  if (gate !== "Enabled") return { state: "disabled", reason: "explicitly-off" };
+  if (ready !== true) return { state: "disabled", reason: "catalog-not-ready" };
+  return { state: "enabled", source: "server-flag" };
+}
+
+/**
+ * روش‌های خوانده‌شده از سرور را به شکل قابل‌سریال‌سازی برای کلاینت تبدیل می‌کند.
+ * فقط کد canonical و ≤۳۲ نویسه پذیرفته می‌شود: کد غیر‌canonical هرگز «نرمال» و به هویت تازه
+ * تبدیل نمی‌شود، و ردیف تکراری/نامعتبر دور ریخته می‌شود. هیچ برچسبی اختراع نمی‌شود.
+ */
+export function mapHostOneLevelMethods(payload: unknown): readonly OneLevelMethodRow[] {
+  if (!payload || typeof payload !== "object") return [];
+  const record = payload as Record<string, unknown>;
+  const raw = record.methods ?? record.Methods;
+  if (!Array.isArray(raw)) return [];
+  const rows: OneLevelMethodRow[] = [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as Record<string, unknown>;
+    const declared = typeof (row.methodCode ?? row.MethodCode) === "string"
+      ? String(row.methodCode ?? row.MethodCode)
+      : "";
+    const code = sanitizeMethodCode(declared);
+    // کد خام باید از قبل canonical و در محدودهٔ ۳۲ نویسه باشد.
+    if (!code || code !== declared || seen.has(code)) continue;
+    seen.add(code);
+    const name = typeof (row.name ?? row.Name) === "string" ? String(row.name ?? row.Name).trim() : "";
+    rows.push({
+      methodCode: code,
+      providerKind: "",
+      isActive: (row.isActive ?? row.IsActive) === true,
+      legacyServiceCode: null,
+      legacyOptionCode: null,
+      translations: name ? [{ languageId: "", name, description: null }] : [],
+    });
+  }
+  return rows;
+}

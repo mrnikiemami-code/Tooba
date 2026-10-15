@@ -106,6 +106,7 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<IShippingServiceLanguageGate, ShippingServiceLanguageGate>();
         services.AddScoped<IShippingCatalogReader, ShippingCatalogReader>();
         services.AddScoped<IShippingOneLevelCatalogReader, ShippingOneLevelCatalogReader>();
+        services.AddScoped<IShippingOneLevelCatalogAdminRead, ShippingOneLevelCatalogAdminRead>();
         services.AddScoped<IShippingCatalogSeedPort, ShippingCatalogSeedAdapter>();
         // دروازهٔ کاتالوگ یک‌سطحی: پیش‌فرض خاموش است و هیچ بخشی در appsettings ندارد. این دروازه فقط
         // مسیر خواندن کاتالوگ/UI آینده را کنترل می‌کند و به Tooba:ShippingRateAuthority یا

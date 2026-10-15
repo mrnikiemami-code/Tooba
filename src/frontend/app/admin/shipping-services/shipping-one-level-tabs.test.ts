@@ -17,9 +17,12 @@ import {
   type OneLevelMethodRow,
 } from "./shipping-one-level-tabs-model.ts";
 import {
+  ONE_LEVEL_CATALOG_ADMIN_READ_PATH,
   ONE_LEVEL_CATALOG_SERVER_SECTION,
   canRenderOneLevelMethods,
+  mapHostOneLevelMethods,
   resolveOneLevelCatalogGate,
+  resolveOneLevelCatalogGateFromHost,
 } from "./shipping-one-level-gate.ts";
 
 const FA = "11111111-1111-4111-8111-111111111111";
@@ -193,20 +196,118 @@ test("the frontend gate is disabled by absence and cannot be enabled from the cl
   assert.equal(canRenderOneLevelMethods({ state: "enabled", source: "server-flag" }), true);
 });
 
-test("screen wires the OFF gate to the legacy screen and exposes no bypass", () => {
+test("host gate response is mapped fail-closed and never enables on anything but an explicit flag", () => {
+  // مسیر خواندن مجوزدار سرور دقیقاً همان مسیر فقط-خواندنی ادمین است.
+  assert.equal(
+    ONE_LEVEL_CATALOG_ADMIN_READ_PATH,
+    "/v1/admin/shipping-services/shipping-methods/one-level",
+  );
+
+  // پاسخ معتبر و کامل ⇒ تنها حالت روشن.
+  assert.deepEqual(
+    resolveOneLevelCatalogGateFromHost({ status: 200, payload: { gate: "Enabled", ready: true } }),
+    { state: "enabled", source: "server-flag" },
+  );
+
+  // دروازهٔ صریحاً خاموش.
+  assert.deepEqual(
+    resolveOneLevelCatalogGateFromHost({ status: 200, payload: { gate: "Disabled", ready: true } }),
+    { state: "disabled", reason: "explicitly-off" },
+  );
+
+  // دروازه روشن ولی کاتالوگ مهاجرت‌نشده ⇒ هرگز «فعال» جا زده نمی‌شود.
+  assert.deepEqual(
+    resolveOneLevelCatalogGateFromHost({ status: 200, payload: { gate: "Enabled", ready: false } }),
+    { state: "disabled", reason: "catalog-not-ready" },
+  );
+
+  // خطای شبکه/مجوز/پاسخ نامعتبر ⇒ fail-closed.
+  assert.deepEqual(
+    resolveOneLevelCatalogGateFromHost({ status: 0, payload: null }),
+    { state: "disabled", reason: "untrusted-source" },
+  );
+  assert.deepEqual(
+    resolveOneLevelCatalogGateFromHost({ status: 401, payload: null }),
+    { state: "disabled", reason: "untrusted-source" },
+  );
+  assert.deepEqual(
+    resolveOneLevelCatalogGateFromHost({ status: 200, payload: "Enabled" }),
+    { state: "disabled", reason: "untrusted-source" },
+  );
+  assert.deepEqual(
+    resolveOneLevelCatalogGateFromHost({ status: 200, payload: {} }),
+    { state: "disabled", reason: "explicitly-off" },
+  );
+  // مقدار رشته‌ای/truthy به‌جای boolean هرگز روشن نمی‌کند.
+  assert.deepEqual(
+    resolveOneLevelCatalogGateFromHost({ status: 200, payload: { gate: "Enabled", ready: "true" } }),
+    { state: "disabled", reason: "catalog-not-ready" },
+  );
+});
+
+test("host method rows are mapped defensively and never invent a label or a second level", () => {
+  const rows = mapHostOneLevelMethods({
+    methods: [
+      { methodCode: "post:standard", name: " پست معمولی ", isActive: true },
+      { methodCode: "post:express", name: "", isActive: false },
+      { methodCode: "POST:Standard", name: "x", isActive: true },
+      { methodCode: "a".repeat(40), name: "x", isActive: true },
+      { methodCode: "store_courier", isActive: true },
+      null,
+      42,
+    ],
+  });
+
+  assert.deepEqual(rows.map((r) => r.methodCode), ["post:standard", "post:express", "store_courier"]);
+  const projected = projectMethodRows(rows, "");
+  assert.equal(projected[0]?.label, "پست معمولی");
+  assert.equal(projected[0]?.isActive, true);
+  // برچسب غایب اختراع نمی‌شود و روش غیرفعال غیرفعال می‌ماند.
+  assert.equal(projected[1]?.hasLabel, false);
+  assert.equal(projected[1]?.isActive, false);
+  // سطح دوم هرگز از پاسخ سرور ساخته نمی‌شود.
+  assert.equal(rows.every((r) => r.providerKind === ""), true);
+  assert.equal(rows.every((r) => r.legacyServiceCode === null && r.legacyOptionCode === null), true);
+  assert.deepEqual(mapHostOneLevelMethods(null), []);
+  assert.deepEqual(mapHostOneLevelMethods({ methods: "x" }), []);
+});
+
+test("screen reads the authoritative gate server-side and exposes no client bypass", () => {
   const raw = fs.readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
   // داوری روی کد اجرایی؛ توضیحات مجازند نام منابع غیرمجاز را بشمارند.
   const page = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
-  // دروازهٔ خاموش ⇒ همان صفحهٔ قدیمی؛ شل جدید mount نمی‌شود.
-  assert.match(page, /resolveOneLevelCatalogGate\(\{\}\)/);
-  assert.match(page, /gate\.state === "enabled" \? \(\s*<ShippingOneLevelTabs gate=\{gate\} \/>\s*\) : \(\s*<ShippingServicesScreen \/>/);
+  // دروازه از پاسخ مجوزدار سرور تعیین می‌شود، نه از پارامتر کلاینتی.
+  assert.match(page, /resolveOneLevelCatalogGateFromHost\(hostRead\)/);
+  assert.match(page, /ONE_LEVEL_CATALOG_ADMIN_READ_PATH/);
+  assert.match(page, /buildUpstreamAuthHeaders\(\)/);
+  assert.match(page, /cache: "no-store"/);
+  assert.match(page, /gate\.state === "enabled" \? \(\s*<ShippingOneLevelTabs gate=\{gate\} initialMethods=\{initialMethods\} \/>\s*\) : \(\s*<ShippingServicesScreen \/>/);
   // هیچ پارامتر URL یا منبع کلاینتی نباید دروازه را روشن کند.
   assert.doesNotMatch(page, /useSearchParams/);
   assert.doesNotMatch(page, /URLSearchParams/);
-  assert.doesNotMatch(page, /searchParams/);
   assert.doesNotMatch(page, /localStorage/);
   assert.doesNotMatch(page, /\?tab=|\?method=|\?gate=/);
+  // هیچ اعتبارنامه‌ای به HTML/مرورگر نمی‌رسد و هیچ لاگی از توکن نیست.
+  assert.doesNotMatch(page, /console\./);
+  assert.doesNotMatch(page, /"use client"/);
+  assert.doesNotMatch(page, /Authorization.*NEXT_PUBLIC/);
+  // هیچ نوشتن/قیمت/رزرو در این صفحه نیست.
+  assert.doesNotMatch(page, /deactivateAdminShippingService|writeAdminShippingService/);
+  assert.doesNotMatch(page, /ShippingRateAuthority|ShippingOperationalShadow/);
+});
+
+test("shell renders server-provided rows without a client fetch and stays read-only", () => {
+  const raw = fs.readFileSync(new URL("./shipping-one-level-tabs.tsx", import.meta.url), "utf8");
+  const shell = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+  // ردیف‌های سرور به‌عنوان مقدار اولیه مصرف می‌شوند؛ نبود خوانندهٔ کلاینتی خطا نیست.
+  assert.match(shell, /useState<readonly OneLevelMethodRow\[\]>\(initialMethods \?\? \[\]\)/);
+  assert.match(shell, /setLoadError\(initialMethods === undefined\)/);
+  // هیچ درخواست مجوزدار از مرورگر و هیچ اعتبارنامه‌ای در این کامپوننت نیست.
+  assert.doesNotMatch(shell, /fetch\(/);
+  assert.doesNotMatch(shell, /Authorization/);
+  assert.doesNotMatch(shell, /localStorage/);
 });
 
 test("new shell is read-only and contains no second-level configuration", () => {

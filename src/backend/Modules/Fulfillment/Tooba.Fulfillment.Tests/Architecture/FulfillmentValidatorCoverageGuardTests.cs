@@ -19,10 +19,11 @@ namespace Tooba.Fulfillment.Tests.Architecture;
 
 /// <summary>
 /// TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001 — exhaustive Fulfillment
-/// endpoint-reachable validator coverage. Exactly 15 endpoint-reachable MediatR requests:
-/// 10 carry a concrete transport validator and 5 are explicitly NO_VALIDATOR_REQUIRED
-/// (2 NO_INPUT + 1 AUTH_SCOPED_QUERY + 2 OPTIONAL_PRESENTATION_LOCALE).
-/// Fulfillment structure certification remains PENDING.
+/// endpoint-reachable validator coverage. Exactly 16 endpoint-reachable MediatR requests:
+/// 10 carry a concrete transport validator and 6 are explicitly NO_VALIDATOR_REQUIRED
+/// (2 NO_INPUT + 1 AUTH_SCOPED_QUERY + 3 OPTIONAL_PRESENTATION_LOCALE).
+/// TB-SHIPPING-ONE-LEVEL-TABS-085 added ListOneLevelShippingMethodsQuery (optional presentation
+/// locale only, no untrusted transport shape) as the 16th request.
 /// </summary>
 public sealed class FulfillmentValidatorCoverageGuardTests
 {
@@ -48,6 +49,7 @@ public sealed class FulfillmentValidatorCoverageGuardTests
         ("ListShippingServicesQuery", "Shipping", OptionalLocale),
         ("EnsureShippingCatalogSeedCommand", "Shipping", NoInput),
         ("ListEnabledShippingMethodsTreeQuery", "Shipping", OptionalLocale),
+        ("ListOneLevelShippingMethodsQuery", "Shipping", OptionalLocale),
     ];
 
     private static readonly (string Request, Type Validator, string Surface)[] RequiredValidators =
@@ -65,14 +67,14 @@ public sealed class FulfillmentValidatorCoverageGuardTests
     ];
 
     [Fact]
-    public void Complete_endpoint_inventory_is_exactly_15_with_10_required_and_5_no_validator()
+    public void Complete_endpoint_inventory_is_exactly_16_with_10_required_and_6_no_validator()
     {
-        Assert.Equal(15, Manifest.Length);
+        Assert.Equal(16, Manifest.Length);
         Assert.Equal(10, Manifest.Count(x => x.Classification == ValidatorRequired));
-        Assert.Equal(5, Manifest.Count(x => x.Classification != ValidatorRequired));
+        Assert.Equal(6, Manifest.Count(x => x.Classification != ValidatorRequired));
         Assert.Equal(2, Manifest.Count(x => x.Classification == NoInput));
         Assert.Equal(1, Manifest.Count(x => x.Classification == AuthScoped));
-        Assert.Equal(2, Manifest.Count(x => x.Classification == OptionalLocale));
+        Assert.Equal(3, Manifest.Count(x => x.Classification == OptionalLocale));
 
         var names = Manifest.Select(x => x.RequestTypeName).ToArray();
         Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());

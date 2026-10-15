@@ -34,6 +34,10 @@ public static class ShippingServiceEndpoints
         group.MapPut("/{serviceId:guid}", UpdateAsync);
         group.MapPost("/{serviceId:guid}/deactivate", DeactivateAsync);
         group.MapPost("/ensure-seed", EnsureSeedHttpAsync);
+
+        // TB-SHIPPING-ONE-LEVEL-TABS-085: مسیر فقط-خواندنی ادمین برای دروازه/کاتالوگ یک‌سطحی.
+        // مسیر مستقل و افزودنی است تا رفتار مسیرهای قدیمی سرویس/گزینه بی‌تغییر بماند.
+        group.MapGet("/shipping-methods/one-level", ListOneLevelMethodsAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -84,6 +88,19 @@ public static class ShippingServiceEndpoints
         await authorizer.RequireAuthorizedAsync(context, cancellationToken);
         var result = await sender.Send(new EnsureShippingCatalogSeedCommand(), cancellationToken);
         return api.From(result);
+    }
+
+    /// <summary>
+    /// وضعیت مؤثر دروازهٔ کاتالوگ یک‌سطحی و فهرست فقط-خواندنی روش‌ها برای پنل ادمین.
+    /// مجوز ادمین لازم است؛ دروازه خاموش ⇒ <c>Disabled/ready=false</c> بدون خواندن دیتابیس؛
+    /// جدول مهاجرت‌نشده ⇒ <c>NOT_READY</c> کنترل‌شده، نه خطای ۵۰۰.
+    /// </summary>
+    private static async Task<IResult> ListOneLevelMethodsAsync(
+        ISender sender, IFulfillmentAdminAuthorizer authorizer, ApiResponseFactory api,
+        HttpContext context, string? language, CancellationToken cancellationToken)
+    {
+        await authorizer.RequireAuthorizedAsync(context, cancellationToken);
+        return api.From(await sender.Send(new ListOneLevelShippingMethodsQuery(language), cancellationToken));
     }
 
     private static ShippingServiceWriteModel ToModel(ShippingServiceWriteRequest body) =>

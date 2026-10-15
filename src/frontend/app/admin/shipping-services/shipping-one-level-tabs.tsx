@@ -36,11 +36,21 @@ export interface ShippingOneLevelTabsProps {
   gate: OneLevelCatalogGate;
   /** زبان فعال برای برچسب‌ها؛ خالی یعنی هیچ زبان فعالی شناخته نشده. */
   activeLanguageId?: string;
+  /**
+   * TB-SHIPPING-ONE-LEVEL-TABS-085: ردیف‌های خوانده‌شده در Server Component.
+   * وقتی ارائه شود، همان دادهٔ سرور رندر می‌شود و هیچ درخواست مجوزدار از مرورگر زده نمی‌شود.
+   */
+  initialMethods?: readonly OneLevelMethodRow[];
   /** خوانندهٔ روش‌ها. نبود آن ⇒ وضعیت «در دسترس نیست»، نه fallback. */
   loadMethods?: () => Promise<readonly OneLevelMethodRow[]>;
 }
 
-export function ShippingOneLevelTabs({ gate, activeLanguageId = "", loadMethods }: ShippingOneLevelTabsProps) {
+export function ShippingOneLevelTabs({
+  gate,
+  activeLanguageId = "",
+  initialMethods,
+  loadMethods,
+}: ShippingOneLevelTabsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const search = searchParams?.toString() ?? "";
@@ -48,7 +58,7 @@ export function ShippingOneLevelTabs({ gate, activeLanguageId = "", loadMethods 
   const selection = useMemo(() => parseOneLevelSelection(search), [search]);
   const activeTab = selection.tab;
 
-  const [methods, setMethods] = useState<readonly OneLevelMethodRow[]>([]);
+  const [methods, setMethods] = useState<readonly OneLevelMethodRow[]>(initialMethods ?? []);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
@@ -56,7 +66,8 @@ export function ShippingOneLevelTabs({ gate, activeLanguageId = "", loadMethods 
 
   const load = useCallback(async () => {
     if (!loadMethods) {
-      setLoadError(true);
+      // ردیف‌های سرور کافی‌اند؛ نبود خوانندهٔ کلاینتی خطا نیست.
+      setLoadError(initialMethods === undefined);
       return;
     }
     setLoading(true);
@@ -68,7 +79,7 @@ export function ShippingOneLevelTabs({ gate, activeLanguageId = "", loadMethods 
     } finally {
       setLoading(false);
     }
-  }, [loadMethods]);
+  }, [initialMethods, loadMethods]);
 
   useEffect(() => {
     void load();
