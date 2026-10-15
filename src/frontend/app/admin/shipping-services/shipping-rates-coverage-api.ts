@@ -6,6 +6,7 @@
  * is always re-read from the server instead of being patched in memory.
  */
 import { adminHeaders, type AdminResult } from "../admin-api.ts";
+import type { ShippingRateConditionWrite } from "./shipping-rate-tier-model.ts";
 
 export type ShippingDestinationScopeWrite = {
   countryId: string;
@@ -27,6 +28,11 @@ export type ShippingRatePolicyWriteRequest = {
   preparationDays: number;
   leadDays: number;
   freeAboveThreshold?: number | null;
+  /**
+   * TB-SHIPPING-FULL-OPERATIONS-074 — the 073 weight/item-count condition of this rate, or `null`
+   * for an unconditioned rule. The shape is the canonical wire contract and is never reshaped here.
+   */
+  condition?: ShippingRateConditionWrite | null;
 };
 
 export type ShippingCoverageGrantWriteRequest = {
@@ -49,6 +55,8 @@ export type ShippingRatePolicyAdminItem = {
   leadDays: number;
   freeAboveThreshold: number | null;
   isActive: boolean;
+  /** TB-SHIPPING-FULL-OPERATIONS-074 — persisted 073 tier condition; `null` means unconditioned. */
+  condition: ShippingRateConditionWrite | null;
 };
 
 export type ShippingCoverageGrantAdminItem = {
@@ -91,6 +99,28 @@ function numberOrNull(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/**
+ * Maps one persisted tier axis. A missing `min` means the axis is not conditioned, so the axis is
+ * dropped rather than invented as `[0, ...)`.
+ */
+function mapTierAxis(value: unknown): { min: number; max: number | null } | null {
+  const row = asRecord(value);
+  if (!row) return null;
+  const min = numberOrNull(pick(row, "min", "Min"));
+  if (min == null) return null;
+  return { min, max: numberOrNull(pick(row, "max", "Max")) };
+}
+
+/** Maps the persisted condition; an empty/absent condition stays `null` (unconditioned). */
+function mapCondition(value: unknown): ShippingRateConditionWrite | null {
+  const row = asRecord(value);
+  if (!row) return null;
+  const weightGrams = mapTierAxis(pick(row, "weightGrams", "WeightGrams"));
+  const itemCount = mapTierAxis(pick(row, "itemCount", "ItemCount"));
+  if (!weightGrams && !itemCount) return null;
+  return { weightGrams, itemCount };
+}
+
 function mapRate(raw: unknown): ShippingRatePolicyAdminItem | null {
   const row = asRecord(raw);
   if (!row) return null;
@@ -113,6 +143,7 @@ function mapRate(raw: unknown): ShippingRatePolicyAdminItem | null {
     leadDays: numberOrNull(pick(row, "leadDays", "LeadDays")) ?? 0,
     freeAboveThreshold: numberOrNull(pick(row, "freeAboveThreshold", "FreeAboveThreshold")),
     isActive: Boolean(pick(row, "isActive", "IsActive")),
+    condition: mapCondition(pick(row, "condition", "Condition")),
   };
 }
 
@@ -228,13 +259,13 @@ export function createAdminShippingRate(
   return sendJson(
     `${base(serviceCode)}/rates`,
     "POST",
-    { serviceCode, optionCode: body.optionCode ?? null, scope: body.scope, chargeAmount: body.chargeAmount, currencyCode: body.currencyCode, preparationDays: body.preparationDays, leadDays: body.leadDays, freeAboveThreshold: body.freeAboveThreshold ?? null },
+    { serviceCode, optionCode: body.optionCode ?? null, scope: body.scope, chargeAmount: body.chargeAmount, currencyCode: body.currencyCode, preparationDays: body.preparationDays, leadDays: body.leadDays, freeAboveThreshold: body.freeAboveThreshold ?? null, condition: body.condition ?? null },
     "shipping_rate.create_failed",
     mapRate,
   );
 }
 
-/** Updates the money/lead-time fields of one existing rate policy. */
+/** Updates the money/lead-time/condition fields of one existing rate policy. */
 export function updateAdminShippingRate(
   serviceCode: string,
   ratePolicyId: string,
@@ -243,7 +274,7 @@ export function updateAdminShippingRate(
   return sendJson(
     `${base(serviceCode)}/rates/${encodeURIComponent(ratePolicyId)}`,
     "PUT",
-    { serviceCode, optionCode: body.optionCode ?? null, scope: body.scope, chargeAmount: body.chargeAmount, currencyCode: body.currencyCode, preparationDays: body.preparationDays, leadDays: body.leadDays, freeAboveThreshold: body.freeAboveThreshold ?? null },
+    { serviceCode, optionCode: body.optionCode ?? null, scope: body.scope, chargeAmount: body.chargeAmount, currencyCode: body.currencyCode, preparationDays: body.preparationDays, leadDays: body.leadDays, freeAboveThreshold: body.freeAboveThreshold ?? null, condition: body.condition ?? null },
     "shipping_rate.update_failed",
     mapRate,
   );

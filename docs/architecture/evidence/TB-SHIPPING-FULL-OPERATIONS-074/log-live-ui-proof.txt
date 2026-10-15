@@ -1,0 +1,149 @@
+TB-SHIPPING-FULL-OPERATIONS-074 — live Development UI proof log
+================================================================================
+Target provenance (positive identification of Development, no production/staging):
+  GET http://127.0.0.1:5088/__platform-commerce =>
+    {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha",
+     "connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha",
+     "defaultMarketReference":"IR"}
+  Frontend: http://127.0.0.1:3000  (GET /admin/shipping-services => 200)
+  Database: tooba_alpha on localhost:5432 (docker container postgres-db)
+  Host:     http://127.0.0.1:5088
+  Real browser automation against the running Development frontend + Host (not a mock).
+
+--------------------------------------------------------------------------------
+1. Baseline: the «شرایط مرسوله» section renders inside the EXISTING per-service
+   «نرخ و پوشش» dialog (/admin/shipping-services -> row "تیپاکس" -> نرخ و پوشش).
+--------------------------------------------------------------------------------
+  Existing tipax rows all rendered as:
+    "شرایط مرسوله: بدون شرط اندازه — برای همهٔ مرسولهها"
+  i.e. every pre-073 unconditioned row is shown explicitly as unconditioned,
+  never as a zero interval.
+
+  The create form exposed the new section:
+    "شرایط مرسوله (اختیاری)"
+    "بازهها نیمبازند: «از» شامل و «تا» غیرشامل است. خالیبودن «تا» یعنی بدون کران بالا.
+     اگر هر دو شرط فعال باشند، نرخ فقط وقتی اعمال میشود که مرسوله هر دو شرط را همزمان داشته باشد."
+    axis checkboxes: «وزن مرسوله» (kg) and «تعداد اقلام مرسوله» (items)
+
+--------------------------------------------------------------------------------
+2. CREATE tier A — weight [0, 2000) grams, tipax / option=standard / Alborz
+--------------------------------------------------------------------------------
+  Input: charge=120000 IRR, preparation=1, lead=2, option=standard,
+         weight axis enabled, from=0 kg, to=2 kg
+  Live preview rendered by the UI:
+    "نتیجه: وزن از ۰ گرم (0 کیلوگرم) شامل، تا ۲٬۰۰۰ گرم (2 کیلوگرم) غیرشامل"
+  POST /v1/admin/shipping-services/tipax/rates => 200
+  Persisted id: 01a13e5d-22a9-7000-a15e-24fd90e25954
+  Row now renders:
+    "شرایط مرسوله: وزن از ۰ گرم (0 کیلوگرم) شامل، تا ۲٬۰۰۰ گرم (2 کیلوگرم) غیرشامل" + badge «پلهای»
+
+--------------------------------------------------------------------------------
+3. CREATE tier B — the ADJACENT weight [2000, 5000) grams (half-open: no overlap)
+--------------------------------------------------------------------------------
+  Input: charge=260000 IRR, option=standard, from=2 kg, to=5 kg
+  Live preview:
+    "نتیجه: وزن از ۲٬۰۰۰ گرم (2 کیلوگرم) شامل، تا ۵٬۰۰۰ گرم (5 کیلوگرم) غیرشامل"
+  POST => 200, persisted id: 01a13e5d-4aa8-7000-9521-23e0ac3505ae
+  Row renders:
+    "شرایط مرسوله: وزن از ۲٬۰۰۰ گرم (2 کیلوگرم) شامل، تا ۵٬۰۰۰ گرم (5 کیلوگرم) غیرشامل"
+
+  1999/2000 boundary description proof:
+    tier A upper bound = 2000 g = «تا ۲٬۰۰۰ گرم غیرشامل»
+    tier B lower bound = 2000 g = «از ۲٬۰۰۰ گرم شامل»
+    => 1999 g is priced by A only; 2000 g is priced by B only; no gap, no double match.
+    The human enters kilograms ("2"), the wire carries exactly 2000 grams.
+
+--------------------------------------------------------------------------------
+4. Deliberate OVERLAP refusal with no write
+--------------------------------------------------------------------------------
+  Attempted tier [1500, 3000) g on the same tipax/standard/Alborz identity:
+    from=1.5 kg, to=3 kg
+  POST /v1/admin/shipping-services/tipax/rates => 400
+    errorCode = shipping.rate_policy.tier_overlap
+  UI surfaced the adjacent Persian guidance:
+    "این بازهٔ اندازه با یک پلهٔ فعال دیگر در همان خدمت/گزینه/دامنه همپوشانی دارد؛
+     بازهٔ نیمباز را طوری تغییر دهید که با پلههای موجود تلاقی نکند."
+  Post-attempt row list was UNCHANGED (5 tipax rows: 3 unconditioned + 2 synthetic tiers),
+  confirming no partial write.
+
+--------------------------------------------------------------------------------
+5. Lossless preservation of an existing UNCONDITIONED row on incidental save
+--------------------------------------------------------------------------------
+  Opened edit on the pre-existing unconditioned row 01a13d84-ca00-... (standard, 180000):
+    weight axis checkbox = false, count axis checkbox = false
+    preview = "نتیجه: بدون شرط اندازه — برای همهٔ مرسولهها"
+  Pressed ذخیره (save) without touching the condition:
+    PUT => 200
+    Row still renders "شرایط مرسوله: بدون شرط اندازه — برای همهٔ مرسولهها"
+  Database confirmation:
+    01a13d84-ca00-7000-8d86-52803380de4e | standard | 180000.00 | t |
+      min_weight_grams = NULL, max_weight_grams = NULL,
+      min_item_count  = NULL, max_item_count  = NULL
+  => a previously unconditioned rate was NOT transformed into a restricted tier.
+
+--------------------------------------------------------------------------------
+6. Toggle
+--------------------------------------------------------------------------------
+  Clicked غیرفعالسازی on tier A (01a13e5d-22a9-...):
+    PATCH /v1/admin/shipping-services/tipax/rates/01a13e5d-22a9-.../active => 200
+    Row re-rendered as «غیرفعال» with «فعالسازی» action, condition text preserved.
+
+--------------------------------------------------------------------------------
+7. Database state after the live proof (before cleanup)
+--------------------------------------------------------------------------------
+            rate_policy_id            | option_code | charge | active | min_w | max_w | min_c | max_c
+  01a13d65-cf37-7000-ad21-ac8e9b2c89d7 | (service)   | 180000 | f      | NULL  | NULL  | NULL  | NULL
+  01a13d84-ca00-7000-8d86-52803380de4e | standard    | 180000 | t      | NULL  | NULL  | NULL  | NULL
+  01a13d84-ca7f-7000-a59a-269a1c8ec13d | express     | 260000 | t      | NULL  | NULL  | NULL  | NULL
+  01a13e5d-22a9-7000-a15e-24fd90e25954 | standard    | 120000 | t      | 0     | 2000  | NULL  | NULL  <- synthetic A
+  01a13e5d-4aa8-7000-9521-23e0ac3505ae | standard    | 260000 | t      | 2000  | 5000  | NULL  | NULL  <- synthetic B
+
+  A count-only tier was NOT created: on tipax/standard/Alborz an active weight-only
+  sibling already exists, and a weight-only + count-only pair genuinely intersects
+  (a 1500 g / 3-item parcel matches both), so the 073 guard correctly refuses it as
+  shipping.rate_policy.tier_overlap. Count-only was therefore proven by the focused
+  model/API tests rather than by forcing an invalid Development row.
+
+--------------------------------------------------------------------------------
+8. Cleanup — task-owned synthetic fixtures deactivated via the approved API
+--------------------------------------------------------------------------------
+  PATCH .../01a13e5d-22a9-.../active {"isActive":false} => 200
+  PATCH .../01a13e5d-4aa8-.../active {"isActive":false} => 200
+
+  Final tipax state:
+    id=01a13d84-ca7f-... option=express  charge=260000.00 active=True  cond=null
+    id=01a13d84-ca00-... option=standard charge=180000.00 active=True  cond=null
+    id=01a13e5d-22a9-... option=standard charge=120000.00 active=False cond={"weightGrams":{"min":0,"max":2000}}
+    id=01a13e5d-4aa8-... option=standard charge=260000.00 active=False cond={"weightGrams":{"min":2000,"max":5000}}
+    id=01a13d65-cf37-... option=(service) charge=180000.00 active=False cond=null
+
+  => No ACTIVE synthetic fixture remains. No delete surface exists in the admin API,
+     so the two task-owned rows were deactivated and are ledgered here by id.
+     068/069 parity fixtures were not touched (the express and service-level rows are
+     unchanged). The pre-existing unconditioned standard row is unchanged in condition.
+
+  Synthetic fixture ledger (deactivated, not deleted):
+    01a13e5d-22a9-7000-a15e-24fd90e25954  weight [0,2000)   charge 120000  active=false
+    01a13e5d-4aa8-7000-9521-23e0ac3505ae  weight [2000,5000) charge 260000  active=false
+
+--------------------------------------------------------------------------------
+9. Focused tests and typecheck
+--------------------------------------------------------------------------------
+  cd src/frontend
+  node --experimental-strip-types --test \
+    app/admin/shipping-services/shipping-rate-tier-model.test.ts \
+    app/admin/shipping-services/shipping-rates-coverage-model.test.ts \
+    app/admin/shipping-services/shipping-rates-coverage-api.test.ts \
+    app/admin/shipping-services/shipping-services-roundtrip.test.ts
+    => tests 53, pass 53, fail 0
+
+  npx tsc --noEmit  => exit 0 (clean)
+
+  Architecture guards:
+    frontend-import-boundary / feature-boundary / flat-folder / test-discovery => 7 passed, 0 failed
+    frontend-source-size => 5 pre-existing failures, ALL in files this task never touched
+      (category-admin-screen.tsx, admin-landing-page-composer.tsx, storefront-landing-blocks.tsx,
+       storefront-shipping.tsx, shared-composition-renderer.tsx) — unmodified baseline god-files.
+      None of this task's files appear in the violation list; the largest new file is 300 LOC
+      (threshold 800) and the dialog grew to 733 LOC (still below threshold, and it is not a
+      baseline entry so it is not shrink-only).

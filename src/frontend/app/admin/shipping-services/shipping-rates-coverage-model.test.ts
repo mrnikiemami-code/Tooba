@@ -81,6 +81,7 @@ test("policy round-trips into the edit form without inventing values", () => {
     leadDays: 4,
     freeAboveThreshold: null,
     isActive: true,
+    condition: null,
   });
   assert.deepEqual(form, {
     chargeAmount: "31000",

@@ -43,6 +43,18 @@ import {
   type ShippingRateFormValues,
   type ShippingServiceOptionChoice,
 } from "./shipping-rates-coverage-model.ts";
+import {
+  conditionFormFromPolicy,
+  conditionFormToWrite,
+  conditionSummaryFa,
+  describeConditionFa,
+  EMPTY_CONDITION_FORM,
+  isConditioned,
+  tierErrorFa,
+  validateConditionForm,
+  type ShippingConditionAxisForm,
+  type ShippingRateConditionForm,
+} from "./shipping-rate-tier-model.ts";
 import { loadShippingMethodTree } from "../shipping-services-api.ts";
 import { ShippingDestinationPicker } from "./shipping-destination-picker.tsx";
 
@@ -74,6 +86,12 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
   // گزینهٔ نرخ در حال ایجاد: تهی یعنی سیاست سطح خدمت (رفتار فعلی تک‌گزینه‌ای‌ها دست‌نخورده می‌ماند).
   const [createOptionCode, setCreateOptionCode] = useState<string>("");
   const [createOptionIssues, setCreateOptionIssues] = useState<string[]>([]);
+  // TB-SHIPPING-FULL-OPERATIONS-074 — «شرایط مرسوله» برای ایجاد و ویرایش، جدا از هم تا فرم ویرایش
+  // هرگز شرط ردیف دیگری را بازتاب ندهد و ذخیرهٔ ناخواسته، قاعدهٔ بی‌شرط را محدود نکند.
+  const [createConditionForm, setCreateConditionForm] = useState<ShippingRateConditionForm>(EMPTY_CONDITION_FORM);
+  const [createConditionIssues, setCreateConditionIssues] = useState<string[]>([]);
+  const [editConditionForm, setEditConditionForm] = useState<ShippingRateConditionForm>(EMPTY_CONDITION_FORM);
+  const [editConditionIssues, setEditConditionIssues] = useState<string[]>([]);
 
   const refresh = useCallback(async () => {
     if (!serviceCode) return;
@@ -115,6 +133,10 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
       setCreateRateForm(rateFormFromPolicy(null));
       setCreateOptionCode("");
       setCreateOptionIssues([]);
+      setCreateConditionForm(EMPTY_CONDITION_FORM);
+      setCreateConditionIssues([]);
+      setEditConditionForm(EMPTY_CONDITION_FORM);
+      setEditConditionIssues([]);
       void refresh();
       void loadOptions();
     }
@@ -125,20 +147,24 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
     const scopeProblems = validateDestinationSelection(selection);
     const formProblems = validateShippingRateForm(createRateForm).map((issue) => issue.messageFa);
     const optionProblems = validateRateOption(createOptionCode || null, options);
-    if (scopeProblems.length > 0 || formProblems.length > 0 || optionProblems.length > 0) {
+    const conditionProblems = validateConditionForm(createConditionForm);
+    if (scopeProblems.length > 0 || formProblems.length > 0 || optionProblems.length > 0 || conditionProblems.length > 0) {
       setScopeIssues(scopeProblems);
       setCreateFormIssues(formProblems);
       setCreateOptionIssues(optionProblems);
+      setCreateConditionIssues(conditionProblems);
       return;
     }
     setScopeIssues([]);
     setCreateFormIssues([]);
     setCreateOptionIssues([]);
+    setCreateConditionIssues([]);
     setBusy(true);
     const result = await createAdminShippingRate(serviceCode, {
       scope: buildScopeWrite(selection),
       optionCode: createOptionCode || null,
       ...rateFormToPayload(createRateForm),
+      condition: conditionFormToWrite(createConditionForm),
     });
     setBusy(false);
     if (result.state !== "ok") {
@@ -147,9 +173,10 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
     }
     onNotice({
       tone: "success",
-      text: `نرخ «${rateOptionLabelFa(result.data!.optionCode, options)} · ${scopeSummary(result.data!)}» ایجاد شد.`,
+      text: `نرخ «${rateOptionLabelFa(result.data!.optionCode, options)} · ${scopeSummary(result.data!)} · ${conditionSummaryFa(result.data!.condition)}» ایجاد شد.`,
     });
     setCreateRateForm(rateFormFromPolicy(null));
+    setCreateConditionForm(EMPTY_CONDITION_FORM);
     await refresh();
   }
 
@@ -180,15 +207,21 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
     setEditingId(policy.ratePolicyId);
     setForm(rateFormFromPolicy(policy));
     setIssues([]);
+    // شرط ذخیره‌شده بدون تغییر خوانده می‌شود؛ پس ذخیرهٔ یک ردیف بی‌شرط، آن را محدود نمی‌کند.
+    setEditConditionForm(conditionFormFromPolicy(policy.condition));
+    setEditConditionIssues([]);
   }
 
   async function submitEdit(policy: ShippingRatePolicyAdminItem) {
     const found = validateShippingRateForm(form);
-    if (found.length > 0) {
+    const conditionProblems = validateConditionForm(editConditionForm);
+    if (found.length > 0 || conditionProblems.length > 0) {
       setIssues(found.map((issue) => issue.messageFa));
+      setEditConditionIssues(conditionProblems);
       return;
     }
     setIssues([]);
+    setEditConditionIssues([]);
     setBusy(true);
     const payload = rateFormToPayload(form);
     const result = await updateAdminShippingRate(serviceCode, policy.ratePolicyId, {
@@ -203,6 +236,8 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
       // در سکوت به گزینهٔ دیگری منتقل نشود.
       optionCode: policy.optionCode,
       ...payload,
+      // شرط، صریح از فرم شرط خوانده می‌شود؛ خالی‌بودن آن یعنی «بی‌شرط»، نه «حذف شرط ذخیره‌شده».
+      condition: conditionFormToWrite(editConditionForm),
     });
     setBusy(false);
     if (result.state !== "ok") {
@@ -210,9 +245,10 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
       return;
     }
     setEditingId(null);
+    setEditConditionIssues([]);
     onNotice({
       tone: "success",
-      text: `نرخ «${rateOptionLabelFa(result.data!.optionCode, options)} · ${scopeSummary(result.data!)}» ذخیره شد.`,
+      text: `نرخ «${rateOptionLabelFa(result.data!.optionCode, options)} · ${scopeSummary(result.data!)} · ${conditionSummaryFa(result.data!.condition)}» ذخیره شد.`,
     });
     await refresh();
   }
@@ -321,6 +357,17 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
                           {policy.isActive ? "فعال" : "غیرفعال"}
                         </span>
                       </div>
+                      <p
+                        className="text-[11px] text-gray-600"
+                        data-testid={`shipping-rate-condition-${policy.ratePolicyId}`}
+                      >
+                        شرایط مرسوله: {describeConditionFa(policy.condition)}
+                        {isConditioned(policy.condition) && (
+                          <span className="mr-2 rounded bg-amber-100 px-1 text-[10px] font-bold text-amber-800">
+                            پله‌ای
+                          </span>
+                        )}
+                      </p>
 
                   {editingId === policy.ratePolicyId ? (
                     <div className="grid grid-cols-2 gap-2">
@@ -369,12 +416,26 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
                           data-testid="shipping-rate-threshold-input"
                         />
                       </label>
+                      <div className="col-span-2">
+                        <ConditionEditor
+                          form={editConditionForm}
+                          onChange={(next) => { setEditConditionForm(next); setEditConditionIssues([]); }}
+                          disabled={busy}
+                          testIdPrefix="shipping-rate-edit"
+                        />
+                      </div>
                     </div>
                   ) : null}
 
                   {issues.length > 0 && editingId === policy.ratePolicyId && (
                     <ul className="list-inside list-disc text-[11px] text-red-600" data-testid="shipping-rate-issues">
                       {issues.map((issue) => <li key={issue}>{issue}</li>)}
+                    </ul>
+                  )}
+
+                  {editConditionIssues.length > 0 && editingId === policy.ratePolicyId && (
+                    <ul className="list-inside list-disc text-[11px] text-red-600" data-testid="shipping-rate-edit-condition-issues">
+                      {editConditionIssues.map((issue) => <li key={issue}>{issue}</li>)}
                     </ul>
                   )}
 
@@ -539,6 +600,19 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
                 </label>
               </div>
 
+              <ConditionEditor
+                form={createConditionForm}
+                onChange={(next) => { setCreateConditionForm(next); setCreateConditionIssues([]); }}
+                disabled={busy}
+                testIdPrefix="shipping-create-rate"
+              />
+
+              {createConditionIssues.length > 0 && (
+                <ul className="list-inside list-disc text-[11px] text-red-600" data-testid="shipping-create-rate-condition-issues">
+                  {createConditionIssues.map((issue) => <li key={issue}>{issue}</li>)}
+                </ul>
+              )}
+
               {createFormIssues.length > 0 && (
                 <ul className="list-inside list-disc text-[11px] text-red-600" data-testid="shipping-create-rate-issues">
                   {createFormIssues.map((issue) => <li key={issue}>{issue}</li>)}
@@ -579,14 +653,121 @@ export function ShippingRatesCoverageDialog({ open, serviceCode, serviceName, on
   );
 }
 
+type ConditionEditorProps = {
+  form: ShippingRateConditionForm;
+  onChange: (next: ShippingRateConditionForm) => void;
+  disabled: boolean;
+  testIdPrefix: string;
+};
+
+/**
+ * TB-SHIPPING-FULL-OPERATIONS-074 — the compact «شرایط مرسوله» section.
+ *
+ * An axis is opt-in: unchecked means "unconditioned on this axis", which is the safe default and the
+ * exact behavior of every pre-073 rate. Weight is entered in kilograms and shown back in kilograms
+ * *and* grams so the half-open boundary («از شامل، تا غیرشامل») is never ambiguous.
+ */
+function ConditionEditor({ form, onChange, disabled, testIdPrefix }: ConditionEditorProps) {
+  const preview = conditionFormToWrite(form);
+  return (
+    <fieldset className="space-y-2 rounded border border-gray-200 p-2" data-testid={`${testIdPrefix}-condition`}>
+      <legend className="px-1 text-[11px] font-bold text-gray-700">شرایط مرسوله (اختیاری)</legend>
+      <p className="text-[10px] text-gray-500">
+        بازه‌ها نیم‌بازند: «از» شامل و «تا» غیرشامل است. خالی‌بودن «تا» یعنی بدون کران بالا.
+        اگر هر دو شرط فعال باشند، نرخ فقط وقتی اعمال می‌شود که مرسوله هر دو شرط را همزمان داشته باشد.
+      </p>
+
+      <ConditionAxis
+        titleFa="وزن مرسوله"
+        unitFa="کیلوگرم"
+        hintFa="وزن را با حداکثر سه رقم اعشار وارد کنید؛ مثال 1.999 دقیقاً ۱۹۹۹ گرم است."
+        axis={form.weight}
+        onChange={(axis) => onChange({ ...form, weight: axis })}
+        disabled={disabled}
+        testId={`${testIdPrefix}-condition-weight`}
+      />
+      <ConditionAxis
+        titleFa="تعداد اقلام مرسوله"
+        unitFa="قلم"
+        hintFa="تعداد اقلام فیزیکی مرسوله است، نه تعداد خطوط سبد و نه جمع تعداد اقلام سبد."
+        axis={form.count}
+        onChange={(axis) => onChange({ ...form, count: axis })}
+        disabled={disabled}
+        testId={`${testIdPrefix}-condition-count`}
+      />
+
+      <p className="text-[10px] text-gray-600" data-testid={`${testIdPrefix}-condition-preview`}>
+        نتیجه: {describeConditionFa(preview)}
+      </p>
+    </fieldset>
+  );
+}
+
+type ConditionAxisProps = {
+  titleFa: string;
+  unitFa: string;
+  hintFa: string;
+  axis: ShippingConditionAxisForm;
+  onChange: (next: ShippingConditionAxisForm) => void;
+  disabled: boolean;
+  testId: string;
+};
+
+function ConditionAxis({ titleFa, unitFa, hintFa, axis, onChange, disabled, testId }: ConditionAxisProps) {
+  return (
+    <div className="space-y-1" data-testid={testId}>
+      <label className="flex items-center gap-2 text-[11px] font-bold text-gray-700">
+        <input
+          type="checkbox"
+          checked={axis.enabled}
+          onChange={(e) => onChange({ ...axis, enabled: e.target.checked })}
+          disabled={disabled}
+          data-testid={`${testId}-enabled`}
+        />
+        {titleFa}
+      </label>
+      {axis.enabled && (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-[10px] text-gray-600">
+              از (شامل) — {unitFa}
+              <input
+                className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-xs"
+                value={axis.min}
+                onChange={(e) => onChange({ ...axis, min: e.target.value })}
+                disabled={disabled}
+                data-testid={`${testId}-min`}
+              />
+            </label>
+            <label className="text-[10px] text-gray-600">
+              تا (غیرشامل) — {unitFa}؛ خالی = بدون کران بالا
+              <input
+                className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-xs"
+                value={axis.max}
+                onChange={(e) => onChange({ ...axis, max: e.target.value })}
+                disabled={disabled}
+                data-testid={`${testId}-max`}
+              />
+            </label>
+          </div>
+          <p className="text-[10px] text-gray-500">{hintFa}</p>
+        </>
+      )}
+    </div>
+  );
+}
+
 function errorFa(code: string | undefined, fallback: string): string {
   if (!code) return fallback;
   if (code === "admin.authorization.denied") return "دسترسی ندارید.";
   if (code === "shipping.service_scope.mismatch") return "این ردیف به خدمت دیگری تعلق دارد.";
   if (code === "shipping.rate_policy.not_found") return "سیاست نرخ پیدا نشد.";
   if (code === "shipping.coverage_grant.not_found") return "مجوز پوشش پیدا نشد.";
-  if (code === "shipping.rate_policy.scope_duplicate") return "برای این دامنه از قبل نرخی ثبت شده است.";
+  if (code === "shipping.rate_policy.scope_duplicate") {
+    return tierErrorFa(code) ?? "برای این دامنه از قبل نرخی ثبت شده است.";
+  }
   if (code === "shipping.coverage_grant.scope_duplicate") return "برای این دامنه از قبل مجوز پوشش ثبت شده است.";
   if (code === SERVICE_OPTION_UNKNOWN_CODE) return "گزینهٔ انتخابی برای این خدمت شناخته‌شده نیست.";
-  return fallback;
+  // کدهای ثابت پلهٔ اندازه با راهنمای مجاور همان بازه ترجمه می‌شوند تا امتناع، قابل‌اقدام باشد.
+  return tierErrorFa(code) ?? fallback;
 }
