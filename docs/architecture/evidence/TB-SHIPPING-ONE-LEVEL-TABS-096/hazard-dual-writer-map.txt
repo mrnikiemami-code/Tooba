@@ -1,0 +1,74 @@
+# TB-SHIPPING-ONE-LEVEL-TABS-096 — Dual-writer hazard map (`ShippingServiceDirectory.UpdateAsync`)
+
+Source of truth: `src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingServiceDirectory.cs`
+at base SHA `c5a72f59b05b5a7c985c3737b5c5f890f9b43496`.
+
+## 1. Who can write `shipping_service_options.is_active` (the operative authority)?
+
+| Writer | Path | Effect on `is_active` |
+| --- | --- | --- |
+| `ShippingServiceDirectory.CreateAsync` | `POST /v1/admin/shipping-services` via `CreateShippingServiceCommand` | sets activation on the NEW option rows it inserts |
+| `ShippingServiceDirectory.UpdateAsync` | `PUT /v1/admin/shipping-services/{serviceId}` via `UpdateShippingServiceCommand` | **before 096: rebuilt the whole option set** (see hazards) |
+| `ShippingServiceDirectory.DeactivateAsync` | `POST /v1/admin/shipping-services/{serviceId}/deactivate` | writes the PARENT service only; option rows untouched |
+| `ShippingServiceDirectory` (new in 096) | `PUT /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/activation` | writes only the ONE mapped existing option row, in one transaction with the one-level projection |
+
+Callers of `UpdateAsync`: exactly one production caller —
+`Application/Shipping/Commands/UpdateShippingServiceCommand.cs` (handler) ← admin endpoint
+`PUT /v1/admin/shipping-services/{serviceId}`. `ShippingCatalogSeedAdapter` only calls `EnsureSeedAsync`/`CreateAsync`.
+
+## 2. Legacy rewrite as it existed before 096
+
+```text
+existingOptions            = SELECT * FROM shipping_service_options WHERE shipping_service_id = :id
+existingOptionTranslations = SELECT * WHERE shipping_service_option_id IN (existingOptions)
+REMOVE existingOptionTranslations           <-- all of them
+REMOVE existingOptions                      <-- all of them
+AddOptions(serviceId, model.Options, now)   <-- re-INSERT from the request body
+SaveChangesAsync()
+```
+
+`AddOptions` mints a new UUID when the body does not carry `shippingServiceOptionId`
+(`option.ShippingServiceOptionId is { } id && id != Guid.Empty ? id : _ids.NewId()`), and takes `isActive`
+verbatim from the body.
+
+## 3. Hazard register
+
+| ID | Hazard | Reachable by | Consequence |
+| --- | --- | --- | --- |
+| H1 | **Identity rewrite** — any option whose id is not echoed in the body is re-inserted under a fresh UUID | a client that only manages `code`/`name`, an older client, a script | option UUID changes; any future reference to the old option identity breaks |
+| H2 | **Activation reset (the 095 dual-writer)** — `is_active` of every option is taken solely from the body | a stale form (loaded before an activation, saved after), a client that omits the flag with a `false` default | the storefront-visible activation set by another writer is silently reverted; `shipping_methods.is_active` and the legacy option then disagree |
+| H3 | **Option wipe** — a body with an empty option list deletes every option row of the service | editing only unrelated service details (name/icon/color/provider/sort) through a client that does not send the option collection | `StorefrontShippingService` loses every method of that service (no option ⇒ no eligible method); historic method codes survive but become unreachable |
+
+H2 is exactly the conflict the 095 decision (`BLOCKED_ACTIVATION_AUTHORITY`) demanded be closed before any
+toggle is exposed: the one-level projection must never become an independent competing authority.
+
+## 4. Repair implemented in 096
+
+`UpdateAsync` now delegates option handling to `ReconcileOptions` (identity-preserving) instead of
+wholesale delete/re-insert:
+
+1. **Empty option body ⇒ no option management.** If the body carries no options and the service already has
+   options, nothing is deleted (`H3` closed). Options can only be destroyed by a *non-empty* body that
+   deliberately omits them, i.e. a genuine explicit removal.
+2. **Identity-preserving match.** Each body option is matched to an existing row by the echoed
+   `ShippingServiceOptionId`, else by the stable business key `code`. Title match ⇒ the SAME row is updated
+   in place (`ShippingServiceOption.Update`) — option UUIDs survive (`H1` closed) and siblings are untouched.
+3. **Activation is only written on an explicit identity assertion.** Activation is applied only when the
+   client echoed that exact option id (an explicit statement about that option, which is what the existing
+   admin «فعال» checkbox produces). A code-only carry-over keeps the existing `IsActive` (`H2` closed).
+   Legitimate explicit option edits (id echoed) are still honoured — nothing is silently discarded.
+4. **Translations are replaced per option**, only for matched/created rows; removed rows take their own
+   translations with them.
+
+## 5. Residual, reported honestly
+
+* Deleting the *last* option of a service through the legacy service form (empty body) no longer deletes it.
+  That is the safe direction of the H3 fix: converting an optioned service into an optionless service is a
+  change of storefront projection semantics and should be a dedicated, explicit operation. It is documented
+  here rather than silently allowed.
+* Removing the last option is not the only consequence: on an optionless service, `Storefront` projects a
+  single method whose code equals the service code. That conversion is now impossible through the legacy PUT.
+* `Contracts` error codes for the new refusals could not be added (path not authorized in 096). Existing,
+  stable codes are reused: `shipping_service.not_found` (binding missing), `fulfillment.shipping_method.unsupported`
+  (inactive parent / stale option / optionless), `shipping_method.not_found`, `shipping_method.code.invalid`,
+  `fulfillment.rejected` (gate off / catalog not migrated).

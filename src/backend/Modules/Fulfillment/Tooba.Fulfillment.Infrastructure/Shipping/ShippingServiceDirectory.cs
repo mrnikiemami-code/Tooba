@@ -84,16 +84,131 @@ public sealed class ShippingServiceDirectory : IShippingServiceDirectory
         AddTranslations(serviceId, model.Translations);
 
         var existingOptions = await _db.ShippingServiceOptions
-            .Where(x => x.ShippingServiceId == serviceId).ToListAsync(cancellationToken);
+            .Where(x => x.ShippingServiceId == serviceId)
+            .OrderBy(x => x.SortOrder).ThenBy(x => x.Code)
+            .ToListAsync(cancellationToken);
         var optionIds = existingOptions.Select(x => x.ShippingServiceOptionId).ToArray();
         var existingOptionTranslations = await _db.ShippingServiceOptionTranslations
             .Where(x => optionIds.Contains(x.ShippingServiceOptionId)).ToListAsync(cancellationToken);
-        _db.ShippingServiceOptionTranslations.RemoveRange(existingOptionTranslations);
-        _db.ShippingServiceOptions.RemoveRange(existingOptions);
-        AddOptions(serviceId, model.Options, now);
+
+        ReconcileOptions(serviceId, model.Options, existingOptions, existingOptionTranslations, now);
 
         await _db.SaveChangesAsync(cancellationToken);
         return serviceId;
+    }
+
+    /// <summary>
+    /// TB-SHIPPING-ONE-LEVEL-TABS-096 — آشتی گزینه‌ها با حفظ هویت، به‌جای حذف/درج دسته‌جمعی.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// پیش از این، <c>UpdateAsync</c> تمام ردیف‌های گزینه و ترجمه‌های گزینه را حذف و دوباره درج می‌کرد.
+    /// آن بازنویسی سه خطر واقعی داشت:
+    /// </para>
+    /// <list type="number">
+    /// <item><description>
+    /// هر گزینه‌ای که شناسه‌اش از سمت کلاینت بازنگردد، شناسهٔ تازه می‌گرفت (بازنویسی هویت/UUID).
+    /// </description></item>
+    /// <item><description>
+    /// مقدار فعال‌بودن هر گزینه فقط از بدنهٔ درخواست خوانده می‌شد؛ بنابراین یک ذخیرهٔ کهنه یا کلاینتی
+    /// که این فیلد را نمی‌فرستد، فعال‌بودن واقعی را بی‌سروصدا صفر می‌کرد — همان تعارض «دو نویسنده» روی
+    /// ستون <c>is_active</c> که مرجع فعال‌سازی برای فروشگاه است.
+    /// </description></item>
+    /// <item><description>
+    /// بدنهٔ بدون گزینه (ویرایش فقط جزئیات خود سرویس) باعث می‌شد همهٔ ردیف‌های گزینه حذف شوند و
+    /// صلاحیت فروشگاهی آن سرویس نابود شود.
+    /// </description></item>
+    /// </list>
+    /// <para>
+    /// اکنون: بدنهٔ بدون گزینه یعنی «گزینه‌ها مدیریت نشده‌اند» و دست‌نخورده می‌ماند؛ هر گزینهٔ موجود
+    /// بر اساس شناسهٔ بازگردانده‌شده یا کلید کاری پایدار <c>code</c> تطبیق داده می‌شود و همان ردیف
+    /// (<c>Update</c>) به‌روزرسانی می‌شود، پس UUID گزینه‌ها و خواهرها حفظ می‌شود؛ فعال‌بودن فقط وقتی
+    /// اعمال می‌شود که کلاینت هویت همان گزینه را صریحاً اعلام کرده باشد، وگرنه مقدار موجود حفظ می‌شود؛
+    /// و فقط گزینه‌هایی که در یک بدنهٔ غیرخالی غایب‌اند حذف می‌شوند (حذف واقعی از بین نمی‌رود).
+    /// </para>
+    /// </remarks>
+    private void ReconcileOptions(
+        Guid serviceId,
+        IReadOnlyList<ShippingServiceOptionWriteModel> payload,
+        List<ShippingServiceOption> existingOptions,
+        List<ShippingServiceOptionTranslation> existingTranslations,
+        DateTimeOffset now)
+    {
+        if (payload.Count == 0)
+        {
+            // بدنهٔ بدون گزینه = «گزینه‌ها بخشی از این ویرایش نیستند»، نه «همه را حذف کن».
+            return;
+        }
+
+        var translationsByOption = existingTranslations
+            .GroupBy(x => x.ShippingServiceOptionId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+        var untouched = existingOptions.ToDictionary(x => x.ShippingServiceOptionId);
+
+        foreach (var option in payload)
+        {
+            if (string.IsNullOrWhiteSpace(option.Code))
+            {
+                continue;
+            }
+
+            var normalizedCode = option.Code.Trim().ToLowerInvariant();
+            var suppliedId = option.ShippingServiceOptionId is { } id && id != Guid.Empty ? id : (Guid?)null;
+            var identityAsserted = suppliedId is not null;
+
+            ShippingServiceOption? target = null;
+            if (suppliedId is { } supplied)
+            {
+                untouched.TryGetValue(supplied, out target);
+            }
+            target ??= untouched.Values.FirstOrDefault(
+                x => string.Equals(x.Code, normalizedCode, StringComparison.Ordinal));
+
+            if (target is null)
+            {
+                var newId = suppliedId ?? _ids.NewId();
+                _db.ShippingServiceOptions.Add(
+                    ShippingServiceOption.Create(newId, serviceId, normalizedCode, option.SortOrder, option.IsActive, now));
+                AddOptionTranslations(newId, option.Translations);
+                continue;
+            }
+
+            untouched.Remove(target.ShippingServiceOptionId);
+            target.Update(normalizedCode, option.SortOrder, now);
+            if (identityAsserted)
+            {
+                // ویرایش صریح همین گزینه (شناسهٔ بازگردانده‌شده) ⇒ فعال‌بودن خواسته‌شده اعمال می‌شود.
+                target.SetActive(option.IsActive, now);
+            }
+            // تطبیق فقط با کد (بدون شناسه) ⇒ انتقال ساده: مقدار فعال‌بودن موجود دست‌نخورده می‌ماند.
+
+            if (translationsByOption.TryGetValue(target.ShippingServiceOptionId, out var current))
+            {
+                _db.ShippingServiceOptionTranslations.RemoveRange(current);
+            }
+            AddOptionTranslations(target.ShippingServiceOptionId, option.Translations);
+        }
+
+        // فقط گزینه‌هایی که در یک بدنهٔ غیرخالی غایب‌اند حذف می‌شوند (حذف صریح همچنان ممکن است).
+        foreach (var removed in untouched.Values)
+        {
+            if (translationsByOption.TryGetValue(removed.ShippingServiceOptionId, out var current))
+            {
+                _db.ShippingServiceOptionTranslations.RemoveRange(current);
+            }
+            _db.ShippingServiceOptions.Remove(removed);
+        }
+    }
+
+    private void AddOptionTranslations(
+        Guid optionId,
+        IReadOnlyList<ShippingServiceOptionTranslationWriteModel> translations)
+    {
+        foreach (var tr in translations.Where(x => x.LanguageId != Guid.Empty && !string.IsNullOrWhiteSpace(x.Name)))
+        {
+            _db.ShippingServiceOptionTranslations.Add(
+                ShippingServiceOptionTranslation.Create(_ids.NewId(), optionId, tr.LanguageId, tr.Name));
+        }
     }
 
     /// <inheritdoc />

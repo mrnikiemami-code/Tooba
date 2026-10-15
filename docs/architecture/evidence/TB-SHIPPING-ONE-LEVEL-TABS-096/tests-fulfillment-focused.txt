@@ -1,0 +1,22 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Tooba.ModuleContracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.ModuleContracts\bin\Debug\net8.0\Tooba.ModuleContracts.dll
+  Tooba.BuildingBlocks -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.BuildingBlocks\bin\Debug\net8.0\Tooba.BuildingBlocks.dll
+  Tooba.Inventory.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Contracts\bin\Debug\net8.0\Tooba.Inventory.Contracts.dll
+  Tooba.Fulfillment.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Domain\bin\Debug\net8.0\Tooba.Fulfillment.Domain.dll
+  Tooba.Payment.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Payment\Tooba.Payment.Contracts\bin\Debug\net8.0\Tooba.Payment.Contracts.dll
+  Tooba.Offer.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Offer\Tooba.Offer.Contracts\bin\Debug\net8.0\Tooba.Offer.Contracts.dll
+  Tooba.Persistence -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.Persistence\bin\Debug\net8.0\Tooba.Persistence.dll
+  Tooba.Party.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Party\Tooba.Party.Contracts\bin\Debug\net8.0\Tooba.Party.Contracts.dll
+  Tooba.Localization.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Localization\Tooba.Localization.Contracts\bin\Debug\net8.0\Tooba.Localization.Contracts.dll
+  Tooba.Fulfillment.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Contracts\bin\Debug\net8.0\Tooba.Fulfillment.Contracts.dll
+  Tooba.Cart.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Cart\Tooba.Cart.Contracts\bin\Debug\net8.0\Tooba.Cart.Contracts.dll
+  Tooba.Order.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Contracts\bin\Debug\net8.0\Tooba.Order.Contracts.dll
+  Tooba.Fulfillment.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Application\bin\Debug\net8.0\Tooba.Fulfillment.Application.dll
+  Tooba.Fulfillment.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Endpoints\bin\Debug\net8.0\Tooba.Fulfillment.Endpoints.dll
+  Tooba.Fulfillment.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\bin\Debug\net8.0\Tooba.Fulfillment.Infrastructure.dll
+  Tooba.Fulfillment.Tests -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Tests\bin\Debug\net8.0\Tooba.Fulfillment.Tests.dll
+Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Tests\bin\Debug\net8.0\Tooba.Fulfillment.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    31, Skipped:     0, Total:    31, Duration: 567 ms - Tooba.Fulfillment.Tests.dll (net8.0)

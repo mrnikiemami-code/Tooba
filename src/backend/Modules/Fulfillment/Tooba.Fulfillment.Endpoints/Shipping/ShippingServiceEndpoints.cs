@@ -16,6 +16,9 @@ public sealed record ShippingServiceOptionTranslationWrite(Guid LanguageId, stri
 
 /// <summary>TB-094: تنها بدنهٔ نوشتن نام یک روش یک‌سطحی — فقط نام؛ هیچ هویت یا سطح دوم.</summary>
 public sealed record OneLevelShippingMethodTranslationWriteRequest(string? Name);
+
+/// <summary>TB-096: تنها بدنهٔ فعال‌سازی یک روش یک‌سطحی — فقط وضعیت؛ هیچ کد سرویس/گزینه‌ای پذیرفته نمی‌شود.</summary>
+public sealed record OneLevelShippingMethodActivationWriteRequest(bool IsActive);
 public sealed record ShippingServiceOptionWrite(
     Guid? ShippingServiceOptionId, string Code, bool IsActive, int SortOrder,
     IReadOnlyList<ShippingServiceOptionTranslationWrite> Translations);
@@ -49,6 +52,12 @@ public static class ShippingServiceEndpoints
         group.MapPut(
             "/shipping-methods/one-level/{methodCode}/translations/{languageId:guid}",
             UpdateOneLevelMethodTranslationAsync);
+        // TB-SHIPPING-ONE-LEVEL-TABS-096: تنها فعال‌سازی مجاز این مسیر — فعا‌ل‌بودن یک روش گزینه‌دار.
+        // مرجع عملیاتی همان گزینهٔ قدیمی است و ردیف یک‌سطحی در همان تراکنش هم‌راستا می‌شود؛ روش بدون
+        // گزینه و والد غیرفعال رد می‌شوند و هیچ سطح دوم/گروه‌بندی ارائه‌دهنده‌ای ساخته نمی‌شود.
+        group.MapPut(
+            "/shipping-methods/one-level/{methodCode}/activation",
+            SetOneLevelMethodActivationAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -141,6 +150,17 @@ public static class ShippingServiceEndpoints
         await authorizer.RequireAuthorizedAsync(context, cancellationToken);
         return api.From(await sender.Send(
             new UpdateOneLevelShippingMethodTranslationCommand(methodCode, languageId, body?.Name),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> SetOneLevelMethodActivationAsync(
+        string methodCode, OneLevelShippingMethodActivationWriteRequest body,
+        ISender sender, IFulfillmentAdminAuthorizer authorizer, ApiResponseFactory api,
+        HttpContext context, CancellationToken cancellationToken)
+    {
+        await authorizer.RequireAuthorizedAsync(context, cancellationToken);
+        return api.From(await sender.Send(
+            new SetOneLevelShippingMethodActivationCommand(methodCode, body?.IsActive ?? false),
             cancellationToken));
     }
 
