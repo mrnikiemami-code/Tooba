@@ -13,7 +13,7 @@ Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: d6c9d5ec2d21331c34cf22f414ecdc1bea5d4606
 Base-SHA: d6c9d5ec2d21331c34cf22f414ecdc1bea5d4606
 Code-SHA: 91307760d2d32372534ed9828b45f7ea529eae2d
-Evidence-SHA: 91307760d2d32372534ed9828b45f7ea529eae2d
+Evidence-SHA: 40b5d0a6ca032a38e4cfe18105496d1d09f22c95
 automaticNextImplementationTask: NONE
 
 MISSION GRADING
@@ -143,8 +143,8 @@ TESTS ACTUALLY RUN
 
 COMMIT / PUSH
   Base-SHA   d6c9d5ec2d21331c34cf22f414ecdc1bea5d4606 (HEAD == origin/main at claim)
-  Code-SHA   91307760d2d32372534ed9828b45f7ea529eae2d (source + evidence + planning, pushed to origin/main)
-  Evidence-SHA 91307760d2d32372534ed9828b45f7ea529eae2d (contains docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-074/**)
+  Code-SHA   91307760d2d32372534ed9828b45f7ea529eae2d (source + planning + live-proof evidence, pushed to origin/main)
+  Evidence-SHA 40b5d0a6ca032a38e4cfe18105496d1d09f22c95 (contains docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-074/** including this result artifact)
   The unstaged Bridge receipt docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-074.task.md was never staged
   or committed. No unrelated dirty path was staged.
 
