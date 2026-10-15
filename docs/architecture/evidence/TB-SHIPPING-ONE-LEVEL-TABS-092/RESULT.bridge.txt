@@ -1,0 +1,180 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-092
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-091
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_DEVELOPMENT_DEPLOY_AND_REAL_FIVE_TAB_SMOKE
+Bridge-Task-Row: 4dd5fd5b-6687-47b2-ad31-35c216e20294
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 903c5d839146874af88a5e0ce1bbe7b73b46b445
+Base-SHA: 1a63b46be85b9a3e1b4091b39df1a9f102306089
+Code-SHA: NONE
+Evidence-SHA: 4bdd9901a38101fb4160a45cec7de7dee8306684
+automaticNextImplementationTask: NONE
+
+=== PREFLIGHT / DRIFT ===
+Claimed exactly one Pending task on tooba-main; persisted the received artifact UNSTAGED as
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-092.task.md. Read AGENTS.md, pipeline protocol, 090-091
+planning/evidence, master recovery, backup manifest and rollback-090.sql. git fetch origin: HEAD ==
+origin/main == 1a63b46be85b9a3e1b4091b39df1a9f102306089. Drift 903c5d839..HEAD is exactly two 091
+result-bookkeeping files (docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-091/RESULT.bridge.txt,
+.../log-post-091.txt); no src/** file differs. Classification: non-overlapping 091 result-bookkeeping
+drift, NOT RECOVERY_CONFLICT. Pre-existing dirty/untracked work preserved; no reset/stash/rebase/force
+push.
+
+=== MISSION A — PROVENANCE / DEPLOYMENT SAFETY (measured, not remembered) ===
+:5088 listener 127.0.0.1:5088 PID 33548 (Tooba.Host). Executable
+src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe; command line is the bare exe path (no extra
+args), consistent with launchSettings profile "Tooba.Host"; creation time 2026-10-15 13:31:13. Parent
+PID 21968 NO LONGER EXISTS -> the listener is an orphaned process with no supervising shell/IDE/service.
+Working directory not recoverable from the orphan. GET /__platform-commerce = edition SingleStore,
+deploymentId dev-singlestore, tenantId store-alpha, connectionReference tenant-alpha -> tooba_alpha,
+themeReference theme-alpha, defaultMarketReference IR. GET /health = {"status":"ok"}. :3000 listener PID
+31580 (node -> next/dist/server/lib/start-server.js); TOOBA_HOST_ORIGIN unset so it defaults to
+http://127.0.0.1:5088 (lib/server/host-client.ts). Live bin appsettings.json and
+appsettings.Development.json are SHA-256 identical to the repo copies.
+Measured behaviour of the shared :5088: one-level route
+/v1/admin/shipping-services/shipping-methods/one-level -> 404 (route not mounted; stale pre-085 binary);
+legacy /v1/admin/shipping-services -> 200 with bootstrapped admin actor 01a036c2-970e-7000-8eb7-94bf5cc2d8db
+but -> 403 with the frontend's hard-coded dev actor aaaaaaaa-aaaa-4aaa-8aaa-000000000009. Public
+POST /v1/storefront/shipping/projection -> 401 checkout.authentication_required (legacy Checkout surface
+unchanged). No production/staging contact.
+
+DEPLOYMENT DECISION: the shared :5088 process was NOT stopped, restarted or replaced. The ruling makes
+replacement conditional on a documented, repeatable stop/start with proved rollback; the following could
+not be established: (1) parent PID 21968 is gone, so the exact original launch cannot be reproduced;
+(2) no supported launch/stop script exists in the repo (only an IDE launchSettings profile) and no
+operator evidence of a managed procedure was found; (3) rollback to the prior process command/parent/
+environment is therefore unprovable; (4) the frontend cannot authorize against :5088 at all (403), so a
+binary swap alone would not yield a browser-visible result. Per the ruling, an isolated non-disruptive
+current-code instance was used instead and the task stops with that exact blocker. No kill, no config
+commit, no permission grant, no destructive DB mutation.
+
+TASK-SCOPED PAIR (isolated, non-disruptive; originals never signalled):
+Host binary .tmp-091-host-out/Tooba.Host.exe (current-code build hash-pinned by task 091) on
+127.0.0.1:5100 with --contentRoot <repo>\src\backend\Host\Tooba.Host, working dir .tmp-091-host-out,
+ASPNETCORE_ENVIRONMENT=Development, against the REAL Development database
+(dev-singlestore/store-alpha/tenant-alpha -> tooba_alpha, re-verified via /__platform-commerce on :5100).
+Ephemeral gate Tooba__ShippingOneLevelCatalog__Enabled=true set as a PROCESS ENV VAR only — never written
+to any appsettings*.json (verified: no committed gate key exists anywhere under src/backend/Host).
+Outbox/CartExpiry/PaymentReconciliation disabled for the task-scoped process to avoid background-job
+interference with shared data. Frontend: isolated copy .tmp-092-fe (node_modules junctioned, copy
+removed at exit) on 127.0.0.1:3100 with TOOBA_HOST_ORIGIN=http://127.0.0.1:5100. A first launch attempt
+failed with an Npgsql connection error because Start-Process used the shell cwd as content root and read
+the scratch appsettings overlay shipped in .tmp-091-host-out; re-launching with an explicit --contentRoot
+at the repo Host project fixed it (recorded as a runnable step).
+
+=== MISSION B — REAL BEHAVIOUR (authenticated, gate ON) ===
+GET /health -> 200 {"status":"ok"}. GET /__platform-commerce -> 200 dev-singlestore/store-alpha/tenant-alpha.
+GET /v1/admin/shipping-services/shipping-methods/one-level -> 401 unauthorized (fail-closed), -> 200
+authorized with gate=Enabled, ready=true and exactly 7 method codes in a FLAT shape with no
+provider/options nesting: post:express (پیشتاز, inactive), post:standard (معمولی, active),
+tipax:express (پیشتاز, active), tipax:standard (معمولی, active), snapp_courier (اسنپ / پیک آنلاین,
+inactive), store_courier (پیک فروشگاه, active), in_person (تحویل حضوری, active). Inactive methods are
+present and remained inactive; none was activated.
+Server-owned binding resolver: post:standard -> resolved=true service=post option=standard isActive=true;
+post:express -> resolved=true service=post option=express isActive=false; snapp_courier -> resolved=true
+service=snapp_courier isActive=false; unknown:code -> resolved=FALSE; bare "post" -> resolved=FALSE (bare
+legacy codes are not accepted as one-level identities).
+Tab 2 (rate/coverage): GET /v1/admin/shipping-services/post/rates -> 200, level=City, 71000 IRR,
+preparationDays=3, leadDays=5, freeAboveThreshold=950000; GET .../tipax/rates -> 200,
+level=AdministrativeArea, 260000 IRR. GET .../coverage-grants -> 405 because that route is POST-only by
+design (create-grant); there is no coverage read list, so coverage evidence comes from the per-method
+rate policies.
+Tab 3 (packaging/payer): GET /v1/admin/shipping-services/tipax/packaging-policies -> 200, feeAmount=15000
+IRR, freightPayerMode=Prepaid, isActive=false.
+Tab 4 (schedule/capacity): GET /v1/admin/shipping-services/tipax/operating-schedules -> 200,
+timeZoneId=Asia/Tehran, windows with capacity=25, configuredCapacityTotal=25.
+Tab 5 (cost inspector, read-only): POST .../post/operational-quote -> 200 outcome=Quoted freightAmount=
+120000 amountPayableAtCheckout=120000 amountCollectOnDelivery=0 packaging.reasonCode=
+shipping.packaging.not_configured; POST .../tipax/operational-quote -> 200 outcome=Quoted freightAmount=
+180000 schedule.availability=Unavailable schedule.reasonCode=shipping.schedule.outside_windows
+schedule.capacityEnforcement=NotEnforced isOperationallyEligible=false; unauthorized quote -> 401. Every
+quote is a read-only evaluation: no order, payment, COD ledger, capacity reservation or promised-delivery
+record was created. Capacity is reported as configured-only and NotEnforced.
+BROWSER-VISIBLE FIVE-TAB UI (real Chromium tab, real network, RTL): authenticated through the frontend
+BFF (/api/auth/login with the bootstrapped Development admin) so the page's SERVER-SIDE fetch hit the
+task-scoped Host. Rendered tab strip ids/labels: shipping-one-level-tab-services (سرویسها),
+-rates-coverage (تعرفه و پوشش), -packaging-fare (بستهبندی و کرایه), -schedule-capacity (برنامه کاری و
+ظرفیت), -cost-review (بررسی هزینه). Tab 1 rendered seven flat rows, one per method, with inactive badges
+on post:express and snapp_courier and no second-level configuration. dir=rtl, lang=fa. Selecting
+tipax:standard then visiting each dependent tab produced real server-backed content: tab 2 coverage
+۱ از ۱ with 180000 (active/unconditional), 120000 (inactive, weight band 0-2000g) and 260000 (inactive)
+rate policies shown rather than hidden; tab 3 packaging 15000 IRR پیشکرایه with the explicit note that
+real COD settlement is not yet wired to Checkout/payment; tab 4 Asia/Tehran, 2 windows, configured cap 25
+labelled "configured, not yet enforced" and stated as carrier hand-over availability, not a customer
+promise; tab 5 manual diagnostic inputs clearly labelled as not read from any order, producing both
+"outside all active carrier windows" (city scope, Tuesday 09:30) and "inside an active carrier window"
+(province scope, Sunday 13:30, matching window id) plus "configured capacity only; no reservation or
+enforcement" and the standing note that Checkout still prices from its old reference and this number is
+written to no order. Page HTML is server-rendered with gate:{state:"enabled",source:"server-flag"} and the
+seven methods already in the payload -> no client-side bypass and no client fetch that could enable it.
+Screenshots: 01-five-tabs-services-rtl.png, 02-cost-review-tab-rtl.png.
+
+=== CHECKOUT PARITY / GATE SCOPING ===
+Tooba:ShippingOneLevelCatalog is referenced only inside Tooba.Fulfillment.*; a search across
+src/backend found ZERO non-Fulfillment references. Its section name is namespace-distinct from
+Tooba:ShippingRateAuthority and Tooba:ShippingOperationalShadow (asserted by
+ShippingOneLevelMethodCatalogTests), and both of those remained OFF/absent. The gate defaults to disabled
+by absence and flips only on an explicit Enabled=true, so enabling only the catalog is structurally
+incapable of cutting over Checkout. Measured with the gate ON, the public storefront shipping projection
+still returned its own 401 checkout.authentication_required. Legacy Checkout price/paid snapshot
+unchanged; no new capacity reservation, no COD ledger, no promised delivery, no packed-weight guess.
+
+=== DB PARITY (read-only; no writes) ===
+fulfillment.__ef_migrations_history rows for AddShippingOneLevelCatalog = 1 (applied exactly once);
+fulfillment.shipping_methods = 7; fulfillment.shipping_method_translations = 14; inactive =
+post:express, snapp_courier; legacy fulfillment.shipping_services = 5 and shipping_service_options = 4;
+order.seller_orders = 26, order.order_lines = 37, fulfillment.fulfillments = 9, checkouts = 13 — all
+unchanged. No seed/backfill repeated; no row inserted, updated or deleted. The 090 pre-DDL backup and
+rollback-090.sql remain available and were not needed.
+
+=== TESTS ===
+Frontend app/admin/shipping-services/shipping-one-level-*.test.ts: 56/56 pass.
+Backend Tooba.Fulfillment.Tests filtered FullyQualifiedName~ShippingOneLevel: 45/45 pass.
+No production source file changed, so no broader loop was run and no frontend typecheck was required.
+
+=== CLEANUP / ROLLBACK ===
+Task-scoped Host PID 37528 (:5100) and frontend PID 32540 (:3100) stopped; both ports verified free.
+Isolated frontend copy .tmp-092-fe removed (junction removed first so the shared node_modules was not
+followed); scratch SQL removed. Original listeners re-verified intact after cleanup: :5088 -> PID 33548,
+:3000 -> PID 31580, and the shared Development page re-checked in the browser rendering the LEGACY
+two-level screen (no one-level tab strip, no method codes) — i.e. the shared surface is exactly as it was
+before this task. Oversized Host stdout trimmed to a redacted excerpt; credential scan over the new
+evidence folder found no Password=/token/secret match; no credential, connection string, token or session
+id is recorded. Rollback = nothing to undo (no config file changed, no DB write); Code-SHA = NONE.
+
+=== IS THE NEW UI VISIBLE TO THE USER NOW? ===
+NO on the shared Development stack (:5088 still 404 for the one-level route and the frontend actor is
+rejected with 403). YES, fully visible/authorized/server-backed, on the task-scoped pair, which has been
+shut down per cleanup rules.
+
+=== REMAINING EXACT BLOCKER — ONE NEXT CORRECTIVE ACTION ===
+Single blocker: no reproducible operator-safe launch/stop procedure for the shared Development :5088 Host,
+plus an unusable frontend->Host credential on that same stack. Next action: (a) add and use a repo-owned
+scripts/dev/start-host.ps1 (env Development, URL http://localhost:5088,
+dotnet run --project src/backend/Host/Tooba.Host) that writes a pidfile so stop/start is reproducible and
+reversible; (b) restart :5088 from that script so the current-code binary serves the one-level admin
+route; (c) resolve the frontend dev-actor mismatch — the BFF sends
+aaaaaaaa-aaaa-4aaa-8aaa-000000000009 which the Host answers with 403, while the bootstrapped admin is
+01a036c2-970e-7000-8eb7-94bf5cc2d8db. Only then flip the gate for the shared stack and observe the five
+tabs at http://localhost:3000/fa/admin/shipping-services without a task-scoped pair.
+
+=== REMAINING COMMERCIAL BLOCKERS (unchanged, not closed by 092) ===
+Trusted packed-weight provenance (Fulfillment + Order); atomic capacity claim/release (Order + Shipping +
+Settlement); COD ledger/settlement (Payment + Settlement); true customer delivery promise (Product +
+Order + Fulfillment/Shipping); merchant-approved real tariffs/packaging/coverage plus an explicit
+user-authorized Checkout cutover (Merchant + Architect); snapp_courier completeness (Fulfillment +
+Shipping).
+
+=== ELAPSED / CHANGED PATHS ===
+Elapsed ~21 minutes (hard timebox 30 minutes, not exceeded). Changed paths: docs/planning/shipping/
+SHIPPING-ONE-LEVEL-UI-092.md (new); docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-092/** (new);
+docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md (append-only); docs/ai/tasks/
+TB-SHIPPING-ONE-LEVEL-TABS-092.task.md (receipt, UNSTAGED). No src/** file was modified.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
