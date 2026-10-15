@@ -1,0 +1,4 @@
+﻿PREPARE=PASS
+RUN_DIR=D:\Users\User\source\repos\SarvNewVer\.tmp-099-host-run
+EFFECTIVE_CONFIG=D:\Users\User\source\repos\SarvNewVer\.tmp-099-host-run\effective-config.json
+CREDENTIALS_WRITTEN_TO_EVIDENCE=false

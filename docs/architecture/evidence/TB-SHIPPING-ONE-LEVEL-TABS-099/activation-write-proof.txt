@@ -1,0 +1,123 @@
+===== BASELINE (scratch DB, read-only) =====
+{
+ "option_alpha_active": "t",
+ "option_alpha_id": "09900000-0000-4000-8000-0000000000b1",
+ "option_alpha_updated": "2026-10-16 00:00:00+00",
+ "option_beta_active": "t",
+ "option_beta_id": "09900000-0000-4000-8000-0000000000b2",
+ "option_beta_updated": "2026-10-16 00:00:00+00",
+ "method_alpha_active": "t",
+ "method_alpha_id": "09900000-0000-4000-8000-0000000000c1",
+ "method_beta_active": "t",
+ "method_beta_id": "09900000-0000-4000-8000-0000000000c2",
+ "service_active": "t",
+ "service_id": "09900000-0000-4000-8000-0000000000a1",
+ "optionless_method_active": "f",
+ "off_parent_active": "f",
+ "off_child_active": "f"
+}
+
+===== AUTH FAIL-CLOSED ON THIS ISOLATED HOST =====
+PUT scratchsvc:alpha isActive=false ANONYMOUS => 401 {"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/scr
+PUT scratchsvc:alpha isActive=false UNKNOWN BEARER => 401 {"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/scr
+PUT scratchsvc:alpha isActive=false GUEST DEV-ACTOR (Development-only seam) => 403 {"type":"about:blank","title":"Access to manage this store is not permitted.","status":403,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/sc
+GET dev-context actor id then PUT scratchsvc:beta isActive=true (already true, no-op) => 200 {"methodCode":"scratchsvc:beta","isActive":true,"changed":false}
+
+===== 1. REAL AUTHORIZED WRITE (deactivate active option-backed method) =====
+PUT scratchsvc:alpha isActive=false AUTHENTICATED => 200 {"methodCode":"scratchsvc:alpha","isActive":false,"changed":true}
+DB TRUTH AFTER WRITE: {
+ "option_alpha_active": "f",
+ "option_alpha_id": "09900000-0000-4000-8000-0000000000b1",
+ "option_alpha_updated": "2026-10-15 22:55:29.226249+00",
+ "option_beta_active": "t",
+ "option_beta_id": "09900000-0000-4000-8000-0000000000b2",
+ "option_beta_updated": "2026-10-16 00:00:00+00",
+ "method_alpha_active": "f",
+ "method_alpha_id": "09900000-0000-4000-8000-0000000000c1",
+ "method_beta_active": "t",
+ "method_beta_id": "09900000-0000-4000-8000-0000000000c2",
+ "service_active": "t",
+ "service_id": "09900000-0000-4000-8000-0000000000a1",
+ "optionless_method_active": "f",
+ "off_parent_active": "f",
+ "off_child_active": "f"
+}
+
+===== 2. REVERSAL THROUGH THE SAME AUTHORIZED API =====
+PUT scratchsvc:alpha isActive=true AUTHENTICATED => 200 {"methodCode":"scratchsvc:alpha","isActive":true,"changed":true}
+DB TRUTH AFTER REVERT: {
+ "option_alpha_active": "t",
+ "option_alpha_id": "09900000-0000-4000-8000-0000000000b1",
+ "option_alpha_updated": "2026-10-15 22:55:31.017167+00",
+ "option_beta_active": "t",
+ "option_beta_id": "09900000-0000-4000-8000-0000000000b2",
+ "option_beta_updated": "2026-10-16 00:00:00+00",
+ "method_alpha_active": "t",
+ "method_alpha_id": "09900000-0000-4000-8000-0000000000c1",
+ "method_beta_active": "t",
+ "method_beta_id": "09900000-0000-4000-8000-0000000000c2",
+ "service_active": "t",
+ "service_id": "09900000-0000-4000-8000-0000000000a1",
+ "optionless_method_active": "f",
+ "off_parent_active": "f",
+ "off_child_active": "f"
+}
+
+===== 3. REPEATED SAME-STATE REQUEST (idempotent, must not mutate again) =====
+PUT scratchsvc:alpha isActive=true AGAIN => 200 {"methodCode":"scratchsvc:alpha","isActive":true,"changed":false}
+DB TRUTH AFTER REPEAT: {
+ "option_alpha_active": "t",
+ "option_alpha_id": "09900000-0000-4000-8000-0000000000b1",
+ "option_alpha_updated": "2026-10-15 22:55:31.017167+00",
+ "option_beta_active": "t",
+ "option_beta_id": "09900000-0000-4000-8000-0000000000b2",
+ "option_beta_updated": "2026-10-16 00:00:00+00",
+ "method_alpha_active": "t",
+ "method_alpha_id": "09900000-0000-4000-8000-0000000000c1",
+ "method_beta_active": "t",
+ "method_beta_id": "09900000-0000-4000-8000-0000000000c2",
+ "service_active": "t",
+ "service_id": "09900000-0000-4000-8000-0000000000a1",
+ "optionless_method_active": "f",
+ "off_parent_active": "f",
+ "off_child_active": "f"
+}
+
+===== 4. OPTIONLESS REFUSAL (never auto-activated) =====
+PUT scratchsvc isActive=true (optionless) => 400 {"type":"about:blank","title":"Shipping method is unsupported.","status":400,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/scratchsvc/activation","errorCode":"fulfillment.shipping_method.unsupported","traceId":"bc9136b84d6b28871ea584fdd88cbd0c","correlationId":"63bd5945f5924a2683749d178e679b88","requestId":"0HNPB1SRDHGSE:00000005"}
+
+===== 5. INACTIVE-PARENT REFUSAL (never auto-activated) =====
+PUT scratchoff:child isActive=true (inactive parent) => 400 {"type":"about:blank","title":"Shipping method is unsupported.","status":400,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/scratchoff:child/activation","errorCode":"fulfillment.shipping_method.unsupported","traceId":"47db3610aaa73d7b9e1d19cadb5aef4b","correlationId":"792a08ab93994b60a9143502a1df805a","requestId":"0HNPB1SRDHGSF:00000005"}
+DB TRUTH AFTER REFUSALS: {
+ "option_alpha_active": "t",
+ "option_alpha_id": "09900000-0000-4000-8000-0000000000b1",
+ "option_alpha_updated": "2026-10-15 22:55:31.017167+00",
+ "option_beta_active": "t",
+ "option_beta_id": "09900000-0000-4000-8000-0000000000b2",
+ "option_beta_updated": "2026-10-16 00:00:00+00",
+ "method_alpha_active": "t",
+ "method_alpha_id": "09900000-0000-4000-8000-0000000000c1",
+ "method_beta_active": "t",
+ "method_beta_id": "09900000-0000-4000-8000-0000000000c2",
+ "service_active": "t",
+ "service_id": "09900000-0000-4000-8000-0000000000a1",
+ "optionless_method_active": "f",
+ "off_parent_active": "f",
+ "off_child_active": "f"
+}
+
+===== VERDICT CHECKS =====
+PASS :: write deactivated legacy option
+PASS :: write deactivated one-level projection
+PASS :: sibling option unchanged
+PASS :: sibling method unchanged
+PASS :: option identity preserved
+PASS :: parent untouched
+PASS :: revert restored baseline activation
+PASS :: repeat was idempotent (no further mutation)
+PASS :: optionless refused (still inactive)
+PASS :: inactive parent refused (child still inactive)
+PASS :: anonymous write denied
+PASS :: unknown bearer denied
+PASS :: guest dev actor denied
+OVERALL=PASS

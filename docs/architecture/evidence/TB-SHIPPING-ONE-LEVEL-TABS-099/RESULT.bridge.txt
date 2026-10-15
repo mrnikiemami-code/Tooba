@@ -1,0 +1,58 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-099
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-098
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_ISOLATED_ACTIVATION_WRITE_READBACK_ROLLBACK
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Bridge-Task-Row: 402e4d46-a7ac-4ec5-9356-db89e8857548
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 0a66c7a2c1c98ba1bee52b3e7a79957020cf3291
+Base-SHA: 0a66c7a2c1c98ba1bee52b3e7a79957020cf3291
+Code-SHA: <EVIDENCE_SHA>
+Evidence-SHA: <EVIDENCE_SHA>
+automaticNextImplementationTask: NONE
+Measured-Time: ~42 minutes (02:15 → 02:57 local) — DISCLOSED overrun of the 30-minute hard timebox; the write proof was completed and the isolated environment fully destroyed before this Result, nothing was left mid-flight
+
+PREFLIGHT
+- Claimed exactly one Pending Bridge task (402e4d46-…, TB-SHIPPING-ONE-LEVEL-TABS-099); receipt preserved UNSTAGED at docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-099.task.md.
+- git fetch origin: HEAD == origin/main == 0a66c7a2c1c98ba1bee52b3e7a79957020cf3291 == Expected-Base-SHA; `git diff BASE..HEAD -- src` empty => no RECOVERY_CONFLICT. Every pre-existing dirty/untracked path preserved; no reset/stash/rebase/force-push.
+- Read AGENTS.md, the pipeline/controller contract, 093/096/097/098 evidence, the 096 authority (ShippingOneLevelCatalogActivation + ShippingServiceEndpoints), the 091 isolated precedent and scripts/dev/host-stack.ps1.
+- Shared read-only baseline BEFORE work: :5088 pid 29788 (098 build, gate ShippingOneLevelCatalog=true, provenance dev-singlestore/store-alpha/tenant-alpha), :3000 pid 31580 untouched; shared tooba_alpha 7 methods / 14 translations / inactive post:express,snapp_courier / option_natural_hash 4fd8872b79e0141c44385b6f44b9f691.
+- Feasibility: a task-owned disposable database AND a genuine authorized admin could both be established without copying private data or bypassing authorization, so the run proceeded instead of BLOCKED_ISOLATED_AUTH_PROOF.
+
+MISSION A — SAFE ISOLATED AUTHENTICATED TARGET
+- New scratch container `tooba-099-scratch-pg` (postgres:17, loopback 127.0.0.1:55441, no volume) with scratch databases `tooba_099_scratch` and `tooba_099_messaging`; task-generated password kept only in an untracked file, deleted at teardown; no credential in any tracked file.
+- Offline isolation guard on the exact effective configuration: exactly 1 tenant (store-alpha, Active), exactly 2 references, both loopback:55441, both the scratch user, both task-owned application names, and no tooba_alpha/tooba_disabled/tooba_marketplace string anywhere => ISOLATION_GUARD=PASS, TOOBA_ALPHA_REACHABLE=false.
+- Current-code Host built output staged into a task-owned directory and launched on http://127.0.0.1:5099 with content root `.tmp-099-host-out` (startup excerpt shows `Now listening on: http://127.0.0.1:5099`, `Hosting environment: Development`), process-only `Tooba__ShippingOneLevelCatalog__Enabled=true` (never persisted); ShippingRateAuthority/ShippingOperationalShadow never set. Migrations were applied to the scratch database only.
+- Provenance: {"edition":"SingleStore","deploymentId":"isolated-099","tenantId":"store-alpha","connectionReference":"tenant-099-scratch",...}. DB-side barrier: pg_stat_activity showed ONLY tooba_099_scratch + tooba_099_messaging; the scratch container has no tooba_alpha database (has_tooba_alpha=0).
+- Genuine auth (no bypass): the supported Development bootstrap (SupportDevelopmentSeedHost -> AdminDevActorBootstrap) created a real admin on the scratch identity schema; GET /v1/admin/dev-context => 200 {"actorUserId":"01a141c2-…","actorLabel":"admin-actor@tooba.local","tenantId":"store-alpha"}; a real credential login POST /v1/auth/login => 200 with a real accessToken/sessionId used as Bearer for every authenticated call. No header bypass, no permission invention, no hard-coded actor, no ACL/allow-anonymous change.
+- Fail-closed on the same route/host: anonymous PUT => 401 admin.actor.missing; unknown bearer => 401; guest Development actor aaaaaaaa-…0009 => 403 admin.authorization.denied.
+
+MISSION B — REAL REVERSIBLE ACTIVATION PROOF (scratch fixtures only: active parent `scratchsvc`, active option siblings `alpha`/`beta`, aligned projection `scratchsvc:alpha`/`scratchsvc:beta`, optionless `scratchsvc`, inactive parent `scratchoff` + child)
+- Baseline (scratch DB): option alpha active (UUID …b1), beta active (…b2), method scratchsvc:alpha active (…c1), scratchsvc:beta active (…c2), parent active (…a1).
+- WRITE via the real 096 endpoint: PUT /v1/admin/shipping-services/shipping-methods/one-level/scratchsvc%3Aalpha/activation {"isActive":false} with Bearer => 200 {"methodCode":"scratchsvc:alpha","isActive":false,"changed":true}; re-query of the SAME scratch database shows shipping_service_options.is_active=false AND shipping_methods.is_active=false aligned in the same transaction, option UUID preserved.
+- Sibling untouched: option beta active + UUID unchanged, method scratchsvc:beta active + UUID unchanged, legacy parent scratchsvc active + UUID unchanged. No historical/financial row exists in the scratch DB, so none could be touched.
+- REVERT through the same authorized API: PUT {"isActive":true} => 200 {"changed":true}; option alpha and method scratchsvc:alpha active again, equal to baseline.
+- IDEMPOTENCE: repeated same-state PUT {"isActive":true} => 200 {"changed":false} with updated_at byte-identical to the revert state => no additional mutation.
+- REFUSALS: optionless method PUT => 400 fulfillment.shipping_method.unsupported and still inactive (never auto-activated); inactive-parent child PUT => 400 same code and still inactive. Live post:express/snapp_courier and any real optionless service were never touched.
+- Read paths on the same isolated host (authenticated): GET …/one-level => 200 gate=Enabled ready=true with the 4 synthetic methods; GET …/scratchsvc%3Aalpha/binding => 200 resolved serviceCode scratchsvc / optionCode alpha; GET …/scratchsvc/binding => 200 resolved with NO optionCode (optionless state).
+- Transcript verdicts: 13/13 PASS, OVERALL=PASS (activation-write-proof.txt).
+
+MISSION C — CLEANUP AND DELIVERABLE
+- Isolated Host pid 23908 (proven owner of :5099 under the task-owned output dir) stopped => 0 listeners on :5099; scratch container removed (`containers_after=0`); task-owned run/output dirs plus the untracked password and session files deleted. Only the pre-existing rabbitmq and postgres-db containers remain.
+- Shared stack untouched and operational: :5088 still pid 29788 with the 098 build and gate=ShippingOneLevelCatalog=true, /health ok, provenance dev-singlestore/store-alpha/tenant-alpha; :3000 still pid 31580. Shared tooba_alpha read-only parity after cleanup: 7 methods, 14 translations, inactive post:express,snapp_courier, option_natural_hash 4fd8872b79e0141c44385b6f44b9f691 (identical to pre-task), seller_orders=26, fulfillments=9.
+- Tests: NONE added and no broad suite re-run, because no production source changed (the shipped 096 authority and 097 client contract worked as-is). Historical 096 backend 154/154 and 097 frontend 204/204 stand by reference only.
+- Master recovery: not touched — no explicit authorization was given for its append-only convention and the task asked for it only "under existing append-only conventions"; leaving it alone is the conservative choice.
+
+ACCEPTANCE MAPPING: real authenticated scratch HTTP write = YES (200, changed=true, Bearer from a real credential login); legacy/one-level atomic alignment = YES (both rows flipped in one transaction, UUIDs preserved); actual rollback = YES (baseline restored via the same API); unchanged sibling = YES; clean isolation and cleanup = YES (guard + pg_stat_activity barrier + 0 listeners + container destroyed + shared parity); shared-stack parity = YES. Limitation disclosed: the 097 browser confirm path was not re-exercised on an isolated Next instance (task preference, would need a second frontend and cross-origin reconfiguration beyond the timebox); the same endpoint it calls was exercised for real over HTTP.
+
+CHANGED PATHS: docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-099.md (new) and docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-099/** (new: summary.md, activation-write-proof.txt, fixtures-099.sql, fixtures-refusal-099.sql, log-fixtures-099.txt, log-prepare-isolated-099.txt, log-isolation-guard-099.txt, log-isolated-host-099.txt, log-isolated-catalog-read-099.txt, log-cleanup-099.txt, isolated-host-099-startup-excerpt.txt, isolated/prepare-isolated-target-099.js, isolated/assert-isolated-target-099.js, isolated/launch-isolated-099.ps1, isolated/activation-write-proof-099.js). No src/** or test file changed. Task receipt unstaged/untracked.
+
+BLOCKERS: none for this proof. Standing items for the Architect: (1) the shared Development anonymous BFF fallback identity decision documented in 093/098; (2) an isolated-frontend browser run for the 097 confirm path if that UI-level proof is required; (3) the two disclosed timebox overruns in 098 and 099.
+END_TOOBA_WORKER_RESULT

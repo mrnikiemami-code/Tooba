@@ -1,0 +1,4 @@
+﻿GET one-level (authenticated, isolated) => 200 gate=Enabled ready=true count=4
+methods=scratchsvc:alpha:active,scratchsvc:beta:active,scratchsvc:inactive,scratchoff:child:inactive
+GET binding alpha => 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"scratchsvc:alpha","serviceCode":"scratchsvc","optionCode":"alpha","isActive":true}
+GET binding optionless => 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"scratchsvc","serviceCode":"scratchsvc","isActive":false}

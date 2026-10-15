@@ -1,0 +1,10 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-099 — synthetic scratch fixtures + baseline snapshot (scratch only)
+BEGIN
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+COMMIT
+BEGIN
+INSERT 0 1
+INSERT 0 2
+COMMIT

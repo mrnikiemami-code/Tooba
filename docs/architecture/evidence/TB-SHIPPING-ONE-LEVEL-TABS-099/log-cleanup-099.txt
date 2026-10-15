@@ -1,0 +1,20 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-099 — isolated teardown + shared-stack parity (read-only)
+isolated_listener_before pid=23908 name=Tooba.Host.exe exe=D:\Users\User\source\repos\SarvNewVer\.tmp-099-host-out\Tooba.Host.exe
+isolated_listeners_after=0
+tooba-099-scratch-pg
+containers_after=0
+scratch_files_removed=True
+=== shared parity ===
+shared_5088_health={"status":"ok"}
+shared_5088_provenance={"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"2223286a53a06814f7d0f43c8cb64d13"}
+shared_3000_owners=31580
+shared_5088_owner_pid=29788
+pidfile={ "pid": 29788, "port": 5088, "url": "http://127.0.0.1:5088", "executablePath": "D:\\Users\\User\\source\\repos\\SarvNewVer\\.tmp-dev-host-out-5088-098\\Tooba.Host.exe", "outDir": "D:\\Users\\User\\source\\repos\\SarvNewVer\\.tmp-dev-host-out-5088-098", "contentRoot": "D:\\Users\\User\\source\\repos\\SarvNewVer\\src\\backend\\Host\\Tooba.Host", "gate": "ShippingOneLevelCatalog=true", "startedAt": "2026-10-16T01:56:28.2692948+03:30" } 
+--- shared tooba_alpha read-only parity (post) ---
+one_level_methods=7
+one_level_translations=14
+inactive_methods=post:express,snapp_courier
+legacy_services=20 legacy_options=20
+option_natural_hash=4fd8872b79e0141c44385b6f44b9f691
+seller_orders=26
+fulfillments=9

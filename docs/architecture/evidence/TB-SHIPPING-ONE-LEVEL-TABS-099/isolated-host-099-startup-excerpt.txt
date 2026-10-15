@@ -1,0 +1,5 @@
+﻿{"Timestamp":"2026-10-15T22:50:36.0051580\u002B00:00","EventId":14,"LogLevel":"Information","Category":"Microsoft.Hosting.Lifetime","Message":"Now listening on: http://127.0.0.1:5099","State":{"Message":"Now listening on: http://127.0.0.1:5099","address":"http
+{"Timestamp":"2026-10-15T22:50:36.0053884\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Microsoft.Hosting.Lifetime","Message":"Hosting environment: Development","State":{"Message":"Hosting environment: Development","EnvName":"Development","{Orig
+{"Timestamp":"2026-10-15T22:50:36.0054162\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Microsoft.Hosting.Lifetime","Message":"Content root path: D:\\Users\\User\\source\\repos\\SarvNewVer\\.tmp-099-host-out","State":{"Message":"Content root pat
+migrations_applied=111
+-- full raw stdout was 3145832 bytes and was trimmed to this excerpt; the raw log is not part of the record --
