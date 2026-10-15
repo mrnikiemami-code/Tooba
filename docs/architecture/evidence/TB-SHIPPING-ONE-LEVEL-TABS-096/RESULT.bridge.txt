@@ -1,0 +1,89 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-096
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-095
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_LEGACY_ACTIVATION_AUTHORITY_REPAIR
+Bridge-Task-Row: 9e01bff2-22c0-4843-b250-09673aeba935
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: c5a72f59b05b5a7c985c3737b5c5f890f9b43496
+Base-SHA: c5a72f59b05b5a7c985c3737b5c5f890f9b43496
+Code-SHA: d9773e21700ffc3c7ba6d8df75d3e15efc21161f
+Evidence-SHA: d9773e21700ffc3c7ba6d8df75d3e15efc21161f
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- Claimed exactly one pending task via BRIDGE-WAKE-V1 (/api/tasks/next?channelId=tooba-main).
+- Preserved docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-096.task.md as UNSTAGED receipt (still untracked after commit/push).
+- Read AGENTS.md, pipeline protocol, 093-095 decisions/evidence, and the 095 activation-authority map.
+- git fetch origin: HEAD == origin/main == c5a72f59b05b5a7c985c3737b5c5f890f9b43496; expected SHA is HEAD itself and an ancestor. Zero src drift (git diff --stat c5a72f59b..HEAD -- src/ backend/ empty). No recovery conflict.
+- No pre-existing dirty/untracked path was reset, stashed, rebased or force-pushed.
+- Development provenance: no DB connection used for writes; all task DB activity was isolated in-memory.
+
+MISSION A - DUAL-WRITER HAZARD CONTAINED
+- Established the writer set for fulfillment.shipping_service_options.is_active: ShippingServiceDirectory.CreateAsync, ShippingServiceDirectory.UpdateAsync, ShippingServiceDirectory.DeactivateAsync (parent only), and the new 096 seam. UpdateAsync has exactly ONE production caller: UpdateShippingServiceCommand <- PUT /v1/admin/shipping-services/{serviceId}.
+- Proved the old UpdateAsync (delete-all + re-insert via AddOptions) created three reachable hazards:
+  H1 UUID rewrite when the body omits shippingServiceOptionId; H2 silent activation reset because is_active was taken solely from the body (the exact 095 conflict); H3 total option wipe when the body carried no options, destroying storefront eligibility for that service.
+- Repair: ShippingServiceDirectory.ReconcileOptions - identity-preserving reconciliation. Empty option body => options are not managed (H3 closed). Match by echoed option id, else by stable code; the SAME row is updated in place, preserving option UUIDs and leaving siblings, codes, sort orders and translations untouched (H1 closed). Activation is written only when the client asserted that option identity (id echoed); a code-only carry-over preserves the existing activation (H2 closed). Explicit id-echoed edits are still honoured, so no legitimate option edit is silently discarded. Genuine removal (non-empty body, option absent) still works. Translations are replaced per option only.
+- Result: the dual-writer risk is demonstrably contained and no second independent writer was invented.
+
+MISSION A - NARROW OPTION-BACKED ACTIVATION AUTHORITY (implemented and exposed in 096)
+- Port: src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Ports/IShippingOneLevelCatalogAdminActivation.cs
+- Command/handler: Application/Shipping/Commands/SetOneLevelShippingMethodActivationCommand.cs
+- Validator: Application/Shipping/Validators/SetOneLevelShippingMethodActivationCommandValidator.cs
+- Infrastructure: Infrastructure/Shipping/ShippingOneLevelCatalogActivation.cs
+- DI: Infrastructure/DependencyInjection/FulfillmentModule.cs (one scoped registration)
+- Endpoint: PUT /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/activation in Endpoints/Shipping/ShippingServiceEndpoints.cs (body: { isActive } only; module-owned, authorized, CQRS/ISender, Result/ApiResponseFactory)
+- Contract enforced: input is only the immutable methodCode plus requested IsActive; the legacy binding is resolved server-side from the method row and never rewritten; no client serviceCode/optionCode/option UUID accepted; refusals before any write for gate OFF, blank/raw/invalid code, unknown method, missing legacy parent, inactive legacy parent (never auto-activated), optionless method (never guessed), missing/stale option row; on success exactly two rows change in ONE SaveChangesAsync - the existing legacy ShippingServiceOption via the existing domain setter SetActive, plus the one-level projection; sibling options, codes, sort orders and UUIDs untouched; already-effective state is an idempotent no-op; gate OFF makes zero DB calls; missing table is a controlled outcome, not a 500. No migrations, no permissions bypass.
+- No frontend toggle was added (096 forbids it). Frontend edits: none.
+
+MISSION B - PROOF ACTUALLY RUN
+- New focused tests: 14 (10 in ShippingOneLevelActivationTests covering alignment in one transaction, sibling/UUID/translation preservation, idempotent no-op, optionless refusal, inactive-parent refusal, stale binding/unknown/malformed refusal, gate-OFF zero-write, handler changed-truthfulness and stable error mapping, unchanged historic method codes; 4 in ShippingServiceDirectoryDualWriterTests covering option-free body, code-matched carry-over without activation reset, explicit id-echoed activation, and genuine removal of an absent option).
+- dotnet test .../Tooba.Fulfillment.Tests --filter ShippingOneLevelActivationTests|ShippingServiceDirectoryDualWriterTests -> Passed! 14/14.
+- Guards updated narrowly and executed: FulfillmentValidatorCoverageGuardTests (endpoint-reachable requests 18->19, required validators 12->13, Shipping/Validators 6->7) and FulfillmentModuleAmsc001W3CertGuardTests (module-owned routes 24->25 with a documented comment). Both green.
+- Full Fulfillment module suite -> Passed! 154/154. Host cert guard + legacy ShippingServiceAdminTests -> Passed! 23/23.
+- Log: docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-096/tests-fulfillment-focused.txt.
+
+SAFETY / GATE STATE
+- Tooba:ShippingOneLevelCatalog gate unchanged; Tooba:ShippingRateAuthority and Tooba:ShippingOperationalShadow neither read nor changed.
+- No live Development activation DML; post:express and snapp_courier were NOT activated anywhere.
+- No migrations, no new schema, no seed, no Host/Next restart, no broad suite loops, no production/staging contact.
+- Order/Checkout/Payment/Settlement untouched; no pricing change and no Checkout price cutover.
+- No credentials in evidence. No force push / reset / stash / rebase / history rewrite.
+
+AUTHORITY PROOF (summary)
+- Operative activation authority remains the legacy Fulfillment option column; the one-level row is aligned in the same transaction and never becomes an independent authority.
+- Legacy writer consistency: the destructive rewrite is gone, so activation set by the new authority cannot be reset by an unrelated legacy service edit and option identity cannot be rewritten.
+
+CHANGED PATHS (exact)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Ports/IShippingOneLevelCatalogAdminActivation.cs (new)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Commands/SetOneLevelShippingMethodActivationCommand.cs (new)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Validators/SetOneLevelShippingMethodActivationCommandValidator.cs (new)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelCatalogActivation.cs (new)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingServiceDirectory.cs (modified)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/DependencyInjection/FulfillmentModule.cs (modified, DI only)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Endpoints/Shipping/ShippingServiceEndpoints.cs (modified)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelActivationTests.cs (new)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingServiceDirectoryDualWriterTests.cs (new)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Architecture/FulfillmentValidatorCoverageGuardTests.cs (modified, counts + manifest)
+- src/backend/Host/Tooba.Host.Tests/Architecture/FulfillmentModuleAmsc001W3CertGuardTests.cs (modified, route count 24->25)
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-096.md (new)
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-096/hazard-dual-writer-map.txt (new)
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-096/tests-fulfillment-focused.txt (new)
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-096/RESULT.bridge.txt (new)
+- docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-096.task.md (UNSTAGED RECEIPT ONLY, deliberately not committed)
+- No path outside the allowed list was touched.
+
+REMAINING ISSUES
+1. Frontend activation toggle not built (out of scope for 096 by instruction); the new endpoint has no UI yet.
+2. Optionless methods (store_courier, in_person, snapp_courier) are refused by design; service-level activation remains an open Architect ruling.
+3. Distinct Contracts error codes for inactive-parent / optionless / stale-option need authorization for Tooba.Fulfillment.Contracts/Errors/FulfillmentErrorCodes.cs; existing stable codes were reused.
+4. A stale id-echoed legacy form save can still carry its old isActive (lost update). Fully closing it needs an optimistic-concurrency token or explicit option-management intent on the legacy write contract (frontend + Contracts), reported and NOT implemented.
+5. Deleting the last option of a service through the legacy service form is no longer possible (the safe direction of the H3 fix); documented in the hazard map as an intentional, visible compatibility change.
+
+ELAPSED
+- Approximately 26 minutes of the 30-minute hard timebox; stopped at the box per instruction.
+END_TOOBA_WORKER_RESULT
