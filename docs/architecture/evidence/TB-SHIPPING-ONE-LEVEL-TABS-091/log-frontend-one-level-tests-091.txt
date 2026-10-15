@@ -1,0 +1,84 @@
+﻿(node:27980) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-packaging-tab.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ only the selected method's own option policies are shown (1.8657ms)
+✔ an optionless method matches only the documented service-level fallback (0.2427ms)
+✔ tipax:express never borrows tipax:standard policies and an unmapped method shows nothing (0.1676ms)
+✔ the write target always comes from the server binding and never from the method text (0.1838ms)
+✔ a response belonging to another service is refused rather than rendered or edited (0.4178ms)
+✔ the tab never reports ready without a resolved binding (0.2017ms)
+✔ a stale operation is never attributed to the newly selected method (0.115ms)
+✔ the empty-state text states explicit zero rather than a hidden fee (0.1735ms)
+✔ tab 3 renders no option picker, no provider hierarchy and no method-code splitting (1.5129ms)
+(node:30672) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-quote-tab.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the option identity of the evaluation comes only from the server binding (0.8226ms)
+✔ the evaluation target always comes from the server binding (1.1826ms)
+✔ a reply belonging to another identity is refused instead of displayed (0.1696ms)
+✔ an unmapped or inactive method has no binding to evaluate against (0.1665ms)
+✔ a stale evaluation is never attributed to the newly selected method (0.1066ms)
+✔ the diagnostic boundary is stated explicitly and never claims a charge or settlement (0.5065ms)
+✔ tab 5 renders no option picker, no provider hierarchy and no method-code splitting (0.7298ms)
+✔ tabs 1-4 remain intact and the shell still exposes the locked five labels (0.35ms)
+(node:25788) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-rates-tab.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the binding path is derived from the method code only and stays on the authorized admin route (0.9374ms)
+✔ a resolved binding requires Enabled + ready + resolved + a real service code (0.6155ms)
+✔ gate-off, unmigrated, unknown and malformed binding answers never become a guessed binding (0.4779ms)
+✔ only the resolved binding's own option rates and its service grants are shown (0.4867ms)
+✔ a methodless binding matches only service-level rates, and an empty view stays empty (0.23ms)
+✔ a response belonging to another service is refused rather than rendered under this method (0.2051ms)
+✔ the tab state machine never reports ready without a resolved binding (0.3064ms)
+✔ binding unavailability text is explicit, Persian and never suggests a fallback (0.2097ms)
+✔ the generation guard invalidates an in-flight operation when the method changes (0.2468ms)
+✔ the binding context names the selected one-level method and its resolved legacy pair (0.2753ms)
+✔ tab 2 renders no second-level option picker and no editable parent-service grouping (0.8348ms)
+(node:19624) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-schedule-tab.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ only the selected method's own schedule identity is shown (1.5048ms)
+✔ an optionless method matches only the documented service-level schedule (0.1851ms)
+✔ tipax:express never borrows tipax:standard and an unmapped method shows nothing (0.1585ms)
+✔ the write target always comes from the server binding and never from the method text (0.1748ms)
+✔ a response belonging to another service is refused rather than rendered or edited (0.2084ms)
+✔ the tab never reports ready without a resolved binding (0.1441ms)
+✔ a stale operation is never attributed to the newly selected method (0.0759ms)
+✔ configured capacity is labeled as configuration that is not enforced (50.1676ms)
+✔ carrier windows are dispatch availability, not a promised delivery (0.1647ms)
+✔ the empty and inactive states are stated truthfully (0.1901ms)
+✔ tab 4 renders no option picker, no provider hierarchy and no method-code splitting (0.5312ms)
+(node:6424) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-tabs.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the five tab labels are exactly the locked Persian labels (1.3369ms)
+✔ all five tabs are genuinely wired and none advertises a wiring task (0.1556ms)
+✔ method codes are sanitized to the 32-character canonical identity (0.2198ms)
+✔ language ids accept only canonical uuids (0.2006ms)
+✔ url selection is parsed safely and never trusts malformed input (0.2836ms)
+✔ url building omits defaults and round-trips sanitized values (0.2275ms)
+✔ tablist keyboard navigation wraps and supports Home/End (0.2069ms)
+✔ method rows keep one row per method and never invent a label (0.3024ms)
+✔ inactive methods stay inactive and are never silently activated or dropped (0.1604ms)
+✔ non-canonical method codes are rejected instead of normalized into new identities (0.1384ms)
+✔ data state is honest and has no legacy fallback path (0.0913ms)
+✔ the frontend gate is disabled by absence and cannot be enabled from the client (0.1057ms)
+✔ host gate response is mapped fail-closed and never enables on anything but an explicit flag (0.0886ms)
+✔ host method rows are mapped defensively and never invent a label or a second level (0.2246ms)
+✔ screen reads the authoritative gate server-side and exposes no client bypass (0.5496ms)
+✔ shell renders server-provided rows without a client fetch and stays read-only (0.2763ms)
+✔ new shell is read-only and contains no second-level configuration (0.2848ms)
+ℹ tests 56
+ℹ suites 0
+ℹ pass 56
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 225.3463

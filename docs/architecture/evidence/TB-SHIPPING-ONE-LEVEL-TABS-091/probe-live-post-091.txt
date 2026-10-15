@@ -1,0 +1,52 @@
+﻿Pager usage is off.
+== post-090 one-level catalog (committed backfill) ==
+  method_code   | legacy_service_code | legacy_option_code | is_active | sort_order 
+----------------+---------------------+--------------------+-----------+------------
+ post:express   | post                | express            | f         |         10
+ post:standard  | post                | standard           | t         |         11
+ tipax:express  | tipax               | express            | t         |         20
+ tipax:standard | tipax               | standard           | t         |         21
+ snapp_courier  | snapp_courier       |                    | f         |         30
+ store_courier  | store_courier       |                    | t         |         40
+ in_person      | in_person           |                    | t         |         50
+(7 rows)
+
+== post-090 method translations ==
+  method_code   |             language_id              |          name          
+----------------+--------------------------------------+------------------------
+ post:express   | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیشتاز
+ post:express   | 01a06a53-4196-7000-9b98-fb3706490005 | Express
+ post:standard  | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | معمولی
+ post:standard  | 01a06a53-4196-7000-9b98-fb3706490005 | Standard
+ tipax:express  | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیشتاز
+ tipax:express  | 01a06a53-4196-7000-9b98-fb3706490005 | Express
+ tipax:standard | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | معمولی
+ tipax:standard | 01a06a53-4196-7000-9b98-fb3706490005 | Standard
+ snapp_courier  | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | اسنپ / پیک آنلاین
+ snapp_courier  | 01a06a53-4196-7000-9b98-fb3706490005 | Snapp / Online courier
+ store_courier  | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیک فروشگاه
+ store_courier  | 01a06a53-4196-7000-9b98-fb3706490005 | Store courier
+ in_person      | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | تحویل حضوری
+ in_person      | 01a06a53-4196-7000-9b98-fb3706490005 | In person
+(14 rows)
+
+== migration history tail ==
+               migration_id                
+-------------------------------------------
+ 20261015120000_AddShippingOneLevelCatalog
+ 20260910170000_AddShippingServiceCatalog
+ 20260910120000_AddConsolidatedPackages
+(3 rows)
+
+== legacy catalog unchanged ==
+ legacy_services | legacy_options | legacy_service_translations | legacy_option_translations 
+-----------------+----------------+-----------------------------+----------------------------
+               5 |              4 |                          10 |                          8
+(1 row)
+
+== historical commerce rows unchanged ==
+ fulfillments | shipments | drafts 
+--------------+-----------+--------
+            9 |         5 |     14
+(1 row)
+

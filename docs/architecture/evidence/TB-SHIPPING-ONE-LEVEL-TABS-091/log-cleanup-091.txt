@@ -1,0 +1,29 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-091 — task-owned cleanup and user-managed process re-verification
+
+=== stop the task-owned isolated Host (:5099) ===
+stopped task-owned isolated Host PID 21028
+:5099 listeners afterwards = 0
+
+=== remove the task-owned scratch database container ===
+tooba-091-scratch
+
+containers named tooba-091-scratch = 0
+
+=== user-managed Development Host must be UNCHANGED ===
+:5088 owner PID=33548 start=10/15/2026 13:31:13 path=D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe
+
+LocalPort OwningProcess
+--------- -------------
+     5088         33548
+
+
+
+GET :5088/health -> 200 {"status":"ok"}
+GET :5088/__platform-commerce -> {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"22b23d3cca32fabf3b6ee1019bb76ea9"}
+:5088 Tooba.Host.dll SHA256 unchanged = 025CD55FFD1A967648058F996C4090D5D45186C9AB691CEAA1B6F80D5F1DEBF1
+
+=== remove the task-owned run directory (contains the scratch password) ===
+.tmp-091-host-run remains = False
+
+=== live Development database untouched ===
+methods=7 translations=14 legacy_services=5 fulfillments=9 drafts=14

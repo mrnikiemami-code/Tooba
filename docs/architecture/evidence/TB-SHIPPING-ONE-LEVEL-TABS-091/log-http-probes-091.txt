@@ -1,0 +1,26 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-091 — real-HTTP probes against the TASK-OWNED isolated current-code Host (http://127.0.0.1:5099).
+The user-managed Development Host on :5088 was never addressed by a mutating request.
+
+===== 1. DB-SIDE ISOLATION BARRIER =====
+         datname          |  application_name  | client_addr | state  | count 
+--------------------------+--------------------+-------------+--------+-------
+ tooba_091_scratch_q3w8t1 | psql               |             | active |     1
+ tooba_091_scratch_q3w8t1 | tooba-091-isolated | 172.17.0.1  | idle   |     2
+(2 rows)
+
+
+0
+
+
+===== 2. ROUTE + AUTH FAIL-CLOSED (no credential) =====
+GET /health -> 200 :: {"status":"ok"}
+GET /__platform-commerce -> 200 :: {"edition":"SingleStore","deploymentId":"isolated-091","tenantId":"store-alpha","connectionReference":"tenant-091-scratch","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId"
+GET /v1/admin/dev-context -> 404 :: {"type":"about:blank","title":"Development context is unavailable.","status":404,"instance":"/v1/admin/dev-context","errorCode":"admin.dev.unavailable","traceId":"83282bb7cbe14bef8e014e3462e3a5bb","correlationId":"49e377
+GET /v1/admin/shipping-services -> 401 :: {"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/shipping-services","errorCode":"admin.actor.missing","traceId":"8500022e3835f7283809e5a5a1db56a0","correlati
+GET /v1/admin/shipping-services/shipping-methods/one-level -> 401 :: {"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/shipping-services/shipping-methods/one-level","errorCode":"admin.actor.missing","traceId":"417c872c5ad306664
+GET /v1/admin/shipping-services/shipping-methods/one-level/post:standard/binding -> 401 :: {"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/post:standard/binding","errorCode":"admin.actor.missing","trace
+
+===== 3. USER-MANAGED HOST :5088 (read-only baseline, NOT restarted) =====
+GET /health -> 200
+GET /v1/admin/shipping-services -> 401
+GET /v1/admin/shipping-services/shipping-methods/one-level -> 404

@@ -1,0 +1,163 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-091
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-090
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-TABS
+Mode: BOUNDED_FINAL_DEVELOPMENT_OPERATIONAL_PROOF_AND_HANDOFF
+Bridge-Task-Row: 9b72f3d5-4297-4359-92f0-f0875ca2df92
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: f0a7bc36576d27d3d722b151174225aa4671cb13
+Base-SHA: 047f085b26c05cb208bcc445523207ddacefd8ec
+Code-SHA: NONE
+Evidence-SHA: EVIDENCE_COMMIT_091 (the single commit that carries SHIPPING-ONE-LEVEL-UI-091.md, the
+  evidence directory, this file, post-result.js and the append-only master-recovery checkpoint; HEAD ==
+  origin/main == that commit at post time)
+automaticNextImplementationTask: NONE
+
+PREFLIGHT / DRIFT
+- Claimed exactly one Pending task on tooba-main (Bridge row 9b72f3d5-4297-4359-92f0-f0875ca2df92) and
+  persisted the artifact as docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-091.task.md (un-staged receipt).
+- git diff f0a7bc365..HEAD = exactly 2 files, both 090 result bookkeeping
+  (docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-090/RESULT.bridge.txt and post-result.js).
+  No source file changed => nonoverlapping result-bookkeeping drift, NOT RECOVERY_CONFLICT.
+- All pre-existing dirty/untracked files were preserved; no reset/stash/rebase/force push.
+
+LIVE TARGET PROVENANCE (read-only, before any probe)
+- GET /__platform-commerce on 127.0.0.1:5088 => edition=SingleStore, deploymentId=dev-singlestore,
+  tenantId=store-alpha, connectionReference=tenant-alpha, resolvedHost=127.0.0.1, themeReference=theme-alpha,
+  defaultMarketReference=IR -> PostgreSQL 17 database tooba_alpha (container postgres-db).
+- Active listener 127.0.0.1:5088 owned by PID 33548 (re-verified, not assumed); process image
+  src/backend/Host/Tooba.Host/bin/Debug/net8.0/Tooba.Host.exe started 2026-10-15 13:31:13.
+- Loaded Tooba.Host.dll written 2026-10-15 09:43:03, SHA256
+  025CD55FFD1A967648058F996C4090D5D45186C9AB691CEAA1B6F80D5F1DEBF1 (stale pre-085 build).
+- No listener on 5089. No secret value was written to evidence, git or logs.
+
+090 ROLLOUT RE-VERIFIED READ-ONLY ON LIVE tooba_alpha (probe-live-post-091.txt)
+- fulfillment.__ef_migrations_history head = 20261015120000_AddShippingOneLevelCatalog (applied ONCE).
+- fulfillment.shipping_methods = 7 rows; fulfillment.shipping_method_translations = 14 rows.
+- Stable codes/activation: post:express(active=false,sort=10), post:standard(true,11), tipax:express(true,20),
+  tipax:standard(true,21), snapp_courier(false,30), store_courier(true,40), in_person(true,50); legacy
+  (service,option) bindings intact; no bare post/tipax sellable method row (0 rows).
+- Legacy two-level catalog unchanged: shipping_services=5, shipping_service_options=4,
+  service translations=10, option translations=8.
+- Historical commerce unchanged: fulfillments=9, shipments=5, order.cart_shipping_drafts=14.
+- Gates OFF by absence: rg finds no Tooba:ShippingOneLevelCatalog, no Tooba:ShippingRateAuthority and no
+  Tooba:ShippingOperationalShadow in appsettings.json / appsettings.Development.json. Checkout untouched.
+- 090 backup restorable: .tmp-090-backup/tooba_alpha-pre-090.dump present, 2492453 bytes, SHA256
+  A3D924BA51449604506A27016C337FBF8D9E4B4776F3C18D22CF92BA822D9439 (matches the 090 manifest).
+
+MISSION B — HOST DEPLOYMENT DECISION GATE: BLOCKED_LIVE_HOST_RELAUNCH
+- The shared Development Host is user-managed. The only explicit stop/rebuild/restart authorization in the
+  repository is TB-P0-DEV-HOST-DEPLOY-AUTHORIZED-008, scoped to a different task, a different expected SHA
+  (207dae32...) and a different target migration; this task explicitly does NOT grant that permission.
+- Therefore PID 33548 was NOT stopped, restarted, signalled, reconfigured or replaced. No in-tree rebuild was
+  attempted (090 already proved bin/Debug DLL locks block it while the process runs).
+- Exact prerequisite for a live proof: a new explicit operator/architect authorization naming 127.0.0.1:5088
+  plus a reproducible launch provenance. Safe operator sequence: stop Host -> build Tooba.Host.csproj ->
+  relaunch with ASPNETCORE_ENVIRONMENT=Development from the repository root -> verify /health,
+  /__platform-commerce (dev-singlestore/store-alpha/tenant-alpha) and
+  /v1/admin/shipping-services/shipping-methods/one-level (401 unauthenticated; Disabled/ready=false with an
+  authorized admin actor because the gate is OFF).
+- Running-binary reality: :5088 answers 404 for the one-level route while the pre-existing
+  /v1/admin/shipping-services still answers 401 admin.actor.missing.
+
+ISOLATED CURRENT-CODE REAL-HTTP PROOF (explicitly NOT proof of the real :5088 process)
+- Built to a separate output dir: dotnet build Tooba.Host.csproj -c Debug -o .tmp-091-host-out => exit 0,
+  0 errors. Isolated Tooba.Host.dll SHA256 DC25E1C063F616C40778700CC60EFFC5977A73393A9C5EE70C438C006E04D88A;
+  isolated Tooba.Fulfillment.Endpoints.dll SHA256 77B707F15A2FCF88820BA0C9733C2A1E7FA0EF82C5F432D7513872E26E3B52AE
+  with the one-level route string present (utf16le_present=true, byte-level check).
+- Ran on unused 127.0.0.1:5099 against a task-owned postgres:17 scratch container tooba-091-scratch
+  (published only as 127.0.0.1:55433, database tooba_091_scratch_q3w8t1).
+- Isolation proven three independent ways BEFORE trusting any response:
+  (a) offline guard PASS (isolated/assert-isolated-target-091.js): exactly 1 tenant and 1 connection reference,
+      HOST=127.0.0.1, PORT=55433, DATABASE=tooba_091_scratch_q3w8t1, sentinel q3w8t1, DATABASE_CONTACTED=false,
+      CREDENTIALS_PRINTED=false, CONFIG_SHA256=ff0553c94d4170aef5a0eff8167466d25c855127218a88fde7b232af73a2d94c;
+  (b) runtime provenance GET /__platform-commerce => deploymentId=isolated-091, connectionReference=tenant-091-scratch;
+  (c) DB-side barrier on the scratch container only: pg_stat_activity shows application_name=tooba-091-isolated
+      inside tooba_091_scratch_q3w8t1, and select count(*) from pg_database where datname='tooba_alpha' = 0.
+- Real HTTP: GET /health => 200 {"status":"ok"}; GET /__platform-commerce => 200 isolated provenance;
+  GET /v1/admin/shipping-services => 401 admin.actor.missing;
+  GET /v1/admin/shipping-services/shipping-methods/one-level => 401 admin.actor.missing (ROUTE MOUNTED + FAIL-CLOSED);
+  GET .../one-level/post:standard/binding => 401 admin.actor.missing; GET /v1/admin/dev-context => 404 admin.dev.unavailable.
+- DECISIVE DELTA: the current-code isolated Host answers 401 for the one-level route whereas the stale shared
+  Host answers 404 — real HTTP evidence of route mounting and admin authorization enforcement.
+- The isolated Host also applied the one-level migration to its own fresh scratch DB at startup
+  (Applying migration '20261015120000_AddShippingOneLevelCatalog' then Now listening on http://127.0.0.1:5099,
+  Hosting environment: Development), independently proving current-code migration compatibility, and left
+  tooba_alpha untouched.
+- What is NOT achieved: the scratch DB is unseeded (no access-control assignments, no Development admin actor
+  snapshot), so the new route stops at 401 and the gate-ON path (Enabled/ready=true/7 methods over HTTP) could
+  not be exercised. Turning the gate ON was not authorized, so it was left OFF; no fake permission, bootstrap
+  or query-string bypass was granted. This is the honest reason the live UI portion remains unproven.
+
+MISSION C — LIVE PROOF NOT PERFORMED
+- The shared Dev Host was not relaunched, so the real :5088 UI cannot serve the new routes; the frontend page
+  resolves the gate to disabled and mounts the legacy surface unchanged (no broken UI, no new shell rendered).
+- Tooba:ShippingOneLevelCatalog left OFF (absent). Tooba:ShippingRateAuthority and
+  Tooba:ShippingOperationalShadow never touched. No Checkout cutover. No Order/Checkout/Payment/Settlement
+  write. No rate/coverage/packaging/schedule row created or mutated (CRUD verification intentionally incomplete).
+
+FIVE-TAB FRONTEND (source-complete, unchanged by this task)
+- services (سرویس‌ها), rates-coverage (تعرفه و پوشش), packaging-fare (بسته‌بندی و کرایه),
+  schedule-capacity (برنامه کاری و ظرفیت), cost-review (بررسی هزینه) — all present under
+  src/frontend/app/admin/shipping-services/** and wired to real API seams.
+- Gate is fail-closed: enabled ONLY on an explicit server flag with ready===true; absence/Disabled/non-200/
+  malformed/ready=false => disabled. No query-string or client-side bypass. No second-level merchant option
+  picker; providerKind is never a selectable option; page.tsx reads the gate server-side (no client fetch).
+
+TESTS ACTUALLY RUN (isolated output dirs; no broad loops, no Host test lock retry)
+- Focused one-level frontend: 5 test files => 56 pass / 0 fail.
+- Focused one-level backend: dotnet test Tooba.Fulfillment.Tests --filter FullyQualifiedName~ShippingOneLevel
+  -o .tmp-091-test-out => 45 pass / 0 fail.
+
+CLEANUP / NON-INTERFERENCE
+- Task-owned isolated Host PID 21028 stopped; :5099 listeners afterwards = 0.
+- Scratch container tooba-091-scratch removed; containers with that name afterwards = 0.
+- Task-owned run directory .tmp-091-host-run (which held the scratch password) deleted; no credential in any
+  tracked evidence file.
+- User-managed Dev Host re-verified UNCHANGED: PID 33548, same start time, :5088 still listening, /health 200,
+  provenance still dev-singlestore/store-alpha/tenant-alpha, binary SHA256 still 025CD55F...DEBF1.
+- Live DB re-verified after all work: methods=7, translations=14, legacy services=5, fulfillments=9, drafts=14.
+
+CHANGED PATHS (this task)
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-091.md
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-091/** (planning evidence, probes, logs, isolated
+  guard/prepare/launch scripts, summary.md, RESULT.bridge.txt, post-result.js)
+- docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md (small append-only checkpoint, zero unrelated edits)
+- docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-091.task.md (un-staged receipt)
+- NO production source file changed (Code-SHA = NONE).
+
+FINAL VERDICT MATRIX
+- Five-tab UI source completeness: COMPLETE (56/56 focused frontend tests green).
+- One-level Development DB rollout: PROVEN (7 methods/14 translations, migration once, historical identity safe).
+- Historical identity safety: PROVEN (no bare post/tipax method; legacy catalog + historical commerce unchanged).
+- Backup/rollback readiness: PROVEN (090 dump present, hash-identical; rollback-090.sql retained).
+- Route mount + admin authorization on current code: PROVEN over real HTTP (isolated 401 vs stale 404).
+- Live UI on the shared Dev Host :5088: NOT PROVEN — BLOCKED_LIVE_HOST_RELAUNCH.
+- Gate-ON catalog rendering (7 methods, 5 tabs in a browser): NOT PROVEN — no gate-on authorization.
+- Rate/coverage/packaging/schedule CRUD via UI: INCOMPLETE — no authorized isolated write path.
+- Commercial readiness: NOT READY.
+
+OPEN ITEMS / OWNERS (unchanged, not closed by 091)
+1. Trusted packed-weight provenance — Fulfillment + Order.
+2. Atomic capacity claim/release — Order + Shipping + Settlement (configuration-only today).
+3. COD ledger/settlement — Payment + Settlement (CollectOnDelivery is a quote fact only).
+4. True customer delivery promise — Product + Order + Fulfillment/Shipping (a pickup window is not a delivery slot).
+5. Merchant-approved real tariffs/packaging/coverage + explicit Checkout cutover — Merchant + Architect
+   (requires a separate user-authorized decision).
+6. snapp_courier completeness — Fulfillment + Shipping.
+
+ACTUAL ELAPSED: ~19 minutes (within the 30-minute hard timebox).
+ROLLBACK: docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-090/rollback-090.sql, or full logical restore
+from the hash-verified 090 dump; no code rollback needed (Code-SHA = NONE). Isolated artifacts already removed.
+
+CONCLUSION: the 11-task one-level UI program (081–091) is technically closeable — the rollout is real and
+verified in Development, the five-tab surface is source-complete and read-only behind a fail-closed gate, the
+current-code route is mounted and authorization-enforced, and the shared Development environment and its data
+were provably left untouched. It is NOT live-proven on the user's running Host and NOT production-ready.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
