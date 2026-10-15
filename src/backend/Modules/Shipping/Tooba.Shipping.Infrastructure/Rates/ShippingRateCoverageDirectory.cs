@@ -74,24 +74,54 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
         var scope = request.Scope.ToScope();
         var optionCode = NormalizeOption(request.OptionCode);
 
-        if (await RateScopeExistsAsync(context.RatePolicies, code, optionCode, scope, cancellationToken))
+        if (await RateScopeExistsAsync(
+                context.RatePolicies,
+                code,
+                optionCode,
+                scope,
+                request.Condition?.ToCondition(),
+                cancellationToken))
         {
             return Result.Failure<ShippingRatePolicyAdminItem>(
                 new SemanticError(ShippingErrorCodes.RatePolicyScopeDuplicate));
         }
 
         var now = DateTimeOffset.UtcNow;
-        var policy = ShippingRatePolicy.Create(
-            code,
-            scope,
-            request.ChargeAmount,
-            request.CurrencyCode,
-            request.PreparationDays,
-            request.LeadDays,
-            request.FreeAboveThreshold,
-            now,
-            ratePolicyId: null,
-            optionCode: optionCode);
+        ShippingRatePolicy policy;
+        try
+        {
+            policy = ShippingRatePolicy.Create(
+                code,
+                scope,
+                request.ChargeAmount,
+                request.CurrencyCode,
+                request.PreparationDays,
+                request.LeadDays,
+                request.FreeAboveThreshold,
+                now,
+                ratePolicyId: null,
+                optionCode: optionCode,
+                condition: request.Condition?.ToCondition());
+
+            // A second active tier that intersects the new one on the same identity+scope would make
+            // "which tier prices this parcel" depend on row order. The pair is refused before any row
+            // is written, and an invalid tier shape is refused here too.
+            if (await TierOverlapsExistingAsync(
+                    context.RatePolicies,
+                    code,
+                    optionCode,
+                    scope,
+                    request.Condition?.ToCondition(),
+                    cancellationToken))
+            {
+                return Result.Failure<ShippingRatePolicyAdminItem>(
+                    new SemanticError(ShippingErrorCodes.RatePolicyTierOverlap));
+            }
+        }
+        catch (SemanticException ex)
+        {
+            return Result.Failure<ShippingRatePolicyAdminItem>(ex.Error);
+        }
 
         context.RatePolicies.Add(policy);
         await context.SaveChangesAsync(cancellationToken);
@@ -139,9 +169,34 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
         }
 
         var now = DateTimeOffset.UtcNow;
-        policy.ChangeCharge(request.ChargeAmount, now);
-        policy.SetFreeAboveThreshold(request.FreeAboveThreshold, now);
-        policy.ChangeLeadTimes(request.PreparationDays, request.LeadDays, now);
+        try
+        {
+            // The measurement tier is an editable attribute of the same commercial rule, so it is
+            // replaced together with the amount/lead times; identity and scope stay immutable above.
+            var condition = request.Condition?.ToCondition();
+            if (await TierOverlapsExistingAsync(
+                    context.RatePolicies,
+                    policy.ServiceCode,
+                    policy.OptionCode,
+                    policy.Scope,
+                    condition,
+                    cancellationToken,
+                    excludedRatePolicyId: policy.RatePolicyId))
+            {
+                return Result.Failure<ShippingRatePolicyAdminItem>(
+                    new SemanticError(ShippingErrorCodes.RatePolicyTierOverlap));
+            }
+
+            policy.ChangeCharge(request.ChargeAmount, now);
+            policy.SetFreeAboveThreshold(request.FreeAboveThreshold, now);
+            policy.ChangeLeadTimes(request.PreparationDays, request.LeadDays, now);
+            policy.ChangeCondition(condition, now);
+        }
+        catch (SemanticException ex)
+        {
+            return Result.Failure<ShippingRatePolicyAdminItem>(ex.Error);
+        }
+
         await context.SaveChangesAsync(cancellationToken);
         return Result.Success(Map(policy));
     }
@@ -250,34 +305,57 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
             routeServiceCode?.Trim() ?? string.Empty,
             StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// آیا همان هویت و دامنه و <em>همان پلهٔ اندازه</em> از قبل وجود دارد. یکتایی «هویت + دامنه +
+    /// پله» است، نه فقط «هویت + دامنه»: دو پلهٔ وزنی مجاز و متمایز برای یک خدمت کاملاً معتبرند و
+    /// تنها تکرار عین همان پله یک ردیف تکراری است. هم‌پوشانیِ ناقص (نه عین هم) در نگهبان جداگانه
+    /// <c>TierOverlapsExistingAsync</c> رد می‌شود.
+    /// </summary>
     private static async Task<bool> RateScopeExistsAsync(
         IQueryable<ShippingRatePolicy> set,
         string serviceCode,
         string? optionCode,
         Contracts.Rates.ShippingDestinationScope scope,
+        Contracts.Rates.ShippingRateCondition? condition,
         CancellationToken cancellationToken)
     {
         // Comparison is done on the narrow per-service slice rather than with a provider-specific NULL
         // comparison expression, so the same guard behaves identically on PostgreSQL and in focused tests.
         var existing = await set
             .Where(x => x.ServiceCode == serviceCode)
-            .Select(x => new
-            {
-                x.OptionCode,
-                x.CountryId,
-                x.AdministrativeAreaId,
-                x.CityId,
-                x.ServiceAreaId,
-            })
             .ToListAsync(cancellationToken);
 
         return existing.Any(x =>
             SameOption(x.OptionCode, optionCode)
-            && x.CountryId == scope.CountryId
-            && x.AdministrativeAreaId == scope.AdministrativeAreaId
-            && x.CityId == scope.CityId
-            && x.ServiceAreaId == scope.ServiceAreaId);
+            && SameScope(x.Scope, scope)
+            && SameTier(x.Condition, condition));
     }
+
+    /// <summary>
+    /// آیا دو شرط اندازه دقیقاً یک پله‌اند. «بی‌شرط» تنها یک نمایش دارد (هر دو محور تهی)، پس یک
+    /// ردیف بی‌شرط تکراری هم اینجا رد می‌شود.
+    /// </summary>
+    private static bool SameTier(
+        Contracts.Rates.ShippingRateCondition left,
+        Contracts.Rates.ShippingRateCondition? right)
+    {
+        var normalizedRight = right is null || !right.IsConditioned
+            ? Contracts.Rates.ShippingRateCondition.Unconditioned
+            : right;
+
+        return SameTierAxis(left.Weight, normalizedRight.Weight)
+            && SameTierAxis(left.Count, normalizedRight.Count);
+    }
+
+    private static bool SameTierAxis(
+        Contracts.Rates.ShippingNumericTier? left,
+        Contracts.Rates.ShippingNumericTier? right)
+        => (left, right) switch
+        {
+            (null, null) => true,
+            (null, not null) or (not null, null) => false,
+            _ => left!.Min == right!.Min && left.Max == right.Max,
+        };
 
     private static async Task<bool> GrantScopeExistsAsync(
         IQueryable<ShippingCoverageGrant> set,
@@ -301,6 +379,41 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
             && x.AdministrativeAreaId == scope.AdministrativeAreaId
             && x.CityId == scope.CityId
             && x.ServiceAreaId == scope.ServiceAreaId);
+    }
+
+    /// <summary>
+    /// آیا شرط اندازهٔ پیشنهادی با شرط یک سیاست فعال دیگر روی همان هویت (خدمت/گزینه/دامنه)
+    /// هم‌پوشانی دارد. ردیف‌های هم‌هویت با هم رقابت می‌کنند، پس فقط همان‌ها بررسی می‌شوند.
+    /// </summary>
+    /// <remarks>
+    /// بررسی در حافظه روی برش باریک همان خدمت انجام می‌شود (نه با عبارت provider-specific)، تا
+    /// همان نگهبان روی PostgreSQL و در تست‌های متمرکز یکسان رفتار کند. طرف بی‌شرط هم‌پوشانی شمرده
+    /// نمی‌شود، چون در موتور به‌عنوان قاعدهٔ پایهٔ مستند پذیرفته شده است.
+    /// </remarks>
+    private static async Task<bool> TierOverlapsExistingAsync(
+        IQueryable<ShippingRatePolicy> set,
+        string serviceCode,
+        string? optionCode,
+        Contracts.Rates.ShippingDestinationScope scope,
+        Contracts.Rates.ShippingRateCondition? candidate,
+        CancellationToken cancellationToken,
+        Guid? excludedRatePolicyId = null)
+    {
+        if (candidate is null || !candidate.IsConditioned)
+        {
+            return false;
+        }
+
+        var siblings = await set
+            .Where(x => x.ServiceCode == serviceCode)
+            .Where(x => excludedRatePolicyId == null || x.RatePolicyId != excludedRatePolicyId)
+            .ToListAsync(cancellationToken);
+
+        return siblings
+            .Where(x => x.IsActive)
+            .Where(x => SameOption(x.OptionCode, optionCode))
+            .Where(x => SameScope(x.Scope, scope))
+            .Any(x => x.TiersOverlapWith(candidate));
     }
 
     private static bool SameScope(Contracts.Rates.ShippingDestinationScope left, Contracts.Rates.ShippingDestinationScope right) =>
@@ -338,7 +451,20 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
             policy.IsActive,
             policy.CreatedAt,
             policy.UpdatedAt,
-            policy.OptionCode);
+            policy.OptionCode,
+            MapCondition(policy));
+
+    /// <summary>شرط اندازهٔ سیاست را به شکل قرارداد ادمین می‌نگارد؛ بی‌شرط به <c>null</c> نگاشت می‌شود.</summary>
+    private static Contracts.Admin.ShippingRateConditionWrite? MapCondition(ShippingRatePolicy policy)
+        => policy.IsUnconditioned
+            ? null
+            : new Contracts.Admin.ShippingRateConditionWrite(
+                policy.MinWeightGrams is { } minWeight
+                    ? new Contracts.Admin.ShippingNumericTierWrite(minWeight, policy.MaxWeightGrams)
+                    : null,
+                policy.MinItemCount is { } minCount
+                    ? new Contracts.Admin.ShippingNumericTierWrite(minCount, policy.MaxItemCount)
+                    : null);
 
     private static ShippingCoverageGrantAdminItem Map(ShippingCoverageGrant grant) =>
         new(

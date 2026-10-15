@@ -33,6 +33,15 @@ public sealed class ShippingRatePolicy
     /// <summary>حداکثر تعداد روز آماده‌سازی/حمل.</summary>
     public const int DaysMaxValue = 365;
 
+    /// <summary>
+    /// حداکثر وزن قابل تنظیم در یک پله (گرم). سقف عمدی است تا یک مقدار بی‌معنا (خطای ورودی یا
+    /// سرریز) به یک قاعدهٔ تجاری تبدیل نشود.
+    /// </summary>
+    public const long WeightGramsMaxValue = 1_000_000_000L;
+
+    /// <summary>حداکثر تعداد اقلام قابل تنظیم در یک پله.</summary>
+    public const int ItemCountMaxValue = 1_000_000;
+
     private ShippingRatePolicy()
     {
     }
@@ -80,6 +89,40 @@ public sealed class ShippingRatePolicy
     /// <summary>آستانهٔ ارسال رایگان؛ تهی یعنی بدون آستانه.</summary>
     public decimal? FreeAboveThreshold { get; private set; }
 
+    /// <summary>بازهٔ وزن گرم این سیاست؛ تهی یعنی روی وزن بی‌شرط است.</summary>
+    public long? MinWeightGrams { get; private set; }
+
+    /// <summary>کران بالای غیرشامل بازهٔ وزن؛ تهی یعنی بی‌کران بالا یا بی‌شرط بودن روی وزن.</summary>
+    public long? MaxWeightGrams { get; private set; }
+
+    /// <summary>بازهٔ تعداد اقلام این سیاست؛ تهی یعنی روی تعداد بی‌شرط است.</summary>
+    public int? MinItemCount { get; private set; }
+
+    /// <summary>کران بالای غیرشامل بازهٔ تعداد؛ تهی یعنی بی‌کران بالا یا بی‌شرط بودن روی تعداد.</summary>
+    public int? MaxItemCount { get; private set; }
+
+    /// <summary>
+    /// آیا این سیاست روی محور وزن شرط دارد. تشخیص با «کران پایین مقدار دارد» انجام می‌شود:
+    /// یک پلهٔ وزنی همیشه کران پایین مشخص دارد، پس نبود آن یعنی بی‌شرط بودن روی وزن.
+    /// </summary>
+    public bool IsWeightConditioned => MinWeightGrams is not null;
+
+    /// <summary>آیا این سیاست روی محور تعداد اقلام شرط دارد.</summary>
+    public bool IsCountConditioned => MinItemCount is not null;
+
+    /// <summary>آیا این سیاست هیچ شرط اندازه‌ای ندارد (یک قاعدهٔ بی‌شرط قدیمی).</summary>
+    public bool IsUnconditioned => !IsWeightConditioned && !IsCountConditioned;
+
+    /// <summary>شرط عددی این سیاست به‌صورت یک مقدار واحد.</summary>
+    public ShippingRateCondition Condition =>
+        new(
+            MinWeightGrams is { } minWeight
+                ? ShippingNumericTier.Between(minWeight, MaxWeightGrams)
+                : null,
+            MinItemCount is { } minCount
+                ? ShippingNumericTier.Between(minCount, MaxItemCount)
+                : null);
+
     /// <summary>آیا سیاست فعال است؛ رکورد هرگز فیزیکی حذف نمی‌شود.</summary>
     public bool IsActive { get; private set; }
 
@@ -116,6 +159,9 @@ public sealed class ShippingRatePolicy
     /// <param name="now">زمان UTC ایجاد.</param>
     /// <param name="ratePolicyId">شناسهٔ قطعی اختیاری برای بازپخش قطعی.</param>
     /// <param name="optionCode">گزینهٔ روش ارسال اختیاری؛ تهی یعنی سیاست در سطح خدمت است.</param>
+    /// <param name="condition">
+    /// شرط اندازه (وزن/تعداد) این سیاست؛ تهی یعنی قاعدهٔ بی‌شرط، دقیقاً مانند ردیف‌های قدیمی.
+    /// </param>
     public static ShippingRatePolicy Create(
         string serviceCode,
         ShippingDestinationScope scope,
@@ -126,9 +172,11 @@ public sealed class ShippingRatePolicy
         decimal? freeAboveThreshold,
         DateTimeOffset now,
         Guid? ratePolicyId = null,
-        string? optionCode = null)
+        string? optionCode = null,
+        ShippingRateCondition? condition = null)
     {
         ArgumentNullException.ThrowIfNull(scope);
+        var normalizedCondition = NormalizeCondition(condition);
         var policy = new ShippingRatePolicy
         {
             RatePolicyId = ratePolicyId is { } id && id != Guid.Empty ? id : UuidV7.New(),
@@ -143,12 +191,87 @@ public sealed class ShippingRatePolicy
             PreparationDays = NormalizeDays(preparationDays, ShippingErrorCodes.PreparationDaysNegative),
             LeadDays = NormalizeDays(leadDays, ShippingErrorCodes.LeadDaysNegative),
             FreeAboveThreshold = NormalizeThreshold(freeAboveThreshold),
+            MinWeightGrams = normalizedCondition.Weight?.Min,
+            MaxWeightGrams = normalizedCondition.Weight?.Max,
+            MinItemCount = normalizedCondition.Count is { } count ? checked((int)count.Min) : null,
+            MaxItemCount = normalizedCondition.Count is { } count2 && count2.Max is { } max
+                ? checked((int)max)
+                : null,
             IsActive = true,
             CreatedAt = now,
             UpdatedAt = now,
         };
         policy.EnsureScopeIsCoherent();
         return policy;
+    }
+
+    /// <summary>
+    /// شرط اندازهٔ این سیاست را جایگزین می‌کند. هویت (خدمت/گزینه/دامنه) دست‌نخورده می‌ماند: تغییر
+    /// شرط، همان قاعدهٔ تجاری را در یک پلهٔ دیگر بازتعریف می‌کند، نه یک قاعدهٔ جدید می‌سازد.
+    /// </summary>
+    /// <param name="condition">شرط جدید؛ تهی یعنی بازگشت به قاعدهٔ بی‌شرط.</param>
+    /// <param name="now">زمان UTC ویرایش.</param>
+    public void ChangeCondition(ShippingRateCondition? condition, DateTimeOffset now)
+    {
+        var normalized = NormalizeCondition(condition);
+        MinWeightGrams = normalized.Weight?.Min;
+        MaxWeightGrams = normalized.Weight?.Max;
+        MinItemCount = normalized.Count is { } count ? checked((int)count.Min) : null;
+        MaxItemCount = normalized.Count is { } count2 && count2.Max is { } max ? checked((int)max) : null;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// آیا اندازهٔ اندازه‌گیری‌شدهٔ درخواست داخل شرط این سیاست می‌افتد.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Fail-closed روی اندازهٔ غایب.</b> اگر این سیاست روی محوری شرط دارد و درخواست آن محور را
+    /// اعلام نکرده است، نتیجه <c>false</c> است: نبود اندازه هرگز به «داخل بازه» تعبیر نمی‌شود،
+    /// وگرنه یک پلهٔ محدود بی‌سروصدا روی همهٔ مرسوله‌ها اثر می‌گذاشت.
+    /// </para>
+    /// <para>
+    /// <b>بی‌شرط یعنی همه‌چیز.</b> سیاستی که روی محوری شرط ندارد، روی آن محور با هر مقداری
+    /// (حتی اعلام‌نشده) سازگار است؛ بنابراین ردیف‌های قدیمی بدون شرط رفتارشان تغییر نمی‌کند.
+    /// </para>
+    /// </remarks>
+    /// <param name="parcel">اندازهٔ اعلام‌شده؛ تهی یعنی هیچ اندازه‌ای اعلام نشده.</param>
+    public bool MatchesCondition(ShippingMeasuredParcel? parcel)
+    {
+        if (IsUnconditioned)
+        {
+            return true;
+        }
+
+        if (MinWeightGrams is { } minWeight)
+        {
+            if (parcel?.WeightGrams is not { } weight)
+            {
+                return false;
+            }
+
+            var weightTier = ShippingNumericTier.Between(minWeight, MaxWeightGrams);
+            if (!weightTier.Contains(weight))
+            {
+                return false;
+            }
+        }
+
+        if (MinItemCount is { } minCount)
+        {
+            if (parcel?.ItemCount is not { } count)
+            {
+                return false;
+            }
+
+            var countTier = ShippingNumericTier.Between(minCount, MaxItemCount);
+            if (!countTier.Contains(count))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>مبلغ هزینه را با همان قواعد اعتبارسنجی به‌روز می‌کند.</summary>
@@ -194,6 +317,44 @@ public sealed class ShippingRatePolicy
     {
         IsActive = false;
         UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// آیا این سیاست روی محوری شرط دارد که درخواست آن را اعلام نکرده است. تفکیک «اندازه لازم
+    /// اعلام نشده» از «اندازهٔ اعلام‌شده در هیچ پله‌ای نیست» فقط با این پرسش ممکن است، و این دو
+    /// وضعیت برای مصرف‌کننده دو واقعیت متفاوت‌اند.
+    /// </summary>
+    /// <param name="parcel">اندازهٔ اعلام‌شده؛ تهی یعنی هیچ اندازه‌ای اعلام نشده.</param>
+    public bool HasUnsuppliedAxis(ShippingMeasuredParcel? parcel)
+        => (IsWeightConditioned && parcel?.WeightGrams is null)
+           || (IsCountConditioned && parcel?.ItemCount is null);
+
+    /// <summary>
+    /// آیا شرط اندازهٔ داده‌شده با شرط این سیاست هم‌پوشانی پله‌ای دارد. این پرسش روی همان هویت
+    /// (خدمت/گزینه/دامنه) پرسیده می‌شود، چون فقط ردیف‌های هم‌هویت با هم رقابت می‌کنند.
+    /// </summary>
+    /// <remarks>
+    /// یک طرف بی‌شرط یعنی «هم‌پوشانی» شمرده نمی‌شود: بی‌شرط همهٔ اندازه‌ها را می‌پوشاند و در موتور
+    /// به‌عنوان قاعدهٔ پایهٔ مستند پذیرفته شده است، پس نوشتن نرخ پایه در کنار پله‌ها مسدود نمی‌شود.
+    /// فقط دو پلهٔ شرط‌دار که بازه‌هایشان روی یک محور تلاقی دارد یک ابهام واقعی‌اند.
+    /// </remarks>
+    /// <param name="candidate">شرط پیشنهادی برای نوشتن.</param>
+    public bool TiersOverlapWith(ShippingRateCondition? candidate)
+    {
+        var other = NormalizeCondition(candidate);
+        if (IsUnconditioned || !other.IsConditioned)
+        {
+            return false;
+        }
+
+        var weightOverlap = MinWeightGrams is null
+            || other.Weight is null
+            || Condition.Weight!.Overlaps(other.Weight);
+        var countOverlap = MinItemCount is null
+            || other.Count is null
+            || Condition.Count!.Overlaps(other.Count);
+
+        return weightOverlap && countOverlap;
     }
 
     /// <summary>
@@ -297,6 +458,72 @@ public sealed class ShippingRatePolicy
         return threshold < 0m
             ? throw new SemanticException(new SemanticError(ShippingErrorCodes.FreeAboveThresholdNegative))
             : threshold;
+    }
+
+    /// <summary>
+    /// شرط اندازه را اعتبارسنجی و به شکل متعارف می‌برد. قواعد عمداً سخت‌گیرانه‌اند:
+    /// </summary>
+    /// <remarks>
+    /// <list type="bullet">
+    /// <item>کران پایین منفی مجاز نیست؛ وزن و تعداد کمیت فیزیکی‌اند و منفی معنا ندارند.</item>
+    /// <item>کران بالا در صورت وجود باید اکیداً بزرگ‌تر از کران پایین باشد؛ بازهٔ خالی/معکوس
+    /// یک پلهٔ بی‌معنا است که هرگز نباید ذخیره شود.</item>
+    /// <item>هر دو کران باید داخل سقف متعارف باشند تا خطای ورودی به یک قاعدهٔ تجاری تبدیل نشود.</item>
+    /// <item>یک شرط کاملاً خالی (<c>new ShippingRateCondition()</c>) به <c>null</c> نگاشت می‌شود تا
+    /// «بی‌شرط» تنها یک نمایش داشته باشد و ردیف‌های هم‌معنا تکراری ساخته نشوند.</item>
+    /// </list>
+    /// </remarks>
+    private static ShippingRateCondition NormalizeCondition(ShippingRateCondition? condition)
+    {
+        if (condition is null || !condition.IsConditioned)
+        {
+            return ShippingRateCondition.Unconditioned;
+        }
+
+        var weight = NormalizeTier(
+            condition.Weight,
+            ShippingErrorCodes.WeightTierInvalid,
+            ShippingErrorCodes.WeightTierOutOfRange,
+            WeightGramsMaxValue);
+        var count = NormalizeTier(
+            condition.Count,
+            ShippingErrorCodes.CountTierInvalid,
+            ShippingErrorCodes.CountTierOutOfRange,
+            ItemCountMaxValue);
+
+        return new ShippingRateCondition(weight, count);
+    }
+
+    private static ShippingNumericTier? NormalizeTier(
+        ShippingNumericTier? tier,
+        string invalidCode,
+        string outOfRangeCode,
+        long maxValue)
+    {
+        if (tier is null)
+        {
+            return null;
+        }
+
+        if (tier.Min < 0 || tier.Min > maxValue)
+        {
+            throw new SemanticException(new SemanticError(
+                tier.Min < 0 ? invalidCode : outOfRangeCode));
+        }
+
+        if (tier.Max is not { } upper)
+        {
+            return ShippingNumericTier.Between(tier.Min, null);
+        }
+
+        if (upper <= tier.Min)
+        {
+            throw new SemanticException(new SemanticError(invalidCode));
+        }
+
+        return upper > maxValue
+            ? throw new SemanticException(new SemanticError(outOfRangeCode))
+            : ShippingNumericTier.Between(tier.Min, upper);
     }
 
     private static int NormalizeDays(int days, string errorCode)

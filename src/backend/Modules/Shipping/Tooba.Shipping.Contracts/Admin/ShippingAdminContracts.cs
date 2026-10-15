@@ -20,6 +20,34 @@ public sealed record ShippingDestinationScopeWrite(
     public ShippingDestinationScope ToScope() => new(CountryId, AdministrativeAreaId, CityId, ServiceAreaId);
 }
 
+/// <summary>
+/// بازهٔ نیم‌باز <c>[Min, Max)</c> در قرارداد ادمین برای یک پلهٔ اندازه. کران بالا تهی یعنی باز.
+/// </summary>
+/// <param name="Min">کران پایین شامل.</param>
+/// <param name="Max">کران بالا غیرشامل؛ تهی یعنی بی‌کران بالا.</param>
+public sealed record ShippingNumericTierWrite(long Min, long? Max = null)
+{
+    /// <summary>بازهٔ قرارداد را به مقدار دامنه تبدیل می‌کند.</summary>
+    public ShippingNumericTier ToTier() => ShippingNumericTier.Between(Min, Max);
+}
+
+/// <summary>
+/// شرط اندازهٔ یک سیاست نرخ در قرارداد ادمین: بازهٔ وزن (گرم) و بازهٔ تعداد اقلام، هر دو اختیاری.
+/// تهی یعنی «روی این محور بی‌شرط».
+/// </summary>
+/// <param name="WeightGrams">بازهٔ وزن گرم؛ تهی یعنی بی‌شرط روی وزن.</param>
+/// <param name="ItemCount">بازهٔ تعداد اقلام؛ تهی یعنی بی‌شرط روی تعداد.</param>
+public sealed record ShippingRateConditionWrite(
+    ShippingNumericTierWrite? WeightGrams = null,
+    ShippingNumericTierWrite? ItemCount = null)
+{
+    /// <summary>شرط قرارداد را به مقدار دامنه تبدیل می‌کند؛ تهی یعنی بی‌شرط.</summary>
+    public ShippingRateCondition? ToCondition()
+        => WeightGrams is null && ItemCount is null
+            ? null
+            : new ShippingRateCondition(WeightGrams?.ToTier(), ItemCount?.ToTier());
+}
+
 /// <summary>بدنهٔ ایجاد/ویرایش یک سیاست نرخ ارسال برای یک کد خدمت.</summary>
 /// <param name="ServiceCode">کد خدمت Fulfillment؛ فقط کلید سازگاری، بدون تکرار ردیف کاتالوگ.</param>
 /// <param name="Scope">دامنهٔ مقصد سیاست.</param>
@@ -32,6 +60,10 @@ public sealed record ShippingDestinationScopeWrite(
 /// گزینهٔ روش ارسال در صورت وجود؛ تهی یعنی سیاست در سطح خود خدمت است.
 /// این مقدار <em>هویت گزینه</em> است، نه کد خدمت: «tipax:express» خدمت tipax با گزینهٔ express است.
 /// </param>
+/// <param name="Condition">
+/// شرط اندازهٔ این سیاست (وزن/تعداد). تهی یعنی قاعدهٔ بی‌شرط، دقیقاً مانند ردیف‌های قدیمی که
+/// رفتارشان تغییر نمی‌کند.
+/// </param>
 public sealed record ShippingRatePolicyWriteRequest(
     string ServiceCode,
     ShippingDestinationScopeWrite Scope,
@@ -40,7 +72,8 @@ public sealed record ShippingRatePolicyWriteRequest(
     int PreparationDays,
     int LeadDays,
     decimal? FreeAboveThreshold = null,
-    string? OptionCode = null);
+    string? OptionCode = null,
+    ShippingRateConditionWrite? Condition = null);
 
 /// <summary>بدنهٔ تغییر وضعیت فعال/غیرفعال یک سیاست نرخ.</summary>
 /// <param name="IsActive">وضعیت هدف.</param>
@@ -58,6 +91,26 @@ public sealed record ShippingCoverageGrantWriteRequest(
 public sealed record ShippingCoverageGrantActiveRequest(bool IsActive);
 
 /// <summary>یک سیاست نرخ همان‌طور که ادمین می‌بیند.</summary>
+/// <param name="RatePolicyId">شناسهٔ پایدار سیاست.</param>
+/// <param name="ServiceCode">کد خدمت Fulfillment.</param>
+/// <param name="CountryId">شناسهٔ کشور دامنه.</param>
+/// <param name="AdministrativeAreaId">ناحیهٔ اداری دامنه؛ تهی یعنی سطح بالاتر.</param>
+/// <param name="CityId">شهر دامنه؛ تهی یعنی سطح بالاتر.</param>
+/// <param name="ServiceAreaId">ناحیهٔ خدمت دامنه؛ تهی یعنی سطح بالاتر.</param>
+/// <param name="Level">عمیق‌ترین سطح دامنه.</param>
+/// <param name="ChargeAmount">مبلغ ثابت هزینه.</param>
+/// <param name="CurrencyCode">کد ارز سه‌حرفی.</param>
+/// <param name="PreparationDays">روزهای آماده‌سازی فروشنده.</param>
+/// <param name="LeadDays">روزهای حمل.</param>
+/// <param name="FreeAboveThreshold">آستانهٔ ارسال رایگان؛ تهی یعنی بدون آستانه.</param>
+/// <param name="IsActive">آیا سیاست فعال است.</param>
+/// <param name="CreatedAt">زمان ایجاد UTC.</param>
+/// <param name="UpdatedAt">زمان آخرین ویرایش UTC.</param>
+/// <param name="OptionCode">گزینهٔ روش ارسال؛ تهی یعنی سیاست سطح‌خدمت.</param>
+/// <param name="Condition">
+/// شرط اندازهٔ این سیاست؛ تهی یعنی بی‌شرط. یک سیاست شرط‌دار فقط داخل بازهٔ نیم‌باز خودش قیمت
+/// می‌دهد و اندازهٔ اعلام‌نشده هرگز با آن تطبیق نمی‌یابد.
+/// </param>
 public sealed record ShippingRatePolicyAdminItem(
     Guid RatePolicyId,
     string ServiceCode,
@@ -74,7 +127,8 @@ public sealed record ShippingRatePolicyAdminItem(
     bool IsActive,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    string? OptionCode = null);
+    string? OptionCode = null,
+    ShippingRateConditionWrite? Condition = null);
 
 /// <summary>یک مجوز پوشش همان‌طور که ادمین می‌بیند.</summary>
 public sealed record ShippingCoverageGrantAdminItem(

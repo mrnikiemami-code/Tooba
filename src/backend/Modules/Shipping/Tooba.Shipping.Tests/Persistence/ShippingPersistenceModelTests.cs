@@ -137,6 +137,9 @@ public sealed class ShippingPersistenceModelTests
     [InlineData("rate_policies", "ck_rate_policies_service_code_canonical", "btrim(service_code)")]
     [InlineData("rate_policies", "ck_rate_policies_currency_code_canonical", "char_length(currency_code) = 3")]
     [InlineData("rate_policies", "ck_rate_policies_scope_coherent", "service_area_id IS NULL OR city_id IS NOT NULL")]
+    [InlineData("rate_policies", "ck_rate_policies_weight_tier_coherent", "max_weight_grams > min_weight_grams")]
+    [InlineData("rate_policies", "ck_rate_policies_count_tier_coherent", "max_item_count > min_item_count")]
+    [InlineData("rate_policies", "ck_rate_policies_tier_bounds_paired", "max_weight_grams IS NULL OR min_weight_grams IS NOT NULL")]
     [InlineData("coverage_grants", "ck_coverage_grants_service_code_canonical", "btrim(service_code)")]
     [InlineData("coverage_grants", "ck_coverage_grants_scope_coherent", "service_area_id IS NULL OR city_id IS NOT NULL")]
     [InlineData("operating_schedules", "ck_operating_schedules_service_code_canonical", "btrim(service_code)")]
@@ -155,7 +158,7 @@ public sealed class ShippingPersistenceModelTests
     }
 
     [Theory]
-    [InlineData("rate_policies", "ux_rate_policies_service_option_scope", new[] { "ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId" })]
+    [InlineData("rate_policies", "ux_rate_policies_service_option_scope", new[] { "ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId", "MinWeightGrams", "MaxWeightGrams", "MinItemCount", "MaxItemCount" })]
     [InlineData("coverage_grants", "ux_coverage_grants_service_scope", new[] { "ServiceCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId" })]
     [InlineData("operating_schedules", "ux_operating_schedules_service_option", new[] { "ServiceCode", "OptionCode" })]
     public void Identity_index_is_unique_over_nulls_not_distinct_columns(
@@ -261,6 +264,9 @@ public sealed class ShippingPersistenceModelTests
                      "ck_rate_policies_currency_code_canonical",
                      "ck_rate_policies_scope_coherent",
                      "ck_rate_policies_option_code_canonical",
+                     "ck_rate_policies_weight_tier_coherent",
+                     "ck_rate_policies_count_tier_coherent",
+                     "ck_rate_policies_tier_bounds_paired",
                      "ck_coverage_grants_service_code_canonical",
                      "ck_coverage_grants_scope_coherent",
                      "ck_operating_schedules_service_code_canonical",
@@ -277,9 +283,11 @@ public sealed class ShippingPersistenceModelTests
             Assert.Contains(constraint, script);
         }
 
-        // Every scope/identity index must carry the modifier: coverage (1) + the initial rate index (1)
-        // + the option-aware rate index (1) + the schedule identity index (1).
-        Assert.Equal(4, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
+        // Every scope/identity index must carry the modifier: the initial slice (rate + coverage = 2),
+        // then one re-created rate index in each of the three additive migrations (option identity,
+        // tier) plus the schedule identity index. The drops do not emit the modifier, so this counts
+        // CREATE statements only.
+        Assert.Equal(5, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
 
         // The only foreign key in the whole schema is the intra-module schedule -> windows cascade;
         // nothing points at another module's schema.
@@ -290,18 +298,19 @@ public sealed class ShippingPersistenceModelTests
     }
 
     [Fact]
-    public void Migrations_are_the_initial_slice_plus_two_additive_updates()
+    public void Migrations_are_the_initial_slice_plus_three_additive_updates()
     {
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        // Three migrations only: the initial slice, the additive option-identity change and the additive
-        // operating-schedule slice. Asserting the exact count is what keeps the schema reviewable as a
-        // unit instead of an open-ended chain.
-        Assert.Equal(3, migrations.Length);
+        // Four migrations only: the initial slice and three additive changes (option identity,
+        // operating schedule, weight/count tiers). Asserting the exact count is what keeps the schema
+        // reviewable as a unit instead of an open-ended chain.
+        Assert.Equal(4, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
+        Assert.EndsWith("_WeightAndCountRateTiers", migrations[3], StringComparison.Ordinal);
     }
 
     [Fact]

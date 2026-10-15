@@ -211,6 +211,22 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("lead_days");
 
+                    b.Property<int?>("MaxItemCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_item_count");
+
+                    b.Property<long?>("MaxWeightGrams")
+                        .HasColumnType("bigint")
+                        .HasColumnName("max_weight_grams");
+
+                    b.Property<int?>("MinItemCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("min_item_count");
+
+                    b.Property<long?>("MinWeightGrams")
+                        .HasColumnType("bigint")
+                        .HasColumnName("min_weight_grams");
+
                     b.Property<string>("OptionCode")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
@@ -240,17 +256,19 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                     b.HasIndex("ServiceCode", "IsActive")
                         .HasDatabaseName("ix_rate_policies_service_active");
 
-                    b.HasIndex("ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId")
+                    b.HasIndex("ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId", "MinWeightGrams", "MaxWeightGrams", "MinItemCount", "MaxItemCount")
                         .IsUnique()
                         .HasDatabaseName("ux_rate_policies_service_option_scope");
 
-                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId"), false);
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId", "MinWeightGrams", "MaxWeightGrams", "MinItemCount", "MaxItemCount"), false);
 
                     b.ToTable("rate_policies", "shipping", t =>
                         {
                             t.HasCheckConstraint("ck_rate_policies_charge_amount_non_negative", "charge_amount >= 0");
 
                             t.HasCheckConstraint("ck_rate_policies_charge_amount_within_max", "charge_amount <= 1000000000");
+
+                            t.HasCheckConstraint("ck_rate_policies_count_tier_coherent", "min_item_count IS NULL OR (min_item_count >= 0 AND min_item_count <= 1000000 AND (max_item_count IS NULL OR (max_item_count > min_item_count AND max_item_count <= 1000000)))");
 
                             t.HasCheckConstraint("ck_rate_policies_currency_code_canonical", "char_length(currency_code) = 3 AND currency_code = upper(currency_code)");
 
@@ -265,6 +283,10 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_rate_policies_scope_coherent", "service_area_id IS NULL OR city_id IS NOT NULL");
 
                             t.HasCheckConstraint("ck_rate_policies_service_code_canonical", "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+
+                            t.HasCheckConstraint("ck_rate_policies_tier_bounds_paired", "(max_weight_grams IS NULL OR min_weight_grams IS NOT NULL) AND (max_item_count IS NULL OR min_item_count IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_rate_policies_weight_tier_coherent", "min_weight_grams IS NULL OR (min_weight_grams >= 0 AND min_weight_grams <= 1000000000 AND (max_weight_grams IS NULL OR (max_weight_grams > min_weight_grams AND max_weight_grams <= 1000000000)))");
                         });
                 });
 

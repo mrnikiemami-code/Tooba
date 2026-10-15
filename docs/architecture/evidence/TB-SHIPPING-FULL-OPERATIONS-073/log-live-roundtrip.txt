@@ -1,0 +1,99 @@
+﻿=== TB-SHIPPING-FULL-OPERATIONS-073 :: live weight/count tier admin roundtrip ===
+target: existing Development host :5088, tenant store-alpha, DB tooba_alpha
+
+--- 0. positive target provenance (Development, no production/staging) ---
+GET /__platform-commerce => 200
+   {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"ab1b2ddea9d4e35697de8c336325cb79"}
+
+--- 1. baseline: existing rows are all unconditioned (condition == null) ---
+GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200
+   {"serviceCode":"tipax","ratePolicies":[{"ratePolicyId":"01a13d84-ca7f-7000-a59a-269a1c8ec13d","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":260000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":1,"isActive":true,"createdAt":"2026-10-15T03:04:35.199704+00:00","updatedAt":"2026-10-15T03:04:35.199704+00:00","optionCode":"express"},{"ratePolicyId":"01a13d84-ca00-7000-8d86-52803380de4e","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":true,"createdAt":"2026-10-15T03:04:35.07236+00:00","updatedAt":"2026-10-15T03:52:37.672066+00:00","optionCode":"standard"},{"ratePolicyId":"01a13d65-cf37-7000-ad21-ac8e9b2c89d7","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":false,"createdAt":"2026-10-15T02:30:44.791242+00:00","updatedAt":"2026-10-15T03:05:45.803679+00:00"}],"coverageGrants":[{"coverageGrantId":"01a13d65-cf8e-7000-a8e5-2205f6167d63","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","isActive":true,"createdAt":"2026-10-15T02:30:44.878728+00:00","updatedAt":"2026-10-15T02:33:23.241766+00:00"}]}
+   EXISTING_ROWS=3
+   option=express charge=260000.00 active=True condition=null
+   option=standard charge=180000.00 active=True condition=null
+   option= charge=180000.00 active=False condition=null
+
+--- 2. create tier [0,2000) grams for tipax/standard (base unconditioned row already exists) ---
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200
+   {"ratePolicyId":"01a13e4f-e076-7000-b14b-85a61c4751f6","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":120000,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.6301523+00:00","updatedAt":"2026-10-15T06:46:24.6301523+00:00","optionCode":"standard","condition":{"weightGrams":{"min":0,"max":2000}}}
+   TIER_LOW_ID=01a13e4f-e076-7000-b14b-85a61c4751f6
+
+--- 3. create adjacent tier [2000,5000) grams for tipax/standard (half-open: no overlap) ---
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200
+   {"ratePolicyId":"01a13e4f-e08f-7000-a163-531d26b0ebda","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":260000,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.6555316+00:00","updatedAt":"2026-10-15T06:46:24.6555316+00:00","optionCode":"standard","condition":{"weightGrams":{"min":2000,"max":5000}}}
+   TIER_HIGH_ID=01a13e4f-e08f-7000-a163-531d26b0ebda
+
+--- 4. cross-axis ambiguity: a weight-only tier and a count-only tier on the SAME identity
+        genuinely intersect (a 1500 g / 3-item parcel matches both), so the pair is refused.
+        This is the guard working, not a failure: the refusal is the correct outcome.
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 400
+   {"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/tipax/rates","errorCode":"shipping.rate_policy.tier_overlap","traceId":"a081a304334893b148e19b9d230c5005","correlationId":"92e561d884e34f55a23d67e2f34530b5","requestId":"0HNPAGUQMTFTL:00000005"}
+   TIER_COUNT_ID= (expected empty: refused as shipping.rate_policy.tier_overlap)
+
+--- 4b. a count-only tier on a DIFFERENT identity (service-level tipax, no active
+         conditioned sibling) is accepted, proving the guard is identity-scoped.
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200
+   {"ratePolicyId":"01a13e4f-e0bc-7000-b10c-c1bace302a44","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":95000,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.7007904+00:00","updatedAt":"2026-10-15T06:46:24.7007904+00:00","condition":{"itemCount":{"min":1,"max":6}}}
+   TIER_COUNT_SERVICE_ID=01a13e4f-e0bc-7000-b10c-c1bace302a44
+
+--- 4c. a combined weight+count tier on tipax/express is accepted because its weight axis
+         [2000,5000) is disjoint from the existing express tier [0,2000).
+         The engine evaluates the two axes as an INTERSECTION, never a union.
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200
+   {"ratePolicyId":"01a13e4f-e0d5-7000-8b5a-2eef68459312","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":340000,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.7252473+00:00","updatedAt":"2026-10-15T06:46:24.7252473+00:00","optionCode":"express","condition":{"weightGrams":{"min":2000,"max":5000},"itemCount":{"min":6,"max":11}}}
+   TIER_COMBINED_ID=01a13e4f-e0d5-7000-8b5a-2eef68459312
+
+--- 5. read back: the persisted rows carry their half-open tiers ---
+GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200
+   {"serviceCode":"tipax","ratePolicies":[{"ratePolicyId":"01a13d84-ca7f-7000-a59a-269a1c8ec13d","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":260000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":1,"isActive":true,"createdAt":"2026-10-15T03:04:35.199704+00:00","updatedAt":"2026-10-15T03:04:35.199704+00:00","optionCode":"express"},{"ratePolicyId":"01a13e4f-e0d5-7000-8b5a-2eef68459312","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":340000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.725247+00:00","updatedAt":"2026-10-15T06:46:24.725247+00:00","optionCode":"express","condition":{"weightGrams":{"min":2000,"max":5000},"itemCount":{"min":6,"max":11}}},{"ratePolicyId":"01a13e4f-e08f-7000-a163-531d26b0ebda","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":260000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.655531+00:00","updatedAt":"2026-10-15T06:46:24.655531+00:00","optionCode":"standard","condition":{"weightGrams":{"min":2000,"max":5000}}},{"ratePolicyId":"01a13e4f-e076-7000-b14b-85a61c4751f6","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":120000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.630152+00:00","updatedAt":"2026-10-15T06:46:24.630152+00:00","optionCode":"standard","condition":{"weightGrams":{"min":0,"max":2000}}},{"ratePolicyId":"01a13d84-ca00-7000-8d86-52803380de4e","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":true,"createdAt":"2026-10-15T03:04:35.07236+00:00","updatedAt":"2026-10-15T03:52:37.672066+00:00","optionCode":"standard"},{"ratePolicyId":"01a13e4f-e0bc-7000-b10c-c1bace302a44","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":95000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.70079+00:00","updatedAt":"2026-10-15T06:46:24.70079+00:00","condition":{"itemCount":{"min":1,"max":6}}},{"ratePolicyId":"01a13d65-cf37-7000-ad21-ac8e9b2c89d7","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":false,"createdAt":"2026-10-15T02:30:44.791242+00:00","updatedAt":"2026-10-15T03:05:45.803679+00:00"}],"coverageGrants":[{"coverageGrantId":"01a13d65-cf8e-7000-a8e5-2205f6167d63","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","isActive":true,"createdAt":"2026-10-15T02:30:44.878728+00:00","updatedAt":"2026-10-15T02:33:23.241766+00:00"}]}
+   TOTAL_ROWS=7
+   option=express charge=340000.00 condition={"weightGrams":{"min":2000,"max":5000},"itemCount":{"min":6,"max":11}}
+   option=standard charge=260000.00 condition={"weightGrams":{"min":2000,"max":5000}}
+   option=standard charge=120000.00 condition={"weightGrams":{"min":0,"max":2000}}
+   option= charge=95000.00 condition={"itemCount":{"min":1,"max":6}}
+
+--- 6. refusals with stable codes (no partial write) ---
+6a. an overlapping tier [1500,3000) must be refused
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 400
+   {"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/tipax/rates","errorCode":"shipping.rate_policy.tier_overlap","traceId":"1e8ec5712d0a48c047a11263040a1073","correlationId":"0693dff7156f4815ae80523730c5c220","requestId":"0HNPAGUQMTFTL:00000009"}
+
+6b. the exact same tier [0,2000) must be refused as a duplicate
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 400
+   {"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/tipax/rates","errorCode":"shipping.rate_policy.scope_duplicate","traceId":"941ec9a2980ec70a2179dc62ebcd4228","correlationId":"f3e7777732d44a92850efe59f2a4cc4e","requestId":"0HNPAGUQMTFTL:0000000A"}
+
+6c. a reversed tier [3000,2000) must be refused
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 400
+   {"type":"about:blank","title":"Validation failed.","status":400,"instance":"/v1/admin/shipping-services/tipax/rates","errorCode":"validation.failed","traceId":"3f4ab8474a6e98a1896f1b5567c9512b","correlationId":"51ee8dbba70e4261a87ba3a76a30f6e5","requestId":"0HNPAGUQMTFTL:0000000B","errors":{"Request.Condition.WeightGrams.Max":["shipping.validation.tier_range_invalid"]}}
+
+6d. a zero-width tier [2000,2000) must be refused
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 400
+   {"type":"about:blank","title":"Validation failed.","status":400,"instance":"/v1/admin/shipping-services/tipax/rates","errorCode":"validation.failed","traceId":"5417d1295dac19ccd04ab20455381f2d","correlationId":"803c923d024c4c2bae75e92faae1cd8e","requestId":"0HNPAGUQMTFTL:0000000C","errors":{"Request.Condition.WeightGrams.Max":["shipping.validation.tier_range_invalid"]}}
+
+6e. a negative lower bound [-1,2000) must be refused
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 400
+   {"type":"about:blank","title":"Validation failed.","status":400,"instance":"/v1/admin/shipping-services/tipax/rates","errorCode":"validation.failed","traceId":"c7a92325be6c7ce9f79fe60e20eaa8f2","correlationId":"a5fa903c1d384b98914f2827a9e99c43","requestId":"0HNPAGUQMTFTL:0000000D","errors":{"Request.Condition.WeightGrams.Min":["shipping.validation.tier_min_negative"]}}
+
+6f. an unknown option must be refused before any write
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 400
+   {"type":"about:blank","title":"Request rejected.","status":400,"instance":"/v1/admin/shipping-services/tipax/rates","errorCode":"shipping.service_option.unknown","traceId":"13d339fc80fc9b058725be3af246306b","correlationId":"35b8c52fe09c450f836e6b8036e752b5","requestId":"0HNPAGUQMTFTL:0000000E"}
+
+--- 7. option isolation: the same range on tipax/express is a different identity, so it is accepted ---
+POST http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200
+   {"ratePolicyId":"01a13e4f-e137-7000-8565-ee3d706df6be","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":210000,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.8233987+00:00","updatedAt":"2026-10-15T06:46:24.8233987+00:00","optionCode":"express","condition":{"weightGrams":{"min":0,"max":2000}}}
+   TIER_EXPRESS_ID=01a13e4f-e137-7000-8565-ee3d706df6be
+
+--- 8. update: widening an existing row's own tier is not a self-collision ---
+PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates/01a13e4f-e076-7000-b14b-85a61c4751f6 => 200
+   {"ratePolicyId":"01a13e4f-e076-7000-b14b-85a61c4751f6","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":115000,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.630152+00:00","updatedAt":"2026-10-15T06:46:24.8459497+00:00","optionCode":"standard","condition":{"weightGrams":{"min":0,"max":1000}}}
+
+--- 9. authorization boundary: unauthenticated read must be 401 ---
+GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 401
+   {"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/shipping-services/tipax/rates","errorCode":"admin.actor.missing","traceId":"396c419cddc7f804d7f99ef33b042a80","correlationId":"e44506ffc0d84243acda87b4e0691f6b","requestId":"0HNPAGUQMTFTL:00000011"}
+
+--- 10. rollback ledger: the synthetic rows created by this probe ---
+   LOW=01a13e4f-e076-7000-b14b-85a61c4751f6 HIGH=01a13e4f-e08f-7000-a163-531d26b0ebda COUNT_SERVICE=01a13e4f-e0bc-7000-b10c-c1bace302a44 COMBINED=01a13e4f-e0d5-7000-8b5a-2eef68459312 EXPRESS=01a13e4f-e137-7000-8565-ee3d706df6be
+   (deleted by the accompanying psql rollback; pre-existing 9 rate rows are untouched)
+
+--- 11. final state ---
+GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/rates => 200
+   {"serviceCode":"tipax","ratePolicies":[{"ratePolicyId":"01a13d84-ca7f-7000-a59a-269a1c8ec13d","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":260000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":1,"isActive":true,"createdAt":"2026-10-15T03:04:35.199704+00:00","updatedAt":"2026-10-15T03:04:35.199704+00:00","optionCode":"express"},{"ratePolicyId":"01a13e4f-e137-7000-8565-ee3d706df6be","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":210000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.823398+00:00","updatedAt":"2026-10-15T06:46:24.823398+00:00","optionCode":"express","condition":{"weightGrams":{"min":0,"max":2000}}},{"ratePolicyId":"01a13e4f-e0d5-7000-8b5a-2eef68459312","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":340000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.725247+00:00","updatedAt":"2026-10-15T06:46:24.725247+00:00","optionCode":"express","condition":{"weightGrams":{"min":2000,"max":5000},"itemCount":{"min":6,"max":11}}},{"ratePolicyId":"01a13e4f-e076-7000-b14b-85a61c4751f6","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":115000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.630152+00:00","updatedAt":"2026-10-15T06:46:24.845949+00:00","optionCode":"standard","condition":{"weightGrams":{"min":0,"max":1000}}},{"ratePolicyId":"01a13d84-ca00-7000-8d86-52803380de4e","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":true,"createdAt":"2026-10-15T03:04:35.07236+00:00","updatedAt":"2026-10-15T03:52:37.672066+00:00","optionCode":"standard"},{"ratePolicyId":"01a13e4f-e08f-7000-a163-531d26b0ebda","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":260000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.655531+00:00","updatedAt":"2026-10-15T06:46:24.655531+00:00","optionCode":"standard","condition":{"weightGrams":{"min":2000,"max":5000}}},{"ratePolicyId":"01a13e4f-e0bc-7000-b10c-c1bace302a44","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":95000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":2,"isActive":true,"createdAt":"2026-10-15T06:46:24.70079+00:00","updatedAt":"2026-10-15T06:46:24.70079+00:00","condition":{"itemCount":{"min":1,"max":6}}},{"ratePolicyId":"01a13d65-cf37-7000-ad21-ac8e9b2c89d7","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","chargeAmount":180000.00,"currencyCode":"IRR","preparationDays":1,"leadDays":3,"isActive":false,"createdAt":"2026-10-15T02:30:44.791242+00:00","updatedAt":"2026-10-15T03:05:45.803679+00:00"}],"coverageGrants":[{"coverageGrantId":"01a13d65-cf8e-7000-a8e5-2205f6167d63","serviceCode":"tipax","countryId":"e3451206-e503-51a8-91ad-afa9ab70e330","administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","level":"AdministrativeArea","isActive":true,"createdAt":"2026-10-15T02:30:44.878728+00:00","updatedAt":"2026-10-15T02:33:23.241766+00:00"}]}

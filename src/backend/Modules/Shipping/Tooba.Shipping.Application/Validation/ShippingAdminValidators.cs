@@ -55,6 +55,15 @@ public static class ShippingValidationCodes
     /// کاملاً غایب. ورودی سطح کلاینت است و باید ۴۰۰ اعلام‌شده بدهد، نه خطای بستر.
     /// </summary>
     public const string BodyInvalid = "shipping.validation.body_invalid";
+
+    /// <summary>کران پایین پلهٔ اندازه نباید منفی باشد.</summary>
+    public const string TierMinNegative = "shipping.validation.tier_min_negative";
+
+    /// <summary>کران بالای پلهٔ اندازه باید اکیداً بزرگ‌تر از کران پایین باشد.</summary>
+    public const string TierRangeInvalid = "shipping.validation.tier_range_invalid";
+
+    /// <summary>کران پلهٔ اندازه خارج از سقف متعارف است.</summary>
+    public const string TierOutOfRange = "shipping.validation.tier_out_of_range";
 }
 
 /// <summary>
@@ -129,6 +138,43 @@ public sealed class ShippingRatePolicyWriteRequestValidator : AbstractValidator<
             .GreaterThanOrEqualTo(0m)
             .When(x => x.FreeAboveThreshold is not null)
             .WithErrorCode(ShippingValidationCodes.FreeAboveThresholdNegative);
+
+        // The measurement tier shape is validated here so a malformed range is a declared 400 rather
+        // than a domain exception; the domain re-checks the same rules because it owns the invariant.
+        When(x => x.Condition is not null, () =>
+        {
+            When(x => x.Condition!.WeightGrams is not null, () =>
+            {
+                RuleFor(x => x.Condition!.WeightGrams!.Min)
+                    .GreaterThanOrEqualTo(0)
+                    .WithErrorCode(ShippingValidationCodes.TierMinNegative)
+                    .LessThanOrEqualTo(ShippingRatePolicy.WeightGramsMaxValue)
+                    .WithErrorCode(ShippingValidationCodes.TierOutOfRange);
+                RuleFor(x => x.Condition!.WeightGrams!.Max)
+                    .GreaterThan(x => x.Condition!.WeightGrams!.Min)
+                    .When(x => x.Condition!.WeightGrams!.Max is not null)
+                    .WithErrorCode(ShippingValidationCodes.TierRangeInvalid)
+                    .LessThanOrEqualTo(ShippingRatePolicy.WeightGramsMaxValue)
+                    .When(x => x.Condition!.WeightGrams!.Max is not null)
+                    .WithErrorCode(ShippingValidationCodes.TierOutOfRange);
+            });
+
+            When(x => x.Condition!.ItemCount is not null, () =>
+            {
+                RuleFor(x => x.Condition!.ItemCount!.Min)
+                    .GreaterThanOrEqualTo(0)
+                    .WithErrorCode(ShippingValidationCodes.TierMinNegative)
+                    .LessThanOrEqualTo(ShippingRatePolicy.ItemCountMaxValue)
+                    .WithErrorCode(ShippingValidationCodes.TierOutOfRange);
+                RuleFor(x => x.Condition!.ItemCount!.Max)
+                    .GreaterThan(x => x.Condition!.ItemCount!.Min)
+                    .When(x => x.Condition!.ItemCount!.Max is not null)
+                    .WithErrorCode(ShippingValidationCodes.TierRangeInvalid)
+                    .LessThanOrEqualTo(ShippingRatePolicy.ItemCountMaxValue)
+                    .When(x => x.Condition!.ItemCount!.Max is not null)
+                    .WithErrorCode(ShippingValidationCodes.TierOutOfRange);
+            });
+        });
     }
 
     private static bool BeThreeLetters(string? raw) =>

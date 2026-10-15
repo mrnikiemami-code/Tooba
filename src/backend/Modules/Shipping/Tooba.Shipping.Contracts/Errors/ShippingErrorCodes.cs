@@ -98,4 +98,25 @@ public static class ShippingErrorCodes
 
     /// <summary>هویت روش برنامهٔ عملیاتی با مسیر/بدنهٔ درخواست یکسان نیست.</summary>
     public const string ScheduleOptionMismatch = "shipping.schedule.option_mismatch";
+
+    /// <summary>بازهٔ وزن نامعتبر است: کران پایین منفی، یا کران بالا بزرگ‌تر از کران پایین نیست.</summary>
+    public const string WeightTierInvalid = "shipping.rate_policy.weight_tier.invalid";
+
+    /// <summary>بازهٔ وزن خارج از سقف متعارف است.</summary>
+    public const string WeightTierOutOfRange = "shipping.rate_policy.weight_tier.out_of_range";
+
+    /// <summary>بازهٔ تعداد اقلام نامعتبر است: کران پایین منفی، یا کران بالا بزرگ‌تر از کران پایین نیست.</summary>
+    public const string CountTierInvalid = "shipping.rate_policy.count_tier.invalid";
+
+    /// <summary>بازهٔ تعداد اقلام خارج از سقف متعارف است.</summary>
+    public const string CountTierOutOfRange = "shipping.rate_policy.count_tier.out_of_range";
+
+    /// <summary>
+    /// دو پلهٔ فعال برای یک هویت (خدمت/گزینه/دامنه) هم‌پوشانی دارند؛ چنین داده‌ای ابهام تجاری است
+    /// و به‌جای انتخاب سطر اول رد می‌شود.
+    /// </summary>
+    public const string RatePolicyTierOverlap = "shipping.rate_policy.tier_overlap";
+
+    /// <summary>سیاست نرخ با این شناسه یافت نشد (برای شرط/پله).</summary>
+    public const string RatePolicyConditionNotFound = "shipping.rate_policy.condition.not_found";
 }

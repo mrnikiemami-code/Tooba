@@ -97,6 +97,19 @@ public sealed class ShippingDbContext : DbContext
                 table.HasCheckConstraint(
                     "ck_rate_policies_scope_coherent",
                     "service_area_id IS NULL OR city_id IS NOT NULL");
+                // Measurement tiers are a pair: a present lower bound is what makes the axis conditioned,
+                // and the upper bound must be strictly greater (half-open [min, max)). A reversed or
+                // zero-width tier can never be stored, and a NULL lower bound with a non-NULL upper bound
+                // (a half-written axis the aggregate would never produce) is refused too.
+                table.HasCheckConstraint(
+                    "ck_rate_policies_weight_tier_coherent",
+                    $"min_weight_grams IS NULL OR (min_weight_grams >= 0 AND min_weight_grams <= {ShippingRatePolicy.WeightGramsMaxValue.ToString(CultureInfo.InvariantCulture)} AND (max_weight_grams IS NULL OR (max_weight_grams > min_weight_grams AND max_weight_grams <= {ShippingRatePolicy.WeightGramsMaxValue.ToString(CultureInfo.InvariantCulture)})))");
+                table.HasCheckConstraint(
+                    "ck_rate_policies_count_tier_coherent",
+                    $"min_item_count IS NULL OR (min_item_count >= 0 AND min_item_count <= {ShippingRatePolicy.ItemCountMaxValue.ToString(CultureInfo.InvariantCulture)} AND (max_item_count IS NULL OR (max_item_count > min_item_count AND max_item_count <= {ShippingRatePolicy.ItemCountMaxValue.ToString(CultureInfo.InvariantCulture)})))");
+                table.HasCheckConstraint(
+                    "ck_rate_policies_tier_bounds_paired",
+                    "(max_weight_grams IS NULL OR min_weight_grams IS NOT NULL) AND (max_item_count IS NULL OR min_item_count IS NOT NULL)");
             });
             entity.HasKey(x => x.RatePolicyId);
             entity.Property(x => x.RatePolicyId).ValueGeneratedNever();
@@ -108,17 +121,34 @@ public sealed class ShippingDbContext : DbContext
             entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsRequired();
             entity.Property(x => x.ChargeAmount).HasPrecision(18, 2);
             entity.Property(x => x.FreeAboveThreshold).HasPrecision(18, 2);
+            entity.Property(x => x.MinWeightGrams);
+            entity.Property(x => x.MaxWeightGrams);
+            entity.Property(x => x.MinItemCount);
+            entity.Property(x => x.MaxItemCount);
 
-            // One commercial policy per (service, option, scope). Scope is the four-level destination tuple,
-            // so a country-level row is distinguished from a city-level row for the same service. The column
-            // order intentionally mirrors the specificity order used by the engine (option identity first,
-            // then destination specificity).
+            // One commercial policy per (service, option, scope, tier). Scope is the four-level destination
+            // tuple and the tier is the half-open measurement range, so a country-level unconditioned row is
+            // distinguished from a city-level weight tier for the same service. The column order
+            // intentionally mirrors the specificity order used by the engine (option identity first, then
+            // destination specificity, then the measurement tier).
             //
             // NULLS NOT DISTINCT is required for this to be a real invariant: with PostgreSQL's default
             // NULLS DISTINCT, two rows that differ only by a NULL level (e.g. two country-scope policies
             // for the same service, or two option-less tipax rows) would both be accepted, and the engine
             // would then answer ScopeConflict for every such request. Requires PostgreSQL 15+.
-            entity.HasIndex(x => new { x.ServiceCode, x.OptionCode, x.CountryId, x.AdministrativeAreaId, x.CityId, x.ServiceAreaId })
+            entity.HasIndex(x => new
+                {
+                    x.ServiceCode,
+                    x.OptionCode,
+                    x.CountryId,
+                    x.AdministrativeAreaId,
+                    x.CityId,
+                    x.ServiceAreaId,
+                    x.MinWeightGrams,
+                    x.MaxWeightGrams,
+                    x.MinItemCount,
+                    x.MaxItemCount,
+                })
                 .IsUnique()
                 .AreNullsDistinct(false)
                 .HasDatabaseName("ux_rate_policies_service_option_scope");

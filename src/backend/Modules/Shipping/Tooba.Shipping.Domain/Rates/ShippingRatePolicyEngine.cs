@@ -30,6 +30,22 @@ namespace Tooba.Shipping.Domain.Rates;
 /// می‌شود تا نرخ شهری بتواند نرخ استانی را کنار بزند؛ این قاعده فقط ترتیب را تعیین می‌کند و
 /// هرگز پوشش را ایجاد نمی‌کند.
 /// </para>
+/// <para>
+/// <b>پلهٔ اندازه آخرین لایه است، نه اولی.</b> شرط وزن/تعداد فقط <em>داخل</em> هویت برنده
+/// (گزینه + عمیق‌ترین دامنه) تفکیک می‌کند: یک پلهٔ وزنی شهر هرگز نرخ استانی را کنار نمی‌زند و
+/// یک پلهٔ وزنی گزینهٔ express هرگز روی standard اثر نمی‌گذارد. ترتیب نهایی قطعی است:
+/// <c>هویت گزینه → عمق دامنه → تطبیق پلهٔ اندازه</c>.
+/// </para>
+/// <para>
+/// <b>پلهٔ محدود هرگز با اندازهٔ غایب تطبیق نمی‌یابد.</b> سیاست شرط‌دار فقط وقتی قیمت می‌دهد که
+/// فراخوان اندازهٔ همان محور را اعلام کرده باشد و مقدار داخل بازهٔ نیم‌باز بیفتد. سیاست بی‌شرط
+/// (ردیف قدیمی) رفتارش دقیقاً مانند قبل است و به‌عنوان قاعدهٔ پایه در همان هویت باقی می‌ماند.
+/// </para>
+/// <para>
+/// <b>ابهام پله‌ای هم حل نمی‌شود.</b> اگر بیش از یک پلهٔ شرط‌دار با اندازهٔ درخواست سازگار باشد،
+/// نتیجه <see cref="ShippingServiceabilityOutcome.ConditionConflict"/> است و سیاستی انتخاب نمی‌شود؛
+/// «اولین سطر برنده» یک تصمیم تجاری پنهان است.
+/// </para>
 /// </remarks>
 public static class ShippingRatePolicyEngine
 {
@@ -73,15 +89,62 @@ public static class ShippingRatePolicyEngine
             : covering;
 
         var deepest = candidates.Max(x => x.Scope.Level);
-        var mostSpecific = candidates.Where(x => x.Scope.Level == deepest).ToArray();
-        if (mostSpecific.Length > 1)
+        var group = candidates.Where(x => x.Scope.Level == deepest).ToArray();
+
+        // Measurement tiers are a refinement INSIDE the winning identity+scope group, so the group is
+        // resolved first and the tier second: a weight tier never overrides option or destination
+        // precedence, it only decides between sibling rows that already share both.
+        var unconditioned = group.Where(x => x.IsUnconditioned).ToArray();
+        var conditioned = group.Where(x => !x.IsUnconditioned).ToArray();
+
+        if (unconditioned.Length > 1)
         {
-            // Two equally specific policies that both cover the request. Even when they carry the same
-            // amount, the pair is a data conflict that must be resolved by a human, not by row order.
+            // Two equally specific unconditioned policies that both cover the request. Even when they
+            // carry the same amount, the pair is a data conflict that must be resolved by a human.
             return NotQuoted(request, optionCode, serviceCode, ShippingServiceabilityOutcome.ScopeConflict, ShippingReasonCodes.ScopeAmbiguous);
         }
 
-        var policy = mostSpecific[0];
+        ShippingRatePolicy policy;
+        ShippingConditionMatch? matchedCondition = null;
+
+        if (conditioned.Length == 0)
+        {
+            policy = unconditioned[0];
+        }
+        else
+        {
+            var matched = conditioned.Where(x => x.MatchesCondition(request.Parcel)).ToArray();
+            if (matched.Length > 1)
+            {
+                return NotQuoted(request, optionCode, serviceCode, ShippingServiceabilityOutcome.ConditionConflict, ShippingReasonCodes.ConditionAmbiguous);
+            }
+
+            if (matched.Length == 1)
+            {
+                policy = matched[0];
+                matchedCondition = new ShippingConditionMatch(
+                    policy.Condition.Weight,
+                    policy.Condition.Count);
+            }
+            else if (unconditioned.Length == 1)
+            {
+                // Documented base-rate fallback: a conditioned sibling is an explicit exception and the
+                // unconditioned row stays the general rule for measurements it does not cover.
+                policy = unconditioned[0];
+            }
+            else
+            {
+                // No sibling matched and there is no base rate to fall back to. A request that simply
+                // omitted a required measurement is reported differently from one that supplied a
+                // measurement outside every declared tier: "we cannot price this without a size" is a
+                // different fact from "this size is not in any tier".
+                var missingMeasurement = request.Parcel is null
+                    || conditioned.Any(x => x.HasUnsuppliedAxis(request.Parcel));
+                return missingMeasurement
+                    ? NotQuoted(request, optionCode, serviceCode, ShippingServiceabilityOutcome.MeasurementRequired, ShippingReasonCodes.MeasurementRequired)
+                    : NotQuoted(request, optionCode, serviceCode, ShippingServiceabilityOutcome.ConditionNotMatched, ShippingReasonCodes.ConditionNotMatched);
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(request.CurrencyCode)
             && !string.Equals(policy.CurrencyCode, request.CurrencyCode.Trim(), StringComparison.OrdinalIgnoreCase))
@@ -90,7 +153,7 @@ public static class ShippingRatePolicyEngine
         }
 
         // Coverage stays a service+destination decision: one grant authorizes the whole service at that
-        // destination, including every option of it, and it never widens the scope.
+        // destination, including every option and every weight/count tier of it, and it never widens scope.
         var covered = (coverageGrants ?? Array.Empty<ShippingCoverageGrant>())
             .Any(x => x.IsActive
                 && string.Equals(x.ServiceCode, serviceCode, StringComparison.OrdinalIgnoreCase)
@@ -113,7 +176,8 @@ public static class ShippingRatePolicyEngine
             policy.LeadDays,
             policy.FreeAboveThreshold,
             freeByThreshold ? ShippingReasonCodes.QuotedFreeAboveThreshold : ShippingReasonCodes.Quoted,
-            optionCode);
+            optionCode,
+            matchedCondition);
     }
 
     private static ShippingQuote NotQuoted(
