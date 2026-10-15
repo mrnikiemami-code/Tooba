@@ -1,0 +1,158 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-085
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-084
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-TABS
+Mode: BOUNDED_AUTHORIZED_ONE_LEVEL_ADMIN_READ_BRIDGE
+Bridge-Task-Row: 7d1c2784-d339-43f6-ba46-871655f09d10
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: f3ce208e7df0c471d318f6e7a40fea9c173889bd
+Base-SHA: f3ce208e7df0c471d318f6e7a40fea9c173889bd
+Code-SHA: fac192e43
+Evidence-SHA: a0c320953b83f6daf4547c8fa9f3d4223274f825
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- Claimed exactly one Pending task on tooba-main; the received .task.md was persisted as receipt only
+  (docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-085.task.md, left UNSTAGED).
+- Read AGENTS.md, docs/ai/TOOBA-PIPELINE-PROTOCOL.md, the 081-084 planning notes, 082 Contracts/reader/gate,
+  084 page.tsx + shipping-one-level-gate.ts + shipping-one-level-tabs.tsx, the Fulfillment admin auth
+  convention (IFulfillmentAdminAuthorizer / FulfillmentAdminAuthorizer / IAdminPanelAccess), the existing
+  ShippingServiceEndpoints/ShippingMethodsEndpoints patterns, and Host composition.
+- git fetch origin; HEAD == origin/main == f3ce208e7df0c471d318f6e7a40fea9c173889bd, identical to
+  Expected-Base-SHA. Zero source drift, no RECOVERY_CONFLICT.
+- Preserved every pre-existing dirty/untracked path, including the modified admin screens
+  admin-fulfillment-work-queue-screen.tsx and admin-order-detail-screen.tsx that predate this task. No
+  reset, stash, rebase or force push.
+- Confirmed READ-ONLY that the Development one-level tables are still absent: no migration, seed, backfill
+  or DML was executed anywhere in this task.
+
+MISSION A - TRUSTED BACKEND ADMIN READ BRIDGE (DELIVERED)
+Route: GET /v1/admin/shipping-services/shipping-methods/one-level, registered additively on the existing
+module-owned /v1/admin/shipping-services group and guarded by IFulfillmentAdminAuthorizer (the module's
+established admin convention; no new auth bypass, no permission widening, no config-secret disclosure, no
+broad feature-flag dump). Host remains composition-only; no Host business logic was added.
+Gate semantics (default OFF, fail-closed, evaluated only via
+ShippingOneLevelCatalogPolicy.Evaluate over Tooba:ShippingOneLevelCatalog):
+  - section absent            => gate=Disabled, ready=false, methods=[], and NO database query is issued;
+  - explicit false            => gate=Disabled, ready=false, methods=[], NO database query;
+  - explicit true + migrated  => gate=Enabled, ready=true, methods=[...] (inactive rows retained);
+  - explicit true + table missing (PostgreSQL 42P01 undefined_table) => gate=Enabled, ready=false,
+    methods=[] i.e. a controlled NOT_READY, never a 500 and never a fake "empty success";
+  - any other DB failure      => propagates untouched (never swallowed).
+This bridge reads and reports ONLY the one-level catalog gate. It never reads, infers or mutates
+Tooba:ShippingRateAuthority or Tooba:ShippingOperationalShadow, and it has no write path.
+Single-level wire: OneLevelShippingMethodListItemDto carries only MethodCode, Name, IsActive, SortOrder -
+no providerKind, no option count, no nested options, no legacy service/option binding, so the admin wire
+cannot create a second merchant level. A missing translation yields an empty label (never invented);
+inactive methods stay visible and explicitly inactive. IShippingOneLevelCatalogReader (082 Contracts) is
+reused; the legacy shipping_services/shipping_service_options endpoints and their nested options are
+unchanged and no legacy tree is presented as a populated one-level catalog.
+
+MISSION B - FRONTEND TRUSTED CONSUMER (DELIVERED)
+app/admin/shipping-services/page.tsx is now a Next.js Server Component (previously a client component with
+a dormant seam). It reads the authorized bridge server-side via buildUpstreamAuthHeaders() with
+Accept-Language and cache: "no-store". Bearer/session credentials stay on the server: the page contains no
+"use client", no console.* logging and no NEXT_PUBLIC credential exposure, so nothing leaks to HTML or the
+browser. Gate resolution uses the pure, fail-closed resolveOneLevelCatalogGateFromHost: only HTTP 200 with
+gate === "Enabled" AND ready === true mounts the new ShippingOneLevelTabs; every other outcome (non-200,
+network failure, unparseable body, Disabled, ready=false) falls back to the untouched legacy
+ShippingServicesScreen with all current actions intact. No query string, useSearchParams, URLSearchParams
+or localStorage participates in gate resolution, so no client-side bypass exists. mapHostOneLevelMethods is
+defensive: a code that is not already canonical and <= 32 chars is dropped rather than normalized into a
+new identity, duplicates are dropped, and no label is invented. Tab 1 renders the server-provided rows
+directly via initialMethods; tabs 2-5 remain honest placeholders naming their own wiring tasks.
+
+CHANGED PATHS (exactly)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Ports/IShippingOneLevelCatalogAdminRead.cs   (new)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Queries/ListOneLevelShippingMethodsQuery.cs (new)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelCatalogAdminRead.cs      (new)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/DependencyInjection/FulfillmentModule.cs          (modified, +1 DI line)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Endpoints/Shipping/ShippingServiceEndpoints.cs                   (modified, +1 additive route)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelAdminReadBridgeTests.cs            (new, 6 tests)
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Architecture/FulfillmentValidatorCoverageGuardTests.cs      (modified, manifest 15->16)
+  src/backend/Host/Tooba.Host.Tests/Architecture/FulfillmentModuleAmsc001W3CertGuardTests.cs                          (modified, route count 21->22)
+  src/frontend/app/admin/shipping-services/page.tsx                                                                  (modified, now a Server Component)
+  src/frontend/app/admin/shipping-services/shipping-one-level-gate.ts                                                 (modified, +host gate mapping)
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.tsx                                                (modified, +initialMethods)
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.test.ts                                            (modified, 14->17 tests)
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-085.md                                                                 (new)
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-085/**                                                        (new)
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-085.task.md                                                                (receipt only, NOT staged)
+The two guard-test edits are the narrowly justified consequence of the single additive endpoint (module
+route count and endpoint-reachable request inventory); no broad guard rebaseline was performed. No
+unrelated admin file was modified.
+
+FOCUSED TESTS ACTUALLY RUN
+  dotnet test src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests            -> Passed! Failed: 0, Passed: 102
+  dotnet test ... --filter ShippingOneLevelAdminReadBridge|FulfillmentValidatorCoverageGuard -> Failed: 0, Passed: 15
+  node --experimental-strip-types --test app/admin/shipping-services/shipping-one-level-tabs.test.ts -> tests 17, pass 17, fail 0
+  node --experimental-strip-types --test app/admin/shipping-services/*.test.ts  -> tests 134, pass 134, fail 0
+  npm run typecheck                                                             -> clean, no errors
+  npm run test:architecture                                                     -> tests 11, pass 10, fail 1 (PRE-EXISTING, see below)
+Backend focused tests cover: gate absent => disabled with zero reader calls; explicit false => disabled
+with zero reader calls; explicit true => enabled with inactive rows retained; unmigrated table =>
+controlled not-ready; unexpected DB error => not swallowed; DTO serialization contains no providerKind,
+legacyServiceCode, legacyOptionCode, optionCount or options. Frontend tests cover: fail-closed mapping for
+401 / 0 / 200-Disabled / 200-ready=false / malformed body; defensive row mapping rejecting non-canonical and
+over-long codes, dropping duplicates and never inventing a label; server-side-only gate resolution with no
+useSearchParams/URLSearchParams/localStorage/console./"use client" in page.tsx; no write API or
+pricing/authority reference in the page; read-only shell with no second level.
+
+BLOCKED / PRE-EXISTING, REPORTED SEPARATELY (NOT HIDDEN)
+1. dotnet test src/backend/Host/Tooba.Host.Tests --filter FulfillmentModuleAmsc001W3CertGuard was NOT
+   executable: MSB3027/MSB3021 - the running Development Host process Tooba.Host (pid 33548) locks
+   src/backend/Host/Tooba.Host/bin/Debug/net8.0/*.dll. Restarting or stopping that Host is outside this
+   task's authorization, so the guard was not run. Its two affected assertions were verified by direct
+   inspection instead: module-owned route count is now 22 (was 21) with exactly one additive read route
+   and zero removed routes, and the edited counts match the real endpoint-reachable inventory
+   (16 requests = 10 with a required validator + 6 explicitly NO_VALIDATOR_REQUIRED).
+2. npm run test:architecture fails only in the FE-SIZE shrink-only guard for five files untouched by this
+   task and identical to the 084 finding: category-admin-screen.tsx (2230>2215),
+   admin-landing-page-composer.tsx (1442>1440), storefront-landing-blocks.tsx (1033>1026),
+   storefront-shipping.tsx (1033>945), shared-composition-renderer.tsx (918>907). This is PRE-EXISTING and
+   is not a new regression.
+
+LIVE CHECKS (REAL, NON-FABRICATED)
+- The frontend dev server already listening on 127.0.0.1:3000 was only navigated to (nothing was
+  restarted or reconfigured): GET /admin/shipping-services -> HTTP 200, legacy screen present, new shell
+  absent, no new-shell tablist. That is the correct OFF-gate behaviour in the current environment.
+- GET http://127.0.0.1:5088/v1/admin/shipping-services/shipping-methods/one-level -> 404 from the RUNNING
+  Host binary, which predates this commit. Deploying or restarting the Host is not authorized by this
+  task, so no live-endpoint success is claimed; the route exists in source and is covered by focused tests.
+  No on/off live browser proof of the new shell is claimed, because mounting it would require enabling the
+  gate, which is FORBIDDEN.
+
+DATABASE UNTOUCHED PROOF
+- No migration, no backfill, no seed, no DDL and no DML were executed. The 083 migration remains unapplied
+  in Development; the one-level tables remain absent.
+- Tooba:ShippingOneLevelCatalog has NO appsettings section anywhere (grep over
+  src/backend/Host/Tooba.Host/appsettings*.json => no matches), so the effective gate is Disabled by
+  absence and was NOT enabled. Tooba:ShippingRateAuthority and Tooba:ShippingOperationalShadow likewise
+  have no appsettings section and were not modified; Checkout still uses the Legacy path.
+- No Host restart or config mutation. No customer price/availability change, no COD settlement, no capacity
+  reservation, no delivery promise, no paid-order snapshot or persisted code touched.
+
+LIMITATIONS
+1. With the gate OFF by absence, the route currently renders the legacy screen, so the new shell is not
+   visible in the running environment; this is the intended fail-closed state, not a fabricated rollout.
+2. Even with the gate enabled, the bridge would honestly report ready=false until a one-level backfill is
+   separately authorized.
+3. The new route is not yet live on the running Host binary (404), as above.
+4. Tabs 2-5 remain shell destinations for 086+.
+
+ROLLBACK
+Revert the four additive backend files, the one DI line, the one route registration and the two guard-count
+edits, and restore page.tsx to render ShippingServicesScreen unconditionally. No persisted state, no
+migration and no runtime configuration is involved, so rollback is a pure source revert; the gate is OFF by
+absence, so today's behaviour already equals the rolled-back behaviour.
+
+ACTUAL ELAPSED: ~53 minutes wall clock (claim 2026-10-15T12:24:42Z, result 2026-10-15T13:18Z). This EXCEEDS
+the 30-minute HARD timebox and is reported truthfully rather than trimmed. The overrun came from the
+blocked Host cert-guard build (two ~5-8 minute MSB3027/MSB3021 file-lock retry cycles against the running
+Host) plus the full module test run; no scope beyond Mission A + Mission B + Mission C was executed.
+END_TOOBA_WORKER_RESULT
