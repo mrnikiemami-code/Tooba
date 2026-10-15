@@ -107,6 +107,8 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<IShippingCatalogReader, ShippingCatalogReader>();
         services.AddScoped<IShippingOneLevelCatalogReader, ShippingOneLevelCatalogReader>();
         services.AddScoped<IShippingOneLevelCatalogAdminRead, ShippingOneLevelCatalogAdminRead>();
+        // TB-SHIPPING-ONE-LEVEL-TABS-094: تنها درز نوشتن نام روش یک‌سطحی؛ دروازهٔ خاموش ⇒ هیچ نوشتنی.
+        services.AddScoped<IShippingOneLevelCatalogAdminWrite, ShippingOneLevelCatalogAdminWrite>();
         services.AddScoped<IShippingOneLevelBackfillStore, ShippingOneLevelBackfillStore>();
         services.AddScoped<IShippingCatalogSeedPort, ShippingCatalogSeedAdapter>();
         // دروازهٔ کاتالوگ یک‌سطحی: پیش‌فرض خاموش است و هیچ بخشی در appsettings ندارد. این دروازه فقط

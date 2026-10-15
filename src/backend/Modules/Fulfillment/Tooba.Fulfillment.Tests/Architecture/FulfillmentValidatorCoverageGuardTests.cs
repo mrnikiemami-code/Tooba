@@ -19,13 +19,16 @@ namespace Tooba.Fulfillment.Tests.Architecture;
 
 /// <summary>
 /// TB-TMAR-FULFILLMENT-ARCH-COMPLETE-002-PRECERT-REPAIR-001 — exhaustive Fulfillment
-/// endpoint-reachable validator coverage. Exactly 17 endpoint-reachable MediatR requests:
-/// 11 carry a concrete transport validator and 6 are explicitly NO_VALIDATOR_REQUIRED
+/// endpoint-reachable validator coverage. Exactly 18 endpoint-reachable MediatR requests:
+/// 12 carry a concrete transport validator and 6 are explicitly NO_VALIDATOR_REQUIRED
 /// (2 NO_INPUT + 1 AUTH_SCOPED_QUERY + 3 OPTIONAL_PRESENTATION_LOCALE).
 /// TB-SHIPPING-ONE-LEVEL-TABS-085 added ListOneLevelShippingMethodsQuery (optional presentation
 /// locale only, no untrusted transport shape) as the 16th request.
 /// TB-SHIPPING-ONE-LEVEL-TABS-086 added ResolveOneLevelShippingMethodBindingQuery (a supplied
 /// method code is untrusted transport shape, so it carries a concrete validator) as the 17th.
+/// TB-SHIPPING-ONE-LEVEL-TABS-094 added UpdateOneLevelShippingMethodTranslationCommand (a supplied
+/// method code plus a supplied label are untrusted transport shape, so it carries a concrete
+/// validator) as the 18th.
 /// </summary>
 public sealed class FulfillmentValidatorCoverageGuardTests
 {
@@ -53,6 +56,7 @@ public sealed class FulfillmentValidatorCoverageGuardTests
         ("ListEnabledShippingMethodsTreeQuery", "Shipping", OptionalLocale),
         ("ListOneLevelShippingMethodsQuery", "Shipping", OptionalLocale),
         ("ResolveOneLevelShippingMethodBindingQuery", "Shipping", ValidatorRequired),
+        ("UpdateOneLevelShippingMethodTranslationCommand", "Shipping", ValidatorRequired),
     ];
 
     private static readonly (string Request, Type Validator, string Surface)[] RequiredValidators =
@@ -68,13 +72,14 @@ public sealed class FulfillmentValidatorCoverageGuardTests
         ("DeactivateShippingServiceCommand", typeof(DeactivateShippingServiceCommandValidator), "Shipping"),
         ("GetShippingServiceQuery", typeof(GetShippingServiceQueryValidator), "Shipping"),
         ("ResolveOneLevelShippingMethodBindingQuery", typeof(ResolveOneLevelShippingMethodBindingQueryValidator), "Shipping"),
+        ("UpdateOneLevelShippingMethodTranslationCommand", typeof(UpdateOneLevelShippingMethodTranslationCommandValidator), "Shipping"),
     ];
 
     [Fact]
-    public void Complete_endpoint_inventory_is_exactly_17_with_11_required_and_6_no_validator()
+    public void Complete_endpoint_inventory_is_exactly_18_with_12_required_and_6_no_validator()
     {
-        Assert.Equal(17, Manifest.Length);
-        Assert.Equal(11, Manifest.Count(x => x.Classification == ValidatorRequired));
+        Assert.Equal(18, Manifest.Length);
+        Assert.Equal(12, Manifest.Count(x => x.Classification == ValidatorRequired));
         Assert.Equal(6, Manifest.Count(x => x.Classification != ValidatorRequired));
         Assert.Equal(2, Manifest.Count(x => x.Classification == NoInput));
         Assert.Equal(1, Manifest.Count(x => x.Classification == AuthScoped));
@@ -107,7 +112,7 @@ public sealed class FulfillmentValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void Ten_required_validators_resolve_via_foundation_DI_and_five_have_none()
+    public void Twelve_required_validators_resolve_via_foundation_DI_and_six_have_none()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -140,7 +145,7 @@ public sealed class FulfillmentValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void All_seventeen_requests_are_real_mediatr_requests_and_endpoints_use_ISender()
+    public void All_eighteen_requests_are_real_mediatr_requests_and_endpoints_use_ISender()
     {
         var appAsm = typeof(SellerMutateFulfillmentCommand).Assembly;
         foreach (var (name, _, _) in Manifest)
@@ -183,7 +188,7 @@ public sealed class FulfillmentValidatorCoverageGuardTests
         Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Validators", "Customer")));
         Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Validators", "Shipping")));
 
-        Assert.Equal(5, Directory.GetFiles(Path.Combine(applicationRoot, "Shipping", "Validators"), "*Validator.cs").Length);
+        Assert.Equal(6, Directory.GetFiles(Path.Combine(applicationRoot, "Shipping", "Validators"), "*Validator.cs").Length);
         Assert.Equal(3, Directory.GetFiles(Path.Combine(applicationRoot, "Fulfillments", "Validators"), "*Validator.cs").Length);
         Assert.Equal(2, Directory.GetFiles(Path.Combine(applicationRoot, "WorkQueue", "Validators"), "*Validator.cs").Length);
         Assert.Single(Directory.GetFiles(Path.Combine(applicationRoot, "Checkout", "Validators"), "*Validator.cs"));

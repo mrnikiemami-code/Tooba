@@ -1,0 +1,761 @@
+﻿
+> tooba-web@0.0.1 test:admin
+> node --experimental-strip-types --test app/admin/admin-api.test.ts app/admin/host-client.test.ts app/admin/operator-settings-api.test.ts app/admin/admin-nav-integrity.test.ts app/admin/admin-error-map.test.ts app/admin/catalog-category-api.test.ts app/admin/catalog-tag-api.test.ts app/admin/category-admin-form.test.ts app/admin/category-attributes-panel.test.ts app/admin/category-products-panel.test.ts app/admin/category-facets-panel.test.ts app/admin/category-mega-menu-panel.test.ts app/admin/product-catalog-admin.test.ts app/admin/product-attributes-panel.test.ts app/admin/product-variants-panel.test.ts app/admin/product-media-panel.test.ts app/admin/media-api.test.ts app/admin/product-seo-panel.test.ts app/admin/landing-pages/admin-landing-pages.guard.test.ts
+
+(node:31852) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ maps live dashboard, order, seller and customer DTOs (17.5277ms)
+✔ maps admin order detail seller snapshots (1.1009ms)
+✔ enriches legacy order detail payload without finance projections (0.5875ms)
+✔ enrichAdminOrderDetail keeps explicit server projections (0.1757ms)
+✔ enrichAdminOrderDetail counts lines not summed quantity (0.2831ms)
+✔ uses Persian money and status labels (0.4794ms)
+✔ sends development actor header and exposes denied state (21.6913ms)
+✔ admin requests negotiate the display locale so Host error text stays in UI language (1.2617ms)
+(node:10900) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-error-map.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ maps known catalog attribute duplicate codes in fa and en (1.0047ms)
+✔ unknown fallback never exposes Bad Request / HTTP / raw codes (1.0011ms)
+✔ extracts code from legacy title (code) payloads (0.1534ms)
+✔ parseAdminProblemErrorCode prefers stable errorCode never title (0.264ms)
+✖ content article update and media errors are humanized (1.0352ms)
+(node:39468) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-nav-integrity.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ admin shell marks settings nav live and clears settings from deferred (0.9142ms)
+✔ technical category-schema is not in live nav group (0.1438ms)
+✔ product list and add-product never double-active (0.2626ms)
+✔ category and attribute library active independently (0.1354ms)
+✔ deep category routes keep category leaf active (0.1003ms)
+✔ landing pages live in ops after home composition (1.8252ms)
+✔ menus live in ops after landing pages (0.2685ms)
+✔ sales campaigns live in moderation after promotions (0.2075ms)
+✔ content group sits between ops and finance with Articles label (0.3699ms)
+✔ content articles categories and authors active independently (0.2533ms)
+(node:41396) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/catalog-category-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ slugifyCategoryName mirrors kebab + unicode keep (4.2829ms)
+✔ storefront route never appends category id (0.3862ms)
+✔ duplicate slug error maps to Persian message (0.592ms)
+✔ mapCategoryTreeNode reads mixed casing (0.3044ms)
+✔ mapCategoryWorkspace requires categoryId (0.1626ms)
+(node:34068) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/catalog-tag-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapCatalogTag reads camel and Pascal casing with human name (1.0042ms)
+✔ mapCatalogTag rejects payload without identity (0.1854ms)
+✔ filterUnassignedTags excludes already assigned ids (0.2192ms)
+✔ helper text is locked Persian taxonomy copy not SEO keywords (0.7574ms)
+✔ admin-tags-panel: searchable multi-select, create fa/en, removable chips, no comma textbox (1.2758ms)
+✔ catalog-tags-card wraps AdminTagsPanel (1.7184ms)
+✔ product and category General screens host tags card (1.8505ms)
+✔ api client exposes CRUD and assign routes without meta keywords (0.9594ms)
+(node:21196) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-admin-form.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ General VIEW default markers and readable cards (2.7365ms)
+✔ General EDIT fields and save/cancel (1.9148ms)
+✔ status localization uses Persian labels in workspace (1.2532ms)
+✔ parent selector is searchable path/name without raw ID labels (1.8143ms)
+✔ category media supports real library select/upload/unassign for image/icon/banner (4.2151ms)
+✔ permission-aware edit action gated by canEdit (1.0988ms)
+✔ Translations tab: locale switcher, statuses, create, VIEW/EDIT (1.4241ms)
+✔ translation completeness: missing / partial / complete (0.3764ms)
+✔ dirty locale-switch protection (1.5542ms)
+✔ human slug preview has no CategoryId suffix (1.8976ms)
+✔ slug auto-suggest respects manual edits (1.0973ms)
+✔ duplicate slug maps to Persian UX message (1.4872ms)
+✔ form mode state machine: view default, edit, cancel, save (0.2374ms)
+✔ view-only user cannot enter edit via state machine (0.0714ms)
+✔ tree context preservation after current-locale Name save (2.5323ms)
+✔ AppCategoryTree file untouched by T006 workspace work (1.8126ms)
+✔ Attributes tab: per-category assignment flags and customize inherited (1.5075ms)
+✔ Attributes tab: VIEW/EDIT, inherited/local, add/create, labels (1.9187ms)
+✔ visible category tabs are functional — products real; seo/settings/history hidden (1.3477ms)
+✔ mobile layout markers present (0.998ms)
+✔ no raw AgGridReact in category admin screen (5.282ms)
+✔ API client exposes updateCore, upsertTranslation with full fields, move (2.8791ms)
+✔ translation meta keywords use removable tag chips not plain textbox (1.1535ms)
+✔ parseMetaKeywords splits commas and drops blanks/duplicates (0.9409ms)
+(node:20744) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-attributes-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ humanizeAttributeCode and attributeCodeFromLabel helpers exist (1.0364ms)
+✔ local vs inherited partition helpers exist (0.1845ms)
+✔ ordinary-user Persian flag labels are defined (0.1171ms)
+✔ behavior chips are independent toggles not checkboxes (3.0362ms)
+✔ inherited vs category-specific human sections (0.25ms)
+✔ inherited override UX copy and reset-to-parent (0.1672ms)
+✔ create+bind strips invalid variant axis before API (0.1166ms)
+(node:40968) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-facets-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ display type labels are ordinary Persian without facet jargon (0.8583ms)
+✔ suggestFacetDisplayType maps value kinds for non-technical users (0.1624ms)
+✔ searchable control only for checklist/select display types (0.1133ms)
+✔ partitionEffectiveFacets splits inherited vs local rows (0.1684ms)
+✔ Facets tab: VIEW/EDIT, add filter, inherited/local, labels (2.5935ms)
+✔ Facets panel hides searchable checkbox for range/boolean types (0.9981ms)
+✔ facet API never prefers raw title Bad Request (0.9737ms)
+✔ no raw AgGridReact in facets panel (1.3361ms)
+(node:28368) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-mega-menu-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ canonical category route has no visible ID suffix (1.519ms)
+✔ Mega Menu tab: VIEW/EDIT, enable, placement, route preview, labels (2.6588ms)
+✔ storefront header consumes mega menu API with canonical destinations (2.1464ms)
+✔ no raw AgGridReact in mega menu panel (1.1137ms)
+(node:22784) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-products-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ behavior chips use short independent labels without comma-separated UI (2.5294ms)
+✔ admin nav groups Categories and Products distinctly (8.3535ms)
+✔ categorySummaryIncludes matches full taxonomy path leaf (16.1299ms)
+✔ category products panel wires column header filters like product list (6.0598ms)
+✔ category products panel is real and blocks L1/L2 assignment (13.2101ms)
+✔ category products assign dialog uses AppDataGrid tabs not checkbox list (6.2355ms)
+✔ category products picker refreshes membership count and row state after mutation (10.275ms)
+✔ category products assign dialog has top bulk add selected action (1.3767ms)
+✔ category products panel is membership-only without change-category (2.0681ms)
+(node:29920) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/host-client.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ list mapper keeps offer counts off the Product price field (1.0357ms)
+✔ list mapper maps leaf primary and additional category arrays (0.309ms)
+✔ workspace mapper keeps prices on offers not product (0.9698ms)
+(node:9232) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-landing-pages.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ landing admin list is human-readable and hides page ids (0.8127ms)
+✔ composer uses wizard + resource selector (no fake sources) (0.4985ms)
+✖ section chooser has Persian labels and no raw JSON editor (1.7554ms)
+✖ TB-P10-T022 ordinary-user Admin UX: no technical leakage + empty category/brand hints (0.902ms)
+✔ TB-FE-ADMINRESULT-NARROWING-001 failure messages come from the result that actually failed (0.3688ms)
+✔ TB-FE-ADMINRESULT-NARROWING-001 retry button does not leak a MouseEvent into refresh (0.2134ms)
+(node:7808) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/media-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapMediaAsset accepts camel and Pascal payloads (1.0458ms)
+✔ media library dialog has library/upload tabs, search, paging, selection modes (2.721ms)
+✔ mediaUploadStateLabel covers queued/uploading/succeeded/failed in fa and en (0.2119ms)
+(node:36544) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/operator-settings-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapOperatorProfile maps camel and Pascal profile fields (0.5905ms)
+✔ mapOperatorPreferences normalizes locale variants (0.2101ms)
+✔ mapOperatorProfile accepts Host payload without actorUserId (0.1622ms)
+✔ mapOperatorProfile rejects empty displayName (0.1037ms)
+(node:15800) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-attributes-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ validateAttributeDrafts blocks missing required text/enum (0.8899ms)
+✔ draftToValueInput builds enum and clear payloads without raw IDs in UI contract (0.2741ms)
+✔ isAttributeDraftDirty detects enum and number changes (0.1917ms)
+✔ panel source has VIEW/EDIT typed controls and no Product-local attribute creation (1.4616ms)
+(node:19088) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-catalog-admin.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ product list keeps AppDataGrid and rejects raw AgGridReact (1.7229ms)
+✔ create CTA navigates to dedicated draft create route (1.1978ms)
+✔ row actions use view/edit scopes and safe archive label (2.2816ms)
+✔ variant terminology uses تنوع not گونه in product list (0.988ms)
+✔ product category picker is hierarchical level-3-only with human paths (1.1943ms)
+✔ dedicated create screen blocks invalid category via level error mapping (1.1817ms)
+✔ create and workspace Brand use searchable combobox with بدون برند (1.7661ms)
+✔ workspace warns on non-L3 category and preserves VIEW/EDIT (1.2336ms)
+✔ workspace tabs and form mode foundation (1.3704ms)
+✔ attributes tab requires categoryId and wires schema-driven panel (1.9398ms)
+✔ workspace page passes view and edit scope (1.8185ms)
+✔ host-client maps core/category helpers and new workspace fields (1.6252ms)
+(node:9632) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-media-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sortMediaItems puts primary first then displayOrder (0.8483ms)
+✔ moveMediaAssetId and alt dirty helpers (0.1738ms)
+✔ readiness and count labels are Persian (9.5673ms)
+✔ panel source opens real Media Library — no placeholder/fake attach (1.4987ms)
+✔ workspace wires ProductMediaPanel into رسانه tab without Guid as primary UX (0.8069ms)
+(node:25172) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-seo-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapSeoDetail and dirty/preview helpers (0.6445ms)
+✔ readiness labels are Persian (0.0949ms)
+✔ panel source has VIEW/EDIT labels Save/Cancel SERP and no AgGrid/Price/Stock (1.3783ms)
+✔ workspace wires ProductSeoPanel into SEO tab (0.8071ms)
+✔ host-client exposes SEO GET/PUT/readiness without Pricing joins (0.6856ms)
+(node:41932) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-variants-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ axis draft dirty detection and selectedAxes payload (0.9236ms)
+✔ combination estimate and readable labels (0.1311ms)
+✔ panel source has VIEW/EDIT, guided steps, preview, impact, no price/stock/AgGrid/jargon (1.5476ms)
+✔ workspace wires ProductVariantsPanel into تنوع‌ها tab (0.7089ms)
+ℹ tests 134
+ℹ suites 0
+ℹ pass 131
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 284.0167
+
+✖ failing tests:
+
+test at app\admin\admin-error-map.test.ts:111:1
+✖ content article update and media errors are humanized (1.0352ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'زبان دسته‌بندی باید با زبان مقاله یکسان باشد.'
+  - 'دستهٔ انتخاب‌شده با زبان مقاله هم‌خوان نیست.'
+  
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-error-map.test.ts:116:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'زبان دسته‌بندی باید با زبان مقاله یکسان باشد.',
+    expected: 'دستهٔ انتخاب‌شده با زبان مقاله هم‌خوان نیست.',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at app\admin\landing-pages\admin-landing-pages.guard.test.ts:40:1
+✖ section chooser has Persian labels and no raw JSON editor (1.7554ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /بنر اصلی/. Input:
+  
+  'import { getVariant } from "../../../lib/storefront-composition/registry.ts";\r\n' +
+    'import { bannerSlotCountForVariant } from "../../../lib/storefront-composition/industry-templates.ts";\r\n' +
+    'import { defaultHeroSliderConfig } from "../../../lib/storefront-composition/hero-slider-config.ts";\r\n' +
+    '\r\n' +
+    'export { bannerSlotCountForVariant };\r\n' +
+    '\r\n' +
+    'export const LANDING_SECTION_TYPES = [\r\n' +
+    '  "Hero",\r\n' +
+    '  "ProductCollection",\r\n' +
+    '  "CategoryGrid",\r\n' +
+    '  "BrandStrip",\r\n' +
+    '  "PromoBanner",\r\n' +
+    '  "ArticleList",\r\n' +
+    '  "Reviews",\r\n' +
+    '  "RichText",\r\n' +
+    '  "NavigationMenu",\r\n' +
+    '  "StoryRail",\r\n' +
+    '  "BannerShowcase",\r\n' +
+    '] as const;\r\n' +
+    '\r\n' +
+    'export type LandingSectionType = (typeof LANDING_SECTION_TYPES)[number];\r\n' +
+    '\r\n' +
+    'export type LandingSectionChoice = {\r\n' +
+    '  type: LandingSectionType;\r\n' +
+    '  label: string;\r\n' +
+    '  description: string;\r\n' +
+    '  testId: string;\r\n' +
+    '};\r\n' +
+    '\r\n' +
+    'export const LANDING_SECTION_CHOICES: LandingSectionChoice[] = [\r\n' +
+    '  { type: "Hero", label: "اسلایدر اصلی", description: "چند اسلاید با تصویر، عنوان و Alt", testId: "add-section-hero" },\r\n' +
+    '  { type: "ProductCollection", label: "مجموعه کالا", description: "نمایش کالا از انتخاب دستی، دسته، برند، تازه‌ها یا پیشنهاد شگفت‌انگیز", testId: "add-section-products" },\r\n' +
+    '  { type: "CategoryGrid", label: "شبکهٔ دسته‌ها", description: "چند دستهٔ فروشگاه را در یک ردیف نشان می‌دهد", testId: "add-section-categories" },\r\n' +
+    '  { type: "BrandStrip", label: "نوار برند", description: "برندهای انتخاب‌شده را در ویترین می‌چیند", testId: "add-section-brands" },\r\n' +
+    '  { type: "PromoBanner", label: "بنر تبلیغاتی", description: "یک بنر با عنوان و پیوند کنترل‌شده", testId: "add-section-promo" },\r\n' +
+    '  { type: "ArticleList", label: "فهرست مطالب", description: "آخرین مقاله‌های منتشرشده", testId: "add-section-articles" },\r\n' +
+    '  { type: "Reviews", label: "نظر خریداران", description: "نظرهای تأییدشدهٔ فروشگاه", testId: "add-section-reviews" },\r\n' +
+    '  { type: "RichText", label: "متن آزاد", description: "یک بلوک متن ساده بدون قالب‌بندی خام", testId: "add-section-text" },\r\n' +
+    '  { type: "NavigationMenu", label: "فهرست پیوند", description: "نمایش یک منوی فعال فروشگاه در بدنهٔ صفحه", testId: "add-section-menu" },\r\n' +
+    '  { type: "StoryRail", label: "میانبر استوری", description: "میانبرهای دایره‌ای یا کارت‌گرد", testId: "add-section-stories" },\r\n' +
+    '  { type: "BannerShowcase", label: "نمایش بنر", description: "شبکه‌های بنر کنترل‌شده با جایگاه مشخص", testId: "add-section-banners" },\r\n' +
+    '];\r\n' +
+    '\r\n' +
+    'export const PRODUCT_SOURCE_CHOICES = [\r\n' +
+    '  { value: "Manual", label: "انتخاب دستی" },\r\n' +
+    '  { value: "Category", label: "از یک دسته" },\r\n' +
+    '  { value: "Brand", label: "از یک برند" },\r\n' +
+    '  { value: "Newest", label: "جدیدترین کالاها" },\r\n' +
+    '  { value: "PromotionCampaign", label: "پیشنهاد شگفت‌انگیز" },\r\n' +
+    '] as const;\r\n' +
+    '\r\n' +
+    '/** برچسب انسانی منبع کالا برای Review (بدون کد فنی). */\r\n' +
+    'export function productSourceLabelFa(source: unknown): string {\r\n' +
+    '  if (typeof source !== "string") return "جدیدترین کالاها";\r\n' +
+    '  return PRODUCT_SOURCE_CHOICES.find((item) => item.value === source)?.label ?? "منبع کالا";\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'export function landingSectionLabel(type: string): string {\r\n' +
+    '  return LANDING_SECTION_CHOICES.find((item) => item.type === type)?.label ?? "بخش";\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'export function defaultLandingSectionConfig(type: LandingSectionType): Record<string, unknown> {\r\n' +
+    '  switch (type) {\r\n' +
+    '    case "Hero":\r\n' +
+    '      return defaultHeroSliderConfig();\r\n' +
+    '    case "ProductCollection":\r\n' +
+    '      return { title: "کالاها", source: "Newest", take: 8, productIds: [] };\r\n' +
+    '    case "CategoryGrid":\r\n' +
+    '      return { title: "دسته‌ها", categoryIds: [] };\r\n' +
+    '    case "BrandStrip":\r\n' +
+    '      return { title: "برندها", brandIds: [] };\r\n' +
+    '    case "PromoBanner":\r\n' +
+    '      return { title: "پیشنهاد ویژه", href: "/offers" };\r\n' +
+    '    case "ArticleList":\r\n' +
+    '      return { title: "آخرین مطالب", source: "Latest", take: 6 };\r\n' +
+    '    case "Reviews":\r\n' +
+    '      return { title: "نظر خریداران" };\r\n' +
+    '    case "RichText":\r\n' +
+    '      return { title: "متن صفحه", text: "متن ساده برای این بخش" };\r\n' +
+    '    case "NavigationMenu":\r\n' +
+    '      return { title: "فهرست پیوندها", menuId: "" };\r\n' +
+    '    case "StoryRail":\r\n' +
+    '      return {\r\n' +
+    '        title: "استوری‌ها",\r\n' +
+    '        variantKey: "story.circle",\r\n' +
+    '        take: 12,\r\n' +
+    '        enabled: true,\r\n' +
+    '        items: [],\r\n' +
+    '      };\r\n' +
+    '    case "BannerShowcase":\r\n' +
+    '      return {\r\n' +
+    '        title: "بنرها",\r\n' +
+    '        variantKey: "banner.single",\r\n' +
+    '        heightPreset: "Medium",\r\n' +
+    '        items: [{ imageUrl: "", href: "/offers", title: "بنر ۱" }],\r\n' +
+    '      };\r\n' +
+    '  }\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'export function parseLandingConfig(raw: string | null | undefined): Record<string, unknown> {\r\n' +
+    '  if (!raw) return {};\r\n' +
+    '  try {\r\n' +
+    '    const value = JSON.parse(raw) as unknown;\r\n' +
+    '    return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};\r\n' +
+    '  } catch {\r\n' +
+    '    return {};\r\n' +
+    '  }\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'export function summarizeLandingSection(type: string, config: Record<string, unknown>): string {\r\n' +
+    '  const title = typeof config.title === "string" && config.title.trim() ? config.title.trim() : null;\r\n' +
+    '  const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;\r\n' +
+    '  const variantFa = variantKey ? getVariant(variantKey)?.nameFa ?? null : null;\r\n' +
+    '  const variantSuffix = variantFa ? ` · ${variantFa}` : "";\r\n' +
+    '  if (type === "ProductCollection") {\r\n' +
+    '    const source = productSourceLabelFa(config.source);\r\n' +
+    '    const take = typeof config.take === "number" ? config.take : 8;\r\n' +
+    '    return title ? `${title}${variantSuffix} · ${source} · ${take} کالا` : `${source} · ${take} کالا${variantSuffix}`;\r\n' +
+    '  }\r\n' +
+    '  if (type === "ArticleList") {\r\n' +
+    '    const take = typeof config.take === "number" ? config.take : 6;\r\n' +
+    '    const source = typeof config.source === "string" ? config.source : "Latest";\r\n' +
+    '    const sourceLabel = source === "Manual" ? "انتخاب دستی" : "جدیدترین مطالب";\r\n' +
+    '    const manualCount = Array.isArray(config.articleIds) ? config.articleIds.length : 0;\r\n' +
+    '    if (source === "Manual") {\r\n' +
+    '      return title\r\n' +
+    '        ? `${title}${variantSuffix} · ${sourceLabel} · ${manualCount.toLocaleString("fa-IR")} مطلب`\r\n' +
+    '        : `${sourceLabel} · ${manualCount.toLocaleString("fa-IR")} مطلب${variantSuffix}`;\r\n' +
+    '    }\r\n' +
+    '    return title ? `${title}${variantSuffix} · ${sourceLabel} · ${take} مورد` : `${sourceLabel} · ${take} مورد${variantSuffix}`;\r\n' +
+    '  }\r\n' +
+    '  if (type === "BannerShowcase" || (variantKey?.startsWith("banner.") ?? false)) {\r\n' +
+    '    const slots = bannerSlotCountForVariant(variantKey);\r\n' +
+    '    return title ? `${title}${variantSuffix} · ${slots} جایگاه` : `بنر${variantSuffix} · ${slots} جایگاه`;\r\n' +
+    '  }\r\n' +
+    '  if (type === "StoryRail" || (variantKey?.startsWith("story.") ?? false)) {\r\n' +
+    '    const take = typeof config.take === "number" ? config.take : 12;\r\n' +
+    '    return title\r\n' +
+    '      ? `${title}${variantSuffix} · نمایش تا ${take.toLocaleString("fa-IR")} استوری تأییدشده`\r\n' +
+    '      : `نمایش استوری تأییدشده${variantSuffix} · تا ${take.toLocaleString("fa-IR")}`;\r\n' +
+    '  }\r\n' +
+    '  if (type === "CategoryGrid") {\r\n' +
+    '    const count = Array.isArray(config.categoryIds)\r\n' +
+    '      ? config.categoryIds.length\r\n' +
+    '      : Array.isArray(config.ids)\r\n' +
+    '        ? config.ids.length\r\n' +
+    '        : 0;\r\n' +
+    '    const countLabel = count > 0 ? `${count.toLocaleString("fa-IR")} دسته` : "بدون دسته";\r\n' +
+    '    return title ? `${title}${variantSuffix} · ${countLabel}` : `${countLabel}${variantSuffix}`;\r\n' +
+    '  }\r\n' +
+    '  if (type === "BrandStrip") {\r\n' +
+    '    const count = Array.isArray(config.brandIds)\r\n' +
+    '      ? config.brandIds.length\r\n' +
+    '      : Array.isArray(config.ids)\r\n' +
+    '        ? config.ids.length\r\n' +
+    '        : 0;\r\n' +
+    '    const countLabel = count > 0 ? `${count.toLocaleString("fa-IR")} برند` : "بدون برند";\r\n' +
+    '    return title ? `${title}${variantSuffix} · ${countLabel}` : `${countLabel}${variantSuffix}`;\r\n' +
+    '  }\r\n' +
+    '  if (title) return `${title}${variantSuffix}`;\r\n' +
+    '  return `${landingSectionLabel(type)}${variantSuffix}`;\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    '/** هشدار منبع ناقص برای فضای کار بخش‌ها (بدون مسدود کردن ذخیره). */\r\n' +
+    'export function incompleteSourceWarning(type: string, config: Record<string, unknown>): string | null {\r\n' +
+    '  if (type === "ProductCollection") {\r\n' +
+    '    const source = typeof config.source === "string" ? config.source : "Newest";\r\n' +
+    '    if (source === "Manual" && (!Array.isArray(config.productIds) || config.productIds.length === 0)) {\r\n' +
+    '      return "منبع کالا ناقص است — حداقل یک کالا انتخاب کنید.";\r\n' +
+    '    }\r\n' +
+    '    if (source === "Category" && !(typeof config.categoryId === "string" && config.categoryId)) {\r\n' +
+    '      return "منبع کالا ناقص است — یک دسته انتخاب کنید.";\r\n' +
+    '    }\r\n' +
+    '    if (source === "Brand" && !(typeof config.brandId === "string" && config.brandId)) {\r\n' +
+    '      return "منبع کالا ناقص است — یک برند انتخاب کنید.";\r\n' +
+    '    }\r\n' +
+    '  }\r\n' +
+    '  if (type === "ArticleList") {\r\n' +
+    '    const source = typeof config.source === "string" ? config.source : "Latest";\r\n' +
+    '    if (source === "Manual" && (!Array.isArray(config.articleIds) || config.articleIds.length === 0)) {\r\n' +
+    '      return "منبع مطلب ناقص است.";\r\n' +
+    '    }\r\n' +
+    '  }\r\n' +
+    '  if (type === "CategoryGrid") {\r\n' +
+    '    const ids = Array.isArray(config.categoryIds) ? config.categoryIds : Array.isArray(config.ids) ? config.ids : [];\r\n' +
+    '    if (ids.length === 0) return "هنوز دسته‌ای انتخاب نشده است.";\r\n' +
+    '  }\r\n' +
+    '  if (type === "BrandStrip") {\r\n' +
+    '    const ids = Array.isArray(config.brandIds) ? config.brandIds : Array.isArray(config.ids) ? config.ids : [];\r\n' +
+    '    if (ids.length === 0) return "هنوز برندی انتخاب نشده است.";\r\n' +
+    '  }\r\n' +
+    '  if (type === "BannerShowcase") {\r\n' +
+    '    const items = Array.isArray(config.items) ? config.items : [];\r\n' +
+    '    const empty = items.length === 0 || items.every((item) => {\r\n' +
+    '      if (!item || typeof item !== "object") return true;\r\n' +
+    '      const imageUrl = (item as { imageUrl?: unknown }).imageUrl;\r\n' +
+    '      return typeof imageUrl !== "string" || !imageUrl.trim();\r\n' +
+    '    });\r\n' +
+    '    if (empty) return "تصویر بنر هنوز کامل نشده است.";\r\n' +
+    '  }\r\n' +
+    '  return null;\r\n' +
+    '}\r\n'
+  
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-landing-pages.guard.test.ts:41:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'import { getVariant } from "../../../lib/storefront-composition/registry.ts";\r\nimport { bannerSlotCountForVariant } from "../../../lib/storefront-composition/industry-templates.ts";\r\nimport { defaultHeroSliderConfig } from "../../../lib/storefront-composition/hero-slider-config.ts";\r\n\r\nexport { bannerSlotCountForVariant };\r\n\r\nexport const LANDING_SECTION_TYPES = [\r\n  "Hero",\r\n  "ProductCollection",\r\n  "CategoryGrid",\r\n  "BrandStrip",\r\n  "PromoBanner",\r\n  "ArticleList",\r\n  "Reviews",\r\n  "RichText",\r\n  "NavigationMenu",\r\n  "StoryRail",\r\n  "BannerShowcase",\r\n] as const;\r\n\r\nexport type LandingSectionType = (typeof LANDING_SECTION_TYPES)[number];\r\n\r\nexport type LandingSectionChoice = {\r\n  type: LandingSectionType;\r\n  label: string;\r\n  description: string;\r\n  testId: string;\r\n};\r\n\r\nexport const LANDING_SECTION_CHOICES: LandingSectionChoice[] = [\r\n  { type: "Hero", label: "اسلایدر اصلی", description: "چند اسلاید با تصویر، عنوان و Alt", testId: "add-section-hero" },\r\n  { type: "ProductCollection", label: "مجموعه کالا", description: "نمایش کالا از انتخاب دستی، دسته، برند، تازه‌ها یا پیشنهاد شگفت‌انگیز", testId: "add-section-products" },\r\n  { type: "CategoryGrid", label: "شبکهٔ دسته‌ها", description: "چند دستهٔ فروشگاه را در یک ردیف نشان می‌دهد", testId: "add-section-categories" },\r\n  { type: "BrandStrip", label: "نوار برند", description: "برندهای انتخاب‌شده را در ویترین می‌چیند", testId: "add-section-brands" },\r\n  { type: "PromoBanner", label: "بنر تبلیغاتی", description: "یک بنر با عنوان و پیوند کنترل‌شده", testId: "add-section-promo" },\r\n  { type: "ArticleList", label: "فهرست مطالب", description: "آخرین مقاله‌های منتشرشده", testId: "add-section-articles" },\r\n  { type: "Reviews", label: "نظر خریداران", description: "نظرهای تأییدشدهٔ فروشگاه", testId: "add-section-reviews" },\r\n  { type: "RichText", label: "متن آزاد", description: "یک بلوک متن ساده بدون قالب‌بندی خام", testId: "add-section-text" },\r\n  { type: "NavigationMenu", label: "فهرست پیوند", description: "نمایش یک منوی فعال فروشگاه در بدنهٔ صفحه", testId: "add-section-menu" },\r\n  { type: "StoryRail", label: "میانبر استوری", description: "میانبرهای دایره‌ای یا کارت‌گرد", testId: "add-section-stories" },\r\n  { type: "BannerShowcase", label: "نمایش بنر", description: "شبکه‌های بنر کنترل‌شده با جایگاه مشخص", testId: "add-section-banners" },\r\n];\r\n\r\nexport const PRODUCT_SOURCE_CHOICES = [\r\n  { value: "Manual", label: "انتخاب دستی" },\r\n  { value: "Category", label: "از یک دسته" },\r\n  { value: "Brand", label: "از یک برند" },\r\n  { value: "Newest", label: "جدیدترین کالاها" },\r\n  { value: "PromotionCampaign", label: "پیشنهاد شگفت‌انگیز" },\r\n] as const;\r\n\r\n/** برچسب انسانی منبع کالا برای Review (بدون کد فنی). */\r\nexport function productSourceLabelFa(source: unknown): string {\r\n  if (typeof source !== "string") return "جدیدترین کالاها";\r\n  return PRODUCT_SOURCE_CHOICES.find((item) => item.value === source)?.label ?? "منبع کالا";\r\n}\r\n\r\nexport function landingSectionLabel(type: string): string {\r\n  return LANDING_SECTION_CHOICES.find((item) => item.type === type)?.label ?? "بخش";\r\n}\r\n\r\nexport function defaultLandingSectionConfig(type: LandingSectionType): Record<string, unknown> {\r\n  switch (type) {\r\n    case "Hero":\r\n      return defaultHeroSliderConfig();\r\n    case "ProductCollection":\r\n      return { title: "کالاها", source: "Newest", take: 8, productIds: [] };\r\n    case "CategoryGrid":\r\n      return { title: "دسته‌ها", categoryIds: [] };\r\n    case "BrandStrip":\r\n      return { title: "برندها", brandIds: [] };\r\n    case "PromoBanner":\r\n      return { title: "پیشنهاد ویژه", href: "/offers" };\r\n    case "ArticleList":\r\n      return { title: "آخرین مطالب", source: "Latest", take: 6 };\r\n    case "Reviews":\r\n      return { title: "نظر خریداران" };\r\n    case "RichText":\r\n      return { title: "متن صفحه", text: "متن ساده برای این بخش" };\r\n    case "NavigationMenu":\r\n      return { title: "فهرست پیوندها", menuId: "" };\r\n    case "StoryRail":\r\n      return {\r\n        title: "استوری‌ها",\r\n        variantKey: "story.circle",\r\n        take: 12,\r\n        enabled: true,\r\n        items: [],\r\n      };\r\n    case "BannerShowcase":\r\n      return {\r\n        title: "بنرها",\r\n        variantKey: "banner.single",\r\n        heightPreset: "Medium",\r\n        items: [{ imageUrl: "", href: "/offers", title: "بنر ۱" }],\r\n      };\r\n  }\r\n}\r\n\r\nexport function parseLandingConfig(raw: string | null | undefined): Record<string, unknown> {\r\n  if (!raw) return {};\r\n  try {\r\n    const value = JSON.parse(raw) as unknown;\r\n    return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};\r\n  } catch {\r\n    return {};\r\n  }\r\n}\r\n\r\nexport function summarizeLandingSection(type: string, config: Record<string, unknown>): string {\r\n  const title = typeof config.title === "string" && config.title.trim() ? config.title.trim() : null;\r\n  const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;\r\n  const variantFa = variantKey ? getVariant(variantKey)?.nameFa ?? null : null;\r\n  const variantSuffix = variantFa ? ` · ${variantFa}` : "";\r\n  if (type === "ProductCollection") {\r\n    const source = productSourceLabelFa(config.source);\r\n    const take = typeof config.take === "number" ? config.take : 8;\r\n    return title ? `${title}${variantSuffix} · ${source} · ${take} کالا` : `${source} · ${take} کالا${variantSuffix}`;\r\n  }\r\n  if (type === "ArticleList") {\r\n    const take = typeof config.take === "number" ? config.take : 6;\r\n    const source = typeof config.source === "string" ? config.source : "Latest";\r\n    const sourceLabel = source === "Manual" ? "انتخاب دستی" : "جدیدترین مطالب";\r\n    const manualCount = Array.isArray(config.articleIds) ? config.articleIds.length : 0;\r\n    if (source === "Manual") {\r\n      return title\r\n        ? `${title}${variantSuffix} · ${sourceLabel} · ${manualCount.toLocaleString("fa-IR")} مطلب`\r\n        : `${sourceLabel} · ${manualCount.toLocaleString("fa-IR")} مطلب${variantSuffix}`;\r\n    }\r\n    return title ? `${title}${variantSuffix} · ${sourceLabel} · ${take} مورد` : `${sourceLabel} · ${take} مورد${variantSuffix}`;\r\n  }\r\n  if (type === "BannerShowcase" || (variantKey?.startsWith("banner.") ?? false)) {\r\n    const slots = bannerSlotCountForVariant(variantKey);\r\n    return title ? `${title}${variantSuffix} · ${slots} جایگاه` : `بنر${variantSuffix} · ${slots} جایگاه`;\r\n  }\r\n  if (type === "StoryRail" || (variantKey?.startsWith("story.") ?? false)) {\r\n    const take = typeof config.take === "number" ? config.take : 12;\r\n    return title\r\n      ? `${title}${variantSuffix} · نمایش تا ${take.toLocaleString("fa-IR")} استوری تأییدشده`\r\n      : `نمایش استوری تأییدشده${variantSuffix} · تا ${take.toLocaleString("fa-IR")}`;\r\n  }\r\n  if (type === "CategoryGrid") {\r\n    const count = Array.isArray(config.categoryIds)\r\n      ? config.categoryIds.length\r\n      : Array.isArray(config.ids)\r\n        ? config.ids.length\r\n        : 0;\r\n    const countLabel = count > 0 ? `${count.toLocaleString("fa-IR")} دسته` : "بدون دسته";\r\n    return title ? `${title}${variantSuffix} · ${countLabel}` : `${countLabel}${variantSuffix}`;\r\n  }\r\n  if (type === "BrandStrip") {\r\n    const count = Array.isArray(config.brandIds)\r\n      ? config.brandIds.length\r\n      : Array.isArray(config.ids)\r\n        ? config.ids.length\r\n        : 0;\r\n    const countLabel = count > 0 ? `${count.toLocaleString("fa-IR")} برند` : "بدون برند";\r\n    return title ? `${title}${variantSuffix} · ${countLabel}` : `${countLabel}${variantSuffix}`;\r\n  }\r\n  if (title) return `${title}${variantSuffix}`;\r\n  return `${landingSectionLabel(type)}${variantSuffix}`;\r\n}\r\n\r\n/** هشدار منبع ناقص برای فضای کار بخش‌ها (بدون مسدود کردن ذخیره). */\r\nexport function incompleteSourceWarning(type: string, config: Record<string, unknown>): string | null {\r\n  if (type === "ProductCollection") {\r\n    const source = typeof config.source === "string" ? config.source : "Newest";\r\n    if (source === "Manual" && (!Array.isArray(config.productIds) || config.productIds.length === 0)) {\r\n      return "منبع کالا ناقص است — حداقل یک کالا انتخاب کنید.";\r\n    }\r\n    if (source === "Category" && !(typeof config.categoryId === "string" && config.categoryId)) {\r\n      return "منبع کالا ناقص است — یک دسته انتخاب کنید.";\r\n    }\r\n    if (source === "Brand" && !(typeof config.brandId === "string" && config.brandId)) {\r\n      return "منبع کالا ناقص است — یک برند انتخاب کنید.";\r\n    }\r\n  }\r\n  if (type === "ArticleList") {\r\n    const source = typeof config.source === "string" ? config.source : "Latest";\r\n    if (source === "Manual" && (!Array.isArray(config.articleIds) || config.articleIds.length === 0)) {\r\n      return "منبع مطلب ناقص است.";\r\n    }\r\n  }\r\n  if (type === "CategoryGrid") {\r\n    const ids = Array.isArray(config.categoryIds) ? config.categoryIds : Array.isArray(config.ids) ? config.ids : [];\r\n    if (ids.length === 0) return "هنوز دسته‌ای انتخاب نشده است.";\r\n  }\r\n  if (type === "BrandStrip") {\r\n    const ids = Array.isArray(config.brandIds) ? config.brandIds : Array.isArray(config.ids) ? config.ids : [];\r\n    if (ids.length === 0) return "هنوز برندی انتخاب نشده است.";\r\n  }\r\n  if (type === "BannerShowcase") {\r\n    const items = Array.isArray(config.items) ? config.items : [];\r\n    const empty = items.length === 0 || items.every((item) => {\r\n      if (!item || typeof item !== "object") return true;\r\n      const imageUrl = (item as { imageUrl?: unknown }).imageUrl;\r\n      return typeof imageUrl !== "string" || !imageUrl.trim();\r\n    });\r\n    if (empty) return "تصویر بنر هنوز کامل نشده است.";\r\n  }\r\n  return null;\r\n}\r\n',
+    expected: /بنر اصلی/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at app\admin\landing-pages\admin-landing-pages.guard.test.ts:49:1
+✖ TB-P10-T022 ordinary-user Admin UX: no technical leakage + empty category/brand hints (0.902ms)
+  AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /breakpoint|JSON\.stringify|customCss/i. Input:
+  
+  '"use client";\r\n' +
+    '\r\n' +
+    'import Link from "next/link";\r\n' +
+    'import { useRouter } from "next/navigation";\r\n' +
+    'import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";\r\n' +
+    'import {\r\n' +
+    '  AlertTriangle,\r\n' +
+    '  ChevronDown,\r\n' +
+    '  ChevronUp,\r\n' +
+    '  Eye,\r\n' +
+    '  EyeOff,\r\n' +
+    '  GripVertical,\r\n' +
+    '  Pencil,\r\n' +
+    '  Plus,\r\n' +
+    '  Trash2,\r\n' +
+    '} from "lucide-react";\r\n' +
+    'import {\r\n' +
+    '  addAdminLandingSection,\r\n' +
+    '  createAdminLandingPage,\r\n' +
+    '  deleteAdminLandingPage,\r\n' +
+    '  deleteAdminLandingSection,\r\n' +
+    '  getAdminLandingHome,\r\n' +
+    '  getAdminLandingPage,\r\n' +
+    '  listAdminLandingSections,\r\n' +
+    '  reorderAdminLandingSections,\r\n' +
+    '  replaceAdminLandingComposition,\r\n' +
+    '  setAdminLandingHome,\r\n' +
+    '  setAdminLandingPageStatus,\r\n' +
+    '  setAdminLandingSectionEnabled,\r\n' +
+    '  updateAdminLandingPage,\r\n' +
+    '  updateAdminLandingSection,\r\n' +
+    '  publicPathForStorePage,\r\n' +
+    '  type AdminLandingPage,\r\n' +
+    '  type AdminLandingSection,\r\n' +
+    '  type StorePageType,\r\n' +
+    '} from "./admin-landing-pages-api.ts";\r\n' +
+    'import {\r\n' +
+    '  LANDING_SECTION_CHOICES,\r\n' +
+    '  incompleteSourceWarning,\r\n' +
+    '  landingSectionLabel,\r\n' +
+    '  parseLandingConfig,\r\n' +
+    '  summarizeLandingSection,\r\n' +
+    '} from "./landing-section-catalog.ts";\r\n' +
+    'import {\r\n' +
+    '  defaultConfigForCompositionSection,\r\n' +
+    '} from "./admin-composition-catalog.ts";\r\n' +
+    'import { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";\r\n' +
+    'import { getSectionType, getVariant } from "../../../lib/storefront-composition/registry.ts";\r\n' +
+    'import {\r\n' +
+    '  buildTemplateSectionPayloads,\r\n' +
+    '  getIndustryTemplate,\r\n' +
+    '  listIndustryTemplates,\r\n' +
+    '} from "../../../lib/storefront-composition/industry-templates.ts";\r\n' +
+    'import { AdminSectionWizard } from "./admin-section-wizard.tsx";\r\n' +
+    'import { AdminTemplateSelectionWorkspace } from "./admin-template-selection-workspace.tsx";\r\n' +
+    'import { buildLandingPublishReadiness } from "./admin-landing-page-readiness.ts";\r\n' +
+    'import {\r\n' +
+    '  LandingChecklistModal,\r\n' +
+    '  LandingPublishIssuesModal,\r\n' +
+    '  LandingPublishReadinessCard,\r\n' +
+    '} from "./admin-landing-page-readiness-ui.tsx";\r\n' +
+    'import { Dialog } from "../../../design-system/index.ts";\r\n' +
+    '\r\n' +
+    'type Meta = {\r\n' +
+    '  title: string;\r\n' +
+    '  slug: string;\r\n' +
+    '  locale: string;\r\n' +
+    '  pageType: StorePageType;\r\n' +
+    '  seoTitle: string;\r\n' +
+    '  seoDescription: string;\r\n' +
+    '  robotsIndex: boolean;\r\n' +
+    '  robotsFollow: boolean;\r\n' +
+    '  canonicalUrl: string;\r\n' +
+    '  ogTitle: string;\r\n' +
+    '  ogDescription: string;\r\n' +
+    '  ogImageUrl: string;\r\n' +
+    '  primaryH1: string;\r\n' +
+    '};\r\n' +
+    '\r\n' +
+    'function toMeta(page?: AdminLandingPage | null): Meta {\r\n' +
+    '  return {\r\n' +
+    '    title: page?.title ?? "",\r\n' +
+    '    slug: page?.slug ?? "",\r\n' +
+    '    locale: page?.locale ?? "fa",\r\n' +
+    '    pageType: page?.pageType ?? "Landing",\r\n' +
+    '    seoTitle: page?.seoTitle ?? "",\r\n' +
+    '    seoDescription: page?.seoDescription ?? "",\r\n' +
+    '    robotsIndex: page?.robotsIndex ?? true,\r\n' +
+    '    robotsFollow: page?.robotsFollow ?? true,\r\n' +
+    '    canonicalUrl: page?.canonicalUrl ?? "",\r\n' +
+    '    ogTitle: page?.ogTitle ?? "",\r\n' +
+    '    ogDescription: page?.ogDescription ?? "",\r\n' +
+    '    ogImageUrl: page?.ogImageUrl ?? "",\r\n' +
+    '    primaryH1: page?.primaryH1 ?? "",\r\n' +
+    '  };\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'function resolveSectionTypeKey(hostType: string, config: Record<string, unknown>): string | null {\r\n' +
+    '  const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;\r\n' +
+    '  if (variantKey) {\r\n' +
+    '    const fromVariant = getVariant(variantKey);\r\n' +
+    '    if (fromVariant) return fromVariant.sectionTypeKey;\r\n' +
+    '  }\r\n' +
+    '  return null;\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'function localeLabel(locale: string): string {\r\n' +
+    '  return locale === "en" ? "انگلیسی" : "فارسی";\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'function slugifyTemplate(templateKey: string): string {\r\n' +
+    '  const base = templateKey.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "page";\r\n' +
+    '  const suffix = Date.now().toString(36).slice(-5);\r\n' +
+    '  return `${base}-${suffix}`;\r\n' +
+    '}\r\n' +
+    '\r\n' +
+    'export function AdminLandingPageComposer({ pageId }: { pageId?: string }) {\r\n' +
+    '  const router = useRouter();\r\n' +
+    '  const [page, setPage] = useState<AdminLandingPage | null>(null);\r\n' +
+    '  const pageRef = useRef<AdminLandingPage | null>(null);\r\n' +
+    '  const [meta, setMeta] = useState<Meta>(toMeta());\r\n' +
+    '  const [sections, setSections] = useState<AdminLandingSection[]>([]);\r\n' +
+    '  const [homePageId, setHomePageId] = useState<string | null>(null);\r\n' +
+    '  const [busy, setBusy] = useState(false);\r\n' +
+    '  const [saved, setSaved] = useState(true);\r\n' +
+    '  const [wizardOpen, setWizardOpen] = useState(false);\r\n' +
+    '  const [wizardMode, setWizardMode] = useState<"create" | "edit">("create");\r\n' +
+    '  const [editing, setEditing] = useState<AdminLandingSection | null>(null);\r\n' +
+    '  const [insertAt, setInsertAt] = useState<number | null>(null);\r\n' +
+    '  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);\r\n' +
+    '  const [deletePageConfirmOpen, setDeletePageConfirmOpen] = useState(false);\r\n' +
+    '  const [focusedSectionId, setFocusedSectionId] = useState<string | null>(null);\r\n' +
+    '  const [createMode, setCreateMode] = useState<"blank" | "template" | null>(pageId ? "blank" : null);\r\n' +
+    '  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | null>(null);\r\n' +
+    '  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);\r\n' +
+    '  const [metaTab, setMetaTab] = useState<"page" | "seo">("page");\r\n' +
+    '  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);\r\n' +
+    '  const [checklistOpen, setChecklistOpen] = useState(false);\r\n' +
+    '  const [issuesModal, setIssuesModal] = useState<{\r\n' +
+    '    mode: "publish-block" | "save-as-draft";\r\n' +
+    '    issues: ReturnType<typeof buildLandingPublishReadiness>["missing"];\r\n' +
+    '  } | null>(null);\r\n' +
+    '  const [errorModal, setErrorModal] = useState<{ title: string; description: string } | null>(null);\r\n' +
+    '  const [dragId, setDragId] = useState<string | null>(null);\r\n' +
+    '  const [dragOverId, setDragOverId] = useState<string | null>(null);\r\n' +
+    '  const [pendingReplaceTemplateKey, setPendingReplaceTemplateKey] = useState<string | null>(null);\r\n' +
+    '  const industryTemplates = useMemo(() => listIndustryTemplates(), []);\r\n' +
+    '  void LANDING_SECTION_CHOICES;\r\n' +
+    '\r\n' +
+    '  useEffect(() => {\r\n' +
+    '    pageRef.current = page;\r\n' +
+    '  }, [page]);\r\n' +
+    '\r\n' +
+    '  const dirty = useMemo(() => {\r\n' +
+    '    if (!page) return Boolean(meta.title);\r\n' +
+    '    const homeLocked = page.pageType === "Home" || homePageId === page.pageId;\r\n' +
+    '    const slugHidden = page.pageType === "Landing" || homeLocked;\r\n' +
+    '    return meta.title !== page.title\r\n' +
+    '      || (!slugHidden && meta.slug !== page.slug)\r\n' +
+    '      || meta.seoTitle !== (page.seoTitle ?? "")\r\n' +
+    '      || meta.seoDescription !== (page.seoDescription ?? "")\r\n' +
+    '      || meta.robotsIndex !== page.robotsIndex\r\n' +
+    '      || meta.robotsFollow !== page.robotsFollow\r\n' +
+    '      || meta.canonicalUrl !== (page.canonicalUrl ?? "")\r\n' +
+    '      || meta.ogTitle !== (page.ogTitle ?? "")\r\n' +
+    '      || meta.ogDescription !== (page.ogDescription ?? "")\r\n' +
+    '      || meta.ogImageUrl !== (page.ogImageUrl ?? "")\r\n' +
+    '      || meta.primaryH1 !== (page.primaryH1 ?? "");\r\n' +
+    '  }, [meta, page, homePageId]);\r\n' +
+    '\r\n' +
+    '  const readiness = useMemo(\r\n' +
+    '    () =>\r\n' +
+    '      buildLandingPublishReadiness({\r\n' +
+    '        title: meta.title,\r\n' +
+    '        slug: meta.slug,\r\n' +
+    '        pageType: page?.pageType ?? meta.pageType,\r\n' +
+    '        isHome: (page?.pageType ?? meta.pageType) === "Home" || (page != null && homePageId === page.pageId),\r\n' +
+    '        seoTitle: meta.seoTitle,\r\n' +
+    '        seoDescription: meta.seoDescription,\r\n' +
+    '        sections,\r\n' +
+    '      }),\r\n' +
+    '    [meta, page, homePageId, sections],\r\n' +
+    '  );\r\n' +
+    '\r\n' +
+    '  const uiLocale = page?.locale ?? meta.locale ?? "fa";\r\n' +
+    '\r\n' +
+    '  useEffect(() => {\r\n' +
+    '    if (!dirty) return;\r\n' +
+    '    const onBeforeUnload = (event: BeforeUnloadEvent) => {\r\n' +
+    '      event.preventDefault();\r\n' +
+    '      event.returnValue = "";\r\n' +
+    '    };\r\n' +
+    '    window.addEventListener("beforeunload", onBeforeUnload);\r\n' +
+    '    return () => window.removeEventListener("beforeunload", onBeforeUnload);\r\n' +
+    '  }, [dirty]);\r\n' +
+    '\r\n' +
+    '  const showError = useCallback((title: string, description: string) => {\r\n' +
+    '    setErrorModal({ title, description });\r\n' +
+    '  }, []);\r\n' +
+    '\r\n' +
+    '  const load = useCallback(async (id: string) => {\r\n' +
+    '    const [pageResult, sectionResult, home] = await Promise.all([\r\n' +
+    '      getAdminLandingPage(id),\r\n' +
+    '      listAdminLandingSections(id),\r\n' +
+    '      getAdminLandingHome(),\r\n' +
+    '    ]);\r\n' +
+    '    if (!pageResult.ok) {\r\n' +
+    '      showError("بارگذاری ناموفق بود", pageResult.message);\r\n' +
+    '      return;\r\n' +
+    '    }\r\n' +
+    '    setPage(pageResult.data);\r\n' +
+    '    pageRef.current = pageResult.data;\r\n' +
+    '    setMeta(toMeta(pageResult.data));\r\n' +
+    '    setSaved(true);\r\n' +
+    '    if (sectionResult.ok) setSections(sectionResult.data);\r\n' +
+    '    if (home.ok) setHomePageId(home.data.homePageId);\r\n' +
+    '\r\n' +
+    '    const pendingKey = `tooba.landing.openWizard.${id}`;\r\n' +
+    '    try {\r\n' +
+    '      const raw = sessionStorage.getItem(pendingKey);\r\n' +
+    '      if (!raw) return;\r\n' +
+    '      sessionStorage.removeItem(pendingKey);\r\n' +
+    '      const pending = JSON.parse(raw) as { insertAt?: number | null; mode?: "create" | "edit" };\r\n' +
+    '      setWizardMode(pending.mode === "edit" ? "edit" : "create");\r\n' +
+    '      setEditing(null);\r\n' +
+    '      setInsertAt(typeof pending.insertAt === "number" ? pending.insertAt : null);\r\n' +
+    '      setWizardOpen(true);\r\n' +
+    '    } catch {\r\n' +
+    '      try {\r\n' +
+    '        sessionStorage.removeItem(pendingKey);\r\n' +
+    '      } catch {\r\n' +
+    '        /* ignore */\r\n' +
+    '      }\r\n' +
+    '    }\r\n' +
+    '  }, [showError]);\r\n' +
+    '\r\n' +
+    '  useEffect(() => {\r\n' +
+    '    if (pageId) void load(pageId);\r\n' +
+    '  }, [load, pageId]);\r\n' +
+    '\r\n' +
+    '  const persistOrder = useCallback(async (next: AdminLandingSection[]) => {\r\n' +
+    '    const activePage = pageRef.current;\r\n' +
+    '    if (!activePage) return false;\r\n' +
+    '    const previous = sections;\r\n' +
+    '    setSections(next);\r\n' +
+    '    setBusy(true);\r\n' +
+    '    const result = await reorderAdminLandingSections(activePage.pageId, next.map((row) => row.pageSectionId));\r\n' +
+    '    setBusy(false);\r\n' +
+    '    if (!result.ok) {\r\n' +
+    '      setSections(previous);\r\n' +
+    '      showError("ذخیرهٔ ترتیب ناموفق بود", result.message);\r\n' +
+    '      void load(activePage.pageId);\r\n' +
+    '      return false;\r\n' +
+    '    }\r\n' +
+    '    setSections(result.data);\r\n' +
+    '    return true;\r\n' +
+    '  }, [load, sections, showError]);\r\n' +
+    '\r\n' +
+    '  const materializeTemplate = async (\r\n' +
+    '    activePage: AdminLandingPage,\r\n' +
+    '    templateKey: string,\r\n' +
+    '  ): Promise<AdminLandingSection[] | null> => {\r\n' +
+    '    const payloads = buildTemplateSectionPayloads(templateKey);\r\n' +
+    '    const result = await replaceAdminLandingComposition(\r\n' +
+    '      activePage.pageId,\r\n' +
+    '      payloads.map((item) => ({ sectionType: item.hostType, config: item.config, isEnabled: true })),\r\n' +
+    '    );\r\n' +
+    '    if (!result.ok) {\r\n' +
+    '      showError("عملیات ناموف'... 52582 more characters
+  
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/landing-pages/admin-landing-pages.guard.test.ts:51:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '"use client";\r\n\r\nimport Link from "next/link";\r\nimport { useRouter } from "next/navigation";\r\nimport { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";\r\nimport {\r\n  AlertTriangle,\r\n  ChevronDown,\r\n  ChevronUp,\r\n  Eye,\r\n  EyeOff,\r\n  GripVertical,\r\n  Pencil,\r\n  Plus,\r\n  Trash2,\r\n} from "lucide-react";\r\nimport {\r\n  addAdminLandingSection,\r\n  createAdminLandingPage,\r\n  deleteAdminLandingPage,\r\n  deleteAdminLandingSection,\r\n  getAdminLandingHome,\r\n  getAdminLandingPage,\r\n  listAdminLandingSections,\r\n  reorderAdminLandingSections,\r\n  replaceAdminLandingComposition,\r\n  setAdminLandingHome,\r\n  setAdminLandingPageStatus,\r\n  setAdminLandingSectionEnabled,\r\n  updateAdminLandingPage,\r\n  updateAdminLandingSection,\r\n  publicPathForStorePage,\r\n  type AdminLandingPage,\r\n  type AdminLandingSection,\r\n  type StorePageType,\r\n} from "./admin-landing-pages-api.ts";\r\nimport {\r\n  LANDING_SECTION_CHOICES,\r\n  incompleteSourceWarning,\r\n  landingSectionLabel,\r\n  parseLandingConfig,\r\n  summarizeLandingSection,\r\n} from "./landing-section-catalog.ts";\r\nimport {\r\n  defaultConfigForCompositionSection,\r\n} from "./admin-composition-catalog.ts";\r\nimport { SIZE_PRESET_CONTRACTS } from "../../../lib/storefront-composition/size-presets.ts";\r\nimport { getSectionType, getVariant } from "../../../lib/storefront-composition/registry.ts";\r\nimport {\r\n  buildTemplateSectionPayloads,\r\n  getIndustryTemplate,\r\n  listIndustryTemplates,\r\n} from "../../../lib/storefront-composition/industry-templates.ts";\r\nimport { AdminSectionWizard } from "./admin-section-wizard.tsx";\r\nimport { AdminTemplateSelectionWorkspace } from "./admin-template-selection-workspace.tsx";\r\nimport { buildLandingPublishReadiness } from "./admin-landing-page-readiness.ts";\r\nimport {\r\n  LandingChecklistModal,\r\n  LandingPublishIssuesModal,\r\n  LandingPublishReadinessCard,\r\n} from "./admin-landing-page-readiness-ui.tsx";\r\nimport { Dialog } from "../../../design-system/index.ts";\r\n\r\ntype Meta = {\r\n  title: string;\r\n  slug: string;\r\n  locale: string;\r\n  pageType: StorePageType;\r\n  seoTitle: string;\r\n  seoDescription: string;\r\n  robotsIndex: boolean;\r\n  robotsFollow: boolean;\r\n  canonicalUrl: string;\r\n  ogTitle: string;\r\n  ogDescription: string;\r\n  ogImageUrl: string;\r\n  primaryH1: string;\r\n};\r\n\r\nfunction toMeta(page?: AdminLandingPage | null): Meta {\r\n  return {\r\n    title: page?.title ?? "",\r\n    slug: page?.slug ?? "",\r\n    locale: page?.locale ?? "fa",\r\n    pageType: page?.pageType ?? "Landing",\r\n    seoTitle: page?.seoTitle ?? "",\r\n    seoDescription: page?.seoDescription ?? "",\r\n    robotsIndex: page?.robotsIndex ?? true,\r\n    robotsFollow: page?.robotsFollow ?? true,\r\n    canonicalUrl: page?.canonicalUrl ?? "",\r\n    ogTitle: page?.ogTitle ?? "",\r\n    ogDescription: page?.ogDescription ?? "",\r\n    ogImageUrl: page?.ogImageUrl ?? "",\r\n    primaryH1: page?.primaryH1 ?? "",\r\n  };\r\n}\r\n\r\nfunction resolveSectionTypeKey(hostType: string, config: Record<string, unknown>): string | null {\r\n  const variantKey = typeof config.variantKey === "string" ? config.variantKey : undefined;\r\n  if (variantKey) {\r\n    const fromVariant = getVariant(variantKey);\r\n    if (fromVariant) return fromVariant.sectionTypeKey;\r\n  }\r\n  return null;\r\n}\r\n\r\nfunction localeLabel(locale: string): string {\r\n  return locale === "en" ? "انگلیسی" : "فارسی";\r\n}\r\n\r\nfunction slugifyTemplate(templateKey: string): string {\r\n  const base = templateKey.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "page";\r\n  const suffix = Date.now().toString(36).slice(-5);\r\n  return `${base}-${suffix}`;\r\n}\r\n\r\nexport function AdminLandingPageComposer({ pageId }: { pageId?: string }) {\r\n  const router = useRouter();\r\n  const [page, setPage] = useState<AdminLandingPage | null>(null);\r\n  const pageRef = useRef<AdminLandingPage | null>(null);\r\n  const [meta, setMeta] = useState<Meta>(toMeta());\r\n  const [sections, setSections] = useState<AdminLandingSection[]>([]);\r\n  const [homePageId, setHomePageId] = useState<string | null>(null);\r\n  const [busy, setBusy] = useState(false);\r\n  const [saved, setSaved] = useState(true);\r\n  const [wizardOpen, setWizardOpen] = useState(false);\r\n  const [wizardMode, setWizardMode] = useState<"create" | "edit">("create");\r\n  const [editing, setEditing] = useState<AdminLandingSection | null>(null);\r\n  const [insertAt, setInsertAt] = useState<number | null>(null);\r\n  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);\r\n  const [deletePageConfirmOpen, setDeletePageConfirmOpen] = useState(false);\r\n  const [focusedSectionId, setFocusedSectionId] = useState<string | null>(null);\r\n  const [createMode, setCreateMode] = useState<"blank" | "template" | null>(pageId ? "blank" : null);\r\n  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | null>(null);\r\n  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);\r\n  const [metaTab, setMetaTab] = useState<"page" | "seo">("page");\r\n  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);\r\n  const [checklistOpen, setChecklistOpen] = useState(false);\r\n  const [issuesModal, setIssuesModal] = useState<{\r\n    mode: "publish-block" | "save-as-draft";\r\n    issues: ReturnType<typeof buildLandingPublishReadiness>["missing"];\r\n  } | null>(null);\r\n  const [errorModal, setErrorModal] = useState<{ title: string; description: string } | null>(null);\r\n  const [dragId, setDragId] = useState<string | null>(null);\r\n  const [dragOverId, setDragOverId] = useState<string | null>(null);\r\n  const [pendingReplaceTemplateKey, setPendingReplaceTemplateKey] = useState<string | null>(null);\r\n  const industryTemplates = useMemo(() => listIndustryTemplates(), []);\r\n  void LANDING_SECTION_CHOICES;\r\n\r\n  useEffect(() => {\r\n    pageRef.current = page;\r\n  }, [page]);\r\n\r\n  const dirty = useMemo(() => {\r\n    if (!page) return Boolean(meta.title);\r\n    const homeLocked = page.pageType === "Home" || homePageId === page.pageId;\r\n    const slugHidden = page.pageType === "Landing" || homeLocked;\r\n    return meta.title !== page.title\r\n      || (!slugHidden && meta.slug !== page.slug)\r\n      || meta.seoTitle !== (page.seoTitle ?? "")\r\n      || meta.seoDescription !== (page.seoDescription ?? "")\r\n      || meta.robotsIndex !== page.robotsIndex\r\n      || meta.robotsFollow !== page.robotsFollow\r\n      || meta.canonicalUrl !== (page.canonicalUrl ?? "")\r\n      || meta.ogTitle !== (page.ogTitle ?? "")\r\n      || meta.ogDescription !== (page.ogDescription ?? "")\r\n      || meta.ogImageUrl !== (page.ogImageUrl ?? "")\r\n      || meta.primaryH1 !== (page.primaryH1 ?? "");\r\n  }, [meta, page, homePageId]);\r\n\r\n  const readiness = useMemo(\r\n    () =>\r\n      buildLandingPublishReadiness({\r\n        title: meta.title,\r\n        slug: meta.slug,\r\n        pageType: page?.pageType ?? meta.pageType,\r\n        isHome: (page?.pageType ?? meta.pageType) === "Home" || (page != null && homePageId === page.pageId),\r\n        seoTitle: meta.seoTitle,\r\n        seoDescription: meta.seoDescription,\r\n        sections,\r\n      }),\r\n    [meta, page, homePageId, sections],\r\n  );\r\n\r\n  const uiLocale = page?.locale ?? meta.locale ?? "fa";\r\n\r\n  useEffect(() => {\r\n    if (!dirty) return;\r\n    const onBeforeUnload = (event: BeforeUnloadEvent) => {\r\n      event.preventDefault();\r\n      event.returnValue = "";\r\n    };\r\n    window.addEventListener("beforeunload", onBeforeUnload);\r\n    return () => window.removeEventListener("beforeunload", onBeforeUnload);\r\n  }, [dirty]);\r\n\r\n  const showError = useCallback((title: string, description: string) => {\r\n    setErrorModal({ title, description });\r\n  }, []);\r\n\r\n  const load = useCallback(async (id: string) => {\r\n    const [pageResult, sectionResult, home] = await Promise.all([\r\n      getAdminLandingPage(id),\r\n      listAdminLandingSections(id),\r\n      getAdminLandingHome(),\r\n    ]);\r\n    if (!pageResult.ok) {\r\n      showError("بارگذاری ناموفق بود", pageResult.message);\r\n      return;\r\n    }\r\n    setPage(pageResult.data);\r\n    pageRef.current = pageResult.data;\r\n    setMeta(toMeta(pageResult.data));\r\n    setSaved(true);\r\n    if (sectionResult.ok) setSections(sectionResult.data);\r\n    if (home.ok) setHomePageId(home.data.homePageId);\r\n\r\n    const pendingKey = `tooba.landing.openWizard.${id}`;\r\n    try {\r\n      const raw = sessionStorage.getItem(pendingKey);\r\n      if (!raw) return;\r\n      sessionStorage.removeItem(pendingKey);\r\n      const pending = JSON.parse(raw) as { insertAt?: number | null; mode?: "create" | "edit" };\r\n      setWizardMode(pending.mode === "edit" ? "edit" : "create");\r\n      setEditing(null);\r\n      setInsertAt(typeof pending.insertAt === "number" ? pending.insertAt : null);\r\n      setWizardOpen(true);\r\n    } catch {\r\n      try {\r\n        sessionStorage.removeItem(pendingKey);\r\n      } catch {\r\n        /* ignore */\r\n      }\r\n    }\r\n  }, [showError]);\r\n\r\n  useEffect(() => {\r\n    if (pageId) void load(pageId);\r\n  }, [load, pageId]);\r\n\r\n  const persistOrder = useCallback(async (next: AdminLandingSection[]) => {\r\n    const activePage = pageRef.current;\r\n    if (!activePage) return false;\r\n    const previous = sections;\r\n    setSections(next);\r\n    setBusy(true);\r\n    const result = await reorderAdminLandingSections(activePage.pageId, next.map((row) => row.pageSectionId));\r\n    setBusy(false);\r\n    if (!result.ok) {\r\n      setSections(previous);\r\n      showError("ذخیرهٔ ترتیب ناموفق بود", result.message);\r\n      void load(activePage.pageId);\r\n      return false;\r\n    }\r\n    setSections(result.data);\r\n    return true;\r\n  }, [load, sections, showError]);\r\n\r\n  const materializeTemplate = async (\r\n    activePage: AdminLandingPage,\r\n    templateKey: string,\r\n  ): Promise<AdminLandingSection[] | null> => {\r\n    const payloads = buildTemplateSectionPayloads(templateKey);\r\n    const result = await replaceAdminLandingComposition(\r\n      activePage.pageId,\r\n      payloads.map((item) => ({ sectionType: item.hostType, config: item.config, isEnabled: true })),\r\n    );\r\n    if (!result.ok) {\r\n      showError("عملیات ناموف'... 52582 more characters,
+    expected: /breakpoint|JSON\.stringify|customCss/i,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }

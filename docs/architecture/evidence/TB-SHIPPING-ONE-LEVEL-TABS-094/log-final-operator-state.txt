@@ -1,0 +1,7 @@
+﻿[host-stack] repo      : D:\Users\User\source\repos\SarvNewVer
+[host-stack] port      : 5088  (http://127.0.0.1:5088)
+[host-stack] pid file  : D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host\host-5088.pid
+[host-stack] listener  : pid=30756 name=Tooba.Host.exe exe=D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host-out-5088\Tooba.Host.exe start=10/15/2026 22:27:33
+[host-stack] managed   : pid=30756 gate=ShippingOneLevelCatalog=true outDir=D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host-out-5088 startedAt=2026-10-15T22:27:43.9238418+03:30
+[host-stack] provenance: SingleStore / dev-singlestore / store-alpha / tenant-alpha
+[host-stack] health    : 200 {"status":"ok"}

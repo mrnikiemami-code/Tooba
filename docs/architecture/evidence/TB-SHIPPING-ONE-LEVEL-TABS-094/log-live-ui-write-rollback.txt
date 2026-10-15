@@ -1,0 +1,51 @@
+TB-SHIPPING-ONE-LEVEL-TABS-094 - real BROWSER (admin UI) write + readback + rollback on the SHARED stack
+Origin: shared http://localhost:3000 (pre-existing Next dev server, untouched)
+Host  : shared http://127.0.0.1:5088 (current code, pid from .tmp-dev-host/host-5088.pid)
+Session: real Development login (admin-actor@tooba.local) via the shared BFF; /api/auth/me = 200
+Gate  : Tooba__ShippingOneLevelCatalog__Enabled=true (ephemeral process environment only)
+
+Every step below was performed by clicking/typing in the real rendered DOM (React controlled inputs
+driven through the native value setter + an input event), NOT by calling the HTTP API directly.
+
+-- 1. Tab 1 shell after reload of the shared page ------------------------------------------------
+tabs = ["سرویس‌ها", "تعرفه و پوشش", "بسته‌بندی و کرایه", "برنامه کاری و ظرفیت", "بررسی هزینه"]
+rows (flat, one per method, no second level):
+  پیشتاز | post:express      | غیرفعال | ویرایش نام
+  معمولی | post:standard     | فعال    | ویرایش نام
+  پیشتاز | tipax:express     | فعال    | ویرایش نام
+  معمولی | tipax:standard    | فعال    | ویرایش نام
+  اسنپ / پیک آنلاین | snapp_courier | غیرفعال | ویرایش نام
+  پیک فروشگاه | store_courier     | فعال    | ویرایش نام
+  تحویل حضوری | in_person         | فعال    | ویرایش نام
+
+-- 2. Click «ویرایش نام» on post:standard -------------------------------------------------------
+dialog visible = true
+language select value = 01a06a53-4139-7000-bb9b-3078a0d2e5c4
+language options = [فارسی, English, Русский]
+name input prefilled = "معمولی"        <-- the real current translation, resolved from the row
+save button disabled = false           <-- editable for a non-empty, valid language target
+
+-- 3. Type a task-owned sample sample label and Save --------------------------------------------
+typed value = "پست معمولی"
+typed == input value at click time = true
+POST through the BFF returned an OK result; dialog closed.
+row after save = "پست معمولی | post:standard | فعال | انتخاب‌شده | ویرایش نام"
+method_code unchanged = post:standard ; isActive unchanged = true
+
+-- 4. Reopen the editor: the saved value is the new prefilled source of truth ---------------------
+prefilled before edit = "پست معمولی"
+
+-- 5. ROLLBACK to the real original label through the same UI -------------------------------------
+typed value = "معمولی" ; Save ; dialog closed.
+row after rollback = "معمولی | post:standard | فعال | انتخاب‌شده | ویرایش نام"
+
+-- 6. Authorized read-back of the source of truth (raw catalog) ----------------------------------
+gate = "Enabled" ; ready = true ; languageId = 01a06a53-4139-7000-bb9b-3078a0d2e5c4 ; methods = 7
+post:standard  = name "معمولی"  isActive true  sortOrder 11  methodCode "post:standard"
+                 translations = [ {en, "Standard"}, {fa, "معمولی"} ]
+post:express   = name "پیشتاز"  isActive false sortOrder 10  methodCode "post:express"
+                 translations = [ {fa, "پیشتاز"}, {en, "Express"} ]
+
+RESULT: byte-for-byte parity with the pre-task state (name «معمولی», same language set, same
+activation flags, same sort order, same method identities). No other row was touched. No activation
+change. No method_code change. No historical order/draft/shipment code was written.

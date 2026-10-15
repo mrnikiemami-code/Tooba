@@ -217,8 +217,12 @@ export function resolveDataState(input: {
   return "ready";
 }
 
-/** آیا ویرایش در UI جدید مجاز است؟ هیچ نوشتنی در این تسک مجاز نیست. */
-export const ONE_LEVEL_UI_IS_READ_ONLY = true;
+/**
+ * TB-SHIPPING-ONE-LEVEL-TABS-094: این شل دیگر «کاملاً فقط-خواندنی» نیست، اما تنها نوشتن مجاز آن
+ * «نام نمایشی یک روش در یک زبان» است. هیچ نوشتن دیگری (کد روش، فعال‌بودن، حذف، قیمت، رزرو) مجاز
+ * نیست و هیچ سطح دومی ساخته نمی‌شود.
+ */
+export const ONE_LEVEL_UI_ALLOWS_NAME_EDIT_ONLY = true;
 
 /** متن صادقانهٔ زبانهٔ سیم‌کشی‌نشده. */
 export function wiringNoticeFor(tab: OneLevelTabId): string | null {

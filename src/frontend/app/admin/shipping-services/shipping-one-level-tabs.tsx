@@ -3,10 +3,11 @@
 /**
  * شل پنج‌زبانهٔ سرویس ارسال (کاتالوگ یک‌سطحی) — پشت دروازهٔ خاموش.
  *
- * TB-SHIPPING-ONE-LEVEL-TABS-084
+ * TB-SHIPPING-ONE-LEVEL-TABS-084 · TB-SHIPPING-ONE-LEVEL-TABS-094
  *
  * قواعد سخت این کامپوننت:
- * - فقط-خواندنی است. هیچ دکمهٔ ذخیره، هیچ دیالوگ ویرایش و هیچ نوشتنی ندارد.
+ * - تنها نوشتن مجاز این شل، «نام نمایشی» یک روش در یک زبان است (TB-094). هیچ نوشتن دیگری
+ *   (کد روش، فعال/غیرفعال‌سازی، حذف، قیمت) وجود ندارد.
  * - هیچ «سطح دوم» (provider → option) و هیچ ستون تعداد گزینه نمایش نمی‌دهد.
  *   `providerKind` فقط فرادادهٔ داخلی است و هرگز گزینهٔ قابل انتخاب نیست.
  * - روش غیرفعال غیرفعال می‌ماند؛ نه پنهان می‌شود و نه فعال.
@@ -17,10 +18,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, EmptyState, ErrorState } from "../../../design-system";
+import { loadAdminLanguages } from "../../../features/admin-languages";
 import { ShippingOneLevelRatesTab } from "./shipping-one-level-rates-tab.tsx";
 import { ShippingOneLevelPackagingTab } from "./shipping-one-level-packaging-tab.tsx";
 import { ShippingOneLevelScheduleTab } from "./shipping-one-level-schedule-tab.tsx";
 import { ShippingOneLevelQuoteTab } from "./shipping-one-level-quote-tab.tsx";
+import {
+  ShippingOneLevelMethodNameDialog,
+  type OneLevelLanguageOption,
+} from "./shipping-one-level-method-name-dialog.tsx";
+import { applySavedMethodName, findMethodRow } from "./shipping-one-level-method-name-model.ts";
 import {
   ONE_LEVEL_TAB_IDS,
   ONE_LEVEL_TAB_LABELS,
@@ -33,6 +40,7 @@ import {
   type OneLevelMethodRow,
   type OneLevelTabId,
 } from "./shipping-one-level-tabs-model.ts";
+import { sanitizeLanguageId } from "./shipping-one-level-tabs-model.ts";
 import type { OneLevelCatalogGate } from "./shipping-one-level-gate.ts";
 
 export interface ShippingOneLevelTabsProps {
@@ -71,8 +79,34 @@ export function ShippingOneLevelTabs({
   const [methods, setMethods] = useState<readonly OneLevelMethodRow[]>(initialMethods ?? []);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  /**
+   * زبان‌های واقعی رجیستری از همان درز مشترک Admin خوانده می‌شوند (`GET /v1/admin/languages`).
+   * نبود/ردمجوز/خطا ⇒ فهرست خالی ⇒ ویرایش نام غیرفعال می‌ماند (fail-closed)، نه اینکه زبان جعلی بسازیم.
+   */
+  const [editableLanguages, setEditableLanguages] = useState<readonly OneLevelLanguageOption[]>([]);
 
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadAdminLanguages().then((result) => {
+      if (cancelled) return;
+      const rows = result.state === "ok" && result.data ? result.data : [];
+      setEditableLanguages(
+        rows
+          .filter((row) => row.active && sanitizeLanguageId(row.languageId))
+          .map((row) => ({
+            languageId: sanitizeLanguageId(row.languageId),
+            label: row.nativeName?.trim() || row.displayName?.trim() || row.code,
+          })),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const load = useCallback(async () => {
     if (!loadMethods) {
@@ -123,13 +157,28 @@ export function ShippingOneLevelTabs({
   const dataState = resolveDataState({ gateEnabled: gate.state === "enabled", loading, error: loadError });
   const rows = useMemo(() => projectMethodRows(methods, activeLanguageId), [methods, activeLanguageId]);
 
+  /**
+   * پس از ذخیرهٔ تأییدشدهٔ سرور، منبع حقیقت دوباره خوانده می‌شود تا برچسب فهرست و زمینهٔ روش
+   * انتخاب‌شده با هم سازگار بمانند. اگر خوانندهٔ کلاینتی نباشد، مقدار تأییدشدهٔ سرور روی همان
+   * ردیف/زبان اعمال می‌شود (بدون ساختن ردیف یا تغییر هویت) و سپس refresh سرور اجرا می‌شود.
+   */
+  const onSaved = useCallback(
+    (saved: { methodCode: string; languageId: string; name: string }) => {
+      setMethods((current) => applySavedMethodName(current, saved.methodCode, saved.languageId, saved.name));
+      void load();
+      router.refresh();
+    },
+    [load, router],
+  );
+
   return (
     <section className="space-y-4" data-testid="admin-shipping-one-level-shell" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">سرویس ارسال — کاتالوگ یک‌سطحی</h2>
           <p className="mt-1 text-sm text-muted">
-            هر روش، یک ردیف مستقل است. این صفحه فقط-خواندنی است و هیچ تغییری در قیمت یا رزرو ایجاد نمی‌کند.
+            هر روش، یک ردیف مستقل است. تنها ویرایش این صفحه، «نام نمایشی» هر روش است و هیچ تغییری در
+            قیمت، رزرو یا وضعیت فعال‌بودن ایجاد نمی‌کند.
           </p>
         </div>
         {selection.methodCode ? (
@@ -181,8 +230,14 @@ export function ShippingOneLevelTabs({
             state={dataState}
             rows={rows}
             selectedMethodCode={selection.methodCode}
+            canEditName={editableLanguages.length > 0}
             onRetry={() => void load()}
             onSelect={(code) => replaceSelection({ methodCode: code })}
+            onEditName={(code) => {
+              // انتخاب همان روش پیش از باز کردن ویرایش، تا زمینهٔ روش و دیالوگ یکی باشند.
+              replaceSelection({ methodCode: code });
+              setEditOpen(true);
+            }}
           />
         ) : activeTab === "rates-coverage" ? (
           // TB-SHIPPING-ONE-LEVEL-TABS-086: زبانهٔ ۲ روی همان روش انتخاب‌شدهٔ زبانهٔ ۱ عمل می‌کند.
@@ -198,6 +253,18 @@ export function ShippingOneLevelTabs({
           <ShippingOneLevelQuoteTab methodCode={selection.methodCode} onNotice={onNotice} />
         )}
       </div>
+
+      {/* TB-SHIPPING-ONE-LEVEL-TABS-094: تنها ویرایشگر این شل — نام نمایشی یک روش در یک زبان. */}
+      <ShippingOneLevelMethodNameDialog
+        open={editOpen && selection.methodCode.length > 0}
+        methodCode={selection.methodCode}
+        method={findMethodRow(methods, selection.methodCode)}
+        languages={editableLanguages}
+        defaultLanguageId={activeLanguageId}
+        onClose={() => setEditOpen(false)}
+        onNotice={onNotice}
+        onSaved={onSaved}
+      />
     </section>
   );
 }
@@ -206,14 +273,18 @@ function ServicesTab({
   state,
   rows,
   selectedMethodCode,
+  canEditName,
   onRetry,
   onSelect,
+  onEditName,
 }: {
   state: ReturnType<typeof resolveDataState>;
   rows: ReturnType<typeof projectMethodRows>;
   selectedMethodCode: string;
+  canEditName: boolean;
   onRetry: () => void;
   onSelect: (code: string) => void;
+  onEditName: (code: string) => void;
 }) {
   if (state === "unavailable") {
     return (
@@ -258,7 +329,7 @@ function ServicesTab({
             <th scope="col" className="px-3 py-2 text-start">برچسب نمایشی</th>
             <th scope="col" className="px-3 py-2 text-start">کد روش</th>
             <th scope="col" className="px-3 py-2 text-start">وضعیت</th>
-            <th scope="col" className="px-3 py-2 text-start">انتخاب</th>
+            <th scope="col" className="px-3 py-2 text-start">اقدام</th>
           </tr>
         </thead>
         <tbody>
@@ -283,15 +354,26 @@ function ServicesTab({
                   </span>
                 </td>
                 <td className="px-3 py-2">
-                  <Button
-                    type="button"
-                    tone="secondary"
-                    aria-pressed={selected}
-                    data-testid={`admin-shipping-one-level-select-${row.methodCode}`}
-                    onClick={() => onSelect(row.methodCode)}
-                  >
-                    {selected ? "انتخاب‌شده" : "انتخاب"}
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      tone="secondary"
+                      aria-pressed={selected}
+                      data-testid={`admin-shipping-one-level-select-${row.methodCode}`}
+                      onClick={() => onSelect(row.methodCode)}
+                    >
+                      {selected ? "انتخاب‌شده" : "انتخاب"}
+                    </Button>
+                    <Button
+                      type="button"
+                      tone="ghost"
+                      data-testid={`admin-shipping-one-level-edit-${row.methodCode}`}
+                      disabled={!canEditName}
+                      onClick={() => onEditName(row.methodCode)}
+                    >
+                      ویرایش نام
+                    </Button>
+                  </div>
                 </td>
               </tr>
             );

@@ -399,15 +399,17 @@ public sealed class FulfillmentModuleAmsc001W3CertGuardTests
         Assert.True(Directory.Exists(Path.Combine(endpointsRoot, "Shipping")));
         Assert.True(Directory.Exists(Path.Combine(endpointsRoot, "Resources")));
 
-        // Exactly 23 module-owned routes. TB-SHIPPING-ONE-LEVEL-TABS-085 added the read-only
+        // Exactly 24 module-owned routes. TB-SHIPPING-ONE-LEVEL-TABS-085 added the read-only
         // one-level catalog admin bridge (GET /v1/admin/shipping-services/shipping-methods/one-level)
         // and TB-SHIPPING-ONE-LEVEL-TABS-086 added its legacy-binding resolver
         // (GET /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/binding).
-        // Both are additive: the pre-existing 21 service/option/fulfillment routes are unchanged.
+        // TB-SHIPPING-ONE-LEVEL-TABS-094 added the single authorized one-level method-name write seam
+        // (PUT /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/translations/{languageId}).
+        // All are additive: the pre-existing 21 service/option/fulfillment routes are unchanged.
         var routes = Directory.GetFiles(endpointsRoot, "*.cs", SearchOption.AllDirectories)
             .Sum(f => Regex.Matches(
                 File.ReadAllText(f), @"\.Map(Get|Post|Put|Delete|Patch)\(").Count);
-        Assert.Equal(23, routes);
+        Assert.Equal(24, routes);
 
         var hostProgram = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         Assert.Contains("MapFulfillmentEndpoints()", hostProgram, StringComparison.Ordinal);

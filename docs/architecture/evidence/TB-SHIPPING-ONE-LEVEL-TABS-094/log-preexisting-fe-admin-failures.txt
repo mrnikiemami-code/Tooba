@@ -1,0 +1,37 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-094 — proof that the 3 frontend admin-suite failures are pre-existing and OUT OF SCOPE
+
+Source of the counts: log-fe-admin-suite.txt (`npm run test:admin`, full raw run)
+
+Failing tests (131 pass / 3 fail of 134; 0 cancelled, 0 skipped, 0 todo):
+  - content article update and media errors are humanized            (app/admin/admin-error-map.test.ts)
+  - section chooser has Persian labels and no raw JSON editor        (app/admin/landing-pages/admin-landing-pages.guard.test.ts)
+  - TB-P10-T022 ordinary-user Admin UX: no technical leakage         (app/admin/landing-pages/admin-landing-pages.guard.test.ts)
+
+Each failing test's input files are byte-identical to HEAD (git diff --quiet HEAD => unchanged), so the
+same assertions fail at HEAD, i.e. before this task's change. This task touched no file under
+app/admin/landing-pages, no admin-error-map and no landing composer.
+
+  src/frontend/app/admin/admin-error-map.ts                                changed_vs_HEAD=False  staged=False
+  src/frontend/app/admin/admin-error-map.test.ts                           changed_vs_HEAD=False  staged=False
+  src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx     changed_vs_HEAD=False  staged=False
+  src/frontend/app/admin/landing-pages/admin-landing-pages.guard.test.ts   changed_vs_HEAD=False  staged=False
+  src/frontend/app/admin/landing-pages/landing-section-catalog.ts          changed_vs_HEAD=False  staged=False
+  src/frontend/app/admin/category-admin-screen.tsx                         changed_vs_HEAD=False  staged=False
+
+Also confirmed identical at HEAD vs working tree (physical line counts, computed with the same
+split(/\r\n|\n/) rule the size guard uses):
+
+  src/frontend/app/storefront/storefront-shipping.tsx                    HEAD=1033 WORK=1033
+  src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx   HEAD=1442 WORK=1442
+  src/frontend/app/admin/category-admin-screen.tsx                       HEAD=2230 WORK=2230
+  src/frontend/app/storefront/storefront-landing-blocks.tsx              HEAD=1033 WORK=1033
+  src/frontend/lib/storefront-composition/shared-composition-renderer.tsx HEAD=918  WORK=918
+
+Therefore these failures were NOT introduced by TB-SHIPPING-ONE-LEVEL-TABS-094 and were deliberately NOT
+repaired (repairing them would edit unrelated files, which the task forbids). They are recorded here so
+the PASS below is not read as a claim of a fully green frontend admin suite.
+
+Task-owned focused suites (green):
+  node --test app/admin/shipping-services/shipping-one-level-method-name.test.ts \
+            app/admin/shipping-services/shipping-one-level-tabs.test.ts        => 31 tests, 31 pass, 0 fail
+  npm run typecheck (tsc --noEmit)                                              => clean, exit 0

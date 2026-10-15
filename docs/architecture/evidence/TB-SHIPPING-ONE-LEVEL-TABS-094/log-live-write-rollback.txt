@@ -1,0 +1,37 @@
+TB-SHIPPING-ONE-LEVEL-TABS-094 - live authorized write + readback + rollback on the SHARED stack
+path: browser/BFF :3000 -> Host :5088 ; fa=01a06a53-4139-7000-bb9b-3078a0d2e5c4 en=01a06a53-4196-7000-9b98-fb3706490005
+
+-- real Development admin login through the shared BFF --
+POST /api/auth/login -> 200 :: {"userId":"01a036c2-970e-7000-8eb7-94bf5cc2d8db","authenticated":true}
+
+-- BEFORE (real persisted state) --
+methods=post:express/inactive, post:standard/active, tipax:express/active, tipax:standard/active, snapp_courier/inactive, store_courier/active, in_person/active
+post:standard fa={"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"معمولی"} en={"languageId":"01a06a53-4196-7000-9b98-fb3706490005","name":"Standard"}
+post:express  fa={"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"پیشتاز"} isActive=false
+
+-- AUTHORIZED WRITE (only the fa label of post:standard) --
+PUT .../post%3Astandard/translations/fa -> 200 :: {"methodCode":"post:standard","languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"پست معمولی نمونهٔ ۰۹۴"}
+readback post:standard fa={"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"پست معمولی نمونهٔ ۰۹۴"}
+readback post:standard en untouched={"languageId":"01a06a53-4196-7000-9b98-fb3706490005","name":"Standard"}
+readback identity unchanged: methodCode=post:standard isActive=true sortOrder=11
+readback other rows untouched: post:express fa={"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"پیشتاز"} isActive=false
+
+-- IDEMPOTENCY (same value twice) --
+PUT repeat -> 200
+rows for (post:standard, fa)=1
+
+-- ROLLBACK to the real original label --
+PUT original -> 200 :: {"methodCode":"post:standard","languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"معمولی"}
+ROLLBACK post:standard fa={"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"معمولی"} restoredByteIdentical=true
+ROLLBACK post:express fa={"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"پیشتاز"} unchanged=true
+ROLLBACK tipax:express fa={"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"پیشتاز"} unchanged=true
+
+-- FAIL-CLOSED PROBES (no write) --
+PUT unknown canonical code post:retired -> 404 :: {"type":"about:blank","title":"Shipping method was not found.","status":404,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/post:retired/translations/01a06a53-4139-7000-bb9b-3078a0d2e5c4","errorCode":"shipping_method.not_found","traceId":"106d19018decc880efc7b460f98a4d59","correlationId":"fe59831bfe764b92a8463bc5a7bc8c36","requestId":"0HNPATOOPEEM1:00000001"}
+PUT blank name -> 400 :: {"type":"about:blank","title":"Shipping method name is required.","status":400,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/post:standard/translations/01a06a53-4139-7000-bb9b-3078a0d2e5c4","errorCode":"shipping_method.name.required","traceId":"a3d9ce577a3b0a28e85f8acd12ad5fac","correlationId":"be83b85032384581bb36e7d88ec0db0e","requestId":"0HNPATOOPEEM2:00000001"}
+PUT unknown language id -> 400 :: {"type":"about:blank","title":"Shipping service language is invalid.","status":400,"instance":"/v1/admin/shipping-services/shipping-methods/one-level/post:standard/translations/01900000-0000-7000-8000-00000000aa01","errorCode":"shipping_service.language_invalid","traceId":"cd8dd823ce4fb149155a4cffe6e2825f","correlationId":"4c03c83662a64f888cabd9361da78dc4","requestId":"0HNPATOOPEEM3:00000001"}
+PUT no credential -> 401
+
+-- FINAL persisted state --
+methods=post:express/پیشتاز/inactive; post:standard/معمولی/active; tipax:express/پیشتاز/active; tipax:standard/معمولی/active; snapp_courier/اسنپ / پیک آنلاین/inactive; store_courier/پیک فروشگاه/active; in_person/تحویل حضوری/active
+post:retired present in catalog=false

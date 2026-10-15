@@ -13,6 +13,9 @@ namespace Tooba.Fulfillment.Endpoints.Shipping;
 /// <summary>Wire-only translation DTO.</summary>
 public sealed record ShippingServiceTranslationWrite(Guid LanguageId, string Name, string? Description);
 public sealed record ShippingServiceOptionTranslationWrite(Guid LanguageId, string Name);
+
+/// <summary>TB-094: تنها بدنهٔ نوشتن نام یک روش یک‌سطحی — فقط نام؛ هیچ هویت یا سطح دوم.</summary>
+public sealed record OneLevelShippingMethodTranslationWriteRequest(string? Name);
 public sealed record ShippingServiceOptionWrite(
     Guid? ShippingServiceOptionId, string Code, bool IsActive, int SortOrder,
     IReadOnlyList<ShippingServiceOptionTranslationWrite> Translations);
@@ -41,6 +44,11 @@ public static class ShippingServiceEndpoints
         // TB-SHIPPING-ONE-LEVEL-TABS-086: حل پیوند قدیمی برای همان روش انتخاب‌شده. ورودی فقط
         // کد روش است؛ هیچ serviceCode/optionCode خام از کلاینت پذیرفته نمی‌شود.
         group.MapGet("/shipping-methods/one-level/{methodCode}/binding", ResolveOneLevelBindingAsync);
+        // TB-SHIPPING-ONE-LEVEL-TABS-094: تنها نوشتن مجاز این مسیر — نام نمایشی مستقل هر روش در یک
+        // زبان. کد روش تغییرناپذیر است و هیچ سطح دوم/گروه‌بندی ارائه‌دهنده ساخته نمی‌شود.
+        group.MapPut(
+            "/shipping-methods/one-level/{methodCode}/translations/{languageId:guid}",
+            UpdateOneLevelMethodTranslationAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -117,6 +125,23 @@ public static class ShippingServiceEndpoints
         await authorizer.RequireAuthorizedAsync(context, cancellationToken);
         return api.From(await sender.Send(
             new ResolveOneLevelShippingMethodBindingQuery(methodCode), cancellationToken));
+    }
+
+    /// <summary>
+    /// TB-SHIPPING-ONE-LEVEL-TABS-094: نام نمایشی مستقل یک روش یک‌سطحی را در یک زبان می‌نویسد.
+    /// مجوز ادمین لازم است؛ دروازهٔ خاموش، کاتالوگ مهاجرت‌نشده، روش ناشناخته، کد نامعتبر و نام
+    /// خالی/بلندتر از حد همه fail-closed رد می‌شوند و هیچ نوشتنی رخ نمی‌دهد. کد روش در URL تنها
+    /// هویت است و بدنه هرگز serviceCode/optionCode نمی‌پذیرد.
+    /// </summary>
+    private static async Task<IResult> UpdateOneLevelMethodTranslationAsync(
+        string methodCode, Guid languageId, OneLevelShippingMethodTranslationWriteRequest body,
+        ISender sender, IFulfillmentAdminAuthorizer authorizer, ApiResponseFactory api,
+        HttpContext context, CancellationToken cancellationToken)
+    {
+        await authorizer.RequireAuthorizedAsync(context, cancellationToken);
+        return api.From(await sender.Send(
+            new UpdateOneLevelShippingMethodTranslationCommand(methodCode, languageId, body?.Name),
+            cancellationToken));
     }
 
     private static ShippingServiceWriteModel ToModel(ShippingServiceWriteRequest body) =>

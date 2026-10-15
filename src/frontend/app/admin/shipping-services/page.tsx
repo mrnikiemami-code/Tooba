@@ -5,6 +5,7 @@ import { ShippingOneLevelTabs } from "./shipping-one-level-tabs.tsx";
 import {
   ONE_LEVEL_CATALOG_ADMIN_READ_PATH,
   mapHostOneLevelMethods,
+  resolveOneLevelActiveLanguageId,
   resolveOneLevelCatalogGateFromHost,
   type OneLevelCatalogGate,
 } from "./shipping-one-level-gate.ts";
@@ -60,12 +61,13 @@ export default async function AdminShippingServicesPage() {
   const hostRead = await readOneLevelCatalogFromHost();
   const gate: OneLevelCatalogGate = resolveOneLevelCatalogGateFromHost(hostRead);
   const initialMethods = gate.state === "enabled" ? mapHostOneLevelMethods(hostRead.payload) : [];
+  const activeLanguageId = gate.state === "enabled" ? resolveOneLevelActiveLanguageId(hostRead.payload) : "";
 
   return (
     <Suspense fallback={<p className="p-6 text-sm text-gray-500">در حال بارگذاری…</p>}>
       <div className="p-4 lg:p-6">
         {gate.state === "enabled" ? (
-          <ShippingOneLevelTabs gate={gate} initialMethods={initialMethods} />
+          <ShippingOneLevelTabs gate={gate} activeLanguageId={activeLanguageId} initialMethods={initialMethods} />
         ) : (
           <ShippingServicesScreen />
         )}

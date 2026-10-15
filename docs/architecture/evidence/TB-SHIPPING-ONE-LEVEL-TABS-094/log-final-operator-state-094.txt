@@ -1,0 +1,32 @@
+TB-SHIPPING-ONE-LEVEL-TABS-094 — final operator state (shared Development stack, kept as-is)
+
+Host      : http://127.0.0.1:5088  (current code; PID recorded in .tmp-dev-host/host-5088.pid)
+Health    : GET /health -> 200
+Provenance: GET /__platform-commerce -> SingleStore / dev-singlestore / store-alpha / tenant-alpha
+Frontend  : http://localhost:3000 (pre-existing Next dev server, untouched)
+Gate      : Tooba__ShippingOneLevelCatalog__Enabled=true (ephemeral process environment only;
+            no appsettings file was written)
+Other gates: ShippingRateAuthority / ShippingOperationalShadow were never set by this task (remain OFF)
+
+One-level catalog (authorized read-back, after the UI write + rollback):
+  gate = Enabled ; ready = true ; methods = 7 ; languageId = fa
+  post:standard  name "معمولی"  isActive true  sortOrder 11  translations [en "Standard", fa "معمولی"]
+  post:express   name "پیشتاز"  isActive false sortOrder 10  translations [fa "پیشتاز", en "Express"]
+  tipax:express / tipax:standard / snapp_courier / store_courier / in_person unchanged
+
+No merchant-entered label was edited: the only live writes used a task-owned sample label and were
+rolled back through the same admin UI (see log-live-ui-write-rollback.txt).
+
+Rollback of the gate (documented, not executed at the end — the stack is deliberately left usable):
+  powershell -File scripts/dev/host-stack.ps1 -Action restart -Port 5088 -OutDir .tmp-093-host-out -NoBuild
+
+Evidence files in this directory:
+  01-shared-3000-one-level-methods-and-name-edit-action-rtl.png
+  02-shared-3000-name-edit-dialog-prefilled-rtl.png
+  log-fe-admin-suite.txt          (npm run test:admin — 131 pass / 3 pre-existing failures, see summary)
+  log-live-ui-write-rollback.txt  (real browser edit/read-back/rollback)
+  log-live-write-rollback.txt     (earlier HTTP-level authorized write/read-back/rollback)
+  log-live-write-rollback-2.txt
+  log-host-stack-restart.txt
+  log-final-operator-state.txt
+  summary.md, RESULT.bridge.txt, post-result.js, task-receipt.json

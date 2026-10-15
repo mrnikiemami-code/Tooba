@@ -18,7 +18,7 @@
  * برگرداند و در صفحهٔ سرور مصرف شود.
  */
 
-import { sanitizeMethodCode, type OneLevelMethodRow } from "./shipping-one-level-tabs-model.ts";
+import { sanitizeLanguageId, sanitizeMethodCode, type OneLevelMethodRow } from "./shipping-one-level-tabs-model.ts";
 
 /** نام دقیق بخش تنظیمات سمت سرور که مرجع دروازه است. */
 export const ONE_LEVEL_CATALOG_SERVER_SECTION = "Tooba:ShippingOneLevelCatalog";
@@ -34,6 +34,13 @@ export const ONE_LEVEL_CATALOG_MISSING_BINDING =
 export type OneLevelCatalogGate =
   | { state: "disabled"; reason: "absent" | "explicitly-off" | "untrusted-source" | "catalog-not-ready" }
   | { state: "enabled"; source: "server-flag" };
+
+/** TB-SHIPPING-ONE-LEVEL-TABS-094: زبان فعال مؤثر که سرور برای برچسب‌ها برگردانده است. */
+export function resolveOneLevelActiveLanguageId(payload: unknown): string {
+  if (!payload || typeof payload !== "object") return "";
+  const record = payload as Record<string, unknown>;
+  return sanitizeLanguageId(record.languageId ?? record.LanguageId);
+}
 
 /**
  * ارزیابی دروازه. تنها ورودی مجاز، پرچم سمت سرور است که فقط یک Server Component می‌تواند
@@ -84,9 +91,14 @@ export function resolveOneLevelCatalogGateFromHost(input: {
 }
 
 /**
- * روش‌های خوانده‌شده از سرور را به شکل قابل‌سریال‌سازی برای کلاینت تبدیل می‌کند.
- * فقط کد canonical و ≤۳۲ نویسه پذیرفته می‌شود: کد غیر‌canonical هرگز «نرمال» و به هویت تازه
- * تبدیل نمی‌شود، و ردیف تکراری/نامعتبر دور ریخته می‌شود. هیچ برچسبی اختراع نمی‌شود.
+ * TB-SHIPPING-ONE-LEVEL-TABS-094: نگاشت محافظه‌کارانهٔ پاسخ سرور به ردیف‌های قابل‌ویرایش.
+ *
+ * قواعد سخت:
+ * - کد خام باید از قبل canonical و ≤۳۲ نویسه باشد؛ کد غیرcanonical هرگز «نرمال» و به هویت
+ *   تازه تبدیل نمی‌شود و ردیف تکراری/نامعتبر دور ریخته می‌شود.
+ * - ترجمه‌های واقعی همان روش نگه داشته می‌شوند تا فرم ویرایش مقدار زبان انتخاب‌شده را از دادهٔ
+ *   واقعی پیش‌پر کند و هیچ نامی اختراع نشود.
+ * - هیچ سطح دومی از پاسخ سرور ساخته نمی‌شود و `providerKind` همیشه خالی می‌ماند.
  */
 export function mapHostOneLevelMethods(payload: unknown): readonly OneLevelMethodRow[] {
   if (!payload || typeof payload !== "object") return [];
@@ -112,8 +124,34 @@ export function mapHostOneLevelMethods(payload: unknown): readonly OneLevelMetho
       isActive: (row.isActive ?? row.IsActive) === true,
       legacyServiceCode: null,
       legacyOptionCode: null,
-      translations: name ? [{ languageId: "", name, description: null }] : [],
+      translations: mapHostOneLevelTranslations(row, name),
     });
   }
   return rows;
+}
+
+/** ترجمه‌های واقعی ردیف؛ فقط زبان معتبر با نام غیرخالی، بدون تکرار زبان و بدون ساختن نام. */
+function mapHostOneLevelTranslations(
+  row: Record<string, unknown>,
+  fallbackName: string,
+): { languageId: string; name: string; description: string | null }[] {
+  const raw = row.translations ?? row.Translations;
+  const translations: { languageId: string; name: string; description: string | null }[] = [];
+  const seen = new Set<string>();
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      if (!item || typeof item !== "object") continue;
+      const entry = item as Record<string, unknown>;
+      const languageId = sanitizeLanguageId(entry.languageId ?? entry.LanguageId);
+      const value = typeof (entry.name ?? entry.Name) === "string" ? String(entry.name ?? entry.Name).trim() : "";
+      if (!languageId || value.length === 0 || seen.has(languageId)) continue;
+      seen.add(languageId);
+      translations.push({ languageId, name: value, description: null });
+    }
+  }
+  // ردیف‌های قدیمی‌تر فقط نام زبان مؤثر را داشتند؛ همان یک ترجمه نگه داشته می‌شود، نه نامی تازه.
+  if (translations.length === 0 && fallbackName.length > 0) {
+    translations.push({ languageId: "", name: fallbackName, description: null });
+  }
+  return translations;
 }

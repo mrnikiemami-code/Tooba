@@ -278,7 +278,7 @@ test("screen reads the authoritative gate server-side and exposes no client bypa
   assert.match(page, /ONE_LEVEL_CATALOG_ADMIN_READ_PATH/);
   assert.match(page, /buildUpstreamAuthHeaders\(\)/);
   assert.match(page, /cache: "no-store"/);
-  assert.match(page, /gate\.state === "enabled" \? \(\s*<ShippingOneLevelTabs gate=\{gate\} initialMethods=\{initialMethods\} \/>\s*\) : \(\s*<ShippingServicesScreen \/>/);
+  assert.match(page, /gate\.state === "enabled" \? \(\s*<ShippingOneLevelTabs gate=\{gate\} activeLanguageId=\{activeLanguageId\} initialMethods=\{initialMethods\} \/>\s*\) : \(\s*<ShippingServicesScreen \/>/);
   // هیچ پارامتر URL یا منبع کلاینتی نباید دروازه را روشن کند.
   assert.doesNotMatch(page, /useSearchParams/);
   assert.doesNotMatch(page, /URLSearchParams/);
@@ -293,28 +293,27 @@ test("screen reads the authoritative gate server-side and exposes no client bypa
   assert.doesNotMatch(page, /ShippingRateAuthority|ShippingOperationalShadow/);
 });
 
-test("shell renders server-provided rows without a client fetch and stays read-only", () => {
+test("shell renders server-provided rows without a client fetch and edits only the method name", () => {
   const raw = fs.readFileSync(new URL("./shipping-one-level-tabs.tsx", import.meta.url), "utf8");
   const shell = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
   // ردیف‌های سرور به‌عنوان مقدار اولیه مصرف می‌شوند؛ نبود خوانندهٔ کلاینتی خطا نیست.
   assert.match(shell, /useState<readonly OneLevelMethodRow\[\]>\(initialMethods \?\? \[\]\)/);
   assert.match(shell, /setLoadError\(initialMethods === undefined\)/);
-  // هیچ درخواست مجوزدار از مرورگر و هیچ اعتبارنامه‌ای در این کامپوننت نیست.
-  assert.doesNotMatch(shell, /fetch\(/);
+  // TB-094: تنها نوشتن این شل، ذخیرهٔ نام روش است؛ هیچ نوشتن دیگری وجود ندارد.
+  assert.doesNotMatch(shell, /deactivateAdminShippingService|writeAdminShippingService/);
   assert.doesNotMatch(shell, /Authorization/);
   assert.doesNotMatch(shell, /localStorage/);
 });
 
-test("new shell is read-only and contains no second-level configuration", () => {
+test("new shell edits only the method name and contains no second-level configuration", () => {
   const raw = fs.readFileSync(new URL("./shipping-one-level-tabs.tsx", import.meta.url), "utf8");
   // نظرات توضیحی اجازه دارند از «ذخیره»/providerKind حرف بزنند؛ داوری روی کد اجرایی است.
   const shell = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
-  // فقط-خواندنی: هیچ دکمهٔ ذخیره/ایجاد/حذف و هیچ دیالوگ ویرایشی در شل جدید نیست.
-  assert.doesNotMatch(shell, /ذخیره/);
-  assert.doesNotMatch(shell, /<Dialog/);
-  assert.doesNotMatch(shell, /writeAdminShippingService|deactivateAdminShippingService/);
+  // TB-094: تنها ویرایش، «نام نمایشی» است؛ هیچ حذف/فعال‌سازی/ایجاد سرویس و هیچ ویرایشگر نوع سرویس.
+  assert.match(shell, /ویرایش نام/);
+  assert.doesNotMatch(shell, /deactivateAdminShippingService|writeAdminShippingService/);
   // سطح دوم حذف شده است: نه ویرایشگر انواع سرویس، نه ستون تعداد گزینه.
   assert.doesNotMatch(shell, /انواع سرویس/);
   assert.doesNotMatch(shell, /optionCount|activeOptionCount/);
