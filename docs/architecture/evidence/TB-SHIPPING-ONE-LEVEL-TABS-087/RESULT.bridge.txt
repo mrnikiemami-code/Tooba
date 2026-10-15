@@ -1,0 +1,137 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-087
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-086
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-TABS
+Mode: BOUNDED_ONE_LEVEL_PACKAGING_AND_FREIGHT_TAB
+Bridge-Task-Row: 68644053-b660-4942-89b4-87cf5ec11bf7
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: db3849895f2f8611ba49970ba836b7e13ee12dff
+Base-SHA: db3849895f2f8611ba49970ba836b7e13ee12dff
+Code-SHA: bf076820f
+Evidence-SHA: <see Evidence-SHA note>
+automaticNextImplementationTask: NONE
+
+STATUS JUSTIFICATION (why PARTIAL, not PASS)
+Tab 3 is genuinely implemented and its focused tests are green, but PASS is not claimed because the
+gate is OFF and the Development one-level tables are unmigrated, so there is NO live browser CRUD to
+demonstrate: every claim is source-level plus unit-test proof. No deployed/commercially-ready claim
+is made. This matches the acceptance clause that requires the live gate OFF / unmigrated database to
+be marked NOT READY.
+
+BASE-SHA PROOF
+HEAD was exactly db3849895 (Expected-Base-SHA) when the task was claimed, so there was no drift to
+reconcile and no RECOVERY_CONFLICT. All pre-existing dirty/untracked paths from earlier work were
+preserved untouched: no reset, stash, rebase, force push or unrelated commit. The 087 receipt
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-087.task.md remains UNSTAGED as required.
+
+CHANGED PATHS (frontend only; no backend source changed)
+  src/frontend/app/admin/shipping-services/shipping-one-level-packaging-model.ts (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-packaging-tab.tsx (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-packaging-tab.test.ts (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.tsx
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs-model.ts
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.test.ts
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-087.md
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-087/**
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-087.task.md (receipt, kept UNSTAGED)
+
+MISSION A — METHOD / BINDING SAFETY
+The 086 resolver is reused unchanged as the single authority:
+  GET /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/binding
+  -> { gate, ready, resolved, methodCode, serviceCode, optionCode, isActive }
+  * the browser never splits method_code (no split(":") in the component or model; asserted);
+  * no client-provided serviceCode/optionCode is accepted — the write target is produced only by
+    packagingWriteTarget(resolvedBinding) and the tab exposes no editable service/option input;
+  * a missing/unresolved/disabled/not-ready/invalid binding NEVER falls back to a guessed pair:
+    resolvePackagingState returns binding-unavailable and the component renders an explicit refusal
+    with no list and no form;
+  * every read AND write is scoped to the selected method's binding on an exact
+    (serviceCode, optionCode) match (null matches null);
+  * a read response belonging to another service is refused before anything is presented or mutated;
+  * stale selection: the generation guard bumps on every method change and operationStillTargetsMethod
+    keeps a completion notice tied to the identity that started the operation, and the post-write
+    refresh is skipped when the method changed. No cancellation of a committed network operation is
+    claimed, and no duplicate write is issued on retry.
+
+MISSION A — POLICY BEHAVIOR (reused, not reimplemented)
+Existing Shipping-owned APIs only, addressed by the resolved service code:
+  GET    /v1/admin/shipping-services/{serviceCode}/packaging-policies
+  POST   /v1/admin/shipping-services/{serviceCode}/packaging-policies
+  PUT    /v1/admin/shipping-services/{serviceCode}/packaging-policies/{id}
+  PATCH  /v1/admin/shipping-services/{serviceCode}/packaging-policies/{id}/active
+No new Shipping endpoint was introduced and the allowed-path widening was NOT needed, because those
+four routes already cover read/create/update/activation.
+  * destination scope: existing Geography-only ShippingDestinationPicker + buildScopeWrite, so no
+    hand-typed or invented id can be submitted;
+  * fee: existing parsePackagingFee (exact decimal(18,2), no silent rounding) + MAX_PACKAGING_FEE_AMOUNT;
+  * currency: existing normalization and three-letter rule;
+  * payer mode: existing Prepaid / CollectOnDelivery contract; a service-level policy
+    (optionCode = null) is the documented fallback for optionless methods and is NEVER presented as a
+    second selectable level, nor silently edited as another option's policy;
+  * edit echoes the stored scope and optionCode unchanged so a policy cannot be moved by an
+    accidental edit;
+  * no financial ledger, no charge collection, no collect-on-delivery settlement and no Checkout
+    pricing change; the UI states the quotation-fact boundary explicitly.
+
+MISSION B — MERCHANT UX AND HONEST STATUS
+  * method context banner (selected one-level method + server-resolved legacy pair);
+  * one-level policy list with destination scope, fee + currency, freight payer label and active state;
+  * create / edit / activate-deactivate with save and cancel, Persian labels, RTL-friendly controls,
+    busy state ("در حال ذخیره…") and success/error notices;
+  * required states implemented: no selected method; binding loading; binding unavailable (gate OFF /
+    not migrated / unresolved / invalid response); policies loading; empty (explicit "fee is zero",
+    never a hidden fee); 401/403 unauthorized; unexpected API error; service mismatch; busy; success;
+  * no option dropdown and no nested provider hierarchy anywhere;
+  * tabs 1 and 2 preserved; placeholders 4 and 5 unchanged; the legacy packaging dialog and its route
+    actions were NOT removed and /admin/shipping-services remains usable while the gate is OFF.
+
+TESTS RUN (frontend only, because no backend source changed)
+  node --test --experimental-strip-types app/admin/shipping-services/shipping-one-level-packaging-tab.test.ts
+    + …-tabs.test.ts                                                        => 26 passed / 0 failed
+  node --test --experimental-strip-types "app/admin/shipping-services/*.test.ts"  => 154 passed / 0 failed
+  npm run typecheck (src/frontend)                                          => clean
+
+Focused coverage added: post:standard, tipax:express, optionless store_courier and in_person,
+inactive/mismatched rows, unmapped binding (fail-closed), policy-option filtering with nullable
+fallback, service-mismatch refusal, the full state machine (never ready without a resolved binding),
+stale-operation identity, explicit-zero empty text, Prepaid vs CollectOnDelivery display/payload
+behavior inherited unchanged from the proven packaging model, and source guards proving there is no
+option picker, no provider hierarchy, no method-code splitting and no settlement/Checkout reference.
+No ledger settlement or Checkout modification is implied anywhere in the new code or tests.
+
+GATE / DATABASE TRUTH
+  * Tooba:ShippingOneLevelCatalog: OFF by absence; NOT switched by this task.
+  * Development one-level migration/backfill: UNAPPLIED; the running Host may predate the 086 route.
+  * Therefore tab 3 is source-and-test integration only: NOT deployed, and the system is NOT claimed
+    commercially ready. Live browser CRUD is NOT asserted.
+  * No DDL/DML, no seeding of real commercial data, no service activation, no Host/Next restart, no
+    capacity reservation fiction, no delivery promise, no invented weight/item counts, no Order/
+    Checkout/Payment/Settlement change, no frozen module-authority rearrangement.
+
+BLOCKED CHECKS (recorded once, not looped)
+  * Backend tests were deliberately not run: no backend source changed (Mission C.8 prefers narrow
+    frontend tests + typecheck in that case).
+  * The known Host output DLL lock held by Tooba.Host (pid 33548) was NOT re-challenged and no service
+    was restarted.
+  * Live tab-3 CRUD needs the gate enabled AND the authorized one-level migration — a separate,
+    unauthorized task. Until then the tab truthfully reports the binding as unavailable.
+
+ACTUAL ELAPSED
+Claim 2026-10-15T13:59:11Z -> result ~14:02Z => approximately 8 minutes, well inside the 30-minute
+hard stop.
+
+ROLLBACK
+Revert the 087 code commit and its evidence commit. Tab 3 returns to its wiring placeholder. No data,
+schema or configuration change needs undoing.
+
+EVIDENCE-SHA NOTE
+The Evidence-SHA is the commit that carries docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-087.md,
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-087/** and this RESULT.bridge.txt; it is created
+and pushed immediately before this result is posted and is reported in the Evidence-SHA field of the
+final pushed tree (parent of this result post).
+END_TOOBA_WORKER_RESULT

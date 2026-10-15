@@ -1,0 +1,21 @@
+feat(shipping): wire one-level tab 3 packaging and freight on the 086 binding
+
+TB-SHIPPING-ONE-LEVEL-TABS-087
+
+Replaces only the tab-3 placeholder with a working packaging-and-freight surface
+for exactly one selected one-level method, reusing the existing Shipping-owned
+packaging-policy admin APIs and the proven packaging model unchanged. No backend
+source changed: the 086 server-owned binding resolver already provides the
+immutable legacy service/option pair.
+
+- shipping-one-level-packaging-model.ts scopes policies to the resolved binding on
+  an exact (serviceCode, optionCode) match, so a service-level fallback is never
+  presented as a second selectable level and a policy of another service/option is
+  never shown or written. A stale operation keeps its original identity.
+- shipping-one-level-packaging-tab.tsx adds read/create/edit/activate with the
+  existing Geography-only destination picker, explicit payer mode (Prepaid /
+  CollectOnDelivery) and honest no-method / binding / loading / empty / 403 /
+  error / mismatch states. No option dropdown, no provider hierarchy, no
+  method-code splitting, no ledger or Checkout implication.
+- Tests: 11 new frontend cases (26 with the shell suite, 154 across
+  shipping-services) and a clean frontend typecheck.
