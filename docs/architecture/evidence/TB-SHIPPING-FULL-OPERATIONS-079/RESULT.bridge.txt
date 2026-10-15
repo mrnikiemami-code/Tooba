@@ -1,0 +1,195 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-FULL-OPERATIONS-079
+Parent-Task: TB-SHIPPING-FULL-OPERATIONS-078
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FULL-OPERATIONS
+Mode: BOUNDED_REAL_CHECKOUT_INTEGRATION_READINESS_AND_CAPACITY_DECISION
+Bridge-Task-Row: 52e6312b-e84c-4f50-92b4-c2f4d0250ab8
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 4c7c565d1dca40ca22418e42a35828dcb0028749
+Base-SHA: 4c7c565d1dca40ca22418e42a35828dcb0028749
+Code-SHA: 91951b875bca970567f3a8196a6e5c89ee20708b
+Evidence-SHA: 91951b875bca970567f3a8196a6e5c89ee20708b
+automaticNextImplementationTask: NONE
+
+ELAPSED: 41 minutes 47 seconds from Bridge claim to result post (timebox 45 minutes HARD; inside).
+Base was verified equal to the expected SHA before any write; no source drift, no RECOVERY_CONFLICT.
+
+MISSION A - REAL STOREFRONT READ-ONLY OPERATIONAL SHADOW (PRIMARY): DELIVERED
+A read-only, fail-isolated operational shadow observation now sits inside the REAL existing storefront
+projection read path (ProjectStorefrontShippingHandler), next to the earlier simple-rate shadow.
+
+SEPARATE GATE, NOT A BROADENED ONE. The seam binds its own options section
+Tooba:ShippingOperationalShadow with two independent flags (Enabled, PrerequisitesConfirmed), both
+default false. The earlier Tooba:ShippingShadow gate keeps exactly its previous meaning; it was not
+widened. The shared fail-closed decision is reused through a new overload
+StorefrontShippingRateAuthorityPolicy.Evaluate(bool shadowEnabled, bool prerequisitesConfirmed) that
+adds no new behaviour - it only applies the existing rule to two explicit values.
+
+CONTRACTS-ONLY, NO FOREIGN AUTHORITY. The observer resolves the canonical destination through
+IGeographyLookup and asks IShippingOperationalQuoteLookup for the operational quote of each legacy
+candidate. Both are Contracts seams consumed via DI. There is no foreign DbContext, no Host business
+logic, no Results.Json, no privilege bypass, no new public route, no duplicate public evaluation
+query and no invented shipping identity. Service code and option code travel separately, so
+"tipax:express" is never read as a service code.
+
+FAILURE ISOLATION PROVEN IN CODE AND LIVE. The observer never publishes its own failure to the
+checkout path: missing lookup/geography, unresolvable destination and any exception from the
+operational lookup are translated to stable observation codes
+(ShadowUnavailable / DestinationNotComparable / ShippingUnavailable); only an explicit
+OperationCanceledException with a cancelled token is rethrown. The handler discards the observer's
+return value entirely. Live ON run confirmed the storefront still answered 200 with the legacy body
+while the shadow evaluated.
+
+BYTE-IDENTICAL LEGACY RESPONSE, OFF AND ON. Storefront projection payloads captured for three
+request shapes (legacy province-only, city text without ids, validated Geography ids) are
+byte-identical between gate OFF and gate ON: payloads-OFF.json == payloads-ON.json at 8553 bytes, and
+all three shapes are equal to each other at 2393 bytes (True/True/True in both runs). The Shipping
+admin surfaces rates / packaging-policies / operating-schedules are also byte-identical OFF vs ON
+(2636 / 1337 / 1055 bytes, all True). OFF produced 0 operational-shadow log lines; ON produced the
+expected structured lines. No monetary field, no delivery promise and no response byte is derived
+from the shadow.
+
+MEASUREMENT PROVENANCE - HONEST, NEVER FABRICATED. The storefront request today carries no trusted
+physical measurement of the shipment, so the seam sends no weight and no item count. Weight is never
+derived from cart subtotal, cart line count, product count or any caller-supplied arbitrary value; an
+unsourced measurement is rejected explicitly (MeasurementUnavailable) rather than accepted as
+commercial input. When a tier-conditioned policy would need a measurement, tier-conditioned parity is
+SKIPPED, not invented, and the observation code reports the gap at the top level. Verified live: an
+identical identity with no measurement returned FreightNotQuoted /
+shipping.operational_quote.freight_not_quoted with carrier reason shipping.quote.measurement_required -
+never a fabricated tier match.
+
+OBSERVATION CONTENT. Low-cardinality structured diagnostics only: service/option, legacy amount,
+new freight/packaging/total, payable-at-checkout vs collect-on-delivery, payer mode, packaging payer,
+schedule availability, capacity enforcement state, configured capacity total, shadow outcome and
+carrier/packaging reason codes. No personal data, no address text, no cart contents, no raw customer
+input, and nothing logged when the gate is off. Nothing is persisted.
+
+PAYER SPLIT IS A FACT, NO LEDGER ENTRY. The observation reports the payer split as a rate fact only.
+No Payment or Settlement entry was created for the collect-on-delivery leg, and no packaging amount
+was inserted into any live checkout amount - not even for prepaid.
+
+MISSION B - CAPACITY AND COMMERCIAL CUTOFF DECISION (REQUIRED): DELIVERED
+ATOMIC CAPACITY IS **NOT** IMPLEMENTED. Capacity remains CONFIGURATION ONLY.
+
+The type system still declares exactly one enforcement value, ShippingCapacityEnforcement.NotEnforced,
+and a guard test asserts that the enum has that single value, so no caller can read a configured
+window number as a real reservation or as remaining capacity.
+
+Inspecting the authoritative Order placement/cancellation state transitions and the allowed shipment
+promise lifecycle showed no unique order-window relation, no transactional window bound, no
+expiration/replay strategy and no settlement owner for a sold slot. A correct atomic, idempotent
+per-window claim/release would therefore be a NEW commitment ledger spanning Order, Shipping and
+Settlement - far beyond a bounded change inside this task and outside its allowed write paths. Per the
+task's own instruction, partially faking capacity enforcement was refused rather than attempted. No
+capacity number may be presented to a customer as remaining or bookable.
+
+CARRIER WINDOWS ARE NOT CUSTOMER SLOTS. ShippingOperatingSchedule describes carrier
+collection/dispatch availability. It is not a customer delivery-slot reservation and the seam never
+converts it into a promised delivery date. Verified live through the authorized read-only diagnostic
+route: the same amounts returned Available, Unavailable (shipping.schedule.outside_windows) and
+NotEvaluated (no pickup instant) - schedule affects eligibility only and never the price, and
+NotEvaluated is never rendered as available or bookable.
+
+CUTOVER CHECKLIST (functional readiness vs commercial acceptance, with owner):
+1. Destination provenance (canonical Geography ids) - present for validated-id requests; legacy
+   text-only requests resolve through Geography ResolveLegacyAsync and fall back to
+   DestinationNotComparable when no single identity exists. Owner: Shipping + Geography.
+2. Service + option identity parity - proven for all five live methods. Owner: Fulfillment.
+3. Real parcel weight/count provenance - MISSING; the storefront path has no trusted shipment
+   packing aggregation. Owner: Fulfillment + Order.
+4. Fee + currency parity per method - proven byte-identical OFF/ON. Owner: Shipping.
+5. Unpaid vs collect-on-delivery ledgers and the Payment/Settlement owner for the COD leg - NOT
+   IMPLEMENTED; the payer split is a fact only, no ledger entry exists. Owner: Payment/Settlement.
+6. Customer-facing pickup vs promised delivery date - carrier windows are availability, not a
+   promise; no promise field is emitted. Owner: Product + Shipping.
+7. Merchant-approved tariffs and destinations - required before any amount reaches a customer.
+   Owner: Merchant.
+8. Schedule gating for absent / inactive / outside-window - absent and inactive are fail-open
+   (legacy behaviour preserved), only an active non-matching window is a constraint; documented and
+   covered by tests. Owner: Shipping.
+9. Capacity enforcement or explicit out-of-scope decision - EXPLICITLY OUT OF SCOPE (configuration
+   only). Owner: Architect.
+10. Flag-safe rollback - gate OFF restores today's exact bytes; no config file, no migration, no
+    schema change. Owner: Shipping.
+11. Packaging fee in the live checkout amount - NOT ALLOWED without human pricing cutover approval,
+    even for prepaid. Owner: Architect + Merchant.
+FUNCTIONAL TECHNICAL READINESS IS NOT COMMERCIAL ACCEPTANCE. The seam is technically ready to
+observe; it is not authorized to price a paid order, charge packaging, collect COD or promise a slot.
+
+MISSION C - FOCUSED DEVELOPMENT PARITY, NO DATA DAMAGE: DELIVERED
+Target positively verified as edition SingleStore, deploymentId dev-singlestore, tenant store-alpha,
+connectionReference tenant-alpha -> database tooba_alpha on the existing Development host at
+http://127.0.0.1:5088. No production, no staging, no scratch database, no migration runner. The two
+gate states were produced by a controlled relaunch of the SAME existing Development host executable
+with a process-scoped environment override; no configuration file was created or modified, and the
+host was restored to the repository's safe defaults (both flags false) and left running.
+
+OFF/ON PARITY MATRIX: three storefront request shapes, byte-identical payloads and byte-identical
+admin surfaces as reported above; 0 shadow log lines OFF vs the expected structured lines ON.
+
+CHARGED PACKAGING + COLLECT-ON-DELIVERY (live, task-owned disposable fixture): a city-level packaging
+policy with fee 25000 IRR and freightPayerMode CollectOnDelivery produced
+freight=75000.00 packaging=25000.00 total=100000.00 checkoutDue=25000.00 codDue=75000.00
+payer=CollectOnDelivery packagingPayer=Checkout - the split is reported as a fact and the packaging
+leg stays on the checkout side. No live money was collected and no order was created.
+
+TIER BOUNDARY 1999g / 2000g (live, task-owned disposable fixture): half-open tiers [0,2000) -> 75000
+and [2000,5000) -> 95000 resolved as freight=75000.00 at 1999g and freight=95000.00 at 2000g, each
+with packaging=25000.00 added. The upper bound of the first tier is excluded and the lower bound of
+the second is included, exactly as the half-open contract states. The same identity WITHOUT a
+measurement returned FreightNotQuoted with shipping.quote.measurement_required - the tier was never
+fabricated. Capacity reported NotEnforced in every case.
+
+FIXTURE LIFECYCLE AND CLEANUP: both tiers and the packaging policy were created only through the
+authorized admin routes, exercised, then deactivated through the authorized admin routes. The
+before/after inventory is recorded, a post-cleanup re-check shows the pre-existing area-level rule
+answering again (freight 75000, packaging 0), and every task-owned row is inactive. The 068/069 legacy
+parity fixture and all 071-078 records were preserved. No unrelated path was modified.
+
+TESTS AND VALIDATION: 26 focused backend tests pass
+(FullyQualifiedName~StorefrontShippingOperationalShadow) covering gate short-circuiting with no query,
+missing-seam and exception failure isolation, destination resolution and refusal, measurement
+provenance (an unsourced measurement is rejected; no weight is derived from subtotal/line count), the
+fail-closed tier behaviour, schedule availability never becoming a promise, capacity always reported
+as not enforced, payer split and packaging disclosure, and the no-price-mutation rule. The Host builds
+clean with 0 warnings and 0 errors. Focused validation only - no full-repo test loop.
+
+NO-WRITE PROOF: the only write calls in the whole task were the task-owned admin fixture create and
+deactivate calls; every storefront and diagnostic call was read-only. Rates, coverage, packaging
+policies, schedules, orders, payments and settlements were byte-compared before and after and are
+unchanged apart from the explicitly ledgered and deactivated task-owned rows.
+
+HONEST LIMITATIONS (stated, not hidden): the storefront path today has no trusted shipment
+measurement, so live tier-conditioned parity inside the storefront shadow could not be produced and is
+NOT claimed; the tier boundary was proven through the authorized read-only admin diagnostic route
+instead, and the storefront shadow explicitly reports MeasurementUnavailable rather than a fabricated
+match. Atomic capacity enforcement is not implemented and is not claimed. No packaging amount was
+inserted into live checkout and no COD ledger entry was created.
+
+CHANGES: new
+src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/OperationalShadow/
+(StorefrontShippingOperationalShadowOptions.cs, ...Contracts.cs, ...Observer.cs, ...Comparer.cs); new
+src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingOperationalShadowObserverTests.cs;
+minimal edits to ProjectStorefrontShippingQuery.cs (composition + observation call),
+StorefrontShippingRateAuthorityPolicy.cs (shared overload) and OrderModule.cs (options binding +
+registration); new docs/planning/shipping/SHIPPING-FULL-OPERATIONS-079.md; new evidence folder
+docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-079/ (task-receipt.json, probe-operational-shadow.ps1,
+relaunch-host.ps1, fixture-tier-packaging-cod.ps1, verify-tier-boundary-and-cleanup.ps1, log-matrix-OFF/ON.txt,
+payloads-OFF/ON.json, baseline-OFF/ON-*.json, log-tier-boundary-and-cleanup.txt,
+log-tier-packaging-cod-fixture.txt, log-relaunch-OFF/ON.txt, host-stdout/stderr-OFF/ON.txt). The task
+receipt file docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-079.task.md is preserved verbatim UNSTAGED.
+
+GIT: committed and pushed to origin/main as 91951b875bca970567f3a8196a6e5c89ee20708b; after
+git fetch, HEAD equals origin/main. No stash, reset, rebase or force push; all unrelated dirty and
+untracked paths were preserved untouched.
+
+BLOCKERS: none. No customer Checkout cutover was made, no price authority changed, no delivery promise
+created and no Task 080 work started. Worker PASS does not constitute Architect ACCEPT.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
