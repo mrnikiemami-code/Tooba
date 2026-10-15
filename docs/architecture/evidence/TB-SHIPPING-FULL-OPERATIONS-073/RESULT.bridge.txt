@@ -13,7 +13,7 @@ Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: b6ec9c5926ff85a45920e8dd5d0883cb82877ad5
 Base-SHA: b6ec9c5926ff85a45920e8dd5d0883cb82877ad5
 Code-SHA: a117d0eb387f07469388062b8e4f8da9ce75f404
-Evidence-SHA: <EVIDENCE_SHA>
+Evidence-SHA: 2d2b1d8ef8c774280a1c64b2d9a4608f58e7fc83
 automaticNextImplementationTask: NONE
 
 OWNERSHIP AND ROOT CAUSE. The weight/quantity pricing foundation is implemented entirely inside the Shipping module (Contracts/Domain/Application/Infrastructure/Endpoints/Tests). Fulfillment still owns service and option identity and Geography still owns place identity; both are consumed through their existing Contracts read seams with no foreign DbContext, no cross-module FK, no Results.Json and no privilege bypass. No Order/Checkout/Payment/Settlement/Host production file was touched and no quote authority was activated: Shipping still exposes only its pre-existing admin endpoints and the quote engine stays consumed internally. The gap closed by 073 was that a rate policy could only be one fixed amount per (service, option, destination) identity, so there was no way to express a bounded weight or item-count condition; every pre-073 row therefore remains a valid unconditioned rule with exactly its previous result.
