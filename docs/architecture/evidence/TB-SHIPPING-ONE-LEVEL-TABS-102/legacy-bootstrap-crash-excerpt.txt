@@ -1,0 +1,19 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-102 — first isolated launch (RunLegacyBootstraps=true) crash, captured verbatim
+from the launch's stderr before the configuration was switched to the schema-only supported path.
+
+Unhandled exception. System.InvalidOperationException: محصول برای انتشار آماده نیست.
+   at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.UnwrapLifecycle(Result result) in ...\CatalogDirectory.cs:line 849
+   at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.PublishProductAsync(Guid productId, CancellationToken cancellationToken) in ...\CatalogDirectory.cs:line 1637
+   at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaDevelopmentSeed.ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken) in ...\CatalogAttributeSchemaDevelopmentSeed.cs:line 99
+   at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentSeed.PostMigration.EnsureAsync(IServiceProvider provider, CancellationToken cancellationToken) in ...\CatalogDevelopmentSeed.cs:line 38
+   at Tooba.Host.Development.DevelopmentSchemaMigrator.MigrateOrderedAsync(IServiceProvider provider, CancellationToken cancellationToken) in ...\DevelopmentSchemaMigrator.cs:line 143
+   at Tooba.Host.Development.DevelopmentSchemaMigrator.ApplyCoreAsync(IServiceProvider services, Boolean seedCatalog) in ...\DevelopmentSchemaMigrator.cs:line 70
+   at Program.<Main>$(String[] args)
+
+Interpretation: the supported legacy Catalog Development bootstrap chain cannot complete on a genuinely empty
+scratch database — the Catalog-owned post-migration attribute-schema step attempts to publish a product that is
+not publishable yet (its prerequisites were never created in this order on an empty database), and the failure is
+an unhandled exception that terminates the host inside the migration pipeline. The same step is a no-op when
+Tooba:CatalogDemo:RunLegacyBootstraps=false, which is why the schema-only path starts normally.
+
+This is reported to the Architect as an observation; no production source was edited (out of scope for this task).

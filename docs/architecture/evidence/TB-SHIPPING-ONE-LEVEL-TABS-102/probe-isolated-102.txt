@@ -1,0 +1,13 @@
+﻿=== TB-102 isolated storefront reachability probe ===
+provenance GET /__platform-commerce | status=200 | body={"edition":"SingleStore","deploymentId":"isolated-102","tenantId":"store-alpha","connectionReference":"tenant-102-scratch","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"beef271052fbb9071ea4d7d3c28b6d17"}
+projection anonymous (no session) | status=401 | body={"type":"about:blank","title":"Sign in to continue.","status":401,"instance":"/v1/storefront/shipping/projection","errorCode":"checkout.authentication_required","traceId":"ab1e0890801fa1c85f0e87d11c065655","correlationId":"d6b2c78caec44692bcacc0626ce4daff","re
+POST /v1/auth/register (genuine customer registration) | status=500 | body={"type":"about:blank","title":"An unexpected error occurred.","status":500,"detail":"IdentityDuplicateIdentifierFault","instance":"/v1/auth/register","errorCode":"platform.unexpected","traceId":"2cae8d5a542f7783bdec79b5c85923c3","correlationId":"7690a7636fbe49
+POST /v1/auth/login (genuine credential login) | status=200 | body={"userId":"<redacted-scratch-user>","sessionId":"<redacted>","accessToken":"<redacted>","refreshToken":"<redacted>"}
+login_token_present=true token_printed=false
+POST /v1/storefront/cart (authenticated, owned) | status=200 | body={"cartId":"<redacted-scratch-cart>","version":1,"market":"IR","defaultCurrency":"IRR","channel":"Marketplace","itemCount":0,"totalsByCurrency":[],"lines":[],"guestSecret":"<redacted>","status":
+cart_id_present=true cart_id_printed=false guest_secret_present=true guest_secret_printed=false
+projection with owned cart (pre-line) | status=400 | body={"type":"about:blank","title":"The cart is empty.","status":400,"instance":"/v1/storefront/shipping/projection","errorCode":"shipping.cart.empty","traceId":"b0f5f54e8750c21f4dae15412ff1013e","correlationId":"c0cf4008fd884e408f09cf29c8eac3da","requestId":"0HNPB
+POST /v1/storefront/cart/{id}/lines with a non-existent offer | status=400 | body={"type":"about:blank","title":"This offer cannot be added to the cart.","status":400,"instance":"/v1/storefront/cart/<redacted-scratch-cart>/lines","errorCode":"cart.offer.unavailable","traceId":"9ec5a73b8a470a1a54f96399181482b9","correlationId":"
+=== end ===
+
+

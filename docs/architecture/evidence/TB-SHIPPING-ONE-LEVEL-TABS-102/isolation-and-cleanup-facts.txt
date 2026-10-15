@@ -1,0 +1,32 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-102 — isolated stack, isolation and cleanup facts
+captured_utc=2026-10-15T23:53:34Z
+head_sha=09870abc0140c0366696a07fa868f79307f25221
+origin_main=09870abc0140c0366696a07fa868f79307f25221
+
+scratch container: tooba-102-scratch-pg (postgres:17, loopback 127.0.0.1:55442 -> 5432, no volume)
+scratch databases: tooba_102_scratch, tooba_102_messaging (listed inside container; no tooba_alpha present)
+scratch schemas present after migrations: catalog, cart, order, fulfillment, identity = 5
+scratch user: scratch102 (task-generated password kept only in an untracked ephemeral file, never written to evidence or git)
+
+isolated Host: .tmp-102-host-out (copy of the current-code build used by the shared host deployment of record)
+isolated Host url: http://127.0.0.1:5192 (never 5088)
+isolated provenance: /__platform-commerce -> edition=SingleStore deploymentId=isolated-102 tenantId=store-alpha connectionReference=tenant-102-scratch
+gate state: ShippingOneLevelCatalog was only ever set as a process environment value; ShippingRateAuthority and ShippingOperationalShadow were never set
+
+cleanup:
+  isolated_listeners_after=0 (port 5192 closed)
+  scratch container removed -> remaining containers: rabbitmq, postgres-db
+  task-owned run/output directories and untracked credential files deleted
+
+shared stack parity (read-only, unchanged):
+  ------------------+----------------------------
+   methods          | 7
+   translations     | 14
+   inactive_methods | post:express,snapp_courier
+   carts            | 50
+   cart_lines       | 78
+   drafts           | 14
+   seller_orders    | 26
+  (7 rows)
+
+shared host: /health 200 on :5088 pid 37200 (env untouched by this task)

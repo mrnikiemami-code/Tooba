@@ -1,0 +1,12 @@
+﻿Pager usage is off.
+        m         |             v              
+------------------+----------------------------
+ methods          | 7
+ translations     | 14
+ inactive_methods | post:express,snapp_courier
+ carts            | 50
+ cart_lines       | 78
+ drafts           | 14
+ seller_orders    | 26
+(7 rows)
+

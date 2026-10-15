@@ -1,0 +1,122 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-102
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-101
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_ISOLATED_STOREFRONT_LABEL_PROJECTION_PROOF
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Push: first `git push origin main` attempt succeeded; HEAD == origin/main at post time. No force-push, no history rewrite.
+Bridge-Task-Row: fba809f8-2b6c-4fdb-be44-6f520fdfba25
+Status: BLOCKED
+Blocker-Code: BLOCKED_ISOLATED_CART_PROOF
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 09870abc0140c0366696a07fa868f79307f25221
+Base-SHA: 09870abc0140c0366696a07fa868f79307f25221
+Code-SHA: NONE
+Evidence-SHA: <EVIDENCE_SHA>
+automaticNextImplementationTask: NONE
+Measured-Time: ~33 minutes (claimed ≈03:12 → finished ≈03:45 local) — DISCLOSED overrun of the 30-minute HARD
+timebox. Not an unfinished-work overrun: cleanup, shared-state parity and all evidence were completed before this
+Result; nothing was left mid-flight and the scratch environment was fully destroyed.
+
+PREFLIGHT
+- Claimed exactly one Pending task (fba809f8-…, TB-SHIPPING-ONE-LEVEL-TABS-102) after a Working heartbeat, through
+  the protocol route `GET /api/tasks/next?channelId=tooba-main`; receipt preserved UNSTAGED at
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-102.task.md.
+- Expected-Base-SHA == HEAD == origin/main == 09870abc0140c0366696a07fa868f79307f25221; zero intervening commits,
+  zero src drift, no RECOVERY_CONFLICT. Pre-existing dirty frontend screens and all prior untracked evidence were
+  preserved untouched; no reset/stash/rebase/force-push.
+- Read AGENTS.md, the pipeline/controller contract, 099 isolated harness, 100 label seam and tests, 101
+  reachability findings and host evidence, 067 canonical customer flow.
+- Minimal supported path identified and used: POST /v1/auth/register → POST /v1/auth/login →
+  POST /v1/storefront/cart → POST /v1/storefront/cart/{id}/lines → POST /v1/storefront/shipping/projection.
+- Shared stack verified read-only before the task and left untouched: :5088 /health 200 (pid 37200, gate
+  ShippingOneLevelCatalog=true), :3000 not restarted, tooba_alpha 7 methods / 14 translations / 50 carts /
+  78 cart lines / 14 drafts / 26 seller orders. No shared write of any kind.
+
+MISSION A — SCRATCH ISOLATION: ACHIEVED
+- New disposable container tooba-102-scratch-pg (postgres:17, loopback 127.0.0.1:55442 → 5432, no volume) with
+  task-owned databases tooba_102_scratch and tooba_102_messaging and a task-generated user whose password exists
+  only in an untracked ephemeral file (never in evidence, never in git).
+- Offline guarded overlay (isolated/prepare-isolated-target-102.js): exactly one tenant (store-alpha, Active),
+  exactly two connection references, both the scratch port, both task-owned application names; the merged
+  effective config that was launched is the file the launcher stages over the build output.
+- Isolated Host from a task-owned copy of the CURRENT code in .tmp-102-host-out on http://127.0.0.1:5192 (never
+  5088/5099). One-level gate only ever a process environment value; Tooba__ShippingRateAuthority__* and
+  Tooba__ShippingOperationalShadow__* never set (stay OFF).
+- Provenance: GET /__platform-commerce → {"edition":"SingleStore","deploymentId":"isolated-102",
+  "tenantId":"store-alpha","connectionReference":"tenant-102-scratch",...} → the scratch target.
+- Database-side isolation: inside the scratch server only tooba_102_scratch and tooba_102_messaging exist (plus
+  templates) — there is no tooba_alpha database on that container, so no scratch statement can reach shared data;
+  the schema-only startup applied migrations (catalog, cart, order, fulfillment, identity present).
+- MISSING PIECE: a genuine sellable offer. Two supported configurations were attempted:
+  (1) Tooba:CatalogDemo:RunLegacyBootstraps=true → the host TERMINATES during migration with an unhandled
+      System.InvalidOperationException «محصول برای انتشار آماده نیست» from
+      CatalogDevelopmentSeed.PostMigration.EnsureAsync → CatalogAttributeSchemaDevelopmentSeed.ApplyAsync →
+      CatalogDirectory.PublishProductAsync (verbatim stack in legacy-bootstrap-crash-excerpt.txt): the Catalog-owned
+      post-migration attribute step attempts to publish a product whose prerequisites do not exist on an empty DB;
+  (2) Tooba:CatalogDemo:RunLegacyBootstraps=false → the documented schema-only path: healthy isolated host, but no
+      catalog demo product/offer at all.
+  The only remaining route to an offer would have been hand-built raw catalog/offer/price/inventory fixtures, i.e.
+  exactly the shortcut the task forbade, so the work stopped at BLOCKED_ISOLATED_CART_PROOF rather than expanding
+  scope or editing production source.
+
+MISSION B — REAL STOREFRONT PROJECTION: NOT EXERCISED (blocked by the missing offer)
+- Genuine chain that DID work on the isolated host (all authenticated calls carried a real Bearer session obtained
+  by credential login; no fabricated actor header, no ACL bypass):
+    projection anonymous                                  → 401 checkout.authentication_required
+    POST /v1/auth/register (customer)                     → 201 (repeat call → 500 platform.unexpected,
+                                                            IdentityDuplicateIdentifierFault)
+    POST /v1/auth/login                                   → 200 with a real session/token
+    POST /v1/storefront/cart                              → 200, cart + guest secret returned by the API
+    POST /v1/storefront/shipping/projection (that cart)   → 400 shipping.cart.empty
+    POST /v1/storefront/cart/{id}/lines (an offer id)     → 400 cart.offer.unavailable
+- The 400 shipping.cart.empty (rather than 401/404) proves the identity gate AND the cart ownership access rules
+  were satisfied legitimately and the request reached the Order projection handler; the sole missing element is a
+  sellable catalog offer, after which the line could not be added.
+- Because RequireCartAsync rejects an empty cart before any eligible-method list is built, no methods[] payload
+  exists in either gate state, so the gate-OFF vs gate-ON label/price/lead-day parity (the acceptance item) could
+  not be attempted at all. A live gate-ON restart was therefore not performed — it would have proven nothing.
+- No test was used as a substitute for HTTP proof and no claim is derived from the 100 unit tests.
+
+MISSION C — CLEANUP / REPORT: DONE
+- Isolated Host stopped; port 5192 listeners after stop = 0; scratch container removed (remaining containers:
+  rabbitmq, postgres-db); task-owned run/output directories and untracked credential files deleted.
+- Shared stack untouched and operational: :5088 pid 37200 /health 200, provenance dev-singlestore / store-alpha /
+  tenant-alpha, gate ShippingOneLevelCatalog unchanged (left ON), :3000 never restarted.
+- Shared tooba_alpha read-only parity after cleanup: 7 methods, 14 translations, post:express and snapp_courier
+  still inactive, 50 carts, 78 cart lines, 14 drafts, 26 seller orders — identical to preflight (no shared DML).
+- Credentials/PII: scratch and probe passwords and all scratch identifiers (user, session, token, cart, guest
+  secret) are redacted or absent from every committed artifact.
+- Evidence: docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-102.md and
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-102/** (summary.md, task.md, task-receipt.json,
+  claim-task.js, isolated/prepare-isolated-target-102.js, isolated/launch-isolated-102.ps1,
+  isolated-host-102-startup-excerpt.txt, legacy-bootstrap-crash-excerpt.txt, probe-isolated-102.js/.txt,
+  shared-parity.sql/.txt, isolation-and-cleanup-facts.txt).
+
+CHANGED PATHS (docs/evidence only; no src/**, test, frontend, schema, migration, config or recovery change)
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-102.md (new)
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-102/** (new)
+- docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-102.task.md (task receipt, UNSTAGED/untracked)
+
+ROLLBACK: nothing to roll back — no shared write, no data/config/schema change, no production source change. The
+isolated environment (container, host, run dirs, credentials) is already destroyed and verified.
+
+BLOCKERS
+1. BLOCKED_ISOLATED_CART_PROOF: an isolated storefront cart with a genuine sellable line cannot be produced with
+   the supported Development bootstrap, because that bootstrap terminates on an empty database
+   (CatalogAttributeSchemaDevelopmentSeed publish failure) and the only alternative is forbidden raw catalog
+   fixtures.
+2. Architect decision needed (options in the planning doc): repair/parameterize the Catalog Development bootstrap;
+   explicitly authorise scratch-only raw catalog/offer fixtures; or authorise
+   POST /v1/admin/catalog/demo/reset-and-seed on an isolated host with an admin actor.
+3. Observations for triage: the Development bootstrap crash is an unimplemented seed-ordering prerequisite on an
+   empty DB (not repaired here, out of scope; shared Development is unaffected); a duplicate customer identifier
+   returns 500 platform.unexpected instead of a typed conflict.
+4. Standing: the two pre-existing dirty frontend screens and the pre-existing Host test-failure set remain
+   untouched and unrepaired.
+END_TOOBA_WORKER_RESULT
