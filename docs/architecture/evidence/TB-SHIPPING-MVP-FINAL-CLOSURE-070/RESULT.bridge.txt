@@ -1,0 +1,129 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-FINAL-CLOSURE-070
+Parent-Task: TB-SHIPPING-MVP-OPTION-PARITY-069
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE
+Mode: BOUNDED_FINAL_RESOLVER_ADMIN_OPTION_AND_DELIVERY_GATE
+Bridge-Task-Row: 3cf6b695-a18a-415d-922d-d91e9b705063
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 8351f66e550f89dc8f64d3efdc62ba1c138155d4
+Base-SHA: 8351f66e550f89dc8f64d3efdc62ba1c138155d4
+Code-SHA: b18c1e41b8e5c8b0564f4a64f4cf2545720b6f8d
+Evidence-SHA: bba6de23e71a23cf5fb1d56a26aeaaa18015b93c
+automaticNextImplementationTask: NONE
+SUMMARY: Task PASS. Both named 069 blockers closed. (A) The 068/069 legacy-text destination gap was NOT a
+Geography resolver defect: the 068/069 matrix scripts transmitted the JSON body as a .NET string through a
+single-byte encoding, so 'البرز' arrived as literal 0x3f bytes ('?????') and the exact, non-fuzzy resolver
+correctly refused it. Proved by a read-only harness over the real tooba_alpha plus seven live projection
+requests: the real UTF-8 label, the stable code and validated ids all reach the same real identity and the
+observer reports Observed with five per-method Match lines each; only the Latin-1 mangled bodies stay
+DestinationNotComparable. No Geography source file changed because no defect exists. (B) The admin
+rates-and-coverage dialog is now option-aware end to end: it reads the real option list from the existing
+Fulfillment service tree, offers the option select only for multi-option services, groups policies per
+option, preserves option identity on edit, labels the service-level fallback explicitly and surfaces
+shipping.service_option.unknown beside the field. Proven by a genuine UI edit and a genuine UI active
+toggle on tipax standard, no cross-option leakage, final fixture state restored.
+ROOT CAUSE - EXACT TRACE (mission A): the resolver is correct. Harness over the real GeographyDbContext on
+tooba_alpha (127.0.0.1:5432, container postgres-db, postgres:17): country id=e3451206-e503-51a8-91ad-
+afa9ab70e330 code='IR' active=True; area code='alborz' active=True with translation label 'البرز' bytes
+d8a7d984d8a8d8b1d8b2; the input 'البرز' byte-for-byte equals that label and matches exactly one area; the
+observer signature ResolveLegacyAsync("IR","البرز",null,null) => Resolved count=1 administrativeAreaId
+1f8050a8-c325-59fa-959f-82d76b5b2bc5; ("IR","alborz",null,null) => the same area; ("IR","البرز","کرج",null)
+=> the same area plus city 68255340-c69f-5d20-bf33-e8e0b24edde9. The previous probes built the body as a
+.NET string and handed it to Invoke-RestMethod -Body without a charset, so the Persian code points were
+written through a single-byte encoding: browser/JS UTF-8 body bytes d8a7d984d8a8d8b1d8b2 versus the probe's
+latin1 body bytes 3f3f3f3f3f. StringComparison.OrdinalIgnoreCase is exact by design (043), so '?????' matches
+nothing and Unresolved -> DestinationNotComparable was the correct, safe answer. There is no resolver bug to
+fix; adding a fuzzy/transliterating fallback would break the locked exact-match-or-refuse semantics and was
+not done. Classified as probe-tooling artefact, not BLOCKER.
+LIVE OBSERVER PROOF (mission A, one controlled Development restart, shadow override in the process only):
+P1 'البرز' (real UTF-8) Observed 5/5 Match; P2 'البرز'+'کرج' Observed 5/5 Match; P3 validated Geography ids
+Observed 5/5 Match; P4 'alborz' code Observed 5/5 Match; P5 'alborz'+'karaj' codes Observed 5/5 Match;
+Q1/Q2 the same two Persian bodies sent through Latin-1 DestinationNotComparable. The five canonical
+per-method Match lines requested by this task are thus captured from the Persian-label path itself:
+post:standard legacy=120000 shadow=120000 Match; tipax:express 260000/260000 Match; tipax:standard
+180000/180000 Match; store_courier 75000/75000 Match; in_person 0/0 Match (reason shipping.quote.quoted).
+LEGACY PROJECTION INVARIANT: all seven request shapes returned a byte-identical payload (2393 bytes each)
+with the gate OFF and ON; the price and method list returned to the customer never changed.
+ADMIN UI + API EVIDENCE (missions B and C): option source is the existing Fulfillment tree -
+GET /v1/admin/shipping-methods?language=fa -> 200 - post=[standard], tipax=[express,standard],
+store_courier=[], in_person=[]; tipax labels express='پیشتاز' standard='معمولی'. Read:
+GET /v1/admin/shipping-services/tipax/rates returns optionCode per policy (express 260000/lead1,
+standard 180000/lead3, plus the superseded 068 service-level row still inactive). Edit through the exact
+payload the dialog builds (scope plus the echoed optionCode): PUT .../rates/01a13d84-ca00-7000-8d86-
+52803380de4e -> 200, 180000->185000, express stayed 260000 (no cross-option leakage), identity unchanged,
+then restored to 180000. Active toggle: PATCH .../active {"isActive":false} -> 200 then true -> 200.
+Refusal: POST with optionCode "drone" -> 400 errorCode shipping.service_option.unknown (the exact code the
+UI now renders beside the option field). REAL UI (browser on :3000, not simulated): the tipax dialog
+renders the option select with values 'سطح خدمت (پیشفرض خدمت) | پیشتاز | معمولی' and groups rows by option
+(shipping-rate-option-group-service / -express / -standard); a genuine UI edit produced the notice
+'نرخ «معمولی · استان · e3451206… / استان 1f8050a8…» ذخیره شد.' with the row at ۱۸۷٬۵۰۰ IRR while پیشتاز
+remained ۲۶۰٬۰۰۰ IRR; a genuine UI toggle flipped معمولی inactive and back; the final UI state equals the
+documented fixture ledger. Screens: ui-tipax-option-dialog.png, ui-tipax-option-roundtrip.png.
+FILES CHANGED: src/frontend/app/admin/shipping-services/shipping-rates-coverage-api.ts (optionCode on the
+rate DTO and on the create/update payloads), .../shipping-rates-coverage-model.ts (pure option helpers:
+service-level fallback label, immutable option identity, membership validation, per-option grouping, the
+unknown-option error code), .../shipping-rates-coverage-dialog.tsx (option select sourced from the real
+service tree, per-option grouping, identity echo on update, error beside the field),
+.../shipping-rates-coverage-model.test.ts (six focused tests). NO backend file changed. Single-option and
+no-option services keep the previous UX and the service-level null-option fallback; the coverage-grant
+editor stays service-scoped and unchanged; the 066 stale-response guard and D1/D2 destination-scope rules
+are untouched; no new page and no new Backend route.
+GATES / HOST RESTORED (mission D): the shadow override was enabled ONLY in the Development process
+(Tooba__ShippingRateAuthority__ShadowEnabled / __PrerequisitesConfirmed environment variables, no config
+file touched) and is removed; the restored host logs ZERO observer lines for the same projection, /health
+200, listener 127.0.0.1:5088 pid 24364, user frontend on :3000 running and not restarted. No production or
+staging connection, no deployment, no pricing-authority cutover, zero modified real orders/payments/snapshots.
+FOCUSED TESTS (actually run): frontend shipping-rates-coverage-model.test.ts 18/18 pass (6 new option
+tests), shipping-destination-picker.test.ts 3/3 pass, shipping-services-form-model.test.ts 9/9 pass,
+shipping-services-roundtrip.test.ts 6/6 pass, npx tsc --noEmit -p tsconfig.json exit 0 with zero
+diagnostics. No backend suite was required because no backend file changed; no architecture guard was
+weakened and no baseline was widened. Geography has no test project in this repo, so Geography is verified
+through the evidence harness (the 043/044/045 precedent), which is what was used. No known unrelated
+baseline failure was observed in the surfaces actually run.
+COMMERCIALS / CUTOVER READINESS VERDICT (five independent categories, honest): (1) Admin authoring/UI ready -
+YES, option-aware create/read/edit/toggle proven live in the UI and over the API. (2) Geography identity
+ready - YES for the tested scope; the exact Persian label, the stable code and validated ids all resolve to
+the same real identity. (3) Shadow parity on representative tested data - YES on the tested Alborz fixtures,
+5/5 Match, captured five separate times. (4) Commercial tariffs and destination coverage approved/complete -
+NO: the amounts are synthetic parity fixtures reproducing measured legacy values, only one area is covered,
+and no tariff has product approval. (5) Customer authority cutover authorized/ready - NO: both gates are OFF,
+no cutover was performed, and legacy pricing authority is untouched. FULL COMMERCIAL READY is therefore NOT
+claimed; the absent gate is explicit product/commercial approval of real tariffs and complete destination
+coverage plus an authorized cutover decision. This task is not commercial approval. The legacy-safe MVP
+remains functional and unchanged.
+PROCESS / DATA SAFETY: base 8351f66e verified as an ancestor of HEAD with HEAD == origin/main and no
+intervening commit at claim time. Fixtures stayed in the documented state (tipax standard
+01a13d84-ca00-7000-8d86-52803380de4e 180000/lead3 active, tipax express 01a13d84-ca7f-7000-a59a-
+269a1c8ec13d 260000/lead1 active, superseded service-level row 01a13d65-cf37-7000-ad21-ac8e9b2c89d7
+inactive, grant 01a13d65-cf8e-7000-a8e5-2205f6167d63 active) and are recorded as unapproved synthetic
+DEVELOPMENT-ONLY fixtures whose parity must not be mistaken for approved commercial rates. Task-owned
+disposables (a temporary sqlite reader, its npm artifacts and the CLI probe scripts) were removed; the
+temporary harness bin/obj were deleted. Unrelated pre-existing dirty files
+(docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md,
+src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx,
+src/frontend/app/admin/admin-order-detail-screen.tsx) and the received .task.md receipt were preserved and
+never staged. No reset, stash, rebase or force-push. The Shipping master recovery checkpoint was deliberately
+NOT edited because a bounded edit could not be guaranteed inside the timebox; full closure is recorded in the
+task planning doc instead, as the task explicitly permits.
+TIMEBOX: elapsed approximately 36 minutes wall clock from claim, inside the 45-minute HARD box. Two
+controlled Development restarts (one to enable the shadow override, one to remove it); no scratch DB, no
+clone, no mass migration, no fixture farm, no test rerun loop, no polling loop, no Host.Tests DLL-lock cycle.
+The only build executed was the focused frontend typecheck plus the disposable read-only harness.
+COMMIT / PUSH: Code-SHA b18c1e41b8e5c8b0564f4a64f4cf2545720b6f8d (frontend option-aware editor + focused
+tests). Evidence-SHA bba6de23e71a23cf5fb1d56a26aeaaa18015b93c (planning doc + docs/architecture/evidence/
+TB-SHIPPING-MVP-FINAL-CLOSURE-070). Pushed to origin/main; final HEAD == origin/main == bba6de23e.
+REMAINING BLOCKERS / NOT DONE: (1) No commercial approval exists for real tariffs or complete destination
+coverage - external product decision, cannot be fabricated by this task. (2) Only the single representative
+alborz area carries synthetic fixtures; parity is proven at that area scope only and is not evidence of
+country-wide coverage. (3) Delivery/promise parity and per-seller preparation days remain uncomparable from
+this seam (unchanged, carried from 068). (4) snapp_courier is still enabled in configuration with no row in
+the service tree; the frontend exposes no option for it, and the side to fix is still an Architect decision.
+(5) The Shipping master recovery checkpoint was not updated, intentionally. No eighth-plus implementation
+task was invented and no automatic continuation is issued.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
