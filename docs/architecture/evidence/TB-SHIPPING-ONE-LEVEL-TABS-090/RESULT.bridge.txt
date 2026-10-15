@@ -1,0 +1,95 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-090
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-089
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-TABS
+Mode: BOUNDED_DEVELOPMENT_ONE_LEVEL_ROLLOUT_AND_LIVE_PROOF
+Bridge-Task-Row: 1092072c-50ad-4788-9bc5-bbbf709d63cf
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 9c233ae5167334047757683c45f3727ee8975b29
+Base-SHA: 9c233ae5167334047757683c45f3727ee8975b29
+Code-SHA: f0a7bc36576d27d3d722b151174225aa4671cb13
+Evidence-SHA: f0a7bc36576d27d3d722b151174225aa4671cb13
+automaticNextImplementationTask: NONE
+SHA NOTE: f0a7bc365 is the single commit that carries both the code (backfill executor, planner
+translation fix, DI line, tests) and the task evidence (planning doc + evidence directory). This
+RESULT.bridge.txt file itself and post-result.js are committed in the small evidence-finalization
+commit immediately after it; the SHAs above are the task's code+evidence commit and are the
+authoritative ones. HEAD == origin/main == that finalization commit at post time.
+
+TARGET / PROVENANCE (positively identified, read-only)
+- GET /__platform-commerce on the running Host (127.0.0.1:5088) => edition=SingleStore, deploymentId=dev-singlestore, tenantId=store-alpha, connectionReference=tenant-alpha, resolvedHost=127.0.0.1, themeReference=theme-alpha, defaultMarketReference=IR.
+- PostgreSQL 17.10 (container postgres-db), database tooba_alpha, user admin. No other environment was contacted; no secret value was written to evidence, git or logs.
+- Migration status pre (canonical runner, --tenant store-alpha): Fulfillment current=20260910170000_AddShippingServiceCatalog pendingCount=0; the one-level migration was NOT in the previously built runner binary.
+
+BACKUP / ROLLBACK (verified before any write)
+- Full logical backup: pg_dump -Fc tooba_alpha => 2,492,453 bytes, 1,190 TOC entries, SHA256 A3D924BA51449604506A27016C337FBF8D9E4B4776F3C18D22CF92BA822D9439. Kept OUTSIDE the repo at .tmp-090-backup/tooba_alpha-pre-090.dump (git-ignored); manifest in backup-manifest.txt.
+- Schema-only exports: fulfillment-schema-pre-090.sql (37,814 B, SHA256 EC5BF979...3171) and order-cart-shipping-drafts-pre-090.sql (6,542 B, SHA256 6BAA93D3...E61C).
+- Rollback plan: docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-090/rollback-090.sql (transactional DML delete of only the 7 backfilled methods + their 14 translations with a legacy-count assertion; canonical migration DOWN documented and already proven reversible on an isolated DB in 083; full restore path via pg_restore of the dump). No database reset and no destructive down migration was run on populated data.
+
+DDL (applied to tooba_alpha through canonical tooling)
+- dotnet build Tooba.MigrationRunner -o .tmp-090-runner (isolated OutDir, because the in-tree bin is locked by the running Host) => succeeded.
+- .tmp-090-runner/Tooba.MigrationRunner.exe plan --tenant store-alpha => Fulfillment pendingCount=1 (20261015120000_AddShippingOneLevelCatalog).
+- .tmp-090-runner/Tooba.MigrationRunner.exe apply --tenant store-alpha => every module result=ok; Fulfillment current=20261015120000_AddShippingOneLevelCatalog pendingCount=0 durationMs=122.
+- Schema read-back: 2 new tables (fulfillment.shipping_methods, fulfillment.shipping_method_translations); shipping_methods has 9 columns, method_code width 32, legacy_option_code nullable; 4 indexes (ix_shipping_methods_method_code, ux_shipping_methods_legacy_binding partial WHERE legacy_option_code IS NOT NULL, ix_shipping_methods_legacy_service_code, ix_shipping_method_translations_method_lang); 2 check constraints (ck_shipping_methods_code_canonical, ck_shipping_methods_option_code_canonical); 1 FK (fk_shipping_method_translations_method). History row 20261015120000_AddShippingOneLevelCatalog present exactly once.
+- No other module DDL changed: all other modules reported pendingCount=0 result=ok.
+
+BACKFILL EXECUTOR (new module-owned code)
+- New: src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Ports/IShippingOneLevelBackfillStore.cs
+- New: src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelBackfillStore.cs — reads existing one-level rows, delegates every decision to the existing pure ShippingMethodBackfillPlanner, applies the plan inside ONE transaction (all-or-nothing), refuses any plan carrying a violation, never deletes a row, never rewrites a historical code/binding, only creates rows and aligns activation.
+- Changed: ShippingMethodBackfillPlanner.cs — ShippingMethodDesiredRow now carries per-language Translations (new ShippingMethodDesiredTranslation record) so the executor cannot collapse every language onto the first translation; the planner stays a pure function. New rule: no bare parent method for option-bearing services (unchanged), inactive options preserved, optionless services => nullable optionCode.
+- Changed: FulfillmentModule.cs — DI registration of the seam only (one line). Contracts/Domain/Infrastructure boundaries respected; no Host business logic.
+- New: src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelBackfillStoreTests.cs (4 facts).
+
+DML / BACKFILL RESULT (real, on tooba_alpha)
+- Pre: shipping_methods=0, shipping_method_translations=0, legacy shipping_services=5, shipping_service_options=4, cart_shipping_drafts=14, fulfillments=9, shipments=5.
+- Guard (real DB, before any write): a plan carrying a violation => REFUSED:shipping.one_level.backfill.plan_not_executable, methods_after=0.
+- Atomicity (real DB): a plan with two colliding creates => ROLLED_BACK:DbUpdateException, methods_after=0 (proves the transaction is real, not assumed).
+- Dry-run: executable=True, items=7, violations=0, creates=7, skips=0, aligns=0.
+- Commit: methods=7, method_translations=14. Read-back per method: post:express (service=post option=express active=false sort=10), post:standard (post/standard active=true sort=11), tipax:express (tipax/express active=true sort=20), tipax:standard (tipax/standard active=true sort=21), snapp_courier (snapp_courier/null active=false sort=30), store_courier (store_courier/null active=true sort=40), in_person (in_person/null active=true sort=50).
+- Per-language names persisted correctly: post:standard fa=معمولی / en=Standard; post:express fa=پیشتاز / en=Express; tipax:* likewise; snapp_courier fa=اسنپ / پیک آنلاین · en=Snapp / Online courier; store_courier fa=پیک فروشگاه / en=Store courier; in_person fa=تحویل حضوری / en=In person.
+- Idempotent re-run: second dry-run executable=True items=7 all_skip=True violations=0; re-applying wrote nothing (still methods=7, method_translations=14).
+- Activation is preserved, never invented: historically inactive post:express stays false and inactive snapp_courier stays false.
+- No service-level row invented: bare `post`=0, bare `tipax`=0 (option-bearing services never become a second sellable method).
+- Legacy catalog untouched: services=5, options=4, service_translations=10, option_translations=8. Historical rows untouched: fulfillments=9, shipments=5, drafts=14.
+- No synthetic tariff, grant, schedule or packaging data was added; no write to Order, Checkout, Payment, Settlement, Geography or any historical snapshot.
+
+GATE / PROCESS STATE
+- Tooba:ShippingOneLevelCatalog remains OFF by absence (no section in any appsettings; verified in the running Host's output config too). Tooba:ShippingRateAuthority and Tooba:ShippingOperationalShadow were NOT read, induced or changed, and are NOT enabled.
+- No Host/Next process was killed or restarted. The Development baseline Host (pid 33548, started 13:31) was left running untouched.
+
+REAL BROWSER PROOF: NOT VERIFIED (why, precisely)
+- The running Development Host is a STALE binary: src/backend/Host/Tooba.Host/bin/Debug/net8.0/Tooba.Fulfillment.Endpoints.dll (13:07) does not contain the string "shipping-methods/one-level", and live calls to GET /v1/admin/shipping-services/shipping-methods/one-level and .../one-level/post:standard/binding both return HTTP 404 on 127.0.0.1:5088 (host /health returns 200, so the process is healthy, just old).
+- Proving the five-tab page in a real browser therefore needs a rebuilt Host + restart, and that rebuild is currently blocked by that same process: dotnet build Tooba.Host fails with MSB3027/MSB3021 because Tooba.Host (33548) locks the DLLs in its own bin/Debug/net8.0 (the in-tree MigrationRunner build failed the same way; only the isolated -o build succeeded). Its parent process (21968) is already gone and its launch environment could not be positively reproduced from evidence, so a speculative kill of a shared, user-managed Development service was refused as the task requires.
+- Consequently unverified: five-tab real-browser visibility, tab 2/3/4 method-scoped data, tab 5 read-only diagnostic response, and any isolated reversible write/read-back on a task-owned disposable policy or schedule. No invented PASS and no fabricated request/response.
+
+TESTS
+- dotnet test Tooba.Fulfillment.Tests => Passed! Failed: 0, Passed: 120, Skipped: 0 (log-fulfillment-tests.txt). Includes the 4 new ShippingOneLevelBackfillStoreTests facts (dry-run reads the persisted catalog without writing; per-language names preserved; violating plan refused before any write; AlignActivation keeps identity). The transactional apply/idempotency/rollback path is proven on real PostgreSQL by the task probe instead of faking it on the InMemory provider (which has no transactions).
+- Frontend was not changed by this task, so no frontend test/typecheck was run.
+- Host test project was not run: its output directory is locked by the same running Host (BLOCKED for that project only); no DLL-lock retry loop was attempted.
+
+CHANGED PATHS (task-owned only; committed f0a7bc365, pushed to origin/main, HEAD == origin/main)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Ports/IShippingOneLevelBackfillStore.cs (new)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelBackfillStore.cs (new)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/ShippingMethodBackfillPlanner.cs (per-language translations)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/DependencyInjection/FulfillmentModule.cs (one DI line)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelBackfillStoreTests.cs (new)
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-090.md
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-090/** (task receipt kept unstaged)
+- docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-090.task.md (receipt only, never staged)
+
+ELAPSED / HARD STOP
+- Claimed 2026-10-15T14:20:56Z, final result at 2026-10-15T14:50:55Z => ~30 minutes, i.e. the 30-minute HARD timebox was reached; work stopped instead of stretching into a rebuild/restart.
+
+READINESS DISTINCTION
+- Source/test ready: YES. Development data ready: YES (migration applied, backfill committed, idempotent, referential integrity and legacy preservation demonstrated).
+- Live/browser ready: NO (stale Host binary + locked build output). Commercially ready: NO (gate OFF, no checkout price cutover, no order/payment/settlement change, no capacity enforcement, no COD settlement claim, no delivery promise claim).
+
+BLOCKERS FOR ARCHITECT
+1. Controlled rebuild + restart of the Development Host is required before any five-tab browser proof; it needs explicit authority (and, if wanted, a safe relaunch procedure) because the current Host is a shared Development baseline whose launch environment is not reproducible from evidence.
+2. After the restart, tab 3/4/5 live read proof and one isolated reversible write/read-back on a task-owned disposable policy/schedule remain to be done.
+END_TOOBA_WORKER_RESULT
