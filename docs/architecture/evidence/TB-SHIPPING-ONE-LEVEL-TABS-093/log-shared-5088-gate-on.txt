@@ -1,0 +1,14 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-093 — shared :5088 after controlled takeover (current code, ephemeral gate ON)
+
+health={"status":"ok"}
+prov={"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"943b6be95534a63167a029c0c551502e"}
+
+-- real Development login through shared frontend :3000 --
+login -> 200 :: {"userId":"01a036c2-970e-7000-8eb7-94bf5cc2d8db","authenticated":true}
+
+-- one-level route authorization matrix on shared :5088 --
+GET one-level [no credential] -> 401
+GET one-level [guest dev actor aaaaaaaa] -> 403
+GET one-level [bearer session (BFF path)] -> 200
+{"gate":"Enabled","ready":true,"methods":[{"methodCode":"post:express","name":"پیشتاز","isActive":false,"sortOrder":10},{"methodCode":"post:standard","name":"معمولی","isActive":true,"sortOrder":11},{"methodCode":"tipax:express","name":"پیشتاز","isActive":true,"sortOrder":20},{"methodCode":"tipax:standard","name":"معمولی","isActive":true,"sortOrder":21},{"methodCode":"snapp_courier","name":"اسنپ / پیک آنلاین","isActive":false,"sortOrder":30},{"methodCode":"store_courier","name":"پیک فروشگاه","isActive":true,"sortOrder":40},{"methodCode":"in_person","name":"تحویل حضوری","isActive":true,"sortOrder":50}]}
+GET one-level [bootstrapped admin actor] -> 200

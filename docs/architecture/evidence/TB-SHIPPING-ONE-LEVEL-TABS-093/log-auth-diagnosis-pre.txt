@@ -1,0 +1,17 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-093 — admin auth discrepancy diagnosis on shared :5088 (pre-change)
+
+-- real Development login through shared frontend :3000 --
+login -> 200 :: {"userId":"01a036c2-970e-7000-8eb7-94bf5cc2d8db","authenticated":true}
+sessionCookiePresent=True
+
+-- shared :5088 authorization matrix --
+GET /v1/admin/shipping-services [bearer session] -> 200
+GET /v1/admin/shipping-services [guest dev actor aaaaaaaa] -> 403
+GET /v1/admin/shipping-services [bootstrapped admin actor] -> 200
+GET /v1/admin/shipping-services [no credential] -> 401
+
+-- same matrix on the one-level route --
+GET one-level [bearer session] -> 404
+GET one-level [guest dev actor aaaaaaaa] -> 404
+GET one-level [bootstrapped admin actor] -> 404
+GET one-level [no credential] -> 404

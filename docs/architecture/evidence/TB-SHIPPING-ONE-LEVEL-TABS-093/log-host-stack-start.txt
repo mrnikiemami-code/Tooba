@@ -1,0 +1,11 @@
+﻿[host-stack] provenance OK: SingleStore / dev-singlestore / store-alpha / tenant-alpha
+[host-stack] prior-process record written: D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host\prior-host-5088-20261015-210438.txt
+[host-stack] graceful stop of proven Development Host pid=33548
+[host-stack] port 5088 free; prior-process record at D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host\prior-host-5088-20261015-210438.txt
+[host-stack] ephemeral gate: Tooba__ShippingOneLevelCatalog__Enabled=true (process env only)
+[host-stack] ShippingRateAuthority and ShippingOperationalShadow are never set by this script (remain OFF)
+[host-stack] started pid=25236; waiting for /health on http://127.0.0.1:5088
+[host-stack] health OK: {"status":"ok"}
+[host-stack] provenance OK: SingleStore / dev-singlestore / store-alpha / tenant-alpha
+[host-stack] PID file written: D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host\host-5088.pid
+[host-stack] rollback: run '-Action stop' then '-Action start' (without the gate) to return to the default gate state
