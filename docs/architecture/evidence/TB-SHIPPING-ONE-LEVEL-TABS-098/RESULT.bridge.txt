@@ -1,0 +1,61 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-098
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-097
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_SHARED_DEVELOPMENT_ACTIVATION_UI_READ_ONLY_PROOF
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Bridge-Task-Row: c805cff2-ee43-49f4-a5a2-5a5b4ed3083c
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: d6ba104368c974094ff4ab2cd667bcb8ea92bf83
+Base-SHA: d6ba104368c974094ff4ab2cd667bcb8ea92bf83
+Code-SHA: 240497b237a5db752dd3aaade1a3f3adaf06beb6
+Evidence-SHA: 240497b237a5db752dd3aaade1a3f3adaf06beb6
+Tip-SHA: bdc9632d056a7f9fa0c6621638e151ae2ff45014
+automaticNextImplementationTask: NONE
+Measured-Time: ~40 minutes elapsed (DISCLOSED overrun of the 30-minute hard timebox; all work, validation, commit, push and code-existence checks were completed before this Result was posted; nothing was left mid-flight and no scope was reduced to fit the clock)
+
+PREFLIGHT
+- Claimed exactly one Pending Bridge task (c805cff2-…, TB-SHIPPING-ONE-LEVEL-TABS-098); receipt preserved UNSTAGED at docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-098.task.md (still ?? untracked after the result, never committed).
+- Read AGENTS.md, the pipeline/architecture contract, 093/096/097 evidence, scripts/dev/host-stack.ps1, docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md and git status.
+- git fetch origin/main: HEAD == origin/main == d6ba104368c974094ff4ab2cd667bcb8ea92bf83 == Expected-Base-SHA. `git diff d6ba1043..HEAD` = empty (zero src drift) => no RECOVERY_CONFLICT. All pre-existing dirty/untracked files were preserved and none were staged or edited.
+- Provenance BEFORE any action: :5088 pid 30756 Tooba.Host.exe exe=D:\...\SarvNewVer\.tmp-dev-host-out-5088\Tooba.Host.exe start=10/15/2026 22:27:33 cmd="…\Tooba.Host.exe" --contentRoot …\src\backend\Host\Tooba.Host, matching the script's own PID file .tmp-dev-host/host-5088.pid (recorded gate ShippingOneLevelCatalog=true). :3000 pid 31580 node.exe (Next dev start-server.js, start 10/11 07:22) — left untouched. /health {"status":"ok"}; /__platform-commerce = SingleStore / dev-singlestore / store-alpha / tenant-alpha (tooba_alpha). Staging/production were never contacted.
+- PROVEN ROOT CAUSE: the running Host was built 22:27, i.e. before the 096 commit (01:40), so its Tooba.Fulfillment.Endpoints.dll did not contain the activation route. Pre-action route semantics on the OLD Host: GET …/one-level => 401, OPTIONS => 405 (094 route family mounted), but GET/OPTIONS/PUT on …/one-level/post%3Astandard/activation => 404 (route absent) while …/translations/{id} => 405. The 097 gap was therefore a build-provenance defect, not a gate defect.
+
+MISSION A — CONTROLLED DEVELOPMENT HOST DEPLOYMENT
+- Built the current Host to an isolated task-owned output directory: `dotnet build src\backend\Host\Tooba.Host\Tooba.Host.csproj -c Debug -o .tmp-dev-host-out-5088-098` => 0 Error(s), 19 Warning(s), 32.8 s (evidence build-098.txt). Avoided the locked shared bin/.tmp-dev-host-out-5088.
+- Verified the new artifacts carry the 096 route: Tooba.Fulfillment.Endpoints.dll (01:55:43) contains the literal `shipping-methods/one-level/{methodCode}/activation` = True.
+- Restarted ONLY through the repo-owned script, re-read first:
+  `powershell -NoProfile -File scripts/dev/host-stack.ps1 -Action restart -OutDir .tmp-dev-host-out-5088-098 -NoBuild -GateShippingOneLevelCatalog -TakeOverProvenDevelopmentHost`
+  It proved ownership (recorded pid alive, owning the port, absolute exe under this repo) and used its graceful Stop-ManagedHost path — no Stop-Process -Force anywhere. Prior state was itself script-managed, so no blind takeover occurred.
+- POST state: :5088 pid 29788 exe=.tmp-dev-host-out-5088-098\Tooba.Host.exe start 01:56:17; /health ok; provenance SingleStore / dev-singlestore / store-alpha / tenant-alpha; PID file gate=ShippingOneLevelCatalog=true. Gate passed ONLY as an ephemeral process env var (Tooba__ShippingOneLevelCatalog__Enabled=true); nothing written to appsettings or source; ShippingRateAuthority and ShippingOperationalShadow never set (remain OFF). Shared :3000 (pid 31580) untouched.
+- Auth guards measured on the current-code Host: anonymous => 401 (admin.actor.missing); guest dev actor aaaaaaaa-aaaa-4aaa-8aaa-000000000009 => 403 (admin.authorization.denied) — the known fail-closed anonymous fallback documented in 093; bootstrapped Development admin 01a036c2-970e-7000-8eb7-94bf5cc2d8db => 200 {"gate":"Enabled","ready":true,…}. Catalog: exactly seven canonical flat methods, 14 translations, active = post:standard, tipax:express, tipax:standard, store_courier, in_person; inactive = post:express, snapp_courier (both historically inactive methods remain inactive).
+- Route mounting without a live write: GET => 405 Allow: PUT and OPTIONS => 405 Allow: PUT on …/activation (was 404 pre-deploy) — method-correct server metadata proves the 096 PUT route is mounted. No PUT was sent to the post-deploy Host.
+
+MISSION B — REAL SHARED BROWSER READ-ONLY PROOF (http://localhost:3000/fa/admin/shipping-services)
+- Authenticated Development administrator session (actor confirmed by GET /api/auth/me in the same tab = 01a036c2-970e-7000-8eb7-94bf5cc2d8db, the subject that gets 200 on the one-level route). No credential/session id was read out or recorded.
+- Shell/tabs/list: dir=rtl, heading «سرویس ارسال — کاتالوگ یکسطحی», five Persian tabs «سرویسها / تعرفه و پوشش / بستهبندی و کرایه / برنامه کاری و ظرفیت / بررسی هزینه», exactly 7 flat method rows, and 7 × the existing 094 «ویرایش نام» action. 094 dialog re-verified OPEN>READ>CANCEL (pre-filled «اسنپ / پیک آنلاین», 3 language options, «ذخیره» present) — never saved.
+- Option-backed ACTIVE post:standard: context «روش یکسطحی post:standard → سرویس post · standard» (server-owned 086 binding; no client-side code splitting), state «وضعیت فعلی (از سرور): فعال», impact statement about leaving the storefront-eligible list, action «غیرفعالسازی», confirmation dialog visible (478x137) titled «غیرفعالسازی روش ارسال» with «کد روش (تغییرناپذیر): post:standard», impact «این روش غیرفعال میشود، … ادامه میدهید؟», submit «تأیید غیرفعالسازی» => explicit DEACTIVATION confirmation; dialog CANCELLED, never confirmed (shot-01).
+- Option-backed INACTIVE post:express: selected via the in-app row action; state «غیرفعال», action «فعالسازی», confirmation dialog with impact «این روش فعال میشود و در فروشگاه برای انتخاب مشتری واجد شرایط میشود. ادامه میدهید؟» and submit «تأیید فعالسازی» => explicit ACTIVATION confirmation; CANCELLED, never confirmed (shot-02).
+- Optionless store_courier / in_person / snapp_courier: each renders only «<code> — فعالسازی این نوع سرویس هنوز پشتیبانی نمیشود.» with NO functional toggle (toggle element absent from the DOM for all three) and the always-mounted confirm submit hidden (0x0) and disabled (shot-03). No implicit enablement of post:express or snapp_courier.
+- No fake success / no optimistic state / no write: a page-level fetch interceptor recorded ZERO non-GET requests across all dialog opens/cancels; the only activation-related traffic was GET …/one-level/{code}/binding per selection; no alert/success region ever rendered; after every cancel the displayed state still equalled server truth («فعال» for post:standard, «غیرفعال» for post:express).
+- Server truth after the whole read-only run: gate=Enabled, ready=true, 7 methods, 14 translations, inactive = post:express,snapp_courier (unchanged). Screenshots: shot-01-post-standard-deactivate-confirm.png, shot-02-post-express-activate-confirm.png, shot-03-snapp-optionless-no-toggle.png, shot-04-tab1-post-standard-control.png.
+- LIMITATION, stated rather than manufactured: the successful-write branch (live PUT confirmation + catalog/binding re-read) is NOT VERIFIED live — no live activation write was performed. It remains covered only by the historical 096 backend and 097 frontend tests.
+
+MISSION C — BOUNDED EVIDENCE AND HANDOFF
+- No production source changed, so no new backend/frontend tests were run; historical results stand by reference (096 Fulfillment 154/154, 097 frontend 204/204) and are NOT presented as newly executed. Commands actually executed for this task: 1 × dotnet build, 1 × host-stack.ps1 restart, read-only HTTP probes (GET/OPTIONS), read-only psql SELECT parity, browser read-only verification, git commit/push.
+- Read-only DB parity (container postgres-db, db tooba_alpha, `-t -A` SELECT only), IDENTICAL pre and post: legacy_services=5, legacy_options=4, legacy_service_translations=10, legacy_option_translations=8, one_level_methods=7, one_level_translations=14, method_codes=in_person,post:express,post:standard,snapp_courier,store_courier,tipax:express,tipax:standard, inactive_methods=post:express,snapp_courier, inactive_options=express, option_natural_hash=4fd8872b79e0141c44385b6f44b9f691, seller_orders=26, order_lines=37, fulfillments=9 (matching 093's historical parity 26/37/9). No activation update, rate/policy/schedule write, migration, seed, COD or Checkout change.
+- Master recovery updated ONLY by its own append-only checkpoint convention (a "## Checkpoint — TB-SHIPPING-ONE-LEVEL-TABS-098 (append-only, 2026-10-16)" block; no existing entry rewritten).
+- Rollback recorded and reproducible: `-Action stop` then `-Action start` without -GateShippingOneLevelCatalog restores gate-OFF defaults (one-level shell disappears, legacy screen returns); `-OutDir .tmp-dev-host-out-5088 -NoBuild` returns to the pre-098 build directory. Kept deliberately: the shared Host stays gate-ON because the prior shared state was also gate-ON, loopback-only, with unchanged 401/403 authorization.
+
+CHANGED PATHS (exactly, at 240497b23): docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-098.md (new); docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-098/browser-read-only-proof.txt, build-098.txt, db-parity-pre.txt, db-parity-post.txt, parity-pre.sql, parity-post.sql, post-deploy-auth-route-proof.txt, rollout-restart.txt, shot-01…shot-04 *.png (all new); docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md (append-only checkpoint). Bookkeeping-only follow-up commit bdc9632d0 stamps that Code-SHA. No src/** file modified. Task receipt unstaged/untracked.
+
+ACCEPTANCE MAPPING: current-code shared Host = YES (096 route mounted, proven by 405 Allow: PUT and by the live activation control rendering); gate-ON Development = YES (ephemeral process env only); authenticated five-tab page = YES with the flat seven-method list and both confirmation controls; optionless refusals = YES for all three methods; unchanged DB = YES (identical pre/post read-only parity); reversible gate-OFF procedure = RECORDED. Live activation writes were NOT tested and are not claimed.
+
+BLOCKERS (for the Architect; none invalidates this proof): (1) the live write branch of the 096 endpoint remains unverified in the shared Development environment by design of this task; (2) the anonymous server-side admin fallback in src/frontend/lib/server/host-client.ts still sends the guest actor id, so anonymous RSC admin reads stay 403 and the one-level gate reads as disabled (documented in 093, fail-closed, deliberately unchanged — needs an identity decision); (3) the 30-minute hard timebox was exceeded (~40 minutes measured), disclosed above.
+END_TOOBA_WORKER_RESULT
