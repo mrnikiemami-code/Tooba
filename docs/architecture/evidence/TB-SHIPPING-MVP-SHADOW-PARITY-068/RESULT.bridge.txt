@@ -1,0 +1,161 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-SHADOW-PARITY-068
+Parent-Task: TB-SHIPPING-MVP-DESTINATION-LIVE-067
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE
+Mode: BOUNDED_EXISTING_DEV_SHIPPING_POLICY_PARITY_PROOF
+Bridge-Task-Row: 7b6f87d4-1d1a-4236-88dd-90b4e844668a
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 2bca9e0e602c7a025108215edf0986a1a31b7346
+Base-SHA: 2bca9e0e602c7a025108215edf0986a1a31b7346
+Code-SHA: NONE
+Evidence-SHA: faa0fdc8bd3912a3ca5707d3c7877ce27deadc0b
+automaticNextImplementationTask: NONE
+
+TARGET PROVENANCE (no PID assumption)
+Current Development host process = Tooba.Host.exe pid 35696 (post-restore), listening 127.0.0.1:5088; the
+outdated 067 PID was stopped and never reused as evidence. Environment re-proven as Development by
+GET /v1/admin/dev-context -> 200 {actorLabel=admin-actor@tooba.local, tenantId=store-alpha} (that route is
+mapped only inside app.Environment.IsDevelopment()) and GET /health -> 200 {"status":"ok"}. Configuration of
+the running host: Tooba:Edition=SingleStore, DeploymentId=dev-singlestore, one active tenant store-alpha
+with ConnectionReference=tenant-alpha -> Host=127.0.0.1;Port=5432;Database=tooba_alpha. Independently
+confirmed with read-only SQL against the container owning :5432 (postgres-db, postgres:17):
+select current_database() = tooba_alpha. No production connection reference exists in this configuration.
+No database write of any kind was issued by this task: every data change went through the authorized
+Shipping admin HTTP routes with the development admin actor.
+
+MISSION A - REAL METHOD->SERVICE MAPPING AND PRECEDENCE (documented, not guessed)
+StorefrontShippingService builds methodCode = "<service.Code>:<option.Code>" and serviceCode = service.Code,
+so methodCode is NOT serviceCode and is never equated. Live DB fulfillment service tree read over the
+authorized admin route: post(owning option "standard"), tipax(options "express","standard"),
+store_courier(no options), in_person(no options). snapp_courier is listed in
+Tooba:ShippingMethods:EnabledCodes=Development but has NO row in the DB shipping-service tree, so the
+storefront never offers it. Legacy quote: price = BasePrice unless FreeAboveSubtotal is set and
+cartSubtotal >= threshold, then 0; leadDays = rate.LeadDays; promise =
+today + max(sellerPreparationDays) + methodLeadDays; the development host has no
+Tooba:ShippingMethods:Rates section, so the built-in default rate table applies, with
+DefaultSellerPreparationDays=1 and a per-seller override putting the observed seller
+(01a030d1-40cb-7000-8abe-6d31739956c5) at 3.
+Measured legacy result for the representative cart (subtotal 8702542 IRR, البرز/کرج):
+post:standard=120000/lead4 (service post), tipax:express=260000/lead1 (service tipax),
+tipax:standard=180000/lead3 (service tipax), store_courier=75000/lead1 (service store_courier),
+in_person=0/lead0 (service in_person).
+Shipping-owned precedence (ShippingRatePolicyEngine via the read-only IShippingRateQuoteLookup seam):
+policies filtered by serviceCode AND countryId, then IsActive, then Covers(destination); deepest scope level
+wins; two equally specific covering policies are ScopeConflict and are never resolved by row order;
+currency must match; an ACTIVE coverage grant for the same service+destination is required or the result is
+NotCovered (fail-closed - an empty grant set is not "no restriction"); Shipping itself evaluates
+FreeAboveThreshold.
+COMPARABILITY: post, store_courier and in_person are exactly comparable (one legacy amount per service
+code). tipax is NOT per-option comparable: a rate policy is keyed by ServiceCode only and a duplicate scope
+for the same service is rejected, so one policy can carry one amount while legacy tipax publishes two
+differently priced options. snapp_courier is not comparable at all (configured enabled, absent from the
+service tree). Per-seller preparation days cannot be represented by one platform-wide policy.
+
+MISSION B - POLICY/GRANT FIXTURE LEDGER (SYNTHETIC, DEVELOPMENT-ONLY, through admin HTTP)
+Scope of every fixture: country IR e3451206-e503-51a8-91ad-afa9ab70e330 / administrative area alborz
+1f8050a8-c325-59fa-959f-82d76b5b2bc5 (area level, deliberately NOT the existing 065 city-level rows).
+post          ratePolicyId 01a13d65-cebe-7000-8b67-50096b8b8a4d charge 120000 prep 1 lead 4
+              coverageGrantId 01a13d65-cf50-7000-9436-100faa454cc0
+store_courier ratePolicyId 01a13d65-cf13-7000-b9bb-d73f95c9b65f charge 75000  prep 1 lead 1
+              coverageGrantId 01a13d65-cf6d-7000-89ee-01e58d680d09
+in_person     ratePolicyId 01a13d65-cf25-7000-8064-f76ca9186f76 charge 0      prep 1 lead 0
+              coverageGrantId 01a13d65-cf7d-7000-a9e5-efcf060f0a90
+tipax         ratePolicyId 01a13d65-cf37-7000-ad21-ac8e9b2c89d7 charge 180000 prep 1 lead 3
+              coverageGrantId 01a13d65-cf8e-7000-a8e5-2205f6167d63
+These amounts are TEST FIXTURES chosen to reproduce the MEASURED legacy amounts so a comparison is
+possible; they are NOT user-approved commercial tariffs and must never be presented as such.
+BEFORE -> AFTER counts (authorized admin read, cross-checked by read-only SQL):
+post 3->4 rate policies (0->1 active) and 3->4 grants (0->1 active) - the other three are the six
+identified 065 fixtures, all still inactive and untouched; tipax 0->1 (0->1); store_courier 0->1 (0->1);
+in_person 0->1 (0->1); snapp_courier 0->0. No pre-existing row was modified. Reversibility (the admin
+surface exposes no delete route, so deactivation is the strongest available state, and an inactive row
+neither covers nor quotes): PATCH /v1/admin/shipping-services/<service>/rates/<ratePolicyId>/active and
+PATCH /v1/admin/shipping-services/<service>/coverage-grants/<grantId>/active with {"isActive":false}.
+No broad IR grant was inserted; only the single representative area was seeded. No SQL bypass of business
+rules was used.
+
+MISSION C - EXPLICIT SHADOW GATE PROOF, LIVE CART PARITY/MISMATCH MATRIX
+StorefrontShippingRateAuthorityOptions is a startup IOptions<T> snapshot, so the temporary
+Development-scoped override had to be process environment variables on a controlled relaunch:
+Tooba__ShippingRateAuthority__ShadowEnabled=true and Tooba__ShippingRateAuthority__PrerequisitesConfirmed
+=true. No configuration file was created or modified; the override lives only in that process environment
+and dies with it. (IOptions<T> being a snapshot is itself a finding: the gate cannot be toggled without a
+restart.)
+Cart/session: ONE disposable Development customer created through canonical /v1/auth/register +
+/v1/auth/login and ONE canonical cart with one real catalogue line (cart 01a13d66-3b5a-7000-b748-bfb2f3680793),
+no order and no payment; the same session was reused for the OFF, ON and post-restore runs. No new database
+and no fabricated role.
+Shadow ACTUALLY RAN (read from the observer's own stable diagnostic, not inferred from an unchanged
+projection):
+ [1] province only (البرز)                      code=DestinationNotComparable candidates=5 outcomes=none
+ [2] province + city text (البرز + کرج)         code=DestinationNotComparable candidates=5 outcomes=none
+ [3] validated Geography ids (IR/alborz/karaj)  code=Observed candidates=5 outcomes=AmountMismatch,Match
+ [4] malformed city id in valid hierarchy       code=DestinationNotComparable candidates=5 outcomes=none
+ [5] incoherent hierarchy (area != city parent) code=DestinationNotComparable candidates=5 outcomes=none
+ [6] tipax-isolation variant (tipax rate+grant inactive)
+                                                code=Observed candidates=5 outcomes=LegacyAllowedShippingDenied,Match
+UNCHANGED LEGACY PROJECTION: the returned payload is byte-identical with the gate OFF and ON for all five
+shapes (length 2322 each) and byte-identical again after the restore (OFF(M3)==ON(M3)==post-restore(M3)
+verified across processes). Legacy methods, amounts, subtotal and provinces are unchanged in every shape.
+MISMATCH MATRIX (the only assignment consistent with the observed outcome sets and the measured legacy
+amounts): post 120000 vs 120000 = Match; tipax:standard 180000 vs 180000 = Match; tipax:express 260000 vs
+180000 = AmountMismatch, cause = one policy per ServiceCode, so the second priced option of the same service
+cannot be represented; store_courier 75000 vs 75000 = Match; in_person 0 vs 0 = Match. Request [6] is what
+proves the tipax result is a real evaluation and not a skipped one: with tipax coverage removed both tipax
+candidates fail closed while the four single-amount services still Match.
+ELIGIBILITY: legacy allowed all five methods at this destination and Shipping agreed in six of the seven
+Observed evaluations once coverage was seeded; coverage is the only lever and is fail-closed.
+DELIVERY SEMANTICS: not comparable from this seam at all - the shadow compares amount and eligibility only,
+and Shipping keeps PreparationDays and LeadDays separate while legacy collapses seller preparation into one
+platform default plus a per-seller map.
+
+MISSION D - NO SOURCE CHANGE (PARTIAL, specific blockers)
+No source file was changed. The observed AmountMismatch cannot be fixed inside the allowed paths without
+changing the Shipping rate-policy DATA SHAPE (adding an option/rate-key dimension) or silently rewriting
+pricing, both explicitly out of scope, and no cutover switch was created. Specific items requiring
+Architect decision: (1) option-level pricing - decide whether Shipping rate policy must gain an option
+dimension or whether a service-level collapse (one published amount per service code) is acceptable, since
+until then tipax-style services cannot reach amount parity by construction; (2) coverage seeding approval
+per service + real destination; (3) legacy text resolution gap - ResolveLegacyAsync("IR","البرز",null,null)
+returned a non-Resolved outcome although read-only SQL proves country IR is active (country_code='IR') and
+the alborz area carries the translation label البرز with byte-identical UTF-8
+(d8a7d984d8a8d8b1d8b2); the resolver returned a safe non-comparison and the exact step was NOT isolated
+inside the timebox, so it is recorded as an open gap rather than guessed (the live storefront is unaffected
+because 067 already makes the frontend send validated ids, which is request [3]); (4) snapp_courier -
+config says enabled while the DB service tree has no row, so decide which side is wrong; (5) per-seller
+preparation days cannot be expressed by a single platform-wide policy.
+
+MISSION E - FOCUSED REGRESSION, RESTORE, ELAPSED
+Focused regression only: 5 shapes OFF, 5 shapes ON, 1 tipax variant, 1 post-restore - no broad Host guard
+suite, no second scratch environment, no repeated test loops. No build was performed (no source change), so
+the host never held a DLL lock. Restore: the override process was stopped and the host relaunched with NO
+override environment; GET /health -> 200; the restored process logged ZERO observer lines for the same
+projection request, which is positive evidence the flags are OFF again because the observer returns the
+Disabled code before touching the logger when the gate is closed. The tipax variant was explicitly
+re-activated and the final admin read persisted. Raw host stdout was redirected to the machine temp
+directory only and never added to the repository; evidence contains filtered excerpts. PROCESS RESTORE
+HISTORY: 3 controlled stop/relaunch cycles (pid 11540 -> 18172 -> 28836 -> 35696, final host healthy). One
+of them was discarded: the first override relaunch set Logging__LogLevel__Default=Warning successfully but
+the category-specific log-level override could not be set with the PowerShell $env: syntax because the
+category name contains dots, which suppressed the very diagnostic that proves the shadow ran; the fix was a
+single additional controlled relaunch with the log level corrected, and it is reported here rather than
+hidden. Elapsed ~47 minutes, OVER the 45-minute HARD timebox, reported as such; the overrun came from that
+discarded relaunch plus the attempted isolation of the legacy-text destination gap.
+FOCUSED TESTS: none added or run, because no source changed and the task scopes tests to changed source.
+PATHS: docs/planning/shipping/SHIPPING-MVP-SHADOW-PARITY-068.md and
+docs/architecture/evidence/TB-SHIPPING-MVP-SHADOW-PARITY-068/** only. The received task receipt is preserved
+at docs/ai/tasks/TB-SHIPPING-MVP-SHADOW-PARITY-068.task.md and was never staged. All unrelated dirty and
+untracked files were preserved; no reset, stash, rebase or force push.
+COMMIT/PUSH: evidence commit faa0fdc8bd3912a3ca5707d3c7877ce27deadc0b on main, pushed to origin/main; this
+result artifact is the immediately following evidence-only commit.
+VERDICT: PARTIAL. The shadow gate was genuinely enabled and produced real comparable evidence over
+authorized real-cart Development HTTP, the returned legacy projection stayed byte-identical, one observed
+AmountMismatch is fully explained, and the runtime override was restored with a healthy host - but an
+observed mismatch remains (service-vs-option collapse) and one destination-resolution gap is not isolated,
+so this is explicitly NOT claimed as parity and NOT a Shipping or Checkout production-readiness assertion.
+END_TOOBA_WORKER_RESULT
