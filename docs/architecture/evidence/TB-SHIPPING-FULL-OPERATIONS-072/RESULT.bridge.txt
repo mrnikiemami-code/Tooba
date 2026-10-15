@@ -1,0 +1,73 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-FULL-OPERATIONS-072
+Parent-Task: TB-SHIPPING-FULL-OPERATIONS-071
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FULL-OPERATIONS
+Mode: BOUNDED_EXISTING_ADMIN_WEEKLY_SCHEDULE_EDITOR
+Bridge-Task-Row: cbf6566c-3bd1-4569-9dc1-f93d1014f7da
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 5ec3a37e1dbdfab723d093a3ec6e9c4edf18975c
+Base-SHA: 5ec3a37e1dbdfab723d093a3ec6e9c4edf18975c
+Code-SHA: 40d953be5ee107cefc006de38587c918c000b265
+Evidence-SHA: 40d953be5ee107cefc006de38587c918c000b265
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+Claimed exactly one Pending task on tooba-main (row cbf6566c-3bd1-4569-9dc1-f93d1014f7da) via GET /api/tasks/next?channelId=tooba-main. Received .task.md preserved verbatim and UNSTAGED at docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-072.task.md (never added to the index, still untracked after the commit). Read AGENTS.md, docs/ai/TOOBA-PIPELINE-PROTOCOL.md, docs/planning/shipping/SHIPPING-FULL-OPERATIONS-071.md, the current Shipping schedule Contracts/API, the existing shipping-services UI/dialog/model/test patterns and the existing Fulfillment tree access. git fetch origin: HEAD == origin/main == 5ec3a37e1dbdfab723d093a3ec6e9c4edf18975c, exactly the Expected-Base-SHA (the 071 result-bookkeeping commit). No source drift overlapped scope, so no RECOVERY_CONFLICT. No reset, stash, rebase or force-push was performed; all unrelated dirty paths were preserved (see below).
+
+IMPLEMENTATION
+A. Discoverability. One new row action «برنامه کاری ارسال» (Clock icon, testId shipping-service-schedule-{shippingServiceId}) was added to the EXISTING /admin/shipping-services grid, immediately after the existing «نرخ و پوشش» action, opening one focused dialog. No new route, no new page, no combined mega-form. The existing design-system Dialog plus plain buttons/labels and the screen's existing notice convention are reused. serviceCode is authoritative from the grid row; serviceName is only a display label.
+B. Real API binding, no fake data. The dialog is wired to the three shipped 071 routes only:
+   GET   /v1/admin/shipping-services/{serviceCode}/operating-schedules
+   PUT   /v1/admin/shipping-services/{serviceCode}/operating-schedules
+   PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/{scheduleId}/active
+   Wire casing and time serialization were taken from the backend source: request body {serviceCode,timeZoneId,windows:[{weekday,startTime,endTime,capacity}],optionCode} with TimeOnly-compatible HH:mm:ss strings and optionCode null for the service level. Captured live bodies prove the exact casing: {"serviceCode":"tipax","timeZoneId":"Asia/Tehran","windows":[{"weekday":7,"startTime":"13:00:00","endTime":"14:00:00","capacity":null},{"weekday":7,"startTime":"16:30:00","endTime":"18:00:00","capacity":25}],"optionCode":"standard"} and {"isActive":false}. No in-memory patching: every write is followed by a real GET. Saved schedules are displayed by option identity, active status, timezone, window count, per-window ranges and configured capacity.
+C. Persian RTL editor. ISO identity 1..7 with 7 = یکشنبه; display order starts at شنبه without remapping the numeric identity (proved by the live wire body carrying weekday 7 for a window shown as یکشنبه). Multiple start/end rows per day, add/remove per weekday, strict 24-hour HH:mm fields, explicit timezone input defaulting to Asia/Tehran (never browser-inferred, with a stated reason in the UI), optional positive capacity. Local validation covers invalid weekday, invalid time, end<=start (reversed, zero-length and overnight), same-day overlap, invalid capacity and foreign/unknown option. Field-adjacent Persian messages are rendered; stable API codes are mapped through a dedicated table. Layout is a wrapping grid that stays usable on narrow widths with no clipped save/close. Capacity is labelled exactly «ظرفیت تنظیم‌شده (هنوز اعمال نمی‌شود)» and is never called remaining/reserved; the absence of a schedule is disclosed as «هیچ ساعت صریحی ثبت نشده» and explicitly not a Checkout block. The dialog also states in-place that these windows are carrier delivery-availability, not a customer delivery promise (the promise stays Order-owned).
+D. Safe and auditable saves. Loading, saving and error states are distinct; the save button is disabled while a request is pending and while the read state is not ok; a failed write triggers a re-read so the form falls back to real server state instead of the failed desire; no fake success is shown on network failure; the 071 upsert replaces only the selected service/option window set. Active toggle persists and refreshes. 401/403 are surfaced visibly and never bypassed. An absent schedule renders a real empty state and can be created from the same editor.
+E. Fulfillment option identity. Selectable options are read from the EXISTING Fulfillment service tree via the existing loadShippingMethodTree() admin seam; no option name is invented. The service-level schedule is offered as a separate, explicitly explained fallback identity (optionCode null) and saving under one identity never overwrites another.
+
+LIVE BROWSER PROOF (existing Development, no restart)
+Target positively identified before acting: existing Next dev frontend on http://127.0.0.1:3000 (pid 31580, started 2026-10-11 07:22) and existing Development host on http://127.0.0.1:5088 (pid 38456). No process was restarted, no parallel instance and no second database was created. Provenance: GET /__platform-commerce => 200 {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","defaultMarketReference":"IR"} — Development, never production/staging. Actor: the existing canonical Development admin actor header 01a036c2-970e-7000-8eb7-94bf5cc2d8db.
+1. Read/display of the saved 071 fixture. GET /v1/admin/shipping-services/tipax/operating-schedules => 200 with scheduleId 01a13deb-cd7c-7000-a11e-641338237a1a, optionCode standard, timeZoneId Asia/Tehran, isActive true, windows weekday 7 13:00:00–14:00:00 (no capacity) and weekday 7 16:30:00–18:00:00 (capacity 25), configuredCapacityTotal 25. The dialog rendered «معمولی / فعال / Asia/Tehran / بازه‌ها: ۲ / ظرفیت تنظیم‌شده (هنوز اعمال نمی‌شود): ۲۵», «یکشنبه · 13:00–14:00» and «یکشنبه · 16:30–18:00 · ظرفیت تنظیم‌شده: ۲۵», with header «برنامه‌های فعال: ۱ از ۱ · مجموع بازه‌ها: ۲ · ظرفیت تنظیم‌شده (هنوز اعمال نمی‌شود): ۲۵». This proves both the Sunday (weekday 7) day mapping and the HH:mm:ss -> HH:mm -> HH:mm:ss time round-trip.
+2. Edit/update. The capacity of the second Sunday window was edited in the form and saved from the UI: PUT .../tipax/operating-schedules => 200 with the body quoted in section B, response configuredCapacityTotal 30, and the notice «برنامهٔ «معمولی» با ۲ بازه ذخیره شد.» Read-after-write then showed «ظرفیت تنظیم‌شده (هنوز اعمال نمی‌شود): ۳۰». The same UI path was then used to write capacity 25 back, and the persisted row again reads «یکشنبه · 16:30–18:00 · ظرفیت تنظیم‌شده: ۲۵» (configuredCapacityTotal 25).
+3. Active toggle. PATCH .../operating-schedules/01a13deb-cd7c-7000-a11e-641338237a1a/active => 200 with {"isActive":false}; the follow-up GET returned isActive:false; the row rendered «غیرفعال», the button flipped to «فعال‌سازی» and the notice read «برنامهٔ «معمولی» غیرفعال شد.» Re-activation through the same control returned 200 {"isActive":true}, GET isActive:true, row «فعال» and summary «برنامه‌های فعال: ۱ از ۱». Persistence and refresh are therefore real. A first toggle attempt made while the dialog was closed produced the stale-serviceCode path /v1/admin/shipping-services//operating-schedules/{id}/active => 404 and the UI showed «تغییر وضعیت برنامه ناموفق بود؛ دوباره تلاش کنید.» with no fabricated success; this is recorded as observed behaviour, not hidden.
+4. Validation refusals (real UI interaction). Same-day overlap 13:00–17:00 vs 16:30–18:00 on یکشنبه was refused locally with «دو بازه در روز «یکشنبه» هم‌پوشانی دارند؛ بازه‌های چسبیده (مثلاً 13:00–14:00 و 14:00–15:00) مجازند.» and no PUT was issued. Adjacent 13:00–14:00 and 14:00–15:00 on the same day produced no overlap issue and were accepted, confirming the half-open [start,end) contract. Invalid time 25:99 gave «ساعت پایان باید به شکل ۲۴ساعته HH:mm باشد (مثلاً 14:00).» and capacity -3 gave «ظرفیت باید عددی مثبت و کمتر از یک میلیون باشد یا خالی بماند.»; the resulting failed write showed «ذخیرهٔ برنامهٔ ارسال ناموفق بود؛ دوباره تلاش کنید.» and the stored fixture was verified afterwards to still be the original two windows with capacity 25.
+5. Option isolation. Selecting «پیشتاز (express)» switched the editor to that identity («هدف ویرایش: پیشتاز», zero rows, «ایجاد برنامه» heading) with the existing «معمولی (standard)» row still visible and intact; no express schedule was written. An independent read-only probe (docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-072/probe-schedules.ps1, GET only) against the same host returned: tipax 200 with the single standard schedule, and post 200, snapp_courier 200, store_courier 200, in_person 200 each with "schedules":[] — so no other service or option was modified.
+6. Authorization. With the admin actor header absent from the page's own requests the dialog rendered «دسترسی به برنامهٔ ارسال ندارید؛ این بخش به مجوز مشاهده و مدیریت Fulfillment نیاز دارد.» (shipping-schedule-denied) with the save control disabled, and the direct call returned 401 {"errorCode":"admin.actor.missing"}. The page was reloaded immediately afterwards and the real actor header was confirmed restored (01a036c2-970e-7000-8eb7-94bf5cc2d8db). Nothing was bypassed and no permission was added.
+7. Before/after data. Before the browser session: tipax/standard Sunday 13:00:00–14:00:00 and 16:30:00–18:00:00 (capacity 25), isActive true. After all interaction: identical — same scheduleId 01a13deb-cd7c-7000-a11e-641338237a1a, same two windows, configuredCapacityTotal 25, isActive true. Only this one schedule row was ever written; no rate, grant, checkout, order, customer quote or other service row was touched, and no capacity was enforced anywhere.
+
+TESTS / CHECKS ACTUALLY RUN
+- Focused new tests: shipping-operating-schedule-model.test.ts (15) + shipping-operating-schedule-api.test.ts (8) = 23/23 pass, 0 fail (log-focused-tests.txt). They cover ISO weekday identity, strict 24-hour parsing, HH:mm:ss wire round-trip, adjacency vs overlap, reversed/zero-length/overnight refusal, invalid weekday/time/capacity, option identity, server-order preservation, configured-only capacity wording, empty-set disclosure, summaries and stable-code mapping; the API tests exercise GET/PUT/PATCH against an in-memory fixture implementing the real 071 contract, so no Development database row is written by tests.
+- Existing shipping frontend tests (shipping-services-form-model, shipping-services-roundtrip, shipping-rates-coverage-model, shipping-destination-picker): 36/36 pass, 0 fail (log-existing-shipping-tests.txt).
+- npx tsc --noEmit across the whole frontend: exit 0, zero errors.
+- Frontend architecture guards: 7/8 pass (log-architecture-guards.txt). The single failure is the pre-existing shrink-only size baseline listing category-admin-screen.tsx (2230 > 2215), admin-landing-page-composer.tsx (1442 > 1440), storefront-landing-blocks.tsx (1033 > 1026), storefront-shipping.tsx (1033 > 945) and shared-composition-renderer.tsx (918 > 907). None of those five files is touched by this task and all five are unchanged on disk (git status confirms), so the growth is pre-existing repository dirt, not introduced here; the three new source files are all well inside the limit. Not repaired because that would be unrelated out-of-scope work.
+- No backend rebuild, no backend test run (Host still holds its DLLs), no broad suite, no waiting loop.
+
+TIMING
+Bridge claim at 2026-10-15T05:53:40Z; result posted at 2026-10-15T06:01Z; elapsed inside the 45-minute HARD timebox with the implementation, live proof, tests, documentation, commit and push all completed. No time was spent on build/restoration loops; the already-running Development frontend and host were used as-is.
+
+CHANGED PATHS (all inside ALLOWED PATHS)
+- src/frontend/app/admin/shipping-services/shipping-operating-schedule-model.ts (new)
+- src/frontend/app/admin/shipping-services/shipping-operating-schedule-model.test.ts (new)
+- src/frontend/app/admin/shipping-services/shipping-operating-schedule-api.ts (new)
+- src/frontend/app/admin/shipping-services/shipping-operating-schedule-api.test.ts (new)
+- src/frontend/app/admin/shipping-services/shipping-operating-schedule-dialog.tsx (new)
+- src/frontend/app/admin/shipping-services-screen.tsx (modified: +22 lines only — Clock import, dialog import, scheduleTarget state, one row action, one dialog render)
+- docs/planning/shipping/SHIPPING-FULL-OPERATIONS-072.md (new)
+- docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-072/** (new: summary.md, log-browser-proof.txt, log-focused-tests.txt, log-existing-shipping-tests.txt, log-architecture-guards.txt, log-isolation-probe.txt, probe-schedules.ps1, ui-01..ui-06 PNGs, bridge-task-row.txt, RESULT.bridge.txt, post-result.js)
+- docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-072.task.md (receipt only, preserved verbatim, NEVER STAGED — still untracked)
+No backend production source, migration, contract, permission or unrelated file was modified.
+
+GIT
+Single commit 40d953be5ee107cefc006de38587c918c000b265 "feat(shipping): admin weekly operating-schedule editor (TB-SHIPPING-FULL-OPERATIONS-072)". git push origin main succeeded (5ec3a37e1..40d953be5). git fetch origin then confirmed HEAD == origin/main == 40d953be5ee107cefc006de38587c918c000b265. All unrelated dirty paths present at task start were left exactly as they were and were not staged or committed.
+
+REMAINING BLOCKERS / OPEN ITEMS
+- Capacity remains configuration-only; no enforcement, counting, reservation or locking path exists, and the UI says so. Enforcement is a later task and was explicitly out of scope here.
+- No schedule consumer exists yet, so an absent or inactive schedule cannot block today's Checkout; this is disclosed in the dialog rather than asserted as enforcement.
+- The stale-serviceCode 404 observed in item 3 is a real, visible failure surface of the current client call path when the dialog is not open; it is recorded as evidence for the Architect and was not "fixed" by adding unrequested behaviour.
+- The pre-existing FE-SIZE baseline growth in five untouched files remains repository dirt for a separate, authorized task.
+END_TOOBA_WORKER_RESULT
