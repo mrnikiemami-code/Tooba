@@ -1,0 +1,80 @@
+﻿# Host stdout excerpt - TB-SHIPPING-FULL-OPERATIONS-071
+# Live Development host wrote ~8 MB of EF/HTTP debug noise. Retained: startup lines plus the
+# request/endpoint lifecycle lines for the new operating-schedules routes.
+# retained lines: 75
+
+2026-10-15T04:56:24.9489959\u002B00:00  Now listening on: http://127.0.0.1:5088
+2026-10-15T04:56:24.9491903\u002B00:00  Application started. Press Ctrl+C to shut down.
+2026-10-15T04:56:24.9492085\u002B00:00  Hosting environment: Development
+2026-10-15T04:57:06.0048973\u002B00:00  Request starting HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - - -
+2026-10-15T04:57:06.0060516\u002B00:00  Executing endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:57:06.0818274\u002B00:00  Executed endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:57:06.0822744\u002B00:00  Request finished HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 200 - application/json;+charset=utf-8 77.3605ms
+2026-10-15T04:57:06.1058914\u002B00:00  Request starting HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - application/json;+charset=utf-8 216
+2026-10-15T04:57:06.1085939\u002B00:00  Executing endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.2060731\u002B00:00  Executed endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.2062578\u002B00:00  Request finished HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 200 - application/json;+charset=utf-8 100.3552ms
+2026-10-15T04:57:06.2568299\u002B00:00  Request starting HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - - -
+2026-10-15T04:57:06.2570472\u002B00:00  Executing endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:57:06.2627082\u002B00:00  Executed endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:57:06.2628530\u002B00:00  Request finished HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 200 - application/json;+charset=utf-8 6.0068ms
+2026-10-15T04:57:06.2732111\u002B00:00  Request starting HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - application/json;+charset=utf-8 216
+2026-10-15T04:57:06.2734184\u002B00:00  Executing endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.2999431\u002B00:00  Executed endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3000704\u002B00:00  Request finished HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 200 - application/json;+charset=utf-8 26.8456ms
+2026-10-15T04:57:06.3135679\u002B00:00  Request starting HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - application/json;+charset=utf-8 202
+2026-10-15T04:57:06.3138321\u002B00:00  Executing endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3208836\u002B00:00  Executed endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3347160\u002B00:00  Request finished HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 400 - application/problem+json 21.1373ms
+2026-10-15T04:57:06.3466038\u002B00:00  Request starting HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - application/json;+charset=utf-8 144
+2026-10-15T04:57:06.3467997\u002B00:00  Executing endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3504098\u002B00:00  Executed endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3513683\u002B00:00  Request finished HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 400 - application/problem+json 4.7568ms
+2026-10-15T04:57:06.3539303\u002B00:00  Request starting HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - application/json;+charset=utf-8 144
+2026-10-15T04:57:06.3541060\u002B00:00  Executing endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3546198\u002B00:00  Executed endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3551656\u002B00:00  Request finished HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 400 - application/problem+json 1.2317ms
+2026-10-15T04:57:06.3575571\u002B00:00  Request starting HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - application/json;+charset=utf-8 144
+2026-10-15T04:57:06.3577050\u002B00:00  Executing endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3586568\u002B00:00  Executed endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3591466\u002B00:00  Request finished HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 400 - application/problem+json 1.5859ms
+2026-10-15T04:57:06.3613243\u002B00:00  Request starting HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - application/json;+charset=utf-8 141
+2026-10-15T04:57:06.3614445\u002B00:00  Executing endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3717007\u002B00:00  Executed endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3718192\u002B00:00  Request finished HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 400 - application/json;+charset=utf-8 10.4763ms
+2026-10-15T04:57:06.3746441\u002B00:00  Request starting HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - application/json;+charset=utf-8 145
+2026-10-15T04:57:06.3748286\u002B00:00  Executing endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3829913\u002B00:00  Executed endpoint 'HTTP: PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E UpsertAsync'
+2026-10-15T04:57:06.3831189\u002B00:00  Request finished HTTP/1.1 PUT http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 400 - application/json;+charset=utf-8 8.4627ms
+2026-10-15T04:57:06.3859502\u002B00:00  Request starting HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - - -
+2026-10-15T04:57:06.3861408\u002B00:00  Executing endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:57:06.3864994\u002B00:00  Executed endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:57:06.3869178\u002B00:00  Request finished HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 401 - application/problem+json 0.9578ms
+2026-10-15T04:57:06.3901268\u002B00:00  Request starting HTTP/1.1 PATCH http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules/01a13deb-cd7c-7000-a11e-641338237a1a/active - application/json;+charset=utf-8 18
+2026-10-15T04:57:06.3906638\u002B00:00  Executing endpoint 'HTTP: PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/{scheduleId:guid}/active =\u003E SetActiveAsync'
+2026-10-15T04:57:06.4069504\u002B00:00  Executed endpoint 'HTTP: PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/{scheduleId:guid}/active =\u003E SetActiveAsync'
+2026-10-15T04:57:06.4070523\u002B00:00  Request finished HTTP/1.1 PATCH http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules/01a13deb-cd7c-7000-a11e-641338237a1a/active - 200 - application/json;+charset=utf-8 16.9111ms
+2026-10-15T04:57:06.4179750\u002B00:00  Request starting HTTP/1.1 PATCH http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules/01a13deb-cd7c-7000-a11e-641338237a1a/active - application/json;+charset=utf-8 17
+2026-10-15T04:57:06.4182278\u002B00:00  Executing endpoint 'HTTP: PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/{scheduleId:guid}/active =\u003E SetActiveAsync'
+2026-10-15T04:57:06.4233639\u002B00:00  Executed endpoint 'HTTP: PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/{scheduleId:guid}/active =\u003E SetActiveAsync'
+2026-10-15T04:57:06.4234733\u002B00:00  Request finished HTTP/1.1 PATCH http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules/01a13deb-cd7c-7000-a11e-641338237a1a/active - 200 - application/json;+charset=utf-8 5.4878ms
+2026-10-15T04:57:06.4351146\u002B00:00  Request starting HTTP/1.1 PATCH http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules/01a13000-0000-7000-8000-000000000001/active - application/json;+charset=utf-8 18
+2026-10-15T04:57:06.4353347\u002B00:00  Executing endpoint 'HTTP: PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/{scheduleId:guid}/active =\u003E SetActiveAsync'
+2026-10-15T04:57:06.4384784\u002B00:00  Executed endpoint 'HTTP: PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/{scheduleId:guid}/active =\u003E SetActiveAsync'
+2026-10-15T04:57:06.4385663\u002B00:00  Request finished HTTP/1.1 PATCH http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules/01a13000-0000-7000-8000-000000000001/active - 400 - application/json;+charset=utf-8 3.4581ms
+2026-10-15T04:57:06.4405962\u002B00:00  Request starting HTTP/1.1 PATCH http://127.0.0.1:5088/v1/admin/shipping-services/post/operating-schedules/01a13deb-cd7c-7000-a11e-641338237a1a/active - application/json;+charset=utf-8 18
+2026-10-15T04:57:06.4407518\u002B00:00  Executing endpoint 'HTTP: PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/{scheduleId:guid}/active =\u003E SetActiveAsync'
+2026-10-15T04:57:06.4431184\u002B00:00  Executed endpoint 'HTTP: PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/{scheduleId:guid}/active =\u003E SetActiveAsync'
+2026-10-15T04:57:06.4432072\u002B00:00  Request finished HTTP/1.1 PATCH http://127.0.0.1:5088/v1/admin/shipping-services/post/operating-schedules/01a13deb-cd7c-7000-a11e-641338237a1a/active - 400 - application/json;+charset=utf-8 2.6012ms
+2026-10-15T04:57:06.4456902\u002B00:00  Request starting HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - - -
+2026-10-15T04:57:06.4458346\u002B00:00  Executing endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:57:06.4491164\u002B00:00  Executed endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:57:06.4491997\u002B00:00  Request finished HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 200 - application/json;+charset=utf-8 3.4961ms
+2026-10-15T04:58:17.7355848\u002B00:00  Request starting HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - - -
+2026-10-15T04:58:17.7357757\u002B00:00  Executing endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:58:17.7359745\u002B00:00  Executed endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:58:17.7361745\u002B00:00  Request finished HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 403 - application/problem+json 0.5869ms
+2026-10-15T04:58:17.7480809\u002B00:00  Request starting HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - - -
+2026-10-15T04:58:17.7482539\u002B00:00  Executing endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:58:17.7507975\u002B00:00  Executed endpoint 'HTTP: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules =\u003E ListAsync'
+2026-10-15T04:58:17.7509078\u002B00:00  Request finished HTTP/1.1 GET http://127.0.0.1:5088/v1/admin/shipping-services/tipax/operating-schedules - 200 - application/json;+charset=utf-8 2.8174ms

@@ -1,0 +1,144 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-FULL-OPERATIONS-071
+Parent-Task: TB-SHIPPING-MVP-FINAL-CLOSURE-070
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FULL-OPERATIONS
+Mode: BOUNDED_SCHEDULING_VERTICAL_SLICE
+Bridge-Task-Row: f29a31d3-7514-4453-9d38-a05e6ffd53a2
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 1c64b45731c59b16e36f6f4ed418219cef120800
+Base-SHA: 1c64b45731c59b16e36f6f4ed418219cef120800
+Code-SHA: d7b82f6d407d984a60018e2de19e16d693fd4008
+Evidence-SHA: d7b82f6d407d984a60018e2de19e16d693fd4008
+automaticNextImplementationTask: NONE
+SUMMARY: PASS. A working Shipping-owned weekly operating-schedule vertical slice now exists end to end:
+domain aggregate + value object, Contracts DTOs, stable error codes, CQRS handlers with FluentValidation,
+EF Core mapping with a Shipping-scoped migration, an authorized admin read/upsert/active-toggle API under
+the existing /v1/admin area, and focused tests. A real Sunday-only 13:00-14:00 window plus a second distinct
+Sunday window 16:30-18:00 (capacity 25) was created over live HTTP against the running Development host
+(127.0.0.1:5088, tenant store-alpha) and then verified by a DIRECT read of tooba_alpha, not merely by the API
+echo. Overlap, reversed, zero-length, overnight, out-of-range weekday, unresolvable timezone and unknown
+option writes are refused with stable codes and leave the previously persisted window set untouched. The
+authorization boundary was exercised live (401 unauthenticated, 403 unprivileged, 200 canonical Development
+admin). The migration is additive only: shipping.rate_policies (9 rows) and shipping.coverage_grants (7 rows)
+are unchanged. No file outside src/backend/Modules/Shipping/** references the new types, tables or routes, so
+an absent or inactive schedule cannot shut down legacy Checkout. Per-window capacity is CONFIGURATION ONLY and
+is labelled as such everywhere; no atomic reservation/counting path exists in this slice.
+OWNERSHIP AND SCOPE: Implemented entirely inside the Shipping module, capability-first and shallow:
+  Domain/Scheduling (ShippingOperatingSchedule aggregate, ShippingOperatingWindow value object)
+  Contracts/Scheduling (write/read DTOs) and Contracts/Errors (new stable codes)
+  Application/Scheduling (IShippingOperatingScheduleDirectory port + MediatR 12.5 commands/queries via ISender)
+  Application/Validation (FluentValidation rules emitting machine codes, never prose)
+  Infrastructure/Scheduling (EF directory implementation) and Infrastructure/Persistence (mapping + migration)
+  Endpoints/Admin (route mapping only; no business logic in the endpoint layer)
+Fulfillment continues to own service/option identity; Shipping only keys its schedule to an existing
+serviceCode and optional optionCode and validates that pair through the existing read seam. No Order, Payment,
+Pricing or Checkout authority was added and no writable cross-module Contracts seam was introduced: the
+schedule surface stays admin-only. No Host business authority was created; Program.cs and the Host module
+composition were NOT modified, because the new directory is module-owned DI and the routes ride the existing
+MapShippingEndpoints() composition (one added line inside the Shipping endpoints module).
+SCHEDULING SEMANTICS: ISO weekdays 1-7 (1=Monday ... 7=Sunday). Local time windows are half-open
+[start,end), so Sunday 13:00-14:00 and 14:00-15:00 are adjacent, not overlapping. Multiple windows per weekday
+are allowed; a window set may not overlap within a weekday. Overnight windows (end <= start) are explicitly
+REJECTED as range-invalid rather than silently wrapped, which is the safe and disclosed choice for this slice.
+Timezone is required and must resolve on the host (IANA preferred, e.g. Asia/Tehran). A schedule is keyed by
+(serviceCode, optionCode) with a unique index using NULLS NOT DISTINCT, so a service-level schedule (optionCode
+NULL) and option-level schedules can coexist without leaking into each other. Active flag plus nullable positive
+per-window capacity. Stable codes added: shipping.schedule.timezone.required, shipping.schedule.timezone.invalid,
+shipping.validation.schedule_weekday_out_of_range, shipping.validation.schedule_window_range_invalid,
+shipping.validation.schedule_window_overlap, shipping.validation.schedule_window_capacity_invalid,
+shipping.validation.schedule_windows_too_many, shipping.schedule.not_found, shipping.schedule.duplicate,
+shipping.service_scope.mismatch, plus the reused shipping.service_option.unknown for invented options.
+API AND MIGRATION: GET /v1/admin/shipping-services/{serviceCode}/operating-schedules (read all schedules for the
+service, optionally filtered), PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules (upsert one
+schedule, idempotent for a repeated body), PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/
+{scheduleId}/active (activate/deactivate). All three are under the existing admin area and use the existing
+fulfillment.view / fulfillment.manage authorization; no custom privilege bypass and no Results.Json shortcut.
+Migration 20261015045130_OperatingSchedule is Shipping-scoped, creating shipping.operating_schedules and
+shipping.operating_windows with the unique (service_code, option_code) index and CHECK constraints. It was
+applied ONLY to the positively verified Development tooba_alpha.
+TARGET PROVENANCE: GET /__platform-commerce returned 200 with edition SingleStore, deploymentId dev-singlestore,
+tenantId store-alpha, connectionReference tenant-alpha, resolvedHost 127.0.0.1, themeReference theme-alpha,
+defaultMarketReference IR. The database is tooba_alpha on localhost:5432. No Production or staging target was
+contacted and no scratch database was created; the pre-existing disposable Development data was used as
+permitted. No PID was assumed from an older task: the listening process on 127.0.0.1:5088 was re-identified
+(Tooba.Host.exe) before use, and the host was left running afterwards.
+REAL SUNDAY 13:00-14:00 PROOF (live HTTP + direct DB read): PUT with timeZoneId Asia/Tehran, isActive true and
+two weekday-7 windows: 13:00:00-14:00:00 (no capacity) and 16:30:00-18:00:00 (capacity 25) returned 200 with
+scheduleId 01a13deb-cd7c-7000-a11e-641338237a1a and configuredCapacityTotal 25. A follow-up GET returned the
+same schedule and window set. A direct database read (not the API echo) showed shipping.operating_schedules = 1
+row (tipax | standard | Asia/Tehran | t) and shipping.operating_windows = 2 rows (weekday=7 13:00-14:00
+capacity NULL; weekday=7 16:30-18:00 capacity 25). Repeating the identical body was idempotent: same schedule id,
+same two-window set, only updatedAt advanced. Live refusals, all 400 with stable codes and no partial write:
+overlap shipping.validation.schedule_window_overlap; reversed AND overnight shipping.validation.
+schedule_window_range_invalid; weekday 0 shipping.validation.schedule_weekday_out_of_range; option 'drone' that
+tipax does not own shipping.service_option.unknown; timezone 'Nowhere/Fake' shipping.schedule.timezone.invalid;
+missing schedule id shipping.schedule.not_found; toggling a tipax schedule through the post service path
+shipping.service_scope.mismatch. Deactivate and reactivate both returned 200 with the expected isActive value.
+TESTS: dotnet test src/backend/Modules/Shipping/Tooba.Shipping.Tests/Tooba.Shipping.Tests.csproj => Passed: 154,
+Failed: 0, Skipped: 0 (re-run on the committed tree; log-focused-tests.txt). New/updated coverage includes
+ShippingOperatingScheduleDomainTests (13), ShippingOperatingScheduleAdminTests (10),
+ShippingOperatingScheduleEndpointOwnershipTests (3), OperatingScheduleCompatibilityTests (3) and updated
+ShippingPersistenceModelTests. Covered: real Sunday 13:00-14:00 plus a second window accepted and read back;
+adjacent windows 13:00-14:00 / 14:00-15:00 NOT an overlap; overlapping windows refused; reversed, zero-length
+and overnight refused; weekday outside 1..7 refused; non-positive capacity refused; missing/invalid timezone
+refused; unknown option refused; cross-service toggle refused; repeated body idempotent; empty schedule set
+returned as a real empty answer and never a fabricated default; and an assertion that no file outside the
+Shipping module references the schedule types, tables or routes.
+COMPATIBILITY: The change is additive. No consumer reads the schedule, so an absent or inactive schedule is
+fail-open and cannot silently shut down legacy Checkout. The existing read-only rate-quote lookup seam is
+unchanged and no new cross-module seam was added. Host startup emits no shipping DDL because no schema migrator
+was registered for this module. Existing rate and coverage data is preserved (9 and 7 rows).
+CAPACITY ENFORCEMENT STATUS - DISCLOSED: per-window capacity and the derived configuredCapacityTotal are
+CONFIGURATION ONLY. They are stored, validated and returned, but this slice implements no atomic reservation,
+counting or locking path, so a configured value caps nothing at runtime. This is stated in the contract XML
+documentation, in the admin DTO and in the tests. Enforcing it is a later task (the 076 budget line).
+ROLLBACK: drop shipping.operating_windows and shipping.operating_schedules and delete the single
+shipping.__ef_migrations_history row for 20261015045130_OperatingSchedule, or run
+`dotnet ef database update OptionLevelRatePolicy` against tooba_alpha. No other table was touched, so rollback
+cannot damage rate policies, coverage grants or any other module's schema.
+ELAPSED: approximately 30 minutes of the 45-minute hard timebox. No repetitive loops and no repeated
+investigation were required.
+CHANGED PATHS (all within ALLOWED PATHS; one commit d7b82f6d4 pushed to main):
+  src/backend/Modules/Shipping/Tooba.Shipping.Domain/Scheduling/ShippingOperatingSchedule.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Domain/Scheduling/ShippingOperatingWindow.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Scheduling/ShippingScheduleContracts.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Errors/ShippingErrorCodes.cs (modified)
+  src/backend/Modules/Shipping/Tooba.Shipping.Application/Scheduling/Commands/ShippingScheduleCommands.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Application/Scheduling/Ports/IShippingOperatingScheduleDirectory.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Application/Validation/ShippingScheduleValidators.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Scheduling/ShippingOperatingScheduleDirectory.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/ShippingDbContext.cs (modified)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261015045130_OperatingSchedule.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261015045130_OperatingSchedule.Designer.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/ShippingDbContextModelSnapshot.cs (modified)
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/DependencyInjection/ShippingModule.cs (modified)
+  src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingOperatingScheduleEndpoints.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingRateCoverageEndpoints.cs (modified: one Map line)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Scheduling/ShippingOperatingScheduleDomainTests.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Scheduling/ShippingOperatingScheduleAdminTests.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/ShippingOperatingScheduleEndpointOwnershipTests.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Compatibility/OperatingScheduleCompatibilityTests.cs (new)
+  src/backend/Modules/Shipping/Tooba.Shipping.Tests/Persistence/ShippingPersistenceModelTests.cs (modified)
+  docs/planning/shipping/SHIPPING-FULL-OPERATIONS-071.md (new)
+  docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-071/** (new: summary.md, probe-schedule.ps1,
+    log-live-roundtrip.txt, log-focused-tests.txt, log-authorization-boundary.txt, bridge-task-row.txt,
+    host-stdout-071.excerpt.txt)
+  docs/ai/tasks/TB-SHIPPING-FULL-OPERATIONS-071.task.md (received receipt, preserved unstaged as required)
+GIT: Base 1c64b4573 confirmed as origin/main and an ancestor of the work. Commit d7b82f6d4 on main, pushed;
+git fetch origin then reported HEAD == origin/main == d7b82f6d407d984a60018e2de19e16d693fd4008. Only allowed
+paths were staged; no unrelated dirty or untracked file was modified, and no reset, stash, rebase or force-push
+was used. The oversized raw Development host stdout (about 8 MB of EF/HTTP debug noise, still held open by the
+running host) was deliberately NOT committed; a filtered excerpt proving the host started with the new routes
+and served them is committed instead. This result artifact and its posting helper are committed in the
+immediately following bookkeeping commit on main.
+BLOCKERS: none. Disclosures for Architect review: (1) per-window capacity is configuration-only and enforces
+nothing; (2) overnight windows are rejected rather than supported; (3) the Development fixture intentionally
+retains one active tipax/standard schedule with two Sunday windows as evidence; (4) this task is backend-only,
+so the Shipping admin UI editor for schedules is intentionally not part of 071. Worker PASS does not equal
+Architect ACCEPT.
+END_TOOBA_WORKER_RESULT
