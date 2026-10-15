@@ -1,0 +1,44 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-101 deployment facts
+captured_utc=2026-10-15T23:37:56Z
+head_sha=4fc2c4b0dcaac565124fe16420955103e314a1ad
+origin_main=4fc2c4b0dcaac565124fe16420955103e314a1ad
+branch=main
+
+{
+    "pid":  37200,
+    "port":  5088,
+    "url":  "http://127.0.0.1:5088",
+    "executablePath":  "D:\\Users\\User\\source\\repos\\SarvNewVer\\.tmp-dev-host-out-5088-101\\Tooba.Host.exe",
+    "outDir":  "D:\\Users\\User\\source\\repos\\SarvNewVer\\.tmp-dev-host-out-5088-101",
+    "contentRoot":  "D:\\Users\\User\\source\\repos\\SarvNewVer\\src\\backend\\Host\\Tooba.Host",
+    "gate":  "ShippingOneLevelCatalog=true",
+    "startedAt":  "2026-10-16T02:57:22.4961997+03:30"
+}
+
+
+deployed_binaries:
+  Tooba.Host.exe sha256=4F8F191CF639475523834DFB74FB2BBD42167ACB4B5CCDE6B941ACE29432AEA1 built_utc=2026-10-15T23:27:11Z
+  Tooba.Fulfillment.Infrastructure.dll sha256=442C198E252B33A68B23DAB44091CA2F63DA38580D46609E8D0A8DFB22FDF06F built_utc=2026-10-15T23:26:53Z
+  Tooba.Fulfillment.Contracts.dll sha256=EE5EF40DEF45626E2AEABEBF0E9B10745DF2C862CC65EE8A4A194902A4FA3C29 built_utc=2026-10-15T23:26:41Z
+  Tooba.Order.Application.dll sha256=E588F9D7FA11688D67DB4497C8E052876563A82898CE16518185B8493F23CD09 built_utc=2026-10-15T23:26:49Z
+
+tmp host dir listing:
+  host-5088-stderr.txt
+  host-5088-stdout.txt
+  host-5088.pid
+  prior-host-5088-20261015-210438.txt
+
+previous rollback artifacts (if any):
+  .tmp-dev-host-out-5088-098
+  .tmp-dev-host-out-5088-101
+
+rollback_target (state that was replaced by this task's restart):
+  priorPid=29788
+  priorOutDir=D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host-out-5088-098
+  priorBuild=task-098 (pre-100 binaries, no label seam)
+  priorGate=ShippingOneLevelCatalog=true (same as current)
+  priorProvenance=dev-singlestore / store-alpha / tenant-alpha (same as current)
+rollback_command:
+  powershell -NoProfile -File scripts/dev/host-stack.ps1 -Action stop
+  powershell -NoProfile -File scripts/dev/host-stack.ps1 -Action start -OutDir .tmp-dev-host-out-5088-098 -GateShippingOneLevelCatalog
+lineage: task 093 took over a manually launched host; task 098 replaced it; task 101 replaced 098.

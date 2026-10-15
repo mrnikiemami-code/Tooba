@@ -1,0 +1,6 @@
+﻿=== TB-101 read-only storefront projection probes (no writes) ===
+anonymous-no-token | 2026-10-15T23:36:07.200Z | status=401 | body={"type":"about:blank","title":"Sign in to continue.","status":401,"instance":"/v1/storefront/shipping/projection","errorCode":"checkout.authentication_required","traceId":"0a8a82d0d9bdf19f1498874b910c001f","correlationId
+bogus-bearer | 2026-10-15T23:36:07.255Z | status=401 | body={"type":"about:blank","title":"Sign in to continue.","status":401,"instance":"/v1/storefront/shipping/projection","errorCode":"checkout.authentication_required","traceId":"d9b1ca023a52107abf5524801c0f5f4d","correlationId
+bogus-guest-secret | 2026-10-15T23:36:07.263Z | status=401 | body={"type":"about:blank","title":"Sign in to continue.","status":401,"instance":"/v1/storefront/shipping/projection","errorCode":"checkout.authentication_required","traceId":"fd0b0bf4516dbed85337b3627d2b862a","correlationId
+unknown-cart-anonymous | 2026-10-15T23:36:07.267Z | status=401 | body={"type":"about:blank","title":"Sign in to continue.","status":401,"instance":"/v1/storefront/shipping/projection","errorCode":"checkout.authentication_required","traceId":"daf1b62cdc88b29bee083ee8f5f813e6","correlationId
+=== end ===

@@ -1,0 +1,42 @@
+﻿Pager usage is off.
+          captured_at          
+-------------------------------
+ 2026-10-15 23:26:27.081522+00
+(1 row)
+
+  method_code   | is_active | legacy_service_code | legacy_option_code |             language_id              |          name          
+----------------+-----------+---------------------+--------------------+--------------------------------------+------------------------
+ in_person      | t         | in_person           |                    | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | تحویل حضوری
+ in_person      | t         | in_person           |                    | 01a06a53-4196-7000-9b98-fb3706490005 | In person
+ post:express   | f         | post                | express            | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیشتاز
+ post:express   | f         | post                | express            | 01a06a53-4196-7000-9b98-fb3706490005 | Express
+ post:standard  | t         | post                | standard           | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | معمولی
+ post:standard  | t         | post                | standard           | 01a06a53-4196-7000-9b98-fb3706490005 | Standard
+ snapp_courier  | f         | snapp_courier       |                    | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | اسنپ / پیک آنلاین
+ snapp_courier  | f         | snapp_courier       |                    | 01a06a53-4196-7000-9b98-fb3706490005 | Snapp / Online courier
+ store_courier  | t         | store_courier       |                    | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیک فروشگاه
+ store_courier  | t         | store_courier       |                    | 01a06a53-4196-7000-9b98-fb3706490005 | Store courier
+ tipax:express  | t         | tipax               | express            | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیشتاز
+ tipax:express  | t         | tipax               | express            | 01a06a53-4196-7000-9b98-fb3706490005 | Express
+ tipax:standard | t         | tipax               | standard           | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | معمولی
+ tipax:standard | t         | tipax               | standard           | 01a06a53-4196-7000-9b98-fb3706490005 | Standard
+(14 rows)
+
+     code      | is_active | option_code | option_active 
+---------------+-----------+-------------+---------------
+ in_person     | t         |             | 
+ post          | t         | express     | f
+ post          | t         | standard    | t
+ snapp_courier | f         |             | 
+ store_courier | t         |             | 
+ tipax         | t         | express     | t
+ tipax         | t         | standard    | t
+(7 rows)
+
+ code  | culture | is_default 
+-------+---------+------------
+ en-US | en-US   | f
+ fa-IR | fa-IR   | t
+ ru-RU | ru-RU   | f
+(3 rows)
+

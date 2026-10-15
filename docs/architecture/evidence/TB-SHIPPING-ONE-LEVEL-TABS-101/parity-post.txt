@@ -1,0 +1,39 @@
+﻿Pager usage is off.
+          captured_at          
+-------------------------------
+ 2026-10-15 23:36:47.033417+00
+(1 row)
+
+ methods | translations 
+---------+--------------
+       7 |           14
+(1 row)
+
+  method_code  | is_active |             language_id              |   name   
+---------------+-----------+--------------------------------------+----------
+ post:express  | f         | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیشتاز
+ post:express  | f         | 01a06a53-4196-7000-9b98-fb3706490005 | Express
+ post:standard | t         | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | معمولی
+ post:standard | t         | 01a06a53-4196-7000-9b98-fb3706490005 | Standard
+(4 rows)
+
+docker : ERROR:  syntax error at or near "order"
+At C:\Users\User\AppData\Local\Temp\ps-script-5edffefe-bef2-4316-a102-b9336ec743a1.ps1:105 char:100
++ ... sql" -Raw | docker exec -i postgres-db psql -U admin -d tooba_alpha 2 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ERROR:  syntax error at or near "order":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+LINE 1: ....cart_lines) AS cart_lines, (SELECT count(*) FROM order.cart...
+                                                             ^
+ seller_orders 
+---------------
+            26
+(1 row)
+
+Pager usage is off.
+ carts | cart_lines | drafts 
+-------+------------+--------
+    50 |         78 |     14
+(1 row)
+

@@ -1,0 +1,28 @@
+TB-SHIPPING-ONE-LEVEL-TABS-101 — read-only reachability facts for the storefront projection
+
+captured 2026-10-15T23:33Z (read-only SELECT, no DML)
+
+1) The authenticated Development session user owns zero carts:
+   SELECT cart_id, access_kind, status FROM cart.carts WHERE owner_user_id = <session user>;
+   => 0 rows
+
+2) Every cart in tooba_alpha, by access kind and status:
+     access_kind  |  status   | count
+   ---------------+-----------+-------
+    Authenticated | Converted |    13
+    Authenticated | Expired   |     1
+    Guest         | Active    |     8
+    Guest         | Abandoned |    11
+    Guest         | Expired   |    17
+   => no Active Authenticated cart exists, so an owned-cart read is impossible;
+      the 8 Active Guest carts are only readable with their guest secret.
+
+3) Guest credentials are not recoverable from storage:
+   cart.carts.guest_credential_hash stores a digest only; the plaintext secret is returned once at
+   guest-cart creation and is not persisted anywhere in the repository, evidence or dev logs
+   (checked: no X-Tooba-Guest-Secret / guestSecret trace in src/frontend/*.log).
+
+Conclusion: reaching the storefront shipping projection on the shared Development data set requires
+either a cart owned by the current session (none exists) or a guest secret for an existing cart
+(not recoverable). Producing either would require DML (cart creation / line insert) or credential
+guessing, both explicitly forbidden by this task => PARTIAL / BLOCKED_REAL_STOREFRONT_PROOF.

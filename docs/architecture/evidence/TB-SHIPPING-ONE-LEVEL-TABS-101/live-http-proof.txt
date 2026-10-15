@@ -1,0 +1,51 @@
+TB-SHIPPING-ONE-LEVEL-TABS-101 — live read-only HTTP evidence (shared Development :5088, gate ON, current code)
+captured 2026-10-15T23:36Z .. 23:37Z
+
+=== 1) Identity/session prerequisite (read-only, via the shared BFF :3000 -> :5088 rewrite) ===
+GET /v1/auth/me
+status=200
+body={"userId":"<redacted>","sessionId":"<redacted>","edition":"SingleStore","tenantId":"store-alpha"}
+=> a real authenticated Development session exists on the shared frontend origin; the storefront
+   shipping projection identity gate therefore passes the session precondition.
+   Session/actor identifiers are deliberately not recorded in git.
+
+=== 2) Storefront projection, authenticated session, existing carts (read-only POST query) ===
+POST /v1/storefront/shipping/projection  {"cartId":"<existing Active guest cart>","language":"fa"}
+status=401
+body={"type":"about:blank","title":"دسترسی به سبد مهمان معتبر نیست.","status":401,
+      "instance":"/v1/storefront/shipping/projection","errorCode":"cart.guest.invalid", ...}
+
+POST /v1/storefront/shipping/projection  {"cartId":"<existing Authenticated Converted cart of another user>","language":"fa"}
+status=401
+body={"type":"about:blank","title":"دسترسی به سبد مجاز نیست.","status":401,
+      "instance":"/v1/storefront/shipping/projection","errorCode":"cart.access.denied", ...}
+
+POST /v1/storefront/shipping/projection  {"cartId":"00000000-0000-4000-8000-000000000001","language":"fa"}
+status=404
+body={"type":"about:blank","title":"سبد خرید پیدا نشد.","status":404,
+      "instance":"/v1/storefront/shipping/projection","errorCode":"shipping.cart.missing", ...}
+
+=> with a genuine session but no cart owned by that session user, the projection is not reachable.
+   The session user owns ZERO carts (read-only SQL below), all Authenticated carts belong to other
+   users and are Converted, and every Active cart is a Guest cart whose credential is a secret that
+   is only ever returned once at creation (unrecoverable from the stored hash, by design).
+
+=== 3) Fail-closed probes without any credential (direct on :5088, read-only POST query) ===
+see probe-readonly-101.txt — all four variants returned
+  401 checkout.authentication_required (anonymous, bogus bearer, bogus guest secret, unknown cart)
+
+=== 4) Fulfillment one-level read, same live process, gate ON (read-only, authenticated session) ===
+GET /v1/admin/shipping-services/shipping-methods/one-level
+status=200
+body={"gate":"Enabled","ready":true,"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","methods":[
+  {"methodCode":"post:express","name":"پیشتاز","isActive":false,"sortOrder":10,"translations":[fa پیشتاز, en Express]},
+  {"methodCode":"post:standard","name":"معمولی","isActive":true,"sortOrder":11,"translations":[en Standard, fa معمولی]},
+  {"methodCode":"tipax:express","name":"پیشتاز","isActive":true,"sortOrder":20,...},
+  {"methodCode":"tipax:standard","name":"معمولی","isActive":true,"sortOrder":21,...},
+  {"methodCode":"snapp_courier","name":"اسنپ / پیک آنلاین","isActive":false,"sortOrder":30,...},
+  {"methodCode":"store_courier","name":"پیک فروشگاه","isActive":true,"sortOrder":40,...},
+  {"methodCode":"in_person","name":"تحویل حضوری","isActive":true,"sortOrder":50,...}]}
+=> the live, current-code process really serves the Fulfillment-owned one-level name «معمولی» for
+   post:standard in fa-IR, with gate Enabled and the catalog ready. This is the exact value the
+   Order label seam would project; it is NOT yet a storefront-projection proof because the ordering
+   consumer could not be reached (section 2).
