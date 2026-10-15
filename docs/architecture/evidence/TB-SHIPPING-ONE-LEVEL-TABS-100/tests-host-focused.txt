@@ -1,0 +1,101 @@
+﻿
+[xUnit.net 00:00:00.55]     
+Tooba.Host.Tests.Architecture.HostAdminAmcW14R1GuardTests.Host_Admin_remains_52_and_W14R1_seo_surface_preserved [FAIL]
+[xUnit.net 00:00:00.56]     
+Tooba.Host.Tests.Architecture.HostGridAmcR4GuardTests.Party_owns_sellers_grid_policy_engine_port_and_row_model [FAIL]
+[xUnit.net 00:00:00.56]     Tooba.Host.Tests.Architecture.HostAdminAmcW28PwDeleteGuardTests.Host_Admin_count_15_StoreAp
+pearance_evacuated_PW_shells_ABSENT [FAIL]
+[xUnit.net 00:00:00.56]     Tooba.Host.Tests.Architecture.HostAdminAmcW14R1GuardTests.Domain_owns_single_slug_normaliza
+tion_core_with_Try_and_throwing_APIs [FAIL]
+[xUnit.net 00:00:00.57]     
+Tooba.Host.Tests.StorefrontPaymentSucceededGuardTests.Frontend_hides_pay_when_capability_forbids [FAIL]
+[xUnit.net 00:00:00.61]     Tooba.Host.Tests.Architecture.HostSellerAmcR2GuardTests.Catalog_seller_endpoint_reachable_r
+equests_follow_canonical_cqrs_and_validator_classification [FAIL]
+[xUnit.net 00:00:00.61]     
+Tooba.Host.Tests.Architecture.HostAdminAmcW7GuardTests.Categories_path_namespace_exact_and_validators_classified [FAIL]
+[xUnit.net 00:00:00.63]     
+Tooba.Host.Tests.Architecture.HostAdminAmcW1GuardTests.Slnx_groups_Catalog_under_Modules_Catalog_folder [FAIL]
+[xUnit.net 00:00:00.67]     
+Tooba.Host.Tests.Architecture.HostAdminAmcW12GuardTests.Error_catalog_owns_category_change_and_assignment_level_codes 
+[FAIL]
+[xUnit.net 00:00:00.69]     Tooba.Host.Tests.Architecture.HostAdminAmcW30PwTaxonomyGuardTests.Host_Admin_count_15_Store
+Appearance_evacuated_PW_shells_ABSENT [FAIL]
+[xUnit.net 00:00:00.69]     
+Tooba.Host.Tests.PaidProjectionFinancialTests.Settlement_and_initiate_exclude_store_shipping_from_seller_ids [FAIL]
+[xUnit.net 00:00:00.71]     Tooba.Host.Tests.Architecture.HostAdminAmcW8GuardTests.Attribute_Definitions_path_namespace
+_exact_and_validators_classified [FAIL]
+[xUnit.net 00:00:00.73]     
+Tooba.Host.Tests.Architecture.HostAdminAmcW7GuardTests.CategoryDirectory_uses_Result_not_exceptions_or_message_as_code 
+[FAIL]
+[xUnit.net 00:00:00.95]     
+Tooba.Host.Tests.Architecture.HostStorefrontAmcR3GuardTests.Downstream_host_adapters_use_catalog_composer_port [FAIL]
+[xUnit.net 00:00:00.96]     Tooba.Host.Tests.Architecture.HostAdminAmcW26PwLifecycleGuardTests.Host_Admin_count_15_Stor
+eAppearance_evacuated_PW_shells_ABSENT [FAIL]
+[xUnit.net 00:00:00.99]     
+Tooba.Host.Tests.Architecture.HostAdminAmcLandingPageSeedGuardTests.Host_Admin_count_15_StoreAppearance_evacuated 
+[FAIL]
+[xUnit.net 00:00:01.03]     Tooba.Host.Tests.Architecture.PaymentModuleAmsc001W3CertGuardTests.Validator_matrix_is_exha
+ustive_for_all_sixteen_endpoint_reachable_requests [FAIL]
+[xUnit.net 00:00:01.04]     
+Tooba.Host.Tests.Architecture.HostAdminAmcW16R1GuardTests.Host_Admin_count_and_W17_through_W20_artifacts_present [FAIL]
+[xUnit.net 00:00:01.05]     
+Tooba.Host.Tests.Architecture.HostAdminAmcW9GuardTests.Attribute_Schema_path_namespace_exact_and_validators_classified 
+[FAIL]
+[xUnit.net 00:00:01.05]     Tooba.Host.Tests.Architecture.HostAdminAmcW16R1GuardTests.Category_readiness_uses_Domain_no
+n_throwing_API_without_hierarchy_duplication [FAIL]
+[xUnit.net 00:00:01.06]     
+Tooba.Host.Tests.Architecture.HostAdminAmcW32PwShellFinalGuardTests.Host_Admin_count_15_StoreAppearance_evacuated 
+[FAIL]
+[xUnit.net 00:00:01.07]     
+Tooba.Host.Tests.Architecture.HostStorefrontAmcR1GuardTests.Catalog_owns_template_preview_cqrs_infra_and_routes [FAIL]
+[xUnit.net 00:00:01.20]     Tooba.Host.Tests.Architecture.HostAdminAmcW34TemplateSeedsGuardTests.Host_Admin_count_15_St
+oreAppearance_and_HoldPolicy_evacuated [FAIL]
+[xUnit.net 00:00:01.21]     
+Tooba.Host.Tests.Architecture.HostAdminAmcReservationPolicyGuardTests.Host_Admin_count_15_StoreAppearance_evacuated 
+[FAIL]
+[xUnit.net 00:00:01.24]     
+Tooba.Host.Tests.Architecture.HostAdminAmcW19R1GuardTests.Domain_exposes_Try_probes_sharing_core_with_throwing_APIs 
+[FAIL]
+[xUnit.net 00:00:01.27]     Tooba.Host.Tests.Architecture.HostReviewsAmcGuardTests.SoT_hostReviewsAmc_r1_present [FAIL]
+[xUnit.net 00:00:01.29]     
+Tooba.Host.Tests.Architecture.HostAdminAmcW35HoldPolicyGuardTests.Host_Admin_count_15_StoreAppearance_evacuated [FAIL]
+[xUnit.net 00:00:01.29]     
+Tooba.Host.Tests.Architecture.HostAdminAmcCheckoutAbuseGuardTests.Host_Admin_count_15_StoreAppearance_evacuated [FAIL]
+[xUnit.net 00:00:01.29]     Tooba.Host.Tests.Architecture.HostAdminAmcW29PwIdentityGuardTests.Host_Admin_count_15_Store
+Appearance_evacuated_PW_shells_ABSENT [FAIL]
+[xUnit.net 00:00:01.31]     
+Tooba.Host.Tests.Architecture.HostAdminAmcStoreMenuGuardTests.Host_Admin_count_15_StoreAppearance_evacuated [FAIL]
+[xUnit.net 00:00:01.32]     
+Tooba.Host.Tests.Architecture.HostAdminAmcStoreLandingGuardTests.Host_Admin_count_15_StoreAppearance_evacuated [FAIL]
+[xUnit.net 00:00:01.35]     Tooba.Host.Tests.Architecture.HostAdminAmcW36StoreAppearanceGuardTests.Host_Admin_count_15_
+KEEP_platform_floor_StoreAppearance_evacuated [FAIL]
+[xUnit.net 00:00:01.37]     Tooba.Host.Tests.Architecture.HostAdminAmcW36StoreAppearanceGuardTests.Store_appearance_set
+tings_owned_by_Catalog_and_absent_from_Host_Admin [FAIL]
+[xUnit.net 00:00:01.47]     
+Tooba.Host.Tests.Architecture.HostGridAmcR5R1GuardTests.Catalog_owns_review_product_and_title_batch_contracts [FAIL]
+[xUnit.net 00:00:01.48]     
+Tooba.Host.Tests.Architecture.HostAdminCanon001GuardTests.Contract_files_expose_no_persistence_types [FAIL]
+[xUnit.net 00:00:01.48]     
+Tooba.Host.Tests.Architecture.HostGridAmcR5R1GuardTests.Host_Grid_remains_absent_and_R5_R1_evidence_present [FAIL]
+[xUnit.net 00:00:01.50]     
+Tooba.Host.Tests.Architecture.HostGridAmcR3GuardTests.Catalog_owns_product_title_id_lookup_contract [FAIL]
+[xUnit.net 00:00:01.50]     Tooba.Host.Tests.Architecture.TmarCompleteReferenceStructureGateTests.Certified_modules_sat
+isfy_root_allowlists_and_namespace_alignment [FAIL]
+[xUnit.net 00:00:01.50]     
+Tooba.Host.Tests.Architecture.HostAdminAmcW6GuardTests.FacetDirectory_uses_Result_not_exceptions_or_message_as_code 
+[FAIL]
+[xUnit.net 00:00:01.54]     Tooba.Host.Tests.Architecture.ProductWorkspaceModuleAmsc001W3R2CertGuardTests.Fresh_certifi
+cation_truth_is_recorded_in_sot_and_manifest [FAIL]
+[xUnit.net 00:00:01.54]     Tooba.Host.Tests.Architecture.HostAdminAmcW10GuardTests.Attribute_ProductValues_path_namesp
+ace_exact_and_validators_classified [FAIL]
+[xUnit.net 00:00:01.54]     Tooba.Host.Tests.Architecture.HostAdminAmcW31PwListGridGuardTests.Host_Admin_count_15_Store
+Appearance_evacuated_PW_shells_ABSENT [FAIL]
+[xUnit.net 00:00:01.55]     Tooba.Host.Tests.Architecture.HostAdminAmcW27PwVariantsGuardTests.Host_Admin_count_15_Store
+Appearance_evacuated_PW_shells_ABSENT [FAIL]
+[xUnit.net 00:00:01.65]     
+Tooba.Host.Tests.Architecture.StoryModuleAmsc001W3R1RecoveryGuardTests.Story_w3_certification_truth_is_preserved [FAIL]
+[xUnit.net 00:00:01.70]     Tooba.Host.Tests.Architecture.HostSellerAmcR5GuardTests.Party_development_seam_exposes_no_p
+arty_persistence_or_domain_types [FAIL]
+Failed!  - Failed:    45, Passed:  1508, Skipped:     0, Total:  1553, Duration: 28 s - Tooba.Host.Tests.dll (net8.0)
+
+

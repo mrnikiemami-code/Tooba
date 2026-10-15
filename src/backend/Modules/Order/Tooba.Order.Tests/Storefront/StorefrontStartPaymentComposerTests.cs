@@ -409,6 +409,7 @@ public sealed class StorefrontStartPaymentComposerTests
                 checkout,
                 addresses: null!,
                 shippingCatalog: new ShippingCatalogFake(),
+                oneLevelLabels: new OneLevelShippingLabelFake(),
                 drafts,
                 languages: new LanguagesFake(),
                 shippingOptions: new ShippingMethodsOptions(),

@@ -1,0 +1,5 @@
+﻿
+Passed!  - Failed:     0, Passed:   316, Skipped:     0, Total:   316, Duration: 311 ms - Tooba.Order.Tests.dll 
+(net8.0)
+
+

@@ -107,6 +107,8 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<IShippingCatalogReader, ShippingCatalogReader>();
         services.AddScoped<IShippingOneLevelCatalogReader, ShippingOneLevelCatalogReader>();
         services.AddScoped<IShippingOneLevelCatalogAdminRead, ShippingOneLevelCatalogAdminRead>();
+        // TB-SHIPPING-ONE-LEVEL-TABS-100: درز فقط-خواندنی برچسب فروشگاه؛ دروازهٔ خاموش ⇒ نگاشت خالی و برچسب قدیمی.
+        services.AddScoped<IShippingOneLevelStorefrontLabelReader, ShippingOneLevelStorefrontLabelRead>();
         // TB-SHIPPING-ONE-LEVEL-TABS-094: تنها درز نوشتن نام روش یک‌سطحی؛ دروازهٔ خاموش ⇒ هیچ نوشتنی.
         services.AddScoped<IShippingOneLevelCatalogAdminWrite, ShippingOneLevelCatalogAdminWrite>();
         // TB-SHIPPING-ONE-LEVEL-TABS-096: تنها مرجع تراکنشی فعال‌سازی روش گزینه‌دار؛ ردیف قدیمی گزینه و

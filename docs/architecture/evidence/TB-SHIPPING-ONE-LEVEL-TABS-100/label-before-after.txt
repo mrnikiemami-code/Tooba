@@ -1,0 +1,24 @@
+﻿    src    |  method_code  |             language_id              |   name   
+-----------+---------------+--------------------------------------+----------
+ one_level | post:express  | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیشتاز
+ one_level | post:express  | 01a06a53-4196-7000-9b98-fb3706490005 | Express
+ one_level | post:standard | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | معمولی
+ one_level | post:standard | 01a06a53-4196-7000-9b98-fb3706490005 | Standard
+(4 rows)
+
+      src       |     code      |             language_id              |          name          
+----------------+---------------+--------------------------------------+------------------------
+ legacy_service | post          | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پست
+ legacy_service | post          | 01a06a53-4196-7000-9b98-fb3706490005 | Post
+ legacy_service | snapp_courier | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | اسنپ / پیک آنلاین
+ legacy_service | snapp_courier | 01a06a53-4196-7000-9b98-fb3706490005 | Snapp / Online courier
+(4 rows)
+
+      src      |  method_code  |             language_id              |   name   
+---------------+---------------+--------------------------------------+----------
+ legacy_option | post:express  | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | پیشتاز
+ legacy_option | post:express  | 01a06a53-4196-7000-9b98-fb3706490005 | Express
+ legacy_option | post:standard | 01a06a53-4139-7000-bb9b-3078a0d2e5c4 | معمولی
+ legacy_option | post:standard | 01a06a53-4196-7000-9b98-fb3706490005 | Standard
+(4 rows)
+

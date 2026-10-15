@@ -1,0 +1,5 @@
+﻿
+Passed!  - Failed:     0, Passed:   158, Skipped:     0, Total:   158, Duration: 721 ms - Tooba.Fulfillment.Tests.dll 
+(net8.0)
+
+

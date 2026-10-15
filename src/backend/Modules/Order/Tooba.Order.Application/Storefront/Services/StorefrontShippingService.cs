@@ -24,6 +24,7 @@ public sealed class StorefrontShippingService
     private readonly StorefrontCheckoutService _checkouts;
     private readonly IAddressBookCheckoutLookup _addresses;
     private readonly IShippingCatalogReader _shippingCatalog;
+    private readonly IShippingOneLevelStorefrontLabelReader _oneLevelLabels;
     private readonly IStorefrontShippingDraftStore _drafts;
     private readonly ILanguageLookup _languages;
     private readonly ShippingMethodsOptions _shippingOptions;
@@ -36,6 +37,7 @@ public sealed class StorefrontShippingService
         StorefrontCheckoutService checkouts,
         Tooba.AddressBook.Contracts.Ports.IAddressBookCheckoutLookup addresses,
         IShippingCatalogReader shippingCatalog,
+        IShippingOneLevelStorefrontLabelReader oneLevelLabels,
         IStorefrontShippingDraftStore drafts,
         ILanguageLookup languages,
         ShippingMethodsOptions shippingOptions,
@@ -47,6 +49,7 @@ public sealed class StorefrontShippingService
         _checkouts = checkouts;
         _addresses = addresses;
         _shippingCatalog = shippingCatalog;
+        _oneLevelLabels = oneLevelLabels;
         _drafts = drafts;
         _languages = languages;
         _shippingOptions = shippingOptions;
@@ -414,7 +417,47 @@ public sealed class StorefrontShippingService
             }
         }
 
-        return result;
+        return await ApplyOneLevelDisplayNamesAsync(result, langId, cancellationToken);
+    }
+
+    /// <summary>
+    /// جایگزینی فقط-برچسب نام روش یک‌سطحی روی واجدین شرایط قدیمی.
+    /// </summary>
+    /// <remarks>
+    /// این متد هیچ‌چیز جز <see cref="StorefrontShippingMethodView.Label"/> را تغییر نمی‌دهد: کد روش،
+    /// کد سرویس، آیکون، قیمت، روزهای تحویل و برچسب تخمین دست‌نخورده می‌مانند. واجد شرایط بودن همان
+    /// منبع قدیمی (سرویس/گزینهٔ فعال + EnabledCodes + پیکربندی نرخ) باقی می‌ماند، چون این متد فقط
+    /// پس از ساخت فهرست اجرا می‌شود و هیچ روشی اضافه/حذف نمی‌کند. اگر درز Fulfillment خالی برگرداند
+    /// (دروازهٔ خاموش، نبود جدول، کد ناشناخته یا نبود ترجمهٔ زبان درخواستی) همان برچسب قدیمی
+    /// عیناً نمایش داده می‌شود.
+    /// </remarks>
+    private async Task<IReadOnlyList<StorefrontShippingMethodView>> ApplyOneLevelDisplayNamesAsync(
+        List<StorefrontShippingMethodView> methods,
+        Guid languageId,
+        CancellationToken cancellationToken)
+    {
+        if (methods.Count == 0)
+        {
+            return methods;
+        }
+
+        var codes = methods.Select(m => m.MethodCode).Distinct(StringComparer.Ordinal).ToArray();
+        var oneLevelNames = await _oneLevelLabels.ResolveDisplayNamesAsync(codes, languageId, cancellationToken);
+        if (oneLevelNames.Count == 0)
+        {
+            return methods;
+        }
+
+        for (var i = 0; i < methods.Count; i++)
+        {
+            if (oneLevelNames.TryGetValue(methods[i].MethodCode, out var name)
+                && !string.IsNullOrWhiteSpace(name))
+            {
+                methods[i] = methods[i] with { Label = name };
+            }
+        }
+
+        return methods;
     }
 
     private void TryAddMethod(

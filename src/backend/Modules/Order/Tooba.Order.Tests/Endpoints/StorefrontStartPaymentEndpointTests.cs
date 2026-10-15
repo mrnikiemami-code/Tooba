@@ -440,6 +440,7 @@ public sealed class StorefrontStartPaymentEndpointTests
                 checkout,
                 addresses: null!,
                 shippingCatalog: new ShippingCatalogFake(),
+                oneLevelLabels: new OneLevelShippingLabelFake(),
                 drafts,
                 languages: new LanguagesFake(),
                 shippingOptions: new ShippingMethodsOptions(),

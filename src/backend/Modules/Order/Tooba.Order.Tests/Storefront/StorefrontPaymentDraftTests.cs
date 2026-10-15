@@ -173,6 +173,7 @@ public sealed class StorefrontPaymentDraftTests
                 checkout,
                 addresses: null!,
                 shippingCatalog: null!,
+                oneLevelLabels: null!,
                 drafts,
                 languages: null!,
                 shippingOptions: null!,
