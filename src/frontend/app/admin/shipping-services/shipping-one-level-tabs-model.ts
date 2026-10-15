@@ -39,7 +39,7 @@ export const DEFAULT_ONE_LEVEL_TAB: OneLevelTabId = "services";
  */
 export const ONE_LEVEL_TAB_WIRING_TASK: Record<OneLevelTabId, string | null> = {
   services: null,
-  "rates-coverage": "085",
+  "rates-coverage": null,
   "packaging-fare": "086",
   "schedule-capacity": "087",
   "cost-review": "088",

@@ -47,4 +47,7 @@ public static class FulfillmentValidationCodes
 
     /// <summary>Shipping service write model must be supplied.</summary>
     public const string ShippingServiceModelRequired = "fulfillment.validation.shipping_service_model_required";
+
+    /// <summary>One-level shipping method code must not be blank when supplied.</summary>
+    public const string ShippingMethodCodeRequired = "fulfillment.validation.shipping_method_code_required";
 }

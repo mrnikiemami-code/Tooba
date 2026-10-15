@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, EmptyState, ErrorState } from "../../../design-system";
+import { ShippingOneLevelRatesTab } from "./shipping-one-level-rates-tab.tsx";
 import {
   ONE_LEVEL_TAB_IDS,
   ONE_LEVEL_TAB_LABELS,
@@ -43,6 +44,11 @@ export interface ShippingOneLevelTabsProps {
   initialMethods?: readonly OneLevelMethodRow[];
   /** خوانندهٔ روش‌ها. نبود آن ⇒ وضعیت «در دسترس نیست»، نه fallback. */
   loadMethods?: () => Promise<readonly OneLevelMethodRow[]>;
+  /**
+   * TB-SHIPPING-ONE-LEVEL-TABS-086: بازخورد موفق/خطای عملیات زبانهٔ تعرفه و پوشش.
+   * در نبود آن، عملیات همچنان اجرا می‌شود و فقط اعلان نمایش داده نمی‌شود.
+   */
+  onNotice?: (notice: { tone: "success" | "error"; text: string }) => void;
 }
 
 export function ShippingOneLevelTabs({
@@ -50,6 +56,7 @@ export function ShippingOneLevelTabs({
   activeLanguageId = "",
   initialMethods,
   loadMethods,
+  onNotice = () => {},
 }: ShippingOneLevelTabsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -174,6 +181,9 @@ export function ShippingOneLevelTabs({
             onRetry={() => void load()}
             onSelect={(code) => replaceSelection({ methodCode: code })}
           />
+        ) : activeTab === "rates-coverage" ? (
+          // TB-SHIPPING-ONE-LEVEL-TABS-086: زبانهٔ ۲ روی همان روش انتخاب‌شدهٔ زبانهٔ ۱ عمل می‌کند.
+          <ShippingOneLevelRatesTab methodCode={selection.methodCode} onNotice={onNotice} />
         ) : (
           <WiringShell tab={activeTab} />
         )}

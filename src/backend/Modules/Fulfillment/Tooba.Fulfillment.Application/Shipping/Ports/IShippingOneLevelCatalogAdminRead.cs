@@ -15,6 +15,27 @@ public sealed record ShippingOneLevelCatalogAdminSnapshot(
     IReadOnlyList<ShippingOneLevelMethodSnapshot> Methods);
 
 /// <summary>
+/// نتیجهٔ حل پیوند قدیمی یک روش یک‌سطحی. <paramref name="Resolved"/> فقط وقتی <c>true</c> است که
+/// دروازه روشن، کاتالوگ آماده و کد روش canonical و موجود باشد؛ در غیر این‌صورت هیچ پیوندی
+/// (<c>ServiceCode</c>/<c>OptionCode</c>) برگردانده نمی‌شود.
+/// </summary>
+/// <param name="Gate">دروازهٔ مؤثر ارزیابی‌شده از پیکربندی معتبر سرور.</param>
+/// <param name="CatalogReady">آیا کاتالوگ واقعاً خوانده شد. نبود جدول/مهاجرت ⇒ false.</param>
+/// <param name="Resolved">آیا پیوند قطعی حل شد. نبود روش یا کد نامعتبر ⇒ false.</param>
+/// <param name="MethodCode">کد روش canonical؛ در نبود حل، تهی.</param>
+/// <param name="ServiceCode">کد سرویس قدیمی والد؛ فقط وقتی حل شده باشد.</param>
+/// <param name="OptionCode">کد گزینهٔ قدیمی؛ تهی یعنی روش به سرویس بدون گزینه نگاشته شده است.</param>
+/// <param name="IsActive">فعال بودن روش؛ روش غیرفعال هرگز پیوند قابل‌استفاده نمی‌دهد.</param>
+public sealed record ShippingOneLevelCatalogAdminBindingSnapshot(
+    ShippingOneLevelCatalogGate Gate,
+    bool CatalogReady,
+    bool Resolved,
+    string MethodCode,
+    string ServiceCode,
+    string? OptionCode,
+    bool IsActive);
+
+/// <summary>
 /// درز خواندن ادمین کاتالوگ یک‌سطحی. این درز فقط-خواندنی است و هیچ قیمت، رزرو، اسنپ‌شات
 /// پرداخت‌شده یا کاتالوگ قدیمی را تغییر نمی‌دهد.
 /// </summary>
@@ -32,4 +53,15 @@ public interface IShippingOneLevelCatalogAdminRead
 {
     /// <summary>دروازهٔ مؤثر و کاتالوگ را می‌خواند؛ هیچ نوشتنی ندارد.</summary>
     Task<ShippingOneLevelCatalogAdminSnapshot> ReadAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// پیوند قدیمی یک روش را از هویت canonical خودش حل می‌کند. هیچ‌گاه از کد ارسالی کلاینت
+    /// (serviceCode/optionCode خام) استفاده نمی‌کند و هرگز <c>method_code</c> را در مرورگر
+    /// به سرویس/گزینه نمی‌شکند. دروازهٔ خاموش ⇒ هیچ پرس‌وجوی دیتابیسی و <c>Resolved=false</c>.
+    /// </summary>
+    /// <param name="methodCode">کد روش یک‌سطحی انتخاب‌شده در UI.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<ShippingOneLevelCatalogAdminBindingSnapshot> ResolveBindingAsync(
+        string methodCode,
+        CancellationToken cancellationToken);
 }

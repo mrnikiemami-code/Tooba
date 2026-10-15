@@ -38,6 +38,9 @@ public static class ShippingServiceEndpoints
         // TB-SHIPPING-ONE-LEVEL-TABS-085: مسیر فقط-خواندنی ادمین برای دروازه/کاتالوگ یک‌سطحی.
         // مسیر مستقل و افزودنی است تا رفتار مسیرهای قدیمی سرویس/گزینه بی‌تغییر بماند.
         group.MapGet("/shipping-methods/one-level", ListOneLevelMethodsAsync);
+        // TB-SHIPPING-ONE-LEVEL-TABS-086: حل پیوند قدیمی برای همان روش انتخاب‌شده. ورودی فقط
+        // کد روش است؛ هیچ serviceCode/optionCode خام از کلاینت پذیرفته نمی‌شود.
+        group.MapGet("/shipping-methods/one-level/{methodCode}/binding", ResolveOneLevelBindingAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -101,6 +104,19 @@ public static class ShippingServiceEndpoints
     {
         await authorizer.RequireAuthorizedAsync(context, cancellationToken);
         return api.From(await sender.Send(new ListOneLevelShippingMethodsQuery(language), cancellationToken));
+    }
+
+    /// <summary>
+    /// حل پیوند قدیمی یک روش یک‌سطحی از هویت canonical خودش. مجوز ادمین لازم است؛ دروازه خاموش،
+    /// کاتالوگ مهاجرت‌نشده یا کد ناشناخته ⇒ <c>resolved=false</c> کنترل‌شده، نه خطای ۵۰۰.
+    /// </summary>
+    private static async Task<IResult> ResolveOneLevelBindingAsync(
+        string methodCode, ISender sender, IFulfillmentAdminAuthorizer authorizer, ApiResponseFactory api,
+        HttpContext context, CancellationToken cancellationToken)
+    {
+        await authorizer.RequireAuthorizedAsync(context, cancellationToken);
+        return api.From(await sender.Send(
+            new ResolveOneLevelShippingMethodBindingQuery(methodCode), cancellationToken));
     }
 
     private static ShippingServiceWriteModel ToModel(ShippingServiceWriteRequest body) =>

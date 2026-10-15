@@ -10,10 +10,12 @@ using Xunit;
 namespace Tooba.Fulfillment.Tests.Behavior;
 
 /// <summary>
-/// TB-SHIPPING-ONE-LEVEL-TABS-085 — focused proof for the trusted, authenticated, read-only admin
+/// TB-SHIPPING-ONE-LEVEL-TABS-085/086 — focused proof for the trusted, authenticated, read-only admin
 /// bridge to the one-level shipping catalog: default-OFF gate evaluation from authoritative server
 /// configuration, no database read while OFF, controlled NOT_READY for an unmigrated table (never a
-/// 500 and never a fake "ready/empty" success), and no second merchant level in the projection.
+/// 500 and never a fake "ready/empty" success), no second merchant level in the projection, and a
+/// server-owned legacy binding resolver that never turns a raw client method code into a
+/// service/option pair.
 /// No web host, no live database.
 /// </summary>
 public sealed class ShippingOneLevelAdminReadBridgeTests
@@ -161,6 +163,177 @@ public sealed class ShippingOneLevelAdminReadBridgeTests
         Assert.Empty(result.Value!.Methods);
     }
 
+    [Fact]
+    public async Task Binding_resolution_is_off_while_the_gate_is_disabled_and_never_reads_the_catalog()
+    {
+        var reader = new RecordingReader
+        {
+            Rows = [Snapshot("post:standard", isActive: true, sortOrder: 1, label: "پست معمولی")],
+        };
+        var read = new ShippingOneLevelCatalogAdminRead(
+            Options.Create(new ShippingOneLevelCatalogOptions()), reader);
+
+        var resolved = await read.ResolveBindingAsync("post:standard", CancellationToken.None);
+
+        Assert.Equal(ShippingOneLevelCatalogGate.Disabled, resolved.Gate);
+        Assert.False(resolved.CatalogReady);
+        Assert.False(resolved.Resolved);
+        Assert.Equal(string.Empty, resolved.ServiceCode);
+        Assert.Null(resolved.OptionCode);
+        Assert.Equal(0, reader.Calls);
+    }
+
+    [Theory]
+    [InlineData("post:ex:press")]
+    [InlineData("post:")]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("post standard;drop")]
+    [InlineData("post:standard!")]
+    public async Task A_malformed_method_code_is_refused_before_any_catalog_lookup(string supplied)
+    {
+        var reader = new RecordingReader
+        {
+            Rows = [Snapshot("post:standard", isActive: true, sortOrder: 1, label: "پست معمولی")],
+        };
+        var read = new ShippingOneLevelCatalogAdminRead(
+            Options.Create(new ShippingOneLevelCatalogOptions { Enabled = true }), reader);
+
+        var resolved = await read.ResolveBindingAsync(supplied, CancellationToken.None);
+
+        Assert.Equal(ShippingOneLevelCatalogGate.Enabled, resolved.Gate);
+        Assert.False(resolved.Resolved);
+        Assert.Equal(string.Empty, resolved.ServiceCode);
+        Assert.Null(resolved.OptionCode);
+        Assert.Equal(0, reader.Calls);
+    }
+
+    [Theory]
+    [InlineData("tipax:express")]
+    [InlineData("a")]
+    [InlineData("POST:STANDARD")]
+    public async Task A_canonical_code_resolves_only_from_the_catalog_row_and_never_from_the_text(
+        string supplied)
+    {
+        var reader = new RecordingReader
+        {
+            Rows = [Snapshot("post:standard", isActive: true, sortOrder: 1, label: "پست معمولی")],
+        };
+        var read = new ShippingOneLevelCatalogAdminRead(
+            Options.Create(new ShippingOneLevelCatalogOptions { Enabled = true }), reader);
+
+        var resolved = await read.ResolveBindingAsync(supplied, CancellationToken.None);
+
+        Assert.Equal(ShippingOneLevelCatalogGate.Enabled, resolved.Gate);
+        Assert.True(resolved.CatalogReady);
+        Assert.Equal(1, reader.Calls);
+
+        if (supplied == "POST:STANDARD")
+        {
+            // Normalization happens on the canonical identity; the pair still comes from the row.
+            Assert.True(resolved.Resolved);
+            Assert.Equal("post:standard", resolved.MethodCode);
+            Assert.Equal("post", resolved.ServiceCode);
+            Assert.Equal("standard", resolved.OptionCode);
+        }
+        else
+        {
+            // No row ⇒ no binding. `tipax:express` is never split into (tipax, express).
+            Assert.False(resolved.Resolved);
+            Assert.Equal(string.Empty, resolved.ServiceCode);
+            Assert.Null(resolved.OptionCode);
+        }
+    }
+
+    [Fact]
+    public async Task An_unmigrated_catalog_reports_the_binding_as_not_ready_instead_of_throwing()
+    {
+        var reader = new RecordingReader
+        {
+            Failure = new PostgresException(
+                "relation \"fulfillment.shipping_methods\" does not exist",
+                "ERROR",
+                "ERROR",
+                PostgresErrorCodes.UndefinedTable),
+        };
+        var read = new ShippingOneLevelCatalogAdminRead(
+            Options.Create(new ShippingOneLevelCatalogOptions { Enabled = true }), reader);
+
+        var resolved = await read.ResolveBindingAsync("post:standard", CancellationToken.None);
+
+        Assert.Equal(ShippingOneLevelCatalogGate.Enabled, resolved.Gate);
+        Assert.False(resolved.CatalogReady);
+        Assert.False(resolved.Resolved);
+        Assert.Equal(string.Empty, resolved.ServiceCode);
+    }
+
+    [Fact]
+    public async Task An_unknown_method_code_resolves_to_nothing_rather_than_a_fabricated_binding()
+    {
+        var reader = new RecordingReader
+        {
+            Rows = [Snapshot("post:standard", isActive: true, sortOrder: 1, label: "پست معمولی")],
+        };
+        var read = new ShippingOneLevelCatalogAdminRead(
+            Options.Create(new ShippingOneLevelCatalogOptions { Enabled = true }), reader);
+
+        var resolved = await read.ResolveBindingAsync("tipax:express", CancellationToken.None);
+
+        Assert.Equal(ShippingOneLevelCatalogGate.Enabled, resolved.Gate);
+        Assert.True(resolved.CatalogReady);
+        Assert.False(resolved.Resolved);
+        Assert.Equal(string.Empty, resolved.ServiceCode);
+        Assert.Null(resolved.OptionCode);
+    }
+
+    [Fact]
+    public async Task Binding_handler_returns_the_server_owned_pair_only_when_resolved()
+    {
+        var handler = new ResolveOneLevelShippingMethodBindingHandler(new StubRead(
+            ShippingOneLevelCatalogGate.Enabled,
+            CatalogReady: true,
+            [Snapshot("post:standard", isActive: true, sortOrder: 1, label: "پست معمولی")],
+            ResolveTo: new ShippingOneLevelCatalogAdminBindingSnapshot(
+                ShippingOneLevelCatalogGate.Enabled, true, true, "post:standard", "post", "standard", true)));
+
+        var result = await handler.Handle(
+            new ResolveOneLevelShippingMethodBindingQuery("post:standard"), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Enabled", result.Value!.Gate);
+        Assert.True(result.Value!.Ready);
+        Assert.True(result.Value!.Resolved);
+        Assert.Equal("post:standard", result.Value!.MethodCode);
+        Assert.Equal("post", result.Value!.ServiceCode);
+        Assert.Equal("standard", result.Value!.OptionCode);
+        Assert.True(result.Value!.IsActive);
+
+        // The wire shape carries one binding only — no option list, no provider nesting.
+        var payload = System.Text.Json.JsonSerializer.Serialize(result.Value!);
+        Assert.DoesNotContain("options", payload, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("providerKind", payload, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Binding_handler_never_leaks_a_pair_when_the_reader_did_not_resolve_it()
+    {
+        var handler = new ResolveOneLevelShippingMethodBindingHandler(new StubRead(
+            ShippingOneLevelCatalogGate.Enabled,
+            CatalogReady: false,
+            [],
+            ResolveTo: new ShippingOneLevelCatalogAdminBindingSnapshot(
+                ShippingOneLevelCatalogGate.Enabled, false, false, string.Empty, "post", "standard", false)));
+
+        var result = await handler.Handle(
+            new ResolveOneLevelShippingMethodBindingQuery("post:standard"), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value!.Resolved);
+        // Even if an implementation were to return a stray pair, an unresolved answer publishes none.
+        Assert.Null(result.Value!.ServiceCode);
+        Assert.Null(result.Value!.OptionCode);
+    }
+
     private static ShippingOneLevelMethodSnapshot Snapshot(
         string code,
         bool isActive,
@@ -195,17 +368,36 @@ public sealed class ShippingOneLevelAdminReadBridgeTests
         public Task<IReadOnlyList<ShippingOneLevelMethodSnapshot>> ListActiveAsync(CancellationToken cancellationToken) =>
             ListAsync(cancellationToken);
 
-        public Task<ShippingOneLevelMethodSnapshot?> GetByCodeAsync(string methodCode, CancellationToken cancellationToken) =>
-            Task.FromResult<ShippingOneLevelMethodSnapshot?>(null);
+        public Task<ShippingOneLevelMethodSnapshot?> GetByCodeAsync(string methodCode, CancellationToken cancellationToken)
+        {
+            Calls++;
+            if (Failure is not null)
+            {
+                return Task.FromException<ShippingOneLevelMethodSnapshot?>(Failure);
+            }
+
+            // Lookup is by the canonical code only; the catalog never resolves a raw client string.
+            var match = Rows.FirstOrDefault(
+                x => string.Equals(x.MethodCode, methodCode, StringComparison.Ordinal));
+            return Task.FromResult(match);
+        }
     }
 
     private sealed class StubRead(
         ShippingOneLevelCatalogGate gate,
         bool CatalogReady,
-        IReadOnlyList<ShippingOneLevelMethodSnapshot> methods) : IShippingOneLevelCatalogAdminRead
+        IReadOnlyList<ShippingOneLevelMethodSnapshot> methods,
+        ShippingOneLevelCatalogAdminBindingSnapshot? ResolveTo = null) : IShippingOneLevelCatalogAdminRead
     {
         public Task<ShippingOneLevelCatalogAdminSnapshot> ReadAsync(CancellationToken cancellationToken) =>
             Task.FromResult(new ShippingOneLevelCatalogAdminSnapshot(gate, CatalogReady, methods));
+
+        public Task<ShippingOneLevelCatalogAdminBindingSnapshot> ResolveBindingAsync(
+            string methodCode,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(ResolveTo ?? new ShippingOneLevelCatalogAdminBindingSnapshot(
+                gate, CatalogReady, Resolved: false, MethodCode: string.Empty, ServiceCode: string.Empty,
+                OptionCode: null, IsActive: false));
     }
 
     private sealed class StubLanguages : ILanguageLookup

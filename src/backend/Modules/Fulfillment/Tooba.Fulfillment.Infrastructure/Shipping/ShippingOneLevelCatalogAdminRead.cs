@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using Npgsql;
 using Tooba.Fulfillment.Application.Shipping.Ports;
 using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
 
 namespace Tooba.Fulfillment.Infrastructure.Shipping;
 
@@ -58,4 +59,54 @@ public sealed class ShippingOneLevelCatalogAdminRead : IShippingOneLevelCatalogA
             return new ShippingOneLevelCatalogAdminSnapshot(gate, CatalogReady: false, Methods: []);
         }
     }
+
+    /// <inheritdoc />
+    public async Task<ShippingOneLevelCatalogAdminBindingSnapshot> ResolveBindingAsync(
+        string methodCode,
+        CancellationToken cancellationToken)
+    {
+        var gate = ShippingOneLevelCatalogPolicy.Evaluate(_options.Value);
+        if (gate != ShippingOneLevelCatalogGate.Enabled)
+        {
+            // دروازهٔ خاموش ⇒ هیچ پرس‌وجوی دیتابیسی و هیچ پیوندی.
+            return Unresolved(gate, CatalogReady: false);
+        }
+
+        var normalized = ShippingMethod.TryNormalizeCode(methodCode);
+        if (normalized is null)
+        {
+            // کد خام/نامعتبر هرگز به سرویس یا گزینه تبدیل نمی‌شود.
+            return Unresolved(gate, CatalogReady: true);
+        }
+
+        try
+        {
+            var method = await _reader.GetByCodeAsync(normalized, cancellationToken);
+            if (method is null)
+            {
+                return Unresolved(gate, CatalogReady: true);
+            }
+
+            // پیوند فقط از رکورد واقعی کاتالوگ می‌آید؛ هیچ بخشی از method_code در مرورگر یا
+            // اینجا به سرویس/گزینه تجزیه نمی‌شود.
+            return new ShippingOneLevelCatalogAdminBindingSnapshot(
+                gate,
+                CatalogReady: true,
+                Resolved: true,
+                MethodCode: method.MethodCode,
+                ServiceCode: method.LegacyServiceCode,
+                OptionCode: method.LegacyOptionCode,
+                IsActive: method.IsActive);
+        }
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UndefinedTable)
+        {
+            return Unresolved(gate, CatalogReady: false);
+        }
+    }
+
+    private static ShippingOneLevelCatalogAdminBindingSnapshot Unresolved(
+        ShippingOneLevelCatalogGate gate,
+        bool CatalogReady) =>
+        new(gate, CatalogReady, Resolved: false, MethodCode: string.Empty, ServiceCode: string.Empty,
+            OptionCode: null, IsActive: false);
 }
