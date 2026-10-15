@@ -1,0 +1,4 @@
+﻿Code-SHA: d38df4325ad83513541f9cad8b122246ec9631fc
+Base-SHA: ec5e693376b56d94441e017df4783e136c63525a
+Expected-Base-SHA: ec5e693376b56d94441e017df4783e136c63525a
+Evidence-SHA: <EVIDENCE_SHA> (the commit that carries RESULT.bridge.txt; substituted at post time by post-result.js)

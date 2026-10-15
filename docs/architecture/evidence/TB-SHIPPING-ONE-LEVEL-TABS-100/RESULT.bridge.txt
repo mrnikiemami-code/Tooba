@@ -1,0 +1,51 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-100
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-099
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_STOREFRONT_ONE_LEVEL_LABEL_PARITY
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Bridge-Task-Row: 03011aef-1665-46a0-89b8-4d06c39ffa10
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: ec5e693376b56d94441e017df4783e136c63525a
+Base-SHA: ec5e693376b56d94441e017df4783e136c63525a
+Code-SHA: d38df4325ad83513541f9cad8b122246ec9631fc
+Evidence-SHA: <EVIDENCE_SHA>
+automaticNextImplementationTask: NONE
+Measured-Time: ~66 minutes (02:27 → 03:33 local) — DISCLOSED overrun of the 30-minute HARD timebox. Not an unfinished-work overrun: the label seam, both focused test suites, full module suites, evidence and commit were all completed before this Result; nothing was left mid-flight. Recorded as a protocol deviation for the Architect.
+
+PREFLIGHT
+- Claimed exactly one Pending Bridge task (03011aef-…, TB-SHIPPING-ONE-LEVEL-TABS-100); receipt preserved UNSTAGED at docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-100.task.md.
+- git fetch origin: HEAD == origin/main == ec5e693376b56d94441e017df4783e136c63525a == Expected-Base-SHA; `git merge-base --is-ancestor` = true; `git diff --stat ec5e693..HEAD -- src` empty and no working-tree src drift on Order/Fulfillment => no RECOVERY_CONFLICT. Two PRE-EXISTING dirty frontend files (admin-fulfillment-work-queue-screen.tsx, admin-order-detail-screen.tsx) and all prior untracked evidence were preserved untouched; no reset/stash/rebase/force-push.
+- Read AGENTS.md, the pipeline/controller contract, the backend feature skill, 094/095 name+activation findings, 098–099 evidence, Fulfillment Contracts (ShippingCatalogContracts, ShippingOneLevelCatalogContracts), ShippingOneLevelCatalogReader/AdminRead and Order StorefrontShippingService.
+- Authority check before coding: the mismatch was confirmed as label-only. `shipping_method_translations` (owning module Fulfillment) holds the 094-edited name; the storefront label came from `label = $"{serviceName} — {optionName}"` over legacy service/option translations, while eligibility, EnabledCodes, rates, prices, methodCode and order snapshots come from other sources entirely. The smallest read-only seam was therefore possible WITHOUT any Order/Checkout refactor, so no BLOCKED_LABEL_PROJECTION_AUTHORITY was warranted.
+
+MISSION A — SMALL, OWNERSHIP-CORRECT LABEL PROJECTION
+- New Contracts-only port `IShippingOneLevelStorefrontLabelReader` (Tooba.Fulfillment.Contracts/Shipping/ShippingOneLevelStorefrontLabelContracts.cs): input = canonical methodCodes + the already-resolved requested languageId, output = methodCode→display name map. No EF/DbContext type in Contracts.
+- New Fulfillment implementation `ShippingOneLevelStorefrontLabelRead` (Infrastructure/Shipping) reusing the EXISTING `IShippingOneLevelCatalogReader` (no second catalog reader): gate `ShippingOneLevelCatalogPolicy` OFF => empty map and ZERO DB reads; only exact LanguageId matches accepted (no guessed language, no cross-language fallback, no default-market change); whitespace/blank codes rejected before any read; `PostgresErrorCodes.UndefinedTable` => empty map; every other exception propagates (not hidden).
+- DI by module convention: `services.AddScoped<IShippingOneLevelStorefrontLabelReader, ShippingOneLevelStorefrontLabelRead>()` in FulfillmentModule.
+- Order side: `StorefrontShippingService` injects the port and runs `ApplyOneLevelDisplayNamesAsync` strictly AFTER the legacy eligible list is built; it rewrites only `Label` (`with { Label = … }`). Eligibility source (legacy service/option IsActive, EnabledCodes, rate config), MethodCode, ServiceCode, OptionCode, IconKey, PriceAmount, LeadDays, IsFree, EstimationLabel and the API response shape are untouched. Gate OFF / missing table / missing language / unknown code / optionless service all fail closed to the EXACT prior legacy string; no "service — option" second concatenation and no client-side methodCode parsing. Zero changes to method identity, activation, translations, order snapshots, rate/packaging policy, payment/settlement; ShippingRateAuthority and ShippingOperationalShadow never read, induced or enabled.
+
+MISSION B — FOCUSED PROOF (no shared DML, no shared :5088/:3000 restart, no live order/checkout write)
+- Gate OFF vs ON proven at the real `ProjectAsync` boundary (Tooba.Order.Tests/Storefront/StorefrontShippingOneLevelLabelTests.cs, 4 tests): OFF => legacy labels `پست قدیمی — استاندارد قدیمی`, `پست قدیمی — اکسپرس قدیمی`, `اسنپ قدیمی` with codes post:standard/post:express/snapp_courier, prices 120000/200000/90000, lead days 4/2/0, option codes standard/express/null; ON (one-level name only for post:standard) => ONLY that label becomes the configured one-level name; the other labels, all codes, all prices, all lead days, ServiceCode, OptionCode and IsFree are identical to the OFF run (asserted equal between runs). Requested language `en` => the resolved English LanguageId reaches the seam and, with no English row, the EXACT legacy label is kept. Unknown key (`post:economic`) and optionless-service key (`post`) => no label rebuilt or substituted; disabled/unknown/ineligible methods never appear because the eligibility pass is unchanged. No price or methodCode mutation is asserted, not assumed.
+- Seam semantics proven (Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelStorefrontLabelReadTests.cs, 4 tests): gate OFF = empty + 0 catalog reads; gate ON = exact-language translation only (fa for fa, en for en); unknown code = 1 read + no label (no name invented); whitespace code and Guid.Empty language = empty before any DB read; UndefinedTable = empty map, no exception.
+- Real-data label pair (READ-ONLY SELECT on tooba_alpha, no DML): before `پست — معمولی` ⇒ after `معمولی` for post:standard, and before `پست — پیشتاز` ⇒ after `پیشتاز` for post:express (one-level fa names currently persisted); snapp_courier (optionless, no one-level row) stays exactly `اسنپ / پیک آنلاین`. Raw SQL + output in label-before-after.sql / .txt.
+- Suites actually run: Tooba.Fulfillment.Tests 158/158 PASS; Tooba.Order.Tests 316/316 PASS; `dotnet build Tooba.Host` 0 errors. Focused Host filter (Architecture|Storefront|Shipping): 1508 passed / 45 failed — the failing set is the documented PRE-EXISTING drift (Host/Admin 17 vs legacy 15/52, deleted Tooba.Catalog.Domain/CatalogDomain.cs + CatalogCategoryTreeRules.cs readers, PaidProjectionFinancialTests.Settlement_and_initiate_exclude_store_shipping_from_seller_ids already recorded in TOOBA-TMAR-MASTER-RECOVERY.md and in the Tax/Settlement/Promotion W2–W3 baseline failing-name files). Zero failing test name relates to one-level, labels or changed files; zero new failure, zero silently fixed.
+
+MISSION C — EVIDENCE AND HANDOFF
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-100.md plus docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-100/** (summary.md, label-before-after.sql/.txt, tests-fulfillment.txt, tests-order.txt, tests-host-focused.txt, tests-host-focused-failed-names.txt, changed-files.txt).
+- Architecture boundaries: Contracts-only port consumed by Order, implementation + DbContext stay inside Fulfillment, no direct EF/Infrastructure/endpoint dependency across modules, no business logic in Host, no migration/schema/config/frontend/financial edit, no architecture-guard manifest exception needed (new files live in existing allowed subfolders; no root allowlist touched).
+- UNPROVEN / NOT PERFORMED (honest scope): no live browser/HTTP storefront render of the new label and no Checkout re-run (explicitly forbidden: no shared DB DML, no :5088/:3000 restart, no live order/checkout write), so end-to-end page proof is deferred to the Architect's environment; the real English one-level label was exercised only in unit tests, not against shared data.
+
+INVARIANTS (explicit): eligibility source unchanged; method set/order unchanged; methodCode, shipping service code, option code unchanged; customer-facing price/lead days/isFree unchanged; checkout charge authority, rate/packaging policy and paid order snapshots untouched; no new payment path; no second provider/option level; no shared DB write; no activation; no gate enablement.
+
+CHANGED PATHS: src/backend/Modules/Fulfillment/Tooba.Fulfillment.Contracts/Shipping/ShippingOneLevelStorefrontLabelContracts.cs (new); src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelStorefrontLabelRead.cs (new); src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/DependencyInjection/FulfillmentModule.cs (+1 registration); src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelStorefrontLabelReadTests.cs (new); src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs (+1 ctor port, +1 label-only pass); src/backend/Modules/Order/Tooba.Order.Tests/TestSupport/OneLevelShippingLabelFake.cs (new); src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingOneLevelLabelTests.cs (new); src/backend/Modules/Order/Tooba.Order.Tests/{Endpoints/StorefrontStartPaymentEndpointTests.cs, Storefront/StorefrontStartPaymentComposerTests.cs, Storefront/StorefrontPaymentDraftTests.cs} (fixture port only); docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-100.md (new); docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-100/** (new). Totals: 19 files, +1015/−1. Task receipt unstaged/untracked.
+ROLLBACK: `git revert d38df4325ad83513541f9cad8b122246ec9631fc` — no migrations, schema, data, config or financial state to reverse; removing the DI registration and ctor port restores the exact pre-task behaviour, which is also what the gate-OFF path already does.
+
+BLOCKERS: none technical. Standing items for the Architect: (1) the disclosed 66-minute overrun against the 30-minute HARD timebox (work completed, no partial state); (2) end-to-end storefront page/Checkout label proof is deferred because this task forbade shared-environment restarts and live checkout writes; (3) the pre-existing Host.Tests drift set (45 failures) and the pre-existing Studio/frontend dirty files remain untouched and unrepaired.
+END_TOOBA_WORKER_RESULT
