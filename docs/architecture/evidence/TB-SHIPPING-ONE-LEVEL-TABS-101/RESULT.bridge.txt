@@ -1,0 +1,157 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-101
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-100
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_SHARED_DEVELOPMENT_STOREFRONT_LABEL_READ_ONLY_PROOF
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Push: `git push origin main` succeeded on the first attempt; HEAD == origin/main at post time. No force-push, no history rewrite.
+Bridge-Task-Row: 59b6ee46-6ee8-4006-ac83-e61aed0beb31
+Status: PARTIAL
+Blocker-Code: BLOCKED_REAL_STOREFRONT_PROOF
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 5e7c9c14117da4e94ae0e459f054d37d3b312124
+Base-SHA: 4fc2c4b0dcaac565124fe16420955103e314a1ad
+Code-SHA: NONE
+Evidence-SHA: <EVIDENCE_SHA>
+automaticNextImplementationTask: NONE
+Measured-Time: ~24 minutes (claimed 02:48 local → ~03:12 local) — INSIDE the 30-minute HARD timebox; no overrun.
+
+STATUS MAPPING (explicit, for the Architect)
+- Mission A is a PASS on its own terms: the shared Development Host was verified stale, then rolled out
+  from current code under script-managed ownership with explicit provenance and a documented rollback,
+  and the released process really serves the Fulfillment-owned one-level name.
+- Mission B is NOT exercised: no safe existing read-only path reaches the storefront shipping projection
+  on the shared data set, so the live Order-side label rendering is unproven.
+- Reported as PARTIAL per the ACCEPTANCE clause "Host updated/safe and projection unable to be exercised",
+  carrying the PREFLIGHT-mandated blocker code BLOCKED_REAL_STOREFRONT_PROOF as the exact reason. If the
+  Architect prefers the stricter reading of BLOCKED ("no safe authenticated read path"), this result
+  satisfies that clause too — the classification is the Architect's call; nothing is left mid-flight.
+
+PREFLIGHT
+- Claimed exactly one Pending Bridge task (59b6ee46-…, TB-SHIPPING-ONE-LEVEL-TABS-101); receipt preserved
+  UNSTAGED at docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-101.task.md.
+- git fetch origin: one intervening commit between Expected-Base-SHA and HEAD —
+  4fc2c4b0d "TB-SHIPPING-ONE-LEVEL-TABS-100: finalize result timing and push disclosure", docs-only
+  (`docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-100/RESULT.bridge.txt`, +2/−1). Non-overlapping
+  result bookkeeping. `git diff --stat 5e7c9c14..HEAD -- src` is EMPTY ⇒ no RECOVERY_CONFLICT.
+- Working tree preserved exactly as found: the two PRE-EXISTING dirty frontend screens
+  (admin-fulfillment-work-queue-screen.tsx, admin-order-detail-screen.tsx) and all prior untracked evidence
+  are untouched; no reset/stash/rebase/force-push.
+- Read AGENTS.md, pipeline/controller, host-stack.ps1, 093 host lifecycle, 098 rollout, 100 projection
+  design and evidence.
+- Shared Development Host positively verified BEFORE any change: listener :5088 owned by managed dev host
+  pid=29788 (.tmp-dev-host/host-5088.pid, outDir .tmp-dev-host-out-5088-098), /health 200,
+  /__platform-commerce = SingleStore / dev-singlestore / store-alpha / tenant-alpha, gate
+  ShippingOneLevelCatalog=true. Rollback of that prior state proven (PID file, prior-host record, stop/start
+  path) ⇒ no blind kill, no takeover of an unowned process.
+- Shared storefront frontend verified to target the SAME backend: :3000 next.config rewrites /v1/:path* →
+  http://127.0.0.1:5088 (TOOBA_HOST_ORIGIN in .env.local) and middleware attaches Authorization: Bearer
+  <tooba_session>; :3000 was never restarted.
+- Staleness proven before deploying: the running build predated the 100 seam commit (binary-built 01:55
+  vs seam commit 02:45) and its DLLs contain no label-seam symbol ⇒ rollout required, not optional.
+- READ-ONLY baseline captured first (baseline-preflight.sql/.txt): 7 one-level methods / 14 translations;
+  post:standard ACTIVE with fa-IR «معمولی» and en-US Standard; post:express INACTIVE; snapp_courier
+  INACTIVE; legacy service/option state; 3 languages (fa-IR default, en-US, ru-RU).
+
+MISSION A — CONTROLLED CURRENT-CODE HOST, ZERO DATA WRITES (PASS)
+- Rollout performed ONLY through the repository lifecycle script, never by hand:
+  `powershell -NoProfile -File scripts/dev/host-stack.ps1 -Action restart -OutDir .tmp-dev-host-out-5088-101
+   -GateShippingOneLevelCatalog`
+  - build: 0 Error(s) / 19 warnings, Time Elapsed 00:00:33.46
+  - result: pid=37200, exe D:\…\.tmp-dev-host-out-5088-101\Tooba.Host.exe, gate
+    ShippingOneLevelCatalog=true as PROCESS-ENV-ONLY ephemeral value; the script never sets
+    ShippingRateAuthority or ShippingOperationalShadow (both stayed OFF)
+  - verification: /health {"status":"ok"}; provenance OK SingleStore / dev-singlestore / store-alpha /
+    tenant-alpha; PID file rewritten; rollback instructions emitted by the script
+  - seam really deployed: rollout Tooba.Fulfillment.Contracts.dll, Tooba.Fulfillment.Infrastructure.dll and
+    Tooba.Order.Application.dll contain the label-seam symbols; SHA-256 of Tooba.Host.exe and all three
+    modules recorded in deployment-facts.txt
+- Gate state was ON at preflight and is left ON; nothing was enabled, disabled or edited; no appsettings,
+  migration, seed, schema or data change; no second shared Host; :3000 untouched.
+- DISCLOSED: an earlier rollout inside this same task used the script's default outDir
+  (.tmp-dev-host-out-5088, pid=41824, current code, gate ON) and was superseded by the task-named isolated
+  outDir above so the deployment of record owns a task-specific build path. Both rollouts were
+  script-managed, graceful, current-code and gate-ON; all verification was performed on the final pid=37200.
+  Logs: host-restart-101.txt (final) and host-restart-101-intermediate-superseded.txt (superseded).
+
+MISSION B — REAL STOREFRONT LABEL PROOF, READ-ONLY (NOT EXERCISED)
+- Exact precondition analysis for POST /v1/storefront/shipping/projection (a read-only query; it cannot
+  write): it requires BOTH (1) a session passing the checkout identity gate and (2) a cart the session may
+  read through the cart presentation gateway.
+- A real Development session DOES exist on the shared frontend origin: GET /v1/auth/me → 200
+  (userId/sessionId redacted, edition SingleStore, tenant store-alpha). The identity precondition is
+  satisfiable.
+- The cart precondition is NOT satisfiable on this data set:
+  * the session user owns ZERO carts (read-only SELECT on cart.carts.owner_user_id) ⇒ 0 rows;
+  * no Active Authenticated cart exists (13 Converted + 1 Expired Authenticated; Guests: 8 Active,
+    11 Abandoned, 17 Expired);
+  * the 8 Active guest carts need their guest secret, which is returned once at creation and stored only
+    as a digest (guest_credential_hash); it is not recoverable, and no trace exists in the repo, evidence
+    or dev logs (checked src/frontend/*.log for X-Tooba-Guest-Secret / guestSecret — none).
+- Observed HTTP results (read-only; raw captures in live-http-proof.txt, credentials redacted):
+  * anonymous / bogus bearer / bogus guest secret / unknown cart → 401 checkout.authentication_required
+    (probe-readonly-101.txt, four variants, on :5088 directly)
+  * authenticated session + Active guest cart → 401 cart.guest.invalid
+  * authenticated session + another user's Converted cart → 401 cart.access.denied
+  * authenticated session + unknown cart → 404 shipping.cart.missing
+  Every failure mode was correctly FAIL-CLOSED; no credential guessing and no auth bypass was attempted.
+- The storefront page itself was deliberately NOT opened: its cart page can lazily create a cart, i.e. DML,
+  which this task forbids; no order/checkout/payment/draft call was made.
+- Positive live read-only proof that the deployed process serves the intended name — the Fulfillment-owned
+  one-level read on the SAME process: GET /v1/admin/shipping-services/shipping-methods/one-level → 200
+  {"gate":"Enabled","ready":true,"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","methods":[
+   … {"methodCode":"post:standard","name":"معمولی","isActive":true,"sortOrder":11, translations fa «معمولی» / en Standard} …]}
+  This is the exact value the Order label seam projects; what remains unproven is only the Order-side
+  substitution as rendered by a reachable cart, which task 100 already asserts in unit tests.
+- The legacy display combination to distinguish («پست — معمولی») was NOT assumed to be the current
+  persisted sample (094 rolled that sample name back); the comparison is made against the live legacy
+  service/option translations captured in the baseline, i.e. legacy «پست» + «استاندارد/معمولی» vs one-level
+  «معمولی». No live gate-OFF/ON storefront comparison exists because the path is unreachable in BOTH gate
+  states on this data set; that comparison remains UNIT-TEST-ONLY (task 100
+  StorefrontShippingOneLevelLabelTests) and is documented as such rather than claimed as live proof.
+
+INVARIANTS / NO-WRITE PROOF
+- post:standard still ACTIVE with fa name «معمولی»; post:express and snapp_courier still INACTIVE and did not
+  become newly eligible; method set (7) and translations (14) unchanged; 26 seller orders;
+  50 carts / 78 cart lines / 14 shipping drafts unchanged.
+- No-write proof (no-write-proof.sql/.txt): newest cart.carts row created 2026-10-15 09:48:12Z, newest
+  cart_shipping_drafts.updated_at 2026-10-14, newest fulfillment.shipping_methods change 2026-10-15 14:45Z —
+  all BEFORE the task window (23:20–23:40Z) ⇒ zero rows created or updated by this task.
+- No activation write, no name edit, no DDL, no fixture in the real DB, no shared frontend patch, no
+  payment-start, no rate/packaging/price change, no Shadow/RateAuthority enablement.
+
+MISSION C — EVIDENCE AND HANDOFF
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-101.md; docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-101/**
+  (summary.md, baseline-preflight.sql/.txt, host-restart-101.txt,
+   host-restart-101-intermediate-superseded.txt, deployment-facts.txt, live-http-proof.txt,
+   probe-readonly-101.js/.txt, reachability-facts.txt, no-write-proof.sql/.txt, parity-post.sql/.txt).
+- Credentials redacted: no session cookie, bearer token, session/user id, password or guest secret is
+  stored in git.
+- Restore/handoff state: preflight gate was ON ⇒ left ON. Current rollout pid=37200,
+  outDir .tmp-dev-host-out-5088-101, provenance dev-singlestore/store-alpha/tenant-alpha, :3000 untouched.
+  Replaced state (098 build in .tmp-dev-host-out-5088-098, same gate, same provenance) documented.
+- ROLLBACK: `powershell -NoProfile -File scripts/dev/host-stack.ps1 -Action stop` then
+  `powershell -NoProfile -File scripts/dev/host-stack.ps1 -Action start -OutDir .tmp-dev-host-out-5088-098
+   -GateShippingOneLevelCatalog` (or -Action start with no gate for the default OFF state).
+- UNPROVEN / NOT PERFORMED (honest scope): live storefront projection label rendering; live gate-OFF vs
+  gate-ON storefront comparison; any browser screenshot (no reachable read-only storefront cart exists).
+
+CHANGED PATHS (docs/evidence only; no src/** change authorized or made)
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-101.md (new)
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-101/** (new, 14 files)
+- docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-101.task.md (task receipt, UNSTAGED/untracked)
+
+BLOCKERS
+1. BLOCKED_REAL_STOREFRONT_PROOF: the storefront shipping projection cannot be reached read-only on the
+   shared Development data set — the authenticated session owns no cart, no Active Authenticated cart
+   exists, and Active guest carts need an unrecoverable guest secret. Reaching it requires forbidden DML
+   (guest cart creation) or credential guessing.
+2. Live gate-OFF vs gate-ON storefront comparison remains unit-test-only for the same reason.
+3. Standing: the two pre-existing dirty frontend screens and the pre-existing Host test-failure set remain
+   untouched and unrepaired (unchanged from task 100's disclosure).
+END_TOOBA_WORKER_RESULT

@@ -125,4 +125,4 @@ is part of this task**. Only docs/evidence were committed.
    create a throwaway Development cart (DML) to reach projection, or should the Architect supply an owned
    cart / guest credential?
 2. The live gate-OFF/ON storefront comparison remains unit-test-only until such a readable cart exists.
-3. This task spent ~26 minutes inside the 30-minute HARD timebox (02:46 → ~03:12 local) — **no overrun**.
+3. This task spent ~24 minutes inside the 30-minute HARD timebox (Bridge claim 02:48 → ~03:12 local) — **no overrun**.
