@@ -1,0 +1,22 @@
+feat(shipping): wire one-level tab 4 operating schedule and capacity on the 086 binding
+
+TB-SHIPPING-ONE-LEVEL-TABS-088
+
+Replaces only the tab-4 placeholder with a working weekly operating-schedule and
+capacity surface for exactly one selected one-level method, reusing the existing
+Shipping-owned operating-schedule APIs and the proven schedule model unchanged.
+No backend source changed: the 086 server-owned binding resolver already provides
+the immutable legacy service/option identity.
+
+- shipping-one-level-schedule-model.ts scopes schedules to the resolved binding on
+  an exact (serviceCode, optionCode) match, so a service-level fallback is never
+  presented as a second selectable level and a schedule of another service/option
+  is never shown or written. A stale operation keeps its original identity.
+- shipping-one-level-schedule-tab.tsx adds read/create-replace/activate with the
+  explicit IANA timezone, ISO weekday half-open windows and honest no-method /
+  binding / loading / empty / 403 / error / mismatch states. Configured capacity is
+  persistently labeled «ظرفیت تنظیم‌شده (هنوز اعمال نمی‌شود)» with NotEnforced
+  truth; no option selector, no provider sublevel, no method-code splitting, no
+  reservation, delivery promise or Checkout implication.
+- Tests: 11 new frontend cases (28 with the shell suite, 165 across
+  shipping-services) and a clean frontend typecheck.

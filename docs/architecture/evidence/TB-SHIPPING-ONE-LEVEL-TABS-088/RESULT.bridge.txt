@@ -1,0 +1,147 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-088
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-087
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-TABS
+Mode: BOUNDED_ONE_LEVEL_OPERATING_SCHEDULE_AND_CAPACITY_TAB
+Bridge-Task-Row: 971b3552-f5e1-4249-aadf-e443d6313102
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: f87b036852da34b5b70055a8ed9c38db42dea47f
+Base-SHA: f87b036852da34b5b70055a8ed9c38db42dea47f
+Code-SHA: 438f606f3
+Evidence-SHA: <see Evidence-SHA note>
+automaticNextImplementationTask: NONE
+
+STATUS NOTE
+PASS is claimed ONLY for the bounded source/test deliverable permitted by the acceptance clause:
+tab 4 is genuinely wired to the EXISTING schedule read/write APIs using the verified server-owned
+binding, per-method isolation and validation are demonstrated, and configured capacity is presented
+as configuration only. This is explicitly NOT LIVE VERIFIED and NOT COMMERCIALLY READY: the gate is
+OFF by absence and the Development one-level table/backfill is absent, so no live browser CRUD is
+claimed. No production PASS is fabricated.
+
+BASE-SHA PROOF
+HEAD was exactly f87b03685 (Expected-Base-SHA) when the task was claimed, so there was no drift and
+no RECOVERY_CONFLICT. All pre-existing dirty/untracked paths were preserved untouched: no reset,
+stash, rebase, force push or unrelated commit. The 088 receipt
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-088.task.md remains UNSTAGED as required.
+
+CHANGED PATHS (frontend only; no backend source changed)
+  src/frontend/app/admin/shipping-services/shipping-one-level-schedule-model.ts (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-schedule-tab.tsx (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-schedule-tab.test.ts (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.tsx
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs-model.ts
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.test.ts
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-088.md
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-088/**
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-088.task.md (receipt, kept UNSTAGED)
+The allowed path exception src/frontend/app/admin/shipping-services/operating-schedule was NOT used:
+the existing schedule model and API client were reused as-is without modification.
+
+MISSION A — METHOD / BINDING SAFETY
+The 086 resolver is reused unchanged as the single authority:
+  GET /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/binding
+  * the tab shows the selected one-level method code/label via the resolved binding context;
+  * the browser never splits method_code (no split(":") in the component or model; asserted);
+  * no client-supplied serviceCode/optionCode is accepted: the PUT target comes only from
+    scheduleWriteTarget(resolvedBinding) and there is no editable service/option input;
+  * fail closed on gate OFF, unavailable/absent/invalid binding or auth denial:
+    resolveScheduleState yields binding-unavailable for gate-off/not-ready/unresolved/untrusted and
+    denied for 401/403, and the component renders an explicit refusal with no list and no editor;
+  * every read AND write is scoped to the selected method's binding on an exact
+    (serviceCode, optionCode) match (null matches null);
+  * a response belonging to another service is refused before anything is presented or mutated;
+  * stale selection: the generation guard bumps on every method change, operationStillTargetsMethod
+    keeps a completion notice tied to the identity that started the operation, and the post-write
+    refresh is skipped when the method changed. No cancellation of a committed server write is
+    claimed and no duplicate write is issued on retry.
+
+MISSION A — SCHEDULE SEMANTICS (reused, not reimplemented)
+Existing Shipping-owned APIs only, addressed by the resolved service code:
+  GET   /v1/admin/shipping-services/{serviceCode}/operating-schedules
+  PUT   /v1/admin/shipping-services/{serviceCode}/operating-schedules
+  PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/{id}/active
+No new Shipping endpoint was introduced and no new second level was created.
+  * ISO weekday identity (1 Monday .. 7 Sunday) and Persian labels reused;
+  * multiple half-open [start,end) local windows per day, end > start, no midnight crossing, overlap
+    refused with adjacent windows allowed — same rules and same Persian messages as 072;
+  * explicit IANA timezone required and never guessed from the browser; the stored value is shown
+    verbatim and edited through an explicit field;
+  * capacity per window reused (null = not configured, positive integer bounded), and the schedule
+    total is the existing configuredCapacityTotal;
+  * active/inactive state shown truthfully, including an explicit inactive count, so an inactive
+    schedule is never silently hidden;
+  * create/replace of the selected identity only, plus activation/deactivation; identity is never
+    moved by an edit because the option identity comes from the server binding;
+  * no change to availability interpretation, timezone conversion, schedule precedence or method
+    activation.
+
+CAPACITY AND WINDOW TRUTH
+  * Persistent Persian label on every capacity surface: «ظرفیت تنظیم‌شده (هنوز اعمال نمی‌شود)».
+  * The only runtime capacity enforcement is stated as NotEnforced.
+  * The strings «ظرفیت باقی‌مانده» and «رزرو شد» appear nowhere (asserted by test).
+  * Carrier windows are described as pickup/dispatch availability, explicitly NOT a promised customer
+    delivery; the promise is Order-owned.
+  * No atomic slot reservation/claim/release, no delivery promise, no derived parcel weight or
+    item count, no COD ledger, no settlement, no Checkout authority, no pricing cutover.
+
+STATES AND UX
+  * no method; binding loading; binding unavailable (gate OFF / not migrated / unresolved / invalid
+    response); schedules loading; zero schedules (explicit "no explicit hours configured"); 401/403
+    denied; unexpected server failure; service identity mismatch; saving; success; failure; cancel of
+    unsaved changes;
+  * Persian labels, RTL-friendly layout and controls, responsive grid, and the 084 tablist/tab/
+    tabpanel keyboard semantics untouched;
+  * tabs 1-3 unchanged; tab 5 remains a truthful placeholder for 089.
+
+TESTS RUN
+  node --test --experimental-strip-types app/admin/shipping-services/shipping-one-level-schedule-tab.test.ts
+    + …-tabs.test.ts                                                        => 28 passed / 0 failed
+  node --test --experimental-strip-types "app/admin/shipping-services/*.test.ts"  => 165 passed / 0 failed
+  npm run typecheck (src/frontend)                                          => clean
+
+Focused coverage added: post:standard, tipax:express, optionless store_courier and in_person,
+inactive methods, no guessed code split, gate/not-ready/403 refusal, service identity mismatch, stale
+selection, the full state machine (never ready without a resolved binding), configured-capacity
+NotEnforced text, the dispatch-vs-delivery distinction, truthful empty/inactive text, and tab 1-3
+preservation through the shell wiring test (locked Persian labels and wired tabs still asserted).
+
+TESTS NOT RUN (and why)
+  * No backend test: no backend source changed (Mission B.6 prefers targeted frontend tests plus
+    typecheck in that case).
+  * No broad suite was run, and the known Host output DLL lock (Tooba.Host pid 33548) was NOT retried;
+    no Host/Next restart.
+
+GATE / DATABASE TRUTH — NOT LIVE VERIFIED, NOT COMMERCIALLY READY
+  * Tooba:ShippingOneLevelCatalog: OFF by absence; NOT switched by this task.
+  * Development one-level table/backfill: absent/unapplied; the running Host may predate the 086 route.
+  * ShippingRateAuthority: OFF. ShippingOperationalShadow: OFF.
+  * Therefore tab 4 is source-and-test proof only; no live browser CRUD is asserted and no commercial
+    readiness is claimed.
+  * No DDL/DML, no migration/backfill, no seeding, no config gate activation, no new permission grant,
+    no staging/production contact, no unrelated dirty file touched. Legacy screen remains usable.
+
+BLOCKERS
+  * Live tab-4 CRUD requires the gate enabled AND the authorized one-level migration — a separate,
+    unauthorized task. Until then the tab truthfully reports the binding as unavailable.
+  * The 086 Host cert-guard run stays blocked while Tooba.Host (pid 33548) holds its output DLLs.
+  * The legacy operating-schedule dialog remains the operational surface while the gate is OFF.
+
+ACTUAL ELAPSED
+Claim 2026-10-15T14:05:03Z -> result ~14:13Z => approximately 8 minutes, well inside the 30-minute
+hard stop.
+
+ROLLBACK
+Revert the 088 code commit and its evidence commit. Tab 4 returns to its wiring placeholder. No data,
+schema or configuration change needs undoing.
+
+EVIDENCE-SHA NOTE
+The Evidence-SHA is the commit carrying docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-088.md,
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-088/** and this RESULT.bridge.txt; it is created
+and pushed immediately before this result is posted and is the parent of the pushed result tree.
+END_TOOBA_WORKER_RESULT
