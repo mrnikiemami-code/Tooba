@@ -181,6 +181,53 @@ Results use the contract defined by the received Task and are posted to Bridge.
 Legacy `BEGIN_TOOBA_CURSOR_*` markers inside historical files are preserved as
 evidence and compatibility records, not current transport.
 
+## Canonical Worker Result envelope
+
+The Task artifact delivered through Tampermonkey/Bridge is a real downloadable
+`<TASK-ID>.task.md` file whose envelope is `BEGIN_TOOBA_TASK … END_TOOBA_TASK`
+and which carries its own `RESULT CONTRACT` section. The Worker only consumes
+that artifact; it never authors or dispatches Tasks.
+
+The Worker Result posted to `POST /api/results` is a single `content` string with
+this canonical envelope. Start and end markers must **never** change:
+
+```text
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: <actual task ID>
+Parent-Task: <actual parent task ID>
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: <actual program>
+Mode: <actual execution mode>
+Bridge-Task-Row: <actual Bridge row id>
+Status: PASS | PARTIAL | BLOCKED | RECOVERY_CONFLICT
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: <verified expected SHA>
+Base-SHA: <actual SHA>
+Code-SHA: <actual or NONE>
+Evidence-SHA: <actual or NONE>
+automaticNextImplementationTask: NONE
+<root cause; implementation; target provenance; service-method mapping; policy/grant
+ fixture ledger; explicit shadow gate proof; live parity/mismatch matrix; unchanged
+ legacy projection; restore/cleanup; focused tests; actual elapsed; changed paths;
+ commit/push; blockers>
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
+```
+
+Fixed-tail rules:
+
+- the tail from `Expected-Base-SHA` through `END_TOOBA_WORKER_RESULT` and
+  `END_TOOBA_TASK` is fixed in order; only the values change per Task;
+- the body sits strictly between `automaticNextImplementationTask: NONE` and
+  `END_TOOBA_WORKER_RESULT`, and nothing follows `END_TOOBA_TASK`;
+- no unresolved placeholder (`<actual>`, `<…>`), template marker, or editorial
+  note may be transmitted; every field carries a real value or `NONE`;
+- `Expected-Base-SHA` is taken from the received Task, never from memory;
+- `Status` is exactly one of the four listed values.
+
 ## Source of Truth and Git
 
 The repository is durable technical Source of Truth. Bridge carries Tasks,
