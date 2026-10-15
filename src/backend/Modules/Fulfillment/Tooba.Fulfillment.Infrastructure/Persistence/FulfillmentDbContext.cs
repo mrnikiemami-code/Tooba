@@ -229,6 +229,13 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.Name).HasMaxLength(128);
             entity.Property(x => x.Description).HasMaxLength(512);
             entity.HasIndex(x => new { x.ShippingMethodId, x.LanguageId }).IsUnique();
+            // بدون این نگاشت، EF ترتیب درج را نمی‌داند و ترجمه را پیش از روش درج می‌کند؛ آن‌وقت
+            // محدودیت FK دیتابیس (fk_shipping_method_translations_method) درج را رد می‌کند. رابطه
+            // عمداً بدون navigation مدل می‌شود تا شکل دامنه تغییر نکند.
+            entity.HasOne<ShippingMethod>()
+                .WithMany()
+                .HasForeignKey(x => x.ShippingMethodId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<FulfillmentPaymentInboxRecord>(entity =>
         {

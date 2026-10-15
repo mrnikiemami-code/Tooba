@@ -61,7 +61,12 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                     language_id uuid NOT NULL,
                     name character varying(128) NOT NULL,
                     description character varying(512) NULL,
-                    CONSTRAINT pk_shipping_method_translations PRIMARY KEY (translation_id)
+                    CONSTRAINT pk_shipping_method_translations PRIMARY KEY (translation_id),
+                    -- نگهبان یکپارچگی مرجع برای جدول تازهٔ ترجمه: بدون آن، حذف یک روش، ترجمه‌های یتیم
+                    -- باقی می‌گذارد. این محدودیت فقط روی جدول تازه اعمال می‌شود و به جدول‌های موجود
+                    -- ماژول (که هیچ FK سطح دیتابیس ندارند) دست نمی‌زند.
+                    CONSTRAINT fk_shipping_method_translations_method FOREIGN KEY (shipping_method_id)
+                        REFERENCES fulfillment.shipping_methods (shipping_method_id) ON DELETE CASCADE
                 );
 
                 CREATE UNIQUE INDEX IF NOT EXISTS ix_shipping_method_translations_method_lang

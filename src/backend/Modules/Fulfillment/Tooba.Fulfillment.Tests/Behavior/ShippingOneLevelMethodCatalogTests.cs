@@ -262,6 +262,69 @@ public sealed class ShippingOneLevelMethodCatalogTests
         Assert.DoesNotContain(plan.Items, x => x.Desired.MethodCode == "post");
     }
 
+    /// <summary>
+    /// TB-SHIPPING-ONE-LEVEL-TABS-083 — durable encoding of the <b>actual</b> persisted legacy method
+    /// codes read (read-only) from Development <c>tooba_alpha</c> on 2026-10-15. This guard exists so the
+    /// compatibility boundary below can never silently drift:
+    /// <list type="bullet">
+    /// <item><c>order.checkouts</c> and <c>order.cart_shipping_drafts</c> persist only composite codes
+    /// (<c>post:express</c>, <c>tipax:express</c>, <c>tipax:standard</c>) — max length 14, so the
+    /// 32-character contract holds with margin and no column widening is needed.</item>
+    /// <item><c>fulfillment.fulfillments</c>, <c>fulfillment.shipments</c> and
+    /// <c>fulfillment.consolidated_packages</c> persist the <b>bare service code</b> <c>post</c> and
+    /// <c>snapp_courier</c>.</item>
+    /// <item><c>post:standard</c> does <b>not</b> occur in live data at all, while the currently
+    /// <b>inactive</b> <c>post:express</c> does — historical paid rows may reference a method that is no
+    /// longer sellable.</item>
+    /// </list>
+    /// A bare <c>post</c> is deliberately NOT a one-level method (B1: a service-level fallback policy is
+    /// not a second sellable method), so resolving it through the one-level catalog fails closed with
+    /// <c>null</c> rather than matching something else. That is the intended, safe outcome and is why the
+    /// legacy catalog stays the operational read authority; it is recorded here as an explicit
+    /// Architect-visible boundary, not an invisible hole.
+    /// </summary>
+    [Fact]
+    public void Live_development_persisted_legacy_codes_resolve_exactly_where_the_model_intends()
+    {
+        // Exact inventory observed read-only in tooba_alpha (code, length, occurrences).
+        (string Code, int Len, string Source)[] live =
+        [
+            ("post:express", 12, "order.checkouts + order.cart_shipping_drafts"),
+            ("tipax:express", 13, "order.checkouts + order.cart_shipping_drafts"),
+            ("tipax:standard", 14, "order.checkouts + order.cart_shipping_drafts"),
+            ("post", 4, "fulfillment.fulfillments + shipments + consolidated_packages"),
+            ("snapp_courier", 13, "fulfillment.shipments + consolidated_packages"),
+        ];
+
+        // The 32-character contract holds for every persisted code with margin.
+        Assert.All(live, x => Assert.InRange(x.Len, 1, ShippingMethod.MaxCodeLength));
+        Assert.Equal(14, live.Max(x => x.Len));
+
+        var plan = ShippingMethodBackfillPlanner.Plan(DevelopmentCatalog(), []);
+        var methodCodes = plan.Items.Select(x => x.Desired.MethodCode).ToHashSet(StringComparer.Ordinal);
+
+        // Composite codes used by Checkout/drafts are real one-level methods.
+        Assert.Contains("post:express", methodCodes);
+        Assert.Contains("tipax:express", methodCodes);
+        Assert.Contains("tipax:standard", methodCodes);
+
+        // Option-less service codes persisted by Fulfillment are real one-level methods.
+        Assert.Contains("snapp_courier", methodCodes);
+
+        // The bare `post` code persisted by Fulfillment is NOT a one-level method: `post` owns options, so
+        // only its option-bound rows are methods. Resolution must therefore fail closed, not guess.
+        Assert.DoesNotContain("post", methodCodes);
+        // …while the code shape itself is still legal: the omission is an identity decision, not a parser gap.
+        Assert.Equal("post", ShippingMethod.TryNormalizeCode("post"));
+
+        // `post:standard` is the active method yet absent from live data; `post:express` is inactive yet
+        // present. Activation must reflect the catalog, never the historical usage.
+        var express = Assert.Single(plan.Items, x => x.Desired.MethodCode == "post:express");
+        Assert.False(express.Desired.IsActive);
+        var standard = Assert.Single(plan.Items, x => x.Desired.MethodCode == "post:standard");
+        Assert.True(standard.Desired.IsActive);
+    }
+
     private static IReadOnlyList<ShippingCatalogServiceSnapshot> DevelopmentCatalog() =>
     [
         new ShippingCatalogServiceSnapshot(
