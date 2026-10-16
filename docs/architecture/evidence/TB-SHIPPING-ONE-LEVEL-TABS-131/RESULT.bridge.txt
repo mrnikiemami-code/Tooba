@@ -1,0 +1,117 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-131
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-130
+WorkerId: tooba-worker-01
+AgentType: cursor
+Channel: tooba-main
+Program: TOOBA-SHIPPING-CHECKOUT-DELIVERY-CLOSURE
+Mode: BOUNDED_GROUPED_CHECKOUT_UI_AND_PAYMENT_DRAFT_DELIVERY
+Bridge-Row: d8ae380b-bfca-4cdf-b467-0c65ce6b50e2
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Expected-Base-SHA: 010a7d18a4e04397685e1ffea2578df54fdb4711
+Actual-Base-SHA: 010a7d18a4e04397685e1ffea2578df54fdb4711
+Code-SHA: 3595ebadbd20630550d0d1a415d64f31a2b3fd51
+Evidence-SHA: 77eabe181fa608a59e7b63ffdc7f0bdbb8b11f74
+HEAD: 77eabe181fa608a59e7b63ffdc7f0bdbb8b11f74
+Origin-Main: 77eabe181fa608a59e7b63ffdc7f0bdbb8b11f74
+Drift: NONE (expected base == HEAD at start; no overlapping source drift; pre-existing dirty admin-fulfillment-work-queue-screen.tsx, admin-order-detail-screen.tsx and TB-SHIPPING-FULL-OPERATIONS-0{75,79} evidence txt preserved untouched; Bridge task receipt unstaged; no reset/stash/rebase/force-push)
+Measured-Minutes: 58 (implementation overshot the minute-32 gate; runtime acceptance therefore deferred per task rule)
+
+SUBSTANTIVE RESULT
+Customer-facing grouped Shipping/Checkout presentation built strictly on the existing Order-owned
+grouped projections (no new backend contract, no parallel source of financial truth).
+/shipping: when the real cart projection contains more than one authoritative SellerPartyId group, the
+page renders one scoped card per seller group containing the REAL cart lines (media, title, quantity,
+real CartLineId identity) and an explicit per-group method choice whose price, localized label and
+lead time all come from the server-evaluated projection.methods[]. "/continue to payment" then submits
+the incremental shippingGroups[] (shippingMethodCode + real cartLineIds + authoritative serviceCode)
+to the existing PUT /v1/storefront/shipping/selection. Single-seller carts keep the legacy scalar
+shippingMethodCode path and the previous DOM (guarded by isGroupedCart), so the legacy cart-wide
+selection remains fully supported and visually unchanged.
+/checkout (payment): the Order-owned shippingGroups list from the checkout projection is now mapped and
+rendered - per-group localized method label, scheduled delivery date and authoritative per-group fee,
+plus a reconciled shipping total row; the legacy single-label rendering is retained when no groups exist.
+Return/refresh: saved draft.shippingGroups are restored into per-group selection state; no automatic
+method conversion and no commit/reservation/order creation from navigation.
+
+API PROVENANCE (all pre-existing contracts, consumed only)
+- POST /v1/storefront/shipping/projection -> draft.shippingGroups[] (StorefrontShippingGroupView:
+  shippingGroupId, sellerPartyId, methodCode, serviceCode, optionCode, methodLabel, shippingAmount,
+  currency, minimumDeliveryDate, selectedDeliveryDate, selectedDeliveryTimeWindow, leadDays, lineCount).
+- PUT /v1/storefront/shipping/selection -> shippingGroups[] (StorefrontShippingGroupSelection:
+  shippingMethodCode, cartLineIds, serviceCode, optionCode) sent only for multi-seller carts.
+- Checkout projection -> shippingGroups[] (Order-owned StorefrontShippingGroupView) now mapped into
+  StorefrontCheckoutPage.shippingGroups.
+- GET /v1/storefront/cart -> StorefrontCartLine.lineId/sellerPartyId/sellerDisplayName/title/
+  mediaAssetId/quantity used verbatim as group membership identity.
+No fee, tax, seller share, carrier cost, warehouse, eligibility or origin value is computed or invented
+client-side; the client only sums already-authoritative per-group prices for the summary row.
+
+FAIL-CLOSED / AUTHORITY
+- Group admission remains server-authoritative: CartShippingGroupPlanner still validates each cart line
+  exactly once, requires an eligible method per group and rejects duplicate seller+method; a client
+  grouping mistake fails closed with shipping.method.unavailable.
+- No carrier tariff, seller/marketplace share, subsidy or commercial split introduced; Payment/Settlement
+  PendingAllocation behaviour from TB-130 untouched.
+- No order/reservation mutation before the final payment click; continue still persists a draft only.
+- Tenant/edition/flag behaviour unchanged; no shared environment or DB touched.
+
+CHANGED PATHS
+src/frontend/app/storefront/storefront-shipping-api.ts (+66: group view mapping, group selection input,
+  shippingGroups in selection request body)
+src/frontend/app/storefront/storefront-shipping.tsx (+190/-8: grouped per-seller items card, per-group
+  method state, draft group restore effect, grouped submit, per-group summary fees)
+src/frontend/app/storefront/storefront-checkout-api.ts (+40: StorefrontCheckoutShippingGroup + mapping)
+src/frontend/app/storefront/storefront-checkout.tsx (+37: grouped method list, shipping total row,
+  per-group fee rows)
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-131.md (new)
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-131/ (new)
+Total source diff: 4 files, 325 insertions, 8 deletions. No admin UI, no backend, no CSS/theme/token,
+no unrelated frontend file.
+
+VISUAL NON-REGRESSION
+No global CSS, design system, token, typography, spacing, radius, shadow, icon, button or breakpoint
+change. Only existing storefront classes reused (bg-surface, bg-primary/5, border-primary, border-gray-*,
+rounded-2xl, text-primary, shadow-sm, gray-50/60 surfaces, RTL grid layout). Grouped markup is additive
+and appears only for multi-seller carts; admin untouched. Disclosed intentional additive change: the
+checkout summary now shows a "هزینه ارسال" row plus per-group fee rows (shipping was absent from the
+payment summary before). No before/after screenshot comparison was produced - see DEFERRED.
+
+TESTS (Mission B: one initial run, one targeted rerun after a concrete failure; no broad suites)
+1. npm run typecheck (frontend tsc --noEmit) ................. PASS, clean output
+2. npm run test:storefront ................................. 76/76 PASS, 0 fail, 0 skipped
+   (includes storefront-shipping-api.test.ts, storefront-checkout-api.test.ts, cart/checkout/payment and
+    storefront-cart-ui.guard.test.ts; no legacy shipping/checkout expectation regressed)
+3. npm run test:critical-storefront ........................ 19/20 at test:surface-coverage
+   home=PASS, pdp-guard=PASS, listing-guard=PASS, category-plp-guard=PASS, surface-coverage=19/20.
+   Sole failure is PRE-EXISTING and UNRELATED: component-compliance.guard.test.ts reports
+   'app/storefront/storefront-landing-blocks.tsx:286 bg-white'. Proof: that file has no working-tree
+   modification (git status clean, git diff HEAD empty) and git show HEAD:<file> line 286 already
+   contains bg-white/70 at the base SHA. None of the 4 files changed by TB-131 appears in the failure
+   list, so the changed surfaces pass the structural raw-color guard.
+
+DEFERRED / NOT PROVEN (recorded, not simulated)
+- No browser or runtime acceptance was executed: implementation finished well after the minute-32 gate,
+  so the optional isolated browser proof was deferred instead of faked. The multi-seller grouped render
+  is static/type/test-validated only.
+- projection.methods[] is destination-scoped, not seller-scoped; per-seller eligible-method partitioning
+  was not proven at runtime (server planner remains the fail-closed gate).
+- TB-124/125 tax-applicable scratch fixture and the payment-draft price/selection round trip were not
+  exercised; checkout.tax.unavailable behaviour from TB-123 is unchanged.
+- No before/after desktop+mobile visual comparison for the new grouped card was produced.
+- Worker PASS does not claim release readiness; runtime multi-seller acceptance is still required.
+
+NEXT AUTHORIZED STEP
+Isolated multi-seller runtime acceptance using the readiness checklist in
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-131.md (disposable scratch only; never :5088, :3000 or
+tooba_alpha). Verify per-seller groups and member items against API/Order draft, per-group method and
+fee, group-sum shipping total, refresh/back-nav persistence, and desktop/mobile visual parity.
+
+ROLLBACK
+Revert code commit 3595ebad and evidence commit 77eabe18; nothing else depends on them, the grouped UI is
+additive and gated by isGroupedCart, and the legacy single-group path was never removed.
+END_TOOBA_WORKER_RESULT
