@@ -1,0 +1,116 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-MULTILINGUAL-UX-148
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Base-SHA: bcac6610ebd1edc7c7c5c246f1d2ac21b669c075
+Head-SHA: abb23c2a72a037995b8f10274940304b402aede6
+Origin-Main-SHA: abb23c2a72a037995b8f10274940304b402aede6
+HEAD-EQUALS-ORIGIN-MAIN: true
+Working-Tree: clean except pre-existing unrelated local dirty files (admin-fulfillment-work-queue-screen.tsx, TB-075/079 evidence logs) preserved untouched
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+
+SUMMARY
+Real (not wireframe) improvement of the method-specific «عمومی» tab in /fa/admin/shipping-services
+plus true multilingual method-name editing backed by the authoritative language registry and the
+existing canonical method-scoped save seam. One item is unverified: a successful save + GET/reopen
+round-trip (no isolated authorized writable environment available in the timebox) — hence PARTIAL,
+not PASS.
+
+DELIVERED
+
+1) Compact, non-repetitive General tab (flat-general-tab.tsx, rewritten)
+- Single header: localized name, immutable canonical code, badges «فعال/غیرفعال» and
+  «وضعیت مالی: تنظیم نشده». Removed the stacked duplicated identity/status panels.
+- Provider identity (serviceCode/optionCode) reduced to one collapsed <details> row explicitly
+  labelled «فرادادهٔ مشترک ارائهدهنده (خارج از دامنهٔ این روش)» — shared metadata, never a
+  method-specific policy editor, never written here.
+- Independent scrollable dialog body, clear actions, visible close, RTL, small-screen friendly
+  (sm: breakpoints), keyboard-reachable controls, per-language state announced in text.
+
+2) TRUE multilingual name editing (new shipping-method-language-model.ts + flat-method-language-editor.tsx)
+- Languages come ONLY from the authoritative Admin registry (GET /v1/admin/languages via the existing
+  features/admin-languages boundary). Live proof: فارسی / English / Русский with their real GUIDs and
+  native names; rows without a real languageId are dropped; NO hardcoded fa/en/ru anywhere in code.
+- Prefill from real server translations per language; missing translation is shown explicitly as
+  «بدون ترجمه» (Русский in the live check) and the completeness summary reads «ترجمهشده: 2 از 3».
+  No synthetic translation is ever created; an empty translation stays empty.
+- Save writes ONLY the selected method + selected language through the unchanged canonical seam
+  PUT /v1/admin/shipping-services/shipping-methods/one-level/{methodCode}/translations/{languageId}.
+  The canonical methodCode is never changed by a name edit; a server answer is accepted only if the
+  returned method+language equals the requested target (stale/out-of-order responses cannot land on
+  another method or language).
+- Explicit states for loading / denied / error-with-retry / empty registry; blank and over-length names
+  are rejected by the existing validator before any request; «بازگردانی» reverts a draft.
+- Lossless language switching: per-language drafts are kept, so unsaved text survives switching
+  (live proof: Russian draft preserved, then Persian, then back to Russian with «Экспресс тест» still
+  present); an explicit «پیشنویس ذخیرهنشده در N زبان» indicator appears. dir follows each language
+  (ltr for Russian, rtl for Persian). No data loss observed.
+- Name save refreshes the source of truth in place (dialog stays open, new value appears without
+  reopening); activation keeps its previous close-after-save behaviour.
+
+3) Separate, honest statuses (no invented readiness)
+- METHOD ACTIVE/INACTIVE remains its own verified server-backed section (unchanged 096 seam, read-only
+  in view mode, confirm, server re-read, no fake toggle when binding forbids it).
+- New «وضعیت مالی مشتری» section states verbatim that the financial status is NOT readable from the
+  current API, that a missing price is NOT free, and that enabled ≠ quote-ready. No amount, no financial
+  mode, no zero-price assumption and no «ready» badge is produced. The locked valid financial modes are
+  named only as requiring an authorized server endpoint.
+
+PRESERVED / NOT TOUCHED
+- Flat canonical 7-method list, exactly three row actions (View/Edit/Delete), four non-nested detail
+  tabs, TB-147 gate/auth parity, all existing design tokens/theme, storefront, and the other three
+  detail tabs' components and behaviour.
+- No provider/child editor switch; no «انواع سرویس» text anywhere (live count = 0).
+- Not touched: server financial policy, create-method endpoint, Checkout/Fulfillment/Settlement,
+  PERF-CRIT-001, unrelated dirty files, existing stashes. No rebase/reset/autostash/force push.
+- Shared :3000/:5088 and store-alpha/tooba_alpha used READ-ONLY; no restart, no .next purge, no writes.
+
+VERIFICATION
+- Focused suite app/admin/shipping-services/**: 220 tests, 220 pass, 0 fail. New coverage: real
+  registry-only languages, missing translation, switch-without-data-loss, per-method save identity,
+  dirty detection, view/edit read-only, authoritative-language and seam guardrails.
+- npm run typecheck: clean (exit 0).
+- Architecture guards: 10/11 pass. The single failure is the pre-existing FE-SIZE baseline listing the
+  same five OVERSIZED_GROWTH files already reported in TB-146/TB-147 (category-admin-screen,
+  admin-landing-page-composer, storefront-landing-blocks, storefront-shipping,
+  shared-composition-renderer). None belongs to this task.
+- Full frontend suite: 1177/1196 pass with the same 19 unrelated pre-existing failures
+  (landing-pages builder UX guards, storefront perf/color guards, FE-SIZE). No failing test references
+  shipping-services.
+- Real browser, ordinary Development Admin, READ-ONLY: 01-general-multilingual.png shows the improved
+  General tab with the language selector and per-language completeness. All four tabs still render.
+- Save-seam fail-closed proof on the real backend (rejected requests only, no mutation):
+  unknown method code ⇒ HTTP 400 shipping_method.code.invalid; unknown language ⇒ HTTP 400
+  shipping_service.language_invalid; re-read of the catalog shows post:express fa name still «پیشتاز»
+  (unchanged).
+
+UNVERIFIED (explicit, why PARTIAL)
+- A SUCCESSFUL name save followed by GET/reopen per language was not executed, and therefore
+  per-method isolation of a real persisted write and stale/failure behaviour around a real successful
+  response were not observed end-to-end. Reason: the only reachable environments (shared :3000/:5088
+  and store-alpha/tooba_alpha) are READ-ONLY for this task and no isolated disposable authorized
+  scratch environment was available within the 45-minute timebox. The UI, the authoritative language
+  discovery, the method+language-scoped save wiring, the fail-closed backend behaviour and the
+  browser-rendered result are proven; the successful round-trip is not.
+
+EVIDENCE
+docs/architecture/evidence/TB-SHIPPING-ADMIN-MULTILINGUAL-UX-148/
+  01-general-multilingual.png
+  browser-evidence-148.txt
+  focused-tests-148.txt
+  typecheck-148.txt
+  architecture-guards-148.txt
+docs/planning/shipping/SHIPPING-ADMIN-MULTILINGUAL-UX-148.md
+docs/ai/tasks/TB-SHIPPING-ADMIN-MULTILINGUAL-UX-148.task.md
+
+NEXT (architect decision only, not started)
+1) Run the same dialog against an isolated disposable authorized scratch Host+DB to prove
+   save → GET/reopen per language and per-method isolation (completes backlog item E).
+2) Then backend per-method financial mode/readiness endpoint (C) and real create-method API (D).
+3) Shipping storefront per-group independent service cards + schedules (B) remains release-critical.
+END_TOOBA_WORKER_RESULT
