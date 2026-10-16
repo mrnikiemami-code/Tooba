@@ -12,6 +12,7 @@ using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Ports;
 using Tooba.Order.Contracts.Storefront;
 using Tooba.Order.Domain;
+using Tooba.Order.Domain.Checkout;
 
 namespace Tooba.Order.Application.Storefront.Services;
 
@@ -150,6 +151,7 @@ public sealed class StorefrontShippingService
         var draft = await _drafts.GetByCartIdAsync(cartId, cancellationToken)
             ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         EnsureDraftOwnership(draft, guestSecret);
+        EnsureLegacySingleGroup(draft);
 
         return await _checkouts.PreviewAsync(
             cartId,
@@ -210,26 +212,55 @@ public sealed class StorefrontShippingService
                 names.Last),
             cancellationToken);
 
+        var (soleCurrency, cartSubtotal) = StorefrontCartCurrencyCompatibility.ResolveSoleCurrencyAndSubtotal(cart);
         var methods = await LoadEligibleMethodsAsync(
-            StorefrontCartCurrencyCompatibility.ResolveSoleCurrencyAndSubtotal(cart).SubtotalExclusiveOfTax,
+            cartSubtotal,
             prepared.Shipping.ProvinceName,
             null,
             cancellationToken);
-        var method = methods.FirstOrDefault(m =>
-            string.Equals(m.MethodCode, request.ShippingMethodCode?.Trim(), StringComparison.OrdinalIgnoreCase))
-            ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingMethodUnavailable);
 
         var sellerIds = cart.Lines.Select(x => x.SellerPartyId).Distinct();
         var maxPrep = StorefrontShippingCalculator.MaxSellerPreparationDays(sellerIds, _shippingOptions);
         var today = DateOnly.FromDateTime(_clock.UtcNow.UtcDateTime);
-        var minimum = StorefrontShippingCalculator.ComputeMinimumDeliveryDate(today, maxPrep, method.LeadDays);
+
+        // قصد گروه‌ها: یا فهرست افزایشی جدید، یا shorthand تک‌روشی قدیمی به‌صورت یک گروه کامل.
+        var requestedGroups = BuildRequestedGroups(request, cart);
+
+        // هویت/برچسب/مبلغ/ارز/روزهای آماده‌سازی فقط از روش واجد شرایط authoritative می‌آید.
+        var eligible = methods
+            .Where(m => requestedGroups.Any(g =>
+                string.Equals((g.MethodCode ?? string.Empty).Trim(), m.MethodCode, StringComparison.OrdinalIgnoreCase)))
+            .Select(m => new CartShippingGroupEligibleMethod(
+                m.MethodCode,
+                m.ServiceCode,
+                m.OptionCode,
+                m.Label,
+                m.PriceAmount,
+                soleCurrency,
+                m.LeadDays,
+                StorefrontShippingCalculator.ComputeMinimumDeliveryDate(today, maxPrep, m.LeadDays)))
+            .ToArray();
+
+        foreach (var requested in requestedGroups)
+        {
+            if (!eligible.Any(e => string.Equals(
+                    e.MethodCode,
+                    (requested.MethodCode ?? string.Empty).Trim(),
+                    StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new StorefrontOrderException(StorefrontOrderErrors.ShippingMethodUnavailable);
+            }
+        }
+
+        // تاریخ انتخابی باید دست‌کم به تأخیرترین promise گروه‌ها احترام بگذارد.
+        var latestMinimum = eligible.Max(x => x.MinimumDeliveryDate);
         if (!DateOnly.TryParse(request.SelectedDeliveryDate, out var selectedDate))
         {
             throw new StorefrontOrderException(StorefrontOrderErrors.ShippingDeliveryInvalid);
         }
 
-        StorefrontShippingCalculator.EnsureDeliveryNotEarlier(selectedDate, minimum);
-        var windows = StorefrontShippingCalculator.ValidTimeWindows(selectedDate, minimum);
+        StorefrontShippingCalculator.EnsureDeliveryNotEarlier(selectedDate, latestMinimum);
+        var windows = StorefrontShippingCalculator.ValidTimeWindows(selectedDate, latestMinimum);
         if (string.IsNullOrWhiteSpace(request.SelectedDeliveryTimeWindow)
             || windows.All(w => w.Value != request.SelectedDeliveryTimeWindow.Trim()))
         {
@@ -241,10 +272,31 @@ public sealed class StorefrontShippingService
             throw new StorefrontOrderException(StorefrontOrderErrors.ShippingNoteTooLong);
         }
 
-        // کلاینت نمی‌تواند قیمت را جعل کند.
-        var amount = method.PriceAmount;
         var now = _clock.UtcNow;
         var hash = HashGuestSecret(guestSecret);
+
+        // عضویت گروه‌ها: هر خط سبد دقیقاً یک بار، فروشنده از Cart، روش متعارف واجد شرایط.
+        IReadOnlyList<CartShippingDraftGroup> groups;
+        try
+        {
+            groups = CartShippingGroupPlanner.Plan(
+                cart.CartId,
+                cart.Lines
+                    .Select(x => new CartShippingGroupCartLine(x.LineId, x.SellerPartyId, x.Quantity))
+                    .ToArray(),
+                requestedGroups,
+                eligible,
+                selectedDate,
+                request.SelectedDeliveryTimeWindow,
+                now,
+                UuidV7.New);
+        }
+        catch (ContractOperationException ex)
+        {
+            throw new StorefrontOrderException(MapGroupFault(ex.Code), ex.Message);
+        }
+
+        var primary = groups[0];
         var existing = await _drafts.GetByCartIdAsync(cart.CartId, cancellationToken);
         if (existing is null)
         {
@@ -259,10 +311,10 @@ public sealed class StorefrontShippingService
                 prepared.Shipping.PostalAddress,
                 prepared.Shipping.PostalCode,
                 prepared.Shipping.SavedAddressId ?? request.SavedAddressId,
-                method.MethodCode,
-                method.Label,
-                amount,
-                minimum,
+                primary.MethodCode,
+                primary.MethodLabel,
+                primary.ShippingAmount,
+                primary.MinimumDeliveryDate,
                 selectedDate,
                 request.SelectedDeliveryTimeWindow,
                 request.CustomerNote,
@@ -273,6 +325,7 @@ public sealed class StorefrontShippingService
                 existing.ClearGuestSecret();
             }
 
+            existing.AddShippingGroups(groups, now);
             await _drafts.SaveAsync(existing, isNew: true, cancellationToken);
         }
         else
@@ -288,10 +341,10 @@ public sealed class StorefrontShippingService
                 prepared.Shipping.PostalAddress,
                 prepared.Shipping.PostalCode,
                 prepared.Shipping.SavedAddressId ?? request.SavedAddressId,
-                method.MethodCode,
-                method.Label,
-                amount,
-                minimum,
+                primary.MethodCode,
+                primary.MethodLabel,
+                primary.ShippingAmount,
+                primary.MinimumDeliveryDate,
                 selectedDate,
                 request.SelectedDeliveryTimeWindow,
                 request.CustomerNote,
@@ -302,6 +355,11 @@ public sealed class StorefrontShippingService
                 existing.ClearGuestSecret();
             }
 
+            // جایگزینی دومرحله‌ای: حذف گروه‌های قبلی پیش از درج مجدد خطوطی که همان cart_line_id را
+            // دارند، تا ایندکس یگانهٔ خط در یک batch واحد نقض نشود.
+            existing.ClearShippingGroups(now);
+            await _drafts.SaveAsync(existing, isNew: false, cancellationToken);
+            existing.AddShippingGroups(groups, now);
             await _drafts.SaveAsync(existing, isNew: false, cancellationToken);
         }
 
@@ -320,6 +378,7 @@ public sealed class StorefrontShippingService
         var draft = await _drafts.GetByCartIdAsync(cartId, cancellationToken)
             ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         EnsureDraftOwnership(draft, guestSecret);
+        EnsureLegacySingleGroup(draft);
 
         // بازاعتبارسنجی قبل از ثبت سفارش.
         await SaveSelectionAsync(
@@ -530,9 +589,25 @@ public sealed class StorefrontShippingService
         }
     }
 
+    /// <summary>
+    /// مسیر پرداخت/سفارش قدیمی فقط یک روش کارت‌گستر را می‌شناسد. تا زمانی که تبدیل به گروه‌های سفارش
+    /// پایدار (اسلایس بعدی) پیاده نشده، پیش‌نویس چندگروهی در این مرز fail-closed رد می‌شود تا انتخاب
+    /// مشتری بی‌صدا به یک روش کارت‌گستر برنگردد. صفر/یک گروه (شامل پیش‌نویس‌های قدیمی) دست‌نخورده است.
+    /// </summary>
+    private static void EnsureLegacySingleGroup(CartShippingDraft draft)
+    {
+        if (draft.ShippingGroups.Count > 1)
+        {
+            throw new StorefrontOrderException(
+                StorefrontOrderErrors.ShippingRejected,
+                "multi_shipping_group_order_conversion_not_implemented");
+        }
+    }
+
     private void EnsureDraftOwnership(CartShippingDraft draft, string? guestSecret)
     {
         var hash = HashGuestSecret(guestSecret);
+
         if (string.Equals(draft.GuestSecretHash, hash, StringComparison.Ordinal))
         {
             return;
@@ -580,6 +655,50 @@ public sealed class StorefrontShippingService
         return Convert.ToHexString(bytes);
     }
 
+    /// <summary>
+    /// قصد گروه‌های ارسال را از درخواست می‌سازد. فهرست افزایشی <c>ShippingGroups</c> مقدم است؛
+    /// در نبود آن همان انتخاب تک‌روشی گذشته به‌عنوان shorthand سازگار به یک گروه تمام-سبد تبدیل می‌شود.
+    /// هیچ خط یا مبلغی از کلاینت به‌عنوان حقیقت پذیرفته نمی‌شود: خطوط پس از این‌جا با مالکیت Cart اعتبارسنجی می‌شوند.
+    /// </summary>
+    private static IReadOnlyList<CartShippingGroupRequest> BuildRequestedGroups(
+        StorefrontShippingSelectionRequest request,
+        CartPage cart)
+    {
+        if (request.ShippingGroups is { Count: > 0 })
+        {
+            return request.ShippingGroups
+                .Select(group => new CartShippingGroupRequest(
+                    group.ShippingMethodCode ?? string.Empty,
+                    group.ServiceCode,
+                    group.OptionCode,
+                    group.OriginContext,
+                    group.CartLineIds ?? []))
+                .ToArray();
+        }
+
+        return
+        [
+            new CartShippingGroupRequest(
+                request.ShippingMethodCode ?? string.Empty,
+                null,
+                null,
+                null,
+                cart.Lines.Select(x => x.LineId).ToArray())
+        ];
+    }
+
+    /// <summary>
+    /// نقض‌های عضویت/هویت گروه را به سطح خطای محلی‌سازی‌شدهٔ فروشگاهی نگاشت می‌کند.
+    /// روش ناواجد/ناهمخوان به «روش در دسترس نیست» و بقیهٔ نقض‌های داده به رد صریح ارسال نگاشت می‌شوند.
+    /// </summary>
+    private static string MapGroupFault(string fault) => fault switch
+    {
+        CartShippingGroupFault.MethodNotEligible => StorefrontOrderErrors.ShippingMethodUnavailable,
+        CartShippingGroupFault.MethodIdentityMismatch => StorefrontOrderErrors.ShippingMethodUnavailable,
+        CartShippingGroupFault.MethodCodeRequired => StorefrontOrderErrors.ShippingMethodUnavailable,
+        _ => StorefrontOrderErrors.ShippingRejected,
+    };
+
     private static StorefrontShippingDraftView MapDraft(CartShippingDraft draft) =>
         new(
             draft.CartId,
@@ -599,5 +718,24 @@ public sealed class StorefrontShippingService
             draft.SelectedDeliveryTimeWindow,
             draft.CustomerNote,
             draft.FirstName,
-            draft.LastName);
+            draft.LastName,
+            draft.ShippingGroups.Count == 0
+                ? null
+                : draft.ShippingGroups.Select(MapGroup).ToArray());
+
+    private static StorefrontShippingGroupView MapGroup(CartShippingDraftGroup group) =>
+        new(
+            group.ShippingGroupId,
+            group.SellerPartyId,
+            group.MethodCode,
+            group.ServiceCode,
+            group.OptionCode,
+            group.MethodLabel,
+            group.ShippingAmount,
+            group.Currency,
+            group.MinimumDeliveryDate.ToString("yyyy-MM-dd"),
+            group.SelectedDeliveryDate?.ToString("yyyy-MM-dd"),
+            group.SelectedDeliveryTimeWindow,
+            group.LeadDays,
+            group.Lines.Count);
 }

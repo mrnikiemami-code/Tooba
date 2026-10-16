@@ -9,7 +9,10 @@ namespace Tooba.Order.Infrastructure.Storefront;
 public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefrontShippingDraftStore
 {
     public Task<CartShippingDraft?> GetByCartIdAsync(Guid cartId, CancellationToken cancellationToken) =>
-        db.ShippingDrafts.FirstOrDefaultAsync(x => x.CartId == cartId, cancellationToken);
+        db.ShippingDrafts
+            .Include(x => x.ShippingGroups)
+            .ThenInclude(x => x.Lines)
+            .FirstOrDefaultAsync(x => x.CartId == cartId, cancellationToken);
 
     public async Task SaveAsync(CartShippingDraft draft, bool isNew, CancellationToken cancellationToken)
     {

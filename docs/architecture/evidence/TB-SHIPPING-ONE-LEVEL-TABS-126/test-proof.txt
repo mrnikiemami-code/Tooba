@@ -1,0 +1,58 @@
+TB-SHIPPING-ONE-LEVEL-TABS-126 — focused test proof (single initial run + one targeted rerun after a demonstrable fix)
+
+Commands (from repository root):
+  dotnet build src\backend\Modules\Order\Tooba.Order.Tests\Tooba.Order.Tests.csproj -v q
+    -> 0 Error(s)
+  dotnet test  src\backend\Modules\Order\Tooba.Order.Tests\Tooba.Order.Tests.csproj --no-build --filter "FullyQualifiedName~CartShippingGroupPlannerTests"
+    -> Passed! Failed: 0, Passed: 13, Skipped: 0
+  dotnet test  src\backend\Modules\Order\Tooba.Order.Tests\Tooba.Order.Tests.csproj --no-build
+    -> Passed! Failed: 0, Passed: 329, Skipped: 0   (13 new + 316 pre-existing, no regression)
+  dotnet build src\backend\Host\Tooba.Host\Tooba.Host.csproj -v q
+    -> 0 Error(s)   (composition root builds with the new EF mapping + migration)
+
+One failure encountered and fixed (single targeted rerun, no loop):
+  Tooba.Order.Tests.Architecture.OrderStorefrontArchitectureGuardTests
+    .Storefront_has_no_central_code_switch_dispatcher FAILED
+  Cause: the guard rejects the literal text "code switch" in Order.Application/Storefront/Services/*.cs and my
+  mapping helper used `faultCode switch`. Fix: renamed the parameter (`fault switch`). After the fix the full
+  project is 329/329 green.
+
+New test file: src/backend/Modules/Order/Tooba.Order.Tests/Storefront/CartShippingGroupPlannerTests.cs
+
+Case-by-case mapping to Mission B acceptance:
+  (1) one seller with two methods => two persisted groups
+      One_seller_with_two_methods_produces_two_groups_with_authoritative_amounts
+        asserts 2 groups, both under SellerA, distinct canonical codes, 1 line each, authoritative
+        amount/currency (100,000 / 120,000 IRT from the eligible method, never from the request).
+  (2) two sellers with identical method => separate groups
+      Two_sellers_with_the_identical_method_stay_separate
+        asserts 2 groups and 2 distinct seller ids although both carry "post:express".
+  (3) every cart line belongs to exactly one group; duplicate/omitted/wrong-owner refused
+      Duplicate_line_membership_is_refused            -> shipping.group.line.duplicate
+      Omitted_cart_line_is_refused                    -> shipping.group.line.missing
+      Unknown_or_foreign_cart_line_is_refused         -> shipping.group.line.unknown
+      Merging_two_sellers_into_one_group_is_refused   -> shipping.group.mixed_seller_lines
+      Same_seller_and_same_method_cannot_be_two_groups_in_v1 -> shipping.group.seller_method.duplicate
+      Method_outside_the_authoritative_eligible_set_is_refused -> shipping.group.method.not_eligible
+      Declared_service_or_option_identity_must_match_authoritative_identity
+                                                      -> shipping.group.method.identity_mismatch
+      Unverified_origin_context_is_refused_instead_of_forged -> shipping.group.origin.unverified
+      Group_order_is_deterministic_for_a_stable_legacy_scalar_projection
+  (4) legacy one-method draft roundtrip remains valid
+      Legacy_single_method_selection_becomes_exactly_one_group_covering_every_line
+        one group, seller from Cart, method preserved, both lines covered, authoritative amount.
+      Legacy_shorthand_for_a_multi_seller_cart_is_refused_rather_than_merged
+        fails closed instead of silently merging two sellers into one cart-wide group.
+
+Backward-compatibility proof at the suite level: the 316 pre-existing Order tests (including
+StorefrontPaymentDraftTests, StorefrontShippingOneLevelLabelTests, StorefrontStartPaymentComposerTests and
+StorefrontStartPaymentEndpointTests, which construct StorefrontShippingDraftView/SelectionRequest and the
+fakes implementing IStorefrontShippingDraftStore) still pass unchanged, i.e. the additive contract changes are
+source-compatible and the legacy single-method path is intact.
+
+NOT executed (and why):
+  - No database/EF model runtime validation: Order.Tests does not reference Order.Infrastructure, and adding
+    that reference (or starting a shared DB) is outside this slice's scope. The EF mapping is validated
+    statically against the certified `public List<OrderLine> Lines { get; } = []` navigation pattern and by a
+    clean Host build. Recorded as a limit, not asserted as proven.
+  - No browser/scratch acceptance: explicitly gated to a later slice by the contract and the delivery plan.

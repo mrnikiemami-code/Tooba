@@ -4,6 +4,7 @@ using Tooba.BuildingBlocks;
 
 /// <summary>
 /// پیش‌نویس ارسال فروشگاهی وابسته به سبد. حقیقت قیمت/حداقل تحویل از backend است نه React.
+/// علاوه بر فیلدهای تک‌روشی سازگار با گذشته، مالک مجموعهٔ گروه‌های ارسال چندگانهٔ همین سبد است.
 /// </summary>
 public sealed class CartShippingDraft
 {
@@ -74,6 +75,12 @@ public sealed class CartShippingDraft
 
     /// <summary>زمان به‌روزرسانی.</summary>
     public DateTimeOffset UpdatedAt { get; private set; }
+
+    /// <summary>
+    /// گروه‌های ارسال پیش‌نویس همین سبد. یک گروه = یک فروشنده + یک روش متعارف.
+    /// برای پیش‌نویس‌های تک‌روشی قدیمی نیز همیشه حداقل یک گروه ساخته می‌شود.
+    /// </summary>
+    public List<CartShippingDraftGroup> ShippingGroups { get; } = [];
 
     /// <summary>پیش‌نویس جدید یا جایگزین می‌سازد.</summary>
     public static CartShippingDraft Create(
@@ -181,5 +188,46 @@ public sealed class CartShippingDraft
         {
             RecipientName = $"{FirstName} {LastName}";
         }
+    }
+
+    /// <summary>
+    /// مجموعهٔ گروه‌های ارسال پیش‌نویس را پاک می‌کند (فاز نخست جایگزینی، تا حذف‌ها پیش از درج
+    /// دوبارهٔ همان cart_line_id روی ایندکس یگانه اجرا شوند).
+    /// </summary>
+    public void ClearShippingGroups(DateTimeOffset now)
+    {
+        if (ShippingGroups.Count == 0)
+        {
+            return;
+        }
+
+        ShippingGroups.Clear();
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// گروه‌های ارسال پیش‌نویس را جایگزین می‌کند (فاز دوم؛ پس از flush حذف‌ها).
+    /// فیلدهای تک‌روشی سازگار با گذشته به‌صورت projection از همین گروه‌ها به‌روز می‌شوند تا
+    /// خواننده‌های قدیمی (پیش‌نویس پرداخت/Commit) بدون تغییر کار کنند.
+    /// </summary>
+    public void AddShippingGroups(IReadOnlyList<CartShippingDraftGroup> groups, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(groups);
+        if (groups.Count == 0)
+        {
+            throw new ContractOperationException(CartShippingGroupFault.GroupWithoutLines);
+        }
+
+        ShippingGroups.AddRange(groups);
+
+        // سازگاری گذشته: فیلد تک‌روشی فقط projection است، نه حقیقت.
+        var first = groups[0];
+        ShippingMethodCode = first.MethodCode;
+        ShippingMethodLabel = first.MethodLabel;
+        ShippingAmount = groups.Sum(x => x.ShippingAmount);
+        MinimumDeliveryDate = first.MinimumDeliveryDate;
+        SelectedDeliveryDate = first.SelectedDeliveryDate;
+        SelectedDeliveryTimeWindow = first.SelectedDeliveryTimeWindow;
+        UpdatedAt = now;
     }
 }

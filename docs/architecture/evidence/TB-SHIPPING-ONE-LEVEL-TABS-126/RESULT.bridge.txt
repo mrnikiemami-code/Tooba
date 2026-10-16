@@ -1,0 +1,59 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-126
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-125
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Bridge-Task-Row: 4172024d-72da-405c-a0c3-e9b4333d137f
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+Expected-Base-SHA: 94aa51bb27336bfabea01ad6b566bd52c81b567b
+Base-SHA: 94aa51bb27336bfabea01ad6b566bd52c81b567b
+Base-SHA-Ancestor-Of-Head: true
+Drift: NONE. origin/main equalled the expected base at claim and at push; no remote delta, no overlapping source/bookkeeping change.
+Code-SHA: (this commit)
+Evidence-SHA: (this commit)
+Measured-Minutes: ~52 (over the 45-minute box; implementation finished before minute 40, the remainder was one targeted rerun, evidence and report. Reported honestly rather than truncated.)
+Scope-Delivered: SLICE M1 ONLY — Order-owned persistent per-seller/per-method cart shipping groups.
+
+IMPLEMENTED
+- Domain (Order.Domain/Checkout): CartShippingDraftGroup + CartShippingDraftGroupLine + CartShippingGroupFault (stable codes); CartShippingGroupPlanner (pure membership/identity planner); CartShippingDraft now owns List<CartShippingDraftGroup> ShippingGroups with ClearShippingGroups (phase 1) / AddShippingGroups (phase 2 + legacy scalar projection). Navigation shape deliberately matches the certified house pattern `public List<OrderLine> Lines { get; } = []` (SellerOrder.cs:14) so EF maps it cleanly.
+- Group identity: stable UUID (UuidV7), CartId, SellerPartyId (from Cart), canonical MethodCode with SEPARATE ServiceCode and OptionCode fields, presentation-only MethodLabel, typed optional OriginContext, authoritative ShippingAmount + Currency, MinimumDeliveryDate/SelectedDeliveryDate/SelectedDeliveryTimeWindow, LeadDays, State, UpdatedAt; whole-line membership by CartLineId with NO cross-module relational FK.
+- Infrastructure: OrderDbContext mapping for cart_shipping_groups + cart_shipping_group_lines; additive migration 20261016090000_AddCartShippingGroups (house raw-SQL style, schema "order"); StorefrontShippingDraftStore.GetByCartIdAsync now Includes groups + lines so replacement is tracked and flushed.
+- Application (additive, no breaking change): StorefrontShippingGroupSelection (request) and StorefrontShippingGroupView (projection); optional trailing ShippingGroups on StorefrontShippingSelectionRequest and StorefrontShippingDraftView; SaveSelectionAsync plans, persists and maps groups; BuildRequestedGroups/MapGroup/MapGroupFault helpers.
+- Enforced server-side: each authoritative cart line exactly once (missing/unknown/duplicate refused); group seller only from Cart ownership (mixed-seller merge refused); one seller + one canonical method = one group in v1; method must resolve in the authoritative eligible set and any declared service/option must match authoritative identity; OriginContext must be empty (refused, never forged); amount/currency/label/lead days from the authoritative method (client money never trusted); selected date/window must satisfy the latest minimum promise across selected groups.
+
+BACKWARD COMPATIBILITY
+ShippingGroups is optional: when absent the legacy scalar request expands to exactly ONE group covering every cart line, reproducing today's amount and delivery-slot validation. Legacy draft scalar columns are retained as a projection; existing accepted-order (checkouts.*) columns are untouched. Drafts with 0 or 1 group keep the legacy payment/commit path; a >1-group draft fails closed (`shipping.rejected`, diagnostic `multi_shipping_group_order_conversion_not_implemented`) in ProjectPaymentDraftAsync and CommitAsync so a per-item selection can never be silently collapsed to one cart-wide method. No automatic commit, cart clear, reservation or order creation was added.
+
+TESTS (focused; single initial run + ONE targeted rerun after a demonstrable fix; no loops)
+- dotnet build Order.Tests -> 0 errors.
+- dotnet test Order.Tests --filter CartShippingGroupPlannerTests -> Failed 0, Passed 13, Skipped 0.
+- dotnet test Order.Tests (full project) -> Failed 0, Passed 329, Skipped 0 (13 new + 316 pre-existing, i.e. the additive contracts and the legacy single-method path are intact; the fakes implementing IStorefrontShippingDraftStore were left unchanged, proving source compatibility).
+- dotnet build Tooba.Host -> 0 errors.
+Acceptance mapping: (1) one seller + two methods => two persisted groups with authoritative amounts (100,000 / 120,000 IRT); (2) two sellers + identical method => two distinct groups; (3) every cart line exactly once with duplicate/omitted/unknown/wrong-owner/duplicate-seller-method/ineligible-method/identity-mismatch/unverified-origin all refused with stable fault codes; (4) legacy single-method roundtrip still yields exactly one group (and the legacy shorthand for a multi-seller cart fails closed instead of merging).
+Fix applied once: the architecture guard OrderStorefrontArchitectureGuardTests.Storefront_has_no_central_code_switch_dispatcher rejected the literal text "code switch" generated by a `faultCode switch` parameter; renamed the parameter. No other test failed at any point.
+
+EXACT LIMITS (not proven)
+- No EF/runtime database validation: Order.Tests does not reference Order.Infrastructure, and adding that reference or starting a shared DB is outside this slice. The EF mapping is validated statically against the certified navigation pattern plus a clean Host build — recorded as a limit, not claimed as proven.
+- No browser/scratch acceptance (gated to a later slice by the contract and the delivery plan).
+- Draft group replacement uses a deliberate TWO-PHASE save (flush deletions, then insert) to avoid an in-batch delete/insert ordering violation of UNIQUE(cart_line_id); if phase 2 fails the draft keeps the legacy scalar projection with zero groups, which fails closed rather than mis-grouping.
+- Per-seller METHOD eligibility does not exist (eligibility is cart-wide); grouping by seller is grounded in Cart ownership, and this gap is recorded.
+- ORIGIN: no trusted authority at draft selection, so per decision (a) the field is typed optional and any asserted origin is refused (BLOCKED_ORIGIN_AUTHORITY remains an open gap, not a forged value).
+
+SHARED-STATE NON-INTERFERENCE
+Shared :5088/:3000, tooba_alpha and all containers were strictly untouched: no process launch/restart/kill, no DDL/DML, no seed or scratch startup, no feature flag, no appsettings change, no direct SQL in handlers, no Fulfillment/Settlement ownership leakage, no new shipping price calculator. No frontend, CSS, storefront component, template or theme file was edited (visual non-regression lock honored). Pre-existing dirty files were preserved and never staged, including the two admin frontend screens and the two FULL-OPERATIONS host-stdout evidence files. Bridge task receipt kept UNSTAGED: docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-126.task.md.
+
+DEVIATIONS
+1. Two-phase draft group replacement (reason above).
+2. Fail-closed multi-group guard on the legacy payment/commit path (reason above).
+3. Timebox overrun (~52 min vs the 45-minute box), reported rather than hidden.
+
+ROLLBACK
+Revert the single commit; the migration Down drops both tables. No runtime artifact, no backfill and no shared state was created.
+
+FIRST REMAINING BLOCKER
+M2 (durable accepted-order group conversion) needs: (1) an approved fulfilment ORIGIN authority or an explicit decision to keep origin null in v2, and (2) a decision on per-seller method eligibility (cart-wide today).
+NEXT: STOP_FOR_ARCHITECT.
+END_TOOBA_WORKER_RESULT

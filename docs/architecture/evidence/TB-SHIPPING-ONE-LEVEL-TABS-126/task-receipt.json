@@ -1,0 +1,93 @@
+{
+  "taskId": "TB-SHIPPING-ONE-LEVEL-TABS-126",
+  "parentTask": "TB-SHIPPING-ONE-LEVEL-TABS-125",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "bridgeTaskRow": "4172024d-72da-405c-a0c3-e9b4333d137f",
+  "mode": "BOUNDED_ORDER_OWNED_MULTI_SHIPPING_GROUP_DRAFT_IMPLEMENTATION",
+  "expectedBaseSha": "94aa51bb27336bfabea01ad6b566bd52c81b567b",
+  "actualBaseSha": "94aa51bb27336bfabea01ad6b566bd52c81b567b",
+  "baseShaAncestorOfHead": true,
+  "drift": "NONE. origin/main == expected base at claim and at push; no remote delta, no overlapping source change.",
+  "status": "PASS",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "automaticNextImplementationTask": "NONE",
+  "slice": "M1 (Order-owned multi-group cart shipping draft)",
+  "changedPaths": [
+    "src/backend/Modules/Order/Tooba.Order.Domain/Checkout/CartShippingDraft.cs",
+    "src/backend/Modules/Order/Tooba.Order.Domain/Checkout/CartShippingDraftGroup.cs",
+    "src/backend/Modules/Order/Tooba.Order.Domain/Checkout/CartShippingGroupPlanner.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Models/StorefrontOrderModels.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs",
+    "src/backend/Modules/Order/Tooba.Order.Infrastructure/Persistence/OrderDbContext.cs",
+    "src/backend/Modules/Order/Tooba.Order.Infrastructure/Persistence/Migrations/20261016090000_AddCartShippingGroups.cs",
+    "src/backend/Modules/Order/Tooba.Order.Infrastructure/Storefront/StorefrontOrderStores.cs",
+    "src/backend/Modules/Order/Tooba.Order.Tests/Storefront/CartShippingGroupPlannerTests.cs",
+    "docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-126.md",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-126/authority-and-design.md",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-126/test-proof.txt",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-126/task-receipt.json",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-126/RESULT.bridge.txt"
+  ],
+  "unstagedPaths": ["docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-126.task.md"],
+  "preExistingDirtyPreserved": [
+    "src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx",
+    "src/frontend/app/admin/admin-order-detail-screen.tsx",
+    "docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-075/host-stdout-075.txt",
+    "docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-079/host-stdout-OFF.txt"
+  ],
+  "migration": {
+    "name": "20261016090000_AddCartShippingGroups",
+    "tables": ["order.cart_shipping_groups", "order.cart_shipping_group_lines"],
+    "additiveOnly": true,
+    "destructiveChange": false,
+    "hostOwnedPersistence": false,
+    "crossModuleRelationalFk": false,
+    "constraints": [
+      "PK shipping_group_id",
+      "FK cart_id -> order.cart_shipping_drafts(cart_id) ON DELETE CASCADE",
+      "UNIQUE (cart_id, seller_party_id, method_code)",
+      "PK (shipping_group_id, cart_line_id) on lines",
+      "FK shipping_group_id -> cart_shipping_groups(shipping_group_id) ON DELETE CASCADE",
+      "UNIQUE (cart_line_id) on lines -> a cart line belongs to at most one draft group",
+      "CHECK shipping_amount >= 0",
+      "CHECK char_length(currency) = 3"
+    ]
+  },
+  "contractsAdded": [
+    "StorefrontShippingGroupSelection (request group: method code + line ids + optional service/option/origin)",
+    "StorefrontShippingGroupView (projection group: identity, seller, method triple, label, amount, currency, schedule, lead days, line count)",
+    "StorefrontShippingSelectionRequest.ShippingGroups (optional trailing parameter)",
+    "StorefrontShippingDraftView.ShippingGroups (optional trailing parameter)"
+  ],
+  "contractsRemoved": [],
+  "serverSideValidation": [
+    "every authoritative cart line exactly once (missing/unknown/duplicate refused)",
+    "group seller from Cart ownership only (mixed-seller merge refused)",
+    "one seller + one canonical method = one group in v1",
+    "method must resolve in the authoritative eligible set; declared service/option must match authoritative identity",
+    "origin context must be empty (no trusted origin authority -> refuse instead of forge)",
+    "amount/currency/label/lead days from the authoritative method; client money never trusted",
+    "selected delivery date/window must satisfy the latest minimum promise across selected groups"
+  ],
+  "backwardCompatibility": "Optional ShippingGroups; absence expands to exactly ONE group covering every cart line with today's validation and money. Legacy draft scalar retained as a projection; legacy accepted-order columns untouched. 0-or-1-group drafts keep the legacy payment/commit path; >1 group fails closed (shipping.rejected) because single-method order conversion is not implemented in this slice.",
+  "tests": {
+    "newFocusedTests": 13,
+    "newTestFile": "src/backend/Modules/Order/Tooba.Order.Tests/Storefront/CartShippingGroupPlannerTests.cs",
+    "projectResult": "329 passed / 0 failed (13 new + 316 pre-existing)",
+    "buildResult": "Order.Tests 0 errors; Tooba.Host 0 errors",
+    "targetedRerunAfterFix": 1,
+    "initialFailure": "OrderStorefrontArchitectureGuardTests.Storefront_has_no_central_code_switch_dispatcher rejected the literal 'code switch' produced by a `faultCode switch` parameter name; renamed to `fault switch`.",
+    "notExecuted": "No EF/runtime DB model validation (Order.Tests does not reference Order.Infrastructure; adding it or starting a shared DB is out of slice scope) and no browser acceptance (gated to a later slice)."
+  },
+  "nonInterference": "Shared :5088/:3000, tooba_alpha and all containers untouched; no process launch/restart/kill; no DDL/DML; no seed/scratch; no feature flag; no direct SQL in handlers; no frontend/CSS/theme/template edit.",
+  "deviations": [
+    "Draft group replacement is a deliberate two-phase save (flush deletions, then insert) to avoid an in-batch delete/insert ordering violation of UNIQUE(cart_line_id). Documented limitation: a failure in phase 2 leaves the legacy scalar projection with zero groups, which fails closed.",
+    "EnsureLegacySingleGroup guard added in ProjectPaymentDraftAsync and CommitAsync so a multi-group selection can never be silently collapsed to one cart-wide method by the legacy payment/order path."
+  ],
+  "rollback": "Revert the single commit; the migration Down drops both tables. No runtime artifact, no data backfill and no shared state was created.",
+  "firstRemainingBlocker": "M2 (durable accepted-order group conversion) cannot start without: (1) an approved fulfilment ORIGIN authority or an explicit decision to keep origin null in v2, and (2) a decision on per-seller method eligibility (cart-wide today).",
+  "commercialReadinessCertified": false,
+  "implementationComplete": false
+}

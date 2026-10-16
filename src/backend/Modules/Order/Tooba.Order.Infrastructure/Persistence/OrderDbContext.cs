@@ -145,6 +145,40 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.ShippingAmount).HasPrecision(18, 2);
             entity.Property(x => x.SelectedDeliveryTimeWindow).HasMaxLength(32);
             entity.Property(x => x.CustomerNote).HasMaxLength(CartShippingDraft.CustomerNoteMaxLength);
+            entity.HasMany(x => x.ShippingGroups)
+                .WithOne()
+                .HasForeignKey(x => x.CartId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<CartShippingDraftGroup>(entity =>
+        {
+            entity.ToTable("cart_shipping_groups");
+            entity.HasKey(x => x.ShippingGroupId);
+            entity.Property(x => x.ShippingGroupId).ValueGeneratedNever();
+            entity.Property(x => x.MethodCode).HasMaxLength(CartShippingDraftGroup.MaxCodeLength);
+            entity.Property(x => x.ServiceCode).HasMaxLength(CartShippingDraftGroup.MaxCodeLength);
+            entity.Property(x => x.OptionCode).HasMaxLength(CartShippingDraftGroup.MaxCodeLength);
+            entity.Property(x => x.MethodLabel).HasMaxLength(CartShippingDraftGroup.MaxLabelLength);
+            entity.Property(x => x.OriginContext).HasMaxLength(CartShippingDraftGroup.MaxOriginLength);
+            entity.Property(x => x.ShippingAmount).HasPrecision(18, 2);
+            entity.Property(x => x.Currency).HasMaxLength(3);
+            entity.Property(x => x.SelectedDeliveryTimeWindow).HasMaxLength(32);
+            entity.Property(x => x.State).HasMaxLength(16);
+            entity.HasIndex(x => x.CartId);
+            entity.HasIndex(x => new { x.CartId, x.SellerPartyId, x.MethodCode }).IsUnique();
+            entity.HasMany(x => x.Lines)
+                .WithOne()
+                .HasForeignKey(x => x.ShippingGroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<CartShippingDraftGroupLine>(entity =>
+        {
+            entity.ToTable("cart_shipping_group_lines");
+            entity.HasKey(x => new { x.ShippingGroupId, x.CartLineId });
+            entity.Property(x => x.ShippingGroupId).ValueGeneratedNever();
+            entity.Property(x => x.CartLineId).ValueGeneratedNever();
+            entity.HasIndex(x => x.CartLineId).IsUnique();
+            entity.HasIndex(x => x.ShippingGroupId);
         });
         modelBuilder.Entity<SellerOrder>(entity =>
         {

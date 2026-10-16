@@ -133,7 +133,8 @@ public sealed record StorefrontShippingDraftView(
     string? SelectedDeliveryTimeWindow,
     string? CustomerNote,
     string FirstName = "",
-    string LastName = "");
+    string LastName = "",
+    IReadOnlyList<StorefrontShippingGroupView>? ShippingGroups = null);
 
 /// <summary>تصویر یکپارچهٔ مرحلهٔ ارسال.</summary>
 public sealed record StorefrontShippingProjection(
@@ -173,7 +174,47 @@ public sealed record StorefrontShippingProjectionRequest(
     string? CityName = null,
     Tooba.Geography.Contracts.Places.DestinationIdentifiers? Destination = null);
 
-/// <summary>ذخیرهٔ انتخاب ارسال.</summary>
+/// <summary>
+/// انتخاب یک گروه ارسال از سمت کلاینت: تنها قصد انتخاب (روش متعارف + خطوط سبد).
+/// هیچ مبلغ، برچسب، فروشنده یا ارزی از کلاینت پذیرفته نمی‌شود؛ همه از منابع authoritative می‌آید.
+/// </summary>
+/// <param name="ShippingMethodCode">کد روش متعارف (مثل tipax:standard).</param>
+/// <param name="CartLineIds">خطوط سبد این گروه (تمام-خط؛ هر خط دقیقاً در یک گروه).</param>
+/// <param name="ServiceCode">کد سرویس؛ در صورت ارسال باید با هویت authoritative بخواند.</param>
+/// <param name="OptionCode">کد گزینه؛ در صورت ارسال باید با هویت authoritative بخواند.</param>
+/// <param name="OriginContext">
+/// مبدأ fulfilment. در این اسلایس مرجع مورداعتمادی وجود ندارد، پس فقط خالی مجاز است و
+/// مقدار اعلامی fail-closed رد می‌شود (بدون جعل انبار).
+/// </param>
+public sealed record StorefrontShippingGroupSelection(
+    string ShippingMethodCode,
+    IReadOnlyList<Guid> CartLineIds,
+    string? ServiceCode = null,
+    string? OptionCode = null,
+    string? OriginContext = null);
+
+/// <summary>
+/// نمای یک گروه ارسال در پیش‌نویس سبد. هویت/برچسب/مبلغ/ارز/زمان‌بندی همه از گروه ذخیره‌شده می‌آید.
+/// </summary>
+public sealed record StorefrontShippingGroupView(
+    Guid ShippingGroupId,
+    Guid SellerPartyId,
+    string MethodCode,
+    string? ServiceCode,
+    string? OptionCode,
+    string MethodLabel,
+    decimal ShippingAmount,
+    string Currency,
+    string MinimumDeliveryDate,
+    string? SelectedDeliveryDate,
+    string? SelectedDeliveryTimeWindow,
+    int LeadDays,
+    int LineCount);
+
+/// <summary>
+/// ذخیرهٔ انتخاب ارسال. <see cref="ShippingGroups"/> افزایشی و اختیاری است: در نبود آن همان
+/// انتخاب تک‌روشی گذشته به‌عنوان shorthand سازگار پذیرفته و به یک گروه کامل تبدیل می‌شود.
+/// </summary>
 public sealed record StorefrontShippingSelectionRequest(
     Guid CartId,
     int ExpectedCartVersion,
@@ -189,7 +230,8 @@ public sealed record StorefrontShippingSelectionRequest(
     string SelectedDeliveryTimeWindow,
     string? CustomerNote,
     string FirstName = "",
-    string LastName = "");
+    string LastName = "",
+    IReadOnlyList<StorefrontShippingGroupSelection>? ShippingGroups = null);
 
 /// <summary>ثبت نهایی ارسال و ساخت checkout برای پرداخت.</summary>
 public sealed record StorefrontShippingCommitRequest(
