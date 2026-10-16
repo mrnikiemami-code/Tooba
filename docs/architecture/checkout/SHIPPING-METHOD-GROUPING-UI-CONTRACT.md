@@ -60,6 +60,26 @@ Essential acceptance cases: (1) one seller + two methods => two persisted and ex
 
 Architectural status: this is a binding requirement, NOT an assertion that migrations/implementation currently exist. Implementation requires a separately bounded task and architect review before any shared or production rollout.
 
+
+## Shipping-fee ledger, allocation and settlement (MANDATORY)
+
+Each persisted shipping group must have its OWN authoritative shipping-fee financial record, separate from merchandise amount and from any other shipping group. The charged amount is not synonymous with carrier cost or seller revenue. Persist explicit money components in one currency with an immutable order-placement snapshot and referenceable group/order/tenant identity:
+
+- Customer shipping charge, before/after shipping discounts, with discount funder where applicable.
+- Carrier/fulfillment payable and any handling/packaging surcharge where applicable.
+- Seller shipping share (seller receivable or seller-borne payable, direction explicitly typed).
+- Marketplace shipping share (marketplace revenue/subsidy/expense, direction explicitly typed).
+- Other allocated parts only when justified by business policy (e.g. platform-funded promotion, insurance, or applicable shipping tax); do not invent a fixed commission or arbitrary percentage.
+- Currency, taxation treatment, pricing/rate/policy version, calculation timestamp, payer/payee and any adjustment/refund identifiers.
+
+Never infer allocation from a displayed total or reconstruct it after the order from mutable current tariffs. Define a deterministic, versioned allocation policy owned by the appropriate pricing/settlement capability. Require a documented reconciliation invariant for customer charge, subsidy, carrier cost, seller/platform shares, tax and discount; avoid double counting or ambiguous sign conventions. A marketplace subsidy can produce a negative marketplace contribution, so do not force all shares positive. Every amount must use existing canonical Money/precision/rounding rules.
+
+Persistence ownership: Order owns the accepted customer quote and per-group order snapshot; Settlement/Wallet/Payment own settlement ledger entries, allocations, receivables/payables and money movement under their existing contracts; Fulfillment owns execution and actual carrier charges/fulfillment adjustments, not financial settlement authority. Changes and reimbursements must be auditable with linked events/adjustments rather than silent overwrite. Do not put financial business authority or settlement writes in Host, browser code, or a global shipping table without a module owner.
+
+Key scenarios: a single seller with multiple shipping methods incurs independently computed fee and allocations per group; multiple sellers sharing a method never merge allocation; seller-funded vs platform-funded free shipping has explicit funder and balanced settlement; partial shipping/cancellation/refund affects the relevant groups and balances only; any difference between quoted and actual delivery cost follows an explicit adjustment policy. Preserve idempotency across retries and prohibit paying or refunding the same shipping share twice.
+
+The schema/contract design must be reviewed against existing Order, Pricing, Settlement, Wallet and Fulfillment models BEFORE migration. Specify the minimum required normalized columns/relations, tenant-scoped referential integrity, transaction/ledger linkage and compatibility path for legacy single-shipping orders. Acceptance needs focused financial reconciliation and persistence tests, not UI-only assertions. This is a REQUIRED architectural invariant, not a claim that the current system already implements it.
+
 ## Current proof boundary
 
 TB-121 showed 7/7 one-level catalog labels in the shipping projection. TB-122 showed 7/7 on the real /fa/shipping DOM. TB-123 showed the cart-level shipping choice was saved before navigating to payment, but payment draft was blocked by scratch tax rule availability (checkout.tax.unavailable). None proves per-item Checkout grouping. This requirement is pending implementation/proof, not a claim of a completed feature.
