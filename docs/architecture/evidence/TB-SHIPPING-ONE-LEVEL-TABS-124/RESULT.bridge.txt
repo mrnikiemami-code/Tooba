@@ -1,0 +1,63 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-124
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-123
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Bridge-Task-Row: eb24e8e5-9bbb-4467-97d8-4f240eb6df53
+Expected-Base-SHA: b6e5639b1c8d29241c75d16edaf6b3668cbcaaae
+Actual-Base-SHA: b6e5639b1c8d29241c75d16edaf6b3668cbcaaae
+Drift: NONE in src/backend, backend tests, frontend shipping, config or migrations. Two PRE-EXISTING unstaged admin edits were left untouched and unstaged (src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx).
+Code-SHA: NONE
+Evidence-SHA: (pushed with this result; see Evidence-Paths)
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+Measured-Minutes: ~41
+Observation-Only: true (0 source / 0 test / 0 frontend / 0 config / 0 migration changes, 0 process start-stop, 0 DB mutations, 0 containers touched, Host NOT started, frontend NOT started)
+
+PER-ITEM GROUPING VERDICT (MISSION A) — source-backed, definitive
+Verdict: NOT IMPLEMENTED. Storefront shipping selection is CART-WIDE: exactly one shipping method for the whole cart. This is a real Contract limitation, not a UI shortcut. Per-item grouping must NOT be claimed as working.
+(a) Granularity: one method per cart. CartShippingDraft is keyed by CartId and holds a single ShippingMethodCode/ShippingAmount/date/window (Tooba.Order.Domain/Checkout/CartShippingDraft.cs). CheckoutGroup copies that single code once (CheckoutGroup.cs:113-125). OrderLine has NO shipping member (OrderLine.cs).
+(b) Concurrent different methods per item: IMPOSSIBLE. Single scalar end-to-end: StorefrontShippingDraftView.ShippingMethodCode (:128), StorefrontShippingProjection.SelectedMethodCode (:148), StorefrontShippingSelectionRequest.ShippingMethodCode (:187); frontend holds one `methodCode` state (storefront-shipping.tsx:116) and PUTs one value (:343).
+(c) Grouping by method: NONE in the customer flow. UI = flat cart-wide card list (:619). Order = one checkout-level code. Fulfillment = FulfillmentUnit created one-per-SellerOrder carrying that same code (FulfillmentUnit.cs:26-30,56-59; OrderFulfillmentBridge.cs:82-83). Shipment MAY carry its own optional method (Shipment.cs:32; CreateShipment :331-360) but only because an operator/seller supplies it — not from a customer per-item choice. Admin-only ConsolidatedPackage (one method, requires >=2 distinct sellers) is post-purchase admin consolidation, not cart-line grouping.
+(d) Partition constraints: SELLER is already authoritative (one SellerOrder per seller, one FulfillmentUnit per SellerOrder, cross-seller lines rejected by the domain) — grouping must respect it. Price/promise are computed CART-WIDE over all sellers (StorefrontShippingService.cs:72-73,222-223 + StorefrontShippingCalculator.MaxSellerPreparationDays), i.e. one flat rate and the SLOWEST seller's horizon for the whole cart — exactly the behaviour being rejected. ORIGIN/warehouse is NOT part of the selection contract at all (Inventory-only), and the eligible-method list takes no seller dimension (LoadEligibleMethodsAsync :373-392).
+4-line example: A,C = post:express; B = tipax:standard; D = store_courier. Expected (seller partition first): S1 -> {A} post:express + {B} tipax:standard; S2 -> {C} post:express + {D} store_courier; shipping payable = sum of group prices. Single-seller variant: {A,C} post:express, {B} tipax:standard, {D} store_courier. CURRENT IMPLEMENTATION CANNOT REPRESENT EITHER: it can hold only ONE of the three methods for the whole cart, with one amount, one date, one window.
+(e) Narrowest capability/contract gap (needs Architect approval — changes locked storefront Contracts and the Order->Fulfillment handoff): turn the CartId-keyed single-method draft into an Order-owned shipping-group set (CartId, SellerPartyId, MethodCode) with a retained recipient/address header; StorefrontShippingSelectionRequest gains Groups[]; projection returns per-group eligible methods + per-group amount + total; pricing authority stays ShippingOptions/ResolveRate (no second source of truth); OrderFulfillmentBridge passes per-line/per-group methods instead of one checkout code; FulfillmentUnit stays one-per-SellerOrder. Anti-claims recorded: single-item, single-method, operator multi-shipment and ConsolidatedPackage tests do NOT evidence per-item grouping.
+
+TAX 409 CAUSE / FIXTURE (MISSION B) — source-backed, actionable
+Cause: fixture gap, NOT a code defect. TaxDirectory.CalculateAsync (Tax.Infrastructure/Adapters/TaxDirectory.cs:120-160) fails closed with NoApplicableRule when the offer has no tax.offer_classifications row, or joins to a category with no ACTIVE rule matching jurisdiction+market. The storefront always asks IR-NAT (StorefrontCheckoutService.cs:29) + market IR. The only Development rule the sanctioned seeds ever create is IR-NAT | IR | standard | Percentage | 0.09 | specificity 10 | Active (WorkspaceDemoMarketplaceSeed.EnsureMarketplaceAsync; StorefrontDemoCatalogBootstrap). There is NO Tax HTTP endpoint in the product, so manual SQL/HTTP rule creation is not a sanctioned path.
+TB-123 cart line was the attribute-schema product, whose enricher classifies its offers into a per-offer category and never creates a rule for it: CatalogAttributeSchemaSellableEnricher.cs:125-128 (`var taxCode = $"sch-{offerId:N}"[..20];`). Read-only SELECTs against the shared read-only Development store confirm the shape: standard = only Active rule (3218 offers classified); the two SCHEMA-PHONE offers sit in rule-less sch-* categories. => those offers fail tax in ANY Development store, including the shared one. The shared store's broad "standard" coverage is legacy durable data and is NOT reproduced by the current seeds.
+Sanctioned bounded recipe for the next isolated acceptance (no SQL, no code change): bootstrap the scratch store with Tooba:CatalogDemo:RunLegacyBootstraps=true (Host/Program.cs:366-380 -> DevelopmentSchemaMigrator.ApplyAsync(seedCatalog:true) -> IWorkspaceDemoSeed.SeedNewProductAsync -> WorkspaceDemoMarketplaceSeed.EnsureMarketplaceAsync) and put the WORKSPACE DEMO PRODUCT workspace-live-shirt (WorkspaceDemoProductSeed.SeedSlug, published) into the guest cart instead of the schema-phone product. Its offers ARM-LN-01 / DGS-LN-01 are classified "standard" so the Active IR-NAT/IR 9% rule applies and payment-draft returns 200; the product already spans two sellers, which is also the right fixture for the per-item grouping proof.
+Smallest module-owned fixture gap (fail closed, no fabrication of Tax authority): the Catalog Development enricher classifies into a generated category code with no matching rule although ITaxDevelopmentSeedGateway already exposes EnsureDevelopmentRuleAsync(CategoryCode). Fix = either classify those offers into "standard" or create/activate a rule for the generated code — a bounded Development-fixture task, not a storefront/shipping task.
+Runtime-Proven: false. The recipe is source-backed; no Host/frontend was started and no scratch DB was created in this task.
+
+TARGETED TEST RESULT
+0 focused tests executed (allowed: at most 1). Justification: both verdicts are settled by authorities (domain aggregates, storefront Contracts, Tax applicability code, module seed seams) plus one read-only store check; no test could change either verdict, so none was run and the single runtime uncertainty is explicitly labelled unproven instead of asserted.
+
+CHANGED PATHS (docs only)
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-124.md
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-124/per-item-grouping-verdict.txt
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-124/tax-409-trace.txt
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-124/task-receipt.json
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-124/RESULT.bridge.txt
+Bridge task receipt preserved UNSTAGED: docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-124.task.md
+
+SHARED NON-INTERFERENCE
+Shared :5088/:3000, the tooba_alpha store and all existing containers were read-only; no process start/stop/restart, no install/build, no DB write (read-only SELECT only), no flag activation, no checkout run.
+
+DEVIATIONS
+None of substance. Deviation of completeness only: no focused test executed (justified above).
+
+ROLLBACK
+Documentation-only commit; `git revert <docs-commit>` restores the previous state. No runtime artifact was created or left behind.
+
+FIRST REMAINING BLOCKER
+The cart-wide shipping Contract cannot represent per-item/per-group method selection (locked storefront Contract + module handoff boundary -> needs Architect approval), and the schema-phone Development fixture creates tax categories without rules.
+
+RECOMMENDED NEXT SLICE (ONE)
+Design review ONLY of the shipping-group slice: Order-owned CartShippingGroup(CartId, SellerPartyId, MethodCode) with retained recipient/address header, Groups[] selection contract, per-group projection amounts/total, per-group Order->Fulfillment handoff, pricing still owned by ShippingOptions; plus a bounded decision on the schema-phone Development tax fixture. Minimal acceptance scenario: guest cart with workspace-live-shirt (two sellers) and a second-seller item, two different methods selected, continue to payment, assert per-group persistence, grouped payment breakdown with summed shipping, one method per group in order persistence, one fulfillment unit per seller with correct per-group methods, and no shipping commit / order creation before the final payment click. No implementation without Architect approval.
+
+NOT CERTIFIED BY THIS TASK
+Per-item shipping grouping, payment readiness, production Shipping, production Tax. No flags were enabled and no checkout was executed.
+END_TOOBA_WORKER_RESULT

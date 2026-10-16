@@ -1,0 +1,91 @@
+TB-SHIPPING-ONE-LEVEL-TABS-124 — Mission A: per-item shipping grouping verdict (source/contract evidence)
+
+VERDICT
+  NOT IMPLEMENTED. Storefront shipping selection is cart-wide: exactly one shipping method for the
+  entire cart, persisted once, copied once into the checkout group, and handed to Fulfillment once per
+  seller order. There is no per-line selection, no per-line persistence and no method-based grouping
+  anywhere in the customer flow.
+
+Q(a) METHOD CODE GRANULARITY
+  Order.Domain/Checkout/CartShippingDraft.cs
+    - primary key / identity is the CART:      public Guid CartId { get; init; }
+    - single method field:                     public string ShippingMethodCode { get; private set; }
+    - single amount:                           public decimal ShippingAmount { get; private set; }
+    - single minimum date / selected date / single time window
+    => one draft row per cart; one method per cart.
+
+  Order.Domain/Aggregates/CheckoutGroup.cs:113-125
+    public string ShippingMethodCode { get; init; }
+    public string ShippingMethodLabel { get; init; }
+    public decimal ShippingAmount { get; init; }
+    => the checkout group copies that single code once. One checkout = one method.
+
+  Order.Domain/Aggregates/OrderLine.cs
+    members = LineId, SellerOrderId, OfferId, CatalogVariantId, SellerPartyId, Quantity,
+              unit snapshots, UnitPriceSnapshot, LineTotalSnapshot, Currency, TaxExclusive, PriceId,
+              ReservationId, Tax*Snapshot, Discount*/Promotion*Snapshot, CategoryIdSnapshot,
+              IsReturnableSnapshot, ReturnWindowDaysSnapshot, ReturnPolicy*
+    => NO shipping method member on the order line. The per-item method cannot be persisted today.
+
+Q(b) CONCURRENT DIFFERENT METHODS PER ITEM
+  Impossible. Every transport/read shape carries one scalar:
+    StorefrontOrderModels.cs
+      :128 StorefrontShippingDraftView.ShippingMethodCode
+      :148 StorefrontShippingProjection.SelectedMethodCode
+      :187 StorefrontShippingSelectionRequest.ShippingMethodCode
+    Frontend
+      storefront-shipping.tsx:116  const [methodCode, setMethodCode] = useState<string | null>(null);
+      storefront-shipping.tsx:343  shippingMethodCode: methodCode    (one value in the PUT body)
+      storefront-shipping.tsx:619  {projection.methods.map((m) => ...)}  (flat cart-wide card list)
+
+Q(c) GROUPING BY METHOD IN UI / ORDER / FULFILLMENT
+  UI:          none. One selected card per page; selection is a scalar.
+  Order:       none. One CheckoutGroup-level code (CheckoutGroup.cs:113-125); OrderLine has no field.
+  Fulfillment: FulfillmentUnit is created one-per-SellerOrder and carries one method:
+                 FulfillmentUnit.cs:26-30   public Guid SellerOrderId { get; init; }
+                 FulfillmentUnit.cs:56-59   public string ShippingMethodCode { get; init; }
+                 OrderFulfillmentBridge.cs:82-83  checkout.ShippingMethodCode / Label passed to the handoff
+               A Shipment MAY carry its own optional method:
+                 Shipment.cs:32    public string ShippingMethodCode { get; init; }
+                 FulfillmentUnit.CreateShipment(... string? shippingMethodCode = null, ...) :331-360
+               but it is OPERATOR/SELLER supplied at creation time (SellerMutateFulfillmentCommand
+               .ShippingMethodCode), not derived from a customer per-item choice.
+               Admin-only ConsolidatedPackage (ConsolidatedPackage.cs:72-141) has one method and requires
+               >= 2 distinct sellers; it is an admin post-purchase consolidation, not cart-line grouping.
+
+Q(d) SELLER / ORIGIN / FULFILLMENT PARTITION
+  Seller: authoritative and already hard. One SellerOrder per seller; one FulfillmentUnit per SellerOrder;
+    a line can never be processed in another seller's unit (Cross_seller_line_is_rejected_by_domain).
+    Price/promise are computed CART-WIDE across all sellers:
+      StorefrontShippingService.cs:72-73,222-223
+        cart.Lines.Select(x => x.SellerPartyId).Distinct()
+        StorefrontShippingCalculator.MaxSellerPreparationDays(sellerIds, _shippingOptions)
+      => the delivery horizon uses the SLOWEST seller and a single flat rate applies to the whole cart;
+         this is precisely the "one shipping method for the whole cart" behaviour being rejected.
+  Origin/warehouse: NOT part of the shipping-selection contract. Locations (WH-THR/WH-ISF/WH-KSH/
+    WH-SCHEMA-MOBILE) live only in Inventory; Shipment grouping is by operator-chosen order lines.
+  Eligible method list is also cart-wide: LoadEligibleMethodsAsync(cartSubtotal, provinceName, language)
+    (StorefrontShippingService.cs:373-392) takes no seller dimension.
+
+Q(e) NARROWEST CAPABILITY/CONTRACT GAP
+  The gap is the 1:1 cart->single-method assumption encoded in the Order-owned draft identity, the
+  selection contract shape, the checkout snapshot and the fulfillment handoff:
+    CartId(as PK) + one ShippingMethodCode  -->  (CartId, SellerPartyId, MethodCode) group set
+  Minimal coherent slice (needs Architect approval; changes locked storefront contracts):
+    1. Order domain: keep the draft header (recipient/address/note) and move method/amount/date-window
+       into CartShippingGroup(CartId, SellerPartyId, MethodCode); every cart line belongs to exactly one
+       group; groups must cover all lines of their seller exactly once.
+    2. Order Contracts: StorefrontShippingSelectionRequest gains Groups[]; projection returns per-group
+       eligible methods + per-group selected amount + total.
+    3. Pricing authority stays ShippingOptions/ResolveRate (no second price source).
+    4. OrderFulfillmentBridge passes (OrderLineId -> MethodCode) or one shipment spec per group instead of
+       the single checkout code; FulfillmentUnit stays one-per-SellerOrder.
+  NO code was changed in this task and per-item grouping must NOT be claimed as working.
+
+NOT SUFFICIENT AS EVIDENCE OF GROUPING (explicit anti-claims)
+  - Single-item cart tests.
+  - Single-method carts.
+  - Admin/seller-created multi-shipment tests (Split_line_across_shipments_and_cancel_releases etc.):
+    these prove the DOMAIN can hold two shipments with different carriers inside one fulfillment unit,
+    but they are operator flows with no customer selection, no grouping UI and no grouped pricing/promise.
+  - ConsolidatedPackage tests: admin consolidation of >= 2 sellers behind one method, not per-item.

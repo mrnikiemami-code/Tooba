@@ -1,0 +1,97 @@
+TB-SHIPPING-ONE-LEVEL-TABS-124 — Mission B: Tax 409 first-blocker trace
+
+SYMPTOM (from TB-123, reproduced identically in source terms)
+  GET /v1/storefront/cart/{cartId}/payment-draft -> 409 with checkout.tax.unavailable on a scratch
+  Development store, so the payment page rendered «امکان شروع پرداخت در حال حاضر وجود ندارد.» instead
+  of the draft summary carrying the selected shipping method label/price.
+
+CALL PATH
+  Order.Endpoints StorefrontOrderEndpoints -> GetStorefrontPaymentDraftQuery
+    -> StorefrontShippingService.ProjectPaymentDraftAsync (StorefrontShippingService.cs:141-176)
+       requires an existing CartShippingDraft; passes draft.ShippingMethodCode/Amount/date/window into
+       _checkouts.PreviewAsync(...)
+    -> checkout preview composes each cart line's tax; Tax failure maps to 409 checkout.tax.unavailable.
+
+AUTHORITATIVE CAUSE (fixture gap, not a code defect in checkout/shipping/payment)
+  TaxDirectory.CalculateAsync (Tax/Tooba.Tax.Infrastructure/Adapters/TaxDirectory.cs:120-160):
+    1. classification := tax.offer_classifications.SingleOrDefault(OfferId == request.OfferId)
+       if null -> Fail(NoApplicableRule)                                    (:137-142)
+    2. candidates := tax.rules where Status == Active
+                         && Jurisdiction == request.Jurisdiction.Trim()
+                         && Market == request.Market.Trim()
+                         && CategoryId == classification.CategoryId        (:144-149)
+       effective := candidates where IsEffectiveAt(at); if empty -> Fail(NoApplicableRule)   (:150-154)
+    3. maxSpecificity must resolve to exactly ONE winner, else CalculationError  (:156-162)
+
+  The storefront asks with fixed values:
+    StorefrontCheckoutService.cs:29   TaxJurisdiction = "IR-NAT"
+    market = IR, currency = IRR
+  So the ONLY rule that can ever apply in Development is
+    jurisdiction IR-NAT | market IR | category "standard" | Percentage | 0.09 | specificity 10 | Active
+
+  The cart line used in TB-123 was the attribute-schema demo product, whose enricher classifies its offers
+  into a PER-OFFER category that NEVER receives a rule:
+    CatalogAttributeSchemaSellableEnricher.cs:125-128
+      var taxCode = $"sch-{offerId:N}"[..20];
+      await tax.EnsureDevelopmentOfferCategoryAsync(
+          new EnsureDevelopmentOfferCategory(offerId, taxCode, "schema phone"), ct);
+  => step (2) can never match for those offers in ANY Development store.
+
+SANCTIONED WAYS TO CREATE A TAX RULE (no manual SQL, no synthetic bypass)
+  - There is NO Tax HTTP endpoint in the product: no MapGroup/MapPost/MapGet under Modules/Tax
+    (only an architecture-guard test matches).
+  - The only sanctioned writer is the module-owned Development seed seam
+    ITaxDevelopmentSeedGateway (Tax.Contracts/Ports/ITaxDevelopmentSeedGateway.cs:
+      EnsureDevelopmentOfferCategoryAsync, EnsureDevelopmentRuleAsync) implemented by
+      Tax.Infrastructure/Adapters/TaxDevelopmentSeedGateway.cs, called exclusively from Catalog-owned
+      Development seeds:
+        * WorkspaceDemoMarketplaceSeed.EnsureMarketplaceAsync  (WorkspaceDemoMarketplaceSeed.cs:151-181)
+        * StorefrontDemoCatalogBootstrap.SeedAsync + EnsureDemoTaxCoverageAsync
+          (StorefrontDemoCatalogBootstrap.cs:429-489)
+      Both create exactly the one "standard" rule above. StorefrontDemoCatalogBootstrap also classifies
+      offers whose seller SKU starts with DEMO- into "standard".
+  - StorefrontDemoCatalogBootstrap.ApplyAsync / SeedAsync have no production caller (tests only), so the
+    rule in a fresh Development store comes from DevelopmentSchemaMigrator.ApplyAsync ->
+    IWorkspaceDemoSeed.SeedNewProductAsync -> WorkspaceDemoMarketplaceSeed.EnsureMarketplaceAsync
+    (Host/Tooba.Host/Program.cs:366-380, DevelopmentSchemaMigrator.cs:70-113,
+     WorkspaceDemoSeed.cs:33-41).
+
+READ-ONLY VERIFICATION AGAINST THE EXISTING (read-only) DEVELOPMENT STORE
+  SELECT-only against the shared dev store; no writes:
+    cat:standard|استاندارد|3218
+    cat:sch-01a04569de3f7000|schema phone|1
+    cat:sch-01a04569df137000|schema phone|1
+    rule:IR-NAT|IR|Active|Percentage|0.09000000|10|2026-01-01 00:00:00+00
+    rule_category:standard
+    schema_offer:SCHEMA-PHONE-PHONE-BLK-128|cat=sch-01a04569de3f7000
+    schema_offer:SCHEMA-PHONE-PHONE-BLU-256|cat=sch-01a04569df137000
+  => only "standard" is rule-backed; the schema-phone categories are rule-less. The broad "standard"
+     classification in that store is legacy durable data and is NOT reproduced by the current seeds.
+
+BOUNDED SANCTIONED RECIPE FOR THE NEXT ISOLATED ACCEPTANCE (no SQL, no code change)
+  1. Reuse the TB-123 scratch recipe with Tooba:CatalogDemo:RunLegacyBootstraps=true so that
+     DevelopmentSchemaMigrator.ApplyAsync(seedCatalog: true) runs the workspace demo seed.
+  2. Put the WORKSPACE DEMO PRODUCT (WorkspaceDemoProductSeed.SeedSlug = "workspace-live-shirt",
+     published by SeedProductAsync) into the guest cart instead of the schema-phone product.
+     Its two offers ARM-LN-01 (فروشگاه آرمان) and DGS-LN-01 (دیجی‌استایل نمونه) are classified "standard"
+     and the Active IR-NAT/IR 9% rule applies -> payment-draft returns 200 and the payment page can show
+     the shipping method label/price.
+  3. Bonus fit: the same product already spans two sellers, so it is the correct fixture for the
+     per-item / per-seller shipping-grouping proof.
+
+SMALLEST MODULE-OWNED FIXTURE GAP (fail closed; do NOT fabricate Tax authority)
+  Catalog.Infrastructure Development enricher classifies an offer into a generated category code and never
+  pairs it with a rule, while ITaxDevelopmentSeedGateway already exposes EnsureDevelopmentRuleAsync with a
+  CategoryCode parameter. Resolution options, both bounded and needing an explicit task:
+    (i)  classify the schema-phone offers into "standard", or
+    (ii) create/activate a matching rule for the generated category code.
+  Owner of the gap: Catalog Development enricher (consumer) + Tax Development seed seam (capability).
+
+SUPPORTED vs UNPROVEN
+  Supported (source): rule creation, classification, applicability conditions, IR-NAT/IR constants,
+    absence of a Tax HTTP API, ownership of the seed seam.
+  Supported (read-only store): only "standard" has an Active rule; sch-* categories have none.
+  UNPROVEN at runtime in this task: that a fresh scratch store really ends up with ARM-LN-01 / DGS-LN-01
+    classified "standard". No Host/frontend was started and no DB was created or mutated in this task
+    (task rule), so this remains a source-backed recipe, not a runtime observation.
+  NOT a defect claim: nothing here asserts the checkout/payment/Tax production code is wrong.
