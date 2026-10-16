@@ -8,6 +8,10 @@ Repository: mrnikiemami-code/Tooba
 Branch: main
 Status: PASS
 Base-SHA: cff0f19d36ab73870345a3f542f01c459894a1a6
+Code-Evidence-Head-SHA: 0db02d7285f262d66004b45ce53afb9fb554c8bb
+Origin-Main-SHA-After-Push: 0db02d7285f262d66004b45ce53afb9fb554c8bb
+HEAD-Origin-Parity: CONFIRMED (fast-forward push; working tree clean for src/backend)
+Final-Evidence-Commit: the follow-up docs commit recording these SHA fields (production source unchanged since Code-Evidence-Head-SHA)
 
 Scope-Delivered:
 - Owner-side strict option identity added to the EXISTING Shipping rate quote contract/engine, opt-in and default-legacy; the TB-159 defect is repaired at its semantic owner.
