@@ -1,3 +1,5 @@
+> **SUPERCEDING DELIVERY-SCHEDULE AUTHORITY (2026-10-16):** [Independent seller shipping commitments and per-group dates/windows](../shipping/SHIPPING-GROUP-INDEPENDENT-DELIVERY-COMMITMENT.md). Every operational ShippingGroupId has its own eligible dates, time window and seller commitment. Two sellers using identical method codes NEVER become one operational group. The legacy global cart-level date/time and cross-method horizon intersection are expressly NOT COMPLIANT and must be replaced. This directive supersedes contradictory timing/grouping clauses below.
+
 # Checkout — Shipping-method grouping and storefront visual continuity
 
 Status: ARCHITECTURAL REQUIREMENT (user-approved intent); implementation and runtime acceptance pending.
