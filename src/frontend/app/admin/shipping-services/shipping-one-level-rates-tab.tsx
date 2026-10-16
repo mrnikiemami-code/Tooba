@@ -72,6 +72,16 @@ import {
   viewMatchesBindingService,
   type OneLevelBindingState,
 } from "./shipping-one-level-rates-model.ts";
+import { loadShippingMethodFinancialStatus } from "./shipping-method-financial-api.ts";
+import type { ShippingMethodFinancialStatus } from "./shipping-method-financial-model.ts";
+import {
+  gateAllowsCreate,
+  gateAllowsInPlaceEdit,
+  gateBlocksWrites,
+  isStoredZeroAmount,
+  resolveFinancialEditGate,
+  ZERO_AMOUNT_NOTE_FA,
+} from "./shipping-method-financial-edit-gate.ts";
 
 type Props = {
   /** کد روش یک‌سطحی انتخاب‌شده در زبانهٔ «سرویس‌ها». تهی یعنی هیچ روشی انتخاب نشده است. */
@@ -114,6 +124,8 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
   const [createFormIssues, setCreateFormIssues] = useState<string[]>([]);
   const [createConditionForm, setCreateConditionForm] = useState<ShippingRateConditionForm>(EMPTY_CONDITION_FORM);
   const [createConditionIssues, setCreateConditionIssues] = useState<string[]>([]);
+  // TB-156: وضعیت مالی تأییدشدهٔ سرور (TB-155) تعیین می‌کند آیا نوشتن امن است یا نه.
+  const [financialStatus, setFinancialStatus] = useState<ShippingMethodFinancialStatus | null>(null);
 
   // نسل انتخاب: هر تغییر روش، پاسخ‌های در راهِ روش قبلی را باطل می‌کند.
   const guard = useRef(createBindingGenerationGuard());
@@ -132,6 +144,17 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
     setRatesState("ok");
   }, []);
 
+  // وضعیت مالی تأییدشده از همان read model مالک داده (TB-155) خوانده می‌شود؛ بدون هویت تأییدشده
+  // هیچ gate ساخته نمی‌شود و مقدار null صریحاً fail-closed است.
+  const refreshFinancial = useCallback(
+    async (serviceCode: string, optionCode: string | null, isCurrent: () => boolean) => {
+      const result = await loadShippingMethodFinancialStatus(serviceCode, optionCode);
+      if (!isCurrent()) return;
+      setFinancialStatus(result.state === "ok" && result.data ? result.data : null);
+    },
+    [],
+  );
+
   useEffect(() => {
     // بازنشانی کامل وضعیت ویرایش هنگام تغییر روش انتخاب‌شده.
     setEditingId(null);
@@ -148,6 +171,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
     setView(null);
     setRatesState(null);
     setBinding(null);
+    setFinancialStatus(null);
 
     if (!methodCode) {
       setBindingLoading(false);
@@ -168,6 +192,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
       });
       setBindingLoading(false);
       void refresh(bindingOverride.serviceCode, isCurrent);
+      void refreshFinancial(bindingOverride.serviceCode, bindingOverride.optionCode, isCurrent);
       return;
     }
 
@@ -190,9 +215,10 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
       setBindingLoading(false);
       if (next.state === "resolved") {
         void refresh(next.binding.serviceCode, isCurrent);
+        void refreshFinancial(next.binding.serviceCode, next.binding.optionCode, isCurrent);
       }
     })();
-  }, [methodCode, refresh, bindingOverride?.serviceCode, bindingOverride?.optionCode, bindingOverride?.isActive]);
+  }, [methodCode, refresh, refreshFinancial, bindingOverride?.serviceCode, bindingOverride?.optionCode, bindingOverride?.isActive]);
 
   const state = resolveRatesState({
     hasMethod: methodCode.length > 0,
@@ -207,9 +233,17 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
     [resolvedBinding, view],
   );
   const summary = useMemo(() => summarizeRatesCoverage(view), [view]);
+  // دروازهٔ نوشتن: از وضعیت تأییدشدهٔ سرور مشتق می‌شود و در نبود اثبات، fail-closed است.
+  const editGate = useMemo(() => resolveFinancialEditGate(financialStatus), [financialStatus]);
+  const writesBlocked = gateBlocksWrites(editGate);
 
   async function submitCreateRate() {
     if (!resolvedBinding) return;
+    // ابهام تجاری یا وضعیت تأییدنشده هرگز با نوشتن خودکار حل نمی‌شود.
+    if (writesBlocked || !gateAllowsCreate(editGate)) {
+      emit({ tone: "error", text: editGate.reasonFa });
+      return;
+    }
     const scopeProblems = validateDestinationSelection(selection);
     const formProblems = validateShippingRateForm(createRateForm).map((issue) => issue.messageFa);
     const conditionProblems = validateConditionForm(createConditionForm);
@@ -241,6 +275,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
     setCreateRateForm(rateFormFromPolicy(null));
     setCreateConditionForm(EMPTY_CONDITION_FORM);
     await refresh(resolvedBinding.serviceCode, isCurrent);
+    await refreshFinancial(resolvedBinding.serviceCode, resolvedBinding.optionCode, isCurrent);
   }
 
   async function submitCreateGrant() {
@@ -270,6 +305,10 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
 
   async function submitEdit(policy: ShippingRatePolicyAdminItem) {
     if (!resolvedBinding) return;
+    if (!gateAllowsInPlaceEdit(editGate)) {
+      emit({ tone: "error", text: editGate.reasonFa });
+      return;
+    }
     const found = validateShippingRateForm(form);
     const conditionProblems = validateConditionForm(editConditionForm);
     if (found.length > 0 || conditionProblems.length > 0) {
@@ -303,6 +342,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
     setEditConditionIssues([]);
     emit({ tone: "success", text: `نرخ «${scopeSummary(result.data!)}» ذخیره شد.` });
     await refresh(resolvedBinding.serviceCode, isCurrent);
+    await refreshFinancial(resolvedBinding.serviceCode, resolvedBinding.optionCode, isCurrent);
   }
 
   async function toggleRate(policy: ShippingRatePolicyAdminItem) {
@@ -318,6 +358,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
     }
     emit({ tone: "success", text: `نرخ «${scopeSummary(result.data!)}» ${result.data!.isActive ? "فعال" : "غیرفعال"} شد.` });
     await refresh(resolvedBinding.serviceCode, isCurrent);
+    await refreshFinancial(resolvedBinding.serviceCode, resolvedBinding.optionCode, isCurrent);
   }
 
   async function toggleGrant(grantId: string, isActive: boolean) {
@@ -424,6 +465,33 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
         <span className="mr-2 text-muted">
           (نرخ‌های فعال: {summary.activeRateCount.toLocaleString("fa-IR")} از {summary.rateCount.toLocaleString("fa-IR")})
         </span>
+      </div>
+
+      {/* TB-156: دروازهٔ نوشتن بر پایهٔ وضعیت مالی تأییدشدهٔ سرور، نه بر پایهٔ برچسب یا isActive. */}
+      <div
+        className={
+          writesBlocked
+            ? "rounded-ds border border-red-200 bg-red-50 p-3 text-xs text-red-800"
+            : "rounded-ds border border-border p-3 text-xs"
+        }
+        data-testid="shipping-one-level-financial-edit-gate"
+        data-gate={editGate.kind}
+      >
+        <p className="font-bold" data-testid="shipping-one-level-financial-edit-gate-reason">
+          {editGate.reasonFa}
+        </p>
+        {financialStatus && financialStatus.state === "legacy-shared-unresolved" && (
+          <p className="mt-1 text-[11px] text-amber-800" data-testid="shipping-one-level-financial-legacy-warning">
+            تعرفهٔ سطح سرویس هرگز پیش‌فرض این فرم نمی‌شود و مبلغ آن به این روش نسبت داده نمی‌شود؛ این روش تا
+            ثبت نرخ اختصاصی خودش «نیازمند تنظیم مالی» می‌ماند و رایگان محسوب نمی‌شود.
+          </p>
+        )}
+        {writesBlocked && (
+          <p className="mt-1 text-[11px]" data-testid="shipping-one-level-financial-edit-gate-action">
+            اقدام لازم: تناقض بالا را در همین فهرست (غیرفعال‌سازی یکی از ردیف‌های متناقض) یا با اصلاح ارز حل کنید؛
+            تا آن زمان هیچ ثبت/ویرایش خودکاری انجام نمی‌شود.
+          </p>
+        )}
       </div>
 
       <section className="space-y-2">
@@ -533,7 +601,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
                   <button
                     type="button"
                     className="rounded-ds bg-primary px-3 py-1 text-xs font-bold text-primary-foreground disabled:opacity-50"
-                    disabled={busy}
+                    disabled={busy || !gateAllowsInPlaceEdit(editGate)}
                     onClick={() => void submitEdit(policy)}
                     data-testid={`shipping-one-level-rate-save-${policy.ratePolicyId}`}
                   >
@@ -559,6 +627,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
                       setEditConditionForm(conditionFormFromPolicy(policy.condition));
                       setEditConditionIssues([]);
                     }}
+                    disabled={!gateAllowsInPlaceEdit(editGate)}
                     data-testid={`shipping-one-level-rate-edit-${policy.ratePolicyId}`}
                   >
                     ویرایش
@@ -692,7 +761,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
           <button
             type="button"
             className="rounded-ds bg-primary px-3 py-1 text-xs font-bold text-primary-foreground disabled:opacity-50"
-            disabled={busy}
+            disabled={busy || !gateAllowsCreate(editGate)}
             onClick={() => void submitCreateRate()}
             data-testid="shipping-one-level-create-rate-submit"
           >
@@ -701,13 +770,18 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
           <button
             type="button"
             className="rounded-ds border border-border px-3 py-1 text-xs disabled:opacity-50"
-            disabled={busy}
+            disabled={busy || !gateAllowsCreate(editGate)}
             onClick={() => void submitCreateGrant()}
             data-testid="shipping-one-level-create-grant-submit"
           >
             افزودن مجوز پوشش
           </button>
         </div>
+        {isStoredZeroAmount(createRateForm.chargeAmount) && (
+          <p className="text-[11px] font-bold text-amber-800" data-testid="shipping-one-level-create-rate-zero-note">
+            {ZERO_AMOUNT_NOTE_FA}
+          </p>
+        )}
       </section>
     </div>
   );

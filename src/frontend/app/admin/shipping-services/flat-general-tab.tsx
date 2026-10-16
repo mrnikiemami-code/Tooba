@@ -285,6 +285,10 @@ export function FlatGeneralTab({
               منبع این وضعیت، همان ردیف‌های واقعی نرخ/پوشش سرویس است و از فعال‌بودن روش یا برچسب آن
               استنتاج نمی‌شود؛ پیوند خدمات سطح سرویس هرگز به‌عنوان تعرفهٔ این روش نمایش داده نمی‌شود.
             </p>
+            <p className="text-[11px] text-amber-800" data-testid="admin-shipping-method-financial-edit-pointer">
+              ویرایش مبلغ ثابت همین روش در زبانهٔ «تعرفه و پوشش» و روی همان خدمت/گزینهٔ authoritative انجام
+              می‌شود؛ آن زبانه در حالت مبهم یا تأییدنشده هیچ نوشتنی انجام نمی‌دهد.
+            </p>
           </div>
         ) : (
           <div className="space-y-1" data-testid="admin-shipping-method-financial-unavailable">
