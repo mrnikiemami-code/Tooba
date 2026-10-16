@@ -11,7 +11,7 @@ Automatic-Next-Implementation-Task: NONE
 Expected-Base-SHA: f75d9c0001f92c159f8536415c69b9ff6af1f418
 Actual-Base-SHA: f75d9c0001f92c159f8536415c69b9ff6af1f418
 Base-SHA-Ancestor-Of-Head: true
-Drift: NONE. No source/test/frontend/config/migration drift and no remote delta since the expected base. Two PRE-EXISTING unstaged admin edits were left untouched and unstaged (src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx).
+Drift: NONE in source. origin/main advanced MID-TASK with ONE docs-only commit (69459138d, docs/planning/shipping/SHIPPING-CHECKOUT-DELIVERY-CLOSURE-PLAN.md); no source overlap and no conflict with this task's paths, resolved with a NO-REBASE merge commit exactly as required (no reset, no stash, no rebase, no force push). That plan explicitly instructs Track B increment 1 to "review TB-125's architecture result against the approved contract; choose the smallest migration and contract design grounded in actual Order/Fulfillment/Pricing/Settlement mappings", which is precisely this task's output, and its Track A instruction to run one isolated proof with the workspace-live-shirt fixture matches this task's tax-fixture decision. No source/test/frontend/config/migration drift otherwise. Two PRE-EXISTING unstaged admin edits were left untouched and unstaged (src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx).
 Code-SHA: NONE
 Evidence-SHA: (this commit; see Changed-Paths)
 Measured-Minutes: ~42
