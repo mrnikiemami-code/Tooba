@@ -1,0 +1,39 @@
+﻿Pager usage is off.
+== A. draft shipping groups (per-group schedule authority) ==
+          shipping_group_id           |           seller_party_id            |  method_code   | service_code | option_code | shipping_amount | currency | minimum_delivery_date | selected_delivery_date | selected_delivery_time_window | lead_days | state |          updated_at           
+--------------------------------------+--------------------------------------+----------------+--------------+-------------+-----------------+----------+-----------------------+------------------------+-------------------------------+-----------+-------+-------------------------------
+ 01a14604-3ba0-7000-8d6b-a63138333a13 | 01a145fd-fdf9-7000-b907-982ab18acc35 | tipax:standard | tipax        | standard    |       180000.00 | IRR      | 2026-10-21            | 2026-10-21             | 12-15                         |         3 | Draft | 2026-10-16 18:40:44.960343+00
+ 01a14604-3ba0-7000-a62a-a5dce52ba44e | 01a145fe-00af-7000-911c-ada7bd1621c7 | tipax:standard | tipax        | standard    |       180000.00 | IRR      | 2026-10-22            | 2026-10-22             | 9-12                          |         3 | Draft | 2026-10-16 18:40:44.960343+00
+(2 rows)
+
+== B. draft group membership (each cart line exactly once) ==
+          shipping_group_id           |             cart_line_id             |           seller_party_id            |  method_code   
+--------------------------------------+--------------------------------------+--------------------------------------+----------------
+ 01a14604-3ba0-7000-8d6b-a63138333a13 | 01a14601-72d0-7000-9284-2ab3fc00adf0 | 01a145fd-fdf9-7000-b907-982ab18acc35 | tipax:standard
+ 01a14604-3ba0-7000-a62a-a5dce52ba44e | 01a14604-0c37-7000-823f-fb62616d3535 | 01a145fe-00af-7000-911c-ada7bd1621c7 | tipax:standard
+(2 rows)
+
+== C. group count / membership integrity ==
+ draft_groups | groups_with_lines | membership_rows | distinct_lines 
+--------------+-------------------+-----------------+----------------
+            2 |                 2 |               2 |              2
+(1 row)
+
+== D. draft header scalars (multi-group must keep no global schedule) ==
+               cart_id                | cart_version | shipping_method_code | shipping_amount | minimum_delivery_date | selected_delivery_date | selected_delivery_time_window 
+--------------------------------------+--------------+----------------------+-----------------+-----------------------+------------------------+-------------------------------
+ 01a14601-7264-7000-8f4c-9417e574363e |           20 |                      |       360000.00 | 2026-10-22            |                        | 
+(1 row)
+
+== E. no checkout / order / reservation was created by the shipping flow ==
+ checkouts | order_shipping_groups | seller_orders 
+-----------+-----------------------+---------------
+         0 |                     0 |             0
+(1 row)
+
+== F. tax fixture coverage (why the read-only payment draft answered 409) ==
+ tax_offer_classifications | tax_rules |           rule_categories            |                           cart_offer_categories                           
+---------------------------+-----------+--------------------------------------+---------------------------------------------------------------------------
+                         5 |         1 | 01a145fe-00cc-7000-8967-741a833062a5 | 01a145fd-fea2-7000-b22f-60a08f3e6dd6,01a145fe-00cc-7000-8967-741a833062a5
+(1 row)
+

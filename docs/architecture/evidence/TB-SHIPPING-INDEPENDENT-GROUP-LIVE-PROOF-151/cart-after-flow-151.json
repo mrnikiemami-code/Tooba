@@ -1,0 +1,57 @@
+{
+  "cartId": "01a14601-7264-7000-8f4c-9417e574363e",
+  "version": 20,
+  "market": "IR",
+  "defaultCurrency": "IRR",
+  "channel": "Marketplace",
+  "itemCount": 8,
+  "totalsByCurrency": [
+    {
+      "currency": "IRR",
+      "subtotalExclusiveOfTax": 78700000
+    }
+  ],
+  "lines": [
+    {
+      "lineId": "01a14601-72d0-7000-9284-2ab3fc00adf0",
+      "offerId": "01a145fd-fe25-7000-8667-69e0b6b8530d",
+      "catalogVariantId": "01a145fd-fd3b-7000-80e9-9fd35b3fb13d",
+      "sellerPartyId": "01a145fd-fdf9-7000-b907-982ab18acc35",
+      "productId": "01a145fd-fc7d-7000-a63b-6d0a5df38ac8",
+      "productSlug": "schema-mobile-demo-phone",
+      "title": "گوشی نمونه schema",
+      "sellerDisplayName": "فروشنده schema موبایل",
+      "mediaAssetId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "quantity": 6,
+      "unitAmountExclusiveOfTax": 12500000,
+      "lineAmountExclusiveOfTax": 75000000,
+      "currency": "IRR",
+      "quotedTaxExclusive": true,
+      "unitCode": "pcs",
+      "unitDisplayName": "pcs",
+      "quantityDecimalPlaces": 0,
+      "availability": "LimitedQuantity"
+    },
+    {
+      "lineId": "01a14604-0c37-7000-823f-fb62616d3535",
+      "offerId": "01a145fe-00b4-7000-8c42-4f0307b65d72",
+      "catalogVariantId": "01a145fe-00a6-7000-bcd0-058df0733ae3",
+      "sellerPartyId": "01a145fe-00af-7000-911c-ada7bd1621c7",
+      "productId": "01a145fe-0058-7000-97a1-dd08425bebbf",
+      "productSlug": "workspace-live-shirt",
+      "title": "پیراهن مردانه لینن",
+      "sellerDisplayName": "فروشگاه آرمان",
+      "mediaAssetId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "quantity": 2,
+      "unitAmountExclusiveOfTax": 1850000,
+      "lineAmountExclusiveOfTax": 3700000,
+      "currency": "IRR",
+      "quotedTaxExclusive": true,
+      "unitCode": "pcs",
+      "unitDisplayName": "pcs",
+      "quantityDecimalPlaces": 0,
+      "availability": "Available"
+    }
+  ],
+  "status": "Active"
+}

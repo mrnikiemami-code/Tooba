@@ -1,0 +1,10 @@
+{
+  "type": "about:blank",
+  "title": "Tax could not be calculated for this order. Try again.",
+  "status": 409,
+  "instance": "/v1/storefront/cart/01a14601-7264-7000-8f4c-9417e574363e/payment-draft",
+  "errorCode": "checkout.tax.unavailable",
+  "traceId": "a07e37218f4e18874d3a67843ae665f0",
+  "correlationId": "dcffdaa5ff7c4495876a42cd616f9019",
+  "requestId": "0HNPBMGU0FGEK:00000009"
+}

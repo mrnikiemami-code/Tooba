@@ -1,0 +1,95 @@
+{
+  "request": {
+    "cartId": "01a14601-7264-7000-8f4c-9417e574363e",
+    "expectedCartVersion": 20,
+    "recipientName": "حمید آزمون",
+    "contactMobile": "09111111111",
+    "provinceName": "تهران",
+    "cityName": "تهران",
+    "postalAddress": "خیابان آزادی پلاک ۱ واحد ۲",
+    "postalCode": "1234567890",
+    "savedAddressId": null,
+    "shippingMethodCode": "tipax:standard",
+    "selectedDeliveryDate": "2026-10-21",
+    "selectedDeliveryTimeWindow": "9-12",
+    "customerNote": null,
+    "firstName": "حمید",
+    "lastName": "آزمون",
+    "shippingGroups": [
+      {
+        "shippingMethodCode": "tipax:standard",
+        "cartLineIds": [
+          "01a14601-72d0-7000-9284-2ab3fc00adf0"
+        ],
+        "serviceCode": null,
+        "optionCode": null,
+        "selectedDeliveryDate": "2026-10-21",
+        "selectedDeliveryTimeWindow": "9-12"
+      },
+      {
+        "shippingMethodCode": "tipax:standard",
+        "cartLineIds": [
+          "01a14604-0c37-7000-823f-fb62616d3535"
+        ],
+        "serviceCode": null,
+        "optionCode": null,
+        "selectedDeliveryDate": "2026-10-22",
+        "selectedDeliveryTimeWindow": "9-12"
+      }
+    ]
+  },
+  "response": {
+    "cartId": "01a14601-7264-7000-8f4c-9417e574363e",
+    "cartVersion": 20,
+    "recipientName": "حمید آزمون",
+    "contactMobile": "09111111111",
+    "provinceName": "تهران",
+    "cityName": "تهران",
+    "postalAddress": "خیابان آزادی پلاک ۱ واحد ۲",
+    "postalCode": "1234567890",
+    "shippingMethodCode": "",
+    "shippingMethodLabel": "",
+    "shippingAmount": 360000,
+    "minimumDeliveryDate": "2026-10-22",
+    "firstName": "حمید",
+    "lastName": "آزمون",
+    "shippingGroups": [
+      {
+        "shippingGroupId": "01a14604-3b4a-7000-8614-4d56691084fd",
+        "sellerPartyId": "01a145fd-fdf9-7000-b907-982ab18acc35",
+        "methodCode": "tipax:standard",
+        "serviceCode": "tipax",
+        "optionCode": "standard",
+        "methodLabel": "معمولی",
+        "shippingAmount": 180000,
+        "currency": "IRR",
+        "minimumDeliveryDate": "2026-10-21",
+        "selectedDeliveryDate": "2026-10-21",
+        "selectedDeliveryTimeWindow": "9-12",
+        "leadDays": 3,
+        "lineCount": 1,
+        "cartLineIds": [
+          "01a14601-72d0-7000-9284-2ab3fc00adf0"
+        ]
+      },
+      {
+        "shippingGroupId": "01a14604-3b4a-7000-b9b8-ead06f25683e",
+        "sellerPartyId": "01a145fe-00af-7000-911c-ada7bd1621c7",
+        "methodCode": "tipax:standard",
+        "serviceCode": "tipax",
+        "optionCode": "standard",
+        "methodLabel": "معمولی",
+        "shippingAmount": 180000,
+        "currency": "IRR",
+        "minimumDeliveryDate": "2026-10-22",
+        "selectedDeliveryDate": "2026-10-22",
+        "selectedDeliveryTimeWindow": "9-12",
+        "leadDays": 3,
+        "lineCount": 1,
+        "cartLineIds": [
+          "01a14604-0c37-7000-823f-fb62616d3535"
+        ]
+      }
+    ]
+  }
+}
