@@ -1,0 +1,1312 @@
+{
+  "cartId": "01a14632-996e-7000-973e-897f2463701a",
+  "cartVersion": 10,
+  "currency": "IRR",
+  "itemCount": 6,
+  "subtotalExclusiveOfTax": 43050000,
+  "sellerCount": 2,
+  "maxSellerPreparationDays": 3,
+  "methods": [
+    {
+      "methodCode": "post:express",
+      "label": "پیشتاز",
+      "serviceCode": "post",
+      "iconKey": "post",
+      "priceAmount": 200000,
+      "leadDays": 2,
+      "isFree": false,
+      "estimationLabel": "حدود ۲ روز",
+      "optionCode": "express"
+    },
+    {
+      "methodCode": "post:standard",
+      "label": "معمولی",
+      "serviceCode": "post",
+      "iconKey": "post",
+      "priceAmount": 120000,
+      "leadDays": 4,
+      "isFree": false,
+      "estimationLabel": "حدود ۴ روز",
+      "optionCode": "standard"
+    },
+    {
+      "methodCode": "tipax:express",
+      "label": "پیشتاز",
+      "serviceCode": "tipax",
+      "iconKey": "tipax",
+      "priceAmount": 260000,
+      "leadDays": 1,
+      "isFree": false,
+      "estimationLabel": "حدود ۱ روز",
+      "optionCode": "express"
+    },
+    {
+      "methodCode": "tipax:standard",
+      "label": "معمولی",
+      "serviceCode": "tipax",
+      "iconKey": "tipax",
+      "priceAmount": 180000,
+      "leadDays": 3,
+      "isFree": false,
+      "estimationLabel": "حدود ۳ روز",
+      "optionCode": "standard"
+    },
+    {
+      "methodCode": "snapp_courier",
+      "label": "اسنپ / پیک آنلاین",
+      "serviceCode": "snapp_courier",
+      "iconKey": "courier",
+      "priceAmount": 90000,
+      "leadDays": 0,
+      "isFree": false,
+      "estimationLabel": "آماده امروز"
+    },
+    {
+      "methodCode": "store_courier",
+      "label": "پیک فروشگاه",
+      "serviceCode": "store_courier",
+      "iconKey": "bike",
+      "priceAmount": 75000,
+      "leadDays": 1,
+      "isFree": false,
+      "estimationLabel": "حدود ۱ روز"
+    },
+    {
+      "methodCode": "in_person",
+      "label": "تحویل حضوری",
+      "serviceCode": "in_person",
+      "iconKey": "store",
+      "priceAmount": 0,
+      "leadDays": 0,
+      "isFree": true,
+      "estimationLabel": "آماده امروز"
+    }
+  ],
+  "selectedShippingAmount": 0,
+  "minimumDeliveryDate": "2026-10-22",
+  "deliveryDates": [
+    {
+      "value": "2026-10-22",
+      "label": "پنجشنبه",
+      "subLabel": "۱۴۰۵/۷/۳۰",
+      "isEarliest": true
+    },
+    {
+      "value": "2026-10-23",
+      "label": "جمعه",
+      "subLabel": "۱۴۰۵/۸/۱",
+      "isEarliest": false
+    },
+    {
+      "value": "2026-10-24",
+      "label": "شنبه",
+      "subLabel": "۱۴۰۵/۸/۲",
+      "isEarliest": false
+    },
+    {
+      "value": "2026-10-25",
+      "label": "یکشنبه",
+      "subLabel": "۱۴۰۵/۸/۳",
+      "isEarliest": false
+    },
+    {
+      "value": "2026-10-26",
+      "label": "دوشنبه",
+      "subLabel": "۱۴۰۵/۸/۴",
+      "isEarliest": false
+    },
+    {
+      "value": "2026-10-27",
+      "label": "سه‌شنبه",
+      "subLabel": "۱۴۰۵/۸/۵",
+      "isEarliest": false
+    },
+    {
+      "value": "2026-10-28",
+      "label": "چهارشنبه",
+      "subLabel": "۱۴۰۵/۸/۶",
+      "isEarliest": false
+    }
+  ],
+  "deliveryTimeWindows": [
+    {
+      "value": "9-12",
+      "label": "۹ صبح تا ۱۲ ظهر"
+    },
+    {
+      "value": "12-15",
+      "label": "۱۲ ظهر تا ۳ بعدازظهر"
+    },
+    {
+      "value": "15-18",
+      "label": "۳ بعدازظهر تا ۶ عصر"
+    },
+    {
+      "value": "18-21",
+      "label": "۶ عصر تا ۹ شب"
+    }
+  ],
+  "draft": {
+    "cartId": "01a14632-996e-7000-973e-897f2463701a",
+    "cartVersion": 8,
+    "recipientName": "حمید آزمون",
+    "contactMobile": "09111111111",
+    "provinceName": "تهران",
+    "cityName": "تهران",
+    "postalAddress": "خیابان آزادی پلاک ۱ واحد ۲",
+    "postalCode": "1234567890",
+    "shippingMethodCode": "",
+    "shippingMethodLabel": "",
+    "shippingAmount": 360000,
+    "minimumDeliveryDate": "2026-10-22",
+    "firstName": "حمید",
+    "lastName": "آزمون",
+    "shippingGroups": [
+      {
+        "shippingGroupId": "01a14632-9bff-7000-9ae5-32bfa328de90",
+        "sellerPartyId": "01a1462e-2888-7000-a8b1-946ebac3faae",
+        "methodCode": "tipax:standard",
+        "serviceCode": "tipax",
+        "optionCode": "standard",
+        "methodLabel": "معمولی",
+        "shippingAmount": 180000,
+        "currency": "IRR",
+        "minimumDeliveryDate": "2026-10-21",
+        "selectedDeliveryDate": "2026-10-21",
+        "selectedDeliveryTimeWindow": "12-15",
+        "leadDays": 3,
+        "lineCount": 1,
+        "cartLineIds": [
+          "01a14632-99e6-7000-bfa9-ed4ecdcf16b8"
+        ]
+      },
+      {
+        "shippingGroupId": "01a14632-9c00-7000-8839-7f0957fc95b4",
+        "sellerPartyId": "01a1462e-2b18-7000-9af9-2977d04a3196",
+        "methodCode": "tipax:standard",
+        "serviceCode": "tipax",
+        "optionCode": "standard",
+        "methodLabel": "معمولی",
+        "shippingAmount": 180000,
+        "currency": "IRR",
+        "minimumDeliveryDate": "2026-10-22",
+        "selectedDeliveryDate": "2026-10-22",
+        "selectedDeliveryTimeWindow": "9-12",
+        "leadDays": 3,
+        "lineCount": 1,
+        "cartLineIds": [
+          "01a14632-9a34-7000-bb1d-6bb868e73cb3"
+        ]
+      }
+    ]
+  },
+  "provinces": [
+    {
+      "code": "tehran",
+      "label": "تهران",
+      "cities": [
+        "تهران",
+        "ری",
+        "شهریار",
+        "اسلامشهر",
+        "ملارد",
+        "پاکدشت"
+      ]
+    },
+    {
+      "code": "alborz",
+      "label": "البرز",
+      "cities": [
+        "کرج",
+        "فردیس",
+        "نظرآباد",
+        "ساوجبلاغ"
+      ]
+    },
+    {
+      "code": "isfahan",
+      "label": "اصفهان",
+      "cities": [
+        "اصفهان",
+        "کاشان",
+        "خمینی‌شهر",
+        "شاهین‌شهر",
+        "نجف‌آباد"
+      ]
+    },
+    {
+      "code": "razavi_khorasan",
+      "label": "خراسان رضوی",
+      "cities": [
+        "مشهد",
+        "نیشابور",
+        "سبزوار",
+        "تربت حیدریه"
+      ]
+    },
+    {
+      "code": "fars",
+      "label": "فارس",
+      "cities": [
+        "شیراز",
+        "مرودشت",
+        "جهرم",
+        "فسا",
+        "کازرون"
+      ]
+    },
+    {
+      "code": "east_azerbaijan",
+      "label": "آذربایجان شرقی",
+      "cities": [
+        "تبریز",
+        "مرند",
+        "مراغه",
+        "اهر"
+      ]
+    },
+    {
+      "code": "khuzestan",
+      "label": "خوزستان",
+      "cities": [
+        "اهواز",
+        "آبادان",
+        "دزفول",
+        "بندر ماهشهر"
+      ]
+    },
+    {
+      "code": "mazandaran",
+      "label": "مازندران",
+      "cities": [
+        "ساری",
+        "بابل",
+        "آمل",
+        "قائم‌شهر"
+      ]
+    },
+    {
+      "code": "gilan",
+      "label": "گیلان",
+      "cities": [
+        "رشت",
+        "بندرانزلی",
+        "لاهیجان",
+        "رودسر"
+      ]
+    },
+    {
+      "code": "qom",
+      "label": "قم",
+      "cities": [
+        "قم"
+      ]
+    },
+    {
+      "code": "yazd",
+      "label": "یزد",
+      "cities": [
+        "یزد",
+        "اردکان",
+        "میبد"
+      ]
+    },
+    {
+      "code": "kerman",
+      "label": "کرمان",
+      "cities": [
+        "کرمان",
+        "رفسنجان",
+        "سیرجان"
+      ]
+    }
+  ],
+  "shippingGroupHorizons": [
+    {
+      "groupKey": "01a1462e28887000a8b1946ebac3faae|in_person",
+      "sellerPartyId": "01a1462e-2888-7000-a8b1-946ebac3faae",
+      "methodCode": "in_person",
+      "minimumDeliveryDate": "2026-10-18",
+      "eligibleDates": [
+        {
+          "value": "2026-10-18",
+          "label": "پس‌فردا",
+          "subLabel": "۱۴۰۵/۷/۲۶",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-19",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۷",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-20",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۷/۲۸",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-21",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۹",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 0,
+      "sellerPreparationDays": 2
+    },
+    {
+      "groupKey": "01a1462e28887000a8b1946ebac3faae|post:express",
+      "sellerPartyId": "01a1462e-2888-7000-a8b1-946ebac3faae",
+      "methodCode": "post:express",
+      "minimumDeliveryDate": "2026-10-20",
+      "eligibleDates": [
+        {
+          "value": "2026-10-20",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۷/۲۸",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-21",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۹",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-26",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۸/۴",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 2,
+      "sellerPreparationDays": 2
+    },
+    {
+      "groupKey": "01a1462e28887000a8b1946ebac3faae|post:standard",
+      "sellerPartyId": "01a1462e-2888-7000-a8b1-946ebac3faae",
+      "methodCode": "post:standard",
+      "minimumDeliveryDate": "2026-10-22",
+      "eligibleDates": [
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-26",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۸/۴",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-27",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۸/۵",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-28",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۸/۶",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 4,
+      "sellerPreparationDays": 2
+    },
+    {
+      "groupKey": "01a1462e28887000a8b1946ebac3faae|snapp_courier",
+      "sellerPartyId": "01a1462e-2888-7000-a8b1-946ebac3faae",
+      "methodCode": "snapp_courier",
+      "minimumDeliveryDate": "2026-10-18",
+      "eligibleDates": [
+        {
+          "value": "2026-10-18",
+          "label": "پس‌فردا",
+          "subLabel": "۱۴۰۵/۷/۲۶",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-19",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۷",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-20",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۷/۲۸",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-21",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۹",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 0,
+      "sellerPreparationDays": 2
+    },
+    {
+      "groupKey": "01a1462e28887000a8b1946ebac3faae|store_courier",
+      "sellerPartyId": "01a1462e-2888-7000-a8b1-946ebac3faae",
+      "methodCode": "store_courier",
+      "minimumDeliveryDate": "2026-10-19",
+      "eligibleDates": [
+        {
+          "value": "2026-10-19",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۷",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-20",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۷/۲۸",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-21",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۹",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 1,
+      "sellerPreparationDays": 2
+    },
+    {
+      "groupKey": "01a1462e28887000a8b1946ebac3faae|tipax:express",
+      "sellerPartyId": "01a1462e-2888-7000-a8b1-946ebac3faae",
+      "methodCode": "tipax:express",
+      "minimumDeliveryDate": "2026-10-19",
+      "eligibleDates": [
+        {
+          "value": "2026-10-19",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۷",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-20",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۷/۲۸",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-21",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۹",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 1,
+      "sellerPreparationDays": 2
+    },
+    {
+      "groupKey": "01a1462e28887000a8b1946ebac3faae|tipax:standard",
+      "shippingGroupId": "01a14632-9bff-7000-9ae5-32bfa328de90",
+      "sellerPartyId": "01a1462e-2888-7000-a8b1-946ebac3faae",
+      "methodCode": "tipax:standard",
+      "minimumDeliveryDate": "2026-10-21",
+      "eligibleDates": [
+        {
+          "value": "2026-10-21",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۹",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-26",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۸/۴",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-27",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۸/۵",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "selectedDeliveryDate": "2026-10-21",
+      "selectedDeliveryTimeWindow": "12-15",
+      "leadDays": 3,
+      "sellerPreparationDays": 2
+    },
+    {
+      "groupKey": "01a1462e2b1870009af92977d04a3196|in_person",
+      "sellerPartyId": "01a1462e-2b18-7000-9af9-2977d04a3196",
+      "methodCode": "in_person",
+      "minimumDeliveryDate": "2026-10-19",
+      "eligibleDates": [
+        {
+          "value": "2026-10-19",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۷",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-20",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۷/۲۸",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-21",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۹",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 0,
+      "sellerPreparationDays": 3
+    },
+    {
+      "groupKey": "01a1462e2b1870009af92977d04a3196|post:express",
+      "sellerPartyId": "01a1462e-2b18-7000-9af9-2977d04a3196",
+      "methodCode": "post:express",
+      "minimumDeliveryDate": "2026-10-21",
+      "eligibleDates": [
+        {
+          "value": "2026-10-21",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۹",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-26",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۸/۴",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-27",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۸/۵",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 2,
+      "sellerPreparationDays": 3
+    },
+    {
+      "groupKey": "01a1462e2b1870009af92977d04a3196|post:standard",
+      "sellerPartyId": "01a1462e-2b18-7000-9af9-2977d04a3196",
+      "methodCode": "post:standard",
+      "minimumDeliveryDate": "2026-10-23",
+      "eligibleDates": [
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-26",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۸/۴",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-27",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۸/۵",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-28",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۸/۶",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-29",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۸/۷",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 4,
+      "sellerPreparationDays": 3
+    },
+    {
+      "groupKey": "01a1462e2b1870009af92977d04a3196|snapp_courier",
+      "sellerPartyId": "01a1462e-2b18-7000-9af9-2977d04a3196",
+      "methodCode": "snapp_courier",
+      "minimumDeliveryDate": "2026-10-19",
+      "eligibleDates": [
+        {
+          "value": "2026-10-19",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۷",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-20",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۷/۲۸",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-21",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۹",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 0,
+      "sellerPreparationDays": 3
+    },
+    {
+      "groupKey": "01a1462e2b1870009af92977d04a3196|store_courier",
+      "sellerPartyId": "01a1462e-2b18-7000-9af9-2977d04a3196",
+      "methodCode": "store_courier",
+      "minimumDeliveryDate": "2026-10-20",
+      "eligibleDates": [
+        {
+          "value": "2026-10-20",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۷/۲۸",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-21",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۹",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-26",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۸/۴",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 1,
+      "sellerPreparationDays": 3
+    },
+    {
+      "groupKey": "01a1462e2b1870009af92977d04a3196|tipax:express",
+      "sellerPartyId": "01a1462e-2b18-7000-9af9-2977d04a3196",
+      "methodCode": "tipax:express",
+      "minimumDeliveryDate": "2026-10-20",
+      "eligibleDates": [
+        {
+          "value": "2026-10-20",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۷/۲۸",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-21",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۷/۲۹",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-26",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۸/۴",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "leadDays": 1,
+      "sellerPreparationDays": 3
+    },
+    {
+      "groupKey": "01a1462e2b1870009af92977d04a3196|tipax:standard",
+      "shippingGroupId": "01a14632-9c00-7000-8839-7f0957fc95b4",
+      "sellerPartyId": "01a1462e-2b18-7000-9af9-2977d04a3196",
+      "methodCode": "tipax:standard",
+      "minimumDeliveryDate": "2026-10-22",
+      "eligibleDates": [
+        {
+          "value": "2026-10-22",
+          "label": "پنجشنبه",
+          "subLabel": "۱۴۰۵/۷/۳۰",
+          "isEarliest": true
+        },
+        {
+          "value": "2026-10-23",
+          "label": "جمعه",
+          "subLabel": "۱۴۰۵/۸/۱",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-24",
+          "label": "شنبه",
+          "subLabel": "۱۴۰۵/۸/۲",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-25",
+          "label": "یکشنبه",
+          "subLabel": "۱۴۰۵/۸/۳",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-26",
+          "label": "دوشنبه",
+          "subLabel": "۱۴۰۵/۸/۴",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-27",
+          "label": "سه‌شنبه",
+          "subLabel": "۱۴۰۵/۸/۵",
+          "isEarliest": false
+        },
+        {
+          "value": "2026-10-28",
+          "label": "چهارشنبه",
+          "subLabel": "۱۴۰۵/۸/۶",
+          "isEarliest": false
+        }
+      ],
+      "eligibleTimeWindows": [
+        {
+          "value": "9-12",
+          "label": "۹ صبح تا ۱۲ ظهر"
+        },
+        {
+          "value": "12-15",
+          "label": "۱۲ ظهر تا ۳ بعدازظهر"
+        },
+        {
+          "value": "15-18",
+          "label": "۳ بعدازظهر تا ۶ عصر"
+        },
+        {
+          "value": "18-21",
+          "label": "۶ عصر تا ۹ شب"
+        }
+      ],
+      "selectedDeliveryDate": "2026-10-22",
+      "selectedDeliveryTimeWindow": "9-12",
+      "leadDays": 3,
+      "sellerPreparationDays": 3
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "stableAcrossRepeatedSave": true,
+  "identity": {
+    "stableAcrossRepeatedSave": true,
+    "editKeptBothIds": true,
+    "groupBByteStableAcrossEdit": true,
+    "schedulesStable": true,
+    "firstSave": {
+      "a": "01a14632-9bff-7000-9ae5-32bfa328de90",
+      "b": "01a14632-9c00-7000-8839-7f0957fc95b4"
+    },
+    "afterEditA": {
+      "a": "01a14632-9bff-7000-9ae5-32bfa328de90",
+      "b": "01a14632-9c00-7000-8839-7f0957fc95b4"
+    },
+    "afterRepeatSave": {
+      "a": "01a14632-9bff-7000-9ae5-32bfa328de90",
+      "b": "01a14632-9c00-7000-8839-7f0957fc95b4"
+    }
+  },
+  "groups": [
+    {
+      "shippingGroupId": "01a14632-9bff-7000-9ae5-32bfa328de90",
+      "sellerPartyId": "01a1462e-2888-7000-a8b1-946ebac3faae",
+      "methodCode": "tipax:standard",
+      "methodLabel": "معمولی",
+      "selectedDeliveryDate": "2026-10-21",
+      "selectedDeliveryTimeWindow": "12-15",
+      "shippingAmount": 180000,
+      "minimumDeliveryDate": "2026-10-21",
+      "currency": "IRR",
+      "leadDays": 3,
+      "lineCount": 1,
+      "cartLineIds": [
+        "01a14632-99e6-7000-bfa9-ed4ecdcf16b8"
+      ]
+    },
+    {
+      "shippingGroupId": "01a14632-9c00-7000-8839-7f0957fc95b4",
+      "sellerPartyId": "01a1462e-2b18-7000-9af9-2977d04a3196",
+      "methodCode": "tipax:standard",
+      "methodLabel": "معمولی",
+      "selectedDeliveryDate": "2026-10-22",
+      "selectedDeliveryTimeWindow": "9-12",
+      "shippingAmount": 180000,
+      "minimumDeliveryDate": "2026-10-22",
+      "currency": "IRR",
+      "leadDays": 3,
+      "lineCount": 1,
+      "cartLineIds": [
+        "01a14632-9a34-7000-bb1d-6bb868e73cb3"
+      ]
+    }
+  ]
+}

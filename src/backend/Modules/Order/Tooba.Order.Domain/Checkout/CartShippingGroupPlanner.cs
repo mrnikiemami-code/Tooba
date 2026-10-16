@@ -57,6 +57,13 @@ public static class CartShippingGroupPlanner
     /// هر خط سبد باید دقیقاً یک بار پوشش داده شود؛ خط ناشناس، خط تکراری، خط جاافتاده،
     /// فروشندهٔ مختلط در یک گروه، روش ناواجد و مبدأ نامعلوم رد می‌شوند.
     /// </summary>
+    /// <remarks>
+    /// TB-SHIPPING-GROUP-ID-CONTINUITY-153: <c>reusableGroups</c> گروه‌های <b>ذخیره‌شدهٔ همان پیش‌نویس</b>
+    /// هستند که اجازهٔ بازاستفادهٔ شناسه دارند. اگر گروهی دقیقاً همان تعهد منطقی درخواست باشد (همان سبد،
+    /// فروشنده، روش/سرویس/گزینه و همان عضویت خطوط)، همان <c>ShippingGroupId</c> پایدار می‌ماند؛ وگرنه
+    /// شناسهٔ تازه ساخته می‌شود. این لیست فقط از پیش‌نویس مورداعتماد سرور پر می‌شود و هیچ شناسه‌ای از کلاینت
+    /// پذیرفته نمی‌شود.
+    /// </remarks>
     public static IReadOnlyList<CartShippingDraftGroup> Plan(
         Guid cartId,
         IReadOnlyList<CartShippingGroupCartLine> cartLines,
@@ -65,7 +72,8 @@ public static class CartShippingGroupPlanner
         DateOnly? selectedDeliveryDate,
         string? selectedDeliveryTimeWindow,
         DateTimeOffset now,
-        Func<Guid> newGroupId)
+        Func<Guid> newGroupId,
+        IReadOnlyList<CartShippingDraftGroup>? reusableGroups = null)
     {
         if (cartId == Guid.Empty)
         {
@@ -91,6 +99,7 @@ public static class CartShippingGroupPlanner
         var assigned = new HashSet<Guid>();
         var groups = new List<CartShippingDraftGroup>(requests.Count);
         var seenSellerMethod = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var reusedIds = new HashSet<Guid>();
 
         foreach (var request in requests)
         {
@@ -119,8 +128,13 @@ public static class CartShippingGroupPlanner
             var groupDate = request.SelectedDeliveryDate ?? selectedDeliveryDate;
             var groupWindow = request.SelectedDeliveryTimeWindow ?? selectedDeliveryTimeWindow;
 
+            // TB-SHIPPING-GROUP-ID-CONTINUITY-153: هویت پایدار فقط برای همان تعهد منطقی بازاستفاده
+            // می‌شود؛ تغییر فروشنده/روش/سرویس/گزینه یا عضویت خطوط شناسهٔ تازه می‌گیرد.
+            var reusedId = FindReusableGroupId(
+                reusableGroups, reusedIds, cartId, seller, method, request.CartLineIds);
+
             var group = CartShippingDraftGroup.Create(
-                newGroupId(),
+                reusedId ?? newGroupId(),
                 cartId,
                 seller,
                 method.MethodCode,
@@ -214,5 +228,104 @@ public static class CartShippingGroupPlanner
         }
 
         return string.Equals(left, (authoritative ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// TB-SHIPPING-GROUP-ID-CONTINUITY-153: نخستین گروه ذخیره‌شده‌ای که <b>همان تعهد منطقی</b> درخواست
+    /// است را برمی‌گرداند (برای حفظ <c>ShippingGroupId</c> پایدار). هر شناسه حداکثر یک بار بازاستفاده
+    /// می‌شود تا هرگز دو گروه شناسهٔ یکسان نگیرند. منبع تصمیم فقط پیش‌نویس مورداعتماد سرور است.
+    /// </summary>
+    private static Guid? FindReusableGroupId(
+        IReadOnlyList<CartShippingDraftGroup>? reusableGroups,
+        HashSet<Guid> reusedIds,
+        Guid cartId,
+        Guid sellerPartyId,
+        CartShippingGroupEligibleMethod method,
+        IReadOnlyList<Guid> cartLineIds)
+    {
+        if (reusableGroups is not { Count: > 0 })
+        {
+            return null;
+        }
+
+        foreach (var candidate in reusableGroups)
+        {
+            if (candidate.ShippingGroupId == Guid.Empty || reusedIds.Contains(candidate.ShippingGroupId))
+            {
+                continue;
+            }
+
+            if (!IsSameLogicalObligation(candidate, cartId, sellerPartyId, method, cartLineIds))
+            {
+                continue;
+            }
+
+            reusedIds.Add(candidate.ShippingGroupId);
+            return candidate.ShippingGroupId;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// آیا گروه ذخیره‌شده و درخواست جدید یک تعهد منطقی واحدند؟ برابری باید کامل باشد: همان سبد،
+    /// همان فروشنده، همان روش canonical با همان هویت سرویس/گزینه، همان بافت مبدأ (که فعلاً فقط خالی
+    /// مجاز است) و <b>همان مجموعهٔ خطوط</b>. تاریخ/پنجره عمداً در این هویت نیستند، پس تغییر زمان‌بندی
+    /// یا تلاش تکراری (idempotent) شناسه را پایدار نگه می‌دارد، ولی تغییر عضویت/فروشنده/روش شناسهٔ
+    /// تازه می‌گیرد و هرگز دادهٔ گروه دیگر بازاستفاده نمی‌شود.
+    /// </summary>
+    public static bool IsSameLogicalObligation(
+        CartShippingDraftGroup existing,
+        Guid cartId,
+        Guid sellerPartyId,
+        CartShippingGroupEligibleMethod method,
+        IReadOnlyList<Guid> cartLineIds)
+    {
+        ArgumentNullException.ThrowIfNull(existing);
+        ArgumentNullException.ThrowIfNull(method);
+        ArgumentNullException.ThrowIfNull(cartLineIds);
+
+        if (existing.ShippingGroupId == Guid.Empty
+            || existing.CartId != cartId
+            || existing.SellerPartyId != sellerPartyId)
+        {
+            return false;
+        }
+
+        if (!string.Equals(
+                (existing.MethodCode ?? string.Empty).Trim(),
+                (method.MethodCode ?? string.Empty).Trim(),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return SameCode(existing.ServiceCode, method.ServiceCode)
+            && SameCode(existing.OptionCode, method.OptionCode)
+            && existing.OriginContext is null
+            && SameLineMembership(existing, cartLineIds);
+    }
+
+    /// <summary>برابری دقیق دو کد اختیاری پس از trim؛ خالی و تهی یکسان‌اند (نه wildcard).</summary>
+    private static bool SameCode(string? left, string? right) =>
+        string.Equals(
+            (left ?? string.Empty).Trim(),
+            (right ?? string.Empty).Trim(),
+            StringComparison.OrdinalIgnoreCase);
+
+    private static bool SameLineMembership(CartShippingDraftGroup existing, IReadOnlyList<Guid> cartLineIds)
+    {
+        if (cartLineIds.Count == 0 || existing.Lines.Count != cartLineIds.Count)
+        {
+            return false;
+        }
+
+        var existingLines = existing.Lines.Select(x => x.CartLineId).ToHashSet();
+        if (existingLines.Count != cartLineIds.Count)
+        {
+            return false;
+        }
+
+        return cartLineIds.All(existingLines.Contains);
     }
 }

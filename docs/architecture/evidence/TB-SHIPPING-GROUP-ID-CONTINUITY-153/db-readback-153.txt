@@ -1,0 +1,37 @@
+﻿== draft groups: identity + schedule + membership (TB-153) ==
+          shipping_group_id           |           seller_party_id            |  method_code   | service_code | option_code | shipping_amount | currency | minimum_delivery_date | selected_delivery_date | selected_delivery_time_window | lead_days | state 
+--------------------------------------+--------------------------------------+----------------+--------------+-------------+-----------------+----------+-----------------------+------------------------+-------------------------------+-----------+-------
+ 01a14632-9bff-7000-9ae5-32bfa328de90 | 01a1462e-2888-7000-a8b1-946ebac3faae | tipax:standard | tipax        | standard    |       180000.00 | IRR      | 2026-10-21            | 2026-10-21             | 12-15                         |         3 | Draft
+ 01a14632-9c00-7000-8839-7f0957fc95b4 | 01a1462e-2b18-7000-9af9-2977d04a3196 | tipax:standard | tipax        | standard    |       180000.00 | IRR      | 2026-10-22            | 2026-10-22             | 9-12                          |         3 | Draft
+(2 rows)
+
+== one-to-one line membership ==
+          shipping_group_id           |             cart_line_id             
+--------------------------------------+--------------------------------------
+ 01a14632-9bff-7000-9ae5-32bfa328de90 | 01a14632-99e6-7000-bfa9-ed4ecdcf16b8
+ 01a14632-9c00-7000-8839-7f0957fc95b4 | 01a14632-9a34-7000-bb1d-6bb868e73cb3
+(2 rows)
+
+== duplicate id / duplicate line probes (both must be 0 rows) ==
+          k          | c 
+---------------------+---
+ duplicate_group_ids | 0
+ lines_in_two_groups | 0
+ orphan_join_rows    | 0
+(3 rows)
+
+== zero checkout / order / payment probe ==
+           k           | c 
+-----------------------+---
+ checkouts             | 0
+ seller_orders         | 0
+ order_lines           | 0
+ order_shipping_groups | 0
+ payments              | 0
+ payment_attempts      | 0
+ cart_groups           | 2
+ cart_group_lines      | 2
+ tax_rules             | 3
+(9 rows)
+
+

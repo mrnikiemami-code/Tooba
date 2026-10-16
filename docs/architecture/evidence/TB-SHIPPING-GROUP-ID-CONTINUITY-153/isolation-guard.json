@@ -1,0 +1,31 @@
+{
+  "tenantCount": 1,
+  "activeTenantCount": 1,
+  "tenants": [
+    "store-alpha:Active:tenant-153-scratch"
+  ],
+  "canonicalGatewayTenantPresent": true,
+  "connectionReferences": [
+    "tenant-153-scratch",
+    "messaging-153-scratch"
+  ],
+  "messagingReference": "messaging-153-scratch",
+  "containsSharedAlphaDatabase": false,
+  "containsSharedAlphaReference": false,
+  "containsSharedAlphaPort": false,
+  "containsPriorScratchPort": false,
+  "scratchPort": "55472",
+  "hostPort": "5414",
+  "webPort": "3109",
+  "runLegacyBootstraps": true,
+  "allowResetAndSeed": false,
+  "oneLevelCatalogEnabledInOverlay": true,
+  "edition": "SingleStore",
+  "editionSwapPerformed": false,
+  "saleChannelOfScratchTenant": "Marketplace",
+  "sellerPreparationDaysByPartyId": 2,
+  "sellerPreparationDaysDiffer": true,
+  "shippingRateAuthoritySet": false,
+  "shippingOperationalShadowSet": false,
+  "failClosed": true
+}

@@ -431,6 +431,11 @@ public sealed class StorefrontShippingService
         var now = _clock.UtcNow;
         var hash = HashGuestSecret(guestSecret);
 
+        // TB-SHIPPING-GROUP-ID-CONTINUITY-153: پیش‌نویس مورداعتماد همین سبد پیش از برنامه‌ریزی خوانده
+        // می‌شود تا شناسهٔ پایدار هر گروه ذخیره‌شده برای همان تعهد منطقی بازاستفاده شود (یک خواندن،
+        // همان تعداد خواندن قبلی)؛ هیچ شناسه‌ای از کلاینت به‌عنوان حقیقت پذیرفته نمی‌شود.
+        var existing = await _drafts.GetByCartIdAsync(cart.CartId, cancellationToken);
+
         // عضویت گروه‌ها: هر خط سبد دقیقاً یک بار، فروشنده از Cart، روش متعارف واجد شرایط.
         IReadOnlyList<CartShippingDraftGroup> groups;
         try
@@ -446,7 +451,8 @@ public sealed class StorefrontShippingService
                 null,
                 null,
                 now,
-                UuidV7.New);
+                UuidV7.New,
+                existing?.ShippingGroups);
         }
         catch (ContractOperationException ex)
         {
@@ -458,7 +464,6 @@ public sealed class StorefrontShippingService
         // سراسریِ authoritative وجود ندارد و این ستون‌ها خالی می‌مانند (گروه‌ها صاحب زمان‌بندی‌اند).
         var scalarDeliveryDate = multiGroupWrite ? null : primary.SelectedDeliveryDate;
         var scalarDeliveryWindow = multiGroupWrite ? null : primary.SelectedDeliveryTimeWindow;
-        var existing = await _drafts.GetByCartIdAsync(cart.CartId, cancellationToken);
         if (existing is null)
         {
             existing = CartShippingDraft.Create(

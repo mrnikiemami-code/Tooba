@@ -1,0 +1,32 @@
+TB-SHIPPING-GROUP-ID-CONTINUITY-153 — persisted draft ShippingGroupId continuity (sanitized)
+Target: task-owned private Host http://127.0.0.1:5414 on disposable scratch Postgres 127.0.0.1:55472
+Scenario: two-seller cart, both lines on the SAME canonical method tipax:standard, seller preparation A=2 / B=3
+Credentials/tokens are NOT included. No shared target (:3000/:5088/:5432, tooba_alpha) was touched.
+
+ACCEPTED-SAVE ID MATRIX (HTTP responses, same cart, same two lines)
+
+| save step                          | group A (seller A)                   | group B (seller B)                   | A schedule      | B schedule      |
+| ---------------------------------- | ------------------------------------ | ------------------------------------ | --------------- | --------------- |
+| 1) first accepted save             | 01a14632-9bff-7000-9ae5-32bfa328de90 | 01a14632-9c00-7000-8839-7f0957fc95b4 | 2026-10-21/9-12 | 2026-10-22/9-12 |
+| 2) save editing ONLY group A       | 01a14632-9bff-7000-9ae5-32bfa328de90 | 01a14632-9c00-7000-8839-7f0957fc95b4 | 2026-10-21/12-15| 2026-10-22/9-12 |
+| 3) identical repeated save (retry) | 01a14632-9bff-7000-9ae5-32bfa328de90 | 01a14632-9c00-7000-8839-7f0957fc95b4 | 2026-10-21/12-15| 2026-10-22/9-12 |
+| 4) re-read after reload (projection)| 01a14632-9bff-7000-9ae5-32bfa328de90 | 01a14632-9c00-7000-8839-7f0957fc95b4 | 2026-10-21/12-15| 2026-10-22/9-12 |
+| 5) re-read after rejected writes   | 01a14632-9bff-7000-9ae5-32bfa328de90 | 01a14632-9c00-7000-8839-7f0957fc95b4 | 2026-10-21/12-15| 2026-10-22/9-12 |
+
+Comparisons enforced by journey-153.js (all PASS):
+- editKeptBothIds: step 2 ids == step 1 ids (an edit of A does not move A's or B's id).
+- stableAcrossRepeatedSave: step 3 ids == step 2 ids (identical retry is idempotent on identity).
+- groupBByteStableAcrossEdit: B id + method + fee + minimum date + selected date + window + line ids
+  are byte-identical between step 1 and step 2.
+- groupA promise identity/fee/minimum/lines unchanged by the window edit (only the schedule moved).
+
+PERSISTED DB READBACK (order.cart_shipping_groups / order.cart_shipping_group_lines)
+
+| shipping_group_id                    | seller                               | method/service/option | fee     | minimum    | selected        | lines |
+| ------------------------------------ | ------------------------------------ | --------------------- | ------- | ---------- | --------------- | ----- |
+| 01a14632-9bff-7000-9ae5-32bfa328de90 | 01a1462e-2888-...a8b1-946ebac3faae   | tipax/standard        | 180000  | 2026-10-21 | 2026-10-21/12-15| 1     |
+| 01a14632-9c00-7000-8839-7f0957fc95b4 | 01a1462e-2b18-...9af9-2977d04a3196   | tipax/standard        | 180000  | 2026-10-22 | 2026-10-22/9-12 | 1     |
+
+join reconciliation probes: duplicate_group_ids = 0, lines_in_two_groups = 0, orphan_join_rows = 0
+premature mutation probe: checkouts = 0, seller_orders = 0, order_lines = 0,
+order_shipping_groups = 0, payments = 0, payment_attempts = 0 (cart_groups = 2, cart_group_lines = 2)
