@@ -1,0 +1,71 @@
+TB-SHIPPING-GROUP-UX-ACCEPTANCE-154 — real private-authenticated-browser DOM assertions
+Private frontend http://127.0.0.1:3109 (TOOBA_HOST_ORIGIN=http://127.0.0.1:5415), disposable scratch Postgres
+127.0.0.1:55473 (tooba_154_scratch). Fixture session: mobile 09111111111, dev fixture OTP. No token/cookie
+value is written here.
+
+PAGE /fa/shipping — CART 01a1463d-3543-7000-8f80-73480ba9e602 (2 lines, 2 sellers, SAME canonical
+tipax:standard, preparation days A=2 / B=3 from the scratch overlay)
+
+A. INITIAL LOAD (server-restored draft, both persisted groups complete)
+   - [data-testid=shipping-page] present; [data-testid=shipping-groups] with exactly 2 group cards
+   - seller card 1 "فروشگاه آرمان"  -> "روش: معمولی · tipax:standard"
+   - seller card 2 "دیجی‌استایل نمونه" -> "روش: معمولی · tipax:standard"
+   - independent horizons rendered from the server rows:
+       card 1 "اولین نوبت ممکن: 1405/07/29" (2026-10-21)
+       card 2 "اولین نوبت ممکن: 1405/07/30" (2026-10-22)
+   - independent chips: card 1 dates 1405/07/29..1405/08/05 with window 12-15 checked;
+     card 2 dates 1405/07/30..1405/08/06 with window 9-12 checked
+   - no page-wide/global delivery date or window control exists in the DOM
+   - [data-testid=shipping-continue] disabled=false
+   - group card test ids are the SERVER-OWNED persisted ids:
+       shipping-group-01a1463d-3852-7000-8f8a-88e19a4608a2 (seller A)
+       shipping-group-01a1463d-3852-7000-bdba-93a120d0c9a5 (seller B)
+
+B. LEGITIMATE INCOMPLETE STATE (no backend tampering, no invented date)
+   Action: in seller A's card, choose a DIFFERENT canonical method for its single line
+           (clicked shipping-group-method-...-post:standard on the line's method chooser).
+   Observed after the click:
+   - seller A card header changed to "روش: معمولی · post:standard"
+   - seller A window radio group: NO window aria-checked=true (schedule selection incomplete)
+   - seller B untouched: window 9-12 still aria-checked=true
+   - [data-testid=shipping-continue] disabled=TRUE  (=> disabled state observed)
+
+C. COMPLETE AGAIN -> ENABLED
+   Actions: choose a server-provided date for seller A's new group
+            (shipping-group-date-...-2026-10-22, the server minimum for post:standard)
+            then choose its window (شipping-group-window-...-12-15).
+   Observed:
+   - shipping-group-window-<A>-12-15 aria-checked=true
+   - [data-testid=shipping-continue] disabled=FALSE  (=> enabled only after every group is complete)
+   Evidence screenshot: ui-shipping-two-groups-complete-154.png
+
+D. WINDOW-ONLY EDIT OF GROUP A
+   Actions: seller A method returned to its canonical tipax:standard, then ONLY its window changed
+            to 15-18 (clicked shipping-group-window-<A>-15-18). Seller B not touched at all.
+   Observed: shipping-group-window-<A>-15-18 aria-checked=true; <B> still 9-12; continue enabled.
+
+E. PERSIST + PAYMENT PREVIEW (no purchase)
+   Action: clicked [data-testid=shipping-continue] (real authenticated PUT via the frontend proxy).
+   Observed: button showed "در حال ثبت…" then the app navigated to
+             http://127.0.0.1:3109/fa/payment?cartId=01a1463d-3543-7000-8f80-73480ba9e602
+             (title "پرداخت | توبا"). NO final purchase/PSP action was performed.
+   Evidence screenshot: ui-payment-preview-154.png
+
+F. BACK + FULL RELOAD (browser_navigate to /fa/shipping again = fresh document)
+   Observed (/api/auth/me = 200, session intact):
+   - group 01a1463d-3852-7000-8f8a-88e19a4608a2: method tipax:standard,
+     selected date 2026-10-21, checked window 15-18
+   - group 01a1463d-3852-7000-bdba-93a120d0c9a5: method tipax:standard,
+     selected date 2026-10-22, checked window 9-12
+   - both are the SAME ShippingGroupIds as before the method-change cycle -> no client drift, no
+     recalculation, no re-keying
+   - [data-testid=shipping-continue] disabled=false
+   Evidence screenshot: ui-shipping-after-reload-154.png
+
+G. DATABASE (authoritative, db-readback-154.txt)
+   - "order".cart_shipping_groups: exactly 2 rows
+       01a1463d-3852-7000-8f8a-88e19a4608a2 | <seller A> | tipax:standard | 2026-10-21 | 15-18 | 180000
+       01a1463d-3852-7000-bdba-93a120d0c9a5 | <seller B> | tipax:standard | 2026-10-22 | 9-12  | 180000
+   - "order".cart_shipping_group_lines: 2 rows, one line per group, no shared line
+   - DUP_GROUP_IDS=0, LINES_IN_TWO_GROUPS=0, ORPHAN_JOIN_ROWS=0
+   - CHECKOUTS=0, SELLER_ORDERS=0, ORDER_LINES=0, PAYMENTS=0 (no premature mutation)

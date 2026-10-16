@@ -1,0 +1,57 @@
+{
+  "cartId": "01a1463d-3543-7000-8f80-73480ba9e602",
+  "version": 6,
+  "market": "IR",
+  "defaultCurrency": "IRR",
+  "channel": "Marketplace",
+  "itemCount": 2,
+  "totalsByCurrency": [
+    {
+      "currency": "IRR",
+      "subtotalExclusiveOfTax": 3640000
+    }
+  ],
+  "lines": [
+    {
+      "lineId": "01a1463d-35b9-7000-96fc-4c02b4b048c6",
+      "offerId": "01a1463c-2b36-7000-9625-961c21d71d99",
+      "catalogVariantId": "01a1463c-2b29-7000-af74-813dab28eed2",
+      "sellerPartyId": "01a1463c-2b31-7000-9874-1d8618750b91",
+      "productId": "01a1463c-2adf-7000-bd7e-10c1b25cc1c4",
+      "productSlug": "workspace-live-shirt",
+      "title": "پیراهن مردانه لینن",
+      "sellerDisplayName": "فروشگاه آرمان",
+      "mediaAssetId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "quantity": 1,
+      "unitAmountExclusiveOfTax": 1850000,
+      "lineAmountExclusiveOfTax": 1850000,
+      "currency": "IRR",
+      "quotedTaxExclusive": true,
+      "unitCode": "pcs",
+      "unitDisplayName": "pcs",
+      "quantityDecimalPlaces": 0,
+      "availability": "Available"
+    },
+    {
+      "lineId": "01a1463d-3612-7000-bccc-019bd8d26ddd",
+      "offerId": "01a1463c-2b3b-7000-aee0-533f7b031257",
+      "catalogVariantId": "01a1463c-2b29-7000-af74-813dab28eed2",
+      "sellerPartyId": "01a1463c-2b33-7000-bd6a-da3ade0d053c",
+      "productId": "01a1463c-2adf-7000-bd7e-10c1b25cc1c4",
+      "productSlug": "workspace-live-shirt",
+      "title": "پیراهن مردانه لینن",
+      "sellerDisplayName": "دیجی‌استایل نمونه",
+      "mediaAssetId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "quantity": 1,
+      "unitAmountExclusiveOfTax": 1790000,
+      "lineAmountExclusiveOfTax": 1790000,
+      "currency": "IRR",
+      "quotedTaxExclusive": true,
+      "unitCode": "pcs",
+      "unitDisplayName": "pcs",
+      "quantityDecimalPlaces": 0,
+      "availability": "Available"
+    }
+  ],
+  "status": "Active"
+}

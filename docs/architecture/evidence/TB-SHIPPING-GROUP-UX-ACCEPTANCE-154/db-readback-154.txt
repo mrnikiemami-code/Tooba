@@ -1,0 +1,35 @@
+﻿text|count
+GROUPS|2
+(1 row)
+shipping_group_id|seller_party_id|method_code|selected_delivery_date|selected_delivery_time_window|shipping_amount
+01a1463d-3852-7000-8f8a-88e19a4608a2|01a1463c-2b31-7000-9874-1d8618750b91|tipax:standard|2026-10-21|15-18|180000.00
+01a1463d-3852-7000-bdba-93a120d0c9a5|01a1463c-2b33-7000-bd6a-da3ade0d053c|tipax:standard|2026-10-22|9-12|180000.00
+(2 rows)
+text|count
+GROUP_LINES|2
+(1 row)
+shipping_group_id|cart_line_id
+01a1463d-3852-7000-8f8a-88e19a4608a2|01a1463d-35b9-7000-96fc-4c02b4b048c6
+01a1463d-3852-7000-bdba-93a120d0c9a5|01a1463d-3612-7000-bccc-019bd8d26ddd
+(2 rows)
+text|count
+DUP_GROUP_IDS|0
+(1 row)
+text|count
+LINES_IN_TWO_GROUPS|0
+(1 row)
+text|count
+ORPHAN_JOIN_ROWS|0
+(1 row)
+text|count
+CHECKOUTS|0
+(1 row)
+text|count
+SELLER_ORDERS|0
+(1 row)
+text|count
+ORDER_LINES|0
+(1 row)
+text|count
+PAYMENTS|0
+(1 row)
