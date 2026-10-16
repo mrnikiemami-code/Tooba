@@ -106,17 +106,26 @@ public sealed class CatalogLegacyBootstrapsDiScopeTests
             "CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(app.Services",
             program,
             StringComparison.Ordinal);
+        // The root provider must never be the seed seam's own provider argument anywhere.
+        Assert.DoesNotMatch(
+            new Regex(@"CatalogDevelopmentSeed\.EnsureLegacyBootstrapsAsync\s*\(\s*app\.Services", RegexOptions.CultureInvariant),
+            program);
 
-        // The scope is created from the root provider and its scoped provider is what is handed over.
+        // TB-116: the scope itself is owned by the canonical Host Development gateway, and the legacy
+        // Catalog sequence is reachable ONLY as the delegate handed to that gateway. The gateway creates
+        // the async scope (asserted in CatalogLegacyBootstrapsCommerceContextTests) and assigns the
+        // trusted CommerceContext before invoking the delegate, so the sequence still runs on a scoped,
+        // assigned provider rather than on the root provider.
         var handoff = Regex.Match(
             program,
-            @"await\s+using\s+var\s+(?<scope>[A-Za-z0-9_]+)\s*=\s*app\.Services\.CreateAsyncScope\s*\(\s*\)\s*;" +
-            @"[\s\S]{0,600}?CatalogDevelopmentSeed\.EnsureLegacyBootstrapsAsync\s*\(\s*\k<scope>\.ServiceProvider\s*,",
+            @"DevelopmentTenantCommerceContext\.RunForDevelopmentTenantAsync\s*\(\s*app\.Services\s*," +
+            @"[\s\S]{0,240}?CatalogDevelopmentSeed\.EnsureLegacyBootstrapsAsync\s*\)",
             RegexOptions.CultureInvariant);
         Assert.True(
             handoff.Success,
-            "Program.cs must create an async scope from app.Services and pass scope.ServiceProvider " +
-            "to CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync");
+            "Program.cs must run the legacy Catalog bootstraps through " +
+            "DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(app.Services, ...) so the " +
+            "sequence executes on a scoped, commerce-assigned provider");
 
         // Scope validation stays enabled: the forbidden workarounds are absent from Host source.
         Assert.DoesNotContain("ValidateScopes", program, StringComparison.Ordinal);

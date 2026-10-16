@@ -1,0 +1,12 @@
+﻿TB-116 NEGATIVE CONTROL (bounded, restored)
+Program.cs was temporarily reverted to the pre-fix TB-114 handoff (scoped but UNASSIGNED provider):
+    await using var legacyCatalogBootstrapScope = app.Services.CreateAsyncScope();
+    await CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(legacyCatalogBootstrapScope.ServiceProvider, CancellationToken.None);
+
+Result of the two Program.cs composition guards on the pre-fix code:
+Failed Tooba.Host.Tests.CatalogLegacyBootstrapsCommerceContextTests.Program_uses_the_canonical_gateway_for_the_legacy_catalog_bootstraps [3 ms]
+Failed Tooba.Host.Tests.CatalogLegacyBootstrapsDiScopeTests.Program_hands_the_legacy_catalog_bootstraps_a_scoped_provider [2 ms]
+Total tests: 2
+
+Then the fix was restored and both guards passed again (see focused-tests.txt: 12 passed / 0 failed).
+Marker scan after restore: rg -c NEGATIVE-CONTROL-TB116 Program.cs -> no match (0 occurrences).

@@ -1,0 +1,54 @@
+TB-SHIPPING-ONE-LEVEL-TABS-116 — minimal diff
+=============================================
+
+src/backend/Host/Tooba.Host/Program.cs  (+9 / -4)
+-------------------------------------------------
+@@ -365,15 +365,17 @@
+         if (catalogDemoOptions.RunLegacyBootstraps)
+         {
+             await DevelopmentSchemaMigrator.ApplyAsync(app.Services);
+-            // TB-114: the legacy Catalog Development bootstraps resolve SCOPED module services
+-            // (CatalogDbContext and the landing-page / store-menu workspaces) from the provider they
+-            // receive. DevelopmentSchemaMigrator owns its own async scope; this sibling sequence needs
+-            // its own, created here at the composition root and handed to the Catalog-owned seed seam,
+-            // so no scoped service is ever resolved from the root provider.
+-            await using var legacyCatalogBootstrapScope = app.Services.CreateAsyncScope();
+-            await CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(
+-                legacyCatalogBootstrapScope.ServiceProvider,
+-                CancellationToken.None);
++            // TB-116: the legacy Catalog Development bootstraps resolve SCOPED module services, and the
++            // Catalog DbContext options factory reads its connection reference from
++            // ICurrentCommerceContext, which is only populated inside an ASSIGNED commerce scope.
++            // TB-114 gave this sequence its own scope but left it unassigned, so the first DbContext
++            // resolution failed closed with platform.edition.unconfigured (observed in TB-115).
++            // Reuse the canonical Host Development gateway instead: it resolves the configured
++            // store-alpha tenant, assigns the trusted CommerceContext and then runs the Catalog-owned
++            // seed seam on that same scoped provider — exactly the migrator's proven hand-off.
++            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
++                app.Services,
++                "legacy-catalog-dev-seed",
++                CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync);
+         }
+
+New / updated tests
+-------------------
+src/backend/Host/Tooba.Host.Tests/CatalogLegacyBootstrapsCommerceContextTests.cs   (new, 7 test cases)
+src/backend/Host/Tooba.Host.Tests/CatalogLegacyBootstrapsDiScopeTests.cs           (1 test updated)
+
+The TB-114 test `Program_hands_the_legacy_catalog_bootstraps_a_scoped_provider` asserted that
+Program.cs itself called `app.Services.CreateAsyncScope()`. That implementation detail legitimately
+moved into the canonical gateway, so the test now asserts the equivalent structural guarantee: the
+Catalog-owned seed seam is reachable ONLY as the delegate passed to
+`DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(app.Services, ...)`, and never receives
+`app.Services` directly. The remaining TB-114 assertions (single provider for all six seeds, module
+seam creates no scope of its own, no `ValidateScopes`/`ValidateOnBuild`, root-handoff negative
+control, disposal on success/throw/cancel) are unchanged and still pass.
+
+Untouched on purpose
+--------------------
+src/backend/Host/Tooba.Host/Development/DevelopmentSchemaMigrator.cs
+src/backend/Host/Tooba.Host/Development/DevelopmentTenantCommerceContext.cs   (reused as-is)
+src/backend/BuildingBlocks/Tooba.Persistence/ToobaNpgsql.cs
+src/backend/Modules/Catalog/**   (incl. CatalogModule.cs and CatalogDevelopmentSeed.cs)
+all other module code, Contracts, endpoints, migrations, appsettings, frontend, shipping/order/
+checkout/fulfillment/payment/settlement

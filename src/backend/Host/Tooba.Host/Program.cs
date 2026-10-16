@@ -365,15 +365,18 @@ if (app.Environment.IsDevelopment())
         if (catalogDemoOptions.RunLegacyBootstraps)
         {
             await DevelopmentSchemaMigrator.ApplyAsync(app.Services);
-            // TB-114: the legacy Catalog Development bootstraps resolve SCOPED module services
-            // (CatalogDbContext and the landing-page / store-menu workspaces) from the provider they
-            // receive. DevelopmentSchemaMigrator owns its own async scope; this sibling sequence needs
-            // its own, created here at the composition root and handed to the Catalog-owned seed seam,
-            // so no scoped service is ever resolved from the root provider.
-            await using var legacyCatalogBootstrapScope = app.Services.CreateAsyncScope();
-            await CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(
-                legacyCatalogBootstrapScope.ServiceProvider,
-                CancellationToken.None);
+            // TB-116: the legacy Catalog Development bootstraps resolve SCOPED module services, and the
+            // Catalog DbContext options factory reads its connection reference from
+            // ICurrentCommerceContext, which is only populated inside an ASSIGNED commerce scope.
+            // TB-114 gave this sequence its own scope but left it unassigned, so the first DbContext
+            // resolution failed closed with platform.edition.unconfigured (observed in TB-115).
+            // Reuse the canonical Host Development gateway instead: it resolves the configured
+            // store-alpha tenant, assigns the trusted CommerceContext and then runs the Catalog-owned
+            // seed seam on that same scoped provider — exactly the migrator's proven hand-off.
+            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
+                app.Services,
+                "legacy-catalog-dev-seed",
+                CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync);
         }
         else
         {
