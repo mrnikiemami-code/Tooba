@@ -100,13 +100,19 @@ public sealed class WorkspaceDemoProductSeed(
         var mid = await catalog.CreateCategoryAsync(root.CategoryId, midNames, cancellationToken);
         var category = await catalog.CreateCategoryAsync(mid.CategoryId, leafNames, cancellationToken);
         var brand = await catalog.CreateBrandAsync(BrandSlugSeam, brandNames, cancellationToken);
-        var colorId = await catalog.CreateAttributeDefinitionAsync(
+        // Development seed coordination: the Catalog attribute-schema seed may already own the same
+        // attribute code on a shared Development database, so reuse it only when its downstream-required
+        // semantics match, and reuse the option under it instead of inserting a duplicate.
+        var colorId = await CatalogDevelopmentAttributeReuse.EnsureCompatibleDefinitionAsync(
+            catalog,
             ColorAttributeCode,
             CatalogAttributeValueKind.Enumeration,
             isVariantAxis: true,
             new Dictionary<string, string> { ["fa-IR"] = "رنگ", ["en-US"] = "Color" },
             cancellationToken);
-        var black = await catalog.AddAttributeOptionAsync(
+        var black = await CatalogDevelopmentAttributeReuse.EnsureCompatibleOptionAsync(
+            catalog,
+            catalogDb,
             colorId,
             BlackOptionCode,
             new Dictionary<string, string> { ["fa-IR"] = "سیاه", ["en-US"] = "Black" },

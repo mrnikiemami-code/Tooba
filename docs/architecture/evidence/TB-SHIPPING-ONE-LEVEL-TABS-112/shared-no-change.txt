@@ -1,0 +1,19 @@
+﻿capturedUtc=2026-10-16T01:43:01Z
+
+Shared environment (read-only, untouched by TB-112)
+===================================================
+listener port=3000 pid=31580
+listener port=5088 pid=35624
+
+Both owning PIDs are byte-identical to the TB-111 shared-parity capture
+(5088 -> 35624, 3000 -> 31580). TB-112 performed:
+  - no shared Host/Next restart, stop, build-deploy or config change;
+  - no connection to the shared `tooba_alpha` database (no DDL/DML);
+  - no process termination of any kind (no name/wildcard kill);
+  - no scratch Host startup (TB-113 owns runtime proof).
+
+The changed source is Development-only seed code
+(`Tooba.Catalog.Infrastructure/Development/**`) that the already-running shared
+instance does not reload. `psql` is not on PATH in this shell, so the TB-111
+data-count comparison was not re-executed here; the process-identity parity
+above is the available no-change proof for TB-112.

@@ -1,0 +1,23 @@
+TB-SHIPPING-ONE-LEVEL-TABS-112: Development attribute seed collision repair
+
+Repair the TB-111 Development startup failure catalog.attribute.code.duplicate at
+WorkspaceDemoProductSeed.SeedProductAsync: the Catalog attribute-schema
+post-migration seed may already own attribute code `color` (and its `black`
+option), so the legacy workspace demo seed now reuses the existing
+definition/option instead of creating them unconditionally.
+
+- Add Development-only Catalog helper CatalogDevelopmentAttributeReuse: reads the
+  canonical code through the existing ICatalogDirectory read seam, reuses the same
+  DefinitionId only when value-kind, variant-axis and active semantics all match,
+  otherwise throws the stable data-minimal diagnostic
+  `catalog-dev.attribute.incompatible-reuse: code=<code>; rules=<rules>` and writes
+  nothing; creates via the existing Catalog API only when absent.
+- Reuse the option by (definitionId, code) identity to avoid the duplicate on the
+  unique index attribute_options(definition_id, code) on the same statement path.
+- No change to public Catalog create/uniqueness behavior, contracts, schema,
+  migrations, Host seams or any checkout/order/fulfillment/shipping/payment surface.
+- Focused proof: CatalogDevelopmentAttributeReuseTests (7) +
+  WorkspaceDemoProductSeedCollisionRegressionTests (1) -> 8/8 passed; negative
+  control on the pre-fix code fails with the exact TB-111 error.
+
+Stop-State: STOP_FOR_ARCHITECT. No runtime/sellable claim (TB-113 owns that).

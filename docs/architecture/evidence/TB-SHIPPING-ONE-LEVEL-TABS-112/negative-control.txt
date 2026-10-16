@@ -1,0 +1,38 @@
+TB-SHIPPING-ONE-LEVEL-TABS-112 — negative control (pre-fix code, same regression test)
+=======================================================================================
+
+Purpose
+-------
+Prove that the new regression test actually catches the TB-111 collision and is not
+a vacuous pass. The two "get-or-create" call sites in
+`WorkspaceDemoProductSeed.SeedProductAsync` were temporarily restored to the
+pre-fix unconditional
+`CreateAttributeDefinitionAsync(ColorAttributeCode, Enumeration, isVariantAxis: true, ...)`
++ `AddAttributeOptionAsync(colorId, BlackOptionCode, ...)`, the focused regression test
+class was executed, and the pre-fix code was then restored byte-for-byte.
+
+Command
+-------
+dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj \
+  --filter "FullyQualifiedName~WorkspaceDemoProductSeedCollisionRegressionTests" -v n
+
+Result (redacted excerpt)
+-------------------------
+Error Message:
+System.InvalidOperationException : catalog.attribute.code.duplicate
+Stack Trace:
+   at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.Unwrap[T](Result`1 result) in .../CatalogDirectory.cs:line 894
+   at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.CreateAttributeDefinitionAsync(String code, CatalogAttributeValueKind valueKind, Boolean isVariantAxis, IReadOnlyDictionary`2 localizedNames, CancellationToken cancellationToken) in .../CatalogDirectory.cs:line 987
+   at Tooba.Catalog.Infrastructure.Development.WorkspaceDemoProductSeed.SeedProductAsync(CancellationToken cancellationToken) in .../WorkspaceDemoProductSeed.cs:line 103
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1
+
+Interpretation
+--------------
+This is exactly the failure TB-111 reported from the isolated scratch Host startup:
+the same error code, the same Catalog API entry point and the same source line
+(`WorkspaceDemoProductSeed.SeedProductAsync` line 103). The regression test therefore
+fails on the pre-fix seed and passes only with the compatible read-or-create reuse.
+
+After restoring the fix, the same run reports:
+Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8
+(7 `CatalogDevelopmentAttributeReuseTests` + 1 `WorkspaceDemoProductSeedCollisionRegressionTests`).
