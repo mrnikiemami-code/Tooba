@@ -1,0 +1,242 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Tooba.Reviews.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Reviews\Tooba.Reviews.Contracts\bin\Debug\net8.0\Tooba.Reviews.Contracts.dll
+  Tooba.ModuleContracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.ModuleContracts\bin\Debug\net8.0\Tooba.ModuleContracts.dll
+  Tooba.CustomerProfile.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\CustomerProfile\Tooba.CustomerProfile.Contracts\bin\Debug\net8.0\Tooba.CustomerProfile.Contracts.dll
+  Tooba.AddressBook.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AddressBook\Tooba.AddressBook.Contracts\bin\Debug\net8.0\Tooba.AddressBook.Contracts.dll
+  Tooba.ProductWorkspace.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\ProductWorkspace\Tooba.ProductWorkspace.Domain\bin\Debug\net8.0\Tooba.ProductWorkspace.Domain.dll
+  Tooba.BuildingBlocks -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.BuildingBlocks\bin\Debug\net8.0\Tooba.BuildingBlocks.dll
+  Tooba.Support.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Support\Tooba.Support.Contracts\bin\Debug\net8.0\Tooba.Support.Contracts.dll
+  Tooba.Content.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Content\Tooba.Content.Contracts\bin\Debug\net8.0\Tooba.Content.Contracts.dll
+  Tooba.Promotion.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Contracts\bin\Debug\net8.0\Tooba.Promotion.Contracts.dll
+  Tooba.Returns.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Returns\Tooba.Returns.Domain\bin\Debug\net8.0\Tooba.Returns.Domain.dll
+  Tooba.Payment.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Payment\Tooba.Payment.Contracts\bin\Debug\net8.0\Tooba.Payment.Contracts.dll
+  Tooba.Catalog.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\bin\Debug\net8.0\Tooba.Catalog.Domain.dll
+  Tooba.ProductQnA.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\ProductQnA\Tooba.ProductQnA.Contracts\bin\Debug\net8.0\Tooba.ProductQnA.Contracts.dll
+  Tooba.Tax.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Tax\Tooba.Tax.Contracts\bin\Debug\net8.0\Tooba.Tax.Contracts.dll
+  Tooba.ProductWorkspace.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\ProductWorkspace\Tooba.ProductWorkspace.Contracts\bin\Debug\net8.0\Tooba.ProductWorkspace.Contracts.dll
+  Tooba.StoreContext.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\StoreContext\Tooba.StoreContext.Contracts\bin\Debug\net8.0\Tooba.StoreContext.Contracts.dll
+  Tooba.PageComposition.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\PageComposition\Tooba.PageComposition.Contracts\bin\Debug\net8.0\Tooba.PageComposition.Contracts.dll
+  Tooba.Settlement.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Settlement\Tooba.Settlement.Contracts\bin\Debug\net8.0\Tooba.Settlement.Contracts.dll
+  Tooba.Notification.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Notification\Tooba.Notification.Domain\bin\Debug\net8.0\Tooba.Notification.Domain.dll
+  Tooba.Notification.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Notification\Tooba.Notification.Contracts\bin\Debug\net8.0\Tooba.Notification.Contracts.dll
+  Tooba.UserPreference.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\UserPreference\Tooba.UserPreference.Contracts\bin\Debug\net8.0\Tooba.UserPreference.Contracts.dll
+  Tooba.Catalog.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Contracts\bin\Debug\net8.0\Tooba.Catalog.Contracts.dll
+  Tooba.Fulfillment.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Domain\bin\Debug\net8.0\Tooba.Fulfillment.Domain.dll
+  Tooba.Geography.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Geography\Tooba.Geography.Contracts\bin\Debug\net8.0\Tooba.Geography.Contracts.dll
+  Tooba.Persistence -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.Persistence\bin\Debug\net8.0\Tooba.Persistence.dll
+  Tooba.Returns.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Returns\Tooba.Returns.Contracts\bin\Debug\net8.0\Tooba.Returns.Contracts.dll
+  Tooba.Fulfillment.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Contracts\bin\Debug\net8.0\Tooba.Fulfillment.Contracts.dll
+  Tooba.Wishlist.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Wishlist\Tooba.Wishlist.Contracts\bin\Debug\net8.0\Tooba.Wishlist.Contracts.dll
+  Tooba.BulkInquiry.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\BulkInquiry\Tooba.BulkInquiry.Contracts\bin\Debug\net8.0\Tooba.BulkInquiry.Contracts.dll
+  Tooba.Identity.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Identity\Tooba.Identity.Contracts\bin\Debug\net8.0\Tooba.Identity.Contracts.dll
+  Tooba.Offer.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Offer\Tooba.Offer.Contracts\bin\Debug\net8.0\Tooba.Offer.Contracts.dll
+  Tooba.Story.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Story\Tooba.Story.Contracts\bin\Debug\net8.0\Tooba.Story.Contracts.dll
+  Tooba.Media.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Media\Tooba.Media.Domain\bin\Debug\net8.0\Tooba.Media.Domain.dll
+  Tooba.Wallet.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Wallet\Tooba.Wallet.Contracts\bin\Debug\net8.0\Tooba.Wallet.Contracts.dll
+  Tooba.Tax.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Tax\Tooba.Tax.Domain\bin\Debug\net8.0\Tooba.Tax.Domain.dll
+  Tooba.Reviews.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Reviews\Tooba.Reviews.Domain\bin\Debug\net8.0\Tooba.Reviews.Domain.dll
+  Tooba.OperatorProfile.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\OperatorProfile\Tooba.OperatorProfile.Contracts\bin\Debug\net8.0\Tooba.OperatorProfile.Contracts.dll
+  Tooba.Localization.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Localization\Tooba.Localization.Contracts\bin\Debug\net8.0\Tooba.Localization.Contracts.dll
+  Tooba.Party.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Party\Tooba.Party.Contracts\bin\Debug\net8.0\Tooba.Party.Contracts.dll
+  Tooba.AddressBook.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AddressBook\Tooba.AddressBook.Domain\bin\Debug\net8.0\Tooba.AddressBook.Domain.dll
+  Tooba.Shipping.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Contracts\bin\Debug\net8.0\Tooba.Shipping.Contracts.dll
+  Tooba.Inventory.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Contracts\bin\Debug\net8.0\Tooba.Inventory.Contracts.dll
+  Tooba.Geography.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Geography\Tooba.Geography.Domain\bin\Debug\net8.0\Tooba.Geography.Domain.dll
+  Tooba.Offer.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Offer\Tooba.Offer.Domain\bin\Debug\net8.0\Tooba.Offer.Domain.dll
+  Tooba.AccessControl.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AccessControl\Tooba.AccessControl.Contracts\bin\Debug\net8.0\Tooba.AccessControl.Contracts.dll
+  Tooba.Localization.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Localization\Tooba.Localization.Domain\bin\Debug\net8.0\Tooba.Localization.Domain.dll
+  Tooba.Story.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Story\Tooba.Story.Domain\bin\Debug\net8.0\Tooba.Story.Domain.dll
+  Tooba.CustomerProfile.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\CustomerProfile\Tooba.CustomerProfile.Domain\bin\Debug\net8.0\Tooba.CustomerProfile.Domain.dll
+  Tooba.UserPreference.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\UserPreference\Tooba.UserPreference.Domain\bin\Debug\net8.0\Tooba.UserPreference.Domain.dll
+  Tooba.Payment.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Payment\Tooba.Payment.Domain\bin\Debug\net8.0\Tooba.Payment.Domain.dll
+  Tooba.Order.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Domain\bin\Debug\net8.0\Tooba.Order.Domain.dll
+  Tooba.Pricing.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Pricing\Tooba.Pricing.Contracts\bin\Debug\net8.0\Tooba.Pricing.Contracts.dll
+  Tooba.Geography.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Geography\Tooba.Geography.Infrastructure\bin\Debug\net8.0\Tooba.Geography.Infrastructure.dll
+  Tooba.Content.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Content\Tooba.Content.Domain\bin\Debug\net8.0\Tooba.Content.Domain.dll
+  Tooba.Settlement.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Settlement\Tooba.Settlement.Domain\bin\Debug\net8.0\Tooba.Settlement.Domain.dll
+  Tooba.AddressBook.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AddressBook\Tooba.AddressBook.Application\bin\Debug\net8.0\Tooba.AddressBook.Application.dll
+  Tooba.Cart.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Cart\Tooba.Cart.Contracts\bin\Debug\net8.0\Tooba.Cart.Contracts.dll
+  Tooba.OperatorProfile.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\OperatorProfile\Tooba.OperatorProfile.Domain\bin\Debug\net8.0\Tooba.OperatorProfile.Domain.dll
+  Tooba.Geography.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Geography\Tooba.Geography.Endpoints\bin\Debug\net8.0\Tooba.Geography.Endpoints.dll
+  Tooba.AccessControl.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AccessControl\Tooba.AccessControl.Domain\bin\Debug\net8.0\Tooba.AccessControl.Domain.dll
+  Tooba.PageComposition.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\PageComposition\Tooba.PageComposition.Domain\bin\Debug\net8.0\Tooba.PageComposition.Domain.dll
+  Tooba.Identity.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Identity\Tooba.Identity.Domain\bin\Debug\net8.0\Tooba.Identity.Domain.dll
+  Tooba.Returns.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Returns\Tooba.Returns.Application\bin\Debug\net8.0\Tooba.Returns.Application.dll
+  Tooba.Media.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Media\Tooba.Media.Contracts\bin\Debug\net8.0\Tooba.Media.Contracts.dll
+  Tooba.BulkInquiry.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\BulkInquiry\Tooba.BulkInquiry.Domain\bin\Debug\net8.0\Tooba.BulkInquiry.Domain.dll
+  Tooba.Wallet.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Wallet\Tooba.Wallet.Domain\bin\Debug\net8.0\Tooba.Wallet.Domain.dll
+  Tooba.Shipping.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Domain\bin\Debug\net8.0\Tooba.Shipping.Domain.dll
+  Tooba.Settlement.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Settlement\Tooba.Settlement.Application\bin\Debug\net8.0\Tooba.Settlement.Application.dll
+  Tooba.Cart.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Cart\Tooba.Cart.Domain\bin\Debug\net8.0\Tooba.Cart.Domain.dll
+  Tooba.Order.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Contracts\bin\Debug\net8.0\Tooba.Order.Contracts.dll
+  Tooba.Promotion.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Domain\bin\Debug\net8.0\Tooba.Promotion.Domain.dll
+  Tooba.OperatorProfile.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\OperatorProfile\Tooba.OperatorProfile.Application\bin\Debug\net8.0\Tooba.OperatorProfile.Application.dll
+  Tooba.Localization.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Localization\Tooba.Localization.Application\bin\Debug\net8.0\Tooba.Localization.Application.dll
+  Tooba.PageComposition.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\PageComposition\Tooba.PageComposition.Application\bin\Debug\net8.0\Tooba.PageComposition.Application.dll
+  Tooba.PageComposition.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\PageComposition\Tooba.PageComposition.Endpoints\bin\Debug\net8.0\Tooba.PageComposition.Endpoints.dll
+  Tooba.Tax.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Tax\Tooba.Tax.Application\bin\Debug\net8.0\Tooba.Tax.Application.dll
+  Tooba.Pricing.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Pricing\Tooba.Pricing.Domain\bin\Debug\net8.0\Tooba.Pricing.Domain.dll
+  Tooba.BulkInquiry.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\BulkInquiry\Tooba.BulkInquiry.Application\bin\Debug\net8.0\Tooba.BulkInquiry.Application.dll
+  Tooba.AccessControl.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AccessControl\Tooba.AccessControl.Application\bin\Debug\net8.0\Tooba.AccessControl.Application.dll
+  Tooba.Party.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Party\Tooba.Party.Domain\bin\Debug\net8.0\Tooba.Party.Domain.dll
+  Tooba.Tax.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Tax\Tooba.Tax.Infrastructure\bin\Debug\net8.0\Tooba.Tax.Infrastructure.dll
+  Tooba.Returns.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Returns\Tooba.Returns.Endpoints\bin\Debug\net8.0\Tooba.Returns.Endpoints.dll
+  Tooba.Payment.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Payment\Tooba.Payment.Application\bin\Debug\net8.0\Tooba.Payment.Application.dll
+  Tooba.Inventory.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Domain\bin\Debug\net8.0\Tooba.Inventory.Domain.dll
+  Tooba.Identity.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Identity\Tooba.Identity.Application\bin\Debug\net8.0\Tooba.Identity.Application.dll
+  Tooba.Story.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Story\Tooba.Story.Application\bin\Debug\net8.0\Tooba.Story.Application.dll
+  Tooba.UserPreference.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\UserPreference\Tooba.UserPreference.Application\bin\Debug\net8.0\Tooba.UserPreference.Application.dll
+  Tooba.Localization.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Localization\Tooba.Localization.Infrastructure\bin\Debug\net8.0\Tooba.Localization.Infrastructure.dll
+  Tooba.Content.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Content\Tooba.Content.Application\bin\Debug\net8.0\Tooba.Content.Application.dll
+  Tooba.AddressBook.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AddressBook\Tooba.AddressBook.Infrastructure\bin\Debug\net8.0\Tooba.AddressBook.Infrastructure.dll
+  Tooba.ProductQnA.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\ProductQnA\Tooba.ProductQnA.Domain\bin\Debug\net8.0\Tooba.ProductQnA.Domain.dll
+  Tooba.Notification.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Notification\Tooba.Notification.Application\bin\Debug\net8.0\Tooba.Notification.Application.dll
+  Tooba.PageComposition.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\PageComposition\Tooba.PageComposition.Infrastructure\bin\Debug\net8.0\Tooba.PageComposition.Infrastructure.dll
+  Tooba.Returns.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Returns\Tooba.Returns.Infrastructure\bin\Debug\net8.0\Tooba.Returns.Infrastructure.dll
+  Tooba.Reviews.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Reviews\Tooba.Reviews.Application\bin\Debug\net8.0\Tooba.Reviews.Application.dll
+  Tooba.Inventory.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Application\bin\Debug\net8.0\Tooba.Inventory.Application.dll
+  Tooba.Payment.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Payment\Tooba.Payment.Infrastructure\bin\Debug\net8.0\Tooba.Payment.Infrastructure.dll
+  Tooba.AddressBook.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AddressBook\Tooba.AddressBook.Endpoints\bin\Debug\net8.0\Tooba.AddressBook.Endpoints.dll
+  Tooba.Support.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Support\Tooba.Support.Domain\bin\Debug\net8.0\Tooba.Support.Domain.dll
+  Tooba.Payment.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Payment\Tooba.Payment.Endpoints\bin\Debug\net8.0\Tooba.Payment.Endpoints.dll
+  Tooba.BulkInquiry.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\BulkInquiry\Tooba.BulkInquiry.Infrastructure\bin\Debug\net8.0\Tooba.BulkInquiry.Infrastructure.dll
+  Tooba.BulkInquiry.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\BulkInquiry\Tooba.BulkInquiry.Endpoints\bin\Debug\net8.0\Tooba.BulkInquiry.Endpoints.dll
+  Tooba.Cart.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Cart\Tooba.Cart.Application\bin\Debug\net8.0\Tooba.Cart.Application.dll
+  Tooba.Content.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Content\Tooba.Content.Infrastructure\bin\Debug\net8.0\Tooba.Content.Infrastructure.dll
+  Tooba.Wishlist.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Wishlist\Tooba.Wishlist.Domain\bin\Debug\net8.0\Tooba.Wishlist.Domain.dll
+  Tooba.Offer.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Offer\Tooba.Offer.Application\bin\Debug\net8.0\Tooba.Offer.Application.dll
+  Tooba.OperatorProfile.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\OperatorProfile\Tooba.OperatorProfile.Endpoints\bin\Debug\net8.0\Tooba.OperatorProfile.Endpoints.dll
+  Tooba.Content.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Content\Tooba.Content.Endpoints\bin\Debug\net8.0\Tooba.Content.Endpoints.dll
+  Tooba.ProductWorkspace.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\ProductWorkspace\Tooba.ProductWorkspace.Application\bin\Debug\net8.0\Tooba.ProductWorkspace.Application.dll
+  Tooba.Localization.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Localization\Tooba.Localization.Endpoints\bin\Debug\net8.0\Tooba.Localization.Endpoints.dll
+  Tooba.Catalog.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\bin\Debug\net8.0\Tooba.Catalog.Application.dll
+  Tooba.Offer.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Offer\Tooba.Offer.Endpoints\bin\Debug\net8.0\Tooba.Offer.Endpoints.dll
+  Tooba.Shipping.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Application\bin\Debug\net8.0\Tooba.Shipping.Application.dll
+  Tooba.Settlement.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Settlement\Tooba.Settlement.Endpoints\bin\Debug\net8.0\Tooba.Settlement.Endpoints.dll
+  Tooba.Settlement.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Settlement\Tooba.Settlement.Infrastructure\bin\Debug\net8.0\Tooba.Settlement.Infrastructure.dll
+  Tooba.Identity.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Identity\Tooba.Identity.Endpoints\bin\Debug\net8.0\Tooba.Identity.Endpoints.dll
+  Tooba.OperatorProfile.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\OperatorProfile\Tooba.OperatorProfile.Infrastructure\bin\Debug\net8.0\Tooba.OperatorProfile.Infrastructure.dll
+  Tooba.UserPreference.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\UserPreference\Tooba.UserPreference.Endpoints\bin\Debug\net8.0\Tooba.UserPreference.Endpoints.dll
+  Tooba.Story.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Story\Tooba.Story.Infrastructure\bin\Debug\net8.0\Tooba.Story.Infrastructure.dll
+  Tooba.Offer.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Offer\Tooba.Offer.Infrastructure\bin\Debug\net8.0\Tooba.Offer.Infrastructure.dll
+  Tooba.ProductWorkspace.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\ProductWorkspace\Tooba.ProductWorkspace.Endpoints\bin\Debug\net8.0\Tooba.ProductWorkspace.Endpoints.dll
+  Tooba.Wallet.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Wallet\Tooba.Wallet.Application\bin\Debug\net8.0\Tooba.Wallet.Application.dll
+  Tooba.ProductWorkspace.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\ProductWorkspace\Tooba.ProductWorkspace.Infrastructure\bin\Debug\net8.0\Tooba.ProductWorkspace.Infrastructure.dll
+  Tooba.Cart.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Cart\Tooba.Cart.Endpoints\bin\Debug\net8.0\Tooba.Cart.Endpoints.dll
+  Tooba.Shipping.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Endpoints\bin\Debug\net8.0\Tooba.Shipping.Endpoints.dll
+  Tooba.Catalog.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Endpoints\bin\Debug\net8.0\Tooba.Catalog.Endpoints.dll
+  Tooba.AccessControl.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AccessControl\Tooba.AccessControl.Endpoints\bin\Debug\net8.0\Tooba.AccessControl.Endpoints.dll
+  Tooba.Shipping.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Infrastructure\bin\Debug\net8.0\Tooba.Shipping.Infrastructure.dll
+  Tooba.Notification.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Notification\Tooba.Notification.Infrastructure\bin\Debug\net8.0\Tooba.Notification.Infrastructure.dll
+  Tooba.Order.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Application\bin\Debug\net8.0\Tooba.Order.Application.dll
+  Tooba.Support.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Support\Tooba.Support.Application\bin\Debug\net8.0\Tooba.Support.Application.dll
+  Tooba.Story.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Story\Tooba.Story.Endpoints\bin\Debug\net8.0\Tooba.Story.Endpoints.dll
+  Tooba.Identity.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Identity\Tooba.Identity.Infrastructure\bin\Debug\net8.0\Tooba.Identity.Infrastructure.dll
+  Tooba.Pricing.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Pricing\Tooba.Pricing.Application\bin\Debug\net8.0\Tooba.Pricing.Application.dll
+  Tooba.CustomerProfile.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\CustomerProfile\Tooba.CustomerProfile.Application\bin\Debug\net8.0\Tooba.CustomerProfile.Application.dll
+  Tooba.UserPreference.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\UserPreference\Tooba.UserPreference.Infrastructure\bin\Debug\net8.0\Tooba.UserPreference.Infrastructure.dll
+  Tooba.Cart.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Cart\Tooba.Cart.Infrastructure\bin\Debug\net8.0\Tooba.Cart.Infrastructure.dll
+  Tooba.ProductQnA.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\ProductQnA\Tooba.ProductQnA.Application\bin\Debug\net8.0\Tooba.ProductQnA.Application.dll
+  Tooba.Reviews.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Reviews\Tooba.Reviews.Infrastructure\bin\Debug\net8.0\Tooba.Reviews.Infrastructure.dll
+  Tooba.Inventory.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Infrastructure\bin\Debug\net8.0\Tooba.Inventory.Infrastructure.dll
+  Tooba.Support.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Support\Tooba.Support.Infrastructure\bin\Debug\net8.0\Tooba.Support.Infrastructure.dll
+  Tooba.Order.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Infrastructure\bin\Debug\net8.0\Tooba.Order.Infrastructure.dll
+  Tooba.Party.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Party\Tooba.Party.Application\bin\Debug\net8.0\Tooba.Party.Application.dll
+  Tooba.StoreContext.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\StoreContext\Tooba.StoreContext.Infrastructure\bin\Debug\net8.0\Tooba.StoreContext.Infrastructure.dll
+  Tooba.Wishlist.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Wishlist\Tooba.Wishlist.Application\bin\Debug\net8.0\Tooba.Wishlist.Application.dll
+  Tooba.Wallet.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Wallet\Tooba.Wallet.Endpoints\bin\Debug\net8.0\Tooba.Wallet.Endpoints.dll
+  Tooba.Support.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Support\Tooba.Support.Endpoints\bin\Debug\net8.0\Tooba.Support.Endpoints.dll
+  Tooba.Fulfillment.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Application\bin\Debug\net8.0\Tooba.Fulfillment.Application.dll
+  Tooba.Reviews.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Reviews\Tooba.Reviews.Endpoints\bin\Debug\net8.0\Tooba.Reviews.Endpoints.dll
+  Tooba.Notification.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Notification\Tooba.Notification.Endpoints\bin\Debug\net8.0\Tooba.Notification.Endpoints.dll
+  Tooba.CustomerProfile.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\CustomerProfile\Tooba.CustomerProfile.Endpoints\bin\Debug\net8.0\Tooba.CustomerProfile.Endpoints.dll
+  Tooba.Wallet.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Wallet\Tooba.Wallet.Infrastructure\bin\Debug\net8.0\Tooba.Wallet.Infrastructure.dll
+  Tooba.Order.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Endpoints\bin\Debug\net8.0\Tooba.Order.Endpoints.dll
+  Tooba.Promotion.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Application\bin\Debug\net8.0\Tooba.Promotion.Application.dll
+  Tooba.Party.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Party\Tooba.Party.Endpoints\bin\Debug\net8.0\Tooba.Party.Endpoints.dll
+  Tooba.Party.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Party\Tooba.Party.Infrastructure\bin\Debug\net8.0\Tooba.Party.Infrastructure.dll
+  Tooba.Wishlist.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Wishlist\Tooba.Wishlist.Infrastructure\bin\Debug\net8.0\Tooba.Wishlist.Infrastructure.dll
+  Tooba.CustomerProfile.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\CustomerProfile\Tooba.CustomerProfile.Infrastructure\bin\Debug\net8.0\Tooba.CustomerProfile.Infrastructure.dll
+  Tooba.Fulfillment.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Endpoints\bin\Debug\net8.0\Tooba.Fulfillment.Endpoints.dll
+  Tooba.ProductQnA.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\ProductQnA\Tooba.ProductQnA.Endpoints\bin\Debug\net8.0\Tooba.ProductQnA.Endpoints.dll
+  Tooba.Promotion.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Endpoints\bin\Debug\net8.0\Tooba.Promotion.Endpoints.dll
+  Tooba.ProductQnA.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\ProductQnA\Tooba.ProductQnA.Infrastructure\bin\Debug\net8.0\Tooba.ProductQnA.Infrastructure.dll
+  Tooba.Promotion.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Promotion\Tooba.Promotion.Infrastructure\bin\Debug\net8.0\Tooba.Promotion.Infrastructure.dll
+  Tooba.Wishlist.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Wishlist\Tooba.Wishlist.Endpoints\bin\Debug\net8.0\Tooba.Wishlist.Endpoints.dll
+  Tooba.Fulfillment.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\bin\Debug\net8.0\Tooba.Fulfillment.Infrastructure.dll
+  Tooba.Catalog.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\bin\Debug\net8.0\Tooba.Catalog.Infrastructure.dll
+  Tooba.AccessControl.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\AccessControl\Tooba.AccessControl.Infrastructure\bin\Debug\net8.0\Tooba.AccessControl.Infrastructure.dll
+  Tooba.Media.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Media\Tooba.Media.Application\bin\Debug\net8.0\Tooba.Media.Application.dll
+  Tooba.Media.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Media\Tooba.Media.Endpoints\bin\Debug\net8.0\Tooba.Media.Endpoints.dll
+  Tooba.Pricing.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Pricing\Tooba.Pricing.Infrastructure\bin\Debug\net8.0\Tooba.Pricing.Infrastructure.dll
+  Tooba.Media.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Media\Tooba.Media.Infrastructure\bin\Debug\net8.0\Tooba.Media.Infrastructure.dll
+  Tooba.Host -> D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.dll
+  Tooba.Host.Tests -> D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\bin\Debug\net8.0\Tooba.Host.Tests.dll
+Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\bin\Debug\net8.0\Tooba.Host.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.3+b1b99bdeb3 (64-bit .NET 8.0.24)
+[xUnit.net 00:00:00.21]   Discovering: Tooba.Host.Tests
+[xUnit.net 00:00:00.36]   Discovered:  Tooba.Host.Tests
+[xUnit.net 00:00:00.38]   Starting:    Tooba.Host.Tests
+[testcontainers.org 00:00:00.05] Connected to Docker:
+  Host: npipe://./pipe/docker_engine
+  Server Version: 29.4.2
+  Kernel Version: 6.6.87.2-microsoft-standard-WSL2
+  API Version: 1.54
+  Operating System: Docker Desktop
+  Total Memory: 31.22 GB
+  Labels: 
+    com.docker.desktop.address=npipe://\\.\pipe\docker_cli
+[testcontainers.org 00:00:00.16] Docker container 1de5a0dfe4df created
+[testcontainers.org 00:00:00.18] Start Docker container 1de5a0dfe4df
+[testcontainers.org 00:00:00.32] Wait for Docker container 1de5a0dfe4df to complete readiness checks
+[testcontainers.org 00:00:00.32] Docker container 1de5a0dfe4df ready
+[testcontainers.org 00:00:00.41] Docker container 649a17a0c39b created
+[testcontainers.org 00:00:00.42] Start Docker container 649a17a0c39b
+[testcontainers.org 00:00:00.60] Wait for Docker container 649a17a0c39b to complete readiness checks
+[testcontainers.org 00:00:00.61] Execute "pg_isready --host localhost --dbname tooba_sparse_default_variant --username tooba" at Docker container 649a17a0c39b
+[testcontainers.org 00:00:01.70] Execute "pg_isready --host localhost --dbname tooba_sparse_default_variant --username tooba" at Docker container 649a17a0c39b
+[testcontainers.org 00:00:01.76] Docker container 649a17a0c39b ready
+[testcontainers.org 00:00:03.50] Delete Docker container 649a17a0c39b
+dotnet : [xUnit.net 00:00:04.28]     Tooba.Host.Tests.CatalogSparseDefaultVariantTests.Attribute_schema_seed_publishes_
+its_sparse_product_with_one_default_and_is_repeat_safe [FAIL]
+At C:\Users\User\AppData\Local\Temp\ps-script-cd94b598-31bd-47f5-907c-6cf40bd319bd.ps1:101 char:108
++ ... -TABS-108"; dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host. ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...eat_safe [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[xUnit.net 00:00:04.28]       System.InvalidOperationException : محصول برای انتشار آماده نیست.
+[xUnit.net 00:00:04.28]       Stack Trace:
+[xUnit.net 00:00:04.28]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Directories\CatalogDirectory.cs(849,0): at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.UnwrapLifecycle(Result result)
+[xUnit.net 00:00:04.28]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Directories\CatalogDirectory.cs(1644,0): at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.PublishProductAsync(Guid productId, CancellationToken cancellationToken)
+[xUnit.net 00:00:04.28]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\CatalogDevelopmentPublishDiagnostics.cs(75,0): at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentPublishDiagnostics.PublishWithDiagnosticsAsync(ICatalogDirectory catalog, IHostEnvironment environment, ILoggerFactory loggerFactory, Guid productId, String stage, CancellationToken cancellationToken)
+[xUnit.net 00:00:04.28]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\CatalogDevelopmentPublishDiagnostics.cs(84,0): at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentPublishDiagnostics.PublishWithDiagnosticsAsync(ICatalogDirectory catalog, IHostEnvironment environment, ILoggerFactory loggerFactory, Guid productId, String stage, CancellationToken cancellationToken)
+[xUnit.net 00:00:04.28]         D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\CatalogAttributeSchemaDevelopmentSeed.cs(106,0): at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaDevelopmentSeed.ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken)
+[xUnit.net 00:00:04.28]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\CatalogSparseDefaultVariantTests.cs(214,0): at Tooba.Host.Tests.CatalogSparseDefaultVariantTests.Attribute_schema_seed_publishes_its_sparse_product_with_one_default_and_is_repeat_safe()
+[xUnit.net 00:00:04.28]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\CatalogSparseDefaultVariantTests.cs(257,0): at Tooba.Host.Tests.CatalogSparseDefaultVariantTests.Attribute_schema_seed_publishes_its_sparse_product_with_one_default_and_is_repeat_safe()
+[xUnit.net 00:00:04.28]         D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\CatalogSparseDefaultVariantTests.cs(257,0): at Tooba.Host.Tests.CatalogSparseDefaultVariantTests.Attribute_schema_seed_publishes_its_sparse_product_with_one_default_and_is_repeat_safe()
+[xUnit.net 00:00:04.28]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:04.29]   Finished:    Tooba.Host.Tests
+  Failed Tooba.Host.Tests.CatalogSparseDefaultVariantTests.Attribute_schema_seed_publishes_its_sparse_product_with_one_default_and_is_repeat_safe [1 s]
+  Error Message:
+   System.InvalidOperationException : محصول برای انتشار آماده نیست.
+  Stack Trace:
+     at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.UnwrapLifecycle(Result result) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Directories\CatalogDirectory.cs:line 849
+   at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.PublishProductAsync(Guid productId, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Directories\CatalogDirectory.cs:line 1644
+   at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentPublishDiagnostics.PublishWithDiagnosticsAsync(ICatalogDirectory catalog, IHostEnvironment environment, ILoggerFactory loggerFactory, Guid productId, String stage, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\CatalogDevelopmentPublishDiagnostics.cs:line 75
+   at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentPublishDiagnostics.PublishWithDiagnosticsAsync(ICatalogDirectory catalog, IHostEnvironment environment, ILoggerFactory loggerFactory, Guid productId, String stage, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\CatalogDevelopmentPublishDiagnostics.cs:line 84
+   at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaDevelopmentSeed.ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\CatalogAttributeSchemaDevelopmentSeed.cs:line 106
+   at Tooba.Host.Tests.CatalogSparseDefaultVariantTests.Attribute_schema_seed_publishes_its_sparse_product_with_one_default_and_is_repeat_safe() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\CatalogSparseDefaultVariantTests.cs:line 214
+   at Tooba.Host.Tests.CatalogSparseDefaultVariantTests.Attribute_schema_seed_publishes_its_sparse_product_with_one_default_and_is_repeat_safe() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\CatalogSparseDefaultVariantTests.cs:line 257
+   at Tooba.Host.Tests.CatalogSparseDefaultVariantTests.Attribute_schema_seed_publishes_its_sparse_product_with_one_default_and_is_repeat_safe() in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\CatalogSparseDefaultVariantTests.cs:line 257
+--- End of stack trace from previous location ---
+
+Test Run Failed.
+Total tests: 1
+     Failed: 1
+ Total time: 4.6154 Seconds

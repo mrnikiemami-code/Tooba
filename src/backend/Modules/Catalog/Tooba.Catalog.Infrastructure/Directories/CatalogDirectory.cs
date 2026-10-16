@@ -1456,6 +1456,13 @@ public sealed class CatalogDirectory :
         Unwrap(await ProductVariantsPort().GetReadinessAsync(productId, cancellationToken));
 
     /// <inheritdoc />
+    public async Task SetProductVariantDefaultAsync(
+        Guid productId,
+        Guid variantId,
+        CancellationToken cancellationToken) =>
+        Unwrap(await ProductVariantsPort().SetDefaultAsync(productId, variantId, cancellationToken));
+
+    /// <inheritdoc />
     public async Task<CategoryChangeImpact> PreviewCategoryChangeAsync(
         Guid productId,
         Guid newCategoryId,

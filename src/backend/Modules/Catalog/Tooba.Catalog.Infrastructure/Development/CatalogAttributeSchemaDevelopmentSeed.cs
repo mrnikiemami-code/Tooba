@@ -89,8 +89,11 @@ public static class CatalogAttributeSchemaDevelopmentSeed
         await catalog.SetProductVariantAxesAsync(product.ProductId, [colorId, storageId], cancellationToken);
 
         // چند ترکیب نمونه برای اثبات محورها؛ FULL_VARIANT_MATRIX تولید نمی‌شود.
-        await catalog.CreateVariantAsync(product.ProductId, "PHONE-BLK-128", [(colorId, "ignored", black), (storageId, "ignored", storage128)], cancellationToken);
+        var defaultVariant = await catalog.CreateVariantAsync(product.ProductId, "PHONE-BLK-128", [(colorId, "ignored", black), (storageId, "ignored", storage128)], cancellationToken);
         await catalog.CreateVariantAsync(product.ProductId, "PHONE-BLU-256", [(colorId, "ignored", blue), (storageId, "ignored", storage256)], cancellationToken);
+        // تنوع اول به‌صورت قطعی پیش‌فرض می‌شود تا الزام noDefault آمادگی انتشار برقرار شود.
+        // ماتریس کامل اعمال نمی‌شود و هیچ تنوع/محوری ساخته، آرشیو یا اضافه نمی‌شود.
+        await catalog.SetProductVariantDefaultAsync(product.ProductId, defaultVariant.VariantId, cancellationToken);
         await catalog.AttachMediaReferenceAsync(
             product.ProductId, Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), cancellationToken);
         await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(

@@ -37,6 +37,17 @@ public interface IProductVariantDirectory
         Guid productId,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Marks ONE existing variant of the product as its only default, reusing the directory-level
+    /// single-default invariant. Deliberately sparse-safe: no matrix reconcile, no variant creation,
+    /// no archiving and no axis replacement, so a product with a partial (diagonal) combination set
+    /// keeps exactly the variants it already has. Idempotent when the variant is already the sole default.
+    /// </summary>
+    Task<Result> SetDefaultAsync(
+        Guid productId,
+        Guid variantId,
+        CancellationToken cancellationToken);
+
     /// <summary>Creates one workspace variant with explicit axes (Host ProductWorkspace parity).</summary>
     Task<Result<VariantReference>> CreateWorkspaceVariantAsync(
         Guid productId,

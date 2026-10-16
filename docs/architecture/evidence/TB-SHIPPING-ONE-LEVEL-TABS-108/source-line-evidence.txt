@@ -1,0 +1,78 @@
+TB-SHIPPING-ONE-LEVEL-TABS-108 — source-line evidence (BOUNDED_CATALOG_SPARSE_DEFAULT_VARIANT_SEAM)
+Base-SHA/HEAD at claim: 9f8ee6c6a0e3c8767ddb86f734db30733583c756 (Expected-Base-SHA 1ff62762ba7679418db53208f47bb2ee6d412bc5 is an ancestor)
+
+[1] PRIVATE INVARIANT HELPERS REUSED VERBATIM (unchanged, pre-existing)
+src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductVariantDirectory.cs
+   999  private static void ClearDefaultFlags(IEnumerable<CatalogVariant> variants, DateTimeOffset now)
+  1007  private static void EnforceSingleDefault(IReadOnlyList<CatalogVariant> variants, DateTimeOffset now)
+  The matrix reconcile itself uses exactly this pair (ApplyMatrixAsync region):
+   ~442      ClearDefaultFlags(variants, now);
+   ~443      target.SetDefault(true, now);
+  => the new seam must not re-implement uniqueness; it calls the same two helpers.
+
+[2] NEW NARROW PORT MEMBER (+11)
+src/backend/Modules/Catalog/Tooba.Catalog.Application/Variants/Ports/IProductVariantDirectory.cs
+  <summary> marks ONE existing variant of the product as its only default, reusing the directory-level single-default
+  invariant. Deliberately sparse-safe: no matrix reconcile, no variant creation, no archiving and no axis replacement.
+  Idempotent when the variant is already the sole default.
+  Task<Result> SetDefaultAsync(Guid productId, Guid variantId, CancellationToken cancellationToken);
+
+[3] NEW CATALOG-OWNED IMPLEMENTATION (+49)
+src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductVariantDirectory.cs:588
+  public async Task<Result> SetDefaultAsync(Guid productId, Guid variantId, CancellationToken cancellationToken)
+  {
+      await _guard.EnsureCanMutateAsync(cancellationToken);                       // same use-case guard as every sibling
+      if (!await _db.Products.AnyAsync(x => x.ProductId == productId, ct))
+          return Result.Failure(new SemanticError(CatalogErrorCodes.ProductMissing));         // NotFound
+      var variants = await _db.Variants.Where(x => x.ProductId == productId).ToListAsync(ct);
+      var target = variants.SingleOrDefault(x => x.VariantId == variantId);
+      if (target is null)
+          return Result.Failure(new SemanticError(CatalogErrorCodes.VariantDefaultMissing));  // missing/mismatched
+      if (target.Status == CatalogPublicationStatus.Archived)
+          return Result.Failure(new SemanticError(CatalogErrorCodes.VariantArchivedCannotBeDefault));
+      if (target.IsDefault && variants.All(x => x.VariantId == variantId || !x.IsDefault))
+          return Result.Success();                                                // idempotent no-op (no write/history)
+      var now = DateTimeOffset.UtcNow;
+      ClearDefaultFlags(variants, now);                                           // reused helper #1
+      target.SetDefault(true, now);                                               // reused helper #2
+      var product = await _db.Products.SingleAsync(x => x.ProductId == productId, ct);
+      product.UpdatedAt = now;                                                    // same pattern as PatchWorkspaceVariantAsync
+      QueueProductHistory(productId, ProductHistoryRules.EventVariantsChanged,
+          ProductHistoryRules.SectionVariants, ProductHistoryRules.SummaryVariantsFa, null, null);
+      await _db.SaveChangesAsync(cancellationToken);                              // ONE SaveChanges => atomic, never 0/2 defaults
+      return Result.Success();
+  }
+  No mutation happens before every rejection check; therefore a refusal cannot leave a partial write.
+  No ApplyMatrixAsync, no combination build, no variant/axis/offer creation or archiving.
+
+[4] FACADE CONTRACT + IMPL (minimal exposure for the Development seed) (+9 / +7)
+src/backend/Modules/Catalog/Tooba.Catalog.Application/Ports/ICatalogDirectory.cs:445
+  Task SetProductVariantDefaultAsync(Guid productId, Guid variantId, CancellationToken cancellationToken);
+   (Persian doc: a single exists variant becomes the only default; no matrix, nothing created/archived.)
+src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CatalogDirectory.cs:1459
+  public async Task SetProductVariantDefaultAsync(...) =>
+      Unwrap(await ProductVariantsPort().SetDefaultAsync(productId, variantId, cancellationToken));
+   (Unwrap(Result) -> InvalidOperationException(code): the established legacy-facade contract, unchanged.)
+
+[5] SEED NOW DESIGNATES ITS FIRST CREATED VARIANT DEFAULT (+5/-1)
+src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaDevelopmentSeed.cs
+   92  var defaultVariant = await catalog.CreateVariantAsync(product.ProductId, "PHONE-BLK-128",
+           [(colorId, "ignored", black), (storageId, "ignored", storage128)], cancellationToken);
+   93  await catalog.CreateVariantAsync(product.ProductId, "PHONE-BLU-256",
+           [(colorId, "ignored", blue), (storageId, "ignored", storage256)], cancellationToken);
+   96  await catalog.SetProductVariantDefaultAsync(product.ProductId, defaultVariant.VariantId, cancellationToken);
+  Both original diagonal variants and both axes (color + storage) are preserved: no extra combination, no offer, no
+  seed record. The 105 Development diagnostic publish call is untouched and still in place.
+
+[6] ERROR/TEXT CODES PRE-EXIST (nothing new in Contracts)
+  CatalogErrorCodes.ProductMissing             = "catalog.product.missing"                    (resx + fa.resx present)
+  CatalogErrorCodes.VariantDefaultMissing      = "catalog.variant.default.missing"            (resx + fa.resx present)
+  CatalogErrorCodes.VariantArchivedCannotBeDefault = "catalog.variant.default.archived_forbidden" (resx + fa.resx present)
+  Registered in CatalogErrorCatalogContributor.cs lines 102 / 138 / 140. No Contracts file modified.
+
+[7] ONLY ONE IMPLEMENTER EACH (no other call site needs updating)
+  IProductVariantDirectory -> ProductVariantDirectory (only)
+  ICatalogDirectory        -> CatalogDirectory (only)
+
+[8] FOCUSED TEST LOCATION
+src/backend/Host/Tooba.Host.Tests/CatalogSparseDefaultVariantTests.cs  (new, 3 SkippableFacts, Testcontainers postgres:16-alpine)

@@ -439,6 +439,15 @@ public interface ICatalogDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// یک تنوع موجود را تنها تنوع پیش‌فرض محصول می‌کند. ماتریس کامل اعمال نمی‌شود و هیچ تنوع یا
+    /// محوری ساخته/آرشیو نمی‌شود؛ برای محصولاتی که فقط بخشی از ترکیب‌ها را دارند.
+    /// </summary>
+    Task SetProductVariantDefaultAsync(
+        Guid productId,
+        Guid variantId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// آمادگی تنوع‌های محصول برای جریان انتشار بعدی.
     /// </summary>
     Task<ProductVariantReadiness> GetProductVariantReadinessAsync(

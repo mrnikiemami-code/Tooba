@@ -1,0 +1,40 @@
+TB-SHIPPING-ONE-LEVEL-TABS-108 — pre-existing Architecture-guard baseline proof
+Sweep: dotnet test Tooba.Host.Tests -c Debug --no-build --filter "FullyQualifiedName~Architecture"
+Result: Total tests: 1458 | Passed: 1415 | Failed: 43 | Skipped: 0   (near-neighbour-architecture-guards.txt)
+
+Question: are any of the 43 failures caused by this task (5 Catalog files + 1 new test file)?
+
+A. Files/counts the failures point at are ALREADY wrong at HEAD (git, no working-tree influence):
+   ABSENT_AT_HEAD src/backend/Modules/Catalog/Tooba.Catalog.Domain/CatalogCategoryTreeRules.cs
+   ABSENT_AT_HEAD src/backend/Modules/Catalog/Tooba.Catalog.Domain/CatalogCategorySlugNormalizer.cs
+   ABSENT_AT_HEAD src/backend/Modules/Catalog/Tooba.Catalog.Domain/CatalogDomain.cs
+   ABSENT_AT_HEAD src/backend/Modules/Party/Tooba.Party.Contracts/IPartyAdminSellerReadGateway.cs
+   ABSENT_AT_HEAD src/backend/Modules/Party/Tooba.Party.Contracts/IPartyDevelopmentSeedGateway.cs
+   ABSENT_AT_HEAD src/backend/Modules/Wishlist/Tooba.Wishlist.Application/Presentation/WishlistPresentationComposer.cs
+   Host/Admin *.cs count at HEAD = 17   (many guards still assert 15 / 52 -> pre-existing)
+
+B. This task's diff touches ONLY these paths (git status -- src/backend):
+   M src/backend/Modules/Catalog/Tooba.Catalog.Application/Ports/ICatalogDirectory.cs
+   M src/backend/Modules/Catalog/Tooba.Catalog.Application/Variants/Ports/IProductVariantDirectory.cs
+   M src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaDevelopmentSeed.cs
+   M src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CatalogDirectory.cs
+   M src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductVariantDirectory.cs
+   ?? src/backend/Host/Tooba.Host.Tests/CatalogSparseDefaultVariantTests.cs
+   No file was added, renamed, moved or deleted outside the new test file; no Contracts/resource/guard file changed.
+
+C. The 43 failing facts group into these pre-existing causes (distinct assertion messages in the sweep log):
+   - "Values differ (Expected 15 / 52 ...)": Host/Admin file-count drift (17 at HEAD).
+   - FileNotFoundException / DirectoryNotFoundException on the six files listed in (A).
+   - Assert.False/Assert.True/Assert.NotNull/Assert.Contains drift in AMSC certification-truth, SOT/manifest,
+     slnx grouping, grid/party/wishlist ownership and validator-classification guards — e.g. W10's failing assertion is
+     Assert.False(File.Exists(<Catalog Attribute/ProductValues/Validators/GetProductAttributeEditorStateQueryValidator.cs>))
+     i.e. validator-file placement drift, unrelated to variant defaults; W7/W8/W9 path-namespace guards inspect
+     Catalog Application folder layout, which this task did not change (one interface member + one infra method only).
+   None of the 43 failures names or reads ProductVariantDirectory.cs, CatalogDirectory.cs, IProductVariantDirectory.cs,
+   ICatalogDirectory.cs or CatalogAttributeSchemaDevelopmentSeed.cs with a failing outcome; the variant-specific guard
+   (HostAdminAmcW27PwVariantsGuardTests.Catalog_Variants_workspace_commands_and_codes_exist) PASSES, and that guard's
+   only failing fact is the Host/Admin count of cause (A).
+
+Conclusion: 0 new guard failures attributable to TB-108. Full backend build: src/backend/Tooba.slnx -c Debug -> 0 errors.
+No Docker-dependent behaviour was exercised by the guard sweep (0 skipped), and the focused Catalog tests ran on real
+postgres:16-alpine containers.

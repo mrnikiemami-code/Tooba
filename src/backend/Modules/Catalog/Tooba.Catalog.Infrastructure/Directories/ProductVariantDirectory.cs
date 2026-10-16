@@ -585,6 +585,55 @@ public sealed class ProductVariantDirectory : IProductVariantDirectory
     }
 
     /// <inheritdoc />
+    public async Task<Result> SetDefaultAsync(
+        Guid productId,
+        Guid variantId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            return Result.Failure(new SemanticError(CatalogErrorCodes.ProductMissing));
+        }
+
+        var variants = await _db.Variants
+            .Where(x => x.ProductId == productId)
+            .ToListAsync(cancellationToken);
+        var target = variants.SingleOrDefault(x => x.VariantId == variantId);
+        if (target is null)
+        {
+            return Result.Failure(new SemanticError(CatalogErrorCodes.VariantDefaultMissing));
+        }
+
+        if (target.Status == CatalogPublicationStatus.Archived)
+        {
+            return Result.Failure(new SemanticError(CatalogErrorCodes.VariantArchivedCannotBeDefault));
+        }
+
+        // Idempotent: the requested variant already carries the only default flag on the product.
+        if (target.IsDefault && variants.All(x => x.VariantId == variantId || !x.IsDefault))
+        {
+            return Result.Success();
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        ClearDefaultFlags(variants, now);
+        target.SetDefault(true, now);
+
+        var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
+        product.UpdatedAt = now;
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventVariantsChanged,
+            ProductHistoryRules.SectionVariants,
+            ProductHistoryRules.SummaryVariantsFa,
+            null,
+            null);
+        await _db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
     public async Task<Result<VariantReference>> CreateWorkspaceVariantAsync(
         Guid productId,
         string? catalogCodeSeam,
