@@ -1,0 +1,29 @@
+TB-SHIPPING-ONE-LEVEL-TABS-104 — environment and parity facts (read-only; no scratch resources created)
+
+captured_utc=2026-10-16T00:14:00Z
+head_sha=ce1b9c2637bec4e36e622c8975e2ee3be915e736
+origin_main=ce1b9c2637bec4e36e622c8975e2ee3be915e736
+expected_base_sha=5e85522ddb454da8b13cbcc33c4662f2cb1c05b9 (ancestor of HEAD; the only drift 5e85522..HEAD is this
+session's own 103 RESULT.bridge.txt evidence-SHA bookkeeping — non-overlapping, accepted)
+
+SCRATCH: none created for this task.
+  Rationale: Mission A concluded that no bounded official sellable seed path is reachable, and the task forbids
+  launching the long reset-and-seed again ("A full 545-product demo run is disallowed even with a longer timeout",
+  "no long seed launched" for the BLOCKED outcome). Mission B is conditional on Path A, so it was not entered.
+  Verified: listeners on 5292 = 0, listeners on 55443 = 0, containers = postgres-db, rabbitmq (no tooba-103/104).
+
+SHARED STACK (read-only; nothing started, stopped, configured or written)
+  :5088 /health            = {"status":"ok"}
+  :5088 /__platform-commerce = edition=SingleStore deploymentId=dev-singlestore tenantId=store-alpha
+                               connectionReference=tenant-alpha themeReference=theme-alpha defaultMarket=IR
+                               (gate ShippingOneLevelCatalog unchanged; no process restart)
+  :3000                    = no HTTP response (pre-existing observation; not touched by this task)
+  tooba_alpha counts (postflight; identical to the values this worker recorded before the task)
+    shipping_methods 7 | shipping_method_translations 14 | carts 50 | cart_lines 78
+    cart_shipping_drafts 14 | seller_orders 26 | catalog.products 567 | offer.offers 3223
+  Note: 3223 shared offers are PROOF THAT the Offer/Pricing/Inventory Development gateways work on a populated
+  development database; the gap is only empty-database ordering/reachability, not gateway capability.
+
+CODE CHANGES: none (report-only task outcome; no Catalog Development source was edited).
+DIRTY WORKING TREE PRESERVED: src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx and
+  src/frontend/app/admin/admin-order-detail-screen.tsx remain modified and untouched, exactly as inherited.

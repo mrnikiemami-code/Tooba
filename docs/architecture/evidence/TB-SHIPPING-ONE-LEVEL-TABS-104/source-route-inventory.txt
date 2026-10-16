@@ -1,0 +1,78 @@
+TB-SHIPPING-ONE-LEVEL-TABS-104 — source-confirmed seed/route inventory (Mission A, read-only)
+Base commit inspected: ce1b9c2637bec4e36e622c8975e2ee3be915e736 (== origin/main at task start)
+
+1) EVERY official HTTP route that can seed Catalog
+   File: src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/CatalogDemo/CatalogDemoDevEndpoints.cs
+   group = MapGroup("/v1/admin/catalog/demo")  (line 18)
+     POST /reset-and-seed  (line 19) -> ICatalogDemoResetAndSeedGateway.ExecuteAsync
+     POST /seed-only       (line 20) -> ICatalogDemoResetAndSeedGateway.SeedOnlyAsync
+     GET  /status          (line 21)
+     GET  /assignment-integrity                (line 22)
+     POST /assignment-integrity/cleanup        (line 23)
+   All are Development/Testing + Tooba:CatalogDemo:AllowResetAndSeed gated and require admin authorization.
+   A repo-wide route scan for seed/demo/dev routes found no other Catalog/Offer/Pricing/Inventory seed
+   endpoint (only unrelated /v1/admin/wallet/demo-preview, /v1/admin/support/demo-preview,
+   /v1/admin/dev-context, /v1/seller/dev-contexts).
+
+2) seed-only DOES NOT avoid the 545-product expansion, and CANNOT produce any offer
+   File: .../Tooba.Catalog.Infrastructure/Development/CatalogDemo/CatalogDemoResetAndSeedHost.cs
+     SeedOnlyAsync (line 100) calls the same CatalogDemoSeedService.SeedAsync and then ValidateIntegrity
+     ValidateIntegrity (line 179) demands Roots==15, brands>=20, tags>=30 and 420<=Products<=720 (line 206)
+     EnsureProductLifecycleCleanAsync (line 214) asserts Published==0 (line 235) and Archived==0
+   => the demo API is structurally a DRAFT-ONLY catalog builder; a sellable/published offer is impossible
+      through it by construction. This explains 103's offers=0/prices=0/stock=0 as DESIGN, not as a timeout.
+   File: .../Tooba.Catalog.Infrastructure/Development/CatalogDemo/CatalogDemoSeedService.cs
+     SeedAsync (line 37) — no reference to any offer/pricing/inventory/tax/party seed gateway at all.
+   A repo-wide grep for IOfferDevelopmentSeedGateway|IPricingDevelopmentSeedGateway|
+   IInventoryDevelopmentSeedGateway|ITaxDevelopmentSeedGateway inside Modules/Catalog returns exactly three
+   files, and CatalogDemoSeedService / CatalogDemoProductSeedService are not among them:
+     CatalogAttributeSchemaSellableEnricher.cs
+     WorkspaceDemoMarketplaceSeed.cs
+     StorefrontDemo/StorefrontDemoCatalogBootstrap.cs
+
+3) The ONLY Development code that creates a genuinely sellable offer (all bounded, all Catalog-owned)
+   a) CatalogAttributeSchemaSellableEnricher.cs — one product, one offer per variant:
+        PublishProductAsync (line 67), EnsureActiveSellerOfferAsync (line 105),
+        EnsureDevelopmentBasePriceAsync (line 111), EnsureDevelopmentOfferCategoryAsync (line 126),
+        IncreaseDevelopmentStockAsync (line 134): price 12_500_000 IRR + 5 stock per variant.
+   b) WorkspaceDemoMarketplaceSeed.cs — the bounded "live workspace demo": two seller offers (lines 123/128),
+        two base prices (135/143), two tax classifications (151/159), a tax rule (167),
+        inventory location (221/234), a reserve hold (191) and stock.
+        Its Catalog-owned entry point is IWorkspaceDemoSeed (Application/Development/IWorkspaceDemoSeed.cs):
+        IsLiveProductSeededAsync / SeedNewProductAsync / RefreshExistingCopyAsync / EnsureAdminR3PreviewAsync.
+   c) StorefrontDemo/StorefrontDemoCatalogBootstrap.cs — self-contained bounded template catalog:
+        creates its own category tree (lines 184/192/202), products (215), publishes them (247) and then
+        creates offers/prices/inventory via the Development seed gateways (256-298, 397-403).
+
+4) Why (3) is UNREACHABLE on an empty scratch database
+   Files: src/backend/Host/Tooba.Host/Program.cs lines 357-380
+     if (catalogDemoOptions.RunLegacyBootstraps)   { DevelopmentSchemaMigrator.ApplyAsync(...);
+                                                    CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(...); }
+     else                                          { MigrateSchemaOnlyAsync(...); }      // 103 used this
+   File: src/backend/Host/Tooba.Host/Development/DevelopmentSchemaMigrator.cs
+     ApplyCoreAsync(seedCatalog: true) (line 43) -> MigrateOrderedAsync (line 119) runs every
+     IModuleSchemaMigrationStep; only AFTER that does it reach IWorkspaceDemoSeed (line 78) and the other seeds.
+   File: src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogModule.cs line 154 registers
+     AddModuleSchemaMigrationStep("Catalog", ..., CatalogDevelopmentSeed.PostMigration.EnsureAsync)
+   File: .../Development/CatalogDevelopmentSeed.cs
+     PostMigration.EnsureAsync (line 21) is a no-op unless Development AND options.RunLegacyBootstraps (line 32),
+     then calls CatalogAttributeSchemaDevelopmentSeed.ApplyAsync (line 38).
+   File: .../Development/CatalogAttributeSchemaDevelopmentSeed.cs line 99: await catalog.PublishProductAsync(...)
+     This is the call that throws on an empty database; the verbatim stack is preserved from 102 in
+     docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-102/legacy-bootstrap-crash-excerpt.txt
+     (UnwrapLifecycle line 849 -> PublishProductAsync line 1637 -> ApplyAsync line 99 -> PostMigration line 38 ->
+     MigrateOrderedAsync line 143). It is an unhandled exception, so it aborts the whole Development chain
+     BEFORE IWorkspaceDemoSeed runs.
+
+5) Configuration surface: there is no narrowed/bounded option
+   File: .../Tooba.Catalog.Application/Development/CatalogDemo/CatalogDemoSeedOptions.cs
+     Section "Tooba:CatalogDemo" exposes only two booleans: AllowResetAndSeed (line 14) and
+     RunLegacyBootstraps (line 20). There is no "workspace-demo only", no "single sellable product",
+     no per-seed selection and no bounded size parameter anywhere in the Development seeding surface.
+
+CONCLUSION (Path B)
+   No existing official Development-only route or supported parameter can produce one sellable offer on an empty
+   database: the only HTTP seed API is draft-only by construction, and the only bounded sellable seeds are behind a
+   startup chain whose Catalog post-migration step aborts on an empty database. Per the task, no seed call was made
+   and no long seed was launched. The precise minimal Catalog-owned proposal is in
+   docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-104.md.

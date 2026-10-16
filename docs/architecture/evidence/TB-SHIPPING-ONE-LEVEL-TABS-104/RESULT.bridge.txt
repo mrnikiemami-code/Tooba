@@ -1,0 +1,132 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-104
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-103
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_CATALOG_SEED_LATENCY_AND_NARROW_SELLABLE_OFFER_PATH
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Push: `git push origin main` succeeded; HEAD == origin/main at post time. No force-push, no history rewrite.
+Bridge-Task-Row: 0d2a1a0e-0f5e-4d30-9480-7817ae78af86
+Status: BLOCKED
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 5e85522ddb454da8b13cbcc33c4662f2cb1c05b9
+Base-SHA: ce1b9c2637bec4e36e622c8975e2ee3be915e736
+  (Expected-Base-SHA verified as ancestor; the only drift 5e85522..HEAD is this session's own 103 result-bookkeeping
+   commit on RESULT.bridge.txt — non-overlapping, accepted, no RECOVERY_CONFLICT)
+Code-SHA: NONE
+Evidence-SHA: <EVIDENCE_SHA>
+automaticNextImplementationTask: NONE
+Verdict-Code: BLOCKED_NARROW_SELLABLE_SEED_PATH
+Measured-Time: ~24 minutes total (~11 minutes Mission A source tracing, then evidence/report), inside the 30-minute
+HARD limit. Work was not stopped at minute 24 because no long/ambiguously-terminating work was running.
+SEED INVOCATIONS: ZERO. No reset-and-seed, no seed-only, no scratch database, no scratch host was started — per the
+task's instruction that a BLOCKED outcome must not launch the long seed, and that a full 545-product run is
+disallowed even with a longer timeout.
+
+PREFLIGHT
+- Claimed exactly one Pending task (0d2a1a0e-…) through GET /api/tasks/next?channelId=tooba-main after a Working
+  heartbeat; receipt persisted UNSTAGED at docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-104.task.md.
+- Read AGENTS.md, pipeline/controller, the 102/103 reports and the official Catalog demo seed endpoint, command,
+  handler and configuration. Fetched origin/main; Expected-Base-SHA is an ancestor of HEAD; no source overlap.
+- Shared read-only snapshot: :5088 /health 200 with provenance dev-singlestore / store-alpha / tenant-alpha and the
+  one-level gate unchanged, :3000 no HTTP response (pre-existing), tooba_alpha 7 methods / 14 translations /
+  50 carts / 78 cart lines / 14 drafts / 26 seller orders / 567 products / 3223 offers. Zero shared writes.
+- All pre-existing dirty/untracked work preserved; nothing reset, stashed, rebased or force-pushed.
+
+MISSION A — SOURCE-CONFIRMED FINDINGS (exact paths and lines in
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-104/source-route-inventory.txt)
+1. The demo HTTP API is DRAFT-ONLY BY CONSTRUCTION and can never produce a sellable offer.
+   - CatalogDemoDevEndpoints.cs lines 18-23: the only seed routes are POST /v1/admin/catalog/demo/reset-and-seed and
+     POST /v1/admin/catalog/demo/seed-only (+ status / assignment-integrity).
+   - seed-only DOES NOT avoid the 545-product expansion: CatalogDemoResetAndSeedHost.SeedOnlyAsync (line 100) runs
+     the same CatalogDemoSeedService.SeedAsync and then ValidateIntegrity (line 179) requiring 420-720 products
+     (line 206), plus EnsureProductLifecycleCleanAsync (line 214) asserting Published==0 (line 235).
+   - CatalogDemoSeedService.SeedAsync references NO offer/pricing/inventory/tax/party seed gateway, and a repo-wide
+     grep for those gateways inside Modules/Catalog returns only CatalogAttributeSchemaSellableEnricher,
+     WorkspaceDemoMarketplaceSeed and StorefrontDemo/StorefrontDemoCatalogBootstrap.
+   => 103's offers=0/prices=0/stock=0 was DESIGN, not a client-timeout artefact; a longer timeout would have
+      produced nothing sellable. The run was therefore correctly not repeated.
+2. The only Development code that creates sellable data is bounded and Catalog-owned:
+   - CatalogAttributeSchemaSellableEnricher.cs: publish (67), EnsureActiveSellerOfferAsync (105),
+     EnsureDevelopmentBasePriceAsync (111, 12,500,000 IRR), EnsureDevelopmentOfferCategoryAsync (126),
+     IncreaseDevelopmentStockAsync (134, 5 units).
+   - IWorkspaceDemoSeed (Application/Development/IWorkspaceDemoSeed.cs) -> WorkspaceDemoMarketplaceSeed.cs:
+     one live demo product with two seller offers (123/128), two prices (135/143), tax classifications/rules
+     (151/159/167), inventory location (221/234), reserve hold (191) and stock.
+   - StorefrontDemo/StorefrontDemoCatalogBootstrap.cs: self-contained bounded template catalog that creates its own
+     category tree (184/192/202), products (215), publishes them (247) and then creates offers/prices/inventory
+     (256-298, 397-403).
+3. None of (2) is REACHABLE on an empty scratch database. Program.cs line 365 gates them behind
+   RunLegacyBootstraps=true -> DevelopmentSchemaMigrator.ApplyAsync; inside ApplyCoreAsync the migration steps run
+   FIRST (MigrateOrderedAsync, line 119) and IWorkspaceDemoSeed only afterwards (line 78).
+   CatalogModule.cs line 154 registers CatalogDevelopmentSeed.PostMigration.EnsureAsync as such a step
+   (CatalogDevelopmentSeed.cs line 21, gated by the same flag at line 32), and
+   CatalogAttributeSchemaDevelopmentSeed.cs line 99 PublishProductAsync throws an unhandled
+   InvalidOperationException (محصول برای انتشار آماده نیست) on a genuinely empty database — the verbatim stack is
+   preserved from 102 and is unchanged at HEAD (ProductPublishReadinessReader rejection -> UnwrapLifecycle line 849
+   -> ApplyAsync line 99 -> PostMigration line 38 -> MigrateOrderedAsync line 143). The exception aborts the whole
+   Development chain before any sellable seed can run.
+4. There is NO narrowed/bounded configuration: CatalogDemoSeedOptions (section Tooba:CatalogDemo) exposes only
+   AllowResetAndSeed (line 14) and RunLegacyBootstraps (line 20) — no workspace-demo-only flag, no single-product
+   parameter, no seed selector, no bounded size.
+5. Route scan for any other official seed/dev surface found only unrelated /v1/admin/wallet/demo-preview,
+   /v1/admin/support/demo-preview, /v1/admin/dev-context and /v1/seller/dev-contexts. No Offer/Pricing/Inventory
+   seed endpoint exists.
+
+DECISION: Path B, not Path A.
+  Path A required an existing official Development-only route or supported parameter that is demonstrably bounded
+  and usable once in scratch. At HEAD neither exists: the only HTTP seed API is draft-only by construction, and the
+  only bounded sellable seeds sit behind a startup chain that cannot complete on an empty database, with no
+  configuration to select them individually. Raw SQL fixtures, pre-creating rows to slip past the seed's
+  early-return, or disabling the failing step are all forbidden or a scope expansion. Therefore: NO SEED CALL, no
+  scratch environment, report-only outcome, per the task's explicit BLOCKED definition ("no correct narrow existing
+  path; precise Catalog-owned proposal and file/route evidence, no long seed launched").
+
+MINIMAL CATALOG-OWNED PROPOSAL (report-only; nothing implemented — the task requires proposal, not design change)
+  P1 (recommended first, zero behaviour change): ProductPublishReadinessReader.GetAsync already computes
+     ProductPublishReadiness.Missing[] with per-requirement codes (category, identity, attributes, variants, media,
+     seo), but CatalogDirectory.UnwrapLifecycle (line 849) discards them and throws only MessageNotReadyFa. Logging
+     those codes in the Development seed path turns the opaque message into the exact failing prerequisite in ONE
+     bounded scratch run — the missing fact that currently blocks any correct minimal fix.
+  P2: a Development-only, Catalog-owned, opt-in, default-false bounded entry point (e.g. a third
+     CatalogDemoSeedOptions flag or an admin-gated Development fixture route) that invokes ONLY the existing bounded
+     seams — IWorkspaceDemoSeed.SeedNewProductAsync, or the existing CatalogAttributeSchemaSellableEnricher command
+     sequence (EnsureActiveSellerOfferAsync, EnsureDevelopmentBasePriceAsync, EnsureDevelopmentOfferCategoryAsync,
+     IncreaseDevelopmentStockAsync, ResolveDevelopmentSellerPartyAsync) — and never CatalogDemoSeedService.SeedAsync.
+     One product, one offer, one price, one stock position; no new framework, no EF/raw inserts, no production logic.
+  P3 (optional sequence guard): make the attribute-schema publish non-fatal, or place it behind the enricher's
+     already-guarded publish (line 67, same media+SEO+publish sequence, executed only when missing/rejected), so one
+     failing seed step cannot abort the Development chain that hosts the sellable seeds. Catalog seed ownership only.
+  Supporting evidence that no cross-module gateway is at fault: shared tooba_alpha holds 3223 offers over 567
+  products, i.e. the Offer/Pricing/Inventory Development gateways work on a populated database; the gap is purely
+  empty-database ordering/reachability.
+
+MISSION B — NOT ENTERED (conditional on Path A). No scratch Postgres, no isolated Host, no credentials, no cart, no
+cart-line, no storefront projection comparison. Nothing to tear down: listeners on 5292 = 0 and 55443 = 0, and the
+only containers are the pre-existing postgres-db and rabbitmq. No order/checkout/payment/identity fabrication.
+
+CHANGED PATHS (docs only; NO src/**, test, config, migration, schema or recovery change)
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-104.md (new)
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-104/** (new: summary.md, task.md, task-receipt.json,
+  claim-task.js, source-route-inventory.txt, environment-and-parity.txt, shared-parity.sql, shared-parity.txt,
+  RESULT.bridge.txt, post-result.js)
+- docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-104.task.md (task receipt, UNSTAGED/untracked)
+
+TESTS: none executed — no source changed, and the task forbids broad Host test runs. No successful offer or cart line
+is asserted anywhere, because none was produced.
+
+SHARED PARITY AFTER WORK (read-only): :5088 /health 200 and provenance unchanged (dev-singlestore / store-alpha /
+tenant-alpha), gate unchanged, no restart, tooba_alpha identical to preflight (7 / 14 / 50 / 78 / 14 / 26 plus
+567 products / 3223 offers). No DML, no gate change, no shared process change; the two pre-existing dirty frontend
+screens remain untouched.
+
+UNRESOLVED PREREQUISITES: (1) the exact failing publish prerequisite of the Development attribute-schema seed on an
+empty database is still unnamed and is the one fact that gates a correct minimal fix (P1 resolves it); (2) a bounded
+Development-only sellable fixture entry point does not exist yet (P2); (3) the two pre-existing dirty frontend
+screens and the pre-existing Host known-failing test set remain untouched and unrepaired. This result claims nothing
+about Checkout cutover or commercial shipping readiness.
+END_TOOBA_WORKER_RESULT
