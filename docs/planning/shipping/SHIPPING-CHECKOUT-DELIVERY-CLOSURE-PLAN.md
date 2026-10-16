@@ -1,3 +1,5 @@
+> **Admin Shipping UI authority (LOCKED):** [docs/architecture/shipping/SHIPPING-ADMIN-FLAT-METHOD-CONTRACT.md](../../architecture/shipping/SHIPPING-ADMIN-FLAT-METHOD-CONTRACT.md). Each selectable method is an independent flat managed service; per-method detail has non-nested tabs. Phase 1 visual shell needs user approval before scattered forms move. Do not revive provider -> service-type nested Admin UX.
+
 # TOOBA Shipping-to-Checkout Delivery Closure Plan
 
 Status: ACTIVE — architect delivery plan, 2026-10-16.
