@@ -1,0 +1,68 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-BROWSER-QUOTE-ACCEPTANCE-158
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PARTIAL
+Base-SHA: 16f8d26ad82ae6f0b54afdf779b94ee6a8f0a6d6
+
+Scope-Delivered:
+- Deliverable A (real authorized private browser Admin acceptance): VERIFIED end-to-end.
+- Deliverable B (genuine customer quote dependency): NON-PROPAGATION established with a real HTTP attempt plus the full code-level call chain; no customer-authenticated quote value could be produced inside the HARD 45-minute timebox, and no fix was invented.
+
+Evidence:
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-BROWSER-QUOTE-ACCEPTANCE-158/RESULT.md
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-BROWSER-QUOTE-ACCEPTANCE-158/browser-acceptance-158.json
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-BROWSER-QUOTE-ACCEPTANCE-158/storefront-quote-provenance-158.md
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-BROWSER-QUOTE-ACCEPTANCE-158/storefront-shipping-projection-158.json (real 401 checkout.authentication_required)
+- financial-status-standard-after-browser-create-158.json, legacy-service-level-write-158.json, financial-status-standard-after-legacy-158.json, financial-status-sibling-express-after-legacy-158.json, duplicate-owned-write-158.json, financial-status-standard-after-duplicate-158.json, financial-status-standard-after-ui-edit-158.json, financial-status-sibling-express-final-158.json, financial-legs-158.json
+- isolation-guard.json, host-launch-158.txt, frontend-launch-158.txt, scratch-seed-158.txt, cleanup-158.txt
+- screenshots: admin-flat-list-authorized-158.png, admin-tipax-standard-general-initial-158.png, admin-tipax-standard-rates-persisted-205000-158.png
+- task artifact: docs/ai/tasks/TB-SHIPPING-ADMIN-BROWSER-QUOTE-ACCEPTANCE-158.task.md
+
+Isolation:
+- Task-owned stack only: container tooba-tb158-pg on 127.0.0.1:55476 (db tooba_158_scratch/tooba_158_messaging), private Tooba.Host.exe on 127.0.0.1:5418, private next dev on 127.0.0.1:3112, TOOBA_HOST_ORIGIN=http://127.0.0.1:5418.
+- Real Tooba.MigrationRunner apply --all-tenants on scratch (shipping + geography) plus scratch-only geography fixture.
+- Real product AccessControl bootstrap for the resolved Development Admin actor (platform-admin, 55 grants); no mock allow-all, no forged role, no invented price, no fake screen.
+- isolation-guard.json failClosed=true: single Active tenant mapped to the scratch reference; no tooba_alpha, no tenant-alpha, no Port=5432, no prior scratch ports, ShippingRateAuthority/ShippingOperationalShadow unset, host port != 5088, web port != 3000.
+- Shared :3000, :5088, :5432/tooba_alpha, RabbitMQ/Redis, store-alpha data and other workers' runtimes were never started, migrated, written or restarted.
+- No credentials/tokens/cookies recorded in evidence (CREDENTIALS_WRITTEN_TO_EVIDENCE=false).
+
+Assertions (Deliverable A, real authorized browser):
+- Flat list: 7 methods (post:express, post:standard, tipax:express, tipax:standard, snapp_courier, store_courier, in_person), footer «نمایش ۱ تا ۷ از ۷ ردیف», exactly 3 actions per row [مشاهده, ویرایش, حذف] — re-asserted after a full document reload.
+- Dialog admin-shipping-method-detail-tipax:standard, computed direction rtl, exactly 4 non-nested tabs (عمومی / تعرفه و پوشش / برنامه کاری حمل / بسته‌بندی و کرایه); role=tablist 1, role=tabpanel 1, nested tablists inside a panel 0.
+- Authoritative server binding in the UI: «روش یک‌سطحی tipax:standard → سرویس tipax · standard»; shared metadata resolves serviceCode=tipax, optionCode=standard from GET .../one-level/tipax%3Astandard/binding (never split client-side).
+- Initial financial state from GET: badges [tipax:standard, فعال, مالی: نیازمند تنظیم], explicit «هیچ قاعدهٔ نرخ فعالی متعلق به همین روش وجود ندارد؛ فعال‌بودن روش به‌معنای رایگان نبودن است و هیچ مبلغی ساخته نمی‌شود.» — no amount, no zero-as-FREE.
+- Create through the actual UI: country IR, charge 185000, currency IRR, preparation 1, lead 3, «افزودن نرخ» -> notice «نرخ «کشور · 11111111… · بدون شرط اندازه — برای همهٔ مرسوله‌ها» ایجاد شد.»; gate becomes «این روش یک قاعدهٔ نرخ اختصاصی و تأییدشده دارد؛ ویرایش همان قاعده امن است.»
+- Edit through the actual UI on the same row 01a14672-d87d-7000-b9e3-21e8210e6313: charge 185000 -> 205000, «ذخیره».
+- After a full document reload: General badge مالی: تنظیم‌شده, money «مبلغ ثابت اعلام‌شده: ۲۰۵٬۰۰۰ IRR»; Rates & Coverage shows exactly one owned row at ۲۰۵٬۰۰۰ IRR with the same ratePolicyId (persisted, authoritative, no stale value, no ambiguous duplicate).
+- Server read-back: after create FinanciallyConfigured/FixedAmount/IRR/185000; after edit FinanciallyConfigured/FixedAmount/IRR/205000; ruleCount=1; reasonCode=shipping.financial.owned_rules_present.
+- Sibling/legacy isolation: tipax:express never inherits (NeedsConfiguration ruleCount=0 while the owned sibling rule exists; LegacySharedUnresolved mode=None ruleCount=0 once a provider-level row exists); a service-level optionCode=null row (99,000 IRR) leaves tipax:standard at its own 185,000 with activeServiceLevelRuleCount=1.
+- Ambiguity guard: a second same-scope owned write returns HTTP 400 shipping.rate_policy.scope_duplicate and ruleCount stays 1.
+
+Assertions (Deliverable B):
+- Real HTTP: POST /v1/storefront/shipping/projection with the Development actor header -> HTTP 401 checkout.authentication_required (body saved verbatim). The checkout identity gate (HostOrderStorefrontActor / CheckoutIdentityGate) requires a genuine customer session; the Development header seam is placement/list-only.
+- Real code chain: ProjectStorefrontShippingHandler -> StorefrontShippingService.ProjectAsync -> LoadEligibleMethodsAsync (IShippingCatalogReader.ListAsync) -> TryAddMethod -> StorefrontShippingCalculator.ResolveRate(methodCode, ShippingMethodsOptions) -> QuotePrice -> StorefrontShippingMethodView.PriceAmount -> SelectedShippingAmount. One-level integration in the storefront is label-only (ApplyOneLevelDisplayNamesAsync changes Label only).
+- Shipping owner rate_policies are not read on the customer path; their only storefront consumer is the observe-only shadow (Tooba:ShippingRateAuthority, defaults off, unset in the isolated overlay, asserted by the isolation guard) plus StorefrontShippingRateAuthorityPolicy and the Rate/Operational shadow observers.
+- Conclusion: the updated owner rate does not propagate to the customer quote; the quote is priced from Tooba:ShippingMethods. Smallest necessary seam documented (DI bind of the existing options + gate-Allowed consumer swap, fail-closed mapping preserved) and intentionally NOT implemented.
+
+Fail-Closed-Visuals:
+- Unreadable financial status renders «وضعیت مالی: نامشخص» with the explicit unavailable message and no amount.
+- Activation and financial readiness are separate badges with the explicit «روش فعال بدون تعرفه، رایگان نیست» caveat.
+- Provider shared identity is quarantined in a collapsed, non-editable block.
+- Legacy service-level row surfaces as LegacySharedUnresolved with ruleCount 0, never as this method's price.
+
+Code-Changes: none (no product code touched; only evidence and the task artifact were added).
+Tests: focused tests/typecheck not required because no product code changed; no broad suites or rebuild loops were run.
+
+Resources-And-Cleanup:
+- cleanup-158.txt: Host PID 29452 stopped (MATCHED_TASK_OWNED_MARKER=True), frontend PID 38020 stopped, two stray private Next node trees on port 3112 stopped, disposable container tooba-tb158-pg removed, SHARED_5432_3000_5088_TOUCHED=False.
+- .tmp-158-run and .tmp-158-host-out discarded; no listener remains on 5418/3112.
+
+Elapsed-Time: within the HARD 45-minute timebox.
+Blockers: only Deliverable B's authenticated customer quote (real customer session required); recorded precisely, no plan-only document and no invented fix.
+STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT

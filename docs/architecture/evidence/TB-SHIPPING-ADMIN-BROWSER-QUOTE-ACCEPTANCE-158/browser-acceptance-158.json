@@ -1,0 +1,70 @@
+{
+  "task": "TB-SHIPPING-ADMIN-BROWSER-QUOTE-ACCEPTANCE-158",
+  "surface": "private authorized Admin browser session on task-owned loopback stack (Host :5418, Next :3112, scratch Postgres :55476)",
+  "actor": "real product Development Admin actor resolved through GET /v1/admin/dev-context + POST /v1/admin/access-control/bootstrap (platform-admin role, 55 grants). No mock allow-all, no forged role.",
+  "list_surface": {
+    "screen": "/fa/admin/shipping-services",
+    "method_row_count": 7,
+    "method_codes": ["post:express", "post:standard", "tipax:express", "tipax:standard", "snapp_courier", "store_courier", "in_person"],
+    "grid_footer": "نمایش ۱ تا ۷ از ۷ ردیف",
+    "actions_per_row": 3,
+    "action_labels": ["مشاهده", "ویرایش", "حذف"],
+    "asserted_after_full_document_reload": true
+  },
+  "dialog_surface": {
+    "dialog_test_id": "admin-shipping-method-detail-tipax:standard",
+    "computed_direction": "rtl",
+    "tab_count": 4,
+    "tab_labels": ["عمومی", "تعرفه و پوشش", "برنامه کاری حمل", "بسته‌بندی و کرایه"],
+    "role_tablist_count": 1,
+    "role_tabpanel_count": 1,
+    "nested_tablist_inside_panel_count": 0,
+    "authoritative_binding_metadata": {"serviceCode": "tipax", "optionCode": "standard"},
+    "binding_source": "GET /v1/admin/shipping-services/shipping-methods/one-level/tipax%3Astandard/binding (server), never split client-side"
+  },
+  "general_tab_authoritative_financial": {
+    "before_any_owned_rule": {
+      "header_badges": ["tipax:standard", "فعال", "مالی: نیازمند تنظیم"],
+      "financial_state": "NeedsConfiguration",
+      "amount_rendered": null,
+      "note": "no amount, no zero-as-FREE, activation explicitly not equated with quote readiness"
+    },
+    "after_full_document_reload_following_ui_create_and_ui_edit": {
+      "header_badges": ["tipax:standard", "فعال", "مالی: تنظیم‌شده"],
+      "financial_reason_fa": "قاعدهٔ نرخ فعالِ همین روش با مبلغ و ارز اعلام‌شده وجود دارد.",
+      "financial_money_fa": "مبلغ ثابت اعلام‌شده: ۲۰۵٬۰۰۰ IRR",
+      "note": "value comes from the authoritative server GET on a freshly loaded document, not a stale local value"
+    }
+  },
+  "rates_tab_ui_write_leg": {
+    "gate_before_create": "این روش هیچ قاعدهٔ نرخ اختصاصی ندارد. تا وقتی نرخ ثبت نشود قیمت عملیاتی ندارد و رایگان محسوب نمی‌شود؛ ثبت نرخ اختصاصی همین روش کار درست است.",
+    "created_via_ui": {"charge": 185000, "currency": "IRR", "preparationDays": 1, "leadDays": 3, "scopeLevel": "Country", "countryId": "11111111-1111-1111-1111-111111111111"},
+    "create_notice_fa": "نرخ «کشور · 11111111… · بدون شرط اندازه — برای همهٔ مرسوله‌ها» ایجاد شد.",
+    "gate_after_create": "این روش یک قاعدهٔ نرخ اختصاصی و تأییدشده دارد؛ ویرایش همان قاعده امن است.",
+    "edited_via_ui_to": {"charge": 205000, "currency": "IRR"},
+    "after_reload_rows": [
+      {"row_test_id": "shipping-one-level-rate-row-01a14672-d87d-7000-b9e3-21e8210e6313", "row_text_fa": "کشور · 11111111… ۲۰۵٬۰۰۰ IRR آماده‌سازی: ۱ روز حمل: ۳ روز ارسال رایگان از: — فعال", "row_count": 1}
+    ],
+    "rate_policy_id_stable_across_create_and_edit": "01a14672-d87d-7000-b9e3-21e8210e6313",
+    "no_additional_ambiguous_duplicate": true
+  },
+  "server_read_back": {
+    "standard_after_ui_create": {"state": "FinanciallyConfigured", "mode": "FixedAmount", "currencyCode": "IRR", "ruleCount": 1, "chargeAmount": 185000, "reasonCode": "shipping.financial.owned_rules_present"},
+    "standard_after_ui_edit": {"state": "FinanciallyConfigured", "mode": "FixedAmount", "currencyCode": "IRR", "ruleCount": 1, "chargeAmount": 205000, "reasonCode": "shipping.financial.owned_rules_present"},
+    "sibling_express_after_owned_rule_only": {"state": "NeedsConfiguration", "mode": "None", "ruleCount": 0, "activeSiblingOptionRuleCount": 1, "activeServiceLevelRuleCount": 0},
+    "sibling_express_after_legacy_row": {"state": "LegacySharedUnresolved", "mode": "None", "ruleCount": 0, "activeSiblingOptionRuleCount": 1, "activeServiceLevelRuleCount": 1},
+    "legacy_provider_level_row_never_becomes_method_money": {"standard_state_after_legacy": "FinanciallyConfigured", "standard_amount_after_legacy": 185000, "activeServiceLevelRuleCount": 1},
+    "same_scope_second_owned_write": {"http": 400, "errorCode": "shipping.rate_policy.scope_duplicate", "ruleCount_after": 1}
+  },
+  "fail_closed_visuals_observed": [
+    "unknown/unavailable financial read renders 'وضعیت مالی: نامشخص' plus the explicit unavailable message; no amount and no FREE assumption",
+    "activation badge is separate from the financial badge; the screen states that an active method without a tariff is not free",
+    "shared provider identity is shown in a collapsed 'فرادادهٔ مشترک ارائه‌دهنده (خارج از دامنهٔ این روش)' block and is not editable as this method's policy",
+    "provider-level legacy row surfaces as LegacySharedUnresolved with ruleCount 0, never projected as this method's price"
+  ],
+  "screenshots": [
+    "admin-flat-list-authorized-158.png",
+    "admin-tipax-standard-general-initial-158.png",
+    "admin-tipax-standard-rates-persisted-205000-158.png"
+  ]
+}

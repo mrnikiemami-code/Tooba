@@ -1,0 +1,30 @@
+{
+  "scratchContainer": "tooba-tb158-pg",
+  "scratchDatabase": "tooba_158_scratch",
+  "scratchPort": "55476",
+  "hostPort": "5418",
+  "webPort": "3112",
+  "tenantCount": 1,
+  "activeTenantCount": 1,
+  "tenants": [
+    "store-alpha:Active:tenant-158-scratch"
+  ],
+  "canonicalGatewayTenantPresent": true,
+  "connectionReferences": [
+    "tenant-158-scratch",
+    "messaging-158-scratch"
+  ],
+  "containsSharedAlphaDatabase": false,
+  "containsSharedAlphaReference": false,
+  "containsSharedAlphaPort": false,
+  "containsPriorScratchPort": false,
+  "runLegacyBootstraps": true,
+  "allowResetAndSeed": false,
+  "oneLevelCatalogEnabledInOverlay": true,
+  "authorizationMode": "InMemory",
+  "edition": "SingleStore",
+  "editionSwapPerformed": false,
+  "shippingRateAuthoritySet": false,
+  "shippingOperationalShadowSet": false,
+  "failClosed": true
+}

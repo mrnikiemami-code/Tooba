@@ -1,0 +1,10 @@
+{
+  "type": "about:blank",
+  "title": "Request rejected.",
+  "status": 400,
+  "instance": "/v1/admin/shipping-services/tipax/rates",
+  "errorCode": "shipping.rate_policy.scope_duplicate",
+  "traceId": "67e268a0b9688c8fe46901244e2e7a1a",
+  "correlationId": "da26de6466a84aedadcf729a283e8e59",
+  "requestId": "0HNPBOI4CMST8:00000003"
+}

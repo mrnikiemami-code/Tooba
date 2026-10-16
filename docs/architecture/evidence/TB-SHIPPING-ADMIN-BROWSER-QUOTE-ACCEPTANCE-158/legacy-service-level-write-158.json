@@ -1,0 +1,13 @@
+{
+  "ratePolicyId": "01a14673-6b84-7000-b7cc-05b8e0afbbf2",
+  "serviceCode": "tipax",
+  "countryId": "11111111-1111-1111-1111-111111111111",
+  "level": "Country",
+  "chargeAmount": 99000,
+  "currencyCode": "IRR",
+  "preparationDays": 1,
+  "leadDays": 3,
+  "isActive": true,
+  "createdAt": "2026-10-16T20:42:11.7168473+00:00",
+  "updatedAt": "2026-10-16T20:42:11.7168473+00:00"
+}

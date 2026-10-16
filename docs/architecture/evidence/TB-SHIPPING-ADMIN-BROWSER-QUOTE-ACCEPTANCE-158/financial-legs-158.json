@@ -1,0 +1,27 @@
+[
+  {
+    "name": "authorized_dev_admin_resolved",
+    "ok": true,
+    "detail": "http=200 actor=present"
+  },
+  {
+    "name": "legacy_provider_level_write_accepted",
+    "ok": true,
+    "detail": "http=200"
+  },
+  {
+    "name": "legacy_service_level_row_never_becomes_method_money",
+    "ok": true,
+    "detail": "http=200 state=FinanciallyConfigured amount=185000 serviceLevelRules=1"
+  },
+  {
+    "name": "sibling_option_did_not_inherit_owned_or_legacy_money",
+    "ok": false,
+    "detail": "http=200 state=LegacySharedUnresolved ruleCount=0 siblingOptionRules=1"
+  },
+  {
+    "name": "same_scope_second_owned_write_stays_unambiguous",
+    "ok": true,
+    "detail": "http=400 ruleCount=1 body={\"type\":\"about:blank\",\"title\":\"Request rejected.\",\"status\":400,\"instance\":\"/v1/admin/shipping-services/tipax/rates\",\"errorCode\":\"shipping.rate_policy.scope_duplicate\",\"traceId\":\"67e268a0b9688c8fe46901"
+  }
+]
