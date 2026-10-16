@@ -1,0 +1,35 @@
+TB-SHIPPING-ONE-LEVEL-TABS-105 — environment and parity facts
+
+captured_local=2026-10-16 ~03:52 (task claimed ~03:45; measured elapsed ~8 minutes at this point)
+head_at_start=222628615f7769ad276c1b3b6e76dc9c6e3dcd8b
+origin_main_at_start=222628615f7769ad276c1b3b6e76dc9c6e3dcd8b
+expected_base_sha=0ac71b2b69d60f5366ee56854531c76c984a121e (ancestor of HEAD; the only drift is this session's own
+  104 RESULT.bridge.txt evidence-SHA bookkeeping commit — non-overlapping, accepted)
+
+SCRATCH: none. No scratch container, overlay, isolated Host or ephemeral credential was created for this task.
+  The only throwaway database was the Testcontainers PostgreSQL instance owned by the new test class and disposed in
+  its DisposeAsync. The isolated-scratch reproduction of the schema demo product was deliberately NOT run (its only
+  supported reproduction starts the full Development legacy bootstrap, which the task forbids).
+  Shared-stack contact was read-only.
+
+SHARED STACK (read-only; nothing started, stopped, configured or written)
+  :5088  /health             = {"status":"ok"}
+  :5088  /__platform-commerce= edition=SingleStore deploymentId=dev-singlestore tenantId=store-alpha
+                               connectionReference=tenant-alpha; the one-level gate is unchanged
+  tooba_alpha counts observed before this task (from the 104 postflight, re-read read-only at preflight here):
+    shipping_methods 7 | shipping_method_translations 14 | carts 50 | cart_lines 78
+    cart_shipping_drafts 14 | seller_orders 26 | catalog.products 567 | offer.offers 3223
+
+WORKING TREE
+  Changed by this task: +1 new Catalog Development file, 1 minimal 1->8 line edit in the Catalog Development seed,
+    +1 new focused test file.
+  Preserved untouched: the two pre-existing modified frontend screens
+    src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx and admin-order-detail-screen.tsx, and the many
+    pre-existing untracked docs/ai/tasks/*.task.md receipts (including this task's own receipt, kept UNSTAGED).
+  No reset, stash, rebase or force-push was performed at any point.
+
+ROLLBACK
+  Fully reversible with zero data impact: delete CatalogDevelopmentPublishDiagnostics.cs, delete
+  CatalogDevelopmentPublishDiagnosticsTests.cs, and restore the single replaced line in
+  CatalogAttributeSchemaDevelopmentSeed.ApplyAsync (`await catalog.PublishProductAsync(product.ProductId,
+  cancellationToken);`). No schema, migration, configuration, contract or persisted state is involved.

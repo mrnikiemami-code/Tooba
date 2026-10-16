@@ -1,0 +1,133 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-105
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-104
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_CATALOG_PUBLISH_READINESS_DIAGNOSTICS
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Push: `git push origin main` succeeded; HEAD == origin/main at post time. No force-push, no history rewrite.
+Bridge-Task-Row: 26bef7e7-5dd3-4caf-be4e-efd2c28d7ac0
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 0ac71b2b69d60f5366ee56854531c76c984a121e
+Base-SHA: 222628615f7769ad276c1b3b6e76dc9c6e3dcd8b
+  (Expected-Base-SHA verified ancestor; only drift 0ac71b2..HEAD is this session's own 104 RESULT.bridge.txt
+   evidence-SHA bookkeeping — non-overlapping, accepted, no RECOVERY_CONFLICT)
+Code-SHA: <CODE_SHA>
+Evidence-SHA: <EVIDENCE_SHA>
+automaticNextImplementationTask: NONE
+Measured-Time: ~14 minutes end to end (claimed ~03:45, stopped ~03:59 local), inside the 30-minute HARD limit and
+within the minute-22 stop-work rule; no timebox overrun was needed.
+
+READ PATHS
+  CatalogAttributeSchemaDevelopmentSeed, CatalogAttributeSchemaSellableEnricher, CatalogDevelopmentSeed,
+  CatalogDirectory (PublishProductAsync / UnwrapLifecycle / UnwrapHistory / PublishReadinessPort),
+  ProductPublishReadinessReader, ProductLifecycleDirectory, ProductPublishRules, ProductPublishReadiness,
+  ProductPublishMissingRequirement, ProductPublishPrep, and the existing focused tests ProductPublishTests /
+  ProductPublishReadinessCapabilityTests plus the Development seed architecture guards. Also read the mandatory
+  .cursor/skills/tooba-backend-feature/SKILL.md and confirmed compliance (single owning module, reused existing
+  contract instead of duplicating the readiness rule, no DI addition, no contract/HTTP drift, minimal diff).
+
+WHY IT IS PARTIAL (not PASS)
+  Diagnosis, implementation and tests are complete and green, but the ACTUAL Missing[] code that rejects the schema
+  demo product on an empty database is NOT YET OBSERVED. Its only supported reproduction starts the full Development
+  legacy bootstrap, which this task explicitly forbids ("DO NOT RUN IT"), so per the Architect's own escape hatch the
+  result stops with unit/source-level diagnostic proof and labels that value NOT YET OBSERVED instead of guessing.
+
+MISSION A — DIAGNOSTIC (done)
+  Loss point, mapped not guessed: ProductPublishReadiness.MissingRequirements is a (Code, MessageFa, WorkspaceTab)
+  record whose ONLY possible codes are category, identity, attributes, variants, media, seo (commercial codes are
+  deliberately excluded). ProductLifecycleDirectory.PublishAsync (lines 48-62) collapses every refusal into the coarse
+  WorkspaceProductPublishRejected, and CatalogDirectory.UnwrapLifecycle line 849 throws it as
+  InvalidOperationException(ProductPublishRules.MessageNotReadyFa) — the exact boundary where the six real reasons
+  become unrecoverable. This is a VALIDATION refusal, not an infrastructure failure: the reader already computed the
+  reasons one frame earlier, and GetProductPublishReadinessAsync returns them as a SUCCESS with IsReady=false, so no
+  new contract, rule, persistence, migration or configuration was required.
+  ADDED (smallest Catalog-owned Development-only seam):
+    NEW src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogDevelopmentPublishDiagnostics.cs
+      - PublishWithDiagnosticsAsync(catalog, provider|IHostEnvironment+ILoggerFactory, productId, stage, ct):
+        performs the ordinary PublishProductAsync and, ONLY on InvalidOperationException and ONLY when
+        environment.IsDevelopment(), re-reads GetProductPublishReadinessAsync(productId, "fa-IR") and emits one
+        structured LogError with the seed stage, the non-sensitive product id and the REAL missing-rule codes;
+        then `throw;` rethrows the ORIGINAL exception unchanged (classification AND message preserved).
+      - EmitAsync never throws (a secondary readiness failure degrades to "readiness=unavailable:{Type}") so the
+        original refusal can never be masked.
+      - Summarize is a pure bounded projection: stage + product id + isReady + the existing codes only; no entity
+        payloads, tokens, connection strings, customer data or new user-facing prose in any language.
+    EDIT src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaDevelopmentSeed.cs
+      exactly one call site: the single PublishProductAsync that 102's crash stack pointed at (old line 99) now routes
+      through the helper with stage "catalog-dev.attribute-schema.publish-product". The enricher's second publish site
+      (line 67) was reported but left untouched to keep the change minimal.
+    NOT DONE (forbidden / out of scope): no publish bypass, no readiness-rule relaxation, no direct EF or raw
+      persistence, no force-publish, no new generic seed service, no Host/composition/appsettings change, no global
+      error-handling change, no change to Order/Fulfillment/Shipping/Checkout/Payment/Settlement or frontend.
+
+TESTS ACTUALLY RUN (focused Catalog only)
+  NEW src/backend/Host/Tooba.Host.Tests/CatalogDevelopmentPublishDiagnosticsTests.cs — 3 tests, ALL GREEN:
+    "Passed! - Failed: 0, Passed: 3, Skipped: 0, Total: 3, Duration: 11 s"
+    1. pure projection test: only the given codes appear, with no offer/price/stock token;
+    2. real Postgres (Testcontainers) + real CatalogDirectory + real rejected Draft product: refusal keeps the SAME
+       exception type and the SAME public message, the product stays Draft, and the emitted line contains exactly the
+       codes the REAL reader returns for that same product (verified true codes, not invented strings);
+    3. same scenario with IHostEnvironment=Production: identical refusal and ZERO log emissions — the diagnostic is
+       disabled/redacted outside Development.
+  Builds: Tooba.Catalog.Infrastructure 0 errors; Tooba.Host.Tests 0 errors.
+  Neighbour run (ProductPublishTests + ProductPublishReadinessCapabilityTests): 18 passed, 1 failed — see below.
+
+KNOWN PRE-EXISTING FAILURE (found by the neighbour run, NOT caused by this task, NOT repaired — out of scope)
+  ProductPublishTests.Aggregate_readiness_and_lifecycle_gates_without_offer_dependency, line 132:
+    Expected "برای انتشار دوباره، ابتدا محصول را از بایگانی خارج کنید." (MessageRestoreBeforePublishFa)
+    Actual   "محصول برای انتشار آماده نیست."                             (MessageNotReadyFa)
+  Source cause: ProductLifecycleDirectory.PublishAsync lines 48-51 short-circuit Archived products with
+  WorkspaceProductPublishRejected, which UnwrapLifecycle line 849 maps to MessageNotReadyFa, making the aggregate's
+  restore-before-publish message unreachable through the legacy ICatalogDirectory seam. Chronology: test authored
+  2026-08-29 (adaf7f01e), ProductLifecycleDirectory refactored 2026-10-03 (5348b1988) i.e. afterwards.
+  EMPIRICAL CONTROL: this task's seed edit was reverted to HEAD, the test project was rebuilt and the same test was
+  re-run — the SAME assertion failed identically ("Failed: 1, Passed: 1"), and the edit was restored in a
+  try/finally block. The failure is therefore independent of this change. It concerns the archived->publish message
+  contract, not readiness diagnostics, so it was reported rather than widened into.
+
+MISSION B — NOT RUN, BY INSTRUCTION
+  No scratch container, overlay, isolated Host or ephemeral credential was created. The isolated-scratch reproduction
+  of the schema demo product was deliberately skipped because its only supported reproduction starts the full
+  Development legacy bootstrap, which the task forbids. The only throwaway database was the Testcontainers instance
+  owned by the new test class and disposed in its DisposeAsync. No Catalog demo reset-and-seed / seed-only call, no
+  545-product run, no shared tooba_alpha DML, no shared Host restart, no gate change.
+
+PARITY / TREE
+  Shared stack read-only and unchanged: :5088 /health 200, provenance dev-singlestore / store-alpha / tenant-alpha,
+  one-level gate unchanged; tooba_alpha parity 7 shipping methods / 14 translations / 50 carts / 78 cart lines /
+  14 drafts / 26 seller orders / 567 products / 3223 offers. All pre-existing modified and untracked files were
+  preserved (the two dirty frontend screens and every historical docs/ai/tasks receipt, including this task's own
+  receipt kept UNSTAGED). No reset, stash, rebase or force-push.
+
+TOUCHED FILES
+  + src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogDevelopmentPublishDiagnostics.cs (new)
+  ~ src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaDevelopmentSeed.cs
+    (1 line -> 8 lines; one call site)
+  + src/backend/Host/Tooba.Host.Tests/CatalogDevelopmentPublishDiagnosticsTests.cs (new, 3 tests)
+  + docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-105.md
+  + docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-105/** (summary.md, task.md, task-receipt.json,
+    claim-task.js, source-diagnostic-inventory.txt, code-diff-seed.patch, focused-test-run.txt,
+    neighbour-publish-test-run.txt, preexisting-failure-control-run.txt, test-evidence.txt,
+    environment-and-parity.txt, RESULT.bridge.txt, post-result.js)
+  (docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-105.task.md stays UNSTAGED/untracked)
+
+ROLLBACK
+  Zero data impact and fully reversible: delete the two new files and restore the single replaced line in
+  CatalogAttributeSchemaDevelopmentSeed.ApplyAsync. No schema, migration, configuration, contract or persisted state
+  is involved.
+
+EXACT NEXT DECISION FOR THE ARCHITECT
+  1. One bounded isolated scratch start exactly as in 103 but with Tooba:CatalogDemo:RunLegacyBootstraps=true will now
+     print "stage=catalog-dev.attribute-schema.publish-product; product=…; isReady=False; missing=[…]" BEFORE the host
+     aborts — that single run yields the still-unobserved fact and makes the 104 P2 fixture a targeted repair instead
+     of a design guess.
+  2. Decide separately whether the pre-existing archived->publish message drift (MessageRestoreBeforePublishFa vs
+     MessageNotReadyFa through the legacy seam) should be reconciled in a dedicated Catalog lifecycle task.
+  Nothing in this result claims storefront, Checkout or commercial shipping readiness.
+END_TOOBA_WORKER_RESULT

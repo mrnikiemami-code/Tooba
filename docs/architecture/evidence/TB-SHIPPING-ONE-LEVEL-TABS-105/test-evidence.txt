@@ -1,0 +1,51 @@
+TB-SHIPPING-ONE-LEVEL-TABS-105 — focused test evidence and pre-existing-failure attribution
+
+ENVIRONMENT
+  .NET SDK 10.0.103 building net8.0 projects; Testcontainers against local Docker image postgres:16-alpine.
+  Builds: Tooba.Catalog.Infrastructure OK (0 errors); Tooba.Host.Tests OK (0 errors).
+
+NEW FOCUSED TESTS (3, all green) — file:
+  src/backend/Host/Tooba.Host.Tests/CatalogDevelopmentPublishDiagnosticsTests.cs
+  command: dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj -c Debug --no-build
+           --filter "FullyQualifiedName~CatalogDevelopmentPublishDiagnosticsTests"
+  result : Passed! - Failed: 0, Passed: 3, Skipped: 0, Total: 3, Duration: 11 s
+           (raw: focused-test-run.txt)
+
+  1. Summarize_projects_only_the_real_missing_rule_codes (pure)
+     Proves the projection is exactly "stage=...; product=...; isReady=...; missing=[media,seo]" — derived only
+     from the readiness object it is given, with no offer/price/stock token invented.
+  2. Refused_publish_emits_real_missing_codes_and_still_refuses_in_development (SkippableFact, real Postgres)
+     Real CatalogDbContext + real CatalogDirectory on a disposable Testcontainers database; a real Draft product
+     with a level-3 category and deliberately missing media/SEO. Asserts:
+       - publish is still refused with the SAME exception type (InvalidOperationException) and the SAME message
+         (ProductPublishRules.MessageNotReadyFa) — the public contract is preserved;
+       - the product is still Draft afterwards — nothing was force-published;
+       - the emitted log line equals CatalogDevelopmentPublishDiagnostics.Summarize(...) built from the codes the
+         REAL reader returns for that same product (verified true codes, not invented strings), non-empty;
+       - the emitted line contains no offer/price/stock token (readiness scope preserved).
+  3. Refused_publish_emits_nothing_outside_development (SkippableFact, real Postgres)
+     Same product and same helper with IHostEnvironment = Production: the refusal is identical, and the log sink
+     stays EMPTY — the diagnostic is disabled/redacted outside Development (no readiness read, no codes emitted).
+
+PRE-EXISTING FAILURE FOUND BY THE NEIGHBOUR RUN (NOT caused by this task; NOT repaired — out of scope)
+  ProductPublishTests.Aggregate_readiness_and_lifecycle_gates_without_offer_dependency failed at line 132:
+    Expected: "برای انتشار دوباره، ابتدا محصول را از بایگانی خارج کنید."  (MessageRestoreBeforePublishFa)
+    Actual:   "محصول برای انتشار آماده نیست."                              (MessageNotReadyFa)
+  Root cause (source): ProductLifecycleDirectory.PublishAsync lines 48-51 short-circuit Archived products with
+  WorkspaceProductPublishRejected, which CatalogDirectory.UnwrapLifecycle line 849 maps to MessageNotReadyFa. The
+  aggregate's MessageRestoreBeforePublishFa (CatalogProduct) is therefore unreachable through the legacy
+  ICatalogDirectory seam. The test was authored 2026-08-29 (adaf7f01e); ProductLifecycleDirectory was refactored
+  2026-10-03 (5348b1988), i.e. after the test.
+  EMPIRICAL CONTROL: the seed edit of this task was temporarily reverted to HEAD (helper file left unused),
+  Tooba.Host.Tests was rebuilt and the same test was re-run — the SAME assertion failed identically
+  (raw: preexisting-failure-control-run.txt, Failed: 1, Passed: 1). The working tree edit was then restored in a
+  try/finally block. Conclusion: the failure is independent of this task's change.
+  Scope note: the failing assertion concerns the archived->publish message contract of the Catalog lifecycle, not
+  publish-readiness diagnostics, so it was reported rather than widened into.
+
+NO SEED, NO SHARED WRITE
+  No Catalog demo reset-and-seed / seed-only call, no 545-product run, no shared tooba_alpha DML, no shared Host
+  restart, no gate change, no new scratch container (the only container started was the Testcontainers one owned by
+  the test and disposed in DisposeAsync). The isolated-scratch reproduction of the schema demo product was NOT run,
+  because its only supported reproduction starts the full Development legacy bootstrap, which the task forbids; the
+  exact real Missing[] value is therefore labelled NOT YET OBSERVED rather than guessed.

@@ -1,0 +1,20 @@
+﻿diff --git a/src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaDevelopmentSeed.cs b/src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaDevelopmentSeed.cs
+index 3b5ee38a7..6ce00e570 100644
+--- a/src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaDevelopmentSeed.cs
++++ b/src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaDevelopmentSeed.cs
+@@ -96,7 +96,14 @@ public static class CatalogAttributeSchemaDevelopmentSeed
+         await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
+             catalog, product.ProductId, "توضیح سئو گوشی نمونه schema", cancellationToken);
+         await catalog.PublishCategoryAsync(mobile, cancellationToken);
+-        await catalog.PublishProductAsync(product.ProductId, cancellationToken);
++        // Development-only diagnostic: a refusal here must name the real ProductPublishReadiness missing rule
++        // instead of only «محصول برای انتشار آماده نیست». The publish decision itself is untouched.
++        await CatalogDevelopmentPublishDiagnostics.PublishWithDiagnosticsAsync(
++            catalog,
++            provider,
++            product.ProductId,
++            CatalogDevelopmentPublishDiagnostics.AttributeSchemaStage,
++            cancellationToken);
+         await InvokeEnricherAsync(provider, cancellationToken);
+     }
+ 

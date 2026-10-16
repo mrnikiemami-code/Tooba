@@ -96,7 +96,14 @@ public static class CatalogAttributeSchemaDevelopmentSeed
         await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
             catalog, product.ProductId, "توضیح سئو گوشی نمونه schema", cancellationToken);
         await catalog.PublishCategoryAsync(mobile, cancellationToken);
-        await catalog.PublishProductAsync(product.ProductId, cancellationToken);
+        // Development-only diagnostic: a refusal here must name the real ProductPublishReadiness missing rule
+        // instead of only «محصول برای انتشار آماده نیست». The publish decision itself is untouched.
+        await CatalogDevelopmentPublishDiagnostics.PublishWithDiagnosticsAsync(
+            catalog,
+            provider,
+            product.ProductId,
+            CatalogDevelopmentPublishDiagnostics.AttributeSchemaStage,
+            cancellationToken);
         await InvokeEnricherAsync(provider, cancellationToken);
     }
 

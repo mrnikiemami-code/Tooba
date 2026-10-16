@@ -1,0 +1,78 @@
+TB-SHIPPING-ONE-LEVEL-TABS-105 — Catalog publish-readiness diagnostics: source mapping (read-only)
+
+INSPECTED (read paths, base ce1b9c2 + this task's changes)
+  src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaDevelopmentSeed.cs
+  src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaSellableEnricher.cs
+  src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogDevelopmentSeed.cs
+  src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogDevelopmentPublishDiagnostics.cs (NEW)
+  src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/CatalogDirectory.cs
+  src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductPublishReadinessReader.cs
+  src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductLifecycleDirectory.cs
+  src/backend/Modules/Catalog/Tooba.Catalog.Domain/Products/ProductPublishRules.cs
+  src/backend/Modules/Catalog/Tooba.Catalog.Application/Models/ProductPublishReadiness.cs
+  src/backend/Modules/Catalog/Tooba.Catalog.Application/Models/ProductPublishMissingRequirement.cs
+  src/backend/Modules/Catalog/Tooba.Catalog.Application/ProductPublishing/ProductPublishPrep.cs
+  src/backend/Host/Tooba.Host.Tests/ProductPublishTests.cs
+  src/backend/Host/Tooba.Host.Tests/ProductPublishReadinessCapabilityTests.cs
+  src/backend/Host/Tooba.Host.Tests/Architecture/HostAdminAmcW34TemplateSeedsGuardTests.cs
+  src/backend/Host/Tooba.Host.Tests/Architecture/HostDevelopmentEnricherClosureGuardTests.cs
+
+1) TYPE AND SEMANTICS OF Missing[]
+   ProductPublishReadiness (Application.Models) carries six booleans — CategoryReady, TranslationReady,
+   AttributeReady, VariantReady, MediaReady, SeoReady — plus
+   IReadOnlyList<ProductPublishMissingRequirement> MissingRequirements and MessageFa.
+   ProductPublishMissingRequirement is a 3-field record: (string Code, string MessageFa, string WorkspaceTab),
+   i.e. a stable machine code, a Persian operator message and the Admin Workspace tab that owns the fix.
+   The ONLY codes ProductPublishReadinessReader.GetAsync can emit (ProductPublishReadinessReader.cs
+   lines 94-147) are: "category" (general), "identity" (general), "attributes" (attributes, with the
+   comma-joined missing required codes appended inside MessageFa), "variants" (variants), "media" (media)
+   and "seo" (seo). There is no commercial code: reader line 88-90 comment and ProductPublishReadiness
+   xml-doc both state Offer/Pricing/Inventory are deliberately excluded.
+
+2) EXACT POINT WHERE THE DIAGNOSTIC CONTEXT IS LOST
+   ProductLifecycleDirectory.PublishAsync (line 34) refuses with a coarse SemanticError only:
+     - not found            -> WorkspaceProductMissing
+     - already Published    -> success (idempotent)
+     - Archived             -> WorkspaceProductPublishRejected (lines 48-51)
+     - readiness failure    -> WorkspaceProductPublishRejected (lines 59-62)   <-- the six codes are dropped here
+   CatalogDirectory.PublishProductAsync (line 1636) then calls UnwrapLifecycle, whose mapping (lines 834-868)
+   converts WorkspaceProductPublishRejected into
+     throw new InvalidOperationException(ProductPublishRules.MessageNotReadyFa)   // line 849
+   So the caller receives only «محصول برای انتشار آماده نیست» and the six rule codes are unrecoverable at that
+   boundary. This is a VALIDATION refusal (a domain/aggregate decision), not an infrastructure failure: the
+   readiness reader already computed the exact reasons one stack frame earlier.
+
+3) THE EXISTING CONTRACT ALREADY CARRIES THE CODES
+   ICatalogDirectory.GetProductPublishReadinessAsync -> CatalogDirectory line 1633 -> PublishReadinessPort()
+   (line 819) -> ProductPublishReadinessReader. UnwrapHistory (line 874) throws only for a real port failure;
+   a not-ready product is a SUCCESS carrying IsReady=false + the populated MissingRequirements list. So no new
+   contract, no new rule and no new persistence were needed — the diagnostic simply re-reads that existing
+   contract for the same product id.
+
+4) WHAT WAS ADDED (smallest Catalog-owned Development-only seam)
+   NEW CatalogDevelopmentPublishDiagnostics (Catalog.Infrastructure/Development):
+     - PublishWithDiagnosticsAsync(catalog, provider|IHostEnvironment+ILoggerFactory, productId, stage, ct):
+       calls the normal PublishProductAsync, and ONLY on InvalidOperationException and ONLY when
+       environment.IsDevelopment() re-reads GetProductPublishReadinessAsync(productId, "fa-IR") and emits one
+       structured LogError with the seed stage, the non-sensitive product id and the real missing-rule codes;
+       then `throw;` rethrows the ORIGINAL exception unchanged.
+     - EmitAsync: never throws (a secondary readiness failure degrades to "readiness=unavailable:{Type}" so the
+       original refusal is never masked).
+     - Summarize: pure bounded projection ->
+       "stage={stage}; product={productId:D}; isReady={bool}; missing=[{codes}]" — codes only, no entity
+       payloads, no tokens, no connection strings, no customer data, no new error details.
+   EDIT CatalogAttributeSchemaDevelopmentSeed.ApplyAsync: the single publish call at old line 99 is routed
+   through PublishWithDiagnosticsAsync with stage "catalog-dev.attribute-schema.publish-product".
+   Nothing else changed: no publish bypass, no rule relaxation, no direct persistence, no Host/config change,
+   no global error-handling change, no effect on the public HTTP contract (this path is not HTTP).
+
+5) UNOBSERVED FACT (explicitly not guessed)
+   The exact Missing[] code that rejects the schema demo product on a genuinely empty DB is STILL
+   NOT YET OBSERVED. Its only reproduction starts the full Development legacy bootstrap, which this task
+   forbids; the Architect's escape hatch was followed instead. With this diagnostic in place, one bounded
+   isolated scratch start with Tooba:CatalogDemo:RunLegacyBootstraps=true will now print that code in the
+   error log line before the host aborts — that is the exact next observation to make.
+
+6) SECOND UNTOUCHED PUBLISH SITE (reported, not changed)
+   CatalogAttributeSchemaSellableEnricher.cs line 67 also calls catalog.PublishProductAsync without diagnostics.
+   It is guarded by its own assignable/media/SEO checks and was left untouched to keep this change minimal.
