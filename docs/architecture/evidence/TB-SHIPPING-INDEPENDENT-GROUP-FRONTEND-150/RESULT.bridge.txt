@@ -1,0 +1,177 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-INDEPENDENT-GROUP-FRONTEND-150
+Parent-Task: TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-INDEPENDENT-SELLER-COMMITMENTS
+Mode: BOUNDED_REAL_STOREFRONT_GROUP_CARDS_AND_SCHEDULE
+Bridge-Task-Row: 67ea6039-087a-4356-8891-8bde1c8b71ac
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 0fde15c5e5d7d223ae4a8825ccb49f8fd17ccff3
+Base-SHA: 0fde15c5e5d7d223ae4a8825ccb49f8fd17ccff3
+Implementation-Commit-SHA: 82444e4eb45bf5de419e96f4d245b9b8720e09ea
+Evidence-Commit-SHA: ba4181382920a66248540378e13ca43b6dd94d21
+Head-SHA: ba4181382920a66248540378e13ca43b6dd94d21
+Push: origin/main fast-forward 0fde15c5e..82444e4eb..ba4181382 ; HEAD == origin/main ; Result-Artifact-Commit: the next commit on origin/main (child of Evidence-Commit-SHA) carries this RESULT.bridge.txt and its poster; scoped working tree clean
+automaticNextImplementationTask: NONE
+
+WHY PARTIAL (not PASS, not BLOCKED)
+The frontend deliverable is real, bounded and complete for the authorized scope, and every deterministic
+obligation of the task passes (focused shipping tests, typecheck, guards, backend contract tests). Two
+things kept this from PASS under the task's own PASS definition:
+ (a) The live authenticated HTTP write/read roundtrip was NOT executed. The shared frontend :3000 has no
+     customer session in the browser (header renders «ورود»), and producing a real two-seller cart needs an
+     authenticated session plus a cart mutation. The task forbids restarts/shared-DB writes and forbids fake
+     mockups, and no credentials exist for me to use, so the per-group draft write/re-read over HTTP is
+     reported UNVERIFIED rather than PASS.
+ (b) Continue/payment gating, per-group persistence and card independence are proven by deterministic tests
+     and by the real rendered route, not by a live end-to-end purchase journey.
+No fake per-group data was produced anywhere: every date/window/amount comes from the server authoritative
+projection, and no client-side date, carrier slot or promise is invented.
+
+ROOT CAUSE OF THE FRONTEND GAP (inherited from TB-145/TB-149)
+TB-145 defined one independently schedulable card per real shipping group, but the storefront still held a
+single page-wide deliveryDate/deliveryTime pair and a client-side group-horizon intersection hook, and before
+the first draft save the projection had no group identity at all (ShippingGroupHorizons was null while
+draft was null), so the UI could not safely attach a schedule to a real group. TB-150 closes exactly that:
+server-owned group key before first save + per-group keyed UI state + per-group payload, with the
+intersection semantics removed.
+
+IMPLEMENTATION (BOUNDED, ADDITIVE, BEHAVIOR-PRESERVING)
+1. Additive server read projection (needed because a pre-save draft has no group id):
+   StorefrontShippingGroupHorizonView gained `string GroupKey` = deterministic "{sellerPartyId:N}|{methodCode
+   lowercased}" and ShippingGroupId became `Guid?` (null until the draft is saved). New
+   BuildGroupHorizons(cart, methods, draft, today) emits one row per (cart seller x eligible method):
+   minimum = today + sellerPreparationDays(THAT seller) + method.LeadDays (never in the past), that row's own
+   eligible dates/windows, and it attaches the persisted group id + persisted selections only when a draft
+   group with the same seller+method exists. No intersection, no global MAX, no shared date. For a single-line
+   cart no rows are emitted, so the legacy one-group projection/UI path is byte-for-byte unchanged.
+2. Per-group frontend state: storefront-shipping.tsx keeps the scalar deliveryDate/deliveryTime ONLY for the
+   single-line legacy cart; a multi-line cart uses groupSelections keyed by the stable group key. Continue is
+   enabled only when every active group has a method AND that group's own date and window are in that group's
+   own server lists (allGroupSchedulesComplete). Changing or invalidating group A leaves every field of group B
+   untouched. The write payload sends Groups[] with per-group selectedDeliveryDate/selectedDeliveryTimeWindow;
+   no global date is copied onto groups; the legacy scalar shorthand is used only for a genuine one-group cart.
+3. One independent card per real group: storefront-shipping-group-cards.tsx renders seller, member lines and
+   quantities, canonical service label+code, that group's server fee, its own «اولین نوبت ممکن», its own date
+   chips and its own time-window picker (data-testid shipping-group-{identity},
+   shipping-group-date-{identity}-{value}, shipping-group-window-{identity}-{value}); a group without a server
+   row renders an explicit pending/stale note instead of a guessed date. Lines without a method stay in that
+   seller's method-choosing block (previous behavior, no seller merging).
+4. New pure module storefront-shipping-group-schedule.ts: resolveGroupSchedules / findGroupHorizon /
+   pickGroupDeliveryDate / pickGroupDeliveryWindow / mergeGroupSelections / setGroupSelection /
+   isGroupScheduleComplete / allGroupSchedulesComplete. No fetch, no new Date(), no client-computed promise.
+5. Removed client intersection semantics: use-storefront-group-shipping-horizon.ts deleted;
+   storefront-shipping-group-horizon.ts narrowed to the single-group compatibility path
+   (resolveSingleGroupHorizon / pickEligibleDeliveryDate / pickEligibleDeliveryWindow /
+   isShippingDateHorizonComplete). No deriveGroupDateHorizon / resolveShippingDateHorizon /
+   distinctSelectedMethodCodes / useGroupShippingDateHorizon remains in the shipping surface (asserted by test).
+6. Source-size guard respected by splitting, not rebaselining: storefront-shipping.tsx 945 (baseline
+   OVERSIZED_LEGACY) -> 816 physical LOC; address cards / single-group section / legacy delivery card extracted
+   with no behavior or visual change; no new file above the 800-LOC threshold.
+
+TARGET PROVENANCE / SERVICE-METHOD MAPPING
+- Group identity in the UI comes from real cart lines (cartLineIds -> sellerPartyId) x the canonical method
+  codes the server returns in `methods` (methodCode/serviceCode/label/priceAmount/leadDays). The client never
+  constructs a ShippingGroupId; it only matches the server row on normalized seller + method code and displays
+  the server id when it exists, otherwise the server-owned draft-stage key.
+- Group fee = that group's method priceAmount from the server; totals are server values, no client fee math
+  beyond summing the returned per-group amounts for the summary.
+- Read contract consumed: StorefrontShippingProjection.shippingGroupHorizons[] ->
+  { groupKey, shippingGroupId, sellerPartyId, methodCode, minimumDeliveryDate, eligibleDates[],
+  eligibleTimeWindows[], selectedDeliveryDate, selectedDeliveryTimeWindow, leadDays, sellerPreparationDays }.
+- Write contract sent: shippingGroups[] -> { shippingMethodCode, cartLineIds, serviceCode, optionCode,
+  selectedDeliveryDate, selectedDeliveryTimeWindow }; TB-149 validates each group against its OWN minimum and
+  its OWN allowed windows and rejects a multi-group write whose group schedule is missing (fail-closed).
+
+UNCHANGED LEGACY PROJECTION / SINGLE-GROUP COMPATIBILITY
+- One-line cart: unchanged scalar path (projection.deliveryDates/deliveryTimeWindows/minimumDeliveryDate),
+  unchanged card, no shippingGroupHorizons rows emitted by the server.
+- One-group multi-line cart: legacy scalar shorthand still accepted by TB-149 and sent by the UI from that
+  single group's own selection.
+- All previously persisted line-method selections still restore via restoreLineMethodSelections.
+
+NO SIDE EFFECTS / RESTORE-CLEANUP
+- Continue still saves a DRAFT only: no /shipping/commit, no order, no reservation, no payment call
+  (asserted by test: source contains no shipping/commit).
+- No schema/migration, no store-alpha/tooba_alpha write, no Admin/Settlement/Payout change, no new CSS system,
+  no .next purge, no restart of shared :5088/:3000, no financial-policy change.
+- Pre-existing unrelated dirty files were preserved and NOT committed: admin-fulfillment-work-queue-screen.tsx,
+  docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-075/host-stdout-075.txt,
+  docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-079/host-stdout-OFF.txt, plus the untracked historical
+  docs/ai/tasks/*.task.md files. No stash, no reset, no force-push, no history rewrite.
+
+FOCUSED TESTS / COMMANDS (raw output committed under the evidence directory)
+- node --experimental-strip-types --test app/storefront/storefront-shipping-api.test.ts
+  app/storefront/storefront-shipping-group-schedule.test.ts app/storefront/storefront-shipping-group-horizon.test.ts
+  app/storefront/storefront-shipping-item-groups.test.ts app/storefront/storefront-final-click-api.test.ts
+  -> 39 tests, 39 pass, 0 fail (focused-shipping-tests-150.txt)
+- npx tsc --noEmit -> exit 0, 0 diagnostics (typecheck-150.txt, empty file)
+- node --test app/storefront/*.test.ts -> 148 tests, 145 pass, 3 PRE-EXISTING failures unrelated to this diff
+  (storefront-product-card-skin.guard + storefront-token-completion assert on storefront-home.tsx;
+  storefront-ssr-perf-r9r1.guard ENOENT on a removed Host composer path) (storefront-suite-150.txt)
+- architecture guards (source-size, import-boundary, flat-folder, feature-boundary, test-discovery)
+  -> 8 tests, 7 pass, 1 fail = FE-SIZE with 4 PRE-EXISTING OVERSIZED_GROWTH files, none of them in this diff;
+  storefront-shipping.tsx is shrink-only 945 -> 816 (architecture-guards-150.txt)
+- npm run test:critical-storefront -> 39 tests, 38 pass, 1 PRE-EXISTING raw-color failure at
+  app/storefront/storefront-landing-blocks.tsx:286 (critical-storefront-150.txt)
+- dotnet test Modules/Order/Tooba.Order.Tests -> Passed! Failed: 0, Passed: 354, Skipped: 0
+  (backend-order-tests-150.txt). New: Two_sellers_with_the_same_method_get_independent_projection_horizons
+  (prep 2 vs 3, same tipax:standard -> 2026-10-21 vs 2026-10-22, distinct group keys, no cross-group date).
+- New frontend tests (7) in storefront-shipping-group-schedule.test.ts: two sellers/same method -> two
+  independent horizons; unresolved group gets no guessed date and blocks Continue; selection independence
+  including targeted invalidation and removal; refresh/back restoration from that group's own persisted
+  selection; contract mapping (camelCase + PascalCase, row without key/method ignored); normalized
+  seller/method matching; single-group behavior unchanged plus surface wiring/payload assertions.
+
+READ-ONLY USER-VISIBLE SMOKE (no write, no login attempt, no mockup)
+- GET http://localhost:3000/fa/shipping -> 200, SSR body 113974 bytes with data-testid="shipping-page" on the
+  current working tree (route compiles, no hang) (shipping-ssr-150.html).
+- Read-only browser navigation in a NEW background tab: title «اطلاعات ارسال | توبا», step strip and summary
+  render, body shows the loading state and the header shows «ورود» (no customer session)
+  (shipping-150-readonly-smoke.png, readonly-smoke-150.txt).
+- Consequently the authenticated multi-group UI and its live write/re-read remain UNVERIFIED (see WHY PARTIAL);
+  the user-visible artifact is the real rendered route, not a fake mockup.
+
+ACTUAL ELAPSED: claimed 2026-10-16T18:18:11Z; reported 2026-10-16T18:26:29Z (about 8 minutes of worker time on
+top of the earlier claim cycle, well inside the 45-minute hard timebox).
+
+CHANGED PATHS
+ src/backend/Modules/Order/Tooba.Order.Application/Storefront/Models/StorefrontOrderModels.cs
+ src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs
+ src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingDraftRecoveryTests.cs
+ src/frontend/app/storefront/storefront-shipping.tsx
+ src/frontend/app/storefront/storefront-shipping-api.ts
+ src/frontend/app/storefront/storefront-shipping-api.test.ts
+ src/frontend/app/storefront/storefront-shipping-group-cards.tsx (new)
+ src/frontend/app/storefront/storefront-shipping-group-schedule.ts (new)
+ src/frontend/app/storefront/storefront-shipping-group-schedule.test.ts (new)
+ src/frontend/app/storefront/storefront-shipping-single-group-section.tsx (new)
+ src/frontend/app/storefront/storefront-shipping-delivery-card.tsx (new)
+ src/frontend/app/storefront/storefront-shipping-address-cards.tsx (new)
+ src/frontend/app/storefront/storefront-shipping-group-horizon.ts
+ src/frontend/app/storefront/storefront-shipping-group-horizon.test.ts
+ src/frontend/app/storefront/storefront-shipping-item-groups.test.ts
+ src/frontend/app/storefront/use-storefront-group-shipping-horizon.ts (deleted)
+ docs/ai/tasks/TB-SHIPPING-INDEPENDENT-GROUP-FRONTEND-150.task.md
+ docs/architecture/evidence/TB-SHIPPING-INDEPENDENT-GROUP-FRONTEND-150/{summary.md,task.md,
+   focused-shipping-tests-150.txt,storefront-suite-150.txt,typecheck-150.txt,architecture-guards-150.txt,
+   critical-storefront-150.txt,backend-order-tests-150.txt,readonly-smoke-150.txt,shipping-ssr-150.html,
+   shipping-150-readonly-smoke.png,RESULT.bridge.txt,post-result.js}
+
+BLOCKERS / LIMITATIONS
+- No Admin-managed calendar/capacity/timezone/working-day authority exists (TB-145 sec 1.7), so per-group
+  promises are sellerPreparationDays(seller) + method.LeadDays + the existing static generic windows. No
+  guaranteed carrier slot is promised or invented; this limitation is unchanged and disclosed.
+- Case D (same seller + same method + incompatible origin/promise) remains out of scope with the unique index
+  ux_order_shipping_groups_checkout_seller_method and DuplicateSellerMethod untouched.
+- Live authenticated per-group write/re-read over HTTP is UNVERIFIED (no customer session, no credentials,
+  shared :3000/:5088 and store-alpha/tooba_alpha must stay untouched).
+NEXT SINGLE BOUNDED STEP (needs Architect authorization; not performed here): one isolated writable scratch
+environment with a real two-seller cart and an authenticated customer session to re-read the draft and the
+payment summary and convert the per-group write/re-read from UNVERIFIED to PASS.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
