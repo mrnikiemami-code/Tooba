@@ -1,0 +1,121 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-107
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-106
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_CATALOG_DEMO_DEFAULT_VARIANT_REPAIR
+Bridge-Task-Row: 720c3b96-c270-473c-be48-1e9e4bcb58be
+Status: BLOCKED
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: aceeb46acbfc89024e2def182da3ade73d20714a
+Base-SHA: 995e485d23216e34320374002812cdc0c1b5913a
+Code-SHA: NONE
+Evidence-SHA: 1ff62762ba7679418db53208f47bb2ee6d412bc5
+automaticNextImplementationTask: NONE
+
+BLOCKER: BLOCKED_DEFAULT_VARIANT_APPLICATION_SEAM
+  No EXISTING Catalog operation can set exactly one default variant on the Development seed's sparse two-variant set
+  without either expanding the demo dataset or duplicating/bypassing the single-default invariant. No src/ file was
+  modified. The task's own escape clause applies: "If the existing canonical operation cannot be used from this seed
+  without broader refactor, STOP with BLOCKED_DEFAULT_VARIANT_APPLICATION_SEAM".
+
+SOURCE-LINE EVIDENCE (all at Base-SHA 995e485d23216e34320374002812cdc0c1b5913a)
+  1. Single-default invariant lives ONLY inside the matrix reconcile:
+     ProductVariantDirectory.cs 383 (patch loop), 410-421 (IsDefault patch -> ClearDefaultFlags + SetDefault(true)),
+     425-441 (DefaultVariantId validated: VariantDefaultMissing / VariantArchivedCannotBeDefault),
+     447 (EnforceSingleDefault when no DefaultVariantId), 999-1006 ClearDefaultFlags, 1007-1024 EnforceSingleDefault.
+     Facade: ICatalogDirectory.cs 436-439 ApplyProductVariantMatrixAsync. Admin route: only
+     CatalogProductVariantAdminEndpoints.cs 15-21 maps /variant-axes, /variants/editor, /variants/preview,
+     /variants/apply, /variants/readiness — there is NO dedicated set-default route.
+  2. That reconcile is a whole-product CARTESIAN operation:
+     ProductVariantDirectory.cs 296-319 entry, 319-330 replaces ProductVariantAxes (RemoveRange at 324, add 326-329),
+     332-370 matches/creates variants by fingerprint, 372-380 ARCHIVES every active variant outside the desired
+     fingerprint set (SetStatus(Archived) at 379), 819-856 multiplies option counts per axis,
+     870-905 enumerates the explicit cross product and computes fingerprints.
+     The repository's own test pins this: ProductVariantMatrixTests.cs 150-168 asserts 2 colours x 3 storages = 6;
+     176-192 asserts 2x2 = 4 created with 2 deactivated; 219-230 asserts shrink archives the rest; 261-290 shows the
+     canonical single-default flow requires applying a FULL matrix with DefaultVariantId.
+  3. The seed's variant set is a SPARSE DIAGONAL, deliberately:
+     CatalogAttributeSchemaDevelopmentSeed.cs 89 declares axes [color, storage], 91 comments
+     «چند ترکیب نمونه برای اثبات محورها؛ FULL_VARIANT_MATRIX تولید نمیشود», 92-93 create only
+     PHONE-BLK-128 (black+128gb) and PHONE-BLU-256 (blue+256gb). Declared axes allow 4 combinations; only 2 exist.
+  4. Expressible desired sets on this product are {1, colour-only-2, storage-only-2, 4} — none equals the two
+     existing fingerprints, so:
+       - both axes' options -> the 4-combination FULL MATRIX: 2 extra variants created (the exact opposite of the
+         seed's documented intent) and, because CatalogAttributeSchemaSellableEnricher.cs 71-78 loads ALL variants
+         and 96-140 creates one Offer + price + tax + stock per variant, 2 extra offers (and SKUs lose their
+         catalog code seam, 99);
+       - one axis only -> BOTH existing variants archived and the other axis silently dropped (axes replaced at
+         324-329, ProductVariantDirectory.cs), losing the axis proof;
+       - one combination -> the other existing variant archived.
+  5. The domain method does not enforce uniqueness: CatalogVariant.cs 133-143 SetDefault(bool, now) — its own comment
+     says «یکتایی در دایرکتوری اعمال میشود» (uniqueness is enforced in the directory) and it only rejects Archived.
+     Calling it from the seed alone would allow two defaults; clearing the others in the seed would duplicate
+     ClearDefaultFlags/EnforceSingleDefault (forbidden) and loading/saving variants through CatalogDbContext would be
+     the direct EF write the task forbids.
+  6. No narrower seam exists: IProductVariantDirectory.cs 30-33 (ApplyMatrixAsync, only default-capable write),
+     41-47 (CreateWorkspaceVariantAsync; IsDefault hard-false at CatalogVariant.cs 101), 48-55
+     (PatchWorkspaceVariantAsync — no default parameter); ICatalogDirectory.cs 411-417 (axes) and 573-577 (create).
+
+OBSERVED FACTS (no repair, so nothing new was run)
+  Observed default variant count on the seed's product = 0: TB-106's isolated scratch SQL shows PHONE-BLK-128 and
+  PHONE-BLU-256 both is_default = f, and readiness refused with missing=[variants] (NoDefaultVariant = true).
+  Axis/option ids and both combination fingerprints were valid (TB-106 evidence), so `variants` maps solely to the
+  no-default sub-rule.
+  Tests run: NONE. With no source change there is nothing to validate; a regression test asserting "exactly one
+  default" would be a permanently failing test until the seam decision is made, and the task forbids passing on
+  unfixed state. Existing matrix tests were used as authoritative in-tree proof of reconcile semantics.
+  LIVE_SCRATCH_NOT_VERIFIED (by design: no code change = nothing new to observe).
+
+PROPOSED SMALLEST ADAPTATION (Architect decision; not executed)
+  Option A (recommended): add ONE narrow Catalog-owned seam that REUSES the existing invariant instead of copying it —
+    IProductVariantDirectory.SetDefaultAsync(productId, variantId, ct) : Result, implemented in
+    ProductVariantDirectory using the existing private ClearDefaultFlags + SetDefault(true) and the same use-case
+    guard/actor/product-history path as the reconcile; exposed on ICatalogDirectory as
+    SetProductVariantDefaultAsync(productId, variantId, ct); optionally a route
+    POST /v1/admin/catalog/products/{productId}/variants/{variantId}/default, which also closes a real Admin gap (the
+    UI cannot express "make this variant the default" for a sparse matrix today). The seed then marks the first
+    created variant (PHONE-BLK-128) deterministically before publishing. Two variants preserved, no rule change, no
+    demo-data expansion, no new semantics.
+  Option B (no new API, needs explicit authorization): switch the seed to the canonical reconcile and accept the full
+    4-combination matrix => 4 variants and 4 offers instead of 2, and variants without catalog code seams.
+  Option C (rejected): seed-side SetDefault + manual clearing — duplicates the invariant and needs EF writes.
+
+BLOCKED CHECKS
+  - Mission A repair: blocked (no safe canonical setter). Mission B regression test: blocked by Mission A.
+  - Optional isolated scratch startup: skipped (no code change); LIVE_SCRATCH_NOT_VERIFIED.
+
+CLEANUP FACTS
+  No process was started, stopped or killed by this task. No scratch container, no .tmp-10* directory and no stray
+  listener (5392/55444 = 0/0). Running containers: postgres-db, rabbitmq only.
+
+SHARED PRE/POST STATE (read-only, unchanged)
+  :5088 /health 200 {"status":"ok"}; provenance identical before/after (edition=SingleStore,
+  deploymentId=dev-singlestore, tenantId=store-alpha, connectionReference=tenant-alpha, resolvedHost=127.0.0.1,
+  themeReference=theme-alpha, defaultMarketReference=IR); listener pid 35624 with the dev-script-managed
+  ShippingOneLevelCatalog=true gate left exactly as found; :3000 no listener before and after; tooba_alpha counts
+  identical before/after: 7 methods / 14 translations / 50 carts / 78 cart_lines / 14 cart_shipping_drafts /
+  26 seller_orders / 567 products / 3223 offers; zero writes to shared databases.
+
+TOUCHED PATHS (evidence only)
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-107.md
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-107/{source-line-evidence.txt, seam-analysis-and-blocker.txt,
+  shared-and-cleanup-facts.txt, shared-parity-preflight.{sql,txt}, shared-parity-postflight.{sql,txt}, summary.md,
+  task.md, task-receipt.json, claim-task.js}
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-107.task.md kept UNSTAGED.
+  ZERO changes under src/, scripts/, appsettings, migrations or tests.
+
+ROLLBACK
+  Revert evidence commit 1ff62762ba7679418db53208f47bb2ee6d412bc5 (docs only). No code, schema, configuration or data
+  change exists to roll back.
+
+RECOMMENDATION FOR NEXT TASK
+  Authorize Option A as a bounded Catalog-only implementation task: add the narrow SetDefaultAsync seam (reusing the
+  existing invariant helpers), call it from CatalogAttributeSchemaDevelopmentSeed for the first created variant, add
+  the focused test asserting exactly one default among the seed's two variants plus valid readiness, then verify with
+  ONE isolated scratch startup using TB-106's proven recipe (legacy bootstrap enabled, watchdog <= 240 s) and finally
+  remove/neutralize the 105 diagnostic if the Architect wants it gone. Do not claim sellable offers, storefront labels
+  or checkout readiness from this task.
+END_TOOBA_WORKER_RESULT
