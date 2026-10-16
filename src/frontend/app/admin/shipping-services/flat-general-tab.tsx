@@ -5,6 +5,7 @@
  *
  * TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146
  * TB-SHIPPING-ADMIN-MULTILINGUAL-UX-148
+ * TB-SHIPPING-METHOD-FINANCIAL-AUTHORITY-155
  *
  * قواعد سخت:
  * - تنها دو نوشتن مجاز این زبانه همان دو نوشتن مجاز قفل‌شدهٔ کاتالوگ یک‌سطحی است:
@@ -12,9 +13,11 @@
  *   هیچ نوشتن دیگری روی سرویس/گزینه/نرخ/پوشش/برنامه/بسته‌بندی از این زبانه انجام نمی‌شود.
  * - هویت ارائه‌دهنده **فرادادهٔ مشترک** است: در یک بخش تاشوی کوچک و برچسب‌دار نمایش داده می‌شود و
  *   هیچ سیاست مشترکی به‌عنوان سیاست اختصاصی این روش نوشته نمی‌شود.
- * - وضعیت «فعال/غیرفعال بودن روش» و «آماده‌بودن مالی» دو وضعیت جداگانه‌اند. چون هیچ endpoint مجازِ
- *   سیاست مالی/آماده‌بودن برای هر روش وجود ندارد، این زبانه هیچ وضعیت «آماده»، هیچ مبلغ و هیچ
- *   فرض صفر نمی‌سازد و فقط نبود صریح پیکربندی مالی را نشان می‌دهد.
+ * - وضعیت «فعال/غیرفعال بودن روش» و «آماده‌بودن مالی» دو وضعیت جداگانه‌اند. از TB-155 وضعیت مالی
+ *   از یک read model فقط‌خواندنیِ **سرور** خوانده می‌شود که مالک همان ردیف‌های نرخ/پوشش است. اگر
+ *   آن خواندن ممکن نباشد (پیوند تأییدنشده، مجوز، شبکه یا پاسخ نامعتبر) این زبانه هیچ وضعیت
+ *   «آماده»، هیچ مبلغ و هیچ فرض صفر نمی‌سازد و فقط نبود خواندن صریح را نشان می‌دهد.
+ * - هویت مالی از پیوند authoritative سرور می‌آید؛ کد روش هرگز در مرورگر تفکیک نمی‌شود.
  */
 
 import { useEffect, useState } from "react";
@@ -33,13 +36,30 @@ import {
   setOneLevelMethodActivation,
 } from "./shipping-one-level-activation-model.ts";
 import type { OneLevelBindingState } from "./shipping-one-level-rates-model.ts";
+import { loadShippingMethodFinancialStatus } from "./shipping-method-financial-api.ts";
+import {
+  FINANCIAL_MODE_TABLE_FA,
+  financialCaveatsFa,
+  financialMoneyFa,
+  financialReasonFa,
+  financialStateLabelFa,
+  financialStateTone,
+  type ShippingMethodFinancialStatus,
+} from "./shipping-method-financial-model.ts";
 
-/** متن صریح وضعیت مالی؛ هیچ وضعیت «آماده» یا مبلغی ساخته نمی‌شود. */
+/** متن صریح نبود خواندن وضعیت مالی؛ هیچ وضعیت «آماده» یا مبلغی ساخته نمی‌شود. */
 export const FINANCIAL_STATUS_UNAVAILABLE_FA =
   "وضعیت مالی این روش از API فعلی قابل خواندن نیست؛ هیچ مبلغ، حالت مالی یا فرض صفر ساخته نمی‌شود.";
 
 export const FINANCIAL_STATUS_DISTINCTNESS_FA =
   "«فعال بودن روش» با «آمادهٔ استعلام بودن قیمت» یکسان نیست: روش فعال بدون تعرفه، رایگان نیست.";
+
+type FinancialReadState =
+  | { state: "loading" }
+  | { state: "unavailable" }
+  | { state: "denied" }
+  | { state: "error" }
+  | { state: "ok"; status: ShippingMethodFinancialStatus };
 
 export function FlatGeneralTab({
   methodCode,
@@ -73,6 +93,7 @@ export function FlatGeneralTab({
   onSavedAndClose: (text: string) => Promise<void>;
 }) {
   const [activationBusy, setActivationBusy] = useState(false);
+  const [financial, setFinancial] = useState<FinancialReadState>({ state: "loading" });
 
   // روش عوض شده است ⇒ هیچ وضعیت در پرواز قبلی روی روش تازه نمی‌نشیند.
   useEffect(() => setActivationBusy(false), [methodCode]);
@@ -80,6 +101,35 @@ export function FlatGeneralTab({
   const eligibility = resolveActivationEligibility(binding, methodCode);
   const resolved = binding.state === "resolved" ? binding.binding : null;
   const displayName = label.trim() || methodCode;
+
+  // وضعیت مالی فقط با هویت تأییدشدهٔ سرور خوانده می‌شود؛ بدون پیوند resolved هیچ درخواستی
+  // فرستاده نمی‌شود و هیچ وضعیت مالی جعلی ساخته نمی‌شود (fail-closed).
+  const serviceCode = resolved?.serviceCode ?? null;
+  const optionCode = resolved?.optionCode ?? null;
+  useEffect(() => {
+    let current = true;
+    if (!resolved || !serviceCode) {
+      setFinancial({ state: "unavailable" });
+      return () => {
+        current = false;
+      };
+    }
+
+    setFinancial({ state: "loading" });
+    void (async () => {
+      const result = await loadShippingMethodFinancialStatus(serviceCode, optionCode);
+      if (!current) return;
+      if (result.state === "ok" && result.data) {
+        setFinancial({ state: "ok", status: result.data });
+        return;
+      }
+      setFinancial(result.state === "denied" ? { state: "denied" } : { state: "error" });
+    })();
+
+    return () => {
+      current = false;
+    };
+  }, [methodCode, serviceCode, optionCode, resolved]);
 
   async function applyActivation() {
     if (eligibility.state !== "supported") return;
@@ -112,7 +162,9 @@ export function FlatGeneralTab({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone={isActive ? "success" : "neutral"}>{activationStatusFa(isActive)}</Badge>
-          <Badge tone="warning">وضعیت مالی: تنظیم نشده</Badge>
+          <Badge tone={financial.state === "ok" ? financialStateTone(financial.status.state) : "warning"}>
+            {financial.state === "ok" ? financialStateLabelFa(financial.status.state) : "وضعیت مالی: نامشخص"}
+          </Badge>
         </div>
       </header>
 
@@ -201,17 +253,50 @@ export function FlatGeneralTab({
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-bold text-amber-900">وضعیت مالی مشتری</h2>
-          <Badge tone="warning">قابل خواندن از API فعلی نیست</Badge>
+          <Badge tone={financial.state === "ok" ? financialStateTone(financial.status.state) : "warning"}>
+            {financial.state === "ok" ? financialStateLabelFa(financial.status.state) : "قابل خواندن از API فعلی نیست"}
+          </Badge>
         </div>
-        <p className="text-xs text-amber-900" data-testid="admin-shipping-method-financial-unavailable">
-          {FINANCIAL_STATUS_UNAVAILABLE_FA}
-        </p>
-        <p className="text-[11px] text-amber-800">{FINANCIAL_STATUS_DISTINCTNESS_FA}</p>
-        <p className="text-[11px] text-amber-800">
-          حالت‌های مالی معتبر بر اساس قرارداد قفل‌شده (رایگان / مبلغ ثابت / قاعده‌محور / پرداخت در محل /
-          استعلام ارائه‌دهنده) نیازمند endpoint مجاز سرور است؛ تا آن زمان این صفحه نه مبلغی می‌سازد و نه
-          روشی را «آمادهٔ قیمت» اعلام می‌کند.
-        </p>
+        {financial.state === "ok" ? (
+          <div className="space-y-1" data-testid="admin-shipping-method-financial-verified">
+            <p className="text-xs font-semibold text-emerald-900" data-testid="admin-shipping-method-financial-reason">
+              {financialReasonFa(financial.status)}
+            </p>
+            {financialMoneyFa(financial.status) ? (
+              <p className="text-xs text-emerald-900" data-testid="admin-shipping-method-financial-money" dir="rtl">
+                {financialMoneyFa(financial.status)}
+              </p>
+            ) : null}
+            {financialCaveatsFa(financial.status).map((caveat) => (
+              <p key={caveat} className="text-[11px] text-amber-900" data-testid="admin-shipping-method-financial-caveat">
+                {caveat}
+              </p>
+            ))}
+            <p className="text-[11px] text-amber-800">{FINANCIAL_STATUS_DISTINCTNESS_FA}</p>
+            <details className="text-[11px] text-amber-800" data-testid="admin-shipping-method-financial-modes">
+              <summary className="cursor-pointer font-bold">حالت‌های مالی اثبات‌پذیر در اسکیمای فعلی</summary>
+              <ul className="mt-1 list-disc space-y-0.5 pr-4">
+                {FINANCIAL_MODE_TABLE_FA.map((row) => (
+                  <li key={row}>{row}</li>
+                ))}
+              </ul>
+            </details>
+            <p className="text-[11px] text-amber-800">
+              منبع این وضعیت، همان ردیف‌های واقعی نرخ/پوشش سرویس است و از فعال‌بودن روش یا برچسب آن
+              استنتاج نمی‌شود؛ پیوند خدمات سطح سرویس هرگز به‌عنوان تعرفهٔ این روش نمایش داده نمی‌شود.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-1" data-testid="admin-shipping-method-financial-unavailable">
+            <p className="text-xs text-amber-900">{FINANCIAL_STATUS_UNAVAILABLE_FA}</p>
+            <p className="text-[11px] text-amber-800">{FINANCIAL_STATUS_DISTINCTNESS_FA}</p>
+            <p className="text-[11px] text-amber-800">
+              حالت‌های مالی معتبر بر اساس قرارداد قفل‌شده (رایگان / مبلغ ثابت / قاعده‌محور / پرداخت در محل /
+              استعلام ارائه‌دهنده) فقط از دادهٔ واقعی سرور ادعا می‌شوند؛ تا آن زمان این صفحه نه مبلغی می‌سازد و نه
+              روشی را «آمادهٔ قیمت» اعلام می‌کند.
+            </p>
+          </div>
+        )}
       </section>
     </div>
   );

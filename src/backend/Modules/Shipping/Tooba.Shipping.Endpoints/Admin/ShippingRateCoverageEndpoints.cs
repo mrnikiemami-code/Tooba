@@ -240,6 +240,7 @@ public static class ShippingEndpointModule
         ArgumentNullException.ThrowIfNull(app);
         var admin = app.MapGroup("/v1/admin");
         ShippingRateCoverageEndpoints.Map(admin);
+        ShippingMethodFinancialStatusEndpoints.Map(admin);
         ShippingOperatingScheduleEndpoints.Map(admin);
         ShippingPackagingPolicyEndpoints.Map(admin);
         ShippingOperationalQuoteEndpoints.Map(admin);

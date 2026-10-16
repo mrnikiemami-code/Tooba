@@ -1,5 +1,6 @@
 using FluentValidation;
 using Tooba.Shipping.Application.Rates.Commands;
+using Tooba.Shipping.Application.Rates.Queries;
 using Tooba.Shipping.Contracts.Admin;
 using Tooba.Shipping.Domain.Aggregates;
 
@@ -292,5 +293,25 @@ public sealed class GetShippingRatesAndCoverageQueryValidator : AbstractValidato
             .NotEmpty().WithErrorCode(ShippingValidationCodes.ServiceCodeRequired)
             .MaximumLength(ShippingRatePolicy.ServiceCodeMaxLength)
             .WithErrorCode(ShippingValidationCodes.ServiceCodeTooLong);
+    }
+}
+
+/// <summary>
+/// اعتبارسنج درخواست وضعیت مالی یک روش. کد سرویس الزامی است و گزینه اختیاری است (تهی یعنی سطح
+/// سرویس)، اما طول آن مثل نوشتن نرخ محدود می‌شود تا هویت بدشکل به لایهٔ داده نرسد.
+/// </summary>
+public sealed class GetShippingMethodFinancialStatusQueryValidator
+    : AbstractValidator<GetShippingMethodFinancialStatusQuery>
+{
+    /// <summary>قواعد را تعریف می‌کند.</summary>
+    public GetShippingMethodFinancialStatusQueryValidator()
+    {
+        RuleFor(x => x.ServiceCode)
+            .NotEmpty().WithErrorCode(ShippingValidationCodes.ServiceCodeRequired)
+            .MaximumLength(ShippingRatePolicy.ServiceCodeMaxLength)
+            .WithErrorCode(ShippingValidationCodes.ServiceCodeTooLong);
+        RuleFor(x => x.OptionCode)
+            .MaximumLength(ShippingRatePolicy.OptionCodeMaxLength)
+            .WithErrorCode(ShippingValidationCodes.OptionCodeTooLong);
     }
 }
