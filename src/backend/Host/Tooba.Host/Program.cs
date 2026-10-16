@@ -365,7 +365,15 @@ if (app.Environment.IsDevelopment())
         if (catalogDemoOptions.RunLegacyBootstraps)
         {
             await DevelopmentSchemaMigrator.ApplyAsync(app.Services);
-            await CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(app.Services, CancellationToken.None);
+            // TB-114: the legacy Catalog Development bootstraps resolve SCOPED module services
+            // (CatalogDbContext and the landing-page / store-menu workspaces) from the provider they
+            // receive. DevelopmentSchemaMigrator owns its own async scope; this sibling sequence needs
+            // its own, created here at the composition root and handed to the Catalog-owned seed seam,
+            // so no scoped service is ever resolved from the root provider.
+            await using var legacyCatalogBootstrapScope = app.Services.CreateAsyncScope();
+            await CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(
+                legacyCatalogBootstrapScope.ServiceProvider,
+                CancellationToken.None);
         }
         else
         {

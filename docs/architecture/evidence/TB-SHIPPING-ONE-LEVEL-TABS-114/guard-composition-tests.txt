@@ -1,0 +1,15 @@
+﻿Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host.Tests\bin\Debug\net8.0\Tooba.Host.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+dotnet : [xUnit.net 00:00:00.30]     
+Tooba.Host.Tests.Architecture.HostAdminAmcLandingPageSeedGuardTests.Host_Admin_count_15_StoreAppearance_evacuated 
+[FAIL]
+At C:\Users\User\AppData\Local\Temp\ps-script-f72f01d7-884d-4f7c-958f-3b3e01933a2f.ps1:103 char:43
++ ... SarvNewVer; dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host. ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...vacuated [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[xUnit.net 00:00:00.30]     Tooba.Host.Tests.Architecture.HostAdminAmcW34TemplateSeedsGuardTests.Host_Admin_count_15_St
+oreAppearance_and_HoldPolicy_evacuated [FAIL]
+
+Failed!  - Failed:     2, Passed:    11, Skipped:     0, Total:    13, Duration: 30 ms - Tooba.Host.Tests.dll (net8.0)
