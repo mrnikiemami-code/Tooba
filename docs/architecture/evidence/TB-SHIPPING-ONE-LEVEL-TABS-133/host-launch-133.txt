@@ -1,0 +1,11 @@
+﻿ISOLATED_HOST_PID=4472
+ISOLATED_HOST_EXE=D:\Users\User\source\repos\SarvNewVer\.tmp-133-host-out\Tooba.Host.exe
+ISOLATED_HOST_URL=http://127.0.0.1:5403
+LAUNCH_COUNT=1
+WATCHDOG_LIMIT_SECONDS=200
+STARTUP_ELAPSED_SECONDS=36
+WATCHDOG_HIT=False
+HAS_EXITED=False
+HEALTH_200_OBSERVED=True
+HEALTH_BODY={"status":"ok"}
+PLATFORM_COMMERCE_BODY={"edition":"SingleStore","deploymentId":"isolated-133","tenantId":"store-alpha","connectionReference":"tenant-133-scratch","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"1912b38feb9afc593c32539e477e1b93"}

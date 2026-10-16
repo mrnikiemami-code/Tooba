@@ -61,6 +61,14 @@ import {
   matchCityInArea,
   type GeographyDestinationIdentifiers,
 } from "./storefront-shipping-destination-model.ts";
+import {
+  distinctSelectedMethodCodes,
+  isShippingDateHorizonComplete,
+  pickEligibleDeliveryDate,
+  pickEligibleDeliveryWindow,
+  resolveShippingDateHorizon,
+} from "./storefront-shipping-group-horizon.ts";
+import { useGroupShippingDateHorizon } from "./use-storefront-group-shipping-horizon.ts";
 
 type AddressForm = {
   firstName: string;
@@ -335,6 +343,38 @@ export function StorefrontShopeivaShipping() {
   const groupedShippingAmount = groupSelections.reduce((sum, group) => sum + (group.method?.priceAmount ?? 0), 0);
   const allGroupsHaveMethod = groupSelections.every((group) => group.method !== null);
 
+  /**
+   * (133) روش‌های **متمایز** انتخاب‌شده. مبنای واکشی سرور است؛ دو گروه با یک روش یک درخواست
+   * مشترک می‌گیرند و ترتیب گروه‌ها روی افق اثری ندارد.
+   */
+  const selectedGroupMethodCodes = useMemo(
+    () => distinctSelectedMethodCodes(groupSelections, new Set(methodByCode.keys())),
+    [groupSelections, methodByCode],
+  );
+
+  // افق تاریخ/بازه از پاسخ واقعی سرور برای همان روش‌های متمایز (بدون تاریخ‌سازی در کلاینت).
+  const { horizon: groupHorizon } = useGroupShippingDateHorizon({
+    enabled: isGroupedCart,
+    cartId: projection?.cartId ?? null,
+    methodCodes: selectedGroupMethodCodes,
+    provinceName: address.provinceName,
+    cityName: address.cityName,
+    destination: destinationIdentifiers,
+    onError: (cause: unknown) => setError(toCustomerShippingMessage(cause, locale)),
+  });
+
+  const dateHorizon = useMemo(
+    () => resolveShippingDateHorizon({ isGroupedCart, projection, groupHorizon }),
+    [isGroupedCart, projection, groupHorizon],
+  );
+
+  // تاریخ/بازهٔ قبلی فقط اگر برای مجموعهٔ فعلی دیگر مجاز نباشد باطل می‌شود (بدون تغییر خودکار روش‌ها).
+  useEffect(() => {
+    if (!isGroupedCart || !groupHorizon.resolved) return;
+    setDeliveryDate((prev) => pickEligibleDeliveryDate(prev, groupHorizon));
+    setDeliveryTime((prev) => pickEligibleDeliveryWindow(prev, groupHorizon));
+  }, [isGroupedCart, groupHorizon]);
+
   const shippingAmount = isGroupedCart
     ? groupedShippingAmount
     : selectedMethod?.priceAmount ?? projection?.selectedShippingAmount ?? 0;
@@ -351,6 +391,8 @@ export function StorefrontShopeivaShipping() {
     (isGroupedCart ? allGroupsHaveMethod : Boolean(methodCode)) &&
     Boolean(deliveryDate) &&
     Boolean(deliveryTime) &&
+    // سبد چندگروهی: تاریخ و بازه باید از اشتراک واقعی پاسخ سرور برای همهٔ روش‌های انتخاب‌شده آمده باشند.
+    (!isGroupedCart || isShippingDateHorizonComplete(dateHorizon, deliveryDate, deliveryTime)) &&
     (projection?.methods.length ?? 0) > 0;
 
   function selectSaved(row: CustomerAddress) {
@@ -830,24 +872,24 @@ export function StorefrontShopeivaShipping() {
                 <div className="space-y-5">
                   <div>
                     <label className="block text-xs md:text-sm font-bold text-gray-700 mb-2">تاریخ تحویل</label>
-                    {projection.deliveryDates.length === 0 ? (
+                    {dateHorizon.dates.length === 0 ? (
                       <p className="text-xs text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-xl p-3">
                         ابتدا روش ارسال را انتخاب کنید تا نزدیک‌ترین تاریخ مجاز فروشگاه نمایش داده شود.
                       </p>
                     ) : (
                       <>
-                        {projection.minimumDeliveryDate ? (
+                        {dateHorizon.minimumDeliveryDate ? (
                           <p className="text-[11px] text-gray-500 mb-3">
                             اولین نوبت ممکن:{" "}
                             <span className="font-bold text-gray-800">
-                              {formatJalaliDate(`${projection.minimumDeliveryDate}T12:00:00`, "fa")}
+                              {formatJalaliDate(`${dateHorizon.minimumDeliveryDate}T12:00:00`, "fa")}
                             </span>
                           </p>
                         ) : null}
                         <div className="-mx-1 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
-                          {projection.deliveryDates.map((d) => {
+                          {dateHorizon.dates.map((d) => {
                             const disabled = Boolean(
-                              projection.minimumDeliveryDate && d.value < projection.minimumDeliveryDate,
+                              dateHorizon.minimumDeliveryDate && d.value < dateHorizon.minimumDeliveryDate,
                             );
                             const selected = deliveryDate === d.value;
                             const chip = deliveryChipParts(d);
@@ -884,10 +926,10 @@ export function StorefrontShopeivaShipping() {
                   <div>
                     <label className="block text-xs md:text-sm font-bold text-gray-700 mb-2">بازهٔ ساعت تحویل</label>
                     <div className="flex flex-wrap gap-2" data-testid="shipping-time" role="radiogroup" aria-label="ساعت تحویل">
-                      {projection.deliveryTimeWindows.length === 0 ? (
+                      {dateHorizon.timeWindows.length === 0 ? (
                         <p className="text-xs text-gray-500">بازه‌ای برای این روز اعلام نشده است.</p>
                       ) : (
-                        projection.deliveryTimeWindows.map((t) => {
+                        dateHorizon.timeWindows.map((t) => {
                           const selected = deliveryTime === t.value;
                           return (
                             <button

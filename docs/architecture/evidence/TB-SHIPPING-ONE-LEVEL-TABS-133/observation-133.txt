@@ -1,0 +1,103 @@
+TB-SHIPPING-ONE-LEVEL-TABS-133 — ISOLATED IMPLEMENTATION + BROWSER ACCEPTANCE
+capturedUtc=2026-10-16T05:55:00Z  (measured wall-clock window 09:07–09:25 local, base SHA 4da88089)
+isolatedHost=http://127.0.0.1:5403   isolatedFrontend=http://127.0.0.1:3103 (TOOBA_HOST_ORIGIN -> isolated Host)
+provenance=/__platform-commerce => tenantId=store-alpha connectionReference=tenant-133-scratch deploymentId=isolated-133
+frontendBindingDiscriminator=GET :3103/v1/storefront/checkout-identity-policy => policy=GuestAllowed, proving the
+  proxy was bound to the scratch Host and not to the shared :5088 listener.
+
+LAUNCH_ACCOUNTING (honest, bounded)
+PUBLISH: dotnet publish src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug -o .tmp-133-host-out --nologo -v q
+  -> exit 0 in ~32s, built from base SHA 4da88089 (backend unchanged by this task; frontend-only repair).
+SCRATCH: disposable container tooba-tb133-pg (postgres:16-alpine, port 55456) with BOTH scratch databases
+  (tooba_133_scratch + tooba_133_messaging) created BEFORE launch; this avoided the TB-132 missing-messaging-DB
+  setup gap.
+    10|HOST_LAUNCH_COUNT=1 -> healthy /health {"status":"ok"} after 36s, no watchdog hit, no relaunch.
+FRONTEND_LAUNCH_COUNT=1 -> ready on :3103 (next dev bound to the isolated Host).
+isolation-guard.json: failClosed=true (single Active tenant, scratch reference/DB/port, no shared alpha DB/ref/port,
+  ShippingRateAuthority/OperationalShadow absent, ShippingOneLevelCatalog.Enabled=true in the disposable overlay only).
+
+MISSION A — ROOT CAUSE REPAIR (frontend-only, no business authority added)
+The TB-132 defect is repaired at the projection seam only:
+ - NEW pure model module `app/storefront/storefront-shipping-group-horizon.ts` (no fetch, no React, no Date):
+   deriveGroupDateHorizon() intersects the server-returned allowed delivery dates and time windows over ALL
+   distinct selected group methods, takes the latest server minimum as the shared minimum, and re-flags the
+   earliest shared date; distinctSelectedMethodCodes() dedupes; createLatestResponseGate() is the latest-wins
+   response gate; pickEligible*/isShippingDateHorizonComplete() decide eligibility.
+ - NEW hook `app/storefront/use-storefront-group-shipping-horizon.ts`: for a grouped cart it calls the EXISTING
+   authorized POST /v1/storefront/shipping/projection ONCE PER DISTINCT selected method (Promise.allSettled,
+   stale tokens discarded) and never writes.
+ - `app/storefront/storefront-shipping.tsx` (minimal plumbing): grouped method clicks now feed that hook; the
+   delivery date/time controls and isValid read the derived `dateHorizon`; a previously chosen date/time is
+   invalidated only when it is no longer in the server-returned shared set. The single-seller path still uses
+   projection.deliveryDates/minimumDeliveryDate/deliveryTimeWindows exactly as before.
+NO CSS/theme/typography/layout/RTL/breakpoint/group-markup change; no client-side rate, promise or calendar arithmetic.
+
+MISSION B — REAL TWO-SELLER GUEST CART (browser, genuine customer actions on the isolated scratch Host)
+product=workspace-live-shirt (پیراهن مردانه لینن); two genuine seller offers:
+  دیجی‌استایل نمونه offer=01a14340-fddd-7000-bd35-0ee0d2041cf5 seller=01a14340-fdd4-7000-a614-344d8ce03ee5 amount=1790000
+  فروشگاه آرمان    offer=01a14340-fdd7-7000-98d2-9177aaece5e9 seller=01a14340-fdd2-7000-802d-4f6f9f426fac amount=1850000
+Browser: PDP add (primary seller) -> alternate seller selected in "فروشندگان این کالا" -> add again.
+  guest cart sessionStorage tooba.storefront.cartId=01a14342-1913-7000-a91b-7a54c40d241b (+guestSecret, never committed)
+  cart after both adds: cartVersion=5 itemCount=2 sellerCount=2 subtotalExclusiveOfTax=3640000 (=1790000+1850000)
+  /fa/shipping grouped card BEFORE fix (start state): 2 disjoint groups, 2 distinct real cart lines
+  (01a14342-1995-…, 01a14342-7fec-…), 14 method tiles (7 authoritative codes per group), delivery chip count=0,
+  "ابتدا روش ارسال را انتخاب کنید" notice visible, ادامه به پرداخت disabled=true — i.e. the TB-132 defect reproduced
+  on the pre-selection state, then eliminated by the repair below.
+
+MISSION B — ACCEPTANCE AFTER REPAIR (real DOM, isolated scratch)
+Address fully filled (رضا محمدی / 09121234567 / تهران / تهران / خیابان ولیعصر پلاک ۱۲ / 1234567890).
+Group methods chosen: group[دیجی‌استایل نمونه]=post:express, group[فروشگاه آرمان]=tipax:standard.
+OBSERVED (after both distinct methods selected):
+  delivery date chips (data-testid^="shipping-date-") = 6
+    ["2026-10-20","2026-10-21","2026-10-22","2026-10-23","2026-10-24","2026-10-25"], none disabled
+  "اولین نوبت ممکن" visible = true; earliest shared chip 2026-10-20 auto-selected ("نزدیک‌ترین")
+  delivery time windows = 4 (۹ صبح تا ۱۲ ظهر / ۱۲ ظهر تا ۳ بعدازظهر / ۳ بعدازظهر تا ۶ عصر / ۶ عصر تا ۹ شب)
+  "ابتدا روش ارسال را انتخاب کنید" notice = GONE
+  grouped fee rows = "دیجی‌استایل نمونه — پیشتاز ۲۰۰٬۰۰۰ ریال" + "فروشگاه آرمان — معمولی ۱۸۰٬۰۰۰ ریال"
+  Continue BEFORE a time window was chosen = disabled (correct: complete valid form still required)
+  Continue AFTER choosing a time window        = ENABLED (ادامه به پرداخت)
+SERVER-AUTHORITY COUNTERFACTUALS ON THE SAME SCRATCH HOST (authorized reads, same cart):
+  POST projection {methodCode:"post:express"}    -> deliveryDates=7 first=2026-10-19 minimum=2026-10-19
+  POST projection {methodCode:"tipax:standard"}  -> deliveryDates=7 first=2026-10-20 minimum=2026-10-20
+  POST projection {no methodCode}                -> deliveryDates=0 (the TB-132 source of the defect)
+  => the 6 chips rendered by the page are exactly the server intersection: 2026-10-19 (offered only by
+     post:express) is correctly excluded, and the shared floor is the LATER minimum (2026-10-20). No date was
+     invented client-side; the page simply mirrors server data for the distinct methods.
+STALE-RACE / SELECTION-RETENTION OBSERVATION: rapid switch of group[فروشگاه آرمان] tipax:standard -> post:standard
+  -> tipax:standard (two overlapping horizon requests) left the same 6 chips, the same selected date
+  (2026-10-20), the selected time window and enabled Continue unchanged (older response did not overwrite).
+
+MISSION B — HANDOFF (exactly ONE Continue click; selection persisted)
+  clicked ادامه به پرداخت once -> router to /fa/payment?cartId=01a14342-1913-7000-a91b-7a54c40d241b
+  payment page (data-testid=payment-handoff-page) summary:
+    روش ارسال: گیرنده: رضا محمدی — تهران        (draft address survived)
+    هزینه ارسال: ۳۸۰٬۰۰۰ ریال = 200,000 + 180,000 (exact sum of the two distinct group fees, server-side)
+    قابل پرداخت: ۴٬۳۴۷٬۶۰۰ ریال = 3,640,000*1.09 + 380,000 (items + 9% VAT + grouped shipping)
+    وضعیت پرداخت: در انتظار پرداخت · "این سفارش هنوز ثبت نشده است. سفارش و رزرو موجودی فقط با کلیک روی دکمهٔ
+      پرداخت نهایی ساخته می‌شود."  => NO premature commit/reservation/order creation.
+  cart after handoff: cartId unchanged, cartVersion=5, itemCount=2, sellerCount=2, subtotalExclusiveOfTax=3640000.
+  PUT /v1/storefront/shipping/selection was issued EXACTLY ONCE (single Continue click); shipping/commit=0,
+  start-payment=0, order creation=0, money capture=0.
+
+FIRST REMAINING BLOCKER (observed, NOT repaired here — outside this task's authorized scope)
+  A cold reload of /fa/shipping does not restore a previously saved shipping draft: address fields empty,
+  group method tiles unselected, 0 date chips, Continue disabled, and the page shows the revalidation notice
+  "انتخاب ارسال دیگر معتبر نیست؛ لطفاً دوباره انتخاب کنید." Consistently, POST /v1/storefront/shipping/projection
+  returns NO draft object (and no minimumDeliveryDate) when no methodCode is supplied — the same response shape
+  TB-132 recorded. This is the EXISTING Order-owned projection read contract, untouched by this repair (the repair
+  only ADDs reads with methodCode and never mutates). The draft itself did persist, as proven by the payment
+  handoff above. Smallest next step for the Architect: an Order-owned decision on the projection draft
+  read-back/revalidation contract (destination-identity matching) — do not "fix" it in the frontend.
+
+NON-CLAIMS (must not be read as accepted)
+ - Payment is NOT proven: the payment page was reached and its summary read, but no payment method was chosen,
+   no payment attempt/authorization/capture and no order was created. Checkout/payment/production readiness is NOT claimed.
+ - The tax figure (9%) is read from the payment page summary only; no tax-rule runtime provenance was gathered here.
+ - Single-seller legacy shipping was NOT re-run in the browser in this session; it is covered by source + the
+   focused tests (resolveShippingDateHorizon returns the projection's own horizon unchanged) and by the
+   untouched legacy branch, not by a new runtime journey.
+ - Visual acceptance is NOT claimed: one bounded screenshot (shipping-grouped-dates-enabled-133.png) is evidence
+   of the date horizon + enabled Continue only; no parity score.
+ - The stale-race observation is a single bounded rapid-switch sequence, not a stress/soak test.
+ - The grouped cart used two DIFFERENT sellers each with one line (TB-132 case). A single seller with two
+   independently chosen methods remains an OUTSTANDING acceptance case (not reachable in this UI).
