@@ -12,8 +12,8 @@ Expected-Base-SHA: b7060db9e363b6e47641dcc0d15626d962b68053
 Base-SHA: b7060db9e363b6e47641dcc0d15626d962b68053
 Base-SHA-Drift: none — HEAD == origin/main == Expected-Base-SHA at claim, and no source edit was made in this task. Only pre-existing unrelated dirty files were preserved (2 frontend admin screens + 3 older evidence txts, all reported before TB-119).
 Code-SHA: NONE (observation-only: no src/, test, frontend, appsettings, migration, feature-gate or shared-config edit)
-Evidence-SHA: <see the committed evidence directory for this task>
-HEAD==origin/main after push: true
+Evidence-SHA: 9dc9dec75a5ea6e3379eecf4eab5d5591592a6f2 (the commit that added docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-122.md and docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-122/**)
+HEAD==origin/main after push: true (verified again after the follow-up commit that carries this contract text)
 Measured-Minutes: ~14 total (claim 03:16Z, result 03:30Z) — inside the 45 min HARD timebox; investigation/setup finished well before minute 30.
 Process-Launch-Counts: isolated Host = 1 (single Start-Process, absolute exe path, watchdog 180 s — never hit, /health 200 after 36 s); isolated frontend = 1 (single node launch, external bound 600 s, ready in 28 s). No relaunch, no retry, no loop.
 Bridge-Output-Discipline: only this contract was posted; no chat status, progress or report was emitted.
