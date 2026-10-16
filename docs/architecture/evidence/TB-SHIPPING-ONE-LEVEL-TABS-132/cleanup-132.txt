@@ -1,0 +1,36 @@
+TB-SHIPPING-ONE-LEVEL-TABS-132 — cleanup / non-interference evidence
+capturedUtc=2026-10-16T05:36:00Z
+
+RECORDED_PIDS
+ISOLATED_HOST_FIRST_ATTEMPT_PID=42368  present=false (aborted before HTTP bind: scratch messaging database missing)
+ISOLATED_HOST_SECOND_LAUNCH_PID=41296  present=false (stopped after absolute-path verification)
+ISOLATED_FRONTEND_PID=36808             present=false (stopped after absolute-path verification)
+VERIFICATION=each PID was resolved with Get-Process and its .Path compared to the recorded absolute
+  executable path before Stop-Process -Id. No wildcard, name-based or port-based termination was used.
+
+SCRATCH_RESOURCES
+SCRATCH_CONTAINER=tooba-tb132-pg  (postgres:16-alpine, no volume, loopback-only 127.0.0.1:55455->5432)
+SCRATCH_CONTAINER_REMOVED=true
+SCRATCH_VOLUMES_CREATED=none
+TEMP_DIRS_REMOVED=.tmp-132-host-out, .tmp-132-run
+UNCOMMITTED_SECRET_REMOVED=.tmp-132-scratch-pw.txt (never committed; credentials were never written to evidence)
+
+PORT_RELEASE_PROOF (after cleanup)
+LISTENERS_ON_5402_AFTER_CLEANUP=0
+LISTENERS_ON_3102_AFTER_CLEANUP=0
+LISTENERS_ON_55455_AFTER_CLEANUP=0
+
+SHARED_ENVIRONMENT_PARITY
+SHARED_5088_LISTENERS=1   (untouched throughout: the isolated Host never bound :5088)
+SHARED_3000_LISTENERS=1   (untouched throughout: the isolated frontend bound :3102 only)
+SHARED_CONTAINERS_RUNNING=postgres-db (Up 5 days), rabbitmq (Up 5 days)  — same containers, same uptime,
+  no restart, no write. No task-owned SQL, no reset-and-seed, no shared tenant or shared database reference
+  (isolation-guard.json proves containsSharedAlphaDatabase=false / containsSharedAlphaPort=false).
+SHARED_TENANT_WRITES=none
+SHARED_SERVICE_RESTARTS=none
+
+REPO_STATE
+SOURCE_EDITS=none (observation-only task; no file under src/** was modified)
+TRACKED_FILE_EDITS=docs/** only (task receipt, evidence, planning note)
+UNRELATED_DIRTY_FILES_PRESERVED=src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx,
+  src/frontend/app/admin/admin-order-detail-screen.tsx (pre-existing, untouched)
