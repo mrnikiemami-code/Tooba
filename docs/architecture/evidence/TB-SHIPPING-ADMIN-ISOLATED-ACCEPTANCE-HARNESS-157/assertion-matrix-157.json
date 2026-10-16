@@ -1,0 +1,104 @@
+{
+  "generatedAtUtc": "2026-10-16T20:26:02.342Z",
+  "host": "http://127.0.0.1:5417",
+  "total": 19,
+  "passed": 19,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "dev_context_available",
+      "ok": true,
+      "detail": "http=200 actorResolved=true"
+    },
+    {
+      "id": "financial_status_anonymous_fail_closed",
+      "ok": true,
+      "detail": "http=401 errorCode=admin.actor.missing"
+    },
+    {
+      "id": "financial_status_unknown_actor_fail_closed",
+      "ok": true,
+      "detail": "http=403 errorCode=admin.authorization.denied"
+    },
+    {
+      "id": "access_control_bootstrap_ok",
+      "ok": true,
+      "detail": "http=204 body="
+    },
+    {
+      "id": "fulfillment_view_granted",
+      "ok": true,
+      "detail": "http=200 grants=55"
+    },
+    {
+      "id": "fulfillment_manage_granted",
+      "ok": true,
+      "detail": "http=200 grants=55"
+    },
+    {
+      "id": "financial_status_other_actor_fail_closed",
+      "ok": true,
+      "detail": "http=403 errorCode=admin.authorization.denied"
+    },
+    {
+      "id": "authoritative_binding_resolved",
+      "ok": true,
+      "detail": "http=200 serviceCode=tipax optionCode=standard"
+    },
+    {
+      "id": "financial_status_authorized_read_ok",
+      "ok": true,
+      "detail": "http=200 state=NeedsConfiguration reason=shipping.financial.no_owned_rules"
+    },
+    {
+      "id": "legacy_service_level_write_accepted",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "legacy_row_is_not_projected_as_method_price",
+      "ok": true,
+      "detail": "http=200 state=LegacySharedUnresolved mode=None currency=undefined serviceLevelRules=1"
+    },
+    {
+      "id": "owned_fixed_irr_rule_saved",
+      "ok": true,
+      "detail": "http=200 ratePolicyId=01a14664-a0ce-7000-af99-032b6e042171 errorCode=null"
+    },
+    {
+      "id": "owned_amount_read_back_from_server",
+      "ok": true,
+      "detail": "http=200 state=FinanciallyConfigured currency=IRR amount=185000"
+    },
+    {
+      "id": "legacy_row_preserved_after_owned_write",
+      "ok": true,
+      "detail": "ruleCount=1 serviceLevelRules=1"
+    },
+    {
+      "id": "sibling_option_unchanged",
+      "ok": true,
+      "detail": "http=200 state=LegacySharedUnresolved ruleCount=0 siblingRules=1"
+    },
+    {
+      "id": "conflicting_duplicate_denied",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping.rate_policy.scope_duplicate"
+    },
+    {
+      "id": "rejected_write_did_not_mutate",
+      "ok": true,
+      "detail": "http=200 ruleCount=1 amount=185000"
+    },
+    {
+      "id": "unauthorized_write_rejected",
+      "ok": true,
+      "detail": "http=403 errorCode=admin.authorization.denied"
+    },
+    {
+      "id": "unauthorized_write_did_not_mutate",
+      "ok": true,
+      "detail": "ruleCount=1 amount=185000"
+    }
+  ]
+}

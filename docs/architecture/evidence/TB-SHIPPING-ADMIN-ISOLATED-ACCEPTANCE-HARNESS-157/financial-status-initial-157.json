@@ -1,0 +1,14 @@
+{
+  "serviceCode": "tipax",
+  "optionCode": "standard",
+  "state": "NeedsConfiguration",
+  "mode": "None",
+  "ruleCount": 0,
+  "conditionedRuleCount": 0,
+  "hasZeroChargeRule": false,
+  "activeServiceLevelRuleCount": 0,
+  "activeSiblingOptionRuleCount": 0,
+  "activeCoverageGrantCount": 0,
+  "rules": [],
+  "reasonCode": "shipping.financial.no_owned_rules"
+}

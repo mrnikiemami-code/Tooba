@@ -1,0 +1,138 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-ISOLATED-ACCEPTANCE-HARNESS-157
+Parent-Task: TB-SHIPPING-METHOD-FINANCIAL-EDIT-156
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FLAT-METHOD-COMMERCIAL-READINESS
+Mode: BOUNDED_REUSABLE_PRIVATE_ADMIN_RUNTIME_AND_REAL_MONEY_WRITE_READ_ACCEPTANCE
+Bridge-Task-Row: b14563ef-a320-4c9d-89cd-e4b9f6dcce21
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 2b798560b9d3dd18e5d5a8c92c919c5fcbf82838
+Base-SHA: 2b798560b9d3dd18e5d5a8c92c919c5fcbf82838
+Code-SHA: the evidence commit that carries this payload together with the harness
+Evidence-SHA: same commit (Code-SHA == Evidence-SHA for this task)
+automaticNextImplementationTask: NONE
+Repository: mrnikiemami-code/Tooba
+Branch: main
+HEAD-Origin-Parity: TRUE (git rev-parse HEAD == git rev-parse origin/main verified immediately before reporting)
+Evidence: docs/architecture/evidence/TB-SHIPPING-ADMIN-ISOLATED-ACCEPTANCE-HARNESS-157/
+
+WHY PARTIAL AND NOT PASS
+Two components remained unproven inside the hard timebox: (a) the REAL PRIVATE ADMIN BROWSER leg — the private
+Next frontend was never launched, so there is no screenshot and no DOM read of the Admin Rates & Coverage /
+General screens, and the save->reload VISUAL cycle is unproven; (b) the STOREFRONT QUOTE dependency of the edited
+amount is UNVERIFIED (needs an authenticated cart journey). Everything else requested was produced for real. No
+pixel/visual claim and no financial-readiness claim is made on their behalf.
+
+WHAT WAS ACTUALLY RUN (real, private, disposable)
+Private topology, all task-owned and loopback-only:
+- Postgres 16.15 on 127.0.0.1:55475, databases tooba_157_scratch + tooba_157_messaging, container tooba-tb157-pg (removed after evidence).
+- Host built from THIS HEAD (dotnet publish, .tmp-157-host-out) on http://127.0.0.1:5417, Edition SingleStore, PID 41828.
+- Next frontend on http://127.0.0.1:3111: NOT LAUNCHED (remaining blocker).
+isolation-guard.json (fail-closed, PASS): one Active tenant (store-alpha -> tenant-157-scratch), no tooba_alpha,
+no tenant-alpha, no Port=5432, no prior scratch port, no ShippingRateAuthority, no ShippingOperationalShadow,
+Edition SingleStore (no swap), AllowResetAndSeed=false, RunLegacyBootstraps=true. Credentials came from the
+environment (TOOBA_157_SCRATCH_PASSWORD) and were never written into evidence.
+
+MISSING PIECE FOUND AND CLOSED: ADMIN AUTHORIZATION IN SCRATCH
+Earlier shipping acceptance tasks could not produce authorized Admin evidence because NO script seeded admin
+authorization in a scratch runtime. The supported path was found and is now scripted in the harness:
+1) GET /v1/admin/dev-context -> the Host's own Development-only seam returning the sanctioned dev admin actor
+   (created by AdminDevActorBootstrap with a real user#member@tenant:store-alpha tuple).
+2) POST /v1/admin/access-control/bootstrap -> the product's OWN access-control bootstrap: system platform-admin
+   role + real permission catalog + assignment, writing real user#granted@permission:<id> tuples through
+   IAuthorizationTupleWriter.
+3) GET /v1/admin/access-control/me/capabilities -> 55 grants observed, including fulfillment.view and
+   fulfillment.manage.
+No authorization was disabled, no fabricated access header was used, and no global allowlist or privilege
+fallback exists.
+
+MEASURED ASSERTIONS — assertion-matrix-157.json: 19 total, 19 PASS, 0 FAIL
+Authorized HTTP read: GET /v1/admin/shipping-services/tipax/financial-status?optionCode=standard -> HTTP 200,
+state=NeedsConfiguration, reason=shipping.financial.no_owned_rules (initial, real scratch state).
+Authoritative server binding: GET .../shipping-methods/one-level/tipax%3Astandard/binding -> HTTP 200,
+serviceCode=tipax, optionCode=standard (option identity always from the server, never parsed client-side).
+Provider/service-level write: POST /v1/admin/shipping-services/tipax/rates with optionCode=null -> HTTP 200;
+the method's own status then read HTTP 200 state=LegacySharedUnresolved, mode=None, NO currency -> the shared
+legacy row is never projected as this method's price and never treated as free.
+Owned write over the EXISTING seam only: POST /v1/admin/shipping-services/tipax/rates with optionCode=standard,
+chargeAmount=185000, currencyCode=IRR -> HTTP 200, ratePolicyId=01a14664-a0ce-7000-af99-032b6e042171.
+Read back from the server: HTTP 200 state=FinanciallyConfigured, mode=FixedAmount, currencyCode=IRR,
+chargeAmount=185000, reason=shipping.financial.owned_rules_present, activeServiceLevelRuleCount=1.
+Legacy preservation: ruleCount=1 while the legacy service-level row stays present (1) -> the provider-level row
+was neither edited nor deleted.
+Sibling isolation: GET .../financial-status?optionCode=express -> HTTP 200 state=LegacySharedUnresolved,
+ruleCount=0, activeSiblingOptionRuleCount=1 -> tipax:express has no owned rule and did not inherit the standard
+money.
+Rejected conflicting write: duplicate identical scope -> HTTP 400 shipping.rate_policy.scope_duplicate, and the
+stored rule stayed ruleCount=1 amount=185000 (no mutation).
+Rejected unauthorized write: HTTP 403 admin.authorization.denied for a non-granted actor, and the stored rule
+stayed ruleCount=1 amount=185000 (no mutation).
+Fail-closed guards: anonymous -> HTTP 401 admin.actor.missing; unknown actor -> HTTP 403
+admin.authorization.denied; a second ungranted actor -> HTTP 403 admin.authorization.denied.
+Real persisted rows (db-readback-157.txt):
+  tipax|option=<null service-level>|amount=99000.00|currency=IRR|active=true
+  tipax|option=standard|amount=185000.00|currency=IRR|active=true
+Sanitized responses kept: financial-status-initial-157.json, financial-status-after-legacy-157.json,
+financial-status-after-owned-157.json, financial-status-sibling-157.json. No stored 0 was interpreted as FREE
+and no missing tariff was made free anywhere in this run.
+
+SCRATCH-ONLY DATA REQUIRED (and why) — a genuine gap in the TB-152/154 recipe, now fixed
+1) Shipping/Geography schema: the Development Host deliberately does NOT migrate the Shipping schema
+   (ShippingModuleCompositionGuardTests asserts the module registers no IModuleSchemaMigrator); the real product
+   tool Tooba.MigrationRunner owns it. Before that step every shipping read answered HTTP 500
+   platform.unexpected with 42P01: relation "shipping.rate_policies" does not exist. seed-scratch-157.ps1 now
+   publishes and runs "Tooba.MigrationRunner apply --all-tenants" against the scratch target:
+   schema=shipping current=20261015071836_ShippingPackagingPolicy result=ok, exit 0.
+2) Destination fixture: the write seam validates its destination through the read-only Geography contract
+   (IGeographyLookup.GetByIdsAsync); with empty scratch geography every write failed 400
+   shipping.destination_scope.invalid. scratch-geography-fixture-157.sql inserts exactly one consistent chain
+   (country -> administrative area -> city -> service area) plus names in the DISPOSABLE database only. No
+   schema change, no migration of production data, no production write.
+
+REUSABLE HARNESS (the deliverable)
+docs/architecture/evidence/TB-SHIPPING-ADMIN-ISOLATED-ACCEPTANCE-HARNESS-157/ contains a durable, rerunnable,
+documented harness: prepare-isolated-target-157.js (overlay + fail-closed isolation guard),
+launch-isolated-host-157.ps1 (PID recorded), launch-isolated-frontend-157.ps1 (private Next, committed but not
+run), seed-scratch-157.ps1 (product migration runner + destination fixture), acceptance-157.js (19 assertions),
+scratch-geography-fixture-157.sql, cleanup-157.ps1 (stops only task-owned PIDs matched by executable path),
+and README.md with the exact run order and the authorization-seeding explanation.
+
+CLEANUP PROVEN — cleanup-157.txt
+Task-owned Host stopped by recorded PID with executable-path match (STOPPED_PID=41828 PATH_MATCH=True
+STILL_ALIVE=False); the ONLY task-owned container removed (docker rm -f tooba-tb157-pg); :5417, :3111 and :55475
+no longer listening; scratch container absent; SHARED :3000 / :5088 / :5432 UNTOUCHED (all still listening);
+.tmp-157-run and .tmp-157-host-out deleted (gitignored). No name/wildcard/broad termination was ever used and no
+shared resource was a stop target.
+
+TESTS AND QUALITY
+No production code or contract was changed, so the focused backend/frontend suites were not re-run for this
+task; the acceptance itself is the measured evidence (19/19 HTTP+DB assertions plus the product migration run).
+The TB-155/TB-156 unit evidence remains in its own folders unchanged. Baseline failures are unchanged and
+unrelated.
+
+INVARIANTS RESPECTED
+Four flat method tabs, exactly three per-row actions, multilingual naming/RTL and the design system were not
+touched; methodCode identity is always bound by the authoritative server and optionCode is never parsed
+client-side; sibling provider options share no write authority or pricing; activation was never equated with
+financial readiness; no production DB write, migration, global CSS or Host business authority change; no
+unrelated dirty file, stash or TB-075/079 log was touched; no rebase/reset/autostash/force-push occurred.
+
+REMAINING GAPS
+1) Real private Admin browser leg NOT DONE: no screenshot and no DOM read; save->reload visual cycle unproven.
+2) Storefront quote dependency UNVERIFIED; no invented production rate and no financial readiness claimed.
+3) The "valid actor without fulfillment.view" probe is order-dependent: the pre-bootstrap probe for the
+   sanctioned dev actor returned 401/403 in the first run but becomes 200 after the idempotent bootstrap, so the
+   durable assertions use an unknown actor (403) and anonymous (401); isolating that state would need a second
+   persisted role/actor.
+4) acceptance-157.js expects a fresh scratch shipping state; re-runs report the second write as the denied
+   duplicate (documented in README.md).
+
+NEXT SMALLEST FIX
+Run launch-isolated-frontend-157.ps1 on top of this harness, open the private Admin shipping-services Rates &
+Coverage and General tabs in a real browser (prepareAdminDevActor()), capture the save->reload screenshot and DOM
+read for the amount already proven over HTTP, then add the authenticated storefront quote check.
+END_TOOBA_WORKER_RESULT

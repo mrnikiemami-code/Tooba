@@ -1,0 +1,14 @@
+{
+  "serviceCode": "tipax",
+  "optionCode": "express",
+  "state": "LegacySharedUnresolved",
+  "mode": "None",
+  "ruleCount": 0,
+  "conditionedRuleCount": 0,
+  "hasZeroChargeRule": false,
+  "activeServiceLevelRuleCount": 1,
+  "activeSiblingOptionRuleCount": 1,
+  "activeCoverageGrantCount": 0,
+  "rules": [],
+  "reasonCode": "shipping.financial.legacy_service_level_shared"
+}

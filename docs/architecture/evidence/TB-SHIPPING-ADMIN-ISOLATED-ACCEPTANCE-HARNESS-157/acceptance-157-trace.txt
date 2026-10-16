@@ -1,0 +1,19 @@
+- PASS :: dev_context_available :: http=200 actorResolved=true
+- PASS :: financial_status_anonymous_fail_closed :: http=401 errorCode=admin.actor.missing
+- PASS :: financial_status_unknown_actor_fail_closed :: http=403 errorCode=admin.authorization.denied
+- PASS :: access_control_bootstrap_ok :: http=204 body=
+- PASS :: fulfillment_view_granted :: http=200 grants=55
+- PASS :: fulfillment_manage_granted :: http=200 grants=55
+- PASS :: financial_status_other_actor_fail_closed :: http=403 errorCode=admin.authorization.denied
+- PASS :: authoritative_binding_resolved :: http=200 serviceCode=tipax optionCode=standard
+- PASS :: financial_status_authorized_read_ok :: http=200 state=NeedsConfiguration reason=shipping.financial.no_owned_rules
+- PASS :: legacy_service_level_write_accepted :: http=200 errorCode=null
+- PASS :: legacy_row_is_not_projected_as_method_price :: http=200 state=LegacySharedUnresolved mode=None currency=undefined serviceLevelRules=1
+- PASS :: owned_fixed_irr_rule_saved :: http=200 ratePolicyId=01a14664-a0ce-7000-af99-032b6e042171 errorCode=null
+- PASS :: owned_amount_read_back_from_server :: http=200 state=FinanciallyConfigured currency=IRR amount=185000
+- PASS :: legacy_row_preserved_after_owned_write :: ruleCount=1 serviceLevelRules=1
+- PASS :: sibling_option_unchanged :: http=200 state=LegacySharedUnresolved ruleCount=0 siblingRules=1
+- PASS :: conflicting_duplicate_denied :: http=400 errorCode=shipping.rate_policy.scope_duplicate
+- PASS :: rejected_write_did_not_mutate :: http=200 ruleCount=1 amount=185000
+- PASS :: unauthorized_write_rejected :: http=403 errorCode=admin.authorization.denied
+- PASS :: unauthorized_write_did_not_mutate :: ruleCount=1 amount=185000

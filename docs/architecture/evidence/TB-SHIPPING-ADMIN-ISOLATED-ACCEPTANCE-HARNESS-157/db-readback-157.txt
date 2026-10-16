@@ -1,0 +1,5 @@
+﻿TARGET=tooba-tb157-pg / tooba_157_scratch (scratch only)
+SHIPPING_RATE_POLICIES (real persisted rows after the acceptance run):
+  tipax|option=<null service-level>|amount=99000.00|currency=IRR|active=true|country=11111111-1111-1111-1111-111111111111
+  tipax|option=standard|amount=185000.00|currency=IRR|active=true|country=11111111-1111-1111-1111-111111111111
+DELIMITER=service_code|option|amount|currency|active|country
