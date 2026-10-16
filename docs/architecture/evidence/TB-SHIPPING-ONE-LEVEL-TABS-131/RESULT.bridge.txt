@@ -92,7 +92,8 @@ TESTS (Mission B: one initial run, one targeted rerun after a concrete failure; 
    home=PASS, pdp-guard=PASS, listing-guard=PASS, category-plp-guard=PASS, surface-coverage=19/20.
    Sole failure is PRE-EXISTING and UNRELATED: component-compliance.guard.test.ts reports
    'app/storefront/storefront-landing-blocks.tsx:286 bg-white'. Proof: that file has no working-tree
-   modification (git status clean, git diff HEAD empty) and git show HEAD:<file> line 286 already
+   modification (git status clean, git diff HEAD empty) and git show HEAD:src/frontend/app/storefront/
+   storefront-landing-blocks.tsx line 286 already
    contains bg-white/70 at the base SHA. None of the 4 files changed by TB-131 appears in the failure
    list, so the changed surfaces pass the structural raw-color guard.
 
