@@ -1,0 +1,76 @@
+﻿BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-136
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-135
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Program: TOOBA-SHIPPING-CHECKOUT-DELIVERY-CLOSURE
+Mode: BOUNDED_SAME_SELLER_TWO_LINES_REAL_BROWSER_ACCEPTANCE
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Base-SHA: 2b0f4a4ae67fb63aeebacf3ec3c4961cd08d34a2
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Measured-Minutes: 68 (timebox was 45; overrun caused by the isolated publish/launch startup and one address-form selector detour; work was stopped immediately after the journey, no exploratory loops were left open)
+
+SUMMARY
+The TB-135 fixture gap is closed with a Development-only additive fixture, and the same-seller / two-item / two-method case is now proven end to end in a real browser session against an isolated Host plus isolated PostgreSQL. One real seller (فروشگاه آرمان) presents two genuinely distinct sellable cart lines, the customer chooses two different authoritative shipping methods for those two lines of that single seller, exactly one draft is saved, the isolated database holds two groups for the same seller with disjoint cart line ids and a fee sum of 380,000 IRR, the Order-owned payment projection charges 380,000 shipping with a 3,977,000 payable total, and a single cold reload restores address, both per-line methods, date and window. No CSS/token/layout change was made and desktop plus one RTL mobile viewport were checked with the pre-existing item-level tiles.
+
+A. FIXTURE (app-owned, Development-only, additive)
+offer.offers enforces a unique index on (SellerPartyId, CatalogVariantId, Channel) for non-Archived rows, so a second offer for the same seller on the same variant is impossible. The fixture therefore adds ONE extra live product with its own variant and its own offer belonging to the SAME existing Seller A:
+- product slug seam workspace-live-scarf (WorkspaceDemoProductSeed.CompanionSlug)
+- variant code seam LIVE-SCARF-NVY
+- seller SKU ARM-SC-01 (WorkspaceDemoMarketplaceSeed.SellerACompanionSku), price 1,450,000 IRR, market IR, channel Marketplace
+- tax category standard (9% IR-NAT) and 6 units of real stock at WH-THR
+- seller identity reused through EnsureDevelopmentOrganizationAsync(SellerADisplayName, SellerALegalName) — no new party
+Reused existing Catalog seams: same brand, the live product's own leaf category, and the existing color/black axis via CatalogDevelopmentAttributeReuse.
+Reachability: invoked only from WorkspaceDemoSeed.SeedNewProductAsync (the create path) behind the already existing IHostEnvironment.IsDevelopment() gate; RefreshExistingCopyAsync is untouched, so an already-seeded or shared Development database is never mutated. No production seed, no manual SQL, no DB bypass, no global seed reset, no user-facing fixture, no fabricated ids or rates.
+
+B. ENVIRONMENT (isolated scratch only)
+- isolated Host http://127.0.0.1:5405 deploymentId isolated-136 tenant store-alpha reference tenant-136-scratch, single active tenant
+- isolated frontend http://127.0.0.1:3105 (repo's own TOOBA_HOST_ORIGIN seam, no tracked file modified)
+- isolated PostgreSQL container tooba-tb136-pg on 127.0.0.1:55458 with BOTH databases created up front (tooba_136_scratch tenant, tooba_136_messaging messaging)
+- overlay difference is exactly one flag: Tooba:ShippingOneLevelCatalog:Enabled=true, disposable overlay only; no ShippingRateAuthority and no ShippingOperationalShadow
+- isolation guard failClosed=true (no tooba_alpha database, no tenant-alpha reference, no 5432 port, no prior scratch port); password came from an uncommitted env file and was never written to evidence
+- shared services were never restarted, mutated or stopped: :5088 and :3000 are still listening and postgres-db/rabbitmq are still running after cleanup
+- cleanup is PID-verified by absolute path; scratch container removed, both temp dirs and the secret removed, listeners on 5405/3105/55458 all 0
+
+C. MISSION A — REAL CUSTOMER FLOW (browser session, storefront actions only)
+- add item 1: PDP /fa/products/workspace-live-shirt, selected the offer radio «فروشگاه آرمان موجود · ۱۶ عدد ۱٬۸۵۰٬۰۰۰ ریال», then «افزودن به سبد خرید»
+- add item 2: PDP /fa/products/workspace-live-scarf (Seller A primary offer, 1,450,000 IRR), then «افزودن به سبد خرید»
+- cart: 2 items, 3,300,000 IRR goods; /fa/shipping rendered exactly ONE seller card whose testid is the seller party id 01a14369-706a-7000-abbc-6346a9cfe571 with TWO item rows (shirt 01a1436e-ff9a-7000-81b1-445bdd4470c7 and scarf 01a1436f-295e-7000-8b30-7001782316a4) and 7 independent method tiles per row (14 total)
+- methods chosen: line 1 = post:express (پیشتاز 200,000 IRR), line 2 = tipax:standard (معمولی 180,000 IRR) — two DIFFERENT authoritative methods for two lines of the SAME seller
+- the single seller card showed TWO fee rows (پیشتاز 200,000 and معمولی 180,000) summing to the card fee ۳۸۰٬۰۰۰ ریال
+- delivery dates are server-derived intersection: «اولین نوبت ممکن: 1405/07/28», 6 allowed date chips and 4 time windows (lead days 2 and 3), chosen shared day 2026-10-20 with window 9-12
+- address completed (نام، نام خانوادگی، موبایل، استان تهران، شهر تهران، آدرس کامل، کد پستی); «ادامه به پرداخت» became enabled only after address plus both per-line methods plus date plus window were valid
+- exactly ONE click of «ادامه به پرداخت» saved exactly one draft and navigated to /fa/payment?cartId=01a1436e-ff2b-7000-bf33-63da8bb56412; no automatic checkout submit, no payment start, no capture, no reservation, no cart clear
+
+D. PERSISTENCE READ-BACK (isolated database, read-only)
+GROUPS=2 DISTINCT_SELLERS=1 DISTINCT_METHODS=2 TOTAL_LINES=2 DISTINCT_LINES=2 FEE_SUM=380000.00
+group 1: seller 01a14369-706a-7000-abbc-6346a9cfe571, method post:express, service post, amount 200000.00, date 2026-10-20, window 9-12, lead 2, cart line 01a1436e-ff9a-7000-81b1-445bdd4470c7
+group 2: seller 01a14369-706a-7000-abbc-6346a9cfe571, method tipax:standard, service tipax, amount 180000.00, date 2026-10-20, window 9-12, lead 3, cart line 01a1436f-295e-7000-8b30-7001782316a4
+draft: shipping_method_code empty (multi-group shorthand), shipping_amount 380000.00, minimum_delivery_date 2026-10-19, selected_delivery_date 2026-10-20, window 9-12, province تهران, city تهران
+disjoint cart line ids confirmed (2 groups, 2 distinct cart_line_id, no line assigned twice); both groups share the SAME real seller party id; fee sum equals the two authoritative group fees, nothing fabricated
+offer provenance read-back: ARM-LN-01 and ARM-SC-01 both belong to seller_party_id 01a14369-706a-7000-abbc-6346a9cfe571 and both are Active, with distinct offers and distinct variants
+
+E. PAYMENT PROJECTION AND RESTORATION
+- /fa/payment shows «هزینه ارسال: ۳۸۰٬۰۰۰ ریال» (equals the persisted group fee sum) and a payable total of ۳٬۹۷۷٬۰۰۰ ریال = 3,300,000 goods + 297,000 standard 9% tax + 380,000 shipping; this step only reads the Order-owned projection and started no payment
+- note: the label «روش ارسال:» is rendered with an EMPTY value for a multi-group draft because the scalar legacy shorthand is blank. This is a display-only residual observation reported for Architect triage, not a charge or total defect
+- one cold reload of /fa/shipping restored 2 item rows, the two per-line methods (post:express and tipax:standard) keyed by the persisted CartLineIds, both per-group fees, the address values, the chosen date (۲۰۲۶-۱۰-۲۰) and window (9-12), with continue enabled and no revalidation message and no guessed substitute
+
+F. NON-REGRESSION AND EVIDENCE
+- zero CSS/token/layout/typography/theme/global-selector changes; the existing item-level tile markup and classes were used unchanged
+- desktop screenshot shipped-same-seller-two-methods-136.png; mobile 390x880 RTL screenshot shipping-same-seller-two-methods-136-mobile.png with rows 2, tiles 14, selected 2, card width 326, direction rtl, no horizontal overflow
+- focused test for the changed fixture source: Tooba.Host.Tests.Architecture.SameSellerCompanionFixtureGuardTests passed (1/1), asserting distinct companion seams, Seller A identity reuse, authoritative price plus real stock, create-path-only reachability behind IsDevelopment, and an untouched refresh path
+- evidence directory docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-136 contains observation-136.txt, api-prereq-136.txt, host-launch-136.txt, isolation-guard.json, cleanup-136.txt, the two launch scripts, the prepare and api-prep scripts, the readback sql and both screenshots; no secret was written
+
+G. NOT CLAIMED / REMAINING BLOCKERS
+- no end-to-end payment capture, order placement, settlement or production acceptance is claimed
+- Settlement PendingAllocation and payout origin/eligibility policy blockers are unchanged and were not exercised
+- the single caller-visible residual is the empty method label on /fa/payment for multi-group drafts noted in section E
+
+COMMITS
+Code/tests/docs commit: 504aeb1166038946ca3b9e314afa46bedcb29f28
+Evidence commit: EVIDENCE_SHA_PLACEHOLDER_136
+HEAD equals origin/main after both pushes; the two pre-existing dirty admin frontend screens and the two unrelated evidence logs were preserved and not committed.
+END_TOOBA_WORKER_RESULT

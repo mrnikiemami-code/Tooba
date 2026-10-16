@@ -1,0 +1,40 @@
+capturedUtc=2026-10-16T06:37:47.456Z
+isolatedBase=http://127.0.0.1:5405
+commerce.status=200
+commerce.body={"edition":"SingleStore","deploymentId":"isolated-136","tenantId":"store-alpha","connectionReference":"tenant-136-scratch","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"a5f3c5e3c57bc1bf91cfa024d18a08bc"}
+dev_context.status=200
+dev_context.actor=01a14369-7218-7000-899f-e2bb8121a651
+policy_put.status=200
+policy_put.status=200
+policy_after.status=200
+policy_after.body={"policy":"GuestAllowed","cartAnonymousAllowed":true,"checkoutAuthenticationRequired":false}
+one_level_admin.status=200
+catalog.gate=Enabled
+catalog.ready=true
+catalog.rowCount=7
+catalog.row[post:express]=name="پیشتاز" isActive=true
+catalog.row[post:standard]=name="معمولی" isActive=true
+catalog.row[tipax:express]=name="پیشتاز" isActive=true
+catalog.row[tipax:standard]=name="معمولی" isActive=true
+catalog.row[snapp_courier]=name="اسنپ / پیک آنلاین" isActive=true
+catalog.row[store_courier]=name="پیک فروشگاه" isActive=true
+catalog.row[in_person]=name="تحویل حضوری" isActive=true
+product1.status=200
+product1.slug=workspace-live-shirt
+product1.title=پیراهن مردانه لینن
+product1.primary.seller=دیجی‌استایل نمونه
+product1.primary.sellerSku=DGS-LN-01
+product1.other[فروشگاه آرمان].offerId=01a14369-706f-7000-8f76-b5fc47476685
+product1.other[فروشگاه آرمان].sellerSku=
+product1.other[فروشگاه آرمان].amount=1850000
+product2.status=200
+product2.slug=workspace-live-scarf
+product2.title=شال مردانه لینن
+product2.primary.offerId=01a14369-7159-7000-909d-b6a0ce999a84
+product2.primary.sellerPartyId=01a14369-706a-7000-abbc-6346a9cfe571
+product2.primary.seller=فروشگاه آرمان
+product2.primary.sellerSku=ARM-SC-01
+product2.primary.amount=1450000
+product2.primary.availableUnits=6
+product2.primary.taxCategory=استاندارد
+uncommittedSecretsFile=.tmp-136-run/api-prep.json (never committed)

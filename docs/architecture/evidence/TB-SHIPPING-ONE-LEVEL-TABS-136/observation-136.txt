@@ -1,0 +1,75 @@
+TB-SHIPPING-ONE-LEVEL-TABS-136 — REAL SAME-SELLER / TWO-METHOD BROWSER ACCEPTANCE (ISOLATED SCRATCH)
+
+TARGET PROVENANCE
+isolatedHost=http://127.0.0.1:5405 deploymentId=isolated-136 tenant=store-alpha connectionReference=tenant-136-scratch
+isolatedFrontend=http://127.0.0.1:3105 (TOOBA_HOST_ORIGIN -> 5405)
+scratchPostgres=tooba-tb136-pg 127.0.0.1:55458 user=scratch136 dbs=tooba_136_scratch,tooba_136_messaging (both created up front)
+sharedTargetsTouched=NONE (no restart/mutation/stop of :5088, :3000, postgres-db/tooba_alpha)
+isolationGuard.failClosed=true (single active tenant; no alpha db/reference/port; no prior scratch port)
+passwordSource=uncommitted env file .tmp-136-scratch-pw.txt (removed at cleanup, never committed)
+
+FIXTURE GAP CLOSED (app-owned, Development-only)
+AddedTB136CompanionLiveProduct=true slug=workspace-live-scarf variantCode=LIVE-SCARF-NVY sellerSku=ARM-SC-01 price=1450000 IRR stock=6
+companionSeller=REUSES existing Seller A identity (EnsureDevelopmentOrganizationAsync SellerADisplayName/SellerALegalName)
+reachableOnlyFrom=WorkspaceDemoSeed.SeedNewProductAsync (create path) behind existing environment.IsDevelopment() gate
+refreshExistingCopyPath=untouched (no companion call) — an already-seeded/shared Development database is never mutated
+noManualSql=true noProductionSeed=true noDbBypass=true noGlobalSeedReset=true noUserFacingFixture=true
+
+MISSION A — REAL CUSTOMER FLOW (browser session, no DB manipulation)
+step1_addItem1=storefront PDP /fa/products/workspace-live-shirt -> selected offer radio "فروشگاه آرمان موجود · ۱۶ عدد ۱٬۸۵۰٬۰۰۰ ریال" -> "افزودن به سبد خرید"
+step2_addItem2=storefront PDP /fa/products/workspace-live-scarf -> primary offer "فروشگاه آرمان موجود · ۶ عدد ۱٬۴۵۰٬۰۰۰ ریال" -> "افزودن به سبد خرید"
+cartReadback=تعداد کالا=۲ / جمع کل=۳٬۳۰۰٬۰۰۰ ریال (=1,850,000+1,450,000, both Seller A offers)
+sellerCardsOnShipping=1 (shipping-group-01a14369-706a-7000-abbc-6346a9cfe571 == the SAME sellerPartyId of both offers)
+itemRowsInThatSellerCard=2 (shipping-group-line-01a1436e-ff9a-7000-81b1-445bdd4470c7 = shirt, shipping-group-line-01a1436f-295e-7000-8b30-7001782316a4 = scarf)
+perItemTiles=7 methods x 2 rows = 14 tiles (post:express, post:standard, tipax:express, tipax:standard, snapp_courier, store_courier, in_person)
+step3_chooseTwoDifferentMethods=line1=post:express (پیشتاز ۲۰۰٬۰۰۰ ریال) / line2=tipax:standard (معمولی ۱۸۰٬۰۰۰ ریال)
+feeRowsForOneSeller=2 ("فروشگاه آرمان — پیشتاز | ۲۰۰٬۰۰۰ ریال", "فروشگاه آرمان — معمولی | ۱۸۰٬۰۰۰ ریال") => group card fee ۳۸۰٬۰۰۰ ریال
+serverDerivedDates=true — date row text "اولین نوبت ممکن: 1405/07/28", 6 allowed date chips, 4 time windows; intersection of both methods (leadDays 2 and 3) => earliest shared day 2026-10-20
+step4_addressCompleted=true (نام حمید / نام خانوادگی آزمون / موبایل 09120000000 / استان تهران / شهر تهران / آدرس کامل ولیعصر پلاک ۱۲ / کد پستی 1234567890)
+continueGate=button "ادامه به پرداخت" disabled=false only after address + both per-line methods + date + window were valid
+step5_oneClick="ادامه به پرداخت" once -> navigated to /fa/payment?cartId=01a1436e-ff2b-7000-bf33-63da8bb56412
+noAutoSubmit=true noPaymentStart=true noCapture=true noReservation=true noCartClear=true (cart still holds 2 lines after the step)
+
+PERSISTENCE READBACK (isolated scratch DB, authorized readback — not a write)
+GROUPS=2 DISTINCT_SELLERS=1 DISTINCT_METHODS=2 TOTAL_LINES=2 DISTINCT_LINES=2 FEE_SUM=380000.00
+GROUP|01a14369-706a-7000-abbc-6346a9cfe571|post:express|post|200000.00|2026-10-20|9-12|2|01a1436e-ff9a-7000-81b1-445bdd4470c7
+GROUP|01a14369-706a-7000-abbc-6346a9cfe571|tipax:standard|tipax|180000.00|2026-10-20|9-12|3|01a1436f-295e-7000-8b30-7001782316a4
+DRAFT persisted: cart_id=01a1436e-ff2b-7000-bf33-63da8bb56412 shipping_method_code='' (multi-group shorthand) shipping_amount=380000.00
+  minimum_delivery_date=2026-10-19 selected_delivery_date=2026-10-20 selected_delivery_time_window=9-12 province=تهران city=تهران
+disjointCartLineIds=TRUE (2 groups, 2 distinct cart_line_id, no line assigned twice)
+authoritativeFeeSum=380000.00 == 200000 (post:express) + 180000 (tipax:standard) — server-derived, not fabricated
+sameSellerPartyId=TRUE for both groups (01a14369-706a-7000-abbc-6346a9cfe571 = فروشگاه آرمان)
+offerProvenanceReadback (offer.offers): ARM-LN-01|01a14369-706a-7000-abbc-6346a9cfe571|...|Active and ARM-SC-01|01a14369-706a-7000-abbc-6346a9cfe571|...|Active => SAME real seller, distinct variants/offers
+
+PAYMENT PROJECTION (Order-owned, read-only)
+paymentUrl=/fa/payment?cartId=01a1436e-ff2b-7000-bf33-63da8bb56412
+paymentShippingCharge=۳۸۰٬۰۰۰ ریال (label "هزینه ارسال:") == persisted group fee sum
+paymentPayable=۳٬۹۷۷٬۰۰۰ ریال == 3,300,000 goods + 297,000 (9% standard tax) + 380,000 shipping
+paymentMethodLabel="روش ارسال:" rendered with an EMPTY value for a multi-group draft (scalar legacy shorthand is blank) — residual UI note, aggregate charge and total are correct
+paymentStartTriggeredByThisStep=FALSE (page only reads the projection)
+
+COLD RELOAD RESTORATION (single reload of /fa/shipping)
+restoredRows=2 restoredTiles=["shipping-group-method-<line1>-post:express","shipping-group-method-<line2>-tipax:standard"]
+restoredFees=["فروشگاه آرمان — پیشتاز | ۲۰۰٬۰۰۰ ریال","فروشگاه آرمان — معمولی | ۱۸۰٬۰۰۰ ریال"]
+restoredAddressValues=["حمید","آزمون","09120000000","1234567890"] restoredDate="سه‌شنبه ۲۸ مهر (نزدیک‌ترین)" restoredWindow="۹ صبح تا ۱۲ ظهر"
+revalidationMessageShown=false continueEnabled=true providerReloaded=false
+=> deterministic restore keyed by persisted CartLineIds; no method was guessed or substituted
+
+VIEWPORT / NON-REGRESSION
+desktop=default viewport (screenshot shipping-same-seller-two-methods-136.png)
+mobile=390x880 @2x (screenshot shipping-same-seller-two-methods-136-mobile.png) direction=rtl rows=2 tiles=14 selected=2 cardWidth=326 horizontalOverflow=false
+cssChanges=0 (no token/theme/selector/layout edits; existing item-level tile markup and classes were used unchanged)
+criticalStorefrontSuite=not required (no shared storefront component, CSS, or Shopeiva-locked surface was changed in this task)
+
+FOCUSED TEST (fixture source changed)
+Tooba.Host.Tests.Architecture.SameSellerCompanionFixtureGuardTests.Companion_fixture_is_additive_development_only_and_create_path_bound => Passed (1/1)
+asserts: distinct companion slug/variant-code/SKU, companion offer reuses Seller A identity only, authoritative price + real stock, companion reachable only from the create path behind IsDevelopment(), refresh path untouched
+
+OBSERVED DEFECTS / REMAINING POLICY BLOCKERS (not repaired here)
+1) /fa/payment renders "روش ارسال:" with an empty value for a multi-group selection (aggregate charge/total correct). Display-only.
+2) Settlement PendingAllocation / payout origin-eligibility policy blockers are unchanged and were not exercised (out of scope).
+3) Production/end-to-end payment acceptance is NOT claimed.
+
+RESULT SCOPE
+Proven: same real seller + two genuinely distinct cart lines + two different authoritative methods + disjoint persisted groups + authoritative fee reconciliation + server-derived delivery dates + one-click single draft save + payment projection charges + cold-reload restoration + RTL desktop/mobile non-regression.
+Not proven / not claimed: payment capture, order placement, settlement, production.
