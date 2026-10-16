@@ -9,7 +9,7 @@ Expected-Base-SHA: b6e5639b1c8d29241c75d16edaf6b3668cbcaaae
 Actual-Base-SHA: b6e5639b1c8d29241c75d16edaf6b3668cbcaaae (merge base for this task). origin/main advanced MID-TASK to cb46eecbe401b9f23a9f1c192ecefb3dc42a2635 with 3 docs-only commits adding docs/architecture/checkout/SHIPPING-METHOD-GROUPING-UI-CONTRACT.md. No source overlap and no conflict with this task's paths; resolved by a NO-REBASE merge commit (HEAD 95bc4ad52ee74775c7a353e1fe9cde679cd9b094) exactly as required (no reset, no stash, no rebase, no force push).
 Drift: NONE in src/backend, backend tests, frontend shipping, config or migrations. The only remote delta was that docs-only contract file. Two PRE-EXISTING unstaged admin edits were left untouched and unstaged (src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx).
 Code-SHA: NONE
-Evidence-SHA: (pushed with this result; see Evidence-Paths)
+Evidence-SHA: 408ac46d4515c6b8b367435a9d7864bbd471aa50 (docs-only; carries all evidence content of this task. This final stamp commit changes only this SHA line; its parent is 408ac46d.)
 Status: PASS
 Stop-State: STOP_FOR_ARCHITECT
 Automatic-Next-Implementation-Task: NONE
