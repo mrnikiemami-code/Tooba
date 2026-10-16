@@ -1,0 +1,3 @@
+﻿PREPARE=PASS
+GUARD={"tenantCount":1,"activeTenantCount":1,"tenants":["store-alpha:Active:tenant-119-scratch"],"canonicalGatewayTenantPresent":true,"connectionReferences":["tenant-119-scratch","messaging-119-scratch"],"messagingReference":"messaging-119-scratch","containsSharedAlphaDatabase":false,"containsSharedAlphaReference":false,"containsSharedAlphaPort":false,"containsPriorScratchPort":false,"scratchPort":"55451","runLegacyBootstraps":true,"allowResetAndSeed":false,"oneLevelCatalogEnabledInOverlay":true,"shippingRateAuthoritySet":false,"shippingOperationalShadowSet":false,"failClosed":true}
+CREDENTIALS_WRITTEN_TO_EVIDENCE=false

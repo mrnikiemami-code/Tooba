@@ -1,0 +1,5 @@
+﻿capturedUtc=2026-10-16T06:24:18.5079965+03:30
+shared_5088_health={"status":"ok"}
+shared_5088_commerce={"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"ebd3933f8e821043d3384494c8502b37"}
+shared_3000=308
+shared_5088_pid=35624 shared_3000_pid=31580

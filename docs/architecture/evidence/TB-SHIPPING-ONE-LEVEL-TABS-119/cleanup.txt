@@ -1,0 +1,9 @@
+﻿== cleanup (TB-119) ==
+capturedUtc=2026-10-16T06:22:43.5718930+03:30
+listeners_on_5399=1
+docker_rm=tooba-119-scratch-pg
+listeners_on_55451_after=0
+listeners_on_5399_after=1
+containers_now=sarv-jaeger,sarv-redis,rabbitmq,postgres-db
+tmp_119_leftovers=2
+shared_5088_pid=35624 shared_3000_pid=31580
