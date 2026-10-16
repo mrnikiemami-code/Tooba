@@ -154,7 +154,41 @@ public sealed record StorefrontShippingProjection(
     IReadOnlyList<StorefrontDeliveryTimeOption> DeliveryTimeWindows,
     StorefrontShippingDraftView? Draft,
     string? RevalidationMessage,
-    IReadOnlyList<StorefrontProvinceOption> Provinces);
+    IReadOnlyList<StorefrontProvinceOption> Provinces,
+    /// <summary>
+    /// TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149: افقِ <b>هر گروه</b> جداگانه. هر عضو همین گروه پایدار
+    /// (<c>ShippingGroupId</c>) را با حداقل/تاریخ‌های مجاز و پنجره‌های خودش برمی‌گرداند؛ هیچ اشتراک یا
+    /// دیرترین-حداقلِ سراسری در این بخش اعمال نمی‌شود. اسکالرهای بالا فقط نمای تک‌گروهی/سازگاری‌اند.
+    /// </summary>
+    IReadOnlyList<StorefrontShippingGroupHorizonView>? ShippingGroupHorizons = null);
+
+/// <summary>
+/// افق زمان‌بندی یک گروه ارسال پایدار. همهٔ مقادیر از همان گروه ذخیره‌شده و ماشین‌حساب canonical
+/// سرور می‌آید؛ هیچ تاریخ/پنجره‌ای از کلاینت یا از افق گروه دیگر استنتاج نمی‌شود.
+/// </summary>
+/// <param name="ShippingGroupId">شناسهٔ پایدار گروه؛ تنها کلید انتخاب زمان‌بندی این گروه.</param>
+/// <param name="SellerPartyId">فروشندهٔ مالک گروه (از سبد، نه از کلاینت).</param>
+/// <param name="MethodCode">کد روش canonical همین گروه.</param>
+/// <param name="MinimumDeliveryDate">حداقل تاریخ تحویلِ همین گروه (آماده‌سازی فروشندهٔ همین گروه + روزهای روش).</param>
+/// <param name="EligibleDates">تاریخ‌های مجاز همین گروه از حداقل خودش آغاز می‌شود.</param>
+/// <param name="EligibleTimeWindows">پنجره‌های مجاز همین گروه.</param>
+/// <param name="SelectedDeliveryDate">تاریخ انتخاب‌شدهٔ ذخیره‌شدهٔ همین گروه (اگر ذخیره شده باشد).</param>
+/// <param name="SelectedDeliveryTimeWindow">پنجرهٔ انتخاب‌شدهٔ ذخیره‌شدهٔ همین گروه.</param>
+/// <param name="LeadDays">روزهای حمل مؤثر روش همین گروه.</param>
+/// <param name="SellerPreparationDays">
+/// روزهای آماده‌سازی فروشندهٔ همین گروه از پیکربندی سرور؛ برای شفاف‌سازی «دیرترین/زودترین» و اثبات تفاضل.
+/// </param>
+public sealed record StorefrontShippingGroupHorizonView(
+    Guid ShippingGroupId,
+    Guid SellerPartyId,
+    string MethodCode,
+    string MinimumDeliveryDate,
+    IReadOnlyList<StorefrontDeliveryDateOption> EligibleDates,
+    IReadOnlyList<StorefrontDeliveryTimeOption> EligibleTimeWindows,
+    string? SelectedDeliveryDate,
+    string? SelectedDeliveryTimeWindow,
+    int LeadDays,
+    int SellerPreparationDays);
 
 /// <summary>
 /// درخواست تصویر ارسال (سبد + مقصد اختیاری + روش انتخابی). <c>CityName</c> و <c>Destination</c> فقط
@@ -187,12 +221,21 @@ public sealed record StorefrontShippingProjectionRequest(
 /// مبدأ fulfilment. در این اسلایس مرجع مورداعتمادی وجود ندارد، پس فقط خالی مجاز است و
 /// مقدار اعلامی fail-closed رد می‌شود (بدون جعل انبار).
 /// </param>
+/// <param name="SelectedDeliveryDate">
+/// TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149: زمان‌بندی مستقل همین گروه (اختیاری و افزایشی).
+/// در نبود آن همان shorthand اسکالر قدیمی به‌کار می‌رود؛ در سبد چندگروهی نبودِ آن fail-closed رد می‌شود.
+/// </param>
+/// <param name="SelectedDeliveryTimeWindow">
+/// پنجرهٔ ساعتی مستقل همین گروه؛ مجموعهٔ مجاز همیشه از محاسبهٔ authoritative سرور می‌آید.
+/// </param>
 public sealed record StorefrontShippingGroupSelection(
     string ShippingMethodCode,
     IReadOnlyList<Guid> CartLineIds,
     string? ServiceCode = null,
     string? OptionCode = null,
-    string? OriginContext = null);
+    string? OriginContext = null,
+    string? SelectedDeliveryDate = null,
+    string? SelectedDeliveryTimeWindow = null);
 
 /// <summary>
 /// نمای یک گروه ارسال در پیش‌نویس سبد. هویت/برچسب/مبلغ/ارز/زمان‌بندی همه از گروه ذخیره‌شده می‌آید.

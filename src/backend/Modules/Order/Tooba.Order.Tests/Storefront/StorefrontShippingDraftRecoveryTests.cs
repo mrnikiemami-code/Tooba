@@ -73,12 +73,17 @@ public sealed class StorefrontShippingDraftRecoveryTests
             [200_000m, 180_000m],
             draft.ShippingGroups.Select(g => g.ShippingAmount).ToArray());
 
-        // تاریخ/بازهٔ ذخیره‌شده هم بازیابی می‌شود تا مشتری انتخابش را از دست ندهد.
-        Assert.Equal("2026-10-21", draft.SelectedDeliveryDate);
-        Assert.Equal("09-12", draft.SelectedDeliveryTimeWindow);
-        // shorthand ذخیره‌شده همان وعدهٔ گروه اول در لحظهٔ ذخیره است (نه وعدهٔ امروز)؛ وعدهٔ تازهٔ
-        // سرور جداگانه روی خود projection محاسبه و پایین‌تر تأیید می‌شود.
-        Assert.Equal("2026-10-19", draft.MinimumDeliveryDate);
+        // تاریخ/بازهٔ ذخیره‌شدهٔ هر گروه بازیابی می‌شود تا مشتری انتخابش را از دست ندهد؛
+        // در سبد چندگروهی هیچ تاریخ/پنجرهٔ سراسریِ authoritative وجود ندارد و اسکالر قدیمی خالی است.
+        Assert.Null(draft.SelectedDeliveryDate);
+        Assert.Null(draft.SelectedDeliveryTimeWindow);
+        Assert.All(draft.ShippingGroups, g =>
+        {
+            Assert.Equal("2026-10-21", g.SelectedDeliveryDate);
+            Assert.Equal("09-12", g.SelectedDeliveryTimeWindow);
+        });
+        // حداقل تاریخ اسکالر قدیمی فقط کران محافظه‌کارانهٔ دیرترین گروه است (نه حقیقت زمان‌بندی گروه‌ها).
+        Assert.Equal("2026-10-20", draft.MinimumDeliveryDate);
 
         // هیچ پیام «نامعتبر»ی وجود ندارد: انتخاب ذخیره‌شده واقعاً معتبر است.
         Assert.Null(projection.RevalidationMessage);
@@ -106,8 +111,23 @@ public sealed class StorefrontShippingDraftRecoveryTests
         // سنجش واقعی دو فروشنده) تا رفت‌وبرگشت /fa/payment -> /fa/shipping مبلغ را عوض نکند.
         Assert.Equal(380_000m, draft.ShippingAmount);
         Assert.Equal(380_000m, draft.ShippingGroups!.Sum(g => g.ShippingAmount));
-        Assert.Equal(GroupedSelectedDate.ToString("yyyy-MM-dd"), draft.SelectedDeliveryDate);
-        Assert.Equal("09-12", draft.SelectedDeliveryTimeWindow);
+        // TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149: در سبد چندگروهی زمان‌بندی روی خود گروه‌ها است
+        // و اسکالر قدیمی حقیقت سراسری جا نمی‌زند.
+        Assert.Null(draft.SelectedDeliveryDate);
+        Assert.Null(draft.SelectedDeliveryTimeWindow);
+        Assert.All(draft.ShippingGroups!, g =>
+            Assert.Equal(GroupedSelectedDate.ToString("yyyy-MM-dd"), g.SelectedDeliveryDate));
+
+        // افق هر گروه جداگانه برمی‌گردد: هیچ اشتراک/دیرترین-حداقل سراسری روی این بخش اعمال نمی‌شود.
+        var horizons = Assert.IsAssignableFrom<IReadOnlyList<StorefrontShippingGroupHorizonView>>(
+            projection.ShippingGroupHorizons);
+        Assert.Equal(2, horizons.Count);
+        Assert.Equal(2, horizons.Select(h => h.ShippingGroupId).Distinct().Count());
+        Assert.Equal(2, horizons.Select(h => h.SellerPartyId).Distinct().Count());
+        Assert.All(horizons, h => Assert.NotEmpty(h.EligibleDates));
+        Assert.All(horizons, h => Assert.NotEmpty(h.EligibleTimeWindows));
+        Assert.All(horizons, h => Assert.Equal(h.MinimumDeliveryDate, h.EligibleDates[0].Value));
+        Assert.All(horizons, h => Assert.True(h.EligibleDates[0].IsEarliest));
         Assert.Equal(0, harness.Drafts.SaveCalls);
     }
 

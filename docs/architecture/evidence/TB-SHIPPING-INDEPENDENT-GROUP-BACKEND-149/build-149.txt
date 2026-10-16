@@ -1,0 +1,17 @@
+﻿
+Build succeeded.
+    0 Error(s)
+
+
+
+[xUnit.net 00:00:00.35]     
+Tooba.Host.Tests.PaidProjectionFinancialTests.Settlement_and_initiate_exclude_store_shipping_from_seller_ids [FAIL]
+[xUnit.net 00:00:00.35]     
+Tooba.Host.Tests.StorefrontPaymentSucceededGuardTests.Frontend_hides_pay_when_capability_forbids [FAIL]
+[xUnit.net 00:00:00.35]     
+Tooba.Host.Tests.Architecture.HostStorefrontAmcR3GuardTests.Downstream_host_adapters_use_catalog_composer_port [FAIL]
+[xUnit.net 00:00:00.36]     
+Tooba.Host.Tests.Architecture.HostStorefrontAmcR1GuardTests.Catalog_owns_template_preview_cqrs_infra_and_routes [FAIL]
+Failed!  - Failed:     4, Passed:   116, Skipped:     0, Total:   120, Duration: 29 s - Tooba.Host.Tests.dll (net8.0)
+
+

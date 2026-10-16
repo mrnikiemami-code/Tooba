@@ -21,20 +21,38 @@ public static class StorefrontShippingCalculator
         ShippingMethodsOptions options)
     {
         var days = sellerPartyIds
-            .Select(id =>
-            {
-                if (options.SellerPreparationDaysByPartyId.TryGetValue(id.ToString("D"), out var overrideDays)
-                    || options.SellerPreparationDaysByPartyId.TryGetValue(id.ToString("N"), out overrideDays))
-                {
-                    return Math.Max(0, overrideDays);
-                }
-
-                return Math.Max(0, options.DefaultSellerPreparationDays);
-            })
+            .Select(id => SellerPreparationDays(id, options))
             .DefaultIfEmpty(Math.Max(0, options.DefaultSellerPreparationDays))
             .ToArray();
         return days.Length == 0 ? Math.Max(0, options.DefaultSellerPreparationDays) : days.Max();
     }
+
+    /// <summary>
+    /// TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149: روزهای آماده‌سازی <b>یک فروشندهٔ مشخص</b>.
+    /// کلید نگاشت همان دو شکل پایدار قبلی است و در نبود override همان پیش‌فرض سرور برمی‌گردد.
+    /// این درز هیچ آماده‌سازی‌ای از کلاینت نمی‌پذیرد و فقط پیکربندی سرور را می‌خواند.
+    /// </summary>
+    public static int SellerPreparationDays(Guid sellerPartyId, ShippingMethodsOptions options)
+    {
+        if (options.SellerPreparationDaysByPartyId.TryGetValue(sellerPartyId.ToString("D"), out var exact)
+            || options.SellerPreparationDaysByPartyId.TryGetValue(sellerPartyId.ToString("N"), out exact))
+        {
+            return Math.Max(0, exact);
+        }
+
+        return Math.Max(0, options.DefaultSellerPreparationDays);
+    }
+
+    /// <summary>
+    /// حداقل تاریخ تحویلِ یک گروه: امروز + آماده‌سازی <b>فروشندهٔ همان گروه</b> + روزهای حمل همان روش.
+    /// هیچ دیرترین-حداقل یا اشتراک بین گروه‌ها اینجا اعمال نمی‌شود.
+    /// </summary>
+    public static DateOnly ComputeGroupMinimumDeliveryDate(
+        DateOnly today,
+        Guid sellerPartyId,
+        int methodLeadDays,
+        ShippingMethodsOptions options)
+        => ComputeMinimumDeliveryDate(today, SellerPreparationDays(sellerPartyId, options), methodLeadDays);
 
     public static ShippingMethodRateOptions ResolveRate(string methodCode, ShippingMethodsOptions options)
     {

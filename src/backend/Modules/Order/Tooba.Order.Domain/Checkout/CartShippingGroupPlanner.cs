@@ -5,15 +5,34 @@ namespace Tooba.Order.Domain.Checkout;
 /// <summary>هویت خط سبد authoritative از Cart برای عضویت گروه.</summary>
 public sealed record CartShippingGroupCartLine(Guid LineId, Guid SellerPartyId, decimal Quantity);
 
-/// <summary>درخواست گروه از سمت کلاینت: فقط قصد انتخاب، بدون هیچ مبلغی.</summary>
+/// <summary>
+/// درخواست گروه از سمت کلاینت: فقط قصد انتخاب، بدون هیچ مبلغی.
+/// </summary>
+/// <param name="MethodCode">کد روش canonical همین گروه.</param>
+/// <param name="ServiceCode">کد سرویس اعلامی؛ باید با هویت authoritative بخواند.</param>
+/// <param name="OptionCode">کد گزینهٔ اعلامی؛ باید با هویت authoritative بخواند.</param>
+/// <param name="OriginContext">بافت مبدأ؛ در این اسلایس فقط خالی مجاز است.</param>
+/// <param name="CartLineIds">خطوط سبد همین گروه (تمام-خط).</param>
+/// <param name="SelectedDeliveryDate">
+/// TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149: زمان‌بندی <b>همین</b> گروه. در نبود آن مقدار اسکالر
+/// قدیمی به‌کار می‌رود (سازگاری تک‌گروهی)؛ هیچ‌گاه مقدار یک گروه روی گروه دیگر کپی نمی‌شود.
+/// </param>
+/// <param name="SelectedDeliveryTimeWindow">پنجرهٔ ساعتی همین گروه.</param>
 public sealed record CartShippingGroupRequest(
     string MethodCode,
     string? ServiceCode,
     string? OptionCode,
     string? OriginContext,
-    IReadOnlyList<Guid> CartLineIds);
+    IReadOnlyList<Guid> CartLineIds,
+    DateOnly? SelectedDeliveryDate = null,
+    string? SelectedDeliveryTimeWindow = null);
 
 /// <summary>روش واجد شرایط authoritative که Order آن را از کاتالوگ/نرخ resolve می‌کند.</summary>
+/// <param name="SellerPartyId">
+/// TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149: فروشنده‌ای که این وعده برای او محاسبه شده است. تهی یعنی
+/// وعدهٔ مستقل از فروشنده (فراخوان‌های قدیمی)؛ مقدار‌دار یعنی این ردیف فقط برای همان فروشنده معتبر است
+/// و هرگز برای فروشندهٔ دیگر به‌کار نمی‌رود (وگرنه وعدهٔ گروه دیگر دزدیده می‌شود).
+/// </param>
 public sealed record CartShippingGroupEligibleMethod(
     string MethodCode,
     string? ServiceCode,
@@ -22,7 +41,8 @@ public sealed record CartShippingGroupEligibleMethod(
     decimal PriceAmount,
     string Currency,
     int LeadDays,
-    DateOnly MinimumDeliveryDate);
+    DateOnly MinimumDeliveryDate,
+    Guid? SellerPartyId = null);
 
 /// <summary>
 /// سازندهٔ قطعی (pure) نقشهٔ گروه‌های ارسال پیش‌نویس سبد.
@@ -74,15 +94,18 @@ public static class CartShippingGroupPlanner
 
         foreach (var request in requests)
         {
-            var method = ResolveMethod(request, eligibleMethods);
             if (request.CartLineIds is null || request.CartLineIds.Count == 0)
             {
                 throw new ContractOperationException(CartShippingGroupFault.GroupWithoutLines);
             }
 
+            // فروشنده پیش از resolve روش لازم است: وعده/حداقل تحویل هر گروه فقط برای فروشندهٔ خودش
+            // محاسبه شده است و نباید از ردیف فروشندهٔ دیگری برداشته شود.
             var seller = sellerByLine.TryGetValue(request.CartLineIds[0], out var firstSeller)
                 ? firstSeller
                 : throw new ContractOperationException(CartShippingGroupFault.UnknownLine);
+
+            var method = ResolveMethod(request, seller, eligibleMethods);
 
             var sellerMethodKey = $"{seller:N}|{method.MethodCode}";
             if (!seenSellerMethod.Add(sellerMethodKey))
@@ -91,6 +114,10 @@ public static class CartShippingGroupPlanner
                 // (whole-line membership, no quantity split).
                 throw new ContractOperationException(CartShippingGroupFault.DuplicateSellerMethod);
             }
+
+            // زمان‌بندی مستقل همین گروه مقدم است؛ اسکالر فقط سازگاری تک‌گروهی/قدیمی است.
+            var groupDate = request.SelectedDeliveryDate ?? selectedDeliveryDate;
+            var groupWindow = request.SelectedDeliveryTimeWindow ?? selectedDeliveryTimeWindow;
 
             var group = CartShippingDraftGroup.Create(
                 newGroupId(),
@@ -104,8 +131,8 @@ public static class CartShippingGroupPlanner
                 method.PriceAmount,
                 method.Currency,
                 method.MinimumDeliveryDate,
-                selectedDeliveryDate,
-                selectedDeliveryTimeWindow,
+                groupDate,
+                groupWindow,
                 method.LeadDays,
                 now);
 
@@ -146,11 +173,13 @@ public static class CartShippingGroupPlanner
     }
 
     /// <summary>
-    /// روش متعارف را resolve می‌کند و کد سرویس/گزینهٔ اعلامی را با هویت authoritative تطبیق می‌دهد.
-    /// روش ناواجد یا هویت ناهمخوان رد می‌شود؛ کلاینت نمی‌تواند روش بسازد.
+    /// روش متعارف را برای <b>همان فروشنده</b> resolve می‌کند و کد سرویس/گزینهٔ اعلامی را با هویت
+    /// authoritative تطبیق می‌دهد. روش ناواجد یا هویت ناهمخوان رد می‌شود؛ کلاینت نمی‌تواند روش بسازد.
+    /// ردیف دارای فروشنده فقط برای همان فروشنده معتبر است و هرگز وعدهٔ فروشندهٔ دیگر را به‌کار نمی‌برد.
     /// </summary>
     private static CartShippingGroupEligibleMethod ResolveMethod(
         CartShippingGroupRequest request,
+        Guid sellerPartyId,
         IReadOnlyList<CartShippingGroupEligibleMethod> eligibleMethods)
     {
         var code = (request.MethodCode ?? string.Empty).Trim();
@@ -159,8 +188,12 @@ public static class CartShippingGroupPlanner
             throw new ContractOperationException(CartShippingGroupFault.MethodCodeRequired);
         }
 
-        var method = eligibleMethods.FirstOrDefault(m =>
-            string.Equals(m.MethodCode, code, StringComparison.OrdinalIgnoreCase))
+        var sameCode = eligibleMethods
+            .Where(m => string.Equals(m.MethodCode, code, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        var method = sameCode.FirstOrDefault(m => m.SellerPartyId == sellerPartyId)
+            ?? sameCode.FirstOrDefault(m => m.SellerPartyId is null)
             ?? throw new ContractOperationException(CartShippingGroupFault.MethodNotEligible);
 
         if (!MatchesDeclared(request.ServiceCode, method.ServiceCode)

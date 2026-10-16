@@ -1,0 +1,65 @@
+﻿
+Passed!  - Failed:     0, Passed:   353, Skipped:     0, Total:   353, Duration: 282 ms - Tooba.Order.Tests.dll 
+(net8.0)
+
+
+
+  Passed 
+Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Method_outside_the_authoritative_eligible_set_is_refused [9 
+ms]
+  Passed 
+Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Same_seller_and_same_method_cannot_be_two_groups_in_v1 [< 1 
+ms]
+  Passed Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Unknown_or_foreign_cart_line_is_refused [< 1 ms]
+  Passed 
+Tooba.Order.Tests.Storefront.ShippingGroupIndependentScheduleTests.Changing_group_a_schedule_leaves_group_b_untouched 
+[16 ms]
+  Passed Tooba.Order.Tests.Storefront.ShippingGroupIndependentScheduleTests.A_seller_specific_promise_is_never_borrowed
+_by_another_seller [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Legacy_single_method_selection_becomes_exactly_one_
+group_covering_every_line [5 ms]
+  Passed Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Omitted_cart_line_is_refused [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.ShippingGroupIndependentScheduleTests.Draft_legacy_scalars_are_null_for_multi_gro
+up_and_kept_for_one_group [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.ShippingGroupIndependentScheduleTests.Two_sellers_with_the_same_method_get_two_di
+fferent_group_minimums [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.One_seller_with_two_methods_produces_two_groups_wit
+h_authoritative_amounts [1 ms]
+  Passed 
+Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Unverified_origin_context_is_refused_instead_of_forged [< 1 
+ms]
+  Passed Tooba.Order.Tests.Storefront.ShippingGroupIndependentScheduleTests.Legacy_scalar_still_applies_to_a_single_gro
+up_without_its_own_schedule [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.ShippingGroupIndependentScheduleTests.Each_group_persists_its_own_selected_date_a
+nd_window [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.ShippingGroupIndependentScheduleTests.A_seller_less_authoritative_row_still_serve
+s_legacy_callers [< 1 ms]
+  Passed 
+Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Two_sellers_with_the_identical_method_stay_separate [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Legacy_shorthand_for_a_multi_seller_cart_is_refused
+_rather_than_merged [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Declared_service_or_option_identity_must_match_auth
+oritative_identity [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Merging_two_sellers_into_one_group_is_refused [< 1 
+ms]
+  Passed Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Duplicate_line_membership_is_refused [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.CartShippingGroupPlannerTests.Group_order_is_deterministic_for_a_stable_legacy_sc
+alar_projection [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.StorefrontShippingDraftRecoveryTests.Cold_projection_without_method_code_recovers
+_the_grouped_draft_and_its_groups [39 ms]
+  Passed Tooba.Order.Tests.Storefront.StorefrontShippingDraftRecoveryTests.Legacy_single_group_draft_is_still_recovered
+_without_method_code [1 ms]
+  Passed Tooba.Order.Tests.Storefront.StorefrontShippingDraftRecoveryTests.Recovery_decision_is_fail_closed_when_no_met
+hod_code_is_resolvable [1 ms]
+  Passed Tooba.Order.Tests.Storefront.StorefrontShippingDraftRecoveryTests.Foreign_guest_secret_never_receives_the_pers
+isted_draft [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.StorefrontShippingDraftRecoveryTests.Recovered_draft_keeps_the_server_snapshot_th
+e_payment_step_will_charge [1 ms]
+  Passed Tooba.Order.Tests.Storefront.StorefrontShippingDraftRecoveryTests.Draft_fails_closed_when_a_persisted_group_no
+_longer_belongs_to_the_cart [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.StorefrontShippingDraftRecoveryTests.Draft_fails_closed_when_its_method_is_no_lon
+ger_eligible [< 1 ms]
+  Passed Tooba.Order.Tests.Storefront.StorefrontShippingDraftRecoveryTests.Projected_lead_days_are_the_latest_authorita
+tive_promise_of_the_saved_groups [5 ms]
+
+

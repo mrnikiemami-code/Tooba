@@ -127,6 +127,15 @@ public sealed class StorefrontShippingService
             .Select(t => new StorefrontDeliveryTimeOption(t.Value, t.LabelFa))
             .ToList();
 
+        // TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149: افق هر گروه پایدار جداگانه؛ هیچ اشتراک یا
+        // دیرترین-حداقلِ سراسری اینجا اعمال نمی‌شود. اسکالرهای بالا فقط نمای سازگاری‌اند.
+        var groupHorizons = draft is null || draft.ShippingGroups.Count == 0
+            ? null
+            : draft.ShippingGroups
+                .OrderBy(g => g.ShippingGroupId)
+                .Select(g => BuildGroupHorizon(g, today, _shippingOptions))
+                .ToArray();
+
         return new StorefrontShippingProjection(
             cart.CartId,
             cart.Version,
@@ -143,7 +152,45 @@ public sealed class StorefrontShippingService
             timeWindows,
             draft is null ? null : MapDraft(draft),
             revalidationMessage,
-            StorefrontIranGeography.Provinces);
+            StorefrontIranGeography.Provinces,
+            groupHorizons);
+    }
+
+    /// <summary>
+    /// افق زمان‌بندی یک گروه پایدار: حداقل تاریخ از آماده‌سازی <b>همان فروشنده</b> و روزهای حمل همان
+    /// روش ساخته می‌شود (و هرگز به گذشته نمی‌رود)، و تاریخ/پنجره‌های مجاز از همان حداقل آغاز می‌شوند.
+    /// هیچ تاریخ یا پنجره‌ای از گروه دیگر، از کلاینت یا تقویم ساختگی گرفته نمی‌شود.
+    /// </summary>
+    private static StorefrontShippingGroupHorizonView BuildGroupHorizon(
+        CartShippingDraftGroup group,
+        DateOnly today,
+        ShippingMethodsOptions options)
+    {
+        var sellerPreparationDays = StorefrontShippingCalculator.SellerPreparationDays(group.SellerPartyId, options);
+        var recalculated = StorefrontShippingCalculator.ComputeMinimumDeliveryDate(
+            today, sellerPreparationDays, group.LeadDays);
+        // وعدهٔ ذخیره‌شده دست‌نخورده می‌ماند، ولی هرگز تاریخ گذشته پیشنهاد نمی‌شود.
+        var minimum = group.MinimumDeliveryDate > recalculated ? group.MinimumDeliveryDate : recalculated;
+
+        return new StorefrontShippingGroupHorizonView(
+            group.ShippingGroupId,
+            group.SellerPartyId,
+            group.MethodCode,
+            minimum.ToString("yyyy-MM-dd"),
+            StorefrontShippingCalculator.BuildDeliveryDates(minimum, options.DeliveryHorizonDays)
+                .Select(d => new StorefrontDeliveryDateOption(
+                    d.ToString("yyyy-MM-dd"),
+                    StorefrontShippingCalculator.FormatDeliveryDateLabelFa(d, today),
+                    StorefrontShippingCalculator.FormatDeliveryDateSubLabelFa(d),
+                    d == minimum))
+                .ToArray(),
+            StorefrontShippingCalculator.DayTimeWindows
+                .Select(t => new StorefrontDeliveryTimeOption(t.Value, t.LabelFa))
+                .ToArray(),
+            group.SelectedDeliveryDate?.ToString("yyyy-MM-dd"),
+            group.SelectedDeliveryTimeWindow,
+            group.LeadDays,
+            sellerPreparationDays);
     }
 
     /// <summary>
@@ -231,18 +278,30 @@ public sealed class StorefrontShippingService
             null,
             cancellationToken);
 
-        var sellerIds = cart.Lines.Select(x => x.SellerPartyId).Distinct();
+        var sellerIds = cart.Lines.Select(x => x.SellerPartyId).Distinct().ToArray();
         var maxPrep = StorefrontShippingCalculator.MaxSellerPreparationDays(sellerIds, _shippingOptions);
         var today = DateOnly.FromDateTime(_clock.UtcNow.UtcDateTime);
 
         // قصد گروه‌ها: یا فهرست افزایشی جدید، یا shorthand تک‌روشی قدیمی به‌صورت یک گروه کامل.
         var requestedGroups = BuildRequestedGroups(request, cart);
+        // نوشتن چندگروهی فقط وقتی است که کلاینت بیش از یک گروه اعلام کرده باشد؛ در آن حالت هر گروه
+        // باید زمان‌بندی مستقل خودش را داشته باشد و هیچ مقدار اسکالری روی همه کپی نمی‌شود.
+        var multiGroupWrite = request.ShippingGroups is { Count: > 1 };
 
-        // هویت/برچسب/مبلغ/ارز/روزهای آماده‌سازی فقط از روش واجد شرایط authoritative می‌آید.
-        var eligible = methods
-            .Where(m => requestedGroups.Any(g =>
-                string.Equals((g.MethodCode ?? string.Empty).Trim(), m.MethodCode, StringComparison.OrdinalIgnoreCase)))
-            .Select(m => new CartShippingGroupEligibleMethod(
+        var requestedCodes = requestedGroups
+            .Select(g => (g.MethodCode ?? string.Empty).Trim())
+            .Where(code => code.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var requestedMethods = methods
+            .Where(m => requestedCodes.Contains(m.MethodCode, StringComparer.OrdinalIgnoreCase))
+            .ToArray();
+
+        // هویت/برچسب/مبلغ/ارز فقط از روش واجد شرایط authoritative می‌آید؛ حداقل تحویل اما به‌ازای
+        // **هر فروشنده** جداگانه ساخته می‌شود (آماده‌سازی همان فروشنده + روزهای حمل همان روش) تا دو
+        // فروشنده با روش یکسان دو وعدهٔ مستقل بگیرند.
+        var eligible = sellerIds
+            .SelectMany(seller => requestedMethods.Select(m => new CartShippingGroupEligibleMethod(
                 m.MethodCode,
                 m.ServiceCode,
                 m.OptionCode,
@@ -250,33 +309,79 @@ public sealed class StorefrontShippingService
                 m.PriceAmount,
                 soleCurrency,
                 m.LeadDays,
-                StorefrontShippingCalculator.ComputeMinimumDeliveryDate(today, maxPrep, m.LeadDays)))
+                StorefrontShippingCalculator.ComputeGroupMinimumDeliveryDate(
+                    today, seller, m.LeadDays, _shippingOptions),
+                seller)))
             .ToArray();
 
-        foreach (var requested in requestedGroups)
-        {
-            if (!eligible.Any(e => string.Equals(
-                    e.MethodCode,
-                    (requested.MethodCode ?? string.Empty).Trim(),
-                    StringComparison.OrdinalIgnoreCase)))
-            {
-                throw new StorefrontOrderException(StorefrontOrderErrors.ShippingMethodUnavailable);
-            }
-        }
+        // shorthand قدیمی: فقط برای سبد تک‌گروهی/تک‌روشی معتبر است و همان‌جا fail-closed بررسی می‌شود.
+        var legacyDateText = (request.SelectedDeliveryDate ?? string.Empty).Trim();
+        DateOnly? legacySelectedDate = DateOnly.TryParse(legacyDateText, out var parsedLegacy)
+            ? parsedLegacy
+            : null;
+        var legacyWindow = (request.SelectedDeliveryTimeWindow ?? string.Empty).Trim();
 
-        // تاریخ انتخابی باید دست‌کم به تأخیرترین promise گروه‌ها احترام بگذارد.
-        var latestMinimum = eligible.Max(x => x.MinimumDeliveryDate);
-        if (!DateOnly.TryParse(request.SelectedDeliveryDate, out var selectedDate))
+        if (!multiGroupWrite && legacySelectedDate is null)
         {
             throw new StorefrontOrderException(StorefrontOrderErrors.ShippingDeliveryInvalid);
         }
 
-        StorefrontShippingCalculator.EnsureDeliveryNotEarlier(selectedDate, latestMinimum);
-        var windows = StorefrontShippingCalculator.ValidTimeWindows(selectedDate, latestMinimum);
-        if (string.IsNullOrWhiteSpace(request.SelectedDeliveryTimeWindow)
-            || windows.All(w => w.Value != request.SelectedDeliveryTimeWindow.Trim()))
+        var sellerByLine = cart.Lines.ToDictionary(x => x.LineId, x => x.SellerPartyId);
+        var validatedGroups = new List<CartShippingGroupRequest>(requestedGroups.Count);
+
+        // اعتبارسنجی زمان‌بندی به‌ازای هر گروه و در برابر حداقل **همان گروه** (نه دیرترین حداقل سراسری).
+        foreach (var requested in requestedGroups)
         {
-            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingDeliverySlotUnavailable);
+            var firstLine = requested.CartLineIds is { Count: > 0 } ? requested.CartLineIds[0] : Guid.Empty;
+            if (!sellerByLine.TryGetValue(firstLine, out var groupSeller))
+            {
+                throw new StorefrontOrderException(StorefrontOrderErrors.ShippingMethodUnavailable);
+            }
+
+            var groupMethod = eligible.FirstOrDefault(e =>
+                    e.SellerPartyId == groupSeller
+                    && string.Equals(
+                        e.MethodCode,
+                        (requested.MethodCode ?? string.Empty).Trim(),
+                        StringComparison.OrdinalIgnoreCase))
+                ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingMethodUnavailable);
+
+            // زمان‌بندی مختص همین گروه مقدم است؛ در نوشتن چندگروهی نبودش fail-closed رد می‌شود
+            // (هیچ تاریخ/پنجرهٔ اسکالری روی گروه‌ها کپی نمی‌شود).
+            var groupDate = requested.SelectedDeliveryDate;
+            if (groupDate is null)
+            {
+                if (multiGroupWrite)
+                {
+                    throw new StorefrontOrderException(StorefrontOrderErrors.ShippingDeliveryInvalid);
+                }
+
+                groupDate = legacySelectedDate;
+            }
+
+            var groupWindow = string.IsNullOrWhiteSpace(requested.SelectedDeliveryTimeWindow)
+                ? (multiGroupWrite ? string.Empty : legacyWindow)
+                : requested.SelectedDeliveryTimeWindow!.Trim();
+
+            if (groupDate is null || groupWindow.Length == 0)
+            {
+                throw new StorefrontOrderException(StorefrontOrderErrors.ShippingDeliverySlotUnavailable);
+            }
+
+            StorefrontShippingCalculator.EnsureDeliveryNotEarlier(groupDate.Value, groupMethod.MinimumDeliveryDate);
+            var groupWindows = StorefrontShippingCalculator.ValidTimeWindows(
+                groupDate.Value, groupMethod.MinimumDeliveryDate);
+            if (groupWindows.All(w => w.Value != groupWindow))
+            {
+                throw new StorefrontOrderException(StorefrontOrderErrors.ShippingDeliverySlotUnavailable);
+            }
+
+            // مقادیر canonical تأییدشده به planner می‌روند تا گروه دقیقاً زمان‌بندی خودش را ذخیره کند.
+            validatedGroups.Add(requested with
+            {
+                SelectedDeliveryDate = groupDate,
+                SelectedDeliveryTimeWindow = groupWindow,
+            });
         }
 
         if (request.CustomerNote is { Length: > CartShippingDraft.CustomerNoteMaxLength })
@@ -296,10 +401,11 @@ public sealed class StorefrontShippingService
                 cart.Lines
                     .Select(x => new CartShippingGroupCartLine(x.LineId, x.SellerPartyId, x.Quantity))
                     .ToArray(),
-                requestedGroups,
+                validatedGroups,
                 eligible,
-                selectedDate,
-                request.SelectedDeliveryTimeWindow,
+                // زمان‌بندی فقط از خودِ هر گروه می‌آید؛ هیچ اسکالر سراسری اینجا کپی نمی‌شود.
+                null,
+                null,
                 now,
                 UuidV7.New);
         }
@@ -309,6 +415,10 @@ public sealed class StorefrontShippingService
         }
 
         var primary = groups[0];
+        // اسکالرهای تک‌گروهی فقط برای سبد تک‌گروهی مقدار می‌گیرند؛ در سبد چندگروهی هیچ تاریخ/پنجرهٔ
+        // سراسریِ authoritative وجود ندارد و این ستون‌ها خالی می‌مانند (گروه‌ها صاحب زمان‌بندی‌اند).
+        var scalarDeliveryDate = multiGroupWrite ? null : primary.SelectedDeliveryDate;
+        var scalarDeliveryWindow = multiGroupWrite ? null : primary.SelectedDeliveryTimeWindow;
         var existing = await _drafts.GetByCartIdAsync(cart.CartId, cancellationToken);
         if (existing is null)
         {
@@ -327,8 +437,8 @@ public sealed class StorefrontShippingService
                 primary.MethodLabel,
                 primary.ShippingAmount,
                 primary.MinimumDeliveryDate,
-                selectedDate,
-                request.SelectedDeliveryTimeWindow,
+                scalarDeliveryDate,
+                scalarDeliveryWindow,
                 request.CustomerNote,
                 now);
             existing.ApplyRecipientNames(names.First, names.Last);
@@ -357,8 +467,8 @@ public sealed class StorefrontShippingService
                 primary.MethodLabel,
                 primary.ShippingAmount,
                 primary.MinimumDeliveryDate,
-                selectedDate,
-                request.SelectedDeliveryTimeWindow,
+                scalarDeliveryDate,
+                scalarDeliveryWindow,
                 request.CustomerNote,
                 now);
             existing.ApplyRecipientNames(names.First, names.Last);
@@ -704,7 +814,12 @@ public sealed class StorefrontShippingService
                     group.ServiceCode,
                     group.OptionCode,
                     group.OriginContext,
-                    group.CartLineIds ?? []))
+                    group.CartLineIds ?? [],
+                    // TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149: زمان‌بندی همان گروه از همان گروه.
+                    string.IsNullOrWhiteSpace(group.SelectedDeliveryDate)
+                        ? null
+                        : DateOnly.TryParse(group.SelectedDeliveryDate.Trim(), out var date) ? date : null,
+                    group.SelectedDeliveryTimeWindow))
                 .ToArray();
         }
 

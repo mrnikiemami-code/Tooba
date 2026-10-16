@@ -227,9 +227,14 @@ public sealed class CartShippingDraft
         ShippingMethodCode = multiGroup ? string.Empty : first.MethodCode;
         ShippingMethodLabel = multiGroup ? string.Empty : first.MethodLabel;
         ShippingAmount = groups.Sum(x => x.ShippingAmount);
-        MinimumDeliveryDate = first.MinimumDeliveryDate;
-        SelectedDeliveryDate = first.SelectedDeliveryDate;
-        SelectedDeliveryTimeWindow = first.SelectedDeliveryTimeWindow;
+        // TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149: در سبد چندگروهی هیچ تاریخ/پنجرهٔ سراسریِ
+        // authoritative وجود ندارد؛ انتخاب‌شده‌ها Null می‌شوند تا اسکالر قدیمی به‌غلط حقیقت گروه‌ها
+        // جا نزند. حداقل تاریخ (ستون غیرnullable قدیمی) فقط یک کران محافظه‌کارانهٔ دیرترین گروه است.
+        SelectedDeliveryDate = multiGroup ? null : first.SelectedDeliveryDate;
+        SelectedDeliveryTimeWindow = multiGroup ? null : first.SelectedDeliveryTimeWindow;
+        MinimumDeliveryDate = multiGroup
+            ? groups.Max(x => x.MinimumDeliveryDate)
+            : first.MinimumDeliveryDate;
         UpdatedAt = now;
     }
 }
