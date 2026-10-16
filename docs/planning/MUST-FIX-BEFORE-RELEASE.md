@@ -1,3 +1,5 @@
+> **Architect handoff / complete open backlog:** [Shipping Architect Recovery — 2026-10-16](shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-16.md). Specifically, storefront per-seller ShippingGroupId delivery cards and dates/time slots (approved TB-145 wireframe) remain **RELEASE-CRITICAL and NOT IMPLEMENTED**, regardless of Admin improvements. Also tracks multilingual Admin, monetary policy, optional constraints, real create-method, persistent writes, EF log flood and financial policy. Read before issuing tasks.
+
 # TOOBA — Must-fix issues before release
 
 Status: ACTIVE release-blocking register. Owner: Software Architecture.
