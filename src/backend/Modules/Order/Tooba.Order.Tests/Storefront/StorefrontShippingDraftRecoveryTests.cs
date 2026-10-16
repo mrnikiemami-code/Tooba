@@ -100,6 +100,42 @@ public sealed class StorefrontShippingDraftRecoveryTests
     }
 
     [Fact]
+    public async Task Two_sellers_with_the_same_method_get_independent_projection_horizons()
+    {
+        // TB-150: آماده‌سازی ۲ و ۳ روز برای دو فروشنده با روش canonical یکسان.
+        var harness = Harness.Create(preparationDays: new Dictionary<Guid, int>
+        {
+            [SellerA] = 2,
+            [SellerB] = 3,
+        });
+
+        var projection = await harness.ProjectAsync();
+        var horizons = Assert.IsAssignableFrom<IReadOnlyList<StorefrontShippingGroupHorizonView>>(
+            projection.ShippingGroupHorizons);
+
+        var a = horizons.Single(h => h.SellerPartyId == SellerA && h.MethodCode == "tipax:standard");
+        var b = horizons.Single(h => h.SellerPartyId == SellerB && h.MethodCode == "tipax:standard");
+
+        Assert.Equal(2, a.SellerPreparationDays);
+        Assert.Equal(3, b.SellerPreparationDays);
+        Assert.Equal("2026-10-21", a.MinimumDeliveryDate);
+        Assert.Equal("2026-10-22", b.MinimumDeliveryDate);
+        // هیچ تلاقی/دیرترین-حداقلِ سراسری: تاریخ‌های مجاز هر ردیف از حداقل خودش آغاز می‌شود.
+        Assert.Equal(a.MinimumDeliveryDate, a.EligibleDates[0].Value);
+        Assert.Equal(b.MinimumDeliveryDate, b.EligibleDates[0].Value);
+        Assert.DoesNotContain(a.EligibleDates, d => string.CompareOrdinal(d.Value, a.MinimumDeliveryDate) < 0);
+        Assert.True(string.CompareOrdinal(a.MinimumDeliveryDate, b.MinimumDeliveryDate) < 0);
+        Assert.NotEqual(a.GroupKey, b.GroupKey);
+        Assert.StartsWith($"{SellerA:N}|", a.GroupKey, StringComparison.Ordinal);
+        // پیش از نخستین ذخیره هیچ شناسهٔ گروهی وجود ندارد؛ ردیفی که پیش‌نویس ذخیره‌شده دارد شناسهٔ
+        // پایدار خودش را ضمیمه می‌کند (بازconciliation صریح با کلید مرحلهٔ پیش‌نویس).
+        Assert.Null(a.ShippingGroupId);
+        Assert.NotNull(b.ShippingGroupId);
+        Assert.Equal($"{(SellerB.ToString("N"))}|tipax:standard", b.GroupKey, StringComparer.OrdinalIgnoreCase);
+        Assert.Equal(0, harness.Drafts.SaveCalls);
+    }
+
+    [Fact]
     public async Task Recovered_draft_keeps_the_server_snapshot_the_payment_step_will_charge()
     {
         var harness = Harness.Create();
@@ -118,16 +154,21 @@ public sealed class StorefrontShippingDraftRecoveryTests
         Assert.All(draft.ShippingGroups!, g =>
             Assert.Equal(GroupedSelectedDate.ToString("yyyy-MM-dd"), g.SelectedDeliveryDate));
 
-        // افق هر گروه جداگانه برمی‌گردد: هیچ اشتراک/دیرترین-حداقل سراسری روی این بخش اعمال نمی‌شود.
+        // افق هر (فروشنده × روش واجد شرایط) جداگانه برمی‌گردد: هیچ اشتراک/دیرترین-حداقل سراسری روی
+        // این بخش اعمال نمی‌شود. ۲ فروشنده × ۲ روش واجد شرایط = ۴ ردیف مستقل.
         var horizons = Assert.IsAssignableFrom<IReadOnlyList<StorefrontShippingGroupHorizonView>>(
             projection.ShippingGroupHorizons);
-        Assert.Equal(2, horizons.Count);
-        Assert.Equal(2, horizons.Select(h => h.ShippingGroupId).Distinct().Count());
-        Assert.Equal(2, horizons.Select(h => h.SellerPartyId).Distinct().Count());
+        Assert.Equal(4, horizons.Count);
+        Assert.Equal(4, horizons.Select(h => h.GroupKey).Distinct().Count());
+        Assert.All(horizons, h => Assert.False(string.IsNullOrWhiteSpace(h.GroupKey)));
         Assert.All(horizons, h => Assert.NotEmpty(h.EligibleDates));
         Assert.All(horizons, h => Assert.NotEmpty(h.EligibleTimeWindows));
         Assert.All(horizons, h => Assert.Equal(h.MinimumDeliveryDate, h.EligibleDates[0].Value));
         Assert.All(horizons, h => Assert.True(h.EligibleDates[0].IsEarliest));
+        // گروه‌های ذخیره‌شده شناسهٔ پایدار خود را ضمیمه دارند و ردیف‌های مرحلهٔ پیش‌نویس شناسه ندارند.
+        var persistedHorizons = horizons.Where(h => h.ShippingGroupId is not null).ToArray();
+        Assert.Equal(2, persistedHorizons.Length);
+        Assert.All(persistedHorizons, h => Assert.NotEqual(Guid.Empty, h.ShippingGroupId!.Value));
         Assert.Equal(0, harness.Drafts.SaveCalls);
     }
 
@@ -264,7 +305,8 @@ public sealed class StorefrontShippingDraftRecoveryTests
         public static Harness Create(
             bool legacySingleGroup = false,
             IReadOnlyList<string>? enabledServiceCodes = null,
-            IReadOnlyList<Guid>? cartSellers = null)
+            IReadOnlyList<Guid>? cartSellers = null,
+            IReadOnlyDictionary<Guid, int>? preparationDays = null)
         {
             var sellers = cartSellers ?? [SellerA, SellerB];
             var carts = new CartsFake(sellers);
@@ -280,6 +322,14 @@ public sealed class StorefrontShippingDraftRecoveryTests
             if (enabledServiceCodes is not null)
             {
                 options.EnabledCodes = [.. enabledServiceCodes];
+            }
+
+            if (preparationDays is not null)
+            {
+                foreach (var (seller, days) in preparationDays)
+                {
+                    options.SellerPreparationDaysByPartyId[seller.ToString("D")] = days;
+                }
             }
 
             var service = new StorefrontShippingService(

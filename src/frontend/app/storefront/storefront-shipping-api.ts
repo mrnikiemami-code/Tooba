@@ -83,6 +83,32 @@ export interface StorefrontShippingGroupSelectionInput {
   cartLineIds: string[];
   serviceCode?: string | null;
   optionCode?: string | null;
+  /**
+   * TB-150: زمان‌بندی **همین** گروه. سرور آن را در برابر حداقل تاریخ همان گروه اعتبارسنجی می‌کند؛
+   * در سبد چندگروهی نبودِ آن fail-closed رد می‌شود (هیچ تاریخی روی همهٔ گروه‌ها کپی نمی‌شود).
+   */
+  selectedDeliveryDate?: string | null;
+  selectedDeliveryTimeWindow?: string | null;
+}
+
+/**
+ * TB-150: افق زمان‌بندی یک گروه ارسال. تمام مقادیر را سرور محاسبه کرده است (آماده‌سازی فروشندهٔ
+ * همان گروه × روزهای حمل همان روش). هیچ تاریخ/پنجره‌ای در کلاینت ساخته یا بین گروه‌ها اشتراک
+ * گرفته نمی‌شود. `groupKey` کلید پایدار سرور-مالک مرحلهٔ پیش‌نویس است و `shippingGroupId` پس از
+ * نخستین ذخیره ضمیمه می‌شود (شناسهٔ پایدار واقعی گروه).
+ */
+export interface StorefrontShippingGroupHorizonView {
+  groupKey: string;
+  shippingGroupId: string | null;
+  sellerPartyId: string;
+  methodCode: string;
+  minimumDeliveryDate: string;
+  eligibleDates: StorefrontDeliveryDateOption[];
+  eligibleTimeWindows: StorefrontDeliveryTimeOption[];
+  selectedDeliveryDate: string | null;
+  selectedDeliveryTimeWindow: string | null;
+  leadDays: number;
+  sellerPreparationDays: number;
 }
 
 export interface StorefrontShippingProjection {
@@ -102,6 +128,8 @@ export interface StorefrontShippingProjection {
   draft: StorefrontShippingDraft | null;
   revalidationMessage: string | null;
   provinces: StorefrontProvinceOption[];
+  /** TB-150: افق مستقل هر جفت (فروشندهٔ سبد × روش واجد شرایط)؛ در سبد تک‌خطی خالی است. */
+  shippingGroupHorizons: StorefrontShippingGroupHorizonView[];
 }
 
 export interface StorefrontShippingSelectionInput {
@@ -246,6 +274,51 @@ function mapDraft(value: unknown): StorefrontShippingDraft | null {
   };
 }
 
+function mapDateOption(row: unknown): StorefrontDeliveryDateOption {
+  const r = asRecord(row) ?? {};
+  return {
+    value: asString(prop(r, "value", "Value")),
+    label: asString(prop(r, "label", "Label")),
+    subLabel: asString(prop(r, "subLabel", "SubLabel")),
+    isEarliest: asBool(prop(r, "isEarliest", "IsEarliest")),
+  };
+}
+
+function mapTimeOption(row: unknown): StorefrontDeliveryTimeOption {
+  const r = asRecord(row) ?? {};
+  return {
+    value: asString(prop(r, "value", "Value")),
+    label: asString(prop(r, "label", "Label")),
+  };
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+/** TB-150: افق مستقل یک گروه؛ ردیف بدون کلید پایدار/روش نادیده گرفته می‌شود (بدون حدس). */
+function mapGroupHorizon(value: unknown): StorefrontShippingGroupHorizonView | null {
+  const item = asRecord(value);
+  if (!item) return null;
+  const groupKey = asString(prop(item, "groupKey", "GroupKey"));
+  const methodCode = asString(prop(item, "methodCode", "MethodCode"));
+  if (!groupKey || !methodCode) return null;
+  return {
+    groupKey,
+    shippingGroupId: asString(prop(item, "shippingGroupId", "ShippingGroupId")) || null,
+    sellerPartyId: asString(prop(item, "sellerPartyId", "SellerPartyId")),
+    methodCode,
+    minimumDeliveryDate: asString(prop(item, "minimumDeliveryDate", "MinimumDeliveryDate")),
+    eligibleDates: asArray(prop(item, "eligibleDates", "EligibleDates")).map(mapDateOption),
+    eligibleTimeWindows: asArray(prop(item, "eligibleTimeWindows", "EligibleTimeWindows")).map(mapTimeOption),
+    selectedDeliveryDate: asString(prop(item, "selectedDeliveryDate", "SelectedDeliveryDate")) || null,
+    selectedDeliveryTimeWindow:
+      asString(prop(item, "selectedDeliveryTimeWindow", "SelectedDeliveryTimeWindow")) || null,
+    leadDays: asNumber(prop(item, "leadDays", "LeadDays")),
+    sellerPreparationDays: asNumber(prop(item, "sellerPreparationDays", "SellerPreparationDays")),
+  };
+}
+
 export function mapShippingProjection(value: unknown): StorefrontShippingProjection {
   const item = asRecord(value);
   if (!item) {
@@ -255,6 +328,7 @@ export function mapShippingProjection(value: unknown): StorefrontShippingProject
   const datesRaw = prop(item, "deliveryDates", "DeliveryDates");
   const timesRaw = prop(item, "deliveryTimeWindows", "DeliveryTimeWindows");
   const provincesRaw = prop(item, "provinces", "Provinces");
+  const horizonsRaw = prop(item, "shippingGroupHorizons", "ShippingGroupHorizons");
   return {
     cartId: asString(prop(item, "cartId", "CartId")),
     cartVersion: asNumber(prop(item, "cartVersion", "CartVersion")),
@@ -269,26 +343,8 @@ export function mapShippingProjection(value: unknown): StorefrontShippingProject
     selectedMethodCode: asString(prop(item, "selectedMethodCode", "SelectedMethodCode")) || null,
     selectedShippingAmount: asNumber(prop(item, "selectedShippingAmount", "SelectedShippingAmount")),
     minimumDeliveryDate: asString(prop(item, "minimumDeliveryDate", "MinimumDeliveryDate")) || null,
-    deliveryDates: Array.isArray(datesRaw)
-      ? datesRaw.map((row) => {
-          const r = asRecord(row) ?? {};
-          return {
-            value: asString(prop(r, "value", "Value")),
-            label: asString(prop(r, "label", "Label")),
-            subLabel: asString(prop(r, "subLabel", "SubLabel")),
-            isEarliest: asBool(prop(r, "isEarliest", "IsEarliest")),
-          };
-        })
-      : [],
-    deliveryTimeWindows: Array.isArray(timesRaw)
-      ? timesRaw.map((row) => {
-          const r = asRecord(row) ?? {};
-          return {
-            value: asString(prop(r, "value", "Value")),
-            label: asString(prop(r, "label", "Label")),
-          };
-        })
-      : [],
+    deliveryDates: asArray(datesRaw).map(mapDateOption),
+    deliveryTimeWindows: asArray(timesRaw).map(mapTimeOption),
     draft: mapDraft(prop(item, "draft", "Draft")),
     revalidationMessage: asString(prop(item, "revalidationMessage", "RevalidationMessage")) || null,
     provinces: Array.isArray(provincesRaw)
@@ -302,6 +358,9 @@ export function mapShippingProjection(value: unknown): StorefrontShippingProject
           };
         })
       : [],
+    shippingGroupHorizons: asArray(horizonsRaw)
+      .map(mapGroupHorizon)
+      .filter((h): h is StorefrontShippingGroupHorizonView => h !== null),
   };
 }
 
@@ -414,6 +473,10 @@ export async function saveShippingSelection(
             cartLineIds: group.cartLineIds,
             serviceCode: group.serviceCode || null,
             optionCode: group.optionCode || null,
+            // TB-150: زمان‌بندی مستقل همین گروه؛ سرور آن را در برابر حداقل تاریخ همین گروه
+            // اعتبارسنجی می‌کند. نبود آن در سبد چندگروهی fail-closed رد می‌شود.
+            selectedDeliveryDate: group.selectedDeliveryDate || null,
+            selectedDeliveryTimeWindow: group.selectedDeliveryTimeWindow || null,
           }))
         : null,
     }),

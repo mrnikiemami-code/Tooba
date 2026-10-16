@@ -45,13 +45,18 @@ test("shipping projection maps store methods and never invents template carriers
 });
 
 test("shipping date chips use Host weekday/date once and do not duplicate Jalali", () => {
-  const source = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-shipping.tsx"), "utf8");
+  // (150) چیپ‌های تاریخ در مسیر تک‌گروهی و درون کارت هر گروه رندر می‌شوند؛ قالب واحد Host.
+  const sources = [
+    "storefront-shipping.tsx",
+    "storefront-shipping-delivery-card.tsx",
+    "storefront-shipping-group-cards.tsx",
+  ].map((name) => fs.readFileSync(path.join(root, "src/frontend/app/storefront", name), "utf8"));
   const chipFormat = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-shipping-format.ts"), "utf8");
-  assert.match(source, /deliveryChipParts/);
+  assert.ok(sources.some((source) => /deliveryChipParts/.test(source)));
   assert.match(chipFormat, /option\.label/);
   assert.match(chipFormat, /option\.subLabel/);
-  assert.doesNotMatch(source, /function deliveryDateUi/);
-  assert.match(source, /overflow-x-auto/);
+  assert.ok(sources.every((source) => !/function deliveryDateUi/.test(source)));
+  assert.ok(sources.some((source) => /overflow-x-auto/.test(source)));
 });
 
 test("shipping continue persists the draft, keeps the cart active and never commits", () => {
@@ -72,6 +77,11 @@ test("shipping continue persists the draft, keeps the cart active and never comm
 
 test("shipping UI source has no hardcoded Shopeiva template method list", () => {
   const source = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-shipping.tsx"), "utf8");
+  // (150) کارت‌های آدرس/تحویل‌گیرنده استخراج شده‌اند؛ فیلدها همان‌جا و بدون تغییر مانده‌اند.
+  const addressCards = fs.readFileSync(
+    path.join(root, "src/frontend/app/storefront/storefront-shipping-address-cards.tsx"),
+    "utf8",
+  );
   assert.doesNotMatch(source, /shippingMethodsList/);
   assert.doesNotMatch(source, /پست پیشتاز/);
   assert.doesNotMatch(source, /ارسال اکسپرس/);
@@ -79,9 +89,9 @@ test("shipping UI source has no hardcoded Shopeiva template method list", () => 
   assert.match(source, /loadShippingProjection/);
   assert.match(source, /saveShippingSelection/);
   assert.match(source, /\/payment\?cartId=/);
-  assert.match(source, /shipping-first-name/);
-  assert.match(source, /shipping-last-name/);
-  assert.doesNotMatch(source, /نام و نام خانوادگی/);
+  assert.match(addressCards, /shipping-first-name/);
+  assert.match(addressCards, /shipping-last-name/);
+  assert.doesNotMatch(addressCards, /نام و نام خانوادگی/);
 });
 
 test("cart CTA routes to /shipping", () => {

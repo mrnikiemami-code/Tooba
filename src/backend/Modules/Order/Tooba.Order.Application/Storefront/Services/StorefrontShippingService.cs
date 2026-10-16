@@ -127,14 +127,10 @@ public sealed class StorefrontShippingService
             .Select(t => new StorefrontDeliveryTimeOption(t.Value, t.LabelFa))
             .ToList();
 
-        // TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149: افق هر گروه پایدار جداگانه؛ هیچ اشتراک یا
-        // دیرترین-حداقلِ سراسری اینجا اعمال نمی‌شود. اسکالرهای بالا فقط نمای سازگاری‌اند.
-        var groupHorizons = draft is null || draft.ShippingGroups.Count == 0
-            ? null
-            : draft.ShippingGroups
-                .OrderBy(g => g.ShippingGroupId)
-                .Select(g => BuildGroupHorizon(g, today, _shippingOptions))
-                .ToArray();
+        // TB-SHIPPING-INDEPENDENT-GROUP-FRONTEND-150: افق هر (فروشنده × روش واجد شرایط) جداگانه؛
+        // هیچ اشتراک یا دیرترین-حداقلِ سراسری اینجا اعمال نمی‌شود. اسکالرهای بالا فقط نمای
+        // سازگاری تک‌گروهی‌اند. در سبد تک‌خطی هیچ افقی ساخته نمی‌شود تا مسیر قدیمی دست‌نخورده بماند.
+        var groupHorizons = BuildGroupHorizons(cart, methods, draft, today);
 
         return new StorefrontShippingProjection(
             cart.CartId,
@@ -153,45 +149,88 @@ public sealed class StorefrontShippingService
             draft is null ? null : MapDraft(draft),
             revalidationMessage,
             StorefrontIranGeography.Provinces,
-            groupHorizons);
+            groupHorizons.Length == 0 ? null : groupHorizons);
     }
 
     /// <summary>
-    /// افق زمان‌بندی یک گروه پایدار: حداقل تاریخ از آماده‌سازی <b>همان فروشنده</b> و روزهای حمل همان
-    /// روش ساخته می‌شود (و هرگز به گذشته نمی‌رود)، و تاریخ/پنجره‌های مجاز از همان حداقل آغاز می‌شوند.
-    /// هیچ تاریخ یا پنجره‌ای از گروه دیگر، از کلاینت یا تقویم ساختگی گرفته نمی‌شود.
+    /// افق زمان‌بندی به‌ازای هر جفت (فروشندهٔ سبد × روش واجد شرایط). حداقل تاریخ هر ردیف از آماده‌سازی
+    /// <b>همان فروشنده</b> و روزهای حمل <b>همان روش</b> ساخته می‌شود (و هرگز به گذشته نمی‌رود). اگر گروه
+    /// ذخیره‌شده‌ای با همان فروشنده/روش وجود داشته باشد، <c>ShippingGroupId</c> و انتخاب ذخیره‌شدهٔ
+    /// همان گروه ضمیمه می‌شود؛ وگرنه ردیف فقط با کلید پایدار مرحلهٔ پیش‌نویس برمی‌گردد.
+    /// کلاینت هیچ تاریخ/شناسه‌ای نمی‌سازد و هیچ گروهی از فهرست حذف/ادغام نمی‌شود.
     /// </summary>
-    private static StorefrontShippingGroupHorizonView BuildGroupHorizon(
-        CartShippingDraftGroup group,
-        DateOnly today,
-        ShippingMethodsOptions options)
+    private StorefrontShippingGroupHorizonView[] BuildGroupHorizons(
+        CartPage cart,
+        IReadOnlyList<StorefrontShippingMethodView> methods,
+        CartShippingDraft? draft,
+        DateOnly today)
     {
-        var sellerPreparationDays = StorefrontShippingCalculator.SellerPreparationDays(group.SellerPartyId, options);
-        var recalculated = StorefrontShippingCalculator.ComputeMinimumDeliveryDate(
-            today, sellerPreparationDays, group.LeadDays);
-        // وعدهٔ ذخیره‌شده دست‌نخورده می‌ماند، ولی هرگز تاریخ گذشته پیشنهاد نمی‌شود.
-        var minimum = group.MinimumDeliveryDate > recalculated ? group.MinimumDeliveryDate : recalculated;
+        // کارت تک‌خطی همان مسیر و همان ظاهر قدیمی را نگه می‌دارد؛ افق گروهی تنها برای سبد چندخطی است.
+        if (cart.Lines.Count <= 1 || methods.Count == 0)
+        {
+            return [];
+        }
 
-        return new StorefrontShippingGroupHorizonView(
-            group.ShippingGroupId,
-            group.SellerPartyId,
-            group.MethodCode,
-            minimum.ToString("yyyy-MM-dd"),
-            StorefrontShippingCalculator.BuildDeliveryDates(minimum, options.DeliveryHorizonDays)
-                .Select(d => new StorefrontDeliveryDateOption(
-                    d.ToString("yyyy-MM-dd"),
-                    StorefrontShippingCalculator.FormatDeliveryDateLabelFa(d, today),
-                    StorefrontShippingCalculator.FormatDeliveryDateSubLabelFa(d),
-                    d == minimum))
-                .ToArray(),
-            StorefrontShippingCalculator.DayTimeWindows
-                .Select(t => new StorefrontDeliveryTimeOption(t.Value, t.LabelFa))
-                .ToArray(),
-            group.SelectedDeliveryDate?.ToString("yyyy-MM-dd"),
-            group.SelectedDeliveryTimeWindow,
-            group.LeadDays,
-            sellerPreparationDays);
+        var persistedGroups = draft?.ShippingGroups ?? [];
+        var sellers = cart.Lines
+            .Select(x => x.SellerPartyId)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToArray();
+        var eligibleMethods = methods
+            .OrderBy(m => m.MethodCode, StringComparer.Ordinal)
+            .ToArray();
+
+        var horizons = new List<StorefrontShippingGroupHorizonView>(sellers.Length * eligibleMethods.Length);
+        foreach (var seller in sellers)
+        {
+            var preparationDays = StorefrontShippingCalculator.SellerPreparationDays(seller, _shippingOptions);
+            foreach (var method in eligibleMethods)
+            {
+                var persisted = persistedGroups.FirstOrDefault(g =>
+                    g.SellerPartyId == seller
+                    && string.Equals(g.MethodCode, method.MethodCode, StringComparison.OrdinalIgnoreCase));
+
+                var recalculated = StorefrontShippingCalculator.ComputeMinimumDeliveryDate(
+                    today, preparationDays, method.LeadDays);
+                // وعدهٔ ذخیره‌شدهٔ همان گروه دست‌نخورده می‌ماند، ولی تاریخ گذشته هرگز پیشنهاد نمی‌شود.
+                var minimum = persisted is not null && persisted.MinimumDeliveryDate > recalculated
+                    ? persisted.MinimumDeliveryDate
+                    : recalculated;
+
+                horizons.Add(new StorefrontShippingGroupHorizonView(
+                    DraftStageGroupKey(seller, method.MethodCode),
+                    persisted?.ShippingGroupId,
+                    seller,
+                    method.MethodCode,
+                    minimum.ToString("yyyy-MM-dd"),
+                    StorefrontShippingCalculator.BuildDeliveryDates(minimum, _shippingOptions.DeliveryHorizonDays)
+                        .Select(d => new StorefrontDeliveryDateOption(
+                            d.ToString("yyyy-MM-dd"),
+                            StorefrontShippingCalculator.FormatDeliveryDateLabelFa(d, today),
+                            StorefrontShippingCalculator.FormatDeliveryDateSubLabelFa(d),
+                            d == minimum))
+                        .ToArray(),
+                    StorefrontShippingCalculator.DayTimeWindows
+                        .Select(t => new StorefrontDeliveryTimeOption(t.Value, t.LabelFa))
+                        .ToArray(),
+                    persisted?.SelectedDeliveryDate?.ToString("yyyy-MM-dd"),
+                    persisted?.SelectedDeliveryTimeWindow,
+                    method.LeadDays,
+                    preparationDays));
+            }
+        }
+
+        return horizons.ToArray();
     }
+
+    /// <summary>
+    /// کلید پایدار سرور-مالکِ گروه در مرحلهٔ پیش‌نویس (پیش از نخستین ذخیره): ترکیب قطعی فروشندهٔ
+    /// سبد و کد روش canonical. کلاینت هرگز شناسهٔ گروه نمی‌سازد و این کلید پس از ذخیره با
+    /// <c>ShippingGroupId</c> بازconciliation می‌شود.
+    /// </summary>
+    private static string DraftStageGroupKey(Guid sellerPartyId, string methodCode)
+        => $"{sellerPartyId:N}|{(methodCode ?? string.Empty).Trim().ToLowerInvariant()}";
 
     /// <summary>
     /// پیش‌نویس پرداخت پیش از سفارش برای سبد فعال: انتخاب ارسال ذخیره‌شده + قیمت authoritative بک‌اند

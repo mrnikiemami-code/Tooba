@@ -24,6 +24,7 @@ import type { StorefrontShippingMethod } from "./storefront-shipping-api.ts";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const shippingSource = fs.readFileSync(path.join(here, "storefront-shipping.tsx"), "utf8");
+const cardsSource = fs.readFileSync(path.join(here, "storefront-shipping-group-cards.tsx"), "utf8");
 const modelSource = fs.readFileSync(path.join(here, "storefront-shipping-item-groups.ts"), "utf8");
 
 function line(lineId: string, sellerPartyId: string, title = "کالا"): StorefrontCartLine {
@@ -201,9 +202,11 @@ test("سیم‌کشی سطح ارسال: انتخاب هر خط، گروه‌ب�
   assert.match(shippingSource, /buildShippingItemGroups\(\{/);
   assert.match(shippingSource, /isItemGroupingComplete\(itemGrouping, cartLines\)/);
   assert.match(shippingSource, /restoreLineMethodSelections\(\{/);
-  assert.match(shippingSource, /setLineMethodByLine\(\(prev\) => \(\{ \.\.\.prev, \[line\.lineId\]: m\.methodCode \}\)\)/);
   assert.match(shippingSource, /cartLineIds: group\.lines\.map\(\(line\) => line\.lineId\)/);
   assert.match(shippingSource, /const isGroupedCart = cartLines\.length > 1;/);
+  // (150) انتخاب روش «هر خط» در کارت مستقل هر گروه است؛ هیچ فروشندهٔ جعلی/ادغامی ساخته نمی‌شود.
+  assert.match(cardsSource, /onSelectMethod\(lineId, m\.methodCode\)/);
+  assert.match(cardsSource, /data-testid={`shipping-group-line-\$\{line\.lineId\}`}/);
   // هیچ تاریخ/مبلغ/فروشندهٔ ساختگی و هیچ commit در این مرحله نیست.
   assert.doesNotMatch(shippingSource, /new Date\(/);
   assert.doesNotMatch(shippingSource, /shipping\/commit/);

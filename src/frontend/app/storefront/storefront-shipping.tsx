@@ -1,39 +1,17 @@
 "use client";
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
-import {
-  Calendar,
-  Check,
-  ChevronDown,
-  ChevronLeft,
-  Clock,
-  CreditCard,
-  Edit3,
-  Home,
-  Mail,
-  MapPin,
-  Package,
-  Phone,
-  Plus,
-  Shield,
-  ShoppingBag,
-  Store,
-  Truck,
-  User,
-  Zap,
-} from "lucide-react";
-import { formatJalaliDate } from "../../design-system/app-data-grid/jalali.ts";
-import { deliveryChipParts, toPersianDigits } from "./storefront-shipping-format.ts";
+import { Check, ChevronLeft, CreditCard, Edit3, Package, Shield, ShoppingBag, Store, Truck } from "lucide-react";
+import { toPersianDigits } from "./storefront-shipping-format.ts";
 import { formatOfferAmount } from "./storefront-api.ts";
 import { loadStorefrontCart, StorefrontCartApiError, type StorefrontCartLine } from "./storefront-cart-api.ts";
 import { StorefrontCheckoutLimitNotice } from "./storefront-checkout-limit-notice.tsx";
 import {
   createCustomerAddress,
   listCheckoutSavedAddresses,
-  recipientDisplayName,
   shippingFromCustomerAddress,
   type CustomerAddress,
 } from "../customer-panel/customer-address-api.ts";
@@ -41,7 +19,6 @@ import {
   loadShippingProjection,
   saveShippingSelection,
   toCustomerShippingMessage,
-  type StorefrontDeliveryDateOption,
   type StorefrontProvinceOption,
   type StorefrontShippingGroupSelectionInput,
   type StorefrontShippingMethod,
@@ -67,35 +44,31 @@ import {
   type GeographyDestinationIdentifiers,
 } from "./storefront-shipping-destination-model.ts";
 import {
-  distinctSelectedMethodCodes,
   isShippingDateHorizonComplete,
   pickEligibleDeliveryDate,
   pickEligibleDeliveryWindow,
-  resolveShippingDateHorizon,
+  resolveSingleGroupHorizon,
 } from "./storefront-shipping-group-horizon.ts";
-import { useGroupShippingDateHorizon } from "./use-storefront-group-shipping-horizon.ts";
+import {
+  allGroupSchedulesComplete,
+  isGroupScheduleComplete,
+  mergeGroupSelections,
+  resolveGroupSchedules,
+  setGroupSelection,
+  type StorefrontShippingGroupSelection,
+} from "./storefront-shipping-group-schedule.ts";
+import { StorefrontShippingGroupCards, type ShippingGroupCard, type UnassignedSellerBlock } from "./storefront-shipping-group-cards.tsx";
+import { StorefrontShippingSingleGroupSection } from "./storefront-shipping-single-group-section.tsx";
+import {
+  EMPTY_SHIPPING_ADDRESS,
+  StorefrontShippingAddressCards,
+  StorefrontShippingNewAddressDialog,
+  type ShippingAddressForm,
+} from "./storefront-shipping-address-cards.tsx";
 
-type AddressForm = {
-  firstName: string;
-  lastName: string;
-  recipientName: string;
-  contactMobile: string;
-  provinceName: string;
-  cityName: string;
-  postalAddress: string;
-  postalCode: string;
-};
+type AddressForm = ShippingAddressForm;
 
-const emptyAddress: AddressForm = {
-  firstName: "",
-  lastName: "",
-  recipientName: "",
-  contactMobile: "",
-  provinceName: "",
-  cityName: "",
-  postalAddress: "",
-  postalCode: "",
-};
+const emptyAddress: AddressForm = EMPTY_SHIPPING_ADDRESS;
 
 function composeRecipient(form: Pick<AddressForm, "firstName" | "lastName" | "recipientName">): string {
   const first = form.firstName.trim();
@@ -104,13 +77,6 @@ function composeRecipient(form: Pick<AddressForm, "firstName" | "lastName" | "re
     return `${first} ${last}`;
   }
   return form.recipientName.trim();
-}
-
-function iconFor(method: StorefrontShippingMethod) {
-  const key = method.iconKey || method.serviceCode;
-  if (key.includes("zap") || key.includes("express") || method.methodCode.includes("express")) return Zap;
-  if (key.includes("store") || key.includes("person") || method.serviceCode === "in_person") return Store;
-  return Package;
 }
 
 /**
@@ -131,6 +97,8 @@ export function StorefrontShopeivaShipping() {
   /** انتخاب روش هر گروه فروشنده در سبد چندگروهی؛ فقط شناسه‌های واقعی سبد و روش‌های authoritative. */
   const [lineMethodByLine, setLineMethodByLine] = useState<Record<string, string>>({});
   const [cartLines, setCartLines] = useState<StorefrontCartLine[]>([]);
+  /** (150) انتخاب تاریخ/بازهٔ **هر گروه جداگانه**؛ کلید = کلید پایدار گروه. */
+  const [groupSelections, setGroupSelections] = useState<Record<string, StorefrontShippingGroupSelection>>({});
   const [deliveryDate, setDeliveryDate] = useState<string>("");
   const [deliveryTime, setDeliveryTime] = useState<string>("");
   const [notes, setNotes] = useState("");
@@ -357,60 +325,57 @@ export function StorefrontShopeivaShipping() {
     [cartLines, lineMethodByLine, projection],
   );
 
-  const groupSelections = itemGrouping.groups;
+  const groupSelectionsByMethod = itemGrouping.groups;
 
-  const groupedShippingAmount = groupSelections.reduce((sum, group) => sum + group.method.priceAmount, 0);
+  const groupedShippingAmount = groupSelectionsByMethod.reduce((sum, group) => sum + group.method.priceAmount, 0);
   const allGroupsHaveMethod = isItemGroupingComplete(itemGrouping, cartLines);
 
-  // هر فروشنده یک کارت می‌گیرد و انتخاب روش داخل همان کارت، «هر خط» است (بدون ادغام فروشندگان).
-  const sellerCards = useMemo(
-    () =>
-      sellerGroups.map((seller) => ({
-        sellerPartyId: seller.sellerPartyId,
-        sellerDisplayName: seller.sellerDisplayName,
-        lines: seller.lines.map((line) => ({
-          line,
-          methodCode: lineMethodByLine[line.lineId] ?? "",
-        })),
-        amount: groupSelections
-          .filter((group) => group.sellerPartyId === seller.sellerPartyId)
-          .reduce((sum, group) => sum + group.method.priceAmount, 0),
-        hasSelection: groupSelections.some((group) => group.sellerPartyId === seller.sellerPartyId),
-      })),
-    [sellerGroups, groupSelections, lineMethodByLine],
+  /** (150) افق مستقل هر گروه از ردیف authoritative سرور؛ بدون تاریخ/تلاقی در کلاینت. */
+  const groupSchedules = useMemo(
+    () => resolveGroupSchedules({ isGroupedCart, projection, groups: groupSelectionsByMethod }),
+    [isGroupedCart, projection, groupSelectionsByMethod],
   );
 
   /**
-   * (133) روش‌های **متمایز** انتخاب‌شده. مبنای واکشی سرور است؛ دو گروه با یک روش یک درخواست
-   * مشترک می‌گیرند و ترتیب گروه‌ها روی افق اثری ندارد.
+   * (150) کارت‌ها به‌تفکیک **گروه ارسال واقعی** (فروشندهٔ سبد × روش canonical): دو فروشنده با روش
+   * یکسان دو کارت مستقل می‌گیرند و یک فروشنده با دو روش هم دو کارت. خطوط بدون روش در بلوک انتخاب
+   * روش همان فروشنده می‌مانند. شناسهٔ نمایشی از شناسهٔ پایدار سرور می‌آید (اگر ذخیره شده باشد).
    */
-  const selectedGroupMethodCodes = useMemo(
-    () => distinctSelectedMethodCodes(groupSelections, new Set(methodByCode.keys())),
-    [groupSelections, methodByCode],
+  const groupCards = useMemo<ShippingGroupCard[]>(
+    () =>
+      groupSelectionsByMethod.map((group) => ({
+        key: group.key,
+        identity: groupSchedules[group.key]?.shippingGroupId ?? group.key,
+        sellerPartyId: group.sellerPartyId,
+        sellerDisplayName: group.sellerDisplayName,
+        methodCode: group.methodCode,
+        methodLabel: group.method.label,
+        amount: group.method.priceAmount,
+        lines: group.lines,
+      })),
+    [groupSelectionsByMethod, groupSchedules],
   );
 
-  // افق تاریخ/بازه از پاسخ واقعی سرور برای همان روش‌های متمایز (بدون تاریخ‌سازی در کلاینت).
-  const { horizon: groupHorizon } = useGroupShippingDateHorizon({
-    enabled: isGroupedCart,
-    cartId: projection?.cartId ?? null,
-    methodCodes: selectedGroupMethodCodes,
-    provinceName: address.provinceName,
-    cityName: address.cityName,
-    destination: destinationIdentifiers,
-    onError: (cause: unknown) => setError(toCustomerShippingMessage(cause, locale)),
-  });
-
-  const dateHorizon = useMemo(
-    () => resolveShippingDateHorizon({ isGroupedCart, projection, groupHorizon }),
-    [isGroupedCart, projection, groupHorizon],
+  const unassignedSellerBlocks = useMemo<UnassignedSellerBlock[]>(
+    () =>
+      sellerGroups
+        .map((seller) => ({
+          sellerPartyId: seller.sellerPartyId,
+          sellerDisplayName: seller.sellerDisplayName,
+          lines: seller.lines.filter((line) => !(lineMethodByLine[line.lineId] ?? "")),
+        }))
+        .filter((seller) => seller.lines.length > 0),
+    [sellerGroups, lineMethodByLine],
   );
 
-  // تاریخ/بازهٔ قبلی فقط اگر برای مجموعهٔ فعلی دیگر مجاز نباشد باطل می‌شود (بدون تغییر خودکار روش‌ها).
+  // انتخاب هر گروه از سرور بازیابی/پاک‌سازی می‌شود؛ تغییر یک گروه بقیه را دست نمی‌زند.
   useEffect(() => {
-    if (!isGroupedCart || !groupHorizon.resolved) return;
-    setDeliveryDate((prev) => pickEligibleDeliveryDate(prev, groupHorizon));
-    setDeliveryTime((prev) => pickEligibleDeliveryWindow(prev, groupHorizon));
-  }, [isGroupedCart, groupHorizon]);
+    if (!isGroupedCart) return;
+    setGroupSelections((prev) => mergeGroupSelections({ previous: prev, schedules: groupSchedules }));
+  }, [isGroupedCart, groupSchedules]);
+
+  // افق مسیر تک‌گروهی (بدون تغییر رفتار قبلی): دقیقاً فیلدهای همان projection.
+  const singleGroupHorizon = useMemo(() => resolveSingleGroupHorizon(projection), [projection]);
 
   const shippingAmount = isGroupedCart
     ? groupedShippingAmount
@@ -426,10 +391,11 @@ export function StorefrontShopeivaShipping() {
     Boolean(address.postalAddress.trim()) &&
     Boolean(address.postalCode.trim()) &&
     (isGroupedCart ? allGroupsHaveMethod : Boolean(methodCode)) &&
-    Boolean(deliveryDate) &&
-    Boolean(deliveryTime) &&
-    // سبد چندگروهی: تاریخ و بازه باید از اشتراک واقعی پاسخ سرور برای همهٔ روش‌های انتخاب‌شده آمده باشند.
-    (!isGroupedCart || isShippingDateHorizonComplete(dateHorizon, deliveryDate, deliveryTime)) &&
+    // سبد چندگروهی: هر گروه باید تاریخ و بازهٔ **خودش** را از پاسخ سرور همان گروه داشته باشد.
+    (isGroupedCart
+      ? allGroupSchedulesComplete({ schedules: groupSchedules, selections: groupSelections })
+      : Boolean(deliveryDate) && Boolean(deliveryTime)
+        && isShippingDateHorizonComplete(singleGroupHorizon, deliveryDate, deliveryTime)) &&
     (projection?.methods.length ?? 0) > 0;
 
   function selectSaved(row: CustomerAddress) {
@@ -465,16 +431,23 @@ export function StorefrontShopeivaShipping() {
   async function persistAndContinue() {
     if (!projection || !isValid) return;
     const requestedGroups: StorefrontShippingGroupSelectionInput[] = isGroupedCart
-      ? groupSelections.map((group) => ({
+      ? groupSelectionsByMethod.map((group) => ({
           shippingMethodCode: group.methodCode,
           // شناسه‌های واقعی خطوط سبد — هیچ خطی حدس زده یا دوباره اختصاص داده نمی‌شود.
           cartLineIds: group.lines.map((line) => line.lineId),
           serviceCode: group.method.serviceCode ?? null,
           optionCode: null,
+          // (150) زمان‌بندی **همین گروه**؛ نه یک تاریخ سراسری برای همهٔ گروه‌ها.
+          selectedDeliveryDate: groupSelections[group.key]?.deliveryDate ?? "",
+          selectedDeliveryTimeWindow: groupSelections[group.key]?.deliveryTime ?? "",
         }))
       : [];
     const primaryMethodCode = isGroupedCart ? requestedGroups[0]?.shippingMethodCode ?? "" : methodCode ?? "";
     if (!primaryMethodCode) return;
+    /** (150) تنها گروهِ سبد: همان shorthand قدیمی تک‌گروهی معتبر است (سرور فقط >۱ گروه را چندگروهی می‌داند). */
+    const onlyGroupSelection = groupSelectionsByMethod.length === 1
+      ? groupSelections[groupSelectionsByMethod[0].key]
+      : undefined;
     setBusy(true);
     setError(null);
     setLimitCode(null);
@@ -490,10 +463,11 @@ export function StorefrontShopeivaShipping() {
         postalCode: address.postalCode,
         savedAddressId,
         shippingMethodCode: primaryMethodCode,
-        selectedDeliveryDate: deliveryDate,
-        selectedDeliveryTimeWindow: deliveryTime,
+        // (150) مقدار اسکالری فقط برای سازگاری مسیر تک‌گروهی ارسال می‌شود؛ در سبد چندگروهی هیچ
+        // تاریخ سراسری معتبر نیست و هر گروه زمان‌بندی خودش را جدا می‌فرستد.
+        selectedDeliveryDate: isGroupedCart ? onlyGroupSelection?.deliveryDate ?? "" : deliveryDate,
+        selectedDeliveryTimeWindow: isGroupedCart ? onlyGroupSelection?.deliveryTime ?? "" : deliveryTime,
         customerNote: notes,
-        // سبد تک‌گروهی همان shorthand قدیمی را می‌فرستد؛ سبد چندگروهی فهرست افزایشی واقعی.
         shippingGroups: isGroupedCart ? requestedGroups : null,
       });
       // ارسال فقط «پیش‌نویس» می‌شود و سبد Active می‌ماند. commit/رزرو/ساخت سفارش فقط با کلیک نهایی
@@ -580,428 +554,62 @@ export function StorefrontShopeivaShipping() {
           ) : null}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <div className="lg:col-span-2 space-y-4">
-              {/* Address selection */}
-              <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-address-section">
-                <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-3">
-                  <Home className="w-4 h-4 text-primary" />
-                  انتخاب آدرس
-                </h3>
-                <div className="flex gap-3 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowNewDialog(true);
-                      setUseSavedAddress(false);
-                    }}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs md:text-sm font-bold border-2 transition-all ${
-                      !useSavedAddress ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-500"
-                    }`}
-                    data-testid="shipping-new-address"
-                  >
-                    <Plus className="w-4 h-4" /> آدرس جدید
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowSaved((v) => !v)}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs md:text-sm font-bold border-2 transition-all ${
-                      useSavedAddress ? "border-primary bg-primary/5 text-primary" : "border-gray-200 text-gray-500"
-                    }`}
-                    data-testid="shipping-saved-toggle"
-                  >
-                    <Home className="w-4 h-4" /> آدرس‌های من
-                    <ChevronDown className={`w-3 h-3 transition-transform ${showSaved ? "rotate-180" : ""}`} />
-                  </button>
-                </div>
-                {showSaved && (
-                  <div className="space-y-2" data-testid="shipping-saved-list">
-                    {(savedAddresses ?? []).length === 0 ? (
-                      <p className="text-xs text-gray-500">نشانی ذخیره‌شده‌ای در دسترس نیست.</p>
-                    ) : (
-                      (savedAddresses ?? []).map((saved) => (
-                        <button
-                          key={saved.addressId}
-                          type="button"
-                          onClick={() => selectSaved(saved)}
-                          className={`w-full text-right p-3 md:p-4 rounded-xl border-2 transition-all ${
-                            useSavedAddress && savedAddressId === saved.addressId
-                              ? "border-primary bg-primary/5"
-                              : "border-gray-100 hover:border-gray-200 bg-gray-50"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="text-xs md:text-sm font-bold text-gray-900">{recipientDisplayName(saved)}</p>
-                              <p className="text-[10px] md:text-xs text-gray-500">
-                                {saved.provinceName}، {saved.cityName}، {saved.postalAddress}
-                              </p>
-                              <p className="text-[10px] text-gray-400 mt-0.5">
-                                {saved.contactMobile} | کد پستی: {saved.postalCode}
-                              </p>
-                            </div>
-                            {useSavedAddress && savedAddressId === saved.addressId ? (
-                              <Check className="w-4 h-4 text-primary shrink-0 mt-1" />
-                            ) : null}
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
+              {/* (150) آدرس و تحویل گیرنده: استخراج‌شده بدون هیچ تغییر رفتاری/بصری */}
+              <StorefrontShippingAddressCards
+                address={address}
+                onAddressChange={setAddress}
+                savedAddresses={savedAddresses}
+                useSavedAddress={useSavedAddress}
+                savedAddressId={savedAddressId}
+                showSaved={showSaved}
+                onToggleSaved={() => setShowSaved((v) => !v)}
+                onSelectSaved={selectSaved}
+                onOpenNewAddress={() => {
+                  setShowNewDialog(true);
+                  setUseSavedAddress(false);
+                }}
+                provinceOptions={provinceOptions}
+                cityOptions={cityOptions}
+                onProvinceChange={(provinceName) => {
+                  setAddress((a) => ({ ...a, provinceName, cityName: "" }));
+                  void refreshProjection(provinceName, methodCode);
+                }}
+              />
 
-              {/* Recipient */}
-              <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-recipient">
-                <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-4">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  اطلاعات تحویل گیرنده
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="نام">
-                    <div className="relative">
-                      <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input
-                        value={address.firstName}
-                        onChange={(e) => setAddress((a) => ({ ...a, firstName: e.target.value }))}
-                        data-testid="shipping-first-name"
-                        className="w-full pr-10 pl-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-                  </Field>
-                  <Field label="نام خانوادگی">
-                    <input
-                      value={address.lastName}
-                      onChange={(e) => setAddress((a) => ({ ...a, lastName: e.target.value }))}
-                      data-testid="shipping-last-name"
-                      className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </Field>
-                  <Field label="شماره موبایل">
-                    <div className="relative">
-                      <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input
-                        dir="ltr"
-                        value={address.contactMobile}
-                        onChange={(e) =>
-                          setAddress((a) => ({
-                            ...a,
-                            contactMobile: e.target.value.replace(/[^\d]/g, "").slice(0, 11),
-                          }))
-                        }
-                        className="w-full pr-10 pl-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-                  </Field>
-                  <Field label="استان">
-                    <select
-                      value={address.provinceName}
-                      onChange={(e) => {
-                        const provinceName = e.target.value;
-                        setAddress((a) => ({ ...a, provinceName, cityName: "" }));
-                        void refreshProjection(provinceName, methodCode);
-                      }}
-                      className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="">انتخاب استان</option>
-                      {provinceOptions.map((p) => (
-                        <option key={p.label} value={p.label}>
-                          {p.label}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="شهر">
-                    <select
-                      value={address.cityName}
-                      disabled={!address.provinceName}
-                      onChange={(e) => setAddress((a) => ({ ...a, cityName: e.target.value }))}
-                      className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-                      data-testid="shipping-city-select"
-                    >
-                      <option value="">{address.provinceName ? "انتخاب شهر" : "ابتدا استان را انتخاب کنید"}</option>
-                      {cityOptions.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                </div>
-                <Field label="آدرس کامل" className="mt-3">
-                  <textarea
-                    rows={3}
-                    value={address.postalAddress}
-                    onChange={(e) => setAddress((a) => ({ ...a, postalAddress: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none resize-none focus:ring-2 focus:ring-primary"
-                  />
-                </Field>
-                <div className="mt-3 max-w-xs">
-                  <Field label="کد پستی">
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input
-                        dir="ltr"
-                        maxLength={10}
-                        value={address.postalCode}
-                        onChange={(e) =>
-                          setAddress((a) => ({
-                            ...a,
-                            postalCode: e.target.value.replace(/[^\d]/g, "").slice(0, 10),
-                          }))
-                        }
-                        className="w-full pl-10 pr-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-                  </Field>
-                </div>
-              </div>
-
-              {/* Grouped items per seller — grouped cart only; single-group carts keep the legacy card */}
+              {/* (150) یک کارت مستقل برای هر گروه ارسال واقعی؛ تاریخ/بازه داخل همان کارت */}
               {isGroupedCart ? (
-                <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-groups">
-                  <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-1">
-                    <Package className="w-4 h-4 text-primary" />
-                    اقلام ارسال به‌تفکیک فروشنده
-                  </h3>
-                  <p className="text-[11px] text-gray-500 mb-4">
-                    هر فروشنده و روش ارسال آن مستقل نمایش داده می‌شود؛ هزینهٔ هر گروه از نرخ معتبر فروشگاه می‌آید.
-                  </p>
-                  <div className="space-y-4">
-                    {sellerCards.map((card) => (
-                      <div
-                        key={card.sellerPartyId}
-                        className="rounded-2xl border border-gray-200 bg-gray-50/60 p-3 md:p-4"
-                        data-testid={`shipping-group-${card.sellerPartyId}`}
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-3">
-                          <div className="min-w-0 flex items-center gap-2">
-                            <Store className="w-4 h-4 text-primary shrink-0" />
-                            <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{card.sellerDisplayName}</p>
-                          </div>
-                          <span className="text-[11px] md:text-xs font-black text-gray-900 shrink-0">
-                            {card.hasSelection ? formatOfferAmount(card.amount, projection.currency) : "—"}
-                          </span>
-                        </div>
-                        <ul className="space-y-2">
-                          {card.lines.map(({ line, methodCode: lineMethodCode }) => (
-                            <li
-                              key={line.lineId}
-                              className="rounded-xl bg-surface border border-gray-100 p-2"
-                              data-testid={`shipping-group-line-${line.lineId}`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
-                                  {line.mediaAssetId ? (
-                                    <img src={`/media/${line.mediaAssetId}`} alt="" className="w-full h-full object-cover" />
-                                  ) : (
-                                    <Package className="w-4 h-4 text-gray-400" />
-                                  )}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-[11px] md:text-xs font-bold text-gray-800 line-clamp-1">{line.title}</p>
-                                  <p className="text-[10px] text-gray-500">
-                                    تعداد: {toPersianDigits(line.quantity)}
-                                  </p>
-                                </div>
-                              </div>
-                              {/* (135) انتخاب روش برای همین قلم سبد؛ روش از فهرست authoritative سرور. */}
-                              {projection.methods.length === 0 ? null : (
-                                <div
-                                  className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2"
-                                  data-testid={`shipping-line-methods-${line.lineId}`}
-                                >
-                                  {projection.methods.map((m) => {
-                                    const Icon = iconFor(m);
-                                    const selected = lineMethodCode === m.methodCode;
-                                    return (
-                                      <button
-                                        key={`${line.lineId}-${m.methodCode}`}
-                                        type="button"
-                                        onClick={() => setLineMethodByLine((prev) => ({ ...prev, [line.lineId]: m.methodCode }))}
-                                        className={`relative flex items-center gap-2 p-3 rounded-2xl border-2 text-right transition-all ${
-                                          selected
-                                            ? "border-primary bg-primary/5 shadow-sm"
-                                            : "border-gray-200 hover:border-gray-300 bg-surface"
-                                        }`}
-                                        data-testid={
-                                          card.lines.length === 1
-                                            ? `shipping-group-method-${card.sellerPartyId}-${m.methodCode}`
-                                            : `shipping-group-method-${line.lineId}-${m.methodCode}`
-                                        }
-                                      >
-                                        <Icon className={`w-4 h-4 shrink-0 ${selected ? "text-primary" : "text-gray-400"}`} />
-                                        <div className="min-w-0 flex-1">
-                                          <p className={`text-[11px] md:text-xs font-bold ${selected ? "text-primary" : "text-gray-700"}`}>
-                                            {m.label}
-                                          </p>
-                                          <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-0.5">
-                                            <Clock className="w-2.5 h-2.5" /> {m.estimationLabel}
-                                          </p>
-                                        </div>
-                                        {selected ? <Check className="w-3.5 h-3.5 text-primary shrink-0" /> : null}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <StorefrontShippingGroupCards
+                  groups={groupCards}
+                  unassigned={unassignedSellerBlocks}
+                  methodByLine={lineMethodByLine}
+                  methods={projection.methods}
+                  currency={projection.currency}
+                  schedules={groupSchedules}
+                  selections={groupSelections}
+                  onSelectMethod={(lineId, code) => setLineMethodByLine((prev) => ({ ...prev, [lineId]: code }))}
+                  onSelectDate={(groupKey, value) =>
+                    setGroupSelections((prev) => setGroupSelection(prev, groupKey, { deliveryDate: value }))
+                  }
+                  onSelectWindow={(groupKey, value) =>
+                    setGroupSelections((prev) => setGroupSelection(prev, groupKey, { deliveryTime: value }))
+                  }
+                />
               ) : null}
 
-              {/* Methods */}
+              {/* (150) مسیر تک‌گروهی: روش + زمان تحویل؛ در سبد چندگروهی هر گروه کارت مستقل دارد. */}
               {isGroupedCart ? null : (
-              <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-methods">
-                <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-3">
-                  <Package className="w-4 h-4 text-primary" />
-                  روش ارسال
-                </h3>
-                {projection.methods.length === 0 ? (
-                  <p className="text-sm text-gray-500" data-testid="shipping-methods-empty">
-                    در حال حاضر روش ارسالی برای این مقصد فعال نیست.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {projection.methods.map((m) => {
-                      const Icon = iconFor(m);
-                      const selected = methodCode === m.methodCode;
-                      return (
-                        <button
-                          key={m.methodCode}
-                          type="button"
-                          onClick={() => void onSelectMethod(m.methodCode)}
-                          className={`relative flex items-start gap-3 p-4 rounded-2xl border-2 text-right transition-all ${
-                            selected
-                              ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
-                              : "border-gray-200 hover:border-gray-300 bg-gray-50"
-                          }`}
-                          data-testid={`shipping-method-${m.methodCode}`}
-                        >
-                          <div
-                            className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-                              selected ? "bg-primary/10" : "bg-surface"
-                            }`}
-                          >
-                            <Icon className={`w-5 h-5 ${selected ? "text-primary" : "text-gray-400"}`} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className={`text-xs md:text-sm font-bold ${selected ? "text-primary" : "text-gray-700"}`}>
-                              {m.label}
-                            </p>
-                            <p className={`text-[11px] md:text-sm font-black mt-0.5 ${selected ? "text-primary" : "text-gray-900"}`}>
-                              {m.isFree || m.priceAmount === 0
-                                ? "رایگان"
-                                : `${formatOfferAmount(m.priceAmount, projection.currency)}`}
-                            </p>
-                            <p className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-0.5">
-                              <Clock className="w-2.5 h-2.5" /> {m.estimationLabel}
-                            </p>
-                          </div>
-                          {selected ? <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-primary" /> : null}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                <StorefrontShippingSingleGroupSection
+                  methods={projection.methods}
+                  currency={projection.currency}
+                  methodCode={methodCode}
+                  onSelectMethod={(code) => void onSelectMethod(code)}
+                  horizon={singleGroupHorizon}
+                  deliveryDate={deliveryDate}
+                  deliveryTime={deliveryTime}
+                  onSelectDate={setDeliveryDate}
+                  onSelectWindow={setDeliveryTime}
+                />
               )}
-
-              {/* Delivery */}
-              <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-delivery">
-                <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-1">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  زمان تحویل
-                </h3>
-                <p className="text-[11px] text-gray-500 mb-4">روز و بازهٔ ساعت را مثل فروشگاه‌های بزرگ از ردیف زیر انتخاب کنید.</p>
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-2">تاریخ تحویل</label>
-                    {dateHorizon.dates.length === 0 ? (
-                      <p className="text-xs text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-xl p-3">
-                        ابتدا روش ارسال را انتخاب کنید تا نزدیک‌ترین تاریخ مجاز فروشگاه نمایش داده شود.
-                      </p>
-                    ) : (
-                      <>
-                        {dateHorizon.minimumDeliveryDate ? (
-                          <p className="text-[11px] text-gray-500 mb-3">
-                            اولین نوبت ممکن:{" "}
-                            <span className="font-bold text-gray-800">
-                              {formatJalaliDate(`${dateHorizon.minimumDeliveryDate}T12:00:00`, "fa")}
-                            </span>
-                          </p>
-                        ) : null}
-                        <div className="-mx-1 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
-                          {dateHorizon.dates.map((d) => {
-                            const disabled = Boolean(
-                              dateHorizon.minimumDeliveryDate && d.value < dateHorizon.minimumDeliveryDate,
-                            );
-                            const selected = deliveryDate === d.value;
-                            const chip = deliveryChipParts(d);
-                            return (
-                              <button
-                                key={d.value}
-                                type="button"
-                                disabled={disabled}
-                                onClick={() => {
-                                  if (disabled) return;
-                                  setDeliveryDate(d.value);
-                                }}
-                                title={disabled ? "قبل از حداقل زمان فروشگاه مجاز نیست" : `${chip.weekday} ${chip.day} ${chip.month}`}
-                                className={`w-[4.75rem] shrink-0 rounded-2xl border-2 px-2 py-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-                                  selected
-                                    ? "border-primary bg-primary/5 text-primary shadow-sm"
-                                    : "border-gray-200 bg-surface text-gray-700 hover:border-gray-300"
-                                }`}
-                                data-testid={`shipping-date-${d.value}`}
-                              >
-                                <p className="text-[11px] font-medium">{chip.weekday}</p>
-                                <p className="mt-1 text-xl font-black leading-none tabular-nums">{chip.day}</p>
-                                <p className="mt-1 text-[10px] text-gray-500">{chip.month}</p>
-                                {d.isEarliest ? (
-                                  <p className="mt-1 text-[9px] font-bold text-primary">نزدیک‌ترین</p>
-                                ) : null}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-2">بازهٔ ساعت تحویل</label>
-                    <div className="flex flex-wrap gap-2" data-testid="shipping-time" role="radiogroup" aria-label="ساعت تحویل">
-                      {dateHorizon.timeWindows.length === 0 ? (
-                        <p className="text-xs text-gray-500">بازه‌ای برای این روز اعلام نشده است.</p>
-                      ) : (
-                        dateHorizon.timeWindows.map((t) => {
-                          const selected = deliveryTime === t.value;
-                          return (
-                            <button
-                              key={t.value}
-                              type="button"
-                              role="radio"
-                              aria-checked={selected}
-                              onClick={() => setDeliveryTime(t.value)}
-                              className={`inline-flex items-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-xs font-bold transition-all ${
-                                selected
-                                  ? "border-primary bg-primary/5 text-primary"
-                                  : "border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300"
-                              }`}
-                            >
-                              <Clock className="size-3.5 shrink-0" />
-                              {t.label}
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Notes */}
               <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-notes">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-3">
@@ -1038,7 +646,7 @@ export function StorefrontShopeivaShipping() {
                     <div className="flex justify-between">
                       <span className="text-gray-500">هزینه ارسال</span>
                       <span className={`font-bold ${shippingAmount === 0 ? "text-emerald-500" : "text-gray-900"}`}>
-                        {shippingAmount === 0 && (isGroupedCart ? groupSelections.length > 0 : selectedMethod)
+                        {shippingAmount === 0 && (isGroupedCart ? groupSelectionsByMethod.length > 0 : selectedMethod)
                           ? "رایگان"
                           : (isGroupedCart ? allGroupsHaveMethod : selectedMethod)
                             ? formatOfferAmount(shippingAmount, projection.currency)
@@ -1047,7 +655,7 @@ export function StorefrontShopeivaShipping() {
                     </div>
                     {isGroupedCart ? (
                       <div className="space-y-1.5 border-t border-dashed border-gray-200 pt-2.5 mt-1" data-testid="shipping-group-fees">
-                        {groupSelections.map((group) => (
+                        {groupSelectionsByMethod.map((group) => (
                           <div key={`fee-${group.key}`} className="flex justify-between gap-2 text-[11px] md:text-xs">
                             <span className="text-gray-500 truncate">
                               {group.sellerDisplayName}
@@ -1096,106 +704,16 @@ export function StorefrontShopeivaShipping() {
         </div>
       </section>
 
-      {showNewDialog ? (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" data-testid="shipping-new-dialog">
-          <div className="bg-surface-elevated rounded-2xl max-w-lg w-full p-5 shadow-xl space-y-3" data-storefront-surface-role="overlay">
-            <h4 className="font-black text-gray-900">آدرس جدید</h4>
-            <input
-              placeholder="نام"
-              value={newAddress.firstName}
-              onChange={(e) => setNewAddress((a) => ({ ...a, firstName: e.target.value }))}
-              data-testid="shipping-new-first-name"
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm"
-            />
-            <input
-              placeholder="نام خانوادگی"
-              value={newAddress.lastName}
-              onChange={(e) => setNewAddress((a) => ({ ...a, lastName: e.target.value }))}
-              data-testid="shipping-new-last-name"
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm"
-            />
-            <input
-              placeholder="موبایل"
-              dir="ltr"
-              value={newAddress.contactMobile}
-              onChange={(e) =>
-                setNewAddress((a) => ({ ...a, contactMobile: e.target.value.replace(/[^\d]/g, "").slice(0, 11) }))
-              }
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm"
-            />
-            <select
-              value={newAddress.provinceName}
-              onChange={(e) => setNewAddress((a) => ({ ...a, provinceName: e.target.value, cityName: "" }))}
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm"
-            >
-              <option value="">استان</option>
-              {provinceOptions.map((p) => (
-                <option key={p.label} value={p.label}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-            <select
-              value={newAddress.cityName}
-              onChange={(e) => setNewAddress((a) => ({ ...a, cityName: e.target.value }))}
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm"
-            >
-              <option value="">شهر</option>
-              {(provinces.find((p) => p.label === newAddress.provinceName)?.cities ?? []).map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <textarea
-              placeholder="آدرس کامل"
-              value={newAddress.postalAddress}
-              onChange={(e) => setNewAddress((a) => ({ ...a, postalAddress: e.target.value }))}
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm"
-              rows={3}
-            />
-            <input
-              placeholder="کد پستی"
-              dir="ltr"
-              value={newAddress.postalCode}
-              onChange={(e) =>
-                setNewAddress((a) => ({ ...a, postalCode: e.target.value.replace(/[^\d]/g, "").slice(0, 10) }))
-              }
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm"
-            />
-            <div className="flex gap-2 justify-end pt-2">
-              <button type="button" className="px-4 py-2 rounded-xl text-sm" onClick={() => setShowNewDialog(false)}>
-                انصراف
-              </button>
-              <button
-                type="button"
-                className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-primary"
-                onClick={() => void submitNewAddress()}
-                disabled={busy}
-              >
-                تأیید آدرس
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function Field({
-  label,
-  children,
-  className = "",
-}: {
-  label: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`space-y-1.5 ${className}`}>
-      <label className="block text-xs md:text-sm font-bold text-gray-700 pr-1">{label}</label>
-      {children}
+      <StorefrontShippingNewAddressDialog
+        open={showNewDialog}
+        newAddress={newAddress}
+        onNewAddressChange={setNewAddress}
+        provinceOptions={provinceOptions}
+        provinces={provinces}
+        busy={busy}
+        onCancel={() => setShowNewDialog(false)}
+        onSubmit={() => void submitNewAddress()}
+      />
     </div>
   );
 }

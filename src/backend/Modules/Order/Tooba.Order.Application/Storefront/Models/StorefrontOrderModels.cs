@@ -163,13 +163,19 @@ public sealed record StorefrontShippingProjection(
     IReadOnlyList<StorefrontShippingGroupHorizonView>? ShippingGroupHorizons = null);
 
 /// <summary>
-/// افق زمان‌بندی یک گروه ارسال پایدار. همهٔ مقادیر از همان گروه ذخیره‌شده و ماشین‌حساب canonical
-/// سرور می‌آید؛ هیچ تاریخ/پنجره‌ای از کلاینت یا از افق گروه دیگر استنتاج نمی‌شود.
+/// افق زمان‌بندی یک گروه ارسال. همهٔ مقادیر از منابع authoritative سرور می‌آید
+/// (آماده‌سازی فروشنده × روزهای حمل روش)؛ هیچ تاریخ/پنجره‌ای از کلاینت یا از افق گروه دیگر
+/// استنتاج نمی‌شود و هیچ تلاقی/دیرترین-حداقل سراسری اعمال نمی‌گردد.
 /// </summary>
-/// <param name="ShippingGroupId">شناسهٔ پایدار گروه؛ تنها کلید انتخاب زمان‌بندی این گروه.</param>
+/// <param name="GroupKey">
+/// کلید پایدار و سرور-مالکِ گروه در مرحلهٔ پیش‌نویس (پیش از نخستین ذخیره): ترکیب قطعی
+/// (فروشندهٔ سبد × کد روش canonical). پس از ذخیرهٔ پیش‌نویس، <paramref name="ShippingGroupId"/> نیز پر
+/// می‌شود و بازconciliation صریح با همین کلید انجام می‌گیرد؛ کلاینت هرگز شناسهٔ گروه نمی‌سازد.
+/// </param>
+/// <param name="ShippingGroupId">شناسهٔ پایدار و ذخیره‌شدهٔ گروه؛ تا پیش از نخستین ذخیره null است.</param>
 /// <param name="SellerPartyId">فروشندهٔ مالک گروه (از سبد، نه از کلاینت).</param>
 /// <param name="MethodCode">کد روش canonical همین گروه.</param>
-/// <param name="MinimumDeliveryDate">حداقل تاریخ تحویلِ همین گروه (آماده‌سازی فروشندهٔ همین گروه + روزهای روش).</param>
+/// <param name="MinimumDeliveryDate">حداقل تاریخ تحویلِ همین گروه (آماده‌سازی همین فروشنده + روزهای همین روش).</param>
 /// <param name="EligibleDates">تاریخ‌های مجاز همین گروه از حداقل خودش آغاز می‌شود.</param>
 /// <param name="EligibleTimeWindows">پنجره‌های مجاز همین گروه.</param>
 /// <param name="SelectedDeliveryDate">تاریخ انتخاب‌شدهٔ ذخیره‌شدهٔ همین گروه (اگر ذخیره شده باشد).</param>
@@ -179,7 +185,8 @@ public sealed record StorefrontShippingProjection(
 /// روزهای آماده‌سازی فروشندهٔ همین گروه از پیکربندی سرور؛ برای شفاف‌سازی «دیرترین/زودترین» و اثبات تفاضل.
 /// </param>
 public sealed record StorefrontShippingGroupHorizonView(
-    Guid ShippingGroupId,
+    string GroupKey,
+    Guid? ShippingGroupId,
     Guid SellerPartyId,
     string MethodCode,
     string MinimumDeliveryDate,
