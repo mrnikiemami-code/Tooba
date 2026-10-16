@@ -1,0 +1,117 @@
+{
+  "taskId": "TB-SHIPPING-ONE-LEVEL-TABS-125",
+  "parentTask": "TB-SHIPPING-ONE-LEVEL-TABS-124",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "bridgeTaskRow": "42dd2bfa-ab9d-4172-bbf4-1ba1f75178e1",
+  "mode": "BOUNDED_ORDER_SHIPPING_GROUP_PERSISTENCE_AND_SETTLEMENT_DESIGN_REVIEW",
+  "expectedBaseSha": "f75d9c0001f92c159f8536415c69b9ff6af1f418",
+  "actualBaseSha": "f75d9c0001f92c159f8536415c69b9ff6af1f418",
+  "baseShaAncestorOfHead": true,
+  "remoteDeltaSinceBase": "NONE (origin/main == base at claim and at push)",
+  "drift": "No source/test/frontend/config/migration drift. Pre-existing unstaged admin edits left untouched: src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx.",
+  "status": "PASS",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "automaticNextImplementationTask": "NONE",
+  "codeSha": "NONE",
+  "designOnly": true,
+  "sourceChanges": 0,
+  "testChanges": 0,
+  "frontendChanges": 0,
+  "configChanges": 0,
+  "migrationChanges": 0,
+  "schemaChanges": 0,
+  "flagChanges": 0,
+  "processStartStop": 0,
+  "dbMutations": 0,
+  "containersTouched": 0,
+  "testsExecuted": 0,
+  "testsJustification": "No design fact required execution: every claim is settled by EF mappings, migrations, domain aggregates, module Contracts and DI seams. The single runtime uncertainty (scratch tax fixture) is labelled unproven with a mandatory pre-check recipe instead of being asserted.",
+  "verifiedCurrentLimitations": {
+    "orderDraft": "cart_shipping_drafts keyed by CartId with ONE ShippingMethodCode/Label/Amount/date/window",
+    "orderAccepted": "checkouts has ONE ShippingMethodCode(32)/Label(64)/Amount(18,2) and UNIQUE(CartId)",
+    "orderLine": "order_lines has NO shipping column",
+    "sellerTotals": "seller_orders totals are merchandise-only; shipping added at payable boundary (StorefrontCheckoutService.cs:357-358)",
+    "fulfillmentUnit": "fulfillments HasIndex(SellerOrderId).IsUnique() => exactly ONE unit per seller TODAY",
+    "fulfillmentShipment": "shipments HasIndex(FulfillmentId) NOT unique; Shipment already carries ShippingMethodCode/Label => MULTIPLE shipments/methods per seller is LEGAL TODAY",
+    "payment": "one SellerOrder allocation per seller (merchandise) + ONE StoreShipping allocation with fixed sentinel target",
+    "settlement": "settlement_entries per SellerOrder, gross x commission rate -> net; NO shipping component anywhere",
+    "eligibility": "LoadEligibleMethodsAsync(cartSubtotal, province, language); MaxSellerPreparationDays = slowest seller; NO seller/origin dimension in shipping selection"
+  },
+  "proposedOwnership": {
+    "order": "owns draft group set + immutable accepted per-group quote snapshot (method/label/amount/currency/lead days/quote policy version/scheduling)",
+    "fulfillment": "owns execution identity + method binding + actual carrier cost; one Shipment per group inside the existing one-unit-per-seller boundary; the unique index is NOT broken",
+    "settlement": "owns per-group shipping fee allocation rows, typed balanced ledger entries, adjustments, idempotency",
+    "pricingTax": "own rate/tax calculation; Order snapshots the typed result",
+    "paymentWallet": "own money movement; one customer charge now referenceable per group",
+    "host": "composition only; no persistence"
+  },
+  "proposedSchema": {
+    "m1_order_draft": ["cart_shipping_groups", "cart_shipping_group_lines (CartLineId cross-module id, no FK; UNIQUE(CartLineId))"],
+    "m2_order_accepted": ["order_shipping_groups (FK checkouts + seller_orders)", "order_shipping_group_lines (FK order_lines; UNIQUE(OrderLineId))"],
+    "m3_fulfillment": ["shipments.ShippingGroupId nullable + index (no cross-module FK)"],
+    "m4_settlement": ["shipping_fee_allocations (UNIQUE live allocation per group)", "shipping_fee_adjustments (UNIQUE IdempotencyKey)"],
+    "backwardCompatibility": "all additive; no drop/rename/backfill; legacy single-method checkouts remain readable as an implicit one-group order; checkouts shipping columns kept as a compatibility projection",
+    "destructiveChange": false,
+    "hostOwnedPersistence": false
+  },
+  "reconciliationRule": {
+    "equation": "CustomerChargeAmount - DiscountAmount == CarrierPayableAmount + SellerShareAmount + MarketplaceShareAmount + ShippingTaxAmount",
+    "signConvention": "components are amounts credited to that party; SellerShareAmount and MarketplaceShareAmount are SIGNED (negative = seller bears / marketplace subsidises); discount funder is stored, not inferred",
+    "enforcement": "fail-closed on mismatch; never plugged by residual inference",
+    "orderRollup": "aggregate customer shipping = sum of group net charges; never fee x group count and never double-added with the legacy scalar",
+    "quoteVsActual": "shipping_fee_adjustments rows + linked entries; original allocation never overwritten",
+    "idempotency": "one live allocation per group + unique idempotency keys prevent double pay/refund"
+  },
+  "uiDesignConcern": {
+    "reusedVerifiedSources": [
+      "src/frontend/app/storefront/storefront-shipping.tsx:613-633 (method card + selection classes, test ids shipping-method-*)",
+      "src/frontend/app/payment/storefront-payment-handoff.tsx:270 (summary card classes + data-storefront-surface-role=card, test ids payment-*)",
+      "src/frontend/app/storefront/storefront-cart.tsx:230 (item row markup, test id cart-line)",
+      "formatOfferAmount for Persian currency formatting"
+    ],
+    "policy": "same card classes + one group header; no global CSS, no new design tokens, no redesign, RTL/responsive preserved",
+    "criticalStorefrontTestRequired": true
+  },
+  "taxFixtureDecision": {
+    "fixture": "workspace-live-shirt (offers ARM-LN-01 / DGS-LN-01 classified standard, Active IR-NAT/IR rule, two sellers)",
+    "verdict": "SUFFICIENT as a source-backed fixture for a later isolated browser acceptance",
+    "runtimeProven": false,
+    "mandatoryPreCheck": "after RunLegacyBootstraps=true bootstrap, read back via authorized APIs that the product is published, both offers are classified standard and an Active IR-NAT/IR rule exists; otherwise STOP and name the fixture gap",
+    "taxCategorizationChanged": false,
+    "taxRuleCreated": false
+  },
+  "unresolvedDecisions": [
+    "(a) adopt a fulfillment origin/context field on the group in v1, or defer it (blocks contract acceptance case 3)?",
+    "(b) may a single cart line be split across groups (partial quantity)? recommendation: v1 whole-line",
+    "(c) allocation policy CONTENT (free-shipping funder, whether a seller shipping share exists, quoted-vs-actual rule) - commercial policy, must not be invented",
+    "(d) retire / keep-as-projection / leave-untouched the legacy checkouts shipping columns? recommendation: keep as compatibility projection",
+    "(e) dedicated Settlement-owned shipping ledger rows vs extending SettlementEntry? recommendation: dedicated rows"
+  ],
+  "proposedSlices": [
+    {"n": 1, "name": "Order-owned draft shipping groups", "owner": "Order", "migration": "M1"},
+    {"n": 2, "name": "Durable order groups + per-group payable", "owner": "Order/Payment", "migration": "M2"},
+    {"n": 3, "name": "Fulfillment execution per group", "owner": "Fulfillment", "migration": "M3"},
+    {"n": 4, "name": "Settlement per-group allocation (blocked on decision c for policy content)", "owner": "Settlement", "migration": "M4"},
+    {"n": 5, "name": "Storefront grouped UI + one bounded browser acceptance", "owner": "Frontend", "migration": "NONE"}
+  ],
+  "firstProposedImplementationSlice": "Slice 1: Order-owned draft shipping groups (migration M1 + draft aggregate + additive selection/projection contracts + 4 focused shape tests; no conversion, fulfillment, settlement or UI)",
+  "changedPaths": [
+    "docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-125.md",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/authority-map.txt",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/schema-contract-proposal.txt",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/money-reconciliation.txt",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/bounded-slices.txt",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/task-receipt.json",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/RESULT.bridge.txt"
+  ],
+  "unstagedPaths": ["docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-125.task.md"],
+  "lockedContractModified": false,
+  "sharedNonInterference": "Shared :5088/:3000, tooba_alpha and all containers untouched; no process launch/restart/kill; no DDL/DML; no seed or scratch startup; no API mutation.",
+  "deviations": "None of substance. Zero tests executed (design facts did not require execution); justified and recorded.",
+  "rollback": "Documentation-only commit; git revert restores the prior state. No runtime artifact created.",
+  "firstRemainingBlocker": "Five explicit Architect decisions (origin, line splitting, allocation policy content, legacy columns, ledger shape) must be resolved before Slice 1 may start.",
+  "implementationCompleted": false,
+  "commercialReadinessCertified": false
+}

@@ -1,0 +1,103 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-125
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-124
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Bridge-Task-Row: 42dd2bfa-ab9d-4172-bbf4-1ba1f75178e1
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+Expected-Base-SHA: f75d9c0001f92c159f8536415c69b9ff6af1f418
+Actual-Base-SHA: f75d9c0001f92c159f8536415c69b9ff6af1f418
+Base-SHA-Ancestor-Of-Head: true
+Drift: NONE. No source/test/frontend/config/migration drift and no remote delta since the expected base. Two PRE-EXISTING unstaged admin edits were left untouched and unstaged (src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx).
+Code-SHA: NONE
+Evidence-SHA: (this commit; see Changed-Paths)
+Measured-Minutes: ~42
+Design-Only: true (0 source / 0 test / 0 frontend / 0 config / 0 migration / 0 schema / 0 flag changes; 0 process start-stop; 0 DB mutations; 0 containers touched; no seed or scratch startup)
+Tests-Executed: 0 — justified: every design fact is settled by EF mappings, migrations, domain aggregates, module Contracts and DI seams; the one runtime uncertainty is labelled unproven with a mandatory pre-check instead of asserted.
+Locked-Contract: docs/architecture/checkout/SHIPPING-METHOD-GROUPING-UI-CONTRACT.md was READ and NOT modified.
+
+VERIFIED CURRENT LIMITATIONS (MISSION A)
+- Order draft: cart_shipping_drafts is keyed by CartId with ONE ShippingMethodCode/Label/Amount/date-window (OrderDbContext.cs:131-147).
+- Accepted order: checkouts has ONE ShippingMethodCode(32)/Label(64)/Amount(18,2) with UNIQUE(CartId) and UNIQUE(IdempotencyKey) (OrderDbContext.cs:103-126).
+- Order line: order_lines has NO shipping column; a line cannot express its own method (OrderDbContext.cs:174-202).
+- Seller totals: seller_orders totals are merchandise-only; shipping is added once at the payable boundary (StorefrontCheckoutService.cs:357-358 PayableAmount = sum(seller payable) + snapshot.ShippingAmount; TaxJurisdiction hard-coded IR-NAT at :29).
+- Fulfillment unit: fulfillments HasIndex(SellerOrderId).IsUnique() => EXACTLY ONE unit per SellerOrder TODAY (FulfillmentDbContext.cs:106).
+- Fulfillment shipment: shipments HasIndex(FulfillmentId) is NOT unique and Shipment already carries ShippingMethodCode(64)/Label(128) (FulfillmentDbContext.cs:124-135; Shipment.cs:32-35; FulfillmentUnit.CreateShipment(...) :331-360). DECISIVE: multiple shipments/methods per seller are LEGAL TODAY; multiple UNITS are not.
+- Payment: allocation kinds are SellerOrder and StoreShipping; PaymentDirectory.cs:175-190 builds one SellerOrder allocation per seller (merchandise only) plus ONE StoreShipping allocation with the fixed sentinel target 00000000-0000-7000-9000-00000000a11c (PaymentAllocation.cs:13-15) => shipping is one cart-wide bucket.
+- Settlement: settlement_entries is per SellerOrder with gross x commission rate -> net and SourceType payment/refund/order_cancel/order_restore (SettlementEntry.cs); SettlementDbContext.cs:82-102 => NO shipping component, no carrier cost, no seller/marketplace share, no group reference exists anywhere.
+- Eligibility: LoadEligibleMethodsAsync(cartSubtotal, province, language) with MaxSellerPreparationDays = slowest seller across the whole cart (StorefrontShippingService.cs:72-73,222-223,373-392) => no seller/origin dimension exists in shipping selection.
+
+PROPOSED SCHEMA / OWNERSHIP (MISSION B)
+- Identity/lifecycle: ShippingGroupId (UuidV7) created by Order at draft-selection time, carried unchanged draft -> accepted order -> fulfillment -> settlement. Tenant isolation is structural (per-tenant module database), so no tenant column and no cross-tenant relation. A group always belongs to exactly one SellerOrderId; a seller may have many groups. Merge rule is domain-enforced: seller + canonical MethodCode + fulfillment origin/context (pending decision a) + destination snapshot + scheduling inputs must all match AND both lines must be eligible; equal method code alone is NEVER sufficient and two sellers are NEVER merged.
+- M1 (Order draft): cart_shipping_groups (PK ShippingGroupId, FK CartId cascade, SellerPartyId, MethodCode/ServiceCode/OptionCode as DISTINCT fields, label snapshot, AmountSnapshot server-computed, Currency, minimum/selected date, window, LeadDaysSnapshot, QuotePolicyVersion, State, UpdatedAt; checks Amount>=0 and currency shape) + cart_shipping_group_lines (PK(ShippingGroupId,CartLineId), UNIQUE(CartLineId), AssignedQuantity>0). CartLineId is deliberately NOT a cross-module FK; Order already reads cart lines through ICartPresentationGateway.
+- M2 (Order accepted): order_shipping_groups (PK ShippingGroupId, FK CheckoutId cascade, FK SellerOrderId cascade, SellerPartyId, method triple, origin (only if decision a), ShippingChargeSnapshot numeric(19,4), Currency, scheduling, QuotePolicyVersion, CalculatedAt, State Confirmed/Cancelled; IX CheckoutId/SellerOrderId/SellerPartyId) + order_shipping_group_lines (FK OrderLineId cascade, UNIQUE(OrderLineId)). Address is NOT duplicated onto the group (single address on checkouts) to avoid a second source of truth; delivery SCHEDULING is per group.
+- M3 (Fulfillment): shipments.ShippingGroupId nullable + index, no cross-module FK; ONE Shipment per group created through the existing CreateShipment(... shippingMethodCode, shippingMethodLabel, ...) overload. fulfillments.HasIndex(SellerOrderId).IsUnique() is PRESERVED — no new aggregate, no broken constraint.
+- M4 (Settlement): shipping_fee_allocations + shipping_fee_adjustments (see reconciliation below).
+- Contracts (ADDITIVE only): StorefrontShippingSelectionRequest gains Groups[] while keeping the legacy scalar as a single-group shorthand (server materializes exactly one group covering all cart lines => today's UI keeps working); StorefrontShippingProjection/DraftView gain per-group views; PayableCheckoutSnapshot gains ShippingGroups[] while keeping the aggregate ShippingAmount. Order conversion freezes the group snapshot at submit; later catalog/rate changes never rewrite historical groups.
+- Migration order M1 -> M2 -> M3 -> M4; fully additive, no drop/rename/backfill; historical single-method checkouts stay readable as an implicit one-group order and the legacy shipping columns are kept as a compatibility projection. No Host-owned persistence, no generic DbContext, no raw SQL.
+- Invariants: I1 every order line of a SellerOrder appears in exactly one group of THAT seller order; I2 no line in two groups (DB UNIQUE); I3 sum(AssignedQuantity) per line == line quantity (v1 whole-line); I4 group's seller order belongs to the same checkout; I5 method eligible for that seller/destination; I6 one seller + one method still yields exactly ONE group.
+
+ALLOCATION AND RECONCILIATION RULE (MISSION B)
+- Separation: Order owns the accepted quote snapshot; Settlement owns allocation and the ledger; Fulfillment owns execution and actual carrier cost; Payment/Wallet own money movement; Tax owns the shipping-tax rule; Host composes only.
+- Invariant (fail-closed, never plugged by residual inference):
+    CustomerChargeAmount - DiscountAmount == CarrierPayableAmount + SellerShareAmount + MarketplaceShareAmount + ShippingTaxAmount
+  All amounts are the amount CREDITED to that party; SellerShareAmount and MarketplaceShareAmount are SIGNED (negative seller = seller bears shipping; negative marketplace = subsidy, explicitly allowed); CarrierPayableAmount >= 0; the discount funder is STORED, not inferred.
+- Storage per group: customer charge, discount + typed funder, carrier payable, signed seller share, signed marketplace share, shipping tax (+ rule reference), currency, QuotePolicyVersion, AllocationPolicyVersion, State, PostedAt, with one live allocation per group and unique idempotency keys.
+- Order rollup: aggregate customer shipping = sum of group net charges; never fee x group count and never double-added with the legacy scalar.
+- Quote vs actual: Fulfillment-reported real carrier cost becomes a shipping_fee_adjustments row (Kind=CarrierCostActualVsQuoted) plus a linked entry; the original allocation is never overwritten.
+- Reversal/refund: per-group Reversed + compensating entry, mirroring the existing per-SellerOrder cancel/restore discipline; a replayed posting is rejected by the idempotency key.
+- NO percentage, tariff or commercial split is invented. Ledger shape (dedicated Settlement-owned shipping rows vs extending SettlementEntry) is decision (e); the recommendation is dedicated rows because SettlementEntry's gross x rate semantics must stay merchandise-only.
+
+UI DESIGN CONCERN
+Reuse VERIFIED sources only: storefront-shipping.tsx:613-633 (method card + selection classes, test ids shipping-method-*), payment/storefront-payment-handoff.tsx:270 (summary card bg-surface rounded-2xl border border-gray-200 p-5 shadow-sm + data-storefront-surface-role="card"), storefront-cart.tsx:230 item row markup (test id cart-line), and formatOfferAmount for Persian currency. Group wrapper = the same card classes plus one group header (method label + fee + ETA); no global CSS, no new design tokens, no redesign, RTL/responsive preserved. Slice 5 must run `npm run test:critical-storefront` and is gated on backend readiness.
+
+PROPOSED SLICES (5, each <= 45 min, STOP_FOR_ARCHITECT each)
+1. Order-owned draft shipping groups (M1): draft aggregate + additive selection/projection contracts + 4 focused shape tests (coverage invariant, 1-seller-2-methods, 2-sellers-same-method, legacy shorthand). No conversion/fulfillment/settlement/UI.
+2. Durable order groups + per-group payable (M2): snapshot + idempotent conversion + legacy read path + roundtrip/back-nav and double-assignment tests.
+3. Fulfillment execution per group (M3): one Shipment per group inside the unchanged unit; partial dispatch/cancel isolation tests.
+4. Settlement per-group allocation (M4): mechanism + reconciliation equation; blocked on decision (c) for policy CONTENT (implementation may proceed only with an explicit versioned policy interface and no invented numbers).
+5. Storefront grouped UI + ONE bounded browser acceptance: critical-storefront test + scratch DOM/API comparison of group identity, per-group cost and selected method, RTL desktop+mobile, no screenshot loops.
+Slices 1-2 already deliver a provable vertical path; the browser acceptance is deliberately last and backend-gated.
+
+TAX FIXTURE DECISION (independent)
+The sanctioned workspace-live-shirt product is SUFFICIENT AS A SOURCE-BACKED FIXTURE for a later isolated browser acceptance: WorkspaceDemoMarketplaceSeed.EnsureMarketplaceAsync (WorkspaceDemoMarketplaceSeed.cs:151-181) classifies its two offers ARM-LN-01 «فروشگاه آرمان» and DGS-LN-01 «دیجی‌استایل نمونه» into the standard category and creates/activates the IR-NAT/IR 9% rule the storefront requests, and the product already spans two sellers (matching contract acceptance case 2). Runtime-Proven: false — no Host/frontend was started in this task. Mandatory pre-check for the acceptance task: after bootstrapping scratch with Tooba:CatalogDemo:RunLegacyBootstraps=true, read back through authorized APIs that (i) the product is published, (ii) both offers are classified standard, (iii) an Active IR-NAT/IR rule exists; if any is missing, STOP and name the Development fixture gap instead of attempting checkout. No tax categorization was changed and no rule was created.
+
+UNRESOLVED DECISIONS (block implementation, not this review)
+(a) Adopt a fulfillment origin/context field on the group in v1 or defer it? Inventory WH-* never enters shipping selection today, so contract acceptance case (3) cannot be demonstrated without it.
+(b) May a single cart line be split across groups (partial quantity)? Schema supports it; product intent unproven. Recommendation: v1 whole-line assignment, split deferred.
+(c) Allocation policy CONTENT: who funds free shipping, whether a seller shipping share exists at all, and the quoted-vs-actual carrier adjustment rule. Commercial policy; must not be invented.
+(d) Legacy checkouts shipping columns: retire, keep as a single-group projection, or leave historical rows untouched? Recommendation: keep as a compatibility projection.
+(e) Ledger shape: dedicated Settlement-owned shipping ledger rows vs extending SettlementEntry. Recommendation: dedicated rows.
+
+CHANGED PATHS (docs only)
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-125.md
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/authority-map.txt
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/schema-contract-proposal.txt
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/money-reconciliation.txt
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/bounded-slices.txt
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/task-receipt.json
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-125/RESULT.bridge.txt
+Bridge task receipt preserved UNSTAGED: docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-125.task.md
+
+SHARED NON-INTERFERENCE
+Shared :5088/:3000, the tooba_alpha store and all existing containers were strictly untouched; no process launch/restart/kill, no DDL/DML, no seed, no scratch startup, no API mutation, no flag activation.
+
+DEVIATIONS
+None of substance. Completeness deviation only: zero tests executed, justified above.
+
+ROLLBACK
+Documentation-only commit; `git revert <docs-commit>` restores the previous state. No runtime artifact was created.
+
+FIRST REMAINING BLOCKER
+Five explicit Architect decisions must be resolved before Slice 1 may start: (a) fulfillment origin in v1, (b) line splitting, (c) allocation policy content, (d) legacy shipping columns, (e) ledger shape.
+
+FIRST PROPOSED IMPLEMENTATION SLICE
+"Order-owned draft shipping groups" (Slice 1): migration M1 (cart_shipping_groups + cart_shipping_group_lines) + draft aggregate + additive selection/projection Contracts + the four focused shape tests, with no order conversion, no fulfillment, no settlement and no UI, ending in STOP_FOR_ARCHITECT.
+
+NOT CERTIFIED BY THIS TASK
+Implementation is NOT done. Per-item grouping, payment readiness, production Shipping and Tax remain uncertified. This PASS means the proposal is grounded in existing entities/DB mappings, specifies per-item/group persistent data and settlement allocation, preserves module owners and certified rules, includes a compatible migration path and storefront CSS continuity, and is ready for Architect approval.
+STOP FOR ARCHITECT.
+END_TOOBA_WORKER_RESULT

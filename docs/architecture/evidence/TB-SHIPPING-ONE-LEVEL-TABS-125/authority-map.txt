@@ -1,0 +1,212 @@
+TB-SHIPPING-ONE-LEVEL-TABS-125 — MISSION A: authority map (VERIFIED EXISTING, read-only)
+
+Method: source + EF mapping/migration + DI-seam reading only. No process, no DB, no SQL, no test execution.
+Cross-checked against docs/architecture/checkout/SHIPPING-METHOD-GROUPING-UI-CONTRACT.md (the mandatory source).
+
+================================================================================
+1. ORDER — persistence + conversion (VERIFIED EXISTING)
+================================================================================
+OrderDbContext.cs mapping (per-tenant module database; tenant = database, not a column):
+
+  checkouts  (PK ShippingGroupId=n/a)  PK CheckoutId
+    unique index: IdempotencyKey
+    unique index: CartId                      <-- ONE checkout per cart
+    ShippingMethodCode  nvarchar(32)
+    ShippingMethodLabel nvarchar(64)
+    ShippingAmount      numeric(18,2)
+    MinimumDeliveryDate, RequestedDeliveryDate, RequestedDeliveryTimeWindow(32)
+    + recipient/address block (RecipientName/FirstName/LastName/ContactMobile/
+      ProvinceName/CityName/PostalAddress/PostalCode)
+    => exactly ONE cart-wide method/amount/date-window per checkout.
+
+  cart_shipping_drafts  PK CartId
+    ShippingMethodCode nvarchar(64), ShippingMethodLabel nvarchar(128),
+    ShippingAmount numeric(18,2), MinimumDeliveryDate, SelectedDeliveryDate,
+    SelectedDeliveryTimeWindow(32), CustomerNote(500)
+    + recipient/address block + GuestSecretHash(128)
+    => exactly ONE cart-wide method/amount/date-window per cart.
+
+  seller_orders  PK SellerOrderId; unique index OrderNumber
+    Currency(3), SubtotalSnapshot/TaxSnapshot/DiscountSnapshot/GrandTotalSnapshot
+    numeric(19,4), TotalQuantity numeric(18,6), NetAmountBeforeTax,
+    TotalDutyAmount, TotalTaxAndDutyAmount, RoundingModeUsed(32),
+    MoneyDecimalPlacesUsed
+    => seller totals are MERCHANDISE-only; no shipping component exists here.
+
+  order_lines  PK LineId; FK column SellerOrderId (module-internal)
+    OfferId, CatalogVariantId, SellerPartyId, Quantity numeric(18,6), PriceId,
+    UnitPriceSnapshot/LineTotalSnapshot numeric(19,4), Currency(3), TaxExclusive,
+    ReservationId, Tax*/Duty*/Discount*/Promotion* snapshots,
+    CategoryIdSnapshot(indexed), IsReturnable*/ReturnWindowDays*/
+    ReturnPolicy* snapshots
+    => NO shipping method/group column. A line cannot express its own method today.
+
+Conversion / preview boundary:
+  StorefrontCheckoutService.cs:357-358
+    PayableAmount = sellers.Sum(x => x.PayableAmount) + snapshot.ShippingAmount
+  StorefrontCheckoutService.cs:29  TaxJurisdiction = "IR-NAT" (hard-coded)
+  StorefrontShippingService.ProjectPaymentDraftAsync:141-176 requires a
+    CartShippingDraft and passes its SINGLE method/label/amount/date/window into
+    _checkouts.PreviewAsync(...)
+  SaveSelectionAsync:179-250 resolves the method from the eligible list, computes
+    amount server-side (`var amount = method.PriceAmount;`) so the client cannot
+    forge a price, then upserts the one draft row.
+  => Shipping is a single cart-wide scalar end-to-end; it is NOT folded into
+     seller order totals (it is added at the payable boundary).
+
+Existing migrations that define this state (evidence of "not yet modelled"):
+  20260824120000_CheckoutShippingSnapshot.cs        (checkouts shipping columns)
+  20260910190000_StorefrontShippingDraftAndCheckoutFields.cs (cart_shipping_drafts)
+  20260823140000_UniqueCheckoutCartId.cs            (one checkout per cart)
+  OrderDbContextModelSnapshot.cs                    (current authoritative shape)
+
+================================================================================
+2. FULFILLMENT — execution granularity (VERIFIED EXISTING, decisive)
+================================================================================
+FulfillmentDbContext.cs mapping:
+
+  fulfillments  PK FulfillmentId
+    HasIndex(SellerOrderId).IsUnique()        <-- EXACTLY ONE unit per SellerOrder TODAY
+    HasIndex(SellerPartyId); HasIndex(CheckoutId)
+    ShippingMethodCode nvarchar(64), ShippingMethodLabel nvarchar(128)
+    + recipient/address snapshot
+
+  shipments  PK ShipmentId
+    HasIndex(FulfillmentId)                   <-- NOT unique => MANY shipments per unit
+    CarrierDisplayName(128), ShippingMethodCode(64), ShippingMethodLabel(128),
+    TrackingReference(128) unique filter "tracking_reference IS NOT NULL",
+    PreviousTrackingReference(128), ProviderMetadataJson/Version
+    => multiple shipments (and therefore multiple distinct methods) per SellerOrder
+       are LEGAL TODAY inside ONE unit.
+
+  shipment_items  PK ShipmentItemId; HasIndex(ShipmentId)
+  consolidated_packages PK ConsolidatedPackageId; HasIndex(CheckoutId);
+    PackageNumber unique; ShippingMethodCode(64)/Label(128); requires >=2 distinct
+    sellers (domain). Admin post-purchase consolidation, NOT a customer grouping.
+  consolidated_package_members HasIndex(ShipmentId).IsUnique() (filtered) =>
+    a shipment may belong to at most one active package.
+
+  shipping_methods PK ShippingMethodId; MethodCode unique; ProviderKind;
+    LegacyServiceCode/LegacyOptionCode + unique (LegacyServiceCode, LegacyOptionCode)
+    => canonical method identity ALREADY exists and is the right anchor for a group.
+
+Domain (authority, not just schema):
+  FulfillmentUnit.cs:26-59,85-120  unit carries ONE ShippingMethodCode (from checkout)
+  FulfillmentUnit.CreateShipment(... shippingMethodCode, shippingMethodLabel ...):331-360
+    -> per-shipment method is already supported (operator/seller supplied today)
+  FulfillmentUnit.ProcessSelections/PackSelections/UnpackSelections/ApplyShipmentDispatched
+    -> item membership and quantities are ALREADY tracked per order line inside the unit
+  OrderFulfillmentBridge.cs:67-84 passes checkout.ShippingMethodCode/Label once, plus
+    lines as (LineId, Quantity, ReservationId)
+
+DECISIVE ANSWER: "multiple units per SellerOrder" is NOT legal today (unique index);
+"multiple shipments, each with its own method, inside one unit" IS legal today.
+=> the smallest owner-correct execution mapping is one Shipment per Order-owned
+   shipping group inside the existing one-unit-per-seller boundary. No new
+   Fulfillment aggregate is required.
+
+================================================================================
+3. MONEY — charge vs cost vs shares (VERIFIED EXISTING)
+================================================================================
+Payment (customer charging side):
+  PaymentAllocationTargetKind.cs
+    SellerOrder = 0        (seller's merchandise share)
+    StoreShipping = 1      ("هزینهٔ ارسال متعلق به Store/platform؛ به SellerOrder
+                            نسبت داده نمیشود")
+  PaymentAllocation.cs:13-15  StoreShippingTargetId =
+    00000000-0000-7000-9000-00000000a11c   (fixed sentinel, one bucket)
+  PaymentDirectory.cs:175-190
+    merchandise = pending.Sum(x => x.PayableAmount)
+    shipping    = Math.Max(0m, payable.ShippingAmount)
+    amount      = merchandise + shipping
+    allocationRows = one SellerOrder allocation per seller order (MERCHANDISE ONLY)
+                     + ONE StoreShipping allocation for the whole cart
+  => the payment/allocation model is CART-WIDE for shipping: one bucket, no seller
+     attribution, no per-group identity. Customer CHARGE and carrier COST are not
+     distinguished anywhere; there is no cost field at all.
+
+Settlement (ledger side):
+  SettlementEntry.cs  EntryId PK, SettlementAccountId, SellerPartyId,
+    EntryType {Credit, Debit}, GrossAmount, CommissionAmount, NetAmount,
+    Currency, CommissionPolicySnapshot, SourceType(32), SourceId,
+    SellerOrderId (nullable), IdempotencyKey unique, PostedAt
+    Factory methods: PostCreditFromPayment / PostDebitFromRefund /
+      PostDebitFromOrderCancel / PostCreditFromOrderRestore
+    commission = round(gross * policySnapshot.Rate, 4, AwayFromZero); net = gross - commission
+  SettlementDbContext.cs:82-102  settlement_entries: HasIndex(SellerOrderId),
+    HasIndex(SettlementAccountId), HasIndex(SellerPartyId), IdempotencyKey unique
+  settlement_accounts: HasIndex(SellerPartyId).IsUnique()
+  => settlement granularity is per SELLER ORDER (merchandise), with ONE commission
+     rate applied to ONE gross amount. There is NO shipping component, NO carrier
+     payable, NO marketplace/seller shipping share, NO group/checkout reference.
+     Shipping money currently stops at the Payment allocation bucket and is never
+     settled, shared or cost-tracked.
+
+Quote/rate authority (Order-owned):
+  StorefrontShippingCalculator.ResolveRate(methodCode, ShippingMethodsOptions)
+  ShippingMethodRegistry.Enabled(_shippingOptions)  -> enabled code set
+  LoadEligibleMethodsAsync(cartSubtotal, provinceName, language):373-392
+    => eligibility = enabled code set + active service catalog + subtotal/province;
+       NO seller/origin dimension exists anywhere in shipping selection.
+  ShippingMethodsOptions: Rates[], SellerPreparationDaysByPartyId, DefaultSellerPreparationDays
+    MaxSellerPreparationDays = MAX over ALL sellers in the cart (slowest seller)
+    ComputeMinimumDeliveryDate(today, maxPrep, method.LeadDays)
+
+Tax:
+  TaxDirectory.CalculateAsync:120-162 applies ONE Active rule per
+    (jurisdiction, market, category) to a single line's exclusive amount.
+  StorefrontCheckoutService.cs:29 hard-codes IR-NAT; market = IR; currency = IRR.
+  => per-group shipping TAX has no existing home; must be a Settlement/Order typed
+     component with its own rule reference, not a reuse of the line tax path.
+
+Wallet: exists as its own module (payment method), no shipping semantics found.
+Returns: Debit refund path exists per SellerOrder; no shipping-fee reversal path.
+
+================================================================================
+4. STOREFRONT UI — real components/tokens to reuse (VERIFIED EXISTING)
+================================================================================
+Shipping page component:  src/frontend/app/storefront/storefront-shipping.tsx
+  :116  const [methodCode, setMethodCode] = useState<string | null>(null)   single scalar
+  :280  selectedMethod = projection?.methods.find(m => m.methodCode === methodCode)
+  :327-347 persistAndContinue() -> saveShippingSelection({ shippingMethodCode: methodCode, ... })
+  :613-633 method card grid markup; test ids `shipping-methods-empty`,
+          `shipping-method-${m.methodCode}`, `shipping-continue`
+  classes: `rounded-2xl border-2`, `border-primary bg-primary/5 shadow-md shadow-primary/10`,
+           `border-gray-200 hover:border-gray-300 bg-gray-50`, `w-11 h-11 rounded-xl`,
+           `bg-primary/10`, `text-primary`, `text-sm font-black text-gray-900`
+
+Payment page:    src/frontend/app/payment/page.tsx -> ./storefront-payment-handoff.tsx
+  :216  `min-h-screen bg-page` + data-storefront-surface-role="page"
+  :218  `rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong`
+  :270  summary card = `bg-surface rounded-2xl border border-gray-200 p-5 shadow-sm space-y-3`
+        + data-storefront-surface-role="card"
+  :271  data-testid `payment-cart-draft-summary` / `payment-handoff-summary`
+  :275  «روش ارسال: {page.shippingMethodLabel}»      <-- single label today
+  :283  formatOfferAmount(page.shippingAmount, page.currency)   <-- single amount today
+  :288  data-testid `payment-payable-amount`
+  :340  `rounded-2xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/25`
+        data-testid `payment-submit`
+  :14   readStoredCheckoutId from ../storefront/storefront-shipping-api.ts
+
+Existing item-row primitive to reuse: storefront-cart.tsx:230 `data-testid="cart-line"`,
+  :435 `border border-gray-200 rounded-xl overflow-hidden` qty stepper.
+
+CSS ownership: Tailwind utility classes only; the only storefront stylesheet is
+  src/frontend/app/storefront/storefront.css plus src/frontend/app/globals.css.
+  => grouping must be plain Tailwind utilities + existing semantic tokens
+     (bg-page, bg-surface, primary, primary-strong, text-primary, rounded-2xl/3xl,
+      border-gray-200, shadow-sm). No new global CSS, no design-system change.
+
+================================================================================
+5. UNRESOLVED-OWNERSHIP FLAGS (for Architect — do NOT assume)
+================================================================================
+(a) Fulfillment-origin in a group: Inventory owns locations; shipping selection has
+    NO origin dimension today. Whether v1 persists an origin/context on the group,
+    or defers it, changes the schema and the merge rules. DECISION NEEDED.
+(b) Whether one cart line may be split across two groups (partial quantity).
+    The schema allows it; product intent is unproven. DECISION NEEDED.
+(c) Settlement shipping-allocation policy content (who funds free shipping, whether
+    a seller shipping share exists at all) is commercial policy, not derivable from
+    code. DECISION NEEDED; no percentage may be invented.
+(d) Whether legacy checkouts.ShippingMethodCode/Amount are retired, kept as a
+    single-group projection, or left as-is for historical rows. DECISION NEEDED.

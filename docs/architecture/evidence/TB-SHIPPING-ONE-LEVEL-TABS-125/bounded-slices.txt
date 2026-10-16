@@ -1,0 +1,133 @@
+TB-SHIPPING-ONE-LEVEL-TABS-125 — MISSION B(iii): bounded implementation slices + decisions
+
+Each slice <= 45 minutes, focused tests only, STOP_FOR_ARCHITECT at the end. No slice starts
+before Architect approves the schema/contract proposal.
+
+================================================================================
+SLICE 1 — Order-owned draft shipping groups (enabler; backend only)
+================================================================================
+Scope: cart_shipping_groups + cart_shipping_group_lines (M1); domain aggregate + invariants I2-I6;
+SaveStorefrontShippingSelectionCommand accepts Groups[] with the legacy single-method shorthand
+materializing exactly ONE group; projection returns per-group views (methods/amount/scheduling);
+server computes each group's amount from ShippingMethodsOptions (client cannot forge).
+Focused tests: coverage invariant (every cart line in exactly one group of its seller);
+one-seller-two-methods; two-sellers-same-method stays separate; ineligible method rejected;
+legacy scalar request still works and creates one group.
+Exit criteria: DB readback of groups+membership through the Order API for the 4 shapes.
+Explicitly out of scope: order conversion, fulfillment, settlement, UI.
+Stop: STOP_FOR_ARCHITECT.
+
+================================================================================
+SLICE 2 — Durable order groups + per-group payable (vertical DB proof)
+================================================================================
+Scope: order_shipping_groups + order_shipping_group_lines (M2); CheckoutGroup snapshot freezes
+method/label/amount/currency/lead-days/quote-policy-version/scheduling per group; idempotent
+conversion from draft (keyed by the existing checkout idempotency key); legacy checkouts stay
+readable as an implicit single group (no backfill); PayableCheckoutSnapshot gains ShippingGroups[]
+while keeping the aggregate ShippingAmount.
+Focused tests: conversion idempotency; persistence roundtrip (grouping/fees/schedule survive
+reload and back-navigation); UNIQUE(OrderLineId) prevents double assignment; legacy single-method
+checkout still reads and pays correctly.
+Exit criteria: create a 2-group order and read both groups back through module APIs.
+Stop: STOP_FOR_ARCHITECT.
+
+================================================================================
+SLICE 3 — Fulfillment execution per group (no new aggregate)
+================================================================================
+Scope: shipments.ShippingGroupId (M3, nullable) + index; OrderFulfillmentContracts handoff carries
+groups; one Shipment created per group via the existing
+FulfillmentUnit.CreateShipment(..., shippingMethodCode, shippingMethodLabel, ...) overload;
+fulfillments.HasIndex(SellerOrderId).IsUnique() is preserved unchanged.
+Focused tests: one unit + two shipments/one group each across two methods; partial dispatch and
+cancel of one group leaves the other intact; tracking uniqueness unaffected.
+Exit criteria: per-group execution read back from Fulfillment APIs.
+Stop: STOP_FOR_ARCHITECT.
+
+================================================================================
+SLICE 4 — Settlement per-group shipping allocation + reconciliation
+================================================================================
+Scope: shipping_fee_allocations + shipping_fee_adjustments (M4); the reconciliation equation in
+money-reconciliation.txt enforced fail-closed; idempotent posting; per-group reversal; typed
+discount funder; quoted-vs-actual adjustment path.
+Blocked on decision (c): the AllocationPolicyVersion CONTENT (who funds free shipping, whether a
+seller shipping share exists) is commercial policy. Until it is given, this slice may implement
+only the mechanism with an explicit, versioned policy interface and NO invented numbers.
+Focused tests: the equation holds for seller-funded and platform-funded free shipping; two
+sellers + same method never merge allocation; cancel/refund touches only its group; a replayed
+posting is rejected by the idempotency key.
+Exit criteria: balanced, auditable, per-group ledger readback.
+Stop: STOP_FOR_ARCHITECT.
+
+================================================================================
+SLICE 5 — Storefront grouped UI + one bounded browser acceptance
+================================================================================
+Scope: per-item (or explicit fulfillment-group) method selection on /shipping; grouped breakdown
+on /payment. Reuse VERIFIED existing components/tokens ONLY:
+  - method cards + selection classes from storefront-shipping.tsx:613-633
+  - summary card classes from storefront-payment-handoff.tsx:270 (`bg-surface rounded-2xl
+    border border-gray-200 p-5 shadow-sm space-y-3` + data-storefront-surface-role="card")
+  - item row markup from storefront-cart.tsx:230 (`data-testid="cart-line"` pattern)
+  - formatOfferAmount for Persian currency; existing rounded-2xl/3xl, primary/primary-strong,
+    text-primary, border-gray-200; RTL and responsive behaviour unchanged.
+Group wrapper = the same card classes + a group header (method label + fee + ETA); new test ids
+following the existing convention (shipping-group-*, payment-group-*). NO global CSS, NO new
+design tokens, NO redesign of Shipping/Payment.
+Also required here: run `npm run test:critical-storefront` because shared storefront surfaces are
+touched, then ONE bounded real-browser acceptance on an authorized disposable scratch setup
+(compare item/group identity + per-group cost + selected method between API/Order draft and
+rendered DOM; RTL desktop + mobile; no screenshot loops).
+Stop: STOP_FOR_ARCHITECT.
+
+================================================================================
+ORDERING RATIONALE (vertical path first)
+================================================================================
+S1+S2 already deliver a provable vertical path: a customer can select different methods per item
+and the server persists real groups and per-group charges that survive to the order. S3 makes the
+grouping executable, S4 makes the money correct, S5 makes it visible. S5's browser acceptance is
+deliberately last and gated on backend readiness, exactly as the contract requires.
+
+================================================================================
+TB-123 TAX FIXTURE DECISION (independent, as instructed)
+================================================================================
+Verdict: SUFFICIENT AS A SOURCE-BACKED FIXTURE for a later isolated browser acceptance, with a
+mandatory pre-check. Rationale:
+  - WorkspaceDemoProductSeed.SeedSlug = "workspace-live-shirt" is published by
+    WorkspaceDemoProductSeed.SeedProductAsync, and WorkspaceDemoMarketplaceSeed.EnsureMarketplaceAsync
+    classifies its two offers (ARM-LN-01 «فروشگاه آرمان», DGS-LN-01 «دیجی‌استایل نمونه») into the
+    "standard" category and creates/activates the IR-NAT/IR 9% rule the storefront asks for.
+    [VERIFIED source paths: WorkspaceDemoMarketplaceSeed.cs:151-181, WorkspaceDemoSeed.cs:33-41,
+     DevelopmentSchemaMigrator.cs:70-113]
+  - Bonus: it already spans TWO sellers, which is exactly the fixture shape needed for the
+    multi-seller/same-method acceptance case (2) in the contract.
+  - Read-only inspection of the existing dev store also showed only "standard" is rule-backed
+    while the schema-phone categories (sch-*) have no rule, consistent with this analysis.
+Mandatory pre-check in the acceptance task (cheap, prevents a wasted browser run):
+  bootstrap scratch with Tooba:CatalogDemo:RunLegacyBootstraps=true, then READ BACK through
+  authorized APIs that (i) the workspace product is published, (ii) both offers are classified
+  "standard", (iii) an Active IR-NAT/IR rule exists. If any is absent, STOP and report the
+  Development fixture gap instead of attempting checkout.
+Still NOT runtime-proven: no Host/frontend was started in this task. This remains a source-backed
+recipe. No tax categorization was changed and no rule was created.
+
+================================================================================
+GENUINE UNRESOLVED DECISIONS FOR ARCHITECT (block implementation, not this review)
+================================================================================
+(a) Fulfillment ORIGIN on a group: adopt as a persisted group field in v1, or defer until
+    Inventory/Shipping expose an origin dimension in eligibility? (Inventory WH-* never enters
+    shipping selection today; acceptance case (3) cannot be demonstrated without it.)
+(b) May a single cart line be SPLIT across two groups (partial quantity)? Schema supports it;
+    product intent unproven. Recommendation: v1 = whole-line assignment, split deferred.
+(c) Allocation policy CONTENT: who funds free shipping, whether a seller shipping share exists,
+    and the quoted-vs-actual carrier adjustment rule. Commercial policy; must not be invented.
+(d) Legacy checkouts.ShippingMethodCode/Amount: retire, keep as a single-group projection, or
+    leave untouched for historical rows? Recommendation: keep as a compatibility projection.
+(e) Ledger shape: dedicated Settlement-owned shipping ledger rows vs. extending SettlementEntry
+    with a shipping component. Recommendation: dedicated rows (SettlementEntry's gross x rate
+    semantics must stay merchandise-only).
+
+================================================================================
+SMALLEST FIRST IMPLEMENTATION TASK AFTER APPROVAL
+================================================================================
+One bounded task: "Order-owned draft shipping groups (Slice 1)" — M1 migration + draft aggregate
++ additive selection/projection Contracts + the four focused shape tests, no order conversion, no
+fulfillment, no settlement, no UI, ending with STOP_FOR_ARCHITECT.

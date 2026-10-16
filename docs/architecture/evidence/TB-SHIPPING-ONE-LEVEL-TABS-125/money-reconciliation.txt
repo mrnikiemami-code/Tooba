@@ -1,0 +1,156 @@
+TB-SHIPPING-ONE-LEVEL-TABS-125 — MISSION B(ii): per-group shipping money, allocation and reconciliation
+
+All labels: [VERIFIED] = exists today (authority-map.txt) / [PROPOSED] = for Architect approval.
+No percentage, rate or commercial split is invented in this document.
+
+================================================================================
+1. THE PROBLEM IN THE CURRENT MONEY MODEL [VERIFIED]
+================================================================================
+- Customer pays  amount = sum(sellerPayable, merchandise only) + ONE cart-wide ShippingAmount
+    PaymentDirectory.cs:175-190
+- The shipping part becomes exactly ONE allocation bucket with a fixed sentinel target:
+    PaymentAllocationTargetKind.StoreShipping + PaymentAllocation.StoreShippingTargetId
+    (00000000-0000-7000-9000-00000000a11c)                          [VERIFIED]
+- Settlement posts per SellerOrder only: gross/commission/net from a single commission rate,
+  SourceType "payment"/"refund"/"order_cancel"/"order_restore"                [VERIFIED]
+- There is NO field anywhere for carrier cost, seller shipping share, marketplace shipping
+  share, shipping discount funder or shipping tax                          [VERIFIED absent]
+Consequence: with multiple groups the current model would either merge all shipping into one
+bucket (losing per-group truth) or multiply/duplicate a single fee. Both are contract violations.
+
+================================================================================
+2. SEPARATION OF CONCERNS (who owns what)
+================================================================================
+- Pricing/Order own the QUOTE: rate lookup, eligibility, server-computed customer charge per
+  group, quote/rate/policy version, calculation timestamp. Order persists the immutable
+  accepted snapshot: order_shipping_groups.ShippingChargeSnapshot + QuotePolicyVersion.
+- Fulfillment owns EXECUTION and actual carrier cost: it may report the real carrier charge and
+  fulfillment surcharge for a group's shipment. It never writes settlement balances.
+- Settlement owns ALLOCATION and the LEDGER: per-group fee allocation rows, typed balanced
+  entries, receivables/payables, reversals, adjustments, idempotency.
+- Payment/Wallet own MONEY MOVEMENT: one customer charge, now referenceable per group, plus
+  provider capture/refund.
+- Tax owns the shipping-tax RULE and the calculation; Order/Settlement store the typed result.
+No Host table, no browser-computed money, no global shipping financial table without an owner.
+
+================================================================================
+3. [PROPOSED] SETTLEMENT SCHEMA (Settlement-owned)
+================================================================================
+shipping_fee_allocations
+  ShippingFeeAllocationId uuid  PK
+  ShippingGroupId         uuid  NOT NULL      (Order-owned stable id; NO cross-module FK)
+  CheckoutId              uuid  NOT NULL
+  SellerOrderId           uuid  NOT NULL
+  SellerPartyId           uuid  NOT NULL
+  Currency                char(3) NOT NULL
+  CustomerChargeAmount    numeric(19,4) NOT NULL   -- snapshot of Order's accepted charge
+  DiscountAmount          numeric(19,4) NOT NULL DEFAULT 0
+  DiscountFunder          varchar(32) NULL         -- 'Seller'|'Marketplace'|'Carrier'
+  CarrierPayableAmount    numeric(19,4) NOT NULL DEFAULT 0   -- quoted payable at placement
+  SellerShareAmount       numeric(19,4) NOT NULL DEFAULT 0   -- SIGNED
+  MarketplaceShareAmount  numeric(19,4) NOT NULL DEFAULT 0   -- SIGNED (negative = subsidy)
+  ShippingTaxAmount       numeric(19,4) NOT NULL DEFAULT 0
+  ShippingTaxRuleIdSnapshot uuid NULL
+  QuotePolicyVersion      varchar(64) NOT NULL
+  AllocationPolicyVersion varchar(64) NOT NULL     -- Settlement-owned versioned policy
+  State                   varchar(16) NOT NULL     -- 'Posted'|'Reversed'
+  PostedAt                timestamptz NOT NULL
+  indexes: PK; UNIQUE(ShippingGroupId) ON State='Posted' (one live allocation per group);
+           IX(CheckoutId); IX(SellerOrderId); IX(SellerPartyId)
+
+shipping_fee_adjustments                                   [PROPOSED]
+  ShippingFeeAdjustmentId uuid PK
+  ShippingGroupId  uuid NOT NULL
+  Kind             varchar(32) NOT NULL  -- 'CarrierCostActualVsQuoted'|'Refund'|'Cancel'|'Correction'
+  Amount           numeric(19,4) NOT NULL  (signed delta vs the posted allocation)
+  Reason           varchar(256) NOT NULL
+  LinkedEntryId    uuid NULL               (ledger entry produced by this adjustment)
+  IdempotencyKey   varchar(128) NOT NULL
+  CreatedAt        timestamptz NOT NULL
+  indexes: PK; UNIQUE(IdempotencyKey); IX(ShippingGroupId, CreatedAt)
+
+Ledger entries: reuse the existing SettlementEntry table/aggregate ONLY if Architect approves a
+shipping component; the cleaner option is a dedicated typed shipping ledger row set
+(Settlement-owned) because SettlementEntry's semantics are gross/commission/net per SellerOrder
+and folding shipping into them would corrupt seller commission math. DECISION NEEDED.
+Either way every entry is auditable and linked (adjustments reference parent entries; nothing is
+overwritten) and every posting carries an idempotency key.
+
+================================================================================
+4. SIGN CONVENTION AND RECONCILIATION INVARIANT
+================================================================================
+Convention (single currency per group; canonical Money precision 19,4; round half away from
+zero exactly once at allocation time — matching the existing SettlementEntry practice):
+  All component amounts are stated as the amount CREDITED to that party.
+  SellerShareAmount      > 0 = seller is credited shipping money; < 0 = seller bears shipping.
+  MarketplaceShareAmount > 0 = marketplace retains shipping revenue; < 0 = marketplace SUBSIDISES
+                               the shipping (explicitly allowed by the architecture contract).
+  CarrierPayableAmount   >= 0 always (a cost, credited to the carrier).
+  ShippingTaxAmount      >= 0.
+  CustomerChargeAmount   >= 0 net of DiscountAmount.
+
+RECONCILIATION EQUATION (must hold exactly per group; mismatch is fail-closed, never plugged):
+      CustomerChargeAmount - DiscountAmount
+        == CarrierPayableAmount
+         + SellerShareAmount
+         + MarketplaceShareAmount
+         + ShippingTaxAmount
+
+Equivalently as a balanced journal for one group (debits = credits):
+  DEBIT   Customer receivable / cash                        (charge - discount)
+  CREDIT  Carrier payable                                            CarrierPayableAmount
+  CREDIT  Seller payable                                             SellerShareAmount     (or DEBIT if < 0)
+  CREDIT  Marketplace shipping revenue                               MarketplaceShareAmount (or DEBIT if < 0)
+  CREDIT  Tax payable                                                ShippingTaxAmount
+  DEBIT   Shipping discount expense (funder = Seller|Marketplace|Carrier)   DiscountAmount
+Normalization of the balancing account: the discount's funder determines which party's share
+absorbs it (funder=Marketplace => MarketplaceShareAmount already negative); the equation above is
+therefore the invariant and the funder is stored, not inferred.
+
+ORDER LEVEL (aggregate) invariant:
+  sum over groups of (CustomerChargeAmount - DiscountAmount)
+     == PayableCheckoutSnapshot.ShippingAmount ... adjusted by the same discount rule,
+  and the customer-facing payable total must be computed from group charges, never by
+  multiplying one fee by a group count and never by double-adding the legacy scalar.
+
+================================================================================
+5. POLICY, VERSIONING, QUOTE VS ACTUAL, IDEMPOTENCY
+================================================================================
+- AllocationPolicyVersion: a Settlement-owned, versioned policy decides SellerShare /
+  MarketplaceShare / discount funder for a given (seller, method, promotion, destination).
+  Its CONTENT is commercial policy and is NOT invented here. DECISION NEEDED.
+- Quote vs actual: CarrierPayableAmount is the placement-time quoted payable. When Fulfillment
+  reports the real carrier cost, Settlement posts a shipping_fee_adjustments row
+  (Kind=CarrierCostActualVsQuoted) plus a linked ledger entry, and never edits the original
+  allocation. The delta is absorbed per the adjustment policy (decision needed), not by
+  silently re-balancing other groups.
+- Idempotency: one live allocation per group (UNIQUE on ShippingGroupId + State='Posted'), and
+  UNIQUE(IdempotencyKey) on adjustments and ledger rows. A retried payment/refund/reversal
+  cannot pay or refund the same shipping share twice.
+- Reversal/refund: a per-group cancel/refund reverses only that group's allocation
+  (State='Reversed' + a compensating entry), mirroring the existing per-SellerOrder
+  PostDebitFromOrderCancel / PostDebitFromOrderRestore discipline.
+- Free shipping: funder is typed. seller-funded => SellerShareAmount negative with
+  MarketplaceShareAmount = 0; platform-funded => MarketplaceShareAmount negative and
+  CarrierPayableAmount still credited to the carrier. Both satisfy the same equation.
+
+================================================================================
+6. KEY SCENARIOS (acceptance targets)
+================================================================================
+S1 one seller, two methods: two allocations, independently computed charge and shares; the
+   seller's shipping share is attributed per group, never pooled into one number.
+S2 two sellers, same method: two allocations; equal method codes NEVER merge allocation.
+S3 seller-funded vs platform-funded free shipping: explicitly typed funder, balanced entries.
+S4 partial ship / cancel / refund: only the affected group's allocation is reversed.
+S5 quoted vs actual carrier cost: an auditable adjustment row, no overwrite.
+Each must be proved by focused reconciliation + persistence tests (per contract), not by UI.
+
+================================================================================
+7. WHAT THIS DESIGN DELIBERATELY DOES NOT DO
+================================================================================
+- Does not invent a commission percentage, carrier tariff, or seller/marketplace split.
+- Does not infer marketplace share from the displayed customer total.
+- Does not fold a seller shipping share into the product commission rate (SettlementEntry's
+  gross x rate model is explicitly left for merchandise).
+- Does not let Fulfillment or Payment write settlement balances.
+- Does not add a global/Host financial table.
