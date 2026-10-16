@@ -28,7 +28,7 @@ import {
 import { formatJalaliDate } from "../../design-system/app-data-grid/jalali.ts";
 import { deliveryChipParts, toPersianDigits } from "./storefront-shipping-format.ts";
 import { formatOfferAmount } from "./storefront-api.ts";
-import { loadStorefrontCart, StorefrontCartApiError } from "./storefront-cart-api.ts";
+import { loadStorefrontCart, StorefrontCartApiError, type StorefrontCartLine } from "./storefront-cart-api.ts";
 import { StorefrontCheckoutLimitNotice } from "./storefront-checkout-limit-notice.tsx";
 import {
   createCustomerAddress,
@@ -43,6 +43,7 @@ import {
   toCustomerShippingMessage,
   type StorefrontDeliveryDateOption,
   type StorefrontProvinceOption,
+  type StorefrontShippingGroupSelectionInput,
   type StorefrontShippingMethod,
   type StorefrontShippingProjection,
 } from "./storefront-shipping-api.ts";
@@ -114,6 +115,9 @@ export function StorefrontShopeivaShipping() {
   const [showSaved, setShowSaved] = useState(false);
   const [savedAddressId, setSavedAddressId] = useState<string | null>(null);
   const [methodCode, setMethodCode] = useState<string | null>(null);
+  /** انتخاب روش هر گروه فروشنده در سبد چندگروهی؛ فقط شناسه‌های واقعی سبد و روش‌های authoritative. */
+  const [groupMethodBySeller, setGroupMethodBySeller] = useState<Record<string, string>>({});
+  const [cartLines, setCartLines] = useState<StorefrontCartLine[]>([]);
   const [deliveryDate, setDeliveryDate] = useState<string>("");
   const [deliveryTime, setDeliveryTime] = useState<string>("");
   const [notes, setNotes] = useState("");
@@ -150,6 +154,7 @@ export function StorefrontShopeivaShipping() {
       destination: destination ?? null,
       methodCode: method || undefined,
     });
+    setCartLines(cart.lines);
     setProjection(page);
     if (page.revalidationMessage) {
       setError(page.revalidationMessage);
@@ -194,6 +199,19 @@ export function StorefrontShopeivaShipping() {
       .then((result) => setSavedAddresses(result.addresses))
       .catch(() => setSavedAddresses(null));
   }, [refreshProjection]);
+
+  // انتخاب گروهی ذخیره‌شده هنگام بازگشت/رفرش بازیابی می‌شود؛ هیچ تبدیل خودکار روش رخ نمی‌دهد.
+  useEffect(() => {
+    const draft = projection?.draft;
+    if (!draft) return;
+    setGroupMethodBySeller((prev) => {
+      const next: Record<string, string> = { ...prev };
+      for (const group of draft.shippingGroups) {
+        if (group.sellerPartyId) next[group.sellerPartyId] = group.methodCode;
+      }
+      return next;
+    });
+  }, [projection]);
 
   const provinces: StorefrontProvinceOption[] = projection?.provinces ?? [];
   const provinceOptions = provinces.map((p) => ({ value: p.label, label: p.label, cities: p.cities }));
@@ -278,7 +296,48 @@ export function StorefrontShopeivaShipping() {
   }, [selectedArea, geoCities, provinces, address.provinceName]);
 
   const selectedMethod = projection?.methods.find((m) => m.methodCode === methodCode) ?? null;
-  const shippingAmount = selectedMethod?.priceAmount ?? projection?.selectedShippingAmount ?? 0;
+
+  // --- نمایش گروهی اقلام (فروشندهٔ authoritative + روش هر گروه) ---------------------------------
+  // خطوط سبد و فروشندهٔ هر خط از projection واقعی سبد می‌آید؛ هیچ فروشنده/انبار جعلی ساخته نمی‌شود.
+  const sellerGroups = useMemo(() => {
+    const bySeller = new Map<string, { sellerPartyId: string; sellerDisplayName: string; lines: StorefrontCartLine[] }>();
+    for (const line of cartLines) {
+      const existing = bySeller.get(line.sellerPartyId);
+      if (existing) existing.lines.push(line);
+      else {
+        bySeller.set(line.sellerPartyId, {
+          sellerPartyId: line.sellerPartyId,
+          sellerDisplayName: line.sellerDisplayName,
+          lines: [line],
+        });
+      }
+    }
+    return [...bySeller.values()];
+  }, [cartLines]);
+
+  const isGroupedCart = sellerGroups.length > 1;
+
+  const methodByCode = useMemo(() => {
+    const map = new Map<string, StorefrontShippingMethod>();
+    for (const method of projection?.methods ?? []) map.set(method.methodCode, method);
+    return map;
+  }, [projection]);
+
+  const groupSelections = useMemo(
+    () =>
+      sellerGroups.map((group) => {
+        const code = groupMethodBySeller[group.sellerPartyId] ?? "";
+        return { ...group, methodCode: code, method: methodByCode.get(code) ?? null };
+      }),
+    [sellerGroups, groupMethodBySeller, methodByCode],
+  );
+
+  const groupedShippingAmount = groupSelections.reduce((sum, group) => sum + (group.method?.priceAmount ?? 0), 0);
+  const allGroupsHaveMethod = groupSelections.every((group) => group.method !== null);
+
+  const shippingAmount = isGroupedCart
+    ? groupedShippingAmount
+    : selectedMethod?.priceAmount ?? projection?.selectedShippingAmount ?? 0;
   const payable = (projection?.subtotalExclusiveOfTax ?? 0) + shippingAmount;
 
   const isValid =
@@ -289,7 +348,7 @@ export function StorefrontShopeivaShipping() {
     Boolean(address.cityName.trim()) &&
     Boolean(address.postalAddress.trim()) &&
     Boolean(address.postalCode.trim()) &&
-    Boolean(methodCode) &&
+    (isGroupedCart ? allGroupsHaveMethod : Boolean(methodCode)) &&
     Boolean(deliveryDate) &&
     Boolean(deliveryTime) &&
     (projection?.methods.length ?? 0) > 0;
@@ -325,7 +384,20 @@ export function StorefrontShopeivaShipping() {
   }
 
   async function persistAndContinue() {
-    if (!projection || !methodCode || !isValid) return;
+    if (!projection || !isValid) return;
+    const requestedGroups: StorefrontShippingGroupSelectionInput[] = isGroupedCart
+      ? groupSelections
+          .filter((group) => group.method !== null)
+          .map((group) => ({
+            shippingMethodCode: group.methodCode,
+            // شناسه‌های واقعی خطوط سبد — هیچ خطی حدس زده یا دوباره اختصاص داده نمی‌شود.
+            cartLineIds: group.lines.map((line) => line.lineId),
+            serviceCode: group.method?.serviceCode ?? null,
+            optionCode: null,
+          }))
+      : [];
+    const primaryMethodCode = isGroupedCart ? requestedGroups[0]?.shippingMethodCode ?? "" : methodCode ?? "";
+    if (!primaryMethodCode) return;
     setBusy(true);
     setError(null);
     setLimitCode(null);
@@ -340,10 +412,12 @@ export function StorefrontShopeivaShipping() {
         postalAddress: address.postalAddress,
         postalCode: address.postalCode,
         savedAddressId,
-        shippingMethodCode: methodCode,
+        shippingMethodCode: primaryMethodCode,
         selectedDeliveryDate: deliveryDate,
         selectedDeliveryTimeWindow: deliveryTime,
         customerNote: notes,
+        // سبد تک‌گروهی همان shorthand قدیمی را می‌فرستد؛ سبد چندگروهی فهرست افزایشی واقعی.
+        shippingGroups: isGroupedCart ? requestedGroups : null,
       });
       // ارسال فقط «پیش‌نویس» می‌شود و سبد Active می‌ماند. commit/رزرو/ساخت سفارش فقط با کلیک نهایی
       // پرداخت در صفحهٔ پرداخت رخ می‌دهد؛ اینجا هیچ درخواست commit ارسال نمی‌شود.
@@ -604,7 +678,93 @@ export function StorefrontShopeivaShipping() {
                 </div>
               </div>
 
+              {/* Grouped items per seller — grouped cart only; single-group carts keep the legacy card */}
+              {isGroupedCart ? (
+                <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-groups">
+                  <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-1">
+                    <Package className="w-4 h-4 text-primary" />
+                    اقلام ارسال به‌تفکیک فروشنده
+                  </h3>
+                  <p className="text-[11px] text-gray-500 mb-4">
+                    هر فروشنده و روش ارسال آن مستقل نمایش داده می‌شود؛ هزینهٔ هر گروه از نرخ معتبر فروشگاه می‌آید.
+                  </p>
+                  <div className="space-y-4">
+                    {groupSelections.map((group) => (
+                      <div
+                        key={group.sellerPartyId}
+                        className="rounded-2xl border border-gray-200 bg-gray-50/60 p-3 md:p-4"
+                        data-testid={`shipping-group-${group.sellerPartyId}`}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <div className="min-w-0 flex items-center gap-2">
+                            <Store className="w-4 h-4 text-primary shrink-0" />
+                            <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{group.sellerDisplayName}</p>
+                          </div>
+                          <span className="text-[11px] md:text-xs font-black text-gray-900 shrink-0">
+                            {group.method ? formatOfferAmount(group.method.priceAmount, projection.currency) : "—"}
+                          </span>
+                        </div>
+                        <ul className="space-y-2 mb-3">
+                          {group.lines.map((line) => (
+                            <li
+                              key={line.lineId}
+                              className="flex items-center gap-3 rounded-xl bg-surface border border-gray-100 p-2"
+                              data-testid={`shipping-group-line-${line.lineId}`}
+                            >
+                              <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+                                {line.mediaAssetId ? (
+                                  <img src={`/media/${line.mediaAssetId}`} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <Package className="w-4 h-4 text-gray-400" />
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[11px] md:text-xs font-bold text-gray-800 line-clamp-1">{line.title}</p>
+                                <p className="text-[10px] text-gray-500">
+                                  تعداد: {toPersianDigits(line.quantity)}
+                                </p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {(projection.methods.length === 0 ? [] : projection.methods).map((m) => {
+                            const Icon = iconFor(m);
+                            const selected = group.methodCode === m.methodCode;
+                            return (
+                              <button
+                                key={`${group.sellerPartyId}-${m.methodCode}`}
+                                type="button"
+                                onClick={() => setGroupMethodBySeller((prev) => ({ ...prev, [group.sellerPartyId]: m.methodCode }))}
+                                className={`relative flex items-center gap-2 p-3 rounded-2xl border-2 text-right transition-all ${
+                                  selected
+                                    ? "border-primary bg-primary/5 shadow-sm"
+                                    : "border-gray-200 hover:border-gray-300 bg-surface"
+                                }`}
+                                data-testid={`shipping-group-method-${group.sellerPartyId}-${m.methodCode}`}
+                              >
+                                <Icon className={`w-4 h-4 shrink-0 ${selected ? "text-primary" : "text-gray-400"}`} />
+                                <div className="min-w-0 flex-1">
+                                  <p className={`text-[11px] md:text-xs font-bold ${selected ? "text-primary" : "text-gray-700"}`}>
+                                    {m.label}
+                                  </p>
+                                  <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-0.5">
+                                    <Clock className="w-2.5 h-2.5" /> {m.estimationLabel}
+                                  </p>
+                                </div>
+                                {selected ? <Check className="w-3.5 h-3.5 text-primary shrink-0" /> : null}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               {/* Methods */}
+              {isGroupedCart ? null : (
               <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-methods">
                 <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-3">
                   <Package className="w-4 h-4 text-primary" />
@@ -658,6 +818,7 @@ export function StorefrontShopeivaShipping() {
                   </div>
                 )}
               </div>
+              )}
 
               {/* Delivery */}
               <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-storefront-surface-role="card" data-testid="shipping-delivery">
@@ -788,13 +949,28 @@ export function StorefrontShopeivaShipping() {
                     <div className="flex justify-between">
                       <span className="text-gray-500">هزینه ارسال</span>
                       <span className={`font-bold ${shippingAmount === 0 ? "text-emerald-500" : "text-gray-900"}`}>
-                        {shippingAmount === 0 && selectedMethod
+                        {shippingAmount === 0 && (isGroupedCart ? groupSelections.length > 0 : selectedMethod)
                           ? "رایگان"
-                          : selectedMethod
+                          : (isGroupedCart ? allGroupsHaveMethod : selectedMethod)
                             ? formatOfferAmount(shippingAmount, projection.currency)
                             : "—"}
                       </span>
                     </div>
+                    {isGroupedCart ? (
+                      <div className="space-y-1.5 border-t border-dashed border-gray-200 pt-2.5 mt-1" data-testid="shipping-group-fees">
+                        {groupSelections.map((group) => (
+                          <div key={`fee-${group.sellerPartyId}`} className="flex justify-between gap-2 text-[11px] md:text-xs">
+                            <span className="text-gray-500 truncate">
+                              {group.sellerDisplayName}
+                              {group.method ? ` — ${group.method.label}` : ""}
+                            </span>
+                            <span className="font-bold text-gray-800 shrink-0">
+                              {group.method ? formatOfferAmount(group.method.priceAmount, projection.currency) : "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                     <div className="border-t border-gray-200 pt-2.5 mt-2.5 flex justify-between">
                       <span className="text-sm font-black">قابل پرداخت</span>
                       <span className="text-base font-black text-primary">

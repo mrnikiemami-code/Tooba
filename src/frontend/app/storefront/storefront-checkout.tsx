@@ -16,6 +16,7 @@ import {
   Truck,
 } from "lucide-react";
 import { formatOfferAmount } from "./storefront-api.ts";
+import { toPersianDigits } from "./storefront-shipping-format.ts";
 import { readCartSession } from "./storefront-cart-api.ts";
 import {
   listCheckoutSavedAddresses,
@@ -282,7 +283,23 @@ export function StorefrontShopeivaCheckout() {
               </h2>
               <div className="rounded-xl border-2 border-primary bg-primary/5 p-3 text-sm">
                 <p className="font-bold">{page.shippingMethodLabel}</p>
-                <p className="text-xs text-gray-500 mt-1">برچسب از Host است. نرخ چندحامل جعلی اضافه نشده است.</p>
+                {page.shippingGroups.length > 0 ? (
+                  <ul className="mt-2 space-y-1.5" data-testid="checkout-shipping-groups">
+                    {page.shippingGroups.map((group) => (
+                      <li key={group.shippingGroupId} className="flex justify-between gap-2 text-xs">
+                        <span className="text-gray-600 truncate">
+                          {group.methodLabel}
+                          {group.selectedDeliveryDate ? ` — ${group.selectedDeliveryDate}` : ""}
+                        </span>
+                        <span className="font-bold text-gray-900 shrink-0">
+                          {formatOfferAmount(group.shippingAmount, group.currency)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-1">برچسب از Host است. نرخ چندحامل جعلی اضافه نشده است.</p>
+                )}
               </div>
             </section>
 
@@ -346,6 +363,24 @@ export function StorefrontShopeivaCheckout() {
                     <span className="text-gray-500">مالیات</span>
                     <span>{formatOfferAmount(page.taxAmount, page.currency)}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">هزینه ارسال</span>
+                    <span>{formatOfferAmount(page.shippingAmount, page.currency)}</span>
+                  </div>
+                  {page.shippingGroups.length > 0 ? (
+                    <div className="space-y-1.5 border-t border-dashed border-gray-200 pt-2" data-testid="checkout-shipping-group-fees">
+                      {page.shippingGroups.map((group) => (
+                        <div key={group.shippingGroupId} className="flex justify-between gap-2 text-xs">
+                          <span className="text-gray-500 truncate">
+                            {group.methodLabel} ({toPersianDigits(group.lineCount)} قلم)
+                          </span>
+                          <span className="font-bold text-gray-800 shrink-0">
+                            {formatOfferAmount(group.shippingAmount, group.currency)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                   <div className="flex justify-between font-black text-primary border-t border-gray-200 pt-2">
                     <span>قابل پرداخت</span>
                     <span>{formatOfferAmount(page.payableAmount, page.currency)}</span>

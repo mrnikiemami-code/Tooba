@@ -82,6 +82,22 @@ export interface StorefrontSellerOrder {
   lines: StorefrontCheckoutLine[];
 }
 
+export interface StorefrontCheckoutShippingGroup {
+  shippingGroupId: string;
+  sellerPartyId: string;
+  methodCode: string;
+  serviceCode: string | null;
+  optionCode: string | null;
+  methodLabel: string;
+  shippingAmount: number;
+  currency: string;
+  minimumDeliveryDate: string;
+  selectedDeliveryDate: string | null;
+  selectedDeliveryTimeWindow: string | null;
+  leadDays: number;
+  lineCount: number;
+}
+
 export interface StorefrontCheckoutPage {
   checkoutId: string | null;
   cartId: string;
@@ -106,6 +122,8 @@ export interface StorefrontCheckoutPage {
   shippingAmount: number;
   payableAmount: number;
   sellerOrders: StorefrontSellerOrder[];
+  /** گروه‌های ارسال سفارش از projection مالک Order؛ خالی برای سفارش تک‌گروهی/قدیمی. */
+  shippingGroups: StorefrontCheckoutShippingGroup[];
   canInitiatePayment: boolean;
 }
 
@@ -161,6 +179,7 @@ export function mapStorefrontCheckout(payload: unknown): StorefrontCheckoutPage 
   }
   const checkoutRaw = readProp(item, "checkoutId", "CheckoutId");
   const sellersRaw = readProp(item, "sellerOrders", "SellerOrders", "sellerOrders");
+  const shippingGroupsRaw = readProp(item, "shippingGroups", "ShippingGroups");
   return {
     checkoutId: checkoutRaw == null || checkoutRaw === "" ? null : asString(checkoutRaw),
     cartId,
@@ -200,6 +219,27 @@ export function mapStorefrontCheckout(payload: unknown): StorefrontCheckoutPage 
             payableAmount: asNumber(readProp(order, "payableAmount", "PayableAmount")),
             currency: asString(readProp(order, "currency", "Currency"), "IRR"),
             lines: Array.isArray(linesRaw) ? linesRaw.map(mapLine) : [],
+          };
+        })
+      : [],
+    shippingGroups: Array.isArray(shippingGroupsRaw)
+      ? shippingGroupsRaw.map((row) => {
+          const group = asRecord(row) ?? {};
+          return {
+            shippingGroupId: asString(readProp(group, "shippingGroupId", "ShippingGroupId")),
+            sellerPartyId: asString(readProp(group, "sellerPartyId", "SellerPartyId")),
+            methodCode: asString(readProp(group, "methodCode", "MethodCode")),
+            serviceCode: asString(readProp(group, "serviceCode", "ServiceCode")) || null,
+            optionCode: asString(readProp(group, "optionCode", "OptionCode")) || null,
+            methodLabel: asString(readProp(group, "methodLabel", "MethodLabel")),
+            shippingAmount: asNumber(readProp(group, "shippingAmount", "ShippingAmount")),
+            currency: asString(readProp(group, "currency", "Currency"), "IRR"),
+            minimumDeliveryDate: asString(readProp(group, "minimumDeliveryDate", "MinimumDeliveryDate")),
+            selectedDeliveryDate: asString(readProp(group, "selectedDeliveryDate", "SelectedDeliveryDate")) || null,
+            selectedDeliveryTimeWindow:
+              asString(readProp(group, "selectedDeliveryTimeWindow", "SelectedDeliveryTimeWindow")) || null,
+            leadDays: asNumber(readProp(group, "leadDays", "LeadDays")),
+            lineCount: asNumber(readProp(group, "lineCount", "LineCount")),
           };
         })
       : [],

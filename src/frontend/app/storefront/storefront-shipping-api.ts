@@ -37,6 +37,22 @@ export interface StorefrontProvinceOption {
   cities: string[];
 }
 
+export interface StorefrontShippingGroupView {
+  shippingGroupId: string;
+  sellerPartyId: string;
+  methodCode: string;
+  serviceCode: string | null;
+  optionCode: string | null;
+  methodLabel: string;
+  shippingAmount: number;
+  currency: string;
+  minimumDeliveryDate: string;
+  selectedDeliveryDate: string | null;
+  selectedDeliveryTimeWindow: string | null;
+  leadDays: number;
+  lineCount: number;
+}
+
 export interface StorefrontShippingDraft {
   cartId: string;
   cartVersion: number;
@@ -56,6 +72,15 @@ export interface StorefrontShippingDraft {
   selectedDeliveryDate: string | null;
   selectedDeliveryTimeWindow: string | null;
   customerNote: string | null;
+  /** گروه‌های ذخیره‌شدهٔ پایدار؛ در سبد تک‌گروهی/قدیمی خالی است. */
+  shippingGroups: StorefrontShippingGroupView[];
+}
+
+export interface StorefrontShippingGroupSelectionInput {
+  shippingMethodCode: string;
+  cartLineIds: string[];
+  serviceCode?: string | null;
+  optionCode?: string | null;
 }
 
 export interface StorefrontShippingProjection {
@@ -91,6 +116,11 @@ export interface StorefrontShippingSelectionInput {
   selectedDeliveryDate: string;
   selectedDeliveryTimeWindow: string;
   customerNote?: string | null;
+  /**
+   * انتخاب گروهی افزایشی. با ارسال آن، سرور همان گروه‌ها را با CartLineIds واقعی و روش‌های
+   * واجد شرایط اعتبارسنجی می‌کند. در سبد تک‌گروهی همان `shippingMethodCode` قدیمی کافی است.
+   */
+  shippingGroups?: StorefrontShippingGroupSelectionInput[] | null;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -152,11 +182,36 @@ function mapMethod(value: unknown): StorefrontShippingMethod | null {
   };
 }
 
+function mapGroup(value: unknown): StorefrontShippingGroupView | null {
+  const item = asRecord(value);
+  if (!item) return null;
+  const shippingGroupId = asString(prop(item, "shippingGroupId", "ShippingGroupId"));
+  const methodCode = asString(prop(item, "methodCode", "MethodCode"));
+  if (!shippingGroupId || !methodCode) return null;
+  return {
+    shippingGroupId,
+    sellerPartyId: asString(prop(item, "sellerPartyId", "SellerPartyId")),
+    methodCode,
+    serviceCode: asString(prop(item, "serviceCode", "ServiceCode")) || null,
+    optionCode: asString(prop(item, "optionCode", "OptionCode")) || null,
+    methodLabel: asString(prop(item, "methodLabel", "MethodLabel")),
+    shippingAmount: asNumber(prop(item, "shippingAmount", "ShippingAmount")),
+    currency: asString(prop(item, "currency", "Currency"), "IRR"),
+    minimumDeliveryDate: asString(prop(item, "minimumDeliveryDate", "MinimumDeliveryDate")),
+    selectedDeliveryDate: asString(prop(item, "selectedDeliveryDate", "SelectedDeliveryDate")) || null,
+    selectedDeliveryTimeWindow:
+      asString(prop(item, "selectedDeliveryTimeWindow", "SelectedDeliveryTimeWindow")) || null,
+    leadDays: asNumber(prop(item, "leadDays", "LeadDays")),
+    lineCount: asNumber(prop(item, "lineCount", "LineCount")),
+  };
+}
+
 function mapDraft(value: unknown): StorefrontShippingDraft | null {
   const item = asRecord(value);
   if (!item) return null;
   const cartId = asString(prop(item, "cartId", "CartId"));
   if (!cartId) return null;
+  const groupsRaw = prop(item, "shippingGroups", "ShippingGroups");
   return {
     cartId,
     cartVersion: asNumber(prop(item, "cartVersion", "CartVersion")),
@@ -176,6 +231,9 @@ function mapDraft(value: unknown): StorefrontShippingDraft | null {
     selectedDeliveryDate: asString(prop(item, "selectedDeliveryDate", "SelectedDeliveryDate")) || null,
     selectedDeliveryTimeWindow: asString(prop(item, "selectedDeliveryTimeWindow", "SelectedDeliveryTimeWindow")) || null,
     customerNote: asString(prop(item, "customerNote", "CustomerNote")) || null,
+    shippingGroups: Array.isArray(groupsRaw)
+      ? groupsRaw.map(mapGroup).filter((g): g is StorefrontShippingGroupView => g !== null)
+      : [],
   };
 }
 
@@ -341,6 +399,14 @@ export async function saveShippingSelection(
       selectedDeliveryDate: selection.selectedDeliveryDate,
       selectedDeliveryTimeWindow: selection.selectedDeliveryTimeWindow,
       customerNote: selection.customerNote || null,
+      shippingGroups: selection.shippingGroups && selection.shippingGroups.length > 0
+        ? selection.shippingGroups.map((group) => ({
+            shippingMethodCode: group.shippingMethodCode,
+            cartLineIds: group.cartLineIds,
+            serviceCode: group.serviceCode || null,
+            optionCode: group.optionCode || null,
+          }))
+        : null,
     }),
   });
   if (!response.ok) {
