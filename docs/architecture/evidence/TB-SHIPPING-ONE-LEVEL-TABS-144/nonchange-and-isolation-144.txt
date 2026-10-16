@@ -1,0 +1,25 @@
+### TB-SHIPPING-ONE-LEVEL-TABS-144 — non-change and isolation statement
+Base SHA at claim: 5ff8b546512730effb2a72f21195051493f4c8e4  (verified HEAD == origin/main)
+Task row: fcd6261f-65bb-4ccb-bf4e-c12260a7181c   channel tooba-main   worker tooba-worker-01
+
+SOURCE CHANGES:      NONE. No file under src/ was created, edited, deleted or renamed by this task.
+RUNTIME LAUNCHES:    NONE. No Host, container, database, frontend or backend process was started for this task.
+CONTAINERS:          NONE created or removed. No Docker resource belongs to TB-144.
+PORTS USED:          none (5410/5411/55460/55461/55463 and shared 5088/3000 untouched).
+DATABASES:           none opened or written. No schema was applied, and no migration was run.
+SHARED SURFACES:     :5088, :3000, tooba_alpha, shared Postgres, shared RabbitMQ — not started, stopped, read
+                     for this task, or written. No config or appsettings value was changed.
+FRONTEND/CSS/TOKENS: untouched. No theme, typography, card markup, layout, RTL, responsive, spacing or admin
+                     file was modified. The two pre-existing dirty admin screen files in the working tree were
+                     NOT touched or staged by this task.
+PAYOUT/COMMERCIAL:   no payout activated, no commercial allocation value created. The settlement capability
+                     default remains OFF; no global migration order changed.
+PSP:                 no live PSP touched; the only test executed this task uses an in-memory provider.
+
+The single executed command was one focused unit-test filter (see focused-test-144.txt), which builds the
+Settlement tests project and runs 8 in-memory tests. It creates no external resource.
+
+Working tree after this task (git status --porcelain) contains only pre-existing unrelated modifications that
+predate this claim plus the documentation files added by this task:
+  M src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx   (pre-existing, untouched)
+  M src/frontend/app/admin/admin-order-detail-screen.tsx             (pre-existing, untouched)

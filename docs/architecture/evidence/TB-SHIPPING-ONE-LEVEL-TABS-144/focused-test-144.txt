@@ -1,0 +1,15 @@
+### TB-SHIPPING-ONE-LEVEL-TABS-144 — single focused guard spot-check (no broad suite)
+### Command
+dotnet test src/backend/Modules/Settlement/Tooba.Settlement.Tests/Tooba.Settlement.Tests.csproj -c Release --filter "FullyQualifiedName~SettlementChannelLedgerEligibilityTests"
+### Result
+Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 459 ms - Tooba.Settlement.Tests.dll (net8.0)
+
+### Guard coverage of the critical edge
+- SingleStore_registration_is_off_until_the_capability_is_explicitly_enabled
+- SingleStore_registration_opens_only_for_the_explicit_capability_flag
+- Marketplace_edition_registration_is_not_weakened_by_the_capability_flag
+- Marketplace_edition_keeps_legacy_per_event_behaviour_without_any_channel_or_schema_work
+- SingleStore_capability_accepts_only_a_persisted_marketplace_channel_sale
+- SingleStore_capability_rejects_an_ordinary_retail_channel_sale
+- SingleStore_capability_rejects_an_unknown_checkout_instead_of_guessing
+- SingleStore_capability_fails_closed_when_the_ledger_schema_is_not_activated

@@ -1,0 +1,100 @@
+### TB-SHIPPING-ONE-LEVEL-TABS-144 — code-owner seam inventory (read-only inspection)
+### Base SHA under review: 5ff8b546512730effb2a72f21195051493f4c8e4
+### All line numbers below were re-verified against the working tree after writing this file.
+
+REGISTRATION (deployment capability) — owner Settlement
+  src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/DependencyInjection/SettlementMarketplaceChannelLedgerOptions.cs
+    13  SectionName = "Tooba:Settlement:MarketplaceChannelLedger"
+    18  Enabled { get; set; }              (default false)
+    29  IsMarketplaceEdition(configuration)
+    40  ShouldRegisterHandlers = IsMarketplaceEdition || IsLedgerCapabilityEnabled
+    44  IsLedgerCapabilityEnabled = bool.TryParse(section["Enabled"]) && enabled
+    55  RequiresMarketplaceChannelOnly = !IsMarketplaceEdition && IsLedgerCapabilityEnabled
+  src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/DependencyInjection/SettlementModule.cs
+    55  ISettlementShippingGroupReader -> SettlementShippingGroupBridge
+    56  ISettlementChannelLedgerEligibilityGate -> SettlementChannelLedgerEligibilityGate
+    57  ISettlementLedgerSchemaReadiness -> SettlementLedgerSchemaReadiness
+    59  if (SettlementMarketplaceChannelLedgerPolicy.ShouldRegisterHandlers(configuration))  { payment.succeeded, refund.succeeded }
+    74  services.AddDbContext<SettlementDbContext>(...)      <-- NO IModuleSchemaMigrator registered anywhere in this module
+  src/backend/Host/Tooba.Host/appsettings.json
+    29-33  "Settlement": { "MarketplaceChannelLedger": { "Enabled": false } }
+
+PER-EVENT ELIGIBILITY — owner Settlement
+  src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Gateways/SettlementChannelLedgerEligibilityGate.cs
+    38  _marketplaceChannelOnly = ...RequiresMarketplaceChannelOnly(configuration)
+    42  EvaluateAsync(checkoutId)
+    49    !_marketplaceChannelOnly  => Eligible (legacy Marketplace / capability OFF: channel + schema NOT read)
+    52    checkoutId == Guid.Empty => SaleChannelNotMarketplace
+    58    channel is not { Channel: SalesChannel.Marketplace } => SaleChannelNotMarketplace
+    63    !await _readiness.IsLedgerReadyAsync() => SchemaNotReady
+    68    else Eligible
+    71  Skip() -> _telemetry.RecordLedgerSkipped()  (:73)
+  src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Persistence/SettlementLedgerSchemaReadiness.cs
+    19-26  scalar to_regclass('settlement.shipping_group_fees') probe (does not throw on absent schema)
+
+SALE-CHANNEL TRUTH — owner Order (Contracts-only read)
+  src/backend/Modules/Order/Tooba.Order.Contracts/Settlement/OrderSettlementShippingGroupContracts.cs
+    39  record OrderCheckoutSalesChannelSnapshot(CheckoutId, Channel)
+    49  interface IOrderCheckoutSalesChannelSettlementReader.GetChannelAsync
+  src/backend/Modules/Order/Tooba.Order.Infrastructure/Integrations/Settlement/OrderCheckoutSalesChannelSettlementBridge.cs
+    reads persisted order.checkouts.channel through OrderDbContext (no cross-module DbContext)
+
+INVOCATION (the only production write path) — owner Settlement
+  src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Handlers/SettlementEventHandlers.cs
+    31  eligibility = await _eligibility.EvaluateAsync(integrationEvent.CheckoutId, ct)
+    32  if (eligibility != Eligible) return;                       <-- fail-closed skip, no exception, no payload poisoning
+    39  await _settlement.RecordShippingGroupFeesAsync(paymentId, sellerOrderIds, ct)
+    43  await _settlement.AccrueFromPaymentAsync(...)              <-- seller merchandise accrual (shipping NOT included)
+    54  SettlementRefundSucceededHandler
+    63  -> AdjustFromRefundAsync                                    <-- does NOT consult the gate (does not touch group fees today)
+
+CHARGE SOURCE + RECONCILIATION GUARD — owner Settlement via Order/Payment Contracts
+  src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Bridges/SettlementShippingGroupBridge.cs
+    29  GetForPaymentAsync(paymentId, sellerOrderIds)
+    34  accepted = IOrderShippingGroupSettlementReader.GetForSellerOrdersAsync(...)
+    40  paid     = IPaymentSettlementReader.GetShippingGroupAllocationsAsync(paymentId)
+    54  group.ShippingCharge < 0  => ShippingGroupChargeInvalid (throw)
+    58  group.ShippingCharge == 0 => skip (no ledger row)
+    65  missing paid allocation    => ShippingGroupChargeMismatch (throw)
+    71  currency/amount mismatch    => ShippingGroupChargeMismatch (throw)
+
+RECORDING DIRECTION — owner Settlement
+  src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Directories/SettlementDirectory.ShippingGroupFees.cs
+    20  RecordShippingGroupFeesAsync   (only production caller: SettlementPaymentSucceededHandler:39)
+    35  idempotency key = shipping-group-fee:{paymentId:N}:{ShippingGroupId:N}
+    36  existing key  => continue (no duplicate)
+    41  existing un-reversed (payment, group) => continue
+    50  ShippingGroupFeeAllocation.RecordAcceptedCharge(...)
+    79  ReverseShippingGroupFeeAsync   <-- NO production caller (tests only)
+    111 ListShippingGroupFeesAsync     <-- NO production consumer (no admin/read surface)
+
+ALLOCATION POLICY — owner Settlement (the UNDECIDED seam)
+  src/backend/Modules/Settlement/Tooba.Settlement.Domain/Aggregates/ShippingGroupFeeAllocation.cs
+    55  CustomerChargeAmount            (KNOWN, from accepted quote)
+    62  AllocationState (default PendingAllocation)
+    65  AllocationPolicyVersion  = null    (UNSPECIFIED)
+    68  AllocationPolicyReference = null   (UNSPECIFIED)
+    71  CarrierPayableAmount    = null     (UNSPECIFIED)
+    74  SellerShareAmount       = null     (UNSPECIFIED)
+    77  MarketplaceShareAmount  = null     (UNSPECIFIED)
+    80  ShippingDiscountAmount  = null     (UNSPECIFIED)
+    83  ShippingTaxAmount       = null     (UNSPECIFIED)
+    86  FunderAdjustmentAmount  = null     (UNSPECIFIED)
+    89  FunderReference         = null     (UNSPECIFIED)
+    104 IsPendingAllocation
+    110 RecordAcceptedCharge     (hard-codes all commercial columns to null; no parameter can supply them)
+    182 ReverseAcceptedCharge    (additive reversal; original row never rewritten)
+    230 EnsureNotSellerRevenue   => always throws settlement.shipping_group.not_seller_revenue
+    237 EnsurePayoutAllocationAvailable => throws settlement.shipping_group.allocation_policy_missing while PendingAllocation
+  src/backend/Modules/Settlement/Tooba.Settlement.Domain/ValueObjects/ShippingGroupFeeAllocationState.cs
+    10  enum ShippingGroupFeeAllocationState { PendingAllocation = 0 }     <-- the ONLY state today
+
+OBSERVABILITY — owner Settlement
+  src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Observability/SettlementInstrumentation.cs
+    25  tooba.settlement.ledger.skipped
+    40  RecordLedgerSkipped()
+
+### Conclusion of the inspection
+The allocation policy seam is a single, well-typed, deliberately-unfilled gateway: the recording path cannot
+accept commercial values, the domain type blocks settlement/payout while pending, and the only undefined piece
+is the business policy itself. No structural change is required to implement an approved policy.
