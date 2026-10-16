@@ -1,0 +1,37 @@
+TB-SHIPPING-ONE-LEVEL-TABS-113: isolated runtime proof of the TB-112 collision repair
+
+Observation-only task: no src/, test, migration, Host config, frontend or script change.
+
+One watchdog-bounded isolated Development Host launch (watchdog 180s; PID 6192; isolated
+port 5396; disposable scratch PostgreSQL on 55448 with owned tooba_113_scratch /
+tooba_113_messaging databases) proved at real startup that:
+
+- the TB-111 catalog.attribute.code.duplicate collision is GONE
+  (0 occurrences in 1,657 stdout lines) and the catalog-dev.attribute.incompatible-reuse
+  guard did not fire;
+- the whole DevelopmentSchemaMigrator.ApplyAsync path completed, including the legacy
+  workspace demo seed chain TB-111 crashed in;
+- TB-110 ordering still holds: 0 occurrences of 42P01, party.parties referenced 22 times
+  and holding 4 rows;
+- exactly one `color` definition and one `black` option exist, and the LEGACY workspace
+  variant LIVE-SHIRT-BLK stores the SAME color definition_id as the schema demo phone's
+  variants -> runtime identity reuse, not re-creation;
+- schema-mobile-demo-phone is Published with exactly 2 sparse variants and exactly 1
+  default, and both variants have an Active offer joined to an Active Base price with
+  positive available stock (row-count/integrity observation only, not eligibility proof).
+
+The single launch then exited by itself at 61s of the 180s budget (no /health 200), and the
+first new blocker is captured precisely:
+  System.InvalidOperationException: Cannot resolve scoped service
+  'Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext' from root provider
+  at FashionTemplateCatalogSeed.ApplyAsync (FashionTemplateCatalogSeed.cs:59)
+  <- CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync (CatalogDevelopmentSeed.cs:61)
+  <- Program.cs:368
+A different, later DI-lifetime barrier on files TB-112 did not touch.
+
+Teardown: task-owned PID gone, only the task-owned scratch container removed, ignored run
+directories deleted, 0 listeners on 5396/55448. Shared parity unchanged (:5088 PID 35624,
+:3000 PID 31580, health 200, tooba_alpha counts identical). Credentials scrubbed; evidence
+contains no secrets.
+
+Status: PARTIAL. Stop-State: STOP_FOR_ARCHITECT. Code-SHA: NONE.

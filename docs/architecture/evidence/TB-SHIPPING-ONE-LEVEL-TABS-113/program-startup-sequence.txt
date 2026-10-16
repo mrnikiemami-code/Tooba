@@ -1,0 +1,16 @@
+﻿}
+else
+{
+var catalogDemoOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<CatalogDemoSeedOptions>>().Value;
+// TB-P07-T033: bootstrapهای قدیمی Catalog به‌طور پیش‌فرض خاموش‌اند تا reset+seed تمیز بماند.
+// Host فقط ترکیب است: مهاجرت schema و دانه‌های Development در مالکیت ماژول‌ها اجرا می‌شوند.
+if (catalogDemoOptions.RunLegacyBootstraps)
+{
+await DevelopmentSchemaMigrator.ApplyAsync(app.Services);
+await CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(app.Services, CancellationToken.None);
+}
+else
+{
+app.Logger.LogInformation(
+"Legacy Catalog Development bootstraps skipped (Tooba:CatalogDemo:RunLegacyBootstraps=false). Use POST /v1/admin/catalog/demo/reset-and-seed.");
+await DevelopmentSchemaMigrator.MigrateSchemaOnlyAsync(app.Services);

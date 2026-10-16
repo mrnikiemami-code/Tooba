@@ -1,0 +1,19 @@
+TB-SHIPPING-ONE-LEVEL-TABS-113 — BUILD AND LAUNCH RECORD
+
+build    : dotnet publish src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug -o .tmp-113-host-out --nologo -v q
+result   : exit code 0, 0 errors, EXE_EXISTS=True (elapsed ~29 s)
+source   : HEAD 8f00b8f528291ff5a311cfa0e5ee4f2deba9dec7 == origin/main == Expected-Base-SHA
+           so the published Host contains the TB-112 compatible reuse
+           (CatalogDevelopmentAttributeReuse.EnsureCompatibleDefinitionAsync /
+            EnsureCompatibleOptionAsync called from WorkspaceDemoProductSeed.SeedProductAsync)
+           on top of the TB-110 two-phase DevelopmentSchemaMigrator.MigrateOrderedAsync.
+prepared : docs/.../prepare-isolated-target-113.js -> PREPARE=PASS, fail-closed guard true,
+           isolation-guard.json (evidence copy, secrets dropped)
+launch   : docs/.../launch-isolated-host-113.ps1 -WatchdogSeconds 180
+           LAUNCH_COUNT=1 (one launch, no retry)
+           ISOLATED_HOST_PID=6192 (absolute path .tmp-113-host-out\Tooba.Host.exe)
+           isolated port 5396, scratch PostgreSQL 55448, tenant store-alpha:Active:tenant-113-scratch
+scratch password was supplied only through the environment variable TOOBA_113_SCRATCH_PASSWORD for
+the prepare step and stored only in the ignored .tmp-113-run directory, which was deleted during
+teardown. A programmatic credential scan of the retained stdout/stderr excerpts found zero
+`Password=` / `Username=scratch113` hits; no secret is retained in any committed artifact.

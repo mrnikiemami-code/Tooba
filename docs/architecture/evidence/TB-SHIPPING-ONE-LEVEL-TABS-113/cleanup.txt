@@ -1,0 +1,11 @@
+﻿capturedUtc=2026-10-16T01:51:58.8803086Z
+task_owned_host_pid_6192_alive=False
+listeners_5396_before_cleanup=0
+listeners_55448_before_cleanup=1
+listeners_5088_still=35624
+listeners_3000_still=31580
+docker_rm=tooba-113-scratch-pg
+listeners_55448_after_container_rm=0
+containers_named_tooba-113_remaining=
+tmp_paths_remaining=False
+containers_named_tooba-111_remaining=

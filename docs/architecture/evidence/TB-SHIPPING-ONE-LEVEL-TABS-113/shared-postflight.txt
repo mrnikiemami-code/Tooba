@@ -1,0 +1,5 @@
+capturedUtc=2026-10-16T01:52:11.124Z
+shared_health_5088=200 {"status":"ok"}
+shared_platform_commerce=200 {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"a91b4aad916840d42193f0214746c043"}
+shared_next_3000=308 http://localhost:3000/fa
+isolated_port_listeners_expected_zero=5396

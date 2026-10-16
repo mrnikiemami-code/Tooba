@@ -1,0 +1,70 @@
+TB-SHIPPING-ONE-LEVEL-TABS-113 — FIRST NEW EXCEPTION AND LAST COMPLETED STAGE (verbatim, redacted)
+====================================================================================================
+
+Credential scan before writing (programmatic): scratch password absent, 0 hits for the
+`Password=` / `Username=scratch113` patterns in the isolated stdout and stderr. No connection
+string is reproduced below.
+
+TB-111 ORIGINAL COLLISION — NOW ABSENT
+--------------------------------------
+The exact TB-111 failure signature was searched in the full 1,657-line isolated stdout:
+  occurrences of "catalog.attribute.code.duplicate" = 0
+  occurrences of "catalog-dev.attribute.incompatible-reuse" = 0
+  occurrences of "42P01" = 0
+  occurrences of "party.parties" = 22  (the sellable enricher reaching the Party schema successfully)
+So the TB-112 compatible read-or-create repair holds at real startup, and the incompatible-reuse
+guard did not fire. No `party.parties` 42P01 regression either.
+
+FIRST NEW BLOCKER (full stderr, isolated-host-113-stderr.txt, 1,469 bytes — quoted verbatim)
+---------------------------------------------------------------------------------------------
+Unhandled exception. System.InvalidOperationException: Cannot resolve scoped service 'Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext' from root provider.
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Tooba.Catalog.Infrastructure.Development.FashionTemplateCatalogSeed.ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken) in ...\FashionTemplateCatalogSeed.cs:line 59
+   at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(IServiceProvider provider, CancellationToken cancellationToken) in ...\CatalogDevelopmentSeed.cs:line 61
+   at Program.<Main>$(String[] args) in ...\Program.cs:line 368
+   at Program.<Main>(String[] args)
+
+Classified fields
+-----------------
+Exception type : System.InvalidOperationException (DI lifetime violation, not a data error)
+Error code     : none (no Tooba SemanticError / catalog.* code; this is a raw container exception)
+Module         : Catalog (Infrastructure/Development)
+Source frame   : FashionTemplateCatalogSeed.ApplyAsync (FashionTemplateCatalogSeed.cs:59)
+                 `var catalog = provider.GetRequiredService<CatalogDbContext>();`
+Caller chain   : Program.cs:368 -> CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync (CatalogDevelopmentSeed.cs:61)
+                 -> FashionTemplateCatalogSeed.ApplyAsync (CatalogDevelopmentSeed.cs:61 is the first legacy bootstrap)
+
+LAST COMPLETED STAGE
+--------------------
+The entire `DevelopmentSchemaMigrator.ApplyAsync(app.Services)` call at Program.cs:367 COMPLETED,
+including:
+  - the two-phase `MigrateOrderedAsync` (TB-110 seam) for every registered module schema;
+  - every module-owned post-migration step;
+  - the Catalog attribute-schema seed and its sellable enricher;
+  - the LEGACY workspace demo seed chain that TB-111 crashed in
+    (`WorkspaceDemoSeed.SeedNewProductAsync` -> `WorkspaceDemoProductSeed.SeedProductAsync`),
+    including its Admin R3 preview enrichment (draft + archived clone products).
+Last SQL actually executed (final stdout entry, 01:50:00.417, EventId 20101):
+  INSERT INTO catalog.outbox_messages ...; INSERT INTO catalog.product_history_entries ...;
+  UPDATE catalog.products SET status = @p25, updated_at = @p26 WHERE product_id = @p27;
+i.e. the archive step of `admin-r3-archived-hat`, the final statement of the workspace demo seed.
+The crash happens immediately afterwards, at the NEXT statement of Program.cs.
+
+WHY THIS IS A DIFFERENT, PRE-EXISTING-SHAPED BARRIER AND NOT A TB-112 REGRESSION
+--------------------------------------------------------------------------------
+`DevelopmentSchemaMigrator.ApplyCoreAsync` creates an async scope and passes the SCOPED provider
+(DevelopmentSchemaMigrator.cs:46-47), which is why every seed above can resolve
+`CatalogDbContext`. Program.cs:368 instead hands the ROOT `app.Services` directly to
+`CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync`, whose first call,
+`FashionTemplateCatalogSeed.ApplyAsync`, resolves a scoped service from that root provider.
+TB-111 never reached this line because it aborted earlier, and TB-112 changed none of these files
+(its diff is WorkspaceDemoProductSeed.cs + the new CatalogDevelopmentAttributeReuse.cs + tests).
+No fix was implemented or attempted in this task (Mission A forbids coding).
+
+ELAPSED
+-------
+Watchdog elapsed 61 s of the 180 s budget; the process exited by itself
+(KILLED_BY_WATCHDOG=False, HEALTH_200_OBSERVED=False, listeners on 5396 after stop = 0).

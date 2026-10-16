@@ -1,0 +1,9 @@
+﻿        slug_seam         | catalog_code_seam | definition_code |         canonical_value          |            definition_id             
+--------------------------+-------------------+-----------------+----------------------------------+--------------------------------------
+ schema-mobile-demo-phone | PHONE-BLK-128     | color           | 01a14266d618700094e9c0261ec15537 | 01a14266-d5b4-7000-9836-fedb228ab758
+ schema-mobile-demo-phone | PHONE-BLK-128     | storage         | 01a14266d6267000b5749594b3802b75 | 01a14266-d5d9-7000-add1-724e69398612
+ schema-mobile-demo-phone | PHONE-BLU-256     | color           | 01a14266d622700082cc3e2c5f23abe2 | 01a14266-d5b4-7000-9836-fedb228ab758
+ schema-mobile-demo-phone | PHONE-BLU-256     | storage         | 01a14266d6297000812c1e9e3e026479 | 01a14266-d5d9-7000-add1-724e69398612
+ workspace-live-shirt     | LIVE-SHIRT-BLK    | color           | 01a14266d618700094e9c0261ec15537 | 01a14266-d5b4-7000-9836-fedb228ab758
+(5 rows)
+

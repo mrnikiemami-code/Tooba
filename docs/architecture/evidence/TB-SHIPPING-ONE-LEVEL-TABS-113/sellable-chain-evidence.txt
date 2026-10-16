@@ -1,0 +1,74 @@
+TB-SHIPPING-ONE-LEVEL-TABS-113 — sellable-chain and identity-reuse evidence (READ-ONLY scratch readback)
+========================================================================================================
+
+Scratch database: tooba_113_scratch (disposable container, port 55448). Read-only SQL only; no fixture,
+migration or DDL/DML was executed by hand. Full output: scratch-inspection.txt. Identity join: identity-reuse.txt.
+
+TB-112 PROOF — NO DUPLICATE, ONE COMPATIBLE IDENTITY
+----------------------------------------------------
+catalog.attribute_definitions grouped by code:
+    color | 1
+    ram   | 1
+    screen_size | 1
+    storage | 1
+catalog.attribute_options grouped by (definition code, option code):
+    color   / black   | 1
+    color   / blue    | 1
+    ram     / 8gb     | 1
+    storage / 128gb   | 1
+    storage / 256gb   | 1
+=> exactly ONE `color` definition and exactly ONE `black` option, i.e. no
+   `catalog.attribute.code.duplicate` and no duplicate option on the unique index
+   attribute_options(definition_id, code).
+
+Runtime identity reuse is visible directly in the persisted data (identity-reuse.txt):
+    workspace-live-shirt     / LIVE-SHIRT-BLK / color -> definition_id 01a14266-d5b4-7000-9836-fedb228ab758
+    schema-mobile-demo-phone / PHONE-BLK-128  / color -> definition_id 01a14266-d5b4-7000-9836-fedb228ab758
+    schema-mobile-demo-phone / PHONE-BLU-256  / color -> definition_id 01a14266-d5b4-7000-9836-fedb228ab758
+The LEGACY workspace demo variant points at the SAME `color` definition_id that the Catalog
+attribute-schema seed owns and that the schema demo phone's variant axes use, and its canonical value
+is the same `black` option id. That is the runtime counterpart of the TB-112 focused-test identity
+assertion (same persistent identifier, no re-creation).
+
+PARTY REGRESSION CHECK
+----------------------
+party.parties count = 4 (table resolvable, no `relation "party.parties" does not exist` / 42P01 anywhere
+in the 1,657-line stdout or in stderr).
+
+PRODUCT / VARIANT / DEFAULT
+---------------------------
+catalog.products:
+    schema-mobile-demo-phone | Published    | PhysicalGood
+    workspace-live-shirt     | Published    | PhysicalGood
+    admin-r3-draft-scarf     | Draft        | PhysicalGood
+    admin-r3-archived-hat    | Archived     | PhysicalGood
+per-product variants + defaults:
+    schema-mobile-demo-phone | Published | 2 variants | 1 default
+    workspace-live-shirt     | Published | 1 variant  | 0 default
+    admin-r3-draft-scarf     | Draft     | 0 variants | 0 default
+    admin-r3-archived-hat    | Archived  | 0 variants | 0 default
+variants:
+    PHONE-BLK-128 | is_default = t | Draft status | fingerprint 01a1...b758=...5537|01a1...8612=...2b75
+    PHONE-BLU-256 | is_default = f | Draft status | fingerprint 01a1...b758=...abe2|01a1...8612=...6479
+    LIVE-SHIRT-BLK| is_default = f | Draft status | fingerprint 01a1...b758=...5537
+=> the published schema demo phone has exactly two SPARSE variants and exactly ONE default, and the
+   two variants differ in BOTH axes (no Cartesian matrix was produced).
+
+OFFERS / PRICES / STOCK (row counts only — NOT an eligibility claim)
+-------------------------------------------------------------------
+offers 5 | active_offers 5 | prices 6 | active_base_prices 4 | stock_positions 6 |
+stock_positive_on_hand 5 | seller_parties 4 | tax_rules 1 (location/tax aggregates)
+per-variant chain for schema-mobile-demo-phone:
+    PHONE-BLK-128 (default) | offers 2 | active_offers 2 | active_base_prices 1 | available 5.000000
+    PHONE-BLU-256           | offers 1 | active_offers 1 | active_base_prices 1 | available 5.000000
+=> both schema demo variants have an Active offer joined to an Active Base price and positive available
+   stock. This is a ROW-COUNT/INTEGRITY observation only: it is NOT proof of customer, cart or storefront
+   eligibility, and no storefront/checkout surface was exercised.
+
+SCRATCH STILL CLEAN OF COMMERCE ACTIVITY
+----------------------------------------
+carts 0 | seller_orders 0 | shipping_methods 0 (as expected on a fresh scratch database)
+
+MIGRATION HISTORY APPLIED (per module schema)
+---------------------------------------------
+catalog 29 | inventory 5 | localization 1 | offer 3 | party 2 | pricing 1 | promotion 2 | tax 1

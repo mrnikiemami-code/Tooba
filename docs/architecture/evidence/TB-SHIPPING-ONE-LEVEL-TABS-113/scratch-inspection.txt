@@ -1,0 +1,109 @@
+﻿Pager usage is off.
+== migration history applied per module schema (__ef_migrations_history) ==
+      m       | applied 
+--------------+---------
+ catalog      |      29
+ inventory    |       5
+ localization |       1
+ offer        |       3
+ party        |       2
+ pricing      |       1
+ promotion    |       2
+ tax          |       1
+(8 rows)
+
+== TB-112 proof: exactly one color definition + stable black option ==
+    code     | definitions 
+-------------+-------------
+ color       |           1
+ ram         |           1
+ screen_size |           1
+ storage     |           1
+(4 rows)
+
+ definition_code | option_code | options 
+-----------------+-------------+---------
+ color           | black       |       1
+ color           | blue        |       1
+ ram             | 8gb         |       1
+ storage         | 128gb       |       1
+ storage         | 256gb       |       1
+(5 rows)
+
+== catalog products (slug_seam, status, kind) ==
+        slug_seam         |  status   |     kind     
+--------------------------+-----------+--------------
+ admin-r3-archived-hat    | Archived  | PhysicalGood
+ admin-r3-draft-scarf     | Draft     | PhysicalGood
+ schema-mobile-demo-phone | Published | PhysicalGood
+ workspace-live-shirt     | Published | PhysicalGood
+(4 rows)
+
+== catalog variants (catalog_code_seam, is_default, status) ==
+ catalog_code_seam | is_default | status |                                                       combination_fingerprint                                                       
+-------------------+------------+--------+-------------------------------------------------------------------------------------------------------------------------------------
+ LIVE-SHIRT-BLK    | f          | Draft  | 01a14266d5b470009836fedb228ab758=01a14266d618700094e9c0261ec15537
+ PHONE-BLK-128     | t          | Draft  | 01a14266d5b470009836fedb228ab758=01a14266d618700094e9c0261ec15537|01a14266d5d97000add1724e69398612=01a14266d6267000b5749594b3802b75
+ PHONE-BLU-256     | f          | Draft  | 01a14266d5b470009836fedb228ab758=01a14266d622700082cc3e2c5f23abe2|01a14266d5d97000add1724e69398612=01a14266d6297000812c1e9e3e026479
+(3 rows)
+
+== per-product variants + defaults ==
+        slug_seam         | product_status | variants | defaults 
+--------------------------+----------------+----------+----------
+ admin-r3-archived-hat    | Archived       |        0 |        0
+ admin-r3-draft-scarf     | Draft          |        0 |        0
+ schema-mobile-demo-phone | Published      |        2 |        1
+ workspace-live-shirt     | Published      |        1 |        0
+(4 rows)
+
+== offers / prices / stock ==
+           m            | v 
+------------------------+---
+ offers                 | 5
+ active_offers          | 5
+ prices                 | 6
+ active_base_prices     | 4
+ stock_positions        | 6
+ stock_positive_on_hand | 5
+ seller_parties         | 4
+ tax_rules              | 1
+(8 rows)
+
+== per-variant sellable chain for schema-mobile-demo-phone ==
+ catalog_code_seam | is_default | offers | active_offers | active_base_prices | available 
+-------------------+------------+--------+---------------+--------------------+-----------
+ PHONE-BLK-128     | t          |      2 |             2 |                  1 |  5.000000
+ PHONE-BLU-256     | f          |      1 |             1 |                  1 |  5.000000
+(2 rows)
+
+== category attribute bindings (mobile schema) ==
+    code     | is_variant_axis | display_order 
+-------------+-----------------+---------------
+ color       | t               |            10
+ storage     | t               |            20
+ ram         | f               |            30
+ screen_size | f               |            40
+(4 rows)
+
+== party.parties 42P01 regression check (must be 0 rows / resolvable) ==
+ parties 
+---------
+       4
+(1 row)
+
+== legacy workspace demo product reached? ==
+       slug_seam       |  status   
+-----------------------+-----------
+ admin-r3-archived-hat | Archived
+ admin-r3-draft-scarf  | Draft
+ workspace-live-shirt  | Published
+(3 rows)
+
+== carts / orders / shipping (must be empty on scratch) ==
+        m         | v 
+------------------+---
+ carts            | 0
+ seller_orders    | 0
+ shipping_methods | 0
+(3 rows)
+
