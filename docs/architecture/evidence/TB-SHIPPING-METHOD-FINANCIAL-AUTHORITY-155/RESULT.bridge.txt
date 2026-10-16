@@ -1,0 +1,132 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-METHOD-FINANCIAL-AUTHORITY-155
+Parent-Task: TB-SHIPPING-GROUP-UX-ACCEPTANCE-154
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FLAT-METHOD-COMMERCIAL-READINESS
+Mode: BOUNDED_IMPLEMENT_PER_METHOD_AUTHORITATIVE_MONEY_STATUS
+Bridge-Task-Row: 2e3799f6-102b-4b02-b690-bbff801fa9ec
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 3134141cff468b37401a11100ce1bf2606c7f4e6
+Base-SHA: 3134141cff468b37401a11100ce1bf2606c7f4e6
+Code-SHA: 2872dea9590eacd192d09c08873e55ebff0e2c12
+Evidence-SHA: the follow-up evidence commit that carries this file (immediately after Code-SHA); resolve with
+  git log -1 --format=%H -- docs/architecture/evidence/TB-SHIPPING-METHOD-FINANCIAL-AUTHORITY-155/RESULT.bridge.txt
+automaticNextImplementationTask: NONE
+HEAD: equals Origin-Main (verified with git rev-parse HEAD vs git rev-parse origin/main immediately before reporting)
+Origin-Main: equals HEAD (same verification)
+HEAD-Origin-Parity: TRUE
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Evidence: docs/architecture/evidence/TB-SHIPPING-METHOD-FINANCIAL-AUTHORITY-155/
+Elapsed-Minutes: 15 (claim 2026-10-16T19:50:18Z -> commit/push 2026-10-16T20:04Z; inside the 45-minute hard box)
+
+DELIVERABLE (one additive owner-correct read model + Admin representation)
+The Shipping module (owner of rate/coverage rows) now exposes ONE read-only seam for the financial
+status of ONE canonical method:
+  GET /v1/admin/shipping-services/{serviceCode}/financial-status?optionCode=<option|omitted>
+Authorization is the EXISTING admin permission fulfillment.view via IShippingAdminAuthorizer; 401/403
+fail closed, there is no anonymous path, no write verb and no Manage permission. optionCode omitted or
+empty means the service-level (optionless) method identity. The Admin General tab renders the verified
+state, reason, and money ONLY when authoritative, while preserving the four top-level tabs, dynamic
+languages, compact RTL design and the canonical method binding.
+
+EVALUATION (deterministic, pure, no IO, no current time, no invented policy)
+ShippingMethodFinancialStatusEvaluator over the real ShippingRatePolicy/ShippingCoverageGrant rows:
+1) Owned rows are ONLY those whose serviceCode AND optionCode equal the authoritative identity pair.
+2) No owned row + method has an option + service-level (optionCode null) rows exist => LegacySharedUnresolved
+   (shipping.financial.legacy_service_level_shared): rules empty, NO amount, NO currency, NO free. The
+   legacy provider-level tariff is counted for audit only and never projected as this method's price.
+3) No owned row and no service-level row => NeedsConfiguration (shipping.financial.no_owned_rules).
+4) Owned rows with more than one currency OR two owned rows with identical scope+condition => Conflicting
+   (mixed_currency / ambiguous_owned_scope); no single amount is asserted, first-row-wins is refused.
+5) Otherwise FinanciallyConfigured / Mode=FixedAmount (shipping.financial.owned_rules_present).
+   A stored zero is a data fact (hasZeroChargeRule) only: the schema has no approved FREE mode.
+6) Optionless methods OWN their service-level rows and are never reported as legacy shared.
+Sibling options are surfaced as a COUNT (activeSiblingOptionRuleCount) for visibility; their rates can
+never become this method's money. Coverage is reported as a count (activeCoverageGrantCount) and is NOT
+a universal quote-ready claim.
+
+MONETARY MODES TRULY SUPPORTED BY THE CURRENT OWNER (concise table; evidence file monetary-modes-table-155.md)
+- FIXED_AMOUNT: provable (ChargeAmount + CurrencyCode on an owned active row) -> returned/shown.
+- RULE_BASED_RATE: PARTIAL only (destination depth + weight/item tiers of declared fixed amounts; no
+  expression or calculator engine) -> reported as RuleCount/ConditionedRuleCount, no rule-engine mode claimed.
+- FREE_TO_CUSTOMER: NOT provable (no mode column, no free rule type; freeAboveThreshold is a conditional
+  threshold on a paid rule) -> never returned; a stored zero is explicitly not interpreted as free.
+- COLLECT_ON_DELIVERY: NOT provable (no payer/collection/advance field anywhere) -> never returned.
+- PROVIDER_QUOTE: NOT provable (no carrier quote entity/validity/failure model) -> never returned.
+
+ADMIN REPRESENTATION
+header badge shows the server-verified financial state separately from activation (مالی: تنظیم‌شده /
+نیازمند تنظیم / تعرفهٔ مشترک قدیمی / متناقض); a "وضعیت مالی مشتری" section shows the precise reason, the
+proven money line only for a single owned rule in a single currency, plus explicit caveats for shared legacy
+rows, sibling rows, absent coverage and a stored zero amount; a compact disclosure states the provable and
+non-provable modes. Identity comes from the existing server binding resolver; a method code is never split
+in the browser. When the read is unavailable/denied/error the tab claims nothing (fail-closed, no ready badge,
+no amount, no zero assumption). No second-level configuration and no new write seam was added.
+
+BOUNDARIES RESPECTED / NOT CHANGED
+No production price calculation, no existing customer quote, no financial ledger, carrier payable,
+seller/platform share, payout, checkout tax, order snapshot, schema or migration was altered; no new quote
+mode was activated; no create-method API and no optional-restriction editor was implemented; Contracts-only
+cross-module access, existing CQRS/MediatR/Result conventions, authorization/feature gating, localization and
+backwards compatibility are preserved; the two locked General-tab writes are unchanged; unrelated dirty files
+and stashes were preserved; commit was fast-forward and HEAD == origin/main.
+
+CHANGED FILES
+Backend (Shipping module only):
+ src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Admin/ShippingMethodFinancialStatusContracts.cs (new)
+ src/backend/Modules/Shipping/Tooba.Shipping.Application/Rates/ReadModels/ShippingMethodFinancialStatusEvaluator.cs (new)
+ src/backend/Modules/Shipping/Tooba.Shipping.Application/Rates/Queries/GetShippingMethodFinancialStatusQuery.cs (new)
+ src/backend/Modules/Shipping/Tooba.Shipping.Application/Validation/ShippingAdminValidators.cs (query validator added)
+ src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingMethodFinancialStatusEndpoints.cs (new)
+ src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingRateCoverageEndpoints.cs (maps the read route)
+ src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/ShippingMethodFinancialAuthorityTests.cs (new, 14 tests)
+Frontend:
+ src/frontend/app/admin/shipping-services/shipping-method-financial-model.ts (new)
+ src/frontend/app/admin/shipping-services/shipping-method-financial-api.ts (new)
+ src/frontend/app/admin/shipping-services/shipping-method-financial-model.test.ts (new)
+ src/frontend/app/admin/shipping-services/flat-general-tab.tsx (verified status rendering)
+Docs: docs/ai/tasks/TB-SHIPPING-METHOD-FINANCIAL-AUTHORITY-155.task.md + this evidence folder.
+
+FOCUSED VERIFICATION (counts)
+- ShippingMethodFinancialAuthorityTests (real ShippingDbContext + real Infrastructure ShippingRateCoverageDirectory,
+  no fake readiness badge): 14/14 PASS. Covers owned rule money, tipax:standard vs tipax:express,
+  post:standard vs post:express, legacy service-level shared, optionless ownership, missing tariff != free,
+  active-but-no-coverage, stored zero != free mode, ambiguous duplicate scope, mixed currency, conditioned rule,
+  deactivated rule, query validation, route ownership/authorization.
+- Full Shipping test project: 303 PASS / 1 FAIL. The single failure is PRE-EXISTING and unrelated:
+  OperationalQuoteCompatibilityTests.No_module_outside_shipping_references_the_operational_quote_types fails
+  because the Order-side shadow observer (StorefrontShippingOperationalShadowObserver.cs / OrderModule.cs)
+  references IShippingOperationalQuoteLookup since commit 91951b8 (TB-SHIPPING-FULL-OPERATIONS-079). Provenance
+  captured in preexisting-red-provenance-155.txt; those files are untouched and clean in this tree.
+- Frontend focused tests (financial model + pinned General-tab/flat-screen/rates-tab guards): 53/53 PASS.
+- npx tsc --noEmit: exit 0. Shipping endpoints project: build succeeded, 0 warnings / 0 errors.
+- Known pre-existing frontend guard drift (NOT this task, not repaired): frontend-source-size.guard reports four
+  unmodified oversized files above baseline (category-admin-screen.tsx 2230>2215, admin-landing-page-composer.tsx
+  1442>1440, storefront-landing-blocks.tsx 1033>1026, shared-composition-renderer.tsx 918>907). Files added by
+  this task are 65-303 LOC, far below the 800-LOC threshold.
+
+UNVERIFIED IN THIS TIMEBOX (explicitly not claimed; no HTTP sample and no screenshot is fabricated)
+No live isolated Host/browser round trip of the new route was performed, so there is no real HTTP status/JSON
+sample and no screenshot. The shared :3000/:5088 stack and tooba_alpha/store-alpha were left untouched
+(read-only, not restarted, not written). Within the timebox the budget was spent on the bounded implementation
+plus the focused real-evaluation tests above; route mapping/authorization is pinned by source guard tests
+(exactly one MapGet, exactly one RequireAuthorizedAsync with fulfillment.view, no write verb, no AllowAnonymous)
+and the Admin rendering by pure mapping tests plus the pinned General-tab guards, not by a live browser run.
+Also out of scope by the task envelope: financial policy EDIT/WRITE, canonical create-method API, optional
+restriction defaults, live production customer acceptance, carrier calendar/origin authority.
+
+BLOCKED CAPABILITY GAPS (honest)
+- The schema cannot represent FREE_TO_CUSTOMER, COLLECT_ON_DELIVERY or PROVIDER_QUOTE, so those modes remain
+  unquotable by design until an authorized financial-policy increment and reviewed migration define them.
+- There is no authoritative carrier quote entity, so provider-quoted amounts cannot be shown even if wanted.
+
+REALISTIC NEXT STEP
+Authorize a live isolated Host/browser acceptance of this read seam (real JSON + screenshot) so the HTTP and
+visual layers are proven, not only tested; then proceed with backlog A (method-specific financial policy
+EDIT/WRITE and opt-in restriction defaults), which this owner-correct read seam now makes safe.
+END_TOOBA_WORKER_RESULT

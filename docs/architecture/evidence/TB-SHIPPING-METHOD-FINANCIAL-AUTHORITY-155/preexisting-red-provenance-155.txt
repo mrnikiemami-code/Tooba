@@ -1,0 +1,1 @@
+﻿91951b875bca970567f3a8196a6e5c89ee20708b Thu Oct 15 13:33:07 2026 +0330 TB-SHIPPING-FULL-OPERATIONS-079: storefront read-only operational shadow, capacity decision, dev parity

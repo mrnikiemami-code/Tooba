@@ -1,0 +1,32 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Tooba.ModuleContracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.ModuleContracts\bin\Debug\net8.0\Tooba.ModuleContracts.dll
+  Tooba.BuildingBlocks -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.BuildingBlocks\bin\Debug\net8.0\Tooba.BuildingBlocks.dll
+  Tooba.Geography.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Geography\Tooba.Geography.Contracts\bin\Debug\net8.0\Tooba.Geography.Contracts.dll
+  Tooba.Persistence -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.Persistence\bin\Debug\net8.0\Tooba.Persistence.dll
+  Tooba.Fulfillment.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Contracts\bin\Debug\net8.0\Tooba.Fulfillment.Contracts.dll
+  Tooba.Shipping.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Contracts\bin\Debug\net8.0\Tooba.Shipping.Contracts.dll
+  Tooba.Shipping.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Domain\bin\Debug\net8.0\Tooba.Shipping.Domain.dll
+  Tooba.Shipping.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Application\bin\Debug\net8.0\Tooba.Shipping.Application.dll
+  Tooba.Shipping.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Infrastructure\bin\Debug\net8.0\Tooba.Shipping.Infrastructure.dll
+  Tooba.Shipping.Tests -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Tests\bin\Debug\net8.0\Tooba.Shipping.Tests.dll
+Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Tests\bin\Debug\net8.0\Tooba.Shipping.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+dotnet : [xUnit.net 00:00:01.43]     Tooba.Shipping.Tests.Compatibility.OperationalQuoteCompatibilityTests.No_module_ou
+tside_shipping_references_the_operational_quote_types [FAIL]
+At C:\Users\User\AppData\Local\Temp\ps-script-984fbee0-10c2-4806-9e0f-a1e75006f433.ps1:125 char:55
++ ... rc\backend; dotnet test Modules\Shipping\Tooba.Shipping.Tests\Tooba.S ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...te_types [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Failed Tooba.Shipping.Tests.Compatibility.OperationalQuoteCompatibilityTests.No_module_outside_shipping_references_the_operational_quote_types [1 s]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: ["src/backend/Modules/Order/Tooba.Order.Infrastructu"···, "src/backend/Modules/Order/Tooba.Order.Application/"···, "src/backend/Modules/Order/Tooba.Order.Application/"···]
+  Stack Trace:
+     at Tooba.Shipping.Tests.Compatibility.OperationalQuoteCompatibilityTests.No_module_outside_shipping_references_the_operational_quote_types() in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Tests\Compatibility\OperationalQuoteCompatibilityTests.cs:line 48
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     1, Passed:   303, Skipped:     0, Total:   304, Duration: 1 s - Tooba.Shipping.Tests.dll (net8.0)

@@ -1,0 +1,17 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Tooba.ModuleContracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.ModuleContracts\bin\Debug\net8.0\Tooba.ModuleContracts.dll
+  Tooba.BuildingBlocks -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.BuildingBlocks\bin\Debug\net8.0\Tooba.BuildingBlocks.dll
+  Tooba.Geography.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Geography\Tooba.Geography.Contracts\bin\Debug\net8.0\Tooba.Geography.Contracts.dll
+  Tooba.Fulfillment.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Contracts\bin\Debug\net8.0\Tooba.Fulfillment.Contracts.dll
+  Tooba.Persistence -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.Persistence\bin\Debug\net8.0\Tooba.Persistence.dll
+  Tooba.Shipping.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Contracts\bin\Debug\net8.0\Tooba.Shipping.Contracts.dll
+  Tooba.Shipping.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Domain\bin\Debug\net8.0\Tooba.Shipping.Domain.dll
+  Tooba.Shipping.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Application\bin\Debug\net8.0\Tooba.Shipping.Application.dll
+  Tooba.Shipping.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Infrastructure\bin\Debug\net8.0\Tooba.Shipping.Infrastructure.dll
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Tests\Admin\ShippingRateCoverageAdminTests.cs(144,111): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Tests\Tooba.Shipping.Tests.csproj]
+  Tooba.Shipping.Tests -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Tests\bin\Debug\net8.0\Tooba.Shipping.Tests.dll
+Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Shipping\Tooba.Shipping.Tests\bin\Debug\net8.0\Tooba.Shipping.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    14, Skipped:     0, Total:    14, Duration: 1 s - Tooba.Shipping.Tests.dll (net8.0)

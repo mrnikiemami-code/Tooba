@@ -1,0 +1,81 @@
+﻿(node:31128) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/flat-method-language.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ editable languages come only from the authoritative registry and carry no invented name (1.7501ms)
+✔ a missing translation stays a visible gap instead of a fabricated name (0.2161ms)
+✔ drafts are per language and switching language loses no unsaved text (0.21ms)
+✔ dirty detection compares against the real server value and ignores pure whitespace (0.0949ms)
+✔ the multilingual editor is bound to the authoritative registry and the method-scoped save seam (0.6047ms)
+✔ the dialog discovers real languages from the authoritative Admin endpoint once per method (0.6006ms)
+✔ the General tab is compact, honest about financial status and makes no fabricated readiness claim (0.3726ms)
+(node:18448) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/flat-method-rows.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the flat list has exactly one row per canonical method, in server order (0.8552ms)
+✔ a duplicate canonical code never produces a second row (0.12ms)
+✔ the label comes only from the real translation of the active language (0.1215ms)
+✔ inactive methods stay inactive and are never dropped or silently activated (0.0893ms)
+✔ the row model carries no provider/option identity and never splits a method code (0.5227ms)
+✔ the client catalog reader uses only the canonical admin read path with fail-closed mapping (0.2362ms)
+(node:40796) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-method-financial-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a method-owned active rule maps to proven fixed money in its own currency (10.9119ms)
+✔ an option with no owned rule maps to needs-configuration and never to free (0.1611ms)
+✔ a service-level legacy tariff is never projected as the option method's money (0.257ms)
+✔ an ambiguous owned rule set maps to a conflict with no single amount (0.1797ms)
+✔ a configured method without any coverage grant states that nothing is quotable yet (0.1632ms)
+✔ a stored zero amount is surfaced as data and never as an approved free mode (0.1548ms)
+✔ several scoped rules are a rule set, not one invented number (0.1416ms)
+✔ an unreadable or unknown server answer is mapped fail-closed, never as ready (0.15ms)
+✔ the read path carries the authoritative identity and omits an absent option (0.1785ms)
+(node:32972) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-rates-tab.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the binding path is derived from the method code only and stays on the authorized admin route (0.6357ms)
+✔ a resolved binding requires Enabled + ready + resolved + a real service code (0.5171ms)
+✔ gate-off, unmigrated, unknown and malformed binding answers never become a guessed binding (0.1276ms)
+✔ only the resolved binding's own option rates and its service grants are shown (0.2018ms)
+✔ a methodless binding matches only service-level rates, and an empty view stays empty (0.1186ms)
+✔ a response belonging to another service is refused rather than rendered under this method (0.0679ms)
+✔ the tab state machine never reports ready without a resolved binding (0.1057ms)
+✔ binding unavailability text is explicit, Persian and never suggests a fallback (0.0828ms)
+✔ the generation guard invalidates an in-flight operation when the method changes (0.1114ms)
+✔ the binding context names the selected one-level method and its resolved legacy pair (0.1285ms)
+✔ tab 2 renders no second-level option picker and no editable parent-service grouping (0.5724ms)
+(node:25888) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-tabs.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the five tab labels are exactly the locked Persian labels (1.5054ms)
+✔ all five tabs are genuinely wired and none advertises a wiring task (0.1481ms)
+✔ method codes are sanitized to the 32-character canonical identity (0.2118ms)
+✔ language ids accept only canonical uuids (0.2151ms)
+✔ url selection is parsed safely and never trusts malformed input (0.3174ms)
+✔ url building omits defaults and round-trips sanitized values (0.3053ms)
+✔ tablist keyboard navigation wraps and supports Home/End (0.2087ms)
+✔ method rows keep one row per method and never invent a label (0.289ms)
+✔ inactive methods stay inactive and are never silently activated or dropped (0.216ms)
+✔ non-canonical method codes are rejected instead of normalized into new identities (0.2759ms)
+✔ data state is honest and has no legacy fallback path (0.2141ms)
+✔ the frontend gate is disabled by absence and cannot be enabled from the client (0.2217ms)
+✔ host gate response is mapped fail-closed and never enables on anything but an explicit flag (0.2229ms)
+✔ host method rows are mapped defensively and never invent a label or a second level (0.398ms)
+✔ page composes the flat method screen and leaks no credential to the browser (0.6172ms)
+✔ gate resolves the real Host answer through the browser Admin transport and never falls back (0.2782ms)
+✔ flat screen owns one row per method, three row actions and four method tabs (0.4257ms)
+✔ flat screen never rewrites sibling-method policy and keeps shared data labelled (0.3574ms)
+✔ shell renders server-provided rows without a client fetch and edits only the method name (0.2605ms)
+✔ new shell edits only the method name and contains no second-level configuration (0.299ms)
+ℹ tests 53
+ℹ suites 0
+ℹ pass 53
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 142.0154
