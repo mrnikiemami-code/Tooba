@@ -1,0 +1,126 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-110
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-109
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_DEVELOPMENT_MIGRATION_POSTMIGRATION_ORDER_REPAIR
+Bridge-Task-Row: c0696608-c66c-4462-868b-d14d9e88dd46
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 072127f7f60a11c0de5583a472b78c27bcf8a5d3
+Base-SHA: a167e56e63625e6901789f929dd207e24296a9a8
+Code-SHA: bc8c87e2853ee6958420ed6e31631eca3c6211d0
+Evidence-SHA: bc8c87e2853ee6958420ed6e31631eca3c6211d0
+automaticNextImplementationTask: NONE
+
+PREFLIGHT — NO CONFLICT
+  HEAD == origin/main == a167e56e63625e6901789f929dd207e24296a9a8 at claim; Expected-Base-SHA
+  072127f7f60a11c0de5583a472b78c27bcf8a5d3 verified ANCESTOR (git merge-base --is-ancestor exit 0). Only drift
+  between expected base and actual base is this pipeline's own TB-109 evidence commit (RESULT.bridge.txt +
+  post-result.js, 157 insertions, docs-only). No overlapping source drift -> no RECOVERY_CONFLICT.
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-110.task.md preserved UNSTAGED as the receipt. All 188 pre-existing
+  dirty/untracked entries preserved untouched (including the two pre-existing src/frontend admin screen edits).
+
+OWNERSHIP AUDIT (Mission A) — source-proven
+  Authority: src/backend/BuildingBlocks/Tooba.Persistence/ModuleSchemaMigrator.cs holds the single canonical
+  ModuleSchemaMigrationOrder (Catalog 1, Offer 2, Pricing 3, Inventory 4, Tax 5, Party 6, ... Promotion 12, ...
+  Localization 22, ... Shipping 31) plus the neutral IModuleSchemaMigrator / IModuleSchemaMigrationStep seam.
+  Host orchestration: src/backend/Host/Tooba.Host/Development/DevelopmentSchemaMigrator.cs (composition only;
+  no foreign DbContext, no business seed authority).
+  Registered post-migration steps (all of them, verified by scanning every composition root): Catalog
+  (AfterOrder 1 -> CatalogDevelopmentSeed.PostMigration.EnsureAsync), Promotion (12 ->
+  PromotionDevelopmentSeed.EnsureAsync), Localization (22 -> LanguageBootstrapDevelopmentSeed.PostMigration).
+  Cross-module schema need per step body: Catalog step needs Party(6)/Offer(2)/Pricing(3)/Inventory(4)/Tax(5)
+  through its OWN Contracts-only Development gateways; Promotion step needs Catalog(1)/Offer(2)/Pricing(3)/
+  Inventory(4)/Party(6) (already satisfied by order 12); Localization step needs only its own module.
+  28 modules register AddModuleSchemaMigrator (23 generic EF, 5 delegate for Offer/Pricing/Inventory/Tax/
+  Promotion). Every migrator registered after Localization is plain DDL Database.MigrateAsync and reads no seeded
+  row, so phase separation cannot affect them.
+  => Confirmed: the defect is a Development orchestration prerequisite, NOT a Catalog readiness or Shipping price
+  defect. The step body is correct and belongs to its owner; only the orchestrator's interleaving was wrong.
+
+ORDERING BEFORE -> AFTER (exact)
+  BEFORE (defect, base a167e56e; DevelopmentSchemaMigrator.MigrateOrderedAsync lines 136-144):
+    migrate Catalog(1) -> step Catalog(1)      <-- needs schemas of modules 2..6 that have not migrated yet
+    migrate Offer(2) -> migrate Pricing(3) -> migrate Inventory(4) -> migrate Tax(5) -> migrate Party(6)
+    -> ... -> migrate Promotion(12) -> step Promotion(12) -> ... -> migrate Localization(22) -> step Localization(22)
+    -> ... -> migrate Shipping(31)
+    Observed runtime consequence (TB-109 isolated startup, unchanged at this base): Npgsql 42P01
+    relation "party.parties" does not exist, raised from CatalogAttributeSchemaSellableEnricher ->
+    PartyDevelopmentSeedGateway reached from CatalogDevelopmentSeed.PostMigration.EnsureAsync (AfterOrder 1).
+  AFTER (fix, code SHA bc8c87e2):
+    PHASE 1 — migrate Catalog(1) .. Shipping(31) in the UNCHANGED canonical Order, none running twice;
+    PHASE 2 — step Catalog(1) -> step Promotion(12) -> step Localization(22), UNCHANGED relative order.
+  Preserved: canonical migration order; deterministic step order (OrderBy AfterOrder, ThenBy Module Ordinal);
+  duplicate-Order fail-fast BEFORE anything runs; at-most-once execution per migrator and per step; startup
+  cancellation propagation; NO post-migration step after a failed or canceled migration (strictly stronger than
+  before); seedCatalog=false (MigrateSchemaOnlyAsync) semantics; Host composition-only rules (no module type,
+  DbContext, seed or gateway named in Host). Legacy edge kept: a step whose AfterOrder names no registered
+  migrator still never runs. Production/explicit migration authority (Tooba.MigrationRunner, own registry,
+  never reached by Host startup) untouched.
+
+EXACT OWNERSHIP AND PATHS CHANGED
+  src/backend/Host/Tooba.Host/Development/DevelopmentSchemaMigrator.cs
+    MigrateOrderedAsync: private -> internal; single interleaved loop replaced by two sequential phases;
+    steps additionally filtered to registered migration orders; XML doc updated. No module type, DbContext,
+    seed, publish rule or migration added. Diff: evidence/migrator-diff.txt (16 insertions, 7 deletions).
+  src/backend/Host/Tooba.Host.Tests/Development/DevelopmentSchemaMigratorOrderingTests.cs
+    NEW focused test, synthetic migrators/steps only (no DbContext, no database, no Testcontainers).
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-110.md
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-110/**
+  NOT touched (verified): ModuleSchemaMigrator.cs order constants, all 28 module composition roots, all
+  I*SchemaMigrator implementations, Catalog publish rules, ProductVariantDirectory, Party schema/migrations,
+  Catalog product/offer/price/stock seed data, Program.cs, MigrationRunner, Checkout/Order/Fulfillment/Shipping/
+  Payment/Settlement sources, appsettings, scripts, package files. No new generic framework, no DDL by hand,
+  no Catalog bypass, no Checkout edit.
+
+MIGRATION / POST-MIGRATION TEST EVIDENCE (measured)
+  Positive (two-phase algorithm, code SHA bc8c87e2):
+    dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj
+      --filter FullyQualifiedName~DevelopmentSchemaMigratorOrderingTests
+      -> Passed! Failed: 0, Passed: 7, Skipped: 0, Total: 7 (evidence/test-evidence-positive.txt)
+    dotnet test ... --filter FullyQualifiedName~HostDevelopment
+      -> Passed! Failed: 0, Passed: 17, Skipped: 0, Total: 17
+      (includes HostDevelopmentMigrationSeamGuardTests, HostDevelopmentEnricherClosureGuardTests,
+       HostDevelopmentAmcGuardTests -> no existing guard regressed)
+  Covered rules: (1) a module's post-migration step observes a LATER module's completed migration;
+    (2) canonical migration order preserved + steps ordered by AfterOrder then Module + exactly-once;
+    (3) failing migration short-circuits EVERY post-migration step and the exception propagates;
+    (4) canceled migration short-circuits every post-migration step; (5) orphan step (no registered AfterOrder)
+    keeps its legacy never-run behavior; (6) no-step registration still migrates every module once;
+    (7) duplicate migration Order rejected before anything runs.
+  Failed tests (negative control, legacy interleaved algorithm restored only for the measurement, then reverted):
+    same filter -> Failed! Failed: 3, Passed: 4, Skipped: 0, Total: 7 (evidence/test-evidence-negative-control.txt)
+    failing assertions verbatim: 'System.InvalidOperationException : post-migration step ran before its dependency
+    schema migrated.' (Post_migration_step_runs_only_after_every_registered_module_migration,
+    Migration_order_and_post_step_order_stay_canonical_and_run_exactly_once,
+    Failing_migration_short_circuits_every_post_migration_step). The 4 legacy-compatible tests still passed, so
+    the fix is a real behavioral correction and not merely added assertions. The temporary 3-line legacy block was
+    removed and the file reverified: 'NEGATIVE CONTROL' occurrences = 0, diff unchanged, tests re-run green.
+
+NO-SHARED-CHANGE PROOF (evidence/no-shared-change-proof.txt)
+  :5088 read-only GET /health = 200 {"status":"ok"} before AND after; :3000 answers HTTP 308 (Next, pre-existing).
+  No shared Host/Next start, stop, restart or signal; no process termination of any kind (no wildcard/name/PID
+  kill); no scratch Host launch in this task (deferred to TB-111); no DB DDL/DML, no fixture SQL, no psql/EF
+  command, no reset-and-seed, no migration-history change; no stash/rebase/reset/force-push/history rewrite
+  (the 3 pre-existing stash entries are untouched); tooba_alpha shared state and the shared instance READ-ONLY.
+
+ELAPSED MINUTES
+  Claim 01:07:28 UTC -> code+evidence commit 01:16 UTC = ~9 minutes wall clock. Implementation stopped far before
+  minute 22 and the 30-minute HARD stop was never approached.
+
+ROLLBACK
+  Revert the single code/evidence commit (bc8c87e2): one production file + one new test file + docs. No schema,
+  data or configuration effect. Reverting restores exactly the TB-109 runtime symptom on a fresh Development
+  database. No live state was migrated or mutated by this task.
+
+TB-111 RUNTIME PREREQUISITE (still unverified here)
+  This is source-proven and unit-proven only. A separately authorized bounded isolated scratch startup must still
+  prove: (1) Development startup proceeds past relation "party.parties" does not exist with the Catalog schema
+  demo product Published and the sellable enricher succeeding; (2) genuine sellable offers / active base prices /
+  stock rows then exist for that product; (3) whether any further barrier appears, and whether the one-level tab
+  surface receives shipping labels. NO runtime-startup, sellable-offer, customer-cart, commercial-ready or
+  storefront-label claim is made by this task.
+END_TOOBA_WORKER_RESULT
