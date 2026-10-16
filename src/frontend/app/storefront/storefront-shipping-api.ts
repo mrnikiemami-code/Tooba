@@ -51,6 +51,8 @@ export interface StorefrontShippingGroupView {
   selectedDeliveryTimeWindow: string | null;
   leadDays: number;
   lineCount: number;
+  /** (135) شناسهٔ واقعی خطوط سبد این گروه برای بازیابی قطعی انتخاب «هر خط». */
+  cartLineIds: string[] | null;
 }
 
 export interface StorefrontShippingDraft {
@@ -150,6 +152,12 @@ function asBool(value: unknown): boolean {
   return value === true;
 }
 
+/** (135) فهرست شناسهٔ خطوط؛ مقدار نامعتبر ⇒ null (سرور قدیمی/پاسخ ناقص) بدون حدس. */
+function asStringArray(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  return value.filter((item): item is string => typeof item === "string" && item.length > 0);
+}
+
 async function throwShippingError(response: Response): Promise<never> {
   const payload: unknown = await response.json().catch(() => null);
   const body = asRecord(payload);
@@ -203,6 +211,7 @@ function mapGroup(value: unknown): StorefrontShippingGroupView | null {
       asString(prop(item, "selectedDeliveryTimeWindow", "SelectedDeliveryTimeWindow")) || null,
     leadDays: asNumber(prop(item, "leadDays", "LeadDays")),
     lineCount: asNumber(prop(item, "lineCount", "LineCount")),
+    cartLineIds: asStringArray(prop(item, "cartLineIds", "CartLineIds")),
   };
 }
 

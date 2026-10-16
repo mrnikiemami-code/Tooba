@@ -769,5 +769,6 @@ public sealed class StorefrontShippingService
             group.SelectedDeliveryDate?.ToString("yyyy-MM-dd"),
             group.SelectedDeliveryTimeWindow,
             group.LeadDays,
-            group.Lines.Count);
+            group.Lines.Count,
+            group.Lines.Select(x => x.CartLineId).ToArray());
 }

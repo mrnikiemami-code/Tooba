@@ -47,6 +47,11 @@ import {
   type StorefrontShippingMethod,
   type StorefrontShippingProjection,
 } from "./storefront-shipping-api.ts";
+import {
+  buildShippingItemGroups,
+  isItemGroupingComplete,
+  restoreLineMethodSelections,
+} from "./storefront-shipping-item-groups.ts";
 import { useCheckoutAuthGate } from "./use-checkout-auth-gate.ts";
 import {
   loadStorefrontGeographyAreas,
@@ -124,7 +129,7 @@ export function StorefrontShopeivaShipping() {
   const [savedAddressId, setSavedAddressId] = useState<string | null>(null);
   const [methodCode, setMethodCode] = useState<string | null>(null);
   /** انتخاب روش هر گروه فروشنده در سبد چندگروهی؛ فقط شناسه‌های واقعی سبد و روش‌های authoritative. */
-  const [groupMethodBySeller, setGroupMethodBySeller] = useState<Record<string, string>>({});
+  const [lineMethodByLine, setLineMethodByLine] = useState<Record<string, string>>({});
   const [cartLines, setCartLines] = useState<StorefrontCartLine[]>([]);
   const [deliveryDate, setDeliveryDate] = useState<string>("");
   const [deliveryTime, setDeliveryTime] = useState<string>("");
@@ -208,18 +213,24 @@ export function StorefrontShopeivaShipping() {
       .catch(() => setSavedAddresses(null));
   }, [refreshProjection]);
 
-  // انتخاب گروهی ذخیره‌شده هنگام بازگشت/رفرش بازیابی می‌شود؛ هیچ تبدیل خودکار روش رخ نمی‌دهد.
+  // انتخاب «هر خط» ذخیره‌شده هنگام بازگشت/رفرش بازیابی می‌شود؛ روش نامعتبر بازیابی نمی‌شود و
+  // هیچ تبدیل خودکار روش رخ نمی‌دهد (fail-closed).
   useEffect(() => {
     const draft = projection?.draft;
-    if (!draft) return;
-    setGroupMethodBySeller((prev) => {
-      const next: Record<string, string> = { ...prev };
-      for (const group of draft.shippingGroups) {
-        if (group.sellerPartyId) next[group.sellerPartyId] = group.methodCode;
-      }
-      return next;
-    });
-  }, [projection]);
+    if (!draft || cartLines.length <= 1) return;
+    setLineMethodByLine((prev) => ({
+      ...prev,
+      ...restoreLineMethodSelections({
+        lines: cartLines,
+        persistedGroups: draft.shippingGroups.map((group) => ({
+          sellerPartyId: group.sellerPartyId,
+          methodCode: group.methodCode,
+          cartLineIds: group.cartLineIds ?? [],
+        })),
+        methods: projection.methods,
+      }),
+    }));
+  }, [projection, cartLines]);
 
   const provinces: StorefrontProvinceOption[] = projection?.provinces ?? [];
   const provinceOptions = provinces.map((p) => ({ value: p.label, label: p.label, cities: p.cities }));
@@ -305,7 +316,7 @@ export function StorefrontShopeivaShipping() {
 
   const selectedMethod = projection?.methods.find((m) => m.methodCode === methodCode) ?? null;
 
-  // --- نمایش گروهی اقلام (فروشندهٔ authoritative + روش هر گروه) ---------------------------------
+  // --- نمایش گروهی اقلام (فروشندهٔ authoritative + روش هر خط) ---------------------------------
   // خطوط سبد و فروشندهٔ هر خط از projection واقعی سبد می‌آید؛ هیچ فروشنده/انبار جعلی ساخته نمی‌شود.
   const sellerGroups = useMemo(() => {
     const bySeller = new Map<string, { sellerPartyId: string; sellerDisplayName: string; lines: StorefrontCartLine[] }>();
@@ -323,7 +334,11 @@ export function StorefrontShopeivaShipping() {
     return [...bySeller.values()];
   }, [cartLines]);
 
-  const isGroupedCart = sellerGroups.length > 1;
+  /**
+   * (135) حالت «انتخاب هر خط» وقتی سبد بیش از یک خط قابل‌ارسال دارد فعال می‌شود — چه چند فروشنده،
+   * چه یک فروشنده با چند خط. سبد تک‌خطی همان مسیر و همان کارت قدیمی را دست‌نخورده نگه می‌دارد.
+   */
+  const isGroupedCart = cartLines.length > 1;
 
   const methodByCode = useMemo(() => {
     const map = new Map<string, StorefrontShippingMethod>();
@@ -331,17 +346,39 @@ export function StorefrontShopeivaShipping() {
     return map;
   }, [projection]);
 
-  const groupSelections = useMemo(
+  // گروه‌ها فقط با (فروشندهٔ واقعی خط، کد روش authoritative) ساخته می‌شوند؛ هر خط دقیقاً یک گروه.
+  const itemGrouping = useMemo(
     () =>
-      sellerGroups.map((group) => {
-        const code = groupMethodBySeller[group.sellerPartyId] ?? "";
-        return { ...group, methodCode: code, method: methodByCode.get(code) ?? null };
+      buildShippingItemGroups({
+        lines: cartLines,
+        methodCodeByLine: lineMethodByLine,
+        methods: projection?.methods ?? [],
       }),
-    [sellerGroups, groupMethodBySeller, methodByCode],
+    [cartLines, lineMethodByLine, projection],
   );
 
-  const groupedShippingAmount = groupSelections.reduce((sum, group) => sum + (group.method?.priceAmount ?? 0), 0);
-  const allGroupsHaveMethod = groupSelections.every((group) => group.method !== null);
+  const groupSelections = itemGrouping.groups;
+
+  const groupedShippingAmount = groupSelections.reduce((sum, group) => sum + group.method.priceAmount, 0);
+  const allGroupsHaveMethod = isItemGroupingComplete(itemGrouping, cartLines);
+
+  // هر فروشنده یک کارت می‌گیرد و انتخاب روش داخل همان کارت، «هر خط» است (بدون ادغام فروشندگان).
+  const sellerCards = useMemo(
+    () =>
+      sellerGroups.map((seller) => ({
+        sellerPartyId: seller.sellerPartyId,
+        sellerDisplayName: seller.sellerDisplayName,
+        lines: seller.lines.map((line) => ({
+          line,
+          methodCode: lineMethodByLine[line.lineId] ?? "",
+        })),
+        amount: groupSelections
+          .filter((group) => group.sellerPartyId === seller.sellerPartyId)
+          .reduce((sum, group) => sum + group.method.priceAmount, 0),
+        hasSelection: groupSelections.some((group) => group.sellerPartyId === seller.sellerPartyId),
+      })),
+    [sellerGroups, groupSelections, lineMethodByLine],
+  );
 
   /**
    * (133) روش‌های **متمایز** انتخاب‌شده. مبنای واکشی سرور است؛ دو گروه با یک روش یک درخواست
@@ -428,15 +465,13 @@ export function StorefrontShopeivaShipping() {
   async function persistAndContinue() {
     if (!projection || !isValid) return;
     const requestedGroups: StorefrontShippingGroupSelectionInput[] = isGroupedCart
-      ? groupSelections
-          .filter((group) => group.method !== null)
-          .map((group) => ({
-            shippingMethodCode: group.methodCode,
-            // شناسه‌های واقعی خطوط سبد — هیچ خطی حدس زده یا دوباره اختصاص داده نمی‌شود.
-            cartLineIds: group.lines.map((line) => line.lineId),
-            serviceCode: group.method?.serviceCode ?? null,
-            optionCode: null,
-          }))
+      ? groupSelections.map((group) => ({
+          shippingMethodCode: group.methodCode,
+          // شناسه‌های واقعی خطوط سبد — هیچ خطی حدس زده یا دوباره اختصاص داده نمی‌شود.
+          cartLineIds: group.lines.map((line) => line.lineId),
+          serviceCode: group.method.serviceCode ?? null,
+          optionCode: null,
+        }))
       : [];
     const primaryMethodCode = isGroupedCart ? requestedGroups[0]?.shippingMethodCode ?? "" : methodCode ?? "";
     if (!primaryMethodCode) return;
@@ -731,74 +766,86 @@ export function StorefrontShopeivaShipping() {
                     هر فروشنده و روش ارسال آن مستقل نمایش داده می‌شود؛ هزینهٔ هر گروه از نرخ معتبر فروشگاه می‌آید.
                   </p>
                   <div className="space-y-4">
-                    {groupSelections.map((group) => (
+                    {sellerCards.map((card) => (
                       <div
-                        key={group.sellerPartyId}
+                        key={card.sellerPartyId}
                         className="rounded-2xl border border-gray-200 bg-gray-50/60 p-3 md:p-4"
-                        data-testid={`shipping-group-${group.sellerPartyId}`}
+                        data-testid={`shipping-group-${card.sellerPartyId}`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-3">
                           <div className="min-w-0 flex items-center gap-2">
                             <Store className="w-4 h-4 text-primary shrink-0" />
-                            <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{group.sellerDisplayName}</p>
+                            <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{card.sellerDisplayName}</p>
                           </div>
                           <span className="text-[11px] md:text-xs font-black text-gray-900 shrink-0">
-                            {group.method ? formatOfferAmount(group.method.priceAmount, projection.currency) : "—"}
+                            {card.hasSelection ? formatOfferAmount(card.amount, projection.currency) : "—"}
                           </span>
                         </div>
-                        <ul className="space-y-2 mb-3">
-                          {group.lines.map((line) => (
+                        <ul className="space-y-2">
+                          {card.lines.map(({ line, methodCode: lineMethodCode }) => (
                             <li
                               key={line.lineId}
-                              className="flex items-center gap-3 rounded-xl bg-surface border border-gray-100 p-2"
+                              className="rounded-xl bg-surface border border-gray-100 p-2"
                               data-testid={`shipping-group-line-${line.lineId}`}
                             >
-                              <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
-                                {line.mediaAssetId ? (
-                                  <img src={`/media/${line.mediaAssetId}`} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                  <Package className="w-4 h-4 text-gray-400" />
-                                )}
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+                                  {line.mediaAssetId ? (
+                                    <img src={`/media/${line.mediaAssetId}`} alt="" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <Package className="w-4 h-4 text-gray-400" />
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[11px] md:text-xs font-bold text-gray-800 line-clamp-1">{line.title}</p>
+                                  <p className="text-[10px] text-gray-500">
+                                    تعداد: {toPersianDigits(line.quantity)}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-[11px] md:text-xs font-bold text-gray-800 line-clamp-1">{line.title}</p>
-                                <p className="text-[10px] text-gray-500">
-                                  تعداد: {toPersianDigits(line.quantity)}
-                                </p>
-                              </div>
+                              {/* (135) انتخاب روش برای همین قلم سبد؛ روش از فهرست authoritative سرور. */}
+                              {projection.methods.length === 0 ? null : (
+                                <div
+                                  className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2"
+                                  data-testid={`shipping-line-methods-${line.lineId}`}
+                                >
+                                  {projection.methods.map((m) => {
+                                    const Icon = iconFor(m);
+                                    const selected = lineMethodCode === m.methodCode;
+                                    return (
+                                      <button
+                                        key={`${line.lineId}-${m.methodCode}`}
+                                        type="button"
+                                        onClick={() => setLineMethodByLine((prev) => ({ ...prev, [line.lineId]: m.methodCode }))}
+                                        className={`relative flex items-center gap-2 p-3 rounded-2xl border-2 text-right transition-all ${
+                                          selected
+                                            ? "border-primary bg-primary/5 shadow-sm"
+                                            : "border-gray-200 hover:border-gray-300 bg-surface"
+                                        }`}
+                                        data-testid={
+                                          card.lines.length === 1
+                                            ? `shipping-group-method-${card.sellerPartyId}-${m.methodCode}`
+                                            : `shipping-group-method-${line.lineId}-${m.methodCode}`
+                                        }
+                                      >
+                                        <Icon className={`w-4 h-4 shrink-0 ${selected ? "text-primary" : "text-gray-400"}`} />
+                                        <div className="min-w-0 flex-1">
+                                          <p className={`text-[11px] md:text-xs font-bold ${selected ? "text-primary" : "text-gray-700"}`}>
+                                            {m.label}
+                                          </p>
+                                          <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-0.5">
+                                            <Clock className="w-2.5 h-2.5" /> {m.estimationLabel}
+                                          </p>
+                                        </div>
+                                        {selected ? <Check className="w-3.5 h-3.5 text-primary shrink-0" /> : null}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </li>
                           ))}
                         </ul>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {(projection.methods.length === 0 ? [] : projection.methods).map((m) => {
-                            const Icon = iconFor(m);
-                            const selected = group.methodCode === m.methodCode;
-                            return (
-                              <button
-                                key={`${group.sellerPartyId}-${m.methodCode}`}
-                                type="button"
-                                onClick={() => setGroupMethodBySeller((prev) => ({ ...prev, [group.sellerPartyId]: m.methodCode }))}
-                                className={`relative flex items-center gap-2 p-3 rounded-2xl border-2 text-right transition-all ${
-                                  selected
-                                    ? "border-primary bg-primary/5 shadow-sm"
-                                    : "border-gray-200 hover:border-gray-300 bg-surface"
-                                }`}
-                                data-testid={`shipping-group-method-${group.sellerPartyId}-${m.methodCode}`}
-                              >
-                                <Icon className={`w-4 h-4 shrink-0 ${selected ? "text-primary" : "text-gray-400"}`} />
-                                <div className="min-w-0 flex-1">
-                                  <p className={`text-[11px] md:text-xs font-bold ${selected ? "text-primary" : "text-gray-700"}`}>
-                                    {m.label}
-                                  </p>
-                                  <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-0.5">
-                                    <Clock className="w-2.5 h-2.5" /> {m.estimationLabel}
-                                  </p>
-                                </div>
-                                {selected ? <Check className="w-3.5 h-3.5 text-primary shrink-0" /> : null}
-                              </button>
-                            );
-                          })}
-                        </div>
                       </div>
                     ))}
                   </div>
@@ -1001,13 +1048,13 @@ export function StorefrontShopeivaShipping() {
                     {isGroupedCart ? (
                       <div className="space-y-1.5 border-t border-dashed border-gray-200 pt-2.5 mt-1" data-testid="shipping-group-fees">
                         {groupSelections.map((group) => (
-                          <div key={`fee-${group.sellerPartyId}`} className="flex justify-between gap-2 text-[11px] md:text-xs">
+                          <div key={`fee-${group.key}`} className="flex justify-between gap-2 text-[11px] md:text-xs">
                             <span className="text-gray-500 truncate">
                               {group.sellerDisplayName}
-                              {group.method ? ` — ${group.method.label}` : ""}
+                              {` — ${group.method.label}`}
                             </span>
                             <span className="font-bold text-gray-800 shrink-0">
-                              {group.method ? formatOfferAmount(group.method.priceAmount, projection.currency) : "—"}
+                              {formatOfferAmount(group.method.priceAmount, projection.currency)}
                             </span>
                           </div>
                         ))}

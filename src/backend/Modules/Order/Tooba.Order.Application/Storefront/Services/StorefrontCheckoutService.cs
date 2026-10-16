@@ -395,7 +395,8 @@ public sealed class StorefrontCheckoutService
             plan.RequestedDeliveryDate?.ToString("yyyy-MM-dd"),
             plan.RequestedDeliveryTimeWindow,
             plan.LeadDays,
-            plan.CartLineIds.Count);
+            plan.CartLineIds.Count,
+            plan.CartLineIds.ToArray());
 
     private static void ValidateShipping(StorefrontCheckoutShippingInput shipping)
     {

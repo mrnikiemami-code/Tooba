@@ -1,0 +1,30 @@
+TB-SHIPPING-ONE-LEVEL-TABS-135 — runtime fixture gap (no fabrication performed)
+capturedUtc=2026-10-16T06:40:00Z
+isolation=none: no host/frontend/database was launched for this task (no shared :5088/:3000/tooba_alpha touched)
+
+requiredRuntimeCase=one seller + two real cart lines + two distinct eligible methods
+
+authorizedFixtureEvidence
+workspaceDemoProduct.slug=workspace-live-shirt (WorkspaceDemoProductSeed.SeedSlug) — the only live sellable demo product
+workspaceDemoProduct.variants=LIVE-SHIRT-BLK (single variant seam)
+marketplaceSeed.sellerA.displayName=فروشگاه آرمان  sku=ARM-LN-01  offersForSeedSlug=1
+marketplaceSeed.sellerB.displayName=دیجی‌استایل نمونه  sku=DGS-LN-01  offersForSeedSlug=1
+marketplaceSeed.docComment="Development seed data for the two-seller marketplace demo of the live workspace product."
+otherSeedProducts=admin-r3-draft-scarf (draft), admin-r3-archived-hat (archived) — not sellable/live offers
+
+conclusion
+distinctLiveOffersPerSeller=1
+A single seller can therefore produce only ONE cart line from the authorized fixture: two lines of the
+same offer collapse into one cart line, and no second live offer exists for that seller on any other
+product. Producing the required case would require inserting catalog/offer rows, fabricating seller
+identity or otherwise creating data, which the task explicitly forbids.
+
+runtimeProofForKeyCase=UNPROVEN (blocked by absent fixture, not by code or launch retries)
+dataFabrication=none (no SQL insert, no API-created offer, no mocked seller identity)
+sharedEnvironmentMutations=none
+
+regressionNote
+The two-seller path (one line per seller) was proven in TB-134 on the isolated scratch stack; TB-135
+preserves that path with the identical card/tile markup and seller-scoped testids, and additionally
+covers it with focused unit tests. A throwaway re-proof was not attempted inside the 45-minute timebox
+per the task's explicit instruction not to spend time in launch retries.

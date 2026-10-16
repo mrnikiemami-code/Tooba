@@ -226,8 +226,8 @@ test("سیم‌کشی سطح ارسال: واکشی سرور-محور، dedup ر
   assert.match(shippingSource, /dateHorizon\.dates\.map/);
   assert.match(shippingSource, /dateHorizon\.timeWindows\.map/);
   assert.match(shippingSource, /!isGroupedCart \|\| isShippingDateHorizonComplete\(dateHorizon, deliveryDate, deliveryTime\)/);
-  // انتخاب گروهی حفظ می‌شود: هیچ‌جا روش گروه‌ها با draft بازنویسی/حدس زده نمی‌شود.
-  assert.match(shippingSource, /groupMethodBySeller\[group\.sellerPartyId\] \?\? ""/);
+  // انتخاب «هر خط» حفظ می‌شود: هیچ‌جا روش خطوط با draft بازنویسی/حدس زده نمی‌شود (fail-closed).
+  assert.match(shippingSource, /restoreLineMethodSelections\(\{/);
   // ارسال سفارش/commit در این مرحله اتفاق نمی‌افتد.
   assert.doesNotMatch(shippingSource, /shipping\/commit/);
 

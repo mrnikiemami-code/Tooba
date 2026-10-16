@@ -210,7 +210,12 @@ public sealed record StorefrontShippingGroupView(
     string? SelectedDeliveryDate,
     string? SelectedDeliveryTimeWindow,
     int LeadDays,
-    int LineCount);
+    int LineCount,
+    /// <summary>
+    /// شناسهٔ واقعی خطوط سبد همین گروه (Whole-line membership). برای بازیابی قطعی انتخاب «هر خط» پس از
+    /// رفرش/برگشت لازم است؛ هیچ مبلغ/فروشنده‌ای از آن استنتاج نمی‌شود. در پاسخ قدیمی خالی می‌ماند.
+    /// </summary>
+    IReadOnlyList<Guid>? CartLineIds = null);
 
 /// <summary>
 /// ذخیرهٔ انتخاب ارسال. <see cref="ShippingGroups"/> افزایشی و اختیاری است: در نبود آن همان
