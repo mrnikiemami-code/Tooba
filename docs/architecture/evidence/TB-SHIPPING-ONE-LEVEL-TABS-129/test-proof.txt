@@ -1,0 +1,28 @@
+TB-SHIPPING-ONE-LEVEL-TABS-129 — focused test/build proof
+Captured on the worker machine at the time of execution. No shared environment, no DB, no browser.
+
+1) Full Fulfillment module test project (directly changed project)
+   dotnet test src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Tooba.Fulfillment.Tests.csproj
+   -> Passed!  - Failed: 0, Passed: 173, Skipped: 0, Total: 173, Duration: 815 ms
+
+2) New focused M3 suite
+   dotnet test ... --filter "FullyQualifiedName~FulfillmentShippingGroupExecutionTests"
+   -> Passed!  - Failed: 0, Passed: 10, Skipped: 0, Total: 10, Duration: 670 ms
+
+3) Order module test project (Order.Contracts + OrderFulfillmentBridge changed)
+   dotnet test src/backend/Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj
+   -> Passed!  - Failed: 0, Passed: 338, Skipped: 0, Total: 338, Duration: 513 ms
+
+4) Host Fulfillment certification guard (migration allowlist bookkeeping)
+   dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj --filter "FullyQualifiedName~FulfillmentModuleAmsc001W3CertGuardTests"
+   -> Passed!  - Failed: 0, Passed: 14, Skipped: 0, Total: 14, Duration: 247 ms
+
+5) Builds of the changed projects
+   dotnet build src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/...csproj -> Build succeeded, 0 Error(s)
+   dotnet build src/backend/Modules/Order/Tooba.Order.Infrastructure/...csproj -> 0 Error(s) (9 pre-existing CS1573 warnings)
+
+6) ARCH-SIZE-001
+   FulfillmentDirectory.cs = 746 LOC (ceiling 800); group write seam and read model moved into cohesive partials.
+
+NOT RUN (disclosed): EF runtime migration execution against a disposable database; any browser/UI acceptance run;
+any shared :5088/:3000 or tooba_alpha environment.

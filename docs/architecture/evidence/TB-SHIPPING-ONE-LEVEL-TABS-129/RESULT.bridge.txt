@@ -1,0 +1,102 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-129
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-128
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Bridge-Row: 18946e95-2d5e-4600-a98d-e1abab3f6e31
+Program: TOOBA-SHIPPING-CHECKOUT-DELIVERY-CLOSURE
+Mode: BOUNDED_FULFILLMENT_GROUP_SCOPED_SHIPMENT_EXECUTION_M3
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+
+BASE-SHA: 8261804c6e5976440099e5c13e3f2bc59daf9c5e
+CODE-SHA: 113ace48cd6ad3a067460b2b77f7ea4f4024db81
+HEAD==origin/main: YES (after push; see EVIDENCE-SHA commit)
+DRIFT: NONE. Expected-Base-SHA was an ancestor of HEAD and origin/main == HEAD at preflight; no overlapping source drift, no unowned source dirty files. The only pre-existing dirty/untracked files are the preserved admin-frontend and unrelated evidence artifacts; the Task receipt stayed UNSTAGED.
+ELAPSED: ~17 minutes wall-clock (inside the 45-minute hard box).
+
+DELIVERED (owner-correct, smallest additive seam)
+1. Order.Contracts: new OrderFulfillmentShippingGroupSnapshot(ShippingGroupId, SellerOrderId, SellerPartyId,
+   MethodCode, ServiceCode, OptionCode, MethodLabel, OriginContext, MinimumDeliveryDate, RequestedDeliveryDate,
+   RequestedDeliveryTimeWindow, LeadDays, OrderLineIds) and an optional trailing
+   OrderFulfillmentHandoffSnapshot.ShippingGroups. The Order->Fulfillment bridge stays Contracts-only.
+2. OrderFulfillmentBridge now projects the accepted shipping groups of THAT SellerOrder only
+   (order.order_shipping_groups + order.order_shipping_group_lines, filtered by SellerOrderId). Orders without
+   persisted groups keep ShippingGroups = null, so the historical single-method handoff is byte-identical in shape
+   and meaning.
+3. Fulfillment.Domain gains a Fulfillment-owned FulfillmentShippingGroup aggregate (fulfillment, stable group id,
+   seller order/party, canonical method/service/option identity, label, origin, minimum/requested delivery date,
+   time window, lead days), the FulfillmentShippingGroupPlan transfer record and FulfillmentShippingGroupFault
+   stable codes. No rate, no carrier allocation, no invented origin.
+4. FulfillmentItem gains ShippingGroupId (one order line belongs to exactly one accepted group) and Shipment gains
+   ShippingGroupId (a shipment names its actual group). FulfillmentUnit.CreateFromPaidOrder resolves membership via
+   ResolveShippingGroupMembership with fail-closed guards, and FulfillmentUnit.CreateShipment validates group scope
+   BEFORE any row is written.
+5. Additive Fulfillment-owned migration 20261016120000_AddFulfillmentShippingGroups: fulfillment.shipping_groups
+   (PK shipping_group_id, unique (fulfillment_id, shipping_group_id), index fulfillment_id), plus nullable
+   items.shipping_group_id and shipments.shipping_group_id with partial indexes. All statements are IF NOT EXISTS /
+   ADD COLUMN IF NOT EXISTS so older shipments and rows stay readable (NULL = legacy ungrouped).
+6. FulfillmentDirectory creation paths (payment.succeeded inbox path and EnsureCreatedForPaidCheckoutAsync) persist
+   the groups inside the existing transaction; LoadMutableAsync attaches them; FulfillmentSnapshot exposes
+   ShippingGroups and FulfillmentItemSnapshot/ShipmentSnapshot expose ShippingGroupId.
+7. Seller seam only: wire-only FulfillmentCreateShipmentRequest.ShippingGroupId ->
+   SellerMutateFulfillmentCommand.ShippingGroupId -> IFulfillmentDirectory.CreateShipmentAsync(..., shippingGroupId).
+   No new endpoint, no new Host business rule.
+8. ARCH-SIZE-001 preserved by moving the read model and the group write seam into cohesive partials
+   (FulfillmentDirectory.ReadModels.cs, FulfillmentDirectory.ShippingGroups.cs); FulfillmentDirectory.cs = 746 LOC.
+9. FulfillmentModuleAmsc001W3CertGuardTests migration allowlist gains exactly the one new additive migration file;
+   no existing entry removed.
+
+INVARIANTS HELD
+- One FulfillmentUnit per SellerOrder, unchanged. Groups live inside a seller unit and can never merge two sellers.
+- Membership is bijective: every order line covered exactly once; duplicate group id, line in two groups, uncovered
+  line, or a group line this seller order does not own all fail closed.
+- Group seller must equal the unit SellerPartyId (fulfillment.shipping_group.seller_mismatch).
+- Shipment scope fail-closed codes: fulfillment.shipment.shipping_group_required,
+  .shipping_group_not_found, .shipping_group_mixed, .shipping_group_not_applicable, plus
+  fulfillment.shipment.shipping_group_not_applicable for a legacy order claiming a group.
+- Group identity is the stable ShippingGroupId from the accepted order; labels and browser values are never identity.
+- Replay of payment.succeeded.v1 stays idempotent (existing inbox + SellerOrderId uniqueness): no duplicate
+  fulfillment, group row or shipment. No shipment is created by opening shipping/payment.
+- OriginContext stays NULL; no synthetic origin, no fabricated carrier allocation, no tenant/auth weakening.
+- Frontend/UI/CSS/theme/template untouched. No shared :5088/:3000 or tooba_alpha mutation.
+
+PROOFS (focused)
+- New FulfillmentShippingGroupExecutionTests: 10 tests, all passing.
+  (a) one seller + two methods -> two separate group-linked shipments in the same unit;
+  (b) two sellers + same method -> isolation: foreign group refused (fulfillment.shipment.shipping_group_not_found),
+      line of another unit refused (fulfillment.order_line.not_found);
+  (c) wrong seller group refused at materialization (fulfillment.shipping_group.seller_mismatch) and inexact member
+      coverage refused (line_uncovered / line_unknown / line_multiple);
+  (d) replay idempotency: one fulfillment, one group row, one shipment;
+  (e) legacy ungrouped order unaffected and it may not claim a group;
+  (f) grouped order refuses a shipment with no group, and each group transitions independently
+      (group A dispatched while group B stays Created and is cancelled separately).
+- Tooba.Fulfillment.Tests: 173 passed / 0 failed.
+- Tooba.Order.Tests: 338 passed / 0 failed (Order.Contracts/Infrastructure changed).
+- Tooba.Host.Tests --filter FulfillmentModuleAmsc001W3CertGuardTests: 14 passed / 0 failed.
+- One targeted rerun per concrete fix (test-side assertions and a .Length -> .Count fix); no broad suites, no
+  polling loops, no environment mutation.
+
+DECISIONS
+- A group-scoped shipment keeps using the existing seller-provided carrier/method fields plus the new
+  ShippingGroupId; the accepted canonical method identity is carried by the Fulfillment-owned group record, so the
+  two cannot silently diverge. Auto-copying the group MethodCode into the shipment would re-trigger provider
+  metadata validation (fulfillment.shipping.post.recipient_required when metadata is absent) and would fabricate a
+  booking context, so it is deliberately NOT done.
+- Automatic per-group shipment creation at payment time is NOT implemented. M3's bounded atomic layer is the
+  durable group identity + membership + group-scoped execution seam; shipment creation remains an explicit
+  authorized seller action with group identity required.
+
+UNPROVEN / REMAINING BLOCKERS
+- Runtime execution of the additive migration against a disposable database was not exercised in the timebox; the
+  DDL is additive and idempotent but its runtime behaviour is UNPROVEN.
+- Group-scoped fulfillment for Checkout/Storefront UI surface and Settlement M4 allocation policy remain open;
+  commercial readiness is not certified.
+- Admin bulk shipment path does not yet pass a group id (out of authorized seller-scope change).
+
+ROLLBACK: revert commit 113ace48cd6ad3a067460b2b77f7ea4f4024db81 (plus the evidence commit). The migration's Down()
+drops the partial indexes, the two columns and the groups table. No shared state or process was mutated.
+END_TOOBA_WORKER_RESULT
