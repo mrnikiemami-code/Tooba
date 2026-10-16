@@ -101,11 +101,24 @@ injection, no direct handler or `SettlementDirectory` call.
 | Customer charges 200000 / 180000 | `200000.0000` (`post:express`) and `180000.0000` (`tipax:standard`) |
 | `allocation_state = PendingAllocation` | `pending_rows = 2` |
 | Unknown commercial fields NULL | `rows_with_commercial_value = 0` (carrier/seller/marketplace share, discount, tax, funder adjustment/reference, allocation policy version/reference) |
-| Charge equals the customer's paid group allocation | ledger charge = paid allocation for both groups |
+| Charge equals the customer's paid group allocation (†) | ledger charge = paid allocation for both groups |
 | ZERO shipping amount in seller merchandise accrual | single accrual `gross=3597000.0000` = the SellerOrder allocation only; no 200000/180000 credit |
 | No payout | `payout_request_rows = 0` |
-| Settlement provenance | `settlement.__ef_migrations_history = [InitialSettlement, AddSettlementShippingGroupFees]` |
-| Duplicate real delivery | `groups_with_more_than_one_charge_row = 0` |
+| Settlement provenance (††) | `settlement.__ef_migrations_history = [InitialSettlement, AddSettlementShippingGroupFees]` |
+| Duplicate real delivery (†††) | `groups_with_more_than_one_charge_row = 0` |
+
+**Capture completeness (declared, not hidden).** The single psql capture persisted as
+`scratch-readback-143.txt` ends at line 70: the rest of section E (`seller_credit_rows_carrying_a_group_charge`,
+`accrual_total_minus_both_shipping_charges`) and the whole of the SQL file's sections F/G/H would have followed, but
+the shell capture was cut at that point and the disposable database has since been destroyed, so the tail cannot be
+re-fetched. Consequences, so nothing below is read as raw persisted output:
+(†) `Charge equals the paid group allocation` is directly readable from the persisted capture itself — its section B
+allocation rows and section D ledger rows carry the same two group ids with the same amounts
+(`…a5ac-f125e2e761f2` = 180000, `…b59d-f3c4e951ad2e` = 200000);
+(††) `Settlement provenance` is evidenced by the persisted `settlement-migration-activation-143.txt`;
+(†††) `Duplicate real delivery` follows from the persisted section D counts
+(`charge_rows = 2`, `distinct_groups = 2`, `charge_kind_rows = 2` → no group can hold more than one charge row).
+No value above was invented and this note changes no verdict.
 
 Authoritative eligibility source visible in the same read-back: `order.checkouts.channel = Marketplace`.
 
