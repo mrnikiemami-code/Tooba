@@ -1,0 +1,24 @@
+{
+  "tenantCount": 1,
+  "activeTenantCount": 1,
+  "tenants": [
+    "store-alpha:Active:tenant-121-scratch"
+  ],
+  "canonicalGatewayTenantPresent": true,
+  "connectionReferences": [
+    "tenant-121-scratch",
+    "messaging-121-scratch"
+  ],
+  "messagingReference": "messaging-121-scratch",
+  "containsSharedAlphaDatabase": false,
+  "containsSharedAlphaReference": false,
+  "containsSharedAlphaPort": false,
+  "containsPriorScratchPort": false,
+  "scratchPort": "55452",
+  "runLegacyBootstraps": true,
+  "allowResetAndSeed": false,
+  "oneLevelCatalogEnabledInOverlay": true,
+  "shippingRateAuthoritySet": false,
+  "shippingOperationalShadowSet": false,
+  "failClosed": true
+}

@@ -1,0 +1,7 @@
+﻿post|express|t|true
+post|standard|t|true
+tipax|express|t|true
+tipax|standard|t|true
+snapp_courier||t|-
+store_courier||t|-
+in_person||t|-

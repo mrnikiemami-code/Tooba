@@ -1,0 +1,47 @@
+capturedUtc=2026-10-16T03:09:58.460Z
+isolatedBase=http://127.0.0.1:5400
+health_reached_within_150s=true
+commerce.status=200
+commerce.body={"edition":"SingleStore","deploymentId":"isolated-121","tenantId":"store-alpha","connectionReference":"tenant-121-scratch","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"3569edec4c9b56e66cc832ccd351c163"}
+dev_context.status=200
+dev_context.actor=01a142b0-3f7d-7000-9900-346809514f05
+dev_context.label=admin-actor@tooba.local
+one_level_admin.status=200
+one_level_admin.body={"gate":"Enabled","ready":true,"languageId":"01a142b0-3d7e-7000-9952-b07f97b209a6","methods":[{"methodCode":"post:express","name":"پیشتاز","isActive":true,"sortOrder":10,"translations":[{"languageId":"01a142b0-3d7e-7000-9952-b07f97b209a6","name":"پیشتاز"},{"languageId":"01a142b0-3d7e-7000-8e7d-ced3315ddcde","name":"Express"}]},{"methodCode":"post:standard","name":"معمولی","isActive":true,"sortOrder":11,"translations":[{"languageId":"01a142b0-3d7e-7000-9952-b07f97b209a6","name":"معمولی"},{"languageId":"01a142b0-3d7e-7000-8e7d-ced3315ddcde","name":"Standard"}]},{"methodCode":"tipax:express","name":"پیشتاز","isActive":true,"sortOrder":20,"translations":[{"languageId":"01a142b0-3d7e-7000-9952-b07f97b209a6","name":"پیشتاز"},{"languageId":"01a142b0-3d7e-7000-8e7d-ced3315ddcde","name":"Express"}]},{"methodCode":"tipax:standard","name":"معمولی","isActive":true,"sortOrder":21,"translations":[{"languageId":"01a142b0-3d7e-7000-8e7d-ced3315ddcde","name":"Standard"},{"languageId":"01a142b0-3d7e-7000-9952-b07f97b209a6","name":"معمولی"}]},{"methodCode":"snapp_courier","name":"اسنپ / پیک آنلاین","isActive":true,"sortOrder":30,"translations":[{"languageId":"01a142b0-3d7e-7000-8e7d-ced3315ddcde","name":"Snapp / Online courier"},{"languageId":"01a142b0-3d7e-7000-9952-b07f97b209a6","name":"اسنپ / پیک آنلاین"}]},{"methodCode":"store_courier","name":"پیک فروشگاه","isActive":true,"sortOrder":40,"translations":[{"languageId":"01a142b0-3d7e-7000-9952-b07f97b209a6","name":"پیک فروشگاه"},{"languageId":"01a142b0-3d7e-7000-8e7d-ced3315ddcde","name":"Store courier"}]},{"methodCode":"in_person","name":"تحویل حضوری","isActive":true,"sortOrder":50,"translations":[{"languageId":"01a142b0-3d7e-7000-8e7d-ced3315ddcde","name":"In person"},{"languageId":"01a142b0-3d7e-7000-9952-b07f97b209a6","name":"تحویل حضوری"}]}]}
+one_level.gate=Enabled
+one_level.catalogReady=
+one_level.languageId=01a142b0-3d7e-7000-9952-b07f97b209a6
+one_level.rows_count=7
+catalog_row[post:express]=serviceCode= optionCode= isActive=true name="پیشتاز"
+catalog_row[post:standard]=serviceCode= optionCode= isActive=true name="معمولی"
+catalog_row[tipax:express]=serviceCode= optionCode= isActive=true name="پیشتاز"
+catalog_row[tipax:standard]=serviceCode= optionCode= isActive=true name="معمولی"
+catalog_row[snapp_courier]=serviceCode= optionCode= isActive=true name="اسنپ / پیک آنلاین"
+catalog_row[store_courier]=serviceCode= optionCode= isActive=true name="پیک فروشگاه"
+catalog_row[in_person]=serviceCode= optionCode= isActive=true name="تحویل حضوری"
+policy_before.status=200
+policy_before.body={"policy":"AuthenticatedOnly","cartAnonymousAllowed":true,"checkoutAuthenticationRequired":true}
+policy_put.status=200
+policy_put.body={"policy":"GuestAllowed","labelFa":"خرید مهمان مجاز","labelEn":"Guest checkout allowed","warningFa":"خرید مهمان می‌تواند کنترل سفارش‌های پرداخت‌نشده و محدودیت‌های رزرو موجودی را کاهش دهد."}
+policy_after.status=200
+policy_after.body={"policy":"GuestAllowed","cartAnonymousAllowed":true,"checkoutAuthenticationRequired":false}
+product_detail.status=200
+offer_ids_found=2
+cart_create.status=200
+cart_create.cartId=01a142b0-4fd7-7000-87e8-3f86b7dca19f
+cart_create.guestSecret=<redacted>
+cart_line.status=200
+cart_line.body={"cartId":"01a142b0-4fd7-7000-87e8-3f86b7dca19f","version":3,"market":"IR","defaultCurrency":"IRR","channel":"Marketplace","itemCount":1,"totalsByCurrency":[{"currency":"IRR","subtotalExclusiveOfTax":12500000.0000}],"lines":[{"lineId":"01a142b0-503b-7000-9e28-e02ac9d6f589","offerId":"01a142b0-3b8e-7000-8ec7-5d403d91a38c","catalogVariantId":"01a142b0-3aac-7000-a198-09ecd3b4c055","sellerPartyId":"01a142b0-3b63-7000-8cda-1eeef6516932","productId":"01a142b0-39f3-7000-8616-0c128f3fb721","productSlug":"schema-mobile-demo-phone","title":"گوشی نمونه schema","sellerDisplayName":"فروشنده schema موبایل","mediaAssetId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","quantity":1,"unitAmountExclusiveOfTax":12500000.0000,"lineAmountExclusiveOfTax":12500000.0000,"currency":"IRR","quotedTaxExclusive":true,"unitCode":"pcs","unitDisplayName":"pcs","quantityDecimalPlaces":0,"availability":"Available"}],"status":"Active"}
+projection.status=200
+projection.body={"cartId":"01a142b0-4fd7-7000-87e8-3f86b7dca19f","cartVersion":3,"currency":"IRR","itemCount":1.000000,"subtotalExclusiveOfTax":12500000.0000000000,"sellerCount":1,"maxSellerPreparationDays":1,"methods":[{"methodCode":"post:express","label":"پیشتاز","serviceCode":"post","iconKey":"post","priceAmount":200000,"leadDays":2,"isFree":false,"estimationLabel":"حدود ۲ روز","optionCode":"express"},{"methodCode":"post:standard","label":"معمولی","serviceCode":"post","iconKey":"post","priceAmount":120000,"leadDays":4,"isFree":false,"estimationLabel":"حدود ۴ روز","optionCode":"standard"},{"methodCode":"tipax:express","label":"پیشتاز","serviceCode":"tipax","iconKey":"tipax","priceAmount":260000,"leadDays":1,"isFree":false,"estimationLabel":"حدود ۱ روز","optionCode":"express"},{"methodCode":"tipax:standard","label":"معمولی","serviceCode":"tipax","iconKey":"tipax","priceAmount":180000,"leadDays":3,"isFree":false,"estimationLabel":"حدود ۳ روز","optionCode":"standard"},{"methodCode":"snapp_courier","label":"اسنپ / پیک آنلاین","serviceCode":"snapp_courier","iconKey":"courier","priceAmount":90000,"leadDays":0,"isFree":false,"estimationLabel":"آماده امروز"},{"methodCode":"store_courier","label":"پیک فروشگاه","serviceCode":"store_courier","iconKey":"bike","priceAmount":75000,"leadDays":1,"isFree":false,"estimationLabel":"حدود ۱ روز"},{"methodCode":"in_person","label":"تحویل حضوری","serviceCode":"in_person","iconKey":"store","priceAmount":0,"leadDays":0,"isFree":true,"estimationLabel":"آماده امروز"}],"selectedShippingAmount":0,"deliveryDates":[],"deliveryTimeWindows":[{"value":"9-12","label":"۹ صبح تا ۱۲ ظهر"},{"value":"12-15","label":"۱۲ ظهر تا ۳ بعدازظهر"},{"value":"15-18","label":"۳ بعدازظهر تا ۶ عصر"},{"value":"18-21","label":"۶ عصر تا ۹ شب"}],"provinces":[{"code":"tehran","label":"تهران","cities":["تهران","ری","شهریار","اسلامشهر","ملارد","پاکدشت"]},{"code":"alborz","label":"البرز","cities":["کرج","فردیس","نظرآباد","ساوجبلاغ"]},{"code":"isfahan","label":"اصفهان","cities":["اصفهان","کاشان","خمینی‌شهر","شاهین‌شهر","نجف‌آباد"]},{"code":"razavi_khorasan","label":"خراسان رضوی","cities":["مشهد","نیشابور","سبزوار","تربت حیدریه"]},{"code":"fars","label":"فارس","cities":["شیراز","مرودشت","جهرم","فسا","کازرون"]},{"code":"east_azerbaijan","label":"آذربایجان شرقی","cities":["تبریز","مرند","مراغه","اهر"]},{"code":"khuzestan","label":"خوزستان","cities":["اهواز","آبادان","دزفول","بندر ماهشهر"]},{"code":"mazandaran","label":"مازندران","cities":["ساری","بابل","آمل","قائم‌شهر"]},{"code":"gilan","label":"گیلان","cities":["رشت","بندرانزلی","لاهیجان","رودسر"]},{"code":"qom","label":"قم","cities":["قم"]},{"code":"yazd","label":"یزد","cities":["یزد","اردکان","میبد"]},{"code":"kerman","label":"کرمان","cities":["کرمان","رفسنجان","سیرجان"]}]}
+projection.methods_count=7
+projected[post:express]=label="پیشتاز" serviceCode=post optionCode=express price=200000 | catalogName="پیشتاز" catalogMatch=true
+projected[post:standard]=label="معمولی" serviceCode=post optionCode=standard price=120000 | catalogName="معمولی" catalogMatch=true
+projected[tipax:express]=label="پیشتاز" serviceCode=tipax optionCode=express price=260000 | catalogName="پیشتاز" catalogMatch=true
+projected[tipax:standard]=label="معمولی" serviceCode=tipax optionCode=standard price=180000 | catalogName="معمولی" catalogMatch=true
+projected[snapp_courier]=label="اسنپ / پیک آنلاین" serviceCode=snapp_courier optionCode= price=90000 | catalogName="اسنپ / پیک آنلاین" catalogMatch=true
+projected[store_courier]=label="پیک فروشگاه" serviceCode=store_courier optionCode= price=75000 | catalogName="پیک فروشگاه" catalogMatch=true
+projected[in_person]=label="تحویل حضوری" serviceCode=in_person optionCode= price=0 | catalogName="تحویل حضوری" catalogMatch=true
+projected_labels_matching_one_level_catalog=7
+projected_labels_not_matching=0
+gate_enabled_in_isolated_overlay=true

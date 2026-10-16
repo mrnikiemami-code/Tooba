@@ -1,0 +1,6 @@
+﻿=== CLEANUP (TB-121) ===
+container_removed=True
+scratch_5432_55452_listeners=0
+host_5400_listeners=0
+temp_dirs_remaining=0
+isolated_host_processes_remaining=0

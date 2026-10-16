@@ -1,0 +1,17 @@
+﻿=== TB-121 SHIPPING/FULFILLMENT MIGRATION + SEED MARKERS ===
+Applying migration \u002720260824120000_CheckoutShippingSnapshot\u0027.","State":{"Message":"Applying migration \u002720
+Applying migration \u002720260910190000_StorefrontShippingDraftAndCheckoutFields\u0027.","State":{"Message":"Applying mi
+Applying migration \u002720260827010000_InitialFulfillment\u0027.","State":{"Message":"Applying migration \u002720260827
+Applying migration \u002720260907090000_AddFulfillmentItemQuantityPacked\u0027.","State":{"Message":"Applying migration 
+Applying migration \u002720260908120000_AddFulfillmentItemQuantityProcessing\u0027.","State":{"Message":"Applying migrat
+Applying migration \u002720260909130500_DecimalFulfillmentQuantity\u0027.","State":{"Message":"Applying migration \u0027
+Applying migration \u002720260910170000_AddShippingServiceCatalog\u0027.","State":{"Message":"Applying migration \u00272
+Applying migration \u002720261015120000_AddShippingOneLevelCatalog\u0027.","State":{"Message":"Applying migration \u0027
+
+=== shipping_methods DDL / one-level table creation evidence ===
+7Text\u0027, CommandTimeout=\u0027120\u0027]\r\nALTER TABLE \u0022order\u0022.checkouts\r\n    ADD COLUMN IF NOT EXISTS shipping_amount numeric(18,2) NOT NULL DEFAULT 0,\r\n    ADD COLUMN IF NOT EXISTS minimum_delivery_date date NULL,\r\n    ADD COLUMN IF NOT EXISTS requested_delivery_date date NULL
+ NULL,\r\n    postal_address character varying(512) NOT NULL,\r\n    postal_code character varying(32) NOT NULL,\r\n    shipping_method_code character varying(64) NOT NULL,\r\n    shipping_method_label character varying(128) NOT NULL,\r\n    created_at timestamp with time zone NOT NULL,\r\n    updat
+ character varying(32) NOT NULL,\r\n    checkout_id uuid NOT NULL,\r\n    status character varying(32) NOT NULL,\r\n    shipping_method_code character varying(64) NOT NULL,\r\n    shipping_method_label character varying(128) NOT NULL,\r\n    tracking_reference character varying(128) NULL,\r\n    not
+[Parameters=[], CommandType=\u0027Text\u0027, CommandTimeout=\u0027120\u0027]\r\nCREATE TABLE IF NOT EXISTS fulfillment.shipping_services\r\n(\r\n    shipping_service_id uuid NOT NULL,\r\n    code character varying(64) NOT NULL,\r\n    provider_kind character varying(64) NOT NULL,\r\n    icon_key ch
+[Parameters=[], CommandType=\u0027Text\u0027, CommandTimeout=\u0027120\u0027]\r\nCREATE TABLE IF NOT EXISTS fulfillment.shipping_methods\r\n(\r\n    shipping_method_id uuid NOT NULL,\r\n    method_code character varying(32) NOT NULL,\r\n    provider_kind character varying(64) NOT NULL,\r\n    legacy
+u0027?\u0027 (DbType = Guid)], CommandType=\u0027Text\u0027, CommandTimeout=\u0027120\u0027]\r\nINSERT INTO fulfillment.shipping_methods (shipping_method_id, created_at, is_active, legacy_option_code, legacy_service_code, method_code, provider_kind, sort_order, updated_at)\r\nVALUES (@p0, @p1, @p2, 

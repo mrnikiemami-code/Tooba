@@ -1,0 +1,7 @@
+﻿=== PRE BASELINE 2026-10-16T06:38:19.3163602+03:30 ===
+SHARED_HOST_PIDS=35624
+SHARED_HOST_PATHS=D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host-out-5088-101\Tooba.Host.exe
+5088_HEALTH={"status":"ok"}
+5088_COMMERCE={"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"3bf9c5b28851c2e8a8fd60b39ad01293"}
+3000_STATUS=308
+CONTAINERS=tooba-121-scratch-pg,rabbitmq,postgres-db

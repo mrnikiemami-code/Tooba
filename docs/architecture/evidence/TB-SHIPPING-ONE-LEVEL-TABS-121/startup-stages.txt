@@ -1,0 +1,56 @@
+﻿=== ISOLATED HOST STARTUP STAGE RECORD (TB-121) ===
+stdout_lines=2245
+stderr_lines=0
+
+--- hosting lifecycle ---
+{"Timestamp":"2026-10-16T03:10:12.3745126\u002B00:00","EventId":14,"LogLevel":"Information","Category":"Microsoft.Hosting.Lifetime","Message":"Now listening on: http://127.0.0.1:5400","State":{"Messag
+{"Timestamp":"2026-10-16T03:10:12.3746967\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Microsoft.Hosting.Lifetime","Message":"Application started. Press Ctrl\u002BC to shut down.","Sta
+{"Timestamp":"2026-10-16T03:10:12.3747173\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Microsoft.Hosting.Lifetime","Message":"Hosting environment: Development","State":{"Message":"Host
+{"Timestamp":"2026-10-16T03:10:12.3747274\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Microsoft.Hosting.Lifetime","Message":"Content root path: D:\\Users\\User\\source\\repos\\SarvNew
+
+--- shipping/catalog/seed/migration markers ---
+{"Timestamp":"2026-10-16T03:10:03.3893552\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (23ms) [Parameters=[], CommandType=
+{"Timestamp":"2026-10-16T03:10:03.4009557\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (2ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.4417497\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (8ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.4477804\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.4515395\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (2ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.4677255\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260823080421_InitialCatalog\u0027
+{"Timestamp":"2026-10-16T03:10:03.5739031\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.5787687\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260826172058_AddBrandLogoMediaAss
+{"Timestamp":"2026-10-16T03:10:03.5864225\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (0ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.5875764\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260826173000_EnsureBrandLogoMedia
+{"Timestamp":"2026-10-16T03:10:03.5955842\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.5968384\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260827222906_AddCategoryAttribute
+{"Timestamp":"2026-10-16T03:10:03.6315552\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.6333710\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260828080000_AddProductMediaGalle
+{"Timestamp":"2026-10-16T03:10:03.6487594\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (0ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.6500954\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260828172727_AddCategoryFoundatio
+{"Timestamp":"2026-10-16T03:10:03.6905617\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.6919686\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260828203000_AddCategoryAttribute
+{"Timestamp":"2026-10-16T03:10:03.6990463\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.7001364\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260828210000_AddCategoryFacetConf
+{"Timestamp":"2026-10-16T03:10:03.7104627\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.7114517\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260828220000_AddMegaMenuItems\u00
+{"Timestamp":"2026-10-16T03:10:03.7271520\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (0ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.7282107\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260829050000_AddCatalogVariantSor
+{"Timestamp":"2026-10-16T03:10:03.7307297\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (0ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.7316946\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260829140000_AddProductHistoryEnt
+{"Timestamp":"2026-10-16T03:10:03.7430525\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (0ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.7439671\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260830010000_AddProductCategoryAs
+{"Timestamp":"2026-10-16T03:10:03.7532572\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.7543580\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260830070000_AddCategoryBannerMed
+{"Timestamp":"2026-10-16T03:10:03.7558213\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (0ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.7567490\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260830090000_AddCatalogTagFoundat
+{"Timestamp":"2026-10-16T03:10:03.7814510\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.7824877\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260909130000_AddQuantityFoundatio
+{"Timestamp":"2026-10-16T03:10:03.8046552\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.8056853\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260912080000_AddStoreHoldPolicySe
+{"Timestamp":"2026-10-16T03:10:03.8103491\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (0ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.8114259\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260913033100_AddReservationCycleP
+{"Timestamp":"2026-10-16T03:10:03.8170625\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[], CommandType=\
+{"Timestamp":"2026-10-16T03:10:03.8179313\u002B00:00","EventId":20402,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Migrations","Message":"Applying migration \u002720260913080000_AddReservationPolicy
+
+--- fail/crit/exception markers (stdout, first 15) ---
+count_fail_markers=0
+
+--- stderr (first 20) ---

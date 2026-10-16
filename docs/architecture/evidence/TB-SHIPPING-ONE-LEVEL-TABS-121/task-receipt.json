@@ -1,0 +1,81 @@
+{
+  "taskId": "TB-SHIPPING-ONE-LEVEL-TABS-121",
+  "parentTask": "TB-SHIPPING-ONE-LEVEL-TABS-120",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "bridgeTaskRow": "6cff6dd6-701f-4e79-a3e3-b708249fced9",
+  "status": "PASS",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "expectedBaseSha": "68e9648bb38cf98aceb670b48855e163655278f2",
+  "baseSha": "68e9648bb38cf98aceb670b48855e163655278f2",
+  "bookkeepingDrift": "none at claim time (HEAD == origin/main == Expected-Base-SHA)",
+  "codeSha": "NONE",
+  "automaticNextImplementationTask": "NONE",
+  "mode": "BOUNDED_ISOLATED_ONE_LEVEL_CATALOG_RUNTIME_LABEL_PROOF",
+  "measuredMinutes": 9,
+  "isolatedLaunchCount": 1,
+  "watchdogSeconds": 180,
+  "startupElapsedSeconds": 41,
+  "health200": true,
+  "provenance": {
+    "connectionReference": "tenant-121-scratch",
+    "deploymentId": "isolated-121",
+    "tenant": "store-alpha",
+    "scratchPostgresPort": "55452",
+    "isolatedHostPort": "5400",
+    "oneLevelGateEnabledInDisposableOverlay": true,
+    "runLegacyBootstraps": true,
+    "allowResetAndSeed": false,
+    "shippingRateAuthorityOrOperationalShadowSet": false,
+    "isolationGuardFailClosed": true
+  },
+  "catalog": {
+    "endpoint": "GET /v1/admin/shipping-services/shipping-methods/one-level?language=fa",
+    "gate": "Enabled",
+    "ready": true,
+    "rowCount": 7,
+    "methodCodes": [
+      "post:express",
+      "post:standard",
+      "tipax:express",
+      "tipax:standard",
+      "snapp_courier",
+      "store_courier",
+      "in_person"
+    ],
+    "allRowsActive": true,
+    "identityResolvedViaBindingForAllSeven": true
+  },
+  "projection": {
+    "endpoint": "POST /v1/storefront/shipping/projection",
+    "methodsReturned": 7,
+    "labelsMatchingOneLevelCatalog": 7,
+    "labelsNotMatching": 0,
+    "tb119ComposedLabelsReplacedByOneLevelNames": true
+  },
+  "startupEvidence": {
+    "oneLevelMigrationApplied": "20261015120000_AddShippingOneLevelCatalog",
+    "tb120SeedInsertObservedInLog": "batched INSERT INTO fulfillment.shipping_methods (7 rows)",
+    "failOrCritMarkers": 0,
+    "stderrLines": 0
+  },
+  "sharedParity": {
+    "sharedHostPid": 35624,
+    "sharedHostPath": ".tmp-dev-host-out-5088-101/Tooba.Host.exe",
+    "beforeAfterIdentical": true,
+    "alphaCounts": "methods 7 | translations 14 | carts 50 | cart_lines 78 | drafts 14 | seller_orders 26 | products 567 | offers 3223"
+  },
+  "changedPaths": [
+    "docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-121.md",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-121/**"
+  ],
+  "cleanup": "isolated Host stopped by recorded PID after path verification; scratch container removed; .tmp-121-run and .tmp-121-host-out deleted; no secret retained",
+  "deviations": [],
+  "rollback": "no repository code or configuration changed; disposable resources already deleted",
+  "unprovenClaims": [
+    "frontend DOM/browser parity NOT PROVEN",
+    "shipping selection persistence, checkout, payment, shipment and commercial readiness NOT certified",
+    "production/store-alpha behaviour not exercised (gate stays off outside the disposable overlay)"
+  ]
+}

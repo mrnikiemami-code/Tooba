@@ -1,0 +1,7 @@
+post:express -> 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"post:express","serviceCode":"post","optionCode":"express","isActive":true}
+post:standard -> 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"post:standard","serviceCode":"post","optionCode":"standard","isActive":true}
+tipax:express -> 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"tipax:express","serviceCode":"tipax","optionCode":"express","isActive":true}
+tipax:standard -> 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"tipax:standard","serviceCode":"tipax","optionCode":"standard","isActive":true}
+snapp_courier -> 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"snapp_courier","serviceCode":"snapp_courier","isActive":true}
+store_courier -> 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"store_courier","serviceCode":"store_courier","isActive":true}
+in_person -> 200 {"gate":"Enabled","ready":true,"resolved":true,"methodCode":"in_person","serviceCode":"in_person","isActive":true}

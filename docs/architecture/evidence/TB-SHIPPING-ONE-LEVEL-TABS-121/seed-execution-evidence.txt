@@ -1,0 +1,6 @@
+﻿=== TB-121 TB-120 SEED EXECUTION EVIDENCE (startup log) ===
+shipping_methods_INSERT_statements=1
+shipping_method_translations_INSERT_statements=1
+
+--- insert #1 ---
+INSERT INTO fulfillment.shipping_methods (shipping_method_id, created_at, is_active, legacy_option_code, legacy_service_code, method_code, provider_kind, sort_order, updated_at) | VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8); | INSERT INTO fulfillment.shipping_methods (shipping_method_id, created_at, is_active, legacy_option_code, legacy_service_code, method_code, provider_kind, sort_order, updated_at) | VALUES (@p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17); | INSERT INTO fulfillment.shipping_methods (shipping_method_id, created_at, is_active, legacy_option_code, legacy_serv

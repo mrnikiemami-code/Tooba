@@ -1,0 +1,7 @@
+﻿=== POST PARITY 2026-10-16T06:43:39.5277506+03:30 ===
+SHARED_HOST_PIDS=35624
+SHARED_HOST_PATHS=D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host-out-5088-101\Tooba.Host.exe
+5088_HEALTH={"status":"ok"}
+5088_COMMERCE={"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"94f3ebc14994614d90e98169838ca53f"}
+3000_STATUS=308
+CONTAINERS=rabbitmq,postgres-db
