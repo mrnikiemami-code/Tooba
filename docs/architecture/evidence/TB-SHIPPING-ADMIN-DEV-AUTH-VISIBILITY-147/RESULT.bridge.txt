@@ -10,8 +10,11 @@ Mode: BOUNDED_AUTH_PARITY_AND_NO_SILENT_LEGACY_FALLBACK
 Verdict: PASS
 Confidence: HIGH
 Base-SHA: 07a808797a7d8d3d3ee1982fde378c907c48f73c
-Result-SHA: bdc6de0f153c9006c951ebbc6f485e88d6d89d22
-HEAD-Equals-Origin-Main: yes (bdc6de0f153c9006c951ebbc6f485e88d6d89d22)
+Implementation-SHA: bdc6de0f153c9006c951ebbc6f485e88d6d89d22
+Evidence-SHA: 266b16160f7249041ddf13d2e8282630dcb8fda6 (both verified pushed on origin/main)
+HEAD-Equals-Origin-Main: yes — `git fetch origin` then `git rev-parse HEAD origin/main` were equal immediately
+before this Result was posted; the only commits after the implementation commit are this evidence Result and its
+poster, so the working tree is clean for the task-owned files.
 Stop-State: STOP_FOR_ARCHITECT
 Automatic-Next-Task: NONE
 Measured-Duration: approximately 40 minutes
