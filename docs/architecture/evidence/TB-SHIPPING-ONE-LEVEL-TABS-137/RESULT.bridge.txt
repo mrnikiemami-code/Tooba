@@ -24,7 +24,7 @@ A. DEFECT ROOT CAUSE (exact)
 B. CHANGE (smallest targeted, frontend-only, +25/-3 in one file)
 src/frontend/app/payment/storefront-payment-handoff.tsx, order-summary card only:
 - when page.shippingGroups.length > 1: heading «روش‌های ارسال» plus one row per group showing group.methodLabel and formatOfferAmount(group.shippingAmount, group.currency || page.currency); machine identity via data-testid="payment-shipping-groups" and data-testid={`payment-shipping-group-${group.shippingGroupId}`}
-- otherwise: the previous legacy markup `<p>روش ارسال: {page.shippingMethodLabel}</p>` is preserved byte-identically
+- otherwise: the previous legacy markup (a paragraph rendering «روش ارسال:» plus page.shippingMethodLabel) is preserved byte-identically
 - classes are reused verbatim from the accepted storefront shipping summary fee rows (space-y-1.5, border-t border-dashed border-gray-200 pt-2.5, flex justify-between gap-2 text-[11px] md:text-xs, text-gray-500 truncate, font-bold text-gray-800 shrink-0); no inline style, no CSS module, no token or global-selector change, no new component, no other route
 - the aggregate «هزینه ارسال» row and «قابل پرداخت» (server payableAmount) are untouched; the load effect remains read-only, so opening or reloading /payment still performs no submit, commit, reservation, cart clear or capture; multi-seller and same-seller grouped cases both render truthfully
 
@@ -61,6 +61,6 @@ G. NOT CLAIMED / REMAINING BLOCKERS
 - the next priority remains a separately authorized, legally safe assessment of isolated checkout-to-order/payment completion with an explicit commercial-policy decision rather than a fabricated allocation
 
 COMMITS
-Implementation/tests/docs/evidence commit: 3a0f46eb793227dd599087a3b90eeb0da6b6866b
-HEAD equals origin/main after push (verified 3a0f46eb793227dd599087a3b90eeb0da6b6866b on both local and origin/main); working tree contains only the pre-existing unrelated modifications noted in section F
+Implementation commit (code + focused test + planning doc + evidence): 3a0f46eb793227dd599087a3b90eeb0da6b6866b
+The evidence/result-contract commits were then pushed normally as well, and HEAD equals origin/main at the time this Result was posted (push verified with git fetch + rev-parse on both local HEAD and origin/main); the working tree contains only the pre-existing unrelated modifications noted in section F
 END_TOOBA_WORKER_RESULT
