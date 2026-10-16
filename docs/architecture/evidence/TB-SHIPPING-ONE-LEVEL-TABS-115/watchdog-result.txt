@@ -1,0 +1,15 @@
+﻿TB-115 launch record
+ISOLATED_HOST_PID=40980
+ISOLATED_HOST_EXE=D:\Users\User\source\repos\SarvNewVer\.tmp-115-host-out\Tooba.Host.exe
+LAUNCH_COUNT=1
+WATCHDOG_LIMIT_SECONDS=180
+ELAPSED_SECONDS=61
+HEALTH_200_OBSERVED=False
+HEALTH_BODY=
+PROCESS_EXITED=True
+EXIT_CODE=
+STILL_RUNNING_AFTER_STOP=False
+KILLED_BY_WATCHDOG=False
+LISTENERS_ON_5397_AFTER_STOP=0
+
+note: stdout/stderr raw logs are intentionally NOT committed (they contain full EF SQL). Redacted excerpt: redacted-diagnostic-excerpt.txt

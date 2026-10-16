@@ -1,0 +1,18 @@
+﻿Pager usage is off.
+== TB-112/TB-115 single-identity proof: every color variant shares ONE color definition_id ==
+        slug_seam         | catalog_code_seam | definition_code |         canonical_value          |            definition_id             
+--------------------------+-------------------+-----------------+----------------------------------+--------------------------------------
+ schema-mobile-demo-phone | PHONE-BLK-128     | color           | 01a14277357d7000be6e070f10c42ca3 | 01a14277-3514-7000-b1bc-99d267ba7ee1
+ schema-mobile-demo-phone | PHONE-BLU-256     | color           | 01a1427735877000b6414df4bbdff233 | 01a14277-3514-7000-b1bc-99d267ba7ee1
+ workspace-live-shirt     | LIVE-SHIRT-BLK    | color           | 01a14277357d7000be6e070f10c42ca3 | 01a14277-3514-7000-b1bc-99d267ba7ee1
+(3 rows)
+
+== new template/landing/menu rows in this run (legacy seeds that never ran) ==
+          m          | v 
+---------------------+---
+ template_products   | 0
+ store_landing_pages | 3
+ store_menus         | 1
+ store_templates     | 0
+(4 rows)
+

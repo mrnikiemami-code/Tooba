@@ -1,0 +1,31 @@
+﻿# TB-115 REDACTED DIAGNOSTIC EXCERPT (no credentials, no customer identifiers)
+stdout_total_lines=1657
+stdout_categories=EF Database.Command 1544 / EF Migrations 110 / EF Query 3
+
+== marker counts over the whole stdout ==
+OCC[Cannot resolve scoped service]=0
+OCC[from root provider]=0
+OCC[catalog.attribute.code.duplicate]=0
+OCC[catalog-dev.attribute.incompatible-reuse]=0
+OCC[42P01]=0
+OCC[Now listening on]=0
+OCC[Application started]=0
+
+== last completed stage reached (final SQL statement of the stdout, redacted to its statement shape) ==
+{"Timestamp":"2026-10-16T02:07:53.4134089\u002B00:00","EventId":20101,"LogLevel":"Information","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Executed DbCommand (1ms) [Parameters=[<PARAMETERS_REDACTED>], CommandType='Text', CommandTimeout='120'] INSERT INTO catalog.outbox_messages (id, attempt_count, correlation_id, dead_lettered_at, deployment_id, edition, event_type, last_error, locked_until, next_attempt_at, occurred_at, payload, processed_at, tenant_id, version) VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14); INSERT INTO catalog.product_history_entries (history_id, actor_display_name, actor_user_id, after_summary, before_su
+
+== UNHANDLED EXCEPTION (from stderr, verbatim) ==
+Unhandled exception. Tooba.BuildingBlocks.PlatformHttpException: Service Unavailable
+   at Tooba.Persistence.ToobaNpgsql.ResolveForContext(ICurrentCommerceContext commerce, IDatabaseConnectionResolver resolver) in D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.Persistence\ToobaNpgsql.cs:line 57
+   at Tooba.Catalog.Infrastructure.CatalogModule.<>c.<AddServices>b__2_8(IServiceProvider sp, DbContextOptionsBuilder options) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\CatalogModule.cs:line 160
+   at Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.CreateDbContextOptions[TContext](IServiceProvider applicationServiceProvider, Action`2 optionsAction)
+   at Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.<>c__DisplayClass17_0`1.<AddCoreServices>b__0(IServiceProvider p)
+   at ResolveService(ILEmitResolverBuilderRuntimeContext, ServiceProviderEngineScope)
+   at ResolveService(ILEmitResolverBuilderRuntimeContext, ServiceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Tooba.Catalog.Infrastructure.Development.FashionTemplateCatalogSeed.ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\FashionTemplateCatalogSeed.cs:line 59
+   at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(IServiceProvider provider, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\CatalogDevelopmentSeed.cs:line 61
+   at Program.<Main>$(String[] args) in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Program.cs:line 374
+   at Program.<Main>$(String[] args) in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Program.cs:line 374
+   at Program.<Main>(String[] args)

@@ -1,0 +1,10 @@
+﻿== cleanup (TB-115) ==
+capturedUtc=2026-10-16T05:39:55.2554773+03:30
+isolated_host_pid=40980 alive_after_run=False
+listeners_on_5397=0
+docker_rm=tooba-115-scratch-pg
+listeners_on_55449_after_container_removal=0
+task115_containers_remaining=0
+prior_113_container_present=0
+tmp_115_run_exists=False tmp_115_host_out_exists=False
+shared_host_5088_alive=True shared_next_3000_alive=True
