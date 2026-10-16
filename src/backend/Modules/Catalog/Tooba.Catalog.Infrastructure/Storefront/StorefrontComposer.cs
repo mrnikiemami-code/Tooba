@@ -91,7 +91,7 @@ public sealed class StorefrontComposer : IStorefrontComposer
     public async Task<StorefrontHomePage> GetHomeAsync(string? locale, CancellationToken cancellationToken)
     {
         var categories = await ListCategoriesAsync(cancellationToken);
-        var products = await BuildProductCardsAsync(cancellationToken, preferredSellerPartyId: null, maxProducts: 48, cardOnly: true);
+        var products = await BuildProductCardsAsync(cancellationToken, preferredSellerPartyId: null, maxProducts: 48);
         var brands = await ListBrandsAsync(cancellationToken);
         var promotedProducts = products
             .Where(card => card.PromotionLabel is not null
@@ -644,7 +644,8 @@ public sealed class StorefrontComposer : IStorefrontComposer
             return null;
         }
 
-        var bundle = await ComposeProductAsync(product, cancellationToken, selectedVariantId: variantId);
+        var batch = await PrepareBatchAsync([product], includeDescriptions: true, cancellationToken);
+        var bundle = await ComposeProductAsync(product, batch, cancellationToken, selectedVariantId: variantId);
         if (bundle is null)
         {
             return null;
@@ -746,10 +747,11 @@ public sealed class StorefrontComposer : IStorefrontComposer
         var products = await _catalog.Products.AsNoTracking()
             .Where(x => requested.Contains(x.ProductId) && x.Status == CatalogPublicationStatus.Published)
             .ToListAsync(cancellationToken);
+        var batch = await PrepareBatchAsync(products, includeDescriptions: false, cancellationToken);
         var cards = new List<StorefrontProductCard>(products.Count);
         foreach (var product in products)
         {
-            var composed = await ComposeProductAsync(product, cancellationToken);
+            var composed = await ComposeProductAsync(product, batch, cancellationToken, cardOnly: true);
             if (composed is not null) cards.Add(composed.Value.Card);
         }
         var summaries = await _reviews.GetPublishedSummariesAsync(cards.Select(x => x.ProductId).ToArray(), cancellationToken);
@@ -762,11 +764,14 @@ public sealed class StorefrontComposer : IStorefrontComposer
             });
     }
 
+    /// <summary>
+    /// کارت‌های زندهٔ محصولات منتشرشده را می‌سازد. این مسیر فقط کارت برمی‌گرداند، پس وابستگیٔ متن
+    /// توصیفی/مشخصات/گونهٔ PDP خوانده نمی‌شود؛ آن‌ها فقط در مسیر <see cref="GetDetailAsync"/> لازم‌اند.
+    /// </summary>
     private async Task<IReadOnlyList<StorefrontProductCard>> BuildProductCardsAsync(
         CancellationToken cancellationToken,
         Guid? preferredSellerPartyId = null,
-        int? maxProducts = null,
-        bool cardOnly = false)
+        int? maxProducts = null)
     {
         var query = _catalog.Products.AsNoTracking()
             .Where(x => x.Status == CatalogPublicationStatus.Published)
@@ -774,38 +779,18 @@ public sealed class StorefrontComposer : IStorefrontComposer
         var products = maxProducts is int limit
             ? await query.Take(Math.Clamp(limit, 1, 48)).ToListAsync(cancellationToken)
             : await query.ToListAsync(cancellationToken);
-        var productIds = products.Select(x => x.ProductId).ToList();
-        var variants = productIds.Count == 0
-            ? []
-            : await _catalog.Variants.AsNoTracking()
-                .Where(x => productIds.Contains(x.ProductId))
-                .Select(x => new { x.ProductId, x.VariantId })
-                .ToListAsync(cancellationToken);
-        var variantIds = variants.Select(x => x.VariantId).Distinct().ToList();
-        var activeOffers = await _offers.ListActiveOffersByCatalogVariantIdsAsync(variantIds, cancellationToken);
-        var offersByProduct = variants
-            .GroupBy(x => x.ProductId)
-            .ToDictionary(
-                g => g.Key,
-                g =>
-                {
-                    var ids = g.Select(v => v.VariantId).ToHashSet();
-                    return (IReadOnlyList<OfferReference>)activeOffers
-                        .Where(o => ids.Contains(o.CatalogVariantId))
-                        .ToList();
-                });
+        var batch = await PrepareBatchAsync(products, includeDescriptions: false, cancellationToken);
 
         var cards = new List<StorefrontProductCard>();
         foreach (var product in products)
         {
-            offersByProduct.TryGetValue(product.ProductId, out var productOffers);
             var composed = await ComposeProductAsync(
                 product,
+                batch,
                 cancellationToken,
                 preferredSellerPartyId,
                 selectedVariantId: null,
-                cardOnly: cardOnly,
-                preloadedActiveOffers: productOffers);
+                cardOnly: true);
             if (composed is null)
             {
                 continue;
@@ -822,71 +807,198 @@ public sealed class StorefrontComposer : IStorefrontComposer
         }).ToList();
     }
 
+    /// <summary>
+    /// دادهٔ مشترک یک دستهٔ محصول برای ساخت کارت‌ها. نام/رسانه/گونه/قیمت/موجودی/مالیات/نام فروشنده
+    /// یک‌بار و گروهی خوانده می‌شوند تا خواندن فروشگاه به N+1 نرسد. مرز ماژول‌ها حفظ می‌شود:
+    /// Pricing/Inventory/Tax/Party فقط از پورت قراردادی و بدون JOIN بین schemaها خوانده می‌شوند.
+    /// </summary>
+    private sealed record StorefrontBatchData(
+        IReadOnlyDictionary<Guid, string> ProductNames,
+        IReadOnlyDictionary<Guid, string> CategoryNames,
+        IReadOnlyDictionary<Guid, string> BrandNames,
+        IReadOnlyDictionary<Guid, IReadOnlyList<CatalogProductCategory>> CategoryLinks,
+        IReadOnlyDictionary<Guid, IReadOnlyList<Guid>> Media,
+        IReadOnlyDictionary<Guid, IReadOnlyList<CatalogVariant>> Variants,
+        IReadOnlyDictionary<Guid, IReadOnlyList<OfferReference>> Offers,
+        IReadOnlyList<AuthoredPriceSnapshot> Prices,
+        IReadOnlyDictionary<Guid, decimal> AvailableUnits,
+        IReadOnlyDictionary<Guid, string> TaxLabels,
+        IReadOnlyDictionary<Guid, string> SellerNames,
+        IReadOnlyDictionary<Guid, string>? ShortDescriptions,
+        IReadOnlyDictionary<Guid, string>? FullDescriptions,
+        IReadOnlyDictionary<Guid, string>? LegacyDescriptions);
+
+    /// <summary>
+    /// وابستگی‌های کارت را برای یک دستهٔ محصول گروهی آماده می‌کند. متن‌های توصیفی فقط وقتی خوانده
+    /// می‌شوند که مسیر فراخوان نیاز داشته باشد (PDP/rail)، نه مسیر فقط-کارتِ خانه و فهرست.
+    /// </summary>
+    private async Task<StorefrontBatchData> PrepareBatchAsync(
+        IReadOnlyList<CatalogProduct> products,
+        bool includeDescriptions,
+        CancellationToken cancellationToken)
+    {
+        var productIds = products.Select(product => product.ProductId).Distinct().ToList();
+
+        var variantRows = await _catalog.Variants.AsNoTracking()
+            .Where(variant => productIds.Contains(variant.ProductId))
+            .ToListAsync(cancellationToken);
+        var variantsByProduct = variantRows
+            .GroupBy(variant => variant.ProductId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<CatalogVariant>)group.ToList());
+
+        var variantIds = variantRows.Select(variant => variant.VariantId).Distinct().ToList();
+        IReadOnlyList<OfferReference> activeOffers = variantIds.Count == 0
+            ? []
+            : await _offers.ListActiveOffersByCatalogVariantIdsAsync(variantIds, cancellationToken);
+        var offersByProduct = new Dictionary<Guid, IReadOnlyList<OfferReference>>();
+        foreach (var group in variantRows.GroupBy(variant => variant.ProductId))
+        {
+            var ids = group.Select(variant => variant.VariantId).ToHashSet();
+            offersByProduct[group.Key] = activeOffers
+                .Where(offer => ids.Contains(offer.CatalogVariantId))
+                .ToList();
+        }
+
+        var productNames = await LoadNamesAsync(CatalogLocalizedOwnerKind.Product, productIds, cancellationToken);
+
+        // ترتیب صریح Role/AssignmentId مثل خوانندهٔ admin: ردهٔ اصلی پیش از رده‌های اضافی و بدون وابستگی به plan.
+        var categoryLinks = (await _catalog.ProductCategories.AsNoTracking()
+                .Where(link => productIds.Contains(link.ProductId))
+                .OrderBy(link => link.Role)
+                .ThenBy(link => link.AssignmentId)
+                .ToListAsync(cancellationToken))
+            .GroupBy(link => link.ProductId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<CatalogProductCategory>)group.ToList());
+        var categoryNames = await LoadNamesAsync(
+            CatalogLocalizedOwnerKind.Category,
+            categoryLinks.Values.SelectMany(links => links).Select(link => link.CategoryId).Distinct().ToList(),
+            cancellationToken);
+
+        var brandIds = products
+            .Where(product => product.BrandId is Guid)
+            .Select(product => product.BrandId!.Value)
+            .Distinct()
+            .ToList();
+        var brandNames = await LoadNamesAsync(CatalogLocalizedOwnerKind.Brand, brandIds, cancellationToken);
+
+        // ترتیب صریح، وگرنه انتخاب تصویر کارت به plan پرس‌وجو وابسته می‌شود:
+        // تصویر اصلی (IsPrimary) تصویر کارت/بندانگشتی است و DisplayOrder ترتیب گالری.
+        var media = (await _catalog.MediaReferences.AsNoTracking()
+                .Where(reference => productIds.Contains(reference.ProductId))
+                .OrderByDescending(reference => reference.IsPrimary)
+                .ThenBy(reference => reference.DisplayOrder)
+                .ThenBy(reference => reference.ReferenceId)
+                .Select(reference => new { reference.ProductId, reference.MediaAssetId })
+                .ToListAsync(cancellationToken))
+            .GroupBy(row => row.ProductId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<Guid>)group.Select(row => row.MediaAssetId).ToList());
+
+        var offerIds = activeOffers.Select(offer => offer.OfferId).Distinct().ToList();
+        IReadOnlyList<AuthoredPriceSnapshot> prices = offerIds.Count == 0
+            ? []
+            : await _prices.ListByOfferIdsAsync(offerIds, cancellationToken);
+        IReadOnlyList<StockPositionSnapshot> positions = offerIds.Count == 0
+            ? []
+            : await _inventory.ListPositionsByOfferIdsAsync(offerIds, cancellationToken);
+        IReadOnlyList<TaxClassificationSnapshot> taxRows = offerIds.Count == 0
+            ? []
+            : await _tax.ListClassificationsByOfferIdsAsync(offerIds, cancellationToken);
+        IReadOnlyList<TaxCategorySnapshot> taxCats = taxRows.Count == 0
+            ? []
+            : await _tax.ListCategoriesByIdsAsync(
+                taxRows.Select(row => row.CategoryId).Distinct().ToArray(),
+                cancellationToken);
+
+        // چند ردیف طبقه روی یک Offer تعارض داده است؛ همان ردیف اولِ قبلی مرجع نمایش می‌ماند.
+        var taxLabels = new Dictionary<Guid, string>();
+        foreach (var tax in taxRows)
+        {
+            if (taxLabels.ContainsKey(tax.OfferId))
+            {
+                continue;
+            }
+
+            taxLabels[tax.OfferId] = taxCats.FirstOrDefault(cat => cat.CategoryId == tax.CategoryId)?.DisplayName
+                ?? tax.CategoryId.ToString("N")[..8];
+        }
+
+        var availableUnits = positions
+            .GroupBy(position => position.OfferId)
+            .ToDictionary(group => group.Key, group => group.Sum(position => position.Available));
+
+        var sellerNames = await _parties.GetDisplayNamesAsync(
+            activeOffers.Select(offer => offer.SellerPartyId).Distinct().ToList(),
+            cancellationToken);
+
+        IReadOnlyDictionary<Guid, string>? shortDescriptions = includeDescriptions
+            ? await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, productIds, "short_description", cancellationToken)
+            : null;
+        IReadOnlyDictionary<Guid, string>? fullDescriptions = includeDescriptions
+            ? await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, productIds, "full_description", cancellationToken)
+            : null;
+        IReadOnlyDictionary<Guid, string>? legacyDescriptions = includeDescriptions
+            ? await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, productIds, "description", cancellationToken)
+            : null;
+
+        return new StorefrontBatchData(
+            productNames,
+            categoryNames,
+            brandNames,
+            categoryLinks,
+            media,
+            variantsByProduct,
+            offersByProduct,
+            prices,
+            availableUnits,
+            taxLabels,
+            sellerNames,
+            shortDescriptions,
+            fullDescriptions,
+            legacyDescriptions);
+    }
+
     private async Task<(StorefrontProductCard Card, StorefrontOfferCandidate Primary, IReadOnlyList<StorefrontAlternateOffer> Others, string? ShortDescription, string? FullDescription, string? Brand, IReadOnlyList<Guid> Media, Guid VariantId, IReadOnlyList<StorefrontProductSpecification> Specifications, IReadOnlyList<StorefrontProductVariant> Variants)?> ComposeProductAsync(
         CatalogProduct product,
+        StorefrontBatchData batch,
         CancellationToken cancellationToken,
         Guid? preferredSellerPartyId = null,
         Guid? selectedVariantId = null,
-        bool cardOnly = false,
-        IReadOnlyList<OfferReference>? preloadedActiveOffers = null)
+        bool cardOnly = false)
     {
         var now = DateTimeOffset.UtcNow;
-        var title = (await LoadNamesAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], cancellationToken))
-            .GetValueOrDefault(product.ProductId)
+        var title = batch.ProductNames.GetValueOrDefault(product.ProductId)
             ?? product.SlugSeam
             ?? "کالا";
-        var shortDescriptions = cardOnly
-            ? new Dictionary<Guid, string>()
-            : await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "short_description", cancellationToken);
-        var fullDescriptions = cardOnly
-            ? new Dictionary<Guid, string>()
-            : await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "full_description", cancellationToken);
-        var legacyDescriptions = cardOnly
-            ? new Dictionary<Guid, string>()
-            : await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "description", cancellationToken);
-        var categoryLinks = await _catalog.ProductCategories.AsNoTracking()
-            .Where(x => x.ProductId == product.ProductId)
-            .ToListAsync(cancellationToken);
-        var categoryNames = await LoadNamesAsync(
-            CatalogLocalizedOwnerKind.Category,
-            categoryLinks.Select(x => x.CategoryId).ToList(),
-            cancellationToken);
+        var emptyTexts = new Dictionary<Guid, string>();
+        var shortDescriptions = cardOnly ? emptyTexts : batch.ShortDescriptions ?? emptyTexts;
+        var fullDescriptions = cardOnly ? emptyTexts : batch.FullDescriptions ?? emptyTexts;
+        var legacyDescriptions = cardOnly ? emptyTexts : batch.LegacyDescriptions ?? emptyTexts;
+        var categoryLinks = batch.CategoryLinks.GetValueOrDefault(product.ProductId) ?? [];
         var primaryLink = categoryLinks.FirstOrDefault(x => x.Role == CatalogProductCategoryRole.Primary)
             ?? categoryLinks.FirstOrDefault();
         var categoryId = primaryLink?.CategoryId;
         var categoryName = categoryId is Guid cid
-            ? categoryNames.GetValueOrDefault(cid) ?? "رده"
+            ? batch.CategoryNames.GetValueOrDefault(cid) ?? "رده"
             : "بدون رده";
         var brandName = product.BrandId is Guid brandId
-            ? (await LoadNamesAsync(CatalogLocalizedOwnerKind.Brand, [brandId], cancellationToken)).GetValueOrDefault(brandId)
+            ? batch.BrandNames.GetValueOrDefault(brandId)
             : null;
-        var media = await _catalog.MediaReferences.AsNoTracking()
-            .Where(x => x.ProductId == product.ProductId)
-            .Select(x => x.MediaAssetId)
-            .ToListAsync(cancellationToken);
-        var variants = await _catalog.Variants.AsNoTracking()
-            .Where(x => x.ProductId == product.ProductId)
-            .ToListAsync(cancellationToken);
+        var media = batch.Media.GetValueOrDefault(product.ProductId) ?? [];
+        var variants = batch.Variants.GetValueOrDefault(product.ProductId) ?? [];
         var variantIds = variants.Select(x => x.VariantId).ToList();
         if (variantIds.Count == 0)
         {
             return null;
         }
 
-        var offers = preloadedActiveOffers
-            ?? await _offers.ListActiveOffersByCatalogVariantIdsAsync(variantIds, cancellationToken);
-        var offerIds = offers.Select(x => x.OfferId).ToList();
-        if (offerIds.Count == 0)
-        {
-            return null;
-        }
-
-        var prices = await _prices.ListByOfferIdsAsync(offerIds, cancellationToken);
-        var positions = await _inventory.ListPositionsByOfferIdsAsync(offerIds, cancellationToken);
-        var taxRows = await _tax.ListClassificationsByOfferIdsAsync(offerIds, cancellationToken);
-        var taxCats = taxRows.Count == 0
-            ? []
-            : await _tax.ListCategoriesByIdsAsync(taxRows.Select(row => row.CategoryId).Distinct().ToArray(), cancellationToken);
+        var offers = batch.Offers.GetValueOrDefault(product.ProductId) ?? [];
+        var prices = batch.Prices;
 
         var candidates = new List<StorefrontOfferCandidate>();
         foreach (var offer in offers)
@@ -904,17 +1016,16 @@ public sealed class StorefrontComposer : IStorefrontComposer
                 continue;
             }
 
-            var available = positions.Where(item => item.OfferId == offer.OfferId).Sum(item => item.Available);
-            var seller = await _parties.FindByIdAsync(offer.SellerPartyId, cancellationToken);
-            var tax = taxRows.FirstOrDefault(row => row.OfferId == offer.OfferId);
-            var taxLabel = tax is null
-                ? "طبقه مالیات ثبت نشده"
-                : taxCats.FirstOrDefault(cat => cat.CategoryId == tax.CategoryId)?.DisplayName ?? tax.CategoryId.ToString("N")[..8];
+            var available = batch.AvailableUnits.GetValueOrDefault(offer.OfferId);
+            var sellerName = batch.SellerNames.TryGetValue(offer.SellerPartyId, out var resolvedSellerName)
+                ? resolvedSellerName
+                : null;
+            var taxLabel = batch.TaxLabels.GetValueOrDefault(offer.OfferId) ?? "طبقه مالیات ثبت نشده";
             candidates.Add(new StorefrontOfferCandidate(
                 offer.OfferId,
                 offer.CatalogVariantId,
                 offer.SellerPartyId,
-                seller?.DisplayName ?? "فروشنده",
+                sellerName ?? "فروشنده",
                 offer.SellerSku,
                 price.Amount,
                 price.Currency,
