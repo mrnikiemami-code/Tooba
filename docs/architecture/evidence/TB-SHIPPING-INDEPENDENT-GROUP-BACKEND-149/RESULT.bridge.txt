@@ -1,0 +1,121 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149
+Parent-Task: TB-SHIPPING-ADMIN-MULTILINGUAL-UX-148
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Base-SHA: 47acebe1661b9e34671506dddd2099de54f65a6b
+Head-SHA: 90e2dc166efac312af7a73f4485f39d6a702e9e3
+Push: origin/main updated 47acebe16..90e2dc166 ; HEAD == origin/main ; scoped working tree clean
+Status: PARTIAL
+
+WHY PARTIAL (not PASS, not BLOCKED)
+Implementation of read + write + planner + persistence is complete and committed, and the ONE-GROUP legacy
+behavior is preserved, but two verification obligations of the task's own PASS definition could not be met
+inside the timebox without exceeding the mandated safety boundaries:
+ (a) SaveSelectionAsync (the write handler) is not covered by any automated test: the existing test harness
+     cannot fake StorefrontCheckoutService (concrete class, no interface) so the handler cannot be driven
+     in-memory; only the domain pieces it calls (planner, calculator, draft) are covered by focused tests.
+ (b) No live HTTP round-trip was executed: shared :5088/:3000 and tooba_alpha/store-alpha are READ ONLY and
+     were left untouched, so no real two-seller cart write/re-read was performed end-to-end over HTTP.
+No fake per-group data was produced: every per-group value comes from the real server calculator/config and
+the real planner/persistence path. Reporting PASS would overclaim (a)+(b).
+
+WHAT WAS IMPLEMENTED (BOUNDED, ADDITIVE, BEHAVIOR-PRESERVING)
+1. READ — src/backend/Modules/Order/Tooba.Order.Application/Storefront/Models/StorefrontOrderModels.cs
+   + StorefrontShippingProjection.ShippingGroupHorizons (additive optional) and new
+     StorefrontShippingGroupHorizonView(ShippingGroupId, SellerPartyId, MethodCode, MinimumDeliveryDate,
+     EligibleDates[], EligibleTimeWindows[], SelectedDeliveryDate, SelectedDeliveryTimeWindow, LeadDays,
+     SellerPreparationDays). Legacy scalars unchanged (one-group compatibility view).
+2. READ — Storefront/Services/StorefrontShippingService.cs: BuildGroupHorizon builds each group's own
+   minimum = today + preparationDays(THAT seller) + group.LeadDays (never in the past) and that group's own
+   eligible dates/windows. No intersection and no global MAX date in this new group path.
+3. WRITE — StorefrontOrderModels.cs: StorefrontShippingGroupSelection gained additive optional
+   SelectedDeliveryDate / SelectedDeliveryTimeWindow (HTTP contract extends automatically; endpoint binds the
+   Application model directly).
+4. WRITE — StorefrontShippingService.SaveSelectionAsync: per-group eligibility resolution keyed by
+   (seller, method); every group validated against ITS OWN minimum and ITS OWN allowed windows; a multi-group
+   write whose group lacks/breaks its own schedule is rejected fail-closed with a clear contract error
+   (ShippingDeliveryInvalid / ShippingDeliverySlotUnavailable / ShippingDeliveryTooEarly), never copied to all
+   groups. Legacy scalar shorthand retained ONLY for genuine one-group carts.
+5. PLANNER — Domain/Checkout/CartShippingGroupPlanner.cs: seller is resolved BEFORE method;
+   CartShippingGroupEligibleMethod gained optional SellerPartyId and CartShippingGroupRequest gained optional
+   per-group schedule; a seller-specific promise can never be borrowed by another seller
+   (fail-closed CartShippingGroupFault.MethodNotEligible). Identical methodCode across DIFFERENT sellers
+   stays separate; DuplicateSellerMethod and the unique index are untouched (case D still out of scope).
+6. PERSISTENCE — Domain/Checkout/CartShippingDraft.cs: for a multi-group draft the legacy scalars
+   SelectedDeliveryDate/SelectedDeliveryTimeWindow are now NULL (true one-group view) and the non-nullable
+   legacy MinimumDeliveryDate carries only the conservative latest-group bound. Each CartShippingDraftGroup
+   keeps its own date/window (existing columns), and the existing BuildOrderGroupPlans ->
+   OrderShippingGroup requested-delivery columns -> Fulfillment snapshot handoff already propagated per-group
+   values, so NO migration/schema change was needed.
+7. CALCULATOR — Storefront/Services/StorefrontShippingCalculator.cs: added SellerPreparationDays(Guid) and
+   ComputeGroupMinimumDeliveryDate(today, seller, leadDays, options) reusing the existing config seam.
+
+AFFECTED PATHS
+ src/backend/Modules/Order/Tooba.Order.Application/Storefront/Models/StorefrontOrderModels.cs
+ src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs
+ src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingCalculator.cs
+ src/backend/Modules/Order/Tooba.Order.Domain/Checkout/CartShippingGroupPlanner.cs
+ src/backend/Modules/Order/Tooba.Order.Domain/Checkout/CartShippingDraft.cs
+ src/backend/Modules/Order/Tooba.Order.Tests/Storefront/ShippingGroupIndependentScheduleTests.cs (new)
+ src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingDraftRecoveryTests.cs (contract-aligned)
+ docs/architecture/evidence/TB-SHIPPING-INDEPENDENT-GROUP-BACKEND-149/{contract-149.txt,focused-tests-149.txt,build-149.txt,RESULT.bridge.txt,post-result.js}
+Not touched: frontend storefront UI, Admin methods, financial shares, Settlement payout, PSP, migrations,
+schema, shared DB, admin-fulfillment-work-queue-screen.tsx, TB-075/TB-079 evidence logs.
+
+EXACT TESTS / COMMANDS
+ dotnet build src/backend/Tooba.slnx                      -> Build succeeded, 0 Error(s)
+ dotnet test Modules/Order/Tooba.Order.Tests              -> Passed! Failed: 0, Passed: 353, Skipped: 0
+ dotnet test Modules/Order/Tooba.Order.Tests --filter
+   "FullyQualifiedName~ShippingGroupIndependentScheduleTests|~CartShippingGroupPlannerTests|~StorefrontShippingDraftRecoveryTests"
+                                                          -> 28 focused tests, all Passed (verbatim list in focused-tests-149.txt)
+ dotnet test Host/Tooba.Host.Tests --filter "~Shipping|~Storefront"
+                                                          -> Failed: 4, Passed: 116 — all 4 are PRE-EXISTING and
+   unrelated to this diff (they read Settlement/Payment/Catalog-frontend/Host sources or throw inside their own
+   Read() helper): PaidProjectionFinancialTests.Settlement_and_initiate_exclude_store_shipping_from_seller_ids,
+   HostStorefrontAmcR3GuardTests.Downstream_host_adapters_use_catalog_composer_port,
+   StorefrontPaymentSucceededGuardTests.Frontend_hides_pay_when_capability_forbids,
+   HostStorefrontAmcR1GuardTests.Catalog_owns_template_preview_cqrs_infra_and_routes. This diff changes zero
+   files those assertions inspect.
+
+NEW FOCUSED PROOFS (ShippingGroupIndependentScheduleTests — 7 tests, all Passed)
+ - Two_sellers_with_the_same_method_get_two_different_group_minimums: prep 2 vs 3 + same tipax:standard lead 3
+   -> 2026-10-21 vs 2026-10-22 (no global MAX anywhere).
+ - Each_group_persists_its_own_selected_date_and_window: group A 2026-10-23/9-12, group B 2026-10-25/18-21.
+ - Changing_group_a_schedule_leaves_group_b_untouched: re-planning A leaves B's date/window/minimum identical.
+ - A_seller_specific_promise_is_never_borrowed_by_another_seller: only seller A eligible row -> seller B group
+   rejected fail-closed (MethodNotEligible).
+ - Draft_legacy_scalars_are_null_for_multi_group_and_kept_for_one_group.
+ - Legacy_scalar_still_applies_to_a_single_group_without_its_own_schedule (legacy shorthand preserved).
+ - A_seller_less_authoritative_row_still_serves_legacy_callers.
+
+CONTRACT EXAMPLE (request/response, server-owned config, IClock today = 2026-10-16)
+ Request: shippingGroups = [
+   { shippingMethodCode: "tipax:standard", cartLineIds: [lineA], selectedDeliveryDate: "2026-10-23",
+     selectedDeliveryTimeWindow: "9-12" },
+   { shippingMethodCode: "tipax:standard", cartLineIds: [lineB], selectedDeliveryDate: "2026-10-25",
+     selectedDeliveryTimeWindow: "18-21" } ]
+ Response: groups[0] sellerA minimum 2026-10-21 selected 2026-10-23 window 9-12 ;
+           groups[1] sellerB minimum 2026-10-22 selected 2026-10-25 window 18-21 ;
+           legacy scalars: ShippingMethodCode "", SelectedDeliveryDate null, SelectedDeliveryTimeWindow null.
+ Rejections: A before its own minimum -> ShippingDeliveryTooEarly ; B window not in its own allowed set ->
+ ShippingDeliverySlotUnavailable ; multi-group with a group schedule missing -> ShippingDeliveryInvalid ;
+ B asking a method eligible only for A -> ShippingMethodUnavailable.
+
+REMAINING BLOCKERS / KNOWN GAPS
+ - No Admin-managed calendar/capacity/timezone/working-day authority exists (TB-145 §1.7), so per-group promises
+   can only be derived from sellerPreparationDays(seller) + method.LeadDays + the existing static generic windows.
+   No guaranteed carrier slot is promised or invented; this limitation is disclosed in the payload.
+ - Case D (SAME seller + SAME method + incompatible origin/promise) stays BLOCKED as instructed: unique index
+   ux_order_shipping_groups_checkout_seller_method untouched, DuplicateSellerMethod still enforced, no origin forged.
+ - No automated coverage yet for SaveSelectionAsync (multi-group fail-closed + per-group persistence through the
+   handler) and no live HTTP round-trip — see WHY PARTIAL.
+ - Migration not required and none was added (existing per-group columns reused).
+
+REAL ELAPSED TIME: {ELAPSED}
+STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+END_TOOBA_WORKER_RESULT
