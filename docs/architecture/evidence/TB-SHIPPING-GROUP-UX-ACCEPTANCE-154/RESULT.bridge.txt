@@ -100,6 +100,13 @@ lifecycle. One extra Host launch was needed because this seed mints different se
 so the first launch (which bootstrapped and seeded the scratch DB) was followed by a relaunch with the correct
 seller preparation overlay; the first launch is disclosed rather than hidden.
 
+SELF-REFERENCE NOTE
+Code-SHA/Evidence-SHA/HEAD/Origin-Main above name the evidence-and-task-artifact commit
+f64379be4b8226e3e2b7128a010655a222ba779b, which is the complete shipped tree for this task (the task changed
+no production source). The additional commit that carries this RESULT.bridge.txt and post-result.js file is
+itself pushed to origin/main before this result is posted, so at post time HEAD is one docs-only commit ahead
+of the named evidence SHA; no code SHA is involved.
+
 REMAINING UNKNOWNS / STILL OPEN (outside this task)
 Admin financial mode and per-method restrictions, real create-method API, multilingual save/write-roundtrip,
 EF debug log flood and scale check, trusted transport calendar/origin authority, approved shipping fee
