@@ -37,6 +37,29 @@ The design must gracefully handle: one group, multiple groups, long item titles,
 3. One bounded real browser acceptance using authorized disposable scratch setup (only after backend readiness): compare item/group identities, per-group cost and selected method between API/Order draft and rendered DOM; inspect RTL, desktop and mobile styles against the existing storefront. No expansive screenshot/test loops.
 4. Confirm no checkout/payment/order mutation from page navigation alone, no shared DB/config changes, and no visual regressions of existing Shipping and Checkout surfaces.
 
+
+## Durable multi-seller / multi-method order and fulfillment contract (MANDATORY)
+
+An order MUST support multiple shipping groups, regardless of whether its items originate from **one seller or multiple sellers**. A seller may have multiple shipping groups in the same order when the customer selects different eligible methods or when fulfillment constraints require separation. Conversely, two sellers must never be merged into one execution group solely because their method codes are equal.
+
+### Durable ownership and relationships
+
+- Persist a stable **ShippingGroupId** per shipping group, tied to the OrderId and tenant; each group references SellerId, authorized fulfillment origin/context, canonical MethodCode plus distinct ServiceCode and optional OptionCode, destination/scheduling snapshot, monetary breakdown, and lifecycle status.
+- Persist item membership with a group-to-order-item relation (and assigned quantity where splitting an order line is supported). No order item/quantity can be silently omitted, assigned twice, or shipped twice. Do not rely on serialized UI grouping or transient cart/session state as the system of record.
+- Snapshot the effective selection, relevant delivery constraints, shipping quote/currency and tax/pricing references at the authoritative order-conversion boundary. The source catalogs can evolve later without rewriting historical shipping decisions. Preserve stable IDs for traceability and correct updates.
+- Checkout draft selections and groups must survive reload/back navigation and convert consistently to the durable order group/items representation. Transactional persistence and idempotent conversion prevent partial grouping, duplicate shipments or duplicate shipping fees.
+- Fulfillment execution is per group (or finer authorized shipment if business rules require splitting): state transitions, dispatch, tracking, cancellation/returns and delivery evidence reference the group and affected order items. The Order remains one commercial order, while execution may include many shipping groups/shipments. Aggregate order state is derived from group/item states, not assumed to be one parcel.
+- Grouping is produced/validated by domain-owned eligibility and fulfillment policy including seller, origin, item restrictions, supported methods, capacity, delivery region/time window and compatibility. Customer choice is honored only when eligible; otherwise show an actionable correction before placement. An identical method code does not override incompatible logistics rules.
+- Shipping fee and applicable tax are calculated/recorded with the authoritative financial owners at group/order boundaries. Display per-group fee and correctly reconciled aggregate totals; no accidental fee multiplication or omission.
+
+### Mandatory schema/contract acceptance
+
+Before coding, inspect actual Order and Fulfillment entities, database mappings, migrations and interfaces. Write an owner-correct minimal schema evolution plan; do NOT assert the existing database already supports this model without proof. Any changes must use module-owned migrations (no Host tables, no manual SQL), explicit tenant isolation and correct FK/uniqueness/check constraints, indexes for OrderId/SellerId/ShippingGroupId lookup, and migration/backward compatibility strategy for existing single-method orders. Avoid speculative extra tables and large-scale refactors; prefer the smallest model consistent with the established module boundaries.
+
+Essential acceptance cases: (1) one seller + two methods => two persisted and executable groups, (2) two sellers + same method => separate groups, (3) same seller + same method but incompatible origin => separate groups, (4) compatible items => one group with correct membership and quantities, (5) a persisted Order checkout/roundtrip retains selected methods, grouping, fees and schedule, (6) partial shipment or cancellation updates the correct group/items without corrupting the other groups. Confirm database readback through authorized module APIs, plus only necessary targeted integration tests. No UI-only mock is accepted as evidence of durable support.
+
+Architectural status: this is a binding requirement, NOT an assertion that migrations/implementation currently exist. Implementation requires a separately bounded task and architect review before any shared or production rollout.
+
 ## Current proof boundary
 
 TB-121 showed 7/7 one-level catalog labels in the shipping projection. TB-122 showed 7/7 on the real /fa/shipping DOM. TB-123 showed the cart-level shipping choice was saved before navigating to payment, but payment draft was blocked by scratch tax rule availability (checkout.tax.unavailable). None proves per-item Checkout grouping. This requirement is pending implementation/proof, not a claim of a completed feature.
