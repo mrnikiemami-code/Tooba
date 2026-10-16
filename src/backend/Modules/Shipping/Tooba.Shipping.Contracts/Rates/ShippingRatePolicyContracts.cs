@@ -142,6 +142,14 @@ public static class ShippingReasonCodes
 
     /// <summary>بیش از یک پلهٔ شرط‌دار با اندازهٔ درخواست سازگار است؛ ابهام حل نمی‌شود.</summary>
     public const string ConditionAmbiguous = "shipping.quote.condition_ambiguous";
+
+    /// <summary>
+    /// درخواست با <see cref="ShippingOptionMatchMode.StrictOwnedOption"/> پرسیده شده و سیاست فعالی
+    /// <em>متعلق به همان گزینهٔ درخواست</em> وجود ندارد. سیاست‌های سطح‌خدمت یا گزینه‌های هم‌خانواده
+    /// عمداً به‌عنوان fallback پذیرفته نمی‌شوند، پس این یک «قیمت‌گذاری‌نشده»‌ی fail-closed است، نه
+    /// صفر و نه رایگان.
+    /// </summary>
+    public const string OwnedOptionNotPriced = "shipping.quote.owned_option_not_priced";
 }
 
 /// <summary>
@@ -212,6 +220,40 @@ public sealed record ShippingNumericTier
 }
 
 /// <summary>
+/// نحوهٔ تطبیق هویت گزینهٔ روش ارسال با ردیف‌های سیاست نرخ مالک‌شده.
+/// </summary>
+/// <remarks>
+/// <para>
+/// این یک انتخاب <em>صریح</em> فراخوان است، نه یک پیش‌فرض پنهان. مقدار پیش‌فرض
+/// <see cref="LegacyFallback"/> است تا هر فراخوان موجود بدون تغییر رفتار کند.
+/// </para>
+/// <para>
+/// <b>Why.</b> موتور نرخ برای سازگاری تاریخی، یک ردیف سطح‌خدمت (<c>OptionCode</c> تهی) را به
+/// عنوان <em>fallback</em> برای روشی که گزینهٔ اختصاصی دارد می‌پذیرد. آن رفتار برای خدمت‌های
+/// تک‌گزینه‌ای درست است، اما اگر مالکیت مالی روش‌ها یک‌به‌یک و مستقل باشد، یک ردیف سطح‌ارائه‌دهنده
+/// (مثل <c>tipax</c> بدون گزینه) نباید قیمت <c>tipax:standard</c> یا <c>tipax:express</c> شود.
+/// <see cref="StrictOwnedOption"/> دقیقاً همان مرز را برای فراخوانی که آن را صریحاً می‌خواهد
+/// اعمال می‌کند.
+/// </para>
+/// </remarks>
+public enum ShippingOptionMatchMode
+{
+    /// <summary>
+    /// رفتار تاریخی و پیش‌فرض: سیاست سطح‌خدمت (<c>OptionCode</c> تهی) به‌عنوان fallback برای روش
+    /// گزینه‌دار پذیرفته می‌شود و سیاست گزینه‌دار برنده است.
+    /// </summary>
+    LegacyFallback = 0,
+
+    /// <summary>
+    /// مالکیت سخت‌گیرانه: فقط ردیفی که <em>گزینهٔ آن دقیقاً با گزینهٔ درخواست برابر است</em> واجد
+    /// شرایط است. ردیف سطح‌خدمت و ردیف هم‌خانوادهٔ گزینهٔ دیگر هیچ‌گاه قیمت این درخواست نمی‌شوند و
+    /// هیچ fallback‌ای وجود ندارد. اگر ردیف مالک‌شده‌ای نباشد، نتیجه همان شکست fail-closed موجود
+    /// است، نه صفر/رایگان و نه مقدار پیش‌فرض.
+    /// </summary>
+    StrictOwnedOption = 1,
+}
+
+/// <summary>
 /// درخواست نرخ ارسال. مقصد با شناسه‌های پایدار Geography بیان می‌شود و مبلغ سبد جدا از هزینهٔ
 /// ارسال است تا آستانهٔ ارسال رایگان بدون بازتفسیر قابل اعمال باشد.
 /// </summary>
@@ -228,13 +270,26 @@ public sealed record ShippingNumericTier
 /// این مقدار را هرگز از جمع سبد یا تعداد خطوط سبد حدس نمی‌زند: یک قاعدهٔ شرط‌دار با اندازهٔ غایب
 /// fail-closed قیمت نمی‌دهد.
 /// </param>
+/// <remarks>
+/// <see cref="OptionMatchMode"/> عمداً یک ویژگی <c>init</c>-only و نه پارامتر ترتیبی است تا امضای
+/// سازندهٔ موجود دست‌نخورده بماند و هیچ فراخوان/سریال‌سازی موجودی نشکند؛ نبودش یعنی
+/// <see cref="ShippingOptionMatchMode.LegacyFallback"/>.
+/// </remarks>
 public sealed record ShippingQuoteRequest(
     string ServiceCode,
     DestinationIdentifiers Destination,
     decimal CartSubtotalExclusive,
     string? CurrencyCode = null,
     string? OptionCode = null,
-    ShippingMeasuredParcel? Parcel = null);
+    ShippingMeasuredParcel? Parcel = null)
+{
+    /// <summary>
+    /// نحوهٔ تطبیق گزینه؛ پیش‌فرض <see cref="ShippingOptionMatchMode.LegacyFallback"/> یعنی رفتار
+    /// دقیقاً مانند قبل. فقط فراخوانی که مالکیت مستقل گزینه‌ها را می‌خواهد
+    /// <see cref="ShippingOptionMatchMode.StrictOwnedOption"/> می‌فرستد.
+    /// </summary>
+    public ShippingOptionMatchMode OptionMatchMode { get; init; } = ShippingOptionMatchMode.LegacyFallback;
+}
 
 /// <summary>
 /// اندازهٔ فیزیکی اندازه‌گیری‌شدهٔ مرسوله، همان‌طور که فراخوان اعلام می‌کند.

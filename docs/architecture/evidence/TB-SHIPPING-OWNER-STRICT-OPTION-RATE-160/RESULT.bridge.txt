@@ -1,0 +1,78 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-OWNER-STRICT-OPTION-RATE-160
+Parent-Task: TB-SHIPPING-STOREFRONT-RATE-AUTHORITY-159
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PASS
+Base-SHA: cff0f19d36ab73870345a3f542f01c459894a1a6
+
+Scope-Delivered:
+- Owner-side strict option identity added to the EXISTING Shipping rate quote contract/engine, opt-in and default-legacy; the TB-159 defect is repaired at its semantic owner.
+- No Order/storefront wiring, no feature-gate enablement, no Admin change, no schema/migration change.
+
+Source-Changes (3 files, exhaustive):
+- src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Rates/ShippingRatePolicyContracts.cs
+  * new enum ShippingOptionMatchMode { LegacyFallback = 0 (default), StrictOwnedOption = 1 }
+  * new init-only property ShippingQuoteRequest.OptionMatchMode = LegacyFallback (constructor signature and serialization untouched, so every existing caller compiles and behaves identically)
+  * new stable reason code ShippingReasonCodes.OwnedOptionNotPriced = "shipping.quote.owned_option_not_priced"
+- src/backend/Modules/Shipping/Tooba.Shipping.Domain/Rates/ShippingRatePolicyEngine.cs
+  * strict branch in the covering filter: MatchesOwnedOptionExactly requires exact (OrdinalIgnoreCase) option equality, so a service-level/provider row (OptionCode == null) and a sibling option row can never qualify; no first-match behaviour
+  * strict-only fail-closed reason selection: UnknownService + owned_option_not_priced when the service HAS active rows covering the destination but none owned by the exact option; the generic service.not_priced is kept when the service has no rows at all
+  * comment records why the pre-existing option-precedence step is a provable no-op in strict mode
+- src/backend/Modules/Shipping/Tooba.Shipping.Tests/Rates/ShippingStrictOwnedOptionRateTests.cs (new, 9 focused tests)
+
+Semantics:
+- LegacyFallback: byte-identical outcomes to before (verified), including the documented service-level fallback that single-option/no-option services depend on.
+- StrictOwnedOption with a concrete option: only rows whose normalized non-empty option equals the request option qualify; no service-level fallback, no sibling fallback, no inactive/stale row, no fallback to legacy configuration, no zero/FREE default.
+- FREE is still only ever signalled by the established shipping.quote.free_above_threshold; a stored zero is NOT free.
+- Fail-closed reasons reused: NotCovered/coverage.missing, MeasurementRequired, ScopeConflict, ConditionConflict, CurrencyMismatch. Amount is 0m with null currency and IsQuoted=false on every failure.
+- No new member was added to ShippingServiceabilityOutcome (deliberate, keeps that Contracts enum additive-stable); the new stable reason code carries the distinction for logs/telemetry/Admin.
+
+Proof-Matrix (focused owner tests, real engine + real read adapter):
+(a) provider-level only, strict tipax:standard fails -> PASS (UnknownService + owned_option_not_priced, IsQuoted=false, 0m)
+(b) tipax:express-owned cannot price tipax:standard -> PASS
+(c) standard-owned prices standard (205000) and express-owned prices express (260000) -> PASS
+(d) mixed shared+owned: strict selects owned; legacy unchanged (express still 185000 by documented fallback) -> PASS
+(e) strict without owned coverage fails closed -> PASS (NotCovered + coverage.missing)
+(f) conditioned strict-owned rate without measurement fails closed, quotes with declared weight -> PASS (MeasurementRequired then Quoted)
+(g) optionless methods and legacy requests unchanged -> PASS (mode-equality asserted)
+(h) ambiguity/conflict handling -> PASS (ScopeConflict, ConditionConflict, CurrencyMismatch)
++ strict flag survives ShippingRateQuoteLookup (in-memory ShippingDbContext, provider row + owned row + grant persisted) -> PASS
+
+Verification-Runs (verbatim in test-runs-160.txt):
+- dotnet build Tooba.Shipping.Infrastructure -> Build succeeded. 0 Error(s)
+- dotnet build Tooba.Shipping.Tests -> Build succeeded. 0 Error(s)
+- dotnet test Tooba.Shipping.Tests --filter FullyQualifiedName~ShippingStrictOwnedOptionRateTests -> Passed: 9/9
+- dotnet test Tooba.Shipping.Tests --filter 'Rates|ShippingMethodFinancial|Compatibility' -> 105 passed / 1 failed
+  * The single failure is PRE-EXISTING: OperationalQuoteCompatibilityTests.No_module_outside_shipping_references_the_operational_quote_types scans committed *.cs for operational-quote markers outside Shipping and finds four UNMODIFIED Order files (the pre-existing operational shadow seam): OperationalShadow/StorefrontShippingOperationalShadowComparer.cs, OperationalShadow/StorefrontShippingOperationalShadowObserver.cs, Tooba.Order.Infrastructure/OrderModule.cs, Tooba.Order.Tests/Storefront/StorefrontShippingOperationalShadowObserverTests.cs. git status --porcelain lists none of them as modified by this task.
+- dotnet build Tooba.Host -> Build succeeded. 0 Error(s) (downstream consumer compile)
+- dotnet test Tooba.Order.Tests --filter FullyQualifiedName~StorefrontShipping -> Passed: 70/70 (shadow/one-level/recovery paths unchanged)
+- Frontend not touched; frontend typecheck not applicable.
+
+Honest-Limit-On-Coverage (reported, not improvised):
+- ShippingCoverageGrant and ShippingCoverageGrantWriteRequest have NO option dimension: coverage is authored and stored per service + destination, and the SQL pre-filter is service+country. A coverage grant therefore cannot be attributed to, or rejected on behalf of, one option; that ownership datum does not exist in the schema.
+- What strict mode does guarantee: no quote without an active coverage grant for the same service and destination, and no quote from a row not owned by the exact requested option.
+- Remaining open prerequisite for any customer-facing cutover (unchanged from TB-159): decide whether customer-purchasable methods must carry their own coverage grants and whether coverage needs an option dimension; adding that dimension is a schema change and was correctly excluded from this bounded task.
+
+Evidence:
+- docs/architecture/evidence/TB-SHIPPING-OWNER-STRICT-OPTION-RATE-160/RESULT.md
+- docs/architecture/evidence/TB-SHIPPING-OWNER-STRICT-OPTION-RATE-160/production-diff-160.txt
+- docs/architecture/evidence/TB-SHIPPING-OWNER-STRICT-OPTION-RATE-160/test-runs-160.txt
+- task artifact: docs/ai/tasks/TB-SHIPPING-OWNER-STRICT-OPTION-RATE-160.task.md
+
+Hard-Safety-Compliance:
+- No Order quote path wiring, no storefront pricing change, no gate enablement, no Admin redesign, no free/COD/provider-quote invention, no tax/settlement-share/PSP change, no Results.Json, Contracts-only, no Host decision authority.
+- No schema or migration change. Shared :3000/:5088/:5432, tooba_alpha, store-alpha, containers, RabbitMQ/Redis untouched; no restart/reset/rebase/stash/force-push.
+- Pre-existing unrelated dirty paths preserved and NOT committed: src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx and two docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-0{75,79}/host-stdout-*.txt files.
+
+Remaining-Prerequisites-Before-Cutover:
+1. Coverage-grant policy for customer-purchasable methods (and whether coverage needs an option dimension).
+2. Trusted parcel/measurement source for conditioned policies, or an explicit MeasurementRequired UX.
+3. Only then: the Order storefront seam behind its own default-off gate requesting StrictOwnedOption, plus authenticated-customer runtime proof.
+
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT

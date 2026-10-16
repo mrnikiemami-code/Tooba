@@ -46,6 +46,14 @@ namespace Tooba.Shipping.Domain.Rates;
 /// نتیجه <see cref="ShippingServiceabilityOutcome.ConditionConflict"/> است و سیاستی انتخاب نمی‌شود؛
 /// «اولین سطر برنده» یک تصمیم تجاری پنهان است.
 /// </para>
+/// <para>
+/// <b>مالکیت سخت‌گیرانهٔ گزینه (اختیاری، پیش‌فرض خاموش).</b>
+/// <see cref="ShippingQuoteRequest.OptionMatchMode"/> می‌تواند
+/// <see cref="ShippingOptionMatchMode.StrictOwnedOption"/> باشد؛ در آن حالت فقط ردیفی واجد شرایط است
+/// که گزینهٔ خودش دقیقاً با گزینهٔ درخواست برابر باشد و هیچ fallback سطح‌خدمت/هم‌خانواده‌ای وجود
+/// ندارد. این انتخاب <em>صریح</em> است: در حالت پیش‌فرض (<see cref="ShippingOptionMatchMode.LegacyFallback"/>)
+/// رفتار بیت‌به‌بیت همان قبل می‌ماند تا خدمت‌های تک‌گزینه‌ای که فقط ردیف سطح‌خدمت دارند نشکنند.
+/// </para>
 /// </remarks>
 public static class ShippingRatePolicyEngine
 {
@@ -63,27 +71,43 @@ public static class ShippingRatePolicyEngine
 
         var serviceCode = request.ServiceCode?.Trim() ?? string.Empty;
         var optionCode = request.OptionCode?.Trim();
+        var strictOwnedOption = request.OptionMatchMode == ShippingOptionMatchMode.StrictOwnedOption;
         var destination = new ShippingDestinationScope(
             request.Destination.CountryId,
             request.Destination.AdministrativeAreaId,
             request.Destination.CityId,
             request.Destination.ServiceAreaId);
 
-        var covering = (policies ?? Array.Empty<ShippingRatePolicy>())
+        var active = (policies ?? Array.Empty<ShippingRatePolicy>())
             .Where(x => x.IsActive)
             .Where(x => string.Equals(x.ServiceCode, serviceCode, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        var covering = active
             .Where(x => x.Covers(destination))
-            .Where(x => x.MatchesOption(optionCode))
+            .Where(x => strictOwnedOption
+                ? MatchesOwnedOptionExactly(x, optionCode)
+                : x.MatchesOption(optionCode))
             .ToArray();
 
         if (covering.Length == 0)
         {
-            return NotQuoted(request, optionCode, serviceCode, ShippingServiceabilityOutcome.UnknownService, ShippingReasonCodes.ServiceNotPriced);
+            // Strict mode never falls back to a service-level/provider row or a sibling option. When the
+            // service itself has active rows that were excluded purely by option ownership, that is a
+            // distinct, stable fact ("this option is not priced") and not a generic unknown service.
+            var reason = strictOwnedOption
+                && optionCode is not null
+                && active.Any(x => x.Covers(destination))
+                    ? ShippingReasonCodes.OwnedOptionNotPriced
+                    : ShippingReasonCodes.ServiceNotPriced;
+            return NotQuoted(request, optionCode, serviceCode, ShippingServiceabilityOutcome.UnknownService, reason);
         }
 
         // Option identity is resolved inside the winning tier only: the request's own option-specific
         // tier when one exists, otherwise the documented service-level fallback tier. A service-level
         // policy therefore keeps working unchanged for single-option and no-option services.
+        // In StrictOwnedOption mode every remaining candidate already shares one exact option identity,
+        // so this precedence step is a no-op there and cannot reintroduce borrowing.
         var candidates = covering.Any(x => x.IsOptionSpecific)
             ? covering.Where(x => x.IsOptionSpecific).ToArray()
             : covering;
@@ -187,4 +211,14 @@ public static class ShippingRatePolicyEngine
         ShippingServiceabilityOutcome outcome,
         string reasonCode)
         => new(outcome, serviceCode, 0m, null, 0, 0, null, reasonCode, optionCode);
+
+    /// <summary>
+    /// تطبیق مالکیت سخت‌گیرانهٔ گزینه: فقط ردیفی که گزینهٔ <em>خودش</em> دقیقاً با گزینهٔ درخواست
+    /// برابر است. ردیف سطح‌خدمت (<c>OptionCode</c> تهی) و ردیف گزینهٔ هم‌خانواده هرگز واجد شرایط
+    /// نیستند، پس «اولین تطابق» یا fallback ضمنی وجود ندارد.
+    /// </summary>
+    /// <param name="policy">سیاست نامزد.</param>
+    /// <param name="optionCode">گزینهٔ نرمال‌شدهٔ درخواست.</param>
+    private static bool MatchesOwnedOptionExactly(ShippingRatePolicy policy, string? optionCode)
+        => string.Equals(policy.OptionCode, optionCode, StringComparison.OrdinalIgnoreCase);
 }

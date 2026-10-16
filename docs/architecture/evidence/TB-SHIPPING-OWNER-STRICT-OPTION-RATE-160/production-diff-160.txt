@@ -1,0 +1,23 @@
+﻿TB-SHIPPING-OWNER-STRICT-OPTION-RATE-160 — scoped production/test diff
+Base/HEAD/origin before work: cff0f19d36ab73870345a3f542f01c459894a1a6
+
+git diff --stat HEAD -- src/backend/Modules/Shipping:
+ .../Rates/ShippingRatePolicyContracts.cs           | 57 +++++++++++++++++++++-
+ .../Rates/ShippingRatePolicyEngine.cs              | 40 +++++++++++++--
+ 2 files changed, 93 insertions(+), 4 deletions(-)
+
+git status --porcelain -- src/backend/Modules/Shipping (untracked = new test file):
+ M src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Rates/ShippingRatePolicyContracts.cs
+ M src/backend/Modules/Shipping/Tooba.Shipping.Domain/Rates/ShippingRatePolicyEngine.cs
+?? src/backend/Modules/Shipping/Tooba.Shipping.Tests/Rates/ShippingStrictOwnedOptionRateTests.cs
+
+Files touched by this task (exhaustive):
+ M src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Rates/ShippingRatePolicyContracts.cs
+   + enum ShippingOptionMatchMode (LegacyFallback=0 default, StrictOwnedOption=1)
+   + init-only ShippingQuoteRequest.OptionMatchMode (constructor signature untouched)
+   + new stable reason code ShippingReasonCodes.OwnedOptionNotPriced
+ M src/backend/Modules/Shipping/Tooba.Shipping.Domain/Rates/ShippingRatePolicyEngine.cs
+   + strict ownership filter (MatchesOwnedOptionExactly) and strict-only reason code selection
+ M (new) src/backend/Modules/Shipping/Tooba.Shipping.Tests/Rates/ShippingStrictOwnedOptionRateTests.cs
+
+Nothing else was modified: no Order/storefront wiring, no Host change, no DI/config, no schema/migration, no Admin change, no frontend change.

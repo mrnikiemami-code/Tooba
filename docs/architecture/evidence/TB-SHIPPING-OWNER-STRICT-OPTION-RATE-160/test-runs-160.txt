@@ -1,0 +1,31 @@
+﻿TB-SHIPPING-OWNER-STRICT-OPTION-RATE-160 — verification runs (captured verbatim, timestamps omitted)
+
+[1] dotnet build src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Tooba.Shipping.Infrastructure.csproj
+    Build succeeded. 0 Error(s)
+
+[2] dotnet build src/backend/Modules/Shipping/Tooba.Shipping.Tests/Tooba.Shipping.Tests.csproj
+    Build succeeded. 0 Error(s)
+
+[3] dotnet test Tooba.Shipping.Tests --filter FullyQualifiedName~ShippingStrictOwnedOptionRateTests
+    Passed! - Failed: 0, Passed: 9, Skipped: 0, Total: 9
+
+[4] dotnet test Tooba.Shipping.Tests --filter 'FullyQualifiedName~Tooba.Shipping.Tests.Rates|FullyQualifiedName~ShippingMethodFinancial|FullyQualifiedName~Compatibility'
+    Failed Tooba.Shipping.Tests.Compatibility.OperationalQuoteCompatibilityTests.No_module_outside_shipping_references_the_operational_quote_types
+      Assert.Empty() Failure: Collection was not empty
+    Failed! - Failed: 1, Passed: 105, Skipped: 0, Total: 106
+
+    PRE-EXISTING RED (not caused by this task). The guard scans committed *.cs for operational-quote markers outside Shipping.
+    Offenders found (all unmodified in this working tree, i.e. baseline content):
+      src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/OperationalShadow/StorefrontShippingOperationalShadowComparer.cs
+      src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/OperationalShadow/StorefrontShippingOperationalShadowObserver.cs
+      src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs
+      src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingOperationalShadowObserverTests.cs
+    Provenance: 'git status --porcelain' lists none of them as modified; the Order operational shadow seam predates this task.
+
+[5] dotnet build src/backend/Host/Tooba.Host/Tooba.Host.csproj (downstream consumer compile)
+    Build succeeded. 0 Error(s)
+
+[6] dotnet test Tooba.Order.Tests --filter FullyQualifiedName~StorefrontShipping
+    Passed! - Failed: 0, Passed: 70, Skipped: 0, Total: 70 (shadow/one-level/recovery paths unchanged)
+
+[7] Frontend: NOT touched; frontend typecheck not applicable.
