@@ -1,0 +1,66 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-137
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-136
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Program: TOOBA-SHIPPING-CHECKOUT-DELIVERY-CLOSURE
+Mode: BOUNDED_GROUPED_PAYMENT_SUMMARY_DISPLAY_CLOSURE
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Base-SHA: 5c32619bec45fe1adafc50c000c820be696e8d35
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Measured-Minutes: 41 (inside the 45 minute hard timebox; source change and targeted tests were completed inside the first 25 minutes, the remaining budget went to the single bounded isolated browser validation and its PID-verified teardown)
+
+SUMMARY
+The exact customer-visible defect reported after TB-136 is repaired. On a genuine multi-group checkout projection the legacy scalar shipping-method fields are intentionally blank server-side (correct behaviour: no single method covers every line), and /fa/payment printed that blank value verbatim. The payment summary now renders the plural heading «روش‌های ارسال» plus one row per authoritative shipping group (real method label and that group's own authoritative amount) taken from the Order-owned projection. Nothing is invented: no aggregate method identity, rate, origin, tax, commercial share, ETA or new method identity is created, the aggregate shipping charge row and the payable total remain server-derived and are each displayed exactly once, the legacy scalar markup is byte-identical for single/empty-group drafts, and no CSS, theme, token, global class or unrelated route was touched. The fix was verified in a real browser session against the sanctioned isolated scratch runtime on the real same-seller / two-line / two-method fixture, desktop and one RTL mobile viewport, followed by PID-verified teardown with the shared environment untouched.
+
+A. DEFECT ROOT CAUSE (exact)
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontCheckoutService.cs:347-353 sets multiGroup = shippingGroups is { Count: > 1 } and then returns an EMPTY shippingMethodCode and shippingMethodLabel for that case, deliberately refusing to present any single method (or the legacy default) as if it covered every line.
+- src/frontend/app/payment/storefront-payment-handoff.tsx rendered `روش ارسال: {page.shippingMethodLabel}` unconditionally, so a multi-group draft produced «روش ارسال:» with an empty value while the grouped data was already available on page.shippingGroups (StorefrontCheckoutPage.shippingGroups exists in src/frontend/app/storefront/storefront-checkout-api.ts).
+- The server behaviour is correct and was NOT changed.
+
+B. CHANGE (smallest targeted, frontend-only, +25/-3 in one file)
+src/frontend/app/payment/storefront-payment-handoff.tsx, order-summary card only:
+- when page.shippingGroups.length > 1: heading «روش‌های ارسال» plus one row per group showing group.methodLabel and formatOfferAmount(group.shippingAmount, group.currency || page.currency); machine identity via data-testid="payment-shipping-groups" and data-testid={`payment-shipping-group-${group.shippingGroupId}`}
+- otherwise: the previous legacy markup `<p>روش ارسال: {page.shippingMethodLabel}</p>` is preserved byte-identically
+- classes are reused verbatim from the accepted storefront shipping summary fee rows (space-y-1.5, border-t border-dashed border-gray-200 pt-2.5, flex justify-between gap-2 text-[11px] md:text-xs, text-gray-500 truncate, font-bold text-gray-800 shrink-0); no inline style, no CSS module, no token or global-selector change, no new component, no other route
+- the aggregate «هزینه ارسال» row and «قابل پرداخت» (server payableAmount) are untouched; the load effect remains read-only, so opening or reloading /payment still performs no submit, commit, reservation, cart clear or capture; multi-seller and same-seller grouped cases both render truthfully
+
+C. TARGETED PROOF
+- new focused test src/frontend/app/payment/storefront-payment-grouped-summary.test.ts, 4/4 pass: the grouped branch is driven by shippingGroups, the heading is not blank, two real per-group label+amount rows are rendered, the legacy scalar markup is unchanged, "هزینه ارسال:" / "قابل پرداخت:" / payment-payable-amount each appear exactly once, only pre-existing storefront classes are used, and the load effect contains no startFinalClickPayment/startStorefrontPayment call
+- pre-existing tests app/payment/storefront-payment-page.test.ts and app/storefront/storefront-checkout-api.test.ts still pass (combined focused run: 18 pass, 1 fail — see below)
+- npm run typecheck is clean
+- two guard failures were observed and are PRE-EXISTING at the base SHA, in files this task never touched (working-tree blob hash equals the HEAD blob hash for both): FE-SIZE reports app/admin/category-admin-screen.tsx at 2230 lines versus baseline 2215, and component-compliance reports app/storefront/storefront-landing-blocks.tsx:286 bg-white. Neither was repaired or worked around (out of scope, fail-closed).
+
+D. ONE BOUNDED REAL-BROWSER VALIDATION (isolated scratch only, TB-136 sanctioned procedure)
+- isolated Host http://127.0.0.1:5406 (deploymentId isolated-137, tenant store-alpha, reference tenant-137-scratch, single active tenant, fail-closed isolation guard with no shared alpha database/reference/port)
+- isolated frontend http://127.0.0.1:3106 via the repo's own TOOBA_HOST_ORIGIN seam (no tracked file modified)
+- isolated PostgreSQL container tooba-tb137-pg on 127.0.0.1:55459 with tooba_137_scratch and tooba_137_messaging; password from an uncommitted env file, never written to evidence
+- journey: added the Development-only companion-fixture pair for the SAME real seller (workspace-live-shirt 1,850,000 IRR and workspace-live-scarf 1,450,000 IRR, both فروشگاه آرمان) → /fa/shipping rendered ONE seller card with TWO item rows and 14 independent method tiles; selected line 1 = post:express (پیشتاز 200,000) and line 2 = tipax:standard (معمولی 180,000); the card showed two per-group fee rows summing to ۳۸۰٬۰۰۰ ریال; server-derived date 2026-10-20, window 9-12; completed the address; one click of «ادامه به پرداخت» saved the draft and navigated to /fa/payment?cartId=01a14382-009b-7000-8253-1360c60050e8
+- observed /fa/payment summary card AFTER the fix (DOM readback): خلاصهٔ سفارش / روش‌های ارسال / پیشتاز ۲۰۰٬۰۰۰ ریال / معمولی ۱۸۰٬۰۰۰ ریال / گیرنده: حمید آزمون — تهران / هزینه ارسال: ۳۸۰٬۰۰۰ ریال / قابل پرداخت: ۳٬۹۷۷٬۰۰۰ ریال / وضعیت پرداخت: در انتظار پرداخت / این سفارش هنوز ثبت نشده است. سفارش و رزرو موجودی فقط با کلیک روی دکمهٔ پرداخت نهایی ساخته می‌شود.
+- before/after: BEFORE the customer saw «روش ارسال:» with no value next to it; AFTER the customer sees the plural heading and both real methods with their own authoritative amounts, and the blank scalar label is gone. grouped heading present = true, group rows = 2, empty «روش ارسال» value = ABSENT, and no invented aggregate method name appears anywhere on the page
+- mobile check 393x887 RTL: grouped branch still rendered with both rows, card width 326, direction rtl, no horizontal overflow, with zero CSS edits (desktop screenshot payment-grouped-summary-137.png, mobile screenshot payment-grouped-summary-137-mobile.png)
+
+E. DATABASE READ-BACK (isolated scratch, read-only)
+GROUPS=2 DISTINCT_SELLERS=1 FEE_SUM=380000.00
+GROUP|post:express|پیشتاز|200000.00|01a14382-016f-7000-80cf-4a5b73cad337
+GROUP|tipax:standard|معمولی|180000.00|01a14382-353a-7000-abd4-4ce7974a95a8
+DRAFT_SCALAR_METHOD_CODE=[] DRAFT_SHIPPING=380000.00 DRAFT_DATE=2026-10-20 DRAFT_WINDOW=9-12
+Legacy readback is intact: the scalar draft method code is still empty by design for multi-group drafts (server unchanged), both durable groups belong to the same real seller with disjoint cart line ids, and their fee sum equals the aggregate shipping amount displayed once on the payment page (۳۸۰٬۰۰۰ ریال) against a payable of ۳٬۹۷۷٬۰۰۰ ریال.
+
+F. ENVIRONMENT INTEGRITY AND TEARDOWN
+- shared services were never modified, restarted or stopped: listeners on :5088 and :3000 are still 1 each, shared containers postgres-db and rabbitmq are still running, and tooba_alpha is present after cleanup
+- PID-verified teardown by absolute path: FRONTEND_STOPPED_BY_RECORDED_PID=42092, HOST_STOPPED_BY_RECORDED_PID=34172, SCRATCH_CONTAINER_REMOVED=tooba-tb137-pg, SCRATCH_VOLUMES=none, all temp dirs and the secret file removed, LISTENERS_ON_5406/3106/55459_AFTER_CLEANUP=0
+- pre-existing dirty frontend admin screens (admin-fulfillment-work-queue-screen.tsx, admin-order-detail-screen.tsx) and the two unrelated evidence logs were preserved and not committed; no reset, stash, rebase, force-push or history rewrite was performed
+
+G. NOT CLAIMED / REMAINING BLOCKERS
+- no end-to-end payment capture/completion, no order commercial split, no production readiness and no migration certification is claimed; this task is a bounded customer-display closure only
+- Settlement PendingAllocation and payout origin/eligibility policy remain OPEN and were not exercised
+- the next priority remains a separately authorized, legally safe assessment of isolated checkout-to-order/payment completion with an explicit commercial-policy decision rather than a fabricated allocation
+
+COMMITS
+Implementation/tests/docs/evidence commit: 3a0f46eb793227dd599087a3b90eeb0da6b6866b
+HEAD equals origin/main after push (verified 3a0f46eb793227dd599087a3b90eeb0da6b6866b on both local and origin/main); working tree contains only the pre-existing unrelated modifications noted in section F
+END_TOOBA_WORKER_RESULT
