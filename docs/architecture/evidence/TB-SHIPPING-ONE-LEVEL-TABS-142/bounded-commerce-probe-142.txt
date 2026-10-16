@@ -1,0 +1,8 @@
+﻿=== bounded_storefront_commerce_probe_marketplace ===
+REQUEST=http://127.0.0.1:5410/v1/storefront/products?locale=fa
+STATUS=500
+BODY={"type":"about:blank","title":"An unexpected error occurred.","status":500,"detail":"PostgresException","instance":"/v1/storefront/products","errorCode":"platform.unexpected","traceId":"da544ad1fb13d9e48c310da42d3641e7","correlationId":"eaf49f3d42fd4aba93becc0549411e76","requestId":"0HNPBC1KINMU3:00000001"}
+REQUEST=http://127.0.0.1:5410/v1/storefront/home?locale=fa
+STATUS=500
+BODY={"type":"about:blank","title":"An unexpected error occurred.","status":500,"detail":"PostgresException","instance":"/v1/storefront/home","errorCode":"platform.unexpected","traceId":"c334fdf2a7be0e860a705458d227c7b5","correlationId":"1326829fa36743ce904c70953e47d62a","requestId":"0HNPBC1KINMU3:00000002"}
+REQUEST_COUNT=2

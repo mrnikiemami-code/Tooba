@@ -1,0 +1,106 @@
+﻿=== schemas_present ===
+     nspname      
+------------------
+ access_control
+ content
+ identity
+ media
+ notification
+ order
+ page_composition
+ party
+ payment
+ public
+ settlement
+ story
+(12 rows)
+
+=== settlement_migration_history ===
+                 migration_id                  
+-----------------------------------------------
+ 20260827030000_InitialSettlement
+ 20261016140000_AddSettlementShippingGroupFees
+(2 rows)
+
+=== settlement_tables ===
+       table_name        
+-------------------------
+ __ef_migrations_history
+ commission_policies
+ outbox_messages
+ payment_inbox
+ payout_attempts
+ payout_requests
+ refund_inbox
+ seller_payout_profiles
+ settlement_accounts
+ settlement_entries
+ settlement_statements
+ shipping_group_fees
+(12 rows)
+
+=== shipping_group_fees_columns ===
+            column_name            |        data_type         | is_nullable 
+-----------------------------------+--------------------------+-------------
+ shipping_group_fee_id             | uuid                     | NO
+ payment_id                        | uuid                     | NO
+ shipping_group_id                 | uuid                     | NO
+ checkout_id                       | uuid                     | NO
+ seller_order_id                   | uuid                     | NO
+ seller_party_id                   | uuid                     | NO
+ method_code                       | character varying        | NO
+ service_code                      | character varying        | YES
+ option_code                       | character varying        | YES
+ accepted_quote_version            | character varying        | NO
+ customer_charge_amount            | numeric                  | NO
+ currency                          | character varying        | NO
+ allocation_state                  | character varying        | NO
+ allocation_policy_version         | character varying        | YES
+ allocation_policy_reference       | character varying        | YES
+ carrier_payable_amount            | numeric                  | YES
+ seller_share_amount               | numeric                  | YES
+ marketplace_share_amount          | numeric                  | YES
+ shipping_discount_amount          | numeric                  | YES
+ shipping_tax_amount               | numeric                  | YES
+ funder_adjustment_amount          | numeric                  | YES
+ funder_reference                  | character varying        | YES
+ record_kind                       | character varying        | NO
+ reversal_of_shipping_group_fee_id | uuid                     | YES
+ idempotency_key                   | character varying        | NO
+ recorded_at                       | timestamp with time zone | NO
+(26 rows)
+
+=== shipping_group_fees_indexes ===
+                  indexname                  
+---------------------------------------------
+ ix_shipping_group_fees_idempotency_key
+ ix_shipping_group_fees_payment_group
+ ix_shipping_group_fees_payment_group_charge
+ ix_shipping_group_fees_seller_party_id
+ ix_shipping_group_fees_shipping_group_id
+ pk_shipping_group_fees
+(6 rows)
+
+=== shipping_group_fees_rowcount ===
+ rows 
+------
+    0
+(1 row)
+
+=== per_module_migration_history_presence ===
+   schema_name    | ef_history_tables 
+------------------+-------------------
+ access_control   |                 1
+ content          |                 1
+ identity         |                 1
+ media            |                 1
+ notification     |                 1
+ order            |                 1
+ page_composition |                 1
+ party            |                 1
+ payment          |                 1
+ public           |                 0
+ settlement       |                 1
+ story            |                 1
+(12 rows)
+

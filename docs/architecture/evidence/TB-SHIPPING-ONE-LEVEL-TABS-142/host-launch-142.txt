@@ -1,0 +1,13 @@
+﻿ISOLATED_HOST_PID=29488
+ISOLATED_HOST_EXE=D:\Users\User\source\repos\SarvNewVer\.tmp-140-host-out\Tooba.Host.exe
+ISOLATED_HOST_URL=http://127.0.0.1:5410
+ISOLATED_HOST_EDITION=Marketplace
+LAUNCH_COUNT=1
+WATCHDOG_LIMIT_SECONDS=180
+STARTUP_ELAPSED_SECONDS=4
+WATCHDOG_HIT=False
+HAS_EXITED=False
+HEALTH_200_OBSERVED=True
+HEALTH_BODY={"status":"ok"}
+READY_STATUS=200
+READY_BODY={"status":"ready","checks":{"edition":"Marketplace","postgresql":"configured","authorization":"inmemory","messaging-transport":"postgresql-sql","messaging":"Healthy"}}

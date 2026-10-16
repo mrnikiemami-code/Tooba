@@ -1,0 +1,36 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-142 — owner-correct module blockers observed at runtime
+Source: task-owned isolated Marketplace Host stdout (.tmp-142-run/isolated-host-142-stdout.txt, PID 29488,
+LAUNCH_COUNT=1). The raw run directory is a task-owned temporary artifact removed by the PID-verified cleanup
+(cleanup-142.txt); the unique owner-correct messages are transcribed verbatim below.
+
+=== canonical marketplace seam applies the Settlement schema at startup ===
+Microsoft.EntityFrameworkCore.Database.Command: Executed DbCommand ... CREATE TABLE settlement...
+Microsoft.EntityFrameworkCore.Database.Command: Executed DbCommand ... 20260827030000_InitialSettlement
+Microsoft.EntityFrameworkCore.Database.Command: Executed DbCommand ... 20261016140000_AddSettlementShippingGroupFees
+
+=== unique owner-correct 42P01 module blockers observed in this runtime ===
+MISSING_RELATION=cart.carts
+MISSING_RELATION=catalog.categories
+MISSING_RELATION=catalog.outbox_messages
+MISSING_RELATION=offer.outbox_messages
+
+=== storefront probe correlation (traceId da544ad1fb13d9e48c310da42d3641e7) ===
+Microsoft.EntityFrameworkCore.Database.Command [Error] Failed executing DbCommand ...
+An exception occurred while iterating over the results of a query for context type
+'Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext'.
+Npgsql.PostgresException (0x80004005): 42P01: relation "catalog.categories" does not exist
+Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware: An unhandled exception has occurred while
+executing the request. -> HTTP 500 (platform.unexpected) for GET /v1/storefront/products (bounded-commerce-probe-142.txt)
+
+=== background worker correlation ===
+CartExpiryWorker: "Cart expiry failed for one tenant. TenantId= ErrorType=PostgresException"
+    Npgsql.PostgresException (0x80004005): 42P01: relation "cart.carts" does not exist
+Outbox: "Outbox claim failed for one module. TenantId= Schema=catalog ErrorType=PostgresException"
+    Npgsql.PostgresException (0x80004005): 42P01: relation "catalog.outbox_messages" does not exist
+Outbox: "Outbox claim failed for one module. TenantId= Schema=offer ErrorType=PostgresException"
+    Npgsql.PostgresException (0x80004005): 42P01: relation "offer.outbox_messages" does not exist
+
+Interpretation: the canonical Marketplace Development seam (MarketplaceDevelopmentBootstrap) provisions only
+11 module schemas; catalog / cart / offer / pricing / inventory / tax / promotion / shipping / fulfillment are
+absent, so no genuine customer checkout can exist in a Marketplace runtime. The first owner-correct blocker is
+schema provisioning for the commerce modules under Edition=Marketplace, not the Settlement recorder itself.
