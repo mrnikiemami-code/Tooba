@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-104
 Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-103
@@ -18,7 +18,7 @@ Base-SHA: ce1b9c2637bec4e36e622c8975e2ee3be915e736
   (Expected-Base-SHA verified as ancestor; the only drift 5e85522..HEAD is this session's own 103 result-bookkeeping
    commit on RESULT.bridge.txt — non-overlapping, accepted, no RECOVERY_CONFLICT)
 Code-SHA: NONE
-Evidence-SHA: <EVIDENCE_SHA>
+Evidence-SHA: 0ac71b2b69d60f5366ee56854531c76c984a121e
 automaticNextImplementationTask: NONE
 Verdict-Code: BLOCKED_NARROW_SELLABLE_SEED_PATH
 Measured-Time: ~24 minutes total (~11 minutes Mission A source tracing, then evidence/report), inside the 30-minute
@@ -130,3 +130,4 @@ Development-only sellable fixture entry point does not exist yet (P2); (3) the t
 screens and the pre-existing Host known-failing test set remain untouched and unrepaired. This result claims nothing
 about Checkout cutover or commercial shipping readiness.
 END_TOOBA_WORKER_RESULT
+
