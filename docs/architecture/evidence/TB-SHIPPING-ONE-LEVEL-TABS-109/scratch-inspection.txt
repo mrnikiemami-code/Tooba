@@ -1,0 +1,58 @@
+﻿Pager usage is off.
+--- demo product status ---
+        slug_seam         |  status   |     kind     
+--------------------------+-----------+--------------
+ schema-mobile-demo-phone | Published | PhysicalGood
+(1 row)
+
+--- variants of demo product (default/status/fingerprint) ---
+ catalog_code_seam | is_default | status |                                                       combination_fingerprint                                                       
+-------------------+------------+--------+-------------------------------------------------------------------------------------------------------------------------------------
+ PHONE-BLK-128     | t          | Draft  | 01a1423ac6f67000aaf8577af19e4abd=01a1423ac757700088f0d377e2d79fbe|01a1423ac719700083755b5a665a9d75=01a1423ac7657000ab69215ce11b84e8
+ PHONE-BLU-256     | f          | Draft  | 01a1423ac6f67000aaf8577af19e4abd=01a1423ac7617000954211e6333db925|01a1423ac719700083755b5a665a9d75=01a1423ac7687000b6dd54f083392bec
+(2 rows)
+
+--- variant attribute values ---
+ catalog_code_seam | attribute_code |         canonical_value          
+-------------------+----------------+----------------------------------
+ PHONE-BLK-128     | color          | 01a1423ac757700088f0d377e2d79fbe
+ PHONE-BLK-128     | storage        | 01a1423ac7657000ab69215ce11b84e8
+ PHONE-BLU-256     | color          | 01a1423ac7617000954211e6333db925
+ PHONE-BLU-256     | storage        | 01a1423ac7687000b6dd54f083392bec
+(4 rows)
+
+--- declared variant axes ---
+ display_order | axis_code 
+---------------+-----------
+             0 | color
+             1 | storage
+(2 rows)
+
+--- default count on demo product (must be exactly 1) ---
+ defaults | total_variants 
+----------+----------------
+        1 |              2
+(1 row)
+
+--- catalog totals ---
+            m            | v 
+-------------------------+---
+ products                | 1
+ published_products      | 1
+ variants                | 2
+ product_history_entries | 6
+(4 rows)
+
+--- offer/price/party/inventory table presence ---
+ offers_table | prices_table | parties_table | stock_items_table 
+--------------+--------------+---------------+-------------------
+              |              |               | 
+(1 row)
+
+--- schemas present ---
+ nspname 
+---------
+ catalog
+ public
+(2 rows)
+

@@ -1,0 +1,49 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-109 — bounded redacted excerpt (credentials verified absent: password/user/Password= all false)
+
+=== PublishReadiness / refusal occurrences in stdout ===
+count(PublishReadiness)=0
+count(آماده-نیست)=0
+count(UnwrapLifecycle)=0
+
+=== the failing DbCommand + query-context error (stdout tail, truncated to 900 chars each) ===
+{"Timestamp":"2026-10-16T01:01:51.3015574\u002B00:00","EventId":20102,"LogLevel":"Error","Category":"Microsoft.EntityFrameworkCore.Database.Command","Message":"Failed executing DbCommand (3ms) [Parameters=[], CommandType=\u0027Text\u0027, CommandTimeout=\u0027120\u0027]\r\nSELECT p.party_id\r\nFROM party.parties AS p\r\nORDER BY p.created_at\r\nLIMIT 1","State":{"Message":"Failed executing DbCommand (3ms) [Parameters=[], CommandType=\u0027Text\u0027, CommandTimeout=\u0027120\u0027]\r\nSELECT p.party_id\r\nFROM party.parties AS p\r\nORDER BY p.created_at\r\nLIMIT 1","elapsed":"3","parameters":"","commandType":"Text","commandTimeout":120,"newLine":"\r\n","commandText":"SELECT p.party_id\r\nFROM party.parties AS p\r\nORDER BY p.created_at\r\nLIMIT 1","{OriginalFormat}":"Failed executing DbCommand ({elapsed}ms) [Parameters=[{parameters}], CommandType=\u0027{commandType}\u0027, CommandTimeout
+
+{"Timestamp":"2026-10-16T01:01:51.3087214\u002B00:00","EventId":10100,"LogLevel":"Error","Category":"Microsoft.EntityFrameworkCore.Query","Message":"An exception occurred while iterating over the results of a query for context type \u0027Tooba.Party.Infrastructure.Persistence.PartyDbContext\u0027.\r\nNpgsql.PostgresException (0x80004005): 42P01: relation \u0022party.parties\u0022 does not exist\r\n\r\nPOSITION: 25\r\n   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)\r\n   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder\u00601.StateMachineBox\u00601.System.Threading.Tasks.Sources.IValueTaskSource\u003CTResult\u003E.GetResult(Int16 token)\r\n   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellation
+
+
+=== full stderr stack (verifies no secrets) ===
+Unhandled exception. Npgsql.PostgresException (0x80004005): 42P01: relation "party.parties" does not exist
+
+POSITION: 25
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Tooba.Party.Infrastructure.Development.PartyDevelopmentSeedGateway.ResolveDevelopmentSellerPartyAsync(String displayName, String legalName, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Party\Tooba.Party.Infrastructure\Development\PartyDevelopmentSeedGateway.cs:line 28
+   at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaSellableEnricher.EnsurePublishedAndSellableAsync(CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\CatalogAttributeSchemaSellableEnricher.cs:line 80
+   at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaDevelopmentSeed.InvokeEnricherAsync(IServiceProvider provider, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\CatalogAttributeSchemaDevelopmentSeed.cs:line 118
+   at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaDevelopmentSeed.ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\CatalogAttributeSchemaDevelopmentSeed.cs:line 110
+   at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentSeed.PostMigration.EnsureAsync(IServiceProvider provider, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Infrastructure\Development\CatalogDevelopmentSeed.cs:line 38
+   at Tooba.Host.Development.DevelopmentSchemaMigrator.MigrateOrderedAsync(IServiceProvider provider, CancellationToken cancellationToken) in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Development\DevelopmentSchemaMigrator.cs:line 143
+   at Tooba.Host.Development.DevelopmentSchemaMigrator.ApplyCoreAsync(IServiceProvider services, Boolean seedCatalog) in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Development\DevelopmentSchemaMigrator.cs:line 70
+   at Tooba.Host.Development.DevelopmentSchemaMigrator.ApplyCoreAsync(IServiceProvider services, Boolean seedCatalog) in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Development\DevelopmentSchemaMigrator.cs:line 112
+   at Program.<Main>$(String[] args) in D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Program.cs:line 367
+   at Program.<Main>(String[] args)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "party.parties" does not exist
+    Position: 25
+    File: parse_relation.c
+    Line: 1428
+    Routine: parserOpenTable

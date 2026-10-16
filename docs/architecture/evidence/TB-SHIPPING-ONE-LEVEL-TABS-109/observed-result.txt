@@ -1,0 +1,60 @@
+TB-SHIPPING-ONE-LEVEL-TABS-109 — THE OBSERVED ANSWER (one isolated startup, no retry)
+
+ANSWER 1 — THE ORIGINAL BLOCKER IS RESOLVED (observed, not inferred)
+  PublishReadiness diagnostic lines in this run .......... 0
+  'محصول برای انتشار آماده نیست.' occurrences in this run . 0
+  catalog.products status for schema-mobile-demo-phone .... Published        <-- TB-106 was refused here
+  The TB-106 stack origin (CatalogDirectory.UnwrapLifecycle) never appears. Execution passed
+  CatalogAttributeSchemaDevelopmentSeed.ApplyAsync line 110 (PublishWithDiagnosticsAsync) successfully and
+  continued into line 118 (InvokeEnricherAsync) — i.e. the seed's publish is no longer refused and the 105
+  diagnostic correctly stayed silent because there was nothing to diagnose.
+
+ANSWER 2 — SPARSE / DEFAULT INVARIANTS ON SCRATCH (read-only SQL, scratch-inspection.txt)
+  defaults = 1 | total_variants = 2   for the demo product
+  PHONE-BLK-128  is_default = t   status = Draft
+  PHONE-BLU-256  is_default = f   status = Draft
+  both fingerprints distinct; both variants carry BOTH axes with GUID option ids
+  declared axes: color(display_order 0), storage(display_order 1)
+  => the two original diagonal variants are preserved, no cartesian expansion, exactly one default
+     (the variant the seed designated).
+
+ANSWER 3 — THE FIRST NEW BARRIER (exact, verbatim)
+  Unhandled exception. Npgsql.PostgresException (0x80004005): 42P01: relation "party.parties" does not exist
+    at Tooba.Party.Infrastructure.Development.PartyDevelopmentSeedGateway.ResolveDevelopmentSellerPartyAsync(...)
+       PartyDevelopmentSeedGateway.cs:line 28
+    at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaSellableEnricher.EnsurePublishedAndSellableAsync(...)
+       CatalogAttributeSchemaSellableEnricher.cs:line 80
+    at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaDevelopmentSeed.InvokeEnricherAsync(...)
+       CatalogAttributeSchemaDevelopmentSeed.cs:line 118
+    at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaDevelopmentSeed.ApplyAsync(...)
+       CatalogAttributeSchemaDevelopmentSeed.cs:line 110
+    at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentSeed.PostMigration.EnsureAsync(...)
+       CatalogDevelopmentSeed.cs:line 38
+    at Tooba.Host.Development.DevelopmentSchemaMigrator.MigrateOrderedAsync(...) line 143
+    at Tooba.Host.Development.DevelopmentSchemaMigrator.ApplyCoreAsync(...) line 70 / line 112
+    at Program.<Main>$(String[] args) Program.cs:line 367
+  Failing SQL (stdout, EventId 20102, Microsoft.EntityFrameworkCore.Database.Command):
+    SELECT p.party_id FROM party.parties AS p ...
+  Context type: Tooba.Party.Infrastructure.Persistence.PartyDbContext
+
+ANSWER 4 — MAINTAINED COLLATERAL FACTS (scratch DB, read-only)
+  schemas present after the run:  catalog, public   ONLY
+  party / offer / pricing / inventory / tax schemas .... ABSENT
+  offer.offers / offer.prices / party.parties / inventory.stock_items .. all to_regclass() = NULL
+  => NO offer, NO price, NO inventory/stock row was created for the demo product.
+  catalog.products = 1 (all Published) ; catalog.variants = 2 ; catalog.product_history_entries = 6
+
+MECHANISM (ordering, stated as observation + code position — NOT a fix)
+  DevelopmentSchemaMigrator.MigrateOrderedAsync runs, for each module migrator in Order, the
+  IModuleSchemaMigrationStep(s) whose AfterOrder equals that migrator's Order (lines 136-144). The Catalog
+  post-migration step (CatalogDevelopmentSeed.PostMigration.EnsureAsync) therefore runs right after the CATALOG
+  migrator and BEFORE the Party/Offer/Pricing/Inventory/Tax migrators. The Catalog seed calls a cross-module
+  sellable enricher (ICatalogAttributeSchemaSellableEnricher) which resolves a seller party, then offers, prices,
+  tax classification and stock. On an EMPTY database those schemas do not exist yet, so the cross-module call
+  fails with 42P01 on party.parties. In TB-106 this was invisible because the run died one step earlier at the
+  variant-default publish refusal.
+
+WHAT THIS DOES NOT CLAIM
+  No storefront-label proof, no customer-cart/Checkout proof, no commercial-readiness claim. No retry, no second
+  bootstrap, no reset/seed, no source change. Not claiming the enricher ordering is a defect — only that it is the
+  first barrier after the original blocker on an empty database.

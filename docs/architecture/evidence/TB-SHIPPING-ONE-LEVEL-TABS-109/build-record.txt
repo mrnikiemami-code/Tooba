@@ -1,0 +1,20 @@
+TB-SHIPPING-ONE-LEVEL-TABS-109 — bounded publish/build record (raw MSBuild log dropped).
+Command: dotnet publish src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug -o .tmp-109-host-out
+Result : Tooba.Host.exe produced in the task-owned output directory; build succeeded, 0 errors (warnings only,
+         all pre-existing XML-doc / duplicate-using warnings). Tooba.Host.exe written 2026-10-16 04:29:43 local.
+
+Verification that the 108 seam and the 105 diagnostic are compiled into the isolated build
+(searched the published assemblies; ASCII for metadata/method names, UTF-16 for string literals):
+  .tmp-109-host-out/Tooba.Catalog.Infrastructure.dll
+      UTF-16 'catalog-dev.attribute-schema.publish-product'  = True   (105 diagnostic stage constant)
+      ASCII  'Tooba.Catalog.Development.PublishReadiness'    = True   (105 diagnostic category constant)
+      ASCII  'SetProductVariantDefaultAsync'                 = True   (108 facade member present in metadata)
+      ASCII  'SetDefaultAsync'                               = True   (108 port member present in metadata)
+      sha256 = 9F80A45F5CBBD23769C0F7CEEB0405AC8E9E7587D2633252515802499E0334BE
+  .tmp-109-host-out/Tooba.Catalog.Contracts.dll
+      UTF-16 'catalog.product.missing'                       = True
+      UTF-16 'catalog.variant.default.archived_forbidden'    = True
+
+Conclusion: the single launch executed code that contains both the 108 sparse default-variant seam and the 105
+Development publish-readiness diagnostic. (The two directories were deleted during cleanup; the module DLL was
+rebuilt from unmodified sources, so the sha is a build artifact reference only.)
