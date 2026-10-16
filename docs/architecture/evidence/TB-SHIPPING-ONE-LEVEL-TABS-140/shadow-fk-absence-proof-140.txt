@@ -1,0 +1,12 @@
+﻿?column?
+M1_column_present_in_migrated_schema=0
+(1 row)
+docker : ERROR:  column "fulfillment_unit_fulfillment_id" of relation "shipping_groups" does not exist
+At C:\Users\User\AppData\Local\Temp\ps-script-eb2982f3-baee-4ddd-8202-e2f9db3fba92.ps1:94 char:189
++ ... .sql -Raw | docker exec -i -e PGPASSWORD=$pw tooba-tb140-pg psql -U s ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ERROR:  column ... does not exist:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+LINE 1: insert into fulfillment.shipping_groups (fulfillment_unit_fu...
+                                                 ^

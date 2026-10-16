@@ -1,0 +1,13 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-140 cleanup (PID-verified)
+ISOLATED_HOST_PID=27584
+ISOLATED_HOST_URL=http://127.0.0.1:5408
+STOPPED_HOST_PROCESS=0 (Get-Process -Name Tooba.Host -Id 27584)
+PORT_5408_LISTENERS=0
+SCRATCH_CONTAINER_BEFORE=tooba-tb140-pg
+SCRATCH_CONTAINER_AFTER=(none)
+PORT_55461_LISTENERS=0
+SHARED_5088_LISTENERS=1 (untouched, was already running)
+SHARED_3000_LISTENERS=1 (untouched, was already running)
+SCRATCH_DATABASES=tooba_140_scratch,tooba_140_messaging (disposed with the container)
+SHARED_ALPHA_TOUCHED=false
+

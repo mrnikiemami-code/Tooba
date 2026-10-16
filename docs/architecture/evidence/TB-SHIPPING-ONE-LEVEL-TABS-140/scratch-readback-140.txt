@@ -1,0 +1,84 @@
+﻿== A. SCOPED TO THE VERIFIED CHECKOUT ==
+?column?
+A1_checkouts=1
+?column?
+A2_seller_orders=1 paid=1|TB-20261016080222-01-f93671|7194000.0000|IRR
+?column?
+A3_order_shipping_groups=2
+?column?
+A4_GROUP=01a143bb-c813-7000-87cc-12ce90b5cab4|post:express|post|express|200000.00|Confirmed|2026-10-20|9-12|2
+A4_GROUP=01a143bb-c813-7000-af28-ca99fb0ab07c|tipax:standard|tipax|standard|180000.00|Confirmed|2026-10-20|9-12|3
+?column?
+A5_order_lines=2
+?column?
+A6_LINE=01a143bb-c840-7000-8043-3603f2db5458|01a143af-9bfe-7000-942c-3a97974c5628|2.000000|3700000.0000
+A6_LINE=01a143bb-c843-7000-996f-cb87b22f2499|01a143af-9cee-7000-963b-e52d0d507af5|2.000000|2900000.0000
+?column?
+A7_group_line_links=2
+?column?
+A8_LINK=01a143bb-c813-7000-87cc-12ce90b5cab4|01a143bb-c840-7000-8043-3603f2db5458
+A8_LINK=01a143bb-c813-7000-af28-ca99fb0ab07c|01a143bb-c843-7000-996f-cb87b22f2499
+?column?
+A9_order_payment_inbox=1|event=01a143bb-ca43-7000-ab7e-f3fcf41f41db|payment=01a143bb-c9d1-7000-847e-1204a1d13012
+?column?
+A10_payments=1 succeeded=1
+?column?
+A11_allocations=3
+?column?
+A12_ALLOC=01a143bb-c813-7000-af28-ca99fb0ab07c|StoreShippingGroup|180000.0000|IRR
+A12_ALLOC=01a143bb-c813-7000-87cc-12ce90b5cab4|StoreShippingGroup|200000.0000|IRR
+A12_ALLOC=01a143bb-c83a-7000-b6d7-e5c6c9f63f17|SellerOrder|7194000.0000|IRR
+?column?
+A13_fulfillment_inbox=1|event=01a143bb-ca43-7000-ab7e-f3fcf41f41db|payment=01a143bb-c9d1-7000-847e-1204a1d13012|processed=true
+?column?
+A14_fulfillment_units=1
+?column?
+A15_UNIT=01a143bb-cb12-7000-853f-1745962d630d|01a143bb-c83a-7000-b6d7-e5c6c9f63f17|01a143bb-c830-7000-913e-58cd322fddc4|ReadyToFulfill|<multi-group>|<multi-group>
+?column?
+A16_fulfillment_groups=2
+?column?
+A17_GROUP=01a143bb-c813-7000-87cc-12ce90b5cab4|01a143bb-cb12-7000-853f-1745962d630d|01a143bb-c83a-7000-b6d7-e5c6c9f63f17|post:express|post|express|پیشتاز|2026-10-20|9-12|2
+A17_GROUP=01a143bb-c813-7000-af28-ca99fb0ab07c|01a143bb-cb12-7000-853f-1745962d630d|01a143bb-c83a-7000-b6d7-e5c6c9f63f17|tipax:standard|tipax|standard|معمولی|2026-10-20|9-12|3
+?column?
+A18_fulfillment_items=2
+?column?
+A19_ITEM=01a143bb-cb12-7000-853f-1745962d630d|01a143bb-c840-7000-8043-3603f2db5458|2.000000|group=01a143bb-c813-7000-87cc-12ce90b5cab4
+A19_ITEM=01a143bb-cb12-7000-853f-1745962d630d|01a143bb-c843-7000-996f-cb87b22f2499|2.000000|group=01a143bb-c813-7000-af28-ca99fb0ab07c
+?column?
+A20_item_group_matches_order_group=true
+?column?
+A21_fulfillment_shipments=0
+== B. DB-WIDE FULFILLMENT INVARIANT (whole scratch database) ==
+?column?
+B1_fulfillment_units=1
+?column?
+B2_fulfillment_groups=2
+?column?
+B3_fulfillment_items=2
+?column?
+B4_fulfillment_payment_inbox=1
+?column?
+B5_fulfillment_shipments=0
+?column?
+B6_shadow_fk_column_present=0
+?column?
+B7_groups_per_unit=01a143bb-cb12-7000-853f-1745962d630d=>2
+== C. PRE-EXISTING ATTEMPTS ON THE SAME SCRATCH DB (context, not part of the verified run) ==
+?column?
+C1_checkouts_total=4
+?column?
+C2_seller_orders_total=4 paid=2
+?column?
+C3_row=01a143b5-00bb-7000-8c7b-eba1e60800f9|Cancelled|TB-20261016075458-01-a2e7c1
+C3_row=01a143b5-5b89-7000-9306-f35e0eff3aba|Cancelled|TB-20261016075521-01-4ae520
+C3_row=01a143b5-dad7-7000-8fe7-fbbb6ef99ba7|Paid|TB-20261016075553-01-ec5ca3
+C3_row=01a143bb-c83a-7000-b6d7-e5c6c9f63f17|Paid|TB-20261016080222-01-f93671
+?column?
+C4_payments_total=2
+== D. OUTBOX PROCESSING ==
+?column?
+D1_order_outbox_pending=0 of 8
+?column?
+D2_fulfillment_outbox_pending=0 of 1
+?column?
+D3_payment_outbox_pending=0 of 6

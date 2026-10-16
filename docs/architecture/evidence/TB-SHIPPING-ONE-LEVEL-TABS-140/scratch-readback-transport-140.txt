@@ -1,0 +1,10 @@
+﻿?column?
+T1_queues=6
+?column?
+T2_error_queues=0
+?column?
+T3_messages=1
+?column?
+T4_deliveries=1
+?column?
+T5_pending_delivery=b85b0000-7a7c-d88c-cc48-08df2b5ae81f|corr=d9227095-db1f-4228-b20b-b3962bf2b29c|sent=2026-10-16 07:55:55.13488+00|enqueued=2026-10-16 07:56:45.451828+00|delivery_count=1|consumer=none|eventType=payment.succeeded.v1|eventId=01a143b5-dbce-7000-8934-6a8e168f9491

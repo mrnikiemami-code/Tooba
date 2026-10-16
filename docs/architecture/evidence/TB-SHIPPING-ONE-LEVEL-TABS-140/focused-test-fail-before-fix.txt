@@ -1,0 +1,54 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Tooba.ModuleContracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.ModuleContracts\bin\Debug\net8.0\Tooba.ModuleContracts.dll
+  Tooba.BuildingBlocks -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.BuildingBlocks\bin\Debug\net8.0\Tooba.BuildingBlocks.dll
+  Tooba.Fulfillment.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Contracts\bin\Debug\net8.0\Tooba.Fulfillment.Contracts.dll
+  Tooba.Inventory.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Contracts\bin\Debug\net8.0\Tooba.Inventory.Contracts.dll
+  Tooba.Payment.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Payment\Tooba.Payment.Contracts\bin\Debug\net8.0\Tooba.Payment.Contracts.dll
+  Tooba.Party.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Party\Tooba.Party.Contracts\bin\Debug\net8.0\Tooba.Party.Contracts.dll
+  Tooba.Persistence -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.Persistence\bin\Debug\net8.0\Tooba.Persistence.dll
+  Tooba.Fulfillment.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Domain\bin\Debug\net8.0\Tooba.Fulfillment.Domain.dll
+  Tooba.Offer.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Offer\Tooba.Offer.Contracts\bin\Debug\net8.0\Tooba.Offer.Contracts.dll
+  Tooba.Localization.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Localization\Tooba.Localization.Contracts\bin\Debug\net8.0\Tooba.Localization.Contracts.dll
+  Tooba.Cart.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Cart\Tooba.Cart.Contracts\bin\Debug\net8.0\Tooba.Cart.Contracts.dll
+  Tooba.Order.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Order\Tooba.Order.Contracts\bin\Debug\net8.0\Tooba.Order.Contracts.dll
+  Tooba.Fulfillment.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Application\bin\Debug\net8.0\Tooba.Fulfillment.Application.dll
+  Tooba.Fulfillment.Endpoints -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Endpoints\bin\Debug\net8.0\Tooba.Fulfillment.Endpoints.dll
+  Tooba.Fulfillment.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Infrastructure\bin\Debug\net8.0\Tooba.Fulfillment.Infrastructure.dll
+  Tooba.Fulfillment.Tests -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Tests\bin\Debug\net8.0\Tooba.Fulfillment.Tests.dll
+Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Tests\bin\Debug\net8.0\Tooba.Fulfillment.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+dotnet : [xUnit.net 00:00:00.76]     Tooba.Fulfillment.Tests.Behavior.FulfillmentShippingGroupSchemaParityTests.Shippin
+g_group_model_declares_no_shadow_foreign_key [FAIL]
+At C:\Users\User\AppData\Local\Temp\ps-script-e29b557e-5b9a-464b-a647-8055716f8fed.ps1:94 char:43
++ ... SarvNewVer; dotnet test src\backend\Modules\Fulfillment\Tooba.Fulfill ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...eign_key [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[xUnit.net 00:00:00.81]     Tooba.Fulfillment.Tests.Behavior.FulfillmentShippingGroupSchemaParityTests.Shipping_group_m
+odel_columns_match_the_migrated_schema_exactly [FAIL]
+  Failed Tooba.Fulfillment.Tests.Behavior.FulfillmentShippingGroupSchemaParityTests.Shipping_group_model_declares_no_shadow_foreign_key [655 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: [ForeignKey: FulfillmentShippingGroup {'FulfillmentUnitFulfillmentId'} -> FulfillmentUnit {'FulfillmentId'} ClientSetNull ToDependent: ShippingGroups]
+  Stack Trace:
+     at Tooba.Fulfillment.Tests.Behavior.FulfillmentShippingGroupSchemaParityTests.Shipping_group_model_declares_no_shadow_foreign_key() in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Tests\Behavior\FulfillmentShippingGroupSchemaParityTests.cs:line 59
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Tooba.Fulfillment.Tests.Behavior.FulfillmentShippingGroupSchemaParityTests.Shipping_group_model_columns_match_the_migrated_schema_exactly [37 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+                             ↓ (pos 1)
+Expected: ["fulfillment_id", "lead_days", "method_code", "method_label", "minimum_delivery_date", ···]
+Actual:   ["fulfillment_id", "fulfillment_unit_fulfillment_id", "lead_days", "method_code", "method_label", ···]
+                             ↑ (pos 1)
+  Stack Trace:
+     at Tooba.Fulfillment.Tests.Behavior.FulfillmentShippingGroupSchemaParityTests.Shipping_group_model_columns_match_the_migrated_schema_exactly() in D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Fulfillment\Tooba.Fulfillment.Tests\Behavior\FulfillmentShippingGroupSchemaParityTests.cs:line 48
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     2, Passed:     1, Skipped:     0, Total:     3, Duration: 700 ms - Tooba.Fulfillment.Tests.dll (net8.0)
