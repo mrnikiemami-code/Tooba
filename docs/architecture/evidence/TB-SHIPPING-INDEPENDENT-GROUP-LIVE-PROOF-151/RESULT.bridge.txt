@@ -1,0 +1,113 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-INDEPENDENT-GROUP-LIVE-PROOF-151
+Parent-Task: TB-SHIPPING-INDEPENDENT-GROUP-FRONTEND-150
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-INDEPENDENT-SELLER-COMMITMENTS
+Mode: BOUNDED_ISOLATED_REAL_HTTP_WRITE_READ_AND_PAYMENT_HANDOFF_PROOF
+Bridge-Task-Row: c4ac5b4b-c382-4db5-969a-c231e3fc50ce
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: e56a0e67b92aa3421017aa69c7ee67d342b0e1d2
+Base-SHA: e56a0e67b92aa3421017aa69c7ee67d342b0e1d2
+Implementation-Commit-SHA: none (this task changed no source file)
+Evidence-Commit-SHA: 575890dd56243b79048d717b936cabfb10ce5631
+Head-SHA: 575890dd56243b79048d717b936cabfb10ce5631
+Push: origin/main fast-forward e56a0e67b..575890dd5 ; HEAD == origin/main ; Result-Artifact-Commit: the next commit on origin/main (child of Evidence-Commit-SHA) carries this RESULT.bridge.txt and its poster; scoped working tree clean
+automaticNextImplementationTask: NONE
+
+WHY PARTIAL (not PASS, not BLOCKED)
+The isolated private environment was found, built and used, and the real authenticated customer journey for a
+two-seller, SAME canonical method (tipax:standard) cart was executed end to end over HTTP with genuine persisted
+writes and reads: JOURNEY=PASS, 25 runnable assertions PASS, 0 FAIL. Under the task's own PASS definition
+("PASS only with genuine authenticated private HTTP save/read + UI proof") the verdict cannot be PASS because:
+ (a) the in-browser UI screenshots were NOT captured within the 45-minute box (no storefront frontend was started
+     against the private host), and no screenshot was fabricated to fill that gap;
+ (b) the read-only payment-draft seam could not be exercised: GET /v1/storefront/cart/{cartId}/payment-draft
+     answered 409 checkout.tax.unavailable because this disposable scratch seeds tax.rules = 1 covering only
+     offer category 01a145fe-00cc-7000-8967-741a833062a5, while the two-seller cart spans
+     01a145fd-fea2-7000-b22f-60a08f3e6dd6 (no active rule) AND 01a145fe-00cc-7000-8967-741a833062a5.
+It is not BLOCKED: the environment existed, the customer auth succeeded safely and the required save/read proof
+was produced. Everything not closed is named exactly above and in RESULT.md section 7.
+
+ENVIRONMENT ACTUALLY USED (task-owned, disposable, destroyed)
+Container tooba-tb151-pg (postgres:16-alpine) at 127.0.0.1:55470 with databases tooba_151_scratch /
+tooba_151_messaging and role scratch151; isolated Host published from the base SHA to .tmp-151-host-out and
+launched on http://127.0.0.1:5412; single Active tenant store-alpha -> tenant-151-scratch, Edition SingleStore
+(no Edition swap), SalesChannel Marketplace. Isolation guard failClosed=true: one tenant, canonical gateway
+tenant present, no tooba_alpha, no tenant-alpha, no Port=5432, no prior scratch port (55447-55463), no
+ShippingRateAuthority, no ShippingOperationalShadow. Two launches of the task-owned Host were required and are
+declared: launch 1 bootstrapped schema+seed, launch 2 carried the final overlay, because seller-specific
+preparation days are keyed by seller party id and the seeded seller ids only exist after the first bootstrap.
+The shared :3000/:5088, tooba_alpha, the shared Postgres :5432 and shared RabbitMQ were never reconfigured,
+stopped or written. Customer identity: sanctioned Development OTP fixture; tokens are REDACTED in the trace and no
+secret (including the scratch DB password) is committed. Cleanup evidence: isolated Host stopped by recorded PID
+AND executable-path match, container removed, 0 LISTENING sockets on 55470, shared :5088 still listening, shared
+postgres-db container preserved.
+
+PROVEN (live authenticated HTTP, isolated private environment)
+1. Before save: two distinct server-owned draft-stage group keys both on the SAME canonical method
+   ("{sellerA:N}|tipax:standard" and "{sellerB:N}|tipax:standard"), ShippingGroupId = null for both (genuinely
+   draft-free start; the task-owned draft tables were emptied first, disclosed in RESULT.md section 2).
+2. Independent authoritative earliest dates from the SAME method with the SAME lead days (3): seller A
+   preparation 2 -> 2026-10-21, seller B preparation 3 -> 2026-10-22 (delta = exactly the preparation delta).
+3. PUT /v1/storefront/shipping/selection with two groups each carrying its own date+window -> 200, two distinct
+   stable ShippingGroupIds, per-group schedules retained (2026-10-21/9-12 and 2026-10-22/9-12), no scalar
+   date/window accepted into the multi-group draft.
+4. Re-read of each ShippingGroupId/date/window from the authoritative projection, and a byte-identical second
+   read (refresh/back): no client drift, no server recalculation, no universal date-time picker in the payload.
+5. Editing group A (window 9-12 -> 12-15) persists on A while group B keeps its own date, window and line
+   membership.
+6. Fail-closed: a past date for group A -> 400 shipping.delivery.too_early; an unknown window 23-24 -> 400
+   shipping.delivery.slot_unavailable; a subsequent read proves neither rejected write overwrote the last
+   accepted selection of A or B.
+7. Persisted read-back: 2 draft groups, 2 distinct sellers, same method_code; independent minimums and selected
+   schedules; one 180000.00 IRR fee per group (draft header keeps only an informational 360000 total); membership
+   rows = 2 covering 2 distinct lines exactly once; draft header has NO global selected_delivery_date/window and no
+   scalar shipping_method_code; checkouts = 0, order_shipping_groups = 0, seller_orders = 0.
+8. Same seller + same method stays ONE group: authenticated probe swapping seller B's line for a second offer of
+   seller A returns exactly 1 canonical tipax:standard horizon.
+9. Cart line membership unchanged after the whole shipping flow (the two submitted offers only).
+
+OBSERVED, NOT REPAIRED (recorded for the Architect, no fabricated PASS)
+* Draft ShippingGroupId is re-issued on every save: CartShippingGroupPlanner.Plan always allocates new ids and has
+  no existing-group reuse input, so the second PUT returns new ids for both groups. Customer-visible schedule, fee
+  and membership are stable across saves because the client re-reads the projection and reconciles
+  groupKey -> ShippingGroupId; identity continuity across re-saves is simply not provided by 149/150 and no
+  customer-facing assertion fails. Not treated as a 149/150 bug and not repaired in this task.
+* StorefrontShippingProjection.minimumDeliveryDate is still returned for a multi-group cart as the legacy
+  single-group compatibility value (the later group minimum); per-group promises are the independently proven
+  shippingGroupHorizons rows.
+* Time windows remain the current static generic set (9-12, 12-15, 15-18, 18-21); no carrier timezone, slot
+  promise, shipping cost or origin was invented. Promise authority is seller preparation + method lead days +
+  server IClock.
+
+SAFETY
+No real SMS, PSP or payment was called; final payment was never invoked, no checkout/order/reservation was created
+and no authentication or eligibility check was bypassed. Case D (same seller + same method + incompatible origins)
+remains documented BLOCKED and no origin was faked. No Settlement payout, carrier cost policy, provider policy,
+method creation or Admin form was created or updated. No frontend, CSS, theme, typography, RTL or admin file was
+touched. No source file was modified: the commit contains only the received task artifact and this task's evidence.
+No N+1 or unrelated audit was performed.
+
+EVIDENCE (docs/architecture/evidence/TB-SHIPPING-INDEPENDENT-GROUP-LIVE-PROOF-151/)
+RESULT.md, isolation-guard.json, host-launch-151.txt, prepare-isolated-target-151.js, launch-isolated-host-151.ps1,
+journey-151.js, journey-151-trace.txt, assertion-matrix-151.txt, projection-before-save-151.json,
+selection-save-151.json, projection-after-save-151.json, payment-draft-151.json (the 409 body), 
+cart-after-flow-151.json, readback-151.sql, scratch-readback-151.txt, cleanup-151.txt.
+
+TESTING
+No focused suite was run and none was modified, because this task changed no source file and exercised no code path
+that the already-green 149/150 suites do not cover; the proof artefact is the live authenticated HTTP round trip
+above, not a test log. No broad slow suite was re-run.
+
+SAFE NEXT STEP (bounded, no redesign)
+Seed a Development tax rule that covers the remaining seeded offer categories (or a per-category rule set) so a
+multi-seller cart is priceable in the disposable scratch, then re-run journey-151.js unchanged to close the
+payment-draft assertion; and start a private storefront frontend pointed at the private host to capture the two
+group cards for UI proof. Both are additive environment/fixture work; no 149/150 code change is justified by this
+task's findings.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
