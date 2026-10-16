@@ -10,6 +10,7 @@
   "actualBaseSha": "8261804c6e5976440099e5c13e3f2bc59daf9c5e",
   "baseShaAncestorOfHead": true,
   "codeSha": "113ace48cd6ad3a067460b2b77f7ea4f4024db81",
+  "evidenceSha": "commit containing this receipt; HEAD == origin/main verified immediately after push, no commit afterwards",
   "headEqualsOriginMain": true,
   "drift": "NONE. HEAD == origin/main == Expected-Base-SHA at preflight; no overlapping source drift and no unowned dirty source file.",
   "elapsedMinutes": 17,

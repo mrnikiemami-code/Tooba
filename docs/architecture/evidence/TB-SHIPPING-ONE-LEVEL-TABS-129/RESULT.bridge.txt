@@ -13,7 +13,8 @@ Automatic-Next-Implementation-Task: NONE
 
 BASE-SHA: 8261804c6e5976440099e5c13e3f2bc59daf9c5e
 CODE-SHA: 113ace48cd6ad3a067460b2b77f7ea4f4024db81
-HEAD==origin/main: YES (after push; see EVIDENCE-SHA commit)
+EVIDENCE-SHA: the commit that contains this result file; HEAD == origin/main was verified immediately after push and
+no commit was made afterwards.
 DRIFT: NONE. Expected-Base-SHA was an ancestor of HEAD and origin/main == HEAD at preflight; no overlapping source drift, no unowned source dirty files. The only pre-existing dirty/untracked files are the preserved admin-frontend and unrelated evidence artifacts; the Task receipt stayed UNSTAGED.
 ELAPSED: ~17 minutes wall-clock (inside the 45-minute hard box).
 
