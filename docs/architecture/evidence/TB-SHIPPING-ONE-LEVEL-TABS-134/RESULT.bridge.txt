@@ -1,0 +1,163 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-134
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-133
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Bridge-Row-Id: 922bd6d5-4176-4e16-8a57-88fb3258924f
+Program: TOOBA-SHIPPING-CHECKOUT-DELIVERY-CLOSURE
+Mode: BOUNDED_PERSISTED_SHIPPING_DRAFT_RELOAD_RECOVERY
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+
+SHA
+Expected-Base-SHA: 2f9f39cf6aad8c2fb650fb48901881fe8f579c9a
+Actual-Base-SHA: 2f9f39cf6aad8c2fb650fb48901881fe8f579c9a (exact match, zero drift at claim)
+Code-SHA: daaa18b23408c91d82345144d417239442daae5b
+Evidence-SHA: daaa18b23408c91d82345144d417239442daae5b (single bounded commit, code + tests + docs + evidence together)
+Branch: main
+HEAD == origin/main == daaa18b23408c91d82345144d417239442daae5b (normal push, no force/rewrite/rebase/stash)
+
+ELAPSED (measured)
+Started: 2026-10-16T05:57:49Z (bridge task createdAtUtc; 09:27:49 local)
+Finished: 2026-10-16T06:41Z local 10:11
+Elapsed: ~43 minutes (inside the 45-minute hard timebox). Source repair + focused tests were complete by minute 9,
+  so the authorized single isolated runtime proof was performed afterwards. No retry loops, no broad suites,
+  no repeated builds.
+
+SCOPE / RULE COMPLIANCE
+- Exactly one bridge task claimed and executed on tooba-main; no unrelated or historical worker touched.
+- Worker heartbeat=Working during execution; set Idle after completion.
+- Only the authorized defect was repaired. No commercial allocation/funding policy, no pricing, no tax, no
+  Settlement, no AMSC wave, no baseline reset, no schema/migration change.
+- Pre-existing dirty files (admin-fulfillment-work-queue-screen.tsx, admin-order-detail-screen.tsx and the two old
+  evidence text files) were never touched and remain unstaged. The task receipt artifact is committed as its own
+  bounded task file; no dummy payload was ever posted to the Results API.
+
+MISSION A — ROOT CAUSE, OWNER-CORRECT (cited code paths)
+Endpoint: StorefrontOrderEndpoints.ProjectShippingAsync -> ProjectStorefrontShippingQuery ->
+  StorefrontShippingService.ProjectAsync (Tooba.Order.Application, Order-owned).
+Layer (a) Order draft retrieval — HEALTHY: LoadDraftAsync reads IStorefrontShippingDraftStore and verifies guest
+  ownership (EnsureDraftOwnership hashes the guest secret; a foreign secret yields no draft and no existence leak).
+Layer (b) shipping destination/revalidation — DEFECTIVE: the only validity predicate was
+  `methods.Any(m => m.MethodCode == draft.ShippingMethodCode)`.
+Layer (c) frontend hydration — HEALTHY and unchanged: refreshProjection already hydrates address/date/time/notes
+  from page.draft, and the grouped restore effect already maps draft.shippingGroups to the per-seller method state.
+The defect is in the owning domain's persisted shape: CartShippingDraft.AddShippingGroups sets
+  `ShippingMethodCode = multiGroup ? string.Empty : first.MethodCode`
+  (order.cart_shipping_drafts row from this run: shipping_method_code = "" , selection only in
+  order.cart_shipping_groups). Therefore for ANY multi-seller draft the guard was always false:
+  stillValid=false -> draft=null + "انتخاب ارسال دیگر معتبر نیست…" + selectedCode empty -> minimumDeliveryDate=null
+  and deliveryDates=[] on EVERY cold reload. Legacy single-group drafts keep a non-empty shorthand and were
+  unaffected. No write, no failed transaction, no access leak was involved.
+
+MISSION A — REPAIR (smallest additive, read-only, Order-owned, no new storage)
+NEW  src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/Recovery/StorefrontShippingDraftRecovery.cs
+  SelectedMethodCodes(): stable groups when present, else the legacy single-method shorthand (blank dropped, deduped).
+  IsStillValid(): every selected method must still be eligible today; if the submitted province differs from the
+  stored one the canonical StorefrontShippingCalculator.IsDestinationAllowed decides; every persisted group must
+  still belong to a seller of THIS cart (otherwise the saved selection is stale) — fail closed with the EXISTING
+  customer message. No price, promise, address authority or storage is duplicated; no client-supplied amount is trusted.
+  ResolveProjectedLeadDays(): latest today-authoritative LeadDays of the saved groups, else null (never a made-up promise).
+EDIT src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs
+  - draft revalidation now goes through that policy (with the cart's seller ids); method-code comparison is
+    case-insensitive to match how SaveSelectionAsync validated eligibility when the draft was written;
+  - a grouped draft with no methodCode now receives a fresh minimumDeliveryDate from the saved groups' latest
+    promise via the canonical ComputeMinimumDeliveryDate (so a recovered date is revalidated against the server's
+    real promise); the single-method legacy path is unchanged.
+No new route, endpoint, DTO, DI registration, migration, schema, localization key or CSS. Projection response shape
+is unchanged (`draft`, `revalidationMessage`, ...) and is simply populated for the grouped case now.
+FRONTEND: no file changed — hydration, grouped restore, and the date/time re-projection hook already existed and the
+hook never overwrites saved groups; the only shipping writer is persistAndContinue (Continue click, guarded by isValid).
+
+MISSION B — FOCUSED SOURCE PROOF
+NEW Tooba.Order.Tests/Storefront/StorefrontShippingDraftRecoveryTests.cs: 8 tests, 8 pass, 0 fail, with the real
+  StorefrontShippingService, real domain CartShippingGroupPlanner and real calculator; only I/O ports are fakes.
+  Covers: cold projection without methodCode recovering the grouped draft + address + both stable seller groups +
+  per-group method/amount + saved date/time; the recovered amount snapshot matching the persisted 380,000;
+  legacy single-group compatibility; method no longer eligible -> fail closed with the existing message;
+  a persisted group whose seller left the cart -> fail closed; foreign guest secret -> no draft and no revalidation
+  notice (no existence leak); empty/blank selection -> fail closed with no fabricated promise; grouped lead days =
+  latest authoritative promise of the saved groups and null when a method is unavailable.
+  Every test also asserts SaveCalls == 0 and one draft read (no side effects on GET/projection).
+REGRESSION: all Storefront + Architecture tests of the Order module: 272 passed, 0 failed.
+Frontend typecheck was intentionally NOT run: no frontend file was modified, so there is no frontend delta to check.
+
+MISSION B — ONE ISOLATED RUNTIME PROOF (real browser, zero shared-environment contact)
+isolatedHost=http://127.0.0.1:5404 (published from this task's source), isolatedFrontend=http://127.0.0.1:3104
+  (TOOBA_HOST_ORIGIN bound to the isolated Host), disposable Postgres container tooba-tb134-pg on port 55457 with
+  BOTH scratch databases pre-created (tooba_134_scratch + tooba_134_messaging).
+Binding discriminator: GET :3104/v1/storefront/checkout-identity-policy returned the ISOLATED policy (GuestAllowed);
+  /__platform-commerce returned deploymentId=isolated-134 connectionReference=tenant-134-scratch.
+isolation-guard.json failClosed=true: single Active tenant store-alpha/tenant-134-scratch, no shared alpha
+  database/reference/port, no prior scratch port, ShippingRateAuthority/OperationalShadow absent,
+  ShippingOneLevelCatalog.Enabled=true in the disposable overlay only.
+LAUNCH_ACCOUNTING: PUBLISH once (dotnet publish Tooba.Host -c Debug -o .tmp-134-host-out, exit 0); HOST_LAUNCH_COUNT=1
+  (healthy /health after 36s, no watchdog hit, no relaunch); FRONTEND_LAUNCH_COUNT=1.
+Real two-seller guest cart from genuine storefront actions (PDP add for دیجی‌استایل نمونه then the alternate seller
+  فروشگاه آرمان): cartId=01a14355-bacc-7000-b3b0-6b379a5f7801, cartVersion=5, itemCount=2, sellerCount=2,
+  subtotalExclusiveOfTax=3,640,000; address رضا محمدی / 09121234567 / تهران / تهران / خیابان ولیعصر پلاک ۱۲ / 1234567890;
+  group methods post:express + tipax:standard; 6 server-derived date chips from 2026-10-20; window ۹ صبح تا ۱۲ ظهر;
+  grouped fees ۲۰۰٬۰۰۰ + ۱۸۰٬۰۰۰ = ۳۸۰٬۰۰۰ ریال; Continue disabled until the slot was chosen, then ENABLED.
+Handoff still works: exactly ONE Continue click -> /fa/payment?cartId=01a14355-bacc-7000-b3b0-6b379a5f7801 with
+  روش ارسال: گیرنده: رضا محمدی — تهران, هزینه ارسال: ۳۸۰٬۰۰۰ ریال, قابل پرداخت: ۴٬۳۴۷٬۶۰۰ ریال,
+  وضعیت پرداخت: در انتظار پرداخت · "این سفارش هنوز ثبت نشده است."
+
+THE ACCEPTANCE CASE (back navigation + COLD full reload of /fa/shipping)
+After reaching payment, /fa/shipping was opened with a FULL page load and the following was observed:
+  address fully restored (first/last name, mobile, province=تهران, city=تهران, address, postal code);
+  both group methods restored as selected: post:express (دیجی‌استایل نمونه) + tipax:standard (فروشگاه آرمان);
+  6 date chips with shipping-date-2026-10-20 selected; window ۹ صبح تا ۱۲ ظهر restored;
+  grouped fees restored (۲۰۰٬۰۰۰ + ۱۸۰٬۰۰۰); Continue ENABLED; the revalidation notice is ABSENT
+  (it was always present before this repair — the defect captured by TB-133).
+NO-SIDE-EFFECT PROOF on that reload (performance resource entries of the whole page lifecycle): shipping/selection=0,
+  shipping/commit=0, checkout submit=0, start-payment=0, payment capture=0, cart clear=0; only the read-only
+  GET /v1/storefront/checkout-identity-policy is recorded.
+DB GROUND TRUTH (scratch only, read-only query): order.cart_shipping_drafts has shipping_method_code = "" with
+  selected_delivery_date=2026-10-20, window=9-12, shipping_amount=380000.00, province/city=تهران and
+  order.cart_shipping_groups holds (دیجی‌استایل نمونه, post:express, 200000.00, 2026-10-20, 9-12) and
+  (فروشگاه آرمان, tipax:standard, 180000.00, 2026-10-20, 9-12); cart.carts = Active version 5 (unchanged by reload).
+SCREENSHOT: shipping-reload-restored-134.png (this task's own isolated scratch run).
+Cleanup: frontend + its verified next-server child and the Host stopped by recorded/verified PIDs, scratch container
+  removed (no volume), temp dirs and the uncommitted scratch password removed; listeners on 5404/3104/55457 = 0
+  afterwards; shared :5088 and :3000 listeners and shared containers untouched.
+
+DRIFT / NON-INTERFERENCE
+No schema, migration, seed, configuration flag or deployed artifact changed. Shared environments untouched:
+:5088/:3000 listeners unchanged, only the pre-existing shared containers (postgres-db, rabbitmq) present at the end.
+The only environment mutation was the Development-only checkout-identity policy seam on the DISPOSABLE scratch tenant
+(required for a guest journey, confined to the scratch database).
+
+ROLLBACK
+Single commit daaa18b23408c91d82345144d417239442daae5b (backend + tests + docs + evidence). `git revert daaa18b23`
+restores the previous behavior exactly; there is no state, schema or deployed artifact to unwind and the isolated
+scratch resources were already removed.
+
+REMAINING DEBT / BLOCKERS (reported, not repaired, outside this task's scope)
+1. Single seller with two independently chosen methods remains UNPROVEN (no UI path), as reported by TB-133.
+2. Merchant allocation / funding policy remains BLOCKED; nothing was invented.
+3. The one-level migration/parity proof remains open.
+4. Payment is NOT proven: only the payment page was reached and read.
+5. The projection's grouped minimum delivery date is intentionally the latest today-authoritative promise of the
+   saved groups; per-group promises are still read per method by the existing frontend horizon hook.
+
+NON-CLAIMS (must not be read as accepted)
+- Payment/checkout/production readiness is NOT claimed (no method chosen, no authorization, capture, order or
+  reservation). The 9% VAT figure is read from the payment page only.
+- The legacy single-seller reload path is proven by focused source tests only, not by a new runtime journey.
+- Visual acceptance is NOT claimed: one bounded screenshot of the restored grouped selection, no parity score.
+- Only ONE reload cycle was exercised in the browser; no soak, stress or multi-tab concurrency proof.
+- Worker PASS is not Architect ACCEPT.
+
+DELIVERABLES (all committed and pushed)
+src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/Recovery/StorefrontShippingDraftRecovery.cs
+src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs
+src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingDraftRecoveryTests.cs
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-134.md
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-134.task.md
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-134/ (observation-134.txt, isolation-guard.json,
+  prepare-isolated-target-134.js, launch-isolated-host-134.ps1, launch-isolated-frontend-134.ps1, run-api-prep-134.js,
+  api-prereq-134.txt, host-launch-134.txt, shipping-reload-restored-134.png, cleanup-134.ps1, cleanup-134.txt)
+END_TOOBA_WORKER_RESULT
