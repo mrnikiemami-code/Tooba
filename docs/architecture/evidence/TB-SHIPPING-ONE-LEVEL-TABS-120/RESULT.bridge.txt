@@ -1,0 +1,62 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-120
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-119
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Bridge-Task-Row: 3bc91c66-6844-4f92-8338-275d15518c4d
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+Expected-Base-SHA: dc2eb1bd71261cd95bc49ac77814105034279913
+Base-SHA: dc2eb1bd71261cd95bc49ac77814105034279913
+Base-SHA-Drift: none for source (Expected-Base-SHA == HEAD == origin/main at claim). Pre-existing, non-overlapping working-tree drift only (the same 5 modified/untracked evidence txts and 2 frontend dirt files dated 2026-10-13 reported in TB-118/119); none is a Fulfillment/shipping/Host-composition source file and none was adopted, reset, stashed or reverted.
+Code-SHA: 562a7ede879b731d84de7e35bd9922dabc0a8267
+Evidence-SHA: 562a7ede879b731d84de7e35bd9922dabc0a8267
+HEAD==origin/main after push: true (verified below)
+Measured-Minutes: ~23 total (claim 02:57Z, result ~03:20Z) — inside the 45 min HARD / 30 min target timebox. Implementation finished well inside 30 min; a single focused test run plus one bounded module-guard run and one Host.Tests architecture-namespace run.
+Rollback: delete the two new files and revert the 16-line Program.cs addition. No DB migration, schema, config or data change — nothing to roll back in any database.
+
+TRACED MISSING CALLER AND AUTHORITATIVE SOURCE (Mission A)
+- Missing caller: the ONLY one-level row creator is ShippingOneLevelBackfillStore/ShippingMethodBackfillPlanner, DI-registered at FulfillmentModule.cs:117 but referenced only by DI + tests, with NO production/Host caller. Migration 20261015120000_AddShippingOneLevelCatalog is DDL-only; ShippingOneLevelCatalogActivation (:75-81) and ShippingOneLevelCatalogAdminWrite (:75,:96) only update/translate existing rows and return MethodNotFound; IShippingCatalogSeedPort.EnsureSeedAsync seeds the LEGACY service/option tables only. Hence any fresh environment yields an empty one-level catalog regardless of the gate.
+- Authoritative source: the legacy service/option catalog (5 services / 7 methods), read via IShippingCatalogReader and ensured through the existing module seam IShippingCatalogSeedPort.EnsureSeedAsync. The planner is a pure function (no DbContext, no writes) that preserves service+option identity as its own field and keeps each language's own name.
+
+CHANGED PATHS (exact bounded diff; no unrelated file adopted)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelCatalogDevelopmentSeed.cs (NEW — module-owned Development bootstrap)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelDevelopmentSeedTests.cs (NEW — five focused facts)
+- src/backend/Host/Tooba.Host/Program.cs (MODIFIED, +16 lines: one using + one Development-only composition try/catch)
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-120.md
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-120/** (summary.md, task-receipt.json, focused-tests-120.log, module-guards-shipping-120.log, RESULT.bridge.txt, post-result.js)
+- Bridge receipt docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-120.task.md preserved UNSTAGED.
+Zero changes to Shipping/Order/Checkout/Payment business behavior, Catalog, migrations, schema, production startup paths, frontend, shared appsettings, public endpoints or feature-gate defaults.
+
+DESIGN / BOUNDED SEAM
+- Host composes ONLY: DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(app.Services, "shipping-one-level-catalog-dev-backfill", ShippingOneLevelCatalogDevelopmentSeed.ApplyAsync). This is the same canonical, already-authorized Host Development gateway used by CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync; it resolves the Active store-alpha tenant and assigns the trusted CommerceContext before the delegate runs. Host implements zero Shipping catalog rules/SQL/mapping/backfill.
+- The module seed is Development-only and gate-controlled and is a pure sequencing of EXISTING seams: (a) IHostEnvironment.IsDevelopment() else return (no DB touch); (b) ShippingOneLevelCatalogPolicy.Evaluate(IOptions<ShippingOneLevelCatalogOptions>) Enabled else return (no query/write); (c) IShippingCatalogSeedPort.EnsureSeedAsync (legacy source); (d) IShippingCatalogReader.ListAsync; (e) IShippingOneLevelBackfillStore.ListExistingAsync; (f) ShippingMethodBackfillPlanner.Plan; (g) !IsExecutable ⇒ return fail-closed; (h) all-Skip ⇒ return idempotent no-op (no transaction); (i) IShippingOneLevelBackfillStore.ApplyAsync.
+- No new duplicate algorithm, no manual SQL, no fabricated rows, no cross-tenant context, no fake actor/HttpContext.
+
+GATES / ACTIVATION POLICY
+- Gate: Tooba:ShippingOneLevelCatalog:Enabled via ShippingOneLevelCatalogPolicy; default OFF, absent from tracked appsettings, and never flipped in tracked/shared config/deployment by this task. Disabled gate ⇒ zero DB access.
+- Activation is a SEPARATE explicit operator action (IShippingOneLevelCatalogAdminActivation) and was deliberately NOT invoked: the backfill preserves each option's IsActive (inactive options create inactive rows), so no deployment silently activates anything.
+- Missing language authority ⇒ legacy seed no-ops ⇒ empty source ⇒ empty plan ⇒ no write (fail-closed).
+
+FOCUSED TEST COUNTS / BUILD (Mission B)
+- New focused tests: dotnet test --filter FullyQualifiedName~ShippingOneLevelDevelopmentSeedTests ⇒ 5 passed / 0 failed / 0 skipped (focused-tests-120.log). Facts: (1) enabled+Development+canonical source ⇒ single apply with 7 Create items, identity + per-language labels preserved; (2) second run all-Skip, no second apply, no new rows; (3) disabled gate ⇒ seed/reader/store untouched, no rows; (4) non-Development ⇒ seed/reader/store untouched; (5) non-executable plan ⇒ never applied, nothing mutated.
+- Module guards + shipping: --filter "FulfillmentArchitectureGuardTests|ShippingOneLevel" ⇒ 93 passed / 0 failed (module-guards-shipping-120.log), covering the Fulfillment physical/namespace/allowlist/route/cert guards and every existing ShippingOneLevel test (new file lives in the allowed Infrastructure/Shipping folder, so no module layout guard was weakened).
+- Build: Tooba.Fulfillment.Tests 0 warnings/0 errors; Tooba.Host 0 errors (pre-existing unrelated warnings only). Only changed projects were built.
+- Host guard set explicitly run and PASSING: HostCompositionAmcGuardTests, CatalogLegacyBootstrapsDiScopeTests, HostDevelopmentAmcGuardTests, HostDevelopmentMigrationSeamGuardTests, FulfillmentModuleAmsc001W3CertGuardTests.
+- Known pre-existing failures (NOT repaired, out of scope, present at base): Tooba.Host.Tests.Architecture = 43 failed / 1413 passed / 1456 total, all unrelated to Fulfillment/Shipping/Program.cs Development composition (e.g. HostAdminCanon001 expects Party.Contracts/IPartyAdminSellerReadGateway.cs at root while it lives in Ports/; TmarCompleteReferenceStructureGate expects Tooba.Catalog.Contracts.Cart vs Tooba.Catalog.Contracts; Story/ProductWorkspace/Payment SOT guards). Failure names + reasons recorded in SHIPPING-ONE-LEVEL-UI-120.md.
+
+NON-INTERFERENCE
+- Shared instances :5088/:3000, tooba_alpha and all existing containers: READ-ONLY and untouched. No start/stop/restart/kill, no DB mutation, no appsettings edit, and NO scratch Host startup in this task. No process termination, no hidden retries, no scope expansion.
+- Bridge receipt preserved unstaged; pre-existing dirty/untracked paths preserved.
+
+DEVIATIONS
+- Placement deviation (forced by durable guards, no guard weakened): the module bootstrap lives in the already-allowed Tooba.Fulfillment.Infrastructure/Shipping folder with namespace Tooba.Fulfillment.Infrastructure.Shipping, because FulfillmentArchitectureGuardTests.AllowedInfrastructureFolders does not permit a Development/ folder and adding it would edit a certified module layout guard. Host composition is an in-place call in the existing Program.cs Development branch (no new Host file) because HostDevelopmentAmcGuardTests and HostCompositionAmcGuardTests pin exact file allowlists. No other deviation.
+
+NON-CLAIMS: no /shipping DOM parity, no storefront runtime acceptance, no commercial readiness, no checkout/payment claim. Code-level tests only; runtime acceptance belongs to a separately approved task.
+
+FIRST REMAINING BLOCKER / NEXT MINIMAL STEP (needs Architect authorization; not started)
+- Isolated runtime/UI proof: start the isolated Host with the gate enabled in the disposable Development overlay and observe non-empty GET /v1/admin/shipping-services/shipping-methods/one-level?language=fa plus storefront label parity from the enabled catalog. This is TB-121 (not started, not self-authorized).
+STOP FOR ARCHITECT.
+END_TOOBA_WORKER_RESULT
