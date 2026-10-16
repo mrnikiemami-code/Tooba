@@ -70,6 +70,13 @@ public sealed class OrderDbContext : DbContext
     /// </summary>
     public DbSet<CartShippingDraft> ShippingDrafts => Set<CartShippingDraft>();
 
+    /// <summary>گروه‌های ارسال پایدار سفارش (M2) — مالکیت Order.</summary>
+    public DbSet<OrderShippingGroup> OrderShippingGroups => Set<OrderShippingGroup>();
+
+    /// <summary>عضویت خطوط سفارش در گروه‌های ارسال پایدار (M2).</summary>
+    public DbSet<OrderShippingGroupLine> OrderShippingGroupLines => Set<OrderShippingGroupLine>();
+
+
     /// <summary>مشاهده‌های Admin برای قفل حذف یادداشت.</summary>
     public DbSet<CheckoutAdminViewAck> AdminViewAcks => Set<CheckoutAdminViewAck>();
 
@@ -125,6 +132,7 @@ public sealed class OrderDbContext : DbContext
             entity.HasIndex(x => x.IdempotencyKey).IsUnique();
             entity.HasIndex(x => x.CartId).IsUnique();
             entity.HasMany(x => x.SellerOrders).WithOne().HasForeignKey(x => x.CheckoutId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.ShippingGroups).WithOne().HasForeignKey(x => x.CheckoutId).OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<CartShippingDraft>(entity =>
         {
@@ -179,6 +187,41 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.CartLineId).ValueGeneratedNever();
             entity.HasIndex(x => x.CartLineId).IsUnique();
             entity.HasIndex(x => x.ShippingGroupId);
+        });
+        modelBuilder.Entity<OrderShippingGroup>(entity =>
+        {
+            entity.ToTable("order_shipping_groups");
+            entity.HasKey(x => x.ShippingGroupId);
+            entity.Property(x => x.ShippingGroupId).ValueGeneratedNever();
+            entity.Property(x => x.MethodCode).HasMaxLength(CartShippingDraftGroup.MaxCodeLength);
+            entity.Property(x => x.ServiceCode).HasMaxLength(CartShippingDraftGroup.MaxCodeLength);
+            entity.Property(x => x.OptionCode).HasMaxLength(CartShippingDraftGroup.MaxCodeLength);
+            entity.Property(x => x.MethodLabel).HasMaxLength(CartShippingDraftGroup.MaxLabelLength);
+            entity.Property(x => x.OriginContext).HasMaxLength(CartShippingDraftGroup.MaxOriginLength);
+            entity.Property(x => x.ShippingChargeSnapshot).HasPrecision(18, 2);
+            entity.Property(x => x.Currency).HasMaxLength(3);
+            entity.Property(x => x.RequestedDeliveryTimeWindow).HasMaxLength(32);
+            entity.Property(x => x.State).HasMaxLength(32);
+            entity.HasIndex(x => x.CheckoutId);
+            entity.HasIndex(x => x.SellerOrderId);
+            entity.HasIndex(x => new { x.CheckoutId, x.SellerPartyId, x.MethodCode }).IsUnique();
+            entity.HasMany(x => x.Lines)
+                .WithOne()
+                .HasForeignKey(x => x.ShippingGroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<OrderShippingGroupLine>(entity =>
+        {
+            entity.ToTable("order_shipping_group_lines");
+            entity.HasKey(x => new { x.ShippingGroupId, x.OrderLineId });
+            entity.Property(x => x.ShippingGroupId).ValueGeneratedNever();
+            entity.Property(x => x.OrderLineId).ValueGeneratedNever();
+            entity.HasIndex(x => x.OrderLineId).IsUnique();
+            entity.HasIndex(x => x.ShippingGroupId);
+            entity.HasOne<OrderLine>()
+                .WithMany()
+                .HasForeignKey(x => x.OrderLineId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<SellerOrder>(entity =>
         {

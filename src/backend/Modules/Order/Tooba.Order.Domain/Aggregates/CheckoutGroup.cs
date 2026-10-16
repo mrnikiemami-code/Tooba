@@ -150,6 +150,12 @@ public sealed class CheckoutGroup : IHasDomainEvents
     /// </summary>
     public List<SellerOrder> SellerOrders { get; } = [];
 
+    /// <summary>
+    /// گروه‌های ارسال پایدار این checkout (M2). خالی یعنی سفارش قدیمی تک‌روشی که فقط
+    /// ستون‌های اسکالر را دارد.
+    /// </summary>
+    public List<OrderShippingGroup> ShippingGroups { get; } = [];
+
     /// <inheritdoc />
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.Events;
 
@@ -185,7 +191,8 @@ public sealed class CheckoutGroup : IHasDomainEvents
         string requestedDeliveryTimeWindow = "",
         string customerNote = "",
         string recipientFirstName = "",
-        string recipientLastName = "")
+        string recipientLastName = "",
+        IReadOnlyList<OrderShippingGroup>? shippingGroups = null)
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -201,6 +208,13 @@ public sealed class CheckoutGroup : IHasDomainEvents
         {
             throw new InvalidOperationException("checkout بدون سفارش فروشنده نیست.");
         }
+
+        var acceptedGroups = shippingGroups ?? [];
+        // The payable is the sum of committed group charges, counted exactly once.
+        var payableShippingAmount = acceptedGroups.Count > 0
+            ? OrderShippingGroupMaterializer.SumShippingCharge(acceptedGroups)
+            : Math.Max(0m, shippingAmount);
+        var multiGroup = acceptedGroups.Count > 1;
 
         var group = new CheckoutGroup
         {
@@ -223,9 +237,9 @@ public sealed class CheckoutGroup : IHasDomainEvents
             CityName = cityName.Trim(),
             PostalAddress = postalAddress.Trim(),
             PostalCode = postalCode.Trim(),
-            ShippingMethodCode = shippingMethodCode.Trim(),
-            ShippingMethodLabel = shippingMethodLabel.Trim(),
-            ShippingAmount = Math.Max(0m, shippingAmount),
+            ShippingMethodCode = multiGroup ? string.Empty : shippingMethodCode.Trim(),
+            ShippingMethodLabel = multiGroup ? string.Empty : shippingMethodLabel.Trim(),
+            ShippingAmount = payableShippingAmount,
             MinimumDeliveryDate = minimumDeliveryDate,
             RequestedDeliveryDate = requestedDeliveryDate,
             RequestedDeliveryTimeWindow = string.IsNullOrWhiteSpace(requestedDeliveryTimeWindow)
@@ -236,6 +250,12 @@ public sealed class CheckoutGroup : IHasDomainEvents
         foreach (var order in sellerOrders)
         {
             group.SellerOrders.Add(order);
+        }
+
+        // M2: accepted shipping groups are materialized once at this boundary and never rewritten.
+        foreach (var shippingGroup in acceptedGroups)
+        {
+            group.ShippingGroups.Add(shippingGroup);
         }
 
         group._domainEvents.Add(new CheckoutSubmittedDomainEvent(checkoutId, cartId, mode));

@@ -378,7 +378,6 @@ public sealed class StorefrontShippingService
         var draft = await _drafts.GetByCartIdAsync(cartId, cancellationToken)
             ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         EnsureDraftOwnership(draft, guestSecret);
-        EnsureLegacySingleGroup(draft);
 
         // بازاعتبارسنجی قبل از ثبت سفارش.
         await SaveSelectionAsync(
@@ -397,7 +396,19 @@ public sealed class StorefrontShippingService
                 draft.SelectedDeliveryTimeWindow ?? string.Empty,
                 draft.CustomerNote,
                 draft.FirstName,
-                draft.LastName),
+                draft.LastName,
+                // Replay the saved group membership so a genuine multi-group selection is
+                // revalidated as-is instead of being collapsed into the legacy shorthand.
+                draft.ShippingGroups.Count == 0
+                    ? null
+                    : draft.ShippingGroups
+                        .Select(group => new StorefrontShippingGroupSelection(
+                            group.MethodCode,
+                            group.Lines.Select(x => x.CartLineId).ToArray(),
+                            group.ServiceCode,
+                            group.OptionCode,
+                            group.OriginContext))
+                        .ToArray()),
             guestSecret,
             cancellationToken);
 
@@ -426,8 +437,32 @@ public sealed class StorefrontShippingService
             draft.MinimumDeliveryDate,
             draft.SelectedDeliveryDate,
             draft.SelectedDeliveryTimeWindow,
-            draft.CustomerNote);
+            draft.CustomerNote,
+            BuildOrderGroupPlans(draft));
     }
+
+    /// <summary>
+    /// پلن گروه‌های ارسال پایدار سفارش از پیش‌نویس M1. فقط انتقال snapshot معتبر backend است؛
+    /// هیچ قیمت/مجوز جدیدی اینجا ساخته نمی‌شود.
+    /// </summary>
+    private static IReadOnlyList<OrderShippingGroupPlan> BuildOrderGroupPlans(CartShippingDraft draft) =>
+        draft.ShippingGroups
+            .Select(group => new OrderShippingGroupPlan(
+                group.ShippingGroupId,
+                group.SellerPartyId,
+                group.MethodCode,
+                group.ServiceCode,
+                group.OptionCode,
+                group.MethodLabel,
+                group.OriginContext,
+                group.ShippingAmount,
+                group.Currency,
+                group.MinimumDeliveryDate,
+                group.SelectedDeliveryDate,
+                group.SelectedDeliveryTimeWindow,
+                group.LeadDays,
+                group.Lines.Select(x => x.CartLineId).ToArray()))
+            .ToArray();
 
     private async Task<IReadOnlyList<StorefrontShippingMethodView>> LoadEligibleMethodsAsync(
         decimal cartSubtotal,

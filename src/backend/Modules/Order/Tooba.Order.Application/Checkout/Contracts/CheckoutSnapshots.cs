@@ -1,6 +1,7 @@
 using Tooba.Cart.Contracts;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Order.Domain;
+using Tooba.Order.Domain.Checkout;
 
 using Tooba.Order.Application.Checkout.Abuse;
 using Tooba.Order.Application.Checkout.Contracts;
@@ -86,7 +87,26 @@ public sealed record CheckoutSnapshot(
     string RequestedDeliveryTimeWindow = "",
     string CustomerNote = "",
     string RecipientFirstName = "",
-    string RecipientLastName = "");
+    string RecipientLastName = "",
+    IReadOnlyList<CheckoutShippingGroupSnapshot>? ShippingGroups = null);
+
+/// <summary>گروه ارسال پایدار سفارش برای خواندن (M2).</summary>
+public sealed record CheckoutShippingGroupSnapshot(
+    Guid ShippingGroupId,
+    Guid SellerOrderId,
+    Guid SellerPartyId,
+    string MethodCode,
+    string? ServiceCode,
+    string? OptionCode,
+    string MethodLabel,
+    decimal ShippingChargeSnapshot,
+    string Currency,
+    DateOnly MinimumDeliveryDate,
+    DateOnly? RequestedDeliveryDate,
+    string? RequestedDeliveryTimeWindow,
+    int LeadDays,
+    string State,
+    IReadOnlyList<Guid> OrderLineIds);
 
 /// <summary>
 /// فرمان ارسال checkout از روی سبد فعال.
@@ -116,4 +136,5 @@ public sealed record SubmitCheckoutCommand(
     string RequestedDeliveryTimeWindow = "",
     string CustomerNote = "",
     string RecipientFirstName = "",
-    string RecipientLastName = "");
+    string RecipientLastName = "",
+    IReadOnlyList<OrderShippingGroupPlan>? ShippingGroups = null);

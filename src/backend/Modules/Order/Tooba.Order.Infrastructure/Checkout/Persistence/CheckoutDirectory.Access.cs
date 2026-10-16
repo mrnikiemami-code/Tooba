@@ -24,6 +24,7 @@ using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Domain;
+using Tooba.Order.Domain.Checkout;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
@@ -70,7 +71,26 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             group.RequestedDeliveryTimeWindow,
             group.CustomerNote,
             group.RecipientFirstName,
-            group.RecipientLastName);
+            group.RecipientLastName,
+            group.ShippingGroups.Select(ToShippingGroupSnapshot).ToList());
+
+    private static CheckoutShippingGroupSnapshot ToShippingGroupSnapshot(OrderShippingGroup group) =>
+        new(
+            group.ShippingGroupId,
+            group.SellerOrderId,
+            group.SellerPartyId,
+            group.MethodCode,
+            group.ServiceCode,
+            group.OptionCode,
+            group.MethodLabel,
+            group.ShippingChargeSnapshot,
+            group.Currency,
+            group.MinimumDeliveryDate,
+            group.RequestedDeliveryDate,
+            group.RequestedDeliveryTimeWindow,
+            group.LeadDays,
+            group.State,
+            group.Lines.Select(x => x.OrderLineId).ToList());
 
     private static SellerOrderSnapshot ToSellerSnapshot(SellerOrder order) =>
         new(

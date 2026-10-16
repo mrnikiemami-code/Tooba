@@ -34,6 +34,12 @@ namespace Tooba.Order.Infrastructure.Checkout.Persistence;
 
 public sealed partial class CheckoutDirectory : ICheckoutDirectory
 {
+    /// <summary>
+    /// نقشهٔ قطعی خط سبد به خط سفارش در همین تبدیل. همان لحظه‌ای پر می‌شود که خط سفارش
+    /// ساخته می‌شود، تا عضویت گروه‌های ارسال M2 هرگز با حدس بازسازی نشود.
+    /// </summary>
+    private readonly Dictionary<Guid, Guid> _orderLineIdByCartLineId = [];
+
     internal async Task<Dictionary<Guid, Guid>> ReserveCartLinesForOrderAsync(
         CartSnapshot cart,
         DateTimeOffset now,
@@ -161,6 +167,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     {
         var sellerOrders = new List<SellerOrder>();
         var sequence = 0;
+        _orderLineIdByCartLineId.Clear();
         var categoryByVariant = await _catalog.GetPrimaryCategoryIdsByVariantIdsAsync(
             cart.Lines.Select(x => x.CatalogVariantId).Distinct().ToArray(),
             cancellationToken);
@@ -288,6 +295,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                     quantityPolicies.GetValueOrDefault(cartLine.CatalogVariantId)?.UnitDisplayName,
                     quantityPolicies.GetValueOrDefault(cartLine.CatalogVariantId)?.DecimalPlaces ?? 0,
                     quantityPolicies.GetValueOrDefault(cartLine.CatalogVariantId)?.Step));
+                _orderLineIdByCartLineId[cartLine.LineId] = lines[^1].LineId;
             }
 
             sellerOrders.Add(SellerOrder.Open(
@@ -318,6 +326,8 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         CancellationToken cancellationToken) =>
         _db.Checkouts
             .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
+            .Include(x => x.ShippingGroups)
             .ThenInclude(x => x.Lines)
             .SingleOrDefaultAsync(predicate, cancellationToken);
 

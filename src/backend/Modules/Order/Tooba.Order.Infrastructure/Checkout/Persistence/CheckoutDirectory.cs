@@ -190,6 +190,8 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         var group = await _db.Checkouts
             .Include(x => x.SellerOrders)
             .ThenInclude(x => x.Lines)
+            .Include(x => x.ShippingGroups)
+            .ThenInclude(x => x.Lines)
             .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken);
         if (group is null)
         {
@@ -278,6 +280,8 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var group = await _db.Checkouts
             .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
+            .Include(x => x.ShippingGroups)
             .ThenInclude(x => x.Lines)
             .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
             ?? throw new ContractOperationException("order.restore.invalid_state");

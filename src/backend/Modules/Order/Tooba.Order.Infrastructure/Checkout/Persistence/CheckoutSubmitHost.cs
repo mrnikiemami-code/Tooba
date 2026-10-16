@@ -146,6 +146,18 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
         CheckoutProcess? process,
         CancellationToken cancellationToken)
     {
+        // M2: freeze accepted-order shipping groups exactly once, inside the caller's transaction.
+        // Nothing is written if any membership/ownership invariant fails (fail-closed).
+        var shippingGroups = OrderShippingGroupMaterializer.Materialize(
+            command.ShippingGroups ?? [],
+            sellerOrders.SelectMany(x => x.Lines.Select(line => (line.LineId, line.SellerPartyId)))
+                .Distinct()
+                .ToList(),
+            sellerOrders.ToDictionary(x => x.SellerPartyId, x => x.SellerOrderId),
+            _orderLineIdByCartLineId,
+            checkoutId,
+            now);
+
         var group = CheckoutGroup.Submit(
             checkoutId,
             command.IdempotencyKey,
@@ -172,7 +184,8 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
             command.RequestedDeliveryTimeWindow,
             command.CustomerNote,
             command.RecipientFirstName,
-            command.RecipientLastName);
+            command.RecipientLastName,
+            shippingGroups);
         BindReservationsToOrders(group, cart, reservations);
         if (process is not null && _processes is not null)
         {
@@ -230,6 +243,8 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
             .AsNoTracking()
             .Include(x => x.SellerOrders)
             .ThenInclude(x => x.Lines)
+            .Include(x => x.ShippingGroups)
+            .ThenInclude(x => x.Lines)
             .Where(x => x.CartId == command.CartId)
             .OrderBy(x => x.SubmittedAt)
             .FirstOrDefaultAsync(cancellationToken);
@@ -256,6 +271,8 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
             winner = await _db.Checkouts
                 .AsNoTracking()
                 .Include(x => x.SellerOrders)
+                .ThenInclude(x => x.Lines)
+                .Include(x => x.ShippingGroups)
                 .ThenInclude(x => x.Lines)
                 .Where(x => x.CartId == command.CartId)
                 .OrderBy(x => x.SubmittedAt)
