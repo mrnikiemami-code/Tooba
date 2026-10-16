@@ -108,6 +108,11 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Ignore(x => x.DomainEvents);
             entity.Ignore(x => x.Items);
             entity.Ignore(x => x.Shipments);
+            // TB-140: مجموعهٔ گروه‌های ارسال فقط-خواندنی است و از طریق DbSet خودش بارگذاری/ذخیره می‌شود؛
+            // نگاشت‌نشدن آن با نگاشت سفارشی‌شدهٔ FK کلید بیگانهٔ سایه‌ای «fulfillment_unit_fulfillment_id»
+            // می‌ساخت که هیچ‌گاه در اسکیمای مهاجرت‌شده وجود ندارد و هر SaveChanges را با
+            // PostgresException 42703 می‌شکست. کلید واقعی همان ستون اسکالر FulfillmentId است.
+            entity.Ignore(x => x.ShippingGroups);
             entity.HasIndex(x => x.SellerOrderId).IsUnique();
             entity.HasIndex(x => x.SellerPartyId);
             entity.HasIndex(x => x.CheckoutId);
