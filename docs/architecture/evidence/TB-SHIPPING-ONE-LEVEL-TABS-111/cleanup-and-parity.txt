@@ -1,0 +1,15 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-111 — MISSION B cleanup and shared parity
+NO_TASK_OWNED_HOST_PROCESS
+listeners_5395_after_run=0
+listeners_55447_before_container_rm=0
+dropped_stdout_bytes=1929043 dropped_stderr_bytes=1877 (credential scan clean before drop)
+docker_rm=already_removed
+listeners_55447_after_container_rm=0
+docker_containers_named_tooba-111_remaining=NONE
+tmp_paths_remaining=NONE
+--- SHARED PARITY POSTFLIGHT (read-only) ---
+shared_pid_5088=35624
+shared_pid_3000=31580
+shared_health_5088={"status":"ok"}
+shared_platform_commerce={"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"8169ae455e857430cbfa7d456884e384"}
+shared_next_3000=The remote server returned an error: (308) Permanent Redirect.

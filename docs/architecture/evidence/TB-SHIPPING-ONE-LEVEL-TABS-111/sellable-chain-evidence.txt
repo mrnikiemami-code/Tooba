@@ -1,0 +1,26 @@
+﻿Pager usage is off.
+             r             |         first_created         
+---------------------------+-------------------------------
+ catalog.products          | 2026-10-16 01:21:01.01655+00
+ catalog.variants          | 2026-10-16 01:21:01.19214+00
+ party.parties             | 2026-10-16 01:21:01.370834+00
+ offer.offers              | 2026-10-16 01:21:01.412747+00
+ pricing.prices            | 2026-10-16 01:21:01.460644+00
+ inventory.stock_positions | 2026-10-16 01:21:01.564642+00
+(6 rows)
+
+              check               | bad 
+----------------------------------+-----
+ offers_with_missing_seller_party | 0
+ prices_with_missing_offer        | 0
+ stock_with_missing_offer         | 0
+ offers_with_missing_variant      | 0
+(4 rows)
+
+         seller_sku         | status |    amount     | currency | qualifier_kind | price_status | available 
+----------------------------+--------+---------------+----------+----------------+--------------+-----------
+ DEV-SEED-OOS               | Active |               |          |                |              |  0.000000
+ SCHEMA-PHONE-PHONE-BLK-128 | Active | 12500000.0000 | IRR      | Base           | Active       |  5.000000
+ SCHEMA-PHONE-PHONE-BLU-256 | Active | 13000000.0000 | IRR      | Base           | Active       |  5.000000
+(3 rows)
+

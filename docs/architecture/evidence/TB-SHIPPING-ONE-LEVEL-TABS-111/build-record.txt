@@ -1,0 +1,32 @@
+TB-SHIPPING-ONE-LEVEL-TABS-111 — BUILD RECORD
+
+command : dotnet publish src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug -o .tmp-111-host-out --nologo -v q
+result  : exit code 0, 0 errors (EXE_EXISTS=True)
+source  : HEAD d791131e14bb6cc03e7d8396d8feb800c8644028
+          = TB-110 code commit bc8c87e2853ee6958420ed6e31631eca3c6211d0 + TB-110 result evidence (docs only)
+          so the published Host contains the TB-110 two-phase DevelopmentSchemaMigrator.MigrateOrderedAsync.
+
+two-phase source at this HEAD (read-only verification, no modification):
+  src/backend/Host/Tooba.Host/Development/DevelopmentSchemaMigrator.cs
+    phase 1: foreach (var migrator in migrators) { await migrator.MigrateAsync(ct); }
+    phase 2: foreach (var step in steps) { await step.RunAsync(provider, ct); }
+  with steps filtered to registered migration orders and ordered by (AfterOrder, Module Ordinal).
+
+scratch credential supplied only through the environment variable TOOBA_111_SCRATCH_PASSWORD for the
+prepare step; the variable was removed from the session immediately after. No secret is stored in any
+retained artifact (programmatic credential scan of stdout/stderr/prepare output: password absent,
+0 'Password=' / 'Username=scratch' hits).
+
+runtime watchdog result (isolated/watchdog-result.txt):
+  ISOLATED_HOST_PID=26940
+  ISOLATED_HOST_EXE=D:\Users\User\source\repos\SarvNewVer\.tmp-111-host-out\Tooba.Host.exe
+  LAUNCH_COUNT=1
+  WATCHDOG_LIMIT_SECONDS=180
+  ELAPSED_SECONDS=54
+  HEALTH_200_OBSERVED=False
+  PROCESS_EXITED=True
+  EXIT_CODE=<empty: PowerShell does not surface ExitCode for an already-exited redirect-started process>
+  KILLED_BY_WATCHDOG=False
+  PUBLISH_READINESS_DIAGNOSTIC_SEEN=False
+  PARTY_SCHEMA_REGRESSION_SEEN=False
+  LISTENERS_ON_5395_AFTER_STOP=0

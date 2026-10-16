@@ -1,0 +1,6 @@
+﻿party.parties-missing=0
+PublishReadiness=0
+attribute-schema-mentions=0
+code.duplicate=0
+fa-ready-not-publishable=0
+ef-migration-commands=110

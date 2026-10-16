@@ -1,0 +1,137 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-111
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-110
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_ISOLATED_TWO_PHASE_MIGRATION_RUNTIME_AND_SELLABLE_PROOF
+Bridge-Task-Row: b1671960-37f2-4e51-b282-56367148f59c
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: bc8c87e2853ee6958420ed6e31631eca3c6211d0
+Base-SHA: d791131e14bb6cc03e7d8396d8feb800c8644028
+Code-SHA: NONE
+Evidence-SHA: 8e2f5fcf00000000000000000000000000000000
+automaticNextImplementationTask: NONE
+
+PREFLIGHT — NO CONFLICT
+  HEAD == origin/main == d791131e14bb6cc03e7d8396d8feb800c8644028 at claim. Expected-Base-SHA
+  bc8c87e2853ee6958420ed6e31631eca3c6211d0 verified ANCESTOR (exit 0). Only drift between expected base and
+  actual base is TB-110's own result evidence commit (RESULT.bridge.txt + post-result.js, 176 insertions,
+  docs-only) -> non-overlapping bookkeeping, no RECOVERY_CONFLICT, nothing to reconcile.
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-111.task.md preserved UNSTAGED as the receipt. All pre-existing
+  dirty/untracked paths preserved; no reset/stash/rebase/force-push.
+  Read-only shared baseline recorded BEFORE anything else: :5088 PID 35624, /health {"status":"ok"},
+  /__platform-commerce => edition SingleStore, deploymentId dev-singlestore, tenantId store-alpha,
+  connectionReference tenant-alpha, themeReference theme-alpha, defaultMarketReference IR; :3000 PID 31580.
+  tooba_alpha preflight: methods 7, translations 14, carts 50, cart_lines 78, drafts 14, seller_orders 26,
+  products 567, offers 3223.
+
+MISSION A — ONE ISOLATED RUNTIME PROOF (single launch, no retry)
+  Scratch: disposable postgres:17 container tooba-111-scratch-pg, loopback-only 127.0.0.1:55447, no shared
+  volume, databases tooba_111_scratch + tooba_111_messaging, task-generated 24-char credential held only in
+  an ignored task-owned file. Build: dotnet publish Tooba.Host -c Debug -o .tmp-111-host-out, 0 errors; the
+  published Host is from HEAD d791131e (= TB-110 code bc8c87e2 + docs only) and therefore contains the
+  two-phase MigrateOrderedAsync.
+  OFFLINE EFFECTIVE CONFIG GUARD (before launch): exactly ONE tenant store-alpha:Active:tenant-111-scratch;
+  connection references tenant-111-scratch + messaging-111-scratch ONLY; containsSharedAlphaDatabase=false;
+  containsSharedAlphaReference=false; containsSharedAlphaPort=false (no Port=5432); ShippingOneLevelCatalog /
+  ShippingRateAuthority / ShippingOperationalShadow absent (OFF); ASPNETCORE_ENVIRONMENT=Development;
+  RunLegacyBootstraps=true (scratch only); CatalogDemo AllowResetAndSeed=false. NO reset-and-seed / seed-only
+  endpoint was invoked. Credentials written to evidence: FALSE (programmatic scan: password absent, 0
+  'Password=' / 'Username=scratch' hits in stdout/stderr/prepare output).
+  ONE launch on task-owned port 5395 with explicit scratch content root and an external watchdog <=180s:
+  ELAPSED_SECONDS=54, PROCESS_EXITED=True (natural crash, not a kill), KILLED_BY_WATCHDOG=False,
+  HEALTH_200_OBSERVED=False, LISTENERS_ON_5395_AFTER_STOP=0. EXIT_CODE empty (PowerShell does not surface
+  ExitCode for an already-exited redirect-started process); failure identity taken from stderr.
+
+MIGRATION ORDER AND POST-MIGRATION ORDER (recorded, not assumed)
+  Registered two-phase sequence COMPLETED before any later bootstrap: 110 EF migration commands executed;
+  20 module schemas present; applied migrations per module = catalog 29, offer 3, pricing 1, inventory 5,
+  tax 1, party 2, promotion 2, localization 1, support 1.
+  COMPARED TO 109's 42P01: occurrences of 'relation "party.parties" does not exist' in the entire run = 0.
+  PublishReadiness diagnostics = 0; 'محصول برای انتشار آماده نیست.' = 0; Catalog post-migration step
+  returned successfully and execution continued past ApplyAsync into the later Host bootstrap chain.
+  => The TB-109/TB-110 barrier is RESOLVED at runtime on an empty database.
+
+PRODUCT / VARIANT / DEFAULT STATE (scratch readback)
+  catalog.products = 1: schema-mobile-demo-phone, status Published, kind PhysicalGood.
+  catalog.variants = 2, defaults = 1. PHONE-BLK-128 is_default = true, status Draft;
+  PHONE-BLU-256 is_default = false, status Draft. Distinct combination fingerprints on both; no Cartesian
+  expansion. attribute_definitions = 4 (color, ram, screen_size, storage); product_history_entries = 6.
+
+SELLABLE OFFER / PRICE / STOCK READBACK (row presence, NOT a readiness claim)
+  offers 3 (3 Active), prices 4 (2 Active Base), stock_positions 3 (2 with positive on_hand), seller parties
+  2, locations 1, carts 0, seller_orders 0, shipping_methods 0, tax rules 0.
+    SCHEMA-PHONE-PHONE-BLK-128  Active offer | Active Base price 12500000 IRR | available 5.0
+    SCHEMA-PHONE-PHONE-BLU-256  Active offer | Active Base price 13000000 IRR | available 5.0
+    DEV-SEED-OOS                Active offer | (no price)                  | available 0.0
+  Referential integrity: broken rows = 0 for offer->party, price->offer, stock->offer, offer->variant.
+  Causal ordering proof from row timestamps (UTC) + the joins above: catalog.products 01:21:01.016,
+  catalog.variants .192, party.parties .370, offer.offers .412, pricing.prices .460,
+  inventory.stock_positions .564 — the post-migration step created product/variant first and the sellable
+  enricher then created party, offers, prices and stock, i.e. strictly after Party's schema existed.
+  ELIGIBILITY LIMITATION: this proves a published product with an active offer, an active Base price and
+  strictly positive available stock. It does NOT prove storefront rendering, cart/checkout reachability,
+  price cutover or commercial readiness; no cart, checkout, activation, price change or method activation
+  was performed, and no customer browser proof is claimed.
+
+FIRST EXCEPTION AND LAST COMPLETED STAGE (PARTIAL reason)
+  Unhandled exception. System.InvalidOperationException: catalog.attribute.code.duplicate
+    CatalogDirectory.Unwrap (CatalogDirectory.cs:894)
+    CatalogDirectory.CreateAttributeDefinitionAsync (CatalogDirectory.cs:987)
+    WorkspaceDemoProductSeed.SeedProductAsync (WorkspaceDemoProductSeed.cs:103)
+    WorkspaceDemoSeed.SeedNewProductAsync (WorkspaceDemoSeed.cs:40)
+    DevelopmentSchemaMigrator.ApplyCoreAsync (DevelopmentSchemaMigrator.cs:98) then (line 112)
+    Program.<Main>$ (Program.cs:367)
+  Last SQL executed (final stdout line, EventId 20101, 01:21:01.968): SELECT ... WHERE normalized_code =
+  @__normalizedCode_0 — the duplicate-attribute lookup that decided the failure.
+  Exact owner/collision (source-proven, both sides read-only): the module-owned attribute-schema seed
+  creates attribute definition `color` first (CatalogAttributeSchemaDevelopmentSeed.cs:39), then the LEGACY
+  Host bootstrap WorkspaceDemoProductSeed (ColorAttributeCode = "color", line 46) calls
+  CreateAttributeDefinitionAsync("color", ...) at line 103 and is refused. Scratch readback confirms the
+  pre-existing definitions color, ram, screen_size, storage.
+  Classification: a Development SEED COLLISION between two bootstraps active in the same startup
+  (RunLegacyBootstraps=true on an empty database) — NOT the 109 ordering barrier, NOT a migration defect,
+  NOT a Catalog-readiness or Shipping-price defect. It occurs at Program.cs:367 AFTER MigrateOrderedAsync
+  (line 70) returned, i.e. after the whole registered two-phase sequence (Catalog + Promotion + Localization
+  steps) completed; the Promotion step is independently evidenced by the DEV-SEED-OOS offer and the
+  promotion campaign tables. NO fix was coded, relaunched or attempted (Mission A forbids coding) and no
+  second bootstrap was run.
+
+MISSION B — NON-INTERFERENCE AND CLEANUP
+  Task-owned Host process: NONE remaining (checked by absolute exe path; NO name/wildcard/IM/-f termination
+  was used anywhere). Disposable container removed; listeners on 55447 before=1 after=0; no tooba-111*
+  container remains; listeners on 5395 = 0. .tmp-111-run, .tmp-111-host-out and the scratch credential file
+  deleted (tmp_paths_remaining=NONE). Raw 1,929,043-byte stdout and 1,877-byte stderr dropped after the
+  credential scan (redacted excerpt retained). Shared :5088 / :3000 were never started, stopped or signaled.
+  SHARED PARITY POSTFLIGHT (read-only, unchanged): :5088 PID 35624, /health {"status":"ok"},
+  /__platform-commerce identical in every field except the per-request traceId; :3000 PID 31580 answering
+  HTTP 308; tooba_alpha counts 7 / 14 / 50 / 78 / 14 / 26 / 567 / 3223 — identical to preflight and to 109.
+  No unexpected shared change, so no incident.
+
+ELAPSED TIME
+  Claim 01:17:5x UTC -> result posting ~01:32 UTC; investigative work stopped at the reserved minute-22 mark
+  and the run itself was 54 seconds. No broad test suite, no second launch, no retry.
+
+EXACT CHANGED PATHS AND ROLLBACK
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-111.md
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-111/** (watchdog-result.txt,
+    startup-stage-summary.txt, scratch-inspection.{sql,txt}, sellable-chain-evidence.txt,
+    redacted-diagnostic-excerpt.txt, prepare-output.txt, build-record.txt, cleanup-and-parity.txt,
+    shared-parity-preflight.{sql,txt}, shared-parity-postflight.{sql,txt}, summary.md, task.md,
+    task-receipt.json, claim-task.js, post-result.js, prepare-isolated-target-111.js,
+    isolated/launch-isolated-111.ps1, isolated/cleanup-111.ps1, isolated/parity-postflight-111.ps1,
+    RESULT.bridge.txt)
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-111.task.md kept UNSTAGED as the receipt.
+  ZERO modifications under src/**, migrations, appsettings, tests, scripts or package files (Code-SHA: NONE).
+  Rollback: revert the task-owned docs only; all runtime resources were disposable and are already destroyed.
+
+NEXT RUNTIME PREREQUISITE FOR THE ARCHITECT
+  The 109/110 migration-ordering line is closed (barrier gone, sellable rows real). The remaining blocker is
+  the Development seed collision on attribute code `color` between CatalogAttributeSchemaDevelopmentSeed and
+  the legacy WorkspaceDemoProductSeed when RunLegacyBootstraps=true runs on an empty database. Startup
+  healthy state, storefront labels and the one-level tab surface remain unverified and require a separately
+  authorized bounded task; this task implemented nothing and claims no readiness.
+END_TOOBA_WORKER_RESULT

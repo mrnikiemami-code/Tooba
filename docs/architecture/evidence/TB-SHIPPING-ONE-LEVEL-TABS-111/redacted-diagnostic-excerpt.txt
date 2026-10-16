@@ -1,0 +1,42 @@
+TB-SHIPPING-ONE-LEVEL-TABS-111 — FIRST EXCEPTION AND LAST COMPLETED STAGE (verbatim, redacted)
+================================================================================================
+
+Credential scan before writing: scratch password absent, no 'Password=' / 'Username=scratch' pattern in the
+isolated stdout/stderr (verified programmatically). No connection string is reproduced here.
+
+UNHANDLED EXCEPTION (full stderr, isolated-host-111-stderr.txt, 1877 bytes — quoted verbatim)
+---------------------------------------------------------------------------------------------
+Unhandled exception. System.InvalidOperationException: catalog.attribute.code.duplicate
+   at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.Unwrap[T](Result`1 result) in ...\CatalogDirectory.cs:line 894
+   at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.CreateAttributeDefinitionAsync(String code, CatalogAttributeValueKind valueKind, Boolean isVariantAxis, IReadOnlyDictionary`2 localizedNames, CancellationToken cancellationToken) in ...\CatalogDirectory.cs:line 987
+   at Tooba.Catalog.Infrastructure.Development.WorkspaceDemoProductSeed.SeedProductAsync(CancellationToken cancellationToken) in ...\WorkspaceDemoProductSeed.cs:line 103
+   at Tooba.Catalog.Infrastructure.Development.WorkspaceDemoSeed.SeedNewProductAsync(CancellationToken cancellationToken) in ...\WorkspaceDemoSeed.cs:line 40
+   at Tooba.Host.Development.DevelopmentSchemaMigrator.ApplyCoreAsync(IServiceProvider services, Boolean seedCatalog) in ...\DevelopmentSchemaMigrator.cs:line 98
+   at Tooba.Host.Development.DevelopmentSchemaMigrator.ApplyCoreAsync(IServiceProvider services, Boolean seedCatalog) in ...\DevelopmentSchemaMigrator.cs:line 112
+   at Program.<Main>$(String[] args) in ...\Program.cs:line 367
+   at Program.<Main>(String[] args)
+
+LAST COMPLETED STAGE
+--------------------
+The whole registered two-phase migration/step sequence COMPLETED, including every module-owned
+post-migration step (Catalog, Promotion, Localization). The crash is in the LATER legacy Host bootstrap
+chain that `RunLegacyBootstraps=true` enables inside `ApplyCoreAsync` (line 98 →
+`WorkspaceDemoSeed.SeedNewProductAsync`), i.e. AFTER `MigrateOrderedAsync` (line 70) returned successfully.
+Last SQL actually executed (final stdout line, EventId 20101, 01:21:01.968):
+  SELECT ... WHERE normalized_code = @__normalizedCode_0      -> duplicate lookup that decided the failure.
+
+EXACT COLLIDING CODE (source-proven, both sides read-only)
+----------------------------------------------------------
+- `CatalogAttributeSchemaDevelopmentSeed` (module-owned post-migration seed, runs FIRST) creates the
+  attribute definition `color` (CatalogAttributeSchemaDevelopmentSeed.cs:39) plus storage/ram/screen_size.
+- `WorkspaceDemoProductSeed.SeedProductAsync` (legacy Host bootstrap, runs SECOND) then calls
+  `CreateAttributeDefinitionAsync(ColorAttributeCode = "color", ...)` (WorkspaceDemoProductSeed.cs:46 and :103)
+  and is refused with `catalog.attribute.code.duplicate`.
+Scratch readback confirms the already-present definitions: color, ram, screen_size, storage (4 rows).
+
+CLASSIFICATION
+--------------
+This is NOT the TB-109 ordering barrier and NOT a migration defect. It is a Development seed COLLISION:
+the attribute-schema demo product and the legacy workspace demo product both own the `color` attribute code
+when both Development bootstraps are active in the same startup (RunLegacyBootstraps=true on an empty DB).
+No fix was implemented or attempted in this task (Mission A forbids coding).

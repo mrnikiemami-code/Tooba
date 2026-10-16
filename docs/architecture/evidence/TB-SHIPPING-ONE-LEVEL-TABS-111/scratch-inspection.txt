@@ -1,0 +1,63 @@
+﻿Pager usage is off.
+== migration history applied per module schema (correct table name __ef_migrations_history) ==
+      m       | applied 
+--------------+---------
+ catalog      |      29
+ inventory    |       5
+ localization |       1
+ offer        |       3
+ party        |       2
+ pricing      |       1
+ promotion    |       2
+ support      |       1
+ tax          |       1
+(9 rows)
+
+== catalog product (slug_seam, status, kind) ==
+        slug_seam         |  status   |     kind     
+--------------------------+-----------+--------------
+ schema-mobile-demo-phone | Published | PhysicalGood
+(1 row)
+
+== catalog variants (catalog_code_seam, is_default, status) ==
+ catalog_code_seam | is_default | status |                                                       combination_fingerprint                                                       
+-------------------+------------+--------+-------------------------------------------------------------------------------------------------------------------------------------
+ PHONE-BLK-128     | t          | Draft  | 01a1424c53e07000ac3996778fd39711=01a1424c54407000b96d29b6f76afab0|01a1424c54047000ab3d6680b2f181e5=01a1424c544e7000ac2c070fbc2b8b59
+ PHONE-BLU-256     | f          | Draft  | 01a1424c53e07000ac3996778fd39711=01a1424c544a700089cbb6974d4467b1|01a1424c54047000ab3d6680b2f181e5=01a1424c54517000adb1cafc60add102
+(2 rows)
+
+== published product has >=1 default variant? ==
+        slug_seam         | product_status | variants | defaults 
+--------------------------+----------------+----------+----------
+ schema-mobile-demo-phone | Published      |        2 |        1
+(1 row)
+
+== offers / prices / stock ==
+           m            | v 
+------------------------+---
+ offers                 | 3
+ active_offers          | 3
+ prices                 | 4
+ active_base_prices     | 2
+ stock_positions        | 3
+ stock_positive_on_hand | 2
+ seller_parties         | 2
+ locations              | 1
+ tax_rules              | 0
+(9 rows)
+
+== per-variant sellable chain (published product only) ==
+ catalog_code_seam | is_default | offers | active_offers | active_base_prices | available 
+-------------------+------------+--------+---------------+--------------------+-----------
+ PHONE-BLK-128     | t          |      2 |             2 |                  1 |  5.000000
+ PHONE-BLU-256     | f          |      1 |             1 |                  1 |  5.000000
+(2 rows)
+
+== carts / orders / shipping (must be empty on scratch) ==
+        m         | v 
+------------------+---
+ carts            | 0
+ seller_orders    | 0
+ shipping_methods | 0
+(3 rows)
+

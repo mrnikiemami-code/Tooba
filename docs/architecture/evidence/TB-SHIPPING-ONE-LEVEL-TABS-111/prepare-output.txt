@@ -1,0 +1,4 @@
+﻿PREPARE=PASS
+RUN_DIR=D:\Users\User\source\repos\SarvNewVer\.tmp-111-run
+GUARD={"tenants":["store-alpha:Active:tenant-111-scratch"],"tenantCount":1,"connectionReferences":["tenant-111-scratch","messaging-111-scratch"],"messagingReference":"messaging-111-scratch","containsSharedAlphaDatabase":false,"containsSharedAlphaReference":false,"containsSharedAlphaPort":false,"scratchPort":"55447","runLegacyBootstraps":true,"allowResetAndSeed":false,"shippingRateAuthoritySet":false,"shippingOperationalShadowSet":false,"shippingOneLevelCatalogSet":false}
+CREDENTIALS_WRITTEN_TO_EVIDENCE=false
