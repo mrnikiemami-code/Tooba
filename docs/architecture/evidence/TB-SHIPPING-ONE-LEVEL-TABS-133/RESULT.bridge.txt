@@ -19,6 +19,7 @@ Code-SHA: a549501e989155638401483af17c607806cbc003
 Evidence-SHA: a549501e989155638401483af17c607806cbc003 (single bounded commit, code + docs + evidence together)
 Branch: main
 HEAD == origin/main == a549501e989155638401483af17c607806cbc003 (pushed with normal push, no force/rewrite)
+Final state after committing this result artifact: HEAD == origin/main == 9a9134a74fda86d2c283357d1d521e8eb7cd4ce3
 
 ELAPSED (measured)
 Started: 2026-10-16T05:39:05Z (bridge task createdAtUtc)
