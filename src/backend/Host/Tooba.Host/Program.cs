@@ -67,6 +67,7 @@ using Tooba.Party.Endpoints;
 using Tooba.Cart.Endpoints;
 using Tooba.Settlement.Endpoints;
 using Tooba.Fulfillment.Endpoints;
+using Tooba.Fulfillment.Infrastructure.Shipping;
 using Tooba.Media.Endpoints;
 using Tooba.Offer.Infrastructure.Adapters;
 using Tooba.Offer.Infrastructure.Adapters.Tracing;
@@ -410,6 +411,21 @@ if (app.Environment.IsDevelopment())
         catch (Exception ex)
         {
             app.Logger.LogError(ex, "WalletDevelopmentSeed failed; Host continues without Wallet demo snapshot.");
+        }
+
+        try
+        {
+            // TB-SHIPPING-ONE-LEVEL-TABS-120: Host only composes the Fulfillment-owned Development
+            // bootstrap on the canonical trusted-tenant gateway. The module owns the gate, the
+            // legacy-source ensure, the backfill plan and the write; Host implements none of them.
+            await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
+                app.Services,
+                "shipping-one-level-catalog-dev-backfill",
+                ShippingOneLevelCatalogDevelopmentSeed.ApplyAsync);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "ShippingOneLevelCatalogDevelopmentSeed failed; Host continues without one-level shipping catalog.");
         }
     }
 }
