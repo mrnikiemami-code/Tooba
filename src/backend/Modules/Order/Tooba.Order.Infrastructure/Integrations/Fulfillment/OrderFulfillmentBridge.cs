@@ -32,7 +32,8 @@ public sealed class OrderFulfillmentBridge : IOrderFulfillmentReader
         var lines = await _db.Lines.AsNoTracking()
             .Where(x => x.SellerOrderId == sellerOrderId)
             .ToListAsync(cancellationToken);
-        return Map(checkout, sellerOrder, lines);
+        var groups = await LoadGroupsAsync(sellerOrderId, cancellationToken);
+        return Map(checkout, sellerOrder, lines, groups);
     }
 
     /// <inheritdoc />
@@ -60,13 +61,54 @@ public sealed class OrderFulfillmentBridge : IOrderFulfillmentReader
         var lines = await _db.Lines.AsNoTracking()
             .Where(x => x.SellerOrderId == sellerOrder.SellerOrderId)
             .ToListAsync(cancellationToken);
-        return Map(checkout, sellerOrder, lines);
+        var groups = await LoadGroupsAsync(sellerOrder.SellerOrderId, cancellationToken);
+        return Map(checkout, sellerOrder, lines, groups);
+    }
+
+    private async Task<IReadOnlyList<OrderFulfillmentShippingGroupSnapshot>> LoadGroupsAsync(
+        Guid sellerOrderId,
+        CancellationToken cancellationToken)
+    {
+        var groups = await _db.OrderShippingGroups.AsNoTracking()
+            .Where(x => x.SellerOrderId == sellerOrderId)
+            .OrderBy(x => x.ShippingGroupId)
+            .ToListAsync(cancellationToken);
+        if (groups.Count == 0)
+        {
+            return [];
+        }
+
+        var groupIds = groups.Select(x => x.ShippingGroupId).ToList();
+        var memberships = await _db.OrderShippingGroupLines.AsNoTracking()
+            .Where(x => groupIds.Contains(x.ShippingGroupId))
+            .ToListAsync(cancellationToken);
+
+        return groups
+            .Select(group => new OrderFulfillmentShippingGroupSnapshot(
+                group.ShippingGroupId,
+                group.SellerOrderId,
+                group.SellerPartyId,
+                group.MethodCode,
+                group.ServiceCode,
+                group.OptionCode,
+                group.MethodLabel,
+                group.OriginContext,
+                group.MinimumDeliveryDate,
+                group.RequestedDeliveryDate,
+                group.RequestedDeliveryTimeWindow,
+                group.LeadDays,
+                memberships
+                    .Where(x => x.ShippingGroupId == group.ShippingGroupId)
+                    .Select(x => x.OrderLineId)
+                    .ToArray()))
+            .ToArray();
     }
 
     private static OrderFulfillmentHandoffSnapshot Map(
         CheckoutGroup checkout,
         SellerOrder sellerOrder,
-        IReadOnlyList<OrderLine> lines) =>
+        IReadOnlyList<OrderLine> lines,
+        IReadOnlyList<OrderFulfillmentShippingGroupSnapshot> groups) =>
         new(
             sellerOrder.SellerOrderId,
             checkout.CheckoutId,
@@ -81,5 +123,6 @@ public sealed class OrderFulfillmentBridge : IOrderFulfillmentReader
             checkout.PostalCode,
             checkout.ShippingMethodCode,
             checkout.ShippingMethodLabel,
-            lines.Select(x => new OrderFulfillmentLineSnapshot(x.LineId, x.Quantity, x.ReservationId)).ToArray());
+            lines.Select(x => new OrderFulfillmentLineSnapshot(x.LineId, x.Quantity, x.ReservationId)).ToArray(),
+            groups.Count == 0 ? null : groups);
 }

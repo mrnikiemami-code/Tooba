@@ -17,7 +17,8 @@ public sealed record OrderFulfillmentHandoffSnapshot(
     string PostalCode,
     string ShippingMethodCode,
     string ShippingMethodLabel,
-    IReadOnlyList<OrderFulfillmentLineSnapshot> Lines);
+    IReadOnlyList<OrderFulfillmentLineSnapshot> Lines,
+    IReadOnlyList<OrderFulfillmentShippingGroupSnapshot>? ShippingGroups = null);
 
 /// <summary>
 /// خط سفارش برای fulfillment.
@@ -26,6 +27,25 @@ public sealed record OrderFulfillmentLineSnapshot(
     Guid OrderLineId,
     decimal Quantity,
     Guid? ReservationId);
+
+/// <summary>
+/// گروه ارسال پذیرفته‌شدهٔ سفارش فروشنده برای دسترسی Fulfillment بدون cross-DbContext.
+/// هویت پایدار <see cref="ShippingGroupId"/> از سفارش پذیرفته‌شده می‌آید و برچسب/مرورگر مرجع نیست.
+/// </summary>
+public sealed record OrderFulfillmentShippingGroupSnapshot(
+    Guid ShippingGroupId,
+    Guid SellerOrderId,
+    Guid SellerPartyId,
+    string MethodCode,
+    string? ServiceCode,
+    string? OptionCode,
+    string MethodLabel,
+    string? OriginContext,
+    DateOnly MinimumDeliveryDate,
+    DateOnly? RequestedDeliveryDate,
+    string? RequestedDeliveryTimeWindow,
+    int LeadDays,
+    IReadOnlyList<Guid> OrderLineIds);
 
 /// <summary>
 /// خواندن snapshot سفارش برای Fulfillment بدون cross-DbContext.

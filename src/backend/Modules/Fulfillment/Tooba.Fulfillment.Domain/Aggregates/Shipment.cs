@@ -22,6 +22,11 @@ public sealed class Shipment
     /// <summary>fulfillment مالک.</summary>
     public Guid FulfillmentId { get; init; }
 
+    /// <summary>
+    /// گروه ارسال پذیرفته‌شدهٔ مالک این محموله؛ null برای سفارش‌های قدیمی بدون گروه‌بندی.
+    /// </summary>
+    public Guid? ShippingGroupId { get; init; }
+
     /// <summary>وضعیت محموله.</summary>
     public ShipmentStatus Status { get; private set; }
 
@@ -70,17 +75,24 @@ public sealed class Shipment
         string? shippingMethodCode = null,
         string? shippingMethodLabel = null,
         string? providerMetadataJson = null,
-        int providerMetadataVersion = 0)
+        int providerMetadataVersion = 0,
+        Guid? shippingGroupId = null)
     {
         if (string.IsNullOrWhiteSpace(carrierDisplayName))
         {
             throw new ContractOperationException("fulfillment.shipment.carrier_required");
         }
 
+        if (shippingGroupId == Guid.Empty)
+        {
+            throw new ContractOperationException(FulfillmentShippingGroupFault.IdentityRequired);
+        }
+
         var shipment = new Shipment
         {
             ShipmentId = shipmentId,
             FulfillmentId = fulfillmentId,
+            ShippingGroupId = shippingGroupId,
             Status = ShipmentStatus.Created,
             CarrierDisplayName = carrierDisplayName.Trim(),
             ShippingMethodCode = (shippingMethodCode ?? string.Empty).Trim(),

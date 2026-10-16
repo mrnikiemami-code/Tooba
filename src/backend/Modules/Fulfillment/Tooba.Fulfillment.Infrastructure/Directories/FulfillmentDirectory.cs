@@ -100,9 +100,12 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
                 handoff.ShippingMethodCode,
                 handoff.ShippingMethodLabel,
                 handoff.Lines.Select(x => (x.OrderLineId, x.Quantity, x.ReservationId)),
-                now);
+                now,
+                MapShippingGroupPlans(handoff));
             _db.Fulfillments.Add(unit);
             _db.Items.AddRange(unit.Items);
+            PersistShippingGroups(unit);
+
             _telemetry.RecordCreated();
         }
 
@@ -294,7 +297,8 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         IReadOnlyList<ShipmentLineCommand> items,
         CancellationToken cancellationToken,
         string? shippingMethodCode = null,
-        string? providerMetadataJson = null)
+        string? providerMetadataJson = null,
+        Guid? shippingGroupId = null)
     {
         _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
@@ -325,7 +329,8 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
             methodCode,
             methodLabel,
             normalizedMetadata,
-            normalizedMetadata is null ? 0 : 1);
+            normalizedMetadata is null ? 0 : 1,
+            shippingGroupId);
         _db.Shipments.Add(shipment);
         _db.ShipmentItems.AddRange(shipment.Items);
         await _db.SaveChangesAsync(cancellationToken);
@@ -528,8 +533,7 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         }
     }
 
-    private async Task<FulfillmentUnit> LoadMutableAsync(Guid fulfillmentId, CancellationToken cancellationToken)
-    {
+    private async Task<FulfillmentUnit> LoadMutableAsync(Guid fulfillmentId, CancellationToken cancellationToken)    {
         var unit = await _db.Fulfillments.SingleOrDefaultAsync(x => x.FulfillmentId == fulfillmentId, cancellationToken)
             ?? throw new ContractOperationException("fulfillment.not_found");
         var items = await _db.Items.Where(x => x.FulfillmentId == fulfillmentId).ToListAsync(cancellationToken);
@@ -540,67 +544,11 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
             shipment.AttachLoadedItems(shipmentItems);
         }
 
+        var shippingGroups = await _db.ShippingGroups.Where(x => x.FulfillmentId == fulfillmentId).ToListAsync(cancellationToken);
         unit.AttachLoadedItems(items);
         unit.AttachLoadedShipments(shipments);
+        unit.AttachLoadedShippingGroups(shippingGroups);
         return unit;
-    }
-
-    private async Task<FulfillmentSnapshot> MapSnapshotAsync(FulfillmentUnit unit, CancellationToken cancellationToken)
-    {
-        var items = await _db.Items.AsNoTracking()
-            .Where(x => x.FulfillmentId == unit.FulfillmentId)
-            .ToListAsync(cancellationToken);
-        var shipments = await _db.Shipments.AsNoTracking()
-            .Where(x => x.FulfillmentId == unit.FulfillmentId)
-            .OrderBy(x => x.CreatedAt)
-            .ToListAsync(cancellationToken);
-        var shipmentSnapshots = new List<ShipmentSnapshot>(shipments.Count);
-        foreach (var shipment in shipments)
-        {
-            var shipmentItems = await _db.ShipmentItems.AsNoTracking()
-                .Where(x => x.ShipmentId == shipment.ShipmentId)
-                .ToListAsync(cancellationToken);
-            shipmentSnapshots.Add(new ShipmentSnapshot(
-                shipment.ShipmentId,
-                shipment.Status,
-                shipment.CarrierDisplayName,
-                shipment.TrackingReference,
-                shipment.DispatchedAt,
-                shipment.DeliveredAt,
-                shipmentItems.Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity)).ToArray(),
-                shipment.CreatedAt,
-                shipment.ShippingMethodCode,
-                shipment.ShippingMethodLabel,
-                shipment.ProviderMetadataJson,
-                shipment.ProviderMetadataVersion,
-                shipment.PreviousTrackingReference));
-        }
-
-        return new FulfillmentSnapshot(
-            unit.FulfillmentId,
-            unit.SellerOrderId,
-            unit.CheckoutId,
-            unit.SellerPartyId,
-            unit.Status,
-            unit.RecipientName,
-            unit.ContactMobile,
-            unit.ProvinceName,
-            unit.CityName,
-            unit.PostalAddress,
-            unit.PostalCode,
-            unit.ShippingMethodCode,
-            unit.ShippingMethodLabel,
-            items.Select(x => new FulfillmentItemSnapshot(
-                x.FulfillmentItemId,
-                x.OrderLineId,
-                x.QuantityOrdered,
-                x.QuantityShipped,
-                x.ReservationId,
-                x.QuantityPacked,
-                x.QuantityProcessing)).ToArray(),
-            shipmentSnapshots,
-            unit.CreatedAt,
-            unit.UpdatedAt);
     }
 
     /// <inheritdoc />
@@ -686,9 +634,12 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
                 handoff.ShippingMethodCode,
                 handoff.ShippingMethodLabel,
                 handoff.Lines.Select(x => (x.OrderLineId, x.Quantity, x.ReservationId)),
-                now);
+                now,
+                MapShippingGroupPlans(handoff));
             _db.Fulfillments.Add(unit);
             _db.Items.AddRange(unit.Items);
+            PersistShippingGroups(unit);
+
             _telemetry.RecordCreated();
             created = true;
         }

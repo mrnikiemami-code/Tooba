@@ -450,6 +450,7 @@ public sealed class FulfillmentModuleAmsc001W3CertGuardTests
                 "20260910120000_AddConsolidatedPackages.cs",
                 "20260910170000_AddShippingServiceCatalog.cs",
                 "20261015120000_AddShippingOneLevelCatalog.cs",
+                "20261016120000_AddFulfillmentShippingGroups.cs",
                 "FulfillmentDbContextModelSnapshot.cs",
             ],
             files);

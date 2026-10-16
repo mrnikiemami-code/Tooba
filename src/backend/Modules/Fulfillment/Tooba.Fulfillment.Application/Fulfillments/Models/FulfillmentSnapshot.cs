@@ -24,4 +24,5 @@ public sealed record FulfillmentSnapshot(
     IReadOnlyList<ShipmentSnapshot> Shipments,
     DateTimeOffset CreatedAt = default,
     DateTimeOffset UpdatedAt = default,
-    string? PreferredTrackingReference = null);
+    string? PreferredTrackingReference = null,
+    IReadOnlyList<FulfillmentShippingGroupSnapshot>? ShippingGroups = null);

@@ -13,4 +13,5 @@ public sealed record FulfillmentItemSnapshot(
     decimal QuantityShipped,
     Guid? ReservationId,
     decimal QuantityPacked = 0,
-    decimal QuantityProcessing = 0);
+    decimal QuantityProcessing = 0,
+    Guid? ShippingGroupId = null);

@@ -45,6 +45,11 @@ public sealed class FulfillmentDbContext : DbContext
     public DbSet<ShipmentItem> ShipmentItems => Set<ShipmentItem>();
 
     /// <summary>
+    /// گروه‌های ارسال پذیرفته‌شدهٔ مالک Fulfillment.
+    /// </summary>
+    public DbSet<FulfillmentShippingGroup> ShippingGroups => Set<FulfillmentShippingGroup>();
+
+    /// <summary>
     /// بسته‌های تجمیعی مرکزی.
     /// </summary>
     public DbSet<ConsolidatedPackage> ConsolidatedPackages => Set<ConsolidatedPackage>();
@@ -118,6 +123,22 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.QuantityPacked).HasColumnType("numeric(18,6)");
             entity.Property(x => x.QuantityShipped).HasColumnType("numeric(18,6)");
             entity.HasIndex(x => x.FulfillmentId);
+            entity.HasIndex(x => x.ShippingGroupId).HasFilter("shipping_group_id IS NOT NULL");
+        });
+        modelBuilder.Entity<FulfillmentShippingGroup>(entity =>
+        {
+            entity.ToTable("shipping_groups");
+            entity.HasKey(x => x.ShippingGroupId);
+            entity.Property(x => x.ShippingGroupId).ValueGeneratedNever();
+            entity.Property(x => x.MethodCode).HasMaxLength(64);
+            entity.Property(x => x.ServiceCode).HasMaxLength(64);
+            entity.Property(x => x.OptionCode).HasMaxLength(64);
+            entity.Property(x => x.MethodLabel).HasMaxLength(128);
+            entity.Property(x => x.OriginContext).HasMaxLength(256);
+            entity.Property(x => x.RequestedDeliveryTimeWindow).HasMaxLength(64);
+            entity.HasIndex(x => x.FulfillmentId);
+            // یک گروه پایدار برای یک فروشنده هرگز دو بار در همان واحد materialize نمی‌شود.
+            entity.HasIndex(x => new { x.FulfillmentId, x.ShippingGroupId }).IsUnique();
         });
         modelBuilder.Entity<Shipment>(entity =>
         {
@@ -131,8 +152,10 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.ProviderMetadataJson).HasColumnType("text");
             entity.Property(x => x.TrackingReference).HasMaxLength(128);
             entity.Property(x => x.PreviousTrackingReference).HasMaxLength(128);
+            entity.Property(x => x.ShippingGroupId);
             entity.Ignore(x => x.Items);
             entity.HasIndex(x => x.FulfillmentId);
+            entity.HasIndex(x => x.ShippingGroupId).HasFilter("shipping_group_id IS NOT NULL");
             entity.HasIndex(x => x.TrackingReference).IsUnique().HasFilter("tracking_reference IS NOT NULL");
         });
         modelBuilder.Entity<ShipmentItem>(entity =>

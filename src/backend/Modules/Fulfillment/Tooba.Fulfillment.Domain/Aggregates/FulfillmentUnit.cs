@@ -13,6 +13,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     private readonly DomainEventCollector _domainEvents = new();
     private readonly List<FulfillmentItem> _items = [];
     private readonly List<Shipment> _shipments = [];
+    private readonly List<FulfillmentShippingGroup> _shippingGroups = [];
 
     private FulfillmentUnit()
     {
@@ -72,6 +73,12 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     /// <summary>محموله‌ها.</summary>
     public IReadOnlyList<Shipment> Shipments => _shipments;
 
+    /// <summary>گروه‌های ارسال پذیرفته‌شدهٔ این واحد؛ خالی برای سفارش‌های قدیمی.</summary>
+    public IReadOnlyList<FulfillmentShippingGroup> ShippingGroups => _shippingGroups;
+
+    /// <summary>آیا سفارش این واحد گروه‌بندی ارسال پذیرفته‌شده دارد.</summary>
+    public bool HasShippingGroups => _shippingGroups.Count > 0;
+
     /// <summary>رویدادهای دامنه.</summary>
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.Events;
 
@@ -97,8 +104,11 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         string shippingMethodCode,
         string shippingMethodLabel,
         IEnumerable<(Guid OrderLineId, decimal Quantity, Guid? ReservationId)> lines,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        IReadOnlyList<FulfillmentShippingGroupPlan>? shippingGroups = null)
     {
+        var lineArray = lines as IReadOnlyList<(Guid OrderLineId, decimal Quantity, Guid? ReservationId)>
+            ?? lines.ToArray();
         var unit = new FulfillmentUnit
         {
             FulfillmentId = fulfillmentId,
@@ -118,13 +128,82 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             CreatedAt = now,
             UpdatedAt = now,
         };
-        foreach (var line in lines)
+
+        var membership = ResolveShippingGroupMembership(
+            lineArray,
+            shippingGroups,
+            fulfillmentId,
+            sellerOrderId,
+            sellerPartyId,
+            unit._shippingGroups);
+
+        foreach (var line in lineArray)
         {
-            unit._items.Add(FulfillmentItem.Create(newId(), unit.FulfillmentId, line.OrderLineId, line.Quantity, line.ReservationId));
+            membership.TryGetValue(line.OrderLineId, out var shippingGroupId);
+            unit._items.Add(FulfillmentItem.Create(
+                newId(),
+                unit.FulfillmentId,
+                line.OrderLineId,
+                line.Quantity,
+                line.ReservationId,
+                shippingGroupId == Guid.Empty ? null : shippingGroupId));
         }
 
         unit._domainEvents.Add(new FulfillmentCreatedDomainEvent(unit.FulfillmentId, unit.SellerOrderId, unit.CheckoutId));
         return unit;
+    }
+
+    /// <summary>
+    /// عضویت گروه ارسال خطوط را از snapshot پذیرفته‌شدهٔ سفارش می‌سازد.
+    /// هر خط دقیقاً یک گروه دارد؛ فروشندهٔ هر گروه باید فروشندهٔ این SellerOrder باشد.
+    /// سفارش بدون گروه‌بندی (legacy) نقشهٔ خالی برمی‌گرداند.
+    /// </summary>
+    private static IReadOnlyDictionary<Guid, Guid> ResolveShippingGroupMembership(
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity, Guid? ReservationId)> lines,
+        IReadOnlyList<FulfillmentShippingGroupPlan>? shippingGroups,
+        Guid fulfillmentId,
+        Guid sellerOrderId,
+        Guid sellerPartyId,
+        List<FulfillmentShippingGroup> target)
+    {
+        if (shippingGroups is null || shippingGroups.Count == 0)
+        {
+            return new Dictionary<Guid, Guid>();
+        }
+
+        var orderedLineIds = lines.Select(x => x.OrderLineId).ToHashSet();
+        var membership = new Dictionary<Guid, Guid>();
+        var seenGroups = new HashSet<Guid>();
+        foreach (var plan in shippingGroups)
+        {
+            var group = FulfillmentShippingGroup.Create(plan, fulfillmentId, sellerOrderId, sellerPartyId);
+            if (!seenGroups.Add(group.ShippingGroupId))
+            {
+                throw new ContractOperationException(FulfillmentShippingGroupFault.GroupDuplicate);
+            }
+
+            foreach (var orderLineId in plan.OrderLineIds)
+            {
+                if (!orderedLineIds.Contains(orderLineId))
+                {
+                    throw new ContractOperationException(FulfillmentShippingGroupFault.LineUnknown);
+                }
+
+                if (!membership.TryAdd(orderLineId, group.ShippingGroupId))
+                {
+                    throw new ContractOperationException(FulfillmentShippingGroupFault.LineInMultipleGroups);
+                }
+            }
+
+            target.Add(group);
+        }
+
+        if (membership.Count != orderedLineIds.Count)
+        {
+            throw new ContractOperationException(FulfillmentShippingGroupFault.LineUncovered);
+        }
+
+        return membership;
     }
 
     /// <summary>خطوط بارگذاری‌شده را وصل می‌کند.</summary>
@@ -139,6 +218,13 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     {
         _shipments.Clear();
         _shipments.AddRange(shipments);
+    }
+
+    /// <summary>گروه‌های ارسال بارگذاری‌شده را وصل می‌کند.</summary>
+    public void AttachLoadedShippingGroups(IEnumerable<FulfillmentShippingGroup> shippingGroups)
+    {
+        _shippingGroups.Clear();
+        _shippingGroups.AddRange(shippingGroups);
     }
 
     /// <summary>همهٔ باقیمانده را وارد پردازش می‌کند.</summary>
@@ -337,7 +423,8 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         string? shippingMethodCode = null,
         string? shippingMethodLabel = null,
         string? providerMetadataJson = null,
-        int providerMetadataVersion = 0)
+        int providerMetadataVersion = 0,
+        Guid? shippingGroupId = null)
     {
         EnsureNotTerminal();
         if (Status is FulfillmentStatus.Cancelled or FulfillmentStatus.Failed or FulfillmentStatus.Delivered)
@@ -346,6 +433,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         }
 
         var normalized = NormalizeSelections(items);
+        EnsureShippingGroupScope(normalized, shippingGroupId);
         var shipment = Shipment.Create(
             shipmentId,
             newId,
@@ -358,11 +446,57 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             shippingMethodCode,
             shippingMethodLabel,
             providerMetadataJson,
-            providerMetadataVersion);
+            providerMetadataVersion,
+            shippingGroupId);
         _shipments.Add(shipment);
         UpdatedAt = now;
         _domainEvents.Add(new ShipmentCreatedDomainEvent(FulfillmentId, shipment.ShipmentId, SellerOrderId));
         return shipment;
+    }
+
+    /// <summary>
+    /// دامنهٔ گروه محموله را اعتبارسنجی می‌کند: سفارش گروه‌دار محمولهٔ گروه‌دار می‌خواهد،
+    /// گروه باید در همین واحد باشد و هیچ خطی از گروه خودش جدا نشود.
+    /// </summary>
+    private void EnsureShippingGroupScope(
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> selections,
+        Guid? shippingGroupId)
+    {
+        if (shippingGroupId == Guid.Empty)
+        {
+            throw new ContractOperationException(FulfillmentShippingGroupFault.IdentityRequired);
+        }
+
+        if (!HasShippingGroups)
+        {
+            if (shippingGroupId is not null)
+            {
+                throw new ContractOperationException(FulfillmentShippingGroupFault.GroupNotApplicable);
+            }
+
+            return;
+        }
+
+        if (shippingGroupId is null)
+        {
+            throw new ContractOperationException(FulfillmentShippingGroupFault.ShipmentGroupRequired);
+        }
+
+        if (_shippingGroups.All(x => x.ShippingGroupId != shippingGroupId.Value))
+        {
+            throw new ContractOperationException(FulfillmentShippingGroupFault.GroupNotFound);
+        }
+
+        foreach (var selection in selections)
+        {
+            var item = _items.SingleOrDefault(x => x.OrderLineId == selection.OrderLineId)
+                ?? throw new ContractOperationException("fulfillment.order_line.not_found");
+            var membership = item.ShippingGroupId ?? Guid.Empty;
+            if (membership != shippingGroupId.Value)
+            {
+                throw new ContractOperationException(FulfillmentShippingGroupFault.ShipmentGroupMixed);
+            }
+        }
     }
 
     /// <summary>ابطال مرسولهٔ پیش از dispatch و آزادسازی تخصیص.</summary>

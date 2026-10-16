@@ -17,7 +17,8 @@ public sealed record FulfillmentCreateShipmentRequest(
     string CarrierDisplayName,
     IReadOnlyList<FulfillmentShipmentLineRequest> Items,
     string? ShippingMethodCode = null,
-    string? ProviderMetadataJson = null);
+    string? ProviderMetadataJson = null,
+    Guid? ShippingGroupId = null);
 
 /// <summary>Wire-only tracking.</summary>
 public sealed record FulfillmentAssignTrackingRequest(string TrackingReference);
@@ -74,7 +75,7 @@ public static class FulfillmentSellerEndpoints
             SellerFulfillmentMutationKind.CreateShipment,
             body.CarrierDisplayName,
             body.Items.Select(x => new ShipmentLineCommand(x.OrderLineId, x.Quantity)).ToArray(),
-            null, null, body.ShippingMethodCode, body.ProviderMetadataJson, cancellationToken);
+            null, null, body.ShippingMethodCode, body.ProviderMetadataJson, cancellationToken, body.ShippingGroupId);
 
     private static Task<IResult> SellerTrackingAsync(
         Guid fulfillmentId, Guid shipmentId, FulfillmentAssignTrackingRequest body,
@@ -101,12 +102,14 @@ public static class FulfillmentSellerEndpoints
         Guid fulfillmentId, ISender sender, IFulfillmentSellerAuthorizer authorizer, ApiResponseFactory api,
         HttpContext context, SellerFulfillmentMutationKind kind,
         string? carrier, IReadOnlyList<ShipmentLineCommand>? lines, Guid? shipmentId, string? tracking,
-        string? shippingMethodCode, string? providerMetadataJson, CancellationToken cancellationToken)
+        string? shippingMethodCode, string? providerMetadataJson, CancellationToken cancellationToken,
+        Guid? shippingGroupId = null)
     {
         var (actorUserId, sellerPartyId) = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
         var permission = await authorizer.GetHandlePermissionAsync(actorUserId, sellerPartyId, cancellationToken);
         return api.From(await sender.Send(new SellerMutateFulfillmentCommand(
             fulfillmentId, actorUserId, sellerPartyId, permission, kind,
-            carrier, lines, shipmentId, tracking, shippingMethodCode, providerMetadataJson), cancellationToken));
+            carrier, lines, shipmentId, tracking, shippingMethodCode, providerMetadataJson,
+            shippingGroupId), cancellationToken));
     }
 }

@@ -38,10 +38,21 @@ public sealed class FulfillmentItem
     /// <summary>رزرو موجودی مرجع فعال؛ FK Inventory نیست.</summary>
     public Guid? ReservationId { get; private set; }
 
+    /// <summary>
+    /// گروه ارسال پذیرفته‌شدهٔ مالک این خط. برای سفارش‌های قدیمی بدون گروه‌بندی null می‌ماند.
+    /// </summary>
+    public Guid? ShippingGroupId { get; init; }
+
     /// <summary>آیا رزرو مصرف شده است.</summary>
     public bool ReservationConsumed { get; private set; }
 
-    internal static FulfillmentItem Create(Guid fulfillmentItemId, Guid fulfillmentId, Guid orderLineId, decimal quantityOrdered, Guid? reservationId) =>
+    internal static FulfillmentItem Create(
+        Guid fulfillmentItemId,
+        Guid fulfillmentId,
+        Guid orderLineId,
+        decimal quantityOrdered,
+        Guid? reservationId,
+        Guid? shippingGroupId = null) =>
         new()
         {
             FulfillmentItemId = fulfillmentItemId,
@@ -49,6 +60,7 @@ public sealed class FulfillmentItem
             OrderLineId = orderLineId,
             QuantityOrdered = quantityOrdered,
             ReservationId = reservationId,
+            ShippingGroupId = shippingGroupId,
         };
 
     /// <summary>

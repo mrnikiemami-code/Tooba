@@ -66,7 +66,8 @@ public interface IFulfillmentDirectory
         IReadOnlyList<ShipmentLineCommand> items,
         CancellationToken cancellationToken,
         string? shippingMethodCode = null,
-        string? providerMetadataJson = null);
+        string? providerMetadataJson = null,
+        Guid? shippingGroupId = null);
 
     /// <summary>ابطال مرسوله پیش از dispatch.</summary>
     Task<FulfillmentSnapshot> CancelShipmentAsync(

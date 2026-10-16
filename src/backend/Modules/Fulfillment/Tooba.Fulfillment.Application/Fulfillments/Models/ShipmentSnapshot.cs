@@ -19,4 +19,21 @@ public sealed record ShipmentSnapshot(
     string ShippingMethodLabel = "",
     string? ProviderMetadataJson = null,
     int ProviderMetadataVersion = 0,
-    string? PreviousTrackingReference = null);
+    string? PreviousTrackingReference = null,
+    Guid? ShippingGroupId = null);
+
+/// <summary>
+/// snapshot گروه ارسال پذیرفته‌شدهٔ یک واحد fulfillment؛ عضویت خطوط برای تصمیم‌گیری canonical است.
+/// </summary>
+public sealed record FulfillmentShippingGroupSnapshot(
+    Guid ShippingGroupId,
+    string MethodCode,
+    string? ServiceCode,
+    string? OptionCode,
+    string MethodLabel,
+    string? OriginContext,
+    DateOnly MinimumDeliveryDate,
+    DateOnly? RequestedDeliveryDate,
+    string? RequestedDeliveryTimeWindow,
+    int LeadDays,
+    IReadOnlyList<Guid> OrderLineIds);

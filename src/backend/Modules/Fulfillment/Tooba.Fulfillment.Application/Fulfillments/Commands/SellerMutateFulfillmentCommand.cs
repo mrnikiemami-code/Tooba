@@ -26,7 +26,8 @@ public sealed record SellerMutateFulfillmentCommand(
     Guid? ShipmentId = null,
     string? TrackingReference = null,
     string? ShippingMethodCode = null,
-    string? ProviderMetadataJson = null) : IRequest<Result<FulfillmentSnapshot>>;
+    string? ProviderMetadataJson = null,
+    Guid? ShippingGroupId = null) : IRequest<Result<FulfillmentSnapshot>>;
 
 /// <summary>نوع جهش فروشنده.</summary>
 public enum SellerFulfillmentMutationKind
@@ -92,7 +93,8 @@ public sealed class SellerMutateFulfillmentHandler
                         request.ShipmentLines ?? [],
                         cancellationToken,
                         request.ShippingMethodCode,
-                        request.ProviderMetadataJson),
+                        request.ProviderMetadataJson,
+                        request.ShippingGroupId),
                 SellerFulfillmentMutationKind.AssignTracking =>
                     await _fulfillment.AssignTrackingAsync(
                         request.FulfillmentId,
