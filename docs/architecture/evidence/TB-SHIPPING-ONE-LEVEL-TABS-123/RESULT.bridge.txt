@@ -1,0 +1,107 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-123
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-122
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Bridge-Task-Row: 5a4df566-27f7-45ee-ab81-99a343f4a368
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_ISOLATED_SHIPPING_SELECTION_PAYMENT_HANDOFF_PROOF
+
+BASE
+Expected-Base-SHA: 0204859dddf0eb726e48ad3b581fd2b5e7026940
+Actual-Base-SHA-At-Claim: 0204859dddf0eb726e48ad3b581fd2b5e7026940
+Drift: NONE
+Code-SHA: NONE (observation-only; no src/test/migration/config change)
+Evidence-SHA: f30c5df9b6675529116b5e3393a592d006546359
+HEAD == origin/main: yes (verified after push)
+Elapsed-Minutes: 11 (Timebox 45m HARD, no overrun)
+
+LAUNCH-COUNTS
+Scratch-Postgres-Containers: 1 (no-volume, 127.0.0.1:55454)
+Isolated-Host-Launches: 1 (127.0.0.1:5402, /health 200 in 36s, watchdog 180s not hit, no restart)
+Isolated-Frontend-Launches: 1 (127.0.0.1:3102, TOOBA_HOST_ORIGIN=http://127.0.0.1:5402, no restart)
+Browser-Tabs-Used: 1 · Customer-Handoff-Clicks: 1 · Retry-Loops: 0
+
+ISOLATION-PROOF (offline guard + runtime)
+isolation-guard.json failClosed=true: exactly 1 Active tenant (store-alpha -> tenant-123-scratch only),
+no tooba_alpha, no tenant-alpha, no Port=5432, no prior scratch port, ShippingRateAuthority /
+ShippingOperationalShadow absent, ShippingOneLevelCatalog=true in the disposable overlay ONLY,
+AllowResetAndSeed=false (no demo reset/seed expansion).
+Runtime provenance: /__platform-commerce -> connectionReference=tenant-123-scratch,
+deploymentId=isolated-123, tenantId=store-alpha.
+Frontend binding discriminator: isolated :3102 checkout-identity-policy=GuestAllowed while shared
+:5088 stays AuthenticatedOnly (shared surface never used for the proof).
+
+ESSENTIAL EVIDENCE (one genuine isolated browser session)
+1. Guest cart created only through the storefront UI (add-to-cart on /fa/products/schema-mobile-demo-phone)
+   -> real cartId 01a142c8-e991-7000-a187-428dab205571 + guest secret in sessionStorage (never committed).
+2. /fa/shipping rendered the seven one-level options (precondition only; no label re-audit, TB-122 not repeated).
+3. Selected methodCode tipax:standard (serviceCode=tipax, optionCode=standard, label «معمولی», 180000 IRR);
+   address/city/date/time filled ONLY through the real form controls
+   (province «تهران», city «تهران», date 2026-10-20, window 9-12).
+4. Exactly ONE click on «ادامه به پرداخت» [shipping-continue]; recorded request ordering for that click:
+     PUT /v1/storefront/shipping/selection -> 200 (70ms)   <-- first and ONLY non-GET request
+     then client-side navigation to /fa/payment?cartId=... (payment-handoff-page present)
+     GET cart 200, GET wallet-quote 200, GET payment-draft -> 409
+   No POST /v1/storefront/shipping/commit and no order/checkout/payment mutation was issued by the
+   shipping-to-payment transition.
+5. Owner readback that works (authorized application read seam, no SQL):
+   POST /v1/storefront/shipping/projection -> selectedMethodCode=tipax:standard and
+   draft.shippingMethodCode=tipax:standard with province/city «تهران», date 2026-10-20, window 9-12
+   => the continue click durably SAVED the selection before navigation and the method identity is retained
+   at an observable Order-owned readback boundary.
+6. Cart after the handoff: GET /v1/storefront/cart/{cartId} -> status=Active, itemCount=1, checkoutId=null
+   (cart present/usable, not cleared, no Order conversion).
+   Scratch read-only counts: carts_total=2, carts_active=2, cart_lines=2, shipping_drafts=1,
+   seller_orders=0, payments=0.
+
+FIRST EXACT BLOCKER (why PARTIAL, not PASS)
+Payment-page shipping selection readback is not observable on this target:
+  GET /v1/storefront/cart/{cartId}/payment-draft -> 409 {"errorCode":"checkout.tax.unavailable",
+  "title":"Tax could not be calculated for this order. Try again."}
+so the payment page renders «امکان شروع پرداخت در حال حاضر وجود ندارد.» instead of the Order-owned draft
+summary (which would carry the selected shipping method label/price). Cause: Order maps any TAX_* failure to
+checkout.tax.unavailable, and the disposable scratch DB was bootstrapped without Tax rule data
+(AllowResetAndSeed=false by design); the Host log shows tax.offer_classifications / tax.rules queried with no
+applicable rule. This is an isolated-environment data gap, NOT a shipping-selection, handoff or persistence
+defect; no claim about production tax behavior, payment acceptance or shipment lifecycle.
+Missing seam for a future PASS attempt: a scratch recipe that yields an applicable Tax rule (or an equivalent
+authorized readback of the saved selection on the payment route).
+
+CHANGED-PATHS (docs only)
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-123.md
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-123/** (guard, launch/prepare scripts, api-prereq,
+browser-handoff, payment screenshot, watchdog results, receipt, cleanup)
+Bridge receipt docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-123.task.md remains UNSTAGED/uncommitted.
+
+SHARED-PARITY (read-only)
+tooba_alpha counts identical pre/post (methods 7, translations 14, carts 50, cart_lines 78,
+cart_shipping_drafts 14, seller_orders 26, products 567, offers 3223) => UNCHANGED, no incident.
+Shared Host PID 35624 unchanged alive, :5088 /health 200, :3000 -> 308. Shared processes, browser tabs,
+databases, configuration and feature gates were never stopped, restarted or modified.
+
+CLEANUP
+Isolated Host stopped by path-verified PID (24068); isolated frontend stopped by cmdline-verified PIDs
+(41496/14820); scratch container tooba-123-scratch-pg removed; .tmp-123-run and .tmp-123-host-out deleted;
+ports 5402/3102/55454 released (0 listeners); only the task-owned browser tab closed; no guest secret,
+token, customer data or raw connection string retained. Pre-existing dirty files preserved (no stash/reset/
+rebase/force push).
+
+DEVIATIONS (disclosed, not hidden)
+1. One deliberate negative-control POST /v1/storefront/shipping/commit was sent AFTER the observation; it was
+   rejected with 400 validation.failed and produced no state change (shipping_drafts=1, seller_orders=0,
+   payments=0, cart still Active). The UI transition itself never called that endpoint.
+2. The un-methoded projection returns deliveryDates=[] by design, so the delivery-date chips only appear after
+   a methodCode is supplied; no bypass or fabricated data was used to satisfy validation.
+3. TB-118's frontend test was not rerun and no broad test suite was executed (runtime observation only).
+
+ROLLBACK
+No-op: no code, config, migration or tracked runtime file changed; disposable container, publish directory and
+run directory were deleted; only documentation evidence was committed.
+
+Automatic-Next-Implementation-Task: NONE
+STOP FOR ARCHITECT
+END_TOOBA_WORKER_RESULT
