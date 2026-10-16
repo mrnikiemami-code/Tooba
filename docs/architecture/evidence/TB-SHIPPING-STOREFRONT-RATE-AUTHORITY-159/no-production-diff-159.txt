@@ -1,0 +1,29 @@
+TB-SHIPPING-STOREFRONT-RATE-AUTHORITY-159 — production diff record
+Baseline/HEAD/origin/main: bfb9245bb6fce0f8a4b65b40c68090879413e667
+Generated: 2026-10-16T20:5xZ (task run)
+
+A. `git status --porcelain -- src/backend` AFTER the task's work (must be empty):
+   (captured verbatim in the shell log; result: empty)
+
+B. `git diff --stat HEAD -- src/backend` (must be empty):
+   (result: empty)
+
+C. Interpretation
+   A candidate implementation was written and compiled successfully
+   (`dotnet build src/backend/Modules/Order/Tooba.Order.Infrastructure/Tooba.Order.Infrastructure.csproj`
+   -> `Build succeeded. 0 Error(s)`), then REVERTED entirely before commit because the owner quote engine's
+   service-level fallback (`ShippingRatePolicy.MatchesOption`, `ShippingRatePolicyEngine.Quote`) would have
+   let a provider-level `tipax` row price `tipax:express`/`tipax:standard` siblings — a forbidden
+   provider-level tariff inheritance. See OWNER-AUTHORITY-BLOCKER-159.md.
+
+   Files created and removed again (no trace in the tree):
+   - src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingOwnedPricingOptions.cs
+   - src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingOwnedRateAuthority.cs
+   Files modified and restored byte-for-byte via `git checkout --`:
+   - .../Storefront/Services/StorefrontShippingService.cs
+   - .../Shipping/Queries/ProjectStorefrontShipping/ProjectStorefrontShippingQuery.cs
+   - src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs
+
+   No customer price, selection, promise, draft, snapshot, Admin surface, schema, DI registration or
+   configuration default was changed. Live customer pricing behaviour is unchanged and no authority
+   feature is enabled anywhere (no option section exists in any appsettings).

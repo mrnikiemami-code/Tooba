@@ -1,0 +1,60 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-STOREFRONT-RATE-AUTHORITY-159
+Parent-Task: TB-SHIPPING-ADMIN-BROWSER-QUOTE-ACCEPTANCE-158
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PARTIAL
+Base-SHA: bfb9245bb6fce0f8a4b65b40c68090879413e667
+Head-SHA: bfb9245bb6fce0f8a4b65b40c68090879413e667
+Origin-Main-SHA: bfb9245bb6fce0f8a4b65b40c68090879413e667
+Production-Diff: NONE
+
+Scope-Delivered:
+- Required first inspection completed: SHIPPING-ARCHITECT-RECOVERY, SHIPPING-ADMIN-FLAT-METHOD-CONTRACT (incl. locked addendum), SHIPPING-GROUP-INDEPENDENT-DELIVERY-COMMITMENT, TB-155..TB-158 evidence, storefront-quote-provenance-158.md, and the exact current call chain, owner Contracts surface, feature-gate semantics, Admin writer and Order adapter were confirmed by reading the real source.
+- Owner-correct customer pricing seam designed, implemented, compiled successfully (Build succeeded, 0 errors), then FULLY REVERTED before commit because it cannot be made owner-correct without changing Shipping's own deterministic pricing semantics.
+- Precise blocked shape documented with exact source citations, plus the minimal required owner-side change and its ordering.
+
+Blocked-Shape (why nothing was shipped):
+- The only existing owner read seam is IShippingRateQuoteLookup (Tooba.Shipping.Contracts.Rates). The owner engine treats a provider/service-level row (OptionCode == null) as a valid FALLBACK for an option-specific request: ShippingRatePolicy.MatchesOption (ShippingRatePolicy.cs:147-149) returns true when OptionCode is null, and ShippingRatePolicyEngine.Quote (ShippingRatePolicyEngine.cs:86-90) falls back to service-level rows when no option-specific row exists.
+- Therefore one row ServiceCode="tipax", OptionCode=null would price BOTH tipax:standard and tipax:express through that lookup: provider-level tariff inheritance across sibling methods.
+- That is forbidden by the LOCKED Admin flat-method contract section C ("Hard method isolation - NO sibling or provider policy inheritance"; provider-level rows MUST be LEGACY_SHARED_UNRESOLVED), by this task's HARD SAFETY ("no provider-level tariff inherit", "no fallback to legacy configuration or sibling/service-level tariffs in that mode"), and it is already recorded by the owner's own read model as LegacySharedUnresolved (ShippingMethodFinancialStatusEvaluator.cs:64-82). The owner module thus already asserts the correct rule while its quote engine still honours the opposite fallback.
+- Order may not compensate: the seam contract explicitly refuses to expose the policy "so that the consumer (Order) cannot re-implement business rules" (ShippingRatePolicyContracts.cs:344-350).
+- Additional proven insufficiency: a rate row alone does not price anything - the owner engine also requires an active coverage grant, and the TB-158 Admin-created tipax:standard row has activeCoverageGrantCount: 0 -> NotCovered. Admin 'FinanciallyConfigured' is therefore provably not a customer quote. Also, the storefront intentionally sends no parcel measurement, so conditioned owned policies fail closed with MeasurementRequired.
+
+Required-Next-Step (Architect decision, not self-authorized):
+- Owner-side additive change in Shipping: allow a caller to demand strict option identity (a service-level row must never satisfy an option-specific request), implemented in ShippingRatePolicyEngine; keep no-option/single-option behaviour byte-compatible otherwise; add owner tests.
+- Then decide coverage-grant creation for customer-purchasable methods and the parcel-measurement contract; only afterwards wire the Order seam behind an explicit default-off production gate independent from the observe-only Tooba:ShippingRateAuthority, fail-closed with no legacy/sibling/service-level fallback and no zero->FREE.
+- Only after that: authenticated-customer runtime proof using the TB-157/TB-158 private harness.
+
+Evidence:
+- docs/architecture/evidence/TB-SHIPPING-STOREFRONT-RATE-AUTHORITY-159/OWNER-AUTHORITY-BLOCKER-159.md
+- docs/architecture/evidence/TB-SHIPPING-STOREFRONT-RATE-AUTHORITY-159/RESULT.md
+- docs/architecture/evidence/TB-SHIPPING-STOREFRONT-RATE-AUTHORITY-159/production-diff-proof-159.txt
+- docs/architecture/evidence/TB-SHIPPING-STOREFRONT-RATE-AUTHORITY-159/no-production-diff-159.txt
+- task artifact: docs/ai/tasks/TB-SHIPPING-STOREFRONT-RATE-AUTHORITY-159.task.md
+
+Verification-Run:
+- HEAD == origin/main == Expected-Base-SHA before and after (production-diff-proof-159.txt).
+- git status --porcelain -- src/backend : EMPTY. git diff --stat HEAD -- src/backend : EMPTY.
+- dotnet build src/backend/Modules/Order/Tooba.Order.Infrastructure/Tooba.Order.Infrastructure.csproj -> Build succeeded. 0 Error(s). (Candidate seam compiled, then removed; 19 pre-existing warnings.)
+- No focused test project was run because no production or test source was retained: asserting an enabled-authority price from the current owner engine would pin a price the owner rule forbids.
+- Frontend untouched (frontend typecheck not applicable).
+- Pre-existing unrelated dirty path preserved and NOT committed: src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx.
+
+Acceptance:
+- A (focused owner/contract tests for enabled authority): NOT DELIVERED - deliberately, because the enabled path cannot be proven correct on the current owner contract; blocker documented with exact citations instead.
+- B (private authenticated end-to-end quote/write/read/payment-draft): NOT ATTEMPTED - blocked upstream; no safe seam exists to observe, and TB-158 already established the authenticated-quote gate (401 checkout.authentication_required).
+- C (build + focused tests): build of the changed project tree PASS (0 errors); no test run applicable; frontend untouched.
+- D (evidence + default-off compatibility + provenance): DELIVERED. No default was changed; no authority section exists in any appsettings, so authority is disabled everywhere.
+
+Hard-Safety-Compliance:
+- No production file changed: no price, selection, promise, draft, snapshot, Admin surface, schema, migration, DI registration or configuration default altered.
+- Shared :3000/:5088/:5432, tooba_alpha/store-alpha, RabbitMQ/Redis, shared migrations/containers and unrelated dirty files untouched; no scratch stack needed since no runtime path was executed.
+- No fake screenshots, no invented prices, no fabricated PASS, no duplicate writer API, no provider-level tariff inherit shipped, no Host DbContext/business logic added, no Results.Json.
+
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT
