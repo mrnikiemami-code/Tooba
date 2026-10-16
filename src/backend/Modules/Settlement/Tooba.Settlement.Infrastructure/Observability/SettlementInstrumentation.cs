@@ -11,6 +11,7 @@ public sealed class SettlementInstrumentation
     private readonly Counter<long> _entryPosted;
     private readonly Counter<long> _payoutSucceeded;
     private readonly Counter<long> _payoutFailed;
+    private readonly Counter<long> _ledgerSkipped;
 
     /// <summary>
     /// متریک‌های in-process Settlement.
@@ -21,6 +22,7 @@ public sealed class SettlementInstrumentation
         _entryPosted = meter.CreateCounter<long>("tooba.settlement.entry.posted");
         _payoutSucceeded = meter.CreateCounter<long>("tooba.settlement.payout.succeeded");
         _payoutFailed = meter.CreateCounter<long>("tooba.settlement.payout.failed");
+        _ledgerSkipped = meter.CreateCounter<long>("tooba.settlement.ledger.skipped");
     }
 
     /// <summary>posted entry ثبت می‌کند.</summary>
@@ -31,4 +33,9 @@ public sealed class SettlementInstrumentation
 
     /// <summary>payout شکست‌خورده ثبت می‌کند.</summary>
     public void RecordPayoutFailed() => _payoutFailed.Add(1);
+
+    /// <summary>
+    /// رد شدن fail-closed ثبت ledger تسویه (کانال غیرقابل‌اعمال یا schema فعال‌نشده) را ثبت می‌کند.
+    /// </summary>
+    public void RecordLedgerSkipped() => _ledgerSkipped.Add(1);
 }

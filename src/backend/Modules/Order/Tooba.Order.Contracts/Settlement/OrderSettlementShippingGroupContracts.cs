@@ -1,3 +1,5 @@
+using Tooba.Offer.Contracts.Dtos;
+
 namespace Tooba.Order.Contracts.Settlement;
 
 /// <summary>
@@ -27,5 +29,29 @@ public interface IOrderShippingGroupSettlementReader
     /// </summary>
     Task<IReadOnlyList<OrderShippingGroupSettlementSnapshot>> GetForSellerOrdersAsync(
         IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// کانال فروش پایدار یک checkout. حقیقت پایدار از وضعیت ثبت‌شدهٔ سفارش می‌آید و هرگز از برچسب رابط
+/// کاربری، نام فروشنده، SKU، حدس Edition یا ادعای کلاینت ساخته نمی‌شود.
+/// </summary>
+/// <param name="CheckoutId">شناسهٔ checkout مالک.</param>
+/// <param name="Channel">کانال پایدار فروش در لحظهٔ ثبت.</param>
+public sealed record OrderCheckoutSalesChannelSnapshot(
+    Guid CheckoutId,
+    SalesChannel Channel);
+
+/// <summary>
+/// درز خواندن کانال فروش پایدار یک checkout برای Settlement از Contracts؛ فقط‌خواندنی و بدون
+/// cross-DbContext.
+/// </summary>
+public interface IOrderCheckoutSalesChannelSettlementReader
+{
+    /// <summary>
+    /// کانال پایدار checkout را برمی‌گرداند؛ <c>null</c> اگر checkout ناشناخته باشد (fail-closed در مصرف‌کننده).
+    /// </summary>
+    Task<OrderCheckoutSalesChannelSnapshot?> GetChannelAsync(
+        Guid checkoutId,
         CancellationToken cancellationToken);
 }

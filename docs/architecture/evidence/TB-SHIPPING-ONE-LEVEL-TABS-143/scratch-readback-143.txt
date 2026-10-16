@@ -1,0 +1,70 @@
+﻿--- A. FULFILLMENT HANDOFF (preserved from TB-140) ---
+ paid_seller_orders 
+--------------------
+                  1
+(1 row)
+
+ fulfillment_unit_rows | distinct_fulfillment_ids 
+-----------------------+--------------------------
+                     1 |                        1
+(1 row)
+
+            fulfillment_id            |           seller_order_id            |          shipping_group_id           |  method_code   
+--------------------------------------+--------------------------------------+--------------------------------------+----------------
+ 01a143f3-3715-7000-ad53-7925ca65b5fe | 01a143f3-3245-7000-a3ee-ff8f6e8b156b | 01a143f3-3227-7000-b59d-f3c4e951ad2e | post:express
+ 01a143f3-3715-7000-ad53-7925ca65b5fe | 01a143f3-3245-7000-a3ee-ff8f6e8b156b | 01a143f3-3227-7000-a5ac-f125e2e761f2 | tipax:standard
+(2 rows)
+
+ fulfillment_group_ids | ledger_group_ids | identical_group_ids 
+-----------------------+------------------+---------------------
+                     2 |                2 |                   2
+(1 row)
+
+--- B. PAYMENT ---
+              payment_id              |             checkout_id              |    amount    | currency |  status   
+--------------------------------------+--------------------------------------+--------------+----------+-----------
+ 01a143f3-33ac-7000-9de7-4af5ecb38a4e | 01a143f3-323e-7000-916b-8e9dd109e38c | 3977000.0000 | IRR      | Succeeded
+(1 row)
+
+           seller_order_id            | allocated_amount | currency |    target_kind     
+--------------------------------------+------------------+----------+--------------------
+ 01a143f3-3227-7000-a5ac-f125e2e761f2 |      180000.0000 | IRR      | StoreShippingGroup
+ 01a143f3-3227-7000-b59d-f3c4e951ad2e |      200000.0000 | IRR      | StoreShippingGroup
+ 01a143f3-3245-7000-a3ee-ff8f6e8b156b |     3597000.0000 | IRR      | SellerOrder
+(3 rows)
+
+--- C. ORDER ACCEPTED GROUP CHANNEL (authoritative eligibility source) ---
+             checkout_id              |   channel   | currency | shipping_amount 
+--------------------------------------+-------------+----------+-----------------
+ 01a143f3-323e-7000-916b-8e9dd109e38c | Marketplace | IRR      |       380000.00
+(1 row)
+
+--- D. SETTLEMENT PENDING LEDGER (the invariant under proof) ---
+        shipping_group_fee_id         |              payment_id              |          shipping_group_id           |             checkout_id              |           seller_order_id            |           seller_party_id            |  method_code   | service_code | option_code | accepted_quote_version | customer_charge_amount | currency | allocation_state  | record_kind | allocation_policy_version | allocation_policy_reference | carrier_payable_amount | seller_share_amount | marketplace_share_amount | shipping_discount_amount | shipping_tax_amount | funder_adjustment_amount | funder_reference | reversal_of_shipping_group_fee_id |                                   idempotency_key                                    
+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+--------------------------------------+----------------+--------------+-------------+------------------------+------------------------+----------+-------------------+-------------+---------------------------+-----------------------------+------------------------+---------------------+--------------------------+--------------------------+---------------------+--------------------------+------------------+-----------------------------------+--------------------------------------------------------------------------------------
+ 01a143f3-3790-7000-9e64-4f3546eeee28 | 01a143f3-33ac-7000-9de7-4af5ecb38a4e | 01a143f3-3227-7000-a5ac-f125e2e761f2 | 01a143f3-323e-7000-916b-8e9dd109e38c | 01a143f3-3245-7000-a3ee-ff8f6e8b156b | 01a143f0-a093-7000-9e31-df23cceaf184 | tipax:standard | tipax        | standard    | Confirmed              |            180000.0000 | IRR      | PendingAllocation | Charge      |                           |                             |                        |                     |                          |                          |                     |                          |                  |                                   | shipping-group-fee:01a143f333ac70009de74af5ecb38a4e:01a143f332277000a5acf125e2e761f2
+ 01a143f3-37a5-7000-b9e2-f45455adbce6 | 01a143f3-33ac-7000-9de7-4af5ecb38a4e | 01a143f3-3227-7000-b59d-f3c4e951ad2e | 01a143f3-323e-7000-916b-8e9dd109e38c | 01a143f3-3245-7000-a3ee-ff8f6e8b156b | 01a143f0-a093-7000-9e31-df23cceaf184 | post:express   | post         | express     | Confirmed              |            200000.0000 | IRR      | PendingAllocation | Charge      |                           |                             |                        |                     |                          |                          |                     |                          |                  |                                   | shipping-group-fee:01a143f333ac70009de74af5ecb38a4e:01a143f332277000b59df3c4e951ad2e
+(2 rows)
+
+ charge_rows | distinct_groups | distinct_idempotency_keys | total_customer_charge | pending_rows | charge_kind_rows | reversal_kind_rows | rows_with_commercial_value 
+-------------+-----------------+---------------------------+-----------------------+--------------+------------------+--------------------+----------------------------
+           2 |               2 |                         2 |           380000.0000 |            2 |                2 |                  0 |                          0
+(1 row)
+
+--- E. NO SELLER CREDIT / NO PAYOUT FROM THE SHIPPING CHARGE ---
+ entry_type | gross_amount | commission_amount |  net_amount  | source_type |           seller_order_id            
+------------+--------------+-------------------+--------------+-------------+--------------------------------------
+ Credit     | 3597000.0000 |       359700.0000 | 3237300.0000 | payment     | 01a143f3-3245-7000-a3ee-ff8f6e8b156b
+(1 row)
+
+ settlement_account_rows 
+-------------------------
+                       1
+(1 row)
+
+ payout_request_rows 
+---------------------
+                   0
+(1 row)
+
+ seller_credit_rows_carrying_a_group_charge 

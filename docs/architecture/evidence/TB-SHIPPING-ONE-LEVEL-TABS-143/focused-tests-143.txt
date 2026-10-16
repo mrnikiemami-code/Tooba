@@ -1,0 +1,4 @@
+﻿### TB-143 focused run: Settlement channel-ledger eligibility + registration
+Passed!  - Failed:     0, Passed:    47, Skipped:     0, Total:    47, Duration: 528 ms - Tooba.Settlement.Tests.dll (net8.0)
+### Marketplace edition registration guard (existing test, unchanged)
+Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7, Duration: 7 s - Tooba.Host.Tests.dll (net8.0)

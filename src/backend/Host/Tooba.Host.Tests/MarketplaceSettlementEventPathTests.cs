@@ -205,7 +205,9 @@ public sealed class MarketplaceSettlementEventPathTests : IAsyncLifetime
 
         var settlementDirectory = CreateSettlementDirectory(settlementDb, orderDb, paymentDb, returnsDb);
         // Marketplace consumer path — not SettlementDirectory.AccrueFromPaymentAsync
-        var paymentConsumer = new SettlementPaymentSucceededHandler(settlementDirectory);
+        var paymentConsumer = new SettlementPaymentSucceededHandler(
+            settlementDirectory,
+            SettlementEligibilityTestGate.Marketplace(orderDb));
         await paymentConsumer.HandleAsync(
             new PaymentSucceededIntegrationEvent
             {

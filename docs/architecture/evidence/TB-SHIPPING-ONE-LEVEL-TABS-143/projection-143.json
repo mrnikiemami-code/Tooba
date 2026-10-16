@@ -1,0 +1,226 @@
+{
+  "cartId": "01a143f3-3152-7000-9b7f-23e07798fadd",
+  "cartVersion": 6,
+  "currency": "IRR",
+  "itemCount": 2,
+  "subtotalExclusiveOfTax": 3300000,
+  "sellerCount": 1,
+  "maxSellerPreparationDays": 1,
+  "methods": [
+    {
+      "methodCode": "post:express",
+      "label": "پیشتاز",
+      "serviceCode": "post",
+      "iconKey": "post",
+      "priceAmount": 200000,
+      "leadDays": 2,
+      "isFree": false,
+      "estimationLabel": "حدود ۲ روز",
+      "optionCode": "express"
+    },
+    {
+      "methodCode": "post:standard",
+      "label": "معمولی",
+      "serviceCode": "post",
+      "iconKey": "post",
+      "priceAmount": 120000,
+      "leadDays": 4,
+      "isFree": false,
+      "estimationLabel": "حدود ۴ روز",
+      "optionCode": "standard"
+    },
+    {
+      "methodCode": "tipax:express",
+      "label": "پیشتاز",
+      "serviceCode": "tipax",
+      "iconKey": "tipax",
+      "priceAmount": 260000,
+      "leadDays": 1,
+      "isFree": false,
+      "estimationLabel": "حدود ۱ روز",
+      "optionCode": "express"
+    },
+    {
+      "methodCode": "tipax:standard",
+      "label": "معمولی",
+      "serviceCode": "tipax",
+      "iconKey": "tipax",
+      "priceAmount": 180000,
+      "leadDays": 3,
+      "isFree": false,
+      "estimationLabel": "حدود ۳ روز",
+      "optionCode": "standard"
+    },
+    {
+      "methodCode": "snapp_courier",
+      "label": "اسنپ / پیک آنلاین",
+      "serviceCode": "snapp_courier",
+      "iconKey": "courier",
+      "priceAmount": 90000,
+      "leadDays": 0,
+      "isFree": false,
+      "estimationLabel": "آماده امروز"
+    },
+    {
+      "methodCode": "store_courier",
+      "label": "پیک فروشگاه",
+      "serviceCode": "store_courier",
+      "iconKey": "bike",
+      "priceAmount": 75000,
+      "leadDays": 1,
+      "isFree": false,
+      "estimationLabel": "حدود ۱ روز"
+    },
+    {
+      "methodCode": "in_person",
+      "label": "تحویل حضوری",
+      "serviceCode": "in_person",
+      "iconKey": "store",
+      "priceAmount": 0,
+      "leadDays": 0,
+      "isFree": true,
+      "estimationLabel": "آماده امروز"
+    }
+  ],
+  "selectedShippingAmount": 0,
+  "deliveryDates": [],
+  "deliveryTimeWindows": [
+    {
+      "value": "9-12",
+      "label": "۹ صبح تا ۱۲ ظهر"
+    },
+    {
+      "value": "12-15",
+      "label": "۱۲ ظهر تا ۳ بعدازظهر"
+    },
+    {
+      "value": "15-18",
+      "label": "۳ بعدازظهر تا ۶ عصر"
+    },
+    {
+      "value": "18-21",
+      "label": "۶ عصر تا ۹ شب"
+    }
+  ],
+  "provinces": [
+    {
+      "code": "tehran",
+      "label": "تهران",
+      "cities": [
+        "تهران",
+        "ری",
+        "شهریار",
+        "اسلامشهر",
+        "ملارد",
+        "پاکدشت"
+      ]
+    },
+    {
+      "code": "alborz",
+      "label": "البرز",
+      "cities": [
+        "کرج",
+        "فردیس",
+        "نظرآباد",
+        "ساوجبلاغ"
+      ]
+    },
+    {
+      "code": "isfahan",
+      "label": "اصفهان",
+      "cities": [
+        "اصفهان",
+        "کاشان",
+        "خمینی‌شهر",
+        "شاهین‌شهر",
+        "نجف‌آباد"
+      ]
+    },
+    {
+      "code": "razavi_khorasan",
+      "label": "خراسان رضوی",
+      "cities": [
+        "مشهد",
+        "نیشابور",
+        "سبزوار",
+        "تربت حیدریه"
+      ]
+    },
+    {
+      "code": "fars",
+      "label": "فارس",
+      "cities": [
+        "شیراز",
+        "مرودشت",
+        "جهرم",
+        "فسا",
+        "کازرون"
+      ]
+    },
+    {
+      "code": "east_azerbaijan",
+      "label": "آذربایجان شرقی",
+      "cities": [
+        "تبریز",
+        "مرند",
+        "مراغه",
+        "اهر"
+      ]
+    },
+    {
+      "code": "khuzestan",
+      "label": "خوزستان",
+      "cities": [
+        "اهواز",
+        "آبادان",
+        "دزفول",
+        "بندر ماهشهر"
+      ]
+    },
+    {
+      "code": "mazandaran",
+      "label": "مازندران",
+      "cities": [
+        "ساری",
+        "بابل",
+        "آمل",
+        "قائم‌شهر"
+      ]
+    },
+    {
+      "code": "gilan",
+      "label": "گیلان",
+      "cities": [
+        "رشت",
+        "بندرانزلی",
+        "لاهیجان",
+        "رودسر"
+      ]
+    },
+    {
+      "code": "qom",
+      "label": "قم",
+      "cities": [
+        "قم"
+      ]
+    },
+    {
+      "code": "yazd",
+      "label": "یزد",
+      "cities": [
+        "یزد",
+        "اردکان",
+        "میبد"
+      ]
+    },
+    {
+      "code": "kerman",
+      "label": "کرمان",
+      "cities": [
+        "کرمان",
+        "رفسنجان",
+        "سیرجان"
+      ]
+    }
+  ]
+}

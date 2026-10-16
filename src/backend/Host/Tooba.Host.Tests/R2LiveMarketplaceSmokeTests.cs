@@ -130,7 +130,9 @@ public sealed class R2LiveMarketplaceSmokeTests
             CancellationToken.None);
 
         var settlement = CreateSettlementDirectory(settlementDb, orderDb, paymentDb, returnsDb);
-        var payHandler = new SettlementPaymentSucceededHandler(settlement);
+        var payHandler = new SettlementPaymentSucceededHandler(
+            settlement,
+            SettlementEligibilityTestGate.Marketplace(orderDb));
         var payEvt = new PaymentSucceededIntegrationEvent
         {
             PaymentId = initiated.PaymentId,

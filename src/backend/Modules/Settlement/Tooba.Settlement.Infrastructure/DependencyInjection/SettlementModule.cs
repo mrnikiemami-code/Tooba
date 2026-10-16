@@ -53,8 +53,10 @@ public sealed class SettlementModule : IToobaModule
         services.AddScoped<ISettlementPaymentReader, SettlementPaymentBridge>();
         services.AddScoped<ISettlementReturnsReader, SettlementReturnsBridge>();
         services.AddScoped<ISettlementShippingGroupReader, SettlementShippingGroupBridge>();
+        services.AddScoped<ISettlementChannelLedgerEligibilityGate, SettlementChannelLedgerEligibilityGate>();
+        services.AddScoped<ISettlementLedgerSchemaReadiness, SettlementLedgerSchemaReadiness>();
 
-        if (IsMarketplaceEdition(configuration))
+        if (SettlementMarketplaceChannelLedgerPolicy.ShouldRegisterHandlers(configuration))
         {
             services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, SettlementPaymentSucceededHandler>();
             services.AddScoped<IIntegrationEventHandler<RefundSucceededIntegrationEvent>, SettlementRefundSucceededHandler>();
@@ -81,11 +83,5 @@ public sealed class SettlementModule : IToobaModule
                 typeof(SettlementDbContext));
             options.AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>());
         });
-    }
-
-    private static bool IsMarketplaceEdition(IConfiguration configuration)
-    {
-        var edition = configuration.GetSection("Tooba")["Edition"];
-        return string.Equals(edition, "Marketplace", StringComparison.OrdinalIgnoreCase);
     }
 }
