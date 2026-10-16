@@ -71,6 +71,6 @@ G. NOT CLAIMED / REMAINING BLOCKERS
 
 COMMITS
 Code/tests/docs commit: 504aeb1166038946ca3b9e314afa46bedcb29f28
-Evidence commit: EVIDENCE_SHA_PLACEHOLDER_136
+Evidence commit: fd340f600916485bbe25e62417f742c08bfdfe7e
 HEAD equals origin/main after both pushes; the two pre-existing dirty admin frontend screens and the two unrelated evidence logs were preserved and not committed.
 END_TOOBA_WORKER_RESULT
