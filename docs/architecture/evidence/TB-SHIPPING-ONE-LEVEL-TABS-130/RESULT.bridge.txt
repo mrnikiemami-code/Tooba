@@ -1,0 +1,129 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-130
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-129
+WorkerId: tooba-worker-01
+AgentType: cursor
+Channel: tooba-main
+Program: TOOBA-SHIPPING-CHECKOUT-DELIVERY-CLOSURE
+Mode: BOUNDED_SETTLEMENT_SHIPPING_GROUP_LEDGER_M4
+Bridge-Row: 387f3c33-a401-4d1e-8aea-04f08ff2a70f
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Expected-Base-SHA: 3446b751545d76ef66797203975272d327454bac
+Actual-Base-SHA: 3446b751545d76ef66797203975272d327454bac
+Code-SHA: 3deff675ad2f6e7e2bfe23d1bf274a88e7b168cd
+Evidence-SHA: 7148cc9a9c842c6932ba0dd4af46b02d208687ae
+HEAD: 7148cc9a9c842c6932ba0dd4af46b02d208687ae
+Origin-Main: 7148cc9a9c842c6932ba0dd4af46b02d208687ae
+Drift: NONE (expected base is an ancestor; no overlapping drift; pre-existing dirty frontend admin screens and other evidence preserved untouched; Bridge task receipt unstaged)
+Measured-Minutes: 17
+
+SUBSTANTIVE RESULT
+Owner-correct, additive Settlement accounting for per-group shipping fees. New table
+settlement.shipping_group_fees (migration 20261016140000_AddSettlementShippingGroupFees, raw SQL,
+additive, no model-snapshot change) keyed by stable ShippingGroupId plus payment_id / checkout_id /
+seller_order_id / seller_party_id / method identity.
+KNOWN content persisted: customer_charge_amount + currency (accepted Order group quote, reconciled to
+the paid Payment StoreShippingGroup allocation), accepted_quote_version (Order-owned accepted marker),
+record_kind + reversal_of_shipping_group_fee_id, idempotency_key, recorded_at.
+UNSPECIFIED content (NULL, never zero-filled, no marketplace residual assumed): allocation_state is
+PendingAllocation and allocation_policy_version, allocation_policy_reference, carrier_payable_amount,
+seller_share_amount, marketplace_share_amount, shipping_discount_amount, shipping_tax_amount,
+funder_adjustment_amount, funder_reference are all unavailable/unknown.
+Recording path: SettlementDirectory.RecordShippingGroupFeesAsync, invoked from
+SettlementPaymentSucceededHandler BEFORE seller accrual, so an accepted-charge mismatch aborts before any
+seller credit. Idempotent via per-(payment,group) idempotency key plus a partial unique index
+(payment_id, shipping_group_id) WHERE reversal_of_shipping_group_fee_id IS NULL. Reversal rows preserve
+the original charge row (no history rewrite). Legacy ungrouped StoreShipping sentinel route untouched
+(ungrouped order -> no group rows -> unchanged accrual). Zero-charge (free) group -> no settlement row.
+Contracts-only boundaries: Order.Contracts Settlement group reader (+ Order.Infrastructure read-only
+bridge, registered in OrderModule) and Payment.Contracts per-group shipping allocation read
+(+ PaymentSettlementBridge). No cross-DbContext, no Host business authority, no new endpoint, no
+production activation, no UI/CSS/theme/component change.
+
+FAIL-CLOSED GUARANTEES
+- settlement.shipping_group.not_seller_revenue: a group fee can never be a SellerOrder merchandise entry
+  or seller/marketplace credit; the recording path writes no SettlementAccount, SettlementEntry or
+  PayoutRequest.
+- settlement.shipping_group.allocation_policy_missing: while PendingAllocation, the row cannot be
+  settled or paid out.
+- settlement.shipping_group.charge_mismatch: accepted group charge must equal the paid per-group
+  allocation (amount + currency), else nothing is recorded.
+- settlement.shipping_group.identity_required / settlement.shipping_group.charge_invalid: construction
+  invariants.
+Reconciliation invariant: SUM(charge rows per payment) == SUM(payment StoreShippingGroup allocations);
+group fee rows contribute 0 to seller balances and payout availability.
+Versioned policy seam documented (must eventually supply carrier cost, signed seller/platform shares,
+discount funding, tax) - no policy content invented.
+
+CHANGED PATHS
+src/backend/Modules/Order/Tooba.Order.Contracts/Settlement/OrderSettlementShippingGroupContracts.cs (new)
+src/backend/Modules/Order/Tooba.Order.Infrastructure/Integrations/Settlement/OrderShippingGroupSettlementBridge.cs (new)
+src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs
+src/backend/Modules/Payment/Tooba.Payment.Contracts/Settlement/PaymentSettlementContracts.cs
+src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Adapters/PaymentSettlementBridge.cs
+src/backend/Modules/Settlement/Tooba.Settlement.Application/Payouts/Ports/SettlementReaderPorts.cs
+src/backend/Modules/Settlement/Tooba.Settlement.Contracts/Errors/SettlementErrorCodes.cs
+src/backend/Modules/Settlement/Tooba.Settlement.Contracts/Resources/SettlementErrors.resx
+src/backend/Modules/Settlement/Tooba.Settlement.Contracts/Resources/SettlementErrors.fa.resx
+src/backend/Modules/Settlement/Tooba.Settlement.Domain/Aggregates/ShippingGroupFeeAllocation.cs (new)
+src/backend/Modules/Settlement/Tooba.Settlement.Domain/ValueObjects/ShippingGroupFeeAllocationState.cs (new)
+src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Bridges/SettlementShippingGroupBridge.cs (new)
+src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Directories/SettlementDirectory.cs
+src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Directories/SettlementDirectory.ShippingGroupFees.cs (new)
+src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/DependencyInjection/SettlementModule.cs
+src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Errors/SettlementErrorCatalogContributor.cs
+src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Handlers/SettlementEventHandlers.cs
+src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Persistence/SettlementDbContext.cs
+src/backend/Modules/Settlement/Tooba.Settlement.Infrastructure/Persistence/Migrations/20261016140000_AddSettlementShippingGroupFees.cs (new)
+src/backend/Modules/Settlement/Tooba.Settlement.Tests/Behavior/ShippingGroupFeeAllocationTests.cs (new, 9 tests)
+src/backend/Modules/Settlement/Tooba.Settlement.Tests/Tooba.Settlement.Tests.csproj
+src/backend/Host/Tooba.Host.Tests/{R1LiveSettlementSmokeTests,R2LiveMarketplaceSmokeTests,SettlementFoundationTests,MarketplaceSettlementEventPathTests}.cs
+src/backend/Host/Tooba.Host.Tests/Architecture/{SettlementModuleAmsc001W1MigrateGuardTests,SettlementModuleAmsc001W3CertGuardTests,SettlementModuleAmsc001W3R1SetEqualityGuardTests}.cs
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-130.md (new)
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-130/ (new)
+
+TESTS
+dotnet test src/backend/Modules/Settlement/Tooba.Settlement.Tests -> Passed 39/39 (9 new per-group tests:
+two groups one seller distinct charges + no ledger/payout, same method different sellers separate,
+idempotent record+reversal with no duplicate row, legacy ungrouped untouched, mismatch fails closed,
+missing paid allocation never recorded, free shipping group excluded, pending allocation cannot become
+revenue/payout, reversal scoped to one group without rewriting the original).
+dotnet test src/backend/Host/Tooba.Host.Tests --filter FullyQualifiedName~SettlementModuleAmsc001 -> Passed 37/37.
+dotnet test src/backend/Host/Tooba.Host.Tests --filter FullyQualifiedName~MarketplaceSettlementEventPathTests
+-> Passed 2/2 against a real PostgreSQL container (applies the new migration and exercises the new handler path).
+Builds: Tooba.Settlement.Infrastructure and Tooba.Order.Infrastructure succeeded.
+
+PRE-EXISTING UNRELATED FAILURE (not caused by TB-130)
+SettlementFoundationTests.Settlement_lifecycle_applies_commission_refund_and_payout_safety expects
+InvalidOperationException from RequestPayoutAsync and AdjustFromRefundAsync(Guid.NewGuid(), ...), which
+throw the typed ContractOperationException (not an InvalidOperationException). Both assertions exist
+unchanged at the base SHA and those code paths are untouched by TB-130; the only TB-130 edit to that file
+is the 3-line directory construction update (2/3 tests in that class pass).
+
+ALLOCATION UNKNOWNS
+carrier payable cost, signed seller share, signed marketplace share, shipping discount/subsidy funding,
+shipping tax, funder/adjustment. All NULL / PendingAllocation, blocked from settlement and payout.
+
+MIGRATION/RUNTIME CAVEAT
+Migration is additive and applied successfully in the container-migrated MarketplaceSettlementEventPathTests
+run. Not applied to any shared/production environment; no manual SQL; no production activation. Shared
+:5088 / :3000 and tooba_alpha stayed read-only with no process stop/restart and no shared DB writes.
+
+SHARED PARITY
+UI identical to current storefront; no frontend files touched.
+
+ROLLBACK
+Revert code commit 3deff675 and drop settlement.shipping_group_fees (Down of
+20261016140000_AddSettlementShippingGroupFees). The table is additive and read by no existing settlement
+path, so removal restores the previous behaviour exactly.
+
+NEXT BLOCKER
+An authorized, versioned commercial allocation policy (carrier cost, signed seller/platform shares,
+discount funding, tax) is required before any per-group shipping fee may leave PendingAllocation. Until
+then per-group shipping fees cannot be settled or paid out by design. Not claiming completed commercial
+settlement, UI checkout grouping, or production readiness.
+END_TOOBA_WORKER_RESULT
