@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-105
 Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-104
@@ -17,8 +17,8 @@ Expected-Base-SHA: 0ac71b2b69d60f5366ee56854531c76c984a121e
 Base-SHA: 222628615f7769ad276c1b3b6e76dc9c6e3dcd8b
   (Expected-Base-SHA verified ancestor; only drift 0ac71b2..HEAD is this session's own 104 RESULT.bridge.txt
    evidence-SHA bookkeeping — non-overlapping, accepted, no RECOVERY_CONFLICT)
-Code-SHA: <CODE_SHA>
-Evidence-SHA: <EVIDENCE_SHA>
+Code-SHA: 2699e53e877a8cbb6f084d1a93e0410aa9950182
+Evidence-SHA: 2699e53e877a8cbb6f084d1a93e0410aa9950182
 automaticNextImplementationTask: NONE
 Measured-Time: ~14 minutes end to end (claimed ~03:45, stopped ~03:59 local), inside the 30-minute HARD limit and
 within the minute-22 stop-work rule; no timebox overrun was needed.
@@ -131,3 +131,4 @@ EXACT NEXT DECISION FOR THE ARCHITECT
      MessageNotReadyFa through the legacy seam) should be reconciled in a dedicated Catalog lifecycle task.
   Nothing in this result claims storefront, Checkout or commercial shipping readiness.
 END_TOOBA_WORKER_RESULT
+
