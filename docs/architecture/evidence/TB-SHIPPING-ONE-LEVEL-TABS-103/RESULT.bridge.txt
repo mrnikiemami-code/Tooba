@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-103
 Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-102
@@ -16,7 +16,7 @@ Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: cbbdc7cbe196914d0df2af7925e9492d22ebfe5e
 Base-SHA: cbbdc7cbe196914d0df2af7925e9492d22ebfe5e
 Code-SHA: NONE
-Evidence-SHA: <EVIDENCE_SHA>
+Evidence-SHA: 5e85522ddb454da8b13cbcc33c4662f2cb1c05b9
 automaticNextImplementationTask: NONE
 Measured-Time: ~37 minutes (claimed ≈03:24 → stopped ≈04:01 local) — DISCLOSED overrun of the 30-minute HARD
 timebox. Cleanup took precedence: the isolated environment was fully destroyed and every artifact captured before
@@ -114,3 +114,4 @@ BLOCKERS / RECOMMENDATION
 4. Standing: the two pre-existing dirty frontend screens and the pre-existing Host test-failure set remain
    untouched and unrepaired.
 END_TOOBA_WORKER_RESULT
+
