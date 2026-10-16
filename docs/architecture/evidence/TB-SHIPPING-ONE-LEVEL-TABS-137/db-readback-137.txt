@@ -1,0 +1,28 @@
+TB-SHIPPING-ONE-LEVEL-TABS-137 — DB READBACK (isolated scratch, read-only)
+Scratch: container tooba-tb137-pg / database tooba_137_scratch (port 55459), deployment isolated-137
+
+\pset footer off
+set search_path to "order", public;
+select 'GROUPS=' || count(*) from cart_shipping_groups;
+select 'DISTINCT_SELLERS=' || count(distinct seller_party_id) from cart_shipping_groups;
+select 'GROUP|' || g.method_code || '|' || g.method_label || '|' || g.shipping_amount || '|' || l.cart_line_id
+from cart_shipping_groups g join cart_shipping_group_lines l on l.shipping_group_id = g.shipping_group_id order by g.method_code;
+select 'FEE_SUM=' || sum(shipping_amount) from cart_shipping_groups;
+select 'DRAFT_SCALAR_METHOD_CODE=[' || coalesce(shipping_method_code,'<null>') || '] DRAFT_SHIPPING=' || shipping_amount
+  || ' DRAFT_DATE=' || coalesce(selected_delivery_date::text,'-')
+  || ' DRAFT_WINDOW=' || coalesce(selected_delivery_time_window,'-')
+from cart_shipping_drafts;
+
+OUTPUT
+GROUPS=2
+DISTINCT_SELLERS=1
+GROUP|post:express|پیشتاز|200000.00|01a14382-016f-7000-80cf-4a5b73cad337
+GROUP|tipax:standard|معمولی|180000.00|01a14382-353a-7000-abd4-4ce7974a95a8
+FEE_SUM=380000.00
+DRAFT_SCALAR_METHOD_CODE=[] DRAFT_SHIPPING=380000.00 DRAFT_DATE=2026-10-20 DRAFT_WINDOW=9-12
+
+INTERPRETATION
+- Two durable per-line shipping groups for ONE seller, disjoint cart lines, distinct methods.
+- Aggregate authoritative shipping = 380000.00 (matches payment projection نمایش ۳۸۰٬۰۰۰ ریال).
+- Legacy scalar draft method code is empty by design for multi-group (server unchanged; legacy
+  single-group readback untouched).

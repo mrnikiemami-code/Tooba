@@ -1,0 +1,66 @@
+TB-SHIPPING-ONE-LEVEL-TABS-137 — OBSERVATION (bounded grouped payment summary display closure)
+Base SHA: 5c32619bec45fe1adafc50c000c820be696e8d35
+Branch: main   HEAD==origin/main at claim time: true
+
+PREFLIGHT
+- Bridge task claimed: e90120f3-8e88-4eab-9486-c7a96f5f44da (channel tooba-main)
+- Source drift: none in src/** (2 pre-existing dirty admin screens preserved untouched:
+  admin-fulfillment-work-queue-screen.tsx, admin-order-detail-screen.tsx)
+- Documentary drift: 2 pre-existing evidence txt modifications preserved untouched.
+- No reset / stash / rebase / force-push.
+
+DEFECT (exact)
+/fa/payment on a genuine multi-group projection printed "روش ارسال:" with an empty value.
+Root cause: StorefrontCheckoutService intentionally blanks scalar ShippingMethodCode/Label when
+shippingGroups.Count > 1; the frontend printed that blank scalar verbatim. Server behaviour is
+correct and was NOT changed.
+
+CHANGE (frontend-only, storefront-payment-handoff.tsx, +25/-3)
+- shippingGroups.length > 1  => heading «روشهای ارسال» + one row per authoritative group
+  (methodLabel + shippingAmount), testids payment-shipping-groups / payment-shipping-group-{id}
+- otherwise                  => legacy scalar <p>روش ارسال: {shippingMethodLabel}</p> (unchanged)
+- No invented aggregate method/rate/origin/tax/ETA; aggregate «هزینه ارسال» rendered once;
+  payable still server-derived; classes reused from the shipping summary; no CSS/theme/token change;
+  load effect stays read-only.
+
+TARGETED PROOF
+- new app/payment/storefront-payment-grouped-summary.test.ts: 4/4 pass
+- app/payment/storefront-payment-page.test.ts + app/storefront/storefront-checkout-api.test.ts: pass
+  (combined run 18 pass / 1 fail, the single fail is a PRE-EXISTING unrelated size guard)
+- npm run typecheck: clean
+- PRE-EXISTING unrelated guard failures at base SHA (unmodified blobs, hash(working)==hash(HEAD)):
+  * FE-SIZE app/admin/category-admin-screen.tsx 2230 > baseline 2215
+  * component-compliance app/storefront/storefront-landing-blocks.tsx:286 bg-white
+  Not repaired (out of scope).
+
+BROWSER VALIDATION (isolated, TB-136 sanctioned procedure)
+Runtime: scratch container tooba-tb137-pg (tooba_137_scratch/tooba_137_messaging, 55459),
+Host 5406 (pid 34172), frontend 3106 (pid 42092), deployment isolated-137, tenant store-alpha.
+Shared :5088/:3000/tooba_alpha never modified or restarted.
+Cart: shirt 1,850,000 + scarf 1,450,000 (SAME Seller A) => 1 seller card, 2 line rows.
+Methods: post:express 200,000 and tipax:standard 180,000; date 2026-10-20 window 9-12.
+payment DOM card text:
+  خلاصهٔ سفارش / روشهای ارسال / پیشتاز ۲۰۰٬۰۰۰ ریال / معمولی ۱۸۰٬۰۰۰ ریال /
+  گیرنده: حمید آزمون — تهران / هزینه ارسال: ۳۸۰٬۰۰۰ ریال /
+  قابل پرداخت: ۳٬۹۷۷٬۰۰۰ ریال / در انتظار پرداخت /
+  این سفارش هنوز ثبت نشده است...
+grouped heading present: true ; rows: 2 ; blank "روش ارسال:" value: ABSENT.
+Mobile 393x887 RTL: grouped present, card 326px, horizontal overflow false.
+Screenshots: payment-grouped-summary-137.png (desktop), payment-grouped-summary-137-mobile.png.
+
+DB READBACK (scratch, authorized, read-only)
+GROUPS=2  DISTINCT_SELLERS=1
+GROUP|post:express|پیشتاز|200000.00|01a14382-016f-7000-80cf-4a5b73cad337
+GROUP|tipax:standard|معمولی|180000.00|01a14382-353a-7000-abd4-4ce7974a95a8
+FEE_SUM=380000.00
+DRAFT_SCALAR_METHOD_CODE=[] DRAFT_SHIPPING=380000.00 DRAFT_DATE=2026-10-20 DRAFT_WINDOW=9-12
+
+TEARDOWN (PID verified)
+FRONTEND_STOPPED_BY_RECORDED_PID=42092 ; HOST_STOPPED_BY_RECORDED_PID=34172
+SCRATCH_CONTAINER_REMOVED=tooba-tb137-pg ; SCRATCH_VOLUMES=none
+LISTENERS_ON_5406_AFTER_CLEANUP=0 ; LISTENERS_ON_3106_AFTER_CLEANUP=0 ;
+LISTENERS_ON_55459_AFTER_CLEANUP=0
+SHARED_5088_LISTENERS=1 ; SHARED_3000_LISTENERS=1 ; SHARED_ALPHA_DB_PRESENT=1
+
+REMAINING BLOCKERS (not claimed closed)
+Payment capture/completion and commercial Settlement allocation policy remain OPEN.

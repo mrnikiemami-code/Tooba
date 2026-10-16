@@ -271,9 +271,31 @@ export function StorefrontPaymentHandoff() {
                 data-testid={mode === "cart" ? "payment-cart-draft-summary" : "payment-handoff-summary"}
               >
                 <h2 className="font-black text-gray-900">خلاصهٔ سفارش</h2>
-                <p className="text-sm text-gray-600">
-                  روش ارسال: <span className="font-bold text-gray-900">{page.shippingMethodLabel}</span>
-                </p>
+                {/* سبد چندگروهی: روش واحد معناداری وجود ندارد؛ جمعبندی واقعی گروه‌ها از projection مالک Order.
+                    (فقط نمایش؛ روش/مبلغ/تاریخ تازه‌ای ساخته نمی‌شود و هزینه ارسال جمعاً یک‌بار نمایش داده می‌شود.) */}
+                {page.shippingGroups.length > 1 ? (
+                  <div className="space-y-1.5" data-testid="payment-shipping-groups">
+                    <p className="text-sm text-gray-600">روش‌های ارسال</p>
+                    <div className="space-y-1.5 border-t border-dashed border-gray-200 pt-2.5">
+                      {page.shippingGroups.map((group) => (
+                        <div
+                          key={group.shippingGroupId}
+                          className="flex justify-between gap-2 text-[11px] md:text-xs"
+                          data-testid={`payment-shipping-group-${group.shippingGroupId}`}
+                        >
+                          <span className="text-gray-500 truncate">{group.methodLabel}</span>
+                          <span className="font-bold text-gray-800 shrink-0">
+                            {formatOfferAmount(group.shippingAmount, group.currency || page.currency)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600">
+                    روش ارسال: <span className="font-bold text-gray-900">{page.shippingMethodLabel}</span>
+                  </p>
+                )}
                 <p className="text-sm text-gray-600">
                   گیرنده: <span className="font-bold text-gray-900">{page.recipientName}</span> — {page.cityName}
                 </p>
