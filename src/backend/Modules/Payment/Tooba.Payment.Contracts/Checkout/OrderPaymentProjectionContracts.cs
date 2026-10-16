@@ -26,6 +26,15 @@ public sealed record PayableSellerOrderSnapshot(
     bool PendingPayment = true);
 
 /// <summary>
+/// سهم ارسال یک گروه پایدار سفارش از دید پرداخت. فقط نگاشت‌کننده است؛ سیاست تسویه/کمیسیون اینجا نیست.
+/// </summary>
+public sealed record PayableShippingGroupSnapshot(
+    Guid ShippingGroupId,
+    Guid SellerOrderId,
+    decimal Amount,
+    string Currency);
+
+/// <summary>
 /// تصویر قابل‌پرداخت سفارش. مبلغ را مشتری نمی‌فرستد؛ Payment از این تصویر می‌خواند.
 /// Order این تصویر را از schema سفارش می‌سازد؛ هیچ DbContext پرداخت اینجا باز نمی‌شود.
 /// </summary>
@@ -34,7 +43,8 @@ public sealed record PayableCheckoutSnapshot(
     OrderPaymentMode Mode,
     string Currency,
     IReadOnlyList<PayableSellerOrderSnapshot> SellerOrders,
-    decimal ShippingAmount = 0m);
+    decimal ShippingAmount = 0m,
+    IReadOnlyList<PayableShippingGroupSnapshot>? ShippingGroups = null);
 
 /// <summary>
 /// خواندن تصویر مالی سفارش بدون DbContext سفارش.

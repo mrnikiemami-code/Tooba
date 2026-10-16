@@ -83,7 +83,8 @@ public sealed record StorefrontCheckoutPage(
     decimal ShippingAmount,
     decimal PayableAmount,
     IReadOnlyList<StorefrontSellerOrderView> SellerOrders,
-    bool CanInitiatePayment = true);
+    bool CanInitiatePayment = true,
+    IReadOnlyList<StorefrontShippingGroupView>? ShippingGroups = null);
 
 /// <summary>روش ارسال قابل انتخاب فروشگاهی از کاتالوگ Store-enabled.</summary>
 /// <param name="OptionCode">

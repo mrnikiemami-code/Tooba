@@ -174,20 +174,17 @@ public sealed class PaymentDirectory : IPaymentDirectory
 
         var merchandise = pending.Sum(x => x.PayableAmount);
         var shipping = Math.Max(0m, payable.ShippingAmount);
-        var amount = merchandise + shipping;
         var gateway = _gateways.Resolve(command.ProviderCode);
-        // تخصیص فروشنده فقط مبلغ کالا؛ ارسال به باکت StoreShipping (نه اولین فروشنده).
+        // تخصیص فروشنده فقط مبلغ کالا؛ ارسال هرگز به حساب فروشنده نمی‌رود.
         var allocationRows = pending
             .OrderBy(x => x.SellerOrderId)
             .Select(x => (PaymentAllocationTargetKind.SellerOrder, x.SellerOrderId, x.PayableAmount))
             .ToList();
-        if (shipping > 0m)
-        {
-            allocationRows.Add((
-                PaymentAllocationTargetKind.StoreShipping,
-                PaymentAllocation.StoreShippingTargetId,
-                shipping));
-        }
+        allocationRows.AddRange(ResolveShippingAllocationRows(payable.ShippingGroups, shipping));
+        var amount = merchandise + allocationRows
+            .Where(x => x.Item1 is PaymentAllocationTargetKind.StoreShipping
+                or PaymentAllocationTargetKind.StoreShippingGroup)
+            .Sum(x => x.Item3);
 
         var paymentId = _ids.NewId();
         var allocationRowsWithIds = allocationRows
@@ -219,6 +216,57 @@ public sealed class PaymentDirectory : IPaymentDirectory
             ResolveRedirectUrl(gateway, payment.PaymentId, attempt.AttemptId, attempt.ProviderRequestReference, initiation.RedirectUrl),
             payment.Amount,
             payment.Currency);
+    }
+
+    /// <summary>
+    /// ردیف‌های تخصیص ارسال را قطعی می‌کند. سفارش چندگروهی: یک ردیف به‌ازای هر گروه پایدار با هدف
+    /// <c>ShippingGroupId</c>؛ سفارش قدیمی تک‌روشی: همان باکت sentinel قبلی. ناسازگاری مبلغ/شناسه
+    /// fail-closed است و هیچ‌گاه گروه تکراری یا گم‌شده بی‌صدا ساخته نمی‌شود.
+    /// </summary>
+    private static IReadOnlyList<(PaymentAllocationTargetKind TargetKind, Guid TargetId, decimal Amount)>
+        ResolveShippingAllocationRows(
+            IReadOnlyList<PayableShippingGroupSnapshot>? groups,
+            decimal shipping)
+    {
+        if (groups is null || groups.Count == 0)
+        {
+            return shipping > 0m
+                ? [(PaymentAllocationTargetKind.StoreShipping, PaymentAllocation.StoreShippingTargetId, shipping)]
+                : [];
+        }
+
+        var seen = new HashSet<Guid>();
+        var rows = new List<(PaymentAllocationTargetKind, Guid, decimal)>(groups.Count);
+        var total = 0m;
+        foreach (var group in groups)
+        {
+            if (group.ShippingGroupId == Guid.Empty)
+            {
+                throw new ContractOperationException("payment.shipping_group.identity_required");
+            }
+
+            if (!seen.Add(group.ShippingGroupId))
+            {
+                throw new ContractOperationException("payment.shipping_group.duplicate");
+            }
+
+            if (group.Amount <= 0m)
+            {
+                throw new ContractOperationException("payment.shipping_group.amount_positive");
+            }
+
+            total += group.Amount;
+            rows.Add((PaymentAllocationTargetKind.StoreShippingGroup, group.ShippingGroupId, group.Amount));
+        }
+
+        if (total != shipping)
+        {
+            // The aggregate payable and the per-group snapshot must agree exactly; otherwise the
+            // shipping charge could be counted twice or lost.
+            throw new ContractOperationException("payment.shipping_group.sum_mismatch");
+        }
+
+        return rows;
     }
 
     /// <inheritdoc />

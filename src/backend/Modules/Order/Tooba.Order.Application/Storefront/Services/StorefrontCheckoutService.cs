@@ -62,7 +62,8 @@ public sealed class StorefrontCheckoutService
         DateOnly? minimumDeliveryDate = null,
         DateOnly? requestedDeliveryDate = null,
         string? requestedDeliveryTimeWindow = null,
-        string? customerNote = null)
+        string? customerNote = null,
+        IReadOnlyList<OrderShippingGroupPlan>? shippingGroups = null)
     {
         var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
         var quoted = await _checkouts.PreviewAsync(
@@ -81,7 +82,7 @@ public sealed class StorefrontCheckoutService
                 requestedDeliveryTimeWindow: requestedDeliveryTimeWindow,
                 customerNote: customerNote),
             cancellationToken);
-        return MapPage(quoted, cart, persisted: false);
+        return MapPage(quoted, cart, persisted: false, shippingGroups);
     }
 
     public async Task<StorefrontCheckoutPage> SubmitAsync(
@@ -125,7 +126,7 @@ public sealed class StorefrontCheckoutService
                 customerNote,
                 shippingGroups),
             cancellationToken);
-        return MapPage(submitted, cart, persisted: true);
+        return MapPage(submitted, cart, persisted: true, shippingGroups);
     }
 
     public async Task<StorefrontCheckoutPage?> GetAsync(
@@ -296,7 +297,11 @@ public sealed class StorefrontCheckoutService
             shipping?.LastName ?? string.Empty,
             shippingGroups);
 
-    private static StorefrontCheckoutPage MapPage(CheckoutSnapshot snapshot, CartPage cart, bool persisted)
+    private static StorefrontCheckoutPage MapPage(
+        CheckoutSnapshot snapshot,
+        CartPage cart,
+        bool persisted,
+        IReadOnlyList<OrderShippingGroupPlan>? shippingGroups = null)
     {
         var titleByOffer = cart.Lines.ToDictionary(x => x.OfferId, x => (x.Title, x.SellerDisplayName));
         var sellers = snapshot.SellerOrders.Select(order =>
@@ -337,6 +342,15 @@ public sealed class StorefrontCheckoutService
         var paymentState = sellers.Count > 0 && sellers.All(x => string.Equals(x.Status, "Paid", StringComparison.Ordinal))
             ? "Paid"
             : "PendingPayment";
+        // A genuine multi-group checkout has no single applicable method: never present one arbitrary
+        // method (or the legacy default) as if it covered every line.
+        var multiGroup = shippingGroups is { Count: > 1 };
+        var methodCode = multiGroup
+            ? string.Empty
+            : string.IsNullOrWhiteSpace(snapshot.ShippingMethodCode) ? DefaultShippingCode : snapshot.ShippingMethodCode;
+        var methodLabel = multiGroup
+            ? string.Empty
+            : string.IsNullOrWhiteSpace(snapshot.ShippingMethodLabel) ? DefaultShippingLabel : snapshot.ShippingMethodLabel;
         return new StorefrontCheckoutPage(
             persisted ? snapshot.CheckoutId : null,
             snapshot.CartId,
@@ -345,8 +359,8 @@ public sealed class StorefrontCheckoutService
             snapshot.Currency,
             snapshot.Channel.ToString(),
             paymentState,
-            string.IsNullOrWhiteSpace(snapshot.ShippingMethodCode) ? DefaultShippingCode : snapshot.ShippingMethodCode,
-            string.IsNullOrWhiteSpace(snapshot.ShippingMethodLabel) ? DefaultShippingLabel : snapshot.ShippingMethodLabel,
+            methodCode,
+            methodLabel,
             StorefrontRecipientNames.Display(snapshot.RecipientFirstName, snapshot.RecipientLastName, snapshot.RecipientName),
             snapshot.ContactMobile,
             snapshot.ProvinceName,
@@ -361,8 +375,27 @@ public sealed class StorefrontCheckoutService
             snapshot.ShippingAmount,
             sellers.Sum(x => x.PayableAmount) + snapshot.ShippingAmount,
             sellers,
-            !string.Equals(paymentState, "Paid", StringComparison.Ordinal));
+            !string.Equals(paymentState, "Paid", StringComparison.Ordinal),
+            shippingGroups is { Count: > 0 }
+                ? shippingGroups.Select(MapGroupPlan).ToArray()
+                : null);
     }
+
+    private static StorefrontShippingGroupView MapGroupPlan(OrderShippingGroupPlan plan) =>
+        new(
+            plan.ShippingGroupId,
+            plan.SellerPartyId,
+            plan.MethodCode,
+            plan.ServiceCode,
+            plan.OptionCode,
+            plan.MethodLabel,
+            plan.ShippingCharge,
+            plan.Currency,
+            plan.MinimumDeliveryDate.ToString("yyyy-MM-dd"),
+            plan.RequestedDeliveryDate?.ToString("yyyy-MM-dd"),
+            plan.RequestedDeliveryTimeWindow,
+            plan.LeadDays,
+            plan.CartLineIds.Count);
 
     private static void ValidateShipping(StorefrontCheckoutShippingInput shipping)
     {

@@ -57,6 +57,13 @@ public sealed class PaymentAllocation
     public bool IsSellerOrder => TargetKind == PaymentAllocationTargetKind.SellerOrder;
 
     /// <summary>
+    /// آیا این تخصیص سهم ارسال فروشگاه است (تک‌گروهی قدیمی یا یک گروه سفارش)؟
+    /// </summary>
+    public bool IsStoreShipping =>
+        TargetKind is PaymentAllocationTargetKind.StoreShipping
+            or PaymentAllocationTargetKind.StoreShippingGroup;
+
+    /// <summary>
     /// تخصیص فروشنده را می‌سازد.
     /// </summary>
     public static PaymentAllocation Create(Guid allocationId, Guid paymentId, Guid sellerOrderId, decimal amount, string currency)
@@ -67,6 +74,18 @@ public sealed class PaymentAllocation
     /// </summary>
     public static PaymentAllocation CreateStoreShipping(Guid allocationId, Guid paymentId, decimal amount, string currency)
         => Create(allocationId, paymentId, PaymentAllocationTargetKind.StoreShipping, StoreShippingTargetId, amount, currency);
+
+    /// <summary>
+    /// تخصیص هزینهٔ ارسال یک گروه پایدار سفارش را می‌سازد. هدف همان <paramref name="shippingGroupId"/> است
+    /// و هیچ‌گاه به SellerOrder نگاشت نمی‌شود.
+    /// </summary>
+    public static PaymentAllocation CreateStoreShippingGroup(
+        Guid allocationId,
+        Guid paymentId,
+        Guid shippingGroupId,
+        decimal amount,
+        string currency)
+        => Create(allocationId, paymentId, PaymentAllocationTargetKind.StoreShippingGroup, shippingGroupId, amount, currency);
 
     /// <summary>
     /// تخصیص را می‌سازد.
@@ -97,6 +116,14 @@ public sealed class PaymentAllocation
         if (targetKind == PaymentAllocationTargetKind.StoreShipping && targetId != StoreShippingTargetId)
         {
             throw new ContractOperationException("payment.allocation.store_shipping_target");
+        }
+
+        if (targetKind == PaymentAllocationTargetKind.StoreShippingGroup
+            && (targetId == Guid.Empty || targetId == StoreShippingTargetId))
+        {
+            // A per-group shipping allocation must carry a real ShippingGroupId; the legacy
+            // sentinel would collapse distinct groups into one bucket.
+            throw new ContractOperationException("payment.allocation.store_shipping_group_target");
         }
 
         return new PaymentAllocation

@@ -55,6 +55,7 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
     {
         var group = await _db.Checkouts
             .Include(x => x.SellerOrders)
+            .Include(x => x.ShippingGroups)
             .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken);
         if (group is null)
         {
@@ -75,7 +76,17 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
                 order.GrandTotalSnapshot,
                 order.Currency,
                 order.Status == SellerOrderStatus.PendingPayment)).ToArray(),
-            group.ShippingAmount);
+            group.ShippingAmount,
+            group.ShippingGroups.Count == 0
+                ? null
+                : group.ShippingGroups
+                    .OrderBy(x => x.ShippingGroupId)
+                    .Select(x => new PayableShippingGroupSnapshot(
+                        x.ShippingGroupId,
+                        x.SellerOrderId,
+                        x.ShippingChargeSnapshot,
+                        x.Currency))
+                    .ToArray());
     }
 
     /// <inheritdoc />

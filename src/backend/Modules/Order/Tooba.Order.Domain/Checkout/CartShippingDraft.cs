@@ -220,10 +220,12 @@ public sealed class CartShippingDraft
 
         ShippingGroups.AddRange(groups);
 
-        // سازگاری گذشته: فیلد تک‌روشی فقط projection است، نه حقیقت.
+        // سازگاری گذشته: فیلد تک‌روشی فقط projection است، نه حقیقت. اگر پیش‌نویس بیش از یک گروه
+        // داشته باشد هیچ روش واحدی بر همهٔ خطوط اعمال نمی‌شود، پس ستون‌های تک‌روشی خالی می‌مانند.
         var first = groups[0];
-        ShippingMethodCode = first.MethodCode;
-        ShippingMethodLabel = first.MethodLabel;
+        var multiGroup = groups.Count > 1;
+        ShippingMethodCode = multiGroup ? string.Empty : first.MethodCode;
+        ShippingMethodLabel = multiGroup ? string.Empty : first.MethodLabel;
         ShippingAmount = groups.Sum(x => x.ShippingAmount);
         MinimumDeliveryDate = first.MinimumDeliveryDate;
         SelectedDeliveryDate = first.SelectedDeliveryDate;

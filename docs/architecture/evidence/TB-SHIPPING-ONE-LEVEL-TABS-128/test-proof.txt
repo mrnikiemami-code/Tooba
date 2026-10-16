@@ -1,0 +1,6 @@
+﻿=== Payment.Tests ===
+Passed!  - Failed:     0, Passed:   160, Skipped:     0, Total:   160, Duration: 565 ms - Tooba.Payment.Tests.dll (net8.0)
+=== Order.Tests ===
+Passed!  - Failed:     0, Passed:   338, Skipped:     0, Total:   338, Duration: 342 ms - Tooba.Order.Tests.dll (net8.0)
+=== Host focused (Payment/Paid) ===
+Failed!  - Failed:     7, Passed:   139, Skipped:     0, Total:   146, Duration: 32 s - Tooba.Host.Tests.dll (net8.0)

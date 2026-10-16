@@ -151,7 +151,6 @@ public sealed class StorefrontShippingService
         var draft = await _drafts.GetByCartIdAsync(cartId, cancellationToken)
             ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         EnsureDraftOwnership(draft, guestSecret);
-        EnsureLegacySingleGroup(draft);
 
         return await _checkouts.PreviewAsync(
             cartId,
@@ -174,7 +173,8 @@ public sealed class StorefrontShippingService
             minimumDeliveryDate: draft.MinimumDeliveryDate,
             requestedDeliveryDate: draft.SelectedDeliveryDate,
             requestedDeliveryTimeWindow: draft.SelectedDeliveryTimeWindow,
-            customerNote: draft.CustomerNote);
+            customerNote: draft.CustomerNote,
+            shippingGroups: BuildOrderGroupPlans(draft));
     }
 
     /// <summary>پیش‌نویس ارسال را ذخیره و اعتبارسنجی می‌کند.</summary>
@@ -621,21 +621,6 @@ public sealed class StorefrontShippingService
         catch
         {
             return null;
-        }
-    }
-
-    /// <summary>
-    /// مسیر پرداخت/سفارش قدیمی فقط یک روش کارت‌گستر را می‌شناسد. تا زمانی که تبدیل به گروه‌های سفارش
-    /// پایدار (اسلایس بعدی) پیاده نشده، پیش‌نویس چندگروهی در این مرز fail-closed رد می‌شود تا انتخاب
-    /// مشتری بی‌صدا به یک روش کارت‌گستر برنگردد. صفر/یک گروه (شامل پیش‌نویس‌های قدیمی) دست‌نخورده است.
-    /// </summary>
-    private static void EnsureLegacySingleGroup(CartShippingDraft draft)
-    {
-        if (draft.ShippingGroups.Count > 1)
-        {
-            throw new StorefrontOrderException(
-                StorefrontOrderErrors.ShippingRejected,
-                "multi_shipping_group_order_conversion_not_implemented");
         }
     }
 
