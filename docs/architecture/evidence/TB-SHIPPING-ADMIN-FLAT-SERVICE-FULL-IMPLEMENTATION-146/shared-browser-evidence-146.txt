@@ -1,0 +1,98 @@
+TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146 — real shared-environment browser evidence
+=================================================================================================
+Origin: http://localhost:3000 (pre-existing shared Next dev server, never restarted)
+Host:   http://127.0.0.1:5088 (pre-existing shared Development Host, never restarted, read-only use)
+Login:  POST /api/auth/login with the Development admin identity admin-actor@tooba.local through the
+        shared BFF -> 200 {"userId":"01a036c2-970e-7000-8eb7-94bf5cc2d8db","authenticated":true}
+        GET /api/auth/me -> 200 {userId 01a036c2..., edition SingleStore, tenantId store-alpha}
+No data was written: every request below is GET. No seed, migration, order, payment, reservation or
+merchant fixture write occurred; the shared DB was used read-only.
+
+1) AUTHORITATIVE HOST READ (the server component's own source of truth)
+--------------------------------------------------------------------------------
+GET /v1/admin/shipping-services/shipping-methods/one-level
+  200 {"gate":"Enabled","ready":true,"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4",
+       "methods":[{"methodCode":"post:express","name":"پیشتاز","isActive":false,"sortOrder":10,...},
+                  {"methodCode":"post:standard","name":"معمولی","isActive":true,...},
+                  {"methodCode":"tipax:express",...},{"methodCode":"tipax:standard",...},
+                  {"methodCode":"snapp_courier",...},{"methodCode":"store_courier",...},
+                  {"methodCode":"in_person",...}]}
+
+2) RENDERED FLAT LIST (DOM, locale-prefixed route /fa/admin/shipping-services)
+--------------------------------------------------------------------------------
+data-testid=admin-shipping-services-screen present; "دسترسی ندارید" absent.
+Rows (server order, one row per canonical method):
+  پیشتاز             post:express    خیر
+  معمولی             post:standard   بله
+  پیشتاز             tipax:express   بله
+  معمولی             tipax:standard  بله
+  اسنپ / پیک آنلاین  snapp_courier   خیر
+  پیک فروشگاه        store_courier   بله
+  تحویل حضوری        in_person       بله
+Grid footer: "نمایش ۱ تا ۷ از ۷ ردیف". "سرویس جدید" (Add Service) control present.
+Per-row controls, exactly three per row and nothing else (21 testids for 7 rows):
+  shipping-method-view-<code>, shipping-method-edit-<code>, shipping-method-delete-<code>
+  -> post:express, post:standard, tipax:express, tipax:standard, snapp_courier, store_courier, in_person
+No per-row rate / coverage / schedule / packaging / quote action exists on the list.
+
+3) ONE SELECTED METHOD — post:express — FOUR NON-NESTED TABS
+--------------------------------------------------------------------------------
+data-testid=admin-shipping-method-detail-post:express present.
+tablist: admin-shipping-method-tab-general(aria-selected=true) عمومی
+         admin-shipping-method-tab-rates تعرفه و پوشش
+         admin-shipping-method-tab-schedule برنامه کاری حمل
+         admin-shipping-method-tab-packaging بسته‌بندی و کرایه
+No "انواع سرویس"/service-types tab and no global tabs over the list.
+General panel: identity post:express (read-only), server-confirmed status "غیرفعال",
+  provider identity block labelled "هویت ارائه‌دهنده — فرادادهٔ مشترک" with the explicit sentence
+  "این بخش مشترک بین همهٔ روش‌های ارائه‌دهندهٔ یکسان است و سیاست اختصاصی این روش نیست",
+  authoritative binding "سرویس authoritative: post · گزینه authoritative: express",
+  display-name editor (value پیشتاز) and the activation control.
+Rates & coverage panel: "روش یک‌سطحی post:express → سرویس post · express"; it states
+  "برای این روش نرخی ثبت نشده است" (the post-level rate policies are NOT shown as this method's rates),
+  and lists only the bound-service coverage grants with the disclosure
+  "نرخ و پوشش روی همان خدمتی ثبت می‌شود که این روش به آن پیوند دارد؛ پیوند از سرور می‌آید و قابل‌تغییر نیست."
+Transport schedule panel: "برنامهٔ ثبت‌شدهٔ این روش — هیچ برنامهٔ عملیاتی ثبت نشده ..." (server: schedules=[]).
+Packaging & fee panel: "برای این روش سیاست بسته‌بندی ثبت نشده است؛ نبود سیاست یعنی هزینهٔ بسته‌بندی صفر و
+  طرف پرداخت کرایه پیش‌کرایهٔ پیش‌فرض است." (server: packagingPolicies=[]).
+Every panel is scoped by the same authoritative binding sentence, so no panel can silently show or write a
+sibling method's policy: the rate policies that exist for service `post` are visible only under the option
+they actually belong to (`optionCode` equality, null == null), never under `post:express`.
+
+4) NETWORK (performance resource entries, initiatorType=fetch, real browser origin)
+--------------------------------------------------------------------------------
+GET /v1/admin/access-control/me/capabilities                                    15-16ms  transfer=947
+GET /v1/admin/ui-preferences/admin-shipping-services                            13-25ms  transfer=353
+GET /v1/admin/shipping-services/shipping-methods/one-level/post%3Aexpress/binding 15-27ms transfer=414
+GET /v1/admin/shipping-services/post/rates                                      16-30ms  transfer=1042
+GET /v1/admin/shipping-services/post/operating-schedules                        16-27ms  transfer=357
+GET /v1/admin/shipping-services/post/packaging-policies                         16-28ms  transfer=365
+GET /v1/admin/geography/countries                                               16-33ms  transfer=417
+No write request (POST/PUT/PATCH/DELETE) was issued from the page during this verification.
+
+5) DIRECT ENDPOINT STATUS CHECK FROM THE AUTHENTICATED BROWSER (same session)
+--------------------------------------------------------------------------------
+GET /v1/admin/shipping-services/shipping-methods/one-level                        -> 200 gate=Enabled ready=true
+GET /v1/admin/shipping-services/shipping-methods/one-level/post:express/binding   -> 200 resolved=true
+     {"methodCode":"post:express","serviceCode":"post","optionCode":"express","isActive":false}
+GET /v1/admin/shipping-services/post/rates                                        -> 200 ratePolicies present (incl. inactive)
+GET /v1/admin/shipping-services/post/operating-schedules                          -> 200 schedules=[]
+GET /v1/admin/shipping-services/post/packaging-policies                           -> 200 packagingPolicies=[]
+GET /v1/admin/shipping-methods (legacy two-level catalog)                         -> 200 (untouched, still served)
+GET /v1/admin/shipping-services (legacy service catalog)                          -> 200 (untouched, still served)
+
+6) WHAT WAS NOT EXECUTED (honest gap)
+--------------------------------------------------------------------------------
+A save/reopen write round-trip was NOT executed. The task forbids writing to the shared Development DB and
+processes (:3000 / :5088 / store-alpha / tooba_alpha) unless explicitly authorized, and no isolated
+disposable environment was created inside the timebox. Therefore form PRE-FILL is proven from real records
+(name پیشتاز, binding post/express, isActive=false, empty schedule/packaging), but the persisted
+save -> reopen cycle is recorded as INCOMPLETE, not as passed.
+
+7) SCREENSHOTS (real captures of the shared page, written into this folder)
+--------------------------------------------------------------------------------
+01-flat-method-list.png
+02-post-express-general.png
+03-post-express-rates-coverage.png
+04-post-express-transport-schedule.png
+05-post-express-packaging-fee.png

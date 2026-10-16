@@ -229,12 +229,15 @@ test("the api client sends only the name and maps denied/error truthfully", () =
   assert.doesNotMatch(api, /serviceCode|optionCode|providerKind/);
 });
 
-test("the server page passes the real active language id and still fails closed", () => {
+test("the server page composes the flat method screen without a client bypass", () => {
   const raw = fs.readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
   // نظرات توضیحی اجازه دارند نام منابع غیرمجاز را بشمارند؛ داوری روی کد اجرایی است.
   const page = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
-  assert.match(page, /resolveOneLevelActiveLanguageId\(hostRead\.payload\)/);
-  assert.match(page, /gate\.state === "enabled" \? \(\s*<ShippingOneLevelTabs gate=\{gate\} activeLanguageId=\{activeLanguageId\} initialMethods=\{initialMethods\} \/>\s*\)/);
+  // TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146: مسیر رندر صفحه همان فهرست تخت است،
+  // فقط پشت دروازهٔ سرورِ fail-closed.
+  assert.match(page, /<ShippingServicesFlatScreen /);
+  assert.match(page, /gate\.state === "enabled" \?/);
+  assert.doesNotMatch(page, /ShippingOneLevelTabs/);
   assert.doesNotMatch(page, /useSearchParams/);
   assert.doesNotMatch(page, /localStorage/);
 });

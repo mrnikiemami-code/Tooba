@@ -1,7 +1,7 @@
-import { Suspense } from "react";
+﻿import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { ShippingServicesScreen } from "../shipping-services-screen.tsx";
-import { ShippingOneLevelTabs } from "./shipping-one-level-tabs.tsx";
+import { ShippingServicesFlatScreen } from "./flat-screen.tsx";
 import {
   ONE_LEVEL_CATALOG_ADMIN_READ_PATH,
   mapHostOneLevelMethods,
@@ -14,19 +14,23 @@ import { acceptLanguageForLocale, parseLocale } from "../../../lib/i18n/locale.t
 import { readLocaleFromCookieString } from "../../../lib/i18n/locale-cookie.ts";
 
 /**
- * صفحهٔ سرویس ارسال.
+ * صفحهٔ سرویس ارسال ادمین.
  *
- * TB-SHIPPING-ONE-LEVEL-TABS-085
+ * TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146
  *
- * این صفحه یک Server Component است و تنها مرجع روشن‌شدن دروازهٔ کاتالوگ یک‌سطحی، پاسخ
- * مجوزدار سرور (`GET /v1/admin/shipping-services/shipping-methods/one-level`) است:
+ * مدل قفل‌شده: **یک روش قابل‌انتخاب مشتری = یک ردیف مستقل مدیریتی**. این صفحه فهرست تختِ روش‌ها را
+ * نشان می‌دهد و برای هر ردیف فقط «مشاهده / ویرایش / حذف» دارد؛ تعرفه، برنامه کاری و بسته‌بندی داخل
+ * چهار زبانهٔ غیرتودرتوی همان روش مدیریت می‌شوند.
  *
- *   - خواندن فقط در سمت سرور انجام می‌شود؛ اعتبارنامه هرگز به HTML/مرورگر نمی‌رسد و
- *     هیچ bearer‌ای log نمی‌شود؛
+ * تنها مرجع ردیف‌ها کاتالوگ canonical یک‌سطحی سرور است
+ * (`GET /v1/admin/shipping-services/shipping-methods/one-level`):
+ *
+ *   - خواندن فقط در سمت سرور انجام می‌شود؛ اعتبارنامه هرگز به HTML/مرورگر نمی‌رسد و هیچ bearer‌ای
+ *     log نمی‌شود؛
  *   - هیچ query string، localStorage یا وجود دادهٔ روش نمی‌تواند دروازه را روشن کند؛
- *   - خطای شبکه/مجوز/پاسخ نامعتبر ⇒ fail-closed و همان صفحهٔ دوسطحی فعلی با همهٔ عملیات سالم؛
- *   - `gate=Enabled` ولی `ready=false` ⇒ دروازه خاموش می‌ماند؛ کاتالوگ مهاجرت‌نشده هرگز
- *     «فعال» یا «خالیِ موفق» جا زده نمی‌شود.
+ *   - خطای شبکه/مجوز/پاسخ نامعتبر ⇒ fail-closed و همان صفحهٔ دوسطحی فعلی؛
+ *   - `gate=Enabled` ولی `ready=false` ⇒ دروازه خاموش می‌ماند؛ کاتالوگ مهاجرت‌نشده هرگز «فعال» یا
+ *     «خالیِ موفق» جا زده نمی‌شود.
  *
  * هیچ نوشتنی، هیچ قیمت‌گذاری و هیچ تغییری در `Tooba:ShippingRateAuthority` یا
  * `Tooba:ShippingOperationalShadow` در این مسیر وجود ندارد.
@@ -67,7 +71,7 @@ export default async function AdminShippingServicesPage() {
     <Suspense fallback={<p className="p-6 text-sm text-gray-500">در حال بارگذاری…</p>}>
       <div className="p-4 lg:p-6">
         {gate.state === "enabled" ? (
-          <ShippingOneLevelTabs gate={gate} activeLanguageId={activeLanguageId} initialMethods={initialMethods} />
+          <ShippingServicesFlatScreen initialMethods={initialMethods} activeLanguageId={activeLanguageId} />
         ) : (
           <ShippingServicesScreen />
         )}

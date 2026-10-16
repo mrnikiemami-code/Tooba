@@ -59,6 +59,7 @@ import {
   type ShippingRateConditionForm,
 } from "./shipping-rate-tier-model.ts";
 import { ShippingDestinationPicker } from "./shipping-destination-picker.tsx";
+import { ConditionEditor } from "./shipping-rate-condition-editor.tsx";
 import { adminRequestHeaders } from "../../../lib/admin/admin-result.ts";
 import {
   bindingContextFa,
@@ -76,9 +77,16 @@ type Props = {
   /** کد روش یک‌سطحی انتخاب‌شده در زبانهٔ «سرویس‌ها». تهی یعنی هیچ روشی انتخاب نشده است. */
   methodCode: string;
   onNotice: (notice: { tone: "success" | "error"; text: string }) => void;
+  /**
+   * TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146: پیوند حل‌شده‌ای که از **درخت واقعی سرور**
+   * (`/v1/admin/shipping-methods`) می‌آید؛ یعنی `serviceCode` و `optionCode` فیلدهای جدا و
+   * authoritative هستند و هیچ تقسیم متنیِ کد روش در مرورگر رخ نمی‌دهد. وقتی این مقدار داده شود،
+   * زبانه همان پیوند را مصرف می‌کند و resolver غایب را صدا نمی‌زند، پس نبود ۰۸۶ مانع کارکرد نیست.
+   */
+  bindingOverride?: { serviceCode: string; optionCode: string | null; isActive: boolean } | null;
 };
 
-export function ShippingOneLevelRatesTab({ methodCode, onNotice }: Props) {
+export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride = null }: Props) {
   const [bindingLoading, setBindingLoading] = useState(false);
   const [binding, setBinding] = useState<OneLevelBindingState | null>(null);
   const [ratesState, setRatesState] = useState<"ok" | "denied" | "error" | null>(null);
@@ -146,6 +154,23 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice }: Props) {
       return;
     }
 
+    // پیوند authoritative از درخت واقعی سرور (بدون تقسیم متنی کد روش در مرورگر).
+    if (bindingOverride) {
+      const isCurrent = guard.current.begin();
+      setBinding({
+        state: "resolved",
+        binding: {
+          methodCode,
+          serviceCode: bindingOverride.serviceCode,
+          optionCode: bindingOverride.optionCode,
+          isActive: bindingOverride.isActive,
+        },
+      });
+      setBindingLoading(false);
+      void refresh(bindingOverride.serviceCode, isCurrent);
+      return;
+    }
+
     const isCurrent = guard.current.begin();
     setBindingLoading(true);
     void (async () => {
@@ -167,7 +192,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice }: Props) {
         void refresh(next.binding.serviceCode, isCurrent);
       }
     })();
-  }, [methodCode, refresh]);
+  }, [methodCode, refresh, bindingOverride?.serviceCode, bindingOverride?.optionCode, bindingOverride?.isActive]);
 
   const state = resolveRatesState({
     hasMethod: methodCode.length > 0,
@@ -684,101 +709,6 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice }: Props) {
           </button>
         </div>
       </section>
-    </div>
-  );
-}
-
-type ConditionEditorProps = {
-  form: ShippingRateConditionForm;
-  onChange: (next: ShippingRateConditionForm) => void;
-  disabled: boolean;
-  testIdPrefix: string;
-};
-
-/** بخش فشردهٔ «شرایط مرسوله» — همان معناشناسی نیم‌باز [min, max) و همان کران‌های بک‌اند. */
-function ConditionEditor({ form, onChange, disabled, testIdPrefix }: ConditionEditorProps) {
-  const preview = conditionFormToWrite(form);
-  return (
-    <fieldset className="space-y-2 rounded-ds border border-border p-2" data-testid={`${testIdPrefix}-condition`}>
-      <legend className="px-1 text-[11px] font-bold">شرایط مرسوله (اختیاری)</legend>
-      <p className="text-[10px] text-muted">
-        بازه‌ها نیم‌بازند: «از» شامل و «تا» غیرشامل است. خالی‌بودن «تا» یعنی بدون کران بالا.
-      </p>
-      <ConditionAxis
-        titleFa="وزن مرسوله"
-        unitFa="کیلوگرم"
-        hintFa="وزن را با حداکثر سه رقم اعشار وارد کنید؛ مثال 1.999 دقیقاً ۱۹۹۹ گرم است."
-        axis={form.weight}
-        onChange={(axis) => onChange({ ...form, weight: axis })}
-        disabled={disabled}
-        testId={`${testIdPrefix}-condition-weight`}
-      />
-      <ConditionAxis
-        titleFa="تعداد اقلام مرسوله"
-        unitFa="قلم"
-        hintFa="تعداد اقلام فیزیکی مرسوله است، نه تعداد خطوط سبد."
-        axis={form.count}
-        onChange={(axis) => onChange({ ...form, count: axis })}
-        disabled={disabled}
-        testId={`${testIdPrefix}-condition-count`}
-      />
-      <p className="text-[10px] text-muted" data-testid={`${testIdPrefix}-condition-preview`}>
-        نتیجه: {describeConditionFa(preview)}
-      </p>
-    </fieldset>
-  );
-}
-
-type ConditionAxisProps = {
-  titleFa: string;
-  unitFa: string;
-  hintFa: string;
-  axis: ShippingRateConditionForm["weight"];
-  onChange: (next: ShippingRateConditionForm["weight"]) => void;
-  disabled: boolean;
-  testId: string;
-};
-
-function ConditionAxis({ titleFa, unitFa, hintFa, axis, onChange, disabled, testId }: ConditionAxisProps) {
-  return (
-    <div className="space-y-1" data-testid={testId}>
-      <label className="flex items-center gap-2 text-[11px] font-bold">
-        <input
-          type="checkbox"
-          checked={axis.enabled}
-          onChange={(e) => onChange({ ...axis, enabled: e.target.checked })}
-          disabled={disabled}
-          data-testid={`${testId}-enabled`}
-        />
-        {titleFa}
-      </label>
-      {axis.enabled && (
-        <>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-[10px] text-muted">
-              از (شامل) — {unitFa}
-              <input
-                className="mt-1 w-full rounded-ds border border-border px-2 py-1 text-xs"
-                value={axis.min}
-                onChange={(e) => onChange({ ...axis, min: e.target.value })}
-                disabled={disabled}
-                data-testid={`${testId}-min`}
-              />
-            </label>
-            <label className="text-[10px] text-muted">
-              تا (غیرشامل) — {unitFa}؛ خالی = بدون کران بالا
-              <input
-                className="mt-1 w-full rounded-ds border border-border px-2 py-1 text-xs"
-                value={axis.max}
-                onChange={(e) => onChange({ ...axis, max: e.target.value })}
-                disabled={disabled}
-                data-testid={`${testId}-max`}
-              />
-            </label>
-          </div>
-          <p className="text-[10px] text-muted">{hintFa}</p>
-        </>
-      )}
     </div>
   );
 }

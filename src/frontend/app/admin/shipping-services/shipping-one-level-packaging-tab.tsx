@@ -77,9 +77,15 @@ type Props = {
   /** کد روش یک‌سطحی انتخاب‌شده در زبانهٔ «سرویس‌ها». تهی یعنی هیچ روشی انتخاب نشده است. */
   methodCode: string;
   onNotice: (notice: { tone: "success" | "error"; text: string }) => void;
+  /**
+   * TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146: پیوند حل‌شده از درخت واقعی سرور
+   * (`/v1/admin/shipping-methods`)؛ `serviceCode` و `optionCode` فیلدهای جدا و authoritative هستند و
+   * هیچ تقسیم متنیِ کد روش در مرورگر انجام نمی‌شود. در حضور آن، resolver غایب صدا زده نمی‌شود.
+   */
+  bindingOverride?: { serviceCode: string; optionCode: string | null; isActive: boolean } | null;
 };
 
-export function ShippingOneLevelPackagingTab({ methodCode, onNotice }: Props) {
+export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOverride = null }: Props) {
   const [bindingLoading, setBindingLoading] = useState(false);
   const [binding, setBinding] = useState<OneLevelBindingState | null>(null);
   const [policiesState, setPoliciesState] = useState<"ok" | "denied" | "error" | null>(null);
@@ -137,6 +143,23 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice }: Props) {
       return;
     }
 
+    // پیوند authoritative از درخت واقعی سرور (بدون تقسیم متنی کد روش در مرورگر).
+    if (bindingOverride) {
+      const isCurrent = guard.current.begin();
+      setBinding({
+        state: "resolved",
+        binding: {
+          methodCode,
+          serviceCode: bindingOverride.serviceCode,
+          optionCode: bindingOverride.optionCode,
+          isActive: bindingOverride.isActive,
+        },
+      });
+      setBindingLoading(false);
+      void refresh(bindingOverride.serviceCode, isCurrent);
+      return;
+    }
+
     const isCurrent = guard.current.begin();
     setBindingLoading(true);
     void (async () => {
@@ -158,7 +181,7 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice }: Props) {
         void refresh(next.binding.serviceCode, isCurrent);
       }
     })();
-  }, [methodCode, refresh]);
+  }, [methodCode, refresh, bindingOverride?.serviceCode, bindingOverride?.optionCode, bindingOverride?.isActive]);
 
   const state = resolvePackagingState({
     hasMethod: methodCode.length > 0,

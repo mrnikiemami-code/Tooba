@@ -268,18 +268,18 @@ test("host method rows are mapped defensively and never invent a label or a seco
   assert.deepEqual(mapHostOneLevelMethods({ methods: "x" }), []);
 });
 
-test("screen reads the authoritative gate server-side and exposes no client bypass", () => {
+test("page composes the flat method screen and leaks no credential to the browser", () => {
   const raw = fs.readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
   // داوری روی کد اجرایی؛ توضیحات مجازند نام منابع غیرمجاز را بشمارند.
   const page = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
-  // دروازه از پاسخ مجوزدار سرور تعیین می‌شود، نه از پارامتر کلاینتی.
-  assert.match(page, /resolveOneLevelCatalogGateFromHost\(hostRead\)/);
-  assert.match(page, /ONE_LEVEL_CATALOG_ADMIN_READ_PATH/);
-  assert.match(page, /buildUpstreamAuthHeaders\(\)/);
-  assert.match(page, /cache: "no-store"/);
-  assert.match(page, /gate\.state === "enabled" \? \(\s*<ShippingOneLevelTabs gate=\{gate\} activeLanguageId=\{activeLanguageId\} initialMethods=\{initialMethods\} \/>\s*\) : \(\s*<ShippingServicesScreen \/>/);
-  // هیچ پارامتر URL یا منبع کلاینتی نباید دروازه را روشن کند.
+  // TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146: صفحهٔ واقعیِ کاربر همان فهرست تختِ
+  // روش‌هاست و فقط پشت دروازهٔ سرورِ fail-closed رندر می‌شود؛ شل پنج‌زبانه دیگر مسیر رندر نیست.
+  assert.match(page, /<ShippingServicesFlatScreen /);
+  assert.match(page, /gate\.state === "enabled" \?/);
+  assert.match(page, /<ShippingServicesScreen \/>/);
+  assert.doesNotMatch(page, /ShippingOneLevelTabs/);
+  // هیچ پارامتر URL یا منبع کلاینتی نباید سطح دسترسی را تعیین کند.
   assert.doesNotMatch(page, /useSearchParams/);
   assert.doesNotMatch(page, /URLSearchParams/);
   assert.doesNotMatch(page, /localStorage/);
@@ -288,9 +288,52 @@ test("screen reads the authoritative gate server-side and exposes no client bypa
   assert.doesNotMatch(page, /console\./);
   assert.doesNotMatch(page, /"use client"/);
   assert.doesNotMatch(page, /Authorization.*NEXT_PUBLIC/);
-  // هیچ نوشتن/قیمت/رزرو در این صفحه نیست.
+  // هیچ نوشتن/قیمت/رزروی در خودِ Server Component نیست.
   assert.doesNotMatch(page, /deactivateAdminShippingService|writeAdminShippingService/);
   assert.doesNotMatch(page, /ShippingRateAuthority|ShippingOperationalShadow/);
+});
+
+test("flat screen owns one row per method, three row actions and four method tabs", () => {
+  const raw = fs.readFileSync(new URL("./flat-screen.tsx", import.meta.url), "utf8");
+  const screen = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  // ردیف‌ها از کاتالوگ canonical یک‌سطحی سرور ساخته می‌شوند؛ نه از درخت دوسطحی ارائه‌دهنده
+  // و نه از تقسیم متنی کد روش در مرورگر.
+  assert.match(screen, /loadOneLevelCatalog\(/);
+  assert.match(screen, /buildFlatMethodRows\(/);
+  assert.doesNotMatch(screen, /loadShippingMethodTree|loadAdminShippingServices|loadAdminShippingService/);
+  assert.doesNotMatch(screen, /methodCode\.split/);
+  // دقیقاً سه عملیات ردیف: مشاهده، ویرایش، حذف. هیچ اکشن سراسری نرخ/برنامه/بسته‌بندی روی ردیف نیست.
+  assert.match(screen, /id: "view"/);
+  assert.match(screen, /id: "edit"/);
+  assert.match(screen, /id: "delete"/);
+  assert.doesNotMatch(screen, /id: "rates"|id: "schedule"|id: "packaging"|id: "quote"|id: "deactivate"/);
+  assert.doesNotMatch(screen, /ShippingRatesCoverageDialog|ShippingOperatingScheduleDialog|ShippingPackagingDialog|ShippingOperationalQuoteDialog/);
+
+  const dialog = fs
+    .readFileSync(new URL("./flat-method-detail-dialog.tsx", import.meta.url), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "");
+  // چهار زبانهٔ غیرتودرتو روی همان روش انتخاب‌شده؛ هیچ زبانهٔ «انواع سرویس» وجود ندارد.
+  assert.match(dialog, /"general", "rates", "schedule", "packaging"/);
+  assert.doesNotMatch(dialog, /options-tab|service-types|انواع سرویس/);
+  assert.match(dialog, /bindingOverride=\{bindingOverride\}/);
+  assert.match(dialog, /serviceCode: binding\.binding\.serviceCode/);
+  assert.match(dialog, /optionCode: binding\.binding\.optionCode/);
+  assert.match(dialog, /loadOneLevelMethodBinding\(row\.methodCode\)/);
+});
+
+test("flat screen never rewrites sibling-method policy and keeps shared data labelled", () => {
+  const screen = fs.readFileSync(new URL("./flat-screen.tsx", import.meta.url), "utf8");
+  const general = fs.readFileSync(new URL("./flat-general-tab.tsx", import.meta.url), "utf8");
+  // «حذف» فقط همان روش را از تنها درز مجاز ۰۹۶ غیرفعال می‌کند؛ هیچ سرویس/گزینهٔ والدی بازنویسی نمی‌شود.
+  assert.match(screen, /setOneLevelMethodActivation\(row\.methodCode, false\)/);
+  assert.doesNotMatch(screen + general, /writeAdminShippingService|deactivateAdminShippingService/);
+  assert.doesNotMatch(screen + general, /ShippingServiceOptionWrite/);
+  // دادهٔ مشترکِ ارائه‌دهنده صریحاً مشترک برچسب می‌خورد.
+  assert.match(general, /admin-shipping-method-shared-warning/);
+  assert.match(general, /مشترک بین همهٔ روش‌های ارائه‌دهندهٔ/);
+  // هیچ نوشتن قیمت/رزرو/سیاست نرخی از این دو فایل انجام نمی‌شود.
+  assert.doesNotMatch(screen + general, /createAdminShippingRate|updateAdminShippingRate|setAdminShippingRateActive/);
 });
 
 test("shell renders server-provided rows without a client fetch and edits only the method name", () => {
