@@ -273,11 +273,11 @@ test("page composes the flat method screen and leaks no credential to the browse
   // داوری روی کد اجرایی؛ توضیحات مجازند نام منابع غیرمجاز را بشمارند.
   const page = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
-  // TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146: صفحهٔ واقعیِ کاربر همان فهرست تختِ
-  // روش‌هاست و فقط پشت دروازهٔ سرورِ fail-closed رندر می‌شود؛ شل پنج‌زبانه دیگر مسیر رندر نیست.
-  assert.match(page, /<ShippingServicesFlatScreen /);
-  assert.match(page, /gate\.state === "enabled" \?/);
-  assert.match(page, /<ShippingServicesScreen \/>/);
+  // TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146 / TB-147: صفحهٔ واقعیِ کاربر همان فهرست
+  // تختِ روش‌هاست؛ شل پنج‌زبانه دیگر مسیر رندر نیست و هیچ سقوط بی‌صدایی به صفحهٔ قدیمی وجود ندارد.
+  assert.match(page, /<ShippingServicesFlatScreenGate\b/);
+  assert.match(page, /serverResolved=\{gate\.state === "enabled"\}/);
+  assert.doesNotMatch(page, /ShippingServicesScreen/);
   assert.doesNotMatch(page, /ShippingOneLevelTabs/);
   // هیچ پارامتر URL یا منبع کلاینتی نباید سطح دسترسی را تعیین کند.
   assert.doesNotMatch(page, /useSearchParams/);
@@ -292,6 +292,32 @@ test("page composes the flat method screen and leaks no credential to the browse
   assert.doesNotMatch(page, /deactivateAdminShippingService|writeAdminShippingService/);
   assert.doesNotMatch(page, /ShippingRateAuthority|ShippingOperationalShadow/);
 });
+
+test("gate resolves the real Host answer through the browser Admin transport and never falls back", () => {
+  const raw = fs.readFileSync(new URL("./flat-screen-gate.tsx", import.meta.url), "utf8");
+  const gate = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+  // تنها ورودی روشن‌شدن: پاسخ واقعی سرور از همان مسیر canonical با همان transport مجاز مرورگر.
+  assert.match(gate, /loadOneLevelCatalog\(\)/);
+  assert.match(gate, /prepareAdminDevActor\(\)/);
+  assert.match(gate, /<ShippingServicesFlatScreen/);
+  // هیچ صفحهٔ قدیمیِ سطح ارائه‌دهنده و هیچ زبانهٔ «انواع سرویس» در این مسیر mount نمی‌شود.
+  assert.doesNotMatch(gate, /ShippingServicesScreen/);
+  assert.doesNotMatch(gate, /ShippingOneLevelTabs/);
+  assert.doesNotMatch(gate, /\?tab=|\?gate=|\?method=/);
+  // دروازه هرگز از URL یا خودِ localStorage روشن نمی‌شود.
+  assert.doesNotMatch(gate, /useSearchParams/);
+  assert.doesNotMatch(gate, /URLSearchParams/);
+  assert.doesNotMatch(gate, /localStorage/);
+  assert.doesNotMatch(gate, /process\.env/);
+  // وضعیت‌های صریح و بومیِ «دسترسی ندارید» و خطا با تلاش دوباره، به‌جای سقوط بی‌صدا.
+  assert.match(gate, /admin-shipping-services-denied/);
+  assert.match(gate, /admin-shipping-services-error/);
+  assert.match(gate, /admin-shipping-services-resolving/);
+  assert.match(gate, /state === "denied"/);
+  assert.match(gate, /onRetry/);
+});
+
 
 test("flat screen owns one row per method, three row actions and four method tabs", () => {
   const raw = fs.readFileSync(new URL("./flat-screen.tsx", import.meta.url), "utf8");

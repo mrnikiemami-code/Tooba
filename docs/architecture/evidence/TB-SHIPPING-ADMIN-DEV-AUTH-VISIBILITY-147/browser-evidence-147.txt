@@ -1,0 +1,83 @@
+TB-SHIPPING-ADMIN-DEV-AUTH-VISIBILITY-147 — real shared-environment browser evidence
+====================================================================================
+Origin: http://localhost:3000 (pre-existing shared Next dev server, never restarted, never rebuilt)
+Host:   http://127.0.0.1:5088 (pre-existing shared Development Host, pid 26472 from .tmp-dev-host/host-5088.pid,
+        env Development, provenance dev-singlestore / store-alpha / tenant-alpha, gate
+        Tooba__ShippingOneLevelCatalog__Enabled=true in the process environment only)
+Stack:  no restart, no cache deletion, no rebuild, no DB write. Every request observed below is a read.
+
+WHY THIS TASK EXISTED (reproduced at the start of TB-147, pre-fix)
+------------------------------------------------------------------
+Logged out, pre-fix, the same route rendered the LEGACY provider editor:
+  document.querySelector('[data-testid="admin-shipping-services-screen"]')        -> present
+  [data-testid^="shipping-service-edit-"]/-rates-/-schedule-/-packaging-/-quote-/-deactivate- -> present
+  per-row controls = 6 per row (the old clutter) and the provider dialog «انواع سرویس (سطح ۲)».
+  [data-testid^="shipping-method-view-"]                                          -> 0
+Cause: page.tsx resolved the gate from the SERVER read, which can never see the Development admin actor
+(browser localStorage), so GET .../shipping-methods/one-level answered 403 admin.authorization.denied and
+the old screen was rendered as a silent fallback.
+
+1) AUTHORITATIVE HOST ANSWERS (read-only, direct)
+------------------------------------------------------------------
+GET .../shipping-methods/one-level  with no identity                       -> 401 admin.actor.missing
+GET .../shipping-methods/one-level  guest dev actor aaaaaaaa-…0009         -> 403 admin.authorization.denied
+GET .../shipping-methods/one-level  browser dev actor 01a036c2-970e-…      -> 200 gate=Enabled ready=true, 7 methods
+GET .../shipping-methods/one-level  real authenticated admin session       -> 200 gate=Enabled ready=true, 7 methods
+GET /v1/admin/dev-context (the pre-existing Development identity seam)     -> 200 {actorUserId 01a036c2-970e-…,
+                                                                                 actorLabel admin-actor@tooba.local}
+
+2) ORDINARY DEVELOPMENT ADMIN FLOW — NO EXTRA LOGIN (the scenario the user reported)
+------------------------------------------------------------------
+State: GET /api/auth/me -> 401 (no session), localStorage tooba.adminActorUserId = 01a036c2-970e-7000-8eb7-94bf5cc2d8db
+(obtained by the app's own pre-existing prepareAdminDevActor() seam — no secret typed anywhere, no DevTools login).
+A full document load of http://localhost:3000/fa/admin/shipping-services rendered:
+  [data-testid^="shipping-method-view-"]    7     (post:express, post:standard, tipax:express, tipax:standard,
+                                                   snapp_courier, store_courier, in_person)
+  [data-testid^="shipping-method-edit-"]    7
+  [data-testid^="shipping-method-delete-"]  7     => 21 row actions, exactly three per row
+  [data-testid^="shipping-service-"]        0     (no legacy row actions)
+  «انواع سرویس» occurrences in the rendered text: 0
+  [data-testid="admin-shipping-method-create"] 1  («سرویس جدید» preserved)
+  grid footer: «نمایش ۱ تا ۷ از ۷ ردیف»
+  [data-testid="admin-shipping-services-denied"] 0, [data-testid="admin-shipping-services-resolving"] 0
+Screenshot: 01-flat-ordinary-dev-flow.png
+
+3) REAL AUTHENTICATED ADMIN SESSION STILL WORKS (SSR fast path preserved)
+------------------------------------------------------------------
+POST /api/auth/login (admin-actor@tooba.local, the repository Development bootstrap credential) -> 200
+GET /api/auth/me -> 200, then a full document load of the same route rendered:
+  rows 7, edit 7, delete 7, legacy ops 0, denied 0, resolving 0, footer «نمایش ۱ تا ۷ از ۷ ردیف»
+Because the server read now succeeds, the flat screen is rendered from the SSR payload: the gate component
+never leaves the resolved state and no client catalogue fetch is required for the fast path.
+
+4) NEGATIVE / FAIL-CLOSED — NO AUTHORIZED IDENTITY
+------------------------------------------------------------------
+Full document load of the same route with: no session cookie, no Development admin actor in localStorage, and
+the canonical catalogue read forced to answer 403 admin.authorization.denied (the browser-side read was made to
+return a real 403 problem+json; only the ANSWER was simulated, never an identity). Observed:
+  [data-testid="admin-shipping-services-denied"] 1
+  text: «دسترسی ندارید — هویت مدیر تأیید نشد؛ فهرست روش‌های ارسال نمایش داده نمی‌شود. اگر با نقش مدیر وارد
+         شده‌اید، دوباره تلاش کنید.» + «تلاش دوباره» (retry) control
+  [data-testid^="shipping-method-view-"] 0
+  [data-testid^="shipping-service-"]     0      (the old provider editor is NOT reachable from this route)
+  «انواع سرویس» occurrences: 0
+  [data-testid="admin-shipping-services-error"] 0
+Screenshot: 02-denied-no-legacy.png
+After the check the temporary browser-side answer override was removed and the ordinary Development flow was
+re-verified (7 rows / 21 row actions / no legacy markers / no «انواع سرویس»).
+
+5) NETWORK (real browser performance entries, initiatorType=fetch, ordinary Development flow)
+------------------------------------------------------------------
+fetch 16ms /v1/admin/shipping-services/shipping-methods/one-level     -> 200
+fetch 16ms /v1/admin/shipping-services/shipping-methods/one-level     (React StrictMode double-effect)
+fetch 12ms /v1/admin/ui-preferences/admin-shipping-services
+fetch 24ms /v1/admin/ui-preferences/admin-shipping-services
+No write request (POST/PUT/PATCH/DELETE) was issued by the page.
+The two one-level reads are harmless: the gate keeps a generation counter so only the newest attempt may
+write state, and both answers are the same authoritative 200.
+
+6) WHAT WAS NOT DONE
+------------------------------------------------------------------
+No create-method endpoint was implemented (still the honest blocked dialog from TB-146), and no live
+save/reopen write round-trip was executed (the shared Development DB and the shared :3000 / :5088 processes
+are read-only in this task). Those remain the TB-146 blockers.

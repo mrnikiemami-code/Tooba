@@ -233,11 +233,14 @@ test("the server page composes the flat method screen without a client bypass", 
   const raw = fs.readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
   // نظرات توضیحی اجازه دارند نام منابع غیرمجاز را بشمارند؛ داوری روی کد اجرایی است.
   const page = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
-  // TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146: مسیر رندر صفحه همان فهرست تخت است،
-  // فقط پشت دروازهٔ سرورِ fail-closed.
-  assert.match(page, /<ShippingServicesFlatScreen /);
-  assert.match(page, /gate\.state === "enabled" \?/);
+  // TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146 / TB-147: مسیر رندر صفحه همان فهرست تخت
+  // است؛ دروازهٔ سرور تصمیم اول را می‌گیرد و در نبود هویت سرور، همان دروازه با مسیر مجاز مرورگر
+  // تصمیم می‌گیرد — هیچ سقوط بی‌صدایی به صفحهٔ قدیمی و هیچ سوئیچ کلاینتیِ دلخواه وجود ندارد.
+  assert.match(page, /<ShippingServicesFlatScreenGate\b/);
+  assert.match(page, /serverResolved=\{gate\.state === "enabled"\}/);
+  assert.doesNotMatch(page, /ShippingServicesScreen/);
   assert.doesNotMatch(page, /ShippingOneLevelTabs/);
   assert.doesNotMatch(page, /useSearchParams/);
   assert.doesNotMatch(page, /localStorage/);
 });
+

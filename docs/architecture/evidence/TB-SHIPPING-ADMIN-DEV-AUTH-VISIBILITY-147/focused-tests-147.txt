@@ -1,0 +1,297 @@
+﻿(node:840) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/flat-method-rows.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the flat list has exactly one row per canonical method, in server order (1.4611ms)
+✔ a duplicate canonical code never produces a second row (0.2288ms)
+✔ the label comes only from the real translation of the active language (0.2028ms)
+✔ inactive methods stay inactive and are never dropped or silently activated (1.6181ms)
+✔ the row model carries no provider/option identity and never splits a method code (0.8745ms)
+✔ the client catalog reader uses only the canonical admin read path with fail-closed mapping (0.361ms)
+(node:29172) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-destination-picker.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ only the newest cascade generation may write state (0.7647ms)
+✔ a stale area response cannot overwrite the cities of a newer area (35.9322ms)
+✔ independent guards do not invalidate each other across cascade levels (0.537ms)
+(node:38468) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-activation.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the activation path is exactly the 096 seam and keeps the method code as the only identity (1.3255ms)
+✔ no service or option identity is ever sent by the activation client (0.9534ms)
+✔ only a server-resolved option-backed method is eligible for activation (0.7599ms)
+✔ optionless methods never get a toggle, no matter how the code looks (0.174ms)
+✔ an unproven binding is fail-closed and never becomes an activation switch (0.1981ms)
+✔ a server response is accepted only when it confirms the same immutable method and a real boolean (0.2752ms)
+✔ the activation call sends the exact payload and only trusts a confirmed server answer (0.5181ms)
+✔ an invalid method code never reaches the network (0.1226ms)
+✔ denial, refusals and unexpected failures stay explicit and fail closed (0.6531ms)
+✔ the binding read is read-only and maps host truth fail-closed (0.635ms)
+✔ an in-flight result can never land on another method (0.216ms)
+✔ the current state, the target action and the storefront impact are explicit in Persian (0.1902ms)
+✔ the control shows a functional toggle only for option-backed methods (0.4418ms)
+✔ the control confirms explicitly, guards duplicates and keeps no optimistic state (0.3874ms)
+✔ tab 1 wires the activation control through the binding read and refreshes server truth (0.4814ms)
+✔ the 094 name editor, the five tabs and the RTL tablist semantics are unchanged (0.5631ms)
+✔ the shell declares exactly the two allowed writes and no more (0.3962ms)
+(node:35880) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-method-name.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the write path carries only the canonical method code and the language id (2.5898ms)
+✔ a name must be non-blank and within the stable column width (0.346ms)
+✔ the edit form is prefilled only from the real translation of the selected language (0.3235ms)
+✔ a saved name updates exactly one row/language and never touches identity or activation (1.4961ms)
+✔ a saved name for an unknown row or language leaves the list unchanged (0.6646ms)
+✔ the edit target key distinguishes method+language and the generation guard rejects stale results (0.9209ms)
+✔ method rows are found by canonical code only (0.5157ms)
+✔ host rows keep the real per-language translations and never invent a label or a second level (0.9046ms)
+✔ the shell exposes a name editor only and keeps the five-tab contract (9.7249ms)
+✔ the dialog writes only the name, keeps the code read-only and never fabricates success (0.9265ms)
+✔ the effective language never stays empty or invalid when the language list arrives late (0.6241ms)
+✔ the dialog resolves the effective language from the real list and never sends an empty one (1.0021ms)
+✔ the api client sends only the name and maps denied/error truthfully (1.3974ms)
+✔ the server page composes the flat method screen without a client bypass (0.6303ms)
+(node:18288) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-packaging-tab.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ only the selected method's own option policies are shown (2.1576ms)
+✔ an optionless method matches only the documented service-level fallback (0.2273ms)
+✔ tipax:express never borrows tipax:standard policies and an unmapped method shows nothing (0.1654ms)
+✔ the write target always comes from the server binding and never from the method text (0.1632ms)
+✔ a response belonging to another service is refused rather than rendered or edited (0.1419ms)
+✔ the tab never reports ready without a resolved binding (0.1947ms)
+✔ a stale operation is never attributed to the newly selected method (0.1116ms)
+✔ the empty-state text states explicit zero rather than a hidden fee (0.1779ms)
+✔ tab 3 renders no option picker, no provider hierarchy and no method-code splitting (0.8981ms)
+(node:42660) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-quote-tab.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the option identity of the evaluation comes only from the server binding (2.3871ms)
+✔ the evaluation target always comes from the server binding (0.7732ms)
+✔ a reply belonging to another identity is refused instead of displayed (0.1671ms)
+✔ an unmapped or inactive method has no binding to evaluate against (0.1717ms)
+✔ a stale evaluation is never attributed to the newly selected method (0.1259ms)
+✔ the diagnostic boundary is stated explicitly and never claims a charge or settlement (0.3416ms)
+✔ tab 5 renders no option picker, no provider hierarchy and no method-code splitting (0.7696ms)
+✔ tabs 1-4 remain intact and the shell still exposes the locked five labels (0.5047ms)
+(node:20244) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-rates-tab.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the binding path is derived from the method code only and stays on the authorized admin route (0.9588ms)
+✔ a resolved binding requires Enabled + ready + resolved + a real service code (0.9873ms)
+✔ gate-off, unmigrated, unknown and malformed binding answers never become a guessed binding (0.188ms)
+✔ only the resolved binding's own option rates and its service grants are shown (0.3053ms)
+✔ a methodless binding matches only service-level rates, and an empty view stays empty (0.1814ms)
+✔ a response belonging to another service is refused rather than rendered under this method (0.1154ms)
+✔ the tab state machine never reports ready without a resolved binding (0.2067ms)
+✔ binding unavailability text is explicit, Persian and never suggests a fallback (0.1471ms)
+✔ the generation guard invalidates an in-flight operation when the method changes (0.4288ms)
+✔ the binding context names the selected one-level method and its resolved legacy pair (0.2123ms)
+✔ tab 2 renders no second-level option picker and no editable parent-service grouping (1.1691ms)
+(node:9800) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-schedule-tab.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ only the selected method's own schedule identity is shown (1.6805ms)
+✔ an optionless method matches only the documented service-level schedule (0.1936ms)
+✔ tipax:express never borrows tipax:standard and an unmapped method shows nothing (0.1566ms)
+✔ the write target always comes from the server binding and never from the method text (0.1982ms)
+✔ a response belonging to another service is refused rather than rendered or edited (0.1485ms)
+✔ the tab never reports ready without a resolved binding (0.2015ms)
+✔ a stale operation is never attributed to the newly selected method (0.2752ms)
+✔ configured capacity is labeled as configuration that is not enforced (16.3718ms)
+✔ carrier windows are dispatch availability, not a promised delivery (0.227ms)
+✔ the empty and inactive states are stated truthfully (0.3148ms)
+✔ tab 4 renders no option picker, no provider hierarchy and no method-code splitting (0.847ms)
+(node:15984) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-one-level-tabs.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the five tab labels are exactly the locked Persian labels (1.5015ms)
+✔ all five tabs are genuinely wired and none advertises a wiring task (0.1843ms)
+✔ method codes are sanitized to the 32-character canonical identity (0.2186ms)
+✔ language ids accept only canonical uuids (0.2472ms)
+✔ url selection is parsed safely and never trusts malformed input (0.3439ms)
+✔ url building omits defaults and round-trips sanitized values (0.2783ms)
+✔ tablist keyboard navigation wraps and supports Home/End (0.2079ms)
+✔ method rows keep one row per method and never invent a label (0.2754ms)
+✔ inactive methods stay inactive and are never silently activated or dropped (0.1904ms)
+✔ non-canonical method codes are rejected instead of normalized into new identities (0.2352ms)
+✔ data state is honest and has no legacy fallback path (0.1632ms)
+✔ the frontend gate is disabled by absence and cannot be enabled from the client (0.1988ms)
+✔ host gate response is mapped fail-closed and never enables on anything but an explicit flag (0.1743ms)
+✔ host method rows are mapped defensively and never invent a label or a second level (0.3309ms)
+✔ page composes the flat method screen and leaks no credential to the browser (0.6924ms)
+✔ gate resolves the real Host answer through the browser Admin transport and never falls back (0.4643ms)
+✔ flat screen owns one row per method, three row actions and four method tabs (0.7157ms)
+✔ flat screen never rewrites sibling-method policy and keeps shared data labelled (0.5731ms)
+✔ shell renders server-provided rows without a client fetch and edits only the method name (0.3975ms)
+✔ new shell edits only the method name and contains no second-level configuration (0.5024ms)
+(node:27988) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-operating-schedule-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ read an empty schedule set: a real empty answer, not a fabricated default (28.0051ms)
+✔ create a Sunday 13:00-14:00 plus 16:30-18:00 (capacity 25) schedule with the real wire shape (2.4919ms)
+✔ repeating the same body is idempotent: same schedule id and same window set (0.9131ms)
+✔ service-level and option-level schedules coexist without overwriting each other (10.815ms)
+✔ active toggle persists and refreshes through PATCH {scheduleId}/active (1.7589ms)
+✔ stable failure codes are surfaced, including the child code of a validation envelope (0.6987ms)
+✔ 401/403 map to denied and unreachable network maps to a stable error (0.6723ms)
+✔ scheduleErrorCode prefers the actionable child code over the validation envelope (0.2762ms)
+(node:31876) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-operating-schedule-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ ISO weekday identity: Sunday is 7 and every Persian label maps to its ISO number (1.2445ms)
+✔ 24-hour parsing is strict and never guesses a time from a malformed value (0.3253ms)
+✔ the wire shape is HH:mm:ss and the editable shape is HH:mm, both round-tripping (0.647ms)
+✔ a real Sunday 13:00-14:00 window plus a second window is valid and serialises correctly (1.4471ms)
+✔ adjacent windows are accepted while overlapping windows are refused (0.3659ms)
+✔ reversed, zero-length and overnight windows are refused with the range meaning (0.2222ms)
+✔ invalid weekday, invalid time, invalid capacity and empty form are refused locally (0.3076ms)
+✔ option identity: only real options are accepted and the service level is the explicit fallback (0.3046ms)
+✔ a stored schedule becomes editable rows and keeps the server order (0.3215ms)
+✔ sorting is stable by day then start, and an incomplete row never sorts above a complete one (0.4603ms)
+✔ capacity is displayed as configured-only, never as remaining or reserved (17.6641ms)
+✔ an empty schedule set is a real answer and its disclosure never reads as a checkout block (0.2639ms)
+✔ summaries count schedules, active rows, windows and configured capacity without inventing values (0.4091ms)
+✔ stable API failure codes map to Persian messages and unknown codes fall back (0.1867ms)
+✔ an empty new row never fabricates a weekday or a time (0.1346ms)
+(node:24080) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-operational-quote-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ evaluate posts the exact 076 body shape and maps the quoted answer faithfully (29.9615ms)
+✔ absent optional inputs are sent as explicit null, never as a guessed default (1.9376ms)
+✔ a not-quoted answer keeps every monetary part null, never a fake zero (19.9526ms)
+✔ a quoted zero packaging fee is a real amount and is never read as 'not declared' (0.6763ms)
+✔ stable failure codes are surfaced, including the child code of a validation envelope (2.1797ms)
+✔ 401/403 map to denied and an unreachable host maps to a stable error (0.5639ms)
+✔ error code extraction prefers the actionable child code over the validation envelope (0.1235ms)
+✔ a body without the mandatory contract fields is refused as an invalid response (0.0929ms)
+(node:35108) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-operational-quote-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ schedule availability wording never upgrades NotEvaluated to available (16.8566ms)
+✔ capacity, promise and payer explanations are explicit non-negotiable contracts (0.3467ms)
+✔ exact kilogram → gram conversion and optional inputs never round silently (1.1601ms)
+✔ timezone resolution is explicit: offset, ambiguity and nonexistent local times are handled (8.872ms)
+✔ form validation is field-adjacent and the payload is canonical (2.9305ms)
+✔ currency mismatch is visible rather than silently normalized (0.6701ms)
+✔ the matched tier description stays descriptive and never computes a price (0.251ms)
+✔ quoted vs eligible is never conflated, and a null amount is never a zero (0.7273ms)
+(node:20028) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-packaging-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ read an empty packaging set: a real empty answer meaning a zero fee, not a hidden charge (24.1692ms)
+✔ create sends the exact 075 wire shape and reads back the persisted row (0.9401ms)
+✔ update changes money and payer mode while keeping the persisted option identity (0.5069ms)
+✔ active toggle persists through PATCH {id}/active and a re-read (0.5708ms)
+✔ a zero fee is a real charged policy, never read as 'not configured' (0.3474ms)
+✔ stable failure codes are surfaced, including the child code of a validation envelope (0.5937ms)
+✔ 401/403 map to denied and an unreachable host maps to a stable error (0.4171ms)
+✔ packagingErrorCode prefers the actionable child code over the validation envelope (0.0915ms)
+✔ money parsing refuses silent rounding and keeps exact two-decimal values (0.2241ms)
+✔ form validation is field-adjacent and the payload is canonical (0.2422ms)
+✔ payer-mode wording is a stable contract and the form round-trips a persisted policy (9.4231ms)
+✔ option identity is validated before any API call and labels never invent a service (0.2247ms)
+✔ the destination scope builder never guesses a deeper level than the user chose (0.1111ms)
+(node:40780) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-rate-tier-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ kilograms convert to exact integer grams without floating point drift (1.1353ms)
+✔ finer-than-gram and malformed weight input is refused rather than rounded (0.1378ms)
+✔ grams render back as trimmed kilogram text, exactly (0.1856ms)
+✔ item count is a plain non-negative integer in items (0.1411ms)
+✔ an absent or empty condition maps to the untouched form and writes back as null (0.8444ms)
+✔ a persisted weight tier round-trips losslessly through the form (0.1917ms)
+✔ the adjacent 2000-gram tier round-trips to exactly 2000, not 1999 or 2001 (0.1211ms)
+✔ an open upper bound survives as null instead of collapsing to zero (0.1188ms)
+✔ a two-axis condition round-trips as an intersection, both axes preserved (0.1475ms)
+✔ disabling an axis drops it entirely rather than writing a zero-width tier (0.1847ms)
+✔ a well-formed half-open range passes with no issues (0.2986ms)
+✔ a zero-width or reversed range is refused, matching tier_range_invalid (0.1745ms)
+✔ a missing or malformed lower bound is refused (0.1127ms)
+✔ bounds above the backend ceilings are refused before any API call (0.1267ms)
+✔ the weight description states half-open boundaries in both grams and kilograms (15.8598ms)
+✔ an open upper bound is described as having no upper limit (0.2554ms)
+✔ two axes are described as an intersection, never as either axis alone (0.1814ms)
+✔ an unconditioned rate says so explicitly and is never rendered as a zero interval (0.2548ms)
+✔ the compact summary is an intersection marker, not a union (0.1284ms)
+✔ stable tier error codes map to adjacent Persian guidance (0.2122ms)
+(node:37268) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-rates-coverage-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a persisted condition is mapped from the camelCase admin payload (27.2776ms)
+✔ an open upper bound is preserved as null, not coerced to zero (0.5773ms)
+✔ a two-axis condition maps both axes (0.4473ms)
+✔ PascalCase payloads are mapped too, so casing never changes the meaning (0.9863ms)
+✔ an unconditioned row maps to null, never to a zero interval (0.4398ms)
+✔ create sends the exact condition wire shape under the route service code (0.4493ms)
+✔ create sends condition null for an unconditioned rule (0.2666ms)
+✔ update sends the exact condition wire shape for the addressed rate policy (0.3719ms)
+✔ a stable tier-overlap refusal surfaces the backend error code (0.4408ms)
+(node:42008) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-rates-coverage-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ valid form produces a numeric payload with normalised currency (1.4823ms)
+✔ empty free-above threshold stays null instead of becoming zero (0.2026ms)
+✔ negative, non-numeric and malformed entries are rejected before any API call (0.2692ms)
+✔ preparation and lead days stay separate values (0.1594ms)
+✔ policy round-trips into the edit form without inventing values (0.2126ms)
+✔ an empty coverage set is reported as NO COVERAGE, never unlimited (0.3556ms)
+✔ an inactive grant is not coverage (0.1819ms)
+✔ scope summary exposes stable ids, not fabricated placeholders (0.2622ms)
+✔ scope level follows the deepest real selection (0.1869ms)
+✔ scope payload drops ids deeper than the chosen level instead of inferring them (0.2494ms)
+✔ an empty or inconsistent destination selection is refused before submit (0.1732ms)
+✔ changing a parent clears dependent selections so no inconsistent id survives (0.1851ms)
+✔ service-level policy renders as the documented fallback, never as an option (0.1195ms)
+✔ an option policy shows its own immutable identity and never a fabricated label (0.0843ms)
+✔ only options really belonging to the service are accepted (0.1728ms)
+✔ rates group by real option order with the service-level group first (0.3464ms)
+✔ an orphaned option code keeps its own group instead of being merged or dropped (0.1429ms)
+✔ no cross-option leakage: two options at one scope stay two separate rows (0.1301ms)
+(node:9832) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-services-form-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a complete form produces no issues (1.6312ms)
+✔ service code is required, must stay canonical, and must be unique (0.3456ms)
+✔ sort order must be a non-negative integer instead of silently becoming zero (0.158ms)
+✔ a display name for the active language is required (0.1725ms)
+✔ option rows are validated instead of being dropped silently (0.1934ms)
+✔ write request is canonical and keeps option identity (0.7689ms)
+✔ active helpers resolve the active language only (0.1701ms)
+✔ known fulfillment failure codes map to fa and unknown codes fall back (0.3772ms)
+✔ screen wires validation, page-level feedback, and confirmed row actions (1.1346ms)
+(node:39372) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/shipping-services/shipping-services-roundtrip.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ create roundtrip: POST path, method, DTO shape and list refresh (24.6473ms)
+✔ load-edit then save-update roundtrip: GET detail, PUT with preserved option identity (0.8529ms)
+✔ confirmed deactivate roundtrip: POST deactivate and inactive row (0.4158ms)
+✔ rejected mutations surface a stable code and leave the catalog untouched (0.6148ms)
+✔ denied and unreachable responses map to denied/host-unreachable (0.4144ms)
+✔ generic endpoint failure keeps a non-empty message for the UI fallback (0.3011ms)
+ℹ tests 213
+ℹ suites 0
+ℹ pass 213
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 375.6586
