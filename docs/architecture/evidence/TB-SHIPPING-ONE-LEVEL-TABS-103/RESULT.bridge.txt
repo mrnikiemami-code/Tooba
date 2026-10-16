@@ -1,0 +1,116 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-103
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-102
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_CATALOG_SCRATCH_BOOTSTRAP_PREREQUISITE_REPAIR
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Push: `git push origin main` succeeded; HEAD == origin/main at post time. No force-push, no history rewrite.
+Bridge-Task-Row: 07aeb343-93b7-4e16-a2c0-f8b49fe23515
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: cbbdc7cbe196914d0df2af7925e9492d22ebfe5e
+Base-SHA: cbbdc7cbe196914d0df2af7925e9492d22ebfe5e
+Code-SHA: NONE
+Evidence-SHA: <EVIDENCE_SHA>
+automaticNextImplementationTask: NONE
+Measured-Time: ~37 minutes (claimed ≈03:24 → stopped ≈04:01 local) — DISCLOSED overrun of the 30-minute HARD
+timebox. Cleanup took precedence: the isolated environment was fully destroyed and every artifact captured before
+this Result; nothing was left running or mid-flight.
+
+PREFLIGHT
+- Claimed exactly one Pending task (07aeb343-…) through the protocol route GET /api/tasks/next?channelId=tooba-main
+  after a Working heartbeat; receipt preserved UNSTAGED at docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-103.task.md.
+- Expected-Base-SHA cbbdc7cbe196914d0df2af7925e9492d22ebfe5e == HEAD == origin/main; merge-base --is-ancestor true;
+  no intervening commits; src/ clean apart from the two pre-existing dirty frontend screens (untouched);
+  no reset/stash/rebase/force-push.
+- Read AGENTS.md, pipeline/controller, 102 evidence incl. legacy-bootstrap-crash-excerpt, CatalogDevelopmentSeed
+  + PostMigration, CatalogAttributeSchemaDevelopmentSeed, CatalogDirectory.PublishProductAsync/UnwrapLifecycle,
+  ProductPublishRules, ProductPublishReadinessReader and the official Catalog demo seed API + its endpoint.
+- Shared read-only snapshot before and after: :5088 /health 200 with gate ShippingOneLevelCatalog unchanged,
+  :3000 not restarted, tooba_alpha 7 methods / 14 translations / 50 carts / 78 cart lines / 14 drafts / 26 seller
+  orders. Zero shared writes.
+
+ROOT CAUSE (from source, not guessed)
+- The 102 crash is the seed's own await catalog.PublishProductAsync(...) at CatalogAttributeSchemaDevelopmentSeed
+  line 99 being rejected by the aggregate readiness gate; UnwrapLifecycle maps WorkspaceProductPublishRejected to
+  ProductPublishRules.MessageNotReadyFa («محصول برای انتشار آماده نیست»).
+- The gate evaluates six independent prerequisites (level-3 primary category, localized identity, required
+  attributes, variants, media ≥1 primary, SEO slug+title/description/identity). Reading the seed against all six
+  does NOT identify one provably failing prerequisite: the seed assigns a published L3 leaf, sets the required
+  non-axis screen_size value, creates two value-complete variants, attaches a first (primary) media reference, and
+  calls ProductPublishPrep.EnsureMinimalSeoForPublishAsync while the product has a valid SlugSeam. The seed also
+  EARLY-RETURNS when the demo product already exists, so this create-then-publish branch has never run on the
+  shared Development database and the defect is latent there, visible only on a truly empty database.
+- Therefore no source edit was made: the task authorises a code change only where source proves a genuine defect,
+  and a blind edit would have been a guess. The supported alternative (official authorized Development seed path)
+  was exercised instead.
+
+MISSION A — OFFICIAL AUTHORIZED SEED PATH ON ISOLATED SCRATCH (executed; did not complete inside the timebox)
+- New disposable container tooba-103-scratch-pg (postgres:17, loopback 127.0.0.1:55443, no volume) with
+  tooba_103_scratch / tooba_103_messaging and a task-generated user; no tooba_alpha on that container.
+- Guarded offline overlay: exactly one tenant (store-alpha, Active) and exactly two references, both the scratch
+  port; CatalogDemo: AllowResetAndSeed=true, RunLegacyBootstraps=false (so startup avoids the 102 defect).
+- Isolated Host from current code in .tmp-103-host-out on http://127.0.0.1:5292, provenance
+  {edition:SingleStore, deploymentId:isolated-103, tenantId:store-alpha, connectionReference:tenant-103-scratch};
+  one-level gate left OFF; ShippingRateAuthority / ShippingOperationalShadow never set.
+- Genuine authorized path (no header bypass, no ACL bypass):
+    POST /v1/auth/login (admin-actor@tooba.local)          -> 200, real session (no header bypass)
+    GET  /v1/admin/catalog/demo/status                     -> 200, all counts 0, allowResetAndSeed=true,
+                                                              environment=Development
+    POST /v1/admin/catalog/demo/reset-and-seed             -> request ABORTED at the client's 300 s HTTP header
+                                                              timeout (Node undici default) — this also cancels
+                                                              the server-side token
+  Server-side scratch truth at that moment: 545 Draft products, 116 categories, 41 attribute definitions,
+  offers=0, prices=0, stock=0.
+- Interpretation: the official reset+seed DOES run on a genuinely empty scratch database and passed everything the
+  attribute-schema seed failed on, but the long sellable-enricher phase (offers/prices/inventory) had not run when
+  the client aborted. The precise remaining gap is an INVOCATION gap, now identified: the seed must be allowed to
+  run to completion without a client-side abort (long/absent HTTP timeout or a background invocation, or the
+  narrower POST /v1/admin/catalog/demo/seed-only).
+- Because cleanup takes precedence and the HARD timebox had expired, no second multi-minute seed run was started.
+
+MISSION B — NOT REACHED
+- With offers=0, prices=0, stock=0 there was no sellable offer, so no owned scratch cart line could be added and the
+  optional gate-OFF vs gate-ON storefront label comparison was skipped (the task explicitly allows skipping it and
+  stopping with PARTIAL). No publish, no order, no checkout/payment, no activation, no gate enablement beyond the
+  one-level flag which stayed OFF.
+
+CHANGED PATHS (docs/evidence only; NO src/**, test, frontend, schema, migration, config or recovery change)
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-103.md (new)
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-103/** (new: summary.md, task.md, task-receipt.json,
+  claim-task.js, isolated/prepare-isolated-target-103.js, isolated/launch-isolated-103.ps1,
+  isolated-host-103-startup-excerpt.txt, legacy-bootstrap-crash-excerpt.txt, bootstrap-demo-103.js/.txt,
+  scratch-seed-state.sql/.txt, shared-parity.sql/.txt, isolation-and-cleanup-facts.txt,
+  log-isolated-host-103-off.txt)
+- docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-103.task.md (task receipt, UNSTAGED/untracked)
+
+CLEANUP AND SHARED PARITY
+- Isolated Host stopped; port 5292 listeners after stop = 0; scratch container removed (remaining containers:
+  rabbitmq, postgres-db); task-owned run/output dirs and untracked credential files deleted; scratch and admin
+  credentials/identifiers redacted from every committed artifact (secret scan = 0).
+- Shared stack unchanged and operational: :5088 /health 200 (provenance dev-singlestore / store-alpha /
+  tenant-alpha, gate unchanged), :3000 never restarted; tooba_alpha parity identical to preflight
+  (7 / 14 / 50 / 78 / 14 / 26).
+
+TESTS
+- No production source changed, so no focused Catalog test was executed and the broad known-failing Host suite was
+  deliberately not run.
+
+BLOCKERS / RECOMMENDATION
+1. The remaining gap is invocational, not architectural: re-run the same isolated recipe with the seed request not
+   aborted (no client timeout / background fetch, larger undici headersTimeout) or use
+   POST /v1/admin/catalog/demo/seed-only; the observed partial state shows the operation needs longer than 5 minutes
+   to reach the sellable enricher.
+2. Only if a later task still needs the attribute-schema demo branch should a diagnostic be added that logs the
+   readiness missing[] entries for the demo product on a scratch database — that will name the single failing
+   prerequisite exactly, instead of a blind fix.
+3. Carried observation: a duplicate identity registration returns 500 platform.unexpected
+   (IdentityDuplicateIdentifierFault) instead of a typed conflict.
+4. Standing: the two pre-existing dirty frontend screens and the pre-existing Host test-failure set remain
+   untouched and unrepaired.
+END_TOOBA_WORKER_RESULT

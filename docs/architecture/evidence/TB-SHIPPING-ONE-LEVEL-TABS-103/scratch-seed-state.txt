@@ -1,0 +1,11 @@
+﻿Pager usage is off.
+ status | count 
+--------+-------
+ Draft  |   545
+(1 row)
+
+ offers | prices | stock | categories | attributes 
+--------+--------+-------+------------+------------
+      0 |      0 |     0 |        116 |         41
+(1 row)
+

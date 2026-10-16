@@ -1,0 +1,35 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-103 — isolation, seed attempt and cleanup facts
+captured_utc=2026-10-16T00:07:50Z
+head_sha=cbbdc7cbe196914d0df2af7925e9492d22ebfe5e
+origin_main=cbbdc7cbe196914d0df2af7925e9492d22ebfe5e
+
+scratch container: tooba-103-scratch-pg (postgres:17, loopback 127.0.0.1:55443 -> 5432, no volume)
+scratch databases: tooba_103_scratch, tooba_103_messaging (no tooba_alpha on that container)
+scratch user: scratch103; password only in an untracked ephemeral file, deleted with the run dir
+isolated Host: .tmp-103-host-out (copy of the current-code build used by the shared deployment of record) on http://127.0.0.1:5292
+isolated provenance: edition=SingleStore deploymentId=isolated-103 tenantId=store-alpha connectionReference=tenant-103-scratch
+gates: ShippingOneLevelCatalog was left OFF for this task (process env only); ShippingRateAuthority and ShippingOperationalShadow never set
+CatalogDemo: AllowResetAndSeed=true, RunLegacyBootstraps=false (the schema-only supported path, so Host startup does not hit the attribute-schema publish defect)
+
+official seed attempt (authorized Development API, real admin credential login):
+  GET  /v1/admin/catalog/demo/status            -> 200, all counts 0 (empty scratch), allowResetAndSeed=true, environment=Development
+  POST /v1/admin/catalog/demo/reset-and-seed    -> request aborted client-side at the 300s HTTP header timeout (Node undici default)
+  result: server-side work had already produced 545 Draft products, 116 categories, 41 attribute definitions; offers=0, prices=0, stock=0
+  interpretation: the reset+seed operation is long-running; aborting the HTTP request cancels the server-side token and stops the seed BEFORE the sellable enricher creates offers/prices/inventory, so no sellable offer was produced in this attempt.
+
+cleanup:
+  isolated_listeners_after=0 (port 5292 closed)
+  scratch container removed -> remaining containers: rabbitmq, postgres-db
+  task-owned run/output directories and untracked credential files deleted
+  credentials redacted from every committed artifact (secret scan = 0)
+
+shared stack parity (read-only, unchanged):
+  ---------------+----
+   methods       | 7
+   translations  | 14
+   carts         | 50
+   cart_lines    | 78
+   drafts        | 14
+   seller_orders | 26
+  (6 rows)
+  shared :5088 /health = 200, gate ShippingOneLevelCatalog unchanged, :3000 not restarted

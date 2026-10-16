@@ -1,0 +1,12 @@
+﻿=== TB-103 isolated official demo bootstrap ===
+admin login | status=200 | ms=129 | body={"userId":"<redacted>","sessionId":"<redacted>","accessToken":"<redacted>","refreshToken":"<redacted>"}
+admin_token_present=true
+GET demo status (pre) | status=200 | ms=51 | body={"rootsDemo":0,"categoriesDemo":0,"categoriesTotal":0,"brandsDemo":0,"brandsTotal":0,"tagsDemo":0,"tagsTotal":0,"attributesDemo":0,"attributesTotal":0,"productsTotal":0,"productsDemo":0,"productsDraft":0,"productsPublished":0,"productsArchived":0,"allowResetAndSeed":true,"environment":"Development"}
+node : BOOTSTRAP_ERROR fetch failed
+At C:\Users\User\AppData\Local\Temp\ps-script-f0700b1b-4cf8-4807-b44c-793a8d4657bd.ps1:99 char:43
++ ... SarvNewVer; node docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TAB ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (BOOTSTRAP_ERROR fetch failed:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

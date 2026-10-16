@@ -1,0 +1,6 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-103 — isolated host startup facts (raw stdout/stderr are not part of the record).
+The isolated Host on http://127.0.0.1:5292 started in Development with the guarded scratch overlay, logged
+"Legacy Catalog Development bootstraps skipped (Tooba:CatalogDemo:RunLegacyBootstraps=false)", applied the
+module migrations against tooba_103_scratch only, and served /health and /__platform-commerce with
+deploymentId=isolated-103 and connectionReference=tenant-103-scratch. Its stderr was empty for the whole task
+(no crash); the only failure was the client-side HTTP abort of the long-running seed request.
