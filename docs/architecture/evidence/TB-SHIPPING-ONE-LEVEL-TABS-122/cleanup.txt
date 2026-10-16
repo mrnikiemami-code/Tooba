@@ -1,0 +1,8 @@
+﻿=== CLEANUP (TB-122) ===
+container_removed=True
+scratch_55453_listeners=0
+host_5401_listeners=0
+frontend_3101_listeners=0
+temp_dirs_remaining=0
+stray_122_host_processes=0
+raw_secret_file_present=False

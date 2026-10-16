@@ -1,0 +1,75 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-122
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-121
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Bridge-Task-Row: 35828f31-9e18-4fe9-a2af-d78b9f4ec454
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+Expected-Base-SHA: b7060db9e363b6e47641dcc0d15626d962b68053
+Base-SHA: b7060db9e363b6e47641dcc0d15626d962b68053
+Base-SHA-Drift: none — HEAD == origin/main == Expected-Base-SHA at claim, and no source edit was made in this task. Only pre-existing unrelated dirty files were preserved (2 frontend admin screens + 3 older evidence txts, all reported before TB-119).
+Code-SHA: NONE (observation-only: no src/, test, frontend, appsettings, migration, feature-gate or shared-config edit)
+Evidence-SHA: <see the committed evidence directory for this task>
+HEAD==origin/main after push: true
+Measured-Minutes: ~14 total (claim 03:16Z, result 03:30Z) — inside the 45 min HARD timebox; investigation/setup finished well before minute 30.
+Process-Launch-Counts: isolated Host = 1 (single Start-Process, absolute exe path, watchdog 180 s — never hit, /health 200 after 36 s); isolated frontend = 1 (single node launch, external bound 600 s, ready in 28 s). No relaunch, no retry, no loop.
+Bridge-Output-Discipline: only this contract was posted; no chat status, progress or report was emitted.
+
+ARCHITECT RULING ADDRESSED
+TB-121 was accepted at the API layer (7/7 projection labels matched the enabled one-level catalog) while browser/UI parity was NOT proven. TB-122 is observation only and answers exactly that gap: the real storefront /fa/shipping page, rendered in a real browser against an isolated Development Host with a genuine scratch guest cart, renders the same seven methods with the same Persian labels. API success and UI success are reported separately below.
+
+PREFLIGHT
+- Claimed exactly ONE Pending task on tooba-main after a Working heartbeat; preserved docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-122.task.md UNSTAGED.
+- Read AGENTS.md/pipeline rules plus TB-119/120/121 evidence; read the frontend API-base seam, the /fa/shipping route, the shipping component, the cart-session mechanism and the existing browser-capture options.
+- Expected-Base-SHA is an ancestor of HEAD (verified). No overlapping or ambiguous source edits. No reset, stash, rebase or force push.
+- Read-only shared baseline captured at start: shared Host PID 35624 at .tmp-dev-host-out-5088-101\Tooba.Host.exe, :5088 /health 200 with tenant-alpha provenance, :3000 status 308, containers postgres-db+rabbitmq. Nothing shared was started, stopped, restarted, migrated or mutated.
+
+MISSION A — MINIMAL ISOLATED BROWSER BINDING
+- Chosen binding (tracked-file-free): the repo already rewrites /v1/:path* to process.env.TOOBA_HOST_ORIGIN. The isolated frontend was launched ONCE in dev mode on http://127.0.0.1:3101 with TOOBA_HOST_ORIGIN=http://127.0.0.1:5401. No tracked file was edited; the repo's committed .env.local (shared :5088) did NOT override the process value.
+- Binding proven by an observable discriminator: GET http://127.0.0.1:3101/v1/storefront/checkout-identity-policy returned {"policy":"GuestAllowed",...}, identical to the scratch host :5401 and different from the shared host :5088 ({"policy":"AuthenticatedOnly",...}). GuestAllowed was set on scratch only, via the canonical PUT /v1/admin/settings/checkout-identity seam with the Development admin actor — no synthetic auth header, no mocked projection, no substituted HTML.
+- Isolated runtime (TB-121 recipe): disposable no-volume postgres:16-alpine on 127.0.0.1:55453 (unique; never 5432 nor a prior scratch port) with task-owned tooba_122_scratch + tooba_122_messaging, password provided by environment and never committed; single published Host bound to 127.0.0.1:5401. Offline effective-config guard: tenantCount=1, activeTenantCount=1, tenant store-alpha:Active:tenant-122-scratch, no shared database/reference/port, RunLegacyBootstraps=true, AllowResetAndSeed=false, ShippingOneLevelCatalog Enabled in the disposable overlay ONLY, ShippingRateAuthority/ShippingOperationalShadow absent — failClosed=true.
+- Genuine cart: the browser created its own guest cart by a real click on the PDP add-to-cart button on /fa/products/schema-mobile-demo-phone, leaving sessionStorage["tooba.storefront.cartId"] plus a 64-char guest secret in that tab. No URL seeding, no bootstrapCartSessionFromQuery, no fabricated session, no manual SQL, no forged identity. The raw secret was never written to evidence.
+
+MISSION B — ONE FOCUSED DOM / UI PROOF
+- Provenance re-verified inside the run: /__platform-commerce => deploymentId=isolated-122, tenantId=store-alpha, connectionReference=tenant-122-scratch; /health 200.
+- Sanctioned Development admin read of the one-level catalog: gate="Enabled", ready=true, 7 rows with fa names پیشتاز / معمولی / پیشتاز / معمولی / اسنپ / پیک آنلاین / پیک فروشگاه / تحویل حضوری.
+- Browser-origin authorized projection for the SAME browser cart (fetched from the page context through the frontend proxy): status 200, 7 methods — post:express "پیشتاز", post:standard "معمولی", tipax:express "پیشتاز", tipax:standard "معمولی", snapp_courier "اسنپ / پیک آنلاین", store_courier "پیک فروشگاه", in_person "تحویل حضوری".
+- Rendered page: http://127.0.0.1:3101/fa/shipping, document lang "fa". DOM evidence captured from a real browser render (task-owned tab, closed afterwards):
+  * present: data-testid=shipping-page, shipping-steps, shipping-methods, shipping-summary, shipping-continue; header cart badge "۱"
+  * ABSENT: data-testid=shipping-methods-empty and data-testid=shipping-error  => the page rendered the PROJECTION branch, not the no-projection fallback
+  * hero step semantics: shipping-step-1 «سبد خرید»، shipping-step-2 «ارسال»، shipping-step-3 «پرداخت»
+  * exactly seven cards: shipping-method-post:express "پیشتاز ۲۰۰٬۰۰۰ ریال حدود ۲ روز", shipping-method-post:standard "معمولی ۱۲۰٬۰۰۰ ریال حدود ۴ روز", shipping-method-tipax:express "پیشتاز ۲۶۰٬۰۰۰ ریال حدود ۱ روز", shipping-method-tipax:standard "معمولی ۱۸۰٬۰۰۰ ریال حدود ۳ روز", shipping-method-snapp_courier "اسنپ / پیک آنلاین ۹۰٬۰۰۰ ریال آماده امروز", shipping-method-store_courier "پیک فروشگاه ۷۵٬۰۰۰ ریال حدود ۱ روز", shipping-method-in_person "تحویل حضوری رایگان آماده امروز"
+- THREE-WAY COMPARISON (DOM methodCode identity + visible label vs enabled one-level catalog vs browser-origin projection): 7/7 identities, 7/7 Persian labels matching BOTH sources, formatted prices matching the projection for all seven, mismatches = 0.
+- Honest scope of the DOM evidence: the DOM embeds the canonical methodCode in the data-testid and renders the label plus the formatted price; serviceCode/optionCode are projection fields and are NOT emitted as DOM attributes. Their mapping to these same seven methodCodes was established at the projection layer (the browser-origin projection above, and TB-121's binding reads). No UI claim is made beyond what was rendered and read.
+- NOT performed: continue/payment was never clicked; PUT shipping/selection and shipping/commit were never invoked; no order, checkout, payment, shipment or shipping-selection was created or committed. One observation pass, no retry, no code repair.
+
+MISSION C — CLEANUP AND NON-INTERFERENCE
+- The isolated Host (PID 35056, absolute exe .tmp-122-host-out\Tooba.Host.exe) and the isolated frontend (PID 37504, node) were stopped ONLY by their recorded PIDs after verifying their absolute paths: STOPPED_BY_RECORDED_PID=true for both, LISTENERS_ON_5401_AFTER_STOP=0, LISTENERS_ON_3101_AFTER_STOP=0. No wildcard/name termination.
+- Removed only the task-owned container tooba-122-scratch-pg and the ignored .tmp-122-run / .tmp-122-host-out directories: container_removed=true, scratch_55453_listeners=0, temp_dirs_remaining=0, stray isolated host processes=0, raw cart secret file gone.
+- Shared parity identical before and after: same shared Host PID 35624 and path, :5088 /health 200 with tenant-alpha, :3000 status 308, containers postgres-db+rabbitmq unchanged, and read-only tooba_alpha counts byte-identical (methods 7 | translations 14 | carts 50 | cart_lines 78 | drafts 14 | seller_orders 26 | products 567 | offers 3223). No incident.
+- The one dedicated browser tab used for the proof was closed; every pre-existing tab was left untouched (including the shared admin tabs still open at :3000).
+
+EVIDENCE
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-122.md
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-122/** : task.md, task-receipt.json, isolation-guard.json, prepare-isolated-target-122.js, prepare-output.txt, launch-isolated-host-122.ps1, watchdog-result.txt, launch-isolated-frontend-122.ps1, frontend-watchdog-result.txt, run-api-prep-122.js, api-prereq-122.txt, dom-proof-122.txt, dom-shipping-fa.png (screenshot), shared-preflight.txt, shared-postflight.txt, shared-alpha-parity.txt, shared-alpha-postflight-counts.txt, cleanup.txt, summary.md, RESULT.bridge.txt
+- Bridge receipt docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-122.task.md preserved UNSTAGED. Zero src/, test, frontend, migration, appsettings, feature-gate or shared-DB edits; all unrelated dirty files preserved.
+
+NONFATAL WARNINGS (reported, not repaired — outside this task)
+- The isolated frontend dev server emitted no stderr; the isolated Host startup produced no fail:/crit:/Unhandled-exception markers for this run. Pre-existing analyzer/doc-comment warnings from earlier publishes are unchanged and untouched.
+- The shared tooba_alpha counts were not re-read at TB-122 start; the read-only reference is the TB-121 reading taken ~20 minutes earlier, and the TB-122 post-flight counts are byte-identical to it. Recorded as a deviation rather than hidden.
+
+DEVIATIONS
+- Only the deviation above (shared count baseline reuse). No scope, evidence or isolation deviation otherwise.
+
+ROLLBACK
+- No repository code, configuration, migration or appsettings changed, so there is nothing to revert. The disposable container, overlay, publish output, run directory and both processes are gone. The only repository additions are task documentation and evidence.
+
+REMAINING NON-CLAIMS
+- This is a Development, scratch-tenant, isolated proof; it is not production acceptance and does not certify commercial readiness, checkout, payment, shipment lifecycle or shipping-selection persistence (TB-118 holds the prior focused source/test coverage for selection semantics).
+- The one-level gate remains off outside the disposable overlay; nothing here changes shared configuration, feature flags or frozen architecture.
+- PASS here is not an Architect ACCEPT and does not authorize a next implementation task.
+STOP FOR ARCHITECT.
+END_TOOBA_WORKER_RESULT

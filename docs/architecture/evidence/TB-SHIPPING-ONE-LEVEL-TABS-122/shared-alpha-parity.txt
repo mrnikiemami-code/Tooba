@@ -1,0 +1,9 @@
+﻿=== TB-122 SHARED tooba_alpha PARITY NOTES ===
+preflight_captured_at_TB122_start: shared host PID/path, :5088 health, /__platform-commerce provenance, :3000 status, container list
+preflight_alpha_counts_not_reread_at_TB122_start: true (the read-only reference is the TB-121 reading taken ~20 min earlier)
+tb121_baseline_counts=cart_lines|78 carts|50 drafts|14 methods|7 offers|3223 products|567 seller_orders|26 translations|14
+tb122_postflight_counts=cart_lines|78 carts|50 drafts|14 methods|7 offers|3223 products|567 seller_orders|26 translations|14
+counts_identical=True
+shared_container_untouched_postgres_db=true
+shared_container_untouched_rabbitmq=true
+scratch_container_created_and_removed=tooba-122-scratch-pg

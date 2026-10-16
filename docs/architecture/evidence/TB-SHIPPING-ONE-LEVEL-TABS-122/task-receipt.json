@@ -1,0 +1,87 @@
+{
+  "taskId": "TB-SHIPPING-ONE-LEVEL-TABS-122",
+  "parentTask": "TB-SHIPPING-ONE-LEVEL-TABS-121",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "bridgeTaskRow": "35828f31-9e18-4fe9-a2af-d78b9f4ec454",
+  "status": "PASS",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "expectedBaseSha": "b7060db9e363b6e47641dcc0d15626d962b68053",
+  "baseSha": "b7060db9e363b6e47641dcc0d15626d962b68053",
+  "drift": "none in source; only the same pre-existing unrelated dirty files preserved (2 frontend admin screens + 3 older evidence txts)",
+  "codeSha": "NONE",
+  "automaticNextImplementationTask": "NONE",
+  "mode": "BOUNDED_ISOLATED_STOREFRONT_SHIPPING_DOM_LABEL_PARITY_PROOF",
+  "measuredMinutes": 14,
+  "processLaunchCounts": { "isolatedHost": 1, "isolatedFrontend": 1 },
+  "watchdog": { "hostSeconds": 180, "hostHit": false, "frontendExternalBoundSeconds": 600 },
+  "startup": { "hostHealthElapsedSeconds": 36, "frontendReadyElapsedSeconds": 28 },
+  "scratchProvenance": {
+    "tenant": "store-alpha",
+    "status": "Active",
+    "connectionReference": "tenant-122-scratch",
+    "deploymentId": "isolated-122",
+    "scratchPostgresPort": "55453",
+    "isolatedHostPort": "5401",
+    "isolatedFrontendPort": "3101",
+    "oneLevelGateEnabledInDisposableOverlay": true,
+    "runLegacyBootstraps": true,
+    "allowResetAndSeed": false,
+    "isolationGuardFailClosed": true
+  },
+  "binding": {
+    "mechanism": "process env TOOBA_HOST_ORIGIN only; next.config.ts rewrites /v1/:path* to that origin",
+    "trackedFilesChanged": false,
+    "discriminator": "frontend proxy policy = GuestAllowed (scratch) while shared :5088 = AuthenticatedOnly"
+  },
+  "cartSession": {
+    "origin": "real storefront PDP add-to-cart UI click (no URL seeding, no forged session)",
+    "secretCommitted": false
+  },
+  "dom": {
+    "pageUrl": "http://127.0.0.1:3101/fa/shipping",
+    "lang": "fa",
+    "shippingPage": true,
+    "shippingSteps": true,
+    "shippingMethods": true,
+    "shippingMethodsEmpty": false,
+    "shippingContinuePresent": true,
+    "shippingContinueClicked": false,
+    "shippingError": false,
+    "stepSemantics": ["سبد خرید", "ارسال", "پرداخت"],
+    "methodCardCount": 7,
+    "labelsMatchingOneLevelCatalog": 7,
+    "labelsMatchingProjection": 7,
+    "mismatches": 0,
+    "comparison": [
+      { "methodCode": "post:express", "catalog": "پیشتاز", "projection": "پیشتاز", "dom": "پیشتاز" },
+      { "methodCode": "post:standard", "catalog": "معمولی", "projection": "معمولی", "dom": "معمولی" },
+      { "methodCode": "tipax:express", "catalog": "پیشتاز", "projection": "پیشتاز", "dom": "پیشتاز" },
+      { "methodCode": "tipax:standard", "catalog": "معمولی", "projection": "معمولی", "dom": "معمولی" },
+      { "methodCode": "snapp_courier", "catalog": "اسنپ / پیک آنلاین", "projection": "اسنپ / پیک آنلاین", "dom": "اسنپ / پیک آنلاین" },
+      { "methodCode": "store_courier", "catalog": "پیک فروشگاه", "projection": "پیک فروشگاه", "dom": "پیک فروشگاه" },
+      { "methodCode": "in_person", "catalog": "تحویل حضوری", "projection": "تحویل حضوری", "dom": "تحویل حضوری" }
+    ]
+  },
+  "sharedParity": {
+    "sharedHostPid": 35624,
+    "sharedHostPath": ".tmp-dev-host-out-5088-101/Tooba.Host.exe",
+    "beforeAfterIdentical": true,
+    "alphaCounts": "methods 7 | translations 14 | carts 50 | cart_lines 78 | drafts 14 | seller_orders 26 | products 567 | offers 3223"
+  },
+  "changedPaths": [
+    "docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-122.md",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-122/**"
+  ],
+  "cleanup": "Host and frontend stopped only by recorded PIDs after absolute-path verification; task-owned container and ignored temp dirs removed; 0 listeners on 5401/3101/55453; raw cart secret never written to evidence; dedicated browser tab closed",
+  "deviations": [
+    "the shared tooba_alpha counts were not re-read at TB-122 start; the read-only reference is the TB-121 reading taken ~20 minutes earlier, and the TB-122 post-flight counts are byte-identical to it"
+  ],
+  "rollback": "no code/config/migration/appsettings changed; disposable resources already deleted",
+  "unprovenClaims": [
+    "serviceCode/optionCode are projection fields and are not emitted as DOM attributes; the DOM proves methodCode identity, labels and formatted prices",
+    "shipping selection persistence, checkout, payment, shipment lifecycle and commercial readiness NOT certified",
+    "production/store-alpha UI behaviour not exercised (gate stays off outside the disposable overlay)"
+  ]
+}
