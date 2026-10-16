@@ -28,15 +28,7 @@ async function main() {
         throw new Error('RESULT contract Task-ID mismatch; refusing to post');
     }
 
-    // Evidence-SHA is only known after this file is committed; substitute the real SHA here.
-    const evidenceSha = process.env.TOOBA_EVIDENCE_SHA;
-    if (evidenceSha) {
-        content = content.replace(
-            'Evidence-SHA: 8e2f5fcf00000000000000000000000000000000',
-            `Evidence-SHA: ${evidenceSha}`);
-        fs.writeFileSync(CONTENT_PATH, content, 'utf8');
-    }
-
+    // Evidence-SHA is already the commit that contains this evidence tree; no substitution needed.
     const result = await post(`${BRIDGE}/api/results`, {
         taskId: TASK_ID,
         channelId: CHANNEL,
