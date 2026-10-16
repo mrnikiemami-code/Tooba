@@ -1,0 +1,82 @@
+{
+  "taskId": "TB-SHIPPING-ONE-LEVEL-TABS-128",
+  "parentTask": "TB-SHIPPING-ONE-LEVEL-TABS-127",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "bridgeTaskRow": "b975b156-eb0f-4f3a-89df-d133f6a426e1",
+  "mode": "BOUNDED_MULTIGROUP_PAYMENT_DRAFT_ALLOCATION_CLOSURE",
+  "expectedBaseSha": "ef412bd0b8d9de132275a25cef9624bf61ce2f35",
+  "actualBaseSha": "ef412bd0b8d9de132275a25cef9624bf61ce2f35",
+  "baseShaAncestorOfHead": true,
+  "headSha": "09c3a0ee8e5b8ff701c108751200ec66f0b92b9b",
+  "headEqualsOriginMain": true,
+  "drift": "NON-OVERLAPPING DOC ONLY. The only delta between the expected base and origin/main was a2 evidence poster (docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-127/post-result.js) authored by the previous task; no source overlap.",
+  "status": "PASS",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "automaticNextImplementationTask": "NONE",
+  "unblockedBoundary": "Order ProjectPaymentDraftAsync fail-closed guard for >1 shipping group (StorefrontShippingService.EnsureLegacySingleGroup) and Payment's single StoreShipping sentinel allocation assumption.",
+  "changedPaths": [
+    "src/backend/Modules/Payment/Tooba.Payment.Domain/ValueObjects/PaymentAllocationTargetKind.cs",
+    "src/backend/Modules/Payment/Tooba.Payment.Domain/Aggregates/PaymentAllocation.cs",
+    "src/backend/Modules/Payment/Tooba.Payment.Contracts/Checkout/OrderPaymentProjectionContracts.cs",
+    "src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Directories/PaymentDirectory.cs",
+    "src/backend/Modules/Payment/Tooba.Payment.Tests/Behavior/PaymentShippingGroupAllocationTests.cs",
+    "src/backend/Modules/Order/Tooba.Order.Infrastructure/Integrations/Payment/OrderPaymentBridge.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Models/StorefrontOrderModels.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontCheckoutService.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs",
+    "src/backend/Modules/Order/Tooba.Order.Domain/Checkout/CartShippingDraft.cs",
+    "docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-128.md",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-128/authority-and-design.md",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-128/test-proof.txt"
+  ],
+  "unstagedPaths": ["docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-128.task.md"],
+  "preExistingDirtyPreserved": [
+    "src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx",
+    "src/frontend/app/admin/admin-order-detail-screen.tsx",
+    "docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-075/host-stdout-075.txt",
+    "docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-079/host-stdout-OFF.txt"
+  ],
+  "migration": {
+    "added": false,
+    "reason": "PaymentAllocationTargetKind is an enum persisted with its existing integer mapping; no column, index or table shape changed, so no migration is required.",
+    "executed": false,
+    "note": "No DDL was run against any database."
+  },
+  "contractsAdded": [
+    "PaymentAllocationTargetKind.StoreShippingGroup = 2",
+    "PaymentAllocation.CreateStoreShippingGroup(...) and PaymentAllocation.IsStoreShipping",
+    "PayableShippingGroupSnapshot(ShippingGroupId, SellerOrderId, Amount, Currency)",
+    "PayableCheckoutSnapshot.ShippingGroups (optional trailing parameter)",
+    "StorefrontCheckoutPage.ShippingGroups (optional trailing parameter, reuses StorefrontShippingGroupView)"
+  ],
+  "contractsRemoved": [
+    "StorefrontShippingService.EnsureLegacySingleGroup (no remaining caller after the guard removal)"
+  ],
+  "crossModuleHandoff": "Order -> Payment via Tooba.Payment.Contracts only: IPayableCheckoutReader.GetPayableAsync implemented by OrderPaymentBridge projects each persisted OrderShippingGroup as PayableShippingGroupSnapshot(ShippingGroupId, SellerOrderId, ShippingChargeSnapshot, Currency). Payment never opens an Order DbContext and Order never opens a Payment DbContext.",
+  "paymentAccountingInvariant": "payment.amount == SUM(SellerOrder merchandise allocations) + SUM(StoreShipping|StoreShippingGroup allocations), once. Group allocations carry the customer-facing charge bucket keyed by ShippingGroupId; they are neither seller revenue, commission, nor carrier cost. ResolveShippingAllocationRows refuses payment.shipping_group.sum_mismatch when SUM(group amounts) != payable.ShippingAmount, payment.shipping_group.duplicate on repeated identity, payment.shipping_group.identity_required on Guid.Empty, payment.shipping_group.amount_positive on non-positive amounts — all before any payment/allocation row is written.",
+  "legacyCompatibility": "Orders with no persisted groups keep exactly one StoreShipping allocation pinned to PaymentAllocation.StoreShippingTargetId, so historical readback, the settlement bridge (TargetKind == SellerOrder filter) and PaymentSucceededDomainEvent.SellerOrderIds are unchanged.",
+  "noSideEffectsOnOpen": "Opening the payment draft performs only the pre-order PreviewAsync path: no payment capture, no order conversion, no checkout commit, no cart clear, no reservation/abuse consumption. Auth/tenant/edition/Tax fail-closed behavior untouched (checkout.tax.unavailable is not bypassed).",
+  "tests": {
+    "newFocusedTests": 8,
+    "newTestFile": "src/backend/Modules/Payment/Tooba.Payment.Tests/Behavior/PaymentShippingGroupAllocationTests.cs",
+    "paymentProjectResult": "160 passed / 0 failed (8 new + 152 pre-existing)",
+    "orderProjectResult": "338 passed / 0 failed",
+    "buildResult": "src/backend/Tooba.slnx build succeeded, 0 errors",
+    "hostFocusedResult": "139 passed / 7 failed on the FullyQualifiedName~Payment|~Paid filter; all 7 failures reproduced identically at the base SHA ef412bd0b in a detached worktree (repo-relative source-scanning helpers that cannot resolve paths from the test host), so they are pre-existing and unrelated.",
+    "reruns": "one targeted rerun after a precise fix (UuidV7IdGenerator name and an Assert.Single overload)",
+    "notExecuted": "No EF/runtime DB validation and no browser acceptance."
+  },
+  "unprovenClaims": [
+    "No runtime EF/migration proof was attempted; no migration was added, and the enum-member addition was not verified against a real database.",
+    "The payment screen was not exercised in a browser; the group readback is proven only at the API/DTO level.",
+    "Fulfillment M3 group-scoped execution is not implemented.",
+    "Settlement M4 allocation policy (seller/platform/carrier share) is deliberately not invented."
+  ],
+  "nonInterference": "No frontend/CSS/theme/template/config edit; no shared :5088/:3000 or tooba_alpha mutation; no process start/stop/kill; no DDL/DML; no seed or scratch database; no feature gate.",
+  "rollback": "Revert commit 09c3a0ee8e5b8ff701c108751200ec66f0b92b9b (single commit, no migration to roll back). No runtime artifact or shared state was created.",
+  "firstRemainingBlocker": "Fulfillment M3 must consume the persisted order shipping groups for group-scoped shipment execution; Settlement M4 must define the allocation policy content. Until then, a multi-group paid order has correct customer payable and per-group charge buckets but no group-level fulfillment or payout policy.",
+  "commercialReadinessCertified": false,
+  "implementationComplete": false
+}
