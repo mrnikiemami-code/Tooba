@@ -1,0 +1,31 @@
+capturedUtc=2026-10-16T02:42:24.518Z
+host_health=200 bytes=15
+host_commerce=200 bytes=253
+host_commerce_body={"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"7ff6197d6fb08d6bd3f09a6983d5bf5f"}
+next_fa_shipping=200 bytes=113286
+next_root_shipping=308 location=http://localhost:3000/fa/shipping bytes=33
+page_marker[data-testid="shipping-page"]=PRESENT
+page_marker[data-testid="shipping-steps"]=PRESENT
+page_marker[data-testid="shipping-step-1"]=PRESENT
+page_marker[data-testid="shipping-step-2"]=PRESENT
+page_marker[data-testid="shipping-step-3"]=PRESENT
+page_marker[data-testid="shipping-address-section"]=absent
+page_marker[data-testid="shipping-methods"]=absent
+page_marker[data-testid="shipping-methods-empty"]=absent
+page_marker[data-testid="shipping-method-]=absent
+page_marker[data-testid="shipping-delivery"]=absent
+page_marker[data-testid="shipping-continue"]=absent
+page_marker[data-testid="shipping-summary"]=absent
+page_marker[اطلاعات ارسال]=PRESENT
+page_marker[روش ارسال]=PRESENT
+page_marker[ادامه به پرداخت]=absent
+page_marker[سبد خرید پیدا نشد]=absent
+page_marker[در حال آماده‌سازی ارسال]=PRESENT
+GET /v1/storefront/shipping/projection=405 bytes=0
+GET /v1/storefront/shipping/selection=405 bytes=0
+GET /v1/storefront/shipping/commit=405 bytes=0
+POST /v1/storefront/shipping/projection (no identity)=401 bytes=294
+POST projection body={"type":"about:blank","title":"Sign in to continue.","status":401,"instance":"/v1/storefront/shipping/projection","errorCode":"checkout.authentication_required","traceId":"31ee87f02b4f8bd5c2f536bd55927782","correlationId":"9e796239b32c4edb9691f2759fe1a6d4","requestId":"0HNPB3LCV585A:00000002"}
+GET /v1/admin/shipping-services/shipping-methods/one-level=401 bytes=325
+admin read body={"type":"about:blank","title":"Administrator identity is not authenticated.","status":401,"instance":"/v1/admin/shipping-services/shipping-methods/one-level","errorCode":"admin.actor.missing","traceId":"f1a72338f9d5f0693521e63457d54f5f","correlationId":"d86d44e34e024ad99dde11b3a090dc3d","requestId":
+GET .../one-level/post/activation=405 bytes=0

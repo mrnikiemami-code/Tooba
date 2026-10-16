@@ -1,0 +1,20 @@
+﻿(node:20744) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ shipping projection maps store methods and never invents template carriers (1.0012ms)
+✔ shipping date chips use Host weekday/date once and do not duplicate Jalali (0.5563ms)
+✔ shipping continue persists the draft, keeps the cart active and never commits (0.2934ms)
+✔ shipping UI source has no hardcoded Shopeiva template method list (0.5943ms)
+✔ cart CTA routes to /shipping (0.2621ms)
+✔ customer shipping errors stay localized (0.5996ms)
+✔ stale cart on shipping never leaks the English server title (0.1294ms)
+✔ shipping stepper walks back to the cart instead of trapping the customer (0.2558ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 119.7559
