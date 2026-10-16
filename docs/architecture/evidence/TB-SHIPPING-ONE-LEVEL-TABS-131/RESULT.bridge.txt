@@ -15,9 +15,11 @@ Branch: main
 Expected-Base-SHA: 010a7d18a4e04397685e1ffea2578df54fdb4711
 Actual-Base-SHA: 010a7d18a4e04397685e1ffea2578df54fdb4711
 Code-SHA: 3595ebadbd20630550d0d1a415d64f31a2b3fd51
-Evidence-SHA: 77eabe181fa608a59e7b63ffdc7f0bdbb8b11f74
-HEAD: 77eabe181fa608a59e7b63ffdc7f0bdbb8b11f74
-Origin-Main: 77eabe181fa608a59e7b63ffdc7f0bdbb8b11f74
+Evidence-SHA: a01a707a720106d6c3652d0686978b3c6ea514fa
+HEAD: a01a707a720106d6c3652d0686978b3c6ea514fa
+Origin-Main: a01a707a720106d6c3652d0686978b3c6ea514fa
+SHA-Note: a01a707a7 is the grandparent commit that contains the complete source + evidence + result tree; the only
+  commit after it before posting is a docs-only correction of these SHA lines (no source/doc content change).
 Drift: NONE (expected base == HEAD at start; no overlapping source drift; pre-existing dirty admin-fulfillment-work-queue-screen.tsx, admin-order-detail-screen.tsx and TB-SHIPPING-FULL-OPERATIONS-0{75,79} evidence txt preserved untouched; Bridge task receipt unstaged; no reset/stash/rebase/force-push)
 Measured-Minutes: 58 (implementation overshot the minute-32 gate; runtime acceptance therefore deferred per task rule)
 
