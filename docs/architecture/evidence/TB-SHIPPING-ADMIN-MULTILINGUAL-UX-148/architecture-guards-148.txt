@@ -1,0 +1,69 @@
+﻿(node:16420) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-feature-boundary.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-BOUNDARY: external code must not deep-import migrated feature internals (63.7523ms)
+(node:37568) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-flat-folder.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-FOLDER-001: no new business-feature files directly under app/admin (3.8558ms)
+✔ FE-FOLDER-002: no new capability exports on admin-api dumping ground (0.6806ms)
+(node:19604) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-import-boundary.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-BOUNDARY-001: no new shared→feature reverse imports beyond baseline (28.3142ms)
+(node:36500) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-source-size.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ FE-SIZE: oversized frontend files are shrink-only against baseline (56.9884ms)
+(node:18972) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-test-discovery.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ architecture guard files exist and package.json wires test:architecture (0.9868ms)
+✔ canonical discovery lists every on-disk frontend test file (73.7086ms)
+✔ package.json test scripts still invoke critical storefront suite (0.267ms)
+(node:21896) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/seo-rendering.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-SEO-001 characterization: home route remains async server entry with generateMetadata (0.7762ms)
+✔ FE-SEO-001 characterization: PDP and listing routes are not client-only entrypoints (0.428ms)
+✔ FE-SEO-001 characterization: blog article page keeps server metadata capability (0.1894ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 10
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 188.7609
+
+✖ failing tests:
+
+test at lib\architecture\frontend-source-size.guard.test.ts:39:1
+✖ FE-SIZE: oversized frontend files are shrink-only against baseline (56.9884ms)
+  AssertionError [ERR_ASSERTION]: OVERSIZED_GROWTH src/frontend/app/admin/category-admin-screen.tsx: 2230 > baseline 2215
+  OVERSIZED_GROWTH src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx: 1442 > baseline 1440
+  OVERSIZED_GROWTH src/frontend/app/storefront/storefront-landing-blocks.tsx: 1033 > baseline 1026
+  OVERSIZED_GROWTH src/frontend/app/storefront/storefront-shipping.tsx: 1298 > baseline 945
+  OVERSIZED_GROWTH src/frontend/lib/storefront-composition/shared-composition-renderer.tsx: 918 > baseline 907
+  
+  5 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-source-size.guard.test.ts:74:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 5,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

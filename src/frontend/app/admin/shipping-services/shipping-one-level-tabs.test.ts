@@ -355,9 +355,11 @@ test("flat screen never rewrites sibling-method policy and keeps shared data lab
   assert.match(screen, /setOneLevelMethodActivation\(row\.methodCode, false\)/);
   assert.doesNotMatch(screen + general, /writeAdminShippingService|deactivateAdminShippingService/);
   assert.doesNotMatch(screen + general, /ShippingServiceOptionWrite/);
-  // دادهٔ مشترکِ ارائه‌دهنده صریحاً مشترک برچسب می‌خورد.
-  assert.match(general, /admin-shipping-method-shared-warning/);
-  assert.match(general, /مشترک بین همهٔ روش‌های ارائه‌دهندهٔ/);
+  // دادهٔ مشترکِ ارائه‌دهنده صریحاً مشترک برچسب می‌خورد (TB-148: بخش تاشوی فشرده و برچسب‌دار).
+  assert.match(general, /admin-shipping-method-shared-metadata/);
+  assert.match(general, /فرادادهٔ مشترک ارائه‌دهنده/);
+  assert.match(general, /بین همهٔ روش‌های یک ارائه‌دهنده مشترک است/);
+  assert.match(general, /فرادادهٔ مشترک/);
   // هیچ نوشتن قیمت/رزرو/سیاست نرخی از این دو فایل انجام نمی‌شود.
   assert.doesNotMatch(screen + general, /createAdminShippingRate|updateAdminShippingRate|setAdminShippingRateActive/);
 });

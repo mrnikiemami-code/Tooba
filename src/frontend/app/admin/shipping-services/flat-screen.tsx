@@ -312,6 +312,7 @@ export function ShippingServicesFlatScreen({
       {detail ? (
         <FlatMethodDetailDialog
           row={detail.row}
+          method={methods.find((m) => m.methodCode === detail.row.methodCode)}
           mode={detail.mode}
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -322,6 +323,7 @@ export function ShippingServicesFlatScreen({
             setDetail(null);
             await refresh({ notice: text, tone: "success" });
           }}
+          onRefreshed={(text) => refresh({ notice: text, tone: "success" })}
         />
       ) : null}
     </main>

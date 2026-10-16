@@ -1,0 +1,55 @@
+TB-SHIPPING-ADMIN-MULTILINGUAL-UX-148 — browser evidence (ordinary Development Admin, READ-ONLY)
+
+Environment
+- URL: http://localhost:3000/fa/admin/shipping-services (ordinary Development Admin flow; same shared
+  dev frontend + Host as TB-147, used READ-ONLY for this task).
+- Dev Admin actor from browser localStorage; no manual session login required.
+- No write was performed against the shared database. Only rejected (fail-closed) probes were sent.
+
+01-general-multilingual.png — improved «عمومی» tab of the Edit dialog for «پیشتاز» (post:express)
+- Compact single header: localized name, canonical code `post:express`, badges «فعال/غیرفعال» and
+  «وضعیت مالی: تنظیم نشده» (previously repeated in several large stacked sections).
+- «فرادادهٔ مشترک ارائهدهنده» is now a collapsed `<details>` row; expanded content still shows the
+  authoritative serviceCode/optionCode and explicitly labels them shared, not method-specific policy.
+- «نام نمایشی روش در زبانها» renders the REAL languages returned by the authoritative registry
+  (`GET /v1/admin/languages`), each one clickable with its translation state, plus a language Select
+  and a per-language name input.
+
+DOM-verified facts of the rendered page (no fabricated values)
+- header:            «پیشتاز — کد روش (تغییرناپذیر): post:express — غیرفعال — وضعیت مالی: تنظیم نشده»
+- language summary:  «ترجمهشده: 2 از 3»
+- language options (real registry ids, real native names):
+    01a06a53-4139-7000-bb9b-3078a0d2e5c4 :: فارسی (زبان فهرست) — ثبتشده
+    01a06a53-4196-7000-9b98-fb3706490005 :: English — ثبتشده
+    01a0844c-829e-7000-ab25-64b381896053 :: Русский — بدون ترجمه
+- select options:    [فارسی, English, Русский — بدون ترجمه]   value = list language (فارسی)
+- name input value:  پیشتاز   (prefilled from the real server translation)
+- server-state line: «مقدار ثبتشدهٔ سرور: پیشتاز»
+- financial line:   «وضعیت مالی این روش از API فعلی قابل خواندن نیست؛ هیچ مبلغ، حالت مالی یا فرض صفر
+                      ساخته نمیشود.» + distinctness note that enabled ≠ quote-ready.
+- 4 non-nested detail tabs still render (general + rates + schedule + packaging); no «انواع سرویس»
+  text anywhere on the page (count = 0).
+
+Per-language isolation and lossless language switching (verified in the live dialog, no save pressed)
+- selecting Русский ⇒ input dir=ltr, value empty, honest line
+  «در این زبان هیچ نامی ثبت نشده است؛ این «خالی» است و نامی ساخته نمیشود.», save disabled
+  (no translation exists ⇒ nothing fabricated).
+- typing an unsaved draft in Russian, switching to فارسی: فارسی draft stays «پیشتاز», the Russian
+  draft survives; indicator «پیشنویس ذخیرهنشده در 1 زبان» then «… در 2 زبان».
+- switching back to Русский returns exactly «Экспресс тест» (unsaved text preserved); dir follows the
+  language (ltr for Russian, rtl for Persian). No data loss from switching languages before save.
+- The page was reloaded afterwards so no local draft was left in the browser.
+
+Fail-closed proof of the canonical save seam (rejected writes only, shared DB READ-ONLY)
+- PUT /v1/admin/shipping-services/shipping-methods/one-level/not-a-real-method/translations/{fa}
+  ⇒ HTTP 400, errorCode `shipping_method.code.invalid`
+- PUT /v1/admin/shipping-services/shipping-methods/one-level/post:express/translations/{0000…0000}
+  ⇒ HTTP 400, errorCode `shipping_service.language_invalid`
+- Re-read of the catalog after both probes: `post:express` fa translation is still «پیشتاز»
+  (unchanged = true). The seam is wired end-to-end and refuses invalid targets without writing.
+
+NOT PROVEN (explicit)
+- A successful name save + GET/reopen round-trip was NOT executed: the only reachable environments
+  (shared :3000/:5088 and store-alpha/tooba_alpha) are READ-ONLY for this task and no isolated
+  disposable authorized scratch environment was available inside the 45-minute timebox.
+  Therefore this task is reported PARTIAL for that single item.
