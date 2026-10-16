@@ -9,6 +9,15 @@
   "expectedBaseSha": "b6e5639b1c8d29241c75d16edaf6b3668cbcaaae",
   "actualBaseSha": "b6e5639b1c8d29241c75d16edaf6b3668cbcaaae",
   "baseShaAncestorOfHead": true,
+  "midTaskRemoteAdvance": {
+    "originMainAtPushTime": "cb46eecbe401b9f23a9f1c192ecefb3dc42a2635",
+    "commits": "docs-only: SHIPPING-METHOD-GROUPING-UI-CONTRACT.md (3 commits)",
+    "sourceOverlap": false,
+    "resolution": "no-rebase merge commit (no reset, no stash, no rebase, no force push)",
+    "mergeHead": "95bc4ad52ee74775c7a353e1fe9cde679cd9b094"
+  },
+  "supersedingAuthority": "docs/architecture/checkout/SHIPPING-METHOD-GROUPING-UI-CONTRACT.md",
+  "supersedingNote": "Architect contract published mid-task; requires per-group ShippingGroupId in Order, group-to-item membership, per-group fee/tax, per-group fulfillment execution and storefront visual continuity. It supersedes the hand-written slice proposal in this task's evidence; the trace produced here is exactly the pre-implementation trace that document demands.",
   "drift": "NONE in src/backend, src/frontend shipping, tests, config or migrations. Pre-existing unstaged admin edits left untouched: src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx.",
   "status": "PASS",
   "stopState": "STOP_FOR_ARCHITECT",
@@ -93,7 +102,7 @@
   "deviations": "None of substance. No focused test executed (0 of allowed 1) with justification recorded.",
   "rollback": "Docs-only commit; git revert of the docs commit restores the prior state. No runtime artifact created.",
   "firstRemainingBlocker": "Cart-wide shipping contract cannot represent per-item/per-group method selection (locked storefront Contract; needs Architect approval) and the schema-phone Development fixture creates tax categories without rules.",
-  "nextTaskBoundary": "Design review ONLY of the shipping-group contract slice plus a bounded decision on the schema-phone Development tax fixture. No implementation."
+  "nextTaskBoundary": "Design review ONLY per docs/architecture/checkout/SHIPPING-METHOD-GROUPING-UI-CONTRACT.md (after inspecting real Order/Fulfillment entities, mappings, migrations and interfaces) plus a bounded decision on the schema-phone Development tax fixture. No implementation."
   ,"perItemGroupingCertified": false,
   "paymentReadinessCertified": false,
   "productionShippingCertified": false,
