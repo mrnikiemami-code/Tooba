@@ -1,0 +1,113 @@
+const fs = require('fs');
+const path = require('path');
+
+const B = 'http://127.0.0.1:17321';
+const ROW = 'da0d2602-9cb0-4cc1-89e5-e8ba926af267';
+const TASK = 'TB-SHIPPING-ONE-LEVEL-TABS-117';
+const OUT = path.join('docs', 'architecture', 'evidence', TASK);
+
+const result = `BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-117
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-116
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Bridge-Task-Row: ${ROW}
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+Expected-Base-SHA: 709e474951c0aa6f5481e2ff4658d24c02533dea
+Base-SHA: 709e474951c0aa6f5481e2ff4658d24c02533dea
+Base-SHA-Drift: NONE (git diff --stat 709e474..HEAD empty at claim; latest task-owned commit 709e474951c0aa6f5481e2ff4658d24c02533dea)
+Code-SHA: NONE (no src/, test, migration, application configuration, frontend or shared-DB modification in TB-117)
+Evidence-SHA: b150421d8a6d78a147967ef5918bbbb670572224
+HEAD==origin/main after push: true
+Measured-Minutes: ~37 (publish 55 s; isolated Host startup reached /health at ELAPSED_SECONDS=45 of the 180 s budget)
+Isolated-Launch-Count: 1 (PID 15724, absolute exe path, external watchdog 180 s, no retry)
+Isolation-Guard (offline, fail-closed, PASS): tenantCount 1 / activeTenantCount 1 / canonicalGatewayTenantPresent true / tenants [store-alpha:Active:tenant-117-scratch] / references [tenant-117-scratch, messaging-117-scratch] / no tooba_alpha / no tenant-alpha / no Port=5432 / no prior-scratch port / Development / RunLegacyBootstraps=true / AllowResetAndSeed=false / ShippingRateAuthority+ShippingOperationalShadow+ShippingOneLevelCatalog absent
+
+STAGE-BY-STAGE FINDINGS
+1. DI container build: OK, no wiring or scope-validation error, ValidateScopes NOT weakened.
+2. DevelopmentSchemaMigrator.ApplyAsync(app.Services): COMPLETED — 112 EF migration events, 8 module schemas (catalog 29, inventory 5, localization 1, offer 3, party 2, pricing 1, promotion 2, tax 1).
+3. Catalog attribute schema + workspace demo chain inside the migrator's own assigned scope: COMPLETED (store_landing_pages inserts first at stdout line 1455; workspace-live-shirt and admin-r3-* present).
+4. Legacy Catalog bootstrap gateway DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync (Program.cs:374, the TB-116 seam): ENTERED; scope created and trusted CommerceContext assigned.
+5. FashionTemplateCatalogSeed resolving scoped CatalogDbContext via ToobaNpgsql.ResolveForContext: SUCCEEDED.
+6. All SIX legacy Catalog bootstraps: COMPLETED — template inserts begin at stdout line 1659 (450 template_products, 30 store_templates statements); landing-page and store-menu seeds idempotent after the migrator scope.
+7. Kestrel: Now listening on http://127.0.0.1:5398 (line 1795), Application started (1796), Hosting environment Development (1797), content root = isolated publish dir.
+8. GET /health: 200 {"status":"ok"}.
+9. GET /__platform-commerce: 200 {"edition":"SingleStore","deploymentId":"isolated-117","tenantId":"store-alpha","connectionReference":"tenant-117-scratch","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR"} — ISOLATED scratch provenance, not shared store-alpha/tenant-alpha.
+
+FORMER BARRIER VERDICT
+platform.edition.unconfigured: 0 occurrences (the TB-115 barrier is ELIMINATED in real isolated runtime).
+Cannot resolve scoped service: 0. from root provider: 0. catalog.attribute.code.duplicate: 0. catalog-dev.attribute.incompatible-reuse: 0. Development seed requires Active tenant: 0.
+stderr: EMPTY (no unhandled exception). Total stdout: 1861 lines.
+
+FIRST SUBSEQUENT (NON-BLOCKING) OBSERVATIONS — not the former barrier, no repair attempted
+- After the Host is already healthy, Tooba.Host.Outbox.OutboxDispatcher logs two Warnings: "Outbox claim failed for one module. TenantId=store-alpha Schema=returns ErrorType=PostgresException" and "Schema=settlement ErrorType=PostgresException" with 42P01 relation "<schema>.outbox_messages" does not exist. returns and settlement schemas are simply not part of this Development scratch schema set; the dispatcher warns and continues; /health stays 200.
+- Two pre-existing EF query-shape warnings: Skip/Take without OrderBy (line 1115) and First/FirstOrDefault without OrderBy (lines 1457, 1459).
+
+SCRATCH READBACK (row presence only; NOT storefront eligibility; redacted, read-only)
+- One color definition, one black option, no duplicate: color 1 / ram 1 / screen_size 1 / storage 1; options black 1, blue 1, 8gb 1, 128gb 1, 256gb 1.
+- Single-identity proof at real startup: PHONE-BLK-128, PHONE-BLU-256 and LIVE-SHIRT-BLK share color definition_id 01a1428e-cc3f-7000-abb5-7c7600a2640d; PHONE-BLK-128 shares LIVE-SHIRT-BLK's canonical black value.
+- schema-mobile-demo-phone Published with exactly 2 sparse variants and exactly 1 default (PHONE-BLK-128); workspace-live-shirt Published; admin-r3-draft-scarf Draft; admin-r3-archived-hat Archived.
+- Sellable chain: PHONE-BLK-128 (default) 2 offers / 2 active / 1 active Base price / available 5.000000; PHONE-BLU-256 1 / 1 / 1 / 5.000000. Totals: offers 5, active_offers 5, prices 6, active_base_prices 4, stock_positions 6, positive on_hand 5, seller_parties 4 (party.parties, no 42P01), tax_rules 1.
+- LEGACY TEMPLATE SEEDS REACHED (these were 0 in TB-115): template_products 150, template_variants 150, template_categories 560, template_brands 60, store_templates 10; store_landing_pages 3 with 16 sections; store_menus 1 with 6 items.
+- Scratch stayed commerce-free: carts 0, seller_orders 0, shipping_methods 0. No cart/order created; no shipping flag activated; no reset-and-seed and no 545-product expansion.
+
+SHARED PARITY (READ-ONLY, no writes)
+- Preflight vs postflight identical: :5088 PID 35624 /health 200 {"status":"ok"}; :3000 PID 31580 -> 308 http://localhost:3000/fa; /__platform-commerce unchanged (SingleStore / dev-singlestore / store-alpha / tenant-alpha / 127.0.0.1 / theme-alpha / IR).
+- tooba_alpha counts byte-identical: methods 7, translations 14, carts 50, cart_lines 78, drafts 14, seller_orders 26, products 567, offers 3223.
+- NO INCIDENT.
+
+CLEANUP
+- Only the recorded isolated PID 15724 was stopped (after health, bounded; absolute path verified); never by name or wildcard; shared :5088 and :3000 processes untouched.
+- docker rm -f of the single task-owned tooba-117-scratch-pg; port 55450 no longer listening; no 113/115 scratch container touched; pre-existing containers (sarv-jaeger, sarv-redis, rabbitmq, postgres-db) untouched.
+- Ignored .tmp-117-run (including the per-run credential file) and .tmp-117-host-out deleted; transient per-run password supplied only via environment and never written to evidence (verified: zero secret matches in the evidence folder).
+- Rollback: documentation/evidence only; no source, configuration or database state requires rollback.
+
+CHANGED PATHS (this task, docs/evidence only)
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-117.md
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-117/** (19 files)
+- Bridge receipt docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-117.task.md preserved UNSTAGED.
+Zero changes under src/, tests, migrations, application configuration, frontend, shared DB, or shipping flags. Pre-existing unrelated working-tree drift (2 frontend files modified 2026-10-13, 3 evidence txts) was left untouched and NOT committed.
+
+DEVIATIONS: none material. Single launch, single watchdog, single claim. No extra launch, no HTTP mutation endpoint, no manual SQL write, no alternate tenant/database fallback, no direct DbContext/SQL seed write, no fake HttpContext.
+
+NON-CLAIMS: this is a STARTUP acceptance only. It does NOT certify storefront labels, cart reachability, checkout cutover, one-level shipping tab behaviour, option parity at the storefront, or commercial shipping readiness. Row presence in scratch is not storefront eligibility.
+
+FIRST REMAINING BLOCKER: none for startup — the former platform.edition.unconfigured barrier is gone, all six legacy Catalog bootstraps complete, and the isolated Host is healthy. The only residual runtime noise is the non-fatal OutboxDispatcher 42P01 warning for the module schemas returns and settlement that are not part of this Development schema set, which is a separate decision for the Architect.
+STOP FOR ARCHITECT.
+END_TOOBA_WORKER_RESULT
+`;
+
+fs.writeFileSync(path.join(OUT, 'RESULT.bridge.txt'), result, 'utf8');
+
+(async () => {
+    const res = await fetch(`${B}/api/results`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            channelId: 'tooba-main',
+            workerId: 'tooba-worker-01',
+            agentType: 'cursor',
+            taskId: TASK,
+            status: 'PASS',
+            content: result,
+        }),
+    });
+    console.log('RESULT_POST=' + res.status + ' ' + (await res.text()).slice(0, 300));
+
+    const done = await fetch(`${B}/api/tasks/${ROW}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workerId: 'tooba-worker-01', channelId: 'tooba-main' }),
+    });
+    console.log('TASK_COMPLETE=' + done.status + ' ' + (await done.text()).slice(0, 300));
+
+    const hb = await fetch(`${B}/api/workers/heartbeat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workerId: 'tooba-worker-01', channelId: 'tooba-main', agentType: 'cursor', status: 'Idle' }),
+    });
+    console.log('IDLE=' + hb.status);
+})().catch((err) => { console.error(err); process.exit(1); });
