@@ -1,0 +1,51 @@
+TB-SHIPPING-ONE-LEVEL-TABS-139 — FOCUSED EVIDENCE (transport fan-out / delivery completeness)
+
+TASK: BOUNDED_PAID_ORDER_FULFILLMENT_EVENT_DELIVERY_REPAIR (parent TB-SHIPPING-ONE-LEVEL-TABS-138)
+BASE: ca4ee6e97298420f60614634fde2dbfc70ec944f (HEAD == origin/main at claim)
+
+FOCUSED TEST RUN 1 — new seam only (before fix was impossible to run: the seam did not exist,
+the legacy loop is characterised inside the same test class):
+
+  dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj \
+    --filter "FullyQualifiedName~IntegrationHandlerDeliveryFanOutTests"
+
+  Passed!  - Failed: 0, Passed: 5, Skipped: 0, Total: 5, Duration: 40 ms
+
+  Tests:
+  1. Every_registered_module_handler_receives_the_same_payment_succeeded_event_once
+     (2 module handlers, one event, same EventId observed by both, exactly one invocation each)
+  2. Failure_in_one_module_handler_does_not_starve_the_other_module_handlers
+     (order handler runs, fulfillment handler throws, later settlement handler STILL runs;
+      failure surfaced as IntegrationHandlerDeliveryException naming ThrowingModuleHandler)
+  3. Handler_failure_is_still_surfaced_so_transport_retry_is_preserved
+     (a failing handler is never swallowed; MassTransit retry/dead-letter contract intact)
+  4. Consume_cancellation_is_not_swallowed_as_a_handler_failure
+     (OperationCanceledException from a handler is rethrown as cancellation, not as a delivery failure)
+  5. Legacy_sequential_loop_starved_the_module_handlers_that_came_after_a_failing_handler
+     (characterises the pre-139 loop: order=1, settlement=0 -> starved=true; then the seam delivers
+      order=2, settlement=1 with the failure still raised)
+
+GUARD / REGRESSION RUN — same project, guarded areas:
+
+  dotnet test ... --filter "HostTransportAmcGuardTests|HostMessagingAmc|HostFolderStructureTests|Outbox|PaymentFoundationTests|MarketplaceSettlementEventPathTests"
+  Result: Failed: 1, Passed: 51, Skipped: 0, Total: 52
+
+  HostTransportAmcGuardTests ................ PASS (Transport folder still EXACTLY three files)
+  HostMessagingAmcCertGuardTests / W1 ....... PASS
+  HostFolderStructureTests .................. PASS
+  Outbox* ................................... PASS
+  MarketplaceSettlementEventPathTests ....... PASS
+
+  PRE-EXISTING, UNRELATED FAILURE (not caused by this task, no transport involvement):
+  PaymentFoundationTests.Payment_verifies_provider_evidence_and_projects_order_without_trusting_callback_text
+    Assert.Throws failure: Expected System.InvalidOperationException, actual
+    Tooba.BuildingBlocks.ContractOperationException : payment.initiate.reservation_forbidden
+    (raised at PaymentFoundationTests.cs:192 in the payment-initiate reservation path; this task
+     touched neither Payment initiate logic nor the in-process publisher, and the assertion drift
+     exists on the untouched transport surface)
+
+NO RUNTIME RERUN IN THIS TASK:
+- No isolated Host/Postgres/browser acceptance was executed inside the 45-minute box.
+- Therefore Fulfillment unit/group creation at runtime remains UNPROVEN here and is reported as such.
+- Shared :5088 / :3000 / tooba_alpha were never touched; no container, port, service or dataset was
+  created, restarted or mutated by this task.

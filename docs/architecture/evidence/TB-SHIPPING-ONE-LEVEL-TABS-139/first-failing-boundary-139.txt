@@ -1,0 +1,53 @@
+TB-SHIPPING-ONE-LEVEL-TABS-139 — FIRST FAILING BOUNDARY (source + runtime evidence, no speculation)
+
+INPUT EVIDENCE (TB-138, real isolated run, docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-138/db-readback-138.txt)
+- payment.succeeded.v1 outbox row: processed=2026-10-16 07:24:21.031089+00, attempts=1, dead=null, err=-
+- order.payment_inbox = 1 record, EventId 01a14398-f765-7000-8859-0a10e36fb414 (the same outbox id)
+- fulfillment: fulfillments=0 items=0 ff_groups=0 shipments=0 shipment_items=0 payment_inbox=0
+- Fulfillment module IS composed and live in that Host (FF_MIGRATIONS=10, shipping catalog seeded)
+
+STEP 1 — the "processed" outbox row does NOT prove handler delivery
+Outbox/OutboxDispatcher.cs:146-153
+  publisher = scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>()
+  await publisher.PublishAsync(integration, ct)
+  await _store.MarkProcessedAsync(...)
+Messaging/MassTransitIntegrationEventPublisher.cs:69-99 publishes only an envelope to the MassTransit
+SQL transport (await _bus.Publish(envelope, ...)). MarkProcessed happens at ENQUEUE time, so
+processed=...|attempts=1|err=- is a publish-side fact, not a consume-side fact.
+
+STEP 2 — registration is not the missing boundary
+- Composition/ToobaModuleComposition.cs Modules list registers OrderModule (index ~7) and
+  FulfillmentModule (index ~25); both are unconditional.
+- Order/Tooba.Order.Infrastructure/OrderModule.cs:157 registers OrderPaymentSucceededHandler.
+- Fulfillment/.../DependencyInjection/FulfillmentModule.cs:128 registers
+  FulfillmentPaymentSucceededHandler.
+- The module's migrator registration (line 129) sits AFTER line 128 in the same flat method and the
+  isolated database shows 10 applied fulfillment migrations, so the method ran past line 128:
+  the handler WAS registered at runtime.
+
+STEP 3 — the dispatcher reaches Order's handler in the same consume attempt
+Messaging/MessagingRegistration.cs:59-69 — ONE receive endpoint ("tooba-integration") and ONE consumer
+(ToobaIntegrationTransportConsumer) for the whole deployment; Transport/ToobaIntegrationTransportConsumer.cs
+enumerated IIntegrationEventHandler<PaymentSucceededIntegrationEvent> from the consume scope and invoked
+them sequentially. Order's handler is the FIRST in that enumeration (OrderModule precedes
+FulfillmentModule in the composition list) and it commits its inbox + Paid projection
+(OrderPaymentSucceededHandler.cs:88-101, SaveChangesAsync).
+=> Because order.payment_inbox holds the event and the seller order became Paid, the consume attempt
+   definitely entered the handler loop. The boundary that failed is therefore AFTER Order's handler.
+
+STEP 4 — why zero fulfillment durable trace is expected once that boundary fails
+FulfillmentDirectory.CreateFromPaidSellerOrdersAsync (Directories/FulfillmentDirectory.cs:62-118) adds the
+unit, its items, its shipping groups and the PaymentInbox record and commits them in ONE
+SaveChangesAsync. A domain-invariant throw (LineUnknown / SellerMismatch / LineUncovered / group faults),
+an EF/Postgres write failure, or a handler-activation failure therefore all leave payment_inbox=0 with
+units=0 — exactly the TB-138 observation, and it can never self-heal because the message is retried and
+finally dead-lettered while Order's (already committed) inbox makes Order's side idempotent.
+
+CONCLUSION (first failing boundary)
+The delivery/dispatch boundary is proven to reach Order and to be incapable of protecting the remaining
+module handlers: the pre-139 loop aborted on the FIRST failing handler
+(Transport/ToobaIntegrationTransportConsumer.cs, replaced in this task), so one module's fault removes
+every later module's delivery for that event and leaves no per-module durable evidence.
+The residual fault INSIDE the Fulfillment owner path (domain invariant vs its single SaveChanges) is
+NOT identified by source reading alone and is NOT fixed or bypassed here; it requires the observable
+trace that this task's change now produces.
