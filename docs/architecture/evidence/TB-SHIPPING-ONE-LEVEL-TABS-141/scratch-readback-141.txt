@@ -1,0 +1,121 @@
+﻿== BEFORE EXPLICIT ACTIVATION (isolated Host startup auto-migration only) ==
+section|item
+PRE_ACTIVATION.settlement_schema_present|0
+(1 row)
+section|item
+PRE_ACTIVATION.settlement_tables|0
+(1 row)
+section|item
+PRE_ACTIVATION.schemas|access_control
+PRE_ACTIVATION.schemas|address_book
+PRE_ACTIVATION.schemas|bulk_inquiry
+PRE_ACTIVATION.schemas|cart
+PRE_ACTIVATION.schemas|catalog
+PRE_ACTIVATION.schemas|content
+PRE_ACTIVATION.schemas|customer_profile
+PRE_ACTIVATION.schemas|fulfillment
+PRE_ACTIVATION.schemas|identity
+PRE_ACTIVATION.schemas|inventory
+PRE_ACTIVATION.schemas|localization
+PRE_ACTIVATION.schemas|media
+PRE_ACTIVATION.schemas|notification
+PRE_ACTIVATION.schemas|offer
+PRE_ACTIVATION.schemas|operator_profile
+PRE_ACTIVATION.schemas|order
+PRE_ACTIVATION.schemas|page_composition
+PRE_ACTIVATION.schemas|party
+PRE_ACTIVATION.schemas|payment
+PRE_ACTIVATION.schemas|pricing
+PRE_ACTIVATION.schemas|product_qna
+PRE_ACTIVATION.schemas|promotion
+PRE_ACTIVATION.schemas|public
+PRE_ACTIVATION.schemas|reviews
+PRE_ACTIVATION.schemas|story
+PRE_ACTIVATION.schemas|support
+PRE_ACTIVATION.schemas|tax
+PRE_ACTIVATION.schemas|user_preference
+PRE_ACTIVATION.schemas|wallet
+PRE_ACTIVATION.schemas|wishlist
+(30 rows)
+
+== AFTER EXPLICIT ACTIVATION (Settlement-owned migrator, module seam) ==
+section|item
+A.schemas|access_control
+A.schemas|address_book
+A.schemas|bulk_inquiry
+A.schemas|cart
+A.schemas|catalog
+A.schemas|content
+A.schemas|customer_profile
+A.schemas|fulfillment
+A.schemas|identity
+A.schemas|inventory
+A.schemas|localization
+A.schemas|media
+A.schemas|notification
+A.schemas|offer
+A.schemas|operator_profile
+A.schemas|order
+A.schemas|page_composition
+A.schemas|party
+A.schemas|payment
+A.schemas|pricing
+A.schemas|product_qna
+A.schemas|promotion
+A.schemas|public
+A.schemas|reviews
+A.schemas|settlement
+A.schemas|story
+A.schemas|support
+A.schemas|tax
+A.schemas|user_preference
+A.schemas|wallet
+A.schemas|wishlist
+(31 rows)
+section|item
+B.settlement_tables_before_activation|12
+(1 row)
+section|item
+C.settlement_migration_history|20260827030000_InitialSettlement
+C.settlement_migration_history|20261016140000_AddSettlementShippingGroupFees
+(2 rows)
+section|item
+D.settlement_tables_after_activation|12
+(1 row)
+section|item
+E.accepted_quote_version nullable=NO|character varying
+E.allocation_policy_reference nullable=YES|character varying
+E.allocation_policy_version nullable=YES|character varying
+E.allocation_state nullable=NO|character varying
+E.carrier_payable_amount nullable=YES|numeric
+E.checkout_id nullable=NO|uuid
+E.currency nullable=NO|character varying
+E.customer_charge_amount nullable=NO|numeric
+E.funder_adjustment_amount nullable=YES|numeric
+E.funder_reference nullable=YES|character varying
+E.idempotency_key nullable=NO|character varying
+E.marketplace_share_amount nullable=YES|numeric
+E.method_code nullable=NO|character varying
+E.option_code nullable=YES|character varying
+E.payment_id nullable=NO|uuid
+E.record_kind nullable=NO|character varying
+E.recorded_at nullable=NO|timestamp with time zone
+E.reversal_of_shipping_group_fee_id nullable=YES|uuid
+E.seller_order_id nullable=NO|uuid
+E.seller_party_id nullable=NO|uuid
+E.seller_share_amount nullable=YES|numeric
+E.service_code nullable=YES|character varying
+E.shipping_discount_amount nullable=YES|numeric
+E.shipping_group_fee_id nullable=NO|uuid
+E.shipping_group_id nullable=NO|uuid
+E.shipping_tax_amount nullable=YES|numeric
+(26 rows)
+section|item
+F.shipping_group_fees_rows|0
+(1 row)
+section|item
+G.settlement_entries_rows|0
+(1 row)
+section|item
+G.payout_requests_rows|0
+(1 row)

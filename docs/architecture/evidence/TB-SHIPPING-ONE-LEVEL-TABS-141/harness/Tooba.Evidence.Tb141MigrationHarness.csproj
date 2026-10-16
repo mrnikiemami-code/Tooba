@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Tooba.Evidence.Tb141MigrationHarness</RootNamespace>
+    <AssemblyName>Tooba.Evidence.Tb141MigrationHarness</AssemblyName>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\src\backend\Modules\Settlement\Tooba.Settlement.Infrastructure\Tooba.Settlement.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
