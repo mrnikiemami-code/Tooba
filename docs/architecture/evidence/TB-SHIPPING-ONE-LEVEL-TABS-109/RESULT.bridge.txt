@@ -1,0 +1,107 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-109
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-108
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_ISOLATED_CATALOG_BOOTSTRAP_POST_DEFAULT_PROOF
+Bridge-Task-Row: 7bdc79c2-4310-4bcb-b57e-89d61bb8ab94
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 729fa793a58508ab05e207a7a60ebec0cfda19d9
+Base-SHA: 3bd045fc5191ba50a0ff6a082477cbd015269356
+Code-SHA: NONE
+Evidence-SHA: 072127f7f60a11c0de5583a472b78c27bcf8a5d3
+automaticNextImplementationTask: NONE
+
+ORIGINAL BLOCKER RESOLVED? YES — observed on ONE isolated Development startup.
+  PublishReadiness diagnostic lines in the run = 0; 'محصول برای انتشار آماده نیست.' occurrences = 0;
+  CatalogDirectory.UnwrapLifecycle never appears. catalog.products shows slug schema-mobile-demo-phone
+  status = Published (TB-106 was refused at exactly this point). The seed's
+  PublishWithDiagnosticsAsync (ApplyAsync:110) succeeded and execution continued into InvokeEnricherAsync:118,
+  so the 105 diagnostic stayed silent because there was nothing to diagnose.
+
+SPARSE VARIANT/DEFAULT READBACK (read-only SQL on the scratch DB, scratch-inspection.txt)
+  defaults = 1 | total_variants = 2 for the demo product
+  PHONE-BLK-128 is_default = true, status Draft ; PHONE-BLU-256 is_default = false, status Draft
+  distinct combination fingerprints; both variants carry BOTH axes with GUID option ids
+  declared axes: color(display_order 0), storage(display_order 1)
+  catalog.products = 1 (all Published), catalog.variants = 2, catalog.product_history_entries = 6
+  => no cartesian expansion, original diagonal preserved, exactly one default.
+
+FIRST NEW BLOCKER / LAST COMPLETED STAGE
+  Last completed stage: the Catalog post-migration step published the attribute-schema demo product.
+  First new barrier (verbatim): Unhandled exception. Npgsql.PostgresException (0x80004005):
+  42P01: relation "party.parties" does not exist
+    at Tooba.Party.Infrastructure.Development.PartyDevelopmentSeedGateway.ResolveDevelopmentSellerPartyAsync (line 28)
+    at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaSellableEnricher.EnsurePublishedAndSellableAsync (line 80)
+    at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaDevelopmentSeed.InvokeEnricherAsync (line 118)
+    at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaDevelopmentSeed.ApplyAsync (line 110)
+    at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentSeed.PostMigration.EnsureAsync (line 38)
+    at Tooba.Host.Development.DevelopmentSchemaMigrator.MigrateOrderedAsync (line 143) / ApplyCoreAsync (70, 112)
+    at Program.<Main>$ (Program.cs:367)
+  Failing SQL: SELECT p.party_id FROM party.parties AS p ... (EntityFrameworkCore.Database.Command, EventId 20102)
+  Context: Tooba.Party.Infrastructure.Persistence.PartyDbContext
+  Ordering observation (NOT a fix verdict, NOT patched): DevelopmentSchemaMigrator.MigrateOrderedAsync runs each
+  module's post-migration steps right after that module's migrator (lines 136-144), so the Catalog post-migration
+  seed calls a cross-module sellable enricher before the Party/Offer/Pricing/Inventory/Tax migrators have run; on an
+  empty database those schemas do not exist yet. TB-106 could not see this because it died one step earlier.
+
+OFFERS / PRICES / STOCK READBACK — NONE CREATED
+  schemas present after the run: catalog, public ONLY.
+  offer.offers, offer.prices, party.parties, inventory.stock_items -> all to_regclass() = NULL.
+  => No eligible published product with an active sellable offer, valid price or positive inventory exists.
+     No storefront-eligibility claim is made from any count.
+
+METHOD OF ISOLATION (offline guard BEFORE launch; .tmp-109-run/isolation-guard.json)
+  exactly ONE tenant (store-alpha:Active:tenant-109-scratch); connection references tenant-109-scratch +
+  messaging-109-scratch only; containsSharedAlphaDatabase=false, containsSharedAlphaReference=false,
+  containsSharedAlphaPort=false (no Port=5432); ShippingOneLevelCatalog / ShippingRateAuthority /
+  ShippingOperationalShadow all absent; RunLegacyBootstraps=true and AllowResetAndSeed=false (no reset/seed, no
+  545-product seeding); scratch PostgreSQL 17 container with no volume on loopback 127.0.0.1:55445, isolated Host on
+  127.0.0.1:5393; explicit scratch config root (the two generated overlay files copied into the task-owned publish
+  dir only); scratch DB inspected only over a scratch-only psql connection. Zero shared-database writes.
+  Build: dotnet publish Tooba.Host -c Debug -o .tmp-109-host-out (0 errors); the published
+  Tooba.Catalog.Infrastructure.dll contains both the 108 seam ('SetProductVariantDefaultAsync') and the 105
+  diagnostic ('catalog-dev.attribute-schema.publish-product' / 'PublishReadiness').
+
+ONE-RUN WATCHDOG SECONDS
+  LAUNCH_COUNT=1, no retry. WATCHDOG_LIMIT_SECONDS=180. ELAPSED_SECONDS=47 (natural exit; the new barrier crashed
+  startup). HEALTH_200_OBSERVED=False, PROCESS_EXITED=True, KILLED_BY_WATCHDOG=False,
+  PUBLISH_READINESS_DIAGNOSTIC_SEEN=False, LISTENERS_ON_5393_AFTER_STOP=0. (EXIT_CODE is empty: PowerShell does not
+  surface ExitCode for an already-exited redirect-started process; failure identity taken from stderr.)
+
+PROCESS CLEANUP
+  The scratch Host exited by itself (pid 30472); a task-owned-path check reported NO_TASK_OWNED_HOST_PROCESS.
+  Container tooba-109-scratch-pg removed; 0 listeners on 5393 and 0 on 55445 afterwards; .tmp-109-run,
+  .tmp-109-host-out and the untracked scratch password file all deleted; raw 682 KB stdout / 5 KB stderr dropped
+  after the bounded redacted excerpt; credentials verified absent from both logs before dropping; docker ps -a shows
+  no 109 container. NO name-based termination was used anywhere (only Stop-Process -Id <task-owned pid> guarded by
+  the watchdog, which did not even fire). The TB-106 teardown deviation did NOT recur.
+
+SHARED PID / PROVENANCE / PARITY (read-only; unchanged)
+  :5088 /health = {"status":"ok"} before AND after; owning PID 35624 (path .tmp-dev-host-out-5088-101\Tooba.Host.exe)
+  identical before AND after; /__platform-commerce byte-identical (edition=SingleStore, deploymentId=dev-singlestore,
+  tenantId=store-alpha, connectionReference=tenant-alpha, resolvedHost=127.0.0.1, themeReference=theme-alpha,
+  defaultMarketReference=IR); :3000 = node PID 31580 before and after (pre-existing, untouched); tooba_alpha counts
+  identical before/after: 7 methods / 14 translations / 50 carts / 78 cart_lines / 14 cart_shipping_drafts /
+  26 seller_orders / 567 products / 3223 offers.
+
+EXACT PATHS
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-109.md
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-109/{observed-result.txt, summary.md,
+    isolation-watchdog-and-parity.txt, watchdog-result.txt, launch-console.txt, scratch-inspection.{sql,txt},
+    redacted-diagnostic-excerpt.txt, build-record.txt, prepare-isolated-target-109.js, prepare-output.txt,
+    claim-task.js, post-result.js, shared-parity-preflight.{sql,txt}, shared-parity-postflight.{sql,txt},
+    isolated/launch-isolated-109.ps1, task.md, task-receipt.json, RESULT.bridge.txt}
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-109.task.md kept UNSTAGED as the receipt.
+  ZERO changes under src/**, migrations, appsettings, tests, scripts or package files (Code-SHA: NONE).
+
+ELAPSED TIME: ~16 minutes wall clock (claim 04:25 -> commit 04:41 local), well inside the 30-minute hard stop; the
+planning/implementation phase ended before minute 22 as required.
+DEVIATIONS: none of the TB-106 kind. Two task-owned notes: (1) the launch script copies the generated scratch
+appsettings overlay into the task-owned publish directory so the standalone Host reads the scratch config root (this
+is the explicit config root the task asked for, repository appsettings untouched); (2) EXIT_CODE could not be
+captured from Start-Process, so the failure identity is documented from stderr instead.
+END_TOOBA_WORKER_RESULT
