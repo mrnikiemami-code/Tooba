@@ -1,0 +1,34 @@
+TASK=TB-SHIPPING-INDEPENDENT-GROUP-ACCEPTANCE-152
+SURFACE=PRIVATE Next frontend http://127.0.0.1:3108  ->  PRIVATE Host http://127.0.0.1:5413  ->  scratch Postgres 127.0.0.1:55471/tooba_152_scratch
+AUTH=real OTP customer session (Development mobile fixture) through the private frontend only; shared :3000/:5088 were never used
+SCREENSHOTS
+  ui-shipping-two-groups-152.png        full-page, two group cards restored from the persisted draft
+  ui-shipping-independent-windows-152.png full-page, after changing ONLY group A's window in the browser
+
+DOM_READ_1 (fresh load of /fa/shipping, authenticated, cart already has the two task-owned lines)
+  group 01a1461a-e3dd-7000-add7-4a7d9600829d  seller="فروشنده schema موبایل"  method=tipax:standard  date=2026-10-21  window=12-15  fee=۱۸۰٬۰۰۰ ریال
+  group 01a1461a-e3dd-7000-8ca6-5c22def14aea  seller="فروشگاه آرمان"        method=tipax:standard  date=2026-10-22  window=9-12   fee=۱۸۰٬۰۰۰ ریال
+  continue button testid=shipping-continue text="ادامه به پرداخت" disabled=false
+  page header counters: ۲ تعداد کالا · ۱۴٬۳۵۰٬۰۰۰ ریال جمع کل
+  group A earliest eligible date chips start at 2026-10-21; group B chips start at 2026-10-22 (independent horizons)
+  each card owns its own method list, its own date chips and its own window chips (independent controls)
+
+DOM_ACTION (click group A window chip 15-18 via the real UI)
+  group A: method=tipax:standard date=2026-10-21 window=15-18     <-- changed
+  group B: method=tipax:standard date=2026-10-22 window=9-12      <-- UNCHANGED (independence proven in the real UI)
+
+DOM_ACTION_2 (toggle probe on group B window chip 9-12)
+  continueDisabled before=false / after re-click=false
+  OBSERVED: the window chip is a single-select control (no deselect), so an "unselected group" state cannot be produced
+  from this cart through the UI; continue gating is therefore evidenced only by the enabled state of
+  data-testid=shipping-continue while both groups carry method+date+window. No synthetic DOM state was fabricated.
+
+DOM_READ_2 (full page reload of the same URL)
+  group 01a1461a-e3dd-7000-add7-4a7d9600829d  method=tipax:standard  date=2026-10-21  window=12-15
+  group 01a1461a-e3dd-7000-8ca6-5c22def14aea  method=tipax:standard  date=2026-10-22  window=9-12
+  OBSERVED: the reload restores the server-persisted promise per group; the unsaved local A edit (15-18) is not
+  persisted and group B was never touched by it. Both groups keep distinct dates and distinct windows.
+
+DOM_CART_INTEGRITY
+  no checkout/order/charge occurred during the shipping navigation or the group edits (see readback-152 database
+  assertions: zero order/checkout rows; payment draft is the read-only seam).

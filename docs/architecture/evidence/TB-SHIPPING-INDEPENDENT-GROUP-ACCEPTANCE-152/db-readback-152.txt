@@ -1,0 +1,44 @@
+﻿== groups ==
+          shipping_group_id           |           seller_party_id            |  method_code   | selected_delivery_date | selected_delivery_time_window | minimum_delivery_date | shipping_amount | lead_days 
+--------------------------------------+--------------------------------------+----------------+------------------------+-------------------------------+-----------------------+-----------------+-----------
+ 01a1461a-e3dd-7000-add7-4a7d9600829d | 01a1460a-49e3-7000-a074-73a5b67329cf | tipax:standard | 2026-10-21             | 12-15                         | 2026-10-21            |       180000.00 |         3
+ 01a1461a-e3dd-7000-8ca6-5c22def14aea | 01a1460a-4c8d-7000-80df-fdc458534eea | tipax:standard | 2026-10-22             | 9-12                          | 2026-10-22            |       180000.00 |         3
+(2 rows)
+
+== group lines ==
+          shipping_group_id           |             cart_line_id             
+--------------------------------------+--------------------------------------
+ 01a1461a-e3dd-7000-8ca6-5c22def14aea | 01a1461a-e0c2-7000-a545-15cb021f7a59
+ 01a1461a-e3dd-7000-add7-4a7d9600829d | 01a1461a-e069-7000-af24-988ac496b923
+(2 rows)
+
+== counts ==
+docker : psql:/tmp/readback.sql:7: ERROR:  relation "order.orders" does not exist
+At C:\Users\User\AppData\Local\Temp\ps-script-2fa163a1-6cda-435e-927c-029ecaa23f29.ps1:115 char:198
++ ... | Out-Null; docker exec -e PGPASSWORD=$pw tooba-tb152-pg psql -U scra ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (psql:/tmp/readb... does not exist:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+LINE 1: select 'orders' k, count(*) c from "order".orders union all ...
+                                           ^
+== draft header ==
+               cart_id                | recipient_name | contact_mobile | city_name |          updated_at           
+--------------------------------------+----------------+----------------+-----------+-------------------------------
+ 01a1461a-dfee-7000-a062-a235e59b4ee7 | حمید آزمون     | 09111111111    | تهران     | 2026-10-16 19:05:29.821083+00
+(1 row)
+
+== zero-checkout probe ==
+           k           | c 
+-----------------------+---
+ checkouts             | 0
+ seller_orders         | 0
+ order_lines           | 0
+ order_shipping_groups | 0
+ payments              | 0
+ payment_attempts      | 0
+ cart_groups           | 2
+ cart_group_lines      | 2
+ tax_rules             | 2
+(9 rows)
+

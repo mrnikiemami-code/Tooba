@@ -1,0 +1,10 @@
+TASK=TB-SHIPPING-INDEPENDENT-GROUP-ACCEPTANCE-152
+LAUNCH_1=bootstrap-only launch of the private Host on 127.0.0.1:5413 with the seeded placeholder preparation
+         map, used only to observe the deterministic Development seed ids and seed the scratch database.
+         health 200 observed; stopped by exact path match before the final overlay was applied.
+LAUNCH_2=final launch with the task-owned overlay (SellerPreparationDaysByPartyId A=2 / B=3) plus the single
+         minimum scratch tax fixture; health 200 observed at 4s (host-launch-152.txt); this is the launch whose
+         PID 37444 served every HTTP and browser assertion below. Stopped by exact path match after evidence.
+PRIVATE_TOPOLOGY=Next(3108) -> Host(5413) -> postgres scratch(55471/tooba_152_scratch, tooba_152_messaging)
+SHARED_TOUCHED=NONE  (:3000, :5088, :5432 postgres-db, rabbitmq, tooba_alpha, store-alpha, tenant-alpha all
+                    left running and unmodified; scratch container tooba-tb152-pg removed after evidence)

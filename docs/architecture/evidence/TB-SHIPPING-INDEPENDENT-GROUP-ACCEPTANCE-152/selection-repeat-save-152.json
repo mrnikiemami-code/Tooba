@@ -1,0 +1,37 @@
+{
+  "stableAcrossRepeatedSave": false,
+  "groups": [
+    {
+      "shippingGroupId": "01a1461a-e3dd-7000-add7-4a7d9600829d",
+      "sellerPartyId": "01a1460a-49e3-7000-a074-73a5b67329cf",
+      "methodCode": "tipax:standard",
+      "methodLabel": "معمولی",
+      "selectedDeliveryDate": "2026-10-21",
+      "selectedDeliveryTimeWindow": "12-15",
+      "shippingAmount": 180000,
+      "minimumDeliveryDate": "2026-10-21",
+      "currency": "IRR",
+      "leadDays": 3,
+      "lineCount": 1,
+      "cartLineIds": [
+        "01a1461a-e069-7000-af24-988ac496b923"
+      ]
+    },
+    {
+      "shippingGroupId": "01a1461a-e3dd-7000-8ca6-5c22def14aea",
+      "sellerPartyId": "01a1460a-4c8d-7000-80df-fdc458534eea",
+      "methodCode": "tipax:standard",
+      "methodLabel": "معمولی",
+      "selectedDeliveryDate": "2026-10-22",
+      "selectedDeliveryTimeWindow": "9-12",
+      "shippingAmount": 180000,
+      "minimumDeliveryDate": "2026-10-22",
+      "currency": "IRR",
+      "leadDays": 3,
+      "lineCount": 1,
+      "cartLineIds": [
+        "01a1461a-e0c2-7000-a545-15cb021f7a59"
+      ]
+    }
+  ]
+}
