@@ -1,0 +1,125 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-METHOD-FINANCIAL-EDIT-156
+Parent-Task: TB-SHIPPING-METHOD-FINANCIAL-AUTHORITY-155
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FLAT-METHOD-COMMERCIAL-READINESS
+Mode: BOUNDED_REAL_METHOD_SCOPED_FIXED_IRR_EDITOR_AND_ISOLATED_READ_WRITE_PROOF
+Bridge-Task-Row: c92e8603-0d5f-4a03-9a48-9a00bf88eebb
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: c752e77bb8471b28ea4d3951b2a77d276bd8412d
+Base-SHA: c752e77bb8471b28ea4d3951b2a77d276bd8412d
+Code-SHA: 5832aa683f57c1b4c52716ac982216f2b99d0f15
+Evidence-SHA: the follow-up evidence commit that carries this file (immediately after Code-SHA)
+automaticNextImplementationTask: NONE
+HEAD: equals Origin-Main (verified with git rev-parse HEAD vs git rev-parse origin/main immediately before reporting)
+Origin-Main: equals HEAD (same verification)
+HEAD-Origin-Parity: TRUE
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Evidence: docs/architecture/evidence/TB-SHIPPING-METHOD-FINANCIAL-EDIT-156/
+Elapsed-Minutes: ~30 (claim 2026-10-16T20:04:37Z -> commit/push inside the 45-minute hard box)
+
+WHY PARTIAL AND NOT PASS
+The task sets the bar itself: "PASS only when real method-owned fixed IRR can be saved, read back and shown in a
+private authorized runtime, with sibling isolation and safe failure proven; otherwise PARTIAL/BLOCKED, not a
+cosmetic PASS." The private authorized runtime (isolated Host + scratch DB + private frontend + authorized Admin
+browser) was NOT built in this session, so the HTTP framing and visuals are not proven live. Everything provable
+with the real owner code and the real write seam WAS proven. No live HTTP sample and no screenshot is claimed.
+
+MISSION 1 — METHOD-SCOPED FIXED-AMOUNT EDITOR: COMPLETE (reuse, no overlapping endpoint)
+Inspection showed the existing Shipping-owned write API ALREADY stores a method+option-specific fixed rule
+(POST/PUT /v1/admin/shipping-services/{serviceCode}/rates with optionCode taken from the authoritative server
+binding), and the one-level Rates & Coverage tab already passes resolvedBinding.optionCode and never splits
+methodCode in the browser. Therefore no overlapping endpoint/command/contract was added and no schema or
+migration was needed. What was genuinely missing was SAFE WRITE SEMANTICS, which this task implements.
+New pure fail-closed gate (src/frontend/app/admin/shipping-services/shipping-method-financial-edit-gate.ts) over
+the verified TB-155 status:
+- NeedsConfiguration => create-allowed (authoring the owned rule is the correct fix; not free).
+- FinanciallyConfigured (single currency, no duplicate scope) => edit-allowed (edit + add scoped rule).
+- LegacySharedUnresolved => legacy-shared: creating a NEW owned rule for this method is allowed, in-place edit is
+  refused, the shared provider/service-level row is never edited, inherited or pre-filled, and the method stays
+  "needs financial configuration" rather than free.
+- Conflicting (ambiguous_owned_scope) => blocked-conflict: BOTH create and in-place edit refused with an
+  actionable Persian instruction to deactivate/remove one duplicate row first; no silent first-row choice.
+- Conflicting (mixed_currency) => blocked-conflict with its own precise message.
+- unreadable/unknown status (null) => blocked-unverified: every write refused (fail closed).
+Wired into shipping-one-level-rates-tab.tsx: gate panel (data-testid=shipping-one-level-financial-edit-gate,
+data-gate=<kind>) with the Persian reason and required action; create buttons and per-row edit/save disabled AND
+handler-refused when the gate blocks; activate/deactivate stays enabled because deactivating a duplicate is the
+repair path; the TB-155 status is re-read after every successful create/edit/activation so amount and financial
+state come from the server; a stored 0 is labelled a stored data amount (never an invented free mode); identity
+comes only from the server binding resolver (no client-side split, no sibling leakage, no second level).
+flat-general-tab.tsx (optional item): the verified financial block now points to «تعرفه و پوشش» as the place the
+method's fixed amount is edited and states that tab performs no write while ambiguous or unverified. Four tabs,
+three row actions, multilingual naming, RTL and the design system are unchanged; legacy dialogs kept intact.
+
+MISSION 2 — ISOLATED ACTUAL ACCEPTANCE: NOT COMPLETED (blocked) — honest evidence
+- TB-154's isolated runtime was fully torn down after that task (cleanup-154.txt): .tmp-154-run/,
+  .tmp-154-host-out/ and the scratch container no longer exist (verified by Test-Path and docker ps; only
+  rabbitmq and postgres-db run). Nothing was reusable, so the recipe had to be rebuilt from zero in a 45-minute
+  hard box.
+- The rebuild is not a small step: publish isolated Host, start scratch PostgreSQL, seed tenant/edition, seed the
+  one-level shipping catalog, seed an ADMIN ACTOR whose tenant#view and fulfillment.view authorization decisions
+  resolve to Allow, then a private Next frontend and a browser session. In the real Host the dev-actor header is
+  honoured only in Development (AdminPanelAccess.DevActorHeader) and real authorization tuples are still
+  required; no existing script seeds admin authorization for a scratch runtime. That is the concrete blocker.
+- Shared :3000/:5088 and store-alpha/tooba_alpha were left untouched (not restarted, not written). They run a
+  build that predates TB-155, so they could not have produced honest evidence for this route anyway. No
+  unauthorized shortcut, no shared-DB write and no invented money was used.
+
+VERIFICATION ACTUALLY PERFORMED (real owner code, no fake badges)
+- NEW ShippingMethodFinancialEditAuthorityTests (5 tests) using the real ShippingDbContext and the real
+  Infrastructure ShippingRateCoverageDirectory that the admin endpoints consume, read back through the TB-155
+  handler: 5/5 PASS. It proves (1) a saved fixed IRR rule for tipax:standard reads back as that method's own
+  proven amount in its own currency while tipax:express stays NeedsConfiguration with the sibling row counted
+  only; (2) editing the owned amount changes only that method and the new amount is visible on re-read while the
+  other option is not invented; (3) creating an owned rule PRESERVES the legacy optionCode=null row untouched
+  (not edited, not deleted) and only the owned row becomes this method's money; (4) a competing identical scope
+  is DENIED fail-closed and the stored amount is not overwritten (one rule, original amount); (5) an owned option
+  rule is never attributed to the optionless/service-level identity.
+- Combined with the still-green TB-155 suite: 19/19 PASS.
+- Full Shipping project: 308 PASS / 1 FAIL; the single failure is the PRE-EXISTING unrelated
+  OperationalQuoteCompatibilityTests failure already recorded in TB-155 (log: backend-shipping-suite-156.txt).
+- Frontend focused tests (edit gate, financial model, one-level rates tab, one-level tabs, pinned General-tab
+  guards, flat rows): 60/60 PASS (log: frontend-focused-tests-156.txt).
+- npx tsc --noEmit: exit 0 (log: frontend-typecheck-156.txt).
+
+NOT VERIFIED (stated plainly)
+- No isolated Host + scratch DB + private frontend acceptance run: no real HTTP status/JSON sample for
+  GET /v1/admin/shipping-services/{serviceCode}/financial-status?optionCode=... and no browser screenshot of the
+  new gate or of a save->reload cycle. The read route stays pinned by TB-155 source guards and the write path by
+  real-seam tests, not by an HTTP round trip.
+- The storefront-quote dependency of an edited amount (does a saved owned rule change a real storefront quote for
+  the same method) was not exercised in a runtime.
+
+REMAINING MODES STILL NOT SUPPORTED
+FREE_TO_CUSTOMER, COLLECT_ON_DELIVERY and PROVIDER_QUOTE still have no field, rule or integration in the owner,
+so they remain unrepresentable and unquotable. This task deliberately invented none of them and introduced no
+settlement share, payout or allocation concept.
+
+CHANGED FILES
+ src/frontend/app/admin/shipping-services/shipping-method-financial-edit-gate.ts (new)
+ src/frontend/app/admin/shipping-services/shipping-method-financial-edit-gate.test.ts (new)
+ src/frontend/app/admin/shipping-services/shipping-one-level-rates-tab.tsx (gate wired; fail-closed writes)
+ src/frontend/app/admin/shipping-services/flat-general-tab.tsx (compact pointer line)
+ src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/ShippingMethodFinancialEditAuthorityTests.cs (new)
+ docs/ai/tasks/TB-SHIPPING-METHOD-FINANCIAL-EDIT-156.task.md + this evidence folder
+
+BOUNDARIES RESPECTED
+No production price calculation, existing customer quote, financial ledger, settlement/payout, checkout group
+identity or schedule, PSP, carrier calendar, EF logging, schema or migration was touched. Contracts-only access,
+existing CQRS/MediatR/Result and authorization/validation conventions preserved; no new route, no new permission,
+no new write seam and no second configuration level. Unrelated dirty files preserved; commit fast-forward;
+HEAD == origin/main verified before reporting.
+
+REALISTIC NEXT STEP
+1) Authorize a dedicated reusable ISOLATED RUNTIME HARNESS task (scratch container + isolated Host publish +
+private frontend + an ADMIN AUTHORIZATION SEED script). This is now a repeated blocker for every shipping admin
+acceptance task and is worth doing once, durably.
+2) In that runtime run the read->write->reload acceptance for one method (tipax:standard), confirm sibling
+tipax:express is unchanged and check the storefront quote dependency, then close this PARTIAL.
+END_TOOBA_WORKER_RESULT
