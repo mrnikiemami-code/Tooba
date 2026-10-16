@@ -1,0 +1,57 @@
+TB-SHIPPING-ONE-LEVEL-TABS-106 — THE OBSERVED ANSWER
+
+OBSERVED = YES (real codes captured from the real isolated scratch startup, not inferred)
+
+  stage   : catalog-dev.attribute-schema.publish-product
+  product : 01a1421c-5ca6-7000-b43d-9797d12fc02d   (scratch-only demo product, non-sensitive)
+  isReady : False
+  missing : [variants]                              <-- THE SINGLE FAILING PREREQUISITE
+
+Raw diagnostic line (JSON console, Error level, category Tooba.Catalog.Development.PublishReadiness):
+  {"Timestamp":"2026-10-16T00:28:37.7543756+00:00","EventId":0,"LogLevel":"Error",
+   "Category":"Tooba.Catalog.Development.PublishReadiness",
+   "Message":"stage=catalog-dev.attribute-schema.publish-product; product=01a1421c-5ca6-7000-b43d-9797d12fc02d;
+              isReady=False; missing=[variants]", ...}
+
+ORIGINAL REFUSAL RETAINED (verbatim, stderr):
+  Unhandled exception. System.InvalidOperationException: محصول برای انتشار آماده نیست.
+     at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.UnwrapLifecycle(Result result) ... CatalogDirectory.cs:line 849
+     at Tooba.Catalog.Infrastructure.Directories.CatalogDirectory.PublishProductAsync(...) ... CatalogDirectory.cs:line 1637
+     at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentPublishDiagnostics.PublishWithDiagnosticsAsync(...) ... CatalogDevelopmentPublishDiagnostics.cs:line 75
+     at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentPublishDiagnostics.PublishWithDiagnosticsAsync(...) ... CatalogDevelopmentPublishDiagnostics.cs:line 84
+     at Tooba.Catalog.Infrastructure.Development.CatalogAttributeSchemaDevelopmentSeed.ApplyAsync(...) ... CatalogAttributeSchemaDevelopmentSeed.cs:line 101
+     at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentSeed.PostMigration.EnsureAsync(...) ... CatalogDevelopmentSeed.cs:line 38
+     at Tooba.Host.Development.DevelopmentSchemaMigrator.MigrateOrderedAsync(...) ... DevelopmentSchemaMigrator.cs:line 143
+     at Tooba.Host.Development.DevelopmentSchemaMigrator.ApplyCoreAsync(...) ... DevelopmentSchemaMigrator.cs:line 70 / line 112
+     at Program.<Main>$(String[] args) ... Program.cs:line 367
+  The 105 diagnostic fired ABOVE the refusal (line 75/84 in the wrapper) and the refusal then propagated EXACTLY as
+  before (same type, same message, same UnwrapLifecycle origin), confirming "original refusal retained".
+
+WHY [variants] — narrowed to one sub-rule with scratch evidence (read-only SQL, excerpt file provided)
+  ProductVariantDirectory.GetReadinessAsync computes
+      isValid = missingAxes.Count == 0 && invalidVariants.Count == 0 && duplicates.Count == 0 && noDefault != true
+  and the scratch data eliminates every candidate except the last:
+    - axes: the effective schema bindings mark color + storage as the variant axes and product_variant_axes holds
+      exactly those two  -> missingAxes = 0
+    - per-variant values: both variants carry BOTH axes with GUID option ids
+      (PHONE-BLK-128 color+storage, PHONE-BLU-256 color+storage) and every canonical value parses as a GUID
+      -> invalidVariants = 0
+    - fingerprints: the two variants have different combination fingerprints -> duplicates = 0
+    - defaults: BOTH variants have is_default = false, so noDefault = !Any(IsDefault) = true
+      -> noDefault == true  =>  isValid = false
+  Root cause: the Development attribute-schema seed creates its variants through the direct create path
+  (ICatalogDirectory.CreateVariantAsync -> ProductVariantDirectory.CreateWorkspaceVariantAsync), which contains NO
+  SetDefault / EnforceSingleDefault call (verified by source: SetDefault only appears in the matrix-apply path at
+  lines 414/419/442/443 and ClearDefaultFlags/EnforceSingleDefault at 447/999/1007). The matrix-apply path used by the
+  Admin workspace auto-picks a single default (line 447), which is why the same product is publishable when created
+  through the workspace and only fails through the empty-database seed path.
+
+WHAT THIS CLOSES
+  The 104/105 hypothesis is now a measured fact instead of a guess: the demo seed's product is refused ONLY by the
+  variant-default rule, not by category, identity, attributes, media or SEO. A minimal Catalog-owned seed correction
+  is therefore well-defined and small (designate one created variant as default through the existing public
+  application command/contract that already enforces a single default), NOT a rule relaxation and NOT a redesign.
+
+WHAT THIS DOES NOT CLAIM
+  No source fix was made (forbidden by this task). Nothing here claims a sellable offer, storefront labels, or
+  checkout/commercial shipping readiness.

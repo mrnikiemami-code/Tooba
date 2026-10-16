@@ -1,0 +1,33 @@
+﻿Pager usage is off.
+--- variants of the demo product ---
+              variant_id              | catalog_code_seam | is_default | status |                                                       combination_fingerprint                                                       
+--------------------------------------+-------------------+------------+--------+-------------------------------------------------------------------------------------------------------------------------------------
+ 01a1421c-5d56-7000-80ae-79e286f58eb8 | PHONE-BLK-128     | f          | Draft  | 01a1421c5c227000933b87a991522c06=01a1421c5c8c7000bf761a5d75537867|01a1421c5c467000825b776f087715c6=01a1421c5c9b7000b019ef59a2222e1d
+ 01a1421c-5d70-7000-aa1f-0d4616f9a22a | PHONE-BLU-256     | f          | Draft  | 01a1421c5c227000933b87a991522c06=01a1421c5c9670008f8febc680c91833|01a1421c5c467000825b776f087715c6=01a1421c5c9f70009ddf51ed1f47a31b
+(2 rows)
+
+--- variant attribute values ---
+ catalog_code_seam | attribute_code |         canonical_value          
+-------------------+----------------+----------------------------------
+ PHONE-BLK-128     | color          | 01a1421c5c8c7000bf761a5d75537867
+ PHONE-BLK-128     | storage        | 01a1421c5c9b7000b019ef59a2222e1d
+ PHONE-BLU-256     | color          | 01a1421c5c9670008f8febc680c91833
+ PHONE-BLU-256     | storage        | 01a1421c5c9f70009ddf51ed1f47a31b
+(4 rows)
+
+--- product variant axes ---
+ axis_code | display_order 
+-----------+---------------
+ color     |             0
+ storage   |             1
+(2 rows)
+
+--- effective axis bindings for the primary category ---
+ attribute_code | is_variant_axis | is_active | value_kind  
+----------------+-----------------+-----------+-------------
+ color          | t               | t         | Enumeration
+ ram            | f               | t         | Enumeration
+ screen_size    | f               | t         | Number
+ storage        | t               | t         | Enumeration
+(4 rows)
+

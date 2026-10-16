@@ -1,0 +1,75 @@
+TB-SHIPPING-ONE-LEVEL-TABS-106 — ISOLATION PROOF, WATCHDOG PROOF AND PARITY PROOF
+
+ISOLATION PROOF (offline, BEFORE launch — .tmp-106-run/isolation-guard.json summary)
+  tenants                     : ["store-alpha:Active:tenant-106-scratch"]   (exactly ONE)
+  connectionReferences        : ["tenant-106-scratch","messaging-106-scratch"]  (both scratch-only)
+  messagingReference          : messaging-106-scratch
+  containsSharedAlphaDatabase : false      (string 'tooba_alpha' absent from the effective config)
+  containsSharedAlphaReference: false      (string 'tenant-alpha' absent)
+  containsSharedAlphaPort     : false      (no 'Port=5432'; scratch port is 55444)
+  shippingRateAuthoritySet    : false
+  shippingOperationalShadowSet: false
+  shippingOneLevelCatalogSet  : false      (no gate override of any kind)
+  runLegacyBootstraps         : true       (the ONLY seed switch set — the subject of the task)
+  allowResetAndSeed           : false      (HTTP demo reset/seed deliberately disabled)
+  The prepare script asserts the scratch references and exits non-zero if a shared target ever appears
+  (.tmp-106-run/ failed-fast guard), and the run directory lives outside the repository evidence tree.
+  DB-side isolation was verified afterward with a scratch-only psql connection (port 55444, database
+  tooba_106_scratch) — see scratch-variant-inspection.txt. The isolated process never opened tooba_alpha.
+
+SCRATCH TARGET
+  container   : tooba-106-scratch-pg (postgres:17, no volume, --rm-free, loopback-only 127.0.0.1:55444:5432)
+  databases   : tooba_106_scratch (tenant), tooba_106_messaging (messaging)
+  host port   : 127.0.0.1:5392 (isolated Host), 127.0.0.1:55444 (scratch PostgreSQL)
+  credentials : generated per run, kept only in .tmp-106-run/scratch-password-untracked.txt, never read into
+                evidence; verified absent from the raw logs before they were dropped.
+
+WATCHDOG PROOF (.tmp-106-* outer PowerShell watchdog, watchdog-result.txt)
+  ISOLATED_HOST_PID           = 37448
+  LAUNCH_COUNT                = 1        (one attempt, no retry)
+  WATCHDOG_LIMIT_SECONDS      = 240      (hard outer limit, 4 minutes from launch)
+  ELAPSED_SECONDS             = 50       (terminated naturally: the expected refusal crashed the startup)
+  PROCESS_EXITED              = True
+  KILLED_BY_WATCHDOG          = False    (no force-kill needed; the isolation never left a stray listener)
+  DIAGNOSTIC_LINE_CAPTURED    = True
+  LISTENERS_ON_5392_AFTER_STOP= 0
+  The watchdog polls the redirected stdout/stderr for the diagnostic category and the process exit state, and it
+  force-stops the child if the 240 s limit is reached. It stopped at 50 s because both conditions were satisfied.
+
+PARITY PROOF (read-only, shared target never written by this task)
+  :5088 /health             = {"status":"ok"}   before AND after
+  :5088 /__platform-commerce= edition=SingleStore deploymentId=dev-singlestore tenantId=store-alpha
+                              connectionReference=tenant-alpha resolvedHost=127.0.0.1 themeReference=theme-alpha
+                              defaultMarketReference=IR        (identical before AND after)
+  :3000                     = no listener before execution and after (pre-existing state, untouched)
+  tooba_alpha counts (before -> after, identical):
+      shipping_methods=7  shipping_method_translations=14  carts=50  cart_lines=78
+      cart_shipping_drafts=14  seller_orders=26  products=567  offers=3223
+  Only the SELECT statements in shared-parity-preflight.sql / shared-parity-postflight.sql were issued; the task
+  performed zero writes to tooba_alpha / tooba_marketplace / tooba_messaging.
+
+CLEANUP PROOF
+  scratch container destroyed : docker rm -f tooba-106-scratch-pg -> removed
+  scratch host process        : exited by itself (pid 37448), 0 listeners on 5392
+  scratch listeners           : 0 on 5392, 0 on 55444
+  task-owned dirs removed     : .tmp-106-run, .tmp-106-host-out (both gone)
+  raw logs                    : the 683 KB scratch stdout and the stderr were dropped after the bounded redacted
+                                excerpt was taken; the 30 KB MSBuild publish log and the 4.4 MB shared-host restart
+                                log were likewise dropped (build-record.txt keeps only the bounded facts)
+  running containers          : postgres-db, rabbitmq (exactly the pre-existing pair)
+
+DEVIATION AND RESTORATION (disclosed, not hidden)
+  During teardown a name-based stop (`Get-Process -Name Tooba.Host | Stop-Process`) also matched the PRE-EXISTING
+  shared Development Host on :5088, which this task was required to leave running. It was detected immediately by
+  the mandatory post-task health check, and the shared Development Host was restarted from the same executable
+  (src/backend/Host/Tooba.Host/bin/Debug/net8.0/Tooba.Host.exe), the same working directory, the same port and the
+  repository's safe defaults, with no override environment variable set.
+    - restart 1 (repo-redirected logs) -> /health 200 and provenance identical; its redirect files were still
+      locked by the running process, so a second controlled restart was performed by explicit PID (35720) using
+      $TEMP redirects, so that no log lands inside the repository.
+    - restart 2 -> SHARED_HOST_PID=34172, /health was 200 within ~3 s, provenance byte-identical
+      (dev-singlestore / store-alpha / tenant-alpha / 127.0.0.1 / theme-alpha / IR), and the postflight DB counts
+      above are unchanged.
+  Net effect on the shared target: process identity (PID) changed; configuration, endpoints, provenance and data are
+  identical. No shared file was rebuilt into the shared output directory by the scratch run itself (the scratch Host
+  was published into the task-owned .tmp-106-host-out). This deviation is reported for Architect awareness.

@@ -1,0 +1,10 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-106 — bounded publish/build record (raw 30 KB MSBuild log dropped).
+Command: dotnet publish src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug -o .tmp-106-host-out
+Result: Tooba.Host.exe produced in the task-owned output directory; build succeeded (warnings only, all pre-existing
+XML-doc/unused-using warnings; zero errors).
+
+Verification that the 105 diagnostic is compiled into the isolated build (searched the published assembly):
+  .tmp-106-host-out/Tooba.Catalog.Infrastructure.dll contains the string
+  'Tooba.Catalog.Development.PublishReadiness' => True (that constant exists only in the new 105 file)
+  dll_sha256=40664CDFB3DF581B8F3B913C71DBD0CE1D2850DF25BE6DC8DE18B41A6B13FCB8
+  Tooba.Host.exe written 2026-10-16T03:57:25

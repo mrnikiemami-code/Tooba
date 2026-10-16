@@ -1,0 +1,74 @@
+TB-SHIPPING-ONE-LEVEL-TABS-106 — EXACT CODE-TO-PREREQUISITE MAPPING
+
+A. The refusal path (unchanged by this task; no src/ file touched)
+   CatalogAttributeSchemaDevelopmentSeed.ApplyAsync (line ~101)
+     -> CatalogDevelopmentPublishDiagnostics.PublishWithDiagnosticsAsync (105 seam, line 75 calls, line 84 re-reads)
+        -> ICatalogDirectory.PublishProductAsync
+           -> CatalogDirectory.PublishProductAsync (line 1637)
+              -> ... PublishAsync -> WorkspaceProductPublishRejected
+                 -> CatalogDirectory.UnwrapLifecycle (line 849)
+                    -> InvalidOperationException(CatalogPublishRules.MessageNotReadyFa)
+                       = "محصول برای انتشار آماده نیست."   <-- observed on stderr, verbatim
+     The 105 seam therefore logs the real reason BEFORE the generic string is the only thing seen. No behaviour change.
+
+B. Code -> prerequisite mapping (the six readiness domains and what the scratch run proved about each)
+
+  1. category  — L3 assignable category
+       source : CatalogAttributeSchemaDevelopmentSeed.EnsureMobileCategoryAsync creates/publishes the L3 leaf and
+                AssignCategoryAsync (line 86) sets the primary category.
+       scratch: no 'category' code was emitted.                                    -> NOT THE BLOCKER
+
+  2. identity  — localized product name
+       source : CreateProductAsync (line 80) with fa-IR/en-US names.
+       scratch: no 'identity' code was emitted.                                    -> NOT THE BLOCKER
+
+  3. attributes — every required attribute definition for the effective category schema
+       source : EnsureDefinitionAsync/EnsureBoundAsync bind color/storage/ram/screen_size, and lines 87-88 write the
+                product-level values.
+       scratch: no 'attributes' code was emitted.                                  -> NOT THE BLOCKER
+
+  4. variants  — ProductVariantDirectory.GetReadinessAsync
+       isValid = missingAxes.Count == 0 && invalidVariants.Count == 0 && duplicates.Count == 0 && noDefault != true
+         missingAxes      : color + storage are the bound variant axes and product_variant_axes holds exactly those
+                            two rows.                                                -> 0 (not the blocker)
+         invalidVariants  : both variants carry both axes with GUID enum option values that parse as GUIDs.
+                                                                                     -> 0 (not the blocker)
+         duplicates       : the two combination fingerprints differ.
+                                                                                     -> 0 (not the blocker)
+         noDefault        : BOTH variants have is_default = false, so
+                            noDefault = !variants.Any(x => x.IsDefault) = TRUE     -> THE BLOCKER
+       => the emitted code 'variants' maps to exactly one sub-rule here: no variant of the product is the default.
+
+  5. media     — at least one primary media asset
+       source : CatalogAttributeSchemaDevelopmentSeed line 94 attaches one media reference
+                (catalog.AttachMediaReferenceAsync(product.ProductId, aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa)).
+       scratch: the product was created fresh on the empty scratch database, so this line ran; the readiness reader
+                emitted no 'media' code.                                          -> NOT THE BLOCKER
+
+  6. seo       — slug + SEO title/description
+       source : DemoProductSlug 'schema-mobile-demo-phone' plus
+                ProductPublishPrep.EnsureMinimalSeoForPublishAsync (line 96).
+       scratch: no 'seo' code was emitted.                                         -> NOT THE BLOCKER
+
+C. Why only 'variants' appears
+   ProductPublishReadiness.Missing[] is built from the domains that reported a missing/invalid requirement. Exactly
+   one domain reported one, and inside it exactly one sub-rule fired (noDefault). The published diagnostic line is
+   therefore a single-element list: missing=[variants].
+
+D. The concrete defect (evidence-backed, NOT fixed here)
+   CatalogAttributeSchemaDevelopmentSeed creates its variants via catalog.CreateVariantAsync, i.e.
+   IProductVariantDirectory.CreateWorkspaceVariantAsync, whose body performs no SetDefault/EnforceSingleDefault
+   (verified by source search: SetDefault appears only at ProductVariantDirectory.cs lines 414/419/442/443 inside the
+   matrix-apply path, while EnforceSingleDefault is only called at line 447 in that same path). Because publish
+   readiness requires noDefault != true, a product whose variants were created only through the direct create path
+   can never be published, no matter how correct its axes/values are.
+
+E. Smallest recommended corrective task (for the Architect, not executed here)
+   ONE bounded Catalog-owned seed correction: after the seed creates its variants, designate exactly one of them as
+   the default through the EXISTING public application command/contract that already clears other defaults and sets a
+   single default (the same rule the Admin workspace uses), then let the seed publish. No readiness rule may be
+   weakened, no synthetic readiness codes, no direct DML, and no change to publish/checkout/shipping semantics.
+   Scope guard: Catalog module only; the change must be proven on the same isolated scratch recipe used here, and the
+   Architect should decide whether the intended product is "the seed must set a default variant" (seed defect) or
+   "the create path should enforce a default when none exists" (directory-contract decision) — this task proves the
+   fact, not the policy.
