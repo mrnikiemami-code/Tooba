@@ -39,6 +39,19 @@ public sealed class WorkspaceDemoMarketplaceSeed(
     /// <summary>Seller SKU of the second demo offer.</summary>
     public const string SellerBSku = "DGS-LN-01";
 
+    /// <summary>
+    /// (TB-136) Seller SKU of the Development-only companion offer. It belongs to <b>Seller A</b> — the
+    /// SAME real seller as <see cref="SellerASku"/> — on a different live product/variant, so a single
+    /// real seller can produce two genuinely distinct sellable cart lines.
+    /// </summary>
+    public const string SellerACompanionSku = "ARM-SC-01";
+
+    /// <summary>(TB-136) Base price of the companion offer, in IRR minor units.</summary>
+    public const decimal SellerACompanionPrice = 1_450_000m;
+
+    /// <summary>(TB-136) Stock quantity seeded for the companion offer.</summary>
+    public const decimal SellerACompanionStock = 6m;
+
     /// <summary>Legacy display name of the first seller that the copy refresh rewrites.</summary>
     public const string LegacySellerADisplayName = "فروشنده الف";
 
@@ -59,7 +72,6 @@ public sealed class WorkspaceDemoMarketplaceSeed(
 
     /// <summary>Demo price market.</summary>
     public const string PriceMarket = "IR";
-
     /// <summary>Demo price currency.</summary>
     public const string PriceCurrency = "IRR";
 
@@ -200,6 +212,53 @@ public sealed class WorkspaceDemoMarketplaceSeed(
         {
             throw new InvalidOperationException(hold.FirstError.Code);
         }
+    }
+
+    /// <summary>
+    /// (TB-136) Ensures the Development-only companion offer for the SAME existing Seller A on the
+    /// companion live variant: active offer, authoritative base price, tax category and real stock.
+    /// Idempotent by SKU; reachable only from the same create-path as the marketplace demo seed.
+    /// </summary>
+    public async Task EnsureSameSellerCompanionOfferAsync(
+        Guid companionVariantId,
+        CancellationToken cancellationToken = default)
+    {
+        var sellerAPartyId = await parties.EnsureDevelopmentOrganizationAsync(
+            SellerADisplayName,
+            SellerALegalName,
+            cancellationToken);
+
+        var offer = await offers.EnsureActiveSellerOfferAsync(
+            companionVariantId,
+            sellerAPartyId,
+            SellerACompanionSku,
+            cancellationToken);
+
+        var start = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
+        var price = await prices.EnsureDevelopmentBasePriceAsync(
+            new SetDevelopmentBasePrice(
+                offer,
+                PriceMarket,
+                SalesChannel.Marketplace,
+                SellerACompanionPrice,
+                PriceCurrency,
+                start),
+            cancellationToken);
+        if (price.IsFailure)
+        {
+            throw new InvalidOperationException(price.FirstError.Code);
+        }
+
+        var classified = await tax.EnsureDevelopmentOfferCategoryAsync(
+            new EnsureDevelopmentOfferCategory(offer, TaxCategoryCode, TaxCategoryDisplayName),
+            cancellationToken);
+        if (classified.IsFailure)
+        {
+            throw new InvalidOperationException(classified.FirstError.Code);
+        }
+
+        await EnsureLocationAsync(LocationTehranCode, LocationTehranName, cancellationToken);
+        await IncreaseStockAsync(offer, LocationTehranCode, SellerACompanionStock, cancellationToken);
     }
 
     /// <summary>

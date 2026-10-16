@@ -39,6 +39,25 @@ public sealed class WorkspaceDemoProductSeed(
     /// <summary>Stable media asset id of the mannequin view.</summary>
     public const string MannequinMediaId = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
 
+    /// <summary>
+    /// (TB-136) Slug seam of the Development-only companion live product. It exists solely so the
+    /// disposable Development fixture can present TWO genuinely distinct sellable cart lines for one
+    /// real seller (the same-seller / two-method acceptance case). Never seeded in production.
+    /// </summary>
+    public const string CompanionSlug = "workspace-live-scarf";
+
+    /// <summary>(TB-136) Variant catalog code seam of the companion live product.</summary>
+    public const string CompanionVariantCodeSeam = "LIVE-SCARF-NVY";
+
+    /// <summary>(TB-136) Localized companion product name (fa-IR).</summary>
+    public const string CompanionProductNameFa = "شال مردانه لینن";
+
+    /// <summary>(TB-136) Localized companion product name (en-US).</summary>
+    public const string CompanionProductNameEn = "Men's Linen Scarf";
+
+    /// <summary>(TB-136) Stable media asset id of the companion product.</summary>
+    public const string CompanionMediaId = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+
     /// <summary>Brand slug seam of the demo product.</summary>
     public const string BrandSlugSeam = "tooba-live";
 
@@ -141,6 +160,92 @@ public sealed class WorkspaceDemoProductSeed(
             [(colorId, "ignored", black)],
             cancellationToken);
         return variant.VariantId;
+    }
+
+    /// <summary>
+    /// (TB-136) Ensures the Development-only companion live product and returns its variant id.
+    /// It reuses the existing demo brand and the live product's own leaf category/attribute axis, is
+    /// idempotent by slug seam, and is reachable ONLY from the same create-path as the marketplace
+    /// demo seed (existing Development fixtures on an already-seeded database are never touched).
+    /// </summary>
+    public async Task<Guid> EnsureCompanionLiveProductAsync(CancellationToken cancellationToken = default)
+    {
+        var existingProduct = await catalogDb.Products.AsNoTracking()
+            .SingleOrDefaultAsync(p => p.SlugSeam == CompanionSlug, cancellationToken);
+
+        Guid productId;
+        if (existingProduct is null)
+        {
+            var source = await catalogDb.Products.AsNoTracking()
+                .SingleAsync(p => p.SlugSeam == SeedSlug, cancellationToken);
+            var categoryId = await catalogDb.ProductCategories.AsNoTracking()
+                .Where(x => x.ProductId == source.ProductId)
+                .Select(x => x.CategoryId)
+                .FirstAsync(cancellationToken);
+            var brandId = await catalogDb.Brands.AsNoTracking()
+                .Where(b => b.SlugSeam == BrandSlugSeam)
+                .Select(b => b.BrandId)
+                .SingleAsync(cancellationToken);
+
+            var product = await catalog.CreateProductAsync(
+                CatalogProductKind.PhysicalGood,
+                CompanionSlug,
+                brandId,
+                new Dictionary<string, string>
+                {
+                    ["fa-IR"] = CompanionProductNameFa,
+                    ["en-US"] = CompanionProductNameEn,
+                },
+                cancellationToken);
+            await catalog.AssignCategoryAsync(product.ProductId, categoryId, cancellationToken);
+            await catalog.AttachMediaReferenceAsync(
+                product.ProductId,
+                Guid.Parse(CompanionMediaId),
+                "نمای شال",
+                cancellationToken);
+            await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
+                catalog,
+                product.ProductId,
+                "توضیح سئو شال زنده Workspace",
+                cancellationToken);
+            await catalog.PublishProductAsync(product.ProductId, cancellationToken);
+            productId = product.ProductId;
+        }
+        else
+        {
+            productId = existingProduct.ProductId;
+        }
+
+        var existingVariant = await catalogDb.Variants.AsNoTracking()
+            .SingleOrDefaultAsync(
+                v => v.ProductId == productId && v.CatalogCodeSeam == CompanionVariantCodeSeam,
+                cancellationToken);
+        if (existingVariant is not null)
+        {
+            return existingVariant.VariantId;
+        }
+
+        var colorId = await CatalogDevelopmentAttributeReuse.EnsureCompatibleDefinitionAsync(
+            catalog,
+            ColorAttributeCode,
+            CatalogAttributeValueKind.Enumeration,
+            isVariantAxis: true,
+            new Dictionary<string, string> { ["fa-IR"] = "رنگ", ["en-US"] = "Color" },
+            cancellationToken);
+        var black = await CatalogDevelopmentAttributeReuse.EnsureCompatibleOptionAsync(
+            catalog,
+            catalogDb,
+            colorId,
+            BlackOptionCode,
+            new Dictionary<string, string> { ["fa-IR"] = "سیاه", ["en-US"] = "Black" },
+            cancellationToken);
+
+        var companionVariant = await catalog.CreateVariantAsync(
+            productId,
+            CompanionVariantCodeSeam,
+            [(colorId, "ignored", black)],
+            cancellationToken);
+        return companionVariant.VariantId;
     }
 
     /// <summary>

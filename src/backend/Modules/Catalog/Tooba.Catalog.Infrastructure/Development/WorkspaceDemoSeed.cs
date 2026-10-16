@@ -39,6 +39,11 @@ public sealed class WorkspaceDemoSeed(
 
         var variantId = await productSeed.SeedProductAsync(cancellationToken);
         await marketplaceSeed.EnsureMarketplaceAsync(variantId, cancellationToken);
+
+        // (TB-136) Development-only companion fixture: one extra live product whose offer belongs to the
+        // SAME Seller A, so a single real seller presents two distinct sellable cart lines.
+        var companionVariantId = await productSeed.EnsureCompanionLiveProductAsync(cancellationToken);
+        await marketplaceSeed.EnsureSameSellerCompanionOfferAsync(companionVariantId, cancellationToken);
     }
 
     /// <inheritdoc />
