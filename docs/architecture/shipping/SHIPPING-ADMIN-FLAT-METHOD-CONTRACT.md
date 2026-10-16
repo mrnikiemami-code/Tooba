@@ -46,3 +46,37 @@ This decision supersedes all earlier planning/mockups that present the five tabs
 
 ## Immediate acceptance
 The current screenshot of `/admin/shipping-services` showing 5 provider rows, many action icons and separate deep editors is CURRENT/REJECTED for this target UX. The required output is a method-level list plus a per-method horizontal single-level tab editor. The user must verify the actual interface before authorization to move forms.
+
+## LOCKED ADDENDUM — Independent monetary status and opt-in constraints (user approved 2026-10-16)
+
+This section is NORMATIVE and supersedes any earlier interpretation that a missing restriction means a disabled method, or that a provider-level rate/restriction may silently apply to sibling methods.
+
+### A. Each selectable shipping method has ONE explicit financial mode
+Every independently administered canonical method (e.g. `tipax:standard`, `tipax:express`) MUST have an unambiguous, server-authoritative monetary configuration and validation state. Supported business modes to model explicitly (subject to existing capability/approved integration):
+- `FREE_TO_CUSTOMER`: customer shipping charge is 0 by an explicit rule, not by absent data; the responsible seller/platform/carrier cost payer must be separately tracked or pending approved finance policy.
+- `FIXED_AMOUNT`: a declared amount and currency (IRR with canonical Money precision/rounding) for this method.
+- `RULE_BASED_RATE`: its own valid tariff rules; ambiguity or no matching required price is NOT free.
+- `COLLECT_ON_DELIVERY`: explicitly customer-payable to carrier at delivery; expose any advance charges and payer responsibility distinctly, never pretend the full cost is zero.
+- `PROVIDER_QUOTE`: a verified carrier quotation from an authorized integration with identity, validity and failure rules; do not fabricate amounts or delivery promises.
+
+No implicit financial-mode inference from an empty tariff list or provider name. Missing, incomplete, conflicting or unavailable monetary policy MUST be shown in Admin as `NEEDS_FINANCIAL_CONFIGURATION`/unquotable and fail closed for checkout quote/selection as appropriate, not silently priced at zero. The method's enabled flag and quote-ready/financial-ready status are DISTINCT; an enabled method is not necessarily customer-selectable until its mandatory pricing/commitment requirements are satisfied. Preserve existing accepted order snapshots and financial PendingAllocation invariants; never activate carrier payout or allocation shares without an approved policy.
+
+### B. Unconfigured optional constraints default to UNRESTRICTED PER METHOD
+For an enabled method, absent optional restrictions mean **no admin-configured restriction for that method** on geography (all supported cities/provinces), parcel weight/dimensions, eligible weekdays, order-value thresholds, and other optional dimensions. Restriction configuration is opt-in. When an admin adds explicit restrictions, they narrow ONLY the selected canonical method. Removing all configured restrictions restores that dimension's unrestricted state. Distinguish `NO_RESTRICTIONS` from `UNCONFIGURED_REQUIRED_POLICY` and from `DENY_ALL`; an empty include-list must not accidentally mean zero eligible cities/days/weights.
+
+'Unrestricted' does NOT override verified carrier capabilities, legal/physical shipping limits, server-side tenant/seller eligibility, calendar/cut-off/capacity authority or missing financial/delivery-promise prerequisites. 'Every day' means no extra admin blacklist, not a guaranteed carrier pickup/delivery slot. Never invent infinity-based physical claims or an unsupported guaranteed date.
+
+### C. Hard method isolation — NO sibling or provider policy inheritance
+Every rate, geographic condition, weight/dimension rule, working-day rule, packaging rule, payment responsibility and operational policy MUST be scoped using the selected **canonical method identity** (and its authorized server binding), with tenant/seller context where required. No sibling method inherits or is edited by these settings, even when both methods share a carrier/provider. Provider identity is shared METADATA ONLY. Example: `tipax:standard` restricted to Tehran and <=20 kg at a fixed fee MUST NOT restrict or price `tipax:express`.
+
+Old provider/service-level policies that cannot be unequivocally attributed to one canonical method MUST be marked `LEGACY_SHARED_UNRESOLVED`, kept readable/auditable, and NOT silently projected as independently owned policies. Migration/compatibility and any conversion of genuinely shared historical rules require explicit reviewed mapping rather than accidental inheritance, deletion or duplication. Persist and retrieve method-specific constraints consistently in Admin, storefront quotation and final Order/Fulfillment snapshot.
+
+### D. Acceptance / prohibition
+1. Enable a method with zero optional restrictions: all supported geography, optional weights/dimensions and eligible weekdays remain unconstrained BY ADMIN for that method, while backend financial status remains explicit.
+2. Save a geographic/weight/schedule restriction for `tipax:standard`: `tipax:express` remains unchanged in both Admin and actual server quote/eligibility.
+3. Delete that restriction: that specific dimension returns to unrestricted state; do not affect pricing mode or other dimensions.
+4. Empty tariffs without an explicit FREE mode cannot produce a zero customer quote or fake promised slot.
+5. Fixed charge, free-to-customer, on-delivery and provider-quoted semantics are separate; all customer-visible totals, seller obligations and pending allocations remain consistent.
+6. A missing/untrusted server binding must fail closed for WRITES; never derive method ownership by splitting a code string in the browser.
+
+This addendum is a LOCKED REQUIREMENT; it is NOT a claim that the present shipping backend supports all modes or correct isolation. Code changes require separate scoped implementation and real write/read and checkout acceptance.
