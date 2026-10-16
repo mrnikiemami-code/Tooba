@@ -1,0 +1,100 @@
+TB-SHIPPING-ONE-LEVEL-TABS-107 — SOURCE-LINE EVIDENCE (Catalog default-variant seam)
+
+All line numbers are from base SHA 995e485d23216e34320374002812cdc0c1b5913a (HEAD == origin/main at claim time).
+
+[1] The only existing writer of "default variant" in the whole Catalog module
+  src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Directories/ProductVariantDirectory.cs
+    - 383      `if (input.VariantPatches is { Count: > 0 })` opens the patch loop
+    - 410-421  patch path: `if (patch.IsDefault is bool isDefault) { if (isDefault) { ClearDefaultFlags(variants, now);
+               target.SetDefault(true, now); } else { target.SetDefault(false, now); } }`
+    - 425-441  `if (input.DefaultVariantId is Guid defaultId)` -> validates the variant exists
+               (VariantDefaultMissing) and is not Archived (VariantArchivedCannotBeDefault), then
+               `ClearDefaultFlags(variants, now); target.SetDefault(true, now);`
+    - 447      `else { EnforceSingleDefault(variants, now); }`
+    - 999-1006 `private static void ClearDefaultFlags(...)`   (clears IsDefault on all but the chosen)
+    - 1007-1024 `private static void EnforceSingleDefault(...)` (picks/keeps exactly one)
+  => The single-default invariant is enforced ONLY inside `ApplyMatrixAsync`. Both the
+     `DefaultVariantId` and the `IsDefault` patch are parameters of that one operation.
+
+[2] That operation is a whole-product cartesian reconcile (verified in source AND in the repo's own test)
+  ProductVariantDirectory.cs
+    - 296-319  `ApplyMatrixAsync(productId, input, ct)` -> `BuildDesiredCombinationsAsync(...)`
+    - 319-330  inside a transaction: existing `ProductVariantAxes` are REMOVED (`RemoveRange` at 324) and replaced
+               by the built axes (add loop 326-329)
+    - 332-370  existing variants indexed by `CombinationFingerprint`; desired combos create missing variants
+    - 372-380  `foreach (var variant in variants.Where(v => v.Status != Archived))` -> any variant whose
+               fingerprint is NOT in `desiredSet` is ARCHIVED (`SetStatus(Archived)` at 379)
+    - 751-817  `BuildDesiredCombinationsAsync`: axes with zero option ids are skipped; if no axis has options
+               it returns an EMPTY combination list (which would archive every variant)
+    - 819-856  option validation, then `total *= axis.Options.Count` per axis  <-- CARTESIAN
+    - 870-905  `seed = seed.SelectMany(prefix => axis.Options.Select(opt => ...))`  <-- explicit cross product;
+               fingerprint = `CatalogVariant.ComputeFingerprint(axes)` (CatalogVariant.cs 68-81)
+  In-tree proof (existing, unchanged test) — src/backend/Host/Tooba.Host.Tests/ProductVariantMatrixTests.cs
+    - 150-168  2 colours x 3 storages  -> `Assert.Equal(6, multiPreview.TotalDesired)`
+    - 176-192  2 colours x 2 storages  -> `Assert.Equal(4, multiApply.Created)`, `Assert.Equal(2, multiApply.Deactivated)`
+                (the previous one-axis variants were archived)
+    - 219-230  shrinking to colour=[black], storage=[s128] archives everything else
+    - 261-290  the canonical single-default flow: apply a FULL matrix, take a variant id, then apply the SAME
+                full matrix again with `DefaultVariantId`, then `Assert.Equal(1, ... v.IsDefault)` and
+                `Assert.True(readiness.IsValid)`
+
+[3] The seed's variant set is a SPARSE DIAGONAL, not a cartesian product
+  src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogAttributeSchemaDevelopmentSeed.cs
+    - 89   `await catalog.SetProductVariantAxesAsync(product.ProductId, [colorId, storageId], ct);`
+    - 91   comment: «چند ترکیب نمونه برای اثبات محورها؛ FULL_VARIANT_MATRIX تولید نمیشود.»
+           ("a few sample combinations to prove the axes; the FULL_VARIANT_MATRIX is not produced")
+    - 92-93 `CreateVariantAsync(productId, "PHONE-BLK-128", [(colorId, black), (storageId, storage128)])`
+            `CreateVariantAsync(productId, "PHONE-BLU-256", [(colorId, blue), (storageId, storage256)])`
+            => active fingerprints = {color:black|storage:128gb , color:blue|storage:256gb}
+               The declared axes are 2 colours x 2 storages (4 possible combinations) but only 2 of the 4 exist.
+    - 100-104 publish via `CatalogDevelopmentPublishDiagnostics.PublishWithDiagnosticsAsync(...)`
+
+[4] Consequence of using the canonical operation on this sparse set (measured, not guessed)
+  ProductVariantDirectory.cs 819-905: the only desired sets expressible are cartesian products.
+    - [color: black, blue] x [storage: 128gb, 256gb] -> desired = 4 fingerprints (BLK-128, BLK-256, BLU-128,
+      BLU-256). The two existing variants match by fingerprint and stay (unchanged, Draft preserved, catalog code
+      seams preserved because no patches are sent), so 2 NEW variants would be created. End state: 4 variants,
+      i.e. the very "FULL_VARIANT_MATRIX" the seed's own comment forbids.
+    - [color: black, blue] alone -> desired = 2 single-axis fingerprints, which do NOT match the existing
+      two-axis fingerprints: BOTH existing variants would be archived and 2 new one-axis variants created, and
+      line 327 would replace ProductVariantAxes with [color] only, silently dropping the storage axis.
+    - [color: black] x [storage: 128gb] -> desired = 1 fingerprint; the other variant is archived.
+  Knock-on effect of the 4-combination variant:
+    src/.../Development/CatalogAttributeSchemaSellableEnricher.cs
+    - 71-78   loads ALL variants of the demo product (no status filter)
+    - 96-111  creates one Offer per variant (`EnsureActiveSellerOfferAsync(variant.VariantId, ...)`)
+    - 99      SKU derived from `variant.CatalogCodeSeam` (null for matrix-created variants)
+    - 112-140 price + tax + stock per variant
+    => 2 variants -> 4 variants also means 2 offers -> 4 offers (each with price, tax category and stock).
+
+[5] No narrower canonical seam exists anywhere in the Catalog surface
+  src/backend/Modules/Catalog/Tooba.Catalog.Application/Variants/Ports/IProductVariantDirectory.cs
+    - 11-16  `SetAxesAsync` (axes only, no default)
+    - 30-33  `ApplyMatrixAsync` (the only default-capable write)
+    - 41-47  `CreateWorkspaceVariantAsync` (creates a variant; IsDefault is hard-false in CatalogVariant.Create,
+             CatalogVariant.cs 101)
+    - 48-55  `PatchWorkspaceVariantAsync(productId, variantId, status, catalogCodeSeam)`  <-- no default parameter
+  src/backend/Modules/Catalog/Tooba.Catalog.Application/Ports/ICatalogDirectory.cs
+    - 411-417 `SetProductVariantAxesAsync`
+    - 436-439 `ApplyProductVariantMatrixAsync(productId, input, ct)`  <-- the only default-capable facade method
+    - 573-577 `CreateVariantAsync`
+  src/backend/Modules/Catalog/Tooba.Catalog.Endpoints/Admin/Variants/CatalogProductVariantAdminEndpoints.cs
+    - 15-21   the five Admin routes are variant-axes, variants/editor, variants/preview, variants/apply,
+              variants/readiness. There is NO dedicated "set default variant" route; the Admin UI can only set a
+              default through /variants/apply, i.e. through the same cartesian reconcile.
+
+[6] The domain method does NOT enforce uniqueness
+  src/backend/Modules/Catalog/Tooba.Catalog.Domain/Aggregates/CatalogVariant.cs
+    - 133-143 `public void SetDefault(bool isDefault, DateTimeOffset now)` — XML comment: «یکتایی در دایرکتوری
+              اعمال میشود» ("uniqueness is enforced in the directory"). It only rejects setting the default on an
+              Archived variant; it does not clear other variants' flags.
+    - 68-81   `ComputeFingerprint(...)` — the deterministic key the reconcile matches on.
+  => Calling only `SetDefault(true)` from the seed would violate the single-default invariant unless the seed also
+     clears the other variants' flags, i.e. unless the seed re-implements `ClearDefaultFlags`/`EnforceSingleDefault`
+     — exactly the duplication Mission A forbids.
+
+[7] Observed state of the seed's variants (from the TB-106 isolated scratch database, read-only SQL)
+    catalog.variants of slug_seam='schema-mobile-demo-phone':
+      PHONE-BLK-128  is_default = f
+      PHONE-BLU-256  is_default = f
+    => observed default count = 0 (and readiness returned missing=[variants] with NoDefaultVariant = true).

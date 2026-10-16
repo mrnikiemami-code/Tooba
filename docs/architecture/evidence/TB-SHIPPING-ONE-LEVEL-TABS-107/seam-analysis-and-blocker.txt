@@ -1,0 +1,88 @@
+TB-SHIPPING-ONE-LEVEL-TABS-107 — SEAM ANALYSIS AND WHY THIS IS BLOCKED
+
+BLOCKED_DEFAULT_VARIANT_APPLICATION_SEAM
+
+The Architect asked for "exactly one default variant using an EXISTING Catalog application/domain operation that
+enforces single-default" while "preserv[ing] two valid variants, axis option IDs and fingerprints". Those two
+requirements are mutually unsatisfiable with the Catalog surface that exists today:
+
+  R1 "set a single default through an operation that enforces single-default"
+  R2 "keep the seed's two-variant sparse diagonal"
+  R3 "do not duplicate the default-selection algorithm"
+  R4 "do not introduce direct EF writes"
+  R5 "do not change CreateWorkspaceVariantAsync / readiness / publish rules / other bootstraps"
+
+Evidence (see source-line-evidence.txt for full citations):
+
+  * The ONLY operation that enforces single-default is `ProductVariantDirectory.ApplyMatrixAsync` (lines 410-447
+    apply the invariant; 999-1024 are its private helpers). It is reached only through
+    `ICatalogDirectory.ApplyProductVariantMatrixAsync`, i.e. Admin `PUT /variants/apply`.
+  * That operation is a whole-product CARTESIAN reconcile: axes' option lists are cross-multiplied (lines 870-905),
+    `ProductVariantAxes` are replaced (lines 319-331), and every active variant whose fingerprint is not in the
+    desired set is ARCHIVED (lines 372-380). The repo's own test asserts the cartesian arithmetic
+    (2x3=6, 2x2=4) and the archive-on-shrink behaviour (ProductVariantMatrixTests 150-230).
+  * The seed's set is a sparse diagonal: 2 declared axes with 2 options each (4 possible combinations) but only
+    2 existing variants (Seed lines 89-92), deliberately: «FULL_VARIANT_MATRIX تولید نمیشود».
+  * Cartesian products expressible on this product are {1, 2-colour-only, 2-storage-only, 4} fingerprints.
+    None of them equals the existing 2 fingerprints, so:
+       - using both axes' options           -> 2 extra variants created (4 total) = full matrix, R2 violated;
+       - using one axis with both options   -> both existing variants archived, storage axis silently dropped
+                                               (axes replaced at line 327), R2 violated and axis proof lost;
+       - using one combination              -> the other existing variant archived, R2 violated.
+  * The knock-on effect of the 4-variant route is not cosmetic: `CatalogAttributeSchemaSellableEnricher` loads ALL
+    variants of the demo product (lines 71-78) and creates one Offer + price + tax + stock per variant (96-140), so
+    the canonical route changes the demo dataset from 2 variants/2 offers to 4 variants/4 offers. Task 107 explicitly
+    says this task is "not to create offers", and TB-103/104 established that the arc wants minimal demo data.
+  * The domain method `CatalogVariant.SetDefault(bool, now)` exists but, per its own XML comment, "uniqueness is
+    enforced in the directory"; calling it alone from the seed would allow two defaults, and clearing the other
+    flags in the seed would re-implement `ClearDefaultFlags`/`EnforceSingleDefault` (R3 violated). Loading the
+    variants through `CatalogDbContext` and saving them would also be a direct EF write (R4 violated).
+  * There is no narrower seam to reuse: `IProductVariantDirectory.PatchWorkspaceVariantAsync` has no default
+    parameter; `CreateWorkspaceVariantAsync` hard-codes IsDefault=false; the Admin surface has no default route.
+
+Therefore no *safe* canonical setter exists for this seed, and per the task's own instruction
+("If the existing canonical operation cannot be used from this seed without broader refactor, STOP with
+BLOCKED_DEFAULT_VARIANT_APPLICATION_SEAM; propose the smallest adaptation, don't invent an unsafe setter") this task
+stops without changing source. Nothing in src/ was modified; no readiness rule was touched.
+
+WHAT WAS NOT DONE, DELIBERATELY
+  - No `src/**` edit: every candidate edit either expanded the demo matrix (2 -> 4 variants and offers) or
+    duplicated/bypassed the single-default invariant.
+  - No direct EF write / no `db.SaveChangesAsync` in the seed.
+  - No readiness/publish-rule change, no force-publish, no bypass of the diagnostic seam.
+  - No test was added: a regression test asserting "the seed's two variants have exactly one default" would be a
+    permanently failing test until the seam decision is made, and the task forbids asserting pass on unfixed state.
+  - No isolated scratch run: with zero source change there is nothing new to observe (LIVE_SCRATCH_NOT_VERIFIED).
+    TB-106's isolated run remains the latest live evidence for this product.
+
+PROPOSED SMALLEST ADAPTATION (Architect decision required; not executed)
+
+  Option A (recommended) — add ONE narrow Catalog-owned application seam that reuses the existing invariant:
+      * `IProductVariantDirectory.SetDefaultAsync(Guid productId, Guid variantId, CancellationToken ct)` returning
+        `Result`, implemented in `ProductVariantDirectory` by reusing the EXISTING private helpers
+        (`ClearDefaultFlags` + `SetDefault(true)`), with the same guard/actor/history path the reconcile uses.
+      * expose it on `ICatalogDirectory` as `SetProductVariantDefaultAsync(productId, variantId, ct)`; optionally a
+        `POST /v1/admin/catalog/products/{productId}/variants/{variantId}/default` route, since the Admin UI has no
+        way to express "make this variant the default" for a sparse matrix today (a real product gap, not just a seed
+        gap).
+      * call it from the seed after the two variants exist, choosing the FIRST created variant deterministically
+        (PHONE-BLK-128), then publish. No behavior of reconcile, readiness, publish rules or the enricher changes.
+      * size: one port method + one facade method + ~15 implementation lines + optional route + one focused test.
+    Justification for scope: Catalog already owns the invariant; the new surface adds no semantics, it only makes an
+    existing capability reachable for a sparse variant set.
+
+  Option B (no new public API) — authorize the seed to be reconciled canonically and accept the data-shape change:
+      * seed stops using `CreateVariantAsync` and instead runs `ApplyProductVariantMatrixAsync` with
+        [color: black, blue] x [storage: 128gb, 256gb] and then the same call again with `DefaultVariantId` resolved
+        from the first result. Outcome: 4 variants (full matrix), 1 default, readiness VALID, and — through the
+        enricher — 4 offers instead of 2, plus variants without catalog code seams.
+      * This is the only route that needs no new Catalog API, but it contradicts the seed's documented intent and
+        doubles demo offer volume, so the Architect must explicitly authorize it.
+
+  Option C (rejected) — seed calls `CatalogVariant.SetDefault` directly and clears the others: duplicates the
+    invariant algorithm (R3) and needs EF writes (R4).
+
+RECOMMENDATION
+  Option A. It is the only route that satisfies the Architect's own constraints simultaneously (single default via an
+  existing invariant, two variants preserved, no rule change, no demo-data expansion), and it closes a genuine Admin
+  capability gap for sparse variant sets.

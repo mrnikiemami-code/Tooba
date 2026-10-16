@@ -1,0 +1,19 @@
+﻿TB-SHIPPING-ONE-LEVEL-TABS-107 — shared state, cleanup and environment facts (all read-only).
+
+SHARED HOST (never stopped, never rebuilt, never reconfigured by this task)
+  :5088 /health             = {"status":"ok"}
+  :5088 /__platform-commerce= {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"dd5b05a16128f8749cd601cf1465aad2"}
+  listener on 5088          = 1 (pid 35624)
+  host-stack managed record = pid 35624 gate=ShippingOneLevelCatalog=true outDir=.tmp-dev-host-out-5088-101 (pre-existing, untouched)
+  :3000                     = no listener before and after (pre-existing state)
+
+TOOBA_ALPHA (read-only; identical before and after)
+  methods=7  translations=14  carts=50  cart_lines=78  drafts=14  seller_orders=26  products=567  offers=3223
+  only SELECT statements issued; zero writes from this task
+
+CLEANUP
+  scratch container created by this task : NONE (no isolated run performed)
+  task-owned temp directories created    : NONE (.tmp-10* count = 0)
+  stray listeners 5392 / 55444           : 0 / 0
+  running containers                     : postgres-db, rabbitmq (pre-existing pair only)
+  no process was started, stopped or killed by this task
