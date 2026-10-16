@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-ADMIN-ISOLATED-ACCEPTANCE-HARNESS-157
 Parent-Task: TB-SHIPPING-METHOD-FINANCIAL-EDIT-156
@@ -12,8 +12,8 @@ Status: PARTIAL
 Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: 2b798560b9d3dd18e5d5a8c92c919c5fcbf82838
 Base-SHA: 2b798560b9d3dd18e5d5a8c92c919c5fcbf82838
-Code-SHA: the evidence commit that carries this payload together with the harness
-Evidence-SHA: same commit (Code-SHA == Evidence-SHA for this task)
+Code-SHA: d97d53e28fd498e9b755841fae5c2905ab3f74ba (harness + evidence; the only later commits are evidence-text records that change no code)
+Evidence-SHA: d97d53e28fd498e9b755841fae5c2905ab3f74ba (same commit as Code-SHA for this task)
 automaticNextImplementationTask: NONE
 Repository: mrnikiemami-code/Tooba
 Branch: main

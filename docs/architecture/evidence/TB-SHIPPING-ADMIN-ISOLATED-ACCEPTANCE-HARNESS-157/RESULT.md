@@ -1,8 +1,8 @@
-# TB-SHIPPING-ADMIN-ISOLATED-ACCEPTANCE-HARNESS-157 — result
+﻿# TB-SHIPPING-ADMIN-ISOLATED-ACCEPTANCE-HARNESS-157 — result
 
 Status: **PARTIAL** — STOP_FOR_ARCHITECT
 Base/Expected SHA: `2b798560b9d3dd18e5d5a8c92c919c5fcbf82838`
-Code/Evidence SHA: this commit (see `RESULT.bridge.txt` for the exact recorded value)
+Code/Evidence SHA: `d97d53e28fd498e9b755841fae5c2905ab3f74ba` (subsequent commits are evidence-text records only)
 Channel `tooba-main` · Worker `tooba-worker-01` · Mode: BOUNDED_REUSABLE_PRIVATE_ADMIN_RUNTIME_AND_REAL_MONEY_WRITE_READ_ACCEPTANCE
 
 ## Verdict
