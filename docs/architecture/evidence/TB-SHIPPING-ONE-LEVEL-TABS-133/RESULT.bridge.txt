@@ -1,0 +1,155 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-133
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-132
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Bridge-Row-Id: 0785f59d-d5db-4482-a2f2-8916ee84ddfe
+Program: TOOBA-SHIPPING-CHECKOUT-DELIVERY-CLOSURE
+Mode: BOUNDED_GROUPED_DELIVERY_DATE_REPROJECTION_REPAIR
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+
+SHA
+Expected-Base-SHA: 4da88089ab10430d3f8360722c573fd49322c3e7
+Actual-Base-SHA: 4da88089ab10430d3f8360722c573fd49322c3e7 (exact match, zero drift at claim)
+Code-SHA: a549501e989155638401483af17c607806cbc003
+Evidence-SHA: a549501e989155638401483af17c607806cbc003 (single bounded commit, code + docs + evidence together)
+Branch: main
+HEAD == origin/main == a549501e989155638401483af17c607806cbc003 (pushed with normal push, no force/rewrite)
+
+ELAPSED (measured)
+Started: 2026-10-16T05:39:05Z (bridge task createdAtUtc)
+Finished: 2026-10-16T05:55:19Z
+Elapsed: 16 minutes (inside the 45-minute hard timebox; source repair finished well before minute 30, so the
+  authorized isolated runtime proof was performed afterwards). No retry loops, no repeated builds, no broad suites.
+
+SCOPE / RULE COMPLIANCE
+- Exactly one bridge task claimed and executed on tooba-main; no unrelated worker, no historical task replay.
+- Worker heartbeat=Working during execution, Idle after completion.
+- Only the authorized root cause was repaired. No per-group pricing, fulfillment-origin, tax or Settlement work.
+- Group choices remain authoritative; no delivery date/rate/promise was ever invented in the frontend.
+- No CSS, theme, token, typography, layout, spacing, RTL, breakpoint or group-markup change; no global CSS.
+- Pre-existing dirty files (2 admin screens, 2 old evidence text files) were never touched and are still unstaged.
+
+MISSION A — NARROW SOURCE REPAIR
+Root cause (proved by TB-132): the grouped multi-seller handler only changed local state and never re-projected
+with a methodCode, and POST /v1/storefront/shipping/projection returns deliveryDates=0 without one, so the
+delivery-date control stayed empty, isValid stayed false and Continue stayed disabled.
+
+Fix (frontend only, smallest surface, no new business authority):
+1. NEW pure module src/frontend/app/storefront/storefront-shipping-group-horizon.ts (no fetch, no React, no Date):
+   - deriveGroupDateHorizon(): INTERSECTS the server-returned allowed delivery dates and time windows over ALL
+     distinct selected group methods; shared minimum = the LATEST server-declared minimum; the earliest surviving
+     date is re-flagged as the nearest slot. Empty intersection produces an empty horizon (fail closed, no fake date).
+   - distinctSelectedMethodCodes() (dedup, unknown codes dropped), resolveShippingDateHorizon() (single-seller
+     horizon is byte-identical to the projection's own lists), pickEligibleDeliveryDate/Window() (invalidate only
+     when no longer eligible), isShippingDateHorizonComplete(), createLatestResponseGate() (latest-wins).
+2. NEW hook src/frontend/app/storefront/use-storefront-group-shipping-horizon.ts (grouped carts only): one
+   authorized POST /v1/storefront/shipping/projection PER DISTINCT selected method via Promise.allSettled with a
+   latest-wins token; reads only, never writes; failed method response fails the horizon closed.
+3. src/frontend/app/storefront/storefront-shipping.tsx (minimal state/API plumbing): the derived dateHorizon now
+   feeds the delivery date chips, the first-possible line, the time windows and isValid; a previously chosen
+   date/time is invalidated only when no longer in the server-returned shared set. Group method choices are never
+   overwritten by re-projections. Continue still submits ShippingGroups[] with exact cartLineIds and selected
+   methods to the existing Order-owned PUT /v1/storefront/shipping/selection exactly once, then router.push.
+
+MISSION B — FAST ESSENTIAL PROOF (source level)
+Focused tests app/storefront/storefront-shipping-group-horizon.test.ts: 7 tests, 7 pass, 0 fail.
+  covers: two distinct methods producing the server intersection (and the chosen date being valid for BOTH),
+  empty-intersection fail-closed, no input mutation and no fabricated date, single-seller horizon identity,
+  stale selection invalidation only when ineligible, stale response gate, and source wiring guards (no
+  shipping/commit, no client-side Date arithmetic, one projection call per distinct method).
+npm run typecheck (src/frontend, tsc --noEmit): exit 0.
+Architecture guards frontend-import-boundary + frontend-flat-folder + frontend-feature-boundary: 17 tests,
+17 pass, 0 fail. Sibling storefront-shipping-api.test.ts and storefront-shipping-destination-model.test.ts: pass.
+No test was reported as PASS without being run.
+
+MISSION B — ISOLATED RUNTIME ACCEPTANCE (real browser, zero shared-environment contact)
+isolatedHost=http://127.0.0.1:5403 (published from base SHA, backend unchanged), isolatedFrontend=http://127.0.0.1:3103
+(TOOBA_HOST_ORIGIN bound to the isolated Host), disposable Postgres container tooba-tb133-pg on :55456.
+Binding discriminator: GET :3103/v1/storefront/checkout-identity-policy returned the ISOLATED policy
+  (GuestAllowed) proving the proxy was bound to the scratch Host, not to shared :5088.
+isolation-guard.json failClosed=true: single Active tenant store-alpha/tenant-133-scratch, both scratch databases
+  pre-created, no shared alpha database/reference/port, no prior scratch port, ShippingRateAuthority and
+  ShippingOperationalShadow absent, ShippingOneLevelCatalog.Enabled=true in the disposable overlay only.
+LAUNCH_ACCOUNTING: HOST_LAUNCH_COUNT=1 (healthy /health status ok after 36s, no watchdog hit, no relaunch);
+  FRONTEND_LAUNCH_COUNT=1; PUBLISH once (dotnet publish Tooba.Host -c Debug -o .tmp-133-host-out, exit 0, ~32s).
+Real two-seller guest cart created by genuine storefront customer actions (PDP add for دیجی‌استایل نمونه, then the
+  alternate seller فروشگاه آرمان selected and added):
+  cartId=01a14342-1913-7000-a91b-7a54c40d241b, itemCount=2, sellerCount=2, subtotalExclusiveOfTax=3,640,000
+  pre-selection grouped state: 2 disjoint seller groups, one real cart line per group, 14 method tiles
+  (7 authoritative codes per group), delivery chips=0, notice visible, Continue disabled (TB-132 defect reproduced).
+
+EXACT OBSERVED DATE SEMANTICS
+Group methods chosen: دیجی‌استایل نمونه=post:express, فروشگاه آرمان=tipax:standard.
+Server counterfactuals on the same isolated Target for the SAME cart:
+  projection methodCode=post:express   : deliveryDates=7 first=2026-10-19 minimum=2026-10-19
+  projection methodCode=tipax:standard : deliveryDates=7 first=2026-10-20 minimum=2026-10-20
+  projection with NO methodCode        : deliveryDates=0 (the original defect source)
+Rendered after the repair: 6 date chips 2026-10-20, 2026-10-21, 2026-10-22, 2026-10-23, 2026-10-24, 2026-10-25,
+  none disabled, 2026-10-20 auto-selected as the nearest shared slot; "اولین نوبت ممکن" visible; 4 time windows.
+The page therefore renders exactly the SERVER intersection: 2026-10-19 (offered only by post:express) is correctly
+  excluded and the shared floor is the later server minimum. No client-side calendar/rate arithmetic exists.
+Stale-race observation: rapidly switching فروشگاه آرمان tipax:standard to post:standard and back (two overlapping
+  horizon requests) left the same 6 chips, the same selected date, the selected time window and enabled Continue.
+Acceptance states: Continue disabled with methods+address but no time window; ENABLED after choosing a time window
+  (complete valid form). Exactly one Continue click navigated to
+  /fa/payment?cartId=01a14342-1913-7000-a91b-7a54c40d241b and the payment summary showed
+  receiver "رضا محمدی — تهران", shipping ۳۸۰٬۰۰۰ ریال (= 200,000 + 180,000 grouped fees), payable ۴٬۳۴۷٬۶۰۰ ریال
+  (= 3,640,000 + 9% VAT + grouped shipping) and "این سفارش هنوز ثبت نشده است".
+=> The saved grouped selection SURVIVED the handoff with NO premature commit, reservation or order creation.
+
+MISSION C — NON-INTERFERENCE / MUTATION GUARDS
+shipping selection PUT calls = 1 (the single authorized Continue click); shipping/commit = 0; start-payment = 0;
+order creation = 0; money capture = 0. Cart after the flow: same cartId, cartVersion=5, itemCount=2, sellerCount=2,
+subtotalExclusiveOfTax=3,640,000. Shared :5088 and :3000 listeners untouched (still 1 each) and shared containers
+postgres-db/rabbitmq untouched throughout; the ONLY mutation anywhere was the Development-only checkout-identity
+policy seam on the DISPOSABLE scratch tenant (required for a guest journey, confined to the scratch database).
+Cleanup: frontend and Host stopped by recorded PID after absolute-path verification, scratch container removed (no
+volume), temp dirs and the uncommitted scratch password removed; listeners on 5403/3103/55456 = 0 afterwards.
+
+DEBT AND FIRST REMAINING BLOCKER (reported, not repaired, outside this task's authorized scope)
+A cold reload of /fa/shipping does not restore a previously saved shipping draft (address empty, no method tile
+selected, 0 date chips, Continue disabled, revalidation notice "انتخاب ارسال دیگر معتبر نیست"). Consistently,
+POST /v1/storefront/shipping/projection returns no draft object when no methodCode is supplied — the pre-existing
+Order-owned projection read contract, untouched by this repair (the repair only ADDS methodCode reads and never
+mutates). The draft itself did persist, as proven by the payment handoff. Smallest next step: an Order-owned
+decision on the projection draft read-back/revalidation contract (destination-identity matching); this must not be
+patched inside the frontend. Secondary debt: src/frontend/app/storefront/storefront-shipping.tsx grew
+1209 to 1251 physical LOC; that file is an existing OVERSIZED_LEGACY shrink-only baseline violation (baseline 945)
+and the frontend-source-size guard already fails on main for 4 unrelated files as well. No baseline file was
+edited (baseline changes are not authorized here).
+
+ROLLBACK
+Single commit a549501e989155638401483af17c607806cbc003, frontend + docs only. git revert a549501e9 restores the
+previous behavior exactly; no schema, migration, seed, configuration flag or deployed artifact was changed, so
+there is no state to unwind. The isolated scratch container and temp directories were already removed.
+
+UNCHANGED UI
+No visual-system change: the date/time controls, chips, cards, tokens, typography, spacing, RTL layout, breakpoints
+and group markup are byte-identical except that the date/time data now comes from the derived horizon. One bounded
+screenshot (shipping-grouped-dates-enabled-133.png) is the only visual evidence and no parity score is claimed.
+
+NON-CLAIMS (must not be read as accepted)
+- Payment/checkout/production readiness is NOT claimed: the payment page was reached and read, but no payment method
+  was chosen, no authorization/capture and no order happened, and the 9% tax figure is read from that page only.
+- Single-seller legacy shipping was not re-run in the browser; it is covered by source plus the focused
+  resolveShippingDateHorizon test and by the untouched legacy branch.
+- Visual acceptance is NOT claimed. The stale-race observation is one bounded rapid switch, not a soak test.
+- One seller with two independently chosen methods remains an OUTSTANDING acceptance case (not reachable here).
+- Worker PASS is not Architect ACCEPT.
+
+DELIVERABLES (all committed and pushed)
+src/frontend/app/storefront/storefront-shipping-group-horizon.ts
+src/frontend/app/storefront/storefront-shipping-group-horizon.test.ts
+src/frontend/app/storefront/use-storefront-group-shipping-horizon.ts
+src/frontend/app/storefront/storefront-shipping.tsx (minimal plumbing)
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-133.md
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-133/ (observation-133.txt, isolation-guard.json,
+  prepare-isolated-target-133.js, launch-isolated-host-133.ps1, launch-isolated-frontend-133.ps1,
+  run-api-prep-133.js, api-prereq-133.txt, host-launch-133.txt, shipping-grouped-dates-enabled-133.png,
+  cleanup-133.ps1, cleanup-133.txt)
+END_TOOBA_WORKER_RESULT
