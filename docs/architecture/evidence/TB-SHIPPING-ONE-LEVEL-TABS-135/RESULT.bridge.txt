@@ -1,0 +1,112 @@
+﻿BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-135
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-134
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Expected-Base-SHA: fb512dc732b7c6e5e94b5f01d1d29918f4ce2335
+Base-SHA-Verified: PASS (HEAD == origin/main == fb512dc7 before work; no drift)
+Commit-SHA: 9040eb11c212563c2cd892b92581d57fafc4f840
+Origin-Main-SHA: 9040eb11c212563c2cd892b92581d57fafc4f840 (HEAD == origin/main after push)
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Elapsed: ~58 minutes wall (source complete in ~25 minutes; remaining time used for focused tests, backend build/test, docs, push)
+
+SUMMARY
+Delivered the missing user-visible case: per-item (per cart line) shipping method selection, so one
+seller with two cart lines can assign DIFFERENT method codes while two sellers with the same method
+stay separate. Client grouping now keys on (real sellerPartyId from the cart line, canonical server
+method code) and merges same-seller/same-method lines into ONE group, satisfying the existing Order M1
+planner invariant (one group per (seller, method); duplicate => DuplicateSellerMethod). No new pricing
+algorithm, no origin assertion, no migration, no fabricated seller/method/amount/line id.
+
+IMPLEMENTATION
+1) src/frontend/app/storefront/storefront-shipping-item-groups.ts (new, pure, no fetch/React/Date)
+   - buildShippingItemGroups({lines, methodCodeByLine, methods}): group key = (line.sellerPartyId,
+     authoritative methodCode); same-seller+same-method merge; sellers NEVER merge; unknown/absent
+     method => no group and the line is reported in unassignedLineIds.
+   - isItemGroupingComplete(grouping, lines): every cart line exactly once, empty cart => false.
+   - restoreLineMethodSelections({lines, persistedGroups, methods}): deterministic, fail-closed restore
+     from the persisted draft groups: ineligible saved method => that group is NOT restored and no
+     substitute method is guessed; missing/foreign line ignored; no line assigned twice (first wins);
+     group without line ids restores only when that seller has exactly ONE live line (deterministic).
+2) src/frontend/app/storefront/storefront-shipping.tsx
+   - isGroupedCart = cartLines.length > 1 (multi-seller OR one seller with several lines); single-line
+     single-seller carts keep the legacy scalar path, legacy methods card and legacy testids untouched.
+   - selection state moved from seller key to line key (lineMethodByLine keyed by real lineId); method
+     validity still comes from the server projection methods list.
+   - inside each existing seller card, each item row now carries its own method tile grid reusing the
+     EXACT previous classes/styles (rounded-2xl border-2, primary/selected states, icons, spacing, RTL);
+     single-line sellers keep their previous structure and seller-scoped data-testid
+     (shipping-group-method-[seller]-[code]), multi-line sellers use unique line-scoped ids.
+   - continue posts Groups[] to the existing /v1/storefront/shipping/selection with only
+     shippingMethodCode + authoritative serviceCode + real cartLineIds (optionCode null); continues to
+     save only the draft and never commits/creates an order.
+   - distinct selected method codes still feed the existing server-based shared delivery-date horizon
+     hook (TB-133); intersection stays authoritative and Continue stays disabled until every line,
+     the address and date/window are complete. No client-side dates or amounts.
+3) Additive Order-owned read contract only (no write/schema/migration change):
+   - StorefrontShippingGroupView gained optional CartLineIds (IReadOnlyList of Guid, optional, default null).
+   - StorefrontShippingService.MapGroup publishes group.Lines cart line ids (draft shippingGroups).
+   - StorefrontCheckoutService.MapGroupPlan publishes OrderShippingGroupPlan.CartLineIds (payment
+     readback symmetric with shipping).
+   - frontend reads cartLineIds via asStringArray; missing/invalid => null with deterministic fallback.
+
+PROOF
+- Frontend typecheck: PASS (npm run typecheck, 0 errors).
+- Focused frontend tests: PASS. storefront-shipping-item-groups.test.ts = 9/9 (one seller/two lines/two
+  methods => two distinct groups with real line ids; same seller/two lines/same method => one merged
+  group; two sellers/same method => seller isolation; unassigned/unknown method => fail closed and
+  grouping incomplete; deterministic restore; fail-closed restore for ineligible method, vanished line
+  and foreign seller line; no-line-id fallback limited to single-line sellers; no double assignment;
+  wiring/no-fabrication source assertions). storefront-shipping-group-horizon.test.ts (TB-133) PASS,
+  only one wiring assertion updated to the new model; storefront-shipping-api.test.ts PASS.
+  Combined run: 24 tests, 0 failures.
+- Backend: dotnet build Tooba.Order.Tests PASS; dotnet test --filter FullyQualifiedName~Shipping
+  PASS 95/95 (includes StorefrontShippingDraftRecovery tests from TB-134 and planner tests).
+- Architecture guards: 10/11 PASS incl. canonical test discovery (new test file is discovered).
+  FE-SIZE (oversized files shrink-only) FAILS but was ALREADY RED at the expected base SHA: shipping.tsx
+  is 1201 lines at fb512dc7 vs baseline 945, and category-admin-screen.tsx, admin-landing-page-composer.tsx,
+  storefront-landing-blocks.tsx and shared-composition-renderer.tsx also exceed their baselines there.
+  The baseline was not modified (guard is intentionally shrink-only) and shipping.tsx was not rewritten;
+  new logic lives in the separate pure module.
+
+BACKWARD COMPATIBILITY
+- Single-line/single-seller cart: unchanged scalar path, card, payload and testids.
+- One-line-per-seller multi-seller cart (TB-133/134 path): same cards, tiles, order and testids; only
+  selection state is now keyed per line.
+- Older server without cartLineIds: hydration still works from existing UI prefill; restore limited to
+  deterministic single-line sellers.
+- No changes to CSS/theme/tokens/spacing/typography/breakpoints/RTL, admin screens, unrelated storefront
+  pages; no global rewrite of shipping.tsx; no commit/order creation on navigation.
+
+RUNTIME PROOF: NOT PERFORMED (fixture gap, reported separately as required)
+- The key case needs two real cart lines from ONE seller. The authorized Development fixture has a
+  single live sellable demo product (workspace-live-shirt, one variant LIVE-SHIRT-BLK) and
+  WorkspaceDemoMarketplaceSeed creates exactly ONE active offer per seller for it (SellerA ARM-LN-01,
+  SellerB DGS-LN-01); the other seeded products (admin-r3-draft-scarf, admin-r3-archived-hat) have no
+  live offers. A same-offer double add collapses into one cart line, so two distinct real same-seller
+  lines cannot be produced.
+- Missing fixture exactly: "a second live/active offer (or second live product with an active offer)
+  belonging to the same seller party as an existing offer". No SQL insert, API-created offer, mocked
+  seller identity or unsupported selection was performed; no scratch stack was launched (avoiding
+  launch retries per the task), and no shared environment (:5088/:3000/tooba_alpha) was touched.
+- Evidence: docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-135/fixture-gap-135.txt
+
+DELIVERY
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-135.md (scope, changes, proof table, fixture gap,
+  remaining blockers).
+- docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-135.task.md (received artifact persisted).
+- Pre-existing dirty admin frontend files, unrelated evidence files and untracked historical artifacts
+  were left untouched; nothing was reset, stashed, rebased or force-pushed.
+
+REMAINING BLOCKERS
+1) Runtime acceptance of the same-seller/two-method case requires an authorized fixture with two live
+   offers from one seller (or explicit authorization to create it).
+2) Pre-existing red FE-SIZE architecture guard on main: decision about shipping.tsx size/baseline is
+   the Architect's, not resolved here.
+
+Automatic-Next-Implementation-Task: NONE
+END_TOOBA_WORKER_RESULT
