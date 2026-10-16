@@ -1,0 +1,67 @@
+﻿(node:23072) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-final-click-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ final click targets the cart-addressed Order route and never carries money, order or identity (1.5379ms)
+✔ final click reuses one stable idempotency key per cart+method instead of a fresh key per render (0.1338ms)
+✔ cart-addressed payment loads the read-only Order draft and invents no checkout id or quote (0.1349ms)
+✔ one click can start exactly one payment: cart draft path and committed checkout path are exclusive (0.1897ms)
+✔ shipping continue saves the draft and navigates cart-addressed without any commit (0.1394ms)
+✔ cart mode offers wallet only when the server proves buyer ownership and full coverage (0.1383ms)
+✔ cart wallet quote client never turns a fetch failure into wallet eligibility (0.286ms)
+✔ a wallet refusal on the final click is localized and never leaks the technical code (0.2512ms)
+✔ post-commit failure keeps the persisted checkout for recovery on the same order (0.1983ms)
+✔ final click failures stay localized and never promise automatic renewal (0.4291ms)
+(node:17540) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ shipping projection maps store methods and never invents template carriers (0.9922ms)
+✔ shipping date chips use Host weekday/date once and do not duplicate Jalali (1.3554ms)
+✔ shipping continue persists the draft, keeps the cart active and never commits (0.4856ms)
+✔ shipping UI source has no hardcoded Shopeiva template method list (1.3245ms)
+✔ cart CTA routes to /shipping (0.473ms)
+✔ customer shipping errors stay localized (0.3307ms)
+✔ stale cart on shipping never leaks the English server title (0.5064ms)
+✔ shipping stepper walks back to the cart instead of trapping the customer (0.5295ms)
+(node:30864) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-group-horizon.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ بدون projection: افق خالی و غیر-resolved است (بدون تاریخ جعلی) (1.2511ms)
+✔ تک‌گروهی: افق دقیقاً فیلدهای همان projection سرور است (0.8448ms)
+✔ انتخاب قبلی فقط وقتی نامعتبر شود بازچینی می‌شود (0.2571ms)
+✔ ماژول تک‌گروهی: بدون fetch و بدون ساخت تاریخ در کلاینت (0.2763ms)
+(node:25188) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-group-schedule.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ دو فروشنده با روش یکسان: دو افق مستقل و دو «اولین نوبت ممکن» متمایز (3.001ms)
+✔ گروه بدون ردیف سرور: افق resolved نمی‌شود و تاریخ حدسی ساخته نمی‌شود (0.2935ms)
+✔ استقلال انتخاب‌ها: تغییر گروه A هیچ فیلدی از گروه B را عوض نمی‌کند (0.44ms)
+✔ بازیابی: انتخاب ذخیره‌شدهٔ همان گروه برمی‌گردد و مقدار نامعتبر همان گروه پاک می‌شود (0.2449ms)
+✔ نگاشت قرارداد سرور: shippingGroupHorizons با فیلدهای camelCase و PascalCase (0.266ms)
+✔ تطبیق ردیف سرور با گروه: بی‌حساسیت به خط تیره/بزرگی و کوچکی (0.1943ms)
+✔ تک‌گروهی: افق دقیقاً همان projection است و رفتار قدیمی تغییر نمی‌کند (0.2341ms)
+✔ سیم‌کشی سطح ارسال: کارت مستقل هر گروه، شرط ادامه و payload هر گروه (0.4686ms)
+(node:29652) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-item-groups.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ یک فروشنده، دو خط، دو روش ⇒ دو گروه مستقل با خطوط واقعی (1.7203ms)
+✔ یک فروشنده، دو خط، روش یکسان ⇒ یک گروه ادغام‌شده (ناوردایی M1) (0.1489ms)
+✔ دو فروشنده با روش یکسان ⇒ گروه‌ها جدا می‌مانند (بدون ادغام فروشنده) (0.1806ms)
+✔ خط بدون انتخاب یا با روش ناواجد ⇒ بدون گروه و ادامهٔ سفارش بسته است (0.2035ms)
+✔ بازیابی قطعی انتخاب هر خط از گروه‌های ذخیره‌شدهٔ پیش‌نویس (0.302ms)
+✔ بازیابی fail-closed: روش ناواجد، خط ناپیدا و خط فروشندهٔ دیگر بازیابی نمی‌شوند (0.1423ms)
+✔ بازیابی بدون شناسهٔ خط: فقط فروشندهٔ تک‌خطی قطعی بازیابی می‌شود (0.1358ms)
+✔ بازیابی هیچ خطی را دو بار تخصیص نمی‌دهد (اولین گروه برنده است) (0.1477ms)
+✔ سیم‌کشی سطح ارسال: انتخاب هر خط، گروه‌بندی (فروشنده،روش) و بازیابی fail-closed (0.3509ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 150.7527

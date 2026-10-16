@@ -1,0 +1,33 @@
+TB-SHIPPING-INDEPENDENT-GROUP-FRONTEND-150 — READ-ONLY smoke of the shared dev frontend
+==============================================================================
+Scope: read-only. No write, no login attempt, no cart/order/payment mutation, no .next purge,
+no restart of shared :5088 / :3000. Shared store-alpha / tooba_alpha untouched.
+
+1) HTTP smoke (curl, GET only)
+   curl.exe -s -L "http://localhost:3000/fa/shipping"
+   -> HTTP 200 | url http://localhost:3000/fa/shipping | size 113974
+   Raw SSR body saved as shipping-ssr-150.html in this directory.
+   Markers found in SSR body: data-testid="shipping-page" (x1), html lang="fa" dir="rtl",
+   data-storefront-scope="tenant:store-alpha", data-storefront-theme-mode="LightOnly".
+   => The shipping route compiles and renders SSR with the current working tree (no hang).
+
+2) Browser smoke (read-only navigation in a NEW background tab, cursor-ide-browser)
+   URL  : http://localhost:3000/fa/shipping   (tab viewId 26e70e, no existing tab was reused)
+   Title: "اطلاعات ارسال | توبا"
+   Render observed (accessibility snapshot):
+     - heading level 1 "اطلاعات ارسال" + step strip "سبد خرید / ارسال / پرداخت"
+     - summary cards: "تعداد کالا / جمع کل / حداقل روز تحویل"
+     - body state "در حال آماده‌سازی ارسال…"
+     - header shows "ورود" (not an authenticated customer session)
+   Screenshot: shipping-150-readonly-smoke.png (in this directory).
+
+3) What this smoke does and does NOT prove
+   PROVES : the shipping route builds and renders from this working tree; no infinite loading
+            screen and no build/runtime error on the changed surface.
+   NOT    : the authenticated multi-group UI, because the browser tab has no customer session
+            (storefront customer auth is required to obtain a real cart + projection). No login
+            credentials were used and none were invented; no mock/synthetic cart was rendered.
+   => Grouped independent cards, per-group persistence and roundtrip therefore remain proven by
+      the deterministic focused tests (focused-shipping-tests-150.txt) and the backend
+      per-group contract tests (backend-order-tests-150.txt), NOT by a live authenticated HTTP
+      write/read roundtrip. The live roundtrip is reported UNVERIFIED (see RESULT.bridge.txt).

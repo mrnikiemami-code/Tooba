@@ -1,0 +1,449 @@
+﻿(node:41844) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/category-plp.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ category PLP route and public prefix are wired (1.7833ms)
+(node:28772) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/home-structure.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home guard keeps Shopeiva section markers (1.1503ms)
+✔ home guard preserves canonical default section order (0.9214ms)
+✔ home guard rejects giant catalog dump on Home rail (0.2949ms)
+✔ home guard keeps composition renderer switch cases (0.1816ms)
+✔ home stories use live Host binding without fake STORY_IMAGES (0.1771ms)
+(node:36548) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/listing-structure.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ listing guard keeps Shopeiva PLP structure markers (0.6941ms)
+✔ listing guard keeps truthful sort options only (0.2216ms)
+✔ listing product grid keeps Shopeiva density classes (0.0997ms)
+✔ product card keeps offer-based pricing and real rating gate (0.0989ms)
+(node:35328) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/pdp-component-surface.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ PDP major regions use section context and inherit-by-default (0.9423ms)
+(node:33836) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/pdp-structure.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ pdp guard keeps sticky structurally distinct tabs (3.7029ms)
+✔ pdp guard keeps distinct tab bodies (no generic flatten) (0.9187ms)
+✔ pdp guard keeps other sellers and related product seams (0.1957ms)
+✔ pdp add-to-cart stays on the product page like Home (0.199ms)
+✔ pdp guard forbids Product.Price / Product.Stock authority markers (0.1432ms)
+✔ pdp first paint does not hide SSR failure with client retry (0.4876ms)
+(node:29368) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home mapper keeps offer amount off a product price field (1.809ms)
+✔ detail mapper reads amount from primary offer only (18.1514ms)
+✔ maps only public review contract and backend aggregate (0.4276ms)
+✔ zero reviews do not emit aggregate rating (0.1861ms)
+✔ review submission sends exact payload and exposes auth/conflict statuses (32.8858ms)
+✔ detail loader sends selected variant only to the authoritative endpoint (0.364ms)
+✔ listing mapper keeps backend discovery facets and pagination (0.3175ms)
+✔ unsupported merchandising remains empty and explicit (0.1644ms)
+✔ public seller mapper ignores private and internal party fields (0.1752ms)
+(node:37852) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-appearance-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ SSR root loads appearance and scopes tokens via provider (not html style) (1.1227ms)
+✔ appearance style is brand-token only (1.4752ms)
+✔ appearance API does not query per product card (0.43ms)
+(node:23372) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-cart-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cart mapper keeps offer identity and ignores product price fields (2.5713ms)
+✔ bootstrapCartSessionFromQuery writes session when both ids present (1.1465ms)
+✔ customer cart message hides Held reservation wording (0.4964ms)
+✔ customer cart message hides raw exception type names (0.1983ms)
+✔ cart mapper defaults missing status to Active (0.2021ms)
+✔ committed checkout proofs are keyed by checkout and survive active cart detach (0.6018ms)
+✔ ensureStorefrontCart rotates Converted cart and never posts lines to it (30.9112ms)
+✔ addOfferToCart rotates when Host omits status and rejects Converted mutation (1.525ms)
+✔ authenticated ensure prefers current cart and does not POST a guest cart (1.3104ms)
+✔ cart mapper keeps quantity policy fields for mini-cart and /cart (0.2436ms)
+✔ one login transition posts merge at most once even when callers race (1.5884ms)
+✔ refresh and navigation after merge do not post a second merge (0.8807ms)
+(node:19768) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-cart-ui.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ product card ATC is a real button wired to addOfferToCart (0.9566ms)
+✔ header opens mini-cart drawer instead of bare /cart link (0.1839ms)
+✔ canonical account menu reuses Shopeiva dropdown and logout (1.349ms)
+✔ mini-cart drawer preserves Shopeiva structure on Host cart APIs (0.1837ms)
+✔ cart page recommendations use live feed cards with working ATC reuse (5.6565ms)
+(node:10280) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-checkout-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ checkout mapper keeps backend totals and pending payment (1.2698ms)
+✔ paid checkout capability disables initiation (0.2036ms)
+✔ post-commit ownership failure is never order-registration-failed (1.2275ms)
+✔ open unpaid and churn messages stay business-safe (0.1816ms)
+✔ customer checkout message hides technical tax codes (0.2193ms)
+✔ checkout shipping body includes savedAddressId only when selected (0.1407ms)
+✔ checkout submit sends savedAddressId for actor and omits it on guest inline path (27.7336ms)
+(node:32172) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-final-click-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ final click targets the cart-addressed Order route and never carries money, order or identity (2.5724ms)
+✔ final click reuses one stable idempotency key per cart+method instead of a fresh key per render (0.2163ms)
+✔ cart-addressed payment loads the read-only Order draft and invents no checkout id or quote (0.2061ms)
+✔ one click can start exactly one payment: cart draft path and committed checkout path are exclusive (0.2293ms)
+✔ shipping continue saves the draft and navigates cart-addressed without any commit (0.1879ms)
+✔ cart mode offers wallet only when the server proves buyer ownership and full coverage (0.217ms)
+✔ cart wallet quote client never turns a fetch failure into wallet eligibility (0.2818ms)
+✔ a wallet refusal on the final click is localized and never leaks the technical code (0.3801ms)
+✔ post-commit failure keeps the persisted checkout for recovery on the same order (0.2238ms)
+✔ final click failures stay localized and never promise automatic renewal (0.4973ms)
+(node:31616) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-home.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home mapper prefers homeCategories rail and does not require dumping all categories (9.0541ms)
+(node:29880) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-identity-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ logged-in with profile name uses name (0.8487ms)
+✔ logged-in without name uses mobile (1.0541ms)
+✔ generic account label is last fallback only (0.1421ms)
+✔ first and last compose when displayName is absent (0.1318ms)
+✔ account label never uses shipping recipient fields (0.6775ms)
+✔ concurrent session consumers share one auth/me request (27.6218ms)
+✔ expected anonymous 401 is cached and not retried (0.381ms)
+✔ invalidate allows one new auth/me after login transition (1.2752ms)
+(node:34728) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-landing.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ landing route uses one canonical section renderer (0.8593ms)
+✔ home uses selected published landing or canonical home (0.2219ms)
+✔ renderer maps approved types and fails unknown types safely (0.1418ms)
+(node:10356) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-menu.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ header uses store menu only when selected and otherwise keeps fallback (0.7619ms)
+✔ one menu tree renderer is shared (0.196ms)
+(node:41712) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-payment-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ payment initiation mapper keeps host redirect and amount (1.0768ms)
+✔ wallet initiation allows empty redirect and skips provider redirect (0.226ms)
+✔ non-wallet initiation without redirect is rejected by mapper (0.1303ms)
+✔ wallet quote mapper keeps host-calculated balances and deferred mixed flag (0.2254ms)
+✔ wallet quote mapper accepts Host wallet-quote field names without cartId (0.1356ms)
+✔ payment mapper does not invent succeeded (0.2183ms)
+✔ already succeeded payment message is customer-safe (0.2063ms)
+✔ post-commit payment ownership is not order-registration-failed (0.1487ms)
+✔ customer payment message hides gateway codes (0.1629ms)
+✔ customer payment message maps wallet insufficient (0.1969ms)
+✔ customer payment message maps unavailable method (0.1592ms)
+✔ shouldPoll stops for Succeeded Failed Cancelled (0.3095ms)
+✔ shouldPoll stops for manual AwaitingAdmin and awaiting customer form (0.1696ms)
+✔ shouldPoll continues for transient online Pending/Processing/Verifying (0.1838ms)
+(node:29900) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-pending-payment-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ countdown is derived from server ExpiresAt and counts locally (1.1278ms)
+✔ failed payment mapping does not invent a new timer (0.431ms)
+✔ customer pending errors never use checkout registration copy (0.2737ms)
+✔ expired reservation retry is checkout-scoped and never a silent no-op (0.6646ms)
+✔ expired reservation retry copy is localized and never invents a paid order (0.1954ms)
+✔ pending card access hint is checkout-scoped and never copies the active cart secret (0.3211ms)
+✔ pending UX source keeps FA RTL EN LTR and no raw cycle enums (1.1135ms)
+✔ dismissed pending checkouts are excluded from the visible list (0.2364ms)
+✔ hide is only available after the reservation timer ends (0.1374ms)
+✔ dead pending card keeps only dismiss: cancel is gated on the retry limit (0.4305ms)
+(node:22772) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-product-card-dark.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ one StorefrontProductCardView uses semantic dark chrome (1.4233ms)
+✔ canonical dark remaps cover leftover light utilities (0.3493ms)
+(node:39812) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-product-card-skin.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ one canonical card consumes store skin on all listing surfaces (1.6055ms)
+✔ listing density and hover geometry stay canonical (0.6465ms)
+✔ tailwind scans lib so product-card media aspect class is generated (0.4759ms)
+(node:28484) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ shipping projection maps store methods and never invents template carriers (1.9701ms)
+✔ shipping date chips use Host weekday/date once and do not duplicate Jalali (1.6923ms)
+✔ shipping continue persists the draft, keeps the cart active and never commits (0.9864ms)
+✔ shipping UI source has no hardcoded Shopeiva template method list (1.1889ms)
+✔ cart CTA routes to /shipping (0.5177ms)
+✔ customer shipping errors stay localized (0.3614ms)
+✔ stale cart on shipping never leaks the English server title (0.2342ms)
+✔ shipping stepper walks back to the cart instead of trapping the customer (0.4163ms)
+(node:28272) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-destination-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ country base is found by exact stable code only, never by label (0.8007ms)
+✔ legacy province maps to its Geography area by exact code, and the city then carries real ids (0.7885ms)
+✔ legacy client without a Geography area still gets a valid country-level destination or none (0.1504ms)
+✔ malformed hierarchy is rejected instead of being silently trusted (0.129ms)
+✔ ambiguous or fuzzy area/city matches are never collapsed (0.1447ms)
+(node:27168) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-group-horizon.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ بدون projection: افق خالی و غیر-resolved است (بدون تاریخ جعلی) (0.6637ms)
+✔ تک‌گروهی: افق دقیقاً فیلدهای همان projection سرور است (0.4091ms)
+✔ انتخاب قبلی فقط وقتی نامعتبر شود بازچینی می‌شود (0.183ms)
+✔ ماژول تک‌گروهی: بدون fetch و بدون ساخت تاریخ در کلاینت (0.2472ms)
+(node:18972) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-group-schedule.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ دو فروشنده با روش یکسان: دو افق مستقل و دو «اولین نوبت ممکن» متمایز (2.7235ms)
+✔ گروه بدون ردیف سرور: افق resolved نمی‌شود و تاریخ حدسی ساخته نمی‌شود (0.3831ms)
+✔ استقلال انتخاب‌ها: تغییر گروه A هیچ فیلدی از گروه B را عوض نمی‌کند (0.5063ms)
+✔ بازیابی: انتخاب ذخیره‌شدهٔ همان گروه برمی‌گردد و مقدار نامعتبر همان گروه پاک می‌شود (0.2737ms)
+✔ نگاشت قرارداد سرور: shippingGroupHorizons با فیلدهای camelCase و PascalCase (0.2536ms)
+✔ تطبیق ردیف سرور با گروه: بی‌حساسیت به خط تیره/بزرگی و کوچکی (0.2238ms)
+✔ تک‌گروهی: افق دقیقاً همان projection است و رفتار قدیمی تغییر نمی‌کند (0.2394ms)
+✔ سیم‌کشی سطح ارسال: کارت مستقل هر گروه، شرط ادامه و payload هر گروه (0.4122ms)
+(node:8684) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-item-groups.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ یک فروشنده، دو خط، دو روش ⇒ دو گروه مستقل با خطوط واقعی (1.5801ms)
+✔ یک فروشنده، دو خط، روش یکسان ⇒ یک گروه ادغام‌شده (ناوردایی M1) (0.1946ms)
+✔ دو فروشنده با روش یکسان ⇒ گروه‌ها جدا می‌مانند (بدون ادغام فروشنده) (0.168ms)
+✔ خط بدون انتخاب یا با روش ناواجد ⇒ بدون گروه و ادامهٔ سفارش بسته است (0.186ms)
+✔ بازیابی قطعی انتخاب هر خط از گروه‌های ذخیره‌شدهٔ پیش‌نویس (0.3005ms)
+✔ بازیابی fail-closed: روش ناواجد، خط ناپیدا و خط فروشندهٔ دیگر بازیابی نمی‌شوند (0.1421ms)
+✔ بازیابی بدون شناسهٔ خط: فقط فروشندهٔ تک‌خطی قطعی بازیابی می‌شود (0.125ms)
+✔ بازیابی هیچ خطی را دو بار تخصیص نمی‌دهد (اولین گروه برنده است) (0.1384ms)
+✔ سیم‌کشی سطح ارسال: انتخاب هر خط، گروه‌بندی (فروشنده،روش) و بازیابی fail-closed (0.331ms)
+(node:9344) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-ssr-perf-r9r1.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+node:fs:441
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\Admin\StoreLandingPageComposer.cs'
+    at readFileSync (node:fs:441:20)
+    at file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-ssr-perf-r9r1.guard.test.ts:16:18
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async node:internal/modules/esm/loader:639:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'D:\\Users\\User\\source\\repos\\SarvNewVer\\src\\backend\\Host\\Tooba.Host\\Admin\\StoreLandingPageComposer.cs'
+}
+
+Node.js v24.15.0
+✖ app\storefront\storefront-ssr-perf-r9r1.guard.test.ts (132.5791ms)
+(node:41340) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-theme.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ layout applies SSR theme markers and blocking bootstrap (0.7555ms)
+✔ UserChoice toggle is in header and does not write appearance API (0.2948ms)
+✔ one ThemeProvider remains and does not force light after SSR (0.1813ms)
+✔ pages still do not poll appearance and dark remaps stay canonical (0.1495ms)
+(node:39228) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-token-completion.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ migrated storefront brand roles no longer hard-code Tooba/Shopeiva brand hex (0.8172ms)
+✖ Home PDP Shipping Cart use semantic primary tokens (1.9452ms)
+✔ pages do not define a local palette registry or appearance fetch (0.9227ms)
+ℹ tests 148
+ℹ suites 0
+ℹ pass 145
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 373.4346
+
+✖ failing tests:
+
+test at app\storefront\storefront-product-card-skin.guard.test.ts:21:1
+✖ one canonical card consumes store skin on all listing surfaces (1.6055ms)
+  AssertionError [ERR_ASSERTION]: app/storefront/storefront-home.tsx
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-product-card-skin.guard.test.ts:30:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '"use client";\n\nimport { Fragment, type ReactNode } from "react";\nimport {\n  defaultHomeCompositionSections,\n  parseSectionDisplayConfig,\n  type HomeCompositionSectionItem,\n  type SectionDisplayConfig,\n} from "../composition/composition-api.ts";\nimport type {\n  StorefrontArticleItem,\n  StorefrontBestSellerColumn,\n  StorefrontBrandItem,\n  StorefrontCategoryItem,\n  StorefrontFeaturedReviewItem,\n  StorefrontProductCard,\n} from "./storefront-model.ts";\nimport { HOME_SECTION_TYPE_MAP } from "../../lib/storefront-composition/landing-adapter.ts";\nimport {\n  type HomeRenderContext,\n  renderSharedHomeSectionForLegacyType,\n} from "../../lib/storefront-composition/shared-composition-renderer.tsx";\n\nexport { DEFAULT_HOME_SECTION_ORDER } from "../composition/composition-api.ts";\nexport type { HomeRenderContext };\n\n/**\n * خانهٔ Shopeiva با ترتیب Page Composition؛ دادهٔ تجاری زنده از Host.\n * Sections resolve through the shared composition renderer (LOCK-SF-229).\n */\nexport function StorefrontShopeivaHome({\n  heroTitle,\n  homeCategories,\n  specialOffers,\n  newArrivals,\n  brands,\n  bestSellerColumns,\n  mostViewedProducts,\n  featuredReviews,\n  latestArticles,\n  compositionSections,\n}: {\n  heroTitle: string;\n  heroSubtitle: string;\n  categories: StorefrontCategoryItem[];\n  homeCategories: StorefrontCategoryItem[];\n  specialOffers: StorefrontProductCard[];\n  campaignProducts: StorefrontProductCard[];\n  newArrivals: StorefrontProductCard[];\n  productRail: StorefrontProductCard[];\n  brands: StorefrontBrandItem[];\n  bestSellerColumns: StorefrontBestSellerColumn[];\n  mostViewedProducts: StorefrontProductCard[];\n  featuredReviews: StorefrontFeaturedReviewItem[];\n  latestArticles: StorefrontArticleItem[];\n  compositionSections?: HomeCompositionSectionItem[];\n}) {\n  const renderContext: HomeRenderContext = {\n    heroTitle,\n    homeCategories,\n    specialOffers,\n    bestSellerColumns,\n    mostViewedProducts,\n    brands,\n    newArrivals,\n    featuredReviews,\n    latestArticles,\n  };\n\n  const sections = (compositionSections?.length ? compositionSections : defaultHomeCompositionSections())\n    .slice()\n    .sort((left, right) => left.displayOrder - right.displayOrder);\n\n  return (\n    <div className="py-6 space-y-6 overflow-x-hidden" data-testid="storefront-home" data-storefront-surface-role="page">\n      <h1 className="sr-only">{heroTitle}</h1>\n      {sections.map((section) => {\n        const rendered = renderHomeSection(\n          section.sectionType,\n          renderContext,\n          parseSectionDisplayConfig(section.configurationJson),\n        );\n        if (!rendered) return null;\n        return <Fragment key={section.pageSectionId}>{rendered}</Fragment>;\n      })}\n    </div>\n  );\n}\n\nfunction renderHomeSection(\n  sectionType: string,\n  context: HomeRenderContext,\n  config: SectionDisplayConfig,\n): ReactNode | null {\n  const mapped = HOME_SECTION_TYPE_MAP[sectionType];\n  const variantKey = mapped?.variantKey;\n  switch (sectionType) {\n    case "hero":\n      return renderSharedHomeSectionForLegacyType("hero", variantKey ?? "hero.fullscreen", context, config);\n    case "stories":\n      return renderSharedHomeSectionForLegacyType("stories", variantKey ?? "story.circle", context, config);\n    case "category_grid":\n      return renderSharedHomeSectionForLegacyType("category_grid", variantKey ?? "category.image-cards", context, config);\n    case "product_rail_flash":\n      return renderSharedHomeSectionForLegacyType("product_rail_flash", variantKey ?? "product.amazing", context, config);\n    case "best_sellers":\n      return renderSharedHomeSectionForLegacyType("best_sellers", variantKey ?? "product.category-columns", context, config);\n    case "product_rail_most_viewed":\n      return renderSharedHomeSectionForLegacyType("product_rail_most_viewed", variantKey ?? "product.zohreh", context, config);\n    case "middle_banners":\n      return renderSharedHomeSectionForLegacyType("middle_banners", variantKey ?? "banner.one-large-two-small", context, config);\n    case "brands":\n      return renderSharedHomeSectionForLegacyType("brands", variantKey ?? "brand.logo-rail", context, config);\n    case "newest_products":\n      return renderSharedHomeSectionForLegacyType("newest_products", variantKey ?? "product.mahoor", context, config);\n    case "customer_reviews":\n      return renderSharedHomeSectionForLegacyType("customer_reviews", variantKey ?? "reviews.card-carousel", context, config);\n    case "latest_articles":\n      return renderSharedHomeSectionForLegacyType("latest_articles", variantKey ?? "article.magazine-rail", context, config);\n    default:\n      return null;\n  }\n}\n',
+    expected: /StorefrontProductCardView/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at app\storefront\storefront-ssr-perf-r9r1.guard.test.ts:1:1
+✖ app\storefront\storefront-ssr-perf-r9r1.guard.test.ts (132.5791ms)
+  'test failed'
+
+test at app\storefront\storefront-token-completion.test.ts:38:1
+✖ Home PDP Shipping Cart use semantic primary tokens (1.9452ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /bg-primary|text-primary|from-primary/. Input:
+  
+  '"use client";\n' +
+    '\n' +
+    'import { Fragment, type ReactNode } from "react";\n' +
+    'import {\n' +
+    '  defaultHomeCompositionSections,\n' +
+    '  parseSectionDisplayConfig,\n' +
+    '  type HomeCompositionSectionItem,\n' +
+    '  type SectionDisplayConfig,\n' +
+    '} from "../composition/composition-api.ts";\n' +
+    'import type {\n' +
+    '  StorefrontArticleItem,\n' +
+    '  StorefrontBestSellerColumn,\n' +
+    '  StorefrontBrandItem,\n' +
+    '  StorefrontCategoryItem,\n' +
+    '  StorefrontFeaturedReviewItem,\n' +
+    '  StorefrontProductCard,\n' +
+    '} from "./storefront-model.ts";\n' +
+    'import { HOME_SECTION_TYPE_MAP } from "../../lib/storefront-composition/landing-adapter.ts";\n' +
+    'import {\n' +
+    '  type HomeRenderContext,\n' +
+    '  renderSharedHomeSectionForLegacyType,\n' +
+    '} from "../../lib/storefront-composition/shared-composition-renderer.tsx";\n' +
+    '\n' +
+    'export { DEFAULT_HOME_SECTION_ORDER } from "../composition/composition-api.ts";\n' +
+    'export type { HomeRenderContext };\n' +
+    '\n' +
+    '/**\n' +
+    ' * خانهٔ Shopeiva با ترتیب Page Composition؛ دادهٔ تجاری زنده از Host.\n' +
+    ' * Sections resolve through the shared composition renderer (LOCK-SF-229).\n' +
+    ' */\n' +
+    'export function StorefrontShopeivaHome({\n' +
+    '  heroTitle,\n' +
+    '  homeCategories,\n' +
+    '  specialOffers,\n' +
+    '  newArrivals,\n' +
+    '  brands,\n' +
+    '  bestSellerColumns,\n' +
+    '  mostViewedProducts,\n' +
+    '  featuredReviews,\n' +
+    '  latestArticles,\n' +
+    '  compositionSections,\n' +
+    '}: {\n' +
+    '  heroTitle: string;\n' +
+    '  heroSubtitle: string;\n' +
+    '  categories: StorefrontCategoryItem[];\n' +
+    '  homeCategories: StorefrontCategoryItem[];\n' +
+    '  specialOffers: StorefrontProductCard[];\n' +
+    '  campaignProducts: StorefrontProductCard[];\n' +
+    '  newArrivals: StorefrontProductCard[];\n' +
+    '  productRail: StorefrontProductCard[];\n' +
+    '  brands: StorefrontBrandItem[];\n' +
+    '  bestSellerColumns: StorefrontBestSellerColumn[];\n' +
+    '  mostViewedProducts: StorefrontProductCard[];\n' +
+    '  featuredReviews: StorefrontFeaturedReviewItem[];\n' +
+    '  latestArticles: StorefrontArticleItem[];\n' +
+    '  compositionSections?: HomeCompositionSectionItem[];\n' +
+    '}) {\n' +
+    '  const renderContext: HomeRenderContext = {\n' +
+    '    heroTitle,\n' +
+    '    homeCategories,\n' +
+    '    specialOffers,\n' +
+    '    bestSellerColumns,\n' +
+    '    mostViewedProducts,\n' +
+    '    brands,\n' +
+    '    newArrivals,\n' +
+    '    featuredReviews,\n' +
+    '    latestArticles,\n' +
+    '  };\n' +
+    '\n' +
+    '  const sections = (compositionSections?.length ? compositionSections : defaultHomeCompositionSections())\n' +
+    '    .slice()\n' +
+    '    .sort((left, right) => left.displayOrder - right.displayOrder);\n' +
+    '\n' +
+    '  return (\n' +
+    '    <div className="py-6 space-y-6 overflow-x-hidden" data-testid="storefront-home" data-storefront-surface-role="page">\n' +
+    '      <h1 className="sr-only">{heroTitle}</h1>\n' +
+    '      {sections.map((section) => {\n' +
+    '        const rendered = renderHomeSection(\n' +
+    '          section.sectionType,\n' +
+    '          renderContext,\n' +
+    '          parseSectionDisplayConfig(section.configurationJson),\n' +
+    '        );\n' +
+    '        if (!rendered) return null;\n' +
+    '        return <Fragment key={section.pageSectionId}>{rendered}</Fragment>;\n' +
+    '      })}\n' +
+    '    </div>\n' +
+    '  );\n' +
+    '}\n' +
+    '\n' +
+    'function renderHomeSection(\n' +
+    '  sectionType: string,\n' +
+    '  context: HomeRenderContext,\n' +
+    '  config: SectionDisplayConfig,\n' +
+    '): ReactNode | null {\n' +
+    '  const mapped = HOME_SECTION_TYPE_MAP[sectionType];\n' +
+    '  const variantKey = mapped?.variantKey;\n' +
+    '  switch (sectionType) {\n' +
+    '    case "hero":\n' +
+    '      return renderSharedHomeSectionForLegacyType("hero", variantKey ?? "hero.fullscreen", context, config);\n' +
+    '    case "stories":\n' +
+    '      return renderSharedHomeSectionForLegacyType("stories", variantKey ?? "story.circle", context, config);\n' +
+    '    case "category_grid":\n' +
+    '      return renderSharedHomeSectionForLegacyType("category_grid", variantKey ?? "category.image-cards", context, config);\n' +
+    '    case "product_rail_flash":\n' +
+    '      return renderSharedHomeSectionForLegacyType("product_rail_flash", variantKey ?? "product.amazing", context, config);\n' +
+    '    case "best_sellers":\n' +
+    '      return renderSharedHomeSectionForLegacyType("best_sellers", variantKey ?? "product.category-columns", context, config);\n' +
+    '    case "product_rail_most_viewed":\n' +
+    '      return renderSharedHomeSectionForLegacyType("product_rail_most_viewed", variantKey ?? "product.zohreh", context, config);\n' +
+    '    case "middle_banners":\n' +
+    '      return renderSharedHomeSectionForLegacyType("middle_banners", variantKey ?? "banner.one-large-two-small", context, config);\n' +
+    '    case "brands":\n' +
+    '      return renderSharedHomeSectionForLegacyType("brands", variantKey ?? "brand.logo-rail", context, config);\n' +
+    '    case "newest_products":\n' +
+    '      return renderSharedHomeSectionForLegacyType("newest_products", variantKey ?? "product.mahoor", context, config);\n' +
+    '    case "customer_reviews":\n' +
+    '      return renderSharedHomeSectionForLegacyType("customer_reviews", variantKey ?? "reviews.card-carousel", context, config);\n' +
+    '    case "latest_articles":\n' +
+    '      return renderSharedHomeSectionForLegacyType("latest_articles", variantKey ?? "article.magazine-rail", context, config);\n' +
+    '    default:\n' +
+    '      return null;\n' +
+    '  }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-token-completion.test.ts:44:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '"use client";\n\nimport { Fragment, type ReactNode } from "react";\nimport {\n  defaultHomeCompositionSections,\n  parseSectionDisplayConfig,\n  type HomeCompositionSectionItem,\n  type SectionDisplayConfig,\n} from "../composition/composition-api.ts";\nimport type {\n  StorefrontArticleItem,\n  StorefrontBestSellerColumn,\n  StorefrontBrandItem,\n  StorefrontCategoryItem,\n  StorefrontFeaturedReviewItem,\n  StorefrontProductCard,\n} from "./storefront-model.ts";\nimport { HOME_SECTION_TYPE_MAP } from "../../lib/storefront-composition/landing-adapter.ts";\nimport {\n  type HomeRenderContext,\n  renderSharedHomeSectionForLegacyType,\n} from "../../lib/storefront-composition/shared-composition-renderer.tsx";\n\nexport { DEFAULT_HOME_SECTION_ORDER } from "../composition/composition-api.ts";\nexport type { HomeRenderContext };\n\n/**\n * خانهٔ Shopeiva با ترتیب Page Composition؛ دادهٔ تجاری زنده از Host.\n * Sections resolve through the shared composition renderer (LOCK-SF-229).\n */\nexport function StorefrontShopeivaHome({\n  heroTitle,\n  homeCategories,\n  specialOffers,\n  newArrivals,\n  brands,\n  bestSellerColumns,\n  mostViewedProducts,\n  featuredReviews,\n  latestArticles,\n  compositionSections,\n}: {\n  heroTitle: string;\n  heroSubtitle: string;\n  categories: StorefrontCategoryItem[];\n  homeCategories: StorefrontCategoryItem[];\n  specialOffers: StorefrontProductCard[];\n  campaignProducts: StorefrontProductCard[];\n  newArrivals: StorefrontProductCard[];\n  productRail: StorefrontProductCard[];\n  brands: StorefrontBrandItem[];\n  bestSellerColumns: StorefrontBestSellerColumn[];\n  mostViewedProducts: StorefrontProductCard[];\n  featuredReviews: StorefrontFeaturedReviewItem[];\n  latestArticles: StorefrontArticleItem[];\n  compositionSections?: HomeCompositionSectionItem[];\n}) {\n  const renderContext: HomeRenderContext = {\n    heroTitle,\n    homeCategories,\n    specialOffers,\n    bestSellerColumns,\n    mostViewedProducts,\n    brands,\n    newArrivals,\n    featuredReviews,\n    latestArticles,\n  };\n\n  const sections = (compositionSections?.length ? compositionSections : defaultHomeCompositionSections())\n    .slice()\n    .sort((left, right) => left.displayOrder - right.displayOrder);\n\n  return (\n    <div className="py-6 space-y-6 overflow-x-hidden" data-testid="storefront-home" data-storefront-surface-role="page">\n      <h1 className="sr-only">{heroTitle}</h1>\n      {sections.map((section) => {\n        const rendered = renderHomeSection(\n          section.sectionType,\n          renderContext,\n          parseSectionDisplayConfig(section.configurationJson),\n        );\n        if (!rendered) return null;\n        return <Fragment key={section.pageSectionId}>{rendered}</Fragment>;\n      })}\n    </div>\n  );\n}\n\nfunction renderHomeSection(\n  sectionType: string,\n  context: HomeRenderContext,\n  config: SectionDisplayConfig,\n): ReactNode | null {\n  const mapped = HOME_SECTION_TYPE_MAP[sectionType];\n  const variantKey = mapped?.variantKey;\n  switch (sectionType) {\n    case "hero":\n      return renderSharedHomeSectionForLegacyType("hero", variantKey ?? "hero.fullscreen", context, config);\n    case "stories":\n      return renderSharedHomeSectionForLegacyType("stories", variantKey ?? "story.circle", context, config);\n    case "category_grid":\n      return renderSharedHomeSectionForLegacyType("category_grid", variantKey ?? "category.image-cards", context, config);\n    case "product_rail_flash":\n      return renderSharedHomeSectionForLegacyType("product_rail_flash", variantKey ?? "product.amazing", context, config);\n    case "best_sellers":\n      return renderSharedHomeSectionForLegacyType("best_sellers", variantKey ?? "product.category-columns", context, config);\n    case "product_rail_most_viewed":\n      return renderSharedHomeSectionForLegacyType("product_rail_most_viewed", variantKey ?? "product.zohreh", context, config);\n    case "middle_banners":\n      return renderSharedHomeSectionForLegacyType("middle_banners", variantKey ?? "banner.one-large-two-small", context, config);\n    case "brands":\n      return renderSharedHomeSectionForLegacyType("brands", variantKey ?? "brand.logo-rail", context, config);\n    case "newest_products":\n      return renderSharedHomeSectionForLegacyType("newest_products", variantKey ?? "product.mahoor", context, config);\n    case "customer_reviews":\n      return renderSharedHomeSectionForLegacyType("customer_reviews", variantKey ?? "reviews.card-carousel", context, config);\n    case "latest_articles":\n      return renderSharedHomeSectionForLegacyType("latest_articles", variantKey ?? "article.magazine-rail", context, config);\n    default:\n      return null;\n  }\n}\n',
+    expected: /bg-primary|text-primary|from-primary/,
+    operator: 'match',
+    diff: 'simple'
+  }

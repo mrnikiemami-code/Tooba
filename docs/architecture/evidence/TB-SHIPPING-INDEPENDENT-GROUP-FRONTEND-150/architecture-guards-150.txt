@@ -1,0 +1,61 @@
+﻿(node:41268) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-feature-boundary.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-BOUNDARY: external code must not deep-import migrated feature internals (69.1093ms)
+(node:25080) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-flat-folder.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-FOLDER-001: no new business-feature files directly under app/admin (6.5028ms)
+✔ FE-FOLDER-002: no new capability exports on admin-api dumping ground (1.0359ms)
+(node:19548) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-import-boundary.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FE-BOUNDARY-001: no new shared→feature reverse imports beyond baseline (30.8706ms)
+(node:27052) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-source-size.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ FE-SIZE: oversized frontend files are shrink-only against baseline (63.0883ms)
+(node:33100) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-test-discovery.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ architecture guard files exist and package.json wires test:architecture (1.1659ms)
+✔ canonical discovery lists every on-disk frontend test file (91.8065ms)
+✔ package.json test scripts still invoke critical storefront suite (0.2582ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 7
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 192.9376
+
+✖ failing tests:
+
+test at lib\architecture\frontend-source-size.guard.test.ts:39:1
+✖ FE-SIZE: oversized frontend files are shrink-only against baseline (63.0883ms)
+  AssertionError [ERR_ASSERTION]: OVERSIZED_GROWTH src/frontend/app/admin/category-admin-screen.tsx: 2230 > baseline 2215
+  OVERSIZED_GROWTH src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx: 1442 > baseline 1440
+  OVERSIZED_GROWTH src/frontend/app/storefront/storefront-landing-blocks.tsx: 1033 > baseline 1026
+  OVERSIZED_GROWTH src/frontend/lib/storefront-composition/shared-composition-renderer.tsx: 918 > baseline 907
+  
+  4 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/architecture/frontend-source-size.guard.test.ts:74:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
