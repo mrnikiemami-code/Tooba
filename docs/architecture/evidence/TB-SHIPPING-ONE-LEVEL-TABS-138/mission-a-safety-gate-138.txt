@@ -1,0 +1,68 @@
+TB-SHIPPING-ONE-LEVEL-TABS-138 — MISSION A SAFETY GATE (source provenance, no click required)
+
+QUESTION: what exactly does the storefront final payment action do, and is there a pre-existing
+explicit Development-only no-charge payment path with provably zero real financial / external effects?
+
+1. Final click path
+- Frontend: src/frontend/app/payment/storefront-payment-handoff.tsx → pay()
+  * cart mode: startFinalClickPayment(cartId, expectedCartVersion, method) →
+    POST /v1/storefront/cart/{cartId}/start-payment   (Order 028, idempotency key from sessionStorage)
+  * checkout mode: startStorefrontPayment(checkoutId, { providerCode }) →
+    POST /v1/storefront/checkout/{checkoutId}/payments
+- Backend endpoint map (src/backend/Modules/Payment/Tooba.Payment.Endpoints/Storefront/PaymentStorefrontEndpoints.cs)
+  line 22: POST /v1/storefront/checkout/{checkoutId:guid}/payments → InitiateStorefrontPaymentCommand
+  line 27: GET  /v1/storefront/payments/{paymentId:guid}/sandbox
+  line 28: POST /v1/storefront/payments/{paymentId:guid}/sandbox/complete
+- Single canonical initiation seam: IPaymentInitiationPort → PaymentInitiationAdapter →
+  StorefrontPaymentOrchestrator (module comment in PaymentModule.cs lines 111-118).
+
+2. Is a Development-only no-charge provider registered?
+src/backend/Modules/Payment/Tooba.Payment.Infrastructure/DependencyInjection/PaymentModule.cs
+  if (environment.IsProduction()) {
+      Mode == Webhook ? WebhookPaymentGateway (AddHttpClient, real PSP) : FailClosedPaymentGateway;
+      + WalletPaymentGateway + ManualPaymentGateway
+  } else {                                   // Development / non-Production ONLY
+      FakePaymentGateway            (ProviderCode "fake")
+      FakeFailingPaymentGateway     (ProviderCode "fake-fail")
+      ManualPaymentGateway
+      WalletPaymentGateway
+      FakePaymentRefundGateway
+  }
+=> the real webhook PSP is UNREACHABLE in Development; the Development branch is fail-safe.
+
+3. Does the fake provider touch the outside world?
+src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Providers/FakePaymentGateway.cs
+  InitiateAsync: no HTTP client; returns reference "fake-{paymentId}-{newId}" and an INTERNAL
+    redirect "/payment/sandbox?ref=..." with a 15-minute expiry.
+  VerifyAsync: no HTTP client; returns success unless the reference carries the "-FAIL-VERIFY"
+    suffix or was explicitly marked declined. Reads no card data, charges no money.
+=> zero external-world side effect.
+
+4. Is the sandbox simulator gated to non-Production + Sandbox mode?
+src/backend/Modules/Payment/Tooba.Payment.Infrastructure/Adapters/PaymentGatewayCatalogAdapter.cs
+  IsSandboxSimulatorEnabled() => !_environment.IsProduction() && Mode == "Sandbox"
+  StorefrontPaymentOrchestrator.GetSandboxContextAsync / CompleteSandboxAsync both
+  throw PaymentErrorCodes.SandboxUnavailable when that gate is false.
+=> GET sandbox and POST sandbox/complete are unreachable in Production.
+
+5. Effective configuration in the isolated run
+src/backend/Host/Tooba.Host/appsettings.json → Payment:Gateway:
+  Mode = "Sandbox", DefaultProvider = "fake",
+  WebhookSigningSecret = "", InitiateBaseUrl = "", StatusQueryBaseUrl = "", StatusQueryApiKey = "",
+  AllowedStatusQueryHosts = []   <-- no PSP credentials exist at all.
+The TB-138 isolated overlay (appsettings.Development.json) does NOT modify Payment:* — it only sets
+SingleStore tenant/connection references, Messaging, Authorization, AuthSecurity, Media,
+CatalogDemo, ShippingOneLevelCatalog and ShippingMethods.
+Isolated Host environment: ASPNETCORE_ENVIRONMENT=Development / DOTNET_ENVIRONMENT=Development.
+Live probe: GET /v1/storefront/payment-methods returned {"code":"gateway",...},{"code":"manual",...}
+=> the off-line sandbox gateway is offered and the simulator is enabled.
+
+6. Shipped customer-facing sandbox surface
+src/frontend/app/payment/sandbox/storefront-payment-sandbox.tsx renders "SANDBOX / TEST" and the text
+«این صفحه بانک واقعی نیست. نتیجه فقط پس از تأیید سرور ثبت میشود.» with success/failure CTAs; it is
+the product's own designed Development hand-off, not a test harness, and it drives the canonical
+VerifyPaymentCommand pipeline (no direct event injection, no DB write, no auth bypass).
+
+VERDICT: MISSION A = SAFE. The isolated run executes the pre-existing explicit Development-only
+fake/sandbox provider with zero external financial effect. No real provider was called, no guard was
+bypassed, no fake success event was injected and no direct DB write was used to reach the paid state.

@@ -1,0 +1,38 @@
+﻿BASELINE (before the journey, fresh isolated DB)
+BEFORE|checkouts=0|seller_orders=0|order_groups=0|payments=0|allocations=0|ff_units=0
+
+AFTER CONTINUE (draft saved, final click NOT yet made)
+AFTER_CONTINUE|checkouts=0|seller_orders=0|order_groups=0|payments=0|allocations=0|ff_units=0|cart_groups=2|cart_group_fee=380000.00
+
+AFTER FINAL CLICK (payment INITIATED, not paid)
+AFTER_FINAL_CLICK|checkouts=1|seller_orders=1|order_groups=2|group_lines=2|payments=1|allocations=3|ff_units=0
+PAYMENT|01a14398-737f-7000-ab5b-7f426ec65567|status=Pending|amount=3977000.0000|cur=IRR|provider=fake
+ALLOC|SellerOrder|target=01a14398-70cf-7000-89a7-169112325f94|amount=3597000.0000
+ALLOC|StoreShippingGroup|target=01a14398-703f-7000-bd8e-71a9e2e9fe48|amount=180000.0000
+ALLOC|StoreShippingGroup|target=01a14398-703f-7000-8c90-f8e1a559db44|amount=200000.0000
+ORDGRP|01a14398-703f-7000-8c90-f8e1a559db44|seller=01a14391-3ba2-7000-98e6-4a70394cb414|method=post:express|svc=post|label=پیشتاز|charge=200000.00|state=Confirmed
+ORDGRP|01a14398-703f-7000-bd8e-71a9e2e9fe48|seller=01a14391-3ba2-7000-98e6-4a70394cb414|method=tipax:standard|svc=tipax|label=معمولی|charge=180000.00|state=Confirmed
+GRP_TOTAL=380000.00|DISTINCT_SELLERS=1
+GRPLINE|01a14398-703f-7000-8c90-f8e1a559db44|order_line=01a14398-70d5-7000-a897-48da358203bb
+GRPLINE|01a14398-703f-7000-bd8e-71a9e2e9fe48|order_line=01a14398-70d9-7000-a18c-49b8dcc8ce92
+SELLERORDER|01a14398-70cf-7000-89a7-169112325f94|seller=01a14391-3ba2-7000-98e6-4a70394cb414|status=PendingPayment
+
+AFTER SANDBOX VERIFICATION (user clicked the governed sandbox success action once)
+PAYMENT|01a14398-737f-7000-ab5b-7f426ec65567|status=Succeeded|amount=3977000.0000|provider=fake|completed=2026-10-16 07:24:20.708104+00
+SELLERORDER|01a14398-70cf-7000-89a7-169112325f94|status=Paid|orderNumber=TB-20261016072346-01-7cf0bf
+ORDGRP (unchanged)|post:express 200000.00 Confirmed / tipax:standard 180000.00 Confirmed
+ALLOC (unchanged)|SellerOrder 3597000 / StoreShippingGroup 180000 / StoreShippingGroup 200000
+
+EVENT / HANDOFF OBSERVATION
+PAYOUTBOX|payment.created.v1|processed=2026-10-16 07:23:47.99014+00|attempts=1|dead=null|err=-
+PAYOUTBOX|payment.initiated.v1|processed=2026-10-16 07:23:48.001582+00|attempts=1|dead=null|err=-
+PAYOUTBOX|payment.succeeded.v1|processed=2026-10-16 07:24:21.031089+00|attempts=1|dead=null|err=-
+ORDINBOX_EVENTS=01a14398-f765-7000-8859-0a10e36fb414   <-- Order consumed payment.succeeded.v1
+FF|fulfillments=0|items=0|ff_groups=0|shipments=0|shipment_items=0|payment_inbox=0  <-- Fulfillment did NOT
+FF_CATALOG|methods=7|services=5|options=4|translations=14   FF_MIGRATIONS=10   <-- module IS live
+SETTLEMENT schema absent from the isolated database (no settlement.* tables; shipping_group_fee_allocation unreadable)
+
+RECONCILIATION
+payment.amount 3977000.00 == SellerOrder allocation 3597000.00 + 180000.00 + 200000.00 = 3977000.00
+(exactly once; the two StoreShippingGroup allocations carry REAL stable ShippingGroupId targets,
+not Guid.Empty sentinel, and no allocation is duplicated)

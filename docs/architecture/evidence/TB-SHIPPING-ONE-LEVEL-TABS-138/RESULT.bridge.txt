@@ -1,0 +1,61 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-138
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-137
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Program: TOOBA-SHIPPING-CHECKOUT-DELIVERY-CLOSURE
+Mode: BOUNDED_ISOLATED_GROUPED_CHECKOUT_FINAL_SUBMIT_PAYMENT_ACCEPTANCE
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Code-SHA: NONE (observation-only task; no source file was changed and no implementation is claimed)
+Base-SHA: f6c07a056524a5313ececce061d489609d1ca4bf
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Measured-Minutes: 45 (timebox exhausted exactly; the final-click acceptance run completed, the two unproven items were located, and the run was stopped instead of opening an unbounded investigation)
+
+SUMMARY
+Mission A safety gate passed with source proof and Mission B's grouped final-submit acceptance was executed end to end on a disposable isolated runtime with the pre-existing Development-only sandbox provider. The customer-visible grouped chain is now proven past the final click: after one Continue nothing is committed, after one final click exactly one Checkout, one SellerOrder, two accepted ShippingGroups with disjoint OrderLine membership exist, the 3977000 IRR payment reconciles exactly once into one SellerOrder allocation plus two StoreShippingGroup allocations that carry REAL stable ShippingGroupId targets, and one governed sandbox verification moves PAYMENT INITIATED to PAYMENT PAID and the SellerOrder to Paid with zero real-world charge. Two acceptance items remain unproven: the paid transition never produced a FulfillmentUnit (Order consumed payment.succeeded.v1 but Fulfillment did not), and the Settlement schema is absent from the isolated database so PendingAllocation could not be read back. Status is PARTIAL with STOP_FOR_ARCHITECT, and no source was modified.
+
+A. MISSION A — SAFETY/SIDE-EFFECT GATE: PASS
+- Final storefront action: POST /v1/storefront/cart/{cartId}/start-payment (Order 028) or POST /v1/storefront/checkout/{checkoutId}/payments, both through the single canonical seam IPaymentInitiationPort then PaymentInitiationAdapter then StorefrontPaymentOrchestrator.
+- A pre-existing explicit Development-only no-charge provider exists: FakePaymentGateway (ProviderCode fake) is registered ONLY in the non-Production branch of PaymentModule.AddServices; Production wires WebhookPaymentGateway (real PSP via AddHttpClient) or FailClosedPaymentGateway. FakePaymentGateway makes no HTTP call and takes no money: InitiateAsync returns an internal redirect /payment/sandbox?ref=... and VerifyAsync only returns a verdict.
+- The simulator is doubly gated: IsSandboxSimulatorEnabled() requires !IsProduction() AND Mode == Sandbox, and both sandbox orchestrator methods throw SandboxUnavailable otherwise.
+- Effective isolated configuration: Payment:Gateway Mode=Sandbox, DefaultProvider=fake, and EVERY PSP field empty (WebhookSigningSecret, InitiateBaseUrl, StatusQueryBaseUrl, StatusQueryApiKey, AllowedStatusQueryHosts=[]). The TB-138 overlay does not modify Payment:* at all, and the Host ran with ASPNETCORE_ENVIRONMENT=Development. A live probe of GET /v1/storefront/payment-methods returned the off-line gateway plus manual method.
+- The customer surface used is the shipped /payment/sandbox page which states «این صفحه بانک واقعی نیست» and drives the canonical VerifyPaymentCommand pipeline. No real provider was called, no guard was bypassed, no fake success event was injected, no direct DB write was used, and no auth was bypassed.
+
+B. MISSION B — ONE E2E ACCEPTANCE
+Environment (disposable, isolated): scratch container tooba-tb138-pg with tooba_138_scratch and tooba_138_messaging on 127.0.0.1:55460; Host 127.0.0.1:5407 (deploymentId isolated-138, tenant store-alpha, reference tenant-138-scratch); frontend 127.0.0.1:3107 via the repo's own TOOBA_HOST_ORIGIN seam. Isolation guard failClosed=true with a single active tenant, no shared alpha database/reference/port and no prior scratch port. The scratch password never reached evidence. Shared :5088 and :3000 and tooba_alpha were never modified, restarted or stopped.
+
+Journey (real storefront actions, guest cart): added workspace-live-shirt (Seller A فروشگاه آرمان, 1,850,000 IRR) and workspace-live-scarf (SAME Seller A, 1,450,000 IRR), which rendered ONE seller card with TWO item rows and 14 method tiles; selected line 1 = post:express (پیشتاز 200,000) and line 2 = tipax:standard (معمولی 180,000), the card showed two per-group fee rows summing to ۳۸۰٬۰۰۰ ریال, server-derived date 2026-10-20 with window 9-12, address completed; Continue was clicked ONCE and navigated to /fa/payment?cartId=01a14397-d05e-7000-9cb8-6522f6e8361d.
+
+Payment summary on this fresh runtime (unchanged from TB-137): خلاصهٔ سفارش / روش‌های ارسال / پیشتاز ۲۰۰٬۰۰۰ / معمولی ۱۸۰٬۰۰۰ / گیرنده: حمید آزمون — تهران / هزینه ارسال: ۳۸۰٬۰۰۰ ریال / قابل پرداخت: ۳٬۹۷۷٬۰۰۰ ریال / در انتظار پرداخت, with the final CTA «پرداخت نهایی و ثبت سفارش» enabled.
+
+Nothing committed before the final click (DB readback): BEFORE all zeros; AFTER_CONTINUE checkouts=0 seller_orders=0 order_groups=0 payments=0 allocations=0 ff_units=0 with cart_groups=2 and cart_group_fee=380000.00. Only read-only cart-level draft groups existed, so the draft is materially separated from acceptance.
+
+After ONE final click (PAYMENT INITIATED, ORDER ACCEPTED, not yet paid): checkouts=1, seller_orders=1, order_groups=2, group_lines=2, payments=1, allocations=3, ff_units=0; PAYMENT status=Pending amount=3977000.0000 IRR provider=fake; ALLOC SellerOrder 3,597,000 plus StoreShippingGroup 180,000 (target = the tipax group id) plus StoreShippingGroup 200,000 (target = the post:express group id); ORDGRP post:express Confirmed 200,000 and tipax:standard Confirmed 180,000 for the SAME seller 01a14391-3ba2-7000-98e6-4a70394cb414 with GRP_TOTAL=380000.00 and DISTINCT_SELLERS=1; group …8c90 maps to order_line …70d5 and group …bd8e maps to order_line …70d9, so membership is disjoint; SELLERORDER status=PendingPayment.
+=> exactly one accepted Checkout, one SellerOrder, two accepted ShippingGroups, disjoint OrderLine membership, amounts summed ONCE, and TWO StoreShippingGroup allocations carrying REAL stable ShippingGroupId targets (no Guid.Empty sentinel, no duplicated charge).
+
+After ONE governed sandbox verification (PAYMENT PAID): PAYMENT status=Succeeded provider=fake completed=2026-10-16 07:24:20.708104+00; SELLERORDER status=Paid orderNumber=TB-20261016072346-01-7cf0bf; the result page showed «پرداخت موفق / شماره سفارش: TB-20261016072346-01-7cf0bf / مبلغ: ۳٬۹۷۷٬۰۰۰ ریال». Groups and allocations were unchanged, so there was no re-charge and no duplicate allocation. The three states were observed separately: PAYMENT INITIATED (Pending), PAYMENT PAID (Succeeded), ORDER ACCEPTED (SellerOrder PendingPayment to Paid). No second customer click was made; exactly one payment row and one idempotency key exist, so no accidental double payment occurred.
+
+C. FIRST BLOCKER — FULFILLMENT HANDOFF DID NOT OCCUR (unproven acceptance item)
+payment.succeeded.v1 (event 01a14398-f765-7000-8859-0a10e36fb414) was published with attempts=1 and was NOT dead-lettered (dead=null, err=-). The Order module consumed it (order.payment_inbox contains that exact event id, which is what moved the SellerOrder to Paid). The Fulfillment module did not: fulfillment.payment_inbox=0 and fulfillment.fulfillments=0, items=0, ff_groups=0, shipments=0, shipment_items=0, even though the Fulfillment module is demonstrably live in this same Host composition (7 methods, 5 services, 4 options, 14 translations, 10 migrations) and registers IIntegrationEventHandler<PaymentSucceededIntegrationEvent> to FulfillmentPaymentSucceededHandler to FulfillmentDirectory.CreateFromPaidSellerOrdersAsync to FulfillmentUnit.CreateFromPaidOrder. The paid transition WAS legally available and did happen, so this is a genuine gap rather than an unreachable case, located at the Order to Fulfillment integration-event delivery/registration boundary. It was deliberately NOT patched inside the timebox because it needs a bounded, owner-correct follow-up task rather than an in-timebox guess. No fabricated group memberships, shipment bookings or dispatch state were invented.
+
+D. SECOND UNPROVEN ITEM — SETTLEMENT ALLOCATION READBACK IMPOSSIBLE HERE
+The isolated database contains no settlement schema at all (the schema listing has catalog, offer, pricing, inventory, tax, party, identity, cart, order, payment, fulfillment, promotion, reviews, product_qna, bulk_inquiry, wishlist, address_book, customer_profile, user_preference, operator_profile, localization, content, media, page_composition, story, notification, access_control, support and wallet, with no settlement), so the Settlement module's ShippingGroupFeeAllocation — which today permits only the PendingAllocation state by design — could not be read back. PendingAllocation was therefore neither exercised nor contradicted, no settlement row was fabricated, no made-up split policy was introduced, and no shipping charge was converted into seller revenue; no premature seller shipping payout exists anywhere in this run.
+
+E. NOT CLAIMED
+No FulfillmentUnit, shipment booking, dispatch, tracking, settlement allocation or split, payout, refund, production readiness or migration certification is claimed. No source code was changed, so no implementation is claimed. Retry/idempotency was not re-proved at runtime because a second click was not allowed; the existing focused tests remain the available proof and were not re-run inside the timebox.
+
+F. ENVIRONMENT INTEGRITY AND CLEANUP
+Shared services were never touched: shared containers postgres-db and rabbitmq are still running, listeners on :5088 and :3000 are still 1 each, and tooba_alpha is still present after cleanup. PID-verified teardown by absolute path: FRONTEND_STOPPED_BY_RECORDED_PID=37908, HOST_STOPPED_BY_RECORDED_PID=14480, SCRATCH_CONTAINER_REMOVED=tooba-tb138-pg, SCRATCH_VOLUMES=none, temp dirs and the secret file removed, and LISTENERS_ON_5407/3107/55460_AFTER_CLEANUP=0. The pre-existing dirty admin screens and unrelated evidence logs were preserved and not committed; no reset, stash, rebase, force-push or history rewrite was performed.
+
+G. EVIDENCE
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-138 contains mission-a-safety-gate-138.txt, observation-138.txt, db-readback-138.txt, cleanup-138.txt, isolation-guard.json, host-launch-138.txt, prepare-isolated-target-138.js, the two launch scripts and tb138-paid-order-result.png. docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-138.md carries the acceptance ledger. No credential was written to evidence.
+
+H. NEXT MINIMAL OWNER-CORRECT STEP (proposal, not executed)
+One bounded task on Order to Fulfillment payment.succeeded.v1 delivery: prove whether the Fulfillment subscriber is registered in the Host's integration-event dispatch for this composition, and if it is, prove why the handler is never invoked despite the outbox row being marked processed; then re-run this same isolated acceptance to obtain the single FulfillmentUnit plus its two scoped groups. Only after that, a separately authorized task can address Settlement PendingAllocation readback with an explicit approved commercial policy, and neither task may invent shares.
+
+COMMITS
+Evidence-only commits pushed normally to main; HEAD equals origin/main at the time this Result was posted. No source file was modified in this task.
+END_TOOBA_WORKER_RESULT
