@@ -1,0 +1,68 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-121
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-120
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Bridge-Task-Row: 6cff6dd6-701f-4e79-a3e3-b708249fced9
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+Expected-Base-SHA: 68e9648bb38cf98aceb670b48855e163655278f2
+Base-SHA: 68e9648bb38cf98aceb670b48855e163655278f2
+Base-SHA-Drift: none — HEAD == origin/main == Expected-Base-SHA at claim; no source edit in this task, so no source drift was possible.
+Code-SHA: NONE (observation-only: no src/, test, frontend, migration, appsettings or shared-config edit)
+Evidence-SHA: aa6be4c7202f73f73818fed65c950f717f821671
+HEAD==origin/main after push: true (see final line of this result for the second commit that carries this file)
+Measured-Minutes: ~9 total (claim 03:06Z, result 03:15Z) — well inside the 45 min HARD timebox; no timebox stop needed.
+Isolated-Launch-Count: 1 (single Start-Process of an absolute exe path; watchdog 180 s — never hit; /health 200 after 41 s)
+Bridge-Output-Discipline: only this contract was posted; no chat status, progress or report was emitted.
+
+PREFLIGHT
+- Claimed exactly one Pending task on tooba-main after a Working heartbeat; preserved docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-121.task.md UNSTAGED.
+- Read AGENTS.md/pipeline rules, TB-119 and TB-120 evidence, the TB-120 seed (ShippingOneLevelCatalogDevelopmentSeed) and its Host/Fulfillment call sites.
+- Source tree was clean at claim; no overlapping source edits and no provenance ambiguity. No reset, stash, rebase or force push was used.
+- Shared Host :5088, Next :3000, the tooba_alpha database and the pre-existing postgres-db/rabbitmq containers were treated as READ-ONLY and were never started, stopped, restarted, migrated or mutated.
+
+MISSION A — ONE ISOLATED DEVELOPMENT RUNTIME (single launch)
+- Scratch provenance only, from the proven TB-117/TB-119 recipe: disposable no-volume postgres:16-alpine on 127.0.0.1:55452 (unique; not 5432 nor any prior scratch port), task-owned databases tooba_121_scratch + tooba_121_messaging, ephemeral password supplied via the environment and never written into committed evidence. Isolated Host published to the ignored .tmp-121-host-out and bound to the unique loopback port http://127.0.0.1:5400.
+- Offline effective-configuration validation passed and FAIL-CLOSED: isolation-guard.json shows tenantCount=1, activeTenantCount=1, tenant store-alpha:Active:tenant-121-scratch (canonical trusted gateway tenant), containsSharedAlphaDatabase=false, containsSharedAlphaReference=false, containsSharedAlphaPort=false, containsPriorScratchPort=false, RunLegacyBootstraps=true, AllowResetAndSeed=false, ShippingRateAuthority and ShippingOperationalShadow absent, oneLevelCatalogEnabledInOverlay=true, failClosed=true. The one-level gate was set ONLY in the disposable overlay; no tracked appsettings file was touched.
+- Provenance at runtime: GET /__platform-commerce returned {"deploymentId":"isolated-121","tenantId":"store-alpha","connectionReference":"tenant-121-scratch"} — the scratch reference, not tenant-alpha.
+- Startup stages observed in the single boot: Development migrations applied, including 20261015120000_AddShippingOneLevelCatalog (one-level schema created by the ordinary startup — no manual SQL, no schema bypass); the legacy shipping catalog bootstrap seeded the LEGACY service/option tables (5 services / 5 options, legacy active); then the TB-120 Development bootstrap ran — the log contains the batched INSERT INTO fulfillment.shipping_methods command carrying seven rows plus its translations, i.e. ShippingMethodBackfillPlanner.Plan produced seven non-skip actions inside DevelopmentTenantCommerceContext and IShippingOneLevelBackfillStore.ApplyAsync applied them. /health returned 200 and /__platform-commerce returned 200. fail:/crit:/Unhandled-exception markers = 0; stderr = 0 lines.
+
+CATALOG PROOF (authorized read endpoint, scratch, gate enabled)
+- GET /v1/admin/shipping-services/shipping-methods/one-level?language=fa with the canonical Development admin actor from GET /v1/admin/dev-context returned gate="Enabled", ready=true, rows=7 — the TB-119 "ready catalog with zero rows" state is resolved.
+- Rows: post:express fa="پیشتاز" / en="Express" isActive=true sort=10; post:standard fa="معمولی" / en="Standard" sort=11; tipax:express fa="پیشتاز" / en="Express" sort=20; tipax:standard fa="معمولی" / en="Standard" sort=21; snapp_courier fa="اسنپ / پیک آنلاین" / en="Snapp / Online courier" sort=30; store_courier fa="پیک فروشگاه" / en="Store courier" sort=40; in_person fa="تحویل حضوری" / en="In person" sort=50. All seven are active.
+- Identity mapping confirmed for all seven: GET .../shipping-methods/one-level/{methodCode}/binding returned resolved=true with post→{post,express}, post:standard→{post,standard}, tipax:express→{tipax,express}, tipax:standard→{tipax,standard}, snapp_courier→{snapp_courier,∅}, store_courier→{store_courier,∅}, in_person→{in_person,∅}. A read-only read-back of the task-owned scratch DB confirms the same identity plus the legacy_service_code/legacy_option_code columns and shows the seeded rows mirror the legacy activation state (all legacy options were already active) rather than forcing activation. No activation endpoint, no manual SQL insert, no synthetic actor and no unapproved bypass was used.
+
+STOREFRONT PROJECTION PROOF (the label seam)
+- ONE bounded authorized scratch projection was performed: canonical guest cart creation + one cart line with a real scratch offer discovered from the product detail payload, after the canonical PUT /v1/admin/settings/checkout-identity {policy:GuestAllowed} admin policy seam (no order, checkout, payment, shipment or committed selection was created).
+- POST /v1/storefront/shipping/projection {cartId, language:fa} returned 7 methods, all labels matched the one-level catalog by exact string: post:express "پیشتاز"; post:standard "معمولی"; tipax:express "پیشتاز"; tipax:standard "معمولی"; snapp_courier "اسنپ / پیک آنلاین"; store_courier "پیک فروشگاه"; in_person "تحویل حضوری". projected_labels_matching_one_level_catalog=7, projected_labels_not_matching=0.
+- Contrast with TB-119 (same scratch recipe, same gate): its projected labels were the composed legacy labels "پست — پیشتاز" / "پست — معمولی". With the TB-120 seed present and running, those became the one-level catalog's own Persian names while priceAmount, serviceCode, optionCode, leadDays and estimationLabel stayed unchanged. The change is therefore observable and attributable to the one-level catalog rows, not to any other surface.
+
+MISSION B — VERIFICATION AND CLEANUP
+- No new unit tests, no broad suites, no frontend rebuild loop, no code change, no schema fix, no migration outside the isolated standard startup, no feature activation beyond the isolated overlay. One observation pass per seam.
+- The isolated Host was stopped ONLY on the recorded PID after re-verifying its absolute path (.tmp-121-host-out\Tooba.Host.exe); STILL_RUNNING_AFTER_STOP=false, LISTENERS_ON_5400_AFTER_STOP=0. Only the task-owned container tooba-121-scratch-pg and the ignored .tmp-121-run / .tmp-121-host-out directories were deleted. No process-name or wildcard termination.
+- Read-only shared parity is identical before and after: shared Host PID 35624 at .tmp-dev-host-out-5088-101\Tooba.Host.exe, :5088 /health 200 and tenant-alpha provenance, :3000 status 308, containers postgres-db+rabbitmq unchanged, and tooba_alpha counts byte-identical (methods 7 | translations 14 | carts 50 | cart_lines 78 | drafts 14 | seller_orders 26 | products 567 | offers 3223). No incident.
+
+FILES
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-121.md
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-121/** (task.md, task-receipt.json, isolation-guard.json, prepare-isolated-target-121.js, prepare-output.txt, launch-isolated-host-121.ps1, watchdog-result.txt, run-isolated-proof-121.js, isolated-proof-121.txt, one-level-binding-readback.txt, scratch-legacy-activation-readback.txt, startup-stages.txt, shipping-migration-markers.txt, seed-execution-evidence.txt, shared-preflight.txt, shared-postflight.txt, shared-alpha-preflight-counts.txt, shared-alpha-postflight-counts.txt, cleanup.txt, summary.md)
+- Bridge receipt docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-121.task.md preserved UNSTAGED. Zero src/, test, frontend, migration, appsettings, feature-gate or shared-DB edits; all pre-existing dirty/untracked files preserved.
+
+NONFATAL WARNINGS (reported, not repaired — outside this task)
+- Build/publish emitted pre-existing analyzer/doc-comment warnings (CS1573/CS1587/CS0105 in Catalog, Order and Host projects) and CRLF normalization warnings on Windows. None is related to the observed behaviour and none was touched.
+- The acceptance wording mentions an iso date inside the one-level schema reference; the applied migration name is 20261015120000_AddShippingOneLevelCatalog, which is the canonical one-level catalog migration.
+
+UNPROVEN CLAIMS
+- UI parity is NOT PROVEN: no isolated frontend render was performed and no DOM/screenshot was captured; the label proof is API-level only (authorized projection output) and never claimed as browser parity.
+- No shipping selection persistence, checkout, payment, shipment lifecycle, production/store-alpha behaviour or commercial readiness is certified. The gate remains off outside the disposable Development overlay.
+- PASS here does not promote, extend or modify the locked architecture, and it is not an Architect ACCEPT.
+
+ROLLBACK
+- No repository code, configuration, migration or appsettings changed, so there is nothing to revert. The disposable container, overlay, publish output and run directory are deleted and the isolated Host PID is terminated. The only repository additions are task documentation and evidence.
+
+PRECISE REMAINING GAP FOR THE ARCHITECT (not started, needs authorization)
+- Frontend DOM parity for the one-level shipping catalog still requires an isolated frontend bound to an isolated Host (or an authorized DOM capture) — a separate, explicitly scoped task.
+STOP FOR ARCHITECT.
+END_TOOBA_WORKER_RESULT
