@@ -1,0 +1,49 @@
+capturedUtc=2026-10-16T03:35:52.706Z
+isolatedBase=http://127.0.0.1:5402
+health_reached_within_150s=true
+commerce.status=200
+commerce.body={"edition":"SingleStore","deploymentId":"isolated-123","tenantId":"store-alpha","connectionReference":"tenant-123-scratch","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"fc7212783f66a7d7f3a202d287e2e8bb"}
+dev_context.status=200
+dev_context.actor=01a142c8-3eb5-7000-badb-4c57cb566aaa
+policy_before.status=200
+policy_before.body={"policy":"AuthenticatedOnly","cartAnonymousAllowed":true,"checkoutAuthenticationRequired":true}
+policy_put.status=200
+policy_put.status=200
+policy_after.status=200
+policy_after.body={"policy":"GuestAllowed","cartAnonymousAllowed":true,"checkoutAuthenticationRequired":false}
+one_level_admin.status=200
+catalog.gate=Enabled
+catalog.ready=true
+catalog.rowCount=7
+catalog.row[post:express]=name="پیشتاز" isActive=true
+catalog.row[post:standard]=name="معمولی" isActive=true
+catalog.row[tipax:express]=name="پیشتاز" isActive=true
+catalog.row[tipax:standard]=name="معمولی" isActive=true
+catalog.row[snapp_courier]=name="اسنپ / پیک آنلاین" isActive=true
+catalog.row[store_courier]=name="پیک فروشگاه" isActive=true
+catalog.row[in_person]=name="تحویل حضوری" isActive=true
+product_detail.status=200
+offer_ids_found=2
+cart_create.status=200
+cart_create.cartId=01a142c8-533b-7000-bdc2-88202f9624d1
+cart_create.guestSecret=<redacted>
+cart_line.status=200
+cart_line.status=200
+projection_no_method.status=200
+projection_no_method.methodsCount=7
+projection_no_method.deliveryDatesCount=0
+projection_no_method.deliveryTimeWindowsCount=4
+projection_with_method.status=200
+projection_with_method.methodsCount=7
+projection_with_method.chosen=label="معمولی" serviceCode=tipax optionCode=standard price=180000
+projection_with_method.deliveryDatesCount=7
+projection_with_method.minimumDeliveryDate=2026-10-20
+projection_with_method.deliveryTimeWindowsCount=4
+projection_with_method.date=2026-10-20
+projection_with_method.date=2026-10-21
+projection_with_method.date=2026-10-22
+projection_with_method.date=2026-10-23
+projection_with_method.date=2026-10-24
+projection_with_method.date=2026-10-25
+projection_with_method.date=2026-10-26
+uncommittedSecretsFile=.tmp-123-run/api-prep.json (never committed)

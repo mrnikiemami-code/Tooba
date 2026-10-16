@@ -1,0 +1,17 @@
+﻿=== TB-SHIPPING-ONE-LEVEL-TABS-123 CLEANUP 2026-10-16T07:11:51.3572559+03:30 ===
+TMP_RUN_DIR_EXISTS=False
+TMP_HOST_OUT_DIR_EXISTS=False
+CONTAINER_PRESENT=0
+CONTAINERS_NOW=rabbitmq,postgres-db
+PORT_5402_LISTEN=0
+PORT_3102_LISTEN=0
+PORT_55454_LISTEN=0
+SHARED_HOST_PIDS=35624
+SHARED_HOST_PATHS=D:\Users\User\source\repos\SarvNewVer\.tmp-dev-host-out-5088-101\Tooba.Host.exe
+SHARED_5088_HEALTH={"status":"ok"}
+SHARED_3000_ROOT_STATUS=308
+SHARED_PREFLIGHT_COUNTS=cart_lines|78 ; carts|50 ; drafts|14 ; methods|7 ; offers|3223 ; products|567 ; seller_orders|26 ; translations|14
+SHARED_POSTFLIGHT_COUNTS=cart_lines|78 ; carts|50 ; drafts|14 ; methods|7 ; offers|3223 ; products|567 ; seller_orders|26 ; translations|14
+SHARED_PARITY=UNCHANGED
+BROWSER_TAB_CLOSED=true (only the task-owned tab 127.0.0.1:3102/fa/payment was closed; pre-existing tabs untouched)
+UNCOMMITTED_SCRATCH_SECRETS_DELETED=true (api-prep.json removed with .tmp-123-run)

@@ -1,0 +1,130 @@
+{
+  "taskId": "TB-SHIPPING-ONE-LEVEL-TABS-123",
+  "parentTask": "TB-SHIPPING-ONE-LEVEL-TABS-122",
+  "channel": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "bridgeTaskRow": "5a4df566-27f7-45ee-ab81-99a343f4a368",
+  "mode": "BOUNDED_ISOLATED_SHIPPING_SELECTION_PAYMENT_HANDOFF_PROOF",
+  "status": "PARTIAL",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "expectedBaseSha": "0204859dddf0eb726e48ad3b581fd2b5e7026940",
+  "actualBaseShaAtClaim": "0204859dddf0eb726e48ad3b581fd2b5e7026940",
+  "baseDrift": "NONE",
+  "codeSha": "NONE",
+  "changedPaths": [
+    "docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-123.md",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-123/**",
+    "docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-123.task.md (UNSTAGED bridge receipt, not committed)"
+  ],
+  "timebox": {
+    "limitMinutes": 45,
+    "elapsedMinutes": 11,
+    "overrun": false
+  },
+  "launchCounts": {
+    "scratchPostgresContainers": 1,
+    "isolatedHostLaunches": 1,
+    "isolatedFrontendLaunches": 1,
+    "hostRestarts": 0,
+    "frontendRestarts": 0,
+    "watchdogHit": false,
+    "hostHealthElapsedSeconds": 36,
+    "browserTabsOpened": 1,
+    "customerHandoffClicks": 1
+  },
+  "isolation": {
+    "scratchPort": "127.0.0.1:55454",
+    "scratchDatabases": ["tooba_123_scratch", "tooba_123_messaging"],
+    "isolatedHostOrigin": "http://127.0.0.1:5402",
+    "isolatedFrontendOrigin": "http://127.0.0.1:3102",
+    "guardFailClosed": true,
+    "activeTenants": 1,
+    "tenantRefs": ["store-alpha:Active:tenant-123-scratch"],
+    "sharedAlphaReferencePresent": false,
+    "sharedAlphaDatabasePresent": false,
+    "sharedPort5432Present": false,
+    "shippingRateAuthoritySet": false,
+    "shippingOperationalShadowSet": false,
+    "oneLevelCatalogEnabledInOverlayOnly": true,
+    "frontendProxyDiscriminator": {
+      "isolated3102": "GuestAllowed",
+      "shared5088": "AuthenticatedOnly"
+    }
+  },
+  "handoff": {
+    "cartId": "01a142c8-e991-7000-a187-428dab205571",
+    "cartOrigin": "genuine guest cart created through storefront UI add-to-cart on /fa/products/schema-mobile-demo-phone",
+    "selectedMethodCode": "tipax:standard",
+    "selectedServiceCode": "tipax",
+    "selectedOptionCode": "standard",
+    "selectedLabel": "معمولی",
+    "selectedPriceAmount": 180000,
+    "selectedDeliveryDate": "2026-10-20",
+    "selectedDeliveryTimeWindow": "9-12",
+    "shippingRouteBefore": "/fa/shipping",
+    "shippingRouteAfter": "/fa/payment?cartId=01a142c8-e991-7000-a187-428dab205571",
+    "saveRequest": "PUT /v1/storefront/shipping/selection -> 200 (70 ms)",
+    "saveBeforeNavigation": true,
+    "commitRequestFromUiTransition": false,
+    "orderOrPaymentMutationFromUiTransition": false,
+    "paymentPageReadbackSeam": "GET /v1/storefront/cart/{cartId}/payment-draft",
+    "paymentPageReadbackStatus": 409,
+    "paymentPageReadbackErrorCode": "checkout.tax.unavailable",
+    "ownerReadSeamUsed": "POST /v1/storefront/shipping/projection (draft + selectedMethodCode)",
+    "ownerReadSeamResult": {
+      "selectedMethodCode": "tipax:standard",
+      "draftShippingMethodCode": "tipax:standard",
+      "draftProvinceName": "تهران",
+      "draftCityName": "تهران",
+      "draftSelectedDeliveryDate": "2026-10-20",
+      "draftSelectedDeliveryTimeWindow": "9-12"
+    },
+    "cartAfterHandoff": {
+      "status": "Active",
+      "itemCount": 1,
+      "checkoutId": null
+    },
+    "scratchDbCounts": {
+      "carts_total": 2,
+      "carts_active": 2,
+      "cart_lines": 2,
+      "shipping_drafts": 1,
+      "seller_orders": 0,
+      "payments": 0
+    }
+  },
+  "firstExactBlocker": {
+    "seam": "payment-page shipping-selection readback (Order-owned cart payment draft)",
+    "request": "GET /v1/storefront/cart/{cartId}/payment-draft",
+    "response": "409 checkout.tax.unavailable",
+    "visibleEffect": "payment page renders «امکان شروع پرداخت در حال حاضر وجود ندارد.» instead of the draft summary",
+    "cause": "no applicable Tax rule in the disposable scratch database (CatalogDemo.AllowResetAndSeed=false on purpose); Order maps any TAX_* failure to checkout.tax.unavailable",
+    "scope": "isolated scratch environment data gap; not a shipping-selection or handoff defect"
+  },
+  "deviations": [
+    "One deliberate negative-control POST /v1/storefront/shipping/commit was sent after the observation; it was rejected with 400 validation.failed and produced no state change (drafts=1, seller_orders=0, payments=0). Disclosed instead of hidden.",
+    "The UI transition itself never invoked that endpoint (recorded non-GET requests during the transition = PUT /v1/storefront/shipping/selection only)."
+  ],
+  "nonInterference": {
+    "sourceChanges": "NONE",
+    "testConfigMigrationChanges": "NONE",
+    "broadTestsRun": false,
+    "sharedServicesStoppedOrRestarted": false,
+    "sharedAlphaParity": "UNCHANGED",
+    "preExistingDirtyFilesPreserved": [
+      "src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx",
+      "src/frontend/app/admin/admin-order-detail-screen.tsx"
+    ]
+  },
+  "cleanup": {
+    "taskOwnedProcessesStopped": "isolated Host (PID 24068, path-verified) and isolated frontend (PIDs 41496/14820, cmdline-verified)",
+    "scratchContainerRemoved": true,
+    "tempDirsRemoved": [".tmp-123-run", ".tmp-123-host-out"],
+    "portsReleased": ["5402", "3102", "55454"],
+    "taskOwnedBrowserTabClosed": true,
+    "secretsRetained": false
+  },
+  "rollback": "No code, config, migration or tracked file changed; rollback is a no-op. Disposable container, publish directory and run directory were deleted; only documentation evidence was committed.",
+  "automaticNextImplementationTask": "NONE"
+}

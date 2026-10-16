@@ -1,0 +1,8 @@
+﻿cart_lines|78
+carts|50
+drafts|14
+methods|7
+offers|3223
+products|567
+seller_orders|26
+translations|14

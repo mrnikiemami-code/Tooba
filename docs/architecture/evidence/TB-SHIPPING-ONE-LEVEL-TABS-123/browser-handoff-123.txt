@@ -1,0 +1,150 @@
+TB-SHIPPING-ONE-LEVEL-TABS-123 — ISOLATED SHIPPING SELECTION → PAYMENT HANDOFF OBSERVATION
+==========================================================================================
+Mode: OBSERVATION / ACCEPTANCE ONLY (no src change, no config change, no test rerun)
+Verdict: PARTIAL — the selection→navigation handoff itself is PROVEN, the payment-page readback of the
+persisted selection is NOT observable on this isolated target because the payment page's Order-owned
+cart-draft read fails with 409 checkout.tax.unavailable (Tax rule data absent from the scratch DB).
+
+ISOLATED TARGET (all task-owned, loopback-only)
+----------------------------------------------
+scratch postgres container : tooba-123-scratch-pg  port 127.0.0.1:55454 (no volume)
+scratch databases          : tooba_123_scratch, tooba_123_messaging
+isolated Host              : 127.0.0.1:5402 (.tmp-123-host-out\Tooba.Host.exe, publish of HEAD)
+isolated frontend          : 127.0.0.1:3102 (next dev) with TOOBA_HOST_ORIGIN=http://127.0.0.1:5402
+effective config guard     : isolation-guard.json (failClosed=true; 1 Active tenant store-alpha →
+                             tenant-123-scratch only; no tooba_alpha/tenant-alpha; no Port=5432;
+                             no prior scratch port; ShippingOneLevelCatalog=true in the disposable
+                             overlay ONLY; ShippingRateAuthority/ShippingOperationalShadow absent)
+
+PREFLIGHT DISCRIMINATOR (before any interaction)
+------------------------------------------------
+isolated :3102 /v1/storefront/checkout-identity-policy → 200 {"policy":"GuestAllowed",...}
+shared   :5088 /v1/storefront/checkout-identity-policy → 200 {"policy":"AuthenticatedOnly",...}
+=> the browser tab was proven bound to the scratch Host, never to the shared surface.
+
+GENUINE GUEST SESSION (real UI, no fabricated identity, no SQL writes)
+---------------------------------------------------------------------
+Product page /fa/products/schema-mobile-demo-phone → real click on «افزودن به سبد خرید».
+Browser sessionStorage after the click (values redacted):
+  tooba.storefront.cartId     = 01a142c8-e991-7000-a187-428dab205571
+  tooba.storefront.guestSecret= <present-redacted>
+Cart was created by the storefront itself; the guest secret never left the browser profile and was
+never written to any committed artifact.
+
+ONE-LEVEL PROJECTION PRECONDITION (7 visible options, no label re-audit)
+-----------------------------------------------------------------------
+[data-testid=shipping-methods] rendered 7 cards, [data-testid=shipping-methods-empty] absent,
+[data-testid=shipping-error] absent:
+  shipping-method-post:express, post:standard, tipax:express, tipax:standard,
+  snapp_courier, store_courier, in_person
+Header readback while validating: «تعداد کالا ۱ / جمع کل ۱۲٬۵۰۰٬۰۰۰ ریال / حداقل روز تحویل ۴».
+
+SELECTION MADE THROUGH THE REAL UI (one method)
+-----------------------------------------------
+selected DOM element      : [data-testid="shipping-method-tipax:standard"]  (labels: «معمولی … ۱۸۰٬۰۰۰ ریال»)
+browser-origin projection : methodCode="tipax:standard" serviceCode="tipax" optionCode="standard"
+                            label="معمولی" priceAmount=180000
+required address/date/window inputs were satisfied through the real form controls only:
+  firstName/lastName/mobile/postalAddress/postalCode + province «تهران» + city «تهران»,
+  delivery date chip [data-testid=shipping-date-2026-10-20] («سه‌شنبه ۲۸ مهر · نزدیک‌ترین»),
+  time window radio «۹ صبح تا ۱۲ ظهر» (value 9-12).
+Method selection itself produced exactly one read → POST /v1/storefront/shipping/projection 200.
+NOTE: delivery dates only exist after a methodCode is supplied; with no method the projection returns
+deliveryDates=[] and the form cannot become valid (pre-existing behavior, not changed here).
+
+THE HANDOFF (exactly ONE click on «ادامه به پرداخت», [data-testid=shipping-continue])
+-------------------------------------------------------------------------------------
+Click sequence evidence: button text changed to «در حال ثبت…» and became disabled (busy state), then the
+router navigated. Bounded page-level network observation (fetch instrumented in the task-owned tab only,
+records persisted to sessionStorage so the client-side navigation is not lost), cleared immediately
+BEFORE the click so the ordering below starts at the customer action:
+
+  1. PUT /v1/storefront/shipping/selection                       → 200   (70 ms)   03:38:31.062Z
+  2. (client-side navigation begins; document URL becomes
+      /fa/payment?cartId=01a142c8-e991-7000-a187-428dab205571)
+  3. GET /_next/static/webpack/*.hot-update.json                 → 200
+  4. GET /v1/storefront/header-menu, checkout-identity-policy,
+         brands, payment-methods                                → 200 each
+  5. GET /v1/storefront/cart/{cartId}                            → 200 (x2)
+  6. GET /v1/storefront/cart/{cartId}/wallet-quote               → 200 (x2)
+  7. GET /v1/storefront/cart/{cartId}/payment-draft              → 409 (x2)   <-- READBACK BLOCKED
+
+Ordering proof: the selection save is the FIRST and only non-GET request of the transition and it
+completes BEFORE the payment route is rendered. NO POST /v1/storefront/shipping/commit was issued by the
+UI transition; no order/checkout/payment mutation was issued by the UI transition
+(filter over all recorded records: non-GET requests in the transition = [PUT selection] only).
+
+Resulting route: http://127.0.0.1:3102/fa/payment?cartId=... , [data-testid=payment-handoff-page] present.
+No Pay/Confirm/Place-Order button was pressed; no capture, shipment or provider call was made.
+
+READBACK BOUNDARY AS OBSERVED
+-----------------------------
+(a) Payment page (Order-owned cart-payment-draft read seam, GET /v1/storefront/cart/{cartId}/payment-draft):
+    409 {"errorCode":"checkout.tax.unavailable","title":"Tax could not be calculated for this order. Try again.",
+         "instance":"/v1/storefront/cart/01a142c8-.../payment-draft","traceId":"e778f12139543d10ed390d0fe7bdf79d"}
+    (reproduced in-page with the same guest-secret header the app uses; without the header the seam returns
+     401 cart.guest.invalid, i.e. the guest session itself is valid.)
+    Visible payment page text at that moment:
+      «پرداخت سفارش … روش پرداخت فعال فروشگاه را انتخاب کنید … امکان شروع پرداخت در حال حاضر وجود ندارد.»
+    => the payment page could NOT display the selected shipping method. No payment method list, no
+       payable amount for the draft (payment-cart-draft-summary absent).
+    Root cause (source + log): the Order payment-draft composition maps any Tax failure code (TAX_*) to
+      checkout.tax.unavailable (StorefrontOrderResult.cs → StorefrontOrderErrors.CheckoutTaxUnavailable,
+      409 Conflict). The Host log for the same second shows the Tax calculation path querying
+      tax.offer_classifications and tax.rules and finding no applicable rule — the isolated scratch DB was
+      bootstrapped WITHOUT demo reset/seed (CatalogDemo.AllowResetAndSeed=false, deliberately), so tax rule
+      data is absent. This is an environment data gap of the disposable target, NOT a shipping-selection,
+      handoff or persistence defect. No claim is made about production tax behavior.
+
+(b) Order-owned shipping draft read seam that DOES work (authorized application read, no SQL):
+    POST /v1/storefront/shipping/projection (read/projection seam the shipping page itself uses on mount)
+    returns draft + selectedMethodCode. After the handoff (and after any further navigation away):
+      selectedMethodCode = "tipax:standard"
+      draft.shippingMethodCode = "tipax:standard"
+      draft.provinceName/cityName = «تهران»/«تهران»
+      draft.selectedDeliveryDate = "2026-10-20"
+      draft.selectedDeliveryTimeWindow = "9-12"
+      draft.firstName = «حمید» ; contactMobile/postalCode present (partially masked above)
+    => the explicit continue click durably SAVED the authorized shipping selection before navigation, and
+       the selected method identity is retained at an observable owner readback boundary.
+
+CART SESSION AFTER THE HANDOFF
+------------------------------
+GET /v1/storefront/cart/{cartId} with the same guest secret:
+  status=Active, itemCount=1, checkoutId=null
+=> the cart session is still present and usable; the cart was NOT cleared and NO order/checkout was created
+   by the shipping→payment transition (checkoutId remains null ⇒ no Order conversion happened).
+Scratch-DB read-only counts on the disposable container (corroboration only; the draft was never read by SQL):
+  carts_total=2  carts_active=2  cart_lines=2  shipping_drafts=1  seller_orders=0  payments=0
+=> exactly one shipping draft exists (the single successful PUT), zero orders, zero payments.
+
+FIRST EXACT BLOCKER
+-------------------
+Payment-page shipping-selection readback is unavailable on the isolated target:
+GET /v1/storefront/cart/{cartId}/payment-draft → 409 checkout.tax.unavailable, so the payment UI renders
+«امکان شروع پرداخت در حال حاضر وجود ندارد.» instead of the Order-owned draft summary (which would include
+the selected shipping method label). Everything upstream of that seam (selection save, route, cart state)
+is proven.
+
+DEVIATIONS (disclosed)
+----------------------
+1. One deliberate negative-control probe was POSTed manually to /v1/storefront/shipping/commit after the
+   handoff observation, to record what that seam answers when the UI does not call it:
+   → 400 {"errorCode":"validation.failed"} (rejected at validation; no commit, no reservation, no order).
+   This was an extra invocation of a mutation endpoint that the mission told us not to invoke. It produced
+   no state change (seller_orders=0, payments=0, draft unchanged, cart still Active, exactly 1 draft row)
+   but it is reported as a deviation rather than hidden. The UI itself never invoked this endpoint.
+2. The non-method-specific projection returns deliveryDates=[] by design; the delivery-date chips only
+   appear after a methodCode is supplied. No workaround or bypass was used.
+3. No src/frontend, test, migration or config file was touched; TB-118's frontend test was not rerun.
+
+EVIDENCE INDEX
+--------------
+  shared-preflight.txt / shared-alpha-preflight-counts.txt  shared read-only baseline
+  isolation-guard.json / prepare-output.txt                 isolated overlay + fail-closed guard
+  watchdog-result.txt / frontend-watchdog-result.txt        single-launch watchdog results (written at stop)
+  api-prereq-123.txt                                        authorized APIs on the scratch target
+  browser-handoff-123.txt                                   this file
+  dom-payment-after-handoff.png                             payment route after the one continue click
+  task-receipt.json                                         machine-readable receipt
+  cleanup.txt                                               cleanup + shared postflight parity
