@@ -1,0 +1,152 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-132
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-131
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Bridge-Row-Id: 2d786541-306b-4bfd-865e-5508a7cf1c8f
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Program: TOOBA-SHIPPING-CHECKOUT-DELIVERY-CLOSURE
+Mode: BOUNDED_ISOLATED_MULTISELLER_SHIPPING_CHECKOUT_BROWSER_ACCEPTANCE
+
+SHA
+Expected-Base-SHA: 8e3aa1bf2a9c8ce74325843572d13fdb8a29fc69
+Actual-Base-SHA: 7eca37901d1a64b62538a459e936a4de2f4eb434 (expected base is a direct ancestor; drift between them is docs/evidence only, no source overlap)
+Code-SHA: NONE (observation-only task, zero src/** edits)
+Evidence-SHA: e842c7cc4d064f93ded1bba76efac2685abe0c38
+Branch: main
+HEAD == origin/main == e842c7cc4d064f93ded1bba76efac2685abe0c38
+
+ELAPSED
+Started: 2026-10-16T05:19:34Z (task createdAtUtc)
+Finished: 2026-10-16T05:40Z
+Elapsed: ~21 minutes (inside the 45-minute hard timebox)
+
+LAUNCH ACCOUNTING (honest, no retry loops)
+HOST_LAUNCH_COUNT=2
+  launch#1 pid=42368 -> aborted BEFORE any healthy HTTP listener. Setup prerequisite gap in this run: the
+    disposable scratch Postgres container had only the tenant database, so MassTransit SQL transport failed
+    with 3D000 database "tooba_132_messaging" does not exist (SqlTransportMigrationHostedService.StartAsync).
+    Not an application defect; no shared-environment impact; the tenant database only received idempotent
+    migrations. Fix: CREATE DATABASE tooba_132_messaging inside the task-owned scratch container.
+  launch#2 pid=41296 -> /health 200; the single observation launch used for everything below.
+FRONTEND_LAUNCH_COUNT=1 pid=36808 -> ready on :3102.
+WATCHDOGS: host watchdog limit 180s (not hit), frontend readiness polled within 150s (ready). One browser flow.
+
+READINESS / BINDING DISCRIMINATOR
+isolatedHost=http://127.0.0.1:5402  isolatedFrontend=http://127.0.0.1:3102
+provenance GET /__platform-commerce => tenantId=store-alpha connectionReference=tenant-132-scratch deploymentId=isolated-132
+binding discriminator GET :3102/v1/storefront/checkout-identity-policy returned the ISOLATED policy
+  (policy=GuestAllowed) -> the frontend proxy was bound to the scratch Host, not to shared :5088.
+isolation-guard.json: tenantCount=1, containsSharedAlphaDatabase=false, containsSharedAlphaReference=false,
+  containsSharedAlphaPort=false, containsPriorScratchPort=false, oneLevelCatalogEnabledInOverlay=true,
+  shippingRateAuthoritySet=false, shippingOperationalShadowSet=false, allowResetAndSeed=false, failClosed=true.
+
+MISSION A — PREREQUISITE PROVENANCE (authorized API reads only)
+product=workspace-live-shirt (فروشگاه مردانه لینن / status Published, taxCategoryLabel="استاندارد")
+offer.primary  offerId=01a14329-e056-7000-8518-279dbedd9f40 sellerPartyId=01a14329-e04e-7000-b769-538de0d67d7c
+               seller="دیجی‌استایل نمونه" sku=DGS-LN-01 price=1,790,000
+offer.alternate offerId=01a14329-e050-7000-bc67-984f3a3ae4c7 seller="فروشگاه آرمان" sku=ARM-LN-01 price=1,850,000
+TWO_GENUINE_SELLER_OFFERS_PRESENT=true — no fabricated identity, no manual SQL, no Tax patch.
+REAL GUEST CART VIA CUSTOMER STOREFRONT ACTIONS (browser): PDP add-to-cart for the primary seller, then the
+  alternate-seller radio selected and add-to-cart again. Storefront created the guest cart itself
+  (cartId=01a14330-f6fb-7000-8086-77fdec33708d + guestSecret kept in the browser session only).
+Cart after the two adds: status=Active, lines=2, itemCount=2, sellerCount=2, subtotalExclusiveOfTax=3,640,000.
+
+MISSION B — EXACT GROUPED DOM / API RESULTS
+Grouped card data-testid="shipping-groups" rendered for the multi-seller cart with exact disjoint membership:
+  group[1] data-testid=shipping-group-01a14329-e04e-7000-b769-538de0d67d7c seller="دیجی‌استایل نمونه"
+    line data-testid=shipping-group-line-01a14330-f794-7000-bc63-8079c19eb318 title="پیراهن مردانه لینن" qty=۱
+    7 authoritative method buttons: post:express, post:standard, tipax:express, tipax:standard, snapp_courier,
+      store_courier, in_person (localized labels + lead-day captions)
+  group[2] data-testid=shipping-group-01a14329-e04b-7000-867f-389125bc23b3 seller="فروشگاه آرمان"
+    line data-testid=shipping-group-line-01a14331-5fdb-7000-ab24-c1f91265da2b title="پیراهن مردانه لینن" qty=۱
+    same 7 authoritative method buttons
+DISTINCT PER-GROUP METHODS OBSERVED: group1=post:express (fee 200,000 ریال), group2=tipax:standard (fee
+  180,000 ریال). Fees are the projection's authoritative methods[].priceAmount, not client arithmetic.
+PER-GROUP FEE BREAKDOWN OBSERVED: data-testid="shipping-group-fees" =
+  "دیجی‌استایل نمونه — پیشتاز | ۲۰۰٬۰۰۰ ریال | فروشگاه آرمان — معمولی | ۱۸۰٬۰۰۰ ریال"
+No arbitrary cart-wide method was projected over the multi-group order.
+VISUAL NON-REGRESSION (bounded evidence, no subjective parity claim): the grouped card, group blocks, line
+  rows and method tiles reuse the page's existing card/surface tokens (bg-surface, rounded-2xl,
+  border-gray-200, shadow-sm, gray text scale, bg-gray-50/60, primary accent), the same radius/border/spacing
+  scale as the pre-existing address/delivery cards on the same page, the same RTL layout and the same
+  responsive grid (grid-cols-1 sm:grid-cols-2). No global CSS introduced. Screenshots captured at desktop and
+  one mobile viewport (390x844): shipping-grouped-desktop-132.png, shipping-grouped-mobile-132.png.
+
+MISSION B — BLOCKING DEFECT (decisive, reproduced in the real browser)
+With the address FULLY completed (first/last name, mobile 09121234567, province تهران, city تهران, full
+address, postal code 1234567890) AND distinct methods selected for BOTH groups:
+  shipping-date-* chip count            = 0
+  inline notice                          = "ابتدا روش ارسال را انتخاب کنید تا نزدیک‌ترین تاریخ مجاز فروشگاه نمایش داده شود."
+  button "ادامه به پرداخت" disabled      = true
+  summary "حداقل روز تحویل" value        = "—" (empty)
+The customer can never set the required delivery date, so isValid never becomes true, Continue never enables,
+and PUT /v1/storefront/shipping/selection is never issued. The payment draft — the surface this task was meant
+to prove — is unreachable through the real grouped customer flow.
+ROOT CAUSE (isolated by counterfactual calls on the same scratch Host):
+  POST /v1/storefront/shipping/projection {cartId,language:fa}                                    -> deliveryDates=0, minimumDeliveryDate=absent, draft=null
+  POST /v1/storefront/shipping/projection {cartId,language:fa,methodCode:"post:express",تهران}     -> deliveryDates=7, minimumDeliveryDate=2026-10-19
+  POST /v1/storefront/shipping/projection {cartId,language:fa,methodCode:"tipax:standard",تهران}   -> deliveryDates=7, minimumDeliveryDate=2026-10-20
+The server computes the date horizon only when a methodCode is supplied. The TB-131 grouped path never sends
+one: the grouped per-seller method click handler only updates local groupMethodBySeller state (and the derived
+fee rows) and does not re-project, while the legacy single-method picker (whose onSelectMethod DOES call
+refreshProjection(..., code, ...)) is intentionally not rendered for grouped carts
+(src/frontend/app/storefront/storefront-shipping.tsx: the projection.deliveryDates.length === 0 branch plus
+isValid at ~line 343 requiring Boolean(deliveryDate) && Boolean(deliveryTime)).
+NARROW PROPOSED FIX (recorded, NOT applied — repair is outside this observation task): re-project with the
+currently selected group method whenever a group method changes (mirroring the legacy single-method
+re-projection semantics) and keep the returned deliveryDates/minimumDeliveryDate for the shared date/time
+picker. Per-group date horizons would be the architecturally complete answer but need an Order-owned contract
+decision. No client-side date arithmetic, no invented horizon.
+
+PAYMENT-DRAFT / TAX OUTCOME
+paymentDraftReached=false, groupedPaymentSummaryObserved=false, taxApplicablePaymentResultObserved=false
+(reason: the grouped shipping step is blocked before any selection save). The IR-NAT/IR 9% standard rule stays
+SOURCE-BACKED, NOT runtime-proven. Commercial allocation remains PendingAllocation (untouched).
+
+CART / ORDER MUTATION GUARDS (observed)
+shippingSelectionCalls=0, shippingCommitCalls=0, startPaymentCalls=0, orderCreationCalls=0, moneyCapture=0.
+cartStatusAfterObservation=Active, cartLines=2, cartVersion=5 (unchanged). Only GET/POST reads were issued
+against the scratch Host; the sole mutation was the Development-only checkout-identity policy seam on the
+DISPOSABLE scratch tenant (GuestAllowed), required for a guest journey and confined to the scratch database.
+
+SHARED PARITY / CLEANUP
+SHARED_5088_LISTENERS=1 and SHARED_3000_LISTENERS=1 throughout (never bound, never restarted).
+Shared containers postgres-db and rabbitmq unchanged (Up 5 days); no shared tenant or shared database
+reference was ever used (isolation-guard.json). Scratch container tooba-tb132-pg removed; no scratch volume
+created; .tmp-132-host-out, .tmp-132-run and the uncommitted scratch password file removed; ports 5402, 3102
+and 55455 have 0 listeners after cleanup. Processes stopped only by recorded PID after absolute-path
+verification (Host 41296, frontend 36808; launch#1 42368 had already exited). Pre-existing dirty files
+(admin-fulfillment-work-queue-screen.tsx, admin-order-detail-screen.tsx and two prior evidence text files)
+were preserved untouched. Task receipt left UNSTAGED.
+
+DEVIATIONS / NON-CLAIMS
+ - Grouping by seller alone is NOT proof of one-seller / multiple-method customer UI support: that case is
+   recorded as an OUTSTANDING acceptance case, not as PASS.
+ - Durable draft read-back of shippingGroups (refresh / back navigation) was NOT exercised (draft was null
+   because the gated Continue never saved a selection).
+ - The durable group schema/migration for shippingGroups was NOT runtime-exercised.
+ - The single-seller legacy browser path was NOT re-run this round (source-backed only).
+ - No source-only proof is represented as a browser claim.
+ - Host launch#1's setup prerequisite failure is recorded honestly and is not an application defect.
+
+FIRST BLOCKER
+Grouped multi-seller shipping step cannot reach a delivery date because the grouped path never requests a
+projection carrying a methodCode, so deliveryDates stays empty and "ادامه به پرداخت" stays permanently
+disabled (exact state and endpoint recorded above).
+
+ROLLBACK
+No code was changed, so there is nothing to roll back. Task-owned runtime resources were already removed
+during cleanup; the only forward artifact is committed docs/evidence at e842c7cc4d064f93ded1bba76efac2685abe0c38.
+
+EVIDENCE ARTIFACTS
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-132/
+  api-prereq-132.txt, isolation-guard.json, host-launch-132.txt, observation-132.txt, cleanup-132.txt,
+  cleanup-132.ps1, prepare-isolated-target-132.js, run-api-prep-132.js, launch-isolated-host-132.ps1,
+  launch-isolated-frontend-132.ps1, decode-screenshot-132.js,
+  shipping-grouped-desktop-132.png, shipping-grouped-mobile-132.png
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-132.md
+END_TOOBA_WORKER_RESULT
