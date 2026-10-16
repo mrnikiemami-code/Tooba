@@ -1,0 +1,107 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-DEV-AUTH-VISIBILITY-147
+Parent-Task: TB-SHIPPING-ADMIN-FLAT-SERVICE-FULL-IMPLEMENTATION-146
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ADMIN-FLAT-SERVICE-CLOSURE
+Mode: BOUNDED_AUTH_PARITY_AND_NO_SILENT_LEGACY_FALLBACK
+Verdict: PASS
+Confidence: HIGH
+Base-SHA: 07a808797a7d8d3d3ee1982fde378c907c48f73c
+Result-SHA: bdc6de0f153c9006c951ebbc6f485e88d6d89d22
+HEAD-Equals-Origin-Main: yes (bdc6de0f153c9006c951ebbc6f485e88d6d89d22)
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+Measured-Duration: approximately 40 minutes
+
+DEFECT-CONFIRMED (reproduced before the fix)
+/fa/admin/shipping-services rendered the LEGACY provider editor («انواع سرویس (سطح ۲)», six per-row icons,
+provider dialog) for every visitor without a server-side admin session. page.tsx resolved the gate from its own
+server read; buildUpstreamAuthHeaders() cannot see the Development admin actor (browser localStorage), so
+GET /v1/admin/shipping-services/shipping-methods/one-level answered 403 admin.authorization.denied, the gate
+failed closed and the old screen was rendered as a silent fallback. With a real session the flat screen rendered,
+which is why TB-146 PASSed while the user still saw the old page. Not a Next cache or build problem (the read is
+force-dynamic, revalidate 0, cache no-store).
+
+IMPLEMENTATION (exactly the preferred option in the task)
+New file src/frontend/app/admin/shipping-services/flat-screen-gate.tsx:
+- if the server read already succeeded (serverResolved), the SSR flat payload renders immediately; the
+  authenticated-admin fast path is untouched and needs no client fetch;
+- otherwise the gate makes ONE canonical read through the SAME authorized browser Admin transport that every
+  admin page already uses — prepareAdminDevActor() (admin-api.ts, the pre-existing Development identity seam)
+  plus loadOneLevelCatalog() (flat-method-catalog-api.ts) — and mounts ShippingServicesFlatScreen ONLY when the
+  actual Host answers gate=Enabled AND ready=true;
+- 401/403 -> localized «دسترسی ندارید» panel (admin-shipping-services-denied); unready / gate-disabled /
+  host-unreachable -> localized error panel (admin-shipping-services-error) with «تلاش دوباره»;
+- a generation counter stops a stale attempt from overwriting newer state (React StrictMode double-effect);
+- no query parameter, build flag, method-list length or hardcoded fallback can enable the gate; no new auth
+  secret, no new header name, no hardcoded or impersonated admin id, no localStorage read in these files.
+page.tsx now renders <ShippingServicesFlatScreenGate serverResolved={gate.state === "enabled"} …/> and no longer
+imports or renders ShippingServicesScreen: the silent legacy fallback is gone from this route, and the initial
+markup is the neutral resolving state, so there is no flash of the legacy page.
+The SSR read, the fail-closed gate mapping, the flat canonical rows, the View/Edit/Delete-only actions, the four
+non-nested detail tabs, the authoritative binding, permissions and RTL are all unchanged. No create-method
+endpoint, no Checkout/Order/Fulfillment/Settlement, no migration, no CSS redesign, no shared Host code, no policy
+change. No server restart, no cache deletion, no DB write, no stash/rebase/reset.
+
+CHANGED-FILES
+src/frontend/app/admin/shipping-services/flat-screen-gate.tsx (added);
+src/frontend/app/admin/shipping-services/page.tsx (modified — gate composition, legacy fallback removed);
+src/frontend/app/admin/shipping-services/shipping-one-level-tabs.test.ts (modified — page/gate guards);
+src/frontend/app/admin/shipping-services/shipping-one-level-method-name.test.ts (modified — page guard);
+docs/architecture/evidence/TB-SHIPPING-ADMIN-DEV-AUTH-VISIBILITY-147/ (added: 01-flat-ordinary-dev-flow.png,
+02-denied-no-legacy.png, browser-evidence-147.txt, focused-tests-147.txt, typecheck-147.txt,
+architecture-guards-147.txt, task-receipt.txt, task-receipt.json);
+docs/planning/shipping/SHIPPING-ADMIN-FLAT-SERVICE-CLOSURE-147.md (added).
+Nothing else was staged; the pre-existing dirty files named by the task were left exactly as found
+(admin-fulfillment-work-queue-screen.tsx, the two TB-075/TB-079 host-stdout evidence logs) and the pre-existing
+stashes are untouched.
+
+MANDATORY-VERIFICATION (real shared Development stack, no restart, no rebuild, no cache deletion, no DB write)
+1) Ordinary authorized Development Admin actor flow, NO extra auth-session login —
+   GET /api/auth/me = 401, browser dev actor 01a036c2-970e-7000-8eb7-94bf5cc2d8db obtained by the app's own
+   existing prepareAdminDevActor() seam; no secret typed anywhere. A real document load of
+   http://localhost:3000/fa/admin/shipping-services rendered: 7 canonical methods
+   (post:express, post:standard, tipax:express, tipax:standard, snapp_courier, store_courier, in_person),
+   7 view + 7 edit + 7 delete = 21 row actions, 0 legacy row-action test ids, 0 occurrences of «انواع سرویس»,
+   grid footer «نمایش ۱ تا ۷ از ۷ ردیف», «سرویس جدید» present, denied/resolving markers 0.
+   The raw read answers 200 gate=Enabled ready=true (guest dev actor aaaa…0009 gets 403, no identity gets 401).
+2) Real authenticated Admin session — POST /api/auth/login (repository Development bootstrap admin) -> 200,
+   GET /api/auth/me -> 200, same route rendered 7 rows / 21 row actions with no client re-resolve (SSR path).
+3) No authorized identity / 403 — full document load with no session, no actor and the canonical read forced to
+   answer a real 403 problem+json (only the ANSWER was simulated; no identity was ever spoofed): the page showed
+   the explicit localized denied panel + «تلاش دوباره», 0 flat rows, 0 legacy row actions and 0 «انواع سرویس» —
+   the legacy provider editor is NOT reachable from this route. The temporary answer override was then removed
+   and scenario 1 was re-verified clean. Screenshots 01 and 02 are the artefacts.
+4) Focused validation — frontend shipping-services folder suite: 213 tests / 213 pass / 0 fail / 0 skipped
+   (focused-tests-147.txt), covering the row model, the catalogue client fail-closed mapping, the activation seam,
+   the four-tab contract, the display-name seam, and the new page/gate composition guards (SSR fast path, one
+   canonical client read, mount only on gate=Enabled + ready=true, explicit denied/error/retry, no legacy render,
+   no URL/localStorage/query-driven gate, no new secret).
+5) npm run typecheck (tsc --noEmit) in src/frontend -> exit 0, no output (typecheck-147.txt).
+6) Architecture guards: 10 of 11 pass, including the import-boundary, flat-folder, feature-boundary and
+   test-discovery guards. The single failure is the PRE-EXISTING unrelated FE-SIZE «oversized frontend files are
+   shrink-only against baseline» baseline (category-admin-screen.tsx 2230>2215, admin-landing-page-composer.tsx
+   1442>1440, storefront-landing-blocks.tsx 1033>1026, storefront-shipping.tsx 1298>945,
+   shared-composition-renderer.tsx 918>907). None of those files is in this task's diff; it is disclosed, not
+   hidden, and deliberately NOT rebaselined because the task forbids unrelated changes.
+7) Critical storefront: NOT_RUN — no storefront Home/PDP/shared storefront component and no file outside
+   src/frontend/app/admin/shipping-services/** was changed.
+
+NO-MOCKUP / NO-CLAIM NOTES
+Nothing in the rendered page is a mockup: every row, label and action comes from the Host read. No gate value was
+hardcoded, no privileged identity was spoofed, and the pre-existing Development identity seam
+(GET /v1/admin/dev-context) was reused, not invented. Production behaviour is unchanged: without an authorized
+session and without a Development identity the route fails closed to an explicit denied state.
+
+REMAINING-BLOCKERS (honest, unchanged from TB-146)
+- CREATE-METHOD: no canonical create-method endpoint exists on the Host, so «سرویس جدید» keeps its honest
+  blocked dialog; the legacy two-level create path is deliberately not used.
+- WRITE-ROUNDTRIP: no live save-and-reopen write round-trip was executed; the shared Development DB and the
+  shared :3000 / :5088 processes are read-only in this task.
+
+Workflow-Stop-State: STOP_FOR_ARCHITECT
+STOP
+END_TOOBA_WORKER_RESULT
