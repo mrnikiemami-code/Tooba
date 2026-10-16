@@ -1,0 +1,26 @@
+﻿=== NEGATIVE CONTROL: legacy interleaved MigrateOrderedAsync (pre-fix algorithm) ===
+command:
+  dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj
+    --filter "FullyQualifiedName~DevelopmentSchemaMigratorOrderingTests" -v n --nologo
+
+Raw log was captured with -Context 0,3 and the 199 pre-existing xUnit analyzer warnings of
+Tooba.Host.Tests were trimmed below; result-relevant lines are verbatim:
+
+  [xUnit.net 00:00:00.60]       System.InvalidOperationException : post-migration step ran before its dependency
+  Post_migration_step_runs_only_after_every_registered_module_migration [FAIL]
+    System.InvalidOperationException : post-migration step ran before its dependency schema migrated.
+    Stack Trace:
+      at Tooba.Host.Tests.Development.DevelopmentSchemaMigratorOrderingTests.<>c.<Post_migration_step_runs_only_after_every_registered_module_migration>b__0_2
+      at Tooba.Persistence.DelegateModuleSchemaMigrationStep.RunAsync(...)
+      at Tooba.Host.Development.DevelopmentSchemaMigrator.MigrateOrderedAsync(...)
+  Migration_order_and_post_step_order_stay_canonical_and_run_exactly_once [FAIL]
+  Failing_migration_short_circuits_every_post_migration_step [FAIL]
+
+  Failed!  - Failed:     3, Passed:     4, Skipped:     0, Total:     7, Duration: 49 ms - Tooba.Host.Tests.dll (net8.0)
+
+Interpretation:
+  - the 3 failures are exactly the ordering-contract tests that the legacy interleaved phase violates
+    (dependency-migrated-before-step, step phase separated from migration phase, no-step-after-migration-failure);
+  - the 4 passing tests are legacy-compatible (sorted migration order, canceled migration, orphan step,
+    no-step registration), i.e. the fix does not merely add assertions: the pre-fix algorithm really ran
+    the Catalog-like post-migration step before the Party-like schema existed.

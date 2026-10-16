@@ -1,0 +1,6 @@
+﻿=== POSITIVE: two-phase MigrateOrderedAsync ===
+command: dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj --filter FullyQualifiedName~DevelopmentSchemaMigratorOrderingTests
+Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7, Duration: 24 ms - Tooba.Host.Tests.dll (net8.0)
+=== POST-FIX Host Development architecture guards (17) ===
+command: dotnet test ... --filter FullyQualifiedName~HostDevelopment
+Passed!  - Failed:     0, Passed:    17, Skipped:     0, Total:    17, Duration: 33 ms - Tooba.Host.Tests.dll (net8.0)

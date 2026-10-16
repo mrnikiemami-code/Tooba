@@ -113,10 +113,11 @@ internal static class DevelopmentSchemaMigrator
     }
 
     /// <summary>
-    /// لنگر خنثی مهاجرت را به ترتیب صریح پایدار اجرا می‌کند، سپس گام‌های ماژول‌محور پس از
-    /// مهاجرتِ همان ماژول را اجرا می‌کند. ترتیب تکراری/نامعتبر fail-fast رد می‌شود.
+    /// لنگر خنثی مهاجرت را در دو فاز پایدار اجرا می‌کند: نخست همهٔ مهاجرت‌های ماژول‌ها به ترتیب صریح
+    /// <see cref="IModuleSchemaMigrator.Order"/>، سپس گام‌های ماژول‌محور پس از مهاجرت به ترتیب موجود
+    /// (<see cref="IModuleSchemaMigrationStep.AfterOrder"/> و سپس Module). ترتیب تکراری fail-fast رد می‌شود.
     /// </summary>
-    private static async Task MigrateOrderedAsync(IServiceProvider provider, CancellationToken cancellationToken)
+    internal static async Task MigrateOrderedAsync(IServiceProvider provider, CancellationToken cancellationToken)
     {
         var migrators = provider.GetServices<IModuleSchemaMigrator>()
             .OrderBy(x => x.Order)
@@ -129,7 +130,15 @@ internal static class DevelopmentSchemaMigrator
                 "Duplicate Development schema migration order: " + duplicateOrder.Key);
         }
 
+        // فاز دوم در پایان فاز اول اجرا می‌شود: یک گام، مالکیت یک ماژول را دارد اما از طریق درزهای
+        // Contracts همان ماژول می‌تواند به schema ماژول‌هایی نیاز داشته باشد که در ترتیب متعارف دیرتر
+        // مهاجرت می‌کنند (نمونهٔ واقعی: گام پس از مهاجرت Catalog پیش از مهاجرت Party اجرا می‌شد و به
+        // schema وابستهٔ Party/Offer/Pricing/Inventory/Tax نیاز داشت). ترتیب نسبی گام‌ها و ترتیب
+        // مهاجرت‌ها دست‌نخورده است و گامی که AfterOrder آن به هیچ مهاجرت ثبت‌شده‌ای اشاره نکند، مثل قبل
+        // اجرا نمی‌شود. اگر مهاجرتی شکست بخورد، هیچ گامی اجرا نمی‌شود.
+        var registeredOrders = migrators.Select(x => x.Order).ToHashSet();
         var steps = provider.GetServices<IModuleSchemaMigrationStep>()
+            .Where(x => registeredOrders.Contains(x.AfterOrder))
             .OrderBy(x => x.AfterOrder)
             .ThenBy(x => x.Module, StringComparer.Ordinal)
             .ToArray();
@@ -137,11 +146,11 @@ internal static class DevelopmentSchemaMigrator
         foreach (var migrator in migrators)
         {
             await migrator.MigrateAsync(cancellationToken);
+        }
 
-            foreach (var step in steps.Where(x => x.AfterOrder == migrator.Order))
-            {
-                await step.RunAsync(provider, cancellationToken);
-            }
+        foreach (var step in steps)
+        {
+            await step.RunAsync(provider, cancellationToken);
         }
     }
 }
