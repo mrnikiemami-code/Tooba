@@ -1,0 +1,110 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-108
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-107
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_CATALOG_SPARSE_DEFAULT_VARIANT_SEAM
+Bridge-Task-Row: d51beb46-248d-4d1c-9bb6-a762a0c6b1a1
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 1ff62762ba7679418db53208f47bb2ee6d412bc5
+Base-SHA: 9f8ee6c6a0e3c8767ddb86f734db30733583c756
+Code-SHA: 729fa793a58508ab05e207a7a60ebec0cfda19d9
+Evidence-SHA: 729fa793a58508ab05e207a7a60ebec0cfda19d9
+automaticNextImplementationTask: NONE
+
+Authorized Option A implemented as SOURCE + FOCUSED TESTS ONLY (no scratch/legacy bootstrap, no process stop in 108).
+
+PREFLIGHT: exactly one Pending task claimed on tooba-main (row d51beb46, task TB-SHIPPING-ONE-LEVEL-TABS-108,
+created 2026-10-16T00:42:57Z). Expected-Base-SHA 1ff62762 is an ancestor of HEAD 9f8ee6c6; the only intervening
+changes are my own TB-107 evidence artifacts (RESULT.bridge.txt + post-result.js, 171 insertions) — non-overlapping
+bookkeeping, no source drift. No reset/stash/rebase/force-push; all pre-existing dirty/untracked files preserved.
+docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-108.task.md kept UNSTAGED as the receipt.
+
+MISSION A — one canonical narrow default operation
+1) IProductVariantDirectory.SetDefaultAsync(productId, variantId, ct) : Result  (+11)
+   src/backend/Modules/Catalog/Tooba.Catalog.Application/Variants/Ports/IProductVariantDirectory.cs
+2) ProductVariantDirectory.SetDefaultAsync  (+49)  ...Catalog.Infrastructure/Directories/ProductVariantDirectory.cs:588
+   Order: _guard.EnsureCanMutateAsync -> product exists -> variant must belong to that product -> archived target
+   refused -> idempotence short-circuit -> ClearDefaultFlags(variants, now) + target.SetDefault(true, now) ->
+   product.UpdatedAt -> QueueProductHistory(EventVariantsChanged/SectionVariants/SummaryVariantsFa) -> ONE
+   SaveChangesAsync. Every rejection precedes any mutation, so a refused call cannot leave a partial write; the
+   helper pair runs inside one tracked change set saved once, so a successful call can never leave two defaults or
+   none. Idempotent case is a true no-op (no write, no history entry). NO ApplyMatrixAsync, NO combination build,
+   NO variant/axis/offer creation or archiving, NO duplicated uniqueness logic, NO new generic framework.
+   Errors are pre-existing idioms only: catalog.product.missing (NotFound), catalog.variant.default.missing
+   (Business; missing OR mismatched/foreign product variant), catalog.variant.default.archived_forbidden
+   (Business). All three already registered in CatalogErrorCatalogContributor and localized in
+   CatalogErrors.resx + CatalogErrors.fa.resx -> zero Contracts/guard/resource changes.
+3) ICatalogDirectory.SetProductVariantDefaultAsync (port +9 at ICatalogDirectory.cs:445; impl +7 at
+   CatalogDirectory.cs:1459 via Unwrap(...)) -> minimum exposure for the Development seed. No admin HTTP route,
+   no frontend action, no route-count change (W27 route guard still passes).
+4) CatalogAttributeSchemaDevelopmentSeed (+5/-1): line 92 captures the first created variant; line 96 calls
+   SetProductVariantDefaultAsync(product.ProductId, defaultVariant.VariantId) before PublishProductAsync. Both
+   diagonal variants (PHONE-BLK-128, PHONE-BLU-256) and both axes (color + storage) are preserved; no extra
+   combination, offer or seed record. The TB-105 Development publish diagnostic is untouched and left in place.
+
+MISSION B — focused tests, no live startup (real postgres:16-alpine Testcontainers)
+src/backend/Host/Tooba.Host.Tests/CatalogSparseDefaultVariantTests.cs (new, 3 SkippableFacts) -> 3/3 PASSED.
+ - Sparse_set_keeps_identity_and_gains_exactly_one_default: 2 axes declared with only the 2-combination diagonal.
+   Before: existing rule already refuses (IsValid=false, NoDefaultVariant=true) = 106's finding at unit level.
+   After: exactly one default (the requested variant), still EXACTLY 2 variants, identical combination
+   fingerprints, identical axis definitions+display order, both still Draft, PHONE-A seam preserved; readiness
+   IsValid=true with NoDefaultVariant=false and empty missing/invalid/duplicate lists. Re-assign => still one
+   default and exactly ONE variants-changed history entry (proves no-op). Switch => previous cleared, still one.
+ - Invalid_targets_are_refused_and_leave_state_untouched: missing product, missing variant, foreign-product
+   variant and archived variant each refused with the exact codes; afterwards the sparse product still has 2
+   variants, none default, 2 axes and 0 variants-changed history rows.
+ - Attribute_schema_seed_publishes_its_sparse_product_with_one_default_and_is_repeat_safe: runs the REAL
+   CatalogAttributeSchemaDevelopmentSeed.ApplyAsync on an empty container DB with only ICatalogDirectory +
+   CatalogDbContext registered (sellable enricher optional via GetService) and asserts Status==Published,
+   exactly 2 variants with codes {PHONE-BLK-128, PHONE-BLU-256}, exactly one default = PHONE-BLK-128,
+   axes [color, storage], readiness valid, and that a SECOND seed pass adds no variant and does not oscillate
+   the default. No full-matrix application occurs (count stays 2 everywhere).
+NEGATIVE CONTROL: with the new seed call temporarily disabled, the seed fact fails with
+InvalidOperationException "محصول برای انتشار آماده نیست." raised by CatalogDirectory.UnwrapLifecycle — the exact
+TB-105/106 symptom; restored and re-run 3/3 pass. This is the proof the test actually covers the defect.
+
+BUILD / GUARDS
+- dotnet build src/backend/Tooba.slnx -c Debug -> Build succeeded, 0 errors.
+- Near-neighbour guard sweep (--filter FullyQualifiedName~Architecture): 1458 tests, 1415 passed, 43 failed, 0
+  skipped. All 43 are PRE-EXISTING repo drift, none attributable to this diff, verified two ways: every distinct
+  failure cause points at files/counts already wrong at HEAD (CatalogCategoryTreeRules.cs,
+  CatalogCategorySlugNormalizer.cs, CatalogDomain.cs, IPartyAdminSellerReadGateway.cs,
+  IPartyDevelopmentSeedGateway.cs, WishlistPresentationComposer.cs are all ABSENT_AT_HEAD; Host/Admin *.cs count
+  is 17 at HEAD while guards assert 15/52; AMSC cert-truth/SOT/slnx/grid ownership drift), and none of the 43
+  failing assertions references any of the six paths this task touched. The variant-specific guard
+  (HostAdminAmcW27PwVariantsGuardTests.Catalog_Variants_workspace_commands_and_codes_exist) PASSES.
+- Only one implementer exists for each interface, so no other call site needed updating. Frontend untouched.
+
+EVIDENCE (committed under Evidence-SHA)
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-108.md
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-108/{summary.md, source-line-evidence.txt,
+  pre-existing-guard-baseline.txt, focused-tests-final.txt, focused-tests-negative-control.txt,
+  focused-tests-run1..3.txt, near-neighbour-architecture-guards.txt, task-receipt.json, task.md, claim-task.js,
+  post-result.js, RESULT.bridge.txt}
+
+SAFETY: no matrix apply; no ProductPublishReadinessReader or readiness-rule weakening; no raw EF writes in the
+seed; no variant/archive/axis/offer/price/inventory expansion; no public route; no Host/Next restart; no scratch
+or shared DB bootstrap; no DML on tooba_alpha; no Order/Fulfillment/Shipping/Checkout/Payment/Settlement change;
+no activation/shipping-gate change; no broad Host suite; NO process termination of any kind (nothing stopped or
+restarted in 108); no secrets logged. Working tree after push: only the intentional untracked pre-existing
+artifacts plus the unstaged task receipt; HEAD == origin/main == 729fa793a58508ab05e207a7a60ebec0cfda19d9.
+
+RUNTIME PROOF DEFERRED (as instructed): no claim of real startup success, sellable-offer creation, storefront
+label proof or commercial readiness. Latest live observation for this product remains TB-106's isolated run
+(missing=[variants], default count 0).
+
+FLAGGED FOR ARCHITECT (not changed, out of the "its two created variants" scope): the seed's pre-existing
+early-return branch (demo product already present) still does not assert a default, so on a database that
+already holds a default-less demo product the next bootstrap publish would still be refused.
+
+ACTUAL ELAPSED: ~22 minutes (claim 04:11 -> result 04:33 local), inside the 30-minute hard stop.
+
+DEVIATIONS: three test-iteration fixes inside my own new test file only (EF-translation of an in-memory
+ordering, and slug/name-suffix uniqueness for the two products created in one container); one temporary
+negative-control edit to the seed that was reverted before commit (git diff confirms the committed seed contains
+the seam call). No other deviations.
+END_TOOBA_WORKER_RESULT
