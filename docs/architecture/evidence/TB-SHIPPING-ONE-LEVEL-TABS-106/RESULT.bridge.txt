@@ -1,0 +1,105 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-106
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-105
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_ISOLATED_CATALOG_PUBLISH_MISSING_CODES_CAPTURE
+Bridge-Task-Row: e41a4e20-bf7b-4e02-b279-33d3020b2cce
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 2699e53e877a8cbb6f084d1a93e0410aa9950182
+Base-SHA: 46170447fe5da00cd65be455efcfd6146e720ff6
+Code-SHA: NONE
+Evidence-SHA: aceeb46acbfc89024e2def182da3ade73d20714a
+automaticNextImplementationTask: NONE
+
+ANSWER — MISSING CODES ARE NOW OBSERVED (not inferred):
+  stage=catalog-dev.attribute-schema.publish-product; product=01a1421c-5ca6-7000-b43d-9797d12fc02d;
+  isReady=False; missing=[variants]
+  Emitted by the 105 seam (category Tooba.Catalog.Development.PublishReadiness, Error) on the real isolated
+  Development startup over the empty scratch database. Single element list: only the variants domain refused.
+
+ORIGINAL REFUSAL RETAINED:
+  Unhandled exception. System.InvalidOperationException: محصول برای انتشار آماده نیست.
+    CatalogDirectory.UnwrapLifecycle (CatalogDirectory.cs:849) <- PublishProductAsync (1637)
+    <- CatalogDevelopmentPublishDiagnostics.PublishWithDiagnosticsAsync (line 75 calls, line 84 re-reads)
+    <- CatalogAttributeSchemaDevelopmentSeed.ApplyAsync (line 101) <- CatalogDevelopmentSeed.PostMigration.EnsureAsync
+    <- DevelopmentSchemaMigrator.MigrateOrderedAsync (143) <- ApplyCoreAsync (70/112) <- Program.cs:367
+  Same type, same message, same origin as before 105 => the diagnostic observes and does not change the decision.
+
+ROOT CAUSE NARROWED TO ONE SUB-RULE (scratch evidence, read-only SQL):
+  ProductVariantDirectory.GetReadinessAsync: isValid = missingAxes==0 && invalidVariants==0 && duplicates==0
+                                            && noDefault != true
+    - axes            : color + storage are the effective variant axes and product_variant_axes holds exactly them
+                        -> missingAxes = 0
+    - per-variant vals: PHONE-BLK-128 and PHONE-BLU-256 each carry BOTH axes with GUID enum option ids
+                        -> invalidVariants = 0
+    - fingerprints    : the two variants have different combination fingerprints -> duplicates = 0
+    - defaults        : is_default = false on BOTH variants -> noDefault = !Any(IsDefault) = true -> isValid = false
+  The Development attribute-schema seed creates its variants via catalog.CreateVariantAsync
+  (ProductVariantDirectory.CreateWorkspaceVariantAsync), which performs no SetDefault/EnforceSingleDefault; only the
+  Admin matrix-apply path enforces a single default (SetDefault at lines 414/419/442/443, EnforceSingleDefault at 447).
+  Therefore a product whose variants exist only through the direct create path can never satisfy publish readiness —
+  latent on the shared database, fatal on an empty one. No other domain (category/identity/attributes/media/seo)
+  reported a missing requirement.
+
+ISOLATION PROOF:
+  exactly ONE tenant ("store-alpha:Active:tenant-106-scratch"), scratch-only connection references
+  (tenant-106-scratch / messaging-106-scratch), no 'tooba_alpha', no 'tenant-alpha', no 'Port=5432' in the effective
+  configuration; ShippingOneLevelCatalog / ShippingRateAuthority / ShippingOperationalShadow all absent;
+  RunLegacyBootstraps=true with AllowResetAndSeed=false so the forbidden demo reset/seed could not run; scratch
+  PostgreSQL 17 container with no volume on loopback 127.0.0.1:55444, isolated Host on 127.0.0.1:5392; the scratch
+  database was inspected only through a scratch-only psql connection. Zero shared-database writes.
+
+WATCHDOG PROOF:
+  LAUNCH_COUNT=1, no retry. Outer watchdog limit 240 s; ELAPSED_SECONDS=50 (the expected refusal ended startup).
+  PROCESS_EXITED=True, KILLED_BY_WATCHDOG=False, DIAGNOSTIC_LINE_CAPTURED=True,
+  LISTENERS_ON_5392_AFTER_STOP=0.
+
+CLEANUP PROOF:
+  scratch container tooba-106-scratch-pg destroyed; isolated Host exited by itself; 0 listeners on 5392 and 55444;
+  task-owned .tmp-106-run and .tmp-106-host-out removed; raw 683 KB stdout/stderr, the 30 KB MSBuild log and the
+  4.4 MB shared-host restart log dropped after bounded excerpts; credentials never left .tmp-106-run and were absent
+  from the raw logs (verified); running containers back to exactly postgres-db + rabbitmq.
+
+SHARED PARITY (read-only, unchanged):
+  :5088 /health = {"status":"ok"} before and after; :5088/__platform-commerce identical before and after
+  (edition=SingleStore, deploymentId=dev-singlestore, tenantId=store-alpha, connectionReference=tenant-alpha,
+  resolvedHost=127.0.0.1, themeReference=theme-alpha, defaultMarketReference=IR); :3000 had no listener before and
+  none after (pre-existing); tooba_alpha counts identical before/after: 7 methods / 14 translations / 50 carts /
+  78 cart_lines / 14 cart_shipping_drafts / 26 seller_orders / 567 products / 3223 offers.
+
+DISCLOSED DEVIATION (reported for Architect awareness, not concealed):
+  During teardown a name-based stop (`Get-Process -Name Tooba.Host | Stop-Process`) also matched the pre-existing
+  shared Development Host on :5088, which the task required to leave running. The mandatory post-task health check
+  detected it immediately. The shared Development Host was restarted from the same executable, working directory,
+  port and repository safe defaults, with no override environment variable; its first restart wrote redirected logs
+  inside the evidence directory, and because the running process held those handles a second controlled restart by
+  explicit PID moved the redirects to $TEMP so nothing lands in the repo. Result: shared host healthy (pid 34172,
+  /health 200 within ~3 s) with byte-identical provenance and unchanged shared data; only the process identity
+  changed. No shared file was rebuilt by the scratch run (the scratch Host was published to the task-owned
+  .tmp-106-host-out, now deleted).
+
+TOUCHED PATHS: docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-106.md,
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-106/** (observed-result.txt, redacted-diagnostic-excerpt.txt,
+  isolation-watchdog-and-parity.txt, code-to-prerequisite-mapping.txt, scratch-variant-inspection.{sql,txt},
+  build-record.txt, watchdog-result.txt, isolated/**, shared-parity-pre/postflight.*, summary.md, task.md,
+  task-receipt.json, claim-task.js). docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-106.task.md kept UNSTAGED.
+  ZERO changes under src/, scripts/, appsettings, migrations or tests.
+
+ROLLBACK: revert evidence commit aceeb46acbfc89024e2def182da3ade73d20714a (docs only). No source, schema, seed,
+  configuration or shared data change exists to roll back; the scratch container and its databases are already gone.
+
+RECOMMENDED SMALLEST NEXT CORRECTIVE TASK (Architect decision, NOT executed and NOT self-authorized):
+  One bounded Catalog-owned correction so the Development attribute-schema seed leaves its product publishable: after
+  creating its two variants, designate exactly ONE of them as the product default through the existing public
+  application command/contract that already clears other defaults and enforces a single default (the same rule the
+  Admin workspace path uses), then publish. The Architect should rule whether the defect is the seed (must set a
+  default variant) or the create-path contract (CreateWorkspaceVariantAsync should enforce a default when none
+  exists). Constraints for that task: Catalog module only, no readiness-rule relaxation, no synthetic readiness
+  codes, no raw DML fixtures, no change to publish/checkout/shipping semantics, and proof on this same isolated
+  scratch recipe. This task claims only the observed fact; sellable offers, storefront labels and checkout readiness
+  remain unproved.
+END_TOOBA_WORKER_RESULT
