@@ -1,0 +1,102 @@
+{
+  "taskId": "TB-SHIPPING-ONE-LEVEL-TABS-127",
+  "parentTask": "TB-SHIPPING-ONE-LEVEL-TABS-126",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "bridgeTaskRow": "faa27b3b-5ecf-4577-a279-33dc2116bc67",
+  "mode": "BOUNDED_ORDER_ACCEPTED_SHIPPING_GROUPS_M2",
+  "expectedBaseSha": "7dfac497c2ca337f90746d662a2d32fd89cc7c98",
+  "actualBaseSha": "7dfac497c2ca337f90746d662a2d32fd89cc7c98",
+  "baseShaAncestorOfHead": true,
+  "headSha": "c136897f4d1a95022221c331d2cb6e2764188cb8",
+  "headEqualsOriginMain": true,
+  "drift": "NONE. origin/main == expected base at claim and after fetch; no remote delta, no overlapping source change.",
+  "status": "PASS",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "automaticNextImplementationTask": "NONE",
+  "slice": "M2 (durable accepted-order shipping groups)",
+  "changedPaths": [
+    "src/backend/Modules/Order/Tooba.Order.Domain/Checkout/OrderShippingGroup.cs",
+    "src/backend/Modules/Order/Tooba.Order.Domain/Checkout/OrderShippingGroupMaterializer.cs",
+    "src/backend/Modules/Order/Tooba.Order.Domain/Aggregates/CheckoutGroup.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Checkout/Contracts/CheckoutSnapshots.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontCheckoutService.cs",
+    "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs",
+    "src/backend/Modules/Order/Tooba.Order.Infrastructure/Persistence/OrderDbContext.cs",
+    "src/backend/Modules/Order/Tooba.Order.Infrastructure/Persistence/Migrations/20261016100000_AddOrderShippingGroups.cs",
+    "src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutSubmitHost.cs",
+    "src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.cs",
+    "src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.Access.cs",
+    "src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Persistence/CheckoutDirectory.Reservations.cs",
+    "src/backend/Modules/Order/Tooba.Order.Tests/Storefront/OrderShippingGroupMaterializerTests.cs",
+    "docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-127.md",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-127/authority-and-design.md",
+    "docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-127/test-proof.txt"
+  ],
+  "unstagedPaths": ["docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-127.task.md"],
+  "preExistingDirtyPreserved": [
+    "src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx",
+    "src/frontend/app/admin/admin-order-detail-screen.tsx",
+    "docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-075/host-stdout-075.txt",
+    "docs/architecture/evidence/TB-SHIPPING-FULL-OPERATIONS-079/host-stdout-OFF.txt"
+  ],
+  "migration": {
+    "name": "20261016100000_AddOrderShippingGroups",
+    "tables": ["order.order_shipping_groups", "order.order_shipping_group_lines"],
+    "additiveOnly": true,
+    "destructiveChange": false,
+    "crossModuleRelationalFk": false,
+    "constraints": [
+      "PK shipping_group_id on order_shipping_groups",
+      "FK checkout_id -> order.checkouts(checkout_id) ON DELETE CASCADE",
+      "FK shipping_group_id -> order_shipping_groups(shipping_group_id) ON DELETE CASCADE on lines",
+      "FK order_line_id -> order.order_lines(line_id) ON DELETE CASCADE (Order-owned)",
+      "UNIQUE (checkout_id, seller_party_id, method_code)",
+      "PK (shipping_group_id, order_line_id) and UNIQUE(order_line_id) on lines -> a line belongs to exactly one group",
+      "CHECK shipping_charge_snapshot >= 0",
+      "CHECK char_length(currency) = 3",
+      "CHECK lead_days >= 0",
+      "indexes on checkout_id, seller_order_id, shipping_group_id"
+    ]
+  },
+  "contractsAdded": [
+    "OrderShippingGroup / OrderShippingGroupLine / OrderShippingGroupFault domain types",
+    "OrderShippingGroupPlan (draft -> order conversion carrier, money/identity/promise from the draft)",
+    "CheckoutShippingGroupSnapshot and CheckoutSnapshot.ShippingGroups (readback projection)",
+    "SubmitCheckoutCommand.ShippingGroups (optional trailing parameter)"
+  ],
+  "contractsRemoved": [],
+  "invariants": [
+    "group seller order == order line seller order; group.CheckoutId == checkout; wrong seller aborts with order.shipping.group.seller_mismatch",
+    "full bijective coverage: every order line in exactly one group (…line.missing / …line.duplicate)",
+    "membership resolved from the authoritative cart-line -> order-line map captured while the order lines were created (…cart_line.mapping_missing) — never inferred positionally",
+    "one group per (seller, canonical method) (…seller_method.duplicate)",
+    "origin always null in v1; a declared origin fails closed with …origin.unverified (BLOCKED_ORIGIN_AUTHORITY recorded, nothing forged)",
+    "seller order merchandise totals unchanged; shipping payable = sum of committed group charges, computed exactly once",
+    "genuine multi-group order no longer projects one arbitrary method into checkouts.shipping_method_code/label (cleared instead)",
+    "idempotency: existing checkout by key/cart short-circuits before persistence, so retries cannot add groups or charges"
+  ],
+  "transactionBoundary": "Groups are materialized inside the existing TransactionScope(ReadCommitted) in CheckoutProcessManager.SubmitAsync, in ICheckoutSubmitHost.PersistCheckoutAsync before SaveChangesAsync; all invariant checks throw ContractOperationException before any row is added.",
+  "guardChange": "StorefrontShippingService.CommitAsync no longer blocks >1 groups (order conversion now persists them); ProjectPaymentDraftAsync keeps EnsureLegacySingleGroup because the unchanged Payment module still expects one StoreShipping allocation.",
+  "tests": {
+    "newFocusedTests": 9,
+    "newTestFile": "src/backend/Modules/Order/Tooba.Order.Tests/Storefront/OrderShippingGroupMaterializerTests.cs",
+    "projectResult": "338 passed / 0 failed (9 new + 329 pre-existing)",
+    "buildResult": "src/backend/Tooba.slnx build succeeded, 0 errors",
+    "reruns": "1 focused run, then 1 full Order.Tests run; no reruns after a fix were needed",
+    "notExecuted": "No runtime DB migration/EF validation (no isolated disposable Postgres inside the box; Order.Tests does not reference Order.Infrastructure) and no browser acceptance."
+  },
+  "unprovenClaims": [
+    "Migration/EF model was not executed against a real database; DDL correctness is static-review only.",
+    "M1's two-phase draft group replacement remains non-atomic by design; M2 reads the persisted draft after the commit-time revalidation, so a phase-2 failure there fails closed before order conversion.",
+    "Draft group identity is regenerated on each draft re-save (M1 planner factory); the id carried into the order is the last persisted draft id.",
+    "Per-seller shipping method eligibility remains cart-wide (no authoritative per-seller service).",
+    "Payment allocation for >1 group is out of scope; the payment path stays fail-closed."
+  ],
+  "nonInterference": "No frontend/CSS/theme/template/config edit; no shared :5088/:3000 or tooba_alpha mutation; no process start/stop/kill; no DDL/DML; no seed or scratch DB; no feature flag.",
+  "rollback": "Revert commit c136897f4d1a95022221c331d2cb6e2764188cb8; migration Down drops both new tables. No runtime artifact or shared state created.",
+  "firstRemainingBlocker": "Payment/Settlement owner must accept multiple StoreShipping allocations (or the payment-draft boundary stays fail-closed for >1 group); per-seller method eligibility and fulfilment origin authority remain open.",
+  "commercialReadinessCertified": false,
+  "implementationComplete": false
+}

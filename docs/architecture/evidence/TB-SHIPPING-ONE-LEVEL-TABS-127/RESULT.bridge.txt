@@ -1,0 +1,74 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-127
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-126
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Bridge-Row: faa27b3b-5ecf-4577-a279-33dc2116bc67
+Program: TOOBA-SHIPPING-CHECKOUT-DELIVERY-CLOSURE
+Mode: BOUNDED_ORDER_ACCEPTED_SHIPPING_GROUPS_M2
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+
+BASE-SHA: 7dfac497c2ca337f90746d662a2d32fd89cc7c98
+HEAD-SHA: c136897f4d1a95022221c331d2cb6e2764188cb8
+HEAD==origin/main: YES
+DRIFT: NONE (no remote delta at claim or after fetch)
+
+DELIVERED (Order-owned M2 only)
+1. order.order_shipping_groups + order.order_shipping_group_lines (additive migration 20261016100000_AddOrderShippingGroups):
+   stable ShippingGroupId carried from the M1 draft, CheckoutId, SellerOrderId, SellerPartyId, canonical
+   Method/Service/Option codes, label, optional origin (always NULL), authoritative charge snapshot, currency,
+   minimum/requested delivery date + window, lead days, lifecycle State=Confirmed, created_at.
+2. Groups are materialized and frozen ONCE inside the existing TransactionScope(ReadCommitted) in
+   ICheckoutSubmitHost.PersistCheckoutAsync, before SaveChangesAsync; every violation throws a stable
+   OrderShippingGroupFault code before any row is added.
+3. Membership resolves through the authoritative cart-line -> order-line map captured while order lines were
+   created (CheckoutDirectory.QuoteSellerOrdersAsync); nothing is inferred positionally and no cross-module FK exists.
+4. checkout.ShippingAmount = SUM of committed group charges, computed exactly once in CheckoutGroup.Submit;
+   SellerOrder merchandise totals untouched.
+5. Genuine multi-group accepted orders clear checkouts.shipping_method_code/label instead of projecting one
+   arbitrary method onto all lines; legacy scalar columns are retained for historical reads.
+6. Legacy single-method path unchanged: empty plan list => no group rows, scalar columns as before.
+7. TB-126 conversion guard removed from StorefrontShippingService.CommitAsync (order conversion now persists
+   groups); the guard is KEPT in ProjectPaymentDraftAsync because the unchanged Payment module still expects one
+   StoreShipping allocation. Commit-time revalidation now replays the saved group membership instead of the
+   single-method shorthand, so a genuine multi-group selection can never be silently collapsed.
+
+INVARIANTS (hard)
+- seller/checkout ownership: group belongs to its own seller order; wrong seller -> order.shipping.group.seller_mismatch
+- full bijective coverage: every order line in exactly one group -> ...line.missing / ...line.duplicate
+- no invented mapping -> order.shipping.group.cart_line.mapping_missing
+- one group per (seller, canonical method) -> order.shipping.group.seller_method.duplicate
+- origin never forged -> order.shipping.group.origin.unverified (BLOCKED_ORIGIN_AUTHORITY)
+- idempotency: existing checkout by key/cart short-circuits before persistence; retries add no groups/charges
+
+PROOF
+- dotnet build src/backend/Tooba.slnx => Build succeeded, 0 errors
+- dotnet test Tooba.Order.Tests => 338 passed / 0 failed (9 new M2 tests + 329 pre-existing)
+- No frontend/CSS/theme/template/config edit. No shared :5088/:3000 or tooba_alpha mutation. No process
+  start/stop/kill. No DDL/DML against any database.
+
+UNPROVEN (declared, not claimed)
+- Migration/EF model was NOT executed against a real database (no isolated disposable Postgres inside the
+  45-minute box; Order.Tests does not reference Order.Infrastructure). DDL is static-review only.
+- M1 draft replacement remains two-phase and therefore non-atomic; M2 reads the persisted draft after the
+  commit-time revalidation, so a phase-2 failure fails closed before conversion.
+- Draft group identity is regenerated on each draft re-save; the id carried into the order is the last
+  persisted draft id.
+- Per-seller shipping method eligibility remains cart-wide; fulfilment origin authority stays BLOCKED.
+- Payment allocation for >1 group stays fail-closed until its owner is updated (M3/M4 untouched).
+
+EVIDENCE
+docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-127.md
+docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-127/{authority-and-design.md,test-proof.txt,task-receipt.json}
+Task receipt docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-127.task.md left UNSTAGED; the two pre-existing dirty
+admin frontend screens and unrelated host-stdout evidence were not touched.
+
+ROLLBACK: revert c136897f4d1a95022221c331d2cb6e2764188cb8; migration Down drops both new tables.
+
+FIRST-REMAINING-BLOCKER: Payment/Settlement owner must accept multiple StoreShipping allocations (otherwise the
+payment-draft boundary stays fail-closed for >1 group); per-seller eligibility and fulfilment origin authority
+remain open.
+END_TOOBA_WORKER_RESULT
