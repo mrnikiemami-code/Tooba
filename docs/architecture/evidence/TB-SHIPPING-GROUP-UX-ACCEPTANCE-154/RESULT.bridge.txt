@@ -1,0 +1,113 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GROUP-UX-ACCEPTANCE-154
+Parent-Task: TB-SHIPPING-GROUP-ID-CONTINUITY-153
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-INDEPENDENT-SELLER-COMMITMENTS
+Mode: BOUNDED_PRIVATE_BROWSER_CONTINUE_GATING_AND_RELOAD_ACCEPTANCE
+Bridge-Task-Row: 111cd8ec-de60-4fc9-84ea-f536a63931ab
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: ab3f70b203056ff464cc963d33c2825cdb63ff29
+Base-SHA: ab3f70b203056ff464cc963d33c2825cdb63ff29
+Code-SHA: f64379be4b8226e3e2b7128a010655a222ba779b
+Evidence-SHA: f64379be4b8226e3e2b7128a010655a222ba779b
+automaticNextImplementationTask: NONE
+HEAD: f64379be4b8226e3e2b7128a010655a222ba779b
+Origin-Main: f64379be4b8226e3e2b7128a010655a222ba779b
+HEAD-Origin-Parity: TRUE
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Evidence: docs/architecture/evidence/TB-SHIPPING-GROUP-UX-ACCEPTANCE-154/
+Elapsed-Minutes: 38 (claim 2026-10-16T19:38:37Z -> commit/push 2026-10-16T20:16Z; inside the 45-minute hard box)
+
+DELIVERABLE (real customer flow, private and disposable)
+Private isolated Host :5415 (current Debug publish of Tooba.Host + task-owned overlay, isolation guard
+fail-closed PASS) + disposable scratch Postgres 127.0.0.1:55473 (tooba_154_scratch) + private Next frontend
+:3109 bound only through TOOBA_HOST_ORIGIN=http://127.0.0.1:5415. One Active tenant
+store-alpha -> tenant-154-scratch, Edition SingleStore (no swap), no tooba_alpha / tenant-alpha / Port=5432 /
+prior scratch port, AllowResetAndSeed=false, no rate-authority or operational-shadow switch. Two real seeded
+sellers on the SAME canonical tipax:standard with preparation 2 and 3 from the scratch overlay only
+(seller ids 01a1463c-2b31-7000-9874-1d8618750b91 and 01a1463c-2b33-7000-bd6a-da3ade0d053c), giving two
+independent server horizons (2026-10-21 vs 2026-10-22). Authenticated with the repository development
+fixture session (mobile 09111111111 / fixture OTP); no secret, token or cookie value appears in any evidence.
+No fake screenshot and no fabricated carrier schedule: every date and window came from the server projection.
+
+1) TWO INDEPENDENT SELLER CARDS (real DOM + screenshots)
+/fa/shipping renders exactly two group cards for the same method, each with its own seller name, its own
+"روش: معمولی · tipax:standard", its own per-group fee (۱۸۰٬۰۰۰ ریال each), its own first-possible date
+(1405/07/29 = 2026-10-21 vs 1405/07/30 = 2026-10-22), its own date chips and its own window radiogroup.
+There is no global/page-wide delivery date or window control anywhere in the DOM, and no cross-method horizon
+intersection. DOM test ids are the SERVER-OWNED persisted ids
+(shipping-group-01a1463d-3852-7000-8f8a-88e19a4608a2 and shipping-group-01a1463d-3852-7000-bdba-93a120d0c9a5).
+
+2) CONTINUE DISABLED -> ENABLED (legitimate incomplete state, no backend tampering, no invented date)
+Initial server-restored state had both groups complete and [data-testid=shipping-continue] disabled=false.
+Choosing a DIFFERENT canonical method for seller A's single line (post:standard) left that group with no
+window selection (no aria-checked=true in its radiogroup) while seller B kept 9-12, and the button was
+observed disabled=true. After selecting that group's own server-provided date (2026-10-22, the server minimum
+for post:standard) and its window, the button returned to disabled=false. So Continue is gated on EVERY active
+group being complete, and it was never forced enabled or disabled by a fake control.
+
+3) PERSIST -> PAYMENT PREVIEW -> BACK -> FULL RELOAD
+Clicking Continue performed the real authenticated selection PUT through the frontend proxy and the app
+navigated to http://127.0.0.1:3109/fa/payment?cartId=... (preview only; NO purchase, no PSP, no SMS). After
+navigating back to /fa/shipping as a fresh document (/api/auth/me = 200) both groups restored their persisted
+schedules and the SAME ShippingGroupIds, with Continue enabled again and no client drift.
+Window-only edit: with seller A back on tipax:standard, ONLY its window was changed to 15-18 (seller B never
+touched) and persisted from the browser; the reloaded page and the database both show A = 2026-10-21/15-18 and
+B = 2026-10-22/9-12 under the two ids allocated by the first save of the run -> TB-153 stable-identity
+continuity is now proven end-to-end through the product surface, not only over HTTP.
+
+4) HTTP ACCEPTANCE + READ-ONLY PAYMENT DRAFT (200, not 409)
+journey-154.js: 37 checks, 36 PASS, 0 FAIL, 1 OBSERVED. Both routes share the same canonical code, carry
+distinct group keys/ids, resolve the two different seller preparations (2 and 3) with the same 3-day method
+lead, and expose independent minimum dates. Save, HTTP re-read, A-only window edit, past-date rejection
+(shipping.delivery.too_early), stale-window rejection (shipping.delivery.slot_unavailable) and an identical
+repeated save keep both ids stable, keep group B byte-identical and never let a rejected write overwrite the
+last accepted selection. The read-only payment draft answered HTTP 200 with exactly two groups mapped to the
+two sellers on the same method, identities equal to the latest accepted save, one line per group, each group
+fee charged once (180000 + 180000 = shippingAmount 360000), taxAmount 327600 (authoritative 9%),
+subtotalExclusiveOfTax 3640000, discount 0, payableAmount 4327600 = subtotal - discount + tax + shipping, and
+no checkout created. The TB-153 scratch 409 checkout.tax.unavailable does NOT reproduce when the cart lines
+come from the seeded offers whose categories carry the active tax rule; no tax or locale production code was
+touched and no global tax/settlement policy was changed.
+
+5) ZERO EARLY MUTATION + CLEANUP
+"order".cart_shipping_groups holds exactly the 2 expected rows with both schedules; the join table has exactly
+2 rows (one line per group); DUP_GROUP_IDS=0, LINES_IN_TWO_GROUPS=0, ORPHAN_JOIN_ROWS=0; checkouts=0,
+seller_orders=0, order_lines=0, payments=0 - no cart/order/payment/PSP mutation occurred before an explicit
+final click (and no final click happened). The scratch container was removed, the private Host and frontend
+processes were stopped, and ports 5415/3109/55473 were verified no longer listening while shared
+3000/5088/5432 listeners were left running and unchanged.
+
+NON-ACTIONS
+No production source change of any kind (no frontend, no Order, no Tax, no Admin, no contract, no schema,
+migration, EF snapshot, DI or startup change, no localization, no visual token or RTL change). No new
+wireframe or global styling change. No bypass of eligibility or auth, no invented customer fee, carrier
+capacity, origin, payout split or date, no real PSP charge or final payment, no notification. No shared
+service restart, cache purge, production DB mutation or force push; unrelated dirty/stashed work untouched. No
+probe/dummy POST to Bridge /api/results and no automatic next task.
+
+CLAIM NOTE (disclosed)
+The first Bridge GET /api/tasks/next returned the full task body for row
+111cd8ec-de60-4fc9-84ea-f536a63931ab, so the immediately following scripted claim returned an empty body; the
+artifact was persisted from the received content as
+docs/ai/tasks/TB-SHIPPING-GROUP-UX-ACCEPTANCE-154.task.md and the same row was completed at the end of this
+lifecycle. One extra Host launch was needed because this seed mints different seller ids than TB-152/153 held,
+so the first launch (which bootstrapped and seeded the scratch DB) was followed by a relaunch with the correct
+seller preparation overlay; the first launch is disclosed rather than hidden.
+
+REMAINING UNKNOWNS / STILL OPEN (outside this task)
+Admin financial mode and per-method restrictions, real create-method API, multilingual save/write-roundtrip,
+EF debug log flood and scale check, trusted transport calendar/origin authority, approved shipping fee
+allocation, same-seller same-method incompatible origins, and the release blockers tracked separately. Worker
+PASS is not Architect ACCEPT.
+
+STOP
+Status PASS; all five PASS criteria met with the observations above disclosed; final state STOP_FOR_ARCHITECT;
+automaticNextImplementationTask=NONE; no chat output beyond the Bridge result.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK
