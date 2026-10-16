@@ -1,0 +1,36 @@
+﻿Pager usage is off.
+== legacy template catalog seeds (Fashion/Industry A/B/C) ==
+          m          |  v  
+---------------------+-----
+ template_products   | 150
+ template_variants   | 150
+ template_categories | 560
+ template_brands     | 60
+ store_templates     | 10
+(5 rows)
+
+== landing page / store menu seeds ==
+              m              | v  
+-----------------------------+----
+ store_landing_pages         | 3
+ store_landing_page_sections | 16
+ store_menus                 | 1
+ store_menu_items            | 6
+(4 rows)
+
+== color identity single-identity proof ==
+        slug_seam         | catalog_code_seam | definition_code |         canonical_value          |            definition_id             
+--------------------------+-------------------+-----------------+----------------------------------+--------------------------------------
+ schema-mobile-demo-phone | PHONE-BLK-128     | color           | 01a1428ecca670009effbc25fb7a9cfe | 01a1428e-cc3f-7000-abb5-7c7600a2640d
+ schema-mobile-demo-phone | PHONE-BLU-256     | color           | 01a1428eccb27000a7f96f9a16634f65 | 01a1428e-cc3f-7000-abb5-7c7600a2640d
+ workspace-live-shirt     | LIVE-SHIRT-BLK    | color           | 01a1428ecca670009effbc25fb7a9cfe | 01a1428e-cc3f-7000-abb5-7c7600a2640d
+(3 rows)
+
+== schemas present (returns/settlement absence explains outbox warnings) ==
+ schema_name 
+-------------
+ cart
+ fulfillment
+ order
+(3 rows)
+

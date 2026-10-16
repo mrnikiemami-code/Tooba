@@ -1,0 +1,7 @@
+capturedUtc=2026-10-16T02:36:01.804Z
+shared_health_5088=200 {"status":"ok"}
+shared_platform_commerce=200 {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"5e4747b610e3ec1bcc90504ae0092226"}
+shared_next_3000=308 http://localhost:3000/fa
+isolated_port_listeners_expected_zero=5398
+port=3000 pid=31580
+port=5088 pid=35624

@@ -1,0 +1,37 @@
+# TB-117 REDACTED DIAGNOSTIC EXCERPT (no credentials, no connection strings, no customer identifiers)
+
+stdout_total_lines=1861
+stderr_total_lines=0
+stdout_categories=Microsoft.EntityFrameworkCore.Database.Command=1674 Microsoft.EntityFrameworkCore.Migrations=112 Tooba.Host.Transport.ToobaIntegrationTransportConsumer=61 Microsoft.Hosting.Lifetime=4 Microsoft.EntityFrameworkCore.Query=3 MassTransit=2 MassTransit.SqlTransport.SqlTransportMigrationHostedService=2 Tooba.Host.Outbox.OutboxDispatcher=2 Tooba.Localization.Infrastructure.Bootstrap.LanguageBootstrapHostedService=1
+
+== marker counts over the whole stdout ==
+OCC[platform.edition.unconfigured]=0
+OCC[Cannot resolve scoped service]=0
+OCC[from root provider]=0
+OCC[catalog.attribute.code.duplicate]=0
+OCC[catalog-dev.attribute.incompatible-reuse]=0
+OCC[Development seed requires Active tenant]=0
+OCC[Now listening on]=3
+OCC[Application started]=3
+
+== lifecycle lines (message text only) ==
+line 1795: Now listening on: http://127.0.0.1:5398
+line 1796: Application started. Press Ctrl\u002BC to shut down.
+line 1797: Hosting environment: Development
+line 1798: Content root path: D:\\Users\\User\\source\\repos\\SarvNewVer\\.tmp-117-host-out
+
+== non-information lines in the whole run ==
+line 1115: WARNING: The query uses a row limiting operator (\u0027Skip\u0027/\u0027Take\u0027) without an \u0027OrderBy\u0027 operator. This may lead to unpredictable results. If the \u0027Distinct\u0027 operator is used after \u0027OrderBy\u0027, then make sure to use the \u0027OrderBy\u0027 operator after \u0027Distinct\u0027 as the ordering would otherwise get erased.
+line 1457: WARNING: The query uses the \u0027First\u0027/\u0027FirstOrDefault\u0027 operator without \u0027OrderBy\u0027 and filter operators. This may lead to unpredictable results.
+line 1459: WARNING: The query uses the \u0027First\u0027/\u0027FirstOrDefault\u0027 operator without \u0027OrderBy\u0027 and filter operators. This may lead to unpredictable results.
+line 1860: WARNING: Outbox claim failed for one module. TenantId=store-alpha Schema=returns ErrorType=PostgresException [ErrorType=PostgresException]
+line 1861: WARNING: Outbox claim failed for one module. TenantId=store-alpha Schema=settlement ErrorType=PostgresException [ErrorType=PostgresException]
+
+== legacy bootstrap stage evidence (statement shapes only; parameters never printed) ==
+INSERT INTO catalog.template_products: first seen at stdout line 1659 (occurrences: 450)
+INSERT INTO catalog.store_templates: first seen at stdout line 1659 (occurrences: 30)
+INSERT INTO catalog.store_landing_pages: first seen at stdout line 1455 (occurrences: 9)
+INSERT INTO catalog.store_menus: first seen at stdout line 1547 (occurrences: 3)
+
+== stderr verbatim (empty means no unhandled exception) ==
+(empty)

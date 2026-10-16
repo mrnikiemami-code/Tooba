@@ -1,0 +1,11 @@
+﻿== cleanup (TB-117) ==
+capturedUtc=2026-10-16T06:05:52.5632073+03:30
+isolated_host_pid=15724 alive_after_run=False
+listeners_on_5398=0
+docker_rm=tooba-117-scratch-pg
+listeners_on_55450_after_container_removal=0
+task117_containers_remaining=0
+prior_scratch_containers_present=0
+postedgres_containers_untouched=sarv-jaeger,sarv-redis,rabbitmq,postgres-db
+tmp_117_run_exists=False tmp_117_host_out_exists=False
+shared_host_5088_alive=True shared_next_3000_alive=True
