@@ -1,0 +1,38 @@
+capturedUtc=2026-10-16T06:10:19.436Z
+isolatedBase=http://127.0.0.1:5404
+commerce.status=200
+commerce.body={"edition":"SingleStore","deploymentId":"isolated-134","tenantId":"store-alpha","connectionReference":"tenant-134-scratch","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR","traceId":"c7c91994f1c33165283e5402b13b892c"}
+dev_context.status=200
+dev_context.actor=01a14353-4df0-7000-866c-e4f88049842c
+policy_before.status=200
+policy_before.body={"policy":"AuthenticatedOnly","cartAnonymousAllowed":true,"checkoutAuthenticationRequired":true}
+policy_put.status=200
+policy_put.status=200
+policy_after.status=200
+policy_after.body={"policy":"GuestAllowed","cartAnonymousAllowed":true,"checkoutAuthenticationRequired":false}
+one_level_admin.status=200
+catalog.gate=Enabled
+catalog.ready=true
+catalog.rowCount=7
+catalog.row[post:express]=name="پیشتاز" isActive=true
+catalog.row[post:standard]=name="معمولی" isActive=true
+catalog.row[tipax:express]=name="پیشتاز" isActive=true
+catalog.row[tipax:standard]=name="معمولی" isActive=true
+catalog.row[snapp_courier]=name="اسنپ / پیک آنلاین" isActive=true
+catalog.row[store_courier]=name="پیک فروشگاه" isActive=true
+catalog.row[in_person]=name="تحویل حضوری" isActive=true
+product_detail.status=200
+product.slug=workspace-live-shirt
+product.title=پیراهن مردانه لینن
+product.taxCategoryLabel=استاندارد
+offer.primary.offerId=01a14353-4cab-7000-96ed-02d62f30a0e1
+offer.primary.sellerPartyId=01a14353-4ca3-7000-bfcb-7d2f8da0a847
+offer.primary.sellerDisplayName=دیجی‌استایل نمونه
+offer.primary.sellerSku=DGS-LN-01
+offer.primary.amount=1790000
+offer.alternate.count=1
+offer.alternate[فروشگاه آرمان].offerId=01a14353-4ca6-7000-a2c1-14a5bfd8e2fb
+offer.alternate[فروشگاه آرمان].amount=1850000
+offer.alternate[فروشگاه آرمان].inStock=true
+product.distinctSellerPartyIds=1
+uncommittedSecretsFile=.tmp-134-run/api-prep.json (never committed)

@@ -1,0 +1,82 @@
+TB-SHIPPING-ONE-LEVEL-TABS-134 — ISOLATED IMPLEMENTATION + BROWSER ACCEPTANCE
+capturedUtc=2026-10-16T06:32:00Z  (measured wall-clock window 09:26–10:04 local, base SHA 2f9f39cf)
+isolatedHost=http://127.0.0.1:5404   isolatedFrontend=http://127.0.0.1:3104 (TOOBA_HOST_ORIGIN -> isolated Host)
+provenance=/__platform-commerce => tenantId=store-alpha connectionReference=tenant-134-scratch deploymentId=isolated-134
+frontendBindingDiscriminator=GET :3104/v1/storefront/checkout-identity-policy => policy=GuestAllowed, proving the
+  proxy was bound to the scratch Host and not to the shared :5088 listener.
+
+LAUNCH_ACCOUNTING (honest, bounded)
+PUBLISH: dotnet publish src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug -o .tmp-134-host-out -> exit 0 (~60s).
+SCRATCH: disposable container tooba-tb134-pg (postgres:16-alpine, port 55457) with BOTH scratch databases
+  (tooba_134_scratch + tooba_134_messaging) created BEFORE launch.
+HOST_LAUNCH_COUNT=1 -> healthy /health after 36s, no watchdog hit, no relaunch.
+FRONTEND_LAUNCH_COUNT=1 -> ready on :3104 (next dev bound to the isolated Host).
+isolation-guard.json: failClosed=true (single Active tenant, scratch reference/DB/port, no shared alpha DB/ref/port,
+  ShippingRateAuthority/OperationalShadow absent, ShippingOneLevelCatalog.Enabled=true in the disposable overlay only).
+
+MISSION A — ROOT CAUSE (source, cited)
+StorefrontShippingService.ProjectAsync accepted a persisted draft only when
+`methods.Any(m => m.MethodCode == draft.ShippingMethodCode)`. CartShippingDraft.AddShippingGroups sets
+`ShippingMethodCode = multiGroup ? string.Empty : first.MethodCode` — so a multi-seller draft ALWAYS has an empty
+shorthand and the guard was always false: draft discarded + "انتخاب ارسال دیگر معتبر نیست…" + minimumDeliveryDate
+null + deliveryDates empty on every cold reload. Single-group legacy drafts were unaffected (non-empty shorthand).
+Persisted row observed in the scratch DB confirms the empty shorthand (see below).
+
+MISSION A — REPAIR (minimal, Order-owned, read-only)
+NEW  Storefront/Shipping/Recovery/StorefrontShippingDraftRecovery.cs — SelectedMethodCodes (stable groups, else
+     legacy shorthand), IsStillValid (every selected method still eligible; canonical IsDestinationAllowed when the
+     submitted province differs; every persisted group still belongs to a seller of THIS cart), ResolveProjectedLeadDays
+     (latest today-authoritative lead time of the saved groups, else null), RevalidationMessage (unchanged text).
+EDIT Storefront/Services/StorefrontShippingService.cs — draft revalidation now goes through that policy (case-insensitive
+     method-code comparison, consistent with SaveSelectionAsync) and a grouped draft without methodCode now gets a
+     fresh server-side minimumDeliveryDate from the saved groups' latest promise (canonical calculator, no client math).
+No schema/migration/route/endpoint/DI/inter-module contract/CSS change; no frontend file changed.
+
+MISSION B — REAL TWO-SELLER GUEST CART (isolated scratch, real browser)
+product=workspace-live-shirt (پیراهن مردانه لینن); two genuine seller offers added by real PDP actions:
+  دیجی‌استایل نمونه offer=01a14353-4cab-7000-96ed-02d62f30a0e1 amount=1790000 (now primary)
+  فروشگاه آرمان    offer=01a14353-4ca6-7000-a2c1-14a5bfd8e2fb amount=1850000
+guest cart sessionStorage tooba.storefront.cartId=01a14355-bacc-7000-b3b0-6b379a5f7801
+cart: cartVersion=5 itemCount=2 sellerCount=2 subtotalExclusiveOfTax=3640000
+address filled: رضا محمدی / 09121234567 / تهران / تهران / خیابان ولیعصر پلاک ۱۲ / 1234567890
+group methods: group[دیجی‌استایل نمونه]=post:express, group[فروشگاه آرمان]=tipax:standard
+delivery date chips = 6, ["2026-10-20".."2026-10-25"], earliest 2026-10-20 auto-selected
+delivery windows = 4, chosen "۹ صبح تا ۱۲ ظهر"
+grouped fees = ۲۰۰٬۰۰۰ + ۱۸۰٬۰۰۰ = ۳۸۰٬۰۰۰ ریال
+Continue BEFORE slot = disabled; AFTER slot = ENABLED
+ONE Continue click -> /fa/payment?cartId=01a14355-bacc-7000-b3b0-6b379a5f7801
+  payment summary: روش ارسال: گیرنده: رضا محمدی — تهران · هزینه ارسال: ۳۸۰٬۰۰۰ ریال · قابل پرداخت: ۴٬۳۴۷٬۶۰۰ ریال
+  وضعیت پرداخت: در انتظار پرداخت · "این سفارش هنوز ثبت نشده است." (no order/reservation/capture)
+
+MISSION B — THE ACCEPTANCE CASE (back navigation + COLD reload of /fa/shipping)
+navigated to /fa/shipping with a FULL page load (cold) after reaching payment, then observed:
+  address restored: firstName=رضا lastName=محمدی mobile=09121234567 province=تهران city=تهران
+    address=خیابان ولیعصر پلاک ۱۲ postalCode=1234567890
+  group methods restored (selected tiles): post:express (دیجی‌استایل نمونه) + tipax:standard (فروشگاه آرمان)
+  delivery date chips = 6, selected = shipping-date-2026-10-20
+  delivery window restored: ۹ صبح تا ۱۲ ظهر
+  grouped fees restored: ۲۰۰٬۰۰۰ + ۱۸۰٬۰۰۰ ریال
+  Continue = ENABLED
+  revalidation notice "دیگر معتبر نیست" = ABSENT (was always present before this repair)
+NO-SIDE-EFFECT PROOF on the reload (performance resource entries of the whole page lifecycle):
+  /v1/storefront/shipping/selection = 0, /v1/storefront/shipping/commit = 0, checkout submit = 0,
+  start-payment = 0, payment capture = 0, cart clear = 0; only the read-only
+  GET /v1/storefront/checkout-identity-policy is recorded.
+SCREENSHOT: shipping-reload-restored-134.png (this task's own isolated scratch run).
+
+DB (scratch only, quoted schema, read-only query) — the persisted truth this repair now reads correctly
+  order.cart_shipping_drafts : cart_id=01a14355-bacc-… shipping_method_code="" (EMPTY — the root cause)
+    selected_delivery_date=2026-10-20 selected_delivery_time_window=9-12 shipping_amount=380000.00
+    province_name=تهران city_name=تهران minimum_delivery_date=2026-10-20
+  order.cart_shipping_groups : (دیجی‌استایل نمونه, post:express, 200000.00, 2026-10-20, 9-12)
+                               (فروشگاه آرمان,   tipax:standard, 180000.00, 2026-10-20, 9-12)
+  cart.carts : cart_id=01a14355-bacc-… status=Active version=5  (unchanged by the reload)
+
+NON-CLAIMS (must not be read as accepted)
+ - Payment is NOT proven: the payment page was reached and read; no payment method, authorization, capture, order or
+   reservation was created. Checkout/production readiness is NOT claimed.
+ - Single seller with two independent methods remains unproven (no UI path), as in TB-133.
+ - The legacy single-seller reload path is proven by focused source tests only, not by a new runtime journey.
+ - Visual acceptance is NOT claimed: one bounded screenshot of the restored grouped selection, no parity score.
+ - Only ONE reload cycle was exercised; no soak/stress and no concurrent multi-tab race stress.
+ - Merchant allocation/funding policy and the one-level migration/parity proof remain OPEN (unchanged).

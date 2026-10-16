@@ -10,6 +10,7 @@ using Tooba.Localization.Contracts.Ports;
 using Tooba.Order.Application.Storefront.Geography;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Ports;
+using Tooba.Order.Application.Storefront.Shipping.Recovery;
 using Tooba.Order.Contracts.Storefront;
 using Tooba.Order.Domain;
 using Tooba.Order.Domain.Checkout;
@@ -79,15 +80,17 @@ public sealed class StorefrontShippingService
         var revalidationMessage = (string?)null;
         if (draft is not null)
         {
-            var stillValid = methods.Any(m => m.MethodCode == draft.ShippingMethodCode)
-                && (string.IsNullOrWhiteSpace(provinceName)
-                    || string.Equals(provinceName, draft.ProvinceName, StringComparison.OrdinalIgnoreCase)
-                    || StorefrontShippingCalculator.IsDestinationAllowed(
-                        StorefrontShippingCalculator.ResolveRate(draft.ShippingMethodCode, _shippingOptions),
-                        draft.ProvinceName));
+            // بازیابی فقط-خواندنی: سبد چندفروشنده‌ای shorthand خالی دارد، پس اعتبار انتخاب ذخیره‌شده از
+            // گروه‌های پایدار همان پیش‌نویس سنجیده می‌شود (نه از یک کد روش خالی). هیچ نوشتنی رخ نمی‌دهد.
+            var stillValid = StorefrontShippingDraftRecovery.IsStillValid(
+                draft,
+                methods,
+                provinceName,
+                cart.Lines.Select(x => x.SellerPartyId).Distinct().ToArray(),
+                _shippingOptions);
             if (!stillValid)
             {
-                revalidationMessage = "انتخاب ارسال دیگر معتبر نیست؛ لطفاً دوباره انتخاب کنید.";
+                revalidationMessage = StorefrontShippingDraftRecovery.RevalidationMessage;
                 draft = null;
             }
         }
@@ -102,6 +105,15 @@ public sealed class StorefrontShippingService
         DateOnly? minDate = selected is null
             ? null
             : StorefrontShippingCalculator.ComputeMinimumDeliveryDate(today, maxPrep, selected.LeadDays);
+
+        // سبد چندگروهیِ ذخیره‌شده بدون methodCode: حداقل تحویل نباید خالی بماند، وگرنه تاریخ بازیابی‌شده
+        // هرگز با وعدهٔ واقعی سرور سنجیده نمی‌شود. مقدار از دیرترین روز آماده‌سازی گروه‌های ذخیره‌شده و
+        // همان ماشین‌حساب canonical ساخته می‌شود؛ هیچ تاریخ یا محاسبهٔ تقویمی در کلاینت انجام نمی‌شود.
+        if (selected is null && draft is not null
+            && StorefrontShippingDraftRecovery.ResolveProjectedLeadDays(draft, methods) is int groupedLeadDays)
+        {
+            minDate = StorefrontShippingCalculator.ComputeMinimumDeliveryDate(today, maxPrep, groupedLeadDays);
+        }
         var dates = minDate is DateOnly min
             ? StorefrontShippingCalculator.BuildDeliveryDates(min, _shippingOptions.DeliveryHorizonDays)
                 .Select(d => new StorefrontDeliveryDateOption(
