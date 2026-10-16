@@ -106,6 +106,7 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<ICustomerCheckoutOwnershipReader, CustomerCheckoutOwnershipBridge>();
         services.AddScoped<IOrderGridEnrichmentReader, OrderGridEnrichmentBridge>();
         services.AddScoped<IOrderReturnReader, OrderReturnBridge>();
+        services.AddScoped<Tooba.Order.Contracts.Settlement.IOrderShippingGroupSettlementReader, Integrations.Settlement.OrderShippingGroupSettlementBridge>();
         services.AddScoped<IOrderNotificationReader, OrderNotificationBridge>();
         services.AddScoped<ICheckoutPaymentAccessReader, CheckoutPaymentAccessBridge>();
         services.AddScoped<Tooba.Order.Contracts.Payments.ICartPaymentQuoteReader, Integrations.Payment.CartPaymentQuoteBridge>();

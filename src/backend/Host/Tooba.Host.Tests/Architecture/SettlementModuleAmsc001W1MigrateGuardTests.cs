@@ -54,8 +54,8 @@ public sealed class SettlementModuleAmsc001W1MigrateGuardTests
     [Fact]
     public void Declared_code_catalog_splits_http_reachable_from_platform_faults()
     {
-        // 17 HTTP-reachable outcome codes + 1 platform-side outbox fault = 18 declared.
-        Assert.Equal(17, SettlementErrorCodes.HttpReachable.Count);
+        // 22 HTTP-reachable outcome codes + 1 platform-side outbox fault = 23 declared.
+        Assert.Equal(22, SettlementErrorCodes.HttpReachable.Count);
         Assert.Equal(1, SettlementErrorCodes.PlatformFaults.Count);
 
         Assert.True(SettlementErrorCodes.IsHttpReachable(SettlementErrorCodes.AccountMissing));
@@ -85,7 +85,7 @@ public sealed class SettlementModuleAmsc001W1MigrateGuardTests
             .Select(f => (string)f.GetRawConstantValue()!)
             .ToArray();
 
-        Assert.Equal(18, declared.Length);
+        Assert.Equal(23, declared.Length);
         Assert.Equal(declared.Length, declared.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(
             declared.OrderBy(x => x, StringComparer.Ordinal),
@@ -446,6 +446,7 @@ public sealed class SettlementModuleAmsc001W1MigrateGuardTests
             [
                 "20260827030000_InitialSettlement.Designer.cs",
                 "20260827030000_InitialSettlement.cs",
+                "20261016140000_AddSettlementShippingGroupFees.cs",
                 "SettlementDbContextModelSnapshot.cs",
             ],
             files);

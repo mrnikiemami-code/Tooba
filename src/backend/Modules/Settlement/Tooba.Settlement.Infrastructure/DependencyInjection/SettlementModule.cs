@@ -52,6 +52,7 @@ public sealed class SettlementModule : IToobaModule
         services.AddScoped<ISettlementOrderReader, SettlementOrderBridge>();
         services.AddScoped<ISettlementPaymentReader, SettlementPaymentBridge>();
         services.AddScoped<ISettlementReturnsReader, SettlementReturnsBridge>();
+        services.AddScoped<ISettlementShippingGroupReader, SettlementShippingGroupBridge>();
 
         if (IsMarketplaceEdition(configuration))
         {

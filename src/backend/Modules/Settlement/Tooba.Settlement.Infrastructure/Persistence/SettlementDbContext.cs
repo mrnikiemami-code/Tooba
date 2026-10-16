@@ -53,6 +53,9 @@ public sealed class SettlementDbContext : DbContext
     /// <summary>inbox refund.</summary>
     public DbSet<SettlementRefundInboxRecord> RefundInbox => Set<SettlementRefundInboxRecord>();
 
+    /// <summary>حساب‌داری هزینهٔ ارسال per-group (charge مشتری؛ تخصیص تجاری UNSPECIFIED).</summary>
+    public DbSet<ShippingGroupFeeAllocation> ShippingGroupFees => Set<ShippingGroupFeeAllocation>();
+
     /// <summary>Outbox همین ماژول.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -160,6 +163,34 @@ public sealed class SettlementDbContext : DbContext
             entity.ToTable("refund_inbox");
             entity.HasKey(x => x.EventId);
             entity.Property(x => x.EventId).ValueGeneratedNever();
+        });
+        modelBuilder.Entity<ShippingGroupFeeAllocation>(entity =>
+        {
+            entity.ToTable("shipping_group_fees");
+            entity.HasKey(x => x.ShippingGroupFeeId);
+            entity.Property(x => x.ShippingGroupFeeId).ValueGeneratedNever();
+            entity.Property(x => x.MethodCode).HasMaxLength(64);
+            entity.Property(x => x.ServiceCode).HasMaxLength(64);
+            entity.Property(x => x.OptionCode).HasMaxLength(64);
+            entity.Property(x => x.AcceptedQuoteVersion).HasMaxLength(32);
+            entity.Property(x => x.CustomerChargeAmount).HasPrecision(19, 4);
+            entity.Property(x => x.Currency).HasMaxLength(8);
+            entity.Property(x => x.AllocationState).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.AllocationPolicyVersion).HasMaxLength(64);
+            entity.Property(x => x.AllocationPolicyReference).HasMaxLength(128);
+            entity.Property(x => x.CarrierPayableAmount).HasPrecision(19, 4);
+            entity.Property(x => x.SellerShareAmount).HasPrecision(19, 4);
+            entity.Property(x => x.MarketplaceShareAmount).HasPrecision(19, 4);
+            entity.Property(x => x.ShippingDiscountAmount).HasPrecision(19, 4);
+            entity.Property(x => x.ShippingTaxAmount).HasPrecision(19, 4);
+            entity.Property(x => x.FunderAdjustmentAmount).HasPrecision(19, 4);
+            entity.Property(x => x.FunderReference).HasMaxLength(128);
+            entity.Property(x => x.RecordKind).HasConversion<string>().HasMaxLength(16);
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(160);
+            entity.HasIndex(x => x.IdempotencyKey).IsUnique();
+            entity.HasIndex(x => new { x.PaymentId, x.ShippingGroupId });
+            entity.HasIndex(x => x.ShippingGroupId);
+            entity.HasIndex(x => x.SellerPartyId);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

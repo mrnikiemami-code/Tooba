@@ -21,5 +21,10 @@
   <data name="settlement.unconfirm.payout_completed" xml:space="preserve"><value>Cannot unconfirm accrual after completed payout.</value></data>
   <data name="settlement.cancel.payout_completed" xml:space="preserve"><value>Cannot cancel accrual after completed payout.</value></data>
   <data name="settlement.restore.payout_completed" xml:space="preserve"><value>Cannot restore after completed payout.</value></data>
+  <data name="settlement.shipping_group.identity_required" xml:space="preserve"><value>Shipping group identity is required.</value></data>
+  <data name="settlement.shipping_group.charge_invalid" xml:space="preserve"><value>Shipping group charge is invalid.</value></data>
+  <data name="settlement.shipping_group.charge_mismatch" xml:space="preserve"><value>Shipping group charge does not match the paid customer charge.</value></data>
+  <data name="settlement.shipping_group.allocation_policy_missing" xml:space="preserve"><value>Shipping group allocation policy is unspecified.</value></data>
+  <data name="settlement.shipping_group.not_seller_revenue" xml:space="preserve"><value>A shipping group fee is not seller revenue.</value></data>
   <data name="settlement.outbox.unmapped_event" xml:space="preserve"><value>The integration event type is not registered.</value></data>
 </root>

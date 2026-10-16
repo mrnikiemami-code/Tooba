@@ -48,6 +48,11 @@ public static class SettlementErrorCodes
         UnconfirmPayoutCompleted,
         CancelPayoutCompleted,
         RestorePayoutCompleted,
+        ShippingGroupIdentityRequired,
+        ShippingGroupChargeInvalid,
+        ShippingGroupChargeMismatch,
+        ShippingGroupAllocationPolicyMissing,
+        ShippingGroupNotSellerRevenue,
     };
 
     private static readonly HashSet<string> PlatformFaultCodes = new(StringComparer.Ordinal)
@@ -130,6 +135,21 @@ public static class SettlementErrorCodes
 
     /// <summary>Cannot restore after completed payout.</summary>
     public const string RestorePayoutCompleted = "settlement.restore.payout_completed";
+
+    /// <summary>Per-group shipping fee requires a stable shipping group identity, method and accepted quote marker.</summary>
+    public const string ShippingGroupIdentityRequired = "settlement.shipping_group.identity_required";
+
+    /// <summary>Per-group customer shipping charge and its currency must be provided and positive.</summary>
+    public const string ShippingGroupChargeInvalid = "settlement.shipping_group.charge_invalid";
+
+    /// <summary>Accepted per-group charge does not equal the customer charge actually paid for that group.</summary>
+    public const string ShippingGroupChargeMismatch = "settlement.shipping_group.charge_mismatch";
+
+    /// <summary>Commercial allocation policy is unspecified, so this group cannot be settled or paid out.</summary>
+    public const string ShippingGroupAllocationPolicyMissing = "settlement.shipping_group.allocation_policy_missing";
+
+    /// <summary>A shipping group fee is never seller-order merchandise revenue.</summary>
+    public const string ShippingGroupNotSellerRevenue = "settlement.shipping_group.not_seller_revenue";
 
     /// <summary>Outbox registration has no mapping for the given integration event type (platform fault).</summary>
     public const string OutboxUnmapped = "settlement.outbox.unmapped_event";

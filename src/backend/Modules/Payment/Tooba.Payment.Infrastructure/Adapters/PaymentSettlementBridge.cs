@@ -43,4 +43,21 @@ public sealed class PaymentSettlementBridge : IPaymentSettlementReader
             .Select(x => new PaymentSettlementAllocationSnapshot(x.SellerOrderId, x.AllocatedAmount, x.Currency))
             .ToArray();
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<PaymentSettlementShippingGroupAllocationSnapshot>> GetShippingGroupAllocationsAsync(
+        Guid paymentId,
+        CancellationToken cancellationToken)
+    {
+        var allocations = await _db.Allocations.AsNoTracking()
+            .Where(x => x.PaymentId == paymentId)
+            .ToListAsync(cancellationToken);
+        return allocations
+            .Where(x => x.TargetKind == PaymentAllocationTargetKind.StoreShippingGroup)
+            .Select(x => new PaymentSettlementShippingGroupAllocationSnapshot(
+                x.SellerOrderId,
+                x.AllocatedAmount,
+                x.Currency))
+            .ToArray();
+    }
 }

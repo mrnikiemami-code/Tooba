@@ -324,6 +324,9 @@ public sealed class SettlementFoundationTests : IAsyncLifetime
             new SettlementOrderBridge(new OrderReturnBridge(orderDb)),
             new SettlementPaymentBridge(new PaymentSettlementBridge(paymentDb)),
             new SettlementReturnsBridge(new ReturnSettlementBridge(returnsDb)),
+            new SettlementShippingGroupBridge(
+                new Tooba.Order.Infrastructure.Integrations.Settlement.OrderShippingGroupSettlementBridge(orderDb),
+                new PaymentSettlementBridge(paymentDb)),
             new FakePayoutGateway(),
             new SettlementInstrumentation(),
             new SystemUtcClock(),

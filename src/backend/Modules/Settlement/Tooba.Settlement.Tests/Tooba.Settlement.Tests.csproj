@@ -8,6 +8,10 @@
     <AssemblyName>Tooba.Settlement.Tests</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
@@ -20,6 +24,8 @@
     <ProjectReference Include="..\Tooba.Settlement.Application\Tooba.Settlement.Application.csproj" />
     <ProjectReference Include="..\Tooba.Settlement.Infrastructure\Tooba.Settlement.Infrastructure.csproj" />
     <ProjectReference Include="..\Tooba.Settlement.Endpoints\Tooba.Settlement.Endpoints.csproj" />
+    <ProjectReference Include="..\..\Order\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
+    <ProjectReference Include="..\..\Payment\Tooba.Payment.Contracts\Tooba.Payment.Contracts.csproj" />
     <ProjectReference Include="..\..\Party\Tooba.Party.Contracts\Tooba.Party.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
   </ItemGroup>

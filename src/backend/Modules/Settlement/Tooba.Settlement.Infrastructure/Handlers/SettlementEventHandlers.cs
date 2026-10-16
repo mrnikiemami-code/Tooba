@@ -16,12 +16,20 @@ public sealed class SettlementPaymentSucceededHandler : IIntegrationEventHandler
     public SettlementPaymentSucceededHandler(SettlementDirectory settlement) => _settlement = settlement;
 
     /// <inheritdoc />
-    public Task HandleAsync(PaymentSucceededIntegrationEvent integrationEvent, CancellationToken cancellationToken) =>
-        _settlement.AccrueFromPaymentAsync(
+    public async Task HandleAsync(PaymentSucceededIntegrationEvent integrationEvent, CancellationToken cancellationToken)
+    {
+        // حساب‌داری هزینهٔ ارسال per-group پیش از accrual ثبت می‌شود تا ناسازگاری charge پذیرفتهٔ گروه با
+        // مبلغ پرداخت‌شده، fail-closed باشد و هیچ اعتبار merchandise فروشنده ساخته نشود.
+        await _settlement.RecordShippingGroupFeesAsync(
+            integrationEvent.PaymentId,
+            integrationEvent.SellerOrderIds,
+            cancellationToken);
+        await _settlement.AccrueFromPaymentAsync(
             integrationEvent.PaymentId,
             integrationEvent.Metadata.EventId,
             integrationEvent.SellerOrderIds,
             cancellationToken);
+    }
 }
 
 /// <summary>

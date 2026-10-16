@@ -14,13 +14,14 @@ namespace Tooba.Settlement.Infrastructure.Directories;
 /// <summary>
 /// ارکستراسیون تسویه و payout در schema settlement.
 /// </summary>
-public sealed class SettlementDirectory : ISettlementDirectory
+public sealed partial class SettlementDirectory : ISettlementDirectory
 {
     private readonly SettlementDbContext _db;
     private readonly ISettlementUseCaseGuard _guard;
     private readonly ISettlementOrderReader _orders;
     private readonly ISettlementPaymentReader _payments;
     private readonly ISettlementReturnsReader _returns;
+    private readonly ISettlementShippingGroupReader _shippingGroups;
     private readonly IPayoutGateway _payoutGateway;
     private readonly SettlementInstrumentation _telemetry;
     private readonly IClock _clock;
@@ -35,6 +36,7 @@ public sealed class SettlementDirectory : ISettlementDirectory
         ISettlementOrderReader orders,
         ISettlementPaymentReader payments,
         ISettlementReturnsReader returns,
+        ISettlementShippingGroupReader shippingGroups,
         IPayoutGateway payoutGateway,
         SettlementInstrumentation telemetry,
         IClock clock,
@@ -45,6 +47,7 @@ public sealed class SettlementDirectory : ISettlementDirectory
         _orders = orders;
         _payments = payments;
         _returns = returns;
+        _shippingGroups = shippingGroups;
         _payoutGateway = payoutGateway;
         _telemetry = telemetry;
         _clock = clock;

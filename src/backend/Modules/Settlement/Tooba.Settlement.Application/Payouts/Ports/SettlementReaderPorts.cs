@@ -62,10 +62,42 @@ public interface ISettlementPaymentReader
 }
 
 /// <summary>
-/// خواندن snapshot refund بدون DbContext Returns.
+/// snapshot خواندن refund بدون DbContext Returns.
 /// </summary>
 public interface ISettlementReturnsReader
 {
     /// <summary>snapshot refund را برمی‌گرداند.</summary>
     Task<SettlementRefundSnapshot?> GetAsync(Guid returnRequestId, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// هزینهٔ ارسال یک گروه پایدار سفارش: charge پذیرفته‌شدهٔ Order به همراه مبلغ واقعی پرداخت‌شدهٔ Payment
+/// برای باز conciliation. هیچ سهم carrier/فروشنده/فروشگاه اینجا ساخته نمی‌شود.
+/// </summary>
+public sealed record SettlementShippingGroupFeeSnapshot(
+    Guid ShippingGroupId,
+    Guid CheckoutId,
+    Guid SellerOrderId,
+    Guid SellerPartyId,
+    string MethodCode,
+    string? ServiceCode,
+    string? OptionCode,
+    string AcceptedQuoteVersion,
+    decimal CustomerCharge,
+    decimal PaidShippingCharge,
+    string Currency);
+
+/// <summary>
+/// خواندن گروه‌های ارسال پذیرفته‌شدهٔ یک پرداخت برای ثبت هزینهٔ ارسال per-group در Settlement.
+/// </summary>
+public interface ISettlementShippingGroupReader
+{
+    /// <summary>
+    /// snapshot گروه‌های پایدار معتبر پرداخت را برمی‌گرداند؛ ناسازگاری charge پذیرفته‌شده و مبلغ
+    /// پرداخت‌شده fail-closed است.
+    /// </summary>
+    Task<IReadOnlyList<SettlementShippingGroupFeeSnapshot>> GetForPaymentAsync(
+        Guid paymentId,
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken);
 }

@@ -14,6 +14,16 @@ public sealed record PaymentSettlementSnapshot(
     string Currency,
     bool Succeeded);
 
+/// <summary>
+/// Per-group shipping charge actually allocated by the customer payment for one stable
+/// <c>ShippingGroupId</c>. It is the customer-facing charge only: never a carrier cost, seller or
+/// marketplace revenue share.
+/// </summary>
+public sealed record PaymentSettlementShippingGroupAllocationSnapshot(
+    Guid ShippingGroupId,
+    decimal AllocatedAmount,
+    string Currency);
+
 /// <summary>Cross-module payment read for Settlement accrual.</summary>
 public interface IPaymentSettlementReader
 {
@@ -22,6 +32,14 @@ public interface IPaymentSettlementReader
 
     /// <summary>Reads seller-order allocations for a payment.</summary>
     Task<IReadOnlyList<PaymentSettlementAllocationSnapshot>> GetAllocationsAsync(
+        Guid paymentId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Reads per-group shipping charge allocations for a payment. A legacy ungrouped order keeps its
+    /// single <c>StoreShipping</c> sentinel allocation and therefore yields no group rows here.
+    /// </summary>
+    Task<IReadOnlyList<PaymentSettlementShippingGroupAllocationSnapshot>> GetShippingGroupAllocationsAsync(
         Guid paymentId,
         CancellationToken cancellationToken);
 }

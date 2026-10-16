@@ -217,13 +217,13 @@ public sealed class SettlementModuleAmsc001W3CertGuardTests
         Assert.Contains("ContractOperationException", seam, StringComparison.Ordinal);
 
         // Single canonical stable-code home with the reachability split preserved.
-        Assert.Equal(17, SettlementErrorCodes.HttpReachable.Count);
+        Assert.Equal(22, SettlementErrorCodes.HttpReachable.Count);
         Assert.Equal(1, SettlementErrorCodes.PlatformFaults.Count);
-        Assert.Equal(18, SettlementErrorCodes.HttpReachable.Count + SettlementErrorCodes.PlatformFaults.Count);
+        Assert.Equal(23, SettlementErrorCodes.HttpReachable.Count + SettlementErrorCodes.PlatformFaults.Count);
 
         var contributor = File.ReadAllText(Path.Combine(
             root, ModuleRoot, "Tooba.Settlement.Infrastructure/Errors/SettlementErrorCatalogContributor.cs"));
-        Assert.Equal(17, Regex.Matches(contributor, @"D\(SettlementErrorCodes\.").Count);
+        Assert.Equal(22, Regex.Matches(contributor, @"D\(SettlementErrorCodes\.").Count);
         Assert.DoesNotContain("OutboxUnmappedEvent", contributor, StringComparison.Ordinal);
 
         // Bilingual resources: one entry per declared code in both cultures.
@@ -232,7 +232,7 @@ public sealed class SettlementModuleAmsc001W3CertGuardTests
             .Where(f => f.IsLiteral && f.FieldType == typeof(string))
             .Select(f => (string)f.GetRawConstantValue()!)
             .ToArray();
-        Assert.Equal(18, declared.Length);
+        Assert.Equal(23, declared.Length);
         foreach (var culture in new[] { "SettlementErrors.resx", "SettlementErrors.fa.resx" })
         {
             var resx = File.ReadAllText(Path.Combine(root, ModuleRoot, "Tooba.Settlement.Contracts/Resources", culture));
@@ -332,6 +332,7 @@ public sealed class SettlementModuleAmsc001W3CertGuardTests
             [
                 "20260827030000_InitialSettlement.Designer.cs",
                 "20260827030000_InitialSettlement.cs",
+                "20261016140000_AddSettlementShippingGroupFees.cs",
                 "SettlementDbContextModelSnapshot.cs",
             ],
             migrations);

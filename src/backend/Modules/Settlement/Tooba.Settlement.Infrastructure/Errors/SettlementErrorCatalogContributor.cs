@@ -47,6 +47,16 @@ public sealed class SettlementErrorCatalogContributor : IErrorCatalogContributor
             "Cannot cancel accrual after completed payout."),
         D(SettlementErrorCodes.RestorePayoutCompleted, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Cannot restore after completed payout."),
+        D(SettlementErrorCodes.ShippingGroupIdentityRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Shipping group identity is required."),
+        D(SettlementErrorCodes.ShippingGroupChargeInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Shipping group charge is invalid."),
+        D(SettlementErrorCodes.ShippingGroupChargeMismatch, ErrorClassification.Business, StatusCodes.Status409Conflict,
+            "Shipping group charge does not match the paid customer charge."),
+        D(SettlementErrorCodes.ShippingGroupAllocationPolicyMissing, ErrorClassification.Business, StatusCodes.Status409Conflict,
+            "Shipping group allocation policy is unspecified."),
+        D(SettlementErrorCodes.ShippingGroupNotSellerRevenue, ErrorClassification.Business, StatusCodes.Status409Conflict,
+            "A shipping group fee is not seller revenue."),
     ];
 
     private static ErrorDescriptor D(
