@@ -1,0 +1,87 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173
+Parent-Task: TB-SHIPPING-NEW-METHOD-BROWSER-PAYMENT-172
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Protocol: BRIDGE-WAKE-V1
+Status: PASS
+Base-SHA: 1f5edc29db4a5ba0a7ac523e6b920981186a7103
+Code-Commit-SHA: c0188f9d15e9aba0ea7a0cbca1ce8d8d131c1d7b
+Evidence-Commit: this commit (HEAD == origin/main)
+Automatic-Next-Task: NONE
+
+SUMMARY
+The existing method-specific «تعرفه و پوشش» tab now reads, edits, saves and reopens the
+authoritative per-method geographic coverage mode (TB-161) through the existing Shipping owner
+endpoints, with a compact RTL section and no new nested configuration surface. No backend change
+was required: PUT /v1/admin/shipping-services/{serviceCode}/method-coverage, the option-scoped
+coverage-grant writer and ShippingRatesAndCoverageView.MethodCoverages already exist.
+
+CHANGED PATHS
+- src/frontend/app/admin/shipping-services/shipping-rates-coverage-api.ts
+- src/frontend/app/admin/shipping-services/shipping-one-level-rates-model.ts
+- src/frontend/app/admin/shipping-services/shipping-method-coverage-mode-section.tsx (new)
+- src/frontend/app/admin/shipping-services/shipping-one-level-rates-tab.tsx
+- src/frontend/app/admin/shipping-services/flat-method-detail-dialog.tsx
+- src/frontend/app/admin/shipping-services/shipping-method-coverage-mode.test.ts (new)
+- src/frontend/app/admin/shipping-services/shipping-one-level-rates-tab.test.ts
+- src/frontend/app/admin/shipping-services/shipping-rates-coverage-model.test.ts
+- docs/ai/tasks/TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173.task.md
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173/ (scripts, assertion matrix, HTTP trace, teardown, RESULT.md)
+
+BEHAVIOR
+- No declaration row => «بدون محدودیت مدیریتی (پیش‌فرض)» with an explicit boundary note (not
+  active, not financially ready, not a carrier/slot promise), and an explicit distinction from the
+  financial NeedsConfiguration gate and disabled activation.
+- Restricted => فقط مقصدهای مجاز همین روش؛ Restricted با صفر مجوز فعال خودِ روش، هشدار «هیچ مقصدی»
+  را نشان می‌دهد و هرگز به‌طور خودکار «بدون محدودیت» خوانده نمی‌شود.
+- Declaration identity is (serviceCode, optionCode) from the server-resolved binding; a malformed
+  declaration row or a wrong-service answer marks the whole declaration untrusted and blocks writes.
+- Grants are option-exact: a sibling option grant or a service-level grant is not inherited/shown.
+- Save = PUT method-coverage (and, when a destination is chosen, POST coverage-grant with the same
+  option), then a full server re-read; no optimistic success. Mode switch back to Unrestricted keeps
+  historical grants (auditable).
+- readOnly (View mode) blocks rate, grant and declaration writes; 401/403 surfaces as denied.
+
+VERIFICATION (all executed before this result)
+- npm run typecheck (src/frontend): PASS.
+- Focused frontend tests: 49 PASS (new suite 11/11): default vs declared vs untrusted mode,
+  sibling/service-level grant isolation, exact PUT body, invalid/denied response never success,
+  grant wire carries the method option, Restricted-empty guard, read-only/in-flight block, mapping
+  of declarations + untrusted flag, source wiring (dialog passes readOnly).
+- dotnet test Tooba.Shipping.Tests filter (coverage restriction, rate coverage admin, endpoint
+  ownership, strict owned-option rate): PASS 30/30.
+- Isolated owner-API acceptance (disposable PostgreSQL tooba-tb173-pg 127.0.0.1:55493 + private Host
+  127.0.0.1:5427, authority flag in the scratch overlay only): 20/20 PASS.
+  Evidence: assertion-matrix-173.json, http-trace-173.txt.
+  * default read: no declaration for tipax:standard and none for sibling tipax:express
+  * PUT method-coverage {optionCode:"standard",mode:"Restricted"} -> 200, persisted, stable id on re-save
+  * POST coverage-grants {serviceCode:"tipax",optionCode:"standard",scope:{countryId}} -> 200
+  * reload -> same Restricted declaration + same active destination; exactly one declaration row
+  * sibling tipax:express undeclared, zero grants; DB identity counts match (decl 1/0, grant 1/0)
+  * PUT Unrestricted -> reload shows Unrestricted, grant retained (1 row, not deleted)
+  * anonymous write -> 401 admin.actor.missing, state unchanged
+- Architecture guards: import-boundary and flat-folder PASS. Source-size guard fails only on four
+  files byte-identical to HEAD and already above baseline (category-admin-screen.tsx,
+  admin-landing-page-composer.tsx, storefront-landing-blocks.tsx, shared-composition-renderer.tsx) —
+  pre-existing drift, baseline repair out of scope. Touched files: rates tab 790 LOC (limit 800),
+  new section 260.
+
+GAPS (disclosed, not claimed)
+- Admin browser click-through (open Edit dialog, click radios, pick destination, save, reopen,
+  View-mode read-only) was NOT executed in this run; that surface is proven by typecheck + focused
+  tests + source guards. No screenshot is claimed.
+- Strict customer quote allowed/denied was proven by the existing focused backend tests, not by a
+  storefront cart leg in this run.
+
+ISOLATION / CLEANUP
+- Only task-owned 127.0.0.1:55493 / 127.0.0.1:5427 were used; :3122 was reserved and unused.
+- Shared :3000 / :5088 / :5432, tooba_alpha, store-alpha, shared RabbitMQ/Redis were never touched.
+- Committed appsettings authority flags remain false; the enabled overlay was disposable.
+- cleanup-173.txt: container removed, no Host process or listening port left.
+
+STOP_FOR_ARCHITECT: YES (await ACCEPT / REPAIR / BLOCK; no next task started)
+END_TOOBA_WORKER_RESULT
