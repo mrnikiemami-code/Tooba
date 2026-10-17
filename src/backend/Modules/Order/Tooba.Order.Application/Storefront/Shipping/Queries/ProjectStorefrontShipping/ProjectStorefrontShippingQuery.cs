@@ -39,9 +39,11 @@ public sealed class ProjectStorefrontShippingHandler(
         ProjectStorefrontShippingQuery request,
         CancellationToken cancellationToken)
     {
-        // مسیر قدیمی دقیقاً همان پنج ورودی قبلی را می‌گیرد؛ شهر و شناسه‌های مقصد عمداً به آن نمی‌رسند.
+        // مسیر قدیمی دقیقاً همان پنج ورودی قبلی را می‌گیرد؛ شهر و شناسه‌های مقصد فقط برای دروازهٔ
+        // نرخ مالک (پیش‌فرض خاموش) به سرویس می‌رسند و در حالت خاموش هیچ اثری ندارند.
         var result = await StorefrontOrderResult.ExecuteAsync(() => shipping.ProjectAsync(
-            request.CartId, request.GuestSecret, request.ProvinceName, request.MethodCode, request.Language, cancellationToken));
+            request.CartId, request.GuestSecret, request.ProvinceName, request.MethodCode, request.Language, cancellationToken,
+            request.CityName, request.Destination));
 
         // مشاهدهٔ سایه روی همان projection واقعی: فقط-مشاهده. نتیجهٔ بازگشتی دست‌نخورده است و
         // هیچ مقدار مشاهده‌شده به روش انتخاب، قیمت مشتری، promise یا draft راه نمی‌یابد.

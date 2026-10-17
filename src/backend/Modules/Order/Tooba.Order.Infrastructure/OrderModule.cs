@@ -121,6 +121,19 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Storefront.Services.StorefrontCheckoutService>();
         services.AddScoped<Application.Storefront.Services.StorefrontShippingService>();
 
+        // TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163: درز «نرخ مشتریِ مالک‌شدهٔ Shipping» با کلید
+        // مستقل و پیش‌فرض خاموش (نبود بخش تنظیمات = false). خاموش یعنی صفر فراخوانی به Shipping و همان
+        // قیمت/خطای قدیمی؛ روشن یعنی فقط نرخ authoritative گزینهٔ دقیق قیمت می‌دهد.
+        services.Configure<Application.Storefront.Shipping.OwnedRate.StorefrontShippingOwnedRateOptions>(
+            configuration.GetSection(
+                Application.Storefront.Shipping.OwnedRate.StorefrontShippingOwnedRateOptions.SectionName));
+        services.AddScoped(
+            sp => new Application.Storefront.Shipping.OwnedRate.StorefrontShippingOwnedRateResolver(
+                sp.GetService<Tooba.Shipping.Contracts.Rates.IShippingRateQuoteLookup>(),
+                sp.GetService<Tooba.Geography.Contracts.Places.IGeographyLookup>(),
+                sp.GetService<Microsoft.Extensions.Options.IOptions<
+                    Application.Storefront.Shipping.OwnedRate.StorefrontShippingOwnedRateOptions>>()));
+
         // مشاهدهٔ سایهٔ نرخ ارسال: دروازهٔ پیش‌فرض خاموش است (appsettings هیچ بخشی ندارد، پس مقادیر
         // امن پیش‌فرض اعمال می‌شود) و اتصال فقط برای مشاهده است؛ هیچ قیمت/انتخاب/draft/snapshot تغییر نمی‌کند.
         services.Configure<Application.Storefront.Shipping.RateAuthority.StorefrontShippingRateAuthorityOptions>(

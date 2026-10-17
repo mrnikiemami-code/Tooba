@@ -10,6 +10,7 @@ using Tooba.Localization.Contracts.Ports;
 using Tooba.Order.Application.Storefront.Geography;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Ports;
+using Tooba.Order.Application.Storefront.Shipping.OwnedRate;
 using Tooba.Order.Application.Storefront.Shipping.Recovery;
 using Tooba.Order.Contracts.Storefront;
 using Tooba.Order.Domain;
@@ -33,7 +34,12 @@ public sealed class StorefrontShippingService
     private readonly IShippingCatalogSeedPort _shippingSeed;
     private readonly IOrderStorefrontActor _actor;
     private readonly IClock _clock;
+    private readonly StorefrontShippingOwnedRateResolver? _ownedRates;
 
+    /// <summary>
+    /// وابستگی اختیاریِ آخر عمداً پیش‌فرض‌دار است: هر ترکیب‌کننده‌ای که آن را تأمین نکند رفتار قدیمی را
+    /// عیناً می‌گیرد (دروازه خاموش، بدون هیچ کوئری به Shipping).
+    /// </summary>
     public StorefrontShippingService(
         ICartPresentationGateway carts,
         StorefrontCheckoutService checkouts,
@@ -45,7 +51,8 @@ public sealed class StorefrontShippingService
         ShippingMethodsOptions shippingOptions,
         IShippingCatalogSeedPort shippingSeed,
         IOrderStorefrontActor actor,
-        IClock clock)
+        IClock clock,
+        StorefrontShippingOwnedRateResolver? ownedRates = null)
     {
         _carts = carts;
         _checkouts = checkouts;
@@ -58,6 +65,7 @@ public sealed class StorefrontShippingService
         _shippingSeed = shippingSeed;
         _actor = actor;
         _clock = clock;
+        _ownedRates = ownedRates;
     }
 
     /// <summary>تصویر ارسال برای سبد جاری.</summary>
@@ -67,14 +75,24 @@ public sealed class StorefrontShippingService
         string? provinceName,
         string? methodCode,
         string? language,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? cityName = null,
+        Tooba.Geography.Contracts.Places.DestinationIdentifiers? destination = null)
     {
         var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
         var (effectiveCurrency, cartSubtotal) = StorefrontCartCurrencyCompatibility.ResolveSoleCurrencyAndSubtotal(cart);
         var sellerIds = cart.Lines.Select(x => x.SellerPartyId).Distinct().ToArray();
         var maxPrep = StorefrontShippingCalculator.MaxSellerPreparationDays(sellerIds, _shippingOptions);
         var today = DateOnly.FromDateTime(_clock.UtcNow.UtcDateTime);
-        var methods = await LoadEligibleMethodsAsync(cartSubtotal, provinceName, language, cancellationToken);
+        var eligible = await LoadEligibleMethodsAsync(
+            cartSubtotal,
+            provinceName,
+            language,
+            cancellationToken,
+            effectiveCurrency,
+            cityName,
+            destination);
+        var methods = eligible.Methods;
 
         var draft = await LoadDraftAsync(cart.CartId, guestSecret, cancellationToken);
         var revalidationMessage = (string?)null;
@@ -149,7 +167,8 @@ public sealed class StorefrontShippingService
             draft is null ? null : MapDraft(draft),
             revalidationMessage,
             StorefrontIranGeography.Provinces,
-            groupHorizons.Length == 0 ? null : groupHorizons);
+            groupHorizons.Length == 0 ? null : groupHorizons,
+            eligible.Unavailable);
     }
 
     /// <summary>
@@ -311,11 +330,16 @@ public sealed class StorefrontShippingService
             cancellationToken);
 
         var (soleCurrency, cartSubtotal) = StorefrontCartCurrencyCompatibility.ResolveSoleCurrencyAndSubtotal(cart);
-        var methods = await LoadEligibleMethodsAsync(
+        var eligibleMethods = await LoadEligibleMethodsAsync(
             cartSubtotal,
             prepared.Shipping.ProvinceName,
             null,
-            cancellationToken);
+            cancellationToken,
+            soleCurrency,
+            prepared.Shipping.CityName);
+        // نرخ ذخیره‌شده فقط از فهرست authoritative می‌آید؛ اگر روش به هر دلیل نرخ معتبر نداشته باشد
+        // در این فهرست نیست و انتخاب/ادامه با آن صریحاً رد می‌شود (هیچ مبلغ ساختگی ذخیره نمی‌شود).
+        var methods = eligibleMethods.Methods;
 
         var sellerIds = cart.Lines.Select(x => x.SellerPartyId).Distinct().ToArray();
         var maxPrep = StorefrontShippingCalculator.MaxSellerPreparationDays(sellerIds, _shippingOptions);
@@ -630,11 +654,14 @@ public sealed class StorefrontShippingService
                 group.Lines.Select(x => x.CartLineId).ToArray()))
             .ToArray();
 
-    private async Task<IReadOnlyList<StorefrontShippingMethodView>> LoadEligibleMethodsAsync(
+    private async Task<StorefrontEligibleMethods> LoadEligibleMethodsAsync(
         decimal cartSubtotal,
         string? provinceName,
         string? language,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? currencyCode = null,
+        string? cityName = null,
+        Tooba.Geography.Contracts.Places.DestinationIdentifiers? destination = null)
     {
         await _shippingSeed.EnsureSeedAsync(cancellationToken);
         var enabled = ShippingMethodRegistry.Enabled(_shippingOptions)
@@ -677,7 +704,47 @@ public sealed class StorefrontShippingService
             }
         }
 
-        return await ApplyOneLevelDisplayNamesAsync(result, langId, cancellationToken);
+        // TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163: دروازهٔ نرخ مالک. خاموش (پیش‌فرض) یعنی
+        // صفر فراخوانی و همان فهرست/قیمت/خطای قدیمی. روشن یعنی تنها نرخ authoritative مالک قیمت
+        // می‌دهد و هر روش بدون نرخ مالک از فهرست حذف می‌شود (نه صفر، نه رایگان، نه نرخ سرویس/provider).
+        IReadOnlyList<StorefrontShippingUnavailableMethodView>? unavailable = null;
+        if (_ownedRates is not null)
+        {
+            var resolution = await _ownedRates.ResolveAsync(
+                result
+                    .Select(m => new StorefrontShippingOwnedRateCandidate(m.MethodCode, m.ServiceCode, m.OptionCode))
+                    .ToArray(),
+                provinceName,
+                cityName,
+                destination,
+                cartSubtotal,
+                currencyCode,
+                cancellationToken);
+
+            if (resolution.Evaluated)
+            {
+                var priced = new List<StorefrontShippingMethodView>(result.Count);
+                foreach (var method in result)
+                {
+                    if (resolution.Quoted.TryGetValue(method.MethodCode, out var quote))
+                    {
+                        // مبلغ authoritative جایگزین مبلغ قدیمی می‌شود؛ هیچ مبلغی از مسیر قدیمی روی آن نمی‌نشیند.
+                        priced.Add(method with { PriceAmount = quote.Amount, IsFree = quote.Amount == 0m });
+                    }
+                }
+
+                result = priced;
+                unavailable = resolution.Unavailable.Count == 0
+                    ? []
+                    : resolution.Unavailable
+                        .Select(u => new StorefrontShippingUnavailableMethodView(u.MethodCode, u.ReasonCode))
+                        .ToArray();
+            }
+        }
+
+        return new StorefrontEligibleMethods(
+            await ApplyOneLevelDisplayNamesAsync(result, langId, cancellationToken),
+            unavailable);
     }
 
     /// <summary>
@@ -930,4 +997,16 @@ public sealed class StorefrontShippingService
             group.LeadDays,
             group.Lines.Count,
             group.Lines.Select(x => x.CartLineId).ToArray());
+
+    /// <summary>
+    /// فهرست واجدین شرایط به‌همراه دلایل پایدار روش‌هایی که دروازهٔ نرخ مالک رد کرده است.
+    /// </summary>
+    /// <param name="Methods">روش‌های قابل انتخاب (در حالت روشن، فقط دارای نرخ authoritative).</param>
+    /// <param name="Unavailable">
+    /// تهی یعنی دروازهٔ نرخ مالک اجرا نشده و رفتار قدیمی عیناً حفظ شده است؛ در غیر این صورت
+    /// روش‌های حذف‌شده با دلیل پایدار.
+    /// </param>
+    private sealed record StorefrontEligibleMethods(
+        IReadOnlyList<StorefrontShippingMethodView> Methods,
+        IReadOnlyList<StorefrontShippingUnavailableMethodView>? Unavailable);
 }

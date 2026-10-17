@@ -102,6 +102,18 @@ public sealed record StorefrontShippingMethodView(
     string EstimationLabel,
     string? OptionCode = null);
 
+/// <summary>
+/// روشی که مسیر قدیمی واجد شرایطش می‌دانست اما نرخ authoritative مالک برایش وجود ندارد.
+/// </summary>
+/// <remarks>
+/// این رکورد فقط <b>دلیل پایدار</b> را اعلام می‌کند: هیچ مبلغ، صفر یا «رایگان»ی ساخته نمی‌شود و
+/// روش در فهرست قابل انتخاب هم حاضر نیست. تهی‌بودن فهرست در تصویر یعنی دروازهٔ نرخ مالک اجرا نشده
+/// (رفتار قدیمی عیناً حفظ شده است).
+/// </remarks>
+/// <param name="MethodCode">کد روش متعارف.</param>
+/// <param name="ReasonCode">کد دلیل پایدار رد نرخ (نبود ردیف مالک، پوشش Restricted، اندازه‌گیری لازم، ...).</param>
+public sealed record StorefrontShippingUnavailableMethodView(string MethodCode, string ReasonCode);
+
 /// <summary>گزینهٔ تاریخ تحویل.</summary>
 public sealed record StorefrontDeliveryDateOption(
     string Value,
@@ -160,7 +172,13 @@ public sealed record StorefrontShippingProjection(
     /// (<c>ShippingGroupId</c>) را با حداقل/تاریخ‌های مجاز و پنجره‌های خودش برمی‌گرداند؛ هیچ اشتراک یا
     /// دیرترین-حداقلِ سراسری در این بخش اعمال نمی‌شود. اسکالرهای بالا فقط نمای تک‌گروهی/سازگاری‌اند.
     /// </summary>
-    IReadOnlyList<StorefrontShippingGroupHorizonView>? ShippingGroupHorizons = null);
+    IReadOnlyList<StorefrontShippingGroupHorizonView>? ShippingGroupHorizons = null,
+    /// <summary>
+    /// TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163: روش‌هایی که تنها به‌دلیل نبود نرخ authoritative
+    /// مالک از فهرست حذف شده‌اند، با دلیل پایدار. <c>null</c> یعنی دروازهٔ نرخ مالک خاموش است و رفتار
+    /// قدیمی عیناً حفظ شده؛ هیچ مبلغ یا صفر ساختگی برای این روش‌ها اعلام نمی‌شود.
+    /// </summary>
+    IReadOnlyList<StorefrontShippingUnavailableMethodView>? UnavailableMethods = null);
 
 /// <summary>
 /// افق زمان‌بندی یک گروه ارسال. همهٔ مقادیر از منابع authoritative سرور می‌آید

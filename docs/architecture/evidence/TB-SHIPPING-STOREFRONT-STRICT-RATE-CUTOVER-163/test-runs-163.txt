@@ -1,0 +1,3 @@
+﻿build: 0 errors (Host)
+tests: StorefrontShippingOwnedRateResolverTests 10/10 passed
+tests: Order.Tests --filter Storefront 210/210 passed
