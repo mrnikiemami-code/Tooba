@@ -13,6 +13,8 @@ import { formatOfferAmount } from "./storefront-api.ts";
 import type { StorefrontShippingMethod } from "./storefront-shipping-api.ts";
 import type { StorefrontShippingDateHorizon } from "./storefront-shipping-group-horizon.ts";
 import { StorefrontShippingDeliveryCard } from "./storefront-shipping-delivery-card.tsx";
+import { StorefrontShippingUnavailableMethods } from "./storefront-shipping-unavailable-methods.tsx";
+import type { StorefrontShippingUnavailableNotice } from "./storefront-shipping-unavailable-methods.ts";
 
 function iconFor(method: StorefrontShippingMethod) {
   const key = method.iconKey || method.serviceCode;
@@ -23,6 +25,7 @@ function iconFor(method: StorefrontShippingMethod) {
 
 export function StorefrontShippingSingleGroupSection({
   methods,
+  unavailableNotices = [],
   currency,
   methodCode,
   onSelectMethod,
@@ -33,6 +36,8 @@ export function StorefrontShippingSingleGroupSection({
   onSelectWindow,
 }: {
   methods: readonly StorefrontShippingMethod[];
+  /** TB-165: فقط توضیح روش‌های بدون نرخ معتبر؛ هرگز گزینهٔ قابل انتخاب نمی‌سازد. */
+  unavailableNotices?: readonly StorefrontShippingUnavailableNotice[];
   currency: string;
   methodCode: string | null;
   onSelectMethod: (methodCode: string) => void;
@@ -98,6 +103,7 @@ export function StorefrontShippingSingleGroupSection({
             })}
           </div>
         )}
+        <StorefrontShippingUnavailableMethods notices={unavailableNotices} />
       </div>
 
       <StorefrontShippingDeliveryCard

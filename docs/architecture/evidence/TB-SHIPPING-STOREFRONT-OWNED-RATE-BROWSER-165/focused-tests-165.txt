@@ -1,0 +1,64 @@
+﻿(node:16800) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ shipping projection maps store methods and never invents template carriers (1.2002ms)
+✔ shipping date chips use Host weekday/date once and do not duplicate Jalali (2.3942ms)
+✔ shipping continue persists the draft, keeps the cart active and never commits (0.3794ms)
+✔ shipping UI source has no hardcoded Shopeiva template method list (0.3605ms)
+✔ cart CTA routes to /shipping (0.7651ms)
+✔ customer shipping errors stay localized (0.3469ms)
+✔ stale cart on shipping never leaks the English server title (0.2218ms)
+✔ shipping stepper walks back to the cart instead of trapping the customer (0.41ms)
+(node:34364) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-group-horizon.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ بدون projection: افق خالی و غیر-resolved است (بدون تاریخ جعلی) (0.9286ms)
+✔ تک‌گروهی: افق دقیقاً فیلدهای همان projection سرور است (0.5432ms)
+✔ انتخاب قبلی فقط وقتی نامعتبر شود بازچینی می‌شود (0.1858ms)
+✔ ماژول تک‌گروهی: بدون fetch و بدون ساخت تاریخ در کلاینت (0.2501ms)
+(node:21632) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-group-schedule.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ دو فروشنده با روش یکسان: دو افق مستقل و دو «اولین نوبت ممکن» متمایز (3.0032ms)
+✔ گروه بدون ردیف سرور: افق resolved نمی‌شود و تاریخ حدسی ساخته نمی‌شود (0.3036ms)
+✔ استقلال انتخاب‌ها: تغییر گروه A هیچ فیلدی از گروه B را عوض نمی‌کند (0.4084ms)
+✔ بازیابی: انتخاب ذخیره‌شدهٔ همان گروه برمی‌گردد و مقدار نامعتبر همان گروه پاک می‌شود (0.2405ms)
+✔ نگاشت قرارداد سرور: shippingGroupHorizons با فیلدهای camelCase و PascalCase (0.2337ms)
+✔ تطبیق ردیف سرور با گروه: بی‌حساسیت به خط تیره/بزرگی و کوچکی (0.175ms)
+✔ تک‌گروهی: افق دقیقاً همان projection است و رفتار قدیمی تغییر نمی‌کند (0.2391ms)
+✔ سیم‌کشی سطح ارسال: کارت مستقل هر گروه، شرط ادامه و payload هر گروه (0.5817ms)
+(node:32716) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-item-groups.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ یک فروشنده، دو خط، دو روش ⇒ دو گروه مستقل با خطوط واقعی (1.0463ms)
+✔ یک فروشنده، دو خط، روش یکسان ⇒ یک گروه ادغام‌شده (ناوردایی M1) (0.116ms)
+✔ دو فروشنده با روش یکسان ⇒ گروه‌ها جدا می‌مانند (بدون ادغام فروشنده) (0.1147ms)
+✔ خط بدون انتخاب یا با روش ناواجد ⇒ بدون گروه و ادامهٔ سفارش بسته است (0.1149ms)
+✔ بازیابی قطعی انتخاب هر خط از گروه‌های ذخیره‌شدهٔ پیش‌نویس (0.1877ms)
+✔ بازیابی fail-closed: روش ناواجد، خط ناپیدا و خط فروشندهٔ دیگر بازیابی نمی‌شوند (0.0815ms)
+✔ بازیابی بدون شناسهٔ خط: فقط فروشندهٔ تک‌خطی قطعی بازیابی می‌شود (0.0632ms)
+✔ بازیابی هیچ خطی را دو بار تخصیص نمی‌دهد (اولین گروه برنده است) (0.0714ms)
+✔ سیم‌کشی سطح ارسال: انتخاب هر خط، گروه‌بندی (فروشنده،روش) و بازیابی fail-closed (0.2404ms)
+(node:30092) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-shipping-unavailable-methods.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ گیت خاموش/پاسخ قدیمی: فیلد غایب یا null هیچ توضیحی نمی‌سازد و روش‌ها دست‌نخورده‌اند (1.4823ms)
+✔ نگاشت UnavailableMethods: فقط ردیف‌های با methodCode معتبر، بدون مبلغ (0.2921ms)
+✔ هویت سطح-روش: دو فروشنده با روش یکسان یک توضیح می‌گیرند و به روش همسایه نسبت داده نمی‌شود (0.1153ms)
+✔ روش واجد شرایط سرور با ردیف توضیحی غیرفعال نمی‌شود (توضیح جایگزین روش نمی‌شود) (0.0941ms)
+✔ ترجمهٔ کد پایدار و متن عمومی برای کد ناشناخته/خالی؛ هیچ مبلغ یا «رایگان» (0.0913ms)
+✔ روش unavailable قابل انتخاب نمی‌شود؛ گروه A روش ندارد و گروه B دست‌نخورده می‌ماند (0.5534ms)
+✔ فقط-خواندنی و RTL: بلوک توضیح هیچ دکمه/انتخاب‌کننده‌ای ندارد و در هر دو سطح روش وصل است (0.1812ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 190.2718

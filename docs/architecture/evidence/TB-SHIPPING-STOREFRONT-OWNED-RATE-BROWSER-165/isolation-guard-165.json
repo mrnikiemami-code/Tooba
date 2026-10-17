@@ -1,0 +1,32 @@
+{
+  "task": "TB-SHIPPING-STOREFRONT-OWNED-RATE-BROWSER-165",
+  "baseSha": "85083b40e1823add0e60597d185b0463cf5051a3",
+  "privateTargets": {
+    "scratchPostgreSqlContainer": "tooba-tb165-pg (:55485, disposable PostgreSQL, created then removed)",
+    "privateHostPort": 5420,
+    "privateWebPort": 3115,
+    "hostPublishDir": ".tmp-165-host-out (removed)"
+  },
+  "sharedTargetsUntouched": {
+    "frontendPort3000Started": false,
+    "sharedHostPort5088Started": false,
+    "sharedPostgreSqlPort5432Used": false,
+    "sharedDatabases": ["tooba_alpha", "store-alpha"],
+    "rabbitMqStarted": false,
+    "redisStarted": false,
+    "broadProcessKills": false
+  },
+  "committedGateDefaults": {
+    "appsettings": false,
+    "appsettings.Development": false,
+    "appsettings.Production": false,
+    "source": "src/backend/Host/Tooba.Host/appsettings*.json (unmodified by this task)"
+  },
+  "cleanup": {
+    "containerRemoved": true,
+    "publishDirRemoved": true,
+    "passwordFileRemoved": true,
+    "privatePortStillListening": false
+  },
+  "note": "The private Host was published and a disposable PostgreSQL container was created for the browser leg; no application data was seeded before the hard timebox forced the browser leg to be reported as PARTIAL, and all scratch resources were removed."
+}

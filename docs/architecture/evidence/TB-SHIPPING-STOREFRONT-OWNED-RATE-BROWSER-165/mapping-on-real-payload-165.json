@@ -1,0 +1,146 @@
+{
+  "source": "TB-SHIPPING-STOREFRONT-OWNED-RATE-LIVE-164/projection-negative-restricted-164.json (read-only)",
+  "restricted": {
+    "eligibleMethods": [
+      {
+        "methodCode": "tipax:standard",
+        "label": "معمولی",
+        "priceAmount": 205000
+      }
+    ],
+    "unavailableMethods": [
+      {
+        "methodCode": "post:express",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "post:standard",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "tipax:express",
+        "reasonCode": "shipping.coverage.method_restricted"
+      },
+      {
+        "methodCode": "snapp_courier",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "store_courier",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "in_person",
+        "reasonCode": "shipping.service.not_priced"
+      }
+    ],
+    "notices": [
+      {
+        "methodCode": "post:express",
+        "label": "post:express",
+        "reasonCode": "shipping.service.not_priced",
+        "reasonText": "برای این روش نرخ فعالی تعریف نشده است."
+      },
+      {
+        "methodCode": "post:standard",
+        "label": "post:standard",
+        "reasonCode": "shipping.service.not_priced",
+        "reasonText": "برای این روش نرخ فعالی تعریف نشده است."
+      },
+      {
+        "methodCode": "tipax:express",
+        "label": "tipax:express",
+        "reasonCode": "shipping.coverage.method_restricted",
+        "reasonText": "این روش برای مقصد انتخابی مجاز نیست."
+      },
+      {
+        "methodCode": "snapp_courier",
+        "label": "snapp_courier",
+        "reasonCode": "shipping.service.not_priced",
+        "reasonText": "برای این روش نرخ فعالی تعریف نشده است."
+      },
+      {
+        "methodCode": "store_courier",
+        "label": "store_courier",
+        "reasonCode": "shipping.service.not_priced",
+        "reasonText": "برای این روش نرخ فعالی تعریف نشده است."
+      },
+      {
+        "methodCode": "in_person",
+        "label": "in_person",
+        "reasonCode": "shipping.service.not_priced",
+        "reasonText": "برای این روش نرخ فعالی تعریف نشده است."
+      }
+    ],
+    "standardStillEligible": true,
+    "expressIsNotSelectable": true,
+    "everyNoticeIsMethodScoped": true,
+    "noFreeOrZeroRendered": true
+  },
+  "onGate": {
+    "eligibleMethods": [
+      {
+        "methodCode": "tipax:express",
+        "priceAmount": 480000
+      },
+      {
+        "methodCode": "tipax:standard",
+        "priceAmount": 205000
+      }
+    ],
+    "unavailableMethods": [
+      {
+        "methodCode": "post:express",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "post:standard",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "snapp_courier",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "store_courier",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "in_person",
+        "reasonCode": "shipping.service.not_priced"
+      }
+    ],
+    "notices": [
+      {
+        "methodCode": "post:express",
+        "label": "post:express",
+        "reasonCode": "shipping.service.not_priced",
+        "reasonText": "برای این روش نرخ فعالی تعریف نشده است."
+      },
+      {
+        "methodCode": "post:standard",
+        "label": "post:standard",
+        "reasonCode": "shipping.service.not_priced",
+        "reasonText": "برای این روش نرخ فعالی تعریف نشده است."
+      },
+      {
+        "methodCode": "snapp_courier",
+        "label": "snapp_courier",
+        "reasonCode": "shipping.service.not_priced",
+        "reasonText": "برای این روش نرخ فعالی تعریف نشده است."
+      },
+      {
+        "methodCode": "store_courier",
+        "label": "store_courier",
+        "reasonCode": "shipping.service.not_priced",
+        "reasonText": "برای این روش نرخ فعالی تعریف نشده است."
+      },
+      {
+        "methodCode": "in_person",
+        "label": "in_person",
+        "reasonCode": "shipping.service.not_priced",
+        "reasonText": "برای این روش نرخ فعالی تعریف نشده است."
+      }
+    ]
+  }
+}

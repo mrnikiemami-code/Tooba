@@ -111,6 +111,17 @@ export interface StorefrontShippingGroupHorizonView {
   sellerPreparationDays: number;
 }
 
+/**
+ * TB-165: روشی که سرور آن را به‌دلیل نبود نرخ‌دهی معتبرِ مالکِ روش از فهرست واجد شرایط خارج کرده
+ * است. این ردیف **تنها توضیح** است: نه مبلغ دارد، نه قابل انتخاب است و نه جایگزین `methods`
+ * می‌شود. هویت آن در سطح «روش» است (نرخ‌دهی به فروشندهٔ سبد وابسته نیست)، بنابراین به فروشندهٔ
+ * همسایه نسبت داده نمی‌شود.
+ */
+export interface StorefrontShippingUnavailableMethod {
+  methodCode: string;
+  reasonCode: string;
+}
+
 export interface StorefrontShippingProjection {
   cartId: string;
   cartVersion: number;
@@ -130,6 +141,11 @@ export interface StorefrontShippingProjection {
   provinces: StorefrontProvinceOption[];
   /** TB-150: افق مستقل هر جفت (فروشندهٔ سبد × روش واجد شرایط)؛ در سبد تک‌خطی خالی است. */
   shippingGroupHorizons: StorefrontShippingGroupHorizonView[];
+  /**
+   * TB-165: توضیح روش‌های ردشده توسط نرخ‌دهی مالک روش. پاسخ قدیمی/گیت خاموش این فیلد را ندارد
+   * (`null`)؛ در آن حالت دقیقاً رفتار قبلی حفظ می‌شود.
+   */
+  unavailableMethods: StorefrontShippingUnavailableMethod[] | null;
 }
 
 export interface StorefrontShippingSelectionInput {
@@ -325,6 +341,7 @@ export function mapShippingProjection(value: unknown): StorefrontShippingProject
     throw new StorefrontCartApiError(500, "پاسخ ارسال نامعتبر است.");
   }
   const methodsRaw = prop(item, "methods", "Methods");
+  const unavailableRaw = prop(item, "unavailableMethods", "UnavailableMethods");
   const datesRaw = prop(item, "deliveryDates", "DeliveryDates");
   const timesRaw = prop(item, "deliveryTimeWindows", "DeliveryTimeWindows");
   const provincesRaw = prop(item, "provinces", "Provinces");
@@ -361,6 +378,19 @@ export function mapShippingProjection(value: unknown): StorefrontShippingProject
     shippingGroupHorizons: asArray(horizonsRaw)
       .map(mapGroupHorizon)
       .filter((h): h is StorefrontShippingGroupHorizonView => h !== null),
+    unavailableMethods: Array.isArray(unavailableRaw)
+      ? unavailableRaw
+          .map((row) => {
+            const r = asRecord(row) ?? {};
+            const methodCode = asString(prop(r, "methodCode", "MethodCode"));
+            if (!methodCode) return null;
+            return {
+              methodCode,
+              reasonCode: asString(prop(r, "reasonCode", "ReasonCode")),
+            };
+          })
+          .filter((m): m is StorefrontShippingUnavailableMethod => m !== null)
+      : null,
   };
 }
 

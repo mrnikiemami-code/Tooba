@@ -59,6 +59,7 @@ import {
 } from "./storefront-shipping-group-schedule.ts";
 import { StorefrontShippingGroupCards, type ShippingGroupCard, type UnassignedSellerBlock } from "./storefront-shipping-group-cards.tsx";
 import { StorefrontShippingSingleGroupSection } from "./storefront-shipping-single-group-section.tsx";
+import { resolveShippingUnavailableNotices } from "./storefront-shipping-unavailable-methods.ts";
 import {
   EMPTY_SHIPPING_ADDRESS,
   StorefrontShippingAddressCards,
@@ -313,6 +314,19 @@ export function StorefrontShopeivaShipping() {
     for (const method of projection?.methods ?? []) map.set(method.methodCode, method);
     return map;
   }, [projection]);
+
+  /**
+   * TB-165: توضیح سطح-روش برای روش‌های بدون نرخ معتبر. تنها از پاسخ سرور؛ گیت خاموش/پاسخ قدیمی
+   * (`unavailableMethods === null`) ⇒ فهرست خالی و رفتار دقیقاً قبلی.
+   */
+  const unavailableNotices = useMemo(
+    () =>
+      resolveShippingUnavailableNotices({
+        unavailableMethods: projection?.unavailableMethods ?? null,
+        methods: projection?.methods ?? [],
+      }),
+    [projection],
+  );
 
   // گروه‌ها فقط با (فروشندهٔ واقعی خط، کد روش authoritative) ساخته می‌شوند؛ هر خط دقیقاً یک گروه.
   const itemGrouping = useMemo(
@@ -583,6 +597,7 @@ export function StorefrontShopeivaShipping() {
                   unassigned={unassignedSellerBlocks}
                   methodByLine={lineMethodByLine}
                   methods={projection.methods}
+                  unavailableNotices={unavailableNotices}
                   currency={projection.currency}
                   schedules={groupSchedules}
                   selections={groupSelections}
@@ -600,6 +615,7 @@ export function StorefrontShopeivaShipping() {
               {isGroupedCart ? null : (
                 <StorefrontShippingSingleGroupSection
                   methods={projection.methods}
+                  unavailableNotices={unavailableNotices}
                   currency={projection.currency}
                   methodCode={methodCode}
                   onSelectMethod={(code) => void onSelectMethod(code)}

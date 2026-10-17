@@ -22,6 +22,8 @@ import type {
   StorefrontShippingGroupSchedule,
   StorefrontShippingGroupSelection,
 } from "./storefront-shipping-group-schedule.ts";
+import { StorefrontShippingUnavailableMethods } from "./storefront-shipping-unavailable-methods.tsx";
+import type { StorefrontShippingUnavailableNotice } from "./storefront-shipping-unavailable-methods.ts";
 
 export interface ShippingGroupCard {
   /** کلید پایدار گروه در کلاینت (فروشندهٔ واقعی + روش canonical). */
@@ -250,6 +252,7 @@ export function StorefrontShippingGroupCards({
   unassigned,
   methodByLine,
   methods,
+  unavailableNotices = [],
   currency,
   schedules,
   selections,
@@ -261,6 +264,12 @@ export function StorefrontShippingGroupCards({
   unassigned: readonly UnassignedSellerBlock[];
   methodByLine: Readonly<Record<string, string>>;
   methods: readonly StorefrontShippingMethod[];
+  /**
+   * TB-165: توضیح سطح-روش برای روش‌های بدون نرخ معتبر. نرخ‌دهی مالک روش به فروشندهٔ سبد وابسته
+   * نیست، بنابراین این بلوک یک‌بار و بدون نسبت‌دادن به فروشندهٔ خاص رندر می‌شود و هرگز روش را
+   * قابل انتخاب نمی‌کند.
+   */
+  unavailableNotices?: readonly StorefrontShippingUnavailableNotice[];
   currency: string;
   schedules: Readonly<Record<string, StorefrontShippingGroupSchedule>>;
   selections: Readonly<Record<string, StorefrontShippingGroupSelection>>;
@@ -282,6 +291,11 @@ export function StorefrontShippingGroupCards({
         هر گروه ارسال زمان تحویل مستقل خودش را دارد؛ هزینه و تاریخ هر گروه از نرخ و وعدهٔ معتبر همان گروه
         می‌آید و با گروه‌های دیگر اشتراک گذاشته نمی‌شود.
       </p>
+
+      <StorefrontShippingUnavailableMethods
+        notices={unavailableNotices}
+        testIdPrefix="shipping-group-unavailable"
+      />
 
       <div className="space-y-4">
         {unassigned.map((seller) => (
