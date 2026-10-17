@@ -1,0 +1,44 @@
+﻿{
+    "baseSha":  "fce505a2be1388aca1eca7b8e0b4f944923aad49",
+    "route":  "/v1/storefront/home",
+    "hostHeader":  "alpha.localhost",
+    "environment":  "Development (DOTNET_ENVIRONMENT)",
+    "scratch":  {
+                    "container":  "tooba-tb178-pg",
+                    "database":  "tooba_178_scratch",
+                    "pgPort":  55498,
+                    "hostPort":  5440
+                },
+    "legA":  {
+                 "leg":  "A-prechange-effective",
+                 "efOverride":  "Information",
+                 "requests":  3,
+                 "httpStatuses":  "200,200,200",
+                 "wallMs":  "118,25.1,33",
+                 "payloadBytes":  "2227,2227,2227",
+                 "stdoutBytes":  675281,
+                 "stdoutLines":  361,
+                 "efCategoryLines":  348,
+                 "efCommandLines":  317,
+                 "efCommandBytes":  649330,
+                 "errorOrCriticalLines":  0
+             },
+    "legB":  {
+                 "leg":  "B-postchange-default",
+                 "efOverride":  "\u003ccommitted default\u003e",
+                 "requests":  3,
+                 "httpStatuses":  "200,200,200",
+                 "wallMs":  "114,25.9,34.2",
+                 "payloadBytes":  "2227,2227,2227",
+                 "stdoutBytes":  10115,
+                 "stdoutLines":  11,
+                 "efCategoryLines":  1,
+                 "efCommandLines":  0,
+                 "efCommandBytes":  0,
+                 "errorOrCriticalLines":  0
+             },
+    "efCommandLinesReduced":  317,
+    "stdoutBytesReduced":  665166,
+    "sharedPortsTouched":  false,
+    "credentialsInEvidence":  false
+}

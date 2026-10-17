@@ -9,6 +9,17 @@ Rule: No issue marked CRITICAL may be silently closed by task completion or docu
 ## PERF-CRIT-001 — Storefront catalog read N+1 and home page timeout
 
 **Status: OPEN — CRITICAL / RELEASE BLOCKER**
+**TB-178 update (2026-10-17): EF-log item ADDRESSED, blocker still OPEN.** The EF Debug/Information command
+flood was a pure Host configuration defect (no explicit `Microsoft.EntityFrameworkCore` level, so
+`Database.Command` at Information was serialised by the JSON console sink in every environment). Committed
+fix: `"Microsoft.EntityFrameworkCore": "Warning"` in `appsettings.json` and `appsettings.Development.json`;
+errors/warnings retained, sensitive-data logging already disabled. Measured same-binary A/B on a disposable
+loopback Host + scratch Postgres, 3× `GET /v1/storefront/home`: `Database.Command` lines **317 → 0**,
+request-scoped stdout **675,281 → 10,115 bytes (−98.5%)**, response bodies byte-identical, 0 error lines both
+legs, wall latency unchanged within noise. **Still missing for closure:** a scale-check across two data sizes
+and product identifier/name/price/availability parity on a seeded catalog (the scratch catalog was empty),
+plus Architect review and user validation. See
+`docs/architecture/evidence/TB-STOREFRONT-EF-LOGGING-RELEASE-178/RESULT.md`.
 
 **Affected routes:** storefront Home (`/fa`, `/v1/storefront/home`) and potentially catalog/listing/product-dependent pages. Shipping/login routes show severe latency in the reported environment but are not proven to share the same cause.
 
