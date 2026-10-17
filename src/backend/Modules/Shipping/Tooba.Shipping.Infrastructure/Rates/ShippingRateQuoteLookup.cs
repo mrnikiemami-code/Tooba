@@ -47,7 +47,13 @@ public sealed class ShippingRateQuoteLookup : IShippingRateQuoteLookup
         var grants = await _db.CoverageGrants.AsNoTracking()
             .Where(x => x.ServiceCode == serviceCode && x.CountryId == countryId)
             .ToListAsync(cancellationToken);
+        // Method restriction declarations are destination-independent: the whole per-service slice is read
+        // and the exact method identity is matched in the engine, so no "nearest" or "provider-level"
+        // declaration can ever be borrowed by a different method.
+        var declarations = await _db.MethodCoverages.AsNoTracking()
+            .Where(x => x.ServiceCode == serviceCode)
+            .ToListAsync(cancellationToken);
 
-        return ShippingRatePolicyEngine.Quote(request, policies, grants);
+        return ShippingRatePolicyEngine.Quote(request, policies, grants, declarations);
     }
 }

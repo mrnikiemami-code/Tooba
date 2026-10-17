@@ -61,6 +61,7 @@ public static class ShippingRateCoverageEndpoints
         group.MapPatch(
             "/shipping-services/{serviceCode}/coverage-grants/{coverageGrantId:guid}/active",
             SetGrantActiveAsync);
+        group.MapPut("/shipping-services/{serviceCode}/method-coverage", SetMethodCoverageAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -175,6 +176,30 @@ public static class ShippingRateCoverageEndpoints
 
         return api.From(await sender.Send(
             new SetShippingCoverageGrantActiveCommand(coverageGrantId, serviceCode, body.IsActive),
+            cancellationToken));
+    }
+
+    /// <summary>
+    /// حالت تحدید جغرافیایی یک روش را ثبت می‌کند. این مسیر هیچ نرخ یا دروازهٔ مشتری‌محور را فعال
+    /// نمی‌کند و پذیرش آن فقط یک تصمیم پوشش/اهلیت است.
+    /// </summary>
+    private static async Task<IResult> SetMethodCoverageAsync(
+        string serviceCode,
+        MediatR.ISender sender,
+        IShippingAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        await authorizer.RequireAuthorizedAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ReadBodyAsync<ShippingMethodCoverageWriteRequest>(context, api, cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new SetShippingMethodCoverageCommand(serviceCode, body),
             cancellationToken));
     }
 

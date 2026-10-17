@@ -18,7 +18,8 @@ namespace Tooba.Shipping.Infrastructure.Rates;
 /// برگردد) و ایندکس یکتای <c>NULLS NOT DISTINCT</c> در دیتابیس (تا هیچ نویسندهٔ دیگری نتواند
 /// ردیف هم‌دامنه ثبت کند). هیچ‌کدام جای دیگری را نمی‌گیرد.
 /// </remarks>
-public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : IShippingRateCoverageDirectory
+public sealed class ShippingRateCoverageDirectory(ShippingDbContext context)
+    : IShippingRateCoverageDirectory, IShippingMethodCoverageDirectory
 {
     /// <inheritdoc />
     public async Task<Result<ShippingRatesAndCoverageView>> ListAsync(
@@ -50,11 +51,22 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
             .ThenBy(x => x.AdministrativeAreaId)
             .ThenBy(x => x.CityId)
             .ThenBy(x => x.ServiceAreaId)
+            .ThenBy(x => x.OptionCode)
+            .Select(x => Map(x))
+            .ToListAsync(cancellationToken);
+
+        // Restriction declarations are read in the same slice so the Admin surface can show, per method,
+        // whether it is explicitly restricted or has no Admin-defined restriction. No declaration row is
+        // invented here either: an empty list means "no restriction configured".
+        var coverages = await context.MethodCoverages
+            .AsNoTracking()
+            .Where(x => x.ServiceCode == code)
+            .OrderBy(x => x.OptionCode)
             .Select(x => Map(x))
             .ToListAsync(cancellationToken);
 
         // An empty coverage set is a real answer: it means NO COVERAGE, never "unrestricted".
-        return Result.Success(new ShippingRatesAndCoverageView(code, rates, grants));
+        return Result.Success(new ShippingRatesAndCoverageView(code, rates, grants, coverages));
     }
 
     /// <inheritdoc />
@@ -251,14 +263,15 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
         }
 
         var scope = request.Scope.ToScope();
+        var optionCode = NormalizeOption(request.OptionCode);
 
-        if (await GrantScopeExistsAsync(context.CoverageGrants, code, scope, cancellationToken))
+        if (await GrantScopeExistsAsync(context.CoverageGrants, code, optionCode, scope, cancellationToken))
         {
             return Result.Failure<ShippingCoverageGrantAdminItem>(
                 new SemanticError(ShippingErrorCodes.CoverageGrantScopeDuplicate));
         }
 
-        var grant = ShippingCoverageGrant.Create(code, scope, DateTimeOffset.UtcNow);
+        var grant = ShippingCoverageGrant.Create(code, scope, DateTimeOffset.UtcNow, optionCode: optionCode);
         context.CoverageGrants.Add(grant);
         await context.SaveChangesAsync(cancellationToken);
         return Result.Success(Map(grant));
@@ -299,8 +312,57 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
         return Result.Success(Map(grant));
     }
 
-    private static bool BelongsTo(string storedServiceCode, string? routeServiceCode) =>
-        string.Equals(
+    /// <inheritdoc />
+    public async Task<Result<ShippingMethodCoverageAdminItem>> SetMethodCoverageAsync(
+        string serviceCode,
+        ShippingMethodCoverageWriteRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var code = Normalize(serviceCode);
+        if (code.Length == 0)
+        {
+            return Result.Failure<ShippingMethodCoverageAdminItem>(
+                new SemanticError(ShippingErrorCodes.ServiceCodeRequired));
+        }
+
+        var optionCode = NormalizeOption(request.OptionCode);
+
+        // The option identity of a declaration is immutable once written: re-pointing a decision from one
+        // option to another would move a restriction between methods, so the caller writes the target method
+        // explicitly and the (service, option) pair is the identity.
+        var existing = (await context.MethodCoverages
+                .Where(x => x.ServiceCode == code)
+                .ToListAsync(cancellationToken))
+            .FirstOrDefault(x => SameOption(x.OptionCode, optionCode));
+
+        var now = DateTimeOffset.UtcNow;
+        ShippingMethodCoverage coverage;
+        try
+        {
+            if (existing is null)
+            {
+                coverage = ShippingMethodCoverage.Create(code, optionCode, request.Mode, now);
+                context.MethodCoverages.Add(coverage);
+            }
+            else
+            {
+                // The write is itself the admin's explicit decision, so it always takes effect: there is no
+                // separate activate flag, because Unrestricted IS the documented "restriction removed" state.
+                existing.ChangeMode(request.Mode, now);
+                coverage = existing;
+            }
+        }
+        catch (SemanticException ex)
+        {
+            return Result.Failure<ShippingMethodCoverageAdminItem>(ex.Error);
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+        return Result.Success(Map(coverage));
+    }
+
+    private static bool BelongsTo(string storedServiceCode, string? routeServiceCode) =>        string.Equals(
             storedServiceCode?.Trim() ?? string.Empty,
             routeServiceCode?.Trim() ?? string.Empty,
             StringComparison.OrdinalIgnoreCase);
@@ -360,6 +422,7 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
     private static async Task<bool> GrantScopeExistsAsync(
         IQueryable<ShippingCoverageGrant> set,
         string serviceCode,
+        string? optionCode,
         Contracts.Rates.ShippingDestinationScope scope,
         CancellationToken cancellationToken)
     {
@@ -367,6 +430,7 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
             .Where(x => x.ServiceCode == serviceCode)
             .Select(x => new
             {
+                x.OptionCode,
                 x.CountryId,
                 x.AdministrativeAreaId,
                 x.CityId,
@@ -374,8 +438,11 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
             })
             .ToListAsync(cancellationToken);
 
+        // Duplicate identity is (method, scope), not (service, scope): an option-scoped grant for the same
+        // destination is a different commercial decision than the legacy service-level row.
         return existing.Any(x =>
-            x.CountryId == scope.CountryId
+            SameOption(x.OptionCode, optionCode)
+            && x.CountryId == scope.CountryId
             && x.AdministrativeAreaId == scope.AdministrativeAreaId
             && x.CityId == scope.CityId
             && x.ServiceAreaId == scope.ServiceAreaId);
@@ -477,5 +544,15 @@ public sealed class ShippingRateCoverageDirectory(ShippingDbContext context) : I
             grant.Scope.Level,
             grant.IsActive,
             grant.CreatedAt,
-            grant.UpdatedAt);
+            grant.UpdatedAt,
+            grant.OptionCode);
+
+    private static ShippingMethodCoverageAdminItem Map(ShippingMethodCoverage coverage) =>
+        new(
+            coverage.MethodCoverageId,
+            coverage.ServiceCode,
+            coverage.OptionCode,
+            coverage.Mode,
+            coverage.CreatedAt,
+            coverage.UpdatedAt);
 }

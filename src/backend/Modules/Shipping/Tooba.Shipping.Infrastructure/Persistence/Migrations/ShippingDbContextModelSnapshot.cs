@@ -131,6 +131,11 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
+                    b.Property<string>("OptionCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("option_code");
+
                     b.Property<Guid?>("ServiceAreaId")
                         .HasColumnType("uuid")
                         .HasColumnName("service_area_id");
@@ -151,17 +156,70 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                     b.HasIndex("ServiceCode", "CountryId", "IsActive")
                         .HasDatabaseName("ix_coverage_grants_service_country_active");
 
-                    b.HasIndex("ServiceCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId")
+                    b.HasIndex("ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId")
                         .IsUnique()
-                        .HasDatabaseName("ux_coverage_grants_service_scope");
+                        .HasDatabaseName("ux_coverage_grants_service_option_scope");
 
-                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ServiceCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId"), false);
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId"), false);
 
                     b.ToTable("coverage_grants", "shipping", t =>
                         {
+                            t.HasCheckConstraint("ck_coverage_grants_option_code_canonical", "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
+
                             t.HasCheckConstraint("ck_coverage_grants_scope_coherent", "service_area_id IS NULL OR city_id IS NOT NULL");
 
                             t.HasCheckConstraint("ck_coverage_grants_service_code_canonical", "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+                        });
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Aggregates.ShippingMethodCoverage", b =>
+                {
+                    b.Property<Guid>("MethodCoverageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("method_coverage_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Mode")
+                        .HasColumnType("integer")
+                        .HasColumnName("mode");
+
+                    b.Property<string>("OptionCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("option_code");
+
+                    b.Property<string>("ServiceCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("service_code");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("MethodCoverageId")
+                        .HasName("pk_method_coverages");
+
+                    b.HasIndex("ServiceCode")
+                        .HasDatabaseName("ix_method_coverages_service");
+
+                    b.HasIndex("ServiceCode", "OptionCode")
+                        .IsUnique()
+                        .HasDatabaseName("ux_method_coverages_service_option");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ServiceCode", "OptionCode"), false);
+
+                    b.ToTable("method_coverages", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_method_coverages_mode_known", "mode IN (0, 1)");
+
+                            t.HasCheckConstraint("ck_method_coverages_option_code_canonical", "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
+
+                            t.HasCheckConstraint("ck_method_coverages_service_code_canonical", "char_length(service_code) > 0 AND service_code = btrim(service_code)");
                         });
                 });
 

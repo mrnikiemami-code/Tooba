@@ -148,17 +148,19 @@ public sealed class ShippingStrictOwnedOptionRateTests
         Assert.Equal(185_000m, legacyExpress.ChargeAmount);
     }
 
-    // (e) Strict without an owned coverage grant fails closed instead of pricing.
+    // (e) Superseded by TB-161: strict mode without any Admin restriction is UNRESTRICTED, so the owned
+    // rate prices it. Coverage is no longer an implicit service-level gate in strict mode; an explicit
+    // restriction declaration is what narrows a method (proven in ShippingMethodCoverageRestrictionTests).
     [Fact]
-    public void Strict_mode_without_coverage_fails_closed()
+    public void Strict_mode_without_any_admin_restriction_prices_the_owned_rate()
     {
         var policies = new[] { Policy("tipax", 205_000m, 3, "standard") };
 
         var strict = ShippingRatePolicyEngine.Quote(Request("tipax", "standard"), policies, []);
 
-        Assert.Equal(ShippingServiceabilityOutcome.NotCovered, strict.Outcome);
-        Assert.Equal(ShippingReasonCodes.CoverageMissing, strict.ReasonCode);
-        Assert.False(strict.IsQuoted);
+        Assert.Equal(ShippingServiceabilityOutcome.Quoted, strict.Outcome);
+        Assert.Equal(205_000m, strict.ChargeAmount);
+        Assert.Equal("standard", strict.OptionCode);
     }
 
     // (f) A conditioned strict-owned row without measurements fails closed, and still does with them.

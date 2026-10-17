@@ -62,10 +62,31 @@ public static class ShippingRatePolicyEngine
     /// <param name="policies">سیاست‌های نرخ؛ ممکن است خالی باشد.</param>
     /// <param name="coverageGrants">مجوزهای پوشش؛ ممکن است خالی باشد (که یعنی پوشش‌نشده).</param>
     /// <returns>نتیجهٔ قطعی؛ هرگز null.</returns>
+    /// <remarks>
+    /// این overload برای فراخوان‌های موجود دست‌نخورده باقی می‌ماند: هیچ اعلام حالت تحدیدی وجود ندارد،
+    /// پس مسیر legacy و مسیر StrictOwnedOption بدون اعلام دقیقاً مانند قبل رفتار می‌کنند.
+    /// </remarks>
     public static ShippingQuote Quote(
         ShippingQuoteRequest request,
         IReadOnlyCollection<ShippingRatePolicy>? policies,
         IReadOnlyCollection<ShippingCoverageGrant>? coverageGrants)
+        => Quote(request, policies, coverageGrants, null);
+
+    /// <summary>
+    /// نرخ و خدمت‌رسانی یک درخواست را با در نظر گرفتن اعلام‌های حالت تحدید روش محاسبه می‌کند.
+    /// </summary>
+    /// <param name="request">درخواست نرخ.</param>
+    /// <param name="policies">سیاست‌های نرخ؛ ممکن است خالی باشد.</param>
+    /// <param name="coverageGrants">مجوزهای پوشش، شامل ردیف‌های سطح‌خدمت و گزینه‌دار.</param>
+    /// <param name="methodCoverages">
+    /// اعلام‌های حالت تحدید روش‌ها؛ تهی/خالی یعنی هیچ محدودیت ادمین‌تعریف‌شده‌ای وجود ندارد.
+    /// </param>
+    /// <returns>نتیجهٔ قطعی؛ هرگز null.</returns>
+    public static ShippingQuote Quote(
+        ShippingQuoteRequest request,
+        IReadOnlyCollection<ShippingRatePolicy>? policies,
+        IReadOnlyCollection<ShippingCoverageGrant>? coverageGrants,
+        IReadOnlyCollection<ShippingMethodCoverage>? methodCoverages)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -176,15 +197,45 @@ public static class ShippingRatePolicyEngine
             return NotQuoted(request, optionCode, serviceCode, ShippingServiceabilityOutcome.CurrencyMismatch, ShippingReasonCodes.CurrencyMismatch);
         }
 
-        // Coverage stays a service+destination decision: one grant authorizes the whole service at that
-        // destination, including every option and every weight/count tier of it, and it never widens scope.
-        var covered = (coverageGrants ?? Array.Empty<ShippingCoverageGrant>())
-            .Any(x => x.IsActive
-                && string.Equals(x.ServiceCode, serviceCode, StringComparison.OrdinalIgnoreCase)
-                && x.Covers(destination));
+        // Coverage is an eligibility decision, separate from pricing readiness.
+        //
+        // Legacy path (default): one service-level grant authorizes the whole service at that destination,
+        // including every option and every tier. Rows that carry an option identity are deliberately NOT
+        // consulted here, so adding option-scoped rows can never widen or narrow legacy coverage.
+        //
+        // Strict path: only the request's OWN method declares its geographic restriction. No active
+        // declaration (or an explicit Unrestricted one) means "Admin defined no restriction" and is NOT a
+        // coverage failure; the owned rate above is still mandatory. A Restricted declaration is enforced
+        // against the grants owned by that exact method, and an empty allowed set denies every destination
+        // instead of silently becoming "unrestricted". Provider/service-level grants never authorize a
+        // restricted method.
+        var grants = (coverageGrants ?? Array.Empty<ShippingCoverageGrant>())
+            .Where(x => x.IsActive)
+            .Where(x => string.Equals(x.ServiceCode, serviceCode, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        bool covered;
+        string coverageReason = ShippingReasonCodes.CoverageMissing;
+        if (!strictOwnedOption)
+        {
+            covered = grants.Any(x => x.OptionCode is null && x.Covers(destination));
+        }
+        else
+        {
+            var declaration = (methodCoverages ?? Array.Empty<ShippingMethodCoverage>())
+                .FirstOrDefault(x => x.BelongsToMethod(serviceCode, optionCode));
+
+            covered = declaration is null || !declaration.IsRestrictive
+                || grants.Any(x => x.BelongsToMethod(serviceCode, optionCode) && x.Covers(destination));
+            if (!covered)
+            {
+                coverageReason = ShippingReasonCodes.CoverageMethodRestricted;
+            }
+        }
+
         if (!covered)
         {
-            return NotQuoted(request, optionCode, serviceCode, ShippingServiceabilityOutcome.NotCovered, ShippingReasonCodes.CoverageMissing);
+            return NotQuoted(request, optionCode, serviceCode, ShippingServiceabilityOutcome.NotCovered, coverageReason);
         }
 
         var freeByThreshold = policy.FreeAboveThreshold is { } threshold

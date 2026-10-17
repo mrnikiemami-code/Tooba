@@ -165,7 +165,6 @@ public sealed class SetShippingCoverageGrantActiveHandler(IShippingRateCoverageD
 /// <summary>خواندن نرخ‌ها و مجوزهای یک کد خدمت برای نویسندگی ادمین.</summary>
 public sealed record GetShippingRatesAndCoverageQuery(string ServiceCode)
     : IRequest<Result<ShippingRatesAndCoverageView>>;
-
 /// <summary>هندلر خواندن نرخ و پوشش یک خدمت.</summary>
 public sealed class GetShippingRatesAndCoverageHandler(IShippingRateCoverageDirectory directory)
     : IRequestHandler<GetShippingRatesAndCoverageQuery, Result<ShippingRatesAndCoverageView>>
@@ -177,5 +176,44 @@ public sealed class GetShippingRatesAndCoverageHandler(IShippingRateCoverageDire
     {
         ArgumentNullException.ThrowIfNull(request);
         return ShippingAdminOperation.ExecuteAsync(() => directory.ListAsync(request.ServiceCode, cancellationToken));
+    }
+}
+
+/// <summary>
+/// تعیین حالت تحدید جغرافیایی یک روش canonical (خدمت + گزینهٔ اختیاری). کد خدمت از مسیر می‌آید و
+/// مرجع قطعی است؛ هویت گزینه پیش از هر نوشتن با کاتالوگ واقعی Fulfillment سنجیده می‌شود.
+/// </summary>
+public sealed record SetShippingMethodCoverageCommand(
+    string ServiceCode,
+    ShippingMethodCoverageWriteRequest Request) : IRequest<Result<ShippingMethodCoverageAdminItem>>;
+
+/// <summary>
+/// هندلر تعیین حالت تحدید. این عملیات هیچ نرخ، پرداخت یا دروازهٔ مشتری‌محور را فعال نمی‌کند: فقط
+/// تصمیم «محدود یا بدون محدودیت» را ثبت می‌کند و نرخ مالک‌شده همچنان شرط جداگانهٔ استعلام است.
+/// </summary>
+public sealed class SetShippingMethodCoverageHandler(
+    IShippingMethodCoverageDirectory directory,
+    IShippingMethodOptionValidator optionValidator)
+    : IRequestHandler<SetShippingMethodCoverageCommand, Result<ShippingMethodCoverageAdminItem>>
+{
+    /// <inheritdoc />
+    public async Task<Result<ShippingMethodCoverageAdminItem>> Handle(
+        SetShippingMethodCoverageCommand request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        // A fabricated option identity must never become a server-authoritative restriction decision.
+        var methodValid = await optionValidator.ValidateAsync(
+            request.ServiceCode,
+            request.Request.OptionCode,
+            cancellationToken);
+        if (methodValid.IsFailure)
+        {
+            return Result.Failure<ShippingMethodCoverageAdminItem>(methodValid.Errors);
+        }
+
+        return await ShippingAdminOperation.ExecuteAsync(
+            () => directory.SetMethodCoverageAsync(request.ServiceCode, request.Request, cancellationToken));
     }
 }

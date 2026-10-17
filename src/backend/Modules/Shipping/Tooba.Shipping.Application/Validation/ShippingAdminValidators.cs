@@ -77,6 +77,9 @@ public static class ShippingValidationCodes
 
     /// <summary>طرف پرداخت‌کنندهٔ حمل خارج از قرارداد پایدار است.</summary>
     public const string PackagingFreightPayerModeInvalid = "shipping.validation.packaging_freight_payer_mode_invalid";
+
+    /// <summary>حالت تحدید پوشش خارج از حالت‌های اعلام‌شدهٔ پایدار است.</summary>
+    public const string CoverageModeInvalid = "shipping.validation.coverage_mode_invalid";
 }
 
 /// <summary>
@@ -218,6 +221,34 @@ public sealed class ShippingCoverageGrantWriteRequestValidator : AbstractValidat
                 .Null().When(x => x.Scope.CityId is null)
                 .WithErrorCode(ShippingValidationCodes.ServiceAreaRequiresCity);
         });
+
+        // هویت گزینه بخشی از کلید یکتایی (روش + دامنه) است، پس شکل آن هم مثل نوشتن نرخ محدود می‌شود؛
+        // وجود واقعی گزینه در کاتالوگ Fulfillment در handler سنجیده می‌شود.
+        RuleFor(x => x.OptionCode)
+            .MaximumLength(ShippingRatePolicy.OptionCodeMaxLength)
+            .WithErrorCode(ShippingValidationCodes.OptionCodeTooLong);
+    }
+}
+
+/// <summary>
+/// اعتبارسنج شکلِ transport حالت تحدید پوشش یک روش. فقط شکل بررسی می‌شود؛ وجود واقعی هویت روش در
+/// handler و از طریق Contracts کاتالوگ Fulfillment سنجیده می‌شود.
+/// </summary>
+public sealed class ShippingMethodCoverageWriteRequestValidator
+    : AbstractValidator<ShippingMethodCoverageWriteRequest>
+{
+    /// <summary>قواعد شکل درخواست حالت تحدید را تعریف می‌کند.</summary>
+    public ShippingMethodCoverageWriteRequestValidator()
+    {
+        RuleFor(x => x.OptionCode)
+            .MaximumLength(ShippingRatePolicy.OptionCodeMaxLength)
+            .WithErrorCode(ShippingValidationCodes.OptionCodeTooLong);
+
+        // یک مقدار عددی ناشناخته نباید به یک «حالت» نامفهوم تبدیل شود: فقط دو معنای مستند مجازند،
+        // وگرنه «محدود یا نه» به خواننده وابسته می‌شد.
+        RuleFor(x => x.Mode)
+            .Must(mode => Enum.IsDefined(mode))
+            .WithErrorCode(ShippingValidationCodes.CoverageModeInvalid);
     }
 }
 
@@ -283,9 +314,22 @@ public sealed class SetShippingCoverageGrantActiveCommandValidator : AbstractVal
     }
 }
 
-/// <summary>اعتبارسنج درخواست خواندن نرخ و پوشش.</summary>
-public sealed class GetShippingRatesAndCoverageQueryValidator : AbstractValidator<GetShippingRatesAndCoverageQuery>
+/// <summary>اعتبارسنج درخواست تعیین حالت تحدید پوشش یک روش.</summary>
+public sealed class SetShippingMethodCoverageCommandValidator : AbstractValidator<SetShippingMethodCoverageCommand>
 {
+    /// <summary>قواعد را تعریف می‌کند.</summary>
+    public SetShippingMethodCoverageCommandValidator()
+    {
+        RuleFor(x => x.ServiceCode)
+            .NotEmpty().WithErrorCode(ShippingValidationCodes.ServiceCodeRequired)
+            .MaximumLength(ShippingRatePolicy.ServiceCodeMaxLength)
+            .WithErrorCode(ShippingValidationCodes.ServiceCodeTooLong);
+        RuleFor(x => x.Request).NotNull().SetValidator(new ShippingMethodCoverageWriteRequestValidator()!);
+    }
+}
+
+/// <summary>اعتبارسنج درخواست خواندن نرخ و پوشش.</summary>
+public sealed class GetShippingRatesAndCoverageQueryValidator : AbstractValidator<GetShippingRatesAndCoverageQuery>{
     /// <summary>قواعد را تعریف می‌کند.</summary>
     public GetShippingRatesAndCoverageQueryValidator()
     {

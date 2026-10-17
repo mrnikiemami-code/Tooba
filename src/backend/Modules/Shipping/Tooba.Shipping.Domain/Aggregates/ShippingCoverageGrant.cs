@@ -31,6 +31,15 @@ public sealed class ShippingCoverageGrant
     /// <summary>کد خدمت ارسال (کلید سازگاری).</summary>
     public string ServiceCode { get; private set; } = string.Empty;
 
+    /// <summary>
+    /// گزینهٔ روش ارسال؛ تهی یعنی این مجوز در سطح خدمت است.
+    /// </summary>
+    /// <remarks>
+    /// ردیف‌های موجود همچنان تهی می‌مانند و معنای قدیمی («پوشش سطح خدمت») را نگه می‌دارند. یک مجوز
+    /// گزینه‌دار به روش دقیقِ خودش تعلق دارد و نه خدمت را پوشش می‌دهد و نه گزینه‌های هم‌خانواده را.
+    /// </remarks>
+    public string? OptionCode { get; private set; }
+
     /// <summary>کشور مالک دامنه.</summary>
     public Guid CountryId { get; private set; }
 
@@ -61,17 +70,23 @@ public sealed class ShippingCoverageGrant
     /// <param name="scope">دامنهٔ مقصد مجوز.</param>
     /// <param name="now">زمان UTC ایجاد.</param>
     /// <param name="coverageGrantId">شناسهٔ قطعی اختیاری برای بازپخش قطعی.</param>
+    /// <param name="optionCode">
+    /// گزینهٔ روش ارسال؛ تهی یعنی مجوز در سطح خدمت. مقدار خالی/فاصله هم به تهی (خدمت‌سطح) نرمال می‌شود
+    /// تا «گزینهٔ nameless» هرگز به‌عنوان یک هویت جدا ثبت نشود.
+    /// </param>
     public static ShippingCoverageGrant Create(
         string serviceCode,
         ShippingDestinationScope scope,
         DateTimeOffset now,
-        Guid? coverageGrantId = null)
+        Guid? coverageGrantId = null,
+        string? optionCode = null)
     {
         ArgumentNullException.ThrowIfNull(scope);
         var grant = new ShippingCoverageGrant
         {
             CoverageGrantId = coverageGrantId is { } id && id != Guid.Empty ? id : UuidV7.New(),
             ServiceCode = NormalizeServiceCode(serviceCode),
+            OptionCode = NormalizeOptionCode(optionCode),
             CountryId = scope.CountryId == Guid.Empty
                 ? throw new SemanticException(new SemanticError(ShippingErrorCodes.DestinationCountryIdRequired))
                 : scope.CountryId,
@@ -85,6 +100,18 @@ public sealed class ShippingCoverageGrant
         grant.EnsureScopeIsCoherent();
         return grant;
     }
+
+    /// <summary>
+    /// آیا این مجوز دقیقاً به روش داده‌شده تعلق دارد (کد خدمت و همان گزینه، بدون fallback).
+    /// </summary>
+    /// <param name="serviceCode">کد خدمت درخواست.</param>
+    /// <param name="optionCode">گزینهٔ درخواست؛ تهی یعنی روش سطح خدمت.</param>
+    public bool BelongsToMethod(string serviceCode, string? optionCode) =>
+        string.Equals(ServiceCode, serviceCode?.Trim() ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(
+            OptionCode ?? string.Empty,
+            NormalizeOptionCode(optionCode) ?? string.Empty,
+            StringComparison.OrdinalIgnoreCase);
 
     /// <summary>مجوز را فعال می‌کند.</summary>
     /// <param name="now">زمان UTC ویرایش.</param>
@@ -145,6 +172,23 @@ public sealed class ShippingCoverageGrant
 
         return trimmed.Length > ShippingRatePolicy.ServiceCodeMaxLength
             ? throw new SemanticException(new SemanticError(ShippingErrorCodes.ServiceCodeInvalid))
+            : trimmed;
+    }
+
+    /// <summary>
+    /// گزینه را به شکل متعارف می‌برد؛ تهی/فاصله یعنی مجوز در سطح خدمت است و یک مقدار غیرمجاز طولی
+    /// هرگز ثبت نمی‌شود (قیاس با کد خدمت).
+    /// </summary>
+    private static string? NormalizeOptionCode(string? optionCode)
+    {
+        var trimmed = optionCode?.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            return null;
+        }
+
+        return trimmed.Length > ShippingRatePolicy.OptionCodeMaxLength
+            ? throw new SemanticException(new SemanticError(ShippingErrorCodes.OptionCodeInvalid))
             : trimmed;
     }
 

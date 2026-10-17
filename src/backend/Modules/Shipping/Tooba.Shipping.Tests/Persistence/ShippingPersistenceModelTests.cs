@@ -63,6 +63,7 @@ public sealed class ShippingPersistenceModelTests
             new[]
             {
                 "coverage_grants",
+                "method_coverages",
                 "operating_schedules",
                 "operating_windows",
                 "outbox_messages",
@@ -85,6 +86,10 @@ public sealed class ShippingPersistenceModelTests
         var grantKey = Assert.Single(Entity(model, "coverage_grants").FindPrimaryKey()!.Properties);
         Assert.Equal(nameof(ShippingCoverageGrant.CoverageGrantId), grantKey.Name);
         Assert.Equal(ValueGenerated.Never, grantKey.ValueGenerated);
+
+        var coverageKey = Assert.Single(Entity(model, "method_coverages").FindPrimaryKey()!.Properties);
+        Assert.Equal(nameof(ShippingMethodCoverage.MethodCoverageId), coverageKey.Name);
+        Assert.Equal(ValueGenerated.Never, coverageKey.ValueGenerated);
     }
 
     [Fact]
@@ -182,7 +187,8 @@ public sealed class ShippingPersistenceModelTests
 
     [Theory]
     [InlineData("rate_policies", "ux_rate_policies_service_option_scope", new[] { "ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId", "MinWeightGrams", "MaxWeightGrams", "MinItemCount", "MaxItemCount" })]
-    [InlineData("coverage_grants", "ux_coverage_grants_service_scope", new[] { "ServiceCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId" })]
+    [InlineData("coverage_grants", "ux_coverage_grants_service_option_scope", new[] { "ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId" })]
+    [InlineData("method_coverages", "ux_method_coverages_service_option", new[] { "ServiceCode", "OptionCode" })]
     [InlineData("operating_schedules", "ux_operating_schedules_service_option", new[] { "ServiceCode", "OptionCode" })]
     [InlineData("packaging_policies", "ux_packaging_policies_service_option_scope", new[] { "ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId" })]
     public void Identity_index_is_unique_over_nulls_not_distinct_columns(
@@ -273,6 +279,7 @@ public sealed class ShippingPersistenceModelTests
         Assert.Contains("CREATE SCHEMA shipping;", script);
         Assert.Contains("CREATE TABLE shipping.rate_policies", script);
         Assert.Contains("CREATE TABLE shipping.coverage_grants", script);
+        Assert.Contains("CREATE TABLE shipping.method_coverages", script);
         Assert.Contains("CREATE TABLE shipping.operating_schedules", script);
         Assert.Contains("CREATE TABLE shipping.operating_windows", script);
         Assert.Contains("CREATE TABLE shipping.packaging_policies", script);
@@ -294,7 +301,11 @@ public sealed class ShippingPersistenceModelTests
                      "ck_rate_policies_count_tier_coherent",
                      "ck_rate_policies_tier_bounds_paired",
                      "ck_coverage_grants_service_code_canonical",
+                     "ck_coverage_grants_option_code_canonical",
                      "ck_coverage_grants_scope_coherent",
+                     "ck_method_coverages_service_code_canonical",
+                     "ck_method_coverages_option_code_canonical",
+                     "ck_method_coverages_mode_known",
                      "ck_operating_schedules_service_code_canonical",
                      "ck_operating_schedules_option_code_canonical",
                      "ck_operating_schedules_timezone_canonical",
@@ -302,7 +313,8 @@ public sealed class ShippingPersistenceModelTests
                      "ck_operating_windows_range_half_open",
                      "ck_operating_windows_capacity_positive",
                      "ux_rate_policies_service_option_scope",
-                     "ux_coverage_grants_service_scope",
+                     "ux_coverage_grants_service_option_scope",
+                     "ux_method_coverages_service_option",
                      "ux_operating_schedules_service_option",
                      "ux_packaging_policies_service_option_scope",
                      "ck_packaging_policies_fee_amount_non_negative",
@@ -319,9 +331,10 @@ public sealed class ShippingPersistenceModelTests
 
         // Every scope/identity index must carry the modifier: the initial slice (rate + coverage = 2),
         // then one re-created rate index in each of the three additive migrations (option identity,
-        // tier) plus the schedule identity index, plus the packaging policy identity index. The drops
-        // do not emit the modifier, so this counts CREATE statements only.
-        Assert.Equal(6, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
+        // tier) plus the schedule identity index, plus the packaging policy identity index, plus the
+        // option-scoped coverage index rebuild and the method coverage identity index. The drops do not
+        // emit the modifier, so this counts CREATE statements only.
+        Assert.Equal(8, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
 
         // The only foreign key in the whole schema is the intra-module schedule -> windows cascade;
         // nothing points at another module's schema.
@@ -332,20 +345,22 @@ public sealed class ShippingPersistenceModelTests
     }
 
     [Fact]
-    public void Migrations_are_the_initial_slice_plus_four_additive_updates()
+    public void Migrations_are_the_initial_slice_plus_five_additive_updates()
     {
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        // Five migrations only: the initial slice and four additive changes (option identity,
-        // operating schedule, weight/count tiers, packaging policy). Asserting the exact count is what
-        // keeps the schema reviewable as a unit instead of an open-ended chain.
-        Assert.Equal(5, migrations.Length);
+        // Six migrations only: the initial slice and five additive changes (option identity,
+        // operating schedule, weight/count tiers, packaging policy, option-scoped coverage restriction).
+        // Asserting the exact count is what keeps the schema reviewable as a unit instead of an
+        // open-ended chain.
+        Assert.Equal(6, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
         Assert.EndsWith("_WeightAndCountRateTiers", migrations[3], StringComparison.Ordinal);
         Assert.EndsWith("_ShippingPackagingPolicy", migrations[4], StringComparison.Ordinal);
+        Assert.EndsWith("_OptionScopedCoverageRestriction", migrations[5], StringComparison.Ordinal);
     }
 
     [Fact]

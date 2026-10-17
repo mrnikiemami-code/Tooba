@@ -82,13 +82,31 @@ public sealed record ShippingRatePolicyActiveRequest(bool IsActive);
 /// <summary>بدنهٔ ایجاد یک مجوز پوشش صریح برای یک کد خدمت.</summary>
 /// <param name="ServiceCode">کد خدمت Fulfillment.</param>
 /// <param name="Scope">دامنهٔ مقصد مجوز.</param>
+/// <param name="OptionCode">
+/// گزینهٔ روش ارسال در صورت وجود؛ تهی یعنی مجوز در سطح خود خدمت است (ردیف‌های قدیمی دست‌نخورده).
+/// این مقدار <em>هویت روش</em> است: یک مجوز گزینه‌دار هرگز پوشش خدمت‌سطح یا گزینهٔ هم‌خانواده را
+/// تغییر نمی‌دهد و برعکس.
+/// </param>
 public sealed record ShippingCoverageGrantWriteRequest(
     string ServiceCode,
-    ShippingDestinationScopeWrite Scope);
+    ShippingDestinationScopeWrite Scope,
+    string? OptionCode = null);
 
 /// <summary>بدنهٔ تغییر وضعیت فعال/غیرفعال یک مجوز پوشش.</summary>
 /// <param name="IsActive">وضعیت هدف.</param>
 public sealed record ShippingCoverageGrantActiveRequest(bool IsActive);
+
+/// <summary>
+/// بدنهٔ تعیین حالت تحدید جغرافیایی یک روش canonical (خدمت + گزینهٔ اختیاری).
+/// </summary>
+/// <param name="OptionCode">گزینهٔ روش ارسال؛ تهی یعنی روش در سطح خدمت است.</param>
+/// <param name="Mode">
+/// <see cref="ShippingCoverageMode.Unrestricted"/> یعنی هیچ محدودیت ادمین‌تعریف‌شده‌ای وجود ندارد؛
+/// <see cref="ShippingCoverageMode.Restricted"/> یعنی فقط مقصدهای مجازشدهٔ همین روش.
+/// </param>
+public sealed record ShippingMethodCoverageWriteRequest(
+    string? OptionCode,
+    ShippingCoverageMode Mode);
 
 /// <summary>یک سیاست نرخ همان‌طور که ادمین می‌بیند.</summary>
 /// <param name="RatePolicyId">شناسهٔ پایدار سیاست.</param>
@@ -131,6 +149,17 @@ public sealed record ShippingRatePolicyAdminItem(
     ShippingRateConditionWrite? Condition = null);
 
 /// <summary>یک مجوز پوشش همان‌طور که ادمین می‌بیند.</summary>
+/// <param name="CoverageGrantId">شناسهٔ پایدار مجوز.</param>
+/// <param name="ServiceCode">کد خدمت Fulfillment.</param>
+/// <param name="CountryId">شناسهٔ کشور دامنه.</param>
+/// <param name="AdministrativeAreaId">ناحیهٔ اداری دامنه؛ تهی یعنی سطح بالاتر.</param>
+/// <param name="CityId">شهر دامنه؛ تهی یعنی سطح بالاتر.</param>
+/// <param name="ServiceAreaId">ناحیهٔ خدمت دامنه؛ تهی یعنی سطح بالاتر.</param>
+/// <param name="Level">عمیق‌ترین سطح دامنه.</param>
+/// <param name="IsActive">آیا مجوز فعال است.</param>
+/// <param name="CreatedAt">زمان ایجاد UTC.</param>
+/// <param name="UpdatedAt">زمان آخرین ویرایش UTC.</param>
+/// <param name="OptionCode">گزینهٔ روش ارسال؛ تهی یعنی مجوز در سطح خدمت (ردیف قدیمی).</param>
 public sealed record ShippingCoverageGrantAdminItem(
     Guid CoverageGrantId,
     string ServiceCode,
@@ -141,16 +170,38 @@ public sealed record ShippingCoverageGrantAdminItem(
     ShippingDestinationLevel Level,
     bool IsActive,
     DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    string? OptionCode = null);
+
+/// <summary>
+/// حالت تحدید جغرافیایی یک روش همان‌طور که ادمین می‌بیند؛ نبود ردیف یعنی «بدون محدودیت».
+/// </summary>
+/// <param name="MethodCoverageId">شناسهٔ پایدار اعلام.</param>
+/// <param name="ServiceCode">کد خدمت Fulfillment.</param>
+/// <param name="OptionCode">گزینهٔ روش؛ تهی یعنی روش در سطح خدمت.</param>
+/// <param name="Mode">حالت تحدید اعلام‌شده.</param>
+/// <param name="CreatedAt">زمان ایجاد UTC.</param>
+/// <param name="UpdatedAt">زمان آخرین ویرایش UTC.</param>
+public sealed record ShippingMethodCoverageAdminItem(
+    Guid MethodCoverageId,
+    string ServiceCode,
+    string? OptionCode,
+    ShippingCoverageMode Mode,
+    DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
 /// <summary>
-/// نمای کامل نویسندگی یک کد خدمت. مجموعه‌های خالی عمداً صریح‌اند: نبود مجوز یعنی «بدون پوشش»،
-/// نه «بدون محدودیت».
+/// نمای کامل نویسندگی یک کد خدمت. مجموعه‌های خالی عمداً صریح‌اند: نبود مجوز یعنی «بدون پوشش»
+/// در مسیر قدیمی، و نبود <em>اعلام حالت</em> یعنی «بدون محدودیت ادمین‌تعریف‌شده» در مسیر روش‌محور.
 /// </summary>
 /// <param name="ServiceCode">کد خدمت این نما.</param>
 /// <param name="RatePolicies">سیاست‌های نرخ این خدمت.</param>
-/// <param name="CoverageGrants">مجوزهای پوشش این خدمت.</param>
+/// <param name="CoverageGrants">مجوزهای پوشش این خدمت (خدمت‌سطح و گزینه‌دار).</param>
+/// <param name="MethodCoverages">
+/// اعلام‌های حالت تحدید این خدمت. خالی بودن یعنی هیچ محدودیت ادمینی برای هیچ روشی تعریف نشده است.
+/// </param>
 public sealed record ShippingRatesAndCoverageView(
     string ServiceCode,
     IReadOnlyList<ShippingRatePolicyAdminItem> RatePolicies,
-    IReadOnlyList<ShippingCoverageGrantAdminItem> CoverageGrants);
+    IReadOnlyList<ShippingCoverageGrantAdminItem> CoverageGrants,
+    IReadOnlyList<ShippingMethodCoverageAdminItem>? MethodCoverages = null);

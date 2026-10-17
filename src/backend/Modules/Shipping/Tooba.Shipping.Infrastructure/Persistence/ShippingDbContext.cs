@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
 using Tooba.Shipping.Contracts.Packaging;
+using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Domain.Aggregates;
 using Tooba.Shipping.Domain.Scheduling;
 
@@ -46,6 +47,9 @@ public sealed class ShippingDbContext : DbContext
 
     /// <summary>مجوزهای پوشش ارسال.</summary>
     public DbSet<ShippingCoverageGrant> CoverageGrants => Set<ShippingCoverageGrant>();
+
+    /// <summary>اعلام‌های حالت تحدید جغرافیایی هر روش ارسال.</summary>
+    public DbSet<ShippingMethodCoverage> MethodCoverages => Set<ShippingMethodCoverage>();
 
     /// <summary>برنامه‌های عملیاتی هفتگی ارسال (پنجره‌های محلی تحویل به حامل).</summary>
     public DbSet<ShippingOperatingSchedule> OperatingSchedules => Set<ShippingOperatingSchedule>();
@@ -169,6 +173,12 @@ public sealed class ShippingDbContext : DbContext
                 table.HasCheckConstraint(
                     "ck_coverage_grants_service_code_canonical",
                     "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+                // A present option code must be canonical for the same reason as the service code: the engine
+                // compares it ordinal-ignore-case against a trimmed request option, so a padded value would
+                // silently never match. NULL keeps the documented legacy service-level meaning.
+                table.HasCheckConstraint(
+                    "ck_coverage_grants_option_code_canonical",
+                    "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
                 table.HasCheckConstraint(
                     "ck_coverage_grants_scope_coherent",
                     "service_area_id IS NULL OR city_id IS NOT NULL");
@@ -176,18 +186,66 @@ public sealed class ShippingDbContext : DbContext
             entity.HasKey(x => x.CoverageGrantId);
             entity.Property(x => x.CoverageGrantId).ValueGeneratedNever();
             entity.Property(x => x.ServiceCode).HasMaxLength(ShippingRatePolicy.ServiceCodeMaxLength).IsRequired();
+            entity.Property(x => x.OptionCode).HasMaxLength(ShippingRatePolicy.OptionCodeMaxLength);
 
-            // Same rule as the rate policy: coverage is granted at most once per service and exact scope,
-            // including scopes whose deeper levels are NULL. Requires PostgreSQL 15+.
-            entity.HasIndex(x => new { x.ServiceCode, x.CountryId, x.AdministrativeAreaId, x.CityId, x.ServiceAreaId })
+            // Same rule as the rate policy: coverage is granted at most once per method (service + option)
+            // and exact scope, including scopes whose deeper levels are NULL. An option-scoped grant and a
+            // service-level grant for the same scope are distinct decisions, so option_code is part of the
+            // key. Requires PostgreSQL 15+.
+            entity.HasIndex(x => new
+                {
+                    x.ServiceCode,
+                    x.OptionCode,
+                    x.CountryId,
+                    x.AdministrativeAreaId,
+                    x.CityId,
+                    x.ServiceAreaId,
+                })
                 .IsUnique()
                 .AreNullsDistinct(false)
-                .HasDatabaseName("ux_coverage_grants_service_scope");
+                .HasDatabaseName("ux_coverage_grants_service_option_scope");
 
             // Coverage rows are sought by service + country on every quote; this index keeps that lookup
             // narrow without introducing any cross-schema reference.
             entity.HasIndex(x => new { x.ServiceCode, x.CountryId, x.IsActive })
                 .HasDatabaseName("ix_coverage_grants_service_country_active");
+        });
+
+        modelBuilder.Entity<ShippingMethodCoverage>(entity =>
+        {
+            entity.ToTable("method_coverages", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_method_coverages_service_code_canonical",
+                    "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+                table.HasCheckConstraint(
+                    "ck_method_coverages_option_code_canonical",
+                    "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
+                // The mode is a stable code, never free-form prose: only the two documented meanings may be
+                // persisted, so no row can exist whose restriction intent is unreadable. A third value would
+                // make "restricted or not" depend on the reader.
+                table.HasCheckConstraint(
+                    "ck_method_coverages_mode_known",
+                    $"mode IN ({(int)ShippingCoverageMode.Unrestricted}, {(int)ShippingCoverageMode.Restricted})");
+            });
+            entity.HasKey(x => x.MethodCoverageId);
+            entity.Property(x => x.MethodCoverageId).ValueGeneratedNever();
+            entity.Property(x => x.ServiceCode)
+                .HasMaxLength(ShippingRatePolicy.ServiceCodeMaxLength)
+                .IsRequired();
+            entity.Property(x => x.OptionCode).HasMaxLength(ShippingRatePolicy.OptionCodeMaxLength);
+            entity.Property(x => x.Mode);
+
+            // One declaration per method identity (service + option). NULLS NOT DISTINCT is required: two
+            // option-less declarations for the same service would make "is this service restricted" depend on
+            // row order. Requires PostgreSQL 15+.
+            entity.HasIndex(x => new { x.ServiceCode, x.OptionCode })
+                .IsUnique()
+                .AreNullsDistinct(false)
+                .HasDatabaseName("ux_method_coverages_service_option");
+
+            entity.HasIndex(x => x.ServiceCode)
+                .HasDatabaseName("ix_method_coverages_service");
         });
 
         modelBuilder.Entity<ShippingPackagingPolicy>(entity =>

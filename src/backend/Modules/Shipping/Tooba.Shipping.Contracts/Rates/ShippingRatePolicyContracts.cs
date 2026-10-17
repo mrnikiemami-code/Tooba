@@ -134,6 +134,13 @@ public static class ShippingReasonCodes
     /// <summary>ارز درخواست با ارز سیاست یکسان نیست.</summary>
     public const string CurrencyMismatch = "shipping.currency.mismatch";
 
+    /// <summary>
+    /// روش صریحاً به مقاصد محدودی محدود شده است (<see cref="ShippingCoverageMode.Restricted"/>) و
+    /// مقصد درخواست در مجموعهٔ مجازِ همان روش نیست. نبودن در مجموعهٔ مجاز یعنی «مجاز نیست»؛ هرگز به
+    /// «بدون محدودیت» یا «پوشش ارائه‌دهنده» تعبیر نمی‌شود.
+    /// </summary>
+    public const string CoverageMethodRestricted = "shipping.coverage.method_restricted";
+
     /// <summary>سیاست سازگار شرط‌دار است و درخواست اندازهٔ فیزیکی لازم را اعلام نکرده.</summary>
     public const string MeasurementRequired = "shipping.quote.measurement_required";
 
@@ -150,6 +157,34 @@ public static class ShippingReasonCodes
     /// صفر و نه رایگان.
     /// </summary>
     public const string OwnedOptionNotPriced = "shipping.quote.owned_option_not_priced";
+}
+
+/// <summary>
+/// حالت تحدید جغرافیایی یک روش canonical: آیا این روش <em>صریحاً</em> به مجموعهٔ محدودی از مقاصد
+/// محدود شده است یا ادمین هیچ محدودیتی برای آن تعریف نکرده است.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>چرا یک حالت صریح لازم است.</b> «نبود ردیف» نمی‌تواند دو چیز متفاوت را از هم جدا کند:
+/// «ادمین محدودیتی تعریف نکرده» و «ادمین هیچ مقصدی را مجاز نکرده». تفاوت این دو در عمل یعنی
+/// تفاوت بین «بدون محدودیت» و «هیچ‌جا سرویس نمی‌دهیم»، پس نیازمند یک اعلام صریح است. این اعلام
+/// هیچ ردیف مقصد فراگیری نمی‌سازد و هیچ معنای پوشش مالی/نرخ ندارد.
+/// </para>
+/// <para>
+/// این حالت فقط <em>تحدید جغرافیایی</em> را بیان می‌کند: نه «خدمت فعال است»، نه «قیمت دارد» و نه
+/// «آمادهٔ استعلام است». نرخ مالک‌شده و بقیهٔ شروط authoritative همیشه جداگانه لازم‌اند.
+/// </para>
+/// </remarks>
+public enum ShippingCoverageMode
+{
+    /// <summary>ادمین هیچ محدودیتی برای این روش تعریف نکرده است: همهٔ مقاصد پشتیبانی‌شده.</summary>
+    Unrestricted = 0,
+
+    /// <summary>
+    /// فقط مقصدهای صریحاً مجازشدهٔ همین روش. مجموعهٔ مجاز خالی یعنی هیچ مقصدی؛ این هرگز به
+    /// «بدون محدودیت» تفسیر نمی‌شود.
+    /// </summary>
+    Restricted = 1,
 }
 
 /// <summary>

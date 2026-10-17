@@ -45,12 +45,13 @@ public sealed class ShippingAdminEndpointOwnershipTests
         Assert.Contains("MapPost(\"/shipping-services/{serviceCode}/coverage-grants\"", source, StringComparison.Ordinal);
         Assert.Contains("MapPatch(", source, StringComparison.Ordinal);
         Assert.Contains("coverage-grants/{coverageGrantId:guid}/active", source, StringComparison.Ordinal);
+        Assert.Contains("MapPut(\"/shipping-services/{serviceCode}/method-coverage\"", source, StringComparison.Ordinal);
 
-        // Six routes, six authorization calls: no mapped route may be reachable anonymously.
+        // Seven routes, seven authorization calls: no mapped route may be reachable anonymously.
         var mapCalls = CountOccurrences(source, "group.Map");
         var authorizerCalls = CountOccurrences(source, "authorizer.RequireAuthorizedAsync(");
-        Assert.Equal(6, mapCalls);
-        Assert.Equal(6, authorizerCalls);
+        Assert.Equal(7, mapCalls);
+        Assert.Equal(7, authorizerCalls);
 
         // Permissions are existing catalog ids only; no invented capability strings.
         Assert.Contains("public const string View = \"fulfillment.view\";", source, StringComparison.Ordinal);
