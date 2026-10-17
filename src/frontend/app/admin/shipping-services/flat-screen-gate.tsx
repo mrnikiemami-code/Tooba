@@ -16,8 +16,10 @@
  *   هیچ fallback hardcoded نمی‌تواند دروازه را روشن کند.
  * - `prepareAdminDevActor` همان seam موجود و مجاز محیط Development است؛ فقط «هویت» را از Host
  *   می‌گیرد و هیچ رمز/OTP/هدر تازه‌ای نمی‌سازد. هیچ actor ممتازی hardcode یا جعل نمی‌شود.
- * - در `401`/`403`/خطا/آماده‌نبودن/قطع ارتباط: وضعیت صریح و بومی (فارسی) با تلاش دوباره نشان داده
- *   می‌شود. هیچ‌گاه به صفحهٔ قدیمیِ سطح ارائه‌دهنده سقوط نمی‌کند و هیچ فلشِ صفحهٔ قدیمی ندارد.
+ * - در `401`/`403`/خطا/آماده‌نبودن/قطع ارتباط: وضعیت صریح و بومی (فارسی) نشان داده می‌شود؛
+ *   «تلاش دوباره» فقط برای شکست گذرا پیشنهاد می‌شود و «دروازهٔ خاموش در این محیط» به‌عنوان
+ *   شکست پیکربندی، بدون دکمهٔ بی‌اثر نمایش داده می‌شود. هیچ‌گاه به صفحهٔ قدیمیِ سطح ارائه‌دهنده
+ *   سقوط نمی‌کند و هیچ فلشِ صفحهٔ قدیمی ندارد.
  * - وقتی خواندن سرور موفق بوده (`serverResolved`)، همان دادهٔ SSR بلافاصله رندر می‌شود تا ادمینِ
  *   لاگین‌کرده هیچ بارگذاری دوباره‌ای نبیند.
  */
@@ -27,29 +29,13 @@ import { ErrorState, faWorkspaceMessages } from "../../../design-system";
 import { prepareAdminDevActor } from "../admin-api.ts";
 import { loadOneLevelCatalog } from "./flat-method-catalog-api.ts";
 import { ShippingServicesFlatScreen } from "./flat-screen.tsx";
+import { presentShippingCatalogFailure } from "./shipping-catalog-gate-presentation.ts";
 import type { OneLevelMethodRow } from "./shipping-one-level-tabs-model.ts";
 
 type GateState = "resolving" | "ok" | "denied" | "error";
 
-/** پیام‌های بومیِ وضعیت دروازه؛ هیچ‌کدام به صفحهٔ قدیمی راه نمی‌دهند. */
+/** پیام بومیِ وضعیتِ در حال بررسی؛ هیچ‌کدام به صفحهٔ قدیمی راه نمی‌دهند. */
 const RESOLVING_FA = "در حال بررسی دسترسی و بارگذاری روش‌های ارسال…";
-const DENIED_TITLE_FA = "دسترسی ندارید";
-const DENIED_DETAIL_FA =
-  "هویت مدیر تأیید نشد؛ فهرست روش‌های ارسال نمایش داده نمی‌شود. اگر با نقش مدیر وارد شده‌اید، دوباره تلاش کنید.";
-const ERROR_TITLE_FA = "بارگذاری روش‌های ارسال ناموفق بود";
-
-function errorDetailFa(message: string | undefined): string {
-  if (message === "shipping_catalog.not_ready") {
-    return "کاتالوگ تک‌سطحی روش‌های ارسال روی سرور آمادهٔ خواندن نیست.";
-  }
-  if (message === "shipping_catalog.gate_disabled") {
-    return "کاتالوگ تک‌سطحی روش‌های ارسال در این محیط فعال نیست.";
-  }
-  if (message === "host-unreachable") {
-    return "ارتباط با سرور برقرار نشد.";
-  }
-  return faWorkspaceMessages.retry;
-}
 
 export function ShippingServicesFlatScreenGate({
   serverResolved,
@@ -99,12 +85,13 @@ export function ShippingServicesFlatScreenGate({
   }
 
   if (state === "denied") {
+    const view = presentShippingCatalogFailure("admin.authorization.denied");
     return (
       <div data-testid="admin-shipping-services-denied">
         <ErrorState
-          title={DENIED_TITLE_FA}
-          detail={DENIED_DETAIL_FA}
-          onRetry={() => void resolve()}
+          title={view.title}
+          detail={view.detail}
+          onRetry={view.retryable ? () => void resolve() : undefined}
           retryLabel={faWorkspaceMessages.retry}
         />
       </div>
@@ -112,12 +99,13 @@ export function ShippingServicesFlatScreenGate({
   }
 
   if (state === "error") {
+    const view = presentShippingCatalogFailure(message);
     return (
       <div data-testid="admin-shipping-services-error">
         <ErrorState
-          title={ERROR_TITLE_FA}
-          detail={errorDetailFa(message)}
-          onRetry={() => void resolve()}
+          title={view.title}
+          detail={view.detail}
+          onRetry={view.retryable ? () => void resolve() : undefined}
           retryLabel={faWorkspaceMessages.retry}
         />
       </div>

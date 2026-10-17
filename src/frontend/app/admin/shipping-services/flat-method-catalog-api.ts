@@ -10,6 +10,10 @@
  * دروازه با همان تابع fail-closed شناخته‌شدهٔ `resolveOneLevelCatalogGateFromHost` ارزیابی می‌شود؛
  * پس خطای مجوز/شبکه/پاسخ نامعتبر و همچنین «دروازهٔ روشن ولی کاتالوگ مهاجرت‌نشده» هیچ‌وقت به‌عنوان
  * «فهرست خالیِ موفق» جا زده نمی‌شوند.
+ *
+ * هر دلیلِ شکست یک کد پایدار و مستقل دارد (`shipping_catalog.gate_disabled`، `not_ready`،
+ * `invalid_response`، `load_failed`، `host-unreachable`) تا لایهٔ نمایش بتواند «شکست پیکربندی»
+ * را از «شکست گذرا» جدا کند؛ پیش‌تر همهٔ این‌ها یک رشته بودند و UI همه را «تلاش دوباره» می‌دید.
  */
 import { adminHeaders, type AdminResult } from "../admin-api.ts";
 import {
@@ -17,7 +21,9 @@ import {
   mapHostOneLevelMethods,
   resolveOneLevelActiveLanguageId,
   resolveOneLevelCatalogGateFromHost,
+  type OneLevelCatalogGate,
 } from "./shipping-one-level-gate.ts";
+import type { ShippingCatalogFailureCode } from "./shipping-catalog-gate-presentation.ts";
 import type { OneLevelMethodRow } from "./shipping-one-level-tabs-model.ts";
 
 /** کاتالوگ خوانده‌شده: ردیف‌های روش + زبان فعال مؤثر که سرور اعلام کرده است. */
@@ -25,6 +31,19 @@ export type OneLevelCatalogRead = {
   methods: readonly OneLevelMethodRow[];
   activeLanguageId: string;
 };
+
+/** کد شکست پایدار برای هر دلیلِ خاموش‌بودن دروازه؛ هر دلیل، نمایش و رفتار خودش را دارد. */
+export function catalogFailureCodeForGate(gate: OneLevelCatalogGate): ShippingCatalogFailureCode {
+  if (gate.state === "enabled") return "shipping_catalog.invalid_response";
+  switch (gate.reason) {
+    case "catalog-not-ready":
+      return "shipping_catalog.not_ready";
+    case "untrusted-source":
+      return "shipping_catalog.invalid_response";
+    default:
+      return "shipping_catalog.gate_disabled";
+  }
+}
 
 export async function loadOneLevelCatalog(): Promise<AdminResult<OneLevelCatalogRead>> {
   try {
@@ -45,9 +64,7 @@ export async function loadOneLevelCatalog(): Promise<AdminResult<OneLevelCatalog
         state: "error",
         data: null,
         status: response.status,
-        message: gate.reason === "catalog-not-ready"
-          ? "shipping_catalog.not_ready"
-          : "shipping_catalog.gate_disabled",
+        message: catalogFailureCodeForGate(gate),
       };
     }
     return {
