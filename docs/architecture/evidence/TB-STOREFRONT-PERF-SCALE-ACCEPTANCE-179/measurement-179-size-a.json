@@ -1,0 +1,97 @@
+﻿{
+    "baseSha":  "26b9c90daf79fa61493e91c9dba725e72562ae0c",
+    "tag":  "size-a",
+    "route":  "/v1/storefront/home?locale=fa",
+    "hostHeader":  "alpha.localhost",
+    "scratch":  {
+                    "container":  "tooba-tb179-pg",
+                    "database":  "tooba_179_scratch",
+                    "pgPort":  55499,
+                    "hostPort":  5450
+                },
+    "legacyBootstraps":  true,
+    "diagnosticLeg":  {
+                          "leg":  "diagnostic",
+                          "efLevel":  "Information",
+                          "warmup":  {
+                                         "status":  200,
+                                         "wallMs":  222.2,
+                                         "payloadBytes":  14851
+                                     },
+                          "requests":  3,
+                          "samples":  [
+                                          {
+                                              "request":  1,
+                                              "status":  200,
+                                              "wallMs":  71,
+                                              "payloadBytes":  14851,
+                                              "productCount":  21,
+                                              "bodySha256":  "DFB61CC5C4AD2E813436F48D99C7653AF1FA6046FB26E0D70476245CA7D8260E"
+                                          },
+                                          {
+                                              "request":  2,
+                                              "status":  200,
+                                              "wallMs":  60.4,
+                                              "payloadBytes":  14851,
+                                              "productCount":  21,
+                                              "bodySha256":  "DFB61CC5C4AD2E813436F48D99C7653AF1FA6046FB26E0D70476245CA7D8260E"
+                                          },
+                                          {
+                                              "request":  3,
+                                              "status":  200,
+                                              "wallMs":  50.4,
+                                              "payloadBytes":  14851,
+                                              "productCount":  21,
+                                              "bodySha256":  "DFB61CC5C4AD2E813436F48D99C7653AF1FA6046FB26E0D70476245CA7D8260E"
+                                          }
+                                      ],
+                          "stdoutBytes":  7681486,
+                          "stdoutLines":  1400,
+                          "efCategoryLines":  1320,
+                          "efCommandLines":  1287,
+                          "errorOrCriticalLines":  0
+                      },
+    "defaultLeg":  {
+                       "leg":  "default",
+                       "efLevel":  "\u003ccommitted default\u003e",
+                       "warmup":  {
+                                      "status":  200,
+                                      "wallMs":  231.6,
+                                      "payloadBytes":  16279
+                                  },
+                       "requests":  3,
+                       "samples":  [
+                                       {
+                                           "request":  1,
+                                           "status":  200,
+                                           "wallMs":  60.4,
+                                           "payloadBytes":  16279,
+                                           "productCount":  22,
+                                           "bodySha256":  "50A31168FFE1F78648F7E9064BC2B8265E143239DA83A8760E6296CB4B788313"
+                                       },
+                                       {
+                                           "request":  2,
+                                           "status":  200,
+                                           "wallMs":  65,
+                                           "payloadBytes":  16279,
+                                           "productCount":  22,
+                                           "bodySha256":  "50A31168FFE1F78648F7E9064BC2B8265E143239DA83A8760E6296CB4B788313"
+                                       },
+                                       {
+                                           "request":  3,
+                                           "status":  200,
+                                           "wallMs":  50.8,
+                                           "payloadBytes":  16279,
+                                           "productCount":  22,
+                                           "bodySha256":  "50A31168FFE1F78648F7E9064BC2B8265E143239DA83A8760E6296CB4B788313"
+                                       }
+                                   ],
+                       "stdoutBytes":  24608,
+                       "stdoutLines":  21,
+                       "efCategoryLines":  2,
+                       "efCommandLines":  0,
+                       "errorOrCriticalLines":  0
+                   },
+    "sharedPortsTouched":  false,
+    "credentialsInEvidence":  false
+}

@@ -21,6 +21,16 @@ and product identifier/name/price/availability parity on a seeded catalog (the s
 plus Architect review and user validation. See
 `docs/architecture/evidence/TB-STOREFRONT-EF-LOGGING-RELEASE-178/RESULT.md`.
 
+**TB-179 update (2026-10-17): log fix re-confirmed on a NONEMPTY catalog; scale evidence still missing.**
+Same-binary A/B on a disposable loopback Host seeded by the app-owned Development bootstraps (5 products,
+6 offers, 10 prices, 8 stock positions) with 1 warm-up + 3 warm `GET /v1/storefront/home?locale=fa`:
+`Database.Command` lines **1,287 → 0**, stdout **7,681,486 → 24,608 bytes**, 3/3 bodies byte-identical inside
+each leg, 0 errors, median latency **60.4 ms in both legs**. Still OPEN because: the **≥4× catalog size** was
+not obtainable (the only scale-capable app-owned seeder sits behind an authenticated Admin Panel session), so
+no commands-per-item growth trend exists; cross-leg payload differed by 1,428 bytes (unexplained, UNVERIFIED);
+and item-level field parity was not captured. See
+`docs/architecture/evidence/TB-STOREFRONT-PERF-SCALE-ACCEPTANCE-179/RESULT.md`.
+
 **Affected routes:** storefront Home (`/fa`, `/v1/storefront/home`) and potentially catalog/listing/product-dependent pages. Shipping/login routes show severe latency in the reported environment but are not proven to share the same cause.
 
 **User-provided diagnostic report** (not yet independently reproduced by architect):
