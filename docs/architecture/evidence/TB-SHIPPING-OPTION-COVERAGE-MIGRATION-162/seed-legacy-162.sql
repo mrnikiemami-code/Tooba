@@ -1,0 +1,10 @@
+﻿INSERT INTO shipping.coverage_grants (coverage_grant_id, service_code, country_id, administrative_area_id, city_id, service_area_id, is_active, created_at, updated_at) VALUES
+ ('11111111-1111-4111-8111-111111111111','tipax','e3451206-e503-51a8-91ad-afa9ab70e330',NULL,NULL,NULL,true,'2026-10-10 10:00:00+00','2026-10-10 10:00:00+00'),
+ ('22222222-2222-4222-8222-222222222222','tipax','e3451206-e503-51a8-91ad-afa9ab70e330','1f8050a8-c325-59fa-959f-82d76b5b2bc5',NULL,NULL,true,'2026-10-10 10:01:00+00','2026-10-10 10:01:00+00'),
+ ('33333333-3333-4333-8333-333333333333','tipax','e3451206-e503-51a8-91ad-afa9ab70e330','1f8050a8-c325-59fa-959f-82d76b5b2bc5','c841be1e-0f47-54aa-8be8-a7b5c33f6f64',NULL,true,'2026-10-10 10:02:00+00','2026-10-10 10:02:00+00'),
+ ('44444444-4444-4444-8444-444444444444','tipax','e3451206-e503-51a8-91ad-afa9ab70e330','1f8050a8-c325-59fa-959f-82d76b5b2bc5','c841be1e-0f47-54aa-8be8-a7b5c33f6f64','a4d3bd2f-1c2e-4d55-9d3c-7f1e2a6b9c01',false,'2026-10-10 10:03:00+00','2026-10-11 09:00:00+00'),
+ ('55555555-5555-4555-8555-555555555555','tooba-post','e3451206-e503-51a8-91ad-afa9ab70e330',NULL,NULL,NULL,true,'2026-10-10 10:04:00+00','2026-10-10 10:04:00+00');
+INSERT INTO shipping.rate_policies (rate_policy_id, service_code, option_code, country_id, administrative_area_id, city_id, service_area_id, charge_amount, currency_code, preparation_days, lead_days, free_above_threshold, is_active, created_at, updated_at) VALUES
+ ('aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa','tipax',NULL,'e3451206-e503-51a8-91ad-afa9ab70e330','1f8050a8-c325-59fa-959f-82d76b5b2bc5',NULL,NULL,185000.00,'IRR',1,3,NULL,true,'2026-10-10 10:10:00+00','2026-10-10 10:10:00+00'),
+ ('bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb','tipax','standard','e3451206-e503-51a8-91ad-afa9ab70e330','1f8050a8-c325-59fa-959f-82d76b5b2bc5',NULL,NULL,205000.00,'IRR',1,3,NULL,true,'2026-10-10 10:11:00+00','2026-10-10 10:11:00+00'),
+ ('cccccccc-3333-4333-8333-cccccccccccc','tipax','express','e3451206-e503-51a8-91ad-afa9ab70e330','1f8050a8-c325-59fa-959f-82d76b5b2bc5',NULL,NULL,260000.00,'IRR',1,1,NULL,true,'2026-10-10 10:12:00+00','2026-10-10 10:12:00+00');

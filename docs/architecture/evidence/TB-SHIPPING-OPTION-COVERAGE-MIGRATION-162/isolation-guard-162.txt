@@ -1,0 +1,32 @@
+﻿ISOLATION GUARD — TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162
+Executed-At-Utc: 2026-10-17T03:10:54.6468465Z
+Repo-HEAD: 37f71ccc7591adc5a68e62a901aa33eaf96111c6
+Repo-OriginMain: 37f71ccc7591adc5a68e62a901aa33eaf96111c6
+Expected-Base-SHA: 37f71ccc7591adc5a68e62a901aa33eaf96111c6
+
+Container-Name: tooba-tb162-pg
+Container-ID: f5b8e6203a8a
+Container-Label: task=TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162
+Image: postgres:17
+Host-Bind: 127.0.0.1:55432 -> 5432/tcp  (loopback only)
+Scratch-DB: tb162_shipping_scratch
+Scratch-Role: postgres (container-local, password not recorded)
+Migration-Target: shipping schema, chain 20261014144742_InitialShipping .. 20261016211322_OptionScopedCoverageRestriction
+Port-55432-Listeners: 1
+
+FORBIDDEN-SHARED-IDENTIFIERS-CHECKED:
+  shared '5432' used by this task: NO
+  shared 'tooba_alpha' used by this task: NO
+  shared 'store-alpha' used by this task: NO
+  shared '5088' used by this task: NO
+  shared '3000' used by this task: NO
+  shared 'rabbitmq' used by this task: NO
+  shared 'redis' used by this task: NO
+
+FAIL-CLOSED VERDICTS:
+  container is task-owned (name+label match): YES
+  DB host is loopback 127.0.0.1:55432 (not 5432): YES
+  DB name is task-unique tb162_shipping_scratch: YES
+  shared postgres container postgres-db / :5432 untouched: YES (not referenced)
+  HEAD == origin/main == expected base: YES
+  GUARD RESULT: PROCEED (no shared identifier, no ambiguity)

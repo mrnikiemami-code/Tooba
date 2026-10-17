@@ -1,0 +1,52 @@
+﻿=== AFTER DOWN: migration history ===
+              migration_id              
+----------------------------------------
+ 20261014144742_InitialShipping
+ 20261015030159_OptionLevelRatePolicy
+ 20261015045130_OperatingSchedule
+ 20261015063838_WeightAndCountRateTiers
+ 20261015071836_ShippingPackagingPolicy
+(5 rows)
+
+=== AFTER DOWN: option_code column must be gone ===
+ option_code_columns 
+---------------------
+                   0
+(1 row)
+
+=== AFTER DOWN: method_coverages must be gone ===
+ method_coverages 
+------------------
+ 
+(1 row)
+
+=== AFTER DOWN: indexes on coverage_grants ===
+                 indexname                 |                                                                                           indexdef                                                                                           
+-------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ ix_coverage_grants_service_country_active | CREATE INDEX ix_coverage_grants_service_country_active ON shipping.coverage_grants USING btree (service_code, country_id, is_active)
+ pk_coverage_grants                        | CREATE UNIQUE INDEX pk_coverage_grants ON shipping.coverage_grants USING btree (coverage_grant_id)
+ ux_coverage_grants_service_scope          | CREATE UNIQUE INDEX ux_coverage_grants_service_scope ON shipping.coverage_grants USING btree (service_code, country_id, administrative_area_id, city_id, service_area_id) NULLS NOT DISTINCT
+(3 rows)
+
+=== AFTER DOWN: legacy rows preserved (identity + activation + scope) ===
+          coverage_grant_id           | service_code |               city_id                |           service_area_id            | is_active 
+--------------------------------------+--------------+--------------------------------------+--------------------------------------+-----------
+ 11111111-1111-4111-8111-111111111111 | tipax        |                                      |                                      | t
+ 22222222-2222-4222-8222-222222222222 | tipax        |                                      |                                      | t
+ 33333333-3333-4333-8333-333333333333 | tipax        | c841be1e-0f47-54aa-8be8-a7b5c33f6f64 |                                      | t
+ 44444444-4444-4444-8444-444444444444 | tipax        | c841be1e-0f47-54aa-8be8-a7b5c33f6f64 | a4d3bd2f-1c2e-4d55-9d3c-7f1e2a6b9c01 | f
+ 55555555-5555-4555-8555-555555555555 | tooba-post   |                                      |                                      | t
+(5 rows)
+
+=== AFTER DOWN: rates untouched ===
+            rate_policy_id            | service_code | option_code | charge_amount 
+--------------------------------------+--------------+-------------+---------------
+ aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa | tipax        |             |     185000.00
+ abababab-4444-4444-8444-abababababab | cond         | standard    |     175000.00
+ bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb | tipax        | standard    |     205000.00
+ cccccccc-3333-4333-8333-cccccccccccc | tipax        | express     |     260000.00
+ dddddddd-1111-4111-8111-dddddddddddd | tpost        | standard    |     150000.00
+ eeeeeeee-2222-4222-8222-eeeeeeeeeeee | strictonly   | standard    |     170000.00
+ ffffffff-3333-4333-8333-ffffffffffff | legacyonly   |             |     100000.00
+(7 rows)
+

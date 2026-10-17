@@ -1,0 +1,82 @@
+COMMANDS EXECUTED — TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162
+(scratch password redacted as ***; nothing else about the environment is hidden)
+
+0. Preconditions
+   git rev-parse HEAD            -> 37f71ccc7591adc5a68e62a901aa33eaf96111c6
+   git rev-parse origin/main     -> 37f71ccc7591adc5a68e62a901aa33eaf96111c6  (== Expected-Base-SHA)
+   docker ps -a                  -> postgres-db (:5432), rabbitmq, sarv-redis (exited), sarv-jaeger (exited)
+   Get-NetTCPConnection 55432/55433/55434 -> FREE
+
+1. Disposable scratch (task-owned)
+   docker run -d --name tooba-tb162-pg \
+     --label task=TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162 \
+     -e POSTGRES_PASSWORD=*** -e POSTGRES_DB=tb162_shipping_scratch \
+     -p 127.0.0.1:55432:5432 postgres:17
+   -> f5b8e6203a8a578501a92a5da2b64564ced8ee91f0917f806941a5e867bf23b9
+   docker exec tooba-tb162-pg psql -U postgres -d tb162_shipping_scratch -tAc "select version();"
+   -> PostgreSQL 17.10 (Debian 17.10-1.pgdg13+1) on x86_64-pc-linux-gnu
+
+2. Isolation guard (BEFORE any DDL)  -> isolation-guard-162.txt
+   fail-closed verdict PROCEED: task-owned container+label, loopback :55432, unique DB name,
+   no shared identifier, HEAD == origin/main == base.
+
+3. Baseline: previous migration state, through the real migrator
+   $env:TOOBA_DESIGN_TIME_CONNECTION = "Host=127.0.0.1;Port=55432;Username=postgres;Password=***;Database=tb162_shipping_scratch"
+   dotnet ef database update 20261015071836_ShippingPackagingPolicy \
+     --project src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/... \
+     --startup-project ... --context ShippingDbContext
+   -> Applying 20261014144742_InitialShipping
+      Applying 20261015030159_OptionLevelRatePolicy
+      Applying 20261015045130_OperatingSchedule
+      Applying 20261015063838_WeightAndCountRateTiers
+      Applying 20261015071836_ShippingPackagingPolicy   Done.
+
+   docker cp seed-legacy-162.sql tooba-tb162-pg:/tmp/seed-legacy-162.sql
+   docker exec tooba-tb162-pg psql -U postgres -d tb162_shipping_scratch -v ON_ERROR_STOP=1 -f /tmp/seed-legacy-162.sql
+   -> INSERT 0 5 (coverage_grants), INSERT 0 3 (rate_policies)
+   baseline: option_code column count = 0 ; to_regclass('shipping.method_coverages') = null
+
+4. UP
+   dotnet ef database update   (latest)
+   -> Applying migration '20261016211322_OptionScopedCoverageRestriction'. Done.
+   docker exec ... psql -f q-after-up.sql        -> schema-after-up-162.txt
+   docker exec ... psql -f q-db-constraints.sql  -> db-constraint-and-identity-proof-162.txt
+   docker cp seed-scenario-162.sql ...; psql -f /tmp/q.sql   (scenario fixtures)
+
+5. Owner-code proof on the upgraded schema
+   (harness project created under %TEMP%\tb162-harness, ProjectReference to Tooba.Shipping.Infrastructure)
+   dotnet run  -> owner-code-quote-proof-162.txt  (16 PASS / 0 FAIL, HARNESS_FAILURES=0)
+
+6. DOWN — first attempt (defect reproduced)
+   dotnet ef database update 20261015071836_ShippingPackagingPolicy ...
+   -> Reverting migration '20261016211322_OptionScopedCoverageRestriction'.
+      23505: could not create unique index "ux_coverage_grants_service_scope"
+   docker exec ... psql -f q-post-failed-down.sql
+   -> still 6 migrations, 7 grants, method_coverages present (EF transaction rolled back cleanly)
+
+7. Narrow production fix (Down only) -> production-diff-162.txt
+   DELETE FROM shipping.coverage_grants WHERE option_code IS NOT NULL;  (before the index is re-created)
+
+8. DOWN — retry after fix
+   dotnet ef database update 20261015071836_ShippingPackagingPolicy ...
+   -> Reverting migration '20261016211322_OptionScopedCoverageRestriction'. Done.
+   docker exec ... psql -f q-after-down.sql   -> schema-after-down-162.txt
+     5 migrations, option_code count 0, method_coverages null,
+     ux_coverage_grants_service_scope restored (NULLS NOT DISTINCT), 5 legacy rows intact
+
+9. UP again
+   dotnet ef database update ...
+   -> Applying migration '20261016211322_OptionScopedCoverageRestriction'. Done.
+   docker exec ... psql -f q-after-reapply.sql -> reapply-proof-162.txt
+     6 migrations, 5 legacy rows still option_code NULL, both NULLS NOT DISTINCT indexes rebuilt,
+     0 declarations / 0 option-level grants (rollback discarded new-format data, as documented)
+
+10. Focused regression after the production fix
+    dotnet test ... --filter "ShippingPersistenceModelTests|ShippingMethodCoverageRestrictionTests|ShippingRateCoverageAdminTests"
+    -> Passed! Failed: 0, Passed: 64, Total: 64, Duration 1 s   -> test-runs-162.txt
+
+11. Cleanup (exact, positive match)
+    docker rm -f tooba-tb162-pg           -> tooba-tb162-pg (removed)
+    Remove-Item -Recurse -Force %TEMP%\tb162-harness
+    containers named tooba-tb162-pg: 0 ; port 55432 listeners: 0 ; harness dir exists: False
+    shared: rabbitmq Up, postgres-db Up (never targeted)   -> cleanup-proof-162.txt

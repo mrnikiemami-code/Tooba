@@ -1,0 +1,44 @@
+TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162 — focused test runs (actual output)
+
+[1] dotnet ef database update 20261015071836_ShippingPackagingPolicy (fresh scratch DB, real migrator)
+    Applying 20261014144742_InitialShipping
+    Applying 20261015030159_OptionLevelRatePolicy
+    Applying 20261015045130_OperatingSchedule
+    Applying 20261015063838_WeightAndCountRateTiers
+    Applying 20261015071836_ShippingPackagingPolicy
+    Done.
+
+[2] dotnet ef database update (latest)
+    Build started... Build succeeded.
+    Applying migration '20261016211322_OptionScopedCoverageRestriction'.
+    Done.
+
+[3] dotnet ef database update 20261015071836_ShippingPackagingPolicy (DOWN, first attempt — BEFORE fix)
+    Reverting migration '20261016211322_OptionScopedCoverageRestriction'.
+    23505: could not create unique index "ux_coverage_grants_service_scope"
+    DETAIL: Key (service_code, country_id, administrative_area_id, city_id, service_area_id)
+            already exists for two rows that differed only by option_code.
+    (EF ran the Down in a transaction; the database stayed on the Up state — verified.)
+
+[4] dotnet ef database update 20261015071836_ShippingPackagingPolicy (DOWN, retry AFTER the pinned fix)
+    Build started... Build succeeded.
+    Reverting migration '20261016211322_OptionScopedCoverageRestriction'.
+    Done.
+
+[5] dotnet ef database update (UP again)
+    Build started... Build succeeded.
+    Applying migration '20261016211322_OptionScopedCoverageRestriction'.
+    Done.
+
+[6] dotnet test src/backend/Modules/Shipping/Tooba.Shipping.Tests
+      --filter "FullyQualifiedName~ShippingPersistenceModelTests|FullyQualifiedName~ShippingMethodCoverageRestrictionTests|FullyQualifiedName~ShippingRateCoverageAdminTests"
+    Passed!  - Failed: 0, Passed: 64, Skipped: 0, Total: 64, Duration: 1 s
+    (one pre-existing analyzer warning xUnit1031 in Admin/ShippingRateCoverageAdminTests.cs:144)
+
+Counts
+------
+Owner-code assertions on real migrated PostgreSQL : 16 PASS / 0 FAIL
+DB constraint & identity cases                    : 6/6 as specified (4 rejected, 2 accepted)
+Focused Shipping tests after the migration fix    : 64 PASS / 0 FAIL
+Migration legs                                    : Up OK, Down OK (after fix), Up-again OK
+No full-suite repeat was run; no repeated retry loop was used.

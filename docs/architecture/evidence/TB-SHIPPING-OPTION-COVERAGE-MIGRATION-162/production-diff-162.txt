@@ -1,0 +1,20 @@
+﻿diff --git a/src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261016211322_OptionScopedCoverageRestriction.cs b/src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261016211322_OptionScopedCoverageRestriction.cs
+index 49b907031..ea2a96d75 100644
+--- a/src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261016211322_OptionScopedCoverageRestriction.cs
++++ b/src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261016211322_OptionScopedCoverageRestriction.cs
+@@ -80,6 +80,15 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
+                 name: "method_coverages",
+                 schema: "shipping");
+ 
++            // Option-scoped grants have no representation in the previous schema: the only legal identity
++            // there is (service, destination). Promoting them to service-level would silently WIDEN coverage
++            // for every option of that service, and keeping them is impossible once option_code is dropped
++            // (two rows that differed only by option would collide on the restored unique index). Deleting
++            // exactly the option-scoped rows is therefore the honest downgrade; legacy service-level rows
++            // (option_code IS NULL) are never touched.
++            migrationBuilder.Sql(
++                "DELETE FROM shipping.coverage_grants WHERE option_code IS NOT NULL;");
++
+             migrationBuilder.DropIndex(
+                 name: "ux_coverage_grants_service_option_scope",
+                 schema: "shipping",

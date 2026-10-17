@@ -1,0 +1,40 @@
+﻿=== NEGATIVE: duplicate service-level grant identity (NULLS NOT DISTINCT) ===
+=== NEGATIVE: mode=2 is not a known restriction mode ===
+docker : psql:/tmp/q.sql:3: ERROR:  duplicate key value violates unique constraint 
+"ux_coverage_grants_service_option_scope"
+At C:\Users\User\AppData\Local\Temp\ps-script-3030ff2e-2152-4391-854f-51454d235ed3.ps1:113 char:76
++ ... | Out-Null; docker exec tooba-tb162-pg psql -U postgres -d tb162_ship ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (psql:/tmp/q.sql...e_option_scope":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+DETAIL:  Key (service_code, option_code, country_id, administrative_area_id, city_id, service_area_id)=(tipax, null, 
+e3451206-e503-51a8-91ad-afa9ab70e330, null, null, null) already exists.
+=== NEGATIVE: padded option code is not canonical ===
+psql:/tmp/q.sql:6: ERROR:  new row for relation "method_coverages" violates check constraint 
+"ck_method_coverages_mode_known"
+DETAIL:  Failing row contains (99999999-aaaa-4aaa-8aaa-999999999999, tipax, standard, 2, 2026-10-17 03:11:55.44335+00, 
+2026-10-17 03:11:55.44335+00).
+psql:/tmp/q.sql:9: ERROR:  new row for relation "method_coverages" violates check constraint 
+"ck_method_coverages_option_code_canonical"
+DETAIL:  Failing row contains (99999999-bbbb-4bbb-8bbb-999999999999, tipax,  standard , 0, 2026-10-17 
+03:11:55.444077+00, 2026-10-17 03:11:55.444077+00).
+=== POSITIVE: two declarations for the same service, different methods ===
+INSERT 0 2
+=== NEGATIVE: duplicate declaration identity ===
+INSERT 0 1
+=== POSITIVE: option-scoped grant distinct from the legacy service-level row at the same scope ===
+INSERT 0 1
+=== FINAL STATE ===
+ service_code | option_code | mode 
+--------------+-------------+------
+ tipax        | express     |    0
+ TIPAX        | express     |    1
+ tipax        | standard    |    1
+(3 rows)
+
+ grants_total | legacy_level | standard_level 
+--------------+--------------+----------------
+            6 |            5 |              1
+(1 row)
+

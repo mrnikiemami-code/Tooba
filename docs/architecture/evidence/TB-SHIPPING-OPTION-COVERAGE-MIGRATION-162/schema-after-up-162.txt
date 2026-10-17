@@ -1,0 +1,68 @@
+﻿=== MIGRATION HISTORY ===
+                  migration_id                  
+------------------------------------------------
+ 20261014144742_InitialShipping
+ 20261015030159_OptionLevelRatePolicy
+ 20261015045130_OperatingSchedule
+ 20261015063838_WeightAndCountRateTiers
+ 20261015071836_ShippingPackagingPolicy
+ 20261016211322_OptionScopedCoverageRestriction
+(6 rows)
+
+=== coverage_grants.option_code COLUMN ===
+ column_name |     data_type     | character_maximum_length | is_nullable 
+-------------+-------------------+--------------------------+-------------
+ option_code | character varying |                       64 | YES
+(1 row)
+
+=== CHECK CONSTRAINTS (coverage_grants, method_coverages) ===
+                  conname                   |                                                                def                                                                 
+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------
+ ck_coverage_grants_option_code_canonical   | CHECK (((option_code IS NULL) OR ((char_length((option_code)::text) > 0) AND ((option_code)::text = btrim((option_code)::text)))))
+ ck_coverage_grants_scope_coherent          | CHECK (((service_area_id IS NULL) OR (city_id IS NOT NULL)))
+ ck_coverage_grants_service_code_canonical  | CHECK (((char_length((service_code)::text) > 0) AND ((service_code)::text = btrim((service_code)::text))))
+ ck_method_coverages_mode_known             | CHECK ((mode = ANY (ARRAY[0, 1])))
+ ck_method_coverages_option_code_canonical  | CHECK (((option_code IS NULL) OR ((char_length((option_code)::text) > 0) AND ((option_code)::text = btrim((option_code)::text)))))
+ ck_method_coverages_service_code_canonical | CHECK (((char_length((service_code)::text) > 0) AND ((service_code)::text = btrim((service_code)::text))))
+(6 rows)
+
+=== INDEXES ===
+                 indexname                 |                                                                                                     indexdef                                                                                                     
+-------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ ix_coverage_grants_service_country_active | CREATE INDEX ix_coverage_grants_service_country_active ON shipping.coverage_grants USING btree (service_code, country_id, is_active)
+ ix_method_coverages_service               | CREATE INDEX ix_method_coverages_service ON shipping.method_coverages USING btree (service_code)
+ pk_coverage_grants                        | CREATE UNIQUE INDEX pk_coverage_grants ON shipping.coverage_grants USING btree (coverage_grant_id)
+ pk_method_coverages                       | CREATE UNIQUE INDEX pk_method_coverages ON shipping.method_coverages USING btree (method_coverage_id)
+ ux_coverage_grants_service_option_scope   | CREATE UNIQUE INDEX ux_coverage_grants_service_option_scope ON shipping.coverage_grants USING btree (service_code, option_code, country_id, administrative_area_id, city_id, service_area_id) NULLS NOT DISTINCT
+ ux_method_coverages_service_option        | CREATE UNIQUE INDEX ux_method_coverages_service_option ON shipping.method_coverages USING btree (service_code, option_code) NULLS NOT DISTINCT
+(6 rows)
+
+=== method_coverages TABLE ===
+    column_name     |        data_type         | is_nullable 
+--------------------+--------------------------+-------------
+ method_coverage_id | uuid                     | NO
+ service_code       | character varying        | NO
+ option_code        | character varying        | YES
+ mode               | integer                  | NO
+ created_at         | timestamp with time zone | NO
+ updated_at         | timestamp with time zone | NO
+(6 rows)
+
+=== LEGACY GRANT PRESERVATION ===
+          coverage_grant_id           | service_code |               city_id                |           service_area_id            | is_active | option_code 
+--------------------------------------+--------------+--------------------------------------+--------------------------------------+-----------+-------------
+ 11111111-1111-4111-8111-111111111111 | tipax        |                                      |                                      | t         | 
+ 22222222-2222-4222-8222-222222222222 | tipax        |                                      |                                      | t         | 
+ 33333333-3333-4333-8333-333333333333 | tipax        | c841be1e-0f47-54aa-8be8-a7b5c33f6f64 |                                      | t         | 
+ 44444444-4444-4444-8444-444444444444 | tipax        | c841be1e-0f47-54aa-8be8-a7b5c33f6f64 | a4d3bd2f-1c2e-4d55-9d3c-7f1e2a6b9c01 | f         | 
+ 55555555-5555-4555-8555-555555555555 | tooba-post   |                                      |                                      | t         | 
+(5 rows)
+
+=== LEGACY RATE PRESERVATION (charges unchanged) ===
+            rate_policy_id            | service_code | option_code | charge_amount | currency_code 
+--------------------------------------+--------------+-------------+---------------+---------------
+ aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa | tipax        |             |     185000.00 | IRR
+ bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb | tipax        | standard    |     205000.00 | IRR
+ cccccccc-3333-4333-8333-cccccccccccc | tipax        | express     |     260000.00 | IRR
+(3 rows)
+

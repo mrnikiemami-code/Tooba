@@ -1,0 +1,17 @@
+﻿PASS | restricted standard allowed in own city X | outcome=Quoted reason=shipping.quote.quoted charge=205000.00 currency=IRR
+PASS | restricted standard denied in city Y | outcome=NotCovered reason=shipping.coverage.method_restricted charge=0 currency=null
+PASS | unrestricted express quoted in city Y (not narrowed by standard) | outcome=Quoted reason=shipping.quote.quoted charge=260000.00 currency=IRR
+PASS | unrestricted express quoted in city X too | outcome=Quoted reason=shipping.quote.quoted charge=260000.00 currency=IRR
+PASS | provider-level legacy grants do not authorize restricted method | outcome=NotCovered reason=shipping.coverage.method_restricted charge=0 currency=null
+PASS | restricted with zero own grants denies | outcome=NotCovered reason=shipping.coverage.method_restricted charge=0 currency=null
+PASS | absent declaration is unrestricted and quoted (owned rate present) | outcome=Quoted reason=shipping.quote.quoted charge=150000.00 currency=IRR
+PASS | absent declaration without any owned rate fails closed | outcome=UnknownService reason=shipping.service.not_priced charge=0 currency=null
+PASS | conditioned rate without measurement stays MeasurementRequired | outcome=MeasurementRequired reason=shipping.quote.measurement_required charge=0 currency=null
+PASS | conditioned rate quotes inside its tier with measurement | outcome=Quoted reason=shipping.quote.quoted charge=175000.00 currency=IRR
+PASS | legacy fallback still requires a service-level grant | outcome=NotCovered reason=shipping.coverage.missing charge=0 currency=null
+PASS | legacy fallback prefers the option-specific rate and ignores the restriction | outcome=Quoted reason=shipping.quote.quoted charge=205000.00 currency=IRR
+PASS | legacy fallback uses the express rate, restriction never applies | outcome=Quoted reason=shipping.quote.quoted charge=260000.00 currency=IRR
+PASS | legacy fallback leaks the provider rate to an unpriced option (unchanged) | outcome=Quoted reason=shipping.quote.quoted charge=185000.00 currency=IRR
+PASS | strict refuses the same provider rate for that option | outcome=UnknownService reason=shipping.quote.owned_option_not_priced charge=0 currency=null
+PASS | strict refuses provider-level rate for an owned option request | outcome=UnknownService reason=shipping.quote.owned_option_not_priced charge=0 currency=null
+HARNESS_FAILURES=0

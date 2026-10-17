@@ -1,0 +1,39 @@
+﻿=== REAPPLIED: history ===
+                  migration_id                  
+------------------------------------------------
+ 20261014144742_InitialShipping
+ 20261015030159_OptionLevelRatePolicy
+ 20261015045130_OperatingSchedule
+ 20261015063838_WeightAndCountRateTiers
+ 20261015071836_ShippingPackagingPolicy
+ 20261016211322_OptionScopedCoverageRestriction
+(6 rows)
+
+=== REAPPLIED: legacy rows preserved back through Up ===
+          coverage_grant_id           | service_code |               city_id                |           service_area_id            | is_active | option_code 
+--------------------------------------+--------------+--------------------------------------+--------------------------------------+-----------+-------------
+ 11111111-1111-4111-8111-111111111111 | tipax        |                                      |                                      | t         | 
+ 22222222-2222-4222-8222-222222222222 | tipax        |                                      |                                      | t         | 
+ 33333333-3333-4333-8333-333333333333 | tipax        | c841be1e-0f47-54aa-8be8-a7b5c33f6f64 |                                      | t         | 
+ 44444444-4444-4444-8444-444444444444 | tipax        | c841be1e-0f47-54aa-8be8-a7b5c33f6f64 | a4d3bd2f-1c2e-4d55-9d3c-7f1e2a6b9c01 | f         | 
+ 55555555-5555-4555-8555-555555555555 | tooba-post   |                                      |                                      | t         | 
+(5 rows)
+
+=== REAPPLIED: new-format data discarded by rollback (documented) ===
+ declarations_after_reapply 
+----------------------------
+                          0
+(1 row)
+
+ option_level_grants_after_reapply 
+-----------------------------------
+                                 0
+(1 row)
+
+=== REAPPLIED: indexes rebuilt ===
+                indexname                |                                                                                                     indexdef                                                                                                     
+-----------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ ux_coverage_grants_service_option_scope | CREATE UNIQUE INDEX ux_coverage_grants_service_option_scope ON shipping.coverage_grants USING btree (service_code, option_code, country_id, administrative_area_id, city_id, service_area_id) NULLS NOT DISTINCT
+ ux_method_coverages_service_option      | CREATE UNIQUE INDEX ux_method_coverages_service_option ON shipping.method_coverages USING btree (service_code, option_code) NULLS NOT DISTINCT
+(2 rows)
+

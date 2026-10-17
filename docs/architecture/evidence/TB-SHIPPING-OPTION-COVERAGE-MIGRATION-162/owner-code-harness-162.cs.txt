@@ -1,0 +1,133 @@
+using Microsoft.EntityFrameworkCore;
+using Tooba.Geography.Contracts.Places;
+using Tooba.Persistence;
+using Tooba.Shipping.Contracts.Rates;
+using Tooba.Shipping.Infrastructure.Persistence;
+using Tooba.Shipping.Infrastructure.Rates;
+
+// TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162 — real owner code (engine + adapter) against the isolated
+// scratch PostgreSQL upgraded by the real EF migration. Read-only: no writes, no DDL.
+var connection =
+    "Host=127.0.0.1;Port=55432;Username=postgres;Password=tb162scratch;Database=tb162_shipping_scratch";
+
+var options = new DbContextOptionsBuilder<ShippingDbContext>();
+ToobaNpgsql.ConfigureModuleContext(options, connection, ShippingDbContext.Schema, typeof(ShippingDbContext));
+await using var db = new ShippingDbContext(options.Options);
+
+// Fail-closed target guard inside the harness itself: never run against a non-scratch database.
+var target = await db.Database.SqlQueryRaw<string>("select current_database() as \"Value\"").SingleAsync();
+if (!string.Equals(target, "tb162_shipping_scratch", StringComparison.Ordinal))
+{
+    Console.WriteLine($"GUARD_FAIL database={target}");
+    return 90;
+}
+
+var lookup = new ShippingRateQuoteLookup(db);
+var failures = 0;
+
+static ShippingQuoteRequest Req(string service, string? option, Guid? city, ShippingOptionMatchMode mode, ShippingMeasuredParcel? parcel = null) =>
+    new(
+        service,
+        new DestinationIdentifiers(
+            Guid.Parse("e3451206-e503-51a8-91ad-afa9ab70e330"),
+            Guid.Parse("1f8050a8-c325-59fa-959f-82d76b5b2bc5"),
+            city),
+        1_000_000m,
+        "IRR",
+        option,
+        parcel)
+    {
+        OptionMatchMode = mode,
+    };
+
+async Task Check(string name, ShippingQuoteRequest request, ShippingServiceabilityOutcome outcome, string reason, decimal charge)
+{
+    var quote = await lookup.QuoteAsync(request, CancellationToken.None);
+    var ok = quote.Outcome == outcome
+        && string.Equals(quote.ReasonCode, reason, StringComparison.Ordinal)
+        && quote.ChargeAmount == charge;
+    if (!ok) failures++;
+    Console.WriteLine(
+        $"{(ok ? "PASS" : "FAIL")} | {name} | outcome={quote.Outcome} reason={quote.ReasonCode} charge={quote.ChargeAmount} currency={quote.CurrencyCode ?? "null"}");
+}
+
+var cityX = Guid.Parse("c841be1e-0f47-54aa-8be8-a7b5c33f6f64");
+var cityY = Guid.Parse("3bfdb19d-20e2-5f04-a4ab-43b8a6d9d2c0");
+
+// tipax:standard is Restricted with ONE own grant at city X; tipax:express is Unrestricted.
+await Check("restricted standard allowed in own city X",
+    Req("tipax", "standard", cityX, ShippingOptionMatchMode.StrictOwnedOption),
+    ShippingServiceabilityOutcome.Quoted, ShippingReasonCodes.Quoted, 205_000m);
+
+await Check("restricted standard denied in city Y",
+    Req("tipax", "standard", cityY, ShippingOptionMatchMode.StrictOwnedOption),
+    ShippingServiceabilityOutcome.NotCovered, ShippingReasonCodes.CoverageMethodRestricted, 0m);
+
+await Check("unrestricted express quoted in city Y (not narrowed by standard)",
+    Req("tipax", "express", cityY, ShippingOptionMatchMode.StrictOwnedOption),
+    ShippingServiceabilityOutcome.Quoted, ShippingReasonCodes.Quoted, 260_000m);
+
+await Check("unrestricted express quoted in city X too",
+    Req("tipax", "express", cityX, ShippingOptionMatchMode.StrictOwnedOption),
+    ShippingServiceabilityOutcome.Quoted, ShippingReasonCodes.Quoted, 260_000m);
+
+// Provider-level (service_code level, option_code NULL) grants must not authorize a restricted method:
+// tipax:standard has its own grant at X, so Y is denied even though legacy country/area grants exist.
+await Check("provider-level legacy grants do not authorize restricted method",
+    Req("tipax", "standard", Guid.Empty == cityY ? cityY : cityY, ShippingOptionMatchMode.StrictOwnedOption),
+    ShippingServiceabilityOutcome.NotCovered, ShippingReasonCodes.CoverageMethodRestricted, 0m);
+
+// Restricted with zero own grants denies everywhere.
+await Check("restricted with zero own grants denies",
+    Req("strictonly", "standard", cityX, ShippingOptionMatchMode.StrictOwnedOption),
+    ShippingServiceabilityOutcome.NotCovered, ShippingReasonCodes.CoverageMethodRestricted, 0m);
+
+// Absent declaration = unrestricted, but the owned rate is still mandatory (tpost has one).
+await Check("absent declaration is unrestricted and quoted (owned rate present)",
+    Req("tpost", "standard", cityY, ShippingOptionMatchMode.StrictOwnedOption),
+    ShippingServiceabilityOutcome.Quoted, ShippingReasonCodes.Quoted, 150_000m);
+
+// Absent declaration + no owned rate anywhere => still fail closed (generic "not priced").
+await Check("absent declaration without any owned rate fails closed",
+    Req("norestrict", "standard", cityY, ShippingOptionMatchMode.StrictOwnedOption),
+    ShippingServiceabilityOutcome.UnknownService, ShippingReasonCodes.ServiceNotPriced, 0m);
+
+// Conditioned owned rate without a trusted measurement stays MeasurementRequired.
+await Check("conditioned rate without measurement stays MeasurementRequired",
+    Req("cond", "standard", cityY, ShippingOptionMatchMode.StrictOwnedOption),
+    ShippingServiceabilityOutcome.MeasurementRequired, ShippingReasonCodes.MeasurementRequired, 0m);
+
+await Check("conditioned rate quotes inside its tier with measurement",
+    Req("cond", "standard", cityY, ShippingOptionMatchMode.StrictOwnedOption, ShippingMeasuredParcel.WithWeight(1_500)),
+    ShippingServiceabilityOutcome.Quoted, ShippingReasonCodes.Quoted, 175_000m);
+
+// Legacy fallback: service-level grant required; option-scoped grant is never inherited.
+await Check("legacy fallback still requires a service-level grant",
+    Req("legacyonly", "standard", cityX, ShippingOptionMatchMode.LegacyFallback),
+    ShippingServiceabilityOutcome.NotCovered, ShippingReasonCodes.CoverageMissing, 0m);
+
+await Check("legacy fallback prefers the option-specific rate and ignores the restriction",
+    Req("tipax", "standard", cityY, ShippingOptionMatchMode.LegacyFallback),
+    ShippingServiceabilityOutcome.Quoted, ShippingReasonCodes.Quoted, 205_000m);
+
+await Check("legacy fallback uses the express rate, restriction never applies",
+    Req("tipax", "express", cityY, ShippingOptionMatchMode.LegacyFallback),
+    ShippingServiceabilityOutcome.Quoted, ShippingReasonCodes.Quoted, 260_000m);
+
+// The documented TB-159 legacy leak, preserved on purpose for non-opted-in callers: an option with no
+// owned rate silently borrows the provider-level rate in LegacyFallback, while strict mode refuses it.
+await Check("legacy fallback leaks the provider rate to an unpriced option (unchanged)",
+    Req("tipax", "saver", cityY, ShippingOptionMatchMode.LegacyFallback),
+    ShippingServiceabilityOutcome.Quoted, ShippingReasonCodes.Quoted, 185_000m);
+
+await Check("strict refuses the same provider rate for that option",
+    Req("tipax", "saver", cityY, ShippingOptionMatchMode.StrictOwnedOption),
+    ShippingServiceabilityOutcome.UnknownService, ShippingReasonCodes.OwnedOptionNotPriced, 0m);
+
+// Strict never borrows the provider-level rate for an option that has no owned rate.
+await Check("strict refuses provider-level rate for an owned option request",
+    Req("legacyonly", "standard", cityX, ShippingOptionMatchMode.StrictOwnedOption),
+    ShippingServiceabilityOutcome.UnknownService, ShippingReasonCodes.OwnedOptionNotPriced, 0m);
+
+Console.WriteLine($"HARNESS_FAILURES={failures}");
+return failures == 0 ? 0 : 1;

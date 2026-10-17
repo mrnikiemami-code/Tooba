@@ -1,0 +1,25 @@
+CLEANUP PROOF — TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162
+Executed-At-Utc: 2026-10-17T03:17Z (approx)
+
+1. Task-owned container removed by EXACT name (no wildcard, no label filter, no `docker system prune`):
+   $ docker rm -f tooba-tb162-pg
+   tooba-tb162-pg
+
+2. Proof of removal:
+   containers named tooba-tb162-pg remaining : 0
+   port 55432 listeners                      : 0
+
+3. Harness scratch directory (outside the repository) removed by exact path:
+   Remove-Item -Recurse -Force C:\Users\User\AppData\Local\Temp\tb162-harness
+   exists after cleanup : False
+
+4. Shared services were never targeted. Observed post-cleanup state:
+   rabbitmq      Up
+   postgres-db   Up   (shared :5432, no restart, no DDL, no connection from this task)
+
+5. No rabbitmq/redis/3000/5088/5432/tooba_alpha/store-alpha write, stop, restart, migration or purge was
+   issued at any point. All `dotnet ef` invocations used
+   TOOBA_DESIGN_TIME_CONNECTION = Host=127.0.0.1;Port=55432;...;Database=tb162_shipping_scratch
+   (password redacted; scratch-only throwaway value, never committed).
+
+6. No stashes created, no reset, no rebase, no force-push, no autostash.
