@@ -69,6 +69,21 @@ rejected by validators, not bypassed. Remaining gates: Architect/register accept
 responsiveness verdict, and a size-B request-scoped EF command count (not captured here).
 See `docs/architecture/evidence/TB-STOREFRONT-PERF-PUBLISHED-SCALE-182/RESULT.md`.
 
+**TB-183 update (2026-10-17): request-scoped command counts now measured at 3 vs 12 Published items.** Same
+disposable PG/Host, same binary, same tenant/route/locale, diagnostic `EF=Information` only in that process
+(committed default stays `Warning`). Attribution was by per-request W3C TraceId from the request scope, not by
+log totals: **38 / 38 / 38** commands per Home request at size A and **47 / 47 / 47** at size B (12 distinct
+Published product IDs, 4.0x). Independent totals: 57,469 command events overall — 340 attributed, 52,460 startup,
+4,669 background during the window. The arithmetic is exact: `38 = 35 + 3`, `47 = 35 + 12`, i.e. one residual
+query per published card; steady-state wall time 91.7 ms vs 95.8 ms. Owner call site:
+`StorefrontComposer.cs:1071` → `PromotionDirectory.EvaluateAsync` (`_db.Promotions…ToListAsync()`) once per card.
+Quiet default leg on the same size B: 105 KB log, **zero** command lines, HTTP 200 — TB-178 fix intact.
+Gates: logging ✔, query growth ✔ (with the one-per-card remainder identified), steady-state performance ✔,
+response parity ✔ (product IDs identical; only secondary rails changed population between legs), browser
+acceptance ✘ (user), register acceptance ✘ (architect). **Blocker stays OPEN**; recommended next slice is a
+batched promotion evaluation owned by the Promotion module.
+See `docs/architecture/evidence/TB-STOREFRONT-PERF-QUERY-SCALE-183/RESULT.md`.
+
 **Affected routes:** storefront Home (`/fa`, `/v1/storefront/home`) and potentially catalog/listing/product-dependent pages. Shipping/login routes show severe latency in the reported environment but are not proven to share the same cause.
 
 **User-provided diagnostic report** (not yet independently reproduced by architect):

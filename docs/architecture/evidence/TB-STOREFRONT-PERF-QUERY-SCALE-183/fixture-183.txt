@@ -1,0 +1,3 @@
+﻿final scratch fixture (TB-183): products=201 published=12 draft=188 variants=663 categories=122 active_offers=46 active_prices=53 stock=48 promotions=0
+published product ids visible in Home size B: 
+01a14a36-790f-7000-b3ea-eb3b16b87c73,01a14a36-76fe-7000-8ff7-2bcea687b2e0,01a14a36-74e9-7000-983c-d205cea0492e,01a14a36-4526-7000-a87e-37bcd5cb6c0c,01a14a36-4313-7000-abd0-bac71bb1afd7,01a14a36-40f5-7000-b0f2-b7c9359fa99a,01a14a36-3eda-7000-aca5-2f4f975221f4,01a14a36-3cdf-7000-8d0a-76dfd037b9c4,01a14a36-3ade-7000-ace9-aa6d4ffcb979,01a14a33-b580-7000-bba5-c2cbc76fcdee,01a14a33-b45c-7000-a4ee-2c69c8600a97,01a14a33-b04b-7000-9422-2f89a75215e4

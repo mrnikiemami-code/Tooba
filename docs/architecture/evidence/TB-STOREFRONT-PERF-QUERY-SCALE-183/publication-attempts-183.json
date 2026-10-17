@@ -1,0 +1,1122 @@
+﻿[
+    {
+        "step":  "offer",
+        "index":  1,
+        "status":  201,
+        "offerId":  "01a14a37-6b58-7000-8b5b-6f0827686f04",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  1,
+        "status":  200,
+        "offerId":  "01a14a37-6b58-7000-8b5b-6f0827686f04",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  1,
+        "status":  200,
+        "offerId":  "01a14a37-6b58-7000-8b5b-6f0827686f04",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  1,
+        "status":  200,
+        "offerId":  "01a14a37-6b58-7000-8b5b-6f0827686f04",
+        "detail":  "{\"productId\":\"01a14a36-3ade-7000-ace9-aa6d4ffcb979\",\"title\":\"سامسونگ هدفون سری 1\",\"status\":\"Published\",\"kind\":\"PhysicalG"
+    },
+    {
+        "step":  "offer",
+        "index":  2,
+        "status":  201,
+        "offerId":  "01a14a37-6dd8-7000-a884-59e09e6cf28c",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  2,
+        "status":  200,
+        "offerId":  "01a14a37-6dd8-7000-a884-59e09e6cf28c",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  2,
+        "status":  200,
+        "offerId":  "01a14a37-6dd8-7000-a884-59e09e6cf28c",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  2,
+        "status":  200,
+        "offerId":  "01a14a37-6dd8-7000-a884-59e09e6cf28c",
+        "detail":  "{\"productId\":\"01a14a36-3ade-7000-ace9-aa6d4ffcb979\",\"title\":\"سامسونگ هدفون سری 1\",\"status\":\"Published\",\"kind\":\"PhysicalG"
+    },
+    {
+        "step":  "offer",
+        "index":  3,
+        "status":  201,
+        "offerId":  "01a14a37-6f2b-7000-8f87-4b662a03849c",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  3,
+        "status":  200,
+        "offerId":  "01a14a37-6f2b-7000-8f87-4b662a03849c",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  3,
+        "status":  200,
+        "offerId":  "01a14a37-6f2b-7000-8f87-4b662a03849c",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  3,
+        "status":  200,
+        "offerId":  "01a14a37-6f2b-7000-8f87-4b662a03849c",
+        "detail":  "{\"productId\":\"01a14a36-3ade-7000-ace9-aa6d4ffcb979\",\"title\":\"سامسونگ هدفون سری 1\",\"status\":\"Published\",\"kind\":\"PhysicalG"
+    },
+    {
+        "step":  "offer",
+        "index":  4,
+        "status":  201,
+        "offerId":  "01a14a37-704c-7000-a683-e1e04d0f0b32",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  4,
+        "status":  200,
+        "offerId":  "01a14a37-704c-7000-a683-e1e04d0f0b32",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  4,
+        "status":  200,
+        "offerId":  "01a14a37-704c-7000-a683-e1e04d0f0b32",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  4,
+        "status":  200,
+        "offerId":  "01a14a37-704c-7000-a683-e1e04d0f0b32",
+        "detail":  "{\"productId\":\"01a14a36-3cdf-7000-8d0a-76dfd037b9c4\",\"title\":\"اپل هدفون مدل 2\",\"status\":\"Published\",\"kind\":\"PhysicalGood\""
+    },
+    {
+        "step":  "offer",
+        "index":  5,
+        "status":  201,
+        "offerId":  "01a14a37-7196-7000-af66-989e110cceb0",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  5,
+        "status":  200,
+        "offerId":  "01a14a37-7196-7000-af66-989e110cceb0",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  5,
+        "status":  200,
+        "offerId":  "01a14a37-7196-7000-af66-989e110cceb0",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  5,
+        "status":  200,
+        "offerId":  "01a14a37-7196-7000-af66-989e110cceb0",
+        "detail":  "{\"productId\":\"01a14a36-3cdf-7000-8d0a-76dfd037b9c4\",\"title\":\"اپل هدفون مدل 2\",\"status\":\"Published\",\"kind\":\"PhysicalGood\""
+    },
+    {
+        "step":  "offer",
+        "index":  6,
+        "status":  201,
+        "offerId":  "01a14a37-72fb-7000-b895-cd9946072aa1",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  6,
+        "status":  200,
+        "offerId":  "01a14a37-72fb-7000-b895-cd9946072aa1",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  6,
+        "status":  200,
+        "offerId":  "01a14a37-72fb-7000-b895-cd9946072aa1",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  6,
+        "status":  200,
+        "offerId":  "01a14a37-72fb-7000-b895-cd9946072aa1",
+        "detail":  "{\"productId\":\"01a14a36-3cdf-7000-8d0a-76dfd037b9c4\",\"title\":\"اپل هدفون مدل 2\",\"status\":\"Published\",\"kind\":\"PhysicalGood\""
+    },
+    {
+        "step":  "offer",
+        "index":  7,
+        "status":  201,
+        "offerId":  "01a14a37-742d-7000-83bd-6833cddf2473",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  7,
+        "status":  200,
+        "offerId":  "01a14a37-742d-7000-83bd-6833cddf2473",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  7,
+        "status":  200,
+        "offerId":  "01a14a37-742d-7000-83bd-6833cddf2473",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  7,
+        "status":  200,
+        "offerId":  "01a14a37-742d-7000-83bd-6833cddf2473",
+        "detail":  "{\"productId\":\"01a14a36-3eda-7000-aca5-2f4f975221f4\",\"title\":\"هدفون نسخه 3\",\"status\":\"Published\",\"kind\":\"PhysicalGood\",\"c"
+    },
+    {
+        "step":  "offer",
+        "index":  8,
+        "status":  201,
+        "offerId":  "01a14a37-759c-7000-a166-ca754baefa0b",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  8,
+        "status":  200,
+        "offerId":  "01a14a37-759c-7000-a166-ca754baefa0b",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  8,
+        "status":  200,
+        "offerId":  "01a14a37-759c-7000-a166-ca754baefa0b",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  8,
+        "status":  200,
+        "offerId":  "01a14a37-759c-7000-a166-ca754baefa0b",
+        "detail":  "{\"productId\":\"01a14a36-3eda-7000-aca5-2f4f975221f4\",\"title\":\"هدفون نسخه 3\",\"status\":\"Published\",\"kind\":\"PhysicalGood\",\"c"
+    },
+    {
+        "step":  "offer",
+        "index":  9,
+        "status":  201,
+        "offerId":  "01a14a37-76e0-7000-b9b2-a42098973c71",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  9,
+        "status":  200,
+        "offerId":  "01a14a37-76e0-7000-b9b2-a42098973c71",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  9,
+        "status":  200,
+        "offerId":  "01a14a37-76e0-7000-b9b2-a42098973c71",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  9,
+        "status":  200,
+        "offerId":  "01a14a37-76e0-7000-b9b2-a42098973c71",
+        "detail":  "{\"productId\":\"01a14a36-3eda-7000-aca5-2f4f975221f4\",\"title\":\"هدفون نسخه 3\",\"status\":\"Published\",\"kind\":\"PhysicalGood\",\"c"
+    },
+    {
+        "step":  "offer",
+        "index":  10,
+        "status":  201,
+        "offerId":  "01a14a37-7834-7000-bb3b-29d0f5cc65ed",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  10,
+        "status":  200,
+        "offerId":  "01a14a37-7834-7000-bb3b-29d0f5cc65ed",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  10,
+        "status":  200,
+        "offerId":  "01a14a37-7834-7000-bb3b-29d0f5cc65ed",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  10,
+        "status":  200,
+        "offerId":  "01a14a37-7834-7000-bb3b-29d0f5cc65ed",
+        "detail":  "{\"productId\":\"01a14a36-40f5-7000-b0f2-b7c9359fa99a\",\"title\":\"هواوی هدفون مجموعه 4\",\"status\":\"Published\",\"kind\":\"Physical"
+    },
+    {
+        "step":  "offer",
+        "index":  11,
+        "status":  201,
+        "offerId":  "01a14a37-7a20-7000-9a5c-83ad91003eed",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  11,
+        "status":  200,
+        "offerId":  "01a14a37-7a20-7000-9a5c-83ad91003eed",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  11,
+        "status":  200,
+        "offerId":  "01a14a37-7a20-7000-9a5c-83ad91003eed",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  11,
+        "status":  200,
+        "offerId":  "01a14a37-7a20-7000-9a5c-83ad91003eed",
+        "detail":  "{\"productId\":\"01a14a36-40f5-7000-b0f2-b7c9359fa99a\",\"title\":\"هواوی هدفون مجموعه 4\",\"status\":\"Published\",\"kind\":\"Physical"
+    },
+    {
+        "step":  "offer",
+        "index":  12,
+        "status":  201,
+        "offerId":  "01a14a37-7c18-7000-84c9-6303b758254c",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  12,
+        "status":  200,
+        "offerId":  "01a14a37-7c18-7000-84c9-6303b758254c",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  12,
+        "status":  200,
+        "offerId":  "01a14a37-7c18-7000-84c9-6303b758254c",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  12,
+        "status":  200,
+        "offerId":  "01a14a37-7c18-7000-84c9-6303b758254c",
+        "detail":  "{\"productId\":\"01a14a36-40f5-7000-b0f2-b7c9359fa99a\",\"title\":\"هواوی هدفون مجموعه 4\",\"status\":\"Published\",\"kind\":\"Physical"
+    },
+    {
+        "step":  "offer",
+        "index":  13,
+        "status":  201,
+        "offerId":  "01a14a37-7d68-7000-85c8-0f0952ca5373",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  13,
+        "status":  200,
+        "offerId":  "01a14a37-7d68-7000-85c8-0f0952ca5373",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  13,
+        "status":  200,
+        "offerId":  "01a14a37-7d68-7000-85c8-0f0952ca5373",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  13,
+        "status":  200,
+        "offerId":  "01a14a37-7d68-7000-85c8-0f0952ca5373",
+        "detail":  "{\"productId\":\"01a14a36-4313-7000-abd0-bac71bb1afd7\",\"title\":\"سونی هدفون انتخاب 5\",\"status\":\"Published\",\"kind\":\"PhysicalG"
+    },
+    {
+        "step":  "offer",
+        "index":  14,
+        "status":  201,
+        "offerId":  "01a14a37-7f3f-7000-b4fe-362714c23253",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  14,
+        "status":  200,
+        "offerId":  "01a14a37-7f3f-7000-b4fe-362714c23253",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  14,
+        "status":  200,
+        "offerId":  "01a14a37-7f3f-7000-b4fe-362714c23253",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  14,
+        "status":  200,
+        "offerId":  "01a14a37-7f3f-7000-b4fe-362714c23253",
+        "detail":  "{\"productId\":\"01a14a36-4313-7000-abd0-bac71bb1afd7\",\"title\":\"سونی هدفون انتخاب 5\",\"status\":\"Published\",\"kind\":\"PhysicalG"
+    },
+    {
+        "step":  "offer",
+        "index":  15,
+        "status":  201,
+        "offerId":  "01a14a37-8089-7000-907c-03d24f5032b9",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  15,
+        "status":  200,
+        "offerId":  "01a14a37-8089-7000-907c-03d24f5032b9",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  15,
+        "status":  200,
+        "offerId":  "01a14a37-8089-7000-907c-03d24f5032b9",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  15,
+        "status":  200,
+        "offerId":  "01a14a37-8089-7000-907c-03d24f5032b9",
+        "detail":  "{\"productId\":\"01a14a36-4313-7000-abd0-bac71bb1afd7\",\"title\":\"سونی هدفون انتخاب 5\",\"status\":\"Published\",\"kind\":\"PhysicalG"
+    },
+    {
+        "step":  "offer",
+        "index":  16,
+        "status":  201,
+        "offerId":  "01a14a37-81f9-7000-896a-264ad726142d",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  16,
+        "status":  200,
+        "offerId":  "01a14a37-81f9-7000-896a-264ad726142d",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  16,
+        "status":  200,
+        "offerId":  "01a14a37-81f9-7000-896a-264ad726142d",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  16,
+        "status":  200,
+        "offerId":  "01a14a37-81f9-7000-896a-264ad726142d",
+        "detail":  "{\"productId\":\"01a14a36-4526-7000-a87e-37bcd5cb6c0c\",\"title\":\"سامسونگ هدفون سری 6\",\"status\":\"Published\",\"kind\":\"PhysicalG"
+    },
+    {
+        "step":  "offer",
+        "index":  17,
+        "status":  201,
+        "offerId":  "01a14a37-83b3-7000-82b1-f29703969950",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  17,
+        "status":  200,
+        "offerId":  "01a14a37-83b3-7000-82b1-f29703969950",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  17,
+        "status":  200,
+        "offerId":  "01a14a37-83b3-7000-82b1-f29703969950",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  17,
+        "status":  200,
+        "offerId":  "01a14a37-83b3-7000-82b1-f29703969950",
+        "detail":  "{\"productId\":\"01a14a36-4526-7000-a87e-37bcd5cb6c0c\",\"title\":\"سامسونگ هدفون سری 6\",\"status\":\"Published\",\"kind\":\"PhysicalG"
+    },
+    {
+        "step":  "offer",
+        "index":  18,
+        "status":  201,
+        "offerId":  "01a14a37-85f9-7000-864b-a16fba757ed7",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  18,
+        "status":  200,
+        "offerId":  "01a14a37-85f9-7000-864b-a16fba757ed7",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  18,
+        "status":  200,
+        "offerId":  "01a14a37-85f9-7000-864b-a16fba757ed7",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  18,
+        "status":  200,
+        "offerId":  "01a14a37-85f9-7000-864b-a16fba757ed7",
+        "detail":  "{\"productId\":\"01a14a36-4526-7000-a87e-37bcd5cb6c0c\",\"title\":\"سامسونگ هدفون سری 6\",\"status\":\"Published\",\"kind\":\"PhysicalG"
+    },
+    {
+        "step":  "offer",
+        "index":  19,
+        "status":  201,
+        "offerId":  "01a14a37-882d-7000-9c56-280e06a0bbab",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  19,
+        "status":  200,
+        "offerId":  "01a14a37-882d-7000-9c56-280e06a0bbab",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  19,
+        "status":  200,
+        "offerId":  "01a14a37-882d-7000-9c56-280e06a0bbab",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  19,
+        "status":  200,
+        "offerId":  "01a14a37-882d-7000-9c56-280e06a0bbab",
+        "detail":  "{\"productId\":\"01a14a36-74e9-7000-983c-d205cea0492e\",\"title\":\"نایک شلوار مردانه سری 1\",\"status\":\"Published\",\"kind\":\"Physi"
+    },
+    {
+        "step":  "offer",
+        "index":  20,
+        "status":  201,
+        "offerId":  "01a14a37-8ade-7000-946f-60173095ad19",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  20,
+        "status":  200,
+        "offerId":  "01a14a37-8ade-7000-946f-60173095ad19",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  20,
+        "status":  200,
+        "offerId":  "01a14a37-8ade-7000-946f-60173095ad19",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  20,
+        "status":  200,
+        "offerId":  "01a14a37-8ade-7000-946f-60173095ad19",
+        "detail":  "{\"productId\":\"01a14a36-74e9-7000-983c-d205cea0492e\",\"title\":\"نایک شلوار مردانه سری 1\",\"status\":\"Published\",\"kind\":\"Physi"
+    },
+    {
+        "step":  "offer",
+        "index":  21,
+        "status":  201,
+        "offerId":  "01a14a37-8d43-7000-ae26-281c801e827a",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  21,
+        "status":  200,
+        "offerId":  "01a14a37-8d43-7000-ae26-281c801e827a",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  21,
+        "status":  200,
+        "offerId":  "01a14a37-8d43-7000-ae26-281c801e827a",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  21,
+        "status":  200,
+        "offerId":  "01a14a37-8d43-7000-ae26-281c801e827a",
+        "detail":  "{\"productId\":\"01a14a36-74e9-7000-983c-d205cea0492e\",\"title\":\"نایک شلوار مردانه سری 1\",\"status\":\"Published\",\"kind\":\"Physi"
+    },
+    {
+        "step":  "offer",
+        "index":  22,
+        "status":  201,
+        "offerId":  "01a14a37-8f15-7000-a0e8-bbcff18332f4",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  22,
+        "status":  200,
+        "offerId":  "01a14a37-8f15-7000-a0e8-bbcff18332f4",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  22,
+        "status":  200,
+        "offerId":  "01a14a37-8f15-7000-a0e8-bbcff18332f4",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  22,
+        "status":  200,
+        "offerId":  "01a14a37-8f15-7000-a0e8-bbcff18332f4",
+        "detail":  "{\"productId\":\"01a14a36-74e9-7000-983c-d205cea0492e\",\"title\":\"نایک شلوار مردانه سری 1\",\"status\":\"Published\",\"kind\":\"Physi"
+    },
+    {
+        "step":  "offer",
+        "index":  23,
+        "status":  201,
+        "offerId":  "01a14a37-915e-7000-8656-b9643327ace8",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  23,
+        "status":  200,
+        "offerId":  "01a14a37-915e-7000-8656-b9643327ace8",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  23,
+        "status":  200,
+        "offerId":  "01a14a37-915e-7000-8656-b9643327ace8",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  23,
+        "status":  200,
+        "offerId":  "01a14a37-915e-7000-8656-b9643327ace8",
+        "detail":  "{\"productId\":\"01a14a36-74e9-7000-983c-d205cea0492e\",\"title\":\"نایک شلوار مردانه سری 1\",\"status\":\"Published\",\"kind\":\"Physi"
+    },
+    {
+        "step":  "offer",
+        "index":  24,
+        "status":  201,
+        "offerId":  "01a14a37-9339-7000-9ccc-4119d65afe55",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  24,
+        "status":  200,
+        "offerId":  "01a14a37-9339-7000-9ccc-4119d65afe55",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  24,
+        "status":  200,
+        "offerId":  "01a14a37-9339-7000-9ccc-4119d65afe55",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  24,
+        "status":  200,
+        "offerId":  "01a14a37-9339-7000-9ccc-4119d65afe55",
+        "detail":  "{\"productId\":\"01a14a36-74e9-7000-983c-d205cea0492e\",\"title\":\"نایک شلوار مردانه سری 1\",\"status\":\"Published\",\"kind\":\"Physi"
+    },
+    {
+        "step":  "offer",
+        "index":  25,
+        "status":  201,
+        "offerId":  "01a14a37-9607-7000-a1f4-2961b128d12e",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  25,
+        "status":  200,
+        "offerId":  "01a14a37-9607-7000-a1f4-2961b128d12e",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  25,
+        "status":  200,
+        "offerId":  "01a14a37-9607-7000-a1f4-2961b128d12e",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  25,
+        "status":  200,
+        "offerId":  "01a14a37-9607-7000-a1f4-2961b128d12e",
+        "detail":  "{\"productId\":\"01a14a36-74e9-7000-983c-d205cea0492e\",\"title\":\"نایک شلوار مردانه سری 1\",\"status\":\"Published\",\"kind\":\"Physi"
+    },
+    {
+        "step":  "offer",
+        "index":  26,
+        "status":  201,
+        "offerId":  "01a14a37-97ab-7000-b307-f78aea2c1ee3",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  26,
+        "status":  200,
+        "offerId":  "01a14a37-97ab-7000-b307-f78aea2c1ee3",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  26,
+        "status":  200,
+        "offerId":  "01a14a37-97ab-7000-b307-f78aea2c1ee3",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  26,
+        "status":  200,
+        "offerId":  "01a14a37-97ab-7000-b307-f78aea2c1ee3",
+        "detail":  "{\"productId\":\"01a14a36-74e9-7000-983c-d205cea0492e\",\"title\":\"نایک شلوار مردانه سری 1\",\"status\":\"Published\",\"kind\":\"Physi"
+    },
+    {
+        "step":  "offer",
+        "index":  27,
+        "status":  201,
+        "offerId":  "01a14a37-9a3d-7000-ab47-d2538a90a8f1",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  27,
+        "status":  200,
+        "offerId":  "01a14a37-9a3d-7000-ab47-d2538a90a8f1",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  27,
+        "status":  200,
+        "offerId":  "01a14a37-9a3d-7000-ab47-d2538a90a8f1",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  27,
+        "status":  200,
+        "offerId":  "01a14a37-9a3d-7000-ab47-d2538a90a8f1",
+        "detail":  "{\"productId\":\"01a14a36-74e9-7000-983c-d205cea0492e\",\"title\":\"نایک شلوار مردانه سری 1\",\"status\":\"Published\",\"kind\":\"Physi"
+    },
+    {
+        "step":  "offer",
+        "index":  28,
+        "status":  201,
+        "offerId":  "01a14a37-9cbe-7000-92b9-a8e365b8fe18",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  28,
+        "status":  200,
+        "offerId":  "01a14a37-9cbe-7000-92b9-a8e365b8fe18",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  28,
+        "status":  200,
+        "offerId":  "01a14a37-9cbe-7000-92b9-a8e365b8fe18",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  28,
+        "status":  200,
+        "offerId":  "01a14a37-9cbe-7000-92b9-a8e365b8fe18",
+        "detail":  "{\"productId\":\"01a14a36-76fe-7000-8ff7-2bcea687b2e0\",\"title\":\"آدیداس شلوار مردانه مدل 2\",\"status\":\"Published\",\"kind\":\"Phy"
+    },
+    {
+        "step":  "offer",
+        "index":  29,
+        "status":  201,
+        "offerId":  "01a14a37-9fd4-7000-8a08-4e769dfcadf5",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  29,
+        "status":  200,
+        "offerId":  "01a14a37-9fd4-7000-8a08-4e769dfcadf5",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  29,
+        "status":  200,
+        "offerId":  "01a14a37-9fd4-7000-8a08-4e769dfcadf5",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  29,
+        "status":  200,
+        "offerId":  "01a14a37-9fd4-7000-8a08-4e769dfcadf5",
+        "detail":  "{\"productId\":\"01a14a36-76fe-7000-8ff7-2bcea687b2e0\",\"title\":\"آدیداس شلوار مردانه مدل 2\",\"status\":\"Published\",\"kind\":\"Phy"
+    },
+    {
+        "step":  "offer",
+        "index":  30,
+        "status":  201,
+        "offerId":  "01a14a37-a368-7000-be57-d8a279ba63ca",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  30,
+        "status":  200,
+        "offerId":  "01a14a37-a368-7000-be57-d8a279ba63ca",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  30,
+        "status":  200,
+        "offerId":  "01a14a37-a368-7000-be57-d8a279ba63ca",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  30,
+        "status":  200,
+        "offerId":  "01a14a37-a368-7000-be57-d8a279ba63ca",
+        "detail":  "{\"productId\":\"01a14a36-76fe-7000-8ff7-2bcea687b2e0\",\"title\":\"آدیداس شلوار مردانه مدل 2\",\"status\":\"Published\",\"kind\":\"Phy"
+    },
+    {
+        "step":  "offer",
+        "index":  31,
+        "status":  201,
+        "offerId":  "01a14a37-a800-7000-92aa-67dd4bdfecc3",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  31,
+        "status":  200,
+        "offerId":  "01a14a37-a800-7000-92aa-67dd4bdfecc3",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  31,
+        "status":  200,
+        "offerId":  "01a14a37-a800-7000-92aa-67dd4bdfecc3",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  31,
+        "status":  200,
+        "offerId":  "01a14a37-a800-7000-92aa-67dd4bdfecc3",
+        "detail":  "{\"productId\":\"01a14a36-76fe-7000-8ff7-2bcea687b2e0\",\"title\":\"آدیداس شلوار مردانه مدل 2\",\"status\":\"Published\",\"kind\":\"Phy"
+    },
+    {
+        "step":  "offer",
+        "index":  32,
+        "status":  201,
+        "offerId":  "01a14a37-aaec-7000-96af-85e8cfd576f2",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  32,
+        "status":  200,
+        "offerId":  "01a14a37-aaec-7000-96af-85e8cfd576f2",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  32,
+        "status":  200,
+        "offerId":  "01a14a37-aaec-7000-96af-85e8cfd576f2",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  32,
+        "status":  200,
+        "offerId":  "01a14a37-aaec-7000-96af-85e8cfd576f2",
+        "detail":  "{\"productId\":\"01a14a36-76fe-7000-8ff7-2bcea687b2e0\",\"title\":\"آدیداس شلوار مردانه مدل 2\",\"status\":\"Published\",\"kind\":\"Phy"
+    },
+    {
+        "step":  "offer",
+        "index":  33,
+        "status":  201,
+        "offerId":  "01a14a37-ae74-7000-98a5-e051e8bc9d92",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  33,
+        "status":  200,
+        "offerId":  "01a14a37-ae74-7000-98a5-e051e8bc9d92",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  33,
+        "status":  200,
+        "offerId":  "01a14a37-ae74-7000-98a5-e051e8bc9d92",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  33,
+        "status":  200,
+        "offerId":  "01a14a37-ae74-7000-98a5-e051e8bc9d92",
+        "detail":  "{\"productId\":\"01a14a36-76fe-7000-8ff7-2bcea687b2e0\",\"title\":\"آدیداس شلوار مردانه مدل 2\",\"status\":\"Published\",\"kind\":\"Phy"
+    },
+    {
+        "step":  "offer",
+        "index":  34,
+        "status":  201,
+        "offerId":  "01a14a37-b1c5-7000-ab0d-104f5d613d1b",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  34,
+        "status":  200,
+        "offerId":  "01a14a37-b1c5-7000-ab0d-104f5d613d1b",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  34,
+        "status":  200,
+        "offerId":  "01a14a37-b1c5-7000-ab0d-104f5d613d1b",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  34,
+        "status":  200,
+        "offerId":  "01a14a37-b1c5-7000-ab0d-104f5d613d1b",
+        "detail":  "{\"productId\":\"01a14a36-76fe-7000-8ff7-2bcea687b2e0\",\"title\":\"آدیداس شلوار مردانه مدل 2\",\"status\":\"Published\",\"kind\":\"Phy"
+    },
+    {
+        "step":  "offer",
+        "index":  35,
+        "status":  201,
+        "offerId":  "01a14a37-b44b-7000-9f5e-b6927de0106e",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  35,
+        "status":  200,
+        "offerId":  "01a14a37-b44b-7000-9f5e-b6927de0106e",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  35,
+        "status":  200,
+        "offerId":  "01a14a37-b44b-7000-9f5e-b6927de0106e",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  35,
+        "status":  200,
+        "offerId":  "01a14a37-b44b-7000-9f5e-b6927de0106e",
+        "detail":  "{\"productId\":\"01a14a36-76fe-7000-8ff7-2bcea687b2e0\",\"title\":\"آدیداس شلوار مردانه مدل 2\",\"status\":\"Published\",\"kind\":\"Phy"
+    },
+    {
+        "step":  "offer",
+        "index":  36,
+        "status":  201,
+        "offerId":  "01a14a37-b716-7000-870f-f0f9cce0b453",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  36,
+        "status":  200,
+        "offerId":  "01a14a37-b716-7000-870f-f0f9cce0b453",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  36,
+        "status":  200,
+        "offerId":  "01a14a37-b716-7000-870f-f0f9cce0b453",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  36,
+        "status":  200,
+        "offerId":  "01a14a37-b716-7000-870f-f0f9cce0b453",
+        "detail":  "{\"productId\":\"01a14a36-76fe-7000-8ff7-2bcea687b2e0\",\"title\":\"آدیداس شلوار مردانه مدل 2\",\"status\":\"Published\",\"kind\":\"Phy"
+    },
+    {
+        "step":  "offer",
+        "index":  37,
+        "status":  201,
+        "offerId":  "01a14a37-bb02-7000-95fa-86d479003472",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  37,
+        "status":  200,
+        "offerId":  "01a14a37-bb02-7000-95fa-86d479003472",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  37,
+        "status":  200,
+        "offerId":  "01a14a37-bb02-7000-95fa-86d479003472",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  37,
+        "status":  200,
+        "offerId":  "01a14a37-bb02-7000-95fa-86d479003472",
+        "detail":  "{\"productId\":\"01a14a36-790f-7000-b3ea-eb3b16b87c73\",\"title\":\"زارا شلوار مردانه نسخه 3\",\"status\":\"Published\",\"kind\":\"Phys"
+    },
+    {
+        "step":  "offer",
+        "index":  38,
+        "status":  201,
+        "offerId":  "01a14a37-bda7-7000-ac18-5cd8407f30f1",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  38,
+        "status":  200,
+        "offerId":  "01a14a37-bda7-7000-ac18-5cd8407f30f1",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  38,
+        "status":  200,
+        "offerId":  "01a14a37-bda7-7000-ac18-5cd8407f30f1",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  38,
+        "status":  200,
+        "offerId":  "01a14a37-bda7-7000-ac18-5cd8407f30f1",
+        "detail":  "{\"productId\":\"01a14a36-790f-7000-b3ea-eb3b16b87c73\",\"title\":\"زارا شلوار مردانه نسخه 3\",\"status\":\"Published\",\"kind\":\"Phys"
+    },
+    {
+        "step":  "offer",
+        "index":  39,
+        "status":  201,
+        "offerId":  "01a14a37-c053-7000-9a31-ad742ad2d804",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  39,
+        "status":  200,
+        "offerId":  "01a14a37-c053-7000-9a31-ad742ad2d804",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  39,
+        "status":  200,
+        "offerId":  "01a14a37-c053-7000-9a31-ad742ad2d804",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  39,
+        "status":  200,
+        "offerId":  "01a14a37-c053-7000-9a31-ad742ad2d804",
+        "detail":  "{\"productId\":\"01a14a36-790f-7000-b3ea-eb3b16b87c73\",\"title\":\"زارا شلوار مردانه نسخه 3\",\"status\":\"Published\",\"kind\":\"Phys"
+    },
+    {
+        "step":  "offer",
+        "index":  40,
+        "status":  201,
+        "offerId":  "01a14a37-c37f-7000-b7eb-d8b36ee76a32",
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  40,
+        "status":  200,
+        "offerId":  "01a14a37-c37f-7000-b7eb-d8b36ee76a32",
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  40,
+        "status":  200,
+        "offerId":  "01a14a37-c37f-7000-b7eb-d8b36ee76a32",
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  40,
+        "status":  200,
+        "offerId":  "01a14a37-c37f-7000-b7eb-d8b36ee76a32",
+        "detail":  "{\"productId\":\"01a14a36-790f-7000-b3ea-eb3b16b87c73\",\"title\":\"زارا شلوار مردانه نسخه 3\",\"status\":\"Published\",\"kind\":\"Phys"
+    }
+]

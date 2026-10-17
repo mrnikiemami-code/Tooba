@@ -1,0 +1,177 @@
+{
+  "logFile": "h-diag.jsonl",
+  "logTotalBytes": 181286417,
+  "logTotalLines": 59480,
+  "totalEfCommandExecuted": 57469,
+  "attributedEfCommands": 340,
+  "unattributedEfCommands": 57129,
+  "unattributedDuringRequestWindow": 4669,
+  "unattributedTopClasses": {
+    "catalog": 48608,
+    "other": 5931,
+    "messaging": 1013,
+    "inventory": 543,
+    "offer": 388,
+    "pricing": 336,
+    "party": 220,
+    "schema": 90
+  },
+  "unattributedSamples": [
+    {
+      "ts": "2026-10-17T14:10:59.062Z",
+      "cls": "schema",
+      "msg": "Executed DbCommand (25ms) [Parameters=[], CommandType=\\u0027Text\\u0027, CommandTimeout=\\u0027183\\u0027]\\r\\nSELECT EXISTS (\\n    SELECT 1 FRO"
+    },
+    {
+      "ts": "2026-10-17T14:10:59.074Z",
+      "cls": "schema",
+      "msg": "Executed DbCommand (2ms) [Parameters=[], CommandType=\\u0027Text\\u0027, CommandTimeout=\\u0027183\\u0027]\\r\\nSELECT EXISTS (\\n    SELECT 1 FROM"
+    },
+    {
+      "ts": "2026-10-17T14:10:59.115Z",
+      "cls": "other",
+      "msg": "Executed DbCommand (8ms) [Parameters=[], CommandType=\\u0027Text\\u0027, CommandTimeout=\\u0027183\\u0027]\\r\\nDO $EF$\\r\\nBEGIN\\r\\n    IF NOT EXI"
+    },
+    {
+      "ts": "2026-10-17T14:10:59.122Z",
+      "cls": "schema",
+      "msg": "Executed DbCommand (1ms) [Parameters=[], CommandType=\\u0027Text\\u0027, CommandTimeout=\\u0027183\\u0027]\\r\\nSELECT EXISTS (\\n    SELECT 1 FROM"
+    },
+    {
+      "ts": "2026-10-17T14:10:59.125Z",
+      "cls": "catalog",
+      "msg": "Executed DbCommand (2ms) [Parameters=[], CommandType=\\u0027Text\\u0027, CommandTimeout=\\u0027183\\u0027]\\r\\nSELECT migration_id, product_versi"
+    },
+    {
+      "ts": "2026-10-17T14:10:59.166Z",
+      "cls": "other",
+      "msg": "Executed DbCommand (1ms) [Parameters=[], CommandType=\\u0027Text\\u0027, CommandTimeout=\\u0027183\\u0027]\\r\\nDO $EF$\\r\\nBEGIN\\r\\n    IF NOT EXI"
+    }
+  ],
+  "perRequest": [
+    {
+      "tag": "size-a",
+      "phase": "warmup",
+      "traceId": "9c9210349ba305b412cddd0838dbedc5",
+      "status": 200,
+      "wallMs": 166.1,
+      "payloadBytes": 33962,
+      "bodySha256": "89AC53F8D153F0B87CE8B4CD90A344750F7F8506FB75FBEC0A24B805CF7C3115",
+      "dbCommands": 38,
+      "dbCommandMs": 71,
+      "boundedLogBytes": 112435
+    },
+    {
+      "tag": "size-a",
+      "phase": "m1",
+      "traceId": "7d31e324aa1520e3f0b86182e4415b58",
+      "status": 200,
+      "wallMs": 136.2,
+      "payloadBytes": 33962,
+      "bodySha256": "89AC53F8D153F0B87CE8B4CD90A344750F7F8506FB75FBEC0A24B805CF7C3115",
+      "dbCommands": 38,
+      "dbCommandMs": 75,
+      "boundedLogBytes": 112438
+    },
+    {
+      "tag": "size-a",
+      "phase": "m2",
+      "traceId": "01a57158843155ac6c33b2f4d75c68b2",
+      "status": 200,
+      "wallMs": 89.6,
+      "payloadBytes": 33962,
+      "bodySha256": "89AC53F8D153F0B87CE8B4CD90A344750F7F8506FB75FBEC0A24B805CF7C3115",
+      "dbCommands": 38,
+      "dbCommandMs": 43,
+      "boundedLogBytes": 112435
+    },
+    {
+      "tag": "size-a",
+      "phase": "m3",
+      "traceId": "4249887e18e2f9f5bdcc4513e494de66",
+      "status": 200,
+      "wallMs": 91.7,
+      "payloadBytes": 33962,
+      "bodySha256": "89AC53F8D153F0B87CE8B4CD90A344750F7F8506FB75FBEC0A24B805CF7C3115",
+      "dbCommands": 38,
+      "dbCommandMs": 44,
+      "boundedLogBytes": 112435
+    },
+    {
+      "tag": "size-b",
+      "phase": "warmup",
+      "traceId": "e3aa8d18a8b9fcd5696fbc5f0c6fde5e",
+      "status": 200,
+      "wallMs": 313.5,
+      "payloadBytes": 51892,
+      "bodySha256": "DB6D475FA92E16BA0AF10E72CB9A5A1A1B2985935E459D83038592907B5B94A5",
+      "dbCommands": 47,
+      "dbCommandMs": 54,
+      "boundedLogBytes": 142261
+    },
+    {
+      "tag": "size-b",
+      "phase": "m1",
+      "traceId": "08436b563bd9b8ef855122ee37a854f0",
+      "status": 200,
+      "wallMs": 341.4,
+      "payloadBytes": 51892,
+      "bodySha256": "DB6D475FA92E16BA0AF10E72CB9A5A1A1B2985935E459D83038592907B5B94A5",
+      "dbCommands": 47,
+      "dbCommandMs": 104,
+      "boundedLogBytes": 142264
+    },
+    {
+      "tag": "size-b",
+      "phase": "m2",
+      "traceId": "89018896e48a46f547aff2f827ea19c5",
+      "status": 200,
+      "wallMs": 363,
+      "payloadBytes": 51892,
+      "bodySha256": "DB6D475FA92E16BA0AF10E72CB9A5A1A1B2985935E459D83038592907B5B94A5",
+      "dbCommands": 47,
+      "dbCommandMs": 78,
+      "boundedLogBytes": 142261
+    },
+    {
+      "tag": "size-b",
+      "phase": "m3",
+      "traceId": "9a085183ad1211ae04ca79727debedb8",
+      "status": 200,
+      "wallMs": 95.8,
+      "payloadBytes": 51892,
+      "bodySha256": "DB6D475FA92E16BA0AF10E72CB9A5A1A1B2985935E459D83038592907B5B94A5",
+      "dbCommands": 47,
+      "dbCommandMs": 45,
+      "boundedLogBytes": 142264
+    }
+  ],
+  "summary": {
+    "size-a": {
+      "requests": 3,
+      "dbCommandsPerRequest": [
+        38,
+        38,
+        38
+      ],
+      "meanDbCommands": 38,
+      "meanDbCommandMs": 54,
+      "meanWallMs": 105.8,
+      "payloadBytes": 33962,
+      "boundedLogBytesMean": 112436
+    },
+    "size-b": {
+      "requests": 3,
+      "dbCommandsPerRequest": [
+        47,
+        47,
+        47
+      ],
+      "meanDbCommands": 47,
+      "meanDbCommandMs": 75.67,
+      "meanWallMs": 266.7,
+      "payloadBytes": 51892,
+      "boundedLogBytesMean": 142263
+    }
+  }
+}
