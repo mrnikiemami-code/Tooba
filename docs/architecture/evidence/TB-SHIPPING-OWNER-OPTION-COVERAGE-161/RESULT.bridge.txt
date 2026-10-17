@@ -1,0 +1,65 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-OWNER-OPTION-COVERAGE-161
+Parent-Task: TB-SHIPPING-OWNER-STRICT-OPTION-RATE-160
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Verdict: PASS
+
+Expected-Base-SHA: 0ad0296ab0df0c2449417cf6438310b1cf3ca6ff
+Code-SHA: c08f232406dccc63eebdaf148e12458f2eeb73bb
+Evidence-SHA: PUSHED_WITH_CODE (docs/architecture/evidence/TB-SHIPPING-OWNER-OPTION-COVERAGE-161)
+
+Implementation (production, Shipping-owned only)
+- ShippingCoverageGrant gained additive nullable OptionCode; existing rows stay NULL = legacy service-level
+  grant. New ShippingMethodCoverage aggregate/table shipping.method_coverages with explicit
+  ShippingCoverageMode (Unrestricted | Restricted), unique over (service_code, option_code) NULLS NOT DISTINCT.
+- ShippingRatePolicyEngine.Quote gained an additive 4-arg overload accepting declarations; the 3-arg
+  overload delegates with null so every existing caller is unchanged.
+- StrictOwnedOption coverage now evaluates ONLY the request's own method: no declaration or explicit
+  Unrestricted => unrestricted (NOT a coverage.missing failure; owned rate still mandatory); Restricted =>
+  only that method's active grants, and Restricted + zero grants denies everywhere (no universal row).
+- LegacyFallback untouched: still requires an active option_code IS NULL grant; option-scoped grants are
+  never consulted, so they can neither widen nor narrow legacy coverage.
+- Admin seam: ShippingCoverageGrantWriteRequest.OptionCode, ShippingMethodCoverageWriteRequest/AdminItem,
+  ShippingRatesAndCoverageView.MethodCoverages, new IShippingMethodCoverageDirectory, and
+  PUT /v1/admin/shipping-services/{serviceCode}/method-coverage under the existing fulfillment.manage
+  authorizer (no new permission, no anonymous route). New stable reason
+  shipping.coverage.method_restricted.
+- EF migration 20261016211322_OptionScopedCoverageRestriction (+ designer, snapshot) generated from the
+  model: nullable option_code + canonical CHECK, grant identity index rebuilt over (service, option, scope),
+  new method_coverages table with mode CHECK and identity unique index. No data backfill, no legacy row
+  assigned to options, no shared-DB DDL.
+
+Proof
+- Tooba.Shipping.Tests full suite: 329 passed / 1 failed / 330 — the only failure is the PRE-EXISTING
+  OperationalQuoteCompatibilityTests.No_module_outside_shipping_references_the_operational_quote_types
+  caused by unmodified Order files (same pre-existing red recorded in TB-160).
+- New Rates/ShippingMethodCoverageRestrictionTests (11/11): restricted allow/deny, sibling isolation,
+  provider-grant non-inheritance, empty allowed set denies all, missing declaration = unrestricted but
+  rate-mandatory, MeasurementRequired preserved, legacy parity, service-level declaration scoping, and an
+  InMemory directory+adapter roundtrip (persisted declaration enforced by the quote adapter).
+- ShippingPersistenceModelTests green with the new table/index/constraint/migration-chain pins.
+- Tooba.Order.Application compiles (0 errors): additive overload keeps legacy callers intact.
+
+Deliberate supersession requiring Architect attention
+TB-160 test Strict_mode_without_coverage_fails_closed asserted NotCovered for strict mode with no grants;
+TB-161's locked contract says a missing explicit restriction is NOT coverage.missing in strict mode. The
+test was rewritten to the new intent (with an inline comment); all TB-160 RATE-authority assertions stay
+untouched and green. If an implicit service-level coverage gate must remain in strict mode, that is a
+one-line engine change but it supersedes the TB-161 contract sentence.
+
+Not proven
+Live PostgreSQL Up/Down of the new migration. Shared-DB DDL is forbidden and an isolated scratch DB did not
+fit the 45-minute box. Offline model<->snapshot<->DDL-script proof is green; a scratch PG15+ Up/Down run is
+the first remaining prerequisite.
+
+Timings: ~44 min of the hard 45-minute box (one full Shipping suite, one Order compile, no repeated suites).
+Working tree: no file outside src/backend/Modules/Shipping/** and the task artifact was modified; pre-existing
+dirty evidence/frontend files were left untouched and uncommitted. No rebase/reset/force-push, no shared
+services touched, no next task launched.
+
+STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,52 @@
+TB-SHIPPING-OWNER-OPTION-COVERAGE-161 — focused test runs (actual output)
+Base: 0ad0296ab0df0c2449417cf6438310b1cf3ca6ff
+Code: c08f232406dccc63eebdaf148e12458f2eeb73bb
+
+[1] dotnet build src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Tooba.Shipping.Infrastructure.csproj
+    Build succeeded. 0 Warning(s) 0 Error(s) (5.0 s)
+
+[2] dotnet ef migrations add OptionScopedCoverageRestriction --project .../Tooba.Shipping.Infrastructure
+    Build started... Build succeeded. Done.
+    -> Persistence/Migrations/20261016211322_OptionScopedCoverageRestriction.cs (+ .Designer.cs)
+    -> ShippingDbContextModelSnapshot.cs updated
+
+[3] dotnet build src/backend/Modules/Shipping/Tooba.Shipping.Tests
+    Build succeeded. 1 Warning(s) 0 Error(s)
+    (warning xUnit1031 in pre-existing Admin/ShippingRateCoverageAdminTests.cs:144)
+
+[4] dotnet test ... --filter "ShippingMethodCoverageRestrictionTests|ShippingPersistenceModelTests|ShippingStrictOwnedOptionRateTests"
+    First cycle: Failed 2, Passed 63, Total 65
+      - Missing_declaration_is_unrestricted_but_still_needs_an_owned_rate (wrong expected reason: no active
+        service row => ServiceNotPriced; test fixture fixed to include a sibling owned rate)
+      - Strict_mode_without_coverage_fails_closed (TB-160 coverage expectation superseded by TB-161
+        contract; test rewritten to the new intent, rate-authority assertions untouched)
+    After fix (see [5]) both green.
+
+[5] dotnet test src/backend/Modules/Shipping/Tooba.Shipping.Tests (full module suite)
+    Failed 1, Passed 329, Skipped 0, Total 330, Duration 1 s
+    Only failure (PRE-EXISTING, unmodified files):
+      Tooba.Shipping.Tests.Compatibility.OperationalQuoteCompatibilityTests
+        .No_module_outside_shipping_references_the_operational_quote_types
+      Collection: ["src/backend/Modules/Order/Tooba.Order.Infrastructu..., ...Order.Application/..."]
+      Provenance: none of the Order files appear in `git status`; they were not modified by TB-161
+      (same failure was recorded as pre-existing red in TB-160). No Shipping test fails.
+
+[6] dotnet build src/backend/Modules/Order/Tooba.Order.Application
+    Build succeeded. 19 Warning(s) 0 Error(s) (5.2 s)
+    -> legacy 3-arg ShippingRatePolicyEngine.Quote callers still compile (additive overload).
+
+Coverage of the new behaviour (ShippingMethodCoverageRestrictionTests, 11 tests):
+  Restricted_method_is_denied_outside_its_own_allowed_city
+  Restricted_method_is_quoted_inside_its_own_allowed_city
+  Sibling_restriction_never_narrows_an_unrestricted_method
+  Provider_level_grant_never_authorizes_a_restricted_option_method
+  Restricted_method_with_zero_grants_denies_every_destination
+  Missing_declaration_is_unrestricted_but_still_needs_an_owned_rate
+  Unrestricted_method_keeps_conditioned_rate_fail_closed_without_measurement
+  Legacy_default_ignores_option_scoped_grants_and_still_requires_a_service_level_grant
+  Unrestricted_method_is_quoted_even_where_a_sibling_is_restricted
+  Service_level_declaration_does_not_restrict_an_option_method
+  Persisted_restriction_is_enforced_by_the_quote_adapter (InMemory directory + adapter roundtrip)
+
+Not proven: live PostgreSQL Up/Down of the new migration (forbidden on shared DB; no scratch DB inside
+the 45-minute box). Offline model<->snapshot<->DDL-script proof is green in ShippingPersistenceModelTests.
