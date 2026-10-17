@@ -1,0 +1,59 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-167
+Parent-Task: TB-SHIPPING-STOREFRONT-PRIVATE-BROWSER-166
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PARTIAL
+Verdict: PARTIAL - real owner-level create contract/endpoint + Admin form + focused tests green; live scratch create->GET->reopen proof not executed inside the timebox
+Base-SHA: 333a9c9640d5be96ae5d697cf621043ad34e03e9
+Code-SHA: 3746483c14fe6cacf951ad8fbc08afb2e8f81b5c
+Evidence-SHA: 3746483c14fe6cacf951ad8fbc08afb2e8f81b5c
+HEAD-SHA: 3746483c14fe6cacf951ad8fbc08afb2e8f81b5c
+Origin-SHA: 3746483c14fe6cacf951ad8fbc08afb2e8f81b5c
+Push: fast-forward 333a9c964..3746483c1 (main -> main)
+
+SUMMARY
+The canonical catalog owner was identified as Fulfillment (fulfillment.shipping_methods + shipping_method_translations), with Shipping owning all rate/coverage/schedule/packaging policy keyed by serviceCode+optionCode and Localization owning the language registry. A REAL method-scoped create was implemented there: command/handler/validator, a narrow write seam, and authorized POST /v1/admin/shipping-services/shipping-methods/one-level. The client supplies only the explicit canonical code, optional provider metadata and names for real registry languages; the legacy binding is DERIVED SERVER-SIDE with the same rule the existing backfill used (service:option => (service, option), single segment => (code, null)), so a mismatched or client-invented binding is not expressible. Every create is written is_active=false with a server-assigned sort order; no legacy shipping_services/shipping_service_options row, no rate/coverage/schedule/packaging policy, no financial mode and no checkout/order data is fabricated. The Admin flat screen replaced the honest BLOCKED dialog with a real RTL form driven by the server language registry, refreshes the flat list from the server on success, never shows a success state on an uncertain response, and keeps exactly the three row actions and four non-nested tabs. Verdict is PARTIAL because the runtime create->GET->reopen proof against a disposable PostgreSQL + private Host was not run before the hard timebox; no screenshot or live HTTP claim is made.
+
+WHAT CHANGED
+1. Application (Fulfillment): IShippingOneLevelCatalogAdminCreate port with explicit statuses (Created, GateDisabled, CatalogNotReady, InvalidMethodCode, MethodCodeDuplicate, BindingDuplicate, NameRequired, NameTooLong, DuplicateLanguage, ConcurrentConflict, InvalidProviderKind) and the pure ShippingOneLevelMethodBinding.Derive rule; CreateOneLevelShippingMethodCommand + handler (language registry validated before any write, duplicate language rejected, every fail-closed status mapped to the existing stable codes shipping_method.code.invalid / code.duplicate / binding.duplicate / name.required / shipping_service.language_invalid / rejected); CreateOneLevelShippingMethodCommandValidator for transport shape.
+2. Infrastructure (Fulfillment): ShippingOneLevelCatalogAdminCreate - gate-first (disabled gate => zero DB access), canonical code normalize, server-derived binding, provider metadata shape (a-z0-9_, <=64), per-language name trim/bounds, explicit duplicate-code and duplicate-binding checks, server sortOrder = max+1, single SaveChanges for method + translations, UndefinedTable => CatalogNotReady, PostgreSQL 23505 => BindingDuplicate/ConcurrentConflict by constraint name. No legacy catalog row, no policy row, no raw SQL writes.
+3. Endpoints (Fulfillment): POST /v1/admin/shipping-services/shipping-methods/one-level behind IFulfillmentAdminAuthorizer; body has only methodCode, providerKind, translations[{languageId,name}] - no serviceCode/optionCode/optionId/isActive field exists.
+4. DI: create seam registered next to the existing read/write/activation seams.
+5. Frontend: flat-method-create-model.ts (pure canonical-code/provider/name validation, conservative response mapping, stable Persian failure messages), flat-method-create-api.ts (401/403 => denied, server error code surfaced, invalid payload => error, no optimistic success), flat-screen.tsx (real form: code, optional provider metadata, one name input per server-registry language, submit disabled while in flight and while languages are unavailable, visible error block, success only after server-confirmed create then server re-read).
+6. Tests/docs: new ShippingOneLevelMethodCreateTests (21 cases) and the Fulfillment validator coverage guard updated to the exact new inventory (20 endpoint-reachable requests / 14 required validators / 8 Shipping validators); frontend flat-method-create-model.test.ts (8 cases); SOURCE-OWNER-MAP.md and EVIDENCE.md.
+
+TESTS (actually run in this task)
+dotnet test src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests --filter "FullyQualifiedName~Architecture|FullyQualifiedName~Shipping"
+  => Passed! Failed: 0, Passed: 155, Skipped: 0, Total: 155
+  New coverage: disabled gate refuses before any read/write; malformed code; duplicate code; binding owned by another row with a free code => BindingDuplicate; non-canonical provider metadata; blank/over-long name; duplicate language; unknown language rejected before write; valid create persists one inactive row with real per-language names, derived binding and server sort order; optionless code => (code, null); zero shipping_services/shipping_service_options rows created (so the legacy storefront tree cannot contain the method); recognized methods and their bindings unchanged; handler maps every fail-closed outcome to a stable code.
+node --experimental-strip-types --test app/admin/shipping-services/flat-method-rows.test.ts app/admin/shipping-services/shipping-one-level-tabs.test.ts app/admin/shipping-services/shipping-one-level-method-name.test.ts app/admin/shipping-services/flat-method-create-model.test.ts
+  => tests 48, pass 48, fail 0
+npx tsc --noEmit -p tsconfig.json => clean (no output)
+
+WHAT IS NOT PROVEN (exact missing proof)
+1. No live authorized HTTP create against PostgreSQL: unique indexes ix_shipping_methods_method_code and ux_shipping_methods_legacy_binding, real 400 error mapping and concurrent-request outcome were exercised only through the in-memory provider and explicit pre-checks.
+2. No live GET .../one-level read-back and no real browser reopen of a created row; the Admin form has not been exercised against a running Host.
+3. No live storefront projection proof with ShippingOwnedRateAuthority=Enabled that the new method is absent/unquotable; this is currently proven structurally (no legacy service/option row is written and the storefront tree is built exclusively from that legacy catalog) plus the existing 096 activation seam requiring a real legacy service AND option.
+4. No migration was added and none is required: legacy_option_code is nullable and legacy_service_code is fully determined by the canonical mapping.
+
+SMALLEST SAFE NEXT STEP
+Reuse the TB-157/158/166 scratch harness: disposable PostgreSQL on a private port, Development Host on a private port with Tooba:ShippingOneLevelCatalog:Enabled=true, one authorized admin session, then POST create tipax:sameday with fa+en names -> GET one-level (row present, inactive, correct derived binding and translations) -> browser reopen the created row -> POST the same code (expect shipping_method.code.duplicate, list unchanged) -> storefront projection probe with the owned-rate gate ON (method absent/unquotable) -> teardown.
+
+SAFETY
+No writes/restarts to shared :3000/:5088/:5432, tooba_alpha/store-alpha, RabbitMQ/Redis; no real SMS/PSP/payout; no migration; no feature flag change in any committed file; no change to already accepted customer Shipping group/promise/Payment/Fulfillment/Settlement paths; no unrelated dirty file staged or committed (three pre-existing unrelated modified files were left untouched); no stash/reset/rebase/force push; no probe/dummy POST to Bridge /api/results.
+
+DISCLOSED NOTES
+- Elapsed time exceeded the 45-minute timebox; the slice was stopped at the safe boundary and reported as PARTIAL instead of claiming a runtime PASS.
+- Binding derivation intentionally reuses the existing backfill mapping so the canonical code remains the single identity and the client can never supply a legacy binding. A genuinely new provider identity therefore requires a later, separately approved legacy-identity step before the method can be activated; that gap is documented in SOURCE-OWNER-MAP.md rather than filled with a fake option.
+
+EVIDENCE (docs/architecture/evidence/TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-167/)
+SOURCE-OWNER-MAP.md, EVIDENCE.md, RESULT.bridge.txt
+
+Automatic-Next-Task: NONE
+STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT
