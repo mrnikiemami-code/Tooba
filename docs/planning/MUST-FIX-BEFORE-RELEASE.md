@@ -1,9 +1,9 @@
-> **Architect handoff / complete open backlog:** [Shipping Architect Recovery — 2026-10-16](shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-16.md). Specifically, storefront per-seller ShippingGroupId delivery cards and dates/time slots (approved TB-145 wireframe) remain **RELEASE-CRITICAL and NOT IMPLEMENTED**, regardless of Admin improvements. Also tracks multilingual Admin, monetary policy, optional constraints, real create-method, persistent writes, EF log flood and financial policy. Read before issuing tasks.
+> **Current architect handoff:** [Shipping Architect Recovery — reconciled 2026-10-17](shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-16.md). TB-153–154/166/172 proved independent shipping-group cards, dates/windows and payment draft on authenticated isolated browsers; TB-167–174 proved method creation and coverage UI; TB-175–176 proved owner-scoped operating schedule and packaging Admin writes, **not customer calendar enforcement or a packaging surcharge**. Production shipping owned-rate gate stays OFF, real shared-browser acceptance is pending. Avoid treating older snapshot text as current state.
 
 # TOOBA — Must-fix issues before release
 
 Status: ACTIVE release-blocking register. Owner: Software Architecture.
-Last updated: 2026-10-16.
+Last updated: 2026-10-17 (reconciled after TB-183; TB-184 issued, outcome pending).
 Rule: No issue marked CRITICAL may be silently closed by task completion or documentation. Closure requires reproducible before/after runtime evidence.
 
 ## PERF-CRIT-001 — Storefront catalog read N+1 and home page timeout
@@ -84,6 +84,8 @@ acceptance ✘ (user), register acceptance ✘ (architect). **Blocker stays OPEN
 batched promotion evaluation owned by the Promotion module.
 See `docs/architecture/evidence/TB-STOREFRONT-PERF-QUERY-SCALE-183/RESULT.md`.
 
+**Architect reconciliation (2026-10-17 after TB-183):** Technical scale evidence reviewed against TB-183 `RESULT.md`: 3→12 Published Home products produced 38→47 request-scoped EF commands (exactly +1 per product; fixed floor 35). Steady-state Home ~91.7→95.8 ms in isolated runtime, quiet default leaves zero command **log lines** (not zero SQL). Residual call is `StorefrontComposer.ComposeProductAsync` → Promotion evaluation per card → `PromotionDirectory.EvaluateAsync` DB read. TB-184 was issued to implement Promotion-owner batching; **no worker result yet as of this reconciliation**, and no claimed fix. **Disposition: OPEN**, pending 184 before/after if delivered, end-user shared-browser responsiveness, and architect sign-off on final behaviour. Earlier TB-179/180/181 failed scale attempts are historical, superseded by TB-182/183 success; do not repeat them.
+
 **Affected routes:** storefront Home (`/fa`, `/v1/storefront/home`) and potentially catalog/listing/product-dependent pages. Shipping/login routes show severe latency in the reported environment but are not proven to share the same cause.
 
 **User-provided diagnostic report** (not yet independently reproduced by architect):
@@ -114,11 +116,11 @@ See `docs/architecture/evidence/TB-STOREFRONT-PERF-QUERY-SCALE-183/RESULT.md`.
 
 **Scope/priority:** Release-blocking performance defect tracked separately from current Admin Shipping flat-method visual milestone; do not derail current Admin phase-1 approval, but must fix before production release. Cursor tasks maximum 45 minutes, narrow focused tests, STOP_FOR_ARCHITECT.
 
-## ADM-UI-001 — Shipping Admin flat-method UI is not yet delivered
+## ADM-UI-001 — Shipping Admin flat-method usability and acceptance
 
-**Status: OPEN — USER VISUAL APPROVAL REQUIRED**
-Authority: [Shipping Admin flat method contract](../architecture/shipping/SHIPPING-ADMIN-FLAT-METHOD-CONTRACT.md).
-Current `/admin/shipping-services` uses provider-level rows, redundant actions and scattered nested configuration forms. Phase 1 must deliver independent method-level list and exactly View/Edit/Delete per row plus one service detail view with top-level General, Rates & Coverage, Transport Schedule, Packaging & Fee tabs, using existing Admin style. **DO NOT** migrate scattered forms until user approves actual visual skeleton.
+**Status: OPEN — REAL USER VISUAL APPROVAL REQUIRED (implementation substantially delivered in scratch).**
+Authority: [Shipping Admin flat-method contract](../architecture/shipping/SHIPPING-ADMIN-FLAT-METHOD-CONTRACT.md).
+TB-146–148 delivered flat one-method-per-row screen, View/Edit/Delete, compact multilingual General and four non-nested tabs. TB-167–172 delivered authenticated canonical-only Add Service, activation, method-owned fixed IRR tariff and real customer selection/payment draft on disposable stack. TB-173–174 delivered per-method Admin geographic coverage editing with real browser persistence and customer quote deny/allow; TB-175 method operating schedules and TB-176 packaging policy persistence/readonly. **Old statement that the current code only has provider-level rows and no method creation was stale.** Still unverified: user's actual running Admin visual approval and rollout parity, all financial modes, true carrier schedule enforcement in customer promise, packaging payer/tax treatment, controlled gate enablement and safe Delete semantics. No approval inferred from worker tests alone.
 
 ## FIN-POL-001 — Group shipping commercial allocation
 
