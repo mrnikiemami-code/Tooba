@@ -1,0 +1,96 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-METHOD-SCHEDULE-175
+Parent-Task: TB-SHIPPING-METHOD-COVERAGE-BROWSER-174
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-FLAT-METHOD-COMMERCIAL-READINESS
+Mode: BOUNDED_METHOD_OWNED_TRANSPORT_SCHEDULE_REPAIR
+Base-SHA: f0159086ebd42fd125b51ca5f3cfe5261102ba14
+Evidence-Commit: this commit (HEAD == origin/main)
+Status: PASS
+
+SUMMARY
+Made the existing Admin «برنامه کاری حمل» tab method-isolated and honest, with real persisted writes
+through the Shipping-owned owner API, and traced the true customer effect. No backend schema or
+contract change was needed: per-(serviceCode, optionCode) operating schedules and their validation
+already exist; the gaps were on the Admin surface and in the untruthful implication of customer
+impact.
+
+PRODUCTION SLICE (frontend only)
+- flat-method-detail-dialog.tsx: passes readOnly into the Schedule tab. Before this, a View-mode
+  dialog could save/toggle a real schedule.
+- shipping-one-level-schedule-tab.tsx: readOnly prop; save/toggle/updateRow/addRow/removeRow fail
+  closed; every input, add/remove, save and activate control disabled; explicit read-only notice.
+- Explicit coverage banner mirroring the owner evaluator:
+  no row = unrestricted (no explicit hours; NOT an availability guarantee);
+  inactive-only = no restriction; one active with windows = restricted;
+  one active with zero windows = restricted-empty (never read as unrestricted);
+  >1 active for the identity = data ambiguity, no availability claim.
+- Explicit customer-effect disclosure: these windows are carrier pickup/dispatch availability, today
+  not applied to the customer delivery date/window promise.
+- Explicit identity-isolation disclosure: only the exact (serviceCode, optionCode) row is read or
+  written; service-level and sibling rows are neither shown nor mutated.
+- shipping-one-level-schedule-model.ts: pure resolveScheduleCoverage + stable Persian labels and
+  explanations, all derived from ShippingScheduleAvailabilityEvaluator semantics.
+
+OWNERSHIP / PROVENANCE (traced)
+- Admin read/write: GET/PUT /v1/admin/shipping-services/{service}/operating-schedules (body
+  optionCode) -> MediatR -> UpsertShippingOperatingScheduleHandler -> IShippingMethodOptionValidator
+  (rejects unknown option) -> ShippingOperatingScheduleDirectory -> shipping.operating_schedules +
+  shipping.operating_windows (full window-set replacement per identity, id stable).
+- Activation: PATCH .../{scheduleId}/active; route serviceCode must match the stored row.
+- Evaluator is consumed by ShippingOperationalQuoteLookup (Admin operational quote).
+- Customer group horizons (Order/StorefrontShippingService.BuildGroupHorizons) use method LeadDays +
+  seller preparation days and the static StorefrontShippingCalculator.DayTimeWindows; they do NOT
+  read shipping.operating_schedules. StorefrontShippingOperationalShadowObserver is observation-only
+  and both its flags default false; it never changes price, promise, draft or order snapshot.
+=> The saved schedule is authoritative for Shipping policy/Admin operational quote but is NOT
+currently authoritative for customer delivery promises; the UI now says so instead of implying a
+promise change. No success-shaped claim of a customer promise change was made.
+
+VALIDATION
+- npx tsc --noEmit: 0 errors.
+- Frontend focused: node --experimental-strip-types --test shipping-one-level-schedule-tab.test.ts
+  shipping-operating-schedule-model.test.ts shipping-operating-schedule-api.test.ts -> 37 passed,
+  0 failed (includes 3 new TB-175 tests).
+- Backend focused: dotnet test Tooba.Shipping.Tests --filter
+  "OperatingSchedule|ScheduleAvailability|OperatingScheduleCompatibility" -> 51 passed, 0 failed.
+- Isolated owner-API acceptance (real Host + disposable PostgreSQL; ports 55495/5429; DB
+  tooba_175_scratch; migrations via canonical runner; host health 200 after 41s): 30/30 PASS.
+  Proven: baseline empty; standard create/read-back exact identity+window; sibling untouched;
+  legacy service-level row created and untouched by method edits (3 distinct DB identity rows);
+  full replacement keeps scheduleId; restricted-empty accepted as a real active 0-window row and not
+  deleted; unknown option -> 400 shipping.service_option.unknown; body/path mismatch -> 400;
+  cross-service PATCH -> 400 shipping.service_scope.mismatch with row still active; anonymous
+  GET/PUT -> 401; rejected writes changed no row.
+- View-mode read-only proven by wiring test (mode view -> readOnly -> all write controls disabled and
+  all mutation functions return before any API call); no authenticated browser leg this run.
+
+SAFETY
+- Shared :5432/:5088/:3000, tooba_alpha and tenant-alpha untouched. No reset/stash/force push,
+  no schema rebaseline, no broad suite loop, no fake customer data, no real SMS/PSP/payout/carrier
+  quotation/shipping share. Contracts-only crossings; no Host business logic. Existing one-level
+  list/three actions/four non-nested tabs, RTL and CSS preserved. Credentials not written to evidence.
+
+OPEN (carrier-level; no owner contract in this slice)
+1. Real carrier calendar/working-day source.
+2. Capacity enforcement/atomic slot reservation (still NotEnforced).
+3. Timezone-aware customer windows driven by the schedule (requires an Order->Shipping enforcement
+   contract; operational shadow stays OFF).
+4. UI cannot create restricted-empty (client form requires >=1 window); owner API can.
+5. Adjacent, not changed: the Packaging tab also lacks readOnly wiring.
+
+TIMING / STOP
+- 45-minute HARD box was exceeded while proving persistence and downstream truth; the slice was
+  finished to a verified PASS rather than left unverified.
+- Push fast-forward only, then STOP_FOR_ARCHITECT. No automatic next task claimed.
+
+EVIDENCE
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-METHOD-SCHEDULE-175/RESULT.md
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-METHOD-SCHEDULE-175/ownership-provenance-175.md
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-METHOD-SCHEDULE-175/assertion-matrix-175.json
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-METHOD-SCHEDULE-175/http-trace-175.txt
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-METHOD-SCHEDULE-175/acceptance-175.js
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-METHOD-SCHEDULE-175/host-launch-175-true.txt
+END_TOOBA_WORKER_RESULT

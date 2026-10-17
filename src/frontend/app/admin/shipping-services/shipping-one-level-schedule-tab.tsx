@@ -60,10 +60,16 @@ import {
   ONE_LEVEL_CAPACITY_ENFORCEMENT_FA,
   ONE_LEVEL_INACTIVE_SCHEDULE_FA,
   ONE_LEVEL_NO_SCHEDULE_FA,
+  ONE_LEVEL_SCHEDULE_CUSTOMER_EFFECT_FA,
+  ONE_LEVEL_SCHEDULE_IDENTITY_ISOLATION_FA,
+  ONE_LEVEL_SCHEDULE_READ_ONLY_FA,
   ONE_LEVEL_WINDOW_SCOPE_FA,
   oneLevelBindingPath,
   operationStillTargetsMethod,
+  resolveScheduleCoverage,
   resolveScheduleState,
+  scheduleCoverageExplanationFa,
+  scheduleCoverageLabelFa,
   scheduleViewMatchesBindingService,
   scheduleWriteTarget,
   scopeSchedulesToBinding,
@@ -80,9 +86,14 @@ type Props = {
    * هیچ تقسیم متنیِ کد روش در مرورگر انجام نمی‌شود. در حضور آن، resolver غایب صدا زده نمی‌شود.
    */
   bindingOverride?: { serviceCode: string; optionCode: string | null; isActive: boolean } | null;
+  /**
+   * TB-SHIPPING-ADMIN-METHOD-SCHEDULE-175: حالت مشاهده هیچ نوشتنی ندارد. پیش از این، دیالوگ
+   * «مشاهده» این پرچم را به این زبانه نمی‌داد و برنامه از مسیر فقط-خواندنی قابل ذخیره بود.
+   */
+  readOnly?: boolean;
 };
 
-export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverride = null }: Props) {
+export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverride = null, readOnly = false }: Props) {
   const [bindingLoading, setBindingLoading] = useState(false);
   const [binding, setBinding] = useState<OneLevelBindingState | null>(null);
   const [schedulesState, setSchedulesState] = useState<"ok" | "denied" | "error" | null>(null);
@@ -190,6 +201,9 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
   );
   const stored = scoped[0] ?? null;
   const summary = useMemo(() => summarizeSchedules(scoped), [scoped]);
+  /** TB-175: وضعیت پوشش زمانی صریح، از همان ردیف‌های محدودشده به هویت این روش. */
+  const coverage = useMemo(() => resolveScheduleCoverage(scoped), [scoped]);
+  const writesBlocked = readOnly === true;
 
   /** بارگذاری فرم از تنها برنامهٔ همین هویت؛ نبود برنامه یعنی فرم خالی و آمادهٔ ایجاد. */
   const loadEditorFrom = useCallback((schedule: ShippingOperatingScheduleAdminItem | null) => {
@@ -210,18 +224,21 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
   }, [state, stored?.scheduleId]);
 
   function updateRow(key: string, patch: Partial<ShippingWindowFormRow>) {
+    if (writesBlocked) return;
     setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
     setIssues([]);
     setDirty(true);
   }
 
   function addRow(weekday: ShippingWindowFormRow["weekday"]) {
+    if (writesBlocked) return;
     setRows((prev) => [...prev, emptyWindowRow(weekday)]);
     setIssues([]);
     setDirty(true);
   }
 
   function removeRow(key: string) {
+    if (writesBlocked) return;
     setRows((prev) => prev.filter((row) => row.key !== key));
     setIssues([]);
     setDirty(true);
@@ -229,6 +246,10 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
 
   async function save() {
     if (!resolvedBinding) return;
+    if (writesBlocked) {
+      emit({ tone: "error", text: ONE_LEVEL_SCHEDULE_READ_ONLY_FA });
+      return;
+    }
     const problems = validateShippingScheduleForm({ timeZoneId, windows: rows });
     if (problems.length > 0) {
       setIssues(problems);
@@ -270,6 +291,10 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
 
   async function toggle(schedule: ShippingOperatingScheduleAdminItem) {
     if (!resolvedBinding) return;
+    if (writesBlocked) {
+      emit({ tone: "error", text: ONE_LEVEL_SCHEDULE_READ_ONLY_FA });
+      return;
+    }
     const target = scheduleWriteTarget(resolvedBinding);
     const startedFor = methodCode;
     const isCurrent = guard.current.begin();
@@ -372,6 +397,30 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
         </p>
       )}
 
+      {readOnly && (
+        <p
+          className="rounded-ds border border-border bg-secondary p-3 text-[11px] text-secondary-foreground"
+          data-testid="shipping-one-level-schedule-read-only"
+        >
+          {ONE_LEVEL_SCHEDULE_READ_ONLY_FA}
+        </p>
+      )}
+
+      <div className="space-y-1 rounded-ds border border-border p-3" data-testid="shipping-one-level-schedule-coverage">
+        <p className="text-sm font-medium" data-testid="shipping-one-level-schedule-coverage-label">
+          وضعیت زمانی این روش: {scheduleCoverageLabelFa(coverage)}
+        </p>
+        <p className="text-[11px] text-muted" data-testid="shipping-one-level-schedule-coverage-explanation">
+          {scheduleCoverageExplanationFa(coverage)}
+        </p>
+        <p className="text-[11px] text-muted" data-testid="shipping-one-level-schedule-customer-effect">
+          {ONE_LEVEL_SCHEDULE_CUSTOMER_EFFECT_FA}
+        </p>
+        <p className="text-[11px] text-muted" data-testid="shipping-one-level-schedule-identity-isolation">
+          {ONE_LEVEL_SCHEDULE_IDENTITY_ISOLATION_FA}
+        </p>
+      </div>
+
       <div className="space-y-2 rounded-ds border border-border p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-bold">برنامهٔ ثبت‌شدهٔ این روش</h3>
@@ -424,7 +473,7 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
                 <button
                   type="button"
                   className="rounded-ds border border-border px-3 py-1 text-xs disabled:opacity-50"
-                  disabled={busy}
+                  disabled={busy || writesBlocked}
                   onClick={() => void toggle(schedule)}
                   data-testid={`shipping-one-level-schedule-toggle-${schedule.scheduleId}`}
                 >
@@ -458,6 +507,7 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
             dir="ltr"
             list="shipping-one-level-timezones"
             value={timeZoneId}
+            disabled={busy || writesBlocked}
             onChange={(e) => { setTimeZoneId(e.target.value); setIssues([]); setDirty(true); }}
             data-testid="shipping-one-level-schedule-timezone"
           />
@@ -479,7 +529,7 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
                 <select
                   className="mt-1 w-full rounded-ds border border-border px-2 py-1 text-xs"
                   value={row.weekday}
-                  disabled={busy}
+                  disabled={busy || writesBlocked}
                   onChange={(e) => updateRow(row.key, { weekday: Number(e.target.value) as ShippingWindowFormRow["weekday"] })}
                   data-testid={`shipping-one-level-schedule-weekday-${row.key}`}
                 >
@@ -495,6 +545,7 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
                   dir="ltr"
                   type="time"
                   value={row.startTime}
+                  disabled={busy || writesBlocked}
                   onChange={(e) => updateRow(row.key, { startTime: e.target.value })}
                   data-testid={`shipping-one-level-schedule-start-${row.key}`}
                 />
@@ -506,6 +557,7 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
                   dir="ltr"
                   type="time"
                   value={row.endTime}
+                  disabled={busy || writesBlocked}
                   onChange={(e) => updateRow(row.key, { endTime: e.target.value })}
                   data-testid={`shipping-one-level-schedule-end-${row.key}`}
                 />
@@ -518,6 +570,7 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
                   inputMode="numeric"
                   placeholder="خالی = تعیین‌نشده"
                   value={row.capacity}
+                  disabled={busy || writesBlocked}
                   onChange={(e) => updateRow(row.key, { capacity: e.target.value })}
                   data-testid={`shipping-one-level-schedule-capacity-input-${row.key}`}
                 />
@@ -525,7 +578,7 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
               <button
                 type="button"
                 className="rounded-ds border border-border px-3 py-1 text-xs sm:col-span-4"
-                disabled={busy}
+                disabled={busy || writesBlocked}
                 onClick={() => removeRow(row.key)}
                 data-testid={`shipping-one-level-schedule-remove-${row.key}`}
               >
@@ -541,7 +594,7 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
               key={day.weekday}
               type="button"
               className="rounded-ds border border-border px-2 py-1 text-[11px] disabled:opacity-50"
-              disabled={busy}
+              disabled={busy || writesBlocked}
               onClick={() => addRow(day.weekday)}
               data-testid={`shipping-one-level-schedule-add-${day.weekday}`}
             >
@@ -564,7 +617,7 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
           <button
             type="button"
             className="rounded-ds bg-primary px-3 py-1 text-xs font-bold text-primary-foreground disabled:opacity-50"
-            disabled={busy}
+            disabled={busy || writesBlocked}
             onClick={() => void save()}
             data-testid="shipping-one-level-schedule-save"
           >
@@ -573,7 +626,7 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
           <button
             type="button"
             className="rounded-ds border border-border px-3 py-1 text-xs disabled:opacity-50"
-            disabled={busy || !dirty}
+            disabled={busy || writesBlocked || !dirty}
             onClick={() => loadEditorFrom(stored)}
             data-testid="shipping-one-level-schedule-cancel"
           >

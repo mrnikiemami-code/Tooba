@@ -1,0 +1,166 @@
+{
+  "generatedAtUtc": "2026-10-17T06:49:00.123Z",
+  "host": "http://127.0.0.1:5429",
+  "task": "TB-SHIPPING-ADMIN-METHOD-SCHEDULE-175",
+  "identity": {
+    "serviceCode": "tipax",
+    "optionCode": "standard",
+    "sibling": "express",
+    "legacyOption": null
+  },
+  "total": 30,
+  "passed": 30,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "dev_context_available",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "fulfillment_manage_granted",
+      "ok": true,
+      "detail": "granted=55"
+    },
+    {
+      "id": "baseline_read_ok",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "baseline_no_own_schedule",
+      "ok": true,
+      "detail": "own=0 all=0"
+    },
+    {
+      "id": "baseline_sibling_absent",
+      "ok": true,
+      "detail": "sibling=0"
+    },
+    {
+      "id": "baseline_db_rows_zero",
+      "ok": true,
+      "detail": "no persisted tipax schedule before the write"
+    },
+    {
+      "id": "standard_schedule_created",
+      "ok": true,
+      "detail": "http=200 option=standard windows=1:09:00:00-12:00:00"
+    },
+    {
+      "id": "standard_reopened_from_server",
+      "ok": true,
+      "detail": "rows=1 windows=1:09:00:00-12:00:00"
+    },
+    {
+      "id": "sibling_not_touched_by_standard_write",
+      "ok": true,
+      "detail": "express remains undeclared"
+    },
+    {
+      "id": "db_identity_exact_one_row",
+      "ok": true,
+      "detail": "one schedule row, one window row"
+    },
+    {
+      "id": "sibling_schedule_created",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "standard_unchanged_by_sibling_write",
+      "ok": true,
+      "detail": "standard=1:09:00:00-12:00:00"
+    },
+    {
+      "id": "sibling_reads_its_own_window",
+      "ok": true,
+      "detail": "express=2:10:00:00-11:00:00"
+    },
+    {
+      "id": "legacy_service_level_row_created",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "standard_replace_is_full_window_set",
+      "ok": true,
+      "detail": "id-stable=true windows=1:09:00:00-12:00:00,4:13:00:00-15:00:00"
+    },
+    {
+      "id": "legacy_row_untouched_by_method_edit",
+      "ok": true,
+      "detail": "legacy=3:08:00:00-09:00:00"
+    },
+    {
+      "id": "sibling_untouched_by_standard_edit",
+      "ok": true,
+      "detail": "express=2:10:00:00-11:00:00"
+    },
+    {
+      "id": "db_three_distinct_identities",
+      "ok": true,
+      "detail": "service-level + standard + express, all separate rows"
+    },
+    {
+      "id": "restricted_empty_accepted_as_real_row",
+      "ok": true,
+      "detail": "http=200 windows=0"
+    },
+    {
+      "id": "restricted_empty_is_not_deleted",
+      "ok": true,
+      "detail": "row kept active with no window; not silently reverted to unrestricted"
+    },
+    {
+      "id": "method_policy_restored",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "unknown_option_rejected",
+      "ok": true,
+      "detail": "http=400 code=shipping.service_option.unknown"
+    },
+    {
+      "id": "body_path_service_mismatch_rejected",
+      "ok": true,
+      "detail": "http=400 code=validation.failed"
+    },
+    {
+      "id": "cross_service_active_toggle_rejected",
+      "ok": true,
+      "detail": "http=400 code=shipping.service_scope.mismatch"
+    },
+    {
+      "id": "anonymous_read_rejected",
+      "ok": true,
+      "detail": "http=401"
+    },
+    {
+      "id": "anonymous_write_rejected",
+      "ok": true,
+      "detail": "http=401"
+    },
+    {
+      "id": "rejected_writes_changed_no_row",
+      "ok": true,
+      "detail": "rows=3"
+    },
+    {
+      "id": "standard_still_active_after_rejections",
+      "ok": true,
+      "detail": "cross-service toggle did not deactivate the real row"
+    },
+    {
+      "id": "final_read_back_is_method_owned",
+      "ok": true,
+      "detail": "windows=1:09:00:00-12:00:00,4:13:00:00-15:00:00"
+    },
+    {
+      "id": "final_legacy_and_sibling_still_distinct",
+      "ok": true,
+      "detail": "service-level and sibling identities unchanged"
+    }
+  ]
+}

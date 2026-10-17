@@ -8,10 +8,21 @@ import {
   ONE_LEVEL_CAPACITY_ENFORCEMENT_FA,
   ONE_LEVEL_INACTIVE_SCHEDULE_FA,
   ONE_LEVEL_NO_SCHEDULE_FA,
+  ONE_LEVEL_SCHEDULE_AMBIGUOUS_FA,
+  ONE_LEVEL_SCHEDULE_CUSTOMER_EFFECT_FA,
+  ONE_LEVEL_SCHEDULE_IDENTITY_ISOLATION_FA,
+  ONE_LEVEL_SCHEDULE_INACTIVE_FA,
+  ONE_LEVEL_SCHEDULE_READ_ONLY_FA,
+  ONE_LEVEL_SCHEDULE_RESTRICTED_EMPTY_FA,
+  ONE_LEVEL_SCHEDULE_RESTRICTED_FA,
+  ONE_LEVEL_SCHEDULE_UNRESTRICTED_FA,
   ONE_LEVEL_WINDOW_SCOPE_FA,
   operationStillTargetsMethod,
+  resolveScheduleCoverage,
   resolveScheduleState,
   scheduleBelongsToBinding,
+  scheduleCoverageExplanationFa,
+  scheduleCoverageLabelFa,
   scheduleViewMatchesBindingService,
   scheduleWriteTarget,
   scopeSchedulesToBinding,
@@ -186,8 +197,79 @@ test("the empty and inactive states are stated truthfully", () => {
   assert.equal(inactiveScheduleCountFa([schedule({ isActive: true }), schedule({ scheduleId: "s2", isActive: false })]), "برنامه‌های غیرفعال: ۱");
 });
 
-test("tab 4 renders no option picker, no provider hierarchy and no method-code splitting", () => {
+test("TB-175 coverage state mirrors the owner evaluator, including restricted-empty", () => {
+  const withWindow = schedule({
+    windows: [{
+      windowId: "w1",
+      weekday: 1,
+      startTime: "09:00:00",
+      endTime: "12:00:00",
+      capacity: null,
+    }],
+  });
+
+  // نبود ردیف = هیچ ساعت صریحی؛ نه ادعای در دسترس بودن.
+  assert.equal(resolveScheduleCoverage([]), "unrestricted");
+  assert.equal(scheduleCoverageLabelFa("unrestricted"), "بدون محدودیت زمانی صریح (پیش‌فرض)");
+  assert.match(ONE_LEVEL_SCHEDULE_UNRESTRICTED_FA, /تضمین در دسترس بودن حامل/);
+
+  // فقط ردیف غیرفعال: طبق قرارداد مالک محدودیتی اعمال نمی‌شود.
+  assert.equal(resolveScheduleCoverage([schedule({ isActive: false })]), "inactive-only");
+  assert.match(ONE_LEVEL_SCHEDULE_INACTIVE_FA, /محدودیتی اعمال نمی‌کند/);
+
+  // دو برنامهٔ فعال هم‌هویت: ابهام داده، نه انتخاب «اولی».
+  assert.equal(resolveScheduleCoverage([withWindow, schedule({ scheduleId: "s2" })]), "ambiguous");
+  assert.match(ONE_LEVEL_SCHEDULE_AMBIGUOUS_FA, /نقص داده/);
+
+  // فعال بدون بازه = محدود به هیچ بازه؛ هرگز «بدون محدودیت» خوانده نمی‌شود.
+  assert.equal(resolveScheduleCoverage([schedule({ windows: [] })]), "restricted-empty");
+  assert.match(ONE_LEVEL_SCHEDULE_RESTRICTED_EMPTY_FA, /هرگز به‌طور خودکار «بدون محدودیت» خوانده نمی‌شود/);
+
+  assert.equal(resolveScheduleCoverage([withWindow]), "restricted");
+  assert.match(ONE_LEVEL_SCHEDULE_RESTRICTED_FA, /خارج از آن‌ها/);
+
+  // توضیح هر وضعیت همان متن وضعیت خودش است، نه متن یک وضعیت دیگر.
+  for (const coverage of ["unrestricted", "inactive-only", "ambiguous", "restricted-empty", "restricted"] as const) {
+    assert.equal(scheduleCoverageExplanationFa(coverage), {
+      unrestricted: ONE_LEVEL_SCHEDULE_UNRESTRICTED_FA,
+      "inactive-only": ONE_LEVEL_SCHEDULE_INACTIVE_FA,
+      ambiguous: ONE_LEVEL_SCHEDULE_AMBIGUOUS_FA,
+      "restricted-empty": ONE_LEVEL_SCHEDULE_RESTRICTED_EMPTY_FA,
+      restricted: ONE_LEVEL_SCHEDULE_RESTRICTED_FA,
+    }[coverage]);
+  }
+});
+
+test("TB-175 states honestly that Admin schedule edits do not change customer promises today", () => {
+  assert.match(ONE_LEVEL_SCHEDULE_CUSTOMER_EFFECT_FA, /اعمال نمی‌شوند/);
+  assert.match(ONE_LEVEL_SCHEDULE_CUSTOMER_EFFECT_FA, /سایهٔ عملیاتی پیش‌فرض خاموش است/);
+  assert.match(ONE_LEVEL_SCHEDULE_CUSTOMER_EFFECT_FA, /هیچ وعدهٔ تحویلی به مشتری را تغییر نمی‌دهد/);
+  // هیچ ادعای رزرو، ظرفیت باقی‌مانده یا نوبت تضمین‌شده در متن اثر مشتری نیست.
+  assert.equal(/رزرو|باقی‌مانده|تضمین نوبت/.test(ONE_LEVEL_SCHEDULE_CUSTOMER_EFFECT_FA), false);
+  assert.match(ONE_LEVEL_SCHEDULE_IDENTITY_ISOLATION_FA, /سطح خدمت/);
+  assert.match(ONE_LEVEL_SCHEDULE_IDENTITY_ISOLATION_FA, /گزینهٔ دیگر/);
+});
+
+test("TB-175 View mode cannot write the schedule", () => {
   const source = fs
+    .readFileSync(new URL("./shipping-one-level-schedule-tab.tsx", import.meta.url), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "");
+
+  // پرچم فقط-خواندنی از دیالوگ می‌آید و همهٔ مسیرهای نوشتن را می‌بندد.
+  assert.match(source, /readOnly\?: boolean/);
+  assert.match(source, /readOnly = false/);
+  assert.match(source, /const writesBlocked = readOnly === true/);
+  assert.match(source, /if \(writesBlocked\)/);
+  assert.match(source, /disabled=\{busy \|\| writesBlocked\}/);
+  assert.match(source, /data-testid="shipping-one-level-schedule-read-only"/);
+  assert.match(source, /ONE_LEVEL_SCHEDULE_READ_ONLY_FA/);
+
+  const dialog = fs.readFileSync(new URL("./flat-method-detail-dialog.tsx", import.meta.url), "utf8");
+  assert.match(dialog, /<ShippingOneLevelScheduleTab[^>]*readOnly=\{readOnly\}/);
+});
+
+test("tab 4 renders no option picker, no provider hierarchy and no method-code splitting", () => {  const source = fs
     .readFileSync(new URL("./shipping-one-level-schedule-tab.tsx", import.meta.url), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/\/\/.*$/gm, "");
