@@ -1,0 +1,11 @@
+﻿{
+  "gate": "OFF (control)",
+  "observedVia": "authenticated real browser page context -> POST /v1/storefront/shipping/projection (name-based destination)",
+  "status": 200,
+  "eligibleMethods": [
+    "post:express:200000", "post:standard:120000", "tipax:express:260000",
+    "tipax:standard:180000", "snapp_courier:90000", "store_courier:75000", "in_person:0"
+  ],
+  "unavailableMethodsPropertyPresent": false,
+  "note": "legacy appsettings rates preserved; no owned-option override; unavailable channel absent (default-OFF parity)"
+}

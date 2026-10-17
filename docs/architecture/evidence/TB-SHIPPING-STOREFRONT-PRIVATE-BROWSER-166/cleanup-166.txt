@@ -1,0 +1,7 @@
+﻿=== TB-166 cleanup ===
+host ON pid=20020 host OFF pid=27940 next port 3116 owners stopped
+container tooba-tb166-pg stopped+removed
+port 3116 listening: 0
+port 5421 listening: 0
+port 55486 listening: 0
+docker ps --filter name=tooba-tb166-pg: 0 rows

@@ -1,0 +1,66 @@
+{
+  "currency": "IRR",
+  "methods": [
+    {
+      "code": "tipax:express",
+      "price": 480000
+    },
+    {
+      "code": "tipax:standard",
+      "price": 205000
+    }
+  ],
+  "unavailableMethods": [
+    {
+      "methodCode": "post:express",
+      "reasonCode": "shipping.service.not_priced"
+    },
+    {
+      "methodCode": "post:standard",
+      "reasonCode": "shipping.service.not_priced"
+    },
+    {
+      "methodCode": "snapp_courier",
+      "reasonCode": "shipping.service.not_priced"
+    },
+    {
+      "methodCode": "store_courier",
+      "reasonCode": "shipping.service.not_priced"
+    },
+    {
+      "methodCode": "in_person",
+      "reasonCode": "shipping.service.not_priced"
+    }
+  ],
+  "horizons": [
+    {
+      "groupKey": "01a148033d1e7000a94b84e8547bc0cc|tipax:express",
+      "seller": "01a14803-3d1e-7000-a94b-84e8547bc0cc",
+      "method": "tipax:express",
+      "minimum": "2026-10-20"
+    },
+    {
+      "groupKey": "01a148033d1e7000a94b84e8547bc0cc|tipax:standard",
+      "seller": "01a14803-3d1e-7000-a94b-84e8547bc0cc",
+      "method": "tipax:standard",
+      "minimum": "2026-10-22"
+    },
+    {
+      "groupKey": "01a148033fb87000b13926472635ae4e|tipax:express",
+      "seller": "01a14803-3fb8-7000-b139-26472635ae4e",
+      "method": "tipax:express",
+      "minimum": "2026-10-20"
+    },
+    {
+      "groupKey": "01a148033fb87000b13926472635ae4e|tipax:standard",
+      "seller": "01a14803-3fb8-7000-b139-26472635ae4e",
+      "method": "tipax:standard",
+      "minimum": "2026-10-22"
+    }
+  ],
+  "sellers": [
+    "01a14803-3d1e-7000-a94b-84e8547bc0cc",
+    "01a14803-3fb8-7000-b139-26472635ae4e"
+  ],
+  "sellerCount": 2
+}

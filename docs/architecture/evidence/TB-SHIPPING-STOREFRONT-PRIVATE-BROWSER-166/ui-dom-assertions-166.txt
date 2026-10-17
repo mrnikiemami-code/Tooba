@@ -1,0 +1,46 @@
+TB-SHIPPING-STOREFRONT-PRIVATE-BROWSER-166 — authenticated real-browser DOM assertions (sanitized)
+
+Environment: private Host http://127.0.0.1:5421 (Debug publish of current HEAD, scratch PostgreSQL 127.0.0.1:55486 db tooba_166_scratch), private Next http://127.0.0.1:3116 (TOOBA_HOST_ORIGIN=http://127.0.0.1:5421).
+Customer: genuine development OTP session (09111111111, dev fixture code only) completed through the real login page.
+Cart: exactly two lines, one per seller, built through the real cart endpoints inside the authenticated page.
+
+A. Gate ON — two group cards, same canonical method, method-owned prices
+- Cart lines: 01a14809-ef57 (seller 01a14803-3d1e… "فروشگاه آرمان", گوشی نمونه schema), 01a14809-ef8d (seller 01a14803-3fb8… "فروشگاه schema موبایل", پیراهن مردانه لینن).
+- Server projection (real POST /v1/storefront/shipping/projection, see projection-on-166.json):
+  eligible = tipax:express 480000 IRR, tipax:standard 205000 IRR
+  unavailableMethods = post:express, post:standard, snapp_courier, store_courier, in_person (each with reasonCode shipping.service.not_priced)
+  horizons = one entry per (seller, method): seller A standard 2026-10-22 / express 2026-10-20; seller B standard 2026-10-22 / express 2026-10-20
+- DOM after choosing "معمولی" for both lines:
+  data-testid="shipping-group-01a14803-3d1e-7000-a94b-84e8547bc0cc\x00tipax:standard"
+  data-testid="shipping-group-01a14803-3fb8-7000-b139-26472635ae4e\x00tipax:standard"
+  each card renders its own schedule block (dates 2026-10-22 … 2026-10-28, windows 9-12/12-15/15-18/18-21) and its own "اولین نوبت ممکن: 1405/07/30".
+- Read-only unavailable notice block: data-testid="shipping-group-unavailable-methods" with per-method items
+  shipping-group-unavailable-method-post:express / -post:standard / -snapp_courier / -store_courier / -in_person.
+  Persian reason rendered: "برای این روش نرخ فعالی تعریف نشده است." + "غیرقابل انتخاب". No seller attribution, no fabricated price, no 0/رایگان.
+- Order summary in the same browser document:
+  "هزینه ارسال ۴۱۰٬۰۰۰ ریال", "فروشنده schema موبایل — معمولی ۲۰۵٬۰۰۰ ریال", "فروشگاه آرمان — معمولی ۲۰۵٬۰۰۰ ریال" ⇒ 205000 + 205000 = 410000 authoritative.
+
+B. Continue gating / payment preview / integrity
+- Continue (data-testid=shipping-continue) was disabled while address data and one group schedule were incomplete, then became enabled exactly after both groups had their own date+window and the recipient/address fields were valid.
+- Continue navigated to /fa/payment?cartId=01a14807-efa9-7000-ab60-bff2d55921b8 (preview only).
+  Preview text: "روش‌های ارسال معمولی ۲۰۵٬۰۰۰ ریال / معمولی ۲۰۵٬۰۰۰ ریال", "هزینه ارسال: ۴۱۰٬۰۰۰ ریال", "قابل پرداخت: ۱۶٬۰۵۱٬۵۰۰ ریال", "این سفارش هنوز ثبت نشده است."
+- Negative PUT /v1/storefront/shipping/selection with shippingMethodCode=post:standard (date 2026-10-22, window 9-12):
+  HTTP 400, errorCode="shipping.method.unavailable" (title "The selected shipping method is unavailable.").
+  Immediately after the rejection the projection was unchanged: tipax:express 480000 / tipax:standard 205000 eligible; post:standard still in unavailableMethods ⇒ fail-closed, draft not corrupted.
+
+C. Persistence after full reload (real document reload)
+- Reloaded /fa/shipping, re-selected Tehran/Tehran: the page restored the SAME persisted group ids
+  shipping-group-01a1480c-afb8-7000-931e-d6bc6f10bf06 and shipping-group-01a1480c-afb9-7000-95ce-51d222cbba83
+  with their own date/window chip sets and the same five unavailable notices; no duplicated group card, no extra line membership.
+
+D. DB readback (see db-readback-groups-on-166.txt, db-readback-on-166.txt)
+- order.cart_shipping_groups (2 rows, state Draft):
+  01a1480c-afb8-7000-931e-d6bc6f10bf06 | seller 01a14803-3d1e… | tipax:standard | 205000.00 | 2026-10-22 | 9-12
+  01a1480c-afb9-7000-95ce-51d222cbba83 | seller 01a14803-3fb8… | tipax:standard | 205000.00 | 2026-10-22 | 9-12
+- cart_shipping_group_lines: exactly 1 line per group (1/1); DUP_GROUP_IDS 0.
+- Zero premature mutation: checkouts 0, seller_orders 0.
+
+E. Gate OFF control (same isolated scratch, Host relaunched with overlay Enabled=false)
+- projection-off-166.json: eligible = legacy appsettings rates post:express 200000, post:standard 120000, tipax:express 260000, tipax:standard 180000, snapp_courier 90000, store_courier 75000, in_person 0.
+- `unavailableMethods` property absent entirely ⇒ no owned-option override, no new warning channel, default-OFF production behaviour preserved.
+- Committed appsettings.json / appsettings.Development.json / appsettings.Production.json all keep Tooba:ShippingOwnedRateAuthority:Enabled=false (isolation-guard-166-on.json committedDefaults).

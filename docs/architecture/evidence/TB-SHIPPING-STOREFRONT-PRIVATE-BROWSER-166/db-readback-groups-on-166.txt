@@ -1,0 +1,8 @@
+﻿SET
+== persisted draft groups ==
+          shipping_group_id           |               cart_id                |           seller_party_id            |  method_code   | service_code | option_code | method_label | origin_context | shipping_amount | currency | minimum_delivery_date | selected_delivery_date | selected_delivery_time_window | lead_days | state |          updated_at           
+--------------------------------------+--------------------------------------+--------------------------------------+----------------+--------------+-------------+--------------+----------------+-----------------+----------+-----------------------+------------------------+-------------------------------+-----------+-------+-------------------------------
+ 01a1480c-afb8-7000-931e-d6bc6f10bf06 | 01a14807-efa9-7000-ab60-bff2d55921b8 | 01a14803-3d1e-7000-a94b-84e8547bc0cc | tipax:standard | tipax        | standard    | معمولی       |                |       205000.00 | IRR      | 2026-10-22            | 2026-10-22             | 9-12                          |         3 | Draft | 2026-10-17 04:09:13.395696+00
+ 01a1480c-afb9-7000-95ce-51d222cbba83 | 01a14807-efa9-7000-ab60-bff2d55921b8 | 01a14803-3fb8-7000-b139-26472635ae4e | tipax:standard | tipax        | standard    | معمولی       |                |       205000.00 | IRR      | 2026-10-22            | 2026-10-22             | 9-12                          |         3 | Draft | 2026-10-17 04:09:13.395696+00
+(2 rows)
+

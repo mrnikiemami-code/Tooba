@@ -1,0 +1,30 @@
+﻿SET
+== persisted draft groups ==
+== duplicate group ids (must be 0) ==
+docker : psql:<stdin>:3: ERROR:  column "charge_amount" does not exist
+At C:\Users\User\AppData\Local\Temp\ps-script-d7fcc8f0-9007-4a00-9e42-55414469bbb1.ps1:111 char:97
++ ... .sql -Raw | docker exec -i -e PGPASSWORD=$(Get-Content .tmp-166-scrat ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (psql:<stdin>:3:... does not exist:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+LINE 1: ... shipping_group_id, seller_party_id, method_code, charge_amo...
+                                                             ^
+ dup 
+-----
+   0
+(1 row)
+
+== group lines per group ==
+          shipping_group_id           | lines 
+--------------------------------------+-------
+ 01a1480c-afb8-7000-931e-d6bc6f10bf06 |     1
+ 01a1480c-afb9-7000-95ce-51d222cbba83 |     1
+(2 rows)
+
+== premature side effects ==
+ checkouts | seller_orders 
+-----------+---------------
+         0 |             0
+(1 row)
+
