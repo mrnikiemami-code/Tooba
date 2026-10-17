@@ -1,0 +1,7 @@
+﻿rows: products_total=151 published=3 draft=147 categories=122 offers=6 prices=10 stock=8
+status split: Archived=1
+Draft=147
+Published=3
+
+Observed during ONE bounded 60s seed-only attempt (Host restarted, request timed out client-side, Host killed): products grew 5 -> 151 and categories 6 -> 122, i.e. the owner seeder does write at scale.
+Both counters are dominated by Draft demo rows; see RESULT.md for the storefront-visibility blocker.

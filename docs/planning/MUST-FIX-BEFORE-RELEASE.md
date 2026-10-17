@@ -44,6 +44,19 @@ scale seeder (`POST /v1/admin/catalog/demo/seed-only`) returns `403 admin.author
 instance without a real Admin session, and hand-written/cloned rows are forbidden. No growth ratio exists and
 none was invented. See `docs/architecture/evidence/TB-STOREFRONT-PERF-SCALE-CLOSURE-180/RESULT.md`.
 
+**TB-181 update (2026-10-17): the 403 resolved to a per-process authority condition; a structural blocker now
+explains the missing second size.** With the **Host itself** owning the Development bootstrap (no separate
+MigrationRunner), `POST /v1/admin/catalog/demo/seed-only` reaches its post-authorization validation (`400
+catalog.demo.failed`) instead of `403 admin.authorization.denied` — same actor, tenant, header and route. Cause:
+`InMemoryAuthorizationAdapter` is a **per-process singleton**, so a `user#member@tenant` grant written in the
+MigrationRunner process does not exist in the serving Host. The decisive blocker, however, is the fixture itself:
+the owner demo seeder hard-asserts demo products **must remain Draft**, while `StorefrontComposer` composes Home
+**only** from `Published` rows; the reset path additionally requires `published == 0`. One bounded seed attempt
+grew products 5 → 151 and categories 6 → 122, yet left `published=3 / draft=147`, so the storefront stayed at
+size-A scale. No legitimate worker action can produce a ≥4× **storefront-visible** catalog without either a
+bounded publish authorization, a new owner `Published` fixture mode, or accepting size-A evidence. No ratio was
+invented. See `docs/architecture/evidence/TB-STOREFRONT-PERF-SEED-AUTH-SCALE-181/RESULT.md`.
+
 **Affected routes:** storefront Home (`/fa`, `/v1/storefront/home`) and potentially catalog/listing/product-dependent pages. Shipping/login routes show severe latency in the reported environment but are not proven to share the same cause.
 
 **User-provided diagnostic report** (not yet independently reproduced by architect):

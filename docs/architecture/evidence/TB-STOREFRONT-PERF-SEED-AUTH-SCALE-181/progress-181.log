@@ -1,0 +1,9 @@
+﻿17:12:38 postgres ready
+17:13:15 published
+17:13:15 guard PASS
+17:13:15 host started pid=21456
+17:13:53 healthy=True elapsed=38.4s
+17:13:53 rows before seed: products=5 offers=6 prices=7 stock=7 parties=4 categories=6
+17:13:54 dev actor=01a14a1a-c132-7000-9ba9-446fbf074450
+17:13:57 seed attempt #1 http=000000400 elapsed=3.5s bodyLen=0
+17:13:57 rows after seed attempt: products=5 offers=6 prices=7 stock=7 parties=4 categories=6
