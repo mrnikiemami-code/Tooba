@@ -1,0 +1,135 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-MULTILINGUAL-ACTIVATION-169
+Parent-Task: TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-ACCEPTANCE-168
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Status: PASS
+Base-SHA: 814ae785618b45512f51a661d40a7ef1047db367
+Code-SHA: NONE
+Evidence-SHA: __EVIDENCE_SHA__
+HEAD-SHA: __HEAD_SHA__
+Origin-SHA: __ORIGIN_SHA__
+Push: __PUSH__
+Automatic-Next-Task: NONE
+
+SUMMARY
+This acceptance-only task closed the TB-148 Admin multilingual save->GET->reopen proof and proved
+truthful activation behaviour for a newly created flat method, in a real authorized disposable
+scratch Host + PostgreSQL + private Next browser. No production source file was modified. A
+task-owned postgres:16 container (tooba-tb169-pg on 127.0.0.1:55488, databases tooba_169_scratch /
+tooba_169_messaging), an isolated Development Host on 127.0.0.1:5423 (SingleStore, single tenant
+store-alpha -> tenant-169-scratch, authorization InMemory, one-level catalog enabled only in the
+scratch overlay) and a private Next frontend on 127.0.0.1:3118 were used; the shared :3000 / :5088 /
+:5432, tooba_alpha, shared RabbitMQ/Redis and other workers were never opened, restarted or
+written, and the isolation guard failed closed before any mutation. Canonical migrations were
+applied to the disposable database only by the product's own Tooba.MigrationRunner. All 27
+authorized HTTP acceptance checks passed. Language ids came from the live Localization registry
+(fa-IR 01a1483f-df34-7000-806c-11c0fe310dcc, en-US 01a1483f-df34-7000-8bd5-38f3f5eb0b7f), never
+hardcoded or fabricated. A canonical tipax:scratch169 method was created (server-derived binding,
+isActive=false) and both per-language names were saved through the canonical method+language
+endpoint with authoritative GET read-back; unknown language (400 shipping_service.language_invalid),
+blank name (400 shipping_method.name.required), anonymous (401) and ungranted (403) writes all failed
+closed and changed no persisted name. In the real Admin browser the General tab saved the English
+name with a server-echoed success message and an authoritative value refresh; an unsaved draft
+survived a language switch without contaminating the saved Persian name; and after a full document
+reload plus modal reopen both languages were still ثبت‌شده with the exact persisted names and the
+four non-nested tabs intact. Activation of the new method through its own UI control was truthfully
+refused (alert: این عملیات برای این روش پشتیبانی نمی‌شود؛ فعال‌سازی سطح سرویس بدون گزینه هنوز مجاز
+نیست) and the method stayed غیرفعال - no fake success and no financial readiness implied. The existing
+fully bound sibling tipax:express was deactivated and reactivated through the same UI with real
+notices (روش «پیشتاز» غیرفعال شد / فعال شد) while tipax:standard stayed active and the new method
+stayed inactive. Authoritative SQL read-back confirms tipax:scratch169 is_active=f with the exact
+server-derived (tipax, scratch169) split, both translations persisted, sibling translations and
+activation states identical to baseline, and zero legacy shipping_services/shipping_service_options
+rows plus zero rate_policies/coverage_grants for the new option. Teardown stopped the isolated Host
+and frontend, removed the disposable container and run directory, verified scratch_ports_closed=True
+and shared_ports_intact=True.
+
+ASSERTIONS (27/27 PASS - assertion-matrix-http-169.json)
+ 1 dev_context_available 200 actorResolved=true
+ 2 one_level_list_anonymous_fail_closed 401 admin.actor.missing
+ 3 one_level_list_unknown_actor_fail_closed 403 admin.authorization.denied
+ 4 access_control_bootstrap_ok 204
+ 5 fulfillment_manage_granted 200 grants=55
+ 6 real_language_ids_read fa-IR / en-US from the live registry
+ 7 baseline_catalog_present rows=7
+ 8 baseline_siblings_active tipax:standard=true tipax:express=true
+ 9 canonical_create_2xx 200
+10 created_row_inactive isActive=false
+11 binding_derived_from_code (tipax, scratch169) resolved=true
+12 save_fa_translation_2xx 200
+13 save_en_translation_2xx 200
+14 readback_fa_name_persisted تیپاکس چندزبانه ۱۶۹
+15 readback_en_name_persisted Tipax Multilingual 169
+16 sibling_translations_unchanged tipax:standard / tipax:express identical to baseline
+17 unknown_language_rejected 400 shipping_service.language_invalid
+18 empty_name_rejected 400 shipping_method.name.required
+19 anonymous_write_rejected 401 admin.actor.missing
+20 ungranted_write_rejected 403 admin.authorization.denied
+21 negatives_changed_nothing persisted fa names identical before/after
+22 new_method_activation_refused 400 fulfillment.shipping_method.unsupported
+23 new_method_still_inactive_after_refusal isActive=false
+24 sibling_deactivation_applied 200 isActive=false changed=true
+25 sibling_deactivation_persisted express=false standard=true new=false
+26 sibling_reactivation_restored 200 isActive=true
+27 final_new_method_inactive_with_names fa + en persisted, isActive=false
+
+BROWSER ACCEPTANCE (real private browser, isolated frontend :3118)
+- /fa/admin/shipping-services grid: 8 independent rows, three row actions each, new row
+  تیپاکس چندزبانه ۱۶۹ / tipax:scratch169 / خیر.
+- Edit dialog: four non-nested tabs; language editor lists exactly the two registry languages.
+- English draft "Unsaved Draft 169" typed unsaved -> switch to فارسی shows the saved Persian name
+  unchanged and English marked پیش‌نویس ذخیره‌نشده -> switch back restores the draft intact.
+- Save through the General tab: success text نام روش در زبان انتخاب‌شده به «Tipax UI Saved 169»
+  ذخیره و دوباره خوانده شد; panel authoritative value refreshed to Tipax UI Saved 169.
+- Activation attempt on the new method: refusal alert, status remains غیرفعال, no fake success.
+- Full document reload + modal reopen: both languages ثبت‌شده with exact names, four tabs intact.
+- Independent activation cycle on tipax:express via the same UI: غیرفعال شد (grid خیر) then
+  فعال شد (grid بله), with tipax:standard بله and tipax:scratch169 خیر unchanged.
+- Screenshots: ui-general-tab-en-saved-169.png, ui-activation-refused-169.png,
+  ui-sibling-activation-cycle-169.png.
+
+SQL READ-BACK (db-readback-169.txt)
+- tipax:scratch169 is_active=f, tipax:standard t, tipax:express t (restored after the cycle).
+- shipping_method_translations: scratch169 fa-IR تیپاکس چندزبانه ۱۶۹ / en-US Tipax UI Saved 169;
+  siblings unchanged (معمولی/Standard, پیشتاز/Express).
+- legacy_option_rows(scratch169)=0, rate_policies=0, coverage_grants=0.
+
+EVIDENCE
+docs/architecture/evidence/TB-SHIPPING-ADMIN-MULTILINGUAL-ACTIVATION-169/
+  EVIDENCE.md, isolation-guard.json, scratch-bootstrap-169.txt, frontend-launch-169.txt,
+  registry-languages-169.json, assertion-matrix-http-169.json, http-trace-169.txt,
+  db-readback-169.txt, teardown-169.txt, cleanup-169.ps1, prepare-isolated-target-169.js,
+  bootstrap-scratch-169.ps1, launch-isolated-frontend-169.ps1, acceptance-169.js,
+  ui-general-tab-en-saved-169.png, ui-activation-refused-169.png,
+  ui-sibling-activation-cycle-169.png
+Task artifact: docs/ai/tasks/TB-SHIPPING-ADMIN-MULTILINGUAL-ACTIVATION-169.task.md
+
+FOCUSED TESTS
+Not applicable: acceptance-only task, no source file changed, so no focused unit test and no
+TypeScript check were required (no frontend code changed). No full suite was run.
+
+PRE-EXISTING FAILURES
+None observed in the touched surface (no code changed). Unrelated dirty/stashed files and historical
+evidence logs were preserved.
+
+OPEN GAPS
+A newly created flat method has no legacy shipping_services / shipping_service_options row by
+construction, so the existing 096 activation seam refuses it with
+fulfillment.shipping_method.unsupported (LegacyOptionMissing) and the storefront eligibility filter
+(IsActive on the legacy option) cannot select it. This is upstream-by-design behaviour; no provider
+or option entity, price or grant was synthesized and no readiness was claimed. New-method
+operational readiness therefore remains an OPEN GAP requiring an Architect decision on a real,
+non-fabricated customer-eligibility source.
+
+CLEANUP
+SCRATCH_PORTS_CLOSED=True, SCRATCH_CONTAINER_REMOVED=True, RUN_DIRECTORY_REMOVED=True,
+SHARED_PORTS_INTACT=True, SHARED_5432_TOUCHED=False, SHARED_5088_TOUCHED=False.
+
+ELAPSED
+Within the 45-minute hard timebox.
+
+STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT

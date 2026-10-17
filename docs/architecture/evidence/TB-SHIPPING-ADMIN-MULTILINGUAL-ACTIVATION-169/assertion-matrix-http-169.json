@@ -1,0 +1,145 @@
+{
+  "generatedAtUtc": "2026-10-17T05:05:49.403Z",
+  "host": "http://127.0.0.1:5423",
+  "methodCode": "tipax:scratch169",
+  "total": 27,
+  "passed": 27,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "dev_context_available",
+      "ok": true,
+      "detail": "http=200 actorResolved=true"
+    },
+    {
+      "id": "one_level_list_anonymous_fail_closed",
+      "ok": true,
+      "detail": "http=401 errorCode=admin.actor.missing"
+    },
+    {
+      "id": "one_level_list_unknown_actor_fail_closed",
+      "ok": true,
+      "detail": "http=403 errorCode=admin.authorization.denied"
+    },
+    {
+      "id": "access_control_bootstrap_ok",
+      "ok": true,
+      "detail": "http=204"
+    },
+    {
+      "id": "fulfillment_manage_granted",
+      "ok": true,
+      "detail": "http=200 grants=55"
+    },
+    {
+      "id": "real_language_ids_read",
+      "ok": true,
+      "detail": "http=200 languages=fa-IR:01a1483f-df34-7000-806c-11c0fe310dcc,en-US:01a1483f-df34-7000-8bd5-38f3f5eb0b7f"
+    },
+    {
+      "id": "baseline_catalog_present",
+      "ok": true,
+      "detail": "http=200 rows=7"
+    },
+    {
+      "id": "baseline_siblings_active",
+      "ok": true,
+      "detail": "tipax:standard=true tipax:express=true"
+    },
+    {
+      "id": "canonical_create_2xx",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "created_row_inactive",
+      "ok": true,
+      "detail": "found=true isActive=false"
+    },
+    {
+      "id": "binding_derived_from_code",
+      "ok": true,
+      "detail": "http=200 serviceCode=tipax optionCode=scratch169 resolved=true"
+    },
+    {
+      "id": "save_fa_translation_2xx",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "save_en_translation_2xx",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "readback_fa_name_persisted",
+      "ok": true,
+      "detail": "fa=[{\"languageId\":\"01a1483f-df34-7000-806c-11c0fe310dcc\",\"name\":\"تیپاکس چندزبانه ۱۶۹\"},{\"languageId\":\"01a1483f-df34-7000-8bd5-38f3f5eb0b7f\",\"name\":\"Tipax Multilingual 169\"}]"
+    },
+    {
+      "id": "readback_en_name_persisted",
+      "ok": true,
+      "detail": "en=[{\"languageId\":\"01a1483f-df34-7000-806c-11c0fe310dcc\",\"name\":\"تیپاکس چندزبانه ۱۶۹\"},{\"languageId\":\"01a1483f-df34-7000-8bd5-38f3f5eb0b7f\",\"name\":\"Tipax Multilingual 169\"}]"
+    },
+    {
+      "id": "sibling_translations_unchanged",
+      "ok": true,
+      "detail": "readback tipax:standard=[{\"languageId\":\"01a1483f-df34-7000-806c-11c0fe310dcc\",\"name\":\"معمولی\"},{\"languageId\":\"01a1483f-df34-7000-8bd5-38f3f5eb0b7f\",\"name\":\"Standard\"}]"
+    },
+    {
+      "id": "unknown_language_rejected",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping_service.language_invalid"
+    },
+    {
+      "id": "empty_name_rejected",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping_method.name.required"
+    },
+    {
+      "id": "anonymous_write_rejected",
+      "ok": true,
+      "detail": "http=401 errorCode=admin.actor.missing"
+    },
+    {
+      "id": "ungranted_write_rejected",
+      "ok": true,
+      "detail": "http=403 errorCode=admin.authorization.denied"
+    },
+    {
+      "id": "negatives_changed_nothing",
+      "ok": true,
+      "detail": "fa=[{\"languageId\":\"01a1483f-df34-7000-806c-11c0fe310dcc\",\"name\":\"تیپاکس چندزبانه ۱۶۹\"},{\"languageId\":\"01a1483f-df34-7000-8bd5-38f3f5eb0b7f\",\"name\":\"Tipax Multilingual 169\"}]"
+    },
+    {
+      "id": "new_method_activation_refused",
+      "ok": true,
+      "detail": "http=400 errorCode=fulfillment.shipping_method.unsupported"
+    },
+    {
+      "id": "new_method_still_inactive_after_refusal",
+      "ok": true,
+      "detail": "isActive=false"
+    },
+    {
+      "id": "sibling_deactivation_applied",
+      "ok": true,
+      "detail": "http=200 isActive=false changed=true"
+    },
+    {
+      "id": "sibling_deactivation_persisted",
+      "ok": true,
+      "detail": "tipax:express=false tipax:standard=true"
+    },
+    {
+      "id": "sibling_reactivation_restored",
+      "ok": true,
+      "detail": "http=200 isActive=true"
+    },
+    {
+      "id": "final_new_method_inactive_with_names",
+      "ok": true,
+      "detail": "isActive=false translations=[{\"languageId\":\"01a1483f-df34-7000-806c-11c0fe310dcc\",\"name\":\"تیپاکس چندزبانه ۱۶۹\"},{\"languageId\":\"01a1483f-df34-7000-8bd5-38f3f5eb0b7f\",\"name\":\"Tipax Multilingual 169\"}]"
+    }
+  ]
+}

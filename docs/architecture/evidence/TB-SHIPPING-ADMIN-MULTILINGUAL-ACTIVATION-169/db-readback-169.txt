@@ -1,0 +1,28 @@
+﻿   method_code    | is_active 
+------------------+-----------
+ tipax:express    | t
+ tipax:scratch169 | f
+ tipax:standard   | t
+(3 rows)
+
+   method_code    | lang  |        name         
+------------------+-------+---------------------
+ tipax:express    | en-US | Express
+ tipax:express    | fa-IR | پیشتاز
+ tipax:scratch169 | en-US | Tipax UI Saved 169
+ tipax:scratch169 | fa-IR | تیپاکس چندزبانه ۱۶۹
+ tipax:standard   | en-US | Standard
+ tipax:standard   | fa-IR | معمولی
+(6 rows)
+
+   code   | is_active 
+----------+-----------
+ express  | t
+ standard | t
+(2 rows)
+
+ legacy_option_rows | rate_policies | coverage_grants 
+--------------------+---------------+-----------------
+                  0 |             0 |               0
+(1 row)
+

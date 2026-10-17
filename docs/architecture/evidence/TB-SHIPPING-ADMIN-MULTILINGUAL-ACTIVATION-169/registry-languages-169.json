@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "languages": [
+    {
+      "id": "01a1483f-df34-7000-806c-11c0fe310dcc",
+      "code": "fa-IR"
+    },
+    {
+      "id": "01a1483f-df34-7000-8bd5-38f3f5eb0b7f",
+      "code": "en-US"
+    }
+  ]
+}
