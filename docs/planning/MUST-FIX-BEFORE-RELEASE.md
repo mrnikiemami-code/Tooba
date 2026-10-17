@@ -57,6 +57,18 @@ size-A scale. No legitimate worker action can produce a ≥4× **storefront-visi
 bounded publish authorization, a new owner `Published` fixture mode, or accepting size-A evidence. No ratio was
 invented. See `docs/architecture/evidence/TB-STOREFRONT-PERF-SEED-AUTH-SCALE-181/RESULT.md`.
 
+**TB-182 update (2026-10-17): the missing two-size proof now exists — 4.33x Published growth; blocker still
+OPEN.** On an isolated scratch PG/Host, the legacy "demo products must remain Draft" assertion was not touched;
+instead the already-authoritative owner routes were used: seller `POST /v1/seller/offers`, `PUT …/price`,
+`PUT …/inventory` with the genuine Development seller memberships, then ProductWorkspace
+`POST /v1/admin/products/{id}/publish` (Catalog `PublishProductCommand` + real `ProductPublishReadiness`). Size A
+(published=3) → size B (published=13), i.e. **13 distinct product IDs in the Home payload vs 3, 52,084 B vs
+33,964 B**, warm-up + 3 requests HTTP 200 on the same binary/tenant/log level, byte-identical payload across size
+B, 68–93 ms wall time. Of 38 attempted demo Drafts only 10 passed real publish readiness — the remainder were
+rejected by validators, not bypassed. Remaining gates: Architect/register acceptance, the user's real-browser
+responsiveness verdict, and a size-B request-scoped EF command count (not captured here).
+See `docs/architecture/evidence/TB-STOREFRONT-PERF-PUBLISHED-SCALE-182/RESULT.md`.
+
 **Affected routes:** storefront Home (`/fa`, `/v1/storefront/home`) and potentially catalog/listing/product-dependent pages. Shipping/login routes show severe latency in the reported environment but are not proven to share the same cause.
 
 **User-provided diagnostic report** (not yet independently reproduced by architect):

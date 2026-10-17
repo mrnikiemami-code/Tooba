@@ -1,0 +1,6 @@
+﻿http=000000400
+elapsedSeconds=3.6
+rowsBefore=products=5 published=3 offers=6 prices=7 stock=7
+rowsAfter=products=5 published=3 variants=4 offers=6 prices=7 stock=7
+body=
+

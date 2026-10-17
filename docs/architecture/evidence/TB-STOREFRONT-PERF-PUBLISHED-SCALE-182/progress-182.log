@@ -1,0 +1,36 @@
+﻿17:23:39 postgres ready
+17:24:13 published
+17:24:13 isolation guard PASS
+17:24:51 host up boot/default pid=17240
+17:24:51 admin actor=01a14a24-c838-7000-a3c9-d9da9e25d460
+17:24:52 baseline rows: products=5 published=3 offers=6 prices=7 stock=7
+17:24:55 seed http=000000400 elapsed=3.6s rows=products=5 published=3 variants=4 offers=6 prices=7 stock=7 bodyLen=0
+17:30:02 seed settled: products=198 draft=194 published=3 categories=122 variants=645 offers=6 active_offers=6 prices=7 stock=7
+17:30:02 size-a: publishedDb=3 distinctPayloadIds=0 bytes=33962 sha=96E861364CEB wall=72.9ms
+17:30:03 seller parties: 
+17:30:39 seller memberships: 1
+17:30:39 candidates: 1
+17:30:40 publication: publish200=1/1 offersCreated=1
+17:30:40 rows after publication: products=200 published=4 active_offers=7 active_prices=8 stock=8
+17:30:40 sizeB: distinct=4 bytes=35153 sha=D576625CCD55 wall=55.9
+17:30:40 sizeA: distinct=3 bytes=33964
+17:30:47 seller memberships: 0
+17:30:58 seller memberships: 0
+17:31:18 seller memberships: 1
+17:31:18 candidates: 1
+17:31:18 publication: publish200=1/1 offersCreated=1
+17:31:19 rows after publication: products=200 published=5 active_offers=8 active_prices=9 stock=9
+17:31:19 sizeB: distinct=5 bytes=37577 sha=A17073F055B0 wall=88.2
+17:31:19 sizeA: distinct=3 bytes=33964
+17:31:35 seller memberships: 2
+17:31:35 candidates: 24
+17:31:39 publication: publish200=24/24 offersCreated=24
+17:31:39 rows after publication: products=200 published=11 active_offers=32 active_prices=33 stock=33
+17:31:39 sizeB: distinct=11 bytes=49444 sha=4EC4752184F4 wall=71.9
+17:31:39 sizeA: distinct=3 bytes=33964
+17:31:47 seller memberships: 2
+17:31:47 candidates: 12
+17:31:49 publication: publish200=12/12 offersCreated=12
+17:31:49 rows after publication: products=200 published=13 active_offers=44 active_prices=45 stock=45
+17:31:49 sizeB: distinct=13 bytes=52084 sha=5C61FF1ACBF8 wall=93
+17:31:49 sizeA: distinct=3 bytes=33964
