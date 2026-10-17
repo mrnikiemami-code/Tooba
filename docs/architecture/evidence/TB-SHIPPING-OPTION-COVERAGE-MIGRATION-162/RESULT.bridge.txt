@@ -1,0 +1,96 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162
+Parent-Task: TB-SHIPPING-OWNER-OPTION-COVERAGE-161
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PASS
+Verdict: PASS
+
+Expected-Base-SHA: 37f71ccc7591adc5a68e62a901aa33eaf96111c6
+Code-SHA: fdd1f0c472883231e39032ce8296777124db26bb
+Evidence-SHA: fdd1f0c472883231e39032ce8296777124db26bb (+ follow-up docs commit)
+
+Environment (isolated, task-owned)
+- postgres:17 -> PostgreSQL 17.10 in container tooba-tb162-pg (ID f5b8e6203a8a...,
+  label task=TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162), bound 127.0.0.1:55432, database
+  tb162_shipping_scratch. Port verified free before start.
+- Migration pathway: real `dotnet ef database update` on ShippingDbContext through the repository
+  design-time factory (TOOBA_DESIGN_TIME_CONNECTION -> ToobaNpgsql.ConfigureModuleContext), history
+  table shipping.__ef_migrations_history. No hand-written DDL.
+- Fail-closed isolation guard recorded BEFORE any DDL (PROCEED: task-owned container+label, loopback
+  port, unique DB, no shared identifier, HEAD == origin/main == base). The harness also refuses to run
+  unless current_database() = tb162_shipping_scratch.
+- Shared :5432/tooba_alpha/store-alpha/:3000/:5088/RabbitMQ/Redis never referenced, restarted or written.
+
+Proofs actually executed
+- Baseline: five pre-existing migrations applied, then seeded 5 legacy coverage grants (country, area,
+  city, city/service-area inactive, plus a second service) and 3 rate policies. Baseline: no option_code
+  column, no method_coverages table, 5 grants / 4 active.
+- UP: 20261016211322_OptionScopedCoverageRestriction applied. Catalog verified: nullable option_code
+  varchar(64); ck_coverage_grants_option_code_canonical; ux_coverage_grants_service_option_scope UNIQUE
+  (service, option, scope) NULLS NOT DISTINCT replacing the old scope index; method_coverages with
+  mode CHECK IN (0,1) and ux_method_coverages_service_option UNIQUE (service, option) NULLS NOT DISTINCT.
+  All 5 legacy grants remain with option_code = NULL (no backfill to standard/express), no row loss, all
+  rate amounts/currencies unchanged.
+- Constraint/identity cases: duplicate service-level grant identity rejected (23505, proves NULLS NOT
+  DISTINCT); mode=2 rejected; padded option code rejected; two declarations for the same service accepted;
+  duplicate declaration identity rejected; option-scoped grant at a scope that already has a service-level
+  grant accepted as a distinct identity.
+- Owner-code integration on the migrated schema (real ShippingRateQuoteLookup + ShippingRatePolicyEngine
+  against real PostgreSQL): 16/16 assertions PASS. Restricted method quoted only inside its own granted
+  city; denied elsewhere with shipping.coverage.method_restricted and zero amount/null currency;
+  unrestricted sibling never narrowed; provider-level grants never authorize a restricted method;
+  Restricted with zero own grants denies everywhere; absent declaration prices only when an owned rate
+  exists (else service.not_priced fail-closed); conditioned rate without trusted measurement stays
+  MeasurementRequired and quotes with it; LegacyFallback still requires a service-level grant, ignores
+  declarations, prefers option rates, and still shows the documented provider-rate leak (185000) that
+  strict mode refuses with owned_option_not_priced.
+- DOWN: first attempt FAILED and reproduced a real defect — 23505 could not create unique index
+  ux_coverage_grants_service_scope because two grants differing only by option collide once option_code
+  is dropped. EF rolled the migration transaction back cleanly. Narrow Shipping-owned fix applied in the
+  Down path only: delete exactly the option-scoped grants (option_code IS NOT NULL) before recreating the
+  index, because promoting them to service-level would silently widen coverage and keeping them is
+  impossible without the column. Legacy rows are untouched by construction.
+- DOWN retry after the fix: reverted successfully. 5 migrations, option_code column gone,
+  method_coverages gone, ux_coverage_grants_service_scope restored (UNIQUE, NULLS NOT DISTINCT), all 5
+  legacy rows preserved with identical ids/scopes/activation, all rates unchanged. The 2 option-scoped
+  grants created after Up are discarded — the documented non-lossless downgrade of new-format data.
+- UP again: reproducible, 6 migrations, both NULLS NOT DISTINCT indexes rebuilt, the same 5 legacy rows
+  still option_code = NULL, no EF drift or collision.
+- Focused regression after the migration fix: ShippingPersistenceModelTests + 
+  ShippingMethodCoverageRestrictionTests + ShippingRateCoverageAdminTests => 64 passed / 0 failed.
+- Cleanup: container removed by exact name, port 55432 free, harness directory deleted, shared services
+  unaffected (rabbitmq/postgres-db still Up, never targeted). No stash/reset/rebase/force-push.
+
+Counts and timing
+- 16/16 owner-code assertions, 6/6 DB constraint cases, 64/64 focused tests.
+- Actual elapsed ~26 minutes of the hard 45-minute box; one bounded execution, no retry loop.
+- HEAD == origin/main == fdd1f0c472883231e39032ce8296777124db26bb at report time.
+
+Files
+- Production: only
+  src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Persistence/Migrations/20261016211322_OptionScopedCoverageRestriction.cs
+  (Down-only change; Up, designer and model snapshot untouched). No Order, storefront, Admin UI or
+  financial-mode change.
+- Evidence: docs/architecture/evidence/TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162/ (RESULT.md, isolation
+  guard, commands, seeds/queries, schema after Up/Down/re-apply, constraint proof, owner-code proof +
+  harness source, legacy preservation matrix, ownership matrix, cleanup proof, production diff, test runs).
+- Unrelated pre-existing dirty files were left untouched and uncommitted.
+
+Residual risk
+1. The pinned Down is destructive for option-scoped grants by design; rollback of this migration means
+   losing option-level coverage decisions (now explicit in code).
+2. service_code uniqueness is case-sensitive at the DB level (observed via a raw-SQL probe). The app write
+   path always sends the route code, so it is not reachable through the Admin seam; hardening it belongs in
+   a cross-cutting task across rate_policies/coverage_grants/method_coverages/packaging_policies/
+   operating_schedules, not here.
+3. Next dependency (not authorized): Order default-OFF Shipping-owned StrictOwnedOption customer quote
+   integration with trusted measurement / MeasurementRequired fail-closed and an authenticated isolated
+   purchase-preview proof.
+
+STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT

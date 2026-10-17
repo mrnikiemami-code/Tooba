@@ -4,8 +4,8 @@ Task: `TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162`
 Parent: `TB-SHIPPING-OWNER-OPTION-COVERAGE-161`
 Channel: `tooba-main` · Worker: `tooba-worker-01` · Agent: `cursor`
 Expected-Base-SHA: `37f71ccc7591adc5a68e62a901aa33eaf96111c6` (verified `HEAD == origin/main`)
-Production Code-SHA: `PENDING_COMMIT` (one narrow `Down` fix — see §4)
-Evidence-SHA: `PENDING_COMMIT`
+Production Code-SHA: `fdd1f0c472883231e39032ce8296777124db26bb`
+Evidence-SHA: `fdd1f0c472883231e39032ce8296777124db26bb` (+ follow-up docs commit)
 Verdict: **PASS** — real isolated PostgreSQL 17.10 Up → Down → Up proven, with one reproduced
 rollback defect found and narrowly fixed in Shipping-owned migration source.
 
