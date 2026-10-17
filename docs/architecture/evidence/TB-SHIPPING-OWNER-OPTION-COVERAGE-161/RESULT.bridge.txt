@@ -6,6 +6,7 @@ Worker-Id: tooba-worker-01
 Agent-Type: cursor
 Repository: mrnikiemami-code/Tooba
 Branch: main
+Status: PASS
 Verdict: PASS
 
 Expected-Base-SHA: 0ad0296ab0df0c2449417cf6438310b1cf3ca6ff
@@ -62,4 +63,5 @@ dirty evidence/frontend files were left untouched and uncommitted. No rebase/res
 services touched, no next task launched.
 
 STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
 END_TOOBA_WORKER_RESULT
