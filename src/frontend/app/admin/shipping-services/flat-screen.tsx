@@ -46,6 +46,10 @@ import {
   activationUnavailableFa,
 } from "./shipping-one-level-activation-model.ts";
 import type { OneLevelMethodRow } from "./shipping-one-level-tabs-model.ts";
+import { loadAdminLanguages } from "../../../features/admin-languages";
+import type { SupportedLocaleDefinition } from "../../../lib/i18n/supported-locales.ts";
+import { validateCreateMethodInput } from "./flat-method-create-model.ts";
+import { createFailureMessage, createOneLevelMethod } from "./flat-method-create-api.ts";
 
 const GRID_VIEW_KEY = "admin-shipping-services";
 
@@ -64,11 +68,13 @@ export function ShippingServicesFlatScreen({
   const [detail, setDetail] = useState<{ row: FlatMethodRow; mode: "view" | "edit" } | null>(null);
   const [activeTab, setActiveTab] = useState<FlatDetailTabId>("general");
   const [createOpen, setCreateOpen] = useState(false);
-
-  const rows = useMemo(
-    () => buildFlatMethodRows(methods, activeLanguageId),
-    [methods, activeLanguageId],
-  );
+  const [createCode, setCreateCode] = useState("");
+  const [createProvider, setCreateProvider] = useState("");
+  const [createNames, setCreateNames] = useState<Record<string, string>>({});
+  const [createLanguages, setCreateLanguages] = useState<readonly SupportedLocaleDefinition[]>([]);
+  const [createLanguagesState, setCreateLanguagesState] = useState<"idle" | "loading" | "ok" | "denied" | "error">("idle");
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [createError, setCreateError] = useState<string | undefined>(undefined);
 
   const refresh = useCallback(async (opts?: { notice?: string; tone?: "success" | "error" }) => {
     setState("loading");
@@ -92,6 +98,68 @@ export function ShippingServicesFlatScreen({
     // ردیف‌های سرور مقدار اولیه‌اند؛ نبودشان یعنی هنوز چیزی خوانده نشده است.
     if (initialMethods.length === 0) void refresh();
   }, [initialMethods.length, refresh]);
+
+  /** زبان‌های فرم فقط از رجیستری واقعی سرور می‌آیند؛ هیچ زبان یا نامی در کلاینت ساخته نمی‌شود. */
+  const openCreate = useCallback(async () => {
+    setCreateCode("");
+    setCreateProvider("");
+    setCreateNames({});
+    setCreateError(undefined);
+    setCreateLanguagesState("loading");
+    setCreateOpen(true);
+    const result = await loadAdminLanguages();
+    if (result.state === "ok" && result.data) {
+      const withIds = result.data.filter((x) => (x.languageId ?? "").length > 0);
+      setCreateLanguages(withIds);
+      setCreateLanguagesState(withIds.length > 0 ? "ok" : "error");
+      return;
+    }
+    setCreateLanguages([]);
+    setCreateLanguagesState(result.state === "denied" ? "denied" : "error");
+  }, []);
+
+  /**
+   * ایجاد واقعی روش canonical از مسیر مجاز سرور. ناموفق‌بودن هرگز «موفقیت» نمایش نمی‌دهد؛
+   * فقط پاسخ تأییدشدهٔ سرور فهرست را تازه می‌کند.
+   */
+  const submitCreate = useCallback(async () => {
+    if (createSubmitting) return;
+    const validation = validateCreateMethodInput({
+      methodCode: createCode,
+      providerKind: createProvider,
+      names: createLanguages.map((language) => ({
+        languageId: language.languageId ?? "",
+        name: createNames[language.languageId ?? ""] ?? "",
+      })),
+    });
+    if (!validation.ok) {
+      setCreateError(validation.message);
+      return;
+    }
+
+    setCreateSubmitting(true);
+    setCreateError(undefined);
+    const result = await createOneLevelMethod(validation.request);
+    setCreateSubmitting(false);
+
+    if (result.state !== "ok" || !result.data) {
+      setCreateError(createFailureMessage(result));
+      return;
+    }
+
+    setCreateOpen(false);
+    await refresh({
+      notice:
+        `روش «${result.data.methodCode}» ساخته و دوباره از سرور خوانده شد. این روش غیرفعال است و تا ثبت `
+        + "سیاست نرخ اختصاصی همین روش و فعال‌سازی، برای مشتری قابل‌انتخاب/قیمت‌گذاری نیست.",
+      tone: "success",
+    });
+  }, [createCode, createLanguages, createNames, createProvider, createSubmitting, refresh]);
+
+  const rows = useMemo(
+    () => buildFlatMethodRows(methods, activeLanguageId),
+    [methods, activeLanguageId],
+  );
 
   /** حذف امن: فقط همان روش، از تنها درز مجاز ۰۹۶. هیچ سیاست ثبت‌شده‌ای حذف نمی‌شود. */
   const removeMethod = useCallback(async (row: FlatMethodRow) => {
@@ -258,7 +326,7 @@ export function ShippingServicesFlatScreen({
           type="button"
           className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#2563EB] px-4 text-sm font-bold text-white"
           data-testid="admin-shipping-method-create"
-          onClick={() => setCreateOpen(true)}
+          onClick={() => void openCreate()}
         >
           <Plus className="size-4" aria-hidden />
           سرویس جدید
@@ -290,22 +358,122 @@ export function ShippingServicesFlatScreen({
       ) : null}
 
       {createOpen ? (
-        <Dialog open onClose={() => setCreateOpen(false)} title="سرویس جدید" showCloseButton size="md">
-          <div className="space-y-3 text-sm text-gray-700" data-testid="admin-shipping-method-create-blocked">
-            <p className="font-bold text-gray-900">
-              ایجاد روش ارسال تازه در حال حاضر از سمت سرور پشتیبانی نمی‌شود.
-            </p>
-            <p>
-              کاتالوگ یک‌سطحی تنها مسیر خواندن، «نوشتن نام نمایشی» و «فعال/غیرفعال‌سازی روش گزینه‌دار» را
-              برای ادمین منتشر کرده است؛ هیچ endpoint ایجاد روش canonical وجود ندارد. مسیر قدیمی ایجاد
-              «سرویس ارائه‌دهنده + گزینه» یک موجودیت دوسطحی می‌سازد و به‌عنوان روش مستقل canonical
-              ساخته نمی‌شود، پس عمداً استفاده نمی‌شود.
-            </p>
+        <Dialog open onClose={() => (createSubmitting ? undefined : setCreateOpen(false))} title="سرویس جدید" showCloseButton size="md">
+          <form
+            className="space-y-4 text-sm text-gray-700"
+            data-testid="admin-shipping-method-create-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitCreate();
+            }}
+          >
             <p className="text-xs text-gray-500">
-              نتیجه: دکمهٔ «سرویس جدید» حفظ شده است، اما تا افزودن endpoint ایجاد روش در سرور هیچ سرویسی
-              ساخته نمی‌شود؛ این مورد به‌عنوان BLOCKED گزارش می‌شود.
+              هر روش ارسال یک هویت مستقل دارد. کد روش تغییرناپذیر است و پیوند قدیمی آن در سرور از
+              همین کد مشتق و اعتبارسنجی می‌شود؛ روش تازه غیرفعال ساخته می‌شود.
             </p>
-          </div>
+
+            <label className="block space-y-1">
+              <span className="font-bold text-gray-900">کد روش</span>
+              <input
+                dir="ltr"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 font-mono text-xs"
+                value={createCode}
+                placeholder="tipax:sameday"
+                maxLength={32}
+                disabled={createSubmitting}
+                data-testid="admin-shipping-method-create-code"
+                onChange={(event) => setCreateCode(event.target.value)}
+              />
+              <span className="block text-[11px] text-gray-500">
+                حروف کوچک/رقم/زیرخط و حداکثر یک «:»؛ حداکثر ۳۲ نویسه. کد نمی‌تواند بعداً تغییر کند.
+              </span>
+            </label>
+
+            <label className="block space-y-1">
+              <span className="font-bold text-gray-900">شناسهٔ ارائه‌دهنده (اختیاری)</span>
+              <input
+                dir="ltr"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 font-mono text-xs"
+                value={createProvider}
+                placeholder="tipax"
+                maxLength={64}
+                disabled={createSubmitting}
+                data-testid="admin-shipping-method-create-provider"
+                onChange={(event) => setCreateProvider(event.target.value)}
+              />
+              <span className="block text-[11px] text-gray-500">
+                فقط metadata ارائه‌دهنده است و هیچ نرخ/پوشش/برنامه‌ای را با روش‌های خواهر به اشتراک
+                نمی‌گذارد. خالی‌بودن یعنی از بخش سرویس همان کد گرفته شود.
+              </span>
+            </label>
+
+            <div className="space-y-2" data-testid="admin-shipping-method-create-names">
+              <span className="block font-bold text-gray-900">نام نمایشی به هر زبان</span>
+              {createLanguagesState === "loading" ? (
+                <p className="text-xs text-gray-500">در حال خواندن زبان‌های ثبت‌شده…</p>
+              ) : createLanguagesState === "denied" ? (
+                <p className="text-xs font-semibold text-red-700">
+                  فهرست زبان‌ها قابل خواندن نیست؛ بدون زبان واقعی روشی ساخته نمی‌شود.
+                </p>
+              ) : createLanguagesState === "error" ? (
+                <p className="text-xs font-semibold text-red-700">
+                  زبان ثبت‌شده‌ای از سرور دریافت نشد؛ ساخت روش ممکن نیست.
+                </p>
+              ) : (
+                createLanguages.map((language) => {
+                  const languageId = language.languageId ?? "";
+                  return (
+                    <label key={languageId} className="flex items-center gap-2">
+                      <span className="w-28 shrink-0 text-xs text-gray-600" dir="auto">
+                        {language.nativeName || language.displayName || language.code}
+                      </span>
+                      <input
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs"
+                        value={createNames[languageId] ?? ""}
+                        maxLength={128}
+                        disabled={createSubmitting}
+                        data-testid={`admin-shipping-method-create-name-${languageId}`}
+                        onChange={(event) =>
+                          setCreateNames((current) => ({ ...current, [languageId]: event.target.value }))}
+                      />
+                    </label>
+                  );
+                })
+              )}
+              <span className="block text-[11px] text-gray-500">
+                حداقل یک زبان باید نام داشته باشد. زبان‌ها فقط از رجیستری واقعی سرور می‌آیند.
+              </span>
+            </div>
+
+            {createError ? (
+              <p
+                role="alert"
+                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700"
+                data-testid="admin-shipping-method-create-error"
+              >
+                {createError}
+              </p>
+            ) : null}
+
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                className="inline-flex min-h-10 items-center rounded-xl border border-gray-200 px-4 text-sm font-bold text-gray-700"
+                disabled={createSubmitting}
+                onClick={() => setCreateOpen(false)}
+              >
+                انصراف
+              </button>
+              <button
+                type="submit"
+                className="inline-flex min-h-10 items-center rounded-xl bg-[#2563EB] px-4 text-sm font-bold text-white disabled:opacity-60"
+                disabled={createSubmitting || createLanguagesState !== "ok"}
+                data-testid="admin-shipping-method-create-submit"
+              >
+                {createSubmitting ? "در حال ساخت…" : "ساخت روش"}
+              </button>
+            </div>
+          </form>
         </Dialog>
       ) : null}
 

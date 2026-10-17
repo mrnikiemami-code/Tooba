@@ -111,6 +111,9 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<IShippingOneLevelStorefrontLabelReader, ShippingOneLevelStorefrontLabelRead>();
         // TB-SHIPPING-ONE-LEVEL-TABS-094: تنها درز نوشتن نام روش یک‌سطحی؛ دروازهٔ خاموش ⇒ هیچ نوشتنی.
         services.AddScoped<IShippingOneLevelCatalogAdminWrite, ShippingOneLevelCatalogAdminWrite>();
+        // TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-167: درز ایجاد روش canonical مستقل؛ پیوند قدیمی فقط
+        // از کد canonical مشتق می‌شود، روش تازه غیرفعال است و هیچ ردیف کاتالوگ قدیمی ساخته نمی‌شود.
+        services.AddScoped<IShippingOneLevelCatalogAdminCreate, ShippingOneLevelCatalogAdminCreate>();
         // TB-SHIPPING-ONE-LEVEL-TABS-096: تنها مرجع تراکنشی فعال‌سازی روش گزینه‌دار؛ ردیف قدیمی گزینه و
         // فرافکنی یک‌سطحی را با هم هم‌راستا می‌کند و دروازهٔ خاموش هیچ نوشتنی نمی‌دهد.
         services.AddScoped<IShippingOneLevelCatalogAdminActivation, ShippingOneLevelCatalogActivation>();

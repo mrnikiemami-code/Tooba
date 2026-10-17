@@ -19,6 +19,18 @@ public sealed record OneLevelShippingMethodTranslationWriteRequest(string? Name)
 
 /// <summary>TB-096: تنها بدنهٔ فعال‌سازی یک روش یک‌سطحی — فقط وضعیت؛ هیچ کد سرویس/گزینه‌ای پذیرفته نمی‌شود.</summary>
 public sealed record OneLevelShippingMethodActivationWriteRequest(bool IsActive);
+
+/// <summary>
+/// TB-167: تنها بدنهٔ ایجاد یک روش یک‌سطحی — کد canonical، metadata اختیاری ارائه‌دهنده و نام هر
+/// زبان واقعی. هیچ <c>serviceCode</c>/<c>optionCode</c>/فعال‌بودن از کلاینت پذیرفته نمی‌شود.
+/// </summary>
+public sealed record OneLevelShippingMethodCreateTranslationWrite(Guid LanguageId, string? Name);
+
+/// <summary>بدنهٔ ایجاد روش یک‌سطحی؛ کد canonical تنها هویت است.</summary>
+public sealed record OneLevelShippingMethodCreateWriteRequest(
+    string? MethodCode,
+    string? ProviderKind,
+    IReadOnlyList<OneLevelShippingMethodCreateTranslationWrite>? Translations);
 public sealed record ShippingServiceOptionWrite(
     Guid? ShippingServiceOptionId, string Code, bool IsActive, int SortOrder,
     IReadOnlyList<ShippingServiceOptionTranslationWrite> Translations);
@@ -58,6 +70,12 @@ public static class ShippingServiceEndpoints
         group.MapPut(
             "/shipping-methods/one-level/{methodCode}/activation",
             SetOneLevelMethodActivationAsync);
+        // TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-167: تنها مسیر ایجاد یک روش canonical مستقل. کد روش
+        // تنها هویت است؛ پیوند قدیمی از همان کد در سرور مشتق می‌شود، روش تازه غیرفعال نوشته می‌شود
+        // و هیچ سرویس/گزینهٔ قدیمی یا سیاست مالی جعلی ساخته نمی‌شود.
+        group.MapPost(
+            "/shipping-methods/one-level",
+            CreateOneLevelMethodAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -161,6 +179,29 @@ public static class ShippingServiceEndpoints
         await authorizer.RequireAuthorizedAsync(context, cancellationToken);
         return api.From(await sender.Send(
             new SetOneLevelShippingMethodActivationCommand(methodCode, body?.IsActive ?? false),
+            cancellationToken));
+    }
+
+    /// <summary>
+    /// TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-167: یک روش ارسال مستقل canonical می‌سازد.
+    /// مجوز ادمین لازم است. بدنه فقط کد canonical، metadata اختیاری ارائه‌دهنده و نام‌های زبان‌های
+    /// واقعی را می‌پذیرد؛ هیچ serviceCode/optionCode/optionId/فعال‌بودن از کلاینت پذیرفته نمی‌شود.
+    /// روش تازه همیشه غیرفعال و بدون سیاست مالی است، پس بدون تنظیم نرخ اختصاصی همان روش برای مشتری
+    /// قابل‌انتخاب/قیمت‌گذاری نیست.
+    /// </summary>
+    private static async Task<IResult> CreateOneLevelMethodAsync(
+        OneLevelShippingMethodCreateWriteRequest body,
+        ISender sender, IFulfillmentAdminAuthorizer authorizer, ApiResponseFactory api,
+        HttpContext context, CancellationToken cancellationToken)
+    {
+        await authorizer.RequireAuthorizedAsync(context, cancellationToken);
+        return api.From(await sender.Send(
+            new CreateOneLevelShippingMethodCommand(
+                body?.MethodCode,
+                body?.ProviderKind,
+                (body?.Translations ?? [])
+                    .Select(t => new OneLevelShippingMethodCreateName(t.LanguageId, t.Name))
+                    .ToList()),
             cancellationToken));
     }
 

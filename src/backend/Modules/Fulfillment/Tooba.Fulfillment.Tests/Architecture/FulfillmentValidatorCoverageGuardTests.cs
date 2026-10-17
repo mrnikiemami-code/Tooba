@@ -31,6 +31,9 @@ namespace Tooba.Fulfillment.Tests.Architecture;
 /// validator) as the 18th.
 /// TB-SHIPPING-ONE-LEVEL-TABS-096 added SetOneLevelShippingMethodActivationCommand (a supplied
 /// method code is untrusted transport shape, so it carries a concrete validator) as the 19th.
+/// TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-167 added CreateOneLevelShippingMethodCommand (a supplied
+/// method code, provider metadata and per-language names are untrusted transport shape, so it
+/// carries a concrete validator) as the 20th.
 /// </summary>
 public sealed class FulfillmentValidatorCoverageGuardTests
 {
@@ -60,6 +63,7 @@ public sealed class FulfillmentValidatorCoverageGuardTests
         ("ResolveOneLevelShippingMethodBindingQuery", "Shipping", ValidatorRequired),
         ("UpdateOneLevelShippingMethodTranslationCommand", "Shipping", ValidatorRequired),
         ("SetOneLevelShippingMethodActivationCommand", "Shipping", ValidatorRequired),
+        ("CreateOneLevelShippingMethodCommand", "Shipping", ValidatorRequired),
     ];
 
     private static readonly (string Request, Type Validator, string Surface)[] RequiredValidators =
@@ -77,13 +81,14 @@ public sealed class FulfillmentValidatorCoverageGuardTests
         ("ResolveOneLevelShippingMethodBindingQuery", typeof(ResolveOneLevelShippingMethodBindingQueryValidator), "Shipping"),
         ("UpdateOneLevelShippingMethodTranslationCommand", typeof(UpdateOneLevelShippingMethodTranslationCommandValidator), "Shipping"),
         ("SetOneLevelShippingMethodActivationCommand", typeof(SetOneLevelShippingMethodActivationCommandValidator), "Shipping"),
+        ("CreateOneLevelShippingMethodCommand", typeof(CreateOneLevelShippingMethodCommandValidator), "Shipping"),
     ];
 
     [Fact]
-    public void Complete_endpoint_inventory_is_exactly_19_with_13_required_and_6_no_validator()
+    public void Complete_endpoint_inventory_is_exactly_20_with_14_required_and_6_no_validator()
     {
-        Assert.Equal(19, Manifest.Length);
-        Assert.Equal(13, Manifest.Count(x => x.Classification == ValidatorRequired));
+        Assert.Equal(20, Manifest.Length);
+        Assert.Equal(14, Manifest.Count(x => x.Classification == ValidatorRequired));
         Assert.Equal(6, Manifest.Count(x => x.Classification != ValidatorRequired));
         Assert.Equal(2, Manifest.Count(x => x.Classification == NoInput));
         Assert.Equal(1, Manifest.Count(x => x.Classification == AuthScoped));
@@ -116,7 +121,7 @@ public sealed class FulfillmentValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void Thirteen_required_validators_resolve_via_foundation_DI_and_six_have_none()
+    public void Fourteen_required_validators_resolve_via_foundation_DI_and_six_have_none()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -149,7 +154,7 @@ public sealed class FulfillmentValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void All_nineteen_requests_are_real_mediatr_requests_and_endpoints_use_ISender()
+    public void All_twenty_requests_are_real_mediatr_requests_and_endpoints_use_ISender()
     {
         var appAsm = typeof(SellerMutateFulfillmentCommand).Assembly;
         foreach (var (name, _, _) in Manifest)
@@ -192,7 +197,7 @@ public sealed class FulfillmentValidatorCoverageGuardTests
         Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Validators", "Customer")));
         Assert.False(Directory.Exists(Path.Combine(applicationRoot, "Validators", "Shipping")));
 
-        Assert.Equal(7, Directory.GetFiles(Path.Combine(applicationRoot, "Shipping", "Validators"), "*Validator.cs").Length);
+        Assert.Equal(8, Directory.GetFiles(Path.Combine(applicationRoot, "Shipping", "Validators"), "*Validator.cs").Length);
         Assert.Equal(3, Directory.GetFiles(Path.Combine(applicationRoot, "Fulfillments", "Validators"), "*Validator.cs").Length);
         Assert.Equal(2, Directory.GetFiles(Path.Combine(applicationRoot, "WorkQueue", "Validators"), "*Validator.cs").Length);
         Assert.Single(Directory.GetFiles(Path.Combine(applicationRoot, "Checkout", "Validators"), "*Validator.cs"));
