@@ -1,0 +1,15 @@
+﻿GET /fa 200 in 219054ms
+GET /fa?tb185=cold 200 in 240086ms
+GET /fa 200 in 48ms
+GET /fa 200 in 89993ms
+GET /fa 200 in 46319ms
+GET /fa 200 in 61254ms
+GET /fa 200 in 31258ms
+GET /fa 200 in 24074ms
+GET /fa 200 in 9045ms
+GET /fa 200 in 9016ms
+GET /fa 200 in 45050ms
+GET /fa 200 in 132027ms
+GET /fa 200 in 90008ms
+GET /fa 200 in 89986ms
+GET /fa 200 in 24992ms

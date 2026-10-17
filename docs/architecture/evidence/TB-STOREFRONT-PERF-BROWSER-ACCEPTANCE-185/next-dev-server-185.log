@@ -1,0 +1,26 @@
+   ▲ Next.js 15.5.23
+   - Local:        http://localhost:3105
+   - Network:      http://100.126.170.122:3105
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 4.1s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 827ms (120 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 15.6s (2483 modules)
+ GET /fa 200 in 219054ms
+ GET /fa?tb185=cold 200 in 240086ms
+ GET /fa 200 in 48ms
+ GET /fa 200 in 89993ms
+ GET /fa 200 in 46319ms
+ GET /fa 200 in 61254ms
+ GET /fa 200 in 31258ms
+ GET /fa 200 in 24074ms
+ GET /fa 200 in 9045ms
+ GET /fa 200 in 9016ms
+ GET /fa 200 in 45050ms
+ GET /fa 200 in 132027ms
+ GET /fa 200 in 90008ms
+ GET /fa 200 in 89986ms
+ GET /fa 200 in 24992ms

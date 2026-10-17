@@ -1,0 +1,26 @@
+﻿[
+    {
+        "run":  1,
+        "status":  null,
+        "wallMs":  90237,
+        "bytes":  0,
+        "hasPrice":  false,
+        "hasProduct":  false
+    },
+    {
+        "run":  2,
+        "status":  null,
+        "wallMs":  90026,
+        "bytes":  0,
+        "hasPrice":  false,
+        "hasProduct":  false
+    },
+    {
+        "run":  3,
+        "status":  null,
+        "wallMs":  35466,
+        "bytes":  0,
+        "hasPrice":  false,
+        "hasProduct":  false
+    }
+]
