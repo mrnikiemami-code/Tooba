@@ -1,0 +1,7 @@
+﻿ ...-SHIPPING-PACKAGING-CUSTOMER-CHARGE-177.task.md |  75 ++++++++++++
+ .../OWNER-AUTHORITY-MATRIX.md                      |  58 +++++++++
+ .../RESULT.md                                      | 111 +++++++++++++++++
+ .../test-commands.txt                              |  51 ++++++++
+ ...orefrontShippingPackagingChargeBoundaryTests.cs | 131 ++++++++++++++++++++
+ ...ShippingPackagingCustomerChargeBoundaryTests.cs | 135 +++++++++++++++++++++
+ 6 files changed, 561 insertions(+)
