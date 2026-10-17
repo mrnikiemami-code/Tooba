@@ -1,0 +1,88 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-NEW-METHOD-CUSTOMER-ACCEPTANCE-171
+Parent-Task: TB-SHIPPING-NEW-METHOD-ACTIVATION-170
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Status: PASS
+Base-SHA: 325315d626f6d347512e0fb0869aa8c56a5cc707
+Expected-Base-SHA-Match: true
+HEAD-SHA-AFTER-PUSH: (see git push output / commit below)
+
+What was executed
+- Reused the proven TB-166/170 recipe: disposable PostgreSQL container (127.0.0.1:55490) with task-owned DBs,
+  canonical Tooba.MigrationRunner apply --all-tenants, and a private Host on 127.0.0.1:5425 in SingleStore mode
+  with one Active tenant pointing at the scratch reference. No shared :3000/:5088/:5432, no tooba_alpha.
+- Created a NEW canonical flat method tipax:scratch171 through the real Admin one-level endpoint, activated it
+  through the supported Fulfillment activation endpoint, then wrote a genuine method-owned Shipping rate and
+  coverage declaration through the real Admin Shipping endpoints.
+- Authenticated a genuine customer (Development fixed-OTP fixture) and exercised the real storefront cart +
+  /v1/storefront/shipping/projection + /v1/storefront/shipping/selection + re-read.
+
+Assertions (31/31 gate ON, 6/6 gate OFF control)
+1  dev_context_available
+2  fulfillment_manage_granted
+3  real_language_id_read
+4  baseline_catalog_seven_methods (7 pre-existing methods)
+5  canonical_method_created
+6  no_fabricated_legacy_or_price_at_create (legacy_option_rows=0, rate_rows=0)
+7  activation_applied_canonical_only (isActive=true, changed=true, canonicalOnly=true)
+8  activation_created_no_legacy_option_row (0)
+9  seeded_single_seller_offers_read
+10 authenticated_customer_session
+11 authenticated_single_seller_cart_ready (2 lines, 1 seller)
+12 projection_http_ok
+13 activated_but_unrated_method_absent (visible=tipax:express,tipax:standard only)
+14 baseline_legacy_methods_priced_by_owner (205000 / 480000)
+15 owned_rate_created_for_new_method
+16 coverage_declaration_unrestricted
+17 new_method_visible_at_owned_rate (price=185000, leadDays=3, isFree=false)
+18 new_method_identity_canonical (serviceCode=tipax, optionCode=scratch171)
+19 no_sibling_or_provider_amount_inherited (185000 != 205000/480000/260000/180000)
+20 server_returned_schedule_available (2026-10-22, 9-12)
+21 selection_saved_with_server_schedule (HTTP 200)
+22 selection_persisted_and_priced_once (selected=tipax:scratch171, amount=185000)
+23 draft_group_holds_owned_amount_once (1 group, 185000)
+24 no_premature_order_or_payment (checkouts=0, payments=0, seller_orders=0)
+25 invalid_schedule_selection_rejected (400 shipping.delivery.too_early)
+26 invalid_selection_cannot_corrupt_accepted_draft (still tipax:scratch171 / 185000)
+27 coverage_switched_to_restricted
+28 restricted_without_own_grant_fails_closed (absent, no zero/FREE price)
+29 invalid_selection_rejected (400 shipping.method.unavailable)
+30 rejected_selection_never_stores_zero_or_legacy_amount (zeroGroups=0, revalidation present)
+31 restored_after_negative_control
+OFF control: new canonical-only method absent; legacy tree keeps committed legacy pricing
+(tipax:express 260000, tipax:standard 180000); unavailableMethods absent.
+
+DB readback (db-readback-on-171.txt)
+METHOD tipax:scratch171 active=true legacy_option=scratch171
+LEGACY_OPTION_ROWS 0
+RATE tipax:scratch171 185000.00 IRR prep=2 lead=3 scope=country+administrative-area active=true
+COVERAGE tipax:scratch171 mode=0
+DRAFT_GROUPS 1 / DRAFT tipax:scratch171 amount=185000.00 IRR lead=3 date=2026-10-22 window=9-12
+CHECKOUTS 0 / PAYMENTS 0
+
+Production diff
+- No production source change. The TB-170 canonical activation + owned-rate seams already serve the new
+  method end-to-end; this task is runtime acceptance + sanitized evidence only.
+- Committed ShippingOwnedRateAuthority.Enabled remains false in appsettings.json, appsettings.Development.json
+  and appsettings.Production.json (verified after the run).
+
+Limitations
+- No browser DOM/screenshot leg (HTTP+DB criteria prioritised inside the 45-minute boundary); no browser proof claimed.
+- Owned rate declared at country+administrative-area scope because the selection path resolves names and stops at
+  administrative-area level in this chain (same destination, strictly wider owner scope; not a fabricated price).
+- Payment draft / final checkout intentionally not exercised; instead proven that no checkout/payment row exists.
+
+Cleanup
+- cleanup-171.txt: Host processes stopped, container tooba-tb171-pg removed, ports 5425/55490/3120 closed,
+  shared ports untouched, credentials never written to evidence.
+
+Evidence
+docs/architecture/evidence/TB-SHIPPING-NEW-METHOD-CUSTOMER-ACCEPTANCE-171/
+(assertion-matrix-on/off, http-trace-on/off, projection-on/off, db-readback-on, isolation guards,
+ host launch, cleanup, reusable harness scripts, EVIDENCE.md)
+
+STOP_FOR_ARCHITECT: YES — task complete, no next task taken.
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT

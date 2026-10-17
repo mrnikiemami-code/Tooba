@@ -1,0 +1,66 @@
+{
+  "methods": [
+    {
+      "code": "post:express",
+      "label": "پیشتاز",
+      "price": 200000,
+      "leadDays": 2,
+      "isFree": false,
+      "serviceCode": "post",
+      "optionCode": "express"
+    },
+    {
+      "code": "post:standard",
+      "label": "معمولی",
+      "price": 120000,
+      "leadDays": 4,
+      "isFree": false,
+      "serviceCode": "post",
+      "optionCode": "standard"
+    },
+    {
+      "code": "tipax:express",
+      "label": "پیشتاز",
+      "price": 260000,
+      "leadDays": 1,
+      "isFree": false,
+      "serviceCode": "tipax",
+      "optionCode": "express"
+    },
+    {
+      "code": "tipax:standard",
+      "label": "معمولی",
+      "price": 180000,
+      "leadDays": 3,
+      "isFree": false,
+      "serviceCode": "tipax",
+      "optionCode": "standard"
+    },
+    {
+      "code": "snapp_courier",
+      "label": "اسنپ / پیک آنلاین",
+      "price": 90000,
+      "leadDays": 0,
+      "isFree": false,
+      "serviceCode": "snapp_courier"
+    },
+    {
+      "code": "store_courier",
+      "label": "پیک فروشگاه",
+      "price": 75000,
+      "leadDays": 1,
+      "isFree": false,
+      "serviceCode": "store_courier"
+    },
+    {
+      "code": "in_person",
+      "label": "تحویل حضوری",
+      "price": 0,
+      "leadDays": 0,
+      "isFree": true,
+      "serviceCode": "in_person"
+    }
+  ],
+  "unavailableMethods": null,
+  "selectedShippingAmount": 0
+}
