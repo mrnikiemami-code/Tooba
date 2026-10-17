@@ -1,0 +1,159 @@
+{
+  "gate": "Enabled",
+  "ready": true,
+  "languageId": "01a14824-271e-7000-845b-fc045577e58e",
+  "methods": [
+    {
+      "methodCode": "post:express",
+      "name": "پیشتاز",
+      "isActive": true,
+      "sortOrder": 10,
+      "translations": [
+        {
+          "languageId": "01a14824-271e-7000-845b-fc045577e58e",
+          "name": "پیشتاز"
+        },
+        {
+          "languageId": "01a14824-271e-7000-9385-9fbeb0090a68",
+          "name": "Express"
+        }
+      ]
+    },
+    {
+      "methodCode": "post:standard",
+      "name": "معمولی",
+      "isActive": true,
+      "sortOrder": 11,
+      "translations": [
+        {
+          "languageId": "01a14824-271e-7000-845b-fc045577e58e",
+          "name": "معمولی"
+        },
+        {
+          "languageId": "01a14824-271e-7000-9385-9fbeb0090a68",
+          "name": "Standard"
+        }
+      ]
+    },
+    {
+      "methodCode": "tipax:express",
+      "name": "پیشتاز",
+      "isActive": true,
+      "sortOrder": 20,
+      "translations": [
+        {
+          "languageId": "01a14824-271e-7000-845b-fc045577e58e",
+          "name": "پیشتاز"
+        },
+        {
+          "languageId": "01a14824-271e-7000-9385-9fbeb0090a68",
+          "name": "Express"
+        }
+      ]
+    },
+    {
+      "methodCode": "tipax:standard",
+      "name": "معمولی",
+      "isActive": true,
+      "sortOrder": 21,
+      "translations": [
+        {
+          "languageId": "01a14824-271e-7000-845b-fc045577e58e",
+          "name": "معمولی"
+        },
+        {
+          "languageId": "01a14824-271e-7000-9385-9fbeb0090a68",
+          "name": "Standard"
+        }
+      ]
+    },
+    {
+      "methodCode": "snapp_courier",
+      "name": "اسنپ / پیک آنلاین",
+      "isActive": true,
+      "sortOrder": 30,
+      "translations": [
+        {
+          "languageId": "01a14824-271e-7000-845b-fc045577e58e",
+          "name": "اسنپ / پیک آنلاین"
+        },
+        {
+          "languageId": "01a14824-271e-7000-9385-9fbeb0090a68",
+          "name": "Snapp / Online courier"
+        }
+      ]
+    },
+    {
+      "methodCode": "store_courier",
+      "name": "پیک فروشگاه",
+      "isActive": true,
+      "sortOrder": 40,
+      "translations": [
+        {
+          "languageId": "01a14824-271e-7000-845b-fc045577e58e",
+          "name": "پیک فروشگاه"
+        },
+        {
+          "languageId": "01a14824-271e-7000-9385-9fbeb0090a68",
+          "name": "Store courier"
+        }
+      ]
+    },
+    {
+      "methodCode": "in_person",
+      "name": "تحویل حضوری",
+      "isActive": true,
+      "sortOrder": 50,
+      "translations": [
+        {
+          "languageId": "01a14824-271e-7000-9385-9fbeb0090a68",
+          "name": "In person"
+        },
+        {
+          "languageId": "01a14824-271e-7000-845b-fc045577e58e",
+          "name": "تحویل حضوری"
+        }
+      ]
+    },
+    {
+      "methodCode": "tipax:sameday",
+      "name": "تیپاکس همان‌روز",
+      "isActive": false,
+      "sortOrder": 51,
+      "translations": [
+        {
+          "languageId": "01a14824-271e-7000-845b-fc045577e58e",
+          "name": "تیپاکس همان‌روز"
+        },
+        {
+          "languageId": "01a14824-271e-7000-9385-9fbeb0090a68",
+          "name": "Tipax Same Day"
+        }
+      ]
+    },
+    {
+      "methodCode": "post:smuggled",
+      "name": "اسمگل",
+      "isActive": false,
+      "sortOrder": 52,
+      "translations": [
+        {
+          "languageId": "01a14824-271e-7000-845b-fc045577e58e",
+          "name": "اسمگل"
+        }
+      ]
+    },
+    {
+      "methodCode": "mahex:parallel",
+      "name": "موازی",
+      "isActive": false,
+      "sortOrder": 53,
+      "translations": [
+        {
+          "languageId": "01a14824-271e-7000-845b-fc045577e58e",
+          "name": "موازی"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+﻿capturedUtc=2026-10-17T04:56:33.6646411Z
+host pid 780: stopped
+frontend pid 21484: stopped
+port 3117 pid 21052: stopped
+docker rm -f: tooba-tb168-pg
+container tooba-tb168-pg: removed
+run dir removed: D:\Users\User\source\repos\SarvNewVer\.tmp-168-run exists=False
+port 5422 (task host)  = closed
+port 3117 (task web)   = closed
+port 55487 (task pg)   = closed
+port 3000 (shared web) = 23632
+port 5088 (shared host)= 26472
+port 5432 (shared pg)  = 3176,7504
+scratch_ports_closed=True
+shared_ports_intact=True

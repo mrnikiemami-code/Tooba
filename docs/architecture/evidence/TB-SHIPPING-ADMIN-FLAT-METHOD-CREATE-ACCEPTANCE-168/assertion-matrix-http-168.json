@@ -1,0 +1,159 @@
+{
+  "generatedAtUtc": "2026-10-17T04:41:59.048Z",
+  "host": "http://127.0.0.1:5422",
+  "total": 30,
+  "passed": 30,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "dev_context_available",
+      "ok": true,
+      "detail": "http=200 actorResolved=true"
+    },
+    {
+      "id": "one_level_list_anonymous_fail_closed",
+      "ok": true,
+      "detail": "http=401 errorCode=admin.actor.missing"
+    },
+    {
+      "id": "one_level_list_unknown_actor_fail_closed",
+      "ok": true,
+      "detail": "http=403 errorCode=admin.authorization.denied"
+    },
+    {
+      "id": "access_control_bootstrap_ok",
+      "ok": true,
+      "detail": "http=204"
+    },
+    {
+      "id": "fulfillment_manage_granted",
+      "ok": true,
+      "detail": "http=200 grants=55"
+    },
+    {
+      "id": "real_language_ids_read",
+      "ok": true,
+      "detail": "http=200 languages=fa-IR:01a14824-271e-7000-845b-fc045577e58e,en-US:01a14824-271e-7000-9385-9fbeb0090a68"
+    },
+    {
+      "id": "baseline_seven_methods_present",
+      "ok": true,
+      "detail": "http=200 codes=post:express,post:standard,tipax:express,tipax:standard,snapp_courier,store_courier,in_person"
+    },
+    {
+      "id": "binding_unresolved_before_create",
+      "ok": true,
+      "detail": "http=200 resolved=false serviceCode=undefined optionCode=undefined"
+    },
+    {
+      "id": "canonical_create_2xx",
+      "ok": true,
+      "detail": "http=200 errorCode=null body={\"methodCode\":\"tipax:sameday\",\"providerKind\":\"tipax\",\"legacyServiceCode\":\"tipax\",\"legacyOptionCode\":\"sameday\",\"isActive\":false,\"sortOrder\":51,\"translations\":[{\"languageId\":\"01a14824-271e-7000-845b-fc0"
+    },
+    {
+      "id": "created_identity_is_method_code",
+      "ok": true,
+      "detail": "methodCode=tipax:sameday"
+    },
+    {
+      "id": "created_is_inactive",
+      "ok": true,
+      "detail": "isActive=false"
+    },
+    {
+      "id": "smuggled_binding_fields_ignored",
+      "ok": true,
+      "detail": "http=200 isActive=false legacy=post/smuggled"
+    },
+    {
+      "id": "readback_exactly_one_new_row",
+      "ok": true,
+      "detail": "http=200 matches=1 total=9"
+    },
+    {
+      "id": "readback_inactive_canonical",
+      "ok": true,
+      "detail": "methodCode=tipax:sameday isActive=false name=تیپاکس همان‌روز"
+    },
+    {
+      "id": "readback_localized_fa_name",
+      "ok": true,
+      "detail": "name=تیپاکس همان‌روز"
+    },
+    {
+      "id": "readback_localized_en_name",
+      "ok": true,
+      "detail": "name=Tipax Same Day"
+    },
+    {
+      "id": "server_derived_binding_post_option",
+      "ok": true,
+      "detail": "http=200 serviceCode=tipax optionCode=sameday"
+    },
+    {
+      "id": "existing_binding_intact_tipax_standard",
+      "ok": true,
+      "detail": "http=200 service=tipax option=standard"
+    },
+    {
+      "id": "existing_binding_intact_tipax_express",
+      "ok": true,
+      "detail": "http=200 service=tipax option=express"
+    },
+    {
+      "id": "existing_binding_intact_post_standard",
+      "ok": true,
+      "detail": "http=200 service=post option=standard"
+    },
+    {
+      "id": "existing_codes_still_present",
+      "ok": true,
+      "detail": "codes=post:express,post:standard,tipax:express,tipax:standard,snapp_courier,store_courier,in_person,tipax:sameday,post:smuggled"
+    },
+    {
+      "id": "duplicate_code_rejected",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping_method.code.duplicate"
+    },
+    {
+      "id": "duplicate_stable_error_code",
+      "ok": true,
+      "detail": "errorCode=shipping_method.code.duplicate"
+    },
+    {
+      "id": "unknown_language_rejected",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping_service.language_invalid"
+    },
+    {
+      "id": "malformed_code_rejected",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping_method.code.invalid"
+    },
+    {
+      "id": "parallel_duplicate_creates_single_winner",
+      "ok": true,
+      "detail": "winnerCount=1 statuses=200,400,400"
+    },
+    {
+      "id": "no_rows_from_rejected_requests",
+      "ok": true,
+      "detail": "codes=post:express,post:standard,tipax:express,tipax:standard,snapp_courier,store_courier,in_person,tipax:sameday,post:smuggled,mahex:parallel"
+    },
+    {
+      "id": "anonymous_create_rejected",
+      "ok": true,
+      "detail": "http=401 errorCode=admin.actor.missing"
+    },
+    {
+      "id": "ungranted_create_rejected",
+      "ok": true,
+      "detail": "http=403 errorCode=admin.authorization.denied"
+    },
+    {
+      "id": "unauthorized_requests_persisted_nothing",
+      "ok": true,
+      "detail": "codes=post:express,post:standard,tipax:express,tipax:standard,snapp_courier,store_courier,in_person,tipax:sameday,post:smuggled,mahex:parallel"
+    }
+  ]
+}

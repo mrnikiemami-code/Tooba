@@ -1,0 +1,29 @@
+﻿== methods_final
+  method_code   | legacy_service_code | legacy_option_code | is_active | provider_kind | sort_order 
+----------------+---------------------+--------------------+-----------+---------------+------------
+ post:express   | post                | express            | t         | post          |         10
+ post:standard  | post                | standard           | t         | post          |         11
+ tipax:express  | tipax               | express            | t         | tipax         |         20
+ tipax:standard | tipax               | standard           | t         | tipax         |         21
+ snapp_courier  | snapp_courier       |                    | t         | courier       |         30
+ store_courier  | store_courier       |                    | t         | store_courier |         40
+ in_person      | in_person           |                    | t         | in_person     |         50
+ tipax:sameday  | tipax               | sameday            | f         | tipax         |         51
+ post:smuggled  | post                | smuggled           | f         | post          |         52
+ mahex:parallel | mahex               | parallel           | f         | mahex         |         53
+ tipax:ondemand | tipax               | ondemand           | f         | tipax         |         54
+(11 rows)
+
+== browser_created_translations
+  method_code   | lang  |      name       
+----------------+-------+-----------------
+ tipax:ondemand | en-US | Tipax On-Demand
+ tipax:ondemand | fa-IR | تیپاکس درجا
+(2 rows)
+
+== no_legacy_or_policy_for_new_methods
+ new_legacy_services | new_legacy_options | rate_policies | coverage_grants | method_coverages 
+---------------------+--------------------+---------------+-----------------+------------------
+                   0 |                  0 |             0 |               0 |                0
+(1 row)
+

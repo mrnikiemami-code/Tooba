@@ -1,0 +1,173 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "Tooba": {
+    "ShippingOwnedRateAuthority": {
+      "Enabled": false
+    },
+    "Edition": "SingleStore",
+    "DeploymentId": "isolated-168",
+    "TrustedProxies": [],
+    "Marketplace": {
+      "ConnectionReference": ""
+    },
+    "SingleStore": {
+      "Tenants": [
+        {
+          "TenantId": "store-alpha",
+          "DisplayName": "Isolated 168 Store",
+          "Status": "Active",
+          "ConnectionReference": "tenant-168-scratch",
+          "ThemeReference": "theme-alpha",
+          "DefaultMarketReference": "IR",
+          "StoreCommerce": {
+            "DefaultCurrency": "IRR",
+            "SalesChannel": "Marketplace"
+          },
+          "PrimaryDomain": "alpha.localhost",
+          "Hosts": [
+            "alpha.localhost",
+            "alpha.localtest.me",
+            "localhost",
+            "127.0.0.1"
+          ]
+        }
+      ]
+    },
+    "PostgreSQL": {
+      "ConnectionReferences": {
+        "tenant-168-scratch": "Host=127.0.0.1;Port=55487;Username=scratch168;Password=scratch168-36d1a3cbdc51;Database=tooba_168_scratch;Application Name=tooba-168-isolated;Timeout=15;Command Timeout=120;Maximum Pool Size=20",
+        "messaging-168-scratch": "Host=127.0.0.1;Port=55487;Username=scratch168;Password=scratch168-36d1a3cbdc51;Database=tooba_168_messaging;Application Name=tooba-168-isolated-messaging;Timeout=15;Command Timeout=120;Maximum Pool Size=10"
+      }
+    },
+    "Messaging": {
+      "Enabled": true,
+      "Transport": "PostgreSql",
+      "ConnectionReference": "messaging-168-scratch",
+      "Schema": "transport",
+      "UseInProcessTestDouble": false
+    },
+    "Settlement": {
+      "MarketplaceChannelLedger": {
+        "Enabled": false
+      }
+    },
+    "Outbox": {
+      "Enabled": true,
+      "PollIntervalSeconds": 2,
+      "BatchSize": 20,
+      "RetryBaseDelaySeconds": 2,
+      "MaxAttempts": 5,
+      "LockSeconds": 30
+    },
+    "CartExpiry": {
+      "Enabled": true,
+      "PollIntervalSeconds": 5,
+      "BatchSize": 20
+    },
+    "PaymentReconciliation": {
+      "Enabled": true,
+      "PollIntervalSeconds": 60,
+      "PendingAgeMinutes": 5,
+      "BatchSize": 20
+    },
+    "Observability": {
+      "ServiceName": "Tooba.Host",
+      "OtlpEndpoint": "",
+      "EnableTracing": true,
+      "EnableMetrics": true
+    },
+    "Cache": {
+      "Enabled": true,
+      "Provider": "Memory",
+      "EntryCountLimit": 10000,
+      "StampedeProtection": true
+    },
+    "Authorization": {
+      "Mode": "InMemory",
+      "ApplySchemaOnStartup": false
+    },
+    "AuthSecurity": {
+      "CorsAllowedOrigins": [
+        "http://127.0.0.1:3117",
+        "http://localhost:3117"
+      ],
+      "AuthRateLimitPermitLimit": 90,
+      "AuthRateLimitWindowSeconds": 60
+    },
+    "ExternalProviders": {},
+    "Media": {
+      "LocalRoot": "App_Data/media",
+      "MaxUploadBytes": 5000000
+    },
+    "CatalogDemo": {
+      "AllowResetAndSeed": false,
+      "RunLegacyBootstraps": true
+    },
+    "ShippingOneLevelCatalog": {
+      "Enabled": true
+    },
+    "ShippingMethods": {
+      "EnabledCodes": [
+        "post",
+        "tipax",
+        "snapp_courier",
+        "store_courier",
+        "in_person"
+      ],
+      "DefaultSellerPreparationDays": 1,
+      "DeliveryHorizonDays": 7
+    }
+  },
+  "Identity": {
+    "PasswordPolicy": {
+      "MinimumLength": 10,
+      "RequireLetterAndDigit": false
+    },
+    "Lifecycle": {
+      "SessionLifetimeHours": 336,
+      "ChallengeLifetimeMinutes": 15,
+      "MaxChallengeAttempts": 5
+    },
+    "OtpDelivery": {
+      "Mode": "Capturing",
+      "WebhookUrl": "",
+      "WebhookApiKey": "",
+      "TimeoutSeconds": 10
+    }
+  },
+  "Payment": {
+    "Gateway": {
+      "Mode": "Sandbox",
+      "DefaultProvider": "fake",
+      "ManualCardToCardEnabled": true,
+      "ManualProofRequirement": "Optional",
+      "ManualPaymentInstructions": "مبلغ را به حساب اعلام‌شده فروشگاه واریز کنید و شماره پیگیری پرداخت را ثبت کنید.",
+      "ManualPaymentReviewHoldHours": 24,
+      "ManualPaymentInitialHoldHours": 2,
+      "OnlinePaymentHoldHours": 2,
+      "CartHoldMinutes": 30,
+      "StoreDisplayName": "Tooba",
+      "WebhookSigningSecret": "",
+      "InitiateBaseUrl": "",
+      "StatusQueryBaseUrl": "",
+      "StatusQueryApiKey": "",
+      "AllowedStatusQueryHosts": [],
+      "TimeoutSeconds": 15,
+      "VerifyMaxAttempts": 3
+    }
+  },
+  "Cart": {
+    "PersistenceHours": 168
+  },
+  "ReservationCycle": {
+    "InitialReservationHoldMinutes": 120,
+    "RetryReservationHoldMinutes": 120,
+    "MaxReservationCycles": 3
+  }
+}

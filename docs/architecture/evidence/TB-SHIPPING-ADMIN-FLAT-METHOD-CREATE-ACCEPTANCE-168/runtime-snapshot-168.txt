@@ -1,0 +1,6 @@
+capturedUtc=2026-10-17T04:55:43.586Z
+task_host_health=200 bytes=15
+task_host_storefront_page=200 bytes=49176
+task_host_api_gate=401 bytes=325
+shared_host_health=200 bytes=15
+shared_web_root=200 bytes=411816

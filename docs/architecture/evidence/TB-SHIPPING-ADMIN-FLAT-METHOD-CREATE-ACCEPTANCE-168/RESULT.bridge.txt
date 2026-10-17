@@ -1,0 +1,94 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-ACCEPTANCE-168
+Parent-Task: TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-167
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PASS
+Verdict: PASS - the real flat Add Service operation is proven end-to-end on an isolated disposable environment: authorized Admin POST create -> authoritative GET read-back -> real browser create/grid-refresh/reopen/reload persistence -> duplicate rejection -> fail-closed authorization, with customer non-selectability proven from authoritative inactive state plus the storefront eligibility filter
+Base-SHA: 8fad87840b9f2491c1ac9220ff3b234a1a6d3f10
+Evidence-SHA: 1aad15158d4fbce904622d3b53b02b709adeac47
+HEAD-SHA: 1aad15158d4fbce904622d3b53b02b709adeac47
+Origin-SHA: 1aad15158d4fbce904622d3b53b02b709adeac47
+Push: fast-forward 8fad87840..1aad15158d4fbce904622d3b53b02b709adeac47 (main -> main)
+
+SUMMARY
+TB-167 shipped the method-scoped create contract but reported PARTIAL because no live authorized create, no authoritative read-back, no browser reopen and no duplicate/authorization proof had been executed against a real PostgreSQL. This task closes exactly that runtime gap and changes no production code. A disposable PostgreSQL container (tooba-tb168-pg on 127.0.0.1:55487, databases tooba_168_scratch / tooba_168_messaging), an isolated Development Host on 127.0.0.1:5422 (SingleStore, single tenant store-alpha -> tenant-168-scratch, authorization InMemory) and an isolated Next frontend on 127.0.0.1:3117 were used; the shared :3000 / :5088 / :5432 were never opened, restarted, migrated or written. All 30 authorized HTTP acceptance checks passed, including a server-derived legacy binding that ignores smuggled client fields, isActive=false on every create, exact duplicate-code rejection with shipping_method.code.duplicate, single-winner under two concurrent duplicate POSTs, and zero persistence from rejected/anonymous/ungranted requests. The Admin flat screen then performed a real browser create of tipax:ondemand (fa + en names): the grid refreshed from the server without a reload, the new row appeared inactive, the four non-nested detail tabs opened with the immutable code and both saved translations, and the row survived a full document reload. Authoritative SQL read-back confirms all four created methods are is_active=f with the exact server-derived (service, option) split and zero legacy shipping_services / shipping_service_options / rate_policies / coverage_grants / method_coverages rows. Customer non-selectability follows from that authoritative inactive state plus the storefront eligibility filter (StorefrontShippingService.LoadEligibleMethodsAsync filters catalog on IsActive), and activation is a separate explicit admin surface that was never called. Teardown stopped the isolated Host and frontend, removed the disposable container and run directory, and verified scratch_ports_closed=True while shared_ports_intact=True.
+
+ASSERTIONS (30/30 PASS - assertion-matrix-http-168.json)
+ 1 dev_context_available 200 actorResolved=true
+ 2 one_level_list_anonymous_fail_closed 401 admin.actor.missing
+ 3 one_level_list_unknown_actor_fail_closed 403 admin.authorization.denied
+ 4 access_control_bootstrap_ok 204
+ 5 fulfillment_manage_granted 200 grants=55
+ 6 real_language_ids_read fa-IR / en-US from the language registry
+ 7 baseline_seven_methods_present
+ 8 binding_unresolved_before_create 200 resolved=false
+ 9 canonical_create_2xx 200
+10 created_identity_is_method_code tipax:sameday
+11 created_is_inactive isActive=false
+12 smuggled_binding_fields_ignored client serviceCode/optionCode/isActive have no effect
+13 readback_exactly_one_new_row
+14 readback_inactive_canonical
+15 readback_localized_fa_name تیپاکس همان‌روز
+16 readback_localized_en_name Tipax Same Day
+17 server_derived_binding_post_option resolves to (tipax, sameday)
+18-20 existing bindings tipax:standard / tipax:express / post:standard unchanged
+21 existing_codes_still_present
+22 duplicate_code_rejected 400
+23 duplicate_stable_error_code shipping_method.code.duplicate
+24 unknown_language_rejected shipping_service.language_invalid
+25 malformed_code_rejected shipping_method.code.invalid
+26 parallel_duplicate_creates_single_winner statuses=200,400,400 winnerCount=1
+27 no_rows_from_rejected_requests
+28 anonymous_create_rejected 401
+29 ungranted_create_rejected 403
+30 unauthorized_requests_persisted_nothing
+
+BROWSER ACCEPTANCE (real private browser, isolated frontend :3117)
+- /fa/admin/shipping-services rendered from the isolated Host.
+- Add Service modal submitted canonical code tipax:ondemand with fa "تیپاکس درجا" and en "Tipax On-Demand".
+- Grid refreshed from the server without reload; new row shown inactive.
+- Row reopened: four non-nested tabs; General tab shows immutable code plus both saved translations, status inactive (screenshot ui-general-tab-browser-created-168.png).
+- Full document reload kept the row (server-persisted, not optimistic state).
+
+AUTHORITATIVE SQL READ-BACK (db-readback-final-168.txt)
+ method_code    | legacy_service_code | legacy_option_code | is_active
+ tipax:sameday  | tipax               | sameday            | f
+ post:smuggled  | post                | smuggled           | f
+ mahex:parallel | mahex               | parallel           | f
+ tipax:ondemand | tipax               | ondemand           | f
+ new_legacy_services=0 new_legacy_options=0 rate_policies=0 coverage_grants=0 method_coverages=0
+ translations: tipax:ondemand en-US "Tipax On-Demand" / fa-IR "تیپاکس درجا"
+
+TESTS (actually run in this task)
+node acceptance-168.js against isolated Host => total=30 passed=30 failed=0
+No production test suite was re-run: this slice changed no source file.
+
+WHAT IS NOT PROVEN (exact)
+1. No live POST /v1/storefront/shipping/projection was executed for the created methods: the scratch tenant carries no seeded catalog/offers, hence no live cart to project. Non-selectability is proven from authoritative persistent state (is_active=false) plus the storefront eligibility filter catalog.Where(x => x.IsActive), not from an observed absence in a live projection response.
+2. Only one of the four created methods was created through the browser (tipax:ondemand); the other three were created over HTTP.
+3. The original .task.md payload could not be re-persisted verbatim (Bridge exposes no task-content endpoint); docs/ai/tasks/TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-ACCEPTANCE-168.task.md is a derived record with the executed scope.
+
+WHAT CHANGED
+Evidence and task-record documentation only - no production code, contract, migration or feature flag:
+1. docs/architecture/evidence/TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-ACCEPTANCE-168/ - harness (prepare/launch/cleanup), UI screenshots, DB read-back, effective config, isolation guard, runtime snapshot and cleanup transcript.
+2. docs/ai/tasks/TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-ACCEPTANCE-168.task.md - derived task record (explicitly labelled as derived).
+
+SAFETY
+No writes/restarts to shared :3000/:5088/:5432, tooba_alpha/store-alpha, RabbitMQ/Redis; no real SMS/PSP/payout; no migration; no feature-flag change in any committed file; no change to already accepted customer Shipping group/promise/Payment/Fulfillment/Settlement paths; only task-owned files staged (three pre-existing unrelated modified files were left untouched); no stash/reset/rebase/force push; no probe/dummy POST to Bridge /api/results.
+
+TEARDOWN
+cleanup-168.ps1 -> cleanup-168.txt: host pid stopped, frontend pid stopped, remaining listener on 3117 stopped, container tooba-tb168-pg removed, .tmp-168-run removed, scratch_ports_closed=True (5422/3117/55487), shared_ports_intact=True (3000/5088/5432).
+
+EVIDENCE (docs/architecture/evidence/TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-ACCEPTANCE-168/)
+EVIDENCE.md, assertion-matrix-http-168.json, http-trace-168.txt, db-readback-final-168.txt, catalog-final-168.json, effective-config-168.json, isolation-guard.json, runtime-snapshot-168.txt, ui-general-tab-browser-created-168.png, cleanup-168.ps1, cleanup-168.txt, acceptance-168.js, prepare-isolated-target-168.js, launch-isolated-host-168.ps1, launch-isolated-frontend-168.ps1, RESULT.bridge.txt
+
+Automatic-Next-Task: NONE
+SHA-NOTE: the SHAs above identify evidence-only commit 1aad151 (no production code changed in this task). Filling these fields creates a new tree object, so the repository tip after push is that amended evidence commit with identical evidence content.
+
+STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT
