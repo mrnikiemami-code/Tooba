@@ -1,0 +1,962 @@
+﻿[
+    {
+        "step":  "offer",
+        "index":  1,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  1,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  1,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  1,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-6cf6-7000-84d9-0c0319d841c4\",\"title\":\"سامسونگ هدفون سری 1\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  2,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  2,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  2,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  2,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-6cf6-7000-84d9-0c0319d841c4\",\"title\":\"سامسونگ هدفون سری 1\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  3,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  3,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  3,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  3,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-6cf6-7000-84d9-0c0319d841c4\",\"title\":\"سامسونگ هدفون سری 1\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  4,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  4,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  4,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  4,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-70c3-7000-aeed-fb808e1b66a0\",\"title\":\"اپل هدفون مدل 2\",\"status\":\"Pu"
+    },
+    {
+        "step":  "offer",
+        "index":  5,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  5,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  5,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  5,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-70c3-7000-aeed-fb808e1b66a0\",\"title\":\"اپل هدفون مدل 2\",\"status\":\"Pu"
+    },
+    {
+        "step":  "offer",
+        "index":  6,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  6,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  6,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  6,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-70c3-7000-aeed-fb808e1b66a0\",\"title\":\"اپل هدفون مدل 2\",\"status\":\"Pu"
+    },
+    {
+        "step":  "offer",
+        "index":  7,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  7,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  7,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  7,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-7582-7000-af3c-a4c4129a36ac\",\"title\":\"هدفون نسخه 3\",\"status\":\"Publi"
+    },
+    {
+        "step":  "offer",
+        "index":  8,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  8,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  8,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  8,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-7582-7000-af3c-a4c4129a36ac\",\"title\":\"هدفون نسخه 3\",\"status\":\"Publi"
+    },
+    {
+        "step":  "offer",
+        "index":  9,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  9,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  9,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  9,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-7582-7000-af3c-a4c4129a36ac\",\"title\":\"هدفون نسخه 3\",\"status\":\"Publi"
+    },
+    {
+        "step":  "offer",
+        "index":  10,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  10,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  10,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  10,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-7b65-7000-834d-430ce5b2ea5a\",\"title\":\"هواوی هدفون مجموعه 4\",\"status"
+    },
+    {
+        "step":  "offer",
+        "index":  11,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  11,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  11,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  11,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-7b65-7000-834d-430ce5b2ea5a\",\"title\":\"هواوی هدفون مجموعه 4\",\"status"
+    },
+    {
+        "step":  "offer",
+        "index":  12,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  12,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  12,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  12,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-7b65-7000-834d-430ce5b2ea5a\",\"title\":\"هواوی هدفون مجموعه 4\",\"status"
+    },
+    {
+        "step":  "offer",
+        "index":  13,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  13,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  13,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  13,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-80cb-7000-a4c4-5476da8364c1\",\"title\":\"سونی هدفون انتخاب 5\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  14,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  14,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  14,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  14,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-80cb-7000-a4c4-5476da8364c1\",\"title\":\"سونی هدفون انتخاب 5\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  15,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  15,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  15,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  15,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-80cb-7000-a4c4-5476da8364c1\",\"title\":\"سونی هدفون انتخاب 5\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  16,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  16,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  16,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  16,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-8605-7000-9525-c6651ea5fcd6\",\"title\":\"سامسونگ هدفون سری 6\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  17,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  17,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  17,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  17,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-8605-7000-9525-c6651ea5fcd6\",\"title\":\"سامسونگ هدفون سری 6\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  18,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  18,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  18,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  18,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-8605-7000-9525-c6651ea5fcd6\",\"title\":\"سامسونگ هدفون سری 6\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  19,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  19,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  19,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  19,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-c876-7000-b7a5-d11068003340\",\"title\":\"نایک پیراهن مردانه سری 1\",\"st"
+    },
+    {
+        "step":  "offer",
+        "index":  20,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  20,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  20,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  20,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-c876-7000-b7a5-d11068003340\",\"title\":\"نایک پیراهن مردانه سری 1\",\"st"
+    },
+    {
+        "step":  "offer",
+        "index":  21,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  21,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  21,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  21,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-c876-7000-b7a5-d11068003340\",\"title\":\"نایک پیراهن مردانه سری 1\",\"st"
+    },
+    {
+        "step":  "offer",
+        "index":  22,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  22,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  22,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  22,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-c876-7000-b7a5-d11068003340\",\"title\":\"نایک پیراهن مردانه سری 1\",\"st"
+    },
+    {
+        "step":  "offer",
+        "index":  23,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  23,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  23,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  23,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-c876-7000-b7a5-d11068003340\",\"title\":\"نایک پیراهن مردانه سری 1\",\"st"
+    },
+    {
+        "step":  "offer",
+        "index":  24,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  24,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  24,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  24,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-c876-7000-b7a5-d11068003340\",\"title\":\"نایک پیراهن مردانه سری 1\",\"st"
+    },
+    {
+        "step":  "offer",
+        "index":  25,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  25,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  25,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  25,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-c876-7000-b7a5-d11068003340\",\"title\":\"نایک پیراهن مردانه سری 1\",\"st"
+    },
+    {
+        "step":  "offer",
+        "index":  26,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  26,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  26,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  26,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-c876-7000-b7a5-d11068003340\",\"title\":\"نایک پیراهن مردانه سری 1\",\"st"
+    },
+    {
+        "step":  "offer",
+        "index":  27,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  27,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  27,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  27,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-c876-7000-b7a5-d11068003340\",\"title\":\"نایک پیراهن مردانه سری 1\",\"st"
+    },
+    {
+        "step":  "offer",
+        "index":  28,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  28,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  28,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  28,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-ce1a-7000-8f71-a50831c5d462\",\"title\":\"پیراهن مردانه مدل 2\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  29,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  29,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  29,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  29,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-ce1a-7000-8f71-a50831c5d462\",\"title\":\"پیراهن مردانه مدل 2\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  30,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  30,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  30,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  30,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-ce1a-7000-8f71-a50831c5d462\",\"title\":\"پیراهن مردانه مدل 2\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  31,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  31,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  31,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  31,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-ce1a-7000-8f71-a50831c5d462\",\"title\":\"پیراهن مردانه مدل 2\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  32,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  32,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  32,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  32,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-ce1a-7000-8f71-a50831c5d462\",\"title\":\"پیراهن مردانه مدل 2\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  33,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  33,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  33,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  33,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-ce1a-7000-8f71-a50831c5d462\",\"title\":\"پیراهن مردانه مدل 2\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  34,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  34,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  34,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  34,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-ce1a-7000-8f71-a50831c5d462\",\"title\":\"پیراهن مردانه مدل 2\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  35,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  35,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  35,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  35,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-ce1a-7000-8f71-a50831c5d462\",\"title\":\"پیراهن مردانه مدل 2\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  36,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  36,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  36,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  36,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-ce1a-7000-8f71-a50831c5d462\",\"title\":\"پیراهن مردانه مدل 2\",\"status\""
+    },
+    {
+        "step":  "offer",
+        "index":  37,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  37,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  37,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  37,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-d430-7000-98b1-89ec4b0219d3\",\"title\":\"زارا پیراهن مردانه نسخه 3\",\"s"
+    },
+    {
+        "step":  "offer",
+        "index":  38,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  38,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  38,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  38,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-d430-7000-98b1-89ec4b0219d3\",\"title\":\"زارا پیراهن مردانه نسخه 3\",\"s"
+    },
+    {
+        "step":  "offer",
+        "index":  39,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  39,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  39,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  39,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-d430-7000-98b1-89ec4b0219d3\",\"title\":\"زارا پیراهن مردانه نسخه 3\",\"s"
+    },
+    {
+        "step":  "offer",
+        "index":  40,
+        "status":  201,
+        "detail":  ""
+    },
+    {
+        "step":  "price",
+        "index":  40,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "inventory",
+        "index":  40,
+        "status":  200,
+        "detail":  ""
+    },
+    {
+        "step":  "publish",
+        "index":  40,
+        "status":  200,
+        "detail":  "{\"productId\":\"01a14a4f-d430-7000-98b1-89ec4b0219d3\",\"title\":\"زارا پیراهن مردانه نسخه 3\",\"s"
+    }
+]

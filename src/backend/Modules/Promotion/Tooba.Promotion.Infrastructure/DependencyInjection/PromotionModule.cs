@@ -40,6 +40,7 @@ public sealed class PromotionModule : IToobaModule
         services.AddScoped<IPromotionUseCaseGuard, OpenPromotionUseCaseGuard>();
         services.AddScoped<IPromotionRedemptionLedger, DeferredPromotionRedemptionLedger>();
         services.AddScoped<IPromotionDirectory, PromotionDirectory>();
+        services.AddScoped<IPromotionCandidateSource, ScopedPromotionCandidateSource>();
         services.AddScoped<IPromotionEvaluator>(sp => sp.GetRequiredService<IPromotionDirectory>());
         services.AddScoped<ICheckoutPromotionPort, CheckoutPromotionAdapter>();
         services.AddScoped<IMerchandisingCampaignDirectory, MerchandisingCampaignDirectory>();

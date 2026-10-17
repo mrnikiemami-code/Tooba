@@ -84,6 +84,22 @@ acceptance ✘ (user), register acceptance ✘ (architect). **Blocker stays OPEN
 batched promotion evaluation owned by the Promotion module.
 See `docs/architecture/evidence/TB-STOREFRONT-PERF-QUERY-SCALE-183/RESULT.md`.
 
+**TB-184 update (2026-10-17): the promotion-driven Home N+1 is REMOVED; blocker still OPEN.** The residual
+one-per-card query was inside the Promotion owner (`PromotionDirectory.EvaluateAsync` →
+`_db.Promotions.AsNoTracking().ToListAsync()`). It is now a scoped owner read: `IPromotionCandidateSource` /
+`PromotionCandidateSnapshot` materializes the candidate set once per request, `PromotionDecisionEngine` holds the
+unchanged decision logic, and every mutation in the same scope invalidates the snapshot. `ICheckoutPromotionPort`
+and the whole checkout consumer slice are **unchanged**; no Promotion entity or DbContext crosses a module.
+Owner tests: **44 passed / 0 failed** (13 new behaviour locks incl. one-load-serves-12-cards and
+invalidate-after-write). Runtime A/B on a disposable PG/Host, 3 vs 12 Published items, same trace attribution
+method as TB-183: **36 / 36 / 36** commands per Home request at size A and **36 / 36 / 36** at size B
+(previously 38 and 47), i.e. the count is now flat in published-product count (`+9` items → `0` extra commands).
+Payload parity: 0 missing price/seller/currency/stock/slug in both sizes, `IRR` only, byte-identical bodies across
+requests, promotion-driven `promotionalAmountExclusiveOfTax` still present on 4 cards in both sizes.
+Gates: query growth ✔ (promotion remainder closed), response parity ✔, focused tests ✔, browser acceptance ✘
+(user), register acceptance ✘ (architect). **Blocker stays OPEN** and must not be marked CLOSED without architect
+and user browser acceptance. See `docs/architecture/evidence/TB-STOREFRONT-PERF-PROMOTION-BATCH-184/RESULT.md`.
+
 **Affected routes:** storefront Home (`/fa`, `/v1/storefront/home`) and potentially catalog/listing/product-dependent pages. Shipping/login routes show severe latency in the reported environment but are not proven to share the same cause.
 
 **User-provided diagnostic report** (not yet independently reproduced by architect):

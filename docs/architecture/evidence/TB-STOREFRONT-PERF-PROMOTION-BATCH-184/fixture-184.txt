@@ -1,0 +1,1 @@
+﻿final scratch fixture (TB-184 guard only, then removed): products=175 published=12 draft=162 active_offers=46 active_prices=47 stock=47 promotions=0

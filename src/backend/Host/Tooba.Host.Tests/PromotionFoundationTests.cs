@@ -124,8 +124,8 @@ public sealed class PromotionFoundationTests : IAsyncLifetime
         await using var dbB = CreateDb(csB, commerceB);
         await dbA.Database.MigrateAsync();
         await dbB.Database.MigrateAsync();
-        var dirA = new PromotionDirectory(dbA, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
-        var dirB = new PromotionDirectory(dbB, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
+        var dirA = new PromotionDirectory(dbA, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator(), new ScopedPromotionCandidateSource(dbA));
+        var dirB = new PromotionDirectory(dbB, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator(), new ScopedPromotionCandidateSource(dbB));
         var at = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
         var offer = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1");
         var variant = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1");

@@ -1,0 +1,20 @@
+﻿17:57:36 postgres ready
+17:57:56 published
+17:57:56 isolation guard PASS
+17:58:40 host up pid=31792
+17:58:52 admin actor=01a14a43-add9-7000-81b6-f03bd0a2662e
+17:58:52 baseline: products=5 published=3
+17:59:02 seed poll done products=5 elapsed=10.3s curlExited=True rows=products=5 published=3 categories=6 variants=4
+18:14:53 size A start: published=3 products=175 categories=122 variants=438
+18:14:53 size-a/warmup: status=200 ms=411.5 bytes=33962 sha=6633D88419BA tid=7ba857868f7e1d2054a46c81fe213bba
+18:14:53 size-a/m1: status=200 ms=108.6 bytes=33962 sha=6633D88419BA tid=d24ccf74d1732c0f3706cb8dd4d47f09
+18:14:53 size-a/m2: status=200 ms=154.5 bytes=33962 sha=6633D88419BA tid=caf2a8199aa145d9ad8f8a9b1fd13fc1
+18:14:54 size-a/m3: status=200 ms=373.8 bytes=33962 sha=6633D88419BA tid=ba02f9674c234f42d5636e26f4e8b6ab
+18:14:54 seller memberships: 2
+18:14:54 candidates: 40
+18:15:12 publication: attempted=40 publishedNow=12
+18:15:12 size B rows: products=175 published=12 active_offers=46 active_prices=47 stock=47 variants=438 categories=122
+18:15:15 size-b/warmup: status=200 ms=234.7 bytes=51704 sha=8FDE10CBB4E9 tid=aa5cd3c0ab14d45f8e5d7dd0ffb2b1c1
+18:15:15 size-b/m1: status=200 ms=99.9 bytes=51704 sha=8FDE10CBB4E9 tid=4a5fa6961257bfe606aeedb2719bf6f7
+18:15:15 size-b/m2: status=200 ms=148 bytes=51704 sha=8FDE10CBB4E9 tid=321c2bfec00cab53c298b16e0a243aba
+18:15:16 size-b/m3: status=200 ms=176.1 bytes=51704 sha=8FDE10CBB4E9 tid=804e391681b0613b57afccaab287c077

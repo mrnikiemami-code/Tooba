@@ -79,7 +79,7 @@ public sealed class MerchandisingCampaignFoundationTests : IAsyncLifetime
         await using var db = CreateDb(_container.GetConnectionString());
         await db.Database.MigrateAsync();
         var dir = new MerchandisingCampaignDirectory(db, new SystemUtcClock(), new UuidV7IdGenerator());
-        var checkout = new PromotionDirectory(db, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
+        var checkout = new PromotionDirectory(db, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator(), new ScopedPromotionCandidateSource(db));
         var storeA = Guid.Parse("aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaa1");
         var storeB = Guid.Parse("bbbbbbbb-bbbb-7bbb-8bbb-bbbbbbbbbbb1");
         var now = DateTimeOffset.Parse("2026-09-19T12:00:00Z");

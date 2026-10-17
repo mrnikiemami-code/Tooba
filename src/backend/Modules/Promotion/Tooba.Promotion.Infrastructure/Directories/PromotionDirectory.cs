@@ -1,5 +1,6 @@
 using Tooba.Promotion.Domain.ValueObjects;
 using Tooba.Promotion.Domain.Aggregates;
+using Tooba.Promotion.Application.Promotions;
 using Tooba.Promotion.Application.Promotions.Ports;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
@@ -21,6 +22,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
     private readonly PromotionDbContext _db;
     private readonly IPromotionUseCaseGuard _guard;
     private readonly IPromotionRedemptionLedger _ledger;
+    private readonly IPromotionCandidateSource _candidates;
     private readonly IClock _clock;
     private readonly IIdGenerator _ids;
 
@@ -32,11 +34,13 @@ public sealed class PromotionDirectory : IPromotionDirectory
         IPromotionUseCaseGuard guard,
         IPromotionRedemptionLedger ledger,
         IClock clock,
-        IIdGenerator ids)
+        IIdGenerator ids,
+        IPromotionCandidateSource candidates)
     {
         _db = db;
         _guard = guard;
         _ledger = ledger;
+        _candidates = candidates;
         ArgumentNullException.ThrowIfNull(clock);
         _clock = clock;
         ArgumentNullException.ThrowIfNull(ids);
@@ -94,6 +98,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
             _clock.UtcNow);
         _db.Promotions.Add(promotion);
         await _db.SaveChangesAsync(cancellationToken);
+        _candidates.Invalidate();
         return ToReference(promotion);
     }
 
@@ -104,6 +109,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
         var promotion = await _db.Promotions.SingleAsync(x => x.PromotionId == promotionId, cancellationToken);
         promotion.Activate(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
+        _candidates.Invalidate();
     }
 
     /// <inheritdoc />
@@ -113,6 +119,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
         var promotion = await _db.Promotions.SingleAsync(x => x.PromotionId == promotionId, cancellationToken);
         promotion.Change(name, priority, _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
+        _candidates.Invalidate();
     }
 
     /// <inheritdoc />
@@ -122,6 +129,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
         var promotion = await _db.Promotions.SingleAsync(x => x.PromotionId == promotionId, cancellationToken);
         promotion.Expire(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
+        _candidates.Invalidate();
     }
 
     /// <inheritdoc />
@@ -233,6 +241,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
             minimumSubtotal,
             _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
+        _candidates.Invalidate();
         return ToReference(promotion);
     }
 
@@ -248,6 +257,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
         var promotion = await RequireOwnedAsync(sellerPartyId, promotionId, cancellationToken);
         promotion.Activate(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
+        _candidates.Invalidate();
     }
 
     /// <inheritdoc />
@@ -262,6 +272,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
         var promotion = await RequireOwnedAsync(sellerPartyId, promotionId, cancellationToken);
         promotion.Expire(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
+        _candidates.Invalidate();
     }
 
     /// <inheritdoc />
@@ -310,6 +321,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
             ?? throw new ContractOperationException(PromotionErrorCodes.Missing);
         promotion.Expire(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
+        _candidates.Invalidate();
     }
 
     /// <inheritdoc />
@@ -318,87 +330,12 @@ public sealed class PromotionDirectory : IPromotionDirectory
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var rejections = new List<string>();
-        if (request.Quantity <= 0 || request.BaseTaxExclusiveAmount < 0 || string.IsNullOrWhiteSpace(request.Currency))
-        {
-            return new PromotionEvaluationResult(0m, request.BaseTaxExclusiveAmount, [], ["INPUT_INVALID"]);
-        }
-
-        var candidates = await _db.Promotions.AsNoTracking().ToListAsync(cancellationToken);
-        var facts = new PromotionEligibilityFacts(
-            request.OfferId,
-            request.CatalogVariantId,
-            request.CategoryId,
-            request.SellerPartyId,
-            request.Market,
-            request.SalesChannel,
-            request.Currency,
-            request.CustomerPartyId,
-            request.OrganizationPartyId,
-            request.Quantity,
-            request.BaseTaxExclusiveAmount,
-            request.CouponCode);
-
-        var matching = candidates
-            .Where(x => x.IsEffectiveAt(request.At) && x.IsEligible(facts))
-            .OrderByDescending(x => x.Priority)
-            .ThenBy(x => x.PromotionId)
-            .ToList();
-
-        if (matching.Count == 0)
-        {
-            if (!string.IsNullOrWhiteSpace(request.CouponCode))
-            {
-                rejections.Add("COUPON_NOT_APPLICABLE");
-            }
-
-            return new PromotionEvaluationResult(0m, request.BaseTaxExclusiveAmount, [], rejections);
-        }
-
-        IReadOnlyList<PromotionDefinition> selected;
-        var exclusive = matching.Where(x => x.StackingPolicy == PromotionStackingPolicy.Exclusive).ToList();
-        if (exclusive.Count > 0)
-        {
-            selected = [exclusive[0]];
-        }
-        else
-        {
-            selected = matching.Where(x => x.StackingPolicy == PromotionStackingPolicy.Stackable).ToList();
-        }
-
-        var remaining = request.BaseTaxExclusiveAmount;
-        var applied = new List<AppliedPromotion>();
-        foreach (var promotion in selected)
-        {
-            if (!await _ledger.CanRedeemAsync(promotion.PromotionId, request.CustomerPartyId, cancellationToken))
-            {
-                rejections.Add("REDEMPTION_BLOCKED");
-                continue;
-            }
-
-            var discount = promotion.ComputeDiscount(remaining, request.Currency, request.RoundingMode);
-            if (discount <= 0)
-            {
-                if (promotion.DiscountKind == PromotionDiscountKind.FixedAmountOff)
-                {
-                    rejections.Add("CURRENCY_MISMATCH");
-                }
-
-                continue;
-            }
-
-            remaining -= discount;
-            applied.Add(new AppliedPromotion(
-                promotion.PromotionId,
-                promotion.Name,
-                promotion.CouponCode,
-                promotion.DiscountKind,
-                discount));
-        }
-
-        var totalDiscount = request.BaseTaxExclusiveAmount - remaining;
-        var post = remaining;
-        return new PromotionEvaluationResult(totalDiscount, post, applied, rejections);
+        var candidates = await _candidates.GetAsync(cancellationToken);
+        return await PromotionDecisionEngine.EvaluateAsync(
+            candidates,
+            request,
+            (promotionId, token) => _ledger.CanRedeemAsync(promotionId, request.CustomerPartyId, token),
+            cancellationToken);
     }
 
     private async Task<PromotionDefinition> RequireOwnedAsync(

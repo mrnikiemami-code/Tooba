@@ -1,0 +1,97 @@
+{
+  "note": "Left = size A (3 published), right = size B (12 published). Sections are allowed to differ only through published-population, never through price/seller/stock shape.",
+  "sections": {
+    "featuredProducts": [
+      3,
+      12
+    ],
+    "specialOffers": [
+      1,
+      1
+    ],
+    "campaignProducts": [
+      0,
+      0
+    ],
+    "newArrivals": [
+      3,
+      8
+    ],
+    "productRail": [
+      0,
+      4
+    ],
+    "mostViewedProducts": [
+      3,
+      12
+    ],
+    "brands": [
+      20,
+      20
+    ],
+    "categories": [
+      119,
+      119
+    ],
+    "bestSellerColumns": [
+      4,
+      4
+    ],
+    "homeCategories": [
+      16,
+      16
+    ],
+    "featuredReviews": [
+      3,
+      3
+    ],
+    "latestArticles": [
+      4,
+      4
+    ]
+  },
+  "distinctProductIds": {
+    "a": 3,
+    "b": 12
+  },
+  "sizeAIntegrity": {
+    "cardOccurrences": 10,
+    "distinctProducts": 3,
+    "missingPrice": 0,
+    "missingSeller": 0,
+    "missingCurrency": 0,
+    "currencies": [
+      "IRR"
+    ],
+    "missingStock": 0,
+    "missingSlug": 0,
+    "withPromotionAmount": 4
+  },
+  "sizeBIntegrity": {
+    "cardOccurrences": 37,
+    "distinctProducts": 12,
+    "missingPrice": 0,
+    "missingSeller": 0,
+    "missingCurrency": 0,
+    "currencies": [
+      "IRR"
+    ],
+    "missingStock": 0,
+    "missingSlug": 0,
+    "withPromotionAmount": 4
+  },
+  "productIdSamplesB": [
+    "01a14a4f-d430-7000-98b1-89ec4b0219d3",
+    "01a14a4f-ce1a-7000-8f71-a50831c5d462",
+    "01a14a4f-c876-7000-b7a5-d11068003340",
+    "01a14a4f-8605-7000-9525-c6651ea5fcd6",
+    "01a14a4f-80cb-7000-a4c4-5476da8364c1",
+    "01a14a4f-7b65-7000-834d-430ce5b2ea5a",
+    "01a14a4f-7582-7000-af3c-a4c4129a36ac",
+    "01a14a4f-70c3-7000-aeed-fb808e1b66a0",
+    "01a14a4f-6cf6-7000-84d9-0c0319d841c4",
+    "01a14a43-ab68-7000-8839-3a821a872da8",
+    "01a14a43-a88c-7000-b695-4f23a54e738e",
+    "01a14a43-9c20-7000-8cfe-db88a083a638"
+  ]
+}

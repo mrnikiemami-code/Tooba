@@ -71,7 +71,7 @@ public sealed class PromotionPanelTests : IAsyncLifetime
         commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-promo-panel", "tenant-promo-panel"));
         await using var db = CreateDb(_container.GetConnectionString(), commerce);
         await db.Database.MigrateAsync();
-        var dir = new PromotionDirectory(db, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator());
+        var dir = new PromotionDirectory(db, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger(), new SystemUtcClock(), new UuidV7IdGenerator(), new ScopedPromotionCandidateSource(db));
 
         var sellerA = Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c5");
         var sellerB = Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c6");
