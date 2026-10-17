@@ -1,0 +1,97 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-NEW-METHOD-BROWSER-PAYMENT-172
+Parent-Task: TB-SHIPPING-NEW-METHOD-CUSTOMER-ACCEPTANCE-171
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Status: PASS
+Base-SHA: c36d2f8004f74cea00eae119f60514ca83ca9178
+Expected-Base-SHA-Match: true
+Final-HEAD-SHA: db4e074c2a1cba253f158f36ca9cb0281fdcd11e
+HEAD-origin-Parity: true
+
+What was executed
+- Reused the proven TB-166/170/171 scratch recipe: disposable PostgreSQL container tooba-tb172-pg
+  (127.0.0.1:55491, DBs tooba_172_scratch + tooba_172_messaging), canonical MigrationRunner apply
+  --all-tenants, and a private Host on 127.0.0.1:5426 in SingleStore mode with one Active tenant
+  (tenant-172-scratch) and in-memory access control. No shared :3000/:5088/:5432, no tooba_alpha,
+  no Redis/RabbitMQ/worker change; fail-closed isolation guard before any write.
+- Created a fresh canonical method tipax:scratch172 through the real Admin one-level endpoint (inactive,
+  no legacy option row), activated it through the supported Fulfillment activation seam
+  (canonicalOnly=true), then declared a genuine method-owned fixed IRR rate (185000, lead_days=3) and
+  explicit unrestricted method coverage through the real Admin Shipping endpoints.
+- Started a private Next frontend on 127.0.0.1:3121 wired only to the private Host, logged in the real
+  Development fixed-OTP customer, and completed the genuine browser journey.
+- Tooba:ShippingOwnedRateAuthority set true ONLY in the disposable overlay; committed flags untouched.
+
+A. Real browser (screenshots + DOM/inner-text assertions committed)
+- /fa/shipping with the real cart (2 lines, one seller, subtotal 51,000,000 IRR): with no destination
+  every method is honestly "destination not resolvable / not selectable"; after selecting تهران/تهران
+  the new method appears as a selectable option "روش تازهٔ ۱۷۱ حدود ۳ روز" alongside legacy پیشتاز/معمولی,
+  while post:*, snapp_courier, store_courier, in_person stay "no active rate defined" (never FREE).
+- Selecting it shows "روش: روش تازهٔ ۱۷۱ · tipax:scratch172", "اولین نوبت ممکن: 1405/07/30",
+  checked window "۹ صبح تا ۱۲ ظهر", fee ۱۸۵٬۰۰۰ ریال, total ۵۱٬۱۸۵٬۰۰۰ ریال, Continue enabled.
+- Continue -> /fa/payment?cartId=... renders روش ارسال: روش تازهٔ ۱۷۱, هزینه ارسال ۱۸۵٬۰۰۰ ریال,
+  قابل پرداخت ۵۵٬۷۷۵٬۰۰۰ ریال, "در انتظار پرداخت", and the explicit "no order created yet" statement.
+- Fresh full document reload of the same URL reproduces the identical method, fee, payable amount and state.
+- Screenshots: browser-shipping-page-172.png, browser-payment-page-172.png, browser-payment-reload-172.png.
+  DOM assertions: browser-dom-assertions-172.txt. No screenshot or DOM value is fabricated.
+
+B. Real HTTP/DB from the same authenticated customer/cart
+- acceptance-172.js on: 37/37 PASS. verify-after-browser-172.js: 7/7 PASS.
+- Projection: tipax:scratch172 price=185000 leadDays=3 isFree=false, canonical identity serviceCode=tipax
+  optionCode=scratch172, no sibling/provider amount inherited.
+- Selection persisted with the server-returned date/window; reread selectedMethodCode=tipax:scratch172,
+  selectedShippingAmount=185000; exactly one group holding 185000.
+- Read-only GET /v1/storefront/cart/{cartId}/payment-draft: 200, shippingMethodCode=tipax:scratch172,
+  shippingGroupId=01a14869-212b-7000-acd1-8d0cfd374944 (stable across reread + reload),
+  shippingAmount=185000 exactly once, subtotalExclusiveOfTax=51000000, discountAmount=0,
+  taxAmount=4590000, payableAmount=55775000 (51000000 - 0 + 4590000 + 185000).
+- DB readback: 1 shipping group, 2 membership lines (each once), checkouts=0, payments=0, seller_orders=0;
+  no payment initiation, no checkout, no order.
+
+C. Safety / negatives (fail closed, no fabricated rate)
+- Active canonical method with owned rate absent: absent from projection, no zero/FREE price.
+- Method-specific coverage Restricted with zero own grants: absent; PUT selection -> 400 shipping.method.unavailable.
+- Rejected selection stores no zero/legacy amount and cannot corrupt the previously accepted draft
+  (still tipax:scratch172 / 185000).
+- Delivery date earlier than server minimum: 400 shipping.delivery.too_early; accepted draft intact.
+- Restored owned rate/coverage: method visible again at 185000; other methods unchanged.
+
+D. Gate-OFF control (same scratch data, same cart)
+- acceptance-172.js off: 6/6 PASS. Canonical-only method absent; legacy methods keep committed pricing
+  (tipax:express 260000, tipax:standard 180000); unavailableMethods absent/omitted.
+  Browser reload confirmed the same (browser-off-control-172.png). Committed flags unchanged.
+
+DB readback summary
+- tipax:scratch172 active=true, legacy_option_rows=0
+- rate 185000.00 IRR prep=2 lead=3 scope=country+administrative-area active=true
+- draft/payment group id stable, amount 185000 once, payable arithmetic exact
+- checkouts=0 payments=0 seller_orders=0
+
+Production diff
+- No production source change and no contract change. Only docs/evidence + the persisted task file.
+
+Limitations
+- Scratch reference data included tax rules for the demo seller categories (scratch-172-tax-fixture.sql),
+  because without an active rule the read-only payment draft legitimately returns 409
+  checkout.tax.unavailable; this is reference data, not shipping or payment logic.
+- Owned rate declared at country+administrative-area scope because the selection path resolves province/city
+  names and stops at administrative-area level in this chain (same destination, strictly wider owner scope).
+- Out of scope per task: same-seller incompatible origins, carrier working-day capacity/timezone,
+  settlement share/payout, release performance. No final purchase, PSP, SMS or real payout executed.
+
+Cleanup
+- cleanup-172.txt: Host process stopped, container tooba-tb172-pg removed, no listener on 5426/55491/3121,
+  private Next dev stopped, shared ports untouched, credentials never written to evidence
+  (sanitize-172.js leaked=false for both traces).
+
+Evidence
+docs/architecture/evidence/TB-SHIPPING-NEW-METHOD-BROWSER-PAYMENT-172/
+(RESULT.md, 4 genuine screenshots, browser-dom-assertions, acceptance/verify harness, assertion matrices on/off,
+ http traces on/off, http-after-browser, projection on/off, db-readback, isolation guards, host launch,
+ negative-and-off matrix, tax/base fixtures, cleanup, sanitize)
+
+STOP_FOR_ARCHITECT: YES - task complete, no next task taken.
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT
