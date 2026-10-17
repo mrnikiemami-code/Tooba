@@ -1,0 +1,46 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-STOREFRONT-OWNED-RATE-BROWSER-165
+Parent-Task: TB-SHIPPING-STOREFRONT-OWNED-RATE-LIVE-164
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Base-SHA: 85083b40e1823add0e60597d185b0463cf5051a3
+Status: PARTIAL
+STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+Head-SHA: 490cedea5fe745ca8ecb75921a5ed82630abcc51
+HEAD==origin/main: true
+Evidence: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-OWNED-RATE-BROWSER-165
+
+VERDICT
+The customer-visible frontend portion of TB-163/164 is implemented, tested and typechecked, and it is proven against the REAL authoritative TB-164 gate-ON payload. The mandatory REAL authenticated browser leg (genuine screenshots, DOM assertions, full-reload persistence, live negative PUT) was NOT executed inside the 45-minute timebox, so this is PARTIAL, not PASS. Nothing here is a live browser certification.
+
+DELIVERED (task-scoped, committed)
+- src/frontend/app/storefront/storefront-shipping-api.ts: additive consumption of the authoritative UnavailableMethods array at the existing storefront API boundary as unavailableMethods: StorefrontShippingUnavailableMethod[] | null. Absent/null property => null and unchanged previous behavior (OFF parity at the model level). No other projection field changed.
+- src/frontend/app/storefront/storefront-shipping-unavailable-methods.ts (new, 78 LOC): stable server reason-code -> short Persian text, truthful generic fallback for unknown/empty codes. Invariants enforced in code: an unavailable row is explanatory only, can never remove or override an eligible server method, never yields a price/zero/رایگان/date, and is de-duplicated per method. Owner-option pricing has no seller dimension, so a row is never attributed to a sibling seller or sibling method.
+- src/frontend/app/storefront/storefront-shipping-unavailable-methods.tsx (new, 49 LOC): read-only, aria-disabled, RTL notice block (data-shipping-unavailable="true", per-method data-testid and data-reason-code); no <button>, no onClick, no clickable option.
+- storefront-shipping-single-group-section.tsx and storefront-shipping-group-cards.tsx receive the notices; storefront-shipping.tsx memoizes them. Selection still comes only from projection.methods (server-eligible), so an unavailable method is never selectable and grouped carts remain fail-closed (a group exists only for an eligible method and resolves only from its own server horizon row; losing one group's eligibility does not erase another group's schedule).
+- No backend, schema, migration, appsettings, Admin, coverage-policy, price, payout or PSP change. All committed appsettings still have Tooba:ShippingOwnedRateAuthority:Enabled = false (appsettings, Development, Production); observe-only shadow gates untouched.
+
+PROOF CAPTURED
+- focused-tests-165.txt: 36/36 pass (new unavailable-method model tests + shipping API mapping + group schedule + horizon + item groups). Covers OFF null/absent, independent method attribution (no sibling attribution, no duplication), eligible-override protection, reason fallback, unavailable-not-selectable plus group-B-unchanged, RTL/read-only source guard, one-group compatibility.
+- typecheck-165.txt: npm run typecheck (tsc --noEmit) clean.
+- mapping-on-real-payload-165.json + verify-unavailable-mapping-165.mjs: the real TB-164 projection-negative-restricted-164.json payload through the shipped normalizer yields tipax:standard still eligible, tipax:express non-selectable with shipping.coverage.method_restricted -> «این روش برای مقصد انتخابی مجاز نیست.», every notice method-scoped with no price; the real TB-164 gate-ON payload yields eligible tipax:standard = 205000 and tipax:express = 480000 (server values rendered as-is).
+- isolation-guard-165.json: shared :3000/:5088/:5432, tooba_alpha/store-alpha, RabbitMQ, Redis and unrelated dirty work untouched; no broad process kills.
+
+GUARD RESULTS (pre-existing, not caused by this task)
+- npm run test:architecture fails on 4 FE-SIZE oversized-growth files (app/admin/category-admin-screen.tsx, app/admin/landing-pages/admin-landing-page-composer.tsx, app/storefront/storefront-landing-blocks.tsx, lib/storefront-composition/shared-composition-renderer.tsx).
+- npm run test:critical-storefront fails on app/storefront/storefront-landing-blocks.tsx:286 bg-white.
+- Every one of those files is unmodified at the expected base SHA (git status reports no change for them), so both failures already exist at 85083b4. No such file was touched; no new file over 800 LOC was introduced.
+
+NOT DONE — EXACT BLOCKER
+- No real authenticated browser run, therefore no genuine screenshots, no live DOM assertions, no live two-card/410000 payment-preview/full-reload persistence proof, and no live rejected-PUT draft-integrity proof.
+- A disposable PostgreSQL container (tooba-tb165-pg, 127.0.0.1:55485) and a private Host publish (.tmp-165-host-out) were created, but an empty scratch database contains no catalog/seller/offer rows and the committed TB-164 harness has no script that seeds two sellers, their offers and active tax rules into a fresh database: journey-164.js takes TOOBA_164_SELLER_A/B and TOOBA_164_OFFER_A/B from the environment. Rebuilding that seed set inside the remaining timebox was not achievable.
+- All scratch resources were then removed (container deleted, publish dir deleted, password file deleted, private port not listening).
+
+NEXT UNBLOCKING STEP (needs Architect authorization)
+Authorize or supply a scratch seeding script that, in an empty private database, creates two sellers, one purchasable offer per seller (price/stock), active tax rules for their categories, the Geography chain, shipping.rate_policies for tipax:standard/tipax:express and the rate coverage declaration. Then the same browser leg can run against the private frontend (TOOBA_HOST_ORIGIN -> private Host) within one timebox.
+
+END_TOOBA_WORKER_RESULT
