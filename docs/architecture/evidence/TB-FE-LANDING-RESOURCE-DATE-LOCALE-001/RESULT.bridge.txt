@@ -1,0 +1,106 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-LANDING-RESOURCE-DATE-LOCALE-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: 6f8f6ff4aae1df4be14d7c25a268e5502584c550
+Starting-HEAD:          6f8f6ff4aae1df4be14d7c25a268e5502584c550
+Starting-origin/main:   6f8f6ff4aae1df4be14d7c25a268e5502584c550
+Tracked-worktree-clean: YES; no conflicting tracked changes; no untracked artifact touched; no stash/reset/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-frontend-feature/SKILL.md, docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md, the exact diagnostic, the full selector, the canonical formatter, and the closest date-formatting callers. Deferred findings register NOT read.
+
+ROOT CAUSE
+formatJalaliDate(iso, locale: "fa" | "en") requires two arguments and — unlike formatJalaliDateTime — declares NO default for locale (design-system/app-data-grid/jalali.ts:7 vs :18). The publishDate cell in ArticleResourceGrid passed only the iso argument, so `Expected 2 arguments, but got 1` -> TS2554 at admin-resource-selector.tsx:741.
+
+CHOSEN LOCALE: "fa" — established from evidence, five independent lines
+1. Convention unanimous: every concrete formatJalaliDate call site in src/frontend passes "fa" (admin-landing-pages-screen.tsx:395; admin-campaigns-screen.tsx:232,243,276; content-author-list.tsx:157,298; content-list.tsx:258,566; content-category-admin-screen.tsx:539,543; content-author-admin-screen.tsx:387,391; product-list.tsx:177,311; category-products-panel.tsx:473; storefront-shipping.tsx:581; storefront-shipping-format.ts:30). A search for a call passing "en" returns ZERO hits in the entire frontend — only the declaration itself matches.
+2. This grid's design-system default is "fa": AppDataGrid.tsx:108 (locale = "fa"), legacy-grid-adapters.ts:35 (locale = "fa"), app-column-header.tsx:36 (ctx.locale ?? "fa"), jalali-date-picker.tsx:34 (locale = "fa"), status-header-filter-panel.tsx:10 (locale = "fa"), formatJalaliDateTime(… = "fa"). admin-resource-selector.tsx passes no locale, so it runs on that default.
+3. Sibling column in the same feature uses "fa": admin-landing-pages-screen.tsx:395 -> formatJalaliDate(row.updatedAt, "fa").
+4. The selector is Persian-facing with NO locale parameter: headers are Persian (تاریخ انتشار / نویسنده / وضعیت) and a search of the file for locale|dir=|lang|i18n returns NO matches; no Admin locale switch/provider exists either. Hence no per-instance locale to honour and NO product/architecture decision was required — BLOCKED_ARCHITECT_DECISION deliberately NOT raised.
+5. The omitting call was internally inconsistent: the column has filterKind: "date", and its own filter panel already renders Jalali via ag-filter-mapper.ts:366-368 (formatJalaliDate(value.iso, locale) with the grid's "fa"), while the cell alone rendered Gregorian — evidence the argument was an oversight (exactly what TS2554 reports), not an intended English render.
+
+EXPLICIT BEHAVIOUR DISCLOSURE (deliberate, not silent)
+Because the locale argument was omitted, at runtime `locale === "fa"` was false, so the cell fell through to d.format("YYYY-MM-DD") and displayed a GREGORIAN date under a Persian "تاریخ انتشار" header while its own filter panel showed Jalali. Supplying "fa" therefore intentionally changes the rendered cell text from YYYY-MM-DD to Jalali YYYY/MM/DD, aligning it with the formatter contract, the sibling column, the grid default and the same column's date filter. This is the repair, stated openly rather than presented as a no-op.
+
+ACTUAL DIFF (1 production file, 1 argument)
+diff --git a/src/frontend/app/admin/landing-pages/admin-resource-selector.tsx b/src/frontend/app/admin/landing-pages/admin-resource-selector.tsx
+@@ -738,7 +738,7 @@ function ArticleResourceGrid({
+         id: "publishDate",
+         header: "تاریخ انتشار",
+         accessor: (row) => row.publishDate,
+-        cell: (row) => (row.publishDate ? formatJalaliDate(row.publishDate) : "—"),
++        cell: (row) => (row.publishDate ? formatJalaliDate(row.publishDate, "fa") : "—"),
+         width: 140,
+         minWidth: 120,
+         filterKind: "date",
+
+PRESERVED (verified by the diff and by `git diff --name-only` returning only this path)
+null fallback `row.publishDate ? … : "—"` unchanged; accessor unchanged (date data and sort/filter keys unchanged); id, header, width 140, minWidth 120, filterKind "date", sortable; every other column; modal/resource-selection markup and ResourceSelectorTrigger; Shopeiva/Home/PDP contract (no storefront/composition file touched). No formatter signature/default change, no new default invented, no i18n refactor, no any/cast/!/suppression/ts-ignore, no tsconfig/CI/baseline/guard edit, no backend/schema change.
+
+DIAGNOSTICS
+errors-before: 20
+errors-after:  19
+delta:         -1
+new-diagnostics-introduced: 0
+comparison method: NORMALIZED by file/line/code, exactly as the task required, to remove TS union-print-order noise. The normalized diff contains exactly one removed entry — app/admin/landing-pages/admin-resource-selector.tsx(741,43) TS2554 — and NO added entries. (The prior task's union-order artefact did not recur as a false difference.)
+per-file tallies (before -> after): admin-resource-selector.tsx 1 -> 0 (target cleared); category-admin-screen.tsx 1 -> 1; content-list.tsx 1 -> 1; landing-pages/admin-builder-ux-r8.guard.test.ts 1 -> 1; product-rich-text-editor.tsx 1 -> 1; storefront/storefront-landing-blocks.tsx 1 -> 1; template-preview/fashion/fashion-template-preview-view.tsx 1 -> 1; features/admin-languages/…/language-list.tsx 3 -> 3; lib/storefront-composition/fashion-demo-preview.ts 1 -> 1; lib/storefront-composition/shared-composition-renderer.tsx 9 -> 9
+tool: frontend node_modules/.bin/tsc --noEmit run exactly ONCE after the final edit (exit 2 overall — 19 pre-existing errors elsewhere; no greenness claimed)
+baseline-file: docs/architecture/evidence/TB-FE-RESERVATION-POLICY-NUMERIC-FIELD-KEY-001/typecheck-after-tsc.txt (exactly as the task specified)
+capture: docs/architecture/evidence/TB-FE-LANDING-RESOURCE-DATE-LOCALE-001/typecheck-{before,after-tsc}.txt
+
+FOCUSED TESTS — 3 failures, ALL PROVEN PRE-EXISTING AND UNRELATED
+RUN A (nearest suites, incl. the only suite that reads the changed file): admin-builder-ux-r1.guard.test.ts (reads admin-resource-selector.tsx at its line 13) + jalali-date-ui.test.ts + ag-filter-mapper.test.ts
+  result: tests 13, pass 12, fail 1
+  the only failure is at admin-builder-ux-r1.guard.test.ts:73 -> assert.match(previews, /data-layout-aware/), where `previews` is layout-aware-previews.tsx (test line 14) — NOT in this diff.
+  crucially, the assertions in that SAME suite which DO read the changed file PASSED: line 41 (selector -> /resource-selector-tab-selected/) and lines 80-82 (selector -> /AppGridRowActionsCell/, /compact/, /label:/).
+RUN B (landing-pages guard suite, which NEVER reads admin-resource-selector.tsx — its 7 readFileSync targets at lines 8-14 are admin-landing-pages-screen.tsx, admin-landing-page-composer.tsx, admin-landing-section-forms.tsx, landing-section-catalog.ts, admin-composition-catalog.ts, admin-landing-pages-api.ts, admin-section-wizard.tsx)
+  result: tests 6, pass 4, fail 2
+  exact pre-existing failures, disclosed and not chased (no cascade, no fix, no retry):
+    admin-builder-ux-r1.guard.test.ts:73   assert.match(previews, /data-layout-aware/)                            -> layout-aware-previews.tsx
+    admin-landing-pages.guard.test.ts:41   assert.match(catalog, /بنر اصلی/)                                      -> landing-section-catalog.ts
+    admin-landing-pages.guard.test.ts:51   assert.doesNotMatch(composer, /breakpoint|JSON\.stringify|customCss/i)  -> admin-landing-page-composer.tsx
+PROOF THE 3 FAILURES ARE PRE-EXISTING (non-destructive, decisive): (a) `git diff --name-only` returns exactly ONE path — src/frontend/app/admin/landing-pages/admin-resource-selector.tsx; (b) each failing assertion reads a file that is NOT that path (layout-aware-previews.tsx, landing-section-catalog.ts, admin-landing-page-composer.tsx); (c) therefore their pass/fail state is provably independent of this change — nothing edited is read by them and no file they read was modified, so a single added string argument cannot alter source-text regexes evaluated against three byte-identical other files.
+never claimed unrun tests pass; no test added or amended (task preferred existing suites and forbade ceremonial tests); no test loop.
+raw: docs/architecture/evidence/TB-FE-LANDING-RESOURCE-DATE-LOCALE-001/focused-tests.txt
+
+LIMITATIONS
+- No browser render was performed, so the Jalali cell text was not visually confirmed in a live grid. The locale->format mapping itself is covered by the pre-existing, PASSING jalali-date-ui.test.ts (formatJalaliDate(iso!, "fa") -> /^1404\/01\/01$/).
+- Three pre-existing failures in two landing-pages guard suites remain red (proven out of this task's scope).
+- tsc still reports 19 pre-existing errors elsewhere (notably 9 in lib/storefront-composition/shared-composition-renderer.tsx and 3 in features/admin-languages/components/language-list.tsx).
+NOT run, deliberately: full npm test / test:discovered, build, browser/visual verification, backend suites, AMSC, other guards.
+
+SCOPE COMPLIANCE
+Production files changed: exactly 1 (admin-resource-selector.tsx) — the only file ALLOWED. Plus the receipt and evidence the task required; no other production file, no test file, no config/guard/baseline touched. No broad i18n refactor; no formatter implementation/API change; no any/unsafe cast/ts-ignore/suppression; no backend/schema; no storefront composition/Home/PDP edit; no AMSC; no speculative related repair; no automatic next task.
+
+RISK / ROLLBACK
+Risk: LOW and deliberate. Compiler fix and correct locale are the same single edit; the only user-visible effect is the one disclosed above (Jalali instead of Gregorian in the تاریخ انتشار cell), which matches that column's own date filter, its sibling column and the grid default. No schema, data, sorting, filtering, accessor or storefront change.
+Rollback: revert the single commit; TS2554 returns and the cell reverts to Gregorian YYYY-MM-DD.
+
+FILES
+src/frontend/app/admin/landing-pages/admin-resource-selector.tsx (M)
+docs/ai/tasks/TB-FE-LANDING-RESOURCE-DATE-LOCALE-001.task.md (A)
+docs/architecture/evidence/TB-FE-LANDING-RESOURCE-DATE-LOCALE-001/{summary.md,typecheck-before.txt,typecheck-after-tsc.txt,focused-tests.txt} (A)
+
+COMMIT
+commit-sha: 345a87b5db6b8dbaab123543af2628007957e040
+pushed-to: origin/main (6f8f6ff4a..345a87b5d)
+HEAD-after-push:         345a87b5db6b8dbaab123543af2628007957e040
+origin/main-after-fetch: 345a87b5db6b8dbaab123543af2628007957e040
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

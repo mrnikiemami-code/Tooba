@@ -1,0 +1,125 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-ADMIN-GRID-RICHTEXT-TYPE-BATCH-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_MULTI_ERROR_REPAIR_WITH_INDEPENDENT_STOP_GATES
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: 286489b74fba6520299f9dbb66d81bec2935e6ab
+Starting-HEAD:          286489b74fba6520299f9dbb66d81bec2935e6ab
+Starting-origin/main:   286489b74fba6520299f9dbb66d81bec2935e6ab
+Tracked-worktree-clean: YES; HEAD == origin/main == Expected-Starting-HEAD; no stash/reset/rebase/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-frontend-feature/SKILL.md, docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md, GridColumnDef (design-system/data-grid/types.ts:87-111), buildLegacyGridBridge / legacy-grid-adapters / grid-direction, AppDataGrid column feed, the actions-column canonical rules, @tiptap/core public types. Deferred ARCHITECTURE-FINDINGS-REGISTER.md NOT read or changed.
+
+GATE VERDICTS
+SCOPE A: FIXED (no BLOCKED) — all three named properties demonstrably inert + one masked sibling on the same literal.
+SCOPE B: FIXED (no BLOCKED) — library's own public type, no version/ownership mismatch, no cast.
+
+TYPECHECK (headline)
+before: 14
+after:  10
+delta:  -4
+new-diagnostic-keys: 0
+comparison: NORMALIZED by file+line+error-code
+tsc still exits non-zero with the 10 untouched storefront/composition errors (shared-composition-renderer.tsx 9, storefront-landing-blocks.tsx 1) — TYPECHECK GREEN IS NOT CLAIMED.
+removed keys (exactly four, none added):
+  <= app/admin/product-rich-text-editor.tsx(162,9) TS2345
+  <= features/admin-languages/components/language-list.tsx(112,7) TS2353  (pinned)
+  <= features/admin-languages/components/language-list.tsx(41,102) TS2353 (flex)
+  <= features/admin-languages/components/language-list.tsx(42,111) TS2353 (flex)
+  ADDED: (none)
+per-file after: storefront-landing-blocks.tsx 1; shared-composition-renderer.tsx 9. Both target files are now FULLY CLEAN.
+baseline-file: docs/architecture/evidence/TB-FE-FASHION-PREVIEW-BRAND-LOGO-NULL-001/typecheck-after-tsc.txt (exactly as the task specified)
+
+SCOPE A — language-list.tsx, 3 named diagnostics (gate: FIXED)
+DECISION GATE / WHY THESE ARE DEAD, NOT MAPPED
+- The only feed into the grid is useLegacyAdminGridDirectProps (language-list.tsx:188) -> buildLegacyGridBridge(columns, "rtl") -> and legacy-grid-adapters.ts:42-56 forwards ONLY bridge.columnDefs + filter/export helpers; the raw GridColumnDef[] array never reaches AG Grid. So a property is live only if buildLegacyGridBridge reads it.
+- flex: GridColumnDef (data-grid/types.ts:87-111) declares id, header, accessor, cell, sortable, filterKind, filterable, resizable, reorderable, hideable, sticky, align, width, minWidth, maxWidth, exportable, enumOptions, defaultVisible — NO flex. buildLegacyGridBridge (:68-92) builds each ColDef from an explicit allow-list (colId, headerName, sortable, width, minWidth, maxWidth-if-set, hide, pinned-from-sticky, cellRenderer) and does NOT spread the input, so nothing leaks. A repo-wide search for any reader of a column's flex (.flex / col.flex / column.flex / "flex ??") across design-system, app and lib returns ZERO matches. Column widths (140/120, 160/140) are untouched and were always what rendered.
+- pinned: buildLegacyGridBridge strips id==="actions" out of the data columns (:49-50) and appends its own hard-coded def (:96-112) with pinned/lockPosition = pinnedGridEdge(direction) and lockPinned:true. mapPinned() — the only consumer of a pinning declaration — is applied EXCLUSIVELY to data columns (:85), so sticky/pinned on the actions def is never read. pinnedGridEdge("rtl")="left", ("ltr")="right" (grid-direction.ts). Pinning intent is retained AND CORRECTED: the literal matched RTL but would have been wrong under LTR, where the bridge pins "right".
+- MASKED FOURTH PROPERTY (disclosed): TypeScript reports only the FIRST excess property per object literal, so removing `pinned` surfaced `filter: false` at :120 as the next TS2353 on the same actions literal. `filter` is likewise not in GridColumnDef and the bridge never reads it — it HARD-CODES filter:false for the actions column itself (:105). Leaving it would only have swapped one diagnostic for another, so it was removed with the same evidence. This is the sole item beyond the three named; same literal, same file, same dead-legacy class.
+RUNTIME PROBE (docs/…/probe-inert-legacy-fields.ts, output runtime-probe.txt)
+Builds the bridge from the pre-repair and post-repair column shapes for BOTH directions and asserts:
+  - produced columnDefs are structurally IDENTICAL with and without flex/pinned/filter (compared as serialized projections; a raw deepStrictEqual false-positives only because cellRenderer is a fresh closure per call)
+  - no produced ColDef carries a flex key
+  - actions pinned/lockPosition follow the direction (left for rtl, right for ltr); filter === false; widths stay 140/120, 110/100, 88/72/96
+  probe output: "PROBE OK — flex/pinned/filter are inert; pinning, filtering and widths unchanged."
+BEFORE/AFTER BEHAVIOUR: IDENTICAL. Before, three (four) properties were silently discarded by the bridge; after, the same ColDefs are produced from a contract-valid input. No visible layout regression; actions access, onEdit wiring and data-testids untouched. GridColumnDef was NOT loosened.
+
+SCOPE B — product-rich-text-editor.tsx, 1 diagnostic (gate: FIXED)
+DECISION GATE / ROOT CAUSE: an INFERENCE artefact, not a version bug. The un-annotated array literal inferred its element type as a union of concrete extension types (Extension<any,any> | Extension<StarterKitOptions,any> | Mark<UnderlineOptions,any> | Mark<TextStyleOptions,any> | … 5 more …); Image.configure(...) returns Node<ImageOptions, any>, which is not assignable to any member of that union (siblings only related via their common base) => TS2345 at :162.
+FIX USING THE LIBRARY'S OWN PUBLIC TYPE (installed @tiptap/core@3.30.5, dist/index.d.ts):
+  1387: type AnyExtension = Extendable;
+  1388: type Extensions = AnyExtension[];
+   504: declare class Mark<…>      extends Extendable<…>
+   802: declare class Node<…>      extends Extendable<…>
+  1325: declare class Extension<…> extends Extendable<…>
+  1644:   extensions: Extensions;   // EditorOptions — exactly what useEditor consumes
+`Extensions` is in the package's public export list, so Node<ImageOptions,any> IS assignable and the array declares the type it always had. No cast, any, unknown-as, non-null assertion, ts-ignore or suppression; no dependency change; no package version/ownership mismatch.
+PRESERVED EXPLICITLY: extension ORDERING (StarterKit → Underline → TextStyle → FontFamily → FontSize → TextAlign → Link → Table → TableRow → TableHeader → TableCell → Placeholder → Image), DAM gating (`if (onPickDamImage)` still guards the push), image flags inline:false / allowBase64:false / HTMLAttributes class article-dam-image, the useMemo deps [onPickDamImage, placeholder], and sanitization (onChange(sanitizeHtml(ed.getHTML()))). No HTML serialization change, no weakening of image security restrictions.
+RUNTIME DELTA: NONE — the import modifier and annotation are erased at emit, so compiled output is byte-identical.
+
+EXACT DIFFS
+src/frontend/features/admin-languages/components/language-list.tsx
+-    { id: "nativeName", header: "نام", accessor: (row) => row.nativeName, width: 140, minWidth: 120, flex: 1.2 },
+-    { id: "displayName", header: "نام نمایشی", accessor: (row) => row.displayName, width: 160, minWidth: 140, flex: 1.4 },
++    { id: "nativeName", header: "نام", accessor: (row) => row.nativeName, width: 140, minWidth: 120 },
++    { id: "displayName", header: "نام نمایشی", accessor: (row) => row.displayName, width: 160, minWidth: 140 },
+       id: "actions",
+-      pinned: "left",
+       width: 88,
+-      filter: false,
+(plus a Persian rationale comment above `return [`)
+src/frontend/app/admin/product-rich-text-editor.tsx
+-import { Extension } from "@tiptap/core";
++import { Extension, type Extensions } from "@tiptap/core";
+-    const base = [
++    const base: Extensions = [
+(plus a Persian rationale comment citing :1387-1388, :504/:802/:1325, :1644)
+
+FOCUSED TESTS (one run per area, each run at most once)
+SCOPE A: design-system/app-data-grid/legacy-grid-bridge.test.ts + features/admin-languages/admin-languages.characterization.test.ts => tests 11, pass 11, fail 0
+  legacy-grid-bridge.test.ts is the directly relevant guard: it asserts actions pinning (assert.equal(actions?.pinned, "left") at :61), width/minWidth/maxWidth pass-through and the uncapped-actions rule — exactly the behaviour Scope A had to preserve.
+SCOPE B: app/admin/product-create-flow.test.ts => tests 3, pass 3, fail 0
+pre-existing-failures-in-selected-sets: NONE
+tests-not-run (NOT reported as pass): full npm test / test:discovered, build, browser/visual verification, AMSC, all other guards. No retry cascade.
+test added/amended: NONE — Scope B is type-only (nothing runtime-observable to assert) and for Scope A inertness is proven by the runtime probe plus the existing bridge guard rather than a ceremonial source-text assertion.
+
+EXECUTION-TRANSPARENCY NOTE ON tsc RUNS
+The task asked for one run after the final edits. The intended single verification run surfaced the masked `filter` diagnostic described above, so after that one further in-scope edit the final run was repeated. Exactly ONE run is the recorded final verification; the intermediate run is disclosed rather than hidden, and no run was used to chase unrelated files.
+
+SCOPE COMPLIANCE
+Production files changed: exactly 2 — the two permitted files (git diff --name-only confirms only those paths). Plus the required receipt and bounded evidence (typecheck-before/after, focused tests, runtime probe + script, summary).
+Untouched: no storefront file, no backend, no shared design-system file (GridColumnDef NOT loosened), no tsconfig/CI/lockfile/guard/baseline, no locked Home/PDP/Shopeiva, no AMSC, no broad suite, no unrelated refactor, no history rewrite, no force-push/reset/stash, no self-started next task. The 10 storefront/composition diagnostics were deliberately NOT chased.
+
+OUTSTANDING RISK / ROLLBACK
+Risk: NEGLIGIBLE. Only contract-invalid, never-read properties were removed from one literal and one type annotation was added; runtime behaviour is provably identical in both scopes.
+Observation (NOT repaired, out of scope): ~10 sibling admin screens still carry the same dead `flex` (product-list.tsx:144,167; content-list.tsx:228; content-author-list.tsx:128; shipping-services-screen.tsx:248; catalog-units-screen.tsx:179; category-products-panel.tsx:404,460,599,619). They do not currently error because their arrays are contextually typed via useMemo<GridColumnDef<…>[]> instead of a directly annotated return, which suppresses the excess-property report; the properties are equally dead there.
+Rollback: revert the single commit; Scope A's three (four) TS2353 and Scope B's TS2345 return, with runtime behaviour identical either way because the removed properties were never read.
+
+FILES
+src/frontend/features/admin-languages/components/language-list.tsx (M)
+src/frontend/app/admin/product-rich-text-editor.tsx (M)
+docs/ai/tasks/TB-FE-ADMIN-GRID-RICHTEXT-TYPE-BATCH-001.task.md (A)
+docs/architecture/evidence/TB-FE-ADMIN-GRID-RICHTEXT-TYPE-BATCH-001/{summary.md,typecheck-before.txt,typecheck-after-tsc.txt,focused-tests-scope-a.txt,focused-tests-scope-b.txt,probe-inert-legacy-fields.ts,runtime-probe.txt} (A)
+
+COMMIT
+commit-sha: 898acdf23151902ee6d5bb3b9f0b643526ef4a6c
+pushed-to: origin/main (286489b74..898acdf23)
+HEAD-after-push:         898acdf23151902ee6d5bb3b9f0b643526ef4a6c
+origin/main-after-fetch: 898acdf23151902ee6d5bb3b9f0b643526ef4a6c
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

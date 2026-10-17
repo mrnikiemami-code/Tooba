@@ -1,0 +1,54 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044
+Parent-Task: TB-SHIPPING-GEOGRAPHY-READ-FOUNDATION-043
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ARCHITECTURE-PLANNING
+Mode: BOUNDED_GEOGRAPHY_MODULE_COMPOSITION_WITHOUT_RUNTIME_MIGRATION
+Bridge-Task-Row: 00a3bb8e-9a0f-4c25-8d7f-dde618ee7783
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 85509d7aa00535d18968099d4d961d5a81c9af61
+Base-SHA: 85509d7aa00535d18968099d4d961d5a81c9af61
+Code-SHA: 5e07617c04c4098efb7d1a4af99f5d6a619c8448
+Evidence-SHA: 5e07617c04c4098efb7d1a4af99f5d6a619c8448
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+Claimed exactly one Pending item on tooba-main after BRIDGE-WAKE (row 00a3bb8e-9a0f-4c25-8d7f-dde618ee7783); received artifact persisted verbatim at docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044.task.md (receipt only, unstaged, never replayed). git fetch origin; HEAD == origin/main == Expected-Base-SHA == 85509d7aa00535d18968099d4d961d5a81c9af61; no reset/stash/rebase/force-push; all unrelated dirty/untracked work preserved untouched. Read AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, ADR-036, report 043, the real migration-order source, DevelopmentSchemaMigrator, ToobaModuleComposition, the MigrationRunner registry, the composition guard tests and the established module roots (LocalizationModule, CartModule, StoreContextModule). Findings register not consulted. Collision check: no DependencyInjection folder under Geography, no report 044, no evidence folder 044; the newest certified convention (composition entry under DependencyInjection/, empty Infrastructure root) was followed.
+
+CHANGED PATHS (exactly four, task-owned only)
+1. src/backend/Modules/Geography/Tooba.Geography.Infrastructure/DependencyInjection/GeographyModule.cs (new, 90 lines): IToobaModule root; one scoped GeographyDbContext; IGeographyLookup -> GeographyPlaceLookup; IGeographyLabelLookup -> GeographyLabelLookup. No migrator, no hosted service, no outbox registration, no endpoint, no seed.
+2. .../Tooba.Geography.Infrastructure.csproj: +1 ProjectReference to Tooba.ModuleContracts (required by IToobaModule).
+3. src/backend/Host/Tooba.Host/Tooba.Host.csproj: +1 ProjectReference to Tooba.Geography.Infrastructure (composition only, reason in a comment).
+4. src/backend/Host/Tooba.Host/Composition/ToobaModuleComposition.cs: +1 using, +1 new GeographyModule() in the explicit module list.
+Diff: 6 inserted lines across the three edited files + the new module file. Explicitly NOT touched: any migration source/Designer/snapshot, GeographyDbContext, Domain/Contracts, ModuleSchemaMigrator.cs (ModuleSchemaMigrationOrder), ModuleMigrationRegistry.cs, Program.cs, DevelopmentSchemaMigrator.cs, Tooba.slnx, every guard test, every Order/AddressBook/Fulfillment/Checkout file, appsettings*. Also produced: docs/planning/shipping/SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044.md and docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044/** (two logs + harness source).
+
+DI / HOST ACTIVATION STATE (ACTIVE vs PREPARED-ONLY)
+ACTIVE: GeographyModule composition root (Name verified at runtime == "Geography"); GeographyDbContext registration (resolves scoped, Model.GetDefaultSchema() == "geography", 9 mapped tables matching the 042 initial migration); exactly one scoped registration each for IGeographyLookup (GeographyPlaceLookup) and IGeographyLabelLookup (GeographyLabelLookup); Host composition entry added and Host compiles.
+PREPARED-ONLY (deliberately NOT registered): AddModuleSchemaMigrator<GeographyDbContext>. Proven absent at runtime: the module's registration set contains zero IModuleSchemaMigrator, zero IModuleSchemaMigrationStep, zero IHostedService, zero IOutboxModuleRegistration.
+NOT DONE (out of allowed paths or unsafe): ModuleSchemaMigrationOrder.Geography constant; Tooba.MigrationRunner.ModuleMigrationRegistry descriptor (0 Geography hits); structure manifest entry (0 "module": "Geography" entries); no ARCH-COMPLETE-002 certification claimed; no guard weakened.
+Shipping authority UNCHANGED: no Order/AddressBook/Checkout consumer change, no switch from legacy StorefrontIranGeography, no serviceability/coverage/rate change, no endpoint/admin UI, no seed or coverage rows, no historical-order revalidation.
+
+MIGRATION SAFETY
+Proof that registration would auto-apply DDL at startup (evidence log log-migration-order-map.txt): Program.cs:361 calls DevelopmentSchemaMigrator.ApplyAsync and Program.cs:368 calls MigrateSchemaOnlyAsync in the non-production startup path; DevelopmentSchemaMigrator.cs:121 resolves provider.GetServices<IModuleSchemaMigrator>() and DevelopmentSchemaMigrator.cs:139 calls migrator.MigrateAsync(cancellationToken), which for EfModuleSchemaMigrator<TContext> is Database.MigrateAsync(). Registering the geography migrator in a Host-loaded module would therefore emit CREATE SCHEMA/TABLE/TRIGGER against the Development tenant database on the next start, so it was NOT registered and Host wiring was limited to the inert composition seam.
+Proof the current wiring cannot do that: zero IModuleSchemaMigrator/IModuleSchemaMigrationStep/IHostedService/IOutboxModuleRegistration from this module; readiness evaluates configuration and messaging only and never enumerates DbContexts; the outbox dispatcher enumerates only IOutboxModuleRegistration. The DDL path is structurally unreachable for Geography in this build.
+Why the canonical slot could not be written: the single authoritative order source is ModuleSchemaMigrationOrder inside src/backend/BuildingBlocks/Tooba.Persistence/ModuleSchemaMigrator.cs, which is outside this Task's allowed paths and explicitly held for separate approval. Used values are 1-12 and 14-29 (13 free since Reviews=14), so append-safe slot 30 exists, but a literal inside the Geography module would create the second contradictory ordering model the seam exists to prevent.
+
+FOCUSED CHECKS
+DI construction verification without service startup and without database contact (harness source kept in evidence, temp project deleted): 15/15 PASS in log-di-composition.txt. C1 module Name == "Geography"; C2/C3 exactly one scoped registration per lookup with the correct implementation type; C4 exactly one scoped GeographyDbContext; C5 zero IModuleSchemaMigrator (no implicit DDL path); C6-C8 zero outbox registration, zero hosted service, zero migration step; D1/D2 both lookups resolve to the real adapters; D3 the context resolves against an unreachable connection string (Port=1) with no exception, proving no database contact; D4/D5 schema geography with the nine expected tables; D6 lookups and context share one scoped instance; D7 BuildServiceProvider with ValidateOnBuild + ValidateScopes (the Development defaults) succeeds, so the resolved graph is complete.
+Builds: Tooba.Geography.Infrastructure and Tooba.Host both compile (Build succeeded, 0 Error(s)). Honest disclosure: the running Development Host (PID 37028) holds its bin/Debug/net8.0 assemblies, so an in-place Host build cannot copy outputs (MSB3027/MSB3021 file locks). Because restarting the Host is forbidden, the compile was verified with a redirected output directory (-p:OutDir=<temp>), which compiles the whole Host graph without touching the running process; the temp directory was then deleted. The running Host was never stopped or restarted.
+Narrow architecture guards reviewed against the change (no guard modified): HostDevelopmentMigrationSeamGuardTests counts registrations over a fixed 28-path list that does not contain Geography, so Assert.Equal(28, registrations) is unaffected; HostCompositionAmcGuardTests asserts the Composition folder file set (still the 5 allowlisted files) and forbids MapGet(/Database.MigrateAsync in that file (still absent); ArchitectureBoundaryTests uses Assert.Contains on Modules (additive change compatible); PlatformProbe guards assert platform-probe absence only. Precedent for a Host-wired module with no schema and no migrator: ProductWorkspaceModule, whose own cert guard asserts exactly that.
+
+ELAPSED TIME / COMMIT / PUSH
+Claim 12:13:35Z -> validated pushes 12:21Z: about 7 minutes of the 30-minute hard timebox. Two bounded commits of task-owned paths only: 4bb0047976195716a3523582a38768b06bf1c24c (module + Host wiring + report + evidence) and 5e07617c04c4098efb7d1a4af99f5d6a619c8448 (report: exact elapsed time and SHA). git push origin main; git fetch origin; HEAD == origin/main == 5e07617c04c4098efb7d1a4af99f5d6a619c8448. No force-push, no history rewrite, no unrelated staging, no Results-API probe, no automatic next task, no idle polling. No Tooba database was connected to, no migration generated/edited/applied, no schema update, no seed.
+
+REMAINING RISKS / BLOCKERS
+1. Wired but unmigrated: after the next authorized Host start the module is present in the DI graph while the geography schema still does not exist on any Tooba database, so any future consumer resolving a Geography lookup before the migration slice lands would fail with a PostgreSQL "schema does not exist" error. Nothing resolves these seams today, so the current build is inert; this is stated rather than implied usable.
+2. Activation is a multi-place change: the order constant must exist first, the module migrator line must be added, and the production runner registry must be extended for real deployments; those files are outside this Task's allowed paths.
+3. Certification gap (reported, not invented): Geography has no Application project, no Endpoints project and no structure manifest entry; whether a read-only reference module needs them at all, or should follow the certified StoreContext INTERNAL_ONLY / PLATFORM_CONTEXT_REFERENCE_PATTERN precedent, is an Architect decision. No certification claimed and no guard weakened.
+4. Guard bookkeeping, if desired, is a separate deliberate edit (extend ModuleCompositionRoots and its 28 expectation) - not performed here.
+Exact activation plan and the single next-step recommendation are in docs/planning/shipping/SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044.md sections 8-10: authorize one activation slice that adds ModuleSchemaMigrationOrder.Geography = 30 plus the module migrator registration, adds the MigrationRunner descriptor, and explicitly rules on whether the geography DDL may be applied to the Development tenant at startup - still without switching any shipping/Checkout consumer. Worker PARTIAL != Architect ACCEPT.
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,73 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GEOGRAPHY-RUNNER-VERIFY-046
+Parent-Task: TB-SHIPPING-GEOGRAPHY-MIGRATION-REGISTRY-045
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ARCHITECTURE-PLANNING
+Mode: BOUNDED_DISPOSABLE_GEOGRAPHY_MIGRATION_VERIFICATION
+Bridge-Task-Row: bcf74e9d-55ff-482e-9da2-236bf071d795
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 6746ca5ae835fa96ef67b99d0ba94095c782b2c2
+Base-SHA: 6746ca5ae835fa96ef67b99d0ba94095c782b2c2
+Code-SHA: NONE
+Evidence-SHA: 85dd0fda2960674c7209ffcf5b9e722424a413d0
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- Claimed exactly one Task on tooba-main (row bcf74e9d-55ff-482e-9da2-236bf071d795) after BRIDGE-WAKE; no idle polling.
+- Read AGENTS.md, docs/ai/TOOBA-PIPELINE-PROTOCOL.md, .cursor/skills/tooba-backend-feature/SKILL.md and the real MigrationRunner sources (Program.cs, MigrationRunnerCli.cs, MigrationTargetResolver.cs, ModuleMigrationRegistry.cs, MigrationOrchestrator usage, DatabaseConnectionResolver.cs, PlatformOptionsValidator.cs).
+- git fetch origin: branch main, HEAD == origin/main == Expected-Base-SHA 6746ca5ae835fa96ef67b99d0ba94095c782b2c2. No divergence. No stash/reset/rebase/force-push.
+- Pre-existing dirty/untracked files preserved untouched (101 entries before and after; the unrelated tracked modifications under src/backend/Modules/Order, src/frontend/app and docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003 were never staged or reverted).
+- No production C#/TS, migration source, snapshot, schema migrator, runner config, Host, Checkout, Order, AddressBook, Fulfillment, frontend, manifest, guard or appsettings file was modified. Code-SHA: NONE.
+
+A. RUNNER CLI / DESCRIPTOR REALITY (read from source, observed by execution)
+- MigrationRunnerCli accepts only <status|plan|apply> plus --tenant / --tenants / --all-tenants. There is NO module selector: `status --module Geography` -> "Unknown argument '--module'." exit 3; no-argument invocation prints the same four options, exit 3.
+- MigrationTargetResolver selects targets (edition/tenant/database), never modules; SingleStore without --tenant/--tenants/--all-tenants fails closed (exit 3).
+- MigrationOrchestrator iterates the whole ModuleMigrationRegistry for the resolved target, therefore `apply` acts on ALL registered descriptors of that database. `--tenant geo046` is what confined the blast radius; the disposable database is what made it authorized.
+- ModuleMigrationRegistry.All = 32 descriptors; "Geography" appears exactly ONCE and is the LAST entry (index 31), schema geography.
+- ModuleSchemaMigrationOrder.Geography = 30, no duplicate slot anywhere in the class.
+- GeographyDbContext advertises exactly one migration: 20261014113949_InitialGeography.
+- Host non-activation re-proven 8/8 PASS against a FRESH build of current source (external reflection harness, isolated build output; running Host never rebuilt/restarted): Tooba.Host references 153 assemblies and does NOT reference Tooba.MigrationRunner; Host composition lists 34 modules with exactly one Geography (last); GeographyModule.AddServices registers 0 IModuleSchemaMigrator and 2 geography lookups; descriptor schema == GeographyDbContext.Schema == "geography".
+
+B/C. ISOLATED DISPOSABLE POSTGRESQL AND GEOGRAPHY MIGRATION EVIDENCE
+- Isolation proven BEFORE any DDL: new task-created container geo046-verify, image postgres:17 (server PostgreSQL 17.10), binding 127.0.0.1:55433->5432/tcp (loopback only, distinct from the Tooba container's 5432), task-created anonymous volume, databases geo046_scratch/postgres/template0/template1 only. First candidate port 55946 was rejected by Docker because it falls inside the Windows excluded range 55941-56040; 55433 is outside every excluded range.
+- The runner was executed against a fresh configuration that cannot name a Tooba database: ASPNETCORE_ENVIRONMENT=geo046verify (no such appsettings file) and the copied appsettings.Development.json / appsettings.Production.json were DELETED from the isolated build output before execution (log-runner-config-guard.txt). The only connection reference supplied was geo046scratch -> Host=127.0.0.1;Port=55433;Database=geo046_scratch on a synthetic SingleStore registry with the single tenant geo046.
+- status --tenant geo046: exit 0. Geography appears ONCE, currentMigration null, pendingMigrations ["20261014113949_InitialGeography"], succeeded true.
+- plan --tenant geo046: exit 0, same single Geography entry, and the database contained only the `public` schema before AND after status+plan -> no DDL, non-mutating confirmed.
+- apply --tenant geo046: exit 0, wall clock 4.1 s, 32 modules applied, 0 failures, 0 occurrences of "succeeded": false, exclusively inside geo046_scratch (a single target resolves a single connection string, so no other database can be opened). Post-apply status: Geography once, currentMigration "20261014113949_InitialGeography", pendingMigrations [], and ZERO modules with pending migrations.
+- SQL object proof: schema geography; 10 tables (countries, administrative_areas, cities, service_areas, outbox_messages, 4 name-translation tables) + __ef_migrations_history holding row 20261014113949_InitialGeography; ancestry function administrative_areas_ancestry_guard; both triggers trg_administrative_areas_ancestry_guard_insert and trg_administrative_areas_ancestry_guard_update; 9 foreign keys of which 5 cascade; alternate key ak_administrative_areas_id_country present; 19 unique indexes; ix_outbox_messages_pending partial index present.
+- Invariant scenarios (focused reuse of 042 validations; script committed as scenarios.sql, output in log-scenarios.txt): fixture accepted (P1); cross-country parent -> 23503 (N1); self-parent -> 23514 (N2); two-row INSERT closing a cycle A->B/B->A (the 042 amendment case) -> 23514 (N3); re-parenting a root under its own descendant -> 23514 (N4) and the stored graph remained intact (root parent null, 2 areas) (N5); city pointing at another country's area -> 23503 (N6); service area with a nonexistent city -> 23503 (N7); duplicate (place, language) name -> 23505 (N8); deleting a country that still owns areas -> 23503 (N9, Restrict); ancestry write in REPEATABLE READ -> 0A000 (N10, isolation fail-closed); valid child area and localized country name accepted (P2/P3).
+- DOWN/UP with the standard EF tools (TOOBA_DESIGN_TIME_CONNECTION pointed only at the disposable database): `dotnet ef migrations list` -> exactly one migration 20261014113949_InitialGeography; `dotnet ef database update 0` -> exit 0 in 1.5 s, geography tables 10 -> 1 (only the EF history table remains), ancestry triggers 2 -> 0, guard function 1 -> 0, history rows 1 -> 0, and all 33 non-system schemas of the other 32 modules were identical before and after, so the down path is Geography-scoped. Honest detail: EF keeps the geography schema itself plus the emptied history table; Down drops tables, not the schema, so a "schema fully absent" claim would be false. `dotnet ef database update` -> exit 0, tables 1 -> 10, triggers 0 -> 2, history row restored, and the runner then reported current=20261014113949_InitialGeography pendingCount=0 on the same database (cross-tool agreement between the runner descriptor and the EF migration assembly).
+
+D. CLEANUP AND CONTAINMENT
+- Container geo046-verify removed; its anonymous volume c552498d6272d6a67026de963da0cee8fb4cd56691311f5bbe757796d380feef removed; residual geo046 containers = [] and volumes = []; external temporary harness/runner build directories deleted; generated password and SQL temp files deleted.
+- No connection to or query/migration of any Tooba dev/staging/prod database at any point; no real tenant used; no seed beyond the isolated fixture; no service restart; the Tooba dev container postgres-db stayed "Up 3 days" and the running Host process (PID 37028, started 2026-10-13 18:11 local) was never restarted; no runtime Geography migrator registration and no Checkout switch.
+- No probe/dummy POST to Bridge /api/results. No automatic follow-up.
+
+CHANGED PATHS (committed, task-owned only)
+- docs/planning/shipping/SHIPPING-GEOGRAPHY-RUNNER-VERIFY-046.md (new report)
+- docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-RUNNER-VERIFY-046/** (results.json, scenarios.sql, log-runner-config-guard.txt, log-runner-status-plan.txt, log-runner-status-plan.compact.txt, log-runner-apply.txt, log-scenarios.txt, log-isolation.txt, log-down-up.txt, log-host-nonactivation.txt, log-provenance-cleanup.txt)
+- docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-RUNNER-VERIFY-046.task.md (received receipt only; NOT STAGED, NOT COMMITTED)
+
+PUSH EVIDENCE
+- Commit 85dd0fda2960674c7209ffcf5b9e722424a413d0 on main; `git push origin main` -> 6746ca5ae..85dd0fda2 main -> main; `git fetch origin` then HEAD == origin/main == 85dd0fda2960674c7209ffcf5b9e722424a413d0.
+
+ELAPSED
+- ~10 minutes wall clock (claimed 2026-10-14T12:33:35Z; evidence closed 2026-10-14T12:44Z), well inside the 30-minute hard timebox.
+
+REMAINING ACTIVATION BLOCKERS (observed)
+1. No module-scoped runner invocation exists: apply always targets every registered descriptor of the resolved database, so running it against a real Tooba tenant database is an all-modules migration, not a Geography-only one - the exact authorization that has not been given.
+2. Tooba.Host startup executes no geography DDL: the Host does not reference Tooba.MigrationRunner and GeographyModule registers 0 IModuleSchemaMigrator, so the geography schema must be created out of band before any runtime Geography read can succeed.
+3. The running Host binary predates the GeographyModule composition and the order-30 constant (process started 2026-10-13); a Host restart/redeploy would be required and is not authorized.
+4. The migrated schema is empty: no geography reference data load and no wired read path, so consumers would observe an empty dataset.
+5. Only SingleStore with one synthetic tenant was exercised; --all-tenants fan-out and Marketplace targets were not run.
+
+RECOMMENDED NEXT BOUNDED TASK (ONE)
+- TB-SHIPPING-GEOGRAPHY-DEPLOY-AUTHORIZATION-BOUNDARY-047: define, without executing it, the authorized deployment boundary for activating Geography on the real Development tenant database - who may run MigrationRunner apply given that the CLI cannot filter modules, the exact ordered commands and pre/post verification queries, the rollback statement set, and the explicit Architect authorization record required. No Tooba database contact inside that task either.
+
+WORKER STATUS: PASS != Architect ACCEPT. Stopping for Architect review.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK

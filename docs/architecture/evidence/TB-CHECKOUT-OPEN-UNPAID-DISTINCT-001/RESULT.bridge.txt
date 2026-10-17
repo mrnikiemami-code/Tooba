@@ -1,0 +1,49 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-CHECKOUT-OPEN-UNPAID-DISTINCT-001
+Parent-Task: TB-CART-OPEN-UNPAID-COUNT-REVIEW
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Verdict: BOUNDED_REPAIR_COMPLETE_AWAITING_ARCHITECT_REVIEW
+Summary: Verified the suspected defect in Order-owned CheckoutAbuseGate.CountOpenUnpaidAsync by reading source, not by inference: the unpaid SellerOrders->Checkouts join was projected without Distinct() and the SAME duplicate-bearing list was used for the final count, so Distinct() applied only to the reservation-cycle projection lookup. A single multi-seller checkout therefore consumed one MaxOpenUnpaidOrdersPerCustomer slot per unpaid seller order and could block a legitimate customer who had only one open checkout. Repair is minimal and confined to the Order owner: Distinct() is pushed into the projection and the now-redundant distinctCheckoutIds local is removed so the de-duplicated list feeds the projection lookup, the payability filter and the count. ReservationCyclePayabilityPolicy.HasReachedRetryLimit remains the single unpayability authority (no duplicated policy); zero-cycle/null-projection rows still count, PlacedByUserId customer isolation, cap values and error codes are unchanged, and no other status, retry policy, reservation coordinator, schema, query contract, frontend, baseline or unrelated code was touched. A behavioral regression was added that drives the REAL gate over a REAL EF OrderDbContext and the REAL ReservationCycleDirectory through the public EnsureCanStartInitialReservationAsync seam and reads the real CheckoutAbuseLimitException.CurrentCount: one checkout with three unpaid seller orders counts as ONE (cap 2 passes; cap 1 reports CurrentCount 1 not 3), two distinct checkouts count as TWO (CurrentCount 2), a retry-exhausted checkout (3/3 cycles closed via the real directory) is excluded while an active retryable checkout still counts (cap 1 reports CurrentCount 1), and a cancelled non-open seller order consumes no slot. The multi-seller scenario was separately proven to FAIL on the pre-fix gate (Failed 1/Passed 3) and PASS after the fix (Passed 4/4), so the regression genuinely discriminates. Order module suite incl. architecture guards: 152/152 passed. Focused Host set: 62 passed / 1 failed, the single failure being a PRE-EXISTING baseline guard unrelated to this change (see below). No automatic full suite and no AMSC wave were run.
+Root-Cause-State: CONFIRMED_DISTINCT_APPLIED_TO_PROJECTIONS_ONLY_THEN_NON_DISTINCT_COUNT
+Defect-Verified-State: VERIFIED_FROM_SOURCE_NOT_INFERRED_FROM_TASK_TEXT
+Repair-Approach-State: PUSH_DISTINCT_INTO_PROJECTION_AND_COUNT_DEDUPLICATED_LIST
+Count-Semantics-State: ONE_MULTI_SELLER_CHECKOUT_CONSUMES_EXACTLY_ONE_SLOT
+Distinct-Checkouts-State: TWO_DISTINCT_CHECKOUTS_CONSUME_TWO_SLOTS
+Payability-Exclusion-State: RETRY_LIMIT_REACHED_CHECKOUT_EXCLUDED_ACTIVE_RETRYABLE_CHECKOUT_INCLUDED
+Multi-Seller-State: COVERED_BEHAVIORALLY_THREE_UNPAID_SELLER_ORDERS_ONE_CHECKOUT
+Null-Zero-Cycle-State: PRESERVED_UNPAYABLE_POLICY_RETURNS_FALSE_SO_SLOT_STILL_COUNTS
+Isolation-State: CUSTOMER_SCOPE_PLACEDBYUSERID_UNCHANGED
+Caps-And-Codes-State: MAXOPENUNPAIDORDERSPERCUSTOMER_AND_CHECKOUT_OPEN_UNPAID_LIMIT_REACHED_UNCHANGED
+Duplicated-Policy-State: NONE_PAYABILITY_POLICY_NOT_FORKED
+Other-Status-Retry-Coordinator-Schema-Touch-State: NONE
+Behavioral-Test-File: src/backend/Host/Tooba.Host.Tests/CheckoutAbuseOpenUnpaidDistinctTests.cs (added)
+Behavioral-Test-Seam: REAL_CHECKOUTABUSEGATE_PLUS_REAL_ORDERDBCONTEXT_PLUS_REAL_RESERVATIONCYCLEDIRECTORY_VIA_ENSURE_CAN_START_INITIAL_RESERVATION
+Behavioral-Test-Result: PASSED_4_OF_4
+Discriminating-Proof-State: REVERTED_GATE_ONLY_HEAD_VERSION_FAILS_MULTI_SELLER_CASE_FAILED_1_PASSED_3_THEN_RESTORED_PASSED_4
+Focused-Validation-State: dotnet test src/backend/Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj -c Release -> Passed Failed:0 Passed:152 Total:152 (module suite incl. architecture guards)
+Focused-Host-Validation-State: dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj -c Release --filter CheckoutAbuse|CheckoutProcess|ReservationCycleFoundation|ReservationLifecycleIntegration|OrderSupplyUx|AdminReservationCycleAudit|StorefrontPendingPayment|HostAdminAmcCheckoutAbuse -> Failed:1 Passed:62 Total:63
+Order-Antipattern-Guard-State: CLEAN_gate_unchanged_wrt_OpenUnpaidOrderPredicate_IClock_IStoreCheckoutAbuseSettingsReader_no_CatalogDbContext_no_DateTimeOffsetUtcNow
+Baseline-Failures-State: ONE_PRE_EXISTING_FAILURE_NOT_INTRODUCED_BY_THIS_TASK
+PreExisting-Baseline-Failure: Tooba.Host.Tests.Architecture.HostAdminAmcCheckoutAbuseGuardTests.Host_Admin_count_15_StoreAppearance_evacuated asserts exactly 15 .cs files under src/backend/Host/Tooba.Host/Admin but the committed tree already contains 17 (git ls-files -> 17; git status shows 0 files touched in that directory), so it fails on the untouched HEAD tree as well. Reported, not repaired: outside task scope, no file in that directory was modified.
+Debug-Build-Lock-State: LIVE_DEV_SERVER_LOCKS_DEBUG_OUTPUT_ALL_GATES_RUN_IN_RELEASE
+Live-Process-Disruption-State: NONE_no_process_killed_no_debug_artifact_overwritten
+Changed-Files: src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs (modified, 4 insertions/3 deletions); src/backend/Host/Tooba.Host.Tests/CheckoutAbuseOpenUnpaidDistinctTests.cs (added); docs/ai/tasks/TB-CHECKOUT-OPEN-UNPAID-DISTINCT-001.task.md (added); docs/architecture/evidence/TB-CHECKOUT-OPEN-UNPAID-DISTINCT-001/repair-evidence.md (added); docs/architecture/evidence/TB-CHECKOUT-OPEN-UNPAID-DISTINCT-001/task-meta.json (added)
+Commit-SHA: 63e3c56b75c528196bfac945bd3673a48ff15a54
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED
+Scope-Expansion-State: NONE
+Amsc-Wave-State: NONE
+Baseline-Reset-State: NONE
+Schema-Migration-State: NONE
+Frontend-Change-State: NONE
+New-Dependency-Edge-State: NONE
+Weakened-Tests-State: NONE
+Remaining-Risk: the EF in-memory provider executes the join in-process and reproduces the duplicate-row shape (proven by the pre-fix failure) but does not prove the PostgreSQL SELECT DISTINCT plan; a relational guarantee would need an integration run against a real provider, outside this bounded repair. Cross-customer semantics within a single checkout were not exercised because single-owner checkouts are the current contract.
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_AFTER_BOUNDED_REPAIR
+STOP
+END_TOOBA_WORKER_RESULT

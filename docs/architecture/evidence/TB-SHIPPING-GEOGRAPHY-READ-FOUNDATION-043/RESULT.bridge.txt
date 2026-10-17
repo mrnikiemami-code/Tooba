@@ -1,0 +1,53 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GEOGRAPHY-READ-FOUNDATION-043
+Parent-Task: TB-SHIPPING-GEOGRAPHY-ANCESTRY-REPAIR-042
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ARCHITECTURE-PLANNING
+Mode: BOUNDED_GEOGRAPHY_READ_FOUNDATION_NO_HOST_WIRING
+Bridge-Task-Row: 91fa4322-b6be-41fd-b288-9706c09d8cac
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: dd3d334b2322b30437b953cb45f5707033e58718
+Base-SHA: dd3d334b2322b30437b953cb45f5707033e58718
+Code-SHA: 38019b3e33e50e5b1cdf9714db4d0dcead954869
+Evidence-SHA: 85509d7aa00535d18968099d4d961d5a81c9af61
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+Claimed exactly one Pending item on tooba-main after BRIDGE-WAKE (row 91fa4322-b6be-41fd-b288-9706c09d8cac); received artifact persisted verbatim at docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-READ-FOUNDATION-043.task.md (receipt only, not staged, never replayed). git fetch origin; HEAD == origin/main == Expected-Base-SHA == dd3d334b2322b30437b953cb45f5707033e58718; no drift, no reset/stash/rebase/force-push. Read AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, ADR-036, report 042, Geography Contracts/Domain/DbContext, the migration source (read, never edited) and the established read-adapter patterns (Catalog UnitOfMeasureDirectory, Localization LanguageDirectory, Fulfillment ShippingServiceLanguageGate). Findings register not consulted. Output-path collision check: nothing existed under Geography/.../Places/**, no report 043, no evidence folder 043. All pre-existing dirty/untracked files recorded and left untouched.
+
+CHANGED PATHS (task-owned only)
+- src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Places/GeographyPlaceLookup.cs (new: IGeographyLookup; lists + GetByIdsAsync)
+- src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Places/GeographyPlaceLookup.LegacyResolution.cs (new: ResolveLegacyAsync, same capability folder)
+- src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Places/GeographyLabelLookup.cs (new: IGeographyLabelLookup)
+- src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Tooba.Geography.Infrastructure.csproj (one Contracts-only ProjectReference to Tooba.Localization.Contracts for ILanguageLookup; the same sanctioned seam Catalog/Content/Fulfillment Infrastructure already consume)
+- docs/planning/shipping/SHIPPING-GEOGRAPHY-READ-FOUNDATION-043.md (report)
+- docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-READ-FOUNDATION-043/** (seed SQL, verification log, destination proof, harness source copy)
+NOT touched: any migration SQL/Designer/model snapshot, GeographyDbContext, Domain/Contracts, Tooba.slnx, Host/DI, ModuleSchemaMigrationOrder, Endpoints, frontend, Order/AddressBook/Fulfillment/Payment/Settlement/Catalog/Offer. No new project was created (no empty Application scaffolding).
+
+CONTRACT IMPLEMENTATION
+A. IGeographyLookup in Infrastructure over the module's own GeographyDbContext, all AsNoTracking, no cross-module DbContext, no lock/transaction/write. Lists return all rows of the requested scope with IsActive surfaced as a flag (inactive rows are not hidden) and a total deterministic order (Code then stable id); ListCities optionally scopes to one area (the 040 composite FK already guarantees that area is in that country); Guid.Empty scope inputs return empty. GetByIdsAsync is strict: country must exist and be active; every provided child must exist, be active and belong to the requested ancestry (area in the same country; city in the same country and exactly in the supplied area; service area owned by the supplied city); Guid.Empty in any slot is rejected rather than silently dropped; a service area without its owning city is rejected because its ancestry cannot then be validated; null means "destination not acceptable" (fail-closed reading of validated identifiers).
+B. ResolveLegacyAsync: strictly read-only, deterministic, no identity creation, no SaveChanges, no seed. Declared semantics (source facts vs proposed): exact normalised comparison after Trim() under OrdinalIgnoreCase (no substring/edit-distance/transliteration/nearest match); two exact keys per place (localised label in ANY language, or the stable code), label rows collapsed per place; country is required (blank/unknown code => Unresolved, never a cross-country search); Ambiguous returns the distinct candidate count with Identifiers null and duplicated labels in different areas are never collapsed; a supplied area is a real scope that disambiguates a duplicated city label; one factual derivation only - when a city resolves and no area was supplied the identifiers carry the city's own stored AdministrativeAreaId; a service-area label alone is Unresolved because its ancestry is the city.
+C. IGeographyLabelLookup: fallback chain requested language -> default language (IsDefault) -> stable code, per ADR-036 D9. The language set/default is read only through the Localization Contracts port ILanguageLookup (no Localization DbContext, no invented global translation service, no language data duplicated). A requested LanguageId is honoured only when that language exists in the Localization set (an unknown/fabricated id cannot surface a stale translation row); the default step uses IsDefault only with no "first language wins" step; the last step is the place's own Code; an id that does not exist at all is omitted rather than fabricated. Fully implemented - no PARTIAL was needed, because the Contracts-only seam is already the repo pattern (ADR-036 E14/D9) and required no unauthorized reference.
+D. No Application project was created; the read adapters live directly in Infrastructure behind the existing Contracts, so Tooba.slnx is unchanged.
+E/F. Focused build of the changed Geography project succeeded (0 warnings, 0 errors) and one report was created at docs/planning/shipping/SHIPPING-GEOGRAPHY-READ-FOUNDATION-043.md with file evidence, bounded checks, unknowns, time and exactly one next-step recommendation.
+
+TARGETED VALIDATION (disposable, task-exclusive PostgreSQL)
+Dedicated container geo043-verify (postgres:17, fdc0c224405d09cf8335f27564276f297a3cfdf4e04f735f752b818f557f8d01) bound only to 127.0.0.1:55433 with db geo043; the pre-existing container postgres-db was never connected to. Schema came only from the already-validated 042 migration source (Up) applied to that empty DB; seed = 3 countries, 4 areas, 8 cities, 3 service areas, 15 label rows. A temporary harness (source kept as evidence) built GeographyDbContext through ToobaNpgsql.ConfigureModuleContext and drove the real adapters. 47/47 checks PASS: listings L1-L7; GetByIds G1-G11 (valid chain, area/country-only, inactive country, inactive city, other-country city, area/city mismatch, service area of another city, service area without city, Guid.Empty slots, unknown ids); labels B1-B12 (requested language wins, en-only label, default step, null/Guid.Empty language, unknown language falls through, empty id set, country/area/city/service-area labels in fa and en, no IsDefault at all, empty language set); legacy resolution R1-R16 including duplicated city label in two different areas => Ambiguous(2) not collapsed, area disambiguation => Resolved, duplicated area label => Ambiguous(2), area filled from the city's own row, service-area label without city => Unresolved, full 4-id chain, country-only, blank/unknown country, trim + case-insensitive, city outside supplied area => Unresolved, unlabelled city resolved by code, and determinism across two full runs; D1 read-only proof: total geography row count unchanged across the whole suite (24 -> 24). Log: docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-READ-FOUNDATION-043/log-read-verification.txt. The container was removed afterwards; no Tooba database was migrated, seeded or inspected; nothing was applied anywhere else.
+
+RUNTIME UNKNOWNS (explicitly not claimed)
+1. DI/Host wiring: the adapters are registered nowhere (forbidden by this Task), so no request path exercises them yet; they were only exercised by the harness.
+2. The production ILanguageLookup adapter (LanguageLookupBridge) was replaced by a test stand-in, so which language is IsDefault in a real deployment - and thus the default step - is untested in combination.
+3. Scale/perf untested: the resolver loads one country's areas/cities and their labels into memory (bounded reference data, exact in-memory comparison); no large-scale measurement was made.
+4. Only same-country duplicate labels were covered; cross-country duplicates are out of reach by design (country is required).
+5. Consumers untouched: no Order/AddressBook/Checkout/legacy-shim adaptation, so the strict "GetByIds rejects inactive places" policy has not been exercised by a real caller and may need a different reading (surface instead of reject) - flagged for the Architect, not decided here.
+
+TIMING / COMMIT / PUSH
+Claim 12:02:30Z -> validated pushes completed 12:10Z: about 9 minutes of the 30-minute hard timebox. Two bounded commits of task-owned paths only: code + report 38019b3e3, then evidence + report wording 85509d7aa. git push origin main; git fetch origin; HEAD == origin/main == 85509d7aa00535d18968099d4d961d5a81c9af61. No force-push, no history rewrite, no unrelated staging. Disposable container removed; no Results-API probe; no automatic next task; no idle polling.
+
+REMAINING BLOCKERS
+None for this scope. Two policy points this slice had to pin down need an Architect ruling before any further step: (a) GetByIds rejecting inactive places (fail-closed) rather than surfacing them, and (b) the label chain stopping at IsDefault with no arbitrary-language step. Single next-step recommendation in the report: rule on those two points, then authorize a later slice to register the adapters in Geography module composition only (still without touching Checkout); nothing in this slice should be applied to a Tooba database or consumed by another module before those decisions are recorded. Worker PASS != Architect ACCEPT.
+END_TOOBA_WORKER_RESULT

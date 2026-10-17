@@ -1,0 +1,199 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GEOGRAPHY-INTEGRITY-MIGRATION-041
+Parent-Task: TB-SHIPPING-GEOGRAPHY-COUNTRY-INTEGRITY-040
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ARCHITECTURE-PLANNING
+Mode: BOUNDED_INERT_HIERARCHY_INTEGRITY_AND_INITIAL_MIGRATION_SOURCE
+Bridge-Task-Row: 60350777-2873-445c-9e2a-d06e2cd8f939
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 097720258721d72bca08ad44ec86c9cc4b6fd3fe
+Base-SHA: 097720258721d72bca08ad44ec86c9cc4b6fd3fe
+Code-SHA: 5456cebb6599c0f4f7ea84bc9bda37a990143629
+Evidence-SHA: 5456cebb6599c0f4f7ea84bc9bda37a990143629
+automaticNextImplementationTask: NONE
+
+SUMMARY
+Goal A completed as delivered source: the self-parent and indirect ancestor-cycle invariant is now
+owned by the database itself (deferrable constraint trigger + bounded recursive walk + advisory
+serialization + fail-closed isolation precondition), so it applies to every future write path rather
+than to the paths that remember to check. Goal B completed as SOURCE ONLY: the first EF Core Geography
+migration and model snapshot exist, limited to schema geography, with the guard carried verbatim as
+raw SQL. Status is PARTIAL for exactly one reason, stated openly: the guard's real PostgreSQL behaviour
+under overlapping concurrent sessions was NOT executed, because no database access is authorized. Static
+and algorithmic verification cannot substitute for that experiment, so migration readiness is NOT claimed
+and no "PASS" is asserted. Everything else (design argument, source, build, model/migration inspection,
+DB non-actions) is complete and recorded.
+
+PREFLIGHT
+Claimed exactly one task on tooba-main after BRIDGE-WAKE (row 60350777-2873-445c-9e2a-d06e2cd8f939);
+persisted the received artifact verbatim at
+docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-INTEGRITY-MIGRATION-041.task.md (receipt only; never replayed as a
+queue, and left uncommitted exactly like the 034-040 receipts). git fetch origin, then
+HEAD == origin/main == Expected-Base-SHA == 097720258721d72bca08ad44ec86c9cc4b6fd3fe; no drift.
+Read AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, SHIPPING-GEOGRAPHY-BOUNDARY-ADR-036.md,
+reports 039/040, current Geography code and module migration conventions; findings register NOT scanned.
+No reset, no force-push, no stash, no rebase, no silent fast-forward. All pre-existing dirty/untracked
+paths were recorded and preserved untouched (CheckoutAbuseGate.cs, three src/frontend screens,
+TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, plus previously existing untracked task/evidence
+files). Output-path collision check before editing: no pre-existing 041 report, no pre-existing
+Geography Persistence/Migrations/**, no *041* shipping task file; historical TB-P07-T041* belongs to an
+unrelated program and was not opened.
+
+CHANGED PATHS (5 files, all inside ALLOWED PATHS; nothing else touched)
+- src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Persistence/AdministrativeAreaAncestryGuard.cs (new; lines 90-204: strategy/assumptions 90-118, function DDL 120, isolation pre-check 133-138, advisory serialization 146, bounded walk 150-163, cycle raise 166-171, bound raise 174-179, constraint trigger 190-196, teardown 199-204)
+- src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Persistence/Migrations/20261014113949_InitialGeography.cs (new; guard wired at 344-350, teardown in Down at 356-358)
+- .../Migrations/20261014113949_InitialGeography.Designer.cs (new; EF generator output unmodified)
+- .../Migrations/GeographyDbContextModelSnapshot.cs (new; EF generator output unmodified)
+- docs/planning/shipping/SHIPPING-GEOGRAPHY-INTEGRITY-MIGRATION-041.md (new evidence report)
+NOT modified (byte-identical to Base-SHA): GeographyDbContext.cs, the whole Geography.Domain and
+Geography.Contracts, Tooba.slnx, Host, DI, endpoints, frontend, StorefrontIranGeography.Provinces, old
+geography route/DTO, pinned guards, manifests and architecture locks.
+
+STRATEGY COMPARISON AND SELECTION
+(A) Application/domain ancestor walk with transaction serialization: impossible inside the aggregate
+    boundary (an AdministrativeArea cannot see sibling rows), so it would need an Application handler or
+    Infrastructure repository plus caller-owned serialization, it would guard only the paths that call it
+    (not raw SQL/migrations/bulk imports), and it needs the runtime write layer/DI/Host composition this
+    Task forbids. Rejected as larger and weaker.
+(B) PostgreSQL constraint trigger (SELECTED): one deferrable per-row trigger with a bounded recursive
+    walk, owned by the database, applies to every future write path, needs no DI, no Application layer,
+    no Host change, no runtime registration. Smallest artifact that can hold the invariant at the
+    boundary where rows actually meet.
+Explicitly not claimed: a CHECK constraint or a FK cannot express a recursive property. The 040 composite
+FK only guarantees existence + same-country parenting and accepts A -> B -> A.
+
+ENFORCEMENT MECHANISM (as delivered in migration source)
+- geography.administrative_areas_ancestry_guard(): (1) reads current_setting('transaction_isolation') and
+  FAILS CLOSED unless 'read committed' (SQLSTATE 0A000, token
+  geography.administrative_area.ancestry_guard_isolation_unsupported); (2) returns for a NULL parent
+  (root); (3) PERFORM pg_advisory_xact_lock(20261014, 41) - one fixed geography-owned key pair, first
+  action of every ancestry mutation; (4) single-statement bounded WITH RECURSIVE walk upward from the
+  proposed parent (depth < 4096) aggregated to (MAX(depth), bool_or(id = NEW.id)); (5) cycle -> RAISE
+  23514 with stable token geography.administrative_area.ancestry_cycle; bound reached -> RAISE 54001 with
+  token geography.administrative_area.ancestry_depth_exceeded.
+- trg_administrative_areas_ancestry_guard: AFTER UPDATE, DEFERRABLE INITIALLY IMMEDIATE, FOR EACH ROW,
+  WHEN (parent_administrative_area_id IS DISTINCT FROM ... OR country_id IS DISTINCT FROM ...) - fires
+  only when an ancestry link actually changed; deferrable so a future authorized reorg may opt into
+  SET CONSTRAINTS DEFERRED.
+- INSERT is deliberately unguarded and this is provable, not an omission: a freshly inserted row's id is
+  new (PK-enforced), so no pre-existing chain can already contain it; the only insert-like path that can
+  create a cycle is INSERT ... ON CONFLICT DO UPDATE, which is an UPDATE and fires this trigger.
+- Unchanged as required: country-consistent composite FKs, nullable roots, the four translation FK
+  tables, codes and D8 legacy compatibility. No Contracts change (outside allowed paths), so the three
+  DB error tokens are not yet declared in GeographyErrorCodes.
+
+CYCLE REJECTION
+Self-parent: the walk's anchor is the proposed parent, so when it equals NEW.id the first recursion row
+already matches -> rejected (the Domain also rejects it earlier; the DB guard makes it unforgettable).
+Indirect A->B->...->A: the walk enumerates the complete upward chain of the proposed parent, so the moved
+node appearing anywhere in it is rejected. Because each edge is validated when written against the
+committed graph plus the current transaction's own change, no path that closes a cycle can be inserted.
+
+CONCURRENCY / RACE ARGUMENT (design argument, NOT an empirical proof)
+(1) Mutual exclusion: every ancestry mutation takes the same transaction-scoped advisory lock as its
+first action; PostgreSQL releases it at end of transaction and only after the committing transaction is
+marked committed, so at most one mutation is inside the check at a time and a later acquirer observes
+everything the previous holder committed.
+(2) The walk must not take row locks and does not: the mutating statement already holds its own row, so a
+locking read of another row would create a real lock cycle (T1 holds A wants B; T2 holds B waits for the
+advisory lock held by T1). Plain reads never block on uncommitted rows, so the advisory lock stays the
+only shared resource and mutual exclusion is deadlock-free by construction. Statically enforced: the
+guard text contains no FOR UPDATE / FOR NO KEY UPDATE / FOR SHARE (verified).
+(3) Ordering: if a cycle C could be committed, take the transaction T* whose edge of C committed last.
+Every other edge of C is then committed and visible to the statements T* runs after acquiring the lock;
+T*'s walk from its new parent follows the chain upward, reaches the node T* is moving, raises, and T*
+aborts. Contradiction, so no cycle can be committed.
+(4) The argument needs READ COMMITTED (fresh snapshot per statement). This is enforced, not merely
+documented: REPEATABLE READ/SERIALIZABLE writes are refused with 0A000 instead of being accepted on a
+potentially stale snapshot. Platform default is READ COMMITTED (ToobaNpgsql does not change the level);
+the repo deviates deliberately only in Order checkout (ReadCommitted) and Wallet refunds (Serializable),
+which is exactly why the precondition is enforced rather than assumed.
+(5) Out of invariant scope: superuser DDL bypass (ALTER TABLE ... DISABLE TRIGGER,
+session_replication_role = replica, manual DROP TRIGGER). No application write path can bypass the guard.
+
+MIGRATION SOURCE (generated, never applied)
+Generated with the module's existing design-time conventions and NO database connection:
+  dotnet ef migrations add InitialGeography --project src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Tooba.Geography.Infrastructure.csproj --output-dir Persistence/Migrations --no-build
+Up order: EnsureSchema("geography"); CreateTable x9 (countries, outbox_messages, administrative_areas,
+administrative_area_name_translations, cities, city_name_translations, country_name_translations,
+service_area_name_translations, service_areas - all schema geography); the
+ak_administrative_areas_id_country unique constraint and both composite (parent, country) FKs exactly as
+accepted in 040; the four translation tables with real cascading parent FKs and UNIQUE(parent, language);
+the previously accepted scoped/unique indexes and the outbox pending index; then the two guard SQL
+operations (hand-appended at lines 344-350, which is why they are source and not generator output).
+Down: guard trigger + guard function removed BEFORE the tables, then 9 DropTable. Authored for
+reversibility only; not executed. Absent by design: Host composition, module migration registration and
+ordering, runtime registration, seeds, regional coverage defaults, database update, apply.
+
+VERIFICATION PERFORMED (bounded, no DB connection)
+- dotnet build of the changed Geography Infrastructure project: Build succeeded, 0 errors, 0 warnings
+  other than the pre-existing NU1900 NuGet vulnerability-feed timeout warning that also appears on the
+  untouched baseline.
+- Throwaway harness OUTSIDE the repository (%TEMP%\geo041check) referencing the built project, building
+  the model through the design-time factory and inspecting metadata/operations only: it calls no
+  Database.* API, opens no connection, touches no database. Result: ALL CHECKS PASSED (36 checks).
+  Model: 9 tables, all in schema geography; single alternate key ak_administrative_areas_id_country =
+  (AdministrativeAreaId, CountryId); administrative_areas has exactly 2 FKs and the self-parent one is
+  the composite (ParentAdministrativeAreaId, CountryId) -> (AdministrativeAreaId, CountryId) Restrict;
+  all four translation tables keep UNIQUE(parent, language) + real cascading parent FK.
+  Model DDL (GenerateCreateScript, no connection): exactly 9 CREATE TABLE, no schema other than
+  geography, alternate-key unique constraint present.
+  Migration operations: exactly one migration (20261014113949_InitialGeography); Up = 9 CreateTable (all
+  geography) + only geography ensured + exactly 2 raw-SQL operations containing the guard function and
+  the constraint trigger, ordered after the administrative_areas table; Down = 9 DropTable + 2 raw-SQL
+  operations with guard teardown before the table drop.
+  Guard static invariants: single fixed advisory key; recursion bound present AND enforced; no
+  row-locking read; transaction_isolation fail-closed check present; stable cycle token + 23514; WHEN
+  clause limited to ancestry-link changes; DEFERRABLE INITIALLY IMMEDIATE.
+- Deterministic predicate vectors (algorithm level, C# mirror of the guarded walk + bound over in-memory
+  graphs): valid re-parent accepted; self-parent, 2-node A<->B and 3-node X->Y->Z->X cycles rejected;
+  re-rooting to NULL and re-asserting the current parent accepted; over-deep chain (4104 nodes) fails
+  closed at the bound.
+- NOT proven, and per instruction never labelled as proof of PostgreSQL behaviour: real trigger firing,
+  real advisory-lock interleaving, real isolation-level enforcement, and acceptance of the exact PL/pgSQL
+  and CREATE CONSTRAINT TRIGGER syntax by a live server.
+
+DATABASE NON-ACTIONS
+No database update/migrate/apply, no connection to any live/staging/development PostgreSQL, no DDL/DML
+executed, no seed/import, no Host/DI/module wiring, no endpoint, no frontend, no
+Checkout/AddressBook/Order/Fulfillment/Payment/Settlement/Catalog/Offer/Shipping-pricing change, no
+manifest/lock change, no test or guard weakened, no broad suite, no runtime restart, no background work,
+no Results-API probe or dummy POST, no continuous idle polling. Geography remains inert and NOT
+ARCH-COMPLETE-002 certified.
+
+ELAPSED
+Claim -> validated commit: about 8 minutes of the 30-minute hard timebox.
+
+PUSH EVIDENCE
+Commit 5456cebb6599c0f4f7ea84bc9bda37a990143629 (5 files changed, 1805 insertions); git push origin main
+reported 097720258..5456cebb6 main -> main; after git fetch origin, HEAD == origin/main ==
+5456cebb6599c0f4f7ea84bc9bda37a990143629. Only the 5 task-owned paths were staged; all pre-existing dirt
+remains untouched and uncommitted, including this task's receipt file.
+
+REMAINING RISKS / OPEN ITEMS
+1. BLOCKING for migration readiness: empirical concurrency verification. Suggested smallest closure: with
+   authorization, apply this migration source to a disposable PostgreSQL and run two overlapping
+   reparenting sessions (A<->B and a 3-node cycle attempt) expecting one abort with
+   geography.administrative_area.ancestry_cycle, plus one session in repeatable read expecting 0A000.
+2. REPEATABLE READ/SERIALIZABLE ancestry writes are rejected by design; if the platform ever mandates a
+   higher level for geography writes the mechanism must be re-chosen (e.g. optimistic check + retry),
+   not patched.
+3. Model-derived schema (GenerateCreateScript/EnsureCreated) does not carry the invariant: the guard
+   exists only in migration source, so any path creating the geography schema without migrations would
+   ship tables without the cycle guard. The repo uses ModuleSchemaMigrator, so this is a guard-rail note.
+4. Superuser DDL bypass (item 5 of the race argument).
+5. The three stable DB error tokens are not yet declared in GeographyErrorCodes/Contracts (outside this
+   Task's allowed paths) and need a later authorized slice for module error mapping.
+6. The depth bound 4096 is a safety net, not a business rule; hitting it fails closed.
+7. D10 administrative level, migration ordering/registration and Host wiring remain open and untouched.
+
+REQUEST TO ARCHITECT
+Decide whether item 1 can be closed by the disposable-database concurrency test above (no code change
+expected), or whether the written serialization argument is accepted as sufficient for this inert stage.
+Until then the status stays PARTIAL: Worker PARTIAL != Architect ACCEPT, and this Worker makes no claim
+that the migration is ready.
+END_TOOBA_WORKER_RESULT

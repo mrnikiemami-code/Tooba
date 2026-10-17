@@ -1,4 +1,4 @@
-// TB-173 — post the complete Worker Result to the Bridge and complete the task lifecycle.
+﻿// TB-173 — post the complete Worker Result to the Bridge and complete the task lifecycle.
 const fs = require("fs");
 const path = require("path");
 
@@ -9,7 +9,7 @@ const HEAD_SHA = process.env.TOOBA_173_HEAD_SHA || "";
 const evidenceDir = path.join(process.cwd(), "docs", "architecture", "evidence", TASK_ID);
 
 let content = fs.readFileSync(path.join(evidenceDir, "RESULT.bridge.txt"), "utf8");
-content = `Worker-Result-Post-Task-Id: ${TASK_ID}\n${content}`;
+
 if (HEAD_SHA) {
     content = content.replace(
         "Evidence-Commit: this commit (HEAD == origin/main)",
@@ -40,3 +40,4 @@ if (HEAD_SHA) {
         console.log("TASK_NOT_FOUND_FOR_COMPLETE");
     }
 })().catch((err) => { console.error("POST_ERROR", err.message); process.exit(2); });
+

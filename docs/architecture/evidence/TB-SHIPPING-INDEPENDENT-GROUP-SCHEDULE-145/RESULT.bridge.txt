@@ -1,0 +1,33 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-INDEPENDENT-GROUP-SCHEDULE-145
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-144
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-INDEPENDENT-SELLER-COMMITMENTS
+Mode: BOUNDED_CONTRACT_GAP_AND_APPROVAL_WIREFRAME
+Bridge-Task-Row: a266d592-81aa-4af5-80da-e5e99377922d
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 5004a59af2f52525f0207216f86b2f4826fa5d7c
+Base-SHA: 73160e3f0655aceae74a2713c7e0c71aa2bb6e81
+Code-SHA: ad3ceb7a09929407673890111cb4f5e2c3277705
+Evidence-SHA: ad3ceb7a09929407673890111cb4f5e2c3277705
+automaticNextImplementationTask: NONE
+Root-Cause: The stable Order model ALREADY persists per-group schedule (CartShippingDraftGroup.SelectedDeliveryDate and SelectedDeliveryTimeWindow L160-166; OrderShippingGroup.RequestedDeliveryDate and RequestedDeliveryTimeWindow L55-61; migration 20261016100000 already declares requested_delivery_date and requested_delivery_time_window L35-36; OrderFulfillmentBridge already forwards them L68-103). The non-compliance is in the read/write path and the UI, which impose ONE global date/time: storefront-shipping.tsx keeps one deliveryDate/deliveryTime (L135-136) and renders ONE page-level date plus ONE window picker (L912-1002); storefront-shipping-group-horizon.ts deriveGroupDateHorizon (L38-78) INTERSECTS dates/windows and takes the latest minimum, and distinctSelectedMethodCodes (L137-144) keys fetches by METHOD CODE only, so two sellers selecting tipax:standard share one horizon; StorefrontShippingService.SaveSelectionAsync validates ONE date against the MAX minimum (L269-280) and CartShippingGroupPlanner.Plan takes scalar selectedDeliveryDate/selectedDeliveryTimeWindow (L40-146) and copies the SAME value into EVERY group (write at L103-104). CartShippingDraftGroup.ApplySchedule (L287-293) exists and is never called.
+Implementation: DESIGN ONLY; no production code, migration, data or UI was changed. Produced a source-grounded change map, an approval-ready RTL wireframe and a three-increment implementation plan.
+Target-Provenance: Grounded in the three locked contracts read first (docs/architecture/shipping/SHIPPING-GROUP-INDEPENDENT-DELIVERY-COMMITMENT.md sec.3/sec.5/sec.6, docs/architecture/checkout/SHIPPING-METHOD-GROUPING-UI-CONTRACT.md, docs/architecture/shipping/SHIPPING-ADMIN-FLAT-METHOD-CONTRACT.md) and in the actual current files with exact line ranges; no speculation and no fabricated endpoints.
+Service-Method-Mapping: docs/planning/shipping/SHIPPING-GROUP-SCHEDULE-IMPLEMENTATION-145.md section 1 maps every required change to owning module, function and line range: frontend storefront-shipping.tsx, storefront-shipping-group-horizon.ts, use-storefront-group-shipping-horizon.ts; backend StorefrontShippingService ProjectAsync and SaveSelectionAsync, CartShippingGroupPlanner.Plan, CartShippingDraft.AddShippingGroups, CartShippingDraftGroup, OrderShippingGroup, migration AddOrderShippingGroups, OrderFulfillmentBridge.LoadGroupsAsync, StorefrontShippingCalculator.
+Policy-Grant-Fixture-Ledger: NONE executed (design-only task). Planned trusted fixture for the implementation increments: ShippingMethodsOptions.SellerPreparationDaysByPartyId with 2 and 3 days under an explicitly approved Development configuration, tipax:standard LeadDays unchanged so the promise difference comes only from seller preparation, and reference date taken from IClock - no invented rates, origins or dates.
+Shadow-Gate-Proof: NONE (no shadow gate in scope for this design-only task).
+Live-Parity-Mismatch-Matrix: NONE (no live or shared environment used; :5088 and :3000 untouched, tooba_alpha untouched).
+Unchanged-Legacy-Projection: Preserved by design. The single-group cart keeps the existing projection scalars (minimumDeliveryDate, deliveryDates, deliveryTimeWindows) and the existing card, and the legacy shorthand write (shippingMethodCode plus selectedDeliveryDate and selectedDeliveryTimeWindow) stays valid; the plan only adds a per-group path alongside it.
+Restore-Cleanup: No host or frontend started or stopped, no port bound, no shared config, no migration and no data write. The Bridge claim was recovered read-only through the official stale-claim redelivery of GET /api/tasks/next after the claim timeout, then persisted verbatim as the task receipt under docs/ai/tasks and the evidence directory.
+Focused-Tests: NONE executed (design-only). The plan defines the focused tests for increment 1 (two groups with two independent valid schedules; an invalid or later choice for one group rejected or scoped to that group only) and increment 2 (two cards, change of one leaves the other intact, Continue enabled only when every group has method plus date plus window, return and refresh restores each group schedule).
+Actual-Elapsed: about 16 minutes of wall time from claim to result.
+Changed-Paths: docs/planning/shipping/SHIPPING-GROUP-SCHEDULE-WIREFRAME-145.md; docs/planning/shipping/SHIPPING-GROUP-SCHEDULE-IMPLEMENTATION-145.md; docs/architecture/evidence/TB-SHIPPING-INDEPENDENT-GROUP-SCHEDULE-145/summary.md; docs/architecture/evidence/TB-SHIPPING-INDEPENDENT-GROUP-SCHEDULE-145/post-result.js.
+Commit-Push: local commit ad3ceb7a09929407673890111cb4f5e2c3277705 pushed to origin/main; HEAD verified equal to origin/main; pre-existing unrelated dirty admin and evidence files preserved untouched; task receipt left unstaged.
+Blockers: (1) Case D (same seller plus same method with incompatible trusted origin or promise) is BLOCKED: CartShippingGroupPlanner raises DuplicateSellerMethod (L85-91) and the unique index ux_order_shipping_groups_checkout_seller_method (checkout_id, seller_party_id, method_code) in migration 20261016100000 forbids two such groups, and OriginContext is deliberately forced to null (OriginUnverified) because no trusted fulfilment-origin authority exists. (2) No authoritative per-method Transport Schedule, timezone, cut-off, capacity or slot owner exists yet (SHIPPING-ADMIN-FLAT-METHOD-CONTRACT.md places Transport Schedule in Admin detail Phase 2, not implemented), so exact per-group promises currently derive only from seller preparation days plus method lead days. (3) Harness STOP: the user must approve the WIREFRAME before any disruptive backend or UI change.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK

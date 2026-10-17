@@ -31,12 +31,12 @@ import { mapAdminErrorMessage } from "./admin-error-map";
 import { AdminOrderOperationsMenu } from "./admin-order-operations-menu";
 import { ADMIN_FULFILLMENT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 
-function PageHeading({ title, description }: { title: string; description: string }) {
+function PageHeading({ title, description }: { title: string; description?: string }) {
   return (
     <div className="mb-5">
       <p className="text-sm text-muted">خانه / {title}</p>
       <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
-      <p className="mt-1 text-base text-muted">{description}</p>
+      {description ? <p className="mt-1 text-base text-muted">{description}</p> : null}
     </div>
   );
 }
@@ -329,13 +329,9 @@ export function AdminFulfillmentWorkQueueScreen() {
 
   return (
     <main data-testid="admin-fulfillment-work-queue" dir="rtl">
-      <PageHeading
-        title="ارسال و تحویل"
-        description="صف کار عملیاتی بین سفارش‌ها — همان backend fulfillment"
-      />
+      <PageHeading title="ارسال و تحویل" />
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="flex flex-col gap-3 border-b border-border px-4 py-3 md:px-5">
-          <span className="text-sm text-muted">دادهٔ زندهٔ فروشگاه — server GridQuery</span>
           <div className="flex flex-wrap gap-2" data-testid="admin-fulfillment-queue-filters" role="tablist">
             {FULFILLMENT_QUEUE_FILTERS.map((tab) => {
               const active = queueFilter === tab.id;

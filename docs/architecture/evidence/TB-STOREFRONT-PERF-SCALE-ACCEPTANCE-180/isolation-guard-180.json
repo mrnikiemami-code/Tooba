@@ -1,0 +1,23 @@
+{
+  "measuredDevelopmentLoggingDefault": {
+    "Default": "Debug",
+    "Microsoft.AspNetCore": "Information",
+    "Microsoft.EntityFrameworkCore": "Warning"
+  },
+  "overlayWritesLogging": false,
+  "runLegacyBootstraps": true,
+  "allowResetAndSeedScratchOnly": true,
+  "tenants": [
+    "store-alpha:Active:tenant-180-scratch"
+  ],
+  "activeTenantCount": 1,
+  "scratchPort": "55500",
+  "hostPort": "5451",
+  "containsSharedAlphaDatabase": false,
+  "containsSharedAlphaReference": false,
+  "containsSharedPort5432": false,
+  "edition": "SingleStore",
+  "sharedFrontendPort3000Touched": false,
+  "sharedHostPort5088Touched": false,
+  "failClosed": true
+}

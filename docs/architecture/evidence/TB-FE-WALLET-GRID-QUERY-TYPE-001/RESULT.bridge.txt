@@ -1,0 +1,65 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-WALLET-GRID-QUERY-TYPE-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR
+Status: PASS
+Verdict: BOUNDED_REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: ed0c0ba3b4243d58542b20b6bf95d044e2b0251b
+Expected-Starting-HEAD-Match-State: VERIFIED
+Expected-Starting-HEAD-Equals-Origin-Main-State: VERIFIED
+Preflight-Tracked-Worktree-State: CLEAN_NO_TRACKED_MODIFICATION
+Preflight-Untracked-Artifacts-State: PRE_EXISTING_PRIOR_TASK_EVIDENCE_NOTED_AND_LEFT_UNTOUCHED_NOT_DELETED_NOT_STASHED
+Preflight-Divergence-State: NONE_NO_UNSAFE_UNRELATED_EDITS
+Diagnostic-Targeted: app/wallet/wallet-ui.tsx(577,12): error TS7006: Parameter 'query' implicitly has an 'any' type.
+Ownership-Diagnosis: The contract was not missing - the annotation was omitted. createClientGridQueryAdapter is declared at design-system/app-data-grid/legacy-grid-adapters.ts:10-14 as (rows, columns) => async (query: GridServerQuery) => executeGridQuery(rows, columns, query), so the inner call already required GridServerQuery, and useLegacyAdminGridDirectProps consumes it at legacy-grid-adapters.ts:18 as queryAdapter: (query: GridServerQuery) => Promise<rows,total>, which is exactly where wallet-ui.tsx:583 passes giftCardQueryAdapter. The canonical type is therefore the design-system's own GridServerQuery export, not a new or duplicated interface.
+Canonical-Type-Source: design-system/data-grid/GridServerQuery, re-exported by design-system/data-grid/index.ts line 13. wallet-ui.tsx already imported its sibling GridColumnDef from that same barrel on line 6, so the existing type-only import was simply widened.
+Change: One file, two lines. The type-only import on line 6 became import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid", and the callback became async (query: GridServerQuery) => createClientGridQueryAdapter(giftCardGridRows, giftCardColumns)(query).
+New-Interface-Added: NONE_NO_DUPLICATE_GRID_TYPE
+Preserved-Surfaces: The useCallback dependency array, giftCardGridRows and giftCardColumns definitions, giftCardGridProps, the useLegacyAdminGridDirectProps wiring, the gift card saved-view store, grid query/sort/filter/page/export behaviour, all callbacks, wallet and gift-card logic, markup, class names and visual design are untouched, as the diff shows.
+Assertion-Suppression-State: NONE_NO_ANY_NO_UNSAFE_TYPE_ASSERTION_NO_TS_IGNORE
+Baseline-Evidence-Source: docs/architecture/evidence/TB-FE-ADMIN-SCREENS-REACTNODE-IMPORT-001/typecheck-after-tsc.txt copied verbatim to docs/architecture/evidence/TB-FE-WALLET-GRID-QUERY-TYPE-001/typecheck-before.txt
+Baseline-Errors: 25
+Typecheck-Total-After: 24
+Typecheck-Reduction: 1
+Typecheck-Introduced: 0
+Typecheck-Compare-Object-Vs-Baseline: ONLY_THE_REMOVED_LINE_NO_ADDED_LINE
+Diagnostics-Remaining-In-Target-File: NONE
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_24_ERRORS_REMAIN_IN_OTHER_CLUSTERS
+Focused-Test-Run-1: app/admin/admin-grid-migration.test.ts - 7 PASS / 0 FAIL
+Focused-Test-Run-2: app/wallet/wallet-api.test.ts - 5 PASS / 0 FAIL
+Focused-Test-Selection-Rationale: admin-grid-migration.test.ts is the nearest pre-existing suite that genuinely reads the edited file - it loads app/wallet/wallet-ui.tsx into a constant at line 10 and asserts the gift-card grid wiring that must be preserved (admin-gift-cards-grid, AppDataGrid, and not LegacyAppDataGrid at lines 42-44). wallet-api.test.ts is the only wallet-focused suite in the tree and is directly adjacent to the edited screen, confirming no wallet behaviour moved.
+Ceremonial-Test-State: NONE_NOTHING_ADDED_TO_ANY_TEST
+Tsc-Sufficiency-Statement: This is a type-only, runtime-neutral annotation plus import widening, so the compiler is the primary proof; the source-loading grid suite adds behavioural confirmation of the preserved wiring without generating ceremonial assertions.
+PreExisting-Failures-Observed: NONE_IN_EITHER_TEST_RUN
+Tests-Not-Run: the full npm test and test:discovered suites, dependency install, build, backend suites, browser or visual verification, AMSC, and every other guard or characterization suite
+Unrun-Test-Pass-Claim-State: NONE
+Remaining-Issues: 24 TypeScript errors remain in other audited clusters outside this task's scope, each requiring its own bounded task.
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: A type-only annotation and import widening in an Admin wallet screen with no runtime, markup or visual effect; no storefront, Home, PDP, Shopeiva, shared-composition or visual surface was touched.
+Scope-Statement: The production change is exactly the one allowed file, src/frontend/app/wallet/wallet-ui.tsx. All other staged paths are the task receipt and evidence files.
+Risks: None. A parameter annotation and an import type are both erased at emit, so compiled output and runtime behaviour are byte-identical and callback identity plus the dependency array are unchanged.
+Rollback-Criteria: Revert commit c204c65b467c4548de44ca8223a6340854ee58b8; TS7006 at line 577 returns.
+Deviation-State: NONE
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Reset-Or-Stash-State: NONE_NO_RESET_NO_STASH
+Rebase-State: NONE_NO_REBASE_WAS_NEEDED
+Process-Termination-State: NONE_NO_SERVICE_STARTED_RESTARTED_OR_TERMINATED
+Concurrent-Change-State: NONE_UNEXPECTED
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED
+Base-SHA: ed0c0ba3b4243d58542b20b6bf95d044e2b0251b
+Final-SHA: c204c65b467c4548de44ca8223a6340854ee58b8
+Commit-SHA: c204c65b467c4548de44ca8223a6340854ee58b8
+Changed-Files: src/frontend/app/wallet/wallet-ui.tsx (production - one import widened and one parameter annotated); docs/ai/tasks/TB-FE-WALLET-GRID-QUERY-TYPE-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-WALLET-GRID-QUERY-TYPE-001/summary.md, typecheck-before.txt, typecheck-after-tsc.txt, focused-test-admin-grid-migration.txt, adjacent-test-wallet-api.txt (added - evidence with raw compiler and test output)
+Commands-Run: git fetch origin plus HEAD==origin/main==Expected-Starting-HEAD checks at preflight, pre-commit and post-push; node_modules/.bin/tsc --noEmit in src/frontend with a Compare-Object against the baseline; node --experimental-strip-types --test for admin-grid-migration.test.ts and wallet-api.test.ts; rg inspections to confirm the canonical type owner, the existing type-only import and the barrel re-export; git diff and status inspections for scope
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: STOP_FOR_ARCHITECT_INDEPENDENT_ACCEPTANCE
+STOP
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,68 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-ADMIN-MENUS-HELPER-SIGNATURES-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR
+Status: PASS
+Verdict: BOUNDED_REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: eebb0a09ebbbea362a06f0f6d1d624724478364c
+Expected-Starting-HEAD-Match-State: VERIFIED
+Expected-Starting-HEAD-Equals-Origin-Main-State: VERIFIED
+Preflight-Tracked-Worktree-State: CLEAN_NO_TRACKED_MODIFICATION
+Preflight-Divergence-State: NONE_NO_OTHER_WORKER_ADVANCED_HEAD
+Root-Cause: The three diagnostics are outdated calls written against an Admin helper API that never existed; they have been in admin-menus-api.ts since the file was created in c3ced29ef. adminHeaders (owner src/frontend/app/admin/admin-api.ts:999) takes extra?: Record<string, string>, not a boolean mutation flag; parseAdminProblemErrorCode (owner src/frontend/app/admin/admin-error-map.ts:968) requires (payload, status) and was called with the payload only; mapAdminErrorMessage (owner admin-error-map.ts:925) takes locale: AdminErrorLocale = "fa" and was handed a Persian sentence, so the file had invented a local error/locale contract instead of using the shared one.
+Neighbouring-Canonical-Callers-Inspected: src/frontend/app/admin/landing-pages/admin-landing-pages-api.ts:126,140-145 and src/frontend/app/admin/campaigns/admin-campaigns-api.ts:136,151-158 - both - the closest Admin capability APIs on this program - implement fail() as: 401/403 returns mapAdminErrorMessage("admin.authorization.denied", "fa") with denied true, otherwise parseAdminProblemErrorCode(body, status) then mapAdminErrorMessage(code, "fa").
+Locale-Contract-Grounding: ADMIN_ERROR_MESSAGES["admin.authorization.denied"].fa is "دسترسی مجاز نیست." which is byte-identical to the Persian string the menus file hardcoded, so the canonical path preserves the same customer-facing text while deleting the local copy. The Admin surface is Persian (its own guard test asserts Persian labels) and "fa" is the canonical locale used by every sibling Admin API, so no new cross-module i18n behaviour and no product decision was required or invented.
+Shared-Helper-Modification-State: NONE_NO_REFACTOR_OF_ADMIN_HEADERS_PARSE_ADMIN_PROBLEM_ERROR_CODE_MAP_ADMIN_ERROR_MESSAGE_OR_THE_ERROR_CODE_INVENTORY_AND_NO_COMPETING_ERROR_OR_LOCALE_CONTRACT
+Change-Decision: fail() now mirrors the canonical sibling contract verbatim (401/403 branch returning the mapped denied message with denied true, otherwise the real stable code plus HTTP status mapped with the canonical "fa" locale) and no hardcoded Persian fallback string remains.
+Header-Argument-Decision: The sibling modules pass init?.headers as Record<string, string>, which is an unsafe cast because HeadersInit also admits Headers and string[][] and is explicitly forbidden by this task, so adminHeaders() is called with no argument. The request-header merge is already performed explicitly by the retained "...(init?.headers ?? {})" spread, whose "headers" key follows "...init" and therefore still governs the request; the previous adminHeaders(Boolean(...)) spread of a primitive contributed no keys either, so this is wire-neutral - every call site keeps its exact previous headers (Accept plus the dev-actor header) and no request gains or loses a header.
+Intended-Behaviour-Delta: For non-401/403 failures the previous code produced the code "admin.http.undefined" and then passed it as the locale, so every server error degraded to the generic UNKNOWN_FA "خطایی رخ داد. لطفاً دوباره تلاش کنید." The canonical contract now extracts the real code with the HTTP status, so the already-shipped menu-specific inventory (menu.title.required, menu.key.duplicate, menu.missing, menu.delete.referenced, menu.item.missing, menu.item.label.required, menu.item.cycle, menu.item.depth, menu.item.parent.invalid, menu.item.reorder.invalid, menu.link.invalid, menu.url.required, menu.url.unsafe, menu.target.required, menu.target.missing, menu.header.ineligible at admin-error-map.ts:861-876) finally resolves to its localized Persian message. denied true is preserved for 401/403 and no technical text (Bad Request or raw codes) can reach the UI.
+Menu-Request-Authentication-CSRF-Response-Error-Preservation-State: PRESERVED_NO_CSRF_OR_AUTH_PROTOCOL_WAS_INVENTED_AND_NO_EXISTING_CANONICAL_HELPER_WAS_BYPASSED
+Runtime-Imports-And-Exports-Change-State: NONE
+Changed-Files: src/frontend/app/admin/menus/admin-menus-api.ts (only production file - two hunks: adminHeaders(Boolean(mutation)) to adminHeaders() in readJson, and fail() rewritten to the canonical 401/403 plus parseAdminProblemErrorCode(body, status) plus mapAdminErrorMessage(code, "fa") contract); src/frontend/app/admin/menus/admin-menus-api.test.ts (added - focused regression test); docs/ai/tasks/TB-FE-ADMIN-MENUS-HELPER-SIGNATURES-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-ADMIN-MENUS-HELPER-SIGNATURES-001/summary.md, typecheck-before.txt, typecheck-after-tsc.txt, focused-tests-menus.txt, focused-tests.txt (added - bounded evidence)
+Test-File-Change-Justification: The new app/admin/menus/admin-menus-api.test.ts is the only test-file change and was necessary because this repair is not a pure type-level move - it changes the user-facing error path and the request-header construction, which had zero existing coverage, so the alternative was to claim correctness from a green compiler alone, which the task forbids. It reuses the repository's existing node:test plus node --experimental-strip-types harness (no new harness, no production seam, no export added), stubs globalThis.fetch, and asserts the shared contract: admin headers present on the request, menu mutations still POST /v1/admin/menus with the same body, 403 maps to denied true plus "دسترسی مجاز نیست.", the known code menu.item.cycle maps to "چرخه در درخت منو مجاز نیست.", and the unmapped body { title: "Bad Request" } yields the generic message with no technical leak. It adds 0 new TypeScript diagnostics.
+Forbidden-Items-State: NONE_NO_BACKEND_NO_SCHEMA_NO_MIGRATION_NO_GLOBAL_TYPE_NO_TSCONFIG_NO_BASELINE_NO_GATE_NO_HOME_PDP_SHOPEIVA_NO_UNRELATED_ADMIN_MODULE_NO_BROAD_LOCALIZATION_REWRITE_NO_ANY_NO_TS_IGNORE_NO_UNSAFE_CAST_NO_SUPPRESSION_NO_AMSC_NO_AUTOMATIC_NEXT_TASK
+Baseline-Evidence-Source: docs/architecture/evidence/TB-FE-MIDDLEWARE-LOCALE-TYPE-IMPORT-001/typecheck-after-tsc.txt copied verbatim to docs/architecture/evidence/TB-FE-ADMIN-MENUS-HELPER-SIGNATURES-001/typecheck-before.txt
+Typecheck-Baseline-Errors: 41
+Typecheck-Total-After: 38
+Typecheck-Reduction: 3
+Typecheck-New-Errors: 0
+Typecheck-Expected-Vs-Actual: expected exactly 3 removed with no new errors, i.e. 41 -> 38; actual exactly 38 with 0 added diagnostics in a Compare-Object of the before and after outputs and nothing left under app/admin/menus
+Diagnostics-Remaining-Under-App-Admin-Menus: NONE
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_38_ERRORS_REMAIN_IN_OTHER_AUDITED_CLUSTERS
+Commands-Run: git fetch origin and HEAD==origin/main==Expected-Starting-HEAD verification with a clean tracked worktree (preflight, pre-commit and post-push); cd src/frontend && node_modules/.bin/tsc --noEmit; node --experimental-strip-types --test app/admin/menus/admin-menus-api.test.ts app/admin/menus/admin-menus.guard.test.ts; node --experimental-strip-types --test app/admin/menus/admin-menus.guard.test.ts app/admin/admin-error-map.test.ts app/admin/admin-api.test.ts; git diff/status inspections for the exact final diff and scope
+Focused-Test-Results: node --experimental-strip-types --test app/admin/menus/admin-menus-api.test.ts app/admin/menus/admin-menus.guard.test.ts - 8 PASS / 0 FAIL. The existing admin-menus.guard.test.ts is the directly relevant architecture guard for this module and passes unmodified, with the /v1/admin/menus and /v1/admin/menus/header route assertions intact.
+Typecheck-Supporting-Tests-Result: node --experimental-strip-types --test app/admin/menus/admin-menus.guard.test.ts app/admin/admin-error-map.test.ts app/admin/admin-api.test.ts - 14 PASS / 1 FAIL, the single failure being the pre-existing unrelated one below.
+PreExisting-Failures-Observed: ONE_UNRELATED_PRE_EXISTING_FAILURE_IN app/admin/admin-error-map.test.ts:111 ("content article update and media errors are humanized")
+PreExisting-Failure-Detail: content.category.language_mismatch actual "زبان دسته‌بندی باید با زبان مقاله یکسان باشد." versus expected "دستهٔ انتخاب‌شده با زبان مقاله هم‌خوان نیست.". Independence of this change is provable without any working-tree mutation: the failing test imports only admin-error-map.ts, and git status shows the only modified production file is admin-menus-api.ts; the drift lives in the message map, outside this task's allowed scope.
+PreExisting-Failure-Action: RECORDED_NOT_CHASED_AS_INSTRUCTED_AND_NOT_MASKED
+PreExisting-Failure-Count-Before: 1
+PreExisting-Failure-Count-After: 1
+Retry-Cascade-State: NONE
+Tests-Not-Run: the full npm test / test:admin* / test:critical-storefront suites, any build, backend tests, browser/live verification, and any AMSC wave
+Unrun-Test-Pass-Claim-State: NONE
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: Only one Admin JSON API module and its Admin error path changed. No Home, PDP, listing, storefront, shared-composition or visual surface is in scope.
+Scope-Statement: The production change is limited to src/frontend/app/admin/menus/admin-menus-api.ts, per the Allowed production change clause. The only other additions are the focused menus API regression test, the task receipt and the evidence files, all of which the task authorises.
+Risks: The repair itself carries low residual risk: two hunks restoring the canonical Admin header and error contracts, with identical wire headers, identical 401/403 Persian text and denied semantics, and a now-correct code-to-locale mapping, verified by 8 passing focused tests including the module architecture guard.
+Residual-Observation-For-Architect-Not-Fixed: Menu POST and PUT calls still send a JSON string body without a Content-Type: application/json header. The previous adminHeaders(Boolean(...)) call also contributed no such header, so this is unchanged behaviour rather than a regression, but it is a plausible latent Host-415 risk that a separate bounded task should decide on; adding the header here would have changed request semantics beyond the three diagnostics this task authorises. It is reported as uncertainty rather than silently expanded into.
+Rollback-Criteria: Revert commit f9b66c15754188f6d9614130978f459a883110d6 if any menu request header, menu response error, denied semantics or localized menu message differs from the canonical Admin contract; the change is two source hunks plus one new test and reverts atomically.
+Deviation-State: ONE_DECLARED_DEVIATION_THE_ADDED_FOCUSED_TEST_FILE_WHICH_THE_TASK_EXPLICITLY_PERMITS_WHEN_NECESSARY_FOR_A_BEHAVIOUR_BASED_REGRESSION_AND_WHICH_IS_JUSTIFIED_IN_THE_TEST_FILE_CHANGE_JUSTIFICATION_FIELD
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Reset-Or-Stash-State: NONE
+Rebase-State: NONE_NO_REBASE_WAS_NEEDED
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED_NOT_REMOVED_NOT_STASHED
+Base-SHA: eebb0a09ebbbea362a06f0f6d1d624724478364c
+Final-SHA: f9b66c15754188f6d9614130978f459a883110d6
+Commit-SHA: f9b66c15754188f6d9614130978f459a883110d6
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: STOP_FOR_ARCHITECT_REVIEW_NO_AUTOMATIC_NEXT_TASK
+STOP
+END_TOOBA_WORKER_RESULT

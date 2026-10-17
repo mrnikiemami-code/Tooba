@@ -1,0 +1,211 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-FULFILLMENT-PACKAGE-DISPATCH-ATOMICITY-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FULFILLMENT-DISPATCH-INTEGRITY-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_P0_BACKEND_REPAIR_WITH_STOP_GATES
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: 4b4754455cb7053a5dcfb4a1fa7636f4641c1f7f
+Starting-HEAD:          4b4754455cb7053a5dcfb4a1fa7636f4641c1f7f
+Starting-origin/main:   4b4754455cb7053a5dcfb4a1fa7636f4641c1f7f
+Tracked-worktree-clean: YES; HEAD == origin/main == Expected-Starting-HEAD; no stash/reset/rebase/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, FulfillmentDirectory.Packages.cs,
+FulfillmentDirectory.cs (AssignTrackingCoreAsync / DispatchShipmentCoreAsync / LoadMutableAsync),
+FulfillmentDbContext (shipments + consolidated_packages configuration, unique tracking index),
+ConsolidatedPackage + Shipment domain aggregates, InventoryDirectory.ConsumeAsync,
+StockReservation.MoveTo, FulfillmentInventoryGateway, Host ConsolidatedPackageTests,
+FulfillmentModuleAmsc001W3CertGuardTests. Deferred ARCHITECTURE-FINDINGS-REGISTER.md NOT read.
+
+LIVE-DATA SAFETY (NO MUTATION)
+Zero write calls against order 01a12e97-ee9e-7000-826c-a9eca536b223, its package
+01a12f79-6ef1-7000-8578-dd7cc841195d, or its member shipments. No dispatch/cancel/retry through the
+live Host. No direct SQL data repair, no migration, no tracking rewrite. Read-only SELECT only.
+
+ROOT CAUSE (confirmed deterministically, not statistically)
+The generated member reference used the first eight hex characters of a UUIDv7 ShipmentId:
+  memberCode = $"{baseCode}-{member.ShipmentId.ToString("N")[..8].ToUpperInvariant()}"
+Those eight characters are the top 32 bits of the UUIDv7 millisecond timestamp and are CONSTANT for
+about 65.5 seconds, so every member of a package generated the SAME code. The second member hit the
+global unique guard and threw fulfillment.tracking.duplicate. Live proof (read-only):
+  package MP-01A12F796EF1 | status=Created | tracking_reference=125444
+  member 01a12f79-1ad4-7000-9174-3237c0d645bf | Dispatched | 125444-01A12F79
+  member 01a12f79-33ed-7000-b7ad-e562dcf67be8 | Created    | (none)
+  first eight hex characters of BOTH shipment ids = 01A12F79  (identical)
+The second defect is the loop shape: DispatchConsolidatedPackageAsync called _db.SaveChangesAsync()
+per member (AssignTrackingCoreAsync + DispatchShipmentCoreAsync), so member 1 was committed and left
+permanently Dispatched while member 2 threw and the package stayed Created and unretryable.
+
+GATE VERDICTS
+GATE A (deterministic tracking collision, F1): PASS / FIXED.
+GATE B (atomic package dispatch, F2):            PARTIAL_PASS_WITH_ARCHITECT_STOP.
+                                                 Fulfillment-owned atomicity implemented + proven;
+                                                 cross-module reservation consumption BLOCKED for
+                                                 an Architect decision (see below). Full end-to-end
+                                                 atomicity is NOT claimed.
+GATE C (existing partial package recovery):      PARTIAL; NO mutation performed.
+                                                 Recoverable via an existing public command AFTER
+                                                 deployment; any state reset is
+                                                 BLOCKED_RECOVERY_REQUIRES_ARCHITECT_DECISION.
+
+GATE A — WHAT CHANGED
+BuildMemberTrackingReference(packageTrackingReference, shipmentId):
+  suffix = shipmentId.ToString("N").ToUpperInvariant()          // full 128-bit identity, 32 hex chars
+  base   = packageTrackingReference.Trim() trimmed to 128-32-1 = 95 chars
+  code   = base.Length == 0 ? suffix : $"{base}-{suffix}"
+Uniqueness now has a proof, not a heuristic: member shipment ids are distinct, the suffix is the
+complete identity, and the base prefix is identical for every member of the package, so distinct
+identities can never map to equal codes. Length is bounded to the shipments.tracking_reference
+column ceiling (128). No carrier/DB contract change was needed: nothing in the repository parses the
+generated suffix (searched Substring/Split suffix parsing: zero matches) and no consumer depends on
+the eight-character form. Existing references are NEVER rewritten: generation happens only when the
+member reference is empty and the package has a central code; an already-Dispatched member is
+skipped before any mutation, so the live 125444-01A12F79 row cannot be touched.
+
+GATE B — WHAT CHANGED
+DispatchConsolidatedPackageAsync is now two phases:
+ (1) BuildDispatchStepsAsync — validate and plan, write nothing: load each active member, validate
+     its shipment status (Dispatched/InTransit/Delivered => skip; anything but Created => throw
+     fulfillment.package.member_state_changed), generate the collision-free reference, reject
+     in-batch duplicates via a case-insensitive Dictionary, then run ONE query
+     (EnsureGeneratedTrackingReferencesAreFreeAsync) that checks every generated code against the
+     global unique guard excluding the members themselves. Any failure throws BEFORE any mutation.
+ (2) apply all tracking + all ApplyShipmentDispatched + inventory consumption, derive the member
+     status dictionary from the tracked shipments, call package.MarkDispatched, then exactly ONE
+     SaveChangesAsync => one atomic DB commit covering every member update and the package
+     transition (EF Core wraps a single SaveChangesAsync in one transaction; all member and package
+     writes share the single FulfillmentDbContext).
+NOT done deliberately: no BeginTransactionAsync around the loop (it would not make the Inventory
+consumption atomic and would turn a retryable failure into a permanently stuck one), no silent
+skipping of not-yet-dispatched members, no invented state transitions, no schema/migration change.
+Traced external side effect: ConsumeInventoryForShipmentAsync -> IFulfillmentInventoryGateway ->
+InventoryDirectory.ConsumeAsync runs on the Inventory module's own DbContext with ExecuteUpdateAsync
++ its own SaveChangesAsync (separate connection/transaction, physically outside the Fulfillment
+transaction), and StockReservation.MoveTo throws inventory.reservation.not_active unless still Held,
+i.e. ConsumeAsync is NOT idempotent. Wrapping it in the Fulfillment transaction would commit the
+reservation but roll back the dispatch, and the retry would then fail permanently; consuming after
+the commit would silently leak reservations. Therefore that half is BLOCKED and reported, not
+papered over with an unsafe transaction hack.
+
+GATE C — FINDINGS (design only, no mutation)
+The state "package = Created + member = Dispatched" is NOT representable through the current public
+API: CreateConsolidatedPackageAsync rejects non-Created members
+(fulfillment.package.shipment_not_eligible) and direct member dispatch is blocked
+(fulfillment.shipment.locked_by_consolidated_package). It could only be produced by the pre-repair
+non-atomic loop, which is why the NeedsDispatch == false skip branch exists as defensive recovery
+logic. Invariants: CancelConsolidatedPackageAsync IS allowed for a Created package (it releases the
+lock) but does not fix the package; Shipment.CancelPreDispatch throws
+fulfillment.shipment.cancel_invalid for a Dispatched member; CorrectTrackingAsync refuses dispatched
+shipments; DeliverConsolidatedPackageAsync requires package Dispatched; a replacement package cannot
+be rebuilt because member 1 is not Created.
+RUNBOOK (OPTION 1, recommended, requires explicit Architect/user approval and deployment of this
+commit): re-run the ordinary admin "dispatch package" action for MP-01A12F796EF1. Member 1 is
+skipped with 125444-01A12F79 preserved, member 2 generates
+125444-01A12F7933ED7000B7ADE562DCF67BE8 and is dispatched, then MarkDispatched commits the package
+transition in the same single commit. Without Gate A deployed the retry reproduces the collision.
+OPTION 2 (business decision, NOT a repair): cancel the order and explicitly accept that member 1
+stays Dispatched with 125444-01A12F79 forever and cannot be rebuilt. BLOCKED: resetting the
+dispatched member, clearing/rewriting its reference, cancelling a dispatched shipment, or any
+UPDATE/DELETE repair.
+
+FOCUSED TESTS (raw outputs in the evidence bundle)
+1) dotnet build src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure => Build succeeded,
+   0 Warning(s), 0 Error(s).
+2) Host.Tests ConsolidatedPackageTests, filter FullyQualifiedName~Package_dispatch_
+   => Total 5, Passed 4, Failed 1; the single failure is the pre-existing test named
+   Direct_member_dispatch_blocked_while_locked_and_package_dispatch_orchestrates (matched by the
+   filter substring) which fails at its FIRST assertion because it expects
+   InvalidOperationException while the domain throws ContractOperationException.
+   The four new/added tests all PASS:
+     Package_dispatch_generates_collision_free_member_tracking_for_uuidv7_prefix_twins  PASS
+     Package_dispatch_preserves_pre_assigned_member_tracking                           PASS
+     Package_dispatch_rejects_pre_taken_generated_code_without_partial_dispatch        PASS
+     Package_dispatch_is_single_commit_and_leaves_no_partial_state_on_late_failure     PASS
+3) Same class, full run => Total 13, Passed 7, Failed 6. All six failures are PRE-EXISTING and
+   unrelated to this change: they are Assert.Throws<InvalidOperationException> exact-type assertions
+   whose code paths throw ContractOperationException, and
+   ContractOperationException : Exception (declared in
+   src/backend/BuildingBlocks/Tooba.BuildingBlocks/ContractOperationException.cs) so those
+   assertions can never pass on the unmodified tree either. Failing messages are
+   fulfillment.package.requires_multi_seller / tracking_locked / cancel_after_dispatch and
+   fulfillment.shipment.locked_by_consolidated_package — none of them on the dispatch path that was
+   changed. The pre-existing tests were NOT repaired (out of scope). I did NOT run them on a
+   pristine HEAD worktree; the claim is proven statically by the exception base type plus the fact
+   that this commit touches neither the domain nor those assertions.
+4) FulfillmentModuleAmsc001W3CertGuardTests (durable architecture locks, real repository files)
+   => Total 14, Passed 14 — including Fulfillment_directory_stays_under_the_arch_size_ceiling
+   (FulfillmentDirectory.Packages.cs is now 535 lines, ceiling 800),
+   Fulfillment_owns_exactly_one_error_descriptor_per_owned_code (no error code added),
+   Fulfillment_schema_and_migrations_are_unchanged (no migration added) and
+   Fulfillment_has_no_foreign_module_application_infrastructure_or_domain_dependency.
+5) Tooba.Fulfillment.Tests (module suite) => Total 70, Passed 70.
+NOT RUN and NOT claimed as passing: full repository test sweep, AMSC, browser/visual verification,
+live Host write smoke test. No retry cascade, no repeated loops.
+TEST-ENVIRONMENT NOTE: the live dev Host (Tooba.Host.exe, PID 15068 at session start) holds the
+default bin output, so verification builds/tests were run into an isolated artifacts output
+(-p:UseArtifactsOutput=true -p:ArtifactsPath=D:\temp\tooba-verify) that never writes the tracked
+tree and never stops or restarts the running Host. Guard tests read repository files, so the
+isolated root was given read-only junctions to src/ and docs/ plus a hardlink to AGENTS.md; nothing
+inside the repository was created or modified by that mechanism.
+
+EXACT CHANGED FILES (production)
+- src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Directories/FulfillmentDirectory.Packages.cs
+  * new const MaxTrackingReferenceLength = 128
+  * new internal static BuildMemberTrackingReference(string, Guid)
+  * new private sealed record PackageDispatchStep(FulfillmentUnit, Shipment, string?, bool)
+  * new private BuildDispatchStepsAsync(...) and EnsureGeneratedTrackingReferencesAreFreeAsync(...)
+  * rewritten DispatchConsolidatedPackageAsync (two-phase, single commit)
+- src/backend/Host/Tooba.Host.Tests/ConsolidatedPackageTests.cs
+  * seed helper overload accepts an optional IFulfillmentInventoryGateway
+  * new ThrowingInventoryGateway(int failOnConsumeCall) failure-injection stub
+  * four new focused tests (Gate A + Gate B)
+No other production file changed; no frontend, no UI, no auth, no F3/F4, no schema/migration,
+no unique-index weakening, no tenant scoping of uniqueness, no guard or baseline weakening.
+
+BEHAVIOUR IMPACT
+- Generated member reference format becomes <central>-<32 hex> instead of <central>-<8 hex>.
+  Observable only for newly generated codes; existing codes are preserved and never rewritten.
+- A package dispatch that previously persisted a partial state now either commits every member plus
+  the package transition or persists nothing.
+- Everything else (types, signatures, HTTP surface, error codes, DTOs, routes, schema) is unchanged.
+
+PENDING DEPLOYMENT / LIMITATION
+The stuck live package has NOT been fixed by this change. Deploying this commit mutates no row; it
+only enables the Gate C OPTION 1 runbook to complete the package.
+
+OUTSTANDING RISK
+- Cross-module inventory reservation consumption stays outside the fulfillment commit (Gate B
+  Architect stop). Recommended follow-up: make ConsumeAsync idempotent, then treat package
+  consumption as one cross-module unit or via the existing outbox.
+- The global unique tracking index is still not tenant/store scoped (separate finding, deliberately
+  untouched).
+- Rollback: revert commit 04e3aa79f1fcf26c2c4c17f10ea1d3fce99dac91.
+
+COMMIT
+commit-sha: 04e3aa79f1fcf26c2c4c17f10ea1d3fce99dac91
+pushed-to: origin/main (4b4754455..04e3aa79f)
+HEAD-after-push:         04e3aa79f1fcf26c2c4c17f10ea1d3fce99dac91
+origin/main-after-fetch: 04e3aa79f1fcf26c2c4c17f10ea1d3fce99dac91
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+EVIDENCE
+docs/architecture/evidence/TB-P0-FULFILLMENT-PACKAGE-DISPATCH-ATOMICITY-001/
+  GATE-A-tracking-collision.md, GATE-B-atomic-dispatch.md, GATE-C-recovery-runbook.md,
+  focused-package-dispatch-tests.txt, consolidated-package-class-full.txt,
+  fulfillment-architecture-guards.txt, fulfillment-module-tests.txt,
+  live-package-state-readonly.txt, diff-stat.txt
+docs/ai/tasks/TB-P0-FULFILLMENT-PACKAGE-DISPATCH-ATOMICITY-001.task.md
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

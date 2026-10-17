@@ -1,0 +1,92 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GEOGRAPHY-COUNTRY-INTEGRITY-040
+Parent-Task: TB-SHIPPING-GEOGRAPHY-TRANSLATION-INTEGRITY-039
+Pipeline-Protocol: BRIDGE-WAKE-V1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ARCHITECTURE-PLANNING
+Mode: IMPLEMENTATION_BOUNDED_INERT_COUNTRY_RELATION_INTEGRITY_ONLY
+Bridge-Task-Row: 90cdca16-34cf-4f73-be17-7c9a5dfa2148
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: da6f339440260047f56210bfc36008d09ec71165
+Base-SHA: da6f339440260047f56210bfc36008d09ec71165
+Code-SHA: 097720258721d72bca08ad44ec86c9cc4b6fd3fe
+Evidence-SHA: 097720258721d72bca08ad44ec86c9cc4b6fd3fe
+automaticNextImplementationTask: NONE
+Migration-Authorized: NO
+Migration-Readiness-Claim: NONE (AdministrativeArea cycle prevention remains UNRESOLVED)
+
+PREFLIGHT
+- BRIDGE-WAKE received; claimed ONLY this task on channel tooba-main; no idle polling; no automatic next task.
+- branch = main; local HEAD == origin/main == Expected-Base-SHA == da6f339440260047f56210bfc36008d09ec71165. Exact match; no merge, rebase, reset, stash, cherry-pick or force-push.
+- Inspected at actual HEAD: Geography Domain aggregates (AdministrativeArea.cs, City.cs, ServiceArea.cs) and Infrastructure GeographyDbContext.cs, plus the EF composite-key/FK conventions already present in the repo.
+- Composite-FK precedent search: NO existing HasAlternateKey or HasPrincipalKey mapping exists anywhere under src/backend/Modules (rg over the whole Modules tree returned zero matches), so this is the first composite-FK pattern in the repository and there was no in-repo precedent to copy. The pattern was therefore verified empirically instead of by analogy (see BUILD/VERIFICATION), and the task's "two existing EF composite FK patterns (if available)" clause resolved to "none available".
+- Country-identity immutability recorded: AdministrativeArea.CountryId is { get; private set; } assigned only in Create (AdministrativeArea.cs L23, L57); City.CountryId the same (City.cs L23, L55). Reparent(Guid? parent, now) and MoveToAdministrativeArea(Guid? area, now) never touch CountryId, so no domain path can re-interpret the (place, country) pair after creation. Domain edits were consequently NOT necessary and none were made.
+- Dirty/untracked status preserved: pre-existing unrelated modified/untracked files were left untouched and unstaged (src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs, src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx, src/frontend/app/storefront/storefront-landing-blocks.tsx, docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, and the pre-existing untracked docs/ai/tasks/* and docs/architecture/evidence/** trees).
+
+CHANGED PATHS (2 staged in exactly one commit; nothing else created, modified or deleted)
+M src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Persistence/GeographyDbContext.cs
+A docs/planning/shipping/SHIPPING-GEOGRAPHY-COUNTRY-INTEGRITY-040.md
+Untracked (not committed, deliberately left dirty as evidence, matching the 034-039 convention): docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-COUNTRY-INTEGRITY-040/{RESULT.bridge.txt,post-result.js}
+UNCHANGED (verified): Tooba.Geography.Domain (no edit was needed), Tooba.Geography.Contracts, src/backend/Tooba.slnx, Order, AddressBook, Fulfillment, Payment, Settlement, Catalog, Offer, Host, frontend, the legacy geography route/constant and its pinned Host guard. git status lists exactly ONE modified file.
+
+SOURCE EVIDENCE / LINE RANGES (GeographyDbContext.cs, 256 lines)
+- AdministrativeArea (L75): country FK country_id -> countries Restrict L91-L93; NEW alternate key L99-L100 (entity.HasAlternateKey(x => new { x.AdministrativeAreaId, x.CountryId }).HasName("ak_administrative_areas_id_country")); self-parent composite FK L107-L111 (HasForeignKey L109 = {ParentAdministrativeAreaId, CountryId}, HasPrincipalKey L110 = {AdministrativeAreaId, CountryId}, OnDelete Restrict L111).
+- City (L115): country FK Restrict L127-L130; NEW composite area FK L137-L141 (HasForeignKey L139 = {AdministrativeAreaId, CountryId}, HasPrincipalKey L140 = {AdministrativeAreaId, CountryId}, OnDelete Restrict L141), replacing the former single-column FK.
+- Unchanged mappings confirmed in the same file: scoped code unique indexes L87 and L124; supporting indexes L88, L125; ServiceArea L145-L161 (unique L154, city FK Cascade L160); four per-kind translation tables L167-L234 (UNIQUE(country_id,language_id) L177, UNIQUE(administrative_area_id,language_id) L197, UNIQUE(city_id,language_id) L212, UNIQUE(service_area_id,language_id) L227; FK -> place Cascade L186/L201/L216/L231); OutboxMessageMapping.Map L235; design-time factory L243.
+- Report: docs/planning/shipping/SHIPPING-GEOGRAPHY-COUNTRY-INTEGRITY-040.md L1-L136 (before/after FK identities and delete policies, composite-key rationale, MATCH SIMPLE null-semantics table, verification evidence incl. rendered DDL, accepted cost, residual blockers, one bounded next step).
+
+WHAT IS NOW ENFORCED (relational boundary, database-enforced)
+- administrative_areas: FOREIGN KEY (parent_administrative_area_id, country_id) REFERENCES administrative_areas (administrative_area_id, country_id) ON DELETE RESTRICT -> a parent in a different country can no longer persist.
+- cities: FOREIGN KEY (administrative_area_id, country_id) REFERENCES administrative_areas (administrative_area_id, country_id) ON DELETE RESTRICT -> a city pointing at an area of another country can no longer persist.
+- Enabler: CONSTRAINT ak_administrative_areas_id_country UNIQUE (administrative_area_id, country_id) (trivially unique because administrative_area_id is already the PK; PostgreSQL requires a unique constraint as an FK target).
+- Delete policies unchanged: Restrict for every place-to-place reference, so no new cascade path was introduced.
+
+NULL-SEMANTICS VERIFICATION (the task's explicit concern)
+- The rendered DDL contains no MATCH clause, i.e. PostgreSQL default MATCH SIMPLE. Verified consequence table: the constraint is skipped ONLY when the parent/area column is NULL (root area, or area-less city) - in which case no cross-country link exists at all - and is always enforced whenever a parent/area is present, because country_id is NOT NULL on both tables. There is no partial-null bypass that could still create a cross-country association.
+- MATCH FULL is deliberately NOT used and would be wrong here: since country_id is NOT NULL, MATCH FULL would reject every root area and every area-less city. Nullable area/parent relations therefore remain valid exactly as before, which is the acceptance requirement.
+- Optionality preserved: both new composite FKs are modelled as optional (required=False); the required country FKs remain required=True delete=Restrict.
+
+BUILD / VERIFICATION
+1) dotnet build src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Tooba.Geography.Infrastructure.csproj => Build succeeded, 0 Error(s), 2 Warning(s) (both NU1900 NuGet vulnerability-feed timeout, network-only). Rebuilt Contracts, Domain, Persistence, Infrastructure.
+2) Targeted EF relational-model metadata verification in a throwaway harness OUTSIDE the repository (%TEMP%/geography-model-check-040, deleted afterwards and verified absent; referenced the project, called ToobaNpgsql.ConfigureModuleContext with a placeholder connection string, then read DbContext.Model) => MODEL_OK. Reported: AK ak_administrative_areas_id_country = administrative_area_id,country_id; FK parent_administrative_area_id,country_id -> administrative_areas(administrative_area_id,country_id) delete=Restrict required=False; FK administrative_area_id,country_id -> administrative_areas(administrative_area_id,country_id) delete=Restrict required=False; FK country_id -> countries(country_id) delete=Restrict required=True on both administrative_areas and cities; four translation tables each required=True delete=Cascade; TRANSLATION_TABLES 4 NO_FK=0; POLYMORPHIC_OWNER_COLUMNS 0.
+3) DDL text rendered from the model only (DbContext.Database.GenerateCreateScript(): pure model->SQL; no connection, no database, no migration file, nothing written to disk) emitted verbatim: "CONSTRAINT ak_administrative_areas_id_country UNIQUE (administrative_area_id, country_id)", "CONSTRAINT fk_administrative_areas_administrative_areas_parent_administra FOREIGN KEY (parent_administrative_area_id, country_id) REFERENCES geography.administrative_areas (administrative_area_id, country_id) ON DELETE RESTRICT", "CONSTRAINT fk_cities_administrative_areas_administrative_area_id_country_ FOREIGN KEY (administrative_area_id, country_id) REFERENCES geography.administrative_areas (administrative_area_id, country_id) ON DELETE RESTRICT", with no MATCH clause on either; all other constraints and unique indexes rendered unchanged.
+- No real database connection, no "dotnet ef" invocation, no migration file, no model snapshot, no seed, no script. Per the bounded-verification rule: no full solution build and no broad test suite.
+
+ACCEPTED COST (stated honestly)
+- The enabler adds one redundant unique constraint/index UNIQUE(administrative_area_id, country_id); it is trivially unique and exists only as an FK target. The two former single-column supporting indexes are replaced by their composite counterparts (ix_parent_administrative_area_id_country_id, ix_administrative_area_id_country_id), so no index is silently lost.
+
+EXCLUDED ACTIONS (explicit non-actions)
+- No migration, no model snapshot, no "dotnet ef" command, no database query/write/seed, no runtime DI/Host change, no endpoint, no service restart, no checkout or shipping behaviour change, no carrier/rating/serviceability work, no new module or manifest registration/certification, no ARCH-COMPLETE-002 claim.
+- NO cycle-prevention claim: an EF CHECK cannot follow arbitrary recursive parent chains, so A->B->A remains representable and was deliberately NOT addressed with an unenforceable constraint.
+- No removal or alteration of the legacy geography endpoint, constant or pinned guard; no change to unrelated pre-existing dirty work; no broader refactor; no Domain edit (not needed); no Geography.Contracts edit.
+- No test/probe/placeholder POST to Bridge /api/results; no automatic next task; no idle polling.
+
+COMMIT / PUSH EVIDENCE
+- Commit: "TB-SHIPPING-GEOGRAPHY-COUNTRY-INTEGRITY-040: enforce same-country parent FKs via composite keys" - 2 files changed, 156 insertions(+), 3 deletions(-).
+- git push origin main => "da6f33944..097720258  main -> main" (succeeded).
+- git fetch origin; LOCAL == ORIGIN == 097720258721d72bca08ad44ec86c9cc4b6fd3fe. Divergence: none. No force-push.
+
+TIME USED
+- Claim at 2026-10-14T10:11:25Z; push completed 2026-10-14T10:13:47Z => approximately 2 minutes wall-clock (well within the 30-minute HARD timebox).
+
+CERTIFICATION / MANIFEST STATUS
+- Geography remains INERT, NOT WIRED, NOT REGISTERED in tmar-module-structure-manifests.json, NOT structure-certified, ARCH-COMPLETE-002 NOT claimed, no migration and no model snapshot. D3/D8/D9 remain as approved; D10 remains OPEN. The module still has no Application/Endpoints/Tests projects, which is intentional.
+
+REMAINING BLOCKERS / RISKS (explicitly NOT solved here)
+1. AdministrativeArea cycle prevention REMAINS UNRESOLVED (A->B->A is still representable; no SQL constraint of this kind can follow a recursive parent chain). Deferred to a separately reviewed task; no false claim was made.
+2. ServiceArea has no country column, so the same-country invariant for ServiceArea -> City is not expressible in this slice (it is transitively implied while a service area hangs off exactly one city); any future direct country/area link on ServiceArea must re-apply this pattern.
+3. Optional relations intentionally remain optional (area-less cities, root areas); the invariant is enforced only when a parent is present, which is the required semantics.
+4. D10 (explicit administrative level) remains OPEN; the composite keys encode nothing about levels.
+5. LanguageId remains an external scalar identity PostgreSQL cannot verify (Localization owns the registry) - unchanged from 039.
+6. No model snapshot exists, so the first authorized migration would create the alternate key plus both composite FKs as part of a full initial create; cycle prevention would still be missing at that point unless task 041 lands first.
+7. Full solution build and the architecture test suite were intentionally not run (bounded verification). No guard in the repo reads the Geography module, so residual risk is low but not zero until a full run is authorized. NOTE for the Architect: because Geography is not registered in tmar-module-structure-manifests.json, the repository-global ARCH-COMPLETE-002 structure gate does not yet inspect these two projects; that remains a deliberate consequence of keeping the module unregistered.
+
+RECOMMENDED ONE BOUNDED NEXT STEP (NOT executed, requires Architect authorization)
+- TB-SHIPPING-GEOGRAPHY-CYCLE-PREVENTION-041: design and deliver inert cycle prevention for the administrative_areas hierarchy - evaluate the genuinely available enforcement vehicles (a domain/Application-level ancestor-walk invariant as the primary guard, optionally backed at the database level by something PostgreSQL can actually enforce, e.g. a deferred constraint trigger or a materialised path/level column), and choose one with a written rationale instead of asserting an unenforceable CHECK. Same inert discipline: no migration, no DB, no Host wiring, no behaviour change. Entry criteria: Architect acceptance of this report plus an explicit ruling on whether database-level enforcement is required at all or a domain invariant suffices for Phase 0a. Only after the cycle question is settled should a migration task be considered.
+
+STOP
+- Worker PASS != Architect ACCEPT. Final state: STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE. No polling, no new task.
+END_TOOBA_WORKER_RESULT

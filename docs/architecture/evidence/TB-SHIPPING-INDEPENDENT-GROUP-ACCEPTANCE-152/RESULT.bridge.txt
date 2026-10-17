@@ -1,0 +1,97 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-INDEPENDENT-GROUP-ACCEPTANCE-152
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Base-SHA: e57ef0639244be1ddd2bb6151456faf3436d76e7
+Code-SHA: NONE
+Evidence-SHA: 9c581914c79fd1d55b60cf9d7361c7584ec48bdb
+HEAD: 9c581914c79fd1d55b60cf9d7361c7584ec48bdb
+Origin-Main: 9c581914c79fd1d55b60cf9d7361c7584ec48bdb
+HEAD-Origin-Parity: TRUE
+Status: PARTIAL
+Evidence: docs/architecture/evidence/TB-SHIPPING-INDEPENDENT-GROUP-ACCEPTANCE-152/
+
+ENVIRONMENT
+Private, disposable, task-owned only: Next frontend http://127.0.0.1:3108
+(TOOBA_HOST_ORIGIN=http://127.0.0.1:5413) -> private Host http://127.0.0.1:5413 (Edition SingleStore) ->
+scratch Postgres container tooba-tb152-pg on 127.0.0.1:55471 (tooba_152_scratch, tooba_152_messaging).
+Fail-closed isolation-guard.json: one Active tenant store-alpha->tenant-152-scratch, no tooba_alpha, no
+tenant-alpha, no Port=5432, no prior scratch port, no ShippingRateAuthority, no ShippingOperationalShadow,
+no Edition swap, AllowResetAndSeed=false. Shared :3000, :5088, :5432/tooba_alpha, RabbitMQ, Redis and
+store-alpha were never used or modified; only loopback scratch services were created and all were removed
+after evidence (private ports 3108/5413/55471 now free, shared host PID 26472 alive). No secret, OTP, token,
+connection string or cookie was written into evidence (CREDENTIALS_WRITTEN_TO_EVIDENCE=false).
+
+SCOPE / CHANGE BOUNDARY
+Zero production source changes (Code-SHA NONE). Only task-owned evidence scripts plus one minimum scratch
+tax fixture were added, exactly as authorized: tax.rules row for the schema-derived seeded offer category
+01a1460a-4a8b-7000-8a53-1b669c1b250f mirroring the existing canonical rule shape (IR-NAT / IR / Percentage
+/ 0.09 / specificity 10 / OverridePolicy Disabled / Active). No tax code touched, no dummy zero quote forced.
+
+(A) AUTHENTICATED TWO-SELLER SAME-METHOD HTTP ACCEPTANCE: PASS
+journey-152.js on the private Host; assertion-matrix-152.txt = 32 checks, 30 PASS, 0 FAIL, 2 OBSERVED.
+- Initial projection returns two seller-specific GroupKeys for the SAME canonical method tipax:standard.
+- Seller A preparation 2 days -> earliest 2026-10-21; Seller B preparation 3 days -> earliest 2026-10-22;
+  both with the same method lead 3; no page-wide intersection or MAX bound was applied.
+- Save produced two distinct ShippingGroupIds (A 01a1461a-e3dd-7000-add7-4a7d9600829d,
+  B 01a1461a-e3dd-7000-8ca6-5c22def14aea), each keeping its own selected date and time window.
+- Re-read and a second re-read return identical per-group schedules (no client drift, no recalculation).
+- Editing group A's window persists on A only; group B date, window and single line membership unchanged.
+- Invalid past date for A -> 4xx; invalid window -> 4xx shipping.delivery.slot_unavailable; neither rejected
+  write overwrote the last accepted selection for either group.
+- Final cart membership is still exactly the two submitted offers (no premature checkout/charge).
+
+(B) READ-ONLY PAYMENT DRAFT (closes the TB-151 409): PASS
+GET /v1/storefront/cart/{cartId}/payment-draft -> HTTP 200 (was 409 checkout.tax.unavailable).
+- two groups, distinct sellers, both tipax:standard, identities equal to the latest accepted save
+- one cart line per group, no shared line; schedules preserved per group
+- per-group fees 180,000 + 180,000; shippingAmount 360,000 = sum of group fees (charged once per group)
+- subtotalExclusiveOfTax 14,350,000; discount 0; taxAmount 1,291,500 (authoritative 9%); payableAmount
+  16,001,500 = subtotal - discount + tax + shipping (exact); checkoutId null (read-only seam, nothing created)
+- no non-existent field asserted and no financial share allocation invented; persisted provenance established
+  through the draft group mapping plus db-readback-152.txt.
+
+(C) REAL PRIVATE BROWSER ACCEPTANCE: PASS with one reported limitation
+Real authenticated OTP fixture session through the private frontend only; the app itself restored the
+persisted two-seller draft. Screenshots from the actual app (no synthetic UI, no mock images):
+ui-shipping-two-groups-152.png and ui-shipping-independent-windows-152.png. DOM (ui-dom-assertions-152.txt):
+two distinguishable "تیپاکس معمولی" cards, each with its own seller, item, fee ۱۸۰٬۰۰۰ ریال, own earliest date
+(2026-10-21 vs 2026-10-22) and own date+window controls; initial A=2026-10-21/12-15 B=2026-10-22/9-12; a real
+UI change of A's window to 15-18 left B byte-identical; full reload restored the server-persisted 12-15 for A
+and 9-12 for B; data-testid=shipping-continue was enabled with both groups carrying method+date+window.
+LIMITATION: the window chip set is single-select with no deselect, so a real "group unselected" state cannot
+be produced from this cart through the UI; the gating clause is evidenced by enabled state only, not by an
+observed disabled->enabled transition. Reported rather than silently certified.
+
+(D) REPEATED-SAVE ShippingGroupId CONTINUITY: OPEN / MUST FIX (reproduced)
+Every accepted save re-issues both draft ShippingGroupIds: first save a=01a1461a-e2d6..., b=01a1461a-e2d7...;
+after editing A a=01a1461a-e370..., b=01a1461a-e370-7000-b14d-9362ac531794; identical repeated save
+a=01a1461a-e3dd-7000-add7-4a7d9600829d, b=01a1461a-e3dd-7000-8ca6-5c22def14aea. Schedules, line membership and
+fees stay correct and consistently mapped to the latest ids (the payment draft references the latest save),
+but the locked "stable ShippingGroupId" requirement remains unmet. Not certified stable; no schema rewrite or
+opportunistic id overhaul attempted in this acceptance task.
+
+NO PREMATURE MUTATION
+db-readback-152.txt: checkouts 0, seller_orders 0, order_lines 0, order_shipping_groups 0, payments 0,
+payment_attempts 0; cart_shipping_groups 2 with cart_shipping_group_lines 2 (one line per group); draft row
+updated with the accepted recipient/address only.
+
+WHY PARTIAL (not PASS)
+PASS requires both real HTTP/payment-draft assertions AND real per-group browser independence, which
+succeeded, but criterion D reproduced a locked-requirement deficit and one clause of criterion C could not be
+produced from a real unselected UI state. Both are reported as OPEN above.
+
+STILL OPEN (outside this task)
+repeated-save ShippingGroupId continuity; authoritative carrier calendar/capacity/timezone; same-seller
+same-method incompatible origins; Admin monetary modes/create-method; release blockers in
+docs/planning/MUST-FIX-BEFORE-RELEASE.md. A PASS on shipping groups does not close overall Shipping.
+
+CLEANUP
+Private Next and private Host stopped by exact path match (PID 37444); container tooba-tb152-pg removed; no
+shared service restarted, purged or rebuilt; .tmp-152-* working artifacts and credentials are untracked and
+were not committed. Automatic-Next-Implementation-Task: NONE. Stopping for Architect review.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK

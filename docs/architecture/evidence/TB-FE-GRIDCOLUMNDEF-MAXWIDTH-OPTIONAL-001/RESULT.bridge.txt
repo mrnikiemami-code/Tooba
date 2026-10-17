@@ -1,0 +1,55 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-GRIDCOLUMNDEF-MAXWIDTH-OPTIONAL-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR
+Status: PASS
+Verdict: REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Base-SHA: 3fda1a8c01b644a180c881abaaa4287fadefe5d2
+Preflight-Head-Equals-Origin-Main-State: VERIFIED_AT_PREFLIGHT
+Final-SHA: 48a59532c1f5e7e961f047518f5bfcea1313a4c4
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Commit-SHA: 48a59532c1f5e7e961f047518f5bfcea1313a4c4
+Contract-Justification: Confirmed from real code, not assumed, that a missing maxWidth means NO imposed maximum and is not a mandatory design constraint, in three independent places. (1) design-system/app-data-grid/legacy-grid-bridge.ts mapped maxWidth straight into AG Grid ColDef.maxWidth. (2) AG Grid 36.1.0 resolves it as "this.maxWidth = colDef.maxWidth ?? Number.MAX_SAFE_INTEGER" (ag-grid-community/dist/package/main.esm.mjs:2081) and clamps with "Math.min(actualWidth, this.maxWidth)" (:2409), so an absent key and an explicit undefined are equivalent at runtime and no cap is forced. (3) The same bridge already guarded the actions column with actionsColumn.maxWidth != null under the comment "بدون سقف اجباری" and legacy-grid-bridge.test.ts already asserted "leaves actions maxWidth open when not provided". The task-requested check of clampWidth with undefined found a REAL latent defect: design-system/data-grid/serialize.ts:91 is "Math.min(max, Math.max(min, width))", and the internal DataGrid resize path called clampWidth(initial + delta, column.minWidth, column.maxWidth); for an uncapped column the runtime value was undefined, so Math.min(undefined, ...) produced NaN, which was written into layout.widths[id] and applied as a CSS width. The falsely-required type contract was therefore masking both 96 phantom errors and a NaN resize bug; the repair had to cover the clamp seam as well as the declaration.
+Changed-Files: src/frontend/design-system/data-grid/types.ts (modified - maxWidth: number -> maxWidth?: number with a doc comment stating that absence means no imposed maximum, matching AG Grid ColDef.maxWidth; width and minWidth remain required and all other semantics untouched); src/frontend/design-system/app-data-grid/legacy-grid-bridge.ts (modified - maxWidth: col.maxWidth replaced by the conditional spread "...(col.maxWidth != null ? { maxWidth: col.maxWidth } : {})", mirroring the existing actions-column pattern so defined caps pass through and absent caps stay absent); src/frontend/design-system/data-grid/DataGrid.tsx (modified - added module constant UNCAPPED_COLUMN_MAX_WIDTH = Number.POSITIVE_INFINITY and used "column.maxWidth ?? UNCAPPED_COLUMN_MAX_WIDTH" in the resize clamp so an uncapped column resizes without a maximum and can never yield NaN); src/frontend/design-system/app-data-grid/legacy-grid-bridge.test.ts (modified - added "passes through defined caps only" and "imposes no maximum for uncapped data columns", existing actions capped/uncapped tests kept); src/frontend/design-system/data-grid/grid-state.test.ts (modified - EXTRA FILE, enumerated and justified: this is the existing discovery-registered DataGrid width/clamp test seam that already imported and asserted clampWidth and is included in npm run test:grid; one focused regression test was added for the uncapped clamp rule used by the resize path; no new test file and no parallel design-system implementation); docs/ai/tasks/TB-FE-GRIDCOLUMNDEF-MAXWIDTH-OPTIONAL-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-GRIDCOLUMNDEF-MAXWIDTH-OPTIONAL-001/summary.md, typecheck-after-tsc.txt, typecheck-diff-vs-base.txt, test-grid.txt, test-architecture.txt (added - bounded evidence)
+Untouched-Surfaces-State: VERIFIED_NO_BACKEND_NO_SCHEMA_NO_LOCALIZATION_NO_ADMIN_SCREENS_NO_HOME_OR_PDP_NO_SECTIONDISPLAYCONFIG_NO_OTHER_TYPECHECK_CLUSTERS_NO_FINDINGS_REGISTER_NO_TSCONFIG_NO_BASELINES_NO_GUARD_RELAXATION
+Antipattern-State: NONE_NO_ANY_NO_TS_IGNORE_NO_HIDING_CASTS_NO_TSCONFIG_EXCLUSION_NO_GLOBAL_BASELINE_NO_GUARD_RELAXATION
+Broad-Screen-Column-Edit-State: NONE_THE_95_SCREEN_COLUMN_LITERALS_WERE_NOT_TOUCHED
+Typecheck-Total-Before: 155
+Typecheck-Total-After: 56
+Typecheck-Reduction: 99
+Typecheck-New-Errors: 0
+Typecheck-Expected-Vs-Actual: expected near 59, measured 56; the extra 3 are diagnostics previously masked by the maxWidth root (2 excess-property TS2353 on half-migrated flex columns and 1 TS2322 array-literal assignability), not silent removals
+Typecheck-Diff-Method: machine diff of file+line+code between the audit raw baseline (docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/typecheck-tsc-raw.txt) and the post-change raw output; result removed=99 added=0
+Remaining-56-Clusters-State: UNBLOCKED_OTHER_CLUSTERS_shared-composition-renderer 9, category-admin-screen 6, settings/page 5, admin-create-shipment-modal 4, menus/admin-menus-api 3, shipping-services-screen 3, language-list 3, plus smaller local clusters
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED
+Commands-Run: git fetch origin + HEAD==origin/main verification (preflight and post-push); cd src/frontend && node_modules/.bin/tsc --noEmit (after: 56 errors, exit 2); node --experimental-strip-types --test design-system/app-data-grid/legacy-grid-bridge.test.ts (6 pass 0 fail); node --experimental-strip-types --test design-system/data-grid/grid-state.test.ts (9 pass 0 fail); npm run test:grid (97 pass 1 fail of 98); npm run test:architecture (11 pass 0 fail); git show HEAD:...AppDataGrid.tsx to prove the pre-existing failure; git diff/status inspections for the exact final diff
+Focused-Test-Results: legacy-grid-bridge.test.ts 6/6 PASS; grid-state.test.ts 9/9 PASS; npm run test:architecture 11/11 PASS
+Test-Grid-Result: 97 PASS / 1 FAIL (98 tests)
+PreExisting-Failure-Proof: design-system/app-data-grid/column-manager.test.ts test "page size options include 1000" asserts AppDataGrid.tsx matches /PAGE_SIZES = \[10, 25, 50, 100, 1000\]/ while AppDataGrid.tsx contains "const PAGE_SIZES = [10, 20, 25, 50, 100, 1000];" AT HEAD (verified with git show HEAD). Neither file is modified by this task, so the failure is deterministic, pre-existing and independent of this change; it belongs to the admin-grid canonical cluster, sits outside the permitted file list, and was deliberately not "fixed" or masked.
+PreExisting-Failure-Count-Before: 1
+PreExisting-Failure-Count-After: 1
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: The change is confined to design-system grid internals and their focused tests. No Home, PDP, listing, storefront or shared-composition file was touched, no visual primitive was changed, and no column cap was added or removed for any existing screen: capped columns keep identical caps, and uncapped columns were already uncapped at runtime by AG Grid ("?? MAX_SAFE_INTEGER"), while the bridge's absent-vs-undefined key is provably equivalent in AG Grid 36.1.0. Therefore no locked storefront surface could shift and the critical visual suite is not applicable to this bounded repair.
+Visual-Runtime-Delta-State: ZERO_FOR_CAPPED_COLUMNS_ZERO_FOR_AG_GRID_COLUMNS_UNCAPPED_LEGACY_DATAGRID_RESIZE_NOW_USES_THE_DRAGGED_WIDTH_INSTEAD_OF_NAN
+NaN-Hardening-State: FIXED_IN_DataGrid.tsx_VIA_UNCAPPED_COLUMN_MAX_WIDTH_POSITIVE_INFINITY
+Tests-Not-Run: npm run test:critical-storefront, npm run test:discovered (full suite), npm run test:home, test:pdp-guard, test:listing-guard, test:category-plp-guard, test:surface-coverage, test:admin*, npm run build, backend build/tests, browser/live verification, any AMSC wave
+Unrun-Test-Pass-Claim-State: NONE
+Amsc-Wave-State: NONE
+Architecture-Contract-Justification-Summary: The repair makes the declared contract match the real, already-shipped runtime contract instead of weakening a guard: GridColumnDef is owned by the data-grid design-system layer, its only consumers are design-system bridges/adapters and screen column literals, and nothing in the backend, Host, Contracts or storefront boundaries depends on maxWidth being required. No optionality was forced beyond what the code and AG Grid already implemented, no compiler or test gate was relaxed, and the design-system ownership and dependency direction are preserved.
+Risks: Residual risk LOW. Contract-only change plus one NaN-hardening line in the legacy internal grid. Explicit caps and column widths are unchanged; AG Grid columns have zero runtime delta because an absent maxWidth and an explicit undefined both resolve to MAX_SAFE_INTEGER; the single behaviour change is that an uncapped legacy internal DataGrid column now resizes to the dragged width instead of NaN. No schema, migration or persisted-state change. Rollback is a single-commit revert of design-system grid files and two focused test files.
+Rollback-Criteria: Revert commit 48a59532c if any admin grid shows a width/visual regression against its approved baseline; the change is self-contained and safe to revert atomically.
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED_NOT_REMOVED_NOT_STASHED
+Preflight-Divergence-State: NONE_HEAD_EQUALS_ORIGIN_MAIN_AT_START
+Recovery-Conflict-State: NONE
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Register-Read-State: NOT_READ_OPT_IN_RESPECTED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: USER_REVIEW_AFTER_BOUNDED_REPAIR
+STOP
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,100 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GEOGRAPHY-MODULE-FOUNDATION-037
+Parent-Task: TB-SHIPPING-GEOGRAPHY-BOUNDARY-036
+Pipeline-Protocol: BRIDGE-WAKE-V1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ARCHITECTURE-PLANNING
+Mode: IMPLEMENTATION_BOUNDED_MODULE_FOUNDATION_ONLY
+Bridge-Task-Row: 6cfa408d-5177-4bfe-8891-08f473902ab3
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 366f18beae463db1c7f2b54f2f1a61c8bdc61db8
+Base-SHA: 366f18beae463db1c7f2b54f2f1a61c8bdc61db8
+Code-SHA: 2d3070c05ef5e2a236da26d3ee6f5cb33e7126e0
+Evidence-SHA: 2d3070c05ef5e2a236da26d3ee6f5cb33e7126e0
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- BRIDGE-WAKE received; exactly one Pending task claimed on channel tooba-main; no polling while idle; no automatic next task.
+- branch = main; local HEAD == origin/main == Expected-Base-SHA == 366f18beae463db1c7f2b54f2f1a61c8bdc61db8. Exact match; no auto-merge, rebase, reset, stash, cherry-pick or force-push was performed.
+- Target paths did not exist: Test-Path src/backend/Modules/Geography => False. No overwrite.
+- Inspected actual organization/manifest: solution is src/backend/Tooba.slnx (one <Folder Name="/Modules/<Module>/"> group per module); Directory.Build.props sets GenerateDocumentationFile=true and WarningsAsErrors includes CS1591 for non-test projects; module conventions read from Modules/Media, Modules/UserPreference and Modules/StoreContext.
+- Architecture-guard impact inspected: no Host test enumerates the top-level src/backend/Modules directory into a set; TmarCompleteReferenceStructureGateTests validates declared-manifest modules against disk (manifest -> disk, not disk -> manifest), and PlatformProbeAmcW4CertGuardTests asserts absence of PlatformProbe only. An inert unmanifested module therefore does not disturb any structure gate. No guard bypassed.
+- Dirty/untracked status preserved: pre-existing unrelated modified/untracked files (CheckoutAbuseGate.cs, admin-fulfillment-work-queue-screen.tsx, admin-order-detail-screen.tsx, storefront-landing-blocks.tsx, TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md and the pre-existing untracked evidence directories) were left untouched and unstaged.
+
+CHANGED PATHS (15 staged in exactly one commit; nothing else created/modified/deleted)
+A src/backend/Modules/Geography/Tooba.Geography.Contracts/Tooba.Geography.Contracts.csproj
+A src/backend/Modules/Geography/Tooba.Geography.Contracts/Errors/GeographyErrorCodes.cs
+A src/backend/Modules/Geography/Tooba.Geography.Contracts/Places/GeographyPlaceSnapshots.cs
+A src/backend/Modules/Geography/Tooba.Geography.Contracts/Places/DestinationResolutionContracts.cs
+A src/backend/Modules/Geography/Tooba.Geography.Contracts/Places/IGeographyLookup.cs
+A src/backend/Modules/Geography/Tooba.Geography.Contracts/Places/IGeographyLabelLookup.cs
+A src/backend/Modules/Geography/Tooba.Geography.Domain/Tooba.Geography.Domain.csproj
+A src/backend/Modules/Geography/Tooba.Geography.Domain/Enums/GeographyPlaceKind.cs
+A src/backend/Modules/Geography/Tooba.Geography.Domain/Aggregates/Country.cs
+A src/backend/Modules/Geography/Tooba.Geography.Domain/Aggregates/AdministrativeArea.cs
+A src/backend/Modules/Geography/Tooba.Geography.Domain/Aggregates/City.cs
+A src/backend/Modules/Geography/Tooba.Geography.Domain/Aggregates/ServiceArea.cs
+A src/backend/Modules/Geography/Tooba.Geography.Domain/Aggregates/PlaceNameTranslation.cs
+A docs/planning/shipping/SHIPPING-GEOGRAPHY-FOUNDATION-037.md
+M src/backend/Tooba.slnx  (additive only: one new <Folder Name="/Modules/Geography/"> group with exactly the two new csproj entries, appended after the Support group; no existing line changed)
+Untracked (not committed, deliberately left dirty as evidence, matching the 034/035/036 convention): docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-MODULE-FOUNDATION-037/{RESULT.bridge.txt,post-result.js}
+
+PATHS / LINE-RANGE EVIDENCE
+- Contracts csproj: src/backend/Modules/Geography/Tooba.Geography.Contracts/Tooba.Geography.Contracts.csproj L1-L12 (net8.0, ImplicitUsings, Nullable, RootNamespace/AssemblyName Tooba.Geography.Contracts; single ProjectReference to BuildingBlocks).
+- Domain csproj: src/backend/Modules/Geography/Tooba.Geography.Domain/Tooba.Geography.Domain.csproj L1-L13 (net8.0, ImplicitUsings, Nullable; references BuildingBlocks + Tooba.Geography.Contracts, matching the UserPreference.Domain -> Contracts precedent).
+- Stable codes: Contracts/Errors/GeographyErrorCodes.cs L6-L42 (geography.country.id.required, geography.country.code.invalid, geography.administrative_area.*, geography.city.*, geography.service_area.*, geography.translation.*).
+- Immutable snapshots only: Contracts/Places/GeographyPlaceSnapshots.cs L6-L46 (CountrySnapshot, AdministrativeAreaSnapshot, CitySnapshot, ServiceAreaSnapshot as sealed records).
+- Resolution seam: Contracts/Places/DestinationResolutionContracts.cs L11-L17 DestinationResolutionOutcome = Resolved|Ambiguous|Unresolved; L23-L42 DestinationResolution with Identifiers=null for Ambiguous/Unresolved (safe closed shape) and factories Resolved/Ambiguous/Unresolved.
+- Read seam: Contracts/Places/IGeographyLookup.cs L9-L59 — ListCountriesAsync, ListAdministrativeAreasAsync, ListCitiesAsync, ListServiceAreasAsync, GetByIdsAsync, ResolveLegacyAsync; every member async with CancellationToken.
+- Label seam: Contracts/Places/IGeographyLabelLookup.cs L9-L47 — GetCountryLabelsAsync / GetAdministrativeAreaLabelsAsync / GetCityLabelsAsync / GetServiceAreaLabelsAsync, all keyed by Guid? languageId (no Localization project reference; plain value only).
+- Place kind discriminator: Domain/Enums/GeographyPlaceKind.cs L8-L20 (Country/AdministrativeArea/City/ServiceArea) used only for translation-row ownership.
+- Country: Domain/Aggregates/Country.cs L9-L94 (CountryId init, CountryCode 2..3 chars normalized upper, IsActive, CreatedAt/UpdatedAt, Create/UpdateCode/Activate/Deactivate; invalid input -> SemanticException(SemanticError(GeographyErrorCodes.CountryCodeInvalid))).
+- AdministrativeArea: Domain/Aggregates/AdministrativeArea.cs L9-L160 (AdministrativeAreaId, CountryId, nullable ParentAdministrativeAreaId self-reference, Code<=32, IsActive, Reparent/UpdateCode/Activate/Deactivate, self-parent rejected via AdministrativeAreaParentSelf; NO level discriminator, D10 left OPEN — stated in the class comment).
+- City: Domain/Aggregates/City.cs L8-L133 (CityId, CountryId, nullable AdministrativeAreaId, Code<=32, MoveToAdministrativeArea, Activate/Deactivate).
+- ServiceArea: Domain/Aggregates/ServiceArea.cs L8-L110 (ServiceAreaId, CityId, Code<=32, Activate/Deactivate; no coverage/rate concept).
+- Localized names: Domain/Aggregates/PlaceNameTranslation.cs L11-L124 (TranslationId, PlaceKind, PlaceId, LanguageId, Name<=128, Rename; uniqueness of (PlaceKind, PlaceId, LanguageId) explicitly deferred to persistence, which does not exist in this task).
+- Structure/convention evidence: every .cs file sits in Aggregates/ or Enums/ (Domain) and Errors/ or Places/ (Contracts) with ZERO .cs files at either project root; namespace == project name + relative folder (Tooba.Geography.Domain.Aggregates, Tooba.Geography.Contracts.Places, Tooba.Geography.Contracts.Errors, Tooba.Geography.Domain.Enums) — verified by the successful build under CS1591-as-error and by construction.
+- Report: docs/planning/shipping/SHIPPING-GEOGRAPHY-FOUNDATION-037.md L1-L200 (created paths, seam, D8/D9/D10 conformance, certification status, build evidence, exclusions, one bounded next step).
+
+HARD-GUARD COMPLIANCE (explicit non-actions)
+- No production behaviour change. No change to Order, AddressBook, Fulfillment, Catalog, Offer, Payment, Settlement, StoreContext, Localization, frontend or Host. Verified: git status is clean for src/backend/Host/** (whole tree), StorefrontOrderEndpoints.cs, StorefrontIranGeography.cs, HostStorefrontAmcR3GuardTests.cs and storefront-shipping.tsx => LEGACY_AND_HOST_CLEAN.
+- D8 honoured: legacy GET /v1/storefront/geography/provinces, StorefrontIranGeography.Provinces, StorefrontProvinceOption and the pinned Host guard are byte-for-byte untouched; this module exposes no endpoint and no route was added or changed.
+- D9 honoured: Geography owns its own per-LanguageId name rows (PlaceNameTranslation); the Contracts seam takes languageId as a plain Guid/Guid? and adds NO dependency on Tooba.Localization.*; no generic translation engine or abstraction was invented.
+- D10 remains OPEN: no administrative-level discriminator was modelled; noted in the AdministrativeArea class comment and in the report.
+- No migration, DbContext, persistence, DB query/write, seed, default country set, deployment, service/config change, checkout shipping/rate/calendar/coverage logic, endpoint or API route change. No static world data. No Geography -> Order/AddressBook/Shipping commercial dependency. No cross-module database access. No Host DI registration. No new consumer project references.
+- No certified manifest entry altered; Geography is NOT registered in docs/architecture/tmar-module-structure-manifests.json and ARCH-COMPLETE-002 is NOT claimed.
+- No edit to ADR 036, the architecture draft, or any previously accepted report. No test/probe/placeholder POST to Bridge /api/results. No hidden polling, no automatic next task.
+
+BUILD / CHECKS
+- dotnet build src/backend/Modules/Geography/Tooba.Geography.Contracts/Tooba.Geography.Contracts.csproj => Build succeeded, 0 Error(s), 2 Warning(s) (both NU1900 NuGet vulnerability-feed timeout — network only, unrelated to code). Artifact: bin/Debug/net8.0/Tooba.Geography.Contracts.dll (plus Tooba.BuildingBlocks.dll).
+- dotnet build src/backend/Modules/Geography/Tooba.Geography.Domain/Tooba.Geography.Domain.csproj => Build succeeded, 0 Error(s), 2 Warning(s) (same NU1900 only). Artifact: bin/Debug/net8.0/Tooba.Geography.Domain.dll.
+- Per the bounded-verification rule: only the two created projects were built. No full solution build, no test run, no DB access, no service restart.
+- bin/ and obj/ artifacts confirmed excluded from staging via `git add --dry-run` (exactly 13 source files listed).
+
+PUSH EVIDENCE
+- Commit: TB-SHIPPING-GEOGRAPHY-MODULE-FOUNDATION-037: add inert Geography Domain+Contracts foundation.
+- git push origin main => "366f18bea..2d3070c05  main -> main" (succeeded).
+- git fetch origin; local HEAD == origin/main == 2d3070c05ef5e2a236da26d3ee6f5cb33e7126e0. Divergence: none. No force-push.
+
+TIME USED
+- Approximately 26 minutes wall-clock from BRIDGE-WAKE claim to push (within the 30-minute HARD timebox). The critical path was the first NuGet restore of the new projects (network vulnerability-feed timeouts), not code.
+
+CERTIFICATION / MANIFEST STATUS
+- Geography: foundation-only, INERT, NOT WIRED, NOT REGISTERED in tmar-module-structure-manifests.json, NOT structure-certified, ARCH-COMPLETE-002 NOT claimed. Nothing was wired into Host, so no module gate was touched.
+
+REMAINING RISKS / OPEN ITEMS (none blocking)
+1. Persistence is absent by design: (PlaceKind, PlaceId, LanguageId) uniqueness and every identifier/code uniqueness rule are declared but unenforced until an Infrastructure layer exists.
+2. The Contracts seam is currently unconsumed; no consumer, no DI registration and no endpoint exists, so nothing can call it yet (intended for this bounded foundation).
+3. Full solution build and the architecture test suite were intentionally not run (bounded verification). Residual risk that a future full-suite run notices the additive /Modules/Geography/ solution group is assessed as very low, because no guard performs global module-directory set equality and the gate direction is manifest -> disk.
+4. D10 (explicit administrative level) remains OPEN and must be resolved by the Architect before real region data is entered.
+5. Later manifest registration/certification will require Application, Infrastructure, Endpoints and Tests projects that are deliberately out of scope here.
+
+RECOMMENDED ONE BOUNDED NEXT STEP (NOT executed, requires Architect authorization)
+- TB-SHIPPING-GEOGRAPHY-PERSISTENCE-038: add Geography Infrastructure + Application (own DbContext with the (PlaceKind, PlaceId, LanguageId) unique index, concrete IGeographyLookup/IGeographyLabelLookup adapters, expand-first migration, and Phase 0a minimal explicit region catalogue administration) with still NO serviceability/coverage/rating/fail-closed logic and NO Order/AddressBook/Fulfillment changes. Entry criteria: Architect acceptance of this foundation plus an explicit ruling on migration/rollout authorization.
+
+STOP
+- Worker PASS != Architect ACCEPT. Final state: STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+END_TOOBA_WORKER_RESULT

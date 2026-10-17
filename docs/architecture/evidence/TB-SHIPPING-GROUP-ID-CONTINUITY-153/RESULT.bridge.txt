@@ -1,0 +1,154 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GROUP-ID-CONTINUITY-153
+Parent-Task: TB-SHIPPING-INDEPENDENT-GROUP-ACCEPTANCE-152
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-INDEPENDENT-SELLER-COMMITMENTS
+Mode: BOUNDED_FIX_PERSISTED_SHIPPING_GROUP_ID_CONTINUITY
+Bridge-Task-Row: 55829207-fd88-41c6-806d-2eedd81c350b
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 9c581914c79fd1d55b60cf9d7361c7584ec48bdb
+Base-SHA: 9c581914c79fd1d55b60cf9d7361c7584ec48bdb
+Code-SHA: ab3f70b203056ff464cc963d33c2825cdb63ff29
+Evidence-SHA: ab3f70b203056ff464cc963d33c2825cdb63ff29
+automaticNextImplementationTask: NONE
+HEAD: ab3f70b203056ff464cc963d33c2825cdb63ff29
+Origin-Main: ab3f70b203056ff464cc963d33c2825cdb63ff29
+HEAD-Origin-Parity: TRUE
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Evidence: docs/architecture/evidence/TB-SHIPPING-GROUP-ID-CONTINUITY-153/
+Elapsed-Minutes: 14 (measured wall clock: first TB-153 artifact written 2026-10-16T22:51:26+03:30 ->
+commit 2026-10-16T23:05:08+03:30. The Bridge row was re-claimed at 2026-10-16T19:34:16Z, about one minute
+before the commit, so the row claim->commit interval is not the task elapsed time.)
+
+ROOT CAUSE (real code, reproduced and fixed)
+StorefrontShippingService.SaveSelectionAsync cleared the whole persisted group set and re-added the planner
+output on EVERY accepted save, and CartShippingGroupPlanner.Plan unconditionally invoked the newGroupId
+factory (UuidV7.New). Consequently a byte-identical retry AND a schedule edit that touched only group A both
+re-issued fresh ids for BOTH groups. This is exactly TB-152 finding (D) "repeated-save ShippingGroupId
+continuity: OPEN / MUST FIX" (first save a=01a1461a-e2d6.., b=01a1461a-e2d7..; edit of A a=01a1461a-e370..,
+b=01a1461a-e370..; repeat save a=01a1461a-e3dd.., b=01a1461a-e3dd..). Nothing else was broken: schedules, fees,
+line membership and draft coupling stayed correct and always mapped to the newest ids.
+
+IMPLEMENTATION (narrow, behavior-preserving, no schema change)
+1. src/backend/Modules/Order/Tooba.Order.Domain/Checkout/CartShippingGroupPlanner.cs
+   - Plan(...) gained an optional IReadOnlyList<CartShippingDraftGroup>? reusableGroups = null.
+   - New pure rule IsSameLogicalObligation(existing, cartId, sellerPartyId, method, cartLineIds): the
+     persisted group is the same logical obligation iff (a) it has a non-empty ShippingGroupId, (b) same
+     CartId, (c) same SellerPartyId, (d) same trimmed case-insensitive canonical MethodCode, (e) same trimmed
+     case-insensitive ServiceCode and OptionCode (empty == empty, never a wildcard), (f) OriginContext is null
+     (the only origin state the planner itself accepts today, so Case D stays BLOCKED), and (g) exact
+     whole-line membership set equality with the authoritative CartLineIds of the request.
+   - Date/window are deliberately NOT part of identity: a pure schedule edit and an idempotent retry keep the
+     id; a membership / seller / method / service / option change allocates a NEW id.
+   - FindReusableGroupId returns the first matching persisted id and records it in a local HashSet<Guid>, so a
+     single persisted id can never be assigned to two groups. Miss -> caller's newGroupId() (UuidV7.New).
+   - The reuse set is derived ONLY from the trusted persisted draft; no client-supplied id is read anywhere.
+2. src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs
+   - The trusted draft for the same cart is now read once BEFORE planning (the same single GetByCartIdAsync
+     read as before, merely hoisted; the later duplicate read was deleted) and passed as reusableGroups.
+   - Everything else is untouched: two-phase ClearShippingGroups/AddShippingGroups replacement, per-group
+     schedule validation, fail-closed date/window faults, legacy single-group scalar shorthand
+     (multiGroupWrite gate, scalarDeliveryDate/scalarDeliveryTimeWindow), price snapshots, seller eligibility,
+     origin/method eligibility, the unique (cart, seller, method) index, and Case D blocking. No migration,
+     no EF mapping change, no model snapshot change, no deterministic GUID/hash substitution.
+
+FOCUSED TESTS (source, owner-correct, deterministic)
+src/backend/Modules/Order/Tooba.Order.Tests/Storefront/ShippingGroupIdentityContinuityTests.cs — 11 tests,
+driven through the real StorefrontShippingService.SaveSelectionAsync with fake ports plus an in-memory draft
+store that reproduces the production two-phase replace semantics:
+ 1. repeat Plan for the same obligation reuses the persisted ids and never assigns one id twice;
+ 2. schedule-only change keeps both ids and moves only A;
+ 3. changed line membership allocates a new id (no cross-group data reuse);
+ 4. a different method for B never borrows A's id;
+ 5. a group persisted for another cart is never reused;
+ 6. legacy Plan without reuse candidates is byte-unchanged;
+ 7. first save creates two distinct ids and an identical save returns the exact same ids (zero writes);
+ 8. editing only A keeps both ids and leaves B's whole promise byte-identical;
+ 9. a genuine method switch re-ids only that group, preserving one-to-one line membership;
+10. fail-closed invalid date (shipping.delivery.too_early) and invalid window
+    (shipping.delivery.slot_unavailable) never write and never change persisted ids/schedules;
+11. legacy single-group shorthand still works and keeps its identity across a window change.
+
+PERSISTENCE-BACKED PROOF (real EF + real Postgres + real authenticated HTTP)
+Task-153-owned copies of the proven TB-152 recipe (TB-152 evidence untouched): private Host
+http://127.0.0.1:5414 (Edition SingleStore, no swap) -> disposable container tooba-tb153-pg on
+127.0.0.1:55472 (tooba_153_scratch / tooba_153_messaging), one Active scratch tenant, seller preparation
+A=2 / B=3, same canonical method tipax:standard for both, one cart line each.
+journey-153.js = 28 checks, 27 PASS / 1 FAIL / 0 BLOCKED:
+- two independent promises on the SAME method: seller A minimum 2026-10-21, seller B minimum 2026-10-22;
+- both ShippingGroupIds identical across first save, edit-of-A save, byte-identical repeat save and re-reads:
+  A 01a14632-9bff-7000-9ae5-32bfa328de90 / B 01a14632-9c00-7000-8839-7f0957fc95b4 (identity-matrix-153.txt);
+- B's promise (id, fee, minimum, date, window, single line) byte-identical across the edit of A;
+- rejected writes (past date, unknown window) never overwrite the last accepted selection;
+- db-readback-153.txt: the same two ids in order.cart_shipping_groups, cart_shipping_group_lines 2 with
+  one line per group, duplicate_group_ids = 0, lines_in_two_groups = 0, orphan_join_rows = 0;
+- zero premature mutation: checkouts 0, seller_orders 0, order_lines 0, order_shipping_groups 0,
+  payments 0, payment_attempts 0.
+
+DISCLOSED UNRELATED FAIL (not this task's deliverable, not masked)
+The read-only payment-draft probe returned 409 checkout.tax.unavailable instead of the TB-152 HTTP 200. The
+fresh scratch bootstrap mints new offer/category ids per seed; seed-tax-153.sql inserted the minimum active
+percentage rule for the two current offer categories yet scratch tax resolution still refused. This is the
+same scratch-fixture class TB-152 closed with its own seed, and TB-152 evidence already proves this read-only
+seam returns 200 with correct per-group fees. It is recorded as FAIL in assertion-matrix-153.txt and
+payment-draft-153.json. No Order or Tax production code was changed to work around it.
+
+LEGACY / LOCKED BEHAVIOR PRESERVED
+Per-group independent selected dates and windows, price snapshots, seller eligibility, current validation
+faults, fail-closed date/window handling, safe single-group legacy shorthand, Case D (same seller + same
+method + incompatible origin) BLOCKED, the unique index and accepted Order/Payment/Fulfillment/Settlement
+group linkage: all unchanged. No client id became authoritative. Existing live order snapshots untouched. No
+unrelated Admin/financial-policy, tax, pricing, frontend visual, storefront N+1 or shared logging edit.
+
+ENVIRONMENTAL SAFETY / CLEANUP
+Only task-owned disposable resources were used: private Host :5414, private scratch Postgres
+127.0.0.1:55472, container tooba-tb153-pg, and one minimum scratch-only tax fixture. No OTP/payment/PSP/SMS/
+settlement payout/real carrier API, no real token or connection string committed (tokens redacted in the
+journey trace). Shared :3000, :5088, :5432/tooba_alpha, RabbitMQ, Redis and postgres-db were never used,
+modified or restarted and remained healthy throughout (verified after the run: no listener on 5414/55472, no
+tooba-tb153-pg container, :3000/:5088/:5432/5672/15673 still up). No destructive migration, rebase, stash,
+reset or force push. Pre-existing local Admin and TB-075/079 evidence dirt was preserved exactly as found and
+was NOT staged or committed.
+
+CHANGED PATHS (single commit ab3f70b203056ff464cc963d33c2825cdb63ff29)
+- src/backend/Modules/Order/Tooba.Order.Domain/Checkout/CartShippingGroupPlanner.cs (modified)
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs (modified)
+- src/backend/Modules/Order/Tooba.Order.Tests/Storefront/ShippingGroupIdentityContinuityTests.cs (added)
+- docs/ai/tasks/TB-SHIPPING-GROUP-ID-CONTINUITY-153.task.md (persisted claim artifact)
+- docs/architecture/evidence/TB-SHIPPING-GROUP-ID-CONTINUITY-153/** (evidence)
+
+COMMANDS / CHECKS
+- git rev-parse HEAD / origin/main before execution: 9c581914c79fd1d55b60cf9d7361c7584ec48bdb (== expected
+  base, no upstream divergence)
+- dotnet test src/backend/Modules/Order/Tooba.Order.Tests --filter FullyQualifiedName~ShippingGroupIdentityContinuity
+  -> Passed! Failed: 0, Passed: 11, Skipped: 0, Total: 11
+- dotnet test src/backend/Modules/Order/Tooba.Order.Tests -> Passed! Failed: 0, Passed: 365, Skipped: 0,
+  Total: 365
+- node docs/architecture/evidence/TB-SHIPPING-GROUP-ID-CONTINUITY-153/journey-153.js (private Host only)
+  -> 28 checks, 27 PASS, 1 FAIL (disclosed scratch tax fixture), 0 BLOCKED
+- readback-153.sql on tooba_153_scratch -> stable ids, 1:1 join rows, 0 duplicate/orphan rows, 0 premature
+  checkout/order/payment rows
+- git push origin main -> 9c581914c..ab3f70b20 main -> main; fetch verified HEAD == origin/main
+
+NON-ACTIONS
+No new endpoint, no schema or migration change, no EF model/snapshot change, no DI or Host startup change, no
+frontend change, no rate/coverage/policy change, no origin authority fabricated, no unique index removed, no
+shared service restart, no probe/dummy POST to Bridge /api/results, no automatic next task.
+
+REMAINING UNKNOWNS / STILL OPEN (outside this task)
+The unrelated scratch tax-fixture FAIL above; authoritative carrier calendar/capacity/timezone; same-seller
+same-method incompatible origins; Admin monetary modes/create-method; and the remaining Shipping acceptance
+gap named in the task (isolated-browser disabled->enabled Continue gating and persistence across
+return/reload). A PASS here closes only the repeated-save ShippingGroupId continuity deficit; Worker PASS !=
+Architect ACCEPT.
+
+STOP
+Status PASS for this task's deliverable with the unrelated fixture FAIL explicitly disclosed. Final state
+STOP_FOR_ARCHITECT; automaticNextImplementationTask=NONE; no chat output beyond the Bridge result.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK

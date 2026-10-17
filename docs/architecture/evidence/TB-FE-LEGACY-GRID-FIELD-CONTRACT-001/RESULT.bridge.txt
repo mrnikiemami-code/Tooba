@@ -1,0 +1,71 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-LEGACY-GRID-FIELD-CONTRACT-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Status: PASS
+Verdict: BOUNDED_REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: e41732c0077af49d33565811199bc8bd92387ca1
+Expected-Starting-HEAD-Match-State: VERIFIED
+Expected-Starting-HEAD-Equals-Origin-Main-State: VERIFIED
+Preflight-Tracked-Worktree-State: CLEAN_NO_TRACKED_MODIFICATION
+Preflight-Divergence-State: NONE_NO_OTHER_WORKER_ADVANCED_HEAD
+Diagnostic: design-system/app-data-grid/legacy-grid-bridge.ts(71,7): error TS2322: Type 'string' is not assignable to type 'ColDefField<T, any>'.
+Root-Cause: In the installed AG Grid 36.1.0 types (node_modules/ag-grid-community/dist/types/src/entities/colDef.d.ts:227,250) ColDefField<TData> is a string-literal union of real property paths (NestedFieldPaths), not string. The bridge was assigning a legacy column id into a slot that means "path into the row object", so the type contract encoded a false claim.
+STOP-Gate-Decision: PROCEEDED_NOT_BLOCKED - runtime semantics were established from source without speculation. field is not needed by AG Grid in this bridge for column identity or state persistence, sorting keying, filtering, export, data access or row identity.
+Evidence-Column-Identity: colId is set explicitly on every data column (legacy-grid-bridge.ts:69) and the installed AG Grid contract comment on ColDef.colId states that the ID is used to identify the column in the API for sorting, filtering etc., defaulting to field only when colId is absent (colDef.d.ts:240-244). Identity and state are therefore colId-based.
+Evidence-Sort-Keying: AppDataGrid.onSortChanged reads event.api.getColumnState() and maps colState.colId into the query (AppDataGrid.tsx:352-358), so sort state is keyed by colId, not field.
+Evidence-Sort-Order-Source: The adapter is createClientGridQueryAdapter(rows, columns) then executeGridQuery(rows, columns, query) - the app's own engine sorts via the legacy accessor - and AG Grid receives the already-sorted page as rowData.
+Evidence-Filtering: Every data column ends as filter: false because the bridge always calls applyAppGridFilterHeader, which returns { ...colDef, filter: false } plus an app-owned headerComponent (app-grid-filter-header.ts:18-33); filtering runs through gridContext.externalFilters. The bridge's own filterMatrix, advancedFilterColumns and externalFilterFields keep using their own field string (legacy-grid-bridge.ts:53-62), which is deliberately not ColDef.field, and applyAppGridFilterHeader's only production caller is this bridge and always passes an explicit spec, so its internal String(colDef.field ?? colDef.colId ?? "") was already unused.
+Evidence-Export: exportCurrent builds rows from the bridge's getExportRow accessors and calls exportRowsToCsv or exportRowsToXlsx (AppDataGrid.tsx:620-629, legacy-grid-bridge.ts:115-121); no api.exportDataAsCsv, no quick filter and no aggregation exist anywhere in design-system (grepped).
+Evidence-Data-Access-And-Row-Identity: Every data column has a custom cellRenderer to renderLegacyCell which reads col.cell or col.accessor (legacy-grid-bridge.ts:26-32,80), and AgGridReact getRowId is params.data.id (AppDataGrid.tsx:964).
+Residual-Role-Analysis: field was only a redundant AG Grid value-service path. For many sortable columns it was already undefined because the id is not a data path - customer (accessor row.customerDisplayName), lines (row.lineCount), amount (row.payableAmount), created (row.createdAt), slug (row.pathLabel), available, credits, debits, reserved (admin-screens.tsx:246-311,489-526 and landing-pages/admin-landing-pages-screen.tsx:316-321). Where the id is a path (title, name, code, status, updatedAt, createdAt, reference, displayOrder) the accessor returns that same property, so AG Grid's secondary sort compared the same values the engine had already sorted by, i.e. a stable re-sort. Removing field makes AG Grid's native sort uniformly value-less while the engine (accessor plus colId) remains the single source of row order, so visible order is unchanged.
+Removal-Disclosure-State: EXPLICIT_NOT_SILENT - the property removal is documented in the summary, in the commit message and in an in-source comment, per the gate instruction not to remove field silently.
+Rejected-Alternatives: Casting to ColDefField<T> would assert the false invariant that every column id is a row path and would keep feeding AG Grid a wrong or undefined path (forbidden broad cast). A valueGetter from the accessor is type-sound but changes the value source for every column from data[colId] to the accessor value and, per the documented ColDef.cellDataType contract, disables cellDataType inference - a larger behaviour surface than this repair needs. STOP with BLOCKED_ARCHITECT_DECISION was not required because runtime semantics were established safely.
+Honest-Residual-Disclosure: The AG Grid runtime bundle (dist/package/main.cjs.js) could not be read in this environment, so the stability of AG Grid's internal comparator for all-missing values is taken from documented null and undefined-pair semantics rather than byte-level source. No live or visual grid confirmation was performed; the sorting-order reasoning is analytic and source-grounded. If the Architect wants runtime proof, a focused visual check on an admin grid with a sortable non-path id (for example orders amount or customer) is the right next artifact.
+Change: One property removed plus an explanatory comment in the base ColDef literal of buildLegacyGridBridge: colId stays, field was deleted. The local const field = col.id is deliberately kept because the bridge's app-owned external-filter contract still needs it (filterMatrix[field], externalFilterFields and the { field, kind: "none" } spec).
+Preserved-Surfaces: colId, headerName, sortable, width, minWidth, maxWidth pass-through, hide, pinned, cellRenderer, applyAppGridFilterHeader, the actions column and getExportRow are untouched; localStorage saved views, grid state, external filter chips and CSV/XLSX export are unchanged.
+Assertion-Suppression-State: NONE_NO_ANY_NO_UNKNOWN_AS_NO_BROAD_CAST_NO_TS_IGNORE_NO_OPTIONALIZED_SHARED_GENERIC
+Test-Amendment-State: NONE - legacy-grid-bridge.test.ts asserts exactly the surfaces this repair had to preserve (columnDefs.length, externalFilterFields, exportHeaders, headerComponent, getExportRow, pinned, maxWidth, width, minWidth and uncapped behaviour) and passes unmodified, which is stronger evidence than an edited assertion.
+Forbidden-Items-State: NONE_NO_BACKEND_SCHEMA_OR_API_NO_STOREFRONT_HOME_PDP_SHOPEIVA_NO_BROAD_GRID_REFACTOR_NO_UNSAFE_CAST_OR_SUPPRESSION_NO_TSCONFIG_CI_BASELINE_OR_GUARD_CHANGE_NO_OTHER_TYPESCRIPT_CLUSTER_NO_AMSC_NO_SELF_CREATED_FOLLOW_UP_TASK_NO_RETRY_OR_TEST_LOOP_NO_FORCED_PUSH_NO_RESET
+Baseline-Evidence-Source: docs/architecture/evidence/TB-FE-SHIPPING-SERVICES-GRID-ROW-IDENTITY-001/typecheck-after-tsc.txt copied verbatim to docs/architecture/evidence/TB-FE-LEGACY-GRID-FIELD-CONTRACT-001/typecheck-before.txt
+Baseline-Errors: 29
+Typecheck-Total-After: 28
+Typecheck-Reduction: 1
+Typecheck-Introduced: 0
+Typecheck-Compare-Object-Vs-Baseline: NO_ADDED_LINE
+Diagnostics-Remaining-In-Target-File: NONE
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_28_ERRORS_REMAIN_IN_OTHER_AUDITED_CLUSTERS
+Changed-Files: src/frontend/design-system/app-data-grid/legacy-grid-bridge.ts (only production file - one property removed plus comment, net one line changed); docs/ai/tasks/TB-FE-LEGACY-GRID-FIELD-CONTRACT-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-LEGACY-GRID-FIELD-CONTRACT-001/summary.md, typecheck-before.txt, typecheck-after-tsc.txt, focused-tests.txt (added - evidence with raw typecheck output)
+Commands-Run: git fetch origin and HEAD==origin/main==Expected-Starting-HEAD verification with a clean tracked worktree (preflight, pre-commit and post-push); cd src/frontend && node_modules/.bin/tsc --noEmit; node --experimental-strip-types --test design-system/app-data-grid/legacy-grid-bridge.test.ts; git diff and status inspections for the exact final diff and scope
+Focused-Test-Results: node --experimental-strip-types --test design-system/app-data-grid/legacy-grid-bridge.test.ts - 6 PASS / 0 FAIL
+PreExisting-Failures-Observed: NONE
+PreExisting-Failure-Count-Before: 0
+PreExisting-Failure-Count-After: 0
+Retry-Cascade-State: NONE
+Tests-Not-Run: the full npm test and test:discovered suites, any build, backend suites, visual suites, browser or live verification of the grids, and any AMSC wave
+Unrun-Test-Pass-Claim-State: NONE
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: Only one shared design-system grid bridge property changed; no Home, PDP, listing, storefront, shared-composition or visual surface was edited, and the change is a ColDef property removal that does not alter rendering, filters or export.
+Scope-Statement: The production change is exactly the one allowed file, src/frontend/design-system/app-data-grid/legacy-grid-bridge.ts. No other production file was touched, and the focused test was not amended.
+Risks: Low but disclosed non-zero - AG Grid's native sort value is no longer populated for the columns whose id happened to be a real path. Because the app's engine produced the order in both the before and after states, no visible change is expected; the residual uncertainty is AG Grid's internal all-missing comparator stability, which the Architect may verify with a live grid check on a sortable non-path id column.
+Rollback-Criteria: Revert commit f9973b04102f9e854460fada8f2fedc5be170287 if a grid's visible sort, filter chips, saved view, column state or export differs; re-adding field restores the previous state atomically.
+Deviation-State: NONE
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Reset-Or-Stash-State: NONE
+Rebase-State: NONE_NO_REBASE_WAS_NEEDED
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED_NOT_REMOVED_NOT_STASHED
+Base-SHA: e41732c0077af49d33565811199bc8bd92387ca1
+Final-SHA: f9973b04102f9e854460fada8f2fedc5be170287
+Commit-SHA: f9973b04102f9e854460fada8f2fedc5be170287
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: STOP_FOR_ARCHITECT_INDEPENDENT_ACCEPTANCE
+STOP
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,313 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-CHECKOUT-PAYMENT-BOUNDARY-ANALYZE-010
+Parent-Task: TB-P0-DEV-PACKAGE-ONE-SHOT-RETRY-009
+Program: TOOBA-CHECKOUT-PAYMENT-COMMIT-BOUNDARY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: AMSC_ANALYZE_ONLY — READ_ONLY — STOP_FOR_ARCHITECT
+Bridge-Task-Row: 590938d2-bfb5-459a-b799-c79ccd25a778
+Repo-SHA: 207dae32fd899584d8057405901593aecf222e45
+origin/main: 207dae32fd899584d8057405901593aecf222e45  -> MATCH (no SHA drift)
+Status: WORKER_COMPLETE — ANALYSIS DELIVERED — STOP FOR ARCHITECT ACCEPT
+
+Code-Edits: 0
+Test-Edits: 0
+Schema/Migration-Changes: 0
+DB-Writes: 0 (all SQL was SELECT)
+Order/Cart/Payment-Mutations: 0
+HTTP-Mutations: 0
+Build-Executed: NO
+Test-Suite-Executed: NO (not required; no runtime loop)
+Host-Restarted: NO
+Commits: 0
+Pushes: 0
+Production-Touched: NO
+changes=0
+
+Artifacts (docs-only, deliberately NOT committed — same convention as 008/009):
+  docs/ai/tasks/TB-P0-CHECKOUT-PAYMENT-BOUNDARY-ANALYZE-010.task.md   (claimed task artifact)
+  docs/architecture/evidence/TB-P0-CHECKOUT-PAYMENT-BOUNDARY-ANALYZE-010/analysis.md  (full deliverable a–f)
+  docs/architecture/evidence/TB-P0-CHECKOUT-PAYMENT-BOUNDARY-ANALYZE-010/RESULT.bridge.txt
+  docs/architecture/evidence/TB-P0-CHECKOUT-PAYMENT-BOUNDARY-ANALYZE-010/post-result.js
+
+== (a) VERIFIED CURRENT CALL GRAPH (file:line) ==
+
+A1 FRONTEND — ONE CLICK = DRAFT + FULL COMMIT
+  storefront-shipping.tsx:707  button «ادامه» -> persistAndContinue()
+  storefront-shipping.tsx:225-251 persistAndContinue():
+      :231 await saveShippingSelection(cartId, cartVersion, {...address, methodCode, deliveryDate, timeWindow, note})
+      :246 await commitShippingToPayment(cartId, cartVersion)
+      :250 router.push('/payment?checkoutId=' + committed.checkoutId)
+  storefront-shipping-api.ts:301-320  saveShippingSelection -> PUT /v1/storefront/shipping/selection (fetch :306)
+  storefront-shipping-api.ts:363-398  commitShippingToPayment -> POST /v1/storefront/shipping/commit (fetch :368)
+      body {cartId, expectedCartVersion, idempotencyKey, couponCode} (:376-380)
+      :384-390 throw on !response.ok; ONLY after success :391 writeStoredCheckoutId,
+      :392 persistCommittedCheckoutAndDetachActiveCart(page.checkoutId, page.cartId), :394 clear shipping idem key
+      => cart detach strictly after proven-OK commit (FACT)
+  storefront-cart-api.ts:76-83 clearCartSession() removes cartId+guestSecret (pointer-only detach)
+  payment/storefront-payment-handoff.tsx:42  checkoutId = params.get("checkoutId") || readStoredCheckoutId()
+  payment/storefront-payment-handoff.tsx:43-46 hard error «سفارش ارسالشده پیدا نشد» when absent
+      => /payment CANNOT render without a committed checkoutId (FACT)
+  payment/storefront-payment-handoff.tsx:51-55 Promise.all(loadStorefrontCheckout, loadStorefrontPaymentMethods, loadStorefrontWalletQuote)
+  payment/storefront-payment-handoff.tsx:81 paid = paymentState==="Paid" || canInitiatePayment===false
+  payment/storefront-payment-handoff.tsx:101-126 pay() -> startStorefrontPayment(page.checkoutId, {providerCode}); :242 disabled={paying || !method}
+  storefront-payment-api.ts:20,318-324,414,311 per-checkout+provider idempotency key in sessionStorage
+  storefront-payment-methods.tsx:32 walletEligible = Boolean(quote?.canPayFullyWithWallet)
+
+A2 ENDPOINTS
+  StorefrontOrderEndpoints.cs:37 MapPut("/shipping/selection"), :161-173 SaveShippingSelectionAsync
+  StorefrontOrderEndpoints.cs:38 MapPost("/shipping/commit"),   :175-190 CommitShippingAsync
+
+A3 DRAFT PATH — CONTRACT-COMPLIANT, ZERO SIDE EFFECTS
+  StorefrontShippingService.cs:139-143 cart + version check; :155-166 PrepareShipping;
+  :168-190 method + delivery-slot validation; :199 server-authoritative price;
+  :204-235 writes ONLY CartShippingDraft (_drafts.SaveAsync :230)
+  => only durable effect is order.cart_shipping_drafts (live index pk_cart_shipping_drafts UNIQUE(cart_id));
+     NO checkout, NO reservation, NO cart conversion, NO quota (FACT)
+
+A4 COMMIT PATH — EAGER COMMIT IN ONE AMBIENT TRANSACTION
+  CheckoutProcessManager.cs:62 LoadActiveCartAsync -> CheckoutSubmitHost.cs:78-92
+      (cart.missing / cart.expired(status!=Active) / version.conflict / cart.empty)
+  CheckoutProcessManager.cs:95-99 new TransactionScope(Required, ReadCommitted, AsyncFlow=Enabled)
+  CheckoutProcessManager.cs:100 EnsureCanStartInitialReservationAsync -> CheckoutAbuseGate.cs:57-100 (quota consumed here)
+  CheckoutProcessManager.cs:106 ResolveInitialReservationExpiresAtAsync -> CheckoutDirectory.Reservations.cs:114-131
+  CheckoutProcessManager.cs:109-119 reserve request; :119 _inventory.ReserveForCheckoutAsync
+  CheckoutProcessManager.cs:123-131 PersistCheckoutAsync (CheckoutGroup + SellerOrders PendingPayment)
+  CheckoutProcessManager.cs:141-158 ConvertForCheckoutAsync (OnlinePurchase); :158-173 race branch
+  CheckoutProcessManager.cs:179-182 MarkPaymentPending + scope.Complete(); :186-205 conflict recovery
+  CheckoutDirectory.Reservations.cs:41-55 ReserveCartLinesForOrderAsync; :84-110 PrepareInitialCycleAsync (cycle #1 InitialPayment)
+
+A5 PAYMENT PATH — NO PAYABILITY GATE ON MONEY ENTRY
+  StorefrontPaymentOrchestrator.cs:110-121 InitiateAsync -> CheckoutPaymentAccessBridge.GetForMutationAsync
+  CheckoutPaymentAccessBridge.cs:22-27,:43-51,:55-59 (ownership + payable amount only; no cycle check)
+  PaymentDirectory.cs:139-150 GetPayableAsync/PendingPayment/currency/mode; :186-200 create + Assign UnpaidTimeoutAt
+  PaymentDirectory.cs:213-261 VerifyAsync (:228-231 already-Succeeded; :250-255 duplicate provider txn)
+  PaymentDirectory.cs:61-65 idempotency lookup is a plain read (non-atomic)
+  OrderPaymentBridge.cs:84-127 ApplyVerifiedSuccessAsync -> :113-124 swallow supply failure (money stays Paid, SupplyStatus Unavailable)
+  StorefrontPaymentOrchestrator.cs:125-137 wallet; :167-198 immediate wallet verify; :201-213 manual; :348-391 manual evidence + PromoteReservationsForManualPaymentReviewAsync
+  GetStorefrontCheckoutQuery.cs:21-28 ONLY overlay: Paid -> CanInitiatePayment=false; default true (StorefrontOrderModels.cs:86,:208)
+
+A6 CYCLE-AWARE PAYABILITY EXISTS BUT IS UNUSED BY THE PAYMENT SURFACE
+  ReservationCyclePayabilityPolicy.cs:12-25 IsActive/HasReachedRetryLimit
+  StorefrontPendingPaymentProjector.cs:98-99 canInitiate/canRetry computed from the cycle
+  consumed only by the pending-payments card list (StorefrontPendingPaymentService.ListAsync:69-117)
+
+A7 LIVE POLICY LIMITS (SELECT only)
+  catalog.store_hold_policy_settings: initial_reservation_hold_minutes=1, retry_...=1, max_reservation_cycles=2,
+    online/manual/cart_persistence hours = NULL (inherit platform)
+  catalog.store_checkout_abuse_settings: max_open_unpaid=2, window=30min, max_commits=3
+  payment.payment_method_hold_overrides: rows manual, fake — all hour columns NULL
+  platform fallbacks: Payment:Gateway:OnlinePaymentHoldHours=2 (appsettings.json:111); ReservationCycle:InitialReservationHoldMinutes=120 (:126-129);
+    Cart:PersistenceHours=168 (:103-104); CartExpiry worker 5s (:37-40); UnpaidOrderExpiryReconciler worker 15s (UnpaidOrderExpiryWorkerOptions.cs:10-14)
+  LIVE PROOF (60s effective hold, not 120min):
+    reservation 01a13309-f5f5-7000-9c0b-5ed9813dea28 qty=2 status=Released
+      created_at 2026-10-13 02:14:13.233565+00
+      expires_at 2026-10-13 02:15:13.127436+00  (= created + 60.000s)
+      updated_at 2026-10-13 02:15:17.431506+00  (released ~4.3s later; CartExpiry poll 5s)
+
+== (b) EXACT VIOLATIONS OF THE DESIRED CONTRACT ==
+
+V1 Shipping/viewing payment/choosing method MUST NOT create Order/CheckoutGroup or convert Cart
+   -> the single Shipping click performs the entire commit. storefront-shipping.tsx:225-251; CheckoutProcessManager.cs:95-182. FACT
+V2 MUST NOT reserve/decrement stock before the final pay action
+   -> reservation created at that same click. CheckoutProcessManager.cs:119; CheckoutDirectory.Reservations.cs:41-55. FACT
+V3 MUST NOT consume unpaid-order/churn quotas
+   -> CheckoutAbuseGate runs inside the same scope; checkout_reservation_commits written.
+      CheckoutProcessManager.cs:100; CheckoutAbuseGate.cs:57-100,102-123. FACT
+V4 Only the final user action explicitly starting payment starts one checkout commit
+   -> commit precedes payment and payment initiation has no commit role.
+      storefront-shipping.tsx:246,250; StorefrontPaymentOrchestrator.cs:110-121. FACT
+V5 If payment initiation fails after a successful commit, keep Order with safe retry/expiry policy
+   -> no attempt-level retry on the initiation path; failure surfaces while Order+reservation exist.
+      StorefrontPaymentOrchestrator.cs:110-163; storefront-payment-handoff.tsx:124-126. FACT
+V6 Payment surface must be reachable for an Active cart without a fake checkoutId
+   -> /payment hard-fails without checkoutId. storefront-payment-handoff.tsx:42-46. FACT
+V7 Method selection must not depend on a pre-existing Order
+   -> methods + wallet quote load only after the order exists. storefront-payment-handoff.tsx:51-55. FACT
+V8 Doc/code drift: docs/architecture/47-checkout-order-foundation.md still says
+   step 5 "Require each cart line to already carry a reservation id (Cart hold). Do not consume stock on Order insert."
+   and "No distributed transaction. IdempotencyKey uniqueness is the duplicate-submit seam."
+   -> current code reserves at commit and DOES use a cross-module TransactionScope.
+      doc §"Checkout orchestration" vs CheckoutProcessManager.cs:95-99,119. FACT (documentation only)
+
+SCOPE HONESTY: the Task itself labels the target behaviour a *product contract* and instructs to
+distinguish old documented behaviour from it. V1–V5 are contract violations / design drift, not
+regressions, and nothing in the repository claims the eager commit is new or defective.
+
+== (c) INVENTORY CHECK+RESERVE ATOMICITY AND CROSS-MODULE TRANSACTION BOUNDARIES ==
+
+C1 Single atomic concurrency-safe reserve — SATISFIED
+   InventoryDirectory.cs:165-210
+     :174-183 idempotency replay returns the same Held receipt
+     :186-193 the real guard: .Where(x => x.StockItemId==id && x.OnHand - x.Reserved >= quantity && quantity > 0)
+               .ExecuteUpdateAsync(SetProperty(Reserved, Reserved + quantity))
+     :193-196 if (reserved != 1) throw ContractOperationException(SupplyUnavailable)
+     :199-200 StockReservation.Hold + position.RecordReserved; :202-209 one SaveChangesAsync;
+              unique idempotency conflict -> InventoryErrorCodes.ReservationConflict
+   => availability arithmetic is evaluated INSIDE the SQL UPDATE predicate: two concurrent commits cannot
+      both pass for the last unit. The preceding GetAvailabilityBatchAsync
+      (CheckoutInventoryReservationAdapter.cs:34-37,60-66) only CHOOSES a location; it is not the guard.
+      The clause "not separate query-then-command" IS MET.
+   Multi-line atomicity: CheckoutInventoryReservationAdapter.cs:37-92 acquires per line, releases acquired
+      ids on failure (:87-92) and rethrows; the ambient scope then rolls back (LOCK-SF-050 upheld).
+
+C2 Cross-module transaction — real single-DB ACID, NOT distributed
+   Every module DbContext resolves the same connection reference:
+     ToobaNpgsql.ResolveForContext (BuildingBlocks/Tooba.Persistence/ToobaNpgsql.cs:55-64)
+       -> resolver.Resolve(commerce.Current.DatabaseConnectionReference); e.g. CartModule.cs:53-65
+   SingleStore tenant-alpha -> one database (tooba_alpha). Therefore Cart/Order/Inventory/Catalog
+     connections at CheckoutProcessManager.cs:95-99 all enlist in ONE ambient System.Transactions
+     transaction against ONE PostgreSQL database = a real ACID transaction across schemas.
+   => no outbox/saga/compensation is needed for the commit itself in this deployment.
+   RISK (extraction blocker): if any participant moved to another database/host, this same TransactionScope
+     would require promotion to a distributed transaction (MSDTC) — unsupported on Linux/PostgreSQL —
+     so the commit would fail at runtime. Re-evaluate before any microservice extraction.
+   UNKNOWN: no behavioural/concurrency runtime test proves enlistment; AtomicCheckoutCommitTests.cs:26-60 is
+     a SOURCE-TEXT assertion test (Assert.Contains("TransactionScope", ...)), not a runtime proof.
+     A documented runtime proof exists for the abuse lock only: docs/evidence/TB-P10-T004/r23-concurrency.md
+     (two prepared carts committed via Promise.all -> 1x200, 1x409 checkout.open_unpaid_limit_reached).
+
+C3 Abuse gate inside the same scope — correct concurrency, eager timing
+   CheckoutAbuseGate.cs:145-164 locks/updates checkout_abuse_customer_locks with SaveChangesAsync inside the
+   ambient scope, then :174-200 counts open unpaid and :81-99 churn. Quota is consumed at Shipping-continue
+   time, before any payment intent exists (V3).
+
+C4 Failure/race matrix — ALL TYPED, NONE SILENT
+   two concurrent commits same cart      -> ix_checkouts_cart_id UNIQUE + ux_checkout_processes_submission_key UNIQUE
+                                            + cart Version concurrency token (CartDbContext.cs:58) => exactly one group;
+                                            loser recovers winner (CheckoutProcessManager.cs:158-173,186-205) or typed error
+   two concurrent commits same last unit -> conditional ExecuteUpdateAsync predicate => one SupplyUnavailable
+   reserve ok / order persist fails      -> scope rollback, no window (LOCK-SF-050)
+   reserve ok / cart convert race        -> winner resolution or rethrow; scope not completed
+   re-submit a Converted cart            -> LoadActiveCartAsync throws checkout.cart.expired BEFORE try/catch, so the
+                                            winner-resolution branch cannot run; frontend maps it to
+                                            «سبد خرید منقضی شده است» (storefront-checkout-api.ts:278-279) although it is
+                                            Converted, not expired (message/copy mismatch)
+   initiation fails after commit         -> Order + reservation remain, reservation expires by policy, no auto-retry (V5)
+
+C5 Final-click / initiation idempotency
+   sequential double-click: idempotent (frontend key + disabled={paying}); FACT
+   concurrent initiation:  PaymentDirectory.cs:61-65 plain read then insert at :186-200; the only atomic guard is
+       ix_payments_idempotency_key => loser can surface as an unhandled unique-violation (5xx) instead of a clean replay. RISK
+   concurrent verify:      Payment has no row version/concurrency token (grep IsConcurrencyToken -> Cart/Story/
+       PageComposition only); both callers could emit payment.succeeded.v1 and both run EnsurePaidDurableSupplyAsync,
+       whose reacquire key embeds _clock.UtcNow.UtcTicks (InventoryDirectory.OrderSupply.cs:143)
+       => two durable reservations for one order line. RISK (code-level, not reproduced)
+
+C6 Expiry ownership
+   InventoryDirectory.Reclaimer.cs:14-63 selects Held AND expires_at <= now with FOR UPDATE SKIP LOCKED;
+   its ONLY production caller is the Cart module sweep (CartExpiryScanner.cs:47) => order-bound hold release
+   depends on Tooba:CartExpiry:Enabled (appsettings.json:37-40). docs/operations/background-processing.md
+   documents only Outbox + CartExpiry workers and omits UnpaidOrderExpiry. RISK (operational coupling)
+   ReservationCycleDirectory.CloseExpiredDueAsync:165-183 only closes Active cycles and never cancels a seller
+   order; unpaid timeout requires a payment.payments row (PaymentExpiryDirectory.cs:62-80).
+   LIVE: checkout 01a09b8b-3e28-7000-94ed-e37517c5cbf5 has two Expired cycles (2026-09-13, 2026-10-11) and
+   its seller orders are still PendingPayment today.
+
+== (d) SMALLEST SAFE DESIGN + MIGRATION/COMPATIBILITY RISK ==
+
+D1 Target shape (no module/lock redesign):
+   Cart(Active) -> Shipping(draft only) -> /payment read-only quote surface addressed by CartId
+       -> final "پرداخت" click = ONE orchestrated, method-aware call with a CartId-scoped idempotency key:
+          (1) commit (Order/CheckoutGroup PendingPayment + atomic reserve + convert)  then  (2) initiate.
+   Ownership unchanged: Cart owns cart reads/ConvertAsync; Order owns the coordinator + cycle payability +
+   quota; Inventory owns the atomic reserve and hold release; Payment owns catalogs/quotes/initiation.
+
+D2 Contracts that must change
+   NEW read contract (no fake checkout): GET /v1/storefront/cart/{cartId}/payment-draft ->
+     {cartId, cartVersion, currency, merchandiseSubtotal, shippingDraftSummary, shippingAmountEstimate,
+      eligibleMethods[], walletQuote, requiresShipping, canStartPayment, blockers[]} — ZERO writes,
+     composed only from ICartPresentationGateway + order.cart_shipping_drafts read + IPaymentGatewayCatalogPort
+     + IWalletOrderPaymentPort + hold-policy preview.
+   NEW single orchestrated command: POST /v1/storefront/checkout/{cartId}/start-payment
+     {expectedCartVersion, shippingSelectionRef, providerCode|wallet|manual, idempotencyKey}
+     -> {checkoutId, paymentId, redirectUrl|awaitingManual}. If a checkout already exists for cartId reuse it
+     (ix_checkouts_cart_id) instead of re-committing; if a Succeeded payment exists -> payment.already_succeeded.
+     The idempotency key must cover BOTH steps.
+   GetStorefrontCheckoutQuery.cs:21-28 overlay must additionally reflect the cycle verdict
+     (so the pay button cannot be enabled while the reservation is gone) — LOCK-SF-074/076 semantics.
+   Frontend: persistAndContinue stops after saveShippingSelection and navigates to a cart-addressed payment
+     surface; the commit moves into the final pay handler; storefront-payment-handoff.tsx:42-46 accepts cartId.
+   Docs: correct 47-checkout-order-foundation.md step 5 + the "No distributed transaction" sentence (V8).
+
+D3 Backward compatibility
+   Keep /shipping/commit and checkoutId-addressed surfaces during migration so pending-payment cards
+   (storefront-pending-payments.tsx:137,148) and the payment proof lifecycle (LOCK-SF-066/071) keep working.
+   Existing eager-path Orders are untouched. No schema change strictly required for the draft projection.
+
+D4 Expiry and quota timing
+   Reserve/TTL starts at the final pay click (same call as order creation) -> removes the "deciding while stock
+   drains" window; initial_reservation_hold_minutes=1 then becomes honest (a floor vs online_payment_hold_hours
+   is still advisable as a guard). Abuse counters move to the commit step with UNCHANGED values/limits.
+   Do NOT merge the two timeouts: LOCK-SF-047/055/039/052/080 deliberately keep reservation hold (minutes,
+   policy-derived) and unpaid-payment timeout (hours, created at initiation) as separate lifecycles. The defect
+   is the ABSENCE OF A PAYABILITY GATE at the money entry point, not the existence of two durations.
+
+D5 Wallet and offline paths
+   Wallet (StorefrontPaymentOrchestrator.cs:125-137,167-198) is fully synchronous inside the initiate request ->
+   under the new design it is the same single call (commit then immediate verified success).
+   Manual (StorefrontPaymentOrchestrator.cs:201-213,:348-391): commit -> Pending with UnpaidTimeoutAt =
+   ManualPaymentInitialHoldHours -> evidence submit promotes the reservation to the review hold and opens a
+   ManualReview cycle (OrderPaymentBridge.cs:148-215). Unchanged.
+
+D6 Migration risk register
+   duplicate commit after the move      -> one CartId-scoped key + ix_checkouts_cart_id reuse + payment.already_succeeded
+   cart mutated between view and pay    -> expectedCartVersion re-check at commit (CheckoutSubmitHost.cs:83-86), already present
+   guest ownership at the new endpoint  -> keep CartAccess/GuestSecret as the pre-order authority; invent no new token
+   existing "empty payment page" tests  -> update them inside the same bounded task
+   abuse semantics shift                -> keep counters/limits identical, move timing only
+   doc/lock drift                       -> documentation-only correction; never rewrite locks unilaterally
+
+D7 Ordered bounded follow-up tasks (NOT started)
+   F1 ~15min  GET /v1/storefront/cart/{cartId}/payment-draft read-only projection + focused read-only test.
+   F2 ~20min  POST /v1/storefront/checkout/{cartId}/start-payment orchestration reusing the commit path;
+              tests: idempotent double-call, existing-checkout reuse, zero orphan reservation on failure.
+   F3 ~15min  cycle-aware CanInitiatePayment overlay + error copy; test: expired-cycle checkout cannot initiate.
+   F4 ~15min  frontend switch (Shipping stops committing; /payment reads the draft; final button calls start-payment;
+              update the hard-error tests).
+   F5 ~15min  doc correction + guard test.
+   F6 optional ~15min  concurrency hardening of payment initiation/verify (conditional update) — separate authorization.
+   Each: one focused test run; PASS = zero new rows in order.checkouts / inventory.reservations /
+     order.checkout_reservation_commits for the draft steps; rollback = git revert of the single commit.
+
+== (e) NEXT ONE RECOMMENDED IMPLEMENTATION TASK ==
+
+TB-P0-CHECKOUT-PAYMENT-DRAFT-011 — read-only pre-order payment draft addressed by CartId.
+  Owner: Order (Application + Endpoints) consuming existing Cart/Payment/Inventory hold-preview contracts.
+  No Host edit. No schema change. No change to CheckoutProcessManager / InventoryDirectory / PaymentDirectory.
+  Scope: one new query + validator + endpoint + one endpoint registration line:
+    GET /v1/storefront/cart/{cartId}/payment-draft ->
+    {cartId, cartVersion, currency, merchandiseSubtotal, shippingDraftSummary, shippingAmountEstimate,
+     eligibleMethods[], walletQuote, canStartPayment, blockers[]}. ZERO writes.
+  One targeted test run (Order storefront/endpoint test project) asserting: 200 for an Active cart with a
+    shipping draft; unchanged row counts for order.checkouts, order.cart_shipping_drafts,
+    inventory.reservations and order.checkout_reservation_commits; cart.carts.status still Active;
+    no checkoutId required anywhere in the request.
+  PASS: all of the above. FAIL: any write, quota row, reservation row, cart status change, or a response
+    requiring a pre-existing checkoutId.
+  Rollback: revert the single commit; nothing durable was created.
+  Why first: F2/F4 depend on a payment surface that can render without an Order, and this step is provably
+    side-effect-free, making it the lowest-risk entry point.
+
+== (f) UNRESOLVED FACTS MARKED UNKNOWN ==
+  U1 same-stock-item concurrent commit was never exercised in a runtime test (only the mechanism is proven here).
+  U2 TransactionScope enlistment is not covered by any behavioural runtime test (AtomicCheckoutCommitTests is source-text only).
+  U3 production tenants may run platform defaults (120min/2h) rather than the observed 1-minute alpha override; only alpha was read.
+  U4 the 2026-10-12 open_unpaid 2/2 blocks are not causally tied to the zombie unpaid checkout (those checkouts are Cancelled).
+  U5 no automatic refund/compensation path was found for the accepted "paid but supply unavailable" state (LOCK-SF-060); unproven, not disproven.
+  U6 runtime behaviour of /payment with an expired cycle and zero payment rows was not driven (read-only mandate).
+
+== HYGIENE ==
+Source reads only (frontend shipping/payment surfaces, Order checkout+storefront, Cart, Inventory, Payment,
+Catalog policy readers/validators, BuildingBlocks persistence, appsettings, docs 47-*/TOOBA-LOCKS.md,
+docs/evidence TB-TMAR-CHECKOUT-CONSISTENCY-DESIGN, docs/evidence/TB-P10-T004/r23-concurrency.md).
+SQL: SELECT only on tooba_alpha (catalog.store_hold_policy_settings, catalog.store_checkout_abuse_settings,
+catalog.reservation_cycle_policy_overrides, payment.payment_method_hold_overrides, payment.payments,
+order.checkouts, order.seller_orders, order.reservation_cycles, order.checkout_abuse_block_events,
+inventory.reservations, pg_indexes). No DDL, no writes, no migrations, no build, no Host restart.
+The pre-existing " M" paths (CheckoutAbuseGate.cs, admin-order-detail-screen.tsx, storefront-landing-blocks.tsx,
+TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md) were NOT touched, NOT staged, NOT committed, NOT reverted.
+No unrelated/leftover Task was launched or resumed.
+STOP for independent Architect acceptance.
+END_TOOBA_WORKER_RESULT

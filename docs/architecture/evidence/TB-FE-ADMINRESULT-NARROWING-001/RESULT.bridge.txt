@@ -1,0 +1,59 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-ADMINRESULT-NARROWING-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR
+Status: PASS
+Verdict: REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: 48a59532c1f5e7e961f047518f5bfcea1313a4c4
+Preflight-Head-Equals-Origin-Main-State: VERIFIED_AT_PREFLIGHT
+Base-SHA: 48a59532c1f5e7e961f047518f5bfcea1313a4c4
+Final-SHA: a4703078913759304f4fc2289c8480783d975317
+Commit-SHA: a4703078913759304f4fc2289c8480783d975317
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Contract-Inspection-Summary: Two DIFFERENT AdminResult shapes were involved and no competing definition was introduced. landing-pages/admin-landing-pages-api.ts:57 declares AdminResult<T> = { ok: true; data: T } | { ok: false; message: string; denied?: boolean } - the failure branch always carries message. The settings modules (quantity-settings-api.ts:32,51, plus hold-policy, checkout-identity, checkout-abuse and appearance settings apis) declare { ok: true; data: X } | { ok: false; denied?: boolean; message?: string } - so on the success branch neither denied nor message exists. ok is the discriminant in both, which makes reading denied/message before testing ok a genuine narrowing defect rather than a type-definition gap.
+Changed-Files: src/frontend/app/admin/settings/page.tsx (modified - five guards changed from "if (result.denied)" to "if (!result.ok && result.denied)" at the quantity-rounding, hold-policy, checkout-identity, checkout-abuse and appearance save handlers); src/frontend/app/admin/landing-pages/admin-landing-pages-screen.tsx (modified - the combined "!pageResult.ok || !sectionResult.ok" guard split into two explicit discriminant guards, and the denied-state retry button changed from onClick={refresh} to onClick={() => refresh()}); src/frontend/app/admin/landing-pages/admin-landing-pages.guard.test.ts (modified - two focused source-guard regression tests); src/frontend/app/admin/admin-appearance-settings.test.ts (modified - one focused source-guard regression test); docs/ai/tasks/TB-FE-ADMINRESULT-NARROWING-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-ADMINRESULT-NARROWING-001/summary.md, typecheck-after-tsc.txt, typecheck-diff-vs-56-baseline.txt, test-landing-guard.txt, test-appearance-settings.txt, test-settings-neighbors.txt, test-architecture.txt (added - bounded evidence)
+Semantics-Preservation-Settings: Behaviour is identical because denied is never present on a success payload, neither in the type nor at runtime (it is only ever set on the 401/403 path). The guard therefore still fires only for the denied path, while each subsequent "if (!result.ok)" generic-error branch, each result.message fallback and every success path is untouched.
+Semantics-Preservation-Landing-Message: The nested "||" gave TypeScript no way to correlate the two results, so the inner ternary could not narrow sectionResult to its failure branch - the reported TS2339. The rewrite makes each discriminant explicit and preserves message precedence exactly: a failed page fetch still wins over a failed section fetch, and when both fail the page message is shown, which is the same result the original expression produced. setBusy(false) and setMessageTone("error") still run exactly once per failure, and no new user-facing text was invented. Downstream narrowing of pageResult.data and sectionResult.data is unchanged.
+Semantics-Preservation-OnClick: refresh is (opts?: { notice?: string; tone?: "error" | "success" }) => void. Passing it directly made React hand it a MouseEvent, so opts.notice was silently undefined and the option object was a lie, while the retry itself worked only by accident. The zero-argument wrapper calls the same function with the same absence of options, so runtime retry behaviour is unchanged and no notification is lost - a button handler could never supply notice/tone here anyway.
+Focused-Regression-Coverage: Two existing focused files amended, no new file and no new harness, so canonical test discovery is unaffected. admin-landing-pages.guard.test.ts gained (a) an assertion that the correlated "pageResult.ok ? sectionResult.message : pageResult.message" pattern is gone and each result now has its own explicit failure guard, and (b) an assertion that onClick={refresh} is gone in favour of onClick={() => refresh()}. admin-appearance-settings.test.ts gained an assertion that no bare "if (result.denied)" remains in settings/page.tsx and exactly 5 "if (!result.ok && result.denied)" narrowings exist. Both follow the repository's existing regex-guard convention (column-manager.test.ts, admin-grid-migration.test.ts), and both files already read the relevant sources.
+Forbidden-Items-State: NONE_NO_NEW_ADMINRESULT_DEFINITION_NO_GLOBAL_CONTRACT_REFACTOR_NO_ANY_NO_UNKNOWN_AS_MASKING_NO_TS_IGNORE_NO_CAST_NO_TSCONFIG_CHANGE_NO_SUPPRESSION_NO_GUARD_WEAKENING_NO_BASELINE_RESET_NO_BACKEND_OR_SCHEMA_CHANGE_NO_UNRELATED_SCREEN_NO_HOME_OR_PDP_SURFACE_NO_AUTO_AMSC_NO_AUTO_NEXT_TASK
+Typecheck-Baseline-Errors: 56
+Typecheck-Total-After: 49
+Typecheck-Reduction: 7
+Typecheck-New-Errors: 0
+Typecheck-Diff-Method: machine diff of file+line+code between docs/architecture/evidence/TB-FE-GRIDCOLUMNDEF-MAXWIDTH-OPTIONAL-001/typecheck-after-tsc.txt (the recorded 56-error baseline) and the post-change raw output; result removed=7 added=0
+Removed-Diagnostics-Match-State: EXACT_SIX_TS2339_PLUS_ONE_TS2322_AS_SPECIFIED
+Removed-Diagnostics-Detail: settings/page.tsx 244, 277, 297, 330 and 355 TS2339 denied on the union; admin-landing-pages-screen.tsx 130 TS2339 message on AdminResult<AdminLandingSection[]>; admin-landing-pages-screen.tsx 431 TS2322 handler signature. No diagnostic remains in either owned file.
+Code-Histogram-Delta: TS2339 16 -> 10 and TS2322 14 -> 13; every other code count unchanged
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_49_ERRORS_REMAIN_IN_OTHER_AUDITED_CLUSTERS
+Commands-Run: git fetch origin and HEAD==origin/main verification (preflight and post-push); cd src/frontend && node_modules/.bin/tsc --noEmit (after: 49 errors, exit 2); node --experimental-strip-types --test app/admin/landing-pages/admin-landing-pages.guard.test.ts; node --experimental-strip-types --test app/admin/admin-appearance-settings.test.ts; node --experimental-strip-types --test app/admin/reservation-policy-admin.test.ts app/admin/admin-nav-integrity.test.ts; npm run test:architecture; git diff/status inspections for the exact final diff and scope
+Focused-Test-Results: admin-appearance-settings.test.ts 6/6 PASS; reservation-policy-admin.test.ts + admin-nav-integrity.test.ts 16/16 PASS; npm run test:architecture 11/11 PASS; admin-landing-pages.guard.test.ts 4 PASS / 2 FAIL, both failures pre-existing and proven below, with both newly added tests passing
+PreExisting-Failure-1: admin-landing-pages.guard.test.ts test "section chooser has Persian labels and no raw JSON editor" fails because landing-section-catalog.ts does not contain the asserted label "بنر اصلی". landing-section-catalog.ts is NOT modified by this task.
+PreExisting-Failure-2: admin-landing-pages.guard.test.ts test "TB-P10-T022 ordinary-user Admin UX..." fails because admin-landing-page-composer.tsx contains "JSON.stringify(". admin-landing-page-composer.tsx is NOT modified by this task.
+PreExisting-Failure-Proof: git status lists only 4 files modified by this task (settings/page.tsx, admin-landing-pages-screen.tsx and the two amended test files), while git show HEAD:...landing-section-catalog.ts contains no "بنر اصلی" and git show HEAD:...admin-landing-page-composer.tsx does contain "JSON.stringify(" - so both assertions fail identically at HEAD and are unrelated to this change. The two failing assertions read only those untouched files. Recorded faithfully and NOT masked or fixed; no retry loop was run, per the task instruction that a baseline failure be recorded and retried no further.
+PreExisting-Failure-Count-Before: 2
+PreExisting-Failure-Count-After: 2
+Tests-Not-Run: npm run test:discovered (full suite), npm run test:admin, npm run test:critical-storefront, npm run build, backend build/tests, browser/live verification, any AMSC wave
+Unrun-Test-Pass-Claim-State: NONE
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: Only two Admin screens and two Admin test files were touched. No Home, PDP, listing, storefront or shared-composition surface and no design-system primitive was modified, so no locked visual contract is in scope and the critical visual suite is not applicable to this bounded repair.
+Visual-Runtime-Delta-State: ZERO_NO_CONTRACT_PAYLOAD_ROUTE_VISUAL_OR_PERSISTENCE_CHANGE
+Scope-Statement: Production touched exactly the two permitted files (src/frontend/app/admin/settings/page.tsx and src/frontend/app/admin/landing-pages/admin-landing-pages-screen.tsx). Tests touched two existing focused Admin test files, each explicitly explained. Nothing else was modified.
+Risks: Residual risk VERY LOW. Both edits are consumer-side narrowing and callback corrections with provably identical runtime behaviour; no schema, migration, persisted-state, API or localization change. Rollback is a single-commit revert of two Admin screens plus two test files.
+Rollback-Criteria: Revert commit a47030789 if any settings denied/generic-error/success path or the landing-pages publish message path behaves differently from before; the change is self-contained and safe to revert atomically.
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED_NOT_REMOVED_NOT_STASHED
+Preflight-Divergence-State: NONE_HEAD_EQUALS_ORIGIN_MAIN_AND_HEAD_EQUALS_EXPECTED_STARTING_HEAD_AT_START
+Recovery-Conflict-State: NONE
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Deviation-State: NONE
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: USER_REVIEW_AFTER_BOUNDED_REPAIR
+STOP
+END_TOOBA_WORKER_RESULT

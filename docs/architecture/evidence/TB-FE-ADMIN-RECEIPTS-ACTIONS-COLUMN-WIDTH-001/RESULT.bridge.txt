@@ -1,0 +1,89 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-ADMIN-RECEIPTS-ACTIONS-COLUMN-WIDTH-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: 82dcb78aba67632ceeb16420607798b757d2fcbc
+Starting-HEAD:          82dcb78aba67632ceeb16420607798b757d2fcbc
+Starting-origin/main:   82dcb78aba67632ceeb16420607798b757d2fcbc
+Tracked-worktree-clean: YES (pre-existing untracked artifacts left untouched; no stash/reset/force-push)
+Governance-read: AGENTS.md, .cursor/skills/tooba-frontend-feature/SKILL.md, docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md; deferred findings register NOT accessed.
+
+ROOT CAUSE
+AppDataGrid's canonical GridColumnDef (design-system/data-grid/types.ts:100-101) declares width: number and minWidth: number as REQUIRED. The actions column in receiptColumns (receipts-screen.tsx:220) declared id/header/accessor/cell/exportable/sortable but neither dimension, producing exactly one TS2739 at :222.
+
+RENDER-IMPACT FINDING (as requested)
+The missing dimensions did NOT affect the rendered grid. Path: ServerGridPage (receipts-screen.tsx:49) -> useLegacyAdminGridDirectProps (line 80) -> buildLegacyGridBridge (legacy-grid-adapters.ts:38) -> actions branch legacy-grid-bridge.ts:97-98 which already applies `width: actionsColumn.width ?? 108` and `minWidth: actionsColumn.minWidth ?? 100`. The column therefore already rendered at 108x100 before this change; the diagnostic was a contract gap, not a rendering defect. There is NO separate actions implementation excluding or overriding this column, so no blank extra column and no changed actions affordance: the column already existed and rendered.
+Bounded choice: the repair declares exactly the bridge fallbacks (108/100), making it a provably zero-visual-delta contract completion. width(108) > minWidth(100), both positive and finite, adequate for one compact AppGridRowActionsCell icon action. maxWidth deliberately NOT added, matching the bridge's "no forced cap for actions" contract (legacy-grid-bridge.ts:100).
+Alternatives recorded, not taken: 88/80 (single-action precedent admin-resource-selector.tsx:606-607) would visibly shrink the column from today's 108; 190/170 (admin-landing-pages-screen.tsx:407-408) serves that column's five row actions (lines 231-274) whereas receiptRowActions has exactly one entry (view, lines 111-118).
+
+ACTUAL DIFF (1 production file)
+diff --git a/src/frontend/features/admin-receipts/components/receipts-screen.tsx b/src/frontend/features/admin-receipts/components/receipts-screen.tsx
+@@ -224,6 +224,10 @@ const receiptColumns: GridColumnDef<AdminReceiptRow>[] = [
+     header: "عملیات",
+     accessor: () => "",
+     cell: (row) => <AppGridRowActionsCell row={row} actions={receiptRowActions} compact />,
++    // GridColumnDef این دو را الزامی می‌داند؛ همان مقادیری که پل گرید برای ستون actions
++    // به‌کار می‌بَرد (width ?? 108 و minWidth ?? 100) صریح می‌شوند تا رفتار visible عوض نشود.
++    width: 108,
++    minWidth: 100,
+     exportable: false,
+     sortable: false,
+   },
+Unchanged (verified by exact diff): column id/header/accessor/cell/exportable/sortable, receiptRowActions, every other column's dimensions, ServerGridPage wiring, data loading, filters, sort behavior, typing to /admin/orders/{checkoutId}.
+
+DIAGNOSTICS
+errors-before: 23
+errors-after:  22
+delta:         -1 (exactly the target TS2739 removed; Compare-Object shows that removed line and ZERO added lines)
+new-diagnostics-introduced: 0
+receipts-screen.tsx diagnostics remaining: 0
+tool: src/frontend/node_modules/.bin/tsc --noEmit, run once after the edit (exit 2 overall — 22 pre-existing errors elsewhere; no greenness claimed)
+baseline-file: docs/architecture/evidence/TB-FE-ADMIN-ORDER-DETAIL-TEST-FIXTURE-001/typecheck-after-tsc.txt
+before/after capture: docs/architecture/evidence/TB-FE-ADMIN-RECEIPTS-ACTIONS-COLUMN-WIDTH-001/typecheck-{before,after-tsc}.txt
+
+FOCUSED TESTS
+suite: features/admin-receipts/admin-receipts.characterization.test.ts (nearest existing focused receipts suite; it reads this screen's source at line 44)
+result: tests 5, pass 5, fail 0
+pre-existing-failures-observed: none
+tests-added-or-amended: none (a dimensions-only contract completion adds no material new behavior to guard; tsc + the source-reading characterization suite are the appropriate proof)
+raw: docs/architecture/evidence/TB-FE-ADMIN-RECEIPTS-ACTIONS-COLUMN-WIDTH-001/focused-test-receipts.txt
+Disclosed: one earlier invocation used a wrong path (components/... instead of the feature root) and Node reported "Could not find ..."; that was a path typo, not a test failure — no retry loop.
+NOT run, deliberately: full npm test/test:discovered, dependency install, build, backend suites, browser/visual verification, AMSC, other guards. No unrun test is reported as pass.
+
+SCOPE COMPLIANCE
+Production files changed: exactly 1 (receipts-screen.tsx), the only file ALLOWED.
+No any / unknown-as / ts-ignore / suppressions; shared GridColumnDef dimensions not optionalized; no tsconfig/CI/baseline change; no backend, schema, storefront or Shopeiva locked surface touched; no generic grid redesign; no unrelated fix; no AMSC; no broad test suite; no retry cascade; no follow-on task started.
+BLOCKED_ARCHITECT_DECISION not raised: the evidence confirms adding the two dimensions is correct canonical behavior and no broader grid change was needed.
+
+RISK / ROLLBACK
+Risk to rendering: none by construction — the declared numbers equal the fallbacks the bridge applied before the change, so pre/post column geometry is identical; the only effect is that the definition now states its contract instead of relying on a renderer fallback. Rollback: revert the single commit; TS2739 returns and rendering is unchanged.
+
+FILES
+src/frontend/features/admin-receipts/components/receipts-screen.tsx (M)
+docs/ai/tasks/TB-FE-ADMIN-RECEIPTS-ACTIONS-COLUMN-WIDTH-001.task.md (A)
+docs/architecture/evidence/TB-FE-ADMIN-RECEIPTS-ACTIONS-COLUMN-WIDTH-001/{summary.md,typecheck-before.txt,typecheck-after-tsc.txt,focused-test-receipts.txt} (A)
+
+COMMIT
+commit-sha: fcc96e37a02bf9c430d1b409bc00d3d59a34da23
+pushed-to: origin/main (82dcb78ab..fcc96e37a)
+HEAD-after-push:        fcc96e37a02bf9c430d1b409bc00d3d59a34da23
+origin/main-after-fetch: fcc96e37a02bf9c430d1b409bc00d3d59a34da23
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

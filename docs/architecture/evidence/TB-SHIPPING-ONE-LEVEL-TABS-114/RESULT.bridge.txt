@@ -1,0 +1,59 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-114
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-113
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_DEVELOPMENT_CATALOG_LEGACY_SEED_DI_SCOPE_REPAIR
+Bridge-Task-Row: 1836efed-5e01-49b7-8d70-dbf052b16ea2
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 5c5c5d2a0072e4ed965063776c2bf299d5d05b7f
+Base-SHA: 5c5c5d2a0072e4ed965063776c2bf299d5d05b7f
+Code-SHA: af836cc992f9cdc40425d98d0169eba7c39b37e5
+Evidence-SHA: af836cc992f9cdc40425d98d0169eba7c39b37e5
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+Claimed exactly ONE Pending Bridge task on tooba-main (row 1836efed-5e01-49b7-8d70-dbf052b16ea2); docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-114.task.md preserved UNSTAGED (verbatim copy also inside the evidence folder). Expected-Base-SHA 5c5c5d2a0 is an ancestor of HEAD and HEAD == origin/main == 5c5c5d2a0; drift classification = ZERO src drift, ZERO docs drift for this task's scope, so RECOVERY_CONFLICT was not triggered. All pre-existing dirty/untracked paths were left untouched and unadopted (TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, TB-SHIPPING-FULL-OPERATIONS-075/079 host stdout logs, src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, the earlier evidence trees and every prior task file). No reset, stash, rebase, force push or unrelated adoption. A probe output that belongs to TB-113 evidence (TB-SHIPPING-ONE-LEVEL-TABS-113/shared-postflight.txt) was briefly rewritten by the shared read-only probe and was restored to its committed content, so no unrelated file is left modified.
+Read-only shared check only: :5088 PID 35624 /health 200 {"status":"ok"}; :3000 PID 31580; /__platform-commerce unchanged (store-alpha / tenant-alpha / dev-singlestore / theme-alpha / IR). No shared Host or Next start/stop/restart/kill, no write to tooba_alpha, no fixture, no migration execution.
+
+MISSION A — ROOT CAUSE (exact failing boundary)
+Program.cs:368 passed the COMPOSITION-ROOT provider into the Catalog-owned Development seam:
+  Program.cs:368  await CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(app.Services, CancellationToken.None)
+  -> CatalogDevelopmentSeed.cs:61  FashionTemplateCatalogSeed.ApplyAsync(provider, cancellationToken)
+  -> FashionTemplateCatalogSeed.cs:59  provider.GetRequiredService<CatalogDbContext>()   [SCOPED from ROOT]
+  => System.InvalidOperationException: Cannot resolve scoped service 'Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext' from root provider.
+CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync creates no scope; it forwards that one provider to ALL SIX legacy bootstraps, and every one of them resolves scoped module services from it: CatalogDbContext (FashionTemplateCatalogSeed.cs:59, IndustryBatchATemplateCatalogSeed.cs:118, IndustryBatchBTemplateCatalogSeed.cs:118, IndustryBatchCTemplateCatalogSeed.cs:118, LandingPageDevelopmentSeed.cs:27, StoreMenuDevelopmentSeed.cs:23) plus IStoreLandingPageWorkspace (LandingPageDevelopmentSeed.cs:28) and IStoreMenuWorkspace (StoreMenuDevelopmentSeed.cs:24). Because Development enables scope validation, the FIRST resolution aborts the whole startup. The proven sibling path is DevelopmentSchemaMigrator.ApplyCoreAsync, which creates its own async scope (DevelopmentSchemaMigrator.cs:46-47) and hands out scope.ServiceProvider, which is exactly why every earlier migration and post-migration step including the entire legacy workspace demo seed chain succeeded in the same TB-113 startup. No other exception was inferred: this is the only invalid provider hand-off on this path.
+
+MISSION A — CORRECTED BOUNDARY (smallest correct change; 1 file, +8/-1)
+src/backend/Host/Tooba.Host/Program.cs:
+    await using var legacyCatalogBootstrapScope = app.Services.CreateAsyncScope();
+    await CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(
+        legacyCatalogBootstrapScope.ServiceProvider,
+        CancellationToken.None);
+The scope is created at the Host composition boundary, which is where the root provider lives, and ONE async scope encloses the WHOLE existing legacy Catalog bootstrap sequence (all six seeds) rather than only the first DbContext resolution. Order, once-only invocation, group position in the startup sequence, Development-only gating and the RunLegacyBootstraps flag semantics are unchanged; exception propagation is unchanged because the scope is disposed while the exception unwinds out of the enclosing block. The module keeps its ownership: CatalogDevelopmentSeed.cs and all six seed files are byte-identical, the seam creates no scope of its own, no seeding authority moved into the Host, no domain behaviour changed. Explicitly NOT done: no scoped context stored in a singleton, no ValidateScopes suppression, no ValidateOnBuild change, no root-resolution workaround, no custom service provider, no new route/config/feature flag/migration/contract/data, no generic framework, no signature change. ProductPublishReadiness, variant invariant, Catalog seeds, shared Development scripts, Order/Fulfillment/Shipping/Checkout/Payment/Settlement: untouched.
+
+MISSION B — FOCUSED TESTS / NEGATIVE CONTROL
+New class src/backend/Host/Tooba.Host.Tests/CatalogLegacyBootstrapsDiScopeTests.cs (5 tests, no Testcontainers needed for a DI-lifetime boundary):
+ (1) Root_provider_handoff_reproduces_the_tb113_lifetime_failure: real ServiceCollection + BuildServiceProvider(ValidateScopes=true, ValidateOnBuild=true) -> resolving the scoped probe from the ROOT provider throws InvalidOperationException containing "Cannot resolve scoped service" and "from root provider" (the exact observed failure mode, not an approximation).
+ (2) Scoped_provider_handoff_succeeds_and_disposes_scoped_services: identical call-site shape (await using var scope = provider.CreateAsyncScope(); then scope.ServiceProvider) -> resolution succeeds, scoped identity is stable inside the scope, the IAsyncDisposable scoped service is disposed with the scope, the IDisposable scoped service is disposed with the scope, and a second scope gets fresh instances.
+ (3) Scope_disposes_when_the_bootstrap_throws_or_is_cancelled: same shape with a throwing and a cancelling delegate -> the exception propagates unaltered AND the scoped service is still disposed (the await-using unwind guarantee).
+ (4) Program_hands_the_legacy_catalog_bootstraps_a_scoped_provider: composition guard on the REAL call site -> Program.cs still contains "CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync"; it must NOT contain "CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(app.Services"; a multi-line regex proves an async scope created from app.Services is the provider actually handed over; and Program.cs contains no ValidateScopes/ValidateOnBuild.
+ (5) Legacy_catalog_bootstrap_sequence_resolves_scoped_services_from_the_single_provider: structural proof that ONE scope is required for the whole sequence -> all six bootstraps receive the same single provider (ApplyAsync(provider, cancellationToken) x6 inside the EnsureLegacyBootstrapsAsync body), each of the six seed files resolves provider.GetRequiredService<CatalogDbContext>(), and the module seam creates no scope of its own (boundary stays at the composition root).
+COMMANDS/COUNTS: dotnet test Tooba.Host.Tests --filter FullyQualifiedName~CatalogLegacyBootstrapsDiScopeTests -> Passed: 5, Failed: 0, Total: 5.
+Relevant EXISTING Host Development composition guards (no broad suite run): HostDevelopmentAmcGuardTests + HostAdminAmcW34TemplateSeedsGuardTests + HostAdminAmcLandingPageSeedGuardTests + HostAdminAmcStoreMenuGuardTests + HostDevelopmentEnricherClosureGuardTests + ContentDevelopmentSeedHostSourceTests + the new class -> Passed: 25, Failed: 3, Total: 28. The 3 failures are ONLY the pre-existing Host_Admin_count_15_* drift (they assert 15 *.cs files under src/backend/Host/Tooba.Host/Admin while 17 exist); proven pre-existing and unrelated: git ls-tree -r --name-only <sha> -- src/backend/Host/Tooba.Host/Admin yields 17 *.cs at the expected base 5c5c5d2a0, at the earlier c862d6c and at HEAD, and TB-114 touched nothing in that folder. A narrow re-run of the three Program.cs-reading guard classes gives 11 passed / 2 failed (the same two count_15 metrics); every functional assertion in them passes, including "DevelopmentSchemaMigrator.ApplyAsync" and "CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync" in Program.cs.
+NEGATIVE CONTROL (performed, then restored): Program.cs was temporarily reverted to the pre-fix line EnsureLegacyBootstrapsAsync(app.Services, CancellationToken.None); the focused guard test then FAILED with "Assert.DoesNotContain() Failure: Sub-string found" (1 failed / 1 total). The pre-fix code was restored byte-for-byte (0 occurrences of the temporary marker remain in Program.cs) and the same test passes. The guard is therefore not vacuous: it fails on the old hand-off and passes on the repaired one.
+BUILD: dotnet build src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug -> 0 Error(s).
+
+MISSION C — EVIDENCE, COMMIT, SHARED NON-INTERFERENCE
+Evidence: docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-114.md and docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-114/** (task.md, task-receipt.json, root-cause.md with before/after call flow, minimal-diff.txt, test-build-record.md, focused-tests.txt, guard-composition-tests.txt, shared-non-interference.txt, post-result.js, RESULT.bridge.txt). No passwords, tokens, connection strings, PII or raw secrets are retained.
+Commit af836cc992f9cdc40425d98d0169eba7c39b37e5 contains exactly the bounded source + test + docs change; normal push origin main; git fetch origin; HEAD == origin/main == af836cc99 verified. No force push. Shared parity rechecked after the work, read-only: :5088 PID 35624 /health 200, :3000 PID 31580 -> 308 /fa, /__platform-commerce unchanged. No Host was started, no scratch database used, no shared process stopped/restarted/killed, no SQL fixture or migration run.
+MEASURED: ~8 minutes (01:55 -> 02:03 UTC+3:30), inside the 30-minute hard ceiling with the minute-22 implementation stop respected. Host launches: 0.
+CHANGED PATHS: src/backend/Host/Tooba.Host/Program.cs (+8/-1); src/backend/Host/Tooba.Host.Tests/CatalogLegacyBootstrapsDiScopeTests.cs (new); docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-114.md (new); docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-114/** (new).
+DEVIATIONS: (1) The mission preferred the Host invocation-site scope and forbade an additional Host composition file that would have removed the literal seam call from Program.cs; the inline two-line scope was chosen because the existing architecture guards assert that literal call site in Program.cs, so the guard tests remain valid and untouched. (2) One pre-existing shared probe rewrote a TB-113 evidence file; it was restored so no unrelated file remains modified. (3) The pre-existing Host_Admin_count_15_* guard drift is reported, not repaired (outside scope).
+ROLLBACK: single commit revert (git revert af836cc99) — one file plus one new test file plus docs; no schema, data, configuration or process consequence.
+ACCEPTANCE: the actual legacy Catalog bootstrap sequence now receives a real scoped provider, the original root-provider failure is prevented by structural and test proof, scoped objects are disposed correctly on success/exception/cancellation, and focused tests plus the relevant guards pass. NOT CLAIMED: no isolated Host is reported healthy and storefront shipping labels are not claimed to work — that remains TB-115 runtime proof.
+STOP FOR ARCHITECT.
+END_TOOBA_WORKER_RESULT

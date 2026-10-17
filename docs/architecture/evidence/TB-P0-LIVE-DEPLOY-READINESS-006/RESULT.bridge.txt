@@ -1,0 +1,225 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-LIVE-DEPLOY-READINESS-006
+Parent-Task: TB-P0-PACKAGE-DISPATCH-W6-RECONCILIATION-005
+Program: TOOBA-FULFILLMENT-DISPATCH-INTEGRITY-RECOVERY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: READ_ONLY_DEPLOY_READINESS_STOP_FOR_ARCHITECT
+Bridge-Task-Row: 6102245c-d997-4f19-b06b-52958a463a8b
+Status: WORKER_COMPLETE — STOP FOR INDEPENDENT ARCHITECT ACCEPTANCE
+
+== 1. PREFLIGHT ==
+
+Branch: main
+HEAD: 207dae32fd899584d8057405901593aecf222e45
+origin/main: 207dae32fd899584d8057405901593aecf222e45  (HEAD == origin/main)
+Expected-Starting-HEAD: 207dae32fd899584d8057405901593aecf222e45  (MATCH)
+Tracked working tree: CLEAN of textual changes.
+  git diff --numstat is empty. Four tracked paths appear as " M" only because of
+  CRLF/LF smudge normalization (summary.md, CheckoutAbuseGate.cs,
+  admin-order-detail-screen.tsx, storefront-landing-blocks.tsx). No content delta.
+Governance read: AGENTS.md; .cursor/skills/tooba-backend-feature/SKILL.md;
+docs/ai/TOOBA-PIPELINE-PROTOCOL.md; docs/ai/TOOBA-PIPELINE-CONTROLLER.md;
+docs/ai/TOOBA-RECOVERY-CONTEXT.md.
+Write budget honoured: 0 production files, 0 test files, 0 SQL writes, 0 migrations
+applied, 0 Host restarts, 0 API mutations, 0 dispatches, 0 cancellations.
+No next task started, no deployment performed, no data repair performed.
+
+== 2. READ-ONLY CHECK 1 — RUNNING HOST / BUILD PROVENANCE ==
+
+Provenance was established EXACTLY (not inferred from repository HEAD).
+Method: process command line + listening socket + assembly ProductVersion
+(SourceRevisionId) + file timestamps.
+
+Running process:
+  PID 15068  Tooba.Host.exe
+  CommandLine: "D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe"
+  Launcher: dotnet run --project src\backend\Host\Tooba.Host --no-launch-profile --no-build (PID 9364)
+  Process start: 2026-10-12T08:24:20 (+03:30)  ==  2026-10-12T04:54:20Z
+  Listening: 127.0.0.1:5088
+  Environment: Development (tenant-alpha connection reference from appsettings.Development.json)
+
+Deployed build commit (embedded, single consistent value across assemblies):
+  ProductVersion = 1.0.0+92d21600cc392ad78532d87a5e3c7f843e2980db
+  => build commit 92d21600cc392ad78532d87a5e3c7f843e2980db
+     ("fix(admin): drop the GridQuery caption and use order wording for the empty payment state",
+      committed 2026-10-12T07:32:16 +03:30)
+
+Assembly evidence (src\backend\Host\Tooba.Host\bin\Debug\net8.0):
+  Tooba.Host.dll                    mtime 2026-10-12 08:23:38  ProductVersion 1.0.0+92d2160...
+  Tooba.Inventory.Infrastructure.dll mtime 2026-10-12 08:12:11  ProductVersion 1.0.0+92d2160...
+  Tooba.Fulfillment.Infrastructure.dll mtime 2026-10-12 08:12:07 ProductVersion 1.0.0+92d2160...
+  Tooba.Order.Infrastructure.dll     mtime 2026-10-12 08:23:37  ProductVersion 1.0.0+92d2160...
+
+Comparison against the five target commits (git merge-base --is-ancestor):
+  92d2160 (build) IS an ancestor of 04e3aa79, e7d0bf97, 8f70763b, 67776052, 207dae32.
+  None of the five is an ancestor of 92d2160.
+  Distance: git rev-list --count 92d2160..HEAD = 42 commits.
+  Target commit times (all AFTER the deployed build):
+    04e3aa79 package atomicity    2026-10-12T14:12:39 +03:30
+    e7d0bf97 inventory journal    2026-10-12T16:33:15 +03:30
+    8f70763b keyed-consume wiring 2026-10-12T17:52:19 +03:30
+    67776052 fail-closed 004R     2026-10-12T18:02:19 +03:30
+    207dae32 W6 reconciliation    2026-10-12T20:25:52 +03:30
+
+VERDICT 1: PROVENANCE ESTABLISHED (not UNKNOWN).
+The running Host is a STALE build of commit 92d2160 and contains NONE of
+003 / 004 / 004R / 005 nor 04e3aa79.
+
+Secondary observation (does not change the verdict): three on-disk assemblies were
+later rebuilt at 2026-10-12 20:16 (Tooba.Story.Contracts.dll,
+Tooba.ProductWorkspace.Domain.dll, Tooba.Support.Contracts.dll,
+ProductVersion 1.0.0+eca66731f96ebb181ef3bfa9db37eacb07971b26). They were written
+AFTER the running process started (08:24), so the live process never loaded them.
+The critical assemblies (Host, Inventory.Infrastructure, Fulfillment.Infrastructure,
+Order.Infrastructure) were NOT rebuilt after the build window, therefore even a Host
+restart with --no-build would still load pre-fix code. A REBUILD is mandatory.
+
+== 3. READ-ONLY CHECK 2 — TENANT tooba_alpha INVENTORY MIGRATION HISTORY ==
+
+Connection (development, read-only SELECT only):
+  Host=127.0.0.1;Port=5432;Database=tooba_alpha;Username=admin
+  PostgreSQL 17 in docker container "postgres-db".
+
+inventory.__ef_migrations_history (all rows):
+  20260823092444_InitialInventory
+  20260823100153_ReservationExpiry
+  20260827023000_ReturnRestockInbox
+  20260909130400_DecimalInventoryQuantity
+  20261012110133_AddReservationConsumptions       <-- the target migration IS APPLIED
+
+inventory.reservation_consumptions present with the expected shape:
+  reservation_id  uuid                      NOT NULL  (PK)
+  stock_item_id   uuid                      NOT NULL
+  quantity        numeric                   NOT NULL
+  consumer_key    character varying(128)    NULL
+  consumed_at     timestamp with time zone  NOT NULL
+Constraint: pk_reservation_consumptions PRIMARY KEY (reservation_id)
+
+Repository Inventory migrations (5 files) == 5 applied history rows => no pending
+Inventory migration. No schema change was made by this task.
+
+VERDICT 2: JOURNAL SCHEMA PREREQUISITE IS ALREADY SATISFIED on tooba_alpha.
+The database is one step AHEAD of the running binary (additive expand-first order),
+which is the safe direction and is not itself a blocker.
+
+== 4. READ-ONLY CHECK 3 — PACKAGE 01a12f79-6ef1-7000-8578-dd7cc841195d SNAPSHOT ==
+
+consolidated_packages:
+  consolidated_package_id 01a12f79-6ef1-7000-8578-dd7cc841195d
+  package_number          MP-01A12F796EF1
+  status                  Created
+  tracking_reference      125444
+  dispatched_at           NULL
+  created_at              2026-10-12T09:37:29.841136Z
+
+consolidated_package_members (2 members):
+  member 01a12f79-6ef2-7000-9a81-7a9ff7894683
+    shipment 01a12f79-1ad4-7000-9174-3237c0d645bf
+    seller   01a030d1-40cb-7000-8abe-6d31739956c5
+    shipment.status = Dispatched   dispatched_at 2026-10-12T10:11:57.155071Z
+    tracking_reference = 125444-01A12F79   released_at NULL
+  member 01a12f79-6ef2-7000-9d73-e0edfbb5412d
+    shipment 01a12f79-33ed-7000-b7ad-e562dcf67be8
+    seller   01a03826-97c5-7000-ad15-c9d141b1f32e
+    shipment.status = Created      dispatched_at NULL   released_at NULL
+
+fulfillment.items joined to inventory.reservation_consumptions:
+  already-Dispatched member (5 lines, all reservation_consumed = true):
+    01a12e98-77ad-7000-8a59-02cf7a089372  res 01a12e97-ef81-7000-a1ef-89d69275fd03  ord 1  shp 1  journal=ABSENT
+    01a12e98-77ad-7000-8e03-2e01d172f603  res 01a12e97-ef84-7000-9312-003a14e8bb47  ord 2  shp 2  journal=ABSENT
+    01a12e98-77ad-7000-9f08-1f63083d99ab  res 01a12e97-ef7b-7000-90cf-f2b797bdad0c  ord 6  shp 6  journal=ABSENT
+    01a12e98-77ad-7000-a86f-46946f16a7cd  res 01a12e97-ef54-7000-a6ad-427b6e7ce95d  ord 4  shp 4  journal=ABSENT
+    01a12e98-77ad-7000-bc5d-96980e9c0515  res 01a12e97-ef87-7000-882c-94ffb7e8c675  ord 1  shp 1  journal=ABSENT
+  still-Created member (1 line, reservation_consumed = false):
+    01a12e98-77d2-7000-9ead-087db14bd4d0  res 01a12e97-ef78-7000-9854-7b1a4affaad3  ord 5  shp 0  journal=ABSENT
+
+Journal rows present for these reservations: ZERO (6 of 6 ABSENT).
+Only identifiers/status needed for proof were read; no personal data copied.
+
+VERDICT 3: The package reproduces exactly the W6 gap: a pre-Dispatched member whose
+five line reservations are marked reservation_consumed = true but carry NO journal
+provenance row (consumed by the pre-journal code path), while the remaining member
+still holds an unconsumed (Held) reservation with quantity_shipped = 0.
+
+== 5. READ-ONLY CHECK 4 — DEPLOYMENT ORDER, COMPATIBILITY, ROLLBACK ==
+
+Required order (verified against code + DB, not assumed):
+  step 1  Inventory journal migration 20261012110133_AddReservationConsumptions
+          -> ALREADY APPLIED on tooba_alpha (additive table, no backfill by design).
+  step 2  Rebuild + deploy the binary containing 003 / 004 / 004R / 005
+          -> NOT DONE. Running binary is commit 92d2160 (see check 1).
+  step 3  Focused read-only verification of the redeployed binary
+          -> pending step 2.
+  step 4  (separately approved) bounded package dispatch retry for the still-Created member
+          -> MUST NOT run before step 2.
+
+Compatibility direction: expand-first is satisfied (schema ahead of binary). Adding the
+new binary while the journal table already exists is compatible; the reverse (running the
+new dispatch path WITHOUT the table) would be a hard failure and is precisely what
+check 2 rules out.
+
+Deploy-ready vs operational-recovery-ready:
+  deploy-ready (artifact + DB prerequisites) = YES.
+  operational-recovery-ready (safe package retry) = NO, because the consumer code that
+  writes/validates the journal is not live.
+
+Backup / rollback:
+  - Take a pg_dump (or equivalent) of tooba_alpha immediately before any approved retry;
+    the journal table is currently empty of disputed rows, so a logical snapshot is cheap.
+  - Rollback of the schema is NOT required (additive table, Down migration drops it only).
+  - Real rollback = redeploy the previous binary (commit 92d2160 build). Keep the existing
+    bin\Debug\net8.0 payload until the new build is proven.
+
+== 6. READ-ONLY CHECK 5 — GO / NO-GO ==
+
+Deployment of the Inventory journal migration: ALREADY APPLIED — no action.
+GO.
+
+Deployment of the backend fixes binary (003 / 004 / 004R / 005 / W6):
+GO — prerequisites satisfied, no hard blocker found. Conditions:
+  - rebuild (not just restart; --no-build would keep 92d2160 code),
+  - stop/start Host (explicitly NOT done by this read-only task),
+  - verify redeployed assembly ProductVersion equals the intended commit before declaring success.
+Hard blockers: none.
+
+Live package retry / operational recovery of MP-01A12F796EF1
+(package 01a12f79-6ef1-7000-8578-dd7cc841195d):
+NO-GO today. Reason: the running binary predates the keyed-consume journal and the W6
+reconciliation; retrying now would consume through the legacy path and silently reproduce
+the journal-less consume already visible on the Dispatched member.
+Status: NO-GO until a rebuilt binary is live; UNKNOWN for exact retry behaviour afterwards
+(requires the post-deploy read-only re-check).
+
+Risks:
+  R1 stale-binary risk — a restart with --no-build would still serve pre-fix code.
+  R2 journal-absence on the already-consumed member — expected legacy provenance; the W6
+     path must keep idempotently skipping it and must not fabricate journal rows.
+  R3 partial-dispatch risk on the still-Created member if the retry runs on old code.
+  R4 environment scope — only the Development runtime (5088) and dev tenant DB were in
+     scope; no production endpoint/DB was inspected, so production readiness remains UNKNOWN.
+
+Smallest next action:
+  Rebuild the Host at HEAD 207dae32 (or newer) and restart on 5088, confirm
+  ProductVersion == 207dae32..., then re-run this package snapshot read-only. Only after
+  that, request a separate bounded package-retry task for the still-Created member.
+
+Next recommended bounded task:
+  TB-P0-LIVE-DEPLOY-EXECUTE-007 — rebuild + redeploy Host from HEAD and re-verify package
+  MP-01A12F796EF1 read-only (no dispatch, no cancellation, no data mutation).
+
+== 7. SCOPE / STOP ==
+
+Production files changed: 0. Test files changed: 0. SQL writes: 0. Migrations applied: 0.
+Host restarts: 0. API mutations: 0. Dispatches/cancellations: 0.
+No commit / no push was performed: the repository is intentionally left at
+HEAD == origin/main == 207dae32 with zero tracked content change, so the deployment
+provenance that this gate certifies stays exact (per the task's READ_ONLY stop rule and the
+"do not commit/push docs merely for reporting" instruction).
+Two local, uncommitted evidence artifacts exist for audit only:
+  docs/ai/tasks/TB-P0-LIVE-DEPLOY-READINESS-006.task.md            (received artifact receipt)
+  docs/architecture/evidence/TB-P0-LIVE-DEPLOY-READINESS-006/      (this result + posting script)
+They are untracked and were deliberately NOT committed or pushed.
+STOP for independent Architect acceptance. Do NOT start 007 without an explicit artifact.
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,173 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-143
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-142
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: BOUNDED_SETTLEMENT_SALES_CAPABILITY_ACTIVATION_AND_PENDING_LEDGER_PROOF
+Status: PASS
+Mission-A-Result: PASS
+Mission-B-Result: PASS
+Mission-C-Result: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Base-SHA: f9bb7000853d681f35fc2e062287c95d73f44ea9
+Code-SHA: ca0f989824218854285a909c1b846e74e448d7be
+Final-HEAD: 5ff8b546512730effb2a72f21195051493f4c8e4
+Base-SHA-Verified: HEAD == origin/main == f9bb7000853d681f35fc2e062287c95d73f44ea9 before work
+Origin-Drift-Before: none (HEAD == origin/main == Expected-Base-SHA at claim)
+Evidence: docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-143/
+Plan: docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-143.md
+Commits: ca0f98982 (implementation + evidence), 5ff8b5465 (evidence attribution only)
+
+MISSION A (SMALLEST SAFE HANDLER ELIGIBILITY) - PASS
+The ruling's two facts are now modelled separately; no Edition swap was performed (editionSwapPerformed=false).
+
+A1. REGISTRATION eligibility = deployment capability (owner: Settlement.Infrastructure/DependencyInjection)
+- New SettlementMarketplaceChannelLedgerOptions (SectionName Tooba:Settlement:MarketplaceChannelLedger, default
+  Enabled=false) + SettlementMarketplaceChannelLedgerPolicy:
+  ShouldRegisterHandlers = IsMarketplaceEdition || IsLedgerCapabilityEnabled;
+  RequiresMarketplaceChannelOnly = !IsMarketplaceEdition && IsLedgerCapabilityEnabled.
+- SettlementModule: `if (IsMarketplaceEdition(configuration))` replaced by
+  `if (SettlementMarketplaceChannelLedgerPolicy.ShouldRegisterHandlers(configuration))`; the private
+  IsMarketplaceEdition helper was removed (its logic moved into the policy). Payment/refund handler
+  registrations are otherwise untouched.
+- Tooba.Host/appsettings.json: explicit `Tooba:Settlement:MarketplaceChannelLedger:Enabled = false`.
+- No canonical migration-order constant was added and Settlement was NOT added to the startup migration
+  chain/registry, so no shared Development tenant receives Settlement DDL from this change.
+
+A2. PER-EVENT eligibility = sale channel + schema readiness (owner: Settlement)
+- New Contracts-only seam: OrderSettlementShippingGroupContracts gains OrderCheckoutSalesChannelSnapshot(
+  CheckoutId, Channel) and IOrderCheckoutSalesChannelSettlementReader; implemented by
+  OrderCheckoutSalesChannelSettlementBridge (Order.Infrastructure) reading the PERSISTED
+  order.checkouts.channel through OrderDbContext (no cross-module DbContext, no frontend label, no seller
+  name, no SKU, no edition guess, no client claim). Registered in OrderModule.
+- New ISettlementChannelLedgerEligibilityGate / SettlementChannelLedgerEligibility
+  (NotMarketplaceChannel | SchemaNotReady | Eligible) implemented by SettlementChannelLedgerEligibilityGate:
+  legacy Edition=Marketplace short-circuits to Eligible WITHOUT reading the channel or the schema (existing
+  Marketplace behaviour bit-for-bit retained); otherwise the persisted channel must be SalesChannel.Marketplace
+  and then ISettlementLedgerSchemaReadiness must pass.
+- New SettlementLedgerSchemaReadiness answers "is the ledger relation present?" with the single scalar probe
+  `to_regclass('settlement.shipping_group_fees') is not null`, which does NOT throw on an absent schema.
+- SettlementPaymentSucceededHandler awaits the gate BEFORE any Settlement query and returns without an
+  exception when the decision is not Eligible, so an inapplicable/not-ready paid event is never surfaced as a
+  transport failure and cannot poison retries or produce a payout. Fail-closed skips are counted by the new
+  tooba.settlement.ledger.skipped counter (SettlementInstrumentation).
+- Order/Fulfillment fan-out is unchanged: the paid -> Fulfillment shipping-group handoff is identical to TB-140.
+
+MISSION B (RUNTIME PROOF ON A DISPOSABLE SINGLESTORE SCRATCH) - PASS
+Environment (task-owned, disposable, isolated): container tooba-tb143-pg (postgres:16-alpine, 127.0.0.1:55463,
+databases tooba_143_scratch / tooba_143_messaging, role scratch143); isolated Host published to
+.tmp-143-host-out and launched EXACTLY once (LAUNCH_COUNT=1, PID 41156) on http://127.0.0.1:5411,
+Edition=SingleStore, HTTP 200 {"status":"ok"} in 37s.
+ISOLATION-GUARD (prepare-isolated-target-143.js, isolation-guard.json, failClosed=true): tenantCount=1,
+activeTenantCount=1 with the single Active tenant store-alpha -> tenant-143-scratch whose
+StoreCommerce.SalesChannel is Marketplace; canonical gateway tenant present; NO tooba_alpha, NO tenant-alpha,
+NO Port=5432, NO prior scratch port, no shared-alpha connection reference; edition=SingleStore;
+editionSwapPerformed=false; settlementCapabilityExplicitlyEnabled=true; settlementHandlerRegistrationExpected=true;
+no ShippingRateAuthority / ShippingOperationalShadow set.
+
+Settlement schema activation was applied ONLY to the task-owned scratch through the module's own proven
+ToobaNpgsql.ConfigureModuleContext seam (raw output: settlement-migration-activation-143.txt):
+MIGRATIONS_APPLIED_BEFORE=[] -> AFTER=[20260827030000_InitialSettlement, 20261016140000_AddSettlementShippingGroupFees];
+a second MigrateAsync was a verified no-op (SECOND_APPLY_WAS_NOOP=True); shipping_group_fees = 26 columns and 6
+indexes (all commercial columns NULLABLE); settlement table count = 12. No schema activation on any shared database.
+
+REAL PAID JOURNEY (journey-143.js / journey-143-run.txt) - real API-driven storefront flow, no event injection,
+no direct handler/SettlementDirectory call: OTP-authenticated customer; guest cart merged into the authenticated
+cart; TWO sibling offers of ONE seller (workspace-live-shirt + workspace-live-scarf, seller
+01a143f0-a093-7000-9e31-df23cceaf184); shipping projection; PUT /shipping/selection accepting TWO groups
+(post:express 200000 IRR and tipax:standard 180000 IRR); one start-payment; one Development sandbox verification.
+Payment 01a143f3-33ac-7000-9de7-4af5ecb38a4e, order TB-20261016090254-01-3f6470, 3977000.0000 IRR, Succeeded,
+with three allocations: 200000 + 180000 (target_kind=StoreShippingGroup) + 3597000 (SellerOrder).
+
+READ-BACK (scratch-readback-143.txt) - the invariant under proof:
+- order.checkouts.channel (authoritative eligibility source) = Marketplace, shipping_amount=380000.
+- settlement.shipping_group_fees: charge_rows=2, distinct_groups=2, distinct_idempotency_keys=2,
+  total_customer_charge=380000.0000, pending_rows=2, charge_kind_rows=2, reversal_kind_rows=0,
+  rows_with_commercial_value=0. The two charges are 200000.0000 (post:express) and 180000.0000
+  (tipax:standard), both allocation_state=PendingAllocation, record_kind=Charge, accepted_quote_version=Confirmed.
+- Every carrier payable / seller share / marketplace share / discount / shipping tax / funder adjustment /
+  funder reference / allocation policy version / allocation policy reference column is NULL.
+- Fulfillment handoff preserved: paid_seller_orders=1; fulfillment_unit_rows=1, distinct_fulfillment_ids=1; the
+  unit holds 2 fulfillment.shipping_groups; identical_group_ids=2 (Fulfillment and Settlement carry the SAME two
+  group identities).
+- NO SELLER CREDIT / NO PAYOUT: the single settlement entry is Credit gross=3597000.0000,
+  commission=359700.0000, net=3237300.0000, source_type=payment, seller_order 01a143f3-3245-... (i.e. the
+  SellerOrder allocation only - the 380000 shipping charge is NOT in the seller accrual);
+  settlement_account_rows=1; payout_request_rows=0.
+- Charge equals the customer's paid group allocation: directly readable from the same capture - its section B
+  allocation rows and section D ledger rows carry the same two group ids with the same amounts
+  (...a5ac-f125e2e761f2 = 180000, ...b59d-f3c4e951ad2e = 200000).
+
+DECLARED EVIDENCE LIMITATION (not hidden, no impact on the verdict): the single psql capture persisted as
+scratch-readback-143.txt ends at line 70 - the remainder of section E and the SQL file's sections F/G/H were cut
+by the shell capture, and the disposable database has since been destroyed so the tail cannot be re-fetched.
+Consequences: "charge equals paid allocation" is readable from the persisted sections B+D (above);
+"migration provenance" is evidenced by the persisted settlement-migration-activation-143.txt; "no duplicate real
+delivery" follows from the persisted section D counts (charge_rows=2 = distinct_groups=2 = charge_kind_rows=2 =>
+no group can hold more than one charge row). This limitation and its attribution are recorded in the plan document.
+
+MISSION C (TESTS AND EVIDENCE) - PASS
+Focused run, once, no rerun loop (focused-tests-143.txt):
+- Tooba.Settlement.Tests -> Passed 47/47, Failed 0, Skipped 0, 528 ms, including the seven new
+  SettlementChannelLedgerEligibilityTests: SingleStore registration OFF by default; ON only for the explicit
+  capability; Marketplace registration not weakened; Marketplace legacy per-event short-circuit (asserts the
+  channel reader was never invoked); Marketplace-channel sale accepted; ordinary retail channel rejected; unknown
+  checkout rejected; schema-not-activated fail-closed.
+- Tooba.Host.Tests -> Passed 7/7, Failed 0, Skipped 0, including the unchanged pre-existing guard
+  (Marketplace registers settlement payment/refund handlers, SingleStore does not) and the Docker-backed
+  Marketplace consumer path, which now injects the gate through the legacy short-circuit.
+
+NON-CLAIMS
+- No commercial policy was invented: no carrier payable, seller/platform split, discount, shipping tax or funder
+  value exists anywhere; every such column is NULL and PendingAllocation is never treated as settled, revenue,
+  credit or payable (0 payout requests).
+- No unit-only test is presented as runtime proof; the runtime claims above come from the real paid journey and
+  its read-back.
+- No shared resource was used or touched: shared :5088 / :3000, tooba_alpha, the shared Postgres on :5432 and the
+  shared RabbitMQ were never used; the plan/proof used only the disposable :55463 container and the isolated Host
+  on :5411.
+- No frontend, CSS, theme, typography, card, spacing, RTL, component-token, storefront-appearance or admin file
+  was modified by this task. NOTE FOR TRANSPARENCY: the working tree still contains FOUR pre-existing unrelated
+  modified files that this task did NOT stage or edit (historically dirty evidence logs
+  TB-SHIPPING-FULL-OPERATIONS-075/host-stdout-075.txt and -079/host-stdout-OFF.txt, plus
+  src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx and admin-order-detail-screen.tsx, which were
+  already dirty before this task was claimed; the latter differs only in line endings). They are untouched,
+  un-rewritten and not part of this task's commits.
+
+SOURCE-CHANGES (ca0f98982; 29 files, +1762/-11)
+- Order.Contracts: Settlement/OrderSettlementShippingGroupContracts.cs (channel-read seam).
+- Order.Infrastructure: Integrations/Settlement/OrderCheckoutSalesChannelSettlementBridge.cs (new); OrderModule.cs.
+- Settlement.Application: Payouts/Ports/SettlementChannelLedgerEligibilityGate.cs (new).
+- Settlement.Infrastructure: DependencyInjection/SettlementMarketplaceChannelLedgerOptions.cs (new);
+  DependencyInjection/SettlementModule.cs; Gateways/SettlementChannelLedgerEligibilityGate.cs (new);
+  Persistence/SettlementLedgerSchemaReadiness.cs (new); Handlers/SettlementEventHandlers.cs;
+  Observability/SettlementInstrumentation.cs.
+- Host: Tooba.Host/appsettings.json (capability default false).
+- Tests: Settlement.Tests/Behavior/SettlementChannelLedgerEligibilityTests.cs (new);
+  Host.Tests/SettlementEligibilityTestGate.cs (new); Host.Tests/MarketplaceSettlementEventPathTests.cs;
+  Host.Tests/R2LiveMarketplaceSmokeTests.cs.
+- Docs/evidence: docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-143.md and 13 evidence files.
+No backend Guard/AMSC invariant, locked contract or Host business authority was changed; no migration was added.
+
+CLEANUP (PID-verified, cleanup-143.ps1 / cleanup-143.txt)
+- RECORDED_HOST_PID=41156; process path matched the task-published .tmp-143-host-out\Tooba.Host.exe before the
+  kill (refuses to stop anything else); ISOLATED_HOST_STOPPED=True; LISTENER_ON_5411_REMAINS=False.
+- SCRATCH_CONTAINER_REMOVED=True (docker rm -f tooba-tb143-pg); .tmp-143-run deleted (SCRATCH_RUN_DIR_DELETED=True).
+- SHARED_5088_LISTENER_ALIVE=True - the shared stack is untouched (never this task's resource).
+
+ROLLBACK: revert 5ff8b5465 (evidence note) and ca0f98982 (source + evidence). That restores the previous
+Edition==Marketplace-only registration and removes the per-event gate; Tooba:Settlement:MarketplaceChannelLedger:
+Enabled defaults to false, so no deployment acquires the capability accidentally and operational rollback is a
+configuration change only. The disposable scratch environment is destroyed and needs no rollback. Nothing shared
+was changed, so no shared rollback exists.
+
+MINUTES: ~24 from claim (08:46:29Z) to report; implementation inside minute 28 and verification/report inside the
+45-minute hard timebox (single activation attempt, single launch, single real paid journey, single focused test run).
+HEAD-CHECK: both commits pushed; HEAD == origin/main == 5ff8b546512730effb2a72f21195051493f4c8e4 verified after push.
+
+REMAINING COMMERCIAL POLICY BLOCKER (unchanged by this task): the ledger records the customer-paid shipping charge
+only as PendingAllocation. Who owns that money - carrier payable, seller share, marketplace share, discounts,
+shipping tax, funder - is still an open commercial policy owned by the Architect; this task deliberately created no
+such value and left every such column NULL. Any future allocation policy must not be inferred from this result.
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,3 @@
+﻿RESULT 200 {"id":"cf76ba95-5cd5-4ea6-ba21-342fafa91c5c","channelId":"tooba-main","taskId":"TB-SHIPPING-ONE-LEVEL-TABS-094","status":"Pending","duplicate":false}
+COMPLETE 200 {"id":"9a41c065-6112-4f80-9917-6c19093b9aa7","status":"Completed"}
+IDLE 200 {"workerId":"tooba-worker-01","channelId":"tooba-main","agentType":"cursor","status":"Idle","lastSeenAtUtc":"2026-10-15T21:51:01.2217756Z"}

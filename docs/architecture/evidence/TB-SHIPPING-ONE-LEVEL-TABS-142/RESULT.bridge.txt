@@ -1,0 +1,127 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-142
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-141
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: BOUNDED_ISOLATED_MARKETPLACE_SETTLEMENT_PENDING_LEDGER_ACCEPTANCE
+Status: PARTIAL
+Mission-A-Result: PASS
+Mission-B-Result: BLOCKED
+Stop-State: STOP_FOR_ARCHITECT
+Base-SHA: 0a771866e85057470a2f7d8fee4764a6f84093a9
+Code-SHA: f9bb7000853d681f35fc2e062287c95d73f44ea9
+Base-SHA-Verified: HEAD == origin/main == 0a771866e85057470a2f7d8fee4764a6f84093a9 before work
+Evidence: docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-142/
+Plan: docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-142.md
+
+ORIGIN-DRIFT-BEFORE: none (HEAD == origin/main == Expected-Base-SHA at claim)
+SOURCE-CONFIG-ISOLATION: Edition=Marketplace; Tooba:Marketplace:ConnectionReference=marketplace-142-scratch;
+  SingleStore.Tenants=[]; Authorization InMemory/ApplySchemaOnStartup=false; Payment Sandbox/fake with empty PSP
+  endpoints+secrets; CatalogDemo.RunLegacyBootstraps=false; AllowResetAndSeed=false; scratch port 55463 only;
+  no tooba_alpha / tenant-alpha / Port=5432 / prior scratch port in any effective setting.
+FAIL-CLOSED-TENANT-BINDING: tenantCount=0 AND marketplaceReferenceConfigured=true AND the marketplace reference
+  resolves in Tooba:PostgreSQL.ConnectionReferences; failClosedTenantBinding=true.
+ISOLATION-GUARD: PREPARE=PASS, failClosed=true (docs/.../TB-142/isolation-guard.json).
+MESSAGING-ISOLATION: disposable tooba_142_messaging (schema transport, 10 tables) on the same container.
+
+MISSION A (SAFE MARKETPLACE ACTIVATION) - PASS
+- Single launch, LAUNCH_COUNT=1, PID 29488, no repeated startup attempts.
+- HTTP 200 /health {"status":"ok"} in 4s; HTTP 200 /ready with
+  checks={edition:Marketplace, postgresql:configured, authorization:inmemory,
+  messaging-transport:postgresql-sql, messaging:Healthy}. Canonical Marketplace edition boots with ZERO
+  source change.
+- Settlement schema is applied by the PRE-EXISTING, edition-owned Marketplace composition seam
+  (MarketplaceDevelopmentBootstrap line 54 -> SettlementDbContext.Database.MigrateAsync), invoked from
+  Program.cs for Development+Marketplace. NOT by adding automatic host-startup registration.
+- Readback: settlement.__ef_migrations_history = {20260827030000_InitialSettlement,
+  20261016140000_AddSettlementShippingGroupFees}; settlement.shipping_group_fees exists with 26 columns and
+  6 indexes; the payment-only columns (allocation policy/reference, carrier payable, seller share, marketplace
+  share, discount, tax, funder adjustment/reference, reversal-of) are all NULLABLE -> the "amounts unknown /
+  never revenue" shape holds at schema level in Marketplace too.
+- settlement.shipping_group_fees row count = 0.
+- TB-141 BLOCKER FRAMING SUPERSEDED: Settlement schema IS reachable under Edition=Marketplace with no new
+  registration. SettlementModule still registers zero IModuleSchemaMigrator; no migration-order constant added;
+  the SingleStore Development startup migrator chain is untouched.
+- Fresh focused proof of the other half: Settlement_handlers_are_marketplace_gated_in_module_registration
+  -> Passed 1/1 (Marketplace registers payment/refund handlers; SingleStore does not).
+
+MISSION B (ONE PAID EVENT ACCEPTANCE) - BLOCKED, PREREQUISITE NAMED
+- Observed runtime fact: MarketplaceDevelopmentBootstrap migrates ONLY 11 contexts, so after startup the
+  marketplace scratch DB has exactly {access_control, content, identity, media, notification, order,
+  page_composition, party, payment, settlement, story} (+public).
+  ABSENT: cart, catalog, offer, pricing, inventory, tax, promotion, shipping*, fulfillment, returns, geography.
+- 2 read-only bounded probes (no writes) against the running isolated host:
+  GET /v1/storefront/products?locale=fa -> 500 platform.unexpected
+  GET /v1/storefront/home?locale=fa     -> 500 platform.unexpected
+- Host's own logs name the first owner-correct blockers:
+  42P01 relation "catalog.categories" does not exist (ExceptionHandlerMiddleware, the 500 above);
+  42P01 relation "cart.carts" does not exist (CartExpiryWorker);
+  42P01 relation "catalog.outbox_messages" does not exist / "offer.outbox_messages" (outbox claim, Schema=catalog|offer).
+- No cart, no catalog product, no offer, no price, no stock, no tax rule, no shipping method, no fulfillment
+  table -> a genuine customer cannot browse or check out, so no paid event can reach
+  SettlementPaymentSucceededHandler. Exactly two pending fee rows were therefore NOT produced.
+- Why no workaround was taken (each is forbidden by the task and would fake a green):
+  (1) adding commerce-module migration registration to the Marketplace startup seam = forbidden
+  "startup migration registration" and the class of change rejected in TB-141;
+  (2) applying other modules' migrations myself into the scratch DB = not the approved mechanism for those
+  modules and still leaves nothing to sell;
+  (3) seeding a commerce fixture under Marketplace = no canonical Marketplace seeder exists; the single
+  sanctioned Development commerce dataset (WorkspaceDemoSeed -> Marketplace seed: sellers/offers/prices/stock/
+  companion offer) is reachable ONLY via DevelopmentSchemaMigrator.ApplyAsync, which requires an
+  Active store-alpha SingleStore tenant, and is not invoked on the Marketplace branch;
+  (4) injecting a payment event / calling SettlementDirectory / synthesizing rows = explicitly forbidden.
+- ARCHITECTURAL CONFLICT (decision-ready): the recorder and the fixture live in mutually exclusive editions.
+  SingleStore owns the runnable storefront fixture AND that fixture sells on the Marketplace SALES CHANNEL
+  (StoreCommerce.SalesChannel=Marketplace; WorkspaceDemoMarketplaceSeed prices via SalesChannel.Marketplace),
+  while Marketplace (the EDITION) is what registers the Settlement handlers. So a genuine paid checkout on the
+  marketplace sales channel in a single-store deployment is not observable by Settlement, because the gate is
+  Tooba:Edition == "Marketplace" instead of the sale's sales channel / a settlement capability.
+- EXACT PREREQUISITE (one Architect decision):
+  Option A - re-gate SettlementPaymentSucceededHandler/SettlementRefundSucceededHandler on the sale's sales
+  channel / deployment capability rather than Tooba:Edition; then the already-sanctioned SingleStore isolated
+  fixture (one Checkout, one SellerOrder, two shipping groups, two payment allocations, one FulfillmentUnit with
+  two group ids) can produce the two pending rows. Impact: changes which deployments write settlement ledger
+  rows -> commercial/architectural decision.
+  Option B - authorize the Marketplace composition seam to provision the commerce-module schema set plus a
+  Development commerce fixture under the marketplace reference. Impact: source change to a startup migration
+  seam, exactly what TB-141/TB-142 kept closed.
+  Until A or B is authorized no canonical path can produce the two pending rows and TB-142 must not claim them.
+
+IDEMPOTENCY / NULL-SHAPE EVIDENCE (no extra customer payments made)
+- Focused bounded test ShippingGroupFeeAllocationTests -> Passed 9/9: two groups of one seller record distinct
+  known charges with no seller revenue; same-method/different-seller never merge; recording AND reversing are
+  idempotent and create NO duplicate row; pending allocation can never become seller revenue or a payout;
+  reversal is scoped to one group and never rewrites the original row.
+- Runtime NULL-shape of a recorded row is NOT asserted in this task because zero rows exist (see NON-CLAIMS).
+
+NON-CLAIMS
+- No shipping_group_fees row was created; the Marketplace readback is 0 rows.
+- No end-to-end paid-journey PASS is claimed in either edition.
+- No final commercial settlement is claimed: signed seller/platform portions, carrier cost, tax and funding
+  remain a business decision; PendingAllocation must never be paid out as-is.
+- No production/shared (tooba_alpha, :5088, :3000, :5432) configuration was used, copied or derived.
+- No frontend/CSS/component/typography/theme/RTL/responsive/storefront-appearance file was touched.
+
+SOURCE-CHANGES: NONE (observation/proof only; no proven in-scope owner-correct blocker; both fixes are forbidden
+  by the task, so architecture was NOT modified to force a green result). No PROVEN owner-correct fix + qualified
+  proof was therefore delivered; result is PARTIAL rather than PASS.
+
+ROLLBACK: nothing to roll back - no source change and no shared resource touched. Task-owned runtime resources
+  were the container tooba-tb142-pg (removed) and Host PID 29488 (path-verified then killed); .tmp-142-run and the
+  scratch password file were deleted. Reverting this commit removes documentation and evidence only.
+
+CLEANUP (PID-verified)
+- HOST_PID=29488 HOST_PID_PATH_MATCHES_TASK_PUBLISH=True HOST_KILLED=True PORT_5410_LISTENERS_AFTER_CLEANUP=0
+- CONTAINER_REMOVE=tooba-tb142-pg CONTAINER_PRESENT_AFTER_CLEANUP=False
+- scratch password file removed (never written into evidence)
+- shared :5088/:3000/:5432 listeners unchanged; shared tooba_alpha database/container untouched
+- TRACKED_MODIFIED_FILES_AFTER_CLEANUP=4: all four are pre-existing unrelated working-tree changes that TB-142
+  did NOT stage (historical evidence logs TB-SHIPPING-FULL-OPERATIONS-075/079 and two admin screen files).
+
+MINUTES: ~45 (single activation attempt; single bounded paid-path feasibility probe; cleanup+report inside the box).
+HEAD-CHECK: local commit pushed; HEAD == origin/main verified after push.
+
+COMMERCIAL POLICY DECISION STILL OPEN: which deployment/sales-channel combination must record shipping-group
+pending fees, and who signs seller/platform portion, carrier cost, tax and funding.
+END_TOOBA_WORKER_RESULT

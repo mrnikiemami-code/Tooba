@@ -1,0 +1,84 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GEOGRAPHY-PERSISTENCE-MODEL-038
+Parent-Task: TB-SHIPPING-GEOGRAPHY-MODULE-FOUNDATION-037
+Pipeline-Protocol: BRIDGE-WAKE-V1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ARCHITECTURE-PLANNING
+Mode: IMPLEMENTATION_BOUNDED_INERT_PERSISTENCE_MODEL_ONLY
+Bridge-Task-Row: a9bffc56-d6f1-451d-9630-1fc9e8432c62
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 2d3070c05ef5e2a236da26d3ee6f5cb33e7126e0
+Base-SHA: 2d3070c05ef5e2a236da26d3ee6f5cb33e7126e0
+Code-SHA: a0eb0d1e969875a77271256d25b11285701858c6
+Evidence-SHA: a0eb0d1e969875a77271256d25b11285701858c6
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- BRIDGE-WAKE received; exactly one Pending task claimed on channel tooba-main; no idle polling; no automatic next task.
+- branch = main; local HEAD == origin/main == Expected-Base-SHA == 2d3070c05ef5e2a236da26d3ee6f5cb33e7126e0. Exact match; no merge, rebase, reset, stash, cherry-pick or force-push performed.
+- Target path src/backend/Modules/Geography/Tooba.Geography.Infrastructure did not exist before this task; nothing was overwritten.
+- Dirty/untracked status preserved: pre-existing unrelated modified/untracked files were left untouched and unstaged (src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs, src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx, src/frontend/app/storefront/storefront-landing-blocks.tsx, docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, and the pre-existing untracked docs/ai/tasks/* and docs/architecture/evidence/** trees).
+- Conventions studied before editing: Modules/Media + Modules/Localization Infrastructure csproj and DbContext (schema const, inline OnModelCreating, design-time factory, EF Design 8.0.11 PrivateAssets=all), BuildingBlocks/Tooba.Persistence/ToobaNpgsql.cs (provider versions Npgsql 8.0.7 / Npgsql.EFCore.PostgreSQL 8.0.11, MigrationsHistoryTable, MigrationsAssembly, UseSnakeCaseNamingConvention), FulfillmentDbContext.cs L183/L200 + CatalogDbContext.cs L599 (translation unique index on ParentId+LanguageId), CatalogDbContext.cs L250-L253 Restrict self-parent vs L271-L274/L285-L288 Cascade dependent, OutboxMessageMapping.Map (mapped by all 31 existing module DbContexts).
+- Safety determination: creating an inert Geography Infrastructure project without Host composition is safe. ArchitectureBoundaryTests resolves module identity by PATH (requires /Modules/ in path), so the Tooba.Persistence building-block reference is module-less and Geography.Domain/Contracts are same-module; the foreign Infrastructure->Application/Domain edge baselines are name-scoped per module; no structure gate enumerates the Modules directory into a set (gates read the manifest and validate declared modules against disk); no test asserts solution-wide project set equality; the ModuleSchemaMigrationOrder pinned numbers (Promotion 12 / Reviews 14 / Support 29, and 13 absent) are untouched because no constant was added. No guard was bypassed.
+
+CHANGED PATHS (4 staged in exactly one commit; nothing else created, modified or deleted)
+A src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Tooba.Geography.Infrastructure.csproj
+A src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Persistence/GeographyDbContext.cs
+A docs/planning/shipping/SHIPPING-GEOGRAPHY-PERSISTENCE-MODEL-038.md
+M src/backend/Tooba.slnx  (additive only: ONE added <Project> line inside the existing /Modules/Geography/ folder group; diff is a single "+" line, no existing line rewritten)
+Untracked (not committed, deliberately left dirty as evidence, matching the 034/035/036/037 convention): docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-PERSISTENCE-MODEL-038/{RESULT.bridge.txt,post-result.js}
+Not created at all: any Persistence/Migrations or Migrations file, any DependencyInjection/module composition class, any Application project, any .cs at the new project root.
+
+SOURCE LINE-RANGE EVIDENCE
+- Infrastructure csproj: src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Tooba.Geography.Infrastructure.csproj L1-L21 — net8.0, ImplicitUsings, Nullable, RootNamespace/AssemblyName Tooba.Geography.Infrastructure; PackageReference Microsoft.EntityFrameworkCore.Design 8.0.11 (PrivateAssets=all); ProjectReferences Geography.Contracts, Geography.Domain, BuildingBlocks/Tooba.BuildingBlocks, BuildingBlocks/Tooba.Persistence. No Application reference (none exists); no foreign module reference.
+- DbContext: src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Persistence/GeographyDbContext.cs
+  * L16 public sealed class GeographyDbContext : DbContext; L19 public const string Schema = "geography"; L46 protected override void OnModelCreating; L159 public sealed class GeographyDbContextFactory : IDesignTimeDbContextFactory<GeographyDbContext> (uses ToobaNpgsql.ConfigureModuleContext + DesignTimeConnectionString, i.e. the EF-tool-only env var, no committed credential).
+  * L51-L62 countries: PK CountryId ValueGeneratedNever, CountryCode MaxLength(3) IsRequired, unique index country_code, index is_active.
+  * L64-L90 administrative_areas: PK, Code MaxLength(32) IsRequired, unique index (country_id, code), index (country_id, is_active), FK country_id -> countries Restrict, self FK parent_administrative_area_id -> administrative_areas Restrict.
+  * L92-L115 cities: PK, Code MaxLength(32) IsRequired, unique index (country_id, code), index (country_id, administrative_area_id, is_active), FK country_id -> countries Restrict, optional FK administrative_area_id -> administrative_areas Restrict.
+  * L117-L134 service_areas: PK, Code MaxLength(32) IsRequired, unique index (city_id, code), index (city_id, is_active), FK city_id -> cities Cascade.
+  * L136-L149 place_name_translations: PK translation_id, PlaceKind HasConversion<string>() MaxLength(32), Name MaxLength(128) IsRequired, unique index (place_kind, place_id, language_id); NO foreign key (documented polymorphic limitation, see report §4).
+  * L151 OutboxMessageMapping.Map(modelBuilder, Schema) — shared canonical module outbox skeleton; no dispatch/consumer/publish behaviour added.
+- Report: docs/planning/shipping/SHIPPING-GEOGRAPHY-PERSISTENCE-MODEL-038.md L1-L166 (created paths, conventions with source anchors, schema/constraint decisions, translation integrity limitation + narrow follow-up, verification evidence, guard impact, exclusions, one bounded next step).
+- Convention anchors used for the mappings (verified pre-existing, not modified): src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Persistence/FulfillmentDbContext.cs L183 and L200 (translation unique index), src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Persistence/CatalogDbContext.cs L599 (translation unique index), L250-L253 (self parent Restrict), L271-L274/L285-L288 (dependent Cascade), src/backend/BuildingBlocks/Tooba.Persistence/ToobaNpgsql.cs L22 and L33, src/backend/BuildingBlocks/Tooba.Persistence/OutboxMessageMapping.cs L20, src/backend/Modules/Media/Tooba.Media.Infrastructure/Persistence/MediaDbContext.cs L10 (class) / L49 (factory), src/backend/Modules/Localization/Tooba.Localization.Infrastructure/Persistence/LocalizationDbContext.cs L9 (class) / L42 (factory).
+
+TARGETED BUILD / VERIFICATION
+1) dotnet build src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Tooba.Geography.Infrastructure.csproj => Build succeeded, 0 Error(s), 2 Warning(s) (both NU1900 NuGet vulnerability-feed timeout, network-only). Output: bin/Debug/net8.0/Tooba.Geography.Infrastructure.dll.
+2) Targeted EF model validation (structural verification), performed in a throwaway harness OUTSIDE the repository (%TEMP%/geography-model-check, deleted afterwards; referenced the new project, called ToobaNpgsql.ConfigureModuleContext with a placeholder connection string and read DbContext.Model) => MODEL_OK. It reported exactly: SCHEMA geography; administrative_areas PK=administrative_area_id with FK country_id->countries Restrict, FK parent_administrative_area_id->administrative_areas Restrict, UNIQUE(country_id,code), IX(country_id,is_active), IX(parent_administrative_area_id); cities PK=city_id with FK administrative_area_id->administrative_areas Restrict, FK country_id->countries Restrict, UNIQUE(country_id,code), IX(country_id,administrative_area_id,is_active), IX(administrative_area_id); countries PK=country_id with UNIQUE(country_code), IX(is_active); outbox_messages PK=id, IX(occurred_at); place_name_translations PK=translation_id with UNIQUE(place_kind,place_id,language_id); service_areas PK=service_area_id with FK city_id->cities Cascade, UNIQUE(city_id,code), IX(city_id,is_active). NO connection was opened, NO database was contacted, NO migration was generated, and nothing was written inside the repository; the harness directory was subsequently removed (verified absent).
+3) Structural self-checks on the working tree: Modules/Geography contains 0 files matching *Migration*; no *.csproj outside Modules/Geography contains the string "Tooba.Geography" (Host and every other module untouched, nothing composes this context); the 037 Contracts and Domain trees show no modification (git status clean for both); no .cs file at the new project root (only Persistence/GeographyDbContext.cs), so the folder↔namespace rule Tooba.Geography.Infrastructure.Persistence ↔ Persistence/ holds.
+- Per the bounded-verification rule the full solution was NOT built, no test suite was run, no database was accessed and no service was restarted.
+
+EXCLUDED ACTIONS (explicit non-actions)
+- No EF migration file, no "dotnet ef" invocation, no database update/script/seed/import, no schema alteration, no live database access, no connection string committed (design-time factory reads the tool-only env var).
+- No endpoints, no Application handlers, no lookup adapters, no admin UI, no Geography or Host DI wiring, no module composition class, no service startup, no deployed/runtime behaviour change.
+- No change to Order, AddressBook, Fulfillment, Payment, Settlement, Shipping/Checkout, frontend, seller origin or any legacy geography surface; no cross-module DbContext dependency or cross-module DB access.
+- No change to the 037 Domain/Contracts model, no ARCH-COMPLETE-002 self-certification, no tmar-module-structure-manifests.json edit, no ModuleSchemaMigrationOrder constant, no ADR 036 / architecture draft / prior report edit, no unrelated edit, no hidden polling, no automatic next task, no dummy/probe payload to Bridge /api/results.
+
+COMMIT / PUSH EVIDENCE
+- Commit: "TB-SHIPPING-GEOGRAPHY-PERSISTENCE-MODEL-038: add inert Geography persistence model and mappings" — 4 files changed, 360 insertions(+), 0 deletions.
+- git push origin main => "2d3070c05..a0eb0d1e9  main -> main" (succeeded).
+- git fetch origin; LOCAL == ORIGIN == a0eb0d1e969875a77271256d25b11285701858c6. Divergence: none. No force-push.
+
+TIME USED
+- Claim at 2026-10-14T09:34:54Z, push completed 2026-10-14T09:43:27Z => approximately 8.5 minutes wall-clock (well within the 30-minute HARD timebox).
+
+CERTIFICATION / MANIFEST STATUS
+- Geography: persistence model only, INERT, NOT WIRED, NOT REGISTERED in tmar-module-structure-manifests.json, NOT structure-certified, ARCH-COMPLETE-002 NOT claimed, no migration exists. The module still has no Application/Endpoints/Tests projects, which is intentional for this bounded task.
+
+REMAINING RISKS / OPEN ITEMS (none blocking)
+1. place_name_translations has no FK because its owner is polymorphic (place_kind + place_id); uniqueness is enforced but referential integrity is not. Documented in the report with one narrow, non-generic follow-up (split into four per-kind translation tables with real FKs). Not executed because it would change the accepted 037 shape.
+2. Scoped code uniqueness is per country (areas, cities) and per city (service areas). If the Architect later wants the same code valid under different parents, that is a deliberate index change requiring authorization.
+3. D10 (explicit administrative level) remains OPEN; nothing in the schema encodes a level, so added level semantics will be a later, explicit mapping decision.
+4. No model snapshot exists yet, so the first migration (task 039) will be a full initial create; nothing about this model has ever touched a database, so no drift exists yet.
+5. Full solution build and the architecture test suite were intentionally not run (bounded verification). Guard impact was assessed by reading the guards; residual risk is low but not zero until a full run is authorized.
+6. The outbox table is mapped for convention compliance only; it is unused in this task and would become a real (empty) table only when a future authorized migration runs.
+
+RECOMMENDED ONE BOUNDED NEXT STEP (NOT executed, requires Architect authorization)
+- TB-SHIPPING-GEOGRAPHY-MIGRATION-039: generate the expand-first migration for the geography schema from this frozen model, with the ModuleSchemaMigrationOrder entry and migration-assembly wiring decided explicitly, and no data import. Entry criteria: Architect acceptance of this model, an explicit ruling on the Phase 0a geographic data-entry source, a decision on the polymorphic-translation split (do it now or accept the gap for one more step), and an explicit ruling on whether a fail-closed switch may ever be enabled (ADR 036 gates G1-G7). Must still perform no serviceability/coverage/rating/fail-closed logic and must not touch Order/AddressBook/Fulfillment.
+
+STOP
+- Worker PASS != Architect ACCEPT. Final state: STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE. No polling, no new task.
+END_TOOBA_WORKER_RESULT

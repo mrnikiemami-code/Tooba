@@ -1,0 +1,164 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-081
+Parent-Task: TB-SHIPPING-FULL-OPERATIONS-080
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Status: PASS
+Base-SHA: 36bdcff729def1537cb9f76ea1b0c44622003846
+Code-SHA: UNCHANGED
+Evidence-SHA: 0d83659238f9a1b668c6f61bb7d505192a2effc7
+Elapsed-Minutes: 14
+Changed-Files:
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-081.md (new; the architecture report)
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-081/summary.md (new)
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-081/probe-live-catalog-identity.ps1 (new; read-only probe)
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-081/log-live-catalog-identity.txt (new; raw live output)
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-081/task.md (new; received task artifact)
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-081/task-receipt.json (new)
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-081/claim-task.js (new)
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-081.task.md (new; received artifact)
+NO source file under src/backend or src/frontend was modified. docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md was NOT modified.
+
+WORKING TREE / BASE
+git fetch origin performed. Local was one commit behind origin/main (7316bc31f -> 36bdcff72, the docs-only
+"Shipping Full-Operations 071-080 final checkpoint" append). Fast-forwarded so the audit reads the current
+Shipping checkpoint. HEAD == origin/main == 36bdcff729def1537cb9f76ea1b0c44622003846 before any write. All
+pre-existing dirty and untracked paths were preserved unchanged (modified evidence logs
+TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, TB-SHIPPING-FULL-OPERATIONS-075/host-stdout-075.txt,
+TB-SHIPPING-FULL-OPERATIONS-079/host-stdout-OFF.txt; modified src/frontend/app/admin/
+admin-fulfillment-work-queue-screen.tsx and admin-order-detail-screen.tsx; and every untracked docs/ai/tasks
+and evidence folder). No RECOVERY_CONFLICT. Only task-owned paths were staged and committed.
+
+READ-ONLY LIVE DEVELOPMENT PROBE (raw: log-live-catalog-identity.txt)
+Target positively identified before acting: GET /__platform-commerce on http://127.0.0.1:5088 ->
+edition=SingleStore, deploymentId=dev-singlestore, tenantId=store-alpha, connectionReference=tenant-alpha,
+defaultMarketReference=IR (Development, never staging/production). Host was NOT restarted and NOT rebuilt.
+Only GETs were issued, plus POST /v1/auth/login against the existing Development bootstrap admin actor to
+obtain a real bearer token (no synthetic admin header). No service, option, rate, coverage, packaging,
+schedule, draft or order row was created, edited or deleted.
+Findings that materially shaped the design:
+- GET /v1/admin/shipping-services -> post (active, optionCount 2, activeOptionCount 1), tipax (active, 2/2),
+  snapp_courier (INACTIVE, 0/0), store_courier (active, 0/0), in_person (active, 0/0). Live ids recorded.
+- GET /v1/admin/shipping-methods?language=fa -> only 4 items (snapp_courier absent because inactive);
+  post offers [standard] only, tipax offers [express, standard], store_courier and in_person offer [].
+- Per-service rates/packaging/schedules read back exactly the 080 inventory (tipax standard 180000 +
+  express 260000 active option-specific rates, one active standard schedule 13:00-14:00 and 16:30-18:00 with
+  configured capacity 25 and enforcement NotEnforced, express schedule inactive, 3 packaging rows inactive;
+  post one active area rate 120000 + 1 grant; store_courier one active area rate 75000 + 2 inactive city
+  tiers + 1 inactive COD packaging row; in_person area rate 0; snapp_courier empty everywhere).
+Two consequences drove the design: post has two option rows but only one active, so the storefront offers
+only post:standard; and three of five services have ZERO option rows, so a one-level method identity cannot
+be defined as "the option row".
+
+A. INVENTORY (report section A, with file paths and line/symbol anchors)
+Fulfillment owns the catalog: ShippingService.cs, ShippingServiceOption.cs, ShippingServiceDirectory.cs
+(EnsureSeedAsync :109-179; UpdateAsync :66-98 which deletes and re-inserts all options at :88-92),
+ShippingServiceEndpoints.cs (/v1/admin/shipping-services), ShippingServiceReadModels.cs
+(OptionCount/ActiveOptionCount), ShippingServiceWriteModels.cs (nested Options), ShippingCatalogContracts.cs
+(IShippingCatalogReader), FulfillmentDbContext.cs (:167/:178/:187 unique (ShippingServiceId, Code) :191/
+:196, schema "fulfillment"). Shipping owns every rule keyed on the PAIR (service_code, option_code?) with
+option_code nullable = the documented service-level fallback: rate_policies (ShippingDbContext.cs :143-158),
+coverage_grants (:182-190), packaging_policies (:239-250), operating_schedules (:288-291), plus
+ShippingRatePolicy.cs :55-63/:139-149, FulfillmentShippingMethodOptionValidator.cs :13-18/:44-49 which
+explicitly REJECTS "tipax:express" as a service code (shipping.service_code.unknown), and the code-keyed
+admin endpoints. Order composes the customer identity: StorefrontShippingService.cs LoadEligibleMethodsAsync
+:370-417 with var code = $"{service.Code}:{option.Code}" (:411) and label $"{serviceName} — {optionName}"
+(:412), option-less services call TryAddMethod(..., service.Code, ...) (:400), TryAddMethod :420-449 carries
+optionCode as its OWN field; StorefrontShippingMethodView in StorefrontOrderModels.cs :88-102;
+StorefrontShippingCalculator.cs :39-56 (exact composite first, then Split(':',2)[0]);
+ShippingMethodsOptions.cs (Tooba:ShippingMethods EnabledCodes/Rates incl. both "post" and "post:standard");
+selection revalidation :215-217; StorefrontCheckoutService.cs :256-292 snapshot write with
+DefaultShippingCode "storefront-default" (:27); OrderDbContext.cs :119-120 checkouts.shipping_method_code
+varchar(32) vs :143-144 cart_shipping_drafts varchar(64); Shipment.cs :29-38. Frontend:
+shipping-services-screen.tsx six icon-only row actions :324-388, the «انواع سرویس» column :408-417, the
+nested «انواع سرویس (سطح ۲)» editor :615-…, four dialogs under app/admin/shipping-services/, and the
+design-system Tabs primitive at overlays.tsx :227-254 which lacks aria-controls/id wiring and arrow-key
+navigation.
+
+B. ONE-LEVEL IDENTITY PROPOSAL
+One merchant level means independently named, independently activatable delivery methods with no
+service->option step anywhere in the merchant surface. The provider grouping survives only as HIDDEN internal
+metadata (provider_kind) that is never rendered as a configurable second level. All six existing identities
+keep their CURRENT composite code byte-identical, because that string is already persisted in
+cart_shipping_drafts / checkouts / shipments and compared with OrdinalIgnoreCase at selection time:
+post:standard (post/standard, active), post:express (post/express, INACTIVE), tipax:standard, tipax:express,
+store_courier, in_person, snapp_courier (INACTIVE). Rules stated: never conflate the composite with the bare
+service code; never erase historical order identity (no UPDATE of those columns); inactive stays inactive;
+anchor identity on code, never on shippingServiceOptionId (which UpdateAsync re-creates); and new codes must
+respect the NARROWEST persisted column, checkouts.shipping_method_code varchar(32). Existing records are NOT
+migrated in 081.
+
+C. FIVE-TAB INTERACTION PLAN
+Route preserved: /admin/shipping-services, with a method context bar plus five tabs «سرویسها»,
+«تعرفه و پوشش», «بستهبندی و کرایه», «برنامه کاری و ظرفیت», «بررسی هزینه», deep-linked as
+?tab=<...>&method=<code>. Tab 1 replaces the nested dialog and drops the «انواع سرویس» column; tabs 2-5 render
+the existing dialog functionality re-scoped to the selected method, preserving the destination picker, the
+Geography reference seam, tier/condition editors, option-identity validation, freight payer mode, timezone,
+the «ظرفیت تنظیمشده (هنوز اعمال نمیشود)» label and the operational-quote failure-code map. The four
+scattered icon-only entry points are eliminated AS ENTRY POINTS, not as functionality (only ویرایش and
+غیرفعالسازی remain as row actions in tab 1). Documented per-tab loading/empty/error/denied states,
+save/cancel and unsaved-change behavior, RTL/responsive layout, and accessible tab navigation
+(role=tablist/tab/tabpanel with aria-controls, aria-labelledby, roving tabindex and arrow/Home/End keys) —
+noting the existing Tabs primitive needs extension or the category-admin-screen.tsx :1018-1035 hand-rolled
+precedent. Frontend skill constraints recorded (route/feature/design-system separation, no new abstraction,
+no hardcoded values).
+
+D. IMPACT MAP + CUTOVER/ROLLBACK
+Fulfillment gains the new catalog; Shipping needs NO contract change if the internal (service_code,
+option_code) key is preserved; Geography none; Order changes only its method-list read seam and must keep
+tolerating composite codes in drafts/checkouts/shipments forever; legacy Checkout is unchanged and both
+existing gates stay OFF; Payment/Settlement untouched. Migration is additive only, backfill is a mapping
+(not a migration), a dual-read window keeps every held composite code resolving, and a proposed
+default-OFF gate Tooba:ShippingOneLevelCatalog (no appsettings section) is UI/catalog-read only and must not
+read, imply or flip Tooba:ShippingRateAuthority or Tooba:ShippingOperationalShadow. Rollback is gate OFF with
+zero data change; the new table can remain unread or be dropped without affecting any other module.
+
+E. UNFINISHED CAPABILITIES + <=11-TASK ROADMAP
+Explicitly stated that UI work CANNOT close: trusted packed weight/item-count provenance (Fulfillment+Order),
+atomic capacity claim/release (Order+Shipping+Settlement; ShippingCapacityEnforcement has exactly one value
+NotEnforced), COD collection/settlement (Payment+Settlement), true customer delivery promise (Product+Order+
+Fulfillment/Shipping), and merchant-approved tariffs plus commercial Checkout cutover (Merchant+Architect).
+Roadmap of exactly 11 tasks INCLUDING 081: 081 blueprint (this task); 082 Fulfillment one-level catalog
+foundation (additive schema, hidden provider_kind, legacy link, idempotent backfill, default-OFF gate);
+083 identity compatibility proof incl. the 32-char column ruling; 084 admin shell + tab 1; 085-088 tabs 2-5;
+089 packed measurement provenance; 090 atomic capacity claim/release; 091 commercial closure with explicit
+user-authorized cutover. Each task carries evidence-based acceptance criteria and dependencies. No
+implementation task may silently activate Checkout; 089-091 are not UI work.
+
+F. RISKS, BLOCKERS, TESTS, 082 SCOPE
+Eight risks recorded with severity and mitigation (R1 the varchar(32) vs varchar(64) mismatch; R2 the
+Split(':') + Tooba:ShippingMethods.Rates composite path re-pricing silently; R3 option-uuid churn; R4
+service-level fallback rules being merged or shown as a bookable method; R5 post:express and snapp_courier
+looking bookable; R6 the customer-visible label delta; R7 gate confusion; R8 provider grouping creeping back
+as a visible level). Minimum targeted tests listed for 082 and 084. Recommended 082 scope is bounded to the
+Fulfillment-owned additive catalog plus gate and module tests, with an explicit out-of-scope list.
+
+BLOCKERS (reported, not guessed)
+1. B1 STOP_FOR_ARCHITECT: Alternative A (flatten the existing pair as the one-level list, no new table) vs
+   Alternative B (new Fulfillment shipping_methods table with hidden provider grouping). They differ in
+   permanent schema and in who owns the new identity, and the choice cannot be resolved from source. The
+   report recommends B because it is the only option that literally satisfies "independently named" plus
+   "hidden grouping", but does NOT treat it as authorized.
+2. B2 STOP: checkouts.shipping_method_code is varchar(32) while cart_shipping_drafts is varchar(64); either
+   cap new method codes at 32 or widen the paid-snapshot column — an explicit schema ruling with a
+   paid-order compatibility surface.
+3. The four capability blockers from task 080 remain open with their named owners.
+4. Checkout cutover remains unauthorized; both shadow gates remain OFF.
+
+TARGETED TESTS
+None were required or run: this task changed no production code, schema, migration or seed, and the task
+explicitly forbids broad suites for a read-only audit. The only executable artifact added is the read-only
+GET-only probe script, whose raw output is committed. No test is reported as PASS that was not run.
+
+GIT
+Committed and pushed to origin/main as 0d83659238f9a1b668c6f61bb7d505192a2effc7; after git fetch,
+HEAD == origin/main and only the pre-existing unrelated modifications remain unstaged.
+
+RECOMMENDED NEXT TASK
+082 ONLY as a proposal, NOT started: Fulfillment-owned one-level delivery-method catalog foundation
+(additive schema, hidden provider_kind, stable code identity, idempotent backfill mapping from the existing
+service/option rows, default-OFF gate, module tests), and it must not start until the Architect resolves B1
+and B2.
+
+Stop-State: STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT

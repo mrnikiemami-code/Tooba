@@ -1,0 +1,198 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-LIVE-DEPLOY-EXECUTE-007
+Parent-Task: TB-P0-LIVE-DEPLOY-READINESS-006
+Program: TOOBA-FULFILLMENT-DISPATCH-INTEGRITY-RECOVERY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_DEV_HOST_DEPLOY_WITH_HARD_STOP_GATES
+Bridge-Task-Row: b90a6cd0-4a12-46a7-a841-b5754d45cb5b
+Status: READY_AWAITING_OPERATOR_RESTART_APPROVAL — STOPPED AT EXECUTION SAFETY GATE
+Deployment-Executed: NO
+Build-Executed: NO
+Restart-Executed: NO
+Rollback-Executed: NO
+Package-Retry-Executed: NO
+DB-Mutation-Executed: NO
+
+== 0. HEADLINE ==
+
+All read-only pre-flight gates (steps 1-4) PASSED and a verified rollback copy of the currently
+running host binaries was created and checksum-proven. Execution stopped BEFORE build/restart
+because the Task's EXECUTION SAFETY gate requires explicit operator permission for a service
+interruption and no such unambiguous authorization exists in the active Cursor session context.
+No build, no stop, no restart, no rollback, no migration, no package mutation was performed.
+
+== 1. STEP 1 — REPOSITORY / GOVERNANCE PRE-FLIGHT (PASS) ==
+
+Branch: main
+HEAD:     207dae32fd899584d8057405901593aecf222e45
+origin/main: 207dae32fd899584d8057405901593aecf222e45
+Expected-Starting-HEAD: 207dae32fd899584d8057405901593aecf222e45   -> MATCH
+
+Tracked production diff: EMPTY.
+  git diff --quiet  -> exit 0
+  git diff --numstat -> no rows
+  Four paths are reported as " M" by git status solely because of CRLF/LF smudge
+  normalization (index stat dirty, zero content delta):
+    docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md
+    src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs
+    src/frontend/app/admin/admin-order-detail-screen.tsx
+    src/frontend/app/storefront/storefront-landing-blocks.tsx
+  No reset / rebase / stash / force-push was used. No discrepancy of substance to STOP on.
+
+Read: AGENTS.md; .cursor/skills/tooba-backend-feature/SKILL.md; report 006 and evidence for
+003 / 004 / 004R / 005 (via git show --stat and the persisted evidence dirs).
+
+== 2. STEP 2 — TARGET IDENTITY (PASS) ==
+
+Running target:
+  Name: Tooba.Host.exe      PID: 15068      Started: 2026-10-12T08:24:20 (+03:30)
+  ExecutablePath: D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe
+  Listener: 127.0.0.1:5088 (the ONLY listener on 5088; single Tooba.Host.exe process on the machine)
+  Launcher: PID 9364, parent 33856 —
+    "C:\Program Files\dotnet\dotnet.exe" run --project src\backend\Host\Tooba.Host --no-launch-profile --no-build
+
+Environment and database target PROVEN (not inferred):
+  GET http://127.0.0.1:5088/__platform-commerce -> 200
+    {"edition":"SingleStore","deploymentId":"dev-singlestore","tenantId":"store-alpha",
+     "connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1",
+     "themeReference":"theme-alpha","defaultMarketReference":"IR"}
+  This endpoint is mapped ONLY under Development/Testing (Program.cs:449), and
+  deploymentId "dev-singlestore" + connectionReference "tenant-alpha" exist only in
+  appsettings.Development.json; appsettings.Production.json has DeploymentId "" and no tenants.
+  => Environment = Development. Target tenant DB = tooba_alpha. CONFIRMED.
+  GET /health -> 200 {"status":"ok"}; GET /health/ready -> 200; GET /health/live -> 200.
+No other service shares the executable path or port 5088 -> no STOP condition.
+
+== 3. STEP 3 — MIGRATION SELECT WITNESS (PASS, read-only) ==
+
+inventory.__ef_migrations_history on tooba_alpha contains exactly 5 rows, including:
+  20261012110133_AddReservationConsumptions
+=> target migration ALREADY RECORDED.
+
+inventory.reservation_consumptions shape confirmed:
+  reservation_id uuid NOT NULL | stock_item_id uuid NOT NULL | quantity numeric NOT NULL
+  consumer_key character varying(128) NULL | consumed_at timestamptz NOT NULL
+  PK: PRIMARY KEY (reservation_id)
+Row count: 0.
+No migration was executed, no backfill, no UPDATE/DELETE, no order action, no live dispatch.
+
+== 4. STEP 4 — RUNNING PROVENANCE + ROLLBACK COPY (PASS, read-only) ==
+
+Running binary provenance (established, not UNKNOWN):
+  SourceRevisionId embedded in assemblies: 1.0.0+92d21600cc392ad78532d87a5e3c7f843e2980db
+  Distribution across the 163 Tooba*.dll files in the output dir:
+    160 files -> 1.0.0+92d2160 (build commit 92d2160, committed 2026-10-12T07:32:16 +03:30)
+      3 files -> 1.0.0+eca66731 (Tooba.Story.Contracts.dll, Tooba.ProductWorkspace.Domain.dll,
+                                 Tooba.Support.Contracts.dll — written 2026-10-12 20:16, i.e.
+                                 AFTER the running process started at 08:24, so never loaded
+                                 by the live process)
+  Critical assemblies (all = deployed commit 92d2160):
+    Tooba.Host.dll                     mtime 2026-10-12 08:23:38  PV 1.0.0+92d2160...
+    Tooba.Inventory.Infrastructure.dll mtime 2026-10-12 08:12:11  PV 1.0.0+92d2160...
+    Tooba.Inventory.Application.dll    mtime 2026-10-12 08:12:05  PV 1.0.0+92d2160...
+    Tooba.Fulfillment.Infrastructure.dll mtime 2026-10-12 08:12:07 PV 1.0.0+92d2160...
+    Tooba.Fulfillment.Application.dll  mtime 2026-10-12 08:12:05  PV 1.0.0+92d2160...
+    Tooba.Order.Infrastructure.dll     mtime 2026-10-12 08:23:37  PV 1.0.0+92d2160...
+  => The live Host is STALE relative to the intended fixes. 04e3aa79 / e7d0bf97 / 8f70763b /
+     67776052 / 207dae32 are all DESCENDANTS of 92d2160 (42 commits ahead) and are NOT present.
+     A plain restart with --no-build would NOT deploy the fixes; a rebuild is mandatory.
+
+Rollback copy (created and verified):
+  Path: D:\Users\User\deploy-backups\Tooba.Host\TB-P0-LIVE-DEPLOY-EXECUTE-007\bin-Debug-net8.0\
+  Manifest: D:\Users\User\deploy-backups\Tooba.Host\TB-P0-LIVE-DEPLOY-EXECUTE-007\ROLLBACK-MANIFEST.sha256.txt
+  Copy fidelity: 583 / 583 files, 92,350,190 bytes (byte-identical counts/size to source);
+  7 spot SHA-256 comparisons source-vs-backup -> 0 mismatches, including Tooba.Host.exe,
+  Tooba.Host.dll, Tooba.Inventory.Infrastructure.dll, Tooba.Fulfillment.Infrastructure.dll,
+  Tooba.Order.Infrastructure.dll, appsettings.Development.json, Tooba.Host.deps.json.
+  Recorded hashes (SHA-256, prefix): Tooba.Host.exe 975388EC0EF77D8F…,
+  Tooba.Host.dll 09FA3F02648FBEC6…, Tooba.Inventory.Infrastructure.dll CDFDC02BDE7A090D…,
+  Tooba.Fulfillment.Infrastructure.dll 5F15043950396FFA…, Tooba.Order.Infrastructure.dll
+  F580CAC296DC53DA…. No credentials are reproduced here.
+  The output dir is located OUTSIDE the git repository; nothing was added to git.
+
+Restart plan (nonsecret, recorded, NOT executed):
+  stop     : the authorized Development Host only (PID 15068 + launcher PID 9364); wait for 5088 to free.
+  build    : exactly ONE attempt, from repo root:
+             dotnet build src\backend\Host\Tooba.Host\Tooba.Host.csproj -c Debug     (no --no-build)
+  start    : from repo root D:\Users\User\source\repos\SarvNewVer, with
+             ASPNETCORE_ENVIRONMENT=Development explicitly set, then
+             dotnet run --project src\backend\Host\Tooba.Host --no-launch-profile
+             IMPORTANT: no machine-level or user-level ASPNETCORE_ENVIRONMENT exists, and
+             --no-launch-profile bypasses launchSettings.json, so the environment MUST be set
+             explicitly in the launching shell or the Host would start as Production
+             (empty tenants / SpiceDb mode) and behave differently.
+  rollback : at most ONE — stop, restore the verified backup over bin\Debug\net8.0, restart
+             with --no-build, confirm ProductVersion == 1.0.0+92d2160….
+  verify   : PID + listener 127.0.0.1:5088, ProductVersion/SourceRevisionId of loaded Host,
+             Inventory.Infrastructure and Fulfillment.Infrastructure assemblies, coherent
+             timestamps, /health, /__platform-commerce. Read-only GET only; no order POST/PATCH.
+
+== 5. EXECUTION SAFETY GATE — NOT SATISFIED (STOP) ==
+
+Task rule quoted: "Service interruption requires explicit operator permission. If no unambiguous
+authorization to restart the DEVELOPMENT Host has been conveyed in the active Cursor session/task
+context, report READY_AWAITING_OPERATOR_RESTART_APPROVAL and STOP. Do NOT infer approval."
+
+Observed session/task context: the only operator input in this session is the BRIDGE-WAKE
+infrastructure instruction (execute the received Task per BRIDGE-WAKE-V1, keep chat silent) plus a
+model-name question. No operator statement grants permission to interrupt the running Development
+Host. BRIDGE-WAKE is explicitly infrastructure control traffic, not an authorization, and the Task
+forbids inferring approval.
+
+=> Decision: STOP at the gate.
+  Builds: 0 of 1 used.   Restarts: 0 of 1 used.   Rollbacks: 0 of 1 used.
+  Nothing was stopped, rebuilt, restarted, rolled back, migrated, dispatched, cancelled or mutated.
+
+== 6. STEP 8 BASELINE RE-READ (read-only, performed) ==
+
+Package MP-01A12F796EF1 (01a12f79-6ef1-7000-8578-dd7cc841195d) at claim time:
+  status = Created, tracking_reference 125444, dispatched_at NULL
+  member 01a12f79-6ef2-7000-9a81-7a9ff7894683 -> shipment 01a12f79-1ad4-…
+    status Dispatched, dispatched_at 2026-10-12T10:11:57.155071Z, tracking 125444-01A12F79, released_at NULL
+  member 01a12f79-6ef2-7000-9d73-e0edfbb5412d -> shipment 01a12f79-33ed-…
+    status Created, dispatched_at NULL, released_at NULL
+  Lines: 5 lines reservation_consumed = true with journal ABSENT (legacy provenance);
+         1 line reservation_consumed = false, quantity_ordered 5, quantity_shipped 0, journal ABSENT.
+  Identical to report 006 in every field observed => NO unapproved data mutation occurred.
+  No dispatch / cancel / retry / tracking assignment was sent. No personal/order data copied.
+
+== 7. GO / NO-GO ==
+
+Backend fixes deployment to the Development Host (steps 5-8):
+  READY (all technical gates PASS, rollback proven) but NOT EXECUTED.
+  GO only after explicit operator restart authorization. Hard blockers: none technical;
+  the single blocker is the mandatory authorization gate.
+  If/repeated after authorization: rebuild is mandatory (a --no-build restart would not deploy).
+
+Separate authorized live package retry of MP-01A12F796EF1:
+  NO-GO today — the journal-capable keyed-consume binary and the W6 reconciliation are still not
+  live on 5088 (live PV = 92d2160). Retrying now would consume through the legacy path.
+  Expected to remain NO-GO until steps 5-8 complete and a post-deploy read-only re-verification passes.
+
+Risks:
+  R1 stale-binary: a restart with --no-build deploys nothing (mitigated: rebuild is in the plan).
+  R2 environment drift on restart: ASPNETCORE_ENVIRONMENT must be set explicitly (see step 4).
+  R3 journal-absence on the already-Dispatched member is expected legacy provenance; the W6 path
+     must keep idempotently skipping it and must not fabricate journal rows.
+  R4 scope: only the Development Host / dev tenant DB were inspected; production remains UNKNOWN
+     and is out of scope.
+
+== 8. SCOPE / HYGIENE ==
+
+0 code edits, 0 test edits, 0 migrations executed, 0 SQL writes, 0 service interruptions,
+0 API mutations, 0 package dispatch/cancel, 0 rollback, 0 retry, 0 next task started.
+Before-HEAD = after-HEAD = origin/main = 207dae32fd899584d8057405901593aecf222e45; no commit,
+no push, no reset/rebase/stash/force-push. No automatic unrelated commit was made.
+Local docs-only evidence (untracked, deliberately not committed):
+
+  docs/ai/tasks/TB-P0-LIVE-DEPLOY-EXECUTE-007.task.md
+  docs/architecture/evidence/TB-P0-LIVE-DEPLOY-EXECUTE-007/   (this result + posting script)
+  D:\Users\User\deploy-backups\Tooba.Host\TB-P0-LIVE-DEPLOY-EXECUTE-007\  (rollback copy + manifest)
+
+Smallest next action:
+  Obtain explicit operator authorization to stop/rebuild/restart the Development Host on
+  127.0.0.1:5088, then issue a bounded deploy-execute artifact (008) that resumes from step 5.
+STOP for independent Architect acceptance. Do NOT start 008.
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,237 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-DEV-PACKAGE-ONE-SHOT-RETRY-009
+Parent-Task: TB-P0-DEV-HOST-DEPLOY-AUTHORIZED-008
+Program: TOOBA-FULFILLMENT-DISPATCH-INTEGRITY-RECOVERY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: ONE_SHOT_DEV_PACKAGE_RECOVERY_WITH_HARD_STOP
+Bridge-Task-Row: 0a8145d0-a8f8-4e9a-a03b-05896bf4f137
+Status: WORKER_COMPLETE — ONE-SHOT DEV PACKAGE DISPATCH PROVEN — STOP FOR INDEPENDENT ARCHITECT ACCEPTANCE
+Verdict: GO (bug actually fixed; real mutation, not inferred from HTTP status)
+Build-Executed: NO
+Code-Edits: 0
+Migration-Applied: NO
+Host-Restart: NO
+Backups-Created: NO
+Dispatch-Operations-Issued: 1 (successful, HTTP 200)
+Retries-Repairs: 0
+Package-Cancellations: 0
+Manual-Tracking-Edit: NO
+Production-Touched: NO
+
+== 1. HEAD / REPO SYNC ==
+
+HEAD                    : 207dae32fd899584d8057405901593aecf222e45
+origin/main             : 207dae32fd899584d8057405901593aecf222e45
+Expected-Starting-HEAD  : 207dae32fd899584d8057405901593aecf222e45   -> MATCH (no SHA drift)
+git diff --quiet        -> exit 0 (tracked production diff EMPTY before and after)
+Worktree: only pre-existing untracked evidence folders + the docs-only artifacts of this task.
+0 code edits, 0 test edits, 0 commits, 0 pushes, no reset/rebase/stash/force-push.
+The four " M" paths remain index-stat/CRLF-only artifacts with zero content delta (unchanged from 008).
+
+== 2. PREFLIGHT GATES — ALL PASS, FAIL-CLOSED NOT TRIGGERED ==
+
+2.1 Governance read (no scope creep, no deferred findings register consulted):
+  AGENTS.md; .cursor/skills/tooba-backend-feature/SKILL.md; receipts 003 / 004 / 004R / 005 / 008
+  (RESULT.bridge.txt of 008 read from docs/architecture/evidence/TB-P0-DEV-HOST-DEPLOY-AUTHORIZED-008/).
+
+2.2 Running process identity and provenance (READ ONLY):
+  PID 39992 Tooba.Host.exe, StartTime 2026-10-13T05:16:33 (+03:30)
+  Path: D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe
+  Sole listener on 127.0.0.1:5088 (OwningProcess 39992).
+  GET /__platform-commerce -> {"edition":"SingleStore","deploymentId":"dev-singlestore",
+    "tenantId":"store-alpha","connectionReference":"tenant-alpha","resolvedHost":"127.0.0.1",...}
+    => Development, tenant-alpha / tooba_alpha. PASS.
+  LIVE loaded assembly provenance read from the running process module list (NOT from build output):
+    Tooba.Host.dll                       loaded PV = 1.0.0+207dae32fd899584d8057405901593aecf222e45
+    Tooba.Fulfillment.Application.dll    loaded PV = 1.0.0+207dae32fd899584d8057405901593aecf222e45
+    Tooba.Fulfillment.Infrastructure.dll loaded PV = 1.0.0+207dae32fd899584d8057405901593aecf222e45
+    Tooba.Inventory.Application.dll      loaded PV = 1.0.0+207dae32fd899584d8057405901593aecf222e45
+    Tooba.Inventory.Infrastructure.dll   loaded PV = 1.0.0+207dae32fd899584d8057405901593aecf222e45
+    => Loaded revision == Expected-Starting-HEAD. PASS.
+
+2.3 Migration gate (SELECT only; no migration executed):
+  inventory.__ef_migrations_history contains 20261012110133_AddReservationConsumptions.
+  inventory.reservation_consumptions exists with PK constraint pk_reservation_consumptions
+    PRIMARY KEY (reservation_id). PASS.
+
+2.4 Target package state — EXACT MATCH to the task contract (SELECT only):
+  package 01a12f79-6ef1-7000-8578-dd7cc841195d = MP-01A12F796EF1, status Created,
+    tracking_reference 125444, dispatched_at NULL
+  member 01a12f79-6ef2-7000-9a81-7a9ff7894683 -> shipment 01a12f79-1ad4-7000-9174-3237c0d645bf
+    status Dispatched, dispatched_at 2026-10-12T10:11:57.155071+00, tracking 125444-01A12F79
+  member 01a12f79-6ef2-7000-9d73-e0edfbb5412d -> shipment 01a12f79-33ed-7000-b7ad-e562dcf67be8
+    status Created, dispatched_at NULL, tracking NULL
+  lines of the Dispatched member (5): reservation_consumed = true (qty 1/2/6/4/1, shipped 1/2/6/4/1)
+  line of the Created member  (1): reservation_consumed = false, qty_ordered 5, qty_shipped 0,
+    reservation 01a12e97-ef78-7000-9854-7b1a4affaad3 status Held, quantity 5
+  inventory.reservation_consumptions row count = 0 (no journal row for that reservation). PASS.
+
+2.5 Authorization / actor — existing approved Development workflow only (no bypass, no credential hardcode):
+  GET /v1/admin/dev-context -> 200 {"actorUserId":"01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+    "actorLabel":"admin-actor@tooba.local","tenantId":"store-alpha"}
+  Actor propagated via the repository-owned Development-only seam
+  (Host AdminPanelAccess.DevActorHeader = X-Tooba-Dev-Actor-User-Id), which the Host accepts ONLY when
+  IHostEnvironment.IsDevelopment() and the session is not authenticated. No session token was forged,
+  no auth middleware was bypassed, no secret/credential ever embedded in a URL or logged.
+
+2.6 Action projection gate (READ ONLY) — PASS:
+  GET /v1/admin/orders/01a12e97-ee9e-7000-826c-a9eca536b223/operations -> 200 with
+    {"code":"dispatch_consolidated_package","labelFa":"ارسال بسته تجمیعی",
+     "requiredPermission":"order.handle","requiresConfirm":true,
+     "consolidatedPackageId":"01a12f79-6ef1-7000-8578-dd7cc841195d"}
+  => projection contains dispatch_consolidated_package with the MATCHING package id.
+
+== 3. THE ONE ACTION ==
+
+Endpoint: POST http://127.0.0.1:5088/v1/admin/orders/01a12e97-ee9e-7000-826c-a9eca536b223/operations
+Payload (identical to what the Admin UI sends for this button — code + package id only, no extras):
+  {"code":"dispatch_consolidated_package","consolidatedPackageId":"01a12f79-6ef1-7000-8578-dd7cc841195d"}
+Headers: Content-Type: application/json; X-Tooba-Dev-Actor-User-Id: 01a036c2-... (Development-only actor seam)
+Issued at: 2026-10-13T05:24:03.5632747+03:30
+
+Response: HTTP 200 (0.296 s)
+  {"consolidatedPackageId":"01a12f79-6ef1-7000-8578-dd7cc841195d","packageNumber":"MP-01A12F796EF1",
+   "checkoutId":"01a12e97-ee9e-7000-826c-a9eca536b223","status":"Dispatched",
+   "shippingMethodCode":"post","shippingMethodLabel":"پست","trackingReference":"125444",
+   "createdBy":"01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+   "createdAt":"2026-10-12T09:37:29.841136+00:00",
+   "updatedAt":"2026-10-13T01:54:03.8371414+00:00",
+   "dispatchedAt":"2026-10-13T01:54:03.8371414+00:00",
+   "members":[ ...both memberships, releasedAt null... ]}
+Sanitized: no tokens, cookies, connection strings or credentials captured. The actor GUID is the
+previously published Development dev-actor id, not a secret.
+
+DISPATCH OPERATION COUNT: exactly 1. No second attempt, no repair, no retry, no parallel call, no loop,
+no cancellation, no manual tracking assignment, no direct SQL.
+
+3.1 FULL TRANSPARENCY — one malformed HTTP request preceded it (NOT an operation attempt):
+  A first POST was sent at 2026-10-13T05:23:29 with the intended JSON body, but the Windows
+  PowerShell -> native curl argument quoting stripped the JSON double quotes, so the Host received
+  `{code:dispatch_consolidated_package,...}`. The Host rejected it BEFORE any business logic:
+    HTTP 500 platform.unexpected / BadHttpRequestException (transport/model-binding),
+    traceId c18ee7eab41b970a98026bc99a9298fb, correlationId 0a8341c7ced244eea9c08af18f9176ec,
+    "Failed to read parameter \"AdminOrderOperationRequest body\" from the request body as JSON.
+     'c' is an invalid start of a property name." (RequestDelegateFactory body reader),
+    ActorId=(null), no operation log line, no domain event.
+  This is verifiable as a NON-mutation, not merely assumed:
+    - package still Created; both shipments unchanged; item reservation_consumed still false;
+    - inventory.reservation_consumptions still 0 rows; reservation still Held; stock 200 / 5 unchanged;
+    - the exception is raised inside ASP.NET Core JSON binding, before ExecuteAsync's handler body,
+      so no handler, no module command and no SQL write could have run.
+  Therefore exactly one AUTHORIZED OPERATION (the dispatch above) was issued, once, with a
+  byte-exact JSON body delivered via --data-binary from a file (103 bytes incl. LF). No operation was
+  retried, and no state needed repair. Reported here rather than silently omitted.
+
+== 4. POSTCHECK (READ ONLY) — EXPECTED vs OBSERVED ==
+
+4.1 Package (before -> after):
+  01a12f79-6ef1-7000-8578-dd7cc841195d: Created -> Dispatched
+  dispatched_at: NULL -> 2026-10-13T01:54:03.837141+00   MATCH
+4.2 Already-Dispatched member (must be untouched):
+  shipment 01a12f79-1ad4-7000-9174-3237c0d645bf:
+    status Dispatched -> Dispatched (unchanged)
+    dispatched_at 2026-10-12T10:11:57.155071+00 -> IDENTICAL (not rewritten)   MATCH
+    tracking 125444-01A12F79 -> IDENTICAL (not regenerated)                   MATCH
+  its fulfillment 01a12e98-77aa-7000-9147-6b2d69ca0ee7: updated_at unchanged
+    (2026-10-12T10:11:57.155071+00) => no re-dispatch path executed for the member. MATCH
+4.3 Previously-Created member (must be dispatched by this operation):
+  shipment 01a12f79-33ed-7000-b7ad-e562dcf67be8: Created -> Dispatched
+    dispatched_at NULL -> 2026-10-13T01:54:03.764208+00
+    tracking NULL -> 125444-01A12F7933ED7000B7ADE562DCF67BE8 (length 39, ≤ column cap 128)
+    suffix = FULL 32-hex uppercase shipment GUID => collision-free by construction (the W5 fix);
+    no other shipment carries this code. MATCH
+  fulfillment 01a12e98-77d1-7000-aa6c-78f53c983947: status Dispatched, updated_at 01:54:03.764208.
+4.4 Inventory consumption journal (must be exactly one, correctly keyed, and must NOT fabricate
+    provenance for the five historical consumptions):
+  inventory.reservation_consumptions TOTAL row count: 0 -> 1
+  single row: reservation_id 01a12e97-ef78-7000-9854-7b1a4affaad3
+              stock_item_id 82ff1c1e-641a-4d09-b4a7-7add90cad394
+              quantity 5.000000
+              consumer_key pkg:01a12f796ef170008578dd7cc841195d:shp:01a12f7933ed7000b7ade562dcf67be8:line:01a12e97eedc7000bf18cb684bdc521e
+              consumed_at 2026-10-13T01:54:03.766704+00
+    => key shape is exactly the stable, proof-carrying key of the W6/004R seam:
+       pkg:<packageId:N>:shp:<shipmentId:N>:line:<orderLineId:N>, lowercase hex N format. MATCH
+  ZERO journal rows for the five pre-consumed reservations (01a12e97-ef54/ef7b/ef81/ef84/ef87):
+    their reservation_consumed = true lines were idempotently SKIPPED by
+    ConsumeInventoryForShipmentAsync (skip if ReservationConsumed) => no fabricated provenance,
+    and no typed fail-closed error was raised. MATCH
+4.5 Reservation / line state:
+  reservation 01a12e97-ef78-7000-9854-7b1a4affaad3: Held -> Consumed            MATCH
+  the other five reservations: Consumed -> Consumed (unchanged)                  MATCH
+  fulfillment line 01a12e98-77d2-7000-9ead-087db14bd4d0: reservation_consumed
+    false -> true; quantity_shipped 0 -> 5.000000 (dispatch applied the shipment quantity before the
+    keyed consume, which is why the 5>=5 consume condition was satisfied)         MATCH
+  the five lines of the Dispatched member: reservation_consumed stayed true (unchanged) MATCH
+4.6 Stock (must be decremented exactly once):
+  inventory.stock_positions 82ff1c1e-641a-4d09-b4a7-7add90cad394
+    on_hand 200.000000 -> 195.000000  (exactly -5, once)                         MATCH
+    reserved  5.000000 -> 0.000000    (reservation released exactly once)         MATCH
+    updated_at 2026-10-13T01:54:03.766704+00 == the journal consumed_at (single mutation instant) MATCH
+4.7 Package memberships: released_at NULL for both members (unchanged). MATCH
+4.8 Host health after the mutation (read-only):
+  GET /health/ready -> 200 {"status":"ready","checks":{"edition":"SingleStore",
+    "postgresql":"configured","authorization":"inmemory","messaging-transport":"postgresql-sql",
+    "messaging":"Healthy"}}
+  Process 39992 still the sole listener on 127.0.0.1:5088 (no restart, no crash, no log error).
+
+DISCREPANCIES: NONE. Every expected postcheck value was observed exactly.
+
+== 5. USER-VISIBLE BUG — IS IT ACTUALLY FIXED? ==
+
+YES, proven against real data and the real running binary, not from HTTP status:
+  - The exact real-world broken state from the pre-repair non-atomic loop (package = Created while one
+    member was already Dispatched) previously could never be dispatched: the member loop re-dispatched
+    the already-dispatched member, the tracking guard rejected the duplicate suffix, and the whole
+    package stayed Created forever with a silent Held reservation leak.
+  - HEAD 207dae32 dispatched THIS package in one bounded call: 200 Dispatched, the historical member
+    untouched (same tracking, same dispatched_at, fulfillment updated_at unchanged), the Held
+    reservation consumed once through the keyed journal seam, and a single authoritative journal row.
+  - User-visible Admin projection before -> after (READ ONLY GET of the same endpoint):
+      before: actions = [cancel_consolidated_package, dispatch_consolidated_package]
+      after : actions = [deliver_consolidated_package]
+    i.e. the "ارسال بسته تجمیعی" button is consumed and the package is now deliverable — the admin can
+    no longer be stuck on a package that refuses to dispatch.
+
+== 6. RESIDUAL NOTES / RISKS ==
+
+R1 The inventory consume runs on the Inventory module's own DbContext/transaction, physically outside
+   the single Fulfillment SaveChangesAsync (documented, accepted half in the 003/004R receipts). This
+   live run showed no failure, so no split-brain occurred; if the Inventory step had failed mid-way,
+   the Fulfillment package writes would not have committed and the keyed replay would have been
+   idempotent. Not re-litigated here.
+R2 The Development-only actor header seam (X-Tooba-Dev-Actor-User-Id) is compiled in and gated by
+   IHostEnvironment.IsDevelopment(); it is a Development convenience, not a production auth path. It
+   was used as the approved dev workflow, not as a bypass.
+R3 The five historical consumptions still have NO journal rows (they were consumed pre-004R by the old
+   unkeyed path). They are now permanently un-journaled history; the new seam deliberately skips them
+   instead of fabricating provenance. If a future audit needs backfill, that must be a separate
+   explicit Architect-authorized task — it was NOT done here.
+R4 This proof covers ONE fake development package on tenant alpha. Production remains untouched and
+   UNKNOWN; no production claim is made.
+R5 Package MP-01A12F796EF1 is now Dispatched. A future deliver_consolidated_package on it would move
+   it to Delivered; that is NOT authorized here and was NOT performed.
+
+== 7. SCOPE / HYGIENE / BUDGET ==
+
+Code edits: 0. Test edits: 0. Commits/pushes: 0. Builds: 0. Migrations: 0. Schema edits: 0.
+Host restarts: 0. Backups created: 0 (no hard safety blocker was revealed).
+HTTP mutations total: 1 (the authorized dispatch). Read-only GETs used for preflight/postcheck.
+SQL writes via direct SQL by the agent: 0 (all SQL used was SELECT).
+Cancellations: 0. Retries/repairs after the mutation: 0. Manual tracking edits: 0.
+Test suites / AMSC run: 0. Other services interrupted: 0. Production endpoints touched: 0.
+Elapsed: well inside the 20-minute budget (preflight 05:18 → postcheck 05:25).
+Local docs-only artifacts (deliberately NOT committed, not pushed):
+  docs/ai/tasks/TB-P0-DEV-PACKAGE-ONE-SHOT-RETRY-009.task.md                      (claimed task artifact)
+  docs/architecture/evidence/TB-P0-DEV-PACKAGE-ONE-SHOT-RETRY-009/                (this result + posting script)
+  C:\Users\User\AppData\Local\Temp\tooba-009-body.json                            (exact request body)
+  C:\Users\User\AppData\Local\Temp\tooba-009-dispatch2-response.txt               (sanitized 200 response)
+  C:\Users\User\AppData\Local\Temp\tooba-009-projections-after.json               (post-action projection)
+
+Smallest next action:
+  Independent Architect review of this one-shot proof; then, if desired, a separately authorized
+  deliver/downstream step for MP-01A12F796EF1 or an explicit decision about the un-journaled historical
+  consumptions. Do not self-authorize any of it.
+STOP for independent Architect acceptance.
+END_TOOBA_WORKER_RESULT

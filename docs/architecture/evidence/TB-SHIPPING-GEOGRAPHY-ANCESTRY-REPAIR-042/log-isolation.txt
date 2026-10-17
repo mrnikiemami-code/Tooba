@@ -1,0 +1,57 @@
+﻿Pager usage is off.
+=== T5a: plain UPDATE in READ COMMITTED (expect success) ===
+BEGIN
+UPDATE 1
+COMMIT
+=== T5b: ancestry UPDATE in REPEATABLE READ (expect 0A000 isolation_unsupported) ===
+BEGIN
+ERROR:  0A000: geography.administrative_area.ancestry_guard_isolation_unsupported
+DETAIL:  administrative area ancestry integrity requires READ COMMITTED; transaction_isolation is 'repeatable read'.
+CONTEXT:  PL/pgSQL function geography.administrative_areas_ancestry_guard() line 12 at RAISE
+LOCATION:  exec_stmt_raise, pl_exec.c:3897
+ROLLBACK
+=== T5c: ancestry UPDATE in SERIALIZABLE (expect 0A000 isolation_unsupported) ===
+BEGIN
+ERROR:  0A000: geography.administrative_area.ancestry_guard_isolation_unsupported
+DETAIL:  administrative area ancestry integrity requires READ COMMITTED; transaction_isolation is 'serializable'.
+CONTEXT:  PL/pgSQL function geography.administrative_areas_ancestry_guard() line 12 at RAISE
+LOCATION:  exec_stmt_raise, pl_exec.c:3897
+ROLLBACK
+=== T5d: code-only UPDATE in REPEATABLE READ (expect success: WHEN clause keeps trigger off) ===
+BEGIN
+UPDATE 1
+COMMIT
+=== T6: SET CONSTRAINTS ALL DEFERRED must not defer the guard (expect immediate 23514 on 2nd statement) ===
+BEGIN
+SET CONSTRAINTS
+UPDATE 1
+ERROR:  23514: geography.administrative_area.ancestry_cycle
+DETAIL:  administrative area 00000000-0000-0000-0000-000000000013 cannot point at parent 00000000-0000-0000-0000-000000000012: the parent chain already contains it.
+CONTEXT:  PL/pgSQL function geography.administrative_areas_ancestry_guard() line 47 at RAISE
+LOCATION:  exec_stmt_raise, pl_exec.c:3897
+ROLLBACK
+=== T7: INSERT ... ON CONFLICT DO UPDATE that would close a cycle (expect 23514) ===
+ERROR:  23514: geography.administrative_area.ancestry_cycle
+DETAIL:  administrative area 00000000-0000-0000-0000-000000000013 cannot point at parent 00000000-0000-0000-0000-000000000012: the parent chain already contains it.
+CONTEXT:  PL/pgSQL function geography.administrative_areas_ancestry_guard() line 47 at RAISE
+LOCATION:  exec_stmt_raise, pl_exec.c:3897
+=== T8: INSERT ... ON CONFLICT DO UPDATE without cycle (expect success) ===
+INSERT 0 1
+=== T9: graph state + acyclic assertion ===
+ reachable_rows 
+----------------
+             16
+(1 row)
+
+        administrative_area_id        |    parent_administrative_area_id     | code 
+--------------------------------------+--------------------------------------+------
+ 00000000-0000-0000-0000-000000000012 | 00000000-0000-0000-0000-000000000011 | A2B
+ 00000000-0000-0000-0000-000000000013 |                                      | B
+ 00000000-0000-0000-0000-000000000031 | 00000000-0000-0000-0000-000000000011 | D1
+ 00000000-0000-0000-0000-000000000032 | 00000000-0000-0000-0000-000000000031 | D2
+ 00000000-0000-0000-0000-000000000033 | 00000000-0000-0000-0000-000000000032 | D3
+ 00000000-0000-0000-0000-000000000034 |                                      | D4
+ 00000000-0000-0000-0000-000000000011 |                                      | ROOT
+ 00000000-0000-0000-0000-000000000016 | 00000000-0000-0000-0000-000000000013 | Z
+(8 rows)
+

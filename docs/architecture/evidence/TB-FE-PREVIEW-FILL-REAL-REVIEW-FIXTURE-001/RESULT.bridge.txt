@@ -1,0 +1,116 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-PREVIEW-FILL-REAL-REVIEW-FIXTURE-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: 40c1526afb1cd52704d36cb5ef6d9811399a50c8
+Starting-HEAD:          40c1526afb1cd52704d36cb5ef6d9811399a50c8
+Starting-origin/main:   40c1526afb1cd52704d36cb5ef6d9811399a50c8
+Conflicting-tracked-changes: NONE; no stash/reset/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-frontend-feature/SKILL.md, docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md, the full target test, createFakeReview/PreviewFakeMarked, applyPreviewFill and StorefrontFeaturedReviewItem. Deferred architecture findings register NOT accessed.
+
+STOP GATE: PASSED — the real item IS admissible by production policy and its legitimate type IS expressible cleanly. BLOCKED_ARCHITECT_DECISION NOT raised. NO production source edited.
+
+ROOT CAUSE (why a factory-created fake is inappropriate as a mutable real fixture)
+createFakeReview (preview-fake-data.ts:112) is declared to return `StorefrontFeaturedReviewItem & PreviewFakeMarked`, and the intersection wins on the marker: PreviewFakeMarked (preview-fake-data.ts:53-57) declares `previewFake: true` (literal) plus `previewSource: PreviewFakeSourceMarker`, and the returned literal sets `previewFake: true` (:124). The array `[createFakeReview(99,"fa")]` therefore has element type `StorefrontFeaturedReviewItem & PreviewFakeMarked`, so `real[0]!.previewFake = false` writes `false` into a literal-`true` slot -> TS2322 at test line 69. The only honest readings are (a) the fixture was never a real item, just a fake mutated into a fake-typed-as-real, or (b) it should be constructed as a real item from the start. PreviewFakeMarked is a deliberate load-bearing production marker (it drives previewFake discrimination and the PREVIEW_FAKE_SOURCE provenance assertions at this suite's lines 208-215), so weakening it to boolean, relaxing it or casting around it would falsify production type semantics — none of which was done.
+
+CONSUMER CONTRACT AND PRECEDENT
+Consumer: applyPreviewFill<T>({ realItems: readonly T[]; createFake: (index: number) => T; … }) (preview-fill-policy.ts:82-88). Its honest element contract is StorefrontFeaturedReviewItem (app/storefront/storefront-model.ts:127-143), where `previewFake?: boolean` is OPTIONAL and BOOLEAN — so `previewFake: false` (and its absence) are both legitimate. The contract therefore already admits a real item and no product/architecture decision was needed. In-repo precedent for building exactly this shape: industry-template-preview.ts:382-392 maps review-like rows to a StorefrontFeaturedReviewItem by explicitly naming the nine contract fields (publicId, authorDisplayName, rating, title, body, verifiedPurchase, createdAt, productTitle, productSlug). The repair follows that canonical pattern.
+
+ACTUAL DIFF (1 file, TEST-ONLY; no production source touched)
+diff --git a/src/frontend/app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts b/src/frontend/app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts
+   } from "../../../lib/storefront-composition/preview-fill-policy.ts";
++// قرارداد ورودی مصرفکنندهٔ fill — همان تایپی که یک آیتم «واقعی» باید داشته باشد.
++import type { StorefrontFeaturedReviewItem } from "../../../app/storefront/storefront-model.ts";
+   import {
+ test("partial Store data preserves real items and fills only missing slots", () => {
+-  const real = [createFakeReview(99, "fa")];
+-  real[0]!.previewFake = false;
+-  real[0]!.publicId = "real-review-1";
++  // آیتم «واقعی» باید با قرارداد مصرفکننده تایپ شود، نه با خروجی کارخانهٔ fake:
++  // createFakeReview نوع PreviewFakeMarked را برمیگرداند که previewFake را به
++  // literal true میدوزد؛ پس mutation به false روی آن ناممکن است (TS2322) و
++  // نمیتوان آن را با cast یا سستکردن PreviewFakeMarked درست کرد.
++  // الگوی ساخت = همان نگاشت صریح فیلدهای قرارداد، مانند industry-template-preview.
++  const fakeContent = createFakeReview(99, "fa");
++  const real: StorefrontFeaturedReviewItem[] = [
++    {
++      publicId: "real-review-1",
++      authorDisplayName: fakeContent.authorDisplayName,
++      rating: fakeContent.rating,
++      title: fakeContent.title,
++      body: fakeContent.body,
++      verifiedPurchase: fakeContent.verifiedPurchase,
++      createdAt: fakeContent.createdAt,
++      productTitle: fakeContent.productTitle,
++      productSlug: fakeContent.productSlug,
++      previewFake: false,
++    },
++  ];
+
+CONSTRAINT-BY-CONSTRAINT COMPLIANCE
+- Truthful type-safe construction: annotated with StorefrontFeaturedReviewItem[] (the actual consumer input contract) and declares previewFake: false, which that contract permits.
+- Necessary real review properties retained: all nine contract fields present and carrying the same values the previous code used (fakeContent.* from createFakeReview(99,"fa")) — no fixture CONTENT changed.
+- Distinct publicId: "real-review-1", unchanged, still outside PREVIEW_FAKE_ID_PREFIX.
+- PreviewFakeMarked NOT falsified: untouched, not relaxed, not widened; no production file changed; no `as`, no any, no unknown-as, no ts-ignore, no suppression.
+- Non-null assertions REDUCED, not added: the two pre-existing `real[0]!` usages are gone (the fixture is no longer mutated after declaration).
+- No internal contradiction: previewSource is deliberately OMITTED rather than copied, so the real item no longer claims previewSource "PreviewFake" while previewFake is false.
+- ALL assertions preserved in the same order: realCount === 1, fakeCount >= 1, items[0].publicId === "real-review-1", items[0].previewFake === false, items.slice(1).every(previewFake). No test weakened or removed.
+Generic inference held: both realItems (now StorefrontFeaturedReviewItem[]) and createFake (returning the intersection) still resolve T = StorefrontFeaturedReviewItem, the common supertype of both candidates — confirmed by 0 errors in this file and by the runtime pass.
+
+DIAGNOSTICS
+errors-before: 18
+errors-after:  17
+delta:         -1
+new-diagnostics-introduced: 0
+comparison method: NORMALIZED by file/line/code. The normalized diff contains exactly one removed entry — app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts(69,3) TS2322 — and NO added entries.
+per-file tallies (before -> after): admin-builder-ux-r8.guard.test.ts 1 -> 0 (target cleared); category-admin-screen.tsx 1 -> 1; product-rich-text-editor.tsx 1 -> 1; storefront/storefront-landing-blocks.tsx 1 -> 1; template-preview/fashion/fashion-template-preview-view.tsx 1 -> 1; features/admin-languages/…/language-list.tsx 3 -> 3; lib/storefront-composition/fashion-demo-preview.ts 1 -> 1; lib/storefront-composition/shared-composition-renderer.tsx 9 -> 9
+tool: frontend node_modules/.bin/tsc --noEmit run exactly ONCE after the change (exit 2 overall — 17 pre-existing errors elsewhere; no greenness claimed)
+baseline-file: docs/architecture/evidence/TB-FE-CONTENT-ACTIONS-SLOTS-CONTRACT-001/typecheck-after-tsc.txt (exactly as the task specified)
+capture: docs/architecture/evidence/TB-FE-PREVIEW-FILL-REAL-REVIEW-FIXTURE-001/typecheck-{before,after-tsc}.txt
+
+FOCUSED TESTS
+suite: app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts (the target file, run alone)
+result: tests 14, pass 14, fail 0
+pre-existing-failures-observed: NONE — every assertion in the suite passes (R8/R8-R2 lock registrations, fake-media isolation checks, assert.doesNotMatch source guards), so nothing needed disclosure or chasing; exactly one run, no cascade.
+the repaired test itself passes, confirming realCount === 1, items[0].previewFake === false and an all-fake remainder still hold.
+raw: docs/architecture/evidence/TB-FE-PREVIEW-FILL-REAL-REVIEW-FIXTURE-001/focused-tests.txt
+NOT run, deliberately: full npm test / test:discovered, build, browser/visual verification, backend suites, AMSC, other guards. No unrun test is reported as pass.
+
+SCOPE COMPLIANCE
+Changed files: exactly 1 — src/frontend/app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts (`git diff --name-only` confirms a single path) — plus the receipt and minimal evidence the task required.
+No production source edit (preview-fake-data.ts, preview-fill-policy.ts, storefront-model.ts all untouched); no locked Shopeiva Home/PDP or storefront-composition edit; no backend/schema/tsconfig/CI/baseline change; no broad suite; no AMSC; no unrelated repair; no auto-started next task.
+
+RISK / LIMITATIONS / ROLLBACK
+Risk to runtime: NONE — a test-file type/fixture correction; no shipped behaviour can change. The only semantic change is that the test's "real" fixture is labelled real by construction rather than by post-hoc mutation.
+Limitation: no browser render (irrelevant to a node:test suite); the characterization remains structural, exactly as before.
+Rollback: revert the single commit; TS2322 returns at test line 69 and the assertions are unaffected.
+
+FILES
+src/frontend/app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts (M)
+docs/ai/tasks/TB-FE-PREVIEW-FILL-REAL-REVIEW-FIXTURE-001.task.md (A)
+docs/architecture/evidence/TB-FE-PREVIEW-FILL-REAL-REVIEW-FIXTURE-001/{summary.md,typecheck-before.txt,typecheck-after-tsc.txt,focused-tests.txt} (A)
+
+COMMIT
+commit-sha: 1a98fa6a33dd18bb27e5f8c84f26f1822c5e77b6
+pushed-to: origin/main (40c1526af..1a98fa6a3)
+HEAD-after-push:         1a98fa6a33dd18bb27e5f8c84f26f1822c5e77b6
+origin/main-after-fetch: 1a98fa6a33dd18bb27e5f8c84f26f1822c5e77b6
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

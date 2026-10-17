@@ -1,0 +1,64 @@
+﻿Pager usage is off.
+=== T0a: installed triggers ===
+                     tgname                     | tgenabled | tgtype | tgisinternal 
+------------------------------------------------+-----------+--------+--------------
+ trg_administrative_areas_ancestry_guard_insert | O         |      5 | f
+ trg_administrative_areas_ancestry_guard_update | O         |     17 | f
+(2 rows)
+
+=== T0b: guard function exists ===
+               proname               | provolatile | args 
+-------------------------------------+-------------+------
+ administrative_areas_ancestry_guard | v           | 
+(1 row)
+
+=== T0c: baseline data (country + root) ===
+INSERT 0 1
+INSERT 0 1
+=== T1: legitimate root insert + child insert + re-root + re-parent (expect 4x success) ===
+INSERT 0 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+=== T2a: INSERT with self-parent (expect ancestry_cycle / 23514) ===
+ERROR:  23514: geography.administrative_area.ancestry_cycle
+DETAIL:  administrative area 00000000-0000-0000-0000-000000000021 cannot point at parent 00000000-0000-0000-0000-000000000021: the parent chain already contains it.
+CONTEXT:  PL/pgSQL function geography.administrative_areas_ancestry_guard() line 47 at RAISE
+LOCATION:  exec_stmt_raise, pl_exec.c:3897
+=== T2b: same-statement two-row INSERT cycle X->Y,Y->X (expect ancestry_cycle / 23514) ===
+ERROR:  23514: geography.administrative_area.ancestry_cycle
+DETAIL:  administrative area 00000000-0000-0000-0000-000000000014 cannot point at parent 00000000-0000-0000-0000-000000000015: the parent chain already contains it.
+CONTEXT:  PL/pgSQL function geography.administrative_areas_ancestry_guard() line 47 at RAISE
+LOCATION:  exec_stmt_raise, pl_exec.c:3897
+=== T2c: 2-node UPDATE cycle (first ok, second expect ancestry_cycle) ===
+INSERT 0 1
+UPDATE 1
+ERROR:  23514: geography.administrative_area.ancestry_cycle
+DETAIL:  administrative area 00000000-0000-0000-0000-000000000013 cannot point at parent 00000000-0000-0000-0000-000000000012: the parent chain already contains it.
+CONTEXT:  PL/pgSQL function geography.administrative_areas_ancestry_guard() line 47 at RAISE
+LOCATION:  exec_stmt_raise, pl_exec.c:3897
+=== T2d: 3-node UPDATE cycle X->Y->Z then Z->X (expect ancestry_cycle) ===
+UPDATE 1
+INSERT 0 1
+UPDATE 1
+ERROR:  23514: geography.administrative_area.ancestry_cycle
+DETAIL:  administrative area 00000000-0000-0000-0000-000000000013 cannot point at parent 00000000-0000-0000-0000-000000000012: the parent chain already contains it.
+CONTEXT:  PL/pgSQL function geography.administrative_areas_ancestry_guard() line 47 at RAISE
+LOCATION:  exec_stmt_raise, pl_exec.c:3897
+UPDATE 1
+=== T3: deep legitimate chain (5 levels) then deep-node re-root (expect success) ===
+INSERT 0 4
+UPDATE 1
+=== T4: final graph state (must be acyclic) ===
+        administrative_area_id        |    parent_administrative_area_id     | code 
+--------------------------------------+--------------------------------------+------
+ 00000000-0000-0000-0000-000000000012 | 00000000-0000-0000-0000-000000000016 | A2
+ 00000000-0000-0000-0000-000000000013 |                                      | B
+ 00000000-0000-0000-0000-000000000031 | 00000000-0000-0000-0000-000000000011 | D1
+ 00000000-0000-0000-0000-000000000032 | 00000000-0000-0000-0000-000000000031 | D2
+ 00000000-0000-0000-0000-000000000033 | 00000000-0000-0000-0000-000000000032 | D3
+ 00000000-0000-0000-0000-000000000034 |                                      | D4
+ 00000000-0000-0000-0000-000000000011 |                                      | ROOT
+ 00000000-0000-0000-0000-000000000016 | 00000000-0000-0000-0000-000000000013 | Z
+(8 rows)
+

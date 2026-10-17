@@ -1,0 +1,214 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002
+Parent-Task: TB-P0-FULFILLMENT-PACKAGE-DISPATCH-ATOMICITY-001
+Program: TOOBA-FULFILLMENT-DISPATCH-INTEGRITY-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: BOUNDED_ARCHITECTURE_GATE_AND_SAFE_REPAIR
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: INCOMPLETE_BLOCKED_ARCHITECT_DECISION
+
+PREFLIGHT
+Expected-Starting-HEAD: 04e3aa79f1fcf26c2c4c17f10ea1d3fce99dac91
+Starting-HEAD:          04e3aa79f1fcf26c2c4c17f10ea1d3fce99dac91
+Starting-origin/main:   04e3aa79f1fcf26c2c4c17f10ea1d3fce99dac91
+Tracked-worktree-clean: YES; HEAD == origin/main == Expected-Starting-HEAD; no reset/stash/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, parent Gate-B evidence,
+FulfillmentDirectory.Packages.cs + FulfillmentDirectory.cs (ConsumeInventoryForShipmentAsync),
+FulfillmentInventoryGateway, IFulfillmentInventoryLifecyclePort, InventoryDirectory.cs
+(ConsumeAsync/ReleaseAsync), StockReservation, StockPosition, InventoryDbContext reservation mapping,
+InventoryReturnGateway/ReturnRestockInboxRecord (existing inbox precedent), OutboxSaveChangesInterceptor,
+FulfillmentItem, inventory module + host focused tests. Deferred ARCHITECTURE-FINDINGS-REGISTER.md NOT read.
+
+LIVE-DATA SAFETY (NO MUTATION)
+Zero write calls against order 01a12e97-ee9e-7000-826c-a9eca536b223, package
+01a12f79-6ef1-7000-8578-dd7cc841195d, its member shipments or any reservation. No dispatch/cancel/retry
+through the live Host, no SQL UPDATE/DELETE, no migration, no API mutation, no service restart.
+All live access was SELECT-only over tooba_alpha and is transcribed in the evidence bundle.
+
+VERDICT
+Do NOT implement a repair. Every provable fix requires at least one Gate-D decision item (Inventory
+schema migration, cross-module public contract change, or new business semantics), and the only
+non-schema/non-contract option is the blanket "Consumed => success" shortcut that Gate B explicitly
+forbids. No speculative production change was made or pushed; only the task receipt and the evidence
+bundle were committed.
+
+GATE VERDICTS
+GATE A (ownership/persistence boundary trace):              PASS (trace complete).
+GATE B (idempotency proof):                                 BLOCKED — 3 of 5 required proofs are
+                                                            impossible with current data/contract.
+GATE C (failure-window model):                              PASS (8 windows modelled; 4 real defects).
+GATE D (smallest architecturally valid approach):           BLOCKED_ARCHITECT_DECISION (rejected A–D,F;
+                                                            recommended bounded design E with tests).
+GATE E (deploy parent before closing this gate?):           GO — constrained (explicit HOLD items).
+
+GATE A — ACTUAL BOUNDARIES (with anchors)
+Chain: FulfillmentDirectory.Packages.cs:250/274/284-290 (validate-all, then one write phase, then ONE
+SaveChangesAsync) -> FulfillmentDirectory.cs:509-527 ConsumeInventoryForShipmentAsync (skip when
+ReservationId is null or ReservationConsumed; consume only when QuantityShipped >= QuantityOrdered)
+-> FulfillmentInventoryGateway -> IFulfillmentInventoryLifecyclePort.ConsumeAsync(reservationId) ONLY
+(no consumer key, no expected quantity/stock item, no status read)
+-> InventoryDirectory.cs:270-294 ConsumeAsync -> StockReservation.MoveTo:157-166 (throws
+inventory.reservation.not_active unless Held; CLEARS IdempotencyKey)
+-> StockPosition.RecordConsumed (raises a domain event only; no persisted consumption row)
+-> OutboxSaveChangesInterceptor:33-46,66-148 (writes inventory.reservation_consumed.v1 in the SAME
+SaveChanges as the reservation status change).
+Reservation identity: PK ReservationId, columns StockItemId/Quantity/Status/ExternalReference/
+IdempotencyKey/ExpiresAt; NO owner/tenant/consumer column (tenant isolation is physical: one database
+per tenant). Filtered unique index on IdempotencyKey (hold-time only; destroyed on consume).
+Existing facilities audited: hold idempotency key (unusable — cleared by MoveTo), return_restock_inbox
+(precedent only; and its inbox row commits in a SECOND SaveChanges after the mutation),
+outbox_messages (rejected: publish-only bus table, opaque JSON, no indexed reservationId, no invariant,
+no consumer identity), ReleaseAsync silent no-op (safe only because a repeat release must not re-credit).
+Atomicity conclusion: Fulfillment-local atomicity PASS (parent repair). Cross-module: no distributed
+atomicity, no saga/outbox command. Worse than "separate transaction": inside ConsumeAsync the stock
+deduction is an immediate autocommitted ExecuteUpdateAsync that is not even atomic with its own
+reservation row / outbox write.
+
+GATE B — WHY IDEMPOTENCY CANNOT BE PROVEN TODAY
+Required proof -> available evidence:
+ * same logical consumption: caller supplies only ReservationId and Quantity is immutable on the row,
+   so "same reservation" holds — but nothing attests the consumption EVENT.
+ * same fulfillment/shipment: NOT PROVABLE. No consumer identity exists anywhere: no column on
+   reservations, no parameter on the port, and ExternalReference is an order-process key shared by
+   every line of the order (live: all five member-1 reservations carry the identical
+   external_reference order-commit:...:process:...). The Fulfillment flag lives in another database.
+ * same owner/tenant: PROVABLE (physical per-tenant database).
+ * quantity cannot be deducted twice: REFUTED by code. The deduction is guarded only by stock
+   arithmetic (Reserved >= q && OnHand >= q), never by reservation state, and MoveTo throws AFTER the
+   statement already committed => a replay can deduct a second time with NO journal trace.
+ * conflicting consumers / reused ids rejected: NOT PROVABLE — there is no consumer identity to compare
+   and a Consumed lookup is indistinguishable from a replay.
+=> Task rule applied verbatim: "If this cannot be proven with current data/contract, STOP this scope
+rather than add a broad Consumed->success shortcut."
+Locked invariants a shortcut would violate: MoveTo rejects any non-Held state, pinned by
+InventoryReleaseIdempotencyTests.Domain_move_to_released_rejects_already_terminal_status,
+PaidOrderReservationLifecycleTests.CommitForPaidOrder_rejects_consumed_without_resurrect:146 and
+Commit_on_released_reservation_throws_not_active:313; plus two source-slice architecture guards
+(InventoryReleaseIdempotencyTests.cs:35-61, InventoryArchitectureGuardTests.cs:147-157) that pin replay
+tolerance for Release ONLY — i.e. the no-op replay pattern exists exactly where it is provably safe.
+
+GATE C — FAILURE WINDOWS (full matrix in failure-matrix.md)
+W1 Inventory commits, Fulfillment fails (the P0 window): retry re-enters ConsumeAsync on a Consumed
+   reservation -> MoveTo throws inventory.reservation.not_active => package permanently undispatchable.
+W2 Fulfillment commits, response fails: idempotent; parent repair holds (member skipped, flag true).
+W3 Inventory fails before Fulfillment commit: nothing persisted; retry consumes normally.
+W4 two concurrent dispatches: no reservation-state CAS, no unique journal row => a second deduction can
+   commit and the loser then throws => unsafe/unproven.
+W5 preexisting Dispatched member with consumed reservation: correctly skipped.
+W6 preexisting Dispatched member whose reservation is still Held/not consumed: the Dispatched branch
+   forces Consume=false, so the NEEDED consumption is silently skipped; the reservation is never
+   consumed and never released (ExpiresAt is null for paid-order holds) => silent stock leak. Not
+   detectable from Fulfillment data alone.
+W7 W1-retry where the position still satisfies the guard (other holds keep Reserved >= q and
+   OnHand >= q): the autocommitted ExecuteUpdate deducts a SECOND time, then MoveTo throws, so no
+   reservation row, no outbox row and no flag change record it => SILENT STOCK CORRUPTION.
+W8 crash between the ExecuteUpdate and SaveChangesAsync inside ConsumeAsync: deduction committed while
+   the reservation is still Held => retry deducts again. Unsafe even without any cross-module failure.
+Live corroboration (SELECT-only, tooba_alpha): member 1 (01a12e98-77aa-7000-9147-6b2d69ca0ee7) has 5
+lines fully shipped with reservation_consumed=true and 5 Consumed reservations (reserved 0 on their
+positions); member 2 (01a12e98-77d1-7000-aa6c-78f53c983947) has 1 line qty 5, quantity_shipped 0,
+reservation_consumed=false, reservation 01a12e97-ef78-7000-9854-7b1a4affaad3 = Held, expires_at NULL,
+idempotency_key checkout-process:..., external_reference order-commit:..., position on_hand 200 /
+reserved 5; inventory.outbox_messages holds exactly 5 inventory.reservation_consumed.v1 rows matching
+the 5 consumed member-1 reservations.
+
+GATE D — OPTIONS
+REJECTED:
+ A. blanket Consumed => success in ConsumeAsync — fails Gate B, masks conflicting consumers, contradicts
+    the locked terminal-state invariant, hides W7/W8.
+ B. Fulfillment-side "already consumed" skip via a new status read — cross-module contract change and
+    still TOCTOU-unsafe (read Held, someone else consumes, we consume again).
+ C. use inventory.outbox_messages as the ledger — publish-only bus table with no indexed reservation
+    lookup, no invariant and still no consumer identity; domain command must not depend on bus bookkeeping.
+ D. Fulfillment-side intent journal committed before the inventory call — needs a migration AND is
+    unsafe in the intent-committed-but-never-consumed window (would skip a NEEDED consumption).
+ F. outbox/saga command consumed by Inventory — feasible but a larger surface with the same gate items.
+REQUIRES EXPLICIT ARCHITECT DECISION (recommended, not implemented):
+ E. Inventory-owned consumption journal `inventory.reservation_consumptions` (ReservationId PK,
+    StockItemId, Quantity, ConsumerKey, ConsumedAt) written in the SAME transaction as a
+    state-guarded deduction and the reservations.Status CAS; replay accepted ONLY when a journal row
+    exists and StockItemId/Quantity match, otherwise typed consume_conflict — never silent success;
+    compatible port extension ConsumeAsync(reservationId, consumerKey, ct) with consumerKey =
+    fulfillment:package:{packageId}:member:{shipmentId}:line:{orderLineId}; single SaveChanges/commit
+    also removes W7/W8/W4. Required tests listed in contract-decision.md (failure injection at each
+    commit boundary, true replay vs conflicting consume, concurrent consumes, journal-missing conflict,
+    W6 reconciliation, guard pinning). Both source-slice guards keep matching if the parameter list grows.
+Background note for the Architect: this scope is exactly "make the parent's recommendation real"; the
+parent's own Result already recommended "make ConsumeAsync idempotent, then treat package consumption as
+one cross-module unit or via the existing outbox".
+
+GATE E — DEPLOYMENT
+GO (constrained) for parent commit 04e3aa79. Rationale: the parent only converts per-member persistence
+into a two-phase single-commit dispatch and validates generated tracking codes before any write; it
+strictly NARROWS the exposure (all validation now precedes any inventory call) and it does not touch
+ConsumeAsync, so it creates no new replay path.
+Constraints: (1) the existing Gate-C runbook may be executed ONCE for the live package — safe because
+member 2's reservation is currently Held with no expiry; (2) HOLD any operator retry of a dispatch whose
+reservation is already Consumed (W1/W7/W8) until design E (or an approved equivalent) is implemented;
+(3) no live action was taken by this task.
+
+FOCUSED VALIDATION (this task)
+1) dotnet test src/backend/Modules/Inventory/Tooba.Inventory.Tests => Passed! Failed 0, Passed 13,
+   Skipped 0, Total 13, 359 ms; exit code 0 (includes the release-idempotency and architecture guards,
+   i.e. the locked baselines this decision must preserve).
+2) dotnet test src/backend/Host/Tooba.Host.Tests --filter
+   "FullyQualifiedName~PaidOrderReservationLifecycleTests|FullyQualifiedName~InventoryFoundationTests"
+   => Passed! Failed 0, Passed 13, Skipped 0, Total 13, 29 s; exit code 0.
+3) No new tests authored: the provable fix is blocked, and the task forbids speculative production
+   changes while blocked. No full-suite/AMSC run (out of task scope). Full raw log:
+   docs/architecture/evidence/TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002/targeted-test-results.txt
+TEST-ENVIRONMENT NOTE: the live dev Host (Tooba.Host.exe, PID 15068) holds the default bin output, so
+verification ran into an isolated artifacts output
+(-p:UseArtifactsOutput=true -p:ArtifactsPath=D:\temp\tooba-verify); the tracked tree was never written by
+the build and the running Host was never stopped or restarted.
+
+EXACT CHANGED FILES
+- docs/ai/tasks/TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002.task.md (exact received receipt)
+- docs/architecture/evidence/TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002/boundary-map.md
+- docs/architecture/evidence/TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002/failure-matrix.md
+- docs/architecture/evidence/TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002/contract-decision.md
+- docs/architecture/evidence/TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002/targeted-test-results.txt
+- docs/architecture/evidence/TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002/summary.md
+PRODUCTION CODE CHANGED: NONE. No frontend, no domain/schema change, no migration, no contract change,
+no guard/baseline weakening, no error-code or status rewrite.
+
+REQUIRED ARCHITECT DECISION (precise)
+1. Approve/replace design E (Inventory-owned reservation_consumptions journal + single transaction +
+   state-guarded deduction) and the typed consume_conflict rule.
+2. Approve the compatible IFulfillmentInventoryLifecyclePort.ConsumeAsync consumerKey extension so
+   "same logical fulfillment/shipment" becomes verifiable instead of assumed.
+3. Confirm that relaxing ConsumeAsync replay semantics is acceptable business semantics (today the
+   terminal state is deliberately not resurrectable, pinned by three durable tests).
+4. Decide the W6 remedy (reconcile Dispatched members whose reservation is not consumed).
+5. Decide migration ownership/sequencing for the new Inventory table.
+
+OUTSTANDING P0 RISK (unchanged)
+A Fulfillment-commit failure after a successful Inventory consumption leaves the consolidated package
+permanently undispatchable AND can silently double-deduct stock (W7/W8), because the deduction is not
+atomic with the reservation status and no consumption journal or consumer identity exists. Parent repair
+is deployable; the cross-module replay gap remains open.
+
+COMMIT
+starting-HEAD: 04e3aa79f1fcf26c2c4c17f10ea1d3fce99dac91
+commit-sha: fa2c9209ec2d03216e823cf4e2c069178df868c4
+pushed-to: origin/main (04e3aa79f..fa2c9209e)
+HEAD-after-push: fa2c9209ec2d03216e823cf4e2c069178df868c4
+origin/main-after-fetch: fa2c9209ec2d03216e823cf4e2c069178df868c4
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+docs-only commit (no speculative production change): CONFIRMED
+
+EVIDENCE
+docs/architecture/evidence/TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002/
+  boundary-map.md, failure-matrix.md, contract-decision.md, targeted-test-results.txt, summary.md
+docs/ai/tasks/TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002.task.md
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

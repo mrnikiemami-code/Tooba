@@ -1,0 +1,198 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-083
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-082
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-TABS
+Mode: BOUNDED_IDENTITY_COMPATIBILITY_AND_ISOLATED_MIGRATION_PROOF
+Bridge-Task-Row: 3d55d383-879e-45cd-80d9-c9dbec344afa
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 64ff456bf547dc5cdbdee8ffb60a397b25addf67
+Base-SHA: e85d2f9537cc5dd2179e49caa007cdc139c0d2e0
+Code-SHA: 04d7b13391c9c78947877ed44b3a44289dc11f1d
+Evidence-SHA: 2b80990f8016ab1beb8c946429fcfad13bd5437b
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- Claimed exactly one pending task on tooba-main; received .task.md persisted as receipt only (unstaged).
+- Read AGENTS.md, TOOBA-PIPELINE-PROTOCOL.md, SHIPPING-ONE-LEVEL-UI-081.md/-082.md, 082 evidence,
+  Fulfillment EF migration registration, DbContext mappings, reader and backfill planner.
+- git fetch origin; HEAD == origin/main == e85d2f9537cc5dd2179e49caa007cdc139c0d2e0.
+- Expected base 64ff456bf is an ANCESTOR of HEAD (merge-base --is-ancestor exit 0). The only drift between
+  the two SHAs is docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-082/RESULT.bridge.txt and
+  .../post-result.js - the 082 worker's own result envelope and delivery script. Nonoverlapping
+  bookkeeping drift, NOT source drift. No RECOVERY_CONFLICT.
+- All pre-existing dirty/untracked paths preserved; no reset, stash, rebase, force push or process restart.
+
+MISSION A - ISOLATED REAL DATABASE PROOF (PRIMARY) - COMPLETE
+Target provenance positively confirmed BEFORE any DDL, so the result is not a tooba_alpha run:
+  ISOLATED_DB_CREATED tooba_onelevel083_<hex>
+  PROVENANCE current_db=1 foreign_schemas=0 preexisting_shipping_services=0
+Brand-new database via CREATE DATABASE on the local server; zero fulfillment/shipping/order/cart schemas
+and no shipping_services table existed beforehand. Development settings were read only for server
+credentials; the connection string pointed at the disposable database, never tooba_alpha.
+
+UP (real EF migration history, not hand-made DDL):
+  PENDING_MIGRATIONS 9 :: ...AddConsolidatedPackages,AddShippingServiceCatalog,AddShippingOneLevelCatalog
+  UP history_total=9 onelevel_applied=1 columns=9 method_code_width=32 indexes=4 checks=2
+     legacy_catalog_tables=4
+Independently confirms the 082 migration review: 9 Fulfillment migrations with the new one last in EF
+history order, all 9 shipping_methods columns present, method_code varchar(32) (B2), 4 indexes and 2
+canonical CHECK constraints, and all 4 legacy two-level catalog tables still present.
+
+Seed + constraints:
+  INSERT representative_methods=4 translations=1 OK
+  post:standard(active) tipax:standard(active) store_courier(optionless,active) snapp_courier(optionless,inactive)
+  8 negative probes, all 8 rejected:
+    duplicate_method_code            -> 23505/ix_shipping_methods_method_code
+    duplicate_legacy_binding         -> 23505/ux_shipping_methods_legacy_binding
+    over_32_chars                    -> 22001 (value too long for varchar(32))
+    uppercase_code                   -> 23514/ck_shipping_methods_code_canonical
+    hyphen_separator                 -> 23514/ck_shipping_methods_code_canonical
+    blank_option_code                -> 23514/ck_shipping_methods_option_code_canonical
+    duplicate_translation_language   -> 23505/ix_shipping_method_translations_method_lang
+    fk_missing_method_translation    -> 23503/fk_shipping_method_translations_method
+  NEGATIVE_SUMMARY rejected=8/8
+  OPTIONLESS_ROWS_COEXIST_OK (partial unique index does not collapse optionless rows)
+
+Reader over the real database:
+  READER all=5 active=4 get_case_insensitive=post:standard get_missing=null get_malformed=null
+         post_translation=پست معمولی optionless_binding=null inactive_present=yes
+Case-insensitive lookup resolves; unknown and malformed codes fail closed with null (no exception, no
+guess); Persian translation round-trips; optionless binding reads back NULL; inactive method present in
+the unfiltered list and correctly absent from the active list.
+
+32-character persisted identity boundary:
+  BOUNDARY persisted_32_chars_readback=32
+  BOUNDARY max_persisted_code_length=32
+
+Legacy catalog untouched inside the isolated database:
+  LEGACY_UNTOUCHED services=0 options=0 new_methods=6
+No shipping_services/options row was created, modified or read by the one-level path.
+
+DOWN then re-UP:
+  DOWN new_tables_remaining=0 legacy_tables_remaining=2 onelevel_history_rows=0
+  REUP new_tables_after_reapply=2
+Down drops exactly its own two tables, leaves the legacy catalog tables in place and removes the EF
+history row; re-Up recreates both. Rollback is not a one-way door.
+Disposal: ISOLATED_DB_DROPPED tooba_onelevel083_<hex> / LEFTOVER_ISOLATED_DATABASES 0
+
+BACKFILL PLANNER - PLANNING PROOF ONLY, NOT PERSISTENCE
+The pure in-memory ShippingMethodBackfillPlanner was exercised in the Fulfillment test fixture against the
+legacy shape (post:standard active, post:express inactive, tipax:standard/express active,
+store_courier/in_person optionless, snapp_courier inactive): byte-identical legacy (service,option) mapping,
+no standalone parent row for services that own options, nullable binding for optionless services, repeat
+idempotency, and duplicate/binding conflicts failing closed.
+EXPLICIT LIMITATION: the planner has NO write executor. Planning proof is not data persistence. The
+one-level backfill is NOT finished and was NOT executed anywhere, including Development. No claim of a
+completed backfill is made.
+
+LIVE DEVELOPMENT COMPATIBILITY AUDIT (READ-ONLY)
+readonly-legacy-code-audit.sql: five SELECTs, no DDL/DML, against tooba_alpha.
+  order.checkouts             post:express(12)x11  tipax:express(13)x1  tipax:standard(14)x1
+  order.cart_shipping_drafts  post:express(12)x12  tipax:express(13)x1  tipax:standard(14)x1
+  fulfillment.fulfillments    post:express(12)x4   tipax:express(13)x2  tipax:standard(14)x3
+  fulfillment.shipments       post(4)x3            snapp_courier(13)x2
+  fulfillment.consolidated_packages  post(4)x1     snapp_courier(13)x2
+Three objective facts, now durably regression-locked by a focused test:
+1. The 32-char contract is sufficient - longest live code is 14; no column widening, no history rewrite.
+2. post:standard is ACTIVE but absent from live data, while INACTIVE post:express is referenced by 11 paid
+   checkouts and 12 drafts. Activation must follow the catalog, never historical usage (082 already did).
+3. fulfillment.shipments/fulfillments/consolidated_packages persist the BARE code `post`. By B1 a
+   service-level fallback policy is deliberately NOT a second sellable method, so resolving `post` through
+   the one-level catalog fails closed with null instead of matching something else. Intended and safe, and
+   precisely why the legacy catalog must stay the operational read authority. Recorded as an explicit
+   Architect-visible boundary, not a hidden hole.
+
+MISSION B - NARROW CODE GUARDS - 2 VERIFIED DEFECTS FIXED (both demonstrated, not speculative)
+1. Missing referential integrity. shipping_method_translations had NO foreign key to shipping_methods, so
+   deleting a method left orphan translation rows. Consistent with module convention (a grep of every
+   Fulfillment migration shows ZERO FOREIGN KEY/REFERENCES clauses), but a real integrity gap on a table
+   written exclusively through the aggregate. Fixed by adding, inside the task-authorized migration file:
+     CONSTRAINT fk_shipping_method_translations_method FOREIGN KEY (shipping_method_id)
+       REFERENCES fulfillment.shipping_methods (shipping_method_id) ON DELETE CASCADE
+   Scoped to the NEW table only; retrofitting FKs onto pre-existing Fulfillment tables would be an
+   out-of-scope schema-wide change.
+2. EF insert ordering. The DB constraint alone broke a legitimate write with
+   23503/fk_shipping_method_translations_method because, with no mapped relationship, EF inserted the
+   translation before its method. Caught by RE-RUNNING the isolated probe, not assumed. Fixed in
+   FulfillmentDbContext with metadata only (no navigation property, no domain shape change):
+     entity.HasOne<ShippingMethod>().WithMany().HasForeignKey(x => x.ShippingMethodId)
+           .OnDelete(DeleteBehavior.Cascade);
+   After this the same write succeeds and the negative probe is rejected: rejected=8/8.
+
+STALE FulfillmentDbContextModelSnapshot - INVESTIGATED, NO BROAD REGENERATION
+The snapshot omits shipping_services/shipping_service_options and both translation tables (it still
+describes only consolidated_packages/consolidated_package_members). Root cause is architectural, not a 082
+defect: the two shipping catalog migrations are hand-written raw SQL with no snapshot delta, so the
+snapshot has been stale since 20260910170000 (pre-existing debt). Deliberately NOT regenerated in 083
+(that would be a broad out-of-scope diff). Independently proven harmless at runtime: MigrateAsync applied
+the full 9-migration history and produced the exact expected schema, because the SQL migrations do not
+depend on the snapshot. LIMITATION: the next EF-generated migration for this DbContext must be
+hand-authored.
+
+BOUNDARY CHECKS
+Contracts expose no EF model (IShippingOneLevelCatalogReader returns Contracts records only). No Host
+business authority added. No foreign DbContext touched. Legacy catalog routes untouched. Checkout and paid
+snapshots unchanged. No dual-write. Tooba:ShippingOneLevelCatalog, ShippingRateAuthority and
+ShippingOperationalShadow all remain OFF.
+
+TESTS ACTUALLY RUN
+- dotnet test src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests
+    -> Passed! Failed: 0, Passed: 95, Skipped: 0, Total: 95 (082 had 94; +1 live-code compatibility test)
+- dotnet test src/backend/Host/Tooba.Host.Tests --filter FullyQualifiedName~FulfillmentModuleAmsc001W3CertGuardTests
+    -> Passed! Failed: 0, Passed: 14, Skipped: 0, Total: 14
+  The 082 file-lock block is RESOLVED. Note: -p:BaseIntermediateOutputPath/-p:BaseOutputPath fails with 159
+  CS0579 duplicate-attribute errors (Directory.Build.props pins obj/); redirecting only OutDir works.
+  The running Host (Tooba.Host, pid 33548) was never restarted and is still alive.
+- isolated PostgreSQL probe: all stages green, 8/8 negatives rejected (log-isolated-migration-083.txt)
+
+LIVE ENVIRONMENT UNCHANGED (post-run verification)
+  fulfillment tables named shipping_method% in tooba_alpha : 0
+  fulfillment.__ef_migrations_history in tooba_alpha        : 8 rows, latest 20260910170000_AddShippingServiceCatalog
+  running Host process                                     : Tooba.Host alive (pid 33548)
+  leftover tooba_onelevel083_* databases                   : 0
+tooba_alpha received NO DDL and NO DML. The one-level catalog remains UNMIGRATED in Development.
+
+ISOLATED MIGRATION SAFETY IN PRINCIPLE
+Production-safe IN PRINCIPLE: additive, idempotent CREATE TABLE IF NOT EXISTS, no data rewrite, no
+cross-schema or cross-module dependency, and a Down that removes exactly its own two tables (now including
+the new FK), proven reversible. NOT called live-ready: no live rollout is authorized, the backfill
+executor does not exist, and the stale-snapshot debt means the next generated migration must be hand-authored.
+
+MODIFIED PATHS
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Persistence/FulfillmentDbContext.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Persistence/Migrations/20261015120000_AddShippingOneLevelCatalog.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelMethodCatalogTests.cs
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-083.md
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-083/** (new; probe, project, log, audit SQL, receipt, task)
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-083.task.md (receipt only, intentionally NOT staged)
+No unrelated file was touched; the pre-existing src/frontend dirt was left exactly as found.
+
+ROLLBACK
+1. Keep Tooba:ShippingOneLevelCatalog OFF -> zero behavioural change, zero data touched.
+2. Down of 20261015120000_AddShippingOneLevelCatalog -> drops shipping_method_translations then
+   shipping_methods; reversibility proven by the isolated re-UP.
+3. No other module references the new tables, so dropping them cannot affect Order, Shipping, Geography,
+   Payment or Settlement.
+
+REMAINING BLOCKERS
+- No backfill write executor exists; the one-level catalog has no persisted data anywhere yet.
+- FulfillmentDbContextModelSnapshot stays stale by decision; future EF-generated migrations for this
+  context must be hand-authored.
+
+RECOMMENDED 084 SCOPE (NOT ISSUED, NOT RUN)
+Admin five-tab shell and service list on /admin/shipping-services, behind the still-OFF
+Tooba:ShippingOneLevelCatalog gate: context bar plus «سرویس‌ها»، «تعرفه و پوشش»، «بسته‌بندی و کرایه»،
+«برنامه کاری و ظرفیت»، «بررسی هزینه». ONE independent row per method (post:standard, post:express,
+tipax:standard, tipax:express, store_courier, in_person, snapp_courier) with provider_kind hidden and NO
+second-level selection. Inactive methods stay visible and inactive (never silently activated), and the
+screen must surface that post:express is inactive although historical paid rows reference it. User-visible
+labels become independently editable only in a later authorized task, and by editing the translation row -
+never by changing a historical method_code. The planned 11-task ceiling (081-091) is unchanged.
+
+ACTUAL ELAPSED: ~26 minutes (claim 12:01:27Z, result 12:27Z) within the 30-minute HARD timebox.
+END_TOOBA_WORKER_RESULT

@@ -73,3 +73,7 @@ docs/evidence/**/RESULT.bridge.txt
 # Test crash/hang dumps (never track binary dumps or TestResults)
 src/**/TestResults/
 *.dmp
+
+# Raw host stdout captures: unbounded, can exceed GitHub's 100 MB blob limit.
+# Only already-tracked (small) captures stay tracked; new/grown ones are ignored.
+docs/architecture/evidence/**/host-stdout*.txt

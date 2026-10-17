@@ -1,0 +1,101 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GEOGRAPHY-TRANSLATION-INTEGRITY-039
+Parent-Task: TB-SHIPPING-GEOGRAPHY-PERSISTENCE-MODEL-038
+Pipeline-Protocol: BRIDGE-WAKE-V1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ARCHITECTURE-PLANNING
+Mode: IMPLEMENTATION_BOUNDED_INERT_TRANSLATION_INTEGRITY_ONLY
+Bridge-Task-Row: 69c6760c-b4de-44bb-b05e-dde05b456cdb
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: a0eb0d1e969875a77271256d25b11285701858c6
+Base-SHA: a0eb0d1e969875a77271256d25b11285701858c6
+Code-SHA: da6f339440260047f56210bfc36008d09ec71165
+Evidence-SHA: da6f339440260047f56210bfc36008d09ec71165
+automaticNextImplementationTask: NONE
+Migration-Readiness-Claim: NONE (two Architect-deferred pre-migration blockers remain open)
+
+PREFLIGHT
+- BRIDGE-WAKE received; claimed ONLY this task on channel tooba-main; no idle polling; no automatic next task.
+- branch = main; local HEAD == origin/main == Expected-Base-SHA == a0eb0d1e969875a77271256d25b11285701858c6. Exact match; no reset, rebase, merge, stash, cherry-pick or force-push.
+- Reviewed before editing: 037 Domain/Contracts (Country/AdministrativeArea/City/ServiceArea + PlaceNameTranslation + GeographyPlaceKind), 038 GeographyDbContext and report, the module manifest reference, and two established translated-entity conventions (CatalogDbContext.cs L259-L274 CatalogCategoryTranslation UNIQUE(CategoryId, Locale) + parent OnDelete Cascade; FulfillmentDbContext.cs L176-L201 ShippingServiceTranslation/OptionTranslation UNIQUE(ParentId, LanguageId)).
+- Target-path check before writing: the four new entity paths did not exist; nothing was overwritten. Confirmed repo-wide (src, excluding bin/obj) that PlaceNameTranslation / GeographyPlaceKind / place_name_translations were referenced ONLY inside Modules/Geography, so no consumer outside the module is affected.
+- Dirty/untracked status preserved: pre-existing unrelated modified/untracked files were left untouched and unstaged (src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs, src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx, src/frontend/app/admin/admin-order-detail-screen.tsx, src/frontend/app/storefront/storefront-landing-blocks.tsx, docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, and the pre-existing untracked docs/ai/tasks/* and docs/architecture/evidence/** trees).
+
+CHANGED PATHS (7 staged in exactly one commit; nothing else created, modified or deleted)
+A src/backend/Modules/Geography/Tooba.Geography.Domain/Aggregates/CountryNameTranslation.cs
+A src/backend/Modules/Geography/Tooba.Geography.Domain/Aggregates/AdministrativeAreaNameTranslation.cs
+A src/backend/Modules/Geography/Tooba.Geography.Domain/Aggregates/CityNameTranslation.cs
+A src/backend/Modules/Geography/Tooba.Geography.Domain/Aggregates/ServiceAreaNameTranslation.cs
+D src/backend/Modules/Geography/Tooba.Geography.Domain/Aggregates/PlaceNameTranslation.cs
+D src/backend/Modules/Geography/Tooba.Geography.Domain/Enums/GeographyPlaceKind.cs
+M src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Persistence/GeographyDbContext.cs
+A docs/planning/shipping/SHIPPING-GEOGRAPHY-TRANSLATION-INTEGRITY-039.md
+(git also reports the PlaceNameTranslation -> CityNameTranslation pair as a 61% rename; the file content is the new CityNameTranslation entity, no residual polymorphic code.)
+Untracked (not committed, deliberately left dirty as evidence, matching the 034-038 convention): docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-TRANSLATION-INTEGRITY-039/{RESULT.bridge.txt,post-result.js}
+NOT changed: Tooba.Geography.Contracts (verified via git status => CONTRACTS_UNCHANGED; the existing geography.translation.* codes are reused), Country/AdministrativeArea/City/ServiceArea entities, Tooba.slnx (the project set is unchanged, so no solution edit was necessary), the 038 report, and every file outside Modules/Geography plus the new report.
+
+SOURCE LINE-RANGE EVIDENCE
+- New Domain entities (each self-contained with its own NameMaxLength, ~117 lines):
+  * CountryNameTranslation.cs L10 class, L13 NameMaxLength = 128, L43 Create(...), owns TranslationId/CountryId/LanguageId/Name/CreatedAt/UpdatedAt; validation raises SemanticException(SemanticError(GeographyErrorCodes.TranslationPlaceIdRequired | TranslationLanguageIdRequired | TranslationNameRequired)).
+  * AdministrativeAreaNameTranslation.cs L10 / L13 / L43 — same shape keyed by AdministrativeAreaId.
+  * CityNameTranslation.cs L10 / L13 / L43 — same shape keyed by CityId.
+  * ServiceAreaNameTranslation.cs L10 / L13 / L43 — same shape keyed by ServiceAreaId.
+- GeographyDbContext.cs (src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Persistence/GeographyDbContext.cs):
+  * DbSets L40, L43, L47, L50 — CountryNameTranslations, AdministrativeAreaNameTranslations, CityNameTranslations, ServiceAreaNameTranslations (the PlaceNameTranslations DbSet is gone).
+  * Place mappings unchanged: countries L62-L72, administrative_areas L75-L100 (country_id Restrict L93, parent_administrative_area_id Restrict L99), cities L103-L125 (Restrict L118/L124), service_areas L128-L145 (city_id Cascade L143).
+  * Per-kind translation mappings: country_name_translations L150-L170 (ToTable L152, UNIQUE(country_id, language_id) L160, FK -> countries Cascade L169); administrative_area_name_translations L172-L185 (UNIQUE L180, FK Cascade L184); city_name_translations L187-L200 (UNIQUE L195, FK Cascade L199); service_area_name_translations L202-L215 (UNIQUE L210, FK Cascade L214).
+  * OutboxMessageMapping.Map L217 (unchanged); design-time factory unchanged (reads only the EF-tool env var; no committed credential).
+- Report: docs/planning/shipping/SHIPPING-GEOGRAPHY-TRANSLATION-INTEGRITY-039.md L1-L133 (before/after mapping, strict-equivalence argument, delete-rule justification, verification results incl. the two programmatic assertions, deferred risks, exclusions, one bounded next step).
+- Cited conventions for the delete rule (pre-existing, unmodified): src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Persistence/CatalogDbContext.cs L271-L274 (translation parent OnDelete Cascade) and L285-L288 (dependent Cascade) vs L250-L253 (reference parent Restrict).
+
+EQUIVALENCE OF THE REPLACEMENT (checked, not assumed)
+- Kind of owner is now the table itself instead of a stored place_kind column: strictly stronger, because the kind can no longer disagree with the row.
+- UNIQUE(place_kind, place_id, language_id) becomes UNIQUE(parent_id, language_id) per kind: the same "one display name per (place, language)" rule, now enforced per table and impossible to collide across kinds without a discriminator.
+- Name ≤ 128 required/trimmed, Guid.Empty rejection for place id and language id, CreatedAt/UpdatedAt and Rename(name, now) are reproduced identically on all four entities.
+- The only intentional difference is strictness: an orphan reference is now impossible at the database level (real required FK) whereas 038 allowed it.
+- Delete rule chosen: Cascade, explicitly justified as the repo-consistent rule for translation rows (strictly owned children with no independent identity; matches CatalogCategoryTranslation/CatalogCategorySlugHistory) and inert today because places are never physically deleted and the in-domain place-to-place FKs remain Restrict.
+
+BUILD / VERIFICATION
+1) dotnet build src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Tooba.Geography.Infrastructure.csproj => Build succeeded, 0 Error(s), 2 Warning(s) (both NU1900 NuGet vulnerability-feed timeout, network-only). Rebuilt Contracts, Domain, Persistence and Infrastructure; produced Tooba.Geography.Infrastructure.dll.
+2) Targeted EF model-metadata validation (structural verification) in a throwaway harness OUTSIDE the repository (%TEMP%/geography-model-check-039, deleted afterwards; referenced the project, called ToobaNpgsql.ConfigureModuleContext with a placeholder connection string, then read DbContext.Model) => MODEL_OK. Reported exactly: SCHEMA geography; administrative_area_name_translations FK administrative_area_id -> administrative_areas delete=Cascade required=True and IX UNIQUE(administrative_area_id, language_id); city_name_translations FK city_id -> cities delete=Cascade required=True and IX UNIQUE(city_id, language_id); country_name_translations FK country_id -> countries delete=Cascade required=True and IX UNIQUE(country_id, language_id); service_area_name_translations FK service_area_id -> service_areas delete=Cascade required=True and IX UNIQUE(service_area_id, language_id); administrative_areas FK parent_administrative_area_id -> administrative_areas delete=Restrict required=False, FK country_id -> countries delete=Restrict required=True; cities both FKs Restrict; service_areas FK city_id -> cities Cascade; outbox_messages unchanged. NO connection was opened, NO database was contacted, NO migration was generated and nothing was written inside the repository; the harness directory was removed (verified absent).
+3) Programmatic orphan-path assertions in the same harness: POLYMORPHIC_OWNER_COLUMNS 0 (no place_kind / place_id column survives anywhere in the model) and TRANSLATION_TABLES_WITHOUT_FK <none> (every *translation* table has a real FK). This is the evidence that "no polymorphic orphan path remains in the EF model".
+4) Repo-wide residue check (src, excluding bin/obj): zero remaining references to GeographyPlaceKind, PlaceNameTranslation or place_kind.
+5) Contracts integrity: CONTRACTS_UNCHANGED.
+- Per the bounded-verification rule: no full solution build, no broad test suite, no DB access, no service restart, no migration generation/application. No model snapshot was created.
+
+EXCLUDED ACTIONS (explicit non-actions)
+- No migration, no model snapshot, no "dotnet ef" invocation, no database update/query/seed, no provider or API integration, no Host DI, no endpoint, no module composition class, no service startup, no running-system change.
+- No change to Order, AddressBook, Fulfillment, Payment, Settlement, Catalog, Offer, Shipping/Checkout, frontend, or the legacy geography route/constant/pinned Host guard.
+- No new module or manifest registration/certification; ARCH-COMPLETE-002 not claimed; D3/D8/D9 preserved; D10 remains OPEN; no change to parent/country hierarchy semantics (cross-country ancestor consistency and hierarchy cycles untouched, per the Architect's explicit deferral).
+- No lookup implementations, no Application layer, no application-only validation substituted for real FKs, no unrelated edits, no dummy/probe result POST to Bridge /api/results, no automatic next task.
+
+COMMIT / PUSH EVIDENCE
+- Commit: "TB-SHIPPING-GEOGRAPHY-TRANSLATION-INTEGRITY-039: replace polymorphic place names with per-kind FK translation tables" — 7 files changed, 520 insertions(+), 54 deletions(-).
+- git push origin main => "a0eb0d1e9..da6f33944  main -> main" (succeeded).
+- git fetch origin; LOCAL == ORIGIN == da6f339440260047f56210bfc36008d09ec71165. Divergence: none. No force-push.
+
+TIME USED
+- Claim at 2026-10-14T09:46:50Z; push completed 2026-10-14T09:49:42Z => approximately 3 minutes wall-clock (well within the 30-minute HARD timebox).
+
+CERTIFICATION / MANIFEST STATUS
+- Geography: INERT, NOT WIRED, NOT REGISTERED in tmar-module-structure-manifests.json, NOT structure-certified, ARCH-COMPLETE-002 NOT claimed, no migration and no model snapshot exist. The module still has no Application/Endpoints/Tests projects, which is intentional.
+
+REMAINING RISKS / OPEN ITEMS (none blocking; migration readiness deliberately NOT claimed)
+1. Cross-country ancestor consistency is still unexpressed: the model cannot require cities.administrative_area_id to belong to the same country_id as the city. Architect-deferred to its own slice; untouched here.
+2. Administrative-hierarchy cycles: the domain rejects only a direct self-parent; multi-node cycles (A -> B -> A) are not prevented by the model. Architect-deferred to its own slice; untouched here.
+3. D10 (explicit administrative level) remains OPEN; the per-kind tables intentionally say nothing about levels.
+4. LanguageId is an external scalar identity: the database cannot verify a language exists (that lives in Localization, which Geography must not reference). Intentional per D9.
+5. The four per-kind tables duplicate the same strict shape four times (about 117 lines each) instead of sharing a base type. This was chosen because a shared base would either require a discriminator (reintroducing the polymorphic path) or TPH/TPT complexity across four parents; the duplication is explicit and each entity stays independently readable. If the Architect prefers a shared non-EF abstract shape, that is a follow-up decision, not a defect.
+6. Cascade on the four translation FKs is inert today because no delete path exists, but it becomes live behaviour if a future task ever deletes places; that future task must re-confirm the rule consciously.
+7. Full solution build and the architecture test suite were intentionally not run (bounded verification); guard impact was assessed by inspection and no guard reads the Geography module, so residual risk is low but not zero until a full run is authorized.
+8. No model snapshot exists, so the first authorized migration will be a full initial create and will include this per-kind translation shape and the deferred gaps above.
+
+RECOMMENDED ONE BOUNDED NEXT STEP (NOT executed, requires Architect authorization)
+- TB-SHIPPING-GEOGRAPHY-HIERARCHY-CONSISTENCY-040: enforce the two Architect-deferred pre-migration blockers inside the inert model - cross-country ancestor consistency for cities (and any future area->country ancestor rule) and administrative-hierarchy cycle prevention - using only constraint/check shapes that PostgreSQL and the existing EF provider actually support, with the same inert-only discipline (no migration, no DB, no Host wiring). Entry criteria: Architect acceptance of this report plus an explicit ruling on the acceptable enforcement vehicle (database check constraint vs domain-only). Only after that should a migration task be considered.
+
+STOP
+- Worker PASS != Architect ACCEPT. Final state: STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE. No polling, no new task.
+END_TOOBA_WORKER_RESULT

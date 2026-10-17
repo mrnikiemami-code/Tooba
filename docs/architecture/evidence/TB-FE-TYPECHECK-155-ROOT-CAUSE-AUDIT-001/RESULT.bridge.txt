@@ -1,0 +1,64 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Parent-Task: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Verdict: AUDIT_COMPLETE_AWAITING_ARCHITECT_REVIEW
+Base-SHA: 0420bb14a88b87b1230320102cb97fd8d8f47127
+Final-SHA: 3fda1a8c01b644a180c881abaaa4287fadefe5d2
+Summary: AUDIT_READ_ONLY executed. The declared script runs exactly ONE check (tsc --noEmit); no second tool, no lint/build. At BASE SHA the typecheck is RED with EXACTLY 155 errors in 31 unique files: npm run typecheck exit 2 (npm wraps a non-zero compiler exit) and local node_modules/.bin/tsc --noEmit exit 1; local TypeScript 5.9.3 (package.json range is ^5.7.3), Node v24.15.0, npm 11.12.1; tsconfig untouched, nothing excluded; the only stderr noise was an unrelated npm "devdir" config warning. The reported ~155 remains accurate. Every diagnostic was parsed mechanically from the raw compiler output into path, line, column, TS code and message, and clustered by root cause; the twelve clusters sum to exactly 155 and their per-code sums match the code histogram exactly. Code histogram: TS2741 97, TS2339 16, TS2322 15, TS2345 7, TS7006 6, TS2353 5, TS2305 2, TS2554 2, TS2304 1, TS2344 1, TS2459 1, TS2739 1, TS2740 1. TOP ROOT #1 (96 errors, 62%) legacy GridColumnDef.maxWidth is declared REQUIRED at design-system/data-grid/types.ts:102 while the real runtime treats it as optional in three independent places: the bridge maps maxWidth straight into AG Grid ColDef.maxWidth which is optional and ignores undefined, the same bridge deliberately omits the cap for the actions column and guards actionsColumn.maxWidth != null with the explicit comment "without a forced cap", and legacy-grid-bridge.test.ts already asserts "leaves actions maxWidth open when not provided". So all 95 cap-less column literals are phantom type errors, not 95 UI bugs; the declaration was introduced as required in 0ba8d1cfe and never reconciled with ~20 consuming screens. TOP ROOT #2 (9 errors) SectionDisplayConfig vs shared-composition-renderer: the renderer reads config.bannerImageUrl / bannerMediaAssetId / bannerHref on a parameter typed SectionDisplayConfig, which is owned by app/composition/composition-api.ts and declares none of them while declaring heightPreset, a field its own parser never populates. parseSectionDisplayConfig is a whitelist that maps only title/subtitle/href/itemCount/sourceKind, so even a correctly typed banner key is DROPPED at runtime on the Home path - a real behaviour gap on a Shopeiva-locked surface, not only type noise. The same banner keys are already written by admin-landing-section-forms and consumed by the product-showcase embla rail, so the payload contract exists. TOP ROOT #3 (6 errors) discriminated AdminResult unions read before narrowing: app/admin/settings/page.tsx reads result.denied five times BEFORE checking result.ok (correct form is !result.ok && result.denied), and admin-landing-pages-screen reads pageResult.message on the ok:true branch. Behind it at least four competing local AdminResult shapes coexist (lib/admin/admin-result.ts with state/data/status/message, plus menus, campaigns and landing-pages variants with differing denied/message members), so no single narrowing rule holds. In that same file, admin-landing-pages-screen.tsx:431 onClick={refresh} passes a MouseEvent into a handler widened to take {notice?,tone?} - a genuine bug beyond the type error. Named areas resolved: GridColumnDef.maxWidth confirmed as the dominant root; admin-languages 11 errors (8 maxWidth + 3 flex/pinned excess properties); admin-receipts 8 errors (7 maxWidth + 1 actions literal missing width/minWidth/maxWidth); SectionDisplayConfig vs shared-composition-renderer confirmed as root #2; i18n/middleware-locale confirmed as 1 error - middleware-locale imports type Locale from ./routing.ts while routing.ts imports Locale from ./locale.ts without re-exporting it, and the canonical owner is lib/i18n/locale.ts as used elsewhere. Clusters: C1 maxWidth 96; C2 SectionDisplayConfig banners 9; C3 flex/pinned excess properties 5; C4 legacy-grid-bridge field/ColDefField 1; C5 AdminResult narrowing 6; C6 stale category meta-keyword exports plus stale test 4; C7 i18n Locale re-export 1; C8 missing local annotations 8; C9 form/input value drift 7; C10 domain contract drift 4; C11 admin menus stale helper signatures 3; C12 independent local admin defects 10. Separated genuine bugs from stale tests/contracts from product decisions: genuine bugs are the onClick MouseEvent leak, the wrong-branch message read, the silent Home banner-config drop, and the required-but-never-applied maxWidth cap; stale tests/contracts are category-admin-form.test.ts plus category-admin-screen.tsx referencing removed parseMetaKeywords/serializeMetaKeywords, the legacy-grid-bridge test fixture, admin-api.test.ts missing AdminOrderDetail.consolidatedPackages, the admin-builder-ux-r8 guard asserting false into a true slot, and the menus API calling adminHeaders(boolean), parseAdminProblemErrorCode with one argument and mapAdminErrorMessage with a Persian sentence where an AdminErrorLocale key is required. Product/visual STOP questions were flagged rather than invented: whether maxWidth becomes optional or 95 real caps are chosen, whether flex/pinned get first-class support in the legacy bridge or those three screens complete their AppDataGrid migration (LOCK-SF-266/LOCK-SF-322 direction), and how to support actionSlots: 5 when buildPinnedActionsColumnDef only accepts 1|2|3. Ordered recovery plan delivered: T1 C1 optional maxWidth (155 -> 59 expected, type-only), T2 C5 narrowing plus the two genuine admin-listing bugs (-> 52), T3 C6 stale category API (-> 48), T4 C7 i18n import (-> 47), T5 C2 Home banner config STOP-gated (-> 38, needs critical-storefront visual review), T6 C3 STOP-gated (-> 33), T7 local clusters, T8 final green typecheck plus CI enforcement. RECOMMENDED FIRST BOUNDED REPAIR TASK: TB-FE-GRIDCOLUMNDEF-MAXWIDTH-OPTIONAL-001 - scope design-system/data-grid/types.ts, design-system/app-data-grid/legacy-grid-bridge.ts, design-system/data-grid/DataGrid.tsx (clampWidth fallback so no new error appears) and legacy-grid-bridge.test.ts; expected 155 -> 59; zero runtime delta; validation npm run typecheck, npm run test:grid, npm run test:architecture; rollback = revert one commit. This repair was NOT executed.
+Reproduction-State: REPRODUCED_AT_BASE_AND_RE_EVALUATED_AT_FINAL
+Declared-Script-Count-State: SINGLE_CHECK_TSC_NOEMIT
+Npm-Typecheck-Exit-Code: 2
+Direct-Tsc-Exit-Code: 1
+Local-TypeScript-Version: 5.9.3
+PackageJson-TypeScript-Range: ^5.7.3
+Node-Npm-Version: v24.15.0 / 11.12.1
+Tsconfig-Change-State: NONE
+Excluded-Files-State: NONE
+Actual-Error-Count: 155
+Reported-155-Still-Accurate-State: YES
+Unique-Files-With-Errors: 31
+Diagnostics-By-Code: TS2741=97, TS2339=16, TS2322=15, TS2345=7, TS7006=6, TS2353=5, TS2305=2, TS2554=2, TS2304=1, TS2344=1, TS2459=1, TS2739=1, TS2740=1
+Cluster-Totals: C1_maxWidth=96, C2_SectionDisplayConfig=9, C3_flex_pinned=5, C4_bridge_field=1, C5_AdminResult_narrowing=6, C6_category_meta_keywords=4, C7_i18n_Locale=1, C8_missing_annotations=8, C9_form_value_drift=7, C10_domain_contract_drift=4, C11_menus_api_stale=3, C12_local_admin_defects=10
+Cluster-Sum-Equals-Total-State: VERIFIED_155
+Cluster-Sum-Equals-Code-Histogram-State: VERIFIED
+Top-Root-1: GridColumnDef.maxWidth declared required while runtime treats it as optional (96 errors, 62%)
+Top-Root-2: SectionDisplayConfig is a whitelist projection dropping the banner keys the shared composition renderer reads (9 errors, real Home behaviour gap)
+Top-Root-3: discriminated AdminResult unions read before narrowing plus four competing local AdminResult shapes (6 errors)
+Named-Area-Admin-Languages-State: 11_ERRORS_8_MAXWIDTH_PLUS_3_FLEX_PINNED
+Named-Area-Admin-Receipts-State: 8_ERRORS_7_MAXWIDTH_PLUS_1_MISSING_WIDTH_MINWIDTH_MAXWIDTH
+Named-Area-SectionDisplayConfig-State: CONFIRMED_9_ERRORS_AND_RUNTIME_CONFIG_DROP
+Named-Area-I18n-Middleware-Locale-State: CONFIRMED_1_ERROR_LOCALE_NOT_REEXPORTED_BY_ROUTING
+Genuine-Bug-Count-State: 4_CONFIRMED_ONCLICK_MOUSEVENT_WRONG_BRANCH_MESSAGE_HOME_BANNER_DROP_MAXWIDTH_CAP_LIE
+Stale-Test-Or-Contract-State: 5_GROUPS_CONFIRMED
+Stop-Question-State: 3_RAISED_MAXWIDTH_DIRECTION_FLEX_PINNED_DIRECTION_ACTIONSLOTS_5
+Recommended-First-Repair-Task-ID: TB-FE-GRIDCOLUMNDEF-MAXWIDTH-OPTIONAL-001
+Recommended-First-Repair-Expected-Reduction: 155_TO_59
+Recommended-First-Repair-Executed-State: NO
+Avoided-Antipatterns-State: NONE_NO_ANY_NO_TS_IGNORE_NO_TSCONFIG_EXCLUSION_NO_TYPE_WEAKENING_NO_GATE_DISABLE_NO_BASELINE_EDIT
+Production-Code-Changed-State: ZERO
+Test-Expectation-Changed-State: NONE
+Baseline-Snapshot-Changed-State: NONE
+Amsc-Wave-State: NONE
+Commands-Run: cd src/frontend && npm run typecheck (exit 2, 155 errors); node_modules/.bin/tsc --noEmit (exit 1, 155 errors) at BASE and at FINAL; node_modules/.bin/tsc --version (5.9.3)
+Tests-Run: NONE
+Tests-Not-Run: no npm run test:* suite, no test:critical-storefront, no test:grid, no test:architecture, no frontend build, no backend build or test, no AMSC wave
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED
+Unrun-Test-Pass-Claim-State: NONE
+Concurrent-Main-Change-Handling: origin/main advanced twice during the audit (0420bb14a -> c4c8e87f2, findings-register/recovery docs only, no frontend source); the audit commit was rebased onto c4c8e87f2 without rewriting published history, and the typecheck was re-run at FINAL SHA 3fda1a8c0 yielding the same exact 155 errors with no new diagnostics
+Evidence-Paths: docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/summary.md; docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/diagnostic-inventory.md; docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/diagnostics.csv; docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/typecheck-npm-raw.txt; docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/typecheck-tsc-raw.txt
+Changed-Files: docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/summary.md (added); docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/diagnostic-inventory.md (added); docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/diagnostics.csv (added); docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/typecheck-npm-raw.txt (added); docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/typecheck-tsc-raw.txt (added); docs/ai/tasks/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001.task.md (added)
+Commit-SHA: 3fda1a8c01b644a180c881abaaa4287fadefe5d2
+HEAD-Equals-Origin-Main: YES
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED_NOT_REMOVED_NOT_STASHED
+PreExisting-Dirty-Files-State: DOCUMENTED_AND_PRESERVED
+Development-Service-Disruption-State: NONE
+Register-Read-State: NOT_READ_OPT_IN_RESPECTED
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_AFTER_TYPECHECK_AUDIT
+STOP
+END_TOOBA_WORKER_RESULT

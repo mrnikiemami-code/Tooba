@@ -1,0 +1,16 @@
+{
+  "bridgeTaskRowId": "bf6e4b5a-8b44-4442-ac4e-41e4183b9cf5",
+  "channelId": "tooba-main",
+  "taskId": "TB-SHIPPING-MVP-DESTINATION-LIVE-067",
+  "parentTask": "TB-SHIPPING-MVP-DESTINATION-066",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "program": "TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE",
+  "mode": "BOUNDED_GEOGRAPHY_BACKED_STOREFRONT_DESTINATION_AND_LIVE_CART_PROOF",
+  "expectedBaseSha": "001fa35f7599b4b8dd7d489b9cdc62836ab18ed4",
+  "claimedAtUtc": "2026-10-14T23:31:52.6231805",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "automaticNextImplementationTask": "NONE",
+  "timebox": "45 minutes HARD",
+  "status": "PASS"
+}

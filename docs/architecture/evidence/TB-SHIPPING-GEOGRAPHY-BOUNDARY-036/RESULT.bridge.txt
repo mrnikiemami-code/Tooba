@@ -1,0 +1,267 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GEOGRAPHY-BOUNDARY-036
+Parent-Task: TB-SHIPPING-GEOGRAPHY-DESIGN-035
+Pipeline-Protocol: BRIDGE-WAKE-V1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ARCHITECTURE-PLANNING
+Mode: DESIGN_ONLY_SOURCE_GROUNDED_ADR
+Bridge-Task-Row: 0f3fd4a3-25b2-40a7-82b7-a858227e9027
+Status: WORKER_COMPLETE — STOP FOR INDEPENDENT ARCHITECT ACCEPTANCE
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: a814b8cb924e0c591b36cd99e561ad9bf2b020eb
+Base-SHA: a814b8cb924e0c591b36cd99e561ad9bf2b020eb
+Code-SHA: 366f18beae463db1c7f2b54f2f1a61c8bdc61db8
+Evidence-SHA: 366f18beae463db1c7f2b54f2f1a61c8bdc61db8
+automaticNextImplementationTask: NONE
+
+== 1. PREFLIGHT ==
+
+Branch: main
+Expected-Base-SHA: a814b8cb924e0c591b36cd99e561ad9bf2b020eb
+HEAD at claim:     a814b8cb924e0c591b36cd99e561ad9bf2b020eb  (MATCH)
+origin/main:       a814b8cb924e0c591b36cd99e561ad9bf2b020eb  (MATCH)
+NO merge, reset, rebase, stash, cherry-pick or force-push was performed: none was needed.
+
+Worktree status at preflight (recorded honestly, NOT clean):
+  Pre-existing tracked modifications (untouched, preserved, NEVER staged or committed):
+    M docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md
+    M src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs
+    M src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx
+    M src/frontend/app/admin/admin-order-detail-screen.tsx
+    M src/frontend/app/storefront/storefront-landing-blocks.tsx
+  Plus pre-existing untracked task/evidence artifacts and bin/obj outputs (untouched).
+  These are unrelated to task 036 and were preserved exactly as found.
+
+Output file pre-check (STOP-if-exists rule honoured):
+  docs/planning/shipping/SHIPPING-GEOGRAPHY-BOUNDARY-ADR-036.md  existed? NO => safe to create.
+  docs/planning/shipping contained exactly the two prior documents before this task:
+    SHIPPING-CURRENT-STATE-AUDIT.md (034), SHIPPING-GEOGRAPHY-DESIGN-035.md (035)
+  Both verified UNMODIFIED after work (git status clean for those paths).
+
+No other task was active. No service restart, no live DB query, no migration, no Host change,
+no runtime state modification, no checkout/payment operation.
+
+== 2. AUDITED EVIDENCE PATHS (verified against audited HEAD a814b8cb9) ==
+
+Neutral-capability precedent:
+  src/backend/Modules/StoreContext/Tooba.StoreContext.Contracts/Current/StoreCommerceContext.cs L18-L34
+  src/backend/Modules/StoreContext/Tooba.StoreContext.Infrastructure/Current/StoreCommerceContextAccessor.cs
+  src/backend/Modules/StoreContext/Tooba.StoreContext.Infrastructure/DependencyInjection/StoreContextModule.cs
+  (module = 3 files; Contracts + Infrastructure only; Contracts-only seams)
+
+Module structure / certification lock:
+  docs/architecture/tmar-module-structure-manifests.json
+    keys: modules[32], modules[].module, modules[].structureCertified=true,
+          modules[].lockVersion="ARCH-COMPLETE-002", rules (APPLICATION_CAPABILITY_FOLDERS,
+          ENDPOINTS_CAPABILITY_FOLDERS, INFRASTRUCTURE_CAPABILITY_INTEGRATION_FOLDERS,
+          PATH_NAMESPACE_ALIGNMENT, ROOT_ALLOWLIST, NO_NAMESPACE_ALIAS_WORKAROUND),
+          uncertifiedHttpOwningModules=[], preCertModules=[]
+    modules list verified: AccessControl, Identity, Media, OperatorProfile, ProductQnA, BulkInquiry,
+      Wishlist, UserPreference, PageComposition, Catalog, Party, Localization, Order, Cart,
+      StoreContext, Offer, Payment, Settlement, Story, Fulfillment, AddressBook, Content,
+      CustomerProfile, Inventory, Notification, Pricing, ProductWorkspace, Promotion, Returns,
+      Support, Tax, Wallet   (32)
+
+Pinned guard (must stay intact):
+  src/backend/Host/Tooba.Host.Tests/Architecture/HostStorefrontAmcR3GuardTests.cs
+    L5-L8 (doc comment "geography → Order.Endpoints"), L73-L85 (Order_owns_geography_provinces_route
+    asserts MapGet("/geography/provinces" AND StorefrontIranGeography.Provinces)
+
+Legacy geography surface:
+  .../Tooba.Order.Endpoints/Storefront/StorefrontOrderEndpoints.cs L41-L42
+  .../Tooba.Order.Application/Storefront/Geography/StorefrontIranGeography.cs L6-L24
+  .../Tooba.Order.Application/Storefront/Models/StorefrontOrderModels.cs L110 (StorefrontProvinceOption),
+    L114-L131 (StorefrontShippingDraftView), L134-L150 (StorefrontShippingProjection)
+  src/frontend/app/storefront/storefront-shipping.tsx L170-L172, L442-L446, L460-L467,
+    L758-L759, L770-L775 (province/city controls are LABEL-valued; DTO Code effectively unused)
+
+AddressBook:
+  .../Tooba.AddressBook.Domain/Aggregates/CustomerAddress.cs L21 (DefaultCountry="IR"),
+    L42-L79 (Country L60, ProvinceName? L63, CityName L66), L199-L209 (ApplyFields)
+  .../Tooba.AddressBook.Contracts/Dtos/CustomerAddressRecord.cs L4-L18
+  .../Tooba.AddressBook.Contracts/Ports/IAddressBookCheckoutLookup.cs L9-L13
+
+Order persistence / snapshot / handoff:
+  .../Tooba.Order.Infrastructure/Persistence/OrderDbContext.cs L115-L118 and L139-L142
+    (two expand-pattern blocks: ProvinceName/CityName/PostalAddress/PostalCode max 64/64/512/16)
+  .../Tooba.Order.Domain/Aggregates/CheckoutGroup.cs L96, L101, L106, L116, L126, L131, L136, L141
+  .../Tooba.Order.Domain/Checkout/CartShippingDraft.cs L40, L43, L52, L145-L149
+  .../Tooba.Order.Contracts/Fulfillment/OrderFulfillmentContracts.cs L6-L21
+    (OrderFulfillmentHandoffSnapshot; L14 ProvinceName, L15 CityName), reader iface L33+
+
+Localization (owns language, not place):
+  .../Tooba.Localization.Domain/Aggregates/Language.cs L18-L26
+  .../Tooba.Localization.Application/Ports/ILanguageDirectory.cs L6-L17
+  .../Tooba.Localization.Contracts/Ports/LanguageLookupContracts.cs L4-L18
+    (LanguageLookupSnapshot + ILanguageLookup — language listing ONLY; no generic translation service)
+  .../Tooba.Localization.Contracts/Ports/ILanguageReferenceGuard.cs L7-L11
+  .../Tooba.Localization.Contracts/Ports/ILanguageActivationPort.cs
+
+Translation-row precedent (LanguageId-keyed, unique (entityId, LanguageId)):
+  .../Tooba.Fulfillment.Infrastructure/Persistence/FulfillmentDbContext.cs L176-L184
+    (shipping_service_translations; unique index L183) and L194-L201
+  .../Tooba.Catalog.Infrastructure/Persistence/CatalogDbContext.cs L258 (category_translations),
+    L426 (mega_menu_item_translations), L594 (unit_of_measure_translations)
+
+Shipping catalogue cross-module coupling:
+  .../Tooba.Fulfillment.Infrastructure/Persistence/FulfillmentDbContext.cs L167 (shipping_services)
+  .../Tooba.Fulfillment.Infrastructure/Shipping/ShippingCatalogReader.cs L20, L54, L78-L92
+
+Party seller origin (only free text):
+  .../Tooba.Party.Application/Seller/Models/PartySellerSettingsModels.cs L10-L31 (AddressLine only)
+  .../Tooba.Party.Contracts/Ports/IPartySellerSettings.cs
+
+Serviceability + verified fail-open:
+  .../Tooba.Order.Application/Storefront/Services/StorefrontShippingCalculator.cs L72-L83
+    (empty AllowedProvinces => TRUE = unrestricted; blank province => false; else exact name match)
+  .../Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs L429-L433
+    (caller enforces allow-list ONLY when province is non-blank => FAIL-OPEN)
+  .../Tooba.Fulfillment.Contracts/Shipping/ShippingMethodsOptions.cs L10-L17 (L16 AllowedProvinces),
+    L36-L47 (shipped defaults leave AllowedProvinces EMPTY for every method)
+
+Prior planning documents (read-only, unmodified):
+  docs/planning/shipping/SHIPPING-CURRENT-STATE-AUDIT.md
+  docs/planning/shipping/SHIPPING-GEOGRAPHY-DESIGN-035.md
+  docs/architecture/SHIPPING-ARCHITECTURE.md (DRAFT)
+
+== 3. D3 / D8 / D9 CONCLUSIONS vs UNKNOWNS ==
+
+D3 OWNERSHIP — RECOMMENDED (one owner):
+  A dedicated NEUTRAL GEOGRAPHY REFERENCE CAPABILITY owns place identity + labels, exposing
+  Contracts-only read ports. Suggested prefix Tooba.Geography.* (naming subject to Architect).
+  Compared and rejected, each on source grounds, with the evidence cited in the document:
+    Order (current de-facto owner; state/transaction module, would force Order into a
+      reference-data dependency for AddressBook/Shipping),
+    AddressBook (owns customer PII rows E9/E10; would become a platform dependency),
+    Catalog (product taxonomy owner; geography is not product),
+    Localization (owns language/locale E14, not place),
+    Fulfillment (would entrench the flagged Fulfillment->Order catalogue coupling E16),
+    Party (organizational identity; only free-text AddressLine E17),
+    StoreContext (models request-scope commerce context E2, not a persisted hierarchy with
+      translations; used as the SHAPE precedent, not the host).
+  Responsibility split stated explicitly: AddressBook owns address rows (ids nullable);
+  Order owns the frozen destination snapshot (ids + rendered labels); Shipping (future) owns
+  origin×destination×service COVERAGE/Verdict; Localization owns language set/default;
+  Host composes only. Geography owns NO commercial policy and NO verdicts.
+  Dependency direction: Geography is a leaf (all may depend on it; it depends on BuildingBlocks
+  and Localization.Contracts only).
+
+D8 LEGACY COMPATIBILITY — RECOMMENDED + D8-OPEN:
+  Keep GET /v1/storefront/geography/provinces, the StorefrontIranGeography.Provinces symbol, the
+  StorefrontProvinceOption shape and the pinned guard UNMODIFIED. Add a NEW additive catalogue read
+  inside the geography capability. Ids are added nullable. The frontend label->id switch is a
+  separate behaviour-affecting task. Later, the legacy route may become a compatibility shim that
+  projects the new catalogue back into the existing DTO shape (guard still passes). Amending or
+  removing the guard is expressly NOT proposed here and remains an OPEN Architect decision.
+D9 LOCALIZATION — RECOMMENDED + D9-OPEN:
+  Geography owns its own LanguageId-keyed label translations (precedent E15, used twice already).
+  Language set/default come from Localization Contracts (ILanguageLookup, E14). Fallback chain:
+  requested language -> default language (IsDefault) -> stable code. Ids/codes are never localized.
+  D9-OPEN: no generic cross-module translation service exists today and none is invented.
+D10 — OPEN: whether AdministrativeArea carries an explicit level discriminator
+  (province/state/region) or an arbitrary-depth self-referencing hierarchy. No current requirement
+  evidence; blocks nothing before Phase 0b.
+Extra register rows added: D13 (a new module must later be registered in the structure manifest and
+  certified under ARCH-COMPLETE-002, E1 — cost accepted only if D3 is approved),
+  D14 (whether Phase 0 needs any HTTP surface at all; recommended data+ports only),
+  D15 (structured seller dispatch origin — DEFERRED).
+
+UNRESOLVED / UNVERIFIED (stated, not guessed):
+  U1 live DB IsActive state of shipping_services (runtime not probed per task constraint).
+  U2 whether other frontend surfaces duplicate the 12-province list.
+  U3 reusability/cost of a future ARCH-COMPLETE-002 certification for the new capability.
+  U4 whether the legacy AllowedProvinces bridge can be lossless for a future zone/polygon model
+     (risk, not a Phase 0 blocker).
+
+OPERATIONAL SAFETY CHECKS ADDED (to prevent a checkout-wide shipping outage):
+  G1 no-regression shadow comparison of legacy province-name resolution vs the new resolver over
+     the current 12-province set + representative free-text values.
+  G2 explicit coverage rows for EVERY service in the effective enabled set
+     (Tooba:ShippingMethods:EnabledCodes ∩ DB IsActive) BEFORE default-deny applies.
+  G3 empty AllowedProvinces currently means UNRESTRICTED (E19 L72-L76) and must NOT be silently
+     inverted to deny-all; inversion requires an explicit Architect ruling plus completed G2.
+  G4 shadow mode + single config kill switch (legacy still decides until G1-G3 pass).
+  G5 rollback = flag flip (all schema changes additive/nullable).
+  G6 historical orders never re-evaluated; Unresolved/Ambiguous never blocks address CRUD or
+     order viewing.
+  G7 the verified fail-open caller (StorefrontShippingService.cs L429-L433) is fixed TOGETHER with
+     Phase 3 as one reviewed change with a blank-destination regression scenario — not earlier.
+
+== 4. CHANGED PATHS ==
+
+Committed and pushed (exactly ONE path):
+  docs/planning/shipping/SHIPPING-GEOGRAPHY-BOUNDARY-ADR-036.md   (new file; the ADR)
+
+Local-only evidence artifacts (deliberately NOT committed, per the write-only-report rule):
+  docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-BOUNDARY-036.task.md        (received artifact receipt)
+  docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-BOUNDARY-036/RESULT.bridge.txt
+  docs/architecture/evidence/TB-SHIPPING-GEOGRAPHY-BOUNDARY-036/post-result.js
+
+Verified NOT modified:
+  AGENTS.md                                        => CLEAN
+  docs/architecture/SHIPPING-ARCHITECTURE.md       => CLEAN (still DRAFT, NOT certified)
+  docs/planning/shipping/SHIPPING-CURRENT-STATE-AUDIT.md   => CLEAN
+  docs/planning/shipping/SHIPPING-GEOGRAPHY-DESIGN-035.md  => CLEAN
+  StorefrontIranGeography.cs, StorefrontOrderEndpoints.cs, HostStorefrontAmcR3GuardTests.cs,
+  AddressBook, Order, Localization, Catalog, Fulfillment, Party, StoreContext, Host, frontend,
+  Payment, Settlement and every other module file           => UNTOUCHED
+
+Pre-existing unrelated dirty/untracked work (§1) was NOT staged, committed or pushed.
+
+== 5. COMMANDS / CHECKS ==
+
+  git rev-parse HEAD ; git rev-parse origin/main          (baseline a814b8cb9 + final match)
+  Test-Path docs/planning/shipping/SHIPPING-GEOGRAPHY-BOUNDARY-ADR-036.md   (False before create)
+  Get-ChildItem docs/planning/shipping -File              (only 034 + 035 present)
+  node -e "require('./docs/architecture/tmar-module-structure-manifests.json')"  (modules/rules/lock)
+  Read/Grep of every path and line range cited in §2 (including exact line-range re-verification of
+    OrderFulfillmentContracts.cs L6-L21 and CustomerAddress.cs L56-L70 after drafting; one citation
+    was corrected from CityName L67 to L66)
+  git status --porcelain -- docs/planning
+  git status --porcelain -- AGENTS.md docs/architecture/SHIPPING-ARCHITECTURE.md
+      docs/planning/shipping/SHIPPING-CURRENT-STATE-AUDIT.md
+      docs/planning/shipping/SHIPPING-GEOGRAPHY-DESIGN-035.md      => empty (all untouched)
+  git status --porcelain --untracked-files=no                     (pre-existing dirty recorded)
+  git add docs/planning/shipping/SHIPPING-GEOGRAPHY-BOUNDARY-ADR-036.md
+  git diff --cached --name-only  => exactly 1 path
+  git commit ; git push origin main ; git fetch origin ; git rev-parse HEAD/origin/main
+
+  Result: HEAD == origin/main == 366f18beae463db1c7f2b54f2f1a61c8bdc61db8
+          push range a814b8cb9..366f18bea  main -> main  (SUCCESS)
+
+No test suite was executed (design-only task; no heavyweight tests, per task instruction).
+
+== 6. NON-ACTIONS (explicit) ==
+
+0 C#/TS/frontend/backend/Host modifications; 0 endpoints; 0 DTOs; 0 wiring.
+0 schema changes; 0 migrations; 0 DB queries; 0 DB writes; 0 seeds; 0 config changes.
+0 tests created or executed. 0 service restarts; 0 runtime deployment; 0 runtime intervention.
+0 checkout/payment/fulfillment operations.
+0 new Shipping module and 0 geography module created; 0 module extraction performed.
+0 edits to AGENTS.md, the architecture draft, audit 034 or design 035; no certification or ACCEPT claimed.
+0 new tasks created; 0 follow-on execution; 0 polling.
+No hidden or placeholder Bridge POST was made.
+
+== 7. STATUS ==
+
+Deliverable: docs/planning/shipping/SHIPPING-GEOGRAPHY-BOUNDARY-ADR-036.md (created, committed, pushed).
+Contains: PROPOSED/NOT CERTIFIED header + base SHA; 20-row source-verified evidence set with exact
+paths/line ranges; an 8-candidate ownership comparison with ONE recommended D3 owner and a text
+dependency diagram; Contracts-only boundary specifications for Geography lookup, AddressBook, Order
+and Shipping coverage; D8 guard-safe stage table; D9 translation ownership/fallback; corrected phased
+sequence; a 7-gate operational safety checklist; a decision register (D3/D8/D9/D10 + D13/D14/D15);
+unresolved facts/risks; and exactly ONE bounded next task recommendation
+(TB-SHIPPING-GEOGRAPHY-MODULE-FOUNDATION-037) that was NOT created and NOT executed.
+Elapsed: approx. 26 minutes (within the 30-minute HARD timebox).
+Elapsed-Units: minutes
+Actual-Push-Result: SUCCESS (a814b8cb9..366f18bea main -> main)
+ADR-Commit-SHA: 366f18beae463db1c7f2b54f2f1a61c8bdc61db8
+
+Status: PASS (ADR delivered as specified) — Worker PASS does not imply Architect ACCEPT.
+Final state: STOP_FOR_ARCHITECT.
+automaticNextImplementationTask = NONE.
+Do NOT create or auto-run TB-SHIPPING-GEOGRAPHY-MODULE-FOUNDATION-037 or any next task.
+No further work performed after posting this result.
+END_TOOBA_WORKER_RESULT

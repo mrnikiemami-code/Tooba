@@ -10,7 +10,7 @@ Protocol: BRIDGE-WAKE-V1
 Status: PASS
 Base-SHA: 1f5edc29db4a5ba0a7ac523e6b920981186a7103
 Code-Commit-SHA: c0188f9d15e9aba0ea7a0cbca1ce8d8d131c1d7b
-Evidence-Commit: 66a6569cedb4c4b1287fed7b776fe0895cf41922
+Evidence-Commit: db80a0231ece17a6da3cf30ab4728d98509d67ba
 Automatic-Next-Task: NONE
 
 SUMMARY

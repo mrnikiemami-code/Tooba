@@ -1,0 +1,63 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-ADMIN-SCREENS-REACTNODE-IMPORT-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR
+Status: PASS
+Verdict: BOUNDED_REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: 1a18bab5ca5f98258c8f34ca734186322bea91ca
+Expected-Starting-HEAD-Match-State: VERIFIED
+Expected-Starting-HEAD-Equals-Origin-Main-State: VERIFIED
+Preflight-Tracked-Worktree-State: CLEAN_NO_TRACKED_MODIFICATION
+Preflight-Untracked-Artifacts-State: PRE_EXISTING_PRIOR_TASK_EVIDENCE_NOTED_AND_LEFT_UNTOUCHED_NOT_DELETED_NOT_STASHED
+Preflight-Divergence-State: NONE_NO_CONFLICT_NONE
+Diagnostic-Targeted: app/admin/admin-screens.tsx(234,33): error TS2304: Cannot find name 'ReactNode'.
+Cause: admin-screens.tsx annotates truncatedCell with ReactNode at line 234 but never imported it; the file's only react import was the hooks line and a grep for ReactNode in the file returned exactly one hit, the usage itself. No local or design-system owner existed, so the name was simply unresolved.
+Canonical-Owner-Confirmed: react package. ReactNode is react's own exported type and the data-grid contract uses import("react").ReactNode at design-system/data-grid/types.ts:91. The repo-wide idiom is to carry it inline in the existing react import - storefront-shipping.tsx:4, storefront-cart.tsx:4, admin-shell.tsx:5 and design-system/primitives/overlays.tsx:3 among others.
+Change: Exactly one line, in the existing react import of src/frontend/app/admin/admin-screens.tsx - import { useCallback, useEffect, useMemo, useState } from "react" became import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react". No new import statement, no path change, no barrel edit.
+Preserved-Surfaces: truncatedCell's signature and body, every truncatedCell call site, the rendered markup and test ids, all column definitions, saved-view wiring and grid wiring are untouched; the diff is the complete production change.
+Assertion-Suppression-State: NONE_NO_ANY_NO_CAST_NO_TS_IGNORE_NO_TYPE_SUPPRESSION
+Baseline-Evidence-Source: docs/architecture/evidence/TB-FE-LANDING-COMPOSER-DRAG-EVENT-TYPES-001/typecheck-after-tsc.txt copied verbatim to docs/architecture/evidence/TB-FE-ADMIN-SCREENS-REACTNODE-IMPORT-001/typecheck-before.txt
+Baseline-Errors: 26
+Typecheck-Total-After: 25
+Typecheck-Reduction: 1
+Typecheck-Introduced: 0
+Typecheck-Compare-Object-Vs-Baseline: ONLY_THE_REMOVED_LINE_NO_ADDED_LINE
+Diagnostics-Remaining-In-Target-File: NONE
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_25_ERRORS_REMAIN_IN_OTHER_CLUSTERS
+Focused-Test-Run: app/admin/admin-grid-migration.test.ts - 7 PASS / 0 FAIL
+Focused-Test-Selection-Rationale: It is the only existing suite that loads this file's source; it reads app/admin/admin-screens.tsx into a constant and asserts the screen's grid wiring (AppDataGrid, ServerGridPage, the direct-grid migration and its adapter usage), so it genuinely exercises the edited file rather than merely mentioning it. A grep across the admin, dashboard and feature test files confirmed no other suite reads admin-screens.tsx.
+Ceremonial-Test-State: NONE_NOTHING_ADDED_TO_ANY_TEST
+Tsc-Sufficiency-Statement: This is an erased type-only import, so the compiler is the primary proof; the source-loading guard above adds behavioural confirmation without generating ceremonial assertions.
+PreExisting-Failures-Observed: NONE_IN_THE_TEST_RUN
+Tests-Not-Run: the full npm test and test:discovered suites, dependency install, build, backend suites, browser or visual verification, AMSC, and every other guard or characterization suite
+Unrun-Test-Pass-Claim-State: NONE
+Remaining-Issues: 25 TypeScript errors remain in other audited clusters outside this task's scope, each requiring its own bounded task.
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: A single type-only import line in an Admin screen with no runtime, markup or visual effect; no storefront, Home, PDP, Shopeiva, shared-composition or visual surface was touched.
+Scope-Statement: The production change is exactly the one allowed file, src/frontend/app/admin/admin-screens.tsx, and exactly one import line. All other staged paths are the task receipt and evidence files.
+Risks: None. import type is fully erased at emit, so compiled output, bundle and runtime behaviour are byte-identical; the only observable effect is that the compiler can now resolve an annotation that was already written in the source.
+Rollback-Criteria: Revert commit ed0c0ba3b4243d58542b20b6bf95d044e2b0251b; TS2304 at line 234 returns.
+Deviation-State: NONE
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Reset-Or-Stash-State: NONE_NO_RESET_NO_STASH
+Rebase-State: NONE_NO_REBASE_WAS_NEEDED
+Process-Termination-State: NONE_NO_SERVICE_STARTED_RESTARTED_OR_TERMINATED
+Concurrent-Change-State: NONE_UNEXPECTED
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED
+Base-SHA: 1a18bab5ca5f98258c8f34ca734186322bea91ca
+Final-SHA: ed0c0ba3b4243d58542b20b6bf95d044e2b0251b
+Commit-SHA: ed0c0ba3b4243d58542b20b6bf95d044e2b0251b
+Changed-Files: src/frontend/app/admin/admin-screens.tsx (production - one import line); docs/ai/tasks/TB-FE-ADMIN-SCREENS-REACTNODE-IMPORT-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-ADMIN-SCREENS-REACTNODE-IMPORT-001/summary.md, typecheck-before.txt, typecheck-after-tsc.txt, focused-test-admin-grid-migration.txt (added - evidence with the full raw typecheck output and the focused test result)
+Commands-Run: git fetch origin plus HEAD==origin/main==Expected-Starting-HEAD checks at preflight, pre-commit and post-push; node_modules/.bin/tsc --noEmit in src/frontend with a Compare-Object against the baseline; node --experimental-strip-types --test app/admin/admin-grid-migration.test.ts; rg inspections to confirm the canonical ReactNode owner, the repo idiom and the absence of any other test loading this file; git diff and status inspections for scope
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: STOP_FOR_ARCHITECT_INDEPENDENT_ACCEPTANCE
+STOP
+END_TOOBA_WORKER_RESULT

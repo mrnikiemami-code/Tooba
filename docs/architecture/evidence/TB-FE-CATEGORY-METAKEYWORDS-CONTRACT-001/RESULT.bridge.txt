@@ -1,0 +1,62 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-CATEGORY-METAKEYWORDS-CONTRACT-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR
+Status: PASS
+Verdict: REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: a4703078913759304f4fc2289c8480783d975317
+Expected-Starting-HEAD-Match-State: VERIFIED
+Preflight-Head-Equals-Origin-Main-State: VERIFIED_AT_PREFLIGHT
+Preflight-Divergence-State: NONE
+Base-SHA: a4703078913759304f4fc2289c8480783d975317
+Final-SHA: 60e2623602bdeeb452f3aa3cc65703595bc6521d
+Commit-SHA: 60e2623602bdeeb452f3aa3cc65703595bc6521d
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Source-Proof: The UI and its focused test both referenced a named helper contract that was never present at its owner. category-admin-screen.tsx imports parseMetaKeywords and serializeMetaKeywords from ./catalog-category-api.ts, and category-admin-form.test.ts asserts the API module contains both and imports them at line 364. Real consumers are MetaKeywordsViewChips (view-only chips) and MetaKeywordsTagInput (removable tag chips with the mandatory translation-edit-meta-keyword-chips / translation-edit-meta-keyword-remove- testids). The API/DTO module owns the field: CategoryTranslationDto.metaKeywords is string | null, mapped from Host at catalog-category-api.ts:279-282 (empty becomes null) and written back at :473 as input.metaKeywords ?? null.
+Missing-Contract-Proof-Not-A-Rename-Regression: git log --all -S "export function parseMetaKeywords" returned no commits; git log -S "parseMetaKeywords" -- src/frontend/app/admin/catalog-category-api.ts returned no commits; a repository-wide search found no other definition. The helpers were therefore never committed anywhere, which makes this a missing contract rather than a regression from a rename, and makes the owning API/DTO module the correct place to create it.
+Semantics-Source-State: TAKEN_FROM_EXISTING_TEST_SPECIFICATION_NOT_INVENTED
+Semantics-Specification: category-admin-form.test.ts:363-368 already specified the contract: parseMetaKeywords("موبایل، گوشی, موبایل\nسامسونگ") equals ["موبایل","گوشی","سامسونگ"]; serializeMetaKeywords(["موبایل","گوشی"]) equals "موبایل, گوشی"; parseMetaKeywords("") equals []. That is: split on Persian/Arabic comma (U+060C), ASCII comma and newline; trim each tag; drop blanks; drop duplicates keeping first-occurrence order (stable); serialize with a comma and space.
+Changed-Files: src/frontend/app/admin/catalog-category-api.ts (only changed production file - added META_KEYWORDS_SEPARATORS = /[,\u060C\r\n]+/, META_KEYWORDS_JOINER = ", ", a module-private normalizeMetaKeywords(tags) that trims/drops blanks/dedupes in stable order, exported parseMetaKeywords(value: string | null | undefined): string[] at line 539, and exported serializeMetaKeywords(tags: readonly string[]): string at line 548); docs/ai/tasks/TB-FE-CATEGORY-METAKEYWORDS-CONTRACT-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-CATEGORY-METAKEYWORDS-CONTRACT-001/summary.md, typecheck-after-tsc.txt, typecheck-diff-vs-49-baseline.txt, test-category-admin-form.txt, test-category-neighbors.txt, test-architecture.txt (added - bounded evidence)
+Category-Admin-Screen-Modified-State: NO_NOT_NEEDED
+Category-Admin-Screen-No-Change-Justification: The permitted "only if truly necessary" file was correctly not required. The screen's import now resolves, and its three implicit-any parameters (tag x2, t) infer from the helper's string[] return type without any edit.
+Caller-Compatibility-Check: All existing callers were verified unchanged and satisfied. MetaKeywordsViewChips accepts string | null | undefined and renders the existing em-dash state for []. MetaKeywordsTagInput passes the string draft directly. commitDraft's parseMetaKeywords([...tags, ...parseMetaKeywords(raw)].join(",")) round-trips exactly because the ASCII-comma join is one of the accepted separators. removeTag's filter-then-serialize is unchanged. The save path at :1684 serializeMetaKeywords(parseMetaKeywords(...)) || null still yields null for an empty set, so the wire payload remains string | null.
+Wire-Contract-Change-State: NONE_HOST_META_KEYWORDS_STRING_AND_DTO_STRING_OR_NULL_UNCHANGED
+Backend-Schema-Migration-DTO-Locale-Change-State: NONE
+New-Backend-Structure-State: NONE
+Deliberate-Contract-Decision: serializeMetaKeywords normalizes instead of blindly joining. Every existing caller already passes pre-normalized tags, so observable behaviour is unchanged for all of them, while the persisted string|null payload becomes canonical and can never accumulate stray separators, blank entries or duplicates across edit cycles. Trim and dedupe semantics were taken from the existing test rather than invented.
+Forbidden-Items-State: NONE_NO_ANY_NO_MASKING_TYPE_ASSERTIONS_NO_TS_IGNORE_NO_TSCONFIG_OR_BASELINE_CHANGE_NO_TEST_WEAKENING_OR_DELETION_NO_BACKEND_CONTRACT_CHANGE_NO_SCHEMA_OR_MIGRATION_NO_HOME_OR_PDP_SURFACE_NO_UNRELATED_REFACTOR_NO_NEW_DEPENDENCY_NO_REGISTER_READ_OR_WRITE_NO_AMSC_WAVE_NO_FORCE_PUSH_NO_PROCESS_TERMINATION
+Typecheck-Baseline-Errors: 49
+Typecheck-Total-After: 42
+Typecheck-Reduction: 7
+Typecheck-New-Errors: 0
+Typecheck-Diff-Method: machine diff of file+line+column+code between docs/architecture/evidence/TB-FE-ADMINRESULT-NARROWING-001/typecheck-after-tsc.txt (the recorded 49-error baseline) and the post-change raw output; result removed=7 added=0
+Removed-Diagnostics-Detail: category-admin-screen.tsx:40 TS2305 missing export parseMetaKeywords and :42 TS2305 missing export serializeMetaKeywords (the two missing exports); category-admin-form.test.ts:364:11 and :364:30 TS2339 parseMetaKeywords and serializeMetaKeywords (the two test import/member errors); category-admin-screen.tsx:345:18 and :391:20 TS7006 tag and :382:49 TS7006 t (the three directly causal implicit-any diagnostics). No diagnostic remains in catalog-category-api.ts or category-admin-form.test.ts.
+Non-Causal-Diagnostic-Left-Untouched: The single remaining category-admin-screen.tsx diagnostic at :1801 TS2322 (EditSurface union) is a different, non-causal cluster and was deliberately not modified.
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_42_ERRORS_REMAIN_IN_OTHER_AUDITED_CLUSTERS
+Commands-Run: git fetch origin and HEAD==origin/main==Expected-Starting-HEAD verification (preflight and post-push); cd src/frontend && node_modules/.bin/tsc --noEmit (after: 42 errors, exit 2); node --experimental-strip-types --test app/admin/category-admin-form.test.ts; node --experimental-strip-types --test app/admin/catalog-category-api.test.ts app/admin/category-attributes-panel.test.ts app/admin/category-products-panel.test.ts app/admin/catalog-tag-api.test.ts; npm run test:architecture; git diff/status inspections for the exact final diff and scope
+Focused-Test-Results: category-admin-form.test.ts 24 PASS / 0 FAIL; category neighbours (catalog-category-api, category-attributes-panel, category-products-panel, catalog-tag-api) 29 PASS / 0 FAIL; npm run test:architecture 11 PASS / 0 FAIL
+Contract-Tests-Now-Passing: "parseMetaKeywords splits commas and drops blanks/duplicates", "translation meta keywords use removable tag chips not plain textbox" and "API client exposes updateCore, upsertTranslation with full fields, move" all pass, the first of which could not execute while the exports were missing.
+PreExisting-Failures-Observed: NONE_IN_THE_FOCUSED_SET
+PreExisting-Failure-Count-Before: 0
+PreExisting-Failure-Count-After: 0
+Retry-Cascade-State: NONE_NO_REPEATED_TEST_RUNS
+Tests-Not-Run: npm run test:discovered (full suite), npm run test:admin, npm run test:category-tree, npm run test:product-workspace, npm run test:critical-storefront, npm run build, backend build/tests, browser/live verification, any AMSC wave
+Unrun-Test-Pass-Claim-State: NONE
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: Only one Admin API module was modified. No Home, PDP, listing, storefront or shared-composition surface and no design-system primitive was touched, so no locked visual contract is in scope for this bounded repair.
+Scope-Statement: Production scope is exactly the one permitted file, src/frontend/app/admin/catalog-category-api.ts. The optional second permitted production file was not needed. No other file was modified.
+Risks: Residual risk VERY LOW. The change is additive and confined to one Admin API module; both helpers are pure functions with no I/O and no state, depending only on one regex and one Set. No schema, migration, persisted-state, API, localization or visual change.
+Product-Semantics-Conflict-State: NONE_NO_STOP_REQUIRED
+Rollback-Criteria: Revert commit 60e26236 if any category meta-keyword chip behaviour or the persisted metaKeywords string|null payload differs from before; the change is self-contained and safe to revert atomically.
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED_NOT_REMOVED_NOT_STASHED
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Deviation-State: NONE
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: USER_REVIEW_AFTER_BOUNDED_REPAIR
+STOP
+END_TOOBA_WORKER_RESULT

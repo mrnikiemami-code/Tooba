@@ -1,0 +1,73 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-115
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-114
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-LIVE-CLOSURE
+Mode: BOUNDED_ISOLATED_LEGACY_CATALOG_DI_RUNTIME_AND_HOST_HEALTH_PROOF
+Bridge-Task-Row: 2fa0fdb9-b16f-4e56-87fa-86720b9416d3
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: af836cc992f9cdc40425d98d0169eba7c39b37e5
+Base-SHA: af836cc992f9cdc40425d98d0169eba7c39b37e5
+Code-SHA: NONE
+Evidence-SHA: 2ea499e98026a522f0bb98a2cce2cc5fe9f9cae5
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+Claimed exactly ONE Pending Bridge task on tooba-main (row 2fa0fdb9-b16f-4e56-87fa-86720b9416d3) after the Working heartbeat; docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-115.task.md preserved UNSTAGED (verbatim copy also in evidence). Fetch origin/main + compare: Expected-Base-SHA af836cc99 is ancestor of HEAD and HEAD == origin/main == af836cc99 at claim time, i.e. ZERO overlapping code drift, so RECOVERY_CONFLICT was not triggered. All pre-existing dirty/untracked paths were left untouched and unadopted (TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md, TB-SHIPPING-FULL-OPERATIONS-075/079 host stdout logs, src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx and admin-order-detail-screen.tsx, the earlier evidence trees, every prior task file). No reset, stash, rebase, force push or unrelated adoption. Read-only shared baseline recorded before any launch: :5088 PID 35624 /health 200 {"status":"ok"}; :3000 PID 31580 -> 308 /fa; /__platform-commerce 200 store-alpha / tenant-alpha / dev-singlestore / theme-alpha / IR; tooba_alpha counts methods 7, translations 14, carts 50, cart_lines 78, drafts 14, seller_orders 26, products 567, offers 3223. No shared process or database was mutated.
+
+MISSION A — SINGLE ISOLATED RUNTIME START (one launch, no retry)
+PUBLISH: dotnet publish src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug -o .tmp-115-host-out -> exit 0, 0 errors, EXE_EXISTS=True, built from HEAD af836cc99 (contains the TB-114 async-scope repair).
+SCRATCH: fresh no-volume disposable container tooba-115-scratch-pg (postgres:16-alpine) on loopback-only 127.0.0.1:55449 (not shared 5432, not prior TB-111 55447 / TB-113 55448) with task-owned databases tooba_115_scratch and tooba_115_messaging; credentials generated per-run, supplied only via the TOOBA_115_SCRATCH_PASSWORD environment variable and kept only under the ignored .tmp-115-run directory (deleted at teardown).
+OFFLINE FAIL-CLOSED EFFECTIVE-CONFIG GUARD (isolation-guard.json, guard.failClosed=true): tenantCount 1, activeTenantCount 1, tenant store-alpha:Active:tenant-115-scratch, connectionReferences [tenant-115-scratch, messaging-115-scratch], containsSharedAlphaDatabase=false, containsSharedAlphaReference=false, containsSharedAlphaPort=false, containsPriorScratchPort=false, ShippingRateAuthority/ShippingOperationalShadow/ShippingOneLevelCatalog all absent/OFF, AllowResetAndSeed=false, RunLegacyBootstraps=true, ASPNETCORE_ENVIRONMENT=Development. No credential written to evidence.
+LAUNCH: LAUNCH_COUNT=1, no retry. ISOLATED_HOST_PID=40980 with absolute path .tmp-115-host-out\Tooba.Host.exe, isolated ASPNETCORE_URLS http://127.0.0.1:5397, task-owned content root, external watchdog limit 180s. No shared Host/Next invocation. HTTP reset-and-seed and seed-only were never called (no 545-product expansion); no raw fixture and no manual SQL write.
+
+STAGE-BY-STAGE PROOF
+ (1) Process start / host builder / DI container build: OK, no wiring or scope-validation error.
+ (2) DevelopmentSchemaMigrator.ApplyAsync(app.Services) at Program.cs:367: COMPLETED — 110 Microsoft.EntityFrameworkCore.Migrations events + 1544 Database.Command events; the two-phase ordered migration ran across catalog/inventory/localization/offer/party/pricing/promotion/tax.
+ (3) Catalog attribute-schema + legacy workspace demo seed inside the migrator's OWN async scope: COMPLETED — attribute_definitions touched 270 times, attribute_options 87; schema-mobile-demo-phone created with 2 variants + 1 default; the full workspace-live-shirt chain ran through to its final admin-r3-archived-hat archive/outbox statement (last stdout line = INSERT INTO catalog.outbox_messages ... INSERT INTO catalog.product_history_entries ...).
+ (4) CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(scope.ServiceProvider, ...) at Program.cs:374 (the TB-114 scope): REACHED — the former DI-lifetime failure is GONE.
+ (5) FashionTemplateCatalogSeed.ApplyAsync -> provider.GetRequiredService<CatalogDbContext>() at line 59: the scoped resolution now SUCCEEDS; the DbContext OPTIONS FACTORY throws instead (below).
+ (6) Kestrel listen / "Now listening on" / "Application started": NEVER REACHED (0 occurrences each in the 1657-line stdout).
+ (7) GET /health: NOT OBSERVED. The process exited by itself at ELAPSED_SECONDS=61 of the 180s budget (PROCESS_EXITED=True, KILLED_BY_WATCHDOG=False, listeners on 5397 after stop = 0). No retry was attempted, so no isolated /health body or provenance could be read.
+FORMER BLOCKER ELIMINATED: over the whole run "Cannot resolve scoped service" = 0 and "from root provider" = 0, and the stack frame is the repaired call site Program.cs:line 374. The TB-114 correction is therefore runtime-proven for the exact failure TB-113 captured.
+NO REGRESSION IN THE EARLIER FIXES: "catalog.attribute.code.duplicate" = 0, "catalog-dev.attribute.incompatible-reuse" = 0, "42P01" = 0.
+
+FIRST SUBSEQUENT BLOCKER (exact; NOT fixed in this task)
+Unhandled exception. Tooba.BuildingBlocks.PlatformHttpException: Service Unavailable
+  at Tooba.Persistence.ToobaNpgsql.ResolveForContext(ICurrentCommerceContext commerce, IDatabaseConnectionResolver resolver) in src/backend/BuildingBlocks/Tooba.Persistence/ToobaNpgsql.cs:line 57
+  at Tooba.Catalog.Infrastructure.CatalogModule.<>c.<AddServices>b__2_8(IServiceProvider sp, DbContextOptionsBuilder options) in src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogModule.cs:line 160
+  at Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.CreateDbContextOptions[TContext](IServiceProvider applicationServiceProvider, Action`2 optionsAction)
+  at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+  at Tooba.Catalog.Infrastructure.Development.FashionTemplateCatalogSeed.ApplyAsync(IServiceProvider provider, CancellationToken cancellationToken) in src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/FashionTemplateCatalogSeed.cs:line 59
+  at Tooba.Catalog.Infrastructure.Development.CatalogDevelopmentSeed.EnsureLegacyBootstrapsAsync(IServiceProvider provider, CancellationToken cancellationToken) in src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/Development/CatalogDevelopmentSeed.cs:line 61
+  at Program.<Main>$(String[] args) in src/backend/Host/Tooba.Host/Program.cs:line 374
+Blocker-Code: platform.edition.unconfigured (surfaced as a 503-class PlatformHttpException "Service Unavailable" at startup).
+Responsible source location and cause: the scoped CatalogDbContext is now resolvable from the handed-over provider, but its options factory asks ICurrentCommerceContext.Current for the database connection reference and gets null, so ToobaNpgsql.ResolveForContext throws. DevelopmentSchemaMigrator does NOT hit this because ApplyCoreAsync explicitly resolves ICommerceContextAssigner and calls assigner.Assign(new CommerceContext(new EditionContext(...), new TenantContext(...), tenant.ConnectionReference, "workspace-dev-seed")) inside its own scope BEFORE any DbContext work; that assignment lives only in the migrator's scope, and the new scope created at Program.cs:374 has no assigned commerce context while startup has no ASP.NET request that would establish one. Fixing this (establishing the commerce context for the legacy Catalog bootstrap scope at the Host composition boundary, exactly as the migrator does) is the next bounded repair and is deliberately out of scope here — no code was written to route around the new error.
+
+SCRATCH DB READ-BACK (row presence only; explicitly NOT a storefront-eligibility proof)
+Migration history per module: catalog 29, inventory 5, localization 1, offer 3, party 2, pricing 1, promotion 2, tax 1.
+attribute_definitions by code: color 1, ram 1, screen_size 1, storage 1 -> exactly ONE color definition. attribute_options: color/black 1, color/blue 1, ram/8gb 1, storage/128gb 1, storage/256gb 1 -> no duplicate option on the (definition_id, code) unique index.
+SINGLE-IDENTITY PROOF: PHONE-BLK-128, PHONE-BLU-256 and LIVE-SHIRT-BLK all store the SAME color definition_id 01a14277-3514-7000-b1bc-99d267ba7ee1, and PHONE-BLK-128 shares LIVE-SHIRT-BLK's canonical black value -> the legacy seed reused the schema-owned definition instead of creating a second one at real startup.
+PRODUCT/VARIANT/DEFAULT: schema-mobile-demo-phone Published with exactly 2 variants and exactly 1 default (PHONE-BLK-128); workspace-live-shirt Published (1 variant, not default); admin-r3-draft-scarf Draft; admin-r3-archived-hat Archived.
+ACTIVE PRICED STOCKED CHAIN: PHONE-BLK-128 (default) 2 offers / 2 active / 1 active Base price / available 5.000000; PHONE-BLU-256 1 offer / 1 active / 1 active Base price / available 5.000000. Totals: offers 5, active_offers 5, prices 6, active_base_prices 4, stock_positions 6, positive on_hand 5, seller_parties 4 (party.parties, no 42P01), tax_rules 1.
+CATEGORY BINDINGS: color is_variant_axis=t (10), storage is_variant_axis=t (20), ram f (30), screen_size f (40).
+MODULE-OWNED SEED ROWS: store_landing_pages 3 and store_menus 1 (produced by the module Development seeds inside the migrator scope). LEGACY bootstrap output: template_products 0 and store_templates 0 — the six legacy bootstraps reached in this run produced nothing because they never ran.
+SCRATCH REMAINS COMMERCE-FREE: carts 0, seller_orders 0, shipping_methods 0. No shipping flag changed, no cart/order created, no manual SQL write.
+
+MISSION B — CLEANUP AND NON-INTERFERENCE
+Task-owned Host PID 40980 verified not alive (absolute-path check before any stop; no stop was even needed and no name/wildcard/broad termination was used). Listeners on 5397 = 0. docker rm -f tooba-115-scratch-pg removed the ONLY task-owned container: no 115 container remains, no 113/111 container was touched, listeners on 55449 = 0 after removal. Ignored .tmp-115-run (including the per-run credential file) and .tmp-115-host-out deleted. Nothing on a shared port was ever a stop target.
+READ-ONLY SHARED POSTFLIGHT PARITY: :5088 PID 35624 /health 200 {"status":"ok"}; :3000 PID 31580 -> 308 /fa; /__platform-commerce unchanged (store-alpha / tenant-alpha / dev-singlestore / theme-alpha / IR); tooba_alpha counts IDENTICAL to the preflight baseline (methods 7, translations 14, carts 50, cart_lines 78, drafts 14, seller_orders 26, products 567, offers 3223). No deviation, so no INCIDENT was declared and nothing was silently repaired.
+EVIDENCE (committed, redacted): docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-115.md and docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-115/** (task.md, task-receipt.json, isolation-guard.json, prepare-isolated-target-115.js, prepare-output.txt, build-record.txt, launch-isolated-host-115.ps1, watchdog-result.txt, stage-record.md, redacted-diagnostic-excerpt.txt, scratch-inspection.sql/.txt, identity-reuse.txt, shared-preflight.txt, shared-preflight-counts.txt, shared-postflight.txt, shared-postflight-counts.txt, shared-probe.js, cleanup.txt, post-result.js, RESULT.bridge.txt). The raw 1657-line EF SQL stdout/stderr are deliberately NOT committed; only a secrets-free redacted excerpt is. Programmatic scan of the evidence tree for literal credentials returned 0 hits, and the per-run credential file lived only in the now-deleted ignored directory.
+
+CHANGED PATHS: docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-115.md (new) and docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-115/** (new). ZERO src/, migration, appsettings, script, test or shared-data change (verified: 0 staged src/ files). Code-SHA: NONE. Task receipt preserved UNSTAGED.
+MEASURED: ~11 minutes (02:04 -> 02:11 UTC+3:30), inside the 30-minute hard ceiling; investigative work stopped well before minute 22. LAUNCHES: 1. WATCHDOG ELAPSED: 61s of 180s.
+ROLLBACK: not required — evidence/docs-only commit 2ea499e98; git revert would remove documentation only and cannot affect runtime state or data.
+DEVIATIONS: (1) PARTIAL rather than PASS because the single launch aborted at 61s before /health; no retry was performed, as instructed. (2) Only one host launch was made and nothing was coded around the new error. (3) The three shipping switches were verified absent/OFF offline and were never toggled.
+ACCEPTANCE: the old root-provider error is provably ABSENT at runtime (0 occurrences, repaired call site on the stack) but a later exception still prevents a healthy Host, so the correct verdict is PARTIAL with the exact FIRST new blocker reported. NOT CLAIMED: no isolated /health 200, no storefront label parity, no cart reachability, no checkout cutover, no commercial shipping readiness, and no eligibility inference from row presence.
+
+NEXT: Architect decision on the next bounded repair — give the legacy Catalog bootstrap scope the same commerce-context establishment DevelopmentSchemaMigrator.ApplyCoreAsync performs (ICommerceContextAssigner.Assign within that scope) so FashionTemplateCatalogSeed can build its DbContext, then ONE new isolated scratch startup to observe whether the six legacy bootstraps complete and /health 200 is reached. No automatic next implementation task is claimed here.
+STOP FOR ARCHITECT.
+END_TOOBA_WORKER_RESULT

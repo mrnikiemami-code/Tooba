@@ -1,0 +1,69 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-LANDING-COMPOSER-DRAG-EVENT-TYPES-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Status: PASS
+Verdict: BOUNDED_REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: 20c013e5e69cca80bcb240679b241b8c68b966cf
+Expected-Starting-HEAD-Match-State: VERIFIED
+Expected-Starting-HEAD-Equals-Origin-Main-State: VERIFIED
+Preflight-Tracked-Worktree-State: CLEAN_NO_TRACKED_MODIFICATION
+Preflight-Untracked-Artifacts-State: PRE_EXISTING_UNTracked_PRIOR_TASK_EVIDENCE_NOTED_AND_LEFT_UNTOUCHED_NOT_DELETED_NOT_STASHED
+Diagnostics-Targeted: app/admin/landing-pages/admin-landing-page-composer.tsx(1024,64) and (1025,61): TS2345 Argument of type DragEvent HTMLDivElement is not assignable to parameter of type DragEvent HTMLLIElement.
+Root-Cause: Both receivers were annotated with the surrounding li element, but the JSX binds onDragOver and onDrop to the inner div of the section card, so the event currentTarget is an HTMLDivElement. The li receives neither handler, so the annotation never described runtime reality; the compiler was correct.
+Bound-Owner-Confirmation: CONFIRMED_HTMLDIVELEMENT_IS_THE_CORRECT_BOUND_OWNER. Read from the JSX at lines 1015-1043: the li opens at 1015, the div that carries onDragOver at 1024, onDrop at 1025, onDragLeave at 1026 and onClick at 1027 opens at 1016, and the section-drag-handle button that carries onDragStart opens at 1036.
+Drag-Start-Typing-Retained: YES_DragEvent_HTMLButtonElement_UNCHANGED_at_line_469
+Change: Exactly two type annotations changed from DragEvent<HTMLLIElement> to DragEvent<HTMLDivElement> plus an explanatory comment, in src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx.
+Preserved-Surfaces: Handler bodies, preventDefault calls, dataTransfer reads and writes, dragId and dragOverId state, findIndex and splice reorder algorithm, persistOrder and data-canonical-order persistence, markup, data-testids, aria-label and title, class names, styles, event propagation and stopPropagation are all byte-identical; no handler was moved and no markup was edited. The two handlers read only preventDefault, dataTransfer.dropEffect, dataTransfer.getData and local state, so HTMLDivElement is a complete and accurate fit.
+Assertion-Suppression-State: NONE_NO_ANY_NO_TS_IGNORE_NO_CAST_NO_FAKE_ASSERTION_NO_TYPE_SUPPRESSION
+Baseline-Evidence-Source: docs/architecture/evidence/TB-FE-LEGACY-GRID-FIELD-CONTRACT-001/typecheck-after-tsc.txt copied verbatim to docs/architecture/evidence/TB-FE-LANDING-COMPOSER-DRAG-EVENT-TYPES-001/typecheck-before.txt
+Baseline-Errors: 28
+Typecheck-Total-After: 26
+Typecheck-Reduction: 2
+Typecheck-Introduced: 0
+Typecheck-Compare-Object-Vs-Baseline: NO_ADDED_LINE
+Diagnostics-Remaining-In-Target-File: NONE
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_26_ERRORS_REMAIN
+Guards-Actually-Run: static source guards under app/admin/landing-pages, run per file in a throwaway git worktree at the parent HEAD without this edit and again in the working tree with it, so each guard has a true before and after reading.
+Guard-Comparison-Results: admin-builder-hardening-r13 pass 6 fail 1 in both; admin-builder-ux-r1 pass 7 fail 1 in both; admin-builder-ux-r2 pass 8 fail 1 in both; admin-builder-ux-r3 pass 8 fail 0 in both; admin-store-pages-r9 pass 4 fail 0 in both; admin-landing-pages pass 4 fail 2 in both; admin-store-pages-r10 fail 1 load error in both. Every guard is IDENTICAL before and after this edit, which is the regression evidence for a pure annotation change.
+PreExisting-Failures-Observed: THREE_AND_ALL_PROVEN_PRE_EXISTING
+PreExisting-Failure-1: admin-landing-pages.guard.test.ts test section chooser has Persian labels and no raw JSON editor asserts the regex بنر اصلی against landing-section-catalog.ts, whose chooser label is بنر نمایش. That file is not in this diff and the assertion fails identically on the pristine parent tree.
+PreExisting-Failure-2: admin-landing-pages.guard.test.ts test TB-P10-T022 no technical leakage asserts the composer does NOT match breakpoint or JSON.stringify or customCss, but the composer matches at line 430 with JSON.stringify of the sessionStorage insertAt handoff. Line 430 is 42 lines from the edited handlers and is unchanged by this diff; it fails identically on the pristine parent tree.
+PreExisting-Failure-3: admin-store-pages-r10.guard.test.ts cannot load because it readFileSyncs src/backend/Host/Tooba.Host/Admin/StoreLandingPageComposer.cs which does not exist at the parent HEAD; it fails identically on the pristine parent tree. Note honestly that this guard also contains the drag and drop reorder assertions (section-drag-handle, onSectionDrop or onDragStart, data-canonical-order, reorderAdminLandingSections), so its drag evidence is unavailable at baseline for an unrelated reason. Recorded with proof and not chased, per the task instruction.
+PreExisting-Failure-Count-Before: 3
+PreExisting-Failure-Count-After: 3
+PreExisting-Failure-Does-Not-Block-State: CONFIRMED_IDENTICAL_BEFORE_AND_AFTER
+Tests-Not-Run: the full npm test and test:discovered suites, dependency install, build, backend tests, browser or visual verification, and any AMSC wave
+Unrun-Test-Pass-Claim-State: NONE
+Directory-Argument-Artifact-Disclosure: guards-pristine-baseline.txt and guards-current-after-edit.txt also contain a folder-level invocation of --test app/admin/landing-pages which reports one aggregate failure in both trees; that is an artifact of passing the directory rather than files and is superseded by the per-file comparison. Kept for completeness and identical in both trees, so it is not evidence of a regression.
+Remaining-Issues: 26 TypeScript errors remain in other audited clusters (Language-Language-List grid flex and pinned properties, storefront composition renderer banner fields, and assorted single diagnostics) - all outside this task's allowed scope and requiring their own bounded tasks. Three pre-existing guard failures listed above remain untouched.
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: A single Admin landing-page composer annotation change with no runtime or visual effect; no storefront, Home, PDP, Shopeiva, shared-composition or visual surface was touched.
+Scope-Statement: The production change is exactly the one allowed file, src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx, and the diff is two annotations plus a comment. All other staged paths are the task receipt and evidence files.
+Admissibility-Of-Alternative: No alternative binding question arose; the div is provably the event target, so no BLOCKED_ARCHITECT_DECISION was required and no cast, any, ts-ignore or suppression was used.
+Risks: None to runtime. DragEvent parameter types are compile-time only, so the emitted JavaScript for these two arrow functions is unchanged and preventDefault and dataTransfer behaviour is identical; the identical pristine-versus-current guard results and the typecheck both corroborate this.
+Rollback-Criteria: Revert commit 1a18bab5ca5f98258c8f34ca734186322bea91ca; the two annotations return to DragEvent<HTMLLIElement> and TS2345 returns.
+Deviation-State: NONE
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Reset-Or-Stash-State: NONE_NO_STASH_NO_RESET
+Worktree-Cleanup-State: TEMPORARY_DETACHED_WORKTREE_AT_PARENT_HEAD_CREATED_FOR_THE_GUARD_BASELINE_AND_REMOVED_AFTERWARDS_NO_OTHER_WORKTREE_DISTURBED
+Process-Termination-State: NONE_NO_SERVICE_STARTED_RESTARTED_OR_TERMINATED
+Concurrent-Change-State: NONE_UNEXPECTED
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED
+Base-SHA: 20c013e5e69cca80bcb240679b241b8c68b966cf
+Final-SHA: 1a18bab5ca5f98258c8f34ca734186322bea91ca
+Commit-SHA: 1a18bab5ca5f98258c8f34ca734186322bea91ca
+Changed-Files: src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx (production - two annotations plus comment); docs/ai/tasks/TB-FE-LANDING-COMPOSER-DRAG-EVENT-TYPES-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-LANDING-COMPOSER-DRAG-EVENT-TYPES-001/summary.md, typecheck-before.txt, typecheck-after-tsc.txt, focused-test-landing-guard.txt, focused-test-r10-guard.txt, guard-comparison.txt, guards-pristine-baseline.txt, guards-current-after-edit.txt (added - evidence with raw outputs)
+Commands-Run: git fetch origin plus HEAD==origin/main==Expected-Starting-HEAD checks at preflight, pre-commit and post-push; node_modules/.bin/tsc --noEmit in src/frontend; node --experimental-strip-types --test on the seven landing-pages guard files in both a pristine parent-HEAD worktree and the working tree; git worktree add and remove; git diff and status inspections to prove the runtime logic and scope are unchanged
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: STOP_FOR_ARCHITECT_INDEPENDENT_ACCEPTANCE
+STOP
+END_TOOBA_WORKER_RESULT

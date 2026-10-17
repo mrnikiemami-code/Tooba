@@ -1,0 +1,68 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-CATALOG-ATTRIBUTE-GRID-QUERY-TYPES-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR
+Status: PASS
+Verdict: BOUNDED_REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: be5492c617709ceb690aff6a8424d9e12f58dd10
+Expected-Starting-HEAD-Match-State: VERIFIED
+Expected-Starting-HEAD-Equals-Origin-Main-State: VERIFIED
+Preflight-Tracked-Worktree-State: CLEAN_NO_TRACKED_MODIFICATION
+Preflight-Divergence-State: NONE_NO_OTHER_WORKER_ADVANCED_HEAD
+Root-Cause: Both TS7006 diagnostics are the same defect - the parameter of a useCallback-wrapped adapter is unannotated, and useCallback cannot infer it from the consumer because the contextual type lives on useLegacyAdminGridDirectProps(...).queryAdapter one expression later rather than on the callback. The parameter therefore degraded to any and both adapters stopped being checked against the grid contract entirely, rather than merely failing to infer it.
+Diagnostics-Addressed: app/admin/catalog-attribute-ui.tsx(237,12) TS7006 Parameter 'query' implicitly has an 'any' type in definitionQueryAdapter; (833,12) TS7006 Parameter 'query' implicitly has an 'any' type in schemaQueryAdapter
+Canonical-Ownership-Verified: YES - GridServerQuery is declared exactly once at src/frontend/design-system/data-grid/types.ts:73 with page, pageSize, sorts, filters and optional search and advancedFilter; a repository-wide grep shows every other occurrence is an import from these ./types modules, so there is a single declaration and no competing duplicate.
+Type-Reachability-Verified: GridServerQuery is re-exported by src/frontend/design-system/data-grid/index.ts:13, which is the very module this file already imports GridColumnDef from, so no new import statement or dependency was required.
+Consumer-Contract-Verified: createClientGridQueryAdapter<T>(rows, columns) returns async (query: GridServerQuery) => executeGridQuery(rows, columns, query) (design-system/app-data-grid/legacy-grid-adapters.ts:10-15); LegacyAdminGridDirectProps<T>.queryAdapter is (query: GridServerQuery) => Promise<{ rows: T[]; total: number }> (legacy-grid-adapters.ts:21); and data-grid/DataGrid.tsx:51,73 uses the same type for onServerExport and its runtime query state.
+Change: Three lines in one production file. The existing type-only barrel import was extended from GridColumnDef to GridColumnDef plus GridServerQuery, and the two callback parameters were annotated: "async (query) =>" became "async (query: GridServerQuery) =>" in both definitionQueryAdapter and schemaQueryAdapter.
+Duplicate-Type-Creation-State: NONE_NO_NEW_GRID_TYPE_WAS_CREATED_AND_NO_DESIGN_SYSTEM_FILE_WAS_TOUCHED
+Import-Statement-Change-State: EXTENDED_EXISTING_TYPE_ONLY_IMPORT_ONLY_NO_NEW_IMPORT_STATEMENT_NO_NEW_DEPENDENCY_AND_NO_RUNTIME_MODULE_EDGE
+Assertion-Suppression-State: NONE_NO_ANY_NO_CAST_NO_TS_IGNORE_NO_SUPPRESSION - the annotation is the real contract, and having it present is what now type-checks both identity adapters against the grid contract instead of excluding them
+Behaviour-Change-State: NONE_OBSERVABLE - annotations are erased at compile time, so the callbacks, their dependency arrays, createClientGridQueryAdapter, useLegacyAdminGridDirectProps, AppDataGrid, the column definitions, widths, maxWidth caps and every search, sort and filter code path are runtime-identical.
+Preserved-Surfaces: createClientGridQueryAdapter, useLegacyAdminGridDirectProps, both callback bodies and dependency arrays, column definitions and visuals, grid search/sort/filter semantics, saved-view stores and grid ids
+Forbidden-Items-State: NONE_NO_GRID_IMPLEMENTATION_NO_ADAPTER_NO_GRID_VISUAL_NO_COLUMN_NO_SEARCH_SORT_FILTER_SEMANTIC_NO_BACKEND_HOST_SCHEMA_NO_HOME_PDP_SHOPEIVA_NO_TSCONFIG_NO_BASELINE_NO_GUARD_NO_UNRELATED_CLUSTER_NO_ANY_NO_CAST_NO_TS_IGNORE_NO_NEW_DEPENDENCY_NO_WIDE_REFACTOR_NO_AMSC_NO_AUTOMATIC_NEXT_TASK_NO_TEST_LOOP
+Baseline-Evidence-Source: docs/architecture/evidence/TB-FE-SHIPMENT-METADATA-OPTIONALS-001/typecheck-after-tsc.txt copied verbatim to docs/architecture/evidence/TB-FE-CATALOG-ATTRIBUTE-GRID-QUERY-TYPES-001/typecheck-before.txt
+Typecheck-Baseline-Errors: 34
+Typecheck-Total-After: 32
+Typecheck-Reduction: 2
+Typecheck-New-Errors: 0
+Typecheck-Expected-Vs-Actual: expected 34 -> 32 with zero introduced; actual exactly 32 with 0 added diagnostics in a Compare-Object of the before and after outputs and none left in app/admin/catalog-attribute-ui.tsx
+Diagnostics-Remaining-In-Target-File: NONE
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_32_ERRORS_REMAIN_IN_OTHER_AUDITED_CLUSTERS
+Changed-Files: src/frontend/app/admin/catalog-attribute-ui.tsx (only production file - one extended type-only import plus two parameter annotations); docs/ai/tasks/TB-FE-CATALOG-ATTRIBUTE-GRID-QUERY-TYPES-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-CATALOG-ATTRIBUTE-GRID-QUERY-TYPES-001/summary.md, typecheck-before.txt, typecheck-after-tsc.txt, focused-tests.txt (added - minimal evidence)
+Test-File-Change-State: NONE_NO_TEST_WAS_AMENDED_AND_NO_TEST_WAS_ADDED - the change is a pure annotation with no behaviour to regress, so the nearest existing focused tests were run unmodified instead.
+Commands-Run: git fetch origin and HEAD==origin/main==Expected-Starting-HEAD verification with a clean tracked worktree (preflight, pre-commit and post-push); cd src/frontend && node_modules/.bin/tsc --noEmit; node --experimental-strip-types --test app/admin/admin-grid-migration.test.ts app/admin/variant-axis-capability.test.ts; git diff/status inspections for the exact final diff and scope
+Focused-Test-Results: node --experimental-strip-types --test app/admin/admin-grid-migration.test.ts app/admin/variant-axis-capability.test.ts - 11 PASS / 0 FAIL
+Focused-Test-Relevance: admin-grid-migration.test.ts is the nearest existing focused catalog attribute/grid test - it reads catalog-attribute-ui.tsx and asserts the direct-AppDataGrid wiring, namely that admin-attribute-definitions-grid and admin-category-schema-grid exist, that createClientGridQueryAdapter is used and that LegacyAppDataGrid is absent, which is exactly the surface this task is forbidden from disturbing. variant-axis-capability.test.ts reads the same file and also passes.
+Focused-Test-Limitation-Honest-Disclosure: Both tests are source-contract assertions and the existing suite has no runtime harness for these two adapters, which are component-internal useCallback wrappers. The authoritative verification for this task is therefore the compiler comparison above, not the focused tests, and the focused green result is reported as corroborating evidence only.
+PreExisting-Failures-Observed: NONE
+PreExisting-Failure-Count-Before: 0
+PreExisting-Failure-Count-After: 0
+Retry-Cascade-State: NONE
+Tests-Not-Run: the full npm test and test:discovered suites, test:admin*, test:critical-storefront, any build, the backend test suite, browser/live verification, and any AMSC wave
+Unrun-Test-Pass-Claim-State: NONE
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: Only two erased type annotations in one Admin catalog screen changed. No Home, PDP, listing, storefront, shared-composition or visual surface is in scope.
+Scope-Statement: The production change is limited to src/frontend/app/admin/catalog-attribute-ui.tsx per the Allowed production changes clause. The only other additions are the task receipt and the evidence files.
+Risks: Residual risk none observable. Three erased annotations in one file; runtime behaviour is provably unchanged and no grid, adapter, column, semantic or backend contract was modified.
+Rollback-Criteria: Revert commit 3786aee814df6d06175e6a418e3746664b3faa96 if any grid behaviour, column, or adapter wiring differs; the change is three lines and reverts atomically.
+Deviation-State: NONE
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Reset-Or-Stash-State: NONE
+Rebase-State: NONE_NO_REBASE_WAS_NEEDED
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED_NOT_REMOVED_NOT_STASHED
+Base-SHA: be5492c617709ceb690aff6a8424d9e12f58dd10
+Final-SHA: 3786aee814df6d06175e6a418e3746664b3faa96
+Commit-SHA: 3786aee814df6d06175e6a418e3746664b3faa96
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: STOP_FOR_ARCHITECT_INDEPENDENT_ACCEPTANCE_NO_FOLLOW_ON_REPAIRS_NO_SELF_SPLITTING
+STOP
+END_TOOBA_WORKER_RESULT

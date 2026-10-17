@@ -1,0 +1,68 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-ADMIN-ORDER-DETAIL-TEST-FIXTURE-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Status: PASS
+Verdict: STALE_TEST_FIXTURE_CONFIRMED_AND_FIXED_WITHOUT_TOUCHING_THE_DOMAIN_CONTRACT_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: c204c65b467c4548de44ca8223a6340854ee58b8
+Expected-Starting-HEAD-Match-State: VERIFIED
+Expected-Starting-HEAD-Equals-Origin-Main-State: VERIFIED
+Preflight-Tracked-Worktree-State: CLEAN_NO_CONFLICTING_ACTIVE_CHANGE
+Preflight-Untracked-Artifacts-State: PRE_EXISTING_PRIOR_TASK_EVIDENCE_NOTED_AND_LEFT_UNTOUCHED
+Diagnostic-Targeted: app/admin/admin-api.test.ts(114,43): TS2345 Argument of type { ... payment: null } is not assignable to parameter of type AdminOrderDetail, with the elaboration Property consolidatedPackages is missing in type ... but required in type AdminOrderDetail.
+Stop-Gate-Verdict: STALE_TEST_SETUP_NOT_A_WIRE_OPTIONALITY_MISMATCH. The fixture is an incomplete domain read model rather than a partial wire payload, so the preferred fixture repair applies and no BLOCKED_ARCHITECT_DECISION report was required.
+Contract-Evidence-1-Parameter-Is-The-Read-Model: enrichAdminOrderDetail(detail: AdminOrderDetail) at admin-api.ts:387 requires the complete domain read model, not a raw wire shape, so a caller must already hold a valid AdminOrderDetail.
+Contract-Evidence-2-Declaration-Is-Required: AdminOrderDetail.consolidatedPackages: AdminConsolidatedPackage[] is declared required and not optional at admin-api.ts:192.
+Contract-Evidence-3-Sole-Producer-Always-Emits-It: mapAdminOrderDetail(value: unknown) at admin-api.ts:541 builds consolidatedPackages at :624 from array(prop(item, "consolidatedPackages", "ConsolidatedPackages")) and emits it at :679, so absent wire data already becomes [] inside the mapper and no path produces a read model without the field. Raw wire optionality is therefore already absorbed, and the required declaration is accurate rather than stale.
+Contract-Evidence-4-Sibling-Consumers-Agree: admin-consolidated-package-section.tsx Props.detail is AdminOrderDetail (line 40) and admin-order-items-shipping.test.ts:367 already supplies a populated consolidatedPackages array for the same type, which makes this one fixture the outlier instead of the contract.
+Contract-Evidence-5-Defensive-Reads-Are-Not-Optionality: The two ?? [] reads at admin-consolidated-package-section.tsx:112 and admin-api.ts:423 are defensive redundancy on an already-required field, neither is a producer-side omission, and neither justifies relaxing the declaration.
+Empty-Array-Justification: [] IS_THE_TRUTHFUL_VALUE_FOR_THIS_SCENARIO. The fixture has no seller orders at all (sellerOrders: []), and AdminConsolidatedPackage members are consolidated from seller-order shipments, so there is nothing to consolidate; the fixture carries no package data anywhere (no members, no packageNumber); and it deliberately supplies the sibling empty projections sellerOrders: [] and financialEvents: [] to prove enrichAdminOrderDetail preserves explicit empty server projections. A representative non-empty package fixture would have invented data the scenario does not have and would have silently improved a test that is specifically about preserving empty projections.
+Change: One field plus one clarifying comment added to the fixture in src/frontend/app/admin/admin-api.test.ts only - consolidatedPackages: [] placed after sellerOrders: [] to match the declaration order in AdminOrderDetail.
+Production-Changes: NONE_ZERO. No DTO or type change, no mapper behaviour change, no backend or schema change, no new mock-only production seam, no change to any other test, no tsconfig or exclusion change, no guard or baseline weakening.
+Existing-Assertions-Preserved: The fixture's existing assertions on enriched.lineCount, enriched.sellerCount and enriched.sellerFinancials[0].commissionAmount are untouched and still pass.
+Assertion-Suppression-State: NONE_NO_ANY_NO_CAST_HIDING_ERRORS_NO_TS_IGNORE_NO_SUPPRESSION
+Baseline-Evidence-Source: docs/architecture/evidence/TB-FE-WALLET-GRID-QUERY-TYPE-001/typecheck-after-tsc.txt copied verbatim to docs/architecture/evidence/TB-FE-ADMIN-ORDER-DETAIL-TEST-FIXTURE-001/typecheck-before.txt
+Baseline-Errors: 24
+Typecheck-Total-After: 23
+Typecheck-Reduction: 1
+Typecheck-Introduced: 0
+Typecheck-Compare-Object-Vs-Baseline: ONLY_REMOVED_LINES_NO_ADDED_LINE (the TS2345 line and its Property-is-missing elaboration line were removed; nothing was added)
+Diagnostics-Remaining-In-Target-File: NONE
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_23_ERRORS_REMAIN_IN_OTHER_CLUSTERS
+Focused-Test-Run: app/admin/admin-api.test.ts - 7 PASS / 0 FAIL, run exactly once at the final edit state
+PreExisting-Failures-Observed: NONE_IN_THE_FOCUSED_RUN
+Baseline-Failures-To-Document: NONE_NONE_HAD_TO_BE_CHASED
+Retry-Loop-State: NONE
+Tests-Not-Run: the full npm test and test:discovered suites, dependency install, build, backend suites, browser or visual verification, AMSC, and every other guard or characterization suite
+Unrun-Test-Pass-Claim-State: NONE
+Remaining-Issues: 23 TypeScript errors remain in other audited clusters outside this task's scope, each requiring its own bounded task.
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: A single test-fixture field with no production artefact changed; no storefront, Home, PDP, Shopeiva, shared-composition or visual surface was touched.
+Scope-Statement: The edited file is exactly src/frontend/app/admin/admin-api.test.ts; all other staged paths are the task receipt and evidence files.
+Risks: None to production - the diff cannot affect shipped code or runtime. The only behavioural effect is that the fixture now models the read model's mandated shape, so the test exercises what it claims; its three existing assertions are unchanged and pass.
+Limitations: The contract decision is static source analysis rather than a live Host call, so it establishes the frontend read-model contract and its single producer, not what any particular Host deployment may send on the wire. That is sufficient here because raw wire optionality is absorbed inside mapAdminOrderDetail, and the test exercises enrichAdminOrderDetail with an already-mapped read model.
+Rollback-Criteria: Revert commit 82dcb78aba67632ceeb16420607798b757d2fcbc; TS2345 at line 114 returns.
+Deviation-State: NONE
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Reset-Or-Stash-State: NONE_NO_RESET_NO_STASH
+Rebase-State: NONE_NO_REBASE_WAS_NEEDED
+Process-Termination-State: NONE
+Concurrent-Change-State: NONE_CONFLICTING
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED
+Base-SHA: c204c65b467c4548de44ca8223a6340854ee58b8
+Final-SHA: 82dcb78aba67632ceeb16420607798b757d2fcbc
+Commit-SHA: 82dcb78aba67632ceeb16420607798b757d2fcbc
+Changed-Files: src/frontend/app/admin/admin-api.test.ts (the only edited file - one fixture field plus one clarifying comment); docs/ai/tasks/TB-FE-ADMIN-ORDER-DETAIL-TEST-FIXTURE-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-ADMIN-ORDER-DETAIL-TEST-FIXTURE-001/summary.md, typecheck-before.txt, typecheck-after-tsc.txt, focused-test-admin-api.txt (added - concise evidence)
+Commands-Run: git fetch origin plus HEAD==origin/main==Expected-Starting-HEAD checks at preflight, pre-commit and post-push; node_modules/.bin/tsc --noEmit once at the final edit state with a Compare-Object against the baseline; node --experimental-strip-types --test app/admin/admin-api.test.ts once; rg and targeted reads of admin-api.ts, admin-consolidated-package-section.tsx and admin-order-items-shipping.test.ts for the contract decision; git diff and status inspections for scope
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: STOP_FOR_ARCHITECT_INDEPENDENT_ACCEPTANCE
+STOP
+END_TOOBA_WORKER_RESULT

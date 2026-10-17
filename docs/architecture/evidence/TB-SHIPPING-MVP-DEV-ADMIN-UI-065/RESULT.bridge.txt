@@ -1,0 +1,129 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-DEV-ADMIN-UI-065
+Parent-Task: TB-SHIPPING-MVP-OPERATIONAL-REPAIR-064
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE
+Mode: BOUNDED_EXISTING_DEV_HOST_ADMIN_UI_END_TO_END
+Bridge-Task-Row: c7a7afae-a57c-4fc3-a657-a53146903567
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 6f87d7dd54b2aa2e2904361b52af24330a8b538e
+Base-SHA: 6f87d7dd54b2aa2e2904361b52af24330a8b538e
+Code-SHA: 9f297f43fb8b7faa9290bfb39dd85aef71095a99
+Evidence-SHA: 9f297f43fb8b7faa9290bfb39dd85aef71095a99
+automaticNextImplementationTask: NONE
+
+REAL DEVELOPMENT TARGET PROVENANCE
+Re-identified from the live process table (no PID/port assumed from 064 evidence):
+  PID 37028 Tooba.Host.exe  + PID 36540 wrapper `dotnet run --project src\backend\Host\Tooba.Host --no-launch-profile --no-build`
+  binary src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe (inside this repo), port http://localhost:5088
+  GET /__platform-commerce -> edition=SingleStore, deploymentId=dev-singlestore, tenantId=store-alpha,
+    connectionReference=tenant-alpha, resolvedHost=127.0.0.1
+  Database: tenant-alpha -> Host=127.0.0.1;Port=5432;Database=tooba_alpha (docker container postgres-db).
+  Hard Development proof: GET /v1/admin/dev-context -> 200 with actorUserId + tenantId=store-alpha; that route is
+    mapped only under app.Environment.IsDevelopment(). appsettings.Production.json is not loaded and no
+    production connection reference is in use; staging/production were never contacted. Credentials not logged.
+
+RESTART ACTION AND ROLLBACK
+Reason: the running binary even predated the Shipping module's Host wiring, so GET /v1/admin/shipping-services/post/rates
+  answered 404 (endpoints not mapped at all) and Mission A could not be satisfied without loading current code.
+Controlled action: recorded process identity -> graceful stop of PID 37028 + PID 36540 -> `dotnet build
+  src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug` (32 s, 0 errors, pre-existing warnings only) ->
+  relaunch with the recorded command (docs/architecture/evidence/TB-SHIPPING-MVP-DEV-ADMIN-UI-065/launch-dev-host.cmd):
+    set ASPNETCORE_ENVIRONMENT=Development / set ASPNETCORE_URLS=http://localhost:5088
+    dotnet run --project src\backend\Host\Tooba.Host --no-launch-profile --no-build
+  Health 200 within 4 s; identical provenance and identical database as before.
+Rollback: stop the Tooba.Host process and re-run that same file. The frontend dev server (:3000, next dev) was not touched.
+No staging/production or unidentified process was stopped; no Host.Tests run (Host holds the Host DLLs, as the task forbids fighting).
+
+MISSION A - LIVE HEALTH, ROUTES, AUTH, 064 REGRESSION (evidence: log-http-065.txt)
+  GET /health 200 {"status":"ok"}
+  authorized GET .../shipping-services/post/rates 200 {"serviceCode":"post","ratePolicies":[],"coverageGrants":[]}
+  authorized GET /v1/admin/geography/countries 200 (IR)
+  unauthenticated GET .../rates 401 admin.actor.missing ; unknown actor 403 admin.authorization.denied
+  064 malformed-body contract PRESENT on the live host: all five write routes (POST rates, PUT rates/{id},
+    PATCH rates/{id}/active, POST coverage-grants, PATCH coverage-grants/{id}/active) -> 400 validation.failed with
+    errors.request=[shipping.validation.body_invalid]; malformed POST with no actor still 401 (auth runs first).
+  063 missing-scope contract unchanged: 400 [shipping.validation.scope_required] (+ service_code_required for an empty body).
+  Cross-service guard 400 shipping.service_scope.mismatch; duplicate scope 400 shipping.rate_policy.scope_duplicate.
+
+MISSION B - REAL SERVICE CODE AND REAL GEOGRAPHY IDS
+  Service: `post` - an existing ACTIVE row of fulfillment.shipping_services. No imaginary svc-065, no service row created.
+  Geography IDs read live from the authorized Geography admin API: country IR e3451206-e503-51a8-91ad-afa9ab70e330,
+    area alborz 1f8050a8-..., city IR-alborz-01 68255340-..., later area east_azerbaijan 995347e5-...,
+    city IR-east_azerbaijan-02 (marand) ebf0cb15-...
+
+MISSION C - TWO DIRECTLY OBSERVED DEFECTS REPAIRED (frontend Shipping screen only; no backend file changed)
+  D1 (blocking, fixed): shipping-rates-coverage-model.ts rejected any selection holding both an administrative area
+    and a city ("شهر و استان همزمان قابل انتخاب نیستند"), which made the primary UI workflow impossible: the picker
+    correctly keeps the area as the city's parent, then the client refused to submit. It contradicts the domain rule
+    that a scoped object must always carry all of its parents (ShippingDestinationScope.ForCity(countryId,
+    administrativeAreaId, cityId)) and the server proves it - country+area+city returns 200 with level=City.
+    Fix: rule removed; country-required and service-area-requires-city kept.
+  D2 (fixed): create-rate field errors were rendered inside the destination list (shipping-destination-issues), so
+    "کد ارز باید سه حرف لاتین باشد." appeared under the Geography picker while shipping-rate-issues never rendered for
+    create. Fix: dedicated createFormIssues state rendering under a new shipping-create-rate-issues list.
+
+MISSION D - UI vs HTTP MATRIX (browser run drove the real Next.js app against the real backend; nothing mocked)
+  open service list / open rates-coverage dialog for `post`          -> UI yes
+  cascading Geography select (country -> area -> city)               -> UI yes (geography reads 200)
+  create rate (city scope)                                           -> UI yes (after D1 fix) AND HTTP yes ; persisted yes
+  create coverage grant (city scope)                                 -> UI yes (after D1 fix) AND HTTP yes ; persisted yes
+  read-after-write                                                   -> UI yes (close/reopen + full page reload) AND HTTP yes
+  edit rate money/lead-time                                          -> UI yes (123456 -> 222222, no revert) AND HTTP yes (65000 -> 71000)
+  toggle rate active / toggle coverage active                        -> UI yes AND HTTP yes ; persisted yes
+  visible validation error                                           -> UI yes (see D2; now under shipping-create-rate-issues)
+  non-admin denial                                                   -> UI yes (403 surfaced) AND HTTP yes (401 no credential, 403 unknown actor)
+  fail-closed untouched services                                     -> UI yes (empty coverage) AND HTTP yes (tipax / store_courier / in_person: 0 rates, 0 grants)
+  D1 before/after proof: the identical area+city scope was refused client-side before the fix (no request sent) and
+    created successfully after the fix with the picker reporting "سطح دامنه: شهر".
+
+FIXTURES AND CONTROLLED CLEANUP (evidence: log-fixtures-and-cleanup.txt)
+  Six TEST fixtures (3 rates + 3 grants) on service `post`, each pinned to one real city scope (or the country for the
+    pre-fix run) with deliberately synthetic amounts (65000 / 71000 / 111111 / 222222 / 123456): no live tariff reproduced.
+    HTTP path : rate 01a13ca4-4281-7000-bb23-76edd8f68818 , grant 01a13ca4-42f6-7000-b2b4-8318c1572792 (city alborz)
+    UI run #1 : rate 01a13ca8-3a0a-7000-8ddc-23b0c11bd871 , grant 01a13ca8-7fac-7000-9248-dbab79feedd1 (country IR, pre-fix)
+    UI run #2 : rate 01a13cb1-22a3-7000-9f3d-8cf18b7cbdc8 , grant 01a13cb1-8c4a-7000-8e00-be5de12ac374 (city marand, post-fix)
+  Cleanup: the Shipping admin surface exposes exactly six routes and NO delete route, so fixtures cannot be removed over
+    the API. All six were deactivated through the canonical PATCH .../active route (200 each) - inactive policy/grant is
+    not coverage and does not quote. Final state for `post`: 3 rates / 0 active, 3 grants / 0 active; database-side
+    confirmation identical (shipping.rate_policies total=3 active=0, shipping.coverage_grants total=3 active=0).
+    No row deleted by hand: nothing in the task authorises silent deletion. No other record touched.
+
+FOCUSED VALIDATION
+  shipping-services-roundtrip.test.ts + shipping-services-form-model.test.ts + shipping-rates-coverage-model.test.ts
+    -> 27 tests, 27 pass, 0 fail.
+  npx tsc --noEmit on src/frontend -> clean (9 s).
+  shipping-rates-coverage-model.test.ts updated so the "inconsistent selection" case asserts the corrected contract
+    (city with its area parent is valid; service area without its owning city is still refused) - the guard is aligned,
+    not weakened. No brittle test was bent to pass.
+  No new scratch container, no cloned database, no test harness, no broad guard suite, no Host.Tests attempt.
+
+ELAPSED / CHANGED PATHS / SYNC
+  Elapsed: ~43 minutes of the 45-minute hard timebox; stopped at the timebox.
+  Changed paths:
+    src/frontend/app/admin/shipping-services/shipping-rates-coverage-model.ts      (D1)
+    src/frontend/app/admin/shipping-services/shipping-rates-coverage-dialog.tsx    (D2)
+    src/frontend/app/admin/shipping-services/shipping-rates-coverage-model.test.ts (contract-aligned assertion)
+    docs/planning/shipping/SHIPPING-MVP-DEV-ADMIN-UI-065.md
+    docs/architecture/evidence/TB-SHIPPING-MVP-DEV-ADMIN-UI-065/** (log-dev-host-identity.txt, launch-dev-host.cmd,
+      log-host-startup.txt, log-http-065.txt, log-fixtures-and-cleanup.txt, probe-http.ps1, cleanup-fixtures.ps1)
+    docs/ai/tasks/TB-SHIPPING-MVP-DEV-ADMIN-UI-065.task.md is the received receipt only and was NOT staged.
+  Commit+push: 9f297f43fb8b7faa9290bfb39dd85aef71095a99 on main; after git fetch, HEAD == origin/main.
+  Pre-existing unrelated dirty files preserved untouched (CheckoutAbuseGate.cs, TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md,
+    admin-fulfillment-work-queue-screen.tsx, admin-order-detail-screen.tsx, storefront-landing-blocks.tsx). No reset/stash/rebase/force push.
+
+REMAINING BLOCKERS / LIMITATIONS (none blocking PASS)
+  - Two residual observations were not repaired as neither blocks the workflow: (1) immediately after picking an area the
+    city <select> can transiently list every city of the country before settling to the area-scoped set (fetch race;
+    values are correct once settled); (2) the rates dialog's two "بستن" buttons are a native <dialog> close with no
+    data-testid, so automation must locate them by text. Cosmetic.
+  - Tooba.Host.Tests was deliberately not run: the Development host is up and holds the Host DLLs (explicitly forbidden).
+    The frontend changes were instead verified in a real browser against the real backend.
+  - The pre-fix UI run created country-scope fixtures instead of the requested city scope; that is recorded above rather
+    than hidden, and it is the exact symptom that proves D1.
+END_TOOBA_WORKER_RESULT
+END_TOOBA_TASK

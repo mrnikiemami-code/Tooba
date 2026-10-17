@@ -1,0 +1,113 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-RESERVATION-POLICY-NUMERIC-FIELD-KEY-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: fd2ad0e82ed916a515756dacc876151605358353
+Starting-HEAD:          fd2ad0e82ed916a515756dacc876151605358353
+Starting-origin/main:   fd2ad0e82ed916a515756dacc876151605358353
+Conflicting-tracked-changes: NONE; untracked artifacts untouched; no stash/reset/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-frontend-feature/SKILL.md, docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md, the full component, reservation-policy-api and the focused suites. Deferred findings register NOT read or updated.
+
+ROOT CAUSE — HYPOTHESIS CONFIRMED
+ReservationPolicyDraft (reservation-policy-editor.tsx:10-18) has three string fields (initial/retry/max) and three boolean fields (inheritInitial/inheritRetry/inheritMax). The descriptor array at line 57 annotated its key as `keyof ReservationPolicyDraft`, which includes the boolean keys, so `draft[key]` widened to `string | boolean`. At line 112 that value is passed to `value={draft[key]}` on <input type="text">, whose value accepts string | number | readonly string[] | undefined -> TS2322. The compiler demonstrated the impossible branch itself: "Type 'false' is not assignable to ...". All three descriptors in the literal are string keys at runtime; the widening was purely a declaration defect. Every producer/consumer was verified before editing: the only read of `key` is the single fields.map, and nothing ever pushes a boolean key into `fields`.
+
+ACTUAL REPAIR
+Added a local, unexported, fully erased type alias and narrowed only the descriptor key annotation:
+  type ReservationPolicyValueKey = "initial" | "retry" | "max";
+  const fields: Array<{ key: ReservationPolicyValueKey; field: ReservationPolicyFieldView; unitFa: string; unitEn: string }> = [ ... ];
+plus a short comment explaining the string/boolean split. No BLOCKED_ARCHITECT_DECISION raised: the declared mapping supports the repair with zero runtime change.
+Why a literal union rather than a mapped derivation: a mapped `Draft[K] extends string ? K : never` form would silently admit any future string-valued field into the descriptor key space — the exact class of drift that caused this defect.
+
+ACTUAL DIFF
+diff --git a/src/frontend/app/admin/reservation-policy-editor.tsx b/src/frontend/app/admin/reservation-policy-editor.tsx
+@@ -17,6 +17,13 @@ export interface ReservationPolicyDraft {
+   inheritMax: boolean;
+ }
+ 
++/**
++ * کلیدهای مقدار متنی در draft (سه فیلد عددی). این سه فیلد همیشه رشته‌اند و
++ * کلیدهای inherit… بولین هستند؛ جدا کردن این دو گروه، جلوی رسیدن مقدار بولین
++ * به ورودی متنی را می‌گیرد و شکل واقعی ReservationPolicyDraft دست‌نخورده می‌ماند.
++ */
++type ReservationPolicyValueKey = "initial" | "retry" | "max";
++
+ export function draftFromView(…)
+@@ -50,7 +57,7 @@ export function ReservationPolicyEditor({
+   const dir = locale === "en" ? "ltr" : "rtl";
+-  const fields: Array<{ key: keyof ReservationPolicyDraft; field: ReservationPolicyFieldView; unitFa: string; unitEn: string }> = [
++  const fields: Array<{ key: ReservationPolicyValueKey; field: ReservationPolicyFieldView; unitFa: string; unitEn: string }> = [
+     { key: "initial", field: view.initialHold, unitFa: "دقیقه", unitEn: "minutes" },
+     { key: "retry", field: view.retryHold, unitFa: "دقیقه", unitEn: "minutes" },
+     { key: "max", field: view.maxCycles, unitFa: "دفعه", unitEn: "cycles" },
+
+RUNTIME INVARIANTS (type-only change)
+- Descriptor literal byte-identical: same three objects, same order, same field bindings (view.initialHold/retryHold/maxCycles), same unitFa/unitEn; only the annotation of the already-string `key` literals narrowed.
+- Inherit-key mapping unchanged: key === "initial" ? "inheritInitial" : key === "retry" ? "inheritRetry" : "inheritMax". For the three actual keys the branches are identical; narrowing only makes the final else provably "max".
+- Checkbox handler unchanged: [inheritKey]: checked, [key]: checked ? "" : draft[key] — draft[key] is now TYPED string but is still the same runtime string from the same object.
+- Text onChange unchanged: { ...draft, [key]: event.target.value }.
+- Save contract untouched: draftFromView and readReservationWrite unmodified; emitted body (initialReservationHoldMinutes / retryReservationHoldMinutes / maxReservationCycles) unmodified.
+- ReservationPolicyDraft's true shape unchanged (its boolean inherit fields still exist and remain boolean; not partialised, not optionalised).
+- No cast / ! / any / ts-ignore / unknown cast / stringify. `type` alias emits zero JavaScript; it is not exported and crosses no module boundary.
+
+DIAGNOSTICS
+errors-before: 21
+errors-after:  20
+delta:         -1
+new-diagnostics-introduced: 0
+Only-file-that-cleared proof (per-file tallies, before -> after):
+  reservation-policy-editor.tsx 1 -> 0   <-- the targeted TS2322 gone entirely
+  category-admin-screen.tsx 1 -> 1 ; content-list.tsx 1 -> 1 ; landing-pages/admin-builder-ux-r8.guard.test.ts 1 -> 1 ; landing-pages/admin-resource-selector.tsx 1 -> 1 ; product-rich-text-editor.tsx 1 -> 1 ; storefront/storefront-landing-blocks.tsx 1 -> 1 ; template-preview/fashion/fashion-template-preview-view.tsx 1 -> 1 ; features/admin-languages/components/language-list.tsx 3 -> 3 ; lib/storefront-composition/fashion-demo-preview.ts 1 -> 1 ; lib/storefront-composition/shared-composition-renderer.tsx 9 -> 9
+EXISTING-FAILURE DISCLOSURE (Compare-Object also flagged one text difference, investigated and explained): the pre-existing app/admin/category-admin-screen.tsx(1801,5) line appears in both runs with the identical file, line, column, error code (TS2322) and target type (EditSurface | null); only TypeScript's printed order of union members differs —
+  before: '"translations" | "facets" | "general" | "attributes" | "mega-menu" | "reservation"'
+  after:  '"general" | "translations" | "attributes" | "facets" | "mega-menu" | "reservation"'
+TS union-member print order is not stable across runs. The per-file tally (1 -> 1) confirms a cosmetic reordering of an untouched pre-existing error, NOT a new diagnostic and NOT caused by this edit: that file was neither opened nor modified.
+tool: cd src/frontend && node_modules/.bin/tsc --noEmit, run exactly once after the final edit (exit 2 overall — 20 pre-existing errors elsewhere; no greenness claimed)
+baseline-file: docs/architecture/evidence/TB-FE-CONTENT-CATEGORY-MEDIA-PREVIEW-NULL-001/typecheck-after-tsc.txt (exactly as the task specified)
+before/after capture: docs/architecture/evidence/TB-FE-RESERVATION-POLICY-NUMERIC-FIELD-KEY-001/typecheck-{before,after-tsc}.txt
+
+FOCUSED TESTS
+suites: app/admin/reservation-policy-admin.test.ts + app/admin/admin-reservation-cycle.test.ts (both directly relevant; the first reads this very file at line 16)
+result: tests 11, pass 11, fail 0
+pre-existing-failures-observed: none (single run, no test loop)
+caveat honoured: these are SOURCE-READING guards, therefore corroborating evidence only, not behavioural proof (noted as such in the evidence file).
+tests-added-or-amended: NONE — the change is erased typing only, so any new assertion would be ceremonial, which the task forbade.
+raw: docs/architecture/evidence/TB-FE-RESERVATION-POLICY-NUMERIC-FIELD-KEY-001/focused-tests.txt
+NOT run, deliberately: full suite / test:discovered, build, browser/visual verification, backend suites, AMSC, other guards. No unrun test is reported as pass.
+
+SCOPE COMPLIANCE
+Production files changed: exactly 1 (reservation-policy-editor.tsx) — the only file ALLOWED. Plus the receipt and evidence the task required; no test file touched.
+No backend, DTO/schema, business-policy or inventory-reservation change; no storefront/Home/PDP/Shopeiva locked surface; no type suppression, any, unsafe cast or ts-ignore; no tsconfig/CI/test-baseline/architecture-guard change; no cross-module cleanup; no unrelated fix; no AMSC; no broad test suite; no automatic follow-up or retry cascade.
+
+RISK / ROLLBACK
+Risk: VERY LOW. A local annotation on an array literal whose runtime contents are byte-identical, so no value, toggle, tab, request body or rendered markup can change. The only compile-time consequence is the intended guard: a future boolean-keyed descriptor is now rejected at the annotation instead of silently reaching an <input>.
+Rollback: revert the single commit; TS2322 returns and the annotation re-widens to keyof ReservationPolicyDraft. No data, migration or contract rollback involved.
+
+FILES
+src/frontend/app/admin/reservation-policy-editor.tsx (M)
+docs/ai/tasks/TB-FE-RESERVATION-POLICY-NUMERIC-FIELD-KEY-001.task.md (A)
+docs/architecture/evidence/TB-FE-RESERVATION-POLICY-NUMERIC-FIELD-KEY-001/{summary.md,typecheck-before.txt,typecheck-after-tsc.txt,focused-tests.txt} (A)
+
+COMMIT
+commit-sha: 6f8f6ff4aae1df4be14d7c25a268e5502584c550
+pushed-to: origin/main (fd2ad0e82..6f8f6ff4a)
+HEAD-after-push:        6f8f6ff4aae1df4be14d7c25a268e5502584c550
+origin/main-after-fetch: 6f8f6ff4aae1df4be14d7c25a268e5502584c550
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

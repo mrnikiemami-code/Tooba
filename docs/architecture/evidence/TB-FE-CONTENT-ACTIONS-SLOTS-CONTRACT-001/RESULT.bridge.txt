@@ -1,0 +1,115 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-CONTENT-ACTIONS-SLOTS-CONTRACT-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: 345a87b5db6b8dbaab123543af2628007957e040
+Starting-HEAD:          345a87b5db6b8dbaab123543af2628007957e040
+Starting-origin/main:   345a87b5db6b8dbaab123543af2628007957e040
+Tracked-worktree-clean: YES; no untracked artifact touched; no stash/reset/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-frontend-feature/SKILL.md, docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md, the actual code (content-list.tsx, app-grid-pinned-actions.ts, app-grid-row-actions.tsx), the reference callers and the closest focused guard suites. Deferred findings register NOT opened.
+
+STOP GATE RESULT: PASSED — repair implemented. BLOCKED_ARCHITECT_DECISION NOT raised.
+Q1. What exactly does actionSlots mean at runtime? A COMPACT-DEFAULT WIDTH HINT ONLY — not a count, not a width reservation, not an overflow trigger, not an actual cap, not a rendering switch.
+  Evidence (design-system/app-data-grid/app-grid-pinned-actions.ts, whole file is 50 lines):
+    :13  actionSlots?: 1 | 2 | 3;   with doc comment "تعداد جایگاه عملیات (۱–۳) برای عرض پیشفرض جمعتر؛ کاربر همچنان میتواند resize کند"
+    :17-21  widthForActionSlots(slots) => { const width = 28 + slots*40; return { width, minWidth: width-8, maxWidth: width+48 } }
+    :33   const slotWidths = widthForActionSlots(actionSlots);
+    :38   width:    width    ?? slotWidths.width
+    :39   minWidth: minWidth ?? slotWidths.minWidth
+    :40   maxWidth: maxWidth ?? slotWidths.maxWidth
+  i.e. the slot value produces three numbers that are used ONLY as `??` fallbacks. All other options (colId, headerName, sortable, filter, resizable, lockVisible, lockPinned, lockPosition, pinned, cellClass, cellRenderer) are independent of it.
+Q1b. Is it even live for THIS caller? NO — provably inert. content-list.tsx supplies ALL THREE dimensions explicitly (width 200, minWidth 180, maxWidth 200), so every `??` short-circuits to the explicit value and slotWidths is computed then entirely DISCARDED. For 5 slots the derived numbers would have been {228, 220, 276}, none of which was ever used. actionSlots: 5 had ZERO runtime effect.
+Q1c. Repo-wide consumers (nothing else reads it): declaration :13, destructure default :31, single use :33; callers category-products-panel.tsx:477 (2|1), content-author-list.tsx:161 (3), product-list.tsx:192 (3), content-list.tsx:262 (5 — the only in-contract violation in the repo). NO test asset in the repository references actionSlots.
+Q2. Are the action definitions all preserved and accessible if the slot hint is removed? YES.
+  Renderer app-grid-row-actions.tsx:37 `const visibleActions = actions.filter((action) => action.visible?.(row) ?? true);` then :61 `{visibleActions.map(...)}` — renders EVERY visible action with NO cap, NO slice, NO index limit, NO overflow/"more" menu, and it NEVER reads actionSlots (not a prop of it).
+  The six definitions in buildContentRowActions (content-list.tsx:149-217) are BYTE-IDENTICAL before/after: view (Eye, viewHref, unfiltered) / edit (Pencil, editHref, visible: canEdit && !isArticleArchived) / delete (Trash2, destructive, canEdit && canHardDeleteArticle) / archive (Archive, destructive, canEdit && canArchiveArticle) / publish (Upload, canPublish && !isPublished && !isArticleArchived) / unpublish (Undo2, destructive, canPublish && isPublished). Labels, icons, variant, href/onClick navigation targets and testIds untouched; caps -> allowedCapability("content.edit"/"content.publish") path and rowActions memo deps untouched.
+Q3. Would the four prohibited shapes have been needed? NO.
+  - Geometry: emitted ColDef stays width 200 / minWidth 180 / maxWidth 200 — the same literals through the same short-circuit. No unexpected resize.
+  - Shared contract: actionSlots?: 1 | 2 | 3 NOT widened, NOT relaxed; no design-system file edited. Reference callers confirm the parameter is a default-width input: category-products-panel.tsx:477 passes 2|1 WITHOUT explicit dimensions (the genuinely load-bearing case), while content-author-list.tsx:161 and product-list.tsx:192 also override it — which is why an out-of-union 5 was never a way to request a wider column.
+  - No product/architecture decision required; no visible control lost.
+  => Gate PASSED, so a bounded repair was applied rather than a block.
+
+REPAIR SHAPE (not one of the prohibited shapes)
+Removed the inert, out-of-contract hint and left a comment recording why (the union covers only the compact 1-3 presets, so no honest in-contract value exists for this column), preserving the intent for maintainers.
+  mechanically replace 5 with 3      → NO (no numeric value substituted)
+  widen the shared union to 5        → NO (design system untouched)
+  hide or remove actions             → NO (all six definitions and their rendering intact)
+  silence the error (cast/any/!/ts-ignore/suppression) → NO (the invalid property was eliminated, not suppressed)
+  change geometry                    → NO (identical 200/180/200 literals)
+No test added or amended: the task allowed a test change only if it tests a meaningful observed contract, and the observed contract is already covered by the passing pre-existing suites; a new assertion would be ceremonial (forbidden).
+
+ACTUAL DIFF (1 production file)
+diff --git a/src/frontend/app/admin/content-list.tsx b/src/frontend/app/admin/content-list.tsx
+@@ -259,7 +259,10 @@ function buildColumnDefs(
+     }),
+     buildPinnedActionsColumnDef<AdminContentArticle>({
+       direction: "rtl",
+-      actionSlots: 5,
++      // actionSlots فقط عرض پیشفرض فشرده را میسازد (۱–۳ جایگاه) و اینجا هندسهٔ ستون
++      // کاملاً با width/minWidth/maxWidth صریح تعیین شده است؛ پس اشارهگر جایگاه نه
++      // اعمال میشود و نه معتبر است. تعداد واقعی دکمهها را AppGridRowActionsCell
++      // بدون سقف رندر میکند.
+       width: 200,
+       minWidth: 180,
+       maxWidth: 200,
+
+DIAGNOSTICS
+errors-before: 19
+errors-after:  18
+delta:         -1
+new-diagnostics-introduced: 0
+comparison method: NORMALIZED by file/line/code. The normalized diff contains exactly one removed entry — app/admin/content-list.tsx(262,7) TS2322 — and NO added entries.
+per-file tallies (before -> after): content-list.tsx 1 -> 0 (target cleared); category-admin-screen.tsx 1 -> 1; landing-pages/admin-builder-ux-r8.guard.test.ts 1 -> 1; product-rich-text-editor.tsx 1 -> 1; storefront/storefront-landing-blocks.tsx 1 -> 1; template-preview/fashion/fashion-template-preview-view.tsx 1 -> 1; features/admin-languages/…/language-list.tsx 3 -> 3; lib/storefront-composition/fashion-demo-preview.ts 1 -> 1; lib/storefront-composition/shared-composition-renderer.tsx 9 -> 9
+tool: frontend node_modules/.bin/tsc --noEmit run exactly ONCE after the final edit (exit 2 overall — 18 pre-existing errors elsewhere; no greenness claimed)
+baseline-file: docs/architecture/evidence/TB-FE-LANDING-RESOURCE-DATE-LOCALE-001/typecheck-after-tsc.txt
+capture: docs/architecture/evidence/TB-FE-CONTENT-ACTIONS-SLOTS-CONTRACT-001/typecheck-{before,after-tsc}.txt
+
+FOCUSED TESTS
+suites: app/admin/content-list.test.ts + design-system/app-data-grid/app-grid-canonical.test.ts + design-system/app-data-grid/pinned-column.test.ts (closest content/action guard suites)
+result: tests 14, pass 14, fail 0
+relevance: content-list.test.ts READS THE CHANGED FILE DIRECTLY (readFileSync(join(import.meta.dirname, "content-list.tsx"), "utf8"), line 6) and its action-column guard still passes — it asserts /buildPinnedActionsColumnDef/, /direction:\s*"rtl"/, /AppGridRowActionsCell/ and doesNotMatch /AgGridReact/. app-grid-canonical.test.ts and pinned-column.test.ts are the design-system action-column guards (reading index.ts, AppDataGrid.tsx, product-list.tsx, theme.css, legacy-grid-bridge.ts) and confirm the shared helper and its union were not altered.
+pre-existing-failures-observed: none (single run, no cascade, no retry)
+raw: docs/architecture/evidence/TB-FE-CONTENT-ACTIONS-SLOTS-CONTRACT-001/focused-tests.txt
+NOT run, deliberately: full npm test / test:discovered, build, browser/visual verification, backend suites, AMSC, other guards. No unrun test is reported as pass.
+
+BEHAVIOR DELTA AND UNCERTAINTY
+Behavior delta: NONE. The removed property had no runtime effect; the six actions remain rendered without a cap; the column dimensions are the same literals (200/180/200).
+Outstanding uncertainty: LOW. The only judgement call is whether the author intended actionSlots: 5 as documentation of five slots; either reading yields identical rendering because explicit dimensions win, and the retained comment preserves the reasoning for the next maintainer.
+Limitations: no browser render was performed, so the actions column was not visually inspected live; the conclusions rest on the helper's `??` semantics, the renderer's unbounded map, the byte-identical action definitions and the passing guards.
+
+SCOPE COMPLIANCE
+Production files changed: exactly 1 (content-list.tsx) — the only file ALLOWED. Plus the receipt and evidence the task required; no test file, no design-system file, no config/guard/baseline touched. No shared design-system edit; no casts/any/!/ts-ignore/suppression; no tsconfig/CI/baseline change; no backend/schema; no storefront composition/Home/PDP edit; no unrelated refactor; no AMSC; no auto-started next task.
+
+RISK / ROLLBACK
+Risk: NEGLIGIBLE. A single inert, out-of-contract option removed from one column definition; geometry, ordering, pinning, resizability, actions, permissions and navigation all unchanged, and no shared contract or storefront surface touched.
+Rollback: revert the single commit; TS2322 returns in content-list.tsx with rendering still identical.
+
+FILES
+src/frontend/app/admin/content-list.tsx (M)
+docs/ai/tasks/TB-FE-CONTENT-ACTIONS-SLOTS-CONTRACT-001.task.md (A)
+docs/architecture/evidence/TB-FE-CONTENT-ACTIONS-SLOTS-CONTRACT-001/{summary.md,typecheck-before.txt,typecheck-after-tsc.txt,focused-tests.txt} (A)
+
+COMMIT
+commit-sha: 40c1526afb1cd52704d36cb5ef6d9811399a50c8
+pushed-to: origin/main (345a87b5d..40c1526af)
+HEAD-after-push:         40c1526afb1cd52704d36cb5ef6d9811399a50c8
+origin/main-after-fetch: 40c1526afb1cd52704d36cb5ef6d9811399a50c8
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

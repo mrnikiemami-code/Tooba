@@ -1,0 +1,34 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-TMAR-USERPREFERENCE-AMSC-001-W3-R1
+Parent-Task: TB-TMAR-USERPREFERENCE-AMSC-001-W3
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Summary: Repaired ONLY the outstanding UserPreference W3 durable verification gap; no production defect was established and no production file changed. The W3 guard proved the route count (6), the ISender.Send count (6) and the presence of the four request names, but never derived the ACTUAL dispatched request type of each shipped route from endpoint code; counts - and even the whole dispatched type set - can be preserved while a dispatch is silently replaced, so certify 6a was not truly enforced. Added UserPreferenceModuleAmsc001W3R1SetEqualityGuardTests (8 tests) deriving real provenance from disk: the three audience prefixes from UserPreferenceEndpointModule.MapGroup, verb+path+handler from every group.Map{Get,Put} mapping, and the dispatched request from each handler's ISender.Send argument (inline Send(new T(...)) read directly, including the multi-line form; untraceable/ambiguous dispatch throws fail-closed). Independently re-derived 6 routes -> 6 sends (exactly one per route) -> 4 distinct actual requests -> 4 matching handlers with exact route-to-request equality. Exact map: customer GET/PUT /v1/customer/preferences/ -> GetUserPreferenceQuery/UpsertUserPreferenceCommand; admin-operator GET/PUT /v1/admin/operator/preferences/ -> GetUserPreferenceQuery/UpsertUserPreferenceCommand; admin-ui GET/PUT /v1/admin/ui-preferences/{key} -> GetUiPreferenceQuery/UpsertUiPreferenceCommand. The two locale requests are genuinely shared by two routes each; 6 distinct requests were NOT required. Re-confirmed the exhaustive 4/4 matrix (3 VALIDATOR_REQUIRED + 1 NO_VALIDATOR_REQUIRED) and proved the single exemption on disk: GetUserPreferenceQuery's GET routes bind no client-controlled transport shape (no body, no route parameter) and its actor is server-derived, whereas GetUiPreferenceQuery requires a validator precisely because its /{key} route binds a non-guid parameter. Non-circular runtime DI proof: a real AddToobaCqrsFoundation container resolves the 3 validators, resolves null for the exempt request and holds exactly one ValidationBehavior<,>. Fail-closed proof covers untraceable variable dispatch, unknown route syntax, missing ISender.Send and an unexpected route-group prefix set. Mutation negative proof is pure in memory: replacing the admin-operator GET dispatch new GetUserPreferenceQuery(actor) -> new UpsertUserPreferenceCommand(actor, "en") preserves route count 6->6, Send count 6->6 and the distinct dispatched type set 4->4 (all blind) while the exact route->request map differs and is caught; no production file was written or committed. Historical W3 certification and evidence are preserved unrewritten; the global Host checkpoint is preserved.
+Route-Request-Set-State: EXACT_SOURCE_DERIVED_6_OF_6
+Handler-Set-State: EXACT_4_DISTINCT_REQUESTS_ONE_HANDLER_EACH
+Dispatch-Per-Route-State: EXACTLY_ONE_SEND_PER_ROUTE
+Validator-Matrix-State: EXHAUSTIVE_4_OF_4_3_VALIDATOR_REQUIRED_1_NO_VALIDATOR_REQUIRED
+Input-Provenance-State: VERIFIED
+Exemption-Provenance-State: SERVER_DERIVED_ACTOR_AND_BODYLESS_PARAMETERLESS_GET_ROUTE
+Validator-Discoverability-State: NON_CIRCULAR_REAL_CQRS_CONTAINER
+Fail-Closed-State: UNTRACEABLE_DISPATCH_UNKNOWN_ROUTE_SYNTAX_MISSING_SEND_UNEXPECTED_GROUP_SET_ALL_THROW
+Mutation-Negative-Guard-State: PASS
+Negative-Mutation-Mode: IN_MEMORY_ONLY_NO_PRODUCTION_WRITE
+Boundary-State: CONTRACTS_ONLY
+Schema-Migration-State: UNCHANGED
+Host-Checkpoint-State: PRESERVED
+Production-Code-Changed-State: ZERO
+Guards-Weakened-State: NONE
+Baselines-Widened-State: NONE
+Unrelated-Files-Touched-State: NONE
+Focused-Validation-State: UserPreferenceModuleAmsc001W3R1SetEqualityGuardTests 8 passed/0 failed/0 skipped; focused UserPreference filter (W3-R1 + W3 + W1 + W2 + UserPreferenceModuleAmcW1/W2/W3/W4 + HostPreferencesAmcGuardTests + ErrorCatalogUniqueCodeGuardTests) 48 passed/0 failed/0 skipped; wider global-gate filter 82 total/79 passed/3 failed versus the starting-head 1808ba55 isolated-worktree baseline 74 total/71 passed/3 failed - NEW = 0; the 3 failures are byte-identical at both heads and are stale repository-global pins unrelated to UserPreference (TmarCompleteReferenceStructureGateTests.Certified_modules_satisfy_root_allowlists_and_namespace_alignment for the pre-existing Tooba.Catalog.Contracts/Cart + Tooba.Cart.Contracts/{Checkout,Presentation} namespace deviation and the stale certifiedModules pin, plus the two TmarDurableGuardTests repository-global recovery pins)
+Changed-Files: src/backend/Host/Tooba.Host.Tests/Architecture/UserPreferenceModuleAmsc001W3R1SetEqualityGuardTests.cs (added); docs/architecture/evidence/TB-TMAR-USERPREFERENCE-AMSC-001-W3-R1/set-equality-gate.md (added); docs/architecture/evidence/TB-TMAR-USERPREFERENCE-AMSC-001-W3-R1/task.md (added); docs/architecture/evidence/TB-TMAR-USERPREFERENCE-AMSC-001-W3-R1/task-receipt.json (added); docs/architecture/tmar-current-state.json (additive userPreferenceAmsc001W3R1 block); docs/architecture/tmar-module-structure-manifests.json (additive set-equality annotation on the existing UserPreference entry); docs/architecture/TOOBA-TMAR-MASTER-RECOVERY.md (additive W3-R1 checkpoint appended)
+Commit-SHA: 4f875042176c2c1f249acffeaad795a2971dd310
+HEAD-Equals-Origin-Main: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_USERPREFERENCE_AMSC_001_W3_R1
+STOP
+END_TOOBA_WORKER_RESULT

@@ -1,0 +1,181 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-DEV-HOST-DEPLOY-AUTHORIZED-008
+Parent-Task: TB-P0-LIVE-DEPLOY-EXECUTE-007
+Program: TOOBA-FULFILLMENT-DISPATCH-INTEGRITY-RECOVERY
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Mode: BOUNDED_AUTHORIZED_DEV_HOST_DEPLOY_STOP_FOR_ARCHITECT
+Bridge-Task-Row: c78c2cd5-2d82-4844-96d4-e170cb7bd1d8
+Status: WORKER_COMPLETE — DEPLOYED AND VERIFIED — STOP FOR INDEPENDENT ARCHITECT ACCEPTANCE
+Deployment-Executed: YES
+Build-Executed: YES (1 attempt, exit 0)
+Restart-Executed: YES
+Rollback-Executed: NO
+Package-Retry-Executed: NO
+SQL-Write-Executed: NO
+Migration-Applied: NO (none needed)
+
+== 1. HEAD (before / after) ==
+
+Starting-HEAD (before deploy): 207dae32fd899584d8057405901593aecf222e45
+Ending-HEAD  (after  deploy): 207dae32fd899584d8057405901593aecf222e45
+origin/main:                  207dae32fd899584d8057405901593aecf222e45
+Expected-Starting-HEAD:       207dae32fd899584d8057405901593aecf222e45   -> MATCH, no SHA drift.
+
+Tracked production diff: EMPTY before and after (git diff --quiet -> exit 0; numstat empty).
+The four " M" paths remain index-stat/CRLF-only artifacts with zero content delta:
+  docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/summary.md
+  src/backend/Modules/Order/Tooba.Order.Infrastructure/Checkout/Abuse/CheckoutAbuseGate.cs
+  src/frontend/app/admin/admin-order-detail-screen.tsx
+  src/frontend/app/storefront/storefront-landing-blocks.tsx
+0 code edits, 0 test edits, 0 commits, 0 pushes, no reset/rebase/stash/force-push, no new SHA.
+
+== 2. PREFLIGHT GATES (all PASS, before service interruption) ==
+
+Governance read: AGENTS.md; .cursor/skills/tooba-backend-feature/SKILL.md; 007 result + rollback manifest.
+Target identity confirmed: PID 15068 Tooba.Host.exe,
+  D:\...\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe,
+  launcher PID 9364 "dotnet run --project src\backend\Host\Tooba.Host --no-launch-profile --no-build",
+  sole listener 127.0.0.1:5088, GET /__platform-commerce ->
+  Development / dev-singlestore / store-alpha / tenant-alpha (127.0.0.1).
+Rollback baseline verified BEFORE stopping anything:
+  D:\Users\User\deploy-backups\Tooba.Host\TB-P0-LIVE-DEPLOY-EXECUTE-007\bin-Debug-net8.0\  (583 files)
+  manifest: ...\ROLLBACK-MANIFEST.sha256.txt -> all 16 recorded SHA-256 entries match the backup copy.
+  All 5 critical live binaries were byte-identical to the backup and carried PV 1.0.0+92d2160....
+Migration gate: inventory.__ef_migrations_history already contained
+  20261012110133_AddReservationConsumptions (SELECT only) -> PASS, no migration required.
+No-migration feasibility checked before starting: the only migration changed between build 92d2160
+and HEAD is that same, already-applied Inventory migration (0 pending) -> the Development startup
+schema-migrate path is a guaranteed no-op; no schema write would occur.
+
+== 3. BUILD (one attempt) ==
+
+Command (repo root D:\Users\User\source\repos\SarvNewVer):
+  dotnet build src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug
+Build exit code: 0 — "Build succeeded. 0 Error(s), 11 Warning(s)" (pre-existing warnings only,
+the same set present before this task). Elapsed 00:01:08.
+No --no-build was used for the build. No retry was made.
+
+Built output provenance (before start): all 163 Tooba*.dll in
+src\backend\Host\Tooba.Host\bin\Debug\net8.0 now carry
+  ProductVersion = 1.0.0+207dae32fd899584d8057405901593aecf222e45
+  (previously 160 x 92d2160 + 3 x eca66731).
+Critical assemblies and mtimes:
+  Tooba.Host.dll                       2026-10-13T05:14:47  PV 1.0.0+207dae32...
+  Tooba.Inventory.Infrastructure.dll   2026-10-13T05:14:06  PV 1.0.0+207dae32...
+  Tooba.Inventory.Application.dll      2026-10-13T05:14:02  PV 1.0.0+207dae32...
+  Tooba.Fulfillment.Infrastructure.dll 2026-10-13T05:14:23  PV 1.0.0+207dae32...
+  Tooba.Fulfillment.Application.dll    2026-10-13T05:14:19  PV 1.0.0+207dae32...
+  Tooba.Order.Infrastructure.dll       2026-10-13T05:14:25  PV 1.0.0+207dae32...
+
+== 4. RESTART AND ONE DOCUMENTED CORRECTION ==
+
+Interruption: ONLY the authorized Development Host was stopped — Host PID 15068 and its verified
+launcher PID 9364. No other process or service was touched. Port 5088 confirmed released
+(listener count 0, /health unreachable) before building.
+
+Start #1 (published, then superseded): launched with ASPNETCORE_ENVIRONMENT=Development and the
+established arguments (dotnet run --project src\backend\Host\Tooba.Host --no-launch-profile
+--no-build) from the repo root. It came up correctly in Development with the new binary, but with
+--no-launch-profile and no ASPNETCORE_URLS present (verified empty at User and Machine scope) it
+bound to the framework default http://localhost:5000 instead of the required 127.0.0.1:5088.
+That is a target-listener mismatch, so it was immediately corrected rather than accepted.
+
+Start #2 (current, accepted): same environment and arguments, with the established URL binding
+restored explicitly:
+  set ASPNETCORE_ENVIRONMENT=Development
+  set ASPNETCORE_URLS=http://127.0.0.1:5088
+  cd /d D:\Users\User\source\repos\SarvNewVer
+  dotnet run --project src\backend\Host\Tooba.Host --no-launch-profile --no-build
+Bounded operation was not retried beyond this single configuration correction. Builds: 1 of 1 used.
+Rollbacks: 0 of 1 used. No loop, no improvisation, no unrelated change.
+
+== 5. POST-DEPLOY VERIFICATION (read-only observations of ACTUAL running state) ==
+
+Process / listener:
+  PID 39992, Tooba.Host.exe, StartTime 2026-10-13T05:16:33 (+03:30)
+  Path: D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe
+  Launcher PID 10512: dotnet run --project src\backend\Host\Tooba.Host --no-launch-profile --no-build
+  Listener: 127.0.0.1:5088 (sole listener on that port)
+  Startup log: "Hosting environment: Development" and "Now listening on: http://127.0.0.1:5088"
+
+Actually loaded assemblies (read from the live process module list, not from build output):
+  Tooba.Host.dll                       loaded PV = 1.0.0+207dae32fd899584d8057405901593aecf222e45
+  Tooba.Inventory.Infrastructure.dll   loaded PV = 1.0.0+207dae32fd899584d8057405901593aecf222e45
+  Tooba.Fulfillment.Infrastructure.dll loaded PV = 1.0.0+207dae32fd899584d8057405901593aecf222e45
+  (also Tooba.Inventory.Application.dll and Tooba.Fulfillment.Application.dll = 1.0.0+207dae32...,
+   all loaded from the same bin\Debug\net8.0 directory)
+  => Loaded revision equals Expected-Starting-HEAD. Provenance PROVEN, not inferred.
+
+Health and identity (read-only GET only; no POST/PATCH/DELETE):
+  GET /health        -> 200 {"status":"ok"}
+  GET /health/live   -> 200 {"status":"ok"}
+  GET /health/ready  -> 200 {"status":"ready","checks":{"edition":"SingleStore",
+                        "postgresql":"configured","authorization":"inmemory",
+                        "messaging-transport":"postgresql-sql","messaging":"Healthy"}}
+  GET /__platform-commerce -> 200 {"edition":"SingleStore","deploymentId":"dev-singlestore",
+                        "tenantId":"store-alpha","connectionReference":"tenant-alpha",
+                        "resolvedHost":"127.0.0.1","themeReference":"theme-alpha",
+                        "defaultMarketReference":"IR"}
+  => Still the DEVELOPMENT development host, dev-singlestore / tenant-alpha. Unchanged identity.
+
+Migration status after deploy (SELECT only, unchanged):
+  inventory.__ef_migrations_history = 5 rows, still including 20261012110133_AddReservationConsumptions.
+  inventory.reservation_consumptions row count = 0 (unchanged; still no fabricated provenance rows).
+
+Package snapshot after deploy (SELECT only) — unchanged vs 007 baseline:
+  MP-01A12F796EF1 (01a12f79-6ef1-7000-8578-dd7cc841195d): status Created, tracking 125444, dispatched_at NULL
+  member 01a12f79-6ef2-7000-9a81-7a9ff7894683 -> shipment status Dispatched,
+    dispatched_at 2026-10-12T10:11:57.155071Z, tracking 125444-01A12F79, released_at NULL
+  member 01a12f79-6ef2-7000-9d73-e0edfbb5412d -> shipment status Created, dispatched_at NULL, released_at NULL
+  lines: 5 x reservation_consumed = true (qty 1/2/6/4/1, shipped 1/2/6/4/1)
+         1 x reservation_consumed = false (qty_ordered 5, qty_shipped 0)
+  => NO unapproved data mutation. No dispatch / cancel / retry / tracking assignment was sent.
+
+Rollback required: NO. The one rollback budget entry remains unused and the verified backup is intact.
+
+== 6. GO / NO-GO ==
+
+Deployment of the reviewed backend fixes to the DEVELOPMENT Host (steps 5-8): DONE / GO.
+  The intended commit 207dae32 is now the actually loaded revision on 127.0.0.1:5088 in Development.
+
+Separately authorized live package retry of MP-01A12F796EF1:
+  NOW READY FOR A LEAD-REVIEWED BOUNDED RETRY — but it was NOT executed here and remains gated on a
+  separate explicit artifact. The pre-deploy blocker (stale 92d2160 binary without the keyed-consume
+  journal path and W6 reconciliation) is removed; the package is unchanged and the journal table is
+  still empty, so the retry would be the first real exercise of the new keyed consume seam.
+  Recommend the retry artifact require: pre-retry pg_dump of tooba_alpha, one bounded dispatch of the
+  still-Created member, and post-retry read-only verification that exactly one journal row appears
+  with the pkg:…:shp:…:line:… key, that the already-Dispatched member stays idempotently skipped,
+  and that no fabricated provenance is created.
+
+Risks / residual notes:
+  R1 First live exercise: 003/004/004R/005/W6 have never executed against real data; the retry is the
+     first proof. Keep the backup and a DB snapshot.
+  R2 The Development startup path still applies pending migrations if any ever appear; it was a no-op
+     here (0 pending) and must be re-checked before any future authorized deploy.
+  R3 Launch binding is not persistent: ASPNETCORE_URLS is set nowhere at User/Machine scope, so anyone
+     restarting with --no-launch-profile must set ASPNETCORE_URLS=http://127.0.0.1:5088 explicitly or
+     the host will bind to :5000 and appear "down" on 5088.
+  R4 Scope: Development only. Production remains untouched and UNKNOWN.
+
+== 7. SCOPE / HYGIENE ==
+
+Production code edits: 0. Test edits: 0. Commits/pushes: 0. Migration apply/backfill: 0.
+SQL writes (INSERT/UPDATE/DELETE): 0. HTTP POST/PATCH/DELETE: 0.
+Order/package dispatch, cancel, retry, tracking assignment: 0. Production endpoints touched: 0.
+Test suites / AMSC run: 0. Other services interrupted: 0.
+Unused budget: rollbacks 0 of 1; package retry not started; task 009 not started.
+Local docs-only evidence (untracked, deliberately not committed):
+  docs/ai/tasks/TB-P0-DEV-HOST-DEPLOY-AUTHORIZED-008.task.md
+  docs/architecture/evidence/TB-P0-DEV-HOST-DEPLOY-AUTHORIZED-008/   (this result + posting script)
+  C:\Users\User\AppData\Local\Temp\tooba-host-008-launch.cmd           (launcher used)
+  C:\Users\User\AppData\Local\Temp\tooba-host-008.log                  (host stdout/stderr log)
+  D:\Users\User\deploy-backups\Tooba.Host\TB-P0-LIVE-DEPLOY-EXECUTE-007\  (rollback copy + manifest, intact)
+
+Smallest next action:
+  Issue the separately approved bounded package-retry artifact for MP-01A12F796EF1 (with pg_dump
+  pre-step), or the next Architect task. Do not self-authorize it.
+STOP for independent Architect acceptance.
+END_TOOBA_WORKER_RESULT

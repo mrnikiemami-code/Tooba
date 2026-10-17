@@ -1,0 +1,187 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003
+Parent-Task: TB-P0-INVENTORY-FULFILLMENT-RETRY-SAFETY-002
+Program: TOOBA-FULFILLMENT-DISPATCH-INTEGRITY-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_INVENTORY_ATOMIC_CONSUME_WITH_STOP_GATES
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: IMPLEMENTED_STOP_FOR_ARCHITECT_INDEPENDENT_ACCEPTANCE
+
+PREFLIGHT
+Expected-Starting-HEAD: fa2c9209ec2d03216e823cf4e2c069178df868c4
+Starting-HEAD:          fa2c9209ec2d03216e823cf4e2c069178df868c4
+Starting-origin/main:   fa2c9209ec2d03216e823cf4e2c069178df868c4
+Tracked-worktree-clean (task files only): YES; HEAD == origin/main == Expected-Starting-HEAD.
+Read: AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, the received task receipt, parent
+Task/Result + evidence (boundary-map.md, failure-matrix.md, contract-decision.md),
+FulfillmentInventoryLifecyclePort, InventoryDirectory.cs, InventoryDbContext.cs, StockReservation,
+StockPosition, InventoryReturnGateway/ReturnRestockInboxRecord (inbox precedent), the Inventory
+migration conventions and the existing Inventory module + architecture-guard tests.
+ARCHITECTURE-FINDINGS-REGISTER.md NOT read (opt-in only).
+
+VERDICT
+Design E implemented exactly as approved in principle, inside Inventory ownership only, additive and
+backward compatible. All four task STOP GATES were checked and none was triggered. No live migration,
+no live data mutation, no deploy, no restart, no Fulfillment/W6/UI/auth/order-state change.
+
+DESIGN E AS LANDED
+1. Durable journal `inventory.reservation_consumptions` (entity `ReservationConsumptionRecord`):
+   `reservation_id` uuid PK (`pk_reservation_consumptions`, ValueGeneratedNever), `stock_item_id` uuid,
+   `quantity` numeric(18,6), `consumer_key` varchar(128) NULLABLE, `consumed_at` timestamptz.
+   Nullable key is deliberate: legacy callers are never silently given a fake ownership identity.
+2. ONE real local Inventory transaction on the keyed path (`InventoryDirectory.ConsumeReservationAsync`):
+   `BeginTransactionAsync` -> state-guarded CAS claim
+   (`UPDATE inventory.reservations ... WHERE reservation_id=@id AND status='Held'`, must affect 1 row)
+   -> guarded stock deduction on `inventory.stock_positions`
+   (`reserved >= q AND on_hand >= q`) -> journal insert -> aggregate sync
+   (`reservation.MoveTo(Consumed)` + `position.RecordConsumed` + `SyncQuantities`)
+   -> single `SaveChangesAsync` (Inventory outbox row is written by the existing
+   OutboxSaveChangesInterceptor in that same SaveChanges) -> `CommitAsync`.
+   Any failure rolls back the claim, the deduction, the journal row and the outbox row together.
+   The pre-existing immediate autocommitted `ExecuteUpdateAsync` deduction (the W7/W8 defect described
+   in the parent evidence) is gone: the claim now happens inside the same physical transaction.
+3. Replay truth table (proven, never assumed):
+   - journal row present AND ConsumerKey ordinal-equal AND StockItemId equal AND Quantity equal
+     => proven replay of the SAME consumer: returns success with NO new stock deduction.
+   - journal row present with any mismatch (different consumer key, stock item, quantity)
+     => typed `inventory.reservation.consume_mismatch`.
+   - reservation already `Consumed` with NO journal row (historical/legacy consumption)
+     => typed `inventory.reservation.consume_mismatch`; provenance is never invented and success is
+     never synthesised. No backfill of historical Consumed rows.
+   - racing loser re-reads the journal: proven replay returns, everything else conflicts.
+   - blank/whitespace consumerKey => typed conflict BEFORE any write (cannot degrade to unguarded path).
+4. Compatibility: `IFulfillmentInventoryLifecyclePort` gains an ADDITIVE member
+   `ConsumeAsync(Guid reservationId, string consumerKey, CancellationToken)`. The existing unkeyed
+   `ConsumeAsync(Guid, CancellationToken)` is unchanged in signature and in strictness (it stays
+   strict and never becomes blanket-success) and now delegates to the same core with `consumerKey:null`.
+   No existing caller was changed, so no caller is silently assigned fake ownership.
+5. No new error code, no resx/catalog edit, no AMSC/guard/baseline weakening. `MoveTo` terminal-state
+   semantics are preserved (the CAS enforces the same Held->Consumed rule in SQL).
+
+STOP GATES CHECKED
+- One physical transaction for claim + deduction + journal + reservation status + outbox: PROVEN on
+  real PostgreSQL 16 (Testcontainers), including an injected mid-flight save failure that rolls back
+  stock, reservation, journal AND outbox. Not triggered.
+- Migration destroys/rewrites historical Consumed rows or needs unapproved backfill: NO — additive
+  CREATE TABLE only; the scaffolded `return_restock_inbox` AlterColumn/DropPrimaryKey/RenameIndex
+  operations were deliberately REMOVED (see migration-safety.md §2). Not triggered.
+- Concurrency/exact-once provable on the supported DB: PROVEN with focused integration tests on real
+  PostgreSQL (2 racing consumers, same and different keys). Not triggered.
+- Existing callers preservable without ambiguous replay: YES — additive overload; legacy path stays
+  strict. Not triggered.
+
+REQUIRED TESTS (focused) — ALL PRESENT AND GREEN
+1. Same reservation + same consumer replay => one stock deduction, one journal row.
+   (Same_consumer_replay_deducts_stock_once_and_keeps_one_journal_row)
+2. Conflicting consumer => typed conflict, no second deduction.
+   (Conflicting_consumer_is_rejected_without_a_second_deduction)
+3. Consumed legacy row without journal => typed conflict, no synthetic success.
+   (Legacy_consumed_reservation_without_journal_is_a_typed_conflict)
+4. Failure between deduction and reservation/journal commit => rollback ALL Inventory writes incl. outbox.
+   (Failure_after_deduction_rolls_back_stock_reservation_journal_and_outbox)
+5. Concurrent consumers => one effective deduction with DB-enforced conflict/replay.
+   (Concurrent_same_consumer_deducts_once_with_journal_backed_replay_or_conflict,
+    Concurrent_different_consumers_produce_one_deduction_and_one_conflict)
+6. Not-Held/Released/unknown/insufficient stock retain correct domain errors.
+   (Released_and_unknown_reservations_keep_their_domain_errors,
+    Insufficient_reserved_stock_keeps_the_typed_error_and_rolls_back,
+    Legacy_unkeyed_consume_stays_strict_and_never_double_deducts,
+    Blank_consumer_key_is_rejected_without_touching_stock)
+7. Durable DB constraint proof (real 23505 + pg_constraint PK check):
+   (Journal_primary_key_is_a_durable_unique_constraint)
+
+FOCUSED VALIDATION (raw logs committed)
+1) InventoryConsumptionJournalTests (new, real PostgreSQL 16 Testcontainer):
+   Passed! - Failed 0, Passed 11, Skipped 0, Total 11, 27 s, exit code 0.
+   Log: docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/raw-inventory-consumption-journal-tests.txt
+2) Tooba.Inventory.Tests (existing module + architecture guards, unchanged baselines):
+   Passed! - Failed 0, Passed 13, Skipped 0, Total 13, 670 ms, exit code 0.
+   Log: docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/raw-inventory-module-tests.txt
+3) Focused host guard selection (journal + Fulfillment foundation + checkout order foundation +
+   host order reverse audit): 23 passed / 4 failed. All 4 failures are PRE-EXISTING and environmental,
+   NOT caused by this change:
+   - HostOrderReverseAuditGuardTests + FulfillmentFoundationTests.Fulfillment_is_not_order_... read
+     repository files by relative depth from AppContext.BaseDirectory; with a non-default
+     -p:ArtifactsPath the depth shifts and they fail with path assertions.
+   - FulfillmentFoundationTests.Paid_order_handoff_... expects InvalidOperationException and the
+     installed Host build surfaces ContractOperationException (stale host output, unrelated module).
+   - CheckoutOrderFoundationTests.Checkout_revalidates_price_splits_..._on_postgres fails with
+     Cart `cart.version.conflict` from shared live Postgres state (Cart module, untouched).
+   The raw log is committed UNMODIFIED so the Architect can see exactly what ran.
+   Log: docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/raw-focused-host-guards.txt
+No test was weakened, deleted, skipped, or excluded. No guard or baseline was edited.
+
+TEST-ENVIRONMENT NOTE
+The live dev Host (Tooba.Host.exe, PID 15068) holds the default bin output, so verification used an
+isolated artifacts output (-p:ArtifactsPath=...\obj\verify-artifacts). The tracked tree was not written
+by the build, and the running Host was never stopped or restarted. The repository also contains two
+untracked gitignored full tree copies (`.tmp-baseline/`, `.tmp-journal003/`) that pollute
+TmarSourceSizeGuard's scan with NEW_OVERSIZED_FILE entries for files that are not part of this task;
+this task's own addition is below the 800-LOC threshold and the one tracked file it grows
+(InventoryDirectory.cs, 324 -> 430 LOC) is also below threshold.
+
+EXACT CHANGED FILES (one bounded commit)
+Production (Inventory module only):
+- src/backend/Modules/Inventory/Tooba.Inventory.Contracts/Fulfillment/FulfillmentInventoryLifecyclePort.cs
+  (additive keyed ConsumeAsync overload + doc that the legacy member stays strict)
+- src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Persistence/ReservationConsumptionRecord.cs (new)
+- src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Persistence/InventoryDbContext.cs
+  (DbSet + mapping: table inventory.reservation_consumptions, PK ReservationId, numeric(18,6), key <=128)
+- src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Persistence/Migrations/20261012110133_AddReservationConsumptions.cs (new)
+- src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Persistence/Migrations/InventoryDbContextModelSnapshot.cs
+  (only the new entity block)
+- src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.cs
+  (keyed overload, ConsumeReservationAsync single-transaction core, replay truth table, 23505 translation)
+Tests:
+- src/backend/Host/Tooba.Host.Tests/InventoryConsumptionJournalTests.cs (new, 11 tests)
+Docs/evidence:
+- docs/ai/tasks/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003.task.md (exact received receipt)
+- docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/{design,files-changed,invariants,migration-safety,risks,summary}.md
+- docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/raw-{inventory-consumption-journal-tests,inventory-module-tests,focused-host-guards}.txt
+EXPLICITLY NOT CHANGED: Fulfillment dispatch orchestration, W6 skip logic, existing live packages,
+global tracking index, UI, backend authentication, tenant isolation, order state, InventoryErrorCodes,
+resx/localization catalog, AMSC/manifest records, any other module, any historical table.
+
+MIGRATION SAFETY
+Additive-only: `CREATE TABLE inventory.reservation_consumptions` + PK; Down drops it. No ALTER/UPDATE/
+DELETE, no backfill, no historical-row rewrite. `numeric(18,6)` matches the existing Inventory decimal
+convention so journal vs reservation quantity comparison is exact. Migration NOT applied to any
+environment. Full analysis in migration-safety.md (incl. the removed pre-existing return_restock_inbox
+drift operations, deliberately untouched as out of scope).
+
+RESIDUAL RISKS / NON-GOALS
+- Historical Consumed reservations without a journal row are a typed conflict on the keyed path
+  (intentional, required by the stop gates). Today's production callers still use the legacy strict
+  path, so this is not user-visible yet.
+- The keyed path is not yet wired by Fulfillment: this task is the Inventory foundation only; the
+  follow-up that supplies a canonical stable Fulfillment consumer key and addresses W6 is out of scope
+  and untouched.
+- Cross-module atomicity is NOT claimed or guaranteed. Only Inventory-local atomicity is proven.
+- Journal table grows one row per consumed reservation; retention is an operational follow-up.
+
+COMMIT
+starting-HEAD: fa2c9209ec2d03216e823cf4e2c069178df868c4
+commit-sha: e7d0bf978fcf8b3f90bd0300474ab23e486d3289
+pushed-to: origin/main (fa2c9209e..e7d0bf978)
+HEAD-after-push: e7d0bf978fcf8b3f90bd0300474ab23e486d3289
+origin/main-after-fetch: e7d0bf978fcf8b3f90bd0300474ab23e486d3289
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES (unrelated pre-existing untracked evidence files left untouched)
+No git reset / stash / force-push; unrelated files not modified.
+
+EVIDENCE
+docs/architecture/evidence/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003/
+  design.md, files-changed.md, invariants.md, migration-safety.md, risks.md, summary.md,
+  raw-inventory-consumption-journal-tests.txt, raw-inventory-module-tests.txt,
+  raw-focused-host-guards.txt
+docs/ai/tasks/TB-P0-INVENTORY-CONSUMPTION-JOURNAL-003.task.md
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

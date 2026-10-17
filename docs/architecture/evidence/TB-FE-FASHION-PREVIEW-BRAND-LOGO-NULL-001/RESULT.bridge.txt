@@ -1,0 +1,101 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-FASHION-PREVIEW-BRAND-LOGO-NULL-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: dc3e551407876becb3e9ca5333d4ff8b87fcb042
+Starting-HEAD:          dc3e551407876becb3e9ca5333d4ff8b87fcb042
+Starting-origin/main:   dc3e551407876becb3e9ca5333d4ff8b87fcb042
+Tracked-worktree-clean: YES; no divergence; no reset/stash/rebase/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-frontend-feature/SKILL.md, docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md, docs/architecture/TOOBA-LOCKS.md (applicable preview locks), fashion-demo-preview.ts (:125-155, :175-225, :500-545), the StorefrontBrandItem contract and all logoMediaAssetId consumers. Deferred ARCHITECTURE-FINDINGS-REGISTER.md NOT read or edited.
+
+STOP GATE: PASSED — undefined is NOT a materially distinct required state. "undefined -> null" is truthful and runtime-identical. BLOCKED_ARCHITECT_DECISION NOT required. StorefrontBrandItem was NOT widened, no cast, no invented fallback asset id.
+
+ROOT CAUSE (exact locations)
+  app/storefront/storefront-model.ts:57-64  interface StorefrontBrandItem { … logoMediaAssetId: string | null; … }   <-- consumer-owned, NOT edited
+  fashion-demo-preview.ts:148               logoMediaAssetId?: string | null;                                      <-- Host type: optional AND nullable
+  fashion-demo-preview.ts:533               normalizePreview: logoMediaAssetId: (pick(row,…) as string | null) ?? null
+  fashion-demo-preview.ts:221 (old)         logoMediaAssetId: b.logoMediaAssetId ?? undefined   <-- yields string | undefined => TS2322 at :216
+
+FIVE PROOFS THAT undefined IS NOT MATERIALLY DISTINCT (the gate's own condition)
+2.1 The producer in this very pipeline ALREADY normalizes absence to null: normalizePreview (:533) rebuilds each brand row as (pick(...) as string | null) ?? null, so mapContext's input preview.brands[].logoMediaAssetId is null — never undefined — at runtime. The old `?? undefined` was therefore DEAD defensive code (it could not produce undefined) whose only effect was to lie about the type. Verified by a direct runtime probe of the same normalization expression:
+      normalized logo values: [{"logoMediaAssetId":null},{"logoMediaAssetId":"abc"}]
+      any undefined? false
+2.2 The sibling projections in the SAME function already emit null for absent media: categories :191 imageMediaAssetId: c.imageMediaAssetId ?? null; products :209/:211 use ?? null for the other nullable media/label fields. `?? null` is this mapper's established absence idiom; the brands branch was the sole deviation.
+2.3 The STORE branch of the SAME preview feature ALREADY delivers null: loadFashionStorePreview passes loadStorefrontBrands() straight through (:684, brands = brandsRaw ?? []) and storefront-api.ts:406 normalizes logoMediaAssetId: logoRaw == null ? null : asString(logoRaw). So consumers of StorefrontBrandItem already receive null on the store path today — null is the feature's real absence marker, so nobody can be relying on a distinct undefined. Store-vs-Sample isolation untouched: the edit is confined to the sample mapper's brand projection.
+2.4 The sole consumer cannot distinguish them even in principle: storefront-home-repair-sections.tsx:234 src={storefrontMediaUrl(brand.logoMediaAssetId)}, and storefrontMediaUrl is declared (assetId: string | null | undefined): string (storefront-api.ts:73) using `if (assetId?.startsWith("/images/"))`. Both null and undefined hit the identical `?.` short-circuit and fall through to the same demo/industry lookups. storefrontHeader :165 likewise normalizes logoRaw == null ? null : String(logoRaw). No branch anywhere treats undefined differently from null.
+2.5 No required absent-vs-null distinction is lost and nothing is invented: no fallback asset id, no Preview-Fake marker, no coercion of untrusted input into a trusted marker. It maps the already-null value to null.
+
+ACTUAL DIFF (1 production file, 1 line)
+diff --git a/src/frontend/lib/storefront-composition/fashion-demo-preview.ts b/src/frontend/lib/storefront-composition/fashion-demo-preview.ts
+   const brands: StorefrontBrandItem[] = preview.brands.map((b) => ({
+     brandId: b.brandId,
+     slug: b.slug,
+     name: b.name,
+     productCount: b.productCount,
+-    logoMediaAssetId: b.logoMediaAssetId ?? undefined,
++    logoMediaAssetId: b.logoMediaAssetId ?? null,
+   }));
+(plus a Persian rationale comment above the projection citing :148, :533, :191 and the store path.) No any / cast / as unknown as / non-null assertion / ts-ignore / suppression. No edit to StorefrontBrandItem, shared schema/API/Host/backend, composition renderer, brand carousel layout, template-catalog provenance, Preview-Fake contract, Home/PDP/Shopeiva visuals, or tsconfig/CI/baseline/guards.
+
+INTENTIONAL RUNTIME DIFFERENCE: NONE (requested transparency)
+The undefined -> null delta is zero: mapContext's input is already null for absence (2.1), so both `?? null` and `?? undefined` evaluate to null for absent logos and to the same asset-id string when present. The value reaching storefrontMediaUrl is byte-for-byte identical before and after, for every previously possible input — including a hypothetical undefined, which the same `?.` consumer path already collapses (2.4). There is no runtime-observable behavior to assert.
+
+DIAGNOSTICS
+errors-before: 15
+errors-after:  14
+delta:         -1
+new-diagnostics-introduced: 0
+comparison method: NORMALIZED by file+line+error-code. Exactly one removed entry — lib/storefront-composition/fashion-demo-preview.ts(216,9) TS2322 — and NO added entries.
+per-file tallies after: product-rich-text-editor.tsx 1; storefront/storefront-landing-blocks.tsx 1; features/admin-languages/…/language-list.tsx 3; shared-composition-renderer.tsx 9. fashion-demo-preview.ts is now FULLY CLEAN (its remaining count was 1 and it was this error).
+tool: cd src/frontend && node_modules/.bin/tsc --noEmit run exactly ONCE after the final edit (exit 2 overall — 14 pre-existing errors elsewhere; compiler GREEN is NOT claimed)
+baseline-file: docs/architecture/evidence/TB-FE-FASHION-PREVIEW-ORIGIN-TYPE-001/typecheck-after-tsc.txt (exactly as the task specified)
+capture: docs/architecture/evidence/TB-FE-FASHION-PREVIEW-BRAND-LOGO-NULL-001/typecheck-{before,after-tsc}.txt
+
+FOCUSED TESTS (one bounded run)
+suites: app/admin/landing-pages/admin-builder-ux-r8.guard.test.ts (imports this module; asserts Fashion provenance + Preview-Fake media isolation + store-vs-sample media paths), lib/storefront-composition/industry-templates.guard.test.ts (sibling industry brand/mapper precedent), app/storefront/storefront-home.test.ts (the StorefrontBrandItem consumer contract, incl. a brand-logo assertion at :77)
+result: tests 19, pass 19, fail 0
+pre-existing-failures-in-selected-set: NONE
+NOT re-run (deliberately): admin-builder-ux-r4.guard.test.ts and r7.guard.test.ts — they abort at IMPORT time on stale backend paths (…/Catalog/Tooba.Catalog.Domain/TemplateCatalog.cs, …/Media/Tooba.Media.Domain/MediaAsset.cs, both since moved into subfolders). Pre-existing, already documented in TB-FE-FASHION-PREVIEW-ORIGIN-TYPE-001 evidence, unrelated to brands or to a .ts mapping line; the task instructed not to chase unrelated stale paths.
+tests-not-run (and NOT reported as pass): full npm test / test:discovered, build, browser/visual verification, AMSC, all other guards. No retry cascade.
+test added/amended: NONE — the change is not runtime-visible (§INTENTIONAL RUNTIME DIFFERENCE), and this module's brand projection has no existing behavioral seam reachable without widening production exports or mocking fetch, both forbidden by the task. Honest outcome: no new test rather than a ceremonial one.
+raw: docs/architecture/evidence/TB-FE-FASHION-PREVIEW-BRAND-LOGO-NULL-001/focused-tests.txt
+
+LIMITATION STATED HONESTLY
+No existing test exercises mapContext's brand branch directly: it is reachable only via loadFashionTemplatePreview, which performs a real Host HTTP fetch, and neither mapContext nor normalizePreview is exported. Direct behavioral coverage of this projection does not exist; the equivalence argument rests on the producer normalization at :533 and the consumer signature at storefront-api.ts:73, both cited and probe-verified above.
+
+SCOPE COMPLIANCE
+Production files changed: exactly 1 (fashion-demo-preview.ts, at the brands projection) — the PREFERRED file (git diff --name-only confirms one path). Plus the required receipt and bounded evidence; no test, guard, config, tsconfig/CI or baseline file touched.
+
+RISK / ROLLBACK
+Risk: NEGLIGIBLE. A one-token fallback change in a type-only mismatch, with the fallback provably unreachable at runtime (2.1) and provably indistinguishable to the sole consumer (2.4). No locked surface, contract, provenance or isolation semantics touched.
+Rollback: revert the single commit; TS2322 returns at fashion-demo-preview.ts:216 and the previous (type-lying but runtime-identical) `?? undefined` resumes.
+
+FILES
+src/frontend/lib/storefront-composition/fashion-demo-preview.ts (M)
+docs/ai/tasks/TB-FE-FASHION-PREVIEW-BRAND-LOGO-NULL-001.task.md (A)
+docs/architecture/evidence/TB-FE-FASHION-PREVIEW-BRAND-LOGO-NULL-001/{summary.md,typecheck-before.txt,typecheck-after-tsc.txt,focused-tests.txt} (A)
+
+COMMIT
+commit-sha: 286489b74fba6520299f9dbb66d81bec2935e6ab
+pushed-to: origin/main (dc3e55140..286489b74)
+HEAD-after-push:        286489b74fba6520299f9dbb66d81bec2935e6ab
+origin/main-after-fetch: 286489b74fba6520299f9dbb66d81bec2935e6ab
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

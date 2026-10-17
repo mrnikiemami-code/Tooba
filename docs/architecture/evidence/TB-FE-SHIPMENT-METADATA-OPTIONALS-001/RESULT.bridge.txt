@@ -1,0 +1,67 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-SHIPMENT-METADATA-OPTIONALS-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR
+Status: PASS
+Verdict: BOUNDED_REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: f9b66c15754188f6d9614130978f459a883110d6
+Expected-Starting-HEAD-Match-State: VERIFIED
+Expected-Starting-HEAD-Equals-Origin-Main-State: VERIFIED
+Preflight-Tracked-Worktree-State: CLEAN_NO_TRACKED_MODIFICATION
+Preflight-Divergence-State: NONE_NO_OTHER_WORKER_ADVANCED_HEAD
+Root-Cause: All four TS2322 diagnostics are one defect shape: an explicit undefined written into an object literal whose declared type is Record<string, string | number>. num() already returns number | undefined, so "?? undefined" was a pure no-op that existed only to look like the sibling "str(...) ?? \"\"" calls, making the declared type of buildMetadata a lie rather than a behaviour defect.
+Diagnostics-Addressed: app/admin/admin-create-shipment-modal.tsx(251,11) weightKg in the post branch; (253,11) declaredValue in the post branch; (263,11) weightKg in the tipax branch; (265,11) declaredValue in the tipax branch
+Wire-Contract-Verification-Performed: YES_NO_VALIDATOR_REQUIRES_THESE_KEYS_AND_OMITTED_KEYS_ARE_ALREADY_THE_CONTRACT
+Wire-Contract-Chain: Producer buildMetadata then Object.fromEntries(Object.entries(metadata).filter(([, v]) => v !== undefined && v !== "")) then JSON.stringify(cleaned) into providerMetadataJson (admin-create-shipment-modal.tsx:309-329); frontend transport src/frontend/app/admin/admin-order-operations.ts:90,289 as providerMetadataJson?: string | null; Order module AdminOrderOperationsModels.cs:81 as string? ProviderMetadataJson = null passed through verbatim by AdminOrderOperationsOrchestrator.Fulfillment.cs:233; Fulfillment module FulfillmentAdminOperationsContracts.cs:84,228, FulfillmentUnit.cs:339,360, FulfillmentDirectory.cs:69 and Shipment.cs:38,90 all as string?, persisted into a text column (FulfillmentDbContext.cs:125) after string.IsNullOrWhiteSpace(...) ? null : providerMetadataJson.Trim(). No key-level validation of weightKg or declaredValue exists anywhere in the chain and the existing cleaned filter has always dropped those keys at runtime, so omission is already the wire contract.
+Repair-Option-Chosen: Of the two options the task offered, this repair took "construct optional keys only when values exist" rather than widening an intermediate, so the declared return type Record<string, string | number> stays true by construction and undefined never enters the metadata object at all.
+Change: One small helper inside buildMetadata - const optionalNum = (key: string): Record<string, number> => { const value = num(key); return value === undefined ? {} : { [key]: value }; } - plus four one-line substitutions: "weightKg: num(\"weightKg\") ?? undefined" and "declaredValue: num(\"declaredValue\") ?? undefined" became "...optionalNum(\"weightKg\")" and "...optionalNum(\"declaredValue\")" in both the post and tipax branches. Two short Persian comments document that a missing valid value means a missing key, matching the final filter contract.
+Assertion-Suppression-State: NONE_NO_ANY_NO_TS_IGNORE_NO_ASSERTION_NO_SUPPRESSION - "{ [key]: value }" with value: number types as { [x: string]: number } and is assignable to Record<string, number> without a cast.
+Wire-Equality-Proof: Before, the key existed holding undefined and was then removed by the cleaned filter; after, the key is absent from the start. JSON.stringify emits the same string in both cases, so the Host receives a byte-identical providerMetadataJson for every branch.
+Behaviour-Change-State: NONE_OBSERVABLE
+Omission-Semantics-State: PRESERVED - blank or non-finite input yields undefined from num() and therefore no key; a supplied valid number yields the key with a numeric value and is never stringified.
+Preserved-Surfaces: packageCount ?? 1, every str(...) ?? "" required field, the snapp_courier, store_courier and in_person branches, the cleaned v !== undefined && v !== "" filter, selections, carrierDisplayName, shippingMethodCode, providerMetadataJson serialization, the result.state !== "ok" error mapping and the success and error toasts
+Backend-Dto-Schema-Or-Contract-Modification-State: NONE
+Changed-Files: src/frontend/app/admin/admin-create-shipment-modal.tsx (only production file - optionalNum helper plus four substitutions in the post and tipax metadata literals); src/frontend/app/admin/admin-order-items-shipping.test.ts (minimal amendment - one added test in the existing focused shipment suite); docs/ai/tasks/TB-FE-SHIPMENT-METADATA-OPTIONALS-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-SHIPMENT-METADATA-OPTIONALS-001/summary.md, typecheck-before.txt, typecheck-after-tsc.txt, focused-tests.txt (added - bounded evidence)
+Test-Amendment-Justification: buildMetadata() is module-internal and unexported, so no behaviour-level seam exists for the omission contract and exporting it would create a production seam that is out of scope. The existing app/admin/admin-order-items-shipping.test.ts already guards this exact modal by source contract (test "create shipment modal sends selections without deferred T005 block", line 258) and is discovered by test:discovered, hence discovery-compatible, so per the task's explicit allowance it was amended with ONE test rather than adding a new file. The added test pins the two invariants that define the repair: assert.doesNotMatch(modal, /\\?\\?\\s*undefined/) proves the metadata literal can never again carry an explicit undefined, and assert.match(modal, /v !== undefined && v !== ""/) proves the canonical blank-removal filter stays. It adds 0 new TypeScript diagnostics.
+Forbidden-Items-State: NONE_NO_GENERIC_FORM_CONTROL_NO_API_DTO_OR_BACKEND_CONTRACT_NO_TYPE_OUTSIDE_THE_MODULE_NO_HOME_PDP_SHOPEIVA_NO_TSCONFIG_NO_GUARD_NO_CI_NO_BASELINE_NO_ANY_NO_TS_IGNORE_NO_UNSAFE_ASSERTION_NO_BROAD_REFACTOR
+Baseline-Evidence-Source: docs/architecture/evidence/TB-FE-ADMIN-MENUS-HELPER-SIGNATURES-001/typecheck-after-tsc.txt copied verbatim to docs/architecture/evidence/TB-FE-SHIPMENT-METADATA-OPTIONALS-001/typecheck-before.txt
+Typecheck-Baseline-Errors: 38
+Typecheck-Total-After: 34
+Typecheck-Reduction: 4
+Typecheck-New-Errors: 0
+Typecheck-Expected-Vs-Actual: expected approximately 38 -> 34 with zero new errors; actual exactly 34 with 0 added diagnostics in a Compare-Object of the before and after outputs and none left in the shipment modal
+Diagnostics-Remaining-In-Shipment-Modal: NONE
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_34_ERRORS_REMAIN_IN_OTHER_AUDITED_CLUSTERS
+Commands-Run: git fetch origin and HEAD==origin/main==Expected-Starting-HEAD verification with a clean tracked worktree (preflight, pre-commit and post-push); cd src/frontend && node_modules/.bin/tsc --noEmit; node --experimental-strip-types --test app/admin/admin-order-items-shipping.test.ts; git diff/status inspections for the exact final diff and scope
+Focused-Test-Results: node --experimental-strip-types --test app/admin/admin-order-items-shipping.test.ts - 17 PASS / 0 FAIL (16 pre-existing plus the 1 added omission guard)
+PreExisting-Failures-Observed: NONE
+PreExisting-Failure-Count-Before: 0
+PreExisting-Failure-Count-After: 0
+Retry-Cascade-State: NONE
+Tests-Not-Run: the full npm test / test:discovered suite, test:admin*, test:critical-storefront, any build, the backend test suite, browser/live verification, and any AMSC wave
+Unrun-Test-Pass-Claim-State: NONE
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: Only one Admin order-operations modal's internal metadata builder changed. No Home, PDP, listing, storefront, shared-composition or visual surface is in scope.
+Scope-Statement: The production change is limited to src/frontend/app/admin/admin-create-shipment-modal.tsx per the Allowed production scope clause. The only other changes are the minimal amendment to the existing focused shipment test, the task receipt and the evidence files, all authorised by the task.
+Risks: Residual risk negligible and behaviour-free. The Host-facing JSON string is identical for every branch, verified against the whole producer-to-persistence chain, and the change is a type-honesty refactor guarded by one focused test.
+Rollback-Criteria: Revert commit be5492c617709ceb690aff6a8424d9e12f58dd10 if any shipment metadata payload differs from the previously serialized JSON or if the omission semantics change; the change is two substitution sites plus one test hunk and reverts atomically.
+Deviation-State: ONE_DECLARED_DEVIATION_THE_ONE_ADDED_TEST_IN_THE_EXISTING_FOCUSED_SHIPMENT_SUITE_WHICH_THE_TASK_EXPLICITLY_PERMITS_FOR_PROTECTING_THE_OPTIONAL_METADATA_OMISSION_SEMANTICS
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Reset-Or-Stash-State: NONE
+Rebase-State: NONE_NO_REBASE_WAS_NEEDED
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED_NOT_REMOVED_NOT_STASHED
+Base-SHA: f9b66c15754188f6d9614130978f459a883110d6
+Final-SHA: be5492c617709ceb690aff6a8424d9e12f58dd10
+Commit-SHA: be5492c617709ceb690aff6a8424d9e12f58dd10
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: STOP_FOR_ARCHITECT_REVIEW_NO_NEXT_TASK_NO_AUTOMATIC_REPAIR_CHAIN_NO_BASELINE_RESET
+STOP
+END_TOOBA_WORKER_RESULT

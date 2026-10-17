@@ -1,0 +1,74 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-119
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-118
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Bridge-Task-Row: f4012d4b-d9f2-485d-91e6-4abac4495d9b
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+Expected-Base-SHA: 141844f038977479ee8091b1a17f258af5c74303
+Base-SHA: 141844f038977479ee8091b1a17f258af5c74303
+Base-SHA-Drift: none for source (git diff --stat empty at claim). Non-overlapping bookkeeping drift only: the same 3 pre-existing modified evidence txts and 2 pre-existing frontend dirt files dated 2026-10-13 as reported in TB-118; none is a storefront shipping file and none was adopted.
+Code-SHA: NONE (no src/, test, frontend, migration, appsettings or shared-config edit)
+Evidence-SHA: 353580d52ef330b76cdcce024c4ed946afdcd7a3
+HEAD==origin/main after push: true
+Measured-Minutes: ~10 total (claim 02:46Z, result 02:56Z) — well inside the 45 min HARD timebox; no timebox stop needed. Only two bounded proof passes, both against the SAME single launch.
+Rollback: docs/evidence only; nothing to roll back.
+
+MISSION A — FEASIBILITY (PASS for the projection half, canonical missing dependency for the label half)
+- Sanctioned fixtures found and used: guest cart creation + cart line (Cart module HTTP), Development admin actor (GET /v1/admin/dev-context), Catalog checkout-identity policy (PUT /v1/admin/settings/checkout-identity), legacy shipping catalog auto-seed (IShippingCatalogSeedPort.EnsureSeedAsync is invoked inside the projection itself).
+- CANONICAL MISSING DEPENDENCY (static proof, no SQL used): the one-level catalog tables are created by migration 20261015120000_AddShippingOneLevelCatalog with DDL ONLY; ShippingOneLevelCatalogActivation (:75-81) and ShippingOneLevelCatalogAdminWrite (:75, :96) both return MethodNotFound and NEVER create a row; the only row creator, ShippingOneLevelBackfillStore/ShippingMethodBackfillPlanner, is DI-registered (FulfillmentModule.cs:117) but has NO production/Host caller (grep: referenced only by DI + tests); IShippingCatalogSeedPort seeds the LEGACY service/option tables only. Therefore the one-level catalog cannot be populated by any existing authorized module-owned Development fixture — only direct SQL DML or new code could, and both are forbidden in this task.
+- Frontend isolation: not attempted within budget, so NO UI claim is made (no DOM, no screenshot). Isolated frontend binding remains the precise remaining gap for UI parity.
+
+MISSION B — ONE ISOLATED PROOF (single launch, authorized, scratch-only)
+Target provenance: disposable tooba-119-scratch-pg (postgres:16-alpine, no volume) on 127.0.0.1:55451 with task-owned tooba_119_scratch + tooba_119_messaging, ephemeral per-run credentials kept only in the deleted ignored run dir. Offline fail-closed guard PASS: 1 tenant / 1 active (store-alpha:Active:tenant-119-scratch), references [tenant-119-scratch, messaging-119-scratch], no tooba_alpha, no tenant-alpha, no Port=5432, no prior scratch port, RunLegacyBootstraps=true, AllowResetAndSeed=false, ShippingRateAuthority/ShippingOperationalShadow absent. ONE launch: PID 23440, absolute exe path, ASPNETCORE_URLS http://127.0.0.1:5399, watchdog 180 s (health in 40 s), bounded 110 s keep-alive for the probes, LAUNCH_COUNT=1, no relaunch.
+Authorized difference from TB-117, applied ONLY to the disposable overlay: Tooba:ShippingOneLevelCatalog:Enabled=true (never in tracked appsettings, never in the shared environment).
+Runtime provenance: GET /health 200 {"status":"ok"}; GET /__platform-commerce -> {"edition":"SingleStore","deploymentId":"isolated-119","tenantId":"store-alpha","connectionReference":"tenant-119-scratch","resolvedHost":"127.0.0.1","themeReference":"theme-alpha","defaultMarketReference":"IR"} = ISOLATED scratch, not shared.
+
+PERMITTED SCRATCH WRITES (all through existing authorized application APIs, none manual SQL)
+1. PUT /v1/admin/settings/checkout-identity {"policy":"GuestAllowed"} -> 200 (canonical Catalog policy seam; no bypass). Baseline read first: AuthenticatedOnly; post-read: {"policy":"GuestAllowed","cartAnonymousAllowed":true,"checkoutAuthenticationRequired":false}.
+2. POST /v1/storefront/cart -> 200 cartId 01a142a0-23dc-7000-a1c0-3f7d1dd1f468 (ephemeral guest secret never recorded here).
+3. POST /v1/storefront/cart/{cartId}/lines with the real scratch offer 01a1429f-ad3b-7000-b874-7f3c7ed8111e -> 200, itemCount 1, subtotal 12500000.0000 IRR.
+No commit, no checkout, no payment, no order, no shipment, no shipping flag activation, no seed/reset, no direct DbContext write, no fake HttpContext/actor.
+
+PROJECTION PROOF (authorized, scratch) — the substantive PASS half
+POST /v1/storefront/shipping/projection -> 200, cartVersion 3, itemCount 1, sellerCount 1, maxSellerPreparationDays 1, subtotalExclusiveOfTax 12500000, currency IRR, 7 methods, 12 provinces, 4 delivery time windows (9-12, 12-15, 15-18, 18-21):
+- post:express  label "پست — پیشتاز"   serviceCode post        optionCode express    price 200000 leadDays 2
+- post:standard label "پست — معمولی"   serviceCode post        optionCode standard   price 120000 leadDays 4
+- tipax:express label "تیپاکس — پیشتاز" serviceCode tipax       optionCode express    price 260000 leadDays 1
+- tipax:standard label "تیپاکس — معمولی" serviceCode tipax      optionCode standard   price 180000 leadDays 3
+- snapp_courier label "اسنپ / پیک آنلاین" serviceCode snapp_courier optionCode null   price 90000  leadDays 0
+- store_courier label "پیک فروشگاه"     serviceCode store_courier optionCode null     price 75000  leadDays 1
+- in_person     label "تحویل حضوری"      serviceCode in_person     optionCode null     price 0 (isFree true) leadDays 0
+A second projection with provinceName=تهران returned the identical 7 methods (no destination removal). The option identity travels as its own field (optionCode), so the "service:option" composite is never treated as a service code. deliveryDates was empty because no method was selected (expected: minimum delivery date is derived from the selected method).
+
+ONE-LEVEL LABEL VERDICT — BLOCKED (canonical missing dependency), definitively observed
+With the gate ENABLED in the isolated overlay: GET /v1/admin/shipping-services/shipping-methods/one-level?language=fa -> 200 {"gate":"Enabled","ready":true,"languageId":"01a1429f-af2a-7000-8f70-71ecb0870e3d","methods":[]} — plumbing healthy, catalog EMPTY. Consistent with that, every projected label above is the LEGACY composed label, i.e. StorefrontShippingService.ApplyOneLevelDisplayNamesAsync (:434-461) resolved names from the Fulfillment seam, got Empty, and overrode nothing — no label was invented and no option was added or removed. The acceptance clause "proves one-level display labels originate from the enabled catalog under scratch provenance" is therefore NOT satisfiable with existing sanctioned seams.
+
+UI PARITY: NOT CLAIMED (isolated frontend not bound; no DOM/screenshot evidence). Selection preservation was NOT re-issued (TB-118 source proof + its 8/8 focused test remain the evidence; this task forbids a PUT/commit merely to demonstrate navigation).
+
+DEVIATIONS
+- One corrected probe pass after the first pass extracted offers from the wrong JSON branch (cart stayed empty; the projection then returned a well-formed 400 shipping.cart.empty). The corrected pass used variants[].primaryOffer.offerId. Both passes ran against the SAME single Host launch; no relaunch, no restart, no extra process, no extra service.
+- No other deviation.
+
+SHARED PARITY (READ-ONLY)
+:5088 PID 35624 /health 200 and /__platform-commerce unchanged (SingleStore / dev-singlestore / store-alpha / tenant-alpha / theme-alpha / IR); :3000 PID 31580 -> 308. tooba_alpha counts byte-identical to the TB-117/TB-118 baseline: methods 7, translations 14, carts 50, cart_lines 78, drafts 14, seller_orders 26, products 567, offers 3223. No INCIDENT.
+
+CLEANUP
+Host PID 23440 stopped after absolute-path verification (STOPPED_BY_RECORDED_PID=True), never by name/wildcard; :5399 and :55451 no longer listening; docker rm -f removed the only task-owned container tooba-119-scratch-pg; pre-existing containers (sarv-jaeger, sarv-redis, rabbitmq, postgres-db) untouched; shared :5088/:3000 processes untouched; ignored .tmp-119-run (incl. the per-run credential file) and .tmp-119-host-out deleted. Evidence contains only placeholder templates (${SCRATCH.password}) — no credential value was ever written; the transient database was destroyed.
+
+CHANGED PATHS (docs/evidence only)
+- docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-119.md
+- docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-119/** (15 files incl. task.md and task-receipt.json)
+- Bridge receipt docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-119.task.md preserved UNSTAGED.
+Zero src/, test, frontend, migration, appsettings, feature-gate or shared-DB edits. Unrelated dirty/untracked files preserved.
+
+NON-CLAIMS: no shipping commercial-readiness, no checkout cutover, no payment claim, no UI parity claim, no storefront eligibility claim from seed rows. The isolated scratch projection is a Development proof, not production acceptance.
+
+FIRST REMAINING BLOCKER / NEXT MINIMAL FIX (needs Architect authorization; not started)
+(a) One-level label parity requires the missing module-owned bootstrap: a Fulfillment-owned seam that invokes ShippingMethodBackfillPlanner + IShippingOneLevelBackfillStore during Development bootstrap (the code already exists and is idempotent; only the caller is absent). Until then the one-level catalog stays empty on any fresh environment regardless of the gate.
+(b) UI parity requires binding an isolated frontend to the isolated Host (or an authorized Playwright-free DOM capture) — a separate, explicitly scoped task.
+STOP FOR ARCHITECT.
+END_TOOBA_WORKER_RESULT

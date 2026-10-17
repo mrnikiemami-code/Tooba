@@ -1,0 +1,57 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-LEGACY-GRID-FIELD-CONTRACT-001-R1
+Parent-Task: TB-FE-LEGACY-GRID-FIELD-CONTRACT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: BOUNDED_BEHAVIORAL_VERIFICATION_WITH_STOP_GATE
+Status: PASS
+Verdict: BEHAVIORAL_EQUIVALENCE_ESTABLISHED_FOR_THE_TASK_SPECIFIED_CASES_PRODUCTION_CODE_UNCHANGED_ONE_BOUNDED_DOCUMENTED_DELTA_FOR_ARCHITECT_DECISION
+Production-Code-Changed: NO_NONE_ZERO_PRODUCTION_FILES
+Expected-Starting-HEAD: f9973b04102f9e854460fada8f2fedc5be170287
+Expected-Starting-HEAD-Match-State: VERIFIED
+Head-Equals-Origin-Main-At-Preflight-State: VERIFIED
+Runtime-Seam: The repository's real buildLegacyGridBridge and the real executeGridQuery engine (exactly what createClientGridQueryAdapter wraps, design-system/app-data-grid/legacy-grid-adapters.ts:10-14, and exactly what the Landing Pages admin grid uses, app/admin/landing-pages/admin-landing-pages-screen.tsx:415-418) driving a real ag-grid-community 36.1.0 grid via createGrid plus ModuleRegistry.registerModules([AllCommunityModule]) headless inside jsdom. No stubs, no mocks, no browser, no already-running local service touched, restarted or terminated.
+Before-Variant-Fidelity: The pre-repair state is reproduced by mirroring the removed line exactly - { ...colDef, field: colDef.colId } - for every non-actions column of the bridge output.
+App-Flow-Fidelity: The probe follows AppDataGrid's real sequence - a header click sets AG Grid sort state through applyColumnState, the app re-queries through executeGridQuery, the new page is written back with setGridOption rowData, and the visible order is then read with api.forEachNodeAfterFilterAndSort.
+Case-A-NonProperty-Id: customer asc and amount desc on an orders-shaped fixture whose ids are not row properties (customer to customerDisplayName, amount to payableAmount). Engine order o2,o3,o1 and o1,o3,o2. Visible order with field: o2,o3,o1 and o1,o3,o2 (SAME AS ENGINE). Visible order without field: o2,o3,o1 and o1,o3,o2 (SAME AS ENGINE). Delta NONE. This confirms the parent claim that for such ids the removed field already resolved to undefined and AG Grid's local sort was inert.
+Case-B-Real-Property-Id-Accessor-Returns-It: reference asc and desc on a fixture where reference is a real row property and the accessor returns it. Engine order o2,o3,o1 and o1,o3,o2. Visible order with field and without field both identical to the engine order. Delta NONE. This confirms the parent claim that the old AG Grid second sort compared the same values the engine had already sorted by, therefore reproducing rather than fighting the engine order.
+Case-D-Null-Fallback: an accessor of row.<id> ?? "" with a null value. Engine order o2,o3,o1 (empty key first). Visible order with field and without field both o2,o3,o1. Delta NONE.
+Case-C-Bounded-Delta: The one sortable column where the old second sort could disagree with the engine is landing pages slug, whose id IS a real AdminLandingPage property while its accessor and displayed value is pathLabel. Fixture z/h/a with Home pathLabel "". Engine order by pathLabel is h,a,z. Visible order with field is a,h,z, which DIFFERS FROM ENGINE because AG Grid sorted by the raw hidden slug. Visible order without field is h,a,z, SAME AS ENGINE. Delta PRESENT, and it moves the visible order toward the application's own sort contract (colId to engine sort by accessor) and toward what the column displays.
+Sort-Key-Evidence: AG Grid sort state is customer:asc, amount:desc, reference:asc, reference:desc and slug:asc in BOTH the field and field-absent variants, and AppDataGrid.onSortChanged maps colState.colId into GridSort.columnId (AppDataGrid.tsx:352-358). The query sort key and the sort indicator are therefore unchanged by the repair; what changed is only whether AG Grid applied an extra local sort on top of the engine result.
+Unintended-Second-Sort-Statement: The extra AG Grid sort is not merely unintended, it is now provably inert for every column in the suite except the one Case C column, where its removal is directionally correct. For Case A it was already inert before the repair, so the parent claim is confirmed rather than assumed.
+Coldef-Source-Exhaustiveness: A read-only scan over every GridColumnDef literal in app, features and design-system (column-accessor-parity-scan.txt) examined 173 legacy columns. 111 have accessor equal to row.<id> or row.<id> ?? "" (Case B and Case D shapes, no delta). 62 have a divergent accessor, of which 15 are sortable; 14 of those 15 have ids that are not row properties (customer, supply, reservation, seller, available, credits, debits, reserved, created and receipts reference, customer, supply, reservation, created), i.e. Case A shape with no delta. Exactly 1 sortable column (landing pages slug) has an id that is a real row property while the accessor returns something else.
+Delta-Magnitude: On that one grid the non-Home label is the constant-prefixed /landing/<slug>, so ordering by label is identical to ordering by slug and no non-Home row can move. The only row that can move is the single Home row, whose displayed address is "" - before, it sat mid-list positioned by its hidden slug; after, it is positioned by the value it actually displays. The delta is one row's position on one admin grid, in the direction of the displayed value and the declared sort.
+Regression-Verdict: NOT_A_REGRESSION. The delta aligns visible order with the app's own sort contract and the rendered values, and removes a state where AG Grid silently overrode the engine with an unseen key. Reverting would restore that hidden-key override and reintroduce TS2322.
+Correction-Admissibility: NO_TYPE_SAFE_CORRECTION_WARRANTED. Reproducing the old hidden-key order requires either assigning a legacy id string into ColDefField<T> (a cast asserting the false invariant that every id is a row path, explicitly forbidden) or a dynamic valueGetter reading data[id] (an index-signature cast). Every type-sound alternative, such as a valueGetter from the accessor or per-column field literals, changes the value source for all columns or is a broad redesign outside the allowed single-file scope. The gate's regression branch therefore has no admissible correction; the equivalence branch applies to the specified cases and the bounded delta is reported rather than hidden.
+Assertion-Suppression-State: NONE_NO_ANY_NO_UNKNOWN_AS_NO_BROAD_CAST_NO_TS_IGNORE_NO_DISABLED_SORTING_NO_TEST_WEAKENING
+Test-Amendment-State: NONE - no existing focused test was edited or weakened.
+Changed-Files: docs/ai/tasks/TB-FE-LEGACY-GRID-FIELD-CONTRACT-001-R1.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-LEGACY-GRID-FIELD-CONTRACT-001-R1/summary.md, runtime-verification.ts, runtime-verification-output.txt, column-accessor-parity-scan.txt, focused-tests-legacy-grid-bridge.txt, focused-tests-grid-state.txt (added). No production file in src.
+Commands-Run: git fetch origin plus HEAD==origin/main==Expected-Starting-HEAD checks at preflight, pre-commit and post-push; node --experimental-strip-types docs/architecture/evidence/TB-FE-LEGACY-GRID-FIELD-CONTRACT-001-R1/runtime-verification.ts (headless real AG Grid); node --experimental-strip-types --test design-system/app-data-grid/legacy-grid-bridge.test.ts; node --experimental-strip-types --test design-system/data-grid/grid-state.test.ts; a read-only parity scan; git diff and status inspections
+Focused-Test-Results: legacy-grid-bridge.test.ts 6 PASS / 0 FAIL; grid-state.test.ts 9 PASS / 0 FAIL
+PreExisting-Failures-Observed: NONE
+Tests-Not-Run: the full npm test and test:discovered suites, any build, backend suites, visual suites, browser or live verification of the grids, AMSC, and tsc --noEmit
+Tsc-Not-Run-Justification: No production code changed in this task, so the task's conditional frontend tsc --noEmit requirement was not triggered; the residual count remains the parent task's 28 errors.
+Unrun-Test-Pass-Claim-State: NONE
+Baseline-Compiler-State: 28_ERRORS_UNCHANGED_FROM_PARENT_TASK
+Limitations: (1) Verification is a real AG Grid running headless in jsdom, not a browser; the sort was applied through applyColumnState, the same state a header click produces, and order was read from the grid's own sorted row model. (2) The engine is the client adapter, which is exactly the Landing Pages grid's adapter; for server-executed grids the engine key is whatever the Host returns for that columnId, and while the AG Grid-side change applies identically, a server column whose Host key differs from a same-named row property would behave like Case C. (3) The parity scan classifies accessors syntactically rather than through the TypeScript type checker; it is an exhaustive candidate enumeration whose single property-like hit was then confirmed by reading AdminLandingPage, publicPathForStorePage (admin-landing-pages-api.ts:423-426) and the screen's adapter wiring.
+Scope-Statement: Verification-only. No production code was changed; no other file was modified beyond the receipt and evidence above.
+Rollback-Criteria: Not applicable - this task changed no production code. The parent commit f9973b04102f9e854460fada8f2fedc5be170287 remains revertible if the Architect prefers the pre-repair behaviour despite Case C.
+Deviation-State: NONE
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Reset-Or-Stash-State: NONE
+Process-Termination-State: NONE_NO_SERVICE_WAS_STARTED_RESTARTED_OR_TERMINATED
+Resource-Cleanup-State: TEMPORARY_LOCAL_PROBES_REMOVED_TWO_UNTRACKED_SCRATCH_FILES_DELETED_NO_OTHER_ARTIFACT_DISTURBED
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED
+Base-SHA: f9973b04102f9e854460fada8f2fedc5be170287
+Final-SHA: 20c013e5e69cca80bcb240679b241b8c68b966cf
+Commit-SHA: 20c013e5e69cca80bcb240679b241b8c68b966cf
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: STOP_FOR_ARCHITECT_INDEPENDENT_ACCEPTANCE
+STOP
+END_TOOBA_WORKER_RESULT

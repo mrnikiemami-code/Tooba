@@ -1,0 +1,16 @@
+{
+  "bridgeTaskRowId": "818761fa-ce0c-4a83-91e0-30657b7858b6",
+  "channelId": "tooba-main",
+  "taskId": "TB-SHIPPING-MVP-DESTINATION-066",
+  "parentTask": "TB-SHIPPING-MVP-DEV-ADMIN-UI-065",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "program": "TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE",
+  "mode": "BOUNDED_REAL_CHECKOUT_DESTINATION_IDENTITY_PROPAGATION_NO_CUTOVER",
+  "expectedBaseSha": "9f297f43fb8b7faa9290bfb39dd85aef71095a99",
+  "claimedAtUtc": "2026-10-14T23:19:01.6009226",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "automaticNextImplementationTask": "NONE",
+  "timebox": "45 minutes HARD",
+  "status": "PASS"
+}

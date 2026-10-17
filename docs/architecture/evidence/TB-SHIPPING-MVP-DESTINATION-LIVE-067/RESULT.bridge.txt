@@ -1,0 +1,74 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MVP-DESTINATION-LIVE-067
+Parent-Task: TB-SHIPPING-MVP-DESTINATION-066
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-MVP-OPERATIONAL-CLOSURE
+Mode: BOUNDED_GEOGRAPHY_BACKED_STOREFRONT_DESTINATION_AND_LIVE_CART_PROOF
+Bridge-Task-Row: bf6e4b5a-8b44-4442-ac4e-41e4183b9cf5
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 001fa35f7599b4b8dd7d489b9cdc62836ab18ed4
+Base-SHA: 001fa35f7599b4b8dd7d489b9cdc62836ab18ed4
+Code-SHA: 2bca9e0e602c7a025108215edf0986a1a31b7346
+Evidence-SHA: 2bca9e0e602c7a025108215edf0986a1a31b7346
+automaticNextImplementationTask: NONE
+
+FRONTEND GEOGRAPHY-ID SOURCE (mission A)
+Admin Geography read is guarded by the existing fulfillment.view permission, so it was NOT reused for customers. Instead a new Geography-owned PUBLIC READ-ONLY surface was added: GET /v1/storefront/geography/places/countries, GET .../countries/{countryId}/administrative-areas, GET .../countries/{countryId}/cities?administrativeAreaId=. File: src/backend/Modules/Geography/Tooba.Geography.Endpoints/Storefront/GeographyStorefrontEndpoints.cs. It consumes only IGeographyLookup + IGeographyLabelLookup (Contracts), has no authorizer, no write verb, no DbContext/IQueryable, and deliberately omits service areas (smallest level the shipping screen needs). Registered from Host with one line: app.MapGeographyStorefrontEndpoints(); Plus one using. GeographyAdminEndpoints.cs was NOT touched, so its four-route/authorized-only invariant still holds (verified by the pre-existing GeographyAdminReadOwnershipTests, still green).
+Customer screen source: new src/frontend/app/storefront/storefront-geography-api.ts reads that surface; new pure model src/frontend/app/storefront/storefront-shipping-destination-model.ts maps a customer selection to DestinationIdentifiers with exact-only matching (stable code for country and province, unique display label for the city inside the already-selected province), ambiguity collapsing to null, and a consistency check that the city's parent is the selected area and the area's parent the selected country. storefront-shipping.tsx resolves IR by exact code to a country id, resolves the selected legacy province to its Geography area by exact code (alborz -> alborz), loads the cities of THAT area so the select can no longer offer another province's cities, keeps provinceName as the legacy catalogue label (so the legacy quote input is untouched) and adds cityName + destination alongside it. No new customer page; no existing Geography admin capability leaked.
+
+LIVE HIERARCHY PROOF (unauthenticated, real Development data)
+GET /v1/storefront/geography/places/countries => 200 [{"id":"e3451206-e503-51a8-91ad-afa9ab70e330","code":"IR","label":"ایران","isActive":true}]
+GET .../countries/<IR>/administrative-areas => 200, 12 provinces; alborz => id=1f8050a8-c325-59fa-959f-82d76b5b2bc5, parentId=e3451206-... (parent == country id: True)
+GET .../countries/<IR>/cities?administrativeAreaId=<alborz> => 200, 4 cities; کرج => id=68255340-c69f-5d20-bf33-e8e0b24edde9, code=IR-alborz-01, parentId=1f8050a8-... (parent == alborz id: True)
+Unscoped country-wide cities = 47, so the area-scoped call is a strict subset: the parent filter is really applied.
+
+AUTHENTICATED LIVE CART PROOF (mission C, acceptance item 2)
+Provisioned through the canonical development customer flow only, no bypass: POST /v1/auth/register => 201, POST /v1/auth/login => 200 (bearer session), POST /v1/storefront/cart => cart version=1, POST /v1/storefront/cart/{id}/lines (real dev catalogue offer 0442a1fa-1d95-4b24-b9d9-129fc19942d2 «نایک شلوار مردانه سری 1») => version=3 itemCount=1. The identity gate accepted the session: the projection returned 400 shipping.cart.empty before the line and no longer returned 401 afterwards. No order placed, no payment made.
+projection BEFORE (provinceName only, the old-client shape) => 5 methods: post:standard:120000, tipax:express:260000, tipax:standard:180000, store_courier:75000, in_person:0; subtotal 8702542.
+projection AFTER (provinceName + cityName + validated destination {countryId, administrativeAreaId, cityId} taken from the live public Geography read) => the SAME 5 methods, the same prices, the same subtotal.
+Payload comparison: "identical projection payload: True".
+projection with a MALFORMED city id => still the same 5 methods, no error and no trusted identity (gate off, metadata inert).
+
+LEGACY INVARIANCE / OLD-CLIENT COMPATIBILITY (mission B and D)
+StorefrontShippingService.ProjectAsync and the whole legacy price, method eligibility, preparation/lead/delivery promise, checkout draft, cart and paid snapshot path were NOT modified in this task. ShadowEnabled and PrerequisitesConfirmed remain false and no appsettings value was changed, so an explicit destination is inert metadata. The frontend still submits the legacy province label, so AllowedProvinces matching and method eligibility are unchanged. A client sending neither cityName nor destination receives the identical payload (proven by unit test and by the live BEFORE call). Invalid/ambiguous/foreign hierarchy can never become a trusted identity: exact matching only, ambiguity -> null, inconsistent parent chain -> null, and the same request shape with a malformed city id left the legacy answer untouched.
+The 065/066 admin picker stale-response guard is unchanged and still green (createLatestRequestGuard + its test).
+
+FOCUSED VALIDATION
+dotnet build Tooba.Geography.Endpoints: 0 warnings / 0 errors. dotnet build Tooba.Host: 0 warnings / 0 errors. Tooba.Shipping.Tests geography ownership guards (4 new in GeographyStorefrontReadOwnershipTests + 4 pre-existing GeographyAdminReadOwnershipTests): 8 passed / 0 failed. Tooba.Order.Tests StorefrontShippingShadowObserverTests (066 regression): 19 passed / 0 failed. New frontend suite (storefront-shipping-destination-model.test.ts + storefront-shipping-api.test.ts + the 066 picker race test): 16 passed / 0 failed — covering one valid city path end-to-end to ids, the old client with no ids, malformed/foreign hierarchy rejection, ambiguous and fuzzy rejection, and inactive-place rejection. npx tsc --noEmit in src/frontend: clean. import-boundary, flat-folder, feature-boundary and test-discovery guards: pass. frontend-source-size.guard.test.ts remains a PRE-EXISTING failure in four files this task did not touch (category-admin-screen.tsx, admin-landing-page-composer.tsx, storefront-landing-blocks.tsx, shared-composition-renderer.tsx); the baseline was not widened.
+
+CHANGED PATHS
+src/backend/Modules/Geography/Tooba.Geography.Endpoints/Storefront/GeographyStorefrontEndpoints.cs (new)
+src/backend/Host/Tooba.Host/Program.cs (one using + one registration line)
+src/backend/Modules/Shipping/Tooba.Shipping.Tests/Admin/GeographyStorefrontReadOwnershipTests.cs (new guard tests)
+src/frontend/app/storefront/storefront-geography-api.ts (new)
+src/frontend/app/storefront/storefront-shipping-destination-model.ts (new)
+src/frontend/app/storefront/storefront-shipping-destination-model.test.ts (new)
+src/frontend/app/storefront/storefront-shipping.tsx (Geography-backed area/city selection + ids in the existing projection call)
+src/frontend/app/storefront/storefront-shipping-api.ts (projection body accepts the optional destination)
+docs/planning/shipping/SHIPPING-MVP-DESTINATION-LIVE-067.md
+docs/architecture/evidence/TB-SHIPPING-MVP-DESTINATION-LIVE-067/**
+
+PROCESS AND DB PROVENANCE
+Restarted exactly one process: the positively identified Development host Tooba.Host.exe PID 38716, started 2026-10-15 02:27:45, listening 127.0.0.1:5088 and [::1]:5088, the only Tooba.Host process on the machine. Reason: it hosted the pre-066/067 binary and locked the Host output DLLs (build failure MSB3027 "...locked by: Tooba.Host (38716)"). Graceful stop observed True, remaining Tooba.Host processes 0. Relaunched with the recorded 065 command (ASPNETCORE_ENVIRONMENT=Development, ASPNETCORE_URLS=http://localhost:5088, dotnet run --project src\backend\Host\Tooba.Host --no-launch-profile --no-build): new PID 11540, GET /health => 200 {"status":"ok"}. No other process was killed and the frontend dev server was not restarted.
+Database: only the authorized Development tooba_alpha. Writes were additive task-owned disposable artifacts: customers 067.probe.20261015031909/032043/032058 and 067.cleanup.20261015032111 @tooba.local plus their guest carts (the successful proof cart holds one line). No pre-existing row was read-modified-written; no order, no payment, no Shipping rate or coverage row, no migration, schema, seed or appsettings change; no scratch/parallel database; no reset, stash, rebase or force push. Task receipt preserved unmodified and unstaged. Unrelated dirty/untracked paths preserved.
+
+SAFETY
+No Shipping rate/coverage authority switch, no feature-gate activation, no legacy quote mutation, no Commerce/Host security bypass, no manual role or capability insert, no Checkout/payment/order snapshot edit, no staging/production contact, no invented tariff or nationwide grant.
+
+COMMIT / PUSH
+Base 001fa35f7599b4b8dd7d489b9cdc62836ab18ed4 confirmed as HEAD ancestor. Committed 2bca9e0e602c7a025108215edf0986a1a31b7346 and pushed to origin/main; after git fetch origin, HEAD == origin/main == 2bca9e0e602c7a025108215edf0986a1a31b7346. One push rejection was resolved without history rewrite: the 173 MB live host stdout capture was removed from the commit (amended before the successful push) and only a small excerpt was committed; the raw stream is intentionally left untracked.
+
+ELAPSED
+The wall clock exceeded the 45-minute budget. The Host rebuild alone burned about 8.5 minutes in MSB3027 copy retries against the locked running host before the authorized restart, and the first push was rejected by GitHub's 100 MB limit. Work stopped immediately after the live proof, the validation capture and the evidence/result commitment were complete.
+
+OPEN BLOCKERS / LIMITATIONS
+1) destination remains observation-only: the Shipping shadow and cutover flags are still off, so no shadow parity and no checkout cutover is claimed and flipping them was out of scope.
+2) The live projection was taken with methodCode null (no method chosen yet), which is why selectedMethodCode is empty in the proof; that is unchanged legacy behaviour, not a regression.
+3) City matching inside a province uses the display label because Geography city codes are synthetic (IR-alborz-01); labels are unique inside a scoped province and ambiguity still collapses to null.
+4) The disposable proof customers/carts were left in the Development database because the platform exposes no customer-delete surface and a direct database delete would exceed this task's write authority.
+5) The raw host stdout capture (~174 MB) is present on disk under the evidence folder but intentionally not committed.
+END_TOOBA_WORKER_RESULT

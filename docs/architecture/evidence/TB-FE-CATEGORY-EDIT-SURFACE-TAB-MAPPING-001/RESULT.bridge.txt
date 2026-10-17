@@ -1,0 +1,126 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-CATEGORY-EDIT-SURFACE-TAB-MAPPING-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: 1a98fa6a33dd18bb27e5f8c84f26f1822c5e77b6
+Starting-HEAD:          1a98fa6a33dd18bb27e5f8c84f26f1822c5e77b6
+Starting-origin/main:   1a98fa6a33dd18bb27e5f8c84f26f1822c5e77b6
+Tracked-worktree-clean: YES; no conflicting edits; no reset/stash/rebase/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-frontend-feature/SKILL.md, docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md, the relevant screen regions and the focused category/reservation guards. Deferred Architecture Findings Register NOT opened.
+
+STOP GATE: PASSED — "reservation" MUST map to null. "reservation" was NOT added to EditSurface. BLOCKED_ARCHITECT_DECISION not required (fully determined by existing source).
+ROOT CAUSE
+  type TabId = "general" | "translations" | "attributes" | "facets" | "mega-menu" | "products" | "reservation"   (screen:80-81)
+  type EditSurface = "general" | "translations" | "attributes" | "facets" | "mega-menu"                          (screen:82)
+  const tabToEditSurface = (tab: TabId): EditSurface | null => { if (tab === "products") return null; return tab; };
+Only ONE non-edit tab was excluded, so "reservation" leaked through `return tab` -> TS2322 at :1801.
+FOUR INDEPENDENT PROOFS THAT "reservation" IS NOT AN EditSurface
+1. handleHeaderEdit (:1744) branches `if (activeTab === "products") { … return; }` then EXPLICITLY `if (activeTab === "reservation") { return; }` — grouped with products as a non-edit-surface tab.
+2. The reservation tab renders its OWN independent editor, <CategoryReservationPanel> (:2193, import :55), which owns a separate draft/save path via useReservationDraft/ReservationPolicyEditor — not editSurface.
+3. Every edit-surface consumer is an exact conjunction `editSurface === X && activeTab === X`: isGeneralEdit…isMegaMenuEdit (:1846-1850, :1855-1856) and header save/discard (:1762,:1766,:1772,:1776,:1780,:1784,:1788). Reservation matches none.
+4. navigateToCategory(id, tab: TabId = "general") (:1401) unconditionally calls setEditSurface("general") and builds /…/{tab}, so products/reservation are NAVIGATIONAL tabs while editSurface is limited to the five editing surfaces.
+=> Adding "reservation" to EditSurface would advertise a sixth editing surface with no renderer, no draft, no save path and no header affordance — the mechanical contract-falsifying change the task forbade.
+
+RESIDUAL "FICTITIOUS SURFACE" AUDIT (what the old code really did at the tab onClick, ~:2093)
+  const nextSurface = tabToEditSurface(tab.id);
+  if (formMode.mode === "edit") { if (nextSurface) { setEditSurface(nextSurface); prepareSurfaceDraft(nextSurface); } }
+  else if (nextSurface) { setEditSurface(nextSurface); } else { setEditSurface("general"); }
+Before: the truthy out-of-union "reservation" was written into editSurface, but the assignment was inert — prepareSurfaceDraft/revertSurfaceDraft (:1712-1740) act ONLY on "general"/"translations" (otherwise merely setSlugFieldError(null)), so prepareSurfaceDraft("reservation") was a no-op and NO draft was ever prepared; and all five isXEdit flags plus the header save/discard handlers require activeTab to equal the surface, while activeTab is "reservation" there.
+After: nextSurface is null for reservation — in edit mode the `if (nextSurface)` body is skipped so editSurface keeps its previous VALID value instead of being overwritten (with activeTab = "reservation" every conjunction stays false exactly as before: no header affordance, no draft swap); in non-edit mode it falls to setEditSurface("general"), identical to the existing "products" behaviour and to what navigateToCategory already does.
+Dirty/discard semantics UNCHANGED: the preceding `if (formMode.isDirty && !formMode.confirmDiscardIfDirty()) { e.preventDefault(); return; }` guard and the `revertSurfaceDraft(editSurface); formMode.clearDirty();` sequence were not modified.
+
+ACTUAL DIFF (1 production file)
+diff --git a/src/frontend/app/admin/category-admin-screen.tsx b/src/frontend/app/admin/category-admin-screen.tsx
+ type EditSurface = "general" | "translations" | "attributes" | "facets" | "mega-menu";
++
++/**
++ * نگاشت صریح تب → سطح ویرایش.
++ * فقط پنج تب، سطح ویرایش دارند. «محصولات» صفحهٔ مستقل است و «سیاست رزرو»
++ * ویرایشگر مستقل خودش را دارد؛ handleHeaderEdit هم برای رزرو return میکند و
++ * navigateToCategory سطح ویرایش را به general بازنشانی میکند.
++ * کلیدها به TabId قفلاند تا افزودن تب جدید در آینده بیصدا از قلم نیفتد و
++ * هیچگاه یک سطح ویرایش ساختگی (مثل «reservation») به editSurface نرسد.
++ */
++const EDIT_SURFACE_BY_TAB: Record<TabId, EditSurface | null> = {
++  general: "general",
++  translations: "translations",
++  attributes: "attributes",
++  facets: "facets",
++  "mega-menu": "mega-menu",
++  products: null,
++  reservation: null,
++};
+-  const tabToEditSurface = (tab: TabId): EditSurface | null => {
+-    if (tab === "products") return null;
+-    return tab;
+-  };
++  const tabToEditSurface = (tab: TabId): EditSurface | null => EDIT_SURFACE_BY_TAB[tab];
+
+WHY AN EXHAUSTIVE Record RATHER THAN `tab === "products" || tab === "reservation"`
+The task preferred "an explicit, exhaustive and type-safe conversion". Record<TabId, EditSurface | null> makes the contract TOTAL: all seven TabId members must state a decision, so a future eighth tab is a COMPILE-TIME error instead of a silently widening `return tab` — removing the failure mode rather than just this instance. The function signature is unchanged, so the single call site needed no edit. tsconfig does not enable noUncheckedIndexedAccess, so the lookup yields exactly EditSurface | null with no extra undefined.
+No cast / any / unknown-as / ts-ignore / added non-null assertion / suppression; EditSurface NOT widened; TABS, TabId, handleHeaderEdit, navigateToCategory, CategoryReservationPanel and the dirty/discard logic untouched.
+
+DIAGNOSTICS
+errors-before: 17
+errors-after:  16
+delta:         -1
+new-diagnostics-introduced: 0
+comparison method: NORMALIZED by file/line/code. Exactly one removed entry — app/admin/category-admin-screen.tsx(1801,5) TS2322 — and NO added entries.
+per-file tallies (before -> after): category-admin-screen.tsx 1 -> 0 (target cleared); product-rich-text-editor.tsx 1 -> 1; storefront/storefront-landing-blocks.tsx 1 -> 1; template-preview/fashion/fashion-template-preview-view.tsx 1 -> 1; features/admin-languages/…/language-list.tsx 3 -> 3; lib/storefront-composition/fashion-demo-preview.ts 1 -> 1; lib/storefront-composition/shared-composition-renderer.tsx 9 -> 9
+tool: cd src/frontend && node_modules/.bin/tsc --noEmit run exactly ONCE after the final edit (exit 2 overall — 16 pre-existing errors elsewhere; no greenness claimed)
+baseline-file: docs/architecture/evidence/TB-FE-PREVIEW-FILL-REAL-REVIEW-FIXTURE-001/typecheck-after-tsc.txt (exactly as the task specified)
+capture: docs/architecture/evidence/TB-FE-CATEGORY-EDIT-SURFACE-TAB-MAPPING-001/typecheck-{before,after-tsc}.txt
+
+FOCUSED TESTS (two runs, both green)
+RUN 1 — reservation-policy guards (most directly concerned with the separate reservation editing flow this repair must preserve): app/admin/reservation-policy-admin.test.ts + app/admin/admin-reservation-cycle.test.ts
+  result: tests 11, pass 11, fail 0
+RUN 2 — category screen guards (they read category-admin-screen.tsx itself, path.join(root,"app/admin/category-admin-screen.tsx") at line 26): app/admin/category-admin-form.test.ts + app/admin/t038-category-grid-ux.test.ts
+  result: tests 28, pass 28, fail 0
+  Notably category-admin-form.test.ts:312 still asserts /id: "reservation", label: "سیاست رزرو", implemented: true/ and PASSES — the reservation TAB is untouched and still declared; only its edit-surface mapping changed.
+pre-existing-failures-observed: NONE in either run; nothing disclosed, nothing chased, no test loop.
+tests-added-or-amended: NONE — the task permitted a focused-test change only if it guards genuine behaviour without ceremonial source assertions; here the contract is enforced by the compiler (Record key set) plus the existing screen/reservation guards, which pass. A new source-text assertion would be ceremonial (forbidden).
+raw: docs/architecture/evidence/TB-FE-CATEGORY-EDIT-SURFACE-TAB-MAPPING-001/focused-tests.txt and focused-tests-2.txt
+NOT run, deliberately: full npm test / test:discovered, build, browser/visual verification, AMSC, other guards. No unrun test is reported as pass.
+
+REQUIRED PROOF (third verification clause)
+- Reservation keeps its INDEPENDENT editor: EDIT_SURFACE_BY_TAB.reservation = null; handleHeaderEdit's reservation `return` and the activeTab === "reservation" -> <CategoryReservationPanel> branch (:2193) are unmodified; reservation-policy guards pass 11/11.
+- No FICTITIOUS new EditSurface: EditSurface is unchanged (five members) and the mapping is total over TabId, so the compiler now rejects any tab lacking an explicit surface decision.
+- Tab switching / editing state: the dirty-check/confirm and revertSurfaceDraft + clearDirty() logic preceding the mapping call is byte-identical; the only state difference is that editSurface can no longer hold "reservation".
+
+SCOPE COMPLIANCE
+Production files changed: exactly 1 (category-admin-screen.tsx) — the only file ALLOWED (git diff --name-only confirms one path). Plus the receipt and bounded evidence the task required; no test file, config, guard or baseline touched.
+No unrelated category/reservation change; no backend/schema; no ShopEva Home/PDP or shared-grid change; no broad suite; no AMSC; no test loop; no self-started next task.
+
+RISK / ROLLBACK
+Risk: VERY LOW. A compile-time totality guarantee was added; runtime deltas are limited to those audited above and are observably inert (both affected helpers ignore any surface other than general/translations, and activeTab gates every surface comparison). No navigation, draft, permission, backend or schema change.
+Rollback: revert the single commit; TS2322 returns at line 1801 and the previous fictitious-surface runtime behaviour resumes.
+
+FILES
+src/frontend/app/admin/category-admin-screen.tsx (M)
+docs/ai/tasks/TB-FE-CATEGORY-EDIT-SURFACE-TAB-MAPPING-001.task.md (A)
+docs/architecture/evidence/TB-FE-CATEGORY-EDIT-SURFACE-TAB-MAPPING-001/{summary.md,typecheck-before.txt,typecheck-after-tsc.txt,focused-tests.txt,focused-tests-2.txt} (A)
+
+COMMIT
+commit-sha: d62b1ea2ed8e29124f2d4364e1605cd9f1046fc7
+pushed-to: origin/main (1a98fa6a3..d62b1ea2e)
+HEAD-after-push:         d62b1ea2ed8e29124f2d4364e1605cd9f1046fc7
+origin/main-after-fetch: d62b1ea2ed8e29124f2d4364e1605cd9f1046fc7
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

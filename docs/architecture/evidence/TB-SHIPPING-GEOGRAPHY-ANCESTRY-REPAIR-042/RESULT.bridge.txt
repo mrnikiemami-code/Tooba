@@ -1,0 +1,178 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-GEOGRAPHY-ANCESTRY-REPAIR-042
+Parent-Task: TB-SHIPPING-GEOGRAPHY-INTEGRITY-MIGRATION-041
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ARCHITECTURE-PLANNING
+Mode: BOUNDED_ANCESTRY_TRIGGER_REPAIR_AND_ISOLATED_VERIFICATION
+Bridge-Task-Row: c36e91c5-444b-4d18-af29-a9aeddefabc6
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 5456cebb6599c0f4f7ea84bc9bda37a990143629
+Base-SHA: 5456cebb6599c0f4f7ea84bc9bda37a990143629
+Code-SHA: dd3d334b2322b30437b953cb45f5707033e58718
+Evidence-SHA: dd3d334b2322b30437b953cb45f5707033e58718
+automaticNextImplementationTask: NONE
+
+SUMMARY
+PASS for the repair scope only. The 041 INSERT loophole was falsified on a real PostgreSQL, the guard was
+repaired so both INSERT and UPDATE create-cycle routes are covered by an immediate check, and the repair,
+the isolation policy, the deferral behaviour and two-session concurrency were all verified against a
+disposable task-exclusive container that was removed afterwards. Migration source is now validated UP ->
+DOWN -> UP against a real server with no EF model drift. Production application readiness is still NOT
+claimed: no Tooba database was contacted, no module registration/ordering, no Host/DI wiring, no seed.
+Worker PASS != Architect ACCEPT.
+
+PREFLIGHT
+Claimed exactly one Pending item on tooba-main after BRIDGE-WAKE (row
+c36e91c5-444b-4d18-af29-a9aeddefabc6); received artifact persisted verbatim at
+docs/ai/tasks/TB-SHIPPING-GEOGRAPHY-ANCESTRY-REPAIR-042.task.md (receipt only, not staged, never
+replayed). git fetch origin -> HEAD == origin/main == Expected-Base-SHA ==
+5456cebb6599c0f4f7ea84bc9bda37a990143629; no drift; no reset/stash/rebase/force-push/silent
+fast-forward. Read AGENTS.md, .cursor/skills/tooba-backend-feature/SKILL.md, the 041 report, the current
+guard and migration source and the module EF conventions; findings register not consulted. Output-path
+collision check performed before editing. All pre-existing dirty/untracked files were recorded and left
+untouched; this task's receipt and evidence folder stay uncommitted exactly like the 034-041 evidence.
+
+CHANGED PATHS (3 staged files; nothing else touched)
+- src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Persistence/AdministrativeAreaAncestryGuard.cs
+  (TriggerName split into UpdateTriggerName line 104 / InsertTriggerName line 107; TriggerSql now creates
+  two immediate triggers at lines 230-243; DropTriggerSql drops both at line 245; class documentation
+  rewritten for INSERT coverage, the falsified 041 claim, the immediate-not-deferrable decision, snapshot
+  and lock ordering, and the 42P17 finding)
+- src/backend/Modules/Geography/Tooba.Geography.Infrastructure/Persistence/Migrations/20261014113949_InitialGeography.cs
+  (comment above the guard operations updated, lines 344-350; Up emits FunctionSql line 351 then TriggerSql
+  line 353; Down tears down at lines 359-361)
+- docs/planning/shipping/SHIPPING-GEOGRAPHY-ANCESTRY-REPAIR-042.md (new evidence report)
+NOT modified (byte-identical to Base-SHA): the migration Designer and GeographyDbContextModelSnapshot
+(the EF model did not change - dotnet ef migrations has-pending-model-changes reports "No changes have been
+made to the model since the last migration"), GeographyDbContext.cs, the whole Geography Domain and
+Contracts, the 040 composite country FKs, the four translation parent FKs, all other constraints, Host, DI,
+endpoints, frontend, StorefrontIranGeography.Provinces, pinned guards, manifests and architecture locks.
+No second migration: the initial migration has never been applied, so its source was amended in place.
+
+INSERT / UPDATE LOOPHOLES - FALSIFIED THEN CLOSED (log-insert-gap.txt)
+The 041 claim "a freshly inserted row's id is new, so it cannot already be in a chain" considered only one
+new row at a time and is WRONG for a multi-row INSERT: the composite FK is an AFTER ROW constraint fired at
+end of statement, so a pair of rows created by ONE statement satisfies it and commits a cycle.
+- G1: same-statement two-row INSERT (A->B, B->A) with the new insert trigger disabled -> "INSERT 0 2" and
+  the table afterwards held G1->G2 and G2->G1: a committed cycle, exactly the 041 hole, reproduced on a real
+  PostgreSQL 17.
+- G2: identical statement with the insert trigger enabled -> ERROR 23514
+  geography.administrative_area.ancestry_cycle, and rows_after_rejected_insert = 0 (nothing committed).
+- G3: the same pair built by two UPDATEs -> first UPDATE 1, second ERROR 23514; graph remains acyclic.
+- T2b in the deterministic log is the same falsification: multi-row INSERT cycle rejected with 23514.
+Repair: TriggerSql now installs two ordinary, non-deferrable, immediate triggers sharing one function -
+trg_administrative_areas_ancestry_guard_update (AFTER UPDATE ... WHEN NEW.parent IS NOT NULL AND
+(OLD.parent IS DISTINCT FROM NEW.parent OR OLD.country_id IS DISTINCT FROM NEW.country_id)) and
+trg_administrative_areas_ancestry_guard_insert (AFTER INSERT ... WHEN NEW.parent IS NOT NULL).
+Two triggers instead of one is empirically forced: PostgreSQL rejected the first attempt with
+"SqlState 42P17: INSERT trigger's WHEN condition cannot reference OLD values" (trigger.c:620). Splitting
+keeps the precise "an ancestry link actually changed" predicate instead of weakening the guard to a blanket
+per-row call (which would take the serialization lock for every unrelated column write).
+Immediate instead of deferrable (041 used DEFERRABLE INITIALLY IMMEDIATE): a deferred check would run at
+COMMIT under a commit-time snapshot whose visibility of concurrently committed edges is not demonstrable,
+and would let a cycle exist transiently inside a transaction. Statement-end firing is what makes the
+multi-row-INSERT cycle visible, and it removes the deferred window entirely. The recursive walk, the depth
+bound 4096, the advisory lock pg_advisory_xact_lock(20261014, 41), the READ COMMITTED fail-closed
+precondition, the stable tokens and every previously accepted constraint are unchanged.
+
+DISPOSABLE DB ISOLATION PROOF (log-destination-proof.txt)
+- Disposable container: e8e13827c78222a5d415e6b9484f2a62e8f728d7c0fd915bddef7c5abd8931c7 /geo042-verify
+  running postgres:17, port binding 5432/tcp -> 127.0.0.1:55432 (Tooba's own service listens on 5432).
+- Pre-existing container, untouched and never connected to: 01d8067a30ce965c2ffc80296c5568c63f8e48eb1b2c5c2d1d3f7963b7b48d9f
+  /postgres-db running postgres:17.
+- Server that answered: db = geo042, usr = postgres, pg_postmaster_start_time = 2026-10-14 11:53:50.865409+00
+  (fresh), 2 non-template databases only - no shared data, no customer data.
+- The only connection string used anywhere in this task:
+  Host=127.0.0.1;Port=55432;Username=postgres;Password=geo042localonly;Database=geo042 (design-time env var
+  TOOBA_DESIGN_TIME_CONNECTION). All SQL ran via docker exec into that container. The container was removed
+  at the end; postgres-db was verified still running and was never touched.
+
+TEST RESULTS - SQLSTATE AND OUTCOMES (every case expected-then-observed)
+Single session, log-scenarios.txt, 4 expected rejections, 4 observed:
+- T0 two triggers installed (tgtype 5 insert, 17 update) and guard function volatile.
+- T1 root insert, child insert, re-root to NULL, re-parent, code-only update: 1x INSERT 0 1, 4x UPDATE 1 - all accepted.
+- T2a INSERT self-parent: ERROR 23514 ancestry_cycle.
+- T2b same-statement two-row INSERT cycle: ERROR 23514 ancestry_cycle.
+- T2c 2-node UPDATE cycle: UPDATE 1 then ERROR 23514.
+- T2d 3-node UPDATE cycle X->Y->Z then Z->X: UPDATE 1, INSERT 0 1, UPDATE 1, then ERROR 23514.
+- T3 five-level legitimate chain plus deep re-root: INSERT 0 4, UPDATE 1 - accepted.
+- T4 final graph acyclic.
+Isolation/deferral/ON CONFLICT, log-isolation.txt, 4 expected rejections, 4 observed:
+- T5a ancestry UPDATE in READ COMMITTED: UPDATE 1, COMMIT - accepted.
+- T5b ancestry UPDATE in REPEATABLE READ: ERROR 0A000 geography.administrative_area.ancestry_guard_isolation_unsupported,
+  DETAIL transaction_isolation is 'repeatable read', ROLLBACK.
+- T5c same in SERIALIZABLE: ERROR 0A000, transaction_isolation is 'serializable'.
+- T5d code-only UPDATE in REPEATABLE READ: UPDATE 1, COMMIT - accepted, so the isolation policy does not
+  over-reject unrelated (non-ancestry) writes.
+- T6 BEGIN; SET CONSTRAINTS ALL DEFERRED; A->B (UPDATE 1); B->A -> ERROR 23514 at that statement, not at
+  commit: no deferred window exists.
+- T7 INSERT ... ON CONFLICT DO UPDATE closing a cycle: ERROR 23514; T8 the same without a cycle: INSERT 0 1.
+- T9 walk/graph consistent, acyclic.
+Two-session concurrency, log-concurrency-1.txt (the race that matters): S1 "begin; update P->Q; pg_sleep(6);
+commit" succeeded (BEGIN, UPDATE 1, COMMIT); S2 "begin; update Q->P; commit" started 2.5 s later BLOCKED
+3.67 s on the advisory lock and then raised ERROR 23514 ancestry_cycle (DETAIL: ...072 cannot point at
+parent ...071: the parent chain already contains it). Final state P2->Q2, Q2 root - acyclic. The blocking
+measures the serialization; the post-lock detection proves the recursive query snapshots AFTER the lock
+wait, i.e. the 041 "fresh snapshot" assumption is now measured rather than asserted.
+Two-session concurrency, log-concurrency-2.txt (guard must not over-reject): S1 "update C3->R3; pg_sleep(6);
+commit" succeeded; S2 "update C2->R3" started 2.5 s later blocked 3.66 s then succeeded (UPDATE 1, COMMIT);
+final state C2b->R3, C3b->R3. No spurious failure and no deadlock in any test (the walk takes plain reads
+only, so it never waits on a row held by another transaction while holding its own row).
+
+MIGRATION / MODEL VALIDATION
+- dotnet build of Tooba.Geography.Infrastructure: succeeded, 0 errors, 0 warnings (only the pre-existing
+  NU1900 NuGet feed timeout warning, also present on the untouched baseline).
+- UP applied to the empty disposable database: "Applying migration '20261014113949_InitialGeography'. Done."
+- DOWN applied (dotnet ef database update 0): "Reverting migration ... Done."; afterwards guard triggers = 0,
+  guard function = 0, no geography data tables (the __ef_migrations_history relation and the geography schema
+  remain, expected EF behaviour).
+- UP again: "Applying migration ... Done."; guard triggers = 2. The round trip proves Down's teardown order
+  (triggers/function before table drops) is valid and reversible.
+- dotnet ef migrations has-pending-model-changes: "No changes have been made to the model since the last
+  migration" - the amended migration still matches the EF model exactly, which is why Designer and
+  ModelSnapshot correctly stay untouched.
+- Operational observation recorded, not hidden: the first apply attempt (with the invalid single
+  INSERT OR UPDATE trigger, 42P17) left the disposable database with the geography schema present and 2
+  relations in it, i.e. the failed migration was not fully atomic end-to-end as executed by the tool for this
+  provider. The database was discarded and recreated; this matters to whoever applies migrations operationally.
+
+DB NON-ACTIONS
+No Tooba database (dev, staging, production or shared) was connected to, inspected or modified: the only
+database used was the disposable container above, and it was removed. No migration applied to any Tooba
+database, no Host/DI/module registration, no endpoint, no frontend, no checkout/address/order/fulfillment
+change, no seed/import, no deployment, no service restart, no broad test run, no manifest or architecture
+lock change, no guard weakened, no Results-API probe or dummy POST, no automatic next task, no idle polling.
+
+ELAPSED
+Claim 11:51:51Z -> validated commit: about 11 minutes of the 30-minute hard timebox.
+
+PUSH EVIDENCE
+Commit dd3d334b2322b30437b953cb45f5707033e58718 (3 files changed, 284 insertions, 70 deletions); git push
+origin main reported 5456cebb6..dd3d334b2 main -> main; after git fetch origin, HEAD == origin/main ==
+dd3d334b2322b30437b953cb45f5707033e58718; nothing left staged; all pre-existing dirt untouched.
+
+REMAINING RISKS / OPEN ITEMS
+1. Production application readiness is NOT claimed: no Tooba database has ever received this migration and
+   module registration/ordering, Host/DI wiring and any ordered apply remain out of scope.
+2. REPEATABLE READ / SERIALIZABLE ancestry writes are rejected by design (0A000). This needs explicit
+   Architect acceptance; unrelated writes at those levels still work (T5d). If a higher level were ever
+   mandated for geography writes, the mechanism must be re-chosen, not patched.
+3. Trigger-based guards are bypassable by superuser DDL (DISABLE TRIGGER, session_replication_role,
+   dropping the trigger) - deliberately used in G1 to reproduce the 041 behaviour. No application path can.
+4. Race coverage is empirical, not exhaustive: one waiting session on both the cycle and the non-cycle case
+   plus all single-session routes were measured; three-or-more concurrent ancestry writers were not enumerated
+   (the serialization argument covers them, the tests do not).
+5. Depth bound 4096 is a fail-closed safety net, not a business rule.
+6. The three DB error tokens are still not declared in GeographyErrorCodes (Contracts is outside this task's
+   allowed paths) and need a later authorized slice.
+7. D10 administrative level, migration ordering/registration and Host wiring remain open and untouched.
+
+REQUEST TO ARCHITECT
+Verdict requested on the repaired guard and on the explicit READ COMMITTED fail-closed policy (item 2). If
+accepted, the next slice can be the module migration registration/ordering decision, still without Host
+behaviour change; the migration must not be applied to any Tooba database until that decision exists.
+END_TOOBA_WORKER_RESULT

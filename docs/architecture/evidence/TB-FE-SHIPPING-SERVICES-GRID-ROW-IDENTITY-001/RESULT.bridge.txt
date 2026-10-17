@@ -1,0 +1,70 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-SHIPPING-SERVICES-GRID-ROW-IDENTITY-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR
+Status: PASS
+Verdict: BOUNDED_REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: 3786aee814df6d06175e6a418e3746664b3faa96
+Expected-Starting-HEAD-Match-State: VERIFIED
+Expected-Starting-HEAD-Equals-Origin-Main-State: VERIFIED
+Preflight-Tracked-Worktree-State: CLEAN_NO_TRACKED_MODIFICATION
+Preflight-Divergence-State: NONE_NO_OTHER_WORKER_ADVANCED_HEAD
+Root-Cause: One contract mismatch produces all three diagnostics. ShippingServiceListItem (shipping-services-api.ts:45-56) exposes shippingServiceId, while the direct-grid contract requires a stable id: LegacyAdminGridDirectProps<T extends { id: string }> declares columns: GridColumnDef<T>[] and queryAdapter: (query: GridServerQuery) => Promise<{ rows: T[]; total: number }> (design-system/app-data-grid/legacy-grid-adapters.ts:17-25), useLegacyAdminGridDirectProps<T extends { id: string }> (legacy-grid-adapters.ts:29) and AppDataGrid<T> share that constraint. This screen was the only direct-AppDataGrid admin screen that had not bridged its API id onto the grid's required stable id.
+Diagnostics-Addressed: app/admin/shipping-services-screen.tsx(306,5) TS2322 GridColumnDef<ShippingServiceListItem>[] not assignable to GridColumnDef<{ id: string }>[]; (307,5) TS2322 queryAdapter returning GridServerPage<ShippingServiceListItem> not assignable to the { rows: { id: string }[]; total: number } contract; (345,26) TS2344 ShippingServiceListItem does not satisfy the constraint { id: string }.
+Canonical-Identity-Established-From-Repository: shippingServiceId is the canonical server-issued identity - it is the value the screen already passes to loadAdminShippingService(serviceId) in openEdit and to deactivateAdminShippingService(serviceId) in deactivate (shipping-services-screen.tsx:168,221), and it is the field the actions column already reads as its accessor.
+Established-Pattern-Followed: The repository already solves exactly this at app/admin/campaigns/admin-campaigns-screen.tsx:31-33,103-108 with a typed view-row projection: type CampaignGridRow = AdminCampaignListItem & { id: string } and list.data.items.map((item) => ({ ...item, id: item.campaignId })). This repair mirrors that precedent verbatim in shape, leaving the API/DTO field name untouched.
+Rejected-Alternatives: Renaming or adding id to the DTO or API type was rejected because it would rewrite the canonical wire identity; optionalizing or weakening { id: string } was rejected because it would weaken the shared grid generic; a random, index or positional id was rejected as a fake identity that breaks selection, saved views and export.
+Row-Id-Semantics-Traced-Before-Edit: id is consumed through useLegacyAdminGridDirectProps to buildLegacyGridBridge and AppDataGrid as the row key for row selection, saved views and saved-view diffs (design-system/app-data-grid/saved-view-*.ts) and for export (getExportRow). A duplicate or positional id would corrupt saved views and selection, which is why the identity had to be the real shippingServiceId rather than a synthesized value.
+STOP-Decision-State: NOT_A_STOP_CASE - the correct fix needed no shared grid contract change, no changed API DTO, no migration and no product decision, because the repository's own campaigns precedent already provides a correctly owned view-row projection seam inside the screen.
+Change: Four edits in one production file. A type alias type ShippingServiceGridRow = ShippingServiceListItem & { id: string }; the rows state type became ShippingServiceGridRow[]; the refresh data seam became setRows(listResult.data.map((item) => ({ ...item, id: item.shippingServiceId }))); the columns memo became GridColumnDef<ShippingServiceGridRow>[]; and the render became <AppDataGrid<ShippingServiceGridRow> {...gridProps} />.
+Shared-Row-Type-State: VERIFIED - column definitions, query rows and <AppDataGrid> all use the single row type ShippingServiceGridRow, as the task requires.
+Row-Action-Target-State: VERIFIED - because the view row extends ShippingServiceListItem, openEdit(row.shippingServiceId) and deactivate(row.shippingServiceId) still target shippingServiceId and every column accessor still reads the API fields it read before; the new id is not used for actions.
+Preserved-Surfaces: all column definitions, widths and accessors; grid state; sorting and filtering; data semantics; the GRID_VIEW_KEY = "admin-shipping-services" saved-view key and its store; export; rows.at(-1)?.sortOrder defaulting; the dialog and save flows
+API-DTO-Schema-Or-Shared-Grid-Contract-Change-State: NONE - no rename, no new DTO field, no fake, random, index or positional id, no change to legacy-grid-adapters.ts or any other design-system file
+Assertion-Suppression-State: NONE_NO_ANY_NO_AS_UNKNOWN_AS_NO_TS_IGNORE_NO_NON_NULL_MASK
+Forbidden-Items-State: NONE_NO_BACKEND_OR_SCHEMA_NO_GLOBAL_GENERIC_WEAKENING_NO_OPTIONALIZED_ID_NO_TSCONFIG_EXCLUDE_NO_BASELINE_NO_GUARD_WEAKENING_NO_UNRELATED_CLUSTER_NO_BROAD_GRID_REFACTOR_NO_SHOPEIVA_HOME_PDP_NO_AMSC_NO_TEST_LOOP_NO_AUTOMATIC_NEXT_TASK
+Baseline-Evidence-Source: docs/architecture/evidence/TB-FE-CATALOG-ATTRIBUTE-GRID-QUERY-TYPES-001/typecheck-after-tsc.txt copied verbatim to docs/architecture/evidence/TB-FE-SHIPPING-SERVICES-GRID-ROW-IDENTITY-001/typecheck-before.txt
+Typecheck-Baseline-Errors: 32
+Typecheck-Total-After: 29
+Typecheck-Reduction: 3
+Typecheck-New-Errors: 0
+Typecheck-Expected-Vs-Actual: expected 32 -> 29 with no new diagnostics; actual exactly 29 in the final tree including the test amendment, with 0 added diagnostics in a Compare-Object of the before and after outputs and none left in shipping-services-screen.tsx
+Diagnostics-Remaining-In-Target-File: NONE
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_29_ERRORS_REMAIN_IN_OTHER_AUDITED_CLUSTERS
+Remaining-Diagnostic-Concentration-For-Architect: 9 in lib/storefront-composition/shared-composition-renderer.tsx across four codes; 3 in features/admin-languages/components/language-list.tsx; 2 in app/admin/landing-pages/admin-landing-page-composer.tsx; and one each in roughly fourteen other files
+Changed-Files: src/frontend/app/admin/shipping-services-screen.tsx (only production file - one type alias, three type substitutions and one id projection); src/frontend/app/admin/admin-grid-migration.test.ts (minimal in-pattern amendment - one readFileSync plus one test); docs/ai/tasks/TB-FE-SHIPPING-SERVICES-GRID-ROW-IDENTITY-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-SHIPPING-SERVICES-GRID-ROW-IDENTITY-001/summary.md, typecheck-before.txt, typecheck-after-tsc.txt, focused-tests.txt (added - evidence with raw typecheck output)
+Test-Amendment-Justification: app/admin/admin-grid-migration.test.ts is the repository's existing direct-AppDataGrid migration guard - it already asserts for catalog attributes, gift cards, stories and admin-screens that the screen uses AppDataGrid plus createClientGridQueryAdapter and does not use LegacyAppDataGrid - making it the one directly relevant existing focused grid test, and this screen was conspicuous by its absence from it. It was minimally amended in the file's own established style rather than adding a new file, because this task's entire content is that this screen must satisfy the direct-grid contract. The genuine assertions are the row-type declaration and the id: item.shippingServiceId binding, which a fake or positional id would break.
+Focused-Test-Limitation-Honest-Disclosure: Three of the five assertions are wiring assertions in the file's existing style and are therefore closer to ceremonial than behavioural; the authoritative identity verification for this task is the compiler comparison, since the type system is what proves columns, the query adapter rows and AppDataGrid now share one row type whose id is the canonical shippingServiceId, and TypeScript would reject a positional or missing id. There is no component-level runtime harness for this screen because the projection is a component-internal state mapping, and exporting a production seam to test it was out of scope.
+Commands-Run: git fetch origin and HEAD==origin/main==Expected-Starting-HEAD verification with a clean tracked worktree (preflight, pre-commit and post-push); cd src/frontend && node_modules/.bin/tsc --noEmit; node --experimental-strip-types --test app/admin/admin-grid-migration.test.ts; git diff/status inspections for the exact final diff and scope
+Focused-Test-Results: node --experimental-strip-types --test app/admin/admin-grid-migration.test.ts - 7 PASS / 0 FAIL
+PreExisting-Failures-Observed: NONE
+PreExisting-Failure-Count-Before: 0
+PreExisting-Failure-Count-After: 0
+Retry-Cascade-State: NONE
+Tests-Not-Run: the full npm test and test:discovered suites, any build, backend suites, visual suites, browser/live verification, and any AMSC wave
+Unrun-Test-Pass-Claim-State: NONE
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: Only one Admin shipping-services screen's row typing and data projection changed. No Home, PDP, listing, storefront, shared-composition or visual surface is in scope.
+Scope-Statement: The production change is limited to src/frontend/app/admin/shipping-services-screen.tsx as the task prefers. The only other changes are the minimal amendment to the existing focused grid guard, the task receipt and the evidence files.
+Risks: Residual risk low. The projection adds one own-property id per row and the mapping is total because shippingServiceId is non-optional on the API item, so id is always a non-empty string stable across refreshes; all column accessors and row actions still read the fields they read before, and saved-view identity is preserved because the grid view key is unchanged.
+Rollback-Criteria: Revert commit e41732c0077af49d33565811199bc8bd92387ca1 if any row action target, column accessor, saved view, sort or filter behaviour differs; the change is five lines plus one test hunk and reverts atomically.
+Deviation-State: ONE_DECLARED_DEVIATION_THE_MINIMAL_AMENDMENT_TO_THE_EXISTING_FOCUSED_GRID_GUARD_WHICH_THE_TASK_EXPLICITLY_PERMITS
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Reset-Or-Stash-State: NONE
+Rebase-State: NONE_NO_REBASE_WAS_NEEDED
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED_NOT_REMOVED_NOT_STASHED
+Base-SHA: 3786aee814df6d06175e6a418e3746664b3faa96
+Final-SHA: e41732c0077af49d33565811199bc8bd92387ca1
+Commit-SHA: e41732c0077af49d33565811199bc8bd92387ca1
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: STOP_FOR_INDEPENDENT_ARCHITECT_REVIEW
+STOP
+END_TOOBA_WORKER_RESULT

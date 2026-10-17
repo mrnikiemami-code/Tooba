@@ -1,0 +1,112 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-CONTENT-CATEGORY-MEDIA-PREVIEW-NULL-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: fcc96e37a02bf9c430d1b409bc00d3d59a34da23
+Starting-HEAD:          fcc96e37a02bf9c430d1b409bc00d3d59a34da23
+Starting-origin/main:   fcc96e37a02bf9c430d1b409bc00d3d59a34da23
+Tracked-worktree-clean: YES (no stash/reset/force-push; no untracked file modified)
+Read: AGENTS.md, .cursor/skills/tooba-frontend-feature/SKILL.md, docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md, the full component, media-api.ts, all mediaPreviewUrl callers and tests, and the exact diagnostic. Deferred findings register NOT accessed.
+
+ROOT CAUSE
+mediaPreviewUrl(mediaAssetId: string | null | undefined): string | null returns null whenever the trimmed id is empty (media-api.ts:90-95). The media tab passed the raw call to <img src>, and <img>.src accepts string | Blob | undefined, so string | null is not assignable -> TS2322 at content-category-admin-screen.tsx:507.
+
+DECISION GATE — WHAT NULL MEANS (established from the real code)
+1. null == absence of a usable media asset id. The helper is a pure string template with no other failure mode: it cannot fail for a non-blank id and cannot succeed for a blank one.
+2. A present mediaAssetId CAN yield null only when it is blank/whitespace-only ("" or "   "), because of the `.trim()` + `if (!id) return null` guard — no genuinely-present id is non-previewable. So "has id" and "has URL" are the same predicate for all real data; the only divergence is the blank-string edge.
+3. Existing representation of absent media on this tab: <p className="text-sm text-muted">تصویری اختصاص داده نشده است.</p> (line 509) — preserved verbatim.
+Consequence: no product decision needed; BLOCKED_ARCHITECT_DECISION NOT raised. The blank-id edge resolves to the screen's own pre-existing empty state, which is also the canonical sibling behavior (category-admin-screen.tsx:456-480 derives `const preview = mediaPreviewUrl(mediaAssetId)` and renders `preview ? <img src={preview}/> : <span>هنوز … تنظیم نشده</span>`). The repair follows an in-repo precedent rather than inventing behavior.
+
+ACTUAL DECISION
+Derive the typed preview URL once in the component body and render <img> only for a usable string; otherwise keep the existing empty state. Explicitly NOT chosen: `?? ""` (an empty src is a document-relative request to the current page, forbidden by the task); `!`/`as string`/`any`/`ts-ignore` (all forbidden).
+
+ACTUAL DIFF
+diff --git a/src/frontend/app/admin/content-category-admin-screen.tsx b/src/frontend/app/admin/content-category-admin-screen.tsx
+@@ -336,6 +336,10 @@ export function ContentCategoryAdminScreen() {
+   const isRtl = languageCode.toLowerCase().startsWith("fa");
++  // mediaPreviewUrl تنها برای شناسهٔ غیرخالی URL می‌سازد و در غیر آن null برمی‌گرداند
++  // (media-api.ts:91). پس پیش‌نمایش را همان‌جا مشتق می‌کنیم تا هیچ‌گاه src نامعتبر/خالی
++  // به <img> نرسد و در نبود رسانهٔ قابل‌استفاده، همان حالت «تصویری اختصاص داده نشده» بماند.
++  const mediaPreview = mediaAsset ? mediaPreviewUrl(mediaAsset.mediaAssetId) : null;
+@@ -503,8 +507,8 @@
+               {tab === "media" ? (
+                 <div className="space-y-3">
+-                  {mediaAsset?.mediaAssetId ? (
+-                    <img src={mediaPreviewUrl(mediaAsset.mediaAssetId)} alt="" className="max-h-40 rounded-xl border object-cover" />
++                  {mediaPreview ? (
++                    <img src={mediaPreview} alt="" className="max-h-40 rounded-xl border object-cover" />
+                   ) : (
+                     <p className="text-sm text-muted">تصویری اختصاص داده نشده است.</p>
+                   )}
+diff --git a/src/frontend/app/admin/media-api.test.ts b/src/frontend/app/admin/media-api.test.ts
+@@ -23,6 +23,12 @@ test("mapMediaAsset accepts camel and Pascal payloads", () => {
+   assert.equal(mediaPreviewUrl(id), `/v1/storefront/media/${id}`);
++  // قرارداد helper: برای شناسهٔ غایب/خالی هیچ URL پیش‌نمایشی وجود ندارد؛ همان پیش‌فرضی که
++  // تب «رسانه» دستهٔ محتوا برای انتخاب بین <img> و حالت «تصویری اختصاص داده نشده» به آن تکیه می‌کند.
++  assert.equal(mediaPreviewUrl(null), null);
++  assert.equal(mediaPreviewUrl(undefined), null);
++  assert.equal(mediaPreviewUrl(""), null);
++  assert.equal(mediaPreviewUrl("   "), null);
+   assert.equal(mapMediaAsset({ originalFileName: "x" }), null);
+
+BEHAVIOR EQUIVALENCE (case by case)
+- mediaAsset === null: <p> empty state -> <p> empty state. IDENTICAL.
+- id non-blank: <img src="/v1/storefront/media/{id}"> -> same string from the same helper. IDENTICAL.
+- id blank/whitespace-only: previously <img src={null}> == an <img> with NO src attribute (React drops null) i.e. a broken-image element; now the existing <p> empty state. Edge case corrected; the media-library dialog cannot produce a blank id, so no reachable screen changes.
+Preserved: alt="" classes, max-h-40, both selection buttons and their disabled gating, assignMedia/updateContentCategoryMedia, mediaOpen, tabs, permissions and every other tab (git diff --stat: 8 lines in the screen file).
+
+DIAGNOSTICS
+errors-before: 22
+errors-after:  21
+delta:         -1 (Compare-Object shows exactly the two removed lines of the target TS2322 — message + continuation — and ZERO added lines)
+new-diagnostics-introduced: 0
+tool: src/frontend/node_modules/.bin/tsc --noEmit, run after the final edit (exit 2 overall — 21 pre-existing errors elsewhere; no greenness claimed)
+baseline-file: docs/architecture/evidence/TB-FE-ADMIN-RECEIPTS-ACTIONS-COLUMN-WIDTH-001/typecheck-after-tsc.txt (exactly as the task specified)
+before/after capture: docs/architecture/evidence/TB-FE-CONTENT-CATEGORY-MEDIA-PREVIEW-NULL-001/typecheck-{before,after-tsc}.txt
+
+FOCUSED TESTS
+suites: app/admin/content-category-admin-screen.test.ts + app/admin/media-api.test.ts (nearest relevant existing suites)
+result: tests 6, pass 6, fail 0
+pre-existing-failures-observed: none (nothing chased, no retry cascade)
+test-amendment: FOUR assertions added inside the EXISTING mediaPreviewUrl case — null, undefined, "", "   " all -> null. Justification: this is the exact contract premise the new guard depends on and was previously untested (only the happy path existed at line 25); it asserts real helper behavior, not an implementation-detail regex, and adds no new file or test case.
+raw: docs/architecture/evidence/TB-FE-CONTENT-CATEGORY-MEDIA-PREVIEW-NULL-001/focused-test.txt
+NOT run, deliberately: full npm test/test:discovered, dependency install, build, backend suites, browser/visual verification, AMSC, other guards. No unrun test is reported as pass.
+
+SCOPE COMPLIANCE
+Production files changed: exactly 1 (content-category-admin-screen.tsx) — the only file ALLOWED. Plus the permitted minimal focused-test amendment and receipt/evidence.
+No !, as string, any, ts-ignore, unsafe cast, empty src, or media contract change. mediaPreviewUrl signature and the shared media API untouched; its other callers untouched. No backend/schema change; no storefront/Home/PDP/Shopeiva locked surface; no tsconfig/baseline/guard edit; no unrelated fix; no AMSC; no broad suite; no follow-on task started.
+
+RISK / ROLLBACK
+Residual risk: LOW. For every value the media-library dialog can produce the rendered markup is byte-identical; the only changed case is a blank id, which was a src-less broken <img> and is now the existing empty state. No new network request is introduced.
+Rollback: revert the single commit; TS2322 returns and the blank-id edge reverts to the src-less <img>.
+
+FILES
+src/frontend/app/admin/content-category-admin-screen.tsx (M)
+src/frontend/app/admin/media-api.test.ts (M)
+docs/ai/tasks/TB-FE-CONTENT-CATEGORY-MEDIA-PREVIEW-NULL-001.task.md (A)
+docs/architecture/evidence/TB-FE-CONTENT-CATEGORY-MEDIA-PREVIEW-NULL-001/{summary.md,typecheck-before.txt,typecheck-after-tsc.txt,focused-test.txt} (A)
+
+COMMIT
+commit-sha: fd2ad0e82ed916a515756dacc876151605358353
+pushed-to: origin/main (fcc96e37a..fd2ad0e82)
+HEAD-after-push:         fd2ad0e82ed916a515756dacc876151605358353
+origin/main-after-fetch: fd2ad0e82ed916a515756dacc876151605358353
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

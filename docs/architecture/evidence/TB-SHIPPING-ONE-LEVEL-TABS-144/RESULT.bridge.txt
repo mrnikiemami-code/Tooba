@@ -1,0 +1,155 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-144
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-143
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: BOUNDED_FINAL_OPERATIONAL_ACCEPTANCE_AND_COMMERCIAL_POLICY_DECISION_GATE
+Status: PASS
+Technical-Delivery-Accepted: YES (at this checkpoint)
+Mission-A-Result: PASS
+Mission-B-Result: PASS
+Mission-C-Result: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Implementation-Task: NONE
+Base-SHA: 5ff8b546512730effb2a72f21195051493f4c8e4
+Code-SHA: 02540583bc5b729b5face3e3f0172560e22ed267
+Base-SHA-Verified: HEAD == origin/main == 5ff8b546512730effb2a72f21195051493f4c8e4 before work
+Origin-Drift-Before: none
+HEAD-Check: local commit pushed; HEAD == origin/main == 02540583bc5b729b5face3e3f0172560e22ed267 verified after push
+Evidence: docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-144/ (focused-test-144.txt, seam-inventory-144.txt, nonchange-and-isolation-144.txt)
+Plan: docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-144.md
+Decision-Record: docs/architecture/checkout/SHIPPING-GROUP-FEE-ALLOCATION-POLICY-DECISION.md
+
+SOURCE-CHANGES: NONE. This checkpoint is a documentation/decision gate: no file under src/ was created,
+edited, deleted or renamed; no migration, dependency-injection registration, appsettings value, frontend,
+CSS, theme, token, layout, RTL, responsive, admin or shared setting was touched. The settlement capability
+default remains OFF and no global migration order changed. No payout or commercial settlement was activated.
+No runtime was launched (no Host, container, database or frontend process) and no live PSP was used.
+
+MISSION A — FINAL DELIVERY REVIEW: PASS (read-only; no completed work reopened)
+Deliverable: a concise acceptance matrix distinguishing what is genuinely RUNTIME-PROVEN from what remains
+open, plus a precise code-owner seam inventory of the allocation policy and its single invocation.
+Runtime-proven (each traced to its accepted evidence, not inferred):
+- per-line method selection on the real Shipping page: one seller, two lines, two different methods, two
+  groups, disjoint cart lines, deterministic cold reload (TB-136);
+- the blank legacy "روش ارسال:" customer-visible defect is fixed by rendering the authoritative groups on
+  /fa/payment, with aggregate fee and payable each exactly once, RTL and 393x887 checked, zero CSS edits
+  (TB-137);
+- nothing committed by opening/continuing checkout; final submit yields one Checkout, one SellerOrder, two
+  Confirmed shipping groups with disjoint line membership; charge reconciled exactly once with real stable
+  ShippingGroupId allocation targets; initiated->paid->accepted states; one sandbox verification, no double
+  payment (TB-138);
+- the paid event really reaches Fulfillment: one unit owning BOTH stable group ids, item->line->group
+  membership matching Order, no 42703, no handler failure (TB-140, after the TB-139 transport repair);
+- the per-group Settlement charge ledger: two PendingAllocation rows keyed by those same two stable group
+  ids, amounts equal to the paid allocations, every commercial column NULL, no seller credit, zero payouts
+  (TB-143, real paid storefront journey on an isolated SingleStore scratch with explicit capability opt-in).
+Critical practical edge (explicitly inspected on the current code, not assumed):
+- registration is OFF by default and cannot be enabled accidentally: SettlementMarketplaceChannelLedgerPolicy
+  registers handlers only for Edition=Marketplace or an explicitly parsed
+  Tooba:Settlement:MarketplaceChannelLedger:Enabled=true, and the shipped Host value is false
+  (src/backend/Host/Tooba.Host/appsettings.json:29-33); a malformed or absent value parses to false;
+- explicit schema activation is still REQUIRED: SettlementModule registers SettlementDbContext and the module
+  migration descriptor but NO IModuleSchemaMigrator (SettlementModule.cs:74-83), so startup auto-migration
+  never creates settlement.*; a deployment with the capability on but no schema gets the fail-closed
+  SchemaNotReady path, not an exception;
+- neither a non-marketplace retail sale nor an unknown checkout can be credited: the channel is read from the
+  persisted order.checkouts.channel through the Order Contracts seam, and absent/unknown resolves to
+  SaleChannelNotMarketplace while a skip is counted (tooba.settlement.ledger.skipped) without throwing, so
+  retries are not poisoned and Order/Fulfillment fan-out is unaffected;
+- legacy Marketplace behaviour is bit-for-bit retained: the gate short-circuits to Eligible without reading
+  the channel or the schema, asserted by a test that also asserts the channel reader was never invoked.
+Remaining blockers, reported as a typed list in the plan (B1..B7):
+B1 commercial allocation policy does not exist (hard BUSINESS gate); B2 production activation procedure for
+the capability flag and the Settlement schema is undefined; B3 refund/reversal of a group fee is not wired
+(ReverseShippingGroupFeeAsync has no production caller); B4 there is no read/observability surface for the
+pending ledger (ListShippingGroupFeesAsync has no production consumer); B5 SettlementRefundSucceededHandler
+does not consult the per-event gate (harmless today because it does not touch group fees, relevant only once
+B3 is implemented); B6 Edition=Marketplace deployments still cannot complete a real paid sale (TB-142,
+unchanged); B7 production PSP/transport/auth/migration rollout all unexercised.
+
+MISSION B — VERSIONED BUSINESS POLICY INPUT CONTRACT: PASS
+Delivered docs/architecture/checkout/SHIPPING-GROUP-FEE-ALLOCATION-POLICY-DECISION.md as an OPEN decision
+record that decides nothing commercial. It contains: (0) why it exists; (1) what is already implemented and
+must not be re-decided, each row mapped to its exact code seam; (2) nine structural invariants any approved
+policy must satisfy (per-group never per-order, one currency, exact balance identity, explicit signed
+directions, immutable snapshot, append-only audit, idempotency, fail-closed default, no inference);
+(3) twelve numbered decision fields (D1..D12) each marked BUSINESS APPROVAL REQUIRED, mapped to the actual
+nullable ledger columns, with the approver named; (4) required SEMANTICS to decide - the accounting equation
+to be signed and the treatment of zero-charge/free shipping, seller-funded vs platform-funded promotion,
+carrier overage, cancellation and partial shipment, return/refund, compensating entries, idempotency and
+audit; (5) the technically answerable owner per value (Order/Payment/Fulfillment/Settlement/Tax/Payout);
+(6) ten decision-ready EITHER/OR questions (Q1..Q10) for the owner; (7) explicit non-goals; (8) what approval
+unlocks for planning. NO numerical default, percentage, tariff, tax rate, split or residual was proposed
+anywhere; the document states explicitly that D2..D12 are undecided and must not be inferred from it.
+Payout code, live business logic and the settlement ledger were not modified.
+
+MISSION C — FINAL UI/PAYMENT RELEASE CHECKLIST: PASS
+Delivered in the plan as a handoff checklist: pre-conditions (isolated deployment; capability+schema required
+only if the ledger is being observed; Development sandbox provider; note the base SHA), then twelve scenarios
+C1..C12 (legacy single-line single-method; one seller two methods; two sellers same method; two sellers
+different methods; mobile RTL at 390-393px; Shipping back-refresh restoration; no premature commit on
+Continue; final sandbox click side-effect timing with a single verification; Order/Fulfillment stable group
+ids; fee sums identical across Shipping card, Payment summary, Order groups and Payment allocations with each
+fee exactly once; pending Settlement with no payout; tenant/sale-channel safety on a non-marketplace
+checkout), each with the expected observation. A separate section lists what is explicitly UNEXPLORED before
+production: real PSP initiate/webhook/status/failure handling, real RabbitMQ transport, real SMS/OTP auth,
+the production migration rollout procedure and rollback, per-deployment capability enablement audit,
+multi-tenant isolation under concurrency, per-group shipment booking/dispatch/tracking, and B1..B7.
+
+FOCUSED GUARD SPOT-CHECK (exactly one, no broad suite)
+dotnet test src/backend/Modules/Settlement/Tooba.Settlement.Tests/Tooba.Settlement.Tests.csproj -c Release
+  --filter "FullyQualifiedName~SettlementChannelLedgerEligibilityTests"
+-> Passed! Failed: 0, Passed: 8, Skipped: 0, Total: 8, Duration: 459 ms
+That class is the guard for the critical edge: registration OFF by default, ON only for the explicit
+capability, Marketplace registration not weakened, Marketplace legacy short-circuit without channel reads,
+marketplace channel accepted, ordinary retail rejected, unknown checkout rejected, missing schema fails
+closed. No other suite was run and no runtime was launched.
+
+DEFECT SEARCH RESULT
+No source defect was found that blocks the main customer journey: grouped selection, grouped payment
+presentation, final submit, Order/Fulfillment group propagation and the per-group pending ledger are all
+runtime-proven. The remaining gaps are the deliberate fail-closed commercial gate (B1) and the operational /
+observability items (B2..B7). Per the task instruction, no unapproved source change was mixed into this
+decision task; nothing was repaired.
+
+NON-CLAIMS
+- No commercial split, percentage, tariff, tax rate, discount funder or payout entitlement was invented, and
+  no PendingAllocation row was presented as settled, revenue, credit or payable.
+- No production activation, no schema activation on any shared database, no global migration order change,
+  no payout activation.
+- No unit test is presented as runtime proof; every runtime claim above cites an accepted prior runtime
+  evidence set.
+- No frontend/CSS/theme/token/layout/RTL/responsive/admin file was modified. The working tree still contains
+  exactly the same pre-existing unrelated modifications that predate this claim (two historical evidence
+  logs TB-SHIPPING-FULL-OPERATIONS-075/079 and two admin screen files); they were not staged, edited or
+  rewritten by this task. Untracked result artifacts (RESULT.bridge.txt, post-result.js, result-post.json)
+  and the received .task.md artifact are left untracked exactly as in the previous tasks.
+
+ISOLATION / CLEANUP
+No runtime resource was created, so nothing required cleanup: no container, no PID, no port, no database, no
+build output directory. Shared :5088 / :3000 / tooba_alpha / shared Postgres / shared RabbitMQ were never
+used, started, stopped or written. Two temporary local files used to read the Bridge API surface were deleted.
+
+ROLLBACK: revert the single documentation commit 02540583b. It contains documentation only; reverting it
+restores the previous state exactly and touches no executable behaviour, schema, configuration or data.
+
+MINUTES: ~20 from claim to report; well inside the 45-minute hard timebox (documentation gate, one focused
+test run, one commit, one push).
+
+DECISIONS AWAITING USER/BUSINESS APPROVAL (the actual gate)
+1. Answer Q1..Q10 in the decision record and sign the accounting equation in its section 4.1. Until then every
+   group shipping fee stays PendingAllocation and non-payable by design.
+2. Decide the production activation procedure for the capability flag and the Settlement schema (B2) and
+   whether B3 (refund/reversal wiring), B4 (pending-ledger read surface) and B5 (refund-handler gate) are
+   approved as a separate bounded follow-on task.
+3. Decide whether Edition=Marketplace must ever hold a runnable commerce fixture (B6), or whether the
+   SingleStore + explicit capability opt-in is the intended production shape.
+4. Decide the production-readiness scope for B7 (real PSP, real transport, real auth, migration rollout).
+
+TECHNICAL DELIVERY ACCEPTANCE: accepted at this checkpoint. The grouped shipping/checkout/payment journey,
+the paid-to-Fulfillment handoff and the per-group pending settlement ledger are runtime-proven and safe; the
+single remaining gate is a business policy decision, which this task prepared as a decision-ready input and
+deliberately did not answer.
+END_TOOBA_WORKER_RESULT

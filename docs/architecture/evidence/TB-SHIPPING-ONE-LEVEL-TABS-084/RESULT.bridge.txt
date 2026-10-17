@@ -1,0 +1,152 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ONE-LEVEL-TABS-084
+Parent-Task: TB-SHIPPING-ONE-LEVEL-TABS-083
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA-SHIPPING-ONE-LEVEL-TABS
+Mode: BOUNDED_ADMIN_FIVE_TAB_SHELL_AND_ONE_LEVEL_LIST
+Bridge-Task-Row: 2168ce4a-4e3d-4fba-96b6-92ddae59085a
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 2b80990f8016ab1beb8c946429fcfad13bd5437b
+Base-SHA: 2b80990f8016ab1beb8c946429fcfad13bd5437b
+Code-SHA: d3d76ec69a60d5044e652ace408c639ffd654af5
+Evidence-SHA: f3ce208e7df0c471d318f6e7a40fea9c173889bd
+automaticNextImplementationTask: NONE
+
+PREFLIGHT
+- Claimed exactly one Pending task on tooba-main; received .task.md persisted as receipt only (unstaged).
+- Read AGENTS.md, TOOBA-PIPELINE-PROTOCOL.md, SHIPPING-ONE-LEVEL-UI-081.md/-082.md/-083.md and the exact
+  082/083 changed files.
+- git fetch origin; HEAD == origin/main == 2b80990f8016ab1beb8c946429fcfad13bd5437b, identical to
+  Expected-Base-SHA. Zero drift, no RECOVERY_CONFLICT.
+- Preserved every pre-existing dirty/untracked path, including the modified admin screens
+  admin-fulfillment-work-queue-screen.tsx and admin-order-detail-screen.tsx that predate this task.
+  No reset, stash, rebase or force push.
+- Inspected before editing: app/admin/shipping-services-screen.tsx (766 lines, the working two-level screen),
+  app/admin/shipping-services/page.tsx (the route), shipping-services-api.ts, the folder's 11 existing tests,
+  design-system primitives (Button/EmptyState/ErrorState), existing admin tab patterns (campaign-tabs,
+  admin-content-language-tabs, WorkspaceShell) and the lib/architecture guards.
+- SOURCE OF TRUTH AS FOUND: the legacy two-level shipping_services/shipping_service_options catalog is the
+  sole operational read/write authority. The 083 one-level catalog exists in source only, is UNMIGRATED in
+  Development, and Tooba:ShippingOneLevelCatalog has no appsettings section anywhere. ShippingRateAuthority
+  and ShippingOperationalShadow are OFF.
+
+CHANGED PATHS (exactly)
+  src/frontend/app/admin/shipping-services/page.tsx                                  (modified)
+  src/frontend/app/admin/shipping-services/shipping-one-level-gate.ts                (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs-model.ts          (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.tsx               (new)
+  src/frontend/app/admin/shipping-services/shipping-one-level-tabs.test.ts           (new)
+  docs/planning/shipping/SHIPPING-ONE-LEVEL-UI-084.md                                (new)
+  docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-084/**                       (new)
+  docs/ai/tasks/TB-SHIPPING-ONE-LEVEL-TABS-084.task.md                               (receipt only, NOT staged)
+No unrelated admin screen was modified. src/frontend/app/admin/shipping-services-screen.tsx was NOT touched
+(it had no overlapping dirty change, but the gate-preserving composition was achievable purely in page.tsx,
+so the legacy screen stays byte-identical).
+
+FIVE-TAB SHELL (IMPLEMENTED)
+Exact labels: «سرویس‌ها»، «تعرفه و پوشش»، «بسته‌بندی و کرایه»، «برنامه کاری و ظرفیت»، «بررسی هزینه»,
+asserted verbatim by a test. Correct role="tablist"/role="tab"/role="tabpanel" with aria-selected,
+aria-controls, aria-labelledby, roving tabIndex and visible focus; ArrowRight/ArrowLeft/Home/End navigation
+with wrap, asserted by 10 focused index-math cases. Container dir="rtl", flex-wrap tab row for responsiveness,
+table headers text-start for RTL mirroring with method codes kept dir="ltr". Selected-method context is shown.
+URL state ?tab=…&method=…&lang=… with defaults omitted, applied via router.replace(..., {scroll:false}) so
+keyboard navigation does not stack history.
+
+TAB «سرویس‌ها» (IMPLEMENTED)
+One independent row per method with stable method_code, an independent display label, explicit فعال/غیرفعال
+state and selection. NO nested «انواع سرویس (سطح ۲)» editor, NO option-count column, and provider_kind is
+never rendered (test asserts the render tree contains no providerKind, no optionCount/activeOptionCount, no
+ShippingServiceOptionWrite). Inactive methods stay visible and inactive: a test proves post:express and
+snapp_courier stay isActive=false and are never dropped or activated. A method with no translation for the
+active language renders «بدون برچسب»; no label is fabricated. Non-canonical codes (POST:Standard,
+post:ex:press, 33 chars) are rejected rather than normalized into new identities.
+
+TABS 2-5 (HONEST SHELL DESTINATIONS)
+Each renders a scoped notice naming its wiring task (085/086/087/088) and stating that it is only a shell
+destination performing no operation. No fake Save button, no invented CRUD, no fabricated data.
+
+URL SANITIZATION
+Method codes: trimmed, lowercased, restricted to [a-z0-9_-] plus at most one ":", truncated to 32 chars to
+match the B2 width of checkouts.shipping_method_code. Language ids: canonical UUID only. Unknown tab values
+fall back to services. Hostile inputs are neutralized (test: "?tab=../../etc/passwd" -> services,
+"?method=<img src=x>" -> imgsrcx, "<script>" -> script).
+
+GATE BEHAVIOR — OBSERVABLE AND FAIL CLOSED
+The authoritative gate is server-side (ShippingOneLevelCatalogPolicy.Evaluate over
+Tooba:ShippingOneLevelCatalog). This Next.js frontend app has NO trusted read of that setting: there is no
+admin read-only endpoint exposing it and no server-config seam in the admin app. Per the task's instruction
+for exactly this case, the delivery is:
+  - an explicit DISABLED-BY-DEFAULT read seam (resolveOneLevelCatalogGate) that returns disabled/absent with
+    no input, disabled/explicitly-off for an explicit false, and enabled ONLY for serverFlag===true which
+    only a server component could supply;
+  - the gate is never inferred from schema existence, method data, list length, query string or localStorage;
+  - there is NO query-param switch that bypasses the OFF gate (tests assert page.tsx contains no
+    useSearchParams/URLSearchParams/searchParams/localStorage and no ?tab=/?method=/?gate= literal);
+  - with the gate off the route renders the untouched legacy screen with all current actions working;
+  - the gate is NOT enabled globally and NO enabled appsettings section was added.
+MISSING BINDING (exact): a read-only admin endpoint returning
+ShippingOneLevelCatalogPolicy.Evaluate(configuration.GetSection("Tooba:ShippingOneLevelCatalog")), consumed
+from a server component. Until it exists the new shell stays unmounted and no live UI rollout is claimed.
+A backend endpoint is out of this task's scope, so it is reported as the blocker rather than guessed.
+
+LIVE BROWSER PROOF (REAL, NON-FABRICATED)
+A Next.js dev server was already listening on 127.0.0.1:3000 (node pid 31580, started 2026-10-11); it was
+only navigated to — nothing was restarted or reconfigured.
+  GET /admin/shipping-services
+    legacyScreen=true  newShell=false  grid=true  createButton=true  rowActionButtons=5  tablistCount=1
+  GET /admin/shipping-services?tab=rates-coverage&method=post%3Aexpress&gate=on   (deliberate bypass attempt)
+    legacyScreen=true  newShell=false  createButton=true  rowActionButtons=5
+Screenshot saved: docs/architecture/evidence/TB-SHIPPING-ONE-LEVEL-TABS-084/gate-off-legacy-route.png
+This is live browser evidence that the OFF gate preserves the legacy route and that crafted query parameters
+cannot switch it. It is the ONLY live claim made: the new shell itself was NOT observed in a browser, because
+mounting it would require enabling the gate, which is not authorized. Code-level proof is kept clearly
+distinct from this live browser proof.
+
+TESTS ACTUALLY RUN
+  node --experimental-strip-types --test app/admin/shipping-services/shipping-one-level-tabs.test.ts
+    -> tests 14, pass 14, fail 0
+  node --experimental-strip-types --test app/admin/shipping-services/*.test.ts
+    -> tests 131, pass 131, fail 0 (14 new + 117 pre-existing)
+  npm run typecheck
+    -> clean, no errors
+  npm run test:architecture
+    -> tests 11, pass 10, fail 1 (PRE-EXISTING, unrelated — see below)
+  live browser check on :3000 -> legacy screen preserved, bypass attempt ineffective
+The single test:architecture failure is the FE-SIZE shrink-only guard reporting OVERSIZED_GROWTH for five
+files that are untracked-clean at HEAD and untouched by this task: category-admin-screen.tsx (2230>2215),
+admin-landing-page-composer.tsx (1442>1440), storefront-landing-blocks.tsx (1033>1026),
+storefront-shipping.tsx (1033>945), shared-composition-renderer.tsx (918>907). The new files were checked
+against the same guard's other rules: nothing was added flat under app/admin (the feature lives inside the
+existing shipping-services/ folder) and no new shared->feature import was introduced.
+
+SAFETY
+No change to Tooba:ShippingRateAuthority, Tooba:ShippingOperationalShadow, StorefrontShippingService or
+StorefrontCheckoutService. No historical persisted code or paid snapshot modified. No DB write, migration or
+backfill. Host not restarted (pid 33548 still alive on :5088). No server reconfiguration, no customer
+price/availability change, no COD settlement, no capacity reservation, no delivery promise. New UI is
+read-only: no write API imported and no Save control exists. No auto 085.
+
+MISSING WIRING / LIMITATIONS
+1. The server-side gate read binding above does not exist, so the new shell is dormant. This is the single
+   blocker to any live UI rollout and needs separate architect authorization.
+2. The one-level catalog has no persisted data anywhere (083), so even with the gate on, tab 1 would show
+   the honest empty state until a backfill is authorized.
+3. loadMethods is an injected seam with no implementation yet; wiring it to a real reader belongs to the same
+   future authorization.
+
+ROLLBACK
+Revert page.tsx to render ShippingServicesScreen unconditionally and delete the four new feature-local files.
+Nothing else references them, no persisted state is involved, and no runtime configuration was changed, so
+rollback is a pure source revert.
+
+RECOMMENDED NEXT STEP (NOT ISSUED, NOT RUN)
+085-088 wire the four remaining tabs against existing capabilities behind the same gate, and a separately
+authorized task adds the read-only admin gate/method endpoint. The planned 11-task ceiling (081-091) is
+unchanged; no 085 task was created or executed.
+
+ACTUAL ELAPSED: ~27 minutes (claim 12:13:38Z, result 12:40Z) within the 30-minute HARD timebox.
+END_TOOBA_WORKER_RESULT

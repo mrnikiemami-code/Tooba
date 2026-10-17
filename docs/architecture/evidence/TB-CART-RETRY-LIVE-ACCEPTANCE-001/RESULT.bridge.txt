@@ -1,0 +1,40 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-CART-RETRY-LIVE-ACCEPTANCE-001
+Parent-Task: TOOBA-CART-EXPIRED-RESERVATION-RETRY-FIX
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Verdict: LIVE_PASS
+Summary: Independently exercised the customer-facing «بررسی موجودی و پرداخت مجدد» control on /fa/cart for a real, authorized unpaid checkout whose inventory hold had expired and whose paymentId is null, and it works end-to-end. Preconditions were confirmed from server truth before the click: checkoutId 01a09b8b-3e28-7000-94ed-e37517c5cbf5, cartId 01a09b33-819c-7000-a3b6-2479c63c653f, orderReference TB-20260913161309-01-bc0f42 / TB-20260913161309-02-7fcb8d, paymentId null, primaryAction retryAfterExpiry, paymentPresentation expiredRetryable, canInitiatePayment false, canRetryPayment true, reservationPresentation ended, secondsRemaining 0, holdEndsAt 2026-09-13T16:14:09Z, cycleNumber 1, maxCycles 2, retryCountRemaining 1, hasReachedRetryLimit false; the card rendered «مهلت رزرو موجودی پایان یافته است.» with an ENABLED [data-testid=pending-payment-retry] CTA. A real, legitimate Development customer session was obtained through the actual /fa/login UI using the Host's built-in Development fixed-OTP fixture (DevelopmentOtpLoginFixtureOptions, auto-enabled in the Development environment) — no actor impersonation, no identity-gate bypass, no fabricated proof or paymentId. A scripted in-page fetch recorder was installed, then the existing CTA was clicked EXACTLY ONCE in the real browser; the recorder captured POST /v1/storefront/checkout/01a09b8b-3e28-7000-94ed-e37517c5cbf5/retry-reservation?cartId=01a09b33-819c-7000-a3b6-2479c63c653f -> HTTP 200 followed by POST /v1/storefront/pending-payments -> HTTP 200, i.e. the checkout-scoped, Order-owned retry endpoint is genuinely invoked for paymentId=null with NO silent return and with the request checkoutId equal to the pre-click checkoutId. Server truth after the click: same checkoutId/cartId/orderReference, paymentId still null, primaryAction pay, paymentPresentation awaitingPayment, canInitiatePayment true, canRetryPayment false, reservationPresentation held, secondsRemaining 46, new holdEndsAt 2026-10-11T17:53:32Z, cycleNumber 1 -> 2, retryCountRemaining 1 -> 0; the cart card switched from the expired-hold message to a localized active countdown «مهلت رزرو مجدد 00:52» plus an ENABLED [data-testid=pending-payment-pay] («پرداخت») control — the refreshed pending-payment capability is truly actionable. Duplicate/fabrication check via read-only SQL in tenant tooba_alpha: exactly 1 checkout for that cartId (no duplicate checkout), 0 payment.payments rows for that checkoutId (no fabricated payment), 2 order.seller_orders (unchanged), 1 order.checkout_reservation_commits (unchanged) and 8 total order.checkouts rows (unchanged, no new checkout). Negative fail-closed checks: anonymous POST to retry-reservation -> HTTP 401 checkout.authentication_required; authorized POST against an unrelated Paid checkout -> HTTP 404 payment.missing (stable codes, no silent success); retry-limit (inventory.reservation.retry_limit_reached) and supply-unavailable (payment.unpaid.supply_unavailable) are covered by the focused behavioral tests. Only sanitized evidence documentation was committed; zero production code changed.
+Live-Precondition-State: UNPAID_EXPIRED_HOLD_PAYMENTID_NULL_CONFIRMED
+Session-Provenance-State: DEVELOPMENT_FIXED_OTP_FIXTURE_REAL_UI_LOGIN
+Retry-Endpoint-Wire-State: POST_RETRY_RESERVATION_INVOKED_HTTP_200
+Silent-Return-State: NONE
+Checkout-Identity-State: UNCHANGED_SAME_CHECKOUT_SAME_CART_SAME_ORDER_REFERENCE
+Cycle-State: CYCLE_1_TO_2_NEW_HOLD_HELD
+PaymentId-Fabrication-State: NONE_STILL_NULL
+Capability-Transition-State: RETRYAFTEREXPIRY_TO_PAY_ACTIONABLE_PENDING_PAYMENT_PAY_ENABLED
+Duplicate-Checkout-State: NONE
+Duplicate-Payment-State: NONE
+Duplicate-Reservation-Commit-State: NONE
+Localization-State: LOCALIZED_FA_EXPIRED_HOLD_AND_ACTIVE_COUNTDOWN_RENDERED
+Negative-Check-State: ANON_401_CHECKOUT_AUTHENTICATION_REQUIRED_AND_PAID_TARGET_404_PAYMENT_MISSING_FAIL_CLOSED
+Focused-Validation-State: Tooba.Order.Tests filter StorefrontPendingReservationRetry 9 passed/0 failed/0 skipped
+Critical-Storefront-Test-State: NOT_REQUIRED_NO_FRONTEND_PRODUCTION_FILE_CHANGED
+Production-Code-Changed-State: ZERO
+Frontend-Redesign-State: NONE
+New-Api-Or-Payment-Flow-State: NONE
+Schema-Seed-Mutation-State: NONE
+Baseline-Reset-State: NONE
+Amsc-Wave-State: NONE
+Critical-Storefront-Locks-State: INTACT_HOME_PDP_UNTOUCHED
+Payment-Initiation-State: DELIBERATELY_NOT_TRIGGERED_NO_CHARGE_CREATED
+Changed-Files: docs/architecture/evidence/TB-CART-RETRY-LIVE-ACCEPTANCE-001/live-acceptance.md (added); docs/architecture/evidence/TB-CART-RETRY-LIVE-ACCEPTANCE-001/task-receipt.json (added); docs/ai/tasks/TB-CART-RETRY-LIVE-ACCEPTANCE-001.task.md (added)
+Commit-SHA: c1dab07c95bc283644e77f7896990320af278fb2
+HEAD-Equals-Origin-Main: YES
+Automatic-Next-Implementation-Task-State: NONE
+Workflow-Stop-State: USER_REVIEW_AFTER_LIVE_ACCEPTANCE
+STOP
+END_TOOBA_WORKER_RESULT

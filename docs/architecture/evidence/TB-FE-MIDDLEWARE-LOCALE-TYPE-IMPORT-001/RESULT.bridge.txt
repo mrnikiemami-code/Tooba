@@ -1,0 +1,64 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-MIDDLEWARE-LOCALE-TYPE-IMPORT-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR
+Status: PASS
+Verdict: REPAIR_COMPLETE_AWAITING_ARCHITECT_ACCEPT
+Expected-Starting-HEAD: 60e2623602bdeeb452f3aa3cc65703595bc6521d
+Expected-Starting-HEAD-Match-State: VERIFIED
+Expected-Starting-HEAD-Equals-Origin-Main-State: VERIFIED
+Preflight-Tracked-Worktree-State: CLEAN
+Preflight-Divergence-State: NONE
+Source-Proof: src/frontend/lib/i18n/locale.ts:6,7 is the canonical owner - "export const LOCALES = [\"fa\", \"en\"] as const;" and "export type Locale = (typeof LOCALES)[number];". routing.ts:8 imports that type from ./locale.ts and never re-exports it, so Locale is declared locally in routing.ts without being exported, which is exactly the TS2459 reported by middleware-locale.ts.
+Change: One production file, one import move. In src/frontend/lib/i18n/middleware-locale.ts the "type Locale" specifier was removed from the ./routing.ts import block (which retains all five runtime imports: isExcludedFromLocalePrefix, isPublicStorefrontPath, parseInvalidLocalePrefix, parseLocalePrefix, resolvePreferredLocale) and a type-only import "import type { Locale } from \"./locale.ts\";" was added.
+Ownership-Decision: The type is taken from its true owner rather than re-exporting Locale from routing.ts. A routing.ts re-export was explicitly avoided because it would have concealed the misownership and widened the routing module's public surface purely for compiler convenience.
+Runtime-Behaviour-Change-State: NONE
+Runtime-Imports-Retained-On-Routing-State: ALL_FIVE
+Type-Only-Import-State: YES_IMPORT_TYPE_SO_NO_RUNTIME_MODULE_EDGE_AND_NO_BUNDLING_CHANGE
+Routing-Locale-Inventory-Middleware-Decision-Url-Prefix-Cookie-Accept-Language-Fallback-Change-State: NONE
+Changed-Files: src/frontend/lib/i18n/middleware-locale.ts (only changed production file - Locale type specifier moved from ./routing.ts to a type-only import from ./locale.ts); docs/ai/tasks/TB-FE-MIDDLEWARE-LOCALE-TYPE-IMPORT-001.task.md (added - exact task receipt); docs/architecture/evidence/TB-FE-MIDDLEWARE-LOCALE-TYPE-IMPORT-001/summary.md, typecheck-before.txt, typecheck-after-tsc.txt, test-i18n.txt (added - bounded evidence)
+Test-Amendment-State: NONE_NO_FOCUSED_I18N_TEST_NEEDED_AMENDING
+Forbidden-Items-State: NONE_NO_LOCALE_INVENTORY_CHANGE_NO_ROUTING_BEHAVIOUR_CHANGE_NO_MIDDLEWARE_DECISION_CHANGE_NO_URL_PREFIX_COOKIE_ACCEPT_LANGUAGE_FALLBACK_CHANGE_NO_BACKEND_NO_SCHEMA_NO_SHOPEIVA_SURFACE_NO_TSCONFIG_NO_TEST_BASELINE_NO_ARCHITECTURE_GUARD_CHANGE_NO_ANY_NO_TS_IGNORE_NO_BROAD_CAST_NO_SUPPRESSION_NO_UNRELATED_TYPE_FIX_NO_AMSC_NO_RETRY_CASCADE
+Baseline-Evidence-Source: docs/architecture/evidence/TB-FE-CATEGORY-METAKEYWORDS-CONTRACT-001/typecheck-after-tsc.txt copied verbatim to docs/architecture/evidence/TB-FE-MIDDLEWARE-LOCALE-TYPE-IMPORT-001/typecheck-before.txt
+Typecheck-Baseline-Errors: 42
+Typecheck-Baseline-TS2459-Count: 1
+Typecheck-Total-After: 41
+Typecheck-TS2459-After: 0
+Typecheck-Reduction: 1
+Typecheck-New-Errors: 0
+Typecheck-Expected-Vs-Actual: expected 42 -> 41 per the task; actual exactly 41 with the expected TS2459 removed and no unexpected or relocated diagnostics
+Diagnostics-Remaining-Under-Lib-I18n: NONE
+Typecheck-Green-Claim-State: NOT_GREEN_NOT_CLAIMED_41_ERRORS_REMAIN_IN_OTHER_AUDITED_CLUSTERS
+Commands-Run: git fetch origin and HEAD==origin/main==Expected-Starting-HEAD verification with clean tracked worktree (preflight and post-push); cd src/frontend && node_modules/.bin/tsc --noEmit (after: 41 errors, TS2459 count 0, exit 2); npm run test:i18n; git diff/status inspections for the exact final diff and scope
+Focused-Test-Results: npm run test:i18n (lib/i18n/locale.test.ts, lib/i18n/routing.test.ts, lib/i18n/middleware-locale.test.ts) 19 PASS / 0 FAIL
+Focused-Test-Justification: This is the existing directly relevant suite for the touched module: it covers the middleware locale plan, the routing prefix behaviour and the locale inventory, so the change was verified against real behaviour and not only against the compiler. No broad suite or build was run.
+PreExisting-Failures-Observed: NONE
+PreExisting-Failure-Count-Before: 0
+PreExisting-Failure-Count-After: 0
+Retry-Cascade-State: NONE
+Tests-Not-Run: npm run test:discovered (full suite), npm run test:admin*, npm run test:critical-storefront, npm run build, backend build/tests, browser/live verification, any AMSC wave
+Unrun-Test-Pass-Claim-State: NONE
+Critical-Storefront-Tests-Run-State: NOT_RUN
+Critical-Storefront-Out-Of-Scope-Justification: Only one lib/i18n type-only import changed. No Home, PDP, listing, storefront or shared-composition surface and no visual primitive is in scope for this bounded repair.
+Scope-Statement: Production scope is exactly the one permitted file, src/frontend/lib/i18n/middleware-locale.ts. No routing.ts re-export, no test amendment and no other file was modified.
+Risks: Residual risk negligible. The change is a one-line type-specifier relocation with zero runtime delta, verified by a fully green directly relevant i18n suite covering routing, middleware plan and locale inventory.
+Rollback-Criteria: Revert commit eebb0a09e if any routing, middleware locale plan, locale inventory or fallback behaviour differs from before; the change is self-contained and safe to revert atomically.
+Deviation-State: NONE
+Register-Read-State: NOT_READ_DEFERRED_FINDINGS_REGISTER_RESPECTED
+Force-Push-State: NONE
+History-Rewrite-State: NONE
+Reset-Or-Stash-State: NONE
+Working-Tree-State: CLEAN_EXCEPT_PRE_EXISTING_UNTRACKED_PRIOR_TASK_ARTIFACTS_LEFT_UNTOUCHED_NOT_REMOVED_NOT_STASHED
+Base-SHA: 60e2623602bdeeb452f3aa3cc65703595bc6521d
+Final-SHA: eebb0a09ebbbea362a06f0f6d1d624724478364c
+Commit-SHA: eebb0a09ebbbea362a06f0f6d1d624724478364c
+Head-Equals-Origin-Main-After-Push-State: VERIFIED
+Automatic-Next-Implementation-Task: NONE
+Workflow-Stop-State: USER_REVIEW_AFTER_BOUNDED_REPAIR
+STOP
+END_TOOBA_WORKER_RESULT

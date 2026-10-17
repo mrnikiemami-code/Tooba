@@ -1,0 +1,155 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-STOREFRONT-COMPOSITION-CONTRACT-BATCH-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_MULTI_ERROR_REPAIR_WITH_INDEPENDENT_STOP_GATES
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: 898acdf23151902ee6d5bb3b9f0b643526ef4a6c
+Starting-HEAD:          898acdf23151902ee6d5bb3b9f0b643526ef4a6c
+Starting-origin/main:   898acdf23151902ee6d5bb3b9f0b643526ef4a6c
+Tracked-worktree-clean: YES; HEAD == origin/main == Expected-Starting-HEAD; no reset/stash/rebase/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-frontend-feature/SKILL.md, docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md, HeroSlideConfig + emptyHeroSlide + safeSlides, SectionDisplayConfig + parseSectionDisplayConfig + storefront-home.tsx, SharedLandingRenderInput, applyPreviewFill + PreviewFakeBannerItem, CompositionBannerGrid item/prop contract, ProductShowcaseEmblaRail ShowcaseProps, admin-landing-section-forms banner authoring. Shopeiva locks and sample/store isolation respected. Deferred ARCHITECTURE-FINDINGS-REGISTER.md NOT read or changed.
+
+GATE VERDICTS
+SCOPE A: FIXED (no BLOCKED) — the inline object is provably the no-panel case and the applicable canonical values already exist and are already used in the same file.
+SCOPE B: FIXED (no BLOCKED) — proven stale legacy reads over the wrong contract (whitelist parser), not missing fields.
+SCOPE C: FIXED (no BLOCKED) — proven type-inference artefact vs. the real consumer element contract.
+No scope was blocked, skipped or silently broadened; baseline is now fully green.
+
+TYPECHECK (headline)
+before: 10
+after:  0
+delta:  -10
+new-diagnostic-keys: 0
+comparison: NORMALIZED by file+line+error-code
+tsc exit code: 0 (node_modules/.bin/tsc.cmd --noEmit); single final verification run after the last edit.
+removed keys (exactly ten, none added):
+  <= app/storefront/storefront-landing-blocks.tsx(722,9) TS2740
+  <= lib/storefront-composition/shared-composition-renderer.tsx(244,23) TS2339 (bannerImageUrl)
+  <= lib/storefront-composition/shared-composition-renderer.tsx(244,61) TS2339 (bannerImageUrl)
+  <= lib/storefront-composition/shared-composition-renderer.tsx(245,20) TS2339 (bannerImageUrl)
+  <= lib/storefront-composition/shared-composition-renderer.tsx(246,27) TS2339 (bannerMediaAssetId)
+  <= lib/storefront-composition/shared-composition-renderer.tsx(246,69) TS2339 (bannerMediaAssetId)
+  <= lib/storefront-composition/shared-composition-renderer.tsx(247,46) TS2339 (bannerMediaAssetId)
+  <= lib/storefront-composition/shared-composition-renderer.tsx(256,37) TS2339 (bannerHref)
+  <= lib/storefront-composition/shared-composition-renderer.tsx(256,70) TS2339 (bannerHref)
+  <= lib/storefront-composition/shared-composition-renderer.tsx(819,32) TS2741
+  ADDED: (none)
+baseline-file: docs/architecture/evidence/TB-FE-ADMIN-GRID-RICHTEXT-TYPE-BATCH-001/typecheck-after-tsc.txt (exactly as the task specified); copy preserved as typecheck-before.txt
+TOTAL-WORK-REMAINING-IN-THIS-PROGRAM: 0 of the 10 assigned diagnostics.
+
+SCOPE A — Hero slide complete contract, storefront-landing-blocks.tsx (gate: FIXED)
+DECISION GATE / WHY THE CANONICAL NO-PANEL VALUES ARE APPLICABLE
+- HeroSlideConfig (lib/storefront-composition/hero-slider-config.ts:192-221) requires six panel fields: panelMediaAssetId, panelImageUrl, panelColor, panelSize, panelOpacity, panelSide.
+- The canonical producer for an unconfigured slide already exists: emptyHeroSlide() (:253-273) -> panelMediaAssetId "", panelImageUrl "", panelColor HERO_DIAGONAL_PANEL_DEFAULT_COLOR, panelSize "xlarge", panelOpacity 100, panelSide "left". HERO_DIAGONAL_PANEL_DEFAULT_COLOR is "#0f172a" (:29).
+- The SAME file already spells that identical record literally in its own safeSlides fallback (storefront-landing-blocks.tsx:336-355) — panelColor "#0f172a" === HERO_DIAGONAL_PANEL_DEFAULT_COLOR, xlarge, left, 100, no panel image. So the values are not invented here; they are the shipped fallback of this very surface.
+- The legacy branch is genuinely reachable: LandingHero takes it whenever hasConfiguredSlides(config) is false (:69-71, :688), and renderSharedLandingSection calls LandingHero with layout = heroLayoutFromVariant(variantKey) (shared-composition-renderer.tsx:548).
+- The renderer dereferences the fields UNCONDITIONALLY inside if (variant === "split") (:423-436: slide.panelMediaAssetId.trim(), slide.panelImageUrl.trim(), slide.panelColor?.trim()) and if (variant === "diagonal") (:526-530). safeSlides only guards the EMPTY-ARRAY case, so this legacy-built single slide was never covered by it — before this change a legacy single-image hero on split/diagonal threw TypeError: Cannot read properties of undefined (reading 'trim'), i.e. the composed landing page crashed.
+FIX: spread emptyHeroSlide() before the existing literal, then keep the same overrides in the same order (mediaAssetId, imageUrl, title, alt, description, ctaLabel, destinationType, targetId, targetSlug, targetLabel, customUrl, href). Not one hand-copied literal; no artwork, product/category intent, placeholder or new default invented. Image, href, metadata and all DOM behaviour for the previously-rendering variants are preserved exactly.
+VISUAL/RUNTIME DELTA (DISCLOSED, flagged for Architect visual acceptance): fullscreen (the LandingHero default, served by DiamondSlideFace which reads only image/title/alt/description/CTA), shapes, editorial and cinematic => ZERO DOM delta. split | diagonal + legacy single-image config => crash-to-canonical-default transition (dark #0f172a panel, xlarge, left, opacity 100, no panel image — the same output safeSlides already yields). This is the one new-vs-crash surface in this task; it is not a redesign and adds no artwork.
+
+SCOPE B — Section display config banner contract, shared-composition-renderer.tsx, 8 diagnostics (gate: FIXED)
+DECISION GATE / WHY THESE ARE STALE LEGACY READS OVER THE WRONG CONTRACT
+- SectionDisplayConfig (app/composition/composition-api.ts:65-71) is a WHITELIST contract: title?, subtitle?, href?, itemCount?, sourceKind?, heightPreset?.
+- Its only producer is parseSectionDisplayConfig() (:215-231), which maps exactly title, subtitle, href, itemCount, sourceKind from configurationJson and drops everything else; this is locked by a contract test ("reads safe keys only", app/composition/composition-api.test.ts:78-83).
+- storefront-home.tsx:81 feeds that parsed object into renderSharedHomeSectionForLegacyType(..., config) -> renderSharedHomeSection(variantKey, context, config) (shared-composition-renderer.tsx:452). Therefore on the Home path config.bannerImageUrl / config.bannerMediaAssetId / config.bannerHref CANNOT exist: every read evaluated to undefined, so bannerImageUrl was always undefined and bannerHref always undefined.
+- The keys are nevertheless a real contract — but a LANDING/variant-local one: authored by admin-landing-section-forms.tsx:350-422 (bannerImageUrl / bannerMediaAssetId / bannerHref) and consumed on the landing path, where the config is the raw record (SharedLandingRenderInput.config: Record<string, unknown>, :88) in the duplicated explorer/sunny block at :657-698. There, ShowcaseProps.bannerImageUrl?/bannerHref? are optional (storefront-product-showcase-embla-rails.tsx:381-382) and the Explorer side banner renders only when isBeauty && bannerImageUrl?.trim() (:901, :906, :915-921).
+- Independent corroboration from the parent audit: docs/architecture/evidence/TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001/summary.md:82 records that parseSectionDisplayConfig() already made bannerImageUrl unreachable for /fa Home sections.
+FIX: removed the provably dead read block and the two prop passes on the HOME path only, with the rationale documented in-code (including the pointer to the landing branch that does honour them). Because the values were always undefined, bannerImageUrl={undefined} is equivalent to omitting the optional prop, so rendered output is BYTE-IDENTICAL: the explorer banner never rendered on the home path before or after, and the data-explorer-banner="0" / "relative" layout branches are unchanged.
+REJECTED (and why): adding the three keys to SectionDisplayConfig + parser would have CHANGED RUNTIME BEHAVIOUR (banners would newly appear on /fa Home) — explicitly forbidden ("do not add fields merely because renderer reads them", no hidden/new UI); any / Record<string, any> / cast widening is forbidden by the task and the repo type-safety contract; deleting the landing-path reads would have removed real functionality. composition-api.ts was NOT modified: evidence showed the correct correction is the narrow one at the renderer/call site.
+NO VISUAL LOSS: nothing that rendered before stopped rendering. The lock on the landing path (which genuinely honours these keys) is untouched.
+
+SCOPE C — Preview fake banner structure, shared-composition-renderer.tsx, 1 diagnostic (gate: FIXED)
+DECISION GATE / ROOT CAUSE: applyPreviewFill<T>({ realItems: readonly T[]; createFake: (index) => T }) (lib/storefront-composition/preview-fill-policy.ts:82-88) unifies the real element type with the fake producer's return type. createFakeBanner() returns PreviewFakeBannerItem (preview-fake-data.ts:146-164: src, href, title, objectPosition, previewFake true, previewSource) which has NO alt, while the realItems map always emitted an alt key — so literal inference produced a bespoke element type with a REQUIRED alt, and TS2741 followed.
+FIX (the task's preferred remedy — sound shared consumer element typing): annotate realItems with the true shared consumer element contract ({ src?, href?, title?, alt?, objectPosition, previewFake? }). The actual consumer CompositionBannerGrid declares items?: Array<{ src?; href?; title?; objectPosition?; previewFake? }> (storefront-home-blocks.tsx:551) and derives the img alt from title (:595) — it never reads an alt field at all.
+NOT DONE (and why): no global alt-optional weakening; no discriminator weakening (previewFake/previewSource provenance preserved); no accessibility content invented (real items keep their authored alt, fakes keep none, exactly as today); alt was NOT derived from the fake's own title because that would have changed rendered content in Store preview while the grid ignores alt; preview-fake-data.ts was NOT edited because it lies outside this task's allowed production paths and the fake genuinely has no alt.
+RUNTIME DELTA: NONE — type annotation only, erased at emit; compiled output is byte-identical. Emitted fake URLs/objectPosition/title/previewFake markers unchanged. Note the sibling createFakeProduct/createFake* branches were already correctly typed (realItems there are StorefrontProductCard) and were not touched.
+
+EXACT DIFFS
+src/frontend/app/storefront/storefront-landing-blocks.tsx
++  emptyHeroSlide,                              (added to the hero-slider-config import)
+   slides={[
+     {
++      // Persian rationale comment: legacy single-image compat carries no panel data; the six
++      // required panel fields come from emptyHeroSlide() (hero-slider-config.ts:253-273), which is
++      // value-for-value the same as this file's safeSlides fallback; image/title/href untouched.
++      ...emptyHeroSlide(),
+       mediaAssetId: mediaId,
+src/frontend/lib/storefront-composition/shared-composition-renderer.tsx
+-      const bannerImageUrl = typeof config.bannerImageUrl === "string" && ... : undefined;
++      // Persian rationale comment: home path config is the whitelist-parsed SectionDisplayConfig
++      // (composition-api.ts:215-231) so banner keys cannot exist here; banner is honoured on the
++      // landing path (~:682). Removing these dead reads does not change rendered output.
+           href={config.href ?? "/products"}
+-          bannerImageUrl={bannerImageUrl}
+-          bannerHref={typeof config.bannerHref === "string" ? config.bannerHref : undefined}
+-      const realItems = rawItems
++      /** Persian rationale comment: the real CompositionBannerGrid item contract
++       *  (storefront-home-blocks.tsx:551) which does not read alt and builds img alt from title
++       *  (:595); without this annotation literal inference made alt required and rejected
++       *  PreviewFakeBannerItem. */
++      const realItems: Array<{
++        src?: string; href?: string; title?: string; alt?: string;
++        objectPosition: string; previewFake?: boolean;
++      }> = rawItems
+
+FOCUSED TESTS (one run per command, each command run at most once; all exit code 0)
+- npm run test:composition-engine => tests 28, pass 28, fail 0 (composition-registry, shared-composition-renderer guard, industry-templates, completeness-matrix)
+- npm run test:composition => tests 5, pass 5, fail 0 (incl. "parseSectionDisplayConfig reads safe keys only")
+- npm run test:home => tests 6, pass 6, fail 0 (storefront-home, home-structure guard)
+- npm run test:storefront => tests 76, pass 76, fail 0 (incl. storefront-landing.guard.test.ts - the legacy Hero path)
+- node --test app/admin/landing-pages/admin-hero-slider-r13r1.guard.test.ts => tests 10, pass 10, fail 0 (incl. "legacy slide seo* and href remain adaptable", "LOCK-SF-367..374 present")
+total: 129 passing marks, 0 failing.
+pre-existing-failures-in-selected-sets: NONE (all selected suites green).
+
+CRITICAL STOREFRONT SUITE (mandatory per AGENTS.md rule 17)
+npm run test:critical-storefront => home 6/6, pdp-guard 6/6, listing-guard 6/6, category-plp 1/1, surface-coverage 19/20.
+1 FAILURE, PRE-EXISTING AND UNRELATED TO THIS TASK — DISCLOSED, NOT REPAIRED:
+  lib/storefront-appearance/component-compliance.guard.test.ts
+  "customer-facing components do not introduce structural raw colors"
+  AssertionError: app/storefront/storefront-landing-blocks.tsx:286 bg-white
+  (raw structural colour in the legacy hero pagination bullet `bg-white/70`).
+PROOF OF PRE-EXISTENCE (recorded, evidence/.../critical-storefront-preexisting-check.txt): the working
+file was backed up (+hash), restored byte-exactly to HEAD with git checkout, the guard re-run, and the
+file then restored from the backup (Get-FileHash identical before and after: A41CA0C0396C8D8DB5D6E717609D5146479686096F31F3A412EBCD6FEFB4A3CA). Against pristine HEAD the SAME guard fails on the SAME
+assertion at :285 — the only difference being the +1 line offset from this task's added import. git diff
+confirms the flagged line is untouched by this task and belongs to none of Scopes A/B/C.
+Relevance: NONE to these scopes; deliberately NOT fixed (would be opportunistic out-of-scope work). Evidence: critical-storefront.txt.
+
+SCOPE COMPLIANCE
+Production files changed: exactly the two permitted files (storefront-landing-blocks.tsx, shared-composition-renderer.tsx). composition-api.ts was NOT touched (evidence proved it unnecessary). helper/temp edits: none (the pristine-HEAD guard check was performed with backup + restore, hash-verified). Plus the required receipt and bounded evidence.
+Untouched: no backend/schema/Contracts, no tsconfig/CI/lockfile/package, no guard disabled or weakened, no baseline reset, no AMSC, no deferred findings register, no broad suite, no unrelated refactor, no new placeholder or hidden UI, no locked Shopeiva Home/PDP DOM/CSS change, no history rewrite, no force-push/reset/stash, no self-started next task.
+Forbidden techniques used: NONE (no any, no unsafe cast/assertion, no @ts-ignore, no suppression, no exclusion).
+
+OUTSTANDING RISK / ROLLBACK
+Risk: LOW. Scopes B and C are provably rendering-neutral (dead reads over a whitelist contract; type-only annotation). Scope A is rendering-neutral for every variant that does not read panel fields and replaces a runtime TypeError with the canonical no-panel default that the same file already ships for the no-slides case — that single crash-to-default surface is flagged for Architect visual acceptance.
+Rollback: `git revert 863e5d4105c4c727744a192fa60cc3ecb4c3979f` (single commit) restores all 10 diagnostics; no schema/backend/package/tsconfig impact either way.
+
+FILES
+src/frontend/app/storefront/storefront-landing-blocks.tsx (M)
+src/frontend/lib/storefront-composition/shared-composition-renderer.tsx (M)
+docs/ai/tasks/TB-FE-STOREFRONT-COMPOSITION-CONTRACT-BATCH-001.task.md (A)
+docs/architecture/evidence/TB-FE-STOREFRONT-COMPOSITION-CONTRACT-BATCH-001/{summary.md,scope-decisions.md,typecheck-before.txt,typecheck-after-tsc.txt,focused-tests.txt,critical-storefront.txt,critical-storefront-preexisting-check.txt} (A)
+
+COMMIT
+commit-sha: 863e5d4105c4c727744a192fa60cc3ecb4c3979f
+pushed-to: origin/main (898acdf23..863e5d410)
+HEAD-after-push:         863e5d4105c4c727744a192fa60cc3ecb4c3979f
+origin/main-after-fetch: 863e5d4105c4c727744a192fa60cc3ecb4c3979f
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT

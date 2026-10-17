@@ -1,0 +1,118 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-FE-FASHION-PREVIEW-ORIGIN-TYPE-001
+Parent-Task: TB-FE-TYPECHECK-155-ROOT-CAUSE-AUDIT-001
+Program: TOOBA-FRONTEND-TYPECHECK-RECOVERY
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Mode: IMPLEMENT_BOUNDED_REPAIR_WITH_STOP_GATE
+Repo: mrnikiemami-code/Tooba
+Branch: main
+Status: COMPLETE_AWAITING_ARCHITECT_ACCEPT
+
+PREFLIGHT
+Expected-Starting-HEAD: d62b1ea2ed8e29124f2d4364e1605cd9f1046fc7
+Starting-HEAD:          d62b1ea2ed8e29124f2d4364e1605cd9f1046fc7
+Starting-origin/main:   d62b1ea2ed8e29124f2d4364e1605cd9f1046fc7
+Tracked-worktree-clean: YES; no divergence, no conflicting changes; no reset/stash/rebase/force-push.
+Read: AGENTS.md, .cursor/skills/tooba-frontend-feature/SKILL.md, docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md, docs/architecture/TOOBA-LOCKS.md (LOCK-SF-291 at :1037, LOCK-SF-300 at :1064), the full fashion-template-preview-view.tsx, both loader contracts, and all meaningful origin consumers/tests. Deferred ARCHITECTURE-FINDINGS-REGISTER.md NOT read.
+
+DECISION GATE: display-only branch PROVEN, bounded truthful repair implemented. BLOCKED_ARCHITECT_DECISION NOT required. Provenance semantics NOT weakened.
+
+ROOT CAUSE (exact locations)
+  fashion-demo-preview.ts:28  FASHION_DEMO_ORIGIN = "fashion-template-catalog-persisted" as const
+  fashion-demo-preview.ts:29  FASHION_STORE_ORIGIN = "operational-store-catalog" as const
+  fashion-demo-preview.ts:583-589  loadFashionTemplatePreview(): Promise<{ kind: "sample"; …; origin: string; }>   <-- SAMPLE loader declares origin: string
+  fashion-demo-preview.ts:664-672  loadFashionStorePreview(...): Promise<{ kind: "store"; …; origin: typeof FASHION_STORE_ORIGIN; }>
+  fashion-demo-preview.ts:469  origin: String(pick(raw, "origin", "Origin") ?? FASHION_DEMO_ORIGIN)   <-- read out of the HOST response JSON, stringified
+  fashion-demo-preview.ts:610  origin: preview.origin || FASHION_DEMO_ORIGIN
+  view :44 (old)  useState(source === "store" ? FASHION_STORE_ORIGIN : FASHION_DEMO_ORIGIN)  <-- BOTH branches literal => TS infers the literal union
+  view :60        setOrigin(result.origin)  <-- sample loader's string not assignable to that inferred literal union => TS2345
+An arbitrary origin string IS legitimate as produced: the sample endpoint's origin comes from Host data, so declaring the PRODUCER `string` is correct. The defect is the CONSUMER's inferred state type, not the producer.
+
+PROOF THAT origin IS DISPLAY-ONLY PROVENANCE, NOT A TRUST DISCRIMINATOR (the gate's own condition)
+The complete set of origin uses in the view is exactly THREE lines (repo-wide search): declaration :44, setter :60, and :119 data-demo-origin={origin}. No conditional, no comparison, no loader argument, no authorization.
+1. Sole consumer is a data attribute: data-demo-origin={origin} (:119), a test/evidence marker beside data-preview-source={source}.
+2. Sample/store selection does NOT use origin: source === "store" ? loadFashionStorePreview(uiLocale, { fixture: storeFixture }) : loadFashionTemplatePreview() (:54-56), driven solely by previewContext.sourceMode (:39).
+3. Trust/purity NOT derived from origin: setPurityOk(result.kind === "sample" ? result.purity.isPure : false) (:63).
+4. The loader's isStore never sees this state: buildFashionTemplatePage computes `const isStore = options.origin === FASHION_STORE_ORIGIN` (fashion-demo-preview.ts:300) but options.origin is ALWAYS a loader-owned const — FASHION_DEMO_ORIGIN (:266) or FASHION_STORE_ORIGIN (:700). The state is never passed into the loader, so a Host-provided string cannot change what the composition treats as store data.
+5. No escaping of an untrusted value into a trusted marker: the repair adds NO fallback and NO coercion; the same value flows to the same attribute, and the state merely stops claiming a two-literal union it could not honour at runtime.
+6. The identical sibling ALREADY behaves this way: the shared industry view has the same path — :74-76 useState(source === "store" ? INDUSTRY_STORE_ORIGIN : industryDemoOrigin(templateKey)) with :92 setOrigin(result.origin) — and compiles only because industryDemoOrigin(key): string (industry-demo-media.ts:96) widens the union. So `string` is the de-facto existing canonical type for this marker; this repair makes Fashion consistent with its shared counterpart instead of depending on one helper's return type.
+Constraining to the two literals would have required a cast/suppression (forbidden) or inventing producer-side normalization of a Host-supplied value into a trusted marker (explicitly forbidden, and it presupposes an unauthorized product/security decision).
+
+ACTUAL DIFF (1 production file)
+diff --git a/src/frontend/app/template-preview/fashion/fashion-template-preview-view.tsx b/src/frontend/app/template-preview/fashion/fashion-template-preview-view.tsx
+-  const [origin, setOrigin] = useState(source === "store" ? FASHION_STORE_ORIGIN : FASHION_DEMO_ORIGIN);
++  /**
++   * منبع نمایشی پیشنمایش — فقط در data-demo-origin مصرف میشود و هیچگاه مبنای
++   * انتخاب داده یا تشخیص اعتماد sample/store نیست؛ آن تصمیمها از sourceMode و
++   * result.kind/result.purity میآیند. چون loadFashionTemplatePreview مقدار origin را
++   * از Host بهصورت string میخواند (fashion-demo-preview.ts:588)، این state صریحاً
++   * string است؛ همان چیزی که view مشترک صنایع هم عملاً دارد.
++   */
++  const [origin, setOrigin] = useState<string>(
++    source === "store" ? FASHION_STORE_ORIGIN : FASHION_DEMO_ORIGIN,
++  );
+The initial value STILL selects between the two canonical consts, so source === "store" still primes the correct optimistic marker before the loader resolves. No cast / any / as unknown as / added ! / ts-ignore / suppression / fallback; no producer edit; no test added or amended (the compiler enforces the contract; a source-text assertion would be ceremonial).
+
+DIAGNOSTICS
+errors-before: 16
+errors-after:  15
+delta:         -1
+new-diagnostics-introduced: 0
+comparison method: NORMALIZED by file/line/code. Exactly one removed entry — app/template-preview/fashion/fashion-template-preview-view.tsx(60,19) TS2345 — and NO added entries.
+per-file tallies after: product-rich-text-editor.tsx 1; storefront/storefront-landing-blocks.tsx 1; features/admin-languages/…/language-list.tsx 3; lib/storefront-composition/fashion-demo-preview.ts 1 (SEPARATE :216 TS2322 on StorefrontBrandItem[], not this task's error, untouched); lib/storefront-composition/shared-composition-renderer.tsx 9
+tool: cd src/frontend && node_modules/.bin/tsc --noEmit run exactly ONCE after the final edit (exit 2 overall — 15 pre-existing errors elsewhere; no greenness claimed)
+baseline-file: docs/architecture/evidence/TB-FE-CATEGORY-EDIT-SURFACE-TAB-MAPPING-001/typecheck-after-tsc.txt (exactly as the task specified)
+capture: docs/architecture/evidence/TB-FE-FASHION-PREVIEW-ORIGIN-TYPE-001/typecheck-{before,after-tsc}.txt
+
+FOCUSED TESTS
+RUN 1 — the three CLOSEST fashion preview/provenance guards: app/admin/landing-pages/admin-builder-ux-r4.guard.test.ts, admin-builder-ux-r7.guard.test.ts, admin-builder-ux-r8.guard.test.ts
+  result: tests 16, pass 14, fail 2
+  The 2 failures are PRE-EXISTING and UNRELATED; they abort at IMPORT time before any assertion, on stale backend paths that were later moved into subfolders:
+    r4 :25 -> Error: ENOENT: no such file or directory … src/backend/Modules/Catalog/Tooba.Catalog.Domain/TemplateCatalog.cs
+    r7 :23 -> Error: ENOENT: no such file or directory … src/backend/Modules/Media/Tooba.Media.Domain/MediaAsset.cs
+  Actual current locations (git ls-files): src/backend/Modules/Catalog/Tooba.Catalog.Domain/TemplateCatalog/TemplateCatalog.cs and src/backend/Modules/Media/Tooba.Media.Domain/Aggregates/MediaAsset.cs.
+  Neither guard file was touched by this task (last commits 4485e3e9a and e535e3cfd); no backend file was touched; the change is a one-line state typing in a .tsx view, and an ENOENT on a backend path cannot be caused or cured by it. NOT chased and NOT fixed (unrelated files are out of scope by the task's own FORBIDDEN conditions).
+  HONEST CONSEQUENCE: those two suites' fashionView source-text assertions therefore CANNOT EXECUTE on the current tree at all — pre-existing.
+RUN 2 — the same-class guards that load cleanly, i.e. the runnable fashion-demo origin/provenance assertions: admin-builder-ux-r8.guard.test.ts, admin-builder-ux-r12a.guard.test.ts, lib/storefront-composition/industry-templates.guard.test.ts
+  result: tests 23, pass 23, fail 0
+  Includes r8's provenance assertions over the fashion composition — { origin: FASHION_STORE_ORIGIN } must not emit /fashion-template-catalog-persisted/ (:108-110) and { origin: FASHION_DEMO_ORIGIN } (:113, :244) — exactly the sample/store provenance-marker boundary this repair must not disturb. GREEN.
+pre-existing-failures-observed: 2 (both disclosed above; both stale-backend-path ENOENT at import)
+tests-not-run (and NOT reported as pass): full npm test / test:discovered, build, browser/visual verification, AMSC, all other guards. No cascades or test loops.
+raw: docs/architecture/evidence/TB-FE-FASHION-PREVIEW-ORIGIN-TYPE-001/focused-tests.txt (run 1) and focused-tests-passing.txt (run 2)
+
+PROOF THAT SOURCE SELECTION AND PROVENANCE OUTPUT ARE RETAINED
+- Source selection untouched: :39 source = previewContext.sourceMode, :54-56 the store/sample loader choice, :46 purityOk seeding are byte-identical; origin participates in none of them.
+- Provenance marker output for all previously accepted runtime values: the value written to data-demo-origin is the SAME EXPRESSION as before (result.origin for both loaders). A widened state annotation cannot change a runtime value, so every previously rendered value — "operational-store-catalog", "fashion-template-catalog-persisted", and any Host-supplied string — still renders identically.
+- Store/sample isolation unaffected: isStore is computed inside buildFashionTemplatePage from loader-owned consts (fashion-demo-preview.ts:266,:300,:700), never from this state, so a Host-provided string still cannot promote sample data to store data or vice versa.
+- Rendering/data attributes: data-demo-origin remains a plain attribute; data-preview-source / data-preview-locale / data-preview-device / data-preview-safe untouched.
+
+SCOPE COMPLIANCE
+Production files changed: exactly 1 (fashion-template-preview-view.tsx) — the sole PREFERRED file (git diff --name-only confirms one path). Plus the required receipt and bounded evidence; no test, loader, config, guard, tsconfig/CI or baseline file touched.
+Untouched as required: loaders, source selection, store/sample fixture logic, rendering, context, data attributes, backend DTO, SSR, locale behaviour, locked Home/PDP/Shopeiva surfaces, shared types. No AMSC, no broad suite, no history rewrite, no force-push/reset/stash, no self-started next task, no unrelated error touched.
+
+RISK / ROLLBACK
+Risk: VERY LOW — lower than before the change. The state previously claimed a two-literal union it could not honour at runtime (the loader can legitimately return any Host string); it now states its real, already-observed type. BEHAVIOR DELTA: NONE — a type annotation cannot alter runtime values (React's useState returns the initial value unchanged regardless of the annotation).
+Rollback: revert the single commit; TS2345 returns at line 60 and the inferred literal-union annotation resumes.
+
+FILES
+src/frontend/app/template-preview/fashion/fashion-template-preview-view.tsx (M)
+docs/ai/tasks/TB-FE-FASHION-PREVIEW-ORIGIN-TYPE-001.task.md (A)
+docs/architecture/evidence/TB-FE-FASHION-PREVIEW-ORIGIN-TYPE-001/{summary.md,typecheck-before.txt,typecheck-after-tsc.txt,focused-tests.txt,focused-tests-passing.txt} (A)
+
+COMMIT
+commit-sha: dc3e551407876becb3e9ca5333d4ff8b87fcb042
+pushed-to: origin/main (d62b1ea2e..dc3e55140)
+HEAD-after-push:         dc3e551407876becb3e9ca5333d4ff8b87fcb042
+origin/main-after-fetch: dc3e551407876becb3e9ca5333d4ff8b87fcb042
+HEAD == origin/main: YES
+tracked-worktree-clean-after: YES
+no force-push / reset / stash: CONFIRMED
+
+STOP
+Architect-review-required: YES
+Architect-ACCEPT-claimed-by-worker: NO
+Automatic-Next-Implementation-Task: NONE
+Worker-state-after-result: IDLE
+END_TOOBA_WORKER_RESULT
