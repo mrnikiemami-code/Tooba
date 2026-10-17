@@ -1,4 +1,4 @@
-BEGIN_TOOBA_WORKER_RESULT
+﻿BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173
 Parent-Task: TB-SHIPPING-NEW-METHOD-BROWSER-PAYMENT-172
 Channel: tooba-main
@@ -10,7 +10,7 @@ Protocol: BRIDGE-WAKE-V1
 Status: PASS
 Base-SHA: 1f5edc29db4a5ba0a7ac523e6b920981186a7103
 Code-Commit-SHA: c0188f9d15e9aba0ea7a0cbca1ce8d8d131c1d7b
-Evidence-Commit: this commit (HEAD == origin/main)
+Evidence-Commit: 66a6569cedb4c4b1287fed7b776fe0895cf41922
 Automatic-Next-Task: NONE
 
 SUMMARY
