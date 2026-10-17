@@ -168,12 +168,16 @@ test("the General tab is compact, honest about financial status and makes no fab
   assert.match(raw, /admin-shipping-method-financial-status/);
   assert.match(raw, /admin-shipping-method-activation/);
   assert.match(raw, /admin-shipping-method-header/);
-  assert.match(raw, /قابل خواندن از API فعلی نیست/);
   assert.match(raw, /رایگان نیست/);
   // هیچ ادعای «آمادهٔ قیمت/استعلام» و هیچ محاسبهٔ مبلغ ساخته نمی‌شود؛ فقط نبود صریح پیکربندی مالی.
+  // هر علت شکست پیام و اقدام مستقل خودش را دارد؛ «نبود داده» با «سرور در دسترس نیست» یکی نمی‌شود.
   assert.match(raw, /FINANCIAL_STATUS_UNAVAILABLE_FA/);
+  assert.match(raw, /FINANCIAL_STATUS_UNREACHABLE_FA/);
+  assert.match(raw, /FINANCIAL_STATUS_ROUTE_MISSING_FA/);
+  assert.match(raw, /FINANCIAL_STATUS_DENIED_FA/);
   assert.match(raw, /FINANCIAL_STATUS_DISTINCTNESS_FA/);
   assert.match(raw, /admin-shipping-method-financial-unavailable/);
+  assert.match(raw, /admin-shipping-method-financial-retry/);
   assert.doesNotMatch(general, /quoteReady|isQuoteReady|financialReady|computeFee|calcPrice|amount|toman|ریال/);
   // فرادادهٔ ارائه‌دهنده تاشو و برچسب‌دار است و ویرایش نمی‌شود.
   assert.match(general, /<details/);

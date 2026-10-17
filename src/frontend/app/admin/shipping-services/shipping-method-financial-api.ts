@@ -41,6 +41,16 @@ export async function loadShippingMethodFinancialStatus(
     if (response.status === 401 || response.status === 403) {
       return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
     }
+    if (response.status === 404) {
+      // 404 با بدنهٔ تهی یعنی مسیر روی این نسخهٔ Host نگاشت نشده است، نه «این روش نرخ ندارد».
+      // پیام باید به اقدام درست (به‌روزرسانی/راه‌اندازی مجدد سرور) راهنمایی کند.
+      return {
+        state: "error",
+        data: null,
+        status: response.status,
+        message: "shipping_method_financial.route_unavailable",
+      };
+    }
     if (!response.ok) {
       return {
         state: "error",

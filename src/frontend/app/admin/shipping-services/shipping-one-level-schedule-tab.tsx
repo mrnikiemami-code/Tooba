@@ -48,14 +48,14 @@ import {
   type ShippingScheduleFormIssue,
   type ShippingWindowFormRow,
 } from "./shipping-operating-schedule-model.ts";
-import { adminRequestHeaders } from "../../../lib/admin/admin-result.ts";
+import { loadOneLevelBinding } from "./one-level-binding-client.ts";
+import { isRetryableBindingFailure } from "./shipping-one-level-rates-model.ts";
 import {
   bindingContextFa,
   bindingUnavailableFa,
   configuredCapacityFa,
   createBindingGenerationGuard,
   inactiveScheduleCountFa,
-  mapHostBinding,
   ONE_LEVEL_CAPACITY_CONFIG_ONLY_FA,
   ONE_LEVEL_CAPACITY_ENFORCEMENT_FA,
   ONE_LEVEL_INACTIVE_SCHEDULE_FA,
@@ -64,7 +64,6 @@ import {
   ONE_LEVEL_SCHEDULE_IDENTITY_ISOLATION_FA,
   ONE_LEVEL_SCHEDULE_READ_ONLY_FA,
   ONE_LEVEL_WINDOW_SCOPE_FA,
-  oneLevelBindingPath,
   operationStillTargetsMethod,
   resolveScheduleCoverage,
   resolveScheduleState,
@@ -96,6 +95,7 @@ type Props = {
 export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverride = null, readOnly = false }: Props) {
   const [bindingLoading, setBindingLoading] = useState(false);
   const [binding, setBinding] = useState<OneLevelBindingState | null>(null);
+  const [bindingAttempt, setBindingAttempt] = useState(0);
   const [schedulesState, setSchedulesState] = useState<"ok" | "denied" | "error" | null>(null);
   const [view, setView] = useState<{ serviceCode: string; schedules: ShippingOperatingScheduleAdminItem[] } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -166,17 +166,8 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
     const isCurrent = guard.current.begin();
     setBindingLoading(true);
     void (async () => {
-      let next: OneLevelBindingState;
-      try {
-        const response = await fetch(oneLevelBindingPath(methodCode), {
-          headers: adminRequestHeaders(),
-          cache: "no-store",
-        });
-        const payload = await response.json().catch(() => null);
-        next = response.ok ? mapHostBinding(payload) : { state: "untrusted" };
-      } catch {
-        next = { state: "untrusted" };
-      }
+      // تنها مسیر مجاز خواندن پیوند؛ تفکیک شکست در همان کلاینت مشترک انجام می‌شود.
+      const next = await loadOneLevelBinding(methodCode);
       if (!isCurrent()) return;
       setBinding(next);
       setBindingLoading(false);
@@ -184,7 +175,7 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
         void refresh(next.binding.serviceCode, isCurrent);
       }
     })();
-  }, [methodCode, refresh, bindingOverride?.serviceCode, bindingOverride?.optionCode, bindingOverride?.isActive]);
+  }, [methodCode, refresh, bindingOverride?.serviceCode, bindingOverride?.optionCode, bindingOverride?.isActive, bindingAttempt]);
 
   const state = resolveScheduleState({
     hasMethod: methodCode.length > 0,
@@ -340,6 +331,16 @@ export function ShippingOneLevelScheduleTab({ methodCode, onNotice, bindingOverr
         <p className="mt-2 text-xs text-muted">
           نگاشت کد روش به سرویس/گزینه فقط سمت سرور انجام می‌شود؛ این صفحه هیچ حدسی نمی‌زند.
         </p>
+        {isRetryableBindingFailure(binding) ? (
+          <button
+            type="button"
+            className="mt-3 rounded-ds border border-border px-3 py-1 text-xs"
+            data-testid="shipping-one-level-schedule-binding-retry"
+            onClick={() => setBindingAttempt((value) => value + 1)}
+          >
+            تلاش دوباره
+          </button>
+        ) : null}
       </div>
     );
   }

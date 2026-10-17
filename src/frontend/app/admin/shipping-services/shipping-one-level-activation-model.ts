@@ -19,9 +19,9 @@
  */
 
 import { adminHeaders, type AdminResult } from "../admin-api.ts";
+import { loadOneLevelBinding } from "./one-level-binding-client.ts";
 import {
   createBindingGenerationGuard,
-  mapHostBinding,
   oneLevelBindingPath,
   type OneLevelBindingState,
   type OneLevelMethodBinding,
@@ -53,7 +53,10 @@ export function oneLevelMethodBindingPath(methodCode: string): string {
 export type OneLevelActivationEligibility =
   | { state: "supported"; methodCode: string; currentIsActive: boolean }
   | { state: "optionless"; methodCode: string }
-  | { state: "unavailable"; reason: "no-method" | "gate-off" | "not-ready" | "unresolved" | "untrusted" };
+  | {
+    state: "unavailable";
+    reason: "no-method" | "gate-off" | "not-ready" | "unresolved" | "denied" | "unreachable" | "untrusted";
+  };
 
 /**
  * واجد شرایط بودن را فقط از پیوند حل‌شدهٔ سرور تعیین می‌کند.
@@ -186,17 +189,8 @@ export async function setOneLevelMethodActivation(
 export async function loadOneLevelMethodBinding(
   methodCode: string,
 ): Promise<OneLevelBindingState> {
-  const code = sanitizeMethodCode(methodCode);
-  if (!code) return { state: "unresolved" };
-  try {
-    const response = await fetch(oneLevelMethodBindingPath(code), { headers: adminHeaders() });
-    if (response.status === 401 || response.status === 403) return { state: "untrusted" };
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) return { state: "untrusted" };
-    return mapHostBinding(payload);
-  } catch {
-    return { state: "untrusted" };
-  }
+  // همان transport مشترک همهٔ زبانه‌ها؛ این تابع فقط نام سازگار قبلی را نگه می‌دارد.
+  return loadOneLevelBinding(methodCode);
 }
 
 /** حالت فعلی به فارسی؛ حقیقت نمایش‌داده‌شده فقط از سرور می‌آید. */
@@ -236,6 +230,10 @@ export function activationUnavailableFa(
       return "کاتالوگ یک‌سطحی هنوز مهاجرت نشده است؛ واجد شرایط بودن این روش قابل‌اثبات نیست.";
     case "unresolved":
       return "پیوند سرویس/گزینهٔ این روش هنوز خوانده نشده است؛ برای احتیاط هیچ سوئیچی نشان داده نمی‌شود.";
+    case "denied":
+      return "دسترسی برای خواندن پیوند این روش تأیید نشد؛ پس از رفع مشکل دسترسی دوباره تلاش کنید.";
+    case "unreachable":
+      return "ارتباط با سرور برای خواندن پیوند این روش برقرار نشد؛ اتصال و اجرای سرور را بررسی و دوباره تلاش کنید.";
     default:
       return "پاسخ سرور برای پیوند این روش معتبر نبود؛ برای احتیاط هیچ سوئیچی نشان داده نمی‌شود.";
   }

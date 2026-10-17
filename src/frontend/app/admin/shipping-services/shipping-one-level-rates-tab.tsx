@@ -60,13 +60,12 @@ import {
 import { ShippingDestinationPicker } from "./shipping-destination-picker.tsx";
 import { ConditionEditor } from "./shipping-rate-condition-editor.tsx";
 import { ShippingMethodCoverageModeSection } from "./shipping-method-coverage-mode-section.tsx";
-import { adminRequestHeaders } from "../../../lib/admin/admin-result.ts";
+import { loadOneLevelBinding } from "./one-level-binding-client.ts";
 import {
   bindingContextFa,
   bindingUnavailableFa,
   createBindingGenerationGuard,
-  mapHostBinding,
-  oneLevelBindingPath,
+  isRetryableBindingFailure,
   resolveRatesState,
   scopeRatesToBinding,
   viewMatchesBindingService,
@@ -104,6 +103,7 @@ type Props = {
 export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride = null, readOnly = false }: Props) {
   const [bindingLoading, setBindingLoading] = useState(false);
   const [binding, setBinding] = useState<OneLevelBindingState | null>(null);
+  const [bindingAttempt, setBindingAttempt] = useState(0);
   const [ratesState, setRatesState] = useState<"ok" | "denied" | "error" | null>(null);
   const [view, setView] = useState<ShippingRatesAndCoverageView | null>(null);
   const [busy, setBusy] = useState(false);
@@ -204,17 +204,8 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
     const isCurrent = guard.current.begin();
     setBindingLoading(true);
     void (async () => {
-      let next: OneLevelBindingState;
-      try {
-        const response = await fetch(oneLevelBindingPath(methodCode), {
-          headers: adminRequestHeaders(),
-          cache: "no-store",
-        });
-        const payload = await response.json().catch(() => null);
-        next = response.ok ? mapHostBinding(payload) : { state: "untrusted" };
-      } catch {
-        next = { state: "untrusted" };
-      }
+      // تنها مسیر مجاز خواندن پیوند؛ تفکیک شکست در همان کلاینت مشترک انجام می‌شود.
+      const next = await loadOneLevelBinding(methodCode);
       if (!isCurrent()) return;
       setBinding(next);
       setBindingLoading(false);
@@ -223,7 +214,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
         void refreshFinancial(next.binding.serviceCode, next.binding.optionCode, isCurrent);
       }
     })();
-  }, [methodCode, refresh, refreshFinancial, bindingOverride?.serviceCode, bindingOverride?.optionCode, bindingOverride?.isActive]);
+  }, [methodCode, refresh, refreshFinancial, bindingOverride?.serviceCode, bindingOverride?.optionCode, bindingOverride?.isActive, bindingAttempt]);
 
   const state = resolveRatesState({
     hasMethod: methodCode.length > 0,
@@ -387,6 +378,16 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
         <p className="mt-2 text-xs text-muted">
           نگاشت کد روش به سرویس/گزینه فقط سمت سرور انجام می‌شود؛ این صفحه هیچ حدسی نمی‌زند.
         </p>
+        {isRetryableBindingFailure(binding) ? (
+          <button
+            type="button"
+            className="mt-3 rounded-ds border border-border px-3 py-1 text-xs"
+            data-testid="shipping-one-level-rates-binding-retry"
+            onClick={() => setBindingAttempt((value) => value + 1)}
+          >
+            تلاش دوباره
+          </button>
+        ) : null}
       </div>
     );
   }

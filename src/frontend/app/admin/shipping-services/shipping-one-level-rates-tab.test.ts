@@ -6,6 +6,7 @@ import {
   bindingUnavailableFa,
   createBindingGenerationGuard,
   grantBelongsToBinding,
+  isRetryableBindingFailure,
   mapHostBinding,
   oneLevelBindingPath,
   rateBelongsToBinding,
@@ -259,6 +260,18 @@ test("binding unavailability text is explicit, Persian and never suggests a fall
   assert.match(bindingUnavailableFa({ state: "not-ready" }, "post:standard"), /مهاجرت/);
   assert.match(bindingUnavailableFa({ state: "unresolved" }, "post:standard"), /post:standard/);
   assert.match(bindingUnavailableFa({ state: "untrusted" }, "post:standard"), /معتبر نبود/);
+  // قطع ارتباط و رد دسترسی نباید با «پاسخ نامعتبر» یکی شوند؛ هر کدام علت و اقدام خودش را دارد.
+  const unreachable = bindingUnavailableFa({ state: "unreachable" }, "post:standard");
+  assert.match(unreachable, /ارتباط با سرور/);
+  assert.doesNotMatch(unreachable, /معتبر نبود/);
+  const denied = bindingUnavailableFa({ state: "denied" }, "post:standard");
+  assert.match(denied, /دسترسی/);
+  assert.doesNotMatch(denied, /معتبر نبود/);
+  // فقط شکست‌های گذرا «تلاش دوباره» معنادار دارند؛ دادهٔ نامعتبر یا دروازهٔ بسته نه.
+  assert.equal(isRetryableBindingFailure({ state: "unreachable" }), true);
+  assert.equal(isRetryableBindingFailure({ state: "denied" }), true);
+  assert.equal(isRetryableBindingFailure({ state: "untrusted" }), false);
+  assert.equal(isRetryableBindingFailure({ state: "resolved", binding: BINDING }), false);
   assert.match(bindingUnavailableFa(null, "post:standard"), /post:standard/);
 });
 

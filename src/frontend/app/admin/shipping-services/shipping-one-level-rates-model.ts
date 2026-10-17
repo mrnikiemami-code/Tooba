@@ -35,15 +35,26 @@ export type OneLevelMethodBinding = {
 };
 
 /**
- * نتیجهٔ حل پیوند. حالت‌ها عمداً از هم جدا هستند تا «خاموش»، «مهاجرت‌نشده» و «روش ناشناخته» با
- * «داده‌ی معتبر» اشتباه نشوند.
+ * نتیجهٔ حل پیوند. حالت‌ها عمداً از هم جدا هستند تا «خاموش»، «مهاجرت‌نشده»، «روش ناشناخته»،
+ * «دسترسی ردشده»، «سرور در دسترس نبود» و «پاسخ نامعتبر» با «دادهٔ معتبر» — و با یکدیگر — اشتباه
+ * نشوند. تفکیک `denied`/`unreachable` از `untrusted` عمدی است: پیش‌تر همهٔ این‌ها به یک حالت
+ * می‌رسیدند و UI دربارهٔ قطع ارتباط می‌گفت «پاسخ سرور معتبر نبود»، یعنی علت واقعی را پنهان
+ * می‌کرد و کاربر را به اقدام اشتباه (تغییر داده) هدایت می‌کرد.
  */
 export type OneLevelBindingState =
   | { state: "resolved"; binding: OneLevelMethodBinding }
   | { state: "gate-off" }
   | { state: "not-ready" }
   | { state: "unresolved" }
+  | { state: "denied" }
+  | { state: "unreachable" }
   | { state: "untrusted" };
+
+/** آیا شکست پیوند گذرا است و «تلاش دوباره» معنادار دارد؟ */
+export function isRetryableBindingFailure(state: OneLevelBindingState | null): boolean {
+  if (!state) return true;
+  return state.state === "denied" || state.state === "unreachable";
+}
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
@@ -180,6 +191,10 @@ export function bindingUnavailableFa(state: OneLevelBindingState | null, methodC
       return "کاتالوگ یک‌سطحی هنوز مهاجرت نشده است؛ پیوند سرویس/گزینه این روش قابل‌اعتماد نیست.";
     case "unresolved":
       return `پیوند سرویس/گزینه برای روش «${methodCode}» یافت نشد؛ هیچ نگاشت حدسی انجام نمی‌شود.`;
+    case "denied":
+      return "دسترسی به پیوند این روش تأیید نشد؛ پس از رفع مشکل دسترسی دوباره تلاش کنید.";
+    case "unreachable":
+      return "ارتباط با سرور برای خواندن پیوند این روش برقرار نشد؛ اتصال و اجرای سرور را بررسی و دوباره تلاش کنید.";
     default:
       return "پاسخ سرور برای پیوند این روش معتبر نبود؛ برای احتیاط هیچ نرخی نمایش داده نمی‌شود.";
   }

@@ -51,6 +51,17 @@ import {
 export const FINANCIAL_STATUS_UNAVAILABLE_FA =
   "وضعیت مالی این روش از API فعلی قابل خواندن نیست؛ هیچ مبلغ، حالت مالی یا فرض صفر ساخته نمی‌شود.";
 
+/** سرور در دسترس نیست: خطای گذرا، نه «نبود داده»؛ اقدام درست تلاش دوباره است. */
+export const FINANCIAL_STATUS_UNREACHABLE_FA =
+  "ارتباط با سرور برای خواندن وضعیت مالی برقرار نشد؛ اتصال و اجرای سرور را بررسی و دوباره تلاش کنید.";
+
+/** مسیر خواندن روی این نسخهٔ سرور نگاشت نشده است؛ دادهٔ مالی اصلاً خوانده نشده، نه اینکه وجود ندارد. */
+export const FINANCIAL_STATUS_ROUTE_MISSING_FA =
+  "این نسخهٔ سرور مسیر خواندن وضعیت مالی روش را ندارد؛ سرور باید به‌روزرسانی و مجدداً راه‌اندازی شود. تا آن زمان هیچ وضعیت مالی ساخته نمی‌شود.";
+
+export const FINANCIAL_STATUS_DENIED_FA =
+  "دسترسی برای خواندن وضعیت مالی این روش تأیید نشد؛ پس از رفع مشکل دسترسی دوباره تلاش کنید.";
+
 export const FINANCIAL_STATUS_DISTINCTNESS_FA =
   "«فعال بودن روش» با «آمادهٔ استعلام بودن قیمت» یکسان نیست: روش فعال بدون تعرفه، رایگان نیست.";
 
@@ -58,8 +69,30 @@ type FinancialReadState =
   | { state: "loading" }
   | { state: "unavailable" }
   | { state: "denied" }
-  | { state: "error" }
+  | { state: "unreachable" }
+  | { state: "route-missing" }
+  | { state: "error"; message: string }
   | { state: "ok"; status: ShippingMethodFinancialStatus };
+
+/** برچسب کوچک وضعیت مالی؛ هر شکست متن مستقل خودش را دارد تا علت با «نبود داده» اشتباه نشود. */
+function financialBadgeLabel(state: FinancialReadState): string {
+  switch (state.state) {
+    case "loading":
+      return "وضعیت مالی: در حال خواندن…";
+    case "unreachable":
+      return "وضعیت مالی: سرور در دسترس نیست";
+    case "route-missing":
+      return "وضعیت مالی: مسیر سرور در دسترس نیست";
+    case "denied":
+      return "وضعیت مالی: دسترسی رد شد";
+    case "error":
+      return "وضعیت مالی: خواندن ناموفق";
+    case "unavailable":
+      return "وضعیت مالی: نامشخص";
+    default:
+      return financialStateLabelFa(state.status.state);
+  }
+}
 
 export function FlatGeneralTab({
   methodCode,
@@ -94,6 +127,7 @@ export function FlatGeneralTab({
 }) {
   const [activationBusy, setActivationBusy] = useState(false);
   const [financial, setFinancial] = useState<FinancialReadState>({ state: "loading" });
+  const [financialAttempt, setFinancialAttempt] = useState(0);
 
   // روش عوض شده است ⇒ هیچ وضعیت در پرواز قبلی روی روش تازه نمی‌نشیند.
   useEffect(() => setActivationBusy(false), [methodCode]);
@@ -123,13 +157,26 @@ export function FlatGeneralTab({
         setFinancial({ state: "ok", status: result.data });
         return;
       }
-      setFinancial(result.state === "denied" ? { state: "denied" } : { state: "error" });
+      if (result.state === "denied") {
+        setFinancial({ state: "denied" });
+        return;
+      }
+      // علت شکست همان‌طور که هست نمایش داده می‌شود؛ هرگز به «نبود داده» فروکاسته نمی‌شود.
+      if (result.message === "host-unreachable") {
+        setFinancial({ state: "unreachable" });
+        return;
+      }
+      if (result.message === "shipping_method_financial.route_unavailable") {
+        setFinancial({ state: "route-missing" });
+        return;
+      }
+      setFinancial({ state: "error", message: result.message ?? "" });
     })();
 
     return () => {
       current = false;
     };
-  }, [methodCode, serviceCode, optionCode, resolved]);
+  }, [methodCode, serviceCode, optionCode, resolved, financialAttempt]);
 
   async function applyActivation() {
     if (eligibility.state !== "supported") return;
@@ -163,7 +210,7 @@ export function FlatGeneralTab({
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone={isActive ? "success" : "neutral"}>{activationStatusFa(isActive)}</Badge>
           <Badge tone={financial.state === "ok" ? financialStateTone(financial.status.state) : "warning"}>
-            {financial.state === "ok" ? financialStateLabelFa(financial.status.state) : "وضعیت مالی: نامشخص"}
+            {financialBadgeLabel(financial)}
           </Badge>
         </div>
       </header>
@@ -254,7 +301,7 @@ export function FlatGeneralTab({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-bold text-amber-900">وضعیت مالی مشتری</h2>
           <Badge tone={financial.state === "ok" ? financialStateTone(financial.status.state) : "warning"}>
-            {financial.state === "ok" ? financialStateLabelFa(financial.status.state) : "قابل خواندن از API فعلی نیست"}
+            {financialBadgeLabel(financial)}
           </Badge>
         </div>
         {financial.state === "ok" ? (
@@ -292,13 +339,37 @@ export function FlatGeneralTab({
           </div>
         ) : (
           <div className="space-y-1" data-testid="admin-shipping-method-financial-unavailable">
-            <p className="text-xs text-amber-900">{FINANCIAL_STATUS_UNAVAILABLE_FA}</p>
+            <p className="text-xs text-amber-900" data-testid="admin-shipping-method-financial-failure-reason">
+              {financial.state === "loading"
+                ? "در حال خواندن وضعیت مالی از سرور…"
+                : financial.state === "unreachable"
+                  ? FINANCIAL_STATUS_UNREACHABLE_FA
+                  : financial.state === "route-missing"
+                    ? FINANCIAL_STATUS_ROUTE_MISSING_FA
+                    : financial.state === "denied"
+                      ? FINANCIAL_STATUS_DENIED_FA
+                      : financial.state === "error"
+                        ? `${FINANCIAL_STATUS_UNAVAILABLE_FA}${financial.message ? ` (کد: ${financial.message})` : ""}`
+                        : FINANCIAL_STATUS_UNAVAILABLE_FA}
+            </p>
             <p className="text-[11px] text-amber-800">{FINANCIAL_STATUS_DISTINCTNESS_FA}</p>
             <p className="text-[11px] text-amber-800">
               حالت‌های مالی معتبر بر اساس قرارداد قفل‌شده (رایگان / مبلغ ثابت / قاعده‌محور / پرداخت در محل /
               استعلام ارائه‌دهنده) فقط از دادهٔ واقعی سرور ادعا می‌شوند؛ تا آن زمان این صفحه نه مبلغی می‌سازد و نه
               روشی را «آمادهٔ قیمت» اعلام می‌کند.
             </p>
+            {financial.state !== "loading" && financial.state !== "unavailable" ? (
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  tone="secondary"
+                  data-testid="admin-shipping-method-financial-retry"
+                  onClick={() => setFinancialAttempt((value) => value + 1)}
+                >
+                  تلاش دوباره
+                </Button>
+              </div>
+            ) : null}
           </div>
         )}
       </section>

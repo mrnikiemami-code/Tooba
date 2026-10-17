@@ -130,6 +130,15 @@ test("an unproven binding is fail-closed and never becomes an activation switch"
     state: "unavailable",
     reason: "untrusted",
   });
+  // قطع ارتباط و رد دسترسی، حالت مستقل دارند و هیچ‌کدام به سوئیچ تبدیل نمی‌شوند.
+  assert.deepEqual(resolveActivationEligibility({ state: "unreachable" }, "post:express"), {
+    state: "unavailable",
+    reason: "unreachable",
+  });
+  assert.deepEqual(resolveActivationEligibility({ state: "denied" }, "post:express"), {
+    state: "unavailable",
+    reason: "denied",
+  });
   assert.deepEqual(resolveActivationEligibility(binding(), ""), { state: "unavailable", reason: "no-method" });
   assert.deepEqual(resolveActivationEligibility(binding(), "  "), { state: "unavailable", reason: "no-method" });
 });
@@ -308,9 +317,25 @@ test("the binding read is read-only and maps host truth fail-closed", async () =
 
   const denied = stubFetch(() => ({ status: 403, payload: null }));
   try {
-    assert.deepEqual(await loadOneLevelMethodBinding("post:express"), { state: "untrusted" });
+    // رد دسترسی دیگر با «پاسخ نامعتبر» یکی نمی‌شود؛ پیام و اقدام متفاوت است.
+    assert.deepEqual(await loadOneLevelMethodBinding("post:express"), { state: "denied" });
   } finally {
     denied.outcome.restore();
+  }
+
+  const broken = stubFetch(() => ({ status: 502, payload: null }));
+  try {
+    assert.deepEqual(await loadOneLevelMethodBinding("post:express"), { state: "unreachable" });
+  } finally {
+    broken.outcome.restore();
+  }
+
+  const offline = stubNetworkFailure();
+  try {
+    // قطع ارتباط باید «گذرا» گزارش شود، نه «پاسخ نامعتبر».
+    assert.deepEqual(await loadOneLevelMethodBinding("post:express"), { state: "unreachable" });
+  } finally {
+    offline.restore();
   }
 });
 

@@ -63,18 +63,17 @@ import {
   type DestinationSelection,
 } from "./shipping-rates-coverage-model.ts";
 import { ShippingDestinationPicker } from "./shipping-destination-picker.tsx";
-import { adminRequestHeaders } from "../../../lib/admin/admin-result.ts";
+import { loadOneLevelBinding } from "./one-level-binding-client.ts";
+import { isRetryableBindingFailure } from "./shipping-one-level-rates-model.ts";
 import {
   bindingContextFa,
   bindingUnavailableFa,
   createBindingGenerationGuard,
-  mapHostBinding,
   ONE_LEVEL_QUOTE_AMOUNT_BOUNDARY_FA,
   ONE_LEVEL_QUOTE_BOUNDARY_FA,
   ONE_LEVEL_QUOTE_CAPACITY_FA,
   ONE_LEVEL_QUOTE_INPUT_BOUNDARY_FA,
   ONE_LEVEL_QUOTE_READ_ONLY_FA,
-  oneLevelBindingPath,
   oneLevelQuotePayload,
   operationStillTargetsMethod,
   quoteMatchesRequestedIdentity,
@@ -93,6 +92,7 @@ type Props = {
 export function ShippingOneLevelQuoteTab({ methodCode, onNotice }: Props) {
   const [bindingLoading, setBindingLoading] = useState(false);
   const [binding, setBinding] = useState<OneLevelBindingState | null>(null);
+  const [bindingAttempt, setBindingAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState<ShippingOperationalQuoteFormValues>(emptyQuoteForm());
   const [selection, setSelection] = useState<DestinationSelection>(EMPTY_DESTINATION_SELECTION);
@@ -125,22 +125,13 @@ export function ShippingOneLevelQuoteTab({ methodCode, onNotice }: Props) {
     const isCurrent = guard.current.begin();
     setBindingLoading(true);
     void (async () => {
-      let next: OneLevelBindingState;
-      try {
-        const response = await fetch(oneLevelBindingPath(methodCode), {
-          headers: adminRequestHeaders(),
-          cache: "no-store",
-        });
-        const payload = await response.json().catch(() => null);
-        next = response.ok ? mapHostBinding(payload) : { state: "untrusted" };
-      } catch {
-        next = { state: "untrusted" };
-      }
+      // تنها مسیر مجاز خواندن پیوند؛ تفکیک شکست در همان کلاینت مشترک انجام می‌شود.
+      const next = await loadOneLevelBinding(methodCode);
       if (!isCurrent()) return;
       setBinding(next);
       setBindingLoading(false);
     })();
-  }, [methodCode]);
+  }, [methodCode, bindingAttempt]);
 
   const state = resolveQuoteState({
     hasMethod: methodCode.length > 0,
@@ -231,6 +222,16 @@ export function ShippingOneLevelQuoteTab({ methodCode, onNotice }: Props) {
         <p className="mt-2 text-xs text-muted">
           نگاشت کد روش به سرویس/گزینه فقط سمت سرور انجام می‌شود؛ این صفحه هیچ حدسی نمی‌زند و هیچ عددی نمی‌سازد.
         </p>
+        {isRetryableBindingFailure(binding) ? (
+          <button
+            type="button"
+            className="mt-3 rounded-ds border border-border px-3 py-1 text-xs"
+            data-testid="shipping-one-level-quote-binding-retry"
+            onClick={() => setBindingAttempt((value) => value + 1)}
+          >
+            تلاش دوباره
+          </button>
+        ) : null}
       </div>
     );
   }
