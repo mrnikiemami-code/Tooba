@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-167
 Parent-Task: TB-SHIPPING-STOREFRONT-PRIVATE-BROWSER-166
@@ -11,10 +11,10 @@ Status: PARTIAL
 Verdict: PARTIAL - real owner-level create contract/endpoint + Admin form + focused tests green; live scratch create->GET->reopen proof not executed inside the timebox
 Base-SHA: 333a9c9640d5be96ae5d697cf621043ad34e03e9
 Code-SHA: 3746483c14fe6cacf951ad8fbc08afb2e8f81b5c
-Evidence-SHA: 3746483c14fe6cacf951ad8fbc08afb2e8f81b5c
-HEAD-SHA: 3746483c14fe6cacf951ad8fbc08afb2e8f81b5c
-Origin-SHA: 3746483c14fe6cacf951ad8fbc08afb2e8f81b5c
-Push: fast-forward 333a9c964..3746483c1 (main -> main)
+Evidence-SHA: a0457ee32d6774e52d9c4142150816b5caaa5ff1
+HEAD-SHA: a0457ee32d6774e52d9c4142150816b5caaa5ff1
+Origin-SHA: a0457ee32d6774e52d9c4142150816b5caaa5ff1
+Push: fast-forward 333a9c964..a0457ee32 (main -> main)
 
 SUMMARY
 The canonical catalog owner was identified as Fulfillment (fulfillment.shipping_methods + shipping_method_translations), with Shipping owning all rate/coverage/schedule/packaging policy keyed by serviceCode+optionCode and Localization owning the language registry. A REAL method-scoped create was implemented there: command/handler/validator, a narrow write seam, and authorized POST /v1/admin/shipping-services/shipping-methods/one-level. The client supplies only the explicit canonical code, optional provider metadata and names for real registry languages; the legacy binding is DERIVED SERVER-SIDE with the same rule the existing backfill used (service:option => (service, option), single segment => (code, null)), so a mismatched or client-invented binding is not expressible. Every create is written is_active=false with a server-assigned sort order; no legacy shipping_services/shipping_service_options row, no rate/coverage/schedule/packaging policy, no financial mode and no checkout/order data is fabricated. The Admin flat screen replaced the honest BLOCKED dialog with a real RTL form driven by the server language registry, refreshes the flat list from the server on success, never shows a success state on an uncertain response, and keeps exactly the three row actions and four non-nested tabs. Verdict is PARTIAL because the runtime create->GET->reopen proof against a disposable PostgreSQL + private Host was not run before the hard timebox; no screenshot or live HTTP claim is made.
