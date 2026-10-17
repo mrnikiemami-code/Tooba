@@ -1,0 +1,111 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-NEW-METHOD-ACTIVATION-170
+Parent-Task: TB-SHIPPING-ADMIN-MULTILINGUAL-ACTIVATION-169
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Status: PARTIAL
+Base-SHA: 1671349312ee0ce75759bbbabda324b7fc91bb95
+Code-SHA: c3de4693780e9f4baf9945ebfd48abda321c992b
+Evidence-SHA: c3de4693780e9f4baf9945ebfd48abda321c992b
+HEAD-SHA: c3de4693780e9f4baf9945ebfd48abda321c992b
+Origin-SHA: c3de4693780e9f4baf9945ebfd48abda321c992b
+Push: fast-forward 1671349312ee0ce75759bbbabda324b7fc91bb95..HEAD (main -> main)
+Result-Artifact: this Result file is committed as the immediately following evidence-only commit
+Automatic-Next-Task: NONE
+Stop-State: STOP_FOR_ARCHITECT
+
+SUMMARY
+The concrete TB-169 gap - a newly created canonical flat method could be named but not activated -
+is closed inside the correct module owners, with no fabricated provider capability, rate, coverage,
+legacy option row, delivery promise or financial readiness.
+
+Fulfillment (method identity/activation owner): ShippingOneLevelCatalogActivation no longer requires
+a legacy shipping_service_options row for a method whose parent service exists and is active. Such a
+method is activated on the shipping_methods row only and reports ActivatedCanonicalOnly; no legacy
+option row is created to satisfy the guard. Missing or inactive parent service still fails closed
+(LegacyBindingMissing / LegacyParentInactive) because provider registration is a genuine prerequisite,
+and legacy-bound methods keep the exact previous two-row transactional alignment. The activation DTO
+gained an additive canonicalOnly flag so Admin can see that activation is an admin projection, not
+customer readiness.
+
+Contracts/infrastructure: new read-only IShippingOneLevelCanonicalMethodReader (+
+ShippingOneLevelCanonicalMethodRead) declares active canonical methods that have an active parent
+service and no legacy option row, and confirms whether a real canonical method binds a given
+service+option. It is gate-aware and fail-closed (gate off, unmigrated table, invented code => empty
+or false), reads only the Fulfillment owner DbContext, and exposes no EF model or price.
+
+Shipping (rate/coverage/quote owner): FulfillmentShippingMethodOptionValidator accepts that real
+canonical identity as an owned rate key when the legacy option list has no such option; invented
+option codes remain refused with shipping.service_option.unknown and the gate-off path grants nothing.
+
+Order (customer eligibility consumer): StorefrontShippingService adds canonical-only methods as
+owned-rate candidates only when Tooba:ShippingOwnedRateAuthority is ON (zero seam calls when off) and
+exposes such a method to the customer only when the same round produced a real Shipping quote; price
+and lead days come from that quote, no fallback/free/zero price is ever emitted, and unquoted
+canonical drafts are not announced in the legacy "unavailable" list.
+
+VERIFICATION
+- dotnet build: Fulfillment.Tests, Shipping.Tests, Order.Application - 0 errors.
+- Focused tests: Fulfillment ShippingOneLevel* 109/109 passed (new canonical-only activation,
+  idempotency, deactivation, unbound identity reader); Shipping ShippingCanonicalMethodRateKey 3/3
+  passed; Order OwnedRate 10/10 passed.
+- Isolated disposable scratch (task-owned postgres:16 container tooba-tb170-pg on 127.0.0.1:55489,
+  databases tooba_170_scratch / tooba_170_messaging; isolated Development Host on 127.0.0.1:5424,
+  SingleStore single tenant store-alpha -> tenant-170-scratch, InMemory authorization, canonical
+  migrations applied only by Tooba.MigrationRunner, one-level catalog and owned-rate gate enabled only
+  in the scratch overlay). Shared :3000 / :5088 / :5432, tooba_alpha, shared Redis/RabbitMQ and other
+  workers were never opened, restarted or written; the isolation guard failed closed before mutation.
+- Authorized Admin HTTP acceptance: 22/22 PASS (assertion-matrix-http-170.json, http-trace-170.txt).
+  Real language ids from the live registry; real IR/THR geography identity from the scratch reference
+  fixture. Proven: create tipax:scratch170 (server-derived binding), legitimate activation
+  (isActive=true, changed=true, canonicalOnly=true), persisted admin projection, zero fake legacy
+  option rows (before=0 after=0), idempotent re-activation (changed=false), Shipping owner rate key
+  accepted for the new method (previously impossible), owner coverage grant accepted, invented option
+  key still refused (shipping.service_option.unknown), legacy sibling activate/deactivate parity
+  unchanged, DB method row is_active=true.
+- DB readback: method active with legacy_option_rows=0; owned rate 185000 IRR / lead_days=3; option
+  scoped coverage grant present and active.
+- Teardown: isolated Host stopped, container removed, port 5424 free, shared ports untouched.
+
+WHY PARTIAL (not PASS)
+The acceptance bar requires a real customer to see the activated method once it is independently
+quote-ready. That final leg is implemented and owner-tested but NOT proven end-to-end over HTTP:
+exercising Order storefront eligibility needs a real cart with seller, offer, stock and checkout
+priced lines, and the isolated scratch carries only shipping/language/geography fixtures. Building a
+catalog+offer+inventory+cart fixture is cross-module work outside the 45 minute boundary and would
+broaden scope, which the task forbids. Related truthful finding: the Admin operational-quote endpoint
+evaluates legacy service-level coverage semantics, so an option-scoped grant is deliberately not
+borrowed there; the run asserts quoted=false, amount=0 and the stable shipping.coverage.missing reason
+instead of any invented price. Strict-owned-option quoting is covered by the owner unit suite, not by
+that endpoint. The Admin browser UI was not re-verified because no UI file changed.
+
+EXACT SMALLEST NEXT STEP
+Add an isolated scratch cart fixture (one seller, one active offer, stock, checkout priced line) and
+call the storefront shipping projection with the scratch method and the IR/THR destination under
+Tooba:ShippingOwnedRateAuthority=true; assert the new method appears with priceAmount=185000,
+leadDays=3, and is absent with the gate off. No further production code change is required to test it.
+
+FILES
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Contracts/Shipping/ShippingOneLevelCanonicalMethodContracts.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelCanonicalMethodRead.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Shipping/ShippingOneLevelCatalogActivation.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/DependencyInjection/FulfillmentModule.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Ports/IShippingOneLevelCatalogAdminActivation.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Shipping/Commands/SetOneLevelShippingMethodActivationCommand.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelCanonicalMethodReadTests.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingOneLevelActivationTests.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Rates/FulfillmentShippingMethodOptionValidator.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Tests/Rates/ShippingCanonicalMethodRateKeyTests.cs
+src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs
+src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/OwnedRate/StorefrontShippingOwnedRateResolver.cs
+docs/architecture/evidence/TB-SHIPPING-NEW-METHOD-ACTIVATION-170/*
+docs/ai/tasks/TB-SHIPPING-NEW-METHOD-ACTIVATION-170.task.md
+
+NOTE
+Elapsed wall time exceeded the 45 minute hard-timebox (setup, isolated publish/boot and acceptance ran
+longer). Work was stopped at the honest boundary, not expanded to force a ceremonial PASS. One
+unrelated pre-existing working-tree modification (src/frontend/app/admin/admin-fulfillment-work-queue-screen.tsx)
+was left untouched and unstaged. No reset, rebase, autostash or force-push was performed.
+END_TOOBA_WORKER_RESULT
