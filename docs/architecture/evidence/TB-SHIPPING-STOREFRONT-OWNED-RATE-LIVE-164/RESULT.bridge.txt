@@ -1,0 +1,63 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-STOREFRONT-OWNED-RATE-LIVE-164
+Parent-Task: TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Base-SHA: 44d604fd9ca82557100f417acfaef2e65e125cdd
+Claimed-Head: 8960eaabf438a7e4bdc3e4b3e81ffb4a82e4ca90
+Status: PASS
+STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+
+VERDICT
+Authenticated end-to-end ON proof achieved in a disposable private scratch stack (projection -> two-group save -> re-read -> read-only payment draft) with strictly method-owned values, correct per-group sums and aggregate, provider/sibling non-inheritance, fail-closed negatives, and OFF parity in the same private stack. All private resources cleaned. One narrow owner-correct seam fix was required (see below).
+
+NARROW OWNER-CORRECT FIX
+- The scratch Host failed DI validation: the Shipping module registered only IShippingRateCoverageDirectory while the TB-161/162 handler requires IShippingMethodCoverageDirectory (same adapter implements both).
+- Fix: one AddScoped<IShippingMethodCoverageDirectory, ShippingRateCoverageDirectory>() in src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/DependencyInjection/ShippingModule.cs. No behavior/contract/schema/policy change, no Host edit.
+- Also stripped an accidental UTF-8 BOM from the three committed appsettings*.json files (content unchanged, all still ShippingOwnedRateAuthority.Enabled=false).
+
+ISOLATION (fail-closed guard, both ON and OFF runs)
+- Container tooba-tb164-pg on 127.0.0.1:55484 only; dbs tooba_164_scratch / tooba_164_messaging.
+- Private Host 127.0.0.1:5419; tenant store-alpha -> tenant-164-scratch; SingleStore (no edition swap).
+- Only flag enabled: Tooba:ShippingOwnedRateAuthority:Enabled=true in the disposable overlay. Committed appsettings remain false. Shadow gates unset.
+- Shared :5432/tooba_alpha, :3000, :5088, RabbitMQ, Redis and other workers untouched. MigrationRunner applied Shipping through 20261016211322_OptionScopedCoverageRestriction.
+
+AUTHENTICATED ON RESULT (real customer session via /v1/auth/register + Development OTP fixture)
+- projection: tipax:standard 205000 IRR, tipax:express 480000 IRR; legacy configured 180000/260000 absent; provider-only 99000 row never projected; no free/zero strict method.
+- selection save 200: two groups, each 205000 IRR.
+- re-read draft: two groups 205000, stable ShippingGroupIds across save/re-read, one disjoint cart line per group.
+- read-only payment draft 200: two groups 205000 each, shippingAmount 410000 exactly, payable = subtotal - discount + tax + shipping, no checkoutId.
+- DB: checkouts 0, seller_orders 0, order_lines 0, payments 0; cart_shipping_groups 2 with 205000.00 each.
+
+FAIL-CLOSED NEGATIVES (same customer/scratch)
+- Express owned rule deactivated: express excluded, reason shipping.quote.owned_option_not_priced, standard still 205000, selecting express -> HTTP 400 shipping.method.unavailable, previous draft uncorrupted.
+- Express rule active but declaration Restricted with no allowed grant: express excluded with shipping.coverage.method_restricted.
+- No fallback to legacy price, zero or FREE in any negative case.
+
+OFF PARITY (same private stack, gate=false)
+- projection: legacy tipax:standard 180000, tipax:express 260000, full legacy method list incl. in_person 0/FREE; unavailableMethods absent (gate not evaluated). No owner/geography call path (resolver returns Disabled before any lookup; TB-163 unit test asserts zero calls).
+
+TESTS / BUILD
+- dotnet build Tooba.Host after the DI fix: 0 errors.
+- TB-163 focused suite unchanged and remains the behavioral guard; no test modified.
+
+CLEANUP
+- ON host PID 38508 stopped, OFF host PID 37332 stopped, container tooba-tb164-pg removed, port 5419 no listener. No PSP/SMS, no final purchase, no order created.
+
+EVIDENCE
+docs/architecture/evidence/TB-SHIPPING-STOREFRONT-OWNED-RATE-LIVE-164/
+- RESULT.md, db-readback-164.txt, cleanup-164.txt, isolation-guard-on-164.json, isolation-guard-off-164.json
+- projection-on-164.json, projection-on-reread-164.json, selection-save-164.json, payment-draft-on-164.json
+- projection-negative-164.json, projection-negative-restricted-164.json, projection-off-164.json
+- checks-on-164.json, checks-negative-164.json, traces, journey-164.js, prepare/launch scripts, scratch-164-fixture.sql
+
+HONEST UNVERIFIED
+- No browser DOM/screenshot captured (HTTP + DB provenance only).
+- Frontend rendering of unavailableMethods not exercised.
+- Tax rules were seeded directly in the scratch DB (tax authoring out of scope).
+- Worker PASS is not Architect ACCEPT.
+END_TOOBA_WORKER_RESULT

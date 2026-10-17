@@ -1,0 +1,33 @@
+{
+  "gate": false,
+  "gateFlagLocation": "scratch overlay only (.tmp-164-run/appsettings.Development.json)",
+  "committedDefaults": {
+    "appsettings": false,
+    "development": false,
+    "production": false
+  },
+  "tenantCount": 1,
+  "activeTenantCount": 1,
+  "tenants": [
+    "store-alpha:Active:tenant-164-scratch"
+  ],
+  "connectionReferences": [
+    "tenant-164-scratch",
+    "messaging-164-scratch"
+  ],
+  "scratchPort": "55484",
+  "hostPort": "5419",
+  "webPort": "3114",
+  "containsSharedAlphaDatabase": false,
+  "containsSharedAlphaReference": false,
+  "containsSharedPort5432": false,
+  "shippingRateAuthorityShadowSet": false,
+  "shippingOperationalShadowSet": false,
+  "edition": "SingleStore",
+  "runLegacyBootstraps": true,
+  "allowResetAndSeed": false,
+  "legacyRatesPresent": false,
+  "sharedFrontendPort3000Touched": false,
+  "sharedHostPort5088Touched": false,
+  "failClosed": true
+}

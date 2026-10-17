@@ -1,0 +1,8 @@
+﻿SCRATCH_TARGET=tooba-tb164-pg / tooba_164_scratch @ 127.0.0.1:55484 (disposable, task-owned)
+MIGRATION_RUNNER_APPLY_EXIT_OK=True (Shipping current=20261016211322_OptionScopedCoverageRestriction)
+DB_READBACK: checkouts=0 seller_orders=0 order_lines=0 payments=0
+DB_READBACK: cart_shipping_drafts=1
+DB_READBACK: cart_shipping_groups=2 (01a147f0-54ef-7000-847c-e45da7e8c527 tipax:standard 205000.00; 01a147f0-54f0-7000-a593-304d9d2eb04b tipax:standard 205000.00)
+DB_READBACK: rate_policies tipax|standard|205000|IRR|active ; tipax|express|480000|IRR|active ; tipax|NULL|99000|IRR|active (provider-only, never projected)
+SHARED_PORT_5432_TOUCHED=False
+SHARED_3000_5088_TOUCHED=False

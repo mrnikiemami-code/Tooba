@@ -1,0 +1,66 @@
+[
+  {
+    "name": "NEGATIVE: tipax:express is excluded from the selectable list",
+    "result": "PASS",
+    "detail": [
+      "tipax:standard"
+    ]
+  },
+  {
+    "name": "NEGATIVE: the exclusion is honest and explicit (stable owner reason, no fabricated fee)",
+    "result": "PASS",
+    "detail": [
+      {
+        "methodCode": "post:express",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "post:standard",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "tipax:express",
+        "reasonCode": "shipping.quote.owned_option_not_priced"
+      },
+      {
+        "methodCode": "snapp_courier",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "store_courier",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "in_person",
+        "reasonCode": "shipping.service.not_priced"
+      }
+    ]
+  },
+  {
+    "name": "NEGATIVE: the remaining standard quote is still the owner amount",
+    "result": "PASS",
+    "detail": null
+  },
+  {
+    "name": "NEGATIVE: selecting the unquotable method fails CLOSED (4xx, no fabricated fee)",
+    "result": "PASS",
+    "detail": {
+      "status": 400,
+      "body": "{\"type\":\"about:blank\",\"title\":\"The selected shipping method is unavailable.\",\"status\":400,\"instance\":\"/v1/storefront/shipping/selection\",\"errorCode\":\"shipping.method.unavailable\",\"traceId\":\"2145faeb6e6b8c62741e5a620bcf537c\",\"correlationId\":\"3364cbd71c69461c9d96de8d74d4f97f\",\"requestId\":\"0HNPBVT2ALLBA:00000001\"}"
+    }
+  },
+  {
+    "name": "NEGATIVE: rejected selection did not corrupt the previously saved draft",
+    "result": "PASS",
+    "detail": [
+      [
+        "tipax:standard",
+        205000
+      ],
+      [
+        "tipax:standard",
+        205000
+      ]
+    ]
+  }
+]

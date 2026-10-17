@@ -1,0 +1,171 @@
+[
+  {
+    "name": "two authenticated cart lines exist (one per seller)",
+    "result": "PASS",
+    "detail": [
+      {
+        "lineId": "01a147f0-530c-7000-914f-07808bd8d839",
+        "offerId": "01a147ea-e169-7000-9249-6baf9cd30291",
+        "sellerPartyId": "01a147ea-e0a9-7000-b590-480d109609ef"
+      },
+      {
+        "lineId": "01a147f0-5325-7000-914e-e9179752f459",
+        "offerId": "01a147ea-eb3c-7000-9b9c-8eec30e22700",
+        "sellerPartyId": "01a147ea-eb2b-7000-8de1-4e50fed80253"
+      }
+    ]
+  },
+  {
+    "name": "two distinct sellers own the two lines",
+    "result": "PASS",
+    "detail": null
+  },
+  {
+    "name": "ON: tipax:standard is projectable",
+    "result": "PASS",
+    "detail": {
+      "methodCode": "tipax:standard",
+      "serviceCode": "tipax",
+      "optionCode": "standard",
+      "priceAmount": 205000,
+      "isFree": false,
+      "label": "معمولی"
+    }
+  },
+  {
+    "name": "ON: tipax:standard price is the owner exact-option amount (205000 IRR)",
+    "result": "PASS",
+    "detail": 205000
+  },
+  {
+    "name": "ON: the legacy configured amount (180000) never reaches the customer quote",
+    "result": "PASS",
+    "detail": 205000
+  },
+  {
+    "name": "ON: sibling tipax:express keeps its own owner amount (480000), never standard/provider",
+    "result": "PASS",
+    "detail": 480000
+  },
+  {
+    "name": "ON: provider-only 99000 row never prices a strict option",
+    "result": "PASS",
+    "detail": [
+      [
+        "tipax:express",
+        480000
+      ],
+      [
+        "tipax:standard",
+        205000
+      ]
+    ]
+  },
+  {
+    "name": "ON: no strict method is presented as free/zero",
+    "result": "PASS",
+    "detail": [
+      [
+        "tipax:express",
+        480000,
+        false
+      ],
+      [
+        "tipax:standard",
+        205000,
+        false
+      ]
+    ]
+  },
+  {
+    "name": "ON: a canonical promise exists for both sellers",
+    "result": "PASS",
+    "detail": [
+      {
+        "groupKey": "01a147eae0a97000b590480d109609ef|tipax:standard",
+        "shippingGroupId": "01a147f0-54ef-7000-847c-e45da7e8c527",
+        "sellerPartyId": "01a147ea-e0a9-7000-b590-480d109609ef",
+        "methodCode": "tipax:standard",
+        "minimumDeliveryDate": "2026-10-22",
+        "windows": [
+          "9-12",
+          "12-15",
+          "15-18",
+          "18-21"
+        ]
+      },
+      {
+        "groupKey": "01a147eaeb2b70008de14e50fed80253|tipax:standard",
+        "shippingGroupId": "01a147f0-54f0-7000-a593-304d9d2eb04b",
+        "sellerPartyId": "01a147ea-eb2b-7000-8de1-4e50fed80253",
+        "methodCode": "tipax:standard",
+        "minimumDeliveryDate": "2026-10-22",
+        "windows": [
+          "9-12",
+          "12-15",
+          "15-18",
+          "18-21"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ON: two-group selection save succeeds",
+    "result": "PASS",
+    "detail": 200
+  },
+  {
+    "name": "ON: persisted groups carry the owner amount 205000 each (not 180000)",
+    "result": "PASS",
+    "detail": [
+      [
+        "tipax:standard",
+        205000,
+        "IRR"
+      ],
+      [
+        "tipax:standard",
+        205000,
+        "IRR"
+      ]
+    ]
+  },
+  {
+    "name": "ON: re-read draft still has exactly two groups with owner amounts",
+    "result": "PASS",
+    "detail": [
+      [
+        205000,
+        "IRR"
+      ],
+      [
+        205000,
+        "IRR"
+      ]
+    ]
+  },
+  {
+    "name": "ON: group identities are stable across save and re-read",
+    "result": "PASS",
+    "detail": {
+      "saved": [
+        "01a147f0-54ef-7000-847c-e45da7e8c527",
+        "01a147f0-54f0-7000-a593-304d9d2eb04b"
+      ],
+      "reread": [
+        "01a147f0-54ef-7000-847c-e45da7e8c527",
+        "01a147f0-54f0-7000-a593-304d9d2eb04b"
+      ]
+    }
+  },
+  {
+    "name": "ON: line membership is one line per group and disjoint",
+    "result": "PASS",
+    "detail": null
+  },
+  {
+    "name": "ON: read-only payment draft answers 200",
+    "result": "FAIL",
+    "detail": 409
+  }
+]

@@ -65,6 +65,10 @@ public sealed class ShippingModule : IToobaModule
         // (module-owned DI) so no Host edit is needed for the data path; the HTTP layer stays in
         // Tooba.Shipping.Endpoints and is wired by the Host at 055.
         services.AddScoped<IShippingRateCoverageDirectory, ShippingRateCoverageDirectory>();
+        // TB-161/TB-163 seam: the method-scoped coverage restriction directory is satisfied by the SAME
+        // module-owned adapter (it implements both read ports). Without this registration the Shipping
+        // command handler cannot be activated and the whole Host fails DI validation.
+        services.AddScoped<IShippingMethodCoverageDirectory, ShippingRateCoverageDirectory>();
         // Admin authoring seam for Shipping-owned packaging fee policies, separate from rate policies.
         services.AddScoped<IShippingPackagingPolicyDirectory, ShippingPackagingPolicyDirectory>();
         // Admin authoring seam for the Shipping-owned weekly operating schedule (carrier pickup/dispatch

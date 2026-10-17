@@ -1,0 +1,119 @@
+{
+  "status": 200,
+  "body": {
+    "cartId": "01a147f0-52fb-7000-ac13-3d809fcfc500",
+    "cartVersion": 8,
+    "market": "IR",
+    "currency": "IRR",
+    "channel": "Marketplace",
+    "paymentState": "PendingPayment",
+    "shippingMethodCode": "",
+    "shippingMethodLabel": "",
+    "recipientName": "حمید آزمون",
+    "contactMobile": "09111111111",
+    "provinceName": "تهران",
+    "cityName": "تهران",
+    "postalAddress": "خیابان آزادی پلاک ۱ واحد ۲",
+    "postalCode": "1234567890",
+    "firstName": "حمید",
+    "lastName": "آزمون",
+    "subtotalExclusiveOfTax": 28700000,
+    "discountAmount": 0,
+    "taxAmount": 2583000,
+    "shippingAmount": 410000,
+    "payableAmount": 31693000,
+    "sellerOrders": [
+      {
+        "sellerOrderId": "01a147f1-838b-7000-b8a1-e5e48ac7cf60",
+        "orderNumber": "TB-20261017033932-01-ac962d",
+        "sellerPartyId": "01a147ea-e0a9-7000-b590-480d109609ef",
+        "sellerDisplayName": "فروشنده schema موبایل",
+        "status": "PendingPayment",
+        "subtotalExclusiveOfTax": 25000000,
+        "taxAmount": 2250000,
+        "discountAmount": 0,
+        "payableAmount": 27250000,
+        "currency": "IRR",
+        "lines": [
+          {
+            "offerId": "01a147ea-e169-7000-9249-6baf9cd30291",
+            "sellerPartyId": "01a147ea-e0a9-7000-b590-480d109609ef",
+            "title": "گوشی نمونه schema",
+            "sellerDisplayName": "فروشنده schema موبایل",
+            "quantity": 2,
+            "lineExclusiveOfTax": 25000000,
+            "discountAmount": 0,
+            "taxAmount": 2250000,
+            "linePayable": 27250000,
+            "currency": "IRR"
+          }
+        ]
+      },
+      {
+        "sellerOrderId": "01a147f1-8392-7000-bf0b-7f9244864063",
+        "orderNumber": "TB-20261017033932-02-03b328",
+        "sellerPartyId": "01a147ea-eb2b-7000-8de1-4e50fed80253",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "status": "PendingPayment",
+        "subtotalExclusiveOfTax": 3700000,
+        "taxAmount": 333000,
+        "discountAmount": 0,
+        "payableAmount": 4033000,
+        "currency": "IRR",
+        "lines": [
+          {
+            "offerId": "01a147ea-eb3c-7000-9b9c-8eec30e22700",
+            "sellerPartyId": "01a147ea-eb2b-7000-8de1-4e50fed80253",
+            "title": "پیراهن مردانه لینن",
+            "sellerDisplayName": "فروشگاه آرمان",
+            "quantity": 2,
+            "lineExclusiveOfTax": 3700000,
+            "discountAmount": 0,
+            "taxAmount": 333000,
+            "linePayable": 4033000,
+            "currency": "IRR"
+          }
+        ]
+      }
+    ],
+    "canInitiatePayment": true,
+    "shippingGroups": [
+      {
+        "shippingGroupId": "01a147f0-54ef-7000-847c-e45da7e8c527",
+        "sellerPartyId": "01a147ea-e0a9-7000-b590-480d109609ef",
+        "methodCode": "tipax:standard",
+        "serviceCode": "tipax",
+        "optionCode": "standard",
+        "methodLabel": "معمولی",
+        "shippingAmount": 205000,
+        "currency": "IRR",
+        "minimumDeliveryDate": "2026-10-22",
+        "selectedDeliveryDate": "2026-10-22",
+        "selectedDeliveryTimeWindow": "9-12",
+        "leadDays": 3,
+        "lineCount": 1,
+        "cartLineIds": [
+          "01a147f0-530c-7000-914f-07808bd8d839"
+        ]
+      },
+      {
+        "shippingGroupId": "01a147f0-54f0-7000-a593-304d9d2eb04b",
+        "sellerPartyId": "01a147ea-eb2b-7000-8de1-4e50fed80253",
+        "methodCode": "tipax:standard",
+        "serviceCode": "tipax",
+        "optionCode": "standard",
+        "methodLabel": "معمولی",
+        "shippingAmount": 205000,
+        "currency": "IRR",
+        "minimumDeliveryDate": "2026-10-22",
+        "selectedDeliveryDate": "2026-10-22",
+        "selectedDeliveryTimeWindow": "9-12",
+        "leadDays": 3,
+        "lineCount": 1,
+        "cartLineIds": [
+          "01a147f0-5325-7000-914e-e9179752f459"
+        ]
+      }
+    ]
+  }
+}
