@@ -1,0 +1,31 @@
+﻿start=2026-10-17T16:53:46.8851269+03:30
+16:53:48 postgres ready
+16:54:34 published
+16:54:34 isolation guard PASS
+16:55:01 migrated
+16:55:02 sizeA rows: products=0 categories=0 variants=0 offers=0 prices=0 stock=0 parties=0 texts=0
+16:55:45 host up size-a/diagnostic pid=32108
+16:55:45 host up size-a/default pid=34368
+16:55:45 sizeA default median=
+16:55:45 host up seed/default pid=21388
+16:55:46 FATAL dev actor missing ()
+16:57:24 sizeA rows: products=5 categories=6 variants=4 offers=6 prices=13 stock=8 parties=4 texts=46
+16:57:24 snapshot size-a written
+16:57:32 host up size-a/diagnostic pid=29028 listener=29028
+16:57:43 host up size-a/default pid=23864 listener=23864
+16:57:45 sizeA medians diag=91.7333333333333 default=60.7
+16:57:52 host up seed/default pid=41396 listener=41396
+17:00:00 FATAL dev actor missing
+17:01:01 sizeA rows: products=5 categories=6 variants=4 offers=6 prices=22 stock=8 parties=4 texts=46
+17:01:02 snapshot size-a written
+17:01:09 host up size-a/diagnostic pid=25800 listener=25800
+17:01:18 host up size-a/default pid=39160 listener=39160
+17:01:20 sizeA medians diag=84.1 default=62.5666666666667
+17:01:27 host up seed/default pid=23696 listener=23696
+17:01:27 dev actor resolved after polling
+17:01:27 seed started curl=24348 cap=480s
+17:01:27 seed progress: products=5 categories=6 variants=4 offers=6 prices=31 stock=8 parties=4 texts=46
+17:01:41 seed done elapsed=14.1s hardKill=False status=000000400 rows=products=5 categories=6 variants=4 offers=6 prices=31 stock=8 parties=4 texts=46
+17:01:43 SKIP sizeB measurement: products=5 (<20)
+17:01:44 snapshot size-b written
+17:01:44 measurement written

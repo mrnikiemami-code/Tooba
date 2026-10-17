@@ -1,0 +1,37 @@
+# TB-180 — why size B could not be produced (live capture)
+
+Task-owned scratch Host (127.0.0.1:5451, tenant store-alpha, Development, EF at committed default).
+The Development dev-actor header carried the real actor id created by `AdminDevActorBootstrap`
+(`identity.login_identifiers.normalized_value = admin-actor@tooba.local` → user id
+`01a14a0a-2431-7000-b6b6-1de5653bf2a2`).
+
+Request:
+
+```
+POST /v1/admin/catalog/demo/seed-only
+Host: alpha.localhost
+X-Tooba-Dev-Actor-User-Id: 01a14a0a-2431-7000-b6b6-1de5653bf2a2
+```
+
+Response (verbatim, sanitised — no credentials or customer data present):
+
+```
+HTTP/1.1 403 Forbidden
+Content-Type: application/problem+json
+X-Correlation-Id: 348ff5e6473a47908e064a88b3a1d944
+{"type":"about:blank","title":"Access to manage this store is not permitted.","status":403,
+ "instance":"/v1/admin/catalog/demo/seed-only","errorCode":"admin.authorization.denied",
+ "traceId":"9fd2f84b023fda341cc70f947e8f00f8",
+ "correlationId":"348ff5e6473a47908e064a88b3a1d944","requestId":"0HNPCAC5KOBA8:00000001"}
+```
+
+Bootstrap-order observation: the same call made 14.1 s after Host start (phase-3 script, actor resolved
+after polling `identity.login_identifiers`) also failed — HTTP 400 with an empty body — while
+`pricing.prices` grew by 3 rows for each Host start (37 → 40 → 43 across three consecutive starts), i.e.
+the Development price bootstrap does run and does mutate the scratch catalog per start.
+
+Interpretation, deliberately conservative: the only **application-owned, scale-capable** catalog seeder is
+reachable only through this admin route; on a scratch instance without a real Admin Panel session the
+route denies authorization (`admin.authorization.denied`). Manufacturing the authorization tuple, minting a
+session, or writing rows by hand would be fake authorization / an invented fixture, both forbidden by the
+task. Therefore size B is a genuine dependency blocker, not a measurement choice.

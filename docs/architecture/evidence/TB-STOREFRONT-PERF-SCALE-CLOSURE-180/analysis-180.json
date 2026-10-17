@@ -1,0 +1,126 @@
+{
+  "measurement": {
+    "route": "/v1/storefront/home?locale=fa",
+    "hostHeader": "alpha.localhost",
+    "sizeA": {
+      "rows": "products=5 categories=6 variants=4 offers=6 prices=22 stock=8 parties=4 texts=46",
+      "diagnostic": {
+        "efLevel": "Information",
+        "statuses": [
+          200,
+          200,
+          200
+        ],
+        "wallMs": [
+          76.6,
+          106.8,
+          68.9
+        ],
+        "medianWallMs": 76.6,
+        "payloadBytes": [
+          16279,
+          16279,
+          16279
+        ],
+        "slugCount": [
+          22,
+          22,
+          22
+        ],
+        "identicalHashes": true,
+        "bodySha256": "E4EB276E87EB35201E80D22576DB8BEC5811304C302B392534CFD9CA2035BCD8",
+        "requestScopedCommands": [
+          37,
+          37,
+          37,
+          37
+        ],
+        "warmupCommands": 37,
+        "totalCommandLines": 554,
+        "stdoutBytes": 1059974,
+        "stdoutLines": 604,
+        "efCategoryLines": 586,
+        "errorOrCriticalLines": 0,
+        "listenerPidMatchesHost": true
+      },
+      "default": {
+        "efLevel": "<committed default>",
+        "statuses": [
+          200,
+          200,
+          200
+        ],
+        "wallMs": [
+          66.2,
+          67.7,
+          53.8
+        ],
+        "medianWallMs": 66.2,
+        "payloadBytes": [
+          16279,
+          16279,
+          16279
+        ],
+        "slugCount": [
+          22,
+          22,
+          22
+        ],
+        "identicalHashes": true,
+        "bodySha256": "E4EB276E87EB35201E80D22576DB8BEC5811304C302B392534CFD9CA2035BCD8",
+        "requestScopedCommands": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "warmupCommands": 0,
+        "totalCommandLines": 0,
+        "stdoutBytes": 23121,
+        "stdoutLines": 20,
+        "efCategoryLines": 2,
+        "errorOrCriticalLines": 0,
+        "listenerPidMatchesHost": true
+      }
+    },
+    "seed": {
+      "status": "000000400",
+      "elapsedSeconds": 14.1,
+      "boundedCapSeconds": 480,
+      "hardKilledAtCap": false,
+      "rowsAfter": "products=5 categories=6 variants=4 offers=6 prices=31 stock=8 parties=4 texts=46"
+    },
+    "sizeB": null
+  },
+  "parity": [
+    {
+      "tag": "size-a",
+      "diagnosticBytes": 16281,
+      "defaultBytes": 16281,
+      "hashesEqual": true,
+      "diffCount": 0,
+      "diffs": [],
+      "diagnosticItemIdentity": {
+        "productIds": 3,
+        "slugs": 7
+      },
+      "defaultItemIdentity": {
+        "productIds": 3,
+        "slugs": 7
+      },
+      "parity": {
+        "dbProductRows": 5,
+        "bodySlugCount": 7,
+        "missingFromBody": [],
+        "missingFromBodyCount": 0,
+        "offers": 6,
+        "prices": 22,
+        "stockPositions": 8,
+        "sellers": 4,
+        "localizations": 46
+      }
+    }
+  ],
+  "sharedPortsTouched": false,
+  "credentialsInEvidence": false
+}

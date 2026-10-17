@@ -31,6 +31,19 @@ no commands-per-item growth trend exists; cross-leg payload differed by 1,428 by
 and item-level field parity was not captured. See
 `docs/architecture/evidence/TB-STOREFRONT-PERF-SCALE-ACCEPTANCE-179/RESULT.md`.
 
+**TB-180 update (2026-10-17): cross-leg delta closed by runtime proof; scale size still blocked.**
+Same instance/binary/database, 1 warm-up + 3 warm `GET /v1/storefront/home?locale=fa`: the EF=Information and
+committed-EF=Warning legs returned **byte-identical** bodies (16,279 B, SHA `E4EB276E…`, parsed diff 0 paths),
+with **37 request-scoped commands per request** (warm-up + 3 = 37/37/37/37), ≈406 startup commands reported
+separately, stdout **1,059,974 → 23,121 B**, and median warm latency 76.6 → 66.2 ms (no regression). The TB-179
+14,851/16,279 delta is therefore a **catalog/pricing data-state transition**, not a logging effect: the same
+route returned 14,856 B at `prices=13` and settled at 16,279 B afterwards, staying there across three further
+process starts while `pricing.prices` grew 37→40→43; the 1,423–1,428 B delta matches the `specialOffers`
+section (1,371 B / 2 items). Still OPEN because the **≥4× size remains unreachable**: the only owner-correct
+scale seeder (`POST /v1/admin/catalog/demo/seed-only`) returns `403 admin.authorization.denied` on an isolated
+instance without a real Admin session, and hand-written/cloned rows are forbidden. No growth ratio exists and
+none was invented. See `docs/architecture/evidence/TB-STOREFRONT-PERF-SCALE-CLOSURE-180/RESULT.md`.
+
 **Affected routes:** storefront Home (`/fa`, `/v1/storefront/home`) and potentially catalog/listing/product-dependent pages. Shipping/login routes show severe latency in the reported environment but are not proven to share the same cause.
 
 **User-provided diagnostic report** (not yet independently reproduced by architect):

@@ -1,0 +1,208 @@
+﻿{
+    "baseSha":  "174dd8171dcb6d233c1a6c1ba8fd56440f988d9e",
+    "route":  "/v1/storefront/home?locale=fa",
+    "hostHeader":  "alpha.localhost",
+    "scratch":  {
+                    "container":  "tooba-tb180-pg",
+                    "database":  "tooba_180_scratch",
+                    "hostPort":  5451
+                },
+    "sizeA":  {
+                  "rows":  "products=5 categories=6 variants=4 offers=6 prices=22 stock=8 parties=4 texts=46",
+                  "diagnostic":  {
+                                     "tag":  "size-a",
+                                     "leg":  "diagnostic",
+                                     "efLevel":  "Information",
+                                     "hostPid":  25800,
+                                     "listenerPid":  25800,
+                                     "warmup":  {
+                                                    "status":  200,
+                                                    "wallMs":  277.6,
+                                                    "payloadBytes":  16279,
+                                                    "slugCount":  22
+                                                },
+                                     "requests":  3,
+                                     "samples":  [
+                                                     {
+                                                         "request":  1,
+                                                         "status":  200,
+                                                         "wallMs":  76.6,
+                                                         "payloadBytes":  16279,
+                                                         "slugCount":  22,
+                                                         "productIdCount":  18,
+                                                         "bodySha256":  "E4EB276E87EB35201E80D22576DB8BEC5811304C302B392534CFD9CA2035BCD8",
+                                                         "startUtc":  "2026-10-17T13:31:09.4544853Z",
+                                                         "endUtc":  "2026-10-17T13:31:09.5309011Z"
+                                                     },
+                                                     {
+                                                         "request":  2,
+                                                         "status":  200,
+                                                         "wallMs":  106.8,
+                                                         "payloadBytes":  16279,
+                                                         "slugCount":  22,
+                                                         "productIdCount":  18,
+                                                         "bodySha256":  "E4EB276E87EB35201E80D22576DB8BEC5811304C302B392534CFD9CA2035BCD8",
+                                                         "startUtc":  "2026-10-17T13:31:09.5663158Z",
+                                                         "endUtc":  "2026-10-17T13:31:09.6736376Z"
+                                                     },
+                                                     {
+                                                         "request":  3,
+                                                         "status":  200,
+                                                         "wallMs":  68.9,
+                                                         "payloadBytes":  16279,
+                                                         "slugCount":  22,
+                                                         "productIdCount":  18,
+                                                         "bodySha256":  "E4EB276E87EB35201E80D22576DB8BEC5811304C302B392534CFD9CA2035BCD8",
+                                                         "startUtc":  "2026-10-17T13:31:09.6736376Z",
+                                                         "endUtc":  "2026-10-17T13:31:09.7431341Z"
+                                                     }
+                                                 ],
+                                     "requestScopedCommands":  [
+                                                                   {
+                                                                       "label":  "warmup",
+                                                                       "commands":  37,
+                                                                       "wallMs":  277.6
+                                                                   },
+                                                                   {
+                                                                       "label":  "req1",
+                                                                       "commands":  37,
+                                                                       "wallMs":  76.6
+                                                                   },
+                                                                   {
+                                                                       "label":  "req2",
+                                                                       "commands":  37,
+                                                                       "wallMs":  106.8
+                                                                   },
+                                                                   {
+                                                                       "label":  "req3",
+                                                                       "commands":  37,
+                                                                       "wallMs":  68.9
+                                                                   }
+                                                               ],
+                                     "totalCommandLines":  554,
+                                     "topTraceCommandGroups":  [
+                                                                   {
+                                                                       "trace":  "",
+                                                                       "commands":  405
+                                                                   },
+                                                                   {
+                                                                       "trace":  "1ca38888a27cc0c4ea4ec2fbb6e394a2",
+                                                                       "commands":  37
+                                                                   },
+                                                                   {
+                                                                       "trace":  "c5049b03a4b8db7f3c46cd0ab3a68a2d",
+                                                                       "commands":  37
+                                                                   },
+                                                                   {
+                                                                       "trace":  "3e0e09a283f02084677d147655c7576b",
+                                                                       "commands":  37
+                                                                   },
+                                                                   {
+                                                                       "trace":  "08808da511b192be8c57d0e6f2bd7f02",
+                                                                       "commands":  37
+                                                                   },
+                                                                   {
+                                                                       "trace":  "d1a2962e1b5d5efacca68fe72051e16a",
+                                                                       "commands":  1
+                                                                   }
+                                                               ],
+                                     "stdoutBytes":  1059974,
+                                     "stdoutLines":  604,
+                                     "efCategoryLines":  586,
+                                     "errorOrCriticalLines":  0
+                                 },
+                  "default":  {
+                                  "tag":  "size-a",
+                                  "leg":  "default",
+                                  "efLevel":  "\u003ccommitted default\u003e",
+                                  "hostPid":  39160,
+                                  "listenerPid":  39160,
+                                  "warmup":  {
+                                                 "status":  200,
+                                                 "wallMs":  266.3,
+                                                 "payloadBytes":  16279,
+                                                 "slugCount":  22
+                                             },
+                                  "requests":  3,
+                                  "samples":  [
+                                                  {
+                                                      "request":  1,
+                                                      "status":  200,
+                                                      "wallMs":  66.2,
+                                                      "payloadBytes":  16279,
+                                                      "slugCount":  22,
+                                                      "productIdCount":  18,
+                                                      "bodySha256":  "E4EB276E87EB35201E80D22576DB8BEC5811304C302B392534CFD9CA2035BCD8",
+                                                      "startUtc":  "2026-10-17T13:31:18.4690000Z",
+                                                      "endUtc":  "2026-10-17T13:31:18.5354046Z"
+                                                  },
+                                                  {
+                                                      "request":  2,
+                                                      "status":  200,
+                                                      "wallMs":  67.7,
+                                                      "payloadBytes":  16279,
+                                                      "slugCount":  22,
+                                                      "productIdCount":  18,
+                                                      "bodySha256":  "E4EB276E87EB35201E80D22576DB8BEC5811304C302B392534CFD9CA2035BCD8",
+                                                      "startUtc":  "2026-10-17T13:31:18.5364058Z",
+                                                      "endUtc":  "2026-10-17T13:31:18.6040630Z"
+                                                  },
+                                                  {
+                                                      "request":  3,
+                                                      "status":  200,
+                                                      "wallMs":  53.8,
+                                                      "payloadBytes":  16279,
+                                                      "slugCount":  22,
+                                                      "productIdCount":  18,
+                                                      "bodySha256":  "E4EB276E87EB35201E80D22576DB8BEC5811304C302B392534CFD9CA2035BCD8",
+                                                      "startUtc":  "2026-10-17T13:31:18.6050640Z",
+                                                      "endUtc":  "2026-10-17T13:31:18.6590386Z"
+                                                  }
+                                              ],
+                                  "requestScopedCommands":  [
+                                                                {
+                                                                    "label":  "warmup",
+                                                                    "commands":  0,
+                                                                    "wallMs":  266.3
+                                                                },
+                                                                {
+                                                                    "label":  "req1",
+                                                                    "commands":  0,
+                                                                    "wallMs":  66.2
+                                                                },
+                                                                {
+                                                                    "label":  "req2",
+                                                                    "commands":  0,
+                                                                    "wallMs":  67.7
+                                                                },
+                                                                {
+                                                                    "label":  "req3",
+                                                                    "commands":  0,
+                                                                    "wallMs":  53.8
+                                                                }
+                                                            ],
+                                  "totalCommandLines":  0,
+                                  "topTraceCommandGroups":  {
+
+                                                            },
+                                  "stdoutBytes":  23121,
+                                  "stdoutLines":  20,
+                                  "efCategoryLines":  2,
+                                  "errorOrCriticalLines":  0
+                              }
+              },
+    "seed":  {
+                 "status":  "000000400",
+                 "elapsedSeconds":  14.1,
+                 "boundedCapSeconds":  480,
+                 "hardKilledAtCap":  false,
+                 "rowsAfter":  "products=5 categories=6 variants=4 offers=6 prices=31 stock=8 parties=4 texts=46"
+             },
+    "sizeB":  {
+                  "rows":  "products=5 categories=6 variants=4 offers=6 prices=31 stock=8 parties=4 texts=46",
+                  "diagnostic":  null,
+                  "default":  null
+              },
+    "sharedPortsTouched":  false,
+    "credentialsInEvidence":  false
+}
