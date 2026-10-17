@@ -1,0 +1,52 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-STOREFRONT-PRIVATE-BROWSER-166
+Parent-Task: TB-SHIPPING-STOREFRONT-OWNED-RATE-BROWSER-165
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PASS
+Verdict: PASS (zero product source change; evidence commit only)
+Base-SHA: 200d904204c2f491659844ffa80199ed08bc2a5b
+Code-SHA: 200d904204c2f491659844ffa80199ed08bc2a5b
+Evidence-SHA: 36b9f09427e99601e15011945a43c74576a94232
+HEAD-SHA: 36b9f09427e99601e15011945a43c74576a94232
+Origin-SHA: 36b9f09427e99601e15011945a43c74576a94232
+Push: fast-forward 200d90420..36b9f0942 (main -> main)
+
+SUMMARY
+Completed the outstanding TB-165 authentic customer browser leg with a new self-contained, reusable and strictly isolated scratch seed recipe. In a real authenticated browser (development OTP fixture 09111111111 / 123456 through /fa/login) against a task-owned Host (127.0.0.1:5421), task-owned Next (127.0.0.1:3116) and task-owned PostgreSQL (127.0.0.1:55486), with the owned-rate gate ON only in the scratch overlay, the /fa/shipping page rendered two genuine seller-specific group cards for the same canonical tipax:standard at 205000 IRR each (persisted group ids 01a1480c-afb8-7000-931e-d6bc6f10bf06 and 01a1480c-afb9-7000-95ce-51d222cbba83), the order summary showed shipping 410000 IRR, and the payment preview reported the authoritative 410000 shipping with payable 16051500. Unavailable-method notices were proven against a real server negative: five methods carry read-only, per-method Persian notices and are not selectable, and PUT /v1/storefront/shipping/selection with post:standard returned 400 shipping.method.unavailable with the projection unchanged afterwards. Full document reload restored exactly the same group ids and schedules. Gate OFF control on the same cart/session preserved the legacy appsettings rates and omitted unavailableMethods entirely. No premature checkout/order/payment rows; one line per group; duplicate group ids 0; task-owned processes and container removed and private ports verified closed.
+
+WHAT WAS PROVEN
+1. Reproducible scratch seed recipe: seed-recipe-166.md + scratch-166-base-fixture.sql + scratch-166-extra-fixture.sql, executed end-to-end in this run (~4 minutes from docker run to an authenticated page). Seed chain: Host Development bootstrap (tenant + customer + two real sellers + purchasable offers + prices + one-level catalog + tax classification) then design-time migrations for Geography and Shipping (both intentionally register no runtime migrator), then country/administrative-area/city + method-owned tipax:standard 205000 and tipax:express 480000 OWNED policies at city scope plus a provider-level decoy row that must never price a strict option + explicit Unrestricted coverage, then two scratch-only active 9% tax rules for seller A's categories and the same two owned amounts declared at administrative-area scope because the storefront address form submits province/city names.
+2. Two genuine group cards, same canonical method: data-testid shipping-group-<sellerA>\\0tipax:standard and shipping-group-<sellerB>\\0tipax:standard, each with its own server horizon (minimum 2026-10-22), its own 7 date chips and its own 4 window chips; no page-wide date or window control.
+3. Method-owned exact-option pricing in the real UI: order summary "هزینه ارسال ۴۱۰٬۰۰۰ ریال" with per-group lines "۲۰۵٬۰۰۰ ریال" and "۲۰۵٬۰۰۰ ریال"; payment preview /fa/payment?cartId=01a14807-efa9-7000-ab60-bff2d55921b8 showed "هزینه ارسال: ۴۱۰٬۰۰۰ ریال" and "قابل پرداخت: ۱۶٬۰۵۱٬۵۰۰ ریال" with no order created.
+4. Continue gating: shipping-continue was disabled while one group lacked its own schedule and the address was incomplete, then enabled exactly when both groups had their own date+window and the recipient/address were valid.
+5. Persistence and identity: after a full document reload the page restored the SAME persisted group ids (01a1480c-afb8… / 01a1480c-afb9…) with their own schedules; DB readback shows two Draft rows, distinct group ids, one line per group, DUP_GROUP_IDS 0, checkouts 0, seller_orders 0.
+6. Real server negative + read-only notices: projection unavailableMethods = post:express, post:standard, snapp_courier, store_courier, in_person (reasonCode shipping.service.not_priced); the page rendered shipping-group-unavailable-methods with per-method notices ("برای این روش نرخ فعالی تعریف نشده است." + "غیرقابل انتخاب"), no seller attribution, no fabricated price, no zero/FREE; PUT selection with post:standard rejected 400 shipping.method.unavailable and the projection stayed unchanged (tipax 205000/480000 still eligible) => fail-closed, draft not corrupted.
+7. OFF parity: Host relaunched from the same overlay with ShippingOwnedRateAuthority.Enabled=false on the same cart/session returned legacy rates (post:express 200000, post:standard 120000, tipax:express 260000, tipax:standard 180000, snapp_courier 90000, store_courier 75000, in_person 0) and no unavailableMethods property. All three committed appsettings keep the flag false; the ON value existed only in the deleted scratch overlay.
+8. Isolation and cleanup: single Active tenant store-alpha -> tenant-166-scratch, Edition SingleStore, no tooba_alpha/tenant-alpha/:5432, no shadow gates; Host PIDs 20020/27940 stopped, next dev on 3116 stopped, container tooba-tb166-pg removed, ports 3116/5421/55486 closed.
+
+TESTS
+No product code changed, so no unit/integration suite was needed or run (no broad repeated suites). Live verification was HTTP + real browser DOM + DB readback as recorded.
+
+EVIDENCE (docs/architecture/evidence/TB-SHIPPING-STOREFRONT-PRIVATE-BROWSER-166/)
+RESULT.md, RESULT.bridge.txt, seed-recipe-166.md, scratch-166-base-fixture.sql, scratch-166-extra-fixture.sql,
+prepare-isolated-target-166.js, launch-isolated-host-166.ps1, probe-projection-166.cjs,
+projection-on-166.json, projection-off-166.json, http-trace-on-166.txt, ui-dom-assertions-166.txt,
+ui-shipping-two-groups-on-166.png, db-readback-groups-on-166.txt, db-readback-on-166.txt,
+isolation-guard-on-166.json, isolation-guard-off-166.json, host-launch-166-on.txt, host-launch-166-off.txt,
+cleanup-166.txt
+
+DISCLOSED NOTES
+- Shipping and Geography intentionally register no runtime schema migrator; their schemas were created with the canonical design-time context (TOOBA_DESIGN_TIME_CONNECTION) on the disposable database only.
+- Name-based destination resolution from the address form stops at administrative-area scope in this scratch chain, so the same two owned amounts were additionally declared at area scope. Amounts, method ownership and fail-closed behaviour are unaffected; this is a scratch fixture detail, documented in seed-recipe-166.md.
+- Two scratch-only active 9% tax rules were inserted for seller A's categories so the payment draft returns 200 (same approach as TB-154); no tax code or production rule changed.
+- Elapsed ~55 minutes, above the 45-minute timebox, because the seed dependency chain had to be discovered; the recipe is now durable for later tasks.
+
+BLOCKERS: none.
+Automatic-Next-Task: NONE
+STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT
