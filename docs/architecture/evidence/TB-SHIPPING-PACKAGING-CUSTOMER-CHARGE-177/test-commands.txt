@@ -1,0 +1,51 @@
+TB-SHIPPING-PACKAGING-CUSTOMER-CHARGE-177 — focused command log
+Base SHA: 8de5f34e0c14977c8456b7f3d42140c0678b03f9
+Host: Windows 10.0.26100, .NET SDK as resolved by `dotnet test` (net8.0 test assemblies)
+Working directory for all commands: src/backend
+
+1) NEW boundary guards — Shipping module (owner of packaging policy/evaluation)
+   dotnet test Modules/Shipping/Tooba.Shipping.Tests/Tooba.Shipping.Tests.csproj \
+     --filter "FullyQualifiedName~ShippingPackagingCustomerChargeBoundaryTests"
+   RESULT: Passed 5 / Failed 0 / Total 5  (after excluding the test project itself from the source scan)
+
+2) NEW boundary guards — Order module (owner of cart/draft/accepted customer charge)
+   dotnet test Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj \
+     --filter "FullyQualifiedName~StorefrontShippingPackagingChargeBoundaryTests"
+   RESULT: Passed 5 / Failed 0 / Total 5
+
+3) EXISTING packaging + operational-quote suites (Shipping), one pre-existing guard excluded
+   dotnet test Modules/Shipping/Tooba.Shipping.Tests/Tooba.Shipping.Tests.csproj \
+     --filter "(FullyQualifiedName~Tooba.Shipping.Tests.Packaging|FullyQualifiedName~ShippingOperationalQuote|FullyQualifiedName~ShippingShipmentCost|FullyQualifiedName~OperationalQuoteCompatibilityTests)&FullyQualifiedName!~No_module_outside_shipping"
+   RESULT: Passed 79 / Failed 0 / Total 79
+
+4) EXISTING storefront shipping shadow/rate suites (Order)
+   dotnet test Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj \
+     --filter "FullyQualifiedName~StorefrontShippingOperationalShadowObserverTests|FullyQualifiedName~StorefrontShippingPackagingChargeBoundaryTests|FullyQualifiedName~StorefrontShippingRateShadowTests|FullyQualifiedName~StorefrontShippingOwnedRate"
+   RESULT: Passed 44 / Failed 0 / Total 44
+
+5) NAMING/STRUCTURE guards for the touched trees (Shipping composition/scope)
+   dotnet test Modules/Shipping/Tooba.Shipping.Tests/Tooba.Shipping.Tests.csproj \
+     --filter "FullyQualifiedName~ShippingModuleCompositionGuardTests|FullyQualifiedName~ShippingAdminScopeGuardRepairTests"
+   RESULT: Passed 12 / Failed 0 / Total 12
+
+6) NAMING/STRUCTURE guards for the touched trees (Order storefront/application/manifest)
+   dotnet test Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj \
+     --filter "FullyQualifiedName~OrderStorefrontArchitectureGuardTests|FullyQualifiedName~OrderApplicationFolderGranularityGuardTests|FullyQualifiedName~OrderManifestDiskReconciliationGuardTests"
+   RESULT: Passed 18 / Failed 0 / Total 18
+
+7) PRE-EXISTING FAILURE (not caused by TB-177, NOT silenced, NOT rebaselined)
+   dotnet test Modules/Shipping/Tooba.Shipping.Tests/Tooba.Shipping.Tests.csproj \
+     --filter "FullyQualifiedName~Packaging|FullyQualifiedName~OperationalQuote"
+   RESULT: Passed 79 / Failed 1 / Total 80
+   Failing test: Tooba.Shipping.Tests.Compatibility.OperationalQuoteCompatibilityTests
+                 .No_module_outside_shipping_references_the_operational_quote_types
+   Offenders reported by that guard (Order module, introduced by the previously shipped operational-shadow
+   slice, present at the base SHA):
+     src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/OperationalShadow/StorefrontShippingOperationalShadowObserver.cs
+     src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs
+   Proven pre-existing without touching the worktree:
+     git grep -l "IShippingOperationalQuoteLookup" HEAD -- src/backend
+   -> both files above are present at HEAD 8de5f34e. TB-177 adds only test files, which that guard excludes
+      (IsGeneratedOrTestTree skips any segment ending in "Tests").
+   Action taken: none. The guard was left exactly as-is; the Architect must decide whether the earlier
+   shadow seam needs the guard narrowed or the seam documented.
