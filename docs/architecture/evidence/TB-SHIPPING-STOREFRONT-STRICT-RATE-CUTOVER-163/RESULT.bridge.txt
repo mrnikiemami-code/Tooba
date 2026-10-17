@@ -1,0 +1,59 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163
+Parent-Task: TB-SHIPPING-OPTION-COVERAGE-MIGRATION-162
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Base-SHA: 727cdb46111446cf1a15364de73ebacb03660e5f
+Implementation-SHA: cc93e68cc63a1f43489ae6d9cda06b9b241ec87e
+HEAD: cc93e68cc63a1f43489ae6d9cda06b9b241ec87e
+Origin-Main: cc93e68cc63a1f43489ae6d9cda06b9b241ec87e
+HEAD-Equals-Origin-Main: YES
+Status: PARTIAL
+STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+
+IMPLEMENTED
+- New dedicated typed gate `Tooba:ShippingOwnedRateAuthority:Enabled`, explicit `false` in appsettings.json, appsettings.Development.json, appsettings.Production.json; absent-is-false; independent of the observe-only `Tooba:ShippingRateAuthority` and of the operational shadow.
+- OFF: `StorefrontShippingOwnedRateResolver` returns Disabled BEFORE touching the owner port or Geography - zero quote calls, zero geography calls, exact existing rates/errors/DTOs/runtime paths.
+- ON: for each legacy-eligible canonical method (service:option), resolves the authoritative destination (explicit Geography ids, else deterministic ResolveLegacyAsync; never from customer free text) and calls the existing `IShippingRateQuoteLookup.QuoteAsync` with `ShippingOptionMatchMode.StrictOwnedOption` and `Parcel = null` (no fabricated weight/dimensions).
+- Accepts a method only when `ShippingQuote.IsQuoted` AND currency matches the cart currency AND amount is non-negative. All other outcomes are mapped to a stable reason and the method is REMOVED from the selectable list (never 0, never FREE, never provider/service-level/sibling-option fallback).
+- `StorefrontShippingService.LoadEligibleMethodsAsync` replaces legacy PriceAmount with the authoritative amount and exposes rejected methods via new additive `StorefrontShippingProjection.UnavailableMethods` (null when OFF).
+- `SaveSelectionAsync` uses the same authoritative list, so a rejected method cannot be selected and its amount can never enter draft ShippingAmount, group ShippingAmount, or the payment draft; group planning/charges unchanged (exactly once per group).
+- `ProjectStorefrontShippingQuery` now forwards CityName/Destination to the service (higher-precision destination; inert while OFF).
+- DI in `OrderModule`; service dependency is trailing/optional so every existing composition keeps the exact legacy path.
+- No new rate engine, no new Shipping Admin writer, no schema/migration, no Host DbContext or business pricing. Contracts-only.
+
+FILES
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/OwnedRate/StorefrontShippingOwnedRateOptions.cs (new)
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/OwnedRate/StorefrontShippingOwnedRateResolver.cs (new)
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Services/StorefrontShippingService.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Models/StorefrontOrderModels.cs
+- src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/Queries/ProjectStorefrontShipping/ProjectStorefrontShippingQuery.cs
+- src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs
+- src/backend/Modules/Order/Tooba.Order.Tests/Storefront/StorefrontShippingOwnedRateResolverTests.cs (new)
+- src/backend/Host/Tooba.Host/appsettings{,.Development,.Production}.json (explicit false)
+- docs/architecture/evidence/TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163/
+
+TESTS
+- dotnet build src/backend/Host/Tooba.Host/Tooba.Host.csproj -> 0 errors.
+- New StorefrontShippingOwnedRateResolverTests: 10/10 passed (OFF zero-call parity; exact 205000 tipax:standard vs 480000 tipax:express with StrictOwnedOption + Parcel null on every request; shared-only row unquotable; Restricted coverage denied; MeasurementRequired fails closed with no fabricated parcel; currency mismatch; unresolved destination with zero quotes; owner missing/throwing fail-closed; incomplete method identity; one rejected option does not poison a quoted sibling).
+- Regression: dotnet test Tooba.Order.Tests --filter "FullyQualifiedName~Storefront" -> 210/210 passed (includes group identity continuity, draft recovery, payment draft, start-payment composer, one-level labels).
+
+UNVERIFIED
+- Isolated authenticated HTTP acceptance (projection -> selection save -> GET reread -> read-only payment draft with a seeded 205000 exact-option rate and per-group fees) was not executed: the HARD 45-minute timebox was consumed by implementation and focused tests. No disposable loopback Host/DB/browser run captured; no sanitized JSON/DB readback.
+- Two-seller/same-method independence and "group charges exactly once" rest on the unchanged group planner/continuity tests, not a new owner-rate multi-seller fixture.
+- Frontend surfacing of UnavailableMethods not built (backend contract only; no visual change while OFF).
+
+CLEANUP
+- No shared service, port, database, container, PID, migration, tenant, RabbitMQ/Redis or worker was created, restarted or modified. No PSP/SMS calls.
+
+EVIDENCE
+- docs/architecture/evidence/TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163/RESULT.md (implementation, flag/default, quote provenance matrix, tests, unverified items)
+- docs/architecture/evidence/TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163/test-runs-163.txt
+
+BLOCKER NOTE
+PASS was not claimed because it requires a genuinely persisted correct customer quote in an isolated authenticated runtime; that live proof is the only missing item and is not covered by an unconditional feature enablement (gate remains OFF everywhere).
+END_TOOBA_WORKER_RESULT
