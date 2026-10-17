@@ -23,7 +23,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  createAdminShippingCoverageGrant,
   createAdminShippingRate,
   loadAdminShippingRates,
   setAdminShippingCoverageGrantActive,
@@ -60,6 +59,7 @@ import {
 } from "./shipping-rate-tier-model.ts";
 import { ShippingDestinationPicker } from "./shipping-destination-picker.tsx";
 import { ConditionEditor } from "./shipping-rate-condition-editor.tsx";
+import { ShippingMethodCoverageModeSection } from "./shipping-method-coverage-mode-section.tsx";
 import { adminRequestHeaders } from "../../../lib/admin/admin-result.ts";
 import {
   bindingContextFa,
@@ -94,9 +94,14 @@ type Props = {
    * زبانه همان پیوند را مصرف می‌کند و resolver غایب را صدا نمی‌زند، پس نبود ۰۸۶ مانع کارکرد نیست.
    */
   bindingOverride?: { serviceCode: string; optionCode: string | null; isActive: boolean } | null;
+  /**
+   * TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173: حالت «مشاهده» دیالوگ جزئیات روش. در این حالت هیچ
+   * نوشتنی (نرخ، مجوز پوشش یا اعلام محدودیت) مجاز نیست؛ فقط خواندن.
+   */
+  readOnly?: boolean;
 };
 
-export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride = null }: Props) {
+export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride = null, readOnly = false }: Props) {
   const [bindingLoading, setBindingLoading] = useState(false);
   const [binding, setBinding] = useState<OneLevelBindingState | null>(null);
   const [ratesState, setRatesState] = useState<"ok" | "denied" | "error" | null>(null);
@@ -239,6 +244,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
 
   async function submitCreateRate() {
     if (!resolvedBinding) return;
+    if (readOnly) { emit({ tone: "error", text: "این روش در حالت مشاهده است؛ ثبت نرخ مجاز نیست." }); return; }
     // ابهام تجاری یا وضعیت تأییدنشده هرگز با نوشتن خودکار حل نمی‌شود.
     if (writesBlocked || !gateAllowsCreate(editGate)) {
       emit({ tone: "error", text: editGate.reasonFa });
@@ -278,33 +284,9 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
     await refreshFinancial(resolvedBinding.serviceCode, resolvedBinding.optionCode, isCurrent);
   }
 
-  async function submitCreateGrant() {
-    if (!resolvedBinding) return;
-    const scopeProblems = validateDestinationSelection(selection);
-    if (scopeProblems.length > 0) {
-      setScopeIssues(scopeProblems);
-      setCreateFormIssues([]);
-      return;
-    }
-    setScopeIssues([]);
-    setCreateFormIssues([]);
-    const isCurrent = guard.current.begin();
-    setBusy(true);
-    const result = await createAdminShippingCoverageGrant(resolvedBinding.serviceCode, {
-      scope: buildScopeWrite(selection),
-    });
-    if (!isCurrent()) return;
-    setBusy(false);
-    if (result.state !== "ok") {
-      emit({ tone: "error", text: errorFa(result.message, "ایجاد مجوز پوشش ناموفق بود.") });
-      return;
-    }
-    emit({ tone: "success", text: `مجوز پوشش «${scopeSummary(result.data!)}» ایجاد شد.` });
-    await refresh(resolvedBinding.serviceCode, isCurrent);
-  }
-
   async function submitEdit(policy: ShippingRatePolicyAdminItem) {
     if (!resolvedBinding) return;
+    if (readOnly) { emit({ tone: "error", text: "این روش در حالت مشاهده است؛ ویرایش نرخ مجاز نیست." }); return; }
     if (!gateAllowsInPlaceEdit(editGate)) {
       emit({ tone: "error", text: editGate.reasonFa });
       return;
@@ -347,6 +329,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
 
   async function toggleRate(policy: ShippingRatePolicyAdminItem) {
     if (!resolvedBinding) return;
+    if (readOnly) { emit({ tone: "error", text: "این روش در حالت مشاهده است؛ تغییر وضعیت نرخ مجاز نیست." }); return; }
     const isCurrent = guard.current.begin();
     setBusy(true);
     const result = await setAdminShippingRateActive(resolvedBinding.serviceCode, policy.ratePolicyId, !policy.isActive);
@@ -363,6 +346,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
 
   async function toggleGrant(grantId: string, isActive: boolean) {
     if (!resolvedBinding) return;
+    if (readOnly) { emit({ tone: "error", text: "این روش در حالت مشاهده است؛ تغییر وضعیت پوشش مجاز نیست." }); return; }
     const isCurrent = guard.current.begin();
     setBusy(true);
     const result = await setAdminShippingCoverageGrantActive(resolvedBinding.serviceCode, grantId, !isActive);
@@ -494,6 +478,18 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
         )}
       </div>
 
+      {/* TB-173: محدودیت جغرافیایی همین روش — خواندن از سرور، ویرایش با درز مالک، و بازخوانی. */}
+      <ShippingMethodCoverageModeSection
+        binding={resolvedBinding}
+        view={view}
+        readOnly={readOnly}
+        busy={busy}
+        beginOperation={() => guard.current.begin()}
+        onBusyChange={setBusy}
+        onSaved={(isCurrent) => refresh(resolvedBinding.serviceCode, isCurrent)}
+        onNotice={emit}
+      />
+
       <section className="space-y-2">
         <h3 className="text-sm font-bold">سیاست‌های نرخ این روش</h3>
         {scoped.rates.length === 0 && (
@@ -601,7 +597,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
                   <button
                     type="button"
                     className="rounded-ds bg-primary px-3 py-1 text-xs font-bold text-primary-foreground disabled:opacity-50"
-                    disabled={busy || !gateAllowsInPlaceEdit(editGate)}
+                    disabled={busy || readOnly || !gateAllowsInPlaceEdit(editGate)}
                     onClick={() => void submitEdit(policy)}
                     data-testid={`shipping-one-level-rate-save-${policy.ratePolicyId}`}
                   >
@@ -627,7 +623,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
                       setEditConditionForm(conditionFormFromPolicy(policy.condition));
                       setEditConditionIssues([]);
                     }}
-                    disabled={!gateAllowsInPlaceEdit(editGate)}
+                    disabled={readOnly || !gateAllowsInPlaceEdit(editGate)}
                     data-testid={`shipping-one-level-rate-edit-${policy.ratePolicyId}`}
                   >
                     ویرایش
@@ -635,7 +631,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
                   <button
                     type="button"
                     className="rounded-ds border border-border px-3 py-1 text-xs disabled:opacity-50"
-                    disabled={busy}
+                    disabled={busy || readOnly}
                     onClick={() => void toggleRate(policy)}
                     data-testid={`shipping-one-level-rate-toggle-${policy.ratePolicyId}`}
                   >
@@ -649,10 +645,11 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
       </section>
 
       <section className="space-y-2">
-        <h3 className="text-sm font-bold">پوشش جغرافیایی این روش</h3>
+        <h3 className="text-sm font-bold">مقصدهای مجاز این روش (در حالت محدود)</h3>
         {scoped.grants.length === 0 && (
           <p className="text-xs text-muted" data-testid="shipping-one-level-coverage-empty">
-            بدون پوشش: هیچ مجوز پوششی برای این روش ثبت نشده است (این وضعیت به‌معنای پوشش نامحدود نیست).
+            هیچ مقصد مجازی برای همین روش ثبت نشده است؛ مجوز سطح سرویس یا گزینهٔ هم‌خانواده به این روش
+            نسبت داده نمی‌شود.
           </p>
         )}
         {scoped.grants.map((grant) => (
@@ -668,7 +665,7 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
             <button
               type="button"
               className="rounded-ds border border-border px-3 py-1 text-xs disabled:opacity-50"
-              disabled={busy}
+              disabled={busy || readOnly}
               onClick={() => void toggleGrant(grant.coverageGrantId, grant.isActive)}
               data-testid={`shipping-one-level-coverage-toggle-${grant.coverageGrantId}`}
             >
@@ -761,20 +758,11 @@ export function ShippingOneLevelRatesTab({ methodCode, onNotice, bindingOverride
           <button
             type="button"
             className="rounded-ds bg-primary px-3 py-1 text-xs font-bold text-primary-foreground disabled:opacity-50"
-            disabled={busy || !gateAllowsCreate(editGate)}
+            disabled={busy || readOnly || !gateAllowsCreate(editGate)}
             onClick={() => void submitCreateRate()}
             data-testid="shipping-one-level-create-rate-submit"
           >
             افزودن نرخ
-          </button>
-          <button
-            type="button"
-            className="rounded-ds border border-border px-3 py-1 text-xs disabled:opacity-50"
-            disabled={busy || !gateAllowsCreate(editGate)}
-            onClick={() => void submitCreateGrant()}
-            data-testid="shipping-one-level-create-grant-submit"
-          >
-            افزودن مجوز پوشش
           </button>
         </div>
         {isStoredZeroAmount(createRateForm.chargeAmount) && (
@@ -795,5 +783,7 @@ function errorFa(code: string | undefined, fallback: string): string {
   if (code === "shipping.coverage_grant.not_found") return "مجوز پوشش پیدا نشد.";
   if (code === "shipping.rate_policy.scope_duplicate") return "برای این دامنه از قبل نرخی ثبت شده است.";
   if (code === "shipping.coverage_grant.scope_duplicate") return "برای این دامنه از قبل مجوز پوشش ثبت شده است.";
+  if (code === "shipping.coverage.scope.invalid") return "دامنهٔ مقصد انتخاب‌شده معتبر نیست؛ آن را از فهرست مرجع دوباره انتخاب کنید.";
+  if (code === "shipping.service_code.required") return "کد خدمت این روش برای ذخیره معتبر نیست.";
   return tierErrorFa(code) ?? fallback;
 }

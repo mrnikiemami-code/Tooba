@@ -12,6 +12,8 @@
  */
 import type {
   ShippingCoverageGrantAdminItem,
+  ShippingCoverageMode,
+  ShippingMethodCoverageAdminItem,
   ShippingRatePolicyAdminItem,
   ShippingRatesAndCoverageView,
 } from "./shipping-rates-coverage-api.ts";
@@ -103,12 +105,17 @@ export function rateBelongsToBinding(
   return rateOption === binding.optionCode;
 }
 
-/** آیا این مجوز پوشش به خدمت پیوند تعلق دارد؟ پوشش در دامنهٔ خدمت است، نه گزینه. */
+/** آیا این مجوز پوشش به همین روش (خدمت + گزینه) تعلق دارد؟ */
 export function grantBelongsToBinding(
-  grant: Pick<ShippingCoverageGrantAdminItem, "serviceCode">,
+  grant: Pick<ShippingCoverageGrantAdminItem, "serviceCode" | "optionCode">,
   binding: OneLevelMethodBinding,
 ): boolean {
-  return grant.serviceCode === binding.serviceCode;
+  // TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173 — identity is (service, option), exactly like the
+  // server's persisted grant row. A grant of `post:express` is NOT this method's coverage, and a
+  // service-level grant is not inherited by an option method: that inheritance is precisely the
+  // sibling/provider approximation this task forbids. Optionless methods match only service-level.
+  if (grant.serviceCode !== binding.serviceCode) return false;
+  return (grant.optionCode ?? null) === binding.optionCode;
 }
 
 /** نمای نرخ/پوشش محدودشده به همان روش یک‌سطحی انتخاب‌شده. */
@@ -196,4 +203,99 @@ export function createBindingGenerationGuard(): { begin: () => () => boolean } {
 export function bindingContextFa(binding: OneLevelMethodBinding): string {
   const option = binding.optionCode ? binding.optionCode : "سطح سرویس (بدون گزینه)";
   return `روش یک‌سطحی ${binding.methodCode} → سرویس ${binding.serviceCode} · ${option}`;
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173 — the geographic restriction mode of ONE method.
+ *
+ * The rule this section encodes: an ABSENT declaration means the documented Unrestricted default
+ * ("the admin has not restricted this method"), NOT "this carrier covers everything" and NOT "the
+ * method is active/priced". A declaration row whose mode cannot be read is untrusted and blocks
+ * writes, because silently falling back to Unrestricted would widen a real restriction.
+ * ------------------------------------------------------------------------------------------- */
+
+/** حالت قابل‌نمایش محدودیت جغرافیایی یک روش، همراه با منبع قطعی آن. */
+export type OneLevelCoverageModeState =
+  /** هیچ ردیف اعلامی برای این روش نیست ⇒ پیش‌فرض مستند «بدون محدودیت مدیریتی». */
+  | { state: "undeclared" }
+  /** ردیف اعلامی سرور خوانده شد. */
+  | { state: "declared"; mode: ShippingCoverageMode; coverage: ShippingMethodCoverageAdminItem }
+  /** پاسخ سرور دربارهٔ اعلام محدودیت قابل‌اعتماد نیست ⇒ هیچ نوشتنی مجاز نیست. */
+  | { state: "untrusted" };
+
+/**
+ * اعلام محدودیتِ همین روش را از نمای سرور استخراج می‌کند.
+ *
+ * تطبیق هویت دقیق است (خدمت + گزینه). ردیف گزینهٔ دیگر هرگز برای این روش خوانده نمی‌شود، و
+ * نمای متعلق به خدمت دیگر یا نمای دارای ردیف ناخوانا `untrusted` است.
+ */
+export function resolveCoverageMode(
+  view: ShippingRatesAndCoverageView | null,
+  binding: OneLevelMethodBinding,
+): OneLevelCoverageModeState {
+  if (!view || view.serviceCode !== binding.serviceCode) return { state: "untrusted" };
+  if (view.methodCoveragesUntrusted === true) return { state: "untrusted" };
+  const rows = view.methodCoverages ?? [];
+  const own = rows.find(
+    (row) => row.serviceCode === binding.serviceCode && (row.optionCode ?? null) === binding.optionCode,
+  );
+  if (!own) return { state: "undeclared" };
+  return { state: "declared", mode: own.mode, coverage: own };
+}
+
+/** متن صریح حالت محدودیت؛ «بدون محدودیت مدیریتی» هرگز ادعای پوشش حامل یا نرخ نیست. */
+export function coverageModeFa(state: OneLevelCoverageModeState): string {
+  if (state.state === "untrusted") {
+    return "اعلام محدودیت جغرافیایی این روش از سرور قابل‌اعتماد خوانده نشد؛ برای احتیاط هیچ تغییری ذخیره نمی‌شود.";
+  }
+  if (state.state === "undeclared") {
+    return "بدون محدودیت مدیریتی (پیش‌فرض): ادمین این روش را به مقصد خاصی محدود نکرده است.";
+  }
+  return state.mode === "Restricted"
+    ? "محدود به مناطق منتخب: فقط مقصدهای مجاز همین روش."
+    : "بدون محدودیت مدیریتی: ادمین محدودیتی برای این روش تعریف نکرده است.";
+}
+
+/**
+ * یادآوری مرز معنایی: حالت محدودیت هیچ‌کدام از این‌ها نیست. متن جدا نگه داشته می‌شود تا اپراتور
+ * «بدون محدودیت مدیریتی» را با «آمادهٔ فروش»، «فعال» یا «دارای نرخ» اشتباه نگیرد.
+ */
+export const COVERAGE_MODE_BOUNDARY_FA =
+  "این حالت فقط محدودیت جغرافیایی را بیان می‌کند: نه فعال بودن روش، نه آماده بودن مالی/نرخ و نه تضمین پوشش حامل یا نوبت تحویل.";
+
+/**
+ * هشدار حالت Restricted با صفر مجوز فعال. این وضعیت «هیچ مقصدی» است و هرگز نباید به‌طور خاموش
+ * به «بدون محدودیت» برگردد.
+ */
+export const RESTRICTED_EMPTY_NOTE_FA =
+  "«محدود به مناطق منتخب» با صفر مقصد مجاز یعنی هیچ مقصدی؛ این وضعیت هرگز خودکار به «بدون محدودیت» تبدیل نمی‌شود.";
+
+/** تعویض حالت، مجوزهای تاریخی را حذف نمی‌کند تا تصمیم‌ها قابل حسابرسی بمانند. */
+export const COVERAGE_GRANTS_KEPT_FA =
+  "تغییر حالت، مجوزهای پوشش ثبت‌شده را حذف نمی‌کند؛ تاریخچه برای حسابرسی می‌ماند و فقط اثر حالت روی تحدید عوض می‌شود.";
+
+/**
+ * آیا نوشتن اعلام محدودیت مجاز است؟ خواندن‌تنها، عملیات در جریان و پاسخ غیرقابل‌اعتماد هر سه
+ * نوشتن را می‌بندند؛ مجوز واقعی همیشه سمت سرور (۴۰۱/۴۰۳) دوباره بررسی می‌شود.
+ */
+export function coverageModeWritable(input: {
+  readOnly: boolean;
+  busy: boolean;
+  modeState: OneLevelCoverageModeState;
+}): boolean {
+  if (input.readOnly || input.busy) return false;
+  return input.modeState.state !== "untrusted";
+}
+
+/**
+ * آیا انتخاب Restricted باید همراه با ثبت یک مقصد مجاز باشد؟ فقط وقتی هیچ مجوز فعالی برای همین
+ * روش وجود ندارد و کاربر مقصدی انتخاب نکرده است، ذخیره جلوی یک «تحدید کامل ناخواسته» را می‌گیرد.
+ */
+export function restrictedNeedsDestination(input: {
+  targetMode: ShippingCoverageMode;
+  activeOwnGrantCount: number;
+  hasDestination: boolean;
+}): boolean {
+  if (input.targetMode !== "Restricted") return false;
+  return input.activeOwnGrantCount === 0 && !input.hasDestination;
 }

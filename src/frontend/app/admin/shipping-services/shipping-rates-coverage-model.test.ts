@@ -97,6 +97,7 @@ test("an empty coverage set is reported as NO COVERAGE, never unlimited", () => 
     serviceCode: "tooba-post",
     ratePolicies: [],
     coverageGrants: [],
+    methodCoverages: [],
   };
   assert.equal(summarizeRatesCoverage(view).hasCoverage, false);
   assert.match(coverageStateFa(view), /بدون پوشش/);
@@ -110,6 +111,7 @@ test("an inactive grant is not coverage", () => {
     coverageGrants: [{
       coverageGrantId: "g1",
       serviceCode: "tooba-post",
+      optionCode: null,
       countryId: "11111111-1111-1111-1111-111111111111",
       administrativeAreaId: null,
       cityId: null,
@@ -117,6 +119,7 @@ test("an inactive grant is not coverage", () => {
       level: "country",
       isActive: false,
     }],
+    methodCoverages: [],
   };
   const summary = summarizeRatesCoverage(view);
   assert.equal(summary.grantCount, 1);

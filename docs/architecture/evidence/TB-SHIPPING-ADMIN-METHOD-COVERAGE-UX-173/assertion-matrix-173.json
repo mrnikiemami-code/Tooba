@@ -1,0 +1,102 @@
+[
+  {
+    "id": "dev_context_available",
+    "ok": true,
+    "detail": "http=200"
+  },
+  {
+    "id": "fulfillment_manage_granted",
+    "ok": true,
+    "detail": "granted=55"
+  },
+  {
+    "id": "rates_read_ok",
+    "ok": true,
+    "detail": "http=200"
+  },
+  {
+    "id": "method_absent_from_declarations_before_edit",
+    "ok": true,
+    "detail": "coverages=0"
+  },
+  {
+    "id": "sibling_absent_from_declarations_before_edit",
+    "ok": true,
+    "detail": "sibling_declared=false"
+  },
+  {
+    "id": "restricted_declaration_saved",
+    "ok": true,
+    "detail": "http=200 mode=Restricted option=standard"
+  },
+  {
+    "id": "declaration_identity_is_stable",
+    "ok": true,
+    "detail": "id=01a14880-7f56-7000-92c7-c4bb94346e61"
+  },
+  {
+    "id": "option_scoped_grant_saved",
+    "ok": true,
+    "detail": "http=200 option=standard"
+  },
+  {
+    "id": "reload_shows_same_restricted_choice",
+    "ok": true,
+    "detail": "mode=Restricted"
+  },
+  {
+    "id": "reload_shows_same_destination",
+    "ok": true,
+    "detail": "own_active_grants=1"
+  },
+  {
+    "id": "only_one_declaration_row_for_method",
+    "ok": true,
+    "detail": "rows=1"
+  },
+  {
+    "id": "sibling_declaration_untouched",
+    "ok": true,
+    "detail": "sibling_declared=false"
+  },
+  {
+    "id": "sibling_has_no_inherited_grant",
+    "ok": true,
+    "detail": "sibling_grants=0"
+  },
+  {
+    "id": "db_identity_rows_match",
+    "ok": true,
+    "detail": "decl_own=1 decl_sibling=0 grant_own=1 grant_sibling=0"
+  },
+  {
+    "id": "unrestricted_saved",
+    "ok": true,
+    "detail": "http=200"
+  },
+  {
+    "id": "reload_shows_unrestricted",
+    "ok": true,
+    "detail": "mode=Unrestricted"
+  },
+  {
+    "id": "grants_not_deleted_by_mode_switch",
+    "ok": true,
+    "detail": "own_grants=1"
+  },
+  {
+    "id": "sibling_still_isolated_after_switch",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "anonymous_write_denied",
+    "ok": true,
+    "detail": "http=401 code=admin.actor.missing"
+  },
+  {
+    "id": "denied_write_changed_nothing",
+    "ok": true,
+    "detail": "mode=Unrestricted"
+  }
+]

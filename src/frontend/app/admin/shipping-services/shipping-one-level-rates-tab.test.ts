@@ -66,6 +66,7 @@ function grant(partial: Partial<ShippingCoverageGrantAdminItem>): ShippingCovera
   return {
     coverageGrantId: "g1",
     serviceCode: "post",
+    optionCode: null,
     countryId: "c1",
     administrativeAreaId: null,
     cityId: null,
@@ -143,7 +144,7 @@ test("gate-off, unmigrated, unknown and malformed binding answers never become a
   assert.deepEqual(mapHostBinding({ ready: true, resolved: true, serviceCode: "post" }), { state: "gate-off" });
 });
 
-test("only the resolved binding's own option rates and its service grants are shown", () => {
+test("only the resolved binding's own option rates and its own option grants are shown", () => {
   const view: ShippingRatesAndCoverageView = {
     serviceCode: "post",
     ratePolicies: [
@@ -153,9 +154,12 @@ test("only the resolved binding's own option rates and its service grants are sh
       rate({ ratePolicyId: "other-service", serviceCode: "tipax" }),
     ],
     coverageGrants: [
-      grant({ coverageGrantId: "mine-grant" }),
+      grant({ coverageGrantId: "mine-grant", optionCode: "standard" }),
+      grant({ coverageGrantId: "other-option-grant", optionCode: "express" }),
+      grant({ coverageGrantId: "service-level-grant", optionCode: null }),
       grant({ coverageGrantId: "other-service-grant", serviceCode: "tipax" }),
     ],
+    methodCoverages: [],
   };
 
   const scoped = scopeRatesToBinding(view, BINDING);
@@ -167,9 +171,22 @@ test("only the resolved binding's own option rates and its service grants are sh
   assert.equal(rateBelongsToBinding(rate({ optionCode: null }), BINDING), false);
   assert.equal(rateBelongsToBinding(rate({ optionCode: "standard" }), BINDING), true);
   assert.equal(rateBelongsToBinding(rate({ serviceCode: "tipax" }), BINDING), false);
-  // پوشش در دامنهٔ خدمت است: گزینه در آن نقشی ندارد، ولی خدمت باید دقیقاً همان باشد.
-  assert.equal(grantBelongsToBinding(grant({}), BINDING), true);
-  assert.equal(grantBelongsToBinding(grant({ serviceCode: "tipax" }), BINDING), false);
+  // TB-173: هویت مجوز هم (خدمت + گزینه) است؛ مجوز گزینهٔ هم‌خانواده یا سطح سرویس به این روش
+  // به ارث نمی‌رسد (همان تقریب provider-level که تسک ممنوع کرده است).
+  assert.equal(grantBelongsToBinding(grant({ optionCode: "standard" }), BINDING), true);
+  assert.equal(grantBelongsToBinding(grant({ optionCode: "express" }), BINDING), false);
+  assert.equal(grantBelongsToBinding(grant({ optionCode: null }), BINDING), false);
+  assert.equal(grantBelongsToBinding(grant({ serviceCode: "tipax", optionCode: "standard" }), BINDING), false);
+  // روش بدون گزینه فقط مجوز سطح سرویس خودش را می‌بیند.
+  assert.equal(
+    grantBelongsToBinding(grant({ serviceCode: "store_courier", optionCode: null }), {
+      methodCode: "store_courier",
+      serviceCode: "store_courier",
+      optionCode: null,
+      isActive: true,
+    }),
+    true,
+  );
 });
 
 test("a methodless binding matches only service-level rates, and an empty view stays empty", () => {
@@ -182,7 +199,8 @@ test("a methodless binding matches only service-level rates, and an empty view s
   const view: ShippingRatesAndCoverageView = {
     serviceCode: "store_courier",
     ratePolicies: [rate({ serviceCode: "store_courier", optionCode: null }), rate({ serviceCode: "store_courier", optionCode: "express" })],
-    coverageGrants: [grant({ serviceCode: "store_courier" })],
+    coverageGrants: [grant({ serviceCode: "store_courier", optionCode: null })],
+    methodCoverages: [],
   };
   assert.deepEqual(scopeRatesToBinding(view, optionless).rates.map((r) => r.ratePolicyId), ["r1"]);
   assert.equal(scopeRatesToBinding(view, optionless).rates.length, 1);
@@ -190,8 +208,8 @@ test("a methodless binding matches only service-level rates, and an empty view s
 });
 
 test("a response belonging to another service is refused rather than rendered under this method", () => {
-  assert.equal(viewMatchesBindingService({ serviceCode: "post", ratePolicies: [], coverageGrants: [] }, BINDING), true);
-  assert.equal(viewMatchesBindingService({ serviceCode: "tipax", ratePolicies: [], coverageGrants: [] }, BINDING), false);
+  assert.equal(viewMatchesBindingService({ serviceCode: "post", ratePolicies: [], coverageGrants: [], methodCoverages: [] }, BINDING), true);
+  assert.equal(viewMatchesBindingService({ serviceCode: "tipax", ratePolicies: [], coverageGrants: [], methodCoverages: [] }, BINDING), false);
   assert.equal(viewMatchesBindingService(null, BINDING), false);
 });
 

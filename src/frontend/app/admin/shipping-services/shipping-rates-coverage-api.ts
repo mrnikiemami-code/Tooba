@@ -37,6 +37,33 @@ export type ShippingRatePolicyWriteRequest = {
 
 export type ShippingCoverageGrantWriteRequest = {
   scope: ShippingDestinationScopeWrite;
+  /**
+   * TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173 — the owning option of this grant, taken only from the
+   * server-resolved binding. A grant is method-scoped: the service-level row (`null`) belongs to a
+   * method without options, and writing it in place of an option grant would hand a sibling method's
+   * destinations to this method (an approximation the task forbids).
+   */
+  optionCode?: string | null;
+};
+
+/**
+ * TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173 — the persisted geographic restriction mode of ONE
+ * canonical method, exactly as the Shipping owner serializes it. This is a coverage decision only:
+ * it never means "active", "priced" or "quotable".
+ */
+export type ShippingCoverageMode = "Unrestricted" | "Restricted";
+
+/** The admin view of one method-coverage declaration (`null`/absent = no declaration row). */
+export type ShippingMethodCoverageAdminItem = {
+  methodCoverageId: string;
+  serviceCode: string;
+  optionCode: string | null;
+  mode: ShippingCoverageMode;
+};
+
+export type ShippingMethodCoverageWriteRequest = {
+  optionCode: string | null;
+  mode: ShippingCoverageMode;
 };
 
 export type ShippingRatePolicyAdminItem = {
@@ -62,6 +89,8 @@ export type ShippingRatePolicyAdminItem = {
 export type ShippingCoverageGrantAdminItem = {
   coverageGrantId: string;
   serviceCode: string;
+  /** Option this grant belongs to; `null` means the service-level grant (legacy identity). */
+  optionCode: string | null;
   countryId: string;
   administrativeAreaId: string | null;
   cityId: string | null;
@@ -74,6 +103,17 @@ export type ShippingRatesAndCoverageView = {
   serviceCode: string;
   ratePolicies: ShippingRatePolicyAdminItem[];
   coverageGrants: ShippingCoverageGrantAdminItem[];
+  /**
+   * TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173 — persisted restriction declarations of this service.
+   * An empty list is a real answer: no admin-defined restriction exists for any method, which is the
+   * documented Unrestricted default and never means "no geographic coverage".
+   */
+  methodCoverages: ShippingMethodCoverageAdminItem[];
+  /**
+   * True when the server sent at least one declaration row this client could not read. It exists so a
+   * malformed row can never be dropped silently into the "no restriction" default.
+   */
+  methodCoveragesUntrusted?: boolean;
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -157,12 +197,35 @@ function mapGrant(raw: unknown): ShippingCoverageGrantAdminItem | null {
   return {
     coverageGrantId,
     serviceCode,
+    optionCode: optionalText(pick(row, "optionCode", "OptionCode")),
     countryId,
     administrativeAreaId: optionalText(pick(row, "administrativeAreaId", "AdministrativeAreaId")),
     cityId: optionalText(pick(row, "cityId", "CityId")),
     serviceAreaId: optionalText(pick(row, "serviceAreaId", "ServiceAreaId")),
     level: text(pick(row, "level", "Level")),
     isActive: Boolean(pick(row, "isActive", "IsActive")),
+  };
+}
+
+/**
+ * TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173 — maps one persisted restriction declaration.
+ *
+ * An unknown/malformed mode is refused (`null`) instead of being coerced to a default: the caller
+ * then renders an explicit unavailable state and refuses to write, so a corrupted answer can never
+ * silently read as "Unrestricted" (which would widen a real restriction).
+ */
+function mapMethodCoverage(raw: unknown): ShippingMethodCoverageAdminItem | null {
+  const row = asRecord(raw);
+  if (!row) return null;
+  const methodCoverageId = text(pick(row, "methodCoverageId", "MethodCoverageId"));
+  const serviceCode = text(pick(row, "serviceCode", "ServiceCode"));
+  const mode = text(pick(row, "mode", "Mode")).trim();
+  if (!methodCoverageId || !serviceCode || (mode !== "Unrestricted" && mode !== "Restricted")) return null;
+  return {
+    methodCoverageId,
+    serviceCode,
+    optionCode: optionalText(pick(row, "optionCode", "OptionCode")),
+    mode: mode as ShippingCoverageMode,
   };
 }
 
@@ -173,6 +236,11 @@ function mapView(raw: unknown): ShippingRatesAndCoverageView | null {
   if (!serviceCode) return null;
   const rates = pick(row, "ratePolicies", "RatePolicies");
   const grants = pick(row, "coverageGrants", "CoverageGrants");
+  const coverages = pick(row, "methodCoverages", "MethodCoverages");
+  const coverageRows = Array.isArray(coverages) ? coverages : [];
+  const mappedCoverages = coverageRows
+    .map(mapMethodCoverage)
+    .filter((x): x is ShippingMethodCoverageAdminItem => Boolean(x));
   return {
     serviceCode,
     ratePolicies: (Array.isArray(rates) ? rates : [])
@@ -181,6 +249,9 @@ function mapView(raw: unknown): ShippingRatesAndCoverageView | null {
     coverageGrants: (Array.isArray(grants) ? grants : [])
       .map(mapGrant)
       .filter((x): x is ShippingCoverageGrantAdminItem => Boolean(x)),
+    methodCoverages: mappedCoverages,
+    // A row the client could not read must not disappear into the "no restriction" default.
+    methodCoveragesUntrusted: mappedCoverages.length !== coverageRows.length,
   };
 }
 
@@ -303,9 +374,28 @@ export function createAdminShippingCoverageGrant(
   return sendJson(
     `${base(serviceCode)}/coverage-grants`,
     "POST",
-    { serviceCode, scope: body.scope },
+    { serviceCode, optionCode: body.optionCode ?? null, scope: body.scope },
     "shipping_coverage.create_failed",
     mapGrant,
+  );
+}
+
+/**
+ * TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173 — declares the geographic restriction mode of ONE
+ * method (service + server-resolved option). This is the existing Shipping-owned declaration seam:
+ * it writes no grant, no rate and no availability, and its response is the persisted row, not an
+ * optimistic echo.
+ */
+export function setAdminShippingMethodCoverage(
+  serviceCode: string,
+  body: ShippingMethodCoverageWriteRequest,
+): Promise<AdminResult<ShippingMethodCoverageAdminItem>> {
+  return sendJson(
+    `${base(serviceCode)}/method-coverage`,
+    "PUT",
+    { optionCode: body.optionCode, mode: body.mode },
+    "shipping_method_coverage.save_failed",
+    mapMethodCoverage,
   );
 }
 

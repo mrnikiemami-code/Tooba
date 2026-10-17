@@ -187,7 +187,7 @@ export function FlatMethodDetailDialog({
               onSavedAndClose={onSaved}
             />
           ) : activeTab === "rates" ? (
-            <ShippingOneLevelRatesTab methodCode={row.methodCode} onNotice={onNotice} bindingOverride={bindingOverride} />
+            <ShippingOneLevelRatesTab methodCode={row.methodCode} onNotice={onNotice} bindingOverride={bindingOverride} readOnly={readOnly} />
           ) : activeTab === "schedule" ? (
             <ShippingOneLevelScheduleTab methodCode={row.methodCode} onNotice={onNotice} bindingOverride={bindingOverride} />
           ) : (
