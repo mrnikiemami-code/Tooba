@@ -30,7 +30,14 @@ public enum ShippingOneLevelMethodActivationStatus
     /// <summary>سرویس والد قدیمی غیرفعال است؛ هرگز به‌صورت خودکار فعال نمی‌شود.</summary>
     LegacyParentInactive = 7,
 
-    /// <summary>گزینهٔ قدیمیِ نگاشت‌شده در کاتالوگ قدیمی وجود ندارد (پیوند کهنه).</summary>
+    /// <summary>
+    /// گزینهٔ قدیمیِ نگاشت‌شده در کاتالوگ قدیمی وجود ندارد (پیوند کهنه).
+    /// </summary>
+    /// <remarks>
+    /// TB-SHIPPING-NEW-METHOD-ACTIVATION-170: دیگر بازگردانده نمی‌شود. نبودِ ردیف گزینه برای یک روش
+    /// canonical یعنی روش «تازه و بدون پیوند گزینه» است و فعال‌سازی آن با
+    /// <see cref="ActivatedCanonicalOnly"/> اعلام می‌شود؛ ردیف قدیمی جعلی ساخته نمی‌شود.
+    /// </remarks>
     LegacyOptionMissing = 8,
 
     /// <summary>
@@ -38,6 +45,16 @@ public enum ShippingOneLevelMethodActivationStatus
     /// حدس زده نمی‌شود.
     /// </summary>
     OptionlessRequiresServiceDecision = 9,
+
+    /// <summary>
+    /// روش تازهٔ canonical (بدون ردیف گزینهٔ قدیمی) فقط در فرافکنی ادمین فعال/غیرفعال شد.
+    /// </summary>
+    /// <remarks>
+    /// این وضعیت «قابل انتخاب بودن مشتری» یا «آمادهٔ قیمت» نیست: ردیف روش در Fulfillment به‌روز
+    /// شده و هیچ ردیف <c>shipping_service_options</c> ساخته نشده است. دیده‌شدن در فروشگاه فقط با
+    /// نرخ/پوشش واقعی مالک Shipping و دروازهٔ نرخ مالک ممکن است.
+    /// </remarks>
+    ActivatedCanonicalOnly = 10,
 }
 
 /// <summary>

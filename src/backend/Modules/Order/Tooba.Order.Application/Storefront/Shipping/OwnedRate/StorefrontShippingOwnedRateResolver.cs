@@ -16,10 +16,14 @@ public sealed record StorefrontShippingOwnedRateCandidate(
 /// <param name="MethodCode">کد روش متعارف.</param>
 /// <param name="Amount">مبلغ پذیرفته‌شده از Shipping.</param>
 /// <param name="CurrencyCode">ارز همان نرخ.</param>
+/// <param name="LeadDays">
+/// روزهای حمل اعلام‌شدهٔ همان نرخ مالک؛ هیچ وعدهٔ تحویل از جای دیگری ساخته نمی‌شود.
+/// </param>
 public sealed record StorefrontShippingOwnedRateQuote(
     string MethodCode,
     decimal Amount,
-    string? CurrencyCode);
+    string? CurrencyCode,
+    int LeadDays = 0);
 
 /// <summary>دلیل پایدار و قابل‌اعلامِ نبودِ نرخ authoritative برای یک روش.</summary>
 /// <param name="MethodCode">کد روش متعارف.</param>
@@ -248,7 +252,8 @@ public sealed class StorefrontShippingOwnedRateResolver(
             quoted[methodCode] = new StorefrontShippingOwnedRateQuote(
                 methodCode,
                 quote.ChargeAmount,
-                quote.CurrencyCode);
+                quote.CurrencyCode,
+                quote.LeadDays);
         }
 
         return new StorefrontShippingOwnedRateResolution(true, quoted, unavailable);

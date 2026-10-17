@@ -1,0 +1,120 @@
+{
+  "generatedAtUtc": "2026-10-17T05:24:50.009Z",
+  "host": "http://127.0.0.1:5424",
+  "methodCode": "tipax:scratch170",
+  "total": 22,
+  "passed": 22,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "dev_context_available",
+      "ok": true,
+      "detail": "http=200 actorResolved=true"
+    },
+    {
+      "id": "one_level_list_anonymous_fail_closed",
+      "ok": true,
+      "detail": "http=401 errorCode=admin.actor.missing"
+    },
+    {
+      "id": "access_control_bootstrap_ok",
+      "ok": true,
+      "detail": "http=204"
+    },
+    {
+      "id": "fulfillment_manage_granted",
+      "ok": true,
+      "detail": "http=200 grants=55"
+    },
+    {
+      "id": "real_language_ids_read",
+      "ok": true,
+      "detail": "http=200 languages=fa-IR:01a1484f-eb96-7000-b1c0-81b113e667f2,en-US:01a1484f-eb97-7000-bdb8-f1ccb7a0d51c"
+    },
+    {
+      "id": "real_country_identity_read",
+      "ok": true,
+      "detail": "http=200 countryId=11111111-1111-1111-1111-111111111111"
+    },
+    {
+      "id": "baseline_catalog_present",
+      "ok": true,
+      "detail": "http=200 rows=7"
+    },
+    {
+      "id": "canonical_create_2xx",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "binding_derived_from_code",
+      "ok": true,
+      "detail": "http=200 serviceCode=tipax optionCode=scratch170"
+    },
+    {
+      "id": "new_method_activation_applied",
+      "ok": true,
+      "detail": "http=200 isActive=true changed=true"
+    },
+    {
+      "id": "activation_flagged_canonical_only",
+      "ok": true,
+      "detail": "canonicalOnly=true"
+    },
+    {
+      "id": "activation_persisted_in_admin_projection",
+      "ok": true,
+      "detail": "isActive=true"
+    },
+    {
+      "id": "no_fake_legacy_option_row_created",
+      "ok": true,
+      "detail": "before=0 after=0"
+    },
+    {
+      "id": "reactivation_is_idempotent",
+      "ok": true,
+      "detail": "http=200 changed=false"
+    },
+    {
+      "id": "owner_rate_key_accepted_for_new_method",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "owner_coverage_grant_accepted_for_new_method",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "operational_quote_never_fabricates_a_price",
+      "ok": true,
+      "detail": "http=200 quoted=false amount=0 reason=shipping.coverage.missing"
+    },
+    {
+      "id": "invented_rate_key_still_refused",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping.service_option.unknown"
+    },
+    {
+      "id": "legacy_sibling_activation_unchanged",
+      "ok": true,
+      "detail": "http=200 isActive=false canonicalOnly=false"
+    },
+    {
+      "id": "legacy_sibling_restored",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "final_state_truthful",
+      "ok": true,
+      "detail": "new=true tipax:standard=true"
+    },
+    {
+      "id": "db_method_row_active",
+      "ok": true,
+      "detail": "is_active=t"
+    }
+  ]
+}

@@ -182,17 +182,44 @@ public sealed class ShippingOneLevelActivationTests
     }
 
     [Fact]
-    public async Task A_method_whose_mapped_option_row_is_gone_is_refused()
+    public async Task A_new_canonical_method_without_a_legacy_option_row_is_activated_as_admin_projection_only()
     {
         await using var db = CreateDb();
         Seed(db);
         db.ShippingServiceOptions.Remove(await db.ShippingServiceOptions.SingleAsync(x => x.ShippingServiceOptionId == ExpressOptionId));
         await db.SaveChangesAsync();
+        var optionCountBefore = await db.ShippingServiceOptions.CountAsync();
 
         var result = await Activation(db, enabled: true).SetActivationAsync("post:express", true, CancellationToken.None);
 
-        Assert.Equal(ShippingOneLevelMethodActivationStatus.LegacyOptionMissing, result.Status);
+        // TB-170: روش تازهٔ canonical سرویس والد موجود دارد اما هیچ ردیف گزینهٔ قدیمی ندارد.
+        Assert.Equal(ShippingOneLevelMethodActivationStatus.ActivatedCanonicalOnly, result.Status);
+        Assert.True(await MethodActiveAsync(db, ExpressMethodId));
+        // هیچ ردیف گزینهٔ قدیمی جعلی فقط برای عبور از نگهبان ساخته نمی‌شود.
+        Assert.Equal(optionCountBefore, await db.ShippingServiceOptions.CountAsync());
+    }
+
+    [Fact]
+    public async Task Canonical_only_activation_is_idempotent_and_deactivates_cleanly()
+    {
+        await using var db = CreateDb();
+        Seed(db);
+        db.ShippingServiceOptions.Remove(await db.ShippingServiceOptions.SingleAsync(x => x.ShippingServiceOptionId == ExpressOptionId));
+        await db.SaveChangesAsync();
+        var activation = Activation(db, enabled: true);
+
+        var first = await activation.SetActivationAsync("post:express", true, CancellationToken.None);
+        Assert.Equal(ShippingOneLevelMethodActivationStatus.ActivatedCanonicalOnly, first.Status);
+
+        var second = await activation.SetActivationAsync("post:express", true, CancellationToken.None);
+        Assert.Equal(ShippingOneLevelMethodActivationStatus.NoChange, second.Status);
+
+        var off = await activation.SetActivationAsync("post:express", false, CancellationToken.None);
+        Assert.Equal(ShippingOneLevelMethodActivationStatus.ActivatedCanonicalOnly, off.Status);
         Assert.False(await MethodActiveAsync(db, ExpressMethodId));
+        // خواهر قدیمی دست‌نخورده می‌ماند.
+        Assert.True(await OptionActiveAsync(db, StandardOptionId));
+        Assert.True(await MethodActiveAsync(db, StandardMethodId));
     }
 
     [Fact]

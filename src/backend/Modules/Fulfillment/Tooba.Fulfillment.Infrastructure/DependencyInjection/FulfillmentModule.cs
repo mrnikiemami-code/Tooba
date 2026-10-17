@@ -109,6 +109,9 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<IShippingOneLevelCatalogAdminRead, ShippingOneLevelCatalogAdminRead>();
         // TB-SHIPPING-ONE-LEVEL-TABS-100: درز فقط-خواندنی برچسب فروشگاه؛ دروازهٔ خاموش ⇒ نگاشت خالی و برچسب قدیمی.
         services.AddScoped<IShippingOneLevelStorefrontLabelReader, ShippingOneLevelStorefrontLabelRead>();
+        // TB-SHIPPING-NEW-METHOD-ACTIVATION-170: هویت فقط-خواندنی روش‌های canonical بدون ردیف گزینهٔ
+        // قدیمی؛ دروازهٔ خاموش ⇒ فهرست خالی و هیچ پرس‌وجویی برای مصرف‌کننده‌های نرخ/فروشگاه.
+        services.AddScoped<IShippingOneLevelCanonicalMethodReader, ShippingOneLevelCanonicalMethodRead>();
         // TB-SHIPPING-ONE-LEVEL-TABS-094: تنها درز نوشتن نام روش یک‌سطحی؛ دروازهٔ خاموش ⇒ هیچ نوشتنی.
         services.AddScoped<IShippingOneLevelCatalogAdminWrite, ShippingOneLevelCatalogAdminWrite>();
         // TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-167: درز ایجاد روش canonical مستقل؛ پیوند قدیمی فقط

@@ -16,7 +16,15 @@ namespace Tooba.Shipping.Infrastructure.Rates;
 /// داخل کد خدمت جدا نمی‌شود: «tipax:express» یک کد خدمت نامعتبر است، نه خدمت tipax با گزینهٔ
 /// express. اگر فراخوان مفهوم ترکیبی را می‌خواهد باید خودش آن را به دو مقدار جدا بشکند.
 /// </remarks>
-public sealed class FulfillmentShippingMethodOptionValidator(IShippingCatalogReader catalog)
+/// <remarks>
+/// TB-SHIPPING-NEW-METHOD-ACTIVATION-170: روش تازهٔ canonical هیچ ردیف گزینهٔ قدیمی ندارد، پس
+/// کلید نرخ مالک آن (سرویس + کد گزینهٔ پیوند) با فهرست گزینهٔ قدیمی قابل تأیید نبود. در این حالت
+/// هویت از درز فقط-خواندنی <see cref="IShippingOneLevelCanonicalMethodReader"/> تأیید می‌شود؛
+/// کد ساختگی همچنان رد می‌شود و هیچ ردیف قدیمی ساخته نمی‌شود.
+/// </remarks>
+public sealed class FulfillmentShippingMethodOptionValidator(
+    IShippingCatalogReader catalog,
+    IShippingOneLevelCanonicalMethodReader? canonicalMethods = null)
     : IShippingMethodOptionValidator
 {
     /// <inheritdoc />
@@ -56,8 +64,19 @@ public sealed class FulfillmentShippingMethodOptionValidator(IShippingCatalogRea
 
         var optionExists = service.Options.Any(o =>
             string.Equals(o.Code, option, StringComparison.OrdinalIgnoreCase));
-        return optionExists
-            ? Result.Success(true)
-            : Result.Failure<bool>(new SemanticError(ShippingErrorCodes.ServiceOptionUnknown));
+        if (optionExists)
+        {
+            return Result.Success(true);
+        }
+
+        // روش تازهٔ canonical: سرویس والد واقعی است اما گزینه فقط روی ردیف روش (بدون ردیف قدیمی)
+        // نگاشت شده است. هویت از Contracts خوانده می‌شود؛ دروازهٔ خاموش یا کد ناشناخته ⇒ رد.
+        if (canonicalMethods is not null
+            && await canonicalMethods.IsCanonicalMethodBindingAsync(code, option, cancellationToken))
+        {
+            return Result.Success(true);
+        }
+
+        return Result.Failure<bool>(new SemanticError(ShippingErrorCodes.ServiceOptionUnknown));
     }
 }

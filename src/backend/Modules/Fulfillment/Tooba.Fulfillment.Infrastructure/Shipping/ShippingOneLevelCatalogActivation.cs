@@ -20,6 +20,13 @@ namespace Tooba.Fulfillment.Infrastructure.Shipping;
 /// <c>SaveChangesAsync</c> هم‌راستا می‌کند تا هیچ‌گاه یک «فعال» نمایشی و بی‌اثر ساخته نشود.
 /// </para>
 /// <para>
+/// TB-SHIPPING-NEW-METHOD-ACTIVATION-170: روش تازهٔ canonical (سرویس والد موجود، اما هیچ ردیف
+/// گزینهٔ قدیمی متناظر) دیگر رد نمی‌شود. در این حالت فقط ردیف روش فعال/غیرفعال می‌شود و هیچ
+/// <c>shipping_service_options</c> جعلی ساخته نمی‌شود. این حالت یعنی «فعال در فرافکنی ادمین»، نه
+/// «قابل انتخاب برای مشتری»؛ دیده‌شدن در فروشگاه فقط با نرخ/پوشش واقعی مالک Shipping ممکن است.
+/// سرویس والد ناموجود یا غیرفعال همچنان fail-closed است، چون ثبت ارائه‌دهنده یک پیش‌نیاز واقعی است.
+/// </para>
+/// <para>
 /// پیوند قدیمی فقط از ردیف روش خوانده می‌شود (<c>LegacyServiceCode</c>/<c>LegacyOptionCode</c> که
 /// تغییرناپذیرند)؛ هیچ کد سرویس/گزینه یا UUID گزینه‌ای از کلاینت گرفته نمی‌شود. تنها نوشتن روی ردیف
 /// گزینهٔ هدف، متد دامنهٔ موجود <see cref="ShippingServiceOption.SetActive"/> است: کد، ترتیب، ترجمه‌ها
@@ -107,7 +114,18 @@ public sealed class ShippingOneLevelCatalogActivation : IShippingOneLevelCatalog
                     cancellationToken);
             if (option is null)
             {
-                return Outcome(ShippingOneLevelMethodActivationStatus.LegacyOptionMissing, normalized, isActive, method.IsActive);
+                // TB-SHIPPING-NEW-METHOD-ACTIVATION-170: روش تازهٔ canonical هیچ ردیف گزینهٔ قدیمی
+                // ندارد و ساختن ردیف جعلی برای عبور از نگهبان ممنوع است. فعال‌سازی فقط فرافکنی
+                // ادمین (ردیف روش) را به‌روز می‌کند؛ هیچ ادعای «آماده برای مشتری» این‌جا نیست.
+                if (method.IsActive == isActive)
+                {
+                    return Outcome(ShippingOneLevelMethodActivationStatus.NoChange, normalized, isActive, isActive);
+                }
+
+                method.Update(method.SortOrder, isActive, _clock.UtcNow);
+                await _db.SaveChangesAsync(cancellationToken);
+                return Outcome(
+                    ShippingOneLevelMethodActivationStatus.ActivatedCanonicalOnly, normalized, isActive, isActive);
             }
 
             if (option.IsActive == isActive && method.IsActive == isActive)

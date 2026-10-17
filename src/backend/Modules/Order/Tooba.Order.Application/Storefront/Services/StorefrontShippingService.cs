@@ -35,6 +35,7 @@ public sealed class StorefrontShippingService
     private readonly IOrderStorefrontActor _actor;
     private readonly IClock _clock;
     private readonly StorefrontShippingOwnedRateResolver? _ownedRates;
+    private readonly IShippingOneLevelCanonicalMethodReader? _canonicalMethods;
 
     /// <summary>
     /// وابستگی اختیاریِ آخر عمداً پیش‌فرض‌دار است: هر ترکیب‌کننده‌ای که آن را تأمین نکند رفتار قدیمی را
@@ -52,7 +53,8 @@ public sealed class StorefrontShippingService
         IShippingCatalogSeedPort shippingSeed,
         IOrderStorefrontActor actor,
         IClock clock,
-        StorefrontShippingOwnedRateResolver? ownedRates = null)
+        StorefrontShippingOwnedRateResolver? ownedRates = null,
+        IShippingOneLevelCanonicalMethodReader? canonicalMethods = null)
     {
         _carts = carts;
         _checkouts = checkouts;
@@ -66,6 +68,7 @@ public sealed class StorefrontShippingService
         _actor = actor;
         _clock = clock;
         _ownedRates = ownedRates;
+        _canonicalMethods = canonicalMethods;
     }
 
     /// <summary>تصویر ارسال برای سبد جاری.</summary>
@@ -710,9 +713,18 @@ public sealed class StorefrontShippingService
         IReadOnlyList<StorefrontShippingUnavailableMethodView>? unavailable = null;
         if (_ownedRates is not null)
         {
+            // TB-SHIPPING-NEW-METHOD-ACTIVATION-170: روش تازهٔ canonical هیچ ردیف گزینهٔ قدیمی ندارد
+            // و در فهرست قدیمی نیست. فقط وقتی دروازهٔ نرخ مالک روشن است هویت آن خوانده می‌شود و فقط
+            // با نرخ واقعی همان دور به مشتری نمایش داده می‌شود؛ دروازهٔ خاموش ⇒ صفر فراخوانی.
+            var canonicalOnly = await LoadCanonicalOnlyMethodsAsync(cancellationToken);
+            var legacyCandidates = result
+                .Select(m => new StorefrontShippingOwnedRateCandidate(m.MethodCode, m.ServiceCode, m.OptionCode))
+                .ToArray();
+
             var resolution = await _ownedRates.ResolveAsync(
-                result
-                    .Select(m => new StorefrontShippingOwnedRateCandidate(m.MethodCode, m.ServiceCode, m.OptionCode))
+                legacyCandidates
+                    .Concat(canonicalOnly.Select(m => new StorefrontShippingOwnedRateCandidate(
+                        m.MethodCode, m.ServiceCode, m.OptionCode)))
                     .ToArray(),
                 provinceName,
                 cityName,
@@ -723,7 +735,7 @@ public sealed class StorefrontShippingService
 
             if (resolution.Evaluated)
             {
-                var priced = new List<StorefrontShippingMethodView>(result.Count);
+                var priced = new List<StorefrontShippingMethodView>(result.Count + canonicalOnly.Count);
                 foreach (var method in result)
                 {
                     if (resolution.Quoted.TryGetValue(method.MethodCode, out var quote))
@@ -733,10 +745,37 @@ public sealed class StorefrontShippingService
                     }
                 }
 
+                foreach (var method in canonicalOnly)
+                {
+                    // نبود نرخ مالک ⇒ روش تازه اصلاً وارد فهرست نمی‌شود (نه صفر، نه رایگان، نه وعدهٔ ساختگی).
+                    if (!resolution.Quoted.TryGetValue(method.MethodCode, out var quote))
+                    {
+                        continue;
+                    }
+
+                    var leadDays = Math.Max(0, quote.LeadDays);
+                    priced.Add(new StorefrontShippingMethodView(
+                        method.MethodCode,
+                        method.MethodCode,
+                        method.ServiceCode,
+                        string.IsNullOrWhiteSpace(method.IconKey) ? method.ServiceCode : method.IconKey,
+                        quote.Amount,
+                        leadDays,
+                        quote.Amount == 0m,
+                        leadDays == 0 ? "آماده امروز" : $"حدود {ToPersianLeadDays(leadDays)} روز",
+                        method.OptionCode));
+                }
+
                 result = priced;
+                // فهرست «ردشده» فقط روش‌های مسیر قدیمی را نگه می‌دارد؛ روش تازهٔ بدون نرخ ساکت و
+                // غیرقابل‌انتخاب می‌ماند تا هیچ روش نیمه‌پیکربندی به UI مشتری معرفی نشود.
+                var legacyCodes = legacyCandidates
+                    .Select(c => c.MethodCode)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
                 unavailable = resolution.Unavailable.Count == 0
                     ? []
                     : resolution.Unavailable
+                        .Where(u => legacyCodes.Contains(u.MethodCode))
                         .Select(u => new StorefrontShippingUnavailableMethodView(u.MethodCode, u.ReasonCode))
                         .ToArray();
             }
@@ -745,6 +784,35 @@ public sealed class StorefrontShippingService
         return new StorefrontEligibleMethods(
             await ApplyOneLevelDisplayNamesAsync(result, langId, cancellationToken),
             unavailable);
+    }
+
+    /// <summary>
+    /// روش‌های تازهٔ canonical (بدون ردیف گزینهٔ قدیمی) هنگام روشن‌بودن دروازهٔ نرخ مالک.
+    /// </summary>
+    /// <remarks>
+    /// دروازهٔ خاموش یا نبود درز ⇒ صفر فراخوانی و فهرست خالی (رفتار قدیمی عیناً). هر خطای غیرمنتظرهٔ
+    /// مرجع هم به فهرست خالی ترجمه می‌شود: نبودِ مدرک هرگز به نمایش روش یا قیمت ساختگی تبدیل نمی‌شود.
+    /// </remarks>
+    private async Task<IReadOnlyList<ShippingOneLevelCanonicalMethodSnapshot>> LoadCanonicalOnlyMethodsAsync(
+        CancellationToken cancellationToken)
+    {
+        if (_canonicalMethods is null || _ownedRates?.IsEnabled != true)
+        {
+            return [];
+        }
+
+        try
+        {
+            return await _canonicalMethods.ListActiveUnboundAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            return [];
+        }
     }
 
     /// <summary>

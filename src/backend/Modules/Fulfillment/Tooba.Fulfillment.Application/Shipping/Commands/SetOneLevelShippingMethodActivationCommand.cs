@@ -25,7 +25,15 @@ public sealed record SetOneLevelShippingMethodActivationCommand(string MethodCod
 /// <param name="MethodCode">کد canonical روش؛ تغییرناپذیر.</param>
 /// <param name="IsActive">وضعیت فعال‌بودن مؤثر.</param>
 /// <param name="Changed">آیا این فراخوانی وضعیت را تغییر داد (نبودِ تغییر، idempotent است).</param>
-public sealed record OneLevelShippingMethodActivationDto(string MethodCode, bool IsActive, bool Changed);
+/// <param name="CanonicalOnly">
+/// آیا روش تازهٔ canonical بدون ردیف گزینهٔ قدیمی بود؛ یعنی فعال‌شدن در فرافکنی ادمین رخ داده و
+/// «آمادهٔ نمایش به مشتری» ادعا نمی‌شود.
+/// </param>
+public sealed record OneLevelShippingMethodActivationDto(
+    string MethodCode,
+    bool IsActive,
+    bool Changed,
+    bool CanonicalOnly = false);
 
 /// <summary>Handler فعال‌سازی روش یک‌سطحی — فقط از مسیر باریکِ گزینه‌دار و بدون هیچ تغییر هویتی.</summary>
 public sealed class SetOneLevelShippingMethodActivationHandler
@@ -46,12 +54,14 @@ public sealed class SetOneLevelShippingMethodActivationHandler
             request.MethodCode, request.IsActive, cancellationToken);
 
         if (outcome.Status is ShippingOneLevelMethodActivationStatus.Applied
-            or ShippingOneLevelMethodActivationStatus.NoChange)
+            or ShippingOneLevelMethodActivationStatus.NoChange
+            or ShippingOneLevelMethodActivationStatus.ActivatedCanonicalOnly)
         {
             return Result.Success(new OneLevelShippingMethodActivationDto(
                 outcome.MethodCode,
                 outcome.EffectiveIsActive,
-                outcome.Status == ShippingOneLevelMethodActivationStatus.Applied));
+                outcome.Status != ShippingOneLevelMethodActivationStatus.NoChange,
+                outcome.Status == ShippingOneLevelMethodActivationStatus.ActivatedCanonicalOnly));
         }
 
         // کدهای خطای Contracts در این تسک قابل افزودن نیستند (مسیر مجاز نیست)؛ بنابراین فقط کدهای
