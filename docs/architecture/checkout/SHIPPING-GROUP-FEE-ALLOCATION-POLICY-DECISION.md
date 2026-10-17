@@ -185,3 +185,17 @@ Once the owner answers §6 and signs §4.1, a single bounded implementation task
 (version + reference), the allocation computation for a charge row, the state transition out of
 `PendingAllocation`, the reversal/refund wiring, and the focused reconciliation tests — without changing any
 existing group identity, charge value, or the fail-closed default.
+
+
+## Business decision approved 2026-10-17: combined shipping costs and free shipping
+
+Approved by the business owner in conversation. This is a **requirements decision**, not confirmation that existing code implements it.
+
+- Store settings must determine whether the combined shipping-related costs (freight, packaging and other related expenses) are taxable. Actual applicable tax rates and rules must come from the Tax authority; tax calculation and remittance details still require design.
+- Customer invoice presents **one combined shipping-cost line**. The individual freight, packaging and other components remain independently stored and auditable, tied to the stable ShippingGroupId, for future reports.
+- Free shipping means **all shipping components are free to the customer**, including packaging and other related costs. Customer shipping charge is zero; the real underlying component costs must not be zeroed or discarded.
+- The explicitly identified party that granted free shipping bears **all underlying shipping components**, and that responsibility must be recorded for reporting, whether that party is the seller, marketplace or another identified funder. Never guess the party.
+- This contradicts the current implementation's omission of zero-customer-charge groups from the fee ledger. The owner must design a safe persistence path for component cost and funder accountability without inventing settlement allocations.
+- Still UNDECIDED: tax inclusion vs addition, tax remittance, rates, rounding, exact settlement equation/signs, charge versioning, reversals and actual payouts. Existing PendingAllocation protections remain in force.
+
+This section **partially supersedes** earlier OPEN questions about whether packaging belongs in the shipping charge and whether free-shipping component costs should be tracked. It does not authorize a production flag change or state that these rules have been implemented.
