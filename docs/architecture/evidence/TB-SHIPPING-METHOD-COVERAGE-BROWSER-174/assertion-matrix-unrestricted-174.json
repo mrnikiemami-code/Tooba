@@ -1,0 +1,35 @@
+{
+  "generatedAtUtc": "2026-10-17T06:28:39.400Z",
+  "phase": "unrestricted",
+  "host": "http://127.0.0.1:5428",
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "authenticated_customer_session",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "unrestricted_d1_still_priced",
+      "ok": true,
+      "detail": "standard=205000"
+    },
+    {
+      "id": "unrestricted_d2_method_priced_again",
+      "ok": true,
+      "detail": "standard=210000"
+    },
+    {
+      "id": "unrestricted_d2_sibling_unchanged",
+      "ok": true,
+      "detail": "express=490000"
+    },
+    {
+      "id": "historical_grant_retained_not_inherited",
+      "ok": true,
+      "detail": "own=1 sibling=0"
+    }
+  ]
+}

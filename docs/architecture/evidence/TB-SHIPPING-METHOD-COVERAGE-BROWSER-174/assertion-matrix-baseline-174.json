@@ -1,0 +1,50 @@
+{
+  "generatedAtUtc": "2026-10-17T06:25:10.273Z",
+  "phase": "baseline",
+  "host": "http://127.0.0.1:5428",
+  "total": 8,
+  "passed": 8,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "authenticated_customer_session",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "seeded_single_seller_offers_read",
+      "ok": true,
+      "detail": "seller=01a14887-eb5b-7000-861d-df74f9b31a85 offers=01a14887-eb88-7000-a31e-c92e37fac1ec,01a14887-ec5e-7000-94af-b231f369cbc5"
+    },
+    {
+      "id": "authenticated_single_seller_cart_ready",
+      "ok": true,
+      "detail": "cartId=01a14889-2263-7000-a03e-2662d76262ad lines=2"
+    },
+    {
+      "id": "baseline_d1_both_owned_options_priced",
+      "ok": true,
+      "detail": "standard=205000 express=480000"
+    },
+    {
+      "id": "baseline_d2_both_owned_options_priced",
+      "ok": true,
+      "detail": "standard=210000 express=490000"
+    },
+    {
+      "id": "server_returned_schedule_available",
+      "ok": true,
+      "detail": "date=2026-10-20 window=9-12"
+    },
+    {
+      "id": "accepted_selection_saved",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "accepted_draft_persisted",
+      "ok": true,
+      "detail": "selected=tipax:express amount=480000"
+    }
+  ]
+}

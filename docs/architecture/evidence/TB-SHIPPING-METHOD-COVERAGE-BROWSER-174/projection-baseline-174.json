@@ -1,0 +1,44 @@
+{
+  "d1": {
+    "methods": [
+      {
+        "code": "tipax:express",
+        "price": 480000,
+        "leadDays": 1,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "express"
+      },
+      {
+        "code": "tipax:standard",
+        "price": 205000,
+        "leadDays": 3,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "standard"
+      }
+    ],
+    "selected": "tipax:express",
+    "amount": 480000
+  },
+  "d2": {
+    "methods": [
+      {
+        "code": "tipax:express",
+        "price": 490000,
+        "leadDays": 1,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "express"
+      },
+      {
+        "code": "tipax:standard",
+        "price": 210000,
+        "leadDays": 3,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "standard"
+      }
+    ]
+  }
+}

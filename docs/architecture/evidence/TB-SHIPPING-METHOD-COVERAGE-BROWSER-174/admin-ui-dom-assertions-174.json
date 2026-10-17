@@ -1,0 +1,79 @@
+{
+  "taskId": "TB-SHIPPING-METHOD-COVERAGE-BROWSER-174",
+  "capturedFrom": "live authorized Admin session http://127.0.0.1:3123/fa/admin/shipping-services (private isolated Next frontend -> isolated Host http://127.0.0.1:5428)",
+  "note": "Values below were read from the live accessibility/DOM state of the running Admin UI during this run; no mock page, no storybook and no hand-written HTML was used.",
+  "observedStates": [
+    {
+      "step": "method-detail-structure",
+      "observedAtUtc": "2026-10-17T06:26:00Z",
+      "method": "tipax:standard",
+      "assertions": {
+        "topLevelTabs": ["عمومی", "تعرفه و پوشش", "برنامه کاری حمل", "بسته‌بندی و کرایه"],
+        "topLevelTabCount": 4,
+        "nestedSecondLevelTabs": 0,
+        "rtl": true,
+        "serverSourcedBinding": "روش یک‌سطحی tipax:standard → سرویس tipax · standard",
+        "listRowActionsPerMethod": ["مشاهده", "ویرایش", "حذف"]
+      }
+    },
+    {
+      "step": "restricted-selected-before-save",
+      "observedAtUtc": "2026-10-17T06:26:20Z",
+      "assertions": {
+        "radioUnrestrictedChecked": false,
+        "radioRestrictedChecked": true,
+        "chosenDestination": "ایران (IR) / استان تهران",
+        "storefrontClaimAbsolutelyAvoided": "section states the mode is geographic restriction only: not activation, not financial readiness, not carrier coverage or slot promise"
+      },
+      "screenshot": "admin-coverage-restricted-selected-174.png"
+    },
+    {
+      "step": "restricted-saved",
+      "observedAtUtc": "2026-10-17T06:26:41Z",
+      "assertions": {
+        "saveCompletedAgainstServer": true,
+        "restrictedRemainsSelectedAfterSave": true,
+        "destinationShownAsOneAllowedDestinationForThisMethodOnly": true
+      },
+      "screenshot": "admin-coverage-restricted-saved-174.png"
+    },
+    {
+      "step": "view-mode-read-only-after-full-reload",
+      "observedAtUtc": "2026-10-17T06:27:44Z",
+      "assertions": {
+        "openedVia": "مشاهده (View)",
+        "radioUnrestrictedDisabled": true,
+        "radioRestrictedDisabled": true,
+        "saveRestrictionButtonDisabled": true,
+        "destinationSelectorsDisabled": true,
+        "rateInputsDisabled": true,
+        "addRateButtonDisabled": true
+      },
+      "screenshot": "admin-coverage-view-mode-readonly-174.png"
+    },
+    {
+      "step": "restored-unrestricted-saved",
+      "observedAtUtc": "2026-10-17T06:28:33Z",
+      "assertions": {
+        "radioUnrestrictedChecked": true,
+        "radioRestrictedChecked": false,
+        "restrictionControlsDisabledAfterCommit": true,
+        "grantNotDisplayedAsAnActiveAllowedDestinationInUnrestrictedMode": true
+      },
+      "screenshot": "admin-coverage-restored-unrestricted-174.png"
+    },
+    {
+      "step": "unrestricted-reopened-after-full-reload",
+      "observedAtUtc": "2026-10-17T06:30:24Z",
+      "assertions": {
+        "editDialogReopened": true,
+        "radioUnrestrictedChecked": true,
+        "radioRestrictedChecked": false,
+        "radiosEditable": true,
+        "serverSourcedReadback": "بدون محدودیت مدیریتی: ادمین محدودیتی برای این روش تعریف نکرده است.",
+        "historicalGrantRetainedServerSideForAudit": true
+      },
+      "screenshot": "admin-coverage-unrestricted-after-reload-174.png"
+    }
+  ]
+}

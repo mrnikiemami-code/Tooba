@@ -1,0 +1,55 @@
+{
+  "generatedAtUtc": "2026-10-17T06:26:48.020Z",
+  "phase": "restricted",
+  "host": "http://127.0.0.1:5428",
+  "total": 9,
+  "passed": 9,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "authenticated_customer_session",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "restricted_d1_allowed_method_kept",
+      "ok": true,
+      "detail": "standard=205000"
+    },
+    {
+      "id": "restricted_d1_sibling_unchanged",
+      "ok": true,
+      "detail": "express=480000"
+    },
+    {
+      "id": "restricted_d2_not_granted_method_excluded",
+      "ok": true,
+      "detail": "present=false visible=tipax:express"
+    },
+    {
+      "id": "restricted_d2_sibling_still_owned_priced",
+      "ok": true,
+      "detail": "express=490000 zeroPriced=none"
+    },
+    {
+      "id": "exclusion_is_coverage_not_missing_rate",
+      "ok": true,
+      "detail": "rated destination 2 still hides standard while Restricted"
+    },
+    {
+      "id": "unsupported_method_selection_rejected",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping.method.unavailable"
+    },
+    {
+      "id": "prior_accepted_draft_unchanged",
+      "ok": true,
+      "detail": "selected=tipax:express amount=480000"
+    },
+    {
+      "id": "declaration_and_grant_row_exactly_one",
+      "ok": true,
+      "detail": "decl=1 own_grants=1 sibling_grants=0"
+    }
+  ]
+}

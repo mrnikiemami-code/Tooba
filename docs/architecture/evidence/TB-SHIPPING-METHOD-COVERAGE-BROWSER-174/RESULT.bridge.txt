@@ -1,0 +1,113 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-METHOD-COVERAGE-BROWSER-174
+Parent-Task: TB-SHIPPING-ADMIN-METHOD-COVERAGE-UX-173
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Protocol: BRIDGE-WAKE-V1
+Status: PASS
+Base-SHA: db80a0231ece17a6da3cf30ab4728d98509d67ba
+Code-Commit-SHA: NONE (no production source change; existing TB-173 surface exercised unchanged)
+Evidence-Commit: this commit (HEAD == origin/main)
+Automatic-Next-Task: NONE
+
+SUMMARY
+Both honest TB-173 acceptance gaps are closed on a disposable loopback stack with real authorized
+Admin browser actions and a real authenticated storefront cart. Admin: tipax:standard went from the
+default Unrestricted to Restricted with exactly one method-owned Iran/Tehran grant, saved through the
+UI, read back after a full document reload, proven read-only in View mode, then returned to
+Unrestricted through the UI and verified again after a second full reload. Customer strict quote:
+the method is priced at its own owned rate where allowed, excluded at a rated-but-ungranted
+destination while tipax:express stays priced and unchanged, an unsupported selection PUT returns
+400 shipping.method.unavailable and leaves the accepted draft untouched, and the method prices again
+after the restore. No production source, schema, gate, checkout or other Admin surface was changed.
+
+CHANGED PATHS
+- docs/ai/tasks/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174.task.md
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/prepare-isolated-target-174.js
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/bootstrap-scratch-174.ps1
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/scratch-174-geography-rates-fixture.sql
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/acceptance-174.js
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/cleanup-174.ps1
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/post-result-174.js
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/admin-ui-dom-assertions-174.json
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/admin-coverage-restricted-selected-174.png
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/admin-coverage-restricted-saved-174.png
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/admin-coverage-view-mode-readonly-174.png
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/admin-coverage-restored-unrestricted-174.png
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/admin-coverage-unrestricted-after-reload-174.png
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/assertion-matrix-baseline-174.json
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/assertion-matrix-restricted-174.json
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/assertion-matrix-unrestricted-174.json
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/http-trace-baseline-174.txt
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/http-trace-restricted-174.txt
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/http-trace-unrestricted-174.txt
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/projection-baseline-174.json
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/projection-restricted-174.json
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/projection-unrestricted-174.json
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/isolation-guard-on-174.json
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/host-launch-174-true.txt
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/cleanup-174.txt
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/RESULT.md
+- docs/architecture/evidence/TB-SHIPPING-METHOD-COVERAGE-BROWSER-174/RESULT.bridge.txt
+- src/**: none
+- Unrelated pre-existing dirty files (admin-fulfillment-work-queue-screen.tsx, TB-173 helper edits,
+  075/079 host logs) were preserved and NOT committed.
+
+REAL BROWSER ADMIN (private isolated Next 127.0.0.1:3123 -> isolated Host 127.0.0.1:5428)
+- Method detail shows exactly four non-nested tabs (عمومی / تعرفه و پوشش / برنامه کاری حمل /
+  بسته‌بندی و کرایه), RTL, and the server-sourced one-level binding
+  «روش یک‌سطحی tipax:standard → سرویس tipax · standard»; three row actions only.
+- Default read before any declaration: «بدون محدودیت مدیریتی (Unrestricted)».
+- Edit -> Restricted, chose ONE existing authoritative destination (ایران / استان تهران), saved via
+  the UI. SQL read-back immediately after save: exactly one declaration (tipax, standard, mode=1) and
+  exactly one active own grant (country IR, administrative area Tehran, city NULL); tipax:express has
+  no declaration and no grant.
+- View mode opened via مشاهده after a full document reload: both mode radios, the save button, the
+  destination selectors, the rate inputs and the add-rate button are disabled; no write is possible.
+- Edit -> Unrestricted saved via the UI; full document reload and reopen shows Unrestricted checked and
+  editable with server read-back «بدون محدودیت مدیریتی: ادمین محدودیتی برای این روش تعریف نکرده است.»;
+  SQL read-back: declaration updated to mode=0, the historical grant row is retained (1, not deleted)
+  and still belongs only to tipax:standard; sibling remains 0/0.
+- Screenshots: admin-coverage-restricted-selected-174.png, admin-coverage-restricted-saved-174.png,
+  admin-coverage-view-mode-readonly-174.png, admin-coverage-restored-unrestricted-174.png,
+  admin-coverage-unrestricted-after-reload-174.png. DOM observations:
+  admin-ui-dom-assertions-174.json.
+
+CUSTOMER STRICT QUOTE (same authenticated cart, ShippingOwnedRateAuthority ON in scratch overlay only)
+- 22/22 assertions PASS: baseline 8/8, restricted 9/9, unrestricted 5/5.
+- baseline: D1 Tehran standard=205000 / express=480000; D2 Karaj standard=210000 / express=490000;
+  one selection accepted (tipax:express 480000, server-returned schedule) and persisted.
+- restricted: D1 standard=205000 kept, express=480000 unchanged; D2 standard absent while
+  express=490000 and no zero/free fallback; the active D2 standard rate row still exists, so exclusion
+  is coverage and not a missing rate; unsupported selection PUT -> 400
+  shipping.method.unavailable; afterwards the accepted draft is still tipax:express / 480000.
+- restored: D2 standard=210000 again, D1 standard=205000, express=490000 unchanged; own grant retained
+  (1), sibling 0.
+- Evidence: assertion-matrix-*.json, http-trace-*.txt, projection-*.json.
+
+TESTS
+- No production source changed -> no typecheck/test suite re-run (focused-only rule). Verification is
+  the real browser write/reload/read-back, authoritative SQL and the authenticated HTTP acceptance.
+
+ISOLATION / CLEANUP
+- disposable container tooba-tb174-pg on 127.0.0.1:55494, isolated Host 127.0.0.1:5428, private Next
+  127.0.0.1:3123; isolation-guard-on-174.json failClosed=true, no shared alpha database/port, single
+  scratch tenant tenant-174-scratch.
+- committed appsettings keep ShippingOwnedRateAuthority "Enabled": false; the enabled overlay existed
+  only in the disposable .tmp-174-run scratch directory (not committed; contains no committed secret).
+- cleanup-174.txt: Host processes stopped, container tooba-tb174-pg removed, shared
+  :3000/:5088/:5432 untouched; private Next dev stopped by exact PID afterwards. Post-cleanup probes:
+  3123/5428/55494 closed, 5432/5088/3000 still listening.
+- No token, OTP, password or cookie exists in committed evidence.
+
+GAPS (disclosed, not claimed)
+- 401/403 coverage-write denial was not re-exercised in this browser run (proven in TB-173); the
+  sanctioned Development Admin actor was used, no authorization bypass.
+- No checkout/payment step (out of scope, forbidden); customer proof is the authenticated strict
+  projection plus the method-selection PUT.
+
+STOP_FOR_ARCHITECT: YES (await ACCEPT / REPAIR / BLOCK; no next task started)
+END_TOOBA_WORKER_RESULT
