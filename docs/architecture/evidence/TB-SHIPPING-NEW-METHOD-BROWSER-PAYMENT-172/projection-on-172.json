@@ -1,0 +1,176 @@
+{
+  "baseline": {
+    "methods": [
+      {
+        "code": "tipax:express",
+        "label": "پیشتاز",
+        "price": 480000,
+        "leadDays": 1,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "express"
+      },
+      {
+        "code": "tipax:standard",
+        "label": "معمولی",
+        "price": 205000,
+        "leadDays": 3,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "standard"
+      }
+    ],
+    "unavailable": [
+      {
+        "methodCode": "post:express",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "post:standard",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "snapp_courier",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "store_courier",
+        "reasonCode": "shipping.service.not_priced"
+      },
+      {
+        "methodCode": "in_person",
+        "reasonCode": "shipping.service.not_priced"
+      }
+    ]
+  },
+  "ready": {
+    "methods": [
+      {
+        "code": "tipax:express",
+        "label": "پیشتاز",
+        "price": 480000,
+        "leadDays": 1,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "express"
+      },
+      {
+        "code": "tipax:standard",
+        "label": "معمولی",
+        "price": 205000,
+        "leadDays": 3,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "standard"
+      },
+      {
+        "code": "tipax:scratch172",
+        "label": "روش تازهٔ ۱۷۱",
+        "price": 185000,
+        "leadDays": 3,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "scratch172"
+      }
+    ]
+  },
+  "selected": {
+    "methods": [
+      {
+        "code": "tipax:express",
+        "label": "پیشتاز",
+        "price": 480000,
+        "leadDays": 1,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "express"
+      },
+      {
+        "code": "tipax:standard",
+        "label": "معمولی",
+        "price": 205000,
+        "leadDays": 3,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "standard"
+      },
+      {
+        "code": "tipax:scratch172",
+        "label": "روش تازهٔ ۱۷۱",
+        "price": 185000,
+        "leadDays": 3,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "scratch172"
+      }
+    ],
+    "selected": "tipax:scratch172",
+    "selectedAmount": 185000,
+    "draft": {
+      "cartId": "01a14868-c709-7000-a043-1b9b5061b796",
+      "cartVersion": 8,
+      "recipientName": "مشتری آزمون",
+      "contactMobile": "09111111111",
+      "provinceName": "تهران",
+      "cityName": "تهران",
+      "postalAddress": "خیابان آزمون، پلاک ۱۷۱",
+      "postalCode": "1234567890",
+      "shippingMethodCode": "tipax:scratch172",
+      "shippingMethodLabel": "روش تازهٔ ۱۷۱",
+      "shippingAmount": 185000,
+      "minimumDeliveryDate": "2026-10-22",
+      "selectedDeliveryDate": "2026-10-22",
+      "selectedDeliveryTimeWindow": "9-12",
+      "firstName": "مشتری",
+      "lastName": "آزمون",
+      "shippingGroups": [
+        {
+          "shippingGroupId": "01a14869-212b-7000-acd1-8d0cfd374944",
+          "sellerPartyId": "01a14865-3546-7000-82a2-05d2bc59f044",
+          "methodCode": "tipax:scratch172",
+          "serviceCode": "tipax",
+          "optionCode": "scratch172",
+          "methodLabel": "روش تازهٔ ۱۷۱",
+          "shippingAmount": 185000,
+          "currency": "IRR",
+          "minimumDeliveryDate": "2026-10-22",
+          "selectedDeliveryDate": "2026-10-22",
+          "selectedDeliveryTimeWindow": "9-12",
+          "leadDays": 3,
+          "lineCount": 2,
+          "cartLineIds": [
+            "01a14868-c770-7000-b269-80b47f957ae3",
+            "01a14868-c7b1-7000-b0a4-3a48d7139c61"
+          ]
+        }
+      ]
+    }
+  },
+  "afterInvalidSchedule": {
+    "selected": "tipax:scratch172",
+    "amount": 185000
+  },
+  "restricted": {
+    "methods": [
+      {
+        "code": "tipax:express",
+        "label": "پیشتاز",
+        "price": 480000,
+        "leadDays": 1,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "express"
+      },
+      {
+        "code": "tipax:standard",
+        "label": "معمولی",
+        "price": 205000,
+        "leadDays": 3,
+        "isFree": false,
+        "serviceCode": "tipax",
+        "optionCode": "standard"
+      }
+    ],
+    "revalidation": "انتخاب ارسال دیگر معتبر نیست؛ لطفاً دوباره انتخاب کنید."
+  }
+}

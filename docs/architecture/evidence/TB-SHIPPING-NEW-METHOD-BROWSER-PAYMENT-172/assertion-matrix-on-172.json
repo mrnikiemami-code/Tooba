@@ -1,0 +1,196 @@
+{
+  "generatedAtUtc": "2026-10-17T05:50:12.909Z",
+  "phase": "on",
+  "host": "http://127.0.0.1:5426",
+  "methodCode": "tipax:scratch172",
+  "total": 37,
+  "passed": 37,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "dev_context_available",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "fulfillment_manage_granted",
+      "ok": true,
+      "detail": "granted=55"
+    },
+    {
+      "id": "real_language_id_read",
+      "ok": true,
+      "detail": "fa-IR=01a14865-3752-7000-8efb-b2159a6b140a"
+    },
+    {
+      "id": "baseline_catalog_seven_methods",
+      "ok": true,
+      "detail": "rows=7"
+    },
+    {
+      "id": "canonical_method_created",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "no_fabricated_legacy_or_price_at_create",
+      "ok": true,
+      "detail": "legacy_option_rows=0 rate_rows=0"
+    },
+    {
+      "id": "activation_applied_canonical_only",
+      "ok": true,
+      "detail": "http=200 isActive=true canonicalOnly=true"
+    },
+    {
+      "id": "activation_created_no_legacy_option_row",
+      "ok": true,
+      "detail": "rows=0"
+    },
+    {
+      "id": "seeded_single_seller_offers_read",
+      "ok": true,
+      "detail": "seller=01a14865-3546-7000-82a2-05d2bc59f044 offers=01a14865-3573-7000-b6ca-9226bd4adf1a,01a14865-363c-7000-a4b7-157bb3032761"
+    },
+    {
+      "id": "authenticated_customer_session",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "authenticated_single_seller_cart_ready",
+      "ok": true,
+      "detail": "cartId=01a14868-c709-7000-a043-1b9b5061b796 lines=2 sellers=1"
+    },
+    {
+      "id": "projection_http_ok",
+      "ok": true,
+      "detail": "http=200 methods=2"
+    },
+    {
+      "id": "activated_but_unrated_method_absent",
+      "ok": true,
+      "detail": "present=false visibleCodes=tipax:express,tipax:standard"
+    },
+    {
+      "id": "baseline_legacy_methods_priced_by_owner",
+      "ok": true,
+      "detail": "legacy=[{\"code\":\"tipax:express\",\"label\":\"پیشتاز\",\"price\":480000,\"leadDays\":1,\"isFree\":false,\"serviceCode\":\"tipax\",\"optionCode\":\"express\"},{\"code\":\"tipax:standard\",\"label\":\"معمولی\",\"price\":205000,\"leadDays\":3,\"isFree\":false,\"serviceCode\":\"tipax\",\"optionCode\":\"standard\"}]"
+    },
+    {
+      "id": "owned_rate_created_for_new_method",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "coverage_declaration_unrestricted",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "new_method_visible_at_owned_rate",
+      "ok": true,
+      "detail": "present=true price=185000 leadDays=3 isFree=false"
+    },
+    {
+      "id": "new_method_identity_canonical",
+      "ok": true,
+      "detail": "serviceCode=tipax optionCode=scratch172"
+    },
+    {
+      "id": "no_sibling_or_provider_amount_inherited",
+      "ok": true,
+      "detail": "price=185000"
+    },
+    {
+      "id": "server_returned_schedule_available",
+      "ok": true,
+      "detail": "date=2026-10-22 window=9-12"
+    },
+    {
+      "id": "selection_saved_with_server_schedule",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "selection_persisted_and_priced_once",
+      "ok": true,
+      "detail": "selected=tipax:scratch172 amount=185000"
+    },
+    {
+      "id": "draft_group_holds_owned_amount_once",
+      "ok": true,
+      "detail": "groups=1 amount=185000"
+    },
+    {
+      "id": "payment_draft_read_ok",
+      "ok": true,
+      "detail": "http=200 errorCode=null"
+    },
+    {
+      "id": "payment_draft_shipping_equals_group_sum_once",
+      "ok": true,
+      "detail": "shippingAmount=185000 groups=1 sum=185000"
+    },
+    {
+      "id": "payment_draft_identity_matches_selection",
+      "ok": true,
+      "detail": "method=tipax:scratch172 groupId=01a14869-212b-7000-acd1-8d0cfd374944"
+    },
+    {
+      "id": "payment_draft_group_identity_stable",
+      "ok": true,
+      "detail": "payGroupIds=01a14869-212b-7000-acd1-8d0cfd374944"
+    },
+    {
+      "id": "payment_draft_arithmetic_matches",
+      "ok": true,
+      "detail": "subtotal=51000000 discount=0 tax=4590000 shipping=185000 payable=55775000 expected=55775000"
+    },
+    {
+      "id": "payment_draft_read_only_no_side_effect",
+      "ok": true,
+      "detail": "checkouts=0 payments=0"
+    },
+    {
+      "id": "no_premature_order_or_payment",
+      "ok": true,
+      "detail": "checkouts=0 payments=0 seller_orders=0"
+    },
+    {
+      "id": "invalid_schedule_selection_rejected",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping.delivery.too_early"
+    },
+    {
+      "id": "invalid_selection_cannot_corrupt_accepted_draft",
+      "ok": true,
+      "detail": "selected=tipax:scratch172 amount=185000"
+    },
+    {
+      "id": "coverage_switched_to_restricted",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "restricted_without_own_grant_fails_closed",
+      "ok": true,
+      "detail": "present=false zeroPriced=none"
+    },
+    {
+      "id": "invalid_selection_rejected",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping.method.unavailable"
+    },
+    {
+      "id": "rejected_selection_never_stores_zero_or_legacy_amount",
+      "ok": true,
+      "detail": "zeroGroups=0 revalidation=present"
+    },
+    {
+      "id": "restored_after_negative_control",
+      "ok": true,
+      "detail": "visible=true"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+TB-SHIPPING-NEW-METHOD-BROWSER-PAYMENT-172 — genuine browser DOM assertions
+Private frontend: http://127.0.0.1:3121 (Next dev, TOOBA_HOST_ORIGIN=http://127.0.0.1:5426 — private Host only)
+Authenticated customer: 09111111111 via the sanctioned Development fixed-OTP fixture (code not recorded)
+New method: tipax:scratch172 (created+activated through the real Admin seam, owned rate 185000 IRR)
+
+=== STEP 1 — /fa/login, real OTP login ===
+URL: http://127.0.0.1:3121/fa/login
+After login the header account control rendered the authenticated identifier:
+  role=button name="09111111111" states=[collapsed]
+
+=== STEP 2 — /fa/shipping with the real cart (2 lines, one seller) ===
+URL: http://127.0.0.1:3121/fa/shipping
+Header counters from server projection:
+  "۴" / "تعداد کالا"      (2 units x qty 2)
+  "۵۱٬۰۰۰٬۰۰۰ ریال" / "جمع کل"
+  "۵" / "حداقل روز تحویل"
+Before a destination is chosen, every method is listed as unavailable with
+  "مقصد انتخابی برای نرخ‌دهی این روش قابل تشخیص نیست." / "غیرقابل انتخاب"
+  -> no method is priced without a real resolvable destination (no invented quote).
+
+After selecting استان=تهران and شهر=تهران, the server projection returned priceable methods and the DOM exposed:
+  role=button name="پیشتاز حدود ۱ روز"
+  role=button name="معمولی حدود ۳ روز"
+  role=button name="روش تازهٔ ۱۷۱ حدود ۳ روز"      <-- NEW canonical-only method, selectable
+  Unavailable (no active rate, honest reason, never FREE):
+    "post:express ... برای این روش نرخ فعالی تعریف نشده است. غیرقابل انتخاب"
+    "post:standard ..." ; "snapp_courier ..." ; "store_courier ..." ; "in_person ..."
+
+=== STEP 3 — selecting the new method in the UI ===
+Clicked the button "روش تازهٔ ۱۷۱ حدود ۳ روز".
+DOM after selection (group card):
+  "فروشنده schema موبایل"
+  "روش: روش تازهٔ ۱۷۱ · tipax:scratch172"          <-- exact canonical code shown
+  "اولین نوبت ممکن: 1405/07/30"                    <-- server-returned minimum date
+  "زمان تحویل این گروه (مستقل)"
+  radio "۹ صبح تا ۱۲ ظهر" states=[checked]         <-- server-returned window
+  button "ادامه به پرداخت" disabled=false
+Inner-text fee evidence on the same document:
+  "۱۸۵٬۰۰۰ ریال"  (three times: group fee, summary fee, total delta)
+  "۵۱٬۱۸۵٬۰۰۰ ریال" (subtotal 51,000,000 + 185,000)
+Screenshot: browser-shipping-page-172.png
+
+=== STEP 4 — Continue to /fa/payment ===
+URL: http://127.0.0.1:3121/fa/payment?cartId=01a14868-c709-7000-a043-1b9b5061b796
+Rendered by the app from the server draft:
+  "روش ارسال: روش تازهٔ ۱۷۱"
+  "هزینه ارسال: ۱۸۵٬۰۰۰ ریال"
+  "قابل پرداخت: ۵۵٬۷۷۵٬۰۰۰ ریال"
+  "وضعیت پرداخت: در انتظار پرداخت"
+  "این سفارش هنوز ثبت نشده است. سفارش و رزرو موجودی فقط با کلیک روی دکمهٔ پرداخت نهایی ساخته می‌شود."
+  "پرداخت نهایی و ثبت سفارش"
+Screenshot: browser-payment-page-172.png
+
+=== STEP 5 — fresh full document reload of /fa/payment ===
+Navigated again to the same URL (full document load, not client transition).
+DOM after reload (identical persisted state):
+  "روش ارسال: روش تازهٔ ۱۷۱"
+  "هزینه ارسال: ۱۸۵٬۰۰۰ ریال"
+  "قابل پرداخت: ۵۵٬۷۷۵٬۰۰۰ ریال"
+  "وضعیت پرداخت: در انتظار پرداخت"
+  "این سفارش هنوز ثبت نشده است. سفارش و رزرو موجودی فقط با کلیک روی دکمهٔ پرداخت نهایی ساخته می‌شود."
+Screenshot: browser-payment-reload-172.png
+Server-side cross-check of the same customer/cart (http-after-browser-172.json):
+  selectedMethodCode=tipax:scratch172, fee=185000, shippingGroupId=01a14869-212b-7000-acd1-8d0cfd374944,
+  date=2026-10-22, window=9-12, payment draft shippingAmount=185000, payable=55775000,
+  checkouts=0, payments=0.
+
+No fabricated DOM: every value above was read from the live rendered page and received a matching
+server-side counterpart in the projection / selection reread / payment-draft payloads.

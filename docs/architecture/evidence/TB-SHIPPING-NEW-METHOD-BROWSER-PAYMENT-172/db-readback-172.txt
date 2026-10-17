@@ -1,0 +1,8 @@
+# scratch DB readback (disposable 127.0.0.1:55491 / tooba_172_scratch); credentials not recorded
+CART=01a14868-c709-7000-a043-1b9b5061b796
+GROUPS=1
+LINES_IN_GROUP=2
+CHECKOUTS=0
+PAYMENTS=0
+METHOD_ROWS=1
+LEGACY_OPTION_ROWS=0

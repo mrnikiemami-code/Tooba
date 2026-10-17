@@ -1,0 +1,74 @@
+{
+  "gateOn": {
+    "total": 37,
+    "passed": 37
+  },
+  "gateOff": {
+    "total": 6,
+    "passed": 6
+  },
+  "negatives": [
+    {
+      "id": "activated_but_unrated_method_absent",
+      "ok": true,
+      "detail": "present=false visibleCodes=tipax:express,tipax:standard"
+    },
+    {
+      "id": "invalid_schedule_selection_rejected",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping.delivery.too_early"
+    },
+    {
+      "id": "invalid_selection_cannot_corrupt_accepted_draft",
+      "ok": true,
+      "detail": "selected=tipax:scratch172 amount=185000"
+    },
+    {
+      "id": "restricted_without_own_grant_fails_closed",
+      "ok": true,
+      "detail": "present=false zeroPriced=none"
+    },
+    {
+      "id": "invalid_selection_rejected",
+      "ok": true,
+      "detail": "http=400 errorCode=shipping.method.unavailable"
+    },
+    {
+      "id": "rejected_selection_never_stores_zero_or_legacy_amount",
+      "ok": true,
+      "detail": "zeroGroups=0 revalidation=present"
+    }
+  ],
+  "offControls": [
+    {
+      "id": "seeded_single_seller_offers_read",
+      "ok": true,
+      "detail": "seller=01a14865-3546-7000-82a2-05d2bc59f044 offers=01a14865-3573-7000-b6ca-9226bd4adf1a,01a14865-363c-7000-a4b7-157bb3032761"
+    },
+    {
+      "id": "authenticated_customer_session",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "authenticated_single_seller_cart_ready",
+      "ok": true,
+      "detail": "cartId=01a14868-c709-7000-a043-1b9b5061b796 lines=2 sellers=1"
+    },
+    {
+      "id": "projection_http_ok",
+      "ok": true,
+      "detail": "http=200 methods=7"
+    },
+    {
+      "id": "off_new_method_absent",
+      "ok": true,
+      "detail": "present=false visibleCodes=post:express,post:standard,tipax:express,tipax:standard,snapp_courier,store_courier,in_person"
+    },
+    {
+      "id": "off_legacy_methods_keep_prior_pricing",
+      "ok": true,
+      "detail": "legacy=[{\"code\":\"tipax:express\",\"label\":\"پیشتاز\",\"price\":260000,\"leadDays\":1,\"isFree\":false,\"serviceCode\":\"tipax\",\"optionCode\":\"express\"},{\"code\":\"tipax:standard\",\"label\":\"معمولی\",\"price\":180000,\"leadDays\":3,\"isFree\":false,\"serviceCode\":\"tipax\",\"optionCode\":\"standard\"}] unavailable=undefined"
+    }
+  ]
+}

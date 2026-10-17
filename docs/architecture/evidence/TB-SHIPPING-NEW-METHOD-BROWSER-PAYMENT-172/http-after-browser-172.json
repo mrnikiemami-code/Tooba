@@ -1,0 +1,83 @@
+{
+  "cartId": "01a14868-c709-7000-a043-1b9b5061b796",
+  "methods": [
+    {
+      "code": "tipax:express",
+      "price": 480000,
+      "leadDays": 1
+    },
+    {
+      "code": "tipax:standard",
+      "price": 205000,
+      "leadDays": 3
+    },
+    {
+      "code": "tipax:scratch172",
+      "price": 185000,
+      "leadDays": 3
+    }
+  ],
+  "draftGroups": [
+    {
+      "groupId": "01a14869-212b-7000-acd1-8d0cfd374944",
+      "method": "tipax:scratch172",
+      "amount": 185000,
+      "date": "2026-10-22",
+      "window": "9-12"
+    }
+  ],
+  "paymentDraft": {
+    "shippingMethodCode": "tipax:scratch172",
+    "subtotal": 51000000,
+    "discount": 0,
+    "tax": 4590000,
+    "shipping": 185000,
+    "payable": 55775000,
+    "shippingGroups": [
+      {
+        "groupId": "01a14869-212b-7000-acd1-8d0cfd374944",
+        "method": "tipax:scratch172",
+        "amount": 185000,
+        "service": "tipax",
+        "option": "scratch172"
+      }
+    ]
+  },
+  "checks": [
+    {
+      "id": "after_browser_new_method_still_quoted",
+      "ok": true,
+      "detail": "price=185000 leadDays=3"
+    },
+    {
+      "id": "after_browser_selection_persisted",
+      "ok": true,
+      "detail": "selected=tipax:scratch172 group=[{\"groupId\":\"01a14869-212b-7000-acd1-8d0cfd374944\",\"method\":\"tipax:scratch172\",\"amount\":185000,\"date\":\"2026-10-22\",\"window\":\"9-12\"}]"
+    },
+    {
+      "id": "payment_draft_http_200",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "payment_draft_method_and_group_identity",
+      "ok": true,
+      "detail": "method=tipax:scratch172 payGroup=01a14869-212b-7000-acd1-8d0cfd374944 draftGroup=01a14869-212b-7000-acd1-8d0cfd374944"
+    },
+    {
+      "id": "payment_draft_arithmetic",
+      "ok": true,
+      "detail": "subtotal=51000000 tax=4590000 shipping=185000 payable=55775000"
+    },
+    {
+      "id": "no_checkout_or_payment_created",
+      "ok": true,
+      "detail": "checkouts=0 payments=0"
+    },
+    {
+      "id": "db_membership_once",
+      "ok": true,
+      "detail": "lines_in_group=2 groups=1"
+    }
+  ]
+}
