@@ -1,0 +1,181 @@
+{
+  "generatedAtUtc": "2026-10-17T07:01:31.663Z",
+  "host": "http://127.0.0.1:5430",
+  "task": "TB-SHIPPING-ADMIN-METHOD-PACKAGING-176",
+  "identity": {
+    "serviceCode": "tipax",
+    "optionCode": "standard",
+    "sibling": "express",
+    "legacyOption": null
+  },
+  "ids": {
+    "standard": "01a148aa-6afd-7000-a8b1-bf137932f5fe",
+    "sibling": "01a148aa-6c02-7000-a025-dd941bd99526",
+    "legacy": "01a148aa-6c17-7000-8923-f8bd41a1059d"
+  },
+  "total": 32,
+  "passed": 32,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "dev_context_available",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "fulfillment_manage_granted",
+      "ok": true,
+      "detail": "granted=55"
+    },
+    {
+      "id": "scratch_country_reference_present",
+      "ok": true,
+      "detail": "country=11111111-1111-1111-1111-111111111176"
+    },
+    {
+      "id": "baseline_read_ok",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "baseline_empty_all_identities",
+      "ok": true,
+      "detail": "rows=0"
+    },
+    {
+      "id": "baseline_db_rows_zero",
+      "ok": true,
+      "detail": "no persisted tipax packaging policy before the write"
+    },
+    {
+      "id": "standard_policy_created",
+      "ok": true,
+      "detail": "http=200 option=standard fee=12000"
+    },
+    {
+      "id": "standard_reopened_from_server",
+      "ok": true,
+      "detail": "rows=1"
+    },
+    {
+      "id": "sibling_not_borrowed_by_standard_policy",
+      "ok": true,
+      "detail": "express remains undeclared"
+    },
+    {
+      "id": "db_identity_exact_one_row",
+      "ok": true,
+      "detail": "one packaging policy row for the method"
+    },
+    {
+      "id": "sibling_policy_created",
+      "ok": true,
+      "detail": "http=200 fee=8000 payer=CollectOnDelivery"
+    },
+    {
+      "id": "standard_unchanged_by_sibling_write",
+      "ok": true,
+      "detail": "standard=12000"
+    },
+    {
+      "id": "sibling_reads_its_own_policy",
+      "ok": true,
+      "detail": "express=8000"
+    },
+    {
+      "id": "legacy_service_level_row_created",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "standard_update_persisted",
+      "ok": true,
+      "detail": "http=200 fee=17500 id-stable=true"
+    },
+    {
+      "id": "legacy_row_untouched_by_method_edit",
+      "ok": true,
+      "detail": "legacy=5000"
+    },
+    {
+      "id": "sibling_untouched_by_method_edit",
+      "ok": true,
+      "detail": "express=8000"
+    },
+    {
+      "id": "db_three_distinct_identities",
+      "ok": true,
+      "detail": "service-level + standard + express, all separate rows"
+    },
+    {
+      "id": "standard_deactivated",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "deactivation_preserves_row_identity",
+      "ok": true,
+      "detail": "row kept auditable, not deleted"
+    },
+    {
+      "id": "sibling_activation_untouched",
+      "ok": true,
+      "detail": "express-active=true"
+    },
+    {
+      "id": "standard_reactivated",
+      "ok": true,
+      "detail": "http=200"
+    },
+    {
+      "id": "unknown_option_rejected",
+      "ok": true,
+      "detail": "http=400 code=shipping.service_option.unknown"
+    },
+    {
+      "id": "body_path_service_mismatch_rejected",
+      "ok": true,
+      "detail": "http=400 code=validation.failed"
+    },
+    {
+      "id": "cross_service_active_toggle_rejected",
+      "ok": true,
+      "detail": "http=400 code=shipping.service_scope.mismatch"
+    },
+    {
+      "id": "cross_service_update_rejected",
+      "ok": true,
+      "detail": "http=400 code=shipping.service_scope.mismatch"
+    },
+    {
+      "id": "anonymous_read_rejected",
+      "ok": true,
+      "detail": "http=401"
+    },
+    {
+      "id": "anonymous_write_rejected",
+      "ok": true,
+      "detail": "http=401"
+    },
+    {
+      "id": "rejected_writes_changed_no_row",
+      "ok": true,
+      "detail": "rows=3"
+    },
+    {
+      "id": "standard_fee_intact_after_rejections",
+      "ok": true,
+      "detail": "cross-service update did not change the real row"
+    },
+    {
+      "id": "final_read_back_is_method_owned",
+      "ok": true,
+      "detail": "fee=17500"
+    },
+    {
+      "id": "final_legacy_and_sibling_still_distinct",
+      "ok": true,
+      "detail": "service-level and sibling identities unchanged"
+    }
+  ]
+}

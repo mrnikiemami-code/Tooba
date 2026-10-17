@@ -59,9 +59,14 @@ import {
   createBindingGenerationGuard,
   mapHostBinding,
   ONE_LEVEL_NO_PACKAGING_FA,
+  ONE_LEVEL_PACKAGING_CUSTOMER_EFFECT_FA,
+  ONE_LEVEL_PACKAGING_IDENTITY_ISOLATION_FA,
+  ONE_LEVEL_PACKAGING_LEGACY_ROW_FA,
+  ONE_LEVEL_PACKAGING_READ_ONLY_FA,
   oneLevelBindingPath,
   operationStillTargetsMethod,
   packagingViewMatchesBindingService,
+  packagingWritesAllowed,
   packagingWriteTarget,
   resolvePackagingState,
   scopePackagingToBinding,
@@ -83,9 +88,14 @@ type Props = {
    * هیچ تقسیم متنیِ کد روش در مرورگر انجام نمی‌شود. در حضور آن، resolver غایب صدا زده نمی‌شود.
    */
   bindingOverride?: { serviceCode: string; optionCode: string | null; isActive: boolean } | null;
+  /**
+   * TB-SHIPPING-ADMIN-METHOD-PACKAGING-176: حالت مشاهده هیچ نوشتنی ندارد. پیش از این، دیالوگ
+   * «مشاهده» این پرچم را به این زبانه نمی‌داد و سیاست بسته‌بندی از مسیر فقط-خواندنی قابل ویرایش بود.
+   */
+  readOnly?: boolean;
 };
 
-export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOverride = null }: Props) {
+export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOverride = null, readOnly = false }: Props) {
   const [bindingLoading, setBindingLoading] = useState(false);
   const [binding, setBinding] = useState<OneLevelBindingState | null>(null);
   const [policiesState, setPoliciesState] = useState<"ok" | "denied" | "error" | null>(null);
@@ -197,9 +207,14 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
     [resolvedBinding, view],
   );
   const summary = useMemo(() => summarizePackagingPolicies(scoped), [scoped]);
+  const writesBlocked = !packagingWritesAllowed(readOnly);
 
   async function submitCreate() {
     if (!resolvedBinding) return;
+    if (writesBlocked) {
+      emit({ tone: "error", text: ONE_LEVEL_PACKAGING_READ_ONLY_FA });
+      return;
+    }
     const scopeProblems = validateDestinationSelection(selection);
     const formProblems = validatePackagingForm(createForm).map((issue) => issue.messageFa);
     if (scopeProblems.length > 0 || formProblems.length > 0) {
@@ -236,6 +251,10 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
 
   async function submitEdit(policy: ShippingPackagingPolicyAdminItem) {
     if (!resolvedBinding) return;
+    if (writesBlocked) {
+      emit({ tone: "error", text: ONE_LEVEL_PACKAGING_READ_ONLY_FA });
+      return;
+    }
     const problems = validatePackagingForm(editForm).map((issue) => issue.messageFa);
     if (problems.length > 0) {
       setEditIssues(problems);
@@ -274,6 +293,10 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
 
   async function toggle(policy: ShippingPackagingPolicyAdminItem) {
     if (!resolvedBinding) return;
+    if (writesBlocked) {
+      emit({ tone: "error", text: ONE_LEVEL_PACKAGING_READ_ONLY_FA });
+      return;
+    }
     const target = packagingWriteTarget(resolvedBinding);
     const startedFor = methodCode;
     const isCurrent = guard.current.begin();
@@ -290,6 +313,17 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
       text: `سیاست بسته‌بندی «${scopeSummary(result.data!)}» برای روش ${startedFor} ${result.data!.isActive ? "فعال" : "غیرفعال"} شد.`,
     });
     if (isCurrent()) await refresh(target.serviceCode, isCurrent);
+  }
+
+  /** ورود به ویرایش یک ردیف؛ در حالت مشاهده حتی باز شدن فرم ویرایش مجاز نیست. */
+  function startEdit(policy: ShippingPackagingPolicyAdminItem) {
+    if (writesBlocked) {
+      emit({ tone: "error", text: ONE_LEVEL_PACKAGING_READ_ONLY_FA });
+      return;
+    }
+    setEditingId(policy.packagingPolicyId);
+    setEditForm(packagingFormFromPolicy(policy));
+    setEditIssues([]);
   }
 
   if (state === "no-method") {
@@ -376,6 +410,27 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
         </p>
       )}
 
+      {readOnly && (
+        <p
+          className="rounded-ds border border-border bg-secondary p-3 text-[11px] text-secondary-foreground"
+          data-testid="shipping-one-level-packaging-read-only"
+        >
+          {ONE_LEVEL_PACKAGING_READ_ONLY_FA}
+        </p>
+      )}
+
+      <div className="space-y-1 rounded-ds border border-border p-3" data-testid="shipping-one-level-packaging-scope">
+        <p className="text-[11px] text-muted" data-testid="shipping-one-level-packaging-customer-effect">
+          {ONE_LEVEL_PACKAGING_CUSTOMER_EFFECT_FA}
+        </p>
+        <p className="text-[11px] text-muted" data-testid="shipping-one-level-packaging-identity-isolation">
+          {ONE_LEVEL_PACKAGING_IDENTITY_ISOLATION_FA}
+        </p>
+        <p className="text-[11px] text-muted" data-testid="shipping-one-level-packaging-legacy-row">
+          {ONE_LEVEL_PACKAGING_LEGACY_ROW_FA}
+        </p>
+      </div>
+
       <div className="rounded-ds bg-secondary p-3 text-xs text-secondary-foreground">
         {scoped.length === 0 ? NO_PACKAGING_POLICY_FA : packagingStateFa(scoped)}
         <span className="mr-2 text-muted">
@@ -423,6 +478,7 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
                     inputMode="decimal"
                     placeholder="12000"
                     value={editForm.feeAmount}
+                    disabled={busy || writesBlocked}
                     onChange={(e) => { setEditForm({ ...editForm, feeAmount: e.target.value }); setEditIssues([]); }}
                     data-testid="shipping-one-level-packaging-edit-fee"
                   />
@@ -433,6 +489,7 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
                     className="mt-1 w-full rounded-ds border border-border px-2 py-1 text-xs"
                     dir="ltr"
                     value={editForm.currencyCode}
+                    disabled={busy || writesBlocked}
                     onChange={(e) => { setEditForm({ ...editForm, currencyCode: e.target.value }); setEditIssues([]); }}
                     data-testid="shipping-one-level-packaging-edit-currency"
                   />
@@ -443,7 +500,7 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
                     className="mt-1 w-full rounded-ds border border-border px-2 py-1 text-xs"
                     value={editForm.payerMode}
                     onChange={(e) => setEditForm({ ...editForm, payerMode: e.target.value as ShippingFreightPayerMode })}
-                    disabled={busy}
+                    disabled={busy || writesBlocked}
                     data-testid="shipping-one-level-packaging-edit-payer"
                   >
                     {PAYER_MODES.map((mode) => (
@@ -466,7 +523,7 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
                   <button
                     type="button"
                     className="rounded-ds bg-primary px-3 py-1 text-xs font-bold text-primary-foreground disabled:opacity-50"
-                    disabled={busy}
+                    disabled={busy || writesBlocked}
                     onClick={() => void submitEdit(policy)}
                     data-testid={`shipping-one-level-packaging-save-${policy.packagingPolicyId}`}
                   >
@@ -484,12 +541,9 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
                 <>
                   <button
                     type="button"
-                    className="rounded-ds border border-border px-3 py-1 text-xs"
-                    onClick={() => {
-                      setEditingId(policy.packagingPolicyId);
-                      setEditForm(packagingFormFromPolicy(policy));
-                      setEditIssues([]);
-                    }}
+                    className="rounded-ds border border-border px-3 py-1 text-xs disabled:opacity-50"
+                    disabled={busy || writesBlocked}
+                    onClick={() => startEdit(policy)}
                     data-testid={`shipping-one-level-packaging-edit-${policy.packagingPolicyId}`}
                   >
                     ویرایش
@@ -497,7 +551,7 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
                   <button
                     type="button"
                     className="rounded-ds border border-border px-3 py-1 text-xs disabled:opacity-50"
-                    disabled={busy}
+                    disabled={busy || writesBlocked}
                     onClick={() => void toggle(policy)}
                     data-testid={`shipping-one-level-packaging-toggle-${policy.packagingPolicyId}`}
                   >
@@ -515,7 +569,7 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
         <p className="text-[11px] text-muted">
           سیاست روی همان خدمتی ثبت می‌شود که این روش به آن پیوند دارد؛ پیوند از سرور می‌آید و قابل‌تغییر نیست.
         </p>
-        <ShippingDestinationPicker selection={selection} onChange={setSelection} disabled={busy} />
+        <ShippingDestinationPicker selection={selection} onChange={setSelection} disabled={busy || writesBlocked} />
 
         <div className="grid gap-2 sm:grid-cols-3">
           <label className="text-[11px] text-muted">
@@ -526,6 +580,7 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
               inputMode="decimal"
               placeholder="12000"
               value={createForm.feeAmount}
+              disabled={busy || writesBlocked}
               onChange={(e) => { setCreateForm({ ...createForm, feeAmount: e.target.value }); setCreateIssues([]); }}
               data-testid="shipping-one-level-packaging-create-fee"
             />
@@ -536,6 +591,7 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
               className="mt-1 w-full rounded-ds border border-border px-2 py-1 text-xs"
               dir="ltr"
               value={createForm.currencyCode}
+              disabled={busy || writesBlocked}
               onChange={(e) => { setCreateForm({ ...createForm, currencyCode: e.target.value }); setCreateIssues([]); }}
               data-testid="shipping-one-level-packaging-create-currency"
             />
@@ -546,7 +602,7 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
               className="mt-1 w-full rounded-ds border border-border px-2 py-1 text-xs"
               value={createForm.payerMode}
               onChange={(e) => setCreateForm({ ...createForm, payerMode: e.target.value as ShippingFreightPayerMode })}
-              disabled={busy}
+              disabled={busy || writesBlocked}
               data-testid="shipping-one-level-packaging-create-payer"
             >
               {PAYER_MODES.map((mode) => (
@@ -569,7 +625,7 @@ export function ShippingOneLevelPackagingTab({ methodCode, onNotice, bindingOver
         <button
           type="button"
           className="rounded-ds bg-primary px-3 py-1 text-xs font-bold text-primary-foreground disabled:opacity-50"
-          disabled={busy}
+          disabled={busy || writesBlocked}
           onClick={() => void submitCreate()}
           data-testid="shipping-one-level-packaging-create-submit"
         >

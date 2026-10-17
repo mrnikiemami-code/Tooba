@@ -1,0 +1,55 @@
+{
+  "task": "TB-SHIPPING-ADMIN-METHOD-PACKAGING-176",
+  "surface": "/fa/admin/shipping-services -> ویرایش/مشاهده روش «معمولی» (tipax:standard) -> tab «بسته‌بندی و کرایه»",
+  "host": "http://127.0.0.1:5430 (isolated scratch Host)",
+  "frontend": "http://127.0.0.1:3125 (private Next dev, TOOBA_HOST_ORIGIN -> scratch Host)",
+  "browser": "Cursor IDE browser (private tab), no mocks",
+  "tabsObserved": ["عمومی", "تعرفه و پوشش", "برنامه کاری حمل", "بسته‌بندی و کرایه"],
+  "nestedTabs": false,
+  "rowActions": ["مشاهده", "ویرایش", "حذف"],
+  "binding": "روش یک‌سطحی tipax:standard → سرویس tipax · standard",
+  "steps": [
+    {
+      "step": "edit-mode read",
+      "observed": "server policy row «کشور · 11111111… ۲۱٬۰۰۰ IRR کرایه: پیش‌کرایه فعال» with ویرایش and غیرفعال‌سازی actions",
+      "screenshot": "admin-packaging-01-loaded-176.png"
+    },
+    {
+      "step": "edit -> change fee 17500 -> 21000, payer CollectOnDelivery -> Prepaid -> ذخیره",
+      "observedNoticeFa": "سیاست بسته‌بندی «کشور · 11111111… · ۲۱٬۰۰۰ IRR · پیش‌کرایه» برای روش tipax:standard ذخیره شد.",
+      "screenshot": "admin-packaging-02-edit-saved-176.png"
+    },
+    {
+      "step": "full page reload -> ویرایش tipax:standard -> tab «بسته‌بندی و کرایه»",
+      "observedRowFa": "کشور · 11111111… ۲۱٬۰۰۰ IRR کرایه: پیش‌کرایه فعال",
+      "observedStatusFa": "سیاست‌های بسته‌بندی فعال: ۱ از ۱ (پس‌کرایه: ۰)",
+      "meaning": "authoritative re-read after reload proves persistence"
+    },
+    {
+      "step": "مشاهده tipax:standard -> tab «بسته‌بندی و کرایه» (View mode)",
+      "readOnlyNotice": true,
+      "readOnlyNoticeFa": "این روش در حالت مشاهده است؛ سیاست بسته‌بندی فقط خواندنی است و هیچ افزودن، ویرایش، ذخیره یا فعال‌سازی مجاز نیست.",
+      "controls": [
+        { "testid": "shipping-one-level-packaging-edit-<id>", "tag": "BUTTON", "disabled": true },
+        { "testid": "shipping-one-level-packaging-toggle-<id>", "tag": "BUTTON", "disabled": true },
+        { "testid": "shipping-destination-country", "tag": "SELECT", "disabled": true },
+        { "testid": "shipping-destination-area", "tag": "SELECT", "disabled": true },
+        { "testid": "shipping-destination-city", "tag": "SELECT", "disabled": true },
+        { "testid": "shipping-destination-service-area", "tag": "SELECT", "disabled": true },
+        { "testid": "shipping-one-level-packaging-create-fee", "tag": "INPUT", "disabled": true },
+        { "testid": "shipping-one-level-packaging-create-currency", "tag": "INPUT", "disabled": true },
+        { "testid": "shipping-one-level-packaging-create-payer", "tag": "SELECT", "disabled": true },
+        { "testid": "shipping-one-level-packaging-create-submit", "tag": "BUTTON", "disabled": true }
+      ],
+      "screenshot": "admin-packaging-03-view-readonly-176.png",
+      "meaning": "TB-175 gap closed: View mode no longer writes"
+    }
+  ],
+  "dbReadBackAfterBrowserEdit": [
+    "tipax|(null)|5000.00|0|true",
+    "tipax|express|8000.00|1|true",
+    "tipax|standard|21000.00|0|true"
+  ],
+  "siblingIsolationObserved": "tipax:express stayed at 8000.00 CollectOnDelivery (1) and the service-level legacy row stayed at 5000.00 Prepaid (0); only the tipax:standard row changed",
+  "notes": "No freight amount, settlement share or customer payable amount is claimed to change. Screenshots are genuine captures of the isolated scratch session only."
+}

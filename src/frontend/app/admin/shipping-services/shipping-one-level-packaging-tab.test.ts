@@ -3,9 +3,14 @@ import fs from "node:fs";
 import test from "node:test";
 import {
   ONE_LEVEL_NO_PACKAGING_FA,
+  ONE_LEVEL_PACKAGING_CUSTOMER_EFFECT_FA,
+  ONE_LEVEL_PACKAGING_IDENTITY_ISOLATION_FA,
+  ONE_LEVEL_PACKAGING_LEGACY_ROW_FA,
+  ONE_LEVEL_PACKAGING_READ_ONLY_FA,
   operationStillTargetsMethod,
   packagingBelongsToBinding,
   packagingViewMatchesBindingService,
+  packagingWritesAllowed,
   packagingWriteTarget,
   resolvePackagingState,
   scopePackagingToBinding,
@@ -168,6 +173,56 @@ test("a stale operation is never attributed to the newly selected method", () =>
 test("the empty-state text states explicit zero rather than a hidden fee", () => {
   assert.match(ONE_LEVEL_NO_PACKAGING_FA, /صفر/);
   assert.match(ONE_LEVEL_NO_PACKAGING_FA, /پیش‌کرایه/);
+});
+
+test("TB-176 View mode blocks every packaging mutation route", () => {
+  // یک منبع تصمیم خالص: فقط حالت مشاهده نوشتن را می‌بندد و حالت ویرایش باز می‌گذارد.
+  assert.equal(packagingWritesAllowed(true), false);
+  assert.equal(packagingWritesAllowed(false), true);
+  assert.equal(packagingWritesAllowed(undefined), true);
+
+  const source = fs
+    .readFileSync(new URL("./shipping-one-level-packaging-tab.tsx", import.meta.url), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "");
+
+  // پرچم از دیالوگ می‌آید و تنها دروازهٔ نوشتن از همان تابع خالص ساخته می‌شود.
+  assert.match(source, /readOnly\?: boolean/);
+  assert.match(source, /readOnly = false/);
+  assert.match(source, /const writesBlocked = !packagingWritesAllowed\(readOnly\)/);
+
+  // هر سه مسیر نوشتن API در همین فایل به‌طور صریح و پیش از فراخوانی fail-closed می‌شوند.
+  for (const fn of ["submitCreate", "submitEdit", "toggle", "startEdit"]) {
+    const start = source.indexOf(`function ${fn}(`);
+    assert.notEqual(start, -1, `${fn} must exist`);
+    const body = source.slice(start, start + 400);
+    assert.match(body, /if \(writesBlocked\)/, `${fn} must guard before writing`);
+    assert.match(body, /ONE_LEVEL_PACKAGING_READ_ONLY_FA/, `${fn} must refuse with the stable read-only text`);
+  }
+
+  // ورود به فرم ویرایش هم مسیر نوشتن است: فقط از startEdit و با همان گارد.
+  assert.equal((source.match(/setEditingId\(policy\.packagingPolicyId\)/g) || []).length, 1);
+  assert.match(source, /onClick=\{\(\) => startEdit\(policy\)\}/);
+
+  // هر کنترل تغییردهنده و دکمهٔ نوشتن با همان گارد غیرفعال می‌شود.
+  assert.equal(/disabled=\{busy\}/.test(source), false);
+  assert.match(source, /disabled=\{busy \|\| writesBlocked\}/);
+  assert.match(source, /<ShippingDestinationPicker[^>]*disabled=\{busy \|\| writesBlocked\}/);
+  assert.match(source, /data-testid="shipping-one-level-packaging-read-only"/);
+});
+
+test("TB-176 discloses provenance instead of implying a customer charge", () => {
+  assert.match(ONE_LEVEL_PACKAGING_READ_ONLY_FA, /حالت مشاهده/);
+  assert.match(ONE_LEVEL_PACKAGING_CUSTOMER_EFFECT_FA, /اعمال نمی‌شود/);
+  assert.match(ONE_LEVEL_PACKAGING_CUSTOMER_EFFECT_FA, /سایهٔ عملیاتی Order پیش‌فرض خاموش است/);
+  assert.match(ONE_LEVEL_PACKAGING_CUSTOMER_EFFECT_FA, /هیچ مبلغ، کرایه یا سهم تسویه‌ای را در Checkout تغییر نمی‌دهد/);
+
+  assert.match(ONE_LEVEL_PACKAGING_IDENTITY_ISOLATION_FA, /کد گزینهٔ همین روش/);
+  assert.match(ONE_LEVEL_PACKAGING_IDENTITY_ISOLATION_FA, /سیاست گزینهٔ دیگر/);
+
+  assert.match(ONE_LEVEL_PACKAGING_LEGACY_ROW_FA, /سطح‌خدمت/);
+  assert.match(ONE_LEVEL_PACKAGING_LEGACY_ROW_FA, /fallback مستند/);
+  assert.match(ONE_LEVEL_PACKAGING_LEGACY_ROW_FA, /تغییر نمی‌دهد/);
 });
 
 test("tab 3 renders no option picker, no provider hierarchy and no method-code splitting", () => {

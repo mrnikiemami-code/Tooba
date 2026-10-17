@@ -191,7 +191,7 @@ export function FlatMethodDetailDialog({
           ) : activeTab === "schedule" ? (
             <ShippingOneLevelScheduleTab methodCode={row.methodCode} onNotice={onNotice} bindingOverride={bindingOverride} readOnly={readOnly} />
           ) : (
-            <ShippingOneLevelPackagingTab methodCode={row.methodCode} onNotice={onNotice} bindingOverride={bindingOverride} />
+            <ShippingOneLevelPackagingTab methodCode={row.methodCode} onNotice={onNotice} bindingOverride={bindingOverride} readOnly={readOnly} />
           )}
         </div>
       </div>
