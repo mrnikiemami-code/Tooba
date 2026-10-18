@@ -15,7 +15,10 @@
     * /health and /__platform-commerce verification before the run is reported healthy;
     * refusal to stop or start over a port owned by an unrelated process;
     * graceful stop by default (no Stop-Process -Force unless -Force is explicitly passed);
-    * no credential, token or connection string is written to any file or log.
+    * no credential, token or connection string is written to any file or log;
+    * -Detach starts the Host outside the caller's job object, so closing the terminal or an IDE
+      task runner does not silently kill it and leave every Admin screen reporting that the store
+      is unavailable.
 
   The one-level Shipping catalog gate is enabled only through an ephemeral process
   environment variable when -GateShippingOneLevelCatalog is passed. No appsettings file is
@@ -26,6 +29,9 @@
 
 .EXAMPLE
   pwsh -File scripts/dev/host-stack.ps1 -Action start -GateShippingOneLevelCatalog
+
+.EXAMPLE
+  pwsh -File scripts/dev/host-stack.ps1 -Action start -GateShippingOneLevelCatalog -Detach
 
 .EXAMPLE
   pwsh -File scripts/dev/host-stack.ps1 -Action stop
@@ -43,6 +49,15 @@ param(
     [switch]$GateShippingOneLevelCatalog,
 
     [switch]$NoBuild,
+
+    # Start the Host outside the caller's Windows job object.
+    #
+    # A terminal, IDE task runner or agent shell commonly places its children in a job configured
+    # to kill every descendant when the owning shell closes. An in-session Start-Process Host is
+    # therefore killed some minutes later while the web app keeps running, and every Admin screen
+    # that reads the Host then reports "store unavailable". Detaching through the WMI process
+    # provider puts the Host outside that job, so it survives the terminal that started it.
+    [switch]$Detach,
 
     # Deliberate, logged takeover of a PRE-EXISTING Development Host on the same port that this
     # script did not start. Allowed only when the running process is positively proven to be this
@@ -131,6 +146,26 @@ function Wait-ForHealth([int]$TimeoutSeconds = 150) {
         } catch { }
     }
     return $null
+}
+
+# Starts the Host through the WMI process provider so the process is not a child of this shell.
+#
+# Terminal/IDE/agent shells frequently run their commands inside a job object that kills every
+# descendant when the shell closes. A Host started with Start-Process inherits that job and dies
+# minutes after the operator closes the terminal, which surfaces later as every Admin screen
+# saying the store is unavailable. WMI creates the process from WmiPrvSE instead, so it outlives
+# the caller. Environment variables are set on the intermediate cmd.exe only; nothing is persisted.
+function Start-DetachedHost([string]$ExePath) {
+    $gateAssignment = if ($GateShippingOneLevelCatalog) { 'set Tooba__ShippingOneLevelCatalog__Enabled=true& ' } else { '' }
+    $commandLine = 'cmd.exe /c set ASPNETCORE_ENVIRONMENT=Development& set ASPNETCORE_URLS=' + $BaseUrl + '& ' +
+        $gateAssignment +
+        'cd /d "' + $OutDir + '"& "' + $ExePath + '" --contentRoot "' + $ContentRoot + '" >> "' + $OutLog + '" 2>> "' + $ErrLog + '"'
+    $result = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{
+        CommandLine      = $commandLine
+        CurrentDirectory = $OutDir
+    }
+    if ($null -eq $result -or $result.ReturnValue -ne 0) { return 0 }
+    return [int]$result.ProcessId
 }
 
 function Stop-ManagedHost([switch]$AllowForce) {
@@ -313,14 +348,21 @@ function Start-ManagedHost {
     }
     Write-Step "ShippingRateAuthority and ShippingOperationalShadow are never set by this script (remain OFF)"
 
-    $process = Start-Process -FilePath $exe `
-        -ArgumentList '--contentRoot', $ContentRoot `
-        -WorkingDirectory $OutDir `
-        -PassThru `
-        -RedirectStandardOutput $OutLog `
-        -RedirectStandardError $ErrLog
+    $process = $null
+    if ($Detach) {
+        $detachedPid = Start-DetachedHost -ExePath $exe
+        if (-not $detachedPid) { throw "Detached Host launch failed; the WMI process provider returned a non-zero result." }
+        Write-Step "started detached pid=$detachedPid (outside the caller's job object); waiting for /health on $BaseUrl"
+    } else {
+        $process = Start-Process -FilePath $exe `
+            -ArgumentList '--contentRoot', $ContentRoot `
+            -WorkingDirectory $OutDir `
+            -PassThru `
+            -RedirectStandardOutput $OutLog `
+            -RedirectStandardError $ErrLog
+        Write-Step "started pid=$($process.Id); waiting for /health on $BaseUrl"
+    }
 
-    Write-Step "started pid=$($process.Id); waiting for /health on $BaseUrl"
     $health = Wait-ForHealth
     if ($null -eq $health) {
         Write-Step "ERROR: /health did not become ready. See $OutLog and $ErrLog"
@@ -328,11 +370,15 @@ function Start-ManagedHost {
     }
     Write-Step "health OK: $health"
 
+    # For a detached launch the process id belongs to the listener, not to the WMI launcher.
+    $hostPid = if ($Detach) { $owner = @(Get-PortOwner $Port); if ($owner.Count -gt 0) { [int]$owner[0] } else { 0 } } else { $process.Id }
+    if ($hostPid -eq 0) { throw "Host is healthy but no listener owns port $Port; refusing to write an unverifiable PID file." }
+
     $provenance = Test-Provenance
     Assert-DevelopmentProvenance $provenance
 
     Write-State ([pscustomobject]@{
-        pid            = $process.Id
+        pid            = $hostPid
         port           = $Port
         url            = $BaseUrl
         executablePath = $exe

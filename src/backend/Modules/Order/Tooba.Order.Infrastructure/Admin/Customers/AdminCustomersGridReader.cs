@@ -53,10 +53,12 @@ internal sealed class AdminCustomersGridReader(OrderDbContext orders) : IAdminCu
     {
         var aggregates = orders.Checkouts.AsNoTracking()
             .GroupBy(x => x.PlacedByUserId)
-            .Select(g => new CustomerAgg(
-                g.Key,
-                g.Count(),
-                g.Max(x => x.SubmittedAt)));
+            .Select(g => new CustomerAgg
+            {
+                UserId = g.Key,
+                OrderCount = g.Count(),
+                LastOrderAt = g.Max(x => x.SubmittedAt),
+            });
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
@@ -110,7 +112,12 @@ internal sealed class AdminCustomersGridReader(OrderDbContext orders) : IAdminCu
 
         var baseAgg = orders.Checkouts.AsNoTracking()
             .GroupBy(x => x.PlacedByUserId)
-            .Select(g => new CustomerAgg(g.Key, g.Count(), g.Max(x => x.SubmittedAt)));
+            .Select(g => new CustomerAgg
+            {
+                UserId = g.Key,
+                OrderCount = g.Count(),
+                LastOrderAt = g.Max(x => x.SubmittedAt),
+            });
 
         var sets = new List<HashSet<Guid>>();
         foreach (var condition in expression.Conditions)
@@ -251,5 +258,15 @@ internal sealed class AdminCustomersGridReader(OrderDbContext orders) : IAdminCu
         }).ToList();
     }
 
-    private sealed record CustomerAgg(Guid UserId, int OrderCount, DateTimeOffset LastOrderAt);
+    private sealed class CustomerAgg
+    {
+        // Member-init projection is required: EF Core 8 can push ordering/aggregate filters down
+        // over a member-initialized projection, but a positional-record ('new CustomerAgg(...)')
+        // projection makes the aggregate opaque and fails translation with InvalidOperationException.
+        public Guid UserId { get; init; }
+
+        public int OrderCount { get; init; }
+
+        public DateTimeOffset LastOrderAt { get; init; }
+    }
 }
