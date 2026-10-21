@@ -1,0 +1,37 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-UI-PREVIEW-186-R2
+Parent-Task: TB-SHIPPING-ADMIN-UI-PREVIEW-186-R1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Program: TOOBA-SHIPPING-ADMIN-UI-ACCEPTANCE
+Mode: BOUNDED_MULTILINGUAL_PER_DAY_SCHEDULE_VISUAL_REPAIR
+Bridge-Task-Row: 21dd66ce-d8a0-4f3e-864f-fef486476971
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 4a37697eef577963c08519616f44ff035ceb4cb1
+Base-SHA: 4a37697eef577963c08519616f44ff035ceb4cb1
+Code-SHA: @@CODE_SHA@@
+Evidence-SHA: @@EVIDENCE_SHA@@
+automaticNextImplementationTask: NONE
+HEAD-Origin-Parity: HEAD == origin/main == @@HEAD@@; working tree clean after push
+Per-Day-Schedule-And-Closed-Days: PreviewSchedule is now { hours: Record<'sat'|'sun'|'mon'|'tue'|'wed'|'thu'|'fri', PreviewDayHours{working,fromTime,toTime}>, cutoffHours }; each weekday has its own working/closed + start/end, editing one day never changes another, closed days keep typed hours and restore them on reopen, schedule stays shared across regions/rows of the method (geography still selected once per region group), sample method shows Sat 09:00-13:00, Sun 15:00-18:00, Fri closed; no residual shared-interval writer or aliasing (deep clone per method/draft/owner)
+First-Apply-Validation: previewScheduleIsValid runs synchronously on the first Apply; inverted (17:00>12:30), equal, missing or malformed active-day times are rejected with localized field errors plus banner, typed value stays editable and is never rounded/reversed/extended overnight; corrected values then apply to preview only; no "at least one active day" rule was invented and all-closed is described truthfully
+Draft-And-Owner-Safety: schedule draft survives tab round-trip, fa/en interface switch and content-language switch; R1 owner-change and back-to-list discard confirmations still fire on unapplied work and Cancel keeps owner, route and every value; pending rate-row input untouched; View mode disables all seven day toggles and all time inputs
+Multilingual-And-Responsive-Checks: preview-scoped fa/en messages with localized weekday labels and independent interface/content language; measured at 390/1024/1440 (fa RTL) and 390 (en, editor subtree direction:ltr): page and schedule section scrollWidth == clientWidth at every width (no horizontal overflow), time inputs 130/231/439 px, closed Friday renders no time inputs
+Real-Browser-Interaction-Proof: ordinary-control sequences in the Cursor IDE Chromium browser against the running preview: set Sat 09:00-12:00 and Sun 16:00-20:00 independently, toggled Friday closed->working without touching other days, first Apply rejected 17:00>12:30 then applied after correction, tab round-trip and fa/en plus content-language switches preserved draft, View mode read-only verified by disabled/readonly DOM state, Restore sample returned pristine sample data, owner/back discard prompts observed and Cancel preserved the draft
+Business-Network-Writes: ZERO
+Live-Shipping-Behavior: PRESERVED
+Focused-Tests-And-Typecheck: preview-model.test.ts 21/21 pass (0 fail, incl. 6 R2 regressions); npm run typecheck 0 errors; import/flat-folder/feature-boundary/test-discovery guards 7/7 pass; npm run test:architecture has a known unrelated baseline failure (frontend-source-size OVERSIZED_GROWTH in category-admin-screen.tsx, admin-landing-page-composer.tsx, storefront-landing-blocks.tsx, shared-composition-renderer.tsx) - none of those files is touched by this task and the failure was not fixed or refreshed
+Decision-Clarification: docs/architecture/shipping/SHIPPING-ADMIN-RULES-DECISION.md section 12 (2026-10-22): per-weekday working/closed and hours are independently configured, sharing across regions does not require identical weekday hours, and the revised visual plus all production implementation remain unaccepted/not started
+Preview-URL-And-Start-Command: http://127.0.0.1:3419/admin/shipping-services/design-preview via `cd src/frontend && npm run dev -- -p 3419`; reused the healthy task-owned listener on :3419 (PID 18428), a second start failed EADDRINUSE and was not retried
+Changed-Files: src/frontend/app/admin/shipping-services/design-preview/{preview-model.ts, preview-model.test.ts, preview-fixtures.ts, preview-i18n.ts, preview-general-tab.tsx, preview-schedule-editor.tsx (new), design-preview-screen.tsx}, docs/architecture/shipping/SHIPPING-ADMIN-RULES-DECISION.md (section 12 only), docs/ai/tasks/TB-SHIPPING-ADMIN-UI-PREVIEW-186-R2.task.md, docs/architecture/evidence/TB-SHIPPING-ADMIN-UI-PREVIEW-186-R2/**
+Isolation-And-Cleanup: only design-preview preview files, the decision clarification, the task receipt and task-scoped evidence changed; no shared component, global CSS, dependency, schema/DTO/backend/client, Storefront, navigation or feature flag touched; live /admin/shipping-services screens unchanged; no Host/DB/Redis/RabbitMQ started, no carrier call, no stash/reset/rebase/force-push
+Elapsed-Minutes: @@ELAPSED@@
+User-Acceptance-Still-Open: YES
+Production-Functional-Implementation: NOT_STARTED
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT
