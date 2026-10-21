@@ -145,6 +145,18 @@ versioned in git, so they survive a Cursor reset, cache clear, or machine change
 After a reset, read the durable registry `docs/ai/AGENT-SKILLS.md`, then open the
 matching `.cursor/skills/<name>/SKILL.md` and follow it exactly.
 
+## Shipping customer experience — mandatory reference
+
+For shipping-related Admin, seller or Storefront work affecting customer delivery
+groups, costs or delivery timing, first read
+`docs/architecture/shipping/SHIPPING-STOREFRONT-UX-REFERENCE.md` and inspect its
+linked user-provided image. Preserve `SHIPPING-STOREFRONT-UX-001`: clear delivery
+groups, per-group cost and independent delivery date/window choices backed by real
+availability. Never substitute raw technical codes or seller-only grouping for
+this approved experience. The reference is a target, not implementation evidence
+or permission to bypass existing locks. Changes to its approved UX require an
+explicit product-owner decision.
+
 ## References
 
 - `docs/ai/AGENT-SKILLS.md`
