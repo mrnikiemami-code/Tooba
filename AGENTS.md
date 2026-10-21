@@ -154,6 +154,9 @@ non-overlapping multi-region selection with multiple condition/price rows beneat
 it, and reuse of that geography by packaging and scheduling. Payment timing and
 rate calculation mode are independent. Do not reintroduce duplicated geography,
 raw location IDs, cross-owner inheritance or seller-only customer grouping.
+Multilingual fields, configured locales, shared non-translated rules, and RTL/LTR
+are mandatory (decision sections 10–11). The current authorized slice is an
+isolated visual Admin preview only, pending user visual review.
 This records approved requirements, not implemented capability or permission to
 weaken guards; report migration/contract conflicts explicitly.
 
