@@ -11,8 +11,8 @@ Date: 2026-10-21 (Asia/Tehran)
 | --- | --- |
 | Expected-Base-SHA | `a889b0190322f13ee9b983a614011f24e132dd90` |
 | Base-SHA (verified before edits) | `a889b0190322f13ee9b983a614011f24e132dd90` |
-| Code-SHA | see `git log -1` on `main` after push (single scoped commit; recorded in the Bridge Result) |
-| Evidence-SHA | same single scoped commit (code + evidence committed together) |
+| Code-SHA | `1bd2ad26a2215f50d7507acd667bc703bc812e53` |
+| Evidence-SHA | `1bd2ad26a2215f50d7507acd667bc703bc812e53` (code + evidence in one scoped commit) |
 
 `git fetch origin` was run first; local `main` was 3 commits behind (`5a66b8b44`) and was fast-forwarded
 normally (no reset/rebase/stash) to the expected base before any edit.
