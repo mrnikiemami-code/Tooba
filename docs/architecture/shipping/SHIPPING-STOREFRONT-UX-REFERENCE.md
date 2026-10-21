@@ -61,3 +61,7 @@ Record unresolved capabilities honestly. Final acceptance needs the actual Tooba
 - [Independent delivery commitment](SHIPPING-GROUP-INDEPENDENT-DELIVERY-COMMITMENT.md)
 - [Shipping architect handoff](../../planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-16.md)
 - [Shipping fee decision](../checkout/SHIPPING-GROUP-FEE-ALLOCATION-POLICY-DECISION.md)
+
+## Approved Admin model — 2026-10-21
+
+Read [SHIPPING-ADMIN-RULES-001](SHIPPING-ADMIN-RULES-DECISION.md) for the approved owner-scoped Admin model, shipping types and multiple condition/price rows under one geographic group. It complements this customer UX target; neither document certifies implementation.

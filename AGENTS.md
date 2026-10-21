@@ -145,6 +145,18 @@ versioned in git, so they survive a Cursor reset, cache clear, or machine change
 After a reset, read the durable registry `docs/ai/AGENT-SKILLS.md`, then open the
 matching `.cursor/skills/<name>/SKILL.md` and follow it exactly.
 
+## Shipping Admin rules — mandatory reference
+
+Before designing or changing shipping Admin/seller rules, read
+`docs/architecture/shipping/SHIPPING-ADMIN-RULES-DECISION.md` (`SHIPPING-ADMIN-RULES-001`).
+Preserve one owner-scoped control panel, shipping type above method name, one
+non-overlapping multi-region selection with multiple condition/price rows beneath
+it, and reuse of that geography by packaging and scheduling. Payment timing and
+rate calculation mode are independent. Do not reintroduce duplicated geography,
+raw location IDs, cross-owner inheritance or seller-only customer grouping.
+This records approved requirements, not implemented capability or permission to
+weaken guards; report migration/contract conflicts explicitly.
+
 ## Shipping customer experience — mandatory reference
 
 For shipping-related Admin, seller or Storefront work affecting customer delivery
