@@ -61,15 +61,169 @@ export const PREVIEW_CARRIERS: readonly PreviewCarrier[] = [
   { id: "carrier-mahex", labels: { fa: "ماهکس", en: "Mahex" } },
 ];
 
-/** برنامهٔ کاری مشترک روش؛ یک‌بار در «اطلاعات روش» و به‌صورت جمع‌شده نمایش داده می‌شود. */
-export type PreviewSchedule = {
-  /** روزهای فعال هفته؛ 0 = شنبه … 6 = جمعه. */
-  weekdays: readonly number[];
+/**
+ * هویت پایدار روزهای هفته؛ ترتیب نمایش (شنبه…جمعه) و برچسب‌های fa/en از آن جدا هستند.
+ * هیچ label، ایندکس ترجمه‌شده یا locale رابط در این هویت دخالت ندارد.
+ */
+export const PREVIEW_WEEKDAY_IDS = ["sat", "sun", "mon", "tue", "wed", "thu", "fri"] as const;
+export type PreviewWeekdayId = (typeof PREVIEW_WEEKDAY_IDS)[number];
+
+/**
+ * ساعت کاری یک روز. روز تعطیل بازهٔ عملیاتی ندارد، اما ساعتِ تایپ‌شده حذف نمی‌شود
+ * تا با فعال‌کردن دوبارهٔ همان روز برگردد (بدون پاک‌شدن بی‌صدای پیش‌نویس).
+ */
+export type PreviewDayHours = {
+  working: boolean;
+  /** قالب HH:mm در بافت نمونهٔ همین پیش‌نمایش؛ هیچ تبدیل منطقهٔ زمانی انجام نمی‌شود. */
   fromTime: string;
   toTime: string;
-  /** آخرین مهلت سفارش برای همان روز کاری، به ساعت. */
+};
+
+/**
+ * برنامهٔ کاری روش: برای همهٔ مناطق و ردیف‌های همین روش مشترک است،
+ * اما ساعت هر روز هفته مستقل تنظیم می‌شود. مهلت سفارش روش‌محور و بدون تغییر معنایی باقی می‌ماند.
+ */
+export type PreviewSchedule = {
+  hours: Readonly<Record<PreviewWeekdayId, PreviewDayHours>>;
+  /** آخرین مهلت سفارش پیش از شروع بازهٔ همان روز کاری، به ساعت. */
   cutoffHours: number;
 };
+
+/** مقدار نمونهٔ صریح برای روش تازه؛ ساعت واقعی کسب‌وکار استنتاج نمی‌شود. */
+export const PREVIEW_SAMPLE_DAY_HOURS = { fromTime: "09:00", toTime: "18:00" } as const;
+
+/** روزهای کاری پیش‌فرض نمونه برای روش تازه: شنبه تا چهارشنبه. */
+const PREVIEW_SAMPLE_WORKING_DAYS: readonly PreviewWeekdayId[] = ["sat", "sun", "mon", "tue", "wed"];
+
+/** برنامهٔ کاری نمونهٔ مستقل برای هر روش تازه؛ هیچ روشی به نمونهٔ مشترک اشاره نمی‌کند. */
+export function previewSampleSchedule(cutoffHours = 4): PreviewSchedule {
+  const hours = {} as Record<PreviewWeekdayId, PreviewDayHours>;
+  for (const day of PREVIEW_WEEKDAY_IDS) {
+    hours[day] = {
+      working: PREVIEW_SAMPLE_WORKING_DAYS.includes(day),
+      fromTime: PREVIEW_SAMPLE_DAY_HOURS.fromTime,
+      toTime: PREVIEW_SAMPLE_DAY_HOURS.toTime,
+    };
+  }
+  return { hours, cutoffHours };
+}
+
+function clonePreviewSchedule(schedule: PreviewSchedule): PreviewSchedule {
+  const hours = {} as Record<PreviewWeekdayId, PreviewDayHours>;
+  for (const day of PREVIEW_WEEKDAY_IDS) {
+    const source = schedule.hours[day];
+    hours[day] = { working: source.working, fromTime: source.fromTime, toTime: source.toTime };
+  }
+  return { hours, cutoffHours: schedule.cutoffHours };
+}
+
+/** خطای یک فیلد ساعت: خالی یا قالب نامعتبر. */
+export type PreviewDayFieldIssue = "missing" | "notTime" | null;
+
+/**
+ * خطاهای سطح فیلدِ یک روز؛ منبع واحد نمایش خطا و اعتبارسنجی «اعمال».
+ * بازهٔ معکوس/مساوی روی «تا» گزارش می‌شود، بدون هیچ بازنویسی یا کشیدن به روز بعد.
+ */
+export type PreviewDayHoursFieldErrors = {
+  start: PreviewDayFieldIssue;
+  end: PreviewDayFieldIssue;
+  interval: "notBefore" | null;
+};
+
+/** خطای یک روز کاری برای خلاصه/اعتبارسنجی: خالی، قالب نامعتبر، یا شروع ≥ پایان. */
+export type PreviewDayHoursIssue = "missing" | "notTime" | "notBefore" | null;
+
+function previewClockMinutes(value: string): number | null {
+  const match = /^(\d{2}):(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return hours * 60 + minutes;
+}
+
+/** روز تعطیل هیچ بازهٔ عملیاتی ندارد و خطا نمی‌گیرد؛ ساعت تایپ‌شده‌اش دست‌نخورده می‌ماند. */
+export function previewDayHoursFieldErrors(hours: PreviewDayHours): PreviewDayHoursFieldErrors {
+  if (!hours.working) return { start: null, end: null, interval: null };
+  const fromText = hours.fromTime.trim();
+  const toText = hours.toTime.trim();
+  const from = fromText.length === 0 ? null : previewClockMinutes(fromText);
+  const to = toText.length === 0 ? null : previewClockMinutes(toText);
+  const start: PreviewDayFieldIssue = fromText.length === 0 ? "missing" : from === null ? "notTime" : null;
+  const end: PreviewDayFieldIssue = toText.length === 0 ? "missing" : to === null ? "notTime" : null;
+  const interval =
+    start === null && end === null && from !== null && to !== null && to <= from ? "notBefore" : null;
+  return { start, end, interval };
+}
+
+export function previewDayHoursIssue(hours: PreviewDayHours): PreviewDayHoursIssue {
+  const errors = previewDayHoursFieldErrors(hours);
+  return errors.start ?? errors.end ?? errors.interval;
+}
+
+export type PreviewScheduleIssues = Readonly<Record<PreviewWeekdayId, PreviewDayHoursIssue>>;
+
+export function previewScheduleIssues(schedule: PreviewSchedule): PreviewScheduleIssues {
+  const issues = {} as Record<PreviewWeekdayId, PreviewDayHoursIssue>;
+  for (const day of PREVIEW_WEEKDAY_IDS) issues[day] = previewDayHoursIssue(schedule.hours[day]);
+  return issues;
+}
+
+/** همهٔ روزها تعطیل هم معتبر است؛ قاعدهٔ «حداقل یک روز فعال» ساخته نمی‌شود. */
+export function previewScheduleIsValid(schedule: PreviewSchedule): boolean {
+  return PREVIEW_WEEKDAY_IDS.every((day) => previewDayHoursIssue(schedule.hours[day]) === null);
+}
+
+export function previewScheduleActiveDays(schedule: PreviewSchedule): PreviewWeekdayId[] {
+  return PREVIEW_WEEKDAY_IDS.filter((day) => schedule.hours[day].working);
+}
+
+/**
+ * قطعه‌های جمع‌شدهٔ برنامه برای خلاصهٔ صادقانه: روزهای متوالی با ساعت یکسان یک قطعه‌اند
+ * و روزهای تعطیل جدا گزارش می‌شوند؛ هرگز یک بازهٔ مشترک جعلی ساخته نمی‌شود.
+ */
+export type PreviewScheduleSegment =
+  | { kind: "open"; days: readonly PreviewWeekdayId[]; fromTime: string; toTime: string }
+  | { kind: "closed"; days: readonly PreviewWeekdayId[] };
+
+export function previewScheduleSegments(schedule: PreviewSchedule): PreviewScheduleSegment[] {
+  const segments: PreviewScheduleSegment[] = [];
+  for (const day of PREVIEW_WEEKDAY_IDS) {
+    const hours = schedule.hours[day];
+    const last = segments[segments.length - 1];
+    if (!hours.working) {
+      if (last && last.kind === "closed") {
+        segments[segments.length - 1] = { kind: "closed", days: [...last.days, day] };
+      } else {
+        segments.push({ kind: "closed", days: [day] });
+      }
+      continue;
+    }
+    if (
+      last &&
+      last.kind === "open" &&
+      last.fromTime === hours.fromTime &&
+      last.toTime === hours.toTime
+    ) {
+      segments[segments.length - 1] = { kind: "open", days: [...last.days, day], fromTime: last.fromTime, toTime: last.toTime };
+    } else {
+      segments.push({ kind: "open", days: [day], fromTime: hours.fromTime, toTime: hours.toTime });
+    }
+  }
+  return segments;
+}
+
+/** یک روز را تغییر می‌دهد و بقیهٔ روزها را دست‌نخورده نگه می‌دارد. */
+export function previewScheduleWithDay(
+  schedule: PreviewSchedule,
+  day: PreviewWeekdayId,
+  hours: PreviewDayHours,
+): PreviewSchedule {
+  return {
+    hours: { ...schedule.hours, [day]: { working: hours.working, fromTime: hours.fromTime, toTime: hours.toTime } },
+    cutoffHours: schedule.cutoffHours,
+  };
+}
 
 /** بازهٔ عددی: `from` شامل، `to` غیرشامل؛ هر دو تهی یعنی «این محور شرطی ندارد». */
 export type PreviewRange = {
@@ -261,7 +415,7 @@ export function clonePreviewMethod(method: PreviewMethod): PreviewMethod {
     calculationMode: method.calculationMode,
     status: method.status,
     carrierId: method.carrierId,
-    schedule: { ...method.schedule, weekdays: [...method.schedule.weekdays] },
+    schedule: clonePreviewSchedule(method.schedule),
     regionGroups: method.regionGroups.map((group) => ({
       id: group.id,
       titles: { ...group.titles },
@@ -524,7 +678,7 @@ export function previewNewMethod(id: string, ownerKind: PreviewOwnerKind = "mark
     calculationMode: "manual",
     status: "inactive",
     carrierId: null,
-    schedule: { weekdays: [0, 1, 2, 3, 4], fromTime: "09:00", toTime: "18:00", cutoffHours: 4 },
+    schedule: previewSampleSchedule(),
     regionGroups: [],
   };
 }

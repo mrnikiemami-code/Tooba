@@ -6,21 +6,76 @@
  * ظاهر و تعامل در حافظه خوانده می‌شود.
  */
 
-import type { PreviewMethod } from "./preview-model.ts";
+import {
+  PREVIEW_WEEKDAY_IDS,
+  type PreviewDayHours,
+  type PreviewMethod,
+  type PreviewSchedule,
+  type PreviewWeekdayId,
+} from "./preview-model.ts";
 
-const SCHEDULE_STANDARD = {
-  weekdays: [0, 1, 2, 3, 4] as const,
-  fromTime: "09:00",
-  toTime: "18:00",
-  cutoffHours: 4,
-};
+type SampleWindow = { fromTime: string; toTime: string };
 
-const SCHEDULE_EXTENDED = {
-  weekdays: [0, 1, 2, 3, 4, 5] as const,
-  fromTime: "08:00",
-  toTime: "20:00",
-  cutoffHours: 6,
-};
+/**
+ * نمونهٔ صریح برنامهٔ هفتگی: هر روز مستقل و بازهٔ هر روز فقط همان روز است.
+ * روز تعطیل ساعت پیش‌فرض نمونه را نگه می‌دارد تا فعال‌کردن دوباره‌اش خالی نباشد.
+ */
+function sampleSchedule(
+  open: Partial<Record<PreviewWeekdayId, SampleWindow>>,
+  cutoffHours: number,
+): PreviewSchedule {
+  const hours = {} as Record<PreviewWeekdayId, PreviewDayHours>;
+  for (const day of PREVIEW_WEEKDAY_IDS) {
+    const window = open[day];
+    hours[day] = {
+      working: window !== undefined,
+      fromTime: window?.fromTime ?? "09:00",
+      toTime: window?.toTime ?? "18:00",
+    };
+  }
+  return { hours, cutoffHours };
+}
+
+/** نمونهٔ پایه: شنبه تا چهارشنبه ۰۹:۰۰–۱۸:۰۰، پنجشنبه و جمعه تعطیل. */
+const SCHEDULE_STANDARD = sampleSchedule(
+  {
+    sat: { fromTime: "09:00", toTime: "18:00" },
+    sun: { fromTime: "09:00", toTime: "18:00" },
+    mon: { fromTime: "09:00", toTime: "18:00" },
+    tue: { fromTime: "09:00", toTime: "18:00" },
+    wed: { fromTime: "09:00", toTime: "18:00" },
+  },
+  4,
+);
+
+/**
+ * نمونهٔ درخواست مالک: شنبه ۰۹:۰۰–۱۳:۰۰، یکشنبه ۱۵:۰۰–۱۸:۰۰، جمعه تعطیل.
+ * تفاوت ساعت روزها صرفاً نمونهٔ نمایشی است، نه ساعات واقعی کسب‌وکار.
+ */
+const SCHEDULE_MIXED_DAYS = sampleSchedule(
+  {
+    sat: { fromTime: "09:00", toTime: "13:00" },
+    sun: { fromTime: "15:00", toTime: "18:00" },
+    mon: { fromTime: "09:00", toTime: "18:00" },
+    tue: { fromTime: "10:00", toTime: "14:00" },
+    wed: { fromTime: "09:00", toTime: "12:30" },
+    thu: { fromTime: "16:00", toTime: "19:00" },
+  },
+  4,
+);
+
+/** نمونهٔ گسترده: شنبه تا پنجشنبه ۰۸:۰۰–۲۰:۰۰، جمعه تعطیل. */
+const SCHEDULE_EXTENDED = sampleSchedule(
+  {
+    sat: { fromTime: "08:00", toTime: "20:00" },
+    sun: { fromTime: "08:00", toTime: "20:00" },
+    mon: { fromTime: "08:00", toTime: "20:00" },
+    tue: { fromTime: "08:00", toTime: "20:00" },
+    wed: { fromTime: "08:00", toTime: "20:00" },
+    thu: { fromTime: "08:00", toTime: "20:00" },
+  },
+  6,
+);
 
 export const PREVIEW_METHOD_FIXTURES: readonly PreviewMethod[] = [
   {
@@ -37,7 +92,7 @@ export const PREVIEW_METHOD_FIXTURES: readonly PreviewMethod[] = [
     calculationMode: "manual",
     status: "active",
     carrierId: null,
-    schedule: SCHEDULE_STANDARD,
+    schedule: SCHEDULE_MIXED_DAYS,
     regionGroups: [
       {
         id: "group-tehran-qom",

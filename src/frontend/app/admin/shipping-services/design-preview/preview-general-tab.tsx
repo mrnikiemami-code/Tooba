@@ -15,6 +15,7 @@ import {
   PREVIEW_CONTENT_LANGUAGE_IDS,
   PREVIEW_SHIPPING_TYPE_IDS,
   PREVIEW_STORE_CURRENCY,
+  previewScheduleActiveDays,
   previewTextFor,
   previewTranslationStates,
   previewTranslationSummary,
@@ -24,13 +25,13 @@ import {
   type PreviewMethod,
   type PreviewShippingTypeId,
 } from "./preview-model.ts";
+import { PreviewScheduleEditor } from "./preview-schedule-editor.tsx";
 import {
-  PREVIEW_WEEKDAY_KEYS,
   formatPreviewMoney,
   formatPreviewNumber,
-  formatPreviewTime,
   previewContentLanguageLabel,
   previewFormat,
+  describePreviewScheduleSummary,
   type PreviewMessages,
 } from "./preview-i18n.ts";
 
@@ -89,10 +90,6 @@ export function PreviewGeneralTab({
   ): void => patch({ [field]: { ...draft[field], [languageId]: value } } as Partial<PreviewMethod>);
 
   const totalRows = draft.regionGroups.reduce((total, group) => total + group.rows.length, 0);
-  const scheduleDays = draft.schedule.weekdays
-    .map((day) => messages[PREVIEW_WEEKDAY_KEYS[day]] ?? "")
-    .filter((label) => label.length > 0)
-    .join("، ");
 
   return (
     <div className="grid gap-5" data-testid="shipping-preview-general-tab">
@@ -321,18 +318,13 @@ export function PreviewGeneralTab({
         ) : null}
       </section>
 
-      {/* برنامهٔ کاری مشترک — جمع‌شده با بازشدن اختیاری */}
+      {/* برنامهٔ کاری روش — ساعت هر روز مستقل؛ جمع‌شده با بازشدن اختیاری */}
       <section className="rounded-2xl border border-border bg-surface-elevated p-3 md:p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-black text-gray-900">{messages.scheduleTitle}</h3>
             <p className="mt-1 text-xs text-gray-600" data-testid="shipping-preview-schedule-summary">
-              {previewFormat(messages.scheduleSummary, {
-                days: scheduleDays || messages.dash,
-                from: formatPreviewTime(draft.schedule.fromTime, locale),
-                to: formatPreviewTime(draft.schedule.toTime, locale),
-                cutoff: formatPreviewNumber(draft.schedule.cutoffHours, locale),
-              })}
+              {describePreviewScheduleSummary(draft.schedule, locale)}
             </p>
           </div>
           <button
@@ -349,57 +341,19 @@ export function PreviewGeneralTab({
 
         {scheduleOpen ? (
           <div className="mt-3 grid gap-3">
-            <div>
-              <p className="text-xs font-bold text-gray-900">{messages.scheduleDays}</p>
-              <div className="mt-1 flex flex-wrap gap-2">
-                {PREVIEW_WEEKDAY_KEYS.map((key, day) => {
-                  const checked = draft.schedule.weekdays.includes(day);
-                  return (
-                    <label key={key} className="inline-flex items-center gap-1 text-xs">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        disabled={readOnly}
-                        data-testid={`shipping-preview-weekday-${day}`}
-                        onChange={() =>
-                          patch({
-                            schedule: {
-                              ...draft.schedule,
-                              weekdays: checked
-                                ? draft.schedule.weekdays.filter((value) => value !== day)
-                                : [...draft.schedule.weekdays, day].sort((a, b) => a - b),
-                            },
-                          })
-                        }
-                      />
-                      {messages[key]}
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
+            <PreviewScheduleEditor
+              schedule={draft.schedule}
+              readOnly={readOnly}
+              locale={locale}
+              messages={messages}
+              onChange={(schedule) => patch({ schedule })}
+            />
             <div className="grid gap-3 md:grid-cols-3">
-              <Field id={`${fieldId}-from`} label={messages.scheduleFrom}>
-                <Input
-                  type="time"
-                  value={draft.schedule.fromTime}
-                  disabled={readOnly}
-                  dir="ltr"
-                  onChange={(event) =>
-                    patch({ schedule: { ...draft.schedule, fromTime: event.target.value } })
-                  }
-                />
-              </Field>
-              <Field id={`${fieldId}-to`} label={messages.scheduleTo}>
-                <Input
-                  type="time"
-                  value={draft.schedule.toTime}
-                  disabled={readOnly}
-                  dir="ltr"
-                  onChange={(event) => patch({ schedule: { ...draft.schedule, toTime: event.target.value } })}
-                />
-              </Field>
-              <Field id={`${fieldId}-cutoff`} label={messages.scheduleCutoff}>
+              <Field
+                id={`${fieldId}-cutoff`}
+                label={messages.scheduleCutoff}
+                hint={messages.scheduleTimeSampleNote}
+              >
                 <Input
                   type="number"
                   min={0}
@@ -408,11 +362,21 @@ export function PreviewGeneralTab({
                   disabled={readOnly}
                   dir="ltr"
                   onChange={(event) =>
-                    patch({ schedule: { ...draft.schedule, cutoffHours: Number(event.target.value) } })
+                    patch({
+                      schedule: { ...draft.schedule, cutoffHours: Number(event.target.value) },
+                    })
                   }
                 />
               </Field>
             </div>
+            {previewScheduleActiveDays(draft.schedule).length === 0 ? (
+              <p
+                className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800"
+                data-testid="shipping-preview-schedule-all-closed"
+              >
+                {messages.scheduleAllClosed}
+              </p>
+            ) : null}
           </div>
         ) : null}
 

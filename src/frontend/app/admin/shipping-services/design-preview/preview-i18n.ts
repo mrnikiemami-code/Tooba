@@ -9,8 +9,13 @@
 
 import {
   PREVIEW_STORE_CURRENCY,
+  previewScheduleActiveDays,
+  previewScheduleSegments,
+  type PreviewDayHoursIssue,
   type PreviewLocale,
   type PreviewRange,
+  type PreviewSchedule,
+  type PreviewWeekdayId,
 } from "./preview-model.ts";
 
 export const previewMessagesFa = {
@@ -105,15 +110,30 @@ export const previewMessagesFa = {
   freeFundingSeller: "فروشنده",
   freePromotionNote:
     "آفر «ارسال رایگان» موضوع Promotion است و با حالت پایهٔ «رایگان» یکی نیست؛ این پیش‌نمایش هیچ آستانهٔ کمپین نمی‌سازد.",
-  scheduleTitle: "برنامهٔ کاری مشترک",
-  scheduleSummary: "{days} · {from} تا {to} · مهلت سفارش {cutoff} ساعت",
+  scheduleTitle: "ساعات کاری هر روز",
+  scheduleSummaryDay: "{day} {from}–{to}",
+  scheduleSummaryOpenDays: "{days} {from}–{to}",
+  scheduleSummaryOpenRange: "{firstDay} تا {lastDay} {from}–{to}",
+  scheduleSummaryClosed: "{days} تعطیل",
+  scheduleSummaryCutoff: "مهلت سفارش {cutoff} ساعت",
+  scheduleAllClosed: "همهٔ روزهای هفته تعطیل‌اند؛ این روش هیچ بازهٔ عملیاتی ندارد.",
   scheduleExpand: "جزئیات برنامه",
   scheduleCollapse: "بستن جزئیات",
-  scheduleDays: "روزهای کاری",
+  scheduleTableDay: "روز هفته",
+  scheduleTableStatus: "وضعیت",
+  scheduleDayOpen: "باز",
+  scheduleDayClosed: "تعطیل",
   scheduleFrom: "از ساعت",
   scheduleTo: "تا ساعت",
   scheduleCutoff: "مهلت سفارش پیش از شروع (ساعت)",
-  scheduleSharedNote: "این برنامه برای همهٔ مناطق و ردیف‌های همین روش مشترک است و در ردیف تکرار نمی‌شود.",
+  scheduleSharedNote:
+    "این برنامه برای همهٔ مناطق و ردیف‌های همین روش مشترک است؛ ساعت هر روز مستقل تنظیم می‌شود و در ردیف تکرار نمی‌شود.",
+  scheduleClosedDayNote: "روز تعطیل بازهٔ عملیاتی ندارد؛ ساعت تایپ‌شده برای بازگشت به حالت باز حفظ می‌شود.",
+  scheduleTimeSampleNote: "ساعت‌ها نمونهٔ همین پیش‌نمایش‌اند؛ منطقهٔ زمانی تبدیل نمی‌شود.",
+  scheduleErrorMissing: "ساعت شروع و پایان این روز را وارد کنید.",
+  scheduleErrorNotTime: "قالب ساعت نامعتبر است؛ HH:mm لازم است.",
+  scheduleErrorNotBefore: "ساعت پایان این روز باید بعد از ساعت شروع باشد.",
+  scheduleApplyBlocked: "برنامهٔ کاری نامعتبر است؛ ابتدا خطاهای روزها را اصلاح کنید. چیزی اعمال نشد.",
   preparationNote: "زمان آماده‌سازی فروشنده از مدت حمل جداست و در این پیش‌نمایش مقدار ندارد.",
   weekdaySat: "شنبه",
   weekdaySun: "یکشنبه",
@@ -292,15 +312,30 @@ export const previewMessagesEn: Record<PreviewMessageKey, string> = {
   freeFundingSeller: "Seller",
   freePromotionNote:
     "A free-shipping offer is a Promotion and is not the same as the base free mode; this preview creates no campaign threshold.",
-  scheduleTitle: "Shared operating schedule",
-  scheduleSummary: "{days} · {from} to {to} · order cutoff {cutoff} h",
+  scheduleTitle: "Operating hours per weekday",
+  scheduleSummaryDay: "{day} {from}–{to}",
+  scheduleSummaryOpenDays: "{days} {from}–{to}",
+  scheduleSummaryOpenRange: "{firstDay} to {lastDay} {from}–{to}",
+  scheduleSummaryClosed: "{days} closed",
+  scheduleSummaryCutoff: "order cutoff {cutoff} h",
+  scheduleAllClosed: "Every weekday is closed; this method has no operating window.",
   scheduleExpand: "Schedule details",
   scheduleCollapse: "Hide details",
-  scheduleDays: "Working days",
+  scheduleTableDay: "Weekday",
+  scheduleTableStatus: "Status",
+  scheduleDayOpen: "Working",
+  scheduleDayClosed: "Closed",
   scheduleFrom: "From",
   scheduleTo: "To",
   scheduleCutoff: "Order cutoff before start (hours)",
-  scheduleSharedNote: "This schedule is shared by every region and row of this method and is not repeated per row.",
+  scheduleSharedNote:
+    "This schedule is shared by every region and row of this method; each weekday's hours are configured independently and are not repeated per row.",
+  scheduleClosedDayNote: "A closed day has no operating window; the typed hours are kept so reopening the day restores them.",
+  scheduleTimeSampleNote: "Times are sample values for this preview; no time zone conversion is applied.",
+  scheduleErrorMissing: "Enter this day's start and end time.",
+  scheduleErrorNotTime: "This time format is invalid; HH:mm is required.",
+  scheduleErrorNotBefore: "This day's end time must be later than its start time.",
+  scheduleApplyBlocked: "The operating schedule is invalid; fix the weekday errors first. Nothing was applied.",
   preparationNote: "Seller preparation time is separate from transit time and has no value in this preview.",
   weekdaySat: "Saturday",
   weekdaySun: "Sunday",
@@ -511,17 +546,71 @@ export function formatPreviewTime(value: string, locale: PreviewLocale): string 
   );
 }
 
-export const PREVIEW_WEEKDAY_KEYS = [
-  "weekdaySat",
-  "weekdaySun",
-  "weekdayMon",
-  "weekdayTue",
-  "weekdayWed",
-  "weekdayThu",
-  "weekdayFri",
-] as const satisfies readonly PreviewMessageKey[];
+/** نگاشت هویت پایدار روز به کلید پیام؛ ترتیب نمایش از `PREVIEW_WEEKDAY_IDS` می‌آید. */
+export const PREVIEW_WEEKDAY_MESSAGE_KEYS: Readonly<
+  Record<PreviewWeekdayId, PreviewMessageKey>
+> = {
+  sat: "weekdaySat",
+  sun: "weekdaySun",
+  mon: "weekdayMon",
+  tue: "weekdayTue",
+  wed: "weekdayWed",
+  thu: "weekdayThu",
+  fri: "weekdayFri",
+};
 
-export function previewWeekdayLabel(day: number, locale: PreviewLocale): string {
-  const key = PREVIEW_WEEKDAY_KEYS[day];
-  return key ? previewMessages(locale)[key] : "";
+export function previewWeekdayLabel(day: PreviewWeekdayId, locale: PreviewLocale): string {
+  return previewMessages(locale)[PREVIEW_WEEKDAY_MESSAGE_KEYS[day]];
+}
+
+/**
+ * خلاصهٔ صادقانهٔ برنامه: قطعه‌های پیوستهٔ هم‌ساعت جدا و روزهای تعطیل صریح گزارش می‌شوند.
+ * هرگز یک بازهٔ واحد جعلی برای روزهایی با ساعت متفاوت ساخته نمی‌شود.
+ */
+export function describePreviewScheduleSummary(schedule: PreviewSchedule, locale: PreviewLocale): string {
+  const messages = previewMessages(locale);
+  const joiner = locale === "fa" ? "، " : ", ";
+  if (previewScheduleActiveDays(schedule).length === 0) return messages.scheduleAllClosed;
+  const parts = previewScheduleSegments(schedule).map((segment) => {
+    if (segment.kind === "closed") {
+      return previewFormat(messages.scheduleSummaryClosed, {
+        days: segment.days.map((day) => previewWeekdayLabel(day, locale)).join(joiner),
+      });
+    }
+    const from = formatPreviewTime(segment.fromTime, locale);
+    const to = formatPreviewTime(segment.toTime, locale);
+    const firstDay = segment.days[0]!;
+    if (segment.days.length === 1) {
+      return previewFormat(messages.scheduleSummaryDay, { day: previewWeekdayLabel(firstDay, locale), from, to });
+    }
+    if (segment.days.length === 2) {
+      return previewFormat(messages.scheduleSummaryOpenDays, {
+        days: segment.days.map((day) => previewWeekdayLabel(day, locale)).join(joiner),
+        from,
+        to,
+      });
+    }
+    return previewFormat(messages.scheduleSummaryOpenRange, {
+      firstDay: previewWeekdayLabel(firstDay, locale),
+      lastDay: previewWeekdayLabel(segment.days[segment.days.length - 1]!, locale),
+      from,
+      to,
+    });
+  });
+  const cutoff = previewFormat(messages.scheduleSummaryCutoff, {
+    cutoff: formatPreviewNumber(schedule.cutoffHours, locale),
+  });
+  return `${parts.join(joiner)} · ${cutoff}`;
+}
+
+/** پیام خطای یک روز کاری؛ `null` برای روز سالم یا تعطیل. */
+export function previewDayHoursIssueMessage(
+  issue: PreviewDayHoursIssue,
+  locale: PreviewLocale,
+): string | undefined {
+  if (issue === null) return undefined;
+  const messages = previewMessages(locale);
+  if (issue === "missing") return messages.scheduleErrorMissing;
+  if (issue === "notTime") return messages.scheduleErrorNotTime;
+  return messages.scheduleErrorNotBefore;
 }

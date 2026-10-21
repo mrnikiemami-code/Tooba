@@ -19,6 +19,7 @@ import {
   previewDirection,
   previewNewMethod,
   previewNextId,
+  previewScheduleIsValid,
   previewTextFor,
   type PreviewLocale,
   type PreviewMethod,
@@ -58,6 +59,8 @@ export function ShippingDesignPreviewScreen() {
   const [draft, setDraft] = useState<PreviewMethod | null>(null);
   const [tab, setTab] = useState<PreviewTabId>("general");
   const [notice, setNotice] = useState<string | undefined>(undefined);
+  /** لحن پیام نوار: خطای اعتبارسنجی «اعمال» باید از پیام موفقیت روشن باشد. */
+  const [noticeTone, setNoticeTone] = useState<"success" | "error">("success");
   /** ورودی ردیف هنوز اعمال‌نشده؛ منبعش داخل زبانهٔ مناطق است و از آن‌جا گزارش می‌شود. */
   const [pendingRowInput, setPendingRowInput] = useState(false);
   /** کلید انتخاب مالک؛ برای بازگرداندن قطعی select وقتی کاربر انصراف می‌دهد. */
@@ -125,6 +128,12 @@ export function ShippingDesignPreviewScreen() {
   /** فقط draft محلی؛ هیچ درخواستی به سرور نمی‌رود و پیام صریح همان را می‌گوید. */
   const applyDraft = useCallback(() => {
     if (!draft || !editor) return;
+    // اعتبارسنجی همگام پیش از اولین اعمال: برنامهٔ نامعتبر هرگز اعمال نمی‌شود.
+    if (!previewScheduleIsValid(draft.schedule)) {
+      setNoticeTone("error");
+      setNotice(messages.scheduleApplyBlocked);
+      return;
+    }
     setMethods((current) => {
       const exists = current.some((method) => method.id === draft.id);
       return exists
@@ -132,8 +141,9 @@ export function ShippingDesignPreviewScreen() {
         : [...current, clonePreviewMethod(draft)];
     });
     if (editor.mode === "create") setEditor({ methodId: draft.id, mode: "edit" });
+    setNoticeTone("success");
     setNotice(messages.appliedToPreview);
-  }, [draft, editor, messages.appliedToPreview]);
+  }, [draft, editor, messages.appliedToPreview, messages.scheduleApplyBlocked]);
 
   const resetDraft = useCallback(() => {
     if (!draft) return;
@@ -141,6 +151,7 @@ export function ShippingDesignPreviewScreen() {
     if (!baseline) return;
     setDraft(clonePreviewMethod(baseline));
     setMethods((current) => current.map((method) => (method.id === draft.id ? clonePreviewMethod(baseline) : method)));
+    setNoticeTone("success");
     setNotice(messages.resetDone);
   }, [draft, messages.resetDone]);
 
@@ -221,8 +232,13 @@ export function ShippingDesignPreviewScreen() {
 
       {notice ? (
         <p
-          role="status"
-          className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800"
+          role={noticeTone === "error" ? "alert" : "status"}
+          data-tone={noticeTone}
+          className={
+            noticeTone === "error"
+              ? "rounded-xl border border-danger/40 bg-red-50 px-3 py-2 text-xs font-semibold text-danger"
+              : "rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800"
+          }
           data-testid="shipping-preview-notice"
         >
           {notice}

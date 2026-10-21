@@ -6,8 +6,13 @@ import { fileURLToPath } from "node:url";
 
 import {
   PREVIEW_PLACES,
+  PREVIEW_SAMPLE_DAY_HOURS,
+  PREVIEW_WEEKDAY_IDS,
   clonePreviewMethod,
+  previewDayHoursFieldErrors,
+  previewDayHoursIssue,
   previewMethodSelectedPlaces,
+  previewNewMethod,
   previewPlaceAncestors,
   previewPlaceCandidateState,
   previewPlaceConflict,
@@ -16,6 +21,11 @@ import {
   previewRowFromRawInputs,
   previewRowInputErrors,
   previewRowInputsAreValid,
+  previewSampleSchedule,
+  previewScheduleActiveDays,
+  previewScheduleIsValid,
+  previewScheduleSegments,
+  previewScheduleWithDay,
   previewTextFor,
   previewTranslationStates,
   previewTranslationSummary,
@@ -25,6 +35,7 @@ import {
 import { PREVIEW_METHOD_FIXTURES } from "./preview-fixtures.ts";
 import {
   describePreviewRange,
+  describePreviewScheduleSummary,
   formatPreviewMoney,
   previewMessagesEn,
   previewMessagesFa,
@@ -247,4 +258,174 @@ test("PREVIEW-186-R1: the picker never disables options and both tab panels stay
   assert.ok(screen.includes('hidden={tab !== "general"}'));
   assert.ok(screen.includes('hidden={tab !== "regions"}'));
   assert.ok(screen.includes("discardAndChangeOwner"));
+});
+
+/* —————————————————— TB-186-R2 per-weekday schedule coverage —————————————————— */
+
+const SAMPLE_SCHEDULE_METHOD = PREVIEW_METHOD_FIXTURES.find((method) => method.id === "method-express");
+
+test("PREVIEW-186-R2: every weekday is configured independently", () => {
+  const sample = SAMPLE_SCHEDULE_METHOD;
+  assert.ok(sample, "the opening sample method must exist");
+  // نمونهٔ درخواست مالک در روش SAMPLE: شنبه ۰۹:۰۰–۱۳:۰۰، یکشنبه ۱۵:۰۰–۱۸:۰۰، جمعه تعطیل.
+  assert.deepEqual(
+    { working: sample.schedule.hours.sat.working, from: sample.schedule.hours.sat.fromTime, to: sample.schedule.hours.sat.toTime },
+    { working: true, from: "09:00", to: "13:00" },
+  );
+  assert.deepEqual(
+    { working: sample.schedule.hours.sun.working, from: sample.schedule.hours.sun.fromTime, to: sample.schedule.hours.sun.toTime },
+    { working: true, from: "15:00", to: "18:00" },
+  );
+  assert.equal(sample.schedule.hours.fri.working, false);
+
+  // تغییر یک روز فقط همان روز را تغییر می‌دهد؛ هیچ بازهٔ مشترکی نوشته نمی‌شود.
+  const draft = clonePreviewMethod(sample);
+  const mondayBefore = { ...draft.schedule.hours.mon };
+  const sundayBefore = { ...draft.schedule.hours.sun };
+  const changed = previewScheduleWithDay(draft.schedule, "sun", {
+    working: true,
+    fromTime: "16:30",
+    toTime: "19:00",
+  });
+  assert.deepEqual(changed.hours.sun, { working: true, fromTime: "16:30", toTime: "19:00" });
+  assert.deepEqual(changed.hours.sat, draft.schedule.hours.sat);
+  assert.deepEqual(changed.hours.mon, mondayBefore);
+  assert.notDeepEqual(changed.hours.sun, sundayBefore);
+  assert.equal(changed.cutoffHours, draft.schedule.cutoffHours);
+});
+
+test("PREVIEW-186-R2: cloning isolates schedule across methods, drafts and owners", () => {
+  const source = PREVIEW_METHOD_FIXTURES[0]!;
+  const copy = clonePreviewMethod(source);
+  const neighbor = clonePreviewMethod(source);
+  (copy.schedule.hours.sat as { fromTime: string }).fromTime = "07:15";
+  assert.equal(source.schedule.hours.sat.fromTime, "09:00");
+  assert.equal(neighbor.schedule.hours.sat.fromTime, "09:00");
+
+  // روش تازه هم نمونهٔ مستقل می‌گیرد؛ دو روش تازه به یک آبجکت اشاره نمی‌کنند.
+  const freshA = previewNewMethod("method-new-a", "marketplace");
+  const freshB = previewNewMethod("method-new-b", "seller");
+  (freshA.schedule.hours.fri as { working: boolean }).working = true;
+  assert.equal(freshB.schedule.hours.fri.working, false);
+  assert.equal(previewSampleSchedule().hours.fri.working, false);
+  // پیش‌فرض روش تازه صریح و نمونه است، نه بازهٔ مشترک استنتاج‌شده.
+  assert.deepEqual(
+    { working: freshA.schedule.hours.sat.working, from: freshA.schedule.hours.sat.fromTime, to: freshA.schedule.hours.sat.toTime },
+    { working: true, from: PREVIEW_SAMPLE_DAY_HOURS.fromTime, to: PREVIEW_SAMPLE_DAY_HOURS.toTime },
+  );
+});
+
+test("PREVIEW-186-R2: a closed day has no operating interval and keeps its typed hours", () => {
+  const sample = clonePreviewMethod(SAMPLE_SCHEDULE_METHOD!);
+  // روز تعطیل هرگز خطا نمی‌دهد، حتی با ساعت خالی یا معکوس.
+  assert.equal(previewDayHoursIssue({ working: false, fromTime: "", toTime: "" }), null);
+  assert.equal(previewDayHoursIssue({ working: false, fromTime: "18:00", toTime: "09:00" }), null);
+
+  // خاموش‌کردن یک روز ساعت تایپ‌شده‌اش را پاک نمی‌کند؛ روشن‌کردن دوباره همان ساعت را برمی‌گرداند.
+  const closed = previewScheduleWithDay(sample.schedule, "sat", {
+    working: false,
+    fromTime: sample.schedule.hours.sat.fromTime,
+    toTime: sample.schedule.hours.sat.toTime,
+  });
+  assert.deepEqual(closed.hours.sat, { working: false, fromTime: "09:00", toTime: "13:00" });
+  assert.deepEqual(previewScheduleActiveDays(closed), previewScheduleActiveDays(sample.schedule).filter((day) => day !== "sat"));
+
+  // روز تعطیل در خلاصهٔ صادقانه جدا گزارش می‌شود.
+  const segments = previewScheduleSegments(closed);
+  const satSegment = segments.find((segment) => segment.days.includes("sat"));
+  assert.equal(satSegment?.kind, "closed");
+  assert.equal(segments.some((segment) => segment.kind === "open" && segment.days.includes("sat")), false);
+
+  // همهٔ روزها تعطیل: معتبر است، اما خلاصه صریحاً «هیچ بازهٔ عملیاتی» می‌گوید.
+  const allClosed = previewScheduleWithDay(clonePreviewMethod(PREVIEW_METHOD_FIXTURES[0]!).schedule, "sat", {
+    working: false,
+    fromTime: "09:00",
+    toTime: "13:00",
+  });
+  const everyClosed = PREVIEW_WEEKDAY_IDS.reduce(
+    (schedule, day) => previewScheduleWithDay(schedule, day, { ...schedule.hours[day], working: false }),
+    allClosed,
+  );
+  assert.deepEqual(previewScheduleActiveDays(everyClosed), []);
+  assert.equal(previewScheduleIsValid(everyClosed), true);
+  assert.equal(describePreviewScheduleSummary(everyClosed, "en"), previewMessagesEn.scheduleAllClosed);
+});
+
+test("PREVIEW-186-R2: invalid first Apply is rejected synchronously and never rewritten", () => {
+  const base = clonePreviewMethod(SAMPLE_SCHEDULE_METHOD!).schedule;
+
+  // شروع مساوی/بعد از پایان: خطا روی همان روز، بدون معکوس‌کردن یا کشیدن به روز بعد.
+  const inverted = previewScheduleWithDay(base, "sun", { working: true, fromTime: "18:00", toTime: "18:00" });
+  assert.equal(previewScheduleIsValid(inverted), false);
+  assert.equal(previewDayHoursIssue(inverted.hours.sun), "notBefore");
+  assert.deepEqual(inverted.hours.sun, { working: true, fromTime: "18:00", toTime: "18:00" });
+
+  const backwards = previewScheduleWithDay(base, "wed", { working: true, fromTime: "17:00", toTime: "09:00" });
+  assert.equal(previewDayHoursIssue(backwards.hours.wed), "notBefore");
+  assert.deepEqual(backwards.hours.wed, { working: true, fromTime: "17:00", toTime: "09:00" });
+
+  // ساعت خالی یا نامعتبر هم رد می‌شود و مقدار تایپ‌شده دست‌نخورده می‌ماند.
+  const missing = previewScheduleWithDay(base, "mon", { working: true, fromTime: "", toTime: "18:00" });
+  assert.equal(previewDayHoursIssue(missing.hours.mon), "missing");
+  assert.equal(previewDayHoursFieldErrors(missing.hours.mon).start, "missing");
+  assert.equal(previewScheduleIsValid(missing), false);
+
+  const malformed = previewScheduleWithDay(base, "tue", { working: true, fromTime: "9", toTime: "18:00" });
+  assert.equal(previewDayHoursIssue(malformed.hours.tue), "notTime");
+  assert.equal(previewScheduleIsValid(malformed), false);
+
+  // تصحیح همان روز، اعتبار را برمی‌گرداند.
+  const fixed = previewScheduleWithDay(malformed, "tue", { working: true, fromTime: "10:00", toTime: "14:00" });
+  assert.equal(previewScheduleIsValid(fixed), true);
+  assert.equal(previewDayHoursIssue(fixed.hours.tue), null);
+  // خطای یک روز، بقیهٔ روزها را نامعتبر نمی‌کند.
+  assert.equal(previewDayHoursIssue(inverted.hours.sat), null);
+});
+
+test("PREVIEW-186-R2: the collapsed summary never fakes one shared interval", () => {
+  const sample = SAMPLE_SCHEDULE_METHOD!;
+  const fa = describePreviewScheduleSummary(sample.schedule, "fa");
+  const en = describePreviewScheduleSummary(sample.schedule, "en");
+
+  // ساعت شنبه و یکشنبه با هم متفاوت‌اند و هر دو در خلاصه دیده می‌شوند.
+  assert.ok(en.includes("09:00–13:00"), en);
+  assert.ok(en.includes("15:00–18:00"), en);
+  assert.ok(en.includes(previewMessagesEn.weekdaySat), en);
+  assert.ok(en.includes(previewMessagesEn.weekdaySun), en);
+  assert.ok(/Friday closed|Thu.*Friday closed/.test(en), en);
+  assert.ok(en.includes("order cutoff"), en);
+  assert.equal(fa.includes("09:00"), false, "fa summary must format Persian digits, not raw digits");
+  assert.ok(/[۰-۹]/.test(fa), fa);
+
+  // روزهای پیوسته با ساعت یکسان به یک قطعه جمع می‌شوند، اما ساعت متفاوت ادغام نمی‌شود.
+  const segments = previewScheduleSegments(sample.schedule);
+  const openSegments = segments.filter((segment) => segment.kind === "open");
+  assert.ok(openSegments.length >= 3, "different hours must stay in separate segments");
+  for (const segment of openSegments) {
+    if (segment.kind !== "open") continue;
+    for (const day of segment.days) {
+      assert.equal(sample.schedule.hours[day].fromTime, segment.fromTime);
+      assert.equal(sample.schedule.hours[day].toTime, segment.toTime);
+    }
+  }
+});
+
+test("PREVIEW-186-R2: the weekly editor exposes per-day controls and cannot mutate in View mode", () => {
+  const editor = fs.readFileSync(path.join(here, "preview-schedule-editor.tsx"), "utf8");
+  assert.ok(editor.includes("PREVIEW_WEEKDAY_IDS.map"));
+  assert.ok(editor.includes("shipping-preview-day-${day}-working"));
+  assert.ok(editor.includes("shipping-preview-day-${day}-from"));
+  assert.ok(editor.includes("shipping-preview-day-${day}-to"));
+  assert.ok(editor.includes("disabled={readOnly}"));
+  // هیچ ورودی بازهٔ مشترک قبلی باقی نمانده است.
+  assert.equal(/schedule\.weekdays/.test(editor), false);
+
+  const generalTab = fs.readFileSync(path.join(here, "preview-general-tab.tsx"), "utf8");
+  assert.ok(generalTab.includes("describePreviewScheduleSummary"));
+  assert.equal(/schedule\.weekdays/.test(generalTab), false);
+  assert.equal(/weekday-\$\{day\}/.test(generalTab), false);
+
+  const screen = fs.readFileSync(path.join(here, "design-preview-screen.tsx"), "utf8");
+  assert.ok(screen.includes("previewScheduleIsValid"));
+  assert.ok(screen.includes("scheduleApplyBlocked"));
 });
