@@ -58,6 +58,10 @@ export function ShippingDesignPreviewScreen() {
   const [draft, setDraft] = useState<PreviewMethod | null>(null);
   const [tab, setTab] = useState<PreviewTabId>("general");
   const [notice, setNotice] = useState<string | undefined>(undefined);
+  /** ورودی ردیف هنوز اعمال‌نشده؛ منبعش داخل زبانهٔ مناطق است و از آن‌جا گزارش می‌شود. */
+  const [pendingRowInput, setPendingRowInput] = useState(false);
+  /** کلید انتخاب مالک؛ برای بازگرداندن قطعی select وقتی کاربر انصراف می‌دهد. */
+  const [ownerSelectKey, setOwnerSelectKey] = useState(0);
 
   const messages = useMemo(() => previewMessages(locale), [locale]);
   const direction = previewDirection(locale);
@@ -68,6 +72,8 @@ export function ShippingDesignPreviewScreen() {
   );
   const applied = editor ? methods.find((method) => method.id === editor.methodId) : undefined;
   const dirty = editor !== null && draft !== null && !sameMethod(draft, applied);
+  /** هر کار اعمال‌نشده (پیش‌نویس روش یا ورودی ردیف) یکسان محافظت می‌شود. */
+  const hasUnappliedWork = dirty || pendingRowInput;
 
   const openEditor = useCallback(
     (method: PreviewMethod, mode: PreviewMode) => {
@@ -75,6 +81,7 @@ export function ShippingDesignPreviewScreen() {
       setDraft(clonePreviewMethod(method));
       setEditor({ methodId: method.id, mode });
       setTab("general");
+      setPendingRowInput(false);
     },
     [],
   );
@@ -85,13 +92,35 @@ export function ShippingDesignPreviewScreen() {
     setDraft(fresh);
     setEditor({ methodId: fresh.id, mode: "create" });
     setTab("general");
+    setPendingRowInput(false);
   }, [ownerKind]);
 
   const closeEditor = useCallback(() => {
-    if (dirty && typeof window !== "undefined" && !window.confirm(messages.discardAndGoBack)) return;
+    if (hasUnappliedWork && typeof window !== "undefined" && !window.confirm(messages.discardAndGoBack)) return;
     setEditor(null);
     setDraft(null);
-  }, [dirty, messages.discardAndGoBack]);
+    setPendingRowInput(false);
+  }, [hasUnappliedWork, messages.discardAndGoBack]);
+
+  /**
+   * تغییر مالک هرگز پیش‌نویس را بی‌صدا دور نمی‌ریزد: ابتدا تأیید صریح می‌گیرد،
+   * و انصراف، مالک/مسیر/تمام مقادیر فعلی را دست‌نخورده نگه می‌دارد.
+   */
+  const changeOwner = useCallback(
+    (next: PreviewOwnerKind) => {
+      if (next === ownerKind) return;
+      if (hasUnappliedWork && typeof window !== "undefined" && !window.confirm(messages.discardAndChangeOwner)) {
+        setOwnerSelectKey((current) => current + 1);
+        return;
+      }
+      setOwnerKind(next);
+      setEditor(null);
+      setDraft(null);
+      setPendingRowInput(false);
+      setNotice(undefined);
+    },
+    [hasUnappliedWork, messages.discardAndChangeOwner, ownerKind],
+  );
 
   /** فقط draft محلی؛ هیچ درخواستی به سرور نمی‌رود و پیام صریح همان را می‌گوید. */
   const applyDraft = useCallback(() => {
@@ -173,12 +202,9 @@ export function ShippingDesignPreviewScreen() {
               <select
                 className="mt-1 min-h-9 rounded-lg border border-border bg-surface px-2 text-xs"
                 value={ownerKind}
+                key={`owner-${ownerSelectKey}`}
                 data-testid="shipping-preview-owner"
-                onChange={(event) => {
-                  setOwnerKind(event.target.value as PreviewOwnerKind);
-                  setEditor(null);
-                  setDraft(null);
-                }}
+                onChange={(event) => changeOwner(event.target.value as PreviewOwnerKind)}
               >
                 <option value="marketplace">{messages.ownerMarketplace}</option>
                 <option value="seller">{messages.ownerSeller}</option>
@@ -275,27 +301,28 @@ export function ShippingDesignPreviewScreen() {
             ))}
           </div>
 
-          <div role="tabpanel">
-            {tab === "general" ? (
-              <PreviewGeneralTab
-                draft={draft}
-                readOnly={editor.mode === "view"}
-                locale={locale}
-                messages={messages}
-                contentLanguageId={contentLanguageId}
-                onContentLanguageChange={setContentLanguageId}
-                onChange={setDraft}
-              />
-            ) : (
-              <PreviewRegionsTab
-                draft={draft}
-                readOnly={editor.mode === "view"}
-                locale={locale}
-                messages={messages}
-                contentLanguageId={contentLanguageId}
-                onChange={setDraft}
-              />
-            )}
+          {/* هر دو زبانه سوار می‌مانند تا ورودی اعمال‌نشدهٔ ردیف با تعویض زبانه از بین نرود. */}
+          <div role="tabpanel" hidden={tab !== "general"} data-testid="shipping-preview-panel-general">
+            <PreviewGeneralTab
+              draft={draft}
+              readOnly={editor.mode === "view"}
+              locale={locale}
+              messages={messages}
+              contentLanguageId={contentLanguageId}
+              onContentLanguageChange={setContentLanguageId}
+              onChange={setDraft}
+            />
+          </div>
+          <div role="tabpanel" hidden={tab !== "regions"} data-testid="shipping-preview-panel-regions">
+            <PreviewRegionsTab
+              draft={draft}
+              readOnly={editor.mode === "view"}
+              locale={locale}
+              messages={messages}
+              contentLanguageId={contentLanguageId}
+              onChange={setDraft}
+              onPendingInputChange={setPendingRowInput}
+            />
           </div>
         </article>
       ) : (

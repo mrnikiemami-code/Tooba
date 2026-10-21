@@ -5,7 +5,8 @@
  *
  * قواعد نمایش‌داده‌شده (بدون اعتبارسنجی سرور):
  * - افزودن در هر سطح مجاز است و همان سطح انتخاب می‌شود؛ صرف انتخاب والد برای مرور چیزی اضافه نمی‌کند.
- * - افزودن والد همهٔ زیرمجموعه‌ها را پوشش می‌دهد، پس گزینه‌های متعارض غیرفعال و علت آن خوانا می‌شود.
+ * - «مرور» و «افزودن» دو حالت جدا هستند: گزینه‌های متعارض برای رسیدن به زیرمجموعهٔ آزاد باز می‌مانند،
+ *   ولی دکمهٔ افزودن برای کاندید متعارض غیرفعال است و علت آن خوانا نمایش داده می‌شود.
  * - تکرار و والد/فرزند در دامنهٔ همان مالک/روش مسدود است؛ هیچ حذف یا جایگزینی خودکار انجام نمی‌شود.
  * - نام خوانای کامل مسیر نمایش داده می‌شود، نه کد فنی.
  */
@@ -16,7 +17,7 @@ import { Field, Select } from "../../../../design-system";
 import {
   PREVIEW_PLACES,
   previewChildPlaces,
-  previewPlaceConflict,
+  previewPlaceCandidateState,
   previewPlaceLabel,
   previewPlacePath,
   previewPlacesByLevel,
@@ -72,7 +73,12 @@ export function PreviewRegionPicker({
   };
 
   const candidate = picker.area || picker.city || picker.province || picker.country;
-  const candidateConflict = candidate ? previewPlaceConflict(methodSelected, candidate) : null;
+  /**
+   * «مرور» از «افزودن» جدا است: گزینه‌های متعارض برای پیمایش باز می‌مانند
+   * و فقط دکمهٔ افزودن برای کاندید متعارض غیرفعال می‌شود.
+   */
+  const candidateState = candidate ? previewPlaceCandidateState(methodSelected, candidate) : null;
+  const candidateConflict = candidateState?.conflict ?? null;
 
   const selectLevel = (level: PreviewPlaceLevel, value: string): void => {
     const index = LEVELS.indexOf(level);
@@ -90,7 +96,8 @@ export function PreviewRegionPicker({
     return previewFormat(messages.pickerBlockedCovered, { place });
   }, [candidateConflict, locale, messages]);
 
-  const canAdd = !readOnly && candidate.length > 0 && candidateConflict === null;
+  const addable = candidateState?.addable ?? false;
+  const canAdd = !readOnly && candidate.length > 0 && addable;
 
   return (
     <div className="space-y-3 rounded-xl border border-dashed border-border bg-surface p-3" data-testid="shipping-preview-region-picker">
@@ -113,11 +120,17 @@ export function PreviewRegionPicker({
               >
                 <option value="">{messages.dash}</option>
                 {options.map((place) => {
-                  const conflict = previewPlaceConflict(methodSelected, place.id);
+                  const state = previewPlaceCandidateState(methodSelected, place.id);
                   const label = previewPlaceLabel(place.id, locale);
+                  // گزینهٔ متعارض «قابل پیمایش» است ولی «قابل افزودن» نیست؛ غیرفعال‌کردن آن مسیر را می‌بست.
                   return (
-                    <option key={place.id} value={place.id} disabled={conflict !== null}>
-                      {conflict ? `⛔ ${label}` : label}
+                    <option
+                      key={place.id}
+                      value={place.id}
+                      data-browsable="true"
+                      data-addable={state.addable ? "true" : "false"}
+                    >
+                      {state.addable ? label : `${label} (${messages.pickerBrowseOnly})`}
                     </option>
                   );
                 })}
@@ -145,11 +158,25 @@ export function PreviewRegionPicker({
         >
           {messages.pickerAdd}
         </button>
-        {candidateConflict ? (
-          <p role="status" className="text-[11px] font-semibold text-amber-700" data-testid="shipping-preview-picker-conflict">
+        {candidate.length === 0 ? null : addable ? (
+          <p
+            role="status"
+            className="text-[11px] font-semibold text-emerald-700"
+            data-testid="shipping-preview-picker-addable"
+            data-addable="true"
+          >
+            {messages.pickerCandidateAddable}
+          </p>
+        ) : (
+          <p
+            role="status"
+            className="text-[11px] font-semibold text-amber-700"
+            data-testid="shipping-preview-picker-conflict"
+            data-addable="false"
+          >
             {conflictExplanation}
           </p>
-        ) : null}
+        )}
       </div>
 
       <div>

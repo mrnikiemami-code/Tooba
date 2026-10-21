@@ -60,6 +60,7 @@ export const previewMessagesFa = {
   resetDone: "پیش‌نمایش به دادهٔ نمونهٔ اولیه بازگشت.",
   unsavedChanges: "تغییر اعمال‌نشده دارید.",
   discardAndGoBack: "بازگشت بدون اعمال تغییرات؟",
+  discardAndChangeOwner: "با تغییر مالک، پیش‌نویس اعمال‌نشده و ورودی‌های ردیفِ باز کنار گذاشته می‌شود. ادامه می‌دهید؟",
   viewReadOnly: "حالت مشاهده — فیلدها قابل ویرایش نیستند.",
   sampleNotice: "دادهٔ نمونه",
 
@@ -133,7 +134,7 @@ export const previewMessagesFa = {
   editRegions: "ویرایش مناطق",
   pickerTitle: "انتخاب منطقه",
   pickerHint:
-    "می‌توانید در هر سطح توقف کنید؛ افزودن یک والد همهٔ زیرمجموعه‌هایش را پوشش می‌دهد. انتخاب والد فقط برای مرور، چیزی اضافه نمی‌کند.",
+    "می‌توانید در هر سطح توقف کنید؛ افزودن یک والد همهٔ زیرمجموعه‌هایش را پوشش می‌دهد. انتخاب والد فقط برای مرور است و چیزی اضافه نمی‌کند؛ گزینه‌های «فقط مرور» برای رسیدن به زیرمجموعه‌های آزاد باز می‌مانند و فقط افزودن آن‌ها بسته است.",
   pickerLevelCountry: "کشور",
   pickerLevelProvince: "استان",
   pickerLevelCity: "شهر",
@@ -147,6 +148,8 @@ export const previewMessagesFa = {
   pickerSelectedTitle: "مناطق انتخاب‌شده",
   pickerNoPlaces: "هنوز منطقه‌ای انتخاب نشده است.",
   pickerNoChildren: "زیرمجموعه‌ای در این سطح ثبت نشده است.",
+  pickerBrowseOnly: "فقط مرور",
+  pickerCandidateAddable: "این منطقه قابل افزودن است.",
   pickerExplanation: "حذف یا جایگزینی خودکار انجام نمی‌شود؛ فقط انتخاب‌های متعارض غیرفعال می‌شوند.",
 
   ratesTitle: "ردیف‌های شرط و هزینه",
@@ -181,6 +184,7 @@ export const previewMessagesFa = {
   rowErrorNegative: "مقدار نمی‌تواند منفی باشد.",
   rowErrorInverted: "کرانهٔ پایان باید بزرگ‌تر از کرانهٔ آغاز باشد.",
   rowErrorNotInteger: "این فیلد باید عدد صحیح باشد.",
+  rowErrorNotNumber: "مقدار وارد‌شده عدد معتبر نیست.",
   rowErrorDelivery: "بیشترین روز تحویل نباید کمتر از کمترین باشد.",
   deliveryValue: "{min} تا {max} روز",
 
@@ -244,6 +248,7 @@ export const previewMessagesEn: Record<PreviewMessageKey, string> = {
   resetDone: "The preview is back to its original sample data.",
   unsavedChanges: "You have changes that were not applied.",
   discardAndGoBack: "Go back without applying your changes?",
+  discardAndChangeOwner: "Changing the owner discards the unapplied draft and any open row input. Continue?",
   viewReadOnly: "View mode — fields are read-only.",
   sampleNotice: "Sample data",
 
@@ -315,7 +320,7 @@ export const previewMessagesEn: Record<PreviewMessageKey, string> = {
   editRegions: "Edit regions",
   pickerTitle: "Select regions",
   pickerHint:
-    "You may stop at any level; adding a parent covers all of its descendants. Browsing a parent in the dropdown adds nothing by itself.",
+    "You may stop at any level; adding a parent covers all of its descendants. Browsing a parent adds nothing by itself; options marked “browse only” stay reachable so you can get to free descendants, and only adding them is blocked.",
   pickerLevelCountry: "Country",
   pickerLevelProvince: "Province",
   pickerLevelCity: "City",
@@ -329,6 +334,8 @@ export const previewMessagesEn: Record<PreviewMessageKey, string> = {
   pickerSelectedTitle: "Selected regions",
   pickerNoPlaces: "No region selected yet.",
   pickerNoChildren: "No descendant registered at this level.",
+  pickerBrowseOnly: "browse only",
+  pickerCandidateAddable: "This region can be added.",
   pickerExplanation: "Nothing is removed or replaced automatically; only conflicting choices are disabled.",
 
   ratesTitle: "Condition and cost rows",
@@ -363,6 +370,7 @@ export const previewMessagesEn: Record<PreviewMessageKey, string> = {
   rowErrorNegative: "Value cannot be negative.",
   rowErrorInverted: "The end bound must be greater than the start bound.",
   rowErrorNotInteger: "This field must be a whole number.",
+  rowErrorNotNumber: "The entered value is not a valid number.",
   rowErrorDelivery: "Maximum delivery days cannot be less than the minimum.",
   deliveryValue: "{min}–{max} days",
 

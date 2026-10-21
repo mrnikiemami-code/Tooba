@@ -9,12 +9,18 @@ import {
   clonePreviewMethod,
   previewMethodSelectedPlaces,
   previewPlaceAncestors,
+  previewPlaceCandidateState,
   previewPlaceConflict,
   previewPlacePath,
   previewRangeError,
+  previewRowFromRawInputs,
+  previewRowInputErrors,
+  previewRowInputsAreValid,
   previewTextFor,
   previewTranslationStates,
   previewTranslationSummary,
+  type PreviewMethod,
+  type PreviewRowRawInputs,
 } from "./preview-model.ts";
 import { PREVIEW_METHOD_FIXTURES } from "./preview-fixtures.ts";
 import {
@@ -143,4 +149,102 @@ test("PREVIEW-186: preview code performs no network, storage or business writes"
     }
   }
   assert.deepEqual(violations, []);
+});
+
+/* —————————————————— TB-186-R1 regression coverage —————————————————— */
+
+const EMPTY_ROW_RAW: PreviewRowRawInputs = {
+  weightFromKg: "",
+  weightToKg: "",
+  countFrom: "",
+  countTo: "",
+  amountFrom: "",
+  amountTo: "",
+  freight: "0",
+  packaging: "0",
+  deliveryMin: "1",
+  deliveryMax: "3",
+};
+
+test("PREVIEW-186-R1: browsing an ancestor is not adding it", () => {
+  // گلپایگان انتخاب شده ⇒ ایران/اصفهان افزودنی نیست، اما پیمایش از آن‌ها برای رسیدن به قم آزاد است.
+  const iran = previewPlaceCandidateState(["place-ir-10-glp"], "place-ir");
+  assert.equal(iran.addable, false);
+  assert.equal(iran.conflict?.kind, "covered");
+
+  const isfahan = previewPlaceCandidateState(["place-ir-10-glp"], "place-ir-10");
+  assert.equal(isfahan.addable, false);
+
+  // مسیر عادی: ایران → قم (استان) → قم (شهر) → افزودن.
+  assert.equal(previewPlaceCandidateState(["place-ir-10-glp"], "place-ir-25").addable, true);
+  const qomCity = previewPlaceCandidateState(["place-ir-10-glp"], "place-ir-25-qom");
+  assert.equal(qomCity.addable, true);
+  assert.equal(qomCity.conflict, null);
+
+  // استان تهران انتخاب شده ⇒ پیمایش به شهر/ناحیه‌اش هرگز افزودنی نیست.
+  assert.equal(previewPlaceCandidateState(["place-ir-23"], "place-ir-23-thr").addable, false);
+  assert.equal(previewPlaceCandidateState(["place-ir-23"], "place-ir-23-thr-1").addable, false);
+});
+
+test("PREVIEW-186-R1: conflict domain spans groups of the same method, not other owners", () => {
+  const method: PreviewMethod = clonePreviewMethod(PREVIEW_METHOD_FIXTURES[0]!);
+  method.regionGroups = [
+    { id: "group-a", titles: { fa: "", en: "" }, places: ["place-ir-25-qom"], rows: [] },
+    { id: "group-b", titles: { fa: "", en: "" }, places: [], rows: [] },
+  ];
+  const selected = previewMethodSelectedPlaces(method);
+  // تکرار همان شهر در گروه دوم مسدود است.
+  assert.equal(previewPlaceCandidateState(selected, "place-ir-25-qom").addable, false);
+  // والدِ آن در گروه دوم هم مسدود است (پوشش کل زیرمجموعه).
+  assert.equal(previewPlaceCandidateState(selected, "place-ir-25").addable, false);
+  // کشور دیگر/شهر بی‌تعارض آزاد است.
+  assert.equal(previewPlaceCandidateState(selected, "place-ir-23-thr").addable, true);
+});
+
+test("PREVIEW-186-R1: the first submit rejects min > max delivery days from raw input", () => {
+  const errors = previewRowInputErrors({ ...EMPTY_ROW_RAW, deliveryMin: "5", deliveryMax: "2" });
+  assert.equal(errors.delivery, "inverted");
+  assert.equal(previewRowInputsAreValid(errors), false);
+
+  // تصحیح همان ورودی، همان کلیک بعدی را مجاز می‌کند.
+  const fixed = previewRowInputErrors({ ...EMPTY_ROW_RAW, deliveryMin: "2", deliveryMax: "5" });
+  assert.equal(previewRowInputsAreValid(fixed), true);
+  assert.deepEqual(previewRowFromRawInputs({ ...EMPTY_ROW_RAW, deliveryMin: "2", deliveryMax: "5" }, "row-1").delivery, {
+    minDays: 2,
+    maxDays: 5,
+  });
+});
+
+test("PREVIEW-186-R1: integer and numeric validation happens on raw values before rounding", () => {
+  assert.equal(previewRowInputErrors({ ...EMPTY_ROW_RAW, countFrom: "1.5" }).count, "notInteger");
+  assert.equal(previewRowInputErrors({ ...EMPTY_ROW_RAW, countTo: "2.5" }).count, "notInteger");
+  assert.equal(previewRowInputErrors({ ...EMPTY_ROW_RAW, amountFrom: "-3" }).amount, "negative");
+  assert.equal(previewRowInputErrors({ ...EMPTY_ROW_RAW, amountFrom: "abc" }).amount, "notNumber");
+  assert.equal(previewRowInputErrors({ ...EMPTY_ROW_RAW, weightFromKg: "abc" }).weight, "notNumber");
+  assert.equal(previewRowInputErrors({ ...EMPTY_ROW_RAW, deliveryMin: "2.5" }).delivery, "notInteger");
+  assert.equal(previewRowInputErrors({ ...EMPTY_ROW_RAW, deliveryMax: "-1" }).delivery, "negative");
+  assert.equal(previewRowInputErrors({ ...EMPTY_ROW_RAW, countFrom: "4", countTo: "4" }).count, "inverted");
+  assert.equal(previewRowInputsAreValid(previewRowInputErrors(EMPTY_ROW_RAW)), true, "empty axes carry no condition");
+
+  // کیلوگرم → گرم با همان دقت پشتیبانی‌شده حفظ می‌شود؛ مقدار خام غیرصحیح برای تعداد گرد نمی‌شود.
+  const row = previewRowFromRawInputs(
+    { ...EMPTY_ROW_RAW, weightFromKg: "1.234", weightToKg: "2", countFrom: "1", countTo: "4", freight: "50", packaging: "5" },
+    "row-2",
+  );
+  assert.deepEqual(row.weightGrams, { from: 1234, to: 2000 });
+  assert.deepEqual(row.itemCount, { from: 1, to: 4 });
+  assert.equal(row.freight, 50);
+  assert.equal(row.packaging, 5);
+});
+
+test("PREVIEW-186-R1: the picker never disables options and both tab panels stay mounted", () => {
+  const picker = fs.readFileSync(path.join(here, "preview-region-picker.tsx"), "utf8");
+  // رگرسیون اصلی: غیرفعال‌کردن گزینه‌ها مسیر پیمایش را می‌بست.
+  assert.equal(/<option[^>]*\bdisabled\b/.test(picker), false);
+  assert.ok(picker.includes("previewPlaceCandidateState"));
+
+  const screen = fs.readFileSync(path.join(here, "design-preview-screen.tsx"), "utf8");
+  assert.ok(screen.includes('hidden={tab !== "general"}'));
+  assert.ok(screen.includes('hidden={tab !== "regions"}'));
+  assert.ok(screen.includes("discardAndChangeOwner"));
 });

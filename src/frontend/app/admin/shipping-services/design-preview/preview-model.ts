@@ -298,6 +298,145 @@ export function previewRangeError(
   return null;
 }
 
+/**
+ * ارزیابی یک کاندید در انتخاب‌گر جغرافیا.
+ *
+ * «مرور» و «افزودن» دو حالت جدا هستند: والدِ یک انتخاب موجود فقط «افزودنی نیست»،
+ * اما پیمایش از آن برای رسیدن به زیرمجموعهٔ بی‌تعارض همچنان مجاز است.
+ */
+export type PreviewPlaceCandidateState = {
+  placeId: string;
+  /** فقط وقتی تعارضی نیست؛ تعارض مانع افزودن است، نه مانع پیمایش. */
+  addable: boolean;
+  conflict: PreviewPlaceConflict | null;
+};
+
+export function previewPlaceCandidateState(
+  selectedIds: readonly string[],
+  candidateId: string,
+  places: readonly PreviewPlace[] = PREVIEW_PLACES,
+): PreviewPlaceCandidateState {
+  const conflict = previewPlaceConflict(selectedIds, candidateId, places);
+  return { placeId: candidateId, addable: conflict === null, conflict };
+}
+
+/** ورودی خام فرم ردیف؛ وزن با واحد نمایش کیلوگرم و بقیه با واحد خودشان. */
+export type PreviewRowRawInputs = {
+  weightFromKg: string;
+  weightToKg: string;
+  countFrom: string;
+  countTo: string;
+  amountFrom: string;
+  amountTo: string;
+  freight: string;
+  packaging: string;
+  deliveryMin: string;
+  deliveryMax: string;
+};
+
+export type PreviewRowInputIssue = "notNumber" | "negative" | "notInteger" | "inverted";
+
+export type PreviewRowInputErrors = {
+  weight: PreviewRowInputIssue | null;
+  count: PreviewRowInputIssue | null;
+  amount: PreviewRowInputIssue | null;
+  delivery: PreviewRowInputIssue | null;
+  freight: PreviewRowInputIssue | null;
+  packaging: PreviewRowInputIssue | null;
+};
+
+type PreviewRawNumber = { state: "empty" | "value" | "invalid"; value: number | null };
+
+/**
+ * خواندن خام یک ورودی، پیش از هر گرد کردن/مقیاس‌بندی.
+ * مقدار تهی «شرط ندارد» است، نه صفر.
+ */
+function previewRawNumber(text: string): PreviewRawNumber {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return { state: "empty", value: null };
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed)) return { state: "invalid", value: null };
+  return { state: "value", value: parsed };
+}
+
+/** خطای یک بازهٔ خام؛ ابتدا عدد بودن، سپس علامت، سپس صحیح بودن و در پایان ترتیب کرانه‌ها. */
+function previewRawRangeIssue(fromText: string, toText: string, integer: boolean): PreviewRowInputIssue | null {
+  const from = previewRawNumber(fromText);
+  const to = previewRawNumber(toText);
+  if (from.state === "invalid" || to.state === "invalid") return "notNumber";
+  const values = [from.value, to.value].filter((value): value is number => value !== null);
+  if (values.some((value) => value < 0)) return "negative";
+  if (integer && values.some((value) => !Number.isInteger(value))) return "notInteger";
+  if (from.value !== null && to.value !== null && to.value <= from.value) return "inverted";
+  return null;
+}
+
+function previewRawScalarIssue(text: string, integer: boolean): PreviewRowInputIssue | null {
+  const parsed = previewRawNumber(text);
+  if (parsed.state === "invalid") return "notNumber";
+  if (parsed.value === null) return null;
+  if (parsed.value < 0) return "negative";
+  if (integer && !Number.isInteger(parsed.value)) return "notInteger";
+  return null;
+}
+
+/**
+ * اعتبارسنجی همگام ورودی خام ردیف — مستقل از اینکه کاربر خطا را دیده باشد.
+ * اولین «ثبت ردیف» با مقادیر نامعتبر باید همان لحظه رد شود، نه بر اساس رندر قبلی.
+ */
+export function previewRowInputErrors(raw: PreviewRowRawInputs): PreviewRowInputErrors {
+  const min = previewRawNumber(raw.deliveryMin);
+  const max = previewRawNumber(raw.deliveryMax);
+  let delivery: PreviewRowInputIssue | null = null;
+  if (min.state === "invalid" || max.state === "invalid") {
+    delivery = "notNumber";
+  } else {
+    const days = [min.value, max.value].filter((value): value is number => value !== null);
+    if (days.some((value) => value < 0)) delivery = "negative";
+    else if (days.some((value) => !Number.isInteger(value))) delivery = "notInteger";
+    else if (min.value !== null && max.value !== null && max.value < min.value) delivery = "inverted";
+  }
+  return {
+    weight: previewRawRangeIssue(raw.weightFromKg, raw.weightToKg, false),
+    count: previewRawRangeIssue(raw.countFrom, raw.countTo, true),
+    amount: previewRawRangeIssue(raw.amountFrom, raw.amountTo, true),
+    delivery,
+    freight: previewRawScalarIssue(raw.freight, true),
+    packaging: previewRawScalarIssue(raw.packaging, true),
+  };
+}
+
+export function previewRowInputsAreValid(errors: PreviewRowInputErrors): boolean {
+  return Object.values(errors).every((issue) => issue === null);
+}
+
+function previewRawRange(fromText: string, toText: string, scale: number): PreviewRange | null {
+  const from = previewRawNumber(fromText).value;
+  const to = previewRawNumber(toText).value;
+  if (from === null && to === null) return null;
+  return { from: from === null ? null : Math.round(from * scale), to: to === null ? null : Math.round(to * scale) };
+}
+
+/**
+ * ساخت ردیف از ورودی خام؛ فقط پس از اعتبارسنجی کامل صدا زده می‌شود.
+ * تبدیل کیلوگرم ← گرم در همین‌جا با همان دقت پشتیبانی‌شده انجام می‌شود و هیچ قاعدهٔ مالی تعریف نمی‌کند.
+ */
+export function previewRowFromRawInputs(raw: PreviewRowRawInputs, id: string): PreviewRateRow {
+  const min = previewRawNumber(raw.deliveryMin).value;
+  const max = previewRawNumber(raw.deliveryMax).value;
+  const minDays = min ?? max ?? 1;
+  const maxDays = Math.max(max ?? min ?? 1, minDays);
+  return {
+    id,
+    weightGrams: previewRawRange(raw.weightFromKg, raw.weightToKg, 1000) ?? previewEmptyRange(),
+    itemCount: previewRawRange(raw.countFrom, raw.countTo, 1) ?? previewEmptyRange(),
+    merchandiseAmount: previewRawRange(raw.amountFrom, raw.amountTo, 1) ?? previewEmptyRange(),
+    freight: previewRawNumber(raw.freight).value ?? 0,
+    packaging: previewRawNumber(raw.packaging).value ?? 0,
+    delivery: { minDays, maxDays },
+  };
+}
+
 /** آیا هر دو بازه در همان محور هم‌پوشانی دارند (فقط برای نمایش نمونهٔ تعارض، نه محاسبه). */
 export function previewRangesOverlap(a: PreviewRange | null, b: PreviewRange | null): boolean {
   if (previewRangeIsEmpty(a) || previewRangeIsEmpty(b)) return false;

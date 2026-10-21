@@ -9,7 +9,7 @@
  * - عنوان گروه اختیاری و به زبان محتوای فعال ذخیره می‌شود؛ تعویض زبان دادهٔ مشترک را از بین نمی‌برد.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { Field, Input } from "../../../../design-system";
 import {
@@ -42,6 +42,7 @@ export function PreviewRegionsTab({
   messages,
   contentLanguageId,
   onChange,
+  onPendingInputChange,
 }: {
   draft: PreviewMethod;
   readOnly: boolean;
@@ -49,12 +50,20 @@ export function PreviewRegionsTab({
   messages: PreviewMessages;
   contentLanguageId: string;
   onChange: (next: PreviewMethod) => void;
+  /** ورودی اعمال‌نشدهٔ ردیف را به پوسته گزارش می‌کند تا خروج/تغییر مالک آن را بی‌صدا از بین نبرد. */
+  onPendingInputChange?: (pending: boolean) => void;
 }) {
   const [openGroups, setOpenGroups] = useState<readonly string[]>(() =>
     draft.regionGroups.length > 0 ? [draft.regionGroups[0]!.id] : [],
   );
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const [editingRowFor, setEditingRowFor] = useState<{ groupId: string; rowId: string | null } | null>(null);
+
+  const pendingRowInput = editingRowFor !== null;
+  useEffect(() => {
+    onPendingInputChange?.(pendingRowInput);
+  }, [onPendingInputChange, pendingRowInput]);
+  useEffect(() => () => onPendingInputChange?.(false), [onPendingInputChange]);
 
   const methodSelected = previewMethodSelectedPlaces(draft);
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * TB-SHIPPING-ADMIN-UI-PREVIEW-186 — ویرایشگر درون‌خطی یک ردیف شرط/هزینه در پیش‌نمایش.
@@ -11,13 +11,15 @@
 import { useId, useState } from "react";
 import { Field, Input } from "../../../../design-system";
 import {
-  previewEmptyRange,
   previewNextId,
-  previewRangeError,
-  previewRangeIsEmpty,
+  previewRowFromRawInputs,
+  previewRowInputErrors,
+  previewRowInputsAreValid,
   type PreviewLocale,
-  type PreviewRange,
   type PreviewRateRow,
+  type PreviewRowInputErrors,
+  type PreviewRowInputIssue,
+  type PreviewRowRawInputs,
 } from "./preview-model.ts";
 import {
   previewCurrencyUnitLabel,
@@ -28,18 +30,24 @@ function numericInput(value: number | null): string {
   return value === null ? "" : String(value);
 }
 
-function parseInput(value: string): number | null {
-  const trimmed = value.trim();
-  if (trimmed.length === 0) return null;
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) ? parsed : null;
+/** مقدار نمایشی کیلوگرم از گرم ذخیره‌شده؛ فقط نمایش/ویرایش، بدون تغییر دقت ذخیره. */
+function kilogramInput(grams: number | null | undefined): string {
+  return grams === null || grams === undefined ? "" : String(grams / 1000);
 }
 
-function rangeFromInputs(fromText: string, toText: string, scale: number): PreviewRange | null {
-  const from = parseInput(fromText);
-  const to = parseInput(toText);
-  if (from === null && to === null) return null;
-  return { from: from === null ? null : Math.round(from * scale), to: to === null ? null : Math.round(to * scale) };
+function initialRawInputs(row: PreviewRateRow | null): PreviewRowRawInputs {
+  return {
+    weightFromKg: kilogramInput(row?.weightGrams?.from),
+    weightToKg: kilogramInput(row?.weightGrams?.to),
+    countFrom: numericInput(row?.itemCount?.from ?? null),
+    countTo: numericInput(row?.itemCount?.to ?? null),
+    amountFrom: numericInput(row?.merchandiseAmount?.from ?? null),
+    amountTo: numericInput(row?.merchandiseAmount?.to ?? null),
+    freight: String(row?.freight ?? 0),
+    packaging: String(row?.packaging ?? 0),
+    deliveryMin: String(row?.delivery.minDays ?? 1),
+    deliveryMax: String(row?.delivery.maxDays ?? 3),
+  };
 }
 
 export function PreviewRateRowEditor({
@@ -58,57 +66,43 @@ export function PreviewRateRowEditor({
   onCancel: () => void;
 }) {
   const fieldId = useId();
-  const [weightFrom, setWeightFrom] = useState(row?.weightGrams?.from != null ? String(row.weightGrams.from / 1000) : "");
-  const [weightTo, setWeightTo] = useState(row?.weightGrams?.to != null ? String(row.weightGrams.to / 1000) : "");
-  const [countFrom, setCountFrom] = useState(numericInput(row?.itemCount?.from ?? null));
-  const [countTo, setCountTo] = useState(numericInput(row?.itemCount?.to ?? null));
-  const [amountFrom, setAmountFrom] = useState(numericInput(row?.merchandiseAmount?.from ?? null));
-  const [amountTo, setAmountTo] = useState(numericInput(row?.merchandiseAmount?.to ?? null));
-  const [freight, setFreight] = useState(String(row?.freight ?? 0));
-  const [packaging, setPackaging] = useState(String(row?.packaging ?? 0));
-  const [deliveryMin, setDeliveryMin] = useState(String(row?.delivery.minDays ?? 1));
-  const [deliveryMax, setDeliveryMax] = useState(String(row?.delivery.maxDays ?? 3));
+  const [raw, setRaw] = useState<PreviewRowRawInputs>(() => initialRawInputs(row));
   const [submitted, setSubmitted] = useState(false);
 
-  const weightRange = rangeFromInputs(weightFrom, weightTo, 1000);
-  const countRange = rangeFromInputs(countFrom, countTo, 1);
-  const amountRange = rangeFromInputs(amountFrom, amountTo, 1);
-
-  const errorFor = (range: PreviewRange | null, integer: boolean): string | undefined => {
-    if (!submitted) return undefined;
-    const code = previewRangeError(range, { integer });
-    if (code === "inverted") return messages.rowErrorInverted;
-    if (code === "notInteger") return messages.rowErrorNotInteger;
-    if (code === "negative") return messages.rowErrorNegative;
-    return undefined;
+  const patchRaw = (key: keyof PreviewRowRawInputs, value: string): void => {
+    setRaw((current) => ({ ...current, [key]: value }));
   };
 
-  const minDays = parseInput(deliveryMin);
-  const maxDays = parseInput(deliveryMax);
-  const deliveryError =
-    submitted && minDays !== null && maxDays !== null && maxDays < minDays ? messages.rowErrorDelivery : undefined;
+  /** خطاها همیشه از ورودی خام همین رندر محاسبه می‌شوند؛ نه از مقدار مشتق‌شدهٔ رندر قبلی. */
+  const errors: PreviewRowInputErrors = previewRowInputErrors(raw);
 
-  const weightError = errorFor(weightRange, false);
-  const countError = errorFor(countRange, true);
-  const amountError = errorFor(amountRange, true);
+  const messageFor = (issue: PreviewRowInputIssue | null, inverted: string): string | undefined => {
+    if (!submitted || issue === null) return undefined;
+    if (issue === "inverted") return inverted;
+    if (issue === "notInteger") return messages.rowErrorNotInteger;
+    if (issue === "notNumber") return messages.rowErrorNotNumber;
+    return messages.rowErrorNegative;
+  };
+
+  const weightError = messageFor(errors.weight, messages.rowErrorInverted);
+  const countError = messageFor(errors.count, messages.rowErrorInverted);
+  const amountError = messageFor(errors.amount, messages.rowErrorInverted);
+  const deliveryError = messageFor(errors.delivery, messages.rowErrorDelivery);
+  const freightError = messageFor(errors.freight, messages.rowErrorInverted);
+  const packagingError = messageFor(errors.packaging, messages.rowErrorInverted);
+
+  const weightRangeEmpty = raw.weightFromKg.trim().length === 0 && raw.weightToKg.trim().length === 0;
+  const countRangeEmpty = raw.countFrom.trim().length === 0 && raw.countTo.trim().length === 0;
+  const amountRangeEmpty = raw.amountFrom.trim().length === 0 && raw.amountTo.trim().length === 0;
 
   const submit = (): void => {
-    setSubmitted(true);
-    const invalid =
-      previewRangeError(weightRange, { integer: false }) !== null ||
-      previewRangeError(countRange, { integer: true }) !== null ||
-      previewRangeError(amountRange, { integer: true }) !== null ||
-      deliveryError !== undefined;
-    if (invalid) return;
-    onApply({
-      id: row?.id ?? previewNextId("row"),
-      weightGrams: weightRange ?? previewEmptyRange(),
-      itemCount: countRange ?? previewEmptyRange(),
-      merchandiseAmount: amountRange ?? previewEmptyRange(),
-      freight: parseInput(freight) ?? 0,
-      packaging: parseInput(packaging) ?? 0,
-      delivery: { minDays: minDays ?? 1, maxDays: maxDays ?? Math.max(minDays ?? 1, 1) },
-    });
+    // اعتبارسنجی همگام ورودی خام: اولین کلیک با min > max باید همان‌جا رد شود.
+    const current = previewRowInputErrors(raw);
+    if (!previewRowInputsAreValid(current)) {
+      setSubmitted(true);
+      return;
+    }
+    onApply(previewRowFromRawInputs(raw, row?.id ?? previewNextId("row")));
   };
 
   return (
@@ -132,10 +126,10 @@ export function PreviewRateRowEditor({
             min={0}
             step="0.001"
             dir="ltr"
-            value={weightFrom}
+            value={raw.weightFromKg}
             disabled={readOnly}
             data-testid="shipping-preview-row-weight-from"
-            onChange={(event) => setWeightFrom(event.target.value)}
+            onChange={(event) => patchRaw("weightFromKg", event.target.value)}
           />
         </Field>
         <Field id={`${fieldId}-wt`} label={messages.weightTo} error={weightError}>
@@ -144,14 +138,14 @@ export function PreviewRateRowEditor({
             min={0}
             step="0.001"
             dir="ltr"
-            value={weightTo}
+            value={raw.weightToKg}
             disabled={readOnly}
             data-testid="shipping-preview-row-weight-to"
-            onChange={(event) => setWeightTo(event.target.value)}
+            onChange={(event) => patchRaw("weightToKg", event.target.value)}
           />
         </Field>
         <div className="self-end pb-1 text-[11px] text-gray-500">
-          {previewRangeIsEmpty(weightRange) ? messages.noCondition : ""}
+          {weightRangeEmpty ? messages.noCondition : ""}
         </div>
 
         <Field id={`${fieldId}-cf`} label={messages.countFrom} error={countError}>
@@ -160,10 +154,10 @@ export function PreviewRateRowEditor({
             min={0}
             step="1"
             dir="ltr"
-            value={countFrom}
+            value={raw.countFrom}
             disabled={readOnly}
             data-testid="shipping-preview-row-count-from"
-            onChange={(event) => setCountFrom(event.target.value)}
+            onChange={(event) => patchRaw("countFrom", event.target.value)}
           />
         </Field>
         <Field id={`${fieldId}-ct`} label={messages.countTo} error={countError}>
@@ -172,14 +166,14 @@ export function PreviewRateRowEditor({
             min={0}
             step="1"
             dir="ltr"
-            value={countTo}
+            value={raw.countTo}
             disabled={readOnly}
             data-testid="shipping-preview-row-count-to"
-            onChange={(event) => setCountTo(event.target.value)}
+            onChange={(event) => patchRaw("countTo", event.target.value)}
           />
         </Field>
         <div className="self-end pb-1 text-[11px] text-gray-500">
-          {previewRangeIsEmpty(countRange) ? messages.noCondition : ""}
+          {countRangeEmpty ? messages.noCondition : ""}
         </div>
 
         <Field id={`${fieldId}-af`} label={messages.amountFrom} error={amountError}>
@@ -188,10 +182,10 @@ export function PreviewRateRowEditor({
             min={0}
             step="1"
             dir="ltr"
-            value={amountFrom}
+            value={raw.amountFrom}
             disabled={readOnly}
             data-testid="shipping-preview-row-amount-from"
-            onChange={(event) => setAmountFrom(event.target.value)}
+            onChange={(event) => patchRaw("amountFrom", event.target.value)}
           />
         </Field>
         <Field id={`${fieldId}-at`} label={messages.amountTo} error={amountError}>
@@ -200,38 +194,38 @@ export function PreviewRateRowEditor({
             min={0}
             step="1"
             dir="ltr"
-            value={amountTo}
+            value={raw.amountTo}
             disabled={readOnly}
             data-testid="shipping-preview-row-amount-to"
-            onChange={(event) => setAmountTo(event.target.value)}
+            onChange={(event) => patchRaw("amountTo", event.target.value)}
           />
         </Field>
         <div className="self-end pb-1 text-[11px] text-gray-500">
-          {previewRangeIsEmpty(amountRange) ? messages.noCondition : ""}
+          {amountRangeEmpty ? messages.noCondition : ""}
         </div>
 
-        <Field id={`${fieldId}-fr`} label={`${messages.freightField} (${previewCurrencyUnitLabel(locale)})`}>
+        <Field id={`${fieldId}-fr`} label={`${messages.freightField} (${previewCurrencyUnitLabel(locale)})`} error={freightError}>
           <Input
             type="number"
             min={0}
             step="1"
             dir="ltr"
-            value={freight}
+            value={raw.freight}
             disabled={readOnly}
             data-testid="shipping-preview-row-freight"
-            onChange={(event) => setFreight(event.target.value)}
+            onChange={(event) => patchRaw("freight", event.target.value)}
           />
         </Field>
-        <Field id={`${fieldId}-pk`} label={`${messages.packagingField} (${previewCurrencyUnitLabel(locale)})`}>
+        <Field id={`${fieldId}-pk`} label={`${messages.packagingField} (${previewCurrencyUnitLabel(locale)})`} error={packagingError}>
           <Input
             type="number"
             min={0}
             step="1"
             dir="ltr"
-            value={packaging}
+            value={raw.packaging}
             disabled={readOnly}
             data-testid="shipping-preview-row-packaging"
-            onChange={(event) => setPackaging(event.target.value)}
+            onChange={(event) => patchRaw("packaging", event.target.value)}
           />
         </Field>
         <div className="grid grid-cols-2 gap-2">
@@ -241,10 +235,10 @@ export function PreviewRateRowEditor({
               min={0}
               step="1"
               dir="ltr"
-              value={deliveryMin}
+              value={raw.deliveryMin}
               disabled={readOnly}
               data-testid="shipping-preview-row-delivery-min"
-              onChange={(event) => setDeliveryMin(event.target.value)}
+              onChange={(event) => patchRaw("deliveryMin", event.target.value)}
             />
           </Field>
           <Field id={`${fieldId}-dx`} label={messages.deliveryMax} error={deliveryError}>
@@ -253,10 +247,10 @@ export function PreviewRateRowEditor({
               min={0}
               step="1"
               dir="ltr"
-              value={deliveryMax}
+              value={raw.deliveryMax}
               disabled={readOnly}
               data-testid="shipping-preview-row-delivery-max"
-              onChange={(event) => setDeliveryMax(event.target.value)}
+              onChange={(event) => patchRaw("deliveryMax", event.target.value)}
             />
           </Field>
         </div>
