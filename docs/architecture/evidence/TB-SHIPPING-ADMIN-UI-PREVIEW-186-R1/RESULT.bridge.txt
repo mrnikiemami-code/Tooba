@@ -1,0 +1,37 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-UI-PREVIEW-186-R1
+Parent-Task: TB-SHIPPING-ADMIN-UI-PREVIEW-186
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Program: TOOBA-SHIPPING-ADMIN-UI-ACCEPTANCE
+Mode: BOUNDED_VISUAL_PREVIEW_PICKER_DRAFT_VALIDATION_REPAIR
+Bridge-Task-Row: 65dad519-05d5-44fe-8632-47344763349b
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 4b7744eb0f7ba79d93e1ab063802bfa25aa1f14a
+Base-SHA: 4b7744eb0f7ba79d93e1ab063802bfa25aa1f14a
+Code-SHA: @@CODE_SHA@@
+Evidence-SHA: @@EVIDENCE_SHA@@
+automaticNextImplementationTask: NONE
+HEAD-Origin-Parity: @@HEAD@@ == origin/main == @@HEAD@@, clean working tree
+Geography-Normal-Control-Reachability: PASS — options are no longer disabled; the picker marks non-addable candidates «(فقط مرور)»/"(browse only)" with data-browsable/data-addable and only the Add button binds to addable. Real controls: added گلپایگان (ایران › اصفهان › گلپایگان), picker reset, then browsed ایران (فقط مرور) → استان قم → شهر قم → افزودن succeeded (ایران › قم › قم). With گلپایگان accepted, candidate ایران keeps افزودن disabled with «والدِ «گلپایگان» است که قبلاً اضافه شده است.» and استان اصفهان stays browse-only, so ancestry validation is preserved without blocking traversal.
+Cross-Group-Geography-Conflict: PASS — second group of the same method: candidate ایران shows the same localized conflict and disabled Add; browsing to استان اصفهان shows «گلپایگان (فقط مرور)» with افزودن disabled, so duplicate/ancestor/descendant additions stay blocked across groups of the same method while other method/owner scopes remain independent (asserted in preview-model.test.ts).
+Owner-And-Pending-Row-Draft-Safety: PASS — PreviewRegionsTab reports its open row editor (onPendingInputChange) and the shell uses hasUnappliedWork = methodDraftDirty || pendingRowInput for both owner change and back-to-list. Owner change raises the localized discard confirmation (discardAndChangeOwner); Cancel re-keys the owner select and keeps owner «مارکت‌پلیس همین فروشگاه», the open editor and every typed value. Pending row values 1.5 / 5 / 2 and their two error messages survived a general↔regions tab round-trip because both panels stay mounted (hidden=...). No persistent browser storage added.
+First-Submit-Delivery-And-Raw-Input-Validation: PASS — row state is the raw string input; previewRowInputErrors(raw) validates notNumber/negative/notInteger/inverted before any conversion, and submit() recomputes it synchronously. Real first click on «ثبت ردیف» with delivery 5→2 and count-from 1.5 showed «بیشترین روز تحویل نباید کمتر از کمترین باشد.» on both delivery fields and «این فیلد باید عدد صحیح باشد.» on both count fields, kept the editor open and left the row counter at ۰ ردیف (nothing applied). Correcting to 2→2 and clearing the count applied exactly once and closed the editor. Kilogram→integer-gram conversion changed only after validation; financial rounding/currency scale untouched.
+Real-Browser-Interaction-Proof: PASS — Cursor IDE browser against the running Next dev server, ordinary click/select_option controls only, no JS mutation of input/select state and no forced selection; assertions read from live DOM (selected place list paths, option labels, disabled state, role=status messages, row counter, input values). Primary sequence: ویرایش on «ارسال رایگان سوپرمارکتی» → tab مناطق و هزینه‌ها → افزودن گروه مناطق → ایران/اصفهان/گلپایگان/افزودن → browse ایران/قم/قم/افزودن → blocked Iran candidate → second group cross-group block → row editor (0 <select>, no geography in the row) → rate-row validation → tab round-trip → EN/فا switch → 390/1024 widths.
+Multilingual-And-Responsive-Checks: PASS — interface EN gives heading "Shipping — design preview" with dir="ltr" lang="en" on the preview region and the four new keys exist in both dictionaries; switching back to فارسی restores RTL. Widths: 390 → innerWidth 390 / scrollWidth 375, 1024 → innerWidth 1024 / scrollWidth 1009, no page-wide horizontal overflow.
+Business-Network-Writes: ZERO
+Live-Shipping-Behavior: PRESERVED — only the in-memory design preview changed; no production shipping path, DTO/API client, schema, migration, feature flag, navigation, global CSS, shared design-system component or Storefront surface touched; View-mode non-writability unchanged.
+Focused-Tests-And-Typecheck: preview-model.test.ts 15/15 PASS (10 pre-existing + 5 new R1 regressions: browse-vs-add candidate state, cross-group conflict domain, first-submit min>max from raw input, integer validation before rounding, no disabled option + both panels mounted). tsc --noEmit PASS. npm run test:architecture: only the pre-existing frontend-source-size guard fails on four untouched legacy files (category-admin-screen.tsx, admin-landing-page-composer.tsx, storefront-landing-blocks.tsx, shared-composition-renderer.tsx) exactly as at the base SHA; no baseline refresh, no unrelated guard repair.
+Preview-URL-And-Start-Command: http://127.0.0.1:3419/admin/shipping-services/design-preview — task-owned loopback listener, PID 18428 (node), started with "cd src/frontend && npx next dev -p 3419", log .tmp-186-preview/next-3419.log, left running for user review; shared :3000/:5088/:5432 and DB/Redis/RabbitMQ untouched, .next not deleted.
+Changed-Files: src/frontend/app/admin/shipping-services/design-preview/{preview-model.ts,preview-model.test.ts,preview-region-picker.tsx,preview-regions-tab.tsx,preview-rate-row-editor.tsx,design-preview-screen.tsx,preview-i18n.ts}; docs/ai/tasks/TB-SHIPPING-ADMIN-UI-PREVIEW-186-R1.task.md; docs/architecture/evidence/TB-SHIPPING-ADMIN-UI-PREVIEW-186-R1/{task.md,task-receipt.json,RESULT.md,claim-task.js,inspect-tasks.js,post-result.js}. Net code diff 432 insertions / 124 deletions across 7 preview files; only 4 new task-scoped fa/en dictionary keys.
+Isolation-And-Cleanup: no reset/rebase/stash/force-push; unrelated work preserved as found; no Host/DB started; no package install, browser download or cache purge; no probe/dummy payload posted to /api/results — this is the single complete contract.
+Elapsed-Minutes: 18
+User-Acceptance-Still-Open: YES
+Production-Functional-Implementation: NOT_STARTED
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT
