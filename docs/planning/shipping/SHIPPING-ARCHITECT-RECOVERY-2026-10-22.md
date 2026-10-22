@@ -1,4 +1,4 @@
-﻿# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
+# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
 > **وضعیت جاری Architect پس از196-R2:** دو اصلاح محدود Domain **ACCEPT**؛ [بررسی مستقل](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R2/ARCHITECT-REVIEW.md)، checkpoint `1b42b7e7e02f147e323433a5db1a20993d601349`. مرزصفر/حداکثر و atomic guardهای متن/شناسه از source/test بررسی شد؛54+1 تست گزارش Worker، اینجا اجرا نشد. اختلاف زمان16/19دقیقه در دو گزارش ثبت شد، هر دو زیر20؛ اثبات مستقل زمان نیست. کل196 هنوز **PARTIAL_PENDING_API_TRACE_AND_RELATIONAL_PROOF**. تنها تسک بعدی **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R3** (Parent=196-R2): فقط تست delegates واقعی API/auth/body/validation و set-equality چهارمسیر، بدون کد محصول/DB/Host/full-suite. ماتریس کامل زبان، listener، constraint-lookalike و snapshot/PostgreSQL/race هنوز gate جدا هستند. assignment Shipping/UI/quote/فعال‌سازی/استقرار مجاز نیست؛ TB-185 متوقف. پایین تاریخچه است.
 
@@ -340,3 +340,18 @@ route/validator set equality, delegate auth/body proof, real language matrix, re
 lookalike-constraint negative, and PostgreSQL schema/snapshot/race proof. TB-196 remains
 PARTIAL_PENDING_API_TRACE_AND_RELATIONAL_PROOF; worker PASS only - not Architect ACCEPT; STOP_FOR_ARCHITECT;
 no automatic next task.
+
+TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R3 (worker, 2026-10-22, PASS for bounded scope) executed the
+real-delegate proof only: production `MapFulfillmentEndpoints` route builder (built, never started) invoking
+the actual four `/v1/admin/shipping-types` `RequestDelegate`s through the real `ShippingTypeAdminAuthorizer`,
+`ShippingTypeBodyReader`, MediatR validation pipeline, handlers, `ShippingTypeStore` over EF InMemory,
+`LocalizationShippingTypeLanguageFacts` with the production tracer, `ApiResponseFactory` and the real
+Fulfillment error catalog. Facts: authorized create/list/detail/activate/deactivate/reactivate lifecycle,
+true no-op repeat preserving revision+UpdatedAt, stale conflict 409, immutable code, independent view/manage
+grants, admin-panel rejection and invalid edition/tenant contexts blocking with zero authorization checks and
+zero dispatch, unauthorized malformed body with zero stream reads, full lossless input rejection matrix with
+pre-handler counters, exactly-four route/request/validator set equality with negative detection, and
+parameterless list immune to query/culture. 42 focused tests pass in the Fulfillment.Tests project only.
+EF InMemory only. Still PENDING_NOT_RUN: full multilingual registry lifecycle, ActivityListener, exact
+constraint negative, and PostgreSQL relational/snapshot/race proof. TB-196 remains PARTIAL; worker PASS only
+- not Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.
