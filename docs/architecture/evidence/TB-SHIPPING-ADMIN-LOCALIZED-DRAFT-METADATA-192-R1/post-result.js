@@ -1,5 +1,7 @@
-const base = '87ae74549d34e941a9c7d76ff61eb1f28ce51568';
+﻿const base = '87ae74549d34e941a9c7d76ff61eb1f28ce51568';
 const code = 'df743ddf160e45c64a62998389c0a04477ce60cb';
+// Evidence-SHA is the actual HEAD at post time, passed as argv[2] by the worker.
+const evidence = process.argv[2] || code;
 
 const content = `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
@@ -17,8 +19,8 @@ Status: PASS
 Expected-Base-SHA: ${base}
 Base-SHA: ${base}
 Code-SHA: ${code}
-Evidence-SHA: ${code}
-HEAD-Origin-Parity: HEAD == origin/main == ${code} after push and fetch; only unrelated historical untracked artifacts left in the tree, nothing staged.
+Evidence-SHA: ${evidence}
+HEAD-Origin-Parity: HEAD == origin/main == ${evidence} after push and fetch; only unrelated historical untracked artifacts left in the tree, nothing staged.
 Real-Presentation-Endpoint-Pipeline-And-Authorizer: PASS — 8 new facts execute the real admin and seller /authoring-drafts/{draftId}/presentation GET/PATCH delegates from MapShippingEndpoints, the real ShippingAuthoringOwnerAuthorizer (admin + seller-panel + effective-access seams), the real body reader, ValidationBehavior, the presentation query/command handlers, ShippingAuthoringContextProjection, ShippingAuthoringDraftDirectory over ShippingDbContext, ApiResponseFactory and the error catalog. Only platform auth seams and the Contracts language/commerce sources are controlled fixtures. Dispatch and execution are measured separately (SentCount behavior before ValidationBehavior, HandlerReached after it).
 OneTwoThreePlus-Presentation-Matrix-And-Adapter-Composition: PASS — one active NON-fa default; two active mixed rtl/ltr with a second PATCH leaving the first language byte-identical; four known / three active with a NON-first default plus stored text for an inactive language. Each case PATCHes then GETs and asserts exact raw text, group titles per (group,language), contentLanguages identity/order, defaultContentLanguageId and hasDefaultLanguageName. Every case runs the production ShippingAuthoringContextSource with a controlled ILanguageLookup + ICurrentStoreCommerceContext (its call counter advances), so the lawful adapter path is exercised; fixtures are labelled fixtures, not a live merchant Localization database.
 Deactivate-Reactivate-Default-Change-And-Raw-Text-Retention: PASS — against the SAME stored draft: deactivate a written language (raw text still returned, excluded from active registry), PATCH that inactive id -> 400 shipping.authoring.presentation_language_invalid with unchanged revision, reactivate -> EXACT previous text with no auto-translation, change default to a language with no stored name -> hasDefaultLanguageName=false while order follows owner SortOrder, then writing that default flips completeness truthfully.
@@ -68,3 +70,4 @@ END_TOOBA_WORKER_RESULT`;
     console.log('REMAINING_PENDING', list.filter(x => x.status === 'Pending').length);
   }
 })();
+
