@@ -353,7 +353,7 @@ public sealed class ShippingMethodFinancialAuthorityTests
 
         var moduleSource = File.ReadAllText(Path.Combine(
             RepoRoot(), "src", "backend", "Modules", "Shipping", "Tooba.Shipping.Endpoints",
-            "Admin", "ShippingRateCoverageEndpoints.cs"));
+            "ShippingEndpointModule.cs"));
         Assert.Contains("ShippingMethodFinancialStatusEndpoints.Map(admin);", moduleSource, StringComparison.Ordinal);
     }
 

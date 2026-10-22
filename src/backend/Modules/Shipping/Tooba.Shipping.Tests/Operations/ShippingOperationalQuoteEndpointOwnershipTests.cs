@@ -82,8 +82,7 @@ public sealed class ShippingOperationalQuoteEndpointOwnershipTests
             "Modules",
             "Shipping",
             "Tooba.Shipping.Endpoints",
-            "Admin",
-            "ShippingRateCoverageEndpoints.cs"));
+            "ShippingEndpointModule.cs"));
 
         Assert.Contains("ShippingOperationalQuoteEndpoints.Map(admin);", module, StringComparison.Ordinal);
     }

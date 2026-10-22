@@ -70,8 +70,7 @@ public sealed class ShippingPackagingEndpointOwnershipTests
             "Modules",
             "Shipping",
             "Tooba.Shipping.Endpoints",
-            "Admin",
-            "ShippingRateCoverageEndpoints.cs"));
+            "ShippingEndpointModule.cs"));
 
         Assert.Contains("var admin = app.MapGroup(\"/v1/admin\");", module, StringComparison.Ordinal);
         Assert.Contains("ShippingPackagingPolicyEndpoints.Map(admin);", module, StringComparison.Ordinal);

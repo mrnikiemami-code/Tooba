@@ -32,12 +32,21 @@ public sealed class ShippingAdminEndpointOwnershipTests
         "Admin",
         "ShippingRateCoverageEndpoints.cs"));
 
+    private static string CompositionSource() => File.ReadAllText(Path.Combine(
+        RepoRoot(),
+        "src",
+        "backend",
+        "Modules",
+        "Shipping",
+        "Tooba.Shipping.Endpoints",
+        "ShippingEndpointModule.cs"));
+
     [Fact]
     public void Every_admin_route_is_mapped_and_authorized_with_existing_permissions()
     {
         var source = EndpointsSource();
 
-        Assert.Contains("MapGroup(\"/v1/admin\")", source, StringComparison.Ordinal);
+        Assert.Contains("MapGroup(\"/v1/admin\")", CompositionSource(), StringComparison.Ordinal);
         Assert.Contains("MapGet(\"/shipping-services/{serviceCode}/rates\"", source, StringComparison.Ordinal);
         Assert.Contains("MapPost(\"/shipping-services/{serviceCode}/rates\"", source, StringComparison.Ordinal);
         Assert.Contains("MapPut(\"/shipping-services/{serviceCode}/rates/{ratePolicyId:guid}\"", source, StringComparison.Ordinal);

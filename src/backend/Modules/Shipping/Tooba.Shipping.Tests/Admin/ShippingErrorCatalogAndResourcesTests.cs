@@ -11,6 +11,7 @@ using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Shipping.Contracts.Errors;
+using Tooba.Shipping.Endpoints;
 using Tooba.Shipping.Endpoints.Admin;
 using Tooba.Shipping.Endpoints.Errors;
 using Tooba.Shipping.Endpoints.Resources;
@@ -259,7 +260,7 @@ public sealed class ShippingErrorCatalogAndResourcesTests
             .Select(path => Path.GetRelativePath(RepoRoot(), path).Replace('\\', '/'))
             .ToArray();
         Assert.Equal(
-            new[] { "src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingRateCoverageEndpoints.cs" },
+            new[] { "src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/ShippingEndpointModule.cs" },
             regressions);
     }
 

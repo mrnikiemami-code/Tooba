@@ -58,6 +58,7 @@ using Tooba.OperatorProfile.Endpoints;
 using Tooba.Localization.Endpoints;
 using Tooba.Geography.Endpoints.Admin;
 using Tooba.Geography.Endpoints.Storefront;
+using Tooba.Shipping.Endpoints;
 using Tooba.Shipping.Endpoints.Admin;
 using Tooba.Support.Endpoints;
 using Tooba.Wallet.Endpoints;

@@ -29,18 +29,18 @@ namespace Tooba.Shipping.Infrastructure.DependencyInjection;
 /// <see cref="ShippingRateQuoteLookup"/>. Nothing in this module writes.
 /// </para>
 /// <para>
-/// <b>Why it is not composed yet.</b> This slice is a non-runtime foundation: <c>Tooba.Host</c> has no
-/// project reference to this assembly, and the Host's <c>ToobaModuleComposition</c> registers an explicit,
-/// hand-maintained module list, so adding this class changes no running process. Registering the type
-/// would require a Host edit (forbidden here) plus a schema-migration decision.
+/// <b>How it is composed.</b> The Host's <c>ToobaModuleComposition</c> registers an explicit,
+/// hand-maintained module list and instantiates this class once there; the Shipping HTTP surface is
+/// mapped separately by <c>ShippingEndpointModule</c> in <c>Tooba.Shipping.Endpoints</c>. This class
+/// therefore only registers module-owned data seams and never route composition.
 /// </para>
 /// <para>
 /// <b>No schema migrator is registered.</b> Consistent with
 /// <c>GeographyModule</c>/<c>SHIPPING-GEOGRAPHY-MODULE-COMPOSITION-044</c>: the running Development Host
 /// executes <em>every</em> registered <c>IModuleSchemaMigrator</c> at startup, so registering one here
-/// would emit <c>CREATE SCHEMA/TABLE</c> DDL against the Tooba development database. The canonical order
-/// source (<c>ModuleSchemaMigrationOrder</c>) is outside this Task's allowed paths, so the hook is
-/// <b>prepared-only</b>: no migration exists and none is applied.
+/// would emit <c>CREATE SCHEMA/TABLE</c> DDL against the Tooba development database. Shipping migrations
+/// under <c>Persistence/Migrations</c> are applied only by the CLI migration runner
+/// (<c>Tooba.MigrationRunner</c>), never at Host startup; the Host hook stays <b>off</b>.
 /// </para>
 /// </remarks>
 public sealed class ShippingModule : IToobaModule
