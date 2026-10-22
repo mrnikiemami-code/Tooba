@@ -1,4 +1,4 @@
-# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
+﻿# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
 ## مرجع جاری پس از R11 / فقط R12
 
@@ -624,7 +624,8 @@ manifest identical in both directions to the 218-entry manifest of the current c
 `GenerateCreateScript` — **residual 0, strict `Assert.Equal` on the whole manifest, the five defaults present on both
 sides**, with migration-history objects excluded by exact (schema, table) identity for columns, constraints and indexes.
 The old residual classifier was replaced by that strict equality contract. Focused suites: 8 passed / 0 failed.
-Declared deviations: 4 harness-only corrections (budget was 1) and a hard-timebox overrun (~75 min vs 35), so the
-result is reported PARTIAL despite complete green evidence. Container removed and 55436 has no listener. Whole TB-196
+Declared process deviation: 4 harness-only corrections (stated budget was 1), so the result is reported PARTIAL
+despite complete green evidence; the 35-minute timebox itself was respected (~9 min). Container removed and 55436
+has no listener. Whole TB-196
 remains BLOCKED_PENDING_FULL_RELATIONAL_ACCEPTANCE; the old full-schema fixture, storage/unique/race/atomicity gates
 were not run; worker result is not Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.

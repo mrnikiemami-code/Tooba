@@ -114,10 +114,10 @@ verified free.
   harness (string CLR default, `shipments` raw column list, multi-column reader, baseline-line normalisation).
   All were harness defects, none weakened an expectation; the production mapping change itself needed no
   rerun. This exceeds the stated maximum of one harness correction.
-* **Hard timebox**: the 35-minute box (stop new work at minute 28) was exceeded — elapsed ≈ 75 minutes — because
-  of those harness corrections plus the `0` vs `0.0` literal discovery. No scope was added.
-* Test evidence is therefore complete and green, but the result is reported as **PARTIAL** for the process
-  limits, not as an unqualified PASS.
+* **Timebox**: within the box — claim `18:49:29Z`, result `18:58:14Z`, elapsed ≈ 9 minutes (limit 35, stop-new-work
+  at 28); no scope was added and no repeated confidence run was made.
+* Evidence is complete and green; the result is nevertheless reported as **PARTIAL** because the stated
+  harness-correction budget (one) was exceeded. No functional gate is open.
 
 ## 8. Scope held
 
