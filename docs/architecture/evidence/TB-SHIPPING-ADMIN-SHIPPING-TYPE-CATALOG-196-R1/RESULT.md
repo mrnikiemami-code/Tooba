@@ -158,3 +158,21 @@ reported as a compliance failure, not as compliant work.
 - TB-185 remains paused; default-OFF flags and PendingAllocation untouched.
 - `TB-196` status: PARTIAL_PENDING_RELATIONAL_SNAPSHOT_PROOF. No certification, no user acceptance, no automatic
   next task.
+
+## Correction appended by TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R2 (2026-10-22)
+
+This R1 result introduced two Domain boundary regressions that R2 repaired:
+- `ShippingType.Create` rejected the declared valid minimum `sortOrder = 0` through a
+  `ThrowIfNegativeOrZero(... ? -1 : ...)` guard; only the R2 sort-zero regression exposed it.
+- Removing the Domain -> Contracts coupling also removed local invariant protection: translation
+  factories/mutators accepted empty row/language ids, blank or overlength text, and `ShippingType.Create`
+  added supplied entries without null/duplicate validation.
+
+R2 restored inclusive `0..1_000_000` sort validation and atomic local invariants (argument-exception
+convention, no `Contracts` reference, no message parsing).
+
+Also corrected: the R1 acceptance label naming only relational proof understated the open gates. The correct
+state is `PARTIAL_PENDING_API_TRACE_AND_RELATIONAL_PROOF` — four-route request/validator set equality,
+production-delegate auth/body proof, real adapter-backed language matrix, real `ActivityListener`
+parent/correlation/disposal/exception/cancellation, lookalike-constraint negative, and PostgreSQL
+schema/snapshot/race proof are all still pending. No history above is rewritten.

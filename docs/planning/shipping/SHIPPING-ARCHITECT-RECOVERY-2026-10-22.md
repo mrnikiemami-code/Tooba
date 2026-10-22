@@ -324,3 +324,16 @@ in-process route/authorizer denial matrix, real ActivityListener assertions, exa
 real ILanguageLookup adapter fixture, and all PostgreSQL/migration-chain/snapshot/race proof (R196-06
 PENDING). Hard timebox was exceeded (~79 min). TB-196 remains PARTIAL_PENDING_RELATIONAL_SNAPSHOT_PROOF;
 worker PARTIAL only - not Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.
+TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R2 (worker, 2026-10-22, PASS for scope) repaired ONLY the two
+Domain boundary regressions found in R1: ShippingType.Create now uses the same inclusive 0..1000000 sort
+validation as Update (sort 0 was wrongly rejected; baseline failure captured before the fix), and public
+translation factories/mutators plus ShippingType.Create again enforce atomic local invariants (non-empty row
+and language identity, non-blank name <=128, description <=512 with null as the only clear form, complete-pair
+validation before assignment, no collection change on invalid/duplicate add, no invalid aggregate
+construction) using argument-exception convention only - no Domain -> Contracts reference and no boundary
+guard weakened. 54 focused rule tests pass; the existing Domain boundary guard passes by exact name; one
+EF InMemory sort-zero create/read/activate regression passes and is not HTTP/PostgreSQL proof. Still pending:
+route/validator set equality, delegate auth/body proof, real language matrix, real ActivityListener,
+lookalike-constraint negative, and PostgreSQL schema/snapshot/race proof. TB-196 remains
+PARTIAL_PENDING_API_TRACE_AND_RELATIONAL_PROOF; worker PASS only - not Architect ACCEPT; STOP_FOR_ARCHITECT;
+no automatic next task.

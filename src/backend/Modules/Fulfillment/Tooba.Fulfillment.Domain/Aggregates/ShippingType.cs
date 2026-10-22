@@ -86,7 +86,10 @@ public sealed class ShippingType
     {
         ArgumentNullException.ThrowIfNull(translations);
         ArgumentOutOfRangeException.ThrowIfEqual(id, Guid.Empty);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sortOrder > SortOrderMaxValue ? -1 : sortOrder);
+        EnsureSortOrder(sortOrder);
+
+        // همهٔ ورودی‌های عرضه‌شده پیش از ساخت نمای معتبر بررسی می‌شوند؛ هیچ تعریف نیمه‌معتبری ساخته نمی‌شود.
+        var validated = ValidateSupplied(translations);
 
         var entity = new ShippingType
         {
@@ -99,7 +102,7 @@ public sealed class ShippingType
             UpdatedAt = now,
         };
 
-        entity._translations.AddRange(translations);
+        entity._translations.AddRange(validated);
         return entity;
     }
 
@@ -141,13 +144,21 @@ public sealed class ShippingType
         string name,
         string? description)
     {
-        if (_translations.Any(x => x.LanguageId == languageId))
+        // بررسی کامل پیش از هر تغییر مجموعه: ورودی نامعتبر یا شناسهٔ تکراری چیزی اضافه نمی‌کند.
+        var candidate = ShippingTypeTranslation.Create(
+            shippingTypeTranslationId, languageId, name, description);
+
+        if (_translations.Any(x => x.LanguageId == candidate.LanguageId))
         {
             throw new ArgumentException("shipping_type_translation_duplicate", nameof(languageId));
         }
 
-        _translations.Add(ShippingTypeTranslation.Create(
-            shippingTypeTranslationId, languageId, name, description));
+        if (_translations.Any(x => x.ShippingTypeTranslationId == candidate.ShippingTypeTranslationId))
+        {
+            throw new ArgumentException("shipping_type_translation_row_duplicate", nameof(shippingTypeTranslationId));
+        }
+
+        _translations.Add(candidate);
     }
 
     /// <summary>آیا برای این زبان متنی ذخیره شده است.</summary>
@@ -197,6 +208,38 @@ public sealed class ShippingType
             throw new ArgumentOutOfRangeException(nameof(sortOrder));
         }
     }
+
+    /// <summary>
+    /// ورودی‌های عرضه‌شده را کامل بررسی می‌کند: نه <c>null</c>، نه تکرار زبان/ردیف و هر ترجمه باید قاعدهٔ
+    /// محلی متن را رعایت کند. هیچ ورودی‌ای در این مرحله تغییر نمی‌کند.
+    /// </summary>
+    private static List<ShippingTypeTranslation> ValidateSupplied(
+        IReadOnlyList<ShippingTypeTranslation> translations)
+    {
+        var validated = new List<ShippingTypeTranslation>(translations.Count);
+        var languages = new HashSet<Guid>();
+        var rowIds = new HashSet<Guid>();
+
+        foreach (var translation in translations)
+        {
+            ArgumentNullException.ThrowIfNull(translation, nameof(translations));
+
+            if (!languages.Add(translation.LanguageId))
+            {
+                throw new ArgumentException("shipping_type_translation_duplicate", nameof(translations));
+            }
+
+            if (!rowIds.Add(translation.ShippingTypeTranslationId))
+            {
+                throw new ArgumentException("shipping_type_translation_row_duplicate", nameof(translations));
+            }
+
+            translation.EnsureValidState();
+            validated.Add(translation);
+        }
+
+        return validated;
+    }
 }
 
 /// <summary>
@@ -234,14 +277,24 @@ public sealed class ShippingTypeTranslation
         string name,
         string? description)
     {
-        ArgumentNullException.ThrowIfNull(name);
+        if (shippingTypeTranslationId == Guid.Empty)
+        {
+            throw new ArgumentException("shipping_type_translation_row_required", nameof(shippingTypeTranslationId));
+        }
+
+        if (languageId == Guid.Empty)
+        {
+            throw new ArgumentException("shipping_type_translation_language_required", nameof(languageId));
+        }
+
+        var (validName, validDescription) = EnsureValidText(name, description);
 
         return new ShippingTypeTranslation
         {
             ShippingTypeTranslationId = shippingTypeTranslationId,
             LanguageId = languageId,
-            Name = name,
-            Description = description,
+            Name = validName,
+            Description = validDescription,
         };
     }
 
@@ -249,15 +302,47 @@ public sealed class ShippingTypeTranslation
     /// مقادیر همین ترجمه را جایگزین می‌کند.
     /// </summary>
     /// <remarks>
-    /// هر دو مقدار ازپیش canonical هستند و هم‌زمان انتساب می‌یابند؛ بنابراین هیچ انتساب نیمه‌کاره‌ای ممکن نیست.
-    /// اعتبارسنجی متن (خالی/طول/زبان) در قاعدهٔ واحد Application انجام می‌شود، نه در دامنه.
+    /// جفت پیشنهادی کامل و پیش از هر انتساب بررسی می‌شود؛ سپس هر دو مقدار هم‌زمان انتساب می‌یابند، بنابراین
+    /// توضیح نامعتبر هرگز نمی‌تواند نام را نیمه‌کاره تغییر دهد. این قاعده فقط invariant محلی است و
+    /// ثبت‌نام/زبان/خطای تجاری در Application می‌مانند.
     /// </remarks>
-    /// <param name="name">نام ازپیش‌نرمال‌شده.</param>
-    /// <param name="description">توضیح ازپیش‌نرمال‌شده یا <c>null</c> برای پاک‌کردن.</param>
+    /// <param name="name">نام غیرتهی.</param>
+    /// <param name="description">توضیح یا <c>null</c> برای پاک‌کردن.</param>
     public void Replace(string name, string? description)
     {
-        ArgumentNullException.ThrowIfNull(name);
-        Name = name;
-        Description = description;
+        var (validName, validDescription) = EnsureValidText(name, description);
+        Name = validName;
+        Description = validDescription;
+    }
+
+    /// <summary>
+    /// invariant محلی وضعیت ذخیره‌شده را بررسی می‌کند (برای ورودی‌هایی که از مسیر خودشان ساخته شده‌اند).
+    /// </summary>
+    internal void EnsureValidState() => EnsureValidText(Name, Description);
+
+    private static (string Name, string? Description) EnsureValidText(string? name, string? description)
+    {
+        if (name is null || string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("shipping_type_translation_name_invalid", nameof(name));
+        }
+
+        if (name.Length > ShippingType.NameMaxLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(name));
+        }
+
+        if (description is not null && string.IsNullOrWhiteSpace(description))
+        {
+            // توضیح خالی به‌جای «پاک‌کردن» نمی‌نشیند؛ فقط null یعنی پاک‌کردن.
+            throw new ArgumentException("shipping_type_translation_description_invalid", nameof(description));
+        }
+
+        if (description is { Length: > ShippingType.DescriptionMaxLength })
+        {
+            throw new ArgumentOutOfRangeException(nameof(description));
+        }
+
+        return (name, description);
     }
 }

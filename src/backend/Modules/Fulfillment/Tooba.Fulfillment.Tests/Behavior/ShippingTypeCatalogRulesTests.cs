@@ -71,16 +71,92 @@ public sealed class ShippingTypeCatalogRulesTests
     }
 
     [Fact]
-    public void Replace_is_atomic_and_does_not_validate_in_domain()
+    public void Replace_validates_the_complete_pair_before_assigning_either_field()
+    {
+        var translation = CreateEntity().Translations.Single();
+        var originalName = translation.Name;
+        var originalDescription = translation.Description;
+
+        Assert.ThrowsAny<ArgumentException>(() => translation.Replace(
+            "نام تازه",
+            new string('x', ShippingType.DescriptionMaxLength + 1)));
+
+        Assert.Equal(originalName, translation.Name);
+        Assert.Equal(originalDescription, translation.Description);
+    }
+
+    [Theory]
+    [InlineData(128, 512)]
+    [InlineData(1, 0)]
+    public void Valid_unicode_text_boundaries_are_accepted(int nameLength, int descriptionLength)
+    {
+        var name = new string('ع', nameLength);
+        var description = descriptionLength == 0 ? null : new string('ی', descriptionLength);
+
+        var translation = ShippingTypeTranslation.Create(UuidV7.New(), DefaultLanguage, name, description);
+
+        Assert.Equal(name, translation.Name);
+        Assert.Equal(description, translation.Description);
+    }
+
+    [Fact]
+    public void Invalid_identity_text_or_blank_description_is_rejected()
+    {
+        Assert.ThrowsAny<ArgumentException>(() => ShippingTypeTranslation.Create(
+            Guid.Empty, DefaultLanguage, "عادی", null));
+        Assert.ThrowsAny<ArgumentException>(() => ShippingTypeTranslation.Create(
+            UuidV7.New(), Guid.Empty, "عادی", null));
+        Assert.ThrowsAny<ArgumentException>(() => ShippingTypeTranslation.Create(
+            UuidV7.New(), DefaultLanguage, "   ", null));
+        Assert.ThrowsAny<ArgumentException>(() => ShippingTypeTranslation.Create(
+            UuidV7.New(), DefaultLanguage, null!, null));
+        Assert.ThrowsAny<ArgumentException>(() => ShippingTypeTranslation.Create(
+            UuidV7.New(), DefaultLanguage, new string('a', ShippingType.NameMaxLength + 1), null));
+        Assert.ThrowsAny<ArgumentException>(() => ShippingTypeTranslation.Create(
+            UuidV7.New(), DefaultLanguage, "عادی", new string('a', ShippingType.DescriptionMaxLength + 1)));
+    }
+
+    [Fact]
+    public void Invalid_or_duplicate_add_leaves_the_same_collection_unchanged()
     {
         var entity = CreateEntity();
-        var translation = entity.Translations.Single();
+        var before = entity.Translations.Select(x => x.LanguageId).ToArray();
 
-        // اعتبارسنجی متن (طول/خالی‌بودن) در قاعدهٔ واحد Application است؛ دامنه فقط انتساب هم‌زمان انجام می‌دهد.
-        translation.Replace("نام تازه", null);
+        Assert.ThrowsAny<ArgumentException>(() => entity.AddTranslation(
+            UuidV7.New(), SecondLanguage, "  ", null));
+        Assert.ThrowsAny<ArgumentException>(() => entity.AddTranslation(
+            UuidV7.New(), Guid.Empty, "Ordinary", null));
+        Assert.ThrowsAny<ArgumentException>(() => entity.AddTranslation(
+            Guid.Empty, SecondLanguage, "Ordinary", null));
+        Assert.ThrowsAny<ArgumentException>(() => entity.AddTranslation(
+            UuidV7.New(), DefaultLanguage, "تکراری", null));
 
-        Assert.Equal("نام تازه", translation.Name);
-        Assert.Null(translation.Description);
+        Assert.Equal(before, entity.Translations.Select(x => x.LanguageId).ToArray());
+        Assert.Single(entity.Translations);
+    }
+
+    [Fact]
+    public void Create_rejects_null_duplicate_or_invalid_supplied_translations()
+    {
+        var duplicateLanguage = new[]
+        {
+            ShippingTypeTranslation.Create(UuidV7.New(), DefaultLanguage, "عادی", null),
+            ShippingTypeTranslation.Create(UuidV7.New(), DefaultLanguage, "دوباره", null),
+        };
+
+        Assert.ThrowsAny<ArgumentException>(() => ShippingType.Create(
+            UuidV7.New(), "ordinary", 0, duplicateLanguage, Now));
+
+        Assert.ThrowsAny<ArgumentException>(() => ShippingType.Create(
+            UuidV7.New(), "ordinary", 0, [null!], Now));
+
+        var corrupted = ShippingTypeTranslation.Create(UuidV7.New(), DefaultLanguage, "عادی", null);
+        typeof(ShippingTypeTranslation)
+            .GetProperty(nameof(ShippingTypeTranslation.Name))!
+            .SetValue(corrupted, "   ");
+
+        Assert.ThrowsAny<ArgumentException>(() => ShippingType.Create(
+            UuidV7.New(), "ordinary", 0, [corrupted], Now));
     }
 
     [Fact]
@@ -123,6 +199,51 @@ public sealed class ShippingTypeCatalogRulesTests
             sortOrder,
             [ShippingTypeTranslation.Create(UuidV7.New(), DefaultLanguage, "عادی", null)],
             Now));
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(ShippingType.SortOrderMaxValue)]
+    public void Inclusive_sort_boundaries_are_accepted_by_create_and_update(int sortOrder)
+    {
+        var entity = ShippingType.Create(
+            UuidV7.New(),
+            "ordinary",
+            sortOrder,
+            [ShippingTypeTranslation.Create(UuidV7.New(), DefaultLanguage, "عادی", null)],
+            Now);
+
+        Assert.Equal(sortOrder, entity.SortOrder);
+        Assert.Equal(1, entity.Revision);
+
+        entity.Update(sortOrder, true, Now.AddMinutes(5));
+
+        Assert.Equal(sortOrder, entity.SortOrder);
+        Assert.True(entity.IsActive);
+    }
+
+    [Fact]
+    public void Rejected_update_leaves_root_state_identical()
+    {
+        var entity = ShippingType.Create(
+            UuidV7.New(),
+            "ordinary",
+            0,
+            [ShippingTypeTranslation.Create(UuidV7.New(), DefaultLanguage, "عادی", null)],
+            Now);
+
+        var revision = entity.Revision;
+        var updatedAt = entity.UpdatedAt;
+        var sortOrder = entity.SortOrder;
+        var isActive = entity.IsActive;
+
+        Assert.ThrowsAny<ArgumentException>(() => entity.Update(ShippingType.SortOrderMaxValue + 1, true, Now.AddHours(1)));
+
+        Assert.Equal(revision, entity.Revision);
+        Assert.Equal(updatedAt, entity.UpdatedAt);
+        Assert.Equal(sortOrder, entity.SortOrder);
+        Assert.Equal(isActive, entity.IsActive);
+    }
 
     [Fact]
     public void Blank_name_and_empty_language_are_rejected_by_the_application_rule()
@@ -455,6 +576,38 @@ public sealed class ShippingTypeCatalogRulesTests
         Assert.Empty(await store.ListActiveAsync(CancellationToken.None));
         var inactive = await store.GetByIdsAsync([id], CancellationToken.None);
         Assert.False(inactive.Single().IsActive);
+    }
+
+    // ---- R196-R1-01: caller path no longer trips the domain sort guard (EF InMemory, not HTTP/PG) ----
+
+    [Fact]
+    public async Task Store_creates_sort_zero_inactive_revision_one_and_reads_it_back()
+    {
+        using var db = NewDbContext();
+        var store = new ShippingTypeStore(db, new FixedClock(Now), new UuidV7IdGenerator());
+
+        var id = await store.CreateAsync(
+            "ordinary",
+            0,
+            [new ShippingTypePreparedTranslation(DefaultLanguage, "عادی", null)],
+            CancellationToken.None);
+
+        var view = await store.GetAsync(id, DefaultLanguage, CancellationToken.None);
+
+        Assert.NotNull(view);
+        Assert.Equal(0, view!.SortOrder);
+        Assert.False(view.IsActive);
+        Assert.Equal(1, view.Revision);
+        Assert.True(view.HasDefaultLanguageName);
+
+        var listed = await store.ListAsync(CancellationToken.None);
+        Assert.Equal(0, listed.Single().SortOrder);
+
+        // فعال‌سازی با همان ترتیب صفر هم مجاز است.
+        var activated = await store.UpdateAsync(
+            id, 1, null, 0, true, [], DefaultLanguage, CancellationToken.None);
+        Assert.True(activated.IsActive);
+        Assert.Equal(0, activated.SortOrder);
     }
 
     // ---- helpers -----------------------------------------------------------------------------
