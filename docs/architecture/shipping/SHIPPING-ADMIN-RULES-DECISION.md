@@ -1,4 +1,4 @@
-# قرارداد مصوب تنظیمات ارسال Admin
+﻿# قرارداد مصوب تنظیمات ارسال Admin
 Decision-ID: SHIPPING-ADMIN-RULES-001
 Date: 2026-10-21 (Asia/Tehran)
 Status: USER_APPROVED_REQUIREMENTS / IMPLEMENTATION_PENDING
@@ -368,3 +368,22 @@ per interface locale or per raw geographic scope, and no other owner's method in
   `ShippingOperatingSchedule` rows remain byte/behavior unchanged. Drafts remain inactive
   configuration; this section records an approved bounded requirement, not production activation or
   module certification.
+
+## 16. تصمیم محدود: پیش‌کرایه/پس‌کرایه و حالت محاسبه — دو انتخاب مستقل (TB-194)
+
+- **دو محور، نه یک enum.** زمان پرداخت کرایه (<code>Prepaid</code>/<code>CollectOnDelivery</code>، همان
+  <code>ShippingFreightPayerMode</code> موجود) و حالت محاسبه (<code>Manual</code>/<code>CarrierApi</code>/<code>Free</code>)
+  دو انتخاب کاملاً مستقل‌اند؛ هر شش ترکیب مجاز است و هیچ‌کدام دیگری را بازنویسی نمی‌کند.
+- **مالکیت یک‌بار روی ریشهٔ روش.** تنظیمات فقط یک‌بار به پیش‌نویس/روش وصل است، نه به گروه منطقه، ردیف نرخ،
+  ترجمه یا برنامهٔ هفتگی. نبود رکورد یعنی <strong>تنظیم‌نشده</strong>، نه پیش‌فرض Manual/Prepaid؛ هر دو مقدار
+  روی PUT حضور صریح دارند و NULL/مقدار ناشناخته هرگز به مقدار صفر enum تبدیل نمی‌شود.
+- **تغییر حالت چیزی را حذف نمی‌کند.** ردیف‌های دستی، مبالغ حمل/بسته‌بندی، ارز bind‌شده، جغرافیا، متن‌های
+  چندزبانه و برنامهٔ هفتگی با تغییر تنظیمات دست‌نخورده می‌مانند؛ مجموعهٔ خالی ردیف هرگز «رایگان» نیست.
+- **انتخاب، نه اجرا.** <code>CarrierApi</code> فقط یک حالت درخواستی است: هیچ هویت حامل، اعتبارنامه، استعلام،
+  مختصات یا ادعای آمادگی از آن نتیجه نمی‌شود. <code>Free</code> یعنی صفرشدن همهٔ اجزای کرایهٔ مشتری (شامل
+  بسته‌بندی) با حفظ هزینهٔ واقعی قابل حسابرسی و تأمین‌کنندهٔ صریح؛ این تسک هیچ‌کدام را محاسبه یا ثبت نمی‌کند و
+  هیچ تأمین‌کننده‌ای را از actor/owner/tenant استنتاج نمی‌کند. کمپین «رایگان بالای X» همچنان Promotion است.
+- **زمان پرداخت کرایه، COD کالا نیست.** این مقدار دستور پرداخت، تخصیص PSP یا زمان پرداخت بسته‌بندی نیست؛
+  قراردادهای موجود بسته‌بندی و مصرف‌کنندگان Order/Payment/Settlement حفظ می‌شوند.
+- رابط/State: یک query و یک command مشترک برای Admin و Seller، مجوز <code>fulfillment.view</code> برای GET و
+  <code>fulfillment.manage</code> برای PUT پیش از dispatch، و 409 همزمانی روی همان revision ریشه.

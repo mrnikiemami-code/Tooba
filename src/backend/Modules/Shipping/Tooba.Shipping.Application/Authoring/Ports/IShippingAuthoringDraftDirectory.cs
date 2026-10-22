@@ -120,6 +120,25 @@ public interface IShippingAuthoringDraftDirectory
         string? timeZoneId,
         IReadOnlyList<ShippingAuthoringDraft.ScheduleDayInput> days,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// تنظیمات روش یک پیش‌نویس همین مالک (زمان پرداخت کرایه + حالت محاسبه) را در <b>یک</b> SaveChanges
+    /// ضمنی اتمی جایگزین می‌کند و بازبینی ریشه را حداکثر یک واحد بالا می‌برد؛
+    /// <paramref name="expectedRevision"/> همان نشانگر همزمانی مشترک با منطقه/نرخ/ارائه/برنامه است.
+    /// </summary>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="draftId">شناسهٔ پیش‌نویس.</param>
+    /// <param name="expectedRevision">بازبینی مورد انتظار کلاینت.</param>
+    /// <param name="freightPaymentMode">زمان پرداخت کرایه؛ غیبت آن نامعتبر است.</param>
+    /// <param name="calculationMode">حالت محاسبهٔ کرایه؛ غیبت آن نامعتبر است.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<ShippingAuthoringDraft>> ReplaceMethodSettingsAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        Tooba.Shipping.Contracts.Packaging.ShippingFreightPayerMode? freightPaymentMode,
+        Tooba.Shipping.Contracts.Authoring.ShippingAuthoringCalculationMode? calculationMode,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

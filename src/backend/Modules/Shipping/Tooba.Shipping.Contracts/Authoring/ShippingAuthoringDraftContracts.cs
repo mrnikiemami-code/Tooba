@@ -1,3 +1,5 @@
+using Tooba.Shipping.Contracts.Packaging;
+
 namespace Tooba.Shipping.Contracts.Authoring;
 
 /// <summary>
@@ -205,3 +207,52 @@ public sealed record ShippingAuthoringWeeklyScheduleReplaceRequest(
     long ExpectedRevision,
     string TimeZoneId,
     IReadOnlyList<ShippingAuthoringScheduleDayWrite> Days);
+
+/// <summary>
+/// مُد محاسبهٔ کرایهٔ یک روش ارسال در پیش‌نویس مالک: دستی، API حامل یا رایگان.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>یک انتخاب مستقل، نه ترکیب با زمان پرداخت.</b> این enum فقط «چگونه محاسبه شود» را می‌گوید؛
+/// پیش‌پرداخت/پس‌کرایه (<c>ShippingFreightPayerMode</c>) یک انتخاب <b>جدا</b> است و هر شش ترکیب
+/// مجازند. هیچ‌کدام در دیگری ادغام نمی‌شود.
+/// </para>
+/// <para>
+/// <b>انتخاب، نه آمادگی.</b> <c>CarrierApi</c> فقط یک درخواست حالت است: هیچ هویت حامل، اعتبارنامه،
+/// استعلام، مختصات یا ادعای آمادگی از آن نتیجه نمی‌شود. <c>Free</c> هم فقط یک انتخاب پیش‌نویس است:
+/// هیچ هزینهٔ واقعی صفر نمی‌شود، هیچ تأمین‌کننده استنتاج نمی‌شود و هیچ ردیف دستی حذف نمی‌گردد.
+/// </para>
+/// </remarks>
+public enum ShippingAuthoringCalculationMode
+{
+    /// <summary>کرایه از ردیف‌های دستی همان گروه محاسبه می‌شود.</summary>
+    Manual = 0,
+
+    /// <summary>کرایه از API حامل درخواست می‌شود (اتصال واقعی حامل هنوز پیاده نشده است).</summary>
+    CarrierApi = 1,
+
+    /// <summary>کرایه برای مشتری رایگان در نظر گرفته می‌شود؛ هزینهٔ واقعی و تأمین‌کننده بیرون این برش‌اند.</summary>
+    Free = 2,
+}
+
+/// <summary>
+/// بدنهٔ جایگزینی تنظیمات روش یک پیش‌نویس: بازبینی ریشه و دو انتخاب مستقل.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>حضور صریح اجباری است.</b> هر دو مقدار nullable هستند؛ اگر <c>bool</c>/enum غیرnullable بودند،
+/// نبودِ فیلد در JSON بی‌سروصدا به مقدار صفر (<c>Prepaid</c>/<c>Manual</c>) تبدیل می‌شد و یک انتخاب
+/// ارسال‌نشده هرگز دیده نمی‌شد. الزام حضور در اعتبارسنجی و دامنه سنجیده می‌شود.
+/// </para>
+/// <para>
+/// مالک، فروشنده، نسخهٔ نصب، Tenant، ارز، زبان و هیچ اختیار فعال‌سازی در این بدنه نیست. «تنظیم‌نشده»
+/// حالت واقعی است و به <c>Manual</c>/<c>Prepaid</c> تفسیر نمی‌شود.
+/// </para>
+/// </remarks>
+/// <param name="ExpectedRevision">بازبینی ریشهٔ پیش‌نویس که کلاینت دیده است.</param>
+/// <param name="FreightPaymentMode">زمان پرداخت کرایه؛ حضور آن اجباری است.</param>
+/// <param name="CalculationMode">حالت محاسبهٔ کرایه؛ حضور آن اجباری است.</param>
+public sealed record ShippingAuthoringMethodSettingsReplaceRequest(
+    long ExpectedRevision,
+    ShippingFreightPayerMode? FreightPaymentMode,
+    ShippingAuthoringCalculationMode? CalculationMode);

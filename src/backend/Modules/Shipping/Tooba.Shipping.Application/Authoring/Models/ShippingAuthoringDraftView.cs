@@ -1,4 +1,5 @@
 using Tooba.Shipping.Contracts.Authoring;
+using Tooba.Shipping.Contracts.Packaging;
 
 namespace Tooba.Shipping.Application.Authoring.Models;
 
@@ -158,3 +159,23 @@ public sealed record ShippingAuthoringWeeklyScheduleItem(
     bool IsConfigured,
     string? TimeZoneId,
     IReadOnlyList<ShippingAuthoringScheduleDayItem> Days);
+
+/// <summary>
+/// تنظیمات روش یک پیش‌نویس: بازبینی ریشهٔ واقعی و وضعیت صریح تنظیم‌شده/نشده با دو انتخاب مستقل.
+/// </summary>
+/// <remarks>
+/// برای پیش‌نویس <b>تنظیم‌نشده</b> هیچ مقداری ساخته نمی‌شود (<c>FreightPaymentMode = null</c> و
+/// <c>CalculationMode = null</c>)؛ <c>Manual</c>/<c>Prepaid</c> پیش‌فرض نیستند. این سند هیچ ادعای
+/// آمادگی عملیاتی، اتصال حامل یا تأمین مالی نمی‌کند.
+/// </remarks>
+/// <param name="DraftId">شناسهٔ پیش‌نویس.</param>
+/// <param name="Revision">بازبینی ریشهٔ فعلی برای نوشتن بعدی.</param>
+/// <param name="IsConfigured">آیا تنظیمات صریحاً نوشته شده است.</param>
+/// <param name="FreightPaymentMode">زمان پرداخت کرایه یا تهی در حالت تنظیم‌نشده.</param>
+/// <param name="CalculationMode">حالت محاسبهٔ کرایه یا تهی در حالت تنظیم‌نشده.</param>
+public sealed record ShippingAuthoringMethodSettingsItem(
+    Guid DraftId,
+    long Revision,
+    bool IsConfigured,
+    ShippingFreightPayerMode? FreightPaymentMode,
+    ShippingAuthoringCalculationMode? CalculationMode);

@@ -192,4 +192,7 @@
   <data name="shipping.authoring.schedule_day_invalid" xml:space="preserve">
     <value>یک روز برنامهٔ هفتگی، روز کاری یا تعطیل معتبر نیست.</value>
   </data>
+  <data name="shipping.authoring.method_settings_invalid" xml:space="preserve">
+    <value>زمان پرداخت کرایه و حالت محاسبه باید هر دو صریحاً انتخاب شوند.</value>
+  </data>
 </root>

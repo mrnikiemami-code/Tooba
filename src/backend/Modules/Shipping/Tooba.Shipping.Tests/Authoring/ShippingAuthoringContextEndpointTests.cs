@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -174,8 +174,8 @@ public sealed class ShippingAuthoringContextEndpointTests
         // TB-189 added the admin and seller owner-scope reads, TB-190/191 the draft routes and TB-192
         // the presentation routes, so the surface is 39 routes (TB-193 adds one GET and one PUT
         // weekly-schedule route per audience).
-        Assert.Equal(39, harness.Routes.Count);
-        Assert.Equal(39, harness.Endpoints.Count);
+        Assert.Equal(43, harness.Routes.Count);
+        Assert.Equal(43, harness.Endpoints.Count);
 
         // The endpoint declares the existing permission and no anonymous/transport binding.
         var source = File.ReadAllText(Path.Combine(

@@ -246,4 +246,10 @@ public static class ShippingErrorCodes
     /// معکوس/مساوی/شبانه کد جداگانهٔ <c>shipping.schedule.window.range_invalid</c> را می‌گیرد.
     /// </summary>
     public const string AuthoringScheduleDayInvalid = "shipping.authoring.schedule_day_invalid";
+
+    /// <summary>
+    /// تنظیمات روش پیش‌نویس نامعتبر است: زمان پرداخت کرایه یا حالت محاسبه غایب/تهی است، یا مقدار
+    /// عددی خارج از مقادیر تعریف‌شده آمده است. مقدار صفر هرگز «پیش‌فرض» یک فیلد ارسال‌نشده نیست.
+    /// </summary>
+    public const string AuthoringMethodSettingsInvalid = "shipping.authoring.method_settings_invalid";
 }

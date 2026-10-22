@@ -140,6 +140,7 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
         D(ShippingErrorCodes.AuthoringPresentationLanguageInvalid, "A selected content language is unknown or not active."),
         D(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid, "The weekly schedule must contain exactly seven distinct ISO weekdays."),
         D(ShippingErrorCodes.AuthoringScheduleDayInvalid, "A weekly schedule day is not a valid working or closed day."),
+        D(ShippingErrorCodes.AuthoringMethodSettingsInvalid, "The method draft settings are not a valid freight payment and calculation choice."),
     ];
 
     private static ErrorDescriptor D(string code, string fallback) =>

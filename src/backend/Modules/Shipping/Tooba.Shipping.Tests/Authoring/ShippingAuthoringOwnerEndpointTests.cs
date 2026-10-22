@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -286,8 +286,8 @@ public sealed class ShippingAuthoringOwnerEndpointTests
 
         // Exactly the two new owner routes were added on top of the certified 17-route surface;
         // TB-190/191/192 draft routes and the TB-193 weekly schedule routes bring the certified
-        // surface to 39 routes.
-        Assert.Equal(39, harness.Routes.Count);
+        // surface to 43 routes.
+        Assert.Equal(43, harness.Routes.Count);
         Assert.Equal(
             ["GET " + AdminPath, "GET " + SellerPath],
             harness.Routes

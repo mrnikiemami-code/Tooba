@@ -65,6 +65,7 @@ public sealed class ShippingPersistenceModelTests
                 "authoring_draft_translations",
                 "authoring_drafts",
                 "authoring_group_titles",
+                "authoring_method_settings",
                 "authoring_rate_rows",
                 "authoring_region_groups",
                 "authoring_selected_areas",
@@ -366,11 +367,14 @@ public sealed class ShippingPersistenceModelTests
                      "ck_authoring_draft_translations_description_length",
                      "ck_authoring_group_titles_title_length",
                      "ck_authoring_weekly_schedules_timezone_length",
+                     "ck_authoring_method_settings_freight_mode",
+                     "ck_authoring_method_settings_calculation_mode",
                      "ck_authoring_weekly_schedule_days_weekday_range",
                      "ck_authoring_weekly_schedule_days_hours_paired",
                      "ck_authoring_weekly_schedule_days_range",
                      "ck_authoring_weekly_schedule_days_working_hours",
                      "fk_authoring_weekly_schedules_draft",
+                     "fk_authoring_method_settings_draft",
                      "fk_authoring_weekly_schedule_days_schedule",
                      "ix_authoring_rate_rows_group",
                  })
@@ -388,15 +392,17 @@ public sealed class ShippingPersistenceModelTests
 
         // The foreign keys in the whole schema are intra-module only: the schedule -> windows cascade,
         // the two authoring draft -> group -> selected-area cascades, the group -> rate-row cascade,
+        // ... draft -> method translations, draft -> group titles, the TB-193 draft -> weekly schedule
         // Nothing points at another module's schema.
         Assert.Contains("REFERENCES shipping.operating_schedules", script);
         Assert.Contains("REFERENCES shipping.authoring_drafts", script);
         Assert.Contains("REFERENCES shipping.authoring_region_groups", script);
         // TB-192 adds exactly two more intra-module cascades: draft -> method translations and
         // group -> optional titles. TB-193 adds two more: draft -> weekly schedule header and
-        // header -> the seven day rows. No language/registry FK crosses a module schema.
+        // header -> the seven day rows. TB-194 adds draft -> method settings. No language/registry FK
+        // crosses a module schema.
         Assert.Equal(
-            8,
+            9,
             script.Split("FOREIGN KEY", StringSplitOptions.None).Length - 1);
     }
 
@@ -411,7 +417,7 @@ public sealed class ShippingPersistenceModelTests
         // authoring draft/group/area addition, the TB-191 group rate-row addition, the TB-191-R1
         // constraint-parity correction and the TB-193 weekly schedule addition. Asserting the exact
         // count keeps the schema reviewable as a unit.
-        Assert.Equal(11, migrations.Length);
+        Assert.Equal(12, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
@@ -423,6 +429,7 @@ public sealed class ShippingPersistenceModelTests
         Assert.EndsWith("_AuthoringRateRowConstraintParity", migrations[8], StringComparison.Ordinal);
         Assert.EndsWith("_AuthoringPresentationTranslations", migrations[9], StringComparison.Ordinal);
         Assert.EndsWith("_AuthoringWeeklySchedule", migrations[10], StringComparison.Ordinal);
+        Assert.EndsWith("_AuthoringMethodSettings", migrations[11], StringComparison.Ordinal);
     }
 
     [Fact]

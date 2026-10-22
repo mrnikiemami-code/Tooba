@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
+using Tooba.Shipping.Contracts.Authoring;
 using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Domain.Aggregates;
@@ -619,6 +620,39 @@ public sealed class ShippingDbContext : DbContext
                 .WithOne()
                 .HasForeignKey(day => day.DraftId)
                 .HasConstraintName("fk_authoring_weekly_schedule_days_schedule")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // TB-194 method-root draft settings: freight payment timing and calculation mode are TWO
+        // independent selections owned once by the draft/method, never per region group, rate row,
+        // translation or schedule. Absence of the row is the explicit UNCONFIGURED state and is never
+        // read as Manual/Prepaid, so both columns are required and constrained to the defined values.
+        modelBuilder.Entity<ShippingAuthoringMethodSettings>(entity =>
+        {
+            entity.ToTable("authoring_method_settings", table =>
+            {
+                // An unknown numeric enum value is a rejected payload, never coerced to a defined one.
+                // NULL is impossible because both columns are NOT NULL, so a missing choice cannot
+                // bypass the constraints by being "unknown" in SQL three-valued logic.
+                table.HasCheckConstraint(
+                    "ck_authoring_method_settings_freight_mode",
+                    $"freight_payment_mode IN ({(int)ShippingFreightPayerMode.Prepaid}, {(int)ShippingFreightPayerMode.CollectOnDelivery})");
+                table.HasCheckConstraint(
+                    "ck_authoring_method_settings_calculation_mode",
+                    $"calculation_mode IN ({(int)ShippingAuthoringCalculationMode.Manual}, {(int)ShippingAuthoringCalculationMode.CarrierApi}, {(int)ShippingAuthoringCalculationMode.Free})");
+            });
+            entity.HasKey(x => x.DraftId);
+            entity.Property(x => x.DraftId).ValueGeneratedNever();
+            entity.Property(x => x.FreightPaymentMode).HasConversion<int>().IsRequired();
+            entity.Property(x => x.CalculationMode).HasConversion<int>().IsRequired();
+            entity.Property(x => x.UpdatedAt).IsRequired();
+
+            // ONE settings row per draft/method: the draft key is the real invariant, so a second row for
+            // the same method is impossible even for a raw writer.
+            entity.HasOne<ShippingAuthoringDraft>()
+                .WithOne(draft => draft.MethodSettings)
+                .HasForeignKey<ShippingAuthoringMethodSettings>(settings => settings.DraftId)
+                .HasConstraintName("fk_authoring_method_settings_draft")
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

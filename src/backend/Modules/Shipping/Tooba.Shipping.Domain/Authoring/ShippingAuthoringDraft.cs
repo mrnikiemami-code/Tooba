@@ -1,5 +1,7 @@
 using Tooba.BuildingBlocks;
+using Tooba.Shipping.Contracts.Authoring;
 using Tooba.Shipping.Contracts.Errors;
+using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Domain.Scheduling;
 
 namespace Tooba.Shipping.Domain.Authoring;
@@ -292,6 +294,12 @@ public sealed class ShippingAuthoringDraft
     /// یک‌بار به خود پیش‌نویس وصل است، پس همهٔ گروه‌های منطقه‌ای همان را به اشتراک می‌گذارند.
     /// </summary>
     public ShippingAuthoringWeeklySchedule? WeeklySchedule { get; private set; }
+
+    /// <summary>
+    /// تنظیمات روش همین پیش‌نویس: زمان پرداخت کرایه و حالت محاسبه، دو انتخاب مستقل روی ریشهٔ روش.
+    /// تهی یعنی صریحاً <b>تنظیم‌نشده</b> و نه <c>Manual</c>/<c>Prepaid</c>.
+    /// </summary>
+    public ShippingAuthoringMethodSettings? MethodSettings { get; private set; }
 
     /// <summary>پیش‌نویس تازه می‌سازد؛ بازبینی نخست همیشه ۱ است.</summary>
     /// <param name="owner">مالک سرورساخته.</param>
@@ -1004,6 +1012,89 @@ public sealed class ShippingAuthoringDraft
         }
 
         return (closedStart, ShippingOperatingWindow.NormalizeRange(closedStart, closedEnd));
+    }
+
+    /// <summary>
+    /// برنامهٔ کامل و تأییدشدهٔ تنظیمات روش: دو مقدار تعریف‌شده و صریح.
+    /// </summary>
+    /// <param name="FreightPaymentMode">زمان پرداخت کرایه.</param>
+    /// <param name="CalculationMode">حالت محاسبهٔ کرایه.</param>
+    public sealed record MethodSettingsPlan(
+        ShippingFreightPayerMode FreightPaymentMode,
+        ShippingAuthoringCalculationMode CalculationMode)
+    {
+        /// <summary>
+        /// آیا این جایگزینی دست‌کم یک تغییر واقعی دارد. یک PUT یکسان (همان دو انتخاب) یک no-op
+        /// صادقانه است: بازبینی و زمان تغییر نمی‌کنند، اما <c>expectedRevision</c> همیشه بررسی می‌شود.
+        /// </summary>
+        public bool HasChanges { get; init; }
+    }
+
+    /// <summary>
+    /// تنظیمات روش را <b>بدون هیچ تغییر</b> روی aggregate می‌سنجد: حضور صریح هر دو انتخاب و تعریف‌شده
+    /// بودن آن‌ها. هر نقصی پیش از نخستین نوشتن برمی‌گردد، پس ردیف‌های tracked، بازبینی، زمان و سایر
+    /// قابلیت‌ها دست‌نخورده می‌مانند.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>غایب ≠ صفر.</b> مقدار تهی یا عددی خارج از مقادیر تعریف‌شده با کد پایدار رد می‌شود؛ هیچ
+    /// «پیش‌فرض پیش‌پرداخت/دستی» ساخته نمی‌شود.
+    /// </para>
+    /// <para>
+    /// <b>دو انتخاب مستقل.</b> این متد هیچ رابطه‌ای بین زمان پرداخت و حالت محاسبه تحمیل نمی‌کند: هر
+    /// شش ترکیب مجاز است. تغییر یکی، دیگری و همهٔ ردیف‌های دستی/ارز/متن/جغرافیا/برنامه را دست نمی‌زند.
+    /// </para>
+    /// </remarks>
+    /// <param name="freightPaymentMode">زمان پرداخت کرایه از بدنه.</param>
+    /// <param name="calculationMode">حالت محاسبه از بدنه.</param>
+    public MethodSettingsPlan PreflightMethodSettings(
+        ShippingFreightPayerMode? freightPaymentMode,
+        ShippingAuthoringCalculationMode? calculationMode)
+    {
+        if (freightPaymentMode is not { } freight
+            || !Enum.IsDefined(freight)
+            || calculationMode is not { } calculation
+            || !Enum.IsDefined(calculation))
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringMethodSettingsInvalid));
+        }
+
+        var unchanged = MethodSettings is { } current
+                        && current.Matches(freight, calculation);
+        return new MethodSettingsPlan(freight, calculation) { HasChanges = !unchanged };
+    }
+
+    /// <summary>
+    /// برنامهٔ پیش‌سنجی‌شده را اعمال می‌کند. هیچ اعتبارسنجی‌ای اینجا نیست؛ ورودی باید از
+    /// <see cref="PreflightMethodSettings"/> آمده باشد. تغییر واقعی، بازبینی ریشه را یک واحد بالا
+    /// می‌برد و در همان SaveChanges ضمنی با سایر قابلیت‌ها نوشته می‌شود.
+    /// </summary>
+    /// <param name="plan">برنامهٔ معتبر.</param>
+    /// <param name="now">زمان UTC.</param>
+    public void ApplyMethodSettings(MethodSettingsPlan plan, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        if (!plan.HasChanges)
+        {
+            return;
+        }
+
+        if (MethodSettings is { } settings)
+        {
+            settings.Apply(plan.FreightPaymentMode, plan.CalculationMode, now);
+        }
+        else
+        {
+            MethodSettings = ShippingAuthoringMethodSettings.Create(
+                DraftId,
+                plan.FreightPaymentMode,
+                plan.CalculationMode,
+                now);
+        }
+
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
     }
 
     private static void RejectPresentation()

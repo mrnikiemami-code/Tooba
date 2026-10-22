@@ -71,6 +71,7 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .Include(candidate => candidate.RegionGroups)
             .ThenInclude(group => group.Titles)
             .Include(candidate => candidate.Translations)
+            .Include(candidate => candidate.MethodSettings)
             .Include(candidate => candidate.WeeklySchedule)
             .ThenInclude(schedule => schedule!.Days)
             .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
@@ -419,6 +420,68 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             context.ChangeTracker.Clear();
             return Result.Failure<ShippingAuthoringDraft>(
                 new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
+        }
+        catch
+        {
+            context.ChangeTracker.Clear();
+            throw;
+        }
+
+        return Result.Success(draft);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<ShippingAuthoringDraft>> ReplaceMethodSettingsAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        Tooba.Shipping.Contracts.Packaging.ShippingFreightPayerMode? freightPaymentMode,
+        Tooba.Shipping.Contracts.Authoring.ShippingAuthoringCalculationMode? calculationMode,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+
+        var draft = await Scoped(ToDomainOwner(owner))
+            .Include(candidate => candidate.MethodSettings)
+            .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
+        if (draft is null)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound));
+        }
+
+        // A stale client is refused before any tracked row is touched; the root revision column is the
+        // relational backstop shared with the region/rate/presentation/schedule writers.
+        if (draft.Revision != expectedRevision)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+        }
+
+        try
+        {
+            // Both choices are preflighted before the first mutation, so a rejected payload leaves this
+            // aggregate, its tracker, its revision and every other capability untouched. The settings row
+            // and the root revision share ONE implicit SaveChanges.
+            var plan = draft.PreflightMethodSettings(freightPaymentMode, calculationMode);
+            draft.ApplyMethodSettings(plan, DateTimeOffset.UtcNow);
+            if (plan.HasChanges)
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            context.ChangeTracker.Clear();
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+        }
+        catch (DbUpdateException exception) when (IsCheckViolation(exception, "authoring_method_settings"))
+        {
+            // The table's CHECK constraints mirror the enum guards; a violation is a rejected payload,
+            // never a silent coercion of an unknown enum value to a defined one.
+            context.ChangeTracker.Clear();
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringMethodSettingsInvalid));
         }
         catch
         {

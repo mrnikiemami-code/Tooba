@@ -539,6 +539,35 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringMethodSettings", b =>
+                {
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<int>("CalculationMode")
+                        .HasColumnType("integer")
+                        .HasColumnName("calculation_mode");
+
+                    b.Property<int>("FreightPaymentMode")
+                        .HasColumnType("integer")
+                        .HasColumnName("freight_payment_mode");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("DraftId")
+                        .HasName("pk_authoring_method_settings");
+
+                    b.ToTable("authoring_method_settings", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_method_settings_calculation_mode", "calculation_mode IN (0, 1, 2)");
+
+                            t.HasCheckConstraint("ck_authoring_method_settings_freight_mode", "freight_payment_mode IN (0, 1)");
+                        });
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRateRow", b =>
                 {
                     b.Property<Guid>("RateRowId")
@@ -886,6 +915,16 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_authoring_draft_translations_authoring_drafts_draft_id");
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringMethodSettings", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", null)
+                        .WithOne("MethodSettings")
+                        .HasForeignKey("Tooba.Shipping.Domain.Authoring.ShippingAuthoringMethodSettings", "DraftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_method_settings_draft");
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRateRow", b =>
                 {
                     b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", null)
@@ -958,6 +997,8 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", b =>
                 {
+                    b.Navigation("MethodSettings");
+
                     b.Navigation("RegionGroups");
 
                     b.Navigation("Translations");

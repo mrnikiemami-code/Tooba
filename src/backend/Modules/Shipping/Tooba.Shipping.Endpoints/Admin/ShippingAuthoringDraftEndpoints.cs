@@ -52,6 +52,15 @@ public static class ShippingAuthoringDraftEndpoints
         group.MapPut(
             "/shipping-services/authoring-drafts/{draftId:guid}/weekly-schedule",
             ReplaceWeeklyScheduleAsync);
+        // TB-194 method-root draft settings: freight payment timing and calculation mode are TWO
+        // independent selections owned once by the draft/method. Absence is UNCONFIGURED, never an
+        // implicit Manual/Prepaid, and neither choice evaluates a rate or activates the method.
+        group.MapGet(
+            "/shipping-services/authoring-drafts/{draftId:guid}/method-settings",
+            GetMethodSettingsAsync);
+        group.MapPut(
+            "/shipping-services/authoring-drafts/{draftId:guid}/method-settings",
+            ReplaceMethodSettingsAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -237,6 +246,43 @@ public static class ShippingAuthoringDraftEndpoints
 
         return api.From(await sender.Send(
             new ReplaceShippingAuthoringWeeklyScheduleCommand(scope, draftId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> GetMethodSettingsAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new GetShippingAuthoringMethodSettingsQuery(scope, draftId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> ReplaceMethodSettingsAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringMethodSettingsReplaceRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new ReplaceShippingAuthoringMethodSettingsCommand(scope, draftId, body!),
             cancellationToken));
     }
 }

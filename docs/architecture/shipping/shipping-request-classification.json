@@ -1,4 +1,4 @@
-{
+﻿{
   "module": "Shipping",
   "lockVersion": "ARCH-COMPLETE-002",
   "task": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3",
@@ -454,6 +454,41 @@
       ],
       "transportRule": "route draft id non-empty, expectedRevision positive, timezone non-blank and bounded, the days collection REQUIRED and exactly seven entries with no null element, an explicitly present working flag per day, paired local times with end > start; owner, tenant, seller, mode, currency, language and geography are never bound from transport and timezone resolvability/exactly-seven uniqueness stay canonical domain preflight rules",
       "reason": "A whole untrusted week and the shared optimistic-concurrency token are caller-controlled; a missing working flag must never deserialize into an implicit closed day, and an omitted/duplicated weekday is a shape failure before any tracked write."
+    },
+    {
+      "request": "GetShippingAuthoringMethodSettingsQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/method-settings",
+        "GET /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/method-settings"
+      ],
+      "handler": "GetShippingAuthoringMethodSettingsHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingAuthoringMethodSettingsQueryValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "authorization:fulfillment.view:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "the route draft id must be non-empty; the draft is only ever sought INSIDE the owner-filtered scope, so a foreign or invented id returns the same safe not-found response",
+      "reason": "One caller-supplied route id is projected into the read request. Absent settings are reported truthfully as UNCONFIGURED; no Manual/Prepaid default and no readiness claim is fabricated for the reader."
+    },
+    {
+      "request": "ReplaceShippingAuthoringMethodSettingsCommand",
+      "routes": [
+        "PUT /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/method-settings",
+        "PUT /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/method-settings"
+      ],
+      "handler": "ReplaceShippingAuthoringMethodSettingsHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ReplaceShippingAuthoringMethodSettingsCommandValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "body:expectedRevision:required-positive:untrusted-caller",
+        "body:freightPaymentMode:required-defined-enum:untrusted-caller",
+        "body:calculationMode:required-defined-enum:untrusted-caller",
+        "authorization:fulfillment.manage:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "route draft id non-empty, expectedRevision positive, and BOTH selections explicitly present and defined (a missing field must never deserialize into the enum zero Manual/Prepaid); owner, seller, edition, tenant, currency, language and activation authority are never bound from transport, and the two choices stay independent",
+      "reason": "A whole untrusted pair of independent enum choices and the shared optimistic-concurrency token are caller-controlled; an absent choice is a shape failure before any tracked write, and an unknown numeric value is a rejected payload rather than a coerced default."
     }
   ],
   "nestedTransportValidators": [
@@ -470,11 +505,11 @@
     "GetShippingAuthoringDraftsQuery"
   ],
     "totals": {
-    "shippedRoutes": 39,
-    "endpointReachableRequests": 28,
-    "requestValidators": 25,
+    "shippedRoutes": 43,
+    "endpointReachableRequests": 30,
+    "requestValidators": 27,
     "nestedTransportValidators": 6,
-    "declaredValidators": 31
+    "declaredValidators": 33
   },
   "amendments": [
     {

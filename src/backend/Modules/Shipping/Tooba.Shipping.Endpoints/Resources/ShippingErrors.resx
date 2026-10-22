@@ -192,4 +192,7 @@
   <data name="shipping.authoring.schedule_day_invalid" xml:space="preserve">
     <value>A weekly schedule day is not a valid working or closed day.</value>
   </data>
+  <data name="shipping.authoring.method_settings_invalid" xml:space="preserve">
+    <value>The freight payment timing and calculation mode must both be selected explicitly.</value>
+  </data>
 </root>

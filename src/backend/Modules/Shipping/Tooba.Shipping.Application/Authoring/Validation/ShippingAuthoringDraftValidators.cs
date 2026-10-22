@@ -70,6 +70,13 @@ public static class ShippingAuthoringValidationCodes
 
     /// <summary>شناسهٔ منطقهٔ زمانی در بدنه غایب یا بیش‌ازحد طولانی است.</summary>
     public const string ScheduleTimeZoneIdInvalid = "shipping.validation.schedule_timezone_id_invalid";
+
+    /// <summary>زمان پرداخت کرایه در بدنه غایب یا خارج از مقادیر تعریف‌شده است.</summary>
+    public const string MethodSettingsFreightModeInvalid = "shipping.validation.method_settings_freight_mode_invalid";
+
+    /// <summary>حالت محاسبهٔ کرایه در بدنه غایب یا خارج از مقادیر تعریف‌شده است.</summary>
+    public const string MethodSettingsCalculationModeInvalid =
+        "shipping.validation.method_settings_calculation_mode_invalid";
 }
 
 /// <summary>اعتبارسنجی شکل درخواست ایجاد پیش‌نویس.</summary>
@@ -612,5 +619,63 @@ internal static class ShippingAuthoringScheduleShape
         }
 
         return true;
+    }
+}
+
+/// <summary>
+/// اعتبارسنجی شکل خواندن تنظیمات روش: شناسهٔ مسیر باید غیرخالی باشد.
+/// </summary>
+public sealed class GetShippingAuthoringMethodSettingsQueryValidator
+    : AbstractValidator<GetShippingAuthoringMethodSettingsQuery>
+{
+    /// <summary>قواعد را می‌سازد.</summary>
+    public GetShippingAuthoringMethodSettingsQueryValidator()
+    {
+        RuleFor(x => x.DraftId)
+            .NotEmpty()
+            .WithErrorCode(ShippingAuthoringValidationCodes.DraftIdRequired);
+    }
+}
+
+/// <summary>
+/// اعتبارسنجی شکل جایگزینی تنظیمات روش: هویت مسیر، نشانگر همزمانی و حضور صریح هر دو انتخاب.
+/// </summary>
+/// <remarks>
+/// هر دو مقدار nullable هستند تا نبودِ فیلد در JSON به مقدار صفر enum تبدیل نشود؛ الزام حضور و
+/// تعریف‌شده‌بودن مقدار در همین لایه و دوباره در دامنه سنجیده می‌شود، پس یک فراخوان مستقیم (بدون
+/// HTTP) هم نمی‌تواند تنظیمات ناقص بنویسد.
+/// </remarks>
+public sealed class ReplaceShippingAuthoringMethodSettingsCommandValidator
+    : AbstractValidator<ReplaceShippingAuthoringMethodSettingsCommand>
+{
+    /// <summary>قواعد را می‌سازد.</summary>
+    public ReplaceShippingAuthoringMethodSettingsCommandValidator()
+    {
+        RuleFor(x => x.DraftId)
+            .NotEmpty()
+            .WithErrorCode(ShippingAuthoringValidationCodes.DraftIdRequired);
+
+        RuleFor(x => x.Request)
+            .NotNull()
+            .WithErrorCode(ShippingValidationCodes.BodyInvalid);
+
+        RuleFor(x => x.Request.ExpectedRevision)
+            .GreaterThan(0)
+            .WithErrorCode(ShippingAuthoringValidationCodes.ExpectedRevisionInvalid)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.FreightPaymentMode)
+            .NotNull()
+            .WithErrorCode(ShippingAuthoringValidationCodes.MethodSettingsFreightModeInvalid)
+            .Must(mode => mode is null || Enum.IsDefined(mode.Value))
+            .WithErrorCode(ShippingAuthoringValidationCodes.MethodSettingsFreightModeInvalid)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.CalculationMode)
+            .NotNull()
+            .WithErrorCode(ShippingAuthoringValidationCodes.MethodSettingsCalculationModeInvalid)
+            .Must(mode => mode is null || Enum.IsDefined(mode.Value))
+            .WithErrorCode(ShippingAuthoringValidationCodes.MethodSettingsCalculationModeInvalid)
+            .When(x => x.Request is not null);
     }
 }
