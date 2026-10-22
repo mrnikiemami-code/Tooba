@@ -507,6 +507,38 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraftTranslation", b =>
+                {
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<Guid>("LanguageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("language_id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.HasKey("DraftId", "LanguageId")
+                        .HasName("pk_authoring_draft_translations");
+
+                    b.ToTable("authoring_draft_translations", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_draft_translations_description_length", "description IS NULL OR char_length(description) <= 2000");
+
+                            t.HasCheckConstraint("ck_authoring_draft_translations_name_length", "char_length(btrim(name)) > 0 AND char_length(name) <= 200");
+                        });
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRateRow", b =>
                 {
                     b.Property<Guid>("RateRowId")
@@ -616,6 +648,35 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_authoring_region_groups_currency_canonical", "currency_code IS NULL OR (octet_length(currency_code) = 3 AND currency_code COLLATE \"C\" ~ '^[A-Z]{3}$')");
 
                             t.HasCheckConstraint("ck_authoring_region_groups_order_non_negative", "group_order >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroupTitle", b =>
+                {
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<Guid>("LanguageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("language_id");
+
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.HasKey("GroupId", "LanguageId")
+                        .HasName("pk_authoring_group_titles");
+
+                    b.ToTable("authoring_group_titles", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_group_titles_title_length", "char_length(btrim(title)) > 0 AND char_length(title) <= 200");
                         });
                 });
 
@@ -753,6 +814,16 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraftTranslation", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", null)
+                        .WithMany("Translations")
+                        .HasForeignKey("DraftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_draft_translations_authoring_drafts_draft_id");
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRateRow", b =>
                 {
                     b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", null)
@@ -771,6 +842,16 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_authoring_region_groups_authoring_drafts_draft_id");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroupTitle", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", null)
+                        .WithMany("Titles")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_group_titles_authoring_region_groups_group_id");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringSelectedArea", b =>
@@ -796,6 +877,8 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", b =>
                 {
                     b.Navigation("RegionGroups");
+
+                    b.Navigation("Translations");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", b =>
@@ -803,6 +886,8 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                     b.Navigation("Areas");
 
                     b.Navigation("RateRows");
+
+                    b.Navigation("Titles");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingSchedule", b =>

@@ -48,6 +48,18 @@ public static class ShippingAuthoringValidationCodes
 
     /// <summary>بازهٔ مدت تحویل یک ردیف نرخ نامعتبر است.</summary>
     public const string RateRowDurationInvalid = "shipping.validation.rate_row_duration_invalid";
+
+    /// <summary>مجموعهٔ ترجمه‌های نام غایب است (برخلاف <c>[]</c> که «بدون تغییر» است).</summary>
+    public const string MethodTranslationsRequired = "shipping.validation.method_translations_required";
+
+    /// <summary>مجموعهٔ عنوان‌های گروه غایب است (برخلاف <c>[]</c> که «بدون تغییر» است).</summary>
+    public const string GroupTitlesRequired = "shipping.validation.group_titles_required";
+
+    /// <summary>یک ورودی ارائه از نظر شکل نامعتبر است (null، شناسهٔ خالی، زبان تکراری، متن غایب/بلند).</summary>
+    public const string PresentationEntryInvalid = "shipping.validation.presentation_entry_invalid";
+
+    /// <summary>تعداد ورودی‌های یک فهرست ارائه از سقف فنی payload بیشتر است.</summary>
+    public const string PresentationEntriesTooMany = "shipping.validation.presentation_entries_too_many";
 }
 
 /// <summary>اعتبارسنجی شکل درخواست ایجاد پیش‌نویس.</summary>
@@ -363,5 +375,121 @@ internal static class ShippingAuthoringShape
                 && area.ServiceAreaId is { } serviceArea && serviceArea != Guid.Empty,
             _ => false,
         };
+    }
+}
+
+/// <summary>
+/// اعتبارسنجی شکل PATCH ارائه: هویت مسیر، نشانگر همزمانی، الزام هر دو فهرست (نه خالی‌بودن)، یکتایی
+/// جفت‌ها و طول متن، همه پیش از هر خواندن خارجی یا نوشتن.
+/// </summary>
+/// <remarks>
+/// <c>[]</c> معتبر است و یعنی «هیچ تغییر»؛ فقط <c>null</c>/غایب شکل نامعتبر است. زبان‌ها در این لایه
+/// فقط شناسه‌اند: فعال‌بودن آن‌ها با منبع authoritative در handler/دامنه سنجیده می‌شود.
+/// </remarks>
+public sealed class ReplaceShippingAuthoringPresentationCommandValidator
+    : AbstractValidator<ReplaceShippingAuthoringPresentationCommand>
+{
+    /// <summary>قواعد را می‌سازد.</summary>
+    public ReplaceShippingAuthoringPresentationCommandValidator()
+    {
+        RuleFor(x => x.DraftId)
+            .NotEmpty()
+            .WithErrorCode(ShippingAuthoringValidationCodes.DraftIdRequired);
+
+        RuleFor(x => x.Request)
+            .NotNull()
+            .WithErrorCode(ShippingValidationCodes.BodyInvalid);
+
+        RuleFor(x => x.Request.ExpectedRevision)
+            .GreaterThan(0)
+            .WithErrorCode(ShippingAuthoringValidationCodes.ExpectedRevisionInvalid)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.MethodTranslations)
+            .NotNull()
+            .WithErrorCode(ShippingAuthoringValidationCodes.MethodTranslationsRequired)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.MethodTranslations)
+            .Must(entries => entries!.Count <= ShippingAuthoringDraft.MaxMethodTranslations)
+            .WithErrorCode(ShippingAuthoringValidationCodes.PresentationEntriesTooMany)
+            .Must(entries => ShippingAuthoringPresentationShape.HasValidTranslations(entries!))
+            .WithErrorCode(ShippingAuthoringValidationCodes.PresentationEntryInvalid)
+            .When(x => x.Request?.MethodTranslations is not null);
+
+        RuleFor(x => x.Request.GroupTitles)
+            .NotNull()
+            .WithErrorCode(ShippingAuthoringValidationCodes.GroupTitlesRequired)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.GroupTitles)
+            .Must(entries => entries!.Count <= ShippingAuthoringDraft.MaxGroupTitleEntries)
+            .WithErrorCode(ShippingAuthoringValidationCodes.PresentationEntriesTooMany)
+            .Must(entries => ShippingAuthoringPresentationShape.HasValidTitles(entries!))
+            .WithErrorCode(ShippingAuthoringValidationCodes.PresentationEntryInvalid)
+            .When(x => x.Request?.GroupTitles is not null);
+    }
+}
+
+/// <summary>
+/// اعتبارسنجی شکل خواندن ارائه: شناسهٔ مسیر باید غیرخالی باشد.
+/// </summary>
+public sealed class GetShippingAuthoringPresentationQueryValidator
+    : AbstractValidator<GetShippingAuthoringPresentationQuery>
+{
+    /// <summary>قواعد را می‌سازد.</summary>
+    public GetShippingAuthoringPresentationQueryValidator()
+    {
+        RuleFor(x => x.DraftId)
+            .NotEmpty()
+            .WithErrorCode(ShippingAuthoringValidationCodes.DraftIdRequired);
+    }
+}
+
+/// <summary>
+/// قواعد شکل/طول متن ارائه در لایهٔ transport. هیچ قاعدهٔ زبانی/تجاری اینجا نیست: فقط «آیا این payload
+/// قابل تفسیر و در محدودهٔ فنی است».
+/// </summary>
+internal static class ShippingAuthoringPresentationShape
+{
+    /// <summary>ورودی‌های نام: عنصر null، زبان خالی/تکراری، نام خالی/بلند و توضیح بلند ممنوع.</summary>
+    /// <param name="entries">ورودی‌ها.</param>
+    public static bool HasValidTranslations(IReadOnlyList<ShippingAuthoringMethodTranslationWrite> entries)
+    {
+        var seen = new HashSet<Guid>();
+        foreach (var entry in entries)
+        {
+            if (entry is null
+                || entry.LanguageId == Guid.Empty
+                || !seen.Add(entry.LanguageId)
+                || string.IsNullOrWhiteSpace(entry.Name)
+                || entry.Name.Trim().Length > ShippingAuthoringPresentationRules.NameMaxLength
+                || entry.Description?.Trim().Length > ShippingAuthoringPresentationRules.DescriptionMaxLength)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>ورودی‌های عنوان: عنصر null، شناسهٔ خالی و جفت (گروه، زبان) تکراری ممنوع.</summary>
+    /// <param name="entries">ورودی‌ها.</param>
+    public static bool HasValidTitles(IReadOnlyList<ShippingAuthoringGroupTitleWrite> entries)
+    {
+        var seen = new HashSet<(Guid GroupId, Guid LanguageId)>();
+        foreach (var entry in entries)
+        {
+            if (entry is null
+                || entry.GroupId == Guid.Empty
+                || entry.LanguageId == Guid.Empty
+                || !seen.Add((entry.GroupId, entry.LanguageId))
+                || entry.Title?.Trim().Length > ShippingAuthoringPresentationRules.TitleMaxLength)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

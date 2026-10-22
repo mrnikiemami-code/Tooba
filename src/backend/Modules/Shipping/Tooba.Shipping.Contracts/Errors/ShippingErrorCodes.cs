@@ -228,4 +228,10 @@ public static class ShippingErrorCodes
     /// تغییر پیکربندی بازتفسیر یا تبدیل نمی‌شوند؛ نوشتن fail-closed رد می‌شود.
     /// </summary>
     public const string AuthoringRateCurrencyMismatch = "shipping.authoring.rate_currency_mismatch";
+
+    /// <summary>بدنهٔ ارائهٔ پیش‌نویس از نظر شکل نامعتبر است (تکراری، خالی یا بیش‌ازحد طولانی).</summary>
+    public const string AuthoringPresentationPayloadInvalid = "shipping.authoring.presentation_payload_invalid";
+
+    /// <summary>زبان ارجاع‌شده در registry فعال authoritative وجود ندارد یا غیرفعال است.</summary>
+    public const string AuthoringPresentationLanguageInvalid = "shipping.authoring.presentation_language_invalid";
 }

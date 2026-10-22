@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -62,7 +62,9 @@ public sealed class ShippingPersistenceModelTests
         Assert.Equal(
             new[]
             {
+                "authoring_draft_translations",
                 "authoring_drafts",
+                "authoring_group_titles",
                 "authoring_rate_rows",
                 "authoring_region_groups",
                 "authoring_selected_areas",
@@ -356,6 +358,9 @@ public sealed class ShippingPersistenceModelTests
                      "ux_authoring_drafts_owner_binding",
                      "ux_authoring_region_groups_draft_order",
                      "ux_authoring_selected_areas_draft_node",
+                     "ck_authoring_draft_translations_name_length",
+                     "ck_authoring_draft_translations_description_length",
+                     "ck_authoring_group_titles_title_length",
                      "ix_authoring_rate_rows_group",
                  })
         {
@@ -371,13 +376,15 @@ public sealed class ShippingPersistenceModelTests
         Assert.Equal(9, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
 
         // The foreign keys in the whole schema are intra-module only: the schedule -> windows cascade,
-        // the two authoring draft -> group -> selected-area cascades and the group -> rate-row cascade.
+        // the two authoring draft -> group -> selected-area cascades, the group -> rate-row cascade,
         // Nothing points at another module's schema.
         Assert.Contains("REFERENCES shipping.operating_schedules", script);
         Assert.Contains("REFERENCES shipping.authoring_drafts", script);
         Assert.Contains("REFERENCES shipping.authoring_region_groups", script);
+        // TB-192 adds exactly two more intra-module cascades: draft -> method translations and
+        // group -> optional titles. No language/registry FK crosses a module schema.
         Assert.Equal(
-            4,
+            6,
             script.Split("FOREIGN KEY", StringSplitOptions.None).Length - 1);
     }
 
@@ -391,7 +398,7 @@ public sealed class ShippingPersistenceModelTests
         // schedule, weight/count tiers, packaging policy, option-scoped coverage restriction), the D3
         // authoring draft/group/area addition, the TB-191 group rate-row addition and the TB-191-R1
         // constraint-parity correction. Asserting the exact count keeps the schema reviewable as a unit.
-        Assert.Equal(9, migrations.Length);
+        Assert.Equal(10, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
@@ -401,6 +408,7 @@ public sealed class ShippingPersistenceModelTests
         Assert.EndsWith("_AuthoringDraftPersistence", migrations[6], StringComparison.Ordinal);
         Assert.EndsWith("_AuthoringGroupRateRows", migrations[7], StringComparison.Ordinal);
         Assert.EndsWith("_AuthoringRateRowConstraintParity", migrations[8], StringComparison.Ordinal);
+        Assert.EndsWith("_AuthoringPresentationTranslations", migrations[9], StringComparison.Ordinal);
     }
 
     [Fact]

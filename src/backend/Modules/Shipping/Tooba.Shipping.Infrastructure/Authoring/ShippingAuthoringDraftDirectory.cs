@@ -68,6 +68,9 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .ThenInclude(group => group.Areas)
             .Include(candidate => candidate.RegionGroups)
             .ThenInclude(group => group.RateRows)
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.Titles)
+            .Include(candidate => candidate.Translations)
             .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
         return draft is null
             ? Result.Failure<ShippingAuthoringDraft>(new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound))
@@ -276,6 +279,73 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             context.ChangeTracker.Clear();
             return Result.Failure<ShippingAuthoringDraft>(
                 new SemanticError(ShippingErrorCodes.AuthoringRateRowPayloadInvalid));
+        }
+        catch
+        {
+            context.ChangeTracker.Clear();
+            throw;
+        }
+
+        return Result.Success(draft);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<ShippingAuthoringDraft>> ReplacePresentationAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        IReadOnlyList<ShippingAuthoringDraft.MethodTranslationInput> translations,
+        IReadOnlyList<ShippingAuthoringDraft.GroupTitleInput> titles,
+        IReadOnlySet<Guid> activeLanguageIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        ArgumentNullException.ThrowIfNull(translations);
+        ArgumentNullException.ThrowIfNull(titles);
+        ArgumentNullException.ThrowIfNull(activeLanguageIds);
+
+        var draft = await Scoped(ToDomainOwner(owner))
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.Titles)
+            .Include(candidate => candidate.Translations)
+            .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
+        if (draft is null)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound));
+        }
+
+        // A stale client is refused before any tracked row is touched; the root revision column is the
+        // relational backstop shared with the region/rate writers.
+        if (draft.Revision != expectedRevision)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+        }
+
+        try
+        {
+            // Preflight proves every entry, group membership and language before the first mutation; the
+            // selected-language text changes and the root revision share ONE implicit SaveChanges.
+            var plan = draft.PreflightPresentation(translations, titles, activeLanguageIds);
+            draft.ApplyPresentation(plan, DateTimeOffset.UtcNow);
+            if (plan.HasChanges)
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            context.ChangeTracker.Clear();
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+        }
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception, "authoring_draft_translations")
+                                                    || IsUniqueViolation(exception, "authoring_group_titles"))
+        {
+            // The composite uniqueness is the relational mirror of a duplicate (owner, language) entry.
+            context.ChangeTracker.Clear();
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringPresentationPayloadInvalid));
         }
         catch
         {

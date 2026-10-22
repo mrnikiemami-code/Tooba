@@ -122,3 +122,46 @@ public sealed record ShippingAuthoringRateRowWrite(
 public sealed record ShippingAuthoringRateRowsReplaceRequest(
     long ExpectedRevision,
     IReadOnlyList<ShippingAuthoringRateRowWrite> Rows);
+
+/// <summary>
+/// یک تغییر نام/توضیح برای <b>یک</b> زبان محتوا.
+/// </summary>
+/// <param name="LanguageId">شناسهٔ زبان محتوای فعال.</param>
+/// <param name="Name">نام غیرخالی همین زبان.</param>
+/// <param name="Description">توضیح اختیاری همین زبان؛ تهی/خالی فقط توضیح همین زبان را پاک می‌کند.</param>
+public sealed record ShippingAuthoringMethodTranslationWrite(
+    Guid LanguageId,
+    string Name,
+    string? Description);
+
+/// <summary>
+/// یک تغییر/پاک‌کردن عنوان اختیاری یک گروه برای یک زبان. عنوان تهی فقط همان (گروه، زبان) را پاک
+/// می‌کند و هیچ زبان یا گروه دیگری را دست نمی‌زند.
+/// </summary>
+/// <param name="GroupId">شناسهٔ گروه همین پیش‌نویس.</param>
+/// <param name="LanguageId">شناسهٔ زبان محتوای فعال.</param>
+/// <param name="Title">عنوان یا تهی برای پاک‌کردن.</param>
+public sealed record ShippingAuthoringGroupTitleWrite(
+    Guid GroupId,
+    Guid LanguageId,
+    string? Title);
+
+/// <summary>
+/// بدنهٔ به‌روزرسانی سند ارائه: بازبینی ریشهٔ مورد انتظار و دو فهرست تغییر زبان‌محور.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>PATCH، نه جایگزینی دیکشنری.</b> هر ورودی فقط همان زبان را تغییر می‌دهد؛ زبان غایب یعنی «تغییر
+/// نکن». فهرست خالی یعنی «هیچ تغییر» و مجاز است، ولی فهرست <c>null</c>/غایب شکل نامعتبر است.
+/// </para>
+/// <para>
+/// مالک، حالت، Tenant و ارز هرگز در این بدنه نیستند.
+/// </para>
+/// </remarks>
+/// <param name="ExpectedRevision">بازبینی ریشهٔ پیش‌نویس که کلاینت دیده است.</param>
+/// <param name="MethodTranslations">تغییرهای نام/توضیح.</param>
+/// <param name="GroupTitles">تغییرهای عنوان گروه.</param>
+public sealed record ShippingAuthoringPresentationPatchRequest(
+    long ExpectedRevision,
+    IReadOnlyList<ShippingAuthoringMethodTranslationWrite> MethodTranslations,
+    IReadOnlyList<ShippingAuthoringGroupTitleWrite> GroupTitles);

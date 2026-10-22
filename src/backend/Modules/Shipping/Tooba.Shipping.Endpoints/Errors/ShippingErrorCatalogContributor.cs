@@ -136,6 +136,8 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
             LocalizationKey: ShippingErrorCodes.AuthoringRateCurrencyMismatch,
             Severity: ErrorSeverity.Warning,
             SafeTitleFallback: "The stored manual rate currency no longer matches the current store currency."),
+        D(ShippingErrorCodes.AuthoringPresentationPayloadInvalid, "The draft presentation metadata is not a valid configuration."),
+        D(ShippingErrorCodes.AuthoringPresentationLanguageInvalid, "A selected content language is unknown or not active."),
     ];
 
     private static ErrorDescriptor D(string code, string fallback) =>

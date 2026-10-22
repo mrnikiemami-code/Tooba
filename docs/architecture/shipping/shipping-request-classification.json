@@ -376,6 +376,46 @@
       ],
       "transportRule": "route ids non-empty, expectedRevision positive, rows collection REQUIRED ([] allowed), retained row ids non-empty and unique, half-open interval coherence and technical bounds per axis, canonical money precision, delivery duration present with min <= max; owner, tenant, seller and currency are never bound from transport",
       "reason": "A whole untrusted row collection, its ranges, amounts and the shared optimistic-concurrency token are caller-controlled; the trusted currency is read server-side BEFORE any tracked write."
+    },
+    {
+      "request": "GetShippingAuthoringPresentationQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/presentation",
+        "GET /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/presentation"
+      ],
+      "handler": "GetShippingAuthoringPresentationHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingAuthoringPresentationQueryValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "authorization:fulfillment.view:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "the route draft id must be non-empty; the draft is only ever sought INSIDE the owner-filtered scope, so a foreign or invented id returns the same safe not-found response",
+      "reason": "One caller-supplied route id is projected into the read request. Content language is never taken from route/query/Accept-Language; stored text and the active registry are returned truthfully."
+    },
+    {
+      "request": "ReplaceShippingAuthoringPresentationCommand",
+      "routes": [
+        "PATCH /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/presentation",
+        "PATCH /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/presentation"
+      ],
+      "handler": "ReplaceShippingAuthoringPresentationHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ReplaceShippingAuthoringPresentationCommandValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "body:expectedRevision:required-positive:untrusted-caller",
+        "body:methodTranslations:whole-collection-required:untrusted-caller",
+        "body:methodTranslations[].languageId:required-unique-active:untrusted-caller",
+        "body:methodTranslations[].name:required-bounded-text:untrusted-caller",
+        "body:methodTranslations[].description:optional-bounded-text:untrusted-caller",
+        "body:groupTitles:whole-collection-required:untrusted-caller",
+        "body:groupTitles[].groupLanguage:required-unique-own-group:untrusted-caller",
+        "body:groupTitles[].title:optional-bounded-text:untrusted-caller",
+        "authorization:fulfillment.manage:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "route draft id non-empty, expectedRevision positive, both collections REQUIRED ([] is a valid no-op), no null entries, language ids non-empty and unique per item, (group,language) pairs unique, name non-blank and bounded, description/title bounded; owner, mode, tenant, currency and active-language facts are never bound from transport",
+      "reason": "Two whole untrusted language-keyed collections and the shared optimistic-concurrency token are caller-controlled; the active language set is resolved from the TB-188 authoritative source BEFORE any tracked write and invalid/inactive ids fail closed."
     }
   ],
   "nestedTransportValidators": [
@@ -391,12 +431,12 @@
     "GetShippingAuthoringOwnerQuery",
     "GetShippingAuthoringDraftsQuery"
   ],
-  "totals": {
-    "shippedRoutes": 31,
-    "endpointReachableRequests": 24,
-    "requestValidators": 21,
+    "totals": {
+    "shippedRoutes": 35,
+    "endpointReachableRequests": 26,
+    "requestValidators": 23,
     "nestedTransportValidators": 6,
-    "declaredValidators": 27
+    "declaredValidators": 29
   },
   "amendments": [
     {

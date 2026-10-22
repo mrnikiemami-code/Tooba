@@ -180,4 +180,10 @@
   <data name="shipping.authoring.rate_currency_mismatch" xml:space="preserve">
     <value>ارز ذخیره‌شدهٔ ردیف‌های نرخ دستی دیگر با ارز فعلی فروشگاه نمی‌خواند.</value>
   </data>
+  <data name="shipping.authoring.presentation_payload_invalid" xml:space="preserve">
+    <value>اطلاعات نام و توضیح پیش‌نویس برای یک زبان معتبر نیست.</value>
+  </data>
+  <data name="shipping.authoring.presentation_language_invalid" xml:space="preserve">
+    <value>زبان انتخاب‌شده برای محتوا در فهرست زبان‌های فعال این نصب وجود ندارد.</value>
+  </data>
 </root>

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
@@ -36,6 +36,13 @@ public static class ShippingAuthoringDraftEndpoints
         group.MapPut(
             "/shipping-services/authoring-drafts/{draftId:guid}/region-groups/{groupId:guid}/rate-rows",
             ReplaceGroupRateRowsAsync);
+        // TB-192 owner-local multilingual presentation: raw language-keyed text plus the ACTUAL active
+        // registry on read, and a selected-language-only patch on write. Interface locale never selects
+        // content language and the body never carries owner/mode/tenant/currency.
+        group.MapGet(
+            "/shipping-services/authoring-drafts/{draftId:guid}/presentation",
+            GetPresentationAsync);
+        group.MapPatch("/shipping-services/authoring-drafts/{draftId:guid}/presentation", PatchPresentationAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -147,6 +154,43 @@ public static class ShippingAuthoringDraftEndpoints
 
         return api.From(await sender.Send(
             new ReplaceShippingAuthoringGroupRateRowsCommand(scope, draftId, groupId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> GetPresentationAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new GetShippingAuthoringPresentationQuery(scope, draftId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> PatchPresentationAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringPresentationPatchRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new ReplaceShippingAuthoringPresentationCommand(scope, draftId, body!),
             cancellationToken));
     }
 }

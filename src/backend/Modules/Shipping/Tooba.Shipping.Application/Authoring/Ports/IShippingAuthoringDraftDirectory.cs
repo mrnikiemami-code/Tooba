@@ -80,6 +80,27 @@ public interface IShippingAuthoringDraftDirectory
         IReadOnlyList<ShippingAuthoringDraft.ShippingAuthoringRateRowInput> rows,
         string trustedCurrencyCode,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// سند ارائهٔ زبان‌محور یک پیش‌نویس همین مالک را در <b>یک</b> SaveChanges ضمنی اتمی می‌نویسد و
+    /// بازبینی ریشه را حداکثر یک واحد بالا می‌برد؛ <paramref name="expectedRevision"/> همان نشانگر
+    /// همزمانی مشترک با درخت منطقه و ردیف‌های نرخ است.
+    /// </summary>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="draftId">شناسهٔ پیش‌نویس.</param>
+    /// <param name="expectedRevision">بازبینی مورد انتظار کلاینت.</param>
+    /// <param name="translations">تغییرهای نام/توضیح هر زبان.</param>
+    /// <param name="titles">تغییرهای عنوان گروه.</param>
+    /// <param name="activeLanguageIds">شناسهٔ زبان‌های فعال authoritative (سرورساخته).</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<ShippingAuthoringDraft>> ReplacePresentationAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        IReadOnlyList<ShippingAuthoringDraft.MethodTranslationInput> translations,
+        IReadOnlyList<ShippingAuthoringDraft.GroupTitleInput> titles,
+        IReadOnlySet<Guid> activeLanguageIds,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

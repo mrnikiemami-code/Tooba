@@ -228,3 +228,12 @@ APIهای جدید فعلی:
   دیتابیس دورریختنی همان تسک اجرا شد.
 - **دروازهٔ باز:** مبنای authoritative اندازه/مبلغ کالا همچنان حل نشده است؛ quote/ارزیاب/فعال‌سازی/انتشار
   و ویرایشگر کامل مجاز نیست. Worker PASS اثبات فنی است، نه Architect ACCEPT؛ تسک بعدی خودکار نیست.
+
+## 13. TB-192 outcome pointer
+
+TB-SHIPPING-ADMIN-LOCALIZED-DRAFT-METADATA-192 delivered bounded persisted language-keyed owner
+presentation (method name/description + optional group titles) with one additive migration and
+executed relational/race proof (579/579 whole Shipping suite). This is not Admin/production
+acceptance, not editor activation, and not module certification; configured-registry runtime/UI
+acceptance remains a later integration gate. Runtime-Merchandise-Basis-And-Measurement-Gate stays
+OPEN_NOT_IMPLEMENTED. Await Architect review; no automatic next task.

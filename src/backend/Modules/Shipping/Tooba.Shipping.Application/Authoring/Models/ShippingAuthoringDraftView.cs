@@ -82,3 +82,47 @@ public sealed record ShippingAuthoringGroupRateRowsItem(
     long Revision,
     string? CurrencyCode,
     IReadOnlyList<ShippingAuthoringRateRowItem> Rows);
+
+/// <summary>یک متن ذخیره‌شدهٔ مالک برای یک زبان محتوا (خواندن خام، بدون fallback).</summary>
+/// <param name="LanguageId">شناسهٔ پایدار زبان.</param>
+/// <param name="Name">نام ذخیره‌شده.</param>
+/// <param name="Description">توضیح ذخیره‌شده یا تهی.</param>
+public sealed record ShippingAuthoringMethodTranslationItem(
+    Guid LanguageId,
+    string Name,
+    string? Description);
+
+/// <summary>یک عنوان ذخیره‌شدهٔ گروه برای یک زبان (خواندن خام).</summary>
+/// <param name="GroupId">شناسهٔ گروه.</param>
+/// <param name="LanguageId">شناسهٔ زبان.</param>
+/// <param name="Title">عنوان ذخیره‌شده.</param>
+public sealed record ShippingAuthoringGroupTitleItem(
+    Guid GroupId,
+    Guid LanguageId,
+    string Title);
+
+/// <summary>
+/// سند ارائهٔ یک پیش‌نویس: متن‌های <b>واقعاً ذخیره‌شده</b> به‌ازای زبان، همراه registry فعال و زبان
+/// پیش‌فرض فعلی.
+/// </summary>
+/// <remarks>
+/// متن زبان غیرفعال حذف نمی‌شود؛ فقط در <paramref name="ContentLanguages"/> (که همان زبان‌های فعال
+/// هستند) ظاهر نمی‌شود تا کلاینت بتواند «ذخیره‌شده ولی فعلاً غیرفعال» را از «فعال و کامل» تشخیص دهد.
+/// <paramref name="HasDefaultLanguageName"/> تنها نتیجهٔ مقایسهٔ متن ذخیره‌شده با شناسهٔ پیش‌فرض
+/// <b>فعلی</b> است، نه یک نام fallback.
+/// </remarks>
+/// <param name="DraftId">شناسهٔ پیش‌نویس.</param>
+/// <param name="Revision">بازبینی ریشهٔ فعلی.</param>
+/// <param name="MethodTranslations">متن‌های ذخیره‌شدهٔ نام/توضیح.</param>
+/// <param name="GroupTitles">عنوان‌های ذخیره‌شدهٔ گروه‌ها.</param>
+/// <param name="ContentLanguages">زبان‌های فعال authoritative همین لحظه.</param>
+/// <param name="DefaultContentLanguageId">شناسهٔ زبان پیش‌فرض فعلی.</param>
+/// <param name="HasDefaultLanguageName">آیا نام برای زبان پیش‌فرض فعلی ذخیره شده است.</param>
+public sealed record ShippingAuthoringPresentationItem(
+    Guid DraftId,
+    long Revision,
+    IReadOnlyList<ShippingAuthoringMethodTranslationItem> MethodTranslations,
+    IReadOnlyList<ShippingAuthoringGroupTitleItem> GroupTitles,
+    IReadOnlyList<ShippingAuthoringLanguageView> ContentLanguages,
+    Guid DefaultContentLanguageId,
+    bool HasDefaultLanguageName);

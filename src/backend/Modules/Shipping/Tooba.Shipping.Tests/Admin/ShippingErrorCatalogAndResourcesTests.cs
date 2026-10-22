@@ -66,7 +66,7 @@ public sealed class ShippingErrorCatalogAndResourcesTests
             .Contribute()
             .Where(descriptor => !explicitCodes.Contains(descriptor.Code, StringComparer.Ordinal))
             .ToArray();
-        Assert.Equal(49, legacy.Length);
+        Assert.Equal(51, legacy.Length);
 
         foreach (var descriptor in legacy)
         {

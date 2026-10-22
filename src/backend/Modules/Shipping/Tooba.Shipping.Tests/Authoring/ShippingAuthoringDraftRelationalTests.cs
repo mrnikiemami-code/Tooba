@@ -780,6 +780,236 @@ public sealed class ShippingAuthoringDraftRelationalTests
         await AssertNoStagedOrdersAsync(context, draftId, includeDraftRevision: false);
     }
 
+    [Fact]
+    public async Task Presentation_patch_touches_only_the_selected_language_and_keeps_regions_rates_and_currency()
+    {
+        // Test-owned language fixtures: the handler receives only ids, so these prove selected-language
+        // isolation without claiming a real merchant Localization database session.
+        var fa = Guid.Parse("01900000-0000-7000-8000-00000000bb01");
+        var en = Guid.Parse("01900000-0000-7000-8000-00000000bb02");
+
+        await using var seed = await NewContextAsync();
+        var owner = ShippingAuthoringOwnerScope.ForStore("tb192-pres-" + Guid.NewGuid().ToString("N"));
+        var created = await new ShippingAuthoringDraftDirectory(seed).CreateAsync(
+            owner,
+            "post",
+            null,
+            [
+                new ShippingAuthoringRegionGroupInput(null, [Node(Tehran)]),
+                new ShippingAuthoringRegionGroupInput(null, [Node(Isfahan)]),
+            ],
+            CancellationToken.None);
+        Assert.True(created.IsSuccess, created.IsFailure ? created.Errors[0].Code : null);
+        var draftId = created.Value.DraftId;
+        var first = created.Value.RegionGroups.OrderBy(group => group.Order).First().GroupId;
+        var second = created.Value.RegionGroups.OrderBy(group => group.Order).Last().GroupId;
+        var seeded = await new ShippingAuthoringDraftDirectory(seed).ReplaceGroupRateRowsAsync(
+            owner, draftId, first, 1, [RowInput(null, 0, 1000, 2500m)], "IRR", CancellationToken.None);
+        Assert.True(seeded.IsSuccess, seeded.IsFailure ? seeded.Errors[0].Code : null);
+
+        // First patch: English method text + one English group title.
+        await using var write = await NewContextAsync();
+        var firstPatch = await new ShippingAuthoringDraftDirectory(write).ReplacePresentationAsync(
+            owner,
+            draftId,
+            expectedRevision: 2,
+            [
+                new ShippingAuthoringDraft.MethodTranslationInput(en, "  Express post  ", "Next day"),
+            ],
+            [new ShippingAuthoringDraft.GroupTitleInput(second, en, "North")],
+            new HashSet<Guid> { fa, en },
+            CancellationToken.None);
+        Assert.True(firstPatch.IsSuccess, firstPatch.IsFailure ? firstPatch.Errors[0].Code : null);
+
+        // Second patch selects ONLY fa for the method name; English text and group title are untouched and
+        // the region tree / rate rows / bound currency are not part of this write at all.
+        await using var secondWrite = await NewContextAsync();
+        var secondPatch = await new ShippingAuthoringDraftDirectory(secondWrite).ReplacePresentationAsync(
+            owner,
+            draftId,
+            expectedRevision: 3,
+            [new ShippingAuthoringDraft.MethodTranslationInput(fa, "پست سریع", null)],
+            [],
+            new HashSet<Guid> { fa, en },
+            CancellationToken.None);
+        Assert.True(secondPatch.IsSuccess, secondPatch.IsFailure ? secondPatch.Errors[0].Code : null);
+
+        await using var verification = await NewContextAsync();
+        var stored = await verification.AuthoringDrafts
+            .AsNoTracking()
+            .Include(draft => draft.Translations)
+            .Include(draft => draft.RegionGroups)
+            .ThenInclude(group => group.Areas)
+            .Include(draft => draft.RegionGroups)
+            .ThenInclude(group => group.Titles)
+            .SingleAsync(draft => draft.DraftId == draftId);
+
+        Assert.Equal(4, stored.Revision);
+        Assert.Equal(2, stored.Translations.Count);
+        var english = Assert.Single(stored.Translations, translation => translation.LanguageId == en);
+        Assert.Equal("Express post", english.Name);
+        Assert.Equal("Next day", english.Description);
+        var persian = Assert.Single(stored.Translations, translation => translation.LanguageId == fa);
+        Assert.Equal("پست سریع", persian.Name);
+        Assert.Null(persian.Description);
+        Assert.Equal("North", stored.RegionGroups.Single(group => group.GroupId == second).Titles.Single().Title);
+        Assert.Equal(
+            [Tehran, Isfahan],
+            stored.RegionGroups.OrderBy(group => group.Order).SelectMany(group => group.Areas).Select(area => area.NodeId).ToArray());
+        var rows = await StoredRowsAsync(verification, first);
+        Assert.Single(rows);
+        Assert.Equal(2500m, rows[0].FreightAmount);
+        Assert.Equal("IRR", await StoredCurrencyAsync(verification, first));
+
+        // A duplicate (group, language) pair and an inactive language are BOTH rejected before any write;
+        // the SAME context keeps no pending edit and a fresh readback is unchanged.
+        await using var rejected = await NewContextAsync();
+        var duplicate = await Assert.ThrowsAsync<SemanticException>(() => new ShippingAuthoringDraftDirectory(rejected).ReplacePresentationAsync(
+            owner,
+            draftId,
+            4,
+            [new ShippingAuthoringDraft.MethodTranslationInput(fa, "x", null), new ShippingAuthoringDraft.MethodTranslationInput(fa, "y", null)],
+            [],
+            new HashSet<Guid> { fa, en },
+            CancellationToken.None));
+        Assert.Equal(ShippingErrorCodes.AuthoringPresentationPayloadInvalid, duplicate.Error.Code);
+        Assert.Empty(rejected.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
+
+        await using var inactive = await NewContextAsync();
+        var wrongLanguage = await Assert.ThrowsAsync<SemanticException>(() => new ShippingAuthoringDraftDirectory(inactive).ReplacePresentationAsync(
+            owner,
+            draftId,
+            4,
+            [new ShippingAuthoringDraft.MethodTranslationInput(fa, "تغییر", null)],
+            [],
+            new HashSet<Guid> { en },
+            CancellationToken.None));
+        Assert.Equal(ShippingErrorCodes.AuthoringPresentationLanguageInvalid, wrongLanguage.Error.Code);
+        Assert.Equal(4, await StoredRevisionAsync(verification, draftId));
+        Assert.Equal("پست سریع", (await verification.AuthoringDrafts.AsNoTracking()
+            .Include(draft => draft.Translations)
+            .SingleAsync(draft => draft.DraftId == draftId))
+            .Translations.Single(translation => translation.LanguageId == fa).Name);
+
+        // Removing the group deletes ONLY its own title; method text and the retained group stay intact.
+        await using var removal = await NewContextAsync();
+        var removed = await new ShippingAuthoringDraftDirectory(removal).ReplaceRegionGroupsAsync(
+            owner,
+            draftId,
+            4,
+            [new ShippingAuthoringRegionGroupInput(first, [Node(Tehran)])],
+            CancellationToken.None);
+        Assert.True(removed.IsSuccess, removed.IsFailure ? removed.Errors[0].Code : null);
+
+        await using var finalRead = await NewContextAsync();
+        Assert.Equal(2, await finalRead.AuthoringDrafts.AsNoTracking()
+            .Where(draft => draft.DraftId == draftId)
+            .SelectMany(draft => draft.Translations)
+            .CountAsync());
+        Assert.Equal(0, await finalRead.AuthoringDrafts.AsNoTracking()
+            .Where(draft => draft.DraftId == draftId)
+            .SelectMany(draft => draft.RegionGroups)
+            .SelectMany(group => group.Titles)
+            .CountAsync());
+        Assert.Equal(1, await finalRead.AuthoringDrafts.AsNoTracking()
+            .Where(draft => draft.DraftId == draftId)
+            .SelectMany(draft => draft.RegionGroups)
+            .CountAsync());
+    }
+
+    [Fact]
+    public async Task A_same_revision_presentation_patch_racing_a_rate_write_leaves_exactly_the_winner_state()
+    {
+        var fa = Guid.Parse("01900000-0000-7000-8000-00000000bc01");
+        var en = Guid.Parse("01900000-0000-7000-8000-00000000bc02");
+
+        await using var seed = await NewContextAsync();
+        var owner = ShippingAuthoringOwnerScope.ForStore("tb192-race-" + Guid.NewGuid().ToString("N"));
+        var created = await new ShippingAuthoringDraftDirectory(seed).CreateAsync(
+            owner,
+            "post",
+            null,
+            [new ShippingAuthoringRegionGroupInput(null, [Node(Tehran)])],
+            CancellationToken.None);
+        Assert.True(created.IsSuccess, created.IsFailure ? created.Errors[0].Code : null);
+        var draftId = created.Value.DraftId;
+        var group = created.Value.RegionGroups.Single().GroupId;
+
+        var gate = new TwoReaderGate();
+        await using var contextA = await NewContextAsync(new TwoReaderBarrierInterceptor(gate));
+        await using var contextB = await NewContextAsync(new TwoReaderBarrierInterceptor(gate));
+
+        async Task<(int Index, Result<ShippingAuthoringDraft> Result)> RunAsync(
+            int index,
+            Func<CancellationToken, Task<Result<ShippingAuthoringDraft>>> run)
+        {
+            try
+            {
+                return (index, await run(CancellationToken.None));
+            }
+            catch (Exception exception)
+            {
+                throw new Xunit.Sdk.XunitException($"participant {index} threw {exception.GetType().Name}: {exception.Message}");
+            }
+        }
+
+        // Two DIFFERENT operations share the root revision: a language-keyed metadata patch and a whole
+        // rate-row replacement. Both loaded revision 1 before either wrote.
+        var outcomes = await Task.WhenAll(
+            RunAsync(0, token => new ShippingAuthoringDraftDirectory(contextA).ReplacePresentationAsync(
+                owner,
+                draftId,
+                1,
+                [new ShippingAuthoringDraft.MethodTranslationInput(en, "Express", null)],
+                [new ShippingAuthoringDraft.GroupTitleInput(group, en, "North")],
+                new HashSet<Guid> { fa, en },
+                token)),
+            RunAsync(1, token => new ShippingAuthoringDraftDirectory(contextB).ReplaceGroupRateRowsAsync(
+                owner,
+                draftId,
+                group,
+                1,
+                [RowInput(null, 0, 1000, 777m)],
+                "IRR",
+                token)));
+
+        Assert.Equal(2, gate.Arrivals);
+        var winner = Assert.Single(outcomes, outcome => !outcome.Result.IsFailure);
+        var loser = Assert.Single(outcomes, outcome => outcome.Result.IsFailure);
+        Assert.Equal(ShippingErrorCodes.AuthoringDraftRevisionConflict, loser.Result.Errors[0].Code);
+
+        await using var verification = await NewContextAsync();
+        var stored = await verification.AuthoringDrafts
+            .AsNoTracking()
+            .Include(draft => draft.Translations)
+            .Include(draft => draft.RegionGroups)
+            .ThenInclude(region => region.Titles)
+            .SingleAsync(draft => draft.DraftId == draftId);
+        Assert.Equal(2, stored.Revision);
+
+        var rows = await StoredRowsAsync(verification, group);
+        if (winner.Index == 0)
+        {
+            // Metadata won: its text and title exist and the rate write left no row or currency behind.
+            Assert.Equal("Express", stored.Translations.Single(translation => translation.LanguageId == en).Name);
+            Assert.Equal("North", stored.RegionGroups.Single().Titles.Single().Title);
+            Assert.Empty(rows);
+            Assert.Null(await StoredCurrencyAsync(verification, group));
+        }
+        else
+        {
+            // Rate write won: its row and currency exist and the patch left no hybrid text/title.
+            Assert.Empty(stored.Translations);
+            Assert.Empty(stored.RegionGroups.SelectMany(region => region.Titles));
+            Assert.Single(rows);
+            Assert.Equal(777m, rows[0].FreightAmount);
+            Assert.Equal("IRR", await StoredCurrencyAsync(verification, group));
+        }
+
+        var losingContext = loser.Index == 0 ? contextA : contextB;
+        Assert.Empty(losingContext.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
+    }
+
     private static Task<List<ShippingAuthoringRateRow>> StoredRowsAsync(ShippingDbContext context, Guid groupId)
         => context.Set<ShippingAuthoringRateRow>()
             .AsNoTracking()

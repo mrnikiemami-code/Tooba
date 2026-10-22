@@ -180,4 +180,10 @@
   <data name="shipping.authoring.rate_currency_mismatch" xml:space="preserve">
     <value>The stored manual rate currency no longer matches the current store currency.</value>
   </data>
+  <data name="shipping.authoring.presentation_payload_invalid" xml:space="preserve">
+    <value>The draft name/description metadata is not a valid configuration.</value>
+  </data>
+  <data name="shipping.authoring.presentation_language_invalid" xml:space="preserve">
+    <value>The selected content language is unknown or not active in this installation.</value>
+  </data>
 </root>

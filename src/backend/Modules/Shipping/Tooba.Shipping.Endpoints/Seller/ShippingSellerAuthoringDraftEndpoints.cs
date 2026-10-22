@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
@@ -35,6 +35,11 @@ public static class ShippingSellerAuthoringDraftEndpoints
         group.MapPut(
             "/shipping-services/authoring-drafts/{draftId:guid}/region-groups/{groupId:guid}/rate-rows",
             ReplaceGroupRateRowsAsync);
+        // Same TB-192 presentation use cases behind the seller owner gate.
+        group.MapGet(
+            "/shipping-services/authoring-drafts/{draftId:guid}/presentation",
+            GetPresentationAsync);
+        group.MapPatch("/shipping-services/authoring-drafts/{draftId:guid}/presentation", PatchPresentationAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -146,6 +151,43 @@ public static class ShippingSellerAuthoringDraftEndpoints
 
         return api.From(await sender.Send(
             new ReplaceShippingAuthoringGroupRateRowsCommand(scope, draftId, groupId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> GetPresentationAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new GetShippingAuthoringPresentationQuery(scope, draftId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> PatchPresentationAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringPresentationPatchRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new ReplaceShippingAuthoringPresentationCommand(scope, draftId, body!),
             cancellationToken));
     }
 }

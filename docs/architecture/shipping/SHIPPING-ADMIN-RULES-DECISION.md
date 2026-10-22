@@ -318,3 +318,21 @@ quote/فعال‌سازی/انتشار/قیمت مشتری اعلام نمی‌�
 - **دروازه‌های باز بدون تغییر:** مبنای authoritative اندازه/مبلغ کالا همچنان `OPEN_NOT_IMPLEMENTED` است؛
   پیش‌نویس‌ها غیرفعال‌اند. پذیرش TB-190 محفوظ و پذیرش TB-191 وابسته به همین اصلاح است. هیچ recertification،
   پرچم استقرار یا تسک بعدی مجاز نشد.
+
+## 23. Owner-local draft presentation metadata (TB-192)
+
+Method name/description and optional group titles are the OWNER's presentation for one Shipping
+draft, keyed by the real authoritative `LanguageId`. They never mutate, clone or replace the shared
+Fulfillment catalog/translations, and interface locale never selects content language.
+
+* One `GET`/`PATCH .../presentation` pair per audience, one Application query + one command; owner and
+  mode come only from server authorization and the body carries no owner/mode/tenant/currency.
+* A missing language entry means NO CHANGE; `[]` is a valid no-op. A `null`/empty description or title
+  clears only that selected-language value. Duplicate/inactive/unknown language ids are rejected
+  before any write.
+* Text stored for a language that later becomes inactive is retained and returned truthfully; a
+  reactivation recovers the exact bytes. No background delete, no auto-translation, no fallback text.
+* The draft may remain incomplete: missing default-language name is reported by comparing stored
+  content with the ACTUAL default id, never by inventing text.
+* Same root `revision` token as regions/rates; one atomic implicit `SaveChanges`; a no-op does not
+  bump the revision. Group removal cascades only its own titles.

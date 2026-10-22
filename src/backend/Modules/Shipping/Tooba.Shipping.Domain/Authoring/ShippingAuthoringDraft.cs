@@ -85,6 +85,7 @@ public sealed class ShippingAuthoringRegionGroup
 {
     private readonly List<ShippingAuthoringSelectedArea> _areas = [];
     private readonly List<ShippingAuthoringRateRow> _rateRows = [];
+    private readonly List<ShippingAuthoringRegionGroupTitle> _titles = [];
 
     private ShippingAuthoringRegionGroup()
     {
@@ -111,6 +112,12 @@ public sealed class ShippingAuthoringRegionGroup
 
     /// <summary>ردیف‌های نرخ دستی این گروه؛ خالی یعنی پیکربندی ناقص، نه پوشش آزاد یا رایگان.</summary>
     public IReadOnlyList<ShippingAuthoringRateRow> RateRows => _rateRows;
+
+    /// <summary>
+    /// عنوان‌های اختیاری همین گروه به‌ازای هر زبان محتوا. عنوان هیچ اثری روی جغرافیا، ردیف‌ها یا
+    /// ارز ندارد و حذف گروه فقط عنوان‌های خودش را cascade می‌کند.
+    /// </summary>
+    public IReadOnlyList<ShippingAuthoringRegionGroupTitle> Titles => _titles;
 
     internal static ShippingAuthoringRegionGroup Create(Guid draftId, Guid groupId, int order)
         => new()
@@ -159,6 +166,36 @@ public sealed class ShippingAuthoringRegionGroup
     /// <summary>ارز صریح مجموعهٔ ردیف‌ها را برای نخستین‌بار bind می‌کند.</summary>
     /// <param name="currencyCode">ارز معتبر سرورساخته.</param>
     internal void BindCurrency(string currencyCode) => CurrencyCode = currencyCode;
+
+    /// <summary>
+    /// عنوان یک زبان را می‌نشاند یا (با تهی) فقط همان جفت را پاک می‌کند. سایر زبان‌ها دست‌نخورده
+    /// می‌مانند.
+    /// </summary>
+    /// <param name="languageId">شناسهٔ زبان محتوا.</param>
+    /// <param name="title">عنوان تأییدشده یا تهی برای پاک‌کردن.</param>
+    /// <returns>آیا وضعیت واقعاً تغییر کرد.</returns>
+    internal bool SetTitle(Guid languageId, string? title)
+    {
+        var existing = _titles.SingleOrDefault(candidate => candidate.LanguageId == languageId);
+        if (title is null)
+        {
+            return existing is not null && _titles.Remove(existing);
+        }
+
+        if (existing is null)
+        {
+            _titles.Add(ShippingAuthoringRegionGroupTitle.Create(DraftId, GroupId, languageId, title));
+            return true;
+        }
+
+        if (string.Equals(existing.Title, title, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        existing.Apply(title);
+        return true;
+    }
 }
 
 /// <summary>
@@ -195,7 +232,14 @@ public sealed class ShippingAuthoringDraft
     /// <summary>سقف فنی تعداد انتخاب در یک پیش‌نویس.</summary>
     public const int MaxSelectionsPerDraft = 500;
 
+    /// <summary>سقف فنی تعداد ورودی نام/توضیح در یک PATCH ارائه.</summary>
+    public const int MaxMethodTranslations = 100;
+
+    /// <summary>سقف فنی تعداد ورودی عنوان گروه در یک PATCH ارائه.</summary>
+    public const int MaxGroupTitleEntries = 1000;
+
     private readonly List<ShippingAuthoringRegionGroup> _regionGroups = [];
+    private readonly List<ShippingAuthoringDraftTranslation> _translations = [];
 
     private ShippingAuthoringDraft()
     {
@@ -234,6 +278,13 @@ public sealed class ShippingAuthoringDraft
 
     /// <summary>گروه‌های منطقه‌ای به ترتیب صریح.</summary>
     public IReadOnlyList<ShippingAuthoringRegionGroup> RegionGroups => _regionGroups;
+
+    /// <summary>
+    /// نام/توضیح مالک برای هر زبان محتوا. این مجموعه مستقل از درخت منطقه‌ای و ردیف‌های نرخ است، پس
+    /// جایگزینی منطقه/ردیف هیچ ترجمه‌ای را حذف نمی‌کند؛ فقط حذف صریح یک گروه عنوان‌های خودش را
+    /// cascade می‌کند.
+    /// </summary>
+    public IReadOnlyList<ShippingAuthoringDraftTranslation> Translations => _translations;
 
     /// <summary>پیش‌نویس تازه می‌سازد؛ بازبینی نخست همیشه ۱ است.</summary>
     /// <param name="owner">مالک سرورساخته.</param>
@@ -587,6 +638,198 @@ public sealed class ShippingAuthoringDraft
         var plan = PreflightGroupRateRows(groupId, rows, trustedCurrencyCode);
         ApplyGroupRateRows(plan, now);
     }
+
+    /// <summary>یک تغییر نام/توضیح برای یک زبان محتوا (ورودی دامنه، بدون قاعدهٔ transport).</summary>
+    /// <param name="LanguageId">شناسهٔ زبان محتوا.</param>
+    /// <param name="Name">نام همان زبان.</param>
+    /// <param name="Description">توضیح همان زبان یا تهی.</param>
+    public sealed record MethodTranslationInput(Guid LanguageId, string? Name, string? Description);
+
+    /// <summary>یک تغییر/پاک‌کردن عنوان یک گروه برای یک زبان.</summary>
+    /// <param name="GroupId">شناسهٔ گروه همین پیش‌نویس.</param>
+    /// <param name="LanguageId">شناسهٔ زبان محتوا.</param>
+    /// <param name="Title">عنوان یا تهی برای پاک‌کردن همان جفت.</param>
+    public sealed record GroupTitleInput(Guid GroupId, Guid LanguageId, string? Title);
+
+    /// <summary>یک جای‌گذاری ترجمهٔ نام: ردیف موجود (برای حفظ هویت) یا ردیف تازه.</summary>
+    /// <param name="Existing">ترجمهٔ موجود همان زبان؛ تهی برای زبان تازه.</param>
+    /// <param name="LanguageId">شناسهٔ زبان.</param>
+    /// <param name="Name">نام تأییدشده.</param>
+    /// <param name="Description">توضیح تأییدشده یا تهی.</param>
+    public sealed record MethodTranslationAssignment(
+        ShippingAuthoringDraftTranslation? Existing,
+        Guid LanguageId,
+        string Name,
+        string? Description);
+
+    /// <summary>یک جای‌گذاری عنوان گروه؛ عنوان تهی یعنی پاک‌کردن همان جفت.</summary>
+    /// <param name="Group">گروه مالک.</param>
+    /// <param name="Existing">عنوان موجود همان جفت؛ تهی برای تازه/پاک‌نشده.</param>
+    /// <param name="LanguageId">شناسهٔ زبان.</param>
+    /// <param name="Title">عنوان تأییدشده یا تهی.</param>
+    public sealed record GroupTitleAssignment(
+        ShippingAuthoringRegionGroup Group,
+        ShippingAuthoringRegionGroupTitle? Existing,
+        Guid LanguageId,
+        string? Title);
+
+    /// <summary>برنامهٔ کامل و تأییدشدهٔ به‌روزرسانی ارائه (بدون هیچ تغییر روی aggregate).</summary>
+    /// <param name="MethodTranslations">تغییرهای نام/توضیح.</param>
+    /// <param name="GroupTitles">تغییرهای عنوان گروه.</param>
+    public sealed record PresentationPlan(
+        IReadOnlyList<MethodTranslationAssignment> MethodTranslations,
+        IReadOnlyList<GroupTitleAssignment> GroupTitles)
+    {
+        /// <summary>آیا پیش‌سنجی حداقل یک تغییر واقعی دید (برای no-op صادقانه).</summary>
+        public bool HasChanges { get; init; }
+    }
+
+    /// <summary>
+    /// کل سند ارائه را <b>بدون هیچ تغییر</b> می‌سنجد: شکل، یکتایی، عضویت گروه، شناسهٔ زبان فعال و
+    /// متن هر ورودی. هر نقصی پیش از اولین نوشتن برمی‌گردد، پس ردیف‌های tracked و بازبینی دست‌نخورده
+    /// می‌مانند.
+    /// </summary>
+    /// <remarks>
+    /// لیست‌های خالی یعنی «هیچ تغییر» (no-op) و مجاز است. زبان‌های <b>غیرفعال</b> تنها وقتی پذیرفته
+    /// می‌شوند که متنی برای آن‌ها از قبل ذخیره شده باشد و همان متن دوباره نوشته شود؛ ورودی جدید برای
+    /// زبان غیرفعال رد می‌شود. متن قدیمی هیچ‌گاه حذف یا ترجمه نمی‌شود.
+    /// </remarks>
+    /// <param name="methodTranslations">تغییرهای نام/توضیح.</param>
+    /// <param name="groupTitles">تغییرهای عنوان گروه.</param>
+    /// <param name="activeLanguageIds">شناسهٔ زبان‌های فعال authoritative (سرورساخته).</param>
+    public PresentationPlan PreflightPresentation(
+        IReadOnlyList<MethodTranslationInput> methodTranslations,
+        IReadOnlyList<GroupTitleInput> groupTitles,
+        IReadOnlySet<Guid> activeLanguageIds)
+    {
+        ArgumentNullException.ThrowIfNull(methodTranslations);
+        ArgumentNullException.ThrowIfNull(groupTitles);
+        ArgumentNullException.ThrowIfNull(activeLanguageIds);
+
+        var existingByLanguage = _translations.ToDictionary(translation => translation.LanguageId);
+        var seenLanguages = new HashSet<Guid>();
+        var translationPlan = new List<MethodTranslationAssignment>(methodTranslations.Count);
+        var changed = false;
+
+        foreach (var input in methodTranslations)
+        {
+            if (input is null || input.LanguageId == Guid.Empty || !seenLanguages.Add(input.LanguageId))
+            {
+                RejectPresentation();
+            }
+
+            if (!activeLanguageIds.Contains(input.LanguageId))
+            {
+                // Previously stored text for a now-inactive language is retained, not re-edited: only
+                // an ACTIVE language may receive a write.
+                throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringPresentationLanguageInvalid));
+            }
+
+            var name = ShippingAuthoringPresentationRules.NormalizeName(input.Name);
+            var description = ShippingAuthoringPresentationRules.NormalizeDescription(input.Description);
+            existingByLanguage.TryGetValue(input.LanguageId, out var existing);
+            if (existing is null
+                || !string.Equals(existing.Name, name, StringComparison.Ordinal)
+                || !string.Equals(existing.Description, description, StringComparison.Ordinal))
+            {
+                changed = true;
+            }
+
+            translationPlan.Add(new MethodTranslationAssignment(existing, input.LanguageId, name, description));
+        }
+
+        var titlePlan = new List<GroupTitleAssignment>(groupTitles.Count);
+        var seenGroupLanguages = new HashSet<(Guid GroupId, Guid LanguageId)>();
+        foreach (var input in groupTitles)
+        {
+            if (input is null || input.GroupId == Guid.Empty || input.LanguageId == Guid.Empty
+                || !seenGroupLanguages.Add((input.GroupId, input.LanguageId)))
+            {
+                RejectPresentation();
+            }
+
+            var group = FindRegionGroup(input.GroupId);
+            if (group is null)
+            {
+                // A foreign/invented group id is the same safe answer as a missing one, before any write.
+                throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRegionGroupNotFound));
+            }
+
+            if (!activeLanguageIds.Contains(input.LanguageId))
+            {
+                throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringPresentationLanguageInvalid));
+            }
+
+            var title = ShippingAuthoringPresentationRules.NormalizeTitle(input.Title);
+            var existing = group.Titles.SingleOrDefault(candidate => candidate.LanguageId == input.LanguageId);
+            if (title is null)
+            {
+                if (existing is not null)
+                {
+                    changed = true;
+                }
+            }
+            else if (existing is null || !string.Equals(existing.Title, title, StringComparison.Ordinal))
+            {
+                changed = true;
+            }
+
+            titlePlan.Add(new GroupTitleAssignment(group, existing, input.LanguageId, title));
+        }
+
+        return new PresentationPlan(translationPlan, titlePlan) { HasChanges = changed };
+    }
+
+    /// <summary>
+    /// برنامهٔ پیش‌سنجی‌شده را اعمال می‌کند. هیچ اعتبارسنجی‌ای اینجا نیست؛ ورودی باید از
+    /// <see cref="PreflightPresentation"/> آمده باشد. اگر هیچ مقدار واقعی تغییر نکند، بازبینی و زمان
+    /// هم تغییر نمی‌کنند (no-op صادقانه).
+    /// </summary>
+    /// <param name="plan">برنامهٔ معتبر.</param>
+    /// <param name="now">زمان UTC.</param>
+    public void ApplyPresentation(PresentationPlan plan, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        var changed = false;
+        foreach (var assignment in plan.MethodTranslations)
+        {
+            if (assignment.Existing is { } kept)
+            {
+                if (!string.Equals(kept.Name, assignment.Name, StringComparison.Ordinal)
+                    || !string.Equals(kept.Description, assignment.Description, StringComparison.Ordinal))
+                {
+                    kept.Apply(assignment.Name, assignment.Description);
+                    changed = true;
+                }
+            }
+            else
+            {
+                _translations.Add(ShippingAuthoringDraftTranslation.Create(
+                    DraftId,
+                    assignment.LanguageId,
+                    assignment.Name,
+                    assignment.Description));
+                changed = true;
+            }
+        }
+
+        foreach (var assignment in plan.GroupTitles)
+        {
+            changed |= assignment.Group.SetTitle(assignment.LanguageId, assignment.Title);
+        }
+
+        if (!changed)
+        {
+            return;
+        }
+
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
+    }
+
+    private static void RejectPresentation()
+        => throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringPresentationPayloadInvalid));
 
     private static ShippingAuthoringRateRowValue NormalizeRow(ShippingAuthoringRateRowInput input)
     {

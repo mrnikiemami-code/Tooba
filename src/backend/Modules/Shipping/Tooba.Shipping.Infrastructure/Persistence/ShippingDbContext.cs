@@ -484,6 +484,62 @@ public sealed class ShippingDbContext : DbContext
                 .HasForeignKey(row => row.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.Navigation(x => x.RateRows).UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            // TB-192 optional owner-authored group titles. Removing the group deletes exactly its own
+            // titles; a title never carries geography, rates or currency.
+            entity.HasMany(x => x.Titles)
+                .WithOne()
+                .HasForeignKey(title => title.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Navigation(x => x.Titles).UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+        // TB-192 owner-local multilingual presentation for ONE draft. The language key is the real
+        // authoritative Localization id, but it is NOT a cross-schema FK: no foreign navigation, no join
+        // and no copied registry row. Text is plain Unicode and is never fabricated or transliterated.
+        modelBuilder.Entity<ShippingAuthoringDraftTranslation>(entity =>
+        {
+            entity.ToTable("authoring_draft_translations", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_authoring_draft_translations_name_length",
+                    $"char_length(btrim(name)) > 0 AND char_length(name) <= {ShippingAuthoringPresentationRules.NameMaxLength}");
+                table.HasCheckConstraint(
+                    "ck_authoring_draft_translations_description_length",
+                    $"description IS NULL OR char_length(description) <= {ShippingAuthoringPresentationRules.DescriptionMaxLength}");
+            });
+            entity.HasKey(x => new { x.DraftId, x.LanguageId });
+            entity.Property(x => x.DraftId).IsRequired();
+            entity.Property(x => x.Name).IsRequired().HasMaxLength(ShippingAuthoringPresentationRules.NameMaxLength);
+            entity.Property(x => x.Description).HasMaxLength(ShippingAuthoringPresentationRules.DescriptionMaxLength);
+
+            // ONE text per draft+language: a second row for the same language would make "the" name
+            // depend on row order, so the primary key above is the real invariant.
+            entity.HasOne<ShippingAuthoringDraft>()
+                .WithMany(draft => draft.Translations)
+                .HasForeignKey(translation => translation.DraftId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ShippingAuthoringRegionGroupTitle>(entity =>
+        {
+            entity.ToTable("authoring_group_titles", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_authoring_group_titles_title_length",
+                    $"char_length(btrim(title)) > 0 AND char_length(title) <= {ShippingAuthoringPresentationRules.TitleMaxLength}");
+            });
+            entity.HasKey(x => new { x.GroupId, x.LanguageId });
+            entity.Property(x => x.GroupId).IsRequired();
+            entity.Property(x => x.DraftId).IsRequired();
+            entity.Property(x => x.Title).IsRequired().HasMaxLength(ShippingAuthoringPresentationRules.TitleMaxLength);
+
+            // Denormalized draft id mirrors the selected-area rule: it makes the ownership scope
+            // inspectable without a second FK, while the only cascade is the group's own.
+            entity.HasOne<ShippingAuthoringRegionGroup>()
+                .WithMany(group => group.Titles)
+                .HasForeignKey(title => title.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // TB-191 manual condition/cost/delivery rows. Every CHECK below is the storage mirror of a domain

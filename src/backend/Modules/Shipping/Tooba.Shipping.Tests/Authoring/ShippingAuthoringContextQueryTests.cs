@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Shipping.Application.Authoring.Ports;
 using Tooba.Shipping.Application.Authoring.Queries;
 using Tooba.Shipping.Contracts.Errors;
@@ -282,7 +282,8 @@ public sealed class ShippingAuthoringContextQueryTests
             "Tooba.Shipping.Application",
             "Authoring",
             "Queries",
-            "GetShippingAuthoringContextQuery.cs"));
+            "..",
+            "ShippingAuthoringContextProjection.cs"));
 
         Assert.Contains("\"SingleStore\"", source, StringComparison.Ordinal);
         Assert.Contains("\"Marketplace\"", source, StringComparison.Ordinal);
