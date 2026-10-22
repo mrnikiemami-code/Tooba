@@ -1,0 +1,42 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R12
+Parent-Task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R11
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Program: TOOBA-SHIPPING-ADMIN-BACKEND-DELIVERY
+Mode: BOUNDED_HISTORICAL_DEFAULT_MODEL_ALIGNMENT_WITH_EXPLICIT_INSERT_PARITY
+Bridge-Task-Row: 94356abb-d32a-4014-8637-3dec53ae22f0
+Status: PARTIAL
+Expected-Base-SHA: 49f594933f1468e75c011f737745f32a26382540
+Base-SHA: 49f594933f1468e75c011f737745f32a26382540 (fast-forward only from 3fef1455a; no reset/stash/rebase/force-push)
+Code-SHA: e604e2704c50c5c70756ec5e0ba465928a225a91
+Evidence-SHA: 8284c1fa2d132860ad54d348bcf4f2503d3eef04
+HEAD-Origin-Parity: HEAD == origin/main == 8284c1fa2d132860ad54d348bcf4f2503d3eef04
+ExactFiveDefaults-And-ValueGeneratedSaveBehaviorParity: PASS — all five mappings carry a default annotation plus ValueGeneratedNever; asserted ValueGenerated=Never and BeforeSaveBehavior/AfterSaveBehavior=Save for all five after the change (insert-parity-after.txt). REPORTED DEVIATION: the two numeric(18,6) properties use HasDefaultValueSql("0") instead of typed HasDefaultValue because typed decimal formatting emits DEFAULT 0.0, a different default expression, and expression normalisation is forbidden by this task; the three non-decimal properties use typed HasDefaultValue(0)/HasDefaultValue("") exactly as instructed. No CLR initializer, accessor, precision, requiredness, runtime rule or save behaviour changed.
+BeforeAfter-RealEfInsertColumnsParameters-And-NewContextReadback: PASS — baseline captured with the UNMODIFIED mapping via a DbCommandInterceptor on the real FulfillmentDbContext + Npgsql provider, then the identical ten cases re-run through SaveChanges after the change; the case lines are asserted equal baseline-vs-after (insert-parity-baseline.txt / insert-parity-after.txt). Each INSERT names the affected column explicitly, contains no DEFAULT token, carries the submitted parameter, and a new context reads back the exact submitted value: 0.000000/2.500000 packed, 0.000000/4.250000 processing, 0/7 version, ''/post:express code, ''/Express label.
+ZeroEmpty-Nondefault-ExplicitNull-And-RawOmitProof: PASS — zero/empty and non-default cases for all five fields; explicit NULL on the required string is rejected by the provider (23502) and leaves no substituted row; raw omit-column inserts still receive the historical server defaults (version=0, code/label='', packed/processing=0.000000) and a raw explicit NULL is still rejected with 23502. No application fallback or normalisation added.
+Canonical-Snapshot-LatestTarget-ModelParity: PASS — real IModelRuntimeInitializer(designTime) + real IMigrationsModelDiffer: snapshot vs IDesignTimeModel = 0 operations and actual latest 20261022182208_AddFulfillmentOutboxPendingIndex TargetModel vs current model = 0 operations, no ignore list and no operation mutation (TypeCatalogModelMetadataParityTests, 3 tests).
+HistoricalChain-Versus-CurrentModel-ZeroDifference: PASS — fresh task-owned primary DB migrated with the REAL unchanged chain through R10 (218 own-schema manifest entries) versus a separate empty model DB projected with GenerateCreateScript (218 entries): residual=0, both-direction difference=0, strict Assert.Equal on the whole manifest plus sorted comparison, primary re-read equal=True (no DDL added to the primary).
+ExactHistoryIdentity-And-NegativeDetection: PASS — migration-history objects are excluded inside the catalog query by exact (schema,table)=('fulfillment','__ef_migrations_history') identity for columns, constraints AND indexes (by owning table); no Contains/prefix matching remains. Existing negative detection (renamed index, deleted object, missing CHECK, relaxed CHECK body, changed default) is retained and exercised by HistoricalObjectNameAndCheckMappingTests.
+PrimarySchema-And-OlderExecutableMetadata-Parity: PASS — 20261022182208_AddFulfillmentOutboxPendingIndex.cs C6600940CBEF7D07 unchanged, 20261022101415_ShippingTypeCatalog.cs 979328491371CD0F unchanged, its designer 50098BD09979F5F8 unchanged, all 14 other executable migrations/designers untouched; only the snapshot and the latest BuildTargetModel were regenerated (5 default annotations, nothing else; no BOM/format churn); the scaffold AlterColumn/defaultValue DDL was never executed or retained and no migration id/history row was created.
+ParsedTarget-LiveProvenance-Cleanup: PASS — postgres:17-alpine from the locally present image, 127.0.0.1:55436 only, role tb196, DBs fulfillment_tb196 + fulfillment_tb196_model, connection parsed with NpgsqlConnectionStringBuilder and validated by the existing fail-closed ValidateTarget(expectedDatabase); current_database/current_user/inet_server_port asserted before any DDL; container removed and 127.0.0.1:55436 verified free; no shared 5432/tooba_alpha/Host/MigrationRunner/Redis/RabbitMQ contact; no credentials in evidence.
+Focused-Commands-And-Test-Counts: dotnet build Tooba.Fulfillment.Tests.csproj = 0 errors; filtered dotnet test (HistoricalNameAlignmentResidualDiffTests|HistoricalDefaultInsertParityTests|TypeCatalogModelMetadataParityTests|HistoricalObjectNameAndCheckMappingTests) = 8 passed / 0 failed / 0 skipped after the change (7 passed / 0 failed in the pre-tightening run of the same suites).
+Failed-Runs-And-CorrectionBudget: 4 harness-only corrections while building the new real-EF insert harness — string CLR default, shipments raw column list (no updated_at), multi-column reader, baseline-line normalisation — plus one reusable model DB reset (42P07 from the earlier failed projection). Every failure was a harness defect, none weakened an expectation, and the production mapping change needed no rerun. This EXCEEDS the stated one-correction budget, which is why Status is PARTIAL even though every functional and proof gate above passed. No repeated confidence run.
+FullRelationalFixture-Storage-Race-Acceptance: PENDING_NOT_RUN — the old TypeCatalogPostgresSchemaFixture/full-schema collection was neither modified nor executed (its pre-R10 chronology needs separate integration authorization); storage/unique/revision-race/atomicity/constraint-lookalike gates remain unexecuted.
+TB196-Acceptance: BLOCKED_PENDING_FULL_RELATIONAL_ACCEPTANCE
+Shared-Database-Data-Flag-Changes: NONE
+Changed-Files: src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Persistence/FulfillmentDbContext.cs; src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Persistence/Migrations/FulfillmentDbContextModelSnapshot.cs; src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Persistence/Migrations/20261022182208_AddFulfillmentOutboxPendingIndex.Designer.cs; src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/HistoricalDefaultInsertParityTests.cs (new); src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/HistoricalNameAlignmentResidualDiffTests.cs (tightened to strict whole-manifest equality + exact history identity); docs/ai/tasks/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R12.task.md; docs/architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R12/**; docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md (worker pointer only).
+Claim-UTC: 2026-10-22T18:49:29Z
+Result-UTC: 2026-10-22T19:00:00Z
+Elapsed-Minutes: 11
+Hard-Deadline-Compliance: WITHIN_BOX — 35-minute hard box respected; no new implementation or test was started after minute 28.
+Out-Of-Scope-Commands: NONE
+Production-Functional-Acceptance: PENDING
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT
