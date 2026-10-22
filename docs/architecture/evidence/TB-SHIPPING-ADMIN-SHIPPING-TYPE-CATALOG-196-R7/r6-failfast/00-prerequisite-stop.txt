@@ -1,0 +1,1 @@
+STOP: snapshot-versus-current-model equivalence is UNPROVEN (191 model differences: DropForeignKeyOperation, DropPrimaryKeyOperation, RenameColumnOperation, RenameIndexOperation, AddPrimaryKeyOperation, AddForeignKeyOperation). No model projection, latest Up or Down parity may be claimed from an unproved prerequisite.

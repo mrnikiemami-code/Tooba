@@ -1,0 +1,45 @@
+﻿--- a/src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Persistence/Migrations/FulfillmentDbContextModelSnapshot.cs
++++ b/src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Persistence/Migrations/FulfillmentDbContextModelSnapshot.cs
+-                        .HasColumnType("uuid");
++                        .HasColumnType("uuid")
++                        .HasColumnName("shipping_type_id");
+-                        .HasColumnType("character varying(64)");
++                        .HasColumnType("character varying(64)")
++                        .HasColumnName("code");
+-                        .HasColumnType("timestamp with time zone");
++                        .HasColumnType("timestamp with time zone")
++                        .HasColumnName("created_at");
+-                        .HasColumnType("boolean");
++                        .HasColumnType("boolean")
++                        .HasColumnName("is_active");
+-                        .HasColumnType("bigint");
++                        .HasColumnType("bigint")
++                        .HasColumnName("revision");
+-                        .HasColumnType("integer");
++                        .HasColumnType("integer")
++                        .HasColumnName("sort_order");
+-                        .HasColumnType("timestamp with time zone");
++                        .HasColumnType("timestamp with time zone")
++                        .HasColumnName("updated_at");
+-                    b.HasKey("ShippingTypeId");
++                    b.HasKey("ShippingTypeId")
++                        .HasName("pk_shipping_types");
+-                        .HasColumnType("uuid");
++                        .HasColumnType("uuid")
++                        .HasColumnName("shipping_type_translation_id");
+-                        .HasColumnType("character varying(512)");
++                        .HasColumnType("character varying(512)")
++                        .HasColumnName("description");
+-                        .HasColumnType("uuid");
++                        .HasColumnType("uuid")
++                        .HasColumnName("language_id");
+-                        .HasColumnType("character varying(128)");
++                        .HasColumnType("character varying(128)")
++                        .HasColumnName("name");
+-                        .HasColumnType("uuid");
++                        .HasColumnType("uuid")
++                        .HasColumnName("shipping_type_id");
+-                    b.HasKey("ShippingTypeTranslationId");
++                    b.HasKey("ShippingTypeTranslationId")
++                        .HasName("pk_shipping_type_translations");
++                        .HasConstraintName("fk_shipping_type_translations_shipping_types_shipping_type_id")

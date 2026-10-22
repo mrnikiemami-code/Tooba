@@ -428,3 +428,23 @@ DEFAULT differences and 10 constraint/index naming differences, reported explici
 therefore blocks regardless of the migration defect, and the teardown Down comparison is a no-op equality (the
 latest migration never applied), not Down proof. Snapshot-model agreement remains UNPROVEN (the differ over an
 initialized ModelSnapshot.Model reported 209 operation-level differences under a non-design-time path).
+
+TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R7 (worker, 2026-10-22, PASS for the bounded repair slice)
+The design-time factory now reuses ToobaNpgsql.ConfigureModuleContext (snake_case + module history) with a
+design-time-only placeholder and no connection. Only the latest unaccepted migration 20261022101415_ShippingTypeCatalog
+was amended to the canonical identifiers (columns shipping_type_id/code/sort_order/is_active/revision/created_at/
+updated_at and shipping_type_translation_id/shipping_type_id/language_id/name/description; pk_shipping_types;
+pk_shipping_type_translations; fk_shipping_type_translations_shipping_types_shipping_type_id) with the owned index and
+CHECK identities preserved; its Designer and only the two type entity/relationship snapshot blocks were aligned, and
+every older migration/designer and unrelated snapshot block is byte-unchanged. Factory-vs-runtime type-surface parity
+is asserted green (6/6 offline tests). The R6 full-schema fixture is now fail-fast: it stops with a concrete diagnostic
+before model projection or latest Up when snapshot equivalence is unproved or substantive legacy discrepancies exist,
+and marks DownExecuted only after a real latest history row and real Down (it currently stops at 191 unproven model
+differences and records "latest Up applied=False; Down NOT executed"). An independent isolated proof on a fresh
+disposable 127.0.0.1:55436 postgres:17-alpine (role tb196, db fulfillment_tb196) applied the ACTUAL historical chain,
+applied the corrected migration once, verified only the two owned tables were added with no non-lowercase column and
+with the canonical PK/FK/index identities, smoke-read a created type through a NEW context, then ran the real Down and
+restored the legacy manifest exactly (1/1 passed). Container removed; 55436 has no listener. Legacy/snapshot parity,
+the 3 substantive legacy discrepancies and the storage/constraint/race/atomicity battery remain OPEN, so TB-196 stays
+BLOCKED_PENDING_LEGACY_SNAPSHOT_AND_RELATIONAL_ACCEPTANCE; worker PASS is not Architect ACCEPT; STOP_FOR_ARCHITECT;
+no automatic next task.

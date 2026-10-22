@@ -340,14 +340,26 @@ public sealed class FulfillmentDbContext : DbContext
 /// <summary>
 /// کارخانهٔ زمان طراحی مهاجرت.
 /// </summary>
+/// <remarks>
+/// TB-196-R7: این کارخانه پیکربندی متعارف ماژول (<see cref="Tooba.Persistence.ToobaNpgsql.ConfigureModuleContext"/>)
+/// را دوباره به‌کار می‌گیرد تا فرادادهٔ زمان طراحی (snake_case، تاریخچهٔ مهاجرت ماژول) با فرادادهٔ زمان اجرا
+/// یکی باشد. رشتهٔ اتصال فقط جایگزین زمان طراحی است و هیچ اتصالی باز نمی‌شود.
+/// </remarks>
 public sealed class FulfillmentDbContextFactory : IDesignTimeDbContextFactory<FulfillmentDbContext>
 {
+    /// <summary>جایگزین زمان طراحی؛ نه اعتبارنامهٔ واقعی است و نه برای اتصال استفاده می‌شود.</summary>
+    private const string DesignTimePlaceholderConnection =
+        "Host=127.0.0.1;Port=5432;Database=tooba_design;Username=tooba;Password=dev-placeholder";
+
     /// <inheritdoc />
     public FulfillmentDbContext CreateDbContext(string[] args)
     {
-        var options = new DbContextOptionsBuilder<FulfillmentDbContext>()
-            .UseNpgsql("Host=127.0.0.1;Database=tooba_design;Username=tooba;Password=dev-placeholder")
-            .Options;
-        return new FulfillmentDbContext(options);
+        var options = new DbContextOptionsBuilder<FulfillmentDbContext>();
+        Tooba.Persistence.ToobaNpgsql.ConfigureModuleContext(
+            options,
+            DesignTimePlaceholderConnection,
+            FulfillmentDbContext.Schema,
+            typeof(FulfillmentDbContext));
+        return new FulfillmentDbContext(options.Options);
     }
 }

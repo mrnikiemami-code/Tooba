@@ -108,6 +108,9 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
 
     public bool DownExecuted { get; private set; }
 
+    /// <summary>True only after the corrected latest migration actually migrated and its history row exists.</summary>
+    public bool LatestUpApplied { get; private set; }
+
     public bool ContainerStillOwned { get; private set; } = true;
 
     public bool PortReleasedAfterDown { get; private set; }
@@ -161,6 +164,17 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         SnapshotEqualsCurrentModel = ModelDifferences.Count == 0;
         Record($"snapshot-vs-current-model differences={ModelDifferences.Count}");
 
+        // FAIL-FAST (R7): in full-schema mode an unproved snapshot/model equivalence must stop the run before any
+        // dependent model projection or Up acceptance. Unknown is never treated as equal.
+        var prerequisite = EvaluateFullSchemaPrerequisite(SnapshotEqualsCurrentModel, ModelDifferences, []);
+        if (prerequisite is not null)
+        {
+            Save("01-target-and-model.txt", _evidence);
+            Record(prerequisite);
+            Save("00-prerequisite-stop.txt", [prerequisite]);
+            throw new InvalidOperationException(prerequisite);
+        }
+
         // Model database: canonical EF create script from the model that the differ just proved equivalent to
         // the checked-in snapshot. Applying it makes both manifests PostgreSQL pg_catalog output, so provider
         // type aliases/formatting are normalized by the provider itself rather than by a hand-written map.
@@ -196,12 +210,27 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         Record(
             $"historical legacy objects={LegacyManifestBeforeUp.Count} substantive={LegacySubstantiveDifferences.Count}"
             + $" defaults={LegacyDefaultDifferences.Count} names={LegacyNameDifferences.Count}");
-       await using (var primary = NewContext())
+
+        // FAIL-FAST (R7): substantive legacy discrepancies are a recorded blocker; never proceed to latest Up.
+        var legacyPrerequisite = EvaluateFullSchemaPrerequisite(
+            true,
+            [],
+            LegacySubstantiveDifferences);
+        if (legacyPrerequisite is not null)
+        {
+            Save("01-target-and-model.txt", _evidence);
+            Save("00-prerequisite-stop.txt", [legacyPrerequisite]);
+            throw new InvalidOperationException(legacyPrerequisite);
+        }
+
+        await using (var primary = NewContext())
         {
             Save("01-target-and-model.txt", _evidence);
             await primary.GetService<IMigrator>().MigrateAsync(LatestMigration);
         }
 
+        // History row must exist before Down can be claimed as anything.
+        LatestUpApplied = await LatestMigrationAppliedAsync();
         var afterUp = await ManifestAsync(Target);
         LegacyManifestAfterUp = LegacyProjection(afterUp);
         LegacyAfterUpDifferences = Diff(expectedLegacy, LegacyManifestAfterUp);
@@ -220,15 +249,18 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        if (!CanRun || LegacyManifestBeforeUp.Count == 0)
+        if (!CanRun || LegacyManifestBeforeUp.Count == 0 || !LatestUpApplied)
         {
-            Save("09-execution-log.txt", [.. _evidence, "initialization did not complete; Down not executed"]);
+            // HONEST BOOKKEEPING (R7): no latest Up means no Down. A no-op equality is never Down parity.
+            DownExecuted = false;
+            Save("09-execution-log.txt",
+                [.. _evidence, $"latest Up applied={LatestUpApplied}; Down NOT executed (cleanup/no-op)"]);
             return;
         }
 
         await using var primary = NewContext();
         await primary.GetService<IMigrator>().MigrateAsync(PreviousMigration);
-        DownExecuted = true;
+        DownExecuted = !await LatestMigrationAppliedAsync();
         LegacyManifestAfterDown = LegacyProjection(await ManifestAsync(Target));
         LegacyAfterDownDifferences = Diff(LegacyManifestBeforeUp, LegacyManifestAfterDown);
         Record($"after-down legacy objects={LegacyManifestAfterDown.Count} differences={LegacyAfterDownDifferences.Count}");
@@ -238,6 +270,46 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
 
         // Down must not recreate or drop legacy objects; the module history is the only difference.
         Assert.Empty(LegacyAfterDownDifferences);
+    }
+
+    /// <summary>
+    /// Full-schema acceptance prerequisites. Returns a concrete diagnostic when the run must stop, or
+    /// <see langword="null"/> when both the snapshot equivalence and the legacy comparison are green.
+    /// Unknown is never converted into "equal".
+    /// </summary>
+    public static string? EvaluateFullSchemaPrerequisite(
+        bool snapshotEqualsCurrentModel,
+        IReadOnlyList<string> modelDifferences,
+        IReadOnlyList<string> substantiveLegacyDifferences)
+    {
+        if (!snapshotEqualsCurrentModel)
+        {
+            return "STOP: snapshot-versus-current-model equivalence is UNPROVEN ("
+                   + $"{modelDifferences.Count} model differences: "
+                   + $"{string.Join(", ", modelDifferences.Distinct(StringComparer.Ordinal).Take(10))}). "
+                   + "No model projection, latest Up or Down parity may be claimed from an unproved prerequisite.";
+        }
+
+        if (substantiveLegacyDifferences.Count > 0)
+        {
+            return "STOP: substantive historical-versus-model legacy discrepancies exist ("
+                   + $"{substantiveLegacyDifferences.Count}): "
+                   + string.Join(" | ", substantiveLegacyDifferences.Take(10))
+                   + ". Latest Up must not run against a diverged legacy schema.";
+        }
+
+        return null;
+    }
+
+    private async Task<bool> LatestMigrationAppliedAsync()
+    {
+        await using var connection = new NpgsqlConnection(Target.ConnectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"select count(*) from {FulfillmentDbContext.Schema}.__ef_migrations_history "
+                              + "where migration_id = @id";
+        command.Parameters.AddWithValue("id", LatestMigration);
+        return Convert.ToInt64(await command.ExecuteScalarAsync(), CultureInfo.InvariantCulture) > 0;
     }
 
     // -------------------------------------------------------------------------------------------

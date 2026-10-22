@@ -1,0 +1,25 @@
+table: fulfillment.shipping_types
+column: shipping_type_id uuid not-null
+column: code character varying(64) not-null
+column: created_at timestamp with time zone not-null
+column: is_active boolean not-null
+column: revision bigint not-null
+column: sort_order integer not-null
+column: updated_at timestamp with time zone not-null
+primary-key: pk_shipping_types (shipping_type_id)
+index: ix_shipping_types_code unique (code)
+index: ix_shipping_types_active_sort (is_active,sort_order)
+check: ck_shipping_types_code_canonical char_length(code) BETWEEN 1 AND 64 AND code = btrim(code) AND code ~ '^[a-z][a-z0-9_]*$'
+check: ck_shipping_types_revision_positive revision > 0
+check: ck_shipping_types_sort_order_range sort_order >= 0 AND sort_order <= 1000000
+table: fulfillment.shipping_type_translations
+column: shipping_type_translation_id uuid not-null
+column: description character varying(512) null
+column: language_id uuid not-null
+column: name character varying(128) not-null
+column: shipping_type_id uuid not-null
+primary-key: pk_shipping_type_translations (shipping_type_translation_id)
+foreign-key: fk_shipping_type_translations_shipping_types_shipping_type_id (shipping_type_id) -> shipping_types (shipping_type_id)
+index: ix_shipping_type_translations_type_language unique (shipping_type_id,language_id)
+check: ck_shipping_type_translations_description_nonblank description IS NULL OR (char_length(description) BETWEEN 1 AND 512 AND description = btrim(description))
+check: ck_shipping_type_translations_name_nonblank char_length(name) BETWEEN 1 AND 128 AND name = btrim(name)

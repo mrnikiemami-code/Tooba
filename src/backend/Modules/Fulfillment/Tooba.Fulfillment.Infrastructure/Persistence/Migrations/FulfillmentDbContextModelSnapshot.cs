@@ -604,30 +604,38 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShippingType", b =>
                 {
                     b.Property<Guid>("ShippingTypeId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_type_id");
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("code");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<long>("Revision")
                         .IsConcurrencyToken()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("revision");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
-                    b.HasKey("ShippingTypeId");
+                    b.HasKey("ShippingTypeId")
+                        .HasName("pk_shipping_types");
 
                     b.HasIndex("Code")
                         .IsUnique()
@@ -649,24 +657,30 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShippingTypeTranslation", b =>
                 {
                     b.Property<Guid>("ShippingTypeTranslationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_type_translation_id");
 
                     b.Property<string>("Description")
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("description");
 
                     b.Property<Guid>("LanguageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("language_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name");
 
                     b.Property<Guid>("ShippingTypeId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_type_id");
 
-                    b.HasKey("ShippingTypeTranslationId");
+                    b.HasKey("ShippingTypeTranslationId")
+                        .HasName("pk_shipping_type_translations");
 
                     b.HasIndex("ShippingTypeId", "LanguageId")
                         .IsUnique()
@@ -776,6 +790,7 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                     b.HasOne("Tooba.Fulfillment.Domain.Aggregates.ShippingType", null)
                         .WithMany("Translations")
                         .HasForeignKey("ShippingTypeId")
+                        .HasConstraintName("fk_shipping_type_translations_shipping_types_shipping_type_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
