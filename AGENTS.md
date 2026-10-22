@@ -42,10 +42,11 @@ TB196 bounded catalog and TB197 owner-local type-assignment backend are Architec
 Read latest recovery/reviews for exact evidence/process limits; no merchant UI/quote/release acceptance.
 TB198 source analysis accepted with corrections; read its ARCHITECT-REVIEW.md before implementation.
 TB199 existing-draft atomic editor backend is Architect-accepted through199-R1 (98274e4ff), with process/proof limits in its review.
-Only next issued task: TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200 (parent199-R1).
-Frontend feature-owned typed adapter/session foundation only; follow frontend skill/standard and existing shared auth transport.
-No preview/live-page/UI/backend/schema/shared-DB/activation change. Do not issue a second task while200 is unfinished.
-Latest recovery is authoritative; accepted backend proofs must not be replayed.
+TB200 at44d742848 is NOT accepted: destructive omitted-region serialization and stale/unknown-outcome session defects.
+Only next issued task: TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R1 (parent200).
+Read TB200 ARCHITECT-REVIEW.md. Current feature-only repair: baseline-aware preserve, unique epoch, unknown-outcome latch, strict identity/registry/time boundary.
+No page/UI/backend/schema/preview/shared-service change; no task201 until200-R1 reviewed. Backend199 remains accepted.
+Latest recovery is authoritative.
 Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
 
 ## Core rules

@@ -1,5 +1,14 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 200 نیازمنداصلاح؛ فقط200-R1 — 2026-10-23
+
+کد200 در44d74284874964d24929a426094d2264c8faefd8 بررسی شد؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200/ARCHITECT-REVIEW.md). backend199بسته؛200هنوزACCEPTنیست،UIتسک201فعلاًصادرنشود.13PASS/typecheck گزارشworkerنقص‌هایواقعی‌زیرراپوششنداده‌اند.
+
+تنها **TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R1**،parent200،25دقیقه/stop18،featureفقط: R200-01 ادیتنام/settingsباgroupsغایب اکنونregionGroups[]می‌سازد=حذفکلدرخت؛builderبایدbaseline-awareوهمیشهfullgroupsبگیرد،explicit[]تنهاclear. R200-02 generationدرA→B→Aبه1برمی‌گرددوsaveactiongenerationندارد؛epochهرگزreuseنشود. R200-03 outcomeUnknownپسازeditقابلApplyاست؛stickyblockتاreconcile/freshGETمجازی. R200-04 readshapezeroGUID/nestedtypeid/registrydefault/day7/time وancestryterminalid mismatchپذیرفتنی‌نیست؛readonlystrictboundaryنهpricingengine. inactiveeditreject،untouchedinactivepreserve.
+
+حفظprecision/nullclear/noautoput/onePUT/feownership. نوبتUIفقطپسازاصلاح200؛backend/schema/preview/livepage/sharedappDBممنوع. تکرار199وbackendproofممنوع.3correction>2تاریخیثبت؛source-sizeunrelatedbaselineبدونتغییرمی‌ماند. cutoff/status/fullcreate/sellerpicker/quoteباز؛TB185paused/defaultOFF/PendingAllocationمحفوظ.
+
+
 ## مرجع جاری: 200 اجرا شد؛ منتظر review — 2026-10-23
 
 TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200 روی base `ccca74258fb70c3eb64be5c743b9ee2d93235e5a` اجرا و به Bridge ارسال شد؛
