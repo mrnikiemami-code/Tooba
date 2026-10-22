@@ -1,0 +1,44 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196
+Parent-Task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-ANALYSIS-195
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Program: TOOBA-SHIPPING-ADMIN-BACKEND-DELIVERY
+Mode: BOUNDED_FULFILLMENT_OPERATIONAL_TYPE_CATALOG_ADMIN_AND_CONTRACTS
+Bridge-Task-Row: f2efd856-a9b1-4f7a-b8ae-3a9a17759379
+Status: PARTIAL
+Expected-Base-SHA: ae969bfa3783a4d99df172f419408e9a0a451ccc
+Base-SHA: ae969bfa3783a4d99df172f419408e9a0a451ccc
+Code-SHA: 7f1e1e0806cb17f53e69996d798e27451bc386be
+Evidence-SHA: 7f1e1e0806cb17f53e69996d798e27451bc386be
+HEAD-Origin-Parity: HEAD == origin/main == 7f1e1e0806cb17f53e69996d798e27451bc386be
+Canonical-Type-Identity-And-NonInherited-Metadata: DELIVERED_BOUNDED. Own fulfillment.shipping_types (server Guid, immutable canonical ASCII code ^[a-z][a-z0-9_]*$ 1..64, sort_order 0..1000000, explicit is_active, revision concurrency token, UTC created/updated) + fulfillment.shipping_type_translations keyed by LanguageId with name 1..128 and optional description 1..512. No rates/coverage/packaging/schedule/currency/payment/capacity/membership/promise columns, no FK to Localization or Shipping, no cross-schema join, no seed/backfill/enum. CREATE is always inactive revision 1; client id/active/revision/owner/edition ignored.
+Actual-Admin-Routes-And-Independent-Permissions: GET /v1/admin/shipping-types/ , GET /v1/admin/shipping-types/{shippingTypeId:guid} , POST /v1/admin/shipping-types/ , PUT /v1/admin/shipping-types/{shippingTypeId:guid}. New module-owned IShippingTypeAdminAuthorizer enforces IAdminPanelAccess then IAuthorizationService with constants fulfillment.view (reads) / fulfillment.manage (writes) BEFORE ISender; the permission-less IFulfillmentAdminAuthorizer is NOT claimed to enforce them; no legacy route changed, no grant invented.
+Trusted-Edition-Tenant-And-Seller-Denials: IMPLEMENTED_NOT_HARNESS_PROVEN. Context resolved only from ICurrentEdition/ICurrentTenant (SingleStore requires active TenantId; Marketplace rejects any Tenant; anything else admin.authorization.unavailable). Seller panel seam is not consulted, so a seller-only grant cannot reach taxonomy administration. Route-level harness denial proof was NOT executed (timebox).
+Database-Languages-SelectedPatch-And-DefaultReadiness: DELIVERED_CODE. Facts come from authoritative ILanguageLookup including inactive rows; no fa/en hardcode and no HTTP locale use. POST requires a name for the current active default; PUT patches only explicitly listed LanguageIds ([] preserves all text); inactive stored text is never deleted and returned raw; activation requires a stored/proposed default-language name; missing/unusable default fails closed with shipping_type.default_language.*. Dynamic multi-locale matrix (non-fa, mixed RTL/LTR, non-first default, byte-identical untouched rows) NOT executed.
+NoOp-Timestamp-Revision-And-SameContext-Preflight: DELIVERED_CODE. Full preflight (code shape, sort, translations, active languages, default name) precedes tracked mutation; one implicit SaveChanges; stale expectedRevision is checked before the no-op branch so an identical payload with an old revision conflicts; genuine no-op preserves Revision AND UpdatedAt; rejected pending edits are cleared; no explicit transaction and no cross-module write.
+ReadOnly-Contracts-DI-And-Availability-Semantics: DELIVERED. Fulfillment.Contracts IShippingTypeReader with ListActiveAsync and GetByIdsAsync returning id/code/isActive/sort/revision/raw LanguageId translations; EF-free; own registered implementation; by-id may return inactive facts while active selection must check the explicit fact. Empty catalog is a legitimately empty list; schema/dependency failure and cancellation propagate (no catch-to-[]).
+Real-Postgres-Storage-And-UniqueCode-Race: NOT_EXECUTED. No disposable 127.0.0.1:55436 postgres:17-alpine container was started; forward SQL is pinned by the committed migration but was not applied, and raw-SQL SQLSTATE negatives (duplicate code, duplicate translation pair, invalid parent, required NULL, blank text, bad code/sort/revision) plus at-limit Unicode persistence were not run. Code maps only SQLSTATE 23505 on the named code/translation constraints; other provider errors propagate.
+Strict-Revision-Race-And-Actual-Loser-Proof: NOT_EXECUTED. No two-reader SavingChanges barrier race; concurrency is implemented with an EF concurrency token on revision plus translation to shipping_type.revision_conflict, but one-winner/two-arrivals and actual-loser-tracker proof is absent.
+Canonical-Results-Errors-Validation-Tracing-And-Structure: DELIVERED_CODE. Module Endpoints -> ISender -> MediatR handlers -> Application ports -> own Domain/Infrastructure; FluentValidation validators for both commands including duplicate-language, blank/overlength text, sort bounds, revision presence; ApiResponseFactory Created/From used (no Results.Json 201, no raw ProblemDetails); stable shipping_type.* codes owned by Fulfillment with neutral+fa resources and descriptors; no new telemetry framework. GAP: the ILanguageLookup call in ShippingTypeLanguageFacts has no canonical IModuleCallTracer child span (the existing shipping-service language gate is also untraced), so the required tracing assertion is NOT met.
+Migration-And-Historical-Byte-Parity: ONE additive migration 20261022101415_ShippingTypeCatalog (+ designer + regenerated snapshot) creating only the two own tables, own CHECKs, unique code, unique (type_id, language_id), active/sort index and own cascade FK. Historical migration/designer files are byte-identical; no legacy catalog/policy change, no startup schema migrator. PRE-EXISTING DEFECT FOUND: the committed FulfillmentDbContextModelSnapshot was stale (2 ToTable entries vs 14 migrations), so ef-generated Up/Down recreated all tables; they were replaced with the two additive tables only and the snapshot was regenerated from the real model (has-pending-model-changes now reports none).
+Focused-Commands-And-Test-Counts: dotnet build Fulfillment.Endpoints -> 0 warnings/0 errors; dotnet build Fulfillment.Infrastructure -> 0/0; dotnet build Fulfillment.Tests -> 0/0; dotnet ef migrations has-pending-model-changes -> none; dotnet test --filter ShippingTypeCatalogRulesTests -> Passed 21, Failed 0, Total 21. NOT run: whole Fulfillment suite with disposable DB, Host.Tests, solution build, architecture guards.
+Changed-Files: src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/Aggregates/ShippingType.cs; Contracts/Shipping/ShippingTypeCatalogContracts.cs; Contracts/Errors/FulfillmentErrorCodes.cs; Application/ShippingTypes/ShippingTypeModels.cs; Application/ShippingTypes/Commands/ShippingTypeCommands.cs; Application/ShippingTypes/Queries/ShippingTypeQueries.cs; Application/ShippingTypes/Validators/ShippingTypeValidators.cs; Application/Validators/FulfillmentValidationCodes.cs; Infrastructure/Shipping/ShippingTypeStore.cs; Infrastructure/Shipping/ShippingTypeLanguageFacts.cs; Infrastructure/Persistence/FulfillmentDbContext.cs; Infrastructure/Persistence/Migrations/20261022101415_ShippingTypeCatalog(.Designer).cs; Infrastructure/Persistence/Migrations/FulfillmentDbContextModelSnapshot.cs; Infrastructure/Errors/FulfillmentErrorCatalogContributor.cs; Infrastructure/DependencyInjection/FulfillmentModule.cs; Endpoints/Admin/ShippingTypeAdminEndpoints.cs; Endpoints/FulfillmentEndpointModule.cs; Endpoints/Resources/FulfillmentErrors(.fa).resx; Tests/Behavior/ShippingTypeCatalogRulesTests.cs; docs/ai/tasks/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196.task.md; docs/architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196/RESULT.md; docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md
+Shipping-Assignment-And-UI: NOT_IMPLEMENTED
+Customer-Grouping-Quote-And-Activation: NOT_IMPLEMENTED
+Shared-Database-Data-Flag-Changes: NONE
+Isolation-And-Cleanup: No container, port, database or role was created, so none required removal; port 55436 remains free. Unrelated dirty/untracked files and both pre-existing stashes preserved; no reset/rebase/stash/force-push. Scoped commit 7f1e1e080 contains only task-scoped files.
+Claim-UTC: 2026-10-22T10:06:51Z
+Result-UTC: 2026-10-22T11:10:00Z
+Elapsed-Minutes: 63
+Hard-Deadline-Compliance: EXCEEDED (45-minute hard timebox; minute-38 stop rule also exceeded while finishing migration consistency and evidence). Reported honestly as PARTIAL, no timebox extension and no detached work.
+Out-Of-Scope-Commands: NONE (no browser, HTTP probe, Host.Tests, solution build, architecture suite, package install, seed, or forced migration against a shared database)
+Production-Functional-Acceptance: PENDING
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT
