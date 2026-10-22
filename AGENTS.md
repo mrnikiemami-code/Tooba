@@ -10,7 +10,8 @@ TB-192 owner-local multilingual draft metadata is accepted through TB-192-R1.
 TB-193 weekly schedule draft persistence is accepted through TB-193-R1.
 TB-194 independent freight/calculation draft settings are accepted (authoring only).
 TB-195 type ownership analysis is accepted with Architect corrections (rules section 26).
-The only next task is TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196; await its result.
+TB-196 catalog implementation is PARTIAL / NOT ACCEPTED; relational/snapshot proof remains open.
+The only next task is TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R1; await its result.
 Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.
