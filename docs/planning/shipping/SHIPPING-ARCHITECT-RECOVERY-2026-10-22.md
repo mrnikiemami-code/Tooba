@@ -1,5 +1,11 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## تسک واحد صادرشده پس از پذیرش R8 — R9
+
+به درخواست صریح مالک، تنها تسک بعدی **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R9**، Parent=196-R8، صادر می‌شود: تحلیل source/evidence اختلاف schema تاریخی و مدل canonical و پیشنهاد کوچک‌ترین reconciliation امن. فقط docs؛ بدون تغییر runtime/metadata/migration/test، DB/container/DDL یا اجرای suite. سقف20دقیقه، توقف تحقیق جدید در15؛ counts قدیمی3+5+10 فرض قطعی نیستند و باید object-by-object از منبع بازبینی شوند. خروجی proposal است و مجوز تغییر اجرایی نیست. پس از دریافت نتیجه، Architect مستقل بررسی می‌کند و فقط سپس تسک بعدی؛ هیچ نسخه جایگزین یا تسک موازی صادر نشود. R8 تمام و accepted محدود است؛ کل196 و assignment/UI/activation همچنان blocked. این بخش بر «هیچ تسک بعدی» در checkpoint پایین مقدم است؛ پایین تاریخچه است.
+
+
+
 ## مرجع جاری Architect پس از دریافت و بررسی R8 — 2026-10-22
 
 این بخش بر وضعیت‌های پایین مقدم است؛ آن‌ها تاریخچه‌اند. **R8 تمام شده و برای اصلاح metadata پذیرفته شد**؛ checkpoint کد `ad1aa1b987f8a7f0037230afbb72b7a57f6c8fdd`، main بررسی‌شده `8aeeaa385a240a46e72a4f5297325d8e651d4f58`. [بررسی مستقل](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R8/ARCHITECT-REVIEW.md).
