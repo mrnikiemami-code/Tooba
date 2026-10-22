@@ -1,0 +1,36 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198
+Parent-Task: TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197-R1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Program: TOOBA-SHIPPING-ADMIN-BACKEND-DELIVERY
+Mode: BOUNDED_ATOMIC_EDITOR_INTEGRATION_CONTRACT_SOURCE_ANALYSIS_ONLY
+Bridge-Task-Row: 4e366f46-86ec-4ad2-9811-629a85143f43
+Status: PASS
+Expected-Base-SHA: e33ef067b2705b98a82ee977f591eba8c860eded
+Base-SHA: e33ef067b2705b98a82ee977f591eba8c860eded
+Code-SHA: UNCHANGED
+Evidence-SHA: adbfeecde5f73a6d20860d6d70177bb505e2af20
+HEAD-Origin-Parity: LOCAL==origin/main==adbfeecde5f73a6d20860d6d70177bb505e2af20 (docs-only fast-forward from 51ac96037 to the expected base e33ef067 whose diff was only the 197 review, recovery pointer and AGENTS.md; no source divergence)
+Atomic-Contract-Choice-And-Reuse-Points: ONE Shipping-owned editor document with ONE root expectedRevision: GET/PUT /v1/{admin|seller}/shipping-services/authoring-drafts/{draftId}/editor-document (proposed, not implemented). Reuse instead of a second rule engine: the existing pure Preflight* methods (PreflightRegionGroups, PreflightGroupRateRows, PreflightPresentation, PreflightWeeklySchedule, PreflightMethodSettings, PreflightTypeAssignment) followed by their Apply* methods on the one aggregate, so Revision/UpdatedAt advance ONCE, ONE implicit SaveChanges, response composed from pre-validated facts plus the saved root with no post-commit fallible read (197-R1 rule). Reused ports: ShippingAuthoringContextSource (TB-188 languages/currency), IShippingAuthoringDestinationResolver (Geography ancestry), IShippingTypeCatalogReader + ShippingTypeAssignmentComposition, existing typed error codes. Existing six capability routes/contracts remain unchanged.
+Field-API-Gaps: (a) the six capabilities each commit and advance the same root Revision, so there is no atomic Apply today (decision section 9 unmet); (b) draft list/read projections omit presentation, settings and type, so an editor needs one additive read document; (c) the approved preview is fixture-driven: sample type ids (ordinary/heavy/extra-heavy/grocery) that are not real catalog UUIDs, a 10-node place fixture tree, fa/en content languages and IRR currency, and status active/inactive; (d) place labels are not returned by the draft read (kind+id only) and must come from the Geography read seam; (e) no draft-level status/completeness aggregate exists; (f) no carrier registry/credentials or funding-party seam exists; (g) the admin preview owner dropdown is not an authorisation source and no admin seller-picker seam exists.
+Cutoff-Status-Owner-Decisions-Requiring-Approval: CUTOFF - source confirms only 'order cutoff before the start of that working day's interval' (preview label/i18n); the sample 4 and UI min 0/max 48 are fixture/UI facts, and weekly schedule persistence has NO cutoff. Unanswered: per method vs per weekday, unit/precision/bounds, closed-day semantics, timezone/DST interaction, draft-only vs runtime input. STATUS - no approved draft activation authority; only a read-only completeness projection is proposed (no 'ready'/quote/storefront claim). OWNER - admin resolves Store/Marketplace via platform auth and seller resolves its authenticated owner; an admin seller/tenant selector needs a separate decision and authorisation source. Carrier/free funding/live integration status remain preview-only and out of scope.
+Recommended-First-Implementation-Slice: Slice A - atomic backend editor document inside the Shipping module only: one additive Contracts authoring document, one Application query + one command + validators, one directory method ReplaceEditorDocumentAsync implemented by ShippingAuthoringDraftDirectory reusing Preflight*/Apply*, admin+seller routes, and the request-classification JSON update. No UI, no activation, no storefront, no quote. Later and only as dependencies: Slice B feature adapter/UI wiring onto the document route (frontend skill + visual review), Slice C live configured-registry/owner acceptance. No further executable task envelopes emitted and delivery is not claimed complete.
+Actually-Run-Checks: SOURCE_ANALYSIS_ONLY - no build, no test, no typecheck, no dotnet ef/scaffold, no Host/server, no browser/HTTP probe, no database/container/schema/migration/seed, no package/image operation, no cache/output cleanup, no shared port/process operation. Git fetch/read and a fast-forward documentation pull only.
+Changed-Files: docs/ai/tasks/TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198.task.md, docs/architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198/EDITOR-FIELD-API-MATRIX.md, docs/architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198/ATOMIC-EDITOR-CONTRACT-PROPOSAL.md, docs/architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198/RESULT.md, docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md
+Schema-Data-Flag-Changes: NONE
+Isolation-And-Cleanup: No container/port/process/database created or touched; unrelated untracked evidence/bin/obj/.next dirt preserved; no reset/stash/rebase/force-push.
+Claim-UTC: 2026-10-22T20:50:41Z
+Result-UTC: 2026-10-22T20:58:00Z
+Elapsed-Minutes: 8
+Hard-Deadline-Compliance: Within the 20-minute box; new analysis stopped before minute 15 and the last minutes were used for evidence, scoped commit/push, fetch parity and this result.
+Out-Of-Scope-Commands: NONE executed.
+Production-Functional-Acceptance: PENDING
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT
