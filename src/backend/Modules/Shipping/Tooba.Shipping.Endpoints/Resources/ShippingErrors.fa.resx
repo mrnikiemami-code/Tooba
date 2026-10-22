@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="shipping.service_code.required" xml:space="preserve">
+    <value>کد خدمت ارسال الزامی است.</value>
+  </data>
+  <data name="shipping.service_code.invalid" xml:space="preserve">
+    <value>کد خدمت ارسال نامعتبر است.</value>
+  </data>
+  <data name="shipping.destination.country_id.required" xml:space="preserve">
+    <value>کشور مقصد الزامی است.</value>
+  </data>
+  <data name="shipping.charge.amount.negative" xml:space="preserve">
+    <value>مبلغ هزینهٔ ارسال نباید منفی باشد.</value>
+  </data>
+  <data name="shipping.charge.amount.out_of_range" xml:space="preserve">
+    <value>مبلغ هزینهٔ ارسال خارج از محدودهٔ مجاز است.</value>
+  </data>
+  <data name="shipping.charge.currency.invalid" xml:space="preserve">
+    <value>کد ارز هزینهٔ ارسال نامعتبر است.</value>
+  </data>
+  <data name="shipping.preparation_days.negative" xml:space="preserve">
+    <value>روزهای آماده‌سازی نباید منفی باشد.</value>
+  </data>
+  <data name="shipping.lead_days.negative" xml:space="preserve">
+    <value>روزهای حمل نباید منفی باشد.</value>
+  </data>
+  <data name="shipping.free_above_threshold.negative" xml:space="preserve">
+    <value>آستانهٔ ارسال رایگان نباید منفی باشد.</value>
+  </data>
+  <data name="shipping.coverage.scope.invalid" xml:space="preserve">
+    <value>دامنهٔ پوشش ارسال نامعتبر است.</value>
+  </data>
+  <data name="shipping.rate_policy.not_found" xml:space="preserve">
+    <value>سیاست نرخ ارسال یافت نشد.</value>
+  </data>
+  <data name="shipping.coverage_grant.not_found" xml:space="preserve">
+    <value>مجوز پوشش ارسال یافت نشد.</value>
+  </data>
+  <data name="shipping.rate_policy.scope_duplicate" xml:space="preserve">
+    <value>برای این دامنه از قبل یک سیاست نرخ ارسال وجود دارد.</value>
+  </data>
+  <data name="shipping.coverage_grant.scope_duplicate" xml:space="preserve">
+    <value>برای این دامنه از قبل یک مجوز پوشش ارسال وجود دارد.</value>
+  </data>
+  <data name="shipping.service_code.unknown" xml:space="preserve">
+    <value>کد خدمت ارسال ناشناخته است.</value>
+  </data>
+  <data name="shipping.service_scope.mismatch" xml:space="preserve">
+    <value>دامنهٔ خدمت ارسال با درخواست هم‌خوان نیست.</value>
+  </data>
+  <data name="shipping.destination_scope.invalid" xml:space="preserve">
+    <value>دامنهٔ مقصد ارسال نامعتبر است.</value>
+  </data>
+  <data name="shipping.option_code.invalid" xml:space="preserve">
+    <value>کد گزینهٔ ارسال نامعتبر است.</value>
+  </data>
+  <data name="shipping.service_option.unknown" xml:space="preserve">
+    <value>گزینهٔ خدمت ارسال ناشناخته است.</value>
+  </data>
+  <data name="shipping.rate_policy.option_mismatch" xml:space="preserve">
+    <value>سیاست نرخ ارسال با روش درخواستی هم‌خوان نیست.</value>
+  </data>
+  <data name="shipping.schedule.timezone.required" xml:space="preserve">
+    <value>منطقهٔ زمانی برنامهٔ عملیاتی الزامی است.</value>
+  </data>
+  <data name="shipping.schedule.timezone.invalid" xml:space="preserve">
+    <value>منطقهٔ زمانی برنامهٔ عملیاتی روی این محیط قابل حل نیست.</value>
+  </data>
+  <data name="shipping.schedule.weekday.invalid" xml:space="preserve">
+    <value>روز هفتهٔ برنامهٔ عملیاتی نامعتبر است.</value>
+  </data>
+  <data name="shipping.schedule.window.range_invalid" xml:space="preserve">
+    <value>بازهٔ پنجرهٔ عملیاتی نامعتبر است.</value>
+  </data>
+  <data name="shipping.schedule.window.overlap" xml:space="preserve">
+    <value>پنجره‌های عملیاتی در یک روز هفته هم‌پوشانی دارند.</value>
+  </data>
+  <data name="shipping.schedule.window.capacity.invalid" xml:space="preserve">
+    <value>ظرفیت پنجرهٔ عملیاتی باید مثبت باشد.</value>
+  </data>
+  <data name="shipping.schedule.windows.too_many" xml:space="preserve">
+    <value>تعداد پنجره‌های عملیاتی از حد مجاز بیشتر است.</value>
+  </data>
+  <data name="shipping.schedule.not_found" xml:space="preserve">
+    <value>برنامهٔ عملیاتی ارسال یافت نشد.</value>
+  </data>
+  <data name="shipping.schedule.duplicate" xml:space="preserve">
+    <value>برای این روش از قبل یک برنامهٔ عملیاتی وجود دارد.</value>
+  </data>
+  <data name="shipping.schedule.option_mismatch" xml:space="preserve">
+    <value>برنامهٔ عملیاتی با روش درخواستی هم‌خوان نیست.</value>
+  </data>
+  <data name="shipping.rate_policy.weight_tier.invalid" xml:space="preserve">
+    <value>بازهٔ وزن نامعتبر است.</value>
+  </data>
+  <data name="shipping.rate_policy.weight_tier.out_of_range" xml:space="preserve">
+    <value>بازهٔ وزن خارج از محدودهٔ مجاز است.</value>
+  </data>
+  <data name="shipping.rate_policy.count_tier.invalid" xml:space="preserve">
+    <value>بازهٔ تعداد اقلام نامعتبر است.</value>
+  </data>
+  <data name="shipping.rate_policy.count_tier.out_of_range" xml:space="preserve">
+    <value>بازهٔ تعداد اقلام خارج از محدودهٔ مجاز است.</value>
+  </data>
+  <data name="shipping.rate_policy.tier_overlap" xml:space="preserve">
+    <value>پله‌های فعال نرخ ارسال هم‌پوشانی دارند.</value>
+  </data>
+  <data name="shipping.rate_policy.condition.not_found" xml:space="preserve">
+    <value>شرط سیاست نرخ ارسال یافت نشد.</value>
+  </data>
+  <data name="shipping.packaging.fee.negative" xml:space="preserve">
+    <value>هزینهٔ بسته‌بندی نباید منفی باشد.</value>
+  </data>
+  <data name="shipping.packaging.fee.out_of_range" xml:space="preserve">
+    <value>هزینهٔ بسته‌بندی خارج از محدودهٔ مجاز است.</value>
+  </data>
+  <data name="shipping.packaging.currency.invalid" xml:space="preserve">
+    <value>کد ارز هزینهٔ بسته‌بندی نامعتبر است.</value>
+  </data>
+  <data name="shipping.packaging.policy.not_found" xml:space="preserve">
+    <value>سیاست بسته‌بندی یافت نشد.</value>
+  </data>
+  <data name="shipping.packaging.policy.scope_duplicate" xml:space="preserve">
+    <value>برای این دامنه از قبل یک سیاست بسته‌بندی وجود دارد.</value>
+  </data>
+  <data name="shipping.packaging.policy.option_mismatch" xml:space="preserve">
+    <value>سیاست بسته‌بندی با روش درخواستی هم‌خوان نیست.</value>
+  </data>
+  <data name="shipping.packaging.policy.ambiguous" xml:space="preserve">
+    <value>چند سیاست فعال بسته‌بندی این روش را مبهم می‌کند.</value>
+  </data>
+  <data name="shipping.packaging.freight_payer_mode.invalid" xml:space="preserve">
+    <value>طرف پرداخت‌کنندهٔ حمل نامعتبر است.</value>
+  </data>
+</root>

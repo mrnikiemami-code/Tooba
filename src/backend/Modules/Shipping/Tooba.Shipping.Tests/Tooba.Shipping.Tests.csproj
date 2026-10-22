@@ -21,6 +21,8 @@
     <ProjectReference Include="..\Tooba.Shipping.Domain\Tooba.Shipping.Domain.csproj" />
     <ProjectReference Include="..\Tooba.Shipping.Application\Tooba.Shipping.Application.csproj" />
     <ProjectReference Include="..\Tooba.Shipping.Infrastructure\Tooba.Shipping.Infrastructure.csproj" />
+    <!-- Focused W1 tests exercise the module's own HTTP-owned authorizer/presentation seams. -->
+    <ProjectReference Include="..\Tooba.Shipping.Endpoints\Tooba.Shipping.Endpoints.csproj" />
     <!-- Compatibility proof only: the test asserts that Shipping can express a policy for every code the
          existing Fulfillment catalog already publishes, WITHOUT duplicating those catalog rows. No
          production project in this module references Fulfillment. -->

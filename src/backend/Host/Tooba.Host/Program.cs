@@ -118,6 +118,7 @@ builder.Services.AddProductQnAEndpointPresentation();
 builder.Services.AddBulkInquiryEndpointPresentation();
 builder.Services.AddCustomerProfileEndpointPresentation();
 builder.Services.AddPartyEndpointPresentation();
+builder.Services.AddShippingEndpointPresentation();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IExceptionPresentationService, ExceptionPresentationService>();
 builder.Services.AddExceptionHandler<ToobaExceptionHandler>();

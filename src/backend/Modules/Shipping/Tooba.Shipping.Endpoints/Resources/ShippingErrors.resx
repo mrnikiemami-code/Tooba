@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="shipping.service_code.required" xml:space="preserve">
+    <value>A shipping service code is required.</value>
+  </data>
+  <data name="shipping.service_code.invalid" xml:space="preserve">
+    <value>The shipping service code is invalid.</value>
+  </data>
+  <data name="shipping.destination.country_id.required" xml:space="preserve">
+    <value>A destination country is required.</value>
+  </data>
+  <data name="shipping.charge.amount.negative" xml:space="preserve">
+    <value>The shipping charge amount cannot be negative.</value>
+  </data>
+  <data name="shipping.charge.amount.out_of_range" xml:space="preserve">
+    <value>The shipping charge amount is out of range.</value>
+  </data>
+  <data name="shipping.charge.currency.invalid" xml:space="preserve">
+    <value>The shipping currency code is invalid.</value>
+  </data>
+  <data name="shipping.preparation_days.negative" xml:space="preserve">
+    <value>Preparation days cannot be negative.</value>
+  </data>
+  <data name="shipping.lead_days.negative" xml:space="preserve">
+    <value>Lead days cannot be negative.</value>
+  </data>
+  <data name="shipping.free_above_threshold.negative" xml:space="preserve">
+    <value>The free-shipping threshold cannot be negative.</value>
+  </data>
+  <data name="shipping.coverage.scope.invalid" xml:space="preserve">
+    <value>The shipping coverage scope is invalid.</value>
+  </data>
+  <data name="shipping.rate_policy.not_found" xml:space="preserve">
+    <value>The shipping rate policy was not found.</value>
+  </data>
+  <data name="shipping.coverage_grant.not_found" xml:space="preserve">
+    <value>The shipping coverage grant was not found.</value>
+  </data>
+  <data name="shipping.rate_policy.scope_duplicate" xml:space="preserve">
+    <value>A shipping rate policy already exists for this scope.</value>
+  </data>
+  <data name="shipping.coverage_grant.scope_duplicate" xml:space="preserve">
+    <value>A shipping coverage grant already exists for this scope.</value>
+  </data>
+  <data name="shipping.service_code.unknown" xml:space="preserve">
+    <value>The shipping service code is unknown.</value>
+  </data>
+  <data name="shipping.service_scope.mismatch" xml:space="preserve">
+    <value>The shipping service scope does not match the request.</value>
+  </data>
+  <data name="shipping.destination_scope.invalid" xml:space="preserve">
+    <value>The shipping destination scope is invalid.</value>
+  </data>
+  <data name="shipping.option_code.invalid" xml:space="preserve">
+    <value>The shipping option code is invalid.</value>
+  </data>
+  <data name="shipping.service_option.unknown" xml:space="preserve">
+    <value>The shipping service option is unknown.</value>
+  </data>
+  <data name="shipping.rate_policy.option_mismatch" xml:space="preserve">
+    <value>The shipping rate policy does not match the requested method.</value>
+  </data>
+  <data name="shipping.schedule.timezone.required" xml:space="preserve">
+    <value>A schedule time zone is required.</value>
+  </data>
+  <data name="shipping.schedule.timezone.invalid" xml:space="preserve">
+    <value>The schedule time zone cannot be resolved on this runtime.</value>
+  </data>
+  <data name="shipping.schedule.weekday.invalid" xml:space="preserve">
+    <value>The schedule weekday is invalid.</value>
+  </data>
+  <data name="shipping.schedule.window.range_invalid" xml:space="preserve">
+    <value>The operating window range is invalid.</value>
+  </data>
+  <data name="shipping.schedule.window.overlap" xml:space="preserve">
+    <value>Operating windows overlap on the same weekday.</value>
+  </data>
+  <data name="shipping.schedule.window.capacity.invalid" xml:space="preserve">
+    <value>The operating window capacity must be positive.</value>
+  </data>
+  <data name="shipping.schedule.windows.too_many" xml:space="preserve">
+    <value>Too many operating windows were provided.</value>
+  </data>
+  <data name="shipping.schedule.not_found" xml:space="preserve">
+    <value>The shipping schedule was not found.</value>
+  </data>
+  <data name="shipping.schedule.duplicate" xml:space="preserve">
+    <value>A shipping schedule already exists for this method.</value>
+  </data>
+  <data name="shipping.schedule.option_mismatch" xml:space="preserve">
+    <value>The shipping schedule does not match the requested method.</value>
+  </data>
+  <data name="shipping.rate_policy.weight_tier.invalid" xml:space="preserve">
+    <value>The weight tier range is invalid.</value>
+  </data>
+  <data name="shipping.rate_policy.weight_tier.out_of_range" xml:space="preserve">
+    <value>The weight tier is out of range.</value>
+  </data>
+  <data name="shipping.rate_policy.count_tier.invalid" xml:space="preserve">
+    <value>The item-count tier range is invalid.</value>
+  </data>
+  <data name="shipping.rate_policy.count_tier.out_of_range" xml:space="preserve">
+    <value>The item-count tier is out of range.</value>
+  </data>
+  <data name="shipping.rate_policy.tier_overlap" xml:space="preserve">
+    <value>Active shipping rate tiers overlap.</value>
+  </data>
+  <data name="shipping.rate_policy.condition.not_found" xml:space="preserve">
+    <value>The shipping rate policy condition was not found.</value>
+  </data>
+  <data name="shipping.packaging.fee.negative" xml:space="preserve">
+    <value>The packaging fee cannot be negative.</value>
+  </data>
+  <data name="shipping.packaging.fee.out_of_range" xml:space="preserve">
+    <value>The packaging fee is out of range.</value>
+  </data>
+  <data name="shipping.packaging.currency.invalid" xml:space="preserve">
+    <value>The packaging currency code is invalid.</value>
+  </data>
+  <data name="shipping.packaging.policy.not_found" xml:space="preserve">
+    <value>The packaging policy was not found.</value>
+  </data>
+  <data name="shipping.packaging.policy.scope_duplicate" xml:space="preserve">
+    <value>A packaging policy already exists for this scope.</value>
+  </data>
+  <data name="shipping.packaging.policy.option_mismatch" xml:space="preserve">
+    <value>The packaging policy does not match the requested method.</value>
+  </data>
+  <data name="shipping.packaging.policy.ambiguous" xml:space="preserve">
+    <value>Multiple active packaging policies make this method ambiguous.</value>
+  </data>
+  <data name="shipping.packaging.freight_payer_mode.invalid" xml:space="preserve">
+    <value>The freight payer mode is invalid.</value>
+  </data>
+</root>

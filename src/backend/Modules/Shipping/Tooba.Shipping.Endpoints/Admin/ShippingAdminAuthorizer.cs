@@ -17,10 +17,20 @@ namespace Tooba.Shipping.Endpoints.Admin;
 /// آداپتور تازه آن گاردها را می‌شکند؛ تضعیف گارد معماری مجاز نیست. با نگه‌داشتن همان درز
 /// انتزاعی <see cref="IShippingAdminAuthorizer"/> و پیاده‌سازی روی seamهای عمومی BuildingBlocks،
 /// هیچ اجازهٔ تازه‌ای ساخته نمی‌شود و هیچ مسیری بی‌مجوز نمی‌ماند.
+/// <para>
+/// زمینهٔ بررسی مجوز (<c>Edition</c>/<c>TenantId</c>) از زمینهٔ تجارت resolve‌شدهٔ همان درخواست
+/// گرفته می‌شود، نه از یک مقدار ثابت و نه از هدر/کوکی/query. مقدار نامعتبر یا ناسازگار پیش از
+/// <see cref="IAuthorizationService.CanAsync"/> fail-closed می‌شود.
+/// </para>
+/// <para>
+/// این تعمیر فقط «زمینهٔ فراخوانی» Shipping را درست می‌کند: هویت فروشنده/مالک، تفکیک دادهٔ
+/// seller-scoped در Marketplace و پشتیبانی کامل حالت نصب را ایجاد نمی‌کند.
+/// </para>
 /// </remarks>
 public sealed class ShippingAdminAuthorizer(
     IAdminPanelAccess adminAccess,
     IAuthorizationService authz,
+    ICurrentEdition edition,
     ICurrentTenant tenant) : IShippingAdminAuthorizer
 {
     /// <inheritdoc />
@@ -31,13 +41,15 @@ public sealed class ShippingAdminAuthorizer(
         ArgumentException.ThrowIfNullOrWhiteSpace(permissionId);
 
         var actor = await adminAccess.RequireAuthorizedAsync(httpContext.Request, cancellationToken);
-        await EnsureAdminCapabilityAsync(actor, permissionId, cancellationToken);
+        var callContext = ResolveCallContext();
+        await EnsureAdminCapabilityAsync(actor, permissionId, callContext, cancellationToken);
         return actor;
     }
 
     private async Task EnsureAdminCapabilityAsync(
         Guid actorUserId,
         string permissionId,
+        AuthorizationCallContext callContext,
         CancellationToken cancellationToken)
     {
         var decision = await authz.CanAsync(
@@ -50,11 +62,7 @@ public sealed class ShippingAdminAuthorizer(
                     Id = permissionId,
                 },
                 Permission = AuthorizationRelations.Check,
-                CallContext = new AuthorizationCallContext
-                {
-                    Edition = ToobaEdition.SingleStore,
-                    TenantId = tenant.Current?.TenantId.Value ?? "unknown",
-                },
+                CallContext = callContext,
             },
             cancellationToken);
 
@@ -66,9 +74,61 @@ public sealed class ShippingAdminAuthorizer(
         // شکست زیرساخت مجوز هرگز ALLOW نیست؛ قابلیت باید fail-closed بماند.
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
         {
-            throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminAuthorizationUnavailable));
+            throw Unavailable();
         }
 
         throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminAuthorizationDenied));
     }
+
+    /// <summary>
+    /// زمینهٔ فراخوانی را فقط از resolve‌شدهٔ پلتفرم می‌سازد. هر ناسازگاری = unavailable،
+    /// بدون رسیدن به <c>CanAsync</c>.
+    /// </summary>
+    private AuthorizationCallContext ResolveCallContext()
+    {
+        var currentEdition = edition.Current?.Edition;
+        return currentEdition switch
+        {
+            ToobaEdition.SingleStore => SingleStoreContext(),
+            ToobaEdition.Marketplace => MarketplaceContext(),
+            _ => throw Unavailable(),
+        };
+    }
+
+    private AuthorizationCallContext SingleStoreContext()
+    {
+        var current = tenant.Current;
+        var tenantId = current?.TenantId.Value;
+
+        if (current is null
+            || current.Status != TenantStatus.Active
+            || string.IsNullOrWhiteSpace(tenantId))
+        {
+            throw Unavailable();
+        }
+
+        return new AuthorizationCallContext
+        {
+            Edition = ToobaEdition.SingleStore,
+            TenantId = tenantId.Trim(),
+        };
+    }
+
+    private AuthorizationCallContext MarketplaceContext()
+    {
+        // در Marketplace هیچ Tenant مجاز نیست؛ Tenant باقی‌مانده یا ناسازگار، زمینهٔ نامعتبر است.
+        if (tenant.Current is not null)
+        {
+            throw Unavailable();
+        }
+
+        return new AuthorizationCallContext
+        {
+            Edition = ToobaEdition.Marketplace,
+            TenantId = null,
+        };
+    }
+
+    private static SemanticException Unavailable() =>
+        new(new SemanticError(FoundationErrorCodes.AdminAuthorizationUnavailable));
 }

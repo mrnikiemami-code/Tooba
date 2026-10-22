@@ -1,13 +1,18 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 using FluentValidation;
 using FluentValidation.Results;
+using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Shipping.Application.Rates.Commands;
 using Tooba.Shipping.Application.Validation;
 using Tooba.Shipping.Contracts.Admin;
+using Tooba.Shipping.Endpoints.Errors;
+using Tooba.Shipping.Endpoints.Resources;
 
 namespace Tooba.Shipping.Endpoints.Admin;
 
@@ -270,5 +275,18 @@ public static class ShippingEndpointModule
         ShippingPackagingPolicyEndpoints.Map(admin);
         ShippingOperationalQuoteEndpoints.Map(admin);
         return app;
+    }
+
+    /// <summary>
+    /// ثبت ارائهٔ Shipping: کاتالوگ خطای صریح <c>shipping.*</c> و مجموعهٔ منبع آن.
+    /// یک‌بار در مسیر ترکیب Host فراخوانی می‌شود؛ هیچ ثبت تکراری مجاز نیست.
+    /// </summary>
+    /// <param name="services">مجموعهٔ سرویس.</param>
+    public static IServiceCollection AddShippingEndpointPresentation(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddSingleton<IErrorCatalogContributor, ShippingErrorCatalogContributor>();
+        services.AddSingleton<IErrorResourceSet, ShippingErrorResourceSet>();
+        return services;
     }
 }
