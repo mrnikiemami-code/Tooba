@@ -7,8 +7,8 @@ For the current Shipping Admin work, start at
 TB-190 including R1/R2 is accepted for the bounded owner/region draft foundation.
 TB-191 manual rate draft persistence is accepted through TB-191-R1.
 TB-192 owner-local multilingual draft metadata is accepted through TB-192-R1.
-TB-193 weekly schedule awaits the required deterministic concurrency proof.
-The only next task is TB-SHIPPING-ADMIN-WEEKLY-SCHEDULE-DRAFTS-193-R1; await its result.
+TB-193 weekly schedule draft persistence is accepted through TB-193-R1.
+The only next task is TB-SHIPPING-ADMIN-METHOD-MODE-DRAFTS-194; await its result.
 Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.
