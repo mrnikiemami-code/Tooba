@@ -1,8 +1,8 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Fulfillment.Application.ShippingTypes;
+using Tooba.Fulfillment.Application.Shipping.Models;
 using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Domain.Aggregates;
@@ -16,92 +16,101 @@ namespace Tooba.Fulfillment.Infrastructure.Shipping;
 /// <remarks>
 /// <para>
 /// تنها نویسندهٔ این جدول‌ها همین درز است. هر نوشتن یک <c>SaveChanges</c> است و هیچ تراکنش صریح یا نوشتن
-/// بین‌ماژولی ساخته نمی‌شود. پیش‌بررسی کامل (شکل کد/ترتیب/متن، زبان فعال، یکتایی کد و نام پیش‌فرض برای
-/// فعال‌سازی) پیش از تغییر وضعیت tracked انجام می‌شود؛ روی رد شدن، ردیابی پاک می‌شود.
+/// بین‌ماژولی ساخته نمی‌شود.
 /// </para>
 /// <para>
-/// یکتایی کد و جفت زبان از SQLSTATE <c>23505</c> روی همان قید نام‌برده به خطای تجاری پایدار نگاشت می‌شود،
-/// نه از متن پیام provider. هر خطای دیگر دوباره پرتاب می‌شود.
+/// قاعدهٔ اتمیک: کل وضعیت پیشنهادی (سرصفحه + همهٔ ترجمه‌ها) پیش از نخستین تغییر tracked آماده و
+/// اعتبارسنجی می‌شود و اختلاف معنایی واقعی محاسبه می‌شود. اگر هیچ اختلافی نباشد، هیچ موجودیتی تغییر نمی‌کند؛
+/// پس بازبینی و UpdatedAt دست‌نخورده می‌مانند. یک ورودی نامعتبر — حتی آخرین عضو فهرست — هیچ تغییر معلقی
+/// باقی نمی‌گذارد و در SaveChanges بعدی منتشر نمی‌شود.
+/// </para>
+/// <para>
+/// یکتایی کد/جفت زبان از SQLSTATE <c>23505</c> روی همان نام قید مالک‌شده (برابری کامل) به خطای تجاری پایدار
+/// نگاشت می‌شود، نه از متن پیام provider و نه از تطبیق زیررشته. هر خطای دیگر دوباره پرتاب می‌شود.
 /// </para>
 /// </remarks>
 public sealed class ShippingTypeStore : IShippingTypeStore, IShippingTypeReader
 {
-    private const string CodeConstraint = "ix_shipping_types_code";
-    private const string TranslationConstraint = "ix_shipping_type_translations_shipping_type_id_language_id";
+    private const string CodeIndexName = "ix_shipping_types_code";
+    private const string TranslationIndexName = "ix_shipping_type_translations_type_language";
 
     private readonly FulfillmentDbContext _db;
     private readonly IClock _clock;
     private readonly IIdGenerator _ids;
-    private readonly IShippingTypeLanguageFacts _languageFacts;
 
     /// <summary>سازنده.</summary>
-    public ShippingTypeStore(
-        FulfillmentDbContext db,
-        IClock clock,
-        IIdGenerator ids,
-        IShippingTypeLanguageFacts languageFacts)
+    public ShippingTypeStore(FulfillmentDbContext db, IClock clock, IIdGenerator ids)
     {
         _db = db;
         _clock = clock;
         _ids = ids;
-        _languageFacts = languageFacts;
     }
 
     /// <inheritdoc />
-    public async Task<Guid> CreateAsync(ShippingTypeCreateModel model, CancellationToken cancellationToken)
+    public async Task<Guid> CreateAsync(
+        string code,
+        int sortOrder,
+        IReadOnlyList<ShippingTypePreparedTranslation> translations,
+        CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(translations);
 
-        var code = ShippingType.TryNormalizeCode(model.Code)
-                   ?? throw Fault(FulfillmentErrorCodes.ShippingTypeCodeInvalid);
+        var normalizedCode = ShippingType.TryNormalizeCode(code)
+                             ?? throw Fault(FulfillmentErrorCodes.ShippingTypeCodeInvalid);
 
-        if (await _db.ShippingTypes.AnyAsync(x => x.Code == code, cancellationToken))
+        // همهٔ ترجمه‌ها پیش از هر تغییر tracked دوباره با قاعدهٔ واحد canonical بررسی می‌شوند.
+        var prepared = PrepareAll(translations);
+
+        if (await _db.ShippingTypes.AnyAsync(x => x.Code == normalizedCode, cancellationToken))
         {
             throw Fault(FulfillmentErrorCodes.ShippingTypeCodeDuplicate);
         }
-
-        var id = _ids.NewId();
-        var now = _clock.UtcNow;
-        var entity = ShippingType.Create(id, code, model.SortOrder, [], now);
-
-        // تعریف تازه همیشه غیرفعال است؛ فعال‌سازی فقط از مسیر ویرایش با نام پیش‌فرض موجود می‌آید.
-        foreach (var translation in model.Translations)
-        {
-            entity.AddTranslation(translation.LanguageId, translation.Name, translation.Description);
-        }
-
-        _db.ShippingTypes.Add(entity);
 
         try
         {
+            var id = _ids.NewId();
+            var now = _clock.UtcNow;
+            var entity = ShippingType.Create(id, normalizedCode, sortOrder, [], now);
+
+            // تعریف تازه همیشه غیرفعال است؛ فعال‌سازی فقط از مسیر ویرایش با نام پیش‌فرض موجود می‌آید.
+            foreach (var translation in prepared)
+            {
+                entity.AddTranslation(_ids.NewId(), translation.LanguageId, translation.Name, translation.Description);
+            }
+
+            _db.ShippingTypes.Add(entity);
             await _db.SaveChangesAsync(cancellationToken);
+            return id;
         }
-        catch (DbUpdateException exception) when (IsUniqueViolation(exception, CodeConstraint))
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception, CodeIndexName))
         {
-            ClearTracking();
+            _db.ChangeTracker.Clear();
             throw Fault(FulfillmentErrorCodes.ShippingTypeCodeDuplicate);
         }
-        catch (DbUpdateException expectation) when (IsUniqueViolation(expectation, TranslationConstraint))
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception, TranslationIndexName))
         {
-            ClearTracking();
+            _db.ChangeTracker.Clear();
             throw Fault(FulfillmentErrorCodes.ShippingTypeTranslationInvalid);
         }
         catch
         {
-            ClearTracking();
+            _db.ChangeTracker.Clear();
             throw;
         }
-
-        return id;
     }
 
     /// <inheritdoc />
     public async Task<ShippingTypeView> UpdateAsync(
         Guid shippingTypeId,
-        ShippingTypeUpdateModel model,
+        long expectedRevision,
+        string? submittedCode,
+        int sortOrder,
+        bool isActive,
+        IReadOnlyList<ShippingTypePreparedTranslation> translations,
+        Guid activeDefaultLanguageId,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(translations);
 
         if (shippingTypeId == Guid.Empty)
         {
@@ -114,9 +123,9 @@ public sealed class ShippingTypeStore : IShippingTypeStore, IShippingTypeReader
                      ?? throw Fault(FulfillmentErrorCodes.ShippingTypeNotFound);
 
         // کد هویت تغییرناپذیر است: بدنهٔ حاوی کد متفاوت رد می‌شود، نه اینکه بی‌صدا نادیده گرفته شود.
-        if (!string.IsNullOrWhiteSpace(model.Code))
+        if (!string.IsNullOrEmpty(submittedCode))
         {
-            var submitted = ShippingType.TryNormalizeCode(model.Code)
+            var submitted = ShippingType.TryNormalizeCode(submittedCode)
                             ?? throw Fault(FulfillmentErrorCodes.ShippingTypeCodeInvalid);
             if (!string.Equals(submitted, entity.Code, StringComparison.Ordinal))
             {
@@ -124,56 +133,45 @@ public sealed class ShippingTypeStore : IShippingTypeStore, IShippingTypeReader
             }
         }
 
-        // کهنه‌بودن بازبینی پیش از هر no-op بررسی می‌شود: بدنهٔ یکسان هم با بازبینی کهنه تعارض است.
-        if (entity.Revision != model.ExpectedRevision)
+        // کهنه‌بودن بازبینی پیش از no-op بررسی می‌شود: بدنهٔ یکسان با بازبینی کهنه هم تعارض است.
+        if (entity.Revision != expectedRevision)
         {
             throw Fault(FulfillmentErrorCodes.ShippingTypeRevisionConflict);
         }
 
-        var facts = await _languageFacts.ReadAsync(cancellationToken);
-        var defaultLanguage = facts.ActiveDefault;
+        // 1) آماده‌سازی/اعتبارسنجی کامل patch و وضعیت پیشنهادی، بدون هیچ تغییر tracked.
+        var prepared = PrepareAll(translations);
+        var proposed = BuildProposed(entity, prepared);
 
-        // فعال‌سازی/فعال‌نگه‌داشتن نیازمند نام ذخیره‌شده یا همین patch برای پیش‌فرض فعال است.
-        if (model.IsActive)
+        // 2) فعال‌سازی نیازمند نام برای پیش‌فرض فعال در وضعیت پیشنهادی است.
+        if (isActive && !proposed.ContainsKey(activeDefaultLanguageId))
         {
-            if (defaultLanguage is null)
-            {
-                throw Fault(FulfillmentErrorCodes.ShippingTypeDefaultLanguageUnavailable);
-            }
-
-            var patched = model.Translations.FirstOrDefault(x => x.LanguageId == defaultLanguage.LanguageId);
-            var nameAfter = patched?.Name ?? (entity.HasTranslation(defaultLanguage.LanguageId)
-                ? entity.Translations.First(x => x.LanguageId == defaultLanguage.LanguageId).Name
-                : null);
-
-            if (string.IsNullOrWhiteSpace(nameAfter))
-            {
-                throw Fault(FulfillmentErrorCodes.ShippingTypeDefaultLanguageNameRequired);
-            }
+            throw Fault(FulfillmentErrorCodes.ShippingTypeDefaultLanguageNameRequired);
         }
 
-        // patch فقط زبان‌های صریحاً فهرست‌شده را عوض می‌کند؛ [] هیچ متنی را حذف نمی‌کند.
-        foreach (var translation in model.Translations)
-        {
-            if (!entity.HasTranslation(translation.LanguageId))
-            {
-                entity.AddTranslation(translation.LanguageId, translation.Name, translation.Description);
-                continue;
-            }
+        // 3) اختلاف معنایی واقعی روی مقادیر canonical — نه فقط «patch خالی نیست».
+        var changed = entity.SortOrder != sortOrder
+                      || entity.IsActive != isActive
+                      || prepared.Any(patch => Differs(entity, patch));
 
-            entity.ReplaceTranslation(translation.LanguageId, translation.Name, translation.Description);
-        }
-
-        // بدنهٔ بدون تغییر: بازبینی و UpdatedAt باید دست‌نخورده بمانند (no-op صادق).
-        var changed = entity.SortOrder != model.SortOrder
-                      || entity.IsActive != model.IsActive
-                      || model.Translations.Count > 0;
         if (!changed)
         {
-            return ToView(entity, defaultLanguage?.LanguageId);
+            return ToView(entity, activeDefaultLanguageId);
         }
 
-        entity.Update(model.SortOrder, model.IsActive, _clock.UtcNow);
+        // 4) اعمال اتمیک پس از تأیید کامل.
+        entity.Update(sortOrder, isActive, _clock.UtcNow);
+        foreach (var patch in prepared)
+        {
+            if (entity.HasTranslation(patch.LanguageId))
+            {
+                entity.ReplaceTranslation(patch.LanguageId, patch.Name, patch.Description);
+            }
+            else
+            {
+                entity.AddTranslation(_ids.NewId(), patch.LanguageId, patch.Name, patch.Description);
+            }
+        }
 
         try
         {
@@ -181,21 +179,21 @@ public sealed class ShippingTypeStore : IShippingTypeStore, IShippingTypeReader
         }
         catch (DbUpdateConcurrencyException)
         {
-            ClearTracking();
+            _db.ChangeTracker.Clear();
             throw Fault(FulfillmentErrorCodes.ShippingTypeRevisionConflict);
         }
-        catch (DbUpdateException exception) when (IsUniqueViolation(exception, TranslationConstraint))
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception, TranslationIndexName))
         {
-            ClearTracking();
+            _db.ChangeTracker.Clear();
             throw Fault(FulfillmentErrorCodes.ShippingTypeTranslationInvalid);
         }
         catch
         {
-            ClearTracking();
+            _db.ChangeTracker.Clear();
             throw;
         }
 
-        return ToView(entity, defaultLanguage?.LanguageId);
+        return ToView(entity, activeDefaultLanguageId);
     }
 
     /// <inheritdoc />
@@ -220,7 +218,10 @@ public sealed class ShippingTypeStore : IShippingTypeStore, IShippingTypeReader
     }
 
     /// <inheritdoc />
-    public async Task<ShippingTypeView?> GetAsync(Guid shippingTypeId, CancellationToken cancellationToken)
+    public async Task<ShippingTypeView?> GetAsync(
+        Guid shippingTypeId,
+        Guid? activeDefaultLanguageId,
+        CancellationToken cancellationToken)
     {
         if (shippingTypeId == Guid.Empty)
         {
@@ -232,13 +233,7 @@ public sealed class ShippingTypeStore : IShippingTypeStore, IShippingTypeReader
             .Include(x => x.Translations)
             .FirstOrDefaultAsync(x => x.ShippingTypeId == shippingTypeId, cancellationToken);
 
-        if (entity is null)
-        {
-            return null;
-        }
-
-        var facts = await _languageFacts.ReadAsync(cancellationToken);
-        return ToView(entity, facts.ActiveDefault?.LanguageId);
+        return entity is null ? null : ToView(entity, activeDefaultLanguageId);
     }
 
     /// <inheritdoc />
@@ -283,6 +278,57 @@ public sealed class ShippingTypeStore : IShippingTypeStore, IShippingTypeReader
         return rows.Select(ToSnapshot).ToList();
     }
 
+    private static IReadOnlyList<ShippingTypePreparedTranslation> PrepareAll(
+        IReadOnlyList<ShippingTypePreparedTranslation> translations)
+    {
+        var prepared = new List<ShippingTypePreparedTranslation>(translations.Count);
+        var seen = new HashSet<Guid>();
+
+        foreach (var translation in translations)
+        {
+            if (translation is null || !seen.Add(translation.LanguageId))
+            {
+                throw Fault(FulfillmentErrorCodes.ShippingTypeLanguageInvalid);
+            }
+
+            var (name, description) = ShippingTypePreparation.NormalizeText(
+                translation.LanguageId,
+                translation.Name,
+                translation.Description);
+
+            prepared.Add(new ShippingTypePreparedTranslation(translation.LanguageId, name, description));
+        }
+
+        return prepared;
+    }
+
+    private static Dictionary<Guid, string> BuildProposed(
+        ShippingType entity,
+        IReadOnlyList<ShippingTypePreparedTranslation> patches)
+    {
+        var proposed = entity.Translations
+            .ToDictionary(x => x.LanguageId, x => x.Name);
+
+        foreach (var patch in patches)
+        {
+            proposed[patch.LanguageId] = patch.Name;
+        }
+
+        return proposed;
+    }
+
+    private static bool Differs(ShippingType entity, ShippingTypePreparedTranslation patch)
+    {
+        var stored = entity.Translations.FirstOrDefault(x => x.LanguageId == patch.LanguageId);
+        if (stored is null)
+        {
+            return true;
+        }
+
+        return !string.Equals(stored.Name, patch.Name, StringComparison.Ordinal)
+               || !string.Equals(stored.Description, patch.Description, StringComparison.Ordinal);
+    }
+
     private static ShippingTypeView ToView(ShippingType entity, Guid? defaultLanguageId)
     {
         var translations = ToTranslations(entity);
@@ -308,15 +354,13 @@ public sealed class ShippingTypeStore : IShippingTypeStore, IShippingTypeReader
             .Select(x => new ShippingTypeTranslationSnapshot(x.LanguageId, x.Name, x.Description))
             .ToList();
 
-    private void ClearTracking() => _db.ChangeTracker.Clear();
-
     private static SemanticException Fault(string code) => new(new SemanticError(code));
 
     /// <summary>
-    /// فقط یکتایی PostgreSQL روی همان قید نام‌برده «تکراری» است؛ هر <see cref="DbUpdateException"/> دیگر
-    /// دوباره پرتاب می‌شود تا خطای provider هرگز به پاسخ تجاری تبدیل نشود.
+    /// فقط یکتایی PostgreSQL روی همان نام قید مالک‌شده (برابری کامل ordinal) «تکراری» است؛ قید
+    /// lookalike یا هر <see cref="DbUpdateException"/> دیگر دوباره پرتاب می‌شود.
     /// </summary>
-    private static bool IsUniqueViolation(DbUpdateException exception, string constraintFragment)
+    private static bool IsUniqueViolation(DbUpdateException exception, string constraintName)
         => exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } postgres
-           && postgres.ConstraintName?.Contains(constraintFragment, StringComparison.Ordinal) == true;
+           && string.Equals(postgres.ConstraintName, constraintName, StringComparison.Ordinal);
 }

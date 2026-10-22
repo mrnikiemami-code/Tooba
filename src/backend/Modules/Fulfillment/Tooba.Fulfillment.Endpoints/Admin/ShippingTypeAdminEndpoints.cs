@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -7,8 +7,9 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Security;
-using Tooba.Fulfillment.Application.ShippingTypes;
-using Tooba.Fulfillment.Contracts.Errors;
+using Tooba.Fulfillment.Application.Shipping.Models;
+using Tooba.Fulfillment.Application.Shipping.Commands;
+using Tooba.Fulfillment.Application.Shipping.Queries;
 using Tooba.Fulfillment.Contracts.Shipping;
 
 namespace Tooba.Fulfillment.Endpoints.Admin;
@@ -150,28 +151,14 @@ internal static class ShippingTypeInstallationContext
         new(new SemanticError(FoundationErrorCodes.AdminAuthorizationUnavailable));
 }
 
-/// <summary>بدنهٔ نوشتن ایجاد/ویرایش نوع ارسال در مرز HTTP.</summary>
-/// <param name="Code">کد canonical؛ در ویرایش باید با کد ذخیره‌شده یکسان باشد (تغییر هویت ممنوع).</param>
-/// <param name="SortOrder">ترتیب صریح.</param>
-/// <param name="IsActive">وضعیت صریح؛ در ایجاد نادیده گرفته می‌شود چون تعریف تازه همیشه غیرفعال است.</param>
-/// <param name="ExpectedRevision">بازبینی خوانده‌شده؛ فقط در ویرایش معنا دارد.</param>
-/// <param name="Translations">ترجمه‌ها (patch در ویرایش).</param>
-public sealed record ShippingTypeWriteRequest(
-    string? Code,
-    int? SortOrder,
-    bool? IsActive,
-    long? ExpectedRevision,
-    IReadOnlyList<ShippingTypeTranslationWriteRequest>? Translations);
-
-/// <summary>یک ترجمه در بدنه.</summary>
-/// <param name="LanguageId">شناسهٔ زبان محتوا.</param>
-/// <param name="Name">نام.</param>
-/// <param name="Description">توضیح یا <c>null</c> برای پاک‌کردن.</param>
-public sealed record ShippingTypeTranslationWriteRequest(Guid LanguageId, string? Name, string? Description);
-
 /// <summary>
 /// چهار مسیر افزودنی مدیریت کاتالوگ نوع ارسال زیر پیشوند واقعی <c>/v1/admin</c>.
 /// </summary>
+/// <remarks>
+/// ترتیب هر مسیر نوشتن ثابت است: مجوز <b>پیش از</b> خواندن بدنه، سپس خواندن/اعتبارسنجی بدنه، سپس ISender.
+/// بنابراین یک بدنهٔ بدشکل از actor غیرمجاز هرگز به پردازش بدنه یا Application نمی‌رسد و هیچ پارامتر
+/// complex از binding خودکار عبور نمی‌کند.
+/// </remarks>
 public static class ShippingTypeAdminEndpoints
 {
     /// <summary>ثبت مسیرها روی گروه ادمین.</summary>
@@ -191,11 +178,10 @@ public static class ShippingTypeAdminEndpoints
         IShippingTypeAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext context,
-        Guid? languageId,
         CancellationToken cancellationToken)
     {
         await authorizer.RequireViewAsync(context, cancellationToken);
-        return api.From(await sender.Send(new ListShippingTypesQuery(languageId), cancellationToken));
+        return api.From(await sender.Send(new ListShippingTypesQuery(), cancellationToken));
     }
 
     private static async Task<IResult> GetAsync(
@@ -211,30 +197,33 @@ public static class ShippingTypeAdminEndpoints
     }
 
     private static async Task<IResult> CreateAsync(
-        ShippingTypeWriteRequest body,
         ISender sender,
         IShippingTypeAdminAuthorizer authorizer,
         ApiResponseFactory api,
         HttpContext context,
         CancellationToken cancellationToken)
     {
+        // مجوز نخست؛ بدنهٔ بدشکل از actor غیرمجاز هرگز خوانده نمی‌شود.
         await authorizer.RequireManageAsync(context, cancellationToken);
 
-        // شناسه/فعال‌بودن/بازبینی از سرور است؛ فیلدهای کلاینت در create خوانده نمی‌شوند.
-        var command = new CreateShippingTypeCommand(new ShippingTypeCreateModel(
-            body.Code ?? string.Empty,
-            body.SortOrder ?? -1,
-            ToInputs(body.Translations)));
+        ShippingTypeWriteModel body;
+        try
+        {
+            body = await ShippingTypeBodyReader.ReadAsync(context.Request, cancellationToken);
+        }
+        catch (SemanticException exception)
+        {
+            return api.FromSemanticException(exception);
+        }
 
-        var result = await sender.Send(command, cancellationToken);
-        return api.Created(
-            $"/v1/admin/shipping-types/{(result.IsSuccess ? result.Value.ShippingTypeId : Guid.Empty)}",
-            result);
+        var result = await sender.Send(new CreateShippingTypeCommand(body), cancellationToken);
+        return result.IsSuccess
+            ? api.Created($"/v1/admin/shipping-types/{result.Value.ShippingTypeId}", result)
+            : api.From(result);
     }
 
     private static async Task<IResult> UpdateAsync(
         Guid shippingTypeId,
-        ShippingTypeWriteRequest body,
         ISender sender,
         IShippingTypeAdminAuthorizer authorizer,
         ApiResponseFactory api,
@@ -243,32 +232,16 @@ public static class ShippingTypeAdminEndpoints
     {
         await authorizer.RequireManageAsync(context, cancellationToken);
 
-        // حضور صریح فیلدهای اجباری: مقدار حذف‌شده یا null نباید بی‌صدا به false/0/فهرست خالی تبدیل شود.
-        if (body.IsActive is null || body.SortOrder is null
-            || body.ExpectedRevision is null || body.Translations is null)
+        ShippingTypeWriteModel body;
+        try
         {
-            throw new SemanticException(new SemanticError(FulfillmentErrorCodes.ShippingTypeTransportFieldMissing));
+            body = await ShippingTypeBodyReader.ReadAsync(context.Request, cancellationToken);
+        }
+        catch (SemanticException exception)
+        {
+            return api.FromSemanticException(exception);
         }
 
-        var result = await sender.Send(
-            new UpdateShippingTypeCommand(
-                shippingTypeId,
-                new ShippingTypeUpdateModel(
-                    body.ExpectedRevision.Value,
-                    body.Code,
-                    body.SortOrder.Value,
-                    body.IsActive.Value,
-                    ToInputs(body.Translations))),
-            cancellationToken);
-        return api.From(result);
+        return api.From(await sender.Send(new UpdateShippingTypeCommand(shippingTypeId, body), cancellationToken));
     }
-
-    private static IReadOnlyList<ShippingTypeTranslationInput> ToInputs(
-        IReadOnlyList<ShippingTypeTranslationWriteRequest>? translations) =>
-        translations is null
-            ? []
-            : translations
-                .Where(x => x is not null)
-                .Select(x => new ShippingTypeTranslationInput(x.LanguageId, x.Name ?? string.Empty, x.Description))
-                .ToList();
 }

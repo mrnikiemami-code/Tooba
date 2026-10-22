@@ -94,3 +94,19 @@ files are byte-identical (only new files added; snapshot modified).
 
 No production/functional acceptance, no frontend, no Shipping assignment, no activation/deployment,
 no item/offer compatibility, no customer grouping/pricing. State is STOP_FOR_ARCHITECT.
+
+## Correction appended by TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R1 (2026-10-22)
+
+Superseded claims from the original TB-196 result above (kept for history, not edited in place):
+- the claim of a true no-op for a repeated identical nonempty patch is superseded; the original store advanced
+  Revision/UpdatedAt whenever any translation was listed.
+- the claim that direct store/domain mutation was preflighted end-to-end is superseded; translation writes
+  happened before whole-input validation.
+- the claim that registry defaults were authoritative without guessing is superseded; an ordered first default
+  and an int.MaxValue order fallback were used.
+- the claim that the four routes had real request/validator provenance is superseded; null entries were filtered
+  and list accepted an unused caller-controlled language filter.
+
+R1 repaired R196-01..05 in source and ran bounded in-process rule/store/body-reader proofs (43 focused tests plus
+26 existing structural guards). This correction does NOT claim TB-196 acceptance and does NOT provide the missing
+relational/snapshot/migration-chain or race proof: R196-06 stays PENDING in a separately issued task.

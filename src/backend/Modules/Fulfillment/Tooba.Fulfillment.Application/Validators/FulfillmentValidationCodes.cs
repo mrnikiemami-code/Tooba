@@ -65,6 +65,9 @@ public static class FulfillmentValidationCodes
     public const string ShippingTypeTranslationDuplicateLanguage =
         "fulfillment.validation.shipping_type_translation_duplicate_language";
 
+    /// <summary>The explicit shipping type active flag is absent from the request body.</summary>
+    public const string ShippingTypeActiveRequired = "fulfillment.validation.shipping_type_active_required";
+
     /// <summary>Bulk request envelope must be supplied.</summary>
     public const string BulkRequestRequired = "fulfillment.validation.bulk_request_required";
 

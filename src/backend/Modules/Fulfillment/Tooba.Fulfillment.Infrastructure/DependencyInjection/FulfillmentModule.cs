@@ -1,4 +1,4 @@
-using Tooba.Payment.Contracts.Events;
+﻿using Tooba.Payment.Contracts.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -115,9 +115,9 @@ public sealed class FulfillmentModule : IToobaModule
         // TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196: کاتالوگ نوع ارسال عملیاتی. یک پیاده‌سازی هم
         // نویسندهٔ مدیریتی است و هم درز فقط-خواندنی Contracts؛ هیچ flag فعال‌سازی مشتری ندارد.
         services.AddScoped<ShippingTypeStore>();
-        services.AddScoped<Application.ShippingTypes.IShippingTypeStore>(sp => sp.GetRequiredService<ShippingTypeStore>());
+        services.AddScoped<Application.Shipping.Models.IShippingTypeStore>(sp => sp.GetRequiredService<ShippingTypeStore>());
         services.AddScoped<Contracts.Shipping.IShippingTypeReader>(sp => sp.GetRequiredService<ShippingTypeStore>());
-        services.AddScoped<Application.ShippingTypes.IShippingTypeLanguageFacts, ShippingTypeLanguageFacts>();        // TB-SHIPPING-ONE-LEVEL-TABS-094: تنها درز نوشتن نام روش یک‌سطحی؛ دروازهٔ خاموش ⇒ هیچ نوشتنی.
+        services.AddScoped<Application.Shipping.Models.IShippingTypeLanguageFacts, LocalizationShippingTypeLanguageFacts>();        // TB-SHIPPING-ONE-LEVEL-TABS-094: تنها درز نوشتن نام روش یک‌سطحی؛ دروازهٔ خاموش ⇒ هیچ نوشتنی.
         services.AddScoped<IShippingOneLevelCatalogAdminWrite, ShippingOneLevelCatalogAdminWrite>();
         // TB-SHIPPING-ADMIN-FLAT-METHOD-CREATE-167: درز ایجاد روش canonical مستقل؛ پیوند قدیمی فقط
         // از کد canonical مشتق می‌شود، روش تازه غیرفعال است و هیچ ردیف کاتالوگ قدیمی ساخته نمی‌شود.

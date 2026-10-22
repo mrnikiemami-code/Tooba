@@ -310,3 +310,14 @@ migration, and a read-only Contracts IShippingTypeReader. Builds clean; 21 focus
 NOT executed inside the expired 45-minute timebox: real PostgreSQL migration/raw-SQL proof, route
 harness denials, revision/unique-code races, module-trace assertion. Worker PARTIAL only - not
 Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.
+TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R1 (worker, 2026-10-22, PARTIAL) repaired R196-01..05 in
+source: presence-aware canonical body reader (authorize -> read -> ISender), no null filtering, parameterless
+list plus a real Guid.Empty guard, whole-state store preflight with a true no-op (Revision and UpdatedAt
+preserved) and stale-identical conflict, strict registry default cardinality with a new ambiguous-language
+error, mandatory module-call tracing on the Localization read, and capability-first relocation to
+Application/Shipping secondary axes with strict whitespace code rejection, typed error codes and exact
+constraint identity matching. 43 focused tests + 26 existing structural guards pass. NOT executed: the
+in-process route/authorizer denial matrix, real ActivityListener assertions, exact-constraint negative,
+real ILanguageLookup adapter fixture, and all PostgreSQL/migration-chain/snapshot/race proof (R196-06
+PENDING). Hard timebox was exceeded (~79 min). TB-196 remains PARTIAL_PENDING_RELATIONAL_SNAPSHOT_PROOF;
+worker PARTIAL only - not Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.

@@ -307,4 +307,10 @@
   <data name="shipping_type.field_missing" xml:space="preserve">
     <value>A required operational shipping type field is missing.</value>
   </data>
+  <data name="shipping_type.default_language.ambiguous" xml:space="preserve">
+    <value>More than one content language claims to be the default.</value>
+  </data>
+  <data name="shipping_type.body.malformed" xml:space="preserve">
+    <value>The shipping type request body is not a usable JSON object.</value>
+  </data>
 </root>

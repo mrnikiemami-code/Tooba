@@ -1,5 +1,4 @@
 ﻿using Tooba.BuildingBlocks;
-using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.Fulfillment.Domain.Aggregates;
 
@@ -13,7 +12,13 @@ namespace Tooba.Fulfillment.Domain.Aggregates;
 /// مثال است و در دامنه/داده به‌عنوان seed یا enum بسته هاردکد نمی‌شود.
 /// </para>
 /// <para>
-/// کد canonical پس از ساخت تغییرناپذیر است؛ تغییر آن یعنی هویت تازه، نه نام‌گذاری دوبارهٔ بی‌صدا.
+/// کد canonical پس از ساخت تغییرناپذیر است؛ تغییر آن یعنی هویت تازه، نه نام‌گذاری دوبارهٔ بی‌صدا. کد با
+/// فاصلهٔ ابتدا/انتها یا هر نویسهٔ خارج از شکل مجاز رد می‌شود و هرگز trim/بازنویسی نمی‌شود.
+/// </para>
+/// <para>
+/// مرز خطا: کدها/پیام‌های خطای تجاری مالکیت Application/Contracts است و دامنه به Contracts وابسته نمی‌شود
+/// (گارد معماری Fulfillment این وابستگی را ممنوع می‌کند). ورودی این موجودیت همیشه از پیش‌بررسی canonical
+/// Application گذشته است؛ بررسی‌های این‌جا فقط نگهبان برنامه‌نویسی (invariant) هستند.
 /// </para>
 /// </remarks>
 public sealed class ShippingType
@@ -51,7 +56,7 @@ public sealed class ShippingType
     /// <summary>فعال‌بودن صریح؛ تعریف تازه همیشه غیرفعال ساخته می‌شود.</summary>
     public bool IsActive { get; private set; }
 
-    /// <summary>شمارهٔ بازبینی یکنوا؛ همین ستون predicate واقعی همزمانی است.</summary>
+    /// <summary>شمارهٔ بازبینی یکنوا؛ همین مقدار predicate واقعی همزمانی است.</summary>
     public long Revision { get; private set; }
 
     /// <summary>زمان ایجاد UTC.</summary>
@@ -64,13 +69,14 @@ public sealed class ShippingType
     public IReadOnlyList<ShippingTypeTranslation> Translations => _translations;
 
     /// <summary>
-    /// تعریف تازه می‌سازد: همیشه غیرفعال، بازبینی ۱ و با ترجمه‌های داده‌شده.
+    /// تعریف تازه می‌سازد: همیشه غیرفعال، بازبینی ۱ و با ترجمه‌های ازپیش‌آمادهٔ داده‌شده.
     /// </summary>
     /// <param name="id">شناسهٔ سرورساختهٔ غیرتهی.</param>
-    /// <param name="code">کد canonical.</param>
+    /// <param name="code">کد canonical ازپیش‌اعتبارسنجی‌شده.</param>
     /// <param name="sortOrder">ترتیب صریح در بازهٔ مجاز.</param>
-    /// <param name="translations">ترجمه‌های اولیه (می‌تواند فقط زبان پیش‌فرض فعال باشد).</param>
+    /// <param name="translations">ترجمه‌های ازپیش‌آماده.</param>
     /// <param name="now">زمان UTC.</param>
+    /// <exception cref="ArgumentException">نقض invariant برنامه‌نویسی؛ هرگز از مسیر کاربر عبور نمی‌کند.</exception>
     public static ShippingType Create(
         Guid id,
         string code,
@@ -79,13 +85,8 @@ public sealed class ShippingType
         DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(translations);
-
-        if (id == Guid.Empty)
-        {
-            throw Fault("shipping_type.translation.invalid");
-        }
-
-        EnsureSortOrder(sortOrder);
+        ArgumentOutOfRangeException.ThrowIfEqual(id, Guid.Empty);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sortOrder > SortOrderMaxValue ? -1 : sortOrder);
 
         var entity = new ShippingType
         {
@@ -117,30 +118,36 @@ public sealed class ShippingType
         UpdatedAt = now;
     }
 
-    /// <summary>ترجمهٔ یک زبان موجود را با مقادیر داده‌شده جایگزین می‌کند.</summary>
+    /// <summary>ترجمهٔ یک زبان موجود را با مقادیر ازپیش‌آماده جایگزین می‌کند.</summary>
     /// <param name="languageId">شناسهٔ زبان همان ردیف.</param>
-    /// <param name="name">نام غیرتهی نرمال‌شده.</param>
-    /// <param name="description">توضیح یا <c>null</c> برای پاک‌کردن همان توضیح.</param>
+    /// <param name="name">نام ازپیش‌نرمال‌شدهٔ غیرتهی.</param>
+    /// <param name="description">توضیح ازپیش‌نرمال‌شده یا <c>null</c> برای پاک‌کردن همان توضیح.</param>
     public void ReplaceTranslation(Guid languageId, string name, string? description)
     {
         var translation = _translations.FirstOrDefault(x => x.LanguageId == languageId)
-            ?? throw Fault("shipping_type.translation.invalid");
+            ?? throw new ArgumentException("shipping_type_translation_missing", nameof(languageId));
 
         translation.Replace(name, description);
     }
 
-    /// <summary>ترجمهٔ یک زبان را برای یک تعریف تازه اضافه می‌کند.</summary>
+    /// <summary>ترجمهٔ یک زبان ازپیش‌آماده را برای این تعریف اضافه می‌کند.</summary>
+    /// <param name="shippingTypeTranslationId">شناسهٔ سرورساختهٔ ردیف ترجمه.</param>
     /// <param name="languageId">شناسهٔ زبان.</param>
-    /// <param name="name">نام.</param>
-    /// <param name="description">توضیح اختیاری.</param>
-    public void AddTranslation(Guid languageId, string name, string? description)
+    /// <param name="name">نام ازپیش‌نرمال‌شده.</param>
+    /// <param name="description">توضیح ازپیش‌نرمال‌شدهٔ اختیاری.</param>
+    public void AddTranslation(
+        Guid shippingTypeTranslationId,
+        Guid languageId,
+        string name,
+        string? description)
     {
         if (_translations.Any(x => x.LanguageId == languageId))
         {
-            throw Fault("shipping_type.translation.invalid");
+            throw new ArgumentException("shipping_type_translation_duplicate", nameof(languageId));
         }
 
-        _translations.Add(ShippingTypeTranslation.Create(languageId, name, description));
+        _translations.Add(ShippingTypeTranslation.Create(
+            shippingTypeTranslationId, languageId, name, description));
     }
 
     /// <summary>آیا برای این زبان متنی ذخیره شده است.</summary>
@@ -148,29 +155,27 @@ public sealed class ShippingType
     public bool HasTranslation(Guid languageId) => _translations.Any(x => x.LanguageId == languageId);
 
     /// <summary>
-    /// کد canonical را نرمال/اعتبارسنجی می‌کند: حرف کوچک ASCII در ابتدا، سپس حروف کوچک/رقم/زیرخط، ۱..۶۴.
+    /// کد canonical را اعتبارسنجی می‌کند: حرف کوچک ASCII در ابتدا، سپس حروف کوچک/رقم/زیرخط، ۱..۶۴.
     /// </summary>
-    /// <returns>کد نرمال‌شده یا <c>null</c> وقتی نامعتبر است.</returns>
+    /// <remarks>
+    /// هیچ trim یا اصلاح خودکاری انجام نمی‌شود؛ ورودی دارای فاصلهٔ ابتدا/انتها نامعتبر است تا هویت
+    /// canonical بی‌صدا بازنویسی نشود.
+    /// </remarks>
+    /// <returns>همان کد یا <c>null</c> وقتی نامعتبر است.</returns>
     public static string? TryNormalizeCode(string? code)
     {
-        if (string.IsNullOrWhiteSpace(code))
+        if (string.IsNullOrEmpty(code) || code.Length > CodeMaxLength)
         {
             return null;
         }
 
-        var candidate = code.Trim();
-        if (candidate.Length is 0 or > CodeMaxLength)
-        {
-            return null;
-        }
-
-        var first = candidate[0];
+        var first = code[0];
         if (first < 'a' || first > 'z')
         {
             return null;
         }
 
-        foreach (var ch in candidate)
+        foreach (var ch in code)
         {
             var ok = (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '_';
             if (!ok)
@@ -179,22 +184,19 @@ public sealed class ShippingType
             }
         }
 
-        return candidate;
+        return code;
     }
 
-    private static string NormalizeCode(string code)
-        => TryNormalizeCode(code)
-           ?? throw Fault("shipping_type.code.invalid");
+    private static string NormalizeCode(string code) =>
+        TryNormalizeCode(code) ?? throw new ArgumentException("shipping_type_code_invalid", nameof(code));
 
     private static void EnsureSortOrder(int sortOrder)
     {
         if (sortOrder is < SortOrderMinValue or > SortOrderMaxValue)
         {
-            throw Fault("shipping_type.sort_order.invalid");
+            throw new ArgumentOutOfRangeException(nameof(sortOrder));
         }
     }
-
-    private static SemanticException Fault(string code) => new(new SemanticError(code));
 }
 
 /// <summary>
@@ -221,69 +223,41 @@ public sealed class ShippingTypeTranslation
     /// <summary>توضیح اختیاری.</summary>
     public string? Description { get; private set; }
 
-    /// <summary>یک ترجمهٔ تازه می‌سازد.</summary>
+    /// <summary>یک ترجمهٔ تازه با مقادیر ازپیش‌آماده می‌سازد.</summary>
+    /// <param name="shippingTypeTranslationId">شناسهٔ سرورساختهٔ ردیف ترجمه (تولید شناسه در Application/Infrastructure).</param>
     /// <param name="languageId">شناسهٔ زبان غیرتهی.</param>
-    /// <param name="name">نام غیرتهی (حداکثر ۱۲۸ نویسه).</param>
-    /// <param name="description">توضیح اختیاری (حداکثر ۵۱۲ نویسه).</param>
-    public static ShippingTypeTranslation Create(Guid languageId, string name, string? description)
+    /// <param name="name">نام ازپیش‌نرمال‌شدهٔ غیرتهی.</param>
+    /// <param name="description">توضیح ازپیش‌نرمال‌شدهٔ اختیاری.</param>
+    public static ShippingTypeTranslation Create(
+        Guid shippingTypeTranslationId,
+        Guid languageId,
+        string name,
+        string? description)
     {
-        if (languageId == Guid.Empty)
-        {
-            throw new SemanticException(new SemanticError("shipping_type.translation.invalid"));
-        }
+        ArgumentNullException.ThrowIfNull(name);
 
         return new ShippingTypeTranslation
         {
-            ShippingTypeTranslationId = UuidV7.New(),
+            ShippingTypeTranslationId = shippingTypeTranslationId,
             LanguageId = languageId,
-            Name = NormalizeName(name),
-            Description = NormalizeDescription(description),
+            Name = name,
+            Description = description,
         };
     }
 
-    /// <summary>مقادیر همین ترجمه را جایگزین می‌کند.</summary>
-    /// <param name="name">نام غیرتهی جدید.</param>
-    /// <param name="description">توضیح جدید یا <c>null</c> برای پاک‌کردن.</param>
+    /// <summary>
+    /// مقادیر همین ترجمه را جایگزین می‌کند.
+    /// </summary>
+    /// <remarks>
+    /// هر دو مقدار ازپیش canonical هستند و هم‌زمان انتساب می‌یابند؛ بنابراین هیچ انتساب نیمه‌کاره‌ای ممکن نیست.
+    /// اعتبارسنجی متن (خالی/طول/زبان) در قاعدهٔ واحد Application انجام می‌شود، نه در دامنه.
+    /// </remarks>
+    /// <param name="name">نام ازپیش‌نرمال‌شده.</param>
+    /// <param name="description">توضیح ازپیش‌نرمال‌شده یا <c>null</c> برای پاک‌کردن.</param>
     public void Replace(string name, string? description)
     {
-        Name = NormalizeName(name);
-        Description = NormalizeDescription(description);
-    }
-
-    private static string NormalizeName(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new SemanticException(new SemanticError("shipping_type.translation.invalid"));
-        }
-
-        var trimmed = name.Trim();
-        if (trimmed.Length > ShippingType.NameMaxLength)
-        {
-            throw new SemanticException(new SemanticError("shipping_type.translation.invalid"));
-        }
-
-        return trimmed;
-    }
-
-    private static string? NormalizeDescription(string? description)
-    {
-        if (description is null)
-        {
-            return null;
-        }
-
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            return null;
-        }
-
-        var trimmed = description.Trim();
-        if (trimmed.Length > ShippingType.DescriptionMaxLength)
-        {
-            throw new SemanticException(new SemanticError("shipping_type.translation.invalid"));
-        }
-
-        return trimmed;
+        ArgumentNullException.ThrowIfNull(name);
+        Name = name;
+        Description = description;
     }
 }

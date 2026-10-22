@@ -307,4 +307,10 @@
   <data name="shipping_type.field_missing" xml:space="preserve">
     <value>یک فیلد الزامی نوع ارسال عملیاتی در بدنه وجود ندارد.</value>
   </data>
+  <data name="shipping_type.default_language.ambiguous" xml:space="preserve">
+    <value>بیش از یک زبان محتوا به‌عنوان پیش‌فرض اعلام شده است.</value>
+  </data>
+  <data name="shipping_type.body.malformed" xml:space="preserve">
+    <value>بدنهٔ درخواست نوع ارسال، JSON قابل‌استفاده نیست.</value>
+  </data>
 </root>

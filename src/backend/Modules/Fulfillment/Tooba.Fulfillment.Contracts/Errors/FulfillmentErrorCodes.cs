@@ -311,6 +311,9 @@ public static class FulfillmentErrorCodes
     /// <summary>The store language configuration has no usable active default language.</summary>
     public const string ShippingTypeDefaultLanguageUnavailable = "shipping_type.default_language.unavailable";
 
+    /// <summary>More than one language claims to be the content default; the registry is ambiguous.</summary>
+    public const string ShippingTypeDefaultLanguageAmbiguous = "shipping_type.default_language.ambiguous";
+
     /// <summary>Activating a type requires a stored name for the current active default language.</summary>
     public const string ShippingTypeDefaultLanguageNameRequired = "shipping_type.default_language.name_required";
 
@@ -319,4 +322,7 @@ public static class FulfillmentErrorCodes
 
     /// <summary>A required shipping type write field was absent from the request body.</summary>
     public const string ShippingTypeTransportFieldMissing = "shipping_type.field_missing";
+
+    /// <summary>The shipping type write body was empty, unparseable or had an unusable JSON shape.</summary>
+    public const string ShippingTypeBodyMalformed = "shipping_type.body.malformed";
 }

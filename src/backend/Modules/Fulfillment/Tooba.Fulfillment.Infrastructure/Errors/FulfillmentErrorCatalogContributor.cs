@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Fulfillment.Contracts.Errors;
 
@@ -220,6 +220,12 @@ public sealed class FulfillmentErrorCatalogContributor : IErrorCatalogContributo
         D(FulfillmentErrorCodes.ShippingTypeTransportFieldMissing, ErrorClassification.Validation,
             StatusCodes.Status400BadRequest,
             "A required operational shipping type field is missing."),
+        D(FulfillmentErrorCodes.ShippingTypeDefaultLanguageAmbiguous, ErrorClassification.Business,
+            StatusCodes.Status409Conflict,
+            "More than one content language claims to be the default."),
+        D(FulfillmentErrorCodes.ShippingTypeBodyMalformed, ErrorClassification.Validation,
+            StatusCodes.Status400BadRequest,
+            "The shipping type request body is not a usable JSON object."),
     ];
 
     private static ErrorDescriptor D(

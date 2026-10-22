@@ -1,31 +1,55 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.BuildingBlocks.Results;
-using Tooba.Fulfillment.Application.ShippingTypes;
+using Tooba.Fulfillment.Application.Shipping.Models;
 using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Localization.Contracts.Ports;
 
 namespace Tooba.Fulfillment.Infrastructure.Shipping;
 
 /// <summary>
-/// حقایق زبان authoritative برای نوشتن متن نوع ارسال، روی <see cref="ILanguageLookup"/> واقعی.
+/// حقایق زبان authoritative برای نوشتن/خواندن متن نوع ارسال، روی <see cref="ILanguageLookup"/> واقعی.
 /// </summary>
 /// <remarks>
 /// <para>
 /// <see cref="ILanguageLookup.ListAsync"/> همهٔ ردیف‌های شناخته‌شده (شامل غیرفعال) را می‌آورد؛ فیلتر
-/// فعال‌بودن اینجا صریح انجام می‌شود و هیچ فهرست ثابت fa/en یا locale درخواست جای آن را نمی‌گیرد.
+/// فعال‌بودن و حل پیش‌فرض در Application انجام می‌شود و هیچ فهرست ثابت fa/en یا locale درخواست جای آن را
+/// نمی‌گیرد.
 /// </para>
 /// <para>
-/// metadata ناقص/مبهم (فعال‌بودن نامعلوم) برای نوشتن متن قابل‌اعتماد نیست و fail-closed می‌شود. رجیستری
-/// بدون پیش‌فرض فعال همان خطای پایداری است که Application بررسی می‌کند.
+/// هر فراخوانی واقعی Localization با یک span فرزند canonical
+/// <c>module.Fulfillment.Localization.ListLanguages</c> پوشیده می‌شود. برچسب‌ها هیچ شناسهٔ زبان/نوع، متن،
+/// tenant یا توکنی ندارند؛ خطا فقط با نوع استثنا ثبت می‌شود و همان استثنا دوباره پرتاب می‌شود. لغو فراخوان
+/// تغییر نمی‌کند و بدون span جایگزین/بدون‌کار منتشر می‌شود.
 /// </para>
 /// </remarks>
-public sealed class ShippingTypeLanguageFacts(ILanguageLookup languages) : IShippingTypeLanguageFacts
+public sealed class LocalizationShippingTypeLanguageFacts(
+    ILanguageLookup languages,
+    IModuleCallTracer moduleCalls) : IShippingTypeLanguageFacts
 {
+    private const string SourceModule = "Fulfillment";
+    private const string TargetModule = "Localization";
+    private const string ListOperation = "ListLanguages";
+
     /// <inheritdoc />
-    public async Task<Application.ShippingTypes.ShippingTypeLanguageFacts> ReadAsync(
+    public async Task<ShippingTypeLanguageFacts> ReadAsync(
         CancellationToken cancellationToken)
     {
-        var rows = await languages.ListAsync(cancellationToken);
+        IReadOnlyList<LanguageLookupSnapshot> rows;
+        using (var moduleCall = moduleCalls.Begin(SourceModule, TargetModule, ListOperation))
+        {
+            try
+            {
+                rows = await languages.ListAsync(cancellationToken);
+                moduleCall.SetOk();
+            }
+            catch (Exception exception)
+            {
+                moduleCall.SetError(exception);
+                throw;
+            }
+        }
+
         if (rows.Count == 0)
         {
             throw Fault(FulfillmentErrorCodes.ShippingTypeDefaultLanguageUnavailable);
@@ -34,20 +58,16 @@ public sealed class ShippingTypeLanguageFacts(ILanguageLookup languages) : IShip
         var facts = new List<ShippingTypeLanguageFact>(rows.Count);
         foreach (var row in rows)
         {
-            // metadata ناقص یعنی رجیستری برای نوشتن متن قابل‌اعتماد نیست؛ حدس نمی‌زنیم.
-            if (row.IsActive is not { } isActive)
+            // metadata ناقص یعنی رجیستری برای نوشتن متن قابل‌اعتماد نیست؛ حدس/مقدار بدلی نمی‌سازیم.
+            if (row.IsActive is not { } isActive || row.SortOrder is not { } sortOrder)
             {
                 throw Fault(FulfillmentErrorCodes.ShippingTypeLanguageInvalid);
             }
 
-            facts.Add(new ShippingTypeLanguageFact(
-                row.LanguageId,
-                isActive,
-                row.IsDefault,
-                row.SortOrder ?? int.MaxValue));
+            facts.Add(new ShippingTypeLanguageFact(row.LanguageId, isActive, row.IsDefault, sortOrder));
         }
 
-        return new Application.ShippingTypes.ShippingTypeLanguageFacts(facts);
+        return new ShippingTypeLanguageFacts(facts);
     }
 
     private static SemanticException Fault(string code) => new(new SemanticError(code));
