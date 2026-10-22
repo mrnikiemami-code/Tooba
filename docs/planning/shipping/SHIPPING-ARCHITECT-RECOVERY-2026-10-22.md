@@ -20,7 +20,13 @@
 
 
 
-## مرجع جاری: نتیجه197-R1 ارسال شد / منتظر بررسی Architect
+## مرجع جاری: تحلیل قرارداد یکپارچهٔ ویرایشگر (198) ارسال شد / منتظر بررسی Architect
+
+DOC-ONLY: تسک **TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198** روی `e33ef067` اجرا شد (هیچ کد/آزمون/داکیومنت تولیدی تغییر نکرد). خروجی: ماتریس فیلد↔API↔مالکیت، پیشنهاد یک قرارداد سند اتمیک GET/PUT برای Apply، و فهرست تصمیم‌های باز (cutoff، وضعیت/فعال‌سازی، انتخاب فروشنده برای ادمین، حامل/funding). یافتهٔ کلیدی: شش capability فعلی هر یک مستقل commit و Revision ریشه را جلو می‌برند، پس ذخیرهٔ اتمیک تصمیم۹ امروز وجود ندارد؛ نقطهٔ بازاستفادهٔ درست، جداسازی موجود `Preflight*`/`Apply*` در Domain است.
+
+[ماتریس](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198/EDITOR-FIELD-API-MATRIX.md) · [قرارداد پیشنهادی](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198/ATOMIC-EDITOR-CONTRACT-PROPOSAL.md) · [نتیجه](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198/RESULT.md). این سند مجوز پیاده‌سازی نیست؛ فقط slice بعدی A (بک‌اند سند اتمیک) پیشنهاد شده است.
+
+## مرجع قبلی: نتیجه197-R1 ارسال شد / منتظر بررسی Architect
 
 پس از review تسک197 (VERDICT: PARTIAL/REPAIR_REQUIRED) تسک **TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197-R1** روی main `cc24c9c1b84e6283c0eed15f895e6b5143621395` اجرا و نتیجه به Bridge داده شد. اصلاح فقط در دو فایل مجاز Application:
 
