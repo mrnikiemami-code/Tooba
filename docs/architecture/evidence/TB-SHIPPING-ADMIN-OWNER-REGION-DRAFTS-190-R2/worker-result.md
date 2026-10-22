@@ -13,9 +13,9 @@ Bridge-Task-Row: 80a440d4-0324-4805-aa2f-9c5f46fb2b8b
 Status: PASS
 Expected-Base-SHA: 260904c8ca5ae51c7a06af6103c1e2d215050d8f
 Base-SHA: 260904c8ca5ae51c7a06af6103c1e2d215050d8f
-Code-SHA: __CODE_SHA__
-Evidence-SHA: __EVIDENCE_SHA__
-HEAD-Origin-Parity: HEAD == origin/main == __CODE_SHA__
+Code-SHA: b29b228e2c49d042984a32ce507b35c30c17098f
+Evidence-SHA: b29b228e2c49d042984a32ce507b35c30c17098f
+HEAD-Origin-Parity: HEAD == origin/main == b29b228e2c49d042984a32ce507b35c30c17098f
 Historic-Authorization-And-Guard-Invariant: OPTION 1 implemented — the authorized single Shipping-owned staged replacement transaction and the immediate uniqueness constraints are preserved; no deferred-constraint migration was created. The obsolete "no BeginTransaction text anywhere in Shipping" assertion is replaced (not deleted) by ShippingTransactionBoundary: it proves exactly one reviewed transaction start site at ShippingAuthoringDraftDirectory::ReplaceRegionGroupsAsync (one begin, >=2 staged saves, one commit, rollback path) while still forbidding every startup-schema authority, every operational money/capacity write, and every unexpected transaction. The allowed file is NOT blanket-excluded: its content and enclosing member are checked, so other members of the same file fail. Static-limitation stated: the scanner is not a data-flow or runtime-enforcement proof; the executed PostgreSQL facts are the behavioural half.
 Unexpected-Transaction-Negative-Proof: PASS — executed negatives: transaction in another Shipping file -> UNEXPECTED_SHIPPING_TRANSACTION naming that file/member; transaction in another member of the allowed file -> same rule (no filename-only exemption); a second begin inside the reviewed member -> AUTHORING_TRANSACTION_SHAPE; stripped boundary -> AUTHORING_TRANSACTION_SHAPE.
 Allowed-File-Content-And-Startup-Migration-Negative-Proof: PASS — MigrateAsync/Database.MigrateAsync injected inside the allowed file -> SHIPPING_STARTUP_SCHEMA_AUTHORITY; production Shipping has zero startup migration authority; operational money/capacity markers -> SHIPPING_OPERATIONAL_WRITE_AUTHORITY; the operational-migration non-existence, approved-consumer set, Contracts-only observation pair, registration-only Order edge, default-OFF gate, capacity enum and legacy read-seam assertions are retained with equal or stronger coverage.
