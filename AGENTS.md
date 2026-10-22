@@ -4,9 +4,10 @@
 
 For the current Shipping Admin work, start at
 `docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md`.
-TB-189 is reviewed; TB-190-R1 is BLOCKED pending bounded guard/proof correction.
-The only next task is TB-SHIPPING-ADMIN-OWNER-REGION-DRAFTS-190-R2; await its result. Do not replay
-TB-190, issue TB-191, or resume TB-185 performance. Fetch current HEAD and verify actual task state;
+TB-190 including R1/R2 is accepted for the bounded owner/region draft foundation.
+The only next task is TB-SHIPPING-ADMIN-GROUP-RATE-DRAFTS-191; await its result.
+Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
+and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.
 
 ## Core rules
