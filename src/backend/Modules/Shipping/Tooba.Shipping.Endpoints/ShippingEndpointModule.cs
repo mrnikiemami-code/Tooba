@@ -23,6 +23,9 @@ public static class ShippingEndpointModule
         ShippingOperatingScheduleEndpoints.Map(admin);
         ShippingPackagingPolicyEndpoints.Map(admin);
         ShippingOperationalQuoteEndpoints.Map(admin);
+        // Additive TB-188 admin read: effective edition, configured default currency and ACTIVE
+        // content languages. It adds no write path, no owner selector and no new permission.
+        ShippingAuthoringContextEndpoints.Map(admin);
         return app;
     }
 

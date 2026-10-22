@@ -2461,19 +2461,19 @@
       "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3"
     },
     {
-    "module": "Shipping",
-    "structureCertified": true,
-    "lockVersion": "ARCH-COMPLETE-002",
-    "certificationState": "COMPLETE_REFERENCE_PATTERN",
-    "certificationAuthorityTask": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1",
-    "certificationHistory": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3_PROMOTED_THEN_ARCHITECT_REJECTED_AND_SUPERSEDED_BY_W3-R1",
-    "certificationCorrection": "W3 was promoted at 2605344c and then REJECTED by the Architect: section 10 of the Certify skill requires IModuleCallTracer decoration for cross-module calls, and the two Shipping outbound Contracts read adapters carried no module-call child span (a shared MediatR parent span does not substitute, and a sibling certified module's identical omission is not exemption authority). W3's 'non-blocking residual' classification is withdrawn, not preserved as debt. W3-R1 applied the authorized bounded repair: GeographyDestinationScopeValidator now wraps IGeographyLookup.GetByIdsAsync and FulfillmentShippingMethodOptionValidator wraps IShippingCatalogReader.ListAsync plus, only when that branch executes, IShippingOneLevelCanonicalMethodReader.IsCanonicalMethodBindingAsync in canonical module.Shipping.{Geography|Fulfillment}.* child spans with stable operation names, outcome/type-only-error annotation, one span per executed foreign read, and unchanged return values, branch order, exception and cancellation propagation. Behavior, wire contracts, error codes, DI lifetimes, schema and Host composition are unchanged.",
-    "certificationNote": "CERTIFIED after the W3-R1 corrective trace repair. Structure remains exactly as Structure verified in TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2 and is not re-litigated: root allowlists, forbidden root files/folders, capability-first shallow folders, exact path<->namespace, canonical /Modules/Shipping/ solution group holding the six projects once each, no stale/duplicate copies. Shipping is HTTP_OWNING with 16 module-owned /v1/admin routes, one MediatR request, one handler and one declared transport validator each (16 request + 6 wired nested validators, zero NO_VALIDATOR_REQUIRED rows); 44 declared semantic codes registered once each with neutral+fa resources; canonical ApiResponseFactory only; Contracts-only foreign edges (Geography.Contracts.Places, Fulfillment.Contracts.Shipping) plus the reviewed TB-079/TB-080 Order observation boundary. Real listener-observed traces now prove one canonical child span per executed outbound read, correct source/target/operation/correlation tags, parent/trace identity, single disposal and parent restoration, with no identifier or exception message exported. The entry is not product acceptance, not a release conclusion, and does not activate any feature, marketplace authoring, owner/region/taxonomy rule, configured-language integration or business requirement D1-D7.",
+      "module": "Shipping",
+      "structureCertified": true,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationState": "COMPLETE_REFERENCE_PATTERN",
+      "certificationAuthorityTask": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1",
+      "certificationHistory": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3_PROMOTED_THEN_ARCHITECT_REJECTED_AND_SUPERSEDED_BY_W3-R1",
+      "certificationCorrection": "W3 was promoted at 2605344c and then REJECTED by the Architect: section 10 of the Certify skill requires IModuleCallTracer decoration for cross-module calls, and the two Shipping outbound Contracts read adapters carried no module-call child span (a shared MediatR parent span does not substitute, and a sibling certified module's identical omission is not exemption authority). W3's 'non-blocking residual' classification is withdrawn, not preserved as debt. W3-R1 applied the authorized bounded repair: GeographyDestinationScopeValidator now wraps IGeographyLookup.GetByIdsAsync and FulfillmentShippingMethodOptionValidator wraps IShippingCatalogReader.ListAsync plus, only when that branch executes, IShippingOneLevelCanonicalMethodReader.IsCanonicalMethodBindingAsync in canonical module.Shipping.{Geography|Fulfillment}.* child spans with stable operation names, outcome/type-only-error annotation, one span per executed foreign read, and unchanged return values, branch order, exception and cancellation propagation. Behavior, wire contracts, error codes, DI lifetimes, schema and Host composition are unchanged.",
+      "certificationNote": "CERTIFIED after the W3-R1 corrective trace repair. Structure remains exactly as Structure verified in TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2 and is not re-litigated: root allowlists, forbidden root files/folders, capability-first shallow folders, exact path<->namespace, canonical /Modules/Shipping/ solution group holding the six projects once each, no stale/duplicate copies. Shipping is HTTP_OWNING with 16 module-owned /v1/admin routes, one MediatR request, one handler and one declared transport validator each (16 request + 6 wired nested validators, zero NO_VALIDATOR_REQUIRED rows); 44 declared semantic codes registered once each with neutral+fa resources; canonical ApiResponseFactory only; Contracts-only foreign edges (Geography.Contracts.Places, Fulfillment.Contracts.Shipping) plus the reviewed TB-079/TB-080 Order observation boundary. Real listener-observed traces now prove one canonical child span per executed outbound read, correct source/target/operation/correlation tags, parent/trace identity, single disposal and parent restoration, with no identifier or exception message exported. Those counts describe the W3-R1 baseline as certified at that time; the later additive TB-188 authoring-context read is recorded separately in postCertificationAdditions and does not retroactively change this certification. The entry is not product acceptance, not a release conclusion, and does not activate any feature, marketplace authoring, owner/region/taxonomy rule, configured-language integration or business requirement D1-D7.",
       "projects": [
         {
           "projectName": "Tooba.Shipping.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Shipping.Application has no root .cs: the capability folders Operations/Packaging/Rates/Scheduling carry Commands/Queries/Ports/ReadModels/Validation as secondary axes plus the cross-capability Validation/ seam; zero per-use-case leaf folders; path<->namespace exact.",
+          "rootAllowlistJustification": "Shipping.Application has no root .cs: the capability folders Operations/Packaging/Rates/Scheduling plus the TB-188 Authoring read capability carry Commands/Queries/Ports/ReadModels/Models/Validation as secondary axes plus the cross-capability Validation/ seam; zero per-use-case leaf folders; path<->namespace exact.",
           "forbiddenRootFiles": [],
           "forbiddenTopLevelFolders": [
             "Commands",
@@ -2509,7 +2509,7 @@
         {
           "projectName": "Tooba.Shipping.Infrastructure",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Shipping.Infrastructure has no root .cs: module DI lives under DependencyInjection/ShippingModule.cs, the capability adapters under Operations/Packaging/Rates/Scheduling, and the EF model plus the CLI-applied migrations under Persistence/ and Persistence/Migrations/; path<->namespace exact.",
+          "rootAllowlistJustification": "Shipping.Infrastructure has no root .cs: module DI lives under DependencyInjection/ShippingModule.cs, the capability adapters under Operations/Packaging/Rates/Scheduling plus the TB-188 Authoring Contracts adapter, and the EF model plus the CLI-applied migrations under Persistence/ and Persistence/Migrations/; path<->namespace exact.",
           "forbiddenRootFiles": [
             "ShippingModule.cs",
             "ShippingDbContext.cs"
@@ -2538,11 +2538,18 @@
           "forbiddenTopLevelFolders": []
         }
       ],
-    "structureAuthorityTask": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2",
-    "structureHandoffState": "READY_FOR_CERTIFY",
-    "certificationAuthorityTask": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1",
-    "certificationHistory": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3_PROMOTED_THEN_ARCHITECT_REJECTED_AND_SUPERSEDED_BY_W3-R1",
-    "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1/RESULT.md"
+      "structureAuthorityTask": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2",
+      "structureHandoffState": "READY_FOR_CERTIFY",
+      "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1/RESULT.md",
+      "postCertificationAdditions": {
+        "task": "TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188",
+        "date": "2026-10-22",
+        "kind": "ADDITIVE_AUTHORIZED_FEATURE_NOT_RECERTIFICATION",
+        "summary": "One read-only admin endpoint GET /v1/admin/shipping-services/authoring-context (Shipping.Endpoints/Admin/ShippingAuthoringContextEndpoints.cs) plus one Application Authoring capability (Queries/Models/Ports), one Infrastructure Contracts adapter (Localization.Contracts + StoreContext.Contracts + platform edition context) and one explicitly classified availability code shipping.authoring.configuration_unavailable (Platform/503/Error). The 44 legacy shipping.* codes keep 400/Business/Warning and no existing route, handler, validator, contract, schema or behavior changed.",
+        "guardAmendments": "ShippingModuleStructureGuardTests.ApplicationCapabilities gained Authoring and the composition mapper count moved from 5 to 6 with the new mapper asserted by name; ShippingRequestClassificationTests gained the single NO_VALIDATOR_REQUIRED row with source-proven absence (no validator type, no route parameters, no query/body binding); ShippingErrorCatalogAndResourcesTests distinguishes the preserved 44-code legacy set from the one explicit 503.",
+        "certificationImpact": "NONE. The W3-R1 certification in this entry remains the historical whole-module baseline; this addition does not claim recertification, production acceptance or D1-D7 completion.",
+        "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188/RESULT.md"
+      }
     }
   ],
   "uncertifiedHttpOwningModules": [],

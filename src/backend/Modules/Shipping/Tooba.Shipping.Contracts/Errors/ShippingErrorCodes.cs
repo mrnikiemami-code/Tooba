@@ -146,4 +146,11 @@ public static class ShippingErrorCodes
 
     /// <summary>طرف پرداخت‌کنندهٔ حمل نامعتبر است (مقدار خارج از قرارداد پایدار).</summary>
     public const string PackagingFreightPayerModeInvalid = "shipping.packaging.freight_payer_mode.invalid";
+
+    /// <summary>
+    /// زمینهٔ نویسندگی Shipping قابل ساخت نیست: حالت نصب/ارز پیش‌فرض resolve نشده یا ناسازگار است،
+    /// هیچ زبان محتوای فعالی وجود ندارد، پیش‌فرض فعال یکتا نیست، یا metadata الزامی مالک ناقص است.
+    /// این یک خطای دسترس‌پذیری مصرف‌کننده است و هیچ زبان/ارز/حالتی را فعال یا حدس نمی‌زند.
+    /// </summary>
+    public const string AuthoringConfigurationUnavailable = "shipping.authoring.configuration_unavailable";
 }

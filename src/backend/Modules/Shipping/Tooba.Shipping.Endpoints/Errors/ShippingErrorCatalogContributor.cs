@@ -71,6 +71,17 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
         D(ShippingErrorCodes.PackagingPolicyOptionMismatch, "The packaging policy does not match the requested method."),
         D(ShippingErrorCodes.PackagingPolicyAmbiguous, "Multiple active packaging policies make this method ambiguous."),
         D(ShippingErrorCodes.PackagingFreightPayerModeInvalid, "The freight payer mode is invalid."),
+        // TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188: the ONE explicitly classified availability
+        // code of this module. Every legacy shipping.* code above keeps its historical
+        // 400/Business/Warning contract unchanged; this one is a consumer-readiness failure and is
+        // declared Platform/503/Error instead of being inferred from its name.
+        new(
+            Code: ShippingErrorCodes.AuthoringConfigurationUnavailable,
+            Classification: ErrorClassification.Platform,
+            HttpStatus: StatusCodes.Status503ServiceUnavailable,
+            LocalizationKey: ShippingErrorCodes.AuthoringConfigurationUnavailable,
+            Severity: ErrorSeverity.Error,
+            SafeTitleFallback: "Shipping authoring configuration is unavailable."),
     ];
 
     private static ErrorDescriptor D(string code, string fallback) =>

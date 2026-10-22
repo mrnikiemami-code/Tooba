@@ -29,5 +29,9 @@
     <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Contracts\Tooba.Fulfillment.Contracts.csproj" />
     <!-- Destination identity for the quote request (Contracts-to-Contracts, same as the module itself). -->
     <ProjectReference Include="..\..\Geography\Tooba.Geography.Contracts\Tooba.Geography.Contracts.csproj" />
+    <!-- TB-188: the authoring-context read proves its real Contracts seams (Localization language
+         lookup, StoreContext default currency) with controlled fakes; no foreign implementation. -->
+    <ProjectReference Include="..\..\Localization\Tooba.Localization.Contracts\Tooba.Localization.Contracts.csproj" />
+    <ProjectReference Include="..\..\StoreContext\Tooba.StoreContext.Contracts\Tooba.StoreContext.Contracts.csproj" />
   </ItemGroup>
 </Project>

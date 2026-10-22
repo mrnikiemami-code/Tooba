@@ -6,12 +6,14 @@ using Tooba.BuildingBlocks;
 using Tooba.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Shipping.Application.Packaging.Ports;
+using Tooba.Shipping.Application.Authoring.Ports;
 using Tooba.Shipping.Application.Rates.Ports;
 using Tooba.Shipping.Application.Scheduling.Ports;
 using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Contracts.Operations;
 using Tooba.Shipping.Infrastructure.Operations;
+using Tooba.Shipping.Infrastructure.Authoring;
 using Tooba.Shipping.Infrastructure.Packaging;
 using Tooba.Shipping.Infrastructure.Persistence;
 using Tooba.Shipping.Infrastructure.Rates;
@@ -85,6 +87,11 @@ public sealed class ShippingModule : IToobaModule
         // Method identity stays Fulfillment-owned: an option code is never hardcoded here, it is looked up
         // in the real shipping catalog through the Fulfillment Contracts read seam.
         services.AddScoped<IShippingMethodOptionValidator, FulfillmentShippingMethodOptionValidator>();
+        // TB-188 authoring context: the admin panel must read the effective edition, configured default
+        // currency and ACTIVE content languages from their real owners (platform edition context,
+        // StoreContext.Contracts, Localization.Contracts) instead of treating preview fixtures as store
+        // configuration. Read-only, Contracts-only, and no cache/fallback of its own.
+        services.AddScoped<IShippingAuthoringContextSource, ShippingAuthoringContextSource>();
         services.AddDbContext<ShippingDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

@@ -46,7 +46,15 @@ public sealed class ShippingErrorCatalogAndResourcesTests
     [Fact]
     public void Every_registered_descriptor_keeps_the_legacy_http_contract()
     {
-        foreach (var descriptor in new ShippingErrorCatalogContributor().Contribute())
+        // TB-188 added exactly one explicitly classified availability code; the 44 legacy codes are
+        // NOT re-classified and must keep their historical 400/Business/Warning contract.
+        var legacy = new ShippingErrorCatalogContributor()
+            .Contribute()
+            .Where(descriptor => descriptor.Code != ShippingErrorCodes.AuthoringConfigurationUnavailable)
+            .ToArray();
+        Assert.Equal(44, legacy.Length);
+
+        foreach (var descriptor in legacy)
         {
             Assert.Equal(StatusCodes.Status400BadRequest, descriptor.HttpStatus);
             Assert.Equal(ErrorClassification.Business, descriptor.Classification);
@@ -54,6 +62,24 @@ public sealed class ShippingErrorCatalogAndResourcesTests
             Assert.Equal(descriptor.Code, descriptor.LocalizationKey);
             Assert.False(string.IsNullOrWhiteSpace(descriptor.SafeTitleFallback), descriptor.Code);
         }
+    }
+
+    [Fact]
+    public void The_authoring_context_failure_is_the_only_explicit_503_platform_code()
+    {
+        var descriptors = new ShippingErrorCatalogContributor().Contribute();
+
+        var descriptor = Assert.Single(
+            descriptors,
+            candidate => candidate.Code == ShippingErrorCodes.AuthoringConfigurationUnavailable);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, descriptor.HttpStatus);
+        Assert.Equal(ErrorClassification.Platform, descriptor.Classification);
+        Assert.Equal(ErrorSeverity.Error, descriptor.Severity);
+        Assert.Equal(descriptor.Code, descriptor.LocalizationKey);
+        Assert.False(string.IsNullOrWhiteSpace(descriptor.SafeTitleFallback));
+
+        // No other shipping.* code silently becomes unavailable: the explicit classification is bounded.
+        Assert.Single(descriptors, candidate => candidate.HttpStatus != StatusCodes.Status400BadRequest);
     }
 
     [Fact]

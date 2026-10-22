@@ -136,4 +136,7 @@
   <data name="shipping.packaging.freight_payer_mode.invalid" xml:space="preserve">
     <value>طرف پرداخت‌کنندهٔ حمل نامعتبر است.</value>
   </data>
+  <data name="shipping.authoring.configuration_unavailable" xml:space="preserve">
+    <value>تنظیمات نویسندگی ارسال در دسترس نیست.</value>
+  </data>
 </root>

@@ -29,9 +29,9 @@ public sealed class ShippingModuleStructureGuardTests
         "Tooba.Shipping.Endpoints",
     ];
 
-    /// <summary>Capability branches proven by the W0/W2 capability map.</summary>
+    /// <summary>Capability branches proven by the W0/W2 capability map, plus the TB-188 additive read.</summary>
     private static readonly string[] ApplicationCapabilities =
-        ["Operations", "Packaging", "Rates", "Scheduling", "Validation"];
+        ["Authoring", "Operations", "Packaging", "Rates", "Scheduling", "Validation"];
 
     /// <summary>Secondary (technical) axes are allowed only underneath a capability branch.</summary>
     private static readonly string[] ApplicationSecondaryAxes =
@@ -222,14 +222,17 @@ public sealed class ShippingModuleStructureGuardTests
         Assert.Contains("namespace Tooba.Shipping.Endpoints;", composition, StringComparison.Ordinal);
         Assert.Contains("public static class ShippingEndpointModule", composition, StringComparison.Ordinal);
 
-        // Behavior preserved verbatim by the extraction: one admin group, five capability mappers.
+        // Behavior preserved verbatim by the extraction: one admin group, six capability mappers.
+        // The sixth (Authoring) is the additive TB-188 admin read; the count is pinned so a mapper
+        // cannot be added or dropped silently, and each mapper name is asserted explicitly.
         Assert.Equal(1, CountOccurrences(composition, "app.MapGroup(\"/v1/admin\")"));
-        Assert.Equal(5, CountOccurrences(composition, "Endpoints.Map(admin);"));
+        Assert.Equal(6, CountOccurrences(composition, "Endpoints.Map(admin);"));
         Assert.Contains("ShippingRateCoverageEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingMethodFinancialStatusEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingOperatingScheduleEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingPackagingPolicyEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingOperationalQuoteEndpoints.Map(admin);", composition, StringComparison.Ordinal);
+        Assert.Contains("ShippingAuthoringContextEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("IErrorCatalogContributor, ShippingErrorCatalogContributor", composition, StringComparison.Ordinal);
         Assert.Contains("IErrorResourceSet, ShippingErrorResourceSet", composition, StringComparison.Ordinal);
 

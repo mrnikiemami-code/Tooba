@@ -18,7 +18,16 @@ public sealed class LanguageLookupBridge : ILanguageLookup
     {
         var rows = await _directory.ListAsync(cancellationToken);
         return rows
-            .Select(x => new LanguageLookupSnapshot(x.LanguageId, x.Code, x.Culture, x.UrlPrefix, x.IsDefault))
+            .Select(x => new LanguageLookupSnapshot(x.LanguageId, x.Code, x.Culture, x.UrlPrefix, x.IsDefault)
+            {
+                // Every value is projected from the authoritative Localization row. Activation is the
+                // real row flag, never default-true inference.
+                IsActive = x.IsActive,
+                Direction = x.Direction,
+                DisplayName = x.DisplayName,
+                NativeName = x.NativeName,
+                SortOrder = x.SortOrder,
+            })
             .ToList();
     }
 }

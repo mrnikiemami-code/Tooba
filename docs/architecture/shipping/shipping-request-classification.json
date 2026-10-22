@@ -3,6 +3,12 @@
   "lockVersion": "ARCH-COMPLETE-002",
   "task": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3",
   "scope": "Endpoint-reachable MediatR request universe of the existing Shipping backend baseline, independently re-derived from shipped sources. This manifest is not a feature authorization: it classifies transport input only.",
+  "amendment": {
+    "task": "TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188",
+    "date": "2026-10-22",
+    "scope": "One additive authorized GET (admin authoring context) is classified here. No previous row changed classification, validator, route or handler.",
+    "noValidatorProvenance": "GetShippingAuthoringContextQuery is constructed with zero arguments in a literal, parameterless route; the endpoint binds no route value, no query string and no body, so there is no caller-controlled transport input for a validator to own. The guard proves absence (no IValidator<T>, no route template parameters, no request Query/body access in the handler body) instead of trusting the label."
+  },
   "derivation": {
     "routeSource": "src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/**/*.cs (group.Map* call sites)",
     "dispatchSource": "handler bodies: sender.Send(new <Request>(...))",
@@ -10,7 +16,7 @@
     "handlerSource": "IRequestHandler<Request, ...> implementations in Tooba.Shipping.Application",
     "validatorSource": "AbstractValidator<T> implementations in Tooba.Shipping.Application",
     "routePrefix": "/v1/admin",
-    "routeOwnership": "ShippingEndpointModule.MapShippingEndpoints -> MapGroup(\"/v1/admin\") -> 5 capability mappers",
+    "routeOwnership": "ShippingEndpointModule.MapShippingEndpoints -> MapGroup(\"/v1/admin\") -> 6 capability mappers",
     "guard": "src/backend/Modules/Shipping/Tooba.Shipping.Tests/Certification/ShippingRequestClassificationTests.cs"
   },
   "transportFailureContract": "FluentValidation failure is rendered by ApiResponseFactory as HTTP 400 validation.failed with the declared shipping.validation.* / per-capability validation child codes; no endpoint maps transport failure by message parsing.",
@@ -241,6 +247,17 @@
       ],
       "transportRule": "non-empty Guid route id + route serviceCode + boolean activation flag",
       "reason": "Route identity and the activation flag are caller-controlled transport input."
+    },
+    {
+      "request": "GetShippingAuthoringContextQuery",
+      "route": "GET /v1/admin/shipping-services/authoring-context",
+      "handler": "GetShippingAuthoringContextHandler",
+      "classification": "NO_VALIDATOR_REQUIRED",
+      "inputs": [
+        "authorization:fulfillment.view:authorizer-seam"
+      ],
+      "transportRule": "literal parameterless route; the handler reads no route value, no query string and no body and constructs new GetShippingAuthoringContextQuery() with zero arguments",
+      "reason": "Effective edition, default currency and content languages are resolved server-side from trusted context and Contracts; there is no caller-controlled transport input, so a validator would own nothing. The classification is proven by the guard, not asserted from intent."
     }
   ],
   "nestedTransportValidators": [
@@ -251,10 +268,12 @@
     "ShippingOperatingScheduleWriteRequestValidator",
     "ShippingOperationalQuoteEvaluationRequestValidator"
   ],
-  "noValidatorRequiredRequests": [],
+  "noValidatorRequiredRequests": [
+    "GetShippingAuthoringContextQuery"
+  ],
   "totals": {
-    "shippedRoutes": 16,
-    "endpointReachableRequests": 16,
+    "shippedRoutes": 17,
+    "endpointReachableRequests": 17,
     "requestValidators": 16,
     "nestedTransportValidators": 6,
     "declaredValidators": 22

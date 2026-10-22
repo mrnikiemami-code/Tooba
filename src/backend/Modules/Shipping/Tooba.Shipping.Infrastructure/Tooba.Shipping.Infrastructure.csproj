@@ -20,6 +20,12 @@
          Contracts (IShippingCatalogReader), never its DbContext. No Fulfillment project references
          Shipping, so this stays acyclic and one-directional. -->
     <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Contracts\Tooba.Fulfillment.Contracts.csproj" />
+    <!-- Contracts-only seam: configured content languages come from the Localization Contracts lookup
+         (no Localization.Application/Infrastructure/Domain type and no cross-schema join). -->
+    <ProjectReference Include="..\..\Localization\Tooba.Localization.Contracts\Tooba.Localization.Contracts.csproj" />
+    <!-- Contracts-only seam: the authoritative default currency is the platform-resolved store
+         commerce context, never a Shipping-owned mode/currency default. -->
+    <ProjectReference Include="..\..\StoreContext\Tooba.StoreContext.Contracts\Tooba.StoreContext.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Shipping.Application\Tooba.Shipping.Application.csproj" />
     <ProjectReference Include="..\Tooba.Shipping.Domain\Tooba.Shipping.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />

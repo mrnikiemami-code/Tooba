@@ -28,10 +28,11 @@ namespace Tooba.Shipping.Tests.Certification;
 public sealed class ShippingRequestClassificationTests
 {
     private const string ValidatorRequired = "VALIDATOR_REQUIRED";
+    private const string NoValidatorRequired = "NO_VALIDATOR_REQUIRED";
     private const string ManifestRelativePath = "docs/architecture/shipping/shipping-request-classification.json";
 
-    /// <summary>Exact count of the certified endpoint-reachable request universe (W3 gate).</summary>
-    private const int CertifiedRequestCount = 16;
+    /// <summary>Exact count of the certified endpoint-reachable request universe (W3 gate + TB-188 additive read).</summary>
+    private const int CertifiedRequestCount = 17;
 
     [Fact]
     public void Shipped_route_universe_equals_the_classified_manifest_exactly()
@@ -78,21 +79,64 @@ public sealed class ShippingRequestClassificationTests
     }
 
     [Fact]
-    public void Every_reachable_request_has_one_handler_and_the_declared_validator()
+    public void Every_reachable_request_has_one_handler_and_the_declared_transport_ownership()
     {
         var rows = ManifestRows();
         var handlers = ApplicationHandlers();
         var validators = ApplicationValidators();
+        var shipped = ShippedRoutes();
 
         foreach (var row in rows)
         {
-            Assert.Equal(ValidatorRequired, row.Classification);
             Assert.True(handlers.ContainsKey(row.Request), $"{row.Request} has no IRequestHandler");
             Assert.Equal(row.Handler, handlers[row.Request]);
 
-            Assert.True(validators.TryGetValue(row.Request, out var actual), $"{row.Request} has no AbstractValidator");
-            Assert.Equal(new[] { row.Validator }, actual!);
+            if (row.Classification == ValidatorRequired)
+            {
+                Assert.True(validators.TryGetValue(row.Request, out var actual), $"{row.Request} has no AbstractValidator");
+                Assert.Equal(new[] { row.Validator }, actual!);
+                continue;
+            }
+
+            // NO_VALIDATOR_REQUIRED is only legal when a validator would own nothing. Prove the
+            // absence from real sources instead of trusting the label: no validator type exists,
+            // the route template carries no parameter, and the handler binds no route/query/body.
+            Assert.Equal(NoValidatorRequired, row.Classification);
+            Assert.Null(row.Validator);
+            Assert.False(validators.ContainsKey(row.Request), $"{row.Request} declares NO_VALIDATOR_REQUIRED but has a validator");
+            Assert.DoesNotContain("{", row.Path, StringComparison.Ordinal);
+
+            var route = shipped.Single(candidate => candidate.Verb == row.Verb && candidate.Path == row.Path);
+            Assert.DoesNotContain("context.Request.Query", route.HandlerSource, StringComparison.Ordinal);
+            Assert.DoesNotContain("ReadFromJsonAsync", route.HandlerSource, StringComparison.Ordinal);
+            Assert.DoesNotContain("[FromRoute]", route.HandlerSource, StringComparison.Ordinal);
+            Assert.DoesNotContain("[FromQuery]", route.HandlerSource, StringComparison.Ordinal);
+            Assert.Contains($"new {row.Request}()", route.HandlerSource, StringComparison.Ordinal);
         }
+    }
+
+    [Fact]
+    public void No_validator_required_rows_are_declared_in_the_manifest_and_nowhere_else()
+    {
+        var manifest = ManifestDocument();
+        var declared = manifest.RootElement.GetProperty("noValidatorRequiredRequests")
+            .EnumerateArray()
+            .Select(item => item.GetString()!)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+        var fromRows = ManifestRows()
+            .Where(row => row.Classification == NoValidatorRequired)
+            .Select(row => row.Request)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(declared, fromRows);
+
+        // The single authorized additive read is the only exception; every other row keeps a validator.
+        Assert.Equal(new[] { "GetShippingAuthoringContextQuery" }, declared);
+        Assert.Equal(17, ManifestRows().Count);
+        Assert.Equal(16, ManifestRows().Count(row => row.Classification == ValidatorRequired));
     }
 
     [Fact]
@@ -137,6 +181,13 @@ public sealed class ShippingRequestClassificationTests
             Assert.True(requestType.IsAssignableTo(typeof(IBaseRequest)), $"{row.Request} is not a MediatR request");
 
             var resolved = provider.GetService(typeof(IValidator<>).MakeGenericType(requestType));
+            if (row.Classification == NoValidatorRequired)
+            {
+                // A real CQRS foundation must not silently invent a validator for this row either.
+                Assert.Null(resolved);
+                continue;
+            }
+
             Assert.NotNull(resolved);
             Assert.Equal(row.Validator, resolved!.GetType().Name);
             Assert.Contains(
@@ -238,7 +289,7 @@ public sealed class ShippingRequestClassificationTests
                 item.GetProperty("route").GetString()!.Split(' ', 2)[1],
                 item.GetProperty("handler").GetString()!,
                 item.GetProperty("classification").GetString()!,
-                item.GetProperty("validator").GetString()!))
+                item.TryGetProperty("validator", out var validator) ? validator.GetString() : null))
             .ToArray();
     }
 
@@ -371,7 +422,7 @@ public sealed class ShippingRequestClassificationTests
         throw new InvalidOperationException("repo root not found");
     }
 
-    private sealed record ManifestRow(string Request, string Verb, string Path, string Handler, string Classification, string Validator);
+    private sealed record ManifestRow(string Request, string Verb, string Path, string Handler, string Classification, string? Validator);
 
     private sealed record ShippedRoute(string Verb, string Path, string Request, string Handler, string HandlerSource);
 }
