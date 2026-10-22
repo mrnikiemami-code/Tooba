@@ -44,6 +44,21 @@ public sealed class ShippingAuthoringSelectedArea
     /// <summary>گرهٔ این انتخاب.</summary>
     public ShippingDestinationNode Node => new(NodeKind, NodeId);
 
+    /// <summary>
+    /// گروه مالک را بدون تغییر هویت ردیف جابه‌جا می‌کند. انتقال یک انتخاب بین گروه‌ها یک UPDATE است،
+    /// نه حذف+درج؛ پس یکتایی <c>(draft_id, node_kind, node_id)</c> در هیچ لحظه‌ای نقض نمی‌شود.
+    /// </summary>
+    /// <param name="groupId">گروه مقصد که به همین پیش‌نویس تعلق دارد.</param>
+    internal void Retarget(Guid groupId)
+    {
+        if (groupId == Guid.Empty)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRegionPayloadInvalid));
+        }
+
+        GroupId = groupId;
+    }
+
     internal static ShippingAuthoringSelectedArea Create(Guid draftId, Guid groupId, ShippingDestinationNode node)
     {
         if (!node.IsValid)
@@ -95,29 +110,31 @@ public sealed class ShippingAuthoringRegionGroup
         };
 
     /// <summary>
-    /// ترتیب و انتخاب‌های این گروه را جایگزین می‌کند و ردیف‌های هم‌هویت موجود را دوباره استفاده
-    /// می‌کند تا جایگزینی یک درخت، حذف/درج یکتایی‌شکن در همان SaveChanges نسازد.
+    /// ترتیب و انتخاب‌های این گروه را جایگزین می‌کند. هویت ردیف‌های موجود حفظ می‌شود تا جایگزینی یک
+    /// درخت، حذف/درج یکتایی‌شکن در همان SaveChanges نسازد.
     /// </summary>
-    /// <param name="order">ترتیب جدید.</param>
-    /// <param name="nodes">انتخاب‌های جدید.</param>
-    internal void Apply(int order, IReadOnlyList<ShippingDestinationNode> nodes)
+    /// <param name="order">ترتیب جدید (پایانی یا موقت در مرحلهٔ اول).</param>
+    /// <param name="areas">انتخاب‌های جدید با هویت ردیف پایدار.</param>
+    internal void ReplaceAreas(int order, IReadOnlyList<ShippingAuthoringSelectedArea> areas)
     {
         Order = order;
-        var existing = _areas.ToDictionary(area => area.Node);
-        var next = new List<ShippingAuthoringSelectedArea>(nodes.Count);
-        foreach (var node in nodes)
-        {
-            if (existing.Remove(node, out var kept))
-            {
-                next.Add(kept);
-                continue;
-            }
-
-            next.Add(ShippingAuthoringSelectedArea.Create(DraftId, GroupId, node));
-        }
-
         _areas.Clear();
-        _areas.AddRange(next);
+        _areas.AddRange(areas);
+    }
+
+    /// <summary>ترتیب صریح را بدون دست‌زدن به انتخاب‌ها می‌نشاند.</summary>
+    /// <param name="order">ترتیب جدید.</param>
+    internal void SetOrder(int order) => Order = order;
+
+    /// <summary>
+    /// انتخاب‌های این گروه را از فهرست جدا می‌کند و برمی‌گرداند. برای بازچینش کل درخت لازم است:
+    /// هر انتخاب دقیقاً یک گروه مالک دارد و جابه‌جایی بین گروه‌ها با همان ردیف انجام می‌شود.
+    /// </summary>
+    internal IReadOnlyList<ShippingAuthoringSelectedArea> DetachAreas()
+    {
+        var detached = _areas.ToArray();
+        _areas.Clear();
+        return detached;
     }
 }
 
@@ -238,37 +255,145 @@ public sealed class ShippingAuthoringDraft
     /// <param name="now">زمان UTC.</param>
     public void ReplaceRegionGroups(IReadOnlyList<ShippingAuthoringRegionGroupInput> regionGroups, DateTimeOffset now)
     {
+        var plan = PreflightRegionGroups(regionGroups);
+        ApplyRegionGroups(plan, staged: false, now);
+    }
+
+    /// <summary>
+    /// ترتیب موقت مرحلهٔ اول جایگزینی. یکتایی <c>(draft_id, group_order)</c> فوری است، پس یک جابه‌جایی
+    /// ترتیب معتبر (A@0,B@1 → B@0,A@1) هیچ UPDATE اول مجاز ندارد؛ مرحلهٔ اول همهٔ گروه‌های باقی‌مانده را
+    /// به بازهٔ موقتِ بدون‌برخورد می‌برد و مرحلهٔ دوم ترتیب نهایی صفرپایه را می‌نشاند.
+    /// </summary>
+    public const int StagedOrderBase = 1_000_000;
+
+    /// <summary>
+    /// یک ورودی برنامهٔ جایگزینی: گروه موجود (یا شناسهٔ گروه تازه) و انتخاب‌های مقصد آن.
+    /// </summary>
+    /// <param name="Existing">گروه موجود همین پیش‌نویس؛ تهی برای گروه تازه.</param>
+    /// <param name="NewGroupId">شناسهٔ قطعی گروه تازه.</param>
+    /// <param name="Nodes">انتخاب‌های مقصد.</param>
+    public sealed record RegionGroupAssignment(
+        ShippingAuthoringRegionGroup? Existing,
+        Guid? NewGroupId,
+        IReadOnlyList<ShippingDestinationNode> Nodes);
+
+    /// <summary>
+    /// کل درخت پیشنهادی را <b>بدون هیچ تغییر</b> روی aggregate می‌سنجد: شکل، عضویت، یکتایی شناسهٔ
+    /// گروه‌های باقی‌مانده و یکتایی گره‌ها. هر نقصی پیش از اولین Apply/Order/Revision/timestamp بالا
+    /// می‌آید تا رد شدن درخواست هیچ ردیف tracked را تغییر نداده باشد.
+    /// </summary>
+    /// <param name="regionGroups">درخت پیشنهادی.</param>
+    public IReadOnlyList<RegionGroupAssignment> PreflightRegionGroups(
+        IReadOnlyList<ShippingAuthoringRegionGroupInput> regionGroups)
+    {
         ArgumentNullException.ThrowIfNull(regionGroups);
         ValidateShape(regionGroups);
 
-        var existing = _regionGroups.ToDictionary(group => group.GroupId);
-        var retained = new List<ShippingAuthoringRegionGroup>(regionGroups.Count);
-        for (var index = 0; index < regionGroups.Count; index++)
+        var byId = _regionGroups.ToDictionary(group => group.GroupId);
+        var seenGroups = new HashSet<Guid>();
+        var seenNodes = new HashSet<ShippingDestinationNode>();
+        var plan = new List<RegionGroupAssignment>(regionGroups.Count);
+
+        foreach (var input in regionGroups)
         {
-            var input = regionGroups[index];
-            ShippingAuthoringRegionGroup group;
+            ShippingAuthoringRegionGroup? existing = null;
+            Guid? newGroupId = null;
             if (input.GroupId is { } groupId)
             {
-                // یک شناسهٔ گروه که به این پیش‌نویس تعلق ندارد، هرگز نمی‌تواند دوباره وصل شود؛
-                // درخواست رد می‌شود تا حذف/جایگزینی خاموش رخ ندهد.
-                if (!existing.Remove(groupId, out group!))
+                // همان شناسه دو بار در یک درخواست، یا شناسه‌ای که به این پیش‌نویس تعلق ندارد، هرگز
+                // دوباره وصل نمی‌شود.
+                if (!seenGroups.Add(groupId) || !byId.TryGetValue(groupId, out existing))
                 {
                     throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRegionPayloadInvalid));
                 }
             }
             else
             {
-                group = ShippingAuthoringRegionGroup.Create(DraftId, UuidV7.New(), index);
+                newGroupId = UuidV7.New();
             }
 
-            group.Apply(index, input.Selections);
-            retained.Add(group);
+            foreach (var node in input.Selections)
+            {
+                // یک گره دقیقاً یک بار در کل پیش‌نویس: ردیف‌های انتخاب با (draft_id, node_kind, node_id)
+                // یکتا هستند و اینجا پیش از هر نوشتنی رد می‌شود.
+                if (!seenNodes.Add(node))
+                {
+                    throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRegionSelectionOverlap));
+                }
+            }
+
+            plan.Add(new RegionGroupAssignment(existing, newGroupId, input.Selections));
         }
 
+        return plan;
+    }
+
+    /// <summary>
+    /// برنامهٔ پیش‌سنجی‌شده را اعمال می‌کند. هیچ اعتبارسنجی‌ای اینجا انجام نمی‌شود؛ ورودی باید از
+    /// <see cref="PreflightRegionGroups"/> آمده باشد.
+    /// </summary>
+    /// <param name="plan">برنامهٔ معتبر.</param>
+    /// <param name="staged">آیا ترتیب موقت مرحلهٔ اول نوشته شود.</param>
+    /// <param name="now">زمان UTC.</param>
+    public void ApplyRegionGroups(
+        IReadOnlyList<RegionGroupAssignment> plan,
+        bool staged,
+        DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        var existingAreas = new Dictionary<ShippingDestinationNode, ShippingAuthoringSelectedArea>();
+        foreach (var group in _regionGroups)
+        {
+            foreach (var area in group.DetachAreas())
+            {
+                existingAreas[area.Node] = area;
+            }
+        }
+
+        var groups = new List<ShippingAuthoringRegionGroup>(plan.Count);
+        for (var index = 0; index < plan.Count; index++)
+        {
+            var assignment = plan[index];
+            var group = assignment.Existing
+                ?? ShippingAuthoringRegionGroup.Create(DraftId, assignment.NewGroupId!.Value, 0);
+
+            var next = new List<ShippingAuthoringSelectedArea>(assignment.Nodes.Count);
+            foreach (var node in assignment.Nodes)
+            {
+                if (existingAreas.Remove(node, out var kept))
+                {
+                    kept.Retarget(group.GroupId);
+                    next.Add(kept);
+                }
+                else
+                {
+                    next.Add(ShippingAuthoringSelectedArea.Create(DraftId, group.GroupId, node));
+                }
+            }
+
+            group.ReplaceAreas(staged ? StagedOrderBase + index : index, next);
+            groups.Add(group);
+        }
+
+        // گروه‌ها/انتخاب‌هایی که در درخت جدید نیستند از aggregate حذف می‌شوند؛ حذف واقعی در همان
+        // SaveChanges انجام می‌شود و هیچ گروه دیگری را از مالک دیگر جابه‌جا نمی‌کند.
         _regionGroups.Clear();
-        _regionGroups.AddRange(retained);
+        _regionGroups.AddRange(groups);
         Revision = checked(Revision + 1);
         UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// ترتیب نهایی صفرپایه را در مرحلهٔ دوم جایگزینی می‌نشاند. تنها Order تغییر می‌کند؛ هویت،
+    /// انتخاب‌ها، بازبینی و زمان دست‌نخورده می‌مانند.
+    /// </summary>
+    public void ApplyFinalRegionGroupOrder()
+    {
+        for (var index = 0; index < _regionGroups.Count; index++)
+        {
+            _regionGroups[index].SetOrder(index);
+        }
     }
 
     private void SetInitialGroups(IReadOnlyList<ShippingAuthoringRegionGroupInput> regionGroups)
@@ -277,7 +402,11 @@ public sealed class ShippingAuthoringDraft
         for (var index = 0; index < regionGroups.Count; index++)
         {
             var group = ShippingAuthoringRegionGroup.Create(DraftId, UuidV7.New(), index);
-            group.Apply(index, regionGroups[index].Selections);
+            group.ReplaceAreas(
+                index,
+                regionGroups[index].Selections
+                    .Select(node => ShippingAuthoringSelectedArea.Create(DraftId, group.GroupId, node))
+                    .ToArray());
             _regionGroups.Add(group);
         }
     }

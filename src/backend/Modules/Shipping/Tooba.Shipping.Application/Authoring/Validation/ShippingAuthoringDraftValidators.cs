@@ -43,19 +43,28 @@ public sealed class CreateShippingAuthoringDraftCommandValidator : AbstractValid
             .NotEmpty()
             .WithErrorCode(ShippingValidationCodes.ServiceCodeRequired)
             .MaximumLength(ShippingAuthoringDraft.ServiceCodeMaxLength)
-            .WithErrorCode(ShippingValidationCodes.ServiceCodeTooLong);
+            .WithErrorCode(ShippingValidationCodes.ServiceCodeTooLong)
+            .When(x => x.Request is not null);
 
         RuleFor(x => x.Request.OptionCode)
             .MaximumLength(ShippingAuthoringDraft.OptionCodeMaxLength)
             .WithErrorCode(ShippingValidationCodes.OptionCodeTooLong)
             .When(x => x.Request?.OptionCode is not null);
 
+        // R190-01: "required" must not sit behind the collection's own null guard. FluentValidation
+        // applies a trailing When(...) to EVERY preceding rule in the chain, so the old placement also
+        // skipped NotNull and an omitted/null JSON collection reached the handler. The required rule is
+        // now unconditional (guarded only by the parent Request), and size/shape rules are separate and
+        // run only for a present collection.
         RuleFor(x => x.Request.RegionGroups)
             .NotNull()
             .WithErrorCode(ShippingAuthoringValidationCodes.RegionGroupsRequired)
-            .Must(groups => groups.Count <= ShippingAuthoringDraft.MaxRegionGroups)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.RegionGroups)
+            .Must(groups => groups!.Count <= ShippingAuthoringDraft.MaxRegionGroups)
             .WithErrorCode(ShippingAuthoringValidationCodes.RegionGroupsTooMany)
-            .Must(ShippingAuthoringShape.IsWellFormed)
+            .Must(groups => ShippingAuthoringShape.IsWellFormed(groups!))
             .WithErrorCode(ShippingAuthoringValidationCodes.RegionSelectionInvalid)
             .When(x => x.Request?.RegionGroups is not null);
     }
@@ -78,14 +87,20 @@ public sealed class ReplaceShippingAuthoringDraftRegionsCommandValidator
 
         RuleFor(x => x.Request.ExpectedRevision)
             .GreaterThan(0)
-            .WithErrorCode(ShippingAuthoringValidationCodes.ExpectedRevisionInvalid);
+            .WithErrorCode(ShippingAuthoringValidationCodes.ExpectedRevisionInvalid)
+            .When(x => x.Request is not null);
 
+        // R190-01: same unconditional required rule as create; [] stays a valid incomplete draft, but a
+        // missing/null collection is a shape failure before any handler, reference read or database work.
         RuleFor(x => x.Request.RegionGroups)
             .NotNull()
             .WithErrorCode(ShippingAuthoringValidationCodes.RegionGroupsRequired)
-            .Must(groups => groups.Count <= ShippingAuthoringDraft.MaxRegionGroups)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.RegionGroups)
+            .Must(groups => groups!.Count <= ShippingAuthoringDraft.MaxRegionGroups)
             .WithErrorCode(ShippingAuthoringValidationCodes.RegionGroupsTooMany)
-            .Must(ShippingAuthoringShape.IsWellFormed)
+            .Must(groups => ShippingAuthoringShape.IsWellFormed(groups!))
             .WithErrorCode(ShippingAuthoringValidationCodes.RegionSelectionInvalid)
             .When(x => x.Request?.RegionGroups is not null);
     }

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
@@ -138,23 +139,94 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
                 new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
         }
 
+        // R190-02: the complete identity/shape plan is proven BEFORE the first Apply/Order/Revision
+        // mutation, so a rejected replacement leaves this very aggregate and tracker untouched.
+        IReadOnlyList<ShippingAuthoringDraft.RegionGroupAssignment> plan;
         try
         {
-            draft.ReplaceRegionGroups(regionGroups, DateTimeOffset.UtcNow);
+            plan = draft.PreflightRegionGroups(regionGroups);
+        }
+        catch (SemanticException exception)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(exception.Error);
+        }
+
+        // R190-03: group_order is an immediate UNIQUE index, so a valid swap/reorder has no legal first
+        // ordinary UPDATE. The relational path stages a temporary non-conflicting order first and only
+        // then writes the final zero-based order. Both stages run inside ONE Shipping-owned transaction
+        // with one commit, and every failure/cancellation rolls the whole replacement back.
+        var relational = context.Database.IsRelational();
+        IDbContextTransaction? transaction = null;
+        try
+        {
+            if (relational)
+            {
+                transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+            }
+
+            draft.ApplyRegionGroups(plan, staged: relational, DateTimeOffset.UtcNow);
             await context.SaveChangesAsync(cancellationToken);
+
+            if (relational)
+            {
+                draft.ApplyFinalRegionGroupOrder();
+                await context.SaveChangesAsync(cancellationToken);
+                await transaction!.CommitAsync(cancellationToken);
+            }
         }
         catch (DbUpdateConcurrencyException)
         {
+            await RollbackAsync(transaction, cancellationToken);
             return Result.Failure<ShippingAuthoringDraft>(
                 new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
         }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception, "authoring_selected_areas"))
         {
+            await RollbackAsync(transaction, cancellationToken);
             return Result.Failure<ShippingAuthoringDraft>(
                 new SemanticError(ShippingErrorCodes.AuthoringRegionSelectionOverlap));
         }
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception, "authoring_region_groups"))
+        {
+            await RollbackAsync(transaction, cancellationToken);
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringRegionPayloadInvalid));
+        }
+        catch
+        {
+            await RollbackAsync(transaction, CancellationToken.None);
+            throw;
+        }
+        finally
+        {
+            if (transaction is not null)
+            {
+                await transaction.DisposeAsync();
+            }
+        }
 
         return Result.Success(draft);
+    }
+
+    /// <summary>
+    /// تراکنش را برمی‌گرداند و هیچ تغییر نیمه‌کاره‌ای را در tracker همین context باقی نمی‌گذارد؛
+    /// بنابراین یک SaveChanges بعدی در همان context نمی‌تواند ویرایش رد‌شده را منتشر کند.
+    /// </summary>
+    private async Task RollbackAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken)
+    {
+        if (transaction is not null)
+        {
+            try
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+            catch (InvalidOperationException)
+            {
+                // The provider already rolled the transaction back (e.g. a failed statement).
+            }
+        }
+
+        context.ChangeTracker.Clear();
     }
 
     private IQueryable<ShippingAuthoringDraft> Scoped(ShippingDraftOwner key)

@@ -35,6 +35,15 @@ public sealed class CreateShippingAuthoringDraftHandler(
         ArgumentNullException.ThrowIfNull(request.Owner);
         ArgumentNullException.ThrowIfNull(request.Request);
 
+        // Defense in depth for direct (non-HTTP) invocation: the HTTP pipeline rejects a missing
+        // collection as a required-field failure, and this guard refuses an explicit null instead of
+        // treating it as an empty draft or letting a NullReferenceException become the answer.
+        if (request.Request.RegionGroups is null)
+        {
+            return Result.Failure<ShippingAuthoringDraftItem>(
+                new SemanticError(ShippingErrorCodes.AuthoringRegionPayloadInvalid));
+        }
+
         var groups = ShippingAuthoringDraftWorkflow.ToDomainGroups(request.Request.RegionGroups);
         var prepared = await ShippingAuthoringDraftWorkflow.PrepareAsync(
             request.Request.ServiceCode,
@@ -96,6 +105,14 @@ public sealed class ReplaceShippingAuthoringDraftRegionsHandler(
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.Owner);
         ArgumentNullException.ThrowIfNull(request.Request);
+
+        // Same defense-in-depth guard as create: an explicit null collection is never interpreted as
+        // "replace with nothing" and never reaches the reference reads.
+        if (request.Request.RegionGroups is null)
+        {
+            return Result.Failure<ShippingAuthoringDraftItem>(
+                new SemanticError(ShippingErrorCodes.AuthoringRegionPayloadInvalid));
+        }
 
         var existing = await directory.GetAsync(request.Owner, request.DraftId, cancellationToken);
         if (existing.IsFailure)

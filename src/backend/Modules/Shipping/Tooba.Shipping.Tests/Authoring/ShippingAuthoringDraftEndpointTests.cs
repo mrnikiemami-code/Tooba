@@ -17,6 +17,7 @@ using Tooba.BuildingBlocks.Security;
 using Tooba.Shipping.Application.Authoring.Commands;
 using Tooba.Shipping.Application.Authoring.Models;
 using Tooba.Shipping.Application.Authoring.Ports;
+using Tooba.Shipping.Application.Authoring.Validation;
 using Tooba.Shipping.Application.Rates.Ports;
 using Tooba.Shipping.Contracts.Authoring;
 using Tooba.Shipping.Contracts.Errors;
@@ -130,6 +131,71 @@ public sealed class ShippingAuthoringDraftEndpointTests
         Assert.Empty(list.GetProperty("drafts").EnumerateArray());
     }
 
+    [Fact]
+    public async Task A_missing_region_group_collection_is_rejected_before_dispatch_and_persists_nothing()
+    {
+        using var harness = Harness.Create("draft-http-d");
+
+        // R190-01: the property is OMITTED — a non-nullable C# annotation is not a JSON contract.
+        var (omittedStatus, _, omitted) = await harness.SendAsync(
+            HttpMethod.Post,
+            AdminDrafts,
+            "{\"serviceCode\":\"post\",\"optionCode\":null}");
+        Assert.Equal(StatusCodes.Status400BadRequest, omittedStatus);
+        Assert.Equal("validation.failed", omitted.GetProperty("errorCode").GetString());
+        Assert.Contains(
+            omitted.GetProperty("errors").EnumerateObject().SelectMany(property => property.Value.EnumerateArray()),
+            code => code.GetString() == ShippingAuthoringValidationCodes.RegionGroupsRequired);
+
+        // The property is present but explicitly null: same required failure, never "empty draft".
+        var (nullStatus, _, nullBody) = await harness.SendAsync(
+            HttpMethod.Post,
+            AdminDrafts,
+            "{\"serviceCode\":\"post\",\"optionCode\":null,\"regionGroups\":null}");
+        Assert.Equal(StatusCodes.Status400BadRequest, nullStatus);
+        Assert.Equal("validation.failed", nullBody.GetProperty("errorCode").GetString());
+        Assert.Contains(
+            nullBody.GetProperty("errors").EnumerateObject().SelectMany(property => property.Value.EnumerateArray()),
+            code => code.GetString() == ShippingAuthoringValidationCodes.RegionGroupsRequired);
+
+        // Neither malformed POST reached a handler or the store.
+        Assert.Equal(0, harness.DraftDispatched);
+        var (_, _, emptyList) = await harness.SendAsync(HttpMethod.Get, AdminDrafts);
+        Assert.Empty(emptyList.GetProperty("drafts").EnumerateArray());
+
+        // An explicit empty array stays a valid incomplete draft (draft CRUD, not coverage).
+        var (createdStatus, _, created) = await harness.SendAsync(
+            HttpMethod.Post,
+            AdminDrafts,
+            "{\"serviceCode\":\"post\",\"optionCode\":null,\"regionGroups\":[]}");
+        Assert.Equal(StatusCodes.Status201Created, createdStatus);
+        var draftId = created.GetProperty("draftId").GetGuid();
+        Assert.Equal(1, harness.DraftDispatched);
+
+        // The same required rule guards PUT, and a rejected replacement keeps the stored revision/tree.
+        var (putOmittedStatus, _, putOmitted) = await harness.SendAsync(
+            HttpMethod.Put,
+            $"{AdminDrafts}/{draftId}",
+            "{\"expectedRevision\":1}");
+        Assert.Equal(StatusCodes.Status400BadRequest, putOmittedStatus);
+        Assert.Equal("validation.failed", putOmitted.GetProperty("errorCode").GetString());
+        Assert.Contains(
+            putOmitted.GetProperty("errors").EnumerateObject().SelectMany(property => property.Value.EnumerateArray()),
+            code => code.GetString() == ShippingAuthoringValidationCodes.RegionGroupsRequired);
+
+        var (putNullStatus, _, putNull) = await harness.SendAsync(
+            HttpMethod.Put,
+            $"{AdminDrafts}/{draftId}",
+            "{\"expectedRevision\":1,\"regionGroups\":null}");
+        Assert.Equal(StatusCodes.Status400BadRequest, putNullStatus);
+        Assert.Equal("validation.failed", putNull.GetProperty("errorCode").GetString());
+
+        Assert.Equal(1, harness.DraftDispatched);
+        var (_, _, after) = await harness.SendAsync(HttpMethod.Get, $"{AdminDrafts}/{draftId}");
+        Assert.Equal(1, after.GetProperty("revision").GetInt64());
+        Assert.Empty(after.GetProperty("regionGroups").EnumerateArray());
+    }
+
     private static string CreateBody(Guid administrativeAreaId) => JsonSerializer.Serialize(
         new ShippingAuthoringDraftCreateRequest(
             "post",
@@ -175,6 +241,8 @@ public sealed class ShippingAuthoringDraftEndpointTests
         public int SellerCalls { get; private set; }
 
         public bool DispatchedHasDraftWrite => _counter.DraftWrite;
+
+        public int DraftDispatched => _counter.DraftDispatchCount;
 
         public static Harness Create(
             string database,
@@ -310,6 +378,8 @@ public sealed class ShippingAuthoringDraftEndpointTests
     private sealed class DispatchCounter
     {
         public bool DraftWrite { get; set; }
+
+        public int DraftDispatchCount { get; set; }
     }
 
     private sealed class DispatchCountingBehavior<TRequest, TResponse>(DispatchCounter counter)
@@ -324,6 +394,7 @@ public sealed class ShippingAuthoringDraftEndpointTests
             if (request is CreateShippingAuthoringDraftCommand or ReplaceShippingAuthoringDraftRegionsCommand)
             {
                 counter.DraftWrite = true;
+                counter.DraftDispatchCount++;
             }
 
             return await next();
