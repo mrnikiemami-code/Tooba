@@ -1,5 +1,14 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 198 بسته / فقط199 — 2026-10-23
+
+تحلیل198 در main 66db0f405e039fcb6a9a53ab9137c93094a4124d بررسی و با اصلاحات پذیرفته شد؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198/ARCHITECT-REVIEW.md). src تغییر نکرده؛196/197 بسته می‌مانند. تنها تسک بعد **TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199**، parent198: GET/PUT سند اتمیک draft موجود در Shipping،45دقیقه/stop35،noUI/noSchema/noQuote. تا نتیجه همین تسک،تسک جایگزین صادر نشود.
+
+اصلاحات الزامی198: یک COMMIT نه یک SaveChanges؛ reorder به دو مرحله در transaction موجود نیاز دارد. Applyهای فعلی هرکدام revision می‌افزایند؛ mutationcore مشترک و یک advance لازم است، reset ممنوع. preflight گروه جدید+rates/titles باید prospective و بدون mutation tracked باشد. bound متن presentation=200/2000/title200 از کد واقعی؛128/512 متعلق بهtypecatalog. nullable top-level schedule/settings clear مجاز نیست؛omitted=preserve؛translation patch inactive حفظ شود. type wrapper explicitnullclear،nestednewgroupsserverids،No fallible postcommit lookup.
+
+199 اجازه اشتراک boundary تراکنش module-owned موجود با همان یک begin site را دارد؛guard فقط exactmember جدید وnegativeproof به‌روز شود،نهfileexemption. DB disposable55432 فقط؛noHost/solution/Fulfillment run/sharedDB. meaningful focused API/preflight/noop/newgroup/reorder/race/providerfailure/cancellation tests؛یک fullShippingrun پس ازfocusedpass در صورت وقت. cutoff/status/carrier/funding/arbitraryadminsellerselector وatomicfullcreate هنوز باز،proposal نه مجوزاستنتاج. بعد199 review سپس frontendadapter/UI وliveacceptance؛TB185paused/defaultOFF/PendingAllocation محفوظ.
+
+
 ## مرجع جاری 2026-10-23:197 بسته شد / فقط198
 
 197-R1 درcode`0b0a10758f000ead3846d0869b9be3225fe6b658`،evidence`cca76737c8096b9dff6cbd54c93a4ff478007ddb`،main`51ac960375a6b4783100050372b2aa5e63c3bbdb` برایpostcommitfix/providerfault/samecontext/DIparent **ACCEPT**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197-R1/ARCHITECT-REVIEW.md). TB197backendassignment وTB196catalogبسته‌اند؛626قبلی+11/31فیلترجدیدگزارشWorker،نه rerunArchitect ونه لزوماً42تستdistinct. دوcorrectionBudgetانحرافتاریخی‌می‌ماند؛proofloopصرفPARTIALممنوع.

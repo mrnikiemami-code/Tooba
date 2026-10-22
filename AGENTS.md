@@ -40,8 +40,11 @@ this is a recovery pointer, not a new implementation authorization.
 
 TB196 bounded catalog and TB197 owner-local type-assignment backend are Architect-accepted through197-R1.
 Read latest recovery/reviews for exact evidence/process limits; no merchant UI/quote/release acceptance.
-Only next issued task: TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198 (parent197-R1),
-documentation-only concrete atomic editor integration contract. No src/runtime/DB/frontend changes.
+TB198 source analysis accepted with corrections; read its ARCHITECT-REVIEW.md before implementation.
+Only next issued task: TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199 (parent198).
+Existing-draft atomic GET/PUT only: one root revision, prospective preflight, one own COMMIT using staged order as needed.
+No frontend/schema/quote/activation; cutoff/status/full-create and arbitrary admin seller selection remain open.
+Do not issue or replay another task while199 is unfinished. Latest recovery is authoritative.
 Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
 
 ## Core rules
