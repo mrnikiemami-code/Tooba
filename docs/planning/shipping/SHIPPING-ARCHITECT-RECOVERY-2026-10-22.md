@@ -415,3 +415,13 @@ defect; snapshot agreement is likewise recorded as UNPROVEN rather than drift. T
 was corrected (fa known-inactive, ar the only active default) and its exact test passes. Container removed, 55436
 verified free. TB-196 is BLOCKED pending an authorized migration repair decision; worker BLOCKED is not Architect
 ACCEPT and grants no repair or scope authority; STOP_FOR_ARCHITECT; no automatic next task.
+
+R6 classification note (worker, same result): the legacy manifest comparison was finally classified with explicit
+normalization: 3 SUBSTANTIVE legacy discrepancies, all pre-existing and none involving a shipping_type object —
+(1) index ix_outbox_messages_pending is declared in the model/snapshot/designer but no migration ever creates it;
+(2) ck_shipping_methods_code_canonical and (3) ck_shipping_methods_option_code_canonical exist in the migrated
+schema from the hand-written 20261015120000 raw SQL but are not declared in the model. Plus 5 migration-time
+DEFAULT differences and 10 constraint/index naming differences, reported explicitly instead of ignored. Gate 1D
+therefore blocks regardless of the migration defect, and the teardown Down comparison is a no-op equality (the
+latest migration never applied), not Down proof. Snapshot-model agreement remains UNPROVEN (the differ over an
+initialized ModelSnapshot.Model reported 209 operation-level differences under a non-design-time path).
