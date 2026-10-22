@@ -12,8 +12,8 @@ TB-194 independent freight/calculation draft settings are accepted (authoring on
 TB-195 type ownership analysis is accepted with Architect corrections (rules section 26).
 TB-196 catalog implementation is PARTIAL / NOT ACCEPTED; relational/snapshot proof remains open.
 TB-196-R1 remains PARTIAL; its bounded Domain regressions are repaired and accepted through R2.
-TB-196-R3 provides partial API evidence; three proof claims require test-only correction.
-The only next task is TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R4; await its result.
+TB-196-R3 API evidence is accepted through R4; registry/tracing/real-DI/relational gates remain open.
+The only next task is TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R5; await its result.
 Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.
