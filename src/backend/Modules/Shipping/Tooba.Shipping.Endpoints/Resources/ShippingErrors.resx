@@ -195,4 +195,10 @@
   <data name="shipping.authoring.method_settings_invalid" xml:space="preserve">
     <value>The freight payment timing and calculation mode must both be selected explicitly.</value>
   </data>
+  <data name="shipping.authoring.type_assignment_invalid" xml:space="preserve">
+    <value>The draft shipping type selection must be a real catalog id or an explicit clear.</value>
+  </data>
+  <data name="shipping.authoring.type_selection_unavailable" xml:space="preserve">
+    <value>The selected shipping type is unknown or not active.</value>
+  </data>
 </root>

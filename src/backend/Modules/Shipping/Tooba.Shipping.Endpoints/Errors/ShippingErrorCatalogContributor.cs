@@ -141,6 +141,8 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
         D(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid, "The weekly schedule must contain exactly seven distinct ISO weekdays."),
         D(ShippingErrorCodes.AuthoringScheduleDayInvalid, "A weekly schedule day is not a valid working or closed day."),
         D(ShippingErrorCodes.AuthoringMethodSettingsInvalid, "The method draft settings are not a valid freight payment and calculation choice."),
+        D(ShippingErrorCodes.AuthoringTypeAssignmentInvalid, "The draft shipping type selection is not a valid catalog reference."),
+        D(ShippingErrorCodes.AuthoringTypeSelectionUnavailable, "The selected shipping type is unknown or not active."),
     ];
 
     private static ErrorDescriptor D(string code, string fallback) =>

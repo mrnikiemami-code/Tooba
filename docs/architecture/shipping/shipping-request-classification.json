@@ -489,6 +489,54 @@
       ],
       "transportRule": "route draft id non-empty, expectedRevision positive, and BOTH selections explicitly present and defined (a missing field must never deserialize into the enum zero Manual/Prepaid); owner, seller, edition, tenant, currency, language and activation authority are never bound from transport, and the two choices stay independent",
       "reason": "A whole untrusted pair of independent enum choices and the shared optimistic-concurrency token are caller-controlled; an absent choice is a shape failure before any tracked write, and an unknown numeric value is a rejected payload rather than a coerced default."
+    },
+    {
+      "request": "GetShippingAuthoringTypeChoicesQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-types",
+        "GET /v1/seller/shipping-services/authoring-types"
+      ],
+      "handler": "GetShippingAuthoringTypeChoicesHandler",
+      "classification": "NO_VALIDATOR_REQUIRED",
+      "inputs": [
+        "authorization:fulfillment.view:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "the literal authoring-types route binds no route value, no query string and no body; the owner scope is produced by executed server authorization",
+      "reason": "The shared active-catalog read has no caller-controlled transport input for a validator to own: the request is constructed with the authorized scope only, so the exemption is proven by an empty input universe rather than by trusting a label."
+    },
+    {
+      "request": "GetShippingAuthoringDraftTypeAssignmentQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/method-type",
+        "GET /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/method-type"
+      ],
+      "handler": "GetShippingAuthoringDraftTypeAssignmentHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingAuthoringDraftTypeAssignmentQueryValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "authorization:fulfillment.view:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "the route draft id must be non-empty; the draft is only ever sought INSIDE the owner-filtered scope, so a foreign or invented id returns the same safe not-found and performs ZERO foreign catalog lookup",
+      "reason": "One caller-supplied route id is projected into the read request. An unconfigured draft needs no foreign read, and an inactive/missing stored reference is reported truthfully instead of being cleared or substituted."
+    },
+    {
+      "request": "ReplaceShippingAuthoringDraftTypeAssignmentCommand",
+      "routes": [
+        "PUT /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/method-type",
+        "PUT /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/method-type"
+      ],
+      "handler": "ReplaceShippingAuthoringDraftTypeAssignmentHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ReplaceShippingAuthoringDraftTypeAssignmentCommandValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "body:expectedRevision:required-positive:untrusted-caller",
+        "body:shippingTypeId:required-presence-explicit-null-clears:untrusted-caller",
+        "authorization:fulfillment.manage:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "route draft id non-empty, expectedRevision positive, the shippingTypeId member REQUIRED to be present (a missing key is rejected by JsonRequired before any handler, an explicit null is the only clear form) and never Guid.Empty; owner, seller, edition, tenant, definition code/text, currency, language and activation authority are never bound from transport",
+      "reason": "An omitted selection must never be silently coerced into a clear or into a default, and the shared optimistic-concurrency token is caller-controlled; the stale check wins before any foreign catalog lookup, including identical and clearing requests."
     }
   ],
   "nestedTransportValidators": [
@@ -502,14 +550,15 @@
   "noValidatorRequiredRequests": [
     "GetShippingAuthoringContextQuery",
     "GetShippingAuthoringOwnerQuery",
-    "GetShippingAuthoringDraftsQuery"
+    "GetShippingAuthoringDraftsQuery",
+    "GetShippingAuthoringTypeChoicesQuery"
   ],
     "totals": {
-    "shippedRoutes": 43,
-    "endpointReachableRequests": 30,
-    "requestValidators": 27,
+    "shippedRoutes": 49,
+    "endpointReachableRequests": 33,
+    "requestValidators": 29,
     "nestedTransportValidators": 6,
-    "declaredValidators": 33
+    "declaredValidators": 35
   },
   "amendments": [
     {
@@ -535,6 +584,14 @@
       "date": "2026-10-22",
       "scope": "Two additive authorized requests (GET/PUT owner weekly operating schedule) are classified here, each reachable through one admin and one seller route. No previous row changed classification, validator, route or handler.",
       "scheduleProvenance": "The schedule is attached ONCE to the draft/method and shared by all its region groups. The body carries NO owner, tenant, seller, mode, geography, currency, language or per-group field. The explicit timezone is validated by the canonical ShippingScheduleRules.NormalizeTimeZone (extracted from the legacy schedule aggregate with identical codes/behavior); resolvability is a domain preflight rule, not a foreign timezone catalog. Absent schedule = UNCONFIGURED, never seven implicit working days; an all-closed week is seven real rows and is distinct."
+    },
+    {
+      "task": "TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197",
+      "date": "2026-10-22",
+      "scope": "Three additive authorized requests (GET active type choices, GET current draft type assignment, PUT/clear assignment) are classified here, each reachable through one admin and one seller route. No previous row changed classification, validator, route or handler. The literal authoring-types route was proved reachable without colliding with the existing shipping-services/{serviceCode}/... templates.",
+      "catalogProvenance": "The type catalog stays Fulfillment-owned and is read ONLY through Fulfillment.Contracts.Shipping.IShippingTypeReader behind the Shipping-owned Application port IShippingTypeCatalogReader; no definition text/code/order/active flag is copied, cached or administered here. Only the nullable shipping_type_id VALUE is stored on the draft root (no cross-schema FK/join/navigation).",
+      "presenceProvenance": "The PUT body marks shippingTypeId [JsonRequired]: an omitted key fails as shipping.validation.body_invalid in the existing body reader BEFORE any handler, so omission can never be read as a clear; an explicit null is the ONLY clear form and needs no foreign read. Guid.Empty is rejected by the transport validator and again by the domain guard, and a non-positive revision keeps the existing expected_revision_invalid code.",
+      "noValidatorProvenance": "GetShippingAuthoringTypeChoicesQuery is constructed with zero arguments after the admin/seller owner gate on a literal parameterless route; the endpoint binds no route value, no query string and no body, so there is no caller-controlled transport input for a validator to own."
     }
   ]
 }

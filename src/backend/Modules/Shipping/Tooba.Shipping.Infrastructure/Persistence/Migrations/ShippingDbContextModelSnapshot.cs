@@ -477,6 +477,10 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("service_code");
 
+                    b.Property<Guid?>("ShippingTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_type_id");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -502,6 +506,8 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_authoring_drafts_revision_positive", "revision > 0");
 
                             t.HasCheckConstraint("ck_authoring_drafts_service_code_canonical", "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+
+                            t.HasCheckConstraint("ck_authoring_drafts_shipping_type_nonempty", "shipping_type_id IS NULL OR shipping_type_id <> '00000000-0000-0000-0000-000000000000'::uuid");
 
                             t.HasCheckConstraint("ck_authoring_drafts_tenant_not_blank", "owner_tenant_id IS NULL OR char_length(owner_tenant_id) > 0");
                         });

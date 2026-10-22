@@ -411,6 +411,12 @@ public sealed class ShippingDbContext : DbContext
                 table.HasCheckConstraint(
                     "ck_authoring_drafts_tenant_not_blank",
                     "owner_tenant_id IS NULL OR char_length(owner_tenant_id) > 0");
+                // TB-197 optional root-level type reference. NULL is the explicit UNCONFIGURED state; a
+                // zero guid is never a legal reference (it is not "no selection"), so no writer can store
+                // one. It is a plain value: no cross-schema FK, navigation or join exists.
+                table.HasCheckConstraint(
+                    "ck_authoring_drafts_shipping_type_nonempty",
+                    "shipping_type_id IS NULL OR shipping_type_id <> '00000000-0000-0000-0000-000000000000'::uuid");
             });
             entity.HasKey(x => x.DraftId);
             entity.Property(x => x.DraftId).ValueGeneratedNever();
@@ -418,6 +424,9 @@ public sealed class ShippingDbContext : DbContext
             entity.Property(x => x.OwnerTenantId).HasMaxLength(ShippingDraftOwner.TenantIdMaxLength);
             entity.Property(x => x.ServiceCode).HasMaxLength(ShippingAuthoringDraft.ServiceCodeMaxLength).IsRequired();
             entity.Property(x => x.OptionCode).HasMaxLength(ShippingAuthoringDraft.OptionCodeMaxLength);
+            // Optional owner-local reference to the shared Fulfillment type definition. A value, never a
+            // relationship: no foreign key, navigation or cross-schema read is created by this mapping.
+            entity.Property(x => x.ShippingTypeId);
             // A real relational concurrency predicate: the UPDATE that advances the revision is only
             // applied while the stored revision still equals the value read for this request.
             entity.Property(x => x.Revision).IsConcurrencyToken();

@@ -1,6 +1,14 @@
 ﻿# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
-## مرجع جاری: کاتالوگ196 بسته شد / فقط197
+## مرجع جاری: نتیجه197 ارسال شد / منتظر بررسی Architect
+
+Worker تسک **TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197** (Parent=196-R13-R1) را روی main `3f05917bd0e71297bdd1fd973ad8dcd8b6687f93` اجرا و نتیجه را به Bridge داد. سه‌گانهٔ یک use case (choices/current/replace) روی شش route admin+seller با مجوزهای موجود، root-only nullable `shipping_type_id` + CHECK مختص Shipping، خواندن Contracts-only از `IShippingTypeReader` پشت `IShippingTypeCatalogReader` با یک span فرزند برای هر خواندن واقعی، presence صریح (`omitted` رد، `null` تنها clear)، active-only PUT، no-op واقعی، stale 409 قبل از I/O خارجی و خواندن صادقانهٔ inactive/missing. [نتیجه](../../architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197/RESULT.md).
+
+اجراهای واقعی: focused 9/9 و کل Shipping.Tests 626/626 روی postgres دورریختنی `127.0.0.1:55432`؛ container حذف و پورت آزاد. correctionها (۷ مورد، خارج از سقف «یک correction») و تغییر include مسیر نوشتن برای readback کامل در RESULT صادقانه ثبت شده‌اند. classification از route/handler/validator واقعی به‌روز شد (49/33/29) بدون promotion/certification.
+
+قدم بعد فقط review وی‌کت این نتیجه است؛ هیچ task بعدی/UI/quote/activation/deployment مجاز نیست. کاتالوگ196 همچنان بستهٔ محدود است و این slice آن را recertify نمی‌کند. TB185 متوقف و default-OFF/PendingAllocation دست‌نخورده. پایین تاریخچه است.
+
+## مرجع قبلی: کاتالوگ196 بسته شد / فقط197
 
 پس ازبررسی R13-R1 درcode`b1d88ac59463f7786e856048bf02ec99baf96223` وmain`f04a13dd44a95e2ff40d1db3d39a77c6e25d3cf4`، سهproof اصلاح‌شده **ACCEPT** و کل196 برای boundedFulfillmentcatalog/API/Contracts/schema/storage **بسته شد**؛ [بررسی/lineage](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13-R1/ARCHITECT-REVIEW.md). WorkerPARTIALبابتcorrection/reset/trace-rerun همچنانتاریخچهصادقانه است؛3PASS گزارشWorker وsourceبررسی‌شده،نه اجرایمجددArchitect. هیچدلیل برایتکرارکاتالوگ/proofloopsنیست. اینacceptance باUI/merchantDB/quote/release/AMSCrecertificationیکی نیست.
 

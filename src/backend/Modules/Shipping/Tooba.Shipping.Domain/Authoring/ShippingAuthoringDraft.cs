@@ -301,6 +301,17 @@ public sealed class ShippingAuthoringDraft
     /// </summary>
     public ShippingAuthoringMethodSettings? MethodSettings { get; private set; }
 
+    /// <summary>
+    /// انتخاب اختیاری نوع ارسال برای کل این روش: <b>یک</b> ارجاع به تعریف مشترک Fulfillment روی ریشهٔ
+    /// پیش‌نویس، نه برای هر گروه/ردیف/زبان/برنامه. تهی یعنی صریحاً <b>انتخاب‌نشده</b>.
+    /// </summary>
+    /// <remarks>
+    /// این فقط یک شناسهٔ پایدار است: هیچ کد، متن چندزبانه، ترتیب، وضعیت فعال یا تعریف کاتالوگ در
+    /// Shipping کپی نمی‌شود و هیچ FK/navigation میان‌ماژولی ساخته نمی‌شود. انتخاب یک نوع هیچ روشی را
+    /// منتشر/فعال نمی‌کند و نرخ، پوشش، برنامه، ارز یا تعهد مشتری نمی‌سازد.
+    /// </remarks>
+    public Guid? ShippingTypeId { get; private set; }
+
     /// <summary>پیش‌نویس تازه می‌سازد؛ بازبینی نخست همیشه ۱ است.</summary>
     /// <param name="owner">مالک سرورساخته.</param>
     /// <param name="serviceCode">کد خدمت.</param>
@@ -1062,6 +1073,59 @@ public sealed class ShippingAuthoringDraft
         var unchanged = MethodSettings is { } current
                         && current.Matches(freight, calculation);
         return new MethodSettingsPlan(freight, calculation) { HasChanges = !unchanged };
+    }
+
+    /// <summary>
+    /// برنامهٔ پیش‌سنجی‌شدهٔ انتخاب نوع ارسال: شناسهٔ پایدار (یا تهی برای پاک‌کردن).
+    /// </summary>
+    /// <param name="ShippingTypeId">شناسهٔ تعریف نوع یا تهی.</param>
+    public sealed record TypeAssignmentPlan(Guid? ShippingTypeId)
+    {
+        /// <summary>
+        /// آیا این انتخاب دست‌کم یک تغییر واقعی دارد. یک PUT یکسان (همان شناسهٔ ذخیره‌شده) یک no-op
+        /// صادقانه است: بازبینی و زمان تغییر نمی‌کنند، اما <c>expectedRevision</c> همیشه بررسی می‌شود.
+        /// </summary>
+        public bool HasChanges { get; init; }
+    }
+
+    /// <summary>
+    /// انتخاب نوع ارسال را <b>بدون هیچ تغییر</b> روی aggregate می‌سنجد. شناسهٔ تهی (Guid.Empty) هرگز
+    /// «انتخاب‌نشده» نیست، یک payload نامعتبر است و پیش از نخستین نوشتن رد می‌شود.
+    /// </summary>
+    /// <remarks>
+    /// تصمیم‌های بیرونی (وجود/فعال‌بودن تعریف) اینجا تکرار نمی‌شوند: دامنه فقط شکل محلی را می‌سنجد.
+    /// پاک‌کردن با تهی هیچ فراخوان بیرونی نمی‌خواهد و همیشه مجاز است.
+    /// </remarks>
+    /// <param name="shippingTypeId">شناسهٔ تعریف انتخاب‌شده یا تهی برای پاک‌کردن.</param>
+    public TypeAssignmentPlan PreflightTypeAssignment(Guid? shippingTypeId)
+    {
+        if (shippingTypeId is { } candidate && candidate == Guid.Empty)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringTypeAssignmentInvalid));
+        }
+
+        return new TypeAssignmentPlan(shippingTypeId) { HasChanges = ShippingTypeId != shippingTypeId };
+    }
+
+    /// <summary>
+    /// برنامهٔ پیش‌سنجی‌شدهٔ انتخاب نوع را اعمال می‌کند. هیچ اعتبارسنجی‌ای اینجا نیست؛ ورودی باید از
+    /// <see cref="PreflightTypeAssignment"/> آمده باشد. تغییر واقعی بازبینی ریشه را یک واحد بالا
+    /// می‌برد و فقط شناسه/بازبینی/زمان را می‌نویسد.
+    /// </summary>
+    /// <param name="plan">برنامهٔ معتبر.</param>
+    /// <param name="now">زمان UTC.</param>
+    public void ApplyTypeAssignment(TypeAssignmentPlan plan, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        if (!plan.HasChanges)
+        {
+            return;
+        }
+
+        ShippingTypeId = plan.ShippingTypeId;
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
     }
 
     /// <summary>

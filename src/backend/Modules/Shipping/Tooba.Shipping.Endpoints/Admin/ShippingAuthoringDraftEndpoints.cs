@@ -61,6 +61,16 @@ public static class ShippingAuthoringDraftEndpoints
         group.MapPut(
             "/shipping-services/authoring-drafts/{draftId:guid}/method-settings",
             ReplaceMethodSettingsAsync);
+        // TB-197 optional draft type selection: the shared catalog is Fulfillment-owned and read ONLY
+        // through its Contracts seam. The type is chosen ONCE on the draft/method root, never per group,
+        // rate row, language or schedule, and choosing it activates nothing.
+        group.MapGet("/shipping-services/authoring-types", ListTypeChoicesAsync);
+        group.MapGet(
+            "/shipping-services/authoring-drafts/{draftId:guid}/method-type",
+            GetMethodTypeAsync);
+        group.MapPut(
+            "/shipping-services/authoring-drafts/{draftId:guid}/method-type",
+            ReplaceMethodTypeAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -283,6 +293,54 @@ public static class ShippingAuthoringDraftEndpoints
 
         return api.From(await sender.Send(
             new ReplaceShippingAuthoringMethodSettingsCommand(scope, draftId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> ListTypeChoicesAsync(
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new GetShippingAuthoringTypeChoicesQuery(scope), cancellationToken));
+    }
+
+    private static async Task<IResult> GetMethodTypeAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new GetShippingAuthoringDraftTypeAssignmentQuery(scope, draftId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> ReplaceMethodTypeAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringDraftTypeAssignmentReplaceRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new ReplaceShippingAuthoringDraftTypeAssignmentCommand(scope, draftId, body!),
             cancellationToken));
     }
 }

@@ -409,3 +409,17 @@ Authority: Architect decision within the owner's authorized Shipping Admin deliv
 - One own-schema implicit SaveChanges for assignment+root revision. Same root token as regions/rates/metadata/schedule/settings; clearing/switching preserves every other capability. No cross-module transaction: catalog activity is validated at the read instant, not guaranteed atomic with later catalog changes. Deactivation is visible on read and does not propagate destructive draft writes.
 - Choice/current responses carry raw LanguageId-keyed catalog texts, declared code/order/status/revision facts; no locale->content-language fallback, hardcodedfa/en or inferred name. The existing authoring-context route remains language/currency authority.
 - Optional/incomplete drafts remain legal. No item compatibility, group inference, type-required activation, pricing inheritance, rate calculation, carrier call, funding or customer promise is introduced. No legacy row backfill/attribution.
+
+### 27.1 Implementation facts — TB-197 (2026-10-22), semantics unchanged
+
+- Delivered exactly the six routes above through one shared choices query, one current-assignment query and one
+  replace command/handler; the owner/permission/scope authority is the existing Shipping admin and seller gates.
+- Stored shape is one nullable `shipping_type_id` column plus the owned `ck_authoring_drafts_shipping_type_nonempty`
+  CHECK (`NULL` or non-empty guid) in the Shipping schema; no cross-schema FK and no Fulfillment metadata edit.
+- Catalog facts arrive only through `Fulfillment.Contracts.Shipping.IShippingTypeReader` behind the Shipping-owned
+  `IShippingTypeCatalogReader`; every actual call carries one canonical child span and only the exception type is
+  tagged. Empty id sets and early rejection branches make no foreign call.
+- `shippingTypeId` is `[JsonRequired]`: omission fails as a body-shape error before any handler; explicit `null`
+  is the only clear form. Inactive/missing stored references are reported truthfully on read and rejected on write.
+- Request classification was updated from real routes/handlers/validators (49 routes, 33 requests, 29 request
+  validators); no certification promotion, no baseline refresh and no guard exemption is implied by this slice.

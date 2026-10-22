@@ -407,17 +407,18 @@ public sealed class ShippingPersistenceModelTests
     }
 
     [Fact]
-    public void Migrations_are_the_initial_slice_plus_eight_additive_updates()
+    public void Migrations_are_the_initial_slice_plus_nine_additive_updates()
     {
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        // Ten migrations only: the initial slice, five additive changes (option identity, operating
+        // Thirteen migrations only: the initial slice, five additive changes (option identity, operating
         // schedule, weight/count tiers, packaging policy, option-scoped coverage restriction), the D3
         // authoring draft/group/area addition, the TB-191 group rate-row addition, the TB-191-R1
-        // constraint-parity correction and the TB-193 weekly schedule addition. Asserting the exact
-        // count keeps the schema reviewable as a unit.
-        Assert.Equal(12, migrations.Length);
+        // constraint-parity correction, the TB-193 weekly schedule addition, the TB-194 method-settings
+        // addition and the TB-197 nullable draft shipping-type reference. Asserting the exact count
+        // keeps the schema reviewable as a unit.
+        Assert.Equal(13, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
@@ -430,6 +431,7 @@ public sealed class ShippingPersistenceModelTests
         Assert.EndsWith("_AuthoringPresentationTranslations", migrations[9], StringComparison.Ordinal);
         Assert.EndsWith("_AuthoringWeeklySchedule", migrations[10], StringComparison.Ordinal);
         Assert.EndsWith("_AuthoringMethodSettings", migrations[11], StringComparison.Ordinal);
+        Assert.EndsWith("_AuthoringDraftTypeAssignment", migrations[12], StringComparison.Ordinal);
     }
 
     [Fact]

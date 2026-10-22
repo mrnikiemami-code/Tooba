@@ -77,6 +77,9 @@ public static class ShippingAuthoringValidationCodes
     /// <summary>حالت محاسبهٔ کرایه در بدنه غایب یا خارج از مقادیر تعریف‌شده است.</summary>
     public const string MethodSettingsCalculationModeInvalid =
         "shipping.validation.method_settings_calculation_mode_invalid";
+
+    /// <summary>شناسهٔ نوع ارسال در بدنه خالی (Guid.Empty) است؛ خالی هرگز «انتخاب‌نشده» نیست.</summary>
+    public const string TypeSelectionInvalid = "shipping.validation.type_selection_invalid";
 }
 
 /// <summary>اعتبارسنجی شکل درخواست ایجاد پیش‌نویس.</summary>
@@ -676,6 +679,55 @@ public sealed class ReplaceShippingAuthoringMethodSettingsCommandValidator
             .WithErrorCode(ShippingAuthoringValidationCodes.MethodSettingsCalculationModeInvalid)
             .Must(mode => mode is null || Enum.IsDefined(mode.Value))
             .WithErrorCode(ShippingAuthoringValidationCodes.MethodSettingsCalculationModeInvalid)
+            .When(x => x.Request is not null);
+    }
+}
+
+/// <summary>
+/// اعتبارسنجی شکل خواندن انتخاب فعلی نوع ارسال: شناسهٔ مسیر باید غیرخالی باشد.
+/// </summary>
+public sealed class GetShippingAuthoringDraftTypeAssignmentQueryValidator
+    : AbstractValidator<GetShippingAuthoringDraftTypeAssignmentQuery>
+{
+    /// <summary>قواعد را می‌سازد.</summary>
+    public GetShippingAuthoringDraftTypeAssignmentQueryValidator()
+    {
+        RuleFor(x => x.DraftId)
+            .NotEmpty()
+            .WithErrorCode(ShippingAuthoringValidationCodes.DraftIdRequired);
+    }
+}
+
+/// <summary>
+/// اعتبارسنجی شکل تعیین/پاک‌کردن نوع ارسال: هویت مسیر، نشانگر همزمانی و شناسهٔ غیرخالی.
+/// </summary>
+/// <remarks>
+/// <b>غیبت فیلد در JSON همین‌جا دیده نمی‌شود</b> چون <c>JsonRequired</c> پیش از این لایه درخواست
+/// ناقص را رد می‌کند؛ این لایه فقط <c>Guid.Empty</c> و بازبینی غیرمثبت را می‌سنجد. مقدار
+/// <c>null</c> صریح مجاز است و «پاک‌کردن» است، نه نبود انتخاب.
+/// </remarks>
+public sealed class ReplaceShippingAuthoringDraftTypeAssignmentCommandValidator
+    : AbstractValidator<ReplaceShippingAuthoringDraftTypeAssignmentCommand>
+{
+    /// <summary>قواعد را می‌سازد.</summary>
+    public ReplaceShippingAuthoringDraftTypeAssignmentCommandValidator()
+    {
+        RuleFor(x => x.DraftId)
+            .NotEmpty()
+            .WithErrorCode(ShippingAuthoringValidationCodes.DraftIdRequired);
+
+        RuleFor(x => x.Request)
+            .NotNull()
+            .WithErrorCode(ShippingValidationCodes.BodyInvalid);
+
+        RuleFor(x => x.Request.ExpectedRevision)
+            .GreaterThan(0)
+            .WithErrorCode(ShippingAuthoringValidationCodes.ExpectedRevisionInvalid)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.ShippingTypeId)
+            .Must(id => id is null || id.Value != Guid.Empty)
+            .WithErrorCode(ShippingAuthoringValidationCodes.TypeSelectionInvalid)
             .When(x => x.Request is not null);
     }
 }

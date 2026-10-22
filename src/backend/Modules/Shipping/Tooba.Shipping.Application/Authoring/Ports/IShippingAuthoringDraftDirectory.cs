@@ -139,6 +139,27 @@ public interface IShippingAuthoringDraftDirectory
         Tooba.Shipping.Contracts.Packaging.ShippingFreightPayerMode? freightPaymentMode,
         Tooba.Shipping.Contracts.Authoring.ShippingAuthoringCalculationMode? calculationMode,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// انتخاب اختیاری نوع ارسال ریشهٔ روش یک پیش‌نویس همین مالک را در <b>یک</b> SaveChanges ضمنی
+    /// می‌نویسد (یا با تهی پاک می‌کند) و بازبینی ریشه را حداکثر یک واحد بالا می‌برد.
+    /// </summary>
+    /// <remarks>
+    /// این متد فقط شکل و ماندگاری را می‌داند؛ وجود/فعال‌بودن تعریف در Application و از طریق درز
+    /// Contracts سنجیده می‌شود. یک <paramref name="shippingTypeId"/> یکسان با مقدار ذخیره‌شده یک no-op
+    /// صادقانه است: هیچ ستونی نوشته نمی‌شود.
+    /// </remarks>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="draftId">شناسهٔ پیش‌نویس.</param>
+    /// <param name="expectedRevision">بازبینی مورد انتظار کلاینت.</param>
+    /// <param name="shippingTypeId">شناسهٔ تعریف یا تهی برای پاک‌کردن.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<ShippingAuthoringDraft>> ReplaceTypeAssignmentAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        Guid? shippingTypeId,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

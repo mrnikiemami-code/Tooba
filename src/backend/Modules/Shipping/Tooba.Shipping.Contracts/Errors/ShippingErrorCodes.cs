@@ -252,4 +252,15 @@ public static class ShippingErrorCodes
     /// عددی خارج از مقادیر تعریف‌شده آمده است. مقدار صفر هرگز «پیش‌فرض» یک فیلد ارسال‌نشده نیست.
     /// </summary>
     public const string AuthoringMethodSettingsInvalid = "shipping.authoring.method_settings_invalid";
+
+    /// <summary>
+    /// شکل انتخاب نوع ارسال نامعتبر است: شناسهٔ خالی (<c>Guid.Empty</c>) هرگز «انتخاب‌نشده» نیست.
+    /// </summary>
+    public const string AuthoringTypeAssignmentInvalid = "shipping.authoring.type_assignment_invalid";
+
+    /// <summary>
+    /// تعریف نوع انتخاب‌شده در همین لحظه قابل استفاده نیست: در کاتالوگ Fulfillment وجود ندارد یا
+    /// غیرفعال است، یا فکت برگشتی با شناسهٔ درخواستی/مالک نمی‌خواند. هیچ نوشتنی انجام نمی‌شود.
+    /// </summary>
+    public const string AuthoringTypeSelectionUnavailable = "shipping.authoring.type_selection_unavailable";
 }

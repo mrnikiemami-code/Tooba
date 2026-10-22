@@ -195,4 +195,10 @@
   <data name="shipping.authoring.method_settings_invalid" xml:space="preserve">
     <value>زمان پرداخت کرایه و حالت محاسبه باید هر دو صریحاً انتخاب شوند.</value>
   </data>
+  <data name="shipping.authoring.type_assignment_invalid" xml:space="preserve">
+    <value>انتخاب نوع ارسال پیش‌نویس باید یک شناسهٔ واقعی کاتالوگ یا پاک‌کردن صریح باشد.</value>
+  </data>
+  <data name="shipping.authoring.type_selection_unavailable" xml:space="preserve">
+    <value>نوع ارسال انتخاب‌شده ناشناخته یا غیرفعال است.</value>
+  </data>
 </root>

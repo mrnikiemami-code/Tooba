@@ -492,12 +492,82 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         return Result.Success(draft);
     }
 
+    /// <inheritdoc />
+    public async Task<Result<ShippingAuthoringDraft>> ReplaceTypeAssignmentAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        Guid? shippingTypeId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+
+        // The whole authored graph is materialised so the returned aggregate is a truthful readback of
+        // every other capability beside the reference; only the root token is written.
+        var draft = await Scoped(ToDomainOwner(owner))
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.Areas)
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.RateRows)
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.Titles)
+            .Include(candidate => candidate.Translations)
+            .Include(candidate => candidate.MethodSettings)
+            .Include(candidate => candidate.WeeklySchedule)
+            .ThenInclude(schedule => schedule!.Days)
+            .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
+        if (draft is null)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound));
+        }
+
+        // A stale client is refused before any tracked row is touched; the root revision column is the
+        // relational backstop shared with the region/rate/presentation/schedule/settings writers.
+        if (draft.Revision != expectedRevision)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+        }
+
+        try
+        {
+            // The assignment shape is preflighted before the first mutation, so a rejected payload leaves
+            // this aggregate, its tracker, its revision and every other capability untouched. The root
+            // revision and the type reference share ONE implicit SaveChanges; no other column is written.
+            var plan = draft.PreflightTypeAssignment(shippingTypeId);
+            draft.ApplyTypeAssignment(plan, DateTimeOffset.UtcNow);
+            if (plan.HasChanges)
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            context.ChangeTracker.Clear();
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+        }
+        catch (DbUpdateException exception) when (IsCheckViolation(exception, "authoring_drafts"))
+        {
+            // The column's CHECK mirrors the domain guard: an empty guid can never be stored by any writer.
+            context.ChangeTracker.Clear();
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringTypeAssignmentInvalid));
+        }
+        catch
+        {
+            context.ChangeTracker.Clear();
+            throw;
+        }
+
+        return Result.Success(draft);
+    }
+
     /// <summary>
     /// تراکنش را برمی‌گرداند و هیچ تغییر نیمه‌کاره‌ای را در tracker همین context باقی نمی‌گذارد؛
     /// بنابراین یک SaveChanges بعدی در همان context نمی‌تواند ویرایش رد‌شده را منتشر کند.
     /// </summary>
-    private async Task RollbackAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken)
-    {
+    private async Task RollbackAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken)    {
         if (transaction is not null)
         {
             try

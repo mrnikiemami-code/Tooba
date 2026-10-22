@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
@@ -68,7 +68,7 @@ public sealed class ShippingErrorCatalogAndResourcesTests
             .ToArray();
         // TB-193 adds two legacy-contract 400/Business/Warning codes for the weekly schedule week/day
         // shape, so the legacy set grows from 51 to 53 without changing any existing code.
-        Assert.Equal(54, legacy.Length);
+        Assert.Equal(56, legacy.Length);
 
         foreach (var descriptor in legacy)
         {
