@@ -14,7 +14,8 @@ TB-192 owner-local multilingual draft metadata is accepted through TB-192-R1.
 TB-193 weekly schedule draft persistence is accepted through TB-193-R1.
 TB-194 independent freight/calculation draft settings are accepted (authoring only).
 TB-195 type ownership analysis is accepted with Architect corrections (rules section 26).
-TB-196 catalog implementation is PARTIAL / NOT ACCEPTED; relational/snapshot proof remains open.
+TB-196 Fulfillment type catalog/API/Contracts/schema/storage is ACCEPTED through R13-R1.
+This is bounded catalog acceptance, not live Shipping integration, UI, release or AMSC recertification.
 TB-196-R1 remains PARTIAL; its bounded Domain regressions are repaired and accepted through R2.
 TB-196-R3 API evidence is accepted through R4; registry/tracing/real-DI/relational gates remain open.
 TB-196-R5 DI/registry/listener evidence and its single-active correction through R6 are accepted.
@@ -24,10 +25,10 @@ TB-196-R9 historical analysis is accepted with Architect corrections (model mani
 TB-196-R10 pending-outbox-index migration and bounded isolated proof are accepted.
 TB-196-R11 existing CHECK/name model alignment is accepted; five defaults remain.
 TB-196-R12 five-default model alignment and strict schema parity are accepted with recorded deviations.
-TB-196-R13 phased schema/storage evidence is accepted narrowly; three winner/full-tree assertions need repair.
-Only next issued task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13-R1,
-three focused test facts/helpers and append-only evidence, no production/migration changes.
-Catalog closure pending that review; no shared deployment.
+TB-196-R13-R1 repaired winner/full-tree evidence is accepted; catalog proof stage closed.
+Only next issued task: TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197,
+Shipping-owned assignment via existing Fulfillment.Contracts, server-authorized owner, shared Revision.
+No shared deployment or quote activation. Follow rules section27; do not replay the catalog tasks.
 Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.

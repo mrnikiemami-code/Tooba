@@ -1,5 +1,15 @@
 ﻿# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: کاتالوگ196 بسته شد / فقط197
+
+پس ازبررسی R13-R1 درcode`b1d88ac59463f7786e856048bf02ec99baf96223` وmain`f04a13dd44a95e2ff40d1db3d39a77c6e25d3cf4`، سهproof اصلاح‌شده **ACCEPT** و کل196 برای boundedFulfillmentcatalog/API/Contracts/schema/storage **بسته شد**؛ [بررسی/lineage](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13-R1/ARCHITECT-REVIEW.md). WorkerPARTIALبابتcorrection/reset/trace-rerun همچنانتاریخچهصادقانه است؛3PASS گزارشWorker وsourceبررسی‌شده،نه اجرایمجددArchitect. هیچدلیل برایتکرارکاتالوگ/proofloopsنیست. اینacceptance باUI/merchantDB/quote/release/AMSCrecertificationیکی نیست.
+
+تنها تسک بعد **TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197**،Parent=196-R13-R1: انتساب اختیاریShippingTypeIdرویdraftrootShipping +choices/currentread ازFulfillment.Contracts.IShippingTypeReader؛ serverowner/permission/sharedRevision،بدونcopycatalog/FK/join/foreignimplementation. تصمیم27rules مرجع: nullصریحclear،omittedرد،non-nullPUTفقطactive،خواندنinactive/missingصادقانه وبدونحذفمرجع،no-opactive/stale409،بدونactivation. migrationفقطShippingرویDBدورریختنی؛Fulfillmentتغییرنکند. سقف45/stop35/setup8/commands120؛فقطShippingchecks،noHost.
+
+بعدازنتیجه197reviewویکتسکبعد: مواردباقیconfig/cutoff،UIAPI/languagesDB/SingleStore-Marketplace وuseracceptance. runtimebasis/carrier/freefunding/quote/activation/deployment مجوزجدا؛TB185متوقف. recovery/AGENTSبه‌روز،یکactive task؛ پایین تاریخچه است.
+
+
+
 ## مرجع جاری پس از R13-R1 / منتظر بررسی مستقل Architect
 
 R13-R1 روی main `7c19e63403d8ab66405b9762ba620bd76ede04e0` فقط test/evidence: سه fact اصلاح شد. uniqueCreate حالا `CreateOutcome(Participant,Guid?,ErrorCode)` دارد و persistedid با Guidبازگشتی‌واقعی و کلtree با proposalبرنده مقایسه می‌شود؛ revisionrace دopropسالهٔ سه‌زبانه/Sort/IsActive، دو `OriginalValues["Revision"]=1` واقعی، winnerاز typed outcome، revision exact2، CreatedAtثابت و UpdatedAtجلو‌رفته؛ rollback حالا `TreeSnapshot` کامل (همهroot + همهtranslation با equalityساختاری) قبل/بعد failure و cancellation و retry. `AttemptedWriteCount=2/completed=1` برای هر دو مسیر. اجرای متمرکز: 3/3 PASS، 1.67s. statusفرایندی PARTIAL (یک correction + resetمحیط + rerunثبتtrace). production/migration byte-identical. [نتیجه](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13-R1/RESULT.md).
