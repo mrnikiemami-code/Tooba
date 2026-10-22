@@ -523,3 +523,19 @@ sets). This proves metadata alignment, NOT equality with the historically migrat
 and the storage/constraint/race/atomicity battery remain OPEN and unexecuted. TB-196 stays
 BLOCKED_PENDING_HISTORICAL_SCHEMA_AND_RELATIONAL_ACCEPTANCE; worker PASS is not Architect ACCEPT; STOP_FOR_ARCHITECT;
 no automatic next task.
+### Worker status pointer — R9 (2026-10-22T18:07Z claim, historical-schema reconciliation analysis only)
+
+`TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R9` is COMPLETE (worker `PASS`, analysis only, no implementation and no
+database). The saved R6 manifests were re-read and re-counted (16 `missing-in-actual` + 17 `unexpected-in-actual`,
+fully classified as 18 objects): 3 substantive (missing `ix_outbox_messages_pending`; two DB-only
+`ck_shipping_methods_*_canonical` CHECKs), 5 column defaults (`items.quantity_packed`, `items.quantity_processing`,
+`shipments.provider_metadata_version`, `shipments.shipping_method_code`, `shipments.shipping_method_label`), and 10
+naming-only objects (1 FK + 9 indexes) with full shape verified equal. R8's 191 metadata renames are explicitly
+excluded. All 10 model-side names were re-verified against the post-R8 snapshot, so R8 did not invalidate the model
+facts. Recommended FIRST slice is the single additive, data-free outbox pending index migration
+(`CREATE INDEX IF NOT EXISTS`, Down `DROP INDEX IF EXISTS`); checks/defaults/names are proposed as zero-DDL
+"model follows DB" follow-ups gated on architect decisions D1-D5 recorded in
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R9/RECONCILIATION-PROPOSAL.md`. Live-DB
+presence of the outbox index and any domain-bypassing write path remain UNKNOWN_PENDING_EXECUTION. TB-196 stays
+BLOCKED_PENDING_HISTORICAL_SCHEMA_AND_RELATIONAL_ACCEPTANCE; worker PASS is not Architect ACCEPT; STOP_FOR_ARCHITECT;
+no automatic next task.
