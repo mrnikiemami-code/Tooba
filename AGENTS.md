@@ -36,6 +36,14 @@ Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.
 
+## Current accepted checkpoint — 2026-10-23
+
+TB196 bounded catalog and TB197 owner-local type-assignment backend are Architect-accepted through197-R1.
+Read latest recovery/reviews for exact evidence/process limits; no merchant UI/quote/release acceptance.
+Only next issued task: TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198 (parent197-R1),
+documentation-only concrete atomic editor integration contract. No src/runtime/DB/frontend changes.
+Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
+
 ## Core rules
 
 1. One active Task only.

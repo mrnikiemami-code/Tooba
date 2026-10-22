@@ -1,4 +1,14 @@
-﻿# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
+# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
+
+## مرجع جاری 2026-10-23:197 بسته شد / فقط198
+
+197-R1 درcode`0b0a10758f000ead3846d0869b9be3225fe6b658`،evidence`cca76737c8096b9dff6cbd54c93a4ff478007ddb`،main`51ac960375a6b4783100050372b2aa5e63c3bbdb` برایpostcommitfix/providerfault/samecontext/DIparent **ACCEPT**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197-R1/ARCHITECT-REVIEW.md). TB197backendassignment وTB196catalogبسته‌اند؛626قبلی+11/31فیلترجدیدگزارشWorker،نه rerunArchitect ونه لزوماً42تستdistinct. دوcorrectionBudgetانحرافتاریخی‌می‌ماند؛proofloopصرفPARTIALممنوع.
+
+تنها تسک بعد **TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198**،Parent=197-R1،source-analysis/docsفقط: قراردادconcreteاتصالفرانت وread/create/saveاتمیککلeditor. قواعد9: چندPUTمستقلازمرورگرحتیsequential/PromiseallجایApplyیکپارچه‌نیست؛capabilityendpointهاهرکدامrevisionراadvanceمی‌کنند. field-to-API/domainmap،cutoff/status/canonicalbindinggap وsmallestatomicownShippingplan باreuseقواعدبایدشفافشود؛نمونهpreview منبعبیزنسdefault/حد/seedنیست.
+
+سقف20/stop15؛بدونsrc/build/test/browser/DB/container/ef/DDL/تصویبDTOاجرایی. خروجیproposalبراییکimplementationبعدی،نهتسکبعدخودکار. sharedDB/Host/frontend/activationدست‌نخورده. بعدازتحلیلreviewفقطیکتسک؛merchantUI/bindings/languagesDB/atomicSave وuseracceptanceهنوزباز. cutoffمعنیlabel «پیشازشروع(ساعت)» دارد،min0/max48previewpolicyقطعی‌نیست؛حد/precision/runtimeeffectحدس‌نشود. TB185متوقف؛quote/carrier/funding/activation/deploymentجدا.
+
+
 
 ## مرجع جاری پس از197 / فقط197-R1
 
