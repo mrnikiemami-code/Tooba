@@ -369,7 +369,7 @@ per interface locale or per raw geographic scope, and no other owner's method in
   configuration; this section records an approved bounded requirement, not production activation or
   module certification.
 
-## 16. تصمیم محدود: پیش‌کرایه/پس‌کرایه و حالت محاسبه — دو انتخاب مستقل (TB-194)
+## 25. تصمیم محدود: پیش‌کرایه/پس‌کرایه و حالت محاسبه — دو انتخاب مستقل (TB-194)
 
 - **دو محور، نه یک enum.** زمان پرداخت کرایه (<code>Prepaid</code>/<code>CollectOnDelivery</code>، همان
   <code>ShippingFreightPayerMode</code> موجود) و حالت محاسبه (<code>Manual</code>/<code>CarrierApi</code>/<code>Free</code>)
