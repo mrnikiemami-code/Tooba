@@ -41,11 +41,11 @@ this is a recovery pointer, not a new implementation authorization.
 TB196 bounded catalog and TB197 owner-local type-assignment backend are Architect-accepted through197-R1.
 Read latest recovery/reviews for exact evidence/process limits; no merchant UI/quote/release acceptance.
 TB198 source analysis accepted with corrections; read its ARCHITECT-REVIEW.md before implementation.
-TB199 implemented at be639a473700d771cbf7b3f90f011814cb82bfeb; proof completion required, not closed.
-Only next issued task: TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199-R1 (parent199), tests/docs only.
-Read TB199 ARCHITECT-REVIEW.md: new-route auth/catalog sentinel, complete storage snapshots/token/noop time and exact transaction caller/shape proof.
-No production/frontend/schema/quote/activation change; no task200 while199-R1 unfinished.
-Latest recovery is authoritative; do not replay accepted196/197/198.
+TB199 existing-draft atomic editor backend is Architect-accepted through199-R1 (98274e4ff), with process/proof limits in its review.
+Only next issued task: TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200 (parent199-R1).
+Frontend feature-owned typed adapter/session foundation only; follow frontend skill/standard and existing shared auth transport.
+No preview/live-page/UI/backend/schema/shared-DB/activation change. Do not issue a second task while200 is unfinished.
+Latest recovery is authoritative; accepted backend proofs must not be replayed.
 Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
 
 ## Core rules

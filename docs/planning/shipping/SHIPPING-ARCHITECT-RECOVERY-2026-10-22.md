@@ -1,5 +1,14 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 199 ازطریقR1 بسته / فقط200 — 2026-10-23
+
+TB199 backendexistingdraft atomiceditor درcode be639a473700d771cbf7b3f90f011814cb82bfeb باtest/evidence98274e4ff7643bfddf1c60e5eca29e7ae6839f5a **ACCEPT**؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199-R1/ARCHITECT-REVIEW.md). 31focusedPASS گزارشworker،نهrerunArchitect/whole-suite؛4correction>2 ثبتprocessdeviationبدونproofloop.645قبلیhistorical. snapshotsemantic/callbackcount/callerCTproofمحدودیت‌هایreviewرا دارد. TB19928.8min طبقBridgeداخل45/stop35است؛minute23متعلقR1بود. completionR1درpayloadنبوده؛حدس‌نشود.
+
+تنها تسک بعد **TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200**،parent199-R1؛typedAPI+sessionstate برایdraftموجودadmin،30دقیقه/stop23. مهارتfrontendوstandardالزامی؛featureownerجدیدadmin-shipping-authoring باreuse lib/admin transport؛نهclientlegacy/fixture. strictdecodeunknown،حفظtype/languages/time/currency،writeیکPUTeditor باexpectedRevision،conflict/outcomeunknownبدونretry،late-responseisolation،dirty/discard وselected-languagepatch. geographyreadkind+id≠writeancestry؛حدسparentممنوع،writeبایدresolvedselectionگیرد. UI/preview/livepage/backend/schema/sharedDBفعال‌نشوند.
+
+پساز200 review فقطیکUIwiringتسک،بعدliveconfiguredregistry/owneracceptance.199/196/197/198replayممنوع. cutoff/status/fullcreate/carrier/funding/arbitrarysellerselector/quoteفعال‌نشده؛TB185paused/defaultOFF/PendingAllocationمحفوظ. اینبخشبرپاراگراف‌هایقدیمیفعالیتبرتری‌دارد.
+
+
 ## مرجع جاری: 199-R1 اجرا شد؛ منتظر review — 2026-10-23
 
 TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199-R1 روی base `b0b3bb804228826a1144b9db86ee0c1362b372bf` اجرا و به Bridge ارسال شد؛ نتایج در
