@@ -126,3 +126,35 @@ public sealed record ShippingAuthoringPresentationItem(
     IReadOnlyList<ShippingAuthoringLanguageView> ContentLanguages,
     Guid DefaultContentLanguageId,
     bool HasDefaultLanguageName);
+
+/// <summary>یک روز هفتهٔ برنامهٔ عملیاتی مالک در پاسخ: پرچم صریح و ساعت‌های (به‌یادماندهٔ) همان روز.</summary>
+/// <param name="Weekday">روز هفتهٔ ISO ۱..۷.</param>
+/// <param name="IsWorking">آیا این روز صریحاً روز کاری است.</param>
+/// <param name="StartTime">ساعت شروع محلی یا تهی وقتی هیچ ساعتی ثبت نشده است.</param>
+/// <param name="EndTime">ساعت پایان محلی (غیرشامل) یا تهی.</param>
+public sealed record ShippingAuthoringScheduleDayItem(
+    int Weekday,
+    bool IsWorking,
+    TimeOnly? StartTime,
+    TimeOnly? EndTime);
+
+/// <summary>
+/// برنامهٔ عملیاتی هفتگی یک پیش‌نویس: بازبینی ریشهٔ واقعی و وضعیت صریح پیکربندی‌شده/نشده.
+/// </summary>
+/// <remarks>
+/// برای برنامهٔ <b>پیکربندی‌نشده</b> هیچ منطقهٔ زمانی و هیچ ساعتی ساخته نمی‌شود
+/// (<c>TimeZoneId = null</c>، <c>Days = []</c>). یک هفتهٔ کاملاً تعطیل، هفت ردیف واقعی با
+/// <c>IsWorking = false</c> برمی‌گرداند و از «پیکربندی‌نشده» قابل تفکیک است. هیچ fallback منطقهٔ
+/// زمانی، ساعت پیش‌فرض یا هفت روز کاری ساخته نمی‌شود.
+/// </remarks>
+/// <param name="DraftId">شناسهٔ پیش‌نویس.</param>
+/// <param name="Revision">بازبینی ریشهٔ فعلی برای نوشتن بعدی.</param>
+/// <param name="IsConfigured">آیا برنامه صریحاً پیکربندی شده است.</param>
+/// <param name="TimeZoneId">منطقهٔ زمانی ذخیره‌شده یا تهی در حالت پیکربندی‌نشده.</param>
+/// <param name="Days">روزهای مرتب‌شده بر اساس روز هفته؛ خالی در حالت پیکربندی‌نشده.</param>
+public sealed record ShippingAuthoringWeeklyScheduleItem(
+    Guid DraftId,
+    long Revision,
+    bool IsConfigured,
+    string? TimeZoneId,
+    IReadOnlyList<ShippingAuthoringScheduleDayItem> Days);

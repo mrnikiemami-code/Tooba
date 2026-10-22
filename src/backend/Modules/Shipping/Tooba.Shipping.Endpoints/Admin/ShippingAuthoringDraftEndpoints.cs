@@ -43,6 +43,15 @@ public static class ShippingAuthoringDraftEndpoints
             "/shipping-services/authoring-drafts/{draftId:guid}/presentation",
             GetPresentationAsync);
         group.MapPatch("/shipping-services/authoring-drafts/{draftId:guid}/presentation", PatchPresentationAsync);
+        // TB-193 owner-scoped per-weekday operating schedule: ONE schedule attached to the draft/method,
+        // shared by all its region groups. Absent is UNCONFIGURED, never seven implicit working days, and
+        // the explicit timezone is validated server-side rather than inferred from locale or country.
+        group.MapGet(
+            "/shipping-services/authoring-drafts/{draftId:guid}/weekly-schedule",
+            GetWeeklyScheduleAsync);
+        group.MapPut(
+            "/shipping-services/authoring-drafts/{draftId:guid}/weekly-schedule",
+            ReplaceWeeklyScheduleAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -191,6 +200,43 @@ public static class ShippingAuthoringDraftEndpoints
 
         return api.From(await sender.Send(
             new ReplaceShippingAuthoringPresentationCommand(scope, draftId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> GetWeeklyScheduleAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new GetShippingAuthoringWeeklyScheduleQuery(scope, draftId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> ReplaceWeeklyScheduleAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringWeeklyScheduleReplaceRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new ReplaceShippingAuthoringWeeklyScheduleCommand(scope, draftId, body!),
             cancellationToken));
     }
 }

@@ -336,3 +336,35 @@ Fulfillment catalog/translations, and interface locale never selects content lan
   content with the ACTUAL default id, never by inventing text.
 * Same root `revision` token as regions/rates; one atomic implicit `SaveChanges`; a no-op does not
   bump the revision. Group removal cascades only its own titles.
+
+## 24. Bounded D5 per-weekday draft operating schedule (TB-193)
+
+The weekly operating schedule is attached ONCE to the draft/method root and is shared by every region
+group of that draft. It is never per region group, per rate row, per packaging rule, per seller actor,
+per interface locale or per raw geographic scope, and no other owner's method inherits it.
+
+* Absent schedule = explicitly UNCONFIGURED, not unrestricted availability, not a holiday and not
+  seven default working days. A configured week always carries an explicit validated timezone and
+  exactly seven unique ISO weekdays (`1 = Monday … 7 = Sunday`), each with an explicitly supplied
+  working/closed flag and its own local interval.
+* All seven days closed is allowed and DISTINCT from unconfigured. The rules deliberately do not
+  require "at least one working day".
+* One same-day interval per working weekday in this slice, `[start, end)` with `end` strictly after
+  `start`. Equal, inverted, overnight and missing active times reject; there is no automatic reversal,
+  overnight extension or normalization into tomorrow.
+* Closed-day remembered hours: both bounds absent keeps the day's previously stored pair; a supplied
+  pair must be valid and replaces only that day; one bound without the other rejects. `GET` returns
+  remembered hours truthfully while the day is closed, and re-opening requires a valid explicit pair.
+* Timezone is owner-authored configuration validated on the server with the actual
+  `TimeZoneInfo`/length/typed-error semantics (now the shared `ShippingScheduleRules`) — never inferred
+  from Persian locale, country, browser clock or a hardcoded `Asia/Tehran` default. A valid timezone id
+  is not proof of DST, holiday or customer-slot integration.
+* One whole-week replacement per request: the entire week is preflighted before the first mutation and
+  the schedule header, its seven day rows and the shared root `revision` commit in ONE implicit
+  `SaveChanges`. A missing working flag is rejected instead of deserializing into an implicit closed
+  day; an omitted or duplicated weekday is a shape failure rather than a silent closed day.
+* No cutoff, holiday/exception date, per-region override, multi-window legacy conversion, preparation
+  time, capacity, customer date/window generation or order promise is implied. The legacy global
+  `ShippingOperatingSchedule` rows remain byte/behavior unchanged. Drafts remain inactive
+  configuration; this section records an approved bounded requirement, not production activation or
+  module certification.

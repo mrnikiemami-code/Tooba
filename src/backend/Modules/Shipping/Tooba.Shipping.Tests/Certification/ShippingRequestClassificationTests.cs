@@ -32,10 +32,10 @@ public sealed class ShippingRequestClassificationTests
     private const string ManifestRelativePath = "docs/architecture/shipping/shipping-request-classification.json";
 
     /// <summary>Exact count of the certified endpoint-reachable request universe (W3 gate + TB-188 + TB-189).</summary>
-    private const int CertifiedRequestCount = 26;
+    private const int CertifiedRequestCount = 28;
 
     /// <summary>Exact count of shipped routes: TB-190 pairs each draft CRUD route for admin and seller.</summary>
-    private const int CertifiedRouteCount = 35;
+    private const int CertifiedRouteCount = 39;
 
     [Fact]
     public void Shipped_route_universe_equals_the_classified_manifest_exactly()
@@ -181,8 +181,8 @@ public sealed class ShippingRequestClassificationTests
         Assert.Equal(
             new[] { "GetShippingAuthoringContextQuery", "GetShippingAuthoringDraftsQuery", "GetShippingAuthoringOwnerQuery" },
             declared);
-        Assert.Equal(26, ManifestRows().Count);
-        Assert.Equal(23, ManifestRows().Count(row => row.Classification == ValidatorRequired));
+        Assert.Equal(28, ManifestRows().Count);
+        Assert.Equal(25, ManifestRows().Count(row => row.Classification == ValidatorRequired));
     }
 
     [Fact]

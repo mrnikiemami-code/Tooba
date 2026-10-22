@@ -416,6 +416,44 @@
       ],
       "transportRule": "route draft id non-empty, expectedRevision positive, both collections REQUIRED ([] is a valid no-op), no null entries, language ids non-empty and unique per item, (group,language) pairs unique, name non-blank and bounded, description/title bounded; owner, mode, tenant, currency and active-language facts are never bound from transport",
       "reason": "Two whole untrusted language-keyed collections and the shared optimistic-concurrency token are caller-controlled; the active language set is resolved from the TB-188 authoritative source BEFORE any tracked write and invalid/inactive ids fail closed."
+    },
+    {
+      "request": "GetShippingAuthoringWeeklyScheduleQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/weekly-schedule",
+        "GET /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/weekly-schedule"
+      ],
+      "handler": "GetShippingAuthoringWeeklyScheduleHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingAuthoringWeeklyScheduleQueryValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "authorization:fulfillment.view:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "the route draft id must be non-empty; the draft is only ever sought INSIDE the owner-filtered scope, so a foreign or invented id returns the same safe not-found response",
+      "reason": "One caller-supplied route id is projected into the read request. Absence of a schedule is reported truthfully as UNCONFIGURED; no timezone, hour or seven-day default is fabricated for the reader."
+    },
+    {
+      "request": "ReplaceShippingAuthoringWeeklyScheduleCommand",
+      "routes": [
+        "PUT /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/weekly-schedule",
+        "PUT /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/weekly-schedule"
+      ],
+      "handler": "ReplaceShippingAuthoringWeeklyScheduleHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ReplaceShippingAuthoringWeeklyScheduleCommandValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "body:expectedRevision:required-positive:untrusted-caller",
+        "body:timeZoneId:required-bounded:untrusted-caller",
+        "body:days:whole-seven-day-collection-required:untrusted-caller",
+        "body:days[].weekday:required-iso-1..7-unique:untrusted-caller",
+        "body:days[].isWorking:required-explicit-flag:untrusted-caller",
+        "body:days[].startTime/endTime:optional-paired-half-open-local-time:untrusted-caller",
+        "authorization:fulfillment.manage:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "route draft id non-empty, expectedRevision positive, timezone non-blank and bounded, the days collection REQUIRED and exactly seven entries with no null element, an explicitly present working flag per day, paired local times with end > start; owner, tenant, seller, mode, currency, language and geography are never bound from transport and timezone resolvability/exactly-seven uniqueness stay canonical domain preflight rules",
+      "reason": "A whole untrusted week and the shared optimistic-concurrency token are caller-controlled; a missing working flag must never deserialize into an implicit closed day, and an omitted/duplicated weekday is a shape failure before any tracked write."
     }
   ],
   "nestedTransportValidators": [
@@ -432,11 +470,11 @@
     "GetShippingAuthoringDraftsQuery"
   ],
     "totals": {
-    "shippedRoutes": 35,
-    "endpointReachableRequests": 26,
-    "requestValidators": 23,
+    "shippedRoutes": 39,
+    "endpointReachableRequests": 28,
+    "requestValidators": 25,
     "nestedTransportValidators": 6,
-    "declaredValidators": 29
+    "declaredValidators": 31
   },
   "amendments": [
     {
@@ -456,6 +494,12 @@
       "date": "2026-10-22",
       "scope": "Two additive authorized requests (GET/PUT group rate rows) are classified here, each reachable through one admin and one seller route. No previous row changed classification, validator, route or handler.",
       "currencyProvenance": "The replace command binds NO currency from transport. The trusted default currency is read from IShippingAuthoringContextSource (TB-188 Contracts-only seam over StoreContext) BEFORE any tracked write; an unresolved edition/currency fails closed with shipping.authoring.configuration_unavailable. The stored group currency is returned truthfully on read and a mismatch is refused rather than reinterpreted."
+    },
+    {
+      "task": "TB-SHIPPING-ADMIN-WEEKLY-SCHEDULE-DRAFTS-193",
+      "date": "2026-10-22",
+      "scope": "Two additive authorized requests (GET/PUT owner weekly operating schedule) are classified here, each reachable through one admin and one seller route. No previous row changed classification, validator, route or handler.",
+      "scheduleProvenance": "The schedule is attached ONCE to the draft/method and shared by all its region groups. The body carries NO owner, tenant, seller, mode, geography, currency, language or per-group field. The explicit timezone is validated by the canonical ShippingScheduleRules.NormalizeTimeZone (extracted from the legacy schedule aggregate with identical codes/behavior); resolvability is a domain preflight rule, not a foreign timezone catalog. Absent schedule = UNCONFIGURED, never seven implicit working days; an all-closed week is seven real rows and is distinct."
     }
   ]
 }

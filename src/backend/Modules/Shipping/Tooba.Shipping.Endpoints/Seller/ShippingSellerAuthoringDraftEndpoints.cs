@@ -40,6 +40,13 @@ public static class ShippingSellerAuthoringDraftEndpoints
             "/shipping-services/authoring-drafts/{draftId:guid}/presentation",
             GetPresentationAsync);
         group.MapPatch("/shipping-services/authoring-drafts/{draftId:guid}/presentation", PatchPresentationAsync);
+        // Same TB-193 weekly schedule use cases behind the seller owner gate.
+        group.MapGet(
+            "/shipping-services/authoring-drafts/{draftId:guid}/weekly-schedule",
+            GetWeeklyScheduleAsync);
+        group.MapPut(
+            "/shipping-services/authoring-drafts/{draftId:guid}/weekly-schedule",
+            ReplaceWeeklyScheduleAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -188,6 +195,43 @@ public static class ShippingSellerAuthoringDraftEndpoints
 
         return api.From(await sender.Send(
             new ReplaceShippingAuthoringPresentationCommand(scope, draftId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> GetWeeklyScheduleAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new GetShippingAuthoringWeeklyScheduleQuery(scope, draftId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> ReplaceWeeklyScheduleAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringWeeklyScheduleReplaceRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new ReplaceShippingAuthoringWeeklyScheduleCommand(scope, draftId, body!),
             cancellationToken));
     }
 }

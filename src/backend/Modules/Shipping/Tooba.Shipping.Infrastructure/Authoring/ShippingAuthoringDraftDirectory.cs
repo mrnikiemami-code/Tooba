@@ -71,6 +71,8 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .Include(candidate => candidate.RegionGroups)
             .ThenInclude(group => group.Titles)
             .Include(candidate => candidate.Translations)
+            .Include(candidate => candidate.WeeklySchedule)
+            .ThenInclude(schedule => schedule!.Days)
             .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
         return draft is null
             ? Result.Failure<ShippingAuthoringDraft>(new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound))
@@ -272,7 +274,7 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             return Result.Failure<ShippingAuthoringDraft>(
                 new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
         }
-        catch (DbUpdateException exception) when (IsCheckViolation(exception))
+        catch (DbUpdateException exception) when (IsCheckViolation(exception, "authoring_rate_rows"))
         {
             // The table's CHECK constraints mirror the domain guards; a violation is a rejected payload,
             // never a silent rounding of a threshold or fee into a different rule.
@@ -356,6 +358,77 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         return Result.Success(draft);
     }
 
+    /// <inheritdoc />
+    public async Task<Result<ShippingAuthoringDraft>> ReplaceWeeklyScheduleAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        string? timeZoneId,
+        IReadOnlyList<ShippingAuthoringDraft.ScheduleDayInput> days,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        ArgumentNullException.ThrowIfNull(days);
+
+        var draft = await Scoped(ToDomainOwner(owner))
+            .Include(candidate => candidate.WeeklySchedule)
+            .ThenInclude(schedule => schedule!.Days)
+            .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
+        if (draft is null)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound));
+        }
+
+        // A stale client is refused before any tracked row is touched; the root revision column is the
+        // relational backstop shared with the region/rate/presentation writers.
+        if (draft.Revision != expectedRevision)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+        }
+
+        try
+        {
+            // The WHOLE week is preflighted before the first mutation, so a bad seventh day leaves this
+            // aggregate, its tracker, the revision and every unrelated capability untouched. The
+            // schedule header, its day rows and the root revision share ONE implicit SaveChanges.
+            var plan = draft.PreflightWeeklySchedule(timeZoneId, days);
+            draft.ApplyWeeklySchedule(plan, DateTimeOffset.UtcNow);
+            if (plan.HasChanges)
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            context.ChangeTracker.Clear();
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+        }
+        catch (DbUpdateException exception) when (IsCheckViolation(exception, "authoring_weekly_schedule_days")
+                                                    || IsCheckViolation(exception, "authoring_weekly_schedules"))
+        {
+            // The tables' CHECK constraints mirror the domain guards; a violation is a rejected payload,
+            // never a silent normalization of a weekday, a time pair or a timezone.
+            context.ChangeTracker.Clear();
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringScheduleDayInvalid));
+        }
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception, "authoring_weekly_schedule_days"))
+        {
+            context.ChangeTracker.Clear();
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
+        }
+        catch
+        {
+            context.ChangeTracker.Clear();
+            throw;
+        }
+
+        return Result.Success(draft);
+    }
+
     /// <summary>
     /// تراکنش را برمی‌گرداند و هیچ تغییر نیمه‌کاره‌ای را در tracker همین context باقی نمی‌گذارد؛
     /// بنابراین یک SaveChanges بعدی در همان context نمی‌تواند ویرایش رد‌شده را منتشر کند.
@@ -407,10 +480,10 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
            && postgres.ConstraintName?.Contains(constraintFragment, StringComparison.Ordinal) == true;
 
     /// <summary>
-    /// آیا خطای provider یک نقض CHECK همان جدول نرخ است. فقط <c>23514</c> روی همان جدول به یک پاسخ
-    /// تجاری تبدیل می‌شود؛ هر خطای دیگر provider دوباره پرتاب می‌شود.
+    /// آیا خطای provider یک نقض CHECK همان جدول نام‌برده است. فقط <c>23514</c> روی همان جدول به یک
+    /// پاسخ تجاری تبدیل می‌شود؛ هر خطای دیگر provider دوباره پرتاب می‌شود.
     /// </summary>
-    private static bool IsCheckViolation(DbUpdateException exception)
+    private static bool IsCheckViolation(DbUpdateException exception, string tableName)
         => exception.InnerException is PostgresException { SqlState: "23514" } postgres
-           && postgres.TableName == "authoring_rate_rows";
+           && postgres.TableName == tableName;
 }

@@ -165,3 +165,43 @@ public sealed record ShippingAuthoringPresentationPatchRequest(
     long ExpectedRevision,
     IReadOnlyList<ShippingAuthoringMethodTranslationWrite> MethodTranslations,
     IReadOnlyList<ShippingAuthoringGroupTitleWrite> GroupTitles);
+
+/// <summary>
+/// یک روز هفته در بدنهٔ جایگزینی برنامهٔ عملیاتی هفتگی: روز هفتهٔ ISO، پرچم صریح کاری/تعطیل و
+/// ساعت‌های اختیاری همان روز.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>پرچم nullable است، عمداً.</b> اگر <c>IsWorking</c> از نوع <c>bool</c> باشد، نبودِ فیلد در JSON
+/// بی‌سروصدا <c>false</c> (یعنی «تعطیل») می‌شود و یک روز کاری حذف‌شده هرگز دیده نمی‌شود. پس پرچم
+/// <c>bool?</c> است و الزام حضور آن در اعتبارسنجی/دامنه سنجیده می‌شود.
+/// </para>
+/// <para>
+/// ساعت‌ها <see cref="TimeOnly"/> محلی هستند (بدون تاریخ/منطقه) و با دقت ثابت سریال می‌شوند؛ هیچ
+/// تبدیل به UTC یا پارس وابسته به culture انجام نمی‌شود.
+/// </para>
+/// </remarks>
+/// <param name="Weekday">روز هفتهٔ ISO ۱..۷ (۶=شنبه، ۵=جمعه).</param>
+/// <param name="IsWorking">پرچم صریح کاری/تعطیل؛ نبود آن شکل نامعتبر است.</param>
+/// <param name="StartTime">شروع بازهٔ محلی؛ شامل و برای روز کاری الزامی.</param>
+/// <param name="EndTime">پایان بازهٔ محلی؛ غیرشامل و برای روز کاری الزامی.</param>
+public sealed record ShippingAuthoringScheduleDayWrite(
+    int Weekday,
+    bool? IsWorking,
+    TimeOnly? StartTime = null,
+    TimeOnly? EndTime = null);
+
+/// <summary>
+/// بدنهٔ جایگزینی کامل برنامهٔ عملیاتی هفتگی یک پیش‌نویس: بازبینی ریشه، منطقهٔ زمانی صریح و هفت روز.
+/// </summary>
+/// <remarks>
+/// مالک، حالت، Tenant، فروشنده، ارز، زبان و هیچ شناسهٔ جغرافیایی در این بدنه نیست. مجموعهٔ روزها
+/// اجباری است و باید دقیقاً هفت روز یکتا باشد؛ <c>[]</c> یا روز کمتر «تعطیل» نیست، پیکربندی ناقص است.
+/// </remarks>
+/// <param name="ExpectedRevision">بازبینی ریشهٔ پیش‌نویس که کلاینت دیده است.</param>
+/// <param name="TimeZoneId">شناسهٔ منطقهٔ زمانی صریح (ترجیحاً IANA)؛ سرور آن را اعتبارسنجی می‌کند.</param>
+/// <param name="Days">دقیقاً هفت روز هفته.</param>
+public sealed record ShippingAuthoringWeeklyScheduleReplaceRequest(
+    long ExpectedRevision,
+    string TimeZoneId,
+    IReadOnlyList<ShippingAuthoringScheduleDayWrite> Days);

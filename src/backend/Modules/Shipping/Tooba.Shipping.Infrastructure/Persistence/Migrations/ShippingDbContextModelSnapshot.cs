@@ -680,6 +680,43 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringScheduleDay", b =>
+                {
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<int>("Weekday")
+                        .HasColumnType("integer")
+                        .HasColumnName("weekday");
+
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("end_time");
+
+                    b.Property<bool>("IsWorking")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_working");
+
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("start_time");
+
+                    b.HasKey("DraftId", "Weekday")
+                        .HasName("pk_authoring_weekly_schedule_days");
+
+                    b.ToTable("authoring_weekly_schedule_days", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_weekly_schedule_days_hours_paired", "(start_time IS NULL) = (end_time IS NULL)");
+
+                            t.HasCheckConstraint("ck_authoring_weekly_schedule_days_range", "start_time IS NULL OR end_time > start_time");
+
+                            t.HasCheckConstraint("ck_authoring_weekly_schedule_days_weekday_range", "weekday BETWEEN 1 AND 7");
+
+                            t.HasCheckConstraint("ck_authoring_weekly_schedule_days_working_hours", "is_working = FALSE OR (start_time IS NOT NULL AND end_time IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringSelectedArea", b =>
                 {
                     b.Property<Guid>("SelectedAreaId")
@@ -715,6 +752,31 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                     b.ToTable("authoring_selected_areas", "shipping", t =>
                         {
                             t.HasCheckConstraint("ck_authoring_selected_areas_node_kind_known", "node_kind IN (0, 1, 2, 3)");
+                        });
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringWeeklySchedule", b =>
+                {
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("time_zone_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("DraftId")
+                        .HasName("pk_authoring_weekly_schedules");
+
+                    b.ToTable("authoring_weekly_schedules", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_weekly_schedules_timezone_length", "char_length(btrim(time_zone_id)) > 0 AND char_length(time_zone_id) <= 64");
                         });
                 });
 
@@ -854,6 +916,16 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_authoring_group_titles_authoring_region_groups_group_id");
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringScheduleDay", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringWeeklySchedule", null)
+                        .WithMany("Days")
+                        .HasForeignKey("DraftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_weekly_schedule_days_schedule");
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringSelectedArea", b =>
                 {
                     b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", null)
@@ -862,6 +934,16 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_authoring_selected_areas_authoring_region_groups_group_id");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringWeeklySchedule", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", null)
+                        .WithOne("WeeklySchedule")
+                        .HasForeignKey("Tooba.Shipping.Domain.Authoring.ShippingAuthoringWeeklySchedule", "DraftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_weekly_schedules_draft");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingWindow", b =>
@@ -879,6 +961,8 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                     b.Navigation("RegionGroups");
 
                     b.Navigation("Translations");
+
+                    b.Navigation("WeeklySchedule");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", b =>
@@ -888,6 +972,11 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                     b.Navigation("RateRows");
 
                     b.Navigation("Titles");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringWeeklySchedule", b =>
+                {
+                    b.Navigation("Days");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingSchedule", b =>

@@ -138,6 +138,8 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
             SafeTitleFallback: "The stored manual rate currency no longer matches the current store currency."),
         D(ShippingErrorCodes.AuthoringPresentationPayloadInvalid, "The draft presentation metadata is not a valid configuration."),
         D(ShippingErrorCodes.AuthoringPresentationLanguageInvalid, "A selected content language is unknown or not active."),
+        D(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid, "The weekly schedule must contain exactly seven distinct ISO weekdays."),
+        D(ShippingErrorCodes.AuthoringScheduleDayInvalid, "A weekly schedule day is not a valid working or closed day."),
     ];
 
     private static ErrorDescriptor D(string code, string fallback) =>

@@ -4,6 +4,7 @@ using Tooba.Shipping.Application.Authoring.Queries;
 using Tooba.Shipping.Application.Validation;
 using Tooba.Shipping.Contracts.Authoring;
 using Tooba.Shipping.Domain.Authoring;
+using Tooba.Shipping.Domain.Scheduling;
 
 namespace Tooba.Shipping.Application.Authoring.Validation;
 
@@ -60,6 +61,15 @@ public static class ShippingAuthoringValidationCodes
 
     /// <summary>تعداد ورودی‌های یک فهرست ارائه از سقف فنی payload بیشتر است.</summary>
     public const string PresentationEntriesTooMany = "shipping.validation.presentation_entries_too_many";
+
+    /// <summary>مجموعهٔ روزهای هفته غایب است (برخلاف هفت روز که پیکربندی معتبر است).</summary>
+    public const string ScheduleDaysRequired = "shipping.validation.schedule_days_required";
+
+    /// <summary>یک روز هفته از نظر شکل نامعتبر است (null، پرچم کاری غایب، بازهٔ ناسازگار).</summary>
+    public const string ScheduleDayEntryInvalid = "shipping.validation.schedule_day_entry_invalid";
+
+    /// <summary>شناسهٔ منطقهٔ زمانی در بدنه غایب یا بیش‌ازحد طولانی است.</summary>
+    public const string ScheduleTimeZoneIdInvalid = "shipping.validation.schedule_timezone_id_invalid";
 }
 
 /// <summary>اعتبارسنجی شکل درخواست ایجاد پیش‌نویس.</summary>
@@ -485,6 +495,117 @@ internal static class ShippingAuthoringPresentationShape
                 || entry.LanguageId == Guid.Empty
                 || !seen.Add((entry.GroupId, entry.LanguageId))
                 || entry.Title?.Trim().Length > ShippingAuthoringPresentationRules.TitleMaxLength)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
+
+/// <summary>
+/// اعتبارسنجی شکل خواندن برنامهٔ عملیاتی هفتگی: شناسهٔ مسیر باید غیرخالی باشد.
+/// </summary>
+public sealed class GetShippingAuthoringWeeklyScheduleQueryValidator
+    : AbstractValidator<GetShippingAuthoringWeeklyScheduleQuery>
+{
+    /// <summary>قواعد را می‌سازد.</summary>
+    public GetShippingAuthoringWeeklyScheduleQueryValidator()
+    {
+        RuleFor(x => x.DraftId)
+            .NotEmpty()
+            .WithErrorCode(ShippingAuthoringValidationCodes.DraftIdRequired);
+    }
+}
+
+/// <summary>
+/// اعتبارسنجی شکل جایگزینی برنامهٔ هفتگی: هویت مسیر، نشانگر همزمانی، الزام مجموعهٔ روزها و
+/// منطقهٔ زمانی، و شکل هر روز، همه پیش از هر خواندن خارجی یا نوشتن.
+/// </summary>
+/// <remarks>
+/// شکل فقط سنجیده می‌شود: «دقیقاً هفت روز یکتا» و «زمان قابل‌حل» در دامنه پیش‌سنجی می‌شوند تا یک
+/// فراخوان مستقیم (بدون HTTP) هم نتواند هفتهٔ ناقص یا منطقهٔ زمانی ساختگی بنویسد. پرچم کاری nullable
+/// است و نبودش هرگز به «تعطیل» تبدیل نمی‌شود.
+/// </remarks>
+public sealed class ReplaceShippingAuthoringWeeklyScheduleCommandValidator
+    : AbstractValidator<ReplaceShippingAuthoringWeeklyScheduleCommand>
+{
+    /// <summary>قواعد را می‌سازد.</summary>
+    public ReplaceShippingAuthoringWeeklyScheduleCommandValidator()
+    {
+        RuleFor(x => x.DraftId)
+            .NotEmpty()
+            .WithErrorCode(ShippingAuthoringValidationCodes.DraftIdRequired);
+
+        RuleFor(x => x.Request)
+            .NotNull()
+            .WithErrorCode(ShippingValidationCodes.BodyInvalid);
+
+        RuleFor(x => x.Request.ExpectedRevision)
+            .GreaterThan(0)
+            .WithErrorCode(ShippingAuthoringValidationCodes.ExpectedRevisionInvalid)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.TimeZoneId)
+            .NotEmpty()
+            .WithErrorCode(ShippingAuthoringValidationCodes.ScheduleTimeZoneIdInvalid)
+            .MaximumLength(ShippingRatePolicyLimits.TimeZoneIdMaxLength)
+            .WithErrorCode(ShippingAuthoringValidationCodes.ScheduleTimeZoneIdInvalid)
+            .When(x => x.Request is not null);
+
+        // Same repaired R190-01 placement: the required rule is unconditional (guarded only by the
+        // parent Request) and the shape rules run only for a present collection, so an omitted JSON
+        // property can never read as "all closed" or "no change".
+        RuleFor(x => x.Request.Days)
+            .NotNull()
+            .WithErrorCode(ShippingAuthoringValidationCodes.ScheduleDaysRequired)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.Days)
+            .Must(days => days!.Count == ShippingAuthoringWeeklySchedule.DaysPerWeek)
+            .WithErrorCode(ShippingAuthoringValidationCodes.ScheduleDayEntryInvalid)
+            .Must(ShippingAuthoringScheduleShape.HasValidDays)
+            .WithErrorCode(ShippingAuthoringValidationCodes.ScheduleDayEntryInvalid)
+            .When(x => x.Request?.Days is not null);
+    }
+}
+
+/// <summary>
+/// قواعد شکل روزهای هفته در لایهٔ transport. هیچ قاعدهٔ تجاری اینجا نیست: فقط «آیا این payload
+/// قابل تفسیر است»؛ یکتایی هفت‌روزه و حل منطقهٔ زمانی در دامنه سنجیده می‌شود.
+/// </summary>
+internal static class ShippingAuthoringScheduleShape
+{
+    /// <summary>روزها: عنصر null، پرچم غایب، روز خارج از ۱..۷ یا جفت ساعت ناسازگار ممنوع.</summary>
+    /// <param name="days">روزهای بدنه.</param>
+    public static bool HasValidDays(IReadOnlyList<ShippingAuthoringScheduleDayWrite> days)
+    {
+        foreach (var day in days)
+        {
+            if (day is null
+                || day.IsWorking is null
+                || day.Weekday is < ShippingOperatingWindow.MinWeekday or > ShippingOperatingWindow.MaxWeekday)
+            {
+                return false;
+            }
+
+            var hasStart = day.StartTime is not null;
+            var hasEnd = day.EndTime is not null;
+            if (hasStart != hasEnd)
+            {
+                return false;
+            }
+
+            if (day.IsWorking == true && !hasStart)
+            {
+                // A working day without an interval would silently invent a schedule.
+                return false;
+            }
+
+            if (day.StartTime is { } start
+                && day.EndTime is { } end
+                && end <= start)
             {
                 return false;
             }

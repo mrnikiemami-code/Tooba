@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Shipping.Contracts.Errors;
+using Tooba.Shipping.Domain.Scheduling;
 
 namespace Tooba.Shipping.Domain.Authoring;
 
@@ -285,6 +286,12 @@ public sealed class ShippingAuthoringDraft
     /// cascade می‌کند.
     /// </summary>
     public IReadOnlyList<ShippingAuthoringDraftTranslation> Translations => _translations;
+
+    /// <summary>
+    /// برنامهٔ عملیاتی هفتگی همین روش؛ تهی یعنی صریحاً <b>پیکربندی‌نشده</b> و نه هفت روز کاری/تعطیل.
+    /// یک‌بار به خود پیش‌نویس وصل است، پس همهٔ گروه‌های منطقه‌ای همان را به اشتراک می‌گذارند.
+    /// </summary>
+    public ShippingAuthoringWeeklySchedule? WeeklySchedule { get; private set; }
 
     /// <summary>پیش‌نویس تازه می‌سازد؛ بازبینی نخست همیشه ۱ است.</summary>
     /// <param name="owner">مالک سرورساخته.</param>
@@ -830,9 +837,177 @@ public sealed class ShippingAuthoringDraft
         UpdatedAt = now;
     }
 
+    /// <summary>یک روز هفتهٔ ورودی برنامه: پرچم صریح کاری/تعطیل و ساعت‌های اختیاری همان روز.</summary>
+    /// <param name="Weekday">روز هفتهٔ ISO ۱..۷.</param>
+    /// <param name="IsWorking">پرچم صریح؛ نبود آن در لایهٔ انتقال پذیرفته نمی‌شود.</param>
+    /// <param name="StartTime">شروع بازهٔ محلی؛ شامل و برای روز کاری الزامی.</param>
+    /// <param name="EndTime">پایان بازهٔ محلی؛ غیرشامل و برای روز کاری الزامی.</param>
+    public sealed record ScheduleDayInput(int Weekday, bool IsWorking, TimeOnly? StartTime, TimeOnly? EndTime);
+
+    /// <summary>یک روز پس از پیش‌سنجی: ردیف موجود (برای حفظ هویت) یا تهی برای نخستین پیکربندی.</summary>
+    /// <param name="Existing">ردیف موجود همین روز در همین پیش‌نویس.</param>
+    /// <param name="Weekday">روز هفتهٔ ISO.</param>
+    /// <param name="IsWorking">پرچم تأییدشده.</param>
+    /// <param name="StartTime">ساعت شروع پس از حفظ/جایگزینی.</param>
+    /// <param name="EndTime">ساعت پایان پس از حفظ/جایگزینی.</param>
+    public sealed record ScheduleDayAssignment(
+        ShippingAuthoringScheduleDay? Existing,
+        int Weekday,
+        bool IsWorking,
+        TimeOnly? StartTime,
+        TimeOnly? EndTime);
+
+    /// <summary>برنامهٔ کامل و تأییدشدهٔ جایگزینی هفته (بدون هیچ تغییر روی aggregate).</summary>
+    /// <param name="TimeZoneId">منطقهٔ زمانی نرمال‌شده و قابل‌حل.</param>
+    /// <param name="Days">دقیقاً هفت روز.</param>
+    public sealed record WeeklySchedulePlan(string TimeZoneId, IReadOnlyList<ScheduleDayAssignment> Days)
+    {
+        /// <summary>
+        /// آیا این جایگزینی دست‌کم یک تغییر واقعی دارد. یک PUT یکسان (همان منطقهٔ زمانی و همان روزها)
+        /// یک no-op صادقانه است: بازبینی و زمان تغییر نمی‌کنند، اما <c>expectedRevision</c> همیشه
+        /// بررسی می‌شود.
+        /// </summary>
+        public bool HasChanges { get; init; }
+    }
+
+    /// <summary>
+    /// کل هفته را <b>بدون هیچ تغییر</b> می‌سنجد: منطقهٔ زمانی، تعداد دقیق روزها، یکتایی/بازهٔ روز هفته،
+    /// حضور پرچم کاری و جفت ساعت‌ها. هر نقصی پیش از نخستین نوشتن برمی‌گردد، پس ردیف‌های tracked،
+    /// بازبینی، زمان و سایر قابلیت‌ها دست‌نخورده می‌مانند.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>هفت روز، نه کمتر.</b> روز حذف‌شده «تعطیل» نیست؛ یک پیکربندی ناقص است و با کد پایدار رد
+    /// می‌شود. روز خارج از ۱..۷ همان کد قدیمی <c>shipping.schedule.weekday.invalid</c> را می‌گیرد.
+    /// </para>
+    /// <para>
+    /// <b>ساعت‌ها.</b> روز کاری باید هر دو ساعت را داشته باشد و <c>end &gt; start</c> باشد؛ بازهٔ
+    /// معکوس/مساوی/شبانه با کد قدیمی <c>shipping.schedule.window.range_invalid</c> رد می‌شود. روز
+    /// تعطیل با هر دو ساعت تهی، جفتِ ذخیره‌شدهٔ قبلی همان روز را حفظ می‌کند؛ یک ساعت بدون دیگری
+    /// نامعتبر است. هیچ نرمال‌سازی، معکوس‌سازی یا کشیدن بازه به روز بعد وجود ندارد.
+    /// </para>
+    /// <para>
+    /// <b>هیچ استنتاج منطقهٔ زمانی.</b> شناسه با <see cref="ShippingScheduleRules.NormalizeTimeZone"/>
+    /// اعتبارسنجی می‌شود؛ locale/کشور/ساعت مرورگر یا پیش‌فرض سخت‌کدشده دخالت ندارد.
+    /// </para>
+    /// </remarks>
+    /// <param name="timeZoneId">شناسهٔ منطقهٔ زمانی از بدنه.</param>
+    /// <param name="days">مجموعهٔ هفت‌روزهٔ پیشنهادی.</param>
+    public WeeklySchedulePlan PreflightWeeklySchedule(string? timeZoneId, IReadOnlyList<ScheduleDayInput> days)
+    {
+        ArgumentNullException.ThrowIfNull(days);
+
+        var normalizedTimeZone = ShippingScheduleRules.NormalizeTimeZone(timeZoneId);
+        if (days.Count != ShippingAuthoringWeeklySchedule.DaysPerWeek)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
+        }
+
+        var existingByWeekday = WeeklySchedule is { } schedule
+            ? schedule.Days.ToDictionary(day => day.Weekday)
+            : new Dictionary<int, ShippingAuthoringScheduleDay>();
+        var seen = new HashSet<int>();
+        var assignments = new List<ScheduleDayAssignment>(ShippingAuthoringWeeklySchedule.DaysPerWeek);
+        foreach (var day in days)
+        {
+            if (day is null)
+            {
+                throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleDayInvalid));
+            }
+
+            var weekday = ShippingOperatingWindow.NormalizeWeekday(day.Weekday);
+            if (!seen.Add(weekday))
+            {
+                // A duplicate weekday would make "which row is Tuesday" depend on array order.
+                throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
+            }
+
+            existingByWeekday.TryGetValue(weekday, out var existing);
+            var (start, end) = NormalizeScheduleDayHours(day.IsWorking, day.StartTime, day.EndTime, existing);
+            assignments.Add(new ScheduleDayAssignment(existing, weekday, day.IsWorking, start, end));
+        }
+
+        if (seen.Count != ShippingAuthoringWeeklySchedule.DaysPerWeek)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
+        }
+
+        var unchanged = WeeklySchedule is { } current
+                         && string.Equals(current.TimeZoneId, normalizedTimeZone, StringComparison.Ordinal)
+                         && assignments.All(assignment => assignment.Existing is { } row
+                                                          && row.Matches(
+                                                              assignment.IsWorking,
+                                                              assignment.StartTime,
+                                                              assignment.EndTime));
+        return new WeeklySchedulePlan(normalizedTimeZone, assignments) { HasChanges = !unchanged };
+    }
+
+    /// <summary>
+    /// برنامهٔ پیش‌سنجی‌شده را اعمال می‌کند. هیچ اعتبارسنجی‌ای اینجا نیست؛ ورودی باید از
+    /// <see cref="PreflightWeeklySchedule"/> آمده باشد. جایگزینی کامل هفته یک واحد افزایش بازبینی
+    /// ریشه است و با همان SaveChanges ضمنی نوشته می‌شود؛ PUT یکسان بازبینی/زمان را تغییر نمی‌دهد.
+    /// </summary>
+    /// <param name="plan">برنامهٔ معتبر.</param>
+    /// <param name="now">زمان UTC.</param>
+    public void ApplyWeeklySchedule(WeeklySchedulePlan plan, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        if (!plan.HasChanges)
+        {
+            return;
+        }
+
+        if (WeeklySchedule is { } schedule)
+        {
+            schedule.Apply(plan.TimeZoneId, plan.Days, now);
+        }
+        else
+        {
+            WeeklySchedule = ShippingAuthoringWeeklySchedule.Create(DraftId, plan.TimeZoneId, plan.Days, now);
+        }
+
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// ساعت‌های یک روز را تعیین می‌کند: روز کاری هر دو ساعت را می‌خواهد، روز تعطیل با هر دو تهی جفت
+    /// ذخیره‌شده را حفظ می‌کند، و یک ساعت تنها یا بدون جفت معتبر رد می‌شود.
+    /// </summary>
+    private static (TimeOnly? Start, TimeOnly? End) NormalizeScheduleDayHours(
+        bool isWorking,
+        TimeOnly? startTime,
+        TimeOnly? endTime,
+        ShippingAuthoringScheduleDay? existing)
+    {
+        if (isWorking)
+        {
+            if (startTime is not { } workingStart || endTime is not { } workingEnd)
+            {
+                // A working day without an explicit interval would silently invent a schedule.
+                throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleDayInvalid));
+            }
+
+            return (workingStart, ShippingOperatingWindow.NormalizeRange(workingStart, workingEnd));
+        }
+
+        if (startTime is null && endTime is null)
+        {
+            return existing is { } kept ? (kept.StartTime, kept.EndTime) : (null, null);
+        }
+
+        if (startTime is not { } closedStart || endTime is not { } closedEnd)
+        {
+            // One supplied bound is not a remembered pair and must not be half-stored.
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleDayInvalid));
+        }
+
+        return (closedStart, ShippingOperatingWindow.NormalizeRange(closedStart, closedEnd));
+    }
+
     private static void RejectPresentation()
         => throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringPresentationPayloadInvalid));
-
     private static ShippingAuthoringRateRowValue NormalizeRow(ShippingAuthoringRateRowInput input)
     {
         var weightMin = NormalizeIntervalLong(

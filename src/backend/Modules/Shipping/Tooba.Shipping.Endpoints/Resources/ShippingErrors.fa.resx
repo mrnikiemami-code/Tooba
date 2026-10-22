@@ -186,4 +186,10 @@
   <data name="shipping.authoring.presentation_language_invalid" xml:space="preserve">
     <value>زبان انتخاب‌شده برای محتوا در فهرست زبان‌های فعال این نصب وجود ندارد.</value>
   </data>
+  <data name="shipping.authoring.schedule_weekday_set_invalid" xml:space="preserve">
+    <value>برنامهٔ هفتگی باید دقیقاً هفت روز هفتهٔ یکتا داشته باشد.</value>
+  </data>
+  <data name="shipping.authoring.schedule_day_invalid" xml:space="preserve">
+    <value>یک روز برنامهٔ هفتگی، روز کاری یا تعطیل معتبر نیست.</value>
+  </data>
 </root>

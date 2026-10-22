@@ -229,36 +229,13 @@ public sealed class ShippingOperatingSchedule
     /// منطقهٔ زمانی را نرمال و اعتبارسنجی می‌کند. یک شناسهٔ غیرقابل‌حل یعنی بازه‌ها به وقت محلی
     /// نامعلومی تفسیر می‌شوند؛ چنین برنامه‌ای ذخیره نمی‌شود.
     /// </summary>
+    /// <remarks>
+    /// قاعده در <see cref="ShippingScheduleRules.NormalizeTimeZone"/> استخراج شده تا برنامهٔ هفتگی
+    /// مالک‌محور هم همان رفتار و همان کدهای پایدار را داشته باشد؛ این wrapper فقط نام محلی قبلی را
+    /// برای خوانایی حفظ می‌کند.
+    /// </remarks>
     private static string NormalizeTimeZone(string? timeZoneId)
-    {
-        var trimmed = timeZoneId?.Trim() ?? string.Empty;
-        if (trimmed.Length == 0)
-        {
-            throw new SemanticException(new SemanticError(ShippingErrorCodes.ScheduleTimeZoneRequired));
-        }
-
-        if (trimmed.Length > ShippingRatePolicyLimits.TimeZoneIdMaxLength)
-        {
-            throw new SemanticException(new SemanticError(ShippingErrorCodes.ScheduleTimeZoneInvalid));
-        }
-
-        try
-        {
-            // IANA preferred; Windows ids still resolve on .NET, so the check accepts exactly what the
-            // runtime can actually interpret rather than a hand-maintained allow-list that would rot.
-            _ = TimeZoneInfo.FindSystemTimeZoneById(trimmed);
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            throw new SemanticException(new SemanticError(ShippingErrorCodes.ScheduleTimeZoneInvalid));
-        }
-        catch (InvalidTimeZoneException)
-        {
-            throw new SemanticException(new SemanticError(ShippingErrorCodes.ScheduleTimeZoneInvalid));
-        }
-
-        return trimmed;
-    }
+        => ShippingScheduleRules.NormalizeTimeZone(timeZoneId);
 }
 
 /// <summary>

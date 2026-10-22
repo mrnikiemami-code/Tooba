@@ -101,6 +101,25 @@ public interface IShippingAuthoringDraftDirectory
         IReadOnlyList<ShippingAuthoringDraft.GroupTitleInput> titles,
         IReadOnlySet<Guid> activeLanguageIds,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// برنامهٔ عملیاتی هفتگی یک پیش‌نویس همین مالک را در <b>یک</b> SaveChanges ضمنی اتمی جایگزین
+    /// می‌کند و بازبینی ریشه را یک واحد بالا می‌برد؛ <paramref name="expectedRevision"/> همان نشانگر
+    /// همزمانی مشترک با منطقه/نرخ/ارائه است.
+    /// </summary>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="draftId">شناسهٔ پیش‌نویس.</param>
+    /// <param name="expectedRevision">بازبینی مورد انتظار کلاینت.</param>
+    /// <param name="timeZoneId">شناسهٔ منطقهٔ زمانی صریح؛ اعتبارسنجی در دامنه.</param>
+    /// <param name="days">دقیقاً هفت روز هفته (جایگزینی کامل).</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<ShippingAuthoringDraft>> ReplaceWeeklyScheduleAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        string? timeZoneId,
+        IReadOnlyList<ShippingAuthoringDraft.ScheduleDayInput> days,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

@@ -234,4 +234,16 @@ public static class ShippingErrorCodes
 
     /// <summary>زبان ارجاع‌شده در registry فعال authoritative وجود ندارد یا غیرفعال است.</summary>
     public const string AuthoringPresentationLanguageInvalid = "shipping.authoring.presentation_language_invalid";
+
+    /// <summary>
+    /// مجموعهٔ روزهای هفتهٔ برنامهٔ مالک دقیقاً هفت روز یکتا با هویت ISO ۱..۷ نیست: روز تکراری،
+    /// روز حذف‌شده یا تعداد نادرست. روز غایب «تعطیل» نیست، پیکربندی ناقص است.
+    /// </summary>
+    public const string AuthoringScheduleWeekdaySetInvalid = "shipping.authoring.schedule_weekday_set_invalid";
+
+    /// <summary>
+    /// شکل یک روز برنامهٔ مالک نامعتبر است: روز کاری بدون هر دو ساعت، یا یک ساعت بدون جفت. بازهٔ
+    /// معکوس/مساوی/شبانه کد جداگانهٔ <c>shipping.schedule.window.range_invalid</c> را می‌گیرد.
+    /// </summary>
+    public const string AuthoringScheduleDayInvalid = "shipping.authoring.schedule_day_invalid";
 }

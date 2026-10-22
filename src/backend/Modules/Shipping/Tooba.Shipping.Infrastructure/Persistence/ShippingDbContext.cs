@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
@@ -586,6 +586,72 @@ public sealed class ShippingDbContext : DbContext
                 .HasDatabaseName("ix_authoring_rate_rows_group");
         });
 
+        // TB-193 owner-scoped per-weekday operating schedule for ONE draft. It is attached to the draft
+        // (method), never to a region group, rate row, language, seller actor or geography, so every
+        // region group of the same draft shares exactly this one header. Absence of the header is the
+        // explicit UNCONFIGURED state; an all-closed week is seven real rows and is NOT the same thing.
+        modelBuilder.Entity<ShippingAuthoringWeeklySchedule>(entity =>
+        {
+            entity.ToTable("authoring_weekly_schedules", table =>
+            {
+                // A blank or over-long timezone would make every local interval uninterpretable; the
+                // runtime resolvability itself stays a canonical preflight rule, not a fake SQL catalog
+                // lookup.
+                table.HasCheckConstraint(
+                    "ck_authoring_weekly_schedules_timezone_length",
+                    $"char_length(btrim(time_zone_id)) > 0 AND char_length(time_zone_id) <= {ShippingRatePolicyLimits.TimeZoneIdMaxLength.ToString(CultureInfo.InvariantCulture)}");
+            });
+            entity.HasKey(x => x.DraftId);
+            entity.Property(x => x.DraftId).ValueGeneratedNever();
+            entity.Property(x => x.TimeZoneId).IsRequired().HasMaxLength(ShippingRatePolicyLimits.TimeZoneIdMaxLength);
+            entity.Property(x => x.UpdatedAt).IsRequired();
+
+            // ONE schedule per draft/method: the draft key is the real invariant, so a second header for
+            // the same method is impossible even for a raw writer.
+            entity.HasOne<ShippingAuthoringDraft>()
+                .WithOne(draft => draft.WeeklySchedule)
+                .HasForeignKey<ShippingAuthoringWeeklySchedule>(schedule => schedule.DraftId)
+                .HasConstraintName("fk_authoring_weekly_schedules_draft")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Navigation(x => x.Days).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.HasMany(x => x.Days)
+                .WithOne()
+                .HasForeignKey(day => day.DraftId)
+                .HasConstraintName("fk_authoring_weekly_schedule_days_schedule")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ShippingAuthoringScheduleDay>(entity =>
+        {
+            entity.ToTable("authoring_weekly_schedule_days", table =>
+            {
+                // ISO weekday identity is 1=Monday .. 7=Sunday. Storage rejects anything else so no
+                // locale label, .NET DayOfWeek cast or array position can become the persisted identity.
+                table.HasCheckConstraint(
+                    "ck_authoring_weekly_schedule_days_weekday_range",
+                    $"weekday BETWEEN {ShippingOperatingWindow.MinWeekday} AND {ShippingOperatingWindow.MaxWeekday}");
+                // Both hours are present or both absent: a half-stored pair is not a remembered pair.
+                table.HasCheckConstraint(
+                    "ck_authoring_weekly_schedule_days_hours_paired",
+                    "(start_time IS NULL) = (end_time IS NULL)");
+                // The local interval is half-open [start,end): equal, inverted and overnight ranges are
+                // rejected instead of being reversed, extended or normalized into tomorrow.
+                table.HasCheckConstraint(
+                    "ck_authoring_weekly_schedule_days_range",
+                    "start_time IS NULL OR end_time > start_time");
+                // A working day is not a working day without an explicit interval.
+                table.HasCheckConstraint(
+                    "ck_authoring_weekly_schedule_days_working_hours",
+                    "is_working = FALSE OR (start_time IS NOT NULL AND end_time IS NOT NULL)");
+            });
+            // Exactly one row per (draft, weekday) is a stable day identity across whole-week
+            // replacements; exactly-seven completeness stays a canonical preflight rule.
+            entity.HasKey(x => new { x.DraftId, x.Weekday });
+            entity.Property(x => x.DraftId).IsRequired();
+            entity.Property(x => x.IsWorking).IsRequired();
+        });
+
         modelBuilder.Entity<ShippingAuthoringSelectedArea>(entity =>
         {
             entity.ToTable("authoring_selected_areas", table =>
@@ -635,3 +701,4 @@ public sealed class ShippingDbContextFactory : IDesignTimeDbContextFactory<Shipp
         return new ShippingDbContext(options.Options);
     }
 }
+

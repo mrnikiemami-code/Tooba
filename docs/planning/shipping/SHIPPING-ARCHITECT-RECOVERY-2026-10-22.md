@@ -250,3 +250,20 @@ pre-dispatch denials and malformed-input preflight; and an independent raw Postg
 on the two new tables plus retained-text reorder/rate-edit proof. Executed 589/589 whole Shipping suite;
 production executable behavior unchanged (one XML remark corrected). Worker PASS only — not Architect
 ACCEPT; no TB-193 and no automatic next task.
+
+## 14. TB-193 outcome pointer (2026-10-22)
+
+TB-SHIPPING-ADMIN-WEEKLY-SCHEDULE-DRAFTS-193 delivered the bounded D5 per-weekday draft operating
+schedule: one owner-scoped schedule attached ONCE to the draft root, explicit validated timezone, exactly
+seven unique ISO weekdays with explicit working/closed flags and independent same-day intervals,
+remembered closed-day hours, truthful UNCONFIGURED versus configured-all-closed, whole-week preflight plus
+one atomic SaveChanges on the shared root revision. Two new Shipping-owned tables plus one additive
+migration; authorized admin/seller GET/PUT through the real owner authorizer; executed PostgreSQL 17
+roundtrip, raw constraint (SQLSTATE + owned constraint) and schedule-vs-rate race proof; whole Shipping
+suite 609/609. Legacy multi-window schedule rows and errors unchanged (74/74 legacy schedule tests).
+Rules recorded in `SHIPPING-ADMIN-RULES-DECISION.md` section 24; details in
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-WEEKLY-SCHEDULE-DRAFTS-193/`.
+
+**Open gates unchanged:** cutoff/holiday/capacity/customer-promise are NOT implemented; drafts remain
+inactive configuration; Runtime-Merchandise-Basis-And-Measurement gate stays OPEN_NOT_IMPLEMENTED and
+TB-185 stays paused. Worker PASS is technical proof only, not Architect ACCEPT; no automatic next task.

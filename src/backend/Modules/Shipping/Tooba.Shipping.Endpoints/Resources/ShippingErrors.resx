@@ -186,4 +186,10 @@
   <data name="shipping.authoring.presentation_language_invalid" xml:space="preserve">
     <value>The selected content language is unknown or not active in this installation.</value>
   </data>
+  <data name="shipping.authoring.schedule_weekday_set_invalid" xml:space="preserve">
+    <value>The weekly schedule must contain exactly seven distinct ISO weekdays.</value>
+  </data>
+  <data name="shipping.authoring.schedule_day_invalid" xml:space="preserve">
+    <value>A weekly schedule day is not a valid working or closed day.</value>
+  </data>
 </root>
