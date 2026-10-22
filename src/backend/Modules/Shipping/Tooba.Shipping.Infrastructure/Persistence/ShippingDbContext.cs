@@ -457,7 +457,7 @@ public sealed class ShippingDbContext : DbContext
                 // make stored amounts ambiguous, so it can never be persisted.
                 table.HasCheckConstraint(
                     "ck_authoring_region_groups_currency_canonical",
-                    "currency_code IS NULL OR (char_length(currency_code) = 3 AND currency_code = upper(currency_code))");
+                    "currency_code IS NULL OR (octet_length(currency_code) = 3 AND currency_code COLLATE \"C\" ~ '^[A-Z]{3}$')");
             });
             entity.HasKey(x => x.GroupId);
             entity.Property(x => x.GroupId).ValueGeneratedNever();
@@ -494,20 +494,24 @@ public sealed class ShippingDbContext : DbContext
         {
             entity.ToTable("authoring_rate_rows", table =>
             {
+                // Each axis is EITHER unconditioned (both bounds NULL) OR explicitly conditioned with a
+                // present, bounded minimum. The second branch repeats "min IS NOT NULL" because without it a
+                // min=NULL / max=positive row makes the whole predicate UNKNOWN, which PostgreSQL CHECK
+                // accepts; the aggregate and transport reject that max-only shape, so storage must too.
                 table.HasCheckConstraint(
                     "ck_authoring_rate_rows_weight_interval",
-                    $"(min_weight_grams IS NULL AND max_weight_grams IS NULL) OR (min_weight_grams >= 0 AND min_weight_grams <= {ShippingAuthoringRateRowRules.WeightGramsMaxValue.ToString(CultureInfo.InvariantCulture)} AND (max_weight_grams IS NULL OR (max_weight_grams > min_weight_grams AND max_weight_grams <= {ShippingAuthoringRateRowRules.WeightGramsMaxValue.ToString(CultureInfo.InvariantCulture)})))");
+                    $"(min_weight_grams IS NULL AND max_weight_grams IS NULL) OR (min_weight_grams IS NOT NULL AND min_weight_grams >= 0 AND min_weight_grams <= {ShippingAuthoringRateRowRules.WeightGramsMaxValue.ToString(CultureInfo.InvariantCulture)} AND (max_weight_grams IS NULL OR (max_weight_grams > min_weight_grams AND max_weight_grams <= {ShippingAuthoringRateRowRules.WeightGramsMaxValue.ToString(CultureInfo.InvariantCulture)})))");
                 table.HasCheckConstraint(
                     "ck_authoring_rate_rows_count_interval",
-                    $"(min_item_count IS NULL AND max_item_count IS NULL) OR (min_item_count >= 1 AND min_item_count <= {ShippingAuthoringRateRowRules.ItemCountMaxValue.ToString(CultureInfo.InvariantCulture)} AND (max_item_count IS NULL OR (max_item_count > min_item_count AND max_item_count <= {ShippingAuthoringRateRowRules.ItemCountMaxValue.ToString(CultureInfo.InvariantCulture)})))");
+                    $"(min_item_count IS NULL AND max_item_count IS NULL) OR (min_item_count IS NOT NULL AND min_item_count >= 1 AND min_item_count <= {ShippingAuthoringRateRowRules.ItemCountMaxValue.ToString(CultureInfo.InvariantCulture)} AND (max_item_count IS NULL OR (max_item_count > min_item_count AND max_item_count <= {ShippingAuthoringRateRowRules.ItemCountMaxValue.ToString(CultureInfo.InvariantCulture)})))");
                 table.HasCheckConstraint(
                     "ck_authoring_rate_rows_merchandise_interval",
-                    $"(min_merchandise_amount IS NULL AND max_merchandise_amount IS NULL) OR (min_merchandise_amount >= 0 AND (max_merchandise_amount IS NULL OR max_merchandise_amount > min_merchandise_amount))");
+                    $"(min_merchandise_amount IS NULL AND max_merchandise_amount IS NULL) OR (min_merchandise_amount IS NOT NULL AND min_merchandise_amount >= 0 AND min_merchandise_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)} AND (max_merchandise_amount IS NULL OR (max_merchandise_amount > min_merchandise_amount AND max_merchandise_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)})))");
                 table.HasCheckConstraint("ck_authoring_rate_rows_freight_non_negative", "freight_amount >= 0");
                 table.HasCheckConstraint("ck_authoring_rate_rows_packaging_non_negative", "packaging_amount >= 0");
                 table.HasCheckConstraint(
                     "ck_authoring_rate_rows_amount_within_max",
-                    $"freight_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)} AND packaging_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)} AND (max_merchandise_amount IS NULL OR max_merchandise_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)})");
+                    $"freight_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)} AND packaging_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)} AND (min_merchandise_amount IS NULL OR min_merchandise_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)}) AND (max_merchandise_amount IS NULL OR max_merchandise_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)})");
                 table.HasCheckConstraint(
                     "ck_authoring_rate_rows_duration_range",
                     $"min_delivery_days >= 0 AND max_delivery_days >= min_delivery_days AND max_delivery_days <= {ShippingAuthoringRateRowRules.DaysMaxValue.ToString(CultureInfo.InvariantCulture)}");

@@ -382,16 +382,16 @@ public sealed class ShippingPersistenceModelTests
     }
 
     [Fact]
-    public void Migrations_are_the_initial_slice_plus_seven_additive_updates()
+    public void Migrations_are_the_initial_slice_plus_eight_additive_updates()
     {
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        // Eight migrations only: the initial slice, five additive changes (option identity, operating
+        // Nine migrations only: the initial slice, five additive changes (option identity, operating
         // schedule, weight/count tiers, packaging policy, option-scoped coverage restriction), the D3
-        // authoring draft/group/area addition and the TB-191 group rate-row addition. Asserting the
-        // exact count keeps the schema reviewable as a unit instead of an open-ended chain.
-        Assert.Equal(8, migrations.Length);
+        // authoring draft/group/area addition, the TB-191 group rate-row addition and the TB-191-R1
+        // constraint-parity correction. Asserting the exact count keeps the schema reviewable as a unit.
+        Assert.Equal(9, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
@@ -400,6 +400,7 @@ public sealed class ShippingPersistenceModelTests
         Assert.EndsWith("_OptionScopedCoverageRestriction", migrations[5], StringComparison.Ordinal);
         Assert.EndsWith("_AuthoringDraftPersistence", migrations[6], StringComparison.Ordinal);
         Assert.EndsWith("_AuthoringGroupRateRows", migrations[7], StringComparison.Ordinal);
+        Assert.EndsWith("_AuthoringRateRowConstraintParity", migrations[8], StringComparison.Ordinal);
     }
 
     [Fact]

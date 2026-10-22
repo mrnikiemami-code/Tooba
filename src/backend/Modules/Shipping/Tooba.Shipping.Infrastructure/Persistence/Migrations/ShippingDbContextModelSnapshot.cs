@@ -569,19 +569,19 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
 
                     b.ToTable("authoring_rate_rows", "shipping", t =>
                         {
-                            t.HasCheckConstraint("ck_authoring_rate_rows_amount_within_max", "freight_amount <= 1000000000 AND packaging_amount <= 1000000000 AND (max_merchandise_amount IS NULL OR max_merchandise_amount <= 1000000000)");
+                            t.HasCheckConstraint("ck_authoring_rate_rows_amount_within_max", "freight_amount <= 1000000000 AND packaging_amount <= 1000000000 AND (min_merchandise_amount IS NULL OR min_merchandise_amount <= 1000000000) AND (max_merchandise_amount IS NULL OR max_merchandise_amount <= 1000000000)");
 
-                            t.HasCheckConstraint("ck_authoring_rate_rows_count_interval", "(min_item_count IS NULL AND max_item_count IS NULL) OR (min_item_count >= 1 AND min_item_count <= 1000000 AND (max_item_count IS NULL OR (max_item_count > min_item_count AND max_item_count <= 1000000)))");
+                            t.HasCheckConstraint("ck_authoring_rate_rows_count_interval", "(min_item_count IS NULL AND max_item_count IS NULL) OR (min_item_count IS NOT NULL AND min_item_count >= 1 AND min_item_count <= 1000000 AND (max_item_count IS NULL OR (max_item_count > min_item_count AND max_item_count <= 1000000)))");
 
                             t.HasCheckConstraint("ck_authoring_rate_rows_duration_range", "min_delivery_days >= 0 AND max_delivery_days >= min_delivery_days AND max_delivery_days <= 365");
 
                             t.HasCheckConstraint("ck_authoring_rate_rows_freight_non_negative", "freight_amount >= 0");
 
-                            t.HasCheckConstraint("ck_authoring_rate_rows_merchandise_interval", "(min_merchandise_amount IS NULL AND max_merchandise_amount IS NULL) OR (min_merchandise_amount >= 0 AND (max_merchandise_amount IS NULL OR max_merchandise_amount > min_merchandise_amount))");
+                            t.HasCheckConstraint("ck_authoring_rate_rows_merchandise_interval", "(min_merchandise_amount IS NULL AND max_merchandise_amount IS NULL) OR (min_merchandise_amount IS NOT NULL AND min_merchandise_amount >= 0 AND min_merchandise_amount <= 1000000000 AND (max_merchandise_amount IS NULL OR (max_merchandise_amount > min_merchandise_amount AND max_merchandise_amount <= 1000000000)))");
 
                             t.HasCheckConstraint("ck_authoring_rate_rows_packaging_non_negative", "packaging_amount >= 0");
 
-                            t.HasCheckConstraint("ck_authoring_rate_rows_weight_interval", "(min_weight_grams IS NULL AND max_weight_grams IS NULL) OR (min_weight_grams >= 0 AND min_weight_grams <= 1000000000 AND (max_weight_grams IS NULL OR (max_weight_grams > min_weight_grams AND max_weight_grams <= 1000000000)))");
+                            t.HasCheckConstraint("ck_authoring_rate_rows_weight_interval", "(min_weight_grams IS NULL AND max_weight_grams IS NULL) OR (min_weight_grams IS NOT NULL AND min_weight_grams >= 0 AND min_weight_grams <= 1000000000 AND (max_weight_grams IS NULL OR (max_weight_grams > min_weight_grams AND max_weight_grams <= 1000000000)))");
                         });
                 });
 
@@ -613,7 +613,7 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
 
                     b.ToTable("authoring_region_groups", "shipping", t =>
                         {
-                            t.HasCheckConstraint("ck_authoring_region_groups_currency_canonical", "currency_code IS NULL OR (char_length(currency_code) = 3 AND currency_code = upper(currency_code))");
+                            t.HasCheckConstraint("ck_authoring_region_groups_currency_canonical", "currency_code IS NULL OR (octet_length(currency_code) = 3 AND currency_code COLLATE \"C\" ~ '^[A-Z]{3}$')");
 
                             t.HasCheckConstraint("ck_authoring_region_groups_order_non_negative", "group_order >= 0");
                         });
