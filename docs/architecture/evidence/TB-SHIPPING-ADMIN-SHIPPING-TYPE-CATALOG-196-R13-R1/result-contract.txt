@@ -1,0 +1,36 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13-R1
+Parent-Task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Program: TOOBA-SHIPPING-ADMIN-BACKEND-DELIVERY
+Mode: BOUNDED_THREE_WINNER_AND_FULL_TREE_ASSERTION_REPAIR
+Bridge-Task-Row: e14ab1aa-44fe-40f0-aa6f-16564686e5e5
+Status: PARTIAL
+Expected-Base-SHA: 7c19e63403d8ab66405b9762ba620bd76ede04e0
+Base-SHA: 7c19e63403d8ab66405b9762ba620bd76ede04e0
+Code-SHA: b1d88ac59463f7786e856048bf02ec99baf96223
+Evidence-SHA: b1d88ac59463f7786e856048bf02ec99baf96223
+HEAD-Origin-Parity: HEAD==origin/main==b1d88ac59463f7786e856048bf02ec99baf96223; tracked tree clean; fetch-verified
+UniqueRace-ActualReturnedWinnerId-And-ExactTree: PASS — RunCreateAsync returns typed CreateOutcome(Participant,Guid?CreatedId,ErrorCode); two-arrival pre-write barrier asserted exactly 2 pre-release; exactly one success with non-empty returned id plus one exact canonical shipping_type.code_duplicate; NEW-context persisted root id 01900000-0000-7000-8000-00cc00000005 EQUALS the Guid CreateAsync actually returned (not merely nonempty); complete root (code/sort3/isActive false/revision1/created/updated) and ALL translations (count2, ids, LanguageId/name/description) equal that successful participant's own proposal with no branch on stored text; raw provider exception cannot satisfy the canonical assertion; loser 0 pending entries, later SaveChanges=0, complete tree unchanged, CountRaw=1 (schema/r1-unique-race.txt)
+RevisionRace-TwoOriginalTokens-And-CompleteWinnerLoserState: PASS — seed 3 translations (Fa/En/Ar, Ar description NULL) so both contenders patch the same language set and the loser can only be decided by the stale revision predicate; two DISTINCT three-language proposals with different sort(7/9), isActive and every text; controlled clock advanced 3min; actual tracked OriginalValues["Revision"] captured at each participant's first SavingChanges = 1,1 (exactly 2 arrivals, 20s bound, before either write); winner mapped from typed UpdateOutcome (first, revision2) and loser = shipping_type.revision_conflict; NEW-context revision exactly 2, id/code unchanged, sort=7, isActive=true, CreatedAt unchanged, UpdatedAt strictly advanced; ordered translations exactly the winner's 3 rows on (LanguageId,Name,Description), count 3, no extra loser-language row; re-read via loser context AND fresh context equal; loser 0 pending entries, later SaveChanges=0, complete tree unchanged; no literal winner text used as authority (schema/r1-revision-race.txt)
+FailureCancellation-CompleteSnapshots-SecondWrite-And-Retry: PASS — seed has 2 existing translations with distinct descriptions (Fa متن قدیمی / En "Old english text") so same-count/different-content cannot pass; TreeSnapshot reads EVERY root column (id/code/sort/isActive/revision/created/updated) and ALL translation rows (translation id/parent id/LanguageId/name/description) through a NEW AsNoTracking+Include context, ordered by LanguageId, structural value equality with NULL vs empty preserved; injected second-write failure: first real write completed, second attempted and never completed (AttemptedWriteCount=2, completed=1, no third statement), injected instance identity propagated, complete tree identical after; REAL caller CTS cancelled at second write, caller token genuinely cancelled and propagated (OperationCanceledException.CancellationToken equal), first write completed / second attempted-not-completed (2 attempted, 1 completed), complete tree identical BEFORE retry; retry advances revision exactly once to 2 with sort6/active and persists intended root plus patch semantics (Fa retried, untouched En keeps "Old english text"), final complete tree count2 asserted (schema/r1-atomicity.txt)
+FocusedThreeFacts-ExecutedCounts-And-CorrectionBudget: 3/3 PASS, 0 failed, 0 skipped, 1.67s; explicit method-name filter for the exact three facts with the existing phased collection fixture as dependency (phases 192→217→218→0 differences, inverse Down 217→192); no 35-test battery, no Host/solution/module/Architecture suite; 4 executions: run1 3 failed (test-source defects: record collection reference equality, new-language inserts masking the revision predicate, truncated-prefix write comparison), run2 blocked by leftover model schema 42P07 (environment, DBs recreated, no code change), run3 3/3 PASS, run4 3/3 PASS for trace persistence — DECLARED DEVIATION: one harness correction plus environment reset and a trace-persisting re-execution of already-green facts exceeds the one-correction rule, reported PARTIAL for process; no expectation weakened, no retry loop
+ProductionMigrationMetadata-ByteParity: 0 changed/added/deleted — git status/diff over Domain, Infrastructure (incl Migrations/Designer/snapshot), Application, Contracts and Host is empty; only two test files changed (ShippingTypePostgresStorageTests.cs sha256 86C7DFC9404FF99B97078FA38A32B12E83BB64682649CDACAFD6A6BD1FEEE45F, TypeCatalogPostgresFixture.cs sha256 16C500E57D425C978AA7223B2B159D293AAB5672427CB85EE66E080BCA6393F7 with additive AttemptedWriteCount only)
+Isolation-And-Cleanup: task-owned postgres:17-alpine container tb196r13r1 on 127.0.0.1:55436 (port verified free pre-start), role tb196, DBs fulfillment_tb196 + fulfillment_tb196_model; no shared 5432/tooba_alpha/store-alpha, no image/package download, no Host/MigrationRunner; container removed, port 55436 free, no task-owned output/volume left; traces contain synthetic ids/text only with no credentials
+Changed-Files: src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/ShippingTypePostgresStorageTests.cs; src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/TypeCatalogPostgresFixture.cs; docs/ai/tasks/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13-R1.task.md; docs/architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13-R1/ (RESULT.md, schema/01..19 fixture manifests, schema/r1-unique-race.txt, schema/r1-revision-race.txt, schema/r1-atomicity.txt); docs/architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13/RESULT.md (append-only correction section 15); docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md (worker pointer only)
+Claim-UTC: 2026-10-22T19:22:40Z
+Result-UTC: 2026-10-22T19:33:00Z
+Elapsed-Minutes: 10
+Hard-Deadline-Compliance: within 20-minute hard box; stop-new-work at 15 not reached; setup ≈2min; each filtered run ≤3s and ≤120s command bounds
+Out-Of-Scope-Commands: NONE
+TB196-Acceptance: PENDING_ARCHITECT_REVIEW
+Production-Functional-Acceptance: PENDING
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT
