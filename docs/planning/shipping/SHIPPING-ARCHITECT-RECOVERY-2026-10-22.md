@@ -1,5 +1,14 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 200-R1 اصلاحاتاصلی‌حفظ؛فقط200-R2کوچک — 2026-10-23
+
+کد99d13021087353e3a226f860b2abb63f8d714706 review شد؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R1/ARCHITECT-REVIEW.md). baselinepreserve/explicit[]/epoch/unknownlatch/wirecoherenceاصلاحاتحفظ؛25PASS/tscگزارشworker،27>25انحرافثبت‌شده. backend199بسته،نهreplay.
+
+تنها **TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R2**،parent200-R1؛10دقیقه/stop6؛session/editor-session.ts+regressiontests/docsفقط. loadStartedبرایهمانdraftوقتیdirtyیاsavingاستاکنونfallthroughمی‌کند؛loadSucceedededitsراپاک‌می‌کندوسیوinflightنادیده‌می‌شود. هماندraftبایدSAMEstateبماند،سوییچdraftدیگرباتاییدdiscard. hasUnsavedWorkبایدcommitUncertain/inflightsaveراهمپوشش‌دهد؛edited({})unknownراwarningfalseنکند. explicitdiscard/reconcile/freshloadمسیرقبلی‌حفظ.
+
+نهdecoder/builder/API/UI/backend/schema/auth/sharedserviceتغییر؛نهتست25تکرارییاbroadbuild. بعدR2reviewوUIتسک201،قبلشصدورنشود. currentبربخش‌هایقدیمی‌برتری‌دارد؛cutoff/status/fullcreate/quoteباز؛TB185paused/defaultOFF/PendingAllocationمحفوظ.
+
+
 ## مرجع جاری: 200-R1 اجرا شد؛ منتظر review — 2026-10-23
 
 TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R1 روی base `29cf0117eeaa087c7edc5e4cf1a0240d1a9f5e8e` اجرا و به Bridge ارسال شد؛
