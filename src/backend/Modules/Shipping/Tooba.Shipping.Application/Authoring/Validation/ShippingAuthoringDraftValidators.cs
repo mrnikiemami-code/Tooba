@@ -731,3 +731,55 @@ public sealed class ReplaceShippingAuthoringDraftTypeAssignmentCommandValidator
             .When(x => x.Request is not null);
     }
 }
+
+/// <summary>
+/// اعتبارسنجی خواندن سند ویرایشگر: شناسهٔ مسیر باید غیرخالی باشد. سند فقط داخل محدودهٔ کامل مالک
+/// خوانده می‌شود، پس شناسهٔ بیگانه همان «یافت نشد» ایمن است.
+/// </summary>
+public sealed class GetShippingAuthoringEditorDocumentQueryValidator
+    : AbstractValidator<GetShippingAuthoringEditorDocumentQuery>
+{
+    /// <summary>قواعد را می‌سازد.</summary>
+    public GetShippingAuthoringEditorDocumentQueryValidator()
+    {
+        RuleFor(x => x.DraftId)
+            .NotEmpty()
+            .WithErrorCode(ShippingAuthoringValidationCodes.DraftIdRequired);
+    }
+}
+
+/// <summary>
+/// اعتبارسنجی شکل سند مرکب ویرایشگر: هویت مسیر، نشانگر همزمانی مثبت، و حضور صریح دو مجموعهٔ اجباری
+/// (گروه‌ها و متن روش). غیبت <c>weeklySchedule</c>/<c>methodSettings</c>/<c>typeAssignment</c> عمداً
+/// مجاز است و معنای آن «حفظ مقدار ذخیره‌شده» است، نه پاک‌کردن.
+/// </summary>
+public sealed class ReplaceShippingAuthoringEditorDocumentCommandValidator
+    : AbstractValidator<ReplaceShippingAuthoringEditorDocumentCommand>
+{
+    /// <summary>قواعد را می‌سازد.</summary>
+    public ReplaceShippingAuthoringEditorDocumentCommandValidator()
+    {
+        RuleFor(x => x.DraftId)
+            .NotEmpty()
+            .WithErrorCode(ShippingAuthoringValidationCodes.DraftIdRequired);
+
+        RuleFor(x => x.Request)
+            .NotNull()
+            .WithErrorCode(ShippingValidationCodes.BodyInvalid);
+
+        RuleFor(x => x.Request.ExpectedRevision)
+            .GreaterThan(0)
+            .WithErrorCode(ShippingAuthoringValidationCodes.ExpectedRevisionInvalid)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.RegionGroups)
+            .NotNull()
+            .WithErrorCode(ShippingAuthoringValidationCodes.RegionGroupsRequired)
+            .When(x => x.Request is not null);
+
+        RuleFor(x => x.Request.MethodTranslations)
+            .NotNull()
+            .WithErrorCode(ShippingValidationCodes.BodyInvalid)
+            .When(x => x.Request is not null);
+    }
+}

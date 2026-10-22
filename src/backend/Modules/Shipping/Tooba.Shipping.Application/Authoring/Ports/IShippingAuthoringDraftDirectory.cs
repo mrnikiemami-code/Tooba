@@ -160,6 +160,27 @@ public interface IShippingAuthoringDraftDirectory
         long expectedRevision,
         Guid? shippingTypeId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// سند کامل ویرایشگر یک پیش‌نویس موجود را در <b>یک</b> commit و <b>یک</b> افزایش بازبینی ریشه
+    /// ذخیره می‌کند. کل درخت پیشنهادی (شامل گروه‌های تازه با ردیف/عنوان تودرتو) پیش از هر تغییر
+    /// سنجیده می‌شود؛ سند یکسان در همان بازبینی هیچ ستونی نمی‌نویسد.
+    /// </summary>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="draftId">شناسهٔ پیش‌نویس.</param>
+    /// <param name="expectedRevision">بازبینی مورد انتظار کلاینت.</param>
+    /// <param name="input">سند دامنهٔ پیش‌سنجی‌نشده.</param>
+    /// <param name="activeLanguageIds">زبان‌های فعال authoritative.</param>
+    /// <param name="trustedCurrencyCode">ارز معتبر سرورساخته.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<ShippingAuthoringDraft>> ReplaceEditorDocumentAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        ShippingAuthoringDraft.EditorDocumentInput input,
+        IReadOnlySet<Guid> activeLanguageIds,
+        string trustedCurrencyCode,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

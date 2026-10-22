@@ -169,7 +169,92 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         // ordinary UPDATE. The relational path stages a temporary non-conflicting order first and only
         // then writes the final zero-based order. Both stages run inside ONE Shipping-owned transaction
         // with one commit, and every failure/cancellation rolls the whole replacement back.
+        return await SaveAuthoringReplacementAsync(
+            draft,
+            regionPlan: plan,
+            editorPlan: null,
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<ShippingAuthoringDraft>> ReplaceEditorDocumentAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        ShippingAuthoringDraft.EditorDocumentInput input,
+        IReadOnlySet<Guid> activeLanguageIds,
+        string trustedCurrencyCode,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        ArgumentNullException.ThrowIfNull(input);
+        ArgumentNullException.ThrowIfNull(activeLanguageIds);
+
+        // The COMPLETE authored graph is materialised so the editor composes and returns one truthful
+        // root snapshot: regions, areas, rows, titles, method text, schedule, settings and type.
+        var draft = await Scoped(ToDomainOwner(owner))
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.Areas)
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.RateRows)
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.Titles)
+            .Include(candidate => candidate.Translations)
+            .Include(candidate => candidate.MethodSettings)
+            .Include(candidate => candidate.WeeklySchedule)
+            .ThenInclude(schedule => schedule!.Days)
+            .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
+        if (draft is null)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound));
+        }
+
+        // A stale client is refused before any tracked row is touched, including identical documents.
+        if (draft.Revision != expectedRevision)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+        }
+
+        // The WHOLE proposed tree — including rates and titles nested under brand-new groups — is proven
+        // before the first tracked mutation, so a late-invalid child leaves nothing half-applied.
+        ShippingAuthoringDraft.EditorDocumentPlan plan;
+        try
+        {
+            plan = draft.PreflightEditorDocument(input, activeLanguageIds, trustedCurrencyCode);
+        }
+        catch (SemanticException exception)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(exception.Error);
+        }
+
+        if (!plan.HasChanges)
+        {
+            // An identical document at the current revision writes nothing and preserves UpdatedAt.
+            return Result.Success(draft);
+        }
+
+        return await SaveAuthoringReplacementAsync(
+            draft,
+            regionPlan: null,
+            editorPlan: plan,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// تنها مرز ذخیرهٔ جایگزینی Shipping: یک تراکنش ماژول‌محور، مرحلهٔ اول ترتیب موقت (فقط وقتی درخت
+    /// منطقه‌ای واقعاً تغییر می‌کند)، مرحلهٔ دوم ترتیب نهایی صفرپایه و <b>یک</b> commit. هم نویسندهٔ
+    /// مستقل درخت منطقه‌ای و هم سند ویرایشگر TB-199 از همین مرز استفاده می‌کنند؛ هیچ begin دومی وجود
+    /// ندارد و خطا/لغو کل جایگزینی را برمی‌گرداند و tracker را پاک می‌کند.
+    /// </summary>
+    private async Task<Result<ShippingAuthoringDraft>> SaveAuthoringReplacementAsync(
+        ShippingAuthoringDraft draft,
+        IReadOnlyList<ShippingAuthoringDraft.RegionGroupAssignment>? regionPlan,
+        ShippingAuthoringDraft.EditorDocumentPlan? editorPlan,
+        CancellationToken cancellationToken)
+    {
         var relational = context.Database.IsRelational();
+        var restage = regionPlan is not null || editorPlan!.RegionsChanged;
         IDbContextTransaction? transaction = null;
         try
         {
@@ -178,14 +263,26 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
                 transaction = await context.Database.BeginTransactionAsync(cancellationToken);
             }
 
-            draft.ApplyRegionGroups(plan, staged: relational, DateTimeOffset.UtcNow);
+            if (editorPlan is not null)
+            {
+                draft.ApplyEditorDocument(editorPlan, DateTimeOffset.UtcNow, staged: relational);
+            }
+            else
+            {
+                draft.ApplyRegionGroups(regionPlan!, staged: relational, DateTimeOffset.UtcNow);
+            }
+
             await context.SaveChangesAsync(cancellationToken);
 
-            if (relational)
+            if (relational && restage)
             {
                 draft.ApplyFinalRegionGroupOrder();
                 await context.SaveChangesAsync(cancellationToken);
-                await transaction!.CommitAsync(cancellationToken);
+            }
+
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
             }
         }
         catch (DbUpdateConcurrencyException)

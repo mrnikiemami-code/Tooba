@@ -423,3 +423,17 @@ Authority: Architect decision within the owner's authorized Shipping Admin deliv
   is the only clear form. Inactive/missing stored references are reported truthfully on read and rejected on write.
 - Request classification was updated from real routes/handlers/validators (49 routes, 33 requests, 29 request
   validators); no certification promotion, no baseline refresh and no guard exemption is implied by this slice.
+
+## 28. پیاده‌سازی محدود: سند اتمیک ویرایشگر برای پیش‌نویس موجود (TB-199) — 2026-10-23
+
+- چهار مسیر افزایشی `GET/PUT /v1/{admin|seller}/shipping-services/authoring-drafts/{draftId:guid}/editor-document`
+  با یک query و یک command/handler مشترک؛ دروازهٔ مالک پیش از `ISender` و پیش از خواندن بدنهٔ نوشتن.
+- `regionGroups` و `methodTranslations` مجموعهٔ اجباری‌اند (`[]` معتبر، غیبت/`null` شکل نامعتبر)؛
+  `weeklySchedule`/`methodSettings`/`typeAssignment` غایب یعنی «حفظ مقدار ذخیره‌شده»؛ `shippingTypeId:null`
+  صریح یعنی پاک‌کردن و `Guid.Empty` نامعتبر است.
+- کل درخت پیشنهادی — شامل ردیف‌ها و عنوان‌های تودرتوی گروه‌های تازه — پیش از نخستین تغییر tracked سنجیده
+  می‌شود؛ یک PUT فقط یک commit و دقیقاً یک افزایش بازبینی ریشه دارد و سند بدون تغییر هیچ ستونی را نمی‌نویسد.
+- مرز ذخیرهٔ مرحله‌ای در یک عضو خصوصی `SaveAuthoringReplacementAsync` متمرکز است و همین یک مرز توسط
+  نویسندهٔ درخت منطقه‌ای و سند ویرایشگر مشترکاً استفاده می‌شود؛ تنها یک محل `BeginTransactionAsync` باقی است.
+- این پیاده‌سازی فقط نویسندگی پیش‌نویس موجود است: نه UI، نه ساخت کامل روش، نه فعال‌سازی اجرایی/نرخ زنده و نه
+  ارتقای گواهی. Production-Functional-Acceptance همچنان PENDING است.

@@ -152,6 +152,34 @@ internal static class ShippingTypeAssignmentComposition
             : Unconfigured(saved);
     }
 
+    /// <summary>
+    /// پاسخ را از ریشهٔ ذخیره‌شده و یک مشاهدهٔ <b>صادق</b> از کاتالوگ می‌سازد: یک فکت موجود یعنی
+    /// Active/Inactive، نبودِ فکت برای شناسهٔ ذخیره‌شده یعنی <see cref="ShippingAuthoringTypeResolution.Missing"/>
+    /// (هرگز «انتخاب‌نشده»ی جعلی). این متد هیچ فراخوانی بیرونی ندارد.
+    /// </summary>
+    /// <param name="saved">ریشهٔ واقعاً ذخیره‌شده.</param>
+    /// <param name="observed">فکت مشاهده‌شده پیش از نوشتن، یا تهی وقتی کاتالوگ آن شناسه را ندارد.</param>
+    public static ShippingAuthoringDraftTypeAssignmentItem ComposeObserved(
+        Domain.Authoring.ShippingAuthoringDraft saved,
+        ShippingTypeFact? observed)
+    {
+        ArgumentNullException.ThrowIfNull(saved);
+
+        if (saved.ShippingTypeId is not { } savedSelection)
+        {
+            return Unconfigured(saved);
+        }
+
+        return observed is { } fact
+            ? Resolved(saved.DraftId, saved.Revision, fact)
+            : new ShippingAuthoringDraftTypeAssignmentItem(
+                saved.DraftId,
+                saved.Revision,
+                savedSelection,
+                ShippingAuthoringTypeResolution.Missing,
+                null);
+    }
+
     private static ShippingAuthoringDraftTypeAssignmentItem Unconfigured(Domain.Authoring.ShippingAuthoringDraft draft)
         => new(
             draft.DraftId,

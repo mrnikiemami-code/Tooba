@@ -71,6 +71,15 @@ public static class ShippingAuthoringDraftEndpoints
         group.MapPut(
             "/shipping-services/authoring-drafts/{draftId:guid}/method-type",
             ReplaceMethodTypeAsync);
+        // TB-199 atomic editor document for an EXISTING draft: ONE consistent read snapshot and ONE
+        // composite atomic save with a single root revision advance. Full-method creation, UI and any
+        // runtime activation remain out of scope.
+        group.MapGet(
+            "/shipping-services/authoring-drafts/{draftId:guid}/editor-document",
+            GetEditorDocumentAsync);
+        group.MapPut(
+            "/shipping-services/authoring-drafts/{draftId:guid}/editor-document",
+            ReplaceEditorDocumentAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -341,6 +350,43 @@ public static class ShippingAuthoringDraftEndpoints
 
         return api.From(await sender.Send(
             new ReplaceShippingAuthoringDraftTypeAssignmentCommand(scope, draftId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> GetEditorDocumentAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new GetShippingAuthoringEditorDocumentQuery(scope, draftId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> ReplaceEditorDocumentAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringEditorDocumentReplaceRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new ReplaceShippingAuthoringEditorDocumentCommand(scope, draftId, body!),
             cancellationToken));
     }
 }

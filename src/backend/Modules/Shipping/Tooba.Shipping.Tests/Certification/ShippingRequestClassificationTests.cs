@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using FluentValidation;
@@ -32,10 +32,10 @@ public sealed class ShippingRequestClassificationTests
     private const string ManifestRelativePath = "docs/architecture/shipping/shipping-request-classification.json";
 
     /// <summary>Exact count of the certified endpoint-reachable request universe (W3 gate + TB-188 + TB-189).</summary>
-    private const int CertifiedRequestCount = 33;
+    private const int CertifiedRequestCount = 35;
 
     /// <summary>Exact count of shipped routes: TB-190 pairs each draft CRUD route for admin and seller.</summary>
-    private const int CertifiedRouteCount = 49;
+    private const int CertifiedRouteCount = 53;
 
     [Fact]
     public void Shipped_route_universe_equals_the_classified_manifest_exactly()
@@ -181,8 +181,8 @@ public sealed class ShippingRequestClassificationTests
         Assert.Equal(
             new[] { "GetShippingAuthoringContextQuery", "GetShippingAuthoringDraftsQuery", "GetShippingAuthoringOwnerQuery", "GetShippingAuthoringTypeChoicesQuery" },
             declared);
-        Assert.Equal(33, ManifestRows().Count);
-        Assert.Equal(29, ManifestRows().Count(row => row.Classification == ValidatorRequired));
+        Assert.Equal(35, ManifestRows().Count);
+        Assert.Equal(31, ManifestRows().Count(row => row.Classification == ValidatorRequired));
     }
 
     [Fact]

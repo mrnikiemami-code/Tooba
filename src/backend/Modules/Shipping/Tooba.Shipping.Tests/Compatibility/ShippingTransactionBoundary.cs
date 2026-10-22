@@ -62,12 +62,17 @@ internal static class ShippingTransactionBoundary
     public const string AllowedBoundaryPath =
         "src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Authoring/ShippingAuthoringDraftDirectory.cs";
 
-    /// <summary>The single reviewed member of that boundary.</summary>
-    public const string AllowedBoundaryMember = "ReplaceRegionGroupsAsync";
+    /// <summary>
+    /// The single reviewed member of that boundary. TB-199 extracted the staged-save boundary out of the
+    /// region writer into this narrowly named typed helper so the region writer and the editor document
+    /// writer share ONE begin-save-commit shape; the caller universe stays inside this file.
+    /// </summary>
+    public const string AllowedBoundaryMember = "SaveAuthoringReplacementAsync";
 
     /// <summary>
-    /// The only other reviewed member allowed to mention a transaction type: the rollback/failure helper
-    /// that the reviewed boundary calls. It may not open a transaction.
+    /// The only other reviewed members allowed to mention a transaction type: the rollback/failure helper
+    /// that the reviewed boundary calls and the two typed writers that delegate to it. None may open a
+    /// transaction.
     /// </summary>
     public const string AllowedBoundaryHelperMember = "RollbackAsync";
 

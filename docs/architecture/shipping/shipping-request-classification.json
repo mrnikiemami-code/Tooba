@@ -537,6 +537,49 @@
       ],
       "transportRule": "route draft id non-empty, expectedRevision positive, the shippingTypeId member REQUIRED to be present (a missing key is rejected by JsonRequired before any handler, an explicit null is the only clear form) and never Guid.Empty; owner, seller, edition, tenant, definition code/text, currency, language and activation authority are never bound from transport",
       "reason": "An omitted selection must never be silently coerced into a clear or into a default, and the shared optimistic-concurrency token is caller-controlled; the stale check wins before any foreign catalog lookup, including identical and clearing requests."
+    },
+    {
+      "request": "GetShippingAuthoringEditorDocumentQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/editor-document",
+        "GET /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/editor-document"
+      ],
+      "handler": "GetShippingAuthoringEditorDocumentHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingAuthoringEditorDocumentQueryValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "authorization:fulfillment.view:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "the route draft id must be non-empty; the whole authored graph is only ever loaded INSIDE the owner-filtered scope, so a foreign or invented id is the same safe not-found and triggers no foreign catalog read",
+      "reason": "One caller-supplied route id is projected into the read request. The response composes ONE consistent root snapshot plus current catalog observations; it never merges independent endpoint calls or fabricates missing/inactive type facts."
+    },
+    {
+      "request": "ReplaceShippingAuthoringEditorDocumentCommand",
+      "routes": [
+        "PUT /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/editor-document",
+        "PUT /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/editor-document"
+      ],
+      "handler": "ReplaceShippingAuthoringEditorDocumentHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ReplaceShippingAuthoringEditorDocumentCommandValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "body:expectedRevision:required-positive:untrusted-caller",
+        "body:regionGroups:required-list-null-elements-rejected:untrusted-caller",
+        "body:regionGroups[].groupId:optional-retained-identity:untrusted-caller",
+        "body:regionGroups[].areas:required-list:untrusted-caller",
+        "body:regionGroups[].rows:required-list:untrusted-caller",
+        "body:regionGroups[].titles:required-list-null-elements-rejected:untrusted-caller",
+        "body:methodTranslations:required-patch-list:untrusted-caller",
+        "body:weeklySchedule:optional-absent-preserves:untrusted-caller",
+        "body:methodSettings:optional-absent-preserves:untrusted-caller",
+        "body:typeAssignment:optional-wrapper-absent-preserves:untrusted-caller",
+        "body:typeAssignment.shippingTypeId:required-presence-explicit-null-clears:untrusted-caller",
+        "authorization:fulfillment.manage:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "route draft id non-empty, expectedRevision positive, regionGroups and methodTranslations present as lists while their optional siblings (weeklySchedule, methodSettings, typeAssignment) are ABSENT-PRESERVES rather than clears; the supplied type wrapper must contain shippingTypeId (JsonRequired) where explicit null clears and Guid.Empty is invalid; owner, seller, edition, tenant, currency, default language and activation authority are never bound from transport",
+      "reason": "A whole untrusted composite document plus the shared optimistic-concurrency token are caller-controlled. The stale check wins before any foreign lookup, the complete prospective tree (including new groups with nested rates/titles) is proven before the first tracked mutation, and one own commit advances the root revision once."
     }
   ],
   "nestedTransportValidators": [
@@ -554,11 +597,11 @@
     "GetShippingAuthoringTypeChoicesQuery"
   ],
     "totals": {
-    "shippedRoutes": 49,
-    "endpointReachableRequests": 33,
-    "requestValidators": 29,
+    "shippedRoutes": 53,
+    "endpointReachableRequests": 35,
+    "requestValidators": 31,
     "nestedTransportValidators": 6,
-    "declaredValidators": 35
+    "declaredValidators": 37
   },
   "amendments": [
     {
@@ -592,6 +635,16 @@
       "catalogProvenance": "The type catalog stays Fulfillment-owned and is read ONLY through Fulfillment.Contracts.Shipping.IShippingTypeReader behind the Shipping-owned Application port IShippingTypeCatalogReader; no definition text/code/order/active flag is copied, cached or administered here. Only the nullable shipping_type_id VALUE is stored on the draft root (no cross-schema FK/join/navigation).",
       "presenceProvenance": "The PUT body marks shippingTypeId [JsonRequired]: an omitted key fails as shipping.validation.body_invalid in the existing body reader BEFORE any handler, so omission can never be read as a clear; an explicit null is the ONLY clear form and needs no foreign read. Guid.Empty is rejected by the transport validator and again by the domain guard, and a non-positive revision keeps the existing expected_revision_invalid code.",
       "noValidatorProvenance": "GetShippingAuthoringTypeChoicesQuery is constructed with zero arguments after the admin/seller owner gate on a literal parameterless route; the endpoint binds no route value, no query string and no body, so there is no caller-controlled transport input for a validator to own."
+    },
+    {
+      "task": "TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199",
+      "date": "2026-10-23",
+      "scope": "Two additive authorized requests (GET/PUT existing-draft editor document) are classified here, each reachable through one admin and one seller route. No previous row changed classification, validator, route or handler. Four additive routes only: full-method creation, UI and runtime activation remain out of scope.",
+      "atomicityProvenance": "One atomic COMMIT is the invariant, not one SaveChanges: the reviewed staged-save boundary was extracted into the single typed helper SaveAuthoringReplacementAsync, used ONLY by the existing region writer and the new editor writer, so exactly one transaction begin site remains in ShippingAuthoringDraftDirectory. The editor refactors the existing Apply* mutation cores so the whole document advances the root revision ONCE when stored content actually changes; an identical document at the current revision writes nothing and preserves UpdatedAt, while a stale identical document is still 409.",
+      "prospectivePreflightProvenance": "Group rates and titles for BRAND-NEW groups are validated against a detached prospective graph built in PreflightEditorDocument, so a PUT that creates a group with nested rows and titles is proven before the first tracked mutation; no group is added and then validated, and no new range/geography/presentation rule engine was introduced.",
+      "presenceProvenance": "regionGroups and methodTranslations are required lists ([] is a valid no-op, null/absent is a shape failure). weeklySchedule, methodSettings and typeAssignment are ABSENT-PRESERVES: Shipping adds no new clearing authority for them, and an unconfigured section stays unconfigured. The supplied type wrapper marks shippingTypeId [JsonRequired], explicit null clears with zero catalog lookup, Guid.Empty is invalid, and an omitted wrapper never revalidates the stored id as a new active selection.",
+      "noForeignAfterCommitProvenance": "Language registry, currency and every Contracts fact are acquired BEFORE the first tracked mutation; the response is composed from the actually saved root plus those facts, so a catalog or context outage after the commit cannot turn a persisted save into a reported failure."
     }
   ]
 }
+

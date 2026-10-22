@@ -440,6 +440,20 @@ public sealed class ShippingAuthoringDraft
         bool staged,
         DateTimeOffset now)
     {
+        ApplyRegionGroupsCore(plan, staged);
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// هستهٔ مشترک جایگزینی درخت بدون هیچ افزایش بازبینی/زمان. فقط سند ویرایشگر TB-199 آن را با سایر
+    /// هسته‌ها ترکیب می‌کند تا یک افزایش بازبینی ریشه برای کل سند وجود داشته باشد؛ API مستقل قبلی
+    /// همچنان از <see cref="ApplyRegionGroups"/> استفاده می‌کند.
+    /// </summary>
+    /// <param name="plan">برنامهٔ معتبر.</param>
+    /// <param name="staged">آیا ترتیب موقت مرحلهٔ اول نوشته شود.</param>
+    private void ApplyRegionGroupsCore(IReadOnlyList<RegionGroupAssignment> plan, bool staged)
+    {
         ArgumentNullException.ThrowIfNull(plan);
 
         var existingAreas = new Dictionary<ShippingDestinationNode, ShippingAuthoringSelectedArea>();
@@ -480,8 +494,6 @@ public sealed class ShippingAuthoringDraft
         // SaveChanges انجام می‌شود و هیچ گروه دیگری را از مالک دیگر جابه‌جا نمی‌کند.
         _regionGroups.Clear();
         _regionGroups.AddRange(groups);
-        Revision = checked(Revision + 1);
-        UpdatedAt = now;
     }
 
     /// <summary>
@@ -558,9 +570,26 @@ public sealed class ShippingAuthoringDraft
         IReadOnlyList<ShippingAuthoringRateRowInput> rows,
         string trustedCurrencyCode)
     {
-        ArgumentNullException.ThrowIfNull(rows);
         var group = FindRegionGroup(groupId)
             ?? throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRegionGroupNotFound));
+        return PreflightGroupRateRows(group, rows, trustedCurrencyCode);
+    }
+
+    /// <summary>
+    /// همان هستهٔ پیش‌سنجی ردیف‌ها روی یک گروه مشخص. سند ویرایشگر TB-199 این را روی گروه
+    /// <b>آینده‌نگر</b> (شامل گروه تازهٔ detached) صدا می‌زند تا کل درخت پیشنهادی پیش از هر تغییر
+    /// سنجیده شود؛ هیچ قاعدهٔ بازه/ارز دومی اضافه نمی‌شود.
+    /// </summary>
+    /// <param name="group">گروه مالک (موجود یا آینده‌نگر).</param>
+    /// <param name="rows">مجموعهٔ کامل ردیف‌های پیشنهادی.</param>
+    /// <param name="trustedCurrencyCode">ارز معتبر سرورساخته (نه از transport).</param>
+    public GroupRateRowPlan PreflightGroupRateRows(
+        ShippingAuthoringRegionGroup group,
+        IReadOnlyList<ShippingAuthoringRateRowInput> rows,
+        string trustedCurrencyCode)
+    {
+        ArgumentNullException.ThrowIfNull(rows);
+        ArgumentNullException.ThrowIfNull(group);
 
         if (rows.Count > ShippingAuthoringRateRow.MaxRowsPerGroup)
         {
@@ -626,8 +655,22 @@ public sealed class ShippingAuthoringDraft
         ArgumentNullException.ThrowIfNull(plan);
         ArgumentNullException.ThrowIfNull(plan.Group);
 
-        var next = new List<ShippingAuthoringRateRow>(plan.Rows.Count);
-        foreach (var assignment in plan.Rows)
+        ApplyGroupRateRowsCore(plan.Group, plan.Rows, plan.CurrencyCode);
+
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// هستهٔ مشترک جایگزینی ردیف‌ها بدون افزایش بازبینی/زمان، برای ترکیب در سند ویرایشگر TB-199.
+    /// </summary>
+    private static void ApplyGroupRateRowsCore(
+        ShippingAuthoringRegionGroup group,
+        IReadOnlyList<RegionRateRowAssignment> rows,
+        string? currencyCode)
+    {
+        var next = new List<ShippingAuthoringRateRow>(rows.Count);
+        foreach (var assignment in rows)
         {
             if (assignment.Existing is { } kept)
             {
@@ -636,18 +679,15 @@ public sealed class ShippingAuthoringDraft
             }
             else
             {
-                next.Add(ShippingAuthoringRateRow.Create(plan.Group.GroupId, assignment.Value));
+                next.Add(ShippingAuthoringRateRow.Create(group.GroupId, assignment.Value));
             }
         }
 
-        plan.Group.ReplaceRateRows(next);
-        if (plan.CurrencyCode is { } currency)
+        group.ReplaceRateRows(next);
+        if (currencyCode is { } currency)
         {
-            plan.Group.BindCurrency(currency);
+            group.BindCurrency(currency);
         }
-
-        Revision = checked(Revision + 1);
-        UpdatedAt = now;
     }
 
     /// <summary>پیش‌سنجی و اعمال یک‌جای مجموعهٔ ردیف‌های یک گروه.</summary>
@@ -819,6 +859,21 @@ public sealed class ShippingAuthoringDraft
     {
         ArgumentNullException.ThrowIfNull(plan);
 
+        if (!ApplyPresentationCore(plan))
+        {
+            return;
+        }
+
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// هستهٔ مشترک جایگزینی متن بدون افزایش بازبینی/زمان. خروجی می‌گوید آیا مقدار ذخیره‌شده واقعاً
+    /// تغییر کرد؛ no-op هیچ ستونی را نمی‌نویسد.
+    /// </summary>
+    private bool ApplyPresentationCore(PresentationPlan plan)
+    {
         var changed = false;
         foreach (var assignment in plan.MethodTranslations)
         {
@@ -847,13 +902,7 @@ public sealed class ShippingAuthoringDraft
             changed |= assignment.Group.SetTitle(assignment.LanguageId, assignment.Title);
         }
 
-        if (!changed)
-        {
-            return;
-        }
-
-        Revision = checked(Revision + 1);
-        UpdatedAt = now;
+        return changed;
     }
 
     /// <summary>یک روز هفتهٔ ورودی برنامه: پرچم صریح کاری/تعطیل و ساعت‌های اختیاری همان روز.</summary>
@@ -970,11 +1019,25 @@ public sealed class ShippingAuthoringDraft
     /// <param name="now">زمان UTC.</param>
     public void ApplyWeeklySchedule(WeeklySchedulePlan plan, DateTimeOffset now)
     {
+        if (!ApplyWeeklyScheduleCore(plan, now))
+        {
+            return;
+        }
+
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// هستهٔ مشترک جایگزینی هفته بدون افزایش بازبینی/زمان؛ no-op چیزی نمی‌نویسد.
+    /// </summary>
+    private bool ApplyWeeklyScheduleCore(WeeklySchedulePlan plan, DateTimeOffset now)
+    {
         ArgumentNullException.ThrowIfNull(plan);
 
         if (!plan.HasChanges)
         {
-            return;
+            return false;
         }
 
         if (WeeklySchedule is { } schedule)
@@ -986,8 +1049,7 @@ public sealed class ShippingAuthoringDraft
             WeeklySchedule = ShippingAuthoringWeeklySchedule.Create(DraftId, plan.TimeZoneId, plan.Days, now);
         }
 
-        Revision = checked(Revision + 1);
-        UpdatedAt = now;
+        return true;
     }
 
     /// <summary>
@@ -1116,16 +1178,29 @@ public sealed class ShippingAuthoringDraft
     /// <param name="now">زمان UTC.</param>
     public void ApplyTypeAssignment(TypeAssignmentPlan plan, DateTimeOffset now)
     {
-        ArgumentNullException.ThrowIfNull(plan);
-
-        if (!plan.HasChanges)
+        if (!ApplyTypeAssignmentCore(plan))
         {
             return;
         }
 
-        ShippingTypeId = plan.ShippingTypeId;
         Revision = checked(Revision + 1);
         UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// هستهٔ مشترک انتخاب نوع بدون افزایش بازبینی/زمان؛ no-op چیزی نمی‌نویسد.
+    /// </summary>
+    private bool ApplyTypeAssignmentCore(TypeAssignmentPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        if (!plan.HasChanges)
+        {
+            return false;
+        }
+
+        ShippingTypeId = plan.ShippingTypeId;
+        return true;
     }
 
     /// <summary>
@@ -1137,11 +1212,25 @@ public sealed class ShippingAuthoringDraft
     /// <param name="now">زمان UTC.</param>
     public void ApplyMethodSettings(MethodSettingsPlan plan, DateTimeOffset now)
     {
+        if (!ApplyMethodSettingsCore(plan, now))
+        {
+            return;
+        }
+
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// هستهٔ مشترک تنظیمات روش بدون افزایش بازبینی/زمان؛ no-op چیزی نمی‌نویسد.
+    /// </summary>
+    private bool ApplyMethodSettingsCore(MethodSettingsPlan plan, DateTimeOffset now)
+    {
         ArgumentNullException.ThrowIfNull(plan);
 
         if (!plan.HasChanges)
         {
-            return;
+            return false;
         }
 
         if (MethodSettings is { } settings)
@@ -1157,9 +1246,303 @@ public sealed class ShippingAuthoringDraft
                 now);
         }
 
+        return true;
+    }
+
+    // ---------------------------------------------------------------------
+    // TB-199: one existing-draft editor document (composite atomic save)
+    // ---------------------------------------------------------------------
+
+    /// <summary>عنوان یک گروه برای یک زبان محتوای فعال، در سند ویرایشگر.</summary>
+    /// <param name="LanguageId">شناسهٔ زبان محتوای فعال.</param>
+    /// <param name="Title">عنوان یا تهی برای پاک‌کردن همان جفت.</param>
+    public sealed record EditorGroupTitleInput(Guid LanguageId, string? Title);
+
+    /// <summary>
+    /// یک گروه در سند ویرایشگر: هویت اختیاری موجود، انتخاب‌های جغرافیایی، ردیف‌های نرخ همان گروه و
+    /// عنوان‌های همان گروه. گروه تازه شناسه نمی‌گیرد؛ سرور شناسهٔ پایدار می‌سازد.
+    /// </summary>
+    /// <param name="GroupId">شناسهٔ گروه موجود همین پیش‌نویس؛ تهی برای گروه تازه.</param>
+    /// <param name="Selections">انتخاب‌های مقصد همان گروه.</param>
+    /// <param name="Rows">مجموعهٔ کامل ردیف‌های همان گروه.</param>
+    /// <param name="Titles">تغییرهای عنوان همان گروه.</param>
+    public sealed record EditorGroupInput(
+        Guid? GroupId,
+        IReadOnlyList<ShippingDestinationNode> Selections,
+        IReadOnlyList<ShippingAuthoringRateRowInput> Rows,
+        IReadOnlyList<EditorGroupTitleInput> Titles);
+
+    /// <summary>
+    /// سند کامل ویرایشگر یک پیش‌نویس موجود. بخش‌های اختیاری با پرچم صریح «جایگزینی» می‌آیند تا
+    /// غیبت هرگز «پاک‌کردن» خوانده نشود.
+    /// </summary>
+    /// <param name="Groups">کل مجموعهٔ مرتب گروه‌ها.</param>
+    /// <param name="MethodTranslations">وصلهٔ زبان‌محور نام/توضیح؛ مجموعهٔ خالی یعنی بدون تغییر.</param>
+    /// <param name="ReplaceWeeklySchedule">آیا برنامهٔ هفتگی در این سند ارائه شده است.</param>
+    /// <param name="TimeZoneId">منطقهٔ زمانی همان برنامه.</param>
+    /// <param name="ScheduleDays">هفت روز همان برنامه.</param>
+    /// <param name="ReplaceMethodSettings">آیا تنظیمات روش در این سند ارائه شده است.</param>
+    /// <param name="FreightPaymentMode">زمان پرداخت کرایه.</param>
+    /// <param name="CalculationMode">حالت محاسبه.</param>
+    /// <param name="ReplaceTypeAssignment">آیا بستهٔ انتخاب نوع در این سند ارائه شده است.</param>
+    /// <param name="ShippingTypeId">شناسهٔ نوع یا تهی برای پاک‌کردن.</param>
+    public sealed record EditorDocumentInput(
+        IReadOnlyList<EditorGroupInput> Groups,
+        IReadOnlyList<MethodTranslationInput> MethodTranslations,
+        bool ReplaceWeeklySchedule,
+        string? TimeZoneId,
+        IReadOnlyList<ScheduleDayInput>? ScheduleDays,
+        bool ReplaceMethodSettings,
+        ShippingFreightPayerMode? FreightPaymentMode,
+        ShippingAuthoringCalculationMode? CalculationMode,
+        bool ReplaceTypeAssignment,
+        Guid? ShippingTypeId);
+
+    /// <summary>برنامهٔ تأییدشدهٔ ردیف‌های یک گروه در سند ویرایشگر.</summary>
+    /// <param name="GroupKey">شناسهٔ پایدار گروه مقصد (موجود یا تازه).</param>
+    /// <param name="Rows">ردیف‌های تأییدشده.</param>
+    /// <param name="CurrencyCode">ارز مقصد پس از این نوشتن.</param>
+    /// <param name="HasChanges">آیا مقدار ذخیره‌شده واقعاً تغییر می‌کند.</param>
+    public sealed record EditorRateRowPlan(
+        Guid GroupKey,
+        IReadOnlyList<RegionRateRowAssignment> Rows,
+        string? CurrencyCode,
+        bool HasChanges);
+
+    /// <summary>یک جای‌گذاری عنوان گروه در سند ویرایشگر.</summary>
+    /// <param name="GroupKey">شناسهٔ پایدار گروه مقصد.</param>
+    /// <param name="LanguageId">شناسهٔ زبان فعال.</param>
+    /// <param name="Title">عنوان تأییدشده یا تهی.</param>
+    /// <param name="Changed">آیا این جفت واقعاً تغییر می‌کند.</param>
+    public sealed record EditorTitleAssignment(Guid GroupKey, Guid LanguageId, string? Title, bool Changed);
+
+    /// <summary>
+    /// کل سند پیش‌سنجی‌شدهٔ ویرایشگر: درخت آینده‌نگر، ردیف‌ها/عنوان‌های هر گروه، متن روش و بخش‌های
+    /// اختیاری. هیچ تغییری روی aggregate تا لحظهٔ <see cref="ApplyEditorDocument"/> رخ نمی‌دهد.
+    /// </summary>
+    public sealed record EditorDocumentPlan(
+        IReadOnlyList<RegionGroupAssignment> Groups,
+        bool RegionsChanged,
+        IReadOnlyList<EditorRateRowPlan> RateRows,
+        PresentationPlan Presentation,
+        IReadOnlyList<EditorTitleAssignment> Titles,
+        WeeklySchedulePlan? Schedule,
+        MethodSettingsPlan? Settings,
+        TypeAssignmentPlan? Type)
+    {
+        /// <summary>آیا کل سند دست‌کم یک تغییر ذخیره‌شدهٔ واقعی دارد.</summary>
+        public bool HasChanges =>
+            RegionsChanged
+            || RateRows.Any(plan => plan.HasChanges)
+            || Presentation.HasChanges
+            || Titles.Any(title => title.Changed)
+            || Schedule?.HasChanges == true
+            || Settings?.HasChanges == true
+            || Type?.HasChanges == true;
+    }
+
+    /// <summary>
+    /// کل سند ویرایشگر را <b>بدون هیچ تغییر</b> می‌سنجد. گروه‌های تازه به‌صورت detached ساخته می‌شوند
+    /// تا ردیف‌ها و عنوان‌های تودرتوی همان PUT پیش از اولین نوشتن سنجیده شوند؛ هیچ گروهی «اول افزوده
+    /// و بعد اعتبارسنجی» نمی‌شود.
+    /// </summary>
+    /// <param name="input">سند دامنه.</param>
+    /// <param name="activeLanguageIds">زبان‌های فعال authoritative (سرورساخته).</param>
+    /// <param name="trustedCurrencyCode">ارز معتبر سرورساخته.</param>
+    public EditorDocumentPlan PreflightEditorDocument(
+        EditorDocumentInput input,
+        IReadOnlySet<Guid> activeLanguageIds,
+        string trustedCurrencyCode)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        ArgumentNullException.ThrowIfNull(input.Groups);
+        ArgumentNullException.ThrowIfNull(input.MethodTranslations);
+        ArgumentNullException.ThrowIfNull(activeLanguageIds);
+
+        var regionInputs = new List<ShippingAuthoringRegionGroupInput>(input.Groups.Count);
+        foreach (var group in input.Groups)
+        {
+            if (group is null || group.Selections is null || group.Rows is null || group.Titles is null)
+            {
+                RejectEditorPayload();
+            }
+
+            regionInputs.Add(new ShippingAuthoringRegionGroupInput(group.GroupId, group.Selections));
+        }
+
+        var assignments = PreflightRegionGroups(regionInputs);
+
+        var ratePlans = new List<EditorRateRowPlan>(input.Groups.Count);
+        var titles = new List<EditorTitleAssignment>();
+        for (var index = 0; index < input.Groups.Count; index++)
+        {
+            var source = input.Groups[index];
+            var key = source.GroupId ?? assignments[index].NewGroupId!.Value;
+            var prospective = assignments[index].Existing
+                ?? ShippingAuthoringRegionGroup.Create(DraftId, key, index);
+
+            var rows = PreflightGroupRateRows(prospective, source.Rows, trustedCurrencyCode);
+            ratePlans.Add(new EditorRateRowPlan(key, rows.Rows, rows.CurrencyCode, RateRowsDiffer(prospective, rows)));
+
+            var seenLanguages = new HashSet<Guid>();
+            foreach (var title in source.Titles)
+            {
+                if (title is null || title.LanguageId == Guid.Empty || !seenLanguages.Add(title.LanguageId))
+                {
+                    RejectPresentation();
+                }
+
+                if (!activeLanguageIds.Contains(title.LanguageId))
+                {
+                    throw new SemanticException(
+                        new SemanticError(ShippingErrorCodes.AuthoringPresentationLanguageInvalid));
+                }
+
+                var normalized = ShippingAuthoringPresentationRules.NormalizeTitle(title.Title);
+                var existing = prospective.Titles.SingleOrDefault(candidate => candidate.LanguageId == title.LanguageId);
+                var changed = normalized is null
+                    ? existing is not null
+                    : existing is null || !string.Equals(existing.Title, normalized, StringComparison.Ordinal);
+                titles.Add(new EditorTitleAssignment(key, title.LanguageId, normalized, changed));
+            }
+        }
+
+        var presentation = PreflightPresentation(input.MethodTranslations, [], activeLanguageIds);
+        var schedule = input.ReplaceWeeklySchedule
+            ? PreflightWeeklySchedule(input.TimeZoneId, input.ScheduleDays ?? [])
+            : null;
+        var settings = input.ReplaceMethodSettings
+            ? PreflightMethodSettings(input.FreightPaymentMode, input.CalculationMode)
+            : null;
+        var type = input.ReplaceTypeAssignment ? PreflightTypeAssignment(input.ShippingTypeId) : null;
+
+        return new EditorDocumentPlan(
+            assignments,
+            RegionsDiffer(regionInputs, assignments),
+            ratePlans,
+            presentation,
+            titles,
+            schedule,
+            settings,
+            type);
+    }
+
+    /// <summary>
+    /// سند پیش‌سنجی‌شده را در <b>یک</b> افزایش بازبینی ریشه اعمال می‌کند. هیچ اعتبارسنجی‌ای اینجا نیست؛
+    /// ورودی باید از <see cref="PreflightEditorDocument"/> آمده باشد. سند بدون تغییر هیچ ستونی را
+    /// نمی‌نویسد و بازبینی/زمان را دست نمی‌زند.
+    /// </summary>
+    /// <param name="plan">برنامهٔ معتبر.</param>
+    /// <param name="now">زمان UTC.</param>
+    /// <param name="staged">آیا ترتیب موقت مرحلهٔ اول نوشته شود.</param>
+    public void ApplyEditorDocument(EditorDocumentPlan plan, DateTimeOffset now, bool staged)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        if (!plan.HasChanges)
+        {
+            return;
+        }
+
+        if (plan.RegionsChanged)
+        {
+            ApplyRegionGroupsCore(plan.Groups, staged);
+        }
+
+        foreach (var ratePlan in plan.RateRows)
+        {
+            var group = FindRegionGroup(ratePlan.GroupKey) ?? throw EditorGroupMissing();
+            ApplyGroupRateRowsCore(group, ratePlan.Rows, ratePlan.CurrencyCode);
+        }
+
+        ApplyPresentationCore(plan.Presentation);
+
+        foreach (var title in plan.Titles)
+        {
+            var group = FindRegionGroup(title.GroupKey) ?? throw EditorGroupMissing();
+            group.SetTitle(title.LanguageId, title.Title);
+        }
+
+        if (plan.Schedule is { } schedule)
+        {
+            ApplyWeeklyScheduleCore(schedule, now);
+        }
+
+        if (plan.Settings is { } settings)
+        {
+            ApplyMethodSettingsCore(settings, now);
+        }
+
+        if (plan.Type is { } type)
+        {
+            ApplyTypeAssignmentCore(type);
+        }
+
         Revision = checked(Revision + 1);
         UpdatedAt = now;
     }
+
+    /// <summary>آیا درخت ورودی با درخت ذخیره‌شده تفاوت معنایی دارد (هویت، ترتیب و مجموعهٔ گره‌ها).</summary>
+    private bool RegionsDiffer(
+        IReadOnlyList<ShippingAuthoringRegionGroupInput> inputs,
+        IReadOnlyList<RegionGroupAssignment> plan)
+    {
+        if (plan.Count != _regionGroups.Count)
+        {
+            return true;
+        }
+
+        // Persistence does not promise a materialisation order, so the stored tree is compared by its
+        // persisted Order (0..n-1 by construction), never by the incidental list position after a load.
+        var stored = _regionGroups.OrderBy(group => group.Order).ToArray();
+        for (var index = 0; index < plan.Count; index++)
+        {
+            var assignment = plan[index];
+            if (assignment.Existing is null)
+            {
+                return true;
+            }
+
+            var existing = stored[index];
+            if (existing.GroupId != assignment.Existing.GroupId || existing.Order != index)
+            {
+                return true;
+            }
+
+            var current = existing.Areas.Select(area => area.Node).ToHashSet();
+            if (current.Count != assignment.Nodes.Count || !assignment.Nodes.All(current.Contains))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool RateRowsDiffer(ShippingAuthoringRegionGroup group, GroupRateRowPlan plan)
+    {
+        if (plan.Rows.Count != group.RateRows.Count)
+        {
+            return true;
+        }
+
+        for (var index = 0; index < plan.Rows.Count; index++)
+        {
+            if (plan.Rows[index].Existing is not { } existing
+                || !Equals(existing.Value, plan.Rows[index].Value))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static SemanticException EditorGroupMissing()
+        => new(new SemanticError(ShippingErrorCodes.AuthoringRegionGroupNotFound));
+
+    private static void RejectEditorPayload()
+        => throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRegionPayloadInvalid));
 
     private static void RejectPresentation()
         => throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringPresentationPayloadInvalid));

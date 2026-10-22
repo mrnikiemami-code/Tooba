@@ -744,3 +744,11 @@ harness-only corrections were needed (shared id generator; Npgsql '@' prefix on 
 allowed one, so Status is PARTIAL despite all functional gates passing. Container removed and 55436 has no listener.
 TB-196 remains PENDING_ARCHITECT_REVIEW; Production-Functional-Acceptance PENDING; no certification/manifest
 promotion; worker PASS is not Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.
+
+## Worker pointer — TB-199 executed (2026-10-23)
+
+`TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199` was executed from base `8211c5e43eb9cf5a8a265c99f78c5c68f6758af9`.
+Evidence: `docs/architecture/evidence/TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199/RESULT.md`.
+Whole Shipping suite passed once on the disposable PostgreSQL target (645 passed), container removed and 55432 free.
+Status is PENDING_ARCHITECT_REVIEW; Production-Functional-Acceptance PENDING; worker PASS is not Architect ACCEPT;
+STATUS: PARTIAL only in that a dedicated throwing-catalog post-commit fault fact was not added. No automatic next task.
