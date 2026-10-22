@@ -2461,10 +2461,10 @@
       "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3"
     },
     {
-      "module": "Shipping",
-      "structureCertified": false,
-      "lockVersion": "ARCH-COMPLETE-002",
-      "certificationNote": "NON-CERTIFIED physical-structure entry recorded by the AMSC W2 structure wave TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2 over the existing Shipping foundation (lineage W0 analysis -> W1 canonical errors/edition guard 7e6b1479 -> W2 structure). This entry records only the physical baseline that Structure verified; it is NOT a certification, NOT a COMPLETE_REFERENCE_PATTERN verdict and does not activate any feature, marketplace authoring, owner/region/taxonomy rule or business requirement D1-D7. Shipping is HTTP_OWNING: the module owns real /v1/admin routes mapped by ShippingEndpointModule.MapShippingEndpoints under the single /v1/admin group (rates/coverage, method financial status, operating schedule, packaging policy, operational quote). W2 corrected exactly one physical defect: the ShippingEndpointModule composition class was housed inside Admin/ShippingRateCoverageEndpoints.cs; it now lives at the project root as the canonical composition entry with namespace Tooba.Shipping.Endpoints, and the route-mapping/registration behavior, route count, order and DI lifetimes are unchanged. Folder granularity is capability-first shallow (Contracts/Domain/Application/Infrastructure/Endpoints capability folders with technical axes only as secondary axes; zero per-use-case single-file request leaves), path<->namespace is exact, and the canonical /Modules/Shipping/ solution group holds the six projects once each. Known non-structural blockers stay open and are not represented here as solved: the pre-existing OperationalQuoteCompatibilityTests failure (three Order consumers), and the unimplemented D1-D7 business requirements.",
+    "module": "Shipping",
+    "structureCertified": true,
+    "lockVersion": "ARCH-COMPLETE-002",
+    "certificationNote": "CERTIFIED physical structure recorded by the AMSC W3 certification wave TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3 over the existing Shipping foundation (lineage W0 analysis -> W1 canonical errors/edition guard 7e6b1479 -> W2 structure 59ce3625 -> W2-R1 approved-shadow compatibility 6c54c821 -> W3 certify). The W2 non-certified entry was promoted only after every applicable ARCH-COMPLETE-002 gate passed on this actual surface; the entry is not a product acceptance, not a release conclusion and does not activate any feature, marketplace authoring, owner/region/taxonomy rule, configured-language integration or business requirement D1-D7. Shipping is HTTP_OWNING: the module owns 16 real /v1/admin routes mapped by ShippingEndpointModule.MapShippingEndpoints through the single /v1/admin group (rates/coverage, method financial status, operating schedule, packaging policy, operational quote), each dispatching one MediatR request through ISender to exactly one handler and one declared transport validator (16 request validators + 6 wired nested transport validators, zero NO_VALIDATOR_REQUIRED rows). Folder granularity is capability-first shallow, path<->namespace is exact, the canonical /Modules/Shipping/ solution group holds the six projects once each, and root allowlists are enforced by ShippingModuleStructureGuardTests and ShippingRequestClassificationTests. Cross-module edges are Contracts-only (Geography.Contracts.Places, Fulfillment.Contracts.Shipping) plus the reviewed TB-079/TB-080 Order shadow observation boundary guarded by OperationalContractBoundary. D1-D7 remain pending and are not represented here as solved.",
       "projects": [
         {
           "projectName": "Tooba.Shipping.Application",
@@ -2534,10 +2534,11 @@
           "forbiddenTopLevelFolders": []
         }
       ],
-      "structureAuthorityTask": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2",
-      "structureHandoffState": "READY_FOR_CERTIFY_PENDING_ARCHITECT_REVIEW",
-      "certificationState": "NOT_CERTIFIED",
-      "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2/RESULT.md"
+    "structureAuthorityTask": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2",
+    "structureHandoffState": "READY_FOR_CERTIFY",
+    "certificationState": "COMPLETE_REFERENCE_PATTERN",
+    "certificationAuthorityTask": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3",
+    "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3/certification.md"
     }
   ],
   "uncertifiedHttpOwningModules": [],

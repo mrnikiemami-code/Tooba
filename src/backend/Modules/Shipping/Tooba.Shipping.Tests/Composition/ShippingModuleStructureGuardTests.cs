@@ -9,7 +9,7 @@ namespace Tooba.Shipping.Tests.Composition;
 /// </summary>
 /// <remarks>
 /// Scope is deliberately limited to the six existing Shipping projects. It machine-checks only the
-/// structural facts the Structure skill owns: physical project roots against the non-certified manifest
+/// structural facts the Structure skill owns: physical project roots against the certified manifest
 /// entry (root allowlist, forbidden root files, forbidden top-level folders), capability-first folders
 /// without unjustified single-file request leaves, exact path&lt;-&gt;namespace alignment, the single root
 /// composition entry, canonical solution membership and stale/duplicate copies.
@@ -41,14 +41,32 @@ public sealed class ShippingModuleStructureGuardTests
     private static readonly string[] EndpointsAudienceFolders = ["Admin", "Errors", "Resources"];
 
     [Fact]
-    public void Manifest_entry_is_present_and_explicitly_non_certified()
+    public void Manifest_entry_is_certified_with_the_shipping_certification_lineage()
     {
         var entry = ShippingManifestEntry(out var raw);
 
-        Assert.False(
+        // W2's stage assertion (structureCertified == false) described the pre-certify lifecycle only.
+        // TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3 promotes it after every certification prerequisite passed.
+        Assert.True(
             entry.GetProperty("structureCertified").GetBoolean(),
-            "Structure must not flip whole-module certification; that is a Certify verdict.");
+            "Shipping must carry the certified structure state after the W3 certification wave.");
         Assert.Equal("ARCH-COMPLETE-002", entry.GetProperty("lockVersion").GetString());
+        Assert.Equal("COMPLETE_REFERENCE_PATTERN", entry.GetProperty("certificationState").GetString());
+        Assert.Equal(
+            "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3",
+            entry.GetProperty("certificationAuthorityTask").GetString());
+        Assert.Equal(
+            "docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3/certification.md",
+            entry.GetProperty("evidence").GetString());
+
+        // Honest lineage: the certification must cite the structure handoff it certifies over.
+        Assert.Contains(
+            "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2",
+            entry.GetProperty("structureAuthorityTask").GetString()!,
+            StringComparison.Ordinal);
+        Assert.Equal(
+            "READY_FOR_CERTIFY",
+            entry.GetProperty("structureHandoffState").GetString());
 
         var declared = entry.GetProperty("projects")
             .EnumerateArray()
@@ -64,7 +82,8 @@ public sealed class ShippingModuleStructureGuardTests
                 $"manifest project {project} has no csproj on disk");
         }
 
-        Assert.Contains("\"module\": \"Shipping\"", raw, StringComparison.Ordinal);
+        // Exactly one Shipping entry; promotion must not leave a temporary pre-cert duplicate behind.
+        Assert.Equal(1, Regex.Matches(raw, "\"module\": \"Shipping\"").Count);
     }
 
     [Fact]

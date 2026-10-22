@@ -1,0 +1,262 @@
+{
+  "module": "Shipping",
+  "lockVersion": "ARCH-COMPLETE-002",
+  "task": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3",
+  "scope": "Endpoint-reachable MediatR request universe of the existing Shipping backend baseline, independently re-derived from shipped sources. This manifest is not a feature authorization: it classifies transport input only.",
+  "derivation": {
+    "routeSource": "src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/**/*.cs (group.Map* call sites)",
+    "dispatchSource": "handler bodies: sender.Send(new <Request>(...))",
+    "requestSource": "src/backend/Modules/Shipping/Tooba.Shipping.Application/**/*.cs (public sealed record ... : IRequest<...>)",
+    "handlerSource": "IRequestHandler<Request, ...> implementations in Tooba.Shipping.Application",
+    "validatorSource": "AbstractValidator<T> implementations in Tooba.Shipping.Application",
+    "routePrefix": "/v1/admin",
+    "routeOwnership": "ShippingEndpointModule.MapShippingEndpoints -> MapGroup(\"/v1/admin\") -> 5 capability mappers",
+    "guard": "src/backend/Modules/Shipping/Tooba.Shipping.Tests/Certification/ShippingRequestClassificationTests.cs"
+  },
+  "transportFailureContract": "FluentValidation failure is rendered by ApiResponseFactory as HTTP 400 validation.failed with the declared shipping.validation.* / per-capability validation child codes; no endpoint maps transport failure by message parsing.",
+  "requests": [
+    {
+      "request": "GetShippingRatesAndCoverageQuery",
+      "route": "GET /v1/admin/shipping-services/{serviceCode}/rates",
+      "handler": "GetShippingRatesAndCoverageHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingRatesAndCoverageQueryValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "authorization:fulfillment.view:authorizer-seam"
+      ],
+      "transportRule": "serviceCode non-empty and bounded length",
+      "reason": "Route identity is caller-supplied and is projected into the read request, so the transport shape must be validated."
+    },
+    {
+      "request": "CreateShippingRatePolicyCommand",
+      "route": "POST /v1/admin/shipping-services/{serviceCode}/rates",
+      "handler": "CreateShippingRatePolicyHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "CreateShippingRatePolicyCommandValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "body:ShippingRatePolicyWriteRequest:required:untrusted-caller",
+        "authorization:fulfillment.manage:authorizer-seam"
+      ],
+      "transportRule": "route serviceCode + body envelope; nested ShippingRatePolicyWriteRequestValidator carries the field rules",
+      "reason": "Route identity and JSON body are caller-controlled transport input."
+    },
+    {
+      "request": "UpdateShippingRatePolicyCommand",
+      "route": "PUT /v1/admin/shipping-services/{serviceCode}/rates/{ratePolicyId:guid}",
+      "handler": "UpdateShippingRatePolicyHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "UpdateShippingRatePolicyCommandValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "route:ratePolicyId:required:guid:untrusted-caller",
+        "body:ShippingRatePolicyWriteRequest:required:untrusted-caller",
+        "authorization:fulfillment.manage:authorizer-seam"
+      ],
+      "transportRule": "non-empty Guid route id + body envelope; nested ShippingRatePolicyWriteRequestValidator",
+      "reason": "Route identity and JSON body are caller-controlled transport input."
+    },
+    {
+      "request": "SetShippingRatePolicyActiveCommand",
+      "route": "PATCH /v1/admin/shipping-services/{serviceCode}/rates/{ratePolicyId:guid}/active",
+      "handler": "SetShippingRatePolicyActiveHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "SetShippingRatePolicyActiveCommandValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "route:ratePolicyId:required:guid:untrusted-caller",
+        "body:isActive:required:bool:untrusted-caller",
+        "authorization:fulfillment.manage:authorizer-seam"
+      ],
+      "transportRule": "non-empty Guid route id + route serviceCode + boolean activation flag",
+      "reason": "Route identity and the activation flag are caller-controlled transport input."
+    },
+    {
+      "request": "CreateShippingCoverageGrantCommand",
+      "route": "POST /v1/admin/shipping-services/{serviceCode}/coverage-grants",
+      "handler": "CreateShippingCoverageGrantHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "CreateShippingCoverageGrantCommandValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "body:ShippingCoverageGrantWriteRequest:required:untrusted-caller",
+        "authorization:fulfillment.manage:authorizer-seam"
+      ],
+      "transportRule": "route serviceCode + body envelope; nested ShippingCoverageGrantWriteRequestValidator",
+      "reason": "Route identity and JSON body are caller-controlled transport input."
+    },
+    {
+      "request": "SetShippingCoverageGrantActiveCommand",
+      "route": "PATCH /v1/admin/shipping-services/{serviceCode}/coverage-grants/{coverageGrantId:guid}/active",
+      "handler": "SetShippingCoverageGrantActiveHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "SetShippingCoverageGrantActiveCommandValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "route:coverageGrantId:required:guid:untrusted-caller",
+        "body:isActive:required:bool:untrusted-caller",
+        "authorization:fulfillment.manage:authorizer-seam"
+      ],
+      "transportRule": "non-empty Guid route id + route serviceCode + boolean activation flag",
+      "reason": "Route identity and the activation flag are caller-controlled transport input."
+    },
+    {
+      "request": "SetShippingMethodCoverageCommand",
+      "route": "PUT /v1/admin/shipping-services/{serviceCode}/method-coverage",
+      "handler": "SetShippingMethodCoverageHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "SetShippingMethodCoverageCommandValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "body:ShippingMethodCoverageWriteRequest:required:untrusted-caller",
+        "authorization:fulfillment.manage:authorizer-seam"
+      ],
+      "transportRule": "route serviceCode + body envelope; nested ShippingMethodCoverageWriteRequestValidator",
+      "reason": "Route identity and JSON body are caller-controlled transport input."
+    },
+    {
+      "request": "GetShippingMethodFinancialStatusQuery",
+      "route": "GET /v1/admin/shipping-services/{serviceCode}/financial-status",
+      "handler": "GetShippingMethodFinancialStatusHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingMethodFinancialStatusQueryValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "query:optionCode:optional:untrusted-caller",
+        "authorization:fulfillment.view:authorizer-seam"
+      ],
+      "transportRule": "serviceCode bounded; optional optionCode is still caller-controlled and is bounded when present",
+      "reason": "Optional query input is caller-controlled; optionality is not proof of server derivation."
+    },
+    {
+      "request": "GetShippingOperatingSchedulesQuery",
+      "route": "GET /v1/admin/shipping-services/{serviceCode}/operating-schedules",
+      "handler": "GetShippingOperatingSchedulesHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingOperatingSchedulesQueryValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "authorization:fulfillment.view:authorizer-seam"
+      ],
+      "transportRule": "serviceCode non-empty and bounded length",
+      "reason": "Route identity is caller-supplied and is projected into the read request."
+    },
+    {
+      "request": "UpsertShippingOperatingScheduleCommand",
+      "route": "PUT /v1/admin/shipping-services/{serviceCode}/operating-schedules",
+      "handler": "UpsertShippingOperatingScheduleHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "UpsertShippingOperatingScheduleCommandValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "body:ShippingOperatingScheduleWriteRequest:required:untrusted-caller",
+        "authorization:fulfillment.manage:authorizer-seam"
+      ],
+      "transportRule": "route serviceCode + body envelope; nested ShippingOperatingScheduleWriteRequestValidator",
+      "reason": "Route identity and JSON body are caller-controlled transport input."
+    },
+    {
+      "request": "SetShippingOperatingScheduleActiveCommand",
+      "route": "PATCH /v1/admin/shipping-services/{serviceCode}/operating-schedules/{scheduleId:guid}/active",
+      "handler": "SetShippingOperatingScheduleActiveHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "SetShippingOperatingScheduleActiveCommandValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "route:scheduleId:required:guid:untrusted-caller",
+        "body:isActive:required:bool:untrusted-caller",
+        "authorization:fulfillment.manage:authorizer-seam"
+      ],
+      "transportRule": "non-empty Guid route id + route serviceCode + boolean activation flag",
+      "reason": "Route identity and the activation flag are caller-controlled transport input."
+    },
+    {
+      "request": "EvaluateShippingOperationalQuoteQuery",
+      "route": "POST /v1/admin/shipping-services/{serviceCode}/operational-quote",
+      "handler": "EvaluateShippingOperationalQuoteHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "EvaluateShippingOperationalQuoteQueryValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "body:ShippingOperationalQuoteEvaluationRequest:required:untrusted-caller",
+        "authorization:fulfillment.view:authorizer-seam"
+      ],
+      "transportRule": "route serviceCode + body envelope; nested ShippingOperationalQuoteEvaluationRequestValidator",
+      "reason": "Route identity and JSON body are caller-controlled transport input."
+    },
+    {
+      "request": "GetShippingPackagingPoliciesQuery",
+      "route": "GET /v1/admin/shipping-services/{serviceCode}/packaging-policies",
+      "handler": "GetShippingPackagingPoliciesHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingPackagingPoliciesQueryValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "authorization:fulfillment.view:authorizer-seam"
+      ],
+      "transportRule": "serviceCode non-empty and bounded length",
+      "reason": "Route identity is caller-supplied and is projected into the read request."
+    },
+    {
+      "request": "CreateShippingPackagingPolicyCommand",
+      "route": "POST /v1/admin/shipping-services/{serviceCode}/packaging-policies",
+      "handler": "CreateShippingPackagingPolicyHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "CreateShippingPackagingPolicyCommandValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "body:ShippingPackagingPolicyWriteRequest:required:untrusted-caller",
+        "authorization:fulfillment.manage:authorizer-seam"
+      ],
+      "transportRule": "route serviceCode + body envelope; nested ShippingPackagingPolicyWriteRequestValidator",
+      "reason": "Route identity and JSON body are caller-controlled transport input."
+    },
+    {
+      "request": "UpdateShippingPackagingPolicyCommand",
+      "route": "PUT /v1/admin/shipping-services/{serviceCode}/packaging-policies/{packagingPolicyId:guid}",
+      "handler": "UpdateShippingPackagingPolicyHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "UpdateShippingPackagingPolicyCommandValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "route:packagingPolicyId:required:guid:untrusted-caller",
+        "body:ShippingPackagingPolicyWriteRequest:required:untrusted-caller",
+        "authorization:fulfillment.manage:authorizer-seam"
+      ],
+      "transportRule": "non-empty Guid route id + route serviceCode + body envelope; nested ShippingPackagingPolicyWriteRequestValidator",
+      "reason": "Route identity and JSON body are caller-controlled transport input."
+    },
+    {
+      "request": "SetShippingPackagingPolicyActiveCommand",
+      "route": "PATCH /v1/admin/shipping-services/{serviceCode}/packaging-policies/{packagingPolicyId:guid}/active",
+      "handler": "SetShippingPackagingPolicyActiveHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "SetShippingPackagingPolicyActiveCommandValidator",
+      "inputs": [
+        "route:serviceCode:required:untrusted-caller",
+        "route:packagingPolicyId:required:guid:untrusted-caller",
+        "body:isActive:required:bool:untrusted-caller",
+        "authorization:fulfillment.manage:authorizer-seam"
+      ],
+      "transportRule": "non-empty Guid route id + route serviceCode + boolean activation flag",
+      "reason": "Route identity and the activation flag are caller-controlled transport input."
+    }
+  ],
+  "nestedTransportValidators": [
+    "ShippingRatePolicyWriteRequestValidator",
+    "ShippingCoverageGrantWriteRequestValidator",
+    "ShippingMethodCoverageWriteRequestValidator",
+    "ShippingPackagingPolicyWriteRequestValidator",
+    "ShippingOperatingScheduleWriteRequestValidator",
+    "ShippingOperationalQuoteEvaluationRequestValidator"
+  ],
+  "noValidatorRequiredRequests": [],
+  "totals": {
+    "shippedRoutes": 16,
+    "endpointReachableRequests": 16,
+    "requestValidators": 16,
+    "nestedTransportValidators": 6,
+    "declaredValidators": 22
+  }
+}
