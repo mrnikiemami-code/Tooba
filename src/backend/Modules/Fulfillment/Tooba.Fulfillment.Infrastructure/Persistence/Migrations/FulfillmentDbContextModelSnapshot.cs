@@ -26,63 +26,80 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackage", b =>
                 {
                     b.Property<Guid>("ConsolidatedPackageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("consolidated_package_id");
 
                     b.Property<DateTimeOffset?>("CancelledAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
 
                     b.Property<Guid>("CheckoutId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("checkout_id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
 
                     b.Property<DateTimeOffset?>("DeliveredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delivered_at");
 
                     b.Property<DateTimeOffset?>("DispatchedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dispatched_at");
 
                     b.Property<string>("Note")
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("note");
 
                     b.Property<string>("PackageNumber")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("package_number");
 
                     b.Property<string>("ShippingMethodCode")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("shipping_method_code");
 
                     b.Property<string>("ShippingMethodLabel")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("shipping_method_label");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
 
                     b.Property<string>("TrackingReference")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("tracking_reference");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
-                    b.HasKey("ConsolidatedPackageId");
+                    b.HasKey("ConsolidatedPackageId")
+                        .HasName("pk_consolidated_packages");
 
-                    b.HasIndex("CheckoutId");
+                    b.HasIndex("CheckoutId")
+                        .HasDatabaseName("ix_consolidated_packages_checkout_id");
 
                     b.HasIndex("PackageNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_consolidated_packages_package_number");
 
                     b.ToTable("consolidated_packages", "fulfillment");
                 });
@@ -90,32 +107,42 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ConsolidatedPackageMember", b =>
                 {
                     b.Property<Guid>("ConsolidatedPackageMemberId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("consolidated_package_member_id");
 
                     b.Property<Guid>("ConsolidatedPackageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("consolidated_package_id");
 
                     b.Property<Guid>("FulfillmentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("fulfillment_id");
 
                     b.Property<DateTimeOffset>("JoinedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
 
                     b.Property<DateTimeOffset?>("ReleasedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("released_at");
 
                     b.Property<Guid>("SellerPartyId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("seller_party_id");
 
                     b.Property<Guid>("ShipmentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipment_id");
 
-                    b.HasKey("ConsolidatedPackageMemberId");
+                    b.HasKey("ConsolidatedPackageMemberId")
+                        .HasName("pk_consolidated_package_members");
 
-                    b.HasIndex("ConsolidatedPackageId");
+                    b.HasIndex("ConsolidatedPackageId")
+                        .HasDatabaseName("ix_consolidated_package_members_consolidated_package_id");
 
                     b.HasIndex("ShipmentId")
                         .IsUnique()
+                        .HasDatabaseName("ix_consolidated_package_members_shipment_id")
                         .HasFilter("released_at IS NULL");
 
                     b.ToTable("consolidated_package_members", "fulfillment");
@@ -124,40 +151,53 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.FulfillmentItem", b =>
                 {
                     b.Property<Guid>("FulfillmentItemId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("fulfillment_item_id");
 
                     b.Property<Guid>("FulfillmentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("fulfillment_id");
 
                     b.Property<Guid>("OrderLineId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_line_id");
 
                     b.Property<decimal>("QuantityOrdered")
-                        .HasColumnType("numeric(18,6)");
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity_ordered");
 
                     b.Property<decimal>("QuantityPacked")
-                        .HasColumnType("numeric(18,6)");
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity_packed");
 
                     b.Property<decimal>("QuantityProcessing")
-                        .HasColumnType("numeric(18,6)");
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity_processing");
 
                     b.Property<decimal>("QuantityShipped")
-                        .HasColumnType("numeric(18,6)");
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity_shipped");
 
                     b.Property<bool>("ReservationConsumed")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("reservation_consumed");
 
                     b.Property<Guid?>("ReservationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("reservation_id");
 
                     b.Property<Guid?>("ShippingGroupId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_group_id");
 
-                    b.HasKey("FulfillmentItemId");
+                    b.HasKey("FulfillmentItemId")
+                        .HasName("pk_items");
 
-                    b.HasIndex("FulfillmentId");
+                    b.HasIndex("FulfillmentId")
+                        .HasDatabaseName("ix_items_fulfillment_id");
 
                     b.HasIndex("ShippingGroupId")
+                        .HasDatabaseName("ix_items_shipping_group_id")
                         .HasFilter("shipping_group_id IS NOT NULL");
 
                     b.ToTable("items", "fulfillment");
@@ -166,58 +206,74 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.FulfillmentShippingGroup", b =>
                 {
                     b.Property<Guid>("ShippingGroupId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_group_id");
 
                     b.Property<Guid>("FulfillmentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("fulfillment_id");
 
                     b.Property<int>("LeadDays")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("lead_days");
 
                     b.Property<string>("MethodCode")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("method_code");
 
                     b.Property<string>("MethodLabel")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("method_label");
 
                     b.Property<DateOnly>("MinimumDeliveryDate")
-                        .HasColumnType("date");
+                        .HasColumnType("date")
+                        .HasColumnName("minimum_delivery_date");
 
                     b.Property<string>("OptionCode")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("option_code");
 
                     b.Property<string>("OriginContext")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("origin_context");
 
                     b.Property<DateOnly?>("RequestedDeliveryDate")
-                        .HasColumnType("date");
+                        .HasColumnType("date")
+                        .HasColumnName("requested_delivery_date");
 
                     b.Property<string>("RequestedDeliveryTimeWindow")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("requested_delivery_time_window");
 
                     b.Property<Guid>("SellerOrderId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("seller_order_id");
 
                     b.Property<Guid>("SellerPartyId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("seller_party_id");
 
                     b.Property<string>("ServiceCode")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("service_code");
 
-                    b.HasKey("ShippingGroupId");
+                    b.HasKey("ShippingGroupId")
+                        .HasName("pk_shipping_groups");
 
-                    b.HasIndex("FulfillmentId");
+                    b.HasIndex("FulfillmentId")
+                        .HasDatabaseName("ix_shipping_groups_fulfillment_id");
 
                     b.HasIndex("FulfillmentId", "ShippingGroupId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_shipping_groups_fulfillment_id_shipping_group_id");
 
                     b.ToTable("shipping_groups", "fulfillment");
                 });
@@ -225,79 +281,99 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.FulfillmentUnit", b =>
                 {
                     b.Property<Guid>("FulfillmentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("fulfillment_id");
 
                     b.Property<Guid>("CheckoutId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("checkout_id");
 
                     b.Property<string>("CityName")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("city_name");
 
                     b.Property<string>("ContactMobile")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("contact_mobile");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<Guid>("PlacedByUserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("placed_by_user_id");
 
                     b.Property<string>("PostalAddress")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("postal_address");
 
                     b.Property<string>("PostalCode")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("postal_code");
 
                     b.Property<string>("ProvinceName")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("province_name");
 
                     b.Property<string>("RecipientName")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("recipient_name");
 
                     b.Property<Guid>("SellerOrderId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("seller_order_id");
 
                     b.Property<Guid>("SellerPartyId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("seller_party_id");
 
                     b.Property<string>("ShippingMethodCode")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("shipping_method_code");
 
                     b.Property<string>("ShippingMethodLabel")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("shipping_method_label");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
-                    b.HasKey("FulfillmentId");
+                    b.HasKey("FulfillmentId")
+                        .HasName("pk_fulfillments");
 
-                    b.HasIndex("CheckoutId");
+                    b.HasIndex("CheckoutId")
+                        .HasDatabaseName("ix_fulfillments_checkout_id");
 
                     b.HasIndex("SellerOrderId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_fulfillments_seller_order_id");
 
-                    b.HasIndex("SellerPartyId");
+                    b.HasIndex("SellerPartyId")
+                        .HasDatabaseName("ix_fulfillments_seller_party_id");
 
                     b.ToTable("fulfillments", "fulfillment");
                 });
@@ -305,66 +381,84 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.Shipment", b =>
                 {
                     b.Property<Guid>("ShipmentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipment_id");
 
                     b.Property<string>("CarrierDisplayName")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("carrier_display_name");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<DateTimeOffset?>("DeliveredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delivered_at");
 
                     b.Property<DateTimeOffset?>("DispatchedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dispatched_at");
 
                     b.Property<Guid>("FulfillmentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("fulfillment_id");
 
                     b.Property<string>("PreviousTrackingReference")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("previous_tracking_reference");
 
                     b.Property<string>("ProviderMetadataJson")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("provider_metadata_json");
 
                     b.Property<int>("ProviderMetadataVersion")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("provider_metadata_version");
 
                     b.Property<Guid?>("ShippingGroupId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_group_id");
 
                     b.Property<string>("ShippingMethodCode")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("shipping_method_code");
 
                     b.Property<string>("ShippingMethodLabel")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("shipping_method_label");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
 
                     b.Property<string>("TrackingReference")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("tracking_reference");
 
-                    b.HasKey("ShipmentId");
+                    b.HasKey("ShipmentId")
+                        .HasName("pk_shipments");
 
-                    b.HasIndex("FulfillmentId");
+                    b.HasIndex("FulfillmentId")
+                        .HasDatabaseName("ix_shipments_fulfillment_id");
 
                     b.HasIndex("ShippingGroupId")
+                        .HasDatabaseName("ix_shipments_shipping_group_id")
                         .HasFilter("shipping_group_id IS NOT NULL");
 
                     b.HasIndex("TrackingReference")
                         .IsUnique()
+                        .HasDatabaseName("ix_shipments_tracking_reference")
                         .HasFilter("tracking_reference IS NOT NULL");
 
                     b.ToTable("shipments", "fulfillment");
@@ -373,20 +467,26 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShipmentItem", b =>
                 {
                     b.Property<Guid>("ShipmentItemId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipment_item_id");
 
                     b.Property<Guid>("OrderLineId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_line_id");
 
                     b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric(18,6)");
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity");
 
                     b.Property<Guid>("ShipmentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipment_id");
 
-                    b.HasKey("ShipmentItemId");
+                    b.HasKey("ShipmentItemId")
+                        .HasName("pk_shipment_items");
 
-                    b.HasIndex("ShipmentId");
+                    b.HasIndex("ShipmentId")
+                        .HasDatabaseName("ix_shipment_items_shipment_id");
 
                     b.ToTable("shipment_items", "fulfillment");
                 });
@@ -394,48 +494,61 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShippingMethod", b =>
                 {
                     b.Property<Guid>("ShippingMethodId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_method_id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("LegacyOptionCode")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("legacy_option_code");
 
                     b.Property<string>("LegacyServiceCode")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("legacy_service_code");
 
                     b.Property<string>("MethodCode")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("method_code");
 
                     b.Property<string>("ProviderKind")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provider_kind");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
-                    b.HasKey("ShippingMethodId");
+                    b.HasKey("ShippingMethodId")
+                        .HasName("pk_shipping_methods");
 
-                    b.HasIndex("LegacyServiceCode");
+                    b.HasIndex("LegacyServiceCode")
+                        .HasDatabaseName("ix_shipping_methods_legacy_service_code");
 
                     b.HasIndex("MethodCode")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_shipping_methods_method_code");
 
                     b.HasIndex("LegacyServiceCode", "LegacyOptionCode")
                         .IsUnique()
+                        .HasDatabaseName("ix_shipping_methods_legacy_service_code_legacy_option_code")
                         .HasFilter("legacy_option_code IS NOT NULL");
 
                     b.ToTable("shipping_methods", "fulfillment");
@@ -444,27 +557,34 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShippingMethodTranslation", b =>
                 {
                     b.Property<Guid>("TranslationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("translation_id");
 
                     b.Property<string>("Description")
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("description");
 
                     b.Property<Guid>("LanguageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("language_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name");
 
                     b.Property<Guid>("ShippingMethodId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_method_id");
 
-                    b.HasKey("TranslationId");
+                    b.HasKey("TranslationId")
+                        .HasName("pk_shipping_method_translations");
 
                     b.HasIndex("ShippingMethodId", "LanguageId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_shipping_method_translations_shipping_method_id_language_id");
 
                     b.ToTable("shipping_method_translations", "fulfillment");
                 });
@@ -472,44 +592,55 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShippingService", b =>
                 {
                     b.Property<Guid>("ShippingServiceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_service_id");
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("code");
 
                     b.Property<string>("ColorKey")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("color_key");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("IconKey")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("icon_key");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("ProviderKind")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provider_kind");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
-                    b.HasKey("ShippingServiceId");
+                    b.HasKey("ShippingServiceId")
+                        .HasName("pk_shipping_services");
 
                     b.HasIndex("Code")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_shipping_services_code");
 
                     b.ToTable("shipping_services", "fulfillment");
                 });
@@ -517,34 +648,44 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShippingServiceOption", b =>
                 {
                     b.Property<Guid>("ShippingServiceOptionId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_service_option_id");
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("code");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<Guid>("ShippingServiceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_service_id");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
-                    b.HasKey("ShippingServiceOptionId");
+                    b.HasKey("ShippingServiceOptionId")
+                        .HasName("pk_shipping_service_options");
 
-                    b.HasIndex("ShippingServiceId");
+                    b.HasIndex("ShippingServiceId")
+                        .HasDatabaseName("ix_shipping_service_options_shipping_service_id");
 
                     b.HasIndex("ShippingServiceId", "Code")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_shipping_service_options_shipping_service_id_code");
 
                     b.ToTable("shipping_service_options", "fulfillment");
                 });
@@ -552,23 +693,29 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShippingServiceOptionTranslation", b =>
                 {
                     b.Property<Guid>("TranslationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("translation_id");
 
                     b.Property<Guid>("LanguageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("language_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name");
 
                     b.Property<Guid>("ShippingServiceOptionId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_service_option_id");
 
-                    b.HasKey("TranslationId");
+                    b.HasKey("TranslationId")
+                        .HasName("pk_shipping_service_option_translations");
 
                     b.HasIndex("ShippingServiceOptionId", "LanguageId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_shipping_service_option_translations_shipping_service_optio");
 
                     b.ToTable("shipping_service_option_translations", "fulfillment");
                 });
@@ -576,27 +723,34 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShippingServiceTranslation", b =>
                 {
                     b.Property<Guid>("TranslationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("translation_id");
 
                     b.Property<string>("Description")
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("description");
 
                     b.Property<Guid>("LanguageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("language_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name");
 
                     b.Property<Guid>("ShippingServiceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_service_id");
 
-                    b.HasKey("TranslationId");
+                    b.HasKey("TranslationId")
+                        .HasName("pk_shipping_service_translations");
 
                     b.HasIndex("ShippingServiceId", "LanguageId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_shipping_service_translations_shipping_service_id_language_");
 
                     b.ToTable("shipping_service_translations", "fulfillment");
                 });
@@ -697,15 +851,19 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentPaymentInboxRecord", b =>
                 {
                     b.Property<Guid>("EventId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("event_id");
 
                     b.Property<Guid>("PaymentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_id");
 
                     b.Property<DateTimeOffset>("ProcessedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
 
-                    b.HasKey("EventId");
+                    b.HasKey("EventId")
+                        .HasName("pk_payment_inbox");
 
                     b.ToTable("payment_inbox", "fulfillment");
                 });
@@ -713,61 +871,77 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Persistence.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<int>("AttemptCount")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("attempt_count");
 
                     b.Property<string>("CorrelationId")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("correlation_id");
 
                     b.Property<DateTimeOffset?>("DeadLetteredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dead_lettered_at");
 
                     b.Property<string>("DeploymentId")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("deployment_id");
 
                     b.Property<string>("Edition")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("edition");
 
                     b.Property<string>("EventType")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("event_type");
 
                     b.Property<string>("LastError")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("last_error");
 
                     b.Property<DateTimeOffset?>("LockedUntil")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("locked_until");
 
                     b.Property<DateTimeOffset?>("NextAttemptAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
 
                     b.Property<DateTimeOffset>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
 
                     b.Property<string>("Payload")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("payload");
 
                     b.Property<DateTimeOffset?>("ProcessedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
 
                     b.Property<string>("TenantId")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("tenant_id");
 
                     b.Property<int>("Version")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_outbox_messages");
 
                     b.HasIndex("OccurredAt")
                         .HasDatabaseName("ix_outbox_messages_pending")
@@ -782,7 +956,8 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("ShippingMethodId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_shipping_method_translations_shipping_methods_shipping_meth");
                 });
 
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShippingTypeTranslation", b =>
@@ -790,9 +965,9 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                     b.HasOne("Tooba.Fulfillment.Domain.Aggregates.ShippingType", null)
                         .WithMany("Translations")
                         .HasForeignKey("ShippingTypeId")
-                        .HasConstraintName("fk_shipping_type_translations_shipping_types_shipping_type_id")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_shipping_type_translations_shipping_types_shipping_type_id");
                 });
 
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShippingType", b =>

@@ -488,3 +488,18 @@ restored the legacy manifest exactly (1/1 passed). Container removed; 55436 has 
 the 3 substantive legacy discrepancies and the storage/constraint/race/atomicity battery remain OPEN, so TB-196 stays
 BLOCKED_PENDING_LEGACY_SNAPSHOT_AND_RELATIONAL_ACCEPTANCE; worker PASS is not Architect ACCEPT; STOP_FOR_ARCHITECT;
 no automatic next task.
+### Worker status pointer — R8 (2026-10-22T17:54Z claim, metadata-only slice)
+
+`TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R8` is COMPLETE (worker `PASS`, metadata alignment only): the canonical
+`FulfillmentDbContextFactory` model was regenerated through the existing EF design-time scaffolder and the resulting
+metadata was written into ONLY `FulfillmentDbContextModelSnapshot.cs` and the
+`20261022101415_ShippingTypeCatalog.Designer.cs` target model; the executable Up/Down, the context/factory, every
+older migration/designer and all business code are byte-identical. The real `IMigrationsModelDiffer` on initialized
+relational models now reports 0 operations for snapshot-vs-current-model and 0 for latest-TargetModel-vs-current-model
+(baseline was a derived 191 naming-only operations: 135 column renames, 24 index renames, 15 PK and 1 FK rename pairs),
+and a normalized relational-description regression guards both artifacts (3/3 new tests; 28/28 with the R7/R5 offline
+sets). This proves metadata alignment, NOT equality with the historically migrated schema: the R6 legacy discrepancies
+(missing outbox pending index in migrations, two migration-only `shipping_methods` checks, column defaults and names)
+and the storage/constraint/race/atomicity battery remain OPEN and unexecuted. TB-196 stays
+BLOCKED_PENDING_HISTORICAL_SCHEMA_AND_RELATIONAL_ACCEPTANCE; worker PASS is not Architect ACCEPT; STOP_FOR_ARCHITECT;
+no automatic next task.
