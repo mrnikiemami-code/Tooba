@@ -13,7 +13,7 @@ async function main() {
     !content.includes("BEGIN_TOOBA_WORKER_RESULT") ||
     !content.includes("END_TOOBA_WORKER_RESULT") ||
     !content.includes(`Task-ID: ${TASK_ID}`) ||
-    !content.includes("Status: PASS")
+    !/^Status: (PASS|PARTIAL|BLOCKED)$/m.test(content)
   ) {
     throw new Error("result contract markers invalid");
   }
