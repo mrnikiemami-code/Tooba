@@ -21,9 +21,10 @@ TB-196-R5 DI/registry/listener evidence and its single-active correction through
 TB-196-R7 naming/isolated UpDown repair is accepted; legacy/snapshot and full relational gates remain blocked.
 TB-196-R8 canonical snapshot/latest TargetModel metadata alignment is accepted.
 TB-196-R9 historical analysis is accepted with Architect corrections (model manifest191, not216).
-Only next issued task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R10,
-limited additive pending-outbox-index migration and disposable PostgreSQL proof.
-Other historical drift/full relational gates remain blocked; no shared deployment.
+TB-196-R10 pending-outbox-index migration and bounded isolated proof are accepted.
+Only next issued task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R11,
+model alignment to the two existing CHECKs and10 historical FK/index names, no schema change.
+Five default discrepancies/full relational gates remain blocked; no shared deployment.
 Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.

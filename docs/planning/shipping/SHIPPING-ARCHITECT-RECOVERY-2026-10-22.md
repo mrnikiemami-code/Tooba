@@ -1,5 +1,15 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری پس از R10 / فقط R11
+
+R10 در `d49ce7b2d2cd748e567f51ccd2a4c2377400b6ab` برای migration تک‌ایندکس و شواهد محدود **ACCEPT**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R10/ARCHITECT-REVIEW.md). Source وSQL واقعاً schema-qualified و manifestbaseline/down برابرند؛3+6PASS گزارش Worker، نه اجرای مستقل Architect. دو harness correction برخلاف سقف یک مورد، انحراف فرایندی ثبت شد؛ تکرار خودکار مجاز نیست.
+
+تنها تسک بعد **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R11**، Parent=196-R10: مدل دوCHECK تاریخیshipping_methods و10نامFK/index را دقیقاً توصیف کند؛ currentSnapshot و فقط latestR10Designer metadata canonical همسو شوند. runtime فقط annotationهای همین12object؛ هیچDDL/newmigration/DBrename/حذفCHECK یا تغییرdefault/ValueGenerated نیست. همه executablemigrationها و همهDesignerهای قدیمیimmutable. proof offline + disposable historical-chain/modelprojection باید فقط5defaultpair باقی نشان دهد. تست latest/current بایدactual latestR10را بسنجد، نه مجبورکردنTargetModel تاریخی196به مدل آینده.
+
+سقف35دقیقه،stop28،setup8،commands120؛ یک correction، بعدSTOP/PARTIAL. sharedDB/apps/flags ممنوع. پنجdefault وfullstorage/races/whole196 هنوزBLOCKED؛ هیچignore/baselinepermit نیست. پس ازنتیجهR11 بررسی مستقل، سپس فقطیکتسک؛assignment/UI/quote/deployment هنوزمجازنیست؛TB185متوقف. پایین تاریخچه است.
+
+
+
 ## مرجع جاری پس از بررسی R9 / تنها تسک بعد R10
 
 R9 در main `49f5b8721290a436d82df7160811b6a62b626dd6` برای تحلیل محدود **ACCEPT با اصلاح**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R9/ARCHITECT-REVIEW.md). شمارش مستقل دو فایل: actual192/model191 (نه216)، missing16/unexpected17؛ دسته‌بندی3+5+10 برقرار. هیچ کد/DB درR9تغییر نکرد.
