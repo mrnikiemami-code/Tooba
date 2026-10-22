@@ -74,7 +74,9 @@ public sealed class ShippingTypePostgresStorageTests(
         Assert.True(schema.SnapshotEqualsCurrentModel,
             $"snapshot must equal design-time model; differences: {string.Join("; ", schema.ModelDifferences)}");
         Assert.Empty(schema.ModelDifferences);
-        Assert.Empty(schema.LegacyDiscrepancies);
+        Assert.Empty(schema.LegacySubstantiveDifferences);
+        output.WriteLine(
+            $"defaults={schema.LegacyDefaultDifferences.Count} names={schema.LegacyNameDifferences.Count}");
         Assert.True(schema.LegacyObjectCount > 0);
         output.WriteLine($"legacy objects={schema.LegacyObjectCount}");
     }

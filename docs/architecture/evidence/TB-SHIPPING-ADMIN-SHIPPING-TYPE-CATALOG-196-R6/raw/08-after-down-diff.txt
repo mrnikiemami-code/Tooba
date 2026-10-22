@@ -1,4 +1,1 @@
-missing-in-actual: column fulfillment.__ef_migrations_history.migration_id character varying(150) not-null default:-
-missing-in-actual: column fulfillment.__ef_migrations_history.product_version character varying(32) not-null default:-
-missing-in-actual: constraint fulfillment.__ef_migrations_history pk___ef_migrations_history PRIMARY KEY (migration_id)
-missing-in-actual: index fulfillment CREATE UNIQUE INDEX pk___ef_migrations_history ON fulfillment.__ef_migrations_history USING btree (migration_id)
+

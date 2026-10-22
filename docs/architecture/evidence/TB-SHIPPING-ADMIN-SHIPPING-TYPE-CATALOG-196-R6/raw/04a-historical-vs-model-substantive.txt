@@ -1,0 +1,3 @@
+missing-in-actual: index fulfillment ON fulfillment.outbox_messages USING btree (occurred_at) WHERE ((processed_at IS NULL) AND (dead_lettered_at IS NULL))
+unexpected-in-actual: constraint fulfillment.shipping_methods CHECK ((((length((method_code)::text) >= 1) AND (length((method_code)::text) <= 32)) AND ((method_code)::text = lower((method_code)::text)) AND ((method_code)::text !~ '[^a-z0-9_:]'::text)))
+unexpected-in-actual: constraint fulfillment.shipping_methods CHECK (((legacy_option_code IS NULL) OR (((length(btrim((legacy_option_code)::text)) >= 1) AND (length(btrim((legacy_option_code)::text)) <= 64)) AND ((legacy_option_code)::text = lower((legacy_option_code)::text)))))

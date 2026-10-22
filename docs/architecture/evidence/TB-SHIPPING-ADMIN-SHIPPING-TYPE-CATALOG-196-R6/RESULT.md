@@ -62,27 +62,39 @@ Baseline hashes of the files that must remain untouched (verified unchanged at f
 The designer and the snapshot carry the snake_case check text (`char_length(code) ...`) that the migration's
 own `CREATE TABLE` cannot satisfy, i.e. this is scaffolding inconsistency, not a provider artefact.
 
-## Gate 1 (A–D) — executed, parity NOT proven (harness normalization incomplete)
+## Gate 1 (A–D) — executed: parity NOT achieved, 3 substantive legacy discrepancies (BLOCKED per 1D)
 
 Executed and recorded in `raw/`:
 
 - historical chain applied to `fulfillment_tb196` up to `20261016120000_AddFulfillmentShippingGroups`
-  (10 rows in `fulfillment.__ef_migrations_history`, 243 legacy manifest lines) — `raw/02-historical-legacy-manifest.txt`;
+  (10 rows in `fulfillment.__ef_migrations_history`, 192 legacy manifest lines) — `raw/02-historical-legacy-manifest.txt`;
 - model target `fulfillment_tb196_model` materialized from the checked-in snapshot/design-time model via
-  `GenerateCreateScript()` after an `IMigrationsModelDiffer` comparison — `raw/03-model-expected-legacy.txt`;
-- normalized `pg_catalog` manifests compared — `raw/04-historical-vs-model-diff.txt` (24 `missing-in-actual`
-  + 28 `unexpected-in-actual` lines).
+  `GenerateCreateScript()` after an `IMigrationsModelDiffer` comparison — `raw/03-model-expected-legacy.txt`
+  (216 projected objects; the two new type tables and migration history excluded from both sides);
+- normalized `pg_catalog` manifests compared and classified — `raw/04a-historical-vs-model-substantive.txt`,
+  `04b-...-defaults.txt`, `04c-...-names.txt`.
 
-Honest qualification: the raw count is **not** claimed as schema drift. Inspection shows the differences are
-dominated by (a) migration-time `DEFAULT` clauses that the model does not declare (e.g.
-`items.quantity_packed ... default:0`), (b) hand-written raw-SQL constraint/index names that differ from the
-names EF derives from the model (e.g. `fk_shipping_method_translations_method` vs the model-derived name), and
-(c) a harness projection defect on my side that left `fulfillment.__ef_migrations_history` lines inside the
-*actual* side of the comparison. Likewise the `IMigrationsModelDiffer` run over
-`IModelRuntimeInitializer.Initialize(ModelSnapshot.Model)` reported 209 operation-level differences, which is
-**not** the design-time pipeline and is therefore recorded as an observation only, never as snapshot drift.
-Snapshot-versus-historical equivalence is therefore **UNPROVEN in this task**; a correct comparison needs
-explicit default/name normalization and the real design-time pipeline.
+Classification: 3 substantive, 5 column-DEFAULT, 10 naming differences. The 3 substantive discrepancies are
+**exact legacy objects with provenance**, and per Gate 1D they are a BLOCKER (no repair was attempted):
+
+| # | Object | Expected (model) | Historical (migrated) | Provenance |
+| --- | --- | --- | --- | --- |
+| 1 | index `ix_outbox_messages_pending` on `fulfillment.outbox_messages (occurred_at) WHERE processed_at IS NULL AND dead_lettered_at IS NULL` | declared | **missing** | declared only in `FulfillmentDbContextModelSnapshot.cs` / `...ShippingTypeCatalog.Designer.cs` (`HasDatabaseName("ix_outbox_messages_pending")`); **no migration ever creates it** — model-ahead drift |
+| 2 | constraint `ck_shipping_methods_code_canonical` on `fulfillment.shipping_methods` | not declared | **present** | created by the hand-written raw SQL of `20261015120000_AddShippingOneLevelCatalog`; the model does not declare it — migration-ahead drift |
+| 3 | constraint `ck_shipping_methods_option_code_canonical` on `fulfillment.shipping_methods` | not declared | **present** | same migration as #2 |
+
+The 5 DEFAULT differences are migration-time defaults that the model does not declare
+(`items.quantity_packed = 0`, `items.quantity_processing = 0`, `shipments.provider_metadata_version = 0`,
+`shipments.shipping_method_code = ''`, `shipments.shipping_method_label = ''`); the 10 naming differences are the
+same foreign key/index shapes under hand-written names (for example `ux_shipping_methods_legacy_binding` versus
+the model-derived `ix_shipping_methods_legacy_service_code_legacy_option_code`). Both are reported explicitly,
+not ignored, and are pre-existing (they involve no `shipping_type*` object).
+
+Snapshot-model agreement: `IMigrationsModelDiffer` over
+`IModelRuntimeInitializer.Initialize(ModelSnapshot.Model)` reported 209 operation-level differences. That path is
+not the design-time pipeline, so the number is recorded as an observation only; snapshot agreement remains
+**UNPROVEN** rather than claimed as drift. `GenerateCreateScript()` output was used as the model projection while
+that equivalence was unproven, which is itself a limitation of this evidence.
 
 ## Small R5 fixture correction — executed
 
@@ -110,6 +122,9 @@ dotnet test ... --filter "FullyQualifiedName~One_active_non_fa_default_is_used_w
   no package/image install.
 - Cleanup: container stopped and removed; 55436 verified free afterwards (`0` listeners). Manifest/log files
   contain no credentials.
+- Note on `raw/07-after-down-legacy.txt` / `08-after-down-diff.txt`: the collection teardown comparison is
+  byte-equal, but it is a **no-op equality** — the latest migration never applied, so `Down` was never recorded
+  and its manifest was never changed. This is explicitly **not** Down-parity proof.
 
 ## Commands and counts
 

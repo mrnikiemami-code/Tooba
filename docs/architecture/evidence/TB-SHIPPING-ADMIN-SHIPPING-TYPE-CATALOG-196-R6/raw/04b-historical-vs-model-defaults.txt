@@ -1,0 +1,5 @@
+column-default fulfillment.items.quantity_packed: expected '-' actual '0'
+column-default fulfillment.items.quantity_processing: expected '-' actual '0'
+column-default fulfillment.shipments.provider_metadata_version: expected '-' actual '0'
+column-default fulfillment.shipments.shipping_method_code: expected '-' actual '''::character varying'
+column-default fulfillment.shipments.shipping_method_label: expected '-' actual '''::character varying'

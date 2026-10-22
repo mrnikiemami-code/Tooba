@@ -49,20 +49,20 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         join pg_namespace n on n.oid = c.relnamespace
         left join pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum
         where c.relkind in ('r', 'p') and a.attnum > 0 and not a.attisdropped
-          and n.nspname not in ('pg_catalog', 'information_schema')
+          and n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
         union all
         select format('constraint %s.%s %s %s',
                       n.nspname, c.relname, con.conname, pg_get_constraintdef(con.oid))
         from pg_constraint con
         join pg_class c on c.oid = con.conrelid
         join pg_namespace n on n.oid = c.relnamespace
-        where n.nspname not in ('pg_catalog', 'information_schema')
+        where n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
         union all
         select format('index %s %s', n.nspname, pg_get_indexdef(i.indexrelid))
         from pg_index i
         join pg_class c on c.oid = i.indrelid
         join pg_namespace n on n.oid = c.relnamespace
-        where n.nspname not in ('pg_catalog', 'information_schema')
+        where n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
         order by 1
         """;
 
@@ -92,6 +92,15 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
     public IReadOnlyList<string> LegacyAfterUpDifferences { get; private set; } = [];
 
     public IReadOnlyList<string> LegacyAfterDownDifferences { get; private set; } = [];
+
+    /// <summary>Substantive legacy differences (type/nullability/PK/unique/FK/check presence, index shape).</summary>
+    public IReadOnlyList<string> LegacySubstantiveDifferences { get; private set; } = [];
+
+    /// <summary>Non-structural differences kept explicit instead of being ignored.</summary>
+    public IReadOnlyList<string> LegacyDefaultDifferences { get; private set; } = [];
+
+    /// <summary>Same definition under a different constraint/index name.</summary>
+    public IReadOnlyList<string> LegacyNameDifferences { get; private set; } = [];
 
     public IReadOnlyList<string> AddedObjects { get; private set; } = [];
 
@@ -171,14 +180,23 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
             ForwardSql = FinePrint(migrator.GenerateScript(PreviousMigration, LatestMigration));
         }
 
-        LegacyManifestBeforeUp = await ManifestAsync(Target);
+        var beforeUpFull = await ManifestAsync(Target);
+        LegacyManifestBeforeUp = LegacyProjection(beforeUpFull);
         Save("02-historical-legacy-manifest.txt", LegacyManifestBeforeUp);
         Save("03-model-expected-legacy.txt", expectedLegacy);
+        var classified = Classify(expectedLegacy, LegacyManifestBeforeUp);
+        LegacySubstantiveDifferences = classified.Substantive;
+        LegacyDefaultDifferences = classified.Defaults;
+        LegacyNameDifferences = classified.Names;
         LegacyDiscrepancies = Diff(expectedLegacy, LegacyManifestBeforeUp);
-        Save("04-historical-vs-model-diff.txt", LegacyDiscrepancies);
-        Record($"historical legacy objects={LegacyManifestBeforeUp.Count} discrepancies={LegacyDiscrepancies.Count}");
-
-        await using (var primary = NewContext())
+        Save("04-historical-vs-model-raw-diff.txt", LegacyDiscrepancies);
+        Save("04a-historical-vs-model-substantive.txt", LegacySubstantiveDifferences);
+        Save("04b-historical-vs-model-defaults.txt", LegacyDefaultDifferences);
+        Save("04c-historical-vs-model-names.txt", LegacyNameDifferences);
+        Record(
+            $"historical legacy objects={LegacyManifestBeforeUp.Count} substantive={LegacySubstantiveDifferences.Count}"
+            + $" defaults={LegacyDefaultDifferences.Count} names={LegacyNameDifferences.Count}");
+       await using (var primary = NewContext())
         {
             Save("01-target-and-model.txt", _evidence);
             await primary.GetService<IMigrator>().MigrateAsync(LatestMigration);
@@ -187,7 +205,7 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         var afterUp = await ManifestAsync(Target);
         LegacyManifestAfterUp = LegacyProjection(afterUp);
         LegacyAfterUpDifferences = Diff(expectedLegacy, LegacyManifestAfterUp);
-        AddedObjects = afterUp.Except(LegacyManifestBeforeUp).OrderBy(x => x, StringComparer.Ordinal).ToList();
+        AddedObjects = afterUp.Except(beforeUpFull).OrderBy(x => x, StringComparer.Ordinal).ToList();
         Save("05-additive-up.txt", AddedObjects);
         Save("06-forward-sql.sql", [ForwardSql]);
         Record($"after up added={AddedObjects.Count} legacy-differences={LegacyAfterUpDifferences.Count}");
@@ -443,6 +461,153 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
 
         differences.Sort(StringComparer.Ordinal);
         return differences;
+    }
+
+    /// <summary>
+    /// Classifies a manifest difference instead of ignoring it: structural differences (object presence,
+    /// column type/nullability, constraint/index shape) are separated from column DEFAULT clauses and from
+    /// the same definition carried under a different constraint/index name.
+    /// </summary>
+    public static (List<string> Substantive, List<string> Defaults, List<string> Names) Classify(
+        IReadOnlyList<string> expected,
+        IReadOnlyList<string> actual)
+    {
+        var substantive = new List<string>();
+        var defaults = new List<string>();
+        var names = new List<string>();
+
+        var expectedColumns = ColumnMap(expected);
+        var actualColumns = ColumnMap(actual);
+        foreach (var key in expectedColumns.Keys.Union(actualColumns.Keys).OrderBy(x => x, StringComparer.Ordinal))
+        {
+            var inExpected = expectedColumns.TryGetValue(key, out var expectedColumn);
+            var inActual = actualColumns.TryGetValue(key, out var actualColumn);
+            if (!inExpected || !inActual)
+            {
+                substantive.Add($"{(inExpected ? "missing-in-actual" : "unexpected-in-actual")}: column {key}");
+                continue;
+            }
+
+            if (!string.Equals(expectedColumn!.Shape, actualColumn!.Shape, StringComparison.Ordinal))
+            {
+                substantive.Add($"column-shape {key}: expected '{expectedColumn.Shape}' actual '{actualColumn.Shape}'");
+            }
+
+            if (!string.Equals(expectedColumn.Default, actualColumn.Default, StringComparison.Ordinal))
+            {
+                defaults.Add($"column-default {key}: expected '{expectedColumn.Default}' actual '{actualColumn.Default}'");
+            }
+        }
+
+        var expectedConstraints = ConstraintMap(expected, out var expectedConstraintNames);
+        var actualConstraints = ConstraintMap(actual, out var actualConstraintNames);
+        foreach (var key in expectedConstraints.Keys.Union(actualConstraints.Keys).OrderBy(x => x, StringComparer.Ordinal))
+        {
+            if (!expectedConstraints.ContainsKey(key))
+            {
+                substantive.Add($"unexpected-in-actual: constraint {key}");
+            }
+            else if (!actualConstraints.ContainsKey(key))
+            {
+                substantive.Add($"missing-in-actual: constraint {key}");
+            }
+        }
+
+        foreach (var key in expectedConstraintNames.Keys.Union(actualConstraintNames.Keys)
+                     .OrderBy(x => x, StringComparer.Ordinal))
+        {
+            var inExpected = expectedConstraintNames.TryGetValue(key, out var expectedName);
+            var inActual = actualConstraintNames.TryGetValue(key, out var actualName);
+            if (inExpected && inActual && !string.Equals(expectedName, actualName, StringComparison.Ordinal))
+            {
+                names.Add($"constraint-name {key}: expected '{expectedName}' actual '{actualName}'");
+            }
+        }
+
+        var expectedIndexes = IndexMap(expected, out var expectedIndexNames);
+        var actualIndexes = IndexMap(actual, out var actualIndexNames);
+        foreach (var key in expectedIndexes.Keys.Union(actualIndexes.Keys).OrderBy(x => x, StringComparer.Ordinal))
+        {
+            if (!expectedIndexes.ContainsKey(key))
+            {
+                substantive.Add($"unexpected-in-actual: index {key}");
+            }
+            else if (!actualIndexes.ContainsKey(key))
+            {
+                substantive.Add($"missing-in-actual: index {key}");
+            }
+        }
+
+        foreach (var key in expectedIndexNames.Keys.Union(actualIndexNames.Keys).OrderBy(x => x, StringComparer.Ordinal))
+        {
+            var inExpected = expectedIndexNames.TryGetValue(key, out var expectedName);
+            var inActual = actualIndexNames.TryGetValue(key, out var actualName);
+            if (inExpected && inActual && !string.Equals(expectedName, actualName, StringComparison.Ordinal))
+            {
+                names.Add($"index-name {key}: expected '{expectedName}' actual '{actualName}'");
+            }
+        }
+
+        substantive.Sort(StringComparer.Ordinal);
+        defaults.Sort(StringComparer.Ordinal);
+        names.Sort(StringComparer.Ordinal);
+        return (substantive, defaults, names);
+    }
+
+    private static Dictionary<string, (string Shape, string Default)> ColumnMap(IReadOnlyList<string> manifest)
+    {
+        var map = new Dictionary<string, (string, string)>(StringComparer.Ordinal);
+        foreach (var line in manifest.Where(x => x.StartsWith("column ", StringComparison.Ordinal)))
+        {
+            // column <schema>.<table>.<attribute> <type...> <nullability> default:<value>
+            var defaultIndex = line.LastIndexOf(" default:", StringComparison.Ordinal);
+            var body = line[..defaultIndex];
+            var value = line[(defaultIndex + " default:".Length)..];
+            var parts = body.Split(' ');
+            var shape = body[(("column " + parts[1]).Length + 1)..];
+            map[parts[1]] = (shape, value);
+        }
+
+        return map;
+    }
+
+    private static Dictionary<string, string> ConstraintMap(IReadOnlyList<string> manifest, out Dictionary<string, string> names)
+    {
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
+        names = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var line in manifest.Where(x => x.StartsWith("constraint ", StringComparison.Ordinal)))
+        {
+            // constraint <schema>.<table> <name> <definition>
+            var parts = line.Split(' ', 4);
+            var key = $"{parts[1]} {parts[3]}";
+            map[key] = parts[2];
+            names[$"{parts[1]} {parts[3]}"] = parts[2];
+        }
+
+        return map;
+    }
+
+    private static Dictionary<string, string> IndexMap(IReadOnlyList<string> manifest, out Dictionary<string, string> names)
+    {
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
+        names = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var line in manifest.Where(x => x.StartsWith("index ", StringComparison.Ordinal)))
+        {
+            // index <schema> CREATE [UNIQUE] INDEX <name> ON <table> USING ...
+            var match = System.Text.RegularExpressions.Regex.Match(
+                line,
+                @"^index (\S+) CREATE (UNIQUE )?INDEX (\S+) (.*)$");
+            if (!match.Success)
+            {
+                continue;
+            }
+
+            var key = $"{match.Groups[1].Value} {match.Groups[2].Value}{match.Groups[4].Value}";
+            map[key] = match.Groups[3].Value;
+            names[key] = match.Groups[3].Value;
+        }
+
+        return map;
     }
 
     private static string Normalize(string line) =>
