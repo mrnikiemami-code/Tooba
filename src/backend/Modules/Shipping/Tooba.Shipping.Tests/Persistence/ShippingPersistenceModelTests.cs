@@ -62,6 +62,9 @@ public sealed class ShippingPersistenceModelTests
         Assert.Equal(
             new[]
             {
+                "authoring_drafts",
+                "authoring_region_groups",
+                "authoring_selected_areas",
                 "coverage_grants",
                 "method_coverages",
                 "operating_schedules",
@@ -176,6 +179,12 @@ public sealed class ShippingPersistenceModelTests
     [InlineData("packaging_policies", "ck_packaging_policies_currency_code_canonical", "char_length(currency_code) = 3")]
     [InlineData("packaging_policies", "ck_packaging_policies_scope_coherent", "service_area_id IS NULL OR city_id IS NOT NULL")]
     [InlineData("packaging_policies", "ck_packaging_policies_freight_payer_mode_known", "freight_payer_mode IN (0, 1)")]
+    [InlineData("authoring_drafts", "ck_authoring_drafts_owner_coherent", "owner_kind = 0 AND owner_tenant_id IS NOT NULL")]
+    [InlineData("authoring_drafts", "ck_authoring_drafts_revision_positive", "revision > 0")]
+    [InlineData("authoring_drafts", "ck_authoring_drafts_service_code_canonical", "btrim(service_code)")]
+    [InlineData("authoring_drafts", "ck_authoring_drafts_option_code_canonical", "option_code IS NULL")]
+    [InlineData("authoring_region_groups", "ck_authoring_region_groups_order_non_negative", "group_order >= 0")]
+    [InlineData("authoring_selected_areas", "ck_authoring_selected_areas_node_kind_known", "node_kind IN (0, 1, 2, 3)")]
     public void Check_constraints_mirror_the_aggregate_guards(string table, string constraintName, string predicateFragment)
     {
         using var context = CreateContext();
@@ -191,6 +200,7 @@ public sealed class ShippingPersistenceModelTests
     [InlineData("method_coverages", "ux_method_coverages_service_option", new[] { "ServiceCode", "OptionCode" })]
     [InlineData("operating_schedules", "ux_operating_schedules_service_option", new[] { "ServiceCode", "OptionCode" })]
     [InlineData("packaging_policies", "ux_packaging_policies_service_option_scope", new[] { "ServiceCode", "OptionCode", "CountryId", "AdministrativeAreaId", "CityId", "ServiceAreaId" })]
+    [InlineData("authoring_drafts", "ux_authoring_drafts_owner_binding", new[] { "OwnerKind", "OwnerTenantId", "OwnerSellerPartyId", "ServiceCode", "OptionCode" })]
     public void Identity_index_is_unique_over_nulls_not_distinct_columns(
         string table,
         string indexName,
@@ -283,6 +293,9 @@ public sealed class ShippingPersistenceModelTests
         Assert.Contains("CREATE TABLE shipping.operating_schedules", script);
         Assert.Contains("CREATE TABLE shipping.operating_windows", script);
         Assert.Contains("CREATE TABLE shipping.packaging_policies", script);
+        Assert.Contains("CREATE TABLE shipping.authoring_drafts", script);
+        Assert.Contains("CREATE TABLE shipping.authoring_region_groups", script);
+        Assert.Contains("CREATE TABLE shipping.authoring_selected_areas", script);
         Assert.Contains("CREATE TABLE shipping.outbox_messages", script);
         Assert.Contains("__ef_migrations_history", script);
 
@@ -324,6 +337,16 @@ public sealed class ShippingPersistenceModelTests
                      "ck_packaging_policies_currency_code_canonical",
                      "ck_packaging_policies_scope_coherent",
                      "ck_packaging_policies_freight_payer_mode_known",
+                     "ck_authoring_drafts_owner_coherent",
+                     "ck_authoring_drafts_revision_positive",
+                     "ck_authoring_drafts_service_code_canonical",
+                     "ck_authoring_drafts_option_code_canonical",
+                     "ck_authoring_drafts_tenant_not_blank",
+                     "ck_authoring_region_groups_order_non_negative",
+                     "ck_authoring_selected_areas_node_kind_known",
+                     "ux_authoring_drafts_owner_binding",
+                     "ux_authoring_region_groups_draft_order",
+                     "ux_authoring_selected_areas_draft_node",
                  })
         {
             Assert.Contains(constraint, script);
@@ -332,35 +355,40 @@ public sealed class ShippingPersistenceModelTests
         // Every scope/identity index must carry the modifier: the initial slice (rate + coverage = 2),
         // then one re-created rate index in each of the three additive migrations (option identity,
         // tier) plus the schedule identity index, plus the packaging policy identity index, plus the
-        // option-scoped coverage index rebuild and the method coverage identity index. The drops do not
-        // emit the modifier, so this counts CREATE statements only.
-        Assert.Equal(8, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
+        // option-scoped coverage index rebuild and the method coverage identity index, plus the
+        // owner-scoped authoring draft binding index. The drops do not emit the modifier, so this
+        // counts CREATE statements only.
+        Assert.Equal(9, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
 
-        // The only foreign key in the whole schema is the intra-module schedule -> windows cascade;
-        // nothing points at another module's schema.
+        // The foreign keys in the whole schema are intra-module only: the schedule -> windows cascade
+        // and the two authoring draft -> group -> selected-area cascades. Nothing points at another
+        // module's schema.
         Assert.Contains("REFERENCES shipping.operating_schedules", script);
+        Assert.Contains("REFERENCES shipping.authoring_drafts", script);
+        Assert.Contains("REFERENCES shipping.authoring_region_groups", script);
         Assert.Equal(
-            1,
+            3,
             script.Split("FOREIGN KEY", StringSplitOptions.None).Length - 1);
     }
 
     [Fact]
-    public void Migrations_are_the_initial_slice_plus_five_additive_updates()
+    public void Migrations_are_the_initial_slice_plus_six_additive_updates()
     {
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        // Six migrations only: the initial slice and five additive changes (option identity,
-        // operating schedule, weight/count tiers, packaging policy, option-scoped coverage restriction).
-        // Asserting the exact count is what keeps the schema reviewable as a unit instead of an
-        // open-ended chain.
-        Assert.Equal(6, migrations.Length);
+        // Seven migrations only: the initial slice, five additive changes (option identity, operating
+        // schedule, weight/count tiers, packaging policy, option-scoped coverage restriction) and the
+        // D3 authoring draft/group/area addition. Asserting the exact count keeps the schema reviewable
+        // as a unit instead of an open-ended chain.
+        Assert.Equal(7, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
         Assert.EndsWith("_WeightAndCountRateTiers", migrations[3], StringComparison.Ordinal);
         Assert.EndsWith("_ShippingPackagingPolicy", migrations[4], StringComparison.Ordinal);
         Assert.EndsWith("_OptionScopedCoverageRestriction", migrations[5], StringComparison.Ordinal);
+        Assert.EndsWith("_AuthoringDraftPersistence", migrations[6], StringComparison.Ordinal);
     }
 
     [Fact]

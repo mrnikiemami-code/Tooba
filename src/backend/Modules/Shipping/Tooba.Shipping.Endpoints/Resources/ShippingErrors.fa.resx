@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -142,7 +142,21 @@
   <data name="shipping.authoring.owner_scope_denied" xml:space="preserve">
     <value>اجازهٔ نوشتن قواعد ارسال برای این محدودهٔ مالک را ندارید.</value>
   </data>
-  <data name="shipping.authoring.owner_scope_unavailable" xml:space="preserve">
+  <data name="shipping.authoring.draft_not_found" xml:space="preserve">
+    <value>پیش‌نویس نویسندگی ارسال پیدا نشد.</value>
+  </data>
+  <data name="shipping.authoring.draft_revision_conflict" xml:space="preserve">
+    <value>پیش‌نویس نویسندگی ارسال تغییر کرده است؛ آن را دوباره بخوانید.</value>
+  </data>
+  <data name="shipping.authoring.draft_binding_duplicate" xml:space="preserve">
+    <value>برای این مالک و این روش ارسال از قبل یک پیش‌نویس وجود دارد.</value>
+  </data>
+  <data name="shipping.authoring.region_selection_overlap" xml:space="preserve">
+    <value>مقصدهای انتخاب‌شده هم‌پوشانی یا تکرار دارند.</value>
+  </data>
+  <data name="shipping.authoring.region_payload_invalid" xml:space="preserve">
+    <value>درخت منطقه‌ای پیش‌نویس یک پیکربندی معتبر نیست.</value>
+  </data>  <data name="shipping.authoring.owner_scope_unavailable" xml:space="preserve">
     <value>مالکیت قواعد ارسال در این نصب در دسترس نیست.</value>
   </data>
 </root>

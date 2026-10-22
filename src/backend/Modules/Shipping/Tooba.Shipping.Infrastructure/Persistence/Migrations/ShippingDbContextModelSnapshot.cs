@@ -438,6 +438,140 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", b =>
+                {
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("OptionCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("option_code");
+
+                    b.Property<int>("OwnerKind")
+                        .HasColumnType("integer")
+                        .HasColumnName("owner_kind");
+
+                    b.Property<Guid?>("OwnerSellerPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_seller_party_id");
+
+                    b.Property<string>("OwnerTenantId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("owner_tenant_id");
+
+                    b.Property<long>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("revision");
+
+                    b.Property<string>("ServiceCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("service_code");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("DraftId")
+                        .HasName("pk_authoring_drafts");
+
+                    b.HasIndex("OwnerKind", "OwnerTenantId", "OwnerSellerPartyId")
+                        .HasDatabaseName("ix_authoring_drafts_owner");
+
+                    b.HasIndex("OwnerKind", "OwnerTenantId", "OwnerSellerPartyId", "ServiceCode", "OptionCode")
+                        .IsUnique()
+                        .HasDatabaseName("ux_authoring_drafts_owner_binding");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("OwnerKind", "OwnerTenantId", "OwnerSellerPartyId", "ServiceCode", "OptionCode"), false);
+
+                    b.ToTable("authoring_drafts", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_drafts_option_code_canonical", "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
+
+                            t.HasCheckConstraint("ck_authoring_drafts_owner_coherent", "((owner_kind = 0 AND owner_tenant_id IS NOT NULL AND owner_seller_party_id IS NULL) OR (owner_kind = 1 AND owner_tenant_id IS NULL AND owner_seller_party_id IS NULL) OR (owner_kind = 2 AND owner_tenant_id IS NULL AND owner_seller_party_id IS NOT NULL))");
+
+                            t.HasCheckConstraint("ck_authoring_drafts_revision_positive", "revision > 0");
+
+                            t.HasCheckConstraint("ck_authoring_drafts_service_code_canonical", "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+
+                            t.HasCheckConstraint("ck_authoring_drafts_tenant_not_blank", "owner_tenant_id IS NULL OR char_length(owner_tenant_id) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", b =>
+                {
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer")
+                        .HasColumnName("group_order");
+
+                    b.HasKey("GroupId")
+                        .HasName("pk_authoring_region_groups");
+
+                    b.HasIndex("DraftId", "Order")
+                        .IsUnique()
+                        .HasDatabaseName("ux_authoring_region_groups_draft_order");
+
+                    b.ToTable("authoring_region_groups", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_region_groups_order_non_negative", "group_order >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringSelectedArea", b =>
+                {
+                    b.Property<Guid>("SelectedAreaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("selected_area_id");
+
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<Guid>("NodeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("node_id");
+
+                    b.Property<int>("NodeKind")
+                        .HasColumnType("integer")
+                        .HasColumnName("node_kind");
+
+                    b.HasKey("SelectedAreaId")
+                        .HasName("pk_authoring_selected_areas");
+
+                    b.HasIndex("GroupId")
+                        .HasDatabaseName("ix_authoring_selected_areas_group_id");
+
+                    b.HasIndex("DraftId", "NodeKind", "NodeId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_authoring_selected_areas_draft_node");
+
+                    b.ToTable("authoring_selected_areas", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_selected_areas_node_kind_known", "node_kind IN (0, 1, 2, 3)");
+                        });
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingSchedule", b =>
                 {
                     b.Property<Guid>("ScheduleId")
@@ -534,6 +668,26 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", null)
+                        .WithMany("RegionGroups")
+                        .HasForeignKey("DraftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_region_groups_authoring_drafts_draft_id");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringSelectedArea", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", null)
+                        .WithMany("Areas")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_selected_areas_authoring_region_groups_group_id");
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingWindow", b =>
                 {
                     b.HasOne("Tooba.Shipping.Domain.Scheduling.ShippingOperatingSchedule", null)
@@ -542,6 +696,16 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_operating_windows_operating_schedules_schedule_id");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", b =>
+                {
+                    b.Navigation("RegionGroups");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", b =>
+                {
+                    b.Navigation("Areas");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingSchedule", b =>

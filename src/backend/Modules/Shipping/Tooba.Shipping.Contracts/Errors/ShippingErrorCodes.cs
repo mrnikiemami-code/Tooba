@@ -166,4 +166,33 @@ public static class ShippingErrorCodes
     /// SingleStore. این یک ناتوانی قابلیت است، نه رد مجوز و نه «فروشنده پیدا نشد».
     /// </summary>
     public const string AuthoringOwnerScopeUnavailable = "shipping.authoring.owner_scope_unavailable";
+
+    /// <summary>
+    /// پیش‌نویس در محدودهٔ مالک مجاز پیدا نشد. شناسهٔ موجودِ مالک دیگر یا شناسهٔ ساختگی همان پاسخ
+    /// ایمن را می‌گیرد تا هیچ اطلاعاتی دربارهٔ مالکیت افشا نشود.
+    /// </summary>
+    public const string AuthoringDraftNotFound = "shipping.authoring.draft_not_found";
+
+    /// <summary>
+    /// بازبینی ارسالی با بازبینی ذخیره‌شده نمی‌خواند؛ جایگزینی رد می‌شود و هیچ داده‌ای تغییر نمی‌کند.
+    /// </summary>
+    public const string AuthoringDraftRevisionConflict = "shipping.authoring.draft_revision_conflict";
+
+    /// <summary>
+    /// برای همین مالک و همین Binding (کد خدمت + گزینه) از قبل یک پیش‌نویس وجود دارد؛
+    ///مالک دیگری می‌تواند همان Binding را مستقل داشته باشد.
+    /// </summary>
+    public const string AuthoringDraftBindingDuplicate = "shipping.authoring.draft_binding_duplicate";
+
+    /// <summary>
+    /// دو انتخاب در یک پیش‌نویس هم‌پوشان‌اند: یکی جدِ دیگری است یا هر دو یکی هستند. این قاعده روی
+    /// همهٔ گروه‌های همان پیش‌نویس اجرا می‌شود، نه فقط داخل یک گروه.
+    /// </summary>
+    public const string AuthoringRegionSelectionOverlap = "shipping.authoring.region_selection_overlap";
+
+    /// <summary>
+    /// درخت منطقه‌ای از نظر شکل نامعتبر است: گروه/انتخاب ناشناخته، شناسهٔ گروه متعلق به پیش‌نویس
+    /// دیگر، یا عبور از سقف فنی payload.
+    /// </summary>
+    public const string AuthoringRegionPayloadInvalid = "shipping.authoring.region_payload_invalid";
 }

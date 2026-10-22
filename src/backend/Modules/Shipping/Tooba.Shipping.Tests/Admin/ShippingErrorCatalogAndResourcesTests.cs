@@ -54,6 +54,11 @@ public sealed class ShippingErrorCatalogAndResourcesTests
             ShippingErrorCodes.AuthoringConfigurationUnavailable,
             ShippingErrorCodes.AuthoringOwnerScopeDenied,
             ShippingErrorCodes.AuthoringOwnerScopeUnavailable,
+            ShippingErrorCodes.AuthoringDraftNotFound,
+            ShippingErrorCodes.AuthoringDraftRevisionConflict,
+            ShippingErrorCodes.AuthoringDraftBindingDuplicate,
+            ShippingErrorCodes.AuthoringRegionSelectionOverlap,
+            ShippingErrorCodes.AuthoringRegionPayloadInvalid,
         };
         var legacy = new ShippingErrorCatalogContributor()
             .Contribute()
@@ -115,15 +120,18 @@ public sealed class ShippingErrorCatalogAndResourcesTests
         // capability fact, never a 403 permission verdict about a seller that does not exist.
         Assert.NotEqual(denied.HttpStatus, unavailable.HttpStatus);
         Assert.Single(descriptors, candidate => candidate.HttpStatus == StatusCodes.Status403Forbidden);
-        Assert.Single(descriptors, candidate => candidate.HttpStatus == StatusCodes.Status404NotFound);
+        Assert.Equal(2, descriptors.Count(candidate => candidate.HttpStatus == StatusCodes.Status404NotFound));
 
-        // Exactly the three explicitly classified non-400 codes exist; nothing else drifted.
+        // Exactly the five explicitly classified non-400 codes exist (503, 403, two 404s, one 409);
+        // nothing else drifted.
         Assert.Equal(
             new HashSet<string>(
                 [
                     ShippingErrorCodes.AuthoringConfigurationUnavailable,
                     ShippingErrorCodes.AuthoringOwnerScopeDenied,
                     ShippingErrorCodes.AuthoringOwnerScopeUnavailable,
+                    ShippingErrorCodes.AuthoringDraftNotFound,
+                    ShippingErrorCodes.AuthoringDraftRevisionConflict,
                 ],
                 StringComparer.Ordinal),
             descriptors

@@ -1,0 +1,81 @@
+using Tooba.BuildingBlocks.Results;
+using Tooba.Shipping.Application.Authoring.Models;
+using Tooba.Shipping.Contracts.Authoring;
+using Tooba.Shipping.Domain.Authoring;
+
+namespace Tooba.Shipping.Application.Authoring.Ports;
+
+/// <summary>
+/// درز ماندگاری پیش‌نویس‌های نویسندگی Shipping. هر متد <b>کل</b> مالک مجاز را می‌گیرد و فیلتر
+/// می‌کند؛ هیچ بارگذاری‌ای فقط با شناسه و اعتماد به فراخوان وجود ندارد.
+/// </summary>
+/// <remarks>
+/// نگاشت scope سرورساختهٔ TB-189 به بازنمایی ماندگاری مالک، وظیفهٔ زیرساخت است؛ Application فقط
+/// scope مجاز را عبور می‌دهد و هرگز مالک را از transport نمی‌سازد.
+/// </remarks>
+public interface IShippingAuthoringDraftDirectory
+{
+    /// <summary>پیش‌نویس‌های همین مالک را می‌خواند.</summary>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<IReadOnlyList<ShippingAuthoringDraft>>> ListAsync(
+        ShippingAuthoringOwnerScope owner,
+        CancellationToken cancellationToken);
+
+    /// <summary>یک پیش‌نویس همین مالک را می‌خواند؛ مالک دیگر همان «پیدا نشد» است.</summary>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="draftId">شناسهٔ پیش‌نویس.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<ShippingAuthoringDraft>> GetAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        CancellationToken cancellationToken);
+
+    /// <summary>پیش‌نویس تازه می‌سازد؛ یکتایی Binding مالک، هم پیش‌از‌نوشت و هم در دیتابیس، حفظ می‌شود.</summary>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="serviceCode">کد خدمت Binding.</param>
+    /// <param name="optionCode">گزینهٔ اختیاری Binding.</param>
+    /// <param name="regionGroups">درخت اولیه.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<ShippingAuthoringDraft>> CreateAsync(
+        ShippingAuthoringOwnerScope owner,
+        string serviceCode,
+        string? optionCode,
+        IReadOnlyList<ShippingAuthoringRegionGroupInput> regionGroups,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// درخت منطقه‌ای یک پیش‌نویس همین مالک را در یک مرز ماندگاری اتمی جایگزین می‌کند؛
+    /// <paramref name="expectedRevision"/> شرط همزمانی واقعی است.
+    /// </summary>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="draftId">شناسهٔ پیش‌نویس.</param>
+    /// <param name="expectedRevision">بازبینی مورد انتظار کلاینت.</param>
+    /// <param name="regionGroups">درخت جدید (جایگزینی کامل).</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<ShippingAuthoringDraft>> ReplaceRegionGroupsAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        IReadOnlyList<ShippingAuthoringRegionGroupInput> regionGroups,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// درز اثبات جغرافیا برای انتخاب‌های یک پیش‌نویس. هر انتخاب به یک زنجیرهٔ <b>اثبات‌شده</b> از
+/// کشور تا خود گره تبدیل می‌شود، یا کل درخواست با کد پایدار رد می‌شود.
+/// </summary>
+/// <remarks>
+/// شناسه‌های والد در بدنه، ادعای مالک است؛ این درز آن‌ها را با فکت‌های معتبر Geography می‌سنجد،
+/// سلسله‌مراتب واقعی (از جمله عمق دلخواه ناحیهٔ اداری) را خودش می‌پیماید و چرخه/والد غایب را رد
+/// می‌کند. نتیجه یک نمایش مسیر محدود برای همان عملیات است، نه یک cache سراسری.
+/// </remarks>
+public interface IShippingAuthoringDestinationResolver
+{
+    /// <summary>همهٔ انتخاب‌ها را در همان ترتیب ورودی (گروه‌به‌گروه، سپس داخل گروه) اثبات می‌کند.</summary>
+    /// <param name="selections">انتخاب‌های بدنهٔ نوشتن.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<IReadOnlyList<ShippingDestinationSelectionPath>>> ResolveAsync(
+        IReadOnlyList<ShippingAuthoringSelectedAreaWrite> selections,
+        CancellationToken cancellationToken);
+}

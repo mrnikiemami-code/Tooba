@@ -7,8 +7,7 @@ using Tooba.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Shipping.Application.Packaging.Ports;
 using Tooba.Shipping.Application.Authoring.Ports;
-using Tooba.Shipping.Application.Rates.Ports;
-using Tooba.Shipping.Application.Scheduling.Ports;
+using Tooba.Shipping.Application.Rates.Ports;using Tooba.Shipping.Application.Scheduling.Ports;
 using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Contracts.Operations;
@@ -26,9 +25,10 @@ namespace Tooba.Shipping.Infrastructure.DependencyInjection;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>What exists.</b> The module owns one <see cref="ShippingDbContext"/> (its own <c>shipping</c> schema)
-/// and one read-only Contracts seam, <see cref="IShippingRateQuoteLookup"/>, backed by
-/// <see cref="ShippingRateQuoteLookup"/>. Nothing in this module writes.
+/// <b>What exists.</b> The module owns one <see cref="ShippingDbContext"/> (its own <c>shipping</c> schema),
+/// its own authoring write paths (admin authoring directories plus the D3 draft/region-group aggregate)
+/// and read-only Contracts seams such as <see cref="IShippingRateQuoteLookup"/>. No quote, order or
+/// financial row is written here: the writes are limited to Shipping-owned authoring configuration.
 /// </para>
 /// <para>
 /// <b>How it is composed.</b> The Host's <c>ToobaModuleComposition</c> registers an explicit,
@@ -92,6 +92,11 @@ public sealed class ShippingModule : IToobaModule
         // StoreContext.Contracts, Localization.Contracts) instead of treating preview fixtures as store
         // configuration. Read-only, Contracts-only, and no cache/fallback of its own.
         services.AddScoped<IShippingAuthoringContextSource, ShippingAuthoringContextSource>();
+        // D3 authoring drafts: Shipping-owned draft/group/area persistence and the Geography Contracts
+        // ancestry proof for submitted selections. Both are module-owned; the owner scope is mapped to
+        // the persisted owner representation only inside the adapter.
+        services.AddScoped<IShippingAuthoringDraftDirectory, ShippingAuthoringDraftDirectory>();
+        services.AddScoped<IShippingAuthoringDestinationResolver, ShippingAuthoringDestinationResolver>();
         services.AddDbContext<ShippingDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

@@ -29,9 +29,13 @@ public static class ShippingEndpointModule
         ShippingAuthoringContextEndpoints.Map(admin);
         // Additive TB-189 admin read: the CURRENT server-authorized shipping rule owner scope.
         ShippingAuthoringOwnerEndpoints.Map(admin);
+        // D3 admin authoring drafts: owner-scoped draft CRUD with geographic region groups.
+        ShippingAuthoringDraftEndpoints.Map(admin);
         // Additive TB-189 seller read: the same use case behind the real seller owner gate.
         var seller = app.MapGroup("/v1/seller");
         ShippingSellerAuthoringOwnerEndpoints.Map(seller);
+        // The same owner-authoritative draft use cases behind the seller owner gate.
+        ShippingSellerAuthoringDraftEndpoints.Map(seller);
         return app;
     }
 

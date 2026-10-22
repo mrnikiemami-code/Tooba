@@ -100,6 +100,23 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
             LocalizationKey: ShippingErrorCodes.AuthoringOwnerScopeUnavailable,
             Severity: ErrorSeverity.Warning,
             SafeTitleFallback: "Shipping rule ownership is unavailable in this installation."),
+        new(
+            Code: ShippingErrorCodes.AuthoringDraftNotFound,
+            Classification: ErrorClassification.NotFound,
+            HttpStatus: StatusCodes.Status404NotFound,
+            LocalizationKey: ShippingErrorCodes.AuthoringDraftNotFound,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "The shipping authoring draft was not found."),
+        new(
+            Code: ShippingErrorCodes.AuthoringDraftRevisionConflict,
+            Classification: ErrorClassification.Conflict,
+            HttpStatus: StatusCodes.Status409Conflict,
+            LocalizationKey: ShippingErrorCodes.AuthoringDraftRevisionConflict,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "The shipping authoring draft has changed; reload it and try again."),
+        D(ShippingErrorCodes.AuthoringDraftBindingDuplicate, "A draft already exists for this owner and shipping method."),
+        D(ShippingErrorCodes.AuthoringRegionSelectionOverlap, "The selected destinations overlap or repeat."),
+        D(ShippingErrorCodes.AuthoringRegionPayloadInvalid, "The draft region tree is not a valid configuration."),
     ];
 
     private static ErrorDescriptor D(string code, string fallback) =>

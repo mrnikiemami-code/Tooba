@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -142,7 +142,21 @@
   <data name="shipping.authoring.owner_scope_denied" xml:space="preserve">
     <value>You are not permitted to author shipping rules for this owner scope.</value>
   </data>
-  <data name="shipping.authoring.owner_scope_unavailable" xml:space="preserve">
+  <data name="shipping.authoring.draft_not_found" xml:space="preserve">
+    <value>The shipping authoring draft was not found.</value>
+  </data>
+  <data name="shipping.authoring.draft_revision_conflict" xml:space="preserve">
+    <value>The shipping authoring draft has changed; reload it and try again.</value>
+  </data>
+  <data name="shipping.authoring.draft_binding_duplicate" xml:space="preserve">
+    <value>A draft already exists for this owner and shipping method.</value>
+  </data>
+  <data name="shipping.authoring.region_selection_overlap" xml:space="preserve">
+    <value>The selected destinations overlap or repeat.</value>
+  </data>
+  <data name="shipping.authoring.region_payload_invalid" xml:space="preserve">
+    <value>The draft region tree is not a valid configuration.</value>
+  </data>  <data name="shipping.authoring.owner_scope_unavailable" xml:space="preserve">
     <value>Shipping rule ownership is unavailable in this installation.</value>
   </data>
 </root>

@@ -172,8 +172,8 @@ public sealed class ShippingAuthoringContextEndpointTests
 
         // Exactly one new endpoint was added on top of the certified 16-route surface.
         // TB-189 then added the admin and seller owner-scope reads, so the surface is 19 routes.
-        Assert.Equal(19, harness.Routes.Count);
-        Assert.Equal(19, harness.Endpoints.Count);
+        Assert.Equal(27, harness.Routes.Count);
+        Assert.Equal(27, harness.Endpoints.Count);
 
         // The endpoint declares the existing permission and no anonymous/transport binding.
         var source = File.ReadAllText(Path.Combine(

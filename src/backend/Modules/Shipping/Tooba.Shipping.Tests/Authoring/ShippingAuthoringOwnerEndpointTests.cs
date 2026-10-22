@@ -285,7 +285,7 @@ public sealed class ShippingAuthoringOwnerEndpointTests
         Assert.False(harness.TemplateMatches(AdminPath, SellerPath));
 
         // Exactly the two new owner routes were added on top of the certified 17-route surface.
-        Assert.Equal(19, harness.Routes.Count);
+        Assert.Equal(27, harness.Routes.Count);
         Assert.Equal(
             ["GET " + AdminPath, "GET " + SellerPath],
             harness.Routes

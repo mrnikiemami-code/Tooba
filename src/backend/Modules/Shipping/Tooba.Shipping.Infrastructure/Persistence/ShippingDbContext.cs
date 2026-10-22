@@ -5,6 +5,7 @@ using Tooba.Persistence;
 using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Domain.Aggregates;
+using Tooba.Shipping.Domain.Authoring;
 using Tooba.Shipping.Domain.Scheduling;
 
 namespace Tooba.Shipping.Infrastructure.Persistence;
@@ -19,8 +20,9 @@ namespace Tooba.Shipping.Infrastructure.Persistence;
 /// Fulfillment، هر دو فقط به‌عنوان مقدار کلید. هیچ join یا FK میان‌ماژولی در این مدل وجود ندارد.
 /// </para>
 /// <para>
-/// <b>NOT WIRED.</b> این DbContext به Host وصل نمی‌شود (هیچ ProjectReference از Host، هیچ ثبت DI،
-/// هیچ endpoint) و مهاجرت آن در هیچ دیتابیس واقعی اجرا نمی‌شود؛ هیچ رفتار runtime تغییر نمی‌کند.
+/// <b>CLI-only migration.</b> مهاجرت‌های این DbContext فقط توسط <c>Tooba.MigrationRunner</c> اعمال
+/// می‌شوند؛ هیچ <c>IModuleSchemaMigrator</c> در این ماژول ثبت نشده و هیچ DDL در startup اجرا نمی‌شود.
+/// DDL همیشه یک تغییر صریح و بازبینی‌شده است، نه اثر جانبی بالا آمدن Host.
 /// </para>
 /// <para>
 /// <b>Invariants at the storage boundary.</b> قواعدی که aggregate در حافظه تضمین می‌کند و از دست
@@ -56,6 +58,9 @@ public sealed class ShippingDbContext : DbContext
 
     /// <summary>سیاست‌های هزینهٔ بسته‌بندی، جدا از سیاست نرخ حمل.</summary>
     public DbSet<ShippingPackagingPolicy> PackagingPolicies => Set<ShippingPackagingPolicy>();
+
+    /// <summary>پیش‌نویس‌های نویسندگی روش ارسال (Draft، بدون فعال‌سازی یا مصرف استعلام).</summary>
+    public DbSet<ShippingAuthoringDraft> AuthoringDrafts => Set<ShippingAuthoringDraft>();
 
     /// <summary>Outbox همین ماژول؛ پیروی از اسکلت متعارف DbContext ماژول‌ها، بدون هیچ مصرف فعلی.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -380,10 +385,119 @@ public sealed class ShippingDbContext : DbContext
                 .HasDatabaseName("ix_operating_windows_schedule_weekday");
         });
 
+        // D3 authoring draft: Shipping-owned, owner-scoped, explicit relational structure for the region
+        // tree. Geography is stored ONCE per group (selected node identities only); future rate,
+        // packaging and schedule rows will reference the stable group id instead of repeating it.
+        modelBuilder.Entity<ShippingAuthoringDraft>(entity =>
+        {
+            entity.ToTable("authoring_drafts", table =>
+            {
+                // The persisted owner shape mirrors the TB-189 scope exactly: Store carries the real
+                // tenant and no seller, Marketplace carries neither, Seller carries the real party id and
+                // no tenant. An impossible combination can never be stored by any writer.
+                table.HasCheckConstraint(
+                    "ck_authoring_drafts_owner_coherent",
+                    $"((owner_kind = {(int)ShippingDraftOwnerKind.Store} AND owner_tenant_id IS NOT NULL AND owner_seller_party_id IS NULL)"
+                    + $" OR (owner_kind = {(int)ShippingDraftOwnerKind.Marketplace} AND owner_tenant_id IS NULL AND owner_seller_party_id IS NULL)"
+                    + $" OR (owner_kind = {(int)ShippingDraftOwnerKind.Seller} AND owner_tenant_id IS NULL AND owner_seller_party_id IS NOT NULL))");
+                table.HasCheckConstraint("ck_authoring_drafts_revision_positive", "revision > 0");
+                table.HasCheckConstraint(
+                    "ck_authoring_drafts_service_code_canonical",
+                    "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+                table.HasCheckConstraint(
+                    "ck_authoring_drafts_option_code_canonical",
+                    "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
+                table.HasCheckConstraint(
+                    "ck_authoring_drafts_tenant_not_blank",
+                    "owner_tenant_id IS NULL OR char_length(owner_tenant_id) > 0");
+            });
+            entity.HasKey(x => x.DraftId);
+            entity.Property(x => x.DraftId).ValueGeneratedNever();
+            entity.Property(x => x.OwnerKind).HasConversion<int>();
+            entity.Property(x => x.OwnerTenantId).HasMaxLength(ShippingDraftOwner.TenantIdMaxLength);
+            entity.Property(x => x.ServiceCode).HasMaxLength(ShippingAuthoringDraft.ServiceCodeMaxLength).IsRequired();
+            entity.Property(x => x.OptionCode).HasMaxLength(ShippingAuthoringDraft.OptionCodeMaxLength);
+            // A real relational concurrency predicate: the UPDATE that advances the revision is only
+            // applied while the stored revision still equals the value read for this request.
+            entity.Property(x => x.Revision).IsConcurrencyToken();
+
+            // Every list/read/update filters by the full owner scope; this index keeps that narrow.
+            entity.HasIndex(x => new { x.OwnerKind, x.OwnerTenantId, x.OwnerSellerPartyId })
+                .HasDatabaseName("ix_authoring_drafts_owner");
+
+            // One draft per owner and canonical binding. NULLS NOT DISTINCT is required because a
+            // service-level binding has no option code, and with PostgreSQL's default NULLS DISTINCT two
+            // option-less drafts for the same owner would both be accepted. Requires PostgreSQL 15+.
+            entity.HasIndex(x => new
+                {
+                    x.OwnerKind,
+                    x.OwnerTenantId,
+                    x.OwnerSellerPartyId,
+                    x.ServiceCode,
+                    x.OptionCode,
+                })
+                .IsUnique()
+                .AreNullsDistinct(false)
+                .HasDatabaseName("ux_authoring_drafts_owner_binding");
+
+            entity.HasMany(x => x.RegionGroups)
+                .WithOne()
+                .HasForeignKey(group => group.DraftId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Navigation(x => x.RegionGroups).UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+        modelBuilder.Entity<ShippingAuthoringRegionGroup>(entity =>
+        {
+            entity.ToTable("authoring_region_groups", table =>
+            {
+                table.HasCheckConstraint("ck_authoring_region_groups_order_non_negative", "group_order >= 0");
+            });
+            entity.HasKey(x => x.GroupId);
+            entity.Property(x => x.GroupId).ValueGeneratedNever();
+            entity.Property(x => x.Order).HasColumnName("group_order");
+            entity.Property(x => x.DraftId).IsRequired();
+
+            // The explicit order is part of the aggregate identity of the tree: two groups of the same
+            // draft can never claim the same position.
+            entity.HasIndex(x => new { x.DraftId, x.Order })
+                .IsUnique()
+                .HasDatabaseName("ux_authoring_region_groups_draft_order");
+
+            entity.HasMany(x => x.Areas)
+                .WithOne()
+                .HasForeignKey(area => area.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Navigation(x => x.Areas).UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+        modelBuilder.Entity<ShippingAuthoringSelectedArea>(entity =>
+        {
+            entity.ToTable("authoring_selected_areas", table =>
+            {
+                // The selected node kind is a stable code, never free-form prose: a row whose kind is
+                // unreadable would make two selections indistinguishable (the same GUID can exist in two
+                // reference node kinds).
+                table.HasCheckConstraint(
+                    "ck_authoring_selected_areas_node_kind_known",
+                    $"node_kind IN ({(int)ShippingDestinationNodeKind.Country}, {(int)ShippingDestinationNodeKind.AdministrativeArea}, {(int)ShippingDestinationNodeKind.City}, {(int)ShippingDestinationNodeKind.ServiceArea})");
+            });
+            entity.HasKey(x => x.SelectedAreaId);
+            entity.Property(x => x.SelectedAreaId).ValueGeneratedNever();
+            entity.Property(x => x.NodeKind).HasConversion<int>();
+            entity.Property(x => x.DraftId).IsRequired();
+
+            // A selection may exist at most once per draft, not merely per group: the ancestor/descendant
+            // rule is enforced in the aggregate, and this index is the relational mirror for the flat
+            // duplicate case that another writer could otherwise introduce.
+            entity.HasIndex(x => new { x.DraftId, x.NodeKind, x.NodeId })
+                .IsUnique()
+                .HasDatabaseName("ux_authoring_selected_areas_draft_node");
+        });
+
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }
 }
-
 /// <summary>
 /// کارخانهٔ design-time مهاجرت Shipping. اتصال فقط از متغیر محیطی ابزار EF خوانده می‌شود؛ هیچ
 /// رشتهٔ اتصال runtime یا credential در این پروژه وجود ندارد.

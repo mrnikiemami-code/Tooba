@@ -9,7 +9,7 @@
     "requestSource": "src/backend/Modules/Shipping/Tooba.Shipping.Application/**/*.cs (public sealed record ... : IRequest<...>)",
     "handlerSource": "IRequestHandler<Request, ...> implementations in Tooba.Shipping.Application",
     "validatorSource": "AbstractValidator<T> implementations in Tooba.Shipping.Application",
-    "routeOwnership": "ShippingEndpointModule.MapShippingEndpoints -> MapGroup(\"/v1/admin\") -> 7 admin capability mappers, MapGroup(\"/v1/seller\") -> 1 seller capability mapper",
+    "routeOwnership": "ShippingEndpointModule.MapShippingEndpoints -> MapGroup(\"/v1/admin\") -> 9 admin capability mappers, MapGroup(\"/v1/seller\") -> 2 seller capability mappers",
     "guard": "src/backend/Modules/Shipping/Tooba.Shipping.Tests/Certification/ShippingRequestClassificationTests.cs",
     "routePrefixes": [
       "/v1/admin",
@@ -270,6 +270,72 @@
       ],
       "transportRule": "literal parameterless routes; each handler constructs the request from a server-built ShippingAuthoringOwnerScope and reads no route value, no query string and no body",
       "reason": "The owner scope is resolved and authorized by the server on every request; there is no caller-controlled transport input, so a validator would own nothing. The classification is proven by the guard, not asserted from intent."
+    },
+    {
+      "request": "CreateShippingAuthoringDraftCommand",
+      "routes": [
+        "POST /v1/admin/shipping-services/authoring-drafts",
+        "POST /v1/seller/shipping-services/authoring-drafts"
+      ],
+      "handler": "CreateShippingAuthoringDraftHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "CreateShippingAuthoringDraftCommandValidator",
+      "inputs": [
+        "body:serviceCode:required:untrusted-caller",
+        "body:optionCode:optional-bounded:untrusted-caller",
+        "body:regionGroups:tree-shape-and-techical-bounds:untrusted-caller",
+        "authorization:fulfillment.manage:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "service code non-empty/bounded, option code bounded, region group tree shape coherent (kind matches deepest id), group/selection counts within technical payload bounds; the owner is never part of the body",
+      "reason": "A full draft tree is submitted by the caller, so every untrusted id, level and count must be rejected with a stable code before any method/geography/business validation runs."
+    },
+    {
+      "request": "ReplaceShippingAuthoringDraftRegionsCommand",
+      "routes": [
+        "PUT /v1/admin/shipping-services/authoring-drafts/{draftId:guid}",
+        "PUT /v1/seller/shipping-services/authoring-drafts/{draftId:guid}"
+      ],
+      "handler": "ReplaceShippingAuthoringDraftRegionsHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ReplaceShippingAuthoringDraftRegionsCommandValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "body:expectedRevision:required-positive:untrusted-caller",
+        "body:regionGroups:tree-shape-and-techical-bounds:untrusted-caller",
+        "authorization:fulfillment.manage:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "draftId non-empty, expectedRevision positive integer, region group tree shape coherent within technical payload bounds; owner/tenant/seller are never bound from transport",
+      "reason": "The replacement replaces a whole tree and carries an optimistic-concurrency token, so both the id and the revision are caller-controlled and must be shape-validated."
+    },
+    {
+      "request": "GetShippingAuthoringDraftsQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-drafts",
+        "GET /v1/seller/shipping-services/authoring-drafts"
+      ],
+      "handler": "GetShippingAuthoringDraftsHandler",
+      "classification": "NO_VALIDATOR_REQUIRED",
+      "inputs": [
+        "authorization:fulfillment.view:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "literal parameterless routes; the handler builds the request from the server-authorized owner scope and reads no route value, query string or body",
+      "reason": "There is no caller-controlled transport input on this read; a validator would own nothing, and the owner filter is the authorization result, not a request field."
+    },
+    {
+      "request": "GetShippingAuthoringDraftQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-drafts/{draftId:guid}",
+        "GET /v1/seller/shipping-services/authoring-drafts/{draftId:guid}"
+      ],
+      "handler": "GetShippingAuthoringDraftHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingAuthoringDraftQueryValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "authorization:fulfillment.view:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "draftId non-empty; a foreign or unknown id returns the same safe not-found response",
+      "reason": "The draft id comes from the route and is projected into the read request, so its shape is transport-owned even though ownership is decided by the server filter."
     }
   ],
   "nestedTransportValidators": [
@@ -282,14 +348,15 @@
   ],
   "noValidatorRequiredRequests": [
     "GetShippingAuthoringContextQuery",
-    "GetShippingAuthoringOwnerQuery"
+    "GetShippingAuthoringOwnerQuery",
+    "GetShippingAuthoringDraftsQuery"
   ],
   "totals": {
-    "shippedRoutes": 19,
-    "endpointReachableRequests": 18,
-    "requestValidators": 16,
+    "shippedRoutes": 27,
+    "endpointReachableRequests": 22,
+    "requestValidators": 19,
     "nestedTransportValidators": 6,
-    "declaredValidators": 22
+    "declaredValidators": 25
   },
   "amendments": [
     {

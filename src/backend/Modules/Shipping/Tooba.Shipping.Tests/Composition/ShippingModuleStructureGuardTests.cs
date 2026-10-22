@@ -226,9 +226,9 @@ public sealed class ShippingModuleStructureGuardTests
         // plus the TB-189 seller group with its single owner-scope mapper. The counts are pinned so a
         // mapper/group cannot be added or dropped silently, and each mapper name is asserted explicitly.
         Assert.Equal(1, CountOccurrences(composition, "app.MapGroup(\"/v1/admin\")"));
-        Assert.Equal(7, CountOccurrences(composition, "Endpoints.Map(admin);"));
+        Assert.Equal(8, CountOccurrences(composition, "Endpoints.Map(admin);"));
         Assert.Equal(1, CountOccurrences(composition, "app.MapGroup(\"/v1/seller\")"));
-        Assert.Equal(1, CountOccurrences(composition, "Endpoints.Map(seller);"));
+        Assert.Equal(2, CountOccurrences(composition, "Endpoints.Map(seller);"));
         Assert.Contains("ShippingRateCoverageEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingMethodFinancialStatusEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingOperatingScheduleEndpoints.Map(admin);", composition, StringComparison.Ordinal);
@@ -237,6 +237,8 @@ public sealed class ShippingModuleStructureGuardTests
         Assert.Contains("ShippingAuthoringContextEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingAuthoringOwnerEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingSellerAuthoringOwnerEndpoints.Map(seller);", composition, StringComparison.Ordinal);
+        Assert.Contains("ShippingAuthoringDraftEndpoints.Map(admin);", composition, StringComparison.Ordinal);
+        Assert.Contains("ShippingSellerAuthoringDraftEndpoints.Map(seller);", composition, StringComparison.Ordinal);
         Assert.Contains("IErrorCatalogContributor, ShippingErrorCatalogContributor", composition, StringComparison.Ordinal);
         Assert.Contains("IErrorResourceSet, ShippingErrorResourceSet", composition, StringComparison.Ordinal);
         // The one reusable owner gate is module-owned and registered exactly once.
