@@ -1,5 +1,8 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+> **وضعیت جاری Architect پس از196-R5:** DI واقعی و چرخهٔ registry/listener در محدودهٔ fixture **ACCEPT با یک اصلاح نمونه**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R5/ARCHITECT-REVIEW.md)، checkpoint `0bd17a8f704d782bd45f0763df7e066685ff3fa1`؛22/22 گزارش Worker، اینجا اجرا نشده. تست «یک فعال» درواقعfa+ar هر دوفعال دارد؛ default غیرفارسی/nonfirst را ثابت می‌کند ولی count1 نه. تنها تسک بعدی **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R6** (Parent=196-R5): اصلاح همانfixture + proof PostgreSQL/snapshot/constraint/unique/revision-race در محیط دورریختنی؛ بدون تغییرکد محصول/مهاجرت/snapshot. schema تاریخی در برابر snapshot باید مستقل سنجیده شود؛ اختلاف=>BLOCKED و نه بازسازی legacy. whole196 هنوز PARTIAL؛ assignment Shipping/UI/quote/استقرار ممنوع، TB-185 متوقف. پایین تاریخچه است.
+
+
 > **وضعیت جاری Architect پس از196-R4:** سه اصلاح proof **ACCEPT** و شواهد APIِ R3 با R4 پذیرفته شد؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R4/ARCHITECT-REVIEW.md). code `a638266bc`، HEAD transport `726ae303473f916b10ae2cf95bb95ab15fa8e045`؛45تست گزارش Worker و source بررسی شد، اینجا اجرا نشد. no-op nonempty با clock متغیر، root/childcode و mapping مشاهده‌شده از Sender/DI بسته شد. تنها تسک بعدی **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R5** (Parent=196-R4)، test-only برای registry lifecycle از adapter واقعی، listener و DI واقعی FulfillmentModule؛ نه کپی registration و نه DB. constraint-lookalike و PG/snapshot/unique/revision-race هنوز gate جدا؛196 **PARTIAL_PENDING_REMAINING_PROOF**، assignment Shipping/UI/quote/استقرار ممنوع و TB-185 متوقف. پایین تاریخچه است.
 
 
