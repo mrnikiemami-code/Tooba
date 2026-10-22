@@ -14,7 +14,12 @@ const receipt = JSON.parse(fs.readFileSync(path.join(__dirname, "task-receipt.js
 (async () => {
     const head = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
     const origin = execSync("git rev-parse origin/main", { encoding: "utf8" }).trim();
+    const scoped = execSync(
+        "git status --porcelain -- docs/ai/tasks/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W0.task.md docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W0",
+        { encoding: "utf8" },
+    ).trim();
     if (head !== origin) throw new Error(`HEAD ${head} != origin/main ${origin}`);
+    if (scoped.length > 0) throw new Error(`scoped tree not clean:\n${scoped}`);
     if (receipt.id !== "fa35ac1d-86a7-411e-8d29-580ef892072e") {
         throw new Error(`unexpected bridge task row ${receipt.id}`);
     }
