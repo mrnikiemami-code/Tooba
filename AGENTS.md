@@ -20,8 +20,10 @@ TB-196-R3 API evidence is accepted through R4; registry/tracing/real-DI/relation
 TB-196-R5 DI/registry/listener evidence and its single-active correction through R6 are accepted.
 TB-196-R7 naming/isolated UpDown repair is accepted; legacy/snapshot and full relational gates remain blocked.
 TB-196-R8 canonical snapshot/latest TargetModel metadata alignment is accepted.
-Historical-schema and full relational gates remain blocked; no next task is issued by this checkpoint.
-Prepare bounded historical reconciliation analysis before authorizing any legacy executable repair.
+TB-196-R9 historical analysis is accepted with Architect corrections (model manifest191, not216).
+Only next issued task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R10,
+limited additive pending-outbox-index migration and disposable PostgreSQL proof.
+Other historical drift/full relational gates remain blocked; no shared deployment.
 Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.

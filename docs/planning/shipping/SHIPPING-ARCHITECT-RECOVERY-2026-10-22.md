@@ -1,5 +1,15 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری پس از بررسی R9 / تنها تسک بعد R10
+
+R9 در main `49f5b8721290a436d82df7160811b6a62b626dd6` برای تحلیل محدود **ACCEPT با اصلاح**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R9/ARCHITECT-REVIEW.md). شمارش مستقل دو فایل: actual192/model191 (نه216)، missing16/unexpected17؛ دسته‌بندی3+5+10 برقرار. هیچ کد/DB درR9تغییر نکرد.
+
+تنها تسک صادرشده **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R10**، Parent=196-R9: یک migration افزایشی برای pending outbox index موجود در shared model ولی مفقود در chain، با CreateIndex عادی transactional و Down محدود، metadata جدید canonical و proof PostgreSQL دورریختنی. پیشنهاد IF NOT EXISTS رد شد: همنام اشتباه را پنهان می‌کند و مالکیت Down را اثبات نمی‌کند. همنام موجود باید fail-closed شود؛ هیچ adoption/shared deployment/concurrent rollout مجاز نیست. runtime/model/snapshot و همه migration/designer قبلی byte-identical؛ فقط migration تازه و target metadata آن، tests محدود و docs. سقف35دقیقه، stop28، setup8،commands120s. بعد از تحویل R10 منتظر بررسی Architect؛ هیچ تسک موازی/جایگزین.
+
+کل196 هنوز BLOCKED؛ CHECK/default/name و storage/race/rollback کامل باز. پیش‌فرض‌ها با HasDefaultValue تغییر semantics می‌دهند؛ مجوز blanket mapping/DDL/baseline ندارند. بعد از کاتالوگ، assignmentسپس UI/API/languagesDB/SingleStore-Marketplace؛ quote/activation/deployment مستقل؛TB185متوقف. پایین تاریخچه است.
+
+
+
 ## تسک واحد صادرشده پس از پذیرش R8 — R9
 
 به درخواست صریح مالک، تنها تسک بعدی **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R9**، Parent=196-R8، صادر می‌شود: تحلیل source/evidence اختلاف schema تاریخی و مدل canonical و پیشنهاد کوچک‌ترین reconciliation امن. فقط docs؛ بدون تغییر runtime/metadata/migration/test، DB/container/DDL یا اجرای suite. سقف20دقیقه، توقف تحقیق جدید در15؛ counts قدیمی3+5+10 فرض قطعی نیستند و باید object-by-object از منبع بازبینی شوند. خروجی proposal است و مجوز تغییر اجرایی نیست. پس از دریافت نتیجه، Architect مستقل بررسی می‌کند و فقط سپس تسک بعدی؛ هیچ نسخه جایگزین یا تسک موازی صادر نشود. R8 تمام و accepted محدود است؛ کل196 و assignment/UI/activation همچنان blocked. این بخش بر «هیچ تسک بعدی» در checkpoint پایین مقدم است؛ پایین تاریخچه است.
