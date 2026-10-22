@@ -1,5 +1,8 @@
 ﻿# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+> **وضعیت جاری پس از196-R1:** **PARTIAL / NOT ACCEPTED**؛ [بررسی مستقل](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R1/ARCHITECT-REVIEW.md)، checkpoint `d5406396e8032b32d22244f29d20336f4c4017fb`. اصلاح ورودی/preflight/no-op در source هست ولی proof API/adapter زبان/listener/set-equality هنوز اجرا نشده؛85دقیقه از45 گذشته و build Host خارج scope بود. رگرسیون تازه: Create ترتیب صفر مجاز را رد می‌کند؛ guardهای متن/شناسهٔ Domain هم حذف شده‌اند. وابستگی Domain→Contracts ممنوع می‌ماند، حذف قواعد راه‌حل نیست. تنها تسک بعدی **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R2** (Parent=196-R1)، فقط مرزهای Domain و regression هدفمند با سقف20دقیقه، نه همهٔ backlog. snapshot/PG/race و API/tracing هنوز gate جدا و باز؛ بدون assignment Shipping/UI/فعال‌سازی/استقرار، TB-185 متوقف. پایین تاریخچه است.
+
+
 > **وضعیت جاری پس از 196:** **PARTIAL / NOT ACCEPTED**؛ [بررسی مستقل](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196/ARCHITECT-REVIEW.md). code `7f1e1e080`؛ HEAD transport `c9f711dd415423f5a929b078a16381028d81c419`. کد نوع‌ها نوشته شده ولی proof API/زبان/tracing/PostgreSQL کامل نیست و63دقیقه از45 تجاوز کرده. نقص‌های source: حذف nullهای ترجمه قبل validation، no-op نادرست برای متن یکسان، mutation قبل preflight کامل، انتخاب اولین default از چند default، read input بی‌validator و namespace/path mismatch. تنها تسک بعدی **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R1** (Parent=196) برای اصلاح رفتار/API/tracing و proof in-process؛ بدون DB یا migration. تغییر گسترده snapshot و هم‌ارزی زنجیره مهاجرت/رقابت PostgreSQL در R196-06 باز است و بعداً تسک جدا می‌خواهد. R1 PASS پذیرش196 نیست. Shipping assignment/فرانت/quote/استقرار ممنوع؛ TB-185 متوقف. پایین تاریخچه است.
 
 
