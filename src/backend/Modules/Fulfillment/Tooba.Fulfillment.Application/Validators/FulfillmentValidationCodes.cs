@@ -39,6 +39,32 @@ public static class FulfillmentValidationCodes
     /// <summary>Shipment line quantity must be greater than zero.</summary>
     public const string ShipmentLineQuantityPositive = "fulfillment.validation.shipment_line_quantity_positive";
 
+    // ---- Operational shipping type catalog (TB-196) -------------------------------------
+    /// <summary>Shipping type write model envelope is missing.</summary>
+    public const string ShippingTypeModelRequired = "fulfillment.validation.shipping_type_model_required";
+
+    /// <summary>Shipping type identifier must be non-empty.</summary>
+    public const string ShippingTypeIdRequired = "fulfillment.validation.shipping_type_id_required";
+
+    /// <summary>Shipping type code violates the canonical ASCII shape or length.</summary>
+    public const string ShippingTypeCodeShape = "fulfillment.validation.shipping_type_code_shape";
+
+    /// <summary>Shipping type sort order is outside the supported bounds.</summary>
+    public const string ShippingTypeSortOrderShape = "fulfillment.validation.shipping_type_sort_order_shape";
+
+    /// <summary>Shipping type expected revision must be greater than zero.</summary>
+    public const string ShippingTypeRevisionShape = "fulfillment.validation.shipping_type_revision_shape";
+
+    /// <summary>Shipping type translations collection is missing.</summary>
+    public const string ShippingTypeTranslationsRequired = "fulfillment.validation.shipping_type_translations_required";
+
+    /// <summary>A shipping type translation entry is null or has an unusable shape.</summary>
+    public const string ShippingTypeTranslationShape = "fulfillment.validation.shipping_type_translation_shape";
+
+    /// <summary>A shipping type translation language id is repeated in one request.</summary>
+    public const string ShippingTypeTranslationDuplicateLanguage =
+        "fulfillment.validation.shipping_type_translation_duplicate_language";
+
     /// <summary>Bulk request envelope must be supplied.</summary>
     public const string BulkRequestRequired = "fulfillment.validation.bulk_request_required";
 

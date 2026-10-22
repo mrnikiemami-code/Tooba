@@ -288,4 +288,35 @@ public static class FulfillmentErrorCodes
 
     /// <summary>One-level shipping method name required.</summary>
     public const string ShippingMethodNameRequired = "shipping_method.name.required";
+
+    // ---- Operational shipping type catalog (TB-196) ---------------------------------------
+    /// <summary>Operational shipping type was not found.</summary>
+    public const string ShippingTypeNotFound = "shipping_type.not_found";
+
+    /// <summary>Duplicate operational shipping type code.</summary>
+    public const string ShippingTypeCodeDuplicate = "shipping_type.code_duplicate";
+
+    /// <summary>Operational shipping type code violates the canonical ASCII shape.</summary>
+    public const string ShippingTypeCodeInvalid = "shipping_type.code.invalid";
+
+    /// <summary>Operational shipping type sort order is outside the supported bounds.</summary>
+    public const string ShippingTypeSortOrderInvalid = "shipping_type.sort_order.invalid";
+
+    /// <summary>A shipping type translation entry is missing language identity or a usable name.</summary>
+    public const string ShippingTypeTranslationInvalid = "shipping_type.translation.invalid";
+
+    /// <summary>A language id on a shipping type write is unknown or inactive.</summary>
+    public const string ShippingTypeLanguageInvalid = "shipping_type.language_invalid";
+
+    /// <summary>The store language configuration has no usable active default language.</summary>
+    public const string ShippingTypeDefaultLanguageUnavailable = "shipping_type.default_language.unavailable";
+
+    /// <summary>Activating a type requires a stored name for the current active default language.</summary>
+    public const string ShippingTypeDefaultLanguageNameRequired = "shipping_type.default_language.name_required";
+
+    /// <summary>The expected revision does not match the stored shipping type revision.</summary>
+    public const string ShippingTypeRevisionConflict = "shipping_type.revision_conflict";
+
+    /// <summary>A required shipping type write field was absent from the request body.</summary>
+    public const string ShippingTypeTransportFieldMissing = "shipping_type.field_missing";
 }

@@ -22,6 +22,7 @@ public static class FulfillmentEndpointModule
         var admin = app.MapGroup("/v1/admin");
         FulfillmentAdminEndpoints.Map(admin);
         ShippingServiceEndpoints.Map(admin);
+        ShippingTypeAdminEndpoints.Map(admin);
         ShippingMethodsEndpoints.Map(app);
         var customer = app.MapGroup("/v1/customer");
         FulfillmentCustomerEndpoints.Map(customer);
@@ -33,6 +34,8 @@ public static class FulfillmentEndpointModule
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<IFulfillmentAdminAuthorizer, FulfillmentAdminAuthorizer>();
+        // TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196: گیت مجوز مستقل خواندن/نوشتن کاتالوگ نوع ارسال.
+        services.AddScoped<IShippingTypeAdminAuthorizer, ShippingTypeAdminAuthorizer>();
         services.AddScoped<IFulfillmentCustomerAuthorizer, FulfillmentCustomerAuthorizer>();
         services.AddScoped<IFulfillmentSellerAuthorizer, FulfillmentSellerAuthorizer>();
         services.AddSingleton<IErrorResourceSet, FulfillmentErrorResourceSet>();

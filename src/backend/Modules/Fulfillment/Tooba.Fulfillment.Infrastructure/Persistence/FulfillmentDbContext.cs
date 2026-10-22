@@ -77,6 +77,12 @@ public sealed class FulfillmentDbContext : DbContext
     /// <summary>ترجمه‌های روش ارسال یک‌سطحی.</summary>
     public DbSet<ShippingMethodTranslation> ShippingMethodTranslations => Set<ShippingMethodTranslation>();
 
+    /// <summary>تعریف‌های مشترک نوع ارسال عملیاتی (TB-196)؛ فقط هویت/ترتیب/فعال‌بودن.</summary>
+    public DbSet<ShippingType> ShippingTypes => Set<ShippingType>();
+
+    /// <summary>متن چندزبانهٔ تعریف نوع ارسال.</summary>
+    public DbSet<ShippingTypeTranslation> ShippingTypeTranslations => Set<ShippingTypeTranslation>();
+
     /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
@@ -264,6 +270,62 @@ public sealed class FulfillmentDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.ShippingMethodId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196: تعریف مشترک نوع ارسال عملیاتی. فقط هویت،
+        // ترتیب، فعال‌بودن و متن LanguageId-keyed؛ هیچ ستون پول/جغرافیا/برنامه/ارز/ظرفیت اینجا نیست و
+        // هیچ FK به Localization یا Shipping ساخته نمی‌شود. قیدهای ذخیره‌سازی آینهٔ گاردهای دامنه‌اند تا
+        // ردیفی که دامنه رد می‌کند از SQL خام/import/هندلر آینده هم ذخیره نشود.
+        modelBuilder.Entity<ShippingType>(entity =>
+        {
+            entity.ToTable("shipping_types", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_shipping_types_code_canonical",
+                    "char_length(code) BETWEEN 1 AND 64"
+                    + " AND code = btrim(code)"
+                    + " AND code ~ '^[a-z][a-z0-9_]*$'");
+                table.HasCheckConstraint(
+                    "ck_shipping_types_sort_order_range",
+                    $"sort_order >= {ShippingType.SortOrderMinValue}"
+                    + $" AND sort_order <= {ShippingType.SortOrderMaxValue}");
+                table.HasCheckConstraint("ck_shipping_types_revision_positive", "revision > 0");
+            });
+            entity.HasKey(x => x.ShippingTypeId);
+            entity.Property(x => x.ShippingTypeId).ValueGeneratedNever();
+            entity.Property(x => x.Code).HasMaxLength(ShippingType.CodeMaxLength).IsRequired();
+            // predicate واقعی همزمانی: UPDATE فقط وقتی اعمال می‌شود که revision ذخیره‌شده هنوز برابر
+            // مقدار خوانده‌شدهٔ همین درخواست باشد.
+            entity.Property(x => x.Revision).IsConcurrencyToken();
+            entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("ix_shipping_types_code");
+            entity.HasIndex(x => new { x.IsActive, x.SortOrder }).HasDatabaseName("ix_shipping_types_active_sort");
+
+            entity.HasMany(x => x.Translations)
+                .WithOne()
+                .HasForeignKey(x => x.ShippingTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Navigation(x => x.Translations).UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+        modelBuilder.Entity<ShippingTypeTranslation>(entity =>
+        {
+            entity.ToTable("shipping_type_translations", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_shipping_type_translations_name_nonblank",
+                    "char_length(name) BETWEEN 1 AND 128 AND name = btrim(name)");
+                table.HasCheckConstraint(
+                    "ck_shipping_type_translations_description_nonblank",
+                    "description IS NULL OR (char_length(description) BETWEEN 1 AND 512"
+                    + " AND description = btrim(description))");
+            });
+            entity.HasKey(x => x.ShippingTypeTranslationId);
+            entity.Property(x => x.ShippingTypeTranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Name).HasMaxLength(ShippingType.NameMaxLength).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(ShippingType.DescriptionMaxLength);
+            entity.HasIndex(x => new { x.ShippingTypeId, x.LanguageId })
+                .IsUnique()
+                .HasDatabaseName("ix_shipping_type_translations_type_language");
         });
         modelBuilder.Entity<FulfillmentPaymentInboxRecord>(entity =>
         {

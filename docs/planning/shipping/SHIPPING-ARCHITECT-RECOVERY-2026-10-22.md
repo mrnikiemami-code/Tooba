@@ -298,3 +298,12 @@ proving no hybrid, and the ACTUAL losing context proven empty and re-reading the
 repair plus evidence correction: no executable production, contract, schema or migration change.
 Re-executed 609/609 whole Shipping suite; the repaired fact passed 5/5 consecutive focused runs.
 Worker PASS only — not Architect ACCEPT; no automatic next task.
+
+TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196 (worker, 2026-10-22, PARTIAL) delivered the additive
+Fulfillment-owned operational shipping-type catalog: domain identity/code/sort/active/revision,
+LanguageId-keyed translations, four Admin routes (/v1/admin/shipping-types) behind a new module-owned
+independent fulfillment.view/manage gate, stable shipping_type.* errors/resources, one additive
+migration, and a read-only Contracts IShippingTypeReader. Builds clean; 21 focused rule tests pass.
+NOT executed inside the expired 45-minute timebox: real PostgreSQL migration/raw-SQL proof, route
+harness denials, revision/unique-code races, module-trace assertion. Worker PARTIAL only - not
+Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.

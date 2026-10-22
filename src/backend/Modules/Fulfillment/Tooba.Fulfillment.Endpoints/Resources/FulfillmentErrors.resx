@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -276,5 +276,35 @@
   </data>
   <data name="shipping_method.name.required" xml:space="preserve">
     <value>Shipping method name is required.</value>
+  </data>
+  <data name="shipping_type.not_found" xml:space="preserve">
+    <value>Operational shipping type was not found.</value>
+  </data>
+  <data name="shipping_type.code_duplicate" xml:space="preserve">
+    <value>Operational shipping type code already exists.</value>
+  </data>
+  <data name="shipping_type.code.invalid" xml:space="preserve">
+    <value>Operational shipping type code is invalid.</value>
+  </data>
+  <data name="shipping_type.sort_order.invalid" xml:space="preserve">
+    <value>Operational shipping type sort order is invalid.</value>
+  </data>
+  <data name="shipping_type.translation.invalid" xml:space="preserve">
+    <value>Operational shipping type translation is invalid.</value>
+  </data>
+  <data name="shipping_type.language_invalid" xml:space="preserve">
+    <value>Operational shipping type language is invalid.</value>
+  </data>
+  <data name="shipping_type.default_language.unavailable" xml:space="preserve">
+    <value>The store has no usable active default content language.</value>
+  </data>
+  <data name="shipping_type.default_language.name_required" xml:space="preserve">
+    <value>Activating a shipping type requires a name for the active default language.</value>
+  </data>
+  <data name="shipping_type.revision_conflict" xml:space="preserve">
+    <value>Operational shipping type was modified by another request.</value>
+  </data>
+  <data name="shipping_type.field_missing" xml:space="preserve">
+    <value>A required operational shipping type field is missing.</value>
   </data>
 </root>

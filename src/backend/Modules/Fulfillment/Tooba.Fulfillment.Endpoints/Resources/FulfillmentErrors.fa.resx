@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -276,5 +276,35 @@
   </data>
   <data name="shipping_method.name.required" xml:space="preserve">
     <value>نام روش ارسال الزامی است.</value>
+  </data>
+  <data name="shipping_type.not_found" xml:space="preserve">
+    <value>نوع ارسال عملیاتی پیدا نشد.</value>
+  </data>
+  <data name="shipping_type.code_duplicate" xml:space="preserve">
+    <value>کد نوع ارسال عملیاتی از قبل وجود دارد.</value>
+  </data>
+  <data name="shipping_type.code.invalid" xml:space="preserve">
+    <value>کد نوع ارسال عملیاتی نامعتبر است.</value>
+  </data>
+  <data name="shipping_type.sort_order.invalid" xml:space="preserve">
+    <value>ترتیب نمایش نوع ارسال عملیاتی نامعتبر است.</value>
+  </data>
+  <data name="shipping_type.translation.invalid" xml:space="preserve">
+    <value>متن نوع ارسال عملیاتی نامعتبر است.</value>
+  </data>
+  <data name="shipping_type.language_invalid" xml:space="preserve">
+    <value>زبان انتخاب‌شده برای نوع ارسال عملیاتی نامعتبر است.</value>
+  </data>
+  <data name="shipping_type.default_language.unavailable" xml:space="preserve">
+    <value>فروشگاه زبان پیش‌فرض فعال قابل‌استفاده ندارد.</value>
+  </data>
+  <data name="shipping_type.default_language.name_required" xml:space="preserve">
+    <value>فعال‌سازی نوع ارسال نیازمند نام برای زبان پیش‌فرض فعال است.</value>
+  </data>
+  <data name="shipping_type.revision_conflict" xml:space="preserve">
+    <value>نوع ارسال عملیاتی توسط درخواست دیگری تغییر کرده است.</value>
+  </data>
+  <data name="shipping_type.field_missing" xml:space="preserve">
+    <value>یک فیلد الزامی نوع ارسال عملیاتی در بدنه وجود ندارد.</value>
   </data>
 </root>
