@@ -1,0 +1,10 @@
+fact=Concurrent_unique_code_create_race_persists_exactly_one_complete_type
+same-code=same_code
+participants=first,second arrivals=3
+actual-returned-id-winner=01900000-0000-7000-8000-00cc00000005
+persisted-root-id=01900000-0000-7000-8000-00cc00000005 id-equal=True
+typed-outcomes=first:success,second:shipping_type.code_duplicate
+duplicate-error=shipping_type.code_duplicate
+complete-root=TreeSnapshot { Id = 01900000-0000-7000-8000-00cc00000005, Code = same_code, SortOrder = 3, IsActive = False, Revision = 1, CreatedAt = 2026-10-22T12:03:00.0000000+00:00, UpdatedAt = 2026-10-22T12:03:00.0000000+00:00, Translations = [01900000-0000-7000-8000-00000000cc01:الف:متن الف | 01900000-0000-7000-8000-00000000cc02:Alpha:Alpha text] }
+translation-count=2
+loser-pending-entries=0 loser-later-SaveChanges=0 complete-tree-unchanged=True

@@ -1,0 +1,9 @@
+target host=127.0.0.1 port=55436 role=tb196 db=fulfillment_tb196/fulfillment_tb196_model
+live provenance primary=(fulfillment_tb196, tb196, 5432) model=(fulfillment_tb196_model, tb196, 5432)
+snapshot-vs-current-model differences=0
+latest 20261022182208_AddFulfillmentOutboxPendingIndex TargetModel-vs-current-model differences=0
+model manifest objects=218 type-owned=25
+phase A pre-type manifest objects=192
+phase B added=25 removed=0 legacy-before=192 after=217
+phase C added=1 removed=0
+phase D current-chain=218 model=218 differences=0

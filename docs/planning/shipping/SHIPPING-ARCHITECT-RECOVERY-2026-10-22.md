@@ -1,5 +1,11 @@
 ﻿# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری پس از R13-R1 / منتظر بررسی مستقل Architect
+
+R13-R1 روی main `7c19e63403d8ab66405b9762ba620bd76ede04e0` فقط test/evidence: سه fact اصلاح شد. uniqueCreate حالا `CreateOutcome(Participant,Guid?,ErrorCode)` دارد و persistedid با Guidبازگشتی‌واقعی و کلtree با proposalبرنده مقایسه می‌شود؛ revisionrace دopropسالهٔ سه‌زبانه/Sort/IsActive، دو `OriginalValues["Revision"]=1` واقعی، winnerاز typed outcome، revision exact2، CreatedAtثابت و UpdatedAtجلو‌رفته؛ rollback حالا `TreeSnapshot` کامل (همهroot + همهtranslation با equalityساختاری) قبل/بعد failure و cancellation و retry. `AttemptedWriteCount=2/completed=1` برای هر دو مسیر. اجرای متمرکز: 3/3 PASS، 1.67s. statusفرایندی PARTIAL (یک correction + resetمحیط + rerunثبتtrace). production/migration byte-identical. [نتیجه](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13-R1/RESULT.md).
+
+تصمیم بعدی فقط با Architect: بررسی مستقل این سه اثبات و سپس verdict closureکاتالوگ. تا آن زمان هیچ taskجدید، promotionmanifest،certification،assignmentShipping،UI/API/languagesDB،quote/activation/deployment مجاز نیست؛ TB185متوقف و default-OFF/PendingAllocation دست‌نخورده. پایین تاریخچه است.
+
 ## مرجع جاری پس از R13 / فقط R13-R1
 
 R13 درcode`86c698fe251a1a45095205b7f9dcb272bae866a2` وmain`ad7d7a3c77d55a39358137d63e9d01e25f78aba4` برای phaseschema/storage/rawconstraints/defaulttrace **ACCEPT محدود**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13/ARCHITECT-REVIEW.md). model/current218 وpretype/down192 مستقلاًbyte-equal؛35PASS گزارشWorker،دوcorrectionانحراففرایندی. whole196هنوزبسته‌نیست.

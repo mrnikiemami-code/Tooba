@@ -5,6 +5,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Shipping.Models;
 using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Fulfillment.Infrastructure.Shipping;
 using Xunit;
@@ -346,12 +347,27 @@ public sealed class ShippingTypePostgresStorageTests(
     {
         Require();
         Guid id;
+        TreeSnapshot seeded;
         await using (var seeding = schema.NewContext())
         {
             var store = schema.NewStore(seeding);
-            id = await store.CreateAsync("race_revision", 0, [T(Fa, "اولیه", "اول")], CancellationToken.None);
+            // Every language a contender proposes already exists, so the race exercises pure UPDATE patch
+            // semantics: a loser can only be decided by the STALE REVISION predicate, never masked by a
+            // concurrent unique-violation on a newly inserted translation row.
+            id = await store.CreateAsync("race_revision", 0,
+            [
+                T(Fa, "اولیه", "اول"),
+                T(En, "Initial", "Initial english"),
+                T(Ar, "أولي", null),
+            ], CancellationToken.None);
             Assert.Equal(1, (await store.GetAsync(id, Fa, CancellationToken.None))!.Revision);
+            seeded = await CompleteSnapshotAsync(id);
+            Assert.Equal(3, seeded.Translations.Count);
         }
+
+        // The clock is advanced so the winner's UpdatedAt must actually move: the immutability assertions are
+        // not vacuous.
+        schema.Clock.Advance(TimeSpan.FromMinutes(3));
 
         var gate = new TwoArrivalGate();
         await using var first = schema.NewContext(saveInterceptor: gate);
@@ -364,10 +380,35 @@ public sealed class ShippingTypePostgresStorageTests(
         Assert.Equal(1, firstLoaded!.Revision);
         Assert.Equal(1, secondLoaded!.Revision);
 
-        var firstTask = RunAsync(() => firstStore.UpdateAsync(id, 1, null, 0, true,
-            [T(Fa, "برنده", "متن برنده")], Fa, CancellationToken.None));
-        var secondTask = RunAsync(() => secondStore.UpdateAsync(id, 1, null, 0, false,
-            [T(Fa, "بازنده", "متن بازنده")], Fa, CancellationToken.None));
+        // Two DISTINCT multi-language proposals: different sort, activation and every text, so a hybrid root or
+        // a mixed/extra translation set is detectable.
+        var firstProposal = new
+        {
+            SortOrder = 7,
+            IsActive = true,
+            Translations = new[]
+            {
+                T(Fa, "برنده", "متن برنده"),
+                T(En, "Winner", "Winner text"),
+                T(Ar, "فائز", "نص الفائز"),
+            },
+        };
+        var secondProposal = new
+        {
+            SortOrder = 9,
+            IsActive = false,
+            Translations = new[]
+            {
+                T(Fa, "بازنده", "متن بازنده"),
+                T(En, "Loser", "Loser text"),
+                T(Ar, "خاسر", "نص الخاسر"),
+            },
+        };
+
+        var firstTask = RunTypedAsync("first", () => firstStore.UpdateAsync(id, 1, null,
+            firstProposal.SortOrder, firstProposal.IsActive, firstProposal.Translations, Fa, CancellationToken.None));
+        var secondTask = RunTypedAsync("second", () => secondStore.UpdateAsync(id, 1, null,
+            secondProposal.SortOrder, secondProposal.IsActive, secondProposal.Translations, Fa, CancellationToken.None));
 
         await gate.WaitForBothArrivalsAsync(TimeSpan.FromSeconds(20));
         Assert.Equal(2, gate.Arrivals);
@@ -380,36 +421,74 @@ public sealed class ShippingTypePostgresStorageTests(
 
         gate.Release();
 
-        var firstError = await firstTask;
-        var secondError = await secondTask;
-        Assert.Single(new[] { firstError, secondError }.Where(e => e is not null));
-        var conflict = (firstError ?? secondError)!;
-        Assert.Equal(FulfillmentErrorCodes.ShippingTypeRevisionConflict, conflict.FirstErrorCode);
+        var firstOutcome = await firstTask;
+        var secondOutcome = await secondTask;
+        Assert.Single(new[] { firstOutcome, secondOutcome }.Where(x => x.ErrorCode is not null));
+        var conflictOutcome = (firstOutcome.ErrorCode is not null ? firstOutcome : secondOutcome);
+        Assert.Equal(FulfillmentErrorCodes.ShippingTypeRevisionConflict, conflictOutcome.ErrorCode);
 
-        // Winner identified from the ACTUAL outcome, not from literal text.
-        var winnerIsFirst = firstError is null;
-        var winningName = winnerIsFirst ? "برنده" : "بازنده";
-        var winningDescription = winnerIsFirst ? "متن برنده" : "متن بازنده";
-        var winningActive = winnerIsFirst;
+        // Winner mapped from the ACTUAL result, never from literal text.
+        var winnerOutcome = firstOutcome.ErrorCode is null ? firstOutcome : secondOutcome;
+        Assert.NotNull(winnerOutcome.Revision);
+        Assert.Equal("race_revision", winnerOutcome.Code);
+        var winningProposal = winnerOutcome.Participant == "first" ? firstProposal : secondProposal;
+        Assert.Equal(winningProposal.SortOrder, winnerOutcome.SortOrder);
+        Assert.Equal(winningProposal.IsActive, winnerOutcome.IsActive);
+        output.WriteLine($"winner={winnerOutcome.Participant} revision={winnerOutcome.Revision}");
 
         await using var verify = schema.NewContext();
         var view = await schema.NewStore(verify).GetAsync(id, Fa, CancellationToken.None);
         Assert.Equal(2, view!.Revision);
-        Assert.Equal(winningName, Translation(view, Fa).Name);
-        Assert.Equal(winningDescription, Translation(view, Fa).Description);
-        Assert.Equal(winningActive, view.IsActive);
-        Assert.Equal(2, await schema.ReadRootRevisionAsync(id));
+        Assert.Equal(id, view.ShippingTypeId);
+        Assert.Equal("race_revision", view.Code);
+        Assert.Equal(winningProposal.SortOrder, view.SortOrder);
+        Assert.Equal(winningProposal.IsActive, view.IsActive);
+
+        // COMPLETE persisted tree versus the winning participant's complete proposal.
+        var winnerTree = await CompleteSnapshotAsync(id);
+        Assert.Equal(2, winnerTree.Revision);
+        Assert.Equal(id, winnerTree.Id);
+        Assert.Equal("race_revision", winnerTree.Code);
+        Assert.Equal(winningProposal.SortOrder, winnerTree.SortOrder);
+        Assert.Equal(winningProposal.IsActive, winnerTree.IsActive);
+        Assert.Equal(seeded.CreatedAt, winnerTree.CreatedAt);
+        Assert.NotEqual(seeded.UpdatedAt, winnerTree.UpdatedAt);
+        Assert.True(
+            DateTimeOffset.Parse(winnerTree.UpdatedAt, CultureInfo.InvariantCulture)
+            > DateTimeOffset.Parse(winnerTree.CreatedAt, CultureInfo.InvariantCulture),
+            "the advanced clock must be reflected in the winner's UpdatedAt");
+
+        Assert.Equal(
+            winningProposal.Translations
+                .Select(x => (x.LanguageId, x.Name, x.Description))
+                .OrderBy(x => x.LanguageId),
+            winnerTree.Translations
+                .Select(x => (x.LanguageId, x.Name, x.Description))
+                .OrderBy(x => x.LanguageId));
+        Assert.Equal(winningProposal.Translations.Length, winnerTree.Translations.Count);
 
         // The ACTUAL loser tracker holds no pending edit: a later SaveChanges publishes nothing.
-        var loser = firstError is not null ? first : second;
+        var loser = firstOutcome.ErrorCode is not null ? first : second;
         Assert.Empty(loser.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
-        var beforeSave = await schema.ReadRawAsync(id);
+        var loserView = await schema.NewStore(loser).GetAsync(id, Fa, CancellationToken.None);
+        Assert.Equal(winningProposal.SortOrder, loserView!.SortOrder);
+        Assert.Equal(winningProposal.IsActive, loserView.IsActive);
         Assert.Equal(0, await loser.SaveChangesAsync());
-        var afterSave = await schema.ReadRawAsync(id);
-        Assert.Equal(beforeSave.Revision, afterSave.Revision);
-        Assert.Equal(beforeSave.UpdatedAt, afterSave.UpdatedAt);
-        Assert.Equal(beforeSave.Name, afterSave.Name);
-        Assert.Equal("2", afterSave.Revision);
+        Assert.Equal(winnerTree, await CompleteSnapshotAsync(id));
+        output.WriteLine($"loser pending-entries=0 publisher=0 complete-tree-unchanged=True");
+        SaveTrace("r1-revision-race.txt",
+        [
+            "fact=Strict_original_revision_race_has_one_winner_one_conflict_and_a_clean_loser",
+            $"original-revisions-at-first-SavingChanges={string.Join(",", originalTokens)}",
+            $"typed-outcomes={firstOutcome.Participant}:{(firstOutcome.ErrorCode ?? "success")},{secondOutcome.Participant}:{(secondOutcome.ErrorCode ?? "success")}",
+            $"winner-participant={winnerOutcome.Participant} winner-revision={winnerOutcome.Revision}",
+            $"conflict-participant={conflictOutcome.Participant} conflict-error={conflictOutcome.ErrorCode}",
+            $"seeded-tree={seeded}",
+            $"winner-tree={winnerTree}",
+            $"created-at-unchanged={seeded.CreatedAt == winnerTree.CreatedAt} updated-at-advanced={(seeded.UpdatedAt != winnerTree.UpdatedAt)}",
+            $"translation-count={winnerTree.Translations.Count} languages={string.Join(",", winnerTree.Translations.Select(x => x.LanguageId))}",
+            "loser-pending-entries=0 loser-later-SaveChanges=0 complete-tree-unchanged=True",
+        ]);
     }
 
     [Fact]
@@ -422,41 +501,83 @@ public sealed class ShippingTypePostgresStorageTests(
         var firstStore = schema.NewStore(first);
         var secondStore = schema.NewStore(second);
 
-        var firstTask = RunAsync(() => firstStore.CreateAsync("same_code", 0,
-            [T(Fa, "الف", null), T(En, "Alpha", null)], CancellationToken.None));
-        var secondTask = RunAsync(() => secondStore.CreateAsync("same_code", 0,
-            [T(Fa, "ب", null), T(En, "Beta", null)], CancellationToken.None));
+        // Typed outcomes keep the participant identity AND the ACTUAL Guid returned by CreateAsync.
+        var firstProposal = new[] { T(Fa, "الف", "متن الف"), T(En, "Alpha", "Alpha text") };
+        var secondProposal = new[] { T(Fa, "ب", "متن ب"), T(En, "Beta", "Beta text") };
+
+        var firstTask = RunCreateAsync("first", () => firstStore.CreateAsync("same_code", 3, firstProposal, CancellationToken.None));
+        var secondTask = RunCreateAsync("second", () => secondStore.CreateAsync("same_code", 3, secondProposal, CancellationToken.None));
 
         await gate.WaitForBothArrivalsAsync(TimeSpan.FromSeconds(20));
         Assert.Equal(2, gate.Arrivals);
         gate.Release();
 
-        var firstError = await firstTask;
-        var secondError = await secondTask;
-        Assert.Single(new[] { firstError, secondError }.Where(e => e is not null));
-        var duplicate = (firstError ?? secondError)!;
-        // A raw provider exception masquerading as a canonical duplicate is rejected here.
-        Assert.Equal(FulfillmentErrorCodes.ShippingTypeCodeDuplicate, duplicate.FirstErrorCode);
+        var firstOutcome = await firstTask;
+        var secondOutcome = await secondTask;
 
-        await using var verify = schema.NewContext();
-        var rows = await verify.ShippingTypes
-            .AsNoTracking()
-            .Include(x => x.Translations)
-            .Where(x => x.Code == "same_code")
-            .ToListAsync();
-        var only = Assert.Single(rows);
-        Assert.Equal(2, only.Translations.Count);
-        var faName = only.Translations.Single(x => x.LanguageId == Fa).Name;
-        Assert.Equal(faName == "الف" ? "Alpha" : "Beta",
-            only.Translations.Single(x => x.LanguageId == En).Name);
-        Assert.NotEqual(Guid.Empty, only.ShippingTypeId);
-        output.WriteLine($"winning type id={only.ShippingTypeId} translations={only.Translations.Count}");
+        // Exactly one typed success with a non-empty returned id and one exact canonical duplicate.
+        Assert.Single(new[] { firstOutcome, secondOutcome }.Where(x => x.CreatedId is not null));
+        Assert.Single(new[] { firstOutcome, secondOutcome }.Where(x => x.ErrorCode is not null));
+        var winnerOutcome = firstOutcome.CreatedId is not null ? firstOutcome : secondOutcome;
+        var duplicateOutcome = (firstOutcome.ErrorCode is not null ? firstOutcome : secondOutcome);
+        Assert.Equal(FulfillmentErrorCodes.ShippingTypeCodeDuplicate, duplicateOutcome.ErrorCode);
+        Assert.NotEqual(Guid.Empty, winnerOutcome.CreatedId);
+        var winnerId = winnerOutcome.CreatedId!.Value;
+        var winnerProposal = winnerOutcome.Participant == "first" ? firstProposal : secondProposal;
+        output.WriteLine($"winner={winnerOutcome.Participant} created-id={winnerId}");
 
-        var loser = firstError is not null ? first : second;
+        await using (var verify = schema.NewContext())
+        {
+            var persistedId = await verify.ShippingTypes
+                .AsNoTracking()
+                .Where(x => x.Code == "same_code")
+                .Select(x => x.ShippingTypeId)
+                .SingleAsync();
+            Assert.Equal(winnerId, persistedId);
+
+            var translated = await verify.ShippingTypes
+                .AsNoTracking()
+                .Include(x => x.Translations)
+                .SingleAsync(x => x.ShippingTypeId == winnerId);
+            Assert.Equal(2, translated.Translations.Count);
+            Assert.Equal("same_code", translated.Code);
+            Assert.Equal(3, translated.SortOrder);
+            Assert.False(translated.IsActive);
+            Assert.Equal(1, translated.Revision);
+            Assert.Equal(
+                winnerProposal.Select(x => (x.LanguageId, x.Name, x.Description)).OrderBy(x => x.LanguageId),
+                translated.Translations.Select(x => (x.LanguageId, x.Name, x.Description)).OrderBy(x => x.LanguageId));
+        }
+
+        // COMPLETE persisted tree, read fresh, matches that successful participant's complete proposal.
+        var winnerTree = await CompleteSnapshotAsync("same_code");
+        Assert.Equal(winnerId, winnerTree.Id);
+        Assert.Equal(1, winnerTree.Revision);
+        Assert.Equal(winnerProposal.Length, winnerTree.Translations.Count);
+        Assert.Equal(
+            winnerProposal.Select(x => (x.LanguageId, x.Name, x.Description)).OrderBy(x => x.LanguageId),
+            winnerTree.Translations.Select(x => (x.LanguageId, x.Name, x.Description)).OrderBy(x => x.LanguageId));
+        Assert.All(winnerTree.Translations, row => Assert.Equal(winnerId, row.ShippingTypeId));
+
+        var loser = duplicateOutcome.Participant == "first" ? first : second;
         Assert.Empty(loser.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
         Assert.Equal(0, await loser.SaveChangesAsync());
-        Assert.Equal(1, await verify.ShippingTypes.CountAsync(x => x.Code == "same_code"));
+        Assert.Equal(winnerTree, await CompleteSnapshotAsync("same_code"));
         Assert.Equal(1, await schema.CountRawAsync("same_code"));
+        output.WriteLine($"loser pending-entries=0 publisher=0 complete-tree-unchanged=True translations={winnerTree.Translations.Count}");
+        SaveTrace("r1-unique-race.txt",
+        [
+            "fact=Concurrent_unique_code_create_race_persists_exactly_one_complete_type",
+            "same-code=same_code",
+            $"participants=first,second arrivals={gate.Arrivals}",
+            $"actual-returned-id-winner={winnerId}",
+            $"persisted-root-id={winnerTree.Id} id-equal={(winnerId == winnerTree.Id)}",
+            $"typed-outcomes={firstOutcome.Participant}:{(firstOutcome.ErrorCode ?? "success")},{secondOutcome.Participant}:{(secondOutcome.ErrorCode ?? "success")}",
+            $"duplicate-error={duplicateOutcome.ErrorCode}",
+            $"complete-root={winnerTree}",
+            $"translation-count={winnerTree.Translations.Count}",
+            "loser-pending-entries=0 loser-later-SaveChanges=0 complete-tree-unchanged=True",
+        ]);
     }
 
     [Fact]
@@ -464,14 +585,18 @@ public sealed class ShippingTypePostgresStorageTests(
     {
         Require();
         Guid id;
+        TreeSnapshot before;
         await using (var seeding = schema.NewContext())
         {
             var store = schema.NewStore(seeding);
-            id = await store.CreateAsync("atomicity", 0, [T(Fa, "قدیمی", "متن قدیمی")], CancellationToken.None);
+            // TWO existing translations with distinct descriptions: a same-count/different-content change must fail.
+            id = await store.CreateAsync("atomicity", 2,
+                [T(Fa, "قدیمی", "متن قدیمی"), T(En, "Old", "Old english text")], CancellationToken.None);
+            before = await CompleteSnapshotAsync(id);
         }
 
-        var before = await schema.ReadRawAsync(id);
-        Assert.Equal("1", before.Revision);
+        Assert.Equal(1, before.Revision);
+        Assert.Equal(2, before.Translations.Count);
 
         // TEST-ONLY provider option: MaxBatchSize(1) makes the header and translation separate commands.
         var injected = new InvalidOperationException("injected mid-save failure");
@@ -479,18 +604,15 @@ public sealed class ShippingTypePostgresStorageTests(
         await using (var db = schema.NewContext(commandInterceptor: failure, maxBatchSize: 1))
         {
             var store = schema.NewStore(db);
-            var thrown = await Assert.ThrowsAnyAsync<Exception>(() => store.UpdateAsync(id, 1, null, 0, true,
-                [T(Fa, "تازه", "متن تازه"), T(En, "New", null)], Fa, CancellationToken.None));
+            var thrown = await Assert.ThrowsAnyAsync<Exception>(() => store.UpdateAsync(id, 1, null, 4, true,
+                [T(Fa, "تازه", "متن تازه"), T(En, "New", "New english text")], Fa, CancellationToken.None));
             AssertPropagated(injected, thrown);
-            Assert.True(failure.FirstWriteCompleted,
-                "at least one real write must complete before the injected failure");
-            Assert.NotNull(failure.SecondWriteAttempt);
-            Assert.Equal(1, failure.CompletedWrites.Count);
-            output.WriteLine($"first completed write: {failure.CompletedWrites[0]}");
-            output.WriteLine($"second attempted write (never completed): {failure.SecondWriteAttempt}");
+            AssertFirstWriteCompletedSecondNot(failure);
+            output.WriteLine($"failure: completed={failure.CompletedWrites[0]} | second-attempt={failure.SecondWriteAttempt}");
         }
 
-        await AssertTreeUnchangedAsync(id, before);
+        // COMPLETE persisted tree must be identical after the injected second-write failure.
+        Assert.Equal(before, await CompleteSnapshotAsync(id));
 
         // REAL caller cancellation: the caller's own CTS is actually cancelled at the second-write boundary.
         using var cancellation = new CancellationTokenSource();
@@ -502,30 +624,84 @@ public sealed class ShippingTypePostgresStorageTests(
         {
             var store = schema.NewStore(db);
             var thrown = await Assert.ThrowsAnyAsync<OperationCanceledException>(
-                () => store.UpdateAsync(id, 1, null, 0, true, [T(Fa, "لغو", null)], Fa, cancellation.Token));
+                () => store.UpdateAsync(id, 1, null, 5, false, [T(Fa, "لغو", "متن لغو")], Fa, cancellation.Token));
             Assert.True(cancellation.IsCancellationRequested, "the caller token must be genuinely cancelled");
             Assert.Equal(cancellation.Token, thrown.CancellationToken);
-            Assert.True(cancellationInterceptor.FirstWriteCompleted);
-            output.WriteLine($"cancelled token at second write; first write completed={cancellationInterceptor.FirstWriteCompleted}");
+            AssertFirstWriteCompletedSecondNot(cancellationInterceptor);
+            output.WriteLine($"cancel: completed={cancellationInterceptor.CompletedWrites[0]} | second-attempt={cancellationInterceptor.SecondWriteAttempt}");
         }
 
-        await AssertTreeUnchangedAsync(id, before);
+        // COMPLETE persisted tree must be identical after the real cancellation, BEFORE the retry.
+        Assert.Equal(before, await CompleteSnapshotAsync(id));
 
         await using (var retry = schema.NewContext())
         {
             var store = schema.NewStore(retry);
-            var retried = await store.UpdateAsync(id, 1, null, 0, true,
+            var retried = await store.UpdateAsync(id, 1, null, 6, true,
                 [T(Fa, "بازیابی", "متن بازیابی")], Fa, CancellationToken.None);
             Assert.True(retried.IsActive);
             Assert.Equal(2, retried.Revision);
+            Assert.Equal(6, retried.SortOrder);
             Assert.Equal("بازیابی", Translation(retried, Fa).Name);
             Assert.Equal("متن بازیابی", Translation(retried, Fa).Description);
+            // untouched-language patch semantics: the English row keeps its previous text
+            Assert.Equal("Old english text", Translation(retried, En).Description);
         }
 
-        await using var final = schema.NewContext();
-        var finalView = await schema.NewStore(final).GetAsync(id, Fa, CancellationToken.None);
-        Assert.Equal(2, finalView!.Revision);
-        Assert.Equal(1, finalView.Translations.Count);
+        var final = await CompleteSnapshotAsync(id);
+        Assert.Equal(2, final.Revision);
+        Assert.Equal(6, final.SortOrder);
+        Assert.True(final.IsActive);
+        Assert.Equal(before.CreatedAt, final.CreatedAt);
+        Assert.Equal(2, final.Translations.Count);
+        Assert.Equal("متن بازیابی", final.Translations.Single(x => x.LanguageId == Fa).Description);
+        Assert.Equal("Old english text", final.Translations.Single(x => x.LanguageId == En).Description);
+        output.WriteLine($"retry: revision={final.Revision} sort={final.SortOrder} active={final.IsActive} translations={final.Translations.Count}");
+        SaveTrace("r1-atomicity.txt",
+        [
+            "fact=Mid_save_failure_and_caller_cancellation_roll_back_every_write_and_retry_succeeds",
+            $"seeded-tree={before}",
+            $"injected-failure-first-write={failure.CompletedWrites[0]}",
+            $"injected-failure-second-attempt={failure.SecondWriteAttempt}",
+            $"injected-failure-attempted-writes={failure.AttemptedWriteCount} completed-writes={failure.CompletedWrites.Count}",
+            "injected-failure-complete-tree-unchanged=True",
+            $"cancellation-first-write={cancellationInterceptor.CompletedWrites[0]}",
+            $"cancellation-second-attempt={cancellationInterceptor.SecondWriteAttempt}",
+            $"cancellation-attempted-writes={cancellationInterceptor.AttemptedWriteCount} completed-writes={cancellationInterceptor.CompletedWrites.Count}",
+            $"caller-token-cancelled={cancellation.IsCancellationRequested} propagated-token-equal=True",
+            "cancellation-complete-tree-unchanged=True",
+            $"retry-tree={final}",
+            "retry-untouched-language-english-description-preserved=True",
+        ]);
+    }
+
+    private static void AssertFirstWriteCompletedSecondNot(StatementFailureInterceptor interceptor)
+    {
+        Assert.True(interceptor.FirstWriteCompleted, "the FIRST real write must complete");
+        Assert.Equal(1, interceptor.CompletedWrites.Count);
+        Assert.Equal(2, interceptor.AttemptedWriteCount);
+        Assert.NotNull(interceptor.SecondWriteAttempt);
+        Assert.True(
+            interceptor.SecondWriteAttempt!.StartsWith("UPDATE ", StringComparison.OrdinalIgnoreCase)
+            || interceptor.SecondWriteAttempt.StartsWith("INSERT ", StringComparison.OrdinalIgnoreCase)
+            || interceptor.SecondWriteAttempt.StartsWith("DELETE ", StringComparison.OrdinalIgnoreCase),
+            "the second attempted statement must be a real write");
+    }
+
+    /// <summary>Persists a narrowly sanitized case trace (task-owned synthetic ids/text only, no credentials).</summary>
+    private static void SaveTrace(string fileName, IEnumerable<string> lines)
+    {
+        var directory = Environment.GetEnvironmentVariable("TB196R6_EVIDENCE_DIR");
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            throw new InvalidOperationException(
+                "TB196R6_EVIDENCE_DIR is required: the three-fact proof must persist its case trace.");
+        }
+
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(
+            Path.Combine(directory, fileName),
+            string.Join(Environment.NewLine, lines) + Environment.NewLine);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -586,16 +762,49 @@ public sealed class ShippingTypePostgresStorageTests(
     // Helpers
     // ---------------------------------------------------------------------------------------------
 
-    private async Task AssertTreeUnchangedAsync(Guid id, RawRow before)
+    /// <summary>
+    /// COMPLETE persisted tree read through a NEW context: every root column and EVERY translation row in a
+    /// stable order. Reference equality is never used; records compare structurally, so a same-count but
+    /// different-content change cannot pass.
+    /// </summary>
+    private async Task<TreeSnapshot> CompleteSnapshotAsync(Guid id)
     {
-        var after = await schema.ReadRawAsync(id);
-        Assert.Equal(before.Revision, after.Revision);
-        Assert.Equal(before.UpdatedAt, after.UpdatedAt);
-        Assert.Equal(before.CreatedAt, after.CreatedAt);
-        Assert.Equal(before.Name, after.Name);
-        Assert.Equal(before.Description, after.Description);
-        Assert.Equal(before.TranslationCount, after.TranslationCount);
+        await using var context = schema.NewContext();
+        var entity = await context.ShippingTypes
+            .AsNoTracking()
+            .Include(x => x.Translations)
+            .SingleAsync(x => x.ShippingTypeId == id);
+        return Snapshot(entity);
     }
+
+    private async Task<TreeSnapshot> CompleteSnapshotAsync(string code)
+    {
+        await using var context = schema.NewContext();
+        var entity = await context.ShippingTypes
+            .AsNoTracking()
+            .Include(x => x.Translations)
+            .SingleAsync(x => x.Code == code);
+        return Snapshot(entity);
+    }
+
+    private static TreeSnapshot Snapshot(ShippingType entity) =>
+        new(
+            entity.ShippingTypeId,
+            entity.Code,
+            entity.SortOrder,
+            entity.IsActive,
+            entity.Revision,
+            entity.CreatedAt.ToString("O", CultureInfo.InvariantCulture),
+            entity.UpdatedAt.ToString("O", CultureInfo.InvariantCulture),
+            entity.Translations
+                .OrderBy(x => x.LanguageId)
+                .Select(x => new TranslationSnapshot(
+                    x.ShippingTypeTranslationId,
+                    x.ShippingTypeId,
+                    x.LanguageId,
+                    x.Name,
+                    x.Description))
+                .ToArray());
 
     private static void AssertPropagated(Exception expected, Exception observed)
     {
@@ -620,20 +829,44 @@ public sealed class ShippingTypePostgresStorageTests(
         }
     }
 
-    private static async Task<ObservedFailure?> RunAsync(Func<Task> action)
+    /// <summary>
+    /// Typed outcome for the revision race: keeps the participant identity, the canonical business error AND the
+    /// actual view returned by the winning <c>UpdateAsync</c> call.
+    /// </summary>
+    private static async Task<UpdateOutcome> RunTypedAsync(string participant, Func<Task<ShippingTypeView>> action)
     {
         try
         {
-            await action();
-            return null;
+            var view = await action();
+            return new UpdateOutcome(participant, view.Code, view.SortOrder, view.IsActive, view.Revision, null);
         }
         catch (SemanticException exception)
         {
-            return new ObservedFailure(exception.Error.Code);
+            return new UpdateOutcome(participant, null, 0, false, null, exception.Error.Code);
         }
         catch (Exception exception)
         {
-            return new ObservedFailure(exception.GetType().FullName ?? "unknown");
+            return new UpdateOutcome(participant, null, 0, false, null, exception.GetType().FullName ?? "unknown");
+        }
+    }
+
+    /// <summary>
+    /// Typed outcome for the unique-create race: keeps the participant identity and the ACTUAL Guid returned by
+    /// <c>CreateAsync</c> on success. A raw provider exception can never masquerade as a canonical code.
+    /// </summary>
+    private static async Task<CreateOutcome> RunCreateAsync(string participant, Func<Task<Guid>> action)
+    {
+        try
+        {
+            return new CreateOutcome(participant, await action(), null);
+        }
+        catch (SemanticException exception)
+        {
+            return new CreateOutcome(participant, null, exception.Error.Code);
+        }
+        catch (Exception exception)
+        {
+            return new CreateOutcome(participant, null, $"{exception.GetType().FullName}: {exception.Message}");
         }
     }
 
@@ -646,5 +879,85 @@ public sealed class ShippingTypePostgresStorageTests(
     private static ShippingTypePreparedTranslation T(Guid languageId, string name, string? description) =>
         new(languageId, name, description);
 
-    private sealed record ObservedFailure(string FirstErrorCode);
+    private sealed record UpdateOutcome(
+        string Participant,
+        string? Code,
+        int SortOrder,
+        bool IsActive,
+        long? Revision,
+        string? ErrorCode);
+
+    private sealed record CreateOutcome(string Participant, Guid? CreatedId, string? ErrorCode);
+
+    private sealed record TranslationSnapshot(
+        Guid TranslationId,
+        Guid ShippingTypeId,
+        Guid LanguageId,
+        string Name,
+        string? Description);
+
+    /// <summary>
+    /// COMPLETE persisted tree snapshot with STRUCTURAL equality: every root column plus every translation row
+    /// compared by value (never by reference identity of the collection), so a same-count but different-content
+    /// change cannot pass.
+    /// </summary>
+    private sealed class TreeSnapshot : IEquatable<TreeSnapshot>
+    {
+        public TreeSnapshot(
+            Guid id,
+            string code,
+            int sortOrder,
+            bool isActive,
+            long revision,
+            string createdAt,
+            string updatedAt,
+            IReadOnlyList<TranslationSnapshot> translations)
+        {
+            Id = id;
+            Code = code;
+            SortOrder = sortOrder;
+            IsActive = isActive;
+            Revision = revision;
+            CreatedAt = createdAt;
+            UpdatedAt = updatedAt;
+            Translations = translations;
+        }
+
+        public Guid Id { get; }
+
+        public string Code { get; }
+
+        public int SortOrder { get; }
+
+        public bool IsActive { get; }
+
+        public long Revision { get; }
+
+        public string CreatedAt { get; }
+
+        public string UpdatedAt { get; }
+
+        public IReadOnlyList<TranslationSnapshot> Translations { get; }
+
+        public bool Equals(TreeSnapshot? other) =>
+            other is not null
+            && Id == other.Id
+            && string.Equals(Code, other.Code, StringComparison.Ordinal)
+            && SortOrder == other.SortOrder
+            && IsActive == other.IsActive
+            && Revision == other.Revision
+            && string.Equals(CreatedAt, other.CreatedAt, StringComparison.Ordinal)
+            && string.Equals(UpdatedAt, other.UpdatedAt, StringComparison.Ordinal)
+            && Translations.SequenceEqual(other.Translations);
+
+        public override bool Equals(object? obj) => Equals(obj as TreeSnapshot);
+
+        public override int GetHashCode() =>
+            HashCode.Combine(Id, Code, SortOrder, IsActive, Revision, CreatedAt, UpdatedAt, Translations.Count);
+
+        public override string ToString() =>
+            $"TreeSnapshot {{ Id = {Id}, Code = {Code}, SortOrder = {SortOrder}, IsActive = {IsActive},"
+            + $" Revision = {Revision}, CreatedAt = {CreatedAt}, UpdatedAt = {UpdatedAt},"
+            + $" Translations = [{string.Join(" | ", Translations.Select(x => $"{x.LanguageId}:{x.Name}:{x.Description ?? "<null>"}"))}] }}";
+    }
 }

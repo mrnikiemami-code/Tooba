@@ -1,0 +1,13 @@
+fact=Mid_save_failure_and_caller_cancellation_roll_back_every_write_and_retry_succeeds
+seeded-tree=TreeSnapshot { Id = 01900000-0000-7000-8000-00cc0000000b, Code = atomicity, SortOrder = 2, IsActive = False, Revision = 1, CreatedAt = 2026-10-22T12:03:00.0000000+00:00, UpdatedAt = 2026-10-22T12:03:00.0000000+00:00, Translations = [01900000-0000-7000-8000-00000000cc01:قدیمی:متن قدیمی | 01900000-0000-7000-8000-00000000cc02:Old:Old english text] }
+injected-failure-first-write=UPDATE fulfillment.shipping_type_translations SET description = @p0, name = @p1 WHERE shipping_type_translation_id = @p2; 
+injected-failure-second-attempt=UPDATE fulfillment.shipping_type_translations SET description = @p0, name = @p1 WHERE shipping_type_translation_id = @p2; 
+injected-failure-attempted-writes=2 completed-writes=1
+injected-failure-complete-tree-unchanged=True
+cancellation-first-write=UPDATE fulfillment.shipping_type_translations SET description = @p0, name = @p1 WHERE shipping_type_translation_id = @p2; 
+cancellation-second-attempt=UPDATE fulfillment.shipping_types SET revision = @p0, sort_order = @p1 WHERE shipping_type_id = @p2 AND revision = @p3; 
+cancellation-attempted-writes=2 completed-writes=1
+caller-token-cancelled=True propagated-token-equal=True
+cancellation-complete-tree-unchanged=True
+retry-tree=TreeSnapshot { Id = 01900000-0000-7000-8000-00cc0000000b, Code = atomicity, SortOrder = 6, IsActive = True, Revision = 2, CreatedAt = 2026-10-22T12:03:00.0000000+00:00, UpdatedAt = 2026-10-22T12:03:00.0000000+00:00, Translations = [01900000-0000-7000-8000-00000000cc01:بازیابی:متن بازیابی | 01900000-0000-7000-8000-00000000cc02:Old:Old english text] }
+retry-untouched-language-english-description-preserved=True

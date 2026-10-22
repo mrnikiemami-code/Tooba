@@ -176,3 +176,23 @@ All identical to the accepted R11/R12 state; `git status` confirms zero diff out
 Whole TB-196 remains `PENDING_ARCHITECT_REVIEW` — bounded catalog relational evidence is complete, but liveregistry, UI, Shipping assignment and runtime quote are not delivered, and no module certification/manifest
 promotion is claimed. `Production-Functional-Acceptance: PENDING`. TB-185 untouched; default-OFF/
 PendingAllocation and all shared services intact.
+
+## 15. Correction appended after ARCHITECT-REVIEW (2026-10-22)
+
+Append-only correction; the section above is preserved as historical worker evidence and is **not** rewritten.
+The Architect review (`ARCHITECT-REVIEW.md`, review of `ad7d7a3c`) accepted the phased schema/storage/raw
+constraint/default-trace work and marked three winner/full-tree claims as overstated. For those three facts,
+the claims in sections 3–6 above **exceeded what the source actually asserted**, and they are superseded by
+`TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13-R1/RESULT.md`:
+
+1. the unique-create race did not capture `CreateAsync`'s returned `Guid` (it printed an id read back from the
+   database) and its translation check branched on stored text;
+2. the revision race asserted only the Fa translation plus revision/isActive, not the complete translation
+   set, SortOrder, immutable fields or timestamps;
+3. the rollback check compared a single selected translation plus a row count, and did not explicitly assert
+   the cancellation second write as attempted-but-not-completed.
+
+Everything else accepted in the review is unchanged and is not re-run or re-claimed: phase chronology
+`192 → 217 → 218 → 0-differences` with inverse Down `217 → 192`, raw snake_case storage facts, exact constraint
+ownership, and the R12 historical-default trace remain as accepted. Whole TB-196 stays
+`PENDING_ARCHITECT_REVIEW`; no manifest promotion or certification is claimed.

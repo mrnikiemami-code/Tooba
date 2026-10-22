@@ -997,6 +997,18 @@ public sealed class StatementFailureInterceptor(
         }
     }
 
+    /// <summary>Count of REAL write statements attempted (reads are excluded).</summary>
+    public int AttemptedWriteCount
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _writes;
+            }
+        }
+    }
+
     /// <summary>The second real write that was attempted but never completed.</summary>
     public string? SecondWriteAttempt
     {

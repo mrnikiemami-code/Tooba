@@ -1,0 +1,10 @@
+fact=Strict_original_revision_race_has_one_winner_one_conflict_and_a_clean_loser
+original-revisions-at-first-SavingChanges=1,1
+typed-outcomes=first:success,second:shipping_type.revision_conflict
+winner-participant=first winner-revision=2
+conflict-participant=second conflict-error=shipping_type.revision_conflict
+seeded-tree=TreeSnapshot { Id = 01900000-0000-7000-8000-00cc00000001, Code = race_revision, SortOrder = 0, IsActive = False, Revision = 1, CreatedAt = 2026-10-22T12:00:00.0000000+00:00, UpdatedAt = 2026-10-22T12:00:00.0000000+00:00, Translations = [01900000-0000-7000-8000-00000000cc01:اولیه:اول | 01900000-0000-7000-8000-00000000cc02:Initial:Initial english | 01900000-0000-7000-8000-00000000cc03:أولي:<null>] }
+winner-tree=TreeSnapshot { Id = 01900000-0000-7000-8000-00cc00000001, Code = race_revision, SortOrder = 7, IsActive = True, Revision = 2, CreatedAt = 2026-10-22T12:00:00.0000000+00:00, UpdatedAt = 2026-10-22T12:03:00.0000000+00:00, Translations = [01900000-0000-7000-8000-00000000cc01:برنده:متن برنده | 01900000-0000-7000-8000-00000000cc02:Winner:Winner text | 01900000-0000-7000-8000-00000000cc03:فائز:نص الفائز] }
+created-at-unchanged=True updated-at-advanced=True
+translation-count=3 languages=01900000-0000-7000-8000-00000000cc01,01900000-0000-7000-8000-00000000cc02,01900000-0000-7000-8000-00000000cc03
+loser-pending-entries=0 loser-later-SaveChanges=0 complete-tree-unchanged=True
