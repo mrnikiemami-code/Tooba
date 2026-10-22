@@ -2459,6 +2459,85 @@
       "evidence": "docs/architecture/evidence/TB-TMAR-WALLET-AMSC-001-W3/certification.md",
       "structureAuthorityCommit": "779cd2f4f08cbc5bd90741384d8cef7d4a049e96",
       "structureHandoffState": "READY_FOR_CERTIFY_CONSUMED_BY_W3"
+    },
+    {
+      "module": "Shipping",
+      "structureCertified": false,
+      "lockVersion": "ARCH-COMPLETE-002",
+      "certificationNote": "NON-CERTIFIED physical-structure entry recorded by the AMSC W2 structure wave TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2 over the existing Shipping foundation (lineage W0 analysis -> W1 canonical errors/edition guard 7e6b1479 -> W2 structure). This entry records only the physical baseline that Structure verified; it is NOT a certification, NOT a COMPLETE_REFERENCE_PATTERN verdict and does not activate any feature, marketplace authoring, owner/region/taxonomy rule or business requirement D1-D7. Shipping is HTTP_OWNING: the module owns real /v1/admin routes mapped by ShippingEndpointModule.MapShippingEndpoints under the single /v1/admin group (rates/coverage, method financial status, operating schedule, packaging policy, operational quote). W2 corrected exactly one physical defect: the ShippingEndpointModule composition class was housed inside Admin/ShippingRateCoverageEndpoints.cs; it now lives at the project root as the canonical composition entry with namespace Tooba.Shipping.Endpoints, and the route-mapping/registration behavior, route count, order and DI lifetimes are unchanged. Folder granularity is capability-first shallow (Contracts/Domain/Application/Infrastructure/Endpoints capability folders with technical axes only as secondary axes; zero per-use-case single-file request leaves), path<->namespace is exact, and the canonical /Modules/Shipping/ solution group holds the six projects once each. Known non-structural blockers stay open and are not represented here as solved: the pre-existing OperationalQuoteCompatibilityTests failure (three Order consumers), and the unimplemented D1-D7 business requirements.",
+      "projects": [
+        {
+          "projectName": "Tooba.Shipping.Application",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Shipping.Application has no root .cs: the capability folders Operations/Packaging/Rates/Scheduling carry Commands/Queries/Ports/ReadModels/Validation as secondary axes plus the cross-capability Validation/ seam; zero per-use-case leaf folders; path<->namespace exact.",
+          "forbiddenRootFiles": [],
+          "forbiddenTopLevelFolders": [
+            "Commands",
+            "Queries",
+            "Validators",
+            "Models",
+            "Ports"
+          ]
+        },
+        {
+          "projectName": "Tooba.Shipping.Domain",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Shipping.Domain has no root .cs: Aggregates/ holds the four aggregates and Operations/Packaging/Rates/Scheduling hold the pure evaluators, with exact path-derived namespaces.",
+          "forbiddenRootFiles": [
+            "ShippingRatePolicy.cs",
+            "ShippingMethodCoverage.cs",
+            "ShippingCoverageGrant.cs",
+            "ShippingPackagingPolicy.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Shipping.Contracts",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Shipping.Contracts has no root .cs: Errors/ carries the single stable-code home and Admin/Operations/Packaging/Rates/Scheduling carry the boundary contracts.",
+          "forbiddenRootFiles": [
+            "ShippingErrorCodes.cs",
+            "ShippingAdminContracts.cs",
+            "ShippingRatePolicyContracts.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        },
+        {
+          "projectName": "Tooba.Shipping.Infrastructure",
+          "rootAllowlist": [],
+          "rootAllowlistJustification": "Shipping.Infrastructure has no root .cs: module DI lives under DependencyInjection/ShippingModule.cs, the capability adapters under Operations/Packaging/Rates/Scheduling, and the EF model plus the CLI-applied migrations under Persistence/ and Persistence/Migrations/; path<->namespace exact.",
+          "forbiddenRootFiles": [
+            "ShippingModule.cs",
+            "ShippingDbContext.cs"
+          ],
+          "forbiddenTopLevelFolders": [
+            "Migrations",
+            "Directories"
+          ]
+        },
+        {
+          "projectName": "Tooba.Shipping.Endpoints",
+          "rootAllowlist": [
+            "ShippingEndpointModule.cs"
+          ],
+          "rootAllowlistJustification": "Composition entry only: ShippingEndpointModule at the project root maps the module-owned /v1/admin routes and registers the single error catalog contributor plus the single error resource set; Admin/ holds the route groups and the authorizer seam, Errors/ the catalog contributor and Resources/ the bilingual resx set; namespace alignment is exact path-derived equality.",
+          "forbiddenRootFiles": [
+            "ShippingRateCoverageEndpoints.cs",
+            "ShippingMethodFinancialStatusEndpoints.cs",
+            "ShippingOperatingScheduleEndpoints.cs",
+            "ShippingPackagingPolicyEndpoints.cs",
+            "ShippingOperationalQuoteEndpoints.cs",
+            "ShippingAdminAuthorizer.cs",
+            "ShippingErrorCatalogContributor.cs",
+            "ShippingErrorResources.cs"
+          ],
+          "forbiddenTopLevelFolders": []
+        }
+      ],
+      "structureAuthorityTask": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2",
+      "structureHandoffState": "READY_FOR_CERTIFY_PENDING_ARCHITECT_REVIEW",
+      "certificationState": "NOT_CERTIFIED",
+      "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2/RESULT.md"
     }
   ],
   "uncertifiedHttpOwningModules": [],
