@@ -171,11 +171,13 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
 
                     b.Property<decimal>("QuantityPacked")
                         .HasColumnType("numeric(18,6)")
-                        .HasColumnName("quantity_packed");
+                        .HasColumnName("quantity_packed")
+                        .HasDefaultValueSql("0");
 
                     b.Property<decimal>("QuantityProcessing")
                         .HasColumnType("numeric(18,6)")
-                        .HasColumnName("quantity_processing");
+                        .HasColumnName("quantity_processing")
+                        .HasDefaultValueSql("0");
 
                     b.Property<decimal>("QuantityShipped")
                         .HasColumnType("numeric(18,6)")
@@ -420,6 +422,7 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("ProviderMetadataVersion")
                         .HasColumnType("integer")
+                        .HasDefaultValue(0)
                         .HasColumnName("provider_metadata_version");
 
                     b.Property<Guid?>("ShippingGroupId")
@@ -430,12 +433,14 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
+                        .HasDefaultValue("")
                         .HasColumnName("shipping_method_code");
 
                     b.Property<string>("ShippingMethodLabel")
                         .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
+                        .HasDefaultValue("")
                         .HasColumnName("shipping_method_label");
 
                     b.Property<string>("Status")

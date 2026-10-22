@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
 using Tooba.Fulfillment.Domain.Aggregates;
@@ -130,8 +130,8 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.FulfillmentItemId).ValueGeneratedNever();
             entity.Property(x => x.FulfillmentId);
             entity.Property(x => x.QuantityOrdered).HasColumnType("numeric(18,6)");
-            entity.Property(x => x.QuantityProcessing).HasColumnType("numeric(18,6)");
-            entity.Property(x => x.QuantityPacked).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.QuantityProcessing).HasColumnType("numeric(18,6)").HasDefaultValueSql("0").ValueGeneratedNever();
+            entity.Property(x => x.QuantityPacked).HasColumnType("numeric(18,6)").HasDefaultValueSql("0").ValueGeneratedNever();
             entity.Property(x => x.QuantityShipped).HasColumnType("numeric(18,6)");
             entity.HasIndex(x => x.FulfillmentId);
             entity.HasIndex(x => x.ShippingGroupId).HasFilter("shipping_group_id IS NOT NULL");
@@ -160,9 +160,10 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.ShipmentId).ValueGeneratedNever();
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.CarrierDisplayName).HasMaxLength(128);
-            entity.Property(x => x.ShippingMethodCode).HasMaxLength(64);
-            entity.Property(x => x.ShippingMethodLabel).HasMaxLength(128);
+            entity.Property(x => x.ShippingMethodCode).HasMaxLength(64).HasDefaultValue(string.Empty).ValueGeneratedNever();
+            entity.Property(x => x.ShippingMethodLabel).HasMaxLength(128).HasDefaultValue(string.Empty).ValueGeneratedNever();
             entity.Property(x => x.ProviderMetadataJson).HasColumnType("text");
+            entity.Property(x => x.ProviderMetadataVersion).HasDefaultValue(0).ValueGeneratedNever();
             entity.Property(x => x.TrackingReference).HasMaxLength(128);
             entity.Property(x => x.PreviousTrackingReference).HasMaxLength(128);
             entity.Property(x => x.ShippingGroupId);

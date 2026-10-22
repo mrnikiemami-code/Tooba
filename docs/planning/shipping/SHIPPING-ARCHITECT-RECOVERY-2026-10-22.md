@@ -606,3 +606,25 @@ primary manifest re-read byte-equal and the R10 pending index is present on both
 (no `HasDefaultValue`/value-generation/insert-behavior change) and stay visible as differences. Container removed;
 55436 has no listener. TB-196 stays BLOCKED_PENDING_DEFAULTS_AND_RELATIONAL_ACCEPTANCE; worker PASS is not Architect
 ACCEPT; no customer-facing or deployed-schema claim; STOP_FOR_ARCHITECT; no automatic next task.
+## Worker pointer — TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R12 (PARTIAL, process limits declared)
+
+R12 described the five remaining historical server defaults on the current model for exactly the five existing
+Fulfillment properties, keeping explicit-write semantics: `ValueGenerated` stays `Never` and before/after save
+behavior stays `Save`, proven by a real EF/Npgsql INSERT harness on a disposable historical target (zero/empty and
+non-default values for all five, explicit column list, no `DEFAULT` token, new-context readback unchanged, explicit
+NULL still rejected with 23502, raw omit-column writers still receiving the server defaults). Baseline was captured
+before the mapping change and the post-change cases are asserted equal to it. The two `numeric(18,6)` properties use
+`HasDefaultValueSql(""0"")` instead of typed `HasDefaultValue` because typed decimal formatting emits `0.0` (a
+different default expression) and expression normalisation is forbidden; the three others use typed
+`HasDefaultValue`. Metadata was regenerated with the existing tooling into only the snapshot and the R10 designer
+`BuildTargetModel`; the scaffold DDL was never applied or retained; every executable migration and older designer is
+byte-identical (R10 `C6600940CBEF7D07`, ShippingTypeCatalog `979328491371CD0F`/designer `50098BD09979F5F8`).
+On a fresh `postgres:17-alpine` (127.0.0.1:55436) the real unchanged chain through R10 produced a 218-entry own-schema
+manifest identical in both directions to the 218-entry manifest of the current canonical model projected by
+`GenerateCreateScript` — **residual 0, strict `Assert.Equal` on the whole manifest, the five defaults present on both
+sides**, with migration-history objects excluded by exact (schema, table) identity for columns, constraints and indexes.
+The old residual classifier was replaced by that strict equality contract. Focused suites: 8 passed / 0 failed.
+Declared deviations: 4 harness-only corrections (budget was 1) and a hard-timebox overrun (~75 min vs 35), so the
+result is reported PARTIAL despite complete green evidence. Container removed and 55436 has no listener. Whole TB-196
+remains BLOCKED_PENDING_FULL_RELATIONAL_ACCEPTANCE; the old full-schema fixture, storage/unique/race/atomicity gates
+were not run; worker result is not Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.

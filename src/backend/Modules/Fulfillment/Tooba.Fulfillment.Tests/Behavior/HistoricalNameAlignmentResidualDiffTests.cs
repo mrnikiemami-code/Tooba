@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -45,6 +45,7 @@ public sealed class HistoricalNameAlignmentResidualDiffTests(ITestOutputHelper o
         left join pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum
         where c.relkind in ('r', 'p') and a.attnum > 0 and not a.attisdropped
           and n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
+          and not (n.nspname = 'fulfillment' and c.relname = '__ef_migrations_history')
         union all
         select format('constraint %s.%s %s %s',
                       n.nspname, c.relname, con.conname, pg_get_constraintdef(con.oid))
@@ -52,12 +53,14 @@ public sealed class HistoricalNameAlignmentResidualDiffTests(ITestOutputHelper o
         join pg_class c on c.oid = con.conrelid
         join pg_namespace n on n.oid = c.relnamespace
         where n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
+          and not (n.nspname = 'fulfillment' and c.relname = '__ef_migrations_history')
         union all
         select format('index %s %s', n.nspname, pg_get_indexdef(i.indexrelid))
         from pg_index i
         join pg_class c on c.oid = i.indrelid
         join pg_namespace n on n.oid = c.relnamespace
         where n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
+          and not (n.nspname = 'fulfillment' and c.relname = '__ef_migrations_history')
         order by 1
         """;
 
@@ -71,7 +74,7 @@ public sealed class HistoricalNameAlignmentResidualDiffTests(ITestOutputHelper o
     ];
 
     [Fact]
-    public async Task Historical_schema_differs_from_the_current_model_only_by_the_five_known_defaults()
+    public async Task Historical_schema_is_strictly_identical_to_the_current_model_including_the_five_defaults()
     {
         var target = RequireTarget();
         var modelTarget = RequireModelTarget();
@@ -108,41 +111,22 @@ public sealed class HistoricalNameAlignmentResidualDiffTests(ITestOutputHelper o
         var modelManifest = await ManifestAsync(modelTarget);
         Record($"model manifest objects={modelManifest.Count}");
 
-        // --- residual classification ------------------------------------------------------------------
+        // --- strict whole-manifest equality (no classifier, no allow-list) -----------------------------
         var missingInModel = beforeManifest.Except(modelManifest, StringComparer.Ordinal).ToList();
         var unexpectedInModel = modelManifest.Except(beforeManifest, StringComparer.Ordinal).ToList();
-        var defaults = new List<string>();
-        var residual = new List<string>();
+        Assert.Empty(missingInModel);
+        Assert.Empty(unexpectedInModel);
+        Assert.Equal(beforeManifest, modelManifest);
+        Assert.Equal(beforeManifest.Order(StringComparer.Ordinal), modelManifest.Order(StringComparer.Ordinal));
 
-        foreach (var line in missingInModel)
+        // the five historical default expressions now exist identically on both sides
+        foreach (var expected in ExpectedDefaultPairs)
         {
-            var expectedColumn = ExpectedDefaultPairs
-                .SingleOrDefault(d => line.StartsWith(d[..d.IndexOf(" default:", StringComparison.Ordinal)], StringComparison.Ordinal));
-            var counterpart = expectedColumn is null ? null : unexpectedInModel.FirstOrDefault(u =>
-                u.StartsWith(line[..line.IndexOf(" default:", StringComparison.Ordinal)], StringComparison.Ordinal));
-            if (expectedColumn is null || counterpart is null)
-            {
-                residual.Add($"missing-in-model: {line}");
-                continue;
-            }
-
-            defaults.Add($"missing-in-model: {line}");
-            defaults.Add($"unexpected-in-model: {counterpart}");
-            unexpectedInModel.Remove(counterpart);
+            Assert.Contains(beforeManifest, x => x == expected);
+            Assert.Contains(modelManifest, x => x == expected);
         }
 
-        residual.AddRange(unexpectedInModel.Select(x => $"unexpected-in-model: {x}"));
-        residual.Sort(StringComparer.Ordinal);
-        defaults.Sort(StringComparer.Ordinal);
-
-        Assert.Empty(residual);
-        Assert.Equal(ExpectedDefaultPairs.Length * 2, defaults.Count);
-        Assert.Equal(
-            ExpectedDefaultPairs.Order(StringComparer.Ordinal),
-            defaults.Where(x => x.StartsWith("missing-in-model:", StringComparison.Ordinal))
-                .Select(x => x["missing-in-model: ".Length..])
-                .Order(StringComparer.Ordinal));
-        Record($"residual={residual.Count} default-lines={defaults.Count}");
+        Record($"residual={missingInModel.Count + unexpectedInModel.Count} strict-equal=True defaults-both-sides={ExpectedDefaultPairs.Length}");
 
         // every check and every historical object name must now agree exactly
         foreach (var name in new[]
@@ -174,7 +158,7 @@ public sealed class HistoricalNameAlignmentResidualDiffTests(ITestOutputHelper o
             Directory.CreateDirectory(evidence);
             File.WriteAllText(Path.Combine(evidence, "manifest-primary.txt"), string.Join(Environment.NewLine, beforeManifest) + Environment.NewLine);
             File.WriteAllText(Path.Combine(evidence, "manifest-model.txt"), string.Join(Environment.NewLine, modelManifest) + Environment.NewLine);
-            File.WriteAllText(Path.Combine(evidence, "residual-default-lines.txt"), string.Join(Environment.NewLine, defaults) + Environment.NewLine);
+            File.WriteAllText(Path.Combine(evidence, "strict-diff.txt"), "both directions empty; whole manifests equal" + Environment.NewLine);
             File.WriteAllText(Path.Combine(evidence, "model-only-create.sql"), createScript);
             File.WriteAllText(Path.Combine(evidence, "residual-diff.log"), string.Join(Environment.NewLine, log) + Environment.NewLine);
         }
@@ -248,20 +232,8 @@ public sealed class HistoricalNameAlignmentResidualDiffTests(ITestOutputHelper o
         await using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            var line = reader.GetString(0).ReplaceLineEndings(" ");
-            // Exclusion by exact table identity only (never by broad tokens).
-            if (line.Contains($" fulfillment.{HistoryTable}", StringComparison.Ordinal)
-                && !line.StartsWith($"column fulfillment.{HistoryTable}.", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            if (line.StartsWith($"column fulfillment.{HistoryTable}.", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            lines.Add(line);
+            // History objects are already excluded by exact (schema, table) identity in the catalog query.
+            lines.Add(reader.GetString(0).ReplaceLineEndings(" "));
         }
 
         lines.Sort(StringComparer.Ordinal);

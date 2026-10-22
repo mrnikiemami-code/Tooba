@@ -1,0 +1,14 @@
+mapping ProviderMetadataVersion:generated=Never,before=Save,after=Save,default=0 QuantityPacked:generated=Never,before=Save,after=Save,default=0 QuantityProcessing:generated=Never,before=Save,after=Save,default=0 ShippingMethodCode:generated=Never,before=Save,after=Save,default=<none> ShippingMethodLabel:generated=Never,before=Save,after=Save,default=<none>
+case=items.quantity_packed:zero explicit-column=True default-keyword=False readback=0.000000
+case=items.quantity_packed:nondefault explicit-column=True default-keyword=False readback=2.500000
+case=items.quantity_processing:zero explicit-column=True default-keyword=False readback=0.000000
+case=items.quantity_processing:nondefault explicit-column=True default-keyword=False readback=4.250000
+case=shipments.provider_metadata_version:zero explicit-column=True default-keyword=False readback=0
+case=shipments.provider_metadata_version:nondefault explicit-column=True default-keyword=False readback=7
+case=shipments.shipping_method_code:zero explicit-column=True default-keyword=False readback=
+case=shipments.shipping_method_code:nondefault explicit-column=True default-keyword=False readback=post:express
+case=shipments.shipping_method_label:zero explicit-column=True default-keyword=False readback=
+case=shipments.shipping_method_label:nondefault explicit-column=True default-keyword=False readback=Express
+explicit-null: 23502 rejected, no row substituted
+raw-omit-column: version=0 code='' label='' packed=0.000000 processing=0.000000
+raw-explicit-null: 23502 rejected

@@ -1,0 +1,6 @@
+target host=127.0.0.1 port=55436 role=tb196 db=fulfillment_tb196
+target host=127.0.0.1 port=55436 role=tb196 db=fulfillment_tb196_model
+primary manifest objects=218
+model manifest objects=218
+residual=0 strict-equal=True defaults-both-sides=5
+primary re-read equal=True (no DDL beyond its own migration chain)
