@@ -1,5 +1,42 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+
+## آخرین checkpoint برای بازیابی چت — درخواست مستقیم مالک، 2026-10-22
+
+این بخش مرجع جاری است؛ توضیحات پایین تاریخچه‌اند. هدف: تکمیل Admin Shipping، سپس Storefront و استقرار. Backend/Frontend clean architecture و AMSC/feature skills اجباری؛ فقط یک تسک دانلودی با preview در هر نوبت، بعد انتظار نتیجه و بررسی مستقل. Worker PASS برابر Architect ACCEPT نیست.
+
+### دقیقاً کجا هستیم
+- ریپو mrnikiemami-code/Tooba، شاخه main. آخرین کد بررسی‌شده و پذیرفتهٔ محدود: R7 در `d78cfa136689f68bdbaeba97a51a401d105ae1fa`. آخرین handoff پیش از این checkpoint: `abf7072aef02783cca6576180c8344bfe3ad09d1`.
+- 190 با R1/R2: draft مالک‌محور و گروه مناطق پایدار؛191-R1: ردیف تعرفه دستی؛192-R1: متن‌های LanguageId؛193-R1: برنامه مستقل هرروز؛194: دو انتخاب مستقل پیش/پس‌کرایه و دستی/API/رایگان پذیرفته‌اند، صرفاً authoring.
+- 195: تصمیم D2؛ تعریف نوع ارسال در Fulfillment و انتساب آینده به draft در Shipping. رجیستری تعریف متعلق به commerce DB/نصب حل‌شده است؛ Admin مدیریت می‌کند، Seller فقط انتخاب مجاز آینده دارد. چهار برچسب نمونه enum/seed نیستند؛ نوع هیچ سیاست قیمت/پوشش/برنامه ارثی ایجاد نمی‌کند.
+- کل196 هنوز **BLOCKED / NOT ACCEPTED**. R2 اصلاح Domain؛ R3+R4 شواهد API/auth/body/validator/no-op؛ R5+اصلاح fixture درR6 شواهد DI/language/listener؛ R7 اصلاح design-time factory/naming و Up/Down مستقل دو جدول جدید پذیرفته شده‌اند.
+- مهاجرت جدید قبلاً ستون PascalCase و CHECK snake_case داشت؛ R7 فقط همین مهاجرت unshipped را اصلاح کرد. factory اکنون ToobaNpgsql canonical را مصرف می‌کند. هیچ migration مشترک/production اعمال نشده.
+- snapshot/latest Designer هنوز metadata قدیمی ناسازگار با مدل canonical دارند؛ آخرین گزارش191operation است، نه برابری. جدا از آن، اختلاف تاریخی واقعی: index outbox pending در مدل ولی نه migration؛ دوCHECK shipping_methods در migration ولی نه مدل؛ پنجdefault و دهname اختلاف ثبت شده. هیچ‌کدام مجوز حذف/اصلاح خودکار ندارند.
+
+### تنها تسک فعال و کار بعد
+**TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R8**، Parent=196-R7، Program=TOOBA-SHIPPING-ADMIN-BACKEND-DELIVERY. **صادر شده؛ نتیجه هنوز دریافت/بررسی نشده است.** وضعیت claim/اجرای Worker از روی این یادداشت معلوم نیست؛ بدون بررسی نتیجه/Bridge تسک تکراری نسازید.
+Scope R8 فقط بازتولید metadata دو artifact با generator canonical:
+1. current FulfillmentDbContextModelSnapshot؛
+2. BuildTargetModel آخرین 20261022101415_ShippingTypeCatalog.Designer.
+مدل runtime، factory، executable Up/Down، همه migration/designer قدیمی و همه business/APIها باید byte-identical بمانند. هیچ DDL/DB/container/Host/فرانت در R8 نیست. اثبات لازم: snapshot و latest TargetModel هر دو با initialized canonical IDesignTimeModel صفر اختلاف relational؛ provenance generator و diff معنایی ثبت شود. سقف25دقیقه، stop کار جدید در20.
+این checkpoint فقط docs است. برای claim جدید، نسخهٔ به‌روز **همان فایل R8** با Expected-Base-SHA پس از این checkpoint ارائه می‌شود؛ Task-ID/Scope عوض نشده و تسک تازه‌ای صادر نشده است. اگر قبلاً R8 claim/تمام شده، آن را دوباره اجرا نکنید؛ اول نتیجه و SHA واقعی را بازیابی و فقط docs concurrent را طبق قرارداد امن بررسی کنید. هیچ mismatch را کورکورانه نادیده نگیرید.
+
+### پس از رسیدن نتیجه R8 — برنامه، نه مجوز اجرا
+1. source/evidence/diff و صفر بودن اختلاف هر دو metadata artifact را مستقلاً بررسی کن؛ فقط همین slice را قبول/اصلاح کن.
+2. اگر R8 پذیرفته شد، اختلاف مدل با schema تاریخی را از metadata mismatch جدا کن. برای reconciliation دقیق defaults/CHECK/names و index outbox پیشنهاد محدود و مجوز بعدی ثبت کن؛ no blanket ignore/baseline refresh، no legacy DDL بدون تسک جدا.
+3. سپس شواهد هنوز اجرا‌نشدهٔ PostgreSQL: raw constraints، unique-code/revision races با original token1 و دقیقاً یک برنده، loser tracker، mid-save rollback/cancellation و constraint-lookalike را با target دورریختنی کامل کن. assertion کامیت‌شده برابر proof اجراشده نیست.
+4. فقط بعد از بسته‌شدن کاتالوگ196، انتساب owner-local نوع در Shipping از Contracts reader؛ بعد اتصال UI مصوب به API/زبان‌های DB و SingleStore/Marketplace و browser/user acceptance.
+5. مبنای authoritative مبلغ/تعداد/اندازهٔ گروه، cutoff، carrier/مختصات، free cost/funder accountability، quote/activation/rollout هنوز gateهای مستقل‌اند. انتخاب CarrierApi یا Free اجرای واقعی ایجاد نمی‌کند. Storefront/استقرار بعد از Admin؛ TB185 performance همچنان متوقف.
+
+### منابع و خطوط قرمز بازیابی
+- AGENTS.md و این فایل اول خوانده شوند؛ docs/architecture/shipping/SHIPPING-ADMIN-RULES-DECISION.md بخش26، flat-method clarification و SHIPPING-STOREFRONT-UX-REFERENCE.md الزامی‌اند.
+- بررسی‌های Architect در docs/architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R*/ARCHITECT-REVIEW.md مرز پذیرش‌اند؛ گزارش Worker به تنهایی SoT پذیرش نیست.
+- هیچ cross-module implementation/DbContext/join/FK، Host business، جغرافیای دوباره، زبان ثابتfa/en، IRR حدسی، owner/edition از مرورگر یا ارث سیاست بین مالکان ایجاد نشود.
+- shared :3000/:3419/:5088/:5432، DBها، bin/obj/.next/cache، dirty/untracked و stashes دیگران محفوظ؛ no reset/stash/rebase/force-push، no shared restart، no credentials، no dummy Bridge result.
+- شواهد آزمون این چت توسط Architect دوباره اجرا نشده‌اند؛ source/diff بررسی شده و شمارش‌ها گزارش Worker است. certification تاریخی، acceptance محصول، visual و release مجزا هستند.
+
+
+
 > **وضعیت جاری Architect پس از196-R7:** اصلاح factory/naming و Up/Down مستقل دو جدول **ACCEPT**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R7/ARCHITECT-REVIEW.md)، checkpoint `d78cfa136689f68bdbaeba97a51a401d105ae1fa`.6+1 PASS و probe مسدود گزارش Worker، source بررسی شد. مانع snapshot هنوز191operation گزارش دارد؛ این با اختلاف واقعیschema قدیمی یکی نیست. تنها تسک بعدی **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R8** (Parent=196-R7): فقط بازتولیدcanonical metadataِ currentSnapshot و آخرینDesigner از مدل فعلیِ بدون‌تغییر و proof differ=0؛ استثنای صریح دوartifact، نه DDL/مهاجرت تازه/تغییرmapping یا مهاجرت قدیمی. اختلاف تاریخیoutbox/CHECK/default/name و full storage/races هنوز BLOCKED؛ whole196 NOT ACCEPTED و assignment/UI/quote/استقرار ممنوع؛TB185متوقف. پایین تاریخچه است.
 
 

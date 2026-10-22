@@ -2,6 +2,10 @@
 
 ## Active Shipping recovery — 2026-10-22
 
+Chat-loss checkpoint: the latest section at the top of the recovery document
+records accepted work, active R8, unresolved gates and the exact continuation.
+Do not replay R8 or issue another task before recovering its actual result/claim state.
+
 For the current Shipping Admin work, start at
 `docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md`.
 TB-190 including R1/R2 is accepted for the bounded owner/region draft foundation.
