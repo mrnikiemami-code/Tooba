@@ -333,19 +333,176 @@ public sealed class OperationalQuoteCompatibilityTests
                 "Migrations",
                 "20261015090000_OperationalQuote.cs")));
 
-        var domain = Path.Combine(RepoRoot(), "src", "backend", "Modules", "Shipping");
-        var offenders = Directory
-            .EnumerateFiles(domain, "*.cs", SearchOption.AllDirectories)
-            .Where(path => !IsGeneratedOrTestTree(path))
-            .Where(path => CodeLines(File.ReadAllText(path)).Any(line =>
-                line.Contains("AddModuleSchemaMigrator", StringComparison.Ordinal)
-                || line.Contains("Database.MigrateAsync", StringComparison.Ordinal)
-                || line.Contains("DbTransaction", StringComparison.Ordinal)
-                || line.Contains("BeginTransaction", StringComparison.Ordinal)))
-            .Select(path => Path.GetRelativePath(RepoRoot(), path).Replace('\\', '/'))
+        // TB-190-R1: the historical blanket "no BeginTransaction text anywhere" rule was stale because the
+        // architect authorized exactly one module-owned authoring replacement transaction. The replacement
+        // guard below is narrower AND stronger: it proves exactly one reviewed transaction site, keeps the
+        // operational quote read-only, and still forbids every startup-migration authority and every
+        // operational money/capacity write inside Shipping.
+        var violations = ShippingTransactionBoundary.Analyze(BackendProductionSources());
+
+        Assert.Empty(violations.Where(violation =>
+            violation.Rule is ShippingTransactionBoundary.StartupSchemaAuthorityRule
+                or ShippingTransactionBoundary.OperationalWriteAuthorityRule));
+    }
+
+    [Fact]
+    public void Exactly_one_reviewed_shipping_transaction_exists_and_it_is_the_staged_draft_replacement()
+    {
+        var violations = ShippingTransactionBoundary.Analyze(BackendProductionSources());
+
+        // No unexpected transaction anywhere, and the reviewed boundary kept its one-begin shape.
+        Assert.Empty(violations.Where(violation =>
+            violation.Rule is ShippingTransactionBoundary.UnexpectedTransactionRule
+                or ShippingTransactionBoundary.BoundaryShapeRule));
+
+        // The allowed boundary is not blanket-excluded by path or folder: its content is inspected too, and
+        // it must remain a single begin/commit around two staged saves with a rollback path.
+        var boundary = BackendProductionSources()
+            .Single(source => source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath);
+        var code = CodeLines(boundary.Text).ToArray();
+
+        Assert.Equal(1, CountOccurrences(string.Join('\n', code), "BeginTransactionAsync("));
+        Assert.Equal(1, CountOccurrences(string.Join('\n', code), "CommitAsync("));
+        Assert.True(
+            CountOccurrences(string.Join('\n', code), "SaveChangesAsync(") >= 2,
+            "both staged saves must live inside the reviewed boundary");
+        Assert.True(
+            CountOccurrences(string.Join('\n', code), "RollbackAsync(") >= 1,
+            "the reviewed boundary must keep a rollback path for failure and cancellation");
+    }
+
+    // ---------- negative detection proof for the transaction / schema guard ----------
+
+    [Fact]
+    public void Transaction_guard_fails_for_an_unexpected_second_transaction_in_another_shipping_file()
+    {
+        var polluted = BackendProductionSources()
+            .Append(new OperationalBoundarySource(
+                "src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Authoring/ShippingAuthoringRateWriter.cs",
+                "namespace X;\ninternal sealed class W\n{\n    internal void Go(Tooba.Shipping.Infrastructure.Persistence.ShippingDbContext db)\n    {\n        using var tx = db.Database.BeginTransaction();\n    }\n}\n"))
             .ToArray();
 
-        Assert.Empty(offenders);
+        var violations = ShippingTransactionBoundary.Analyze(polluted);
+
+        var violation = Assert.Single(
+            violations,
+            candidate => candidate.Rule == ShippingTransactionBoundary.UnexpectedTransactionRule);
+        Assert.Contains("ShippingAuthoringRateWriter.cs", violation.RelativePath, StringComparison.Ordinal);
+        Assert.Contains("Go", violation.Detail, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Transaction_guard_fails_for_an_extra_transaction_inside_the_otherwise_allowed_file()
+    {
+        // Same reviewed FILE, different member: a filename-only exemption would let this pass.
+        var polluted = BackendProductionSources()
+            .Select(source => source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath
+                ? source with
+                {
+                    Text = source.Text
+                           + "\n\ninternal sealed class SmuggledSecondBoundary\n{\n"
+                           + "    internal void Extra()\n"
+                           + "    {\n"
+                           + "        using var nested = _context.Database.BeginTransaction();\n"
+                           + "    }\n"
+                           + "}\n",
+                }
+                : source)
+            .ToArray();
+
+        var violations = ShippingTransactionBoundary.Analyze(polluted);
+
+        Assert.Contains(
+            violations,
+            violation => violation.Rule == ShippingTransactionBoundary.UnexpectedTransactionRule
+                         && violation.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath
+                         && violation.Detail.Contains("Extra", StringComparison.Ordinal));
+
+        // And a SECOND begin added to the reviewed member itself must fail: the boundary is exactly one
+        // begin/commit, not "at most one per file".
+        var doubled = BackendProductionSources()
+            .Select(source => source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath
+                ? source with
+                {
+                    Text = source.Text.Replace(
+                        "                transaction = await context.Database.BeginTransactionAsync(cancellationToken);",
+                        "                transaction = await context.Database.BeginTransactionAsync(cancellationToken);\n"
+                        + "                var nested = await context.Database.BeginTransactionAsync(cancellationToken);",
+                        StringComparison.Ordinal),
+                }
+                : source)
+            .ToArray();
+        Assert.NotEqual(
+            BackendProductionSources().Single(source =>
+                source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath).Text,
+            doubled.Single(source => source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath).Text);
+
+        var doubledViolations = ShippingTransactionBoundary.Analyze(doubled);
+        Assert.Contains(
+            doubledViolations,
+            violation => violation.Rule == ShippingTransactionBoundary.BoundaryShapeRule);
+    }
+
+    [Fact]
+    public void Transaction_guard_fails_for_an_operational_transaction_or_money_authority_leak()
+    {
+        var polluted = BackendProductionSources()
+            .Append(new OperationalBoundarySource(
+                "src/backend/Modules/Shipping/Tooba.Shipping.Application/Operations/ShippingOperationalMoneyWriter.cs",
+                "namespace X;\ninternal sealed class W\n{\n    internal void Go()\n    {\n"
+                + "        using var tx = _db.Database.BeginTransaction();\n"
+                + "        result.SelectedShippingAmount = 1m;\n"
+                + "        var reservation = new StorefrontCapacityReservation();\n"
+                + "    }\n}\n"))
+            .ToArray();
+
+        var violations = ShippingTransactionBoundary.Analyze(polluted);
+
+        Assert.Contains(violations, violation =>
+            violation.Rule == ShippingTransactionBoundary.UnexpectedTransactionRule);
+        Assert.Contains(violations, violation =>
+            violation.Rule == ShippingTransactionBoundary.OperationalWriteAuthorityRule);
+    }
+
+    [Fact]
+    public void Transaction_guard_fails_for_a_startup_migration_inside_the_allowed_file()
+    {
+        var polluted = BackendProductionSources()
+            .Select(source => source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath
+                ? source with
+                {
+                    Text = source.Text
+                           + "\n\ninternal sealed class SmuggledMigrator\n{\n"
+                           + "    internal static void Up(Tooba.Shipping.Infrastructure.Persistence.ShippingDbContext db)\n"
+                           + "    {\n"
+                           + "        db.Database.MigrateAsync().GetAwaiter().GetResult();\n"
+                           + "    }\n"
+                           + "}\n",
+                }
+                : source)
+            .ToArray();
+
+        var violations = ShippingTransactionBoundary.Analyze(polluted);
+
+        Assert.Contains(
+            violations,
+            violation => violation.Rule == ShippingTransactionBoundary.StartupSchemaAuthorityRule
+                         && violation.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath);
+    }
+
+    [Fact]
+    public void Transaction_guard_fails_when_the_reviewed_boundary_loses_its_single_transaction()
+    {
+        var allowed = BackendProductionSources()
+            .Single(source => source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath);
+
+        var stripped = new[] { allowed with { Text = allowed.Text.Replace("BeginTransactionAsync", "OpenAsync") } };
+
+        var violations = ShippingTransactionBoundary.Analyze(stripped);
+
+        Assert.Contains(
+            violations,
+            violation => violation.Rule == ShippingTransactionBoundary.BoundaryShapeRule);
     }
 
     [Fact]

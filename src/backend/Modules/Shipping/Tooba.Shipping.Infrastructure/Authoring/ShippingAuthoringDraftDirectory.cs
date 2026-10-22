@@ -22,9 +22,15 @@ namespace Tooba.Shipping.Infrastructure.Authoring;
 /// دیگر همان «پیدا نشد» ایمن (404) را می‌گیرد.
 /// </para>
 /// <para>
-/// <b>One atomic boundary.</b> جایگزینی کل درخت در یک <c>SaveChangesAsync</c> انجام می‌شود و ستون
-/// <c>revision</c> یک concurrency token واقعی است؛ بنابراین UPDATE فقط وقتی اثر دارد که بازبینی
-/// ذخیره‌شده همان بازبینی مورد انتظار باشد. هیچ تراکنش دست‌ساز یا چندنوشتنی از سمت مرورگر لازم نیست.
+/// <b>One atomic boundary (revised in TB-190-R1).</b> این توضیح پیش‌تر می‌گفت فقط یک <c>SaveChanges</c>
+/// و هیچ تراکنش دست‌سندی وجود ندارد؛ این دیگر درست نیست. ایندکس یکتای
+/// <c>(draft_id, group_order)</c> فوری است، بنابراین جابه‌جایی معتبر ترتیب هیچ UPDATE اول مجاز ندارد.
+/// مسیر رابطه‌ای دو مرحله را داخل <b>یک</b> تراکنش ماژول‌محور انجام می‌دهد: مرحلهٔ اول ترتیب موقت
+/// بدون‌برخورد (<see cref="ShippingAuthoringDraft.StagedOrderBase"/> + ایندکس نهایی) و مرحلهٔ دوم
+/// ترتیب نهایی صفرپایه، هر دو با <c>SaveChangesAsync</c> در همان مرز، و فقط <b>یک</b> commit. هر
+/// خطا/لغو، کل جایگزینی را برمی‌گرداند و tracker پاک می‌شود تا ویرایش رد‌شده منتشر نشود. ستون
+/// <c>revision</c> همچنان concurrency token واقعی است. مسیر غیررابطه‌ای (آزمون InMemory) یک
+/// <c>SaveChanges</c> با ترتیب نهایی مستقیم دارد، چون آنجا ایندکس فوری وجود ندارد.
 /// </para>
 /// </remarks>
 public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) : IShippingAuthoringDraftDirectory

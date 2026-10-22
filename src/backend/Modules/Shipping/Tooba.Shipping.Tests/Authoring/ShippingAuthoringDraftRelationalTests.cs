@@ -23,10 +23,12 @@ namespace Tooba.Shipping.Tests.Authoring;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The connection string comes from <c>TOOBA_TB190R1_POSTGRES</c> and must point at the task-owned
-/// disposable instance (127.0.0.1:55432, database <c>shipping_tb190r1</c>). Without it every fact is
-/// skipped: no shared :5432 / tooba_alpha server is ever touched, and no test pretends to be relational
-/// when it is not.
+/// The connection string comes from <c>TOOBA_TB190R1_POSTGRES</c> and must name the task-owned disposable
+/// instance exactly (<c>127.0.0.1:55432</c>, database <c>shipping_tb190r1</c>, role <c>tb190r1</c>), parsed
+/// with <see cref="ShippingRelationalTestTarget"/> before any connection is opened. When the variable is
+/// absent or names anything else these facts <b>fail closed</b>: they throw, they are never reported as
+/// passed, and nothing is skipped. Running the whole suite therefore requires the isolated database to be
+/// provisioned first, and the suite must not be executed after cleanup.
 /// </para>
 /// <para>
 /// These tests execute the real <see cref="ShippingAuthoringDraftDirectory"/>, the real
@@ -37,9 +39,9 @@ namespace Tooba.Shipping.Tests.Authoring;
 /// </remarks>
 public sealed class ShippingAuthoringDraftRelationalTests
 {
-    private const string ConnectionVariable = "TOOBA_TB190R1_POSTGRES";
     private static readonly SemaphoreSlim MigrationGate = new(1, 1);
     private static bool _migrated;
+    private static bool _liveTargetVerified;
 
     private static readonly Guid Iran = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid Tehran = Guid.Parse("22222222-2222-2222-2222-222222222222");
@@ -183,17 +185,39 @@ public sealed class ShippingAuthoringDraftRelationalTests
         var first = created.Value.RegionGroups.OrderBy(group => group.Order).First().GroupId;
         var second = created.Value.RegionGroups.OrderBy(group => group.Order).Last().GroupId;
 
-        await using var contextA = await NewContextAsync();
-        await using var contextB = await NewContextAsync();
+        // Deterministic two-reader barrier: the interceptor arrives at the FIRST SavingChanges of each
+        // participant, i.e. after that participant has read and prepared revision 1 and BEFORE either has
+        // written anything. A bare BEGIN holds no row locks, so no participant waits while holding one.
+        var gate = new TwoReaderGate();
+        var interceptorA = new TwoReaderBarrierInterceptor(gate);
+        var interceptorB = new TwoReaderBarrierInterceptor(gate);
 
-        var results = await Task.WhenAll(
-            new ShippingAuthoringDraftDirectory(contextA).ReplaceRegionGroupsAsync(
+        await using var contextA = await NewContextAsync(interceptorA);
+        await using var contextB = await NewContextAsync(interceptorB);
+
+        async Task<(int Index, Result<ShippingAuthoringDraft> Result)> RunAsync(
+            int index,
+            ShippingDbContext context,
+            Func<CancellationToken, Task<Result<ShippingAuthoringDraft>>> run)
+        {
+            try
+            {
+                return (index, await run(CancellationToken.None));
+            }
+            catch (Exception exception)
+            {
+                throw new Xunit.Sdk.XunitException($"participant {index} threw {exception.GetType().Name}: {exception.Message}");
+            }
+        }
+
+        var outcomes = await Task.WhenAll(
+            RunAsync(0, contextA, token => new ShippingAuthoringDraftDirectory(contextA).ReplaceRegionGroupsAsync(
                 owner,
                 draftId,
                 1,
                 [new ShippingAuthoringRegionGroupInput(second, [Node(Isfahan)])],
-                CancellationToken.None),
-            new ShippingAuthoringDraftDirectory(contextB).ReplaceRegionGroupsAsync(
+                token)),
+            RunAsync(1, contextB, token => new ShippingAuthoringDraftDirectory(contextB).ReplaceRegionGroupsAsync(
                 owner,
                 draftId,
                 1,
@@ -201,11 +225,16 @@ public sealed class ShippingAuthoringDraftRelationalTests
                     new ShippingAuthoringRegionGroupInput(first, [Node(Tehran)]),
                     new ShippingAuthoringRegionGroupInput(null, [Node(Qom)]),
                 ],
-                CancellationToken.None));
+                token)));
 
-        Assert.Single(results, result => !result.IsFailure);
-        var loser = Assert.Single(results, result => result.IsFailure);
-        Assert.Equal(ShippingErrorCodes.AuthoringDraftRevisionConflict, loser.Errors[0].Code);
+        // Both really arrived with revision 1 loaded, and the barrier really synchronized them.
+        Assert.Equal(2, gate.Arrivals);
+        Assert.Equal(1, interceptorA.OriginalRevision);
+        Assert.Equal(1, interceptorB.OriginalRevision);
+
+        var winner = Assert.Single(outcomes, outcome => !outcome.Result.IsFailure);
+        var loser = Assert.Single(outcomes, outcome => outcome.Result.IsFailure);
+        Assert.Equal(ShippingErrorCodes.AuthoringDraftRevisionConflict, loser.Result.Errors[0].Code);
 
         await using var verification = await NewContextAsync();
         var stored = await verification.AuthoringDrafts
@@ -213,16 +242,111 @@ public sealed class ShippingAuthoringDraftRelationalTests
             .Include(draft => draft.RegionGroups)
             .ThenInclude(group => group.Areas)
             .SingleAsync(draft => draft.DraftId == draftId);
+
+        // The persisted tree is the WINNER's tree, whichever participant won, with revision advanced once.
         Assert.Equal(2, stored.Revision);
-        Assert.Single(stored.RegionGroups);
-        Assert.Equal(Isfahan, stored.RegionGroups.Single().Areas.Single().NodeId);
-        Assert.DoesNotContain(stored.RegionGroups, group => group.Areas.Any(area => area.NodeId == Qom));
-        Assert.Equal(0, stored.RegionGroups.Single().Order);
+        Assert.Equal(
+            Project(winner.Result.Value.RegionGroups),
+            Project(stored.RegionGroups
+                .OrderBy(group => group.Order)
+                .Select(group => (
+                    group.GroupId,
+                    group.Order,
+                    (IReadOnlyList<Guid>)group.Areas.Select(area => area.NodeId).OrderBy(id => id).ToArray()))));        await AssertNoStagedOrdersAsync(verification, draftId, includeDraftRevision: false);
+
+        // The ACTUAL losing context holds no pending edit that a later SaveChanges could publish.
+        var loserContext = loser.Index == 0 ? contextA : contextB;
+        Assert.Empty(loserContext.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
+
+        // And its tree is still readable as the winner's, never a hybrid.
+        var reread = await loserContext.AuthoringDrafts
+            .AsNoTracking()
+            .Include(draft => draft.RegionGroups)
+            .ThenInclude(group => group.Areas)
+            .SingleAsync(draft => draft.DraftId == draftId);
+        Assert.Equal(2, reread.Revision);
+    }
+
+    [Fact]
+    public async Task Caller_cancellation_after_the_first_stage_rolls_back_and_propagates()
+    {
+        await using var seedContext = await NewContextAsync();
+        var owner = ShippingAuthoringOwnerScope.ForStore("tb190r1-cancel-" + Guid.NewGuid().ToString("N"));
+        var created = await new ShippingAuthoringDraftDirectory(seedContext).CreateAsync(
+            owner,
+            "post",
+            null,
+            [
+                new ShippingAuthoringRegionGroupInput(null, [Node(Tehran)]),
+                new ShippingAuthoringRegionGroupInput(null, [Node(Isfahan)]),
+            ],
+            CancellationToken.None);
+        Assert.True(created.IsSuccess);
+        var draftId = created.Value.DraftId;
+        var first = created.Value.RegionGroups.OrderBy(group => group.Order).First().GroupId;
+        var second = created.Value.RegionGroups.OrderBy(group => group.Order).Last().GroupId;
+
+        // The caller token is cancelled at the START of the SECOND SaveChanges, i.e. after the staged orders
+        // and node moves were already written inside the replacement transaction and before the commit.
+        using var cancellation = new CancellationTokenSource();
+        var interceptor = new CancelOnSecondSaveInterceptor(cancellation);
+        await using var context = await NewContextAsync(interceptor);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            new ShippingAuthoringDraftDirectory(context).ReplaceRegionGroupsAsync(
+                owner,
+                draftId,
+                1,
+                [
+                    new ShippingAuthoringRegionGroupInput(second, [Node(Isfahan)]),
+                    new ShippingAuthoringRegionGroupInput(first, [Node(Tehran)]),
+                ],
+                cancellation.Token));
+
+        Assert.Equal(2, interceptor.SaveAttempts);
+        Assert.True(cancellation.IsCancellationRequested);
+
+        await using var verification = await NewContextAsync();
+        var stored = await verification.AuthoringDrafts
+            .AsNoTracking()
+            .Include(draft => draft.RegionGroups)
+            .ThenInclude(group => group.Areas)
+            .SingleAsync(draft => draft.DraftId == draftId);
+        Assert.Equal(1, stored.Revision);
+        Assert.Equal(
+            [first, second],
+            stored.RegionGroups.OrderBy(group => group.Order).Select(group => group.GroupId).ToArray());
+        Assert.Equal([0, 1], stored.RegionGroups.OrderBy(group => group.Order).Select(group => group.Order).ToArray());
+        Assert.Equal(Tehran, stored.RegionGroups.Single(group => group.GroupId == first).Areas.Single().NodeId);
         await AssertNoStagedOrdersAsync(verification, draftId, includeDraftRevision: false);
 
-        // The losing scoped context holds no pending edit that a later SaveChanges could publish.
-        Assert.Empty(contextB.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
+        // Nothing half-written: a valid replacement from the untouched revision still succeeds.
+        var retried = await new ShippingAuthoringDraftDirectory(verification).ReplaceRegionGroupsAsync(
+            owner,
+            draftId,
+            1,
+            [
+                new ShippingAuthoringRegionGroupInput(second, [Node(Isfahan)]),
+                new ShippingAuthoringRegionGroupInput(first, [Node(Tehran)]),
+            ],
+            CancellationToken.None);
+        Assert.True(retried.IsSuccess, retried.IsFailure ? retried.Errors[0].Code : null);
+        Assert.Equal(2, retried.Value.Revision);
     }
+
+    private static string Project(
+        IEnumerable<(Guid GroupId, int Order, IReadOnlyList<Guid> Nodes)> groups)
+        => string.Join(
+            "|",
+            groups
+                .OrderBy(group => group.Order)
+                .Select(group => $"{group.GroupId}@{group.Order}[{string.Join(",", group.Nodes)}]"));
+
+    private static string Project(IReadOnlyList<ShippingAuthoringRegionGroup> groups)
+        => Project(groups.Select(group => (
+            group.GroupId,
+            group.Order,
+            (IReadOnlyList<Guid>)group.Areas.Select(area => area.NodeId).OrderBy(id => id).ToArray())));
 
     [Fact]
     public async Task A_failure_after_the_first_stage_rolls_the_whole_replacement_back()
@@ -370,16 +494,9 @@ public sealed class ShippingAuthoringDraftRelationalTests
 
     private static async Task<ShippingDbContext> NewContextAsync(SaveChangesInterceptor? interceptor = null)
     {
-        var connectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            throw new InvalidOperationException($"{ConnectionVariable} must point at the disposable R190-03 PostgreSQL instance; refusing to fake relational proof.");
-        }
-
-        // Fail closed: this suite only ever runs against the task-owned loopback instance.
-        Assert.Contains("127.0.0.1", connectionString!, StringComparison.Ordinal);
-        Assert.Contains("shipping_tb190r1", connectionString!, StringComparison.Ordinal);
-        Assert.DoesNotContain("tooba_alpha", connectionString!, StringComparison.OrdinalIgnoreCase);
+        // Parsed, test-owned target: exact loopback host, exact task-only port, database and role. A missing
+        // or mismatched configuration throws (fail closed) instead of skipping or faking relational proof.
+        var target = ShippingRelationalTestTarget.FromEnvironment();
 
         // The production module configuration is used verbatim: same snake_case convention, same
         // schema-owned migration history table, same migrations assembly. A plain UseNpgsql would query
@@ -387,7 +504,7 @@ public sealed class ShippingAuthoringDraftRelationalTests
         var builder = new DbContextOptionsBuilder<ShippingDbContext>();
         ToobaNpgsql.ConfigureModuleContext(
             builder,
-            connectionString!,
+            target.ConnectionString,
             ShippingDbContext.Schema,
             typeof(ShippingDbContext));
         if (interceptor is not null)
@@ -400,6 +517,20 @@ public sealed class ShippingAuthoringDraftRelationalTests
         await MigrationGate.WaitAsync();
         try
         {
+            // Prove the live target before any write: the parsed string says where we meant to go, this
+            // says where we actually landed.
+            if (!_liveTargetVerified)
+            {
+                var facts = await context.Database
+                    .SqlQueryRaw<string>(
+                        "SELECT (current_database() || '|' || current_user) AS \"Value\"")
+                    .SingleAsync();
+                var parts = facts.Split('|');
+                Assert.Equal(ShippingRelationalTestTarget.ExpectedDatabase, parts[0]);
+                Assert.Equal(ShippingRelationalTestTarget.ExpectedUser, parts[1]);
+                _liveTargetVerified = true;
+            }
+
             if (!_migrated)
             {
                 await context.GetService<IMigrator>().MigrateAsync();
@@ -420,9 +551,87 @@ public sealed class ShippingAuthoringDraftRelationalTests
     private static ShippingAuthoringSelectedAreaWrite Area(Guid administrativeAreaId)
         => new(ShippingAuthoringAreaKind.AdministrativeArea, Iran, administrativeAreaId);
 
-    private sealed class FailOnSecondSaveInterceptor : SaveChangesInterceptor
+    /// <summary>
+    /// Bounded two-participant barrier. Arrivals are counted; the last one releases both. A participant that
+    /// never arrives is bounded by a timeout so a failure cannot hang the suite, and a bare open transaction
+    /// holds no row lock, so nobody waits while holding a conflicting lock.
+    /// </summary>
+    private sealed class TwoReaderGate
+    {
+        private const int Participants = 2;
+        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(20);
+        private readonly TaskCompletionSource _bothArrived = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _arrivals;
+
+        public int Arrivals => Volatile.Read(ref _arrivals);
+
+        public async Task ArriveAsync()
+        {
+            if (Interlocked.Increment(ref _arrivals) == Participants)
+            {
+                _bothArrived.TrySetResult();
+            }
+
+            await _bothArrived.Task.WaitAsync(Timeout);
+        }
+    }
+
+    /// <summary>
+    /// Test-only synchronization point at the FIRST SavingChanges of a replacement participant, i.e. after
+    /// that participant read and prepared revision 1 and before it wrote anything. It also records the
+    /// concurrency token's ORIGINAL value, which is the exact predicate the later UPDATE uses.
+    /// </summary>
+    private sealed class TwoReaderBarrierInterceptor(TwoReaderGate gate) : SaveChangesInterceptor
+    {
+        private bool _arrived;
+
+        public long OriginalRevision { get; private set; }
+
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (!_arrived)
+            {
+                _arrived = true;
+                var entry = eventData.Context!.ChangeTracker
+                    .Entries<ShippingAuthoringDraft>()
+                    .Single(candidate => candidate.State == EntityState.Modified);
+                OriginalRevision = (long)entry.OriginalValues[nameof(ShippingAuthoringDraft.Revision)]!;
+                await gate.ArriveAsync();
+            }
+
+            return await base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Cancels the caller token at the START of the SECOND SaveChanges, i.e. after the staged write and
+    /// before the commit, so caller cancellation (not an injected arbitrary exception) is proven to roll the
+    /// replacement back and propagate.
+    /// </summary>
+    private sealed class CancelOnSecondSaveInterceptor(CancellationTokenSource cancellation) : SaveChangesInterceptor
     {
         public int SaveAttempts { get; private set; }
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            SaveAttempts++;
+            if (SaveAttempts >= 2 && !cancellation.IsCancellationRequested)
+            {
+                cancellation.Cancel();
+            }
+
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
+    }
+
+    private sealed class FailOnSecondSaveInterceptor : SaveChangesInterceptor
+    {        public int SaveAttempts { get; private set; }
 
         public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
             DbContextEventData eventData,
