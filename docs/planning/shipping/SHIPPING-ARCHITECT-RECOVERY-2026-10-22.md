@@ -358,3 +358,18 @@ parameterless list immune to query/culture. 42 focused tests pass in the Fulfill
 EF InMemory only. Still PENDING_NOT_RUN: full multilingual registry lifecycle, ActivityListener, exact
 constraint negative, and PostgreSQL relational/snapshot/race proof. TB-196 remains PARTIAL; worker PASS only
 - not Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.
+
+TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R4 (worker, 2026-10-22, PASS for the three repaired claims only)
+repaired exactly the three overstated R3 evidence claims in the SAME endpoint test file, test-only: (A) the
+no-op fact now sends an IDENTICAL NONEMPTY patch built from the actually stored translation under a mutable
+test clock advanced +5 minutes, asserting revision and persisted UpdatedAt are exactly the pre-repeat value and
+not the advanced instant, plus a stale nonempty conflict; (B) every shaped-invalid POST/PUT and the
+Guid.Empty GET now assert the canonical root `validation.failed` and the exact stable child code under its
+property (plus a 129-char overlength-name case), with a test-only post-validation arrival counter proving valid
+requests arrive (Arrivals=1) while validation rejections do not (Arrivals=0), and malformed bodies kept
+distinct as `shipping_type.body.malformed`; (C) all four real delegates are invoked with valid input and the
+OBSERVED dispatched request type plus real-DI IRequestHandler/validator are matched per route, with a
+same-four-route swapped-mapping negative. 45 focused endpoint tests pass; only Fulfillment.Tests built.
+EF InMemory only. Still PENDING_NOT_RUN: full dynamic registry lifecycle, real listener/DI verification,
+exact-constraint lookalike and PostgreSQL relational/snapshot/race proof. TB-196 remains PARTIAL; worker PASS
+only - not Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.

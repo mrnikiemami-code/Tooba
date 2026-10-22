@@ -19,6 +19,7 @@ using Tooba.Fulfillment.Application.Shipping.Commands;
 using Tooba.Fulfillment.Application.Shipping.Models;
 using Tooba.Fulfillment.Application.Shipping.Queries;
 using Tooba.Fulfillment.Application.Shipping.Validators;
+using Tooba.Fulfillment.Application.Validators;
 using Tooba.Fulfillment.Contracts.Errors;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Endpoints;
@@ -88,6 +89,8 @@ public sealed class ShippingTypeCatalogEndpointTests
         Assert.Equal(0, create.Body.GetProperty("sortOrder").GetInt32());
         Assert.Equal("ordinary", create.Body.GetProperty("code").GetString());
         Assert.True(create.Body.GetProperty("hasDefaultLanguageName").GetBoolean());
+        // A VALID request does arrive past the real ValidationBehavior (arrival is measured, not inferred).
+        Assert.Equal(1, harness.Counters.Arrivals);
 
         // GET list/detail return it through the real query handlers.
         var list = await harness.SendAsync("GET", ListPath);
@@ -105,18 +108,44 @@ public sealed class ShippingTypeCatalogEndpointTests
         Assert.True(activate.Body.GetProperty("isActive").GetBoolean());
         Assert.Equal(2, activate.Body.GetProperty("revision").GetInt64());
 
-        // Repeating the identical nonempty text must be a true no-op: revision and UpdatedAt preserved.
+        // CORRECTION A: repeating an IDENTICAL NONEMPTY patch is a true no-op even after the clock moved.
+        // The patch text is read back from the actual stored row, not invented by the test.
+        var beforeRepeat = await harness.SendAsync("GET", $"{ListPath}/{id}");
+        var storedTranslation = beforeRepeat.Body.GetProperty("translations")[0];
+        var storedName = storedTranslation.GetProperty("name").GetString()!;
+        var storedDescription = storedTranslation.GetProperty("description").GetString()!;
+        var storedLanguageId = storedTranslation.GetProperty("languageId").GetGuid();
         var storedUpdatedAt = await harness.StoredUpdatedAtAsync(id);
-        var repeat = await harness.SendAsync("PUT", $"{ListPath}/{id}", UpdateBody(2, isActive: true, sortOrder: 0));
+
+        harness.AdvanceClock(TimeSpan.FromMinutes(5));
+        var advancedNow = harness.Clock.UtcNow;
+        Assert.NotEqual(storedUpdatedAt, advancedNow);
+
+        var identicalNonempty = NonEmptyUpdateBody(
+            2, isActive: true, sortOrder: 0, storedLanguageId, storedName, storedDescription);
+
+        var repeat = await harness.SendAsync("PUT", $"{ListPath}/{id}", identicalNonempty);
         Assert.Equal(StatusCodes.Status200OK, repeat.Status);
         Assert.Equal(2, repeat.Body.GetProperty("revision").GetInt64());
-        Assert.Equal(storedUpdatedAt, await harness.StoredUpdatedAtAsync(id));
+        Assert.Equal(storedName, repeat.Body.GetProperty("translations")[0].GetProperty("name").GetString());
+        Assert.Equal(
+            storedDescription,
+            repeat.Body.GetProperty("translations")[0].GetProperty("description").GetString());
 
-        // Stale identical body is still a canonical conflict, and nothing was written.
-        var stale = await harness.SendAsync("PUT", $"{ListPath}/{id}", UpdateBody(1, isActive: true, sortOrder: 0));
+        // Neither a revision bump nor a timestamp-only restamp may slip through: the persisted instant is
+        // EXACTLY the pre-repeat value, not the advanced clock instant.
+        Assert.Equal(storedUpdatedAt, await harness.StoredUpdatedAtAsync(id));
+        Assert.NotEqual(advancedNow, await harness.StoredUpdatedAtAsync(id));
+
+        // Stale expectedRevision with the SAME identical NONEMPTY payload is still a canonical conflict,
+        // and the persisted state (revision + timestamp) is untouched.
+        var stale = await harness.SendAsync(
+            "PUT", $"{ListPath}/{id}",
+            NonEmptyUpdateBody(1, isActive: true, sortOrder: 0, storedLanguageId, storedName, storedDescription));
         Assert.Equal(StatusCodes.Status409Conflict, stale.Status);
         Assert.Equal(FulfillmentErrorCodes.ShippingTypeRevisionConflict, ErrorCode(stale.Body));
         Assert.Equal(2, await harness.StoredRevisionAsync(id));
+        Assert.Equal(storedUpdatedAt, await harness.StoredUpdatedAtAsync(id));
 
         // Deactivate then reactivate through the real handler/store.
         var deactivate = await harness.SendAsync("PUT", $"{ListPath}/{id}", UpdateBody(2, isActive: false, sortOrder: 0));
@@ -307,8 +336,12 @@ public sealed class ShippingTypeCatalogEndpointTests
 
         Assert.Equal(StatusCodes.Status400BadRequest, response.Status);
         Assert.Equal(FulfillmentErrorCodes.ShippingTypeBodyMalformed, ErrorCode(response.Body));
+        // Transport shape is distinct from validation: never the canonical root validation code, no child codes.
+        Assert.NotEqual(RootValidationCode, ErrorCode(response.Body));
+        Assert.False(response.Body.TryGetProperty("errors", out _));
         // Body-shape rejection happens before ISender and before any language read.
         Assert.Equal(0, harness.Counters.Dispatches);
+        Assert.Equal(0, harness.Counters.Arrivals);
         Assert.Equal(0, harness.Counters.LanguageLookups);
         Assert.Single(await harness.StoredRowsAsync());
     }
@@ -318,37 +351,68 @@ public sealed class ShippingTypeCatalogEndpointTests
     // ---------------------------------------------------------------------------------------------
 
     [Theory]
-    [InlineData("""{"code":"ordinary","translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"}]}""", "sortOrder")]
-    [InlineData("""{"code":"ordinary","sortOrder":null,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"}]}""", "sortOrder")]
-    [InlineData("""{"code":"ordinary","sortOrder":-1,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"}]}""", "sortOrder")]
-    [InlineData("""{"code":" ordinary","sortOrder":0,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"}]}""", "code")]
-    [InlineData("""{"code":"ordinary","sortOrder":0}""", "translations")]
-    [InlineData("""{"code":"ordinary","sortOrder":0,"translations":null}""", "translations")]
-    [InlineData("""{"code":"ordinary","sortOrder":0,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"},null]}""", "translations")]
-    [InlineData("""{"code":"ordinary","sortOrder":0,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"},{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"y"}]}""", "translations")]
-    [InlineData("""{"code":"ordinary","sortOrder":0,"translations":[{"languageId":"00000000-0000-0000-0000-000000000000","name":"x"}]}""", "translations")]
-    [InlineData("""{"code":"ordinary","sortOrder":0,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"  "}]}""", "translations")]
-    public async Task Post_rejections_are_canonical_and_never_reach_the_handler(string body, string _)
+    [InlineData("""{"code":"ordinary","translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"}]}""", "Model.SortOrder", FulfillmentValidationCodes.ShippingTypeSortOrderShape)]
+    [InlineData("""{"code":"ordinary","sortOrder":null,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"}]}""", "Model.SortOrder", FulfillmentValidationCodes.ShippingTypeSortOrderShape)]
+    [InlineData("""{"code":"ordinary","sortOrder":-1,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"}]}""", "Model.SortOrder", FulfillmentValidationCodes.ShippingTypeSortOrderShape)]
+    [InlineData("""{"code":" ordinary","sortOrder":0,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"}]}""", "Model.Code", FulfillmentValidationCodes.ShippingTypeCodeShape)]
+    [InlineData("""{"code":"ordinary","sortOrder":0}""", "Model.Translations", FulfillmentValidationCodes.ShippingTypeTranslationsRequired)]
+    [InlineData("""{"code":"ordinary","sortOrder":0,"translations":null}""", "Model.Translations", FulfillmentValidationCodes.ShippingTypeTranslationsRequired)]
+    [InlineData("""{"code":"ordinary","sortOrder":0,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"},null]}""", "Model.Translations", FulfillmentValidationCodes.ShippingTypeTranslationShape)]
+    [InlineData("""{"code":"ordinary","sortOrder":0,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"},{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"y"}]}""", "Model.Translations", FulfillmentValidationCodes.ShippingTypeTranslationDuplicateLanguage)]
+    [InlineData("""{"code":"ordinary","sortOrder":0,"translations":[{"languageId":"00000000-0000-0000-0000-000000000000","name":"x"}]}""", "Model.Translations", FulfillmentValidationCodes.ShippingTypeTranslationShape)]
+    [InlineData("""{"code":"ordinary","sortOrder":0,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"  "}]}""", "Model.Translations", FulfillmentValidationCodes.ShippingTypeTranslationShape)]
+    public async Task Post_rejections_are_canonical_and_never_reach_the_handler(
+        string body,
+        string property,
+        string expectedChildCode)
     {
         using var harness = Harness.Create();
 
         var response = await harness.SendAsync("POST", ListPath, body);
 
         Assert.Equal(StatusCodes.Status400BadRequest, response.Status);
-        Assert.Equal(1, harness.Counters.Dispatches);          // dispatched into the pipeline
+        // Canonical root validation code (never the transport body-shape code) plus the exact stable child.
+        Assert.Equal(RootValidationCode, ErrorCode(response.Body));
+        Assert.Contains(expectedChildCode, ChildCodes(response.Body, property));
+        Assert.Equal(1, harness.Counters.Dispatches);           // dispatched into the pipeline
+        Assert.Equal(0, harness.Counters.Arrivals);             // rejected BY validation: no post-validation arrival
         Assert.Equal(0, harness.Counters.LanguageLookups);      // handler never ran
-        Assert.Single(await harness.StoredRowsAsync());        // nothing new persisted
         Assert.Single(await harness.StoredRowsAsync());         // only the seeded row remains
     }
 
+    [Fact]
+    public async Task Overlength_name_is_rejected_with_the_canonical_validation_code()
+    {
+        using var harness = Harness.Create();
+        var name = new string('A', 129);   // ShippingType.NameMaxLength + 1
+        Assert.Equal(129, name.Length);
+
+        var response = await harness.SendAsync(
+            "POST", ListPath,
+            """{"code":"ordinary","sortOrder":0,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"__NAME__"}]}"""
+                .Replace("__NAME__", name, StringComparison.Ordinal));
+
+        Assert.Equal(StatusCodes.Status400BadRequest, response.Status);
+        Assert.Equal(RootValidationCode, ErrorCode(response.Body));
+        Assert.Contains(
+            FulfillmentValidationCodes.ShippingTypeTranslationShape,
+            ChildCodes(response.Body, "Model.Translations"));
+        Assert.Equal(0, harness.Counters.Arrivals);
+        Assert.Equal(0, harness.Counters.LanguageLookups);
+        Assert.Single(await harness.StoredRowsAsync());
+    }
+
     [Theory]
-    [InlineData("""{"sortOrder":0,"expectedRevision":1,"translations":[]}""")]
-    [InlineData("""{"sortOrder":0,"isActive":true,"translations":[]}""")]
-    [InlineData("""{"sortOrder":0,"isActive":true,"expectedRevision":1}""")]
-    [InlineData("""{"sortOrder":0,"isActive":true,"expectedRevision":1,"translations":null}""")]
-    [InlineData("""{"sortOrder":0,"isActive":true,"expectedRevision":0,"translations":[]}""")]
-    [InlineData("""{"sortOrder":0,"isActive":true,"expectedRevision":1,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"},null]}""")]
-    public async Task Put_presence_and_shape_rejections_never_reach_the_handler(string body)
+    [InlineData("""{"sortOrder":0,"expectedRevision":1,"translations":[]}""", "Model.IsActive", FulfillmentValidationCodes.ShippingTypeActiveRequired)]
+    [InlineData("""{"sortOrder":0,"isActive":true,"translations":[]}""", "Model.ExpectedRevision", FulfillmentValidationCodes.ShippingTypeRevisionShape)]
+    [InlineData("""{"sortOrder":0,"isActive":true,"expectedRevision":1}""", "Model.Translations", FulfillmentValidationCodes.ShippingTypeTranslationsRequired)]
+    [InlineData("""{"sortOrder":0,"isActive":true,"expectedRevision":1,"translations":null}""", "Model.Translations", FulfillmentValidationCodes.ShippingTypeTranslationsRequired)]
+    [InlineData("""{"sortOrder":0,"isActive":true,"expectedRevision":0,"translations":[]}""", "Model.ExpectedRevision", FulfillmentValidationCodes.ShippingTypeRevisionShape)]
+    [InlineData("""{"sortOrder":0,"isActive":true,"expectedRevision":1,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"x"},null]}""", "Model.Translations", FulfillmentValidationCodes.ShippingTypeTranslationShape)]
+    public async Task Put_presence_and_shape_rejections_never_reach_the_handler(
+        string body,
+        string property,
+        string expectedChildCode)
     {
         using var harness = Harness.Create();
         var revisionBefore = await harness.StoredRevisionAsync(harness.SeededId);
@@ -356,7 +420,10 @@ public sealed class ShippingTypeCatalogEndpointTests
         var response = await harness.SendAsync("PUT", $"{ListPath}/{harness.SeededId}", body);
 
         Assert.Equal(StatusCodes.Status400BadRequest, response.Status);
+        Assert.Equal(RootValidationCode, ErrorCode(response.Body));
+        Assert.Contains(expectedChildCode, ChildCodes(response.Body, property));
         Assert.Equal(1, harness.Counters.Dispatches);
+        Assert.Equal(0, harness.Counters.Arrivals);
         Assert.Equal(0, harness.Counters.LanguageLookups);
         Assert.Equal(revisionBefore, await harness.StoredRevisionAsync(harness.SeededId));
     }
@@ -369,7 +436,12 @@ public sealed class ShippingTypeCatalogEndpointTests
         var response = await harness.SendAsync("GET", $"{ListPath}/{Guid.Empty}");
 
         Assert.Equal(StatusCodes.Status400BadRequest, response.Status);
+        Assert.Equal(RootValidationCode, ErrorCode(response.Body));
+        Assert.Contains(
+            FulfillmentValidationCodes.ShippingTypeIdRequired,
+            ChildCodes(response.Body, "ShippingTypeId"));
         Assert.Equal(1, harness.Counters.Dispatches);
+        Assert.Equal(0, harness.Counters.Arrivals);
         Assert.Equal(0, harness.Counters.LanguageLookups);
     }
 
@@ -432,6 +504,126 @@ public sealed class ShippingTypeCatalogEndpointTests
     }
 
     [Fact]
+    public async Task Observed_delegate_dispatch_request_handler_and_validator_match_per_route()
+    {
+        using var harness = Harness.Create();
+
+        // Each of the four shipped delegates is invoked with VALID input; counters are reset per invocation.
+        var invocations = new[]
+        {
+            ("GET", ListPath, (string?)null),
+            ("GET", $"{ListPath}/{harness.SeededId}", (string?)null),
+            ("POST", ListPath, (string?)"""{"code":"observed_post","sortOrder":1,"translations":[{"languageId":"01900000-0000-7000-8000-00000000bb01","name":"نوع"}]}"""),
+            ("PUT", $"{ListPath}/{harness.SeededId}", (string?)UpdateBody(1, isActive: true, sortOrder: 5)),
+        };
+
+        var observed = new List<(string Route, string Request)>();
+        foreach (var (method, path, body) in invocations)
+        {
+            harness.Counters.Reset();
+            var response = await harness.SendAsync(method, path, body);
+            Assert.True(
+                response.Status is StatusCodes.Status200OK or StatusCodes.Status201Created,
+                $"{method} {path} unexpectedly returned {response.Status}");
+
+            // The dispatch is OBSERVED from the decorator, not assigned from the route string.
+            var dispatched = Assert.Single(harness.Counters.SenderRequests);
+            Assert.Equal(1, harness.Counters.Arrivals);
+            observed.Add((ExpectedRoute(method, path), dispatched));
+        }
+
+        // The same guard that rejects a swapped mapping must accept the real observed mapping.
+        Assert.Equal(4, ShippingTypeRouteClassification.VerifyObserved(harness.ShippingTypeRoutes(), observed).Count);
+
+        // Observed request types compared against the authoritative expected table, in both directions.
+        Assert.Equal(4, observed.Count);
+        Assert.Equal(
+            ShippingTypeRouteClassification.Expected
+                .Select(ExpectedRequestFor)
+                .OrderBy(x => x, StringComparer.Ordinal),
+            observed.Select(x => x.Request).OrderBy(x => x, StringComparer.Ordinal));
+
+        foreach (var (route, request) in observed)
+        {
+            Assert.Equal(ExpectedRequestFor(route), request);
+            AssertValidHandlerRegistered(harness, route, request);
+        }
+
+        AssertValidators<GetShippingTypeQuery, GetShippingTypeQueryValidator>(harness, 1);
+        AssertValidators<CreateShippingTypeCommand, CreateShippingTypeCommandValidator>(harness, 1);
+        AssertValidators<UpdateShippingTypeCommand, UpdateShippingTypeCommandValidator>(harness, 1);
+        Assert.Empty(harness.Scope.ServiceProvider.GetServices<FluentValidation.IValidator<ListShippingTypesQuery>>());
+    }
+
+    [Fact]
+    public void Same_route_set_with_a_swapped_observed_request_mapping_is_rejected()
+    {
+        var routes = ShippingTypeRouteClassification.Expected;
+
+        // The route strings are untouched; only the OBSERVED dispatch mapping is swapped.
+        var swapped = new List<(string Route, string Request)>
+        {
+            ("GET /v1/admin/shipping-types", "GetShippingTypeQuery"),
+            ("GET /v1/admin/shipping-types/{shippingTypeId:guid}", "ListShippingTypesQuery"),
+            ("POST /v1/admin/shipping-types", "UpdateShippingTypeCommand"),
+            ("PUT /v1/admin/shipping-types/{shippingTypeId:guid}", "CreateShippingTypeCommand"),
+        };
+
+        Assert.Throws<InvalidOperationException>(
+            () => ShippingTypeRouteClassification.VerifyObserved(routes, swapped));
+
+        // Control: the real mapping passes the same guard.
+        var correct = routes
+            .Select(route => (route, ExpectedRequestFor(route)))
+            .ToList();
+        Assert.Equal(4, ShippingTypeRouteClassification.VerifyObserved(routes, correct).Count);
+    }
+
+    private static string ExpectedRoute(string method, string path) =>
+        method == "GET" && path == ListPath ? "GET /v1/admin/shipping-types"
+        : method == "POST" ? "POST /v1/admin/shipping-types"
+        : method == "PUT" ? "PUT /v1/admin/shipping-types/{shippingTypeId:guid}"
+        : "GET /v1/admin/shipping-types/{shippingTypeId:guid}";
+
+    private static string ExpectedRequestFor(string route) => route switch
+    {
+        "GET /v1/admin/shipping-types" => nameof(ListShippingTypesQuery),
+        "GET /v1/admin/shipping-types/{shippingTypeId:guid}" => nameof(GetShippingTypeQuery),
+        "POST /v1/admin/shipping-types" => nameof(CreateShippingTypeCommand),
+        "PUT /v1/admin/shipping-types/{shippingTypeId:guid}" => nameof(UpdateShippingTypeCommand),
+        _ => throw new InvalidOperationException($"unexpected route: {route}"),
+    };
+
+    private static void AssertValidHandlerRegistered(Harness harness, string route, string requestName)
+    {
+        var requestType = route switch
+        {
+            "GET /v1/admin/shipping-types" => typeof(ListShippingTypesQuery),
+            "GET /v1/admin/shipping-types/{shippingTypeId:guid}" => typeof(GetShippingTypeQuery),
+            "POST /v1/admin/shipping-types" => typeof(CreateShippingTypeCommand),
+            _ => typeof(UpdateShippingTypeCommand),
+        };
+
+        Assert.Equal(requestName, requestType.Name);
+
+        var responseType = requestType.GetInterfaces()
+            .Single(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(MediatR.IRequest<>))
+            .GetGenericArguments()[0];
+        var handlerType = typeof(MediatR.IRequestHandler<,>).MakeGenericType(requestType, responseType);
+        var handler = harness.Scope.ServiceProvider.GetRequiredService(handlerType);
+
+        var expectedHandlerName = route switch
+        {
+            "GET /v1/admin/shipping-types" => nameof(ListShippingTypesHandler),
+            "GET /v1/admin/shipping-types/{shippingTypeId:guid}" => nameof(GetShippingTypeHandler),
+            "POST /v1/admin/shipping-types" => nameof(CreateShippingTypeHandler),
+            _ => nameof(UpdateShippingTypeHandler),
+        };
+
+        Assert.Equal(expectedHandlerName, handler.GetType().Name);
+    }
+
+    [Fact]
     public void The_three_validated_requests_resolve_their_validators_from_the_real_pipeline()
     {
         using var harness = Harness.Create();
@@ -472,8 +664,54 @@ public sealed class ShippingTypeCatalogEndpointTests
     private static string UpdateBody(long expectedRevision, bool isActive, int sortOrder) =>
         $$"""{"sortOrder":{{sortOrder}},"isActive":{{(isActive ? "true" : "false")}},"expectedRevision":{{expectedRevision}},"translations":[]}""";
 
+    private static string NonEmptyUpdateBody(
+        long expectedRevision,
+        bool isActive,
+        int sortOrder,
+        Guid languageId,
+        string name,
+        string? description)
+    {
+        var translation = new Dictionary<string, object?>
+        {
+            ["languageId"] = languageId,
+            ["name"] = name,
+        };
+
+        if (description is not null)
+        {
+            translation["description"] = description;
+        }
+
+        return JsonSerializer.Serialize(new Dictionary<string, object?>
+        {
+            ["sortOrder"] = sortOrder,
+            ["isActive"] = isActive,
+            ["expectedRevision"] = expectedRevision,
+            ["translations"] = new[] { translation },
+        });
+    }
+
+    private const string RootValidationCode = "validation.failed";
+
     private static string? ErrorCode(JsonElement body) =>
         body.TryGetProperty("errorCode", out var code) ? code.GetString() : null;
+
+    /// <summary>Child machine codes of the canonical validation problem, keyed by FluentValidation property.</summary>
+    private static IReadOnlyList<string> ChildCodes(JsonElement body, string property)
+    {
+        if (!body.TryGetProperty("errors", out var errors) || !errors.TryGetProperty(property, out var codes))
+        {
+            return [];
+        }
+
+        if (codes.ValueKind == JsonValueKind.Array)
+        {
+            return codes.EnumerateArray().Select(x => x.GetString()!).ToArray();
+        }
+
+        return codes.ValueKind == JsonValueKind.String ? [codes.GetString()!] : [];
+    }
 
     private static void AssertValidators<TRequest, TValidator>(Harness harness, int expected)
     {
@@ -528,6 +766,40 @@ public sealed class ShippingTypeCatalogEndpointTests
 
             return classified;
         }
+
+        /// <summary>
+        /// Guard for the OBSERVED mapping: the same four shipped route strings must be paired with the
+        /// expected request types. The route set alone is not enough — a swapped dispatch must fail here.
+        /// </summary>
+        internal static IReadOnlyList<(string Route, string Request)> VerifyObserved(
+            IReadOnlyList<string> routes,
+            IReadOnlyList<(string Route, string Request)> observed)
+        {
+            if (routes.Count != expectedRouteCount || observed.Count != expectedRouteCount)
+            {
+                throw new InvalidOperationException(
+                    $"capability route set {routes.Count} / observed {observed.Count} != {expectedRouteCount}");
+            }
+
+            if (!routes.OrderBy(x => x, StringComparer.Ordinal)
+                    .SequenceEqual(Expected.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal))
+            {
+                throw new InvalidOperationException("capability route set differs from the shipped four routes");
+            }
+
+            foreach (var (route, request) in observed)
+            {
+                if (ExpectedRequestFor(route) != request)
+                {
+                    throw new InvalidOperationException(
+                        $"route {route} dispatched {request}, expected {ExpectedRequestFor(route)}");
+                }
+            }
+
+            return observed;
+        }
+
+        private const int expectedRouteCount = 4;
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -544,7 +816,8 @@ public sealed class ShippingTypeCatalogEndpointTests
             IReadOnlyList<RouteEndpoint> endpoints,
             Counters counters,
             CountingAuthorization authz,
-            CountingAdminPanel panel)
+            CountingAdminPanel panel,
+            MutableClock clock)
         {
             _app = app;
             Scope = scope;
@@ -552,6 +825,7 @@ public sealed class ShippingTypeCatalogEndpointTests
             Counters = counters;
             Authz = authz;
             Panel = panel;
+            Clock = clock;
         }
 
         public IServiceScope Scope { get; }
@@ -563,6 +837,10 @@ public sealed class ShippingTypeCatalogEndpointTests
         public CountingAuthorization Authz { get; }
 
         public CountingAdminPanel Panel { get; }
+
+        public MutableClock Clock { get; }
+
+        public void AdvanceClock(TimeSpan delta) => Clock.Advance(delta);
 
         public string? LastLocation { get; private set; }
 
@@ -587,6 +865,7 @@ public sealed class ShippingTypeCatalogEndpointTests
             bool readCounting = false)
         {
             var counters = new Counters();
+            var clock = new MutableClock(Now);
             var database = $"tb196r3-{Guid.NewGuid():N}";
             var panelSeam = new CountingAdminPanel(panel);
             var authz = new CountingAuthorization(counters, permissions ?? [ShippingTypeAdminAuthorizer.View, ShippingTypeAdminAuthorizer.Manage]);
@@ -602,6 +881,12 @@ public sealed class ShippingTypeCatalogEndpointTests
             builder.Services.AddSingleton<IHostEnvironment>(new StubHostEnvironment());
             builder.Services.AddToobaObservabilityFoundation();
             builder.Services.AddToobaCqrsFoundation(typeof(CreateShippingTypeCommand).Assembly);
+            // TEST-ONLY arrival counter registered LAST, so it runs AFTER the real ValidationBehavior and
+            // measures arrival past validation (not an instrumentation inside a production handler).
+            builder.Services.AddSingleton(counters);
+            builder.Services.AddTransient(
+                typeof(IPipelineBehavior<,>),
+                typeof(PostValidationArrivalBehavior<,>));
 
             // The Host's own exception envelope so an uncaught endpoint exception is rendered by production.
             builder.Services.AddProblemDetails();
@@ -625,7 +910,7 @@ public sealed class ShippingTypeCatalogEndpointTests
             builder.Services.AddSingleton<ILanguageLookup>(languages);
 
             // Controlled deterministic clock/id only; production implementation types.
-            builder.Services.AddSingleton<IClock>(new FixedClock(Now));
+            builder.Services.AddSingleton<IClock>(clock);
             builder.Services.AddSingleton<IIdGenerator, UuidV7IdGenerator>();
 
             // Count ISender dispatch without replacing the handlers.
@@ -641,7 +926,7 @@ public sealed class ShippingTypeCatalogEndpointTests
                 .ToArray();
 
             var scope = app.Services.CreateScope();
-            var harness = new Harness(app, scope, endpoints, counters, authz, panelSeam);
+            var harness = new Harness(app, scope, endpoints, counters, authz, panelSeam, clock);
 
             // One lawful seeded row so GET/PUT routes have a real target from the real store.
             harness.SeededId = harness.SeedAsync().GetAwaiter().GetResult();
@@ -1001,6 +1286,8 @@ public sealed class ShippingTypeCatalogEndpointTests
     {
         public int Dispatches { get; set; }
 
+        public int Arrivals { get; set; }
+
         public int LanguageLookups { get; set; }
 
         public int ReadCalls { get; set; }
@@ -1012,6 +1299,7 @@ public sealed class ShippingTypeCatalogEndpointTests
         public void Reset()
         {
             Dispatches = 0;
+            Arrivals = 0;
             LanguageLookups = 0;
             ReadCalls = 0;
             AuthorizationChecks = 0;
@@ -1023,6 +1311,31 @@ public sealed class ShippingTypeCatalogEndpointTests
     {
         Allow = 1,
         RejectSellerOnly = 2,
+    }
+
+    /// <summary>TEST-ONLY: runs after the real ValidationBehavior; counts arrival past validation.</summary>
+    private sealed class PostValidationArrivalBehavior<TRequest, TResponse>(Counters counters)
+        : IPipelineBehavior<TRequest, TResponse>
+        where TRequest : notnull
+    {
+        public Task<TResponse> Handle(
+            TRequest request,
+            RequestHandlerDelegate<TResponse> next,
+            CancellationToken cancellationToken)
+        {
+            counters.Arrivals++;
+            return next();
+        }
+    }
+
+    /// <summary>Mutable controlled clock fixture; the test advances it explicitly (no sleep).</summary>
+    private sealed class MutableClock(DateTimeOffset start) : IClock
+    {
+        private DateTimeOffset _now = start;
+
+        public DateTimeOffset UtcNow => _now;
+
+        public void Advance(TimeSpan delta) => _now = _now.Add(delta);
     }
 
     private sealed class StubHostEnvironment : IHostEnvironment

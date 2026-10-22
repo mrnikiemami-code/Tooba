@@ -130,3 +130,30 @@ None. No production defect surfaced in this slice.
 
 Production schema, contracts, DI, resources, EF mapping, migrations and snapshots: **NONE**.
 Shared database/data/flag changes: **NONE**. TB-185 untouched; PendingAllocation/default-OFF unchanged.
+
+## Correction appended by TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R4 (2026-10-22)
+
+Architect review classified three R3 claims as overstated (R196-R3-01/02/03). This section corrects the record;
+nothing above is rewritten:
+
+- The "repeated identical nonempty text" no-op fact actually repeated `translations:[]`, and the fixed clock
+  never advanced, so an equal `UpdatedAt` could not detect a timestamp-only restamp. The fact is not executed
+  as previously worded. R4 rebuilt it from the actually stored translation under an advancing test clock and
+  re-asserted revision + persisted `UpdatedAt` exactly.
+- The POST/PUT validation facts asserted only `400` (with an unused theory argument); they did not assert the
+  canonical root `validation.failed` or the exact child machine codes. `LanguageLookups == 0` is evidence of
+  non-arrival at the handler's first I/O, not a measured "handler reached" counter. R4 added exact root/child
+  code assertions, an overlength-name case, an explicit transport-vs-validation distinction and a test-only
+  post-validation arrival counter.
+- The route classification assigned request names manually from route strings; it compared real route strings
+  and resolved validators but never observed the dispatched request per delegate. R4 observes
+  `CountingSender.SenderRequests` per real invocation, resolves handlers from real DI, and adds a same-route-set
+  swapped-mapping negative.
+- Harness qualification: the production endpoint-presentation registration is invoked directly, while the
+  store and language-adapter registrations are manually reproduced in the test composition — production types
+  in a test composition, not an independent verification of every production Infrastructure DI registration.
+- Registry qualification: the fixture is `fa` (default) plus active non-fa `en`, not a single non-fa default and
+  not a live Localization DB; no dynamic-registry matrix is claimed here.
+
+The three corrected facts are executed in
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R4/RESULT.md`.
