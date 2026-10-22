@@ -46,11 +46,18 @@ public sealed class ShippingErrorCatalogAndResourcesTests
     [Fact]
     public void Every_registered_descriptor_keeps_the_legacy_http_contract()
     {
-        // TB-188 added exactly one explicitly classified availability code; the 44 legacy codes are
-        // NOT re-classified and must keep their historical 400/Business/Warning contract.
+        // TB-188 added exactly one explicitly classified availability code and TB-189 added the two
+        // owner-scope gate codes; the 44 legacy codes are NOT re-classified and must keep their
+        // historical 400/Business/Warning contract.
+        var explicitCodes = new[]
+        {
+            ShippingErrorCodes.AuthoringConfigurationUnavailable,
+            ShippingErrorCodes.AuthoringOwnerScopeDenied,
+            ShippingErrorCodes.AuthoringOwnerScopeUnavailable,
+        };
         var legacy = new ShippingErrorCatalogContributor()
             .Contribute()
-            .Where(descriptor => descriptor.Code != ShippingErrorCodes.AuthoringConfigurationUnavailable)
+            .Where(descriptor => !explicitCodes.Contains(descriptor.Code, StringComparer.Ordinal))
             .ToArray();
         Assert.Equal(44, legacy.Length);
 
@@ -78,8 +85,51 @@ public sealed class ShippingErrorCatalogAndResourcesTests
         Assert.Equal(descriptor.Code, descriptor.LocalizationKey);
         Assert.False(string.IsNullOrWhiteSpace(descriptor.SafeTitleFallback));
 
-        // No other shipping.* code silently becomes unavailable: the explicit classification is bounded.
-        Assert.Single(descriptors, candidate => candidate.HttpStatus != StatusCodes.Status400BadRequest);
+        // No other shipping.* code silently becomes unavailable: the explicit 503 classification is
+        // bounded to the single TB-188 configuration code.
+        Assert.Single(descriptors, candidate => candidate.HttpStatus == StatusCodes.Status503ServiceUnavailable);
+    }
+
+    [Fact]
+    public void The_owner_scope_gate_uses_one_403_denial_and_one_404_capability_code()
+    {
+        var descriptors = new ShippingErrorCatalogContributor().Contribute();
+
+        var denied = Assert.Single(
+            descriptors,
+            candidate => candidate.Code == ShippingErrorCodes.AuthoringOwnerScopeDenied);
+        Assert.Equal(StatusCodes.Status403Forbidden, denied.HttpStatus);
+        Assert.Equal(ErrorClassification.Forbidden, denied.Classification);
+        Assert.Equal(ErrorSeverity.Warning, denied.Severity);
+        Assert.Equal(denied.Code, denied.LocalizationKey);
+
+        var unavailable = Assert.Single(
+            descriptors,
+            candidate => candidate.Code == ShippingErrorCodes.AuthoringOwnerScopeUnavailable);
+        Assert.Equal(StatusCodes.Status404NotFound, unavailable.HttpStatus);
+        Assert.Equal(ErrorClassification.NotFound, unavailable.Classification);
+        Assert.Equal(ErrorSeverity.Warning, unavailable.Severity);
+        Assert.Equal(unavailable.Code, unavailable.LocalizationKey);
+
+        // Denial and capability-unavailable stay distinct: a SingleStore seller route is a 404
+        // capability fact, never a 403 permission verdict about a seller that does not exist.
+        Assert.NotEqual(denied.HttpStatus, unavailable.HttpStatus);
+        Assert.Single(descriptors, candidate => candidate.HttpStatus == StatusCodes.Status403Forbidden);
+        Assert.Single(descriptors, candidate => candidate.HttpStatus == StatusCodes.Status404NotFound);
+
+        // Exactly the three explicitly classified non-400 codes exist; nothing else drifted.
+        Assert.Equal(
+            new HashSet<string>(
+                [
+                    ShippingErrorCodes.AuthoringConfigurationUnavailable,
+                    ShippingErrorCodes.AuthoringOwnerScopeDenied,
+                    ShippingErrorCodes.AuthoringOwnerScopeUnavailable,
+                ],
+                StringComparer.Ordinal),
+            descriptors
+                .Where(candidate => candidate.HttpStatus != StatusCodes.Status400BadRequest)
+                .Select(candidate => candidate.Code)
+                .ToHashSet(StringComparer.Ordinal));
     }
 
     [Fact]

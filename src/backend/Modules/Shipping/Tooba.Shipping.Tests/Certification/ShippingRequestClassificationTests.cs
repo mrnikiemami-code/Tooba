@@ -31,24 +31,30 @@ public sealed class ShippingRequestClassificationTests
     private const string NoValidatorRequired = "NO_VALIDATOR_REQUIRED";
     private const string ManifestRelativePath = "docs/architecture/shipping/shipping-request-classification.json";
 
-    /// <summary>Exact count of the certified endpoint-reachable request universe (W3 gate + TB-188 additive read).</summary>
-    private const int CertifiedRequestCount = 17;
+    /// <summary>Exact count of the certified endpoint-reachable request universe (W3 gate + TB-188 + TB-189).</summary>
+    private const int CertifiedRequestCount = 18;
+
+    /// <summary>Exact count of shipped routes: TB-189 adds two routes for ONE shared request.</summary>
+    private const int CertifiedRouteCount = 19;
 
     [Fact]
     public void Shipped_route_universe_equals_the_classified_manifest_exactly()
     {
         var rows = ManifestRows();
         var shipped = ShippedRoutes();
+        var classifiedRoutes = rows.SelectMany(row => row.Routes).ToArray();
 
         // Exact set equality, both directions: no unclassified live route, no phantom manifest route.
         Assert.Equal(
-            rows.Select(row => $"{row.Verb} {row.Path}").OrderBy(x => x, StringComparer.Ordinal).ToArray(),
+            classifiedRoutes.Select(route => $"{route.Verb} {route.Path}").OrderBy(x => x, StringComparer.Ordinal).ToArray(),
             shipped.Select(route => $"{route.Verb} {route.Path}").OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
-        // Each route pattern and each request is classified exactly once; duplicates are not "coverage".
-        Assert.Equal(rows.Count, rows.Select(row => $"{row.Verb} {row.Path}").Distinct(StringComparer.Ordinal).Count());
+        // Each route pattern is classified exactly once; duplicates are not "coverage".
+        Assert.Equal(classifiedRoutes.Length, classifiedRoutes.Select(route => $"{route.Verb} {route.Path}").Distinct(StringComparer.Ordinal).Count());
+        // A request may be reachable through more than one classified route (one row per request, not per route).
         Assert.Equal(rows.Count, rows.Select(row => row.Request).Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(CertifiedRequestCount, rows.Count);
+        Assert.Equal(CertifiedRouteCount, classifiedRoutes.Length);
     }
 
     [Fact]
@@ -57,7 +63,8 @@ public sealed class ShippingRequestClassificationTests
         var rows = ManifestRows();
         foreach (var route in ShippedRoutes())
         {
-            var row = rows.Single(candidate => candidate.Verb == route.Verb && candidate.Path == route.Path);
+            var row = rows.Single(candidate => candidate.Routes.Any(declared =>
+                declared.Verb == route.Verb && declared.Path == route.Path));
             Assert.Equal(row.Request, route.Request);
 
             // The real dispatch site is the handler body, so the classification cannot drift from it.
@@ -70,7 +77,7 @@ public sealed class ShippingRequestClassificationTests
     [Fact]
     public void Application_request_universe_equals_the_endpoint_reachable_universe()
     {
-        var reachable = ShippedRoutes().Select(route => route.Request).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        var reachable = ShippedRoutes().Select(route => route.Request).Distinct().OrderBy(x => x, StringComparer.Ordinal).ToArray();
         var declared = ApplicationRequests().OrderBy(x => x, StringComparer.Ordinal).ToArray();
         var classified = ManifestRows().Select(row => row.Request).OrderBy(x => x, StringComparer.Ordinal).ToArray();
 
@@ -100,19 +107,56 @@ public sealed class ShippingRequestClassificationTests
 
             // NO_VALIDATOR_REQUIRED is only legal when a validator would own nothing. Prove the
             // absence from real sources instead of trusting the label: no validator type exists,
-            // the route template carries no parameter, and the handler binds no route/query/body.
+            // every route template carries no parameter, and each handler binds no route/query/body.
             Assert.Equal(NoValidatorRequired, row.Classification);
             Assert.Null(row.Validator);
             Assert.False(validators.ContainsKey(row.Request), $"{row.Request} declares NO_VALIDATOR_REQUIRED but has a validator");
-            Assert.DoesNotContain("{", row.Path, StringComparison.Ordinal);
 
-            var route = shipped.Single(candidate => candidate.Verb == row.Verb && candidate.Path == row.Path);
-            Assert.DoesNotContain("context.Request.Query", route.HandlerSource, StringComparison.Ordinal);
-            Assert.DoesNotContain("ReadFromJsonAsync", route.HandlerSource, StringComparison.Ordinal);
-            Assert.DoesNotContain("[FromRoute]", route.HandlerSource, StringComparison.Ordinal);
-            Assert.DoesNotContain("[FromQuery]", route.HandlerSource, StringComparison.Ordinal);
-            Assert.Contains($"new {row.Request}()", route.HandlerSource, StringComparison.Ordinal);
+            foreach (var declared in row.Routes)
+            {
+                Assert.DoesNotContain("{", declared.Path, StringComparison.Ordinal);
+
+                var route = shipped.Single(candidate => candidate.Verb == declared.Verb && candidate.Path == declared.Path);
+                Assert.DoesNotContain("context.Request.Query", route.HandlerSource, StringComparison.Ordinal);
+                Assert.DoesNotContain("ReadFromJsonAsync", route.HandlerSource, StringComparison.Ordinal);
+                Assert.DoesNotContain("[FromRoute]", route.HandlerSource, StringComparison.Ordinal);
+                Assert.DoesNotContain("[FromQuery]", route.HandlerSource, StringComparison.Ordinal);
+                Assert.Contains($"new {row.Request}(", route.HandlerSource, StringComparison.Ordinal);
+            }
         }
+    }
+
+    [Fact]
+    public void The_shared_owner_read_has_both_route_provenance_paths_and_no_trusted_seller_input()
+    {
+        var owner = ManifestRows().Single(row => row.Request == "GetShippingAuthoringOwnerQuery");
+
+        Assert.Equal(NoValidatorRequired, owner.Classification);
+        Assert.Null(owner.Validator);
+        Assert.Equal(
+            [
+                new ManifestRoute("GET", "/v1/admin/shipping-services/authoring-owner"),
+                new ManifestRoute("GET", "/v1/seller/shipping-services/authoring-owner"),
+            ],
+            owner.Routes);
+
+        var shipped = ShippedRoutes();
+        var admin = shipped.Single(route => route.Path == "/v1/admin/shipping-services/authoring-owner");
+        var seller = shipped.Single(route => route.Path == "/v1/seller/shipping-services/authoring-owner");
+
+        // One use case, two real gates: never one permissive replacement route.
+        Assert.Equal(owner.Request, admin.Request);
+        Assert.Equal(owner.Request, seller.Request);
+        Assert.Contains("RequireAdminOwnerAsync", admin.HandlerSource, StringComparison.Ordinal);
+        Assert.Contains("RequireSellerOwnerAsync", seller.HandlerSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("RequireAdminOwnerAsync", seller.HandlerSource, StringComparison.Ordinal);
+
+        // The seller candidate header is only ever consumed by the canonical platform seam, never
+        // parsed or copied into the request/response by Shipping.
+        Assert.DoesNotContain("X-Tooba-Seller-Party", seller.HandlerSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("Request.Headers", seller.HandlerSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("SellerPartyId", seller.HandlerSource, StringComparison.Ordinal);
+        Assert.Contains("new GetShippingAuthoringOwnerQuery(scope)", seller.HandlerSource, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -133,9 +177,11 @@ public sealed class ShippingRequestClassificationTests
 
         Assert.Equal(declared, fromRows);
 
-        // The single authorized additive read is the only exception; every other row keeps a validator.
-        Assert.Equal(new[] { "GetShippingAuthoringContextQuery" }, declared);
-        Assert.Equal(17, ManifestRows().Count);
+        // Two additive authorized reads are the only exceptions; every other row keeps a validator.
+        Assert.Equal(
+            new[] { "GetShippingAuthoringContextQuery", "GetShippingAuthoringOwnerQuery" },
+            declared);
+        Assert.Equal(18, ManifestRows().Count);
         Assert.Equal(16, ManifestRows().Count(row => row.Classification == ValidatorRequired));
     }
 
@@ -243,7 +289,9 @@ public sealed class ShippingRequestClassificationTests
     public void A_new_unclassified_route_or_request_is_reported_instead_of_silently_accepted()
     {
         var rows = ManifestRows();
-        var classifiedRoutes = rows.Select(row => $"{row.Verb} {row.Path}").ToHashSet(StringComparer.Ordinal);
+        var classifiedRoutes = rows.SelectMany(row => row.Routes)
+            .Select(route => $"{route.Verb} {route.Path}")
+            .ToHashSet(StringComparer.Ordinal);
         var classifiedRequests = rows.Select(row => row.Request).ToHashSet(StringComparer.Ordinal);
 
         // Negative detection: the guard compares real universes, so any new route/request is uncovered.
@@ -285,13 +333,37 @@ public sealed class ShippingRequestClassificationTests
             .EnumerateArray()
             .Select(item => new ManifestRow(
                 item.GetProperty("request").GetString()!,
-                item.GetProperty("route").GetString()!.Split(' ', 2)[0],
-                item.GetProperty("route").GetString()!.Split(' ', 2)[1],
+                ManifestRoutes(item),
                 item.GetProperty("handler").GetString()!,
                 item.GetProperty("classification").GetString()!,
                 item.TryGetProperty("validator", out var validator) ? validator.GetString() : null))
             .ToArray();
     }
+
+    /// <summary>
+    /// A manifest row is keyed by request. Legacy rows carry one <c>route</c>; a request that is
+    /// legitimately reachable through more than one route carries a <c>routes</c> array instead, so
+    /// neither provenance path can be dropped or silently duplicated.
+    /// </summary>
+    private static ManifestRoute[] ManifestRoutes(JsonElement item)
+    {
+        if (item.TryGetProperty("routes", out var multiple))
+        {
+            Assert.False(
+                item.TryGetProperty("route", out _),
+                $"{item.GetProperty("request").GetString()} declares both route and routes");
+            return multiple
+                .EnumerateArray()
+                .Select(text => text.GetString()!)
+                .Select(SplitRoute)
+                .ToArray();
+        }
+
+        return [SplitRoute(item.GetProperty("route").GetString()!)];
+    }
+
+    private static ManifestRoute SplitRoute(string route) =>
+        new(route.Split(' ', 2)[0], route.Split(' ', 2)[1]);
 
     private static JsonDocument ManifestDocument()
     {
@@ -301,11 +373,22 @@ public sealed class ShippingRequestClassificationTests
 
     private static IReadOnlyList<ShippedRoute> ShippedRoutes()
     {
+        var prefixes = MapperRoutePrefixes();
         var routes = new List<ShippedRoute>();
         foreach (var path in EndpointSourceFiles())
         {
             var text = File.ReadAllText(path);
-            foreach (Match match in RouteRegex().Matches(text))
+            var matches = RouteRegex().Matches(text);
+            if (matches.Count == 0)
+            {
+                continue;
+            }
+
+            // The physical group prefix is derived from the composition entry, never hardcoded here,
+            // so a route mapped under /v1/seller cannot be mistaken for an /v1/admin route.
+            var mapper = MapperClass(text, prefixes, path);
+            var prefix = prefixes[mapper];
+            foreach (Match match in matches)
             {
                 var handler = match.Groups["handler"].Value;
                 var body = HandlerBody(text, handler);
@@ -313,7 +396,7 @@ public sealed class ShippingRequestClassificationTests
                 Assert.True(request.Success, $"{Path.GetFileName(path)}:{handler} does not dispatch a classified request");
                 routes.Add(new ShippedRoute(
                     match.Groups["verb"].Value.ToUpperInvariant(),
-                    $"/v1/admin{match.Groups["path"].Value}",
+                    $"{prefix}{match.Groups["path"].Value}",
                     request.Groups["request"].Value,
                     handler,
                     body));
@@ -321,6 +404,51 @@ public sealed class ShippingRequestClassificationTests
         }
 
         return routes;
+    }
+
+    /// <summary>Maps each capability mapper to the concrete route-group prefix its file is mapped under.</summary>
+    private static Dictionary<string, string> MapperRoutePrefixes()
+    {
+        var module = File.ReadAllText(Path.Combine(
+            RepoRoot(),
+            "src",
+            "backend",
+            "Modules",
+            "Shipping",
+            "Tooba.Shipping.Endpoints",
+            "ShippingEndpointModule.cs"));
+
+        var groups = GroupDeclaration().Matches(module)
+            .ToDictionary(
+                match => match.Groups["group"].Value,
+                match => match.Groups["prefix"].Value,
+                StringComparer.Ordinal);
+
+        var prefixes = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (Match match in MapperMapping().Matches(module))
+        {
+            var mapper = match.Groups["mapper"].Value;
+            var group = match.Groups["group"].Value;
+            Assert.True(groups.ContainsKey(group), $"{mapper} is mapped under an undeclared group {group}");
+            Assert.False(prefixes.ContainsKey(mapper), $"{mapper} is mapped more than once");
+            prefixes[mapper] = groups[group];
+        }
+
+        Assert.NotEmpty(prefixes);
+        return prefixes;
+    }
+
+    private static string MapperClass(string text, IReadOnlyDictionary<string, string> prefixes, string path)
+    {
+        var declared = MapperClassDeclaration().Matches(text)
+            .Select(match => match.Groups["mapper"].Value)
+            .Where(prefixes.ContainsKey)
+            .ToArray();
+
+        Assert.True(
+            declared.Length == 1,
+            $"{Path.GetFileName(path)} must declare exactly one mapper that the composition entry maps, found {declared.Length}");
+        return declared[0];
     }
 
     private static string HandlerBody(string text, string handler)
@@ -390,6 +518,18 @@ public sealed class ShippingRequestClassificationTests
         @"Map(?<verb>Get|Post|Put|Patch|Delete)\(\s*""(?<path>[^""]+)""\s*,\s*(?<handler>\w+)",
         RegexOptions.CultureInvariant);
 
+    private static Regex GroupDeclaration() => new(
+        @"var\s+(?<group>\w+)\s*=\s*app\.MapGroup\(\s*""(?<prefix>[^""]+)""\s*\)",
+        RegexOptions.CultureInvariant);
+
+    private static Regex MapperMapping() => new(
+        @"(?<mapper>\w+)\.Map\(\s*(?<group>\w+)\s*\)",
+        RegexOptions.CultureInvariant);
+
+    private static Regex MapperClassDeclaration() => new(
+        @"public static class (?<mapper>\w+)",
+        RegexOptions.CultureInvariant);
+
     private static Regex RequestConstruction() => new(
         @"sender\.Send\(\s*new\s+(?<request>\w+)\s*\(",
         RegexOptions.CultureInvariant);
@@ -422,7 +562,14 @@ public sealed class ShippingRequestClassificationTests
         throw new InvalidOperationException("repo root not found");
     }
 
-    private sealed record ManifestRow(string Request, string Verb, string Path, string Handler, string Classification, string? Validator);
+    private sealed record ManifestRoute(string Verb, string Path);
+
+    private sealed record ManifestRow(
+        string Request,
+        IReadOnlyList<ManifestRoute> Routes,
+        string Handler,
+        string Classification,
+        string? Validator);
 
     private sealed record ShippedRoute(string Verb, string Path, string Request, string Handler, string HandlerSource);
 }

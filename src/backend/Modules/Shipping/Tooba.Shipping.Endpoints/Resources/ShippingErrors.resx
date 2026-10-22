@@ -139,4 +139,10 @@
   <data name="shipping.authoring.configuration_unavailable" xml:space="preserve">
     <value>Shipping authoring configuration is unavailable.</value>
   </data>
+  <data name="shipping.authoring.owner_scope_denied" xml:space="preserve">
+    <value>You are not permitted to author shipping rules for this owner scope.</value>
+  </data>
+  <data name="shipping.authoring.owner_scope_unavailable" xml:space="preserve">
+    <value>Shipping rule ownership is unavailable in this installation.</value>
+  </data>
 </root>

@@ -153,4 +153,17 @@ public static class ShippingErrorCodes
     /// این یک خطای دسترس‌پذیری مصرف‌کننده است و هیچ زبان/ارز/حالتی را فعال یا حدس نمی‌زند.
     /// </summary>
     public const string AuthoringConfigurationUnavailable = "shipping.authoring.configuration_unavailable";
+
+    /// <summary>
+    /// مجوز کافی برای محدودهٔ مالک درخواستی وجود ندارد: actor برای فروشندهٔ درخواستی مجاز نشده،
+    /// مجوز <c>fulfillment.view</c> در سطح کل مالک ندارد، یا فقط grant محدود به دسته/محصول/برند/انبار
+    /// یا ردشده با سقف دارد. این پاسخ هیچ اطلاعاتی دربارهٔ وجود مالک/فروشنده leakage نمی‌کند.
+    /// </summary>
+    public const string AuthoringOwnerScopeDenied = "shipping.authoring.owner_scope_denied";
+
+    /// <summary>
+    /// مالکِ درخواستی در این نصب اصلاً وجود ندارد یا قابل ارائه نیست؛ مثلاً مسیر فروشنده در نصب
+    /// SingleStore. این یک ناتوانی قابلیت است، نه رد مجوز و نه «فروشنده پیدا نشد».
+    /// </summary>
+    public const string AuthoringOwnerScopeUnavailable = "shipping.authoring.owner_scope_unavailable";
 }

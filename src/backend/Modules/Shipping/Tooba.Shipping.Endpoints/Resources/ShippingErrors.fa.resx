@@ -139,4 +139,10 @@
   <data name="shipping.authoring.configuration_unavailable" xml:space="preserve">
     <value>تنظیمات نویسندگی ارسال در دسترس نیست.</value>
   </data>
+  <data name="shipping.authoring.owner_scope_denied" xml:space="preserve">
+    <value>اجازهٔ نوشتن قواعد ارسال برای این محدودهٔ مالک را ندارید.</value>
+  </data>
+  <data name="shipping.authoring.owner_scope_unavailable" xml:space="preserve">
+    <value>مالکیت قواعد ارسال در این نصب در دسترس نیست.</value>
+  </data>
 </root>

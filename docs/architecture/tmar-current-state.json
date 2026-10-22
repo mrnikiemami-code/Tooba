@@ -16945,5 +16945,30 @@
     "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188/RESULT.md",
     "workflowStop": "STOP_FOR_ARCHITECT",
     "automaticNextImplementationTask": "NONE"
+  },
+  "shippingAuthoringOwnerScope189": {
+    "task": "TB-SHIPPING-ADMIN-AUTHORIZED-OWNER-SCOPE-189",
+    "parent": "TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188",
+    "program": "TOOBA-SHIPPING-ADMIN-BACKEND-DELIVERY",
+    "mode": "BOUNDED_SERVER_AUTHORIZED_SHIPPING_RULE_OWNER_SCOPE",
+    "kind": "ADDITIVE_AUTHORIZED_FEATURE_NOT_RECERTIFICATION",
+    "state": "IMPLEMENTED_AND_TESTED_PENDING_ARCHITECT",
+    "api": "GET /v1/admin/shipping-services/authoring-owner and GET /v1/seller/shipping-services/authoring-owner (literal, parameterless, existing fulfillment.view, one shared GetShippingAuthoringOwnerQuery, ApiResponseFactory.From)",
+    "ownerModel": "Application-internal immutable ShippingAuthoringOwnerScope (Store with the resolved stable TenantId and no seller; Marketplace with neither tenant nor seller; Seller with the authorized SellerPartyId and no SingleStore tenant) plus the compact view { ownerKind, sellerPartyId } only",
+    "authorization": "admin: existing IShippingAdminAuthorizer + trusted installation context (SingleStore => Store, Marketplace => Marketplace); seller: resolved Marketplace + ISellerPanelAccess actor->SellerPartyId + IPlatformEffectiveAccessReader for the SAME actor/owner requiring fulfillment.view at GlobalWithinOwner and not DeniedByCeiling; the seam takes permissionId so a future write can request fulfillment.manage (view does not authorize manage)",
+    "installationCapability": "SingleStore seller route => shipping.authoring.owner_scope_unavailable / HTTP 404 before seller resolution and before ISender dispatch; no forged Marketplace context; request headers/query cannot override the resolved edition/tenant/owner/seller",
+    "newErrors": "shipping.authoring.owner_scope_denied = Forbidden/403/Warning; shipping.authoring.owner_scope_unavailable = NotFound/404/Warning; the 44 legacy codes and the TB-188 503 code are unchanged",
+    "trace": "one IModuleCallTracer child span module.Shipping.AccessControl.GetEffectivePermissions around the effective-permission read, with constant source/target/operation, correct parent/disposal, exception type only and no actor/seller ids in tags",
+    "classification": "18 requests / 19 routes; GetShippingAuthoringOwnerQuery is NO_VALIDATOR_REQUIRED with both route provenance paths recorded in one request-keyed manifest row; the guard derives each mapper group prefix from the composition entry instead of hardcoding /v1/admin",
+    "structure": "Shipping.Endpoints gained one Seller audience folder and one installer/owner gate registration; ShippingInstallationContext is a mechanical extraction of the W1 edition/tenant validation with identical behavior and unchanged error code",
+    "legacyNonAttribution": "existing global rate/catalog rows are NOT assigned, copied or exposed to the owner-scoped model; quote behavior and D3 persistence are untouched",
+    "dbProvenance": "NOT_PROVEN: platform seams are labelled fakes in tests; the production adapter is exercised but no real identity store, merchant database or running server was used",
+    "remainingGates": "PERSISTED_OWNER_ISOLATION_D3_SELLER_AUTHORED_RULES_UI_CONNECTION_CARRIER_INTEGRATED_ACCEPTANCE",
+    "schemaDataFlagChanges": "NONE",
+    "guardsWeakened": "NONE",
+    "certificationImpact": "NONE; shippingArchComplete002Structure remains the historical W3-R1 whole-module baseline and no recertification is claimed",
+    "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORIZED-OWNER-SCOPE-189/RESULT.md",
+    "workflowStop": "STOP_FOR_ARCHITECT",
+    "automaticNextImplementationTask": "NONE"
   }
 }

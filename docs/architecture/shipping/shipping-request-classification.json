@@ -3,21 +3,18 @@
   "lockVersion": "ARCH-COMPLETE-002",
   "task": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3",
   "scope": "Endpoint-reachable MediatR request universe of the existing Shipping backend baseline, independently re-derived from shipped sources. This manifest is not a feature authorization: it classifies transport input only.",
-  "amendment": {
-    "task": "TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188",
-    "date": "2026-10-22",
-    "scope": "One additive authorized GET (admin authoring context) is classified here. No previous row changed classification, validator, route or handler.",
-    "noValidatorProvenance": "GetShippingAuthoringContextQuery is constructed with zero arguments in a literal, parameterless route; the endpoint binds no route value, no query string and no body, so there is no caller-controlled transport input for a validator to own. The guard proves absence (no IValidator<T>, no route template parameters, no request Query/body access in the handler body) instead of trusting the label."
-  },
   "derivation": {
     "routeSource": "src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/**/*.cs (group.Map* call sites)",
     "dispatchSource": "handler bodies: sender.Send(new <Request>(...))",
     "requestSource": "src/backend/Modules/Shipping/Tooba.Shipping.Application/**/*.cs (public sealed record ... : IRequest<...>)",
     "handlerSource": "IRequestHandler<Request, ...> implementations in Tooba.Shipping.Application",
     "validatorSource": "AbstractValidator<T> implementations in Tooba.Shipping.Application",
-    "routePrefix": "/v1/admin",
-    "routeOwnership": "ShippingEndpointModule.MapShippingEndpoints -> MapGroup(\"/v1/admin\") -> 6 capability mappers",
-    "guard": "src/backend/Modules/Shipping/Tooba.Shipping.Tests/Certification/ShippingRequestClassificationTests.cs"
+    "routeOwnership": "ShippingEndpointModule.MapShippingEndpoints -> MapGroup(\"/v1/admin\") -> 7 admin capability mappers, MapGroup(\"/v1/seller\") -> 1 seller capability mapper",
+    "guard": "src/backend/Modules/Shipping/Tooba.Shipping.Tests/Certification/ShippingRequestClassificationTests.cs",
+    "routePrefixes": [
+      "/v1/admin",
+      "/v1/seller"
+    ]
   },
   "transportFailureContract": "FluentValidation failure is rendered by ApiResponseFactory as HTTP 400 validation.failed with the declared shipping.validation.* / per-capability validation child codes; no endpoint maps transport failure by message parsing.",
   "requests": [
@@ -258,6 +255,21 @@
       ],
       "transportRule": "literal parameterless route; the handler reads no route value, no query string and no body and constructs new GetShippingAuthoringContextQuery() with zero arguments",
       "reason": "Effective edition, default currency and content languages are resolved server-side from trusted context and Contracts; there is no caller-controlled transport input, so a validator would own nothing. The classification is proven by the guard, not asserted from intent."
+    },
+    {
+      "request": "GetShippingAuthoringOwnerQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-owner",
+        "GET /v1/seller/shipping-services/authoring-owner"
+      ],
+      "handler": "GetShippingAuthoringOwnerHandler",
+      "classification": "NO_VALIDATOR_REQUIRED",
+      "inputs": [
+        "authorization:fulfillment.view:admin-gate-and-trusted-installation-context:authorizer-seam",
+        "authorization:fulfillment.view:GlobalWithinOwner:seller-panel-and-effective-access-seams"
+      ],
+      "transportRule": "literal parameterless routes; each handler constructs the request from a server-built ShippingAuthoringOwnerScope and reads no route value, no query string and no body",
+      "reason": "The owner scope is resolved and authorized by the server on every request; there is no caller-controlled transport input, so a validator would own nothing. The classification is proven by the guard, not asserted from intent."
     }
   ],
   "nestedTransportValidators": [
@@ -269,13 +281,28 @@
     "ShippingOperationalQuoteEvaluationRequestValidator"
   ],
   "noValidatorRequiredRequests": [
-    "GetShippingAuthoringContextQuery"
+    "GetShippingAuthoringContextQuery",
+    "GetShippingAuthoringOwnerQuery"
   ],
   "totals": {
-    "shippedRoutes": 17,
-    "endpointReachableRequests": 17,
+    "shippedRoutes": 19,
+    "endpointReachableRequests": 18,
     "requestValidators": 16,
     "nestedTransportValidators": 6,
     "declaredValidators": 22
-  }
+  },
+  "amendments": [
+    {
+      "task": "TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188",
+      "date": "2026-10-22",
+      "scope": "One additive authorized GET (admin authoring context) is classified here. No previous row changed classification, validator, route or handler.",
+      "noValidatorProvenance": "GetShippingAuthoringContextQuery is constructed with zero arguments in a literal, parameterless route; the endpoint binds no route value, no query string and no body, so there is no caller-controlled transport input for a validator to own. The guard proves absence (no IValidator<T>, no route template parameters, no request Query/body access in the handler body) instead of trusting the label."
+    },
+    {
+      "task": "TB-SHIPPING-ADMIN-AUTHORIZED-OWNER-SCOPE-189",
+      "date": "2026-10-22",
+      "scope": "Two additive authorized GETs (admin and seller authoring owner) share ONE request. The row is therefore keyed by request and carries both route provenance paths; one route is not assumed to equal one request, and no route is left unclassified.",
+      "sharedRequestProvenance": "GetShippingAuthoringOwnerQuery is constructed exactly once per route in the endpoint delegate, from a ShippingAuthoringOwnerScope built by executed server authorization (admin trusted installation gate, or seller panel gate + effective whole-owner permission). No route value, query string or body is bound and no owner/mode/tenant/seller field is forwarded from transport, so a validator would own nothing."
+    }
+  ]
 }

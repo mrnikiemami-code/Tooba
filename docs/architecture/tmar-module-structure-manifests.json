@@ -2473,7 +2473,7 @@
         {
           "projectName": "Tooba.Shipping.Application",
           "rootAllowlist": [],
-          "rootAllowlistJustification": "Shipping.Application has no root .cs: the capability folders Operations/Packaging/Rates/Scheduling plus the TB-188 Authoring read capability carry Commands/Queries/Ports/ReadModels/Models/Validation as secondary axes plus the cross-capability Validation/ seam; zero per-use-case leaf folders; path<->namespace exact.",
+          "rootAllowlistJustification": "Shipping.Application has no root .cs: the capability folders Operations/Packaging/Rates/Scheduling plus the Authoring read capability (TB-188 context, TB-189 owner scope) carry Commands/Queries/Ports/ReadModels/Models/Validation as secondary axes plus the cross-capability Validation/ seam; zero per-use-case leaf folders; path<->namespace exact.",
           "forbiddenRootFiles": [],
           "forbiddenTopLevelFolders": [
             "Commands",
@@ -2524,7 +2524,7 @@
           "rootAllowlist": [
             "ShippingEndpointModule.cs"
           ],
-          "rootAllowlistJustification": "Composition entry only: ShippingEndpointModule at the project root maps the module-owned /v1/admin routes and registers the single error catalog contributor plus the single error resource set; Admin/ holds the route groups and the authorizer seam, Errors/ the catalog contributor and Resources/ the bilingual resx set; namespace alignment is exact path-derived equality.",
+          "rootAllowlistJustification": "Composition entry only: ShippingEndpointModule at the project root maps the module-owned /v1/admin and /v1/seller routes and registers the single error catalog contributor, the single error resource set and the single owner-scope authorizer; Admin/ holds the admin route groups, the installation-context helper and the authorizer seams, Seller/ the seller owner-scope route group, Errors/ the catalog contributor and Resources/ the bilingual resx set; namespace alignment is exact path-derived equality.",
           "forbiddenRootFiles": [
             "ShippingRateCoverageEndpoints.cs",
             "ShippingMethodFinancialStatusEndpoints.cs",
@@ -2533,7 +2533,11 @@
             "ShippingOperationalQuoteEndpoints.cs",
             "ShippingAdminAuthorizer.cs",
             "ShippingErrorCatalogContributor.cs",
-            "ShippingErrorResources.cs"
+            "ShippingErrorResources.cs",
+            "ShippingAuthoringOwnerAuthorizer.cs",
+            "ShippingInstallationContext.cs",
+            "ShippingAuthoringOwnerEndpoints.cs",
+            "ShippingSellerAuthoringOwnerEndpoints.cs"
           ],
           "forbiddenTopLevelFolders": []
         }
@@ -2541,15 +2545,26 @@
       "structureAuthorityTask": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2",
       "structureHandoffState": "READY_FOR_CERTIFY",
       "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1/RESULT.md",
-      "postCertificationAdditions": {
-        "task": "TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188",
-        "date": "2026-10-22",
-        "kind": "ADDITIVE_AUTHORIZED_FEATURE_NOT_RECERTIFICATION",
-        "summary": "One read-only admin endpoint GET /v1/admin/shipping-services/authoring-context (Shipping.Endpoints/Admin/ShippingAuthoringContextEndpoints.cs) plus one Application Authoring capability (Queries/Models/Ports), one Infrastructure Contracts adapter (Localization.Contracts + StoreContext.Contracts + platform edition context) and one explicitly classified availability code shipping.authoring.configuration_unavailable (Platform/503/Error). The 44 legacy shipping.* codes keep 400/Business/Warning and no existing route, handler, validator, contract, schema or behavior changed.",
-        "guardAmendments": "ShippingModuleStructureGuardTests.ApplicationCapabilities gained Authoring and the composition mapper count moved from 5 to 6 with the new mapper asserted by name; ShippingRequestClassificationTests gained the single NO_VALIDATOR_REQUIRED row with source-proven absence (no validator type, no route parameters, no query/body binding); ShippingErrorCatalogAndResourcesTests distinguishes the preserved 44-code legacy set from the one explicit 503.",
-        "certificationImpact": "NONE. The W3-R1 certification in this entry remains the historical whole-module baseline; this addition does not claim recertification, production acceptance or D1-D7 completion.",
-        "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188/RESULT.md"
-      }
+      "postCertificationAdditions": [
+        {
+          "task": "TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188",
+          "date": "2026-10-22",
+          "kind": "ADDITIVE_AUTHORIZED_FEATURE_NOT_RECERTIFICATION",
+          "summary": "One read-only admin endpoint GET /v1/admin/shipping-services/authoring-context (Shipping.Endpoints/Admin/ShippingAuthoringContextEndpoints.cs) plus one Application Authoring capability (Queries/Models/Ports), one Infrastructure Contracts adapter (Localization.Contracts + StoreContext.Contracts + platform edition context) and one explicitly classified availability code shipping.authoring.configuration_unavailable (Platform/503/Error). The 44 legacy shipping.* codes keep 400/Business/Warning and no existing route, handler, validator, contract, schema or behavior changed.",
+          "guardAmendments": "ShippingModuleStructureGuardTests.ApplicationCapabilities gained Authoring and the composition mapper count moved from 5 to 6 with the new mapper asserted by name; ShippingRequestClassificationTests gained the single NO_VALIDATOR_REQUIRED row with source-proven absence (no validator type, no route parameters, no query/body binding); ShippingErrorCatalogAndResourcesTests distinguishes the preserved 44-code legacy set from the one explicit 503.",
+          "certificationImpact": "NONE. The W3-R1 certification in this entry remains the historical whole-module baseline; this addition does not claim recertification, production acceptance or D1-D7 completion.",
+          "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-CONFIGURATION-CONTEXT-188/RESULT.md"
+        },
+        {
+          "task": "TB-SHIPPING-ADMIN-AUTHORIZED-OWNER-SCOPE-189",
+          "date": "2026-10-22",
+          "kind": "ADDITIVE_AUTHORIZED_FEATURE_NOT_RECERTIFICATION",
+          "summary": "Two read-only owner-scope routes (GET /v1/admin/shipping-services/authoring-owner and GET /v1/seller/shipping-services/authoring-owner) share one Application Authoring use case GetShippingAuthoringOwnerQuery and one Endpoints-owned owner gate (ShippingAuthoringOwnerAuthorizer) built on existing platform seams. The module gains one Endpoints audience folder (Seller) and two explicitly classified codes: shipping.authoring.owner_scope_denied (403/Forbidden) and shipping.authoring.owner_scope_unavailable (404/NotFound). No existing route, handler, validator, contract, schema or behavior changed, and the W1 edition/tenant validation was extracted mechanically into ShippingInstallationContext with identical behavior.",
+          "guardAmendments": "ShippingModuleStructureGuardTests.EndpointsAudienceFolders gained Seller; the composition guard pins seven admin mappers plus one seller mapper and the single owner-gate registration, and rejects any /v1/seller MapGroup outside the composition entry. ShippingRequestClassificationTests now keys rows by request (a request may be reachable from two routes), derives each mapper's group prefix from the composition entry instead of hardcoding /v1/admin, and proves both owner routes map to the one classified use case. ShippingErrorCatalogAndResourcesTests distinguishes the preserved 44 legacy 400 codes from the three explicitly classified non-400 codes.",
+          "certificationImpact": "NONE. The W3-R1 certification in this entry remains the historical whole-module baseline; this addition claims no recertification, no persisted owner isolation, no seller-authored rules and no merchant runtime acceptance.",
+          "evidence": "docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORIZED-OWNER-SCOPE-189/RESULT.md"
+        }
+      ]
     }
   ],
   "uncertifiedHttpOwningModules": [],

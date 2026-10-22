@@ -82,6 +82,24 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
             LocalizationKey: ShippingErrorCodes.AuthoringConfigurationUnavailable,
             Severity: ErrorSeverity.Error,
             SafeTitleFallback: "Shipping authoring configuration is unavailable."),
+        // TB-SHIPPING-ADMIN-AUTHORIZED-OWNER-SCOPE-189: the owner-scope gate is a Shipping policy
+        // failure, not a Foundation panel/party gate. 403 says "you are not permitted this owner
+        // scope at whole-owner level"; 404 says "this owner scope does not exist in this
+        // installation". Neither reveals whether a seller or owner row exists.
+        new(
+            Code: ShippingErrorCodes.AuthoringOwnerScopeDenied,
+            Classification: ErrorClassification.Forbidden,
+            HttpStatus: StatusCodes.Status403Forbidden,
+            LocalizationKey: ShippingErrorCodes.AuthoringOwnerScopeDenied,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "You are not permitted to author shipping rules for this owner scope."),
+        new(
+            Code: ShippingErrorCodes.AuthoringOwnerScopeUnavailable,
+            Classification: ErrorClassification.NotFound,
+            HttpStatus: StatusCodes.Status404NotFound,
+            LocalizationKey: ShippingErrorCodes.AuthoringOwnerScopeUnavailable,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "Shipping rule ownership is unavailable in this installation."),
     ];
 
     private static ErrorDescriptor D(string code, string fallback) =>

@@ -38,7 +38,7 @@ public sealed class ShippingModuleStructureGuardTests
         ["Commands", "Queries", "Ports", "ReadModels", "Models", "Validation"];
 
     /// <summary>Audience/capability folders plus the shared error/resource homes.</summary>
-    private static readonly string[] EndpointsAudienceFolders = ["Admin", "Errors", "Resources"];
+    private static readonly string[] EndpointsAudienceFolders = ["Admin", "Errors", "Resources", "Seller"];
 
     [Fact]
     public void Manifest_entry_is_certified_with_the_shipping_certification_lineage()
@@ -222,19 +222,25 @@ public sealed class ShippingModuleStructureGuardTests
         Assert.Contains("namespace Tooba.Shipping.Endpoints;", composition, StringComparison.Ordinal);
         Assert.Contains("public static class ShippingEndpointModule", composition, StringComparison.Ordinal);
 
-        // Behavior preserved verbatim by the extraction: one admin group, six capability mappers.
-        // The sixth (Authoring) is the additive TB-188 admin read; the count is pinned so a mapper
-        // cannot be added or dropped silently, and each mapper name is asserted explicitly.
+        // Behavior preserved verbatim by the extraction: one admin group, seven capability mappers,
+        // plus the TB-189 seller group with its single owner-scope mapper. The counts are pinned so a
+        // mapper/group cannot be added or dropped silently, and each mapper name is asserted explicitly.
         Assert.Equal(1, CountOccurrences(composition, "app.MapGroup(\"/v1/admin\")"));
-        Assert.Equal(6, CountOccurrences(composition, "Endpoints.Map(admin);"));
+        Assert.Equal(7, CountOccurrences(composition, "Endpoints.Map(admin);"));
+        Assert.Equal(1, CountOccurrences(composition, "app.MapGroup(\"/v1/seller\")"));
+        Assert.Equal(1, CountOccurrences(composition, "Endpoints.Map(seller);"));
         Assert.Contains("ShippingRateCoverageEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingMethodFinancialStatusEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingOperatingScheduleEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingPackagingPolicyEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingOperationalQuoteEndpoints.Map(admin);", composition, StringComparison.Ordinal);
         Assert.Contains("ShippingAuthoringContextEndpoints.Map(admin);", composition, StringComparison.Ordinal);
+        Assert.Contains("ShippingAuthoringOwnerEndpoints.Map(admin);", composition, StringComparison.Ordinal);
+        Assert.Contains("ShippingSellerAuthoringOwnerEndpoints.Map(seller);", composition, StringComparison.Ordinal);
         Assert.Contains("IErrorCatalogContributor, ShippingErrorCatalogContributor", composition, StringComparison.Ordinal);
         Assert.Contains("IErrorResourceSet, ShippingErrorResourceSet", composition, StringComparison.Ordinal);
+        // The one reusable owner gate is module-owned and registered exactly once.
+        Assert.Equal(1, CountOccurrences(composition, "IShippingAuthoringOwnerAuthorizer, ShippingAuthoringOwnerAuthorizer"));
 
         // No second live home for the composition class and no admin-group mapping outside it.
         var duplicateHomes = ProductionFiles("Tooba.Shipping.Endpoints")
@@ -247,7 +253,9 @@ public sealed class ShippingModuleStructureGuardTests
         var foreignGroups = ProductionFiles("Tooba.Shipping.Endpoints")
             .Where(relative => !string.Equals(relative, "ShippingEndpointModule.cs", StringComparison.Ordinal))
             .Where(relative => File.ReadAllText(Path.Combine(endpoints, relative))
-                .Contains("MapGroup(\"/v1/admin\")", StringComparison.Ordinal))
+                .Contains("MapGroup(\"/v1/admin\")", StringComparison.Ordinal)
+                || File.ReadAllText(Path.Combine(endpoints, relative))
+                    .Contains("MapGroup(\"/v1/seller\")", StringComparison.Ordinal))
             .ToArray();
         Assert.Empty(foreignGroups);
 

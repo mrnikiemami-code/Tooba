@@ -41,7 +41,7 @@ public sealed class ShippingAdminAuthorizer(
         ArgumentException.ThrowIfNullOrWhiteSpace(permissionId);
 
         var actor = await adminAccess.RequireAuthorizedAsync(httpContext.Request, cancellationToken);
-        var callContext = ResolveCallContext();
+        var callContext = ShippingInstallationContext.Resolve(edition, tenant);
         await EnsureAdminCapabilityAsync(actor, permissionId, callContext, cancellationToken);
         return actor;
     }
@@ -78,55 +78,6 @@ public sealed class ShippingAdminAuthorizer(
         }
 
         throw new SemanticException(new SemanticError(FoundationErrorCodes.AdminAuthorizationDenied));
-    }
-
-    /// <summary>
-    /// زمینهٔ فراخوانی را فقط از resolve‌شدهٔ پلتفرم می‌سازد. هر ناسازگاری = unavailable،
-    /// بدون رسیدن به <c>CanAsync</c>.
-    /// </summary>
-    private AuthorizationCallContext ResolveCallContext()
-    {
-        var currentEdition = edition.Current?.Edition;
-        return currentEdition switch
-        {
-            ToobaEdition.SingleStore => SingleStoreContext(),
-            ToobaEdition.Marketplace => MarketplaceContext(),
-            _ => throw Unavailable(),
-        };
-    }
-
-    private AuthorizationCallContext SingleStoreContext()
-    {
-        var current = tenant.Current;
-        var tenantId = current?.TenantId.Value;
-
-        if (current is null
-            || current.Status != TenantStatus.Active
-            || string.IsNullOrWhiteSpace(tenantId))
-        {
-            throw Unavailable();
-        }
-
-        return new AuthorizationCallContext
-        {
-            Edition = ToobaEdition.SingleStore,
-            TenantId = tenantId.Trim(),
-        };
-    }
-
-    private AuthorizationCallContext MarketplaceContext()
-    {
-        // در Marketplace هیچ Tenant مجاز نیست؛ Tenant باقی‌مانده یا ناسازگار، زمینهٔ نامعتبر است.
-        if (tenant.Current is not null)
-        {
-            throw Unavailable();
-        }
-
-        return new AuthorizationCallContext
-        {
-            Edition = ToobaEdition.Marketplace,
-            TenantId = null,
-        };
     }
 
     private static SemanticException Unavailable() =>
