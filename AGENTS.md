@@ -14,8 +14,8 @@ TB-196 catalog implementation is PARTIAL / NOT ACCEPTED; relational/snapshot pro
 TB-196-R1 remains PARTIAL; its bounded Domain regressions are repaired and accepted through R2.
 TB-196-R3 API evidence is accepted through R4; registry/tracing/real-DI/relational gates remain open.
 TB-196-R5 DI/registry/listener evidence and its single-active correction through R6 are accepted.
-TB-196-R6 is BLOCKED: new migration naming defect and legacy/snapshot divergence remain open.
-The only next task is TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R7; await its result.
+TB-196-R7 naming/isolated UpDown repair is accepted; legacy/snapshot and full relational gates remain blocked.
+The only next task is TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R8; await its result.
 Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.
