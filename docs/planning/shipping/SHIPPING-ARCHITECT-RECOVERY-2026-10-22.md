@@ -231,7 +231,7 @@ APIهای جدید فعلی:
 - **دروازهٔ باز:** مبنای authoritative اندازه/مبلغ کالا همچنان حل نشده است؛ quote/ارزیاب/فعال‌سازی/انتشار
   و ویرایشگر کامل مجاز نیست. Worker PASS اثبات فنی است، نه Architect ACCEPT؛ تسک بعدی خودکار نیست.
 
-## 13. TB-192 outcome pointer
+## 13. TB-192 / TB-192-R1 outcome pointer
 
 TB-SHIPPING-ADMIN-LOCALIZED-DRAFT-METADATA-192 delivered bounded persisted language-keyed owner
 presentation (method name/description + optional group titles) with one additive migration and
@@ -239,3 +239,12 @@ executed relational/race proof (579/579 whole Shipping suite). This is not Admin
 acceptance, not editor activation, and not module certification; configured-registry runtime/UI
 acceptance remains a later integration gate. Runtime-Merchandise-Basis-And-Measurement-Gate stays
 OPEN_NOT_IMPLEMENTED. Await Architect review; no automatic next task.
+
+TB-SHIPPING-ADMIN-LOCALIZED-DRAFT-METADATA-192-R1 (worker, 2026-10-22) closed the R192-01/R192-02
+proof gaps: real admin/seller presentation GET/PATCH through the real authorizer, validation pipeline,
+handlers/projection and directory; one/two/three-plus dynamic-language matrix with deactivate/reactivate/
+default-change/raw-text retention; selected clear and true no-ops; interface-culture invariance;
+pre-dispatch denials and malformed-input preflight; and an independent raw PostgreSQL 17 storage matrix
+on the two new tables plus retained-text reorder/rate-edit proof. Executed 589/589 whole Shipping suite;
+production executable behavior unchanged (one XML remark corrected). Worker PASS only — not Architect
+ACCEPT; no TB-193 and no automatic next task.

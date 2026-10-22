@@ -85,3 +85,20 @@ The language ids used by the tests are controlled fixtures; they prove handler/d
 behavior and lawful source wiring, not a live merchant Localization database or browser session.
 Configured-registry runtime/UI acceptance remains a later integration gate. This is not Admin,
 production or module certification. Runtime-Merchandise-Basis-And-Measurement-Gate: OPEN_NOT_IMPLEMENTED.
+
+## Correction appended by TB-192-R1 (2026-10-22)
+
+Scope correction to the two facts above: both call `ShippingAuthoringDraftDirectory` directly with a
+manually supplied active-language `HashSet`. They therefore prove domain/permission-free selected-language
+persistence and the same-revision race, and they do NOT prove the presentation HTTP endpoints, the real
+owner authorizer, the MediatR validation pipeline, or registry-driven transitions. Their PASS and the
+historic 579/579 remain valid reported history, not API/registry proof.
+
+The missing executed proof was added in
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-LOCALIZED-DRAFT-METADATA-192-R1/RESULT.md`:
+real admin/seller presentation GET/PATCH, one/two/three-plus dynamic language matrix, deactivate/reactivate/
+default-change retention, selected clear and true no-ops, interface-culture invariance, pre-dispatch
+denials and malformed-input preflight, plus an independent raw PostgreSQL storage matrix on
+`shipping.authoring_draft_translations` and `shipping.authoring_group_titles` and retained-text
+reorder/rate-edit proof. Production executable behavior is unchanged; only the `PreflightPresentation`
+XML remark was corrected to the approved active-only PATCH plus passive retention semantics.
