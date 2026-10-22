@@ -3,50 +3,271 @@ using Xunit;
 namespace Tooba.Shipping.Tests.Compatibility;
 
 /// <summary>
-/// TB-SHIPPING-FULL-OPERATIONS-076 — the operational quote seam is additive and read-only: no module
-/// outside Shipping consumes it, the legacy rate/packaging seams keep their exact shape, and nothing
-/// in the new slice introduces a customer pricing cutover or a money-movement type. These guards pin
-/// that boundary so a later task cannot quietly turn the new seam into Checkout authority.
+/// Shipping operational-quote boundary guards.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <b>History.</b> TB-SHIPPING-FULL-OPERATIONS-076 introduced this class when the operational quote seam
+/// was brand new and had no external consumer at all; its assertion
+/// <c>No_module_outside_shipping_references_the_operational_quote_types</c> therefore expressed a
+/// <em>temporary</em> "nobody outside Shipping may mention these types" rule.
+/// </para>
+/// <para>
+/// <b>Why that rule became stale.</b> TB-079 Mission A explicitly authorized a real, read-only,
+/// default-OFF operational shadow on the Order storefront shipping projection through
+/// <c>Tooba.Shipping.Contracts</c> only, and TB-080 recorded that bounded scope as accepted. The
+/// historical blanket prohibition therefore contradicts an approved architecture decision. It is replaced
+/// here — not deleted — by the narrower and stronger invariant those decisions approved:
+/// </para>
+/// <list type="bullet">
+///   <item>only the reviewed observation/comparison pair plus the single Order DI registration may
+///   consume the operational Contracts; any fourth production consumer fails;</item>
+///   <item>no module outside Shipping may reference Shipping Domain/Application/Infrastructure/Endpoints
+///   implementation types — including <em>inside</em> the three approved files;</item>
+///   <item>the Order edge stays registration-only and observation-only (no quote call, no observation call
+///   from the composition root);</item>
+///   <item>the approved observation files use public Contracts only, never an implementation import;</item>
+///   <item>the gate defaults stay OFF and the real projection keeps discarding the observation, so nothing
+///   reaches customer amount, payment draft, paid snapshot, delivery promise or capacity.</item>
+/// </list>
+/// <para>
+/// The detector is deliberately separate from the file enumeration so the negative cases below can prove it
+/// fails on a forbidden expansion instead of merely asserting that today's allowed files exist. String
+/// matching is paired with exact source review; it is not claimed as a general data-flow proof.
+/// </para>
+/// </remarks>
 public sealed class OperationalQuoteCompatibilityTests
 {
-    private static string RepoRoot()
+    [Fact]
+    public void Only_the_reviewed_order_observation_files_consume_the_operational_contracts()
     {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "AGENTS.md")))
-                return dir.FullName;
-            dir = dir.Parent;
-        }
+        var sources = BackendProductionSources();
 
-        throw new InvalidOperationException("repo root not found");
+        var consumers = sources
+            .Where(source => !OperationalContractBoundary.IsShippingModule(source.RelativePath))
+            .Where(OperationalContractBoundary.ConsumesOperationalContracts)
+            .Select(source => source.RelativePath)
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        // The reviewed set is source-proven: TB-079 Mission A authorized exactly this observation pair and
+        // the single Order composition edge; TB-080 accepted that bounded scope.
+        Assert.Equal(
+            OperationalContractBoundary.ApprovedConsumers.OrderBy(path => path, StringComparer.Ordinal).ToArray(),
+            consumers);
+
+        // No unexpected consumer and no implementation reference anywhere outside Shipping.
+        Assert.Empty(OperationalContractBoundary.Analyze(sources));
     }
 
     [Fact]
-    public void No_module_outside_shipping_references_the_operational_quote_types()
+    public void Approved_observation_files_use_only_public_contracts_and_never_an_implementation_import()
     {
-        var backend = Path.Combine(RepoRoot(), "src", "backend");
-        var markers = new[]
-        {
-            "IShippingOperationalQuoteLookup",
-            "ShippingOperationalQuote",
-            "ShippingOperationalQuoteEvaluator",
-            "ShippingScheduleAvailabilityEvaluator",
-            "operational-quote",
-        };
+        var sources = BackendProductionSources().ToDictionary(source => source.RelativePath, StringComparer.Ordinal);
 
-        var offenders = Directory
-            .EnumerateFiles(backend, "*.cs", SearchOption.AllDirectories)
-            .Where(path => !IsGeneratedOrTestTree(path))
-            .Where(path => !IsShippingModule(path))
-            .Where(path => markers.Any(marker =>
-                File.ReadAllText(path).Contains(marker, StringComparison.Ordinal)))
-            .Select(path => Path.GetRelativePath(RepoRoot(), path).Replace('\\', '/'))
+        foreach (var path in new[]
+                 {
+                     OperationalContractBoundary.ApprovedComparerPath,
+                     OperationalContractBoundary.ApprovedObserverPath,
+                 })
+        {
+            var text = sources[path].Text;
+
+            // Every Shipping import in the observation pair must be the public Contracts surface.
+            foreach (var line in text.Split('\n'))
+            {
+                var trimmed = line.Trim();
+                if (!trimmed.StartsWith("using Tooba.Shipping.", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                Assert.StartsWith("using Tooba.Shipping.Contracts.", trimmed, StringComparison.Ordinal);
+            }
+
+            // Contracts-only observation: no evaluator/engine/persistence type may be reached from here.
+            Assert.Empty(OperationalContractBoundary.ImplementationReferences(text));
+            Assert.DoesNotContain("DbContext", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("IQueryable", text, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void The_order_module_edge_is_registration_only()
+    {
+        var sources = BackendProductionSources().ToDictionary(source => source.RelativePath, StringComparer.Ordinal);
+        var registration = sources[OperationalContractBoundary.ApprovedRegistrationPath].Text;
+
+        // The only operational Contracts reference is the DI factory argument.
+        var operationalLines = CodeLines(registration)
+            .Where(OperationalContractBoundary.ConsumesOperationalContracts)
+            .ToArray();
+        Assert.NotEmpty(operationalLines);
+        Assert.All(operationalLines, line => Assert.Contains("GetService<", line, StringComparison.Ordinal));
+
+        // Composition must not become an execution path.
+        Assert.DoesNotContain("QuoteAsync(", registration, StringComparison.Ordinal);
+        Assert.DoesNotContain(".ObserveAsync(", registration, StringComparison.Ordinal);
+        Assert.DoesNotContain("ShippingOperationalQuoteRequest", registration, StringComparison.Ordinal);
+
+        // The registration is unique: one factory for the observer, one options section.
+        Assert.Equal(
+            1,
+            CountOccurrences(
+                registration,
+                "new Application.Storefront.Shipping.OperationalShadow.StorefrontShippingOperationalShadowObserver("));
+        Assert.Contains(
+            "StorefrontShippingOperationalShadowOptions.SectionName",
+            registration,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_real_projection_discards_the_observation_and_the_gate_stays_off_by_default()
+    {
+        var sources = BackendProductionSources().ToDictionary(source => source.RelativePath, StringComparer.Ordinal);
+
+        var options = sources[
+            "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/OperationalShadow/StorefrontShippingOperationalShadowOptions.cs"].Text;
+        Assert.Contains("Tooba:ShippingOperationalShadow", options, StringComparison.Ordinal);
+        Assert.Contains("public bool Enabled { get; set; }", options, StringComparison.Ordinal);
+        Assert.Contains("public bool PrerequisitesConfirmed { get; set; }", options, StringComparison.Ordinal);
+        Assert.DoesNotContain("Enabled { get; set; } = true", options, StringComparison.Ordinal);
+        Assert.DoesNotContain("PrerequisitesConfirmed { get; set; } = true", options, StringComparison.Ordinal);
+
+        var projection = sources[
+            "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/Queries/ProjectStorefrontShipping/ProjectStorefrontShippingQuery.cs"].Text;
+
+        // The observation is awaited and its value is never bound to anything.
+        Assert.Contains("await operationalShadow.ObserveAsync(", projection, StringComparison.Ordinal);
+        Assert.DoesNotContain("= await operationalShadow.ObserveAsync(", projection, StringComparison.Ordinal);
+
+        // No path from observation to the customer-facing result.
+        Assert.Contains("return result;", projection, StringComparison.Ordinal);
+        Assert.DoesNotContain("SelectedShippingAmount =", projection, StringComparison.Ordinal);
+        Assert.DoesNotContain("MinimumDeliveryDate =", projection, StringComparison.Ordinal);
+    }
+
+    // ---------- negative detection proof (the replacement must fail on expansion) ----------
+
+    [Fact]
+    public void Detector_fails_for_an_unexpected_fourth_consumer_outside_the_reviewed_set()
+    {
+        var sources = BackendProductionSources()
+            .Append(new OperationalBoundarySource(
+                "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/RateAuthority/StorefrontShippingRateShadowEvaluator.cs",
+                "using Tooba.Shipping.Contracts.Operations;\n\nnamespace X;\ninternal static class Y { }\n"))
             .ToArray();
 
-        Assert.Empty(offenders);
+        var violations = OperationalContractBoundary.Analyze(sources);
+
+        var violation = Assert.Single(violations);
+        Assert.Equal(OperationalContractBoundary.UnexpectedConsumerRule, violation.Rule);
+        Assert.Contains("StorefrontShippingRateShadowEvaluator.cs", violation.RelativePath, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Detector_fails_for_an_implementation_reference_inside_an_otherwise_allowed_file()
+    {
+        var observerPath = OperationalContractBoundary.ApprovedObserverPath;
+        var polluted = BackendProductionSources()
+            .Select(source => source.RelativePath == observerPath
+                ? source with
+                {
+                    // A single illegal line inside a permitted file must not be tolerated.
+                    Text = source.Text
+                           + "\n// injected for the negative case\n"
+                           + "internal static class Smuggled\n{\n"
+                           + "    internal static int Peek() =>\n"
+                           + "        typeof(Tooba.Shipping.Domain.Operations.ShippingOperationalQuoteEvaluator).Name.Length;\n"
+                           + "}\n",
+                }
+                : source)
+            .ToArray();
+
+        var violations = OperationalContractBoundary.Analyze(polluted);
+
+        Assert.Contains(
+            violations,
+            v => v.Rule == OperationalContractBoundary.ForeignImplementationRule
+                 && v.RelativePath == observerPath
+                 && v.Detail.Contains("Tooba.Shipping.Domain", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Detector_fails_for_an_evaluator_reference_inside_an_allowed_comparer_file()
+    {
+        var comparerPath = OperationalContractBoundary.ApprovedComparerPath;
+        var polluted = BackendProductionSources()
+            .Select(source => source.RelativePath == comparerPath
+                ? source with
+                {
+                    Text = source.Text
+                           + "\n// injected for the negative case\n"
+                           + "internal static class SmuggledEvaluator\n{\n"
+                           + "    private static readonly System.Type T = typeof(ShippingRatePolicyEngine);\n"
+                           + "}\n",
+                }
+                : source)
+            .ToArray();
+
+        var violations = OperationalContractBoundary.Analyze(polluted);
+
+        Assert.Contains(
+            violations,
+            v => v.Rule == OperationalContractBoundary.ForeignImplementationRule
+                 && v.RelativePath == comparerPath
+                 && v.Detail.Contains("ShippingRatePolicyEngine", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Detector_fails_for_a_non_registration_use_in_the_order_module()
+    {
+        var registrationPath = OperationalContractBoundary.ApprovedRegistrationPath;
+        var polluted = BackendProductionSources()
+            .Select(source => source.RelativePath == registrationPath
+                ? source with
+                {
+                    Text = source.Text
+                           + "\ninternal sealed class SmuggledLookup\n{\n"
+                           + "    internal async Task Peek(CancellationToken ct)\n"
+                           + "    {\n"
+                           + "        var lookup = _sp.GetRequiredService<Tooba.Shipping.Contracts.Operations.IShippingOperationalQuoteLookup>();\n"
+                           + "        await lookup.QuoteAsync(default!, ct);\n"
+                           + "    }\n"
+                           + "}\n",
+                }
+                : source)
+            .ToArray();
+
+        var violations = OperationalContractBoundary.Analyze(polluted);
+
+        Assert.Contains(
+            violations,
+            v => v.Rule == OperationalContractBoundary.RegistrationOnlyRule
+                 && v.RelativePath == registrationPath);
+    }
+
+    [Fact]
+    public void Detector_fails_for_a_peer_module_reaching_shipping_implementation()
+    {
+        var sources = BackendProductionSources()
+            .Append(new OperationalBoundarySource(
+                "src/backend/Modules/Geography/Tooba.Geography.Application/Leak.cs",
+                "namespace X;\ninternal sealed class Leak\n{\n    private readonly Tooba.Shipping.Infrastructure.Persistence.ShippingDbContext _db = null!;\n}\n"))
+            .ToArray();
+
+        var violations = OperationalContractBoundary.Analyze(sources);
+
+        Assert.NotEmpty(violations);
+        Assert.All(violations, violation =>
+        {
+            Assert.Equal(OperationalContractBoundary.ForeignImplementationRule, violation.Rule);
+            Assert.Contains("Leak.cs", violation.RelativePath, StringComparison.Ordinal);
+        });
+    }
+
+    // ---------- preserved historical invariants ----------
 
     [Fact]
     public void The_legacy_read_seams_keep_their_exact_shape()
@@ -116,22 +337,11 @@ public sealed class OperationalQuoteCompatibilityTests
         var offenders = Directory
             .EnumerateFiles(domain, "*.cs", SearchOption.AllDirectories)
             .Where(path => !IsGeneratedOrTestTree(path))
-            .Where(path =>
-            {
-                // Only executable lines count: the pre-existing XML docs mention IModuleSchemaMigrator
-                // precisely to explain WHY none is registered, and that documentation must stay legal.
-                var code = File.ReadAllLines(path)
-                    .Select(line => line.TrimStart())
-                    .Where(line => !line.StartsWith("///", StringComparison.Ordinal)
-                                   && !line.StartsWith("//", StringComparison.Ordinal))
-                    .ToArray();
-
-                return code.Any(line =>
-                    line.Contains("AddModuleSchemaMigrator", StringComparison.Ordinal)
-                    || line.Contains("Database.MigrateAsync", StringComparison.Ordinal)
-                    || line.Contains("DbTransaction", StringComparison.Ordinal)
-                    || line.Contains("BeginTransaction", StringComparison.Ordinal));
-            })
+            .Where(path => CodeLines(File.ReadAllText(path)).Any(line =>
+                line.Contains("AddModuleSchemaMigrator", StringComparison.Ordinal)
+                || line.Contains("Database.MigrateAsync", StringComparison.Ordinal)
+                || line.Contains("DbTransaction", StringComparison.Ordinal)
+                || line.Contains("BeginTransaction", StringComparison.Ordinal)))
             .Select(path => Path.GetRelativePath(RepoRoot(), path).Replace('\\', '/'))
             .ToArray();
 
@@ -148,10 +358,42 @@ public sealed class OperationalQuoteCompatibilityTests
         Assert.Equal([Contracts.Operations.ShippingCapacityEnforcement.NotEnforced], values);
     }
 
-    private static bool IsShippingModule(string path)
+    // ---------- helpers ----------
+
+    /// <summary>Executable lines only: XML docs and line comments explain boundaries and must stay legal.</summary>
+    internal static IEnumerable<string> CodeLines(string text) =>
+        text.Split('\n')
+            .Select(line => line.TrimStart())
+            .Where(line => line.Length > 0
+                           && !line.StartsWith("///", StringComparison.Ordinal)
+                           && !line.StartsWith("//", StringComparison.Ordinal)
+                           && !line.StartsWith("*", StringComparison.Ordinal)
+                           && !line.StartsWith("/*", StringComparison.Ordinal));
+
+    internal static int CountOccurrences(string haystack, string needle)
     {
-        var relative = Path.GetRelativePath(RepoRoot(), path).Replace('\\', '/');
-        return relative.StartsWith("src/backend/Modules/Shipping/", StringComparison.Ordinal);
+        var count = 0;
+        var index = haystack.IndexOf(needle, StringComparison.Ordinal);
+        while (index >= 0)
+        {
+            count++;
+            index = haystack.IndexOf(needle, index + needle.Length, StringComparison.Ordinal);
+        }
+
+        return count;
+    }
+
+    private static OperationalBoundarySource[] BackendProductionSources()
+    {
+        var backend = Path.Combine(RepoRoot(), "src", "backend");
+        return Directory
+            .EnumerateFiles(backend, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !IsGeneratedOrTestTree(path))
+            .Select(path => new OperationalBoundarySource(
+                Path.GetRelativePath(RepoRoot(), path).Replace('\\', '/'),
+                File.ReadAllText(path)))
+            .OrderBy(source => source.RelativePath, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static bool IsGeneratedOrTestTree(string path)
@@ -163,4 +405,198 @@ public sealed class OperationalQuoteCompatibilityTests
         return segments.Any(segment => segment is "obj" or "bin")
                || segments.Any(segment => segment.EndsWith("Tests", StringComparison.Ordinal));
     }
+
+    private static string RepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "AGENTS.md")))
+                return dir.FullName;
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException("repo root not found");
+    }
+}
+
+/// <summary>One production source file considered by the operational-contract boundary detector.</summary>
+internal sealed record OperationalBoundarySource(string RelativePath, string Text);
+
+/// <summary>One detected breach of the approved operational-contract boundary.</summary>
+internal sealed record OperationalBoundaryViolation(string RelativePath, string Rule, string Detail);
+
+/// <summary>
+/// Machine-checkable form of the TB-079/TB-080-approved operational shadow boundary, replacing the stale
+/// TB-076 blanket prohibition. Kept side-effect free so the negative cases can feed it synthetic sources.
+/// </summary>
+internal static class OperationalContractBoundary
+{
+    public const string UnexpectedConsumerRule = "UNEXPECTED_OPERATIONAL_CONTRACT_CONSUMER";
+    public const string ForeignImplementationRule = "FOREIGN_SHIPPING_IMPLEMENTATION_REFERENCE";
+    public const string RegistrationOnlyRule = "ORDER_EDGE_NOT_REGISTRATION_ONLY";
+
+    private const string ShippingModuleRoot = "src/backend/Modules/Shipping/";
+    private const string ModulesRoot = "src/backend/Modules/";
+    private const string HostRoot = "src/backend/Host/";
+
+    public const string ApprovedComparerPath =
+        "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/OperationalShadow/StorefrontShippingOperationalShadowComparer.cs";
+
+    public const string ApprovedObserverPath =
+        "src/backend/Modules/Order/Tooba.Order.Application/Storefront/Shipping/OperationalShadow/StorefrontShippingOperationalShadowObserver.cs";
+
+    public const string ApprovedRegistrationPath =
+        "src/backend/Modules/Order/Tooba.Order.Infrastructure/OrderModule.cs";
+
+    /// <summary>The reviewed observation/comparison pair plus the single Order DI registration.</summary>
+    public static readonly string[] ApprovedConsumers =
+    [
+        ApprovedComparerPath,
+        ApprovedObserverPath,
+        ApprovedRegistrationPath,
+    ];
+
+    /// <summary>Host composition roots: they may compose modules, never compute module behavior.</summary>
+    private static readonly string[] HostCompositionFiles =
+    [
+        "src/backend/Host/Tooba.Host/Program.cs",
+        "src/backend/Host/Tooba.Host/Composition/ToobaModuleComposition.cs",
+        "src/backend/Host/Tooba.MigrationRunner/ModuleMigrationRegistry.cs",
+    ];
+
+    /// <summary>Public Contracts surface an outside module may lawfully observe.</summary>
+    private static readonly string[] OperationalContractMarkers =
+    [
+        "Tooba.Shipping.Contracts.Operations",
+        "IShippingOperationalQuoteLookup",
+        "ShippingOperationalQuoteRequest",
+        "ShippingOperationalQuoteOutcome",
+        "ShippingOperationalQuoteReasonCodes",
+        "ShippingOperationalQuote",
+        "operational-quote",
+    ];
+
+    /// <summary>Shipping implementation surface no outside module may reference.</summary>
+    private static readonly string[] ForeignImplementationMarkers =
+    [
+        "Tooba.Shipping.Domain",
+        "Tooba.Shipping.Application",
+        "Tooba.Shipping.Infrastructure",
+        "Tooba.Shipping.Endpoints",
+        "ShippingOperationalQuoteEvaluator",
+        "ShippingScheduleAvailabilityEvaluator",
+        "ShippingRatePolicyEngine",
+        "ShippingDbContext",
+    ];
+
+    /// <summary>Even the Host composition roots must never reach module domain logic.</summary>
+    private static readonly string[] HostForbiddenImplementationMarkers =
+    [
+        "Tooba.Shipping.Domain",
+        "ShippingOperationalQuoteEvaluator",
+        "ShippingScheduleAvailabilityEvaluator",
+        "ShippingRatePolicyEngine",
+    ];
+
+    public static bool ConsumesOperationalContracts(string code) =>
+        OperationalContractMarkers.Any(marker => code.Contains(marker, StringComparison.Ordinal));
+
+    public static bool IsShippingModule(string relativePath) =>
+        relativePath.Replace('\\', '/').StartsWith(ShippingModuleRoot, StringComparison.Ordinal);
+
+    public static bool ConsumesOperationalContracts(OperationalBoundarySource source) =>
+        Code(source.Text).Any(ConsumesOperationalContracts);
+
+    public static IReadOnlyList<string> ImplementationReferences(string text) =>
+        ForeignImplementationMarkers
+            .Where(marker => Code(text).Any(line => line.Contains(marker, StringComparison.Ordinal)))
+            .ToArray();
+
+    public static IReadOnlyList<OperationalBoundaryViolation> Analyze(IEnumerable<OperationalBoundarySource> sources)
+    {
+        var violations = new List<OperationalBoundaryViolation>();
+
+        foreach (var source in sources)
+        {
+            var path = source.RelativePath.Replace('\\', '/');
+            var code = Code(source.Text);
+
+            // The owning module and non-backend paths are not this guard's business.
+            if (path.StartsWith(ShippingModuleRoot, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var implementationMarkers = ForeignImplementationMarkers
+                .Where(marker => code.Any(line => line.Contains(marker, StringComparison.Ordinal)))
+                .ToArray();
+            var consumes = code.Any(ConsumesOperationalContracts);
+
+            if (path.StartsWith(ModulesRoot, StringComparison.Ordinal))
+            {
+                // A peer module may never reach Shipping implementation, inside or outside an approved file.
+                foreach (var marker in implementationMarkers)
+                {
+                    violations.Add(new OperationalBoundaryViolation(
+                        path,
+                        ForeignImplementationRule,
+                        $"module outside Shipping references Shipping implementation marker '{marker}'"));
+                }
+            }
+            else if (path.StartsWith(HostRoot, StringComparison.Ordinal))
+            {
+                var isCompositionRoot = HostCompositionFiles.Contains(path, StringComparer.Ordinal);
+                var hostViolations = isCompositionRoot
+                    ? implementationMarkers.Where(marker =>
+                        HostForbiddenImplementationMarkers.Contains(marker, StringComparer.Ordinal))
+                    : implementationMarkers;
+                foreach (var marker in hostViolations)
+                {
+                    violations.Add(new OperationalBoundaryViolation(
+                        path,
+                        ForeignImplementationRule,
+                        $"Host references Shipping implementation marker '{marker}'"));
+                }
+            }
+
+            if (!consumes)
+            {
+                continue;
+            }
+
+            if (!ApprovedConsumers.Contains(path, StringComparer.Ordinal))
+            {
+                violations.Add(new OperationalBoundaryViolation(
+                    path,
+                    UnexpectedConsumerRule,
+                    "operational Contracts consumed outside the reviewed observation/registration set"));
+                continue;
+            }
+
+            if (!string.Equals(path, ApprovedRegistrationPath, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var nonRegistration = code
+                .Where(ConsumesOperationalContracts)
+                .Where(line => !line.Contains("GetService<", StringComparison.Ordinal))
+                .ToArray();
+            if (nonRegistration.Length > 0
+                || code.Any(line => line.Contains("QuoteAsync(", StringComparison.Ordinal)
+                                    || line.Contains(".ObserveAsync(", StringComparison.Ordinal)))
+            {
+                violations.Add(new OperationalBoundaryViolation(
+                    path,
+                    RegistrationOnlyRule,
+                    "the Order edge must only register the seam, never call the quote or the observer"));
+            }
+        }
+
+        return violations;
+    }
+
+    private static string[] Code(string text) =>
+        OperationalQuoteCompatibilityTests.CodeLines(text).ToArray();
 }
