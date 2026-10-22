@@ -24,9 +24,10 @@ TB-196-R9 historical analysis is accepted with Architect corrections (model mani
 TB-196-R10 pending-outbox-index migration and bounded isolated proof are accepted.
 TB-196-R11 existing CHECK/name model alignment is accepted; five defaults remain.
 TB-196-R12 five-default model alignment and strict schema parity are accepted with recorded deviations.
-Only next issued task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13,
-test-only chronology/current-schema/storage/concurrency/atomicity proof completion.
-All production/migration changes forbidden in R13; real failure stops for Architect. No shared deployment.
+TB-196-R13 phased schema/storage evidence is accepted narrowly; three winner/full-tree assertions need repair.
+Only next issued task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13-R1,
+three focused test facts/helpers and append-only evidence, no production/migration changes.
+Catalog closure pending that review; no shared deployment.
 Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.

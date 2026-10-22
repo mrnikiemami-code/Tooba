@@ -1,5 +1,15 @@
 ﻿# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری پس از R13 / فقط R13-R1
+
+R13 درcode`86c698fe251a1a45095205b7f9dcb272bae866a2` وmain`ad7d7a3c77d55a39358137d63e9d01e25f78aba4` برای phaseschema/storage/rawconstraints/defaulttrace **ACCEPT محدود**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13/ARCHITECT-REVIEW.md). model/current218 وpretype/down192 مستقلاًbyte-equal؛35PASS گزارشWorker،دوcorrectionانحراففرایندی. whole196هنوزبسته‌نیست.
+
+سه ادعای باقی دقیق‌اند: uniqueCreateGuid توسطFunc<Task>دورانداخته‌می‌شود؛ revisionrace فقطیکlanguage راassertمی‌کند نهcompletewinner؛ rollbackRawRowهمهroot/alltranslation را ندارد. تنها تسک **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13-R1**،Parent=196-R13: فقط3fact/helper/evidence اصلاح؛ winneroutcome typed،تمامroot+translation وcounts،snapshotکاملپسازfailure/cancellation وsecondwrite. production/migration/metadata ممنوع؛ آزمون‌های قبلیreusedنهfull35rerun. سقف20دقیقه،stop15،setup8،commands120،یکcorrection.
+
+بعدازنتیجه بررسی مستقل و تصمیمclosureکاتالوگ،بعدassignmentShippingازContracts وUI/API/languagesDB؛ هیچparallel/replacementtask تاcompletion؛ quote/activation/deploymentجدا،TB185متوقف. پایین تاریخچه است.
+
+
+
 ## مرجع جاری پس از R12 / فقط R13
 
 R12 پس از review در main `e4fdcf587facb9bef1d28045c00744bbffb17244` برای modeling5default/schema0diff **ACCEPT محدود**؛ WorkerPARTIAL به‌دلیل4harnesscorrection+modelDBreset ثبت می‌ماند. [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R12/ARCHITECT-REVIEW.md). دوHasDefaultValueSql("0") فقط برایdecimalها صریحاً ratifyشد؛ValueGeneratedNever حفظ؛manifestهای218خط byte-identical مستقل تأیید شد. case-summary برابرSQLtrace نیست؛ bindings وunconditionalmetadata وprefixnegative درtestبعد کامل شود، نه تکرارbaseline/production.
