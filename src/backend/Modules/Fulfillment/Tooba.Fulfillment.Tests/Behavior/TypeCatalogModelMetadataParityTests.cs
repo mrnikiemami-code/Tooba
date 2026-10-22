@@ -29,7 +29,12 @@ namespace Tooba.Fulfillment.Tests.Behavior;
 /// </remarks>
 public sealed class TypeCatalogModelMetadataParityTests(ITestOutputHelper output)
 {
-    private const string LatestMigration = "20261022101415_ShippingTypeCatalog";
+    /// <summary>
+    /// The ACTUAL latest migration of the assembly (R11): the current model evolves, so the newest generated
+    /// TargetModel must describe it while historical designers keep describing their own historical point in time.
+    /// </summary>
+    private static string LatestMigrationId(IMigrationsAssembly assembly) =>
+        assembly.Migrations.Keys.Order(StringComparer.Ordinal).Last();
 
     [Fact]
     public void Snapshot_metadata_matches_the_canonical_design_time_model()
@@ -60,9 +65,11 @@ public sealed class TypeCatalogModelMetadataParityTests(ITestOutputHelper output
     {
         using var context = CanonicalContext();
         var migrations = context.GetService<IMigrationsAssembly>().Migrations;
-        Assert.True(migrations.ContainsKey(LatestMigration), "latest migration must exist in the assembly");
+        var latestMigration = LatestMigrationId(context.GetService<IMigrationsAssembly>());
+        Assert.True(migrations.ContainsKey(latestMigration), "latest migration must exist in the assembly");
+        Assert.Equal("20261022182208_AddFulfillmentOutboxPendingIndex", latestMigration);
 
-        var migrationType = migrations[LatestMigration];
+        var migrationType = migrations[latestMigration];
         var migration = (Migration)Activator.CreateInstance(migrationType)!;
         var initializer = context.GetService<IModelRuntimeInitializer>();
         var targetModel = initializer.Initialize(

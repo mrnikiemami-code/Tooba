@@ -149,7 +149,9 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.RequestedDeliveryTimeWindow).HasMaxLength(64);
             entity.HasIndex(x => x.FulfillmentId);
             // یک گروه پایدار برای یک فروشنده هرگز دو بار در همان واحد materialize نمی‌شود.
-            entity.HasIndex(x => new { x.FulfillmentId, x.ShippingGroupId }).IsUnique();
+            entity.HasIndex(x => new { x.FulfillmentId, x.ShippingGroupId })
+                .IsUnique()
+                .HasDatabaseName("ix_shipping_groups_fulfillment_group");
         });
         modelBuilder.Entity<Shipment>(entity =>
         {
@@ -197,10 +199,12 @@ public sealed class FulfillmentDbContext : DbContext
             entity.ToTable("consolidated_package_members");
             entity.HasKey(x => x.ConsolidatedPackageMemberId);
             entity.Property(x => x.ConsolidatedPackageMemberId).ValueGeneratedNever();
-            entity.HasIndex(x => x.ConsolidatedPackageId);
+            entity.HasIndex(x => x.ConsolidatedPackageId)
+                .HasDatabaseName("ix_consolidated_package_members_package_id");
             entity.HasIndex(x => x.ShipmentId)
                 .IsUnique()
-                .HasFilter("released_at IS NULL");
+                .HasFilter("released_at IS NULL")
+                .HasDatabaseName("ix_consolidated_package_members_shipment_active");
         });
         modelBuilder.Entity<ShippingService>(entity =>
         {
@@ -220,7 +224,9 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.TranslationId).ValueGeneratedNever();
             entity.Property(x => x.Name).HasMaxLength(128);
             entity.Property(x => x.Description).HasMaxLength(512);
-            entity.HasIndex(x => new { x.ShippingServiceId, x.LanguageId }).IsUnique();
+            entity.HasIndex(x => new { x.ShippingServiceId, x.LanguageId })
+                .IsUnique()
+                .HasDatabaseName("ix_shipping_service_translations_service_lang");
         });
         modelBuilder.Entity<ShippingServiceOption>(entity =>
         {
@@ -228,8 +234,11 @@ public sealed class FulfillmentDbContext : DbContext
             entity.HasKey(x => x.ShippingServiceOptionId);
             entity.Property(x => x.ShippingServiceOptionId).ValueGeneratedNever();
             entity.Property(x => x.Code).HasMaxLength(64);
-            entity.HasIndex(x => new { x.ShippingServiceId, x.Code }).IsUnique();
-            entity.HasIndex(x => x.ShippingServiceId);
+            entity.HasIndex(x => new { x.ShippingServiceId, x.Code })
+                .IsUnique()
+                .HasDatabaseName("ix_shipping_service_options_service_code");
+            entity.HasIndex(x => x.ShippingServiceId)
+                .HasDatabaseName("ix_shipping_service_options_service_id");
         });
         modelBuilder.Entity<ShippingServiceOptionTranslation>(entity =>
         {
@@ -237,11 +246,27 @@ public sealed class FulfillmentDbContext : DbContext
             entity.HasKey(x => x.TranslationId);
             entity.Property(x => x.TranslationId).ValueGeneratedNever();
             entity.Property(x => x.Name).HasMaxLength(128);
-            entity.HasIndex(x => new { x.ShippingServiceOptionId, x.LanguageId }).IsUnique();
+            entity.HasIndex(x => new { x.ShippingServiceOptionId, x.LanguageId })
+                .IsUnique()
+                .HasDatabaseName("ix_shipping_service_option_translations_option_lang");
         });
         modelBuilder.Entity<ShippingMethod>(entity =>
         {
-            entity.ToTable("shipping_methods");
+            entity.ToTable("shipping_methods", table =>
+            {
+                // قیدهای موجود دیتابیس (۲۰۲۶۱۰۱۵۱۲۰۰۰۰) توصیف می‌شوند تا مدل واقعیت ذخیره‌سازی را بگوید؛
+                // این‌ها همان گاردهای SQL خام هستند و جای اعتبارسنجی دامنه را نمی‌گیرند.
+                table.HasCheckConstraint(
+                    "ck_shipping_methods_code_canonical",
+                    "length(method_code) BETWEEN 1 AND 32"
+                    + " AND method_code = lower(method_code)"
+                    + " AND method_code !~ '[^a-z0-9_:]'");
+                table.HasCheckConstraint(
+                    "ck_shipping_methods_option_code_canonical",
+                    "legacy_option_code IS NULL"
+                    + " OR (length(btrim(legacy_option_code)) BETWEEN 1 AND 64"
+                    + " AND legacy_option_code = lower(legacy_option_code))");
+            });
             entity.HasKey(x => x.ShippingMethodId);
             entity.Property(x => x.ShippingMethodId).ValueGeneratedNever();
             entity.Property(x => x.MethodCode).HasMaxLength(ShippingMethod.MaxCodeLength);
@@ -252,7 +277,8 @@ public sealed class FulfillmentDbContext : DbContext
             // پیوند قدیمی یکتا نگه داشته می‌شود تا یک سیاست fallback سطح سرویس هرگز به روش دوم تبدیل نشود.
             entity.HasIndex(x => new { x.LegacyServiceCode, x.LegacyOptionCode })
                 .IsUnique()
-                .HasFilter("legacy_option_code IS NOT NULL");
+                .HasFilter("legacy_option_code IS NOT NULL")
+                .HasDatabaseName("ux_shipping_methods_legacy_binding");
             entity.HasIndex(x => x.LegacyServiceCode);
         });
         modelBuilder.Entity<ShippingMethodTranslation>(entity =>
@@ -262,13 +288,16 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.TranslationId).ValueGeneratedNever();
             entity.Property(x => x.Name).HasMaxLength(128);
             entity.Property(x => x.Description).HasMaxLength(512);
-            entity.HasIndex(x => new { x.ShippingMethodId, x.LanguageId }).IsUnique();
+            entity.HasIndex(x => new { x.ShippingMethodId, x.LanguageId })
+                .IsUnique()
+                .HasDatabaseName("ix_shipping_method_translations_method_lang");
             // بدون این نگاشت، EF ترتیب درج را نمی‌داند و ترجمه را پیش از روش درج می‌کند؛ آن‌وقت
             // محدودیت FK دیتابیس (fk_shipping_method_translations_method) درج را رد می‌کند. رابطه
             // عمداً بدون navigation مدل می‌شود تا شکل دامنه تغییر نکند.
             entity.HasOne<ShippingMethod>()
                 .WithMany()
                 .HasForeignKey(x => x.ShippingMethodId)
+                .HasConstraintName("fk_shipping_method_translations_method")
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

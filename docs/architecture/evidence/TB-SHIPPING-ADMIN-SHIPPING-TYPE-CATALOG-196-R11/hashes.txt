@@ -1,0 +1,8 @@
+﻿R11 byte parity (SHA-256 prefix) — captured after the mapping edit and metadata regeneration
+20261022182208_AddFulfillmentOutboxPendingIndex.cs        C6600940CBEF7D07  UNCHANGED executable Up/Down (only the R10 index pair)
+20261022101415_ShippingTypeCatalog.cs                     979328491371CD0F  UNCHANGED
+20261022101415_ShippingTypeCatalog.Designer.cs            50098BD09979F5F8  UNCHANGED (historical designer keeps its own point-in-time model)
+FulfillmentDbContext.cs                                    MODIFIED (mapping annotations only: 2 checks + 10 names)
+FulfillmentDbContextModelSnapshot.cs                       MODIFIED (regenerated from the unchanged canonical factory)
+20261022182208_AddFulfillmentOutboxPendingIndex.Designer.cs MODIFIED (generated TargetModel regenerated)
+all other migrations/designers                          UNCHANGED (git status lists only the three files above under Migrations)

@@ -576,3 +576,23 @@ and an exact-shape preexisting same-name index failed closed with `42P07` and no
 55436 has no listener. CHECK/default/naming reconciliation and the storage/relational battery remain OPEN, so TB-196
 stays BLOCKED_PENDING_HISTORICAL_SCHEMA_AND_RELATIONAL_ACCEPTANCE; worker PASS is not Architect ACCEPT;
 STOP_FOR_ARCHITECT; no automatic next task.
+### Worker status pointer — R11 (2026-10-22T18:39Z claim, existing CHECK + historical object-name model alignment)
+
+`TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R11` is COMPLETE (worker `PASS`). The canonical Fulfillment model now
+describes TWELVE objects that already existed in the database: the two `shipping_methods` CHECKs from
+`20261015120000` (verbatim SQL, protection preserved, not replaced by the stricter domain validator) and ten historical
+physical names pinned with `HasDatabaseName`/`HasConstraintName` (1 FK + 9 indexes, shapes verified unchanged: ordered
+columns, uniqueness, partial filters, FK principal and `ON DELETE CASCADE`). Only the current snapshot and the R10
+`20261022182208_AddFulfillmentOutboxPendingIndex.Designer.cs` TargetModel were regenerated with the unchanged factory;
+the R10 executable Up/Down, every older migration and every older designer (including ShippingTypeCatalog) are
+byte-identical, with no new migration id or history row. The R8 parity regression now selects the ACTUAL latest
+migration (asserted = R10) instead of pinning obsolete equality on ShippingTypeCatalog, keeping real
+initializer/differ zero-operation and normalized-semantics assertions. Offline: snapshot-vs-model 0 and latest-R10-
+TargetModel-vs-model 0, plus a negative demonstration that renamed/missing CHECK or object names are detected, not
+filtered. Executed on a task-owned `postgres:17-alpine` (127.0.0.1:55436, DBs `fulfillment_tb196` +
+`fulfillment_tb196_model`): the real chain applied through R10 versus the current model projected by
+`GenerateCreateScript` yields residual **0** and exactly the **10 raw default lines** for the five known defaults; the
+primary manifest re-read byte-equal and the R10 pending index is present on both sides. Defaults were NOT touched
+(no `HasDefaultValue`/value-generation/insert-behavior change) and stay visible as differences. Container removed;
+55436 has no listener. TB-196 stays BLOCKED_PENDING_DEFAULTS_AND_RELATIONAL_ACCEPTANCE; worker PASS is not Architect
+ACCEPT; no customer-facing or deployed-schema claim; STOP_FOR_ARCHITECT; no automatic next task.

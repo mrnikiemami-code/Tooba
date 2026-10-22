@@ -1,0 +1,10 @@
+missing-in-model: column fulfillment.items.quantity_packed numeric(18,6) not-null default:0
+missing-in-model: column fulfillment.items.quantity_processing numeric(18,6) not-null default:0
+missing-in-model: column fulfillment.shipments.provider_metadata_version integer not-null default:0
+missing-in-model: column fulfillment.shipments.shipping_method_code character varying(64) not-null default:''::character varying
+missing-in-model: column fulfillment.shipments.shipping_method_label character varying(128) not-null default:''::character varying
+unexpected-in-model: column fulfillment.items.quantity_packed numeric(18,6) not-null default:-
+unexpected-in-model: column fulfillment.items.quantity_processing numeric(18,6) not-null default:-
+unexpected-in-model: column fulfillment.shipments.provider_metadata_version integer not-null default:-
+unexpected-in-model: column fulfillment.shipments.shipping_method_code character varying(64) not-null default:-
+unexpected-in-model: column fulfillment.shipments.shipping_method_label character varying(128) not-null default:-
