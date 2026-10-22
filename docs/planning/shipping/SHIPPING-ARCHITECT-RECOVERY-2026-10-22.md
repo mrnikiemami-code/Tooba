@@ -1,5 +1,8 @@
 ﻿# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+> **وضعیت جاری Architect پس از196-R2:** دو اصلاح محدود Domain **ACCEPT**؛ [بررسی مستقل](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R2/ARCHITECT-REVIEW.md)، checkpoint `1b42b7e7e02f147e323433a5db1a20993d601349`. مرزصفر/حداکثر و atomic guardهای متن/شناسه از source/test بررسی شد؛54+1 تست گزارش Worker، اینجا اجرا نشد. اختلاف زمان16/19دقیقه در دو گزارش ثبت شد، هر دو زیر20؛ اثبات مستقل زمان نیست. کل196 هنوز **PARTIAL_PENDING_API_TRACE_AND_RELATIONAL_PROOF**. تنها تسک بعدی **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R3** (Parent=196-R2): فقط تست delegates واقعی API/auth/body/validation و set-equality چهارمسیر، بدون کد محصول/DB/Host/full-suite. ماتریس کامل زبان، listener، constraint-lookalike و snapshot/PostgreSQL/race هنوز gate جدا هستند. assignment Shipping/UI/quote/فعال‌سازی/استقرار مجاز نیست؛ TB-185 متوقف. پایین تاریخچه است.
+
+
 > **وضعیت جاری پس از196-R1:** **PARTIAL / NOT ACCEPTED**؛ [بررسی مستقل](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R1/ARCHITECT-REVIEW.md)، checkpoint `d5406396e8032b32d22244f29d20336f4c4017fb`. اصلاح ورودی/preflight/no-op در source هست ولی proof API/adapter زبان/listener/set-equality هنوز اجرا نشده؛85دقیقه از45 گذشته و build Host خارج scope بود. رگرسیون تازه: Create ترتیب صفر مجاز را رد می‌کند؛ guardهای متن/شناسهٔ Domain هم حذف شده‌اند. وابستگی Domain→Contracts ممنوع می‌ماند، حذف قواعد راه‌حل نیست. تنها تسک بعدی **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R2** (Parent=196-R1)، فقط مرزهای Domain و regression هدفمند با سقف20دقیقه، نه همهٔ backlog. snapshot/PG/race و API/tracing هنوز gate جدا و باز؛ بدون assignment Shipping/UI/فعال‌سازی/استقرار، TB-185 متوقف. پایین تاریخچه است.
 
 
