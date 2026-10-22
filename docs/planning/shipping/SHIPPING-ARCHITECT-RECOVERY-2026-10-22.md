@@ -1,5 +1,15 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری پس از R11 / فقط R12
+
+R11 در `3fef1455ae12ca612ced7ac4720e7c679e6206c1` برای دوCHECK/دهنام موجود **ACCEPT**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R11/ARCHITECT-REVIEW.md). manifestهای218خط مستقلاً مقایسه و فقط10خطِ پنجdefaultpair باقی بود؛6+5+1PASS گزارش Worker،نه اجرای مستقل Architect. helper فعلی counterpartdefault و historyprefix را exhaustivelyاثباتنمی‌کند؛ در تستnext باید strictfull-equality/exactidentitySQL شود، نه whitelist.
+
+تنها تسک صادرشده **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R12**،Parent=196-R11: توصیف پنج serverdefault تاریخی در مدل با typedHasDefaultValue و explicitValueGeneratedNever تا ارسال صریحEFحفظشود. قبل/بعد INSERT SQL+parameters برایzero/empty وnondefault وfreshreadback اجباری؛ metadata/savebehavior ثابت. فقط5propertymapping/currentSnapshot/latestR10TargetModel؛ هیچDDL/newmigration/defaultdrop/تغییرbusiness. fullchainR10 درDBدورریختنی وmodelprojection باید بدونexemptionدقیقاًبرابر شوند. sharedDB/apps/flagsممنوع.
+
+سقف35دقیقه،stop28/setup8/commands120،یکcorrection. whole196/fullstorage/races/atomicityهنوزBLOCKED؛ fullschemafixtureقدیمی preR10chainراreplayمی‌کند و integrationآن مجوزجدا می‌خواهد. پس ازنتیجهR12بررسی مستقل،سپس فقطیکتسک؛assignment/UI/quote/deploymentهنوزمجازنیست؛TB185متوقف. پایین تاریخچه است.
+
+
+
 ## مرجع جاری پس از R10 / فقط R11
 
 R10 در `d49ce7b2d2cd748e567f51ccd2a4c2377400b6ab` برای migration تک‌ایندکس و شواهد محدود **ACCEPT**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R10/ARCHITECT-REVIEW.md). Source وSQL واقعاً schema-qualified و manifestbaseline/down برابرند؛3+6PASS گزارش Worker، نه اجرای مستقل Architect. دو harness correction برخلاف سقف یک مورد، انحراف فرایندی ثبت شد؛ تکرار خودکار مجاز نیست.

@@ -22,9 +22,10 @@ TB-196-R7 naming/isolated UpDown repair is accepted; legacy/snapshot and full re
 TB-196-R8 canonical snapshot/latest TargetModel metadata alignment is accepted.
 TB-196-R9 historical analysis is accepted with Architect corrections (model manifest191, not216).
 TB-196-R10 pending-outbox-index migration and bounded isolated proof are accepted.
-Only next issued task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R11,
-model alignment to the two existing CHECKs and10 historical FK/index names, no schema change.
-Five default discrepancies/full relational gates remain blocked; no shared deployment.
+TB-196-R11 existing CHECK/name model alignment is accepted; five defaults remain.
+Only next issued task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R12,
+describe historical defaults while explicitly preserving EF insert generation, no DDL.
+Full relational/storage gates remain blocked; no shared deployment.
 Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.
