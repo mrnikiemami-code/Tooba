@@ -1,5 +1,13 @@
 # Tooba — Agent Rules
 
+## Active Shipping recovery — 2026-10-22
+
+For the current Shipping Admin work, start at
+`docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md`.
+TB-189 is reviewed; TB-190 was issued and awaits its result. Do not duplicate/replay
+it or resume TB-185 performance. Fetch current HEAD and verify actual task state;
+this is a recovery pointer, not a new implementation authorization.
+
 ## Core rules
 
 1. One active Task only.

@@ -1,5 +1,15 @@
 # TOOBA — Shipping architect recovery / handoff (created 2026-10-16; reconciled 2026-10-17)
 
+## Superseding current handoff — 2026-10-22
+
+**Start at [SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md](SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md).**
+TB-186-R2 visual baseline accepted; backend foundation corrected through 187-W3-R1;
+188 configured-language context and 189 authorized owner scope reviewed. TB-190
+issued, awaiting result. The earlier next-task/performance/four-tab directions in
+this historical ledger are not current execution instructions. Financial and
+runtime evidence remains historical authority where not superseded by dated
+decisions; TB-185 performance is still paused.
+
 **ACTIVE architectural handoff.** Repository `mrnikiemami-code/Tooba`, branch `main`, channel `tooba-main`, Cursor worker `tooba-worker-01`, Bridge protocol `BRIDGE-WAKE-V1`. **Observed origin/main before this recovery update:** `e7ef3916dcf0d40b5ce6758b4c343fa572bfc4cd` (TB-184 integration); always re-fetch HEAD. **TB-184 worker result: PASS; reviewed and accepted 2026-10-17.** The next Bridge task is to be issued sequentially after this recovery update; no concurrent worker task is implied.
 
 ## Operating rules and real goal

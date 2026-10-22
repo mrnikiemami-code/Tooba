@@ -1,5 +1,14 @@
 ﻿# Tooba — Bridge-Wake-V1 Recovery Start
 
+## Current Shipping recovery — 2026-10-22
+
+Read [`SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md`](../planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md)
+before interpreting the historical phases below. Active objective: Shipping Admin,
+clean backend/frontend architecture; TB-189 reviewed, TB-190 issued and awaiting
+result. Verify actual Bridge task state and fresh origin/main; never re-enqueue
+an already claimed task. TB-185 performance stays paused. This pointer is not a
+new task, permission to deploy, or whole-product acceptance.
+
 ```text
 PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 CHANNEL: tooba-main
