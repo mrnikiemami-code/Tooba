@@ -1,5 +1,15 @@
 ﻿# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری پس از R12 / فقط R13
+
+R12 پس از review در main `e4fdcf587facb9bef1d28045c00744bbffb17244` برای modeling5default/schema0diff **ACCEPT محدود**؛ WorkerPARTIAL به‌دلیل4harnesscorrection+modelDBreset ثبت می‌ماند. [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R12/ARCHITECT-REVIEW.md). دوHasDefaultValueSql("0") فقط برایdecimalها صریحاً ratifyشد؛ValueGeneratedNever حفظ؛manifestهای218خط byte-identical مستقل تأیید شد. case-summary برابرSQLtrace نیست؛ bindings وunconditionalmetadata وprefixnegative درtestبعد کامل شود، نه تکرارbaseline/production.
+
+تنها تسک بعد **TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13**،Parent=196-R12: TEST/EVIDENCE ONLY برای fixturechronology واجرای باقی relationalproof. stalePascalCaseSQL وgateقبلR10 وbarrierبدونoriginaltoken وinterceptorشمارندهSELECTها ازsource مشخص‌اند؛ فقطtestsاصلاح. ترتیب: historicalpretype ->typeUpدقیق2table ->R10indexUpدقیق1index ->strictcurrentmodel0diff ->storage/constraints/races/atomicity ->Downمعکوس باproofواقعی. هیچsrcproduction/migration/metadata/business/guardwaiver مجازنیست؛ productionfailure=>STOP/BLOCKED نهfix.
+
+سقف45دقیقه،stop35/setup8/commands120؛ یکcorrection. شمارش تست و اجراهایشده/نشده دقیق؛ noHost/fullsolution/fullmodule/skip/sharedDB. whole196 هنوزBLOCKED تاreviewrelational؛ سپسassignmentدرShippingازContracts،بعدUI/API/languagesDB/SingleStore-Marketplace وuseracceptance. quote/activation/carrier/funding/runtimebasis/deployment مستقل؛TB185متوقف. پس ازنتیجهفقطreviewویکتسکبعد؛ پایین تاریخچه است.
+
+
+
 ## مرجع جاری پس از R11 / فقط R12
 
 R11 در `3fef1455ae12ca612ced7ac4720e7c679e6206c1` برای دوCHECK/دهنام موجود **ACCEPT**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R11/ARCHITECT-REVIEW.md). manifestهای218خط مستقلاً مقایسه و فقط10خطِ پنجdefaultpair باقی بود؛6+5+1PASS گزارش Worker،نه اجرای مستقل Architect. helper فعلی counterpartdefault و historyprefix را exhaustivelyاثباتنمی‌کند؛ در تستnext باید strictfull-equality/exactidentitySQL شود، نه whitelist.

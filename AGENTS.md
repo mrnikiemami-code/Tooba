@@ -23,9 +23,10 @@ TB-196-R8 canonical snapshot/latest TargetModel metadata alignment is accepted.
 TB-196-R9 historical analysis is accepted with Architect corrections (model manifest191, not216).
 TB-196-R10 pending-outbox-index migration and bounded isolated proof are accepted.
 TB-196-R11 existing CHECK/name model alignment is accepted; five defaults remain.
-Only next issued task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R12,
-describe historical defaults while explicitly preserving EF insert generation, no DDL.
-Full relational/storage gates remain blocked; no shared deployment.
+TB-196-R12 five-default model alignment and strict schema parity are accepted with recorded deviations.
+Only next issued task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13,
+test-only chronology/current-schema/storage/concurrency/atomicity proof completion.
+All production/migration changes forbidden in R13; real failure stops for Architect. No shared deployment.
 Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.
