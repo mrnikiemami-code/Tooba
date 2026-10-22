@@ -147,3 +147,20 @@ people's dirty/untracked work were not touched. The container is removed after t
   Catalog/Content/StoreAppearance/Pricing/Wallet/Wishlist certification state, plus Content/Fulfillment/Order/
   Settlement/Product suites) and none references the changed Shipping files or routes; they are pre-existing
   environment/manifest-state failures, not a Shipping regression. They are reported here rather than hidden.
+
+## Correction (TB-191-R1) — 2026-10-22
+
+This file is retained as the historic TB-191 result; nothing above is rewritten.
+
+- **Status correction:** PARTIAL was not Architect ACCEPT. `ARCHITECT-REVIEW.md` found R191-01 (storage CHECK
+  predicates did not mirror the domain: max-only intervals evaluated UNKNOWN and were accepted, the minimum
+  merchandise amount escaped the cap, and the currency guard allowed `'123'`/`'A$!'`) and R191-02 (the requested
+  race between a rate write and a REGION write was missing; only rate-vs-rate was proven).
+- **Repair outcome:** both findings were repaired and executed in TB-SHIPPING-ADMIN-GROUP-RATE-DRAFTS-191-R1 —
+  one additive corrective migration re-stating the five authoring checks (old migrations byte-identical),
+  direct parameterized storage negatives asserting SQLSTATE 23514 and the owned constraint identity, and two
+  deterministic same-revision races between `ReplaceGroupRateRowsAsync` and `ReplaceRegionGroupsAsync`
+  (retention/edit and group removal). See `../TB-SHIPPING-ADMIN-GROUP-RATE-DRAFTS-191-R1/`.
+- **Attribution correction:** the claim in this file that all 132 `Tooba.Host.Tests` failures were pre-existing
+  non-regressions is **UNVERIFIED**; no same-base controlled comparison was supplied and none was run. Do not
+  cite that broad run as evidence. Re-running Host is out of scope.
