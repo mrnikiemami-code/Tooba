@@ -1,4 +1,6 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
+> **آخرین وضعیت پس از 190-R1:** Worker نتیجهٔ BLOCKED با 538 pass / 1 fail گزارش کرد؛ اصلاح null/preflight و تراکنش دو‌مرحله‌ای بررسی شد، اما پذیرش نهایی صادر نشده است. تصمیم Architect: حفظ همان تراکنش مجاز و اصلاح محدود گارد قدیمی، بدون migration تازه. هم‌زمان شواهد race و اتصال آزمایشی باید دقیق شوند. [بررسی R1](../../architecture/evidence/TB-SHIPPING-ADMIN-OWNER-REGION-DRAFTS-190-R1/ARCHITECT-REVIEW.md). تنها تسک بعدی **TB-SHIPPING-ADMIN-OWNER-REGION-DRAFTS-190-R2** است؛ نتیجهٔ آن را بررسی کنید. اشاره‌های زیر به انتظار R1/190 تاریخی‌اند. نرخ/فرانت/فعال‌سازی و پذیرش کامل محصول همچنان باز است.
+
 > **وضعیت جدید پس از نتیجهٔ 190 — 2026-10-22:** نتیجه دریافت و کد تا `b84877f4f633714989d6458f2be9a7aeda59f8f5` بررسی شد؛ **ARCHITECT = REPAIR_REQUIRED**. عبارت‌های «190 منتظر نتیجه» در checkpoint اولیهٔ زیر تاریخی‌اند. سه مانع: null گروه‌ها از validator عبور می‌کند، preflight شناسهٔ گروه‌ها پیش از mutation کامل نیست، و swap ترتیب با UNIQUE فوری سازگار نیست. [بررسی مستقل](../../architecture/evidence/TB-SHIPPING-ADMIN-OWNER-REGION-DRAFTS-190/ARCHITECT-REVIEW.md). فقط **TB-SHIPPING-ADMIN-OWNER-REGION-DRAFTS-190-R1** برای اصلاح محدود آماده/صادر می‌شود؛ منتظر نتیجهٔ آن بمانید، تسک 191 صادر نشده است. نرخ/فرانت/فعال‌سازی/پذیرش PostgreSQL هنوز بازند. Worker گزارش 526 تست سبز دارد؛ اینجا آزمون اجرا نشده است.
 
 
