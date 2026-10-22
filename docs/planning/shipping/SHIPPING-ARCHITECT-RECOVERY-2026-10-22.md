@@ -549,3 +549,20 @@ facts. Recommended FIRST slice is the single additive, data-free outbox pending 
 presence of the outbox index and any domain-bypassing write path remain UNKNOWN_PENDING_EXECUTION. TB-196 stays
 BLOCKED_PENDING_HISTORICAL_SCHEMA_AND_RELATIONAL_ACCEPTANCE; worker PASS is not Architect ACCEPT; STOP_FOR_ARCHITECT;
 no automatic next task.
+### Worker status pointer — R10 (2026-10-22T18:21Z claim, pending-outbox index slice)
+
+`TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R10` is COMPLETE (worker `PASS`). ONE additive migration
+`20261022182208_AddFulfillmentOutboxPendingIndex` adds `fulfillment.ix_outbox_messages_pending`
+(non-unique btree on `occurred_at`, predicate `processed_at IS NULL AND dead_lettered_at IS NULL`) via transactional
+`CreateIndex`, with `Down` = its `DropIndex` only (no `IF NOT EXISTS`, no `CONCURRENTLY`). Its Designer `TargetModel`
+was generated from the unchanged canonical design-time model; the snapshot, the context/factory, the
+ShippingTypeCatalog migration/designer and all older artifacts are byte-identical. Offline: Up/Down operation universe
+is exactly the index pair, and snapshot-vs-canonical-model plus NEW-TargetModel-vs-canonical-model are both 0
+operations. Executed on a task-owned `postgres:17-alpine` at `127.0.0.1:55436` (chain applied through
+`20261022101415_ShippingTypeCatalog`, three seeded outbox states): Up added exactly one index + its history row with
+byte-identical normalized manifest otherwise, complete row values preserved, genuine Down restored the baseline
+manifest/rows and removed the history row, reapply + migrate-to-same-target produced no churn, and both a wrong-shape
+and an exact-shape preexisting same-name index failed closed with `42P07` and no history row/adoption. Container removed;
+55436 has no listener. CHECK/default/naming reconciliation and the storage/relational battery remain OPEN, so TB-196
+stays BLOCKED_PENDING_HISTORICAL_SCHEMA_AND_RELATIONAL_ACCEPTANCE; worker PASS is not Architect ACCEPT;
+STOP_FOR_ARCHITECT; no automatic next task.

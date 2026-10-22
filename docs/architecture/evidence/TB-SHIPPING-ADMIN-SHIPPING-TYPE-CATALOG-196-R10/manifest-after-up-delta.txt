@@ -1,0 +1,1 @@
+unexpected-in-actual: index fulfillment CREATE INDEX ix_outbox_messages_pending ON fulfillment.outbox_messages USING btree (occurred_at) WHERE ((processed_at IS NULL) AND (dead_lettered_at IS NULL))

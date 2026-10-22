@@ -1,0 +1,10 @@
+target host=127.0.0.1 port=55436 role=tb196 db=fulfillment_tb196
+baseline index present=False rows=3 manifest=221
+after-up shape=CREATE INDEX ix_outbox_messages_pending ON fulfillment.outbox_messages USING btree (occurred_at) WHERE ((processed_at IS NULL) AND (dead_lettered_at IS NULL))
+after-up history=1 rows=3
+after-up manifest delta=1
+after-down index=None history=0 manifest-equal=True rows-equal=True
+reapply-then-migrate-again: one index, one history row, no schema/data change
+wrong-shape: 42P07 relation "ix_outbox_messages_pending" already exists history=0 object-preserved=True
+exact-shape: 42P07 relation "ix_outbox_messages_pending" already exists history=0 object-preserved=True
+cleanup: task-owned conflicting index removed, baseline restored, rows intact
