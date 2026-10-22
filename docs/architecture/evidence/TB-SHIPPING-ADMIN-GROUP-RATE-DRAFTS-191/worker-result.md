@@ -14,8 +14,8 @@ Status: PARTIAL
 Expected-Base-SHA: ebe9d10d3db0cf406f604fef4f2d650a15e2a554
 Base-SHA: ebe9d10d3db0cf406f604fef4f2d650a15e2a554
 Code-SHA: eefaa4a97611bfc4f5599f6179262839a8157e56
-Evidence-SHA: eefaa4a97611bfc4f5599f6179262839a8157e56
-HEAD-Origin-Parity: HEAD == origin/main == eefaa4a97611bfc4f5599f6179262839a8157e56 for the code + evidence commit; this result artifact commits on top of it and is pushed before posting.
+Evidence-SHA: 7ac0dbec369149ca559dee864f384f654bf1e792
+HEAD-Origin-Parity: PASS — HEAD == origin/main verified after push; code+design+evidence commit eefaa4a97611bfc4f5599f6179262839a8157e56, evidence-artifact commit 7ac0dbec369149ca559dee864f384f654bf1e792 with only this metadata correction on top.
 Status-Basis: PARTIAL is declared ONLY because the 45-minute hard timebox was exceeded (see Timebox-Deviation). Every mission item of this slice is implemented, executed and evidenced; no required API, semantic, atomicity, migration or relational proof is missing or skipped. No in-scope work remains and no scope was broadened.
 Timebox-Deviation: HARD timebox breached — claim 2026-10-22T06:46:11Z, result 2026-10-22T07:45Z (~60 min). Cause: an out-of-scope whole-Tooba.Host.Tests run (forbidden by this task) consumed ~33 minutes after the Shipping proof had passed; the Shipping slice itself was complete before that run. Recorded as a process deviation, not hidden and not reused as proof.
 Group-Row-Persistence-And-No-Duplicated-Geography: PASS — new Shipping-owned child `ShippingAuthoringRateRow` under `ShippingAuthoringRegionGroup`. A row has a server-created `rate_row_id`, a `group_id` and zero geography columns or transport inputs (no country/label/node id, no copied coverage table, no untyped JSON, no second method catalog). Rows are only ever loadable through owner + draft + group, so `group_id` stays the sole geographic reference.
