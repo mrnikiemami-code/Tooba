@@ -1,3 +1,4 @@
+﻿using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Geography.Contracts.Places;
 using Tooba.Shipping.Application.Rates.Commands;
@@ -23,7 +24,7 @@ public sealed class ShippingDestinationScopeValidationTests
     [Fact]
     public async Task Valid_scope_is_accepted_and_passed_through_unchanged()
     {
-        var validator = new GeographyDestinationScopeValidator(new StubGeography(accept: true));
+        var validator = new GeographyDestinationScopeValidator(new StubGeography(accept: true), new ModuleCallTracer());
 
         var result = await validator.ValidateAsync(
             new ShippingDestinationScopeWrite(CountryId, AreaId, null, null),
@@ -37,7 +38,7 @@ public sealed class ShippingDestinationScopeValidationTests
     [Fact]
     public async Task Unknown_or_inactive_scope_is_refused_with_stable_code()
     {
-        var validator = new GeographyDestinationScopeValidator(new StubGeography(accept: false));
+        var validator = new GeographyDestinationScopeValidator(new StubGeography(accept: false), new ModuleCallTracer());
 
         var result = await validator.ValidateAsync(new ShippingDestinationScopeWrite(CountryId), default);
 
@@ -51,7 +52,7 @@ public sealed class ShippingDestinationScopeValidationTests
         var directory = new RecordingDirectory();
         var handler = new CreateShippingRatePolicyHandler(
             directory,
-            new GeographyDestinationScopeValidator(new StubGeography(accept: false)),
+            new GeographyDestinationScopeValidator(new StubGeography(accept: false), new ModuleCallTracer()),
             new AcceptingMethodOptionValidator());
 
         var result = await handler.Handle(
@@ -77,7 +78,7 @@ public sealed class ShippingDestinationScopeValidationTests
         var directory = new RecordingDirectory();
         var handler = new CreateShippingCoverageGrantHandler(
             directory,
-            new GeographyDestinationScopeValidator(new StubGeography(accept: false)));
+            new GeographyDestinationScopeValidator(new StubGeography(accept: false), new ModuleCallTracer()));
 
         var result = await handler.Handle(
             new CreateShippingCoverageGrantCommand(
@@ -98,7 +99,7 @@ public sealed class ShippingDestinationScopeValidationTests
         var directory = new RecordingDirectory();
         var handler = new CreateShippingCoverageGrantHandler(
             directory,
-            new GeographyDestinationScopeValidator(new StubGeography(accept: true)));
+            new GeographyDestinationScopeValidator(new StubGeography(accept: true), new ModuleCallTracer()));
 
         var result = await handler.Handle(
             new CreateShippingCoverageGrantCommand(

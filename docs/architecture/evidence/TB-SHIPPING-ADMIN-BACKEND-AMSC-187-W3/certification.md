@@ -122,3 +122,28 @@ Promoted: the single Shipping manifest entry → `structureCertified: true`, `ce
 ## Verdict
 
 `COMPLETE_REFERENCE_PATTERN` / `ARCH-COMPLETE-002` — **STRUCTURE_CERTIFIED** for the existing Shipping backend baseline. No whole-product acceptance, release conclusion or feature activation follows. `STOP_FOR_ARCHITECT`.
+
+---
+
+## ARCHITECT REJECTION — SUPERSEDED BY TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1
+
+Appended by TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1. Everything above is preserved verbatim as the
+historical W3 output and is **not** re-written; the following ruling overrides its verdict and its
+section 6 "residual" classification.
+
+- The Architect rejected the W3 verdict. Section 10 of the Certify skill requires *"cross-module calls
+  use IModuleCallTracer decoration and trace continuity is not broken"*. ModuleCallTracer's own
+  contract is explicitly for in-process cross-module calls, so a shared MediatR parent span does
+  **not** supply the missing module-call child span.
+- A similar omission in a sibling certified module is **not** exception authority. There is no
+  approved exemption for this edge.
+- Consequently the sentence *"Residual (non-blocking, recorded honestly) … residual observability
+  debt, not a continuity regression"* is **withdrawn**. It is a blocking certification violation, not
+  residual debt.
+- Outcome: W3's promotion is superseded. structureCertified = true in
+  docs/architecture/tmar-module-structure-manifests.json and Shipping's membership in
+  structureLock.certifiedModules now cite TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1 as the
+  corrective authority; this file remains the historical (rejected) report.
+- Corrective evidence: docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1/RESULT.md.
+- Product requirements D1–D7, integrated Admin runtime acceptance and release acceptance remain
+  pending irrespective of the repair.

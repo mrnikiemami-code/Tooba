@@ -46,18 +46,31 @@ public sealed class ShippingModuleStructureGuardTests
         var entry = ShippingManifestEntry(out var raw);
 
         // W2's stage assertion (structureCertified == false) described the pre-certify lifecycle only.
-        // TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3 promotes it after every certification prerequisite passed.
+        // TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3 promoted it, then the Architect REJECTED that promotion
+        // (no IModuleCallTracer child span on the two outbound Contracts reads; "non-blocking residual"
+        // was refused). TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1 applied the bounded trace repair and is
+        // now the corrective certification authority; W3 stays in history as rejected/superseded.
         Assert.True(
             entry.GetProperty("structureCertified").GetBoolean(),
-            "Shipping must carry the certified structure state after the W3 certification wave.");
+            "Shipping must carry the certified structure state after the W3-R1 corrective trace repair.");
         Assert.Equal("ARCH-COMPLETE-002", entry.GetProperty("lockVersion").GetString());
         Assert.Equal("COMPLETE_REFERENCE_PATTERN", entry.GetProperty("certificationState").GetString());
         Assert.Equal(
-            "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3",
+            "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1",
             entry.GetProperty("certificationAuthorityTask").GetString());
         Assert.Equal(
-            "docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3/certification.md",
+            "docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3-R1/RESULT.md",
             entry.GetProperty("evidence").GetString());
+
+        // Corrective provenance must stay pinned: W3's rejection is not silently erased.
+        var history = entry.GetProperty("certificationHistory").GetString()!;
+        Assert.Contains("TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3_", history, StringComparison.Ordinal);
+        Assert.Contains("REJECTED", history, StringComparison.Ordinal);
+        Assert.Contains("W3-R1", history, StringComparison.Ordinal);
+        Assert.Contains(
+            "IModuleCallTracer",
+            entry.GetProperty("certificationCorrection").GetString()!,
+            StringComparison.Ordinal);
 
         // Honest lineage: the certification must cite the structure handoff it certifies over.
         Assert.Contains(

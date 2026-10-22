@@ -1,4 +1,5 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Shipping.Application.Rates.Ports;
 using Tooba.Shipping.Contracts.Errors;
@@ -192,7 +193,7 @@ public sealed class ShippingOptionLevelRatePolicyTests
     [Fact]
     public async Task Unknown_option_and_unknown_service_are_refused_through_the_catalog_seam()
     {
-        var validator = new FulfillmentShippingMethodOptionValidator(new StubCatalog());
+        var validator = new FulfillmentShippingMethodOptionValidator(new StubCatalog(), new ModuleCallTracer());
 
         var ok = await validator.ValidateAsync("tipax", "express", default);
         var okServiceLevel = await validator.ValidateAsync("tipax", null, default);

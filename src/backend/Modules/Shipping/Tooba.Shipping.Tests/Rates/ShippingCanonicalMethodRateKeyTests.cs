@@ -1,3 +1,4 @@
+﻿using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Shipping.Contracts.Errors;
 using Tooba.Shipping.Infrastructure.Rates;
@@ -58,7 +59,7 @@ public sealed class ShippingCanonicalMethodRateKeyTests
     [Fact]
     public async Task A_legacy_catalog_option_is_still_accepted_unchanged()
     {
-        var validator = new FulfillmentShippingMethodOptionValidator(new CatalogFake(), new CanonicalFake());
+        var validator = new FulfillmentShippingMethodOptionValidator(new CatalogFake(), new ModuleCallTracer(), new CanonicalFake());
 
         Assert.True((await validator.ValidateAsync("post", "standard", CancellationToken.None)).IsSuccess);
         Assert.True((await validator.ValidateAsync("post", null, CancellationToken.None)).IsSuccess);
@@ -67,7 +68,7 @@ public sealed class ShippingCanonicalMethodRateKeyTests
     [Fact]
     public async Task A_new_canonical_method_binding_becomes_a_valid_rate_key_without_a_legacy_option_row()
     {
-        var validator = new FulfillmentShippingMethodOptionValidator(new CatalogFake(), new CanonicalFake("economy"));
+        var validator = new FulfillmentShippingMethodOptionValidator(new CatalogFake(), new ModuleCallTracer(), new CanonicalFake("economy"));
 
         Assert.True((await validator.ValidateAsync("post", "economy", CancellationToken.None)).IsSuccess);
     }
@@ -75,12 +76,12 @@ public sealed class ShippingCanonicalMethodRateKeyTests
     [Fact]
     public async Task An_invented_option_or_a_missing_seam_is_refused()
     {
-        var validator = new FulfillmentShippingMethodOptionValidator(new CatalogFake(), new CanonicalFake("economy"));
+        var validator = new FulfillmentShippingMethodOptionValidator(new CatalogFake(), new ModuleCallTracer(), new CanonicalFake("economy"));
         var refused = await validator.ValidateAsync("post", "invented", CancellationToken.None);
         Assert.True(refused.IsFailure);
         Assert.Equal(ShippingErrorCodes.ServiceOptionUnknown, refused.Errors.Single().Code);
 
-        var withoutSeam = new FulfillmentShippingMethodOptionValidator(new CatalogFake());
+        var withoutSeam = new FulfillmentShippingMethodOptionValidator(new CatalogFake(), new ModuleCallTracer());
         var rejected = await withoutSeam.ValidateAsync("post", "economy", CancellationToken.None);
         Assert.True(rejected.IsFailure);
         Assert.Equal(ShippingErrorCodes.ServiceOptionUnknown, rejected.Errors.Single().Code);
