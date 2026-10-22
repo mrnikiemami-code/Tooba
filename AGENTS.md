@@ -155,8 +155,13 @@ it, and reuse of that geography by packaging and scheduling. Payment timing and
 rate calculation mode are independent. Do not reintroduce duplicated geography,
 raw location IDs, cross-owner inheritance or seller-only customer grouping.
 Multilingual fields, configured locales, shared non-translated rules, and RTL/LTR
-are mandatory (decision sections 10–11). The current authorized slice is an
-isolated visual Admin preview only, pending user visual review.
+are mandatory (decision sections 10–11). The TB-186-R2 visual preview baseline was accepted by the owner on 2026-10-22.
+Decision sections 13–15 add authoritative single-store/marketplace capability
+handling and database-backed configured languages. Backend delivery is authorized
+only through the single active Bridge task and repository AMSC/feature skills;
+visual acceptance is not production activation, integration acceptance or module
+certification. Do not hardcode two locales, trust browser owner/mode, or create
+parallel mode/language authorities.
 This records approved requirements, not implemented capability or permission to
 weaken guards; report migration/contract conflicts explicitly.
 
