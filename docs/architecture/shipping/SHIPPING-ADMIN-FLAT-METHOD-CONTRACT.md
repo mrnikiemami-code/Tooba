@@ -80,3 +80,7 @@ Old provider/service-level policies that cannot be unequivocally attributed to o
 6. A missing/untrusted server binding must fail closed for WRITES; never derive method ownership by splitting a code string in the browser.
 
 This addendum is a LOCKED REQUIREMENT; it is NOT a claim that the present shipping backend supports all modes or correct isolation. Code changes require separate scoped implementation and real write/read and checkout acceptance.
+
+
+## Architect clarification — operational classification metadata (TB-195, 2026-10-22)
+Shared operational shipping-type identity/display metadata (for example a configurable heavy category) may be referenced by several independently managed methods. This is NOT a provider/child-service hierarchy or a policy container: it owns no rate, coverage, packaging, schedule, payment or capacity rule and grants no sibling/provider/cross-owner inheritance. Sections B/C isolation remains fully enforced. No standalone former "Types of Service" tab or nested provider editor is restored. This clarification authorizes no runtime grouping, migration of legacy policy or customer quote change; the separate bounded task governs implementation.
