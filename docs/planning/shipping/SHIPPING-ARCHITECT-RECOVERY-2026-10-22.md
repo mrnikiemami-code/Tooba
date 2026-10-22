@@ -1,5 +1,19 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری Architect پس از دریافت و بررسی R8 — 2026-10-22
+
+این بخش بر وضعیت‌های پایین مقدم است؛ آن‌ها تاریخچه‌اند. **R8 تمام شده و برای اصلاح metadata پذیرفته شد**؛ checkpoint کد `ad1aa1b987f8a7f0037230afbb72b7a57f6c8fdd`، main بررسی‌شده `8aeeaa385a240a46e72a4f5297325d8e651d4f58`. [بررسی مستقل](../../architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R8/ARCHITECT-REVIEW.md).
+
+- دو metadata artifact با مدل canonical هماهنگ‌اند؛ هر دو فهرست baseline برابر191عملیات نام‌گذاری و after صفر است. تست واقعی differ/initializer و normalized metadata از source بررسی شد؛ نتایج3+28PASS گزارش Worker است و Architect دوباره اجرا نکرده.
+- runtime model/factory، executable Up/Down، مهاجرت‌های قدیمی، business/API/فرانت/manifest هیچ تغییری ندارند. پذیرش Up/Down محدود R7 با source یکسان باقی است؛ schema تاریخی هنوز برابر مدل اثبات نشده.
+- کل196 همچنان **BLOCKED_PENDING_HISTORICAL_SCHEMA_AND_RELATIONAL_ACCEPTANCE**. index outbox مفقود در migration، دوCHECK تاریخیِ خارج مدل، پنجdefault و دهname اختلاف بازند؛ storage/unique/revision race/rollback/cancellation و constraint-lookalike هنوز شواهد اجراشده لازم دارند.
+- **هیچ تسک فعالِ صادرشدهٔ بعدی در این checkpoint نیست. R8 را دوباره اجرا نکنید.** گام بعدِ آماده‌سازی: تحلیل محدود reconciliation تاریخی با provenance دقیق هر اختلاف و پیشنهاد کوچک‌ترین تصمیم امن، قبل از هر تغییر اجرایی legacy. این یادداشت مجوز اجرا یا تسک جدید نیست.
+- طبق تذکر مالک، قبل از اتمام و بررسی تسک جاری فایل تسک تازه یا نسخه جایگزین ندهید. R8 اکنون بررسی و بسته شده؛ فقط یک تسک بعدی می‌تواند جداگانه صادر شود.
+- تصحیح گزارش Worker: فاصله Expected abf7072 تا Base8741f3c دقیقاً **یک** کامیت Architect فقط docs (+41خط) بود، نه دو. ancestry و تغییرات آن مستقلاً بررسی شد؛ این مورد مجوز نادیده‌گرفتن mismatchهای آینده نیست.
+- ادامه پس از بسته‌شدن کاتالوگ: assignment در Shipping فقط از Fulfillment.Contracts، سپس UI/API و زبان‌های واقعیDB و SingleStore/Marketplace و پذیرش مرورگر/مالک. quote/activation/runtime amount-count basis/carrier/free funding/cutoff و deployment مستقل و باز؛TB185متوقف.
+
+
+
 
 ## آخرین checkpoint برای بازیابی چت — درخواست مستقیم مالک، 2026-10-22
 

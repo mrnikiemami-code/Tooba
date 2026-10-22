@@ -3,8 +3,8 @@
 ## Active Shipping recovery — 2026-10-22
 
 Chat-loss checkpoint: the latest section at the top of the recovery document
-records accepted work, active R8, unresolved gates and the exact continuation.
-Do not replay R8 or issue another task before recovering its actual result/claim state.
+records accepted work, completed R8, unresolved gates and the exact continuation.
+R8 is completed and Architect-accepted for metadata only; do not replay it.
 
 For the current Shipping Admin work, start at
 `docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md`.
@@ -19,7 +19,9 @@ TB-196-R1 remains PARTIAL; its bounded Domain regressions are repaired and accep
 TB-196-R3 API evidence is accepted through R4; registry/tracing/real-DI/relational gates remain open.
 TB-196-R5 DI/registry/listener evidence and its single-active correction through R6 are accepted.
 TB-196-R7 naming/isolated UpDown repair is accepted; legacy/snapshot and full relational gates remain blocked.
-The only next task is TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R8; await its result.
+TB-196-R8 canonical snapshot/latest TargetModel metadata alignment is accepted.
+Historical-schema and full relational gates remain blocked; no next task is issued by this checkpoint.
+Prepare bounded historical reconciliation analysis before authorizing any legacy executable repair.
 Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.
