@@ -269,3 +269,13 @@ Rules recorded in `SHIPPING-ADMIN-RULES-DECISION.md` section 24; details in
 **Open gates unchanged:** cutoff/holiday/capacity/customer-promise are NOT implemented; drafts remain
 inactive configuration; Runtime-Merchandise-Basis-And-Measurement gate stays OPEN_NOT_IMPLEMENTED and
 TB-185 stays paused. Worker PASS is technical proof only, not Architect ACCEPT; no automatic next task.
+
+TB-SHIPPING-ADMIN-WEEKLY-SCHEDULE-DRAFTS-193-R1 (worker, 2026-10-22) closed R193-01 by replacing the
+weak race fact with the established real `SavingChanges` two-reader barrier and strict assertions:
+both participants proven to arrive with the original root token 1, exactly one winner and exactly one
+loser with the canonical `AuthoringDraftRevisionConflict`, revision advanced exactly once, the actual
+winner's capability asserted present and the loser's absent in both orders, raw day/rate row counts
+proving no hybrid, and the ACTUAL losing context proven empty and re-reading the winner. Test-only
+repair plus evidence correction: no executable production, contract, schema or migration change.
+Re-executed 609/609 whole Shipping suite; the repaired fact passed 5/5 consecutive focused runs.
+Worker PASS only — not Architect ACCEPT; no automatic next task.

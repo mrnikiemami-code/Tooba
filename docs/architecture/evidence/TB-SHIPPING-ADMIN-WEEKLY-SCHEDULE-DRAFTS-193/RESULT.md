@@ -106,6 +106,14 @@ revision returns the canonical `AuthoringDraftRevisionConflict` (409). A relatio
 
 ## 6. Executed verification
 
+> **Correction (TB-193-R1, R193-01).** The concurrency fact originally recorded in this section for
+> the schedule-versus-rate race was structurally weak: it released a gate *before* either directory
+> call read the root, asserted only "at least one success", tolerated an empty loser set, and accepted
+> a revision that both writers could produce. The requirement stands and the production behavior is
+> unchanged, but that fact was replaced (see §6.1) with the established real `SavingChanges` pre-write
+> barrier and strict winner/loser assertions. The numbers below are the re-executed post-repair run;
+> the original 609/609 report remains history, and its concurrency claim is superseded by §6.1.
+
 PostgreSQL 17 disposable task container `tb193-pg` (`postgres:17-alpine`) published on
 `127.0.0.1:55432`, database `shipping_tb190r1`, user `tb190r1` (fixture credentials from the prior
 task target; no shared `:5432`/`tooba_alpha` access, no credential logging). Module migrations were
@@ -113,7 +121,7 @@ applied to that disposable database only.
 
 | Command (focused) | Count |
 | --- | --- |
-| `dotnet test … --filter FullyQualifiedName~ShippingAuthoringWeeklySchedule` (HTTP + PostgreSQL) | 20/20 pass (17 endpoint + 3 storage) |
+| `dotnet test … --filter FullyQualifiedName~ShippingAuthoringWeeklySchedule` (HTTP + PostgreSQL) | 20/20 pass (17 endpoint + 3 storage, including the repaired R193-01 race fact) |
 | `--filter FullyQualifiedName~ShippingOperatingScheduleTests` (legacy parity) | 74/74 pass |
 | `--filter FullyQualifiedName~ShippingRequestClassificationTests` | 11/11 pass |
 | `--filter FullyQualifiedName~ShippingPersistenceModelTests` | 52/52 pass |
@@ -131,7 +139,6 @@ culture invariance; view-only PUT denied pre-dispatch; foreign draft and SingleS
 no-op PUT keeping the revision.
 
 Covered by the 3 executed PostgreSQL cases:
-
 1. `Full_week_roundtrips_through_a_new_context_and_survives_unrelated_capability_writes` — seven
    distinct day keys with remembered times read back in a NEW context, and an unrelated capability
    write preserving the schedule and vice versa.
@@ -140,10 +147,37 @@ Covered by the 3 executed PostgreSQL cases:
    (`23514`/`23505`/`23503`) **and** the owned constraint identity: weekday out of range, unpaired
    hours, inverted/equal interval, working without hours, duplicate `(draft, weekday)`, foreign
    draft, blank/over-long timezone.
-3. `Concurrent_schedule_and_rate_writes_leave_no_hybrid_state_and_report_a_canonical_conflict` — a
-   schedule PUT racing ONE rate writer on the same original root revision behind the bounded
-   pre-write barrier; either winner accepted, the loser gets the canonical conflict and the exact
-   winner-dependent state is asserted with no hybrid rows and a safe tracker.
+3. `Concurrent_schedule_and_rate_writes_leave_exactly_the_winner_state_and_one_canonical_conflict`
+   (TB-193-R1 repair) — a schedule `PUT` racing ONE rate writer on the same original root revision,
+   deterministically synchronized at the **first `SavingChanges`** of each participant (after that
+   participant read and staged revision 1, before either wrote anything), with the ORIGINAL concurrency
+   value asserted as `1` for both and exactly `2` barrier arrivals.
+
+## 6.1 Strict concurrency proof (R193-01 repair)
+
+The replaced fact asserts, instead of "something won":
+
+* both participants really arrived at their first `SavingChanges` with the original root token `1`
+  loaded (`TwoReaderGate.Arrivals == 2`, both interceptors' `OriginalRevision == 1`), so a genuine
+  two-reader race is proven rather than two operations merely started together;
+* **exactly one** winner (`Assert.Single(!IsFailure)`) and **exactly one** loser
+  (`Assert.Single(IsFailure)`), with the loser's error exactly
+  `AuthoringDraftRevisionConflict` — a both-succeed outcome fails the test;
+* the persisted root revision is exactly `2`, so the shared token advanced exactly once;
+* the persisted state is asserted **conditionally on the actual winner, in both directions**:
+  schedule-winner ⇒ header + `Asia/Tehran` + seven rows with Saturday `09:00–13:00` working and the
+  other six closed, **and** zero rate rows with `CurrencyCode == null`; rate-winner ⇒ one
+  `12.50` row with `USD` **and** `WeeklySchedule == null`;
+* raw row counts confirm the absence of hybrid state independently of the projection:
+  `authoring_weekly_schedule_days` = 7 or 0 and `authoring_rate_rows` = 0 or 1, exactly matching the
+  winner;
+* the ACTUAL losing `DbContext` (`loser.Index` selects it) has no tracked entry in a non-`Unchanged`
+  state, so a later `SaveChanges` on it can publish nothing, and it re-reads the winner's revision `2`
+  and winner's capability shape.
+
+Determinism: the focused fact was executed five consecutive times on the same live disposable
+database (5/5 pass, ~0.86 s each) and inside the whole suite. No production, schema, API, contract or
+migration file changed in this repair — only the test and this evidence correction.
 
 ## 7. Classification manifest
 

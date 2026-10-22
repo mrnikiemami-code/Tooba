@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -278,7 +279,7 @@ public sealed class ShippingAuthoringWeeklyScheduleStorageTests
     }
 
     [Fact]
-    public async Task Concurrent_schedule_and_rate_writes_leave_no_hybrid_state_and_report_a_canonical_conflict()
+    public async Task Concurrent_schedule_and_rate_writes_leave_exactly_the_winner_state_and_one_canonical_conflict()
     {
         await using var seed = await NewContextAsync();
         var owner = ShippingAuthoringOwnerScope.ForStore("tb193-race-" + Guid.NewGuid().ToString("N"));
@@ -292,66 +293,124 @@ public sealed class ShippingAuthoringWeeklyScheduleStorageTests
         var draftId = created.Value.DraftId;
         var groupId = created.Value.RegionGroups.Single().GroupId;
 
-        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        async Task<Tooba.BuildingBlocks.Results.Result<ShippingAuthoringDraft>> ScheduleAsync()
+        // Deterministic two-reader barrier (the established TB-190-R2/TB-191-R1/TB-192-R1 pattern): each
+        // participant is intercepted at its FIRST SavingChanges, i.e. AFTER it read the draft root with
+        // revision 1 and staged its own rows, and BEFORE either has written anything. A bare BEGIN holds no
+        // row lock here, so neither participant waits on the other while holding a lock.
+        var gate = new TwoReaderGate();
+        var scheduleInterceptor = new TwoReaderBarrierInterceptor(gate);
+        var rateInterceptor = new TwoReaderBarrierInterceptor(gate);
+
+        await using var scheduleContext = await NewContextAsync(scheduleInterceptor);
+        await using var rateContext = await NewContextAsync(rateInterceptor);
+
+        async Task<(int Index, Tooba.BuildingBlocks.Results.Result<ShippingAuthoringDraft> Result)> RunAsync(
+            int index,
+            Func<CancellationToken, Task<Tooba.BuildingBlocks.Results.Result<ShippingAuthoringDraft>>> run)
         {
-            await using var context = await NewContextAsync();
-            await gate.Task;
-            return await new ShippingAuthoringDraftDirectory(context).ReplaceWeeklyScheduleAsync(
+            try
+            {
+                return (index, await run(CancellationToken.None));
+            }
+            catch (Exception exception)
+            {
+                throw new Xunit.Sdk.XunitException(
+                    $"participant {index} threw {exception.GetType().Name}: {exception.Message}");
+            }
+        }
+
+        var outcomes = await Task.WhenAll(
+            RunAsync(0, token => new ShippingAuthoringDraftDirectory(scheduleContext).ReplaceWeeklyScheduleAsync(
                 owner,
                 draftId,
                 1,
                 "Asia/Tehran",
                 Days((Saturday, true, new TimeOnly(9, 0), new TimeOnly(13, 0))),
-                CancellationToken.None);
-        }
-
-        async Task<Tooba.BuildingBlocks.Results.Result<ShippingAuthoringDraft>> RateAsync()
-        {
-            await using var context = await NewContextAsync();
-            await gate.Task;
-            return await new ShippingAuthoringDraftDirectory(context).ReplaceGroupRateRowsAsync(
+                token)),
+            RunAsync(1, token => new ShippingAuthoringDraftDirectory(rateContext).ReplaceGroupRateRowsAsync(
                 owner,
                 draftId,
                 groupId,
                 1,
                 [RowInput(null, 0, 1000, 12.50m)],
                 "USD",
-                CancellationToken.None);
-        }
+                token)));
 
-        var scheduleTask = ScheduleAsync();
-        var rateTask = RateAsync();
-        gate.SetResult();
-        var results = await Task.WhenAll(scheduleTask, rateTask);
+        // Both really arrived with the ORIGINAL root token 1 loaded, and the barrier really synchronized them.
+        Assert.Equal(2, gate.Arrivals);
+        Assert.Equal(1, scheduleInterceptor.OriginalRevision);
+        Assert.Equal(1, rateInterceptor.OriginalRevision);
 
-        // The same original root revision can only be admitted once; any loser is the canonical conflict.
-        Assert.Contains(results, result => result.IsSuccess);
-        foreach (var loser in results.Where(result => result.IsFailure))
-        {
-            Assert.Equal(ShippingErrorCodes.AuthoringDraftRevisionConflict, loser.Errors[0].Code);
-        }
+        // Exactly one winner and exactly one loser: the shared root revision admits a single commit.
+        var winner = Assert.Single(outcomes, outcome => !outcome.Result.IsFailure);
+        var loser = Assert.Single(outcomes, outcome => outcome.Result.IsFailure);
+        Assert.Equal(ShippingErrorCodes.AuthoringDraftRevisionConflict, loser.Result.Errors[0].Code);
 
-        await using var final = await NewContextAsync();
-        var stored = await new ShippingAuthoringDraftDirectory(final)
+        await using var verification = await NewContextAsync();
+        var stored = await new ShippingAuthoringDraftDirectory(verification)
             .GetAsync(owner, draftId, CancellationToken.None);
         Assert.True(stored.IsSuccess, stored.IsFailure ? stored.Errors[0].Code : null);
         var draftValue = stored.Value;
-        Assert.Equal(results.Count(result => result.IsSuccess) + 1, draftValue.Revision);
 
-        var scheduleConfigured = draftValue.WeeklySchedule is not null;
-        var ratesConfigured = draftValue.RegionGroups.Single().RateRows.Count > 0;
-        // No hybrid: the revision proves exactly which writers committed, and each capability is all-or-nothing.
-        if (scheduleConfigured)
+        // The revision advanced EXACTLY once, so both writers cannot have committed.
+        Assert.Equal(2, draftValue.Revision);
+        var storedGroup = draftValue.RegionGroups.Single();
+        Assert.Equal(groupId, storedGroup.GroupId);
+
+        // The persisted state is exactly the WINNER's capability and the absence of the loser's, asserted
+        // explicitly in both directions instead of validating whichever capability happens to exist.
+        if (winner.Index == 0)
         {
-            Assert.Equal(7, draftValue.WeeklySchedule!.Days.Count);
+            var schedule = Assert.IsType<ShippingAuthoringWeeklySchedule>(draftValue.WeeklySchedule);
+            Assert.Equal("Asia/Tehran", schedule.TimeZoneId);
+            Assert.Equal(7, schedule.Days.Count);
+            var saturday = schedule.Days.Single(day => day.Weekday == Saturday);
+            Assert.True(saturday.IsWorking);
+            Assert.Equal(new TimeOnly(9, 0), saturday.StartTime);
+            Assert.Equal(new TimeOnly(13, 0), saturday.EndTime);
+            Assert.All(
+                schedule.Days.Where(day => day.Weekday != Saturday),
+                day => Assert.False(day.IsWorking));
+
+            // The losing rate write left nothing behind: no row and no currency.
+            Assert.Empty(storedGroup.RateRows);
+            Assert.Null(storedGroup.CurrencyCode);
+        }
+        else
+        {
+            // The losing schedule write left nothing behind: no header, so the draft stays unconfigured.
+            Assert.Null(draftValue.WeeklySchedule);
+
+            var storedRow = Assert.Single(storedGroup.RateRows);
+            Assert.Equal(12.50m, storedRow.FreightAmount);
+            Assert.Equal("USD", storedGroup.CurrencyCode);
         }
 
-        if (ratesConfigured)
-        {
-            Assert.Equal("USD", draftValue.RegionGroups.Single().CurrencyCode);
-            Assert.Equal(12.50m, draftValue.RegionGroups.Single().RateRows.Single().FreightAmount);
-        }
+        // No hybrid: the day rows exist only when the schedule write actually won.
+        var dayRowCount = await verification.Set<ShippingAuthoringScheduleDay>()
+            .AsNoTracking()
+            .CountAsync(day => day.DraftId == draftId);
+        Assert.Equal(winner.Index == 0 ? 7 : 0, dayRowCount);
+        var rateRowCount = await verification.Set<ShippingAuthoringRateRow>()
+            .AsNoTracking()
+            .CountAsync(row => row.GroupId == groupId);
+        Assert.Equal(winner.Index == 0 ? 0 : 1, rateRowCount);
+
+        // The ACTUAL losing context holds no pending edit that a later SaveChanges could publish.
+        var loserContext = loser.Index == 0 ? scheduleContext : rateContext;
+        Assert.Empty(loserContext.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
+
+        // And the loser re-reads the winner's state, never its own rejected write.
+        var reread = await new ShippingAuthoringDraftDirectory(loserContext)
+            .GetAsync(owner, draftId, CancellationToken.None);
+        Assert.True(reread.IsSuccess, reread.IsFailure ? reread.Errors[0].Code : null);
+        Assert.Equal(2, reread.Value.Revision);
+        Assert.Equal(
+            draftValue.WeeklySchedule is not null,
+            reread.Value.WeeklySchedule is not null);
+        Assert.Equal(
+            storedGroup.RateRows.Count,
+            reread.Value.RegionGroups.Single().RateRows.Count);
     }
 
     private static IReadOnlyList<ShippingAuthoringDraft.ScheduleDayInput> Days(
@@ -423,6 +482,9 @@ public sealed class ShippingAuthoringWeeklyScheduleStorageTests
     }
 
     private static async Task<ShippingDbContext> NewContextAsync()
+        => await NewContextAsync(null);
+
+    private static async Task<ShippingDbContext> NewContextAsync(SaveChangesInterceptor? interceptor)
     {
         // Parsed, test-owned target: exact loopback host/port/database/role. A missing or mismatched
         // configuration throws instead of skipping or faking the relational proof.
@@ -433,6 +495,11 @@ public sealed class ShippingAuthoringWeeklyScheduleStorageTests
             target.ConnectionString,
             ShippingDbContext.Schema,
             typeof(ShippingDbContext));
+        if (interceptor is not null)
+        {
+            builder.AddInterceptors(interceptor);
+        }
+
         var context = new ShippingDbContext(builder.Options);
 
         await MigrationGate.WaitAsync();
@@ -465,6 +532,61 @@ public sealed class ShippingAuthoringWeeklyScheduleStorageTests
 
     private static ShippingDestinationNode Node(Guid id)
         => new(ShippingDestinationNodeKind.AdministrativeArea, id);
+
+    /// <summary>
+    /// Bounded two-participant barrier. Arrivals are counted; the last one releases both. A participant that
+    /// never arrives is bounded by a timeout so a failure cannot hang the suite, and a bare open transaction
+    /// holds no row lock, so nobody waits while holding a conflicting lock.
+    /// </summary>
+    private sealed class TwoReaderGate
+    {
+        private const int Participants = 2;
+        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(20);
+        private readonly TaskCompletionSource _bothArrived = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _arrivals;
+
+        public int Arrivals => Volatile.Read(ref _arrivals);
+
+        public async Task ArriveAsync()
+        {
+            if (Interlocked.Increment(ref _arrivals) == Participants)
+            {
+                _bothArrived.TrySetResult();
+            }
+
+            await _bothArrived.Task.WaitAsync(Timeout);
+        }
+    }
+
+    /// <summary>
+    /// Test-only synchronization point at the FIRST SavingChanges of a participant, i.e. after that
+    /// participant read and prepared the draft root with revision 1 and before it wrote anything. It also
+    /// records the concurrency token's ORIGINAL value, which is the exact predicate the later UPDATE uses.
+    /// </summary>
+    private sealed class TwoReaderBarrierInterceptor(TwoReaderGate gate) : SaveChangesInterceptor
+    {
+        private bool _arrived;
+
+        public long OriginalRevision { get; private set; }
+
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (!_arrived)
+            {
+                _arrived = true;
+                var entry = eventData.Context!.ChangeTracker
+                    .Entries<ShippingAuthoringDraft>()
+                    .Single(candidate => candidate.State == EntityState.Modified);
+                OriginalRevision = (long)entry.OriginalValues[nameof(ShippingAuthoringDraft.Revision)]!;
+                await gate.ArriveAsync();
+            }
+
+            return await base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
+    }
 
     private static ShippingAuthoringDraft.ShippingAuthoringRateRowInput RowInput(
         Guid? rateRowId,
