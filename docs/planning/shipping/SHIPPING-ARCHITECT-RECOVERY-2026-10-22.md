@@ -1,5 +1,15 @@
 ﻿# Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری پس از197 / فقط197-R1
+
+197 در`962897207bdc8f21bb07251108973a8776275722` **PARTIAL/REPAIR_REQUIRED**؛ [بررسی](../../architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197/ARCHITECT-REVIEW.md). owner/rootnullable/Contracts/schema/routes/raceدرحدsourceوگزارش626PASSپذیرفته،اماsliceبسته‌نیست.7correctionوproductionreadbackfix فراترbudgetثبتشد.196کاتالوگبسته‌می‌ماند.
+
+ایرادactual: PUTپسازSaveدوبارهGetByIdsمی‌کند؛failureخواندندوم=خطا درپاسخپسازثبت. تنها تسک **TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197-R1**،Parent197: reuseprevalidatedfactبرایپاسخPUTبدونforeignreadپسازcommit؛GETemptyواقعیMissingولیnonemptyinconsistent503. tests: rejectedscalarدرsamecontext/save0،realDBfault+fullgraphrollback/cleanretry،realShippingModuleDI وtracingباparent/correlation/sameexception،no-opزمانnonvacuous. مجوزفقط2Applicationfiles+tests/docs؛نهmigration/Domain/auth/DTOwire/routes/frontend. DBfaulttriggerفقطنامدارtaskownedدرcontainerدورریختنی55432ومحدودبهdraftتست،سپسحذف.
+
+سقف30دقیقه/stop23/setup8/commands120؛یکcorrection،بعدSTOP. نهwhole626confidence/Host/solution/Fulfillmentrun؛ evidenceدیگرreuseباشناختsource. بعدنتیجهreviewویکتسکبعد؛cutoff/UIفعلاًمجازنیست،quote/activation/deploymentجدا؛TB185متوقف. پایینتاریخچه‌است.
+
+
+
 ## مرجع جاری: نتیجه197 ارسال شد / منتظر بررسی Architect
 
 Worker تسک **TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197** (Parent=196-R13-R1) را روی main `3f05917bd0e71297bdd1fd973ad8dcd8b6687f93` اجرا و نتیجه را به Bridge داد. سه‌گانهٔ یک use case (choices/current/replace) روی شش route admin+seller با مجوزهای موجود، root-only nullable `shipping_type_id` + CHECK مختص Shipping، خواندن Contracts-only از `IShippingTypeReader` پشت `IShippingTypeCatalogReader` با یک span فرزند برای هر خواندن واقعی، presence صریح (`omitted` رد، `null` تنها clear)، active-only PUT، no-op واقعی، stale 409 قبل از I/O خارجی و خواندن صادقانهٔ inactive/missing. [نتیجه](../../architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197/RESULT.md).
