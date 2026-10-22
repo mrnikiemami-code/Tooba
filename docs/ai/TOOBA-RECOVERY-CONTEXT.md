@@ -1,5 +1,14 @@
 # Tooba — Recovery Context
 
+## Current Shipping handoff — 2026-10-22
+
+The current Shipping task/acceptance pointer is
+[`SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md`](../planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md).
+TB-189 accepted from source review; TB-190 issued, result pending. One active task;
+no automatic next task and no TB-185 performance resumption. Older phase/task
+pointers below are historical for this Shipping track, not executable next work.
+Fetch current main and read the active task's exact recovery/base rules first.
+
 Canonical repository:
 
 ```text
