@@ -1,0 +1,40 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2
+Parent-Task: TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Program: TOOBA-SHIPPING-ADMIN-BACKEND-DELIVERY
+Mode: BOUNDED_AMSC_STRUCTURE_EXISTING_SHIPPING_FOUNDATION
+Bridge-Task-Row: a3abe338-c369-40f5-b608-1669ff7ef4d4
+Status: PASS
+Base-SHA: a41e4274789848fc89ce7895dcce597d8bc997a7
+Code-SHA: 59ce36250f109fec62572284049c607cd0f74c1f
+Evidence-SHA: @@EVIDENCE_SHA@@
+HEAD-Origin-Parity: HEAD == origin/main at @@EVIDENCE_SHA@@ (git fetch + git rev-parse verified after push; recovery gate satisfied: HEAD == origin/main == expected base before any edit)
+Applicability: HTTP_OWNING
+Folder-Granularity-State: PROFESSIONAL_SHALLOW
+Solution-Explorer-State: CANONICAL
+Path-Namespace-State: EXACT
+Physical-Copy-State: CLEAN
+Root-Allowlist-State: ENFORCED
+File-Cohesion-State: COHESIVE
+Structure-State: READY_FOR_CERTIFY
+Validator-Evidence-Preservation: PRESERVED_NO_REQUEST_OR_VALIDATOR_MOVED (16 routes -> 16 distinct ISender requests -> 22 validators in 4 files; request validator present for all 16; input provenance and permission ids unchanged; route->request matrix re-derived post-move in capability-map.md + route-matrix.js/validator-matrix.js)
+Error-Resources-And-Authorization-Parity: PRESERVED_44_SHIPPING_CODES_ONE_DESCRIPTOR_OWNER_ONE_RESOURCE_SET_EXACTLY_ONE_REGISTRATION_SITE (now the root composition entry; neutral+fa resx logical names unchanged because Resources/ did not move) AND PRESERVED_20_CASE_EDITION_TENANT_AUTHORIZER_MATRIX (ShippingAdminAuthorizer.cs untouched; fails closed with admin.authorization.unavailable; SingleStore/Marketplace derived from scoped ICurrentEdition, tenant from ICurrentTenant)
+Host-Closure-And-Contracts-Boundaries: PRESERVED_ONE_USING_ONLY (single added `using Tooba.Shipping.Endpoints;` in Program.cs; no Host file/folder added, no business authority in Host, HOST_TMAR_EVACUATION_FINAL_CLOSURE_CERTIFIED/HOST_ROOT_FINAL_CERTIFIED untouched; zero new project references, Contracts-only cross-module edges, no foreign Application/Infrastructure/Domain/Endpoints edge, no cross-module DbSet/DbContext/join)
+Manifest-State: NOT_CERTIFIED
+Focused-Checks-Actually-Run: (1) dotnet build Tooba.Shipping.Endpoints -> 0 warnings 0 errors; (2) dotnet build Tooba.Shipping.Tests -> 0 errors, 1 pre-existing xUnit1031 warning; (3) dotnet build Tooba.Host with -p:ArtifactsPath=%TEMP%\tooba-w2-187-artifacts -> 0 errors, 30 pre-existing warnings (isolated task-owned output; locked running Host never stopped, shared bin untouched); (4) dotnet test affected filter (endpoint ownership, error catalog+resources, packaging/schedule/ops ownership, financial authority, authorizer context matrix, module composition guard, new structure guard) -> 74/74 passed 0 failed; (5) new ShippingModuleStructureGuardTests alone -> 7/7 passed; (6) manifest JSON parse + declarations -> 33 modules, Shipping structureCertified=false, 5 declared projects exist on disk
+Known-Nonstructural-Blockers: (a) pre-existing Shipping OperationalQuoteCompatibilityTests failure involving three Order consumers - untouched, not exempted, not re-baselined, deliberately not rerun, remains unclosed for any later Certify/all-green decision; (b) business requirements D1-D7 remain unimplemented (no owner isolation, no new schema, no marketplace seller authoring, no mode/language feature in this wave); (c) duplicated admin body readers (ReadBodyAsync/TryReadBodyAsync/InvalidBodyException) intentionally NOT consolidated - requires a separately authorized Migrate repair; (d) this wave issues no certification: structureCertified stays false and no COMPLETE_REFERENCE_PATTERN verdict is claimed
+Schema-Data-Flag-Changes: NONE
+Changed-Files: NEW src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/ShippingEndpointModule.cs (verbatim extraction of the composition root, namespace Tooba.Shipping.Endpoints); MOD src/backend/Modules/Shipping/Tooba.Shipping.Endpoints/Admin/ShippingRateCoverageEndpoints.cs (composition class + its now-unused imports removed; 7 route handlers unchanged); MOD src/backend/Host/Tooba.Host/Program.cs (one using); MOD src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/DependencyInjection/ShippingModule.cs (comment-only stale remark corrected; migrations stay CLI-applied, never emitted at Host startup); NEW src/backend/Modules/Shipping/Tooba.Shipping.Tests/Composition/ShippingModuleStructureGuardTests.cs (durable shipping-scoped structure guard); MOD Shipping.Tests/Admin/ShippingAdminEndpointOwnershipTests.cs, Admin/ShippingMethodFinancialAuthorityTests.cs, Admin/ShippingOperatingScheduleEndpointOwnershipTests.cs, Admin/ShippingErrorCatalogAndResourcesTests.cs, Packaging/ShippingPackagingEndpointOwnershipTests.cs, Operations/ShippingOperationalQuoteEndpointOwnershipTests.cs (pins/imports follow the authoritative moved file, equivalent assertions retained); MOD docs/architecture/tmar-module-structure-manifests.json (one new non-certified Shipping entry, 33 total, no other module touched, no reserialization); NEW docs/ai/tasks/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2.task.md (received artifact, verbatim); NEW docs/architecture/evidence/TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W2/** (physical-tree-before/after, folder-granularity, capability-map, solution-explorer, path-namespace, root-allowlist, stale-duplicate-copy, cohesion-balance, manifest-structure, semantics-preservation, validation, RESULT.md, task-receipt.json, claim-task.js, route-matrix.js, validator-matrix.js, post-result.js, RESULT.bridge.txt)
+Isolation-And-Cleanup: isolated build output only under %TEMP%\tooba-w2-187-artifacts (task-owned, outside the repo); the locked running Host process was never stopped or restarted and its binaries were not overwritten; no DB/migration/container/package/browser/server operation; no shared output/.next or cache cleanup; pre-existing unrelated untracked files (including Tooba.Host.Tests bin/Debug artifacts) were left untouched and not committed; scoped working tree clean at push time (HEAD == origin/main)
+Elapsed-Minutes: 0
+Production-Functional-Acceptance: PENDING
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT
