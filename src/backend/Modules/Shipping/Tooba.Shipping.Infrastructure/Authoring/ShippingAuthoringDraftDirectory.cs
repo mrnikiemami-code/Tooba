@@ -66,6 +66,8 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .AsNoTracking()
             .Include(candidate => candidate.RegionGroups)
             .ThenInclude(group => group.Areas)
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.RateRows)
             .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
         return draft is null
             ? Result.Failure<ShippingAuthoringDraft>(new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound))
@@ -214,6 +216,76 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         return Result.Success(draft);
     }
 
+    /// <inheritdoc />
+    public async Task<Result<ShippingAuthoringDraft>> ReplaceGroupRateRowsAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        Guid groupId,
+        long expectedRevision,
+        IReadOnlyList<ShippingAuthoringDraft.ShippingAuthoringRateRowInput> rows,
+        string trustedCurrencyCode,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        ArgumentNullException.ThrowIfNull(rows);
+
+        // Owner + draft + group are always resolved together: a group id alone is never loadable, so a
+        // foreign or invented id gets the same safe not-found answer as a missing one.
+        var draft = await Scoped(ToDomainOwner(owner))
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.RateRows)
+            .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
+        if (draft is null)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound));
+        }
+
+        if (draft.FindRegionGroup(groupId) is null)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringRegionGroupNotFound));
+        }
+
+        // A stale client is refused before any tracked row is touched; the root revision column is the
+        // relational backstop for the race between this check and the UPDATE.
+        if (draft.Revision != expectedRevision)
+        {
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+        }
+
+        try
+        {
+            // Preflight happens inside the aggregate, before the first mutation. The row changes and the
+            // root revision update share ONE implicit EF SaveChanges transaction: no explicit
+            // BeginTransaction is introduced in this path.
+            draft.ReplaceGroupRateRows(groupId, rows, trustedCurrencyCode, DateTimeOffset.UtcNow);
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // The loser keeps no pending edit that a later SaveChanges could publish.
+            context.ChangeTracker.Clear();
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+        }
+        catch (DbUpdateException exception) when (IsCheckViolation(exception))
+        {
+            // The table's CHECK constraints mirror the domain guards; a violation is a rejected payload,
+            // never a silent rounding of a threshold or fee into a different rule.
+            context.ChangeTracker.Clear();
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringRateRowPayloadInvalid));
+        }
+        catch
+        {
+            context.ChangeTracker.Clear();
+            throw;
+        }
+
+        return Result.Success(draft);
+    }
+
     /// <summary>
     /// تراکنش را برمی‌گرداند و هیچ تغییر نیمه‌کاره‌ای را در tracker همین context باقی نمی‌گذارد؛
     /// بنابراین یک SaveChanges بعدی در همان context نمی‌تواند ویرایش رد‌شده را منتشر کند.
@@ -263,4 +335,12 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
     private static bool IsUniqueViolation(DbUpdateException exception, string constraintFragment)
         => exception.InnerException is PostgresException { SqlState: "23505" } postgres
            && postgres.ConstraintName?.Contains(constraintFragment, StringComparison.Ordinal) == true;
+
+    /// <summary>
+    /// آیا خطای provider یک نقض CHECK همان جدول نرخ است. فقط <c>23514</c> روی همان جدول به یک پاسخ
+    /// تجاری تبدیل می‌شود؛ هر خطای دیگر provider دوباره پرتاب می‌شود.
+    /// </summary>
+    private static bool IsCheckViolation(DbUpdateException exception)
+        => exception.InnerException is PostgresException { SqlState: "23514" } postgres
+           && postgres.TableName == "authoring_rate_rows";
 }

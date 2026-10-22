@@ -84,12 +84,13 @@ public sealed class ShippingAuthoringSelectedArea
 public sealed class ShippingAuthoringRegionGroup
 {
     private readonly List<ShippingAuthoringSelectedArea> _areas = [];
+    private readonly List<ShippingAuthoringRateRow> _rateRows = [];
 
     private ShippingAuthoringRegionGroup()
     {
     }
 
-    /// <summary>شناسهٔ پایدار گروه؛ مرجع آیندهٔ ردیف‌های نرخ/بسته‌بندی/زمان‌بندی.</summary>
+    /// <summary>شناسهٔ پایدار گروه؛ مرجع ردیف‌های نرخ/بسته‌بندی/زمان‌بندی.</summary>
     public Guid GroupId { get; private set; }
 
     /// <summary>شناسهٔ پیش‌نویس مالک (ستون denormalized همان قاعدهٔ یکتایی).</summary>
@@ -98,8 +99,18 @@ public sealed class ShippingAuthoringRegionGroup
     /// <summary>ترتیب صریح گروه در پیش‌نویس (صفرپایه).</summary>
     public int Order { get; private set; }
 
+    /// <summary>
+    /// ارز صریح مجموعهٔ ردیف‌های نرخ این گروه؛ تهی یعنی هنوز هیچ ردیفی ذخیره نشده است. پس از نخستین
+    /// ذخیرهٔ مجموعهٔ غیرخالی، این مقدار bind می‌شود و با پاک‌کردن ردیف‌ها هم پاک نمی‌شود تا مبالغ
+    /// قدیمی هرگز بی‌سروصدا با ارز دیگری بازتفسیر نشوند.
+    /// </summary>
+    public string? CurrencyCode { get; private set; }
+
     /// <summary>انتخاب‌های این گروه، مرتب‌شده برای خواندن قطعی.</summary>
     public IReadOnlyList<ShippingAuthoringSelectedArea> Areas => _areas;
+
+    /// <summary>ردیف‌های نرخ دستی این گروه؛ خالی یعنی پیکربندی ناقص، نه پوشش آزاد یا رایگان.</summary>
+    public IReadOnlyList<ShippingAuthoringRateRow> RateRows => _rateRows;
 
     internal static ShippingAuthoringRegionGroup Create(Guid draftId, Guid groupId, int order)
         => new()
@@ -136,6 +147,18 @@ public sealed class ShippingAuthoringRegionGroup
         _areas.Clear();
         return detached;
     }
+
+    /// <summary>مجموعهٔ ردیف‌های نرخ را جایگزین می‌کند؛ هویت ردیف‌های باقی‌مانده حفظ می‌شود.</summary>
+    /// <param name="rows">ردیف‌های تازه (شامل موجودهای به‌روزشده و ردیف‌های تازه).</param>
+    internal void ReplaceRateRows(IReadOnlyList<ShippingAuthoringRateRow> rows)
+    {
+        _rateRows.Clear();
+        _rateRows.AddRange(rows);
+    }
+
+    /// <summary>ارز صریح مجموعهٔ ردیف‌ها را برای نخستین‌بار bind می‌کند.</summary>
+    /// <param name="currencyCode">ارز معتبر سرورساخته.</param>
+    internal void BindCurrency(string currencyCode) => CurrencyCode = currencyCode;
 }
 
 /// <summary>
@@ -394,6 +417,308 @@ public sealed class ShippingAuthoringDraft
         {
             _regionGroups[index].SetOrder(index);
         }
+    }
+
+    /// <summary>گروه با شناسهٔ داده‌شده در همین پیش‌نویس، یا <c>null</c>.</summary>
+    /// <param name="groupId">شناسهٔ گروه.</param>
+    public ShippingAuthoringRegionGroup? FindRegionGroup(Guid groupId)
+        => _regionGroups.SingleOrDefault(group => group.GroupId == groupId);
+
+    /// <summary>
+    /// یک ردیف نرخ دستی در بدنهٔ نوشتن، پیش از هر قاعدهٔ دامنه. مقادیر nullable صرفاً شکل انتقال‌اند:
+    /// پیش‌سنجی دامنه آن‌ها را به یک مقدار متعارف تبدیل می‌کند یا کل مجموعه را رد می‌کند.
+    /// </summary>
+    /// <param name="RateRowId">شناسهٔ ردیف موجود همین گروه؛ تهی برای ردیف تازه.</param>
+    /// <param name="MinWeightGrams">کران پایین وزن.</param>
+    /// <param name="MaxWeightGrams">کران بالای وزن.</param>
+    /// <param name="MinItemCount">کران پایین تعداد واحد.</param>
+    /// <param name="MaxItemCount">کران بالای تعداد واحد.</param>
+    /// <param name="MinMerchandiseAmount">کران پایین مبلغ کالا.</param>
+    /// <param name="MaxMerchandiseAmount">کران بالای مبلغ کالا.</param>
+    /// <param name="FreightAmount">هزینهٔ حمل.</param>
+    /// <param name="PackagingAmount">هزینهٔ بسته‌بندی.</param>
+    /// <param name="MinDeliveryDays">کمینهٔ مدت تحویل.</param>
+    /// <param name="MaxDeliveryDays">بیشینهٔ مدت تحویل.</param>
+    public sealed record ShippingAuthoringRateRowInput(
+        Guid? RateRowId,
+        long? MinWeightGrams,
+        long? MaxWeightGrams,
+        int? MinItemCount,
+        int? MaxItemCount,
+        decimal? MinMerchandiseAmount,
+        decimal? MaxMerchandiseAmount,
+        decimal? FreightAmount,
+        decimal? PackagingAmount,
+        int? MinDeliveryDays,
+        int? MaxDeliveryDays);
+
+    /// <summary>یک جای‌گذاری ردیف در برنامهٔ پیش‌سنجی‌شده: ردیف موجود (برای حفظ هویت) یا ردیف تازه.</summary>
+    /// <param name="Existing">ردیف موجود همین گروه؛ تهی برای ردیف تازه.</param>
+    /// <param name="Value">مقدار متعارف تأییدشده.</param>
+    public sealed record RegionRateRowAssignment(
+        ShippingAuthoringRateRow? Existing,
+        ShippingAuthoringRateRowValue Value);
+
+    /// <summary>برنامهٔ کامل و تأییدشدهٔ جایگزینی ردیف‌های یک گروه.</summary>
+    /// <param name="Group">گروه مالک.</param>
+    /// <param name="CurrencyCode">ارز bind‌شده پس از این نوشتن (ممکن است تهی بماند).</param>
+    /// <param name="Rows">ردیف‌های تأییدشده.</param>
+    public sealed record GroupRateRowPlan(
+        ShippingAuthoringRegionGroup Group,
+        string? CurrencyCode,
+        IReadOnlyList<RegionRateRowAssignment> Rows);
+
+    /// <summary>
+    /// کل مجموعهٔ ردیف‌های نرخ یک گروه را <b>بدون هیچ تغییر</b> می‌سنجد: هویت ردیف‌ها، بازه‌های
+    /// نیم‌باز، مبلغ/دقت canonical، مدت تحویل، هم‌پوشانی کامل سه‌محوری و ارز. اگر هر ردیفی نامعتبر
+    /// باشد، هیچ ردیف/بازبینی/زمان/ارزی تغییر نمی‌کند و ردیف‌های قبلی هم دست‌نخورده می‌مانند.
+    /// </summary>
+    /// <param name="groupId">گروه مالک.</param>
+    /// <param name="rows">مجموعهٔ کامل ردیف‌های پیشنهادی.</param>
+    /// <param name="trustedCurrencyCode">ارز معتبر سرورساخته (نه از transport).</param>
+    public GroupRateRowPlan PreflightGroupRateRows(
+        Guid groupId,
+        IReadOnlyList<ShippingAuthoringRateRowInput> rows,
+        string trustedCurrencyCode)
+    {
+        ArgumentNullException.ThrowIfNull(rows);
+        var group = FindRegionGroup(groupId)
+            ?? throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRegionGroupNotFound));
+
+        if (rows.Count > ShippingAuthoringRateRow.MaxRowsPerGroup)
+        {
+            ShippingAuthoringRateRowRules.Reject(ShippingErrorCodes.AuthoringRateRowPayloadInvalid);
+        }
+
+        var currency = NormalizeTrustedCurrency(trustedCurrencyCode);
+        var existingById = group.RateRows.ToDictionary(row => row.RateRowId);
+        var seenIds = new HashSet<Guid>();
+        var assignments = new List<RegionRateRowAssignment>(rows.Count);
+
+        foreach (var input in rows)
+        {
+            if (input is null)
+            {
+                ShippingAuthoringRateRowRules.Reject(ShippingErrorCodes.AuthoringRateRowPayloadInvalid);
+            }
+
+            ShippingAuthoringRateRow? existing = null;
+            if (input.RateRowId is { } rowId)
+            {
+                // A retained id is a claim: it must be a real row of THIS group and may appear once.
+                if (rowId == Guid.Empty
+                    || !seenIds.Add(rowId)
+                    || !existingById.TryGetValue(rowId, out existing))
+                {
+                    ShippingAuthoringRateRowRules.Reject(ShippingErrorCodes.AuthoringRateRowPayloadInvalid);
+                }
+            }
+
+            var value = NormalizeRow(input);
+            if (assignments.Any(assignment => assignment.Value.Overlaps(value)))
+            {
+                ShippingAuthoringRateRowRules.Reject(ShippingErrorCodes.AuthoringRateOverlap);
+            }
+
+            assignments.Add(new RegionRateRowAssignment(existing, value));
+        }
+
+        // A bound currency is the truth of the stored amounts. A different trusted currency is a
+        // configuration mismatch, never a silent reinterpretation or conversion of old numbers.
+        if (group.CurrencyCode is { } stored
+            && !string.Equals(stored, currency, StringComparison.Ordinal))
+        {
+            ShippingAuthoringRateRowRules.Reject(ShippingErrorCodes.AuthoringRateCurrencyMismatch);
+        }
+
+        // The currency binds on the first NON-EMPTY row set and is never cleared, so removing rows does
+        // not turn the stored amounts into "no currency" or another currency.
+        var nextCurrency = group.CurrencyCode ?? (assignments.Count > 0 ? currency : null);
+        return new GroupRateRowPlan(group, nextCurrency, assignments);
+    }
+
+    /// <summary>
+    /// برنامهٔ پیش‌سنجی‌شده را اعمال می‌کند. هیچ اعتبارسنجی‌ای اینجا انجام نمی‌شود؛ ورودی باید از
+    /// <see cref="PreflightGroupRateRows"/> آمده باشد. بازبینی ریشه یک واحد بالا می‌رود تا نوشتن
+    /// ردیف‌ها و جایگزینی درخت با یک نشانگر همزمانی مشترک دیده شوند.
+    /// </summary>
+    /// <param name="plan">برنامهٔ معتبر.</param>
+    /// <param name="now">زمان UTC.</param>
+    public void ApplyGroupRateRows(GroupRateRowPlan plan, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentNullException.ThrowIfNull(plan.Group);
+
+        var next = new List<ShippingAuthoringRateRow>(plan.Rows.Count);
+        foreach (var assignment in plan.Rows)
+        {
+            if (assignment.Existing is { } kept)
+            {
+                kept.Apply(assignment.Value);
+                next.Add(kept);
+            }
+            else
+            {
+                next.Add(ShippingAuthoringRateRow.Create(plan.Group.GroupId, assignment.Value));
+            }
+        }
+
+        plan.Group.ReplaceRateRows(next);
+        if (plan.CurrencyCode is { } currency)
+        {
+            plan.Group.BindCurrency(currency);
+        }
+
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
+    }
+
+    /// <summary>پیش‌سنجی و اعمال یک‌جای مجموعهٔ ردیف‌های یک گروه.</summary>
+    /// <param name="groupId">گروه مالک.</param>
+    /// <param name="rows">مجموعهٔ کامل ردیف‌ها.</param>
+    /// <param name="trustedCurrencyCode">ارز معتبر سرورساخته.</param>
+    /// <param name="now">زمان UTC.</param>
+    public void ReplaceGroupRateRows(
+        Guid groupId,
+        IReadOnlyList<ShippingAuthoringRateRowInput> rows,
+        string trustedCurrencyCode,
+        DateTimeOffset now)
+    {
+        var plan = PreflightGroupRateRows(groupId, rows, trustedCurrencyCode);
+        ApplyGroupRateRows(plan, now);
+    }
+
+    private static ShippingAuthoringRateRowValue NormalizeRow(ShippingAuthoringRateRowInput input)
+    {
+        var weightMin = NormalizeIntervalLong(
+            input.MinWeightGrams,
+            input.MaxWeightGrams,
+            0,
+            ShippingAuthoringRateRowRules.WeightGramsMaxValue,
+            ShippingErrorCodes.AuthoringRateConditionInvalid);
+
+        // The count minimum is a real unit count: zero units is not a group.
+        var countMin = NormalizeIntervalLong(
+            input.MinItemCount,
+            input.MaxItemCount,
+            1,
+            ShippingAuthoringRateRowRules.ItemCountMaxValue,
+            ShippingErrorCodes.AuthoringRateConditionInvalid);
+
+        var amountMin = NormalizeIntervalAmount(input.MinMerchandiseAmount, input.MaxMerchandiseAmount);
+
+        var freight = input.FreightAmount
+            ?? throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRateRowPayloadInvalid));
+        var packaging = input.PackagingAmount
+            ?? throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRateRowPayloadInvalid));
+
+        // The transport validator already refuses an omitted amount; a direct caller gets the same
+        // refusal instead of a silent zero fee.
+        var normalizedFreight = NormalizeAmount(freight);
+        var normalizedPackaging = NormalizeAmount(packaging);
+
+        var minDays = input.MinDeliveryDays
+            ?? throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRateRowPayloadInvalid));
+        var maxDays = input.MaxDeliveryDays
+            ?? throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRateRowPayloadInvalid));
+
+        if (minDays < 0 || minDays > ShippingAuthoringRateRowRules.DaysMaxValue
+            || maxDays < minDays || maxDays > ShippingAuthoringRateRowRules.DaysMaxValue)
+        {
+            ShippingAuthoringRateRowRules.Reject(ShippingErrorCodes.AuthoringRateDurationInvalid);
+        }
+
+        return new ShippingAuthoringRateRowValue(
+            weightMin.Min,
+            weightMin.Max,
+            countMin.Min is { } count ? (int)count : null,
+            countMin.Max is { } countMax ? (int)countMax : null,
+            amountMin.Min,
+            amountMin.Max,
+            normalizedFreight,
+            normalizedPackaging,
+            minDays,
+            maxDays);
+    }
+
+    private static (long? Min, long? Max) NormalizeIntervalLong(
+        long? min,
+        long? max,
+        long minimumAllowed,
+        long maximumAllowed,
+        string code)
+    {
+        if (min is not { } lower)
+        {
+            // An upper bound alone is a half-written axis: "up to N" is expressed as min = 0.
+            if (max is not null)
+            {
+                ShippingAuthoringRateRowRules.Reject(code);
+            }
+
+            return (null, null);
+        }
+
+        if (lower < minimumAllowed || lower > maximumAllowed)
+        {
+            ShippingAuthoringRateRowRules.Reject(code);
+        }
+
+        if (max is not { } upper)
+        {
+            return (lower, null);
+        }
+
+        if (upper <= lower || upper > maximumAllowed)
+        {
+            ShippingAuthoringRateRowRules.Reject(code);
+        }
+
+        return (lower, upper);
+    }
+
+    private static (decimal? Min, decimal? Max) NormalizeIntervalAmount(decimal? min, decimal? max)
+    {
+        if (min is not { } lower)
+        {
+            if (max is not null)
+            {
+                ShippingAuthoringRateRowRules.Reject(ShippingErrorCodes.AuthoringRateConditionInvalid);
+            }
+
+            return (null, null);
+        }
+
+        var normalizedMin = NormalizeAmount(lower);
+        if (max is not { } upper)
+        {
+            return (normalizedMin, null);
+        }
+
+        var normalizedMax = NormalizeAmount(upper);
+        return normalizedMax <= normalizedMin
+            ? throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRateConditionInvalid))
+            : (normalizedMin, normalizedMax);
+    }
+
+    private static decimal NormalizeAmount(decimal amount)
+    {
+        if (amount < 0m
+            || amount > ShippingAuthoringRateRowRules.AmountMaxValue
+            || !ShippingAuthoringRateRowRules.IsRepresentableAmount(amount))
+        {
+            ShippingAuthoringRateRowRules.Reject(ShippingErrorCodes.AuthoringRateAmountInvalid);
+        }
+
+        return amount;
+    }
+
+    private static string NormalizeTrustedCurrency(string? currencyCode)
+    {
+        var trimmed = currencyCode?.Trim().ToUpperInvariant() ?? string.Empty;
+        return trimmed.Length == 3 && trimmed.All(char.IsAsciiLetter)
+            ? trimmed
+            : throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringConfigurationUnavailable));
     }
 
     private void SetInitialGroups(IReadOnlyList<ShippingAuthoringRegionGroupInput> regionGroups)

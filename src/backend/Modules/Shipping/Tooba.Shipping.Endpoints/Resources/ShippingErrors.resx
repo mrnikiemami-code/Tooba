@@ -159,4 +159,25 @@
   </data>  <data name="shipping.authoring.owner_scope_unavailable" xml:space="preserve">
     <value>Shipping rule ownership is unavailable in this installation.</value>
   </data>
+  <data name="shipping.authoring.region_group_not_found" xml:space="preserve">
+    <value>The shipping authoring region group was not found.</value>
+  </data>
+  <data name="shipping.authoring.rate_row_payload_invalid" xml:space="preserve">
+    <value>The manual shipping rate rows are not a valid configuration.</value>
+  </data>
+  <data name="shipping.authoring.rate_condition_invalid" xml:space="preserve">
+    <value>A manual shipping rate condition range is invalid.</value>
+  </data>
+  <data name="shipping.authoring.rate_amount_invalid" xml:space="preserve">
+    <value>A manual shipping rate amount is negative, out of range or too precise.</value>
+  </data>
+  <data name="shipping.authoring.rate_duration_invalid" xml:space="preserve">
+    <value>A manual shipping rate delivery duration is invalid.</value>
+  </data>
+  <data name="shipping.authoring.rate_overlap" xml:space="preserve">
+    <value>Two manual shipping rate rows overlap on the same group.</value>
+  </data>
+  <data name="shipping.authoring.rate_currency_mismatch" xml:space="preserve">
+    <value>The stored manual rate currency no longer matches the current store currency.</value>
+  </data>
 </root>

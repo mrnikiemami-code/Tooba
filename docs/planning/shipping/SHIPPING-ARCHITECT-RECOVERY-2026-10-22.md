@@ -203,3 +203,14 @@ APIهای جدید فعلی:
 ## ۱۰. متن کوتاه برای شروع چت بعدی
 
 «ریکاوری Tooba را از `docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md` بخوان. Admin Shipping اولویت دارد؛ 189 پذیرفته و 190 صادر شده و منتظر نتیجه است. قبل از تسک تازه نتیجه/وضعیت همان 190 و HEAD واقعی را بررسی کن. مسیر Home performance بعد از185 متوقف است. معماری تمیز frontend/backend، Contracts-only، زبان‌های دیتابیس و SingleStore/Marketplace را حفظ کن. فقط یک task دانلودی/preview در هر نوبت، بعد review نتیجه و task بعدی.»
+
+## ۱۱. وضعیت واقعی TB-191 (2026-10-22)
+
+- TB-SHIPPING-ADMIN-GROUP-RATE-DRAFTS-191 اجرا و نتیجه‌اش به Bridge ارسال شد: ردیف‌های نرخ دستی زیر
+  `group_id` پایدار، بازه‌های نیم‌باز سه‌محوره، ارز trusted و اتمی بودن یک `SaveChanges` با نشانگر هم‌زمانی
+  ریشهٔ مشترک. اثبات رابطه‌ای روی PostgreSQL دورریختنی همان تسک اجرا و کانتینر پاک شد.
+- معنای ذخیره‌شده و دروازهٔ باز در `SHIPPING-ADMIN-RULES-DECISION.md` بخش ۲۱ ثبت شده‌اند؛ جزئیات اجرا در
+  `docs/architecture/evidence/TB-SHIPPING-ADMIN-GROUP-RATE-DRAFTS-191/`.
+- **دروازهٔ باز:** مبنای authoritative اندازه/مبلغ کالا حل نشده است. هیچ quote/ارزیاب/فعال‌سازی/انتشار/
+  ویرایشگر کامل مجاز نیست تا Architect آن را صریح باز کند. Worker PASS تنها اثبات فنی است و Architect ACCEPT
+  نیست؛ تسک بعدی خودکار نیست.

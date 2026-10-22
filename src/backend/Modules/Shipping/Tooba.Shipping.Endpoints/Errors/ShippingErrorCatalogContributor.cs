@@ -117,6 +117,25 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
         D(ShippingErrorCodes.AuthoringDraftBindingDuplicate, "A draft already exists for this owner and shipping method."),
         D(ShippingErrorCodes.AuthoringRegionSelectionOverlap, "The selected destinations overlap or repeat."),
         D(ShippingErrorCodes.AuthoringRegionPayloadInvalid, "The draft region tree is not a valid configuration."),
+        new(
+            Code: ShippingErrorCodes.AuthoringRegionGroupNotFound,
+            Classification: ErrorClassification.NotFound,
+            HttpStatus: StatusCodes.Status404NotFound,
+            LocalizationKey: ShippingErrorCodes.AuthoringRegionGroupNotFound,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "The shipping authoring region group was not found."),
+        D(ShippingErrorCodes.AuthoringRateRowPayloadInvalid, "The manual shipping rate rows are not a valid configuration."),
+        D(ShippingErrorCodes.AuthoringRateConditionInvalid, "A manual shipping rate condition range is invalid."),
+        D(ShippingErrorCodes.AuthoringRateAmountInvalid, "A manual shipping rate amount is negative, out of range or too precise."),
+        D(ShippingErrorCodes.AuthoringRateDurationInvalid, "A manual shipping rate delivery duration is invalid."),
+        D(ShippingErrorCodes.AuthoringRateOverlap, "Two manual shipping rate rows overlap on the same group."),
+        new(
+            Code: ShippingErrorCodes.AuthoringRateCurrencyMismatch,
+            Classification: ErrorClassification.Conflict,
+            HttpStatus: StatusCodes.Status409Conflict,
+            LocalizationKey: ShippingErrorCodes.AuthoringRateCurrencyMismatch,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "The stored manual rate currency no longer matches the current store currency."),
     ];
 
     private static ErrorDescriptor D(string code, string fallback) =>

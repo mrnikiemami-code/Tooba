@@ -507,11 +507,94 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRateRow", b =>
+                {
+                    b.Property<Guid>("RateRowId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("rate_row_id");
+
+                    b.Property<decimal>("FreightAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("freight_amount");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<int>("MaxDeliveryDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_delivery_days");
+
+                    b.Property<int?>("MaxItemCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_item_count");
+
+                    b.Property<decimal?>("MaxMerchandiseAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("max_merchandise_amount");
+
+                    b.Property<long?>("MaxWeightGrams")
+                        .HasColumnType("bigint")
+                        .HasColumnName("max_weight_grams");
+
+                    b.Property<int>("MinDeliveryDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("min_delivery_days");
+
+                    b.Property<int?>("MinItemCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("min_item_count");
+
+                    b.Property<decimal?>("MinMerchandiseAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("min_merchandise_amount");
+
+                    b.Property<long?>("MinWeightGrams")
+                        .HasColumnType("bigint")
+                        .HasColumnName("min_weight_grams");
+
+                    b.Property<decimal>("PackagingAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("packaging_amount");
+
+                    b.HasKey("RateRowId")
+                        .HasName("pk_authoring_rate_rows");
+
+                    b.HasIndex("GroupId")
+                        .HasDatabaseName("ix_authoring_rate_rows_group");
+
+                    b.ToTable("authoring_rate_rows", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_rate_rows_amount_within_max", "freight_amount <= 1000000000 AND packaging_amount <= 1000000000 AND (max_merchandise_amount IS NULL OR max_merchandise_amount <= 1000000000)");
+
+                            t.HasCheckConstraint("ck_authoring_rate_rows_count_interval", "(min_item_count IS NULL AND max_item_count IS NULL) OR (min_item_count >= 1 AND min_item_count <= 1000000 AND (max_item_count IS NULL OR (max_item_count > min_item_count AND max_item_count <= 1000000)))");
+
+                            t.HasCheckConstraint("ck_authoring_rate_rows_duration_range", "min_delivery_days >= 0 AND max_delivery_days >= min_delivery_days AND max_delivery_days <= 365");
+
+                            t.HasCheckConstraint("ck_authoring_rate_rows_freight_non_negative", "freight_amount >= 0");
+
+                            t.HasCheckConstraint("ck_authoring_rate_rows_merchandise_interval", "(min_merchandise_amount IS NULL AND max_merchandise_amount IS NULL) OR (min_merchandise_amount >= 0 AND (max_merchandise_amount IS NULL OR max_merchandise_amount > min_merchandise_amount))");
+
+                            t.HasCheckConstraint("ck_authoring_rate_rows_packaging_non_negative", "packaging_amount >= 0");
+
+                            t.HasCheckConstraint("ck_authoring_rate_rows_weight_interval", "(min_weight_grams IS NULL AND max_weight_grams IS NULL) OR (min_weight_grams >= 0 AND min_weight_grams <= 1000000000 AND (max_weight_grams IS NULL OR (max_weight_grams > min_weight_grams AND max_weight_grams <= 1000000000)))");
+                        });
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", b =>
                 {
                     b.Property<Guid>("GroupId")
                         .HasColumnType("uuid")
                         .HasColumnName("group_id");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency_code");
 
                     b.Property<Guid>("DraftId")
                         .HasColumnType("uuid")
@@ -530,6 +613,8 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
 
                     b.ToTable("authoring_region_groups", "shipping", t =>
                         {
+                            t.HasCheckConstraint("ck_authoring_region_groups_currency_canonical", "currency_code IS NULL OR (char_length(currency_code) = 3 AND currency_code = upper(currency_code))");
+
                             t.HasCheckConstraint("ck_authoring_region_groups_order_non_negative", "group_order >= 0");
                         });
                 });
@@ -668,6 +753,16 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRateRow", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", null)
+                        .WithMany("RateRows")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_rate_rows_authoring_region_groups_group_id");
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", b =>
                 {
                     b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", null)
@@ -706,6 +801,8 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", b =>
                 {
                     b.Navigation("Areas");
+
+                    b.Navigation("RateRows");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingSchedule", b =>

@@ -28,6 +28,13 @@ public static class ShippingSellerAuthoringDraftEndpoints
         group.MapPost("/shipping-services/authoring-drafts", CreateAsync);
         group.MapGet("/shipping-services/authoring-drafts/{draftId:guid}", GetAsync);
         group.MapPut("/shipping-services/authoring-drafts/{draftId:guid}", ReplaceRegionsAsync);
+        // Same TB-191 group rate row use cases behind the seller owner gate.
+        group.MapGet(
+            "/shipping-services/authoring-drafts/{draftId:guid}/region-groups/{groupId:guid}/rate-rows",
+            GetGroupRateRowsAsync);
+        group.MapPut(
+            "/shipping-services/authoring-drafts/{draftId:guid}/region-groups/{groupId:guid}/rate-rows",
+            ReplaceGroupRateRowsAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -100,6 +107,45 @@ public static class ShippingSellerAuthoringDraftEndpoints
 
         return api.From(await sender.Send(
             new ReplaceShippingAuthoringDraftRegionsCommand(scope, draftId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> GetGroupRateRowsAsync(
+        Guid draftId,
+        Guid groupId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new GetShippingAuthoringGroupRateRowsQuery(scope, draftId, groupId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> ReplaceGroupRateRowsAsync(
+        Guid draftId,
+        Guid groupId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringRateRowsReplaceRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new ReplaceShippingAuthoringGroupRateRowsCommand(scope, draftId, groupId, body!),
             cancellationToken));
     }
 }

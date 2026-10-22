@@ -220,6 +220,71 @@ internal static class ShippingAuthoringDraftWorkflow
         return Result.Success(true);
     }
 
+    /// <summary>
+    /// شکل انتقال ردیف‌های نرخ را به ورودی دامنه تبدیل می‌کند. هیچ قاعدهٔ تجاری اینجا نیست؛
+    /// عنصر null پیش از هر نوشتن با کد پایدار رد می‌شود.
+    /// </summary>
+    /// <param name="rows">ردیف‌های بدنه.</param>
+    public static IReadOnlyList<ShippingAuthoringDraft.ShippingAuthoringRateRowInput> ToDomainRateRows(
+        IReadOnlyList<ShippingAuthoringRateRowWrite> rows)
+    {
+        ArgumentNullException.ThrowIfNull(rows);
+        var result = new List<ShippingAuthoringDraft.ShippingAuthoringRateRowInput>(rows.Count);
+        foreach (var row in rows)
+        {
+            if (row is null)
+            {
+                throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRateRowPayloadInvalid));
+            }
+
+            result.Add(new ShippingAuthoringDraft.ShippingAuthoringRateRowInput(
+                row.RateRowId,
+                row.MinWeightGrams,
+                row.MaxWeightGrams,
+                row.MinItemCount,
+                row.MaxItemCount,
+                row.MinMerchandiseAmount,
+                row.MaxMerchandiseAmount,
+                row.FreightAmount,
+                row.PackagingAmount,
+                row.MinDeliveryDays,
+                row.MaxDeliveryDays));
+        }
+
+        return result;
+    }
+
+    /// <summary>مجموعهٔ ردیف‌های نرخ یک گروه را به پاسخ نگاشت می‌کند.</summary>
+    /// <param name="draft">پیش‌نویس مالک (برای بازبینی ریشه).</param>
+    /// <param name="group">گروه زیر همان پیش‌نویس.</param>
+    public static ShippingAuthoringGroupRateRowsItem MapRateRows(
+        ShippingAuthoringDraft draft,
+        ShippingAuthoringRegionGroup group)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+        ArgumentNullException.ThrowIfNull(group);
+
+        return new ShippingAuthoringGroupRateRowsItem(
+            draft.DraftId,
+            group.GroupId,
+            draft.Revision,
+            group.CurrencyCode,
+            group.RateRows
+                .Select(row => new ShippingAuthoringRateRowItem(
+                    row.RateRowId,
+                    row.MinWeightGrams,
+                    row.MaxWeightGrams,
+                    row.MinItemCount,
+                    row.MaxItemCount,
+                    row.MinMerchandiseAmount,
+                    row.MaxMerchandiseAmount,
+                    row.FreightAmount,
+                    row.PackagingAmount,
+                    row.MinDeliveryDays,
+                    row.MaxDeliveryDays))
+                .ToArray());
+    }
+
     /// <summary>پیش‌نویس دامنه را به پاسخ نویسندگی نگاشت می‌کند.</summary>
     /// <param name="draft">پیش‌نویس.</param>
     /// <param name="owner">مالک مجاز همین درخواست (برای نمای مالک).</param>

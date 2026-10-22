@@ -336,6 +336,46 @@
       ],
       "transportRule": "draftId non-empty; a foreign or unknown id returns the same safe not-found response",
       "reason": "The draft id comes from the route and is projected into the read request, so its shape is transport-owned even though ownership is decided by the server filter."
+    },
+    {
+      "request": "GetShippingAuthoringGroupRateRowsQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/region-groups/{groupId:guid}/rate-rows",
+        "GET /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/region-groups/{groupId:guid}/rate-rows"
+      ],
+      "handler": "GetShippingAuthoringGroupRateRowsHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingAuthoringGroupRateRowsQueryValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "route:groupId:required:untrusted-caller",
+        "authorization:fulfillment.view:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "both route ids non-empty; the group is only ever sought INSIDE the owner-filtered draft, so a foreign or invented id returns the same safe not-found response",
+      "reason": "Two caller-supplied route ids are projected into the read request; neither ownership nor geography is taken from transport."
+    },
+    {
+      "request": "ReplaceShippingAuthoringGroupRateRowsCommand",
+      "routes": [
+        "PUT /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/region-groups/{groupId:guid}/rate-rows",
+        "PUT /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/region-groups/{groupId:guid}/rate-rows"
+      ],
+      "handler": "ReplaceShippingAuthoringGroupRateRowsHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ReplaceShippingAuthoringGroupRateRowsCommandValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "route:groupId:required:untrusted-caller",
+        "body:expectedRevision:required-positive:untrusted-caller",
+        "body:rows:whole-collection-required:untrusted-caller",
+        "body:rows[].bounds:optional-half-open-intervals:untrusted-caller",
+        "body:rows[].freightAmount:required-non-negative-canonical-precision:untrusted-caller",
+        "body:rows[].packagingAmount:required-non-negative-canonical-precision:untrusted-caller",
+        "body:rows[].deliveryDays:required-min-lte-max:untrusted-caller",
+        "authorization:fulfillment.manage:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "route ids non-empty, expectedRevision positive, rows collection REQUIRED ([] allowed), retained row ids non-empty and unique, half-open interval coherence and technical bounds per axis, canonical money precision, delivery duration present with min <= max; owner, tenant, seller and currency are never bound from transport",
+      "reason": "A whole untrusted row collection, its ranges, amounts and the shared optimistic-concurrency token are caller-controlled; the trusted currency is read server-side BEFORE any tracked write."
     }
   ],
   "nestedTransportValidators": [
@@ -352,11 +392,11 @@
     "GetShippingAuthoringDraftsQuery"
   ],
   "totals": {
-    "shippedRoutes": 27,
-    "endpointReachableRequests": 22,
-    "requestValidators": 19,
+    "shippedRoutes": 31,
+    "endpointReachableRequests": 24,
+    "requestValidators": 21,
     "nestedTransportValidators": 6,
-    "declaredValidators": 25
+    "declaredValidators": 27
   },
   "amendments": [
     {
@@ -370,6 +410,12 @@
       "date": "2026-10-22",
       "scope": "Two additive authorized GETs (admin and seller authoring owner) share ONE request. The row is therefore keyed by request and carries both route provenance paths; one route is not assumed to equal one request, and no route is left unclassified.",
       "sharedRequestProvenance": "GetShippingAuthoringOwnerQuery is constructed exactly once per route in the endpoint delegate, from a ShippingAuthoringOwnerScope built by executed server authorization (admin trusted installation gate, or seller panel gate + effective whole-owner permission). No route value, query string or body is bound and no owner/mode/tenant/seller field is forwarded from transport, so a validator would own nothing."
+    },
+    {
+      "task": "TB-SHIPPING-ADMIN-GROUP-RATE-DRAFTS-191",
+      "date": "2026-10-22",
+      "scope": "Two additive authorized requests (GET/PUT group rate rows) are classified here, each reachable through one admin and one seller route. No previous row changed classification, validator, route or handler.",
+      "currencyProvenance": "The replace command binds NO currency from transport. The trusted default currency is read from IShippingAuthoringContextSource (TB-188 Contracts-only seam over StoreContext) BEFORE any tracked write; an unresolved edition/currency fails closed with shipping.authoring.configuration_unavailable. The stored group currency is returned truthfully on read and a mismatch is refused rather than reinterpreted."
     }
   ]
 }

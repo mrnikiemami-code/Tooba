@@ -41,3 +41,44 @@ public sealed record ShippingAuthoringDraftItem(
 /// <summary>فهرست پیش‌نویس‌های مالک مجاز همین درخواست.</summary>
 /// <param name="Drafts">پیش‌نویس‌ها؛ فهرست خالی یعنی هنوز پیش‌نویسی ساخته نشده است.</param>
 public sealed record ShippingAuthoringDraftList(IReadOnlyList<ShippingAuthoringDraftItem> Drafts);
+
+/// <summary>یک ردیف نرخ دستی در پاسخ؛ بدون هیچ ستون جغرافیایی.</summary>
+/// <param name="RateRowId">شناسهٔ پایدار سرورساخته.</param>
+/// <param name="MinWeightGrams">کران پایین وزن (گرم).</param>
+/// <param name="MaxWeightGrams">کران بالای وزن (گرم).</param>
+/// <param name="MinItemCount">کران پایین تعداد واحد کالا.</param>
+/// <param name="MaxItemCount">کران بالای تعداد واحد کالا.</param>
+/// <param name="MinMerchandiseAmount">کران پایین مبلغ کالای گروه.</param>
+/// <param name="MaxMerchandiseAmount">کران بالای مبلغ کالای گروه.</param>
+/// <param name="FreightAmount">هزینهٔ حمل.</param>
+/// <param name="PackagingAmount">هزینهٔ بسته‌بندی.</param>
+/// <param name="MinDeliveryDays">کمینهٔ مدت تحویل (روز).</param>
+/// <param name="MaxDeliveryDays">بیشینهٔ مدت تحویل (روز).</param>
+public sealed record ShippingAuthoringRateRowItem(
+    Guid RateRowId,
+    long? MinWeightGrams,
+    long? MaxWeightGrams,
+    int? MinItemCount,
+    int? MaxItemCount,
+    decimal? MinMerchandiseAmount,
+    decimal? MaxMerchandiseAmount,
+    decimal FreightAmount,
+    decimal PackagingAmount,
+    int MinDeliveryDays,
+    int MaxDeliveryDays);
+
+/// <summary>
+/// پاسخ مجموعهٔ ردیف‌های نرخ یک گروه: هویت گروه/پیش‌نویس، بازبینی فعلی ریشهٔ پیش‌نویس (نشانگر
+/// همزمانی مشترک با جایگزینی درخت) و ارز ذخیره‌شده (تهی یعنی هنوز bind نشده).
+/// </summary>
+/// <param name="DraftId">شناسهٔ پیش‌نویس.</param>
+/// <param name="GroupId">شناسهٔ پایدار گروه.</param>
+/// <param name="Revision">بازبینی فعلی ریشهٔ پیش‌نویس.</param>
+/// <param name="CurrencyCode">ارز ذخیره‌شدهٔ مجموعهٔ ردیف‌ها؛ تهی یعنی هنوز ذخیره نشده.</param>
+/// <param name="Rows">ردیف‌ها؛ خالی یعنی پیکربندی ناقص، نه ارسال رایگان.</param>
+public sealed record ShippingAuthoringGroupRateRowsItem(
+    Guid DraftId,
+    Guid GroupId,
+    long Revision,
+    string? CurrencyCode,
+    IReadOnlyList<ShippingAuthoringRateRowItem> Rows);

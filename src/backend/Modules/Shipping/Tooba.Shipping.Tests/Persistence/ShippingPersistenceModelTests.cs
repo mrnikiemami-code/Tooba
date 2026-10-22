@@ -63,6 +63,7 @@ public sealed class ShippingPersistenceModelTests
             new[]
             {
                 "authoring_drafts",
+                "authoring_rate_rows",
                 "authoring_region_groups",
                 "authoring_selected_areas",
                 "coverage_grants",
@@ -343,10 +344,19 @@ public sealed class ShippingPersistenceModelTests
                      "ck_authoring_drafts_option_code_canonical",
                      "ck_authoring_drafts_tenant_not_blank",
                      "ck_authoring_region_groups_order_non_negative",
+                     "ck_authoring_region_groups_currency_canonical",
                      "ck_authoring_selected_areas_node_kind_known",
+                     "ck_authoring_rate_rows_weight_interval",
+                     "ck_authoring_rate_rows_count_interval",
+                     "ck_authoring_rate_rows_merchandise_interval",
+                     "ck_authoring_rate_rows_freight_non_negative",
+                     "ck_authoring_rate_rows_packaging_non_negative",
+                     "ck_authoring_rate_rows_amount_within_max",
+                     "ck_authoring_rate_rows_duration_range",
                      "ux_authoring_drafts_owner_binding",
                      "ux_authoring_region_groups_draft_order",
                      "ux_authoring_selected_areas_draft_node",
+                     "ix_authoring_rate_rows_group",
                  })
         {
             Assert.Contains(constraint, script);
@@ -360,28 +370,28 @@ public sealed class ShippingPersistenceModelTests
         // counts CREATE statements only.
         Assert.Equal(9, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
 
-        // The foreign keys in the whole schema are intra-module only: the schedule -> windows cascade
-        // and the two authoring draft -> group -> selected-area cascades. Nothing points at another
-        // module's schema.
+        // The foreign keys in the whole schema are intra-module only: the schedule -> windows cascade,
+        // the two authoring draft -> group -> selected-area cascades and the group -> rate-row cascade.
+        // Nothing points at another module's schema.
         Assert.Contains("REFERENCES shipping.operating_schedules", script);
         Assert.Contains("REFERENCES shipping.authoring_drafts", script);
         Assert.Contains("REFERENCES shipping.authoring_region_groups", script);
         Assert.Equal(
-            3,
+            4,
             script.Split("FOREIGN KEY", StringSplitOptions.None).Length - 1);
     }
 
     [Fact]
-    public void Migrations_are_the_initial_slice_plus_six_additive_updates()
+    public void Migrations_are_the_initial_slice_plus_seven_additive_updates()
     {
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        // Seven migrations only: the initial slice, five additive changes (option identity, operating
-        // schedule, weight/count tiers, packaging policy, option-scoped coverage restriction) and the
-        // D3 authoring draft/group/area addition. Asserting the exact count keeps the schema reviewable
-        // as a unit instead of an open-ended chain.
-        Assert.Equal(7, migrations.Length);
+        // Eight migrations only: the initial slice, five additive changes (option identity, operating
+        // schedule, weight/count tiers, packaging policy, option-scoped coverage restriction), the D3
+        // authoring draft/group/area addition and the TB-191 group rate-row addition. Asserting the
+        // exact count keeps the schema reviewable as a unit instead of an open-ended chain.
+        Assert.Equal(8, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
@@ -389,6 +399,7 @@ public sealed class ShippingPersistenceModelTests
         Assert.EndsWith("_ShippingPackagingPolicy", migrations[4], StringComparison.Ordinal);
         Assert.EndsWith("_OptionScopedCoverageRestriction", migrations[5], StringComparison.Ordinal);
         Assert.EndsWith("_AuthoringDraftPersistence", migrations[6], StringComparison.Ordinal);
+        Assert.EndsWith("_AuthoringGroupRateRows", migrations[7], StringComparison.Ordinal);
     }
 
     [Fact]

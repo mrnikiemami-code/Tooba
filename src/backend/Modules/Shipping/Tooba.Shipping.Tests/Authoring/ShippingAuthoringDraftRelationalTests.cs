@@ -464,6 +464,367 @@ public sealed class ShippingAuthoringDraftRelationalTests
                 .SingleAsync());
     }
 
+    [Fact]
+    public async Task Rate_rows_roundtrip_bind_the_currency_and_share_the_root_revision_through_npgsql()
+    {
+        await using var context = await NewContextAsync();
+        var owner = ShippingAuthoringOwnerScope.ForStore("tb191-rates-" + Guid.NewGuid().ToString("N"));
+        var directory = new ShippingAuthoringDraftDirectory(context);
+
+        var created = await directory.CreateAsync(
+            owner,
+            "post",
+            null,
+            [
+                new ShippingAuthoringRegionGroupInput(null, [Node(Tehran)]),
+                new ShippingAuthoringRegionGroupInput(null, [Node(Isfahan)]),
+            ],
+            CancellationToken.None);
+        Assert.True(created.IsSuccess, created.IsFailure ? created.Errors[0].Code : null);
+        var draftId = created.Value.DraftId;
+        var first = created.Value.RegionGroups.OrderBy(group => group.Order).First().GroupId;
+        var second = created.Value.RegionGroups.OrderBy(group => group.Order).Last().GroupId;
+
+        // Two alternative rows on three axes; the amounts are canonical two-decimal values, not rounded.
+        var saved = await directory.ReplaceGroupRateRowsAsync(
+            owner,
+            draftId,
+            first,
+            1,
+            [
+                RowInput(null, 0, 1000, 15000.55m, 2000.25m, minDeliveryDays: 1, maxDeliveryDays: 2),
+                RowInput(null, 1000, 5000, 30000m, 0m, 2, 4, minItemCount: 1, maxItemCount: 10,
+                    minMerchandiseAmount: 100000m, maxMerchandiseAmount: 500000m),
+            ],
+            "IRR",
+            CancellationToken.None);
+        Assert.True(saved.IsSuccess, saved.IsFailure ? saved.Errors[0].Code : null);
+        Assert.Equal(2, saved.Value.Revision);
+        Assert.Equal("IRR", saved.Value.FindRegionGroup(first)!.CurrencyCode);
+
+        var storedRows = await StoredRowsAsync(context, first);
+        Assert.Equal(2, storedRows.Count);
+        var unconditioned = storedRows.Single(row => row.MinWeightGrams == 0);
+        Assert.Equal(1000, unconditioned.MaxWeightGrams);
+        Assert.Null(unconditioned.MinItemCount);
+        Assert.Null(unconditioned.MinMerchandiseAmount);
+        Assert.Equal(15000.55m, unconditioned.FreightAmount);
+        Assert.Equal(2000.25m, unconditioned.PackagingAmount);
+        Assert.Equal(1, unconditioned.MinDeliveryDays);
+        Assert.Equal(2, unconditioned.MaxDeliveryDays);
+        var conditioned = storedRows.Single(row => row.MinWeightGrams == 1000);
+        Assert.Equal(1, conditioned.MinItemCount);
+        Assert.Equal(10, conditioned.MaxItemCount);
+        Assert.Equal(100000m, conditioned.MinMerchandiseAmount);
+        Assert.Equal(500000m, conditioned.MaxMerchandiseAmount);
+
+        // The currency binds only on the group that got rows; the untouched group keeps nothing.
+        Assert.Equal("IRR", await StoredCurrencyAsync(context, first));
+        Assert.Null(await StoredCurrencyAsync(context, second));
+        Assert.Empty(await StoredRowsAsync(context, second));
+
+        // A retained row id is real identity: same rate row survives the replacement of its values.
+        var kept = conditioned.RateRowId;
+        var replaced = await directory.ReplaceGroupRateRowsAsync(
+            owner,
+            draftId,
+            first,
+            2,
+            [
+                RowInput(kept, 1000, 5000, 31000m, 0m, 3, 5),
+                RowInput(null, 5000, 9000, 45000m, 1000m, 5, 7),
+            ],
+            "IRR",
+            CancellationToken.None);
+        Assert.True(replaced.IsSuccess, replaced.IsFailure ? replaced.Errors[0].Code : null);
+        Assert.Equal(3, replaced.Value.Revision);
+        var afterReplace = await StoredRowsAsync(context, first);
+        Assert.Equal(2, afterReplace.Count);
+        Assert.Contains(afterReplace, row => row.RateRowId == kept);
+        Assert.Equal(31000m, afterReplace.Single(row => row.RateRowId == kept).FreightAmount);
+        Assert.Equal(3, afterReplace.Single(row => row.RateRowId == kept).MinDeliveryDays);
+
+        // Removing every row clears the rows but never unbinds the stored currency.
+        var cleared = await directory.ReplaceGroupRateRowsAsync(
+            owner,
+            draftId,
+            first,
+            3,
+            [],
+            "IRR",
+            CancellationToken.None);
+        Assert.True(cleared.IsSuccess, cleared.IsFailure ? cleared.Errors[0].Code : null);
+        Assert.Equal(4, cleared.Value.Revision);
+        Assert.Empty(await StoredRowsAsync(context, first));
+        Assert.Equal("IRR", await StoredCurrencyAsync(context, first));
+
+        // A different trusted currency is a configuration mismatch: fail closed, nothing written.
+        var mismatch = Assert.Throws<SemanticException>(() => directory.ReplaceGroupRateRowsAsync(
+                owner,
+                draftId,
+                first,
+                4,
+                [RowInput(null, 0, 1000, 1000m, 0m)],
+                "USD",
+                CancellationToken.None)
+            .GetAwaiter()
+            .GetResult());
+        Assert.Equal(ShippingErrorCodes.AuthoringRateCurrencyMismatch, mismatch.Error.Code);
+        Assert.Empty(await StoredRowsAsync(context, first));
+        Assert.Equal("IRR", await StoredCurrencyAsync(context, first));
+        Assert.Equal(4, await StoredRevisionAsync(context, draftId));
+    }
+
+    [Fact]
+    public async Task The_rate_row_write_is_one_atomic_boundary_and_a_failed_save_publishes_nothing()
+    {
+        await using var seedContext = await NewContextAsync();
+        var owner = ShippingAuthoringOwnerScope.ForStore("tb191-atomic-" + Guid.NewGuid().ToString("N"));
+        var created = await new ShippingAuthoringDraftDirectory(seedContext).CreateAsync(
+            owner,
+            "post",
+            null,
+            [new ShippingAuthoringRegionGroupInput(null, [Node(Tehran)])],
+            CancellationToken.None);
+        Assert.True(created.IsSuccess);
+        var draftId = created.Value.DraftId;
+        var groupId = created.Value.RegionGroups.Single().GroupId;
+        var baseline = await new ShippingAuthoringDraftDirectory(seedContext).ReplaceGroupRateRowsAsync(
+            owner,
+            draftId,
+            groupId,
+            1,
+            [RowInput(null, 0, 1000, 9000m, 0m)],
+            "IRR",
+            CancellationToken.None);
+        Assert.True(baseline.IsSuccess, baseline.IsFailure ? baseline.Errors[0].Code : null);
+        Assert.Equal(2, baseline.Value.Revision);
+
+        // A provider failure inside the single SaveChanges must leave the previous rows and revision intact,
+        // because rows and the root revision share one implicit transaction.
+        var failure = new FailOnNextSaveInterceptor();
+        await using var failing = await NewContextAsync(failure);
+        failure.Arm();
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            new ShippingAuthoringDraftDirectory(failing).ReplaceGroupRateRowsAsync(
+                owner,
+                draftId,
+                groupId,
+                2,
+                [
+                    RowInput(null, 0, 500, 1000m, 0m),
+                    RowInput(null, 500, 1000, 2000m, 0m),
+                ],
+                "IRR",
+                CancellationToken.None));
+        Assert.Equal(1, failure.SaveAttempts);
+
+        await using var verification = await NewContextAsync();
+        var stored = await StoredRowsAsync(verification, groupId);
+        Assert.Single(stored);
+        Assert.Equal(9000m, stored[0].FreightAmount);
+        Assert.Equal(2, await StoredRevisionAsync(verification, draftId));
+        Assert.Empty(failing.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
+
+        // Nothing half-written: the same replacement from the untouched revision still succeeds once.
+        var retried = await new ShippingAuthoringDraftDirectory(verification).ReplaceGroupRateRowsAsync(
+            owner,
+            draftId,
+            groupId,
+            2,
+            [
+                RowInput(null, 0, 500, 1000m, 0m),
+                RowInput(null, 500, 1000, 2000m, 0m),
+            ],
+            "IRR",
+            CancellationToken.None);
+        Assert.True(retried.IsSuccess, retried.IsFailure ? retried.Errors[0].Code : null);
+        Assert.Equal(3, retried.Value.Revision);
+        Assert.Equal(2, (await StoredRowsAsync(verification, groupId)).Count);
+    }
+
+    [Fact]
+    public async Task A_same_revision_rate_row_race_leaves_exactly_one_winner_and_only_its_rows()
+    {
+        await using var seedContext = await NewContextAsync();
+        var owner = ShippingAuthoringOwnerScope.ForStore("tb191-race-" + Guid.NewGuid().ToString("N"));
+        var created = await new ShippingAuthoringDraftDirectory(seedContext).CreateAsync(
+            owner,
+            "post",
+            null,
+            [
+                new ShippingAuthoringRegionGroupInput(null, [Node(Tehran)]),
+                new ShippingAuthoringRegionGroupInput(null, [Node(Isfahan)]),
+            ],
+            CancellationToken.None);
+        Assert.True(created.IsSuccess);
+        var draftId = created.Value.DraftId;
+        var first = created.Value.RegionGroups.OrderBy(group => group.Order).First().GroupId;
+        var second = created.Value.RegionGroups.OrderBy(group => group.Order).Last().GroupId;
+
+        // Both participants read revision 1 (root revision and rows), then meet at their single SavingChanges.
+        var gate = new TwoReaderGate();
+        await using var contextA = await NewContextAsync(new TwoReaderBarrierInterceptor(gate));
+        await using var contextB = await NewContextAsync(new TwoReaderBarrierInterceptor(gate));
+
+        async Task<(int Index, Result<ShippingAuthoringDraft> Result)> RunAsync(
+            int index,
+            ShippingDbContext context,
+            Guid groupId,
+            ShippingAuthoringDraft.ShippingAuthoringRateRowInput[] rows)
+        {
+            try
+            {
+                return (index, await new ShippingAuthoringDraftDirectory(context).ReplaceGroupRateRowsAsync(
+                    owner,
+                    draftId,
+                    groupId,
+                    1,
+                    rows,
+                    "IRR",
+                    CancellationToken.None));
+            }
+            catch (Exception exception)
+            {
+                throw new Xunit.Sdk.XunitException($"participant {index} threw {exception.GetType().Name}: {exception.Message}");
+            }
+        }
+
+        var outcomes = await Task.WhenAll(
+            RunAsync(0, contextA, first, [RowInput(null, 0, 1000, 1111m, 0m)]),
+            RunAsync(1, contextB, first, [RowInput(null, 2000, 3000, 2222m, 0m)]));
+
+        Assert.Equal(2, gate.Arrivals);
+
+        var winner = Assert.Single(outcomes, outcome => !outcome.Result.IsFailure);
+        var loser = Assert.Single(outcomes, outcome => outcome.Result.IsFailure);
+        Assert.Equal(ShippingErrorCodes.AuthoringDraftRevisionConflict, loser.Result.Errors[0].Code);
+
+        await using var verification = await NewContextAsync();
+        Assert.Equal(2, await StoredRevisionAsync(verification, draftId));
+        var stored = await StoredRowsAsync(verification, first);
+        Assert.Single(stored);
+        Assert.Equal(
+            winner.Index == 0 ? 1111m : 2222m,
+            stored[0].FreightAmount);
+        var losingContext = loser.Index == 0 ? contextA : contextB;
+        Assert.Empty(losingContext.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
+        Assert.Empty(await StoredRowsAsync(verification, second));
+    }
+
+    [Fact]
+    public async Task Retained_group_rate_rows_survive_a_region_reorder_and_are_deleted_with_their_group()
+    {
+        await using var context = await NewContextAsync();
+        var owner = ShippingAuthoringOwnerScope.ForStore("tb191-cascade-" + Guid.NewGuid().ToString("N"));
+        var directory = new ShippingAuthoringDraftDirectory(context);
+
+        var created = await directory.CreateAsync(
+            owner,
+            "post",
+            null,
+            [
+                new ShippingAuthoringRegionGroupInput(null, [Node(Tehran)]),
+                new ShippingAuthoringRegionGroupInput(null, [Node(Isfahan)]),
+            ],
+            CancellationToken.None);
+        Assert.True(created.IsSuccess, created.IsFailure ? created.Errors[0].Code : null);
+        var draftId = created.Value.DraftId;
+        var first = created.Value.RegionGroups.OrderBy(group => group.Order).First().GroupId;
+        var second = created.Value.RegionGroups.OrderBy(group => group.Order).Last().GroupId;
+
+        var saved = await directory.ReplaceGroupRateRowsAsync(
+            owner,
+            draftId,
+            first,
+            1,
+            [RowInput(null, 0, 1000, 12000m, 500m), RowInput(null, 1000, 4000, 24000m, 0m)],
+            "IRR",
+            CancellationToken.None);
+        Assert.True(saved.IsSuccess, saved.IsFailure ? saved.Errors[0].Code : null);
+        var rowIds = (await StoredRowsAsync(context, first)).Select(row => row.RateRowId).OrderBy(id => id).ToArray();
+
+        // Reordering the tree keeps the group identity, so its rows and currency are untouched.
+        var reordered = await directory.ReplaceRegionGroupsAsync(
+            owner,
+            draftId,
+            2,
+            [
+                new ShippingAuthoringRegionGroupInput(second, [Node(Isfahan)]),
+                new ShippingAuthoringRegionGroupInput(first, [Node(Tehran)]),
+            ],
+            CancellationToken.None);
+        Assert.True(reordered.IsSuccess, reordered.IsFailure ? reordered.Errors[0].Code : null);
+        Assert.Equal(3, reordered.Value.Revision);
+        Assert.Equal(1, reordered.Value.FindRegionGroup(first)!.Order);
+        Assert.Equal(
+            rowIds,
+            (await StoredRowsAsync(context, first)).Select(row => row.RateRowId).OrderBy(id => id).ToArray());
+        Assert.Equal("IRR", await StoredCurrencyAsync(context, first));
+
+        // Deleting the owning group removes exactly its own dependent rows.
+        var dropped = await directory.ReplaceRegionGroupsAsync(
+            owner,
+            draftId,
+            3,
+            [new ShippingAuthoringRegionGroupInput(second, [Node(Isfahan)])],
+            CancellationToken.None);
+        Assert.True(dropped.IsSuccess, dropped.IsFailure ? dropped.Errors[0].Code : null);
+        Assert.Equal(4, dropped.Value.Revision);
+        Assert.Empty(await StoredRowsAsync(context, first));
+        Assert.Empty(await StoredRowsAsync(context, second));
+        Assert.Equal(0, await context.Set<ShippingAuthoringRateRow>().AsNoTracking()
+            .CountAsync(row => row.GroupId == first));
+        await AssertNoStagedOrdersAsync(context, draftId, includeDraftRevision: false);
+    }
+
+    private static Task<List<ShippingAuthoringRateRow>> StoredRowsAsync(ShippingDbContext context, Guid groupId)
+        => context.Set<ShippingAuthoringRateRow>()
+            .AsNoTracking()
+            .Where(row => row.GroupId == groupId)
+            .OrderBy(row => row.MinWeightGrams)
+            .ThenBy(row => row.FreightAmount)
+            .ToListAsync();
+
+    private static Task<string?> StoredCurrencyAsync(ShippingDbContext context, Guid groupId)
+        => context.Set<ShippingAuthoringRegionGroup>()
+            .AsNoTracking()
+            .Where(group => group.GroupId == groupId)
+            .Select(group => group.CurrencyCode)
+            .SingleAsync();
+
+    private static Task<long> StoredRevisionAsync(ShippingDbContext context, Guid draftId)
+        => context.AuthoringDrafts
+            .AsNoTracking()
+            .Where(draft => draft.DraftId == draftId)
+            .Select(draft => draft.Revision)
+            .SingleAsync();
+
+    private static ShippingAuthoringDraft.ShippingAuthoringRateRowInput RowInput(
+        Guid? rateRowId,
+        long? minWeightGrams,
+        long? maxWeightGrams,
+        decimal freightAmount,
+        decimal packagingAmount = 0m,
+        int minDeliveryDays = 1,
+        int maxDeliveryDays = 3,
+        int? minItemCount = null,
+        int? maxItemCount = null,
+        decimal? minMerchandiseAmount = null,
+        decimal? maxMerchandiseAmount = null)
+        => new(
+            rateRowId,
+            minWeightGrams,
+            maxWeightGrams,
+            minItemCount,
+            maxItemCount,
+            minMerchandiseAmount,
+            maxMerchandiseAmount,
+            freightAmount,
+            packagingAmount,
+            minDeliveryDays,
+            maxDeliveryDays);
+
     private static Task<Guid> AreaRowIdAsync(ShippingDbContext context, Guid draftId, Guid nodeId)
         => context.Set<ShippingAuthoringSelectedArea>()
             .AsNoTracking()
@@ -642,6 +1003,30 @@ public sealed class ShippingAuthoringDraftRelationalTests
             if (SaveAttempts >= 2)
             {
                 throw new InvalidOperationException("tb190r1: injected failure after the staged write");
+            }
+
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
+    }
+
+    private sealed class FailOnNextSaveInterceptor : SaveChangesInterceptor
+    {
+        private bool _armed;
+
+        public int SaveAttempts { get; private set; }
+
+        public void Arm() => _armed = true;
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            SaveAttempts++;
+            if (_armed)
+            {
+                _armed = false;
+                throw new InvalidOperationException("tb191: injected failure inside the single SaveChanges");
             }
 
             return base.SavingChangesAsync(eventData, result, cancellationToken);

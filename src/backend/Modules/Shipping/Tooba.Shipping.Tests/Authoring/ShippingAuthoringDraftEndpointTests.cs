@@ -196,6 +196,271 @@ public sealed class ShippingAuthoringDraftEndpointTests
         Assert.Empty(after.GetProperty("regionGroups").EnumerateArray());
     }
 
+    [Fact]
+    public async Task Group_rate_rows_roundtrip_with_the_shared_root_revision_and_survive_region_edits()
+    {
+        using var harness = Harness.Create("rate-http-a");
+        var (_, _, created) = await harness.SendAsync(HttpMethod.Post, AdminDrafts, CreateTwoGroupBody(Tehran, Isfahan));
+        var draftId = created.GetProperty("draftId").GetGuid();
+        var groups = created.GetProperty("regionGroups").EnumerateArray().ToArray();
+        var firstGroup = groups[0].GetProperty("groupId").GetGuid();
+        var secondGroup = groups[1].GetProperty("groupId").GetGuid();
+        var rowsPath = $"{AdminDrafts}/{draftId}/region-groups/{firstGroup}/rate-rows";
+
+        var (putStatus, _, put) = await harness.SendAsync(
+            HttpMethod.Put,
+            rowsPath,
+            RowsBody(1, RowJson(1000, 2000, null, null, null, null, 25000m, 5000m, 2, 4)));
+        Assert.Equal(StatusCodes.Status200OK, putStatus);
+        Assert.Equal(2, put.GetProperty("revision").GetInt64());
+        Assert.Equal("USD", put.GetProperty("currencyCode").GetString());
+        var rows = put.GetProperty("rows").EnumerateArray().ToArray();
+        var rowId = Assert.Single(rows).GetProperty("rateRowId").GetGuid();
+
+        // The persisted read is the exact stored truth, including the server-generated id.
+        var (getStatus, _, get) = await harness.SendAsync(HttpMethod.Get, rowsPath);
+        Assert.Equal(StatusCodes.Status200OK, getStatus);
+        Assert.Equal(draftId, get.GetProperty("draftId").GetGuid());
+        Assert.Equal(firstGroup, get.GetProperty("groupId").GetGuid());
+        Assert.Equal(2, get.GetProperty("revision").GetInt64());
+        Assert.Equal("USD", get.GetProperty("currencyCode").GetString());
+        var stored = Assert.Single(get.GetProperty("rows").EnumerateArray());
+        Assert.Equal(rowId, stored.GetProperty("rateRowId").GetGuid());
+        Assert.Equal(25000m, stored.GetProperty("freightAmount").GetDecimal());
+
+        // Another group is untouched by that write.
+        var (_, _, secondRead) = await harness.SendAsync(
+            HttpMethod.Get,
+            $"{AdminDrafts}/{draftId}/region-groups/{secondGroup}/rate-rows");
+        Assert.Empty(secondRead.GetProperty("rows").EnumerateArray());
+        Assert.Equal(JsonValueKind.Null, secondRead.GetProperty("currencyCode").ValueKind);
+
+        // The root revision is shared: a stale rate write and a stale region replacement both 409.
+        var (staleStatus, _, stale) = await harness.SendAsync(
+            HttpMethod.Put,
+            rowsPath,
+            RowsBody(1, RowJson(null, null, null, null, null, null, 1000m, 0m, 1, 1)));
+        Assert.Equal(StatusCodes.Status409Conflict, staleStatus);
+        Assert.Equal(ShippingErrorCodes.AuthoringDraftRevisionConflict, stale.GetProperty("errorCode").GetString());
+
+        var (staleRegionStatus, _, staleRegion) = await harness.SendAsync(
+            HttpMethod.Put,
+            $"{AdminDrafts}/{draftId}",
+            ReplaceBody(1, Isfahan));
+        Assert.Equal(StatusCodes.Status409Conflict, staleRegionStatus);
+        Assert.Equal(ShippingErrorCodes.AuthoringDraftRevisionConflict, staleRegion.GetProperty("errorCode").GetString());
+
+        // A current region replacement that RETAINS the group keeps its rows and currency.
+        var (regionStatus, _, region) = await harness.SendAsync(
+            HttpMethod.Put,
+            $"{AdminDrafts}/{draftId}",
+            ReplaceBodyKeepingGroup(2, firstGroup, Isfahan));
+        Assert.Equal(StatusCodes.Status200OK, regionStatus);
+        Assert.Equal(3, region.GetProperty("revision").GetInt64());
+        var (_, _, afterRegion) = await harness.SendAsync(HttpMethod.Get, rowsPath);
+        Assert.Equal(3, afterRegion.GetProperty("revision").GetInt64());
+        Assert.Equal("USD", afterRegion.GetProperty("currencyCode").GetString());
+        Assert.Equal(rowId, Assert.Single(afterRegion.GetProperty("rows").EnumerateArray()).GetProperty("rateRowId").GetGuid());
+    }
+
+    [Fact]
+    public async Task Missing_null_overlapping_and_invalid_last_rows_are_refused_before_any_write()
+    {
+        using var harness = Harness.Create("rate-http-b");
+        var (_, _, created) = await harness.SendAsync(HttpMethod.Post, AdminDrafts, CreateBody(Tehran));
+        var draftId = created.GetProperty("draftId").GetGuid();
+        var groupId = created.GetProperty("regionGroups").EnumerateArray().First().GetProperty("groupId").GetGuid();
+        var rowsPath = $"{AdminDrafts}/{draftId}/region-groups/{groupId}/rate-rows";
+
+        var (okStatus, _, ok) = await harness.SendAsync(
+            HttpMethod.Put,
+            rowsPath,
+            RowsBody(1, RowJson(1000, 2000, null, null, null, null, 25000m, 5000m, 2, 4)));
+        Assert.Equal(StatusCodes.Status200OK, okStatus);
+        var acceptedId = Assert.Single(ok.GetProperty("rows").EnumerateArray()).GetProperty("rateRowId").GetGuid();
+
+        // Rows is REQUIRED: an omitted or explicit-null collection never reads as "replace with nothing".
+        var (omittedStatus, _, omitted) = await harness.SendAsync(
+            HttpMethod.Put,
+            rowsPath,
+            "{\"expectedRevision\":2}");
+        Assert.Equal(StatusCodes.Status400BadRequest, omittedStatus);
+        Assert.Contains(
+            omitted.GetProperty("errors").EnumerateObject().SelectMany(property => property.Value.EnumerateArray()),
+            code => code.GetString() == ShippingAuthoringValidationCodes.RateRowsRequired);
+
+        var (nullStatus, _, nullBody) = await harness.SendAsync(
+            HttpMethod.Put,
+            rowsPath,
+            "{\"expectedRevision\":2,\"rows\":null}");
+        Assert.Equal(StatusCodes.Status400BadRequest, nullStatus);
+        Assert.Contains(
+            nullBody.GetProperty("errors").EnumerateObject().SelectMany(property => property.Value.EnumerateArray()),
+            code => code.GetString() == ShippingAuthoringValidationCodes.RateRowsRequired);
+
+        // Overlap inside ONE group is a semantic rejection, not a silent first-row choice.
+        var (overlapStatus, _, overlap) = await harness.SendAsync(
+            HttpMethod.Put,
+            rowsPath,
+            RowsBody(
+                2,
+                RowJson(1000, 2000, null, null, null, null, 25000m, 5000m, 2, 4),
+                RowJson(1500, 2500, null, null, null, null, 25000m, 5000m, 2, 4)));
+        Assert.Equal(StatusCodes.Status400BadRequest, overlapStatus);
+        Assert.Equal(ShippingErrorCodes.AuthoringRateOverlap, overlap.GetProperty("errorCode").GetString());
+
+        // An invalid LAST row rejects the whole collection and leaves the accepted row/revision intact.
+        var (invalidStatus, _, invalid) = await harness.SendAsync(
+            HttpMethod.Put,
+            rowsPath,
+            RowsBody(
+                2,
+                RowJson(null, null, null, null, null, null, 1000m, 0m, 1, 2),
+                "{\"minWeightGrams\":3000,\"maxWeightGrams\":4000,\"freightAmount\":-1,\"packagingAmount\":0,\"minDeliveryDays\":1,\"maxDeliveryDays\":2}"));
+        Assert.Equal(StatusCodes.Status400BadRequest, invalidStatus);
+        Assert.Equal("validation.failed", invalid.GetProperty("errorCode").GetString());
+
+        var (_, _, after) = await harness.SendAsync(HttpMethod.Get, rowsPath);
+        Assert.Equal(2, after.GetProperty("revision").GetInt64());
+        var stillOne = Assert.Single(after.GetProperty("rows").EnumerateArray());
+        Assert.Equal(acceptedId, stillOne.GetProperty("rateRowId").GetGuid());
+        Assert.Equal(1000, stillOne.GetProperty("minWeightGrams").GetInt64());
+    }
+
+    [Fact]
+    public async Task Trusted_currency_change_fails_closed_and_an_unresolved_context_is_unavailable()
+    {
+        using var harness = Harness.Create("rate-http-c");
+        var (_, _, created) = await harness.SendAsync(HttpMethod.Post, AdminDrafts, CreateBody(Tehran));
+        var draftId = created.GetProperty("draftId").GetGuid();
+        var groupId = created.GetProperty("regionGroups").EnumerateArray().First().GetProperty("groupId").GetGuid();
+        var rowsPath = $"{AdminDrafts}/{draftId}/region-groups/{groupId}/rate-rows";
+        var body = RowsBody(1, RowJson(null, null, null, null, null, null, 1000m, 0m, 1, 1));
+
+        Assert.Equal(StatusCodes.Status200OK, (await harness.SendAsync(HttpMethod.Put, rowsPath, body)).Status);
+
+        // A configuration change is never a silent reinterpretation of the stored amounts.
+        harness.Commerce.Currency = "EUR";
+        var (mismatchStatus, _, mismatch) = await harness.SendAsync(HttpMethod.Put, rowsPath, body.Replace("\"expectedRevision\":1", "\"expectedRevision\":2"));
+        Assert.Equal(StatusCodes.Status409Conflict, mismatchStatus);
+        Assert.Equal(ShippingErrorCodes.AuthoringRateCurrencyMismatch, mismatch.GetProperty("errorCode").GetString());
+
+        // Read still reports the stored currency truthfully.
+        var (_, _, read) = await harness.SendAsync(HttpMethod.Get, rowsPath);
+        Assert.Equal("USD", read.GetProperty("currencyCode").GetString());
+        Assert.Single(read.GetProperty("rows").EnumerateArray());
+
+        // An unresolved trusted currency fails closed instead of guessing.
+        harness.Commerce.Currency = null;
+        var (unavailableStatus, _, unavailable) = await harness.SendAsync(
+            HttpMethod.Put,
+            rowsPath,
+            body.Replace("\"expectedRevision\":1", "\"expectedRevision\":2"));
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, unavailableStatus);
+        Assert.Equal(ShippingErrorCodes.AuthoringConfigurationUnavailable, unavailable.GetProperty("errorCode").GetString());
+    }
+
+    [Fact]
+    public async Task Foreign_owner_view_only_and_single_store_seller_denials_leave_rows_unchanged()
+    {
+        using var harness = Harness.Create("rate-http-d");
+        var (_, _, created) = await harness.SendAsync(HttpMethod.Post, AdminDrafts, CreateBody(Tehran));
+        var draftId = created.GetProperty("draftId").GetGuid();
+        var groupId = created.GetProperty("regionGroups").EnumerateArray().First().GetProperty("groupId").GetGuid();
+        var rowsPath = $"{AdminDrafts}/{draftId}/region-groups/{groupId}/rate-rows";
+        var body = RowsBody(1, RowJson(null, null, null, null, null, null, 1000m, 0m, 1, 1));
+        Assert.Equal(StatusCodes.Status200OK, (await harness.SendAsync(HttpMethod.Put, rowsPath, body)).Status);
+
+        harness.TenantContext = Harness.Tenant("store-b");
+        var (foreignGet, _, foreignGetBody) = await harness.SendAsync(HttpMethod.Get, rowsPath);
+        Assert.Equal(StatusCodes.Status404NotFound, foreignGet);
+        Assert.Equal(ShippingErrorCodes.AuthoringDraftNotFound, foreignGetBody.GetProperty("errorCode").GetString());
+
+        var (foreignPut, _, foreignPutBody) = await harness.SendAsync(
+            HttpMethod.Put,
+            rowsPath,
+            RowsBody(2, RowJson(null, null, null, null, null, null, 2000m, 0m, 1, 1)));
+        Assert.Equal(StatusCodes.Status404NotFound, foreignPut);
+        Assert.Equal(ShippingErrorCodes.AuthoringDraftNotFound, foreignPutBody.GetProperty("errorCode").GetString());
+
+        // Seller routes remain a capability failure in a SingleStore installation.
+        var (sellerStatus, _, sellerBody) = await harness.SendAsync(
+            HttpMethod.Get,
+            $"/v1/seller/shipping-services/authoring-drafts/{draftId}/region-groups/{groupId}/rate-rows");
+        Assert.Equal(StatusCodes.Status404NotFound, sellerStatus);
+        Assert.Equal(ShippingErrorCodes.AuthoringOwnerScopeUnavailable, sellerBody.GetProperty("errorCode").GetString());
+
+        harness.TenantContext = Harness.Tenant("store-a");
+        var (_, _, read) = await harness.SendAsync(HttpMethod.Get, rowsPath);
+        Assert.Equal(2, read.GetProperty("revision").GetInt64());
+        Assert.Single(read.GetProperty("rows").EnumerateArray());
+
+        // A view-only permission cannot run the replace and is denied before dispatch.
+        using var viewOnly = Harness.Create("rate-http-e", allowed: [ShippingAdminPermissions.View]);
+        var (denied, _, _) = await viewOnly.SendAsync(
+            HttpMethod.Put,
+            $"{AdminDrafts}/{Guid.NewGuid()}/region-groups/{Guid.NewGuid()}/rate-rows",
+            body);
+        Assert.Equal(StatusCodes.Status403Forbidden, denied);
+        Assert.False(viewOnly.DispatchedHasDraftWrite);
+    }
+
+    private static string RowsBody(long expectedRevision, params string[] rows)
+        => $"{{\"expectedRevision\":{expectedRevision},\"rows\":[{string.Join(',', rows)}]}}";
+
+    private static string RowJson(
+        long? minWeight,
+        long? maxWeight,
+        int? minCount,
+        int? maxCount,
+        decimal? minAmount,
+        decimal? maxAmount,
+        decimal freight,
+        decimal packaging,
+        int minDays,
+        int maxDays)
+        => JsonSerializer.Serialize(
+            new
+            {
+                rateRowId = (Guid?)null,
+                minWeightGrams = minWeight,
+                maxWeightGrams = maxWeight,
+                minItemCount = minCount,
+                maxItemCount = maxCount,
+                minMerchandiseAmount = minAmount,
+                maxMerchandiseAmount = maxAmount,
+                freightAmount = freight,
+                packagingAmount = packaging,
+                minDeliveryDays = minDays,
+                maxDeliveryDays = maxDays,
+            },
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+    private static string CreateTwoGroupBody(Guid first, Guid second) => JsonSerializer.Serialize(
+        new ShippingAuthoringDraftCreateRequest(
+            "post",
+            null,
+            [
+                new ShippingAuthoringRegionGroupWrite(
+                    null,
+                    [new ShippingAuthoringSelectedAreaWrite(ShippingAuthoringAreaKind.AdministrativeArea, Iran, first)]),
+                new ShippingAuthoringRegionGroupWrite(
+                    null,
+                    [new ShippingAuthoringSelectedAreaWrite(ShippingAuthoringAreaKind.AdministrativeArea, Iran, second)]),
+            ]),
+        new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+    private static string ReplaceBodyKeepingGroup(long expectedRevision, Guid groupId, Guid administrativeAreaId)
+        => JsonSerializer.Serialize(
+            new ShippingAuthoringDraftReplaceRegionsRequest(
+                expectedRevision,
+                [
+                    new ShippingAuthoringRegionGroupWrite(
+                        groupId,
+                        [new ShippingAuthoringSelectedAreaWrite(ShippingAuthoringAreaKind.AdministrativeArea, Iran, administrativeAreaId)]),
+                ]),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
     private static string CreateBody(Guid administrativeAreaId) => JsonSerializer.Serialize(
         new ShippingAuthoringDraftCreateRequest(
             "post",
@@ -224,13 +489,21 @@ public sealed class ShippingAuthoringDraftEndpointTests
         private readonly DispatchCounter _counter;
         private readonly StubCurrentTenant _tenant;
 
-        private Harness(WebApplication app, IServiceScope scope, DispatchCounter counter, StubCurrentTenant tenant)
+        private Harness(
+            WebApplication app,
+            IServiceScope scope,
+            DispatchCounter counter,
+            StubCurrentTenant tenant,
+            FakeContextSource commerce)
         {
             _app = app;
             _scope = scope;
             _counter = counter;
             _tenant = tenant;
+            Commerce = commerce;
         }
+
+        public FakeContextSource Commerce { get; }
 
         public TenantContext TenantContext
         {
@@ -252,6 +525,7 @@ public sealed class ShippingAuthoringDraftEndpointTests
             var counter = new DispatchCounter();
             var seller = new RecordingSellerAccess(counter);
             var tenant = new StubCurrentTenant(Tenant("store-a"));
+            var commerce = new FakeContextSource(edition, "USD");
 
             var builder = WebApplication.CreateBuilder(new WebApplicationOptions
             {
@@ -276,13 +550,14 @@ public sealed class ShippingAuthoringDraftEndpointTests
             builder.Services.AddSingleton<ICurrentTenant>(tenant);
             builder.Services.AddSingleton<IShippingMethodOptionValidator>(new FakeMethodValidator());
             builder.Services.AddSingleton<IShippingAuthoringDestinationResolver>(new FakeResolver());
+            builder.Services.AddSingleton<IShippingAuthoringContextSource>(commerce);
             builder.Services.AddSingleton(counter);
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(DispatchCountingBehavior<,>));
 
             var app = builder.Build();
             app.MapShippingEndpoints();
             var scope = app.Services.CreateScope();
-            var harness = new Harness(app, scope, counter, tenant);
+            var harness = new Harness(app, scope, counter, tenant, commerce);
             seller.OnCall = () => harness.SellerCalls++;
             return harness;
         }
@@ -391,7 +666,9 @@ public sealed class ShippingAuthoringDraftEndpointTests
             RequestHandlerDelegate<TResponse> next,
             CancellationToken cancellationToken)
         {
-            if (request is CreateShippingAuthoringDraftCommand or ReplaceShippingAuthoringDraftRegionsCommand)
+            if (request is CreateShippingAuthoringDraftCommand
+                or ReplaceShippingAuthoringDraftRegionsCommand
+                or ReplaceShippingAuthoringGroupRateRowsCommand)
             {
                 counter.DraftWrite = true;
                 counter.DraftDispatchCount++;
@@ -467,6 +744,16 @@ public sealed class ShippingAuthoringDraftEndpointTests
     private sealed class StubCurrentEdition(EditionContext? current) : ICurrentEdition
     {
         public EditionContext? Current { get; } = current;
+    }
+
+    private sealed class FakeContextSource(ToobaEdition edition, string? currency) : IShippingAuthoringContextSource
+    {
+        public ToobaEdition Edition { get; set; } = edition;
+
+        public string? Currency { get; set; } = currency;
+
+        public Task<ShippingAuthoringContextSourceSnapshot> ReadAsync(CancellationToken cancellationToken)
+            => Task.FromResult(new ShippingAuthoringContextSourceSnapshot(Edition, Currency, []));
     }
 
     private sealed class StubCurrentTenant(TenantContext? current) : ICurrentTenant

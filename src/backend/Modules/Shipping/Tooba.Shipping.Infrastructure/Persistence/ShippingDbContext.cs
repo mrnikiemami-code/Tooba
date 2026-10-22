@@ -452,11 +452,18 @@ public sealed class ShippingDbContext : DbContext
             entity.ToTable("authoring_region_groups", table =>
             {
                 table.HasCheckConstraint("ck_authoring_region_groups_order_non_negative", "group_order >= 0");
+                // The currency binding of the group's manual rate rows: either "never bound" (no rows
+                // saved yet) or an explicit canonical three-letter code. A blank/lowercase value would
+                // make stored amounts ambiguous, so it can never be persisted.
+                table.HasCheckConstraint(
+                    "ck_authoring_region_groups_currency_canonical",
+                    "currency_code IS NULL OR (char_length(currency_code) = 3 AND currency_code = upper(currency_code))");
             });
             entity.HasKey(x => x.GroupId);
             entity.Property(x => x.GroupId).ValueGeneratedNever();
             entity.Property(x => x.Order).HasColumnName("group_order");
             entity.Property(x => x.DraftId).IsRequired();
+            entity.Property(x => x.CurrencyCode).HasMaxLength(3);
 
             // The explicit order is part of the aggregate identity of the tree: two groups of the same
             // draft can never claim the same position.
@@ -469,6 +476,54 @@ public sealed class ShippingDbContext : DbContext
                 .HasForeignKey(area => area.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.Navigation(x => x.Areas).UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            // Manual rate rows own the SAME stable group identity as their only geographic reference.
+            // Deleting a group removes exactly its own dependent draft rates, never another owner's.
+            entity.HasMany(x => x.RateRows)
+                .WithOne()
+                .HasForeignKey(row => row.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Navigation(x => x.RateRows).UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+        // TB-191 manual condition/cost/delivery rows. Every CHECK below is the storage mirror of a domain
+        // guard, so a row the aggregate refuses can never be written by raw SQL, an import or a sibling
+        // handler. Amount precision is the canonical numeric(18,2): PostgreSQL may never silently round a
+        // threshold or fee into a different rule.
+        modelBuilder.Entity<ShippingAuthoringRateRow>(entity =>
+        {
+            entity.ToTable("authoring_rate_rows", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_authoring_rate_rows_weight_interval",
+                    $"(min_weight_grams IS NULL AND max_weight_grams IS NULL) OR (min_weight_grams >= 0 AND min_weight_grams <= {ShippingAuthoringRateRowRules.WeightGramsMaxValue.ToString(CultureInfo.InvariantCulture)} AND (max_weight_grams IS NULL OR (max_weight_grams > min_weight_grams AND max_weight_grams <= {ShippingAuthoringRateRowRules.WeightGramsMaxValue.ToString(CultureInfo.InvariantCulture)})))");
+                table.HasCheckConstraint(
+                    "ck_authoring_rate_rows_count_interval",
+                    $"(min_item_count IS NULL AND max_item_count IS NULL) OR (min_item_count >= 1 AND min_item_count <= {ShippingAuthoringRateRowRules.ItemCountMaxValue.ToString(CultureInfo.InvariantCulture)} AND (max_item_count IS NULL OR (max_item_count > min_item_count AND max_item_count <= {ShippingAuthoringRateRowRules.ItemCountMaxValue.ToString(CultureInfo.InvariantCulture)})))");
+                table.HasCheckConstraint(
+                    "ck_authoring_rate_rows_merchandise_interval",
+                    $"(min_merchandise_amount IS NULL AND max_merchandise_amount IS NULL) OR (min_merchandise_amount >= 0 AND (max_merchandise_amount IS NULL OR max_merchandise_amount > min_merchandise_amount))");
+                table.HasCheckConstraint("ck_authoring_rate_rows_freight_non_negative", "freight_amount >= 0");
+                table.HasCheckConstraint("ck_authoring_rate_rows_packaging_non_negative", "packaging_amount >= 0");
+                table.HasCheckConstraint(
+                    "ck_authoring_rate_rows_amount_within_max",
+                    $"freight_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)} AND packaging_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)} AND (max_merchandise_amount IS NULL OR max_merchandise_amount <= {ShippingAuthoringRateRowRules.AmountMaxValue.ToString(CultureInfo.InvariantCulture)})");
+                table.HasCheckConstraint(
+                    "ck_authoring_rate_rows_duration_range",
+                    $"min_delivery_days >= 0 AND max_delivery_days >= min_delivery_days AND max_delivery_days <= {ShippingAuthoringRateRowRules.DaysMaxValue.ToString(CultureInfo.InvariantCulture)}");
+            });
+            entity.HasKey(x => x.RateRowId);
+            entity.Property(x => x.RateRowId).ValueGeneratedNever();
+            entity.Property(x => x.GroupId).IsRequired();
+            entity.Property(x => x.FreightAmount).HasPrecision(18, 2);
+            entity.Property(x => x.PackagingAmount).HasPrecision(18, 2);
+            entity.Property(x => x.MinMerchandiseAmount).HasPrecision(18, 2);
+            entity.Property(x => x.MaxMerchandiseAmount).HasPrecision(18, 2);
+
+            // Rows are always read per group; no uniqueness/ordering index is added because row order has
+            // no pricing priority and rows are alternatives, validated as a whole tuple.
+            entity.HasIndex(x => x.GroupId)
+                .HasDatabaseName("ix_authoring_rate_rows_group");
         });
 
         modelBuilder.Entity<ShippingAuthoringSelectedArea>(entity =>

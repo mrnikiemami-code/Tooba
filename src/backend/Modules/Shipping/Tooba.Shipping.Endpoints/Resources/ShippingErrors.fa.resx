@@ -159,4 +159,25 @@
   </data>  <data name="shipping.authoring.owner_scope_unavailable" xml:space="preserve">
     <value>مالکیت قواعد ارسال در این نصب در دسترس نیست.</value>
   </data>
+  <data name="shipping.authoring.region_group_not_found" xml:space="preserve">
+    <value>گروه منطقه‌ای پیش‌نویس ارسال یافت نشد.</value>
+  </data>
+  <data name="shipping.authoring.rate_row_payload_invalid" xml:space="preserve">
+    <value>ردیف‌های نرخ دستی ارسال یک پیکربندی معتبر نیستند.</value>
+  </data>
+  <data name="shipping.authoring.rate_condition_invalid" xml:space="preserve">
+    <value>بازهٔ شرط یک ردیف نرخ دستی معتبر نیست.</value>
+  </data>
+  <data name="shipping.authoring.rate_amount_invalid" xml:space="preserve">
+    <value>مبلغ یک ردیف نرخ دستی منفی، خارج از محدوده یا با دقت بیش از حد است.</value>
+  </data>
+  <data name="shipping.authoring.rate_duration_invalid" xml:space="preserve">
+    <value>مدت تحویل یک ردیف نرخ دستی معتبر نیست.</value>
+  </data>
+  <data name="shipping.authoring.rate_overlap" xml:space="preserve">
+    <value>دو ردیف نرخ دستی در یک گروه هم‌پوشانی دارند.</value>
+  </data>
+  <data name="shipping.authoring.rate_currency_mismatch" xml:space="preserve">
+    <value>ارز ذخیره‌شدهٔ ردیف‌های نرخ دستی دیگر با ارز فعلی فروشگاه نمی‌خواند.</value>
+  </data>
 </root>

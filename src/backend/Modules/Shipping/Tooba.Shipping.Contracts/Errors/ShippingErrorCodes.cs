@@ -195,4 +195,37 @@ public static class ShippingErrorCodes
     /// دیگر، یا عبور از سقف فنی payload.
     /// </summary>
     public const string AuthoringRegionPayloadInvalid = "shipping.authoring.region_payload_invalid";
+
+    /// <summary>
+    /// گروه منطقه‌ای درخت در محدودهٔ مالک مجاز پیدا نشد. شناسهٔ متعلق به پیش‌نویس دیگر یا شناسهٔ ساختگی
+    /// همان پاسخ ایمن را می‌گیرد تا هیچ اطلاعاتی دربارهٔ مالکیت افشا نشود.
+    /// </summary>
+    public const string AuthoringRegionGroupNotFound = "shipping.authoring.region_group_not_found";
+
+    /// <summary>
+    /// مجموعهٔ ردیف‌های نرخ از نظر شکل/هویت نامعتبر است: ردیف null، شناسهٔ ردیف ناشناخته یا متعلق به
+    /// گروه/پیش‌نویس دیگر، شناسهٔ تکراری، یا عبور از سقف فنی payload.
+    /// </summary>
+    public const string AuthoringRateRowPayloadInvalid = "shipping.authoring.rate_row_payload_invalid";
+
+    /// <summary>بازهٔ شرط یک ردیف نرخ نامعتبر است: معکوس، صفرعرض، کران‌بالای بدون کران‌پایین یا خارج از سقف فنی.</summary>
+    public const string AuthoringRateConditionInvalid = "shipping.authoring.rate_condition_invalid";
+
+    /// <summary>مبلغ یک ردیف نرخ نامعتبر است: منفی، خارج از محدوده، یا با دقت اعشاری غیرقابل‌نمایش.</summary>
+    public const string AuthoringRateAmountInvalid = "shipping.authoring.rate_amount_invalid";
+
+    /// <summary>مدت تحویل یک ردیف نرخ نامعتبر است: منفی، بیشینه کوچک‌تر از کمینه، یا خارج از محدوده.</summary>
+    public const string AuthoringRateDurationInvalid = "shipping.authoring.rate_duration_invalid";
+
+    /// <summary>
+    /// دو ردیف نرخ در یک گروه هم‌پوشانی دارند: حاصل‌ضرب کامل سه محور شرط، حداقل یک نقطهٔ معتبر مشترک
+    /// دارد. ردیف‌های جایگزین یکدیگرند، پس هم‌پوشانی به‌جای انتخاب تصادفی رد می‌شود.
+    /// </summary>
+    public const string AuthoringRateOverlap = "shipping.authoring.rate_overlap";
+
+    /// <summary>
+    /// ارز معتبر فعلی با ارز ذخیره‌شدهٔ همین مجموعهٔ ردیف‌ها نمی‌خواند. مبالغ قدیمی هرگز با یک
+    /// تغییر پیکربندی بازتفسیر یا تبدیل نمی‌شوند؛ نوشتن fail-closed رد می‌شود.
+    /// </summary>
+    public const string AuthoringRateCurrencyMismatch = "shipping.authoring.rate_currency_mismatch";
 }

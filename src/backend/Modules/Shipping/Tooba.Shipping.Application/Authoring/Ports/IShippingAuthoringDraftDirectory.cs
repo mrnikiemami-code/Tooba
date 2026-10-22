@@ -59,6 +59,27 @@ public interface IShippingAuthoringDraftDirectory
         long expectedRevision,
         IReadOnlyList<ShippingAuthoringRegionGroupInput> regionGroups,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// مجموعهٔ کامل ردیف‌های نرخ یک گروه همین مالک را در <b>یک</b> SaveChanges ضمنی اتمی جایگزین
+    /// می‌کند و بازبینی ریشه را یک واحد بالا می‌برد؛ <paramref name="expectedRevision"/> شرط همزمانی
+    /// واقعی و مشترک با جایگزینی درخت است.
+    /// </summary>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="draftId">شناسهٔ پیش‌نویس.</param>
+    /// <param name="groupId">شناسهٔ گروه زیر همان پیش‌نویس.</param>
+    /// <param name="expectedRevision">بازبینی مورد انتظار کلاینت.</param>
+    /// <param name="rows">مجموعهٔ کامل ردیف‌ها (جایگزینی کامل).</param>
+    /// <param name="trustedCurrencyCode">ارز معتبر سرورساخته؛ هرگز از transport نمی‌آید.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<ShippingAuthoringDraft>> ReplaceGroupRateRowsAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        Guid groupId,
+        long expectedRevision,
+        IReadOnlyList<ShippingAuthoringDraft.ShippingAuthoringRateRowInput> rows,
+        string trustedCurrencyCode,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

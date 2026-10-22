@@ -46,9 +46,9 @@ public sealed class ShippingErrorCatalogAndResourcesTests
     [Fact]
     public void Every_registered_descriptor_keeps_the_legacy_http_contract()
     {
-        // TB-188 added exactly one explicitly classified availability code and TB-189 added the two
-        // owner-scope gate codes; the 44 legacy codes are NOT re-classified and must keep their
-        // historical 400/Business/Warning contract.
+        // TB-188 added exactly one explicitly classified availability code, TB-189 the two
+        // owner-scope gate codes and TB-191 the group/rate-row availability and currency codes; the
+        // remaining legacy codes are NOT re-classified and must keep their 400/Business/Warning contract.
         var explicitCodes = new[]
         {
             ShippingErrorCodes.AuthoringConfigurationUnavailable,
@@ -59,12 +59,14 @@ public sealed class ShippingErrorCatalogAndResourcesTests
             ShippingErrorCodes.AuthoringDraftBindingDuplicate,
             ShippingErrorCodes.AuthoringRegionSelectionOverlap,
             ShippingErrorCodes.AuthoringRegionPayloadInvalid,
+            ShippingErrorCodes.AuthoringRegionGroupNotFound,
+            ShippingErrorCodes.AuthoringRateCurrencyMismatch,
         };
         var legacy = new ShippingErrorCatalogContributor()
             .Contribute()
             .Where(descriptor => !explicitCodes.Contains(descriptor.Code, StringComparer.Ordinal))
             .ToArray();
-        Assert.Equal(44, legacy.Length);
+        Assert.Equal(49, legacy.Length);
 
         foreach (var descriptor in legacy)
         {
@@ -120,9 +122,9 @@ public sealed class ShippingErrorCatalogAndResourcesTests
         // capability fact, never a 403 permission verdict about a seller that does not exist.
         Assert.NotEqual(denied.HttpStatus, unavailable.HttpStatus);
         Assert.Single(descriptors, candidate => candidate.HttpStatus == StatusCodes.Status403Forbidden);
-        Assert.Equal(2, descriptors.Count(candidate => candidate.HttpStatus == StatusCodes.Status404NotFound));
+        Assert.Equal(3, descriptors.Count(candidate => candidate.HttpStatus == StatusCodes.Status404NotFound));
 
-        // Exactly the five explicitly classified non-400 codes exist (503, 403, two 404s, one 409);
+        // Exactly the seven explicitly classified non-400 codes exist (503, 403, three 404s, two 409s);
         // nothing else drifted.
         Assert.Equal(
             new HashSet<string>(
@@ -132,6 +134,8 @@ public sealed class ShippingErrorCatalogAndResourcesTests
                     ShippingErrorCodes.AuthoringOwnerScopeUnavailable,
                     ShippingErrorCodes.AuthoringDraftNotFound,
                     ShippingErrorCodes.AuthoringDraftRevisionConflict,
+                    ShippingErrorCodes.AuthoringRegionGroupNotFound,
+                    ShippingErrorCodes.AuthoringRateCurrencyMismatch,
                 ],
                 StringComparer.Ordinal),
             descriptors
