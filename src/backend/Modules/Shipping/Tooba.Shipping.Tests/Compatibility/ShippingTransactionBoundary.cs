@@ -31,10 +31,12 @@ internal sealed record ShippingBoundaryViolation(string RelativePath, string Rul
 /// </para>
 /// <para>
 /// <b>Scope of the proof.</b> This is a static source scanner. It proves that exactly one reviewed
-/// transaction start site exists, that it lives in the reviewed member, and that schema/startup and
-/// operational money authority markers never appear in the module. It is NOT a general data-flow proof and
-/// it does not claim runtime enforcement; the executed PostgreSQL race/rollback/cancellation facts are the
-/// behavioural half of the same boundary.
+/// transaction start site exists, that it lives in the reviewed member, that the reviewed member still has
+/// its staged-save/commit/rollback statement shape, and that the only members calling it are the two typed
+/// writers. Marker/member checks are <b>not</b> control-flow or data-flow enforcement: they cannot prove
+/// that every failure path returns through the rollback, nor that the commit really happens after both
+/// saves. The executed PostgreSQL rollback/cancellation/race facts are the behavioural half of the same
+/// boundary, and the scanner never claims runtime atomicity on its own.
 /// </para>
 /// <para>
 /// <b>No filename-only exemption.</b> The reviewed file is not skipped: its content and its enclosing
@@ -54,6 +56,9 @@ internal static class ShippingTransactionBoundary
 
     /// <summary>Stable rule: the reviewed boundary itself lost its required shape.</summary>
     public const string BoundaryShapeRule = "AUTHORING_TRANSACTION_SHAPE";
+
+    /// <summary>Stable rule: the reviewed boundary gained a caller or a callback indirection.</summary>
+    public const string CallerUniverseRule = "AUTHORING_TRANSACTION_CALLER_UNIVERSE";
 
     /// <summary>The Shipping module root this guard owns.</summary>
     public const string ShippingRoot = "src/backend/Modules/Shipping/";
@@ -81,6 +86,16 @@ internal static class ShippingTransactionBoundary
 
     /// <summary>Transaction-type markers: outside the reviewed pair, using a transaction type is a site.</summary>
     private static readonly string[] TransactionTypeMarkers = ["IDbContextTransaction", "DbTransaction"];
+
+    /// <summary>The only two typed writers allowed to call the reviewed boundary.</summary>
+    public static readonly string[] ExpectedBoundaryCallers =
+        ["ReplaceEditorDocumentAsync", "ReplaceRegionGroupsAsync"];
+
+    /// <summary>Statement markers that define the reviewed member's staged save / commit / rollback shape.</summary>
+    private static readonly string[] ShapeMarkers =
+        ["BeginTransaction", "SaveChangesAsync(", "CommitAsync(", "RollbackAsync(", BoundaryCallMarker];
+
+    private const string BoundaryCallMarker = "SaveAuthoringReplacementAsync(";
 
     /// <summary>Members inside the reviewed file that may legitimately mention a transaction type.</summary>
     private static readonly string[] AllowedTypeMarkerMembers =
@@ -203,16 +218,26 @@ internal static class ShippingTransactionBoundary
             }
         }
 
-        violations.AddRange(CheckAllowedBoundaryShape(sites));
+        violations.AddRange(CheckAllowedBoundaryShape(
+            sites,
+            sources.FirstOrDefault(source => source.RelativePath.Replace('\\', '/') == AllowedBoundaryPath)));
         return violations;
     }
 
     /// <summary>
-    /// The reviewed boundary must keep its exact shape: one begin, two staged saves inside it, one commit,
-    /// a rollback path. A file that simply lost its transaction would otherwise pass "at most one".
+    /// The reviewed boundary must keep its exact shape: one begin, at least two staged saves, one commit
+    /// and a rollback path INSIDE the reviewed member, and a caller universe of exactly the two typed
+    /// writers with no callback/delegate indirection. A file that simply lost its transaction, its commit,
+    /// its rollback or its staged save would otherwise pass "at most one".
     /// </summary>
+    /// <remarks>
+    /// This is marker/member scanning, not control flow. It cannot prove the commit is reached after both
+    /// saves on every path, nor that the rollback is reachable from every failure; the executed PostgreSQL
+    /// facts are what prove that behaviour.
+    /// </remarks>
     private static IEnumerable<ShippingBoundaryViolation> CheckAllowedBoundaryShape(
-        IReadOnlyList<ShippingTransactionSite> sites)
+        IReadOnlyList<ShippingTransactionSite> sites,
+        OperationalBoundarySource? boundarySource)
     {
         var starts = sites
             .Where(site => site.RelativePath == AllowedBoundaryPath
@@ -220,15 +245,131 @@ internal static class ShippingTransactionBoundary
                            && TransactionStartMarkers.Contains(site.Marker, StringComparer.Ordinal))
             .ToArray();
 
-        if (starts.Length == 1)
+        if (starts.Length != 1)
         {
+            yield return new ShippingBoundaryViolation(
+                AllowedBoundaryPath,
+                BoundaryShapeRule,
+                $"the reviewed replacement boundary must open exactly one transaction, found {starts.Length}");
+        }
+
+        if (boundarySource is null)
+        {
+            yield return new ShippingBoundaryViolation(
+                AllowedBoundaryPath,
+                BoundaryShapeRule,
+                "the reviewed replacement boundary file is missing, so its staged shape cannot be verified");
             yield break;
         }
 
-        yield return new ShippingBoundaryViolation(
-            AllowedBoundaryPath,
-            BoundaryShapeRule,
-            $"the reviewed replacement boundary must open exactly one transaction, found {starts.Length}");
+        var shape = ShapeSites(boundarySource)
+            .Where(site => string.Equals(site.Member, AllowedBoundaryMember, StringComparison.Ordinal))
+            .ToArray();
+
+        if (shape.Count(site => site.Marker == "SaveChangesAsync(") < 2)
+        {
+            yield return new ShippingBoundaryViolation(
+                AllowedBoundaryPath,
+                BoundaryShapeRule,
+                $"the reviewed replacement boundary must keep BOTH staged saves, found "
+                + $"{shape.Count(site => site.Marker == "SaveChangesAsync(")} SaveChangesAsync call(s) in "
+                + $"{AllowedBoundaryMember}");
+        }
+
+        if (!shape.Any(site => site.Marker == "CommitAsync("))
+        {
+            yield return new ShippingBoundaryViolation(
+                AllowedBoundaryPath,
+                BoundaryShapeRule,
+                $"the reviewed replacement boundary must commit its transaction, found no CommitAsync in "
+                + $"{AllowedBoundaryMember}");
+        }
+
+        if (!shape.Any(site => site.Marker == "RollbackAsync("))
+        {
+            yield return new ShippingBoundaryViolation(
+                AllowedBoundaryPath,
+                BoundaryShapeRule,
+                $"the reviewed replacement boundary must keep its rollback path, found no RollbackAsync in "
+                + $"{AllowedBoundaryMember}");
+        }
+
+        // Caller universe: the declaration line is excluded; every remaining call must be an awaited direct
+        // call inside one of the two typed writers. A third caller, or a delegate/callback indirection that
+        // would let an unreviewed path open the boundary, fails.
+        var callSites = ShapeSites(boundarySource)
+            .Where(site => site.Marker == BoundaryCallMarker)
+            .Where(site => !IsBoundaryDeclaration(boundarySource, site.LineNumber))
+            .ToArray();
+
+        var callers = callSites
+            .Select(site => site.Member)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(member => member, StringComparer.Ordinal)
+            .ToArray();
+
+        if (!callers.SequenceEqual(ExpectedBoundaryCallers, StringComparer.Ordinal))
+        {
+            yield return new ShippingBoundaryViolation(
+                AllowedBoundaryPath,
+                CallerUniverseRule,
+                $"the reviewed boundary may only be called by "
+                + $"[{string.Join(", ", ExpectedBoundaryCallers)}]; found [{string.Join(", ", callers)}]");
+        }
+
+        var lines = boundarySource.Text.Split('\n');
+        foreach (var site in callSites)
+        {
+            var code = lines[site.LineNumber - 1].TrimStart();
+            if (!code.Contains("await ", StringComparison.Ordinal)
+                || code.Contains("=>", StringComparison.Ordinal)
+                || code.Contains("Func<", StringComparison.Ordinal)
+                || code.Contains("Invoke(", StringComparison.Ordinal))
+            {
+                yield return new ShippingBoundaryViolation(
+                    AllowedBoundaryPath,
+                    CallerUniverseRule,
+                    $"the reviewed boundary call at line {site.LineNumber} in member '{site.Member}' must be a "
+                    + "direct awaited call, not a delegate/callback indirection");
+            }
+        }
+    }
+
+    /// <summary>The one reviewed declaration line, as opposed to a call site.</summary>
+    private static bool IsBoundaryDeclaration(OperationalBoundarySource boundarySource, int lineNumber)
+    {
+        var lines = boundarySource.Text.Split('\n');
+        return lineNumber >= 1
+               && lineNumber <= lines.Length
+               && lines[lineNumber - 1].Contains(
+                   "<Result<ShippingAuthoringDraft>> " + BoundaryCallMarker,
+                   StringComparison.Ordinal);
+    }
+
+    /// <summary>Every statement marker in the reviewed file, attributed to its enclosing member.</summary>
+    private static IReadOnlyList<ShippingTransactionSite> ShapeSites(OperationalBoundarySource boundarySource)
+    {
+        var lines = boundarySource.Text.Split('\n');
+        var sites = new List<ShippingTransactionSite>();
+        for (var index = 0; index < lines.Length; index++)
+        {
+            var code = lines[index].TrimStart();
+            if (!IsExecutable(code))
+            {
+                continue;
+            }
+
+            var member = MemberAt(lines, index) ?? "<file>";
+            foreach (var marker in ShapeMarkers)
+            {
+                if (code.Contains(marker, StringComparison.Ordinal))
+                {
+                    sites.Add(new ShippingTransactionSite(boundarySource.RelativePath, member, index + 1, marker));
+                }
+            }
+        }
+
+        return sites;
     }
 
     /// <summary>

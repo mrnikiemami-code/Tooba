@@ -139,3 +139,22 @@ database, port 5432, image download or unrelated service touched. No credentials
 
 Shared-Database-Data-Flag-Changes: NONE
 Automatic-Next-Task: NONE
+
+---
+
+## R1 correction (2026-10-23, append-only; the text above is preserved as history)
+
+The claim "only one proof was missing" is INCORRECT. Also absent or insufficient in the above report:
+new-route denial proof (view-only PUT, SingleStore seller early 404, category-scoped seller 403) with
+zero body reads; a complete structural snapshot covering seeded schedule/type/all row amounts and
+descriptions/timestamps; a non-vacuous (deliberately aged) no-op timestamp boundary; exact winner/loser
+proof reading the actual loser after its SaveChanges; caller-token cancellation identity; and the
+transaction scanner's real limits (it counted only the begin, not the staged-save/commit/rollback shape or
+the caller universe). All of these are now executed and reported in
+../TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199-R1/RESULT.md.
+
+Known timing evidence: bridge rows record claim 2026-10-22T22:17:19.8903939Z and completion
+2026-10-22T22:46:07.5908908Z (~28.8 min, past the minute-23 stop line). The "UTC 22:5x" figure quoted
+above is the R1 issue time, not this task's finish. Whether a whole-solution build was attempted is
+UNKNOWN_NOT_RECONSTRUCTABLE from available artifacts; it was never used as proof, and only Shipping.Tests
+plus its references is proven to have been built/tested.

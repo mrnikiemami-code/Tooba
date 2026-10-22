@@ -1,5 +1,16 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 199-R1 اجرا شد؛ منتظر review — 2026-10-23
+
+TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199-R1 روی base `b0b3bb804228826a1144b9db86ee0c1362b372bf` اجرا و به Bridge ارسال شد؛ نتایج در
+[RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199-R1/RESULT.md) و اصلاح append-only در
+[199 RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199/RESULT.md).
+tests/docs فقط: production بایت‌به‌بایت دست‌نخورده؛ هیچ Domain/Application/Infrastructure/Contracts/Endpoints/DI/Host/schema/frontend تغییر نکرد.
+اجراشده: deny-before-body برای admin view-only و SingleStore/scoped seller، catalog یک‌خواندنی با sentinel (handler جدید)، snapshot کامل درخت
+(NO-OP با stamp قدیمی، late-invalid same-context، race با loser واقعی، failure/caller-token/same-context retry) و guard تراکنش با caller/shape negatives.
+31 focused PASS (6 endpoint + 4 storage + 21 compatibility)؛ بدون rerun 645/Host/solution. container موقت حذف و پورت55432 آزاد است.
+199 هنوز Architect-accepted نیست؛ تسک بعدی بدون review صادر نشود. UI/full-create/cutoff/status/live registry/quote باز و غیرفعال‌اند؛ TB185 متوقف.
+
 ## مرجع جاری: 199 اجرا شد؛ فقط199-R1 تکمیل محدود — 2026-10-23
 
 main/result be639a473700d771cbf7b3f90f011814cb82bfeb بررسی شد؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199/ARCHITECT-REVIEW.md). پیاده‌سازی prospectiveplan/sharedcores/یکrevision/یکcommit و4route حفظ می‌شود،اما199 هنوز بسته نیست.645PASS گزارشworker است نهrerunArchitect. timeoutگذشته ثبت بماند؛زمان22:5x دقیق نیست و نبایدحدس زد.

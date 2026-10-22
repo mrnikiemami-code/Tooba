@@ -350,10 +350,12 @@ public sealed class OperationalQuoteCompatibilityTests
     {
         var violations = ShippingTransactionBoundary.Analyze(BackendProductionSources());
 
-        // No unexpected transaction anywhere, and the reviewed boundary kept its one-begin shape.
+        // No unexpected transaction anywhere, and the reviewed boundary kept its one-begin shape with its
+        // staged saves/commit/rollback statements and exactly the two typed callers.
         Assert.Empty(violations.Where(violation =>
             violation.Rule is ShippingTransactionBoundary.UnexpectedTransactionRule
-                or ShippingTransactionBoundary.BoundaryShapeRule));
+                or ShippingTransactionBoundary.BoundaryShapeRule
+                or ShippingTransactionBoundary.CallerUniverseRule));
 
         // The allowed boundary is not blanket-excluded by path or folder: its content is inspected too, and
         // it must remain a single begin/commit around two staged saves with a rollback path.
@@ -503,6 +505,94 @@ public sealed class OperationalQuoteCompatibilityTests
         Assert.Contains(
             violations,
             violation => violation.Rule == ShippingTransactionBoundary.BoundaryShapeRule);
+    }
+
+    [Fact]
+    public void Transaction_guard_fails_when_the_reviewed_boundary_loses_its_commit_or_rollback_or_staged_save()
+    {
+        var allowed = BackendProductionSources()
+            .Single(source => source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath);
+
+        // (1) The commit statement disappears: a begin with no commit is not the reviewed shape.
+        var withoutCommit = allowed with
+        {
+            Text = allowed.Text.Replace(
+                "await transaction.CommitAsync(cancellationToken);",
+                "await transaction.CompleteAsync(cancellationToken);",
+                StringComparison.Ordinal),
+        };
+        Assert.NotEqual(allowed.Text, withoutCommit.Text);
+        Assert.Contains(
+            ShippingTransactionBoundary.Analyze([withoutCommit]),
+            violation => violation.Rule == ShippingTransactionBoundary.BoundaryShapeRule
+                         && violation.Detail.Contains("CommitAsync", StringComparison.Ordinal));
+
+        // (2) The rollback path disappears: a failure would then leave the transaction open.
+        var withoutRollback = allowed with
+        {
+            Text = allowed.Text.Replace("RollbackAsync(", "DiscardAsync(", StringComparison.Ordinal),
+        };
+        Assert.NotEqual(allowed.Text, withoutRollback.Text);
+        Assert.Contains(
+            ShippingTransactionBoundary.Analyze([withoutRollback]),
+            violation => violation.Rule == ShippingTransactionBoundary.BoundaryShapeRule
+                         && violation.Detail.Contains("RollbackAsync", StringComparison.Ordinal));
+
+        // (3) One of the two REQUIRED staged saves disappears.
+        var secondSave = string.Join(
+            Environment.NewLine,
+            "                draft.ApplyFinalRegionGroupOrder();",
+            "                await context.SaveChangesAsync(cancellationToken);");
+        var withoutSecondSave = allowed with
+        {
+            Text = allowed.Text.Replace(
+                secondSave,
+                "                draft.ApplyFinalRegionGroupOrder();",
+                StringComparison.Ordinal),
+        };
+        Assert.NotEqual(allowed.Text, withoutSecondSave.Text);
+        Assert.Contains(
+            ShippingTransactionBoundary.Analyze([withoutSecondSave]),
+            violation => violation.Rule == ShippingTransactionBoundary.BoundaryShapeRule
+                         && violation.Detail.Contains("staged saves", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Transaction_guard_fails_for_a_third_caller_or_a_callback_indirection_in_the_reviewed_file()
+    {
+        var allowed = BackendProductionSources()
+            .Single(source => source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath);
+
+        // A third caller in the SAME reviewed file is outside the caller universe, even with no extra begin.
+        var thirdCaller = allowed with
+        {
+            Text = allowed.Text
+                   + "\n\ninternal sealed class SmuggledThirdCaller\n{\n"
+                   + "    internal async Task<Tooba.BuildingBlocks.Results.Result<ShippingAuthoringDraft>> Extra("
+                   + "ShippingAuthoringDraft draft)\n"
+                   + "    {\n"
+                   + "        return await SaveAuthoringReplacementAsync(draft, null, null, CancellationToken.None);\n"
+                   + "    }\n"
+                   + "}\n",
+        };
+        Assert.Contains(
+            ShippingTransactionBoundary.Analyze([thirdCaller]),
+            violation => violation.Rule == ShippingTransactionBoundary.CallerUniverseRule
+                         && violation.Detail.Contains("Extra", StringComparison.Ordinal));
+
+        // A delegate indirection from an ALLOWED caller still hides an unreviewed invocation path.
+        var callback = allowed with
+        {
+            Text = allowed.Text.Replace(
+                "return await SaveAuthoringReplacementAsync(",
+                "return await InvokeBoundary(() => SaveAuthoringReplacementAsync(",
+                StringComparison.Ordinal),
+        };
+        Assert.NotEqual(allowed.Text, callback.Text);
+        Assert.Contains(
+            ShippingTransactionBoundary.Analyze([callback]),
+            violation => violation.Rule == ShippingTransactionBoundary.CallerUniverseRule
+                         && violation.Detail.Contains("delegate/callback", StringComparison.Ordinal));
     }
 
     [Fact]
