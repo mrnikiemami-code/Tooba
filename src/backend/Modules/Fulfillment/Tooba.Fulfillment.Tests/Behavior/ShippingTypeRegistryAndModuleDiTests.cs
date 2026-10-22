@@ -152,10 +152,19 @@ public sealed class ShippingTypeRegistryAndModuleDiTests
     [Fact]
     public async Task One_active_non_fa_default_is_used_without_any_fa_fallback()
     {
+        // R6 correction: exactly ONE active language. `fa` is a KNOWN but INACTIVE row, so this proves a
+        // single-active foreign-language default rather than a non-first default among two active rows.
         using var harness = Harness.Create([
-            Row(Fa, "fa", "fa-IR", true, false, 1),
-            Row(Ar, "ar", "ar-SA", true, true, 2),
+            Row(Fa, "fa", "fa-IR", isActive: false, isDefault: false, sortOrder: 1),
+            Row(Ar, "ar", "ar-SA", isActive: true, isDefault: true, sortOrder: 2),
         ]);
+
+        var facts = await harness.LanguageFacts.ReadAsync(CancellationToken.None);
+        var active = facts.Languages.Where(x => x.IsActive).ToArray();
+        var onlyActive = Assert.Single(active);
+        Assert.Equal(Ar, onlyActive.LanguageId);
+        Assert.True(onlyActive.IsDefault);
+        Assert.Contains(facts.Languages, x => x.LanguageId == Fa && !x.IsActive);
 
         var created = await harness.CreateAsync("ordinary", 0, (Ar, "  نوع عادی  ", "توضیح"));
 

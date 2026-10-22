@@ -1,0 +1,6 @@
+target host=127.0.0.1 port=55436 role=tb196 db=fulfillment_tb196/fulfillment_tb196_model
+live provenance primary=(fulfillment_tb196, tb196, 5432) model=(fulfillment_tb196_model, tb196, 5432)
+snapshot-vs-current-model differences=209
+model manifest objects=264
+historical legacy objects=243 discrepancies=52
+after-down legacy objects=239 differences=4

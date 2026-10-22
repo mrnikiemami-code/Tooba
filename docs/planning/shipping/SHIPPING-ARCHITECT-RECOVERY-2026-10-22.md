@@ -399,3 +399,19 @@ tests pass in Fulfillment.Tests only. EF InMemory + controlled Contracts registr
 PENDING_NOT_RUN: exact-constraint lookalike negative and PostgreSQL historical-schema/snapshot/constraint/
 unique/revision-race proof. TB-196 remains PARTIAL; worker PASS only - not Architect ACCEPT;
 STOP_FOR_ARCHITECT; no automatic next task.
+
+TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R6 (worker, 2026-10-22, BLOCKED on a real PostgreSQL defect)
+test/evidence only on a disposable postgres:17-alpine at 127.0.0.1:55436 (role tb196, DBs fulfillment_tb196 and
+fulfillment_tb196_model), parsed and live-proven before DDL; legacy chain (10 migrations) applies cleanly, then the
+checked-in latest migration 20261022101415_ShippingTypeCatalog FAILS 5/5 with SQLSTATE 42703 `column "code" does not
+exist`: its scaffolded CREATE TABLE uses quoted PascalCase identifiers ("Code", "SortOrder", ...) while the model and
+its own CHECK body use snake_case (char_length(code) ...), i.e. scaffolding inconsistent with the production naming
+convention used by ToobaNpgsql.ConfigureModuleContext. No production/migration/designer/snapshot/EF mapping file was
+touched (hashes recorded). Consequently Gate 1E additive Up/Down, Gate 2 storage matrix, Gate 3 revision/unique races
+and mid-save rollback/cancellation, and Gate 4 exact-constraint ownership are committed but UNEXECUTED. Historical
+legacy manifest versus model projection was executed (24 missing + 28 unexpected lines) but parity is NOT claimed:
+the differences are dominated by migration-time defaults, hand-written raw-SQL names, and a harness projection
+defect; snapshot agreement is likewise recorded as UNPROVEN rather than drift. The R5 single-active non-fa fixture
+was corrected (fa known-inactive, ar the only active default) and its exact test passes. Container removed, 55436
+verified free. TB-196 is BLOCKED pending an authorized migration repair decision; worker BLOCKED is not Architect
+ACCEPT and grants no repair or scope authority; STOP_FOR_ARCHITECT; no automatic next task.

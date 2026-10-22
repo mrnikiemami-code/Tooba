@@ -1,0 +1,239 @@
+column fulfillment.consolidated_package_members.consolidated_package_id uuid not-null default:-
+column fulfillment.consolidated_package_members.consolidated_package_member_id uuid not-null default:-
+column fulfillment.consolidated_package_members.fulfillment_id uuid not-null default:-
+column fulfillment.consolidated_package_members.joined_at timestamp with time zone not-null default:-
+column fulfillment.consolidated_package_members.released_at timestamp with time zone null default:-
+column fulfillment.consolidated_package_members.seller_party_id uuid not-null default:-
+column fulfillment.consolidated_package_members.shipment_id uuid not-null default:-
+column fulfillment.consolidated_packages.cancelled_at timestamp with time zone null default:-
+column fulfillment.consolidated_packages.checkout_id uuid not-null default:-
+column fulfillment.consolidated_packages.consolidated_package_id uuid not-null default:-
+column fulfillment.consolidated_packages.created_at timestamp with time zone not-null default:-
+column fulfillment.consolidated_packages.created_by uuid null default:-
+column fulfillment.consolidated_packages.delivered_at timestamp with time zone null default:-
+column fulfillment.consolidated_packages.dispatched_at timestamp with time zone null default:-
+column fulfillment.consolidated_packages.note character varying(512) null default:-
+column fulfillment.consolidated_packages.package_number character varying(32) not-null default:-
+column fulfillment.consolidated_packages.shipping_method_code character varying(64) not-null default:-
+column fulfillment.consolidated_packages.shipping_method_label character varying(128) not-null default:-
+column fulfillment.consolidated_packages.status character varying(32) not-null default:-
+column fulfillment.consolidated_packages.tracking_reference character varying(128) null default:-
+column fulfillment.consolidated_packages.updated_at timestamp with time zone not-null default:-
+column fulfillment.fulfillments.checkout_id uuid not-null default:-
+column fulfillment.fulfillments.city_name character varying(128) not-null default:-
+column fulfillment.fulfillments.contact_mobile character varying(32) not-null default:-
+column fulfillment.fulfillments.created_at timestamp with time zone not-null default:-
+column fulfillment.fulfillments.fulfillment_id uuid not-null default:-
+column fulfillment.fulfillments.placed_by_user_id uuid not-null default:-
+column fulfillment.fulfillments.postal_address character varying(512) not-null default:-
+column fulfillment.fulfillments.postal_code character varying(32) not-null default:-
+column fulfillment.fulfillments.province_name character varying(128) not-null default:-
+column fulfillment.fulfillments.recipient_name character varying(256) not-null default:-
+column fulfillment.fulfillments.seller_order_id uuid not-null default:-
+column fulfillment.fulfillments.seller_party_id uuid not-null default:-
+column fulfillment.fulfillments.shipping_method_code character varying(64) not-null default:-
+column fulfillment.fulfillments.shipping_method_label character varying(128) not-null default:-
+column fulfillment.fulfillments.status character varying(32) not-null default:-
+column fulfillment.fulfillments.updated_at timestamp with time zone not-null default:-
+column fulfillment.items.fulfillment_id uuid not-null default:-
+column fulfillment.items.fulfillment_item_id uuid not-null default:-
+column fulfillment.items.order_line_id uuid not-null default:-
+column fulfillment.items.quantity_ordered numeric(18,6) not-null default:-
+column fulfillment.items.quantity_packed numeric(18,6) not-null default:-
+column fulfillment.items.quantity_processing numeric(18,6) not-null default:-
+column fulfillment.items.quantity_shipped numeric(18,6) not-null default:-
+column fulfillment.items.reservation_consumed boolean not-null default:-
+column fulfillment.items.reservation_id uuid null default:-
+column fulfillment.items.shipping_group_id uuid null default:-
+column fulfillment.outbox_messages.attempt_count integer not-null default:-
+column fulfillment.outbox_messages.correlation_id character varying(128) null default:-
+column fulfillment.outbox_messages.dead_lettered_at timestamp with time zone null default:-
+column fulfillment.outbox_messages.deployment_id character varying(128) not-null default:-
+column fulfillment.outbox_messages.edition character varying(32) not-null default:-
+column fulfillment.outbox_messages.event_type character varying(256) not-null default:-
+column fulfillment.outbox_messages.id uuid not-null default:-
+column fulfillment.outbox_messages.last_error character varying(256) null default:-
+column fulfillment.outbox_messages.locked_until timestamp with time zone null default:-
+column fulfillment.outbox_messages.next_attempt_at timestamp with time zone null default:-
+column fulfillment.outbox_messages.occurred_at timestamp with time zone not-null default:-
+column fulfillment.outbox_messages.payload text not-null default:-
+column fulfillment.outbox_messages.processed_at timestamp with time zone null default:-
+column fulfillment.outbox_messages.tenant_id character varying(128) null default:-
+column fulfillment.outbox_messages.version integer not-null default:-
+column fulfillment.payment_inbox.event_id uuid not-null default:-
+column fulfillment.payment_inbox.payment_id uuid not-null default:-
+column fulfillment.payment_inbox.processed_at timestamp with time zone not-null default:-
+column fulfillment.shipment_items.order_line_id uuid not-null default:-
+column fulfillment.shipment_items.quantity numeric(18,6) not-null default:-
+column fulfillment.shipment_items.shipment_id uuid not-null default:-
+column fulfillment.shipment_items.shipment_item_id uuid not-null default:-
+column fulfillment.shipments.carrier_display_name character varying(128) not-null default:-
+column fulfillment.shipments.created_at timestamp with time zone not-null default:-
+column fulfillment.shipments.delivered_at timestamp with time zone null default:-
+column fulfillment.shipments.dispatched_at timestamp with time zone null default:-
+column fulfillment.shipments.fulfillment_id uuid not-null default:-
+column fulfillment.shipments.previous_tracking_reference character varying(128) null default:-
+column fulfillment.shipments.provider_metadata_json text null default:-
+column fulfillment.shipments.provider_metadata_version integer not-null default:-
+column fulfillment.shipments.shipment_id uuid not-null default:-
+column fulfillment.shipments.shipping_group_id uuid null default:-
+column fulfillment.shipments.shipping_method_code character varying(64) not-null default:-
+column fulfillment.shipments.shipping_method_label character varying(128) not-null default:-
+column fulfillment.shipments.status character varying(32) not-null default:-
+column fulfillment.shipments.tracking_reference character varying(128) null default:-
+column fulfillment.shipping_groups.fulfillment_id uuid not-null default:-
+column fulfillment.shipping_groups.lead_days integer not-null default:-
+column fulfillment.shipping_groups.method_code character varying(64) not-null default:-
+column fulfillment.shipping_groups.method_label character varying(128) not-null default:-
+column fulfillment.shipping_groups.minimum_delivery_date date not-null default:-
+column fulfillment.shipping_groups.option_code character varying(64) null default:-
+column fulfillment.shipping_groups.origin_context character varying(256) null default:-
+column fulfillment.shipping_groups.requested_delivery_date date null default:-
+column fulfillment.shipping_groups.requested_delivery_time_window character varying(64) null default:-
+column fulfillment.shipping_groups.seller_order_id uuid not-null default:-
+column fulfillment.shipping_groups.seller_party_id uuid not-null default:-
+column fulfillment.shipping_groups.service_code character varying(64) null default:-
+column fulfillment.shipping_groups.shipping_group_id uuid not-null default:-
+column fulfillment.shipping_method_translations.description character varying(512) null default:-
+column fulfillment.shipping_method_translations.language_id uuid not-null default:-
+column fulfillment.shipping_method_translations.name character varying(128) not-null default:-
+column fulfillment.shipping_method_translations.shipping_method_id uuid not-null default:-
+column fulfillment.shipping_method_translations.translation_id uuid not-null default:-
+column fulfillment.shipping_methods.created_at timestamp with time zone not-null default:-
+column fulfillment.shipping_methods.is_active boolean not-null default:-
+column fulfillment.shipping_methods.legacy_option_code character varying(64) null default:-
+column fulfillment.shipping_methods.legacy_service_code character varying(64) not-null default:-
+column fulfillment.shipping_methods.method_code character varying(32) not-null default:-
+column fulfillment.shipping_methods.provider_kind character varying(64) not-null default:-
+column fulfillment.shipping_methods.shipping_method_id uuid not-null default:-
+column fulfillment.shipping_methods.sort_order integer not-null default:-
+column fulfillment.shipping_methods.updated_at timestamp with time zone not-null default:-
+column fulfillment.shipping_service_option_translations.language_id uuid not-null default:-
+column fulfillment.shipping_service_option_translations.name character varying(128) not-null default:-
+column fulfillment.shipping_service_option_translations.shipping_service_option_id uuid not-null default:-
+column fulfillment.shipping_service_option_translations.translation_id uuid not-null default:-
+column fulfillment.shipping_service_options.code character varying(64) not-null default:-
+column fulfillment.shipping_service_options.created_at timestamp with time zone not-null default:-
+column fulfillment.shipping_service_options.is_active boolean not-null default:-
+column fulfillment.shipping_service_options.shipping_service_id uuid not-null default:-
+column fulfillment.shipping_service_options.shipping_service_option_id uuid not-null default:-
+column fulfillment.shipping_service_options.sort_order integer not-null default:-
+column fulfillment.shipping_service_options.updated_at timestamp with time zone not-null default:-
+column fulfillment.shipping_service_translations.description character varying(512) null default:-
+column fulfillment.shipping_service_translations.language_id uuid not-null default:-
+column fulfillment.shipping_service_translations.name character varying(128) not-null default:-
+column fulfillment.shipping_service_translations.shipping_service_id uuid not-null default:-
+column fulfillment.shipping_service_translations.translation_id uuid not-null default:-
+column fulfillment.shipping_services.code character varying(64) not-null default:-
+column fulfillment.shipping_services.color_key character varying(32) not-null default:-
+column fulfillment.shipping_services.created_at timestamp with time zone not-null default:-
+column fulfillment.shipping_services.icon_key character varying(32) not-null default:-
+column fulfillment.shipping_services.is_active boolean not-null default:-
+column fulfillment.shipping_services.provider_kind character varying(64) not-null default:-
+column fulfillment.shipping_services.shipping_service_id uuid not-null default:-
+column fulfillment.shipping_services.sort_order integer not-null default:-
+column fulfillment.shipping_services.updated_at timestamp with time zone not-null default:-
+constraint fulfillment.consolidated_package_members pk_consolidated_package_members PRIMARY KEY (consolidated_package_member_id)
+constraint fulfillment.consolidated_packages pk_consolidated_packages PRIMARY KEY (consolidated_package_id)
+constraint fulfillment.fulfillments pk_fulfillments PRIMARY KEY (fulfillment_id)
+constraint fulfillment.items pk_items PRIMARY KEY (fulfillment_item_id)
+constraint fulfillment.outbox_messages pk_outbox_messages PRIMARY KEY (id)
+constraint fulfillment.payment_inbox pk_payment_inbox PRIMARY KEY (event_id)
+constraint fulfillment.shipment_items pk_shipment_items PRIMARY KEY (shipment_item_id)
+constraint fulfillment.shipments pk_shipments PRIMARY KEY (shipment_id)
+constraint fulfillment.shipping_groups pk_shipping_groups PRIMARY KEY (shipping_group_id)
+constraint fulfillment.shipping_method_translations fk_shipping_method_translations_shipping_methods_shipping_meth FOREIGN KEY (shipping_method_id) REFERENCES fulfillment.shipping_methods(shipping_method_id) ON DELETE CASCADE
+constraint fulfillment.shipping_method_translations pk_shipping_method_translations PRIMARY KEY (translation_id)
+constraint fulfillment.shipping_methods pk_shipping_methods PRIMARY KEY (shipping_method_id)
+constraint fulfillment.shipping_service_option_translations pk_shipping_service_option_translations PRIMARY KEY (translation_id)
+constraint fulfillment.shipping_service_options pk_shipping_service_options PRIMARY KEY (shipping_service_option_id)
+constraint fulfillment.shipping_service_translations pk_shipping_service_translations PRIMARY KEY (translation_id)
+constraint fulfillment.shipping_services pk_shipping_services PRIMARY KEY (shipping_service_id)
+index fulfillment CREATE INDEX ix_consolidated_package_members_consolidated_package_id ON fulfillment.consolidated_package_members USING btree (consolidated_package_id)
+index fulfillment CREATE INDEX ix_consolidated_packages_checkout_id ON fulfillment.consolidated_packages USING btree (checkout_id)
+index fulfillment CREATE INDEX ix_fulfillments_checkout_id ON fulfillment.fulfillments USING btree (checkout_id)
+index fulfillment CREATE INDEX ix_fulfillments_seller_party_id ON fulfillment.fulfillments USING btree (seller_party_id)
+index fulfillment CREATE INDEX ix_items_fulfillment_id ON fulfillment.items USING btree (fulfillment_id)
+index fulfillment CREATE INDEX ix_items_shipping_group_id ON fulfillment.items USING btree (shipping_group_id) WHERE (shipping_group_id IS NOT NULL)
+index fulfillment CREATE INDEX ix_outbox_messages_pending ON fulfillment.outbox_messages USING btree (occurred_at) WHERE ((processed_at IS NULL) AND (dead_lettered_at IS NULL))
+index fulfillment CREATE INDEX ix_shipment_items_shipment_id ON fulfillment.shipment_items USING btree (shipment_id)
+index fulfillment CREATE INDEX ix_shipments_fulfillment_id ON fulfillment.shipments USING btree (fulfillment_id)
+index fulfillment CREATE INDEX ix_shipments_shipping_group_id ON fulfillment.shipments USING btree (shipping_group_id) WHERE (shipping_group_id IS NOT NULL)
+index fulfillment CREATE INDEX ix_shipping_groups_fulfillment_id ON fulfillment.shipping_groups USING btree (fulfillment_id)
+index fulfillment CREATE INDEX ix_shipping_methods_legacy_service_code ON fulfillment.shipping_methods USING btree (legacy_service_code)
+index fulfillment CREATE INDEX ix_shipping_service_options_shipping_service_id ON fulfillment.shipping_service_options USING btree (shipping_service_id)
+index fulfillment CREATE UNIQUE INDEX ix_consolidated_package_members_shipment_id ON fulfillment.consolidated_package_members USING btree (shipment_id) WHERE (released_at IS NULL)
+index fulfillment CREATE UNIQUE INDEX ix_consolidated_packages_package_number ON fulfillment.consolidated_packages USING btree (package_number)
+index fulfillment CREATE UNIQUE INDEX ix_fulfillments_seller_order_id ON fulfillment.fulfillments USING btree (seller_order_id)
+index fulfillment CREATE UNIQUE INDEX ix_shipments_tracking_reference ON fulfillment.shipments USING btree (tracking_reference) WHERE (tracking_reference IS NOT NULL)
+index fulfillment CREATE UNIQUE INDEX ix_shipping_groups_fulfillment_id_shipping_group_id ON fulfillment.shipping_groups USING btree (fulfillment_id, shipping_group_id)
+index fulfillment CREATE UNIQUE INDEX ix_shipping_method_translations_shipping_method_id_language_id ON fulfillment.shipping_method_translations USING btree (shipping_method_id, language_id)
+index fulfillment CREATE UNIQUE INDEX ix_shipping_methods_legacy_service_code_legacy_option_code ON fulfillment.shipping_methods USING btree (legacy_service_code, legacy_option_code) WHERE (legacy_option_code IS NOT NULL)
+index fulfillment CREATE UNIQUE INDEX ix_shipping_methods_method_code ON fulfillment.shipping_methods USING btree (method_code)
+index fulfillment CREATE UNIQUE INDEX ix_shipping_service_option_translations_shipping_service_optio ON fulfillment.shipping_service_option_translations USING btree (shipping_service_option_id, language_id)
+index fulfillment CREATE UNIQUE INDEX ix_shipping_service_options_shipping_service_id_code ON fulfillment.shipping_service_options USING btree (shipping_service_id, code)
+index fulfillment CREATE UNIQUE INDEX ix_shipping_service_translations_shipping_service_id_language_ ON fulfillment.shipping_service_translations USING btree (shipping_service_id, language_id)
+index fulfillment CREATE UNIQUE INDEX ix_shipping_services_code ON fulfillment.shipping_services USING btree (code)
+index fulfillment CREATE UNIQUE INDEX pk_consolidated_package_members ON fulfillment.consolidated_package_members USING btree (consolidated_package_member_id)
+index fulfillment CREATE UNIQUE INDEX pk_consolidated_packages ON fulfillment.consolidated_packages USING btree (consolidated_package_id)
+index fulfillment CREATE UNIQUE INDEX pk_fulfillments ON fulfillment.fulfillments USING btree (fulfillment_id)
+index fulfillment CREATE UNIQUE INDEX pk_items ON fulfillment.items USING btree (fulfillment_item_id)
+index fulfillment CREATE UNIQUE INDEX pk_outbox_messages ON fulfillment.outbox_messages USING btree (id)
+index fulfillment CREATE UNIQUE INDEX pk_payment_inbox ON fulfillment.payment_inbox USING btree (event_id)
+index fulfillment CREATE UNIQUE INDEX pk_shipment_items ON fulfillment.shipment_items USING btree (shipment_item_id)
+index fulfillment CREATE UNIQUE INDEX pk_shipments ON fulfillment.shipments USING btree (shipment_id)
+index fulfillment CREATE UNIQUE INDEX pk_shipping_groups ON fulfillment.shipping_groups USING btree (shipping_group_id)
+index fulfillment CREATE UNIQUE INDEX pk_shipping_method_translations ON fulfillment.shipping_method_translations USING btree (translation_id)
+index fulfillment CREATE UNIQUE INDEX pk_shipping_methods ON fulfillment.shipping_methods USING btree (shipping_method_id)
+index fulfillment CREATE UNIQUE INDEX pk_shipping_service_option_translations ON fulfillment.shipping_service_option_translations USING btree (translation_id)
+index fulfillment CREATE UNIQUE INDEX pk_shipping_service_options ON fulfillment.shipping_service_options USING btree (shipping_service_option_id)
+index fulfillment CREATE UNIQUE INDEX pk_shipping_service_translations ON fulfillment.shipping_service_translations USING btree (translation_id)
+index fulfillment CREATE UNIQUE INDEX pk_shipping_services ON fulfillment.shipping_services USING btree (shipping_service_id)
+index pg_toast CREATE UNIQUE INDEX pg_toast_1213_index ON pg_toast.pg_toast_1213 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_1247_index ON pg_toast.pg_toast_1247 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_1255_index ON pg_toast.pg_toast_1255 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_1260_index ON pg_toast.pg_toast_1260 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_1262_index ON pg_toast.pg_toast_1262 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_13500_index ON pg_toast.pg_toast_13500 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_13505_index ON pg_toast.pg_toast_13505 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_13510_index ON pg_toast.pg_toast_13510 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_13515_index ON pg_toast.pg_toast_13515 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_1417_index ON pg_toast.pg_toast_1417 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_1418_index ON pg_toast.pg_toast_1418 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_17578_index ON pg_toast.pg_toast_17578 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_17585_index ON pg_toast.pg_toast_17585 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_17597_index ON pg_toast.pg_toast_17597 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_17614_index ON pg_toast.pg_toast_17614 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_17621_index ON pg_toast.pg_toast_17621 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_17643_index ON pg_toast.pg_toast_17643 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_17663_index ON pg_toast.pg_toast_17663 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_17675_index ON pg_toast.pg_toast_17675 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2328_index ON pg_toast.pg_toast_2328 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2396_index ON pg_toast.pg_toast_2396 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2600_index ON pg_toast.pg_toast_2600 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2604_index ON pg_toast.pg_toast_2604 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2606_index ON pg_toast.pg_toast_2606 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2609_index ON pg_toast.pg_toast_2609 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2612_index ON pg_toast.pg_toast_2612 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2615_index ON pg_toast.pg_toast_2615 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2618_index ON pg_toast.pg_toast_2618 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2619_index ON pg_toast.pg_toast_2619 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2620_index ON pg_toast.pg_toast_2620 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_2964_index ON pg_toast.pg_toast_2964 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3079_index ON pg_toast.pg_toast_3079 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3118_index ON pg_toast.pg_toast_3118 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3256_index ON pg_toast.pg_toast_3256 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3350_index ON pg_toast.pg_toast_3350 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3381_index ON pg_toast.pg_toast_3381 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3394_index ON pg_toast.pg_toast_3394 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3429_index ON pg_toast.pg_toast_3429 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3456_index ON pg_toast.pg_toast_3456 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3466_index ON pg_toast.pg_toast_3466 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3592_index ON pg_toast.pg_toast_3592 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3596_index ON pg_toast.pg_toast_3596 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_3600_index ON pg_toast.pg_toast_3600 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_6000_index ON pg_toast.pg_toast_6000 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_6100_index ON pg_toast.pg_toast_6100 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_6106_index ON pg_toast.pg_toast_6106 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_6243_index ON pg_toast.pg_toast_6243 USING btree (chunk_id, chunk_seq)
+index pg_toast CREATE UNIQUE INDEX pg_toast_826_index ON pg_toast.pg_toast_826 USING btree (chunk_id, chunk_seq)

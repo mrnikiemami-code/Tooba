@@ -1,0 +1,17 @@
+﻿
+> 2026-10-22 11:36:11.223 UTC [289] ERROR:  column "code" does not exist at character 466
+  2026-10-22 11:36:11.223 UTC [289] HINT:  Perhaps you meant to reference the column "shipping_types.Code".
+  2026-10-22 11:36:11.223 UTC [289] STATEMENT:  CREATE TABLE fulfillment.shipping_types (
+  	    "ShippingTypeId" uuid NOT NULL,
+  	    "Code" character varying(64) NOT NULL,
+  	    "SortOrder" integer NOT NULL,
+  	    "IsActive" boolean NOT NULL,
+  	    "Revision" bigint NOT NULL,
+  	    "CreatedAt" timestamp with time zone NOT NULL,
+  	    "UpdatedAt" timestamp with time zone NOT NULL,
+  	    CONSTRAINT "PK_shipping_types" PRIMARY KEY ("ShippingTypeId"),
+  	    CONSTRAINT ck_shipping_types_code_canonical CHECK (char_length(code) BETWEEN 1 AND 64 AND code = btrim(code) 
+AND code ~ '^[a-z][a-z0-9_]*$'),
+  	    CONSTRAINT ck_shipping_types_sort_order_range CHECK (sort_order >= 0 AND sort_order <= 1000000),
+
+

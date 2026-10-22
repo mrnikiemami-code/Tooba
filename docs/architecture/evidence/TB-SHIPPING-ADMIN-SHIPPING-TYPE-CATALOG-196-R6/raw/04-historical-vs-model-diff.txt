@@ -1,0 +1,52 @@
+missing-in-actual: column fulfillment.items.quantity_packed numeric(18,6) not-null default:-
+missing-in-actual: column fulfillment.items.quantity_processing numeric(18,6) not-null default:-
+missing-in-actual: column fulfillment.shipments.provider_metadata_version integer not-null default:-
+missing-in-actual: column fulfillment.shipments.shipping_method_code character varying(64) not-null default:-
+missing-in-actual: column fulfillment.shipments.shipping_method_label character varying(128) not-null default:-
+missing-in-actual: constraint fulfillment.shipping_method_translations fk_shipping_method_translations_shipping_methods_shipping_meth FOREIGN KEY (shipping_method_id) REFERENCES fulfillment.shipping_methods(shipping_method_id) ON DELETE CASCADE
+missing-in-actual: index fulfillment CREATE INDEX ix_consolidated_package_members_consolidated_package_id ON fulfillment.consolidated_package_members USING btree (consolidated_package_id)
+missing-in-actual: index fulfillment CREATE INDEX ix_outbox_messages_pending ON fulfillment.outbox_messages USING btree (occurred_at) WHERE ((processed_at IS NULL) AND (dead_lettered_at IS NULL))
+missing-in-actual: index fulfillment CREATE INDEX ix_shipping_service_options_shipping_service_id ON fulfillment.shipping_service_options USING btree (shipping_service_id)
+missing-in-actual: index fulfillment CREATE UNIQUE INDEX ix_consolidated_package_members_shipment_id ON fulfillment.consolidated_package_members USING btree (shipment_id) WHERE (released_at IS NULL)
+missing-in-actual: index fulfillment CREATE UNIQUE INDEX ix_shipping_groups_fulfillment_id_shipping_group_id ON fulfillment.shipping_groups USING btree (fulfillment_id, shipping_group_id)
+missing-in-actual: index fulfillment CREATE UNIQUE INDEX ix_shipping_method_translations_shipping_method_id_language_id ON fulfillment.shipping_method_translations USING btree (shipping_method_id, language_id)
+missing-in-actual: index fulfillment CREATE UNIQUE INDEX ix_shipping_methods_legacy_service_code_legacy_option_code ON fulfillment.shipping_methods USING btree (legacy_service_code, legacy_option_code) WHERE (legacy_option_code IS NOT NULL)
+missing-in-actual: index fulfillment CREATE UNIQUE INDEX ix_shipping_service_option_translations_shipping_service_optio ON fulfillment.shipping_service_option_translations USING btree (shipping_service_option_id, language_id)
+missing-in-actual: index fulfillment CREATE UNIQUE INDEX ix_shipping_service_options_shipping_service_id_code ON fulfillment.shipping_service_options USING btree (shipping_service_id, code)
+missing-in-actual: index fulfillment CREATE UNIQUE INDEX ix_shipping_service_translations_shipping_service_id_language_ ON fulfillment.shipping_service_translations USING btree (shipping_service_id, language_id)
+missing-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17578_index ON pg_toast.pg_toast_17578 USING btree (chunk_id, chunk_seq)
+missing-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17585_index ON pg_toast.pg_toast_17585 USING btree (chunk_id, chunk_seq)
+missing-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17597_index ON pg_toast.pg_toast_17597 USING btree (chunk_id, chunk_seq)
+missing-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17614_index ON pg_toast.pg_toast_17614 USING btree (chunk_id, chunk_seq)
+missing-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17621_index ON pg_toast.pg_toast_17621 USING btree (chunk_id, chunk_seq)
+missing-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17643_index ON pg_toast.pg_toast_17643 USING btree (chunk_id, chunk_seq)
+missing-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17663_index ON pg_toast.pg_toast_17663 USING btree (chunk_id, chunk_seq)
+missing-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17675_index ON pg_toast.pg_toast_17675 USING btree (chunk_id, chunk_seq)
+unexpected-in-actual: column fulfillment.__ef_migrations_history.migration_id character varying(150) not-null default:-
+unexpected-in-actual: column fulfillment.__ef_migrations_history.product_version character varying(32) not-null default:-
+unexpected-in-actual: column fulfillment.items.quantity_packed numeric(18,6) not-null default:0
+unexpected-in-actual: column fulfillment.items.quantity_processing numeric(18,6) not-null default:0
+unexpected-in-actual: column fulfillment.shipments.provider_metadata_version integer not-null default:0
+unexpected-in-actual: column fulfillment.shipments.shipping_method_code character varying(64) not-null default:''::character varying
+unexpected-in-actual: column fulfillment.shipments.shipping_method_label character varying(128) not-null default:''::character varying
+unexpected-in-actual: constraint fulfillment.__ef_migrations_history pk___ef_migrations_history PRIMARY KEY (migration_id)
+unexpected-in-actual: constraint fulfillment.shipping_method_translations fk_shipping_method_translations_method FOREIGN KEY (shipping_method_id) REFERENCES fulfillment.shipping_methods(shipping_method_id) ON DELETE CASCADE
+unexpected-in-actual: constraint fulfillment.shipping_methods ck_shipping_methods_code_canonical CHECK ((((length((method_code)::text) >= 1) AND (length((method_code)::text) <= 32)) AND ((method_code)::text = lower((method_code)::text)) AND ((method_code)::text !~ '[^a-z0-9_:]'::text)))
+unexpected-in-actual: constraint fulfillment.shipping_methods ck_shipping_methods_option_code_canonical CHECK (((legacy_option_code IS NULL) OR (((length(btrim((legacy_option_code)::text)) >= 1) AND (length(btrim((legacy_option_code)::text)) <= 64)) AND ((legacy_option_code)::text = lower((legacy_option_code)::text)))))
+unexpected-in-actual: index fulfillment CREATE INDEX ix_consolidated_package_members_package_id ON fulfillment.consolidated_package_members USING btree (consolidated_package_id)
+unexpected-in-actual: index fulfillment CREATE INDEX ix_shipping_service_options_service_id ON fulfillment.shipping_service_options USING btree (shipping_service_id)
+unexpected-in-actual: index fulfillment CREATE UNIQUE INDEX ix_consolidated_package_members_shipment_active ON fulfillment.consolidated_package_members USING btree (shipment_id) WHERE (released_at IS NULL)
+unexpected-in-actual: index fulfillment CREATE UNIQUE INDEX ix_shipping_groups_fulfillment_group ON fulfillment.shipping_groups USING btree (fulfillment_id, shipping_group_id)
+unexpected-in-actual: index fulfillment CREATE UNIQUE INDEX ix_shipping_method_translations_method_lang ON fulfillment.shipping_method_translations USING btree (shipping_method_id, language_id)
+unexpected-in-actual: index fulfillment CREATE UNIQUE INDEX ix_shipping_service_option_translations_option_lang ON fulfillment.shipping_service_option_translations USING btree (shipping_service_option_id, language_id)
+unexpected-in-actual: index fulfillment CREATE UNIQUE INDEX ix_shipping_service_options_service_code ON fulfillment.shipping_service_options USING btree (shipping_service_id, code)
+unexpected-in-actual: index fulfillment CREATE UNIQUE INDEX ix_shipping_service_translations_service_lang ON fulfillment.shipping_service_translations USING btree (shipping_service_id, language_id)
+unexpected-in-actual: index fulfillment CREATE UNIQUE INDEX pk___ef_migrations_history ON fulfillment.__ef_migrations_history USING btree (migration_id)
+unexpected-in-actual: index fulfillment CREATE UNIQUE INDEX ux_shipping_methods_legacy_binding ON fulfillment.shipping_methods USING btree (legacy_service_code, legacy_option_code) WHERE (legacy_option_code IS NOT NULL)
+unexpected-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17723_index ON pg_toast.pg_toast_17723 USING btree (chunk_id, chunk_seq)
+unexpected-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17735_index ON pg_toast.pg_toast_17735 USING btree (chunk_id, chunk_seq)
+unexpected-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17751_index ON pg_toast.pg_toast_17751 USING btree (chunk_id, chunk_seq)
+unexpected-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17798_index ON pg_toast.pg_toast_17798 USING btree (chunk_id, chunk_seq)
+unexpected-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17820_index ON pg_toast.pg_toast_17820 USING btree (chunk_id, chunk_seq)
+unexpected-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17851_index ON pg_toast.pg_toast_17851 USING btree (chunk_id, chunk_seq)
+unexpected-in-actual: index pg_toast CREATE UNIQUE INDEX pg_toast_17864_index ON pg_toast.pg_toast_17864 USING btree (chunk_id, chunk_seq)
