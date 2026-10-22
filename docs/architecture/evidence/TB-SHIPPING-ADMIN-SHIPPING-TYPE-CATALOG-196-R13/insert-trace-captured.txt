@@ -1,0 +1,19 @@
+mapping ProviderMetadataVersion:generated=Never,before=Save,after=Save,default=0 QuantityPacked:generated=Never,before=Save,after=Save,default=0 QuantityProcessing:generated=Never,before=Save,after=Save,default=0 ShippingMethodCode:generated=Never,before=Save,after=Save,default= ShippingMethodLabel:generated=Never,before=Save,after=Save,default=
+case=items.quantity_packed:zero explicit-column=True default-keyword=False bound=quantity_packed->@p4=0 readback=0.000000
+case=items.quantity_packed:nondefault explicit-column=True default-keyword=False bound=quantity_packed->@p4=2.5 readback=2.500000
+case=items.quantity_processing:zero explicit-column=True default-keyword=False bound=quantity_processing->@p5=0 readback=0.000000
+case=items.quantity_processing:nondefault explicit-column=True default-keyword=False bound=quantity_processing->@p5=4.25 readback=4.250000
+case=shipments.provider_metadata_version:zero explicit-column=True default-keyword=False bound=provider_metadata_version->@p8=0 readback=0
+case=shipments.provider_metadata_version:nondefault explicit-column=True default-keyword=False bound=provider_metadata_version->@p8=7 readback=7
+case=shipments.shipping_method_code:zero explicit-column=True default-keyword=False bound=shipping_method_code->@p10= readback=
+case=shipments.shipping_method_code:nondefault explicit-column=True default-keyword=False bound=shipping_method_code->@p10=post:express readback=post:express
+case=shipments.shipping_method_label:zero explicit-column=True default-keyword=False bound=shipping_method_label->@p11= readback=
+case=shipments.shipping_method_label:nondefault explicit-column=True default-keyword=False bound=shipping_method_label->@p11=Express readback=Express
+server-default items.quantity_packed=0
+server-default items.quantity_processing=0
+server-default shipments.provider_metadata_version=0
+server-default shipments.shipping_method_code=''::character varying
+server-default shipments.shipping_method_label=''::character varying
+explicit-null: 23502 rejected, no row substituted
+raw-omit-column: version=0 code='' label='' packed=0.000000 processing=0.000000
+raw-explicit-null: 23502 rejected

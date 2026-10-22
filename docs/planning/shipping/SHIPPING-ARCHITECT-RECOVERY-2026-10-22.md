@@ -639,3 +639,27 @@ despite complete green evidence; the 35-minute timebox itself was respected (~9 
 has no listener. Whole TB-196
 remains BLOCKED_PENDING_FULL_RELATIONAL_ACCEPTANCE; the old full-schema fixture, storage/unique/race/atomicity gates
 were not run; worker result is not Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.
+
+## Worker pointer — TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13 (PARTIAL, correction-budget declared)
+
+R13 repaired the stale type-catalog harness in TESTS ONLY and then actually executed the PostgreSQL acceptance on a
+task-owned `postgres:17-alpine` at 127.0.0.1:55436 (role tb196, DBs fulfillment_tb196 + fulfillment_tb196_model).
+The fixture is now chronology-correct: pre-type checkpoint 192 objects -> historical type Up adds exactly the 25
+objects owned by the two type tables (removed 0, every legacy object still present) -> accepted R10 pending-index Up
+adds exactly one index ON fulfillment.outbox_messages (removed 0) -> STRICT both-direction whole-manifest equality
+between the current real chain and the canonical GenerateCreateScript projection (218 vs 218, differences 0, no
+classifier/default/name/count exception, history excluded by exact schema/table identity in the SQL). Teardown ran the
+real inverse order with history-row gating: Down index restores 217 objects (0 diff) and Down type restores the 192
+pre-type objects (0 diff), no orphan object, no no-op labelled Down. Storage matrix, revision race with two ACTUAL
+per-context OriginalValues[Revision]=1 tokens and a winner identified from the real outcome, unique create race with
+one complete winning tree, write-only mid-save failure plus REAL caller-token cancellation at the second-write
+boundary (both followed by an unchanged tree and a clean retry), and exact/lookalike constraint ownership all passed.
+R12 default proof was hardened without touching production: unconditional Never/Save/Save assertions and an actual
+column->parameter->submitted-value binding trace persisted in insert-trace-captured.txt, plus executed negatives for a
+changed default and a same-prefix non-history object. Executed 35 tests, 35 passed, 0 failed, 0 skipped; production
+(mapping, all migrations/designers, snapshot) is byte-identical (DbContext F26466311348C46C, R10 C6600940CBEF7D07,
+type catalog 979328491371CD0F/50098BD09979F5F8, snapshot D74FA5C166305E19). Declared process deviation: two
+harness-only corrections were needed (shared id generator; Npgsql '@' prefix on parameter names) where the task
+allowed one, so Status is PARTIAL despite all functional gates passing. Container removed and 55436 has no listener.
+TB-196 remains PENDING_ARCHITECT_REVIEW; Production-Functional-Acceptance PENDING; no certification/manifest
+promotion; worker PASS is not Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.

@@ -1,6 +1,5 @@
 ﻿using System.Data.Common;
 using System.Globalization;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -21,9 +20,10 @@ namespace Tooba.Fulfillment.Tests.Behavior;
 public sealed class TypeCatalogPostgresCollection : ICollectionFixture<TypeCatalogPostgresSchemaFixture>;
 
 /// <summary>
-/// Disposable, task-owned PostgreSQL target for TB-196-R6. Parses and validates the connection string before
-/// any connection, proves live database/user provenance, then executes the historical-versus-model gate once
-/// for the whole collection and records the executed manifests.
+/// Disposable, task-owned PostgreSQL target for TB-196-R13. Parses and validates the connection string before
+/// any connection, proves live database/user provenance, then executes the chronology-correct phased migration
+/// proof once for the whole collection: pre-type checkpoint, historical type Up, accepted pending-index Up,
+/// strict current-chain-versus-current-model equality, and the real inverse Down sequence at teardown.
 /// </summary>
 /// <remarks>
 /// Only the clock, the id generator and the prepared language facts are fixtures. Store, context and the
@@ -33,11 +33,27 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
 {
     public const string PrimaryDatabase = "fulfillment_tb196";
     public const string ModelDatabase = "fulfillment_tb196_model";
+
+    /// <summary>Pre-type checkpoint: the last migration before the shipping-type catalog.</summary>
     public const string PreviousMigration = "20261016120000_AddFulfillmentShippingGroups";
-    public const string LatestMigration = "20261022101415_ShippingTypeCatalog";
+
+    /// <summary>The accepted shipping-type catalog migration under proof.</summary>
+    public const string TypeMigration = "20261022101415_ShippingTypeCatalog";
+
+    /// <summary>The accepted additive pending-outbox-index migration (ACTUAL latest).</summary>
+    public const string LatestMigration = "20261022182208_AddFulfillmentOutboxPendingIndex";
+
     public const string TypeTable = "fulfillment.shipping_types";
     public const string TranslationTable = "fulfillment.shipping_type_translations";
+    public const string OutboxTable = "fulfillment.outbox_messages";
+    public const string PendingIndexName = "ix_outbox_messages_pending";
+    public const string HistoryTable = "__ef_migrations_history";
 
+    /// <summary>
+    /// Complete own-schema catalog manifest. Migration-history objects are excluded here by EXACT
+    /// (schema, table) identity — never by token/prefix matching — for columns, constraints and the owning
+    /// table of every index.
+    /// </summary>
     private const string ManifestSql = """
         select format('column %s.%s.%s %s %s default:%s',
                       n.nspname, c.relname, a.attname,
@@ -50,6 +66,7 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         left join pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum
         where c.relkind in ('r', 'p') and a.attnum > 0 and not a.attisdropped
           and n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
+          and not (n.nspname = 'fulfillment' and c.relname = '__ef_migrations_history')
         union all
         select format('constraint %s.%s %s %s',
                       n.nspname, c.relname, con.conname, pg_get_constraintdef(con.oid))
@@ -57,12 +74,14 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         join pg_class c on c.oid = con.conrelid
         join pg_namespace n on n.oid = c.relnamespace
         where n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
+          and not (n.nspname = 'fulfillment' and c.relname = '__ef_migrations_history')
         union all
         select format('index %s %s', n.nspname, pg_get_indexdef(i.indexrelid))
         from pg_index i
         join pg_class c on c.oid = i.indrelid
         join pg_namespace n on n.oid = c.relnamespace
         where n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
+          and not (n.nspname = 'fulfillment' and c.relname = '__ef_migrations_history')
         order by 1
         """;
 
@@ -77,47 +96,70 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
 
     public MutableClock Clock { get; } = new(new DateTimeOffset(2026, 10, 22, 12, 0, 0, TimeSpan.Zero));
 
+    /// <summary>ONE fixture-scoped generator, so every store in the collection gets globally unique ids.</summary>
+    private readonly SequentialIdGenerator _ids = new();
+
+    // ---- offline metadata gate -------------------------------------------------------------------
+
     public bool SnapshotEqualsCurrentModel { get; private set; }
 
     public IReadOnlyList<string> ModelDifferences { get; private set; } = [];
 
-    public IReadOnlyList<string> LegacyDiscrepancies { get; private set; } = [];
+    /// <summary>ACTUAL latest migration TargetModel versus the canonical design-time model.</summary>
+    public IReadOnlyList<string> LatestTargetModelDifferences { get; private set; } = [];
 
+    public string ActualLatestMigration { get; private set; } = string.Empty;
+
+    // ---- phased historical parity ----------------------------------------------------------------
+
+    /// <summary>Complete manifest at the pre-type checkpoint (no type tables, no pending index).</summary>
     public IReadOnlyList<string> LegacyManifestBeforeUp { get; private set; } = [];
 
-    public IReadOnlyList<string> LegacyManifestAfterUp { get; private set; } = [];
+    /// <summary>Complete manifest after the historical type Up.</summary>
+    public IReadOnlyList<string> ManifestAfterTypeUp { get; private set; } = [];
 
-    public IReadOnlyList<string> LegacyManifestAfterDown { get; private set; } = [];
+    /// <summary>Complete manifest after the accepted pending-index Up (current real chain).</summary>
+    public IReadOnlyList<string> ManifestAfterLatestUp { get; private set; } = [];
 
-    public IReadOnlyList<string> LegacyAfterUpDifferences { get; private set; } = [];
+    /// <summary>Canonical current-model projection manifest from the separate model database.</summary>
+    public IReadOnlyList<string> ModelManifest { get; private set; } = [];
 
-    public IReadOnlyList<string> LegacyAfterDownDifferences { get; private set; } = [];
+    public IReadOnlyList<string> AddedByTypeUp { get; private set; } = [];
 
-    /// <summary>Substantive legacy differences (type/nullability/PK/unique/FK/check presence, index shape).</summary>
-    public IReadOnlyList<string> LegacySubstantiveDifferences { get; private set; } = [];
+    public IReadOnlyList<string> RemovedByTypeUp { get; private set; } = [];
 
-    /// <summary>Non-structural differences kept explicit instead of being ignored.</summary>
-    public IReadOnlyList<string> LegacyDefaultDifferences { get; private set; } = [];
+    public IReadOnlyList<string> ExpectedTypeOwnedObjects { get; private set; } = [];
 
-    /// <summary>Same definition under a different constraint/index name.</summary>
-    public IReadOnlyList<string> LegacyNameDifferences { get; private set; } = [];
+    public IReadOnlyList<string> AddedByLatestUp { get; private set; } = [];
 
-    public IReadOnlyList<string> AddedObjects { get; private set; } = [];
+    public IReadOnlyList<string> RemovedByLatestUp { get; private set; } = [];
 
-    public IReadOnlyList<string> ExpectedAddedObjects { get; private set; } = [];
+    /// <summary>Whole-manifest difference primary-current-chain versus canonical current model (both ways).</summary>
+    public IReadOnlyList<string> CurrentChainVersusModelDifferences { get; private set; } = [];
 
-    public bool DownExecuted { get; private set; }
-
-    /// <summary>True only after the corrected latest migration actually migrated and its history row exists.</summary>
     public bool LatestUpApplied { get; private set; }
-
-    public bool ContainerStillOwned { get; private set; } = true;
-
-    public bool PortReleasedAfterDown { get; private set; }
 
     public int LegacyObjectCount => LegacyManifestBeforeUp.Count;
 
-    public string ForwardSql { get; private set; } = string.Empty;
+    public string ForwardTypeSql { get; private set; } = string.Empty;
+
+    public string ForwardIndexSql { get; private set; } = string.Empty;
+
+    // ---- real inverse Down ----------------------------------------------------------------------
+
+    public bool DownIndexExecuted { get; private set; }
+
+    public bool DownTypeExecuted { get; private set; }
+
+    public IReadOnlyList<string> ManifestAfterDownIndex { get; private set; } = [];
+
+    public IReadOnlyList<string> ManifestAfterDownType { get; private set; } = [];
+
+    public IReadOnlyList<string> DownIndexDifferences { get; private set; } = [];
+
+    public IReadOnlyList<string> DownTypeDifferences { get; private set; } = [];
+
+    public bool ContainerStillOwned { get; private set; } = true;
 
     public async Task InitializeAsync()
     {
@@ -147,16 +189,15 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         Record($"live provenance primary={primaryProvenance} model={modelProvenance}");
 
         await using var modelContext = NewContext(ModelTarget);
-        var snapshot = modelContext.GetService<IMigrationsAssembly>().ModelSnapshot
+        var migrationsAssembly = modelContext.GetService<IMigrationsAssembly>();
+        var snapshot = migrationsAssembly.ModelSnapshot
                        ?? throw new InvalidOperationException("No checked-in ModelSnapshot found.");
-        
+
         var initializer = modelContext.GetService<IModelRuntimeInitializer>();
-        var snapshotModel = initializer.Initialize(
-            snapshot.Model,
-            designTime: true,
-            validationLogger: null);
+        var snapshotModel = initializer.Initialize(snapshot.Model, designTime: true, validationLogger: null);
         var currentModel = modelContext.GetService<IDesignTimeModel>().Model;
         var differ = modelContext.GetService<IMigrationsModelDiffer>();
+
         ModelDifferences = differ
             .GetDifferences(snapshotModel.GetRelationalModel(), currentModel.GetRelationalModel())
             .Select(difference => difference.GetType().Name)
@@ -164,8 +205,23 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         SnapshotEqualsCurrentModel = ModelDifferences.Count == 0;
         Record($"snapshot-vs-current-model differences={ModelDifferences.Count}");
 
-        // FAIL-FAST (R7): in full-schema mode an unproved snapshot/model equivalence must stop the run before any
-        // dependent model projection or Up acceptance. Unknown is never treated as equal.
+        ActualLatestMigration = migrationsAssembly.Migrations.Keys.OrderBy(x => x, StringComparer.Ordinal).Last();
+        Assert.Equal(LatestMigration, ActualLatestMigration);
+        var latestMigration = (Migration)Activator.CreateInstance(
+            migrationsAssembly.Migrations[ActualLatestMigration])!;
+        var latestTargetModel = initializer.Initialize(
+            latestMigration.TargetModel,
+            designTime: true,
+            validationLogger: null);
+        LatestTargetModelDifferences = differ
+            .GetDifferences(latestTargetModel.GetRelationalModel(), currentModel.GetRelationalModel())
+            .Select(difference => difference.GetType().Name)
+            .ToList();
+        Record($"latest {ActualLatestMigration} TargetModel-vs-current-model differences={LatestTargetModelDifferences.Count}");
+
+        // FAIL-FAST: an unproved snapshot/latest-TargetModel equivalence stops the run before any dependent DB proof.
+        VerifyMetadataEquivalence(SnapshotEqualsCurrentModel, ModelDifferences, LatestTargetModelDifferences);
+
         var prerequisite = EvaluateFullSchemaPrerequisite(SnapshotEqualsCurrentModel, ModelDifferences, []);
         if (prerequisite is not null)
         {
@@ -175,107 +231,151 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
             throw new InvalidOperationException(prerequisite);
         }
 
-        // Model database: canonical EF create script from the model that the differ just proved equivalent to
-        // the checked-in snapshot. Applying it makes both manifests PostgreSQL pg_catalog output, so provider
-        // type aliases/formatting are normalized by the provider itself rather than by a hand-written map.
+        // Model database: canonical EF create script from the model the differ just proved equivalent.
         var createScript = modelContext.Database.GenerateCreateScript();
         await ExecuteScriptAsync(ModelTarget, "create schema if not exists fulfillment;");
         await ExecuteScriptAsync(ModelTarget, createScript);
-        var modelManifest = await ManifestAsync(ModelTarget);
-        Record($"model manifest objects={modelManifest.Count}");
+        ModelManifest = await ManifestAsync(ModelTarget);
+        ExpectedTypeOwnedObjects = ModelManifest
+            .Where(line => IsTypeOwned(line))
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToList();
+        Save("01-model-manifest.txt", ModelManifest);
+        Record($"model manifest objects={ModelManifest.Count} type-owned={ExpectedTypeOwnedObjects.Count}");
 
-        var expectedLegacy = LegacyProjection(modelManifest);
-        ExpectedAddedObjects = modelManifest.Except(expectedLegacy).OrderBy(x => x, StringComparer.Ordinal).ToList();
-
+        // ---- PHASE A: the real chain up to the pre-type checkpoint ---------------------------------
         await using (var primary = NewContext())
         {
             var migrator = primary.GetService<IMigrator>();
             await migrator.MigrateAsync(PreviousMigration);
-            ForwardSql = FinePrint(migrator.GenerateScript(PreviousMigration, LatestMigration));
+            ForwardTypeSql = FinePrint(migrator.GenerateScript(PreviousMigration, TypeMigration));
+            ForwardIndexSql = FinePrint(migrator.GenerateScript(TypeMigration, LatestMigration));
         }
 
-        var beforeUpFull = await ManifestAsync(Target);
-        LegacyManifestBeforeUp = LegacyProjection(beforeUpFull);
-        Save("02-historical-legacy-manifest.txt", LegacyManifestBeforeUp);
-        Save("03-model-expected-legacy.txt", expectedLegacy);
-        var classified = Classify(expectedLegacy, LegacyManifestBeforeUp);
-        LegacySubstantiveDifferences = classified.Substantive;
-        LegacyDefaultDifferences = classified.Defaults;
-        LegacyNameDifferences = classified.Names;
-        LegacyDiscrepancies = Diff(expectedLegacy, LegacyManifestBeforeUp);
-        Save("04-historical-vs-model-raw-diff.txt", LegacyDiscrepancies);
-        Save("04a-historical-vs-model-substantive.txt", LegacySubstantiveDifferences);
-        Save("04b-historical-vs-model-defaults.txt", LegacyDefaultDifferences);
-        Save("04c-historical-vs-model-names.txt", LegacyNameDifferences);
-        Record(
-            $"historical legacy objects={LegacyManifestBeforeUp.Count} substantive={LegacySubstantiveDifferences.Count}"
-            + $" defaults={LegacyDefaultDifferences.Count} names={LegacyNameDifferences.Count}");
+        Assert.True(await MigrationAppliedAsync(PreviousMigration), "the pre-type checkpoint must be applied");
+        Assert.False(await MigrationAppliedAsync(TypeMigration), "no type migration may exist before its phase");
+        LegacyManifestBeforeUp = await ManifestAsync(Target);
+        Assert.DoesNotContain(LegacyManifestBeforeUp, line => IsTypeOwned(line));
+        Assert.DoesNotContain(LegacyManifestBeforeUp, line => line.Contains(PendingIndexName, StringComparison.Ordinal));
+        Save("02-phase-a-pre-type-manifest.txt", LegacyManifestBeforeUp);
+        Save("03-phase-a-to-type-forward.sql", [ForwardTypeSql]);
+        Record($"phase A pre-type manifest objects={LegacyManifestBeforeUp.Count}");
 
-        // FAIL-FAST (R7): substantive legacy discrepancies are a recorded blocker; never proceed to latest Up.
-        var legacyPrerequisite = EvaluateFullSchemaPrerequisite(
-            true,
-            [],
-            LegacySubstantiveDifferences);
-        if (legacyPrerequisite is not null)
-        {
-            Save("01-target-and-model.txt", _evidence);
-            Save("00-prerequisite-stop.txt", [legacyPrerequisite]);
-            throw new InvalidOperationException(legacyPrerequisite);
-        }
-
+        // ---- PHASE B: historical type Up is strictly additive and only type-owned -------------------
+        var legacyBeforeCount = LegacyManifestBeforeUp.Count;
         await using (var primary = NewContext())
         {
-            Save("01-target-and-model.txt", _evidence);
+            await primary.GetService<IMigrator>().MigrateAsync(TypeMigration);
+        }
+
+        Assert.True(await MigrationAppliedAsync(TypeMigration), "the type migration history row must exist");
+        ManifestAfterTypeUp = await ManifestAsync(Target);
+        AddedByTypeUp = ManifestAfterTypeUp.Except(LegacyManifestBeforeUp, StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal).ToList();
+        RemovedByTypeUp = LegacyManifestBeforeUp.Except(ManifestAfterTypeUp, StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal).ToList();
+        Save("04-phase-b-added-by-type.txt", AddedByTypeUp);
+        Save("05-phase-b-removed-by-type.txt", RemovedByTypeUp);
+        Record(
+            $"phase B added={AddedByTypeUp.Count} removed={RemovedByTypeUp.Count}"
+            + $" legacy-before={legacyBeforeCount} after={ManifestAfterTypeUp.Count}");
+        Assert.Empty(RemovedByTypeUp);
+        Assert.Equal(ExpectedTypeOwnedObjects, AddedByTypeUp);
+        Assert.All(AddedByTypeUp, line => Assert.True(
+            IsTypeOwned(line),
+            $"the type Up may add only objects owned by the two type tables but added: {line}"));
+        Assert.Equal(
+            legacyBeforeCount,
+            ManifestAfterTypeUp.Count(line => !IsTypeOwned(line)));
+
+        // ---- PHASE C: accepted pending-index Up adds exactly one owned index ------------------------
+        await using (var primary = NewContext())
+        {
             await primary.GetService<IMigrator>().MigrateAsync(LatestMigration);
         }
 
-        // History row must exist before Down can be claimed as anything.
-        LatestUpApplied = await LatestMigrationAppliedAsync();
-        var afterUp = await ManifestAsync(Target);
-        LegacyManifestAfterUp = LegacyProjection(afterUp);
-        LegacyAfterUpDifferences = Diff(expectedLegacy, LegacyManifestAfterUp);
-        AddedObjects = afterUp.Except(beforeUpFull).OrderBy(x => x, StringComparer.Ordinal).ToList();
-        Save("05-additive-up.txt", AddedObjects);
-        Save("06-forward-sql.sql", [ForwardSql]);
-        Record($"after up added={AddedObjects.Count} legacy-differences={LegacyAfterUpDifferences.Count}");
+        LatestUpApplied = await MigrationAppliedAsync(LatestMigration);
+        Assert.True(LatestUpApplied, "the accepted pending-index migration history row must exist");
+        ManifestAfterLatestUp = await ManifestAsync(Target);
+        AddedByLatestUp = ManifestAfterLatestUp.Except(ManifestAfterTypeUp, StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal).ToList();
+        RemovedByLatestUp = ManifestAfterTypeUp.Except(ManifestAfterLatestUp, StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal).ToList();
+        Save("06-phase-c-added-by-index.txt", AddedByLatestUp);
+        Save("07-phase-c-removed-by-index.txt", RemovedByLatestUp);
+        Save("08-phase-c-forward.sql", [ForwardIndexSql]);
+        Record($"phase C added={AddedByLatestUp.Count} removed={RemovedByLatestUp.Count}");
+        Assert.Empty(RemovedByLatestUp);
+        var addedIndex = Assert.Single(AddedByLatestUp);
+        Assert.Contains(PendingIndexName, addedIndex, StringComparison.Ordinal);
+        Assert.Contains($" ON {OutboxTable} ", addedIndex, StringComparison.Ordinal);
 
-        Save("01-target-and-model.txt", _evidence);
-        Save("02-historical-legacy-manifest.txt", LegacyManifestBeforeUp);
-        Save("03-model-expected-legacy.txt", expectedLegacy);
-        Save("04-historical-vs-model-diff.txt", LegacyDiscrepancies);
-        Save("05-additive-up.txt", AddedObjects);
-        Save("06-forward-sql.sql", [ForwardSql]);
+        // ---- PHASE D: STRICT current-chain versus canonical current model --------------------------
+        CurrentChainVersusModelDifferences = Diff(ModelManifest, ManifestAfterLatestUp);
+        Save("09-current-chain-vs-model-strict-diff.txt", CurrentChainVersusModelDifferences);
+        Save("10-current-chain-manifest.txt", ManifestAfterLatestUp);
+        Record(
+            $"phase D current-chain={ManifestAfterLatestUp.Count} model={ModelManifest.Count}"
+            + $" differences={CurrentChainVersusModelDifferences.Count}");
+        Assert.Empty(CurrentChainVersusModelDifferences);
+        Assert.Equal(ModelManifest, ManifestAfterLatestUp);
+
+        Save("11-execution-log.txt", _evidence);
     }
 
     public async Task DisposeAsync()
     {
         if (!CanRun || LegacyManifestBeforeUp.Count == 0 || !LatestUpApplied)
         {
-            // HONEST BOOKKEEPING (R7): no latest Up means no Down. A no-op equality is never Down parity.
-            DownExecuted = false;
-            Save("09-execution-log.txt",
+            // HONEST BOOKKEEPING: no latest Up means no Down. A no-op equality is never Down parity.
+            DownIndexExecuted = false;
+            DownTypeExecuted = false;
+            Save("19-execution-log.txt",
                 [.. _evidence, $"latest Up applied={LatestUpApplied}; Down NOT executed (cleanup/no-op)"]);
             return;
         }
 
-        await using var primary = NewContext();
-        await primary.GetService<IMigrator>().MigrateAsync(PreviousMigration);
-        DownExecuted = !await LatestMigrationAppliedAsync();
-        LegacyManifestAfterDown = LegacyProjection(await ManifestAsync(Target));
-        LegacyAfterDownDifferences = Diff(LegacyManifestBeforeUp, LegacyManifestAfterDown);
-        Record($"after-down legacy objects={LegacyManifestAfterDown.Count} differences={LegacyAfterDownDifferences.Count}");
-        Save("07-after-down-legacy.txt", LegacyManifestAfterDown);
-        Save("08-after-down-diff.txt", LegacyAfterDownDifferences);
-        Save("09-execution-log.txt", _evidence);
+        // ---- REAL INVERSE DOWN 1: index migration -> type checkpoint --------------------------------
+            Assert.True(await MigrationAppliedAsync(LatestMigration), "Down 1 requires an applied index migration");
+            await using (var primary = NewContext())
+            {
+                await primary.GetService<IMigrator>().MigrateAsync(TypeMigration);
+            }
 
-        // Down must not recreate or drop legacy objects; the module history is the only difference.
-        Assert.Empty(LegacyAfterDownDifferences);
+            DownIndexExecuted = true;
+            Assert.False(await MigrationAppliedAsync(LatestMigration), "the index migration row must be gone after Down 1");
+            ManifestAfterDownIndex = await ManifestAsync(Target);
+            DownIndexDifferences = Diff(ManifestAfterTypeUp, ManifestAfterDownIndex);
+            Save("15-after-down-index-manifest.txt", ManifestAfterDownIndex);
+            Save("16-after-down-index-diff.txt", DownIndexDifferences);
+            Record($"down 1 objects={ManifestAfterDownIndex.Count} differences={DownIndexDifferences.Count}");
+            Assert.Empty(DownIndexDifferences);
+            Assert.DoesNotContain(ManifestAfterDownIndex, line => line.Contains(PendingIndexName, StringComparison.Ordinal));
+
+            // ---- REAL INVERSE DOWN 2: type migration -> pre-type checkpoint -----------------------------
+            Assert.True(await MigrationAppliedAsync(TypeMigration), "Down 2 requires an applied type migration");
+            await using (var primary = NewContext())
+            {
+                await primary.GetService<IMigrator>().MigrateAsync(PreviousMigration);
+            }
+
+            DownTypeExecuted = true;
+            Assert.False(await MigrationAppliedAsync(TypeMigration), "the type migration row must be gone after Down 2");
+            ManifestAfterDownType = await ManifestAsync(Target);
+            DownTypeDifferences = Diff(LegacyManifestBeforeUp, ManifestAfterDownType);
+            Save("17-after-down-type-manifest.txt", ManifestAfterDownType);
+            Save("18-after-down-type-diff.txt", DownTypeDifferences);
+            Record($"down 2 objects={ManifestAfterDownType.Count} differences={DownTypeDifferences.Count}");
+            Assert.Empty(DownTypeDifferences);
+            Assert.DoesNotContain(ManifestAfterDownType, line => IsTypeOwned(line));
+            Save("19-execution-log.txt", _evidence);
     }
+
+    public bool PortReleasedAfterDown { get; private set; }
 
     /// <summary>
     /// Full-schema acceptance prerequisites. Returns a concrete diagnostic when the run must stop, or
-    /// <see langword="null"/> when both the snapshot equivalence and the legacy comparison are green.
-    /// Unknown is never converted into "equal".
+    /// <see langword="null"/> when the legacy comparison is green. Unknown is never converted into "equal".
     /// </summary>
     public static string? EvaluateFullSchemaPrerequisite(
         bool snapshotEqualsCurrentModel,
@@ -301,14 +401,77 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         return null;
     }
 
-    private async Task<bool> LatestMigrationAppliedAsync()
+    /// <summary>Offline metadata-equivalence gate: snapshot AND actual latest TargetModel must both be 0/0.</summary>
+    public static void VerifyMetadataEquivalence(
+        bool snapshotEqualsCurrentModel,
+        IReadOnlyList<string> snapshotDifferences,
+        IReadOnlyList<string> latestTargetModelDifferences)
+    {
+        if (!snapshotEqualsCurrentModel || latestTargetModelDifferences.Count > 0)
+        {
+            throw new InvalidOperationException(
+                "STOP: model metadata equivalence is UNPROVEN (snapshot differences="
+                + $"{snapshotDifferences.Count}: {string.Join(", ", snapshotDifferences.Distinct(StringComparer.Ordinal).Take(8))};"
+                + $" latest TargetModel differences={latestTargetModelDifferences.Count}: "
+                + $"{string.Join(", ", latestTargetModelDifferences.Distinct(StringComparer.Ordinal).Take(8))}). "
+                + "No database projection or migration phase may be claimed from an unproved prerequisite.");
+        }
+    }
+
+    /// <summary>
+    /// Exact owning-table identity of a manifest line. Only the (schema, table) pair is returned — never a
+    /// token/prefix match — so a lookalike name cannot be suppressed by accident.
+    /// </summary>
+    public static string OwningTable(string line)
+    {
+        if (line.StartsWith("column ", StringComparison.Ordinal))
+        {
+            var qualified = line.Split(' ')[1];
+            return JoinSchemaTable(qualified);
+        }
+
+        if (line.StartsWith("constraint ", StringComparison.Ordinal))
+        {
+            return line.Split(' ')[1];
+        }
+
+        if (line.StartsWith("index ", StringComparison.Ordinal))
+        {
+            var onIndex = line.IndexOf(" ON ", StringComparison.Ordinal);
+            if (onIndex < 0)
+            {
+                return string.Empty;
+            }
+
+            var tail = line[(onIndex + 4)..];
+            var table = tail.Split(' ')[0];
+            return JoinSchemaTable(table);
+        }
+
+        return string.Empty;
+    }
+
+    private static string JoinSchemaTable(string qualified)
+    {
+        var parts = qualified.Split('.');
+        return parts.Length < 2 ? qualified : $"{parts[0]}.{parts[1]}";
+    }
+
+    /// <summary>True only when the object is owned by one of the two shipping-type tables.</summary>
+    public static bool IsTypeOwned(string line)
+    {
+        var owner = OwningTable(line);
+        return owner is TypeTable or TranslationTable;
+    }
+
+    public async Task<bool> MigrationAppliedAsync(string migrationId)
     {
         await using var connection = new NpgsqlConnection(Target.ConnectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = $"select count(*) from {FulfillmentDbContext.Schema}.__ef_migrations_history "
+        command.CommandText = $"select count(*) from {FulfillmentDbContext.Schema}.{HistoryTable} "
                               + "where migration_id = @id";
-        command.Parameters.AddWithValue("id", LatestMigration);
+        command.Parameters.AddWithValue("id", migrationId);
         return Convert.ToInt64(await command.ExecuteScalarAsync(), CultureInfo.InvariantCulture) > 0;
     }
 
@@ -337,11 +500,12 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
                 (target ?? Target).ConnectionString,
                 builder =>
                 {
-                    builder.MigrationsHistoryTable("__ef_migrations_history", FulfillmentDbContext.Schema);
+                    builder.MigrationsHistoryTable(HistoryTable, FulfillmentDbContext.Schema);
                     builder.MigrationsAssembly(typeof(FulfillmentDbContext).Assembly.FullName);
                     builder.MaxBatchSize(size);
                 });
         }
+
         if (commandInterceptor is not null)
         {
             options.AddInterceptors(commandInterceptor);
@@ -356,27 +520,28 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
     }
 
     public ShippingTypeStore NewStore(FulfillmentDbContext db) =>
-        new(db, Clock, new SequentialIdGenerator());
+        new(db, Clock, _ids);
 
     public IShippingTypeReader NewReader(FulfillmentDbContext db) => NewStore(db);
 
-    public async Task<RawRow> ReadRawAsync(Guid id)
+    /// <summary>Raw read-back using the ACTUAL accepted snake_case column names.</summary>
+    public async Task<RawRow> ReadRawAsync(Guid id, Guid? languageId = null)
     {
         await using var connection = new NpgsqlConnection(Target.ConnectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            select t."Revision"::text, t."UpdatedAt"::text, t."CreatedAt"::text,
-                   coalesce((select tr."Name" from fulfillment.shipping_type_translations tr
-                             where tr."ShippingTypeId" = t."ShippingTypeId" and tr."LanguageId" = @fa), ''),
-                   coalesce((select tr."Description" from fulfillment.shipping_type_translations tr
-                             where tr."ShippingTypeId" = t."ShippingTypeId" and tr."LanguageId" = @fa), ''),
+            select t.revision::text, t.updated_at::text, t.created_at::text,
+                   coalesce((select tr.name from fulfillment.shipping_type_translations tr
+                             where tr.shipping_type_id = t.shipping_type_id and tr.language_id = @lang), ''),
+                   coalesce((select tr.description from fulfillment.shipping_type_translations tr
+                             where tr.shipping_type_id = t.shipping_type_id and tr.language_id = @lang), ''),
                    (select count(*)::text from fulfillment.shipping_type_translations tr
-                    where tr."ShippingTypeId" = t."ShippingTypeId")
-            from fulfillment.shipping_types t where t."ShippingTypeId" = @id
+                    where tr.shipping_type_id = t.shipping_type_id)
+            from fulfillment.shipping_types t where t.shipping_type_id = @id
             """;
         command.Parameters.AddWithValue("id", id);
-        command.Parameters.AddWithValue("fa", Guid.Parse("01900000-0000-7000-8000-00000000cc01"));
+        command.Parameters.AddWithValue("lang", languageId ?? Guid.Parse("01900000-0000-7000-8000-00000000cc01"));
         await using var reader = await command.ExecuteReaderAsync();
         Assert.True(await reader.ReadAsync(), "row must exist");
         return new RawRow(
@@ -393,9 +558,9 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         await using var connection = new NpgsqlConnection(Target.ConnectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "select \"Revision\" from fulfillment.shipping_types where \"ShippingTypeId\" = @id";
+        command.CommandText = "select revision from fulfillment.shipping_types where shipping_type_id = @id";
         command.Parameters.AddWithValue("id", id);
-        return (long)(await command.ExecuteScalarAsync() ?? 0L);
+        return Convert.ToInt64(await command.ExecuteScalarAsync(), CultureInfo.InvariantCulture);
     }
 
     public async Task<int> CountRawAsync(string code)
@@ -403,7 +568,7 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         await using var connection = new NpgsqlConnection(Target.ConnectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "select count(*) from fulfillment.shipping_types where \"Code\" = @code";
+        command.CommandText = "select count(*) from fulfillment.shipping_types where code = @code";
         command.Parameters.AddWithValue("code", code);
         return Convert.ToInt32(await command.ExecuteScalarAsync(), CultureInfo.InvariantCulture);
     }
@@ -471,7 +636,7 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
     private async Task<(string Database, string User, int Port)> LiveProvenanceAsync(
         NpgsqlConnectionStringBuilder target)
     {
-        using var connection = new NpgsqlConnection(target.ConnectionString);
+        await using var connection = new NpgsqlConnection(target.ConnectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = "select current_database(), current_user, inet_server_port()";
@@ -511,14 +676,8 @@ public sealed class TypeCatalogPostgresSchemaFixture : IAsyncLifetime
         return lines;
     }
 
-    /// <summary>Expected legacy projection: drop ONLY the two new type tables and migration-history infra.</summary>
-    private static List<string> LegacyProjection(IReadOnlyList<string> manifest) =>
-        manifest
-            .Where(line => !line.Contains("shipping_type", StringComparison.Ordinal))
-            .Where(line => !line.Contains("migrations_history", StringComparison.OrdinalIgnoreCase)  || line.Contains("__EFMigrationsHistory", StringComparison.Ordinal))
-            .ToList();
-
-    private static List<string> Diff(IReadOnlyList<string> expected, IReadOnlyList<string> actual)
+    /// <summary>Both-direction whole-manifest difference, sorted. Empty means byte-equal sets.</summary>
+    public static List<string> Diff(IReadOnlyList<string> expected, IReadOnlyList<string> actual)
     {
         var differences = new List<string>();
         foreach (var line in expected.Except(actual, StringComparer.Ordinal))
@@ -721,20 +880,43 @@ public sealed class SequentialIdGenerator : IIdGenerator
         Guid.Parse($"01900000-0000-7000-8000-{(Interlocked.Increment(ref _next) + 0xcc00000000):x12}");
 }
 
-/// <summary>Two-arrival barrier on the FIRST <c>SavingChanges</c> of independent contexts.</summary>
+/// <summary>
+/// Two-arrival barrier on the FIRST <c>SavingChanges</c> of independent contexts. At that exact boundary it
+/// records the ACTUAL tracked <c>ShippingType</c> entry's <c>OriginalValues["Revision"]</c> for the arriving
+/// context, so the race proof rests on the real concurrency token rather than a copied view revision.
+/// </summary>
 public sealed class TwoArrivalGate(int expectedArrivals = 2) : SaveChangesInterceptor
 {
     private readonly TaskCompletionSource _bothArrived = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly object _sync = new();
+    private readonly List<long> _originalRevisions = [];
     private int _arrivals;
 
     public int Arrivals => Volatile.Read(ref _arrivals);
+
+    /// <summary>One entry per arriving context that actually tracked a <c>ShippingType</c> root.</summary>
+    public IReadOnlyList<long> OriginalRevisions
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return [.. _originalRevisions];
+            }
+        }
+    }
 
     public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
+        if (eventData.Context is { } context)
+        {
+            CaptureOriginalRevision(context);
+        }
+
         if (Interlocked.Increment(ref _arrivals) >= expectedArrivals)
         {
             _bothArrived.TrySetResult();
@@ -744,46 +926,99 @@ public sealed class TwoArrivalGate(int expectedArrivals = 2) : SaveChangesInterc
         return result;
     }
 
+    private void CaptureOriginalRevision(DbContext context)
+    {
+        foreach (var entry in context.ChangeTracker.Entries())
+        {
+            if (entry.Metadata.ClrType.Name != "ShippingType")
+            {
+                continue;
+            }
+
+            if (entry.State is EntityState.Unchanged or EntityState.Detached)
+            {
+                continue;
+            }
+
+            var revision = entry.OriginalValues["Revision"];
+            if (revision is null)
+            {
+                continue;
+            }
+
+            lock (_sync)
+            {
+                _originalRevisions.Add(Convert.ToInt64(revision, CultureInfo.InvariantCulture));
+            }
+
+            return;
+        }
+    }
+
     public Task WaitForBothArrivalsAsync(TimeSpan timeout) => _bothArrived.Task.WaitAsync(timeout);
 
     public void Release() => _release.TrySetResult();
 }
 
-/// <summary>Fails the Nth real statement, after at least one statement has completed.</summary>
-public sealed class StatementFailureInterceptor(int failAtCommand, Exception? exception) : DbCommandInterceptor
+/// <summary>
+/// Fails the Nth REAL write statement (INSERT/UPDATE/DELETE only — reads never count and never satisfy the
+/// "first write completed" bookkeeping). Optionally cancels the caller's real token at that exact boundary,
+/// so the observed cancellation is genuine rather than an uncancelled synthetic exception.
+/// </summary>
+public sealed class StatementFailureInterceptor(
+    int failAtWrite,
+    Exception? exception = null,
+    CancellationTokenSource? cancelAtFailure = null) : DbCommandInterceptor
 {
-    private int _commands;
+    private readonly object _sync = new();
+    private readonly List<string> _completedWrites = [];
+    private readonly List<string> _attemptedWrites = [];
+    private int _writes;
 
-    public bool FirstCommandCompleted { get; private set; }
+    public bool FirstWriteCompleted
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _completedWrites.Count == 1;
+            }
+        }
+    }
 
-    public override async ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(
+    public IReadOnlyList<string> CompletedWrites
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return [.. _completedWrites];
+            }
+        }
+    }
+
+    /// <summary>The second real write that was attempted but never completed.</summary>
+    public string? SecondWriteAttempt
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _attemptedWrites.Count >= 2 ? _attemptedWrites[1] : null;
+            }
+        }
+    }
+
+    public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(
         DbCommand command,
         CommandEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
-        await GateAsync(cancellationToken);
-        return result;
-    }
-
-    public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
-        DbCommand command,
-        CommandEventData eventData,
-        InterceptionResult<DbDataReader> result,
-        CancellationToken cancellationToken = default)
-    {
-        await GateAsync(cancellationToken);
-        return result;
-    }
-
-    public override ValueTask<DbDataReader> ReaderExecutedAsync(
-        DbCommand command,
-        CommandExecutedEventData eventData,
-        DbDataReader result,
-        CancellationToken cancellationToken = default)
-    {
-        FirstCommandCompleted = true;
-        return ValueTask.FromResult(result);
+        var failure = Gate(command, cancellationToken);
+        return failure is null
+            ? ValueTask.FromResult(result)
+            : ValueTask.FromException<InterceptionResult<int>>(failure);
     }
 
     public override ValueTask<int> NonQueryExecutedAsync(
@@ -792,19 +1027,94 @@ public sealed class StatementFailureInterceptor(int failAtCommand, Exception? ex
         int result,
         CancellationToken cancellationToken = default)
     {
-        FirstCommandCompleted = true;
+        Completed(command);
         return ValueTask.FromResult(result);
     }
 
-    private Task GateAsync(CancellationToken cancellationToken)
+    public override int NonQueryExecuted(
+        DbCommand command,
+        CommandExecutedEventData eventData,
+        int result)
     {
-        var position = Interlocked.Increment(ref _commands);
-        if (position == failAtCommand)
+        Completed(command);
+        return result;
+    }
+
+    public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+        DbCommand command,
+        CommandEventData eventData,
+        InterceptionResult<DbDataReader> result,
+        CancellationToken cancellationToken = default)
+    {
+        // Reads are explicitly NOT writes: they neither increment the counter nor complete a write.
+        var failure = Gate(command, cancellationToken);
+        return failure is null
+            ? ValueTask.FromResult(result)
+            : ValueTask.FromException<InterceptionResult<DbDataReader>>(failure);
+    }
+
+    public override ValueTask<DbDataReader> ReaderExecutedAsync(
+        DbCommand command,
+        CommandExecutedEventData eventData,
+        DbDataReader result,
+        CancellationToken cancellationToken = default)
+    {
+        Completed(command);
+        return ValueTask.FromResult(result);
+    }
+
+    private Exception? Gate(DbCommand command, CancellationToken cancellationToken)
+    {
+        if (!IsWrite(command))
         {
-            return Task.FromException(exception ?? new InvalidOperationException("injected mid-save failure"));
+            return null;
         }
 
-        return Task.CompletedTask;
+        int position;
+        lock (_sync)
+        {
+            position = ++_writes;
+            _attemptedWrites.Add(Describe(command));
+        }
+
+        if (position != failAtWrite)
+        {
+            return null;
+        }
+
+        cancelAtFailure?.Cancel();
+        if (exception is not null)
+        {
+            return exception;
+        }
+
+        return cancelAtFailure is not null
+            ? new OperationCanceledException(cancelAtFailure.Token)
+            : new InvalidOperationException("injected mid-save failure");
+    }
+
+    private void Completed(DbCommand command)
+    {
+        if (!IsWrite(command))
+        {
+            return;
+        }
+
+        lock (_sync)
+        {
+            _completedWrites.Add(Describe(command));
+        }
+    }
+
+    private static bool IsWrite(DbCommand command) =>
+        command.CommandText.StartsWith("INSERT ", StringComparison.OrdinalIgnoreCase)
+        || command.CommandText.StartsWith("UPDATE ", StringComparison.OrdinalIgnoreCase)
+        || command.CommandText.StartsWith("DELETE ", StringComparison.OrdinalIgnoreCase);
+
+    private static string Describe(DbCommand command)
+    {
+        var text = command.CommandText.ReplaceLineEndings(" ");
+        return text.Length <= 160 ? text : text[..160];
     }
 }
 
@@ -812,6 +1122,9 @@ public sealed class StatementFailureInterceptor(int failAtCommand, Exception? ex
 public sealed class SyntheticProviderFailureInterceptor(string constraintName, string sqlState) : SaveChangesInterceptor
 {
     private bool _thrown;
+
+    /// <summary>The exact injected instance, so the caller can assert identity-preserving propagation.</summary>
+    public DbUpdateException? Injected { get; private set; }
 
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
@@ -824,7 +1137,7 @@ public sealed class SyntheticProviderFailureInterceptor(string constraintName, s
         }
 
         _thrown = true;
-        throw new DbUpdateException(
+        Injected = new DbUpdateException(
             "synthetic provider failure",
             new PostgresException(
                 "synthetic",
@@ -832,6 +1145,7 @@ public sealed class SyntheticProviderFailureInterceptor(string constraintName, s
                 "ERROR",
                 sqlState,
                 constraintName: constraintName));
+        throw Injected;
     }
 }
 

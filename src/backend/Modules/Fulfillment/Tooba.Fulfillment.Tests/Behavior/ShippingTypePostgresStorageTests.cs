@@ -9,21 +9,20 @@ using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Fulfillment.Infrastructure.Shipping;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace Tooba.Fulfillment.Tests.Behavior;
 
 /// <summary>
-/// TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R6 — real PostgreSQL proof for the existing Fulfillment type
-/// catalog: historical migrated schema versus the regenerated snapshot, additive latest Up, real storage
-/// invariants, strict revision and unique-code races, mid-save rollback/cancellation and exact constraint
+/// TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R13 — real PostgreSQL proof for the existing Fulfillment type
+/// catalog on a CHRONOLOGY-CORRECT fixture: pre-type checkpoint, historical type Up, accepted pending-index Up,
+/// strict current-chain-versus-current-model equality, real inverse Down, real storage invariants, strict
+/// original-token and unique races, write-only mid-save rollback/caller cancellation and exact constraint
 /// ownership.
 /// </summary>
 /// <remarks>
 /// Only the clock, id generator and prepared language facts are fixtures; store, context, mappings and the
-/// checked-in migrations are production code. This is storage/schema evidence, not production functional
-/// acceptance. PostgreSQL schema is the disposable task target described by
-/// <see cref="TypeCatalogPostgresSchemaFixture"/>.
+/// checked-in migrations are production code. This is bounded storage/schema evidence, not production
+/// functional acceptance.
 /// </remarks>
 [Collection(nameof(TypeCatalogPostgresCollection))]
 public sealed class ShippingTypePostgresStorageTests(
@@ -64,36 +63,93 @@ public sealed class ShippingTypePostgresStorageTests(
     }
 
     // ---------------------------------------------------------------------------------------------
-    // GATE 1 — historical schema versus regenerated snapshot, additive Up
+    // GATE 1 — offline metadata gate, phased historical additivity, strict current parity
     // ---------------------------------------------------------------------------------------------
 
     [Fact]
-    public void Historical_legacy_schema_matches_the_regenerated_snapshot_projection()
+    public void Snapshot_and_actual_latest_target_model_both_equal_the_design_time_model()
     {
         Require();
         Assert.True(schema.SnapshotEqualsCurrentModel,
             $"snapshot must equal design-time model; differences: {string.Join("; ", schema.ModelDifferences)}");
         Assert.Empty(schema.ModelDifferences);
-        Assert.Empty(schema.LegacySubstantiveDifferences);
+        Assert.Empty(schema.LatestTargetModelDifferences);
+        Assert.Equal(TypeCatalogPostgresSchemaFixture.LatestMigration, schema.ActualLatestMigration);
         output.WriteLine(
-            $"defaults={schema.LegacyDefaultDifferences.Count} names={schema.LegacyNameDifferences.Count}");
-        Assert.True(schema.LegacyObjectCount > 0);
-        output.WriteLine($"legacy objects={schema.LegacyObjectCount}");
+            $"snapshot=0 latest-target-model=0 actual-latest={schema.ActualLatestMigration}");
     }
 
     [Fact]
-    public void Latest_up_is_additive_and_touches_no_legacy_object()
+    public void Metadata_equivalence_gate_stops_on_any_snapshot_or_latest_target_model_difference()
+    {
+        TypeCatalogPostgresSchemaFixture.VerifyMetadataEquivalence(true, [], []);
+
+        var snapshotStop = Assert.Throws<InvalidOperationException>(
+            () => TypeCatalogPostgresSchemaFixture.VerifyMetadataEquivalence(false, ["CreateTableOperation"], []));
+        Assert.Contains("UNPROVEN", snapshotStop.Message, StringComparison.Ordinal);
+
+        var latestStop = Assert.Throws<InvalidOperationException>(
+            () => TypeCatalogPostgresSchemaFixture.VerifyMetadataEquivalence(true, [], ["AlterColumnOperation"]));
+        Assert.Contains("latest TargetModel differences=1", latestStop.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Historical_type_up_is_additive_and_adds_exactly_the_two_owned_tables()
     {
         Require();
-        Assert.Empty(schema.LegacyAfterUpDifferences);
-        Assert.NotEmpty(schema.AddedObjects);
-        Assert.Equal(schema.ExpectedAddedObjects, schema.AddedObjects);
-        Assert.All(schema.AddedObjects, line =>
-            Assert.True(
-                line.Contains("shipping_types", StringComparison.Ordinal)
-                || line.Contains("shipping_type_translations", StringComparison.Ordinal),
-                $"latest Up must add only owned type objects but added: {line}"));
-        output.WriteLine($"added objects={schema.AddedObjects.Count}");
+        Assert.Empty(schema.RemovedByTypeUp);
+        var added = schema.AddedByTypeUp;
+        Assert.NotEmpty(added);
+        Assert.Equal(schema.ExpectedTypeOwnedObjects, added);
+        Assert.All(added, line => Assert.True(
+            TypeCatalogPostgresSchemaFixture.IsTypeOwned(line),
+            $"the type Up may add only objects owned by the two type tables but added: {line}"));
+
+        var owners = added.Select(TypeCatalogPostgresSchemaFixture.OwningTable).Distinct(StringComparer.Ordinal).ToList();
+        Assert.Equal(
+            new[] { TypeCatalogPostgresSchemaFixture.TypeTable, TypeCatalogPostgresSchemaFixture.TranslationTable }
+                .OrderBy(x => x, StringComparer.Ordinal),
+            owners.OrderBy(x => x, StringComparer.Ordinal));
+
+        // every pre-existing (legacy) object is still present, byte-identical
+        Assert.All(schema.LegacyManifestBeforeUp, line => Assert.Contains(line, schema.ManifestAfterTypeUp));
+        Assert.Equal(
+            schema.LegacyManifestBeforeUp.Count,
+            schema.ManifestAfterTypeUp.Count(line => !TypeCatalogPostgresSchemaFixture.IsTypeOwned(line)));
+
+        output.WriteLine($"type-owned added={added.Count} owners={string.Join(",", owners)}");
+    }
+
+    [Fact]
+    public void Accepted_pending_index_up_adds_only_that_one_index_on_the_outbox_table()
+    {
+        Require();
+        Assert.True(schema.LatestUpApplied);
+        Assert.Empty(schema.RemovedByLatestUp);
+        var added = Assert.Single(schema.AddedByLatestUp);
+        Assert.Contains(TypeCatalogPostgresSchemaFixture.PendingIndexName, added, StringComparison.Ordinal);
+        Assert.Equal(
+            TypeCatalogPostgresSchemaFixture.OutboxTable,
+            TypeCatalogPostgresSchemaFixture.OwningTable(added));
+        Assert.Equal(
+            schema.ManifestAfterTypeUp.Count,
+            schema.ManifestAfterLatestUp.Count - 1);
+        output.WriteLine($"index added: {added}");
+    }
+
+    [Fact]
+    public void Current_real_chain_matches_the_canonical_model_exactly_with_no_classified_exception()
+    {
+        Require();
+        Assert.Empty(schema.CurrentChainVersusModelDifferences);
+        Assert.Equal(schema.ModelManifest, schema.ManifestAfterLatestUp);
+        // the two type tables and the pending index must be present on both sides at CURRENT chain
+        Assert.Contains(schema.ManifestAfterLatestUp,
+            line => TypeCatalogPostgresSchemaFixture.OwningTable(line) == TypeCatalogPostgresSchemaFixture.TypeTable);
+        Assert.Contains(schema.ManifestAfterLatestUp,
+            line => line.Contains(TypeCatalogPostgresSchemaFixture.PendingIndexName, StringComparison.Ordinal));
+        output.WriteLine(
+            $"current-chain={schema.ManifestAfterLatestUp.Count} model={schema.ModelManifest.Count} differences=0");
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -166,6 +222,7 @@ public sealed class ShippingTypePostgresStorageTests(
                 [T(En, "Ordinary v2", "English v2")], Fa, CancellationToken.None));
             Assert.Equal(FulfillmentErrorCodes.ShippingTypeRevisionConflict, stale.Error.Code);
             Assert.Equal(after.UpdatedAt, (await schema.ReadRawAsync(id)).UpdatedAt);
+            Assert.Equal(6, await schema.ReadRootRevisionAsync(id));
         }
     }
 
@@ -184,34 +241,37 @@ public sealed class ShippingTypePostgresStorageTests(
 
             string HeaderInsert(string code, int sort, int revision) =>
                 "insert into fulfillment.shipping_types "
-                + "(\"ShippingTypeId\",\"Code\",\"SortOrder\",\"IsActive\",\"Revision\",\"CreatedAt\",\"UpdatedAt\") "
+                + "(shipping_type_id,code,sort_order,is_active,revision,created_at,updated_at) "
                 + $"values ('{newId}','{code}',{sort},false,{revision},now(),now())";
 
-            string TranslationInsert(string typeId, Guid languageId, string name, string? description) =>
+            string TranslationInsert(Guid typeId, Guid languageId, string name, string? description) =>
                 "insert into fulfillment.shipping_type_translations "
-                + "(\"ShippingTypeTranslationId\",\"ShippingTypeId\",\"LanguageId\",\"Name\",\"Description\") "
+                + "(shipping_type_translation_id,shipping_type_id,language_id,name,description) "
                 + $"values ('{Guid.NewGuid()}','{typeId}','{languageId}','{name}',"
                 + (description is null ? "null" : $"'{description}'") + ")";
 
             cases.Add(("duplicate-code",
                 HeaderInsert("parent_type", 3, 1), "23505", "ix_shipping_types_code"));
             cases.Add(("duplicate-type-language",
-                TranslationInsert(parentId.ToString(), Fa, "تکراری", null), "23505",
+                TranslationInsert(parentId, Fa, "تکراری", null), "23505",
                 "ix_shipping_type_translations_type_language"));
             cases.Add(("invalid-own-parent",
-                TranslationInsert(Guid.NewGuid().ToString(), En, "یتیم", null), "23503",
-                "FK_shipping_type_translations_shipping_types_ShippingTypeId"));
-            cases.Add(("invalid-parent-with-foreign-schema-join-absent",
+                TranslationInsert(Guid.NewGuid(), En, "یتیم", null), "23503",
+                "fk_shipping_type_translations_shipping_types_shipping_type_id"));
+            // Absence of a foreign-schema join target only shows the table is not there; it is NOT a
+            // Contracts-boundary proof and is labelled as such.
+            cases.Add(("absent-foreign-schema-table-is-not-a-contracts-proof",
                 "select count(*) from fulfillment.shipping_type_translations tr "
-                + "join public.unknown_localization_table l on l.id = tr.\"LanguageId\"", "42P01", null));
+                + "join public.unknown_localization_table l on l.id = tr.language_id", "42P01", null));
             cases.Add(("required-null-code",
-                $"insert into fulfillment.shipping_types (\"ShippingTypeId\",\"Code\",\"SortOrder\",\"IsActive\",\"Revision\",\"CreatedAt\",\"UpdatedAt\") values ('{Guid.NewGuid()}',null,3,false,1,now(),now())",
-                "23502", "Code"));
+                "insert into fulfillment.shipping_types (shipping_type_id,code,sort_order,is_active,revision,created_at,updated_at) "
+                + $"values ('{Guid.NewGuid()}',null,3,false,1,now(),now())",
+                "23502", "code"));
             cases.Add(("required-null-name",
-                "insert into fulfillment.shipping_type_translations (\"ShippingTypeTranslationId\",\"ShippingTypeId\",\"LanguageId\",\"Name\",\"Description\") "
-                + $"values ('{Guid.NewGuid()}','{otherId}','{En}',null,null)", "23502", "Name"));
+                "insert into fulfillment.shipping_type_translations (shipping_type_translation_id,shipping_type_id,language_id,name,description) "
+                + $"values ('{Guid.NewGuid()}','{otherId}','{En}',null,null)", "23502", "name"));
             cases.Add(("blank-name",
-                TranslationInsert(otherId.ToString(), En, "   ", null), "23514",
+                TranslationInsert(otherId, En, "   ", null), "23514",
                 "ck_shipping_type_translations_name_nonblank"));
             cases.Add(("malformed-code", HeaderInsert("Bad Code", 3, 1), "23514",
                 "ck_shipping_types_code_canonical"));
@@ -228,9 +288,9 @@ public sealed class ShippingTypePostgresStorageTests(
             cases.Add(("revision-non-positive", HeaderInsert("zero_rev", 3, 0), "23514",
                 "ck_shipping_types_revision_positive"));
             cases.Add(("overlength-name",
-                TranslationInsert(otherId.ToString(), En, new string('n', 129), null), "22001", null));
+                TranslationInsert(otherId, En, new string('n', 129), null), "22001", null));
             cases.Add(("overlength-description",
-                TranslationInsert(otherId.ToString(), En, "ok", new string('d', 513)), "22001", null));
+                TranslationInsert(otherId, En, "ok", new string('d', 513)), "22001", null));
         }
 
         foreach (var (name, sql, expectedState, expectedOwner) in cases)
@@ -241,10 +301,17 @@ public sealed class ShippingTypePostgresStorageTests(
             if (expectedOwner is not null)
             {
                 Assert.True(
-                    observed.ConstraintName == expectedOwner || observed.ColumnName == expectedOwner,
+                    string.Equals(observed.ConstraintName, expectedOwner, StringComparison.Ordinal)
+                    || string.Equals(observed.ColumnName, expectedOwner, StringComparison.Ordinal),
                     $"{name}: expected owned owner '{expectedOwner}' but observed constraint='{observed.ConstraintName}' column='{observed.ColumnName}'");
             }
         }
+
+        // every rejected statement was rolled back independently: no case leaked a row
+        Assert.Equal(1, await schema.CountRawAsync("parent_type"));
+        Assert.Equal(1, await schema.CountRawAsync("other_type"));
+        Assert.Equal(0, await schema.CountRawAsync("neg_sort"));
+        Assert.Equal(0, await schema.CountRawAsync("zero_rev"));
 
         var atLimitName = new string('ی', 128);
         var atLimitDescription = new string('ی', 512);
@@ -267,7 +334,7 @@ public sealed class ShippingTypePostgresStorageTests(
         Assert.Equal(0, min.SortOrder);
         Assert.Equal(1_000_000, (await freshStore.GetAsync(maxId, Fa, CancellationToken.None))!.SortOrder);
 
-        output.WriteLine($"raw-sql negatives executed={cases.Count}");
+        output.WriteLine($"raw-sql negatives executed={cases.Count} (each rolled back)");
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -304,8 +371,13 @@ public sealed class ShippingTypePostgresStorageTests(
 
         await gate.WaitForBothArrivalsAsync(TimeSpan.FromSeconds(20));
         Assert.Equal(2, gate.Arrivals);
-        Assert.Equal(1, firstLoaded.Revision);
-        Assert.Equal(1, secondLoaded.Revision);
+
+        // ACTUAL per-context original concurrency token, captured at each participant's SavingChanges boundary.
+        var originalTokens = gate.OriginalRevisions;
+        Assert.Equal(2, originalTokens.Count);
+        Assert.All(originalTokens, token => Assert.Equal(1, token));
+        output.WriteLine($"original revisions at first SavingChanges: {string.Join(",", originalTokens)}");
+
         gate.Release();
 
         var firstError = await firstTask;
@@ -314,12 +386,19 @@ public sealed class ShippingTypePostgresStorageTests(
         var conflict = (firstError ?? secondError)!;
         Assert.Equal(FulfillmentErrorCodes.ShippingTypeRevisionConflict, conflict.FirstErrorCode);
 
+        // Winner identified from the ACTUAL outcome, not from literal text.
+        var winnerIsFirst = firstError is null;
+        var winningName = winnerIsFirst ? "برنده" : "بازنده";
+        var winningDescription = winnerIsFirst ? "متن برنده" : "متن بازنده";
+        var winningActive = winnerIsFirst;
+
         await using var verify = schema.NewContext();
         var view = await schema.NewStore(verify).GetAsync(id, Fa, CancellationToken.None);
         Assert.Equal(2, view!.Revision);
-        var name = Translation(view, Fa).Name;
-        Assert.Equal(name == "برنده" ? "متن برنده" : "متن بازنده", Translation(view, Fa).Description);
-        Assert.Equal(name == "برنده", view.IsActive);
+        Assert.Equal(winningName, Translation(view, Fa).Name);
+        Assert.Equal(winningDescription, Translation(view, Fa).Description);
+        Assert.Equal(winningActive, view.IsActive);
+        Assert.Equal(2, await schema.ReadRootRevisionAsync(id));
 
         // The ACTUAL loser tracker holds no pending edit: a later SaveChanges publishes nothing.
         var loser = firstError is not null ? first : second;
@@ -356,6 +435,7 @@ public sealed class ShippingTypePostgresStorageTests(
         var secondError = await secondTask;
         Assert.Single(new[] { firstError, secondError }.Where(e => e is not null));
         var duplicate = (firstError ?? secondError)!;
+        // A raw provider exception masquerading as a canonical duplicate is rejected here.
         Assert.Equal(FulfillmentErrorCodes.ShippingTypeCodeDuplicate, duplicate.FirstErrorCode);
 
         await using var verify = schema.NewContext();
@@ -369,15 +449,18 @@ public sealed class ShippingTypePostgresStorageTests(
         var faName = only.Translations.Single(x => x.LanguageId == Fa).Name;
         Assert.Equal(faName == "الف" ? "Alpha" : "Beta",
             only.Translations.Single(x => x.LanguageId == En).Name);
+        Assert.NotEqual(Guid.Empty, only.ShippingTypeId);
+        output.WriteLine($"winning type id={only.ShippingTypeId} translations={only.Translations.Count}");
 
         var loser = firstError is not null ? first : second;
         Assert.Empty(loser.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
         Assert.Equal(0, await loser.SaveChangesAsync());
         Assert.Equal(1, await verify.ShippingTypes.CountAsync(x => x.Code == "same_code"));
+        Assert.Equal(1, await schema.CountRawAsync("same_code"));
     }
 
     [Fact]
-    public async Task Mid_save_failure_and_cancellation_roll_back_every_statement_and_retry_succeeds()
+    public async Task Mid_save_failure_and_caller_cancellation_roll_back_every_write_and_retry_succeeds()
     {
         Require();
         Guid id;
@@ -391,41 +474,42 @@ public sealed class ShippingTypePostgresStorageTests(
         Assert.Equal("1", before.Revision);
 
         // TEST-ONLY provider option: MaxBatchSize(1) makes the header and translation separate commands.
-        var failure = new StatementFailureInterceptor(failAtCommand: 2, exception: null);
+        var injected = new InvalidOperationException("injected mid-save failure");
+        var failure = new StatementFailureInterceptor(failAtWrite: 2, exception: injected);
         await using (var db = schema.NewContext(commandInterceptor: failure, maxBatchSize: 1))
         {
             var store = schema.NewStore(db);
-            await Assert.ThrowsAnyAsync<Exception>(() => store.UpdateAsync(id, 1, null, 0, true,
+            var thrown = await Assert.ThrowsAnyAsync<Exception>(() => store.UpdateAsync(id, 1, null, 0, true,
                 [T(Fa, "تازه", "متن تازه"), T(En, "New", null)], Fa, CancellationToken.None));
-            Assert.True(failure.FirstCommandCompleted,
-                "at least one real write statement must complete before the injected failure");
+            AssertPropagated(injected, thrown);
+            Assert.True(failure.FirstWriteCompleted,
+                "at least one real write must complete before the injected failure");
+            Assert.NotNull(failure.SecondWriteAttempt);
+            Assert.Equal(1, failure.CompletedWrites.Count);
+            output.WriteLine($"first completed write: {failure.CompletedWrites[0]}");
+            output.WriteLine($"second attempted write (never completed): {failure.SecondWriteAttempt}");
         }
 
-        var afterFailure = await schema.ReadRawAsync(id);
-        Assert.Equal(before.Revision, afterFailure.Revision);
-        Assert.Equal(before.UpdatedAt, afterFailure.UpdatedAt);
-        Assert.Equal(before.Name, afterFailure.Name);
-        Assert.Equal(before.Description, afterFailure.Description);
-        Assert.Equal(before.TranslationCount, afterFailure.TranslationCount);
+        await AssertTreeUnchangedAsync(id, before);
 
+        // REAL caller cancellation: the caller's own CTS is actually cancelled at the second-write boundary.
         using var cancellation = new CancellationTokenSource();
-        var cancellationException = new OperationCanceledException(cancellation.Token);
-        var cancellationInterceptor = new StatementFailureInterceptor(2, cancellationException);
+        Assert.False(cancellation.IsCancellationRequested);
+        var cancellationInterceptor = new StatementFailureInterceptor(
+            failAtWrite: 2,
+            cancelAtFailure: cancellation);
         await using (var db = schema.NewContext(commandInterceptor: cancellationInterceptor, maxBatchSize: 1))
         {
             var store = schema.NewStore(db);
             var thrown = await Assert.ThrowsAnyAsync<OperationCanceledException>(
                 () => store.UpdateAsync(id, 1, null, 0, true, [T(Fa, "لغو", null)], Fa, cancellation.Token));
-            Assert.Same(cancellationException, thrown);
+            Assert.True(cancellation.IsCancellationRequested, "the caller token must be genuinely cancelled");
             Assert.Equal(cancellation.Token, thrown.CancellationToken);
-            Assert.True(cancellationInterceptor.FirstCommandCompleted);
+            Assert.True(cancellationInterceptor.FirstWriteCompleted);
+            output.WriteLine($"cancelled token at second write; first write completed={cancellationInterceptor.FirstWriteCompleted}");
         }
 
-        var afterCancellation = await schema.ReadRawAsync(id);
-        Assert.Equal(before.Revision, afterCancellation.Revision);
-        Assert.Equal(before.UpdatedAt, afterCancellation.UpdatedAt);
-        Assert.Equal(before.Name, afterCancellation.Name);
-        Assert.Equal(before.TranslationCount, afterCancellation.TranslationCount);
+        await AssertTreeUnchangedAsync(id, before);
 
         await using (var retry = schema.NewContext())
         {
@@ -437,6 +521,11 @@ public sealed class ShippingTypePostgresStorageTests(
             Assert.Equal("بازیابی", Translation(retried, Fa).Name);
             Assert.Equal("متن بازیابی", Translation(retried, Fa).Description);
         }
+
+        await using var final = schema.NewContext();
+        var finalView = await schema.NewStore(final).GetAsync(id, Fa, CancellationToken.None);
+        Assert.Equal(2, finalView!.Revision);
+        Assert.Equal(1, finalView.Translations.Count);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -447,8 +536,8 @@ public sealed class ShippingTypePostgresStorageTests(
     public async Task Only_the_exact_owned_constraint_and_sqlstate_map_to_the_canonical_duplicate()
     {
         Require();
-        await using (var owned = schema.NewContext(
-                         saveInterceptor: new SyntheticProviderFailureInterceptor("ix_shipping_types_code", "23505")))
+        var ownedFailure = new SyntheticProviderFailureInterceptor("ix_shipping_types_code", "23505");
+        await using (var owned = schema.NewContext(saveInterceptor: ownedFailure))
         {
             var store = schema.NewStore(owned);
             var mapped = await Assert.ThrowsAsync<SemanticException>(
@@ -456,9 +545,9 @@ public sealed class ShippingTypePostgresStorageTests(
             Assert.Equal(FulfillmentErrorCodes.ShippingTypeCodeDuplicate, mapped.Error.Code);
         }
 
-        await using (var translationOwned = schema.NewContext(
-                         saveInterceptor: new SyntheticProviderFailureInterceptor(
-                             "ix_shipping_type_translations_type_language", "23505")))
+        var translationFailure = new SyntheticProviderFailureInterceptor(
+            "ix_shipping_type_translations_type_language", "23505");
+        await using (var translationOwned = schema.NewContext(saveInterceptor: translationFailure))
         {
             var store = schema.NewStore(translationOwned);
             var mapped = await Assert.ThrowsAsync<SemanticException>(
@@ -466,30 +555,60 @@ public sealed class ShippingTypePostgresStorageTests(
             Assert.Equal(FulfillmentErrorCodes.ShippingTypeTranslationInvalid, mapped.Error.Code);
         }
 
-        await using (var lookalike = schema.NewContext(
-                         saveInterceptor: new SyntheticProviderFailureInterceptor(
-                             "lookalike_ix_shipping_types_code_suffix", "23505")))
+        // A lookalike name containing the owned token must NOT be treated as the owned constraint.
+        var lookalikeFailure = new SyntheticProviderFailureInterceptor(
+            "lookalike_ix_shipping_types_code_suffix", "23505");
+        await using (var lookalike = schema.NewContext(saveInterceptor: lookalikeFailure))
         {
             var store = schema.NewStore(lookalike);
-            await Assert.ThrowsAsync<DbUpdateException>(
+            var thrown = await Assert.ThrowsAsync<DbUpdateException>(
                 () => store.CreateAsync("synthetic_lookalike", 0, [T(Fa, "x", null)], CancellationToken.None));
+            Assert.Same(lookalikeFailure.Injected, thrown);
         }
 
-        await using (var wrongState = schema.NewContext(
-                         saveInterceptor: new SyntheticProviderFailureInterceptor("ix_shipping_types_code", "23503")))
+        // The exact owned name with the WRONG sqlstate must also propagate unchanged.
+        var wrongStateFailure = new SyntheticProviderFailureInterceptor("ix_shipping_types_code", "23503");
+        await using (var wrongState = schema.NewContext(saveInterceptor: wrongStateFailure))
         {
             var store = schema.NewStore(wrongState);
-            await Assert.ThrowsAsync<DbUpdateException>(
+            var thrown = await Assert.ThrowsAsync<DbUpdateException>(
                 () => store.CreateAsync("synthetic_wrong_state", 0, [T(Fa, "x", null)], CancellationToken.None));
+            Assert.Same(wrongStateFailure.Injected, thrown);
         }
 
         Assert.Equal(0, await schema.CountRawAsync("synthetic_owned"));
+        Assert.Equal(0, await schema.CountRawAsync("synthetic_translation"));
         Assert.Equal(0, await schema.CountRawAsync("synthetic_lookalike"));
+        Assert.Equal(0, await schema.CountRawAsync("synthetic_wrong_state"));
     }
 
     // ---------------------------------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------------------------------
+
+    private async Task AssertTreeUnchangedAsync(Guid id, RawRow before)
+    {
+        var after = await schema.ReadRawAsync(id);
+        Assert.Equal(before.Revision, after.Revision);
+        Assert.Equal(before.UpdatedAt, after.UpdatedAt);
+        Assert.Equal(before.CreatedAt, after.CreatedAt);
+        Assert.Equal(before.Name, after.Name);
+        Assert.Equal(before.Description, after.Description);
+        Assert.Equal(before.TranslationCount, after.TranslationCount);
+    }
+
+    private static void AssertPropagated(Exception expected, Exception observed)
+    {
+        for (Exception? current = observed; current is not null; current = current.InnerException)
+        {
+            if (ReferenceEquals(current, expected))
+            {
+                return;
+            }
+        }
+
+        Assert.Fail($"the injected {expected.GetType().Name} must propagate (observed {observed.GetType().Name}: {observed.Message})");
+    }
 
     private void Require()
     {

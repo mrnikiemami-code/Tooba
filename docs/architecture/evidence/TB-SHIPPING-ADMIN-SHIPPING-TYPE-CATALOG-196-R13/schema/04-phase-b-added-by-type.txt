@@ -1,0 +1,25 @@
+column fulfillment.shipping_type_translations.description character varying(512) null default:-
+column fulfillment.shipping_type_translations.language_id uuid not-null default:-
+column fulfillment.shipping_type_translations.name character varying(128) not-null default:-
+column fulfillment.shipping_type_translations.shipping_type_id uuid not-null default:-
+column fulfillment.shipping_type_translations.shipping_type_translation_id uuid not-null default:-
+column fulfillment.shipping_types.code character varying(64) not-null default:-
+column fulfillment.shipping_types.created_at timestamp with time zone not-null default:-
+column fulfillment.shipping_types.is_active boolean not-null default:-
+column fulfillment.shipping_types.revision bigint not-null default:-
+column fulfillment.shipping_types.shipping_type_id uuid not-null default:-
+column fulfillment.shipping_types.sort_order integer not-null default:-
+column fulfillment.shipping_types.updated_at timestamp with time zone not-null default:-
+constraint fulfillment.shipping_type_translations ck_shipping_type_translations_description_nonblank CHECK (((description IS NULL) OR (((char_length((description)::text) >= 1) AND (char_length((description)::text) <= 512)) AND ((description)::text = btrim((description)::text)))))
+constraint fulfillment.shipping_type_translations ck_shipping_type_translations_name_nonblank CHECK ((((char_length((name)::text) >= 1) AND (char_length((name)::text) <= 128)) AND ((name)::text = btrim((name)::text))))
+constraint fulfillment.shipping_type_translations fk_shipping_type_translations_shipping_types_shipping_type_id FOREIGN KEY (shipping_type_id) REFERENCES fulfillment.shipping_types(shipping_type_id) ON DELETE CASCADE
+constraint fulfillment.shipping_type_translations pk_shipping_type_translations PRIMARY KEY (shipping_type_translation_id)
+constraint fulfillment.shipping_types ck_shipping_types_code_canonical CHECK ((((char_length((code)::text) >= 1) AND (char_length((code)::text) <= 64)) AND ((code)::text = btrim((code)::text)) AND ((code)::text ~ '^[a-z][a-z0-9_]*$'::text)))
+constraint fulfillment.shipping_types ck_shipping_types_revision_positive CHECK ((revision > 0))
+constraint fulfillment.shipping_types ck_shipping_types_sort_order_range CHECK (((sort_order >= 0) AND (sort_order <= 1000000)))
+constraint fulfillment.shipping_types pk_shipping_types PRIMARY KEY (shipping_type_id)
+index fulfillment CREATE INDEX ix_shipping_types_active_sort ON fulfillment.shipping_types USING btree (is_active, sort_order)
+index fulfillment CREATE UNIQUE INDEX ix_shipping_type_translations_type_language ON fulfillment.shipping_type_translations USING btree (shipping_type_id, language_id)
+index fulfillment CREATE UNIQUE INDEX ix_shipping_types_code ON fulfillment.shipping_types USING btree (code)
+index fulfillment CREATE UNIQUE INDEX pk_shipping_type_translations ON fulfillment.shipping_type_translations USING btree (shipping_type_translation_id)
+index fulfillment CREATE UNIQUE INDEX pk_shipping_types ON fulfillment.shipping_types USING btree (shipping_type_id)

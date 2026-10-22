@@ -166,6 +166,66 @@ public sealed class HistoricalNameAlignmentResidualDiffTests(ITestOutputHelper o
 
     // ---------------------------------------------------------------------------------------------
 
+    [Fact]
+    public void Strict_manifest_comparison_detects_a_changed_default()
+    {
+        string[] before =
+        [
+            "column fulfillment.items.quantity_packed numeric(18,6) not-null default:0",
+            "column fulfillment.shipments.shipping_method_code character varying(64) not-null default:''::character varying",
+        ];
+        string[] changedDefault =
+        [
+            "column fulfillment.items.quantity_packed numeric(18,6) not-null default:0.0",
+            "column fulfillment.shipments.shipping_method_code character varying(64) not-null default:'x'::character varying",
+        ];
+
+        var differences = TypeCatalogPostgresSchemaFixture.Diff(before, changedDefault);
+        Assert.Equal(4, differences.Count);
+        Assert.Contains(differences, x => x.Contains("default:0", StringComparison.Ordinal));
+        Assert.Contains(differences, x => x.Contains("unexpected-in-actual", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Exact_history_and_type_identity_never_suppresses_a_same_prefix_non_history_object()
+    {
+        const string lookalike = "fulfillment.shipping_type_catalog_archive";
+        string[] lines =
+        [
+            $"column {lookalike}.id uuid not-null default:-",
+            $"constraint {lookalike} pk_shipping_type_catalog_archive PRIMARY KEY (id)",
+            $"index fulfillment CREATE INDEX ix_shipping_type_catalog_archive_id ON {lookalike} USING btree (id)",
+            "column fulfillment.shipping_types.code character varying(64) not-null default:-",
+            "column fulfillment.shipping_type_translations.name character varying(128) not-null default:-",
+            "column fulfillment.__ef_migrations_history.migration_id character varying(150) not-null default:-",
+        ];
+
+        // exact identity: only the two OWNED tables are type-owned; a longer same-prefix table is NOT.
+        Assert.False(TypeCatalogPostgresSchemaFixture.IsTypeOwned(lines[0]));
+        Assert.False(TypeCatalogPostgresSchemaFixture.IsTypeOwned(lines[1]));
+        Assert.False(TypeCatalogPostgresSchemaFixture.IsTypeOwned(lines[2]));
+        Assert.Equal(lookalike, TypeCatalogPostgresSchemaFixture.OwningTable(lines[0]));
+        Assert.True(TypeCatalogPostgresSchemaFixture.IsTypeOwned(lines[3]));
+        Assert.True(TypeCatalogPostgresSchemaFixture.IsTypeOwned(lines[4]));
+
+        // the history table is excluded ONLY by its exact identity, so a lookalike column must survive
+        var historyOwned = lines.Where(x =>
+            TypeCatalogPostgresSchemaFixture.OwningTable(x)
+            == $"fulfillment.{TypeCatalogPostgresSchemaFixture.HistoryTable}").ToList();
+        var retained = lines.Except(historyOwned, StringComparer.Ordinal).ToList();
+        Assert.Single(historyOwned);
+        Assert.Contains(lines[0], retained);
+        Assert.Contains(lines[1], retained);
+        Assert.Contains(lines[2], retained);
+
+        // if the lookalike object disappeared from one side, the strict comparison reports it
+        var differences = TypeCatalogPostgresSchemaFixture.Diff(retained, retained[3..]);
+        Assert.Equal(3, differences.Count);
+        Assert.All(differences, x => Assert.StartsWith("missing-in-actual:", x, StringComparison.Ordinal));
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
     private static NpgsqlConnectionStringBuilder RequireTarget() =>
         TypeCatalogPostgresSchemaFixture.ValidateTarget(
             Environment.GetEnvironmentVariable("TB196R11_CONNECTION") ?? throw new InvalidOperationException(

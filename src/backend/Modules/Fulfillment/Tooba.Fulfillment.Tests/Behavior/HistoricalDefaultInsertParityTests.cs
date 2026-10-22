@@ -50,7 +50,28 @@ public sealed class HistoricalDefaultInsertParityTests(ITestOutputHelper output)
     {
         var target = RequireTarget();
         var mode = Environment.GetEnvironmentVariable("TB196R12_MODE") ?? "verify";
+        if (mode is not ("capture" or "verify"))
+        {
+            throw new InvalidOperationException(
+                $"TB196R12_MODE='{mode}' is invalid: only 'capture' or 'verify' are accepted, so a claimed "
+                + "before/after comparison can never be silently skipped.");
+        }
+
         var evidence = Environment.GetEnvironmentVariable("TB196R12_EVIDENCE_DIR");
+        if (string.IsNullOrWhiteSpace(evidence))
+        {
+            throw new InvalidOperationException(
+                $"TB196R12_EVIDENCE_DIR is required for mode '{mode}': the before/after trace must be persisted.");
+        }
+
+        var baselinePath = Path.Combine(evidence, "insert-parity-baseline.txt");
+        if (mode == "verify" && !File.Exists(baselinePath))
+        {
+            throw new InvalidOperationException(
+                "the pre-change baseline is required for the parity comparison and was not found at "
+                + baselinePath);
+        }
+
         var lines = new List<string>();
         void Note(string line)
         {
@@ -64,6 +85,9 @@ public sealed class HistoricalDefaultInsertParityTests(ITestOutputHelper output)
         }
 
         Note($"mapping {DescribeMapping(target)}");
+
+        // UNCONDITIONAL current-model invariant: asserted outside any evidence path/capture conditional.
+        AssertExplicitMapping(target);
 
         foreach (var (entity, property, column, zero, nonDefault) in Cases)
         {
@@ -81,16 +105,25 @@ public sealed class HistoricalDefaultInsertParityTests(ITestOutputHelper output)
                 var statement = interceptor.Statements[0];
                 Assert.StartsWith($"INSERT INTO fulfillment.{entity} (", statement, StringComparison.Ordinal);
                 Assert.DoesNotContain("DEFAULT", statement, StringComparison.OrdinalIgnoreCase);
-                var columnList = statement[(statement.IndexOf('(') + 1)..statement.IndexOf(')')];
-                Assert.Contains(column, columnList, StringComparison.Ordinal);
 
-                var submitted = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
-                Assert.Contains(interceptor.Values, x => (Convert.ToString(x, CultureInfo.InvariantCulture) ?? string.Empty) == submitted);
-
+                var submitted = value;
+                var bound = AssertColumnBindsSubmittedValue(interceptor, column, submitted);
+                var submittedText = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
                 var readBack = await ReadScalarAsync(target, entity, id, column);
-                Assert.Equal(entity == "items" ? decimal.Parse(submitted, CultureInfo.InvariantCulture).ToString("0.000000", CultureInfo.InvariantCulture) : submitted, readBack);
-                Note($"case={entity}.{column}:{kind} explicit-column=True default-keyword=False readback={readBack}");
+                Assert.Equal(entity == "items" ? decimal.Parse(submittedText, CultureInfo.InvariantCulture).ToString("0.000000", CultureInfo.InvariantCulture) : submittedText, readBack);
+                Note($"case={entity}.{column}:{kind} explicit-column=True default-keyword=False bound={bound} readback={readBack}");
             }
+        }
+
+        // A changed server default and an accidental omit-column write must both be detectable: the mapping's
+        // default annotation is read back from the provider, and the captured statement must always name the
+        // column explicitly (asserted above for every case).
+        foreach (var (entity, property, column, zero, _) in Cases)
+        {
+            var declaredDefault = await ReadColumnDefaultAsync(target, entity, column);
+            var expectedDefault = entity == "items" ? "0" : column == "provider_metadata_version" ? "0" : "''::character varying";
+            Assert.Equal(expectedDefault, declaredDefault);
+            Note($"server-default {entity}.{column}={declaredDefault}");
         }
 
         // a required string given an explicit NULL must never be silently replaced by the server empty default
@@ -151,34 +184,18 @@ public sealed class HistoricalDefaultInsertParityTests(ITestOutputHelper output)
         Assert.Equal("23502", rawNull);
         Note($"raw-explicit-null: {rawNull} rejected");
 
-        if (!string.IsNullOrWhiteSpace(evidence))
+        Directory.CreateDirectory(evidence);
+        File.WriteAllText(
+            Path.Combine(evidence, mode == "capture" ? "insert-trace-captured.txt" : "insert-parity-after.txt"),
+            string.Join(Environment.NewLine, lines) + Environment.NewLine);
+
+        if (mode == "verify")
         {
-            Directory.CreateDirectory(evidence);
-            File.WriteAllText(
-                Path.Combine(evidence, mode == "capture" ? "insert-parity-baseline.txt" : "insert-parity-after.txt"),
-                string.Join(Environment.NewLine, lines) + Environment.NewLine);
-
-            if (mode == "verify")
-            {
-                var baselinePath = Path.Combine(evidence, "insert-parity-baseline.txt");
-                Assert.True(File.Exists(baselinePath), "the captured baseline is required for the parity comparison");
-                var normalized = lines.Where(x => x.StartsWith("case=", StringComparison.Ordinal));
-                var baseline = File.ReadAllLines(baselinePath)
-                    .Where(x => x.StartsWith("case=", StringComparison.Ordinal));
-                Assert.Equal(baseline, normalized);
-
-                // the annotations are metadata-only: value generation and save behavior stay explicit
-                using var context = Context(target, null);
-                foreach (var propertyName in new[] { "QuantityPacked", "QuantityProcessing" })
-                {
-                    AssertExplicit(context.Model.FindEntityType(typeof(FulfillmentItem))!.FindProperty(propertyName)!);
-                }
-
-                foreach (var propertyName in new[] { "ProviderMetadataVersion", "ShippingMethodCode", "ShippingMethodLabel" })
-                {
-                    AssertExplicit(context.Model.FindEntityType(typeof(Shipment))!.FindProperty(propertyName)!);
-                }
-            }
+            var normalized = lines.Where(x => x.StartsWith("case=", StringComparison.Ordinal));
+            var baseline = File.ReadAllLines(baselinePath)
+                .Where(x => x.StartsWith("case=", StringComparison.Ordinal));
+            Assert.Equal(baseline, normalized);
+            Note("mode=verify baseline comparison equal=True");
         }
     }
 
@@ -252,6 +269,71 @@ public sealed class HistoricalDefaultInsertParityTests(ITestOutputHelper output)
         Assert.Equal(ValueGenerated.Never, property.ValueGenerated);
         Assert.Equal(PropertySaveBehavior.Save, property.GetBeforeSaveBehavior());
         Assert.Equal(PropertySaveBehavior.Save, property.GetAfterSaveBehavior());
+    }
+
+    /// <summary>Unconditional current-model invariant, independent of any evidence file output.</summary>
+    private static void AssertExplicitMapping(NpgsqlConnectionStringBuilder target)
+    {
+        using var context = Context(target, null);
+        foreach (var propertyName in new[] { "QuantityPacked", "QuantityProcessing" })
+        {
+            AssertExplicit(context.Model.FindEntityType(typeof(FulfillmentItem))!.FindProperty(propertyName)!);
+        }
+
+        foreach (var propertyName in new[] { "ProviderMetadataVersion", "ShippingMethodCode", "ShippingMethodLabel" })
+        {
+            AssertExplicit(context.Model.FindEntityType(typeof(Shipment))!.FindProperty(propertyName)!);
+        }
+    }
+
+    /// <summary>
+    /// Proves the ACTUAL column→parameter→submitted-value binding: the column's own position in the INSERT
+    /// column list must map to the parameter that carries exactly the submitted value. A value appearing in some
+    /// other parameter is not accepted.
+    /// </summary>
+    private static string AssertColumnBindsSubmittedValue(InsertCapture capture, string column, object? submitted)
+    {
+        Assert.Single(capture.Columns);
+        var columns = capture.Columns[0];
+        var values = capture.ValueTokens[0];
+        Assert.Equal(columns.Count, values.Count);
+
+        var index = columns.FindIndex(x => string.Equals(x, column, StringComparison.Ordinal));
+        Assert.True(index >= 0, $"the INSERT must name '{column}' explicitly; columns={string.Join(",", columns)}");
+
+        var token = values[index];
+        var expected = Convert.ToString(submitted, CultureInfo.InvariantCulture) ?? string.Empty;
+        if (token.StartsWith('@'))
+        {
+            var parameterName = token[1..].TrimStart('@');
+            var parameter = capture.Parameters[0]
+                .SingleOrDefault(x => string.Equals(
+                    (x.Name ?? string.Empty).TrimStart('@'),
+                    parameterName,
+                    StringComparison.Ordinal));
+            Assert.True(parameter.Name is not null,
+                $"no captured parameter named '{parameterName}' for column '{column}'");
+            var actual = parameter.Value is null
+                ? string.Empty
+                : Convert.ToString(parameter.Value, CultureInfo.InvariantCulture) ?? string.Empty;
+            Assert.Equal(expected, actual);
+            return $"{column}->@{parameterName}={actual}";
+        }
+
+        Assert.Equal(expected, token.Trim('\''));
+        return $"{column}->literal {token}";
+    }
+
+    private static async Task<string> ReadColumnDefaultAsync(
+        NpgsqlConnectionStringBuilder target,
+        string table,
+        string column)
+    {
+        var values = await QueryAsync(
+            target,
+            "select coalesce(column_default, '<none>') from information_schema.columns "
+            + $"where table_schema = 'fulfillment' and table_name = '{table}' and column_name = '{column}'");
+        return values[0];
     }
 
     private static async Task<string> ReadScalarAsync(
@@ -354,7 +436,11 @@ public sealed class HistoricalDefaultInsertParityTests(ITestOutputHelper output)
     {
         public List<string> Statements { get; } = [];
 
-        public List<object?> Values { get; } = [];
+        public List<List<string>> Columns { get; } = [];
+
+        public List<List<string>> ValueTokens { get; } = [];
+
+        public List<List<(string? Name, object? Value)>> Parameters { get; } = [];
 
         public override InterceptionResult<DbDataReader> ReaderExecuting(
             DbCommand command,
@@ -377,17 +463,34 @@ public sealed class HistoricalDefaultInsertParityTests(ITestOutputHelper output)
 
         private void Capture(DbCommand command)
         {
-            if (!command.CommandText.StartsWith("INSERT INTO fulfillment.", StringComparison.Ordinal))
+            var text = command.CommandText.ReplaceLineEndings(" ");
+            if (!text.StartsWith("INSERT INTO fulfillment.", StringComparison.Ordinal))
             {
                 return;
             }
 
-            Statements.Add(command.CommandText.ReplaceLineEndings(" "));
-            Values.Clear();
+            Statements.Add(text);
+
+            var columnsStart = text.IndexOf('(');
+            var columnsEnd = text.IndexOf(')', columnsStart + 1);
+            var columns = text[(columnsStart + 1)..columnsEnd]
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+            var valuesStart = text.IndexOf('(', text.IndexOf("VALUES", StringComparison.OrdinalIgnoreCase));
+            var valuesEnd = text.IndexOf(')', valuesStart + 1);
+            var values = text[(valuesStart + 1)..valuesEnd]
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+            Columns.Add(columns);
+            ValueTokens.Add(values);
+
+            var parameters = new List<(string?, object?)>();
             foreach (DbParameter parameter in command.Parameters)
             {
-                Values.Add(parameter.Value is DBNull ? null : parameter.Value);
+                parameters.Add((parameter.ParameterName, parameter.Value is DBNull ? null : parameter.Value));
             }
+
+            Parameters.Add(parameters);
         }
     }
 }
