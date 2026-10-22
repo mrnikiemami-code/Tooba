@@ -376,3 +376,23 @@ same-four-route swapped-mapping negative. 45 focused endpoint tests pass; only F
 EF InMemory only. Still PENDING_NOT_RUN: full dynamic registry lifecycle, real listener/DI verification,
 exact-constraint lookalike and PostgreSQL relational/snapshot/race proof. TB-196 remains PARTIAL; worker PASS
 only - not Architect ACCEPT; STOP_FOR_ARCHITECT; no automatic next task.
+TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R5 (worker, 2026-10-22, PASS for this bounded nonrelational slice only)
+test/evidence only, one new Fulfillment test file: (A) the ACTUAL `FulfillmentModule.AddServices` entry is
+invoked and only data boundaries are replaced (Npgsql `FulfillmentDbContext` option action -> EF InMemory,
+`IClock` -> test clock, `ILanguageLookup` -> controlled fixture); the module's own store/reader aliases,
+`LocalizationShippingTypeLanguageFacts`, canonical `ModuleCallTracer`, handlers and validator resolve from real
+DI with one descriptor each and a single owned error-catalog contributor, and the migrator stays registered but
+never resolved or executed. (B) the registered adapter now drives the registry lifecycle matrix: one active
+non-fa default with no fa fallback, two active mixed RTL/LTR languages with byte-identical untouched text,
+independent `null` description clearing and `[]` preservation, declared non-first default with an inactive row,
+deactivate/reactivate raw-text retention with a canonical `language_invalid` edit rejection, default-switch
+`name_required` gate before activation, eight invalid registries rejected with exact codes and zero persisted
+rows, and culture-invariant raw language ids. (C) a real `ActivityListener` on `ToobaTelemetry` proves exactly
+one `module.Fulfillment.Localization.ListLanguages` child span per real lookup with source/target/operation/
+request-kind/correlation tags, parent+shared trace, restored ambient parent, one stop per call, business
+validation after a successful lookup, exception-type-only error instrumentation, and identical exception/
+cancellation identity with no sensitive names, ids, codes, tenant/currency or message exported. 22 focused
+tests pass in Fulfillment.Tests only. EF InMemory + controlled Contracts registry fixture only. Still
+PENDING_NOT_RUN: exact-constraint lookalike negative and PostgreSQL historical-schema/snapshot/constraint/
+unique/revision-race proof. TB-196 remains PARTIAL; worker PASS only - not Architect ACCEPT;
+STOP_FOR_ARCHITECT; no automatic next task.
