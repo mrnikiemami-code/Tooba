@@ -1,5 +1,16 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 200-R1 اجرا شد؛ منتظر review — 2026-10-23
+
+TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R1 روی base `29cf0117eeaa087c7edc5e4cf1a0240d1a9f5e8e` اجرا و به Bridge ارسال شد؛
+[RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R1/RESULT.md) و اصلاح append-only در
+[200 RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200/RESULT.md).
+regression-first روی 200 بدون تغییر اجرا شد (0/12) و رفتار واقعی ثبت شد؛ سپس R200-01 (baseline-aware whole-tree،
+`[]` فقط با intent صریح)، R200-02 (epoch یکتای هرگزتکرارنشده در load/save/reconcile)، R200-03 (latch عدم‌قطعیت commit تا
+reconcile صریح یا discard + fresh load) و R200-04 (coherence سند و تطابق terminal id انتخاب) اصلاح شد.
+25 focused PASS (12 repair + 13 قبلی) و `tsc --noEmit` صفر خطا؛ فقط frontend feature و evidence docs تغییر کرد.
+هنوز Architect-accepted نیست؛ UI wiring بدون review صادر نشود. هیچ visual/live/quote/activation ادعا نمی‌شود.
+
 ## مرجع جاری: 200 نیازمنداصلاح؛ فقط200-R1 — 2026-10-23
 
 کد200 در44d74284874964d24929a426094d2264c8faefd8 بررسی شد؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200/ARCHITECT-REVIEW.md). backend199بسته؛200هنوزACCEPTنیست،UIتسک201فعلاًصادرنشود.13PASS/typecheck گزارشworkerنقص‌هایواقعی‌زیرراپوششنداده‌اند.

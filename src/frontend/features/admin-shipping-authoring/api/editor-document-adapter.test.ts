@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -146,6 +146,13 @@ function parsed() {
   return node;
 }
 
+/** Confirmed baseline decoded from the same real wire fixture. */
+function baselineDocument() {
+  const decoded = decodeEditorDocument(parsed(), DRAFT);
+  if (!decoded.ok) throw new Error('decode_failed');
+  return decoded.value;
+}
+
 function resolver(): AreaAncestryResolver {
   return {
     resolve: (area) =>
@@ -253,7 +260,7 @@ test("the single PUT carries the exact revision, decimal text and explicit clear
     return new Response(WIRE, { status: 200, headers: { "Content-Type": "application/json" } });
   }) as typeof fetch;
   try {
-    const built = buildEditorDocumentBody(7, edits(), resolver());
+    const built = buildEditorDocumentBody(baselineDocument(), edits(), resolver());
     assert.equal(built.status, "ready");
     if (built.status !== "ready") return;
     assert.equal(
@@ -295,14 +302,18 @@ test("the single PUT carries the exact revision, decimal text and explicit clear
 });
 
 test("absent optional sections stay PRESERVE and [] stays no text change", () => {
-  const built = buildEditorDocumentBody(3, { regionGroups: [], methodTranslations: [] }, resolver());
+  const built = buildEditorDocumentBody(
+    { ...baselineDocument(), revision: 3 },
+    { regionGroups: [], methodTranslations: [] },
+    resolver(),
+  );
   assert.equal(built.status, "ready");
   if (built.status !== "ready") return;
   assert.equal(built.text, '{"expectedRevision":3,"regionGroups":[],"methodTranslations":[]}');
 });
 
 test("a read selection without authoritative ancestry blocks request construction", () => {
-  const built = buildEditorDocumentBody(7, edits(), { resolve: () => null });
+  const built = buildEditorDocumentBody(baselineDocument(), edits(), { resolve: () => null });
   assert.equal(built.status, "needsResolution");
   if (built.status !== "needsResolution") return;
   assert.equal(built.pending.length, 2);

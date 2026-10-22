@@ -25,42 +25,44 @@ function rawNumbers(text: string): string {
 }
 
 function wire(draftId: string, revision: number, groupId: string, rowId: string): string {
-  return rawNumbers(JSON.stringify({
-    draftId,
-    owner: { kind: "Store" },
-    serviceCode: "tooba.post",
-    revision,
-    createdAt: "2026-10-23T00:15:00+03:30",
-    updatedAt: "2026-10-23T00:15:00+03:30",
-    type: { draftId, revision, resolution: "Unconfigured" },
-    presentation: {
-      methodTranslations: [{ languageId: LANGUAGE_FA, name: "پست" }],
-      groupTitles: [{ languageId: LANGUAGE_AR, title: "عربي" }],
-      contentLanguages: [
-        { languageId: LANGUAGE_FA, code: "fa", culture: "fa-IR", urlPrefix: "", direction: "rtl", displayName: "فارسی", nativeName: "فارسی", isDefault: true, sortOrder: 1 },
-        { languageId: LANGUAGE_EN, code: "en", culture: "en-US", urlPrefix: "en", direction: "ltr", displayName: "English", nativeName: "English", isDefault: false, sortOrder: 2 },
-      ],
-      defaultContentLanguageId: LANGUAGE_FA,
-      hasDefaultLanguageName: true,
-    },
-    regionGroups: [
-      {
-        groupId,
-        order: 0,
-        areas: [{ kind: "Country", id: COUNTRY }],
-        rows: [
-          {
-            rateRowId: rowId,
-            freightAmount: "@10.00@",
-            packagingAmount: "@0.00@",
-            minDeliveryDays: 1,
-            maxDeliveryDays: 2,
-          },
+  return rawNumbers(
+    JSON.stringify({
+      draftId,
+      owner: { kind: "Store" },
+      serviceCode: "tooba.post",
+      revision,
+      createdAt: "2026-10-23T00:15:00+03:30",
+      updatedAt: "2026-10-23T00:15:00+03:30",
+      type: { draftId, revision, resolution: "Unconfigured" },
+      presentation: {
+        methodTranslations: [{ languageId: LANGUAGE_FA, name: "پست" }],
+        groupTitles: [{ languageId: LANGUAGE_AR, title: "عربي" }],
+        contentLanguages: [
+          { languageId: LANGUAGE_FA, code: "fa", culture: "fa-IR", urlPrefix: "", direction: "rtl", displayName: "فارسی", nativeName: "فارسی", isDefault: true, sortOrder: 1 },
+          { languageId: LANGUAGE_EN, code: "en", culture: "en-US", urlPrefix: "en", direction: "ltr", displayName: "English", nativeName: "English", isDefault: false, sortOrder: 2 },
         ],
-        titles: [],
+        defaultContentLanguageId: LANGUAGE_FA,
+        hasDefaultLanguageName: true,
       },
-    ],
-  }));
+      regionGroups: [
+        {
+          groupId,
+          order: 0,
+          areas: [{ kind: "Country", id: COUNTRY }],
+          rows: [
+            {
+              rateRowId: rowId,
+              freightAmount: "@10.00@",
+              packagingAmount: "@0.00@",
+              minDeliveryDays: 1,
+              maxDeliveryDays: 2,
+            },
+          ],
+          titles: [],
+        },
+      ],
+    }),
+  );
 }
 
 function document(draftId: string, revision: number, groupId = GROUP, rowId = ROW): EditorDocument {
@@ -80,41 +82,18 @@ function loaded(draftId = DRAFT_A, revision = 1): EditorSessionState {
   return reduceEditorSession(started, {
     type: "loadSucceeded",
     draftId,
-    generation: started.generation,
+    epoch: started.epoch,
     document: document(draftId, revision),
   });
 }
 
 function edit(): EditorEdits {
   return {
-    regionGroups: [
-      {
-        groupKey: "local-1",
-        groupId: GROUP,
-        areas: [{ kind: "Country", id: COUNTRY }],
-        rows: [
-          {
-            rowKey: "local-row-1",
-            rateRowId: ROW,
-            minWeightGrams: null,
-            maxWeightGrams: null,
-            minItemCount: null,
-            maxItemCount: null,
-            minMerchandiseAmount: null,
-            maxMerchandiseAmount: null,
-            freightAmount: "12.50",
-            packagingAmount: "0.00",
-            minDeliveryDays: 1,
-            maxDeliveryDays: 2,
-          },
-        ],
-        titles: [],
-      },
-    ],
+    methodTranslations: [{ languageId: LANGUAGE_EN, name: "Post", description: null }],
   };
 }
 
-test("load states stay honest: empty values load, denied/notfound/error stay distinct", () => {
+test("load states stay honest: an incoherent empty registry fails closed, failures stay distinct", () => {
   const emptyWire = JSON.stringify({
     draftId: DRAFT_A,
     owner: { kind: "Store" },
@@ -123,12 +102,11 @@ test("load states stay honest: empty values load, denied/notfound/error stay dis
     createdAt: "2026-10-23T00:15:00+03:30",
     updatedAt: "2026-10-23T00:15:00+03:30",
     type: { draftId: DRAFT_A, revision: 1, resolution: "Unconfigured" },
-    presentation: { methodTranslations: [], groupTitles: [], contentLanguages: [], defaultContentLanguageId: "00000000-0000-4000-8000-000000000000", hasDefaultLanguageName: false },
+    presentation: { methodTranslations: [], groupTitles: [], contentLanguages: [], defaultContentLanguageId: "00000000-0000-0000-0000-000000000000", hasDefaultLanguageName: false },
     regionGroups: [],
   });
   const node = parseJsonNode(emptyWire);
   assert.ok(node);
-  // An empty language registry cannot resolve the default language, so the whole payload is untrusted.
   assert.equal(decodeEditorDocument(node, DRAFT_A).ok, false);
 
   for (const [failure, expected] of [
@@ -141,7 +119,7 @@ test("load states stay honest: empty values load, denied/notfound/error stay dis
     const failed = reduceEditorSession(started, {
       type: "loadFailed",
       draftId: DRAFT_A,
-      generation: started.generation,
+      epoch: started.epoch,
       failure,
     });
     assert.equal(failed.load, expected);
@@ -152,11 +130,12 @@ test("load states stay honest: empty values load, denied/notfound/error stay dis
 test("conflict keeps local edits and a successful save adopts real server ids and revision", () => {
   const state = reduceEditorSession(loaded(), { type: "edited", draftId: DRAFT_A, edits: edit() });
   assert.equal(state.unsaved, true);
-  const started = reduceEditorSession(state, { type: "saveStarted", draftId: DRAFT_A, requestId: 1 });
+  const started = reduceEditorSession(state, { type: "saveStarted", draftId: DRAFT_A, epoch: state.epoch, requestId: 1 });
   assert.equal(started.save, "saving");
   const conflicted = reduceEditorSession(started, {
     type: "saveFailed",
     draftId: DRAFT_A,
+    epoch: started.epoch,
     requestId: 1,
     failure: { kind: "conflict", status: 409, errorCode: "shipping.authoring.revision_conflict", title: null, errors: [] },
   });
@@ -164,49 +143,61 @@ test("conflict keeps local edits and a successful save adopts real server ids an
   assert.equal(conflicted.unsaved, true, "conflict must not drop the operator's edits");
   assert.deepEqual(conflicted.edits, edit());
 
-  const retried = reduceEditorSession(conflicted, { type: "saveStarted", draftId: DRAFT_A, requestId: 2 });
+  const retried = reduceEditorSession(conflicted, {
+    type: "saveStarted",
+    draftId: DRAFT_A,
+    epoch: conflicted.epoch,
+    requestId: 2,
+  });
   const savedWire = document(DRAFT_A, 2, "cccccccc-cccc-4ccc-8ccc-cccccccccccc", "dddddddd-dddd-4ddd-8ddd-dddddddddddd");
-  const saved = reduceEditorSession(retried, { type: "saveSucceeded", draftId: DRAFT_A, requestId: 2, document: savedWire });
+  const saved = reduceEditorSession(retried, { type: "saveSucceeded", draftId: DRAFT_A, epoch: retried.epoch, requestId: 2, document: savedWire });
   assert.equal(saved.unsaved, false);
   assert.equal(saved.save, "clean");
   assert.equal(saved.baseline?.revision, 2);
   assert.equal(saved.baseline?.regionGroups[0]?.groupId, "cccccccc-cccc-4ccc-8ccc-cccccccccccc");
   assert.equal(saved.baseline?.regionGroups[0]?.rows[0]?.rateRowId, "dddddddd-dddd-4ddd-8ddd-dddddddddddd");
   // A no-op success may keep the same revision and is still accepted.
-  const noop = reduceEditorSession(loaded(DRAFT_A, 5), { type: "edited", draftId: DRAFT_A, edits: edit() });
-  const noopStarted = reduceEditorSession(noop, { type: "saveStarted", draftId: DRAFT_A, requestId: 9 });
+  const noopState = reduceEditorSession(loaded(DRAFT_A, 5), { type: "edited", draftId: DRAFT_A, edits: edit() });
+  const noopStarted = reduceEditorSession(noopState, { type: "saveStarted", draftId: DRAFT_A, epoch: noopState.epoch, requestId: 9 });
   const noopSaved = reduceEditorSession(noopStarted, {
     type: "saveSucceeded",
     draftId: DRAFT_A,
+    epoch: noopStarted.epoch,
     requestId: 9,
     document: document(DRAFT_A, 5),
   });
   assert.equal(noopSaved.baseline?.revision, 5);
 });
 
-test("outcomeUnknown and validation failures preserve work and never fake a baseline", () => {
+test("unknown outcome and validation failures preserve work and never fake a baseline", () => {
   const state = reduceEditorSession(loaded(), { type: "edited", draftId: DRAFT_A, edits: edit() });
-  const started = reduceEditorSession(state, { type: "saveStarted", draftId: DRAFT_A, requestId: 3 });
+  const started = reduceEditorSession(state, { type: "saveStarted", draftId: DRAFT_A, epoch: state.epoch, requestId: 3 });
   const unknown = reduceEditorSession(started, {
     type: "saveFailed",
     draftId: DRAFT_A,
+    epoch: started.epoch,
     requestId: 3,
     failure: { kind: "outcomeUnknown", reason: "network" },
   });
   assert.equal(unknown.save, "outcomeUnknown");
   assert.equal(unknown.unsaved, true);
   assert.equal(unknown.baseline?.revision, 1);
-
+  assert.equal(unknown.commitUncertain, true);
   const blocked = selectApplyRequest(unknown, 4, resolver);
-  assert.equal(blocked.status, "ready", "unknown outcome is retried only by an explicit decision, not automatically");
+  assert.equal(blocked.status, "blocked", "an unreadable commit must not be replayed automatically");
+  if (blocked.status === "blocked") assert.equal(blocked.reason, "uncertain");
 
-  const invalid = reduceEditorSession(
-    reduceEditorSession(loaded(), { type: "edited", draftId: DRAFT_A, edits: edit() }),
-    { type: "saveStarted", draftId: DRAFT_A, requestId: 5 },
-  );
-  const failed = reduceEditorSession(invalid, {
+  const invalid = reduceEditorSession(loaded(), { type: "edited", draftId: DRAFT_A, edits: edit() });
+  const startedInvalid = reduceEditorSession(invalid, {
+    type: "saveStarted",
+    draftId: DRAFT_A,
+    epoch: invalid.epoch,
+    requestId: 5,
+  });
+  const failed = reduceEditorSession(startedInvalid, {
     type: "saveFailed",
     draftId: DRAFT_A,
+    epoch: startedInvalid.epoch,
     requestId: 5,
     failure: {
       kind: "validation",
@@ -218,16 +209,17 @@ test("outcomeUnknown and validation failures preserve work and never fake a base
   });
   assert.equal(failed.save, "validationFailed");
   assert.equal(failed.unsaved, true);
+  assert.equal(failed.commitUncertain, false);
 });
 
-test("duplicate Apply is gated and late results from another generation never overwrite", () => {
+test("duplicate Apply is gated and late results from another epoch never overwrite", () => {
   const dirty = reduceEditorSession(loaded(), { type: "edited", draftId: DRAFT_A, edits: edit() });
-  const first = reduceEditorSession(dirty, { type: "saveStarted", draftId: DRAFT_A, requestId: 1 });
-  const second = reduceEditorSession(first, { type: "saveStarted", draftId: DRAFT_A, requestId: 2 });
+  const first = reduceEditorSession(dirty, { type: "saveStarted", draftId: DRAFT_A, epoch: dirty.epoch, requestId: 1 });
+  const second = reduceEditorSession(first, { type: "saveStarted", draftId: DRAFT_A, epoch: first.epoch, requestId: 2 });
   assert.equal(second, first, "second Apply in flight is ignored, not queued");
   assert.equal(selectApplyRequest(first, 2, resolver).status, "blocked");
 
-  const lateLoadA = { type: "loadSucceeded", draftId: DRAFT_A, generation: 1, document: document(DRAFT_A, 9) } as const;
+  const lateLoadA = { type: "loadSucceeded", draftId: DRAFT_A, epoch: dirty.epoch, document: document(DRAFT_A, 9) } as const;
   const afterLate = reduceEditorSession(first, lateLoadA);
   assert.equal(afterLate, first, "a stale load result is discarded");
 
@@ -243,13 +235,14 @@ test("duplicate Apply is gated and late results from another generation never ov
   const loadedB = reduceEditorSession(startedB, {
     type: "loadSucceeded",
     draftId: DRAFT_B,
-    generation: startedB.generation,
+    epoch: startedB.epoch,
     document: document(DRAFT_B, 4),
   });
   assert.equal(loadedB.baseline?.draftId, DRAFT_B);
   const lateA = reduceEditorSession(loadedB, {
     type: "saveSucceeded",
     draftId: DRAFT_A,
+    epoch: first.epoch,
     requestId: 1,
     document: document(DRAFT_A, 8),
   });
@@ -257,7 +250,7 @@ test("duplicate Apply is gated and late results from another generation never ov
   const lateBGen = reduceEditorSession(loadedB, {
     type: "loadSucceeded",
     draftId: DRAFT_B,
-    generation: 0,
+    epoch: startedB.epoch,
     document: document(DRAFT_B, 77),
   });
   assert.equal(lateBGen, loadedB);
@@ -273,7 +266,9 @@ test("dirty close asks for a decision and cancel keeps the work", () => {
   assert.equal(cancelled.unsaved, true);
   const discarded = reduceEditorSession(cancelled, { type: "discardConfirmed", draftId: DRAFT_A });
   assert.equal(discarded.unsaved, false);
-  assert.equal(discarded.baseline?.revision, 1, "discard returns to the confirmed server baseline");
+  assert.equal(discarded.baseline, null, "discard returns to an idle session that needs a fresh read");
+  assert.equal(discarded.load, "idle");
+  assert.ok(discarded.epoch > dirty.epoch);
   const cleanClose = reduceEditorSession(discarded, { type: "closeRequested", draftId: DRAFT_A });
   assert.equal(cleanClose.decision, "none");
 });
@@ -312,8 +307,7 @@ test("only intentionally touched active languages are patched and the interface 
     assert.equal(again.body.text, request.body.text);
   }
   // Unresolved geography blocks the request with an explicit reason instead of dropping the area.
-  const unresolved = reduceEditorSession(loaded(), { type: "edited", draftId: DRAFT_A, edits: edit() });
-  const cityState = reduceEditorSession(unresolved, {
+  const cityState = reduceEditorSession(loaded(), {
     type: "edited",
     draftId: DRAFT_A,
     edits: {

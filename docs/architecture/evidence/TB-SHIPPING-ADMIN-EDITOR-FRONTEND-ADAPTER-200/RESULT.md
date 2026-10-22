@@ -133,3 +133,24 @@ change, no permission or server-authority change. Production-Functional-Acceptan
 - Only the composite editor document plus its type/context observations are exposed; no catalog
   write, draft create, activation or per-capability mutation helper exists.
 - UI wiring/localized error presentation is the next dependency after Architect review.
+
+## Correction (append-only, 2026-10-23 / TB200-R1)
+
+The 13 passing tests and green typecheck reported above did NOT cover four concrete defects later
+found by Architect review, and are not evidence of their absence:
+
+1. uildEditorDocumentBody used `edits.regionGroups ?? []` and never received the confirmed
+   baseline, so a method/settings/type-only edit emitted `regionGroups: []` and deleted every
+   persisted group, rate row and title. Verified by execution on this implementation.
+2. Session identity used a per-draft `generation` that reset to 1 on switch/discard/reopen, and
+   save completions carried no generation/epoch, so an old A load/save could be accepted.
+3. `selectApplyRequest` returned `ready` after `saveFailed(outcomeUnknown)` and `edited`
+   reset the status to `clean`, allowing a duplicate PUT against an unknown commit.
+4. The decoder accepted zero GUIDs, an inconsistent `type.draftId`, duplicate/multi-default
+   language metadata, schedules with fewer than seven days and `99:99:99` as `TimeOnly`; the
+   request builder validated only the area `kind`, so a resolver could substitute another terminal
+   id for the same kind.
+
+Repairs and their executed regressions are in
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R1/RESULT.md`. The
+historical report stays unchanged except for this append.

@@ -52,7 +52,7 @@ export type {
 } from "./api/editor-document-api.ts";
 export { editorDocumentPath, loadEditorDocument, saveEditorDocument } from "./api/editor-document-api.ts";
 
-export type { EditorRequestBody } from "./api/editor-document-request.ts";
+export type { EditorIntentIssue, EditorRequestBody } from "./api/editor-document-request.ts";
 export { buildEditorDocumentBody } from "./api/editor-document-request.ts";
 
 export { decodeEditorDocument, sameId } from "./api/editor-document-decode.ts";
@@ -62,6 +62,7 @@ export type {
   EditorApplyRequest,
   EditorDecision,
   EditorLoadStatus,
+  EditorReconcileStatus,
   EditorSaveStatus,
   EditorSessionAction,
   EditorSessionState,

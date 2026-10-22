@@ -2,9 +2,13 @@
  * Local editor session state for ONE existing shipping authoring draft.
  *
  * Pure reducer + selectors: no fetch, no rendering, no global store, no browser dialogs or storage.
- * It keeps the confirmed server baseline apart from the local edit intent, scopes every async result
- * by draft id + generation + save request id so a late response for another/obsolete session cannot
- * overwrite current work, and never discards unsaved edits without an explicit UI decision.
+ * It keeps the confirmed server baseline apart from the local edit intent and scopes every async
+ * completion to a NEVER-REUSED session epoch plus the in-epoch save request id, so a late load/save
+ * for another draft, an obsolete epoch or a reopened session can never overwrite current work.
+ *
+ * An unreadable/unreachable PUT commit (`outcomeUnknown`) stays latched across local edits: another
+ * PUT is refused until an explicit reconciliation read confirms a new baseline, or the operator
+ * discards and a fresh load re-establishes one. The previous write is never assumed to have failed.
  */
 import type { EditorDocument } from "../model/editor-document.ts";
 import type { AreaAncestryResolver, EditorEdits } from "../model/editor-edits.ts";
@@ -20,10 +24,14 @@ export type EditorSaveStatus = "clean" | "saving" | "validationFailed" | "confli
 /** Pending confirmation the UI must ask the operator before throwing work away. */
 export type EditorDecision = "none" | "discardUnsaved";
 
-/** Mutable-looking but immutable session state. */
+/** State of an explicit reconciliation read after an unknown commit. */
+export type EditorReconcileStatus = "idle" | "pending";
+
+/** Immutable session state. */
 export interface EditorSessionState {
   readonly draftId: string;
-  readonly generation: number;
+  /** Monotonic, never-reused identity of this editing session (never reset on switch/discard/reopen). */
+  readonly epoch: number;
   readonly load: EditorLoadStatus;
   readonly loadFailure: EditorTransportFailure | null;
   readonly baseline: EditorDocument | null;
@@ -34,30 +42,59 @@ export interface EditorSessionState {
   readonly unsaved: boolean;
   readonly decision: EditorDecision;
   readonly pendingSwitchTo: string | null;
+  /** Latched while a previous PUT's commit cannot be established. Blocks every further PUT. */
+  readonly commitUncertain: boolean;
+  readonly reconcile: EditorReconcileStatus;
+  readonly reconcileFailure: EditorTransportFailure | null;
 }
 
 /** Actions the editor screen dispatches. */
 export type EditorSessionAction =
   | { readonly type: "loadStarted"; readonly draftId: string }
-  | { readonly type: "loadSucceeded"; readonly draftId: string; readonly generation: number; readonly document: EditorDocument }
+  | {
+      readonly type: "loadSucceeded";
+      readonly draftId: string;
+      readonly epoch: number;
+      readonly document: EditorDocument;
+    }
   | {
       readonly type: "loadFailed";
       readonly draftId: string;
-      readonly generation: number;
+      readonly epoch: number;
       readonly failure: EditorTransportFailure;
     }
   | { readonly type: "edited"; readonly draftId: string; readonly edits: EditorEdits }
-  | { readonly type: "saveStarted"; readonly draftId: string; readonly requestId: number }
+  | {
+      readonly type: "saveStarted";
+      readonly draftId: string;
+      readonly epoch: number;
+      readonly requestId: number;
+    }
   | {
       readonly type: "saveSucceeded";
       readonly draftId: string;
+      readonly epoch: number;
       readonly requestId: number;
       readonly document: EditorDocument;
     }
   | {
       readonly type: "saveFailed";
       readonly draftId: string;
+      readonly epoch: number;
       readonly requestId: number;
+      readonly failure: EditorTransportFailure;
+    }
+  | { readonly type: "reconcileStarted"; readonly draftId: string; readonly epoch: number }
+  | {
+      readonly type: "reconcileSucceeded";
+      readonly draftId: string;
+      readonly epoch: number;
+      readonly document: EditorDocument;
+    }
+  | {
+      readonly type: "reconcileFailed";
+      readonly draftId: string;
+      readonly epoch: number;
       readonly failure: EditorTransportFailure;
     }
   | { readonly type: "switchRequested"; readonly draftId: string; readonly nextDraftId: string }
@@ -69,7 +106,7 @@ export type EditorSessionAction =
 export function createEditorSessionState(draftId: string): EditorSessionState {
   return {
     draftId,
-    generation: 0,
+    epoch: 0,
     load: "idle",
     loadFailure: null,
     baseline: null,
@@ -80,6 +117,9 @@ export function createEditorSessionState(draftId: string): EditorSessionState {
     unsaved: false,
     decision: "none",
     pendingSwitchTo: null,
+    commitUncertain: false,
+    reconcile: "idle",
+    reconcileFailure: null,
   };
 }
 
@@ -102,26 +142,48 @@ function saveFailureStatus(failure: EditorTransportFailure): EditorSaveStatus {
   return "error";
 }
 
+/** Session state after leaving the current draft, with a strictly greater epoch. */
+function switchedState(from: EditorSessionState, nextDraftId: string): EditorSessionState {
+  return {
+    ...createEditorSessionState(nextDraftId),
+    epoch: from.epoch + 1,
+    load: "idle",
+  };
+}
+
 /**
  * Reduces one editor session action.
  *
- * Stale results (other draft, older generation, obsolete save request) return the SAME state object,
- * so a slow load/save can never overwrite current work. Unsaved work is only dropped on an explicit
- * `discardConfirmed`.
+ * A completion whose draft/epoch (or in-epoch request id) does not match the current session returns
+ * the SAME state object, so a slow or reopened session's result can never overwrite current work.
+ * Unsaved work is only dropped on an explicit `discardConfirmed`.
  */
 export function reduceEditorSession(state: EditorSessionState, action: EditorSessionAction): EditorSessionState {
   if (action.type === "loadStarted") {
+    // A latched unknown commit needs an explicit reconciliation, not a silent reload.
+    if (state.commitUncertain && state.baseline !== null) return state;
     if (state.unsaved || state.save === "saving") {
-      // Switching away from dirty work always surfaces the decision first.
-      return state.draftId === action.draftId
-        ? state
-        : { ...state, decision: "discardUnsaved", pendingSwitchTo: action.draftId };
+      if (state.draftId !== action.draftId) {
+        return { ...state, decision: "discardUnsaved", pendingSwitchTo: action.draftId };
+      }
     }
     const sameSession = sameDraft(state, action.draftId);
     return {
-      ...createEditorSessionState(action.draftId),
-      generation: sameSession ? state.generation + 1 : 1,
+      draftId: action.draftId,
+      epoch: state.epoch + 1,
       load: "loading",
+      loadFailure: null,
+      baseline: sameSession ? state.baseline : null,
+      edits: sameSession ? state.edits : {},
+      save: sameSession ? state.save : "clean",
+      saveFailure: sameSession ? state.saveFailure : null,
+      saveRequestId: 0,
+      unsaved: sameSession ? state.unsaved : false,
+      decision: "none",
+      pendingSwitchTo: null,
+      commitUncertain: state.commitUncertain,
+      reconcile: "idle",
+      reconcileFailure: null,
     };
   }
 
@@ -129,7 +191,7 @@ export function reduceEditorSession(state: EditorSessionState, action: EditorSes
 
   switch (action.type) {
     case "loadSucceeded":
-      if (action.generation !== state.generation || state.load !== "loading") return state;
+      if (action.epoch !== state.epoch || state.load !== "loading") return state;
       return {
         ...state,
         load: "loaded",
@@ -140,21 +202,33 @@ export function reduceEditorSession(state: EditorSessionState, action: EditorSes
         saveFailure: null,
         saveRequestId: 0,
         unsaved: false,
+        commitUncertain: false,
+        reconcile: "idle",
+        reconcileFailure: null,
       };
     case "loadFailed": {
-      if (action.generation !== state.generation || state.load !== "loading") return state;
+      if (action.epoch !== state.epoch || state.load !== "loading") return state;
       const load =
         action.failure.kind === "denied" ? "denied" : action.failure.kind === "notFound" ? "notfound" : "error";
       return { ...state, load, loadFailure: action.failure, baseline: null };
     }
     case "edited":
-      if (state.load !== "loaded" || state.save === "saving") return state;
-      return { ...state, edits: action.edits, unsaved: isDirty(action.edits), save: "clean", saveFailure: null };
+      if (state.load !== "loaded" || state.save === "saving" || state.reconcile === "pending") return state;
+      // A local edit never clears latched uncertainty or pretends the previous PUT failed.
+      return {
+        ...state,
+        edits: action.edits,
+        unsaved: isDirty(action.edits),
+        save: state.commitUncertain ? "outcomeUnknown" : "clean",
+        saveFailure: state.commitUncertain ? state.saveFailure : null,
+      };
     case "saveStarted":
-      if (state.load !== "loaded" || !state.unsaved) return state;
+      if (action.epoch !== state.epoch) return state;
+      if (state.load !== "loaded" || !state.unsaved || state.commitUncertain) return state;
       if (state.save === "saving") return state; // duplicate Apply is gated, not queued
       return { ...state, save: "saving", saveRequestId: action.requestId, saveFailure: null };
     case "saveSucceeded":
+      if (action.epoch !== state.epoch) return state;
       if (action.requestId !== state.saveRequestId || state.save !== "saving") return state;
       return {
         ...state,
@@ -164,25 +238,71 @@ export function reduceEditorSession(state: EditorSessionState, action: EditorSes
         save: "clean",
         saveFailure: null,
         saveRequestId: 0,
+        commitUncertain: false,
       };
-    case "saveFailed":
+    case "saveFailed": {
+      if (action.epoch !== state.epoch) return state;
       if (action.requestId !== state.saveRequestId || state.save !== "saving") return state;
-      return { ...state, save: saveFailureStatus(action.failure), saveFailure: action.failure, saveRequestId: 0 };
+      const uncertain = action.failure.kind === "outcomeUnknown";
+      return {
+        ...state,
+        save: saveFailureStatus(action.failure),
+        saveFailure: action.failure,
+        saveRequestId: 0,
+        commitUncertain: uncertain || state.commitUncertain,
+      };
+    }
+    case "reconcileStarted":
+      if (!state.commitUncertain || state.baseline === null) return state;
+      if (action.epoch !== state.epoch + 1) return state;
+      return { ...state, epoch: action.epoch, reconcile: "pending", reconcileFailure: null };
+    case "reconcileSucceeded":
+      if (action.epoch !== state.epoch || state.reconcile !== "pending") return state;
+      return {
+        ...state,
+        reconcile: "idle",
+        reconcileFailure: null,
+        baseline: action.document,
+        commitUncertain: false,
+        save: "clean",
+        saveFailure: null,
+        saveRequestId: 0,
+        unsaved: isDirty(state.edits),
+      };
+    case "reconcileFailed":
+      if (action.epoch !== state.epoch || state.reconcile !== "pending") return state;
+      return { ...state, reconcile: "idle", reconcileFailure: action.failure };
     case "switchRequested":
       if (action.nextDraftId === state.draftId) return state;
-      return { ...state, decision: "discardUnsaved", pendingSwitchTo: action.nextDraftId };
+      if (state.unsaved || state.save === "saving" || state.commitUncertain) {
+        return { ...state, decision: "discardUnsaved", pendingSwitchTo: action.nextDraftId };
+      }
+      return switchedState(state, action.nextDraftId);
     case "closeRequested":
-      return state.unsaved ? { ...state, decision: "discardUnsaved" } : { ...state, decision: "none" };
+      return state.unsaved || state.commitUncertain
+        ? { ...state, decision: "discardUnsaved" }
+        : { ...state, decision: "none" };
     case "discardCancelled":
       return { ...state, decision: "none", pendingSwitchTo: null };
     case "discardConfirmed": {
-      if (state.pendingSwitchTo === null) {
-        return { ...state, edits: {}, unsaved: false, save: "clean", saveFailure: null, decision: "none" };
-      }
+      if (state.pendingSwitchTo !== null) return switchedState(state, state.pendingSwitchTo);
+      // Same-draft discard: the old baseline must not become resubmittable while a commit is unknown.
       return {
-        ...createEditorSessionState(state.pendingSwitchTo),
-        generation: 1,
+        draftId: state.draftId,
+        epoch: state.epoch + 1,
         load: "idle",
+        loadFailure: null,
+        baseline: null,
+        edits: {},
+        save: state.commitUncertain ? "outcomeUnknown" : "clean",
+        saveFailure: null,
+        saveRequestId: 0,
+        unsaved: false,
+        decision: "none",
+        pendingSwitchTo: null,
+        commitUncertain: state.commitUncertain,
+        reconcile: "idle",
+        reconcileFailure: null,
       };
     }
     default:
@@ -192,8 +312,16 @@ export function reduceEditorSession(state: EditorSessionState, action: EditorSes
 
 /** A save the caller must perform, or the reason Apply is currently blocked. */
 export type EditorApplyRequest =
-  | { readonly status: "ready"; readonly requestId: number; readonly expectedRevision: number; readonly body: EditorRequestBody }
-  | { readonly status: "blocked"; readonly reason: "not-loaded" | "no-changes" | "in-flight" | "needs-resolution" };
+  | {
+      readonly status: "ready";
+      readonly requestId: number;
+      readonly expectedRevision: number;
+      readonly body: EditorRequestBody;
+    }
+  | {
+      readonly status: "blocked";
+      readonly reason: "not-loaded" | "no-changes" | "in-flight" | "needs-resolution" | "invalid-intent" | "uncertain";
+    };
 
 /**
  * Builds the single Apply request from the confirmed baseline + local edits.
@@ -208,10 +336,13 @@ export function selectApplyRequest(
   resolver: AreaAncestryResolver,
 ): EditorApplyRequest {
   if (state.load !== "loaded" || state.baseline === null) return { status: "blocked", reason: "not-loaded" };
+  if (state.commitUncertain) return { status: "blocked", reason: "uncertain" };
+  if (state.reconcile === "pending") return { status: "blocked", reason: "in-flight" };
   if (state.save === "saving") return { status: "blocked", reason: "in-flight" };
   if (!state.unsaved) return { status: "blocked", reason: "no-changes" };
-  const body = buildEditorDocumentBody(state.baseline.revision, state.edits, resolver);
+  const body = buildEditorDocumentBody(state.baseline, state.edits, resolver);
   if (body.status === "needsResolution") return { status: "blocked", reason: "needs-resolution" };
+  if (body.status === "invalidIntent") return { status: "blocked", reason: "invalid-intent" };
   return { status: "ready", requestId, expectedRevision: state.baseline.revision, body };
 }
 

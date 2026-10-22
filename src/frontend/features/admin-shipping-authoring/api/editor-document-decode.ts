@@ -40,8 +40,9 @@ const RESOLUTIONS: readonly AuthoringTypeResolution[] = ["Unconfigured", "Active
 const PAYER_MODES: readonly FreightPaymentMode[] = ["Prepaid", "CollectOnDelivery"];
 const CALCULATION_MODES: readonly AuthoringCalculationMode[] = ["Manual", "CarrierApi", "Free"];
 const GUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+const ZERO_GUID = "00000000-0000-0000-0000-000000000000";
 const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
-const TIME = /^\d{2}:\d{2}:\d{2}(?:\.\d{1,7})?$/;
+const TIME = /^(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]{1,7})?$/;
 
 class DecodeFailure extends Error {}
 
@@ -98,7 +99,7 @@ function optionalDecimal(node: JsonNode | undefined, path: string): string | nul
 
 function guid(node: JsonNode | undefined, path: string): string {
   const value = text(node, path);
-  if (!GUID.test(value)) fail(`${path}:guid`);
+  if (!GUID.test(value) || value.toLowerCase() === ZERO_GUID) fail(`${path}:guid`);
   return value;
 }
 
@@ -164,7 +165,7 @@ export function decodeEditorDocument(node: JsonNode, expectedDraftId: string): D
       revision,
       createdAt: timestamp(required(root, "createdAt"), "createdAt"),
       updatedAt: timestamp(required(root, "updatedAt"), "updatedAt"),
-      type: decodeType(object(required(root, "type"), "type"), revision),
+      type: decodeType(object(required(root, "type"), "type"), draftId, revision),
       settings: decodeSettings(root.get("settings")),
       presentation: decodePresentation(object(required(root, "presentation"), "presentation")),
       weeklySchedule: decodeSchedule(root.get("weeklySchedule")),
@@ -179,8 +180,13 @@ export function decodeEditorDocument(node: JsonNode, expectedDraftId: string): D
   }
 }
 
-function decodeType(node: ReadonlyMap<string, JsonNode>, revision: number): EditorTypeAssignment {
+function decodeType(
+  node: ReadonlyMap<string, JsonNode>,
+  rootDraftId: string,
+  revision: number,
+): EditorTypeAssignment {
   const draftId = guid(required(node, "draftId"), "type.draftId");
+  if (!sameId(draftId, rootDraftId)) fail("type.draftId:mismatch");
   const typeRevision = integer(required(node, "revision"), "type.revision");
   if (typeRevision !== revision) fail("type.revision:mismatch");
   const resolution = variant(node.get("resolution"), "type.resolution", RESOLUTIONS);
@@ -244,6 +250,7 @@ function decodeSchedule(node: JsonNode | undefined): EditorWeeklySchedule | null
   });
   const weekdays = new Set(days.map((day) => day.weekday));
   if (weekdays.size !== days.length) fail("weeklySchedule.days:duplicate");
+  if (days.length !== 7) fail("weeklySchedule.days:count");
   return { timeZoneId: text(required(fields, "timeZoneId"), "weeklySchedule.timeZoneId"), days };
 }
 
@@ -269,7 +276,15 @@ function decodePresentation(node: ReadonlyMap<string, JsonNode>): EditorPresenta
     required(node, "defaultContentLanguageId"),
     "presentation.defaultContentLanguageId",
   );
-  if (!contentLanguages.some((language) => sameId(language.languageId, defaultContentLanguageId))) {
+  const languageIds = new Set<string>();
+  for (const language of contentLanguages) {
+    const key = language.languageId.toLowerCase();
+    if (languageIds.has(key)) fail("presentation.contentLanguages:duplicate");
+    languageIds.add(key);
+  }
+  const declaredDefaults = contentLanguages.filter((language) => language.isDefault);
+  if (declaredDefaults.length !== 1) fail("presentation.contentLanguages:default-count");
+  if (!sameId(declaredDefaults[0]?.languageId ?? null, defaultContentLanguageId)) {
     fail("presentation.defaultContentLanguageId:unresolved");
   }
   return {
