@@ -21,18 +21,24 @@ public sealed record ReplaceShippingAuthoringDraftTypeAssignmentCommand(
     ShippingAuthoringDraftTypeAssignmentReplaceRequest Request)
     : IRequest<Result<ShippingAuthoringDraftTypeAssignmentItem>>;
 
-/// <summary>
-/// هندلر PUT انتخاب نوع. ترتیب تصمیم‌ها عمدی و ثابت است:
-/// (۱) پیش‌نویس فقط داخل محدودهٔ کامل مالک، (۲) بازبینی کهنهٔ کلاینت <b>پیش از</b> هر خواندن
-/// بیرونی رد می‌شود (حتی برای درخواست یکسان یا پاک‌کردن)، (۳) فقط برای شناسهٔ غیرتهی، تعریف دقیق
-/// باید <b>فعال</b> باشد، (۴) سپس یک نوشتن اتمی روی ریشه.
-/// </summary>
-/// <remarks>
-/// <b>پاک‌کردن</b> هیچ فراخوانی بیرونی نمی‌خواهد و حتی وقتی کاتالوگ در دسترس نیست کار می‌کند.
-/// <b>نوشتن یکسان</b> روی انتخاب فعالِ فعلی یک no-op صادقانه است: بازبینی و زمان دست‌نخورده
-/// می‌مانند، اما بازبینی کهنه همچنان 409 است. شاخه‌های زودگذر (پیش‌نویس غایب، بازبینی کهنه،
-/// پاک‌کردن، no-op پیش از فراخوانی) هیچ span فراخوانی ماژولی نمی‌سازند.
-/// </remarks>
+    /// <summary>
+    /// هندلر PUT انتخاب نوع. ترتیب تصمیم‌ها عمدی و ثابت است:
+    /// (۱) پیش‌نویس فقط داخل محدودهٔ کامل مالک، (۲) بازبینی کهنهٔ کلاینت <b>پیش از</b> هر خواندن
+    /// بیرونی رد می‌شود (حتی برای درخواست یکسان یا پاک‌کردن)، (۳) فقط برای شناسهٔ غیرتهی، تعریف دقیق
+    /// باید <b>فعال</b> باشد، (۴) سپس یک نوشتن اتمی روی ریشه.
+    /// </summary>
+    /// <remarks>
+    /// <b>پاک‌کردن</b> هیچ فراخوانی بیرونی نمی‌خواهد و حتی وقتی کاتالوگ در دسترس نیست کار می‌کند.
+    /// <b>نوشتن یکسان</b> روی انتخاب فعالِ فعلی یک no-op صادقانه است: بازبینی و زمان دست‌نخورده
+    /// می‌مانند، اما بازبینی کهنه همچنان 409 است. شاخه‌های زودگذر (پیش‌نویس غایب، بازبینی کهنه،
+    /// پاک‌کردن، no-op پیش از فراخوانی) هیچ span فراخوانی ماژولی نمی‌سازند.
+    /// <para>
+    /// <b>یک خواندن پیش از نوشتن.</b> فکت فعالِ تأییدشده همان لحظه در همین درخواست نگه داشته می‌شود و
+    /// پاسخ پس از ذخیره <b>بدون هیچ فراخوانی بیرونی</b> از ریشهٔ واقعاً ذخیره‌شده ساخته می‌شود. بنابراین
+    /// قطعی کاتالوگ بعد از commit نمی‌تواند موفقیت ذخیره‌شده را به شکست تبدیل کند؛ این فکت یک واقعیت
+    /// همان لحظهٔ اعتبارسنجی است، نه تضمین اتمی در برابر تغییر بعدی کاتالوگ.
+    /// </para>
+    /// </remarks>
 public sealed class ReplaceShippingAuthoringDraftTypeAssignmentHandler(
     IShippingAuthoringDraftDirectory directory,
     IShippingTypeCatalogReader catalog)
@@ -65,6 +71,7 @@ public sealed class ReplaceShippingAuthoringDraftTypeAssignmentHandler(
                     new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
             }
 
+            ShippingTypeFact? resolved = null;
             if (request.Request.ShippingTypeId is { } selected)
             {
                 if (selected == Guid.Empty)
@@ -77,8 +84,8 @@ public sealed class ReplaceShippingAuthoringDraftTypeAssignmentHandler(
                 // (3) Every non-null selection — including the id already stored — must resolve EXACTLY
                 // one ACTIVE definition. Unknown/inactive/inconsistent facts reject before any write.
                 var facts = await catalog.GetByIdsAsync([selected], cancellationToken);
-                var fact = facts.Count == 1 && facts[0].ShippingTypeId == selected ? facts[0] : null;
-                if (fact is null || !fact.IsActive)
+                resolved = facts.Count == 1 && facts[0].ShippingTypeId == selected ? facts[0] : null;
+                if (resolved is null || !resolved.IsActive)
                 {
                     return Result.Failure<ShippingAuthoringDraftTypeAssignmentItem>(
                         new SemanticError(ShippingErrorCodes.AuthoringTypeSelectionUnavailable));
@@ -97,12 +104,10 @@ public sealed class ReplaceShippingAuthoringDraftTypeAssignmentHandler(
                 return Result.Failure<ShippingAuthoringDraftTypeAssignmentItem>(replaced.Errors);
             }
 
-            // The response re-reads the definition through the same port so an inactive/missing state is
-            // reported truthfully even immediately after a successful write.
-            return Result.Success(await ShippingTypeAssignmentComposition.ComposeAsync(
-                replaced.Value,
-                catalog,
-                cancellationToken));
+            // The response is composed ONLY from the actual saved root plus the single fact resolved
+            // before the write: no foreign lookup (and no other fallible dependency) runs after commit,
+            // so a catalog outage can never turn a persisted assignment into a reported failure.
+            return Result.Success(ShippingTypeAssignmentComposition.ComposeResolved(replaced.Value, resolved));
         }
         catch (SemanticException exception)
         {

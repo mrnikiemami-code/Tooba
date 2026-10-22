@@ -1,8 +1,10 @@
 using MediatR;
+using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Shipping.Application.Authoring.Models;
 using Tooba.Shipping.Application.Authoring.Ports;
 using Tooba.Shipping.Contracts.Authoring;
+using Tooba.Shipping.Contracts.Errors;
 
 namespace Tooba.Shipping.Application.Authoring.Queries;
 
@@ -75,23 +77,30 @@ public sealed class GetShippingAuthoringDraftTypeAssignmentHandler(
             return Result.Failure<ShippingAuthoringDraftTypeAssignmentItem>(draft.Errors);
         }
 
-        return Result.Success(await ShippingTypeAssignmentComposition.ComposeAsync(
+        return await ShippingTypeAssignmentComposition.ComposeAsync(
             draft.Value,
             catalog,
-            cancellationToken));
+            cancellationToken);
     }
 }
 
 /// <summary>
 /// ترکیب انتخاب ذخیره‌شدهٔ پیش‌نویس با فکت‌های همان لحظهٔ کاتالوگ برای یک پاسخ صادقانه.
 /// </summary>
+/// <remarks>
+/// «یافت‌نشد» فقط وقتی است که پاسخ <b>واقعاً خالی</b> باشد. پاسخ غیرخالیِ ناسازگار (شناسهٔ دیگر یا
+/// رکورد تکراری برای همان شناسه) «نبود» نیست: با کد canonical موجود
+/// <c>shipping.authoring.configuration_unavailable</c> به‌شکل بسته شکست می‌خورد و شناسهٔ ذخیره‌شده
+/// دست‌نخورده می‌ماند. برای نوشتن، پاسخ از همان یک فکت اعتبارسنجی‌شده و ریشهٔ ذخیره‌شده ساخته می‌شود و
+/// <b>هیچ</b> فراخوانی بیرونی پس از commit رخ نمی‌دهد.
+/// </remarks>
 internal static class ShippingTypeAssignmentComposition
 {
     /// <summary>پاسخ انتخاب فعلی را می‌سازد؛ بدون نوع انتخاب‌شده هیچ فراخوانی بیرونی رخ نمی‌دهد.</summary>
     /// <param name="draft">پیش‌نویس مالک.</param>
     /// <param name="catalog">درز کاتالوگ نوع.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
-    public static async Task<ShippingAuthoringDraftTypeAssignmentItem> ComposeAsync(
+    public static async Task<Result<ShippingAuthoringDraftTypeAssignmentItem>> ComposeAsync(
         Domain.Authoring.ShippingAuthoringDraft draft,
         IShippingTypeCatalogReader catalog,
         CancellationToken cancellationToken)
@@ -101,34 +110,66 @@ internal static class ShippingTypeAssignmentComposition
         if (draft.ShippingTypeId is not { } selected)
         {
             // UNCONFIGURED is a real state and needs no foreign read at all.
-            return new ShippingAuthoringDraftTypeAssignmentItem(
-                draft.DraftId,
-                draft.Revision,
-                null,
-                ShippingAuthoringTypeResolution.Unconfigured,
-                null);
+            return Result.Success(Unconfigured(draft));
         }
 
         var facts = await catalog.GetByIdsAsync([selected], cancellationToken);
-        var fact = facts.Count == 1 && facts[0].ShippingTypeId == selected ? facts[0] : null;
-        if (fact is null)
+        if (facts.Count == 0)
         {
-            // A missing definition is explicit and truthful; it is never silently cleared or replaced.
-            return new ShippingAuthoringDraftTypeAssignmentItem(
+            // A genuinely empty set is the ONLY truthful "missing"; the stored id is never cleared.
+            return Result.Success(new ShippingAuthoringDraftTypeAssignmentItem(
                 draft.DraftId,
                 draft.Revision,
                 selected,
                 ShippingAuthoringTypeResolution.Missing,
-                null);
+                null));
         }
 
-        return new ShippingAuthoringDraftTypeAssignmentItem(
+        if (facts.Count != 1 || facts[0].ShippingTypeId != selected)
+        {
+            // Wrong-id/duplicate/inconsistent facts are a dependency defect, not absence.
+            return Result.Failure<ShippingAuthoringDraftTypeAssignmentItem>(
+                new SemanticError(ShippingErrorCodes.AuthoringConfigurationUnavailable));
+        }
+
+        return Result.Success(Resolved(draft.DraftId, draft.Revision, facts[0]));
+    }
+
+    /// <summary>
+    /// پاسخ را تنها از ریشهٔ واقعاً ذخیره‌شده و فکت واحدی که پیش از نوشتن تأیید شده ساخته می‌شود؛
+    /// هیچ فراخوانی بیرونی یا وابستگی شکست‌پذیر پس از commit اجرا نمی‌شود.
+    /// </summary>
+    /// <param name="saved">ریشهٔ ذخیره‌شده (شناسه/بازبینی واقعی).</param>
+    /// <param name="resolved">فکت فعال تأییدشده پیش از نوشتن، یا تهی برای پاک‌کردن.</param>
+    public static ShippingAuthoringDraftTypeAssignmentItem ComposeResolved(
+        Domain.Authoring.ShippingAuthoringDraft saved,
+        ShippingTypeFact? resolved)
+    {
+        ArgumentNullException.ThrowIfNull(saved);
+
+        return saved.ShippingTypeId is { } savedSelection && resolved is not null
+            ? Resolved(saved.DraftId, saved.Revision, resolved)
+            : Unconfigured(saved);
+    }
+
+    private static ShippingAuthoringDraftTypeAssignmentItem Unconfigured(Domain.Authoring.ShippingAuthoringDraft draft)
+        => new(
             draft.DraftId,
             draft.Revision,
-            selected,
+            null,
+            ShippingAuthoringTypeResolution.Unconfigured,
+            null);
+
+    private static ShippingAuthoringDraftTypeAssignmentItem Resolved(
+        Guid draftId,
+        long revision,
+        ShippingTypeFact fact)
+        => new(
+            draftId,
+            revision,
+            fact.ShippingTypeId,
             fact.IsActive ? ShippingAuthoringTypeResolution.Active : ShippingAuthoringTypeResolution.Inactive,
             ShippingTypeProjection.Map(fact));
-    }
 }
 
 /// <summary>نگاشت فکت کاتالوگ به قرارداد عمومی؛ هیچ ترجمه/جایگزینی متنی انجام نمی‌شود.</summary>

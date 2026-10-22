@@ -10,7 +10,19 @@
 
 
 
-## مرجع جاری: نتیجه197 ارسال شد / منتظر بررسی Architect
+## مرجع جاری: نتیجه197-R1 ارسال شد / منتظر بررسی Architect
+
+پس از review تسک197 (VERDICT: PARTIAL/REPAIR_REQUIRED) تسک **TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197-R1** روی main `cc24c9c1b84e6283c0eed15f895e6b5143621395` اجرا و نتیجه به Bridge داده شد. اصلاح فقط در دو فایل مجاز Application:
+
+- PUT دیگر هیچ فراخوانی خارجی پس از commit ندارد؛ پاسخ از همان یک فکت فعالِ تأییدشده پیش از نوشتن + ریشهٔ واقعاً ذخیره‌شده ساخته می‌شود (ثبت‌شده: pre-fix 500 روی نوشتن موفق، post-fix 200 با دقیقاً یک read).
+- GET: فقط پاسخ واقعاً خالی «missing» است؛ پاسخ غیرخالی ناسازگار (شناسهٔ دیگر/تکراری) با کد موجود `shipping.authoring.configuration_unavailable` (503) بسته شکست می‌خورد.
+- اثبات‌های جدید: same-context rejection با tracker پاک و SaveChanges=0، no-op با timestamp قدیمیِ seed‌شده از سرور، شکست واقعی نوشتن با trigger موقتِ task-only (P0001) + پاک‌سازی + retry موفق در همان context، و DI واقعی ماژول با parent Activity/correlation/TraceId و همان instance استثنا.
+
+[نتیجه](../../architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197-R1/RESULT.md). اجراها: 11/11 (focused C/D/E) و 31/31 (endpoint+error/classification guards). container دورریختنی حذف و پورت 55432 آزاد. دو correction harness (بیش از سقف یک) صادقانه ثبت شده است. schema/migration/Designer/snapshot/adapter/DTO بدون تغییر؛ شواهد owner/schema/race تسک197 بازاستفاده می‌شود.
+
+قدم بعد فقط review این نتیجه است؛ هیچ feature بعدی/UI/quote/activation/deployment مجاز نیست. TB185 متوقف و default-OFF/PendingAllocation دست‌نخورده.
+
+## مرجع قبلی: نتیجه197 ارسال شد / منتظر بررسی Architect
 
 Worker تسک **TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197** (Parent=196-R13-R1) را روی main `3f05917bd0e71297bdd1fd973ad8dcd8b6687f93` اجرا و نتیجه را به Bridge داد. سه‌گانهٔ یک use case (choices/current/replace) روی شش route admin+seller با مجوزهای موجود، root-only nullable `shipping_type_id` + CHECK مختص Shipping، خواندن Contracts-only از `IShippingTypeReader` پشت `IShippingTypeCatalogReader` با یک span فرزند برای هر خواندن واقعی، presence صریح (`omitted` رد، `null` تنها clear)، active-only PUT، no-op واقعی، stale 409 قبل از I/O خارجی و خواندن صادقانهٔ inactive/missing. [نتیجه](../../architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197/RESULT.md).
 

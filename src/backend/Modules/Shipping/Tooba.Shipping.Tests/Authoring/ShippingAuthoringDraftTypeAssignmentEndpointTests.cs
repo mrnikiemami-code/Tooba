@@ -315,6 +315,130 @@ public sealed class ShippingAuthoringDraftTypeAssignmentEndpointTests
     }
 
     [Fact]
+    public async Task Rejections_in_one_context_leave_zero_tracked_mutation_and_a_later_valid_assignment_succeeds()
+    {
+        using var harness = Harness.Create("type-http-k");
+        var draftId = await harness.CreateDraftAsync();
+        var owner = ShippingAuthoringOwnerScope.ForStore("store-a");
+        var active = harness.AddType("post-same-context", true, 1, 1, (PersianLanguage, "زمینه", null));
+        var inactive = harness.AddType("post-same-context-off", false, 2, 1, (PersianLanguage, "خاموش", null));
+        var baseline = await harness.ReadDraftAsync(draftId);
+
+        // Scalar Guid.Empty reaches the same directory/context and is refused by the domain preflight.
+        await harness.WithContextAsync(async context =>
+        {
+            var emptyGuid = await Assert.ThrowsAsync<SemanticException>(() =>
+                new ShippingAuthoringDraftDirectory(context).ReplaceTypeAssignmentAsync(
+                    owner, draftId, baseline.Revision, Guid.Empty, CancellationToken.None));
+            Assert.Equal(ShippingErrorCodes.AuthoringTypeAssignmentInvalid, emptyGuid.Error.Code);
+        });
+
+        // Well-shaped UNKNOWN and INACTIVE selections are rejected by the real handler in the same context.
+        harness.GetByIdsOverride = _ => [];
+        var unknown = await harness.SendHandlerAsync(new ReplaceShippingAuthoringDraftTypeAssignmentCommand(
+            owner, draftId, Request(baseline.Revision, Guid.NewGuid())));
+        Assert.True(unknown.IsFailure);
+        Assert.Equal(ShippingErrorCodes.AuthoringTypeSelectionUnavailable, unknown.Errors[0].Code);
+
+        harness.GetByIdsOverride = null;
+        var refusedInactive = await harness.SendHandlerAsync(new ReplaceShippingAuthoringDraftTypeAssignmentCommand(
+            owner, draftId, Request(baseline.Revision, inactive)));
+        Assert.True(refusedInactive.IsFailure);
+        Assert.Equal(ShippingErrorCodes.AuthoringTypeSelectionUnavailable, refusedInactive.Errors[0].Code);
+
+        // The SAME context still holds nothing writable and a later SaveChanges publishes zero rows.
+        await harness.WithContextAsync(async context =>
+        {
+            Assert.Empty(context.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
+            Assert.Equal(0, await context.SaveChangesAsync());
+        });
+        var unchanged = await harness.ReadDraftAsync(draftId);
+        Assert.Equal(baseline.Revision, unchanged.Revision);
+        Assert.Equal(baseline.UpdatedAt, unchanged.UpdatedAt);
+        Assert.Null(await harness.ReadTypeIdAsync(draftId));
+
+        // A valid assignment then succeeds in that same context with ONE revision advance.
+        var accepted = await harness.SendHandlerAsync(new ReplaceShippingAuthoringDraftTypeAssignmentCommand(
+            owner, draftId, Request(baseline.Revision, active)));
+        Assert.True(accepted.IsSuccess, accepted.IsFailure ? accepted.Errors[0].Code : null);
+        Assert.Equal(baseline.Revision + 1, accepted.Value.Revision);
+        Assert.Equal(active, await harness.ReadTypeIdAsync(draftId));
+    }
+
+    [Fact]
+    public async Task Put_resolves_the_selected_type_once_before_the_write_and_never_reads_after_commit()
+    {
+        using var harness = Harness.Create("type-http-i");
+        var draftId = await harness.CreateDraftAsync();
+        var type = harness.AddType("post-one-read", true, 3, 1, (PersianLanguage, "یک‌بار", null));
+        var path = $"{AdminDrafts}/{draftId}/method-type";
+
+        // Any read beyond the FIRST one throws: the legacy composition performed a second lookup AFTER
+        // the root was committed, so an outage there reported failure over a successful write.
+        harness.ReadLimit = 1;
+        var (status, _, body) = await harness.SendAsync(
+            HttpMethod.Put, path, $"{{\"expectedRevision\":1,\"shippingTypeId\":\"{type}\"}}");
+
+        Assert.Equal(StatusCodes.Status200OK, status);
+        Assert.Equal(1, harness.CatalogReads);
+        Assert.Equal(type, body.GetProperty("shippingTypeId").GetGuid());
+        Assert.Equal((int)ShippingAuthoringTypeResolution.Active, body.GetProperty("resolution").GetInt32());
+        Assert.Equal(2, body.GetProperty("revision").GetInt64());
+
+        // Exactly one persisted revision advance and no post-commit dependency call.
+        var stored = await harness.ReadDraftAsync(draftId);
+        Assert.Equal(2, stored.Revision);
+        Assert.Equal(1, harness.CatalogReads);
+
+        // A later truthful GET may now fail on the dependency WITHOUT changing the committed success.
+        harness.FailWith = () => throw new InvalidOperationException("catalog-outage");
+        var (getStatus, _, _) = await harness.SendAsync(HttpMethod.Get, path);
+        Assert.Equal(StatusCodes.Status500InternalServerError, getStatus);
+        var afterOutage = await harness.ReadDraftAsync(draftId);
+        Assert.Equal(2, afterOutage.Revision);
+        Assert.Equal(stored.UpdatedAt, afterOutage.UpdatedAt);
+        Assert.Equal(type, await harness.ReadTypeIdAsync(draftId));
+    }
+
+    [Fact]
+    public async Task Empty_facts_are_missing_but_inconsistent_nonempty_facts_fail_closed_with_the_canonical_code()
+    {
+        using var harness = Harness.Create("type-http-j");
+        var draftId = await harness.CreateDraftAsync();
+        var type = harness.AddType("post-inconsistent", true, 2, 4, (PersianLanguage, "ناسازگار", null));
+        var path = $"{AdminDrafts}/{draftId}/method-type";
+        var (assignStatus, _, assigned) = await harness.SendAsync(
+            HttpMethod.Put, path, $"{{\"expectedRevision\":1,\"shippingTypeId\":\"{type}\"}}");
+        Assert.True(assignStatus == StatusCodes.Status200OK, assigned.ToString());
+        var stamp = await harness.ReadDraftAsync(draftId);
+
+        // A genuinely empty result is a real, truthful MISSING with the raw id retained.
+        harness.GetByIdsOverride = _ => [];
+        var (missingStatus, _, missing) = await harness.SendAsync(HttpMethod.Get, path);
+        Assert.Equal(StatusCodes.Status200OK, missingStatus);
+        Assert.Equal(type, missing.GetProperty("shippingTypeId").GetGuid());
+        Assert.Equal((int)ShippingAuthoringTypeResolution.Missing, missing.GetProperty("resolution").GetInt32());
+
+        // A wrong-id fact is NOT absence: fail closed through the existing canonical code.
+        harness.GetByIdsOverride = _ => [harness.Fact(type) with { ShippingTypeId = Guid.NewGuid() }];
+        var (wrongStatus, _, wrong) = await harness.SendAsync(HttpMethod.Get, path);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, wrongStatus);
+        Assert.Equal(ShippingErrorCodes.AuthoringConfigurationUnavailable, wrong.GetProperty("errorCode").GetString());
+
+        // Duplicate facts for one requested id are equally inconsistent.
+        harness.GetByIdsOverride = _ => [harness.Fact(type), harness.Fact(type)];
+        var (duplicateStatus, _, duplicate) = await harness.SendAsync(HttpMethod.Get, path);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, duplicateStatus);
+        Assert.Equal(ShippingErrorCodes.AuthoringConfigurationUnavailable, duplicate.GetProperty("errorCode").GetString());
+
+        // The stored reference, revision and timestamp are untouched by the failed compositions.
+        var after = await harness.ReadDraftAsync(draftId);
+        Assert.Equal(stamp.Revision, after.Revision);
+        Assert.Equal(stamp.UpdatedAt, after.UpdatedAt);
+        Assert.Equal(type, await harness.ReadTypeIdAsync(draftId));
+    }
+
+    [Fact]
     public void Every_actual_fulfillment_read_gets_one_child_span_and_early_branches_get_none()
     {
         var reader = new RecordingReader();
@@ -467,6 +591,27 @@ public sealed class ShippingAuthoringDraftTypeAssignmentEndpointTests
             set => _catalog.FailWith = value;
         }
 
+        public int? ReadLimit
+        {
+            get => _catalog.ReadLimit;
+            set => _catalog.ReadLimit = value;
+        }
+
+        public Func<IReadOnlyCollection<Guid>, IReadOnlyList<ShippingTypeFact>>? GetByIdsOverride
+        {
+            get => _catalog.GetByIdsOverride;
+            set => _catalog.GetByIdsOverride = value;
+        }
+
+        public ShippingTypeFact Fact(Guid id) => _catalog.Fact(id);
+
+        public async Task<Guid?> ReadTypeIdAsync(Guid draftId)
+            => await WithContextAsync(async context => await context.AuthoringDrafts
+                .AsNoTracking()
+                .Where(draft => draft.DraftId == draftId)
+                .Select(draft => draft.ShippingTypeId)
+                .SingleAsync());
+
         public static Harness Create(
             string database,
             ToobaEdition edition = ToobaEdition.SingleStore,
@@ -570,6 +715,9 @@ public sealed class ShippingAuthoringDraftTypeAssignmentEndpointTests
         public async Task SendToHandlerAsync<TResponse>(MediatR.IRequest<TResponse> request)
             => await _scope.ServiceProvider.GetRequiredService<MediatR.IMediator>().Send(request);
 
+        public async Task<TResponse> SendHandlerAsync<TResponse>(MediatR.IRequest<TResponse> request)
+            => await _scope.ServiceProvider.GetRequiredService<MediatR.IMediator>().Send(request);
+
         public async Task<T> WithContextAsync<T>(Func<ShippingDbContext, Task<T>> action)
             => await action(_scope.ServiceProvider.GetRequiredService<ShippingDbContext>());
 
@@ -663,6 +811,9 @@ public sealed class ShippingAuthoringDraftTypeAssignmentEndpointTests
         public int Sent { get; set; }
     }
 
+    private static ShippingAuthoringDraftTypeAssignmentReplaceRequest Request(long revision, Guid? shippingTypeId)
+        => new() { ExpectedRevision = revision, ShippingTypeId = shippingTypeId };
+
     private sealed class SentCountingBehavior<TRequest, TResponse>(Counter counter)
         : IPipelineBehavior<TRequest, TResponse>
         where TRequest : notnull
@@ -690,6 +841,12 @@ public sealed class ShippingAuthoringDraftTypeAssignmentEndpointTests
 
         public Action? FailWith { get; set; }
 
+        /// <summary>When set, any read beyond this count fails, proving a single pre-write lookup.</summary>
+        public int? ReadLimit { get; set; }
+
+        /// <summary>Optional shape override for the by-id read, used to prove inconsistent facts.</summary>
+        public Func<IReadOnlyCollection<Guid>, IReadOnlyList<ShippingTypeFact>>? GetByIdsOverride { get; set; }
+
         public Guid Add(string code, bool isActive, int sortOrder, long revision, params (Guid LanguageId, string Name, string? Description)[] translations)
         {
             var id = Guid.NewGuid();
@@ -711,10 +868,12 @@ public sealed class ShippingAuthoringDraftTypeAssignmentEndpointTests
 
         public void Remove(Guid id) => _facts.RemoveAll(fact => fact.ShippingTypeId == id);
 
+        public ShippingTypeFact Fact(Guid id) => _facts.Single(fact => fact.ShippingTypeId == id);
+
         public Task<IReadOnlyList<ShippingTypeFact>> ListActiveAsync(CancellationToken cancellationToken)
         {
             Reads++;
-            FailWith?.Invoke();
+            Guard();
             return Task.FromResult<IReadOnlyList<ShippingTypeFact>>(
                 _facts.Where(fact => fact.IsActive).OrderBy(fact => fact.SortOrder).ThenBy(fact => fact.ShippingTypeId).ToArray());
         }
@@ -724,9 +883,23 @@ public sealed class ShippingAuthoringDraftTypeAssignmentEndpointTests
             CancellationToken cancellationToken)
         {
             Reads++;
-            FailWith?.Invoke();
+            Guard();
+            if (GetByIdsOverride is not null)
+            {
+                return Task.FromResult(GetByIdsOverride(shippingTypeIds));
+            }
+
             return Task.FromResult<IReadOnlyList<ShippingTypeFact>>(
                 _facts.Where(fact => shippingTypeIds.Contains(fact.ShippingTypeId)).ToArray());
+        }
+
+        private void Guard()
+        {
+            FailWith?.Invoke();
+            if (ReadLimit is { } limit && Reads > limit)
+            {
+                throw new InvalidOperationException("second-catalog-read");
+            }
         }
     }
 

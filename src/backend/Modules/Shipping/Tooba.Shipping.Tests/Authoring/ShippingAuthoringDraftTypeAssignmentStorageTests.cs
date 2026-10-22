@@ -333,6 +333,148 @@ public sealed class ShippingAuthoringDraftTypeAssignmentStorageTests
         }
     }
 
+    [Fact]
+    public async Task Provider_aborted_assignment_write_publishes_nothing_and_a_clean_retry_succeeds_in_the_same_context()
+    {
+        await using var context = await NewContextAsync();
+        var owner = ShippingAuthoringOwnerScope.ForStore("tb197-fail-" + Guid.NewGuid().ToString("N"));
+        var created = await new ShippingAuthoringDraftDirectory(context).CreateAsync(
+            owner, "post", null, [new ShippingAuthoringRegionGroupInput(null, [Node(Tehran)])], CancellationToken.None);
+        Assert.True(created.IsSuccess, created.IsFailure ? created.Errors[0].Code : null);
+        var draftId = created.Value.DraftId;
+        var groupId = created.Value.RegionGroups.Single().GroupId;
+
+        // Seed a real authored graph so an aborted write can be shown to publish nothing at all.
+        var directory = new ShippingAuthoringDraftDirectory(context);
+        var rate = await directory.ReplaceGroupRateRowsAsync(
+            owner, draftId, groupId, 1, [RowInput(21.5m)], "USD", CancellationToken.None);
+        Assert.True(rate.IsSuccess, rate.IsFailure ? rate.Errors[0].Code : null);
+        var settings = await directory.ReplaceMethodSettingsAsync(
+            owner, draftId, 2,
+            Tooba.Shipping.Contracts.Packaging.ShippingFreightPayerMode.CollectOnDelivery,
+            Tooba.Shipping.Contracts.Authoring.ShippingAuthoringCalculationMode.Free,
+            CancellationToken.None);
+        Assert.True(settings.IsSuccess, settings.IsFailure ? settings.Errors[0].Code : null);
+
+        // The seeded timestamp is meaningfully older than any current write (non-vacuous boundary).
+        var seededStamp = DateTimeOffset.UtcNow.AddYears(-1).AddMinutes(-7);
+        await context.Database.ExecuteSqlRawAsync(
+            "UPDATE shipping.authoring_drafts SET updated_at = {0} WHERE draft_id = {1}", seededStamp, draftId);
+        context.ChangeTracker.Clear();
+
+        var baseline = await new ShippingAuthoringDraftDirectory(context).GetAsync(owner, draftId, CancellationToken.None);
+        Assert.True(baseline.IsSuccess, baseline.IsFailure ? baseline.Errors[0].Code : null);
+        Assert.Equal(3, baseline.Value.Revision);
+        // Compare against the value the SERVER stored (microsecond precision), not the C# literal.
+        var storedStamp = baseline.Value.UpdatedAt;
+        Assert.True(storedStamp < DateTimeOffset.UtcNow.AddMonths(-6), "the seeded boundary is non-vacuous");
+
+        var type = Guid.NewGuid();
+        var function = "tb197_fail_assignment_" + draftId.ToString("N");
+        var trigger = "tb197_fail_assignment_trg_" + draftId.ToString("N");
+        try
+        {
+            // TASK-ONLY fault injection in the disposable database: a real provider-side abort that
+            // never enters production migrations, scoped to this one synthetic draft id.
+            await context.Database.ExecuteSqlRawAsync(
+                $"CREATE FUNCTION shipping.{function}() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'tb197 synthetic write failure'; END; $$ LANGUAGE plpgsql");
+            await context.Database.ExecuteSqlRawAsync(
+                $"CREATE TRIGGER {trigger} BEFORE UPDATE OF shipping_type_id ON shipping.authoring_drafts "
+                + $"FOR EACH ROW WHEN (OLD.draft_id = '{draftId}') EXECUTE FUNCTION shipping.{function}()");
+
+            // The real provider aborts the write; its canonical exception is not remapped into a Result.
+            var failure = await Assert.ThrowsAsync<Microsoft.EntityFrameworkCore.DbUpdateException>(
+                () => directory.ReplaceTypeAssignmentAsync(owner, draftId, 3, type, CancellationToken.None));
+            var providerError = Assert.IsType<PostgresException>(failure.InnerException);
+            Assert.Equal("P0001", providerError.SqlState);
+
+            // The aborted write publishes nothing in a NEW context: root, revision, time, type and the
+            // whole authored graph are exactly the baseline.
+            await using (var verify = await NewContextAsync())
+            {
+                var stored = await new ShippingAuthoringDraftDirectory(verify).GetAsync(owner, draftId, CancellationToken.None);
+                Assert.True(stored.IsSuccess, stored.IsFailure ? stored.Errors[0].Code : null);
+                Assert.Equal(3, stored.Value.Revision);
+                Assert.Equal(storedStamp, stored.Value.UpdatedAt);
+                Assert.Null(stored.Value.ShippingTypeId);
+                var group = stored.Value.RegionGroups.Single();
+                Assert.Equal("USD", group.CurrencyCode);
+                Assert.Equal(21.5m, group.RateRows.Single().FreightAmount);
+                Assert.Equal(
+                    Tooba.Shipping.Contracts.Packaging.ShippingFreightPayerMode.CollectOnDelivery,
+                    stored.Value.MethodSettings!.FreightPaymentMode);
+            }
+
+            // The ACTUAL writing context cleared its tracker: a later SaveChanges publishes zero rows.
+            Assert.Empty(context.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged));
+            Assert.Equal(0, await context.SaveChangesAsync());
+        }
+        finally
+        {
+            // Exact owned cleanup, executed even when an assertion above fails.
+            await context.Database.ExecuteSqlRawAsync($"DROP TRIGGER IF EXISTS {trigger} ON shipping.authoring_drafts");
+            await context.Database.ExecuteSqlRawAsync($"DROP FUNCTION IF EXISTS shipping.{function}()");
+        }
+
+        // A same-context retry with the ORIGINAL revision succeeds once and preserves every capability.
+        var retried = await directory.ReplaceTypeAssignmentAsync(owner, draftId, 3, type, CancellationToken.None);
+        Assert.True(retried.IsSuccess, retried.IsFailure ? retried.Errors[0].Code : null);
+        Assert.Equal(4, retried.Value.Revision);
+        Assert.Equal(type, retried.Value.ShippingTypeId);
+        Assert.Equal("USD", retried.Value.RegionGroups.Single().CurrencyCode);
+        Assert.Equal(21.5m, retried.Value.RegionGroups.Single().RateRows.Single().FreightAmount);
+        Assert.NotNull(retried.Value.MethodSettings);
+    }
+
+    [Fact]
+    public async Task No_op_assignment_preserves_a_seeded_earlier_timestamp_exactly_and_stale_still_conflicts()
+    {
+        await using var context = await NewContextAsync();
+        var owner = ShippingAuthoringOwnerScope.ForStore("tb197-noop-" + Guid.NewGuid().ToString("N"));
+        var created = await new ShippingAuthoringDraftDirectory(context).CreateAsync(
+            owner, "post", null, [new ShippingAuthoringRegionGroupInput(null, [Node(Tehran)])], CancellationToken.None);
+        Assert.True(created.IsSuccess, created.IsFailure ? created.Errors[0].Code : null);
+        var draftId = created.Value.DraftId;
+
+        var type = Guid.NewGuid();
+        var assigned = await new ShippingAuthoringDraftDirectory(context).ReplaceTypeAssignmentAsync(
+            owner, draftId, 1, type, CancellationToken.None);
+        Assert.True(assigned.IsSuccess, assigned.IsFailure ? assigned.Errors[0].Code : null);
+        Assert.Equal(2, assigned.Value.Revision);
+
+        // Seed a meaningfully older timestamp: a no-op that wrongly restamped "now" cannot pass this.
+        var seededStamp = DateTimeOffset.UtcNow.AddYears(-1).AddDays(-3);
+        await context.Database.ExecuteSqlRawAsync(
+            "UPDATE shipping.authoring_drafts SET updated_at = {0} WHERE draft_id = {1}", seededStamp, draftId);
+        context.ChangeTracker.Clear();
+
+        DateTimeOffset noOpStamp;
+        await using (var seeded = await NewContextAsync())
+        {
+            var seededDraft = await new ShippingAuthoringDraftDirectory(seeded).GetAsync(owner, draftId, CancellationToken.None);
+            noOpStamp = seededDraft.Value.UpdatedAt;
+        }
+
+        await using (var noOpContext = await NewContextAsync())
+        {
+            var noOp = await new ShippingAuthoringDraftDirectory(noOpContext).ReplaceTypeAssignmentAsync(
+                owner, draftId, 2, type, CancellationToken.None);
+            Assert.True(noOp.IsSuccess, noOp.IsFailure ? noOp.Errors[0].Code : null);
+            Assert.Equal(2, noOp.Value.Revision);
+            Assert.Equal(noOpStamp, noOp.Value.UpdatedAt);
+            Assert.True(noOp.Value.UpdatedAt < DateTimeOffset.UtcNow.AddMonths(-6), "the no-op must not restamp");
+        }
+
+        // A stale token still wins over an otherwise identical payload.
+        await using (var stale = await NewContextAsync())
+        {
+            var conflict = await new ShippingAuthoringDraftDirectory(stale).ReplaceTypeAssignmentAsync(
+                owner, draftId, 1, type, CancellationToken.None);
+            Assert.True(conflict.IsFailure);
+            Assert.Equal(ShippingErrorCodes.AuthoringDraftRevisionConflict, conflict.Errors[0].Code);
+        }
+    }
+
     private static async Task<ShippingDbContext> NewContextAsync()
         => await NewContextAsync(null);
 

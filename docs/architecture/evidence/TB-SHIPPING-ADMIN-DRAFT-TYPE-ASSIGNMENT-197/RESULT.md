@@ -151,3 +151,22 @@ themselves are the only surface that changed apart from the readback include in 
   acceptance, catalog administration, item/offer compatibility, rate/quote evaluation, cutoff, carrier/funding/
   activation/deployment. TB-185 stays paused; default-OFF/PendingAllocation untouched.
 - Stop state: `STOP_FOR_ARCHITECT`; no automatic next task.
+
+## 8. Correction appended by TB-SHIPPING-ADMIN-DRAFT-TYPE-ASSIGNMENT-197-R1 (2026-10-22)
+
+The Architect review of `962897207` found one concrete production defect in this slice, now repaired in the two
+authorized Application files and re-proved by `...-197-R1/RESULT.md`:
+
+- **Post-commit foreign lookup.** The PUT response was composed by a SECOND `GetByIdsAsync` executed after the
+  root commit, so a catalog outage there reported failure over an already-persisted assignment (and a retry then
+  conflicted). It now composes synchronously from the single pre-write validated fact plus the actual saved
+  root revision: exactly one foreign read before the write, none after.
+- **GET bad facts.** A non-empty inconsistent response (wrong id/duplicates) was previously reported as `Missing`;
+  now only a genuinely empty set is `Missing`, and any inconsistent non-empty set fails closed with the existing
+  canonical `shipping.authoring.configuration_unavailable` (503). No new error code/resource/DTO.
+- **Proof limits of the earlier evidence.** This slice did not prove (a) a single pre-write lookup with no
+  post-commit dependency, (b) a rejected last validation in the SAME context with a later `SaveChanges` of 0,
+  (c) a real provider-aborted assignment write with unchanged graph and clean same-context retry, (d) real
+  `ShippingModule` DI resolution, or (e) parent-`Activity`/correlation continuity and same-instance exception
+  identity. Those facts now exist; the earlier "626/626" run and the manual-adapter/root-span listener facts are
+  retained as history, not as proof of those cases.
