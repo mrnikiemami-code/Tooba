@@ -43,11 +43,11 @@ Read latest recovery/reviews for exact evidence/process limits; no merchant UI/q
 TB198 source analysis accepted with corrections; read its ARCHITECT-REVIEW.md before implementation.
 TB199 existing-draft atomic editor backend is Architect-accepted through199-R1 (98274e4ff), with process/proof limits in its review.
 TB200 frontend foundation accepted through200-R2 at64f3f307cf; UI is still pending.
-Only next issued task: TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201 (parent200-R2).
-Minimal Geography-owned bulk identity read seam + Shipping destinationFacts read/pre-write projection; Contracts-only, no schema/HTTP Geography/UI change.
-Current Geography GetByIds validates supplied mandatory-country tuple; cannot reverse-hydrate terminal ids. No frontend world-scan/parent guessing.
-All PUT facts acquired pre-write; no postcommit foreign call. City may legitimately have no admin parent.
-Backend199 accepted; no replay. Latest recovery authoritative; wait201 result before another task.
+TB201 read hydration at e0c2a2651 is not accepted; inactive ServiceArea erroneously resolves, proof gaps remain.
+Only next issued task: TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R1 (parent201).
+One activity guard + existing Shipping.Tests EF/DI/listener/new-handler proof; test-only Geography.Infrastructure reference explicitly allowed, production edges stay Contracts-only.
+No schema/frontend/Host/shared DB or read API redesign. Exact nonrelational filters only; prior connection-refused storage run is not green.
+Backend199/frontend200 accepted; latest recovery authoritative; wait201-R1 result before UI202.
 Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
 
 ## Core rules

@@ -1,5 +1,14 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 201 نیازمنداصلاح؛فقط201-R1 — 2026-10-23
+
+201 درe0c2a2651e413aa7b5b0af3f5011eb7cd9955828 بررسی شد؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201/ARCHITECT-REVIEW.md). readbridge/Contracts/sharedancestry/prewriteprojectionحفظ،اما201بسته‌نیست. ServiceArea branch فاقد !serviceArea.IsActive است؛ناحیه‌غیرفعالباوالدفعالاشتباهResolvedمی‌شود. proofهایEFreader/realDI/ActivityListener/newhandlerpoisonedsecondcall اجرا نشده؛6facts+10editorPASS و4storageconnectionrefusedگزارشworker،نهgreenیاregressionabsence. deadlineگذشته ثبت.
+
+تنها **TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R1**،parent201؛20دقیقه/stop14. productionفقطهمانserviceareaactivityguard. test-onlyیکProjectReference بهGeography.InfrastructureدرShipping.TestsمجازبرایownEFInMemoryreader+realmoduleDI؛productionedgeهمچنانContracts-only؛نهnewproject/package/sharedDB. ActivityListener/actualhandlerprewriteproofتکمیل؛فقطexactnonrelationalfilters نهwildcardEditorDocumentstorage یاfullsuite. اگرنقصدیگریپیداشدSTOPنهscopegrow. بعدreview:UI202.
+
+200/199بسته،نهreplay؛frontend/schema/Host/quote/activationدست‌نخورده؛cutoff/status/fullcreate/sellerpickerباز؛TB185paused/defaultOFF/PendingAllocationمحفوظ. آخرینبخشمرجعجاری‌است.
+
+
 ## مرجع جاری: 201 اجرا شد؛ منتظر review — 2026-10-23
 
 TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201 روی base `b1c89e20f495e326a932e9c0b497105b0d89bec6` اجرا و به Bridge ارسال شد؛
