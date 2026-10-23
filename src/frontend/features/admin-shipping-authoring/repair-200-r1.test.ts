@@ -6,8 +6,8 @@ import {
   parseJsonNode,
   reduceEditorSession,
   selectApplyRequest,
-} from "./index.ts";
-import type { AreaAncestryResolver, EditorDocument, EditorEdits, EditorSessionState } from "./index.ts";
+} from "./authoring-core.ts";
+import type { AreaAncestryResolver, EditorDocument, EditorEdits, EditorSessionState } from "./authoring-core.ts";
 
 const DRAFT_A = "11111111-1111-4111-8111-111111111111";
 const DRAFT_B = "99999999-9999-4999-8999-999999999999";
@@ -509,3 +509,4 @@ test("R200-01 baseline retention does not mutate the confirmed baseline", () => 
   bodyOf(methodOnly(state), fullResolver);
   assert.equal(JSON.stringify(state.baseline), before);
 });
+

@@ -1,75 +1,13 @@
 /**
- * Public boundary of the shipping authoring editor feature.
+ * Public boundary of the shipping authoring feature — the ONLY module the app imports.
  *
- * Transport (`api`), typed read model (`model`) and local session state (`session`) stay separate so
- * the presentation slice can be added later without moving ownership. No rendered page is exported
- * yet: this slice is the typed adapter + session foundation only.
+ * `authoring-core.ts` holds the non-rendered surface (typed model, authorized transport, strict decode,
+ * ancestry index, local session, controller, messages) so unit tests can load it without a JSX
+ * transform. The rendered capability of this slice is exported from here for routes/pages:
+ * - `ShippingAuthoringScreen`: the composed draft editor;
+ * - `ShippingAuthoringDraftEntry`: the read-only legacy-method entry component.
  */
-export type {
-  AuthoringAreaKind,
-  AuthoringCalculationMode,
-  AuthoringOwnerKind,
-  AuthoringTypeResolution,
-  DecimalText,
-  EditorContentLanguage,
-  EditorDocument,
-  EditorGroupTitle,
-  EditorMethodSettings,
-  EditorMethodTranslation,
-  EditorOwnerView,
-  EditorPresentation,
-  EditorRateRow,
-  EditorRegionGroup,
-  EditorScheduleDay,
-  EditorShippingType,
-  EditorTypeAssignment,
-  EditorTypeTranslation,
-  EditorWeeklySchedule,
-  FreightPaymentMode,
-  SelectedAreaRead,
-  TimeText,
-  UnresolvedAreaSelection,
-} from "./model/editor-document.ts";
+export * from "./authoring-core.ts";
 
-export type {
-  AreaAncestryResolver,
-  EditorEdits,
-  GroupTitleEdit,
-  MethodSettingsEdit,
-  MethodTranslationEdit,
-  RateRowEdit,
-  RegionGroupEdit,
-  ResolvedAreaAncestry,
-  ScheduleDayEdit,
-  TypeAssignmentEdit,
-  WeeklyScheduleEdit,
-} from "./model/editor-edits.ts";
-
-export type {
-  EditorOutcome,
-  EditorPropertyError,
-  EditorTransportFailure,
-} from "./api/editor-document-api.ts";
-export { editorDocumentPath, loadEditorDocument, saveEditorDocument } from "./api/editor-document-api.ts";
-
-export type { EditorIntentIssue, EditorRequestBody } from "./api/editor-document-request.ts";
-export { buildEditorDocumentBody } from "./api/editor-document-request.ts";
-
-export { decodeEditorDocument, sameId } from "./api/editor-document-decode.ts";
-export { isDecimalText, isIntegerText, parseJsonNode, RawNumber, writeJsonText } from "./api/wire-json.ts";
-
-export type {
-  EditorApplyRequest,
-  EditorDecision,
-  EditorLoadStatus,
-  EditorReconcileStatus,
-  EditorSaveStatus,
-  EditorSessionAction,
-  EditorSessionState,
-} from "./session/editor-session.ts";
-export {
-  createEditorSessionState,
-  hasUnsavedWork,
-  reduceEditorSession,
-  selectApplyRequest,
-} from "./session/editor-session.ts";
+export { ShippingAuthoringScreen } from "./ui/authoring-screen.tsx";
+export { ShippingAuthoringDraftEntry } from "./ui/authoring-draft-entry.tsx";

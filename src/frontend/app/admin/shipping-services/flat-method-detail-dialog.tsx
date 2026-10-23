@@ -22,6 +22,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Dialog } from "../../../design-system";
 import { loadAdminLanguages } from "../../../features/admin-languages";
+import { ShippingAuthoringDraftEntry } from "../../../features/admin-shipping-authoring";
+import { readBrowserLocaleCookie } from "../../../lib/i18n/locale-cookie.ts";
 import type { SupportedLocaleDefinition } from "../../../lib/i18n/supported-locales.ts";
 import { FlatGeneralTab } from "./flat-general-tab.tsx";
 import type { MethodLanguagesState } from "./flat-method-language-editor.tsx";
@@ -171,7 +173,23 @@ export function FlatMethodDetailDialog({
 
         <div role="tabpanel" id={`method-panel-${activeTab}`} aria-labelledby={`method-tab-${activeTab}`} tabIndex={0}>
           {activeTab === "general" ? (
-            <FlatGeneralTab
+            <>
+              {/*
+                TB-202 — ورود فقط‌خواندنی به ویرایشگر یک‌جای همین پیش‌نویس، تنها در حالت مشاهده،
+                تنها روی زبانهٔ عمومی و تنها وقتی پیوند authoritative سرور حل شده است. این بلوک نه
+                ردیف/عملیات تازه می‌سازد، نه فرم قدیمی (ویرایش/حذف/تعرفه/سیاست) را تغییر می‌دهد و
+                هیچ درخواست ایجاد/ذخیره‌ای به‌طور خودکار نمی‌فرستد.
+              */}
+              {readOnly && binding?.state === "resolved" ? (
+                <div className="mb-3">
+                  <ShippingAuthoringDraftEntry
+                    serviceCode={binding.binding.serviceCode}
+                    optionCode={binding.binding.optionCode}
+                    locale={readBrowserLocaleCookie()}
+                  />
+                </div>
+              ) : null}
+              <FlatGeneralTab
               methodCode={row.methodCode}
               label={effectiveLabel}
               isActive={effectiveIsActive}
@@ -186,6 +204,7 @@ export function FlatMethodDetailDialog({
               onSavedInPlace={onRefreshed}
               onSavedAndClose={onSaved}
             />
+            </>
           ) : activeTab === "rates" ? (
             <ShippingOneLevelRatesTab methodCode={row.methodCode} onNotice={onNotice} bindingOverride={bindingOverride} readOnly={readOnly} />
           ) : activeTab === "schedule" ? (

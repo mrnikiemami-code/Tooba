@@ -145,6 +145,32 @@ export interface EditorOwnerView {
   readonly sellerPartyId: string | null;
 }
 
+/** Honest resolution of one requested destination key (`ShippingAuthoringDestinationResolution`). */
+export type AuthoringDestinationResolution = "Resolved" | "Unresolved";
+
+/**
+ * Canonical WRITE shape of one destination, proven by the server's own parent closure.
+ *
+ * `administrativeAreaId` is legitimately `null` for a city (and a service area under it) without an
+ * administrative parent: the UI must never invent one.
+ */
+export interface EditorDestinationWriteShape {
+  readonly kind: AuthoringAreaKind;
+  readonly countryId: string;
+  readonly administrativeAreaId: string | null;
+  readonly cityId: string | null;
+  readonly serviceAreaId: string | null;
+}
+
+/** One additive destination fact for ONE distinct selected key (kind + id). */
+export interface EditorDestinationFact {
+  readonly kind: AuthoringAreaKind;
+  readonly id: string;
+  readonly resolution: AuthoringDestinationResolution;
+  readonly area: EditorDestinationWriteShape | null;
+  readonly label: string | null;
+}
+
 /** The whole editor document of one existing draft. */
 export interface EditorDocument {
   readonly draftId: string;
@@ -159,6 +185,12 @@ export interface EditorDocument {
   readonly presentation: EditorPresentation;
   readonly weeklySchedule: EditorWeeklySchedule | null;
   readonly regionGroups: readonly EditorRegionGroup[];
+  /**
+   * Additive destination facts of the same read snapshot, or `null` when the server did not supply the
+   * hydration field at all. `null` is EXPLICITLY unavailable — it is never treated as "everything is
+   * unresolved" silently resolved, and no ancestry is ever invented from it.
+   */
+  readonly destinationFacts: readonly EditorDestinationFact[] | null;
 }
 
 /** A read selection that still needs its authoritative ancestor chain before it can be written. */

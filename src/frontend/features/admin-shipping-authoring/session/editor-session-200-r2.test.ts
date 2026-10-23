@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import test from "node:test";
 import {
   createEditorSessionState,
@@ -7,8 +7,8 @@ import {
   parseJsonNode,
   reduceEditorSession,
   selectApplyRequest,
-} from "../index.ts";
-import type { AreaAncestryResolver, EditorDocument, EditorSessionState } from "../index.ts";
+} from "../authoring-core.ts";
+import type { AreaAncestryResolver, EditorDocument, EditorSessionState } from "../authoring-core.ts";
 
 const DRAFT_A = "11111111-1111-4111-8111-111111111111";
 const GROUP = "22222222-2222-4222-8222-222222222222";
@@ -203,3 +203,4 @@ test("R2-02 hasUnsavedWork protects latched uncertainty, in-flight save and ordi
   const discarded = reduceEditorSession(asked, { type: "discardConfirmed", draftId: DRAFT_A });
   assert.equal(hasUnsavedWork(discarded), true, "an unresolved commit survives discard until a fresh read");
 });
+

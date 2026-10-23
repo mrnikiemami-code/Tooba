@@ -15,6 +15,8 @@ import type {
   AuthoringOwnerKind,
   AuthoringTypeResolution,
   EditorContentLanguage,
+  EditorDestinationFact,
+  EditorDestinationWriteShape,
   EditorDocument,
   EditorGroupTitle,
   EditorMethodSettings,
@@ -29,6 +31,7 @@ import type {
   EditorTypeTranslation,
   EditorWeeklySchedule,
   FreightPaymentMode,
+  SelectedAreaRead,
 } from "../model/editor-document.ts";
 
 /** Result of a strict decode: either the typed value or an untrusted-payload reason. */
@@ -172,8 +175,10 @@ export function decodeEditorDocument(node: JsonNode, expectedDraftId: string): D
       regionGroups: array(required(root, "regionGroups"), "regionGroups").map((group, index) =>
         decodeGroup(group, `regionGroups[${index}]`),
       ),
+      destinationFacts: null,
     };
-    return { ok: true, value: document };
+    const facts = decodeDestinationFacts(root.get("destinationFacts"), document.regionGroups);
+    return { ok: true, value: { ...document, destinationFacts: facts } };
   } catch (error) {
     if (error instanceof DecodeFailure) return { ok: false, reason: error.message };
     throw error;
@@ -362,4 +367,84 @@ function decodeRow(node: JsonNode, path: string): EditorRateRow {
 export function sameId(left: string | null, right: string | null): boolean {
   if (left === null || right === null) return left === right;
   return left.toLowerCase() === right.toLowerCase();
+}
+
+function destinationKey(kind: AuthoringAreaKind, id: string): string {
+  return `${kind}:${id.toLowerCase()}`;
+}
+
+/**
+ * Decodes the ADDITIVE `destinationFacts` collection and proves it against the selected tree.
+ *
+ * @param node Raw field (undefined when an older/partial server omitted the hydration field).
+ * @param groups Already validated region groups of the same document.
+ * @returns Validated facts, or `null` when the field is genuinely absent (explicitly unavailable).
+ */
+function decodeDestinationFacts(
+  node: JsonNode | undefined,
+  groups: readonly EditorRegionGroup[],
+): readonly EditorDestinationFact[] | null {
+  if (node === undefined) return null;
+  const selected = new Map<string, SelectedAreaRead>();
+  for (const group of groups) {
+    for (const area of group.areas) selected.set(destinationKey(area.kind, area.id), area);
+  }
+
+  const seen = new Set<string>();
+  const facts = array(node, "destinationFacts").map((entry, index): EditorDestinationFact => {
+    const path = `destinationFacts[${index}]`;
+    const item = object(entry, path);
+    const kind = variant(item.get("kind"), `${path}.kind`, AREA_KINDS);
+    const id = guid(required(item, "id"), `${path}.id`);
+    const key = destinationKey(kind, id);
+    if (!selected.has(key)) fail(`${path}:unselected`);
+    if (seen.has(key)) fail(`${path}:duplicate`);
+    seen.add(key);
+    const resolution = variant(item.get("resolution"), `${path}.resolution`, ["Resolved", "Unresolved"] as const);
+    const areaNode = item.get("area");
+    const area = areaNode === undefined || areaNode.kind === "null" ? null : decodeWriteShape(areaNode, kind, id, path);
+    // Contradictory payloads fail closed: a proven shape is never dropped, nor invented.
+    if (resolution === "Resolved" && area === null) fail(`${path}:area-missing`);
+    if (resolution === "Unresolved" && area !== null) fail(`${path}:area-unexpected`);
+    return { kind, id, resolution, area, label: optionalText(item.get("label"), `${path}.label`) };
+  });
+
+  // No corrupt selected fact may be filtered away: every selected key needs exactly one fact.
+  for (const key of selected.keys()) {
+    if (!seen.has(key)) fail(`destinationFacts:missing:${key}`);
+  }
+  return facts;
+}
+
+/** Canonical per-kind write shape with the terminal id proven against the fact itself. */
+function decodeWriteShape(
+  node: JsonNode,
+  kind: AuthoringAreaKind,
+  id: string,
+  path: string,
+): EditorDestinationWriteShape {
+  const fields = object(node, `${path}.area`);
+  const shapeKind = variant(fields.get("kind"), `${path}.area.kind`, AREA_KINDS);
+  if (shapeKind !== kind) fail(`${path}.area.kind:mismatch`);
+  const countryId = guid(required(fields, "countryId"), `${path}.area.countryId`);
+  const administrativeAreaId = optionalGuid(fields.get("administrativeAreaId"), `${path}.area.administrativeAreaId`);
+  const cityId = optionalGuid(fields.get("cityId"), `${path}.area.cityId`);
+  const serviceAreaId = optionalGuid(fields.get("serviceAreaId"), `${path}.area.serviceAreaId`);
+
+  if (kind === "Country") {
+    if (administrativeAreaId !== null || cityId !== null || serviceAreaId !== null) fail(`${path}.area:deeper`);
+    if (!sameId(countryId, id)) fail(`${path}.area:terminal`);
+  } else if (kind === "AdministrativeArea") {
+    if (administrativeAreaId === null || cityId !== null || serviceAreaId !== null) fail(`${path}.area:shape`);
+    if (!sameId(administrativeAreaId, id)) fail(`${path}.area:terminal`);
+  } else if (kind === "City") {
+    // A city without an administrative parent is lawful; deeper fields are not.
+    if (cityId === null || serviceAreaId !== null) fail(`${path}.area:shape`);
+    if (!sameId(cityId, id)) fail(`${path}.area:terminal`);
+  } else {
+    if (cityId === null || serviceAreaId === null) fail(`${path}.area:shape`);
+    if (!sameId(serviceAreaId, id)) fail(`${path}.area:terminal`);
+  }
+
+  return { kind, countryId, administrativeAreaId, cityId, serviceAreaId };
 }

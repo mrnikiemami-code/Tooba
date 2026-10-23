@@ -81,7 +81,10 @@ function writesArea(area: SelectedAreaRead, ancestry: ResolvedAreaAncestry): Jso
           ? { administrativeAreaId, cityId, serviceAreaId: null, terminal: cityId }
           : { administrativeAreaId, cityId, serviceAreaId, terminal: serviceAreaId };
 
-  if (area.kind !== "Country" && shape.administrativeAreaId === null) return null;
+  // Canonical backend rule: only an AdministrativeArea selection itself must carry an admin area id.
+  // A City (and a ServiceArea under it) may legitimately have NO administrative parent at all, so a
+  // null admin is lawful for those kinds and must not be rejected here.
+  if (area.kind === "AdministrativeArea" && shape.administrativeAreaId === null) return null;
   if (area.kind === "City" && shape.cityId === null) return null;
   if (area.kind === "ServiceArea" && (shape.cityId === null || shape.serviceAreaId === null)) return null;
   if (shape.terminal === null || shape.terminal.toLowerCase() !== area.id.toLowerCase()) return null;

@@ -10,8 +10,8 @@ import {
   loadEditorDocument,
   parseJsonNode,
   saveEditorDocument,
-} from "../index.ts";
-import type { AreaAncestryResolver, EditorEdits } from "../index.ts";
+} from "../authoring-core.ts";
+import type { AreaAncestryResolver, EditorEdits } from "../authoring-core.ts";
 
 const DRAFT = "11111111-1111-4111-8111-111111111111";
 const GROUP = "22222222-2222-4222-8222-222222222222";
@@ -415,3 +415,4 @@ test("the feature boundary stays public-only and never imports a page-owned clie
   assert.doesNotMatch(api, /method:\s*"PATCH"/);
   assert.doesNotMatch(api, /Promise\.all/);
 });
+

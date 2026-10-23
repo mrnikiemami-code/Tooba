@@ -60,8 +60,17 @@ function actorId(): string {
   return window.localStorage.getItem(ADMIN_ACTOR_STORAGE_KEY) ?? DEFAULT_ADMIN_ACTOR_ID;
 }
 
-function headers(extra?: Record<string, string>): Record<string, string> {
+/**
+ * The ONE set of admin headers every authoring read/write in this feature uses (no second auth client).
+ *
+ * @param extra Additional request headers (for example a JSON content type).
+ */
+export function authoringHeaders(extra?: Record<string, string>): Record<string, string> {
   return { ...adminRequestHeaders(), [ADMIN_DEV_ACTOR_HEADER]: actorId(), ...(extra ?? {}) };
+}
+
+function headers(extra?: Record<string, string>): Record<string, string> {
+  return authoringHeaders(extra);
 }
 
 /** Exact authorized route of ONE existing draft's editor document. */
@@ -169,7 +178,6 @@ async function send(
 
 /**
  * Reads the composite editor document of one existing admin draft.
- *
  * @param draftId Draft id from the route.
  * @param signal Optional caller cancellation.
  * @returns Typed document or typed failure (a cancelled/failed GET is never reported as not-found).
@@ -193,4 +201,16 @@ export function saveEditorDocument(draftId: string, bodyText: string, signal?: A
     signal,
     true,
   );
+}
+
+/** Re-exported canonical failure mapping for the feature's other authorized reads (no second client). */
+export { failureFor as editorTransportFailureFor };
+
+/**
+ * Parses one response body into a JSON node, keeping `null` for an unreadable/empty body.
+ *
+ * @param text Exact response text.
+ */
+export function parseResponseRoot(text: string | null): JsonNode | null {
+  return text === null ? null : parseJsonNode(text);
 }

@@ -1,5 +1,17 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## pointer: 202 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-23
+
+TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202 از base `439c43017ab38bdd6fb6999e26976796365e8140`
+اجرا و result آن به Bridge ارسال شد؛ **Architect-accepted نیست** و هیچ گام بعدی مجاز نیست.
+محدودهٔ تحویل: فقط مسیر نازک `/admin/shipping-services/authoring/[draftId]`، فرم general
+(نام/توضیح چندزبانهٔ فعال، نوع واقعی، دو تنظیم مستقل، یک PUT اتمیک) و نمایش فقط‌خواندنی
+Regions/Week؛ decoding سخت destinationFacts، اصلاح مجاز null-admin برای City/ServiceArea در
+request builder، و entry فقط‌VIEW در `flat-method-detail-dialog` بدون ایجاد/POST خودکار.
+ویرایش مناطق/نرخ/هفته، ساخت روش کامل، فعال‌سازی و کنترل‌های cutoff/carrier/funding عمداً پیاده نشد.
+Visual: NOTRUN (بدون dev app/restart). شواهد: `docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202/RESULT.md`.
+Production activation/quote/UI certification ادعا نشده؛ 199/200/201 بسته و replay نشوند.
+
 ## مرجع جاری: 201 ازطریقR2 بسته / فقط202 فرمواقعیgeneral — 2026-10-23
 
 201 readbridge در9120f0cba36071a4c6748d1176819c032284c2ca **ACCEPT**؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R2/ARCHITECT-REVIEW.md). fakeDuplicateCityعلتقراردادشکسته‌بودونقصدومproductionردشد؛IsActiveserviceareaاکنونlawfultestپوشش‌دارد.15readfacts+7endpointPASS گزارشworker،نهArchitectrerun؛EFInMemoryنهSQL/schemaPG. no-postcommitازcounter1پوشش‌دارد(poisonبعدPUTفعال)،OCEidentity/naturalcancelassertنشده؛reviewدقیق،نهproofloop. timingcomplianceحدس‌نشود. prior4PGrefusalsهمانhistoryمی‌مانند.
