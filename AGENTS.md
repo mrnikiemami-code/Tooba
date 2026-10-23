@@ -45,10 +45,11 @@ TB199 existing-draft atomic editor backend is Architect-accepted through199-R1 (
 TB200 frontend foundation accepted through200-R2 at64f3f307cf; UI is still pending.
 TB201 destination read bridge accepted through201-R2 at9120f0cba; prior fake duplicate-city defect retracted.
 TB202 existing-draft General UI is Architect-accepted through202-R1 at86c0a10932f (bounded source/pure-function review; mounted React and visual remain unverified).
-Only next issued task: TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203 (parent202-R1).
-Edit existing-group rate rows and ONE method-root weekly schedule through the same atomic editor Apply; geography/group topology read-only.
-Keep raw-invalid work dirty and merge General/rate/week intent; no backend/schema/shared-service/activation change.
-Wait203 result before any next task. Backend199/frontend200/readbridge201/general202 accepted, no proof replay.
+TB203 delivered atceeaa609b; Architect review: REPAIR_REQUIRED (see203 ARCHITECT-REVIEW).
+Only next issued task: TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203-R1 (parent203).
+Repair per-bound time precision, complete General/rates/week Cancel Edit reset, raw pending timezone dirty and full read-only rate-condition display.
+Keep existing-group topology/geography read-only; no backend/schema/shared-service change.
+Wait203-R1 result before any next task.199/200/201/202 accepted, no proof replay.
 Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
 
 ## Core rules

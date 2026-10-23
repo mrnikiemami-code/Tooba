@@ -1,3 +1,11 @@
+## مرجع جاری: 203 نیازمند اصلاح / فقط203-R1 — 2026-10-23
+
+203 در `ceeaa609b0c1875a992cb65d115f00cba2a243ff` reviewشد؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203/ARCHITECT-REVIEW.md). **REPAIR_REQUIRED؛ پایان تیک نخورد.** rate/weekUI و composedONEintent حفظ؛7new+48existing/tsc/7guards گزارشworker،source-size4oldfail بیرونscope؛Visual/mountedNOTRUN.
+
+دو شاهد مستقل Node روی week بدونتغییر: تغییر فقطstart روزذخیره‌شده، end راinvalid/null می‌کند چون hoursEdited مشترک است؛ timezoneتایپ‌شده قبلConfigure dirty=false است. source: CancelEdit فقطGeneral resetمی‌کند وrates/weekمیمانند؛ read-only rates شرطcount/amount را حذف و noCondition نشانمی‌دهد.
+
+تنها **TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203-R1**،parent203،25دقیقه/stop18: per-boundtime حفظprecision؛discard همهcapabilityها ازیکbaseline؛pendingtimezone rawdirty بدونweekwrite؛viewهمهconditionaxes. نهnewfeature/backend/schema/sharedservice/broadtest؛بعدنتیجهreview سپسgroup/destinationUI. تا نتیجه203-R1 تسکدیگری صادرنشود. 199/200/201/202بسته‌نهreplay؛ProductionPENDING؛TB185paused/defaultOFF/PendingAllocationمحفوظ. این بخش بر pointerهای تاریخی مقدم است.
+
 ## pointer: 203 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-23
 
 **TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203** (parent202-R1) از base `44a220dea77c87e3d8c1a80e07b22af4e2846e45`
