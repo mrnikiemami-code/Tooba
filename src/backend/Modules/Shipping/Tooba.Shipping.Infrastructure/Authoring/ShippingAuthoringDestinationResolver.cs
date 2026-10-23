@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Geography.Contracts.Places;
@@ -96,7 +96,7 @@ public sealed class ShippingAuthoringDestinationResolver(
                 }
 
                 var areaChain = await BuildAdministrativeChainAsync(country.CountryId, administrativeAreas, cancellationToken);
-                if (!TryAppendAreaChain(areaChain, selectedArea, chain))
+                if (!TryAppendAreaChain(areaChain, country.CountryId, selectedArea, chain))
                 {
                     return Failure();
                 }
@@ -134,7 +134,7 @@ public sealed class ShippingAuthoringDestinationResolver(
             if (city.AdministrativeAreaId is { } areaId)
             {
                 var areaChain = await BuildAdministrativeChainAsync(country.CountryId, administrativeAreas, cancellationToken);
-                if (!TryAppendAreaChain(areaChain, areaId, chain))
+                if (!TryAppendAreaChain(areaChain, country.CountryId, areaId, chain))
                 {
                     return Failure();
                 }
@@ -189,36 +189,26 @@ public sealed class ShippingAuthoringDestinationResolver(
                 () => geography.ListAdministrativeAreasAsync(countryId, cancellationToken));
 
     /// <summary>
-    /// زنجیرهٔ واقعی یک ناحیهٔ اداری (ریشه تا خود ناحیه) را به زنجیره اضافه می‌کند. والد غایب،
-    /// غیرفعال، متعلق به کشور دیگر یا تکرار در مسیر (چرخه) زنجیره را نامعتبر می‌کند.
+    /// زنجیرهٔ واقعی یک ناحیهٔ اداری (ریشه تا خود ناحیه) را به زنجیره اضافه می‌کند. قاعدهٔ canonical
+    /// در <see cref="ShippingDestinationAncestry"/> نگه داشته می‌شود تا خواندن و نوشتن یک حکم داشته باشند.
     /// </summary>
     private static bool TryAppendAreaChain(
         IReadOnlyList<AdministrativeAreaSnapshot> areas,
+        Guid countryId,
         Guid areaId,
         List<ShippingDestinationNode> chain)
     {
-        var byId = areas.ToDictionary(area => area.AdministrativeAreaId);
-        var reversed = new List<ShippingDestinationNode>();
-        var visited = new HashSet<Guid>();
-        Guid? current = areaId;
-        while (current is { } id)
-        {
-            if (!visited.Add(id) || !byId.TryGetValue(id, out var area) || !area.IsActive)
-            {
-                return false;
-            }
-
-            reversed.Add(new ShippingDestinationNode(ShippingDestinationNodeKind.AdministrativeArea, area.AdministrativeAreaId));
-            current = area.ParentAdministrativeAreaId;
-        }
-
-        if (reversed.Count == 0)
+        // The canonical chain rule lives in one helper so the read projection and the write validation
+        // cannot drift apart.
+        if (!ShippingDestinationAncestry.TryBuildAdministrativeChain(
+                areas.ToDictionary(area => area.AdministrativeAreaId),
+                areaId,
+                countryId,
+                chain))
         {
             return false;
         }
 
-        reversed.Reverse();
-        chain.AddRange(reversed);
         return true;
     }
 

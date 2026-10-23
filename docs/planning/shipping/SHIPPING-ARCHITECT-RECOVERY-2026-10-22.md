@@ -1,5 +1,18 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 201 اجرا شد؛ منتظر review — 2026-10-23
+
+TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201 روی base `b1c89e20f495e326a932e9c0b497105b0d89bec6` اجرا و به Bridge ارسال شد؛
+[RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201/RESULT.md).
+Geography یک درز Contracts فقط-خواندنی bulk-by-key (`IGeographyPlaceSnapshotReader`) روی snapshotهای موجود گرفت
+(بدون route/schema/HTTP جدید، بدون تغییر `IGeographyLookup`)؛ Shipping یک projection افزودنی `destinationFacts` روی
+GET سند ویرایشگر و پاسخ PUT گرفت که فکت‌های مقصد را **پیش از** commit می‌خواند و پاسخ را از ریشهٔ ذخیره‌شده می‌سازد.
+قاعدهٔ canonical زنجیرهٔ اداری یک helper مشترک است و resolver نوشتن به آن delegate می‌کند.
+اجرا: build موفق؛ 6/6 آزمون متمرکز فکت مقصد PASS؛ مجموعهٔ editor document 10 PASS و 4 failure فقط به‌خاطر نبود
+Postgres در 127.0.0.1:55432 (محیط، نه رگرسیون). Geography EF proof و DI/tracing/handler composition واقعی اجرا
+نشد (نبود Geography test project + محدودیت DB) و صادقانه در RESULT ثبت شد. زمان از سقف 30 دقیقه گذشت؛ انحراف ثبت شد.
+هنوز Architect-accepted نیست؛ UI/202 بدون review صادر نشود.
+
 ## مرجع جاری: 200 ازطریقR2 بسته / فقط201 hydrationخواندنی — 2026-10-23
 
 200frontendfoundation در64f3f307cf259aeb147663f13011832c24fa1195 **ACCEPT**؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R2/ARCHITECT-REVIEW.md). guardهماندraftdirty/saving وselectorunknown اصلاحشد؛10PASSگزارشworker،نهrerunArchitect. backend199بسته؛R1~27>25تاریخی‌ثبت.

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -63,6 +63,7 @@ public sealed class GeographyModule : IToobaModule
         IHostEnvironment environment)
     {
         services.AddScoped<IGeographyLookup, GeographyPlaceLookup>();
+        services.AddScoped<IGeographyPlaceSnapshotReader, GeographyPlaceSnapshotReader>();
         services.AddScoped<IGeographyLabelLookup, GeographyLabelLookup>();
         services.AddDbContext<GeographyDbContext>((sp, options) =>
         {

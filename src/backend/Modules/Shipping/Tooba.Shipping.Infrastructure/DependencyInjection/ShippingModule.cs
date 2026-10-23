@@ -97,6 +97,7 @@ public sealed class ShippingModule : IToobaModule
         // the persisted owner representation only inside the adapter.
         services.AddScoped<IShippingAuthoringDraftDirectory, ShippingAuthoringDraftDirectory>();
         services.AddScoped<IShippingAuthoringDestinationResolver, ShippingAuthoringDestinationResolver>();
+        services.AddScoped<IShippingAuthoringDestinationFactsReader, ShippingAuthoringDestinationFactsReader>();
         // TB-197 draft type assignment: the shared type catalog stays Fulfillment-owned and is read ONLY
         // through its Contracts seam (no foreign DbContext, no local taxonomy, no cache). Registered
         // scoped once, like every other module-owned adapter.

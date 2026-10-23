@@ -437,3 +437,19 @@ Authority: Architect decision within the owner's authorized Shipping Admin deliv
   نویسندهٔ درخت منطقه‌ای و سند ویرایشگر مشترکاً استفاده می‌شود؛ تنها یک محل `BeginTransactionAsync` باقی است.
 - این پیاده‌سازی فقط نویسندگی پیش‌نویس موجود است: نه UI، نه ساخت کامل روش، نه فعال‌سازی اجرایی/نرخ زنده و نه
   ارتقای گواهی. Production-Functional-Acceptance همچنان PENDING است.
+
+## Implementation fact — TB-201 destination read hydration (2026-10-23)
+
+- Editor GET returns rea(kind,id) only; the write shape needs proven ancestors. Geography now exposes
+  one Contracts bulk-by-key reader (IGeographyPlaceSnapshotReader) over its EXISTING snapshots, so a
+  stored terminal id can be hydrated without scanning countries/cities and without a new HTTP route.
+- IGeographyLookup.GetByIdsAsync still only validates a caller-supplied tuple and is NOT a hydration
+  source; the new reader is additive and the existing lookup/HTTP/legacy resolver are unchanged.
+- The editor document response now carries an additive destinationFacts list: one entry per distinct
+  (kind,id) selected key with a truthful Resolved/Unresolved, the canonical write shape only when
+  proven, and a localized label from the authoritative default content language (null when absent).
+- A city may legitimately have no administrative parent; no parent is synthesized or required.
+- PUT acquires all destination facts BEFORE its single commit and composes the response from the saved
+  root plus those facts; no foreign read happens after the write.
+- These facts are a read projection, not authority: the writer still revalidates real Geography on
+  every accepted PUT and never trusts hydrated facts supplied by a caller.

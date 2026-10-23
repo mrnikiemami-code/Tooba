@@ -28,7 +28,8 @@ public sealed record GetShippingAuthoringEditorDocumentQuery(
 public sealed class GetShippingAuthoringEditorDocumentHandler(
     IShippingAuthoringDraftDirectory directory,
     IShippingAuthoringContextSource contextSource,
-    IShippingTypeCatalogReader catalog)
+    IShippingTypeCatalogReader catalog,
+    IShippingAuthoringDestinationFactsReader destinationFacts)
     : IRequestHandler<GetShippingAuthoringEditorDocumentQuery, Result<ShippingAuthoringEditorDocumentItem>>
 {
     /// <inheritdoc />
@@ -60,8 +61,25 @@ public sealed class GetShippingAuthoringEditorDocumentHandler(
             return Result.Failure<ShippingAuthoringEditorDocumentItem>(type.Errors);
         }
 
+        // Authoritative parent facts for the STORED typed selections of this owner's draft, read only
+        // after the owner-scoped draft read above. A localized label uses the real default content
+        // language of the authoritative context, never a locale guess.
+        var facts = await destinationFacts.ReadAsync(
+            ShippingAuthoringEditorDocumentComposition.SelectedKeys(draft.Value),
+            context.Value.DefaultContentLanguageId,
+            cancellationToken);
+        if (facts.IsFailure)
+        {
+            return Result.Failure<ShippingAuthoringEditorDocumentItem>(facts.Errors);
+        }
+
         return Result.Success(
-            ShippingAuthoringEditorDocumentComposition.Map(draft.Value, request.Owner, context.Value, type.Value));
+            ShippingAuthoringEditorDocumentComposition.Map(
+                draft.Value,
+                request.Owner,
+                context.Value,
+                type.Value,
+                facts.Value));
     }
 }
 
@@ -75,11 +93,13 @@ internal static class ShippingAuthoringEditorDocumentComposition
     /// <param name="owner">مالک مجاز همین درخواست.</param>
     /// <param name="context">زمینهٔ typed زبان/ارز.</param>
     /// <param name="type">انتخاب نوع با حل واقعی.</param>
+    /// <param name="destinationFacts">فکت‌های پیش‌خوانده‌شدهٔ مقصد یا تهی برای فهرست خالی.</param>
     public static ShippingAuthoringEditorDocumentItem Map(
         ShippingAuthoringDraft draft,
         ShippingAuthoringOwnerScope owner,
         ShippingAuthoringContextView context,
-        ShippingAuthoringDraftTypeAssignmentItem type)
+        ShippingAuthoringDraftTypeAssignmentItem type,
+        IReadOnlyList<ShippingAuthoringDestinationFactItem>? destinationFacts = null)
     {
         ArgumentNullException.ThrowIfNull(draft);
         ArgumentNullException.ThrowIfNull(owner);
@@ -146,7 +166,29 @@ internal static class ShippingAuthoringEditorDocumentComposition
                         .OrderBy(title => title.LanguageId)
                         .Select(title => new ShippingAuthoringEditorGroupTitleItem(title.LanguageId, title.Title))
                         .ToArray()))
-                .ToArray());
+                .ToArray())
+        {
+            DestinationFacts = destinationFacts ?? [],
+        };
+    }
+
+    /// <summary>
+    /// کلیدهای typed و متمایز <b>ذخیره‌شدهٔ</b> همین پیش‌نویس، به ترتیب گروه و هویت؛ تنها ورودی مجاز
+    /// خواندن فکت‌های مقصد است (نه فهرست دلخواه مالک دیگر).
+    /// </summary>
+    /// <param name="draft">ریشهٔ ذخیره‌شده.</param>
+    public static IReadOnlyList<ShippingAuthoringSelectedAreaItem> SelectedKeys(ShippingAuthoringDraft draft)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+
+        return draft.RegionGroups
+            .OrderBy(group => group.Order)
+            .SelectMany(group => group.Areas
+                .OrderBy(area => area.NodeId)
+                .ThenBy(area => area.NodeKind)
+                .Select(area => new ShippingAuthoringSelectedAreaItem(ToContractKind(area.NodeKind), area.NodeId)))
+            .Distinct()
+            .ToArray();
     }
 
     private static ShippingAuthoringAreaKind ToContractKind(ShippingDestinationNodeKind kind) => kind switch

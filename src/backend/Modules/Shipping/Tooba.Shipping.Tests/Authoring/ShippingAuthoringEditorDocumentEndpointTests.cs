@@ -676,6 +676,7 @@ public sealed class ShippingAuthoringEditorDocumentEndpointTests
             builder.Services.AddSingleton(tenant);
             builder.Services.AddSingleton<IShippingMethodOptionValidator>(new FakeMethodValidator());
             builder.Services.AddSingleton<IShippingAuthoringDestinationResolver>(new FakeResolver());
+            builder.Services.AddSingleton<IShippingAuthoringDestinationFactsReader>(new FakeDestinationFacts());
             builder.Services.AddSingleton<IShippingAuthoringContextSource>(new FakeContextSource(edition, "IRR", counter));
             builder.Services.AddSingleton<IShippingTypeCatalogReader>(new FakeTypeCatalog(counter));
             builder.Services.AddSingleton(counter);
@@ -942,6 +943,24 @@ public sealed class ShippingAuthoringEditorDocumentEndpointTests
                 : Result<bool>.Failure(new SemanticError(ShippingErrorCodes.ServiceOptionUnknown)));
     }
 
+    /// <summary>
+    /// Fake کمینهٔ درز فکت مقصد برای این آزمون‌ها: برای هر کلید یک فکت <c>Unresolved</c> برمی‌گرداند،
+    /// پس هیچ شکل نوشتنی جعلی ساخته نمی‌شود.
+    /// </summary>
+    private sealed class FakeDestinationFacts : IShippingAuthoringDestinationFactsReader
+    {
+        public Task<Result<IReadOnlyList<ShippingAuthoringDestinationFactItem>>> ReadAsync(
+            IReadOnlyList<ShippingAuthoringSelectedAreaItem> keys,
+            Guid languageId,
+            CancellationToken cancellationToken)
+            => Task.FromResult(Result.Success<IReadOnlyList<ShippingAuthoringDestinationFactItem>>(
+                keys.Select(key => new ShippingAuthoringDestinationFactItem(
+                    key.Kind,
+                    key.Id,
+                    ShippingAuthoringDestinationResolution.Unresolved,
+                    null,
+                    null)).ToArray()));
+    }
     private sealed class FakeResolver : IShippingAuthoringDestinationResolver
     {
         public Task<Result<IReadOnlyList<ShippingDestinationSelectionPath>>> ResolveAsync(

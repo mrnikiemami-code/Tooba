@@ -79,4 +79,16 @@ public sealed record ShippingAuthoringEditorDocumentItem(
     ShippingAuthoringEditorSettingsItem? Settings,
     ShippingAuthoringPresentationItem Presentation,
     ShippingAuthoringEditorScheduleItem? WeeklySchedule,
-    IReadOnlyList<ShippingAuthoringEditorGroupItem> RegionGroups);
+    IReadOnlyList<ShippingAuthoringEditorGroupItem> RegionGroups)
+{
+    /// <summary>
+    /// فکت‌های افزودنی مقصد: یک ورودی برای هر کلید <b>متمایز</b> (نوع، شناسه) از همان درخت
+    /// انتخاب‌شده، با برچسب محلی‌شدهٔ زبان پیش‌فرض محتوا.
+    /// </summary>
+    /// <remarks>
+    /// این فیلد <b>مرجعیت</b> ندارد و فقط خواندنی است: نوشتن همچنان جغرافیای واقعی را اعتبارسنجی
+    /// می‌کند و هیچ فکت hydrate‌شده‌ای از مرورگر پذیرفته نمی‌شود. انتخاب خام در
+    /// <see cref="RegionGroups"/> در هر حالت دست‌نخورده می‌ماند؛ حتی وقتی هویت <c>Unresolved</c> است.
+    /// </remarks>
+    public IReadOnlyList<ShippingAuthoringDestinationFactItem> DestinationFacts { get; init; } = [];
+}

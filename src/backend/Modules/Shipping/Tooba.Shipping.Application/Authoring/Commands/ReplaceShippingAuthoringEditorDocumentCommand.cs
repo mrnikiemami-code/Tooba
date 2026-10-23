@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Shipping.Application.Authoring.Models;
@@ -35,7 +35,8 @@ public sealed class ReplaceShippingAuthoringEditorDocumentHandler(
     IShippingAuthoringDestinationResolver destinationResolver,
     IShippingMethodOptionValidator optionValidator,
     IShippingAuthoringContextSource contextSource,
-    IShippingTypeCatalogReader catalog)
+    IShippingTypeCatalogReader catalog,
+    IShippingAuthoringDestinationFactsReader destinationFacts)
     : IRequestHandler<ReplaceShippingAuthoringEditorDocumentCommand, Result<ShippingAuthoringEditorDocumentItem>>
 {
     /// <inheritdoc />
@@ -182,8 +183,7 @@ public sealed class ReplaceShippingAuthoringEditorDocumentHandler(
                 scheduleDays = days;
             }
 
-            var groups = new List<ShippingAuthoringDraft.EditorGroupInput>(domainGroups.Count);
-            for (var index = 0; index < domainGroups.Count; index++)
+            var groups = new List<ShippingAuthoringDraft.EditorGroupInput>(domainGroups.Count);            for (var index = 0; index < domainGroups.Count; index++)
             {
                 var source = request.Request.RegionGroups[index];
                 groups.Add(new ShippingAuthoringDraft.EditorGroupInput(
@@ -209,7 +209,19 @@ public sealed class ReplaceShippingAuthoringEditorDocumentHandler(
                 includeType,
                 typeId);
 
-            // (6) ONE own atomic commit and ONE root revision advance; a rejected child leaves the whole
+            // (6) Destination facts for the WHOLE submitted tree are acquired here — before the first
+            // tracked mutation and therefore before the commit — so the response can be composed
+            // without any foreign read after the write.
+            var destinationRead = await destinationFacts.ReadAsync(
+                SubmittedKeys(regionWrites),
+                context.Value.DefaultContentLanguageId,
+                cancellationToken);
+            if (destinationRead.IsFailure)
+            {
+                return Result.Failure<ShippingAuthoringEditorDocumentItem>(destinationRead.Errors);
+            }
+
+            // (7) ONE own atomic commit and ONE root revision advance; a rejected child leaves the whole
             // tree untouched.
             var saved = await directory.ReplaceEditorDocumentAsync(
                 request.Owner,
@@ -224,7 +236,7 @@ public sealed class ReplaceShippingAuthoringEditorDocumentHandler(
                 return Result.Failure<ShippingAuthoringEditorDocumentItem>(saved.Errors);
             }
 
-            // (7) The response is composed from the actually saved root plus facts acquired BEFORE the
+            // (8) The response is composed from the actually saved root plus facts acquired BEFORE the
             // write: no catalog/context lookup (and no other fallible dependency) runs after commit.
             var typeItem = includeType
                 ? ShippingTypeAssignmentComposition.ComposeResolved(saved.Value, observation)
@@ -235,13 +247,45 @@ public sealed class ReplaceShippingAuthoringEditorDocumentHandler(
                     saved.Value,
                     request.Owner,
                     context.Value,
-                    typeItem));
+                    typeItem,
+                    destinationRead.Value));
         }
         catch (SemanticException exception)
         {
             return Result.Failure<ShippingAuthoringEditorDocumentItem>(exception.Error);
         }
     }
+
+    /// <summary>
+    /// کلیدهای typed و متمایز <b>پیشنهادیِ ارسال‌شده</b> (پس از مجوز مالک و اعتبارسنجی canonical)؛
+    /// همان مجموعه‌ای که درخت ذخیره‌شده خواهد داشت.
+    /// </summary>
+    private static IReadOnlyList<ShippingAuthoringSelectedAreaItem> SubmittedKeys(
+        IReadOnlyList<ShippingAuthoringRegionGroupWrite> regionWrites)
+    {
+        var keys = new List<ShippingAuthoringSelectedAreaItem>();
+        foreach (var group in regionWrites)
+        {
+            foreach (var area in group.Areas)
+            {
+                keys.Add(new ShippingAuthoringSelectedAreaItem(area.Kind, TerminalId(area)));
+            }
+        }
+
+        return keys.Distinct().ToArray();
+    }
+
+    /// <summary>
+    /// شناسهٔ <b>پایانه</b> یک انتخاب همان‌گونه که خواندن فکت لازم دارد؛ جفت (نوع، شناسه) کلید است.
+    /// </summary>
+    private static Guid TerminalId(ShippingAuthoringSelectedAreaWrite area) => area.Kind switch
+    {
+        ShippingAuthoringAreaKind.Country => area.CountryId,
+        ShippingAuthoringAreaKind.AdministrativeArea => area.AdministrativeAreaId ?? Guid.Empty,
+        ShippingAuthoringAreaKind.City => area.CityId ?? Guid.Empty,
+        ShippingAuthoringAreaKind.ServiceArea => area.ServiceAreaId ?? Guid.Empty,
+        _ => Guid.Empty,
+    };
 
     private static bool TryMapGroups(
         IReadOnlyList<ShippingAuthoringEditorGroupWrite> source,
