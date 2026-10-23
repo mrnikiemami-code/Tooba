@@ -1,5 +1,17 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 200-R2 اجرا شد؛ منتظر review — 2026-10-23
+
+TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R2 روی base `03271c75af1f25ca0faf598ee93b4570deb2dce6` اجرا و به Bridge ارسال شد؛
+[RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R2/RESULT.md) و اصلاح append-only در
+[R1 RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R1/RESULT.md).
+فقط `session/editor-session.ts`: (1) `loadStarted` همان draft هنگام dirty/saving دیگر session را restart نمی‌کند و همان
+شیء state را برمی‌گرداند (epoch/baseline/edits/saveRequestId حفظ، save در جریان باطل نمی‌شود)؛ تصمیم discard برای draft
+متفاوت و مسیرهای صریح discard/reconcile دست‌نخورده. (2) `hasUnsavedWork` اکنون commit نامعلوم و save در جریان را هم
+پوشش می‌دهد؛ state تمیز loaded همان `false`. public API بدون تغییر.
+regression-first: 1/4 PASS قبل از اصلاح، 4/4 بعد؛ اجرای متمرکز session 10/10. tsc/build/feature25 عمداً اجرا نشد
+(scope محلی reducer/boolean). چهار اصلاح R1 حفظ و بازآزمایی نشد. هنوز Architect-accepted نیست؛ UI بدون review صادر نشود.
+
 ## مرجع جاری: 200-R1 اصلاحاتاصلی‌حفظ؛فقط200-R2کوچک — 2026-10-23
 
 کد99d13021087353e3a226f860b2abb63f8d714706 review شد؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R1/ARCHITECT-REVIEW.md). baselinepreserve/explicit[]/epoch/unknownlatch/wirecoherenceاصلاحاتحفظ؛25PASS/tscگزارشworker،27>25انحرافثبت‌شده. backend199بسته،نهreplay.

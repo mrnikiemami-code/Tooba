@@ -134,3 +134,21 @@ round-trip. These are recorded as-is; no retrospective compliance claim is made.
 - No visual, live-registry or production acceptance is claimed.
 
 Status: PENDING_ARCHITECT_REVIEW. Worker PASS != Architect ACCEPT.
+
+## Correction (append-only, 2026-10-23 / TB200-R2)
+
+Architect review of this result found two remaining local session defects; the statement above that the
+session repairs were complete is superseded by the following.
+
+1. `loadStarted` only returned a discard decision for a DIFFERENT draft. For the SAME draft while
+   dirty or saving it fell through, incremented the epoch, set `loading` and kept the edits
+   temporarily — then `loadSucceeded` cleared them. A refresh silently discarded dirty work, and
+   during an in-flight save it invalidated the valid completion. Repaired in R2 to return the same
+   state object for a same-draft reload while unsaved or saving.
+2. `hasUnsavedWork` returned only `unsaved`. After `saveFailed(outcomeUnknown)` followed by
+   `edited({})` the latch was set and `closeRequested` demanded confirmation, yet the public
+   selector reported no work at risk. Repaired in R2 to include a latched unknown commit and an
+   in-flight save.
+
+Evidence: `docs/architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R2/RESULT.md`
+(pre-fix 1/4, post-fix 4/4, focused session set 10/10). All other content of this report stands.

@@ -166,6 +166,9 @@ export function reduceEditorSession(state: EditorSessionState, action: EditorSes
       if (state.draftId !== action.draftId) {
         return { ...state, decision: "discardUnsaved", pendingSwitchTo: action.draftId };
       }
+      // A same-draft refresh must not restart the live session: it would discard dirty work on the
+      // next success and invalidate an in-flight save. Only an explicit discard/reconcile recovers.
+      return state;
     }
     const sameSession = sameDraft(state, action.draftId);
     return {
@@ -346,7 +349,12 @@ export function selectApplyRequest(
   return { status: "ready", requestId, expectedRevision: state.baseline.revision, body };
 }
 
-/** True while the session has work that a close/switch would lose. */
+/**
+ * True while the session holds work that a close/switch would lose.
+ *
+ * Includes an unresolved commit (`commitUncertain`) and an in-flight save: uncertainty must not look
+ * like "nothing at risk" merely because the editable values are currently empty.
+ */
 export function hasUnsavedWork(state: EditorSessionState): boolean {
-  return state.unsaved;
+  return state.unsaved || state.commitUncertain || state.save === "saving";
 }
