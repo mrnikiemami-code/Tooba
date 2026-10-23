@@ -1,3 +1,13 @@
+## مرجع جاری: 202 نیازمند اصلاح / فقط202-R1 — 2026-10-23
+
+202 در `41dc0a7fcf94e56209c8a87b84aab18a66f907eb` بررسی شد؛ [Architect review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202/ARCHITECT-REVIEW.md). **REPAIR_REQUIRED؛ تیک پایان نخورد.** مسیر واقعی/general/entry/201facts/null-admin حفظ؛38featurePASS/tsc/5guards گزارشworker،نهrerunArchitect؛VisualNOTRUN،productionPENDING.
+
+اجرای مستقل Architect روی editor-form بدون تغییر: settings تنظیم‌شده و untouched باز هم wrapper می‌دهد؛ نام خالی یا یک‌طرف settings به edits={} تبدیل می‌شود، پس session falsely-clean و احتمال reset/خروج بدون هشدار؛ description-only زبان بدوننام حتی issue ندارد. CancelEdit مستقیم reset می‌کند و هنگامsave هم فعال است. hook فقط draftId اول را نگه می‌دارد، cleanup ندارد؛ route هم key ندارد. review شامل شاهد دقیق است.
+
+تنها تسک بعدی **TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202-R1**،parent202،35دقیقه/stop25: dirty واقعی ورودی نامعتبر مستقل از wire-validity ولی داخل همان sessionauthority؛ untouchedsettings omit/revert؛ CancelEdit با تأیید و حفظ کار هنگامcancel/inflight؛ lifecycle واقعی React/draftId/StrictModecleanup. frontend feature + thin route identity درصورتنیاز،نهbackend/transport/schema/sharedservices یاregions/rates/weekediting. regressionsمتمرکز+feature/typecheckیکبار،نهproofloop/newpackage/browser setup. تا نتیجه202-R1 تسک دیگری صادر نشود.
+
+199/200/201 بسته‌اند و replay نشوند؛ بعد review این اصلاح، مرحله بعد regions/rates/week UI و سپس visual/live پذیرش محدود است. cutoff/status/fullcreate/carrier/funding/quote همچنان تصمیم/کار جدا؛ TB185paused/defaultOFF/PendingAllocation محفوظ. این بخش بر active pointers تاریخی اولویت دارد.
+
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
 ## pointer: 202 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-23
