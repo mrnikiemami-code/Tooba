@@ -1,3 +1,13 @@
+## مرجع جاری: 203 ازطریقR1 پذیرفته / فقط204 گروه و مقصد — 2026-10-23
+
+203-R1 در `bf7cb78e471010be540e3613d489b284d5b02140` برای نرخگروه‌موجود/هفته **ACCEPT**؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203-R1/ARCHITECT-REVIEW.md). per-boundprecision/whole-documentdiscard/pendingtimezone dirty/fullconditiondisplay بسته. Architect weekcasesمستقلNodePASS؛9+7/tsc/7guards گزارشworker،نهrerun؛mounted/browser/VisualNOTRUN. source-size4oldfail untouched؛productionPENDING.
+
+تنها **TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204**،parent203-R1،45دقیقه/stop35: collectionگروههمانdraft add/remove/reorder+titlepatch فعال + مقصدواقعیGeography،همانONEeditorPUT؛rates/week/General حفظ. ExistingroutesGeo countries/admin/cities/serviceareas باlanguageIdازregistry واقعیموجودند؛backendendpoint sourceتأییدشد. app-ownedlegacy picker فقطsource参考،نهfeature->appimport؛sharedauthhelpersوstrictfeatureadapter،no newbackendseam.
+
+مقصدانتخابیcanonicalparents ازواقعیoptionparent+requestcontext؛nulladmincity/serviceareaحفظ؛parentchange پاسخقدیمیignore؛stored201facts retained؛duplicate/overlapcanonicalserverauthority،نهguess/worldscan. newgroupsclientkeys/noinventedGUID؛currencyserverowned؛titlelanguageDBactivepatchonly؛reset/unknown/reconcileandintentmergeهمهcapabilities. تا نتیجه204 تسکدیگری صادر نشود.
+
+پس از review204،visual/livevalidationمحدود با محیط مجاز جدا؛whole-methodcreate/status/cutoff/carrier/funding/quote هنوز خارجscope و کامل‌اعلام‌نشوند. 199/200/201/202/203بسته،نهproofreplay؛TB185paused/defaultOFF/PendingAllocationمحفوظ. این بخش برactivepointerتاریخی مقدم است.
+
 ## مرجع جاری: 203 نیازمند اصلاح / فقط203-R1 — 2026-10-23
 
 203 در `ceeaa609b0c1875a992cb65d115f00cba2a243ff` reviewشد؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203/ARCHITECT-REVIEW.md). **REPAIR_REQUIRED؛ پایان تیک نخورد.** rate/weekUI و composedONEintent حفظ؛7new+48existing/tsc/7guards گزارشworker،source-size4oldfail بیرونscope؛Visual/mountedNOTRUN.
