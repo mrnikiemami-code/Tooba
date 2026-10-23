@@ -15,10 +15,28 @@ import { Dialog } from "../../../design-system";
 import { loadAuthoringTypeChoices, type AuthoringTypeChoice } from "../api/authoring-lookup-api.ts";
 import type { EditorTransportFailure, EditorPropertyError } from "../api/editor-document-api.ts";
 import { authoringMessages, authoringFormat, type AuthoringLocale, type AuthoringMessages } from "../messages/authoring-messages.ts";
-import type { AuthoringCalculationMode, EditorDocument, FreightPaymentMode } from "../model/editor-document.ts";
-import { indexDestinationFacts, unresolvedSelections } from "../model/editor-destination-ancestry.ts";
+import type {
+  AuthoringCalculationMode,
+  EditorDocument,
+  FreightPaymentMode,
+  SelectedAreaRead,
+} from "../model/editor-document.ts";
+import { indexDestinationFacts } from "../model/editor-destination-ancestry.ts";
 import { buildAuthoringIntent, hasNoIssues, intentHasEdits } from "../model/authoring-intent.ts";
 import { resetAuthoringDrafts, seedAuthoringDrafts } from "../model/authoring-drafts.ts";
+import { composeAncestryResolver, areaIdentity, unresolvedDraftSelections } from "../model/destination-choice.ts";
+import type { ResolvedAreaAncestry } from "../model/editor-edits.ts";
+import {
+  withAddedGroup,
+  withGroupAreaAdded,
+  withGroupAreaRemoved,
+  withGroupTitle,
+  withGroupTitleSlots,
+  withMovedGroup,
+  withRemovedGroup,
+  type GroupIssue,
+  type GroupsFormState,
+} from "../model/editor-groups.ts";
 import {
   withCalculationMode,
   withDescription,
@@ -32,6 +50,7 @@ import {
   withRemovedRow,
   withRowField,
   type RateField,
+  type RateRowDraft,
   type RatesFormState,
 } from "../model/editor-rates.ts";
 import {
@@ -49,7 +68,7 @@ import { useEditorController } from "./use-editor-controller.ts";
 import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor, weekIssueMessage } from "./authoring-week-editor.tsx";
 import { rowIssueMessage } from "./authoring-rates-editor.tsx";
-import { AuthoringRegionsPanel } from "./authoring-regions-panel.tsx";
+import { AuthoringGroupsEditor } from "./authoring-groups-editor.tsx";
 
 const TABS = ["general", "regions"] as const;
 type ScreenTab = (typeof TABS)[number];
@@ -68,6 +87,19 @@ function fieldLabel(property: string, messages: AuthoringMessages): string {
   if (/settings|freight|calculation/i.test(property)) return messages.fieldSettingsLabel;
   if (/type/i.test(property)) return messages.fieldTypeLabel;
   return messages.fieldNameLabel;
+}
+
+function groupIssueText(issue: GroupIssue, messages: AuthoringMessages): string {
+  switch (issue.code) {
+    case "groupLimitExceeded":
+      return messages.groupLimitExceeded;
+    case "selectionLimitExceeded":
+      return messages.selectionLimitExceeded;
+    case "duplicateSelection":
+      return messages.duplicateSelection;
+    case "titleTooLong":
+      return messages.titleTooLong;
+  }
 }
 
 function failureMessages(failure: EditorTransportFailure, messages: AuthoringMessages): readonly string[] {
@@ -118,8 +150,11 @@ export function ShippingAuthoringScreen({
   const [mode, setMode] = useState<"view" | "edit">(initialMode);
   const [tab, setTab] = useState<ScreenTab>("general");
   const [form, setForm] = useState<EditorFormState | null>(null);
+  const [groups, setGroups] = useState<GroupsFormState>([]);
   const [rates, setRates] = useState<RatesFormState>({});
   const [week, setWeek] = useState<WeekFormState | null>(null);
+  /** Verified ancestry of terminals the operator picked in THIS session (reset with the drafts). */
+  const [pickedFacts, setPickedFacts] = useState<ReadonlyMap<string, ResolvedAreaAncestry>>(new Map());
   const [contentLanguageId, setContentLanguageId] = useState<string>("");
   const [types, setTypes] = useState<readonly AuthoringTypeChoice[]>([]);
   const [typesState, setTypesState] = useState<"loading" | "ok" | "error">("loading");
@@ -130,18 +165,27 @@ export function ShippingAuthoringScreen({
 
   const formSeed = state.formSeed;
   const rowCounter = useRef(0);
+  const groupCounter = useRef(0);
+  const activeLanguageIds = useMemo(
+    () => (document ? document.presentation.contentLanguages.map((language) => language.languageId) : []),
+    [document],
+  );
 
   /**
-   * All local drafts (General, rate rows, weekly schedule) are seeded from the CONFIRMED baseline
-   * only on an accepted transition (fresh load, accepted save, explicit discard + fresh read). A
-   * render, an invalid `edited({})` or a reconcile never re-seeds them, so typed work survives.
+   * All local drafts (General, group collection, rate rows, weekly schedule) are seeded from the
+   * CONFIRMED baseline only on an accepted transition (fresh load, accepted save, explicit discard +
+   * fresh read). A render, an invalid `edited({})` or a reconcile never re-seeds them, so typed work
+   * survives. Staged picker selections are cleared with the same reset.
    */
   useEffect(() => {
     if (!document) return;
-    const drafts = seedAuthoringDrafts(document);
+    const languageIds = document.presentation.contentLanguages.map((language) => language.languageId);
+    const drafts = seedAuthoringDrafts(document, languageIds);
     setForm(drafts.form);
+    setGroups(drafts.groups);
     setRates(drafts.rates);
     setWeek(drafts.week);
+    setPickedFacts(new Map());
     const defaultLanguage = document.presentation.contentLanguages.find(
       (language) => language.languageId.toLowerCase() === document.presentation.defaultContentLanguageId.toLowerCase(),
     );
@@ -194,22 +238,33 @@ export function ShippingAuthoringScreen({
   }, [session.decision]);
 
   const index = useMemo(() => (document ? indexDestinationFacts(document) : null), [document]);
+  /** Retained server-proven facts + this session's verified picks, as ONE resolver. */
+  const resolver = useMemo(
+    () => (index ? composeAncestryResolver(index.resolver, pickedFacts) : null),
+    [index, pickedFacts],
+  );
   const intent = useMemo(
-    () => (document && form && week ? buildAuthoringIntent(document, form, rates, week) : null),
-    [document, form, rates, week],
+    () => (document && form && week ? buildAuthoringIntent(document, form, rates, week, groups) : null),
+    [document, form, rates, week, groups],
   );
 
   /**
-   * ONE dispatch for every capability: sets the three local drafts and hands the controller a SINGLE
-   * composed patch, so a General edit never drops a pending rate/week change and vice versa.
+   * ONE dispatch for every capability: sets the local drafts and hands the controller a SINGLE
+   * composed patch, so a General edit never drops a pending group/rate/week change and vice versa.
    */
   const commit = useCallback(
-    (nextForm: EditorFormState, nextRates: RatesFormState, nextWeek: WeekFormState) => {
+    (
+      nextForm: EditorFormState,
+      nextGroups: GroupsFormState,
+      nextRates: RatesFormState,
+      nextWeek: WeekFormState,
+    ) => {
       setForm(nextForm);
+      setGroups(nextGroups);
       setRates(nextRates);
       setWeek(nextWeek);
       if (!document) return;
-      const composed = buildAuthoringIntent(document, nextForm, nextRates, nextWeek);
+      const composed = buildAuthoringIntent(document, nextForm, nextRates, nextWeek, nextGroups);
       controller.edit(composed.edits, composed.localDirty);
     },
     [controller, document],
@@ -218,49 +273,104 @@ export function ShippingAuthoringScreen({
   const pushEdits = useCallback(
     (nextForm: EditorFormState) => {
       if (!week) return;
-      commit(nextForm, rates, week);
+      commit(nextForm, groups, rates, week);
     },
-    [commit, rates, week],
+    [commit, groups, rates, week],
   );
 
   const changeRow = useCallback(
-    (groupId: string, rowKey: string, field: RateField, value: string) => {
+    (groupKey: string, rowKey: string, field: RateField, value: string) => {
       if (!form || !week) return;
-      commit(form, withRowField(rates, groupId, rowKey, field, value), week);
+      commit(form, groups, withRowField(rates, groupKey, rowKey, field, value), week);
     },
-    [commit, form, rates, week],
+    [commit, form, groups, rates, week],
   );
 
   const addRow = useCallback(
-    (groupId: string) => {
+    (groupKey: string) => {
       if (!form || !week) return;
       rowCounter.current += 1;
-      commit(form, withAddedRow(rates, groupId, `new-${rowCounter.current}`), week);
+      commit(form, groups, withAddedRow(rates, groupKey, `new-${rowCounter.current}`), week);
     },
-    [commit, form, rates, week],
+    [commit, form, groups, rates, week],
   );
 
   const removeRow = useCallback(
-    (groupId: string, rowKey: string) => {
+    (groupKey: string, rowKey: string) => {
       if (!form || !week) return;
-      commit(form, withRemovedRow(rates, groupId, rowKey), week);
+      commit(form, groups, withRemovedRow(rates, groupKey, rowKey), week);
     },
-    [commit, form, rates, week],
+    [commit, form, groups, rates, week],
+  );
+
+  const addGroup = useCallback(() => {
+    if (!form || !week) return;
+    groupCounter.current += 1;
+    const key = `group-new-${groupCounter.current}`;
+    const nextGroups = withGroupTitleSlots(withAddedGroup(groups, key), key, activeLanguageIds);
+    commit(form, nextGroups, { ...rates, [key]: [] }, week);
+  }, [activeLanguageIds, commit, form, groups, rates, week]);
+
+  const removeGroup = useCallback(
+    (groupKey: string) => {
+      if (!form || !week) return;
+      const nextRates: Record<string, readonly RateRowDraft[]> = { ...rates };
+      delete nextRates[groupKey];
+      commit(form, withRemovedGroup(groups, groupKey), nextRates, week);
+    },
+    [commit, form, groups, rates, week],
+  );
+
+  const moveGroup = useCallback(
+    (groupKey: string, delta: -1 | 1) => {
+      if (!form || !week) return;
+      commit(form, withMovedGroup(groups, groupKey, delta), rates, week);
+    },
+    [commit, form, groups, rates, week],
+  );
+
+  const changeGroupTitle = useCallback(
+    (groupKey: string, languageId: string, value: string) => {
+      if (!form || !week) return;
+      commit(form, withGroupTitle(groups, groupKey, languageId, value), rates, week);
+    },
+    [commit, form, groups, rates, week],
+  );
+
+  const removeGroupArea = useCallback(
+    (groupKey: string, area: SelectedAreaRead) => {
+      if (!form || !week) return;
+      commit(form, withGroupAreaRemoved(groups, groupKey, area), rates, week);
+    },
+    [commit, form, groups, rates, week],
+  );
+
+  const addGroupArea = useCallback(
+    (groupKey: string, area: SelectedAreaRead, ancestry: ResolvedAreaAncestry) => {
+      if (!form || !week) return;
+      const nextGroups = withGroupAreaAdded(groups, groupKey, area);
+      if (nextGroups === groups) return; // an exact duplicate is rejected locally, never double-sent
+      setPickedFacts((previous) => new Map(previous).set(areaIdentity(area), ancestry));
+      commit(form, nextGroups, rates, week);
+    },
+    [commit, form, groups, rates, week],
   );
 
   const changeWeek = useCallback(
     (nextWeek: WeekFormState) => {
       if (!form) return;
-      commit(form, rates, nextWeek);
+      commit(form, groups, rates, nextWeek);
     },
-    [commit, form, rates],
+    [commit, form, groups, rates],
   );
 
   const busy = session.save === "saving" || session.reconcile === "pending";
   const readOnly = mode === "view" || busy;
   const blockedByFacts = document && index ? !index.available : false;
-  const unresolved = document && index ? unresolvedSelections(document, index) : [];
+  /** Only the PROPOSED tree blocks: a removed unresolved destination/group no longer does. */
+  const unresolved = resolver ? unresolvedDraftSelections(groups, resolver) : [];
   const formIssues = intent?.issues.general ?? [];
+  const groupProblems = intent?.issues.groups ?? [];
   const rateRowIssues = intent?.issues.rates ?? [];
   const weekProblemIssues = intent?.issues.week ?? [];
   const nameIssueLanguageIds = formIssues.flatMap((issue) =>
@@ -281,11 +391,11 @@ export function ShippingAuthoringScreen({
     session.load === "loaded";
 
   const apply = useCallback(async () => {
-    if (applyRef.current || !index) return;
+    if (applyRef.current || !resolver) return;
     applyRef.current = true;
     setNotice(null);
     try {
-      const outcome = await controller.apply(index.resolver);
+      const outcome = await controller.apply(resolver);
       if (outcome.status !== "sent") return;
       const revision = controller.getState().savedRevision;
       setNotice(authoringFormat(messages.saved, { revision: revision ?? "" }));
@@ -293,7 +403,7 @@ export function ShippingAuthoringScreen({
     } finally {
       applyRef.current = false;
     }
-  }, [controller, index, messages.saved]);
+  }, [controller, messages.saved, resolver]);
 
   /** Enters the requested destination once the session confirms nothing is at risk. */
   const enterDestination = useCallback(
@@ -309,24 +419,28 @@ export function ShippingAuthoringScreen({
         // The latched unknown commit is never cleared here: only the explicit fresh read recovers.
         controller.confirmDiscard();
         setForm(null);
+        setGroups([]);
         setRates({});
         setWeek(null);
+        setPickedFacts(new Map());
       } else {
         controller.cancelDiscard();
-        // ONE cohesive reseed: General AND rate rows AND week come from the SAME confirmed baseline,
-        // so a discarded row/week can never stay on screen or be resurrected by the next edit.
+        // ONE cohesive reseed: General AND group collection AND rate rows AND week come from the SAME
+        // confirmed baseline, so discarded groups/rows/week can never stay or be resurrected.
         if (document) {
-          const drafts = resetAuthoringDrafts(document);
+          const drafts = resetAuthoringDrafts(document, activeLanguageIds);
           setForm(drafts.form);
+          setGroups(drafts.groups);
           setRates(drafts.rates);
           setWeek(drafts.week);
+          setPickedFacts(new Map());
         }
         controller.edit({});
       }
       setMode("view");
       setNotice(null);
     },
-    [controller, document, router, session.commitUncertain],
+    [activeLanguageIds, controller, document, router, session.commitUncertain],
   );
 
   const requestExit = useCallback(
@@ -523,7 +637,7 @@ export function ShippingAuthoringScreen({
                   <p className="mt-1 font-normal">{messages.blockedUnresolved}</p>
                   <ul className="mt-1 list-disc ps-4 font-normal">
                     {unresolved.map((item) => (
-                      <li key={`${item.groupId ?? "root"}:${item.area.kind}:${item.area.id}`}>
+                      <li key={`${item.groupKey}:${item.area.kind}:${item.area.id}`}>
                         {messages[AREA_KIND_KEYS[item.area.kind]]} —{" "}
                         {index.labelOf(item.area) ?? messages.unavailableName}
                       </li>
@@ -547,6 +661,7 @@ export function ShippingAuthoringScreen({
                     ...intent.issues.general.map((issue) =>
                       issue.code === "nameRequired" ? messages.nameRequired : messages.settingsIncomplete,
                     ),
+                    ...groupProblems.map((issue) => groupIssueText(issue, messages)),
                     ...intent.issues.rates.map((issue) => rowIssueMessage(issue.code, messages)),
                     ...intent.issues.week.map((issue) => weekIssueMessage(issue.code, messages)),
                   ]),
@@ -598,18 +713,27 @@ export function ShippingAuthoringScreen({
             ) : null}
           </div>
           <div role="tabpanel" hidden={tab !== "regions"} data-testid="shipping-authoring-panel-regions">
-            <AuthoringRegionsPanel
+            <AuthoringGroupsEditor
               document={document}
               index={index}
               locale={locale}
               messages={messages}
               contentLanguageId={contentLanguageId}
+              activeLanguageIds={activeLanguageIds}
+              groups={groups}
               rates={rates}
-              issues={rateRowIssues}
+              rateIssues={rateRowIssues}
+              unresolved={unresolved}
               editable={!readOnly}
+              onAddGroup={addGroup}
+              onRemoveGroup={removeGroup}
+              onMoveGroup={moveGroup}
+              onChangeTitle={changeGroupTitle}
+              onRemoveArea={removeGroupArea}
+              onAddArea={addGroupArea}
               onAddRow={addRow}
               onRemoveRow={removeRow}
-              onChangeField={changeRow}
+              onChangeRowField={changeRow}
             />
           </div>
         </>

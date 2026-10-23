@@ -179,3 +179,46 @@ export { buildAuthoringIntent, hasNoIssues, intentHasEdits } from "./model/autho
 export type { AuthoringDrafts } from "./model/authoring-drafts.ts";
 export { resetAuthoringDrafts, seedAuthoringDrafts } from "./model/authoring-drafts.ts";
 
+
+/* ————————————————— additive capabilities (TB-204: groups + real destinations) ————————————————— */
+
+export type { GroupDraft, GroupIssue, GroupIssueCode, GroupTitleDraft, GroupsFormState } from "./model/editor-groups.ts";
+export {
+  GROUP_LIMITS,
+  buildGroupsEdits,
+  createGroupsForm,
+  groupIssues,
+  groupRateIssues,
+  groupsDirty,
+  withAddedGroup,
+  withGroupAreaAdded,
+  withGroupAreaRemoved,
+  withGroupTitle,
+  withGroupTitleSlots,
+  withMovedGroup,
+  withRemovedGroup,
+} from "./model/editor-groups.ts";
+
+export type { DestinationChoice, UnresolvedDraftSelection } from "./model/destination-choice.ts";
+export {
+  AREA_LEVELS,
+  areaIdentity,
+  choiceAncestry,
+  choiceTerminal,
+  chooseAdministrativeArea,
+  chooseCity,
+  chooseCountry,
+  chooseLevel,
+  chooseServiceArea,
+  composeAncestryResolver,
+  emptyChoice,
+  unresolvedDraftSelections,
+} from "./model/destination-choice.ts";
+
+export type {
+  GeographyOption,
+  GeographyQuery,
+  GeographyReadFailure,
+  GeographyReadOutcome,
+} from "./api/geography-lookup-api.ts";
+export { decodeGeographyOptions, geographyQueryPath, loadGeographyOptions } from "./api/geography-lookup-api.ts";

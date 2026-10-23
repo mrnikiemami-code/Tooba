@@ -1,3 +1,14 @@
+## pointer: 204 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-23
+
+**TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204** (parent203-R1) از base `06466c7546aa2801690f888015583db958866e4e`
+اجرا و به Bridge گزارش شد؛ **Architect-accepted نیست**. نتیجه:
+[docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204/RESULT.md](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204/RESULT.md).
+collectionگروههمانdraft (add/remove/reorder/titlepatch فعال + chipمقصد) + pickerواقعیGeography با strictfeatureadapter روی همان routeهای موجود
++ rates203 داخل گروه‌های جدید + week ریشه‌ای، همه در همان ONE composed intent/PUT. newgroups clientkey با groupId:null؛ currencyserverowned؛
+titlepatch فقط pair فعال تغییرکرده و null صریح؛ inactive stored echo نمی‌شود. resolver = 201facts + pickهای تأییدشده همان session؛
+blocked فقط روی tree پیشنهادی.8 تست جدید + 55 تست feature + tsc + 7 guard سبز؛ mounted/browser/Visual NOTRUN؛ source-size sweep
+عمداً اجرا نشد. production/visual/live هنوز PENDING؛ فقط پس از review204.
+
 ## مرجع جاری: 203 ازطریقR1 پذیرفته / فقط204 گروه و مقصد — 2026-10-23
 
 203-R1 در `bf7cb78e471010be540e3613d489b284d5b02140` برای نرخگروه‌موجود/هفته **ACCEPT**؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203-R1/ARCHITECT-REVIEW.md). per-boundprecision/whole-documentdiscard/pendingtimezone dirty/fullconditiondisplay بسته. Architect weekcasesمستقلNodePASS؛9+7/tsc/7guards گزارشworker،نهrerun؛mounted/browser/VisualNOTRUN. source-size4oldfail untouched؛productionPENDING.

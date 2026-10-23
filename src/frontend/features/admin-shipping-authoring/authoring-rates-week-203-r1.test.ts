@@ -257,7 +257,7 @@ test("R203-07 confirmed discard restores ALL three capabilities from the same ba
 
 test("R203-08 the real screen Cancel Edit path calls the same whole-document reseed", () => {
   const source = readFileSync(new URL("./ui/authoring-screen.tsx", import.meta.url), "utf8");
-  assert.ok(source.includes("resetAuthoringDrafts(document)"), "the UI path uses the tested helper");
+  assert.ok(source.includes("resetAuthoringDrafts(document"), "the UI path uses the tested helper");
   const cancelBlock = source.slice(source.indexOf("controller.cancelDiscard();"), source.lastIndexOf('setMode("view")'));
   for (const call of ["setForm(drafts.form)", "setRates(drafts.rates)", "setWeek(drafts.week)"]) {
     assert.ok(cancelBlock.includes(call), `cancel edit reseeds ${call}`);

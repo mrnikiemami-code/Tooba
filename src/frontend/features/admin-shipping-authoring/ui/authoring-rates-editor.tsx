@@ -76,8 +76,8 @@ function BoundField({
   );
 }
 
-/** One editable row of one group. */
-function RateRowEditor({
+/** One editable row of one group (shared with the group-collection editor). */
+export function RateRowEditor({
   row,
   index,
   locale,
