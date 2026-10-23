@@ -43,12 +43,12 @@ Read latest recovery/reviews for exact evidence/process limits; no merchant UI/q
 TB198 source analysis accepted with corrections; read its ARCHITECT-REVIEW.md before implementation.
 TB199 existing-draft atomic editor backend is Architect-accepted through199-R1 (98274e4ff), with process/proof limits in its review.
 TB200 frontend foundation accepted through200-R2 at64f3f307cf; UI is still pending.
-TB201-R1 activity guard retained at0c692f357;201 not accepted, proof remains incomplete.
-Only next issued task: TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R2 (parent201-R1), tests/docs only.
-Saved repro fake returns duplicate city rows for shared-city service areas; real bulk reader deduplicates. Second production closure defect is UNPROVEN.
-Correct fixture and execute compact real-reader/module-DI/listener/new-handler proof; authorized test-only Geography.Infrastructure reference remains.
-No production/schema/frontend/Host/shared DB change; no speculative second fix. Backend199/frontend200 accepted; latest recovery authoritative.
-Wait201-R2 result before UI202.
+TB201 destination read bridge accepted through201-R2 at9120f0cba; prior fake duplicate-city defect retracted.
+Only next issued task: TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202 (parent201-R2).
+Frontend existing-draft admin general form/ONE atomic Apply,201 facts decoding/resolver, thin route and safe view-only legacy entry.
+Regions/rates/week read-only and preserved; no backend/schema/shared-service/activation change or automatic draft create.
+Read latest review/recovery for test/reporting limits; backend199/frontend200 accepted, no proof replay.
+Wait202 result before any next task.
 Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
 
 ## Core rules

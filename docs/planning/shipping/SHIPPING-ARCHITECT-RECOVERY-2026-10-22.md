@@ -1,5 +1,14 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 201 ازطریقR2 بسته / فقط202 فرمواقعیgeneral — 2026-10-23
+
+201 readbridge در9120f0cba36071a4c6748d1176819c032284c2ca **ACCEPT**؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R2/ARCHITECT-REVIEW.md). fakeDuplicateCityعلتقراردادشکسته‌بودونقصدومproductionردشد؛IsActiveserviceareaاکنونlawfultestپوشش‌دارد.15readfacts+7endpointPASS گزارشworker،نهArchitectrerun؛EFInMemoryنهSQL/schemaPG. no-postcommitازcounter1پوشش‌دارد(poisonبعدPUTفعال)،OCEidentity/naturalcancelassertنشده؛reviewدقیق،نهproofloop. timingcomplianceحدس‌نشود. prior4PGrefusalsهمانhistoryمی‌مانند.
+
+تنها **TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202**،parent201-R2،45دقیقه/stop35؛frontendexistingfeature+thinroute /admin/shipping-services/authoring/[draftId]. فرمgeneral: databaseLanguageIdname/description،realtypechoices،دوsettingsمستقل؛onePUTexpectedrevision/sessionguards.201destinationFactsstrictdecode+resolver؛City/ServiceAreaadminnullableواقعتطبیقFEsinglepredicateمجاز،نهguess. Regions/rates/weekفعلاًreadonlyمحفوظ؛editingبعدتسکمحدود.
+
+entryدرlegacyFlatMethodDetailDialogفقطVIEWوbindingresolved؛ازهمانserverbinding+ownerdraftlistuniqueبهrouteبرود،نهsplitmethodCode،نهPOSTخودکار،نهخروجازدیتlegacydirty. fallbackmissingdraft/ambiguous/deniedخطایصادق،نهfakecreate. قالبpreviewمرجعvisualنهfixture/datatypeauthority. noBackend/schema/sharedservices/activation؛livebrowserفقطreadonlyاگرappموجودوآماده،نهrestart/loginprobe/merchantwrite. بعدresult202review؛تسکدیگرتاresultصادرنشود.200/199بسته‌نهreplay؛TB185paused/defaultOFF/PendingAllocationمحفوظ.
+
+
 ## مرجع جاری: 201-R1 partial؛ فقط201-R2 fixture+integration — 2026-10-23
 
 main0c692f35732420c785916bb28e11bd02910270df reviewشد؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R1/ARCHITECT-REVIEW.md). IsActiveserviceareaاضافه‌شده‌حفظ،اماtestبهassertنرسیده. 6green narrowfixturesفقط؛EF/DI/Listener/newhandlerهنوزاجرانشده؛overrun/staleassemblyثبت. 201بسته‌نیست،UI202صادرنشود.
