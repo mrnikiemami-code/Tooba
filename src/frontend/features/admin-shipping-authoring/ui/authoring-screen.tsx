@@ -1,11 +1,13 @@
 "use client";
 
 /**
- * Rendered GENERAL editor of ONE existing shipping draft (the first connected visible slice).
+ * Rendered editor of ONE existing shipping draft: General (names/type/two settings), the ONE
+ * method-level weekly schedule and the rate rows under each EXISTING region group.
  *
  * Boundary: this component only renders state and dispatches the feature controller. Transport,
- * decoding, ancestry and the ONE atomic PUT stay in `api`/`model`/`session`; region/rate/week editing,
- * whole-method creation, activation and unsupported cutoff/carrier/funding controls are NOT here.
+ * decoding, ancestry, validation and the ONE atomic PUT stay in `api`/`model`/`session`; group
+ * topology/geography editing, whole-method creation, activation and unsupported cutoff/carrier/
+ * funding controls are NOT here.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,13 +15,11 @@ import { Dialog } from "../../../design-system";
 import { loadAuthoringTypeChoices, type AuthoringTypeChoice } from "../api/authoring-lookup-api.ts";
 import type { EditorTransportFailure, EditorPropertyError } from "../api/editor-document-api.ts";
 import { authoringMessages, authoringFormat, type AuthoringLocale, type AuthoringMessages } from "../messages/authoring-messages.ts";
-import type { AuthoringCalculationMode, FreightPaymentMode } from "../model/editor-document.ts";
+import type { AuthoringCalculationMode, EditorDocument, FreightPaymentMode } from "../model/editor-document.ts";
 import { indexDestinationFacts, unresolvedSelections } from "../model/editor-destination-ancestry.ts";
+import { buildAuthoringIntent, hasNoIssues, intentHasEdits } from "../model/authoring-intent.ts";
 import {
-  buildEditorEdits,
   createEditorForm,
-  formHasEdits,
-  formHasLocalChanges,
   withCalculationMode,
   withDescription,
   withFreightPaymentMode,
@@ -27,10 +27,30 @@ import {
   withShippingType,
   type EditorFormState,
 } from "../model/editor-form.ts";
+import {
+  createRatesForm,
+  withAddedRow,
+  withRemovedRow,
+  withRowField,
+  type RateField,
+  type RatesFormState,
+} from "../model/editor-rates.ts";
+import {
+  configureWeek,
+  createWeekForm,
+  resetWeek,
+  withDayTime,
+  withDayWorking,
+  withPendingTimeZone,
+  withTimeZone,
+  type WeekFormState,
+} from "../model/editor-week.ts";
 import { hasUnsavedWork, type EditorSaveStatus } from "../session/editor-session.ts";
 import { planAuthoringExit, type AuthoringExitDestination } from "./authoring-exit.ts";
 import { useEditorController } from "./use-editor-controller.ts";
 import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
+import { AuthoringWeekEditor, weekIssueMessage } from "./authoring-week-editor.tsx";
+import { rowIssueMessage } from "./authoring-rates-editor.tsx";
 import { AuthoringRegionsPanel } from "./authoring-regions-panel.tsx";
 
 const TABS = ["general", "regions"] as const;
@@ -100,6 +120,8 @@ export function ShippingAuthoringScreen({
   const [mode, setMode] = useState<"view" | "edit">(initialMode);
   const [tab, setTab] = useState<ScreenTab>("general");
   const [form, setForm] = useState<EditorFormState | null>(null);
+  const [rates, setRates] = useState<RatesFormState>({});
+  const [week, setWeek] = useState<WeekFormState | null>(null);
   const [contentLanguageId, setContentLanguageId] = useState<string>("");
   const [types, setTypes] = useState<readonly AuthoringTypeChoice[]>([]);
   const [typesState, setTypesState] = useState<"loading" | "ok" | "error">("loading");
@@ -109,15 +131,18 @@ export function ShippingAuthoringScreen({
   const exitDestinationRef = useRef<AuthoringExitDestination>("back");
 
   const formSeed = state.formSeed;
+  const rowCounter = useRef(0);
 
   /**
-   * The form is seeded from the CONFIRMED baseline only on an accepted transition (fresh load,
-   * accepted save, explicit discard + fresh read). A render, an invalid `edited({})` or a reconcile
-   * never re-seeds it, so typed values are never erased by a state change.
+   * All local drafts (General, rate rows, weekly schedule) are seeded from the CONFIRMED baseline
+   * only on an accepted transition (fresh load, accepted save, explicit discard + fresh read). A
+   * render, an invalid `edited({})` or a reconcile never re-seeds them, so typed work survives.
    */
   useEffect(() => {
     if (!document) return;
     setForm(createEditorForm(document));
+    setRates(createRatesForm(document));
+    setWeek(createWeekForm(document.weeklySchedule));
     const defaultLanguage = document.presentation.contentLanguages.find(
       (language) => language.languageId.toLowerCase() === document.presentation.defaultContentLanguageId.toLowerCase(),
     );
@@ -170,38 +195,87 @@ export function ShippingAuthoringScreen({
   }, [session.decision]);
 
   const index = useMemo(() => (document ? indexDestinationFacts(document) : null), [document]);
-  const built = useMemo(
-    () => (document && form ? buildEditorEdits(document, form) : null),
-    [document, form],
+  const intent = useMemo(
+    () => (document && form && week ? buildAuthoringIntent(document, form, rates, week) : null),
+    [document, form, rates, week],
+  );
+
+  /**
+   * ONE dispatch for every capability: sets the three local drafts and hands the controller a SINGLE
+   * composed patch, so a General edit never drops a pending rate/week change and vice versa.
+   */
+  const commit = useCallback(
+    (nextForm: EditorFormState, nextRates: RatesFormState, nextWeek: WeekFormState) => {
+      setForm(nextForm);
+      setRates(nextRates);
+      setWeek(nextWeek);
+      if (!document) return;
+      const composed = buildAuthoringIntent(document, nextForm, nextRates, nextWeek);
+      controller.edit(composed.edits, composed.localDirty);
+    },
+    [controller, document],
   );
 
   const pushEdits = useCallback(
     (nextForm: EditorFormState) => {
-      setForm(nextForm);
-      if (!document) return;
-      const built = buildEditorEdits(document, nextForm);
-      // Raw form work (even invalid) must stay dirty; only serializable parts travel as a patch.
-      controller.edit(built.edits, formHasLocalChanges(document, nextForm) || built.issues.length > 0);
+      if (!week) return;
+      commit(nextForm, rates, week);
     },
-    [controller, document],
+    [commit, rates, week],
+  );
+
+  const changeRow = useCallback(
+    (groupId: string, rowKey: string, field: RateField, value: string) => {
+      if (!form || !week) return;
+      commit(form, withRowField(rates, groupId, rowKey, field, value), week);
+    },
+    [commit, form, rates, week],
+  );
+
+  const addRow = useCallback(
+    (groupId: string) => {
+      if (!form || !week) return;
+      rowCounter.current += 1;
+      commit(form, withAddedRow(rates, groupId, `new-${rowCounter.current}`), week);
+    },
+    [commit, form, rates, week],
+  );
+
+  const removeRow = useCallback(
+    (groupId: string, rowKey: string) => {
+      if (!form || !week) return;
+      commit(form, withRemovedRow(rates, groupId, rowKey), week);
+    },
+    [commit, form, rates, week],
+  );
+
+  const changeWeek = useCallback(
+    (nextWeek: WeekFormState) => {
+      if (!form) return;
+      commit(form, rates, nextWeek);
+    },
+    [commit, form, rates],
   );
 
   const busy = session.save === "saving" || session.reconcile === "pending";
   const readOnly = mode === "view" || busy;
   const blockedByFacts = document && index ? !index.available : false;
   const unresolved = document && index ? unresolvedSelections(document, index) : [];
-  const formIssues = built?.issues ?? [];
+  const formIssues = intent?.issues.general ?? [];
+  const rateRowIssues = intent?.issues.rates ?? [];
+  const weekProblemIssues = intent?.issues.week ?? [];
   const nameIssueLanguageIds = formIssues.flatMap((issue) =>
     issue.code === "nameRequired" ? [issue.languageId] : [],
   );
   const settingsIncomplete = formIssues.some((issue) => issue.code === "settingsIncomplete");
-  const hasIntent = built !== null && formHasEdits(built.edits);
+  const hasIntent = intent !== null && intentHasEdits(intent.edits);
   const canApply =
     !readOnly &&
     session.unsaved &&
     document !== null &&
     hasIntent &&
-    formIssues.length === 0 &&
+    intent !== null &&
+    hasNoIssues(intent.issues) &&
     !blockedByFacts &&
     unresolved.length === 0 &&
     !session.commitUncertain &&
@@ -452,6 +526,29 @@ export function ShippingAuthoringScreen({
             </div>
           ) : null}
 
+          {intent && !hasNoIssues(intent.issues) ? (
+            <div
+              role="alert"
+              className="rounded-xl border border-danger/40 bg-red-50 px-3 py-2 text-xs font-semibold text-danger"
+              data-testid="shipping-authoring-local-issues"
+            >
+              <p className="font-black">{messages.applyBlockedLocal}</p>
+              <ul className="mt-1 list-disc space-y-0.5 ps-4 font-normal">
+                {Array.from(
+                  new Set([
+                    ...intent.issues.general.map((issue) =>
+                      issue.code === "nameRequired" ? messages.nameRequired : messages.settingsIncomplete,
+                    ),
+                    ...intent.issues.rates.map((issue) => rowIssueMessage(issue.code, messages)),
+                    ...intent.issues.week.map((issue) => weekIssueMessage(issue.code, messages)),
+                  ]),
+                ).map((text) => (
+                  <li key={text}>{text}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           <div role="tabpanel" hidden={tab !== "general"} data-testid="shipping-authoring-panel-general">
             {form ? (
               <AuthoringGeneralTab
@@ -471,6 +568,24 @@ export function ShippingAuthoringScreen({
                 onFreightPaymentMode={(mode2: FreightPaymentMode) => pushEdits(withFreightPaymentMode(form, mode2))}
                 onCalculationMode={(mode2: AuthoringCalculationMode) => pushEdits(withCalculationMode(form, mode2))}
                 onShippingType={(shippingTypeId) => pushEdits(withShippingType(form, shippingTypeId))}
+                scheduleSlot={
+                  week ? (
+                    <AuthoringWeekEditor
+                      schedule={document.weeklySchedule}
+                      week={week}
+                      issues={weekProblemIssues}
+                      editable={!readOnly}
+                      locale={locale}
+                      messages={messages}
+                      onPendingTimeZone={(value) => changeWeek(withPendingTimeZone(week, value))}
+                      onConfigure={() => changeWeek(configureWeek(week))}
+                      onTimeZone={(value) => changeWeek(withTimeZone(week, value))}
+                      onDayWorking={(weekday, isWorking) => changeWeek(withDayWorking(week, weekday, isWorking))}
+                      onDayTime={(weekday, bound, value) => changeWeek(withDayTime(week, weekday, bound, value))}
+                      onReset={() => changeWeek(resetWeek(document.weeklySchedule))}
+                    />
+                  ) : null
+                }
               />
             ) : null}
           </div>
@@ -481,6 +596,12 @@ export function ShippingAuthoringScreen({
               locale={locale}
               messages={messages}
               contentLanguageId={contentLanguageId}
+              rates={rates}
+              issues={rateRowIssues}
+              editable={!readOnly}
+              onAddRow={addRow}
+              onRemoveRow={removeRow}
+              onChangeField={changeRow}
             />
           </div>
         </>

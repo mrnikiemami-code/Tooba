@@ -134,3 +134,45 @@ export { confirmedDocument, createEditorController } from "./session/editor-cont
 export type { AuthoringLocale, AuthoringMessageKey, AuthoringMessages } from "./messages/authoring-messages.ts";
 export { authoringFormat, authoringMessages } from "./messages/authoring-messages.ts";
 
+/* ————————————————— additive capabilities (TB-203: rows + week) ————————————————— */
+
+export type {
+  RateField,
+  RateRowDraft,
+  RateRowIssue,
+  RateRowIssueCode,
+  RatesFormState,
+} from "./model/editor-rates.ts";
+export {
+  RATE_LIMITS,
+  buildRegionGroupsEdits,
+  createRatesForm,
+  draftFromRow,
+  newRateRow,
+  rateIssues,
+  ratesDirty,
+  rowIssue,
+  withAddedRow,
+  withRemovedRow,
+  withRowField,
+} from "./model/editor-rates.ts";
+
+export type { ScheduleDayDraft, WeekFormState, WeekIssue, WeekIssueCode } from "./model/editor-week.ts";
+export {
+  TIME_ZONE_MAX_LENGTH,
+  WEEKDAYS,
+  buildWeeklyScheduleEdit,
+  configureWeek,
+  createWeekForm,
+  resetWeek,
+  weekDirty,
+  weekIssues,
+  withDayTime,
+  withDayWorking,
+  withPendingTimeZone,
+  withTimeZone,
+} from "./model/editor-week.ts";
+
+export type { AuthoringIntent, AuthoringIntentIssues } from "./model/authoring-intent.ts";
+export { buildAuthoringIntent, hasNoIssues, intentHasEdits } from "./model/authoring-intent.ts";
+

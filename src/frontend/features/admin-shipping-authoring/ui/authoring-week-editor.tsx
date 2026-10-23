@@ -1,0 +1,209 @@
+﻿"use client";
+
+/**
+ * The ONE method-level weekly schedule, mode-aware: read-only in view, editable in edit.
+ *
+ * An unconfigured schedule is NOT auto-created: it stays explicitly unconfigured until the operator
+ * supplies a time zone and deliberately configures it. Working/closed toggles keep the remembered
+ * hours, a working day requires a real start/end pair, and an untouched stored `TimeText` (including
+ * its seconds/fractions) is never rewritten by simply rendering this component.
+ */
+import type { EditorWeeklySchedule } from "../model/editor-document.ts";
+import type { WeekFormState, WeekIssue } from "../model/editor-week.ts";
+import { WEEKDAYS, type WeekIssueCode } from "../model/editor-week.ts";
+import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-messages.ts";
+import { authoringFormat } from "../messages/authoring-messages.ts";
+import { weekdayLabel } from "./authoring-general-tab.tsx";
+
+/** Localized text of one week issue (shared by the editor and the screen's issue summary). */
+export function weekIssueMessage(code: WeekIssueCode, messages: AuthoringMessages): string {
+  switch (code) {
+    case "timeZoneRequired":
+      return messages.weekTimeZoneRequired;
+    case "timeZoneTooLong":
+      return messages.weekTimeZoneTooLong;
+    case "dayHoursRequired":
+      return messages.weekDayHoursRequired;
+    case "dayTimeInvalid":
+      return messages.weekDayTimeInvalid;
+    case "dayRangeInvalid":
+      return messages.weekDayRangeInvalid;
+  }
+}
+
+/** `HH:mm` for a `time` input: an untouched stored token is shown truncated but never rewritten. */
+function inputTime(value: string): string {
+  const match = /^([01][0-9]|2[0-3]):([0-5][0-9])/.exec(value);
+  return match ? `${match[1]}:${match[2]}` : value;
+}
+
+export function AuthoringWeekEditor({
+  schedule,
+  week,
+  issues,
+  editable,
+  locale,
+  messages,
+  onPendingTimeZone,
+  onConfigure,
+  onTimeZone,
+  onDayWorking,
+  onDayTime,
+  onReset,
+}: {
+  schedule: EditorWeeklySchedule | null;
+  week: WeekFormState;
+  issues: readonly WeekIssue[];
+  editable: boolean;
+  locale: AuthoringLocale;
+  messages: AuthoringMessages;
+  onPendingTimeZone: (value: string) => void;
+  onConfigure: () => void;
+  onTimeZone: (value: string) => void;
+  onDayWorking: (weekday: number, isWorking: boolean) => void;
+  onDayTime: (weekday: number, bound: "startTime" | "endTime", value: string) => void;
+  onReset: () => void;
+}) {
+  const timeZoneIssue = issues.find((issue) => issue.code === "timeZoneRequired" || issue.code === "timeZoneTooLong");
+  const configureTimeZone = week.kind === "unconfigured" ? week.pendingTimeZone : "";
+
+  return (
+    <section className="rounded-xl border border-border bg-surface-elevated p-3 md:p-4" data-testid="shipping-authoring-week">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-black text-gray-900">{messages.weekTitle}</h3>
+        {editable && week.kind === "configured" && schedule !== null ? (
+          <button
+            type="button"
+            className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800"
+            data-testid="shipping-authoring-week-reset"
+            onClick={onReset}
+          >
+            {messages.weekResetAction}
+          </button>
+        ) : null}
+      </div>
+
+      {week.kind === "unconfigured" ? (
+        <div className="mt-2 grid gap-2 text-xs text-gray-700">
+          <p>{messages.weekUnconfigured}</p>
+          {editable ? (
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="grid gap-0.5">
+                <span className="text-[10px] font-bold text-gray-600">{messages.weekTimeZone}</span>
+                <input
+                  type="text"
+                  dir="ltr"
+                  className="min-h-8 w-56 rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
+                  placeholder="Asia/Tehran"
+                  value={configureTimeZone}
+                  onChange={(event) => onPendingTimeZone(event.target.value)}
+                  data-testid="shipping-authoring-week-configure-timezone"
+                />
+              </label>
+              <button
+                type="button"
+                className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800 disabled:opacity-50"
+                data-testid="shipping-authoring-week-configure"
+                disabled={configureTimeZone.trim().length === 0}
+                onClick={onConfigure}
+              >
+                {messages.weekConfigureAction}
+              </button>
+            </div>
+          ) : null}
+          {editable ? <p className="text-[11px] text-gray-500">{messages.weekTimeZoneHint}</p> : null}
+        </div>
+      ) : (
+        <div className="mt-2 grid gap-2 text-xs text-gray-700">
+          {editable ? (
+            <label className="grid gap-0.5">
+              <span className="text-[10px] font-bold text-gray-600">{messages.weekTimeZone}</span>
+              <input
+                type="text"
+                dir="ltr"
+                className="min-h-8 w-56 rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
+                value={week.timeZoneId}
+                onChange={(event) => onTimeZone(event.target.value)}
+                data-testid="shipping-authoring-week-timezone"
+              />
+            </label>
+          ) : (
+            <p>
+              <span className="font-bold">{messages.weekTimeZone}: </span>
+              <span dir="ltr">{week.timeZoneId}</span>
+            </p>
+          )}
+          {timeZoneIssue ? (
+            <p role="alert" className="text-[11px] font-semibold text-danger">
+              {weekIssueMessage(timeZoneIssue.code, messages)}
+            </p>
+          ) : null}
+
+          <ul className="grid gap-1 md:grid-cols-2">
+            {WEEKDAYS.map((weekday) => {
+              const day = week.days.find((candidate) => candidate.weekday === weekday);
+              if (!day) return null;
+              const dayIssue = issues.find((issue) => issue.weekday === weekday);
+              return (
+                <li
+                  key={weekday}
+                  className="grid gap-1 rounded-lg bg-surface px-2 py-1"
+                  data-testid={`shipping-authoring-week-day-${weekday}`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold">{weekdayLabel(weekday, locale)}</span>
+                    {editable ? (
+                      <label className="flex items-center gap-1 text-[11px]">
+                        <input
+                          type="checkbox"
+                          checked={day.isWorking}
+                          onChange={(event) => onDayWorking(weekday, event.target.checked)}
+                          data-testid={`shipping-authoring-week-working-${weekday}`}
+                        />
+                        <span>{messages.weekWorking}</span>
+                      </label>
+                    ) : (
+                      <span dir="ltr" className="text-gray-600">
+                        {day.isWorking
+                          ? authoringFormat(messages.weekOpen, { from: inputTime(day.startTime), to: inputTime(day.endTime) })
+                          : messages.weekClosed}
+                      </span>
+                    )}
+                  </div>
+                  {editable ? (
+                    <div className="flex flex-wrap items-center gap-1">
+                      <input
+                        type="time"
+                        dir="ltr"
+                        className="min-h-8 rounded-lg border border-border bg-surface px-2 text-xs"
+                        value={inputTime(day.startTime)}
+                        onChange={(event) => onDayTime(weekday, "startTime", event.target.value)}
+                        data-testid={`shipping-authoring-week-start-${weekday}`}
+                      />
+                      <span className="text-gray-500">–</span>
+                      <input
+                        type="time"
+                        dir="ltr"
+                        className="min-h-8 rounded-lg border border-border bg-surface px-2 text-xs"
+                        value={inputTime(day.endTime)}
+                        onChange={(event) => onDayTime(weekday, "endTime", event.target.value)}
+                        data-testid={`shipping-authoring-week-end-${weekday}`}
+                      />
+                    </div>
+                  ) : null}
+                  {dayIssue ? (
+                    <p role="alert" className="text-[11px] font-semibold text-danger">
+                      {weekIssueMessage(dayIssue.code, messages)}
+                    </p>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      <p className="mt-2 text-[11px] text-gray-500">{editable ? messages.weekEditNote : messages.weekNote}</p>
+    </section>
+  );
+}
+

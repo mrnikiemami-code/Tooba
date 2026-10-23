@@ -2,8 +2,9 @@
 
 /**
  * Presentational GENERAL tab of one existing draft: real type, multilingual name/description, two
- * independent settings, and the read-only weekly schedule. No fetch, no session, no business rule.
+ * independent settings, and the ONE method-level schedule slot. No fetch, no session, no business rule.
  */
+import type { ReactNode } from "react";
 import { Field, Input, Select, Textarea } from "../../../design-system";
 import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-messages.ts";
 import { authoringFormat } from "../messages/authoring-messages.ts";
@@ -16,7 +17,7 @@ import type {
 } from "../model/editor-document.ts";
 import { descriptionOf, nameOf, selectedShippingTypeValue, type EditorFormState } from "../model/editor-form.ts";
 import type { AuthoringTypeChoice } from "../api/authoring-lookup-api.ts";
-import { formatNumber, formatTimeText } from "./authoring-format.ts";
+import { formatNumber } from "./authoring-format.ts";
 
 const WEEKDAY_ANCHOR = Date.UTC(2024, 0, 1); // 2024-01-01 was a Monday (ISO weekday 1).
 
@@ -60,6 +61,7 @@ export function AuthoringGeneralTab({
   onFreightPaymentMode,
   onCalculationMode,
   onShippingType,
+  scheduleSlot,
 }: {
   document: EditorDocument;
   form: EditorFormState;
@@ -72,6 +74,8 @@ export function AuthoringGeneralTab({
   typeChoicesState: "loading" | "ok" | "error";
   nameIssueLanguageIds: readonly string[];
   settingsIncomplete: boolean;
+  /** The ONE method-level schedule component, composed here so the section is not duplicated. */
+  scheduleSlot: ReactNode;
   onName: (languageId: string, value: string) => void;
   onDescription: (languageId: string, value: string) => void;
   onFreightPaymentMode: (mode: FreightPaymentMode) => void;
@@ -313,35 +317,7 @@ export function AuthoringGeneralTab({
         </p>
       ) : null}
 
-      <section className="rounded-xl border border-border bg-surface-elevated p-3 md:p-4">
-        <h3 className="text-sm font-black text-gray-900">{messages.weekTitle}</h3>
-        {document.weeklySchedule ? (
-          <div className="mt-2 space-y-1 text-xs text-gray-700">
-            <p>
-              <span className="font-bold">{messages.weekTimeZone}: </span>
-              <span dir="ltr">{document.weeklySchedule.timeZoneId}</span>
-            </p>
-            <ul className="grid gap-1 md:grid-cols-2">
-              {document.weeklySchedule.days.map((day) => (
-                <li key={day.weekday} className="flex items-center justify-between rounded-lg bg-surface px-2 py-1">
-                  <span className="font-semibold">{weekdayLabel(day.weekday, locale)}</span>
-                  <span dir="ltr" className="text-gray-600">
-                    {day.isWorking
-                      ? authoringFormat(messages.weekOpen, {
-                          from: day.startTime ? formatTimeText(day.startTime) : "",
-                          to: day.endTime ? formatTimeText(day.endTime) : "",
-                        })
-                      : messages.weekClosed}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="mt-1 text-xs text-gray-500">{messages.weekUnconfigured}</p>
-        )}
-        <p className="mt-2 text-[11px] text-gray-500">{messages.weekNote}</p>
-      </section>
+      {scheduleSlot}
     </div>
   );
 }

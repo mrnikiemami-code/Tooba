@@ -1,3 +1,15 @@
+## pointer: 203 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-23
+
+**TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203** (parent202-R1) از base `44a220dea77c87e3d8c1a80e07b22af4e2846e45`
+اجرا و result آن به Bridge ارسال شد؛ **Architect-accepted نیست**. محدوده: ردیف‌های نرخ زیر گروه‌های موجود
+(add/remove/edit با متن دقیق پول، بدون Number)، برنامهٔ هفتگی ریشهٔ روش یک‌بار (configured/unconfigured صریح،
+۷ روز ISO، TimeText کسری دست‌نخورده)، و ترکیب General+rates+week در یک `EditorEdits` واحد و یک PUT.
+هویت/ترتیب/مناطق/ارز فقط‌خواندنی؛ overlap/price سیاست سمت سرور. 7 تست جدید + 48 تست موجود + tsc سبز؛
+feature/import/test-discovery/flat-folder guard سبز؛ فقط `frontend-source-size` با ۴ تخلف **از پیش موجود** در
+فایل‌های خارج از این تسک شکست خورد. Visual/browser NOTRUN. شواهد:
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203/RESULT.md`.
+199/200/201/202 بسته و replay نشوند؛ تا review این نتیجه تسک دیگری صادر نشود.
+
 ## مرجع جاری: 202 ازطریقR1 پذیرفته / فقط203 نرخ و هفته — 2026-10-23
 
 202-R1 در `86c0a10932f48760978681dec4d606ddbf24b33e` برای اصلاحات محدود General **ACCEPT**؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202-R1/ARCHITECT-REVIEW.md). raw-invalid dirty داخلهمانsession،settingsuntouched/revert،تأییدCancelEdit/Back،busyguard،formSeed و lifecycle/key اصلاحشده‌اند. Architect formpurecases را مستقل اجرا کرد؛48feature/tsc/5guards گزارشworker،نهrerunArchitect. mountedReact/browser/Visual هنوز اجرا نشده؛پذیرش محدود،نهproduction/certification.
