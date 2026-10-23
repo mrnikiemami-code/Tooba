@@ -1,3 +1,11 @@
+## مرجع جاری: 204 نیازمند اصلاح / فقط204-R1 — 2026-10-23
+
+204 در `790c2583c12953986666b493d30122aeca603ce4` بررسیشد؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204/ARCHITECT-REVIEW.md). **REPAIR_REQUIRED؛ تیک پایان نخورد.** group/title/rates/ONEintent حفظ؛picker اشکال دارد: globalepoch درخواستareas را باcities باطل می‌کند؛cities ازareas قدیمی/undefined والد را fail-open می‌پذیرد؛isActive درAdd guardندارد؛برگشتlevelAdminازcity ancestryغلط؛clearplaceholderبی‌اثر وlabelfallbackcodeمخالفگزارش.
+
+Architect دوchoicecase را مستقلNodeاجراکرد: inactiveCountry ancestry معتبرمی‌دهد؛adminپسازnulladmincity terminalداردولیancestrynull. sourceeffects raceبررسیشد،نهmountedReact.8focused/55root/tsc/7guardsگزارشworker؛55glob روت،نهnestedadapter/session؛sourceRegexاثباتraceنیست. مسیر واقعی `/admin/shipping-services/authoring/[draftId]` است،نهdrafts/{id}. Visual/mounted/liveNOTRUN.
+
+تنها **TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R1**،parent204،30دقیقه/stop22: pickercoordinatorواقعی باdeferredproof،cityparentverificationبعدareassuccess وemptyfailclosed،activechainguard،terminalexactpath،clearcascade/stalelist وunavailablelabel. noBackend/schema/route/newfeature/proofloop. تا نتیجه204-R1 تسکدیگری صادر نشود؛بعدreview visual/livevalidationمحدود.199/200/201/202/203بسته‌نهreplay؛ProductionPENDING؛TB185paused/defaultOFF/PendingAllocationمحفوظ. اینبخش برpointerهایقدیمی مقدم است.
+
 ## pointer: 204 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-23
 
 **TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204** (parent203-R1) از base `06466c7546aa2801690f888015583db958866e4e`
