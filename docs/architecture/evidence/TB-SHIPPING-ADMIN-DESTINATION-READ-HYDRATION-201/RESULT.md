@@ -131,3 +131,21 @@ and absent labels staying null.
 
 Status: PENDING_ARCHITECT_REVIEW. Worker PASS != Architect ACCEPT. Production-Functional-Acceptance:
 PENDING. Schema/Data/Flag changes: NONE.
+
+---
+
+## Append-only correction — TB-201-R1 (2026-10-23)
+
+Repair applied: the ServiceArea branch of `Resolve` now also requires `serviceArea.IsActive`, so an
+inactive terminal can no longer produce `Resolved` + a write shape. That is the only production change
+in R1.
+
+Correction to the "not executed" notes above: a terminal-only request (service area key present, its
+city/admin/country keys NOT present) fails closed with `shipping.authoring.configuration_unavailable`
+before reaching any fact assertion. The scenario is preserved verbatim in
+`../TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R1/repro-servicearea-only-fail-closed.cs.txt`. The
+same shape resolves when the ancestor keys are themselves part of the request, which is what the six
+currently green tests do, so the parent-closure path is not covered by any green test. This means the new
+activity guard could not be exercised by its intended regression, and the required EF/DI/listener/new
+handler proofs remain unexecuted. R1 is therefore PARTIAL, not a completion. See
+`../TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R1/RESULT.md`.

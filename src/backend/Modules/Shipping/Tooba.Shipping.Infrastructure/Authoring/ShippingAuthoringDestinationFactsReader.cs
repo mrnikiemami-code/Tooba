@@ -232,7 +232,7 @@ public sealed class ShippingAuthoringDestinationFactsReader(
 
             case ShippingAuthoringAreaKind.ServiceArea:
             {
-                if (!serviceAreas.TryGetValue(key.Id, out var serviceArea)
+                if (!serviceAreas.TryGetValue(key.Id, out var serviceArea) || !serviceArea.IsActive
                     || !cities.TryGetValue(serviceArea.CityId, out var city) || !city.IsActive
                     || !countries.TryGetValue(city.CountryId, out var country) || !country.IsActive)
                 {

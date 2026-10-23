@@ -863,3 +863,9 @@ Evidence: `docs/architecture/evidence/TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-1
 Whole Shipping suite passed once on the disposable PostgreSQL target (645 passed), container removed and 55432 free.
 Status is PENDING_ARCHITECT_REVIEW; Production-Functional-Acceptance PENDING; worker PASS is not Architect ACCEPT;
 STATUS: PARTIAL only in that a dedicated throwing-catalog post-commit fault fact was not added. No automatic next task.
+
+## مرجع جاری: 201-R1 PARTIAL — 2026-10-23
+
+گارد فعالیت ناحیهٔ خدمت (تنها تغییر production) اعمال شد؛ اما سناریوی فقط-کلید-پایانه با
+configuration_unavailable بسته می‌شود و اثبات pre/post و چهار اثبات الزامی (EF واقعی، DI واقعی،
+ActivityListener، enrichment هندلر) اجرا نشد. جزئیات: docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R1/RESULT.md
