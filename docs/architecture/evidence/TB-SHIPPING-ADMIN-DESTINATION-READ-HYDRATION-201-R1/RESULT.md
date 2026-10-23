@@ -95,3 +95,20 @@ read bridge is byte-identical apart from the one guard line.
 
 Status: PARTIAL. Production-Functional-Acceptance: PENDING. Schema/Data/Flag changes: NONE.
 Worker PASS != Architect ACCEPT.
+
+---
+
+## Append-only correction — TB-201-R2 (2026-10-23)
+
+The "second genuine defect" reported above is **withdrawn**. It was a FIXTURE defect, not a production
+defect: the saved reproduction's fake echoed every requested id, so when two service areas shared one city
+the reader's legitimate [city, city] request produced two identical city rows and
+`ReadVerifiedAsync` correctly refused the duplicated response identity. The real
+`GeographyPlaceSnapshotReader` de-duplicates requested ids, as its contract requires.
+
+Executed proof in R2: with the fixture made lawful and the SAME activity assertions, an inactive service
+area stays `Unresolved` with its raw key/Area = null, the otherwise-identical active one on the same
+city resolves, a terminal-only request discovers its whole ancestry, and a deliberately duplicated foreign
+response is still refused. So the guard is exercised, terminal-only closure is NOT broken, and no second
+production change was made or needed. See
+`../TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R2/RESULT.md`.

@@ -880,3 +880,12 @@ STATUS: PARTIAL only in that a dedicated throwing-catalog post-commit fault fact
 گارد فعالیت ناحیهٔ خدمت (تنها تغییر production) اعمال شد؛ اما سناریوی فقط-کلید-پایانه با
 configuration_unavailable بسته می‌شود و اثبات pre/post و چهار اثبات الزامی (EF واقعی، DI واقعی،
 ActivityListener، enrichment هندلر) اجرا نشد. جزئیات: docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R1/RESULT.md
+
+## مرجع جاری: 201-R2 (test-only) — 2026-10-23
+
+ریشهٔ خرابیِ repro قبلی، fixture بود نه production: fake هر id درخواستی را تکرار می‌کرد و پاسخ تکراری شهر
+درست fail-closed می‌شد. با fixture قانونی، همان assertionهای فعالیت پاس می‌شوند (غیرفعال → Unresolved،
+فعال → Resolved، فقط-کلید-پایانه → کل نیاکان کشف می‌شود، پاسخ تکراری عمدی → configuration_unavailable).
+یک harness واقعی DI/EFInMemory هم ثبت‌های scoped، خواندن واقعی چهار محور، فعالیت تودرتو/کورلیشن و
+انتشار استثنا/لغو را اثبات می‌کند؛ enrichment هندلر هم در harness اندپوینت اثبات شد.
+production بایت‌به‌بایت تغییر نکرد. جزئیات: docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R2/RESULT.md

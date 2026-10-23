@@ -487,6 +487,76 @@ public sealed class ShippingAuthoringEditorDocumentEndpointTests
         Assert.Equal(JsonValueKind.Null, cleared.GetProperty("type").GetProperty("shippingTypeId").ValueKind);
     }
 
+    [Fact]
+    public async Task The_editor_response_carries_facts_read_once_before_the_save_and_a_poisoned_later_read_cannot_move_the_draft()
+    {
+        var facts = new FakeDestinationFacts { ReturnResolvedFacts = true };
+        using var harness = Harness.Create("editor-facts-a", destinationFacts: facts);
+        var draftId = await harness.CreateDraftAsync(Tehran);
+        var path = $"{AdminDrafts}/{draftId}/editor-document";
+
+        // A GET is a read too; it already hydrates facts for the stored selection.
+        var (readStatus, _, initial) = await harness.SendAsync(HttpMethod.Get, path);
+        Assert.Equal(StatusCodes.Status200OK, readStatus);
+        var initialFacts = initial.GetProperty("destinationFacts").EnumerateArray().ToArray();
+        Assert.Equal(Tehran, Assert.Single(initialFacts).GetProperty("id").GetGuid());
+        facts.Reset();
+
+        // One genuine composite PUT: the facts port is read exactly once, BEFORE the module's own save,
+        // and the response is composed from the actually saved root plus those facts.
+        var (saveStatus, _, saved) = await harness.SendAsync(
+            HttpMethod.Put,
+            path,
+            Document(1, [Group(null, [Isfahan, Tehran], [], [])], []));
+        Assert.True(saveStatus == StatusCodes.Status200OK, saved.ToString());
+        Assert.Equal(1, facts.Calls);
+        Assert.Equal(PersianLanguage, facts.LastLanguageId);
+        Assert.Equal(2, saved.GetProperty("revision").GetInt64());
+
+        var savedAreas = saved.GetProperty("regionGroups").EnumerateArray()
+            .SelectMany(group => group.GetProperty("areas").EnumerateArray().ToArray())
+            .Select(area => area.GetProperty("id").GetGuid())
+            .OrderBy(id => id)
+            .ToArray();
+        var savedFacts = saved.GetProperty("destinationFacts").EnumerateArray().ToArray();
+        Assert.Equal(
+            savedAreas,
+            savedFacts.Select(fact => fact.GetProperty("id").GetGuid()).OrderBy(id => id).ToArray());
+        Assert.All(savedFacts, fact => Assert.Equal(JsonValueKind.Object, fact.GetProperty("area").ValueKind));
+        Assert.Equal(draftId, saved.GetProperty("draftId").GetGuid());
+
+        // A later deliberate read that hits a poisoned source fails as a READ failure: the committed tree,
+        // revision and stamp do not move, and no post-commit lookup was needed for the successful PUT above.
+        var stamp = await harness.ReadDraftStampAsync(draftId);
+        facts.ThrowOnSecondRead = true;
+        var (poisonStatus, _, _) = await harness.SendAsync(HttpMethod.Get, path);
+        Assert.NotEqual(StatusCodes.Status200OK, poisonStatus);
+        var afterPoison = await harness.ReadDraftStampAsync(draftId);
+        Assert.Equal(stamp.Revision, afterPoison.Revision);
+        Assert.Equal(stamp.UpdatedAt, afterPoison.UpdatedAt);
+
+        // Zero submitted selections: an empty facts list, and the own port may only be called with [].
+        facts.ThrowOnSecondRead = false;
+        facts.Reset();
+        var (emptyStatus, _, emptyDocument) = await harness.SendAsync(
+            HttpMethod.Put,
+            path,
+            Document(stamp.Revision, [], []));
+        Assert.Equal(StatusCodes.Status200OK, emptyStatus);
+        Assert.Empty(emptyDocument.GetProperty("destinationFacts").EnumerateArray());
+        Assert.Empty(emptyDocument.GetProperty("regionGroups").EnumerateArray());
+
+        // A stale revision is refused BEFORE any facts read.
+        facts.Reset();
+        var (staleStatus, _, stale) = await harness.SendAsync(
+            HttpMethod.Put,
+            path,
+            Document(1, [Group(null, [Isfahan], [], [])], []));
+        Assert.Equal(StatusCodes.Status409Conflict, staleStatus);
+        Assert.Equal(ShippingErrorCodes.AuthoringDraftRevisionConflict, stale.GetProperty("errorCode").GetString());
+        Assert.Equal(0, facts.Calls);
+    }
+
     private static string CreateBody(IEnumerable<Guid> areas)
         => string.Concat(
             "{\"serviceCode\":\"post\",\"optionCode\":null,\"regionGroups\":[",
@@ -605,6 +675,10 @@ public sealed class ShippingAuthoringEditorDocumentEndpointTests
         public FakeTypeCatalog Catalog =>
             (FakeTypeCatalog)_scope.ServiceProvider.GetRequiredService<IShippingTypeCatalogReader>();
 
+        /// <summary>The scripted destination-facts port actually resolved by the handlers.</summary>
+        public FakeDestinationFacts Facts =>
+            (FakeDestinationFacts)_scope.ServiceProvider.GetRequiredService<IShippingAuthoringDestinationFactsReader>();
+
         /// <summary>Downgrade the admin edge to a narrower permission without rebuilding the harness.</summary>
         public void AllowAdmin(params string[] permissions)
         {
@@ -632,7 +706,8 @@ public sealed class ShippingAuthoringEditorDocumentEndpointTests
             ToobaEdition edition = ToobaEdition.SingleStore,
             bool marketplace = false,
             string? tenantId = "store-a",
-            bool sellerHasGlobalManage = true)
+            bool sellerHasGlobalManage = true,
+            FakeDestinationFacts? destinationFacts = null)
         {
             var counter = new Counter();
             var tenant = new StubCurrentTenant(marketplace ? null : Tenant(tenantId ?? "store-a"));
@@ -676,7 +751,7 @@ public sealed class ShippingAuthoringEditorDocumentEndpointTests
             builder.Services.AddSingleton(tenant);
             builder.Services.AddSingleton<IShippingMethodOptionValidator>(new FakeMethodValidator());
             builder.Services.AddSingleton<IShippingAuthoringDestinationResolver>(new FakeResolver());
-            builder.Services.AddSingleton<IShippingAuthoringDestinationFactsReader>(new FakeDestinationFacts());
+            builder.Services.AddSingleton<IShippingAuthoringDestinationFactsReader>(destinationFacts ?? new FakeDestinationFacts());
             builder.Services.AddSingleton<IShippingAuthoringContextSource>(new FakeContextSource(edition, "IRR", counter));
             builder.Services.AddSingleton<IShippingTypeCatalogReader>(new FakeTypeCatalog(counter));
             builder.Services.AddSingleton(counter);
@@ -944,22 +1019,67 @@ public sealed class ShippingAuthoringEditorDocumentEndpointTests
     }
 
     /// <summary>
-    /// Fake کمینهٔ درز فکت مقصد برای این آزمون‌ها: برای هر کلید یک فکت <c>Unresolved</c> برمی‌گرداند،
-    /// پس هیچ شکل نوشتنی جعلی ساخته نمی‌شود.
+    /// Scriptable destination-facts port for the editor harness. By default it reports every requested key
+    /// as <c>Unresolved</c> so unrelated facts never fabricate a write shape; the enrichment fact switches
+    /// it to authoritative-shaped facts and can poison any second read.
     /// </summary>
     private sealed class FakeDestinationFacts : IShippingAuthoringDestinationFactsReader
     {
+        public int Calls { get; private set; }
+
+        public Guid? LastLanguageId { get; private set; }
+
+        public CancellationToken LastToken { get; private set; }
+
+        public bool ReturnResolvedFacts { get; set; }
+
+        public bool ThrowOnSecondRead { get; set; }
+
+        public InvalidOperationException Poison { get; } = new("facts-poison-secret");
+
+        public void Reset()
+        {
+            Calls = 0;
+            LastLanguageId = null;
+            LastToken = default;
+        }
+
         public Task<Result<IReadOnlyList<ShippingAuthoringDestinationFactItem>>> ReadAsync(
             IReadOnlyList<ShippingAuthoringSelectedAreaItem> keys,
             Guid languageId,
             CancellationToken cancellationToken)
-            => Task.FromResult(Result.Success<IReadOnlyList<ShippingAuthoringDestinationFactItem>>(
-                keys.Select(key => new ShippingAuthoringDestinationFactItem(
-                    key.Kind,
-                    key.Id,
-                    ShippingAuthoringDestinationResolution.Unresolved,
-                    null,
-                    null)).ToArray()));
+        {
+            Calls++;
+            LastLanguageId = languageId;
+            LastToken = cancellationToken;
+            if (ThrowOnSecondRead && Calls > 1)
+            {
+                throw Poison;
+            }
+
+            return Task.FromResult(Result.Success<IReadOnlyList<ShippingAuthoringDestinationFactItem>>(
+                keys.Select(key => ReturnResolvedFacts
+                    ? new ShippingAuthoringDestinationFactItem(
+                        key.Kind,
+                        key.Id,
+                        ShippingAuthoringDestinationResolution.Resolved,
+                        Shape(key),
+                        "برچسب-" + key.Id.ToString("N")[..4])
+                    : new ShippingAuthoringDestinationFactItem(
+                        key.Kind,
+                        key.Id,
+                        ShippingAuthoringDestinationResolution.Unresolved,
+                        null,
+                        null)).ToArray()));
+        }
+
+        private static ShippingAuthoringDestinationWriteShape Shape(ShippingAuthoringSelectedAreaItem key) => key.Kind switch
+        {
+            ShippingAuthoringAreaKind.Country => new(ShippingAuthoringAreaKind.Country, key.Id, null, null, null),
+            ShippingAuthoringAreaKind.AdministrativeArea => new(ShippingAuthoringAreaKind.AdministrativeArea, Iran, key.Id, null, null),
+            ShippingAuthoringAreaKind.City => new(ShippingAuthoringAreaKind.City, Iran, null, key.Id, null),
+            _ => new(ShippingAuthoringAreaKind.ServiceArea, Iran, null, null, key.Id),
+        };
     }
     private sealed class FakeResolver : IShippingAuthoringDestinationResolver
     {

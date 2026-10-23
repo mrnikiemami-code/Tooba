@@ -29,6 +29,11 @@
     <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Contracts\Tooba.Fulfillment.Contracts.csproj" />
     <!-- Destination identity for the quote request (Contracts-to-Contracts, same as the module itself). -->
     <ProjectReference Include="..\..\Geography\Tooba.Geography.Contracts\Tooba.Geography.Contracts.csproj" />
+    <!-- INTEGRATION-TEST-ONLY composition proof (TB-201-R2): the Shipping authoring read bridge must be
+         proven against the REAL Geography EF reader and the REAL module composition roots, which cannot be
+         reached through Contracts alone. Production projects keep Contracts-only references; no production
+         project in either module references the other's Infrastructure. -->
+    <ProjectReference Include="..\..\Geography\Tooba.Geography.Infrastructure\Tooba.Geography.Infrastructure.csproj" />
     <!-- TB-188: the authoring-context read proves its real Contracts seams (Localization language
          lookup, StoreContext default currency) with controlled fakes; no foreign implementation. -->
     <ProjectReference Include="..\..\Localization\Tooba.Localization.Contracts\Tooba.Localization.Contracts.csproj" />
