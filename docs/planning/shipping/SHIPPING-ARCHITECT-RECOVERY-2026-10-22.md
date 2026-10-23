@@ -6,6 +6,18 @@
 
 تنها **TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203-R1**،parent203،25دقیقه/stop18: per-boundtime حفظprecision؛discard همهcapabilityها ازیکbaseline؛pendingtimezone rawdirty بدونweekwrite؛viewهمهconditionaxes. نهnewfeature/backend/schema/sharedservice/broadtest؛بعدنتیجهreview سپسgroup/destinationUI. تا نتیجه203-R1 تسکدیگری صادرنشود. 199/200/201/202بسته‌نهreplay؛ProductionPENDING؛TB185paused/defaultOFF/PendingAllocationمحفوظ. این بخش بر pointerهای تاریخی مقدم است.
 
+## pointer: 203-R1 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-23
+
+**TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203-R1** (parent203) از base `f4f95bc8afada6ac528c124a8951ffa9622709c8`
+اجرا و result آن به Bridge ارسال شد؛ **Architect-accepted نیست**. چهار نقص review شده اصلاح شد: provenance
+per-bound ساعت (ویرایش فقط شروع/پایان، توکن کسری طرف دیگر دقیق می‌ماند، مقایسهٔ بازه بر اساس مقدار واقعی)،
+Cancel Edit تأییدشده کل سه draft را از همان baseline بازنشانی می‌کند (`model/authoring-drafts.ts`)، متن timezone
+در انتظار Configure به‌عنوان کار محلی dirty و blocker است ولی wrapper نمی‌سازد، و نمای فقط‌خواندنی ردیف‌ها همهٔ سه
+محور وزن/تعداد/مبلغ را نشان می‌دهد (`ui/rate-presentation.ts`). 9 تست جدید + 7 fact تسک 203 + tsc سبز؛
+4 guard لمس‌شده سبز. Visual/mounted NOTRUN. شواهد:
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203-R1/RESULT.md`.
+تا review این اصلاح، تسک 204 یا envelope بعدی صادر نشود. 199/200/201/202 بسته و replay نشوند.
+
 ## pointer: 203 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-23
 
 **TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203** (parent202-R1) از base `44a220dea77c87e3d8c1a80e07b22af4e2846e45`

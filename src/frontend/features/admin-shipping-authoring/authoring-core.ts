@@ -176,3 +176,6 @@ export {
 export type { AuthoringIntent, AuthoringIntentIssues } from "./model/authoring-intent.ts";
 export { buildAuthoringIntent, hasNoIssues, intentHasEdits } from "./model/authoring-intent.ts";
 
+export type { AuthoringDrafts } from "./model/authoring-drafts.ts";
+export { resetAuthoringDrafts, seedAuthoringDrafts } from "./model/authoring-drafts.ts";
+

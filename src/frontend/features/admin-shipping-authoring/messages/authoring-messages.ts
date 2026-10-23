@@ -100,6 +100,8 @@ const fa = {
   weekDayHoursRequired: "برای روز کاری، ساعت شروع و پایان الزامی است.",
   weekDayTimeInvalid: "ساعت‌ها باید معتبر و هر دو با هم باشند.",
   weekDayRangeInvalid: "پایان بازه باید بعد از شروع آن باشد.",
+  weekPendingTimeZoneUnapplied:
+    "منطقهٔ زمانی نوشته شده هنوز پیکربندی نشده است؛ برای ذخیره، «پیکربندی برنامهٔ هفتگی» را بزنید یا آن را پاک کنید.",
   applyBlockedLocal: "برای اعمال، ابتدا موارد زیر را اصلاح کنید:",
   weekTitle: "برنامهٔ کاری هفتگی",
   weekNote: "برنامه بین همهٔ مناطق همین روش مشترک است و در این مرحله فقط خواندنی است.",
@@ -243,6 +245,8 @@ const en: Record<AuthoringMessageKey, string> = {
   weekDayHoursRequired: "A working day needs both a start and an end time.",
   weekDayTimeInvalid: "Times must be valid and supplied together.",
   weekDayRangeInvalid: "The end of the interval must come after its start.",
+  weekPendingTimeZoneUnapplied:
+    "The typed time zone is not configured yet; press “Configure the weekly schedule” to save it, or clear it.",
   applyBlockedLocal: "Fix the following before applying:",
   weekTitle: "Weekly operating schedule",
   weekNote: "The schedule is shared by every region of this method and is read-only in this step.",

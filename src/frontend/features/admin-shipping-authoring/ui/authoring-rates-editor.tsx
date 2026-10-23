@@ -12,6 +12,7 @@ import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-m
 import { authoringFormat } from "../messages/authoring-messages.ts";
 import type { EditorRegionGroup } from "../model/editor-document.ts";import type { DestinationFactIndex } from "../model/editor-destination-ancestry.ts";
 import { RATE_LIMITS, type RateField, type RateRowDraft, type RateRowIssue } from "../model/editor-rates.ts";
+import { rateDraftConditionText } from "./rate-presentation.ts";
 import { formatNumber } from "./authoring-format.ts";
 
 const AREA_KIND_LABEL = {
@@ -304,10 +305,8 @@ export function AuthoringRatesEditor({
                   className="grid gap-1 rounded-lg bg-surface px-2 py-1 text-[11px] text-gray-700 md:grid-cols-4"
                   data-testid="shipping-authoring-rate-row"
                 >
-                  <span className="md:col-span-2">
-                    {row.minWeightGrams !== "" || row.maxWeightGrams !== ""
-                      ? `${messages.weightLabel}: ${row.minWeightGrams || "—"}–${row.maxWeightGrams || "—"}`
-                      : messages.noCondition}
+                  <span className="md:col-span-2" data-testid="shipping-authoring-rate-row-condition">
+                    {rateDraftConditionText(row, locale, messages)}
                   </span>
                   <span>
                     {messages.freightLabel}: <span dir="ltr">{row.freightAmount || "—"}</span>

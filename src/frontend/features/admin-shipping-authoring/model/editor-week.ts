@@ -5,6 +5,8 @@
  * An UNCONFIGURED schedule stays explicitly unconfigured until the operator types a timezone and
  * deliberately clicks Configure: only then do seven CLOSED days with blank hours appear, and no
  * browser timezone, default working hours or fabricated persisted configuration is invented.
+ * The typed-but-unconfigured timezone is still real local WORK: it is dirty (and blocks Apply with
+ * an explicit configure-or-reset issue) while the `weeklySchedule` wrapper stays omitted.
  *
  * Rules mirrored from the shipping domain (no new policy):
  * - exactly seven unique ISO weekdays;
@@ -13,8 +15,10 @@
  * - the timezone text is trimmed and must be non-empty within the stored length limit;
  * - there is no clear operation for a configured schedule (absent/edit only).
  *
- * Hours are kept as the exact stored token until the operator actually edits that day; a deliberate
- * `HH:mm` edit becomes a lawful `HH:mm:00` `TimeText` at serialization time only.
+ * Provenance is PER BOUND, not per day: editing the start must never re-interpret the untouched
+ * stored end (and the reverse). An untouched bound keeps its exact stored token, including seconds
+ * and fractions; a deliberate `HH:mm` edit becomes a lawful `HH:mm:00` `TimeText`. Range checks
+ * compare actual time values (`18:00:00` equals `18:00:00.0000000`), never string spelling.
  */
 import type { EditorScheduleDay, EditorWeeklySchedule, TimeText } from "./editor-document.ts";
 import type { ScheduleDayEdit, WeeklyScheduleEdit } from "./editor-edits.ts";
@@ -31,8 +35,9 @@ export interface ScheduleDayDraft {
   /** Exact untouched `TimeText`, or an `HH:mm` the operator typed through the time input. */
   readonly startTime: string;
   readonly endTime: string;
-  /** True once this day's hours were deliberately edited (a `HH:mm` value, not a stored token). */
-  readonly hoursEdited: boolean;
+  /** Per-bound provenance: true only for the bound this operator actually typed. */
+  readonly startEdited: boolean;
+  readonly endEdited: boolean;
 }
 
 export type WeekFormState =
@@ -46,13 +51,34 @@ export type WeekFormState =
 const STORED_TIME = /^(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]{1,7})?$/;
 const INPUT_TIME = /^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/;
 
+/**
+ * Comparable absolute value of a `TimeText`: 100-nanosecond ticks within the day.
+ * `18:00:00` and `18:00:00.0000000` are the same value. `null` for malformed text.
+ */
+export function timeValue(text: string): number | null {
+  const match = /^((?:[01][0-9]|2[0-3])):([0-5][0-9]):([0-5][0-9])(?:\.([0-9]{1,7}))?$/.exec(text);
+  if (!match) return null;
+  const seconds = Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
+  const fraction = Number((match[4] ?? "").padEnd(7, "0"));
+  return seconds * 10_000_000 + fraction;
+}
+
+/** True when two lawful time texts denote the same instant (spelling is irrelevant). */
+function sameTimeValue(left: string | null, right: string | null): boolean {
+  if (left === null || right === null) return left === right;
+  const leftValue = timeValue(left);
+  const rightValue = timeValue(right);
+  return leftValue !== null && rightValue !== null ? leftValue === rightValue : left === right;
+}
+
 function dayDraft(day: EditorScheduleDay): ScheduleDayDraft {
   return {
     weekday: day.weekday,
     isWorking: day.isWorking,
     startTime: day.startTime ?? "",
     endTime: day.endTime ?? "",
-    hoursEdited: false,
+    startEdited: false,
+    endEdited: false,
   };
 }
 
@@ -82,12 +108,13 @@ export function configureWeek(state: WeekFormState): WeekFormState {
       isWorking: false,
       startTime: "",
       endTime: "",
-      hoursEdited: false,
+      startEdited: false,
+      endEdited: false,
     })),
   };
 }
 
-/** Local reset of a configured draft back to its confirmed stored schedule. */
+/** Local reset of a configured draft back to its confirmed stored schedule (and clears pending text). */
 export function resetWeek(schedule: EditorWeeklySchedule | null): WeekFormState {
   return createWeekForm(schedule);
 }
@@ -96,24 +123,32 @@ export function withTimeZone(state: WeekFormState, value: string): WeekFormState
   return state.kind === "configured" ? { ...state, timeZoneId: value } : state;
 }
 
-function replaceDay(state: WeekFormState, weekday: number, patch: (day: ScheduleDayDraft) => ScheduleDayDraft): WeekFormState {
+function replaceDay(
+  state: WeekFormState,
+  weekday: number,
+  patch: (day: ScheduleDayDraft) => ScheduleDayDraft,
+): WeekFormState {
   if (state.kind !== "configured") return state;
   return { ...state, days: state.days.map((day) => (day.weekday === weekday ? patch(day) : day)) };
 }
 
-/** Working/closed toggle: remembered hours stay exactly as they are. */
+/** Working/closed toggle: BOTH remembered hour texts stay exactly as they are. */
 export function withDayWorking(state: WeekFormState, weekday: number, isWorking: boolean): WeekFormState {
   return replaceDay(state, weekday, (day) => ({ ...day, isWorking }));
 }
 
-/** A deliberate `HH:mm` (or blank) edit of one bound; marks the day's hours as operator-edited. */
+/** A deliberate `HH:mm` (or blank) edit of ONE bound; the other bound keeps its provenance. */
 export function withDayTime(
   state: WeekFormState,
   weekday: number,
   bound: "startTime" | "endTime",
   value: string,
 ): WeekFormState {
-  return replaceDay(state, weekday, (day) => ({ ...day, [bound]: value, hoursEdited: true }));
+  return replaceDay(state, weekday, (day) =>
+    bound === "startTime"
+      ? { ...day, startTime: value, startEdited: true }
+      : { ...day, endTime: value, endEdited: true },
+  );
 }
 
 /** Why the local week cannot be serialized (localized by the screen). */
@@ -122,7 +157,8 @@ export type WeekIssueCode =
   | "timeZoneTooLong"
   | "dayHoursRequired"
   | "dayTimeInvalid"
-  | "dayRangeInvalid";
+  | "dayRangeInvalid"
+  | "pendingTimeZoneUnapplied";
 
 export interface WeekIssue {
   readonly code: WeekIssueCode;
@@ -138,7 +174,11 @@ function canonicalTime(value: string, edited: boolean): TimeText | null {
 
 /** All blocking week issues, or `[]` when the state is serializable. */
 export function weekIssues(state: WeekFormState): readonly WeekIssue[] {
-  if (state.kind === "unconfigured") return [];
+  if (state.kind === "unconfigured") {
+    // Typed-but-unconfigured timezone is real local work with no lawful wire representation:
+    // Apply is blocked until the operator configures it or resets the section.
+    return state.pendingTimeZone.trim().length > 0 ? [{ code: "pendingTimeZoneUnapplied", weekday: null }] : [];
+  }
   const issues: WeekIssue[] = [];
   const timeZone = state.timeZoneId.trim();
   if (timeZone.length === 0) issues.push({ code: "timeZoneRequired", weekday: null });
@@ -150,8 +190,8 @@ export function weekIssues(state: WeekFormState): readonly WeekIssue[] {
       issues.push({ code: "dayRangeInvalid", weekday: day.weekday });
       continue;
     }
-    const start = canonicalTime(day.startTime, day.hoursEdited);
-    const end = canonicalTime(day.endTime, day.hoursEdited);
+    const start = canonicalTime(day.startTime, day.startEdited);
+    const end = canonicalTime(day.endTime, day.endEdited);
     const startPresent = day.startTime !== "";
     const endPresent = day.endTime !== "";
     if (day.isWorking) {
@@ -163,7 +203,10 @@ export function weekIssues(state: WeekFormState): readonly WeekIssue[] {
         issues.push({ code: "dayTimeInvalid", weekday: day.weekday });
         continue;
       }
-      if (end <= start) issues.push({ code: "dayRangeInvalid", weekday: day.weekday });
+      // Compare REAL values (fractions included): a zero-length interval is still invalid.
+      const startValue = timeValue(start)!;
+      const endValue = timeValue(end)!;
+      if (endValue <= startValue) issues.push({ code: "dayRangeInvalid", weekday: day.weekday });
       continue;
     }
     if (!startPresent && !endPresent) continue;
@@ -171,7 +214,7 @@ export function weekIssues(state: WeekFormState): readonly WeekIssue[] {
       issues.push({ code: "dayTimeInvalid", weekday: day.weekday });
       continue;
     }
-    if (end <= start) issues.push({ code: "dayRangeInvalid", weekday: day.weekday });
+    if (timeValue(end)! <= timeValue(start)!) issues.push({ code: "dayRangeInvalid", weekday: day.weekday });
   }
   if (seen.size !== WEEKDAYS.length) issues.push({ code: "dayRangeInvalid", weekday: null });
   return issues;
@@ -184,8 +227,8 @@ function dayEdits(state: Extract<WeekFormState, { kind: "configured" }>): readon
     return {
       weekday,
       isWorking: day.isWorking,
-      startTime: canonicalTime(day.startTime, day.hoursEdited),
-      endTime: canonicalTime(day.endTime, day.hoursEdited),
+      startTime: canonicalTime(day.startTime, day.startEdited),
+      endTime: canonicalTime(day.endTime, day.endEdited),
     };
   });
 }
@@ -198,15 +241,18 @@ function sameDays(schedule: EditorWeeklySchedule, state: Extract<WeekFormState, 
     return (
       local !== undefined &&
       local.isWorking === stored.isWorking &&
-      local.startTime === stored.startTime &&
-      local.endTime === stored.endTime
+      sameTimeValue(local.startTime, stored.startTime) &&
+      sameTimeValue(local.endTime, stored.endTime)
     );
   });
 }
 
-/** True when the local week differs from the confirmed schedule (or was deliberately configured). */
+/**
+ * True when the local week is real work: a changed configured week, a deliberately configured week,
+ * OR a typed-but-unconfigured timezone (raw local text, never a configured week).
+ */
 export function weekDirty(schedule: EditorWeeklySchedule | null, state: WeekFormState): boolean {
-  if (state.kind === "unconfigured") return false;
+  if (state.kind === "unconfigured") return state.pendingTimeZone.trim().length > 0;
   if (schedule === null) return true;
   if (schedule.timeZoneId !== state.timeZoneId.trim()) return true;
   return !sameDays(schedule, state);
@@ -214,8 +260,8 @@ export function weekDirty(schedule: EditorWeeklySchedule | null, state: WeekForm
 
 /**
  * The `weeklySchedule` intent for the ONE PUT: `undefined` means PRESERVE (absent wrapper), which
- * covers an untouched configured week and an untouched unconfigured week. An unconfigured draft that
- * was never deliberately configured stays omitted; there is no clear operation.
+ * covers an untouched configured week, an untouched unconfigured week and a typed-but-unconfigured
+ * timezone. Only a deliberate Configure (or a real change to a configured week) is serialized.
  */
 export function buildWeeklyScheduleEdit(
   schedule: EditorWeeklySchedule | null,

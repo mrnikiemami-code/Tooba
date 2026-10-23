@@ -74,3 +74,7 @@ was available and none was started/installed.
   wrapping but is NOT visually certified (no harness).
 - Recovery pointer added; no certification or delivery-complete claim is made.
 
+
+## Correction (2026-10-23, R1)
+
+The four Architect-observed defects in this result are repaired in TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203-R1 (docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203-R1/RESULT.md): per-bound time provenance, whole-document Cancel Edit reseed, pending-timezone dirtiness, and truthful all-axis read-only rate conditions. This section is append-only; the statements above describe the reviewed pre-R1 state.

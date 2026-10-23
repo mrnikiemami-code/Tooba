@@ -18,8 +18,8 @@ import { authoringMessages, authoringFormat, type AuthoringLocale, type Authorin
 import type { AuthoringCalculationMode, EditorDocument, FreightPaymentMode } from "../model/editor-document.ts";
 import { indexDestinationFacts, unresolvedSelections } from "../model/editor-destination-ancestry.ts";
 import { buildAuthoringIntent, hasNoIssues, intentHasEdits } from "../model/authoring-intent.ts";
+import { resetAuthoringDrafts, seedAuthoringDrafts } from "../model/authoring-drafts.ts";
 import {
-  createEditorForm,
   withCalculationMode,
   withDescription,
   withFreightPaymentMode,
@@ -28,7 +28,6 @@ import {
   type EditorFormState,
 } from "../model/editor-form.ts";
 import {
-  createRatesForm,
   withAddedRow,
   withRemovedRow,
   withRowField,
@@ -37,7 +36,6 @@ import {
 } from "../model/editor-rates.ts";
 import {
   configureWeek,
-  createWeekForm,
   resetWeek,
   withDayTime,
   withDayWorking,
@@ -140,9 +138,10 @@ export function ShippingAuthoringScreen({
    */
   useEffect(() => {
     if (!document) return;
-    setForm(createEditorForm(document));
-    setRates(createRatesForm(document));
-    setWeek(createWeekForm(document.weeklySchedule));
+    const drafts = seedAuthoringDrafts(document);
+    setForm(drafts.form);
+    setRates(drafts.rates);
+    setWeek(drafts.week);
     const defaultLanguage = document.presentation.contentLanguages.find(
       (language) => language.languageId.toLowerCase() === document.presentation.defaultContentLanguageId.toLowerCase(),
     );
@@ -310,9 +309,18 @@ export function ShippingAuthoringScreen({
         // The latched unknown commit is never cleared here: only the explicit fresh read recovers.
         controller.confirmDiscard();
         setForm(null);
+        setRates({});
+        setWeek(null);
       } else {
         controller.cancelDiscard();
-        if (document) setForm(createEditorForm(document));
+        // ONE cohesive reseed: General AND rate rows AND week come from the SAME confirmed baseline,
+        // so a discarded row/week can never stay on screen or be resurrected by the next edit.
+        if (document) {
+          const drafts = resetAuthoringDrafts(document);
+          setForm(drafts.form);
+          setRates(drafts.rates);
+          setWeek(drafts.week);
+        }
         controller.edit({});
       }
       setMode("view");

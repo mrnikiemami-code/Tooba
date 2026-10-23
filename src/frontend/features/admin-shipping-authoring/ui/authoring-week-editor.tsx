@@ -13,6 +13,7 @@ import type { WeekFormState, WeekIssue } from "../model/editor-week.ts";
 import { WEEKDAYS, type WeekIssueCode } from "../model/editor-week.ts";
 import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-messages.ts";
 import { authoringFormat } from "../messages/authoring-messages.ts";
+import { formatTimeText } from "./authoring-format.ts";
 import { weekdayLabel } from "./authoring-general-tab.tsx";
 
 /** Localized text of one week issue (shared by the editor and the screen's issue summary). */
@@ -28,6 +29,8 @@ export function weekIssueMessage(code: WeekIssueCode, messages: AuthoringMessage
       return messages.weekDayTimeInvalid;
     case "dayRangeInvalid":
       return messages.weekDayRangeInvalid;
+    case "pendingTimeZoneUnapplied":
+      return messages.weekPendingTimeZoneUnapplied;
   }
 }
 
@@ -109,7 +112,22 @@ export function AuthoringWeekEditor({
               >
                 {messages.weekConfigureAction}
               </button>
+              {configureTimeZone.length > 0 ? (
+                <button
+                  type="button"
+                  className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800"
+                  data-testid="shipping-authoring-week-clear-pending"
+                  onClick={onReset}
+                >
+                  {messages.weekResetAction}
+                </button>
+              ) : null}
             </div>
+          ) : null}
+          {editable && configureTimeZone.trim().length > 0 ? (
+            <p role="alert" className="text-[11px] font-semibold text-danger" data-testid="shipping-authoring-week-pending">
+              {messages.weekPendingTimeZoneUnapplied}
+            </p>
           ) : null}
           {editable ? <p className="text-[11px] text-gray-500">{messages.weekTimeZoneHint}</p> : null}
         </div>
@@ -165,7 +183,10 @@ export function AuthoringWeekEditor({
                     ) : (
                       <span dir="ltr" className="text-gray-600">
                         {day.isWorking
-                          ? authoringFormat(messages.weekOpen, { from: inputTime(day.startTime), to: inputTime(day.endTime) })
+                          ? authoringFormat(messages.weekOpen, {
+                              from: formatTimeText(day.startTime),
+                              to: formatTimeText(day.endTime),
+                            })
                           : messages.weekClosed}
                       </span>
                     )}
