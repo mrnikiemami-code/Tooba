@@ -1,3 +1,11 @@
+## مرجع جاری: 202 ازطریقR1 پذیرفته / فقط203 نرخ و هفته — 2026-10-23
+
+202-R1 در `86c0a10932f48760978681dec4d606ddbf24b33e` برای اصلاحات محدود General **ACCEPT**؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202-R1/ARCHITECT-REVIEW.md). raw-invalid dirty داخلهمانsession،settingsuntouched/revert،تأییدCancelEdit/Back،busyguard،formSeed و lifecycle/key اصلاحشده‌اند. Architect formpurecases را مستقل اجرا کرد؛48feature/tsc/5guards گزارشworker،نهrerunArchitect. mountedReact/browser/Visual هنوز اجرا نشده؛پذیرش محدود،نهproduction/certification.
+
+تنها تسک بعدی **TB-SHIPPING-ADMIN-AUTHORING-RATES-WEEK-UI-203**،parent202-R1؛35دقیقه/stop25. UI نرخ‌های گروه‌های موجود + یک برنامه هفتگی ریشه روش، همانONEeditorPUT. ترتیب/هویت/مقصد/ارز گروه‌ها فعلاًreadonly؛ویرایش General و rates/week باید باهم حفظ شوند،نهoverwrite edits. اعداد پولی exactdecimaltext،ورودی نامعتبر dirty و blocked،timezone/day مطابق backend. نهbackend/schema/Host/sharedservices،نهGeographynewseam،نهcreate/activation/cutoff/carrier/funding.
+
+بعدازنتیجه203 review؛سپسویرایشگروه/انتخابمقصد باauthorityموجود،وvisual/livereviewمحدود. تا پایان203 هیچتسکدیگری صادر نشود. 199/200/201/202 بسته‌اند،نهproofreplay. ProductionPENDING؛TB185paused/defaultOFF/PendingAllocationمحفوظ. این بخش بر pointerهای تاریخی اولویت دارد.
+
 ## pointer: 202-R1 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-23
 
 **TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202-R1** (parent202) از base `a66573615d902df3ceeefc43adf571a2db59179f`
