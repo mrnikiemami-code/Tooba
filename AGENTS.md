@@ -42,11 +42,12 @@ TB196 bounded catalog and TB197 owner-local type-assignment backend are Architec
 Read latest recovery/reviews for exact evidence/process limits; no merchant UI/quote/release acceptance.
 TB198 source analysis accepted with corrections; read its ARCHITECT-REVIEW.md before implementation.
 TB199 existing-draft atomic editor backend is Architect-accepted through199-R1 (98274e4ff), with process/proof limits in its review.
-TB200-R1 original four repairs at99d130210 are retained;200 not fully closed.
-Only next issued task: TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R2 (parent200-R1).
-Ten-minute session-only repair: same-draft dirty/saving load must not discard/invalidate work; hasUnsavedWork must cover uncertain/in-flight state.
-No decoder/builder/API/UI/backend/schema/shared-service change; no task201 while200-R2 unfinished.
-Backend199 accepted; latest recovery supersedes old active paragraphs.
+TB200 frontend foundation accepted through200-R2 at64f3f307cf; UI is still pending.
+Only next issued task: TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201 (parent200-R2).
+Minimal Geography-owned bulk identity read seam + Shipping destinationFacts read/pre-write projection; Contracts-only, no schema/HTTP Geography/UI change.
+Current Geography GetByIds validates supplied mandatory-country tuple; cannot reverse-hydrate terminal ids. No frontend world-scan/parent guessing.
+All PUT facts acquired pre-write; no postcommit foreign call. City may legitimately have no admin parent.
+Backend199 accepted; no replay. Latest recovery authoritative; wait201 result before another task.
 Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
 
 ## Core rules

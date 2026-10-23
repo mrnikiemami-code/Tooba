@@ -1,0 +1,12 @@
+# Architect review — TB200-R2 / 2026-10-23
+Verdict: ACCEPT_BOUNDED_FRONTEND_FOUNDATION; TB200 closed through R2.
+Reviewed64f3f307cf259aeb147663f13011832c24fa1195 against03271c75af1f25ca0faf598ee93b4570deb2dce6: only session branch/selector production change(+10/-2), one regression file and docs; API/decoder/builder/backend unchanged. No Architect execution.
+Same-draft dirty/saving loadStarted now returns SAME state and cannot invalidate current save/clear edits. Different-draft discard behavior and explicit recovery retained. hasUnsavedWork covers dirty/unknown/inflight. Source regressions match pre-fix1/3fail, post-fix4/4 and focused10/10 reported. No broad rerun required; previous25/tsc remains source-narrow historical proof. Time5min/10 reported. R1 overrun/process history retained. No UI/live merchant/visual acceptance.
+
+Next dependency discovered by source tracing, not a new audit:
+Editor read has kind+id only; write requires ancestry. Geography HTTP lists cannot reverse-resolve an arbitrary stored city/servicearea id without a whole-tree scan. IGeographyLookup.GetByIdsAsync takes mandatory CountryId and validates a supplied tuple; it does NOT hydrate unknown parents. Existing Country/AdministrativeArea/City/ServiceAreaSnapshots expose genuine parent fields but only list methods exist.
+Do not claim the frontend can implement AreaAncestryResolver safely from the current HTTP surface; don't scan every country/city or guess ids.
+
+Sole next task TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201: minimal Geography-owned bulk read-by-key Contracts seam, own Infrastructure implementation; Shipping-owned read projection for stored/submitted destination facts via Contracts, using canonical ancestry validation and label lookups. Add editor response destinationFacts only; existing write input/authority unchanged. All PUT projection dependencies pre-write, never after commit. No DB/schema/newHTTPGeographyroute/copy/cache/activation/UI. Then202 wire the existing-draft Admin form with authoritative facts;203 finish region/rate/week UI and configured acceptance as separately bounded.
+CitySnapshot.AdministrativeAreaId is nullable: city-without-admin is legitimate; do not fabricate an admin parent or require it in frontend when server does not.
+Backend199 remains accepted;201 is a necessary additive read integration capability, not a recertification or replay of its proof.

@@ -1,5 +1,14 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 200 ازطریقR2 بسته / فقط201 hydrationخواندنی — 2026-10-23
+
+200frontendfoundation در64f3f307cf259aeb147663f13011832c24fa1195 **ACCEPT**؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R2/ARCHITECT-REVIEW.md). guardهماندraftdirty/saving وselectorunknown اصلاحشد؛10PASSگزارشworker،نهrerunArchitect. backend199بسته؛R1~27>25تاریخی‌ثبت.
+
+تنها **TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201**،parent200-R2،30دقیقه/stop23: GeographyContractsbulkreadbyid+ownadapter؛Shippingeditorread/prewriteprojectiondestinationFactsشاملcanonicalparents/label/resolution. شاهدنیاز: readkind/idفقط؛IGeographyLookup.GetByIdsمجبورCountryIdمی‌گیردوvalidationاستنهhydrate؛HTTPفقطلیستhierarchyدارد. مرورگرنبایدallworldscan/guessparentکند. seamجدیدreadonlyContractsداخلGeo،noHTTPGeo/newDB/schema/crossFK/foreignAppDomainInfra. labelازIGeographyLabelLookupپیشفرضزبانcontentDB،نهrawguidنمایشی. recursiveadmin/cycle/inactiveوCityبدونadminواقعیپوششداده‌شود.
+
+201 نهUIوnotbackendproofreplay؛PUTهیچforeignreadپسازcommitندارد؛readfactsقبلSaveیکباربدست‌آیدوصرفاًcomposeبعدSave. بعد201review task202 فرمواقعیgeneral باlookupها،سپسregion/rate/weekUI وliveacceptanceمحدود؛تسکدیگری‌تاresult201صادرنشود. sharedDB/Host/frontendفعلاًدست‌نخورده. cutoff/status/fullcreate/quote/carrier/funding/arbitrarysellerpickerباز؛TB185paused/defaultOFF/PendingAllocationمحفوظ. آخرینبخشمرجعجاری‌است.
+
+
 ## مرجع جاری: 200-R2 اجرا شد؛ منتظر review — 2026-10-23
 
 TB-SHIPPING-ADMIN-EDITOR-FRONTEND-ADAPTER-200-R2 روی base `03271c75af1f25ca0faf598ee93b4570deb2dce6` اجرا و به Bridge ارسال شد؛
