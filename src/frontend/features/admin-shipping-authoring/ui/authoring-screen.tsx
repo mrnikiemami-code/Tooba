@@ -18,6 +18,8 @@ import { indexDestinationFacts, unresolvedSelections } from "../model/editor-des
 import {
   buildEditorEdits,
   createEditorForm,
+  formHasEdits,
+  formHasLocalChanges,
   withCalculationMode,
   withDescription,
   withFreightPaymentMode,
@@ -26,6 +28,7 @@ import {
   type EditorFormState,
 } from "../model/editor-form.ts";
 import { hasUnsavedWork, type EditorSaveStatus } from "../session/editor-session.ts";
+import { planAuthoringExit, type AuthoringExitDestination } from "./authoring-exit.ts";
 import { useEditorController } from "./use-editor-controller.ts";
 import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringRegionsPanel } from "./authoring-regions-panel.tsx";
@@ -103,25 +106,35 @@ export function ShippingAuthoringScreen({
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmDiscardVisible, setConfirmDiscardVisible] = useState(false);
   const applyRef = useRef(false);
+  const exitDestinationRef = useRef<AuthoringExitDestination>("back");
 
-  // The form starts from the CONFIRMED baseline, never from an optimistic guess.
+  const formSeed = state.formSeed;
+
+  /**
+   * The form is seeded from the CONFIRMED baseline only on an accepted transition (fresh load,
+   * accepted save, explicit discard + fresh read). A render, an invalid `edited({})` or a reconcile
+   * never re-seeds it, so typed values are never erased by a state change.
+   */
   useEffect(() => {
     if (!document) return;
-    setForm((current) => current ?? createEditorForm(document));
-    setContentLanguageId((current) => {
-      if (current.length > 0) return current;
-      const defaultLanguage = document.presentation.contentLanguages.find(
-        (language) => language.languageId.toLowerCase() === document.presentation.defaultContentLanguageId.toLowerCase(),
-      );
-      return (defaultLanguage ?? document.presentation.contentLanguages[0])?.languageId ?? "";
-    });
-  }, [document]);
-
-  // A confirmed save re-establishes the baseline: the form is rebuilt from the server truth.
-  useEffect(() => {
-    if (!document || session.save !== "clean" || session.unsaved) return;
     setForm(createEditorForm(document));
-  }, [document, session.save, session.unsaved]);
+    const defaultLanguage = document.presentation.contentLanguages.find(
+      (language) => language.languageId.toLowerCase() === document.presentation.defaultContentLanguageId.toLowerCase(),
+    );
+    const fallback = (defaultLanguage ?? document.presentation.contentLanguages[0])?.languageId ?? "";
+    // Keep the operator's chosen language when the new confirmed document still offers it.
+    setContentLanguageId((current) =>
+      document.presentation.contentLanguages.some((language) => language.languageId === current) ? current : fallback,
+    );
+    // `document` is intentionally excluded: reconcile updates the baseline but must preserve the
+    // operator's pending local edits for review against the new confirmed baseline.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formSeed]);
+
+  // A stale success notice never survives a fresh read.
+  useEffect(() => {
+    if (session.load === "loading") setNotice(null);
+  }, [session.load]);
 
   useEffect(() => {
     let current = true;
@@ -166,12 +179,15 @@ export function ShippingAuthoringScreen({
     (nextForm: EditorFormState) => {
       setForm(nextForm);
       if (!document) return;
-      controller.edit(buildEditorEdits(document, nextForm).edits);
+      const built = buildEditorEdits(document, nextForm);
+      // Raw form work (even invalid) must stay dirty; only serializable parts travel as a patch.
+      controller.edit(built.edits, formHasLocalChanges(document, nextForm) || built.issues.length > 0);
     },
     [controller, document],
   );
 
-  const readOnly = mode === "view" || session.save === "saving" || session.reconcile === "pending";
+  const busy = session.save === "saving" || session.reconcile === "pending";
+  const readOnly = mode === "view" || busy;
   const blockedByFacts = document && index ? !index.available : false;
   const unresolved = document && index ? unresolvedSelections(document, index) : [];
   const formIssues = built?.issues ?? [];
@@ -179,9 +195,10 @@ export function ShippingAuthoringScreen({
     issue.code === "nameRequired" ? [issue.languageId] : [],
   );
   const settingsIncomplete = formIssues.some((issue) => issue.code === "settingsIncomplete");
-  const hasIntent = built !== null && Object.keys(built.edits).length > 0;
+  const hasIntent = built !== null && formHasEdits(built.edits);
   const canApply =
     !readOnly &&
+    session.unsaved &&
     document !== null &&
     hasIntent &&
     formIssues.length === 0 &&
@@ -196,28 +213,78 @@ export function ShippingAuthoringScreen({
     setNotice(null);
     try {
       const outcome = await controller.apply(index.resolver);
-      if (outcome.status === "sent") {
-        const revision = controller.getState().savedRevision;
-        setNotice(authoringFormat(messages.saved, { revision: revision ?? "" }));
-        setMode("view");
-      }
+      if (outcome.status !== "sent") return;
+      const revision = controller.getState().savedRevision;
+      setNotice(authoringFormat(messages.saved, { revision: revision ?? "" }));
+      setMode("view");
     } finally {
       applyRef.current = false;
     }
   }, [controller, index, messages.saved]);
 
-  const goBack = useCallback(() => {
-    if (controller.requestClose()) router.push("/admin/shipping-services");
-  }, [controller, router]);
+  /** Enters the requested destination once the session confirms nothing is at risk. */
+  const enterDestination = useCallback(
+    (destination: AuthoringExitDestination) => {
+      exitDestinationRef.current = "back";
+      setConfirmDiscardVisible(false);
+      if (destination === "back") {
+        router.push("/admin/shipping-services");
+        return;
+      }
+      // "Cancel Edit": stay on the screen, show the confirmed document again, keep the session.
+      if (session.commitUncertain) {
+        // The latched unknown commit is never cleared here: only the explicit fresh read recovers.
+        controller.confirmDiscard();
+        setForm(null);
+      } else {
+        controller.cancelDiscard();
+        if (document) setForm(createEditorForm(document));
+        controller.edit({});
+      }
+      setMode("view");
+      setNotice(null);
+    },
+    [controller, document, router, session.commitUncertain],
+  );
+
+  const requestExit = useCallback(
+    (destination: AuthoringExitDestination) => {
+      const plan = planAuthoringExit({
+        save: session.save,
+        reconciling: session.reconcile === "pending",
+        hasLocalWork: hasUnsavedWork(session),
+      });
+      if (plan === "blocked") return;
+      if (plan === "direct") {
+        enterDestination(destination);
+        return;
+      }
+      exitDestinationRef.current = destination;
+      // The existing discard decision (session) owns the confirmation dialog.
+      controller.requestClose();
+    },
+    [controller, enterDestination, session],
+  );
+
+  const goBack = useCallback(() => requestExit("back"), [requestExit]);
+
+  const cancelEdit = useCallback(() => requestExit("view"), [requestExit]);
 
   const confirmDiscard = useCallback(() => {
-    setConfirmDiscardVisible(false);
-    controller.confirmDiscard();
-    router.push("/admin/shipping-services");
-  }, [controller, router]);
+    const destination = exitDestinationRef.current;
+    if (destination === "back") {
+      setConfirmDiscardVisible(false);
+      controller.confirmDiscard();
+      exitDestinationRef.current = "back";
+      router.push("/admin/shipping-services");
+      return;
+    }
+    enterDestination("view");
+  }, [controller, enterDestination, router]);
 
   const cancelDiscard = useCallback(() => {
     setConfirmDiscardVisible(false);
+    exitDestinationRef.current = "back";
     controller.cancelDiscard();
   }, [controller]);
 
@@ -230,8 +297,9 @@ export function ShippingAuthoringScreen({
         <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
-            className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-bold text-gray-700"
+            className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-bold text-gray-700 disabled:opacity-50"
             data-testid="shipping-authoring-back"
+            disabled={busy}
             onClick={goBack}
           >
             {messages.back}
@@ -251,13 +319,10 @@ export function ShippingAuthoringScreen({
           ) : (
             <button
               type="button"
-              className="inline-flex min-h-9 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
+              className="inline-flex min-h-9 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700 disabled:opacity-50"
               data-testid="shipping-authoring-cancel-edit"
-              onClick={() => {
-                if (document) setForm(createEditorForm(document));
-                controller.edit({});
-                setMode("view");
-              }}
+              disabled={busy}
+              onClick={cancelEdit}
             >
               {messages.cancelEdit}
             </button>

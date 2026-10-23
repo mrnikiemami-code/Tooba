@@ -39,6 +39,12 @@ export interface EditorSessionState {
   readonly save: EditorSaveStatus;
   readonly saveFailure: EditorTransportFailure | null;
   readonly saveRequestId: number;
+  /**
+   * True while the local form holds work that is not (yet) a serializable patch — a blanked name,
+   * a description typed before its name, or a one-sided settings choice. It keeps the raw work
+   * dirty so it can never look clean, be discarded silently or be resubmitted as an empty PUT.
+   */
+  readonly localDirty: boolean;
   readonly unsaved: boolean;
   readonly decision: EditorDecision;
   readonly pendingSwitchTo: string | null;
@@ -63,7 +69,16 @@ export type EditorSessionAction =
       readonly epoch: number;
       readonly failure: EditorTransportFailure;
     }
-  | { readonly type: "edited"; readonly draftId: string; readonly edits: EditorEdits }
+  | {
+      readonly type: "edited";
+      readonly draftId: string;
+      readonly edits: EditorEdits;
+      /**
+       * True when the raw form holds local work that is not all serializable yet. Defaults to false
+       * so existing callers/tests keep the pure wire-patch semantics.
+       */
+      readonly localDirty?: boolean;
+    }
   | {
       readonly type: "saveStarted";
       readonly draftId: string;
@@ -114,6 +129,7 @@ export function createEditorSessionState(draftId: string): EditorSessionState {
     save: "clean",
     saveFailure: null,
     saveRequestId: 0,
+    localDirty: false,
     unsaved: false,
     decision: "none",
     pendingSwitchTo: null,
@@ -181,6 +197,7 @@ export function reduceEditorSession(state: EditorSessionState, action: EditorSes
       save: sameSession ? state.save : "clean",
       saveFailure: sameSession ? state.saveFailure : null,
       saveRequestId: 0,
+      localDirty: sameSession ? state.localDirty : false,
       unsaved: sameSession ? state.unsaved : false,
       decision: "none",
       pendingSwitchTo: null,
@@ -204,6 +221,7 @@ export function reduceEditorSession(state: EditorSessionState, action: EditorSes
         save: "clean",
         saveFailure: null,
         saveRequestId: 0,
+        localDirty: false,
         unsaved: false,
         commitUncertain: false,
         reconcile: "idle",
@@ -215,19 +233,23 @@ export function reduceEditorSession(state: EditorSessionState, action: EditorSes
         action.failure.kind === "denied" ? "denied" : action.failure.kind === "notFound" ? "notfound" : "error";
       return { ...state, load, loadFailure: action.failure, baseline: null };
     }
-    case "edited":
+    case "edited": {
       if (state.load !== "loaded" || state.save === "saving" || state.reconcile === "pending") return state;
       // A local edit never clears latched uncertainty or pretends the previous PUT failed.
+      const localDirty = action.localDirty === true;
       return {
         ...state,
         edits: action.edits,
-        unsaved: isDirty(action.edits),
+        localDirty,
+        unsaved: isDirty(action.edits) || localDirty,
         save: state.commitUncertain ? "outcomeUnknown" : "clean",
         saveFailure: state.commitUncertain ? state.saveFailure : null,
       };
+    }
     case "saveStarted":
       if (action.epoch !== state.epoch) return state;
-      if (state.load !== "loaded" || !state.unsaved || state.commitUncertain) return state;
+      // Only a serializable patch can be sent: raw-only (invalid) work is blocked here too.
+      if (state.load !== "loaded" || !isDirty(state.edits) || state.commitUncertain) return state;
       if (state.save === "saving") return state; // duplicate Apply is gated, not queued
       return { ...state, save: "saving", saveRequestId: action.requestId, saveFailure: null };
     case "saveSucceeded":
@@ -237,6 +259,7 @@ export function reduceEditorSession(state: EditorSessionState, action: EditorSes
         ...state,
         baseline: action.document,
         edits: {},
+        localDirty: false,
         unsaved: false,
         save: "clean",
         saveFailure: null,
@@ -270,7 +293,8 @@ export function reduceEditorSession(state: EditorSessionState, action: EditorSes
         save: "clean",
         saveFailure: null,
         saveRequestId: 0,
-        unsaved: isDirty(state.edits),
+        localDirty: state.localDirty,
+        unsaved: isDirty(state.edits) || state.localDirty,
       };
     case "reconcileFailed":
       if (action.epoch !== state.epoch || state.reconcile !== "pending") return state;
@@ -297,6 +321,7 @@ export function reduceEditorSession(state: EditorSessionState, action: EditorSes
         loadFailure: null,
         baseline: null,
         edits: {},
+        localDirty: false,
         save: state.commitUncertain ? "outcomeUnknown" : "clean",
         saveFailure: null,
         saveRequestId: 0,
@@ -342,7 +367,7 @@ export function selectApplyRequest(
   if (state.commitUncertain) return { status: "blocked", reason: "uncertain" };
   if (state.reconcile === "pending") return { status: "blocked", reason: "in-flight" };
   if (state.save === "saving") return { status: "blocked", reason: "in-flight" };
-  if (!state.unsaved) return { status: "blocked", reason: "no-changes" };
+  if (!isDirty(state.edits)) return { status: "blocked", reason: "no-changes" };
   const body = buildEditorDocumentBody(state.baseline, state.edits, resolver);
   if (body.status === "needsResolution") return { status: "blocked", reason: "needs-resolution" };
   if (body.status === "invalidIntent") return { status: "blocked", reason: "invalid-intent" };

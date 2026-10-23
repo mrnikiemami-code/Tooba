@@ -1,3 +1,15 @@
+## pointer: 202-R1 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-23
+
+**TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202-R1** (parent202) از base `a66573615d902df3ceeefc43adf571a2db59179f`
+اجرا و result آن به Bridge ارسال شد؛ **Architect-accepted نیست** و گام بعدی مجاز نیست. محدوده: raw-dirty
+جدا از wire-patch (localDirty + formHasLocalChanges؛ untouched settings omit/revert؛ blankname و
+description-only و one-sided settings واقعاً dirty و invalid)، CancelEdit/Back از یک exit-plan با
+Dialog و inert هنگامsave/reconcile و حفظcommitUncertain، lifecycle واقعی hook (per-draft slot، dispose،
+StrictMode revival) و seed کنترل‌شده فرم، adoption-only برای savedRevision/formSeed. 48featurePASS
+(38 قبلی حفظ) +10جدید، typecheck و 5guards سبز؛ Visual NOTRUN؛mount/browser test ادعا نشده.
+شواهد: `docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202-R1/RESULT.md`.
+199/200/201/202 بسته و replay نشوند؛ هیچ تسکی تا review این اصلاح صادر نشود.
+
 ## مرجع جاری: 202 نیازمند اصلاح / فقط202-R1 — 2026-10-23
 
 202 در `41dc0a7fcf94e56209c8a87b84aab18a66f907eb` بررسی شد؛ [Architect review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202/ARCHITECT-REVIEW.md). **REPAIR_REQUIRED؛ تیک پایان نخورد.** مسیر واقعی/general/entry/201facts/null-admin حفظ؛38featurePASS/tsc/5guards گزارشworker،نهrerunArchitect؛VisualNOTRUN،productionPENDING.

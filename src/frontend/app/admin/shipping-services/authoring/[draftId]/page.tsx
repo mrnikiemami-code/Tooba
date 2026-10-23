@@ -41,7 +41,8 @@ export default async function AdminShippingAuthoringDraftPage({
   return (
     <Suspense fallback={<p className="p-6 text-sm text-gray-500">…</p>}>
       <div className="p-4 lg:p-6">
-        <ShippingAuthoringScreen draftId={draftId} locale={locale} initialMode={initialMode} />
+        {/* key: a different draft identity is a different editing session (no state reuse across A/B). */}
+        <ShippingAuthoringScreen key={draftId} draftId={draftId} locale={locale} initialMode={initialMode} />
       </div>
     </Suspense>
   );

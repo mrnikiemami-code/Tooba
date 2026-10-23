@@ -111,3 +111,12 @@ Schema-Data-Flag-Changes: NONE
 Stop-State: STOP_FOR_ARCHITECT
 automaticNextImplementationTask: NONE
 Automatic-Next-Task: NONE
+
+## R1 correction (2026-10-23, append-only)
+
+The Architect review of this result is in `ARCHITECT-REVIEW.md` (REPAIR_REQUIRED): the form/session
+dirty state above was derived from serializable edits only, so blank/incomplete/description-only input
+looked clean; Cancel Edit bypassed the discard decision; and the hook captured the first draft id with
+no cleanup. See `docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GENERAL-UI-202-R1/RESULT.md`
+for the repairs (raw local dirt separated from the wire patch, one explicit exit plan, per-draft
+controller lifecycle and a seeded form). The statements above remain as the historical 202 claim.

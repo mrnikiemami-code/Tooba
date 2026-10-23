@@ -124,8 +124,37 @@ function sameDescription(left: string | null, right: string | null): boolean {
   return l === r;
 }
 
+/** The stored raw description of one language (null when there is none). */
+function storedDescription(document: EditorDocument, languageId: string): string | null {
+  return storedTranslation(document, languageId)?.description ?? null;
+}
+
+/** The raw description currently held by the form, falling back to the stored one. */
+function formDescription(form: EditorFormState, languageId: string, document: EditorDocument): string | null {
+  const value = form.descriptions[languageKey(languageId)];
+  return value === undefined ? storedDescription(document, languageId) : value;
+}
+
+/** An emptied description is the same EXPLICIT clear whether it is `""` or blank whitespace. */
+function normalizeDescription(value: string | null): string | null {
+  return value !== null && value.trim().length === 0 ? null : value;
+}
+
+/** True when BOTH settings equal the confirmed baseline (no wrapper must be emitted). */
+function settingsEqualBaseline(document: EditorDocument, form: EditorFormState): boolean {
+  return (
+    form.freightPaymentMode === (document.settings?.freightPaymentMode ?? null) &&
+    form.calculationMode === (document.settings?.calculationMode ?? null)
+  );
+}
+
 /**
  * Builds the intentional write intent of the current form against the confirmed baseline.
+ *
+ * Only real differences from the confirmed baseline are serialized: an untouched configured
+ * setting (or a type id equal to the stored one) never becomes a write, and reverting every value
+ * back to the baseline yields `{}`. Local problems (blank name, one-sided settings) are reported as
+ * issues and are never turned into a partial patch that silently drops them.
  *
  * @param document Confirmed baseline.
  * @param form Local form values.
@@ -141,15 +170,14 @@ export function buildEditorEdits(
     const key = languageKey(language.languageId);
     const stored = storedTranslation(document, language.languageId);
     const name = form.names[key] ?? stored?.name ?? "";
-    const descriptionValue = form.descriptions[key];
-    const rawDescription = descriptionValue === undefined ? (stored?.description ?? null) : descriptionValue;
+    const rawDescription = formDescription(form, language.languageId, document);
     // An emptied description stays an EXPLICIT null, never a fabricated empty patch.
-    const description = rawDescription !== null && rawDescription.trim().length === 0 ? null : rawDescription;
-    const changed =
-      stored === undefined
-        ? name.trim().length > 0
-        : stored.name !== name || !sameDescription(stored.description, description);
-    if (!changed) continue;
+    const description = normalizeDescription(rawDescription);
+    // Any raw material difference counts — including a blank name and a description typed for a
+    // language that has no stored translation yet (that is a real intent with a local name issue).
+    const nameDiffers = stored === undefined ? name.length > 0 : stored.name !== name;
+    const descriptionDiffers = !sameDescription(storedDescription(document, language.languageId), description);
+    if (!nameDiffers && !descriptionDiffers) continue;
     if (name.trim().length === 0) {
       issues.push({ code: "nameRequired", languageId: language.languageId });
       continue;
@@ -158,10 +186,11 @@ export function buildEditorEdits(
   }
 
   let methodSettings: MethodSettingsEdit | undefined;
-  if (form.freightPaymentMode !== null || form.calculationMode !== null) {
+  if (!settingsEqualBaseline(document, form)) {
     if (form.freightPaymentMode === null || form.calculationMode === null) {
       issues.push({ code: "settingsIncomplete" });
     } else {
+      // Once a settings write exists it carries BOTH axes, so the untouched axis is preserved.
       methodSettings = {
         freightPaymentMode: form.freightPaymentMode,
         calculationMode: form.calculationMode,
@@ -176,12 +205,41 @@ export function buildEditorEdits(
   } = {};
   if (translations.length > 0) edits.methodTranslations = translations;
   if (methodSettings) edits.methodSettings = methodSettings;
+  // Preserved accepted-202 semantics: an explicit select/clear is a real operator intent. Only an
+  // untouched (`preserve`) selection is omitted; a select equal to the stored id is not coerced.
   if (form.typeSelection.kind === "select") {
     edits.typeAssignment = { shippingTypeId: form.typeSelection.shippingTypeId };
   } else if (form.typeSelection.kind === "clear") {
     edits.typeAssignment = { shippingTypeId: null };
   }
   return { edits, issues };
+}
+
+/**
+ * True when the operator changed ANY raw form value against the confirmed baseline.
+ *
+ * This is deliberately WIDER than {@link buildEditorEdits}: invalid work (a blanked name, an
+ * unfinished settings pair, a description typed before its name) is real local work. It must stay
+ * dirty, keep the discard warning and block Apply instead of looking clean just because it cannot
+ * be serialized yet.
+ */
+export function formHasLocalChanges(document: EditorDocument, form: EditorFormState): boolean {
+  for (const language of document.presentation.contentLanguages) {
+    const key = languageKey(language.languageId);
+    const stored = storedTranslation(document, language.languageId);
+    const name = form.names[key] ?? stored?.name ?? "";
+    if (stored === undefined ? name.length > 0 : stored.name !== name) return true;
+    if (
+      normalizeDescription(formDescription(form, language.languageId, document)) !==
+      normalizeDescription(storedDescription(document, language.languageId))
+    ) {
+      return true;
+    }
+  }
+  if (!settingsEqualBaseline(document, form)) return true;
+  if (form.typeSelection.kind === "select") return form.typeSelection.shippingTypeId !== document.type.shippingTypeId;
+  if (form.typeSelection.kind === "clear") return document.type.shippingTypeId !== null;
+  return false;
 }
 
 /** True when the form carries an intentional change that Apply would send. */

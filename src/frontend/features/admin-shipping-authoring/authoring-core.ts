@@ -1,9 +1,9 @@
 ﻿/**
  * Public boundary of the shipping authoring editor feature.
  *
- * Transport (`api`), typed read model (`model`) and local session state (`session`) stay separate so
- * the presentation slice can be added later without moving ownership. No rendered page is exported
- * yet: this slice is the typed adapter + session foundation only.
+ * Transport (`api`), typed read model (`model`) and local session state (`session`) stay separate;
+ * the rendered capability is exported from `index.ts` and only that boundary may be imported by app
+ * pages. No transport/business logic lives in a page.
  */
 export type {
   AuthoringAreaKind,
@@ -112,6 +112,7 @@ export {
   createEditorForm,
   descriptionOf,
   formHasEdits,
+  formHasLocalChanges,
   nameOf,
   selectedShippingTypeValue,
   storedTranslation,

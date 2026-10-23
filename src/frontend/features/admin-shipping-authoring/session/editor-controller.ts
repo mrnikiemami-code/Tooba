@@ -37,12 +37,20 @@ export interface EditorControllerState {
   readonly savedRevision: number | null;
   /** True after a first successful reconciliation of an unknown commit. */
   readonly reconciled: boolean;
+  /**
+   * Monotonic seed of the rendered form. It advances ONLY on an accepted fresh load, an accepted
+   * save and a fresh load after an explicit discard — never on a reconcile or a plain render — so
+   * the screen re-seeds the form only on a real confirmed transition and never erases typed work.
+   */
+  readonly formSeed: number;
 }
 
 /** Result of one Apply attempt. */
 export type EditorApplyOutcome =
   | { readonly status: "blocked"; readonly reason: Extract<EditorApplyRequest, { status: "blocked" }>["reason"] }
   | { readonly status: "sent" }
+  /** The completion arrived after disposal or was rejected by epoch/request identity. */
+  | { readonly status: "ignored" }
   | { readonly status: "failed"; readonly failure: EditorTransportFailure };
 
 /** Controller handle used by the screen. */
@@ -51,7 +59,7 @@ export interface EditorController {
   subscribe(listener: () => void): () => void;
   begin(): void;
   retryLoad(): void;
-  edit(edits: EditorEdits): void;
+  edit(edits: EditorEdits, localDirty?: boolean): void;
   apply(resolver: AreaAncestryResolver): Promise<EditorApplyOutcome>;
   reconcile(): Promise<void>;
   requestClose(): boolean;
@@ -72,6 +80,7 @@ export function createEditorController(draftId: string, transport: EditorTranspo
     applying: false,
     savedRevision: null,
     reconciled: false,
+    formSeed: 0,
   };
   const listeners = new Set<() => void>();
   let requestCounter = 0;
@@ -99,7 +108,9 @@ export function createEditorController(draftId: string, transport: EditorTranspo
     const outcome = await transport.load(draftId);
     if (disposed) return;
     if (outcome.kind === "ok") {
-      dispatch({ type: "loadSucceeded", draftId, epoch, document: outcome.document });
+      const next = dispatch({ type: "loadSucceeded", draftId, epoch, document: outcome.document });
+      // Only an ACCEPTED load re-seeds the rendered form.
+      if (next.baseline === outcome.document) setState({ ...state, formSeed: state.formSeed + 1 });
       return;
     }
     dispatch({ type: "loadFailed", draftId, epoch, failure: outcome.failure });
@@ -118,8 +129,8 @@ export function createEditorController(draftId: string, transport: EditorTranspo
       if (state.session.load === "loading" || state.session.commitUncertain) return;
       void load();
     },
-    edit: (edits) => {
-      dispatch({ type: "edited", draftId, edits });
+    edit: (edits, localDirty = false) => {
+      dispatch({ type: "edited", draftId, edits, localDirty });
     },
     apply: async (resolver) => {
       // Synchronous gate BEFORE any await: a second click in the same tick never sends a second PUT.
@@ -141,17 +152,23 @@ export function createEditorController(draftId: string, transport: EditorTranspo
       } finally {
         if (inFlight === controller) inFlight = null;
       }
-      if (disposed) return { status: "sent" };
+      if (disposed) return { status: "ignored" };
       setState({ ...state, applying: false });
       if (outcome.kind === "ok") {
-        dispatch({
+        const next = dispatch({
           type: "saveSucceeded",
           draftId,
           epoch,
           requestId: selection.requestId,
           document: outcome.document,
         });
-        setState({ ...state, savedRevision: outcome.document.revision });
+        // A rejected (stale epoch/request or non-saving) completion must not fabricate success.
+        if (next.baseline !== outcome.document || next.save !== "clean") return { status: "ignored" };
+        setState({
+          ...state,
+          savedRevision: outcome.document.revision,
+          formSeed: state.formSeed + 1,
+        });
         return { status: "sent" };
       }
       dispatch({ type: "saveFailed", draftId, epoch, requestId: selection.requestId, failure: outcome.failure });
@@ -165,8 +182,11 @@ export function createEditorController(draftId: string, transport: EditorTranspo
       const outcome = await transport.load(draftId);
       if (disposed) return;
       if (outcome.kind === "ok") {
-        dispatch({ type: "reconcileSucceeded", draftId, epoch, document: outcome.document });
-        setState({ ...state, reconciled: true, savedRevision: outcome.document.revision });
+        const next = dispatch({ type: "reconcileSucceeded", draftId, epoch, document: outcome.document });
+        // Pending local edits are intentionally preserved (no formSeed advance) for operator review.
+        if (next.baseline === outcome.document) {
+          setState({ ...state, reconciled: true, savedRevision: outcome.document.revision });
+        }
         return;
       }
       dispatch({ type: "reconcileFailed", draftId, epoch, failure: outcome.failure });
