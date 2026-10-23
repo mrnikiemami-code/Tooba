@@ -1,5 +1,16 @@
 # Tooba — ریکاوری جاری معماری ارسال / 2026-10-22
 
+## مرجع جاری: 201-R1 partial؛ فقط201-R2 fixture+integration — 2026-10-23
+
+main0c692f35732420c785916bb28e11bd02910270df reviewشد؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R1/ARCHITECT-REVIEW.md). IsActiveserviceareaاضافه‌شده‌حفظ،اماtestبهassertنرسیده. 6green narrowfixturesفقط؛EF/DI/Listener/newhandlerهنوزاجرانشده؛overrun/staleassemblyثبت. 201بسته‌نیست،UI202صادرنشود.
+
+تشخیصArchitectازsource: reproدوserviceareaباCityمشترکدارد؛owningCityIds=[City,City]؛CountingSnapshots.GetCitiesبدونDistinctدوشهریکسانمی‌دهد؛ReadVerified.TryAddدرستconfiguration_unavailableمی‌دهد. قراردادواقعیGeoReaderداخلDistinctIdentifiersdedupمی‌کند. پس«نقصدومclosure»اثبات‌نشده؛fakeقراردادراشکسته. JSشکلcollectionتاییدشد،نهاجرایC#Architect. اضافه‌کردنancestorkeyعلتduplicateراازبیننمی‌برد.
+
+تنها **TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R2**،parent201-R1،30دقیقه/stop23؛tests/docsفقط،noProductionfix. fakeقانونیDistinctوpositiveoneSA/sharedcityactiveinactive+negativebadduprows؛یکharnessrealGeo+Shipmodule/EFInMemoryبرایreaderDIlistener؛editornewportpoisonsecondreadproofدرharnessموجود. test-onlyGeoInfraProjectReferenceمجوزقبلی‌حفظ،productionContracts-only. اگرlawfulfixtureبازfailشدredtestبماند exactrows/callstageSTOPنهchase.
+
+نهPostgres/storage/fullsuite/Host/UI/schema/sharedservices؛200و199بسته‌نهreplay. بعد201R2review:UI202. cutoff/status/fullcreate/quoteباز؛TB185paused/defaultOFF/PendingAllocationمحفوظ.
+
+
 ## مرجع جاری: 201 نیازمنداصلاح؛فقط201-R1 — 2026-10-23
 
 201 درe0c2a2651e413aa7b5b0af3f5011eb7cd9955828 بررسی شد؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201/ARCHITECT-REVIEW.md). readbridge/Contracts/sharedancestry/prewriteprojectionحفظ،اما201بسته‌نیست. ServiceArea branch فاقد !serviceArea.IsActive است؛ناحیه‌غیرفعالباوالدفعالاشتباهResolvedمی‌شود. proofهایEFreader/realDI/ActivityListener/newhandlerpoisonedsecondcall اجرا نشده؛6facts+10editorPASS و4storageconnectionrefusedگزارشworker،نهgreenیاregressionabsence. deadlineگذشته ثبت.

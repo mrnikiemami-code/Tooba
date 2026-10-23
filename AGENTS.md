@@ -43,11 +43,12 @@ Read latest recovery/reviews for exact evidence/process limits; no merchant UI/q
 TB198 source analysis accepted with corrections; read its ARCHITECT-REVIEW.md before implementation.
 TB199 existing-draft atomic editor backend is Architect-accepted through199-R1 (98274e4ff), with process/proof limits in its review.
 TB200 frontend foundation accepted through200-R2 at64f3f307cf; UI is still pending.
-TB201 read hydration at e0c2a2651 is not accepted; inactive ServiceArea erroneously resolves, proof gaps remain.
-Only next issued task: TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R1 (parent201).
-One activity guard + existing Shipping.Tests EF/DI/listener/new-handler proof; test-only Geography.Infrastructure reference explicitly allowed, production edges stay Contracts-only.
-No schema/frontend/Host/shared DB or read API redesign. Exact nonrelational filters only; prior connection-refused storage run is not green.
-Backend199/frontend200 accepted; latest recovery authoritative; wait201-R1 result before UI202.
+TB201-R1 activity guard retained at0c692f357;201 not accepted, proof remains incomplete.
+Only next issued task: TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R2 (parent201-R1), tests/docs only.
+Saved repro fake returns duplicate city rows for shared-city service areas; real bulk reader deduplicates. Second production closure defect is UNPROVEN.
+Correct fixture and execute compact real-reader/module-DI/listener/new-handler proof; authorized test-only Geography.Infrastructure reference remains.
+No production/schema/frontend/Host/shared DB change; no speculative second fix. Backend199/frontend200 accepted; latest recovery authoritative.
+Wait201-R2 result before UI202.
 Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
 
 ## Core rules
