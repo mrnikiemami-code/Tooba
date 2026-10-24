@@ -1,3 +1,11 @@
+## مرجع جاری: 204-R1 دو ایراد باقی / فقط204-R2 — 2026-10-24
+
+204-R1 در `0b1f9abcbad8c1a5fc244ef5354413510dcf1cd8` reviewشد؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R1/ARCHITECT-REVIEW.md). mainفعلی `909e43ad26298a253f6e9cb41712bc76571b10d0` فقطpost-resultartifactبعدی دارد،productionیکسان. **REPAIR_REQUIRED؛ 204 بسته نیست.** siblingepoch/clear/terminalpath/label fixes حفظ.
+
+دوrepro مستقل Architect رویماژول‌بدونتغییر: Aareas موفق سپسB سپسA، پیشfreshAareas شهرAدوبارهخوانده‌می‌شود چونverifiedAreasقدیمی reuseمی‌شود؛ activecity باparentinactiveadmin وstagedadminnull درchoiceChainActive true. Addبایدcurrentverifiedpath/activity را ببیندنهفقطchoiceflags؛decoderهنوزnullparentقبلfilter قبولمی‌کندوabsentknownsetfailopenاست. report12+9/68root/tsc/7guards worker،نهrerun؛Visual/mounted/liveNOTRUN.
+
+تنها **TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R2**،parent204-R1،20دقیقه/stop14: freshcontextparentprerequisite،countrywideactualactiveparent،currentgenerationAddguard+smallstrictdecoderpredicate؛no newfeature/backend/schema/broadtest/proofloop. تا نتیجه204-R2 تسکدیگری صادر نشود؛سپسreviewوvisual/livevalidationمحدود.199/200/201/202/203بسته‌نهreplay؛ProductionPENDING؛TB185paused/defaultOFF/PendingAllocationمحفوظ. اینبخش برpointerقدیمی مقدم است.
+
 ## مرجع جاری: 204-R1 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-24
 
 **TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R1** (parent204) از base `5eaf479417a1d771f6c428f242e901e35b2d76f3`

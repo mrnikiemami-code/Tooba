@@ -46,11 +46,11 @@ TB200 frontend foundation accepted through200-R2 at64f3f307cf; UI is still pendi
 TB201 destination read bridge accepted through201-R2 at9120f0cba; prior fake duplicate-city defect retracted.
 TB202 existing-draft General UI is Architect-accepted through202-R1 at86c0a10932f (bounded source/pure-function review; mounted React and visual remain unverified).
 TB203 existing-group rates and root week UI are Architect-accepted through203-R1 atbf7cb78e471; Visual/mounted/live remain unverified.
-TB204 delivered at790c2583c; Architect review: REPAIR_REQUIRED (see204 ARCHITECT-REVIEW).
-TB204-R1 picker coordinator repair was executed on 2026-10-24 from5eaf47941 and posted to Bridge; NOT Architect-accepted.
-Verified/active ancestry, terminal-level tuple, cascading clear and unavailable labels are repaired in feature scope only.
-Only next issued task: NONE until Architect reviews204-R1.
-Wait204-R1 review before any next task.199/200/201/202/203 accepted, no proof replay.
+TB204-R1 at0b1f9abcb remains REPAIR_REQUIRED after Architect review; sibling/clear/label changes preserved.
+Only next issued task: TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R2 (parent204-R1).
+Repair fresh-generation parent evidence, active countrywide city parent, current-path Add gating and strict city-parent decoder.
+Current main909e43ad is only a post-result documentation artifact after the code SHA.
+Wait204-R2 result before any next task; no205.199/200/201/202/203 accepted, no proof replay.
 Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
 
 ## Core rules
