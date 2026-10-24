@@ -7,6 +7,22 @@ Architect fixturesاجراکرد: nulladminparent متن"null" است؛group1cou
 تنها **TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R1**،parent205،30دقیقه/stop22؛reusecommittedharness/knownstartup؛fixtureهایقانونی+typelookup/shellwhitelist grounded وfailclosed؛interactionواقعی+4FAENdesktop/mobilecaptures. نهproductionfix/Nodeproofreplay/newframework یاsetuploop. setup<=5min؛اگرنشدexactBLOCKED. sharedapps/DBبدونتغییر؛syntheticinterceptedPUTفقط؛no merchantwrite.
 تا نتیجه205-R1 تسکدیگری صادرنشود.199/200/201/202/203/204بسته‌نهreplay؛ProductionPENDING؛TB185paused/defaultOFF/PendingAllocationمحفوظ. اینبخش مقدم برpointerتاریخی.
 
+## 205-R1 اجرا شد: PARTIAL — منتظر بازبینی Architect، بدون پذیرش — 2026-10-24
+
+**TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R1** از base `be286fcb788aee83c3fd5733221065bc470d1e15`
+اجرا و به Bridge گزارش شد؛ **Architect-accepted نیست**. نتیجه:
+[docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R1/RESULT.md](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R1/RESULT.md).
+شش نقص harness/آرایهٔ 205 رفع شد (null-admin parent به null واقعی، انتخاب‌های terminal ناسازگار حذف شد،
+city-list بر اساس query تفکیک شد، پاسخ PUT سند کامل آمادهٔ همان سناریو شد، authoring-types با پوشش واقعی
+`{types:[...]}`، خطای CDP دیگر success تلقی نمی‌شود). **اصلاح 205 تأیید شد**: بنر «بررسی پیش‌نویس ناموفق
+بود» از read نوع‌های feature می‌آمد و با envelope واقعی ناپدید شد (banner:false)؛ نه نقص محصول.
+تعامل واقعی: ویرایش نام در هر دو زبان محتوا با حفظ مقدار پس از switch، dirty و فعال‌شدن Apply؛ سپس
+**دقیقاً یک PUT** با `expectedRevision=7`، هر دو گروه/ردیف/شناسه حفظ‌شده و توکن‌های عددی `0.50`/`1850000.00`،
+بدون GET بعد از ذخیره. adoption نهایی اثبات **نشد** چون پاسخ آمادهٔ من با `destinationFacts` هم‌خوان نبود؛
+UI درست fail-closed شد (outcome-unknown، بدون retry خودکار، reconcile صریح). هفتهٔ بدون تغییر در body ارسال
+نمی‌شود. group/geography، ویرایش هفته، 409/transport و اسکرین‌شات EN/LTR اجرا نشد. پنج شات FA/دسکتاپ+موبایل
+شاهد مرور است، نه Visual ACCEPT. Production/DB/flag NONE؛ پورت‌های 3517/9555 آزاد و `:3000` دست‌نخورده.
+
 ## 205 اجرا شد: PARTIAL — منتظر بازبینی Architect، بدون پذیرش — 2026-10-24
 
 **TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205** از base `b7f7ead6df5129a9b0a62ee201592c4a2888f1ae`
