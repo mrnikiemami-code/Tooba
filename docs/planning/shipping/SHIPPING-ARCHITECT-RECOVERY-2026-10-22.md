@@ -7,6 +7,15 @@ Architect کدProgram را خواند: Development startup حتی با RunLegacy
 پس ازنتیجه207: review اثرواقعیstartup/pendingids و کوچک‌ترین اقدامرفع؛ نهtaskتحلیلیخودکار/تکرارUI. تانتایج207تسکدیگریصادرنشود. آماده تست‌بودنکاربرهنوزتأییدنشده؛accepted190–205محفوظ،ProductionPENDING،TB185paused/defaultOFFمحفوظ.
 این بخش تمام pointerهای قدیمی206/NONE را supersede می‌کند؛ issued≠claimed.
 
+## مرجع جاری: 207 preflight — build فعلی آماده، اما 7 مهاجرت Shipping اعمال نشده — 2026-10-24
+
+**TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207** روی base `a932fa2915fed4827635d0cb8dbb0260baf35945` اجرا و به Bridge تحویل شد؛ [RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207/RESULT.md).
+نتیجه: **PREFLIGHT_READY_PENDING_APPROVAL**. build ایزولهٔ فعلی Host از main موفق شد (0 error، 42 warning، ~45s؛ `D:\temp\tb207-build\out`، `Tooba.Host.dll FD7C37F4CC13E95F`)، bin/Debug و obj مشترک دست‌نخورده.
+واقعیت schema با SQL **read-only** روی `tooba_alpha` (db/user/read-only تأیید شد): shipping 6 اعمال‌شده و **7 pending** (AuthoringDraftPersistence…AuthoringDraftTypeAssignment)، fulfillment 10 و **2 pending** (ShippingTypeCatalog، AddFulfillmentOutboxPendingIndex)، geography کامل. مهم‌ترین یافته: Shipping هیچ `IModuleSchemaMigrator` ندارد، پس restart Host آن 7 مهاجرت را **هرگز** اعمال نمی‌کند و صرفاً swap باینری، 404 امروز را به `42P01` تبدیل می‌کند.
+جدول اثرهای startup کامل ثبت شد؛ `RunLegacyBootstraps=false` فقط seed قدیمی Catalog را خاموش می‌کند و مهاجرت/Content/Support/Wallet/one-level backfill و hosted workers (Outbox dispatcher، Order expiry، Payment reconciliation، Cart expiry، Authorization schema، Language bootstrap) را نه. **حالت startup بدون mutation وجود ندارد.**
+برخورد ایندکس: `ix_outbox_messages_pending` در 29 schema حاضر است ولی در `fulfillment` نیست → collision=NO، ریسک fail-closed R10 با نام تکراری فعال نمی‌شود.
+مسیر تأیید پیشنهادی: (1) اجرای Shipping-only با `Tooba.MigrationRunner` و راستی‌آزمایی 7 id، سپس (2) swap باینری جدید روی 5088؛ ترتیب 1→2 الزامی است. rollback = همان `bin\Debug\net8.0` فعلی. هیچ restart/migration/seed/DDL/DML انجام نشد؛ 3000/5088 دست‌نخورده. ProductionPENDING، Stop-State STOP_FOR_ARCHITECT، Automatic-Next-Task NONE.
+
 ## مرجع جاری: 206 اجرا شد — BLOCKED روی باینری قدیمی Host — 2026-10-24
 
 **TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206** روی base `8fcd9df9e44f7bc283e0e6ccf0c6cd95d9b0d8c2` اجرا و به Bridge تحویل شد؛ [RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206/RESULT.md).
