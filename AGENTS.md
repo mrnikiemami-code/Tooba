@@ -1,3 +1,15 @@
+﻿## CURRENT — 210 visual alignment posted / awaiting Architect review — 2026-10-25
+
+User rejected 209-R1/R2 visual alignment (10/20) from two real screenshots: General formed a second
+content axis, type floated in its own max-w box, language chips changed geometry, week was two columns of
+independent day cards. 210 repaired ONLY presentation in the existing feature: one content
+width for both main panels, type on the name card's axis, chips with one box model, and a seven-row week
+grid plus header on one shared column template (narrow viewport = day+status, then full-width from/to).
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210/RESULT.md`.
+Measured at 1440x900: both panels w=1057, type/name inner x=73 w=1023, all seven week rows identical
+(day 481/607, start 209/120, end 81/120), 390x844 no horizontal overflow. No Apply/HTTP write/migration;
+stored 120000.00/5000.00 unchanged. typecheck clean. Hard 20min timebox was exceeded (~32min) — recorded,
+not graded PASS. Active task: NONE. Next task: NONE — await Architect review; User Visual ACCEPT PENDING.
 # Tooba — Agent Rules
 
 ## CURRENT TASK —210 / user rejected alignment10/20 —2026-10-25
