@@ -1,0 +1,65 @@
+BEGIN_TOOBA_WORKER_RESULT
+TASK: TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210
+PARENT: TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R2
+CHANNEL: tooba-main
+WORKER: tooba-worker-01
+AGENT: cursor
+BASE: 3f14b3beebddc5265fdd23b078bfd6ba38ff92b7
+COMMIT: 3e8dc524f4d624eb8f189303749d2e802d922e13
+PUSH: origin/main fast-forward, HEAD == origin/main (pointer commit fdea4a9 on top, docs only)
+VERDICT: READY_FOR_ARCHITECT_REVIEW (frontend presentation only, zero domain writes)
+STATUS: COMPLETED
+
+USER-REPORTED DEFECTS ADDRESSED
+1) General inner max-w-4xl formed a second content axis versus Regions.
+2) Type lived in a floating max-w-sm box, so type/name/settings/week edges disagreed.
+3) Language chips changed geometry between selected and unselected (selected had no border).
+4) Week was two columns of independent day cards with inner justify-between: labels on one side,
+   toggles/inputs on the other, and no column lined up across the seven days.
+
+CHANGES (existing feature files only)
+- ui/authoring-general-tab.tsx: dropped the General-only max-w-4xl; both main panels now use the page's
+  single content width. The type control moved into a card with the same padding and edges as the
+  name/description card, so select and name input share one inline edge. Language chips now share one
+  box model (border + min-h-8 in BOTH states; only colour changes), so selecting cannot shift geometry.
+  Settings cards are items-stretch + h-full for common legend/option baselines.
+- ui/authoring-week-editor.tsx: two-column day cards replaced by ONE seven-row grid. A header row and
+  every day row use the same template minmax(6rem,1fr) 8.5rem 7.5rem 7.5rem ([day][status][from][to]),
+  applied as an explicit inline template so it is independent of the prebuilt CSS bundle. Below 640px the
+  template is minmax(0,1fr) auto: day+working control on line one, full-width from/to on line two.
+  Weekday ids/order, remembered closed-day hours, TimeText handling, validation, timezone value and
+  one-root-week authority are untouched; view mode uses the same rhythm as text/status.
+- messages/authoring-messages.ts: four column headers added in fa and en. Content languages remain
+  database-driven; nothing hardcoded.
+
+MEASURED (real page, 1440x900, EDIT, same sidebar)
+- Main panels: General w=1057 and Regions w=1057; screen x=56.
+- Main tabs: both h=40, both border-bottom 2px.
+- General: type card x=56 w=1057; name card x=56 w=1057; type select x=73 w=1023 h=44;
+  name input x=73 w=1023 h=44; chips all h=32 with 1px border at the same top; settings cards
+  x=56 w=523 and x=591 w=523.
+- Week: all seven rows identical -> day label x=481 w=607, status checkbox x=457 w=16,
+  start input x=209 w=120, end input x=81 w=120 (0px spread). Header cells: 481/607, 337/136,
+  209/120, 81/120.
+- 390x844: document.scrollWidth == innerWidth == 390 (no horizontal overflow); week resolves to
+  minmax(0px,1fr) auto with the two-line day layout.
+
+EVIDENCE
+docs/architecture/evidence/TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210/RESULT.md plus
+general-edit-1440x900.png, regions-edit-1440x900.png, week-edit-1440x900.png, week-edit-390x844.png.
+Values and revision unchanged: no Apply, no HTTP write, no seed/migration, no backend build/restart.
+Post-inspection readback still shows freight 120000.00 and packaging 5000.00. The user's browser and
+unsaved work were not reloaded; an isolated tab was used.
+
+VALIDATION AND TIMING (honest)
+- npm run typecheck: clean (one run).
+- No full suite, no source-regex CSS tests, no new logic tests (no behaviour changed).
+- Timebox deviation: hard 20min, implementation stop point minute 13; the measurement/alignment loop ran
+  to about minute 25 and the result was finished at about minute 32. Exceeded the timebox; recorded as a
+  real deviation, not a timing PASS.
+
+LIMITS
+Presentation/alignment only. Accepted 209/209-R1/R2 functional behaviour is preserved, not re-proved.
+No save, activation, readiness, quote, deployment or production acceptance.
+USER VISUAL ACCEPT REMAINS PENDING; the worker does not grade its own UI. Stop for Architect review.
+END_TOOBA_WORKER_RESULT
