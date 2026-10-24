@@ -1,0 +1,64 @@
+BEGIN_TOOBA_WORKER_RESULT
+TASK: TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R2
+PARENT: TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1
+CHANNEL: tooba-main
+WORKER: tooba-worker-01
+AGENT: cursor
+BASE: 2de29283a9d32739607d7d8be26666a19bb82a2a
+COMMIT: cebc455147e779245c7317a2106afce041e885e5
+PUSH: origin/main fast-forward, HEAD == origin/main
+VERDICT: READY_FOR_ARCHITECT_REVIEW (frontend-only, zero domain writes)
+STATUS: COMPLETED
+
+DEFECT FIXED (the only one in scope)
+parseProperty kept only rows[j]; ServerFieldIssue had no group identity; the screen shared a
+Map<number,string> by rowIndex with every group; focus used a document-global
+querySelectorAll(testId)[rowIndex]. So regionGroups[1].rows[0].freightAmount targeted group0 row0,
+equal row indices across groups collapsed, and a closed optional-conditions disclosure blocked focus.
+
+CHANGES
+- ui/server-field-error.ts: ServerFieldIssue gains groupIndex (parsed from the submitted
+  regionGroups[i] segment via the same splitter, not a new parser); dedup key is
+  target|groupIndex|rowIndex|testId|reason so two groups' row0 stay TWO issues; localized label uses the
+  existing groupTitle/rowLabel messages (group + 1-based row); new pure helpers isRowScoped,
+  rateRowKey(g,r) ("g:r") and serverIssueSelector(issue) which composes
+  group[data-group-index] row[data-row-index] input[data-testid] (null for unknown). Exact-code reason
+  mapping and unknown-code honesty unchanged.
+- ui/authoring-groups-editor.tsx: group section carries data-group-index={position};
+  serverRateErrors is ReadonlyMap<string,string> looked up with rateRowKey(position, rowIndex), i.e. the
+  submitted index resolved against the CURRENT ordered groups/rows; a missing/out-of-range index matches
+  nothing and is never redirected to row 0. No second grouping store.
+- ui/authoring-rates-editor.tsx: editable row carries data-row-index={index} (presentation metadata only).
+- ui/authoring-screen.tsx: rateServerErrors builds composite keys; revealServerIssue resolves the scoped
+  selector, then walks up from that element and sets open=true ONLY on enclosing <details> before
+  scroll/focus. Presentation only: no value write, no dirty flag, no revision touch, and other groups'
+  conditions stay closed. The global Nth-match code is removed (asserted by test).
+
+GUARANTEES
+1) intended group element -> intended row element -> actual input testid;
+2) no document-wide Nth shortcut (both the lookup and the reveal block are guarded by tests);
+3) an index absent from the current tree highlights nothing instead of another row;
+4) an optional-condition rejection inside a closed disclosure is opened by its own ancestor only.
+
+VALIDATION
+- npm run typecheck: clean (run once, after the correction).
+- user-trial-209-r2.test.ts: 10/10 pass (group1 row0 keeps (1,0); selector exactness; group0 row1 delivery
+  + group1 row0 freight separate with correct reasons; equal code/row0 yields two issues; composite keys
+  never collide; out-of-range (9,7) preserved and not redirected; group-level path scoped to the group;
+  non-region path stays global; reveal opens only enclosing disclosures with no value/commit path;
+  group/row ownership reaches rendered attributes and the map lookup).
+- user-trial-209.test.ts label assertion updated to the group+row scoped text; with
+  user-trial-209-r1.test.ts the three focused files are 26/26 pass. No full suite / backend / architecture
+  sweep.
+
+NOT DONE
+- No browser/runtime startup, no screenshots, no HTTP probe, no save replay, no seed/migration/rebuild/Host
+  restart; the real rev2 draft was not touched.
+- The disclosure-opening walk is proven at source/test level here, not in a live browser.
+- Group-level (regions) rejections still appear in the banner summary only, not inline in the group card;
+  unchanged from R1 and outside this task.
+- Picker relevant-level rendering, General view disabled-vs-text and user Visual ACCEPT remain outside this
+  task; no production/functional acceptance claimed.
+- Timing: claim 2026-10-24T21:19:37Z, implementation ~21:27Z, finish ~21:31Z => ~12 min vs the 10-min
+  hardbox (~2 min over, one correction round).
+END_TOOBA_WORKER_RESULT
