@@ -30,6 +30,7 @@ import {
   clearAdministrativeArea,
   clearCity,
   clearServiceArea,
+  destinationAddEligibility,
   emptyChoice,
   optionDisplayName,
   type DestinationChoice,
@@ -169,9 +170,10 @@ export function AuthoringDestinationPicker({
 
   const terminal = choiceTerminal(choice);
   const ancestry = choiceAncestry(choice);
-  const chainActive = choiceChainActive(choice);
   const duplicate = terminal !== null && isSelected(terminal);
-  const canAdd = !disabled && terminal !== null && ancestry !== null && chainActive && !duplicate;
+  // Add is gated by the CURRENT verified rows (not by staged flags alone).
+  const eligible = destinationAddEligibility(choice, readState);
+  const canAdd = !disabled && eligible && ancestry !== null && !duplicate;
 
   return (
     <div className="grid gap-2 rounded-lg border border-dashed border-border p-2" data-testid="shipping-authoring-destination-picker">
@@ -253,8 +255,10 @@ export function AuthoringDestinationPicker({
           disabled={!canAdd}
           data-testid="shipping-authoring-destination-add"
           onClick={() => {
-            // Re-checked here too: a forged/stale option must not bypass the active-chain guard.
-            if (terminal === null || ancestry === null || !choiceChainActive(choice)) return;
+            // Re-checked synchronously against the coordinator's CURRENT evidence, not a stale closure.
+            const evidence = coordinator.current?.getState() ?? readState;
+            if (terminal === null || ancestry === null) return;
+            if (!choiceChainActive(choice) || !destinationAddEligibility(choice, evidence)) return;
             if (isSelected(terminal)) {
               setRejected(true);
               return;

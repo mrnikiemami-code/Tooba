@@ -111,3 +111,19 @@ coordinator tests, not from a mounted render.
 
 Elapsed: ~24 minutes (claim 14:28Z → result). Hard 30-minute window respected; no new coding after the
 22-minute mark.
+
+## Correction appended 2026-10-24 (TB-204-R2) — history preserved
+
+1. Parent evidence: the `verifiedAreas` map claimed above was NOT bound to the current generation.
+   Re-entering A after B launched a fresh areas read and a country-wide city read with the OLD A set.
+   Superseded by 204-R2, where evidence is a single generation record cleared when a new areas read
+   starts and accepted only when its key equals the current `language|country`.
+2. Add gating: `choiceChainActive` used only staged flags, so an active city under an INACTIVE current
+   area passed and current loading/failure/membership were ignored. Superseded by 204-R2's
+   `destinationAddEligibility(choice, currentEvidence)`, used by canAdd and re-checked in the handler.
+3. "Filtered reads are exact" was not literal in the adapter: `parentAccepted` checked a null city
+   parent BEFORE the explicit filter and fell through `true` when no country-wide set existed.
+   204-R2 fixes the predicate (filter first, absent evidence fails closed, verified empty set keeps
+   null-admin cities lawful).
+4. Everything R1 actually delivered — sibling-request independence, clear functions, terminal-level
+   ancestry, unavailable label — is unchanged and still covered by its executed tests.

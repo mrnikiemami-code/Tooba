@@ -59,12 +59,17 @@ function parentAccepted(kind: AuthoringAreaKind, parentId: string | null, query:
       return parentId === null;
     case "AdministrativeArea":
       return query.countryId !== undefined && parentId !== null && parentId.toLowerCase() === query.countryId.toLowerCase();
-    case "City":
+    case "City": {
+      if (query.countryId === undefined) return false;
+      if (query.administrativeAreaId) {
+        // Explicit area filter: exactly that parent, and never a null-parent contradiction.
+        return parentId !== null && parentId.toLowerCase() === query.administrativeAreaId.toLowerCase();
+      }
+      // Country-wide: absent parent evidence is NOT evidence (a verified empty set is).
+      if (!query.knownAdministrativeAreaIds) return false;
       if (parentId === null) return true;
-      if (query.administrativeAreaId) return parentId.toLowerCase() === query.administrativeAreaId.toLowerCase();
-      return query.knownAdministrativeAreaIds
-        ? query.knownAdministrativeAreaIds.has(parentId.toLowerCase())
-        : true;
+      return query.knownAdministrativeAreaIds.has(parentId.toLowerCase());
+    }
     case "ServiceArea":
       return query.cityId !== undefined && parentId !== null && parentId.toLowerCase() === query.cityId.toLowerCase();
   }
@@ -78,6 +83,10 @@ function parentAccepted(kind: AuthoringAreaKind, parentId: string | null, query:
  */
 export function decodeGeographyOptions(query: GeographyQuery, payload: unknown): GeographyReadOutcome {
   if (!Array.isArray(payload)) return { state: "failure", failure: { kind: "untrusted" } };
+  // Parent evidence is compared against normalized ids regardless of the caller's casing.
+  const evidence = query.knownAdministrativeAreaIds
+    ? { ...query, knownAdministrativeAreaIds: new Set([...query.knownAdministrativeAreaIds].map((id) => id.toLowerCase())) }
+    : query;
   const options: GeographyOption[] = [];
   const seen = new Set<string>();
   for (const raw of payload) {
@@ -90,7 +99,7 @@ export function decodeGeographyOptions(query: GeographyQuery, payload: unknown):
       return { state: "failure", failure: { kind: "untrusted" } };
     }
     const parent = parentId === null || parentId === undefined ? null : (parentId as string);
-    if (!parentAccepted(query.kind, parent, query)) return { state: "failure", failure: { kind: "untrusted" } };
+    if (!parentAccepted(query.kind, parent, evidence)) return { state: "failure", failure: { kind: "untrusted" } };
     if (typeof row.isActive !== "boolean") return { state: "failure", failure: { kind: "untrusted" } };
     const key = id.toLowerCase();
     if (seen.has(key)) return { state: "failure", failure: { kind: "untrusted" } };

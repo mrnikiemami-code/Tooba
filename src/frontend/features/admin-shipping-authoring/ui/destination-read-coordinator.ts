@@ -40,6 +40,11 @@ export interface DestinationReadState {
   readonly lists: Readonly<Record<DestinationListKey, readonly GeographyOption[]>>;
   readonly loading: Readonly<Record<DestinationListKey, boolean>>;
   readonly failures: Readonly<Partial<Record<DestinationListKey, GeographyReadFailure>>>;
+  /**
+   * Whether the CURRENT generation of that stage completed successfully. A successful EMPTY read is
+   * settled (known empty), while a pending/failed/not-started stage is not.
+   */
+  readonly settled: Readonly<Record<DestinationListKey, boolean>>;
 }
 
 /** The strict adapter contract (the real one is `loadGeographyOptions`). */
@@ -60,6 +65,7 @@ export function emptyDestinationReadState(): DestinationReadState {
     lists: { countries: EMPTY_ROW, areas: EMPTY_ROW, cities: EMPTY_ROW, serviceAreas: EMPTY_ROW },
     loading: { countries: false, areas: false, cities: false, serviceAreas: false },
     failures: {},
+    settled: { countries: false, areas: false, cities: false, serviceAreas: false },
   };
 }
 
@@ -101,8 +107,12 @@ export function createDestinationReadCoordinator(
     cities: { key: null, token: 0, controller: null },
     serviceAreas: { key: null, token: 0, controller: null },
   };
-  /** `${languageId}|${countryId}` -> verified area id set of that exact branch (empty set = known empty). */
-  const verifiedAreas = new Map<string, ReadonlySet<string>>();
+  /**
+   * Parent evidence of the CURRENT areas generation only. A re-entered country/language starts a
+   * fresh areas read, which invalidates this evidence immediately, so a cached set can never
+   * discharge a new prerequisite (A -> B -> A must wait for the fresh A areas read).
+   */
+  let areasEvidence: { readonly key: string; readonly ids: ReadonlySet<string> } | null = null;
 
   let context: DestinationReadContext = IDLE_CONTEXT;
   let disposed = false;
@@ -127,6 +137,11 @@ export function createDestinationReadCoordinator(
     state = { ...state, failures };
   }
 
+  function setSettled(name: DestinationListKey, value: boolean): void {
+    if (state.settled[name] === value) return;
+    state = { ...state, settled: { ...state.settled, [name]: value } };
+  }
+
   function abortStage(name: DestinationListKey): void {
     stages[name].controller?.abort();
     stages[name].controller = null;
@@ -140,6 +155,8 @@ export function createDestinationReadCoordinator(
     setList(name, EMPTY_ROW);
     setLoading(name, false);
     setFailure(name, null);
+    setSettled(name, false);
+    if (name === "areas") areasEvidence = null;
   }
 
   function holdStage(name: DestinationListKey, key: string, loading: boolean): void {
@@ -148,6 +165,7 @@ export function createDestinationReadCoordinator(
     stages[name].token += 1;
     setList(name, EMPTY_ROW);
     setFailure(name, null);
+    setSettled(name, false);
     setLoading(name, loading);
   }
 
@@ -160,6 +178,7 @@ export function createDestinationReadCoordinator(
     setList(name, EMPTY_ROW);
     setLoading(name, true);
     setFailure(name, null);
+    setSettled(name, false);
     return { token: stages[name].token, signal: controller.signal };
   }
 
@@ -196,6 +215,8 @@ export function createDestinationReadCoordinator(
     setList(name, EMPTY_ROW);
     setLoading(name, false);
     setFailure(name, failure);
+    setSettled(name, false);
+    if (name === "areas") areasEvidence = null;
   }
 
   function apply(name: DestinationListKey, token: number, key: string, outcome: GeographyReadOutcome): void {
@@ -206,23 +227,28 @@ export function createDestinationReadCoordinator(
     if (outcome.state === "ok") {
       setList(name, outcome.options);
       setFailure(name, null);
+      setSettled(name, true);
     } else {
       setList(name, EMPTY_ROW);
       setFailure(name, outcome.failure);
+      setSettled(name, false);
     }
 
     if (name === "areas") {
       if (outcome.state === "ok") {
-        // A successful read — including a legitimately EMPTY catalog — is the verified area set.
-        verifiedAreas.set(key, new Set(outcome.options.map((option) => option.id.toLowerCase())));
+        // A successful CURRENT read — including a legitimately EMPTY catalog — is the parent evidence.
+        areasEvidence = { key, ids: new Set(outcome.options.map((option) => option.id.toLowerCase())) };
         if (citiesKey() === `${key}|`) {
           // Country-wide cities waited for exactly this prerequisite.
           const inFlight = stages.cities.controller !== null && state.loading.cities;
           if (!inFlight) startCities();
         }
-      } else if (citiesKey() !== null && citiesKey() === `${key}|`) {
-        // Prerequisite failure: cities stay untrusted; no country-wide read is attempted.
-        failStage("cities", citiesKey() as string, outcome.failure);
+      } else {
+        areasEvidence = null;
+        if (citiesKey() !== null && citiesKey() === `${key}|`) {
+          // Prerequisite failure: cities stay untrusted; no country-wide read is attempted.
+          failStage("cities", citiesKey() as string, outcome.failure);
+        }
       }
     }
     emit();
@@ -246,6 +272,9 @@ export function createDestinationReadCoordinator(
       resetStage("areas");
       return;
     }
+    // A NEW areas generation invalidates the previous parent evidence immediately, even for the same
+    // language|country (A -> B -> A must wait for the fresh A read).
+    areasEvidence = null;
     const gate = beginStage("areas", key);
     void read(
       { kind: "AdministrativeArea", languageId: context.languageId, countryId: context.countryId ?? undefined },
@@ -262,8 +291,9 @@ export function createDestinationReadCoordinator(
       return;
     }
     if (normalize(context.administrativeAreaId) === null) {
-      const prerequisite = verifiedAreas.get(`${languageKey()}|${normalize(context.countryId)}`);
-      if (prerequisite === undefined) {
+      // Parent evidence is bound to the CURRENT areas generation only.
+      const prerequisite = areasEvidence;
+      if (prerequisite === null || prerequisite.key !== areasKey()) {
         holdStage("cities", key, true);
         return;
       }
@@ -274,7 +304,7 @@ export function createDestinationReadCoordinator(
           languageId: context.languageId,
           countryId: context.countryId ?? undefined,
           administrativeAreaId: null,
-          knownAdministrativeAreaIds: prerequisite,
+          knownAdministrativeAreaIds: prerequisite.ids,
         },
         gate.signal,
       )

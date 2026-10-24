@@ -174,6 +174,86 @@ export function optionDisplayName(option: GeographyOption, unavailableName: stri
   return label.length > 0 ? label : unavailableName;
 }
 
+const EVIDENCE_LEVELS = ["countries", "areas", "cities", "serviceAreas"] as const;
+
+/** The CURRENT rows the picker actually holds (language/context scoped evidence, never a cache). */
+export interface DestinationRowEvidence {
+  readonly lists: Readonly<Record<(typeof EVIDENCE_LEVELS)[number], readonly GeographyOption[]>>;
+  readonly settled: Readonly<Record<(typeof EVIDENCE_LEVELS)[number], boolean>>;
+}
+
+function currentRow(rows: readonly GeographyOption[], id: string): GeographyOption | null {
+  const target = id.toLowerCase();
+  return rows.find((row) => row.id.toLowerCase() === target) ?? null;
+}
+
+function sameId(left: string | null, right: string): boolean {
+  return left !== null && left.toLowerCase() === right.toLowerCase();
+}
+
+/**
+ * The ONE Add eligibility of the staged terminal, computed from the CURRENT verified rows.
+ *
+ * Staged flags alone are not evidence: a row chosen under an old language/context, a row whose parent
+ * is absent or inactive in the current generation, or a path whose prerequisite is still pending or
+ * failed cannot be added. Country-wide non-null city parents are matched to a current ACTIVE area row
+ * even when no administrative filter is selected; a null-admin city stays lawful on a verified
+ * country-wide read. Only the required terminal path is inspected, so an unrelated child failure does
+ * not block a Country/AdministrativeArea terminal.
+ *
+ * @param choice The staged choice.
+ * @param evidence The picker's current rows plus which stages settled successfully.
+ */
+export function destinationAddEligibility(
+  choice: DestinationChoice,
+  evidence: DestinationRowEvidence,
+): boolean {
+  if (choice.country === null || !evidence.settled.countries) return false;
+  const countryRow = currentRow(evidence.lists.countries, choice.country.id);
+  if (countryRow === null || !countryRow.isActive || countryRow.parentId !== null) return false;
+
+  const terminal = choiceTerminal(choice);
+  if (terminal === null) return false;
+  if (terminal.kind === "Country") return true;
+
+  // The required terminal path always contains the administrative area when it is staged.
+  let areaRow: GeographyOption | null = null;
+  if (choice.administrativeArea !== null) {
+    if (!evidence.settled.areas) return false;
+    areaRow = currentRow(evidence.lists.areas, choice.administrativeArea.id);
+    if (areaRow === null || !areaRow.isActive) return false;
+    if (!sameId(areaRow.parentId, countryRow.id)) return false;
+  } else if (terminal.kind === "AdministrativeArea") {
+    return false;
+  }
+
+  if (terminal.kind === "AdministrativeArea") return true;
+
+  if (choice.city === null || !evidence.settled.cities) return false;
+  const cityRow = currentRow(evidence.lists.cities, choice.city.id);
+  if (cityRow === null || !cityRow.isActive) return false;
+
+  if (areaRow !== null) {
+    // Explicit area filter: exactly that parent, never a null-parent contradiction.
+    if (!sameId(cityRow.parentId, areaRow.id)) return false;
+  } else {
+    // Country-wide branch: verified evidence must exist; a non-null parent must be a CURRENT ACTIVE area.
+    if (!evidence.settled.areas) return false;
+    if (cityRow.parentId !== null) {
+      const parentRow = currentRow(evidence.lists.areas, cityRow.parentId);
+      if (parentRow === null || !parentRow.isActive) return false;
+      if (!sameId(parentRow.parentId, countryRow.id)) return false;
+    }
+  }
+
+  if (terminal.kind === "City") return true;
+
+  if (choice.serviceArea === null || !evidence.settled.serviceAreas) return false;
+  const serviceRow = currentRow(evidence.lists.serviceAreas, choice.serviceArea.id);
+  if (serviceRow === null || !serviceRow.isActive) return false;
+  return sameId(serviceRow.parentId, cityRow.id);
+}
+
 /**
  * Composes the baseline `destinationFacts` resolver with the operation-local verified picks.
  *

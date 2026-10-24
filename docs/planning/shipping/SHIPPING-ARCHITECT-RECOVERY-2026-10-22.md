@@ -6,7 +6,22 @@
 
 تنها **TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R2**،parent204-R1،20دقیقه/stop14: freshcontextparentprerequisite،countrywideactualactiveparent،currentgenerationAddguard+smallstrictdecoderpredicate؛no newfeature/backend/schema/broadtest/proofloop. تا نتیجه204-R2 تسکدیگری صادر نشود؛سپسreviewوvisual/livevalidationمحدود.199/200/201/202/203بسته‌نهreplay؛ProductionPENDING؛TB185paused/defaultOFF/PendingAllocationمحفوظ. اینبخش برpointerقدیمی مقدم است.
 
-## مرجع جاری: 204-R1 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-24
+## مرجع جاری: 204-R2 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-24
+
+**TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R2** (parent204-R1) از base `65d1842c5ab889a10815b7d03c29cf1713fb4aba`
+اجرا و به Bridge گزارش شد؛ **Architect-accepted نیست**. نتیجه:
+[docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R2/RESULT.md](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R2/RESULT.md).
+`verifiedAreas` map حذف شد؛ evidence اکنون یک رکورد نسل‌محور است که با شروع هر areas جدید (حتی همان
+`language|country`) پاک می‌شود و city کشورگرد فقط وقتی پذیرفته می‌شود که key آن با areas جاری برابر باشد؛
+state یک `settled` صریح گرفت (موفقیت خالی هم settled است، begin/hold/reset/failure نه). Add با helper واحد
+`destinationAddEligibility(choice, currentEvidence)` گیت می‌شود که canAdd و handler (از `coordinator.getState()`)
+هر دو از آن استفاده می‌کنند: membership/فعال‌بودن از ردیف‌های جاری، parent واقعی city کشورگرد باید ردیف
+active جاری باشد، null-admin روی read تأییدشده lawful، service فقط از city تأییدشده، و Country با خطای
+فرزند نامرتبط بلاک نمی‌شود. adapter نیز filter صریح را اول چک می‌کند و نبودِ known set را fail-closed
+می‌داند (مجموعه خالی تأییدشده null-admin را مجاز نگه می‌دارد).
+8 تست جدید + 12 coordinator + 9 group fact = 29/29، typecheck و 7 guard سبز؛ root68/nested/source-size
+عمداً اجرا نشد؛ mounted/browser/Visual NOTRUN. production/visual/live PENDING؛ فقط پس از review204-R2.
+
 
 **TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R1** (parent204) از base `5eaf479417a1d771f6c428f242e901e35b2d76f3`
 اجرا و به Bridge گزارش شد؛ **Architect-accepted نیست** و گام بعدی مجاز نیست. نتیجه:
