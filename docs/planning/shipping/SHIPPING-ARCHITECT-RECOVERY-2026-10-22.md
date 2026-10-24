@@ -16,6 +16,21 @@ Architect fixturesاجراکرد: nulladminparent متن"null" است؛group1cou
 تنها **TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R1**،parent205،30دقیقه/stop22؛reusecommittedharness/knownstartup؛fixtureهایقانونی+typelookup/shellwhitelist grounded وfailclosed؛interactionواقعی+4FAENdesktop/mobilecaptures. نهproductionfix/Nodeproofreplay/newframework یاsetuploop. setup<=5min؛اگرنشدexactBLOCKED. sharedapps/DBبدونتغییر؛syntheticinterceptedPUTفقط؛no merchantwrite.
 تا نتیجه205-R1 تسکدیگری صادرنشود.199/200/201/202/203/204بسته‌نهreplay؛ProductionPENDING؛TB185paused/defaultOFF/PendingAllocationمحفوظ. اینبخش مقدم برpointerتاریخی.
 
+## 205-R2 اجرا شد: PASS محدود — منتظر بازبینی Architect، بدون پذیرش — 2026-10-24
+
+**TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R2** از base `0c8f2803462442b8eda8aa51823420f196d7519f`
+اجرا و به Bridge گزارش شد؛ **Architect-accepted نیست**. نتیجه:
+[docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R2/RESULT.md](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R2/RESULT.md).
+سناریوی آمادهٔ Architect بدون تغییر استفاده شد (یک preflight PASS). روی مسیر واقعی: نام FA/EN ویرایش و پس از
+switch حفظ شد، فقط پایان دوشنبه→18:15 با شروع دست‌نخورده، یک گروه جدید با عنوان «گروه آزمایشی» و کشور آلمان
+و ردیف 0.50/0.00/1..2، سپس **Apply**: PUT نگه‌داشته‌شده با `assertScenarioRequest` **PASS** (expectedRevision7،
+هر دو گروه/ردیف/ارز حفظ‌شده، توکن‌های خام `0.50`/`1850000.00`، هفتهٔ کامل با start `09:00:00.500`)، کلیک دوم
+روی کنترل `در حال ذخیره…` درخواست دوم نساخت (**putCount=1**)، سپس پاسخ آماده → view با revision8، هر سه گروه و
+هفتهٔ adopted، و **بدون GET بعد از ذخیره**. چهار+دو شات با کوکی `tooba_locale` و reload واقعی: FA/RTL و EN/LTR
+(‏`lang/dir` تأییدشده) در 1440×900 و 390×844. گپ‌های باقی‌مانده صریح‌اند: blank-name/discard، 409/transport/
+reconcile، ماتریس کامل geography و move/remove اجرا نشد؛ A–E کامل ادعا نمی‌شود. Production/DB/flag NONE؛
+3517/9555 آزاد و `:3000` دست‌نخورده.
+
 ## 205-R1 اجرا شد: PARTIAL — منتظر بازبینی Architect، بدون پذیرش — 2026-10-24
 
 **TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R1** از base `be286fcb788aee83c3fd5733221065bc470d1e15`
