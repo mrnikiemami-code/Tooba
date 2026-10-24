@@ -1,0 +1,82 @@
+BEGIN_TOOBA_WORKER_RESULT
+TASK: TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1
+PARENT: TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209
+CHANNEL: tooba-main
+WORKER: tooba-worker-01
+AGENT: cursor
+BASE: 4d4929a297b0f3f717a649e41f46939d93828e06
+COMMIT: 893f35bfd1b6b5ec1f02f81637fb4526ad1a3e80
+PUSH: origin/main fast-forward, HEAD == origin/main, clean scoped tree
+VERDICT: READY_FOR_ARCHITECT_REVIEW (no user Visual ACCEPT, no production acceptance)
+STATUS: COMPLETED
+
+SUMMARY
+Bounded presentation + error-placement repair in the same feature. No backend, schema, seed, migration,
+catalog, type or draft write; the real rev2 draft and runtime were preserved.
+
+1) TRUTHFUL VIEW (review defect #1)
+- New RateRowSummary renders each stored row as text (condition, freight, packaging, delivery range);
+  the groups editor branches `editable ? RateRowEditor : RateRowSummary`, so view cannot build an
+  editable row. Group title in view is text; add/remove/move/area/row controls all sit behind `editable`.
+- Handler-boundary guard: `mutationBlocked.current = mode !== "edit" || session.save === "saving" ||
+  session.reconcile === "pending"`, and commit/pushEdits/changeRow/addRow/removeRow/addGroup/removeGroup/
+  moveGroup/changeGroupTitle/addGroupArea/removeGroupArea/changeWeek all return early via blockedNow().
+  Panels also receive editable={!readOnly && !busy}.
+- Measured live: Regions panel in view has 0 input/select/textarea/button; one read-only row.
+
+2) COMPACT PROFESSIONAL FORM (defect #2)
+- General: duplicate type card gone (state line only when the select cannot express it; measured 0
+  type-state cards), owner is one plain line, name/description 862px inside an 896px column, type select
+  384px, screen container max-w-6xl (1072px at 1440).
+- Rates: 4 primary fields (freight, packaging, delivery min/max; measured 247.25px x4 at 1440) instead of
+  ten narrow axes; optional weight/count/merchandise in a labelled <details> whose summary always shows
+  the active condition (weight 1000-2000 visible while collapsed); opening/closing has no value path.
+- No text-[10px] remains in this feature UI; labels 12px, rate inputs 14px/min-h-9, read row 12px.
+- 390px: scrollWidth == innerWidth (390), no overflow; summary collapses to one 280px column.
+
+3) EXACT ERROR PLACEMENT (defects #3/#4)
+- Server error mapping rewritten around segment ownership: regionGroups[i].rows[j].minDeliveryDays ->
+  that RATE ROW (testId rate-min-days, row index kept for focus), never weeklySchedule; description ->
+  description, not name.
+- Reasons only from exact registered codes (shipping.schedule.timezone.required vs .invalid vs
+  shipping.validation.schedule_timezone_id_invalid; rate amount/duration/condition/row codes).
+  Unknown codes -> fieldRejectedServer; no substring-invented nameRequired/timeInvalid/typeUnavailable.
+- Placement per owning field (name/description Field error, settings fieldset, week timezone + day list,
+  RateRowEditor.serverError by row index); banner summary entries focus the exact element, resolving row
+  repeats by index; raw codes moved to collapsed diagnostics (`shipping-authoring-save-diagnostics`).
+- time-zone-options comment corrected: hand-kept suggestion list, not market-derived, stored ids never
+  silently defaulted.
+- Conflict/unknown-transport semantics, raw text, epoch, one Apply and no auto-retry untouched.
+
+VALIDATION
+- npm run typecheck: clean.
+- user-trial-209-r1.test.ts: 10/10 pass (description ownership, nested delivery->rate row, row focus
+  mapping, required vs invalid timezone, unknown-code honesty, diagnostics, view/guard source facts,
+  disclosure has no mutation path, honest timezone comment).
+- user-trial-209.test.ts updated to the R1 contract: 6/6 pass. No full suite / backend loop.
+
+LIVE MOUNTED INSPECTION (read-only, no write)
+Route /admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=view on FE :3000 with
+Host :5088 untouched; only real reads observed (editor-document, authoring-types). Stored values
+unchanged before/after (type عادی, name پیشتاز, IRR, ایران, freight 120000.00, packaging 5000.00, weights
+1000-2000, delivery 1-3, week Asia/Tehran Monday 09:00-17:00). Edit -> local freight 999999 ->
+«انصراف از ویرایش» -> «خروج بدون ذخیره» -> view restored 120000.00 with 0 row inputs. No Apply, no
+PUT/PATCH/DELETE, no domain mutation.
+
+ARTIFACTS
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1/RESULT.md
+- .../screenshots/{regions-view-1440, general-edit-1440, regions-edit-conditions-open-1440,
+  regions-view-390}.png (synthetic/dev content only)
+- docs/architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209/RESULT.md: appended correction
+  (live save accepted, visual incomplete, 63-vs-45 timing contradiction acknowledged; history preserved).
+
+HONEST LIMITS
+- No live save replay: server-rejection rendering is proven by unit tests and source, not a fresh real
+  rejected PUT.
+- General view still uses disabled (not text) inputs; the text-only treatment was applied to Regions and
+  the type summary, which were the concrete review complaints.
+- Browser interactions were DOM-driven, not physical input; "no write" is worker observation.
+- Timebox: claim 19:15:43Z, implementation stop ~19:34Z, finish ~19:52Z => ~37 min vs the 30-min hardbox
+  (~7 min over, one correction round). Reported, not relabelled.
+- No user Visual ACCEPT, no activation/readiness, no production-functional acceptance.
+END_TOOBA_WORKER_RESULT
