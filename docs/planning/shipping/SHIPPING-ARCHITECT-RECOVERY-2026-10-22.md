@@ -1,3 +1,15 @@
+﻿## CURRENT — 210-R1 posted / awaiting Architect review — 2026-10-25
+
+210-R1 finished exactly the three review items, frontend only. ui/authoring-week-editor.tsx: narrow screens
+render TWO lines per day (day+status, then a paired equal-width From/To line with visible localized labels)
+instead of three; each bound is a <label> whose accessible name is "<weekday> From/To"; view mode is
+truthful per column (Status = «روز کاری»/«تعطیل» text, From/To = stored bounds, a closed day shows an honest
+dash) with zero inputs and no duplicated formatted range. Desktop 210 geometry is retained exactly
+(day 481/607, status 457, start 209/120, end 81/120; all seven rows identical, header matches).
+Evidence at docs/architecture/evidence/TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210-R1/ now contains REAL
+390x844 viewport bytes with the week scrolled into view (the 210 file defect is not repeated) plus a bounded
+EN/LTR cookie check. No Apply/HTTP write/migration; stored 120000.00/5000.00 unchanged; typecheck clean.
+Active task: NONE. Next task: NONE — await Architect review; User Visual ACCEPT PENDING.
 ## CURRENT — 210 desktop accepted; only 210-R1 mobile week completion — 2026-10-25
 
 Architect viewed all four210 PNGs and source. Desktop common widths/tab geometry/seven row columns accepted within scope; User Visual ACCEPT remains PENDING after prior10/20 rejection.
