@@ -1,3 +1,11 @@
+## مرجع جاری: 206 اجرا شد — BLOCKED روی باینری قدیمی Host — 2026-10-24
+
+**TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206** روی base `8fcd9df9e44f7bc283e0e6ccf0c6cd95d9b0d8c2` اجرا و به Bridge تحویل شد؛ [RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206/RESULT.md).
+نتیجه: **BLOCKED_STALE_BACKEND_BINARY**. Host واقعی روی `5088` (PID24304، باینری ساخته‌شده 2026-10-22 06:41) و FE مشترک روی `3000` سالم‌اند، اما `/v1/admin/shipping-services/authoring-drafts` و `authoring-types` هر دو **404 route-not-found** می‌دهند (هم مستقیم، هم از rewrite واقعی `:3000`)، در حالی که main فعلی این مسیرها را در `ShippingEndpointModule.cs:33` ثبت می‌کند و منبع `ShippingAuthoringDraftEndpoints.cs` آخرین‌بار در `be639a473` (2026-10-23 02:15) تغییر کرده — یعنی باینری در حال اجرا قدیمی‌تر از مسیرهاست. مسیر قدیمی‌تر `/v1/admin/shipping-services` هنوز 401 می‌دهد (route در باینری هست، auth برقرار)، پس 404 نه auth است نه connection نه schema نه داده خالی نه proxy. موجودیت draft/binding تا rebuild **UNKNOWN** است، نه «0 draft».
+همه بررسی‌ها read-only واقعی بودند؛ PUT/POST/PATCH/DELETE=0؛ هیچ mock/interception، هیچ migration/seed، هیچ build/restart، هیچ تغییر shared port/process.
+کوچک‌ترین repair (خارج از bounds این تسک): rebuild+restart کنترل‌شده Host از main در پنجره مجاز، با تأیید صریح درباره migration در startup (وضعیت migration عمداً بررسی نشد)، سپس همان سه GET read-only و بعد trial mounted.
+ProductionPENDING، live write PENDING، Stop-State STOP_FOR_ARCHITECT، Automatic-Next-Task NONE. تا review این نتیجه تسک دیگری صادر نشود.
+
 ## تسک جاری: 206 اتصال واقعی پیش‌نویس موجود — 2026-10-24
 
 کاربر پس از پذیرش205-R3 صریحاً خواست قبل از تست خودش اتصال واقعی بررسی شود و سریع تحویل بگیرد.
