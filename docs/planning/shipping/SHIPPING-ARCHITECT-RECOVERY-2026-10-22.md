@@ -1,3 +1,18 @@
+## 205 اجرا شد: PARTIAL — منتظر بازبینی Architect، بدون پذیرش — 2026-10-24
+
+**TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205** از base `b7f7ead6df5129a9b0a62ee201592c4a2888f1ae`
+اجرا و به Bridge گزارش شد؛ **Architect-accepted نیست**. نتیجه:
+[docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205/RESULT.md](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205/RESULT.md).
+وضعیت **PARTIAL** صادقانه: runtime تک‌وظیفه‌ای frontend-only روی `127.0.0.1:3517` (کپی task-owned با
+junction روی node_modules، `.env.local` جایگزین‌شده با `TOOBA_HOST_ORIGIN=http://127.0.0.1:1`، بدون install)
+و Chrome نصب‌شده headless با CDP آماده شد؛ مسیر واقعی `/admin/shipping-services/authoring/<guid>?mode=edit`
+mount و رندر شد و همهٔ `/v1` با `Fetch` روی whitelist synthetic پاسخ گرفت و بقیه محلی fail شد
+(editor GET=2، countries=4، PUT=0، blocked=6). سناریوهای A–E و بازبینی بصری FA/EN دسکتاپ/موبایل
+اجرا **نشدند**: کل بودجهٔ ۳۰ دقیقه صرف bring-up و یک نقص BOM در harness شد. بنر
+«بررسی پیش‌نویس ناموفق بود» به‌احتمال زیاد واکنش fail-closed به سه read shell مسدودشده است و هیچ
+نقص محصولی ادعا نمی‌شود. Production/DB/flag NONE؛ tsc-as-visual ممنوع؛ هیچ فایل production تغییر نکرد.
+پورت 3517/9555 آزاد و dev سرور قبلی `:3000` دست‌نخورده. تا نتیجهٔ 205 تسک دیگری صادر نشود.
+
 ## مرجع جاری: 204 ازطریقR2 پذیرفته / فقط205 مرورگر — 2026-10-24
 
 204-R2 در `ec957367fadd94ceb14045e1b013d2ec308bade2` برایgroup/destination **ACCEPT**؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R2/ARCHITECT-REVIEW.md). mainپسازکد `eb93df3be7000fe1e5bff3a51c767a1ac335b753` فقطpost-resultartifact دارد. freshparentgeneration/currentactiveeligibility/strictdecoder بسته. Architect دوreproقدیمی را مستقلNodePASS اجراکرد؛8new/29focused/tsc/7guards گزارشworker،نهrerun. beginStage settledfix productionبوده ثبتشد. mounted/browser/visual/liveهنوزNOTRUN.
