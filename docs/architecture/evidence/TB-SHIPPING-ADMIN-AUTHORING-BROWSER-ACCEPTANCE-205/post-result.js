@@ -1,4 +1,4 @@
-/* Posts the TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205 worker result to Bridge (complete contract only). */
+﻿/* Posts the TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205 worker result to Bridge (complete contract only). */
 const content = `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205
@@ -96,6 +96,10 @@ Task-owned identities removed on exit: harness node (PID 13332), the next dev :3
 Chrome under chrome-profile; ports 3517 and 9555 verified free afterwards and the pre-existing :3000
 dev server untouched. The temporary tree D:\\temp\\tb205-runtime is not committed.
 
+Code-SHA: 926c3a6c397d0d0bd83d9bd494c6ef0ecb08a7d4
+Evidence-SHA: 926c3a6c397d0d0bd83d9bd494c6ef0ecb08a7d4
+HEAD-Origin-Parity: HEAD == origin/main == 926c3a6c397d0d0bd83d9bd494c6ef0ecb08a7d4 (fetch verified)
+
 Parity: local commit pushed to origin/main, then fetch; HEAD == origin/main.
 END_TOOBA_WORKER_RESULT`;
 
@@ -105,3 +109,4 @@ const res = await fetch("http://127.0.0.1:17321/api/results", {
   body: JSON.stringify({ taskId: "TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205", channelId: "tooba-main", workerId: "tooba-worker-01", content })
 });
 console.log(res.status, await res.text());
+
