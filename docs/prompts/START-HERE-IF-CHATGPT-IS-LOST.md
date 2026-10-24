@@ -1,6 +1,13 @@
 ﻿# Tooba — Bridge-Wake-V1 Recovery Start
 
-## Current Shipping recovery — 2026-10-24
+## Current task — Shipping206 — 2026-10-24
+
+Only issued task: TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206.
+Read the TOP canonical Shipping recovery and AGENTS. Real existing-draft read-only readiness,
+20min/stop14; await its result before another task. Prior USER_TRIAL/NONE checkpoint is superseded.
+No replay of accepted190–205, no merchant writes/migrations/shared restart.
+
+## Prior Shipping checkpoint — 2026-10-24
 
 Read the TOP checkpoint in [SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md](../planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md), then its 205-R3/R2 Architect reviews and root AGENTS.md.
 Last Architect acceptance: TB205-R3; acceptance commit `750b4d73e1e3561d53ddd7b2e7170136e2933f5a`.

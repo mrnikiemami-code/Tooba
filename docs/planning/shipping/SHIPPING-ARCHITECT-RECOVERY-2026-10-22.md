@@ -1,3 +1,15 @@
+## تسک جاری: 206 اتصال واقعی پیش‌نویس موجود — 2026-10-24
+
+کاربر پس از پذیرش205-R3 صریحاً خواست قبل از تست خودش اتصال واقعی بررسی شود و سریع تحویل بگیرد.
+**Only active/issued task: TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206**؛ parent205-R3؛ mode BOUNDED_REAL_ENVIRONMENT_EXISTING_DRAFT_READ_ONLY_HANDOFF.
+20دقیقه hardbox، stop-new-work14؛ reuse installed tooling، بدون proof replay. تا نتیجه206 تسک دیگری صادر نشود.
+هدف: تشخیص runtime/backend/auth واقعی، خواندن لیست و binding دقیق یک draft مجاز، GET document/types واقعی و mount route بدونmock؛ خروجی URL آماده تست read-only یا اولین blocker دقیق و کوچک‌ترین repair.
+هیچ merchant write، ساخت draft، seed، migration، shared process restart، packageinstall، broadbuild/suite یا production code change مجاز این task نیست.
+Historical FE3000/Host5088 فقط hint؛ readiness قبلی205 synthetic بود. اگر draft/runtime/auth/schema وجود ندارد، BLOCKED همان لایه با شاهد؛ نتیجه سبز جعل نشود.
+تسک دانلودی به worker از pipeline معمول تحویل می‌شود؛ این ثبت به معنای claim/start worker نیست.
+بعد از نتیجه: Architect review؛ green → exact URL برای user trial با live write PENDING؛ blocked → یک repair محدود مبتنی بر علت واقعی، نه بازکردن190–205.
+Latest accepted stage205-R3 در750b4d73e1؛ accepted ledger زیر محفوظ. این بخش بر Active task=NONE قدیمی مقدم است.
+
 ## نقطه شروع قطعی چت جدید — 2026-10-24 — SHIPPING USER TRIAL
 
 این بخش مرجع وضعیت جاری است؛ تمام «تسک فعال/منتظر نتیجه» در بخش‌های پایین تاریخچه‌اند. چت جدید نباید از روی آن‌ها کار جدید یا تکراری صادر کند.

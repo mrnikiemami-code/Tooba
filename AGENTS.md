@@ -1,6 +1,16 @@
 # Tooba — Agent Rules
 
-## START HERE — Shipping checkpoint 2026-10-24
+## CURRENT ISSUED TASK — 206 — 2026-10-24
+
+Only active/issued task: TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206, parent205-R3.
+User authorized continuing REAL existing-draft connectivity/read-only readiness before their trial.
+20min hardbox, stop14. Read real runtime/auth/list/document/types and mount without mocks;
+deliver usable route or first concrete blocker. No merchant writes, draft creation, migrations,
+shared restarts, broad build/tests or production changes. Await206 result; do not replay190–205.
+Issued is not claimed/started; worker lifecycle must establish that separately.
+This block supersedes all historical NONE/await-user statements below.
+
+## Prior checkpoint — Shipping checkpoint 2026-10-24
 
 Read only the TOP current checkpoint first in
 `docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md`, then the
