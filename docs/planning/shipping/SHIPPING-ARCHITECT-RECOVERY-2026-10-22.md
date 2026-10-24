@@ -1,3 +1,29 @@
+## مرجع قطعی چت جدید:209-R2 پذیرفته؛ اکنون تست کاربر —2026-10-25
+
+**Architect ACCEPT_BOUNDED_NESTED_RATE_ERROR_REPAIR / READY_FOR_USER_RETEST**؛sourcecebc455147e779245c7317a2106afce041e885e5؛[reviewR2](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R2/ARCHITECT-REVIEW.md).
+mainپیشreview0011d86fفقطpostresult/contractبعدی،اجرانشد.
+**Current phase USER_RETEST_LOCAL_LIVE_EDITOR. Active task=NONE؛awaiting result=NONE؛next task=NONE. کاربرراالانبرایretestصدابزن؛تسکاثباتی/visualجدیدخودکارنساز.**
+
+URLواقعی:
+http://127.0.0.1:3000/admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=view
+
+### چه چیزهایی انجام شده
+
+208:9migrationمحلیاعمال،Hostجدید5088وFE3000متصل،خواندنواقعی؛پذیرشفقطread.
+209:ذخیرهواقعی+GET+reloadپذیرفته؛typeواقعیعادی/nameپیشتاز/محدودهIran/IRRfees120000و5000/weight1000–2000گرم/delivery1–3/AsiaTehranMonday09–17درrev2snapshot. کشورنامدار/zonevalidselect/خطایtimezoneعلتروشن.
+209-R1:Architectهر4PNGراواقعاًدید؛RegionsVIEWبدونinputs/delete،Generalدوبلtypeحذف،4feeprimary+optionalconditions،discardمحلیبدونwrite. userVisualACCEPTهنوزنداده.
+209-R2:groupIndex+rowIndexدقیقبرایrateerrors/dedup/selector،openingفقطdetailsوالد؛focused26/typecheckworkerreported؛browser/writeتکرارنشده. Rootrelatedknownrateinputscopeپذیرفتهنههمهخطاها.
+
+### وضعیت حفظ‌شده و حدادعا
+
+Draftوrevisionراresetنکن؛rev2مشاهدهقبلیاست،اگرکاربرتغییردادهactualread. HostآخرینمشاهدهPID10800،`D:\temp\tb207-build\out\Tooba.Host.exe`،launcher`D:\temp\tb208-host\run-host.cmd`؛FE3000آخرPID19108؛اولfreshprocessverifyاگرURLقطعشد،نهmigrate/buildازاول.
+مجوزصریحuserبرایdevnonproductionمهاجرت/Hoststartup/repairمحفوظ؛همینکارهادوبارهapprovalنمی‌خواهد. نهDBreset/drop/unrelateddelete/externalproduction.
+Limits:group-levelerrorهنوزsummary-onlyوgroupcontainerfocusاثباتنشده؛rateindicesبعدreorderبعدerrorشناسهپایدارنیست؛pickerهنوز4levelنمایش؛Generalviewdisabledinputs. این‌هاreviewثبتشده‌اند،بهخودیتسکجدیدنساز.
+R1زمان37>30وR2~12>10/stopimplementation~8>6انحراف‌اندنهPASStime. UserVisual/Production/fullShipping/quote/activation/wholemethodcreate/certificationPENDING.
+بعدtestفقطfeedbackواقعیبررسیورفعمحدود؛190–209replayممنوع،proofloopممنوع،TB185paused/defaultOFF/PendingAllocationمحفوظ. تمامpointerهایپایینتاریخچه‌اند.
+
+---
+
 ## مرجع جاری:209-R1 ظاهر/مشاهده پذیرفته؛ فقطخطایمحدوده209-R2 —2026-10-24
 
 209-R1commit893f35bf/mainb79669a1(postresult+contractonly)؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1/ARCHITECT-REVIEW.md). Architectهر4PNGراواقعاًدید:RegionVIEWtextبدونcontrols،Generaltypecardدوبلندارد،4feeprimary+optionalconditions،mobileviewخواناتر. پذیرشمحدودبرایretestنهuserVisualACCEPT. liveSave209rev2محفوظ؛R1هیچwriteنکرد.

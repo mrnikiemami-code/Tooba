@@ -1,5 +1,20 @@
 ﻿# Tooba — Bridge-Wake-V1 Recovery Start
 
+## CURRENT HANDOFF —209-R2 ACCEPTED / USER RETEST —2026-10-25
+
+Read TOP canonical Shipping recovery and209-R2/ARCHITECT-REVIEW.md first after chat loss.
+209-R2 sourcecebc455147e779245c7317a2106afce041e885e5 accepted for bounded nested-rate error placement.
+Live save/readback209 and visual/view/discard repairR1 remain accepted within their limits.
+Active task NONE; awaiting worker result NONE; next task NONE. Call user for retest NOW; no proof-loop task.
+URL http://127.0.0.1:3000/admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=view
+Preserve actual user data/revision and Host5088/FE3000; no reapply/rebuild/reset as routine recovery.
+User Visual ACCEPT/production/quote/activation/full-method-create not claimed.
+Group-level banner/focus, index-after-reorder and picker/General-view presentation limits are in review.
+Explicit local-dev authorization persists, no repeated approval. Await actual user feedback.
+Older CURRENT/TASK headings below are historical and superseded.
+
+
+
 ## CURRENT TASK —209-R2 / exact nested error targeting only —2026-10-24
 
 Only issued TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R2,parent209-R1;10min/stop6.
