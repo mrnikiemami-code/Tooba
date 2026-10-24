@@ -103,7 +103,9 @@ export function AuthoringGeneralTab({
   const nameInvalid = active ? nameIssueLanguageIds.some((id) => id.toLowerCase() === active.languageId.toLowerCase()) : false;
 
   return (
-    <div className="grid max-w-4xl gap-4" data-testid="shipping-authoring-general-tab">
+    /* ONE inline-axis contract for both main panels: no inner max-width offset, so the General fields
+       and the Regions cards share the same outer edges and paddings. */
+    <div className="grid gap-4" data-testid="shipping-authoring-general-tab">
       <p className="text-xs text-gray-600">
         <span className="font-bold text-gray-900">{messages.ownerLabel}: </span>
         {document.owner.kind === "Marketplace"
@@ -113,13 +115,14 @@ export function AuthoringGeneralTab({
             : messages.ownerStore}
       </p>
 
-      <Field
-        id="authoring-type"
-        label={messages.typeLabel}
-        hint={messages.typeHint}
-        error={serverErrors?.type}
-      >
-        <div className="max-w-sm">
+      {/* Type sits on the same form axis as the name card below (same card padding and full width). */}
+      <section className="rounded-xl border border-border bg-surface-elevated p-3 md:p-4">
+        <Field
+          id="authoring-type"
+          label={messages.typeLabel}
+          hint={messages.typeHint}
+          error={serverErrors?.type}
+        >
           <Select
             value={selectedTypeValue}
             disabled={readOnly}
@@ -152,23 +155,23 @@ export function AuthoringGeneralTab({
             ))}
             <option value="">{messages.typeClearOption}</option>
           </Select>
-        </div>
-      </Field>
+        </Field>
 
-      {/* Only a state the select cannot show is stated once here: it never contradicts the choice. */}
-      {document.type.resolution === "Inactive" || document.type.resolution === "Missing" || typeChoicesState !== "ok" ? (
-        <p className="text-xs text-gray-600" data-testid="shipping-authoring-type-state">
-          {document.type.resolution === "Inactive"
-            ? messages.typeInactiveStored
-            : document.type.resolution === "Missing"
-              ? messages.typeMissingStored
-              : typeChoicesState === "loading"
-                ? messages.entryLoading
-                : typeChoicesState === "error"
-                  ? messages.entryFailed
-                  : messages.typeCatalogEmptyHint}
-        </p>
-      ) : null}
+        {/* Only a state the select cannot show is stated once here: it never contradicts the choice. */}
+        {document.type.resolution === "Inactive" || document.type.resolution === "Missing" || typeChoicesState !== "ok" ? (
+          <p className="mt-2 text-xs text-gray-600" data-testid="shipping-authoring-type-state">
+            {document.type.resolution === "Inactive"
+              ? messages.typeInactiveStored
+              : document.type.resolution === "Missing"
+                ? messages.typeMissingStored
+                : typeChoicesState === "loading"
+                  ? messages.entryLoading
+                  : typeChoicesState === "error"
+                    ? messages.entryFailed
+                    : messages.typeCatalogEmptyHint}
+          </p>
+        ) : null}
+      </section>
 
       <section className="rounded-xl border border-border bg-surface-elevated p-3 md:p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -186,9 +189,11 @@ export function AuthoringGeneralTab({
                   aria-pressed={selected}
                   data-testid={`shipping-authoring-content-language-${language.code}`}
                   className={
+                    // SAME box model in both states: border thickness + height never change on select,
+                    // so activating a language tab cannot shift the row geometry.
                     selected
-                      ? "inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground"
-                      : "inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-bold text-gray-700"
+                      ? "inline-flex min-h-8 items-center gap-1 rounded-lg border border-primary bg-primary px-2.5 text-xs font-bold text-primary-foreground"
+                      : "inline-flex min-h-8 items-center gap-1 rounded-lg border border-border bg-surface px-2.5 text-xs font-bold text-gray-700"
                   }
                   onClick={() => onContentLanguageChange(language.languageId)}
                 >
@@ -266,8 +271,9 @@ export function AuthoringGeneralTab({
         ) : null}
       </section>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <fieldset className="rounded-xl border border-border bg-surface-elevated p-3">
+      {/* Two independent settings, equal height, legend and options on a shared baseline. */}
+      <div className="grid items-stretch gap-3 md:grid-cols-2">
+        <fieldset className="flex h-full flex-col rounded-xl border border-border bg-surface-elevated p-3">
           <legend className="px-1 text-xs font-black text-gray-900">{messages.freightTitle}</legend>
           <div className="mt-1 flex flex-wrap gap-4">
             {(["Prepaid", "CollectOnDelivery"] as FreightPaymentMode[]).map((mode) => (
@@ -290,7 +296,7 @@ export function AuthoringGeneralTab({
           ) : null}
         </fieldset>
 
-        <fieldset className="rounded-xl border border-border bg-surface-elevated p-3">
+        <fieldset className="flex h-full flex-col rounded-xl border border-border bg-surface-elevated p-3">
           <legend className="px-1 text-xs font-black text-gray-900">{messages.calculationTitle}</legend>
           <div className="mt-1 flex flex-wrap gap-4">
             {(["Manual", "CarrierApi", "Free"] as AuthoringCalculationMode[]).map((mode) => (

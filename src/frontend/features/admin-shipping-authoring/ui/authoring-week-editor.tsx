@@ -8,6 +8,7 @@
  * hours, a working day requires a real start/end pair, and an untouched stored `TimeText` (including
  * its seconds/fractions) is never rewritten by simply rendering this component.
  */
+import { useEffect, useState } from "react";
 import type { EditorWeeklySchedule } from "../model/editor-document.ts";
 import type { WeekFormState, WeekIssue } from "../model/editor-week.ts";
 import { WEEKDAYS, type WeekIssueCode } from "../model/editor-week.ts";
@@ -16,6 +17,27 @@ import { authoringFormat } from "../messages/authoring-messages.ts";
 import { formatTimeText } from "./authoring-format.ts";
 import { weekdayLabel } from "./authoring-general-tab.tsx";
 import { TIME_ZONE_OPTIONS, isOfferedTimeZone, timeZoneLabel } from "./time-zone-options.ts";
+
+/**
+ * The ONE column contract of the seven-day grid. Header and every day row use the same template, so
+ * day names, working controls and start/end inputs each share one x position and width.
+ */
+const WEEK_COLUMNS_DESKTOP = "minmax(6rem, 1fr) 8.5rem 7.5rem 7.5rem";
+/** Narrow viewport: day + status on the first line, from/to together on the second. */
+const WEEK_COLUMNS_NARROW = "minmax(0, 1fr) auto";
+
+/** True when the week table may use its four desktop columns. */
+function useWideWeekGrid(): boolean {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 640px)");
+    const sync = () => setWide(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+  return wide;
+}
 
 /** Localized text of one week issue (shared by the editor and the screen's issue summary). */
 export function weekIssueMessage(code: WeekIssueCode, messages: AuthoringMessages): string {
@@ -115,6 +137,7 @@ export function AuthoringWeekEditor({
 }) {
   const timeZoneIssue = issues.find((issue) => issue.code === "timeZoneRequired" || issue.code === "timeZoneTooLong");
   const configureTimeZone = week.kind === "unconfigured" ? week.pendingTimeZone : "";
+  const wide = useWideWeekGrid();
 
   return (
     <section
@@ -212,7 +235,23 @@ export function AuthoringWeekEditor({
             </p>
           ) : null}
 
-          <ul className="grid gap-1 md:grid-cols-2">
+          {/* ONE column contract for all seven days: header and every row share the same template,
+              so day labels, status controls and start/end inputs each line up on one x position. */}
+          <div
+            className="mt-1 hidden rounded-lg bg-surface px-2 py-1 text-xs font-bold text-gray-500 sm:grid sm:gap-2"
+            style={{ gridTemplateColumns: WEEK_COLUMNS_DESKTOP }}
+            data-testid="shipping-authoring-week-head"
+            aria-hidden
+          >
+            <span>{messages.weekDayColumn}</span>
+            <span>{messages.weekStatusColumn}</span>
+            <span>{messages.weekFromColumn}</span>
+            <span>{messages.weekToColumn}</span>
+          </div>
+          <ul
+            className="grid gap-1 sm:gap-0 sm:divide-y sm:divide-border sm:rounded-lg sm:bg-surface"
+            data-testid="shipping-authoring-week-days"
+          >
             {WEEKDAYS.map((weekday) => {
               const day = week.days.find((candidate) => candidate.weekday === weekday);
               if (!day) return null;
@@ -220,55 +259,60 @@ export function AuthoringWeekEditor({
               return (
                 <li
                   key={weekday}
-                  className="grid gap-1 rounded-lg bg-surface px-2 py-1"
+                  className="grid items-center gap-x-2 gap-y-1 rounded-lg bg-surface px-2 py-1.5 sm:rounded-none sm:py-1"
+                  style={{ gridTemplateColumns: wide ? WEEK_COLUMNS_DESKTOP : WEEK_COLUMNS_NARROW, columnGap: 8 }}
                   data-testid={`shipping-authoring-week-day-${weekday}`}
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-semibold">{weekdayLabel(weekday, locale)}</span>
-                    {editable ? (
-                      <label className="flex items-center gap-1 text-[11px]">
-                        <input
-                          type="checkbox"
-                          checked={day.isWorking}
-                          onChange={(event) => onDayWorking(weekday, event.target.checked)}
-                          data-testid={`shipping-authoring-week-working-${weekday}`}
-                        />
-                        <span>{messages.weekWorking}</span>
-                      </label>
-                    ) : (
-                      <span dir="ltr" className="text-gray-600">
-                        {day.isWorking
-                          ? authoringFormat(messages.weekOpen, {
-                              from: formatTimeText(day.startTime),
-                              to: formatTimeText(day.endTime),
-                            })
-                          : messages.weekClosed}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-sm font-semibold text-gray-900">{weekdayLabel(weekday, locale)}</span>
                   {editable ? (
-                    <div className="flex flex-wrap items-center gap-1">
+                    <label className="flex items-center gap-1.5 text-xs text-gray-700">
+                      <input
+                        type="checkbox"
+                        className="size-4 shrink-0"
+                        checked={day.isWorking}
+                        onChange={(event) => onDayWorking(weekday, event.target.checked)}
+                        data-testid={`shipping-authoring-week-working-${weekday}`}
+                      />
+                      <span>{messages.weekWorking}</span>
+                    </label>
+                  ) : (
+                    <span dir="ltr" className="text-xs text-gray-600">
+                      {day.isWorking
+                        ? authoringFormat(messages.weekOpen, {
+                            from: formatTimeText(day.startTime),
+                            to: formatTimeText(day.endTime),
+                          })
+                        : messages.weekClosed}
+                    </span>
+                  )}
+                  {editable ? (
+                    <>
                       <input
                         type="time"
                         dir="ltr"
                         className="min-h-8 rounded-lg border border-border bg-surface px-2 text-xs"
+                        style={wide ? { width: "7.5rem" } : { gridColumn: "1 / -1", width: "100%" }}
                         value={inputTime(day.startTime)}
                         onChange={(event) => onDayTime(weekday, "startTime", event.target.value)}
                         data-testid={`shipping-authoring-week-start-${weekday}`}
                       />
-                      <span className="text-gray-500">–</span>
                       <input
                         type="time"
                         dir="ltr"
                         className="min-h-8 rounded-lg border border-border bg-surface px-2 text-xs"
+                        style={wide ? { width: "7.5rem" } : { gridColumn: "1 / -1", width: "100%" }}
                         value={inputTime(day.endTime)}
                         onChange={(event) => onDayTime(weekday, "endTime", event.target.value)}
                         data-testid={`shipping-authoring-week-end-${weekday}`}
                       />
-                    </div>
+                    </>
                   ) : null}
                   {dayIssue ? (
-                    <p role="alert" className="text-[11px] font-semibold text-danger">
+                    <p
+                      role="alert"
+                      className="text-xs font-semibold text-danger"
+                      style={{ gridColumn: "1 / -1" }}
+                    >
                       {weekIssueMessage(dayIssue.code, messages)}
                     </p>
                   ) : null}
