@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import type { EditorDocument, EditorRateRow, EditorRegionGroup } from "./model/editor-document.ts";
@@ -100,7 +100,7 @@ function documentWith(overrides: Partial<EditorDocument> = {}): EditorDocument {
   });
   const base: EditorDocument = {
     draftId: DRAFT,
-    owner: { kind: "Store", sellerPartyId: null },
+    owner: { ownerKind: "Store", sellerPartyId: null },
     serviceCode: "tooba.post",
     optionCode: null,
     revision: 4,

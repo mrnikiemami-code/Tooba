@@ -73,7 +73,7 @@ export function AuthoringGroupsEditor({
   onMoveGroup: (groupKey: string, delta: -1 | 1) => void;
   onChangeTitle: (groupKey: string, languageId: string, value: string) => void;
   onRemoveArea: (groupKey: string, area: SelectedAreaRead) => void;
-  onAddArea: (groupKey: string, area: SelectedAreaRead, ancestry: ResolvedAreaAncestry) => void;
+  onAddArea: (groupKey: string, area: SelectedAreaRead, ancestry: ResolvedAreaAncestry, label: string) => void;
   onAddRow: (groupKey: string) => void;
   onRemoveRow: (groupKey: string, rowKey: string) => void;
   onChangeRowField: (groupKey: string, rowKey: string, field: RateField, value: string) => void;
@@ -83,9 +83,10 @@ export function AuthoringGroupsEditor({
 
   return (
     <div className="grid gap-3" data-testid="shipping-authoring-groups-panel">
-      <p className="rounded-xl border border-border bg-surface px-3 py-2 text-xs text-gray-600">
-        {editable ? messages.groupsEditNote : messages.regionsNote}
-      </p>
+      <div className="grid gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs text-gray-600">
+        <p className="font-bold text-gray-800">{messages.regionsIntro}</p>
+        <p>{editable ? messages.groupsEditNote : messages.regionsNote}</p>
+      </div>
 
       {editable ? (
         <button
@@ -266,7 +267,7 @@ export function AuthoringGroupsEditor({
                   messages={messages}
                   disabled={!editable}
                   isSelected={(area) => groups.some((candidate) => candidate.areas.some((entry) => areaIdentity(entry) === areaIdentity(area)))}
-                  onAdd={(area, ancestry) => onAddArea(group.key, area, ancestry)}
+                  onAdd={(area, ancestry, label) => onAddArea(group.key, area, ancestry, label)}
                 />
               </div>
             ) : null}

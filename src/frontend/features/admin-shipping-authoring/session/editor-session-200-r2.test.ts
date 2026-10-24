@@ -25,7 +25,7 @@ function wire(revision: number): string {
   return rawNumbers(
     JSON.stringify({
       draftId: DRAFT_A,
-      owner: { kind: "Store" },
+      owner: { ownerKind: "Store" },
       serviceCode: "tooba.post",
       revision,
       createdAt: "2026-10-23T00:15:00+03:30",

@@ -15,6 +15,7 @@ import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-m
 import { authoringFormat } from "../messages/authoring-messages.ts";
 import { formatTimeText } from "./authoring-format.ts";
 import { weekdayLabel } from "./authoring-general-tab.tsx";
+import { TIME_ZONE_OPTIONS, isOfferedTimeZone, timeZoneLabel } from "./time-zone-options.ts";
 
 /** Localized text of one week issue (shared by the editor and the screen's issue summary). */
 export function weekIssueMessage(code: WeekIssueCode, messages: AuthoringMessages): string {
@@ -38,6 +39,48 @@ export function weekIssueMessage(code: WeekIssueCode, messages: AuthoringMessage
 function inputTime(value: string): string {
   const match = /^([01][0-9]|2[0-3]):([0-5][0-9])/.exec(value);
   return match ? `${match[1]}:${match[2]}` : value;
+}
+
+/**
+ * Time-zone chooser: the operator picks a human-labelled entry whose VALUE is the real identifier the
+ * server can resolve. A stored identifier outside this list is shown honestly as its own option and is
+ * never rewritten or silently replaced.
+ */
+function TimeZoneSelect({
+  value,
+  locale,
+  messages,
+  testId,
+  onChange,
+}: {
+  value: string;
+  locale: AuthoringLocale;
+  messages: AuthoringMessages;
+  testId: string;
+  onChange: (id: string) => void;
+}) {
+  const outsideList = value.trim().length > 0 && !isOfferedTimeZone(value.trim());
+  return (
+    <select
+      dir="ltr"
+      className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
+      value={value}
+      data-testid={testId}
+      onChange={(event) => onChange(event.target.value)}
+    >
+      <option value="">—</option>
+      {TIME_ZONE_OPTIONS.map((option) => (
+        <option key={option.id} value={option.id}>
+          {option.label[locale]} — {option.id}
+        </option>
+      ))}
+      {outsideList ? (
+        <option value={value}>
+          {messages.weekTimeZoneOther} — {value}
+        </option>
+      ) : null}
+    </select>
+  );
 }
 
 export function AuthoringWeekEditor({
@@ -91,16 +134,14 @@ export function AuthoringWeekEditor({
           <p>{messages.weekUnconfigured}</p>
           {editable ? (
             <div className="flex flex-wrap items-end gap-2">
-              <label className="grid gap-0.5">
+              <label className="grid w-full gap-0.5 md:w-72">
                 <span className="text-[10px] font-bold text-gray-600">{messages.weekTimeZone}</span>
-                <input
-                  type="text"
-                  dir="ltr"
-                  className="min-h-8 w-56 rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
-                  placeholder="Asia/Tehran"
+                <TimeZoneSelect
                   value={configureTimeZone}
-                  onChange={(event) => onPendingTimeZone(event.target.value)}
-                  data-testid="shipping-authoring-week-configure-timezone"
+                  locale={locale}
+                  messages={messages}
+                  testId="shipping-authoring-week-configure-timezone"
+                  onChange={onPendingTimeZone}
                 />
               </label>
               <button
@@ -134,21 +175,23 @@ export function AuthoringWeekEditor({
       ) : (
         <div className="mt-2 grid gap-2 text-xs text-gray-700">
           {editable ? (
-            <label className="grid gap-0.5">
+            <label className="grid w-full gap-0.5 md:w-72">
               <span className="text-[10px] font-bold text-gray-600">{messages.weekTimeZone}</span>
-              <input
-                type="text"
-                dir="ltr"
-                className="min-h-8 w-56 rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
+              <TimeZoneSelect
                 value={week.timeZoneId}
-                onChange={(event) => onTimeZone(event.target.value)}
-                data-testid="shipping-authoring-week-timezone"
+                locale={locale}
+                messages={messages}
+                testId="shipping-authoring-week-timezone"
+                onChange={onTimeZone}
               />
             </label>
           ) : (
             <p>
               <span className="font-bold">{messages.weekTimeZone}: </span>
-              <span dir="ltr">{week.timeZoneId}</span>
+              <span>{timeZoneLabel(week.timeZoneId, locale) ?? week.timeZoneId}</span>{" "}
+              <span dir="ltr" className="text-gray-500">
+                {timeZoneLabel(week.timeZoneId, locale) ? week.timeZoneId : ""}
+              </span>
             </p>
           )}
           {timeZoneIssue ? (

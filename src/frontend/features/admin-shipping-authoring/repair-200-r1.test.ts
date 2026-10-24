@@ -32,7 +32,7 @@ function wire(draftId = DRAFT_A, revision = 4, secondArea: "City" | "Country" = 
   return rawNumbers(
     JSON.stringify({
       draftId,
-      owner: { kind: "Store" },
+      owner: { ownerKind: "Store" },
       serviceCode: "tooba.post",
       revision,
       createdAt: "2026-10-23T00:15:00+03:30",

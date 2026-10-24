@@ -1,4 +1,11 @@
-## تسک جاری209: کاربر UI و ذخیره را رد کرد —2026-10-24
+## نتیجه209: کار واقعی ذخیره می‌شود — retest آماده —2026-10-24
+
+**Worker result `READY_FOR_USER_RETEST`** (نه user Visual ACCEPT). Evidence کامل: [RESULT209](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209/RESULT.md).
+ریشه‌های اثبات‌شده: (1) چیپ مقصد تازه از `index.labelOf` خوانده می‌شد که فقط fact‌های ذخیره‌شده را دارد → `withPickedLabels` از ردیف واقعاً انتخاب‌شده؛ (2) PUT واقعی با timezone «تهران» دقیقاً `400 shipping.schedule.timezone.invalid` با `errors` خالی برمی‌گرداند → نقشهٔ `server-field-error.ts` روی فیلد/تب/فوکوس + کد فنی در diagnostics؛ (3) ورودی متنی timezone با selector شناسهٔ معتبر جایگزین شد؛ (4) catalog واقعاً خالی بود و یک type فعال «عادی» از API موجود ساخته/فعال شد؛ (5) «گروه»→«محدودهٔ ارسال» و واحد وزن روشن شد.
+**Real evidence:** روی همان draftکاربر `01a16eeb-70b3-7000-87c2-564c82835496` (ابتدا خالی، revision1) از UI واقعی: nameپیشتاز/typeعادی/Prepaid+Manual/Countryایران/fee120000-5000/weight1000-2000/delivery1-3/Asia/Tehran/دوشنبه09-17 → **یک PUT** revision2 و reload همان مقادیر. 93+6 تست، typecheck0، mobile390 بدون overflow.
+backend5088 PID10800 و FE3000 دست‌نخورده؛ migration تکرار نشد. active209=نتیجه ارسال شد؛ **next task=NONE**؛ فقط پس از review/بازخورد کاربر ادامه. 199–207 proof بازنشوند؛ TB185 paused/defaultOFF محفوظ.
+
+## تسک209 (تاریخی): کاربر UI و ذخیره را رد کرد —2026-10-24
 
 کاربر پس ازتستواقعی208اعتراضکرد: «گروه»نامفهوم،typeempty،انتخابمنطقه/مبلغ/ذخیرهکارنکردوUIنامناسب. دوscreenshotمشاهدهشد:Generaltypeempty/timezone«تهران»؛Regionsgenericservervalidationerror،newgroupتست،countrychip«نامموجودنیست»،pickerهای—،fees120000/5000،weight1..2/days1..3.
 **208 فقطruntime/schema/readmount پذیرفته،نهuserUI/fullsaveacceptance. User Visual ACCEPT=REJECTED_CURRENT_UI.**

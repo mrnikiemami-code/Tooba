@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * Rendered editor of ONE existing shipping draft: General (names/type/two settings), the ONE
@@ -13,7 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog } from "../../../design-system";
 import { loadAuthoringTypeChoices, type AuthoringTypeChoice } from "../api/authoring-lookup-api.ts";
-import type { EditorTransportFailure, EditorPropertyError } from "../api/editor-document-api.ts";
+import type { EditorTransportFailure } from "../api/editor-document-api.ts";
 import { authoringMessages, authoringFormat, type AuthoringLocale, type AuthoringMessages } from "../messages/authoring-messages.ts";
 import type {
   AuthoringCalculationMode,
@@ -21,7 +21,7 @@ import type {
   FreightPaymentMode,
   SelectedAreaRead,
 } from "../model/editor-document.ts";
-import { indexDestinationFacts } from "../model/editor-destination-ancestry.ts";
+import { indexDestinationFacts, withPickedLabels } from "../model/editor-destination-ancestry.ts";
 import { buildAuthoringIntent, hasNoIssues, intentHasEdits } from "../model/authoring-intent.ts";
 import { resetAuthoringDrafts, seedAuthoringDrafts } from "../model/authoring-drafts.ts";
 import { composeAncestryResolver, areaIdentity, unresolvedDraftSelections } from "../model/destination-choice.ts";
@@ -69,6 +69,7 @@ import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor, weekIssueMessage } from "./authoring-week-editor.tsx";
 import { rowIssueMessage } from "./authoring-rates-editor.tsx";
 import { AuthoringGroupsEditor } from "./authoring-groups-editor.tsx";
+import { TARGET_TEST_ID, serverErrorCodes, serverFieldIssues, targetTab, type ServerFieldIssue } from "./server-field-error.ts";
 
 const TABS = ["general", "regions"] as const;
 type ScreenTab = (typeof TABS)[number];
@@ -81,14 +82,6 @@ const AREA_KIND_KEYS = {
 } as const;
 
 /** Field labels for server validation properties; raw codes are never shown as prose. */
-function fieldLabel(property: string, messages: AuthoringMessages): string {
-  if (/name/i.test(property)) return messages.fieldNameLabel;
-  if (/description/i.test(property)) return messages.fieldDescriptionLabel;
-  if (/settings|freight|calculation/i.test(property)) return messages.fieldSettingsLabel;
-  if (/type/i.test(property)) return messages.fieldTypeLabel;
-  return messages.fieldNameLabel;
-}
-
 function groupIssueText(issue: GroupIssue, messages: AuthoringMessages): string {
   switch (issue.code) {
     case "groupLimitExceeded":
@@ -125,12 +118,6 @@ function failureMessages(failure: EditorTransportFailure, messages: AuthoringMes
   }
 }
 
-function errorGroups(failure: EditorTransportFailure): readonly EditorPropertyError[] {
-  return failure.kind === "conflict" || failure.kind === "validation" || failure.kind === "httpError"
-    ? failure.errors
-    : [];
-}
-
 export function ShippingAuthoringScreen({
   draftId,
   locale,
@@ -155,6 +142,8 @@ export function ShippingAuthoringScreen({
   const [week, setWeek] = useState<WeekFormState | null>(null);
   /** Verified ancestry of terminals the operator picked in THIS session (reset with the drafts). */
   const [pickedFacts, setPickedFacts] = useState<ReadonlyMap<string, ResolvedAreaAncestry>>(new Map());
+  /** Localized labels of those same picks, so a fresh chip never shows "name unavailable". */
+  const [pickedLabels, setPickedLabels] = useState<ReadonlyMap<string, string>>(new Map());
   const [contentLanguageId, setContentLanguageId] = useState<string>("");
   const [types, setTypes] = useState<readonly AuthoringTypeChoice[]>([]);
   const [typesState, setTypesState] = useState<"loading" | "ok" | "error">("loading");
@@ -186,6 +175,7 @@ export function ShippingAuthoringScreen({
     setRates(drafts.rates);
     setWeek(drafts.week);
     setPickedFacts(new Map());
+    setPickedLabels(new Map());
     const defaultLanguage = document.presentation.contentLanguages.find(
       (language) => language.languageId.toLowerCase() === document.presentation.defaultContentLanguageId.toLowerCase(),
     );
@@ -237,7 +227,10 @@ export function ShippingAuthoringScreen({
     if (session.decision === "discardUnsaved") setConfirmDiscardVisible(true);
   }, [session.decision]);
 
-  const index = useMemo(() => (document ? indexDestinationFacts(document) : null), [document]);
+  const index = useMemo(
+    () => (document ? withPickedLabels(indexDestinationFacts(document), pickedLabels) : null),
+    [document, pickedLabels],
+  );
   /** Retained server-proven facts + this session's verified picks, as ONE resolver. */
   const resolver = useMemo(
     () => (index ? composeAncestryResolver(index.resolver, pickedFacts) : null),
@@ -346,11 +339,14 @@ export function ShippingAuthoringScreen({
   );
 
   const addGroupArea = useCallback(
-    (groupKey: string, area: SelectedAreaRead, ancestry: ResolvedAreaAncestry) => {
+    (groupKey: string, area: SelectedAreaRead, ancestry: ResolvedAreaAncestry, label: string) => {
       if (!form || !week) return;
       const nextGroups = withGroupAreaAdded(groups, groupKey, area);
       if (nextGroups === groups) return; // an exact duplicate is rejected locally, never double-sent
       setPickedFacts((previous) => new Map(previous).set(areaIdentity(area), ancestry));
+      if (label.trim().length > 0) {
+        setPickedLabels((previous) => new Map(previous).set(areaIdentity(area), label.trim()));
+      }
       commit(form, nextGroups, rates, week);
     },
     [commit, form, groups, rates, week],
@@ -423,6 +419,7 @@ export function ShippingAuthoringScreen({
         setRates({});
         setWeek(null);
         setPickedFacts(new Map());
+        setPickedLabels(new Map());
       } else {
         controller.cancelDiscard();
         // ONE cohesive reseed: General AND group collection AND rate rows AND week come from the SAME
@@ -434,6 +431,7 @@ export function ShippingAuthoringScreen({
           setRates(drafts.rates);
           setWeek(drafts.week);
           setPickedFacts(new Map());
+          setPickedLabels(new Map());
         }
         controller.edit({});
       }
@@ -486,6 +484,34 @@ export function ShippingAuthoringScreen({
 
   const saveStatus: EditorSaveStatus = session.save;
   const saveFailure = session.saveFailure;
+  /** Localized, actionable placement of the server's rejection on real fields of this screen. */
+  const serverIssues = useMemo(
+    () => (saveFailure ? serverFieldIssues(saveFailure, messages) : []),
+    [saveFailure, messages],
+  );
+  const serverCodes = useMemo(() => (saveFailure ? serverErrorCodes(saveFailure) : []), [saveFailure]);
+
+  /** Reveals the section that owns a rejected field and moves focus to it. */
+  const revealServerIssue = useCallback((issue: ServerFieldIssue) => {
+    setTab(targetTab(issue.target));
+    const testId = TARGET_TEST_ID[issue.target];
+    if (testId === null) return;
+    window.requestAnimationFrame(() => {
+      const element = globalThis.document.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
+      if (!element) return;
+      element.scrollIntoView({ block: "center" });
+      element.focus({ preventScroll: true });
+    });
+  }, []);
+
+  // A new rejection immediately shows the failing section and focuses the first rejected field.
+  const revealedFailure = useRef<EditorTransportFailure | null>(null);
+  useEffect(() => {
+    if (!saveFailure || serverIssues.length === 0) return;
+    if (revealedFailure.current === saveFailure) return;
+    revealedFailure.current = saveFailure;
+    revealServerIssue(serverIssues[0]);
+  }, [saveFailure, serverIssues, revealServerIssue]);
 
   return (
     <div dir={direction} lang={locale} className="space-y-3" data-testid="shipping-authoring-screen">
@@ -573,17 +599,35 @@ export function ShippingAuthoringScreen({
 
       {saveFailure && saveStatus !== "clean" ? (
         <div role="alert" className="rounded-xl border border-danger/40 bg-red-50 px-3 py-2 text-xs font-semibold text-danger">
-          {failureMessages(saveFailure, messages).map((text) => (
-            <p key={text} data-testid={`shipping-authoring-save-${saveFailure.kind}`}>
-              {text}
-            </p>
-          ))}
-          {errorGroups(saveFailure).length > 0 ? (
-            <p className="mt-1 font-normal text-gray-700">
-              {authoringFormat(messages.validationSummary, { count: errorGroups(saveFailure).length })}{" "}
-              {errorGroups(saveFailure)
-                .map((group) => fieldLabel(group.property, messages))
-                .join(" · ")}
+          {failureMessages(saveFailure, messages)
+            .filter(() => !(saveFailure.kind === "validation" && serverIssues.length > 0))
+            .map((text) => (
+              <p key={text} data-testid={`shipping-authoring-save-${saveFailure.kind}`}>
+                {text}
+              </p>
+            ))}
+          {serverIssues.length > 0 ? (
+            <>
+              <p className="mt-1 font-normal text-gray-700">{messages.saveValidation}</p>
+              <ul className="mt-1 grid gap-0.5 font-normal" data-testid="shipping-authoring-save-fields">
+                {serverIssues.map((issue) => (
+                  <li key={`${issue.target}:${issue.reason}`}>
+                    <button
+                      type="button"
+                      className="text-start underline decoration-dotted underline-offset-2"
+                      data-testid={`shipping-authoring-save-field-${issue.target}`}
+                      onClick={() => revealServerIssue(issue)}
+                    >
+                      {authoringFormat(messages.serverFieldErrorLine, { field: issue.field, reason: issue.reason })}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          {serverCodes.length > 0 ? (
+            <p dir="ltr" className="mt-1 font-normal text-[10px] text-gray-500" data-testid="shipping-authoring-save-code">
+              {authoringFormat(messages.serverErrorCodeNote, { code: serverCodes.join(", ") })}
             </p>
           ) : null}
           {saveStatus === "outcomeUnknown" || session.commitUncertain ? (

@@ -63,8 +63,34 @@ export function indexDestinationFacts(document: EditorDocument): DestinationFact
   };
 }
 
-/** Every stored selection that the snapshot did not prove, in document order (never filtered away). */
-export function unresolvedSelections(
+/**
+ * Composes the LABELS of this session's verified picks into the document's fact index.
+ *
+ * A destination the operator has just added has no server fact yet (the server can only prove what is
+ * already stored), so without this composition the chip of a freshly picked destination would show
+ * "name unavailable" even though its real localized label is known from the row the operator chose.
+ * Labels stay display-only: identity and ancestry are unchanged, and a stored fact always wins.
+ *
+ * @param base The document's own validated fact index.
+ * @param pickedLabels Localized labels of picks, keyed by `kind:id`.
+ */
+export function withPickedLabels(
+  base: DestinationFactIndex,
+  pickedLabels: ReadonlyMap<string, string>,
+): DestinationFactIndex {
+  if (pickedLabels.size === 0) return base;
+  return {
+    ...base,
+    labelOf: (area) => {
+      const stored = base.labelOf(area);
+      if (stored !== null) return stored;
+      const picked = pickedLabels.get(keyOf(area))?.trim() ?? "";
+      return picked.length > 0 ? picked : null;
+    },
+  };
+}
+
+/** Every stored selection that the snapshot did not prove, in document order (never filtered away). */export function unresolvedSelections(
   document: EditorDocument,
   index: DestinationFactIndex,
 ): readonly UnresolvedAreaSelection[] {

@@ -22,6 +22,7 @@ import {
   choiceAncestry,
   choiceChainActive,
   choiceTerminal,
+  choiceTerminalLabel,
   chooseAdministrativeArea,
   chooseCity,
   chooseCountry,
@@ -121,7 +122,7 @@ export function AuthoringDestinationPicker({
   messages: AuthoringMessages;
   isSelected: (area: SelectedAreaRead) => boolean;
   disabled: boolean;
-  onAdd: (area: SelectedAreaRead, ancestry: ResolvedAreaAncestry) => void;
+  onAdd: (area: SelectedAreaRead, ancestry: ResolvedAreaAncestry, label: string) => void;
 }) {
   const [choice, setChoice] = useState<DestinationChoice>(() => emptyChoice());
   const [readState, setReadState] = useState<DestinationReadState>(() => emptyDestinationReadState());
@@ -264,7 +265,7 @@ export function AuthoringDestinationPicker({
               return;
             }
             setRejected(false);
-            onAdd(terminal, ancestry);
+            onAdd(terminal, ancestry, choiceTerminalLabel(choice));
           }}
         >
           {messages.destinationAddAction}

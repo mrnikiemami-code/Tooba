@@ -70,7 +70,7 @@ function wire(overrides: { readonly destinationFacts?: unknown | "omit"; readonl
   return rawNumbers(
     JSON.stringify({
       draftId: DRAFT,
-      owner: { kind: "Store" },
+      owner: { ownerKind: "Store" },
       serviceCode: "tooba.post",
       optionCode: null,
       revision,

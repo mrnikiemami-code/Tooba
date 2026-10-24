@@ -29,7 +29,21 @@ No rebuild/reapply/reset/replay190–205 as routine recovery. Await actual user 
 Older CURRENT/ISSUED headings below are superseded history.
 
 
-## CURRENT ISSUED TASK —208 / explicit local-development execution authorized —2026-10-24
+## CURRENT ISSUED TASK —209 result posted / awaiting review —2026-10-24
+
+Read TOP canonical recovery + `docs/architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209/RESULT.md`.
+209 executed under the existing local-development authorization: real root causes (chip labels from
+picked rows, field-level server error mapping for `shipping.schedule.timezone.invalid`, lawful
+time-zone selector, one real active `عادی` type via existing catalog API, «محدودهٔ ارسال» wording).
+Real evidence on draft `01a16eeb-70b3-7000-87c2-564c82835496`: one UI Apply -> revision 2, fresh GET +
+browser reload show name/type/destination/fees/schedule. Worker verdict READY_FOR_USER_RETEST.
+Active task: NONE. Next task: NONE — wait for Architect review and user retest.
+208 read-only handoff did NOT prove the whole workflow; this correction stands. No user Visual ACCEPT,
+no activation/readiness, no Production-Functional-Acceptance. Do not replay 199–209.
+Host :5088 (PID 10800) and FE :3000 left running; migrations were not re-applied.
+TB185 paused; default-OFF/PendingAllocation unchanged.
+
+## SUPERSEDED HISTORICAL —208 / 207 / 206 blocks —2026-10-24
 
 Only issued task: TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208, parent207.
 User confirms NON-production local DB and explicitly authorizes necessary checked-in dev migrations,

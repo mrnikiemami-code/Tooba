@@ -92,6 +92,27 @@ export function choiceTerminal(choice: DestinationChoice): SelectedAreaRead | nu
 }
 
 /**
+ * Localized label of the staged terminal, exactly as the chosen row carries it.
+ *
+ * Display-only: it never proves ancestry and is never sent to the server. An empty/blank label stays
+ * empty so the caller can show the honest "name unavailable" state instead of a code.
+ *
+ * @param choice Staged choice.
+ */
+export function choiceTerminalLabel(choice: DestinationChoice): string {
+  switch (choice.level) {
+    case "Country":
+      return choice.country?.label.trim() ?? "";
+    case "AdministrativeArea":
+      return choice.administrativeArea?.label.trim() ?? "";
+    case "City":
+      return choice.city?.label.trim() ?? "";
+    case "ServiceArea":
+      return choice.serviceArea?.label.trim() ?? "";
+  }
+}
+
+/**
  * Canonical ancestry of the staged terminal, taken from the rows the operator really selected.
  *
  * @param choice Staged choice.

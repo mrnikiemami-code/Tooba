@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildEditorEdits,
@@ -34,7 +34,7 @@ function documentWith(settings: EditorMethodSettings | null, revision = 4): Edit
   });
   return {
     draftId: DRAFT,
-    owner: { kind: "Store", sellerPartyId: null },
+    owner: { ownerKind: "Store", sellerPartyId: null },
     serviceCode: "tooba.post",
     optionCode: null,
     revision,
