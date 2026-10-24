@@ -1,3 +1,11 @@
+## مرجع جاری: 204 ازطریقR2 پذیرفته / فقط205 مرورگر — 2026-10-24
+
+204-R2 در `ec957367fadd94ceb14045e1b013d2ec308bade2` برایgroup/destination **ACCEPT**؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R2/ARCHITECT-REVIEW.md). mainپسازکد `eb93df3be7000fe1e5bff3a51c767a1ac335b753` فقطpost-resultartifact دارد. freshparentgeneration/currentactiveeligibility/strictdecoder بسته. Architect دوreproقدیمی را مستقلNodePASS اجراکرد؛8new/29focused/tsc/7guards گزارشworker،نهrerun. beginStage settledfix productionبوده ثبتشد. mounted/browser/visual/liveهنوزNOTRUN.
+
+تنها **TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205**،parent204-R2،30دقیقه/stop22؛صفحهٔواقعی `/admin/shipping-services/authoring/[draftId]`،FA/EN desktop/mobile،تعاملواقعیmounted،syntheticAPIinterception برایGET/PUT،بدونهیچmerchantwrite یاbackend/sharedservicechange. runtimeinventoryمحدود؛اگرموجودنبودفقطfrontend/browser task-ownedisolated وinstalleddependencies مجاز،setupحداکثر5دقیقه،نهinstall/restart/shared.next. همه /v1fixturefailclosed؛noauthbypass/login/credentials.
+
+هدف205 ارزیابیactualReactflow وvisual دربرابر186-R2مرجع،نهتستخالصدوباره. اگرsetupنشدمتوقفباexactBLOCKEDنهوقت‌پرکردن/تسکتازه؛نقصپیداشدreportنهunboundedfix. تا نتیجه205 تسکدیگری صادرنشود. ProductionPENDING؛whole-methodcreate/status/cutoff/carrier/funding/quote همچنانخارجscope؛TB185paused/defaultOFF/PendingAllocationمحفوظ.199/200/201/202/203/204 بسته،نهproofreplay. اینبخشبرpointerتاریخی مقدم است.
+
 ## مرجع جاری: 204-R1 دو ایراد باقی / فقط204-R2 — 2026-10-24
 
 204-R1 در `0b1f9abcbad8c1a5fc244ef5354413510dcf1cd8` reviewشد؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R1/ARCHITECT-REVIEW.md). mainفعلی `909e43ad26298a253f6e9cb41712bc76571b10d0` فقطpost-resultartifactبعدی دارد،productionیکسان. **REPAIR_REQUIRED؛ 204 بسته نیست.** siblingepoch/clear/terminalpath/label fixes حفظ.
