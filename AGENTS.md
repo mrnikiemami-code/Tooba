@@ -36,23 +36,22 @@ Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.
 
-## Current accepted checkpoint — 2026-10-23
+## Current accepted checkpoint — 2026-10-24 — USER TRIAL
 
-TB196 bounded catalog and TB197 owner-local type-assignment backend are Architect-accepted through197-R1.
-Read latest recovery/reviews for exact evidence/process limits; no merchant UI/quote/release acceptance.
-TB198 source analysis accepted with corrections; read its ARCHITECT-REVIEW.md before implementation.
-TB199 existing-draft atomic editor backend is Architect-accepted through199-R1 (98274e4ff), with process/proof limits in its review.
-TB200 frontend foundation accepted through200-R2 at64f3f307cf; UI is still pending.
-TB201 destination read bridge accepted through201-R2 at9120f0cba; prior fake duplicate-city defect retracted.
-TB202 existing-draft General UI is Architect-accepted through202-R1 at86c0a10932f (bounded source/pure-function review; mounted React and visual remain unverified).
-TB203 existing-group rates and root week UI are Architect-accepted through203-R1 atbf7cb78e471; Visual/mounted/live remain unverified.
-TB204 existing-draft group/destination editor is Architect-accepted through204-R2 atec957367f; browser/visual/live remain unverified.
-TB205-R2 narrowed mounted synthetic save/duplicate/locale evidence is Architect-accepted at4dddb7265e9; no real-data/release/userVisual acceptance.
-Only next issued task: TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3 (parent205-R2).
-15min mounted invalid/discard,409 and transportUnknown/reconcile controls using existing harness; no happy-path/visual replay or full geography matrix.
-26min>25 onR2 is a recorded process deviation, no proof loop. After controls review, hand off existing-draft slice for user trial with remaining live/quote/create limits.
-Wait205-R3 result before any next task.199-204 accepted, no proof replay.
-Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
+TB196–204 bounded capabilities remain accepted through their latest reviewed repairs.
+TB205-R2 successful intercepted composite-save/duplicate/locale evidence and TB205-R3 mounted
+invalid/discard, canonical409 and transportUnknown/explicit-reconcile work protection are Architect-accepted
+within their reviews. R3 source/evidence: d6fd1ba0c7e43fe3493f91b77a6bd5a6402c3e76.
+Read the TOP canonical recovery and 205-R3/ARCHITECT-REVIEW.md first after chat loss.
+Existing authorized draft authoring is ready for USER TRIAL. Active task: NONE. Next task: NONE.
+Await user trial/feedback; do not replay 199–205 or add full-matrix proof tasks.
+Canonical UI route: /admin/shipping-services/authoring/[draftId]; entry from an existing method's
+view-only authorized draft link. No automatic draft creation.
+Production-Functional-Acceptance remains PENDING: intercepted browser data is not live integration,
+merchant mutation, deployment or user Visual ACCEPT. R2 screenshots are REVIEW_EVIDENCE_ONLY.
+Whole-method creation, activation/readiness, cutoff/carrier/funding and runtime quote are outside this slice.
+R2/R3 timing deviations remain recorded, not timing PASS. TB185 paused; default-OFF/PendingAllocation unchanged.
+Historical active-task paragraphs above/below are not current authorization.
 
 ## Core rules
 

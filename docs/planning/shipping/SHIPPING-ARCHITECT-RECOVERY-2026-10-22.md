@@ -1,4 +1,14 @@
-## مرجع جاری: 205-R3 اجرا شد و در انتظار review Architect — 2026-10-24
+## مرجع جاری: تحویل ویرایش پیش‌نویس موجود برای تست کاربر — 2026-10-24
+
+**205-R3 پذیرفته شد: ACCEPT_BOUNDED_MOUNTED_WORK_PROTECTION** در source/evidence `d6fd1ba0c7e43fe3493f91b77a6bd5a6402c3e76`؛ [بازبینی Architect](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3/ARCHITECT-REVIEW.md). diff مستقل فقط docs/harness؛ production بدون تغییر. سه کنترل mounted طبق DOM/count ثبت‌شده: invalid/رد و تأیید لغو با بازگرداندن کل General+rates+week؛409 حفظ کار بدون retry؛transportUnknown با latch و reconcile صریح دقیقاً1GET و بدون replay. Architect harness/RESULT را خواند، مرورگر Windows را دوباره اجرا نکرد. stop-minute10 حدود0.6دقیقه رد شد؛ انحراف فرایندی ثبت، نه timingPASS. chronology دقیق پایان از commitها اثبات نشده است.
+
+**مرحله فعلی USER_TRIAL؛ تسک فعال/بعدی NONE.** مسیر موفق ذخیره ترکیبی و duplicate gate در205-R2 و حفاظت کار در205-R3 برای همین دامنه پذیرفته‌اند؛ 199–204 بسته‌اند. تسک اثباتی یا full geography matrix تازه صادر نشود. گام بعد فقط تست/بازخورد کاربر روی دامنه موجود؛ در چت جدید از همین بخش و review شروع شود.
+
+تحویل محدود: ویرایش پیش‌نویس مجاز موجود شامل متن چندزبانه/نوع/تنظیمات مستقل، گروه و مقصد و عنوان، ردیف هزینه و هفته واحد، ONE atomic Apply. ورود از لینک پیش‌نویس در نمایش روش موجود با binding دقیق؛ مسیر واقعی `/admin/shipping-services/authoring/[draftId]`. نبود پیش‌نویس مجاز = حالت صادقانه بدون ساخت خودکار.
+
+**Production-Functional-Acceptance=PENDING؛ userVisual/release/live integration تأیید نشده.** مرورگر با همه/v1 synthetic بود؛ تست با داده/registry واقعی و deployment انجام نشده. ساخت روش کامل، activation/readiness، cutoff/carrier/funding و runtime quote جزو تحویل این slice نیست. VisualR2 فقط REVIEW_EVIDENCE_ONLY؛ عبارت «reuse Visual ACCEPT» در RESULT-R3 پذیرفته نیست. sharedDB/data/flag تغییر نکرد؛ TB185 paused و default-OFF/PendingAllocation محفوظ. بخش‌های پایین تاریخچه‌اند و اختیار تسک تازه نیستند.
+
+## مرجع پیشین: 205-R3 اجرا شد و در انتظار review Architect — 2026-10-24
 
 **TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3** روی base `61043bb5d699a55145ec18fb8d03ce3bd82e2f28` اجرا و به Bridge تحویل شد؛ نتیجه در [RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3/RESULT.md). سه کنترل mounted روی runtime/harness موجود: (1) invalid name + Apply disabled/dirty + reject نگه‌داشتن کار + confirm بازگرداندن name/rate/week/groups و ورود مجدد بدون residue، 0 PUT؛ (2) canonical 409 `shipping.authoring.draft_revision_conflict` با حفظ name/dirty/edit، put=1 بدون retry و بدون post-save GET؛ (3) transportUnknown با reconcile صریح، latch حتی با ویرایش محلی بعدی، سپس GET delta +1 و پاک‌شدن uncertainty با حفظ کار و بدون replay. یعنی هر سه کنترل PASS; نه full matrix/visual/real-data. یک harness restart مجاز مصرف شد؛ کنترل3 بعد از stop-minute10 اجرا شد و در RESULT به‌عنوان timedeviation ثبت است. ProductionPENDING، shared/data/flag NONE، Stop-State STOP_FOR_ARCHITECT. تا review این نتیجه تسک دیگری صادر نشود.
 
