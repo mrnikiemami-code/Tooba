@@ -1,0 +1,65 @@
+BEGIN_TOOBA_WORKER_RESULT
+TASK: TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210-R1
+PARENT: TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210
+CHANNEL: tooba-main
+WORKER: tooba-worker-01
+AGENT: cursor
+BASE: 705921b85a9675dd6af994213ef908f54a4f237d
+COMMIT: 58f484e83b6b2665e4d2a3bb92cd166cd3ccb574
+PUSH: origin/main fast-forward, HEAD == origin/main (pointer commit 77a3467 on top, docs only)
+VERDICT: READY_FOR_ARCHITECT_REVIEW (frontend presentation only, zero domain writes)
+STATUS: COMPLETED
+
+THE THREE REVIEW ITEMS, CLOSED
+1) Mobile was THREE lines/day (day+status, start full-width, end full-width) -> now TWO lines: day+status,
+   then ONE paired line with equal-width start/end and visible localized From/To labels.
+2) Bounds had no mobile label and no weekday-scoped accessible name -> each bound is a <label> containing a
+   sr-only weekday plus the localized From/To word, so the accessible name is "<weekday> From" / "<weekday> To"
+   in both modes; on narrow screens the From/To word is visible, on desktop it is sr-only and the header
+   supplies the visible label (no duplicate visible text).
+3) View mode dumped the whole formatted range into Status while From/To stayed empty -> Status now shows
+   working/closed as text, From shows the stored start, To shows the stored end, and a closed day shows an
+   honest dash in both bounds. No duplicated formatted range, zero editable controls.
+
+IMPLEMENTATION (ui/authoring-week-editor.tsx only)
+- Paired bounds block: desktop `display: contents` (children stay ordinary grid items in the accepted
+  columns 3 and 4); narrow `grid-column: 1 / -1` with `minmax(0,1fr) minmax(0,1fr)` + 8px gap.
+- View branch renders text bounds instead of inputs; edit branch renders the same two labels around the
+  existing time inputs. Removed the now-unused `authoringFormat` import. No message/DTO/model change.
+- Unchanged: weekday ids/order, remembered closed-day hours, TimeText/fraction handling, onDayWorking /
+  onDayTime callbacks, timezone value, one-root-week authority, every data-testid.
+
+MEASURED
+Desktop 1440x900 edit (FA), header == rows, all seven rows identical h=44:
+  day 481/607, status control 457/16, start 209/120, end 81/120; header cells 481/607, 337/136, 209/120, 81/120.
+Mobile 390x844 edit (FA), all seven rows identical h=86: start (x=199,w=138) and end (x=53,w=138) share the
+  same top on every row -> one paired second line. document.scrollWidth == innerWidth == 390, no overflow.
+Mobile 390x844 view (FA): week inputs = 0; Monday row = day / "روز کاری" / From 09:00 / To 17:00; Tuesday row =
+  day / "تعطیل" / From — / To —.
+EN/LTR via canonical `tooba_locale=en` cookie (dir ltr, lang en), desktop and mobile: header Day/Status/From/To,
+  rows "Monday / Working day / From 09:00 / To 17:00" and "Tuesday / Closed / From — / To —"; accessible names
+  observed "Monday From", "Monday To", "Tuesday From", "Tuesday To". Cookie restored to fa afterwards.
+
+EVIDENCE (real bytes, each cropped to the emulated viewport, week scrolled into view first)
+docs/architecture/evidence/TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210-R1/
+  RESULT.md, week-view-390x844.png, week-edit-390x844.png, week-edit-1440x900.png,
+  week-en-view-1440x900.png, week-en-view-390x844.png.
+The 210 evidence defect is not repeated: every 390x844 file is a 390x844 PNG with the week visible, not a
+General-form top crop and not a mobile rectangle inside a larger canvas.
+
+DATA / REVISION
+No Apply, no POST/PUT/PATCH/DELETE, no seed/migration, no backend build/restart. Edit was opened and left via
+"Leave edit mode" without saving; afterwards view mode, week inputs 0, Regions panel inputs 0, and readback
+still shows freight 120000.00 / packaging 5000.00. The user's own tab and unsaved work were not reloaded.
+
+VALIDATION AND TIMING (honest)
+- npm run typecheck clean (once after the source change, once after removing the unused import).
+- No unit/source-regex tests, no full suite, no save replay.
+- Claimed 21:52:55Z; source + typecheck complete by ~21:58Z; docs/commit from ~21:59Z, i.e. inside the
+  12-minute box with the minute-7 implementation stop respected. Elapsed reported from the real clock.
+
+LIMITS
+Presentation only. No save/activation/readiness/quote/deployment/production acceptance. Prior 210 desktop
+acceptance is preserved, not re-proved. USER VISUAL ACCEPT REMAINS PENDING; the worker does not grade its
+own UI. STOP_FOR_ARCHITECT.
+END_TOOBA_WORKER_RESULT
