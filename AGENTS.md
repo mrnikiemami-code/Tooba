@@ -1,5 +1,21 @@
 # Tooba — Agent Rules
 
+## CURRENT HANDOFF —208 ACCEPTED / REAL LOCAL USER TRIAL —2026-10-24
+
+Read TOP canonical Shipping recovery and208/ARCHITECT-REVIEW.md.
+208 source f2fa49d5432d38663aa67ea057583c51bf0bb01e accepted for real existing-draft READ trial.
+Active task NONE; awaiting result NONE; next task NONE. Call user now, do not create proof-loop tasks.
+URL http://127.0.0.1:3000/admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=view
+Real minimal draft post/null, Store, empty groups; actual type catalog empty, settings/week unconfigured.
+9 migrations applied; Host5088 current binary left running in D:\temp\tb207-build\out,
+launcher D:\temp\tb208-host\run-host.cmd; FE3000 preserved. Verify fresh PIDs if troubleshooting.
+Live Apply persistence NOT exercised; current state is read+mount+cleanEdit/Cancel readiness.
+Explicit user NONproduction local execution authorization persists: no repeated approval.
+owner.ownerKind wire fix accepted; historical synthetic owner.kind fixtures not current wire proof.
+No rebuild/reapply/reset/replay190–205 as routine recovery. Await actual user feedback.
+Older CURRENT/ISSUED headings below are superseded history.
+
+
 ## CURRENT ISSUED TASK —208 / explicit local-development execution authorized —2026-10-24
 
 Only issued task: TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208, parent207.

@@ -1,3 +1,32 @@
+## مرجع قطعی چت جدید:208 پذیرفته؛ تست کاربر روی مسیر واقعی —2026-10-24
+
+**Architect ACCEPT_LOCAL_EXISTING_DRAFT_READ_TRIAL_HANDOFF**؛source/evidence `f2fa49d5432d38663aa67ea057583c51bf0bb01e`؛[review208](../../architecture/evidence/TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208/ARCHITECT-REVIEW.md).
+**Current phase=USER_TRIAL_LOCAL_LIVE_READ_READY. Active task=NONE؛ awaiting worker result=NONE؛ next task=NONE.** کاربر اکنون برای تست فراخوانده شود؛تسکاثباتی/تحلیلی تازه نساز.
+
+### مسیر دقیق و وضعیت واقعی
+
+http://127.0.0.1:3000/admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=view
+
+Draftواقعی:`01a16eeb-70b3-7000-87c2-564c82835496`؛binding`post`/optionCode=null؛Store/store-alpha؛revision1هنگامhandoff؛groups[]؛بدونترجمه؛settings/weekunconfigured. نوع‌هاواقعاًخالی‌اند،نهخطایخواندن؛زبان‌هایconfiguredسه‌تاfa-IR/en-US/Russian. دادهکاربرپسازاینممکنتغییرکند؛revision1راresetنکن.
+واقعاًAPI200+mount+Edit/CancelcleanبدونPUTمشاهدهشده؛**ذخیرهApplyرویاینdraftواقعیPENDING**. توضیحجهتتست:روی«ویرایش»بزند،بخش‌هایموردنظرراپرکند،ذخیرهوحفظپسازخواندندوبارهرابررسیکند؛پیشاپیشموفقیتwriteادعانشود.
+
+### اقدام‌های انجام‌شده؛ دوباره اجرا نشوند
+
+Runner planکل33moduleدقیقاً9pending؛applyموفق:Shipping7تا20261022195929،Fulfillment2تا20261022182208؛historyShipping13/Fulfillment12وobjectsوجوددارند. هیچmigration/historyeditنیست.
+Hostقدیمی5088تعویض؛HostجدیدمشاهدهPID10800،`D:\temp\tb207-build\out\Tooba.Host.exe`؛Development؛5088؛contentrootهمانout؛ShippingOneLevelCatalogEnabled=true؛FE3000PID19108دست‌نخورده. launcherمحلی`D:\temp\tb208-host\run-host.cmd`،runtime/outputبرایکاربرنگه‌داشتهشده. PIDهاsnapshotاند،هنگامtroubleshootدوبارهverify.
+Frontendfixفقطdecodecanonical`owner.ownerKind`بهinternal`owner.kind`+wiretestfixture؛adapter7/7workerreported. actualOwnerViewApplicationresponseاستنهContracts؛auth/DTOتغییرنکرده.
+DBواقعاًتغییرکرد:9migration/schema/history/index/check+یکdraft+startupMassTransitSQLschema. «فقطdraftتغییرکرد»درworkerfieldدقیقنیست؛کلstartup/workerrowwritesشمرده‌نشده،zeroادعانشود. ایناثراتdevمجازبودند.
+
+### مجوز/حدادعا/قدم بعد
+
+مجوزصریحکاربر«DBproductionنیست،همهکارهایلازمdevانجامشود،توقفوتأییدتکراری‌نمی‌خواهم»معتبرومحفوظ؛برایهمیناقداماتدوبارهapprovalنگیر.
+اولفقطبازخوردتستکاربر. اگرURLقطعشد:process/launcher/originراread-onlyverify؛نهrebuild/migrate/resetازابتدا. اگرایرادواقعیreportشد،repairمحدودهمانایرادباskillمربوطونتایجfocused؛190–205دوبارهبازنشوند.
+Historical205syntheticserializedfixturesowner.kindناصحیحداشتند؛بعدfix208آن‌هارابدوناصلاحwireدوبارهاجرا/اثباتتازه معرفینکن. آرشیوhistoryحفظ؛proofloopنساز.
+Production/fullshippingdelivery/quote/activation/wholemethodcreate/certification/userVisualACCEPTادعانشود. تحویلهمینexisting-drafteditorبرایusertrialاست؛backendintegrationreadاکنونreal،livewriteهنوزتستنشده. TB185paused/defaultOFF/PendingAllocationمحفوظ.
+Architectdiff/harness/OwnerView/decoderراreviewکرد؛localhostWindowsرامستقلراننکرد. همهpointerهایپایینتاریخچه‌اند،نهتسکفعال.
+
+---
+
 ## نتیجه اجرای208 — READY_FOR_USER_TRIAL روی استک توسعهٔ محلی — 2026-10-24
 
 208 اجرا و به Bridge گزارش شد؛ Worker، base`822a8ea8`، فقط یک تسک. [evidence208](../../architecture/evidence/TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208/RESULT.md).
