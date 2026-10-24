@@ -1,3 +1,74 @@
+## نقطه شروع قطعی چت جدید — 2026-10-24 — SHIPPING USER TRIAL
+
+این بخش مرجع وضعیت جاری است؛ تمام «تسک فعال/منتظر نتیجه» در بخش‌های پایین تاریخچه‌اند. چت جدید نباید از روی آن‌ها کار جدید یا تکراری صادر کند.
+
+### الان کجا هستیم
+
+- Repository: `mrnikiemami-code/Tooba`؛ branch: `main`.
+- آخرین پذیرش Architect: **TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3**.
+- Worker source/evidence: `d6fd1ba0c7e43fe3493f91b77a6bd5a6402c3e76`.
+- پذیرش و تحویل ثبت‌شده در commit `750b4d73e1e3561d53ddd7b2e7170136e2933f5a`. این checkpoint در commit بعدی همین شاخه ثبت می‌شود؛ در بازیابی HEAD تازه را بخوان، SHA تاریخی را HEAD فرض نکن.
+- **Active implementation task=NONE؛ Awaiting worker result=NONE؛ Automatic next task=NONE.**
+- **Current phase=USER_TRIAL_EXISTING_DRAFT_AUTHORING**؛ این به معنای پایان کل برنامه Shipping یا تأیید production نیست.
+- خواسته فعلی کاربر: ریکاوری کامل برای چت جدید، سرعت تحویل و جلوگیری از دوباره‌کاری/حلقه اثبات.
+
+### دفتر پذیرش؛ دوباره اجرا نشود
+
+| کار | آخرین repair پذیرفته‌شده | دامنه بسته‌شده |
+| --- | --- | --- |
+| 190–194 | reviews تاریخی مربوط | owner-local draft، region/rate، ترجمه، هفته و تنظیمات مستقل |
+| 195/198 | تحلیل با اصلاحات Architect | مالکیت نوع و قرارداد ویرایشگر اتمیک |
+| 196 | 196-R13-R1 | کاتالوگ نوع Fulfillment، API/Contracts، schema/storage/race |
+| 197 | 197-R1 | انتساب نوع روی root پیش‌نویس Shipping، failure/retry و no post-commit lookup |
+| 199 | 199-R1 | document اتمیک موجود، preflight کامل، یک revision و transaction/rollback |
+| 200 | 200-R2 | adapter دقیق decimal/time، baseline preservation، epoch و sticky unknown |
+| 201 | 201-R2 | destination hydration از Geography.Contracts؛ repro قبلی fake نامعتبر بود و پس گرفته شد |
+| 202 | 202-R1 | General واقعی، raw dirty، discard و lifecycle |
+| 203 | 203-R1 | نرخ‌ها و هفته واحد؛ per-bound time و reset همه فرم‌ها |
+| 204 | 204-R2 | گروه/مقصد، coordinator درخواست، evidence نسل جاری و active-path Add |
+| 205-R2 | bounded happy-path review | mounted synthetic composite save، duplicate gate، response adoption، FA/EN captures |
+| 205-R3 | bounded work-protection review | invalid+discard،409 حفظ کار،transportUnknown+reconcile صریح بدون replay |
+
+مرجع آخرین پذیرش:
+[205-R3 ARCHITECT-REVIEW](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3/ARCHITECT-REVIEW.md).
+مرجع happy-path:
+[205-R2 ARCHITECT-REVIEW](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R2/ARCHITECT-REVIEW.md).
+نیازی به بازخوانی همه نتایج از196 یا اجرای دوباره suiteها برای بازیابی نیست.
+
+### تحویل موجود و مسیر ورود
+
+ویرایش **پیش‌نویس مجاز موجود** شامل متن چندزبانه/نوع/تنظیمات مستقل، گروه‌های مرتب/مقصد/عنوان، ردیف‌های هزینه و یک هفته روی root، با ONE PUT و expectedRevision مشترک آماده تست کاربر است.
+ورود: پنل روش‌های ارسال → نمایش روش موجود → تب عمومی → لینک پیش‌نویس، فقط اگر binding دقیق serviceCode+nullable optionCode به یک پیش‌نویس مجاز برسد.
+مسیر واقعی: `/admin/shipping-services/authoring/[draftId]?mode=view|edit`.
+شناسه‌های synthetic نتایج205 برای داده واقعی قابل استفاده نیستند. صفر پیش‌نویس = حالت no-draft صادقانه؛ هیچ POST/create خودکار وجود ندارد.
+Backend editor API: `GET|PUT /v1/admin/shipping-services/authoring-drafts/{draftId}/editor-document`؛ seller نیز composition مجاز خود را دارد.
+
+### دقیقاً قدم بعد چیست
+
+1. ابتدا HEAD فعلی main، همین checkpoint، AGENTS و دو review بالا را بخوان؛ اگر HEAD جدید است فقط delta جدید را بررسی کن.
+2. هدف بعدی **تست عملی کاربر و تأیید اتصال محیط واقعی برای همین پیش‌نویس موجود** است؛ تکمیل UI را با آماده‌بودن runtime و داده واقعی یکی نگیر. دسترسی/سلامت Host، FE، schema جاری، language/type/geography registry و وجود draft مجاز در محیط واقعی در این مرحله هنوز تأیید نشده‌اند.
+3. اگر کاربر مشکل ورود/لود گزارش کرد یا خواست ادامه اتصال اجرا شود: فقط همان مسیر واقعی و اولین blocker را بررسی کن؛ ابتدا read-only و source-grounded. نبود draft را با ساخت یا seed خودسرانه دور نزن؛ محیط/شناسه/مالک را از منبع متصل به دست آور، حدس نزن. اگر دسترسی کافی نبود فقط اطلاعات واقعاً مفقود را بپرس.
+4. اگر نیاز به کار Worker بود، یک فایل دانلودی .task.md کوتاه با Task-ID/base/scope/timebox/STOP و معیار اتمام مشخص صادر کن؛ بعد از نتیجه review. این checkpoint خودش مجوز deployment/merchant write یا یک task صادرشده نیست.
+5. بعد از تست کاربر، بازخورد واقعی را به repair محدود تبدیل کن؛ full geography matrix، visual replay، confidence loop یا suite سنگین تازه صرفاً برای پرکردن شواهد نساز. اگر blocker ندارد، برای این slice کار مصنوعی اضافه نکن.
+6. ساخت روش کامل، activation، cutoff/carrier/funding و runtime quote مراحل مستقلِ هنوز تحویل‌نشده‌اند؛ بدون تعیین دامنه واردشان نشو. برنامه کلی به اشتباه COMPLETE علامت نخورد.
+
+### حد ادعا و شواهد
+
+همه /v1 مرورگر205 synthetic/intercepted و fail-closed بودند؛ source واقعی route/component mounted شد، نه merchant/backend integration واقعی. Production-Functional-Acceptance=PENDING، live registry/user Visual ACCEPT/release/deployment/whole-module certification اثبات نشده.
+R2: 1PUT/rev7→8/new IDs/no post-saveGET؛ 6FA/ENdesktop/mobile captures فقط REVIEW_EVIDENCE_ONLY. Architect به‌علت محدودیت UTF8 connector پیکسلPNG را مستقل ندید.
+R3: سه کنترل طبق DOM/count worker و harness بررسی و پذیرفته شد؛ Architect مرورگرWindows را دوباره اجرا نکرد. عبارت reuse Visual ACCEPT در RESULT ناصحیح است. timing انحراف R2 و stop-minute10 درR3 حفظ شده؛ برای آن‌ها proof task مجدد صادر نشود.
+ماتریس کامل geography/group move-remove در مرورگر تأیید نشده؛ این گپ باعث بازکردن دوباره199–204 نیست.
+
+### محیط و حفاظت‌های ادامه
+
+205 runtime موقت FE3517 +ChromeCDP9555 پاک شده و طبق worker پورت‌ها آزادند؛ shared3000 دست‌نخورده بود. آماده‌بودن فعلی پورت3000/Host5088 را از تاریخچه فرض نکن.
+Runtime browser test قبلی فقط frontend copy، installed deps/junction، `TOOBA_HOST_ORIGIN=http://127.0.0.1:1` و همه/v1 interception بود؛ برای live trial همین mock را واقعی معرفی نکن.
+sharedDB/data/flag تغییر نکرده؛ TB185 paused و default-OFF/PendingAllocation محفوظ.
+Bridge فقط transport؛ هیچ dummy/probe/result ساختگی و هیچ اجرای تاریخی post-result.js. یک task هم‌زمان، بدون reset/stash/rebase/force-push یا دست‌زدن به کار نامرتبط.
+کاربر عجله دارد: گزارش کوتاه فارسی، taskهای کوتاه و محدود، بدون توقف غیرضروری یا تست‌سازی بی‌پایان. هیچ تیک تکمیل قبل از پایان و review کار واقعی زده نشود.
+
+---
+
 ## مرجع جاری: تحویل ویرایش پیش‌نویس موجود برای تست کاربر — 2026-10-24
 
 **205-R3 پذیرفته شد: ACCEPT_BOUNDED_MOUNTED_WORK_PROTECTION** در source/evidence `d6fd1ba0c7e43fe3493f91b77a6bd5a6402c3e76`؛ [بازبینی Architect](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3/ARCHITECT-REVIEW.md). diff مستقل فقط docs/harness؛ production بدون تغییر. سه کنترل mounted طبق DOM/count ثبت‌شده: invalid/رد و تأیید لغو با بازگرداندن کل General+rates+week؛409 حفظ کار بدون retry؛transportUnknown با latch و reconcile صریح دقیقاً1GET و بدون replay. Architect harness/RESULT را خواند، مرورگر Windows را دوباره اجرا نکرد. stop-minute10 حدود0.6دقیقه رد شد؛ انحراف فرایندی ثبت، نه timingPASS. chronology دقیق پایان از commitها اثبات نشده است.

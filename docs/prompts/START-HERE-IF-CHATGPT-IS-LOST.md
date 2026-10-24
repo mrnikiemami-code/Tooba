@@ -1,13 +1,16 @@
 ﻿# Tooba — Bridge-Wake-V1 Recovery Start
 
-## Current Shipping recovery — 2026-10-22
+## Current Shipping recovery — 2026-10-24
 
-Read [`SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md`](../planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md)
-before interpreting the historical phases below. Active objective: Shipping Admin,
-clean backend/frontend architecture; TB-189 reviewed, TB-190 issued and awaiting
-result. Verify actual Bridge task state and fresh origin/main; never re-enqueue
-an already claimed task. TB-185 performance stays paused. This pointer is not a
-new task, permission to deploy, or whole-product acceptance.
+Read the TOP checkpoint in [SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md](../planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md), then its 205-R3/R2 Architect reviews and root AGENTS.md.
+Last Architect acceptance: TB205-R3; acceptance commit `750b4d73e1e3561d53ddd7b2e7170136e2933f5a`.
+Current phase: USER_TRIAL_EXISTING_DRAFT_AUTHORING. Active task=NONE; awaiting worker result=NONE.
+199–204 and bounded 205-R2/R3 are accepted; do not repeat their work or issue full-matrix proof tasks.
+Next objective is user trial / real-environment connectivity for an existing authorized draft; live runtime/data/registry acceptance is pending.
+Actual entry: existing method View → General → authorized draft link; route `/admin/shipping-services/authoring/[draftId]`.
+No automatic draft create, deployment, live merchant mutation or runtime quote is authorized here.
+The TOP recovery section contains the complete accepted ledger, remaining limits, runtime facts and continuation rules.
+Everything below is historical project context, NOT the current phase/task. Fetch fresh main before proceeding.
 
 ```text
 PIPELINE-PROTOCOL: BRIDGE-WAKE-V1

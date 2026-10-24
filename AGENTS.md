@@ -1,6 +1,19 @@
 # Tooba — Agent Rules
 
-## Active Shipping recovery — 2026-10-22
+## START HERE — Shipping checkpoint 2026-10-24
+
+Read only the TOP current checkpoint first in
+`docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md`, then the
+205-R3 and 205-R2 ARCHITECT-REVIEW.md referenced there.
+Latest Architect acceptance commit: 750b4d73e1e3561d53ddd7b2e7170136e2933f5a.
+Current phase: USER_TRIAL_EXISTING_DRAFT_AUTHORING. Active task=NONE; awaiting result=NONE.
+Next objective: user trial / source-grounded real-environment connectivity for an EXISTING authorized draft;
+live runtime, registry/data and production acceptance are still unverified. No new task has been issued.
+Do not replay 190–205, reopen accepted capabilities, invent a proof loop, or infer live readiness from synthetic browser evidence.
+The recovery top section includes accepted-task ledger, actual UI/API paths, remaining limits and exact continuation.
+Older active-task statements below are historical, not current authorization.
+
+## Historical Shipping recovery — 2026-10-22
 
 Chat-loss checkpoint: the latest section at the top of the recovery document
 records accepted work, completed R8, unresolved gates and the exact continuation.
