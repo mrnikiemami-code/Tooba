@@ -1,3 +1,12 @@
+## مرجع جاری: 205-R1 هنوزجزئی / فقط205-R2 باfixtureآماده — 2026-10-24
+
+205-R1 در `e827c5d60aabe52cc243369df6fa4a73e5f2be86` فقطشواهدتعاملجزئیثبتشد،**205بسته‌نیست**؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R1/ARCHITECT-REVIEW.md). main `c33103f2fa7be66194389dad2a95b086cd5617fc` فقطpostresultبعدی. workerreport: FAnames+ENcontentedits حفظ،1PUT/rev7/decimalexact/noGET؛responsemockinvalid باعثunknownدرست‌شدنهsuccessfuladoption.5FAscreens؛ENinterface/B/C/E/doubleclickNOTRUN؛productioncodeunchanged.
+
+علتfixture: WRITEregionGroups (areatuple/titlepatch/noordercurrencynewid) مستقیمبهREADdocumentinjectشد. Architect اینبار **205-R2/scripts/save-scenario.mjs** آماده و باproductiondecoder/wireواقعی preflightاجراکرد: initial7/saved8هردوdecode؛newgroup/newrowreadids/factsconsistent؛negativeWRITEasREADردشد؛rawmoney/timeحفظ. اینpreflightاستنهbrowserPASS.
+
+تنها **TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R2**،parent205-R1،25دقیقه/stop18: reuseCDP+fixtureآماده،exactcompositeflow namesFAEN+MondayEND18:15+Country2newgroup/faعنوان+row0.50/0.00/day1..2؛ONEPUT/rev8/newidsadoption+pendingdoubleclick و4FAENdesktop/mobilecaptures. نهgenericmockengine/productionfix/setuploop. باقیA-E اگراجرانشدصریحOPEN،نهfullaccept.
+تا نتیجه205-R2 تسکدیگری صادر نشود.199-204بسته‌نهreplay؛ProductionPENDING؛TB185paused/defaultOFF/PendingAllocationمحفوظ. اینبخش برpointerتاریخی مقدم است.
+
 ## مرجع جاری: 205 فقطruntimeجزئی / فقط205-R1 تعامل و visual — 2026-10-24
 
 205 در `926c3a6c397d0d0bd83d9bd494c6ef0ecb08a7d4` برایruntimeevidence ثبتشد، **PARTIAL؛ A-E/visualپذیرفته‌نیست**؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205/ARCHITECT-REVIEW.md). main `fb4f63e33957a9e29dbf3fc9cd2f15a8ed11ae03` فقطpostresultartifactبعدی. workerreport: Nexttaskowned3517+Chrome9555،mountواقعی،0PUT،1FA screenshot؛A-EونمایFAEN/mobileاجرایشده‌نیست. منابعproductionتغییرنکرده.

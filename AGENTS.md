@@ -47,11 +47,11 @@ TB201 destination read bridge accepted through201-R2 at9120f0cba; prior fake dup
 TB202 existing-draft General UI is Architect-accepted through202-R1 at86c0a10932f (bounded source/pure-function review; mounted React and visual remain unverified).
 TB203 existing-group rates and root week UI are Architect-accepted through203-R1 atbf7cb78e471; Visual/mounted/live remain unverified.
 TB204 existing-draft group/destination editor is Architect-accepted through204-R2 atec957367f; browser/visual/live remain unverified.
-TB205 is PARTIAL runtime evidence only at926c3a6c; no interaction or visual acceptance (see205 ARCHITECT-REVIEW).
-Only next issued task: TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R1 (parent205).
-Reuse committed CDP harness/known isolated startup, repair synthetic fixtures, execute actual interactions and FA/EN desktop/mobile observations.
-No production change or merchant write; all /v1 remains synthetic fail-closed. No setup/proof loop.
-Wait205-R1 result before any next task.199/200/201/202/203/204 accepted, no proof replay.
+TB205-R1 is PARTIAL mounted interaction evidence at e827c5d60; no successful save/adoption or full visual acceptance.
+Only next issued task: TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R2 (parent205-R1).
+Use Architect-prevalidated205-R2/scripts/save-scenario.mjs; exact composite mounted save/adoption + duplicate gate + FA/EN screenshots.
+No production change/merchant writes/generic mock engine/setup loop; all /v1 synthetic fail-closed.
+Wait205-R2 result before any next task; remaining unexecuted A-E controls explicitly open.199-204 accepted, no proof replay.
 Do not replay old active-task paragraphs as authority; this block and latest recovery supersede them.
 
 ## Core rules
