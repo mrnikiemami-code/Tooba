@@ -1,3 +1,12 @@
+## مرجع جاری: 205 فقطruntimeجزئی / فقط205-R1 تعامل و visual — 2026-10-24
+
+205 در `926c3a6c397d0d0bd83d9bd494c6ef0ecb08a7d4` برایruntimeevidence ثبتشد، **PARTIAL؛ A-E/visualپذیرفته‌نیست**؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205/ARCHITECT-REVIEW.md). main `fb4f63e33957a9e29dbf3fc9cd2f15a8ed11ae03` فقطpostresultartifactبعدی. workerreport: Nexttaskowned3517+Chrome9555،mountواقعی،0PUT،1FA screenshot؛A-EونمایFAEN/mobileاجرایشده‌نیست. منابعproductionتغییرنکرده.
+
+Architect fixturesاجراکرد: nulladminparent متن"null" است؛group1country+descendants overlapping است؛cityfilteredfixture ثابتناصحیح؛PUTfixtureفقطrevisionراreplaceمی‌کندنهedits/newids. authoring-types متعلقfeature است وبنرentryFailed ازهمینfailureمی‌آید،نهصرفاًshell. reviewدقیق،نهproductdefectازmockناقص.
+
+تنها **TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R1**،parent205،30دقیقه/stop22؛reusecommittedharness/knownstartup؛fixtureهایقانونی+typelookup/shellwhitelist grounded وfailclosed؛interactionواقعی+4FAENdesktop/mobilecaptures. نهproductionfix/Nodeproofreplay/newframework یاsetuploop. setup<=5min؛اگرنشدexactBLOCKED. sharedapps/DBبدونتغییر؛syntheticinterceptedPUTفقط؛no merchantwrite.
+تا نتیجه205-R1 تسکدیگری صادرنشود.199/200/201/202/203/204بسته‌نهreplay؛ProductionPENDING؛TB185paused/defaultOFF/PendingAllocationمحفوظ. اینبخش مقدم برpointerتاریخی.
+
 ## 205 اجرا شد: PARTIAL — منتظر بازبینی Architect، بدون پذیرش — 2026-10-24
 
 **TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205** از base `b7f7ead6df5129a9b0a62ee201592c4a2888f1ae`
