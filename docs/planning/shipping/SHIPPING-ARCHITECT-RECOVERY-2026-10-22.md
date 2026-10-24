@@ -1,3 +1,12 @@
+## مرجع جاری: 205-R2 مسیرموفق پذیرفته / فقط205-R3 کنترل‌کارکاربر — 2026-10-24
+
+205-R2 در `4dddb7265e98a5ec012d11be0a7d2b7b982f982e` برای **mounted synthetic happy-path ACCEPT**؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R2/ARCHITECT-REVIEW.md). main `c7cb141c3d1e091d66d8b7e2bed3cb54991eeb75` فقطpostresultبعدی.1PUT/rev7->8/newgroup-rowids/noGET/duplicategate گزارشbrowserworker coherentباharness+fixtureprevalidated. assertساختاریJSON+rawtokens است،نهbyte-for-byte؛requestareasWRITEtupleنهREAD.
+
+6screenshotFAENdesktop/mobileوجوددارد،ولیconnectorPNGbinaryreadراUTF8-onlyردکرد؛Architectpixelsندیده،VisualREVIEW_EVIDENCE_ONLYنهowneraccept.26min>25 ثبتtimedeviation،نهretestloop. ProductionPENDING؛نهrealDBwrite/deploy/quote.
+
+تنها **TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3**،parent205-R2،15دقیقه/stop10: mounted invalid+reject/confirmwhole-discard،canonical409preserve،transportUnknown+explicitGETreconcile/noReplay. reuseharness/runtime،setup<=3؛نهhappy/visualreplay/wholegeographymatrix/newfeature. بعدreview اینکنترل‌ها handoffexistingdraftبرایusertrialباremaininglimits،نهتسک‌سازیبی‌پایان. تا نتیجه205-R3 تسکدیگری صادرنشود.
+199-204بسته،TB185paused/defaultOFF/PendingAllocationمحفوظ. اینبخش مقدم برpointerتاریخی.
+
 ## مرجع جاری: 205-R1 هنوزجزئی / فقط205-R2 باfixtureآماده — 2026-10-24
 
 205-R1 در `e827c5d60aabe52cc243369df6fa4a73e5f2be86` فقطشواهدتعاملجزئیثبتشد،**205بسته‌نیست**؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R1/ARCHITECT-REVIEW.md). main `c33103f2fa7be66194389dad2a95b086cd5617fc` فقطpostresultبعدی. workerreport: FAnames+ENcontentedits حفظ،1PUT/rev7/decimalexact/noGET؛responsemockinvalid باعثunknownدرست‌شدنهsuccessfuladoption.5FAscreens؛ENinterface/B/C/E/doubleclickNOTRUN؛productioncodeunchanged.
