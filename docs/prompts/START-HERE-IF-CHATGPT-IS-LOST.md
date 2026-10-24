@@ -1,5 +1,18 @@
 ﻿# Tooba — Bridge-Wake-V1 Recovery Start
 
+## CURRENT ISSUED TASK —208 / explicit local-development execution authorized —2026-10-24
+
+Only issued task: TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208, parent207.
+User confirms NON-production local DB and explicitly authorizes necessary checked-in dev migrations,
+Host5088 refresh and normal existing startup seed/backfill/workers, minimal ONE trial draft via real API if absent,
+and narrow relevant integration repair. Do not ask again for these same actions or retain old approval holds.
+40min hardbox/implementation stop30; reuse207 build, preserve frontend3000, keep successful Host running.
+Read TOP recovery and task. Target verification still required; no external/production/reset/drop/auth bypass.
+Await208 result; user is called to test only after actual real API+mounted route readiness.
+Old207 approval-pending paragraphs below are superseded historical context.
+
+
+
 ## CURRENT: 207 reviewed, schema approval pending — 2026-10-24
 
 Read TOP canonical Shipping recovery and207/ARCHITECT-REVIEW.md + EXECUTION-PLAN.md.

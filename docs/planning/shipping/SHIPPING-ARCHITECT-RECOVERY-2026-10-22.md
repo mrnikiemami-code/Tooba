@@ -1,3 +1,12 @@
+## تسک جاری208 — مجوز صریح ادامه روی دیتابیس توسعه — 2026-10-24
+
+کاربر صریحاً اعلام کرد دیتابیس production نیست، تغییرات لازم انجام شود، توقف/تأییدهای تکراری نمی‌خواهد و فقط وقتی مسیر واقعی آماده شد برای تست صدایش کنیم. **این مجوز جایگزین holdهای approval قبلی207 است.**
+**Only issued task: TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208**؛parent207؛40min/stop implementation30،هدف سریع تحویل واقعی،نهproofloop. issued≠claimed.
+مجازرویهمانdevlocal127.0.0.1:5432/tooba_alpha/tenant-alpha/store-alpha: planکلRunner،اعمالmigrationهایchecked-inلازم(9شناخته‌شدهوpendingعادیاضافیهمانstackپسreview)،Host-onlyrefresh5088باbinaryآماده207وstartupseed/backfill/workers موجود،realAPI/mount،ساختحداکثر1draftتستازPOSTمجازواقعیفقطاگردraftوجودندارد. FE3000محفوظ؛موفقHostرابرایکاربرروشننگه‌دار.
+backupسریعاگرابزارحاضر،عدمابزارbackupمانعاینdevنیست. هیچمجوزdrop/resetDB،حذفکارنامرتبط،تغییرauth/editionیاdeploymentخارجینداریم. Runnermodulefilterندارد؛targetراverifyوpendingکلراببین،ولیبرایصرفاًcount!=9تأییدمجددنگیر.
+بعدنتیجه208reviewسریع: اگرrouteواقعیآمادهURL+تستکاربر؛اگرtechnicalblockerواقعیrepairمحدود،نهpermissionloop. runtime/schema/auth/draftهنوزتااجراثابتنیست؛تیکزودهنگامممنوع.190–205بسته،TB185paused/defaultOFFمحفوظ.
+مجوزکاربردرچتجدیدهممعتبر؛برایهمیناقداماتdevدوبارهسؤالنشود.
+
 ## مرجع جاری:207 بررسی شد؛ منتظر تأیید تغییر schema محلی — 2026-10-24
 
 207 build و preflight محدود پذیرفته؛ [review207](../../architecture/evidence/TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207/ARCHITECT-REVIEW.md) و [طرح اجرای دقیق](../../architecture/evidence/TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207/EXECUTION-PLAN.md).
