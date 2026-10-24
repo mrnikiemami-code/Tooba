@@ -103,3 +103,20 @@ Modified: `authoring-core.ts`, `model/authoring-intent.ts`, `model/authoring-dra
 `ui/authoring-screen.tsx`, `ui/authoring-rates-editor.tsx` (export `RateRowEditor`),
 `messages/authoring-messages.ts`, `authoring-rates-week-203-r1.test.ts` (one assertion relaxation).
 Removed: `ui/authoring-regions-panel.tsx` (superseded by the group editor).
+
+## Correction appended 2026-10-24 (TB-204-R1) — reporting only, history preserved
+
+1. Actual shipped entry route is `/admin/shipping-services/authoring/[draftId]`. The earlier
+   `/drafts/{id}` statement above was wrong; no such new route exists in the 204 diff and no routing
+   change was made or is needed.
+2. The "55 tests" figure came from the feature-ROOT glob `features/admin-shipping-authoring/*.test.ts`
+   (7 files at the time: authoring-general-ui, authoring-lifecycle-202-r1, authoring-rates-week-203,
+   authoring-rates-week-203-r1, repair-200-r1, shipping-groups-204 — plus the newly added
+   destination-picker-204-r1 in R1). Nested `api/editor-document-adapter.test.ts`,
+   `session/editor-session.test.ts` and `session/editor-session-200-r2.test.ts` were NOT matched and
+   were NOT run. "Full foundation suite" was never true and is withdrawn.
+3. The original "late epochs are guarded" claim was SOURCE-PATTERN evidence (`/epoch\.current/`), not
+   an executed race. It is superseded by the executed deferred-promise case 204-05b plus the new
+   coordinator suite in 204-R1.
+4. The single-epoch defect the Architect reported was real and is confirmed by execution: the areas
+   completion was discarded whenever the cities read started. Fixed in R1 only.

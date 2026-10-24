@@ -35,6 +35,9 @@ import {
   unresolvedDraftSelections,
 } from "./model/destination-choice.ts";
 import { decodeGeographyOptions, geographyQueryPath } from "./api/geography-lookup-api.ts";
+import type { GeographyQuery, GeographyReadOutcome } from "./api/geography-lookup-api.ts";
+import { createDestinationReadCoordinator } from "./ui/destination-read-coordinator.ts";
+import type { DestinationReadState } from "./ui/destination-read-coordinator.ts";
 import { buildEditorDocumentBody } from "./api/editor-document-request.ts";
 import { createEditorController, type EditorTransport } from "./session/editor-controller.ts";
 import type { EditorOutcome } from "./api/editor-document-api.ts";
@@ -346,11 +349,49 @@ test("204-05 country-wide cities keep their ACTUAL admin; null-admin city is law
   });
 
   const picker = read("ui/authoring-destination-picker.tsx");
-  assert.match(picker, /epoch\.current/, "a late response of an old parent/language is ignored");
-  assert.match(picker, /controller\.abort\(\)/, "the previous branch read is aborted");
-  assert.match(picker, /disabled \|\| countryId === ""/, "nothing is read before a parent is opened");
+  assert.match(picker, /createDestinationReadCoordinator/, "the picker delegates ALL orchestration to the one coordinator");
+  assert.match(picker, /choiceChainActive/, "Add re-checks active/chain coherence");
   assert.match(picker, /destination-level-/, "all four terminal levels are explicit");
   assert.equal(picker.includes("app/admin/shipping-services"), false, "no feature→app import of the legacy picker");
+});
+
+test("204-05b a late old-parent response is dropped by EXECUTION, not by a source pattern", async () => {
+  const pending: {
+    query: GeographyQuery;
+    signal: AbortSignal;
+    resolve(outcome: GeographyReadOutcome): void;
+  }[] = [];
+  let latest: DestinationReadState | undefined;
+  const ctl = createDestinationReadCoordinator(
+    (query, signal) => new Promise<GeographyReadOutcome>((resolve) => pending.push({ query, signal, resolve })),
+    (state) => {
+      latest = state;
+    },
+  );
+  ctl.update({ enabled: true, languageId: FA, countryId: COUNTRY, administrativeAreaId: null, cityId: null });
+  ctl.update({ enabled: true, languageId: FA, countryId: G1, administrativeAreaId: null, cityId: null });
+
+  const areas = pending.filter((call) => call.query.kind === "AdministrativeArea");
+  assert.equal(areas.length, 2, "each parent opens its own area read");
+  assert.equal(areas[0].signal.aborted, true, "the obsolete branch read is aborted");
+  assert.equal(latest?.lists.areas.length, 0, "old rows are cleared before the new parent answers");
+
+  areas[0].resolve({
+    state: "ok",
+    options: [{ kind: "AdministrativeArea", id: AREA, code: "THR", label: "Tehran", parentId: COUNTRY, isActive: true }],
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(latest?.lists.areas.length, 0, "the late response of the previous parent cannot win");
+
+  areas[1].resolve({
+    state: "ok",
+    options: [{ kind: "AdministrativeArea", id: AREA, code: "THR", label: "Tehran", parentId: G1, isActive: true }],
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+  const areasAfterCurrent = latest?.lists.areas ?? [];
+  assert.equal(areasAfterCurrent.length, 1, "the current parent's response is applied");
+  assert.equal(areasAfterCurrent[0]?.parentId, G1, "the current parent's response is applied");
+  ctl.dispose();
 });
 
 test("204-06 proposed resolver: retained facts + verified picks; removed unresolved stops blocking", () => {

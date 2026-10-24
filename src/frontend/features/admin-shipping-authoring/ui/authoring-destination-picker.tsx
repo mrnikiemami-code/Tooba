@@ -6,35 +6,42 @@
  * It reads ONLY the branch the operator opens (countries → areas of one country → cities of one
  * country[/area] → service areas of one city) through the feature-owned strict adapter, keeps the
  * actually returned rows as the only parent evidence, and hands the verified terminal + its typed
- * ancestry to the caller on a deliberate Add. Disabled during save/reconcile/view; a late response of
- * a previous parent/language request can never overwrite the current stage.
+ * ancestry to the caller on a deliberate Add. Disabled during save/reconcile/view.
+ *
+ * Request orchestration lives in ONE coordinator (`./destination-read-coordinator.ts`): sibling
+ * branches own independent request identities, a country-wide city read waits for the verified area
+ * set of that same country/language, and any parent/language change clears the dependent rows at once
+ * so a late response of a previous parent can never win.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { loadGeographyOptions, type GeographyOption, type GeographyReadFailure } from "../api/geography-lookup-api.ts";
 import type { AuthoringAreaKind, SelectedAreaRead } from "../model/editor-document.ts";
 import type { ResolvedAreaAncestry } from "../model/editor-edits.ts";
 import {
   AREA_LEVELS,
   choiceAncestry,
+  choiceChainActive,
   choiceTerminal,
   chooseAdministrativeArea,
   chooseCity,
   chooseCountry,
   chooseLevel,
   chooseServiceArea,
+  clearAdministrativeArea,
+  clearCity,
+  clearServiceArea,
   emptyChoice,
+  optionDisplayName,
   type DestinationChoice,
 } from "../model/destination-choice.ts";
 import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-messages.ts";
-
-type Lists = {
-  readonly countries: readonly GeographyOption[];
-  readonly areas: readonly GeographyOption[];
-  readonly cities: readonly GeographyOption[];
-  readonly serviceAreas: readonly GeographyOption[];
-};
-
-const EMPTY_LISTS: Lists = { countries: [], areas: [], cities: [], serviceAreas: [] };
+import {
+  createDestinationReadCoordinator,
+  emptyDestinationReadState,
+  type DestinationReadCoordinator,
+  type DestinationReadContext,
+  type DestinationReadState,
+} from "./destination-read-coordinator.ts";
 
 function failureText(failure: GeographyReadFailure, messages: AuthoringMessages): string {
   switch (failure.kind) {
@@ -67,6 +74,7 @@ function OptionSelect({
   value,
   options,
   disabled,
+  unavailableName,
   testId,
   onChange,
 }: {
@@ -74,6 +82,7 @@ function OptionSelect({
   value: string;
   options: readonly GeographyOption[];
   disabled: boolean;
+  unavailableName: string;
   testId: string;
   onChange: (option: GeographyOption | null) => void;
 }) {
@@ -89,8 +98,8 @@ function OptionSelect({
       >
         <option value="">—</option>
         {options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.label.trim().length > 0 ? option.label : option.code}
+          <option key={option.id} value={option.id} disabled={!option.isActive}>
+            {optionDisplayName(option, unavailableName)}
           </option>
         ))}
       </select>
@@ -114,107 +123,55 @@ export function AuthoringDestinationPicker({
   onAdd: (area: SelectedAreaRead, ancestry: ResolvedAreaAncestry) => void;
 }) {
   const [choice, setChoice] = useState<DestinationChoice>(() => emptyChoice());
-  const [lists, setLists] = useState<Lists>(EMPTY_LISTS);
-  const [failure, setFailure] = useState<GeographyReadFailure | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [readState, setReadState] = useState<DestinationReadState>(() => emptyDestinationReadState());
   const [rejected, setRejected] = useState(false);
-  const epoch = useRef(0);
+  const coordinator = useRef<DestinationReadCoordinator | null>(null);
 
   const countryId = choice.country?.id ?? "";
   const areaId = choice.administrativeArea?.id ?? "";
   const cityId = choice.city?.id ?? "";
+  const serviceAreaId = choice.serviceArea?.id ?? "";
+
+  // One owner of the picker's read lifecycle (React StrictMode safe: created/disposed per mount).
+  useEffect(() => {
+    const created = createDestinationReadCoordinator(loadGeographyOptions, setReadState);
+    coordinator.current = created;
+    setReadState(created.getState());
+    return () => {
+      created.dispose();
+      if (coordinator.current === created) coordinator.current = null;
+    };
+  }, []);
+
+  const context = useMemo<DestinationReadContext>(
+    () => ({
+      enabled: !disabled,
+      languageId,
+      countryId: countryId === "" ? null : countryId,
+      administrativeAreaId: areaId === "" ? null : areaId,
+      cityId: cityId === "" ? null : cityId,
+    }),
+    [disabled, languageId, countryId, areaId, cityId],
+  );
 
   useEffect(() => {
-    if (disabled) return;
-    const current = ++epoch.current;
-    const controller = new AbortController();
-    setLoading(true);
-    void loadGeographyOptions({ kind: "Country", languageId }, controller.signal).then((outcome) => {
-      if (current !== epoch.current || controller.signal.aborted) return;
-      setLoading(false);
-      if (outcome.state === "ok") {
-        setLists((previous) => ({ ...previous, countries: outcome.options }));
-        setFailure(null);
-      } else {
-        setLists((previous) => ({ ...previous, countries: [] }));
-        setFailure(outcome.failure);
-      }
-    });
-    return () => controller.abort();
-  }, [disabled, languageId]);
+    coordinator.current?.update(context);
+  }, [context]);
 
-  useEffect(() => {
-    if (disabled || countryId === "") return;
-    const current = ++epoch.current;
-    const controller = new AbortController();
-    setLoading(true);
-    void loadGeographyOptions({ kind: "AdministrativeArea", languageId, countryId }, controller.signal).then((outcome) => {
-      if (current !== epoch.current || controller.signal.aborted) return;
-      setLoading(false);
-      if (outcome.state === "ok") {
-        setLists((previous) => ({ ...previous, areas: outcome.options }));
-        setFailure(null);
-      } else {
-        setLists((previous) => ({ ...previous, areas: [] }));
-        setFailure(outcome.failure);
-      }
-    });
-    return () => controller.abort();
-  }, [disabled, countryId, languageId]);
-
-  useEffect(() => {
-    if (disabled || countryId === "") return;
-    const current = ++epoch.current;
-    const controller = new AbortController();
-    const knownAdministrativeAreaIds = new Set(lists.areas.map((option) => option.id.toLowerCase()));
-    setLoading(true);
-    void loadGeographyOptions(
-      {
-        kind: "City",
-        languageId,
-        countryId,
-        administrativeAreaId: areaId || null,
-        knownAdministrativeAreaIds: knownAdministrativeAreaIds.size > 0 ? knownAdministrativeAreaIds : undefined,
-      },
-      controller.signal,
-    ).then((outcome) => {
-      if (current !== epoch.current || controller.signal.aborted) return;
-      setLoading(false);
-      if (outcome.state === "ok") {
-        setLists((previous) => ({ ...previous, cities: outcome.options }));
-        setFailure(null);
-      } else {
-        setLists((previous) => ({ ...previous, cities: [] }));
-        setFailure(outcome.failure);
-      }
-    });
-    return () => controller.abort();
-    // `lists.areas` is deliberately NOT a dependency: only the opened branch may trigger a read.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disabled, countryId, areaId, languageId]);
-
-  useEffect(() => {
-    if (disabled || cityId === "") return;
-    const current = ++epoch.current;
-    const controller = new AbortController();
-    setLoading(true);
-    void loadGeographyOptions({ kind: "ServiceArea", languageId, cityId }, controller.signal).then((outcome) => {
-      if (current !== epoch.current || controller.signal.aborted) return;
-      setLoading(false);
-      if (outcome.state === "ok") {
-        setLists((previous) => ({ ...previous, serviceAreas: outcome.options }));
-        setFailure(null);
-      } else {
-        setLists((previous) => ({ ...previous, serviceAreas: [] }));
-        setFailure(outcome.failure);
-      }
-    });
-    return () => controller.abort();
-  }, [disabled, cityId, languageId]);
+  const lists = readState.lists;
+  const loading = Object.values(readState.loading).some(Boolean);
+  const failure =
+    readState.failures.countries ??
+    readState.failures.areas ??
+    readState.failures.cities ??
+    readState.failures.serviceAreas ??
+    null;
 
   const terminal = choiceTerminal(choice);
   const ancestry = choiceAncestry(choice);
+  const chainActive = choiceChainActive(choice);
   const duplicate = terminal !== null && isSelected(terminal);
+  const canAdd = !disabled && terminal !== null && ancestry !== null && chainActive && !duplicate;
 
   return (
     <div className="grid gap-2 rounded-lg border border-dashed border-border p-2" data-testid="shipping-authoring-destination-picker">
@@ -246,6 +203,7 @@ export function AuthoringDestinationPicker({
           value={countryId}
           options={lists.countries}
           disabled={disabled}
+          unavailableName={messages.destinationNameUnavailable}
           testId="shipping-authoring-destination-country"
           onChange={(option) =>
             setChoice((previous) =>
@@ -258,9 +216,12 @@ export function AuthoringDestinationPicker({
           value={areaId}
           options={lists.areas}
           disabled={disabled || countryId === ""}
+          unavailableName={messages.destinationNameUnavailable}
           testId="shipping-authoring-destination-area"
           onChange={(option) =>
-            setChoice((previous) => (option === null ? previous : chooseAdministrativeArea(previous, option)))
+            setChoice((previous) =>
+              option === null ? clearAdministrativeArea(previous) : chooseAdministrativeArea(previous, option),
+            )
           }
         />
         <OptionSelect
@@ -268,17 +229,19 @@ export function AuthoringDestinationPicker({
           value={cityId}
           options={lists.cities}
           disabled={disabled || countryId === ""}
+          unavailableName={messages.destinationNameUnavailable}
           testId="shipping-authoring-destination-city"
-          onChange={(option) => setChoice((previous) => (option === null ? previous : chooseCity(previous, option)))}
+          onChange={(option) => setChoice((previous) => (option === null ? clearCity(previous) : chooseCity(previous, option)))}
         />
         <OptionSelect
           label={messages.areaServiceArea}
-          value={choice.serviceArea?.id ?? ""}
+          value={serviceAreaId}
           options={lists.serviceAreas}
           disabled={disabled || cityId === ""}
+          unavailableName={messages.destinationNameUnavailable}
           testId="shipping-authoring-destination-service-area"
           onChange={(option) =>
-            setChoice((previous) => (option === null ? previous : chooseServiceArea(previous, option)))
+            setChoice((previous) => (option === null ? clearServiceArea(previous) : chooseServiceArea(previous, option)))
           }
         />
       </div>
@@ -287,10 +250,11 @@ export function AuthoringDestinationPicker({
         <button
           type="button"
           className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800"
-          disabled={disabled || terminal === null || ancestry === null || duplicate}
+          disabled={!canAdd}
           data-testid="shipping-authoring-destination-add"
           onClick={() => {
-            if (terminal === null || ancestry === null) return;
+            // Re-checked here too: a forged/stale option must not bypass the active-chain guard.
+            if (terminal === null || ancestry === null || !choiceChainActive(choice)) return;
             if (isSelected(terminal)) {
               setRejected(true);
               return;

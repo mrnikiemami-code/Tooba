@@ -1,4 +1,21 @@
-## مرجع جاری: 204 نیازمند اصلاح / فقط204-R1 — 2026-10-23
+## مرجع جاری: 204-R1 اجرا شد — منتظر بازبینی، بدون پذیرش — 2026-10-24
+
+**TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R1** (parent204) از base `5eaf479417a1d771f6c428f242e901e35b2d76f3`
+اجرا و به Bridge گزارش شد؛ **Architect-accepted نیست** و گام بعدی مجاز نیست. نتیجه:
+[docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R1/RESULT.md](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204-R1/RESULT.md).
+picker اکنون یک coordinator مشترک دارد (`ui/destination-read-coordinator.ts`): token و branch-key
+مستقل برای هر stage، پس پاسخ درست areas با شروع cities باطل نمی‌شود؛ cities کشورگرد فقط بعد از
+موفقیت areas همان `language|country` خوانده می‌شود و مجموعهٔ تأییدشده — از جمله مجموعهٔ خالیِ واقعی،
+fail-closed — به decoder داده می‌شود؛ شکست prerequisite شهرها را untrusted و بدون read نگه می‌دارد.
+`choiceAncestry` برای terminal نوع AdministrativeArea از ردیف خودش استفاده می‌کند (نه parent شهر)،
+`choiceChainActive` زنجیرهٔ active و coherence را در Add دوباره اعمال می‌کند، row غیرفعال نمایشاً
+disabled است، clear-area/city/service واقعاً cascade می‌کند و label خالی «نام در دسترس نیست» می‌شود
+(هرگز code/GUID). گروه/عنوان/rates/week/General و ONE PUT و discard دست‌نخورده.
+12 تست جدید coordinator/chain + 204 facts با case اجرایی out-of-order (جای regex قدیمی) = 68/68 feature-root،
+typecheck و 7 guard سبز؛ nested adapter/session و source-size عمداً اجرا نشد؛ mounted/browser/Visual NOTRUN.
+production/visual/live همچنان PENDING؛ فقط پس از review204-R1.
+
+## مرجع جاری: 204 نیازمند اصلاح / فقط204-R1 — 2026-10-23 (تاریخی، با R1 جایگزین شد)
 
 204 در `790c2583c12953986666b493d30122aeca603ce4` بررسیشد؛ [review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-GROUPS-DESTINATIONS-UI-204/ARCHITECT-REVIEW.md). **REPAIR_REQUIRED؛ تیک پایان نخورد.** group/title/rates/ONEintent حفظ؛picker اشکال دارد: globalepoch درخواستareas را باcities باطل می‌کند؛cities ازareas قدیمی/undefined والد را fail-open می‌پذیرد؛isActive درAdd guardندارد؛برگشتlevelAdminازcity ancestryغلط؛clearplaceholderبی‌اثر وlabelfallbackcodeمخالفگزارش.
 

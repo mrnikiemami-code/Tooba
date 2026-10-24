@@ -48,6 +48,21 @@ export function chooseServiceArea(choice: DestinationChoice, option: GeographyOp
   return { ...choice, serviceArea: option };
 }
 
+/** Clears the staged area (keeps the country, so country-wide cities become reachable again). */
+export function clearAdministrativeArea(choice: DestinationChoice): DestinationChoice {
+  return { ...choice, administrativeArea: null, city: null, serviceArea: null };
+}
+
+/** Clears the staged city and its dependent service area. */
+export function clearCity(choice: DestinationChoice): DestinationChoice {
+  return { ...choice, city: null, serviceArea: null };
+}
+
+/** Clears only the staged service area (the city stays selected). */
+export function clearServiceArea(choice: DestinationChoice): DestinationChoice {
+  return { ...choice, serviceArea: null };
+}
+
 /** Changes the terminal level without discarding already chosen parents. */
 export function chooseLevel(choice: DestinationChoice, level: AuthoringAreaKind): DestinationChoice {
   return { ...choice, level };
@@ -86,23 +101,77 @@ export function choiceAncestry(choice: DestinationChoice): ResolvedAreaAncestry 
   const terminal = choiceTerminal(choice);
   if (terminal === null || choice.country === null) return null;
   const countryId = choice.country.id;
-  const administrativeAreaId = choice.city ? choice.city.parentId : choice.administrativeArea?.id ?? null;
   const cityId = choice.city?.id ?? null;
+  // The city row's verified parent is the only administrative authority of a city/service-area
+  // terminal; an AdministrativeArea terminal takes its OWN staged row, never a deeper city parent.
+  const cityParentId = choice.city?.parentId ?? null;
   const serviceAreaId = choice.serviceArea?.id ?? null;
   switch (terminal.kind) {
     case "Country":
       return { kind: "Country", countryId, administrativeAreaId: null, cityId: null, serviceAreaId: null };
     case "AdministrativeArea":
-      return administrativeAreaId === null
-        ? null
-        : { kind: "AdministrativeArea", countryId, administrativeAreaId, cityId: null, serviceAreaId: null };
+      if (choice.administrativeArea === null) return null;
+      return {
+        kind: "AdministrativeArea",
+        countryId,
+        administrativeAreaId: choice.administrativeArea.id,
+        cityId: null,
+        serviceAreaId: null,
+      };
     case "City":
-      return { kind: "City", countryId, administrativeAreaId, cityId, serviceAreaId: null };
+      return { kind: "City", countryId, administrativeAreaId: cityParentId, cityId, serviceAreaId: null };
     case "ServiceArea":
       return cityId === null || serviceAreaId === null
         ? null
-        : { kind: "ServiceArea", countryId, administrativeAreaId, cityId, serviceAreaId };
+        : { kind: "ServiceArea", countryId, administrativeAreaId: cityParentId, cityId, serviceAreaId };
   }
+}
+
+/**
+ * Active/chain coherence of the staged choice, re-checked at Add (never only at render).
+ *
+ * A forged/stale programmatic option can reach the state, so every level of the chain must be an
+ * ACTIVE row whose verified parent is the level above it; an explicit area filter may not yield a
+ * null-admin city, and a service area must belong to the staged city.
+ */
+export function choiceChainActive(choice: DestinationChoice): boolean {
+  const { country, administrativeArea, city, serviceArea } = choice;
+  if (country === null || !country.isActive) return false;
+  if (administrativeArea !== null) {
+    if (!administrativeArea.isActive) return false;
+    if (
+      administrativeArea.parentId === null ||
+      administrativeArea.parentId.toLowerCase() !== country.id.toLowerCase()
+    ) {
+      return false;
+    }
+  }
+  if (city !== null) {
+    if (!city.isActive) return false;
+    if (city.parentId !== null && administrativeArea !== null) {
+      if (city.parentId.toLowerCase() !== administrativeArea.id.toLowerCase()) return false;
+    } else if (city.parentId === null && administrativeArea !== null) {
+      // A filtered country/area read can only return cities of that area.
+      return false;
+    }
+  }
+  if (serviceArea !== null) {
+    if (!serviceArea.isActive) return false;
+    if (
+      city === null ||
+      serviceArea.parentId === null ||
+      serviceArea.parentId.toLowerCase() !== city.id.toLowerCase()
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** Display name of one option row; a blank label is honestly shown as unavailable, never as its code. */
+export function optionDisplayName(option: GeographyOption, unavailableName: string): string {
+  const label = option.label.trim();
+  return label.length > 0 ? label : unavailableName;
 }
 
 /**
