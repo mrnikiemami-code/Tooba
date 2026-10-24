@@ -1,3 +1,11 @@
+## مرجع جاری:209-R1 ظاهر/مشاهده پذیرفته؛ فقطخطایمحدوده209-R2 —2026-10-24
+
+209-R1commit893f35bf/mainb79669a1(postresult+contractonly)؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1/ARCHITECT-REVIEW.md). Architectهر4PNGراواقعاًدید:RegionVIEWtextبدونcontrols،Generaltypecardدوبلندارد،4feeprimary+optionalconditions،mobileviewخواناتر. پذیرشمحدودبرایretestنهuserVisualACCEPT. liveSave209rev2محفوظ؛R1هیچwriteنکرد.
+**Only issued task TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R2**؛10min/stop6؛exactsourcebug:mappergroupIndexرادورمی‌اندازد،MaprowIndexبرایهمهgroups/globalNthfocus،پسgroup1.row0بهgroup0می‌رودودوerrorcollapseمی‌شوند؛optionalconditiondetailsبستهfocusنمی‌گیرد.
+فقطgroup+rowplacement/focus/dedup+focusedregression/typecheck؛نهlayoutدوباره/wholeproof/browser/save/migration. پسازreviewاگرسبزuserرابرایretestهمانURLصدابزن؛تسکvisual/proofتازهخودکارنساز.
+Pickerهنوز4selectهمهlevelsراrenderمی‌کند؛relevant-onlyخواسته‌شدهانجامنشدهوpresentationlimitationاست،نهscopeجدیدبرایحلقه. R1زمان37>30صریحnoncompliance.
+Draft01a16eeb-70b3-7000-87c2-564c82835496populatedrev2snapshot؛usercontentرامحفوظنگه‌دار. Host5088/FE3000روشن،مجوزdevبدونتکرارapprovalمحفوظ.190–209scopeهایپذیرفتهدوبارهبازنشوند.issued≠claimed.
+
 ## مرجع جاری:209-R1 اجرا شد — منتظر بررسی معماری —2026-10-24
 
 209-R1 نتیجه دارد: [RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1/RESULT.md).

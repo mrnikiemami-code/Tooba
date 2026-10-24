@@ -1,5 +1,16 @@
 # Tooba — Agent Rules
 
+## CURRENT TASK —209-R2 / exact nested error targeting only —2026-10-24
+
+Only issued TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R2,parent209-R1;10min/stop6.
+R1 presentation/view improvements accepted after Architect viewed all4screenshots; not userVisualACCEPT.
+Actual remaining bug: groupIndex discarded; row errors/focus/dedup rowIndex-only and globalNth.
+Fix composite group+row ownership +open targeted optional disclosure before focus; focused tests/typecheck only.
+No UI rewrite/browser/save/data/migration/runtime/proof replay. After corrected result review, user retest;
+no automatic visual/proof follow-up. Read TOP recovery and209-R1/ARCHITECT-REVIEW.md.
+Prior localdev authorization persists; preserve populated draft/backend/FE.
+
+
 ## CURRENT HANDOFF —209-R1 posted / awaiting Architect review —2026-10-24
 
 209-R1 executed under the standing local-development authorization. Read
