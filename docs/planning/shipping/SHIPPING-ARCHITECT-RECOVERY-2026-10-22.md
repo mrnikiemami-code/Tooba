@@ -1,3 +1,12 @@
+## مرجع جاری:209 ذخیره پذیرفته، UI هنوز ناقص؛ فقط209-R1 —2026-10-24
+
+209source21e78d8f/main69f70e74(result-contractonly)برای**live save repair پذیرفته**؛[review209](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209/ARCHITECT-REVIEW.md). کاربرUIراردکرده؛VisualACCEPTنداریم.
+واقعاًdraft01a16eeb-70b3-7000-87c2-564c82835496درrev2باtypeعادی/پیشتاز/IRR/Iran/fees120000-5000/weight1000–2000/day1–3/AsiaTehranMonday09–17ذخیره+GET+reloadworkerreported. دوبارهseed/migrate/saveproofنساز.
+ArchitectدوPNGdesktopراواقعاًدید(باgithub_fetch_file encodingbase64،whitespaceحذف):Viewهنوزinputوdeleterowدارد؛Generalکشیده/ریزودوبل،rateدهفیلدیکردیف؛compactUIتحویلنشده.
+Sourceerrors:description→name؛regexdaysقبلratesباعثminDeliveryDays→weekly؛ratestargetAddGroup؛reasonregexناشناخته‌هاحدس؛inlineerrorsنیست. Timezone10suggestionنهconfiguredmarket. claim18:51:55→19:55حدود63min>45،RESULTwithin45متناقض؛PASStimingنیست.
+**Only issued task TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1**؛30min/stop22؛frontendفقطprofessionalcompactlayout+truthfulview/busyguard+exacterrormapping. realmountedpixelsGeneralEDIT/RegionsEDIT+VIEWوموبایل،بدونsaveدوباره؛currentdraftusercontentحفظ،0write،Host5088/FE3000محفوظ.
+بعدنتیجهreview؛تااصلاحایننواقصواقعیuserراretestکاملصدانکن. نهfullproofloop/بازکردنbackendیا190–208؛مجوزdevمحفوظ. issued≠claimed.
+
 ## نتیجه209: کار واقعی ذخیره می‌شود — retest آماده —2026-10-24
 
 **Worker result `READY_FOR_USER_RETEST`** (نه user Visual ACCEPT). Evidence کامل: [RESULT209](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209/RESULT.md).

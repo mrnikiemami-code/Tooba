@@ -1,5 +1,18 @@
 ﻿# Tooba — Bridge-Wake-V1 Recovery Start
 
+## CURRENT TASK —209-R1 / live save accepted, UI incomplete —2026-10-24
+
+Read TOP canonical recovery +209/ARCHITECT-REVIEW.md.
+Only issued task TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1,parent209;30min/stop22.
+209 live save/readback accepted; user Visual ACCEPT absent. Architect viewed actualdesktopPNGs:
+view-mode rate inputs/delete still rendered; requested compact professional layout not delivered.
+Repair mode/busy mutation guards, compact General/Regions, optional condition organization,
+exact description/nested delivery error targeting and inline feedback. Same feature/design-system.
+No backend/migration/seed/new draft/repeat save; preserve current real populated draft/runtime.
+Await209-R1 result; no full suite/proof replay. Timing209~63min contradicts45 claim; retain honestly.
+
+
+
 ## CURRENT TASK —209 / user rejected authoring UX and save —2026-10-24
 
 Only issued task TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209, parent208;45min/stop35.
