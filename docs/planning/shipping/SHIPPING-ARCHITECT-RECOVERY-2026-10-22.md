@@ -1,3 +1,12 @@
+## تسک جاری207: ساخت Host جدید و پیش‌نیاز راه‌اندازی — 2026-10-24
+
+206 برای **تشخیص مانع پذیرفته شد**؛ source26e2b31a،main394fdf040 (فقطresult-contract بعدی). [review206](../../architecture/evidence/TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206/ARCHITECT-REVIEW.md).
+باینری Host5088 قدیمی است؛ routeهایauthoring404،FErewrite سالم. draft/auth/schema/live readiness هنوزUNKNOWN؛ devcontext200 مجوزshipping نیست.
+Architect کدProgram را خواند: Development startup حتی با RunLegacyBootstraps=false مایگریشن و چندseed/backfill دارد. restart کور مجاز نیست.
+**Only issued task: TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207**،parent206،20min/stop14: source-grounded startup effects + READ-ONLY migration history و outbox-index collision + ONE isolated currentHost build<=6min،طرح دقیقrefresh/rollback. هیچsharedrestart/DDL/DML/migration/seed در207؛binaryجدیدrunنشود. buildoutputمحلیبرایمرحلهrefreshنگه‌داری وhash/sourceثبت.
+پس ازنتیجه207: review اثرواقعیstartup/pendingids و کوچک‌ترین اقدامرفع؛ نهtaskتحلیلیخودکار/تکرارUI. تانتایج207تسکدیگریصادرنشود. آماده تست‌بودنکاربرهنوزتأییدنشده؛accepted190–205محفوظ،ProductionPENDING،TB185paused/defaultOFFمحفوظ.
+این بخش تمام pointerهای قدیمی206/NONE را supersede می‌کند؛ issued≠claimed.
+
 ## مرجع جاری: 206 اجرا شد — BLOCKED روی باینری قدیمی Host — 2026-10-24
 
 **TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206** روی base `8fcd9df9e44f7bc283e0e6ccf0c6cd95d9b0d8c2` اجرا و به Bridge تحویل شد؛ [RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206/RESULT.md).

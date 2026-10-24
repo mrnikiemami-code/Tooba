@@ -1,6 +1,16 @@
 # Tooba — Agent Rules
 
-## CURRENT ISSUED TASK — 206 — 2026-10-24
+## CURRENT ISSUED TASK — 207 — 2026-10-24
+
+Only issued task: TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207 (parent206).
+206 blocker diagnosis accepted: stale Host5088 binary; live auth/schema/draft readiness unverified.
+207:20min/stop14, read-only actual migration history + startup effects + ONE isolated currentHost build,
+concrete refresh/rollback plan. NO shared restart, migrations/seeds, database writes or new production code.
+Program.cs Development startup performs migration/seeds even with legacy bootstrap disabled.
+Read TOP canonical recovery and206/ARCHITECT-REVIEW.md. Await207 result, no replay190–205.
+
+
+## Historical issued task — 206 — 2026-10-24
 
 Only active/issued task: TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206, parent205-R3.
 User authorized continuing REAL existing-draft connectivity/read-only readiness before their trial.
