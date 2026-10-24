@@ -1,4 +1,8 @@
-## مرجع جاری: 205-R2 مسیرموفق پذیرفته / فقط205-R3 کنترل‌کارکاربر — 2026-10-24
+## مرجع جاری: 205-R3 اجرا شد و در انتظار review Architect — 2026-10-24
+
+**TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3** روی base `61043bb5d699a55145ec18fb8d03ce3bd82e2f28` اجرا و به Bridge تحویل شد؛ نتیجه در [RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3/RESULT.md). سه کنترل mounted روی runtime/harness موجود: (1) invalid name + Apply disabled/dirty + reject نگه‌داشتن کار + confirm بازگرداندن name/rate/week/groups و ورود مجدد بدون residue، 0 PUT؛ (2) canonical 409 `shipping.authoring.draft_revision_conflict` با حفظ name/dirty/edit، put=1 بدون retry و بدون post-save GET؛ (3) transportUnknown با reconcile صریح، latch حتی با ویرایش محلی بعدی، سپس GET delta +1 و پاک‌شدن uncertainty با حفظ کار و بدون replay. یعنی هر سه کنترل PASS; نه full matrix/visual/real-data. یک harness restart مجاز مصرف شد؛ کنترل3 بعد از stop-minute10 اجرا شد و در RESULT به‌عنوان timedeviation ثبت است. ProductionPENDING، shared/data/flag NONE، Stop-State STOP_FOR_ARCHITECT. تا review این نتیجه تسک دیگری صادر نشود.
+
+## مرجع پیشین: 205-R2 مسیرموفق پذیرفته / فقط205-R3 کنترل‌کارکاربر — 2026-10-24
 
 205-R2 در `4dddb7265e98a5ec012d11be0a7d2b7b982f982e` برای **mounted synthetic happy-path ACCEPT**؛[review](../../architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R2/ARCHITECT-REVIEW.md). main `c7cb141c3d1e091d66d8b7e2bed3cb54991eeb75` فقطpostresultبعدی.1PUT/rev7->8/newgroup-rowids/noGET/duplicategate گزارشbrowserworker coherentباharness+fixtureprevalidated. assertساختاریJSON+rawtokens است،نهbyte-for-byte؛requestareasWRITEtupleنهREAD.
 
