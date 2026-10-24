@@ -1,3 +1,15 @@
+﻿## CURRENT — 210-R1 mobile/view week completion posted / awaiting Architect review — 2026-10-25
+
+210 desktop acceptance retained. R1 finished the three concrete review items in the existing week editor:
+narrow screens now render TWO lines per day (day+status, then paired equal-width From/To with visible
+localized labels) instead of three; each bound is a label whose accessible name is "<weekday> From/To";
+view mode is truthful per column (Status = working/closed text, From/To = stored bounds, closed day shows
+an honest dash) with zero inputs. Desktop 210 geometry unchanged (day 481/607, start 209/120, end 81/120;
+all seven rows identical). Evidence now contains real 390x844 viewport bytes with the week actually in
+view, plus a bounded EN/LTR cookie check. Read
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210-R1/RESULT.md`.
+No Apply/HTTP write/migration; stored 120000.00/5000.00 unchanged. typecheck clean. Actual elapsed inside
+the 12min box. Active task: NONE. Next task: NONE — await Architect review; User Visual ACCEPT PENDING.
 ## CURRENT — 210 desktop accepted; only 210-R1 mobile week completion — 2026-10-25
 
 Architect viewed all four210 PNGs and source. Desktop common widths/tab geometry/seven row columns accepted within scope; User Visual ACCEPT remains PENDING after prior10/20 rejection.

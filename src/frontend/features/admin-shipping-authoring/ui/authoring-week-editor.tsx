@@ -8,12 +8,11 @@
  * hours, a working day requires a real start/end pair, and an untouched stored `TimeText` (including
  * its seconds/fractions) is never rewritten by simply rendering this component.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { EditorWeeklySchedule } from "../model/editor-document.ts";
 import type { WeekFormState, WeekIssue } from "../model/editor-week.ts";
 import { WEEKDAYS, type WeekIssueCode } from "../model/editor-week.ts";
 import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-messages.ts";
-import { authoringFormat } from "../messages/authoring-messages.ts";
 import { formatTimeText } from "./authoring-format.ts";
 import { weekdayLabel } from "./authoring-general-tab.tsx";
 import { TIME_ZONE_OPTIONS, isOfferedTimeZone, timeZoneLabel } from "./time-zone-options.ts";
@@ -37,6 +36,16 @@ function useWideWeekGrid(): boolean {
     return () => query.removeEventListener("change", sync);
   }, []);
   return wide;
+}
+
+/**
+ * The paired from/to bounds: on desktop they are two ordinary grid cells (columns 3 and 4), so their
+ * x/width stay on the shared column contract; on narrow screens the pair becomes ONE equal-halves line.
+ */
+function boundPairStyle(wide: boolean): CSSProperties {
+  return wide
+    ? { display: "contents" }
+    : { gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", columnGap: 8 };
 }
 
 /** Localized text of one week issue (shared by the editor and the screen's issue summary). */
@@ -276,37 +285,55 @@ export function AuthoringWeekEditor({
                       <span>{messages.weekWorking}</span>
                     </label>
                   ) : (
-                    <span dir="ltr" className="text-xs text-gray-600">
-                      {day.isWorking
-                        ? authoringFormat(messages.weekOpen, {
-                            from: formatTimeText(day.startTime),
-                            to: formatTimeText(day.endTime),
-                          })
-                        : messages.weekClosed}
+                    /* Truthful status column: working/closed as text, the bounds live in their own columns. */
+                    <span className="text-xs font-semibold text-gray-700">
+                      {day.isWorking ? messages.weekWorking : messages.weekClosed}
                     </span>
                   )}
-                  {editable ? (
-                    <>
-                      <input
-                        type="time"
-                        dir="ltr"
-                        className="min-h-8 rounded-lg border border-border bg-surface px-2 text-xs"
-                        style={wide ? { width: "7.5rem" } : { gridColumn: "1 / -1", width: "100%" }}
-                        value={inputTime(day.startTime)}
-                        onChange={(event) => onDayTime(weekday, "startTime", event.target.value)}
-                        data-testid={`shipping-authoring-week-start-${weekday}`}
-                      />
-                      <input
-                        type="time"
-                        dir="ltr"
-                        className="min-h-8 rounded-lg border border-border bg-surface px-2 text-xs"
-                        style={wide ? { width: "7.5rem" } : { gridColumn: "1 / -1", width: "100%" }}
-                        value={inputTime(day.endTime)}
-                        onChange={(event) => onDayTime(weekday, "endTime", event.target.value)}
-                        data-testid={`shipping-authoring-week-end-${weekday}`}
-                      />
-                    </>
-                  ) : null}
+                  {/* Paired bounds: on narrow screens they share ONE second line with equal widths and
+                      visible From/To labels; on desktop they are the two existing header columns. */}
+                  <div style={boundPairStyle(wide)}>
+                    <label className="grid min-w-0 gap-0.5">
+                      <span className="sr-only">{weekdayLabel(weekday, locale)}</span>
+                      <span className={wide ? "sr-only" : "text-[11px] font-semibold text-gray-500"}>
+                        {messages.weekFromColumn}
+                      </span>
+                      {editable ? (
+                        <input
+                          type="time"
+                          dir="ltr"
+                          className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs"
+                          value={inputTime(day.startTime)}
+                          onChange={(event) => onDayTime(weekday, "startTime", event.target.value)}
+                          data-testid={`shipping-authoring-week-start-${weekday}`}
+                        />
+                      ) : (
+                        <span dir="ltr" className="text-xs text-gray-700">
+                          {day.isWorking ? formatTimeText(day.startTime) : "—"}
+                        </span>
+                      )}
+                    </label>
+                    <label className="grid min-w-0 gap-0.5">
+                      <span className="sr-only">{weekdayLabel(weekday, locale)}</span>
+                      <span className={wide ? "sr-only" : "text-[11px] font-semibold text-gray-500"}>
+                        {messages.weekToColumn}
+                      </span>
+                      {editable ? (
+                        <input
+                          type="time"
+                          dir="ltr"
+                          className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs"
+                          value={inputTime(day.endTime)}
+                          onChange={(event) => onDayTime(weekday, "endTime", event.target.value)}
+                          data-testid={`shipping-authoring-week-end-${weekday}`}
+                        />
+                      ) : (
+                        <span dir="ltr" className="text-xs text-gray-700">
+                          {day.isWorking ? formatTimeText(day.endTime) : "—"}
+                        </span>
+                      )}
+                    </label>
+                  </div>
                   {dayIssue ? (
                     <p
                       role="alert"
