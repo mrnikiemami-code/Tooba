@@ -1,0 +1,59 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206
+Parent-Task: TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+
+Status: BLOCKED_STALE_BACKEND_BINARY
+Base-SHA: 8fcd9df9e44f7bc283e0e6ccf0c6cd95d9b0d8c2 (verified HEAD == origin/main before work)
+Source-SHA: 26e2b31a812f802106771b26f0ec6af9ffa3a6e5
+HEAD==origin/main: YES
+Working-Tree: CLEAN for task-scoped files (only pre-existing untracked historical evidence copies remain, untouched)
+Claim: 2026-10-24T16:42:54Z
+Last-Interaction: 2026-10-24T16:49Z
+
+Evidence: docs/architecture/evidence/TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206/RESULT.md and probes.md
+Task artifact: docs/ai/tasks/TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206.task.md
+
+FIRST BLOCKER: the running backend is older than the authoring routes. The existing-draft editor cannot be opened against the local stack because every Shipping authoring route answers HTTP 404 route-not-found, while the Host is healthy and an older admin shipping route still answers 401.
+
+Runtime provenance (real, shared, untouched):
+- Port 3000: existing shared Next dev server, PID 19108, started 2026-10-22 06:45, repo src/frontend. Not restarted, not reconfigured.
+- Port 5088: Tooba.Host.exe PID 24304, started 2026-10-22 06:41:42, binaries in bin/Debug/net8.0 built 2026-10-22 06:41:10-20.
+- src/frontend/.env.local sets TOOBA_HOST_ORIGIN=http://127.0.0.1:5088 and next.config.ts rewrites /v1/:path* to it; the same 404 reproduced through the real rewrite on :3000, so it is not a proxy/rewrite fault.
+- Ports 3517/9555 stayed free; no task-owned frontend or browser was started (it could only re-observe the same backend 404); no shared process restarted or killed.
+- PostgreSQL 127.0.0.1:5432 is listening per existing dev configuration references; migration applied-state deliberately NOT checked (no DDL, no MigrationRunner).
+
+REAL vs intercepted boundary: every request was a plain real HTTP read against the shared Host (/health, /v1/admin/dev-context, shipping admin reads). No /v1 interception, stub, fulfilment or mock of any kind, no task-owned frontend. Mutation counts: PUT 0 / POST 0 / PATCH 0 / DELETE 0. /health -> 200 {"status":"ok"}; /v1/admin/dev-context -> 200 with the existing dev actor/tenant context (no invented owner, token, grant or permission).
+
+Read outcomes:
+- GET /v1/admin/shipping-services/authoring-drafts -> 404 (also 404 via :3000 rewrite)
+- GET /v1/admin/shipping-services/authoring-types -> 404
+- GET /v1/admin/shipping-services/authoring-drafts/{draftId}/editor-document -> not reachable (no draft id obtainable; route absent)
+- GET /v1/admin/shipping-services (older admin shipping route) -> 401, route exists in running binary and auth is enforced
+
+Why this is staleness, not path/auth/schema/data: current main registers these routes (ShippingEndpointModule.cs:21 MapGroup("/v1/admin") -> ShippingEndpointModule.cs:33 ShippingAuthoringDraftEndpoints.Map(admin); ShippingAuthoringDraftEndpoints.cs:26,67 map /shipping-services/authoring-drafts and /shipping-services/authoring-types). ShippingAuthoringDraftEndpoints.cs last changed at be639a473 (2026-10-23 02:15 +0330, TB-199), after the running binary was built. Symmetrically, the running Host answers 401 for /v1/admin/shipping-services while current main defines no route at that exact path, so the running route table differs from current source in both directions. An empty legitimate data set would be 200 rather than 404.
+
+Authorized draft list / binding: NOT READABLE, cardinality UNKNOWN. No draft was created, seeded or backfilled; this must not be reported as zero drafts or as a UI/data defect.
+
+Mounted route: /admin/shipping-services/authoring/[draftId]?mode=view was not opened in a browser because the API layer fails first and the user's signed-in session is not lawfully reusable by this worker (a fresh headless profile is not proof of that session). The shared page shell GET /admin/shipping-services returns 200, so the frontend surface itself is serving; no readiness is inferred from that. API-read outcome is therefore reported separately from browser readiness.
+
+SMALLEST REPAIR (recommended, NOT executed - outside this task's bounds):
+1) Rebuild Tooba.Host and its Shipping modules from current main and restart only the Host in an approved window, leaving the shared frontend running; build/restart of a shared runtime is explicitly forbidden here.
+2) Before restart, decide whether Host startup applies pending migrations (TB-196-R10 pending-outbox-index and others) and approve that explicitly; migration applied-state is currently UNKNOWN and was deliberately not inspected.
+3) After restart, re-run the three read-only GETs to establish the real binding cardinality in one bounded pass; only then is a mounted read trial meaningful. If the list legitimately returns zero drafts, that is a data state and the next separately reviewable step is the existing whole-method create capability, still bounded.
+
+Status fields:
+Production-Functional-Acceptance: PENDING (no live integration accepted)
+Live-Write-Acceptance: PENDING; no Apply/save/delete performed
+Shared-Database-Data-Flag-Changes: NONE (no migration, seed, DDL or data write)
+Visual: none claimed (no screenshot, no DOM-derived readiness claim)
+Production-Code-Changes: NONE (docs/evidence only)
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+
+Deviations/cleanup: none in scope; the stale Host and shared frontend were intentionally left exactly as found. Nothing task-owned was created, so nothing needed cleanup; 3517/9555 verifiably free and 3000/5088 still listening and untouched. Scoped diff is only this RESULT.md, probes.md, the verbatim task receipt and one recovery pointer section. Elapsed stayed inside the 20-minute box with no new work after minute 14.
+END_TOOBA_WORKER_RESULT
