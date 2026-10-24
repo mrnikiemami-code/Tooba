@@ -1,3 +1,12 @@
+## تسک جاری210: کاربرهم‌ترازیUIراردکرد/10از20 —2026-10-25
+
+کاربردوتصویرواقعیپسازR2داد:تب‌ها/فیلدها/کنترلروزکاری‌تعطیلهماهنگنیست؛نمره10/20. **UserVisualACCEPT=REJECTED_ALIGNMENT.** پذیرشfunctional209ذخیرهومدلخطاهابرقرار،نهپذیرشUI.
+ArchitectتصاویرراواقعاًدیدوکدموجودGeneral/weekراخواند:Generalmaxw4xlزیرouter6xl،typemaxwsmجدا،tabactiveborderنامتقارن؛weekmd2columnsوinnerjustifybetweenچک‌باکس‌هاوساعت‌هاراپخشکرده.
+**Only issued TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210**؛parent209-R2؛20min/stop13. فقطgrid/width/tabgeometry/7rowweekfixedcolumnsوformspacingدرfeatureموجود. نهbackend/data/savepolicy/sessionrewrite.
+معیار:desktopmatched1440x900هردوتبباهمانsidebar،DOMboundingboxمحورهاو7status/start/end<=2pxاختلافستونی،mobile390بدونoverflow؛یکtypecheck،نهsuite/testساختگیCSS. userدوبارهjudgeمی‌کند؛مدلخودشبهUIنمرهندهد.
+Draftواقعی01a16eeb-70b3-7000-87c2-564c82835496وactualrevisionمحتواحفظ؛userbrowserunsavedreloadممنوع؛0write/nomigration/Host5088/FE3000محفوظ. مجوزdevپایدار،proof/saveتکرارنشود.
+پسازنتیجه210reviewتصاویروترازواقعی؛تاresultتسکدیگریصادرنشود.اینبخشتمامhandoffNONEقدیمیراsupersedeمی‌کند؛issued≠claimed.
+
 ## مرجع قطعی چت جدید:209-R2 پذیرفته؛ اکنون تست کاربر —2026-10-25
 
 **Architect ACCEPT_BOUNDED_NESTED_RATE_ERROR_REPAIR / READY_FOR_USER_RETEST**؛sourcecebc455147e779245c7317a2106afce041e885e5؛[reviewR2](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R2/ARCHITECT-REVIEW.md).

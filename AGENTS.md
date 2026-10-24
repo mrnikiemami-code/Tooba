@@ -1,5 +1,16 @@
 # Tooba — Agent Rules
 
+## CURRENT TASK —210 / user rejected alignment10/20 —2026-10-25
+
+Only issued TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210,parent209-R2;20min/stop13.
+Actual user screenshots show General/Regions width mismatch, unaligned tabs and weekday status/time controls.
+Read TOP recovery+task; frontend feature skill/standard. One common form grid, equal tab geometry,
+seven aligned week rows with fixed day/status/start/end columns; existing design-system only.
+Matcheddesktop/mobile screenshot +DOM box evidence, one typecheck; no fullsuite/save/backend/data writes.
+User Visual ACCEPT remains REJECTED/PENDING retest; functional209 accepted, do not reopen it.
+Preserve current user draft/revision/unsaved browser edits, Host5088/FE3000. Await210 result.
+
+
 ## CURRENT HANDOFF —209-R2 ACCEPTED / USER RETEST —2026-10-25
 
 Read TOP canonical Shipping recovery and209-R2/ARCHITECT-REVIEW.md first after chat loss.
