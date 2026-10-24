@@ -1,0 +1,138 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209
+Parent-Task: TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+
+Status: COMPLETED
+Verdict: READY_FOR_USER_RETEST
+Base-SHA: d0b8a1e84871c456e343bbb8b09ee0b0170f4df8
+Source-SHA: 21e78d8f117f4d93013b9985a0700e38d02c0a60
+HEAD==origin/main: YES
+Working-Tree: CLEAN (task-scoped; unrelated untracked evidence helpers preserved, untouched)
+Claim: 2026-10-24T18:51:55Z
+Last-Interaction: 2026-10-24T19:55:00Z
+
+Scope: one cohesive repair of the rejected real authoring flow inside the EXISTING
+frontend feature (no new architecture, no parallel rule engine, no redesign, no
+unrelated storefront/legacy grid change). The user's prior local-development
+authorization was reused; no new approval was requested. No production/external
+target, no DB reset/drop, no migration re-apply, no shared restart, no auth bypass.
+
+Evidence: docs/architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209/RESULT.md
+Task artifact: docs/ai/tasks/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209.task.md
+
+A. REAL ROOT CAUSES (reproduced before repair, not diagnosed from the report)
+1. Chip "name unavailable": the group editor rendered every chip through
+   indexDestinationFacts().labelOf, which indexes ONLY the server-proven
+   destinationFacts of the read snapshot. A destination added in the current
+   session has no server fact yet, so its real chosen label was discarded.
+   Repair: choiceTerminalLabel + onAdd(area, ancestry, label) + withPickedLabels;
+   a stored server fact always wins, identity/ancestry untouched, labels are
+   display-only and never sent. Observed: "name unavailable" -> "Iran".
+2. Generic save rejection: reproduced against the live Host with the exact
+   screenshot-shaped payload. PUT editor-document returns
+   400 {"errorCode":"shipping.schedule.timezone.invalid",
+        "title":"The schedule time zone cannot be resolved on this runtime.", ...}
+   with NO errors property map, so the old screen could only print
+   saveValidation and a fieldLabel fallback that defaulted every unrecognized
+   path to "method name". Repair: new ui/server-field-error.ts maps the real
+   shapes (registered property errors by their own path; a root errorCode such
+   as shipping.schedule.timezone.invalid -> weekly schedule time zone) to the
+   localized field + reason + owning tab + focus target, keeps the technical
+   code in a separate diagnostics line, and never invents a cause for unknown
+   codes. Conflict/unknown latch, kept input, one-PUT and no-auto-retry intact.
+3. Human label sent as a time-zone id: both schedule editors were free-text.
+   They now use one feature-owned selector whose VALUE is the identifier and
+   whose TEXT is the human label (Asia/Tehran first). A stored id outside the
+   list is shown honestly as its own option and is never rewritten or silently
+   defaulted; the server stays the authority. The old 400 class is no longer
+   reachable from this UI; the mapping is proven by the captured real 400 plus
+   focused tests 209-03/209-05.
+4. Type catalog was GENUINELY empty (authoring-types -> {"types":[]}).
+   Created ONE real type through the existing Fulfillment catalog routes:
+   POST /v1/admin/shipping-types (code standard, sortOrder 10, fa name "adi")
+   -> 201 id 01a16f43-6b4a-7000-8670-4c16e14c6345 revision 1, isActive:false
+   (the create route does not honour isActive); then the explicit
+   PUT /v1/admin/shipping-types/{id} expectedRevision 1 isActive true -> 200
+   revision 2 isActive:true; authoring-types now returns it. CREATED, not
+   reused; no raw SQL, no invented GUID, no client-only choice, no
+   auto-assignment, no duplicate seed, no catalog CRUD subsystem, no guessed
+   management route. The empty state also explains what is missing.
+5. Presentation: visible "group" -> "delivery area" everywhere the operator
+   reads it (add/remove/title/confirm/no-items/areas label/note/regions title)
+   plus one short explanation line; internal ids, DTOs, model and the
+   regionGroups wire name are unchanged. "(explicit clear)" -> "No type" with
+   the same explicit-clear semantics. Weight unit now explicit (grams) matching
+   the real min/maxWeightGrams fields. Destination hint now states the lawful
+   cascade; child-level gating is unchanged.
+
+B. REAL SAVE + READBACK (the completion gate)
+Environment reused exactly as handed over: DB 127.0.0.1:5432/tooba_alpha,
+tenant store-alpha, Host :5088 PID 10800 (retained TB-207 build, Development),
+frontend :3000 untouched, the nine migrations NOT re-applied.
+Draft used: the user's own trial draft 01a16eeb-70b3-7000-87c2-564c82835496.
+Its content was re-read first and was still empty (revision 1, regionGroups [],
+type Unconfigured, weeklySchedule null, no translations), so nothing the user
+authored was overwritten and no revision was assumed. A second reproduction
+draft was NOT created: POST authoring-drafts for the same binding returns
+400 shipping.authoring.draft_binding_duplicate; the invalid-timezone
+reproduction was a rejected PUT (which writes nothing), not a new draft.
+Driven through the mounted route in an isolated headless profile with ZERO
+request interception: edit -> type "adi" -> name "pishtaz" (fa) -> Prepaid +
+Manual -> new delivery area titled "test" -> real country Iran added -> one fee
+row 1000-2000 g, freight 120000, packaging 5000, delivery 1-3 -> schedule
+configured with Asia/Tehran -> Monday 09:00-17:00 -> exactly ONE Apply.
+Result: "changes saved (revision 2)", mode back to view, no save alert, no
+console errors. Fresh GET: revision 2; type Active standard/"adi"; settings
+Prepaid/Manual; methodTranslations fa-IR "pishtaz"; group id
+01a16f4e-1c41-7000-8e7a-e54b0b29ae5b order 0 currency IRR with
+areas [Country e3451206-e503-51a8-91ad-afa9ab70e330], row freight 120000.00
+packaging 5000.00 weights 1000-2000 delivery 1-3, title fa-IR "test";
+weeklySchedule Asia/Tehran with Monday 09:00:00-17:00:00 and days 2..7 closed;
+destinationFacts Country "Iran" (Resolved). Browser reload shows the same
+values, including the chip with the real country label. Money stays exact
+server text (no rounding) and the currency label comes from the server.
+
+C. VERIFICATION ACTUALLY RUN
+- npx tsc --noEmit -p tsconfig.json -> 0 errors.
+- Feature suites (root + api + model + session) -> 93/93 pass.
+- New user-trial-209.test.ts -> 6/6 pass (picked label, stored-fact precedence,
+  timezone placement, property placement, unknown-code honesty, lawful-id-only
+  serialization).
+- put-probe.mjs -> the real 400 above.
+- mount-write.mjs -> the real Apply + reload values above.
+- picker-probe.mjs -> after Add the chosen branch is kept and Add is disabled as
+  a duplicate; chip reads the real country label.
+- mobile-probe.mjs -> 390px: scrollWidth 390, zero overflowing elements on both
+  tabs.
+- Test-fixture alignment: seven suites still carried the pre-208 wire fixture
+  owner:{kind} while the canonical view is ownerKind; they were failing on main
+  before this task and were aligned to the real wire field (no production code
+  changed for this).
+
+D. LIMITS / DEVIATIONS
+- The previous free-text time zone is gone, so the exact old failure cannot be
+  reproduced from the UI any more; its mapping is proven by the captured real
+  400 and focused tests rather than by a UI click. Stated, not glossed over.
+- POST /v1/admin/shipping-types writes isActive:false regardless of the body and
+  activation needs the explicit PUT. Recorded as existing catalog behaviour; not
+  changed by this task.
+- A destination added in this session gets its label from the chosen row; if
+  that row later becomes unavailable the chip returns to the honest
+  "name unavailable" state after a fresh read. No guessed name is persisted.
+- Host :5088 (PID 10800) and frontend :3000 left running; only temporary
+  headless profiles under D:\temp\tb209-* were used. The user's browser was not
+  touched and their unsaved edits were never reloaded or erased.
+- Still outside this slice and unchanged: activation/readiness, cutoff/carrier/
+  funding, runtime quote, whole-method creation, production merchant mutation,
+  Production-Functional-Acceptance, module certification. TB185 paused;
+  default-OFF/PendingAllocation unchanged. No user Visual ACCEPT is claimed.
+
+E. NEXT
+Stop for Architect review. No automatic next task.
+Retest URL: /admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=view
+END_TOOBA_WORKER_RESULT
