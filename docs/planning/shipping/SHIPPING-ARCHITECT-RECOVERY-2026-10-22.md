@@ -1,3 +1,13 @@
+## تسک جاری209: کاربر UI و ذخیره را رد کرد —2026-10-24
+
+کاربر پس ازتستواقعی208اعتراضکرد: «گروه»نامفهوم،typeempty،انتخابمنطقه/مبلغ/ذخیرهکارنکردوUIنامناسب. دوscreenshotمشاهدهشد:Generaltypeempty/timezone«تهران»؛Regionsgenericservervalidationerror،newgroupتست،countrychip«نامموجودنیست»،pickerهای—،fees120000/5000،weight1..2/days1..3.
+**208 فقطruntime/schema/readmount پذیرفته،نهuserUI/fullsaveacceptance. User Visual ACCEPT=REJECTED_CURRENT_UI.**
+**Only issued task TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209**؛parent208؛45min/stop35. Source-main0e2fa09e. هدفرفعهمینworkflowواقعی+UXدرfeatureموجود؛نهproofreplay.
+Rootcauseهاهنوزاثباتنشده:timezoneانسانیممکنinvalidباشد؛newchipindexفقطbaselineاست،pickedlabelsاحتمالجامانده؛خطایserverفقطgenericنمایشمی‌یابد. تشخیصازPUTactual/geoواقعیقبلrepair.
+مجاز:renamevisiblegroupبه«محدودهارسال»بدونdomainchange،compactreadableform/destination+rates،inlineactionablefieldvalidation،lawfultimezoneselect،یکtypeواقعی«عادی»ازAPIمجازدرdevفقطاگرcatalogempty،realApply+GET+reload. نهcatalogCRUDجدید/حدسroute/SQLbusinessseed.
+مجوزdevکاربرمحفوظ؛existingdraft01a16eeb-70b3-7000-87c2-564c82835496ممکنusercontentجدیدداشتهباشد،overwrite/reset/reloaduseractiveeditsممنوع. backend5088/FE3000روشن،9migrationsalreadyapplied؛تکرارنشوند.
+پسازنتیجه209review،فقطاگرrealnames/type/destination/fees/weeksave+readbackکارکردبرایretestصداکن. active209،نتیجهدرانتظار؛نهtaskبعدییاpermissionloop.199–207proofبازنشوند؛TB185paused/defaultOFFمحفوظ.
+
 ## مرجع قطعی چت جدید:208 پذیرفته؛ تست کاربر روی مسیر واقعی —2026-10-24
 
 **Architect ACCEPT_LOCAL_EXISTING_DRAFT_READ_TRIAL_HANDOFF**؛source/evidence `f2fa49d5432d38663aa67ea057583c51bf0bb01e`؛[review208](../../architecture/evidence/TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208/ARCHITECT-REVIEW.md).

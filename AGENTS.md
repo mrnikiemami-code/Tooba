@@ -1,5 +1,18 @@
 # Tooba — Agent Rules
 
+## CURRENT TASK —209 / user rejected authoring UX and save —2026-10-24
+
+Only issued task TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209, parent208;45min/stop35.
+User screenshots/report show failed save, unusable destination/type experience and confusing "group" UI.
+208 acceptance is read/runtime readiness ONLY; current UI is NOT user-accepted.
+Read TOP recovery and task; frontend feature skill/architecture/rules mandatory.
+Repair the real destination+fee+save path, actionable validation, "محدوده ارسال" terminology,
+compact existing design-system layout and lawful timezone/type selection. No broad rewrite/new framework.
+Must prove actual ONEPUT then real freshGET/reload with saved values, not just mount.
+Explicit local-dev authorization persists. Preserve user edits/content; no replay of applied migrations or190–208 proof.
+Await209 result before next task; report true blocker if not fixed, never premature READY.
+
+
 ## CURRENT HANDOFF —208 ACCEPTED / REAL LOCAL USER TRIAL —2026-10-24
 
 Read TOP canonical Shipping recovery and208/ARCHITECT-REVIEW.md.
