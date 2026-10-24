@@ -1,5 +1,14 @@
 ﻿# Tooba — Bridge-Wake-V1 Recovery Start
 
+## CURRENT: 207 reviewed, schema approval pending — 2026-10-24
+
+Read TOP canonical Shipping recovery and207/ARCHITECT-REVIEW.md + EXECUTION-PLAN.md.
+No worker task active/issued. Await approval for nine named LOCAL schema migrations only, conditional
+on full pending-set equality and backup/target checks. Host restart/seed is NOT approved.
+Runner has no module filter; do not run generic apply before checking all descriptors.
+Old task pointers below are historical. Existing-draft live readiness remains pending.
+
+
 ## CURRENT ISSUED TASK — 207 — 2026-10-24
 
 Only issued task: TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207 (parent206).

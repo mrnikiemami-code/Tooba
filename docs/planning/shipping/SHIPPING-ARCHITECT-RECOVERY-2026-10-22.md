@@ -1,3 +1,13 @@
+## مرجع جاری:207 بررسی شد؛ منتظر تأیید تغییر schema محلی — 2026-10-24
+
+207 build و preflight محدود پذیرفته؛ [review207](../../architecture/evidence/TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207/ARCHITECT-REVIEW.md) و [طرح اجرای دقیق](../../architecture/evidence/TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207/EXECUTION-PLAN.md).
+Worker149faf7c/basea932fa29؛Host جدیددرD:\temp\tb207-build\out ساخته‌شده ولیrunنشده. Shipping7pending+Fulfillment2pending رویtooba_alpha گزارش‌شده؛همهmoduleهاpending-checkکاملنشده. draft/auth/live readinessUNKNOWN.
+**Active worker task=NONE؛ next task NOT ISSUED؛ state AWAITING_EXPLICIT_LOCAL_SCHEMA_APPROVAL.**
+تأییددرخواست‌شدهفقط9migrationنام‌بردهدرplanرویtenant-alpha/store-alpha محلی،مشروطبهpendingکلدقیقاًهمین9،backupقابل‌استفاده/identity/collisioncheck. هیچHostrestart/seed/backfill دراینمجوزنیست.
+اصلاحArchitect:Runner --moduleندارد؛applyهمهdescriptorهاست،پسقبلapplyplanکللازم. ShippingConstraintParity پنجCHECKراreplaceمی‌کند؛create-onlyنیست. buildintermediatesخارجrepoاثباتنشده؛sourcebuilda932استنهresultcommit. oldexe restartفقطbinaryrollbackاستنهDBrollback؛liveenvUNKNOWN. هیچTask208یااجراییقبلتأییدصادرنشده.
+پسازتأییدکاربر: یکtaskکوتاهschema-onlyباهمینشرط‌ها؛اگرpendingاضافیSTOPباidها. سپسruntime/startupeffectsجداگانهreview،بدونtaskاثباتیUI. کاربرعجلهدارد؛accepted190–205دوبارهبازنشود.ProductionPENDING،TB185paused/defaultOFFمحفوظ.
+بخش‌هایپایینتاریخچه‌اند.
+
 ## تسک جاری207: ساخت Host جدید و پیش‌نیاز راه‌اندازی — 2026-10-24
 
 206 برای **تشخیص مانع پذیرفته شد**؛ source26e2b31a،main394fdf040 (فقطresult-contract بعدی). [review206](../../architecture/evidence/TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206/ARCHITECT-REVIEW.md).

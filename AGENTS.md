@@ -1,6 +1,17 @@
 # Tooba — Agent Rules
 
-## CURRENT ISSUED TASK — 207 — 2026-10-24
+## CURRENT CHECKPOINT — 207 reviewed / local schema approval pending — 2026-10-24
+
+207 build and bounded schema observations accepted with corrections in207/ARCHITECT-REVIEW.md.
+Read TOP canonical recovery +207/EXECUTION-PLAN.md. Worker task NONE; next task NOT ISSUED.
+Await explicit approval for ONLY nine named local Shipping/Fulfillment migrations, conditional on full
+all-module pending set matching exactly, target/collision/backup checks. No Host restart/seed approval.
+Runner has NO module filter: apply walks all descriptors. Seven Shipping +two Fulfillment pending are
+not yet proof that every other module is current. Never apply broader changes under this permission.
+New binary retained, not run; live draft/auth/readiness pending. Do not replay190–205.
+
+
+## Historical issued task — 207 — 2026-10-24
 
 Only issued task: TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207 (parent206).
 206 blocker diagnosis accepted: stale Host5088 binary; live auth/schema/draft readiness unverified.
