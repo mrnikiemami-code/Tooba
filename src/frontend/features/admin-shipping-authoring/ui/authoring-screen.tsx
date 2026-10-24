@@ -69,7 +69,7 @@ import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor, weekIssueMessage } from "./authoring-week-editor.tsx";
 import { rowIssueMessage } from "./authoring-rates-editor.tsx";
 import { AuthoringGroupsEditor } from "./authoring-groups-editor.tsx";
-import { TARGET_TEST_ID, serverErrorCodes, serverFieldIssues, targetTab, type ServerFieldIssue } from "./server-field-error.ts";
+import { serverErrorCodes, serverFieldIssues, targetTab, type ServerFieldIssue } from "./server-field-error.ts";
 
 const TABS = ["general", "regions"] as const;
 type ScreenTab = (typeof TABS)[number];
@@ -155,6 +155,13 @@ export function ShippingAuthoringScreen({
   const formSeed = state.formSeed;
   const rowCounter = useRef(0);
   const groupCounter = useRef(0);
+  /**
+   * Handler-boundary guard: a view-mode (or saving/reconciling) tree must not change local rows even
+   * if a control were activated programmatically — presentation alone is not the protection.
+   */
+  const mutationBlocked = useRef(true);
+  mutationBlocked.current = mode !== "edit" || session.save === "saving" || session.reconcile === "pending";
+  const blockedNow = useCallback(() => mutationBlocked.current, []);
   const activeLanguageIds = useMemo(
     () => (document ? document.presentation.contentLanguages.map((language) => language.languageId) : []),
     [document],
@@ -252,6 +259,7 @@ export function ShippingAuthoringScreen({
       nextRates: RatesFormState,
       nextWeek: WeekFormState,
     ) => {
+      if (blockedNow()) return;
       setForm(nextForm);
       setGroups(nextGroups);
       setRates(nextRates);
@@ -260,12 +268,12 @@ export function ShippingAuthoringScreen({
       const composed = buildAuthoringIntent(document, nextForm, nextRates, nextWeek, nextGroups);
       controller.edit(composed.edits, composed.localDirty);
     },
-    [controller, document],
+    [blockedNow, controller, document],
   );
 
   const pushEdits = useCallback(
     (nextForm: EditorFormState) => {
-      if (!week) return;
+      if (blockedNow() || !week) return;
       commit(nextForm, groups, rates, week);
     },
     [commit, groups, rates, week],
@@ -273,7 +281,7 @@ export function ShippingAuthoringScreen({
 
   const changeRow = useCallback(
     (groupKey: string, rowKey: string, field: RateField, value: string) => {
-      if (!form || !week) return;
+      if (blockedNow() || !form || !week) return;
       commit(form, groups, withRowField(rates, groupKey, rowKey, field, value), week);
     },
     [commit, form, groups, rates, week],
@@ -281,7 +289,7 @@ export function ShippingAuthoringScreen({
 
   const addRow = useCallback(
     (groupKey: string) => {
-      if (!form || !week) return;
+      if (blockedNow() || !form || !week) return;
       rowCounter.current += 1;
       commit(form, groups, withAddedRow(rates, groupKey, `new-${rowCounter.current}`), week);
     },
@@ -290,14 +298,14 @@ export function ShippingAuthoringScreen({
 
   const removeRow = useCallback(
     (groupKey: string, rowKey: string) => {
-      if (!form || !week) return;
+      if (blockedNow() || !form || !week) return;
       commit(form, groups, withRemovedRow(rates, groupKey, rowKey), week);
     },
     [commit, form, groups, rates, week],
   );
 
   const addGroup = useCallback(() => {
-    if (!form || !week) return;
+    if (blockedNow() || !form || !week) return;
     groupCounter.current += 1;
     const key = `group-new-${groupCounter.current}`;
     const nextGroups = withGroupTitleSlots(withAddedGroup(groups, key), key, activeLanguageIds);
@@ -306,7 +314,7 @@ export function ShippingAuthoringScreen({
 
   const removeGroup = useCallback(
     (groupKey: string) => {
-      if (!form || !week) return;
+      if (blockedNow() || !form || !week) return;
       const nextRates: Record<string, readonly RateRowDraft[]> = { ...rates };
       delete nextRates[groupKey];
       commit(form, withRemovedGroup(groups, groupKey), nextRates, week);
@@ -316,7 +324,7 @@ export function ShippingAuthoringScreen({
 
   const moveGroup = useCallback(
     (groupKey: string, delta: -1 | 1) => {
-      if (!form || !week) return;
+      if (blockedNow() || !form || !week) return;
       commit(form, withMovedGroup(groups, groupKey, delta), rates, week);
     },
     [commit, form, groups, rates, week],
@@ -324,7 +332,7 @@ export function ShippingAuthoringScreen({
 
   const changeGroupTitle = useCallback(
     (groupKey: string, languageId: string, value: string) => {
-      if (!form || !week) return;
+      if (blockedNow() || !form || !week) return;
       commit(form, withGroupTitle(groups, groupKey, languageId, value), rates, week);
     },
     [commit, form, groups, rates, week],
@@ -332,7 +340,7 @@ export function ShippingAuthoringScreen({
 
   const removeGroupArea = useCallback(
     (groupKey: string, area: SelectedAreaRead) => {
-      if (!form || !week) return;
+      if (blockedNow() || !form || !week) return;
       commit(form, withGroupAreaRemoved(groups, groupKey, area), rates, week);
     },
     [commit, form, groups, rates, week],
@@ -340,7 +348,7 @@ export function ShippingAuthoringScreen({
 
   const addGroupArea = useCallback(
     (groupKey: string, area: SelectedAreaRead, ancestry: ResolvedAreaAncestry, label: string) => {
-      if (!form || !week) return;
+      if (blockedNow() || !form || !week) return;
       const nextGroups = withGroupAreaAdded(groups, groupKey, area);
       if (nextGroups === groups) return; // an exact duplicate is rejected locally, never double-sent
       setPickedFacts((previous) => new Map(previous).set(areaIdentity(area), ancestry));
@@ -490,14 +498,36 @@ export function ShippingAuthoringScreen({
     [saveFailure, messages],
   );
   const serverCodes = useMemo(() => (saveFailure ? serverErrorCodes(saveFailure) : []), [saveFailure]);
+  /** Reasons that belong next to their own field (not in the summary prose). */
+  const fieldServerErrors = useMemo(() => {
+    const map: Partial<Record<"name" | "description" | "settings" | "type" | "weekTimeZone" | "weekDays", string>> = {};
+    for (const issue of serverIssues) {
+      if (issue.target === "unknown" || issue.target === "regions" || issue.target === "rates") continue;
+      if (map[issue.target] === undefined) map[issue.target] = issue.reason;
+    }
+    return map;
+  }, [serverIssues]);
+  /** Rate-row reasons keyed by the rejected row index inside the submitted group tree. */
+  const rateServerErrors = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const issue of serverIssues) {
+      if (issue.target !== "rates" || issue.rowIndex === null) continue;
+      if (!map.has(issue.rowIndex)) map.set(issue.rowIndex, issue.reason);
+    }
+    return map;
+  }, [serverIssues]);
 
-  /** Reveals the section that owns a rejected field and moves focus to it. */
+  /** Reveals the section that owns a rejected field and moves focus to that exact input/row. */
   const revealServerIssue = useCallback((issue: ServerFieldIssue) => {
     setTab(targetTab(issue.target));
-    const testId = TARGET_TEST_ID[issue.target];
+    const testId = issue.testId;
     if (testId === null) return;
     window.requestAnimationFrame(() => {
-      const element = globalThis.document.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
+      // A row field can repeat (one input per row), so pick the element of the REJECTED row.
+      const candidates = globalThis.document.querySelectorAll<HTMLElement>(`[data-testid="${testId}"]`);
+      const element = issue.rowIndex !== null && candidates.length > issue.rowIndex
+        ? candidates[issue.rowIndex]!
+        : candidates[0] ?? null;
       if (!element) return;
       element.scrollIntoView({ block: "center" });
       element.focus({ preventScroll: true });
@@ -514,7 +544,7 @@ export function ShippingAuthoringScreen({
   }, [saveFailure, serverIssues, revealServerIssue]);
 
   return (
-    <div dir={direction} lang={locale} className="space-y-3" data-testid="shipping-authoring-screen">
+    <div dir={direction} lang={locale} className="mx-auto w-full max-w-6xl space-y-3" data-testid="shipping-authoring-screen">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <button
@@ -611,7 +641,7 @@ export function ShippingAuthoringScreen({
               <p className="mt-1 font-normal text-gray-700">{messages.saveValidation}</p>
               <ul className="mt-1 grid gap-0.5 font-normal" data-testid="shipping-authoring-save-fields">
                 {serverIssues.map((issue) => (
-                  <li key={`${issue.target}:${issue.reason}`}>
+                  <li key={`${issue.target}:${issue.rowIndex ?? "-"}:${issue.reason}`}>
                     <button
                       type="button"
                       className="text-start underline decoration-dotted underline-offset-2"
@@ -626,9 +656,12 @@ export function ShippingAuthoringScreen({
             </>
           ) : null}
           {serverCodes.length > 0 ? (
-            <p dir="ltr" className="mt-1 font-normal text-[10px] text-gray-500" data-testid="shipping-authoring-save-code">
-              {authoringFormat(messages.serverErrorCodeNote, { code: serverCodes.join(", ") })}
-            </p>
+            <details className="mt-1 font-normal" data-testid="shipping-authoring-save-diagnostics">
+              <summary className="cursor-pointer text-[11px] text-gray-600">{messages.diagnosticsToggle}</summary>
+              <p dir="ltr" className="mt-0.5 text-[11px] text-gray-500" data-testid="shipping-authoring-save-code">
+                {authoringFormat(messages.serverErrorCodeNote, { code: serverCodes.join(", ") })}
+              </p>
+            </details>
           ) : null}
           {saveStatus === "outcomeUnknown" || session.commitUncertain ? (
             <button
@@ -730,6 +763,7 @@ export function ShippingAuthoringScreen({
                 typeChoicesState={typesState}
                 nameIssueLanguageIds={nameIssueLanguageIds}
                 settingsIncomplete={settingsIncomplete}
+                serverErrors={fieldServerErrors}
                 onName={(languageId, value) => pushEdits(withName(form, languageId, value))}
                 onDescription={(languageId, value) => pushEdits(withDescription(form, languageId, value))}
                 onFreightPaymentMode={(mode2: FreightPaymentMode) => pushEdits(withFreightPaymentMode(form, mode2))}
@@ -741,9 +775,10 @@ export function ShippingAuthoringScreen({
                       schedule={document.weeklySchedule}
                       week={week}
                       issues={weekProblemIssues}
-                      editable={!readOnly}
+                      editable={!readOnly && !busy}
                       locale={locale}
                       messages={messages}
+                      serverErrors={{ timeZone: fieldServerErrors.weekTimeZone, days: fieldServerErrors.weekDays }}
                       onPendingTimeZone={(value) => changeWeek(withPendingTimeZone(week, value))}
                       onConfigure={() => changeWeek(configureWeek(week))}
                       onTimeZone={(value) => changeWeek(withTimeZone(week, value))}
@@ -767,8 +802,9 @@ export function ShippingAuthoringScreen({
               groups={groups}
               rates={rates}
               rateIssues={rateRowIssues}
+              serverRateErrors={rateServerErrors}
               unresolved={unresolved}
-              editable={!readOnly}
+              editable={!readOnly && !busy}
               onAddGroup={addGroup}
               onRemoveGroup={removeGroup}
               onMoveGroup={moveGroup}

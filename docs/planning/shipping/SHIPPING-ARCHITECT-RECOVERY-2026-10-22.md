@@ -1,4 +1,16 @@
-## مرجع جاری:209 ذخیره پذیرفته، UI هنوز ناقص؛ فقط209-R1 —2026-10-24
+## مرجع جاری:209-R1 اجرا شد — منتظر بررسی معماری —2026-10-24
+
+209-R1 نتیجه دارد: [RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1/RESULT.md).
+VIEW حالا واقعاً فقط‌خواندنی است (rows با RateRowSummary، title به‌صورت متن، هیچ input/button در پنل مناطق؛
+گارد mode/busy در خود callbackها)، General فشردهٔ حرفه‌ای (بدون کارت تکراری نوع، صاحب یک خط، عرض محدود)،
+ردیف هزینه چهار فیلد اصلی + شرایط اختیاری جمع‌شو با خلاصهٔ شرط، و نقشه‌برداری خطای سرور دقیق
+(description→description، rows[i].minDeliveryDays→همان ردیف، timezone.required≠invalid، کد ناشناخته بدون حدس،
+diagnostics جمع‌شو). typecheck پاک، 10/10 تست جدید + 6/6 تست سازگارشده. live mounted بدون هیچ نوشتن؛
+مقادیر ذخیره‌شده دست‌نخورده (freight 120000.00 بعد از تغییر محلی و discard بازگشت). زمان ≈37min > 30min hardbox
+(ثبت صادقانه؛ یک دور اصلاح). Active task=NONE. Next task=NONE — منتظر بررسی معماری؛ retest کاربر تا تأیید ایشان نه.
+Host5088/FE3000 محفوظ؛ migration/seed/save دوباره اجرا نشد؛ TB185 متوقف.
+
+## مرجع قبلی:209 ذخیره پذیرفته، UI هنوز ناقص؛ فقط209-R1 —2026-10-24
 
 209source21e78d8f/main69f70e74(result-contractonly)برای**live save repair پذیرفته**؛[review209](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209/ARCHITECT-REVIEW.md). کاربرUIراردکرده؛VisualACCEPTنداریم.
 واقعاًdraft01a16eeb-70b3-7000-87c2-564c82835496درrev2باtypeعادی/پیشتاز/IRR/Iran/fees120000-5000/weight1000–2000/day1–3/AsiaTehranMonday09–17ذخیره+GET+reloadworkerreported. دوبارهseed/migrate/saveproofنساز.

@@ -157,3 +157,23 @@ Test-fixture alignment: seven suites still carried the pre-208 wire fixture `own
 - The user's browser was not touched; their own unsaved edits were never reloaded or erased.
 
 **State: `READY_FOR_USER_RETEST`** — retest the same URL, edit → fill → Apply → reload.
+
+---
+
+## Correction —2026-10-24 TB209-R1 (append-only, history preserved above)
+
+Architect review accepted the live save but found the delivered UI still user-rejected. This section
+does NOT rewrite the original text above.
+
+- **Live save remains ACCEPTED** (rev1 -> rev2 on the real draft); it was not replayed in 209-R1.
+- **Visual delivery was incomplete**: General was still stretched/duplicated, Regions view still showed
+  editable rows and a live-looking delete button, and the requested professional compact layout had not
+  been delivered by label replacement alone. The reviewer's judgement stands.
+- **Timing contradiction acknowledged**: result payload 18:51:55Z -> 19:55Z is about 63 minutes against a
+  45-minute timebox. The earlier "within 45" claim was wrong; it is retracted here and never repeated.
+  No relabelled timebox PASS is claimed.
+- Error placement defects were real source defects (description->name, nested deliveryDays->weekly,
+  generic rates target, substring-invented reasons, raw codes in prose), repaired in
+  `TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1/RESULT.md`.
+- Scope note: the 209 evidence of one successful mounted Apply is bounded evidence, not full UI quality,
+  not user Visual ACCEPT, and not production acceptance.

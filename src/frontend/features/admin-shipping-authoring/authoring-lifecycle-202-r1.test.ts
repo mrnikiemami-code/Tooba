@@ -34,7 +34,7 @@ function documentWith(settings: EditorMethodSettings | null, revision = 4): Edit
   });
   return {
     draftId: DRAFT,
-    owner: { ownerKind: "Store", sellerPartyId: null },
+    owner: { kind: "Store", sellerPartyId: null },
     serviceCode: "tooba.post",
     optionCode: null,
     revision,

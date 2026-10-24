@@ -3,9 +3,12 @@
  *
  * The operator must never have to know a raw IANA id, and a human label must never be SENT as if it
  * were an id. Each option therefore carries the exact identifier the server resolves
- * (`TimeZoneInfo.FindSystemTimeZoneById`, so IANA ids are authoritative) plus a human label. The list
- * is deliberately small and explicit — no browser/geo inference, no silent default and no second
- * time-zone authority: the server still rejects anything it cannot resolve.
+ * (`TimeZoneInfo.FindSystemTimeZoneById`, so IANA ids are authoritative) plus a human label.
+ *
+ * This is a small, hand-kept SUGGESTION list — it is NOT derived from configured markets, and being
+ * listed here is not a claim that this runtime accepts every entry. Only the ids actually exercised
+ * here are known-good; the server stays the authority and still rejects anything it cannot resolve.
+ * A stored id outside the list is preserved and shown as-is, never silently replaced or defaulted.
  */
 import type { AuthoringLocale } from "../messages/authoring-messages.ts";
 
@@ -15,7 +18,7 @@ export interface TimeZoneOption {
   readonly label: Record<AuthoringLocale, string>;
 }
 
-/** The offered identifiers, ordered by relevance to the configured markets. */
+/** The offered identifiers, ordered by relevance to the regions this feature targets. */
 export const TIME_ZONE_OPTIONS: readonly TimeZoneOption[] = [
   { id: "Asia/Tehran", label: { fa: "تهران (ایران)", en: "Tehran (Iran)" } },
   { id: "Asia/Dubai", label: { fa: "دوبی (امارات)", en: "Dubai (UAE)" } },

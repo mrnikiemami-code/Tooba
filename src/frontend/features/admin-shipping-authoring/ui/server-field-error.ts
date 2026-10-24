@@ -1,14 +1,15 @@
 /**
- * One actionable mapping from a REJECTED save to the local field that actually caused it.
+ * Exact placement of a REJECTED save on the local field that actually caused it.
  *
  * The server is the authority: this module never guesses a cause, never turns a failure into success
- * and never hides the technical code. It only translates the codes/properties the server really
- * returns into (a) the section of this screen, (b) the human field name, and (c) a localized reason,
- * so the operator is not left with a generic "some fields were rejected".
+ * and never hides the technical code (it is offered in a collapsed diagnostics disclosure). Placement
+ * uses TWO independent, explicit facts only:
+ * 1. the registered property path (`regionGroups[0].rows[0].minDeliveryDays`) — its own segment
+ *    ownership decides the section, the row and the input;
+ * 2. an exact registered error code (`shipping.schedule.timezone.invalid`) — string equality, never a
+ *    substring guess, so an unknown code can never be "explained" as a required name or bad time.
  *
- * Two real shapes are covered:
- * 1. registered property errors (`errors: { "<property>": ["<code>"] }`) from the validation pipeline;
- * 2. a single root `errorCode` for domain rules (for example `shipping.schedule.timezone.invalid`).
+ * A code outside the registered set keeps the honest generic reason of its owning field.
  */
 import type { EditorPropertyError, EditorTransportFailure } from "../api/editor-document-api.ts";
 import type { AuthoringMessages } from "../messages/authoring-messages.ts";
@@ -32,6 +33,12 @@ export interface ServerFieldIssue {
   readonly field: string;
   /** Localized human reason. */
   readonly reason: string;
+  /** The server property path, when the rejection carried one. */
+  readonly property: string | null;
+  /** Index of the rejected rate row inside the submitted `regionGroups[i].rows`, if any. */
+  readonly rowIndex: number | null;
+  /** `data-testid` of the input to focus, when the screen renders one. */
+  readonly testId: string | null;
 }
 
 /** TAB that owns each target, so the screen can reveal the failing section. */
@@ -39,8 +46,8 @@ export function targetTab(target: ServerFieldTarget): "general" | "regions" {
   return target === "regions" || target === "rates" ? "regions" : "general";
 }
 
-/** `data-testid` of the input that receives focus for a target, when the screen renders one. */
-export const TARGET_TEST_ID: Readonly<Record<ServerFieldTarget, string | null>> = {
+/** Static section/input ids per target (row-level rate inputs are resolved per property). */
+const STATIC_TEST_ID: Readonly<Record<ServerFieldTarget, string | null>> = {
   name: "shipping-authoring-name",
   description: "shipping-authoring-description",
   settings: "shipping-authoring-freight-Prepaid",
@@ -48,30 +55,104 @@ export const TARGET_TEST_ID: Readonly<Record<ServerFieldTarget, string | null>> 
   weekTimeZone: "shipping-authoring-week-timezone",
   weekDays: "shipping-authoring-week",
   regions: "shipping-authoring-groups-panel",
-  rates: "shipping-authoring-group-add",
+  rates: "shipping-authoring-rate-row-edit",
   unknown: null,
 };
 
-/** Root error codes this screen can place on a real field (no invented code is listed here). */
-const ROOT_CODE_TARGETS: Readonly<Record<string, ServerFieldTarget>> = {
-  "shipping.schedule.timezone.invalid": "weekTimeZone",
-  "shipping.schedule.timezone.required": "weekTimeZone",
-  "shipping.validation.schedule_timezone_id_invalid": "weekTimeZone",
-  "shipping.schedule.day.time_invalid": "weekDays",
-  "shipping.schedule.day.range_invalid": "weekDays",
+/** Exact registered `regionGroups[i].rows[j].<segment>` → the row input test id. */
+const ROW_FIELD_TEST_ID: Readonly<Record<string, string>> = {
+  freightAmount: "shipping-authoring-rate-freight",
+  packagingAmount: "shipping-authoring-rate-packaging",
+  minDeliveryDays: "shipping-authoring-rate-min-days",
+  maxDeliveryDays: "shipping-authoring-rate-max-days",
+  minWeightGrams: "shipping-authoring-rate-min-weight",
+  maxWeightGrams: "shipping-authoring-rate-max-weight",
+  minItemCount: "shipping-authoring-rate-min-count",
+  maxItemCount: "shipping-authoring-rate-max-count",
+  minMerchandiseAmount: "shipping-authoring-rate-min-amount",
+  maxMerchandiseAmount: "shipping-authoring-rate-max-amount",
 };
 
-/** Property-path → target, checked in order (most specific first). */
-const PROPERTY_TARGETS: readonly (readonly [RegExp, ServerFieldTarget])[] = [
-  [/timezone|time_zone/i, "weekTimeZone"],
-  [/schedule|weekday|days?\b|starttime|endtime/i, "weekDays"],
-  [/description/i, "name"],
-  [/shippingtype|typeassignment|\btype\b/i, "type"],
-  [/freightamount|packagingamount|delivery|rows?\b|rate/i, "rates"],
-  [/regiongroup|areas?\b|country|city|servicearea|administrative/i, "regions"],
-  [/settings|freightpay|calculation/i, "settings"],
-  [/name/i, "name"],
-];
+/**
+ * EXACT registered codes → reason + the section they belong to.
+ *
+ * No entry here is derived from a substring; a code that is not listed is treated as unknown.
+ */
+const REGISTERED: Readonly<Record<string, { target: ServerFieldTarget; key: keyof AuthoringMessages }>> = {
+  "shipping.schedule.timezone.required": { target: "weekTimeZone", key: "weekTimeZoneRequired" },
+  "shipping.schedule.timezone.invalid": { target: "weekTimeZone", key: "weekTimeZoneInvalidServer" },
+  "shipping.validation.schedule_timezone_id_invalid": { target: "weekTimeZone", key: "weekTimeZoneInvalidServer" },
+  "shipping.schedule.weekday.invalid": { target: "weekDays", key: "weekDayRangeInvalid" },
+  "shipping.schedule.window.range_invalid": { target: "weekDays", key: "weekDayRangeInvalid" },
+  "shipping.schedule.window.overlap": { target: "weekDays", key: "weekDayRangeInvalid" },
+  "shipping.authoring.schedule_weekday_set_invalid": { target: "weekDays", key: "weekDayRangeInvalid" },
+  "shipping.authoring.schedule_day_invalid": { target: "weekDays", key: "weekDayTimeInvalid" },
+  "shipping.authoring.rate_amount_invalid": { target: "rates", key: "rateAmountServerError" },
+  "shipping.authoring.rate_duration_invalid": { target: "rates", key: "rateDurationServerError" },
+  "shipping.authoring.rate_condition_invalid": { target: "rates", key: "rateConditionServerError" },
+  "shipping.authoring.rate_row_payload_invalid": { target: "rates", key: "rateRowServerError" },
+  "shipping.authoring.rate_overlap": { target: "rates", key: "rateRowServerError" },
+  "shipping.authoring.rate_currency_mismatch": { target: "rates", key: "rateRowServerError" },
+  "shipping.authoring.region_payload_invalid": { target: "regions", key: "fieldRejectedServer" },
+  "shipping.authoring.region_selection_overlap": { target: "regions", key: "fieldRejectedServer" },
+  "shipping.authoring.region_group_not_found": { target: "regions", key: "fieldRejectedServer" },
+  "shipping.authoring.presentation_payload_invalid": { target: "name", key: "fieldRejectedServer" },
+  "shipping.authoring.presentation_language_invalid": { target: "name", key: "fieldRejectedServer" },
+  "shipping.authoring.method_settings_invalid": { target: "settings", key: "fieldRejectedServer" },
+  "shipping.authoring.type_assignment_invalid": { target: "type", key: "typeRejectedServer" },
+  "shipping.authoring.type_selection_unavailable": { target: "type", key: "typeRejectedServer" },
+};
+
+interface ParsedPath {
+  readonly target: ServerFieldTarget;
+  readonly segment: string;
+  readonly rowIndex: number | null;
+  readonly testId: string | null;
+}
+
+/** One path segment split into its registered name and its collection index (if any). */
+function segmentOf(segment: string): { name: string; index: number | null } {
+  const match = /^([A-Za-z_][A-Za-z0-9_]*)(?:\[(\d+)\])?$/.exec(segment.trim());
+  if (!match) return { name: "", index: null };
+  return { name: match[1]!, index: match[2] === undefined ? null : Number(match[2]) };
+}
+
+/** Ownership of one registered property path, decided by its own segments (never by a substring). */
+function parseProperty(property: string): ParsedPath | null {
+  const segments = property
+    .split(".")
+    .map(segmentOf)
+    .filter((segment) => segment.name.length > 0);
+  if (segments.length === 0) return null;
+  const first = segments[0]!;
+  const last = segments[segments.length - 1]!;
+  const parent = segments.length > 1 ? segments[segments.length - 2]! : null;
+
+  if (first.name === "regionGroups" && parent?.name === "rows" && parent.index !== null) {
+    const testId = ROW_FIELD_TEST_ID[last.name] ?? "shipping-authoring-rate-row-edit";
+    return { target: "rates", segment: last.name, rowIndex: parent.index, testId };
+  }
+  if (first.name === "regionGroups") {
+    return { target: "regions", segment: last.name, rowIndex: null, testId: STATIC_TEST_ID.regions };
+  }
+  if (first.name === "weeklySchedule") {
+    if (last.name === "timeZoneId") {
+      return { target: "weekTimeZone", segment: last.name, rowIndex: null, testId: STATIC_TEST_ID.weekTimeZone };
+    }
+    return { target: "weekDays", segment: last.name, rowIndex: null, testId: STATIC_TEST_ID.weekDays };
+  }
+  if (first.name === "methodTranslations") {
+    const target: ServerFieldTarget = last.name === "description" ? "description" : "name";
+    return { target, segment: last.name, rowIndex: null, testId: STATIC_TEST_ID[target] };
+  }
+  if (first.name === "methodSettings") {
+    return { target: "settings", segment: last.name, rowIndex: null, testId: STATIC_TEST_ID.settings };
+  }
+  if (first.name === "typeAssignment") {
+    return { target: "type", segment: last.name, rowIndex: null, testId: STATIC_TEST_ID.type };
+  }
+  return { target: "unknown", segment: last.name, rowIndex: null, testId: null };
+}
 
 /** Localized human name of one target. */
 export function targetFieldLabel(target: ServerFieldTarget, messages: AuthoringMessages): string {
@@ -97,33 +178,24 @@ export function targetFieldLabel(target: ServerFieldTarget, messages: AuthoringM
   }
 }
 
-/**
- * Localized reason for one server code.
- *
- * Unknown codes are NOT translated into an invented cause: the registered field name is shown and the
- * technical code stays available in the diagnostics note.
- */
-function reasonFor(code: string | null, target: ServerFieldTarget, messages: AuthoringMessages): string {
-  if (code === null) return messages.saveValidation;
-  if (/timezone|time_zone/i.test(code)) return messages.weekTimeZoneInvalidServer;
-  if (/required/i.test(code) && target === "weekTimeZone") return messages.weekTimeZoneRequired;
-  if (/time|schedule|weekday/i.test(code)) return messages.weekDayTimeInvalid;
-  if (/conflict/i.test(code)) return messages.saveConflict;
-  if (/name/i.test(code)) return messages.nameRequired;
-  if (/type/i.test(code)) return messages.typeRejectedServer;
-  if (/amount|decimal|rate/i.test(code)) return messages.amountInvalid;
-  return messages.saveValidation;
+/** Row-scoped human name, so two rejected rows of the same group stay distinguishable. */
+function fieldName(
+  target: ServerFieldTarget,
+  rowIndex: number | null,
+  messages: AuthoringMessages,
+): string {
+  const base = targetFieldLabel(target, messages);
+  return rowIndex === null ? base : `${base} ${rowIndex + 1}`;
 }
 
-function propertyTarget(property: string): ServerFieldTarget {
-  for (const [pattern, target] of PROPERTY_TARGETS) {
-    if (pattern.test(property)) return target;
-  }
-  return "unknown";
+function codeReason(code: string | null, messages: AuthoringMessages): string | null {
+  if (code === null) return null;
+  const entry = REGISTERED[code];
+  return entry ? messages[entry.key] : null;
 }
 
 /**
- * The actionable issues of one rejected save, in server order and de-duplicated by (target, reason).
+ * The actionable issues of one rejected save, de-duplicated by (target, row, reason).
  *
  * @param failure The typed transport failure of the rejected PUT.
  * @param messages Localized messages of the interface locale.
@@ -132,34 +204,52 @@ export function serverFieldIssues(
   failure: EditorTransportFailure,
   messages: AuthoringMessages,
 ): readonly ServerFieldIssue[] {
-  const issues: ServerFieldIssue[] = [];
-  const seen = new Set<string>();
-  const push = (target: ServerFieldTarget, reason: string): void => {
-    const key = `${target}|${reason}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    issues.push({ target, field: targetFieldLabel(target, messages), reason });
-  };
-
   const groups: readonly EditorPropertyError[] =
     failure.kind === "conflict" || failure.kind === "validation" || failure.kind === "httpError"
       ? failure.errors
       : [];
+  const issues: ServerFieldIssue[] = [];
+  const seen = new Set<string>();
+
   for (const group of groups) {
-    const target = propertyTarget(group.property);
     const code = group.codes.find((candidate) => candidate.length > 0) ?? null;
-    push(target, reasonFor(code, target, messages));
+    const parsed = parseProperty(group.property);
+    const registered = code === null ? null : REGISTERED[code];
+    // The path owns the SECTION/ROW; the exact registered code owns the REASON. A path this screen
+    // cannot own stays `unknown` rather than being attached to a plausible-looking field.
+    const target = parsed?.target ?? registered?.target ?? "unknown";
+    const rowIndex = parsed?.rowIndex ?? null;
+    const issue: ServerFieldIssue = {
+      target,
+      field: fieldName(target, rowIndex, messages),
+      reason: codeReason(code, messages) ?? messages.fieldRejectedServer,
+      property: group.property,
+      rowIndex,
+      testId: parsed?.testId ?? STATIC_TEST_ID[target],
+    };
+    const key = `${issue.target}|${issue.rowIndex}|${issue.reason}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    issues.push(issue);
   }
 
   if (issues.length === 0 && (failure.kind === "validation" || failure.kind === "httpError")) {
     const rootCode = failure.errorCode;
-    const target = rootCode !== null ? (ROOT_CODE_TARGETS[rootCode] ?? "unknown") : "unknown";
-    push(target, reasonFor(rootCode, target, messages));
+    const registered = rootCode === null ? null : REGISTERED[rootCode];
+    const target = registered?.target ?? "unknown";
+    issues.push({
+      target,
+      field: fieldName(target, null, messages),
+      reason: codeReason(rootCode, messages) ?? messages.fieldRejectedServer,
+      property: null,
+      rowIndex: null,
+      testId: STATIC_TEST_ID[target],
+    });
   }
   return issues;
 }
 
-/** The technical codes of a rejection, for the small diagnostics note (never the main prose). */
+/** The technical codes of a rejection, for the collapsed diagnostics disclosure only. */
 export function serverErrorCodes(failure: EditorTransportFailure): readonly string[] {
   const codes = new Set<string>();
   if (failure.kind === "conflict" || failure.kind === "validation" || failure.kind === "httpError") {

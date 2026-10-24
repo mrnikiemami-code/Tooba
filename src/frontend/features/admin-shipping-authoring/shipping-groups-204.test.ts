@@ -100,7 +100,7 @@ function documentWith(overrides: Partial<EditorDocument> = {}): EditorDocument {
   });
   const base: EditorDocument = {
     draftId: DRAFT,
-    owner: { ownerKind: "Store", sellerPartyId: null },
+    owner: { kind: "Store", sellerPartyId: null },
     serviceCode: "tooba.post",
     optionCode: null,
     revision: 4,

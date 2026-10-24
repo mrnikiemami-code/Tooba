@@ -56,6 +56,7 @@ export function AuthoringGeneralTab({
   typeChoicesState,
   nameIssueLanguageIds,
   settingsIncomplete,
+  serverErrors,
   onName,
   onDescription,
   onFreightPaymentMode,
@@ -74,6 +75,8 @@ export function AuthoringGeneralTab({
   typeChoicesState: "loading" | "ok" | "error";
   nameIssueLanguageIds: readonly string[];
   settingsIncomplete: boolean;
+  /** Server reasons placed on their OWN field (`name`, `description`, `settings`, `type`, week…). */
+  serverErrors?: Partial<Record<"name" | "description" | "settings" | "type" | "weekTimeZone" | "weekDays", string>>;
   /** The ONE method-level schedule component, composed here so the section is not duplicated. */
   scheduleSlot: ReactNode;
   onName: (languageId: string, value: string) => void;
@@ -100,20 +103,23 @@ export function AuthoringGeneralTab({
   const nameInvalid = active ? nameIssueLanguageIds.some((id) => id.toLowerCase() === active.languageId.toLowerCase()) : false;
 
   return (
-    <div className="grid gap-4" data-testid="shipping-authoring-general-tab">
-      <section className="rounded-xl border border-border bg-surface px-3 py-2 text-xs text-gray-600">
+    <div className="grid max-w-4xl gap-4" data-testid="shipping-authoring-general-tab">
+      <p className="text-xs text-gray-600">
         <span className="font-bold text-gray-900">{messages.ownerLabel}: </span>
         {document.owner.kind === "Marketplace"
           ? messages.ownerMarketplace
           : document.owner.kind === "Seller"
             ? messages.ownerSeller
             : messages.ownerStore}
-        <span className="mx-1">·</span>
-        <span className="text-gray-500">{messages.ownerNote}</span>
-      </section>
+      </p>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <Field id="authoring-type" label={messages.typeLabel} hint={messages.typeHint}>
+      <Field
+        id="authoring-type"
+        label={messages.typeLabel}
+        hint={messages.typeHint}
+        error={serverErrors?.type}
+      >
+        <div className="max-w-sm">
           <Select
             value={selectedTypeValue}
             disabled={readOnly}
@@ -146,26 +152,23 @@ export function AuthoringGeneralTab({
             ))}
             <option value="">{messages.typeClearOption}</option>
           </Select>
-        </Field>
-
-        <div className="rounded-xl border border-border bg-surface px-3 py-2 text-xs text-gray-600">
-          <p data-testid="shipping-authoring-type-state">
-            <span className="font-bold text-gray-900">{messages.typeLabel}: </span>
-            {document.type.resolution === "Active"
-              ? messages.typeActive
-              : document.type.resolution === "Inactive"
-                ? messages.typeInactiveStored
-                : document.type.resolution === "Missing"
-                  ? messages.typeMissingStored
-                  : messages.typeUnconfigured}
-          </p>
-          {typeChoicesState === "loading" ? <p className="mt-1 text-gray-500">{messages.entryLoading}</p> : null}
-          {typeChoicesState === "error" ? <p className="mt-1 text-danger">{messages.entryFailed}</p> : null}
-          {typeChoicesState === "ok" && typeChoices.length === 0 ? (
-            <p className="mt-1 text-gray-500">{messages.typeCatalogEmpty}</p>
-          ) : null}
         </div>
-      </div>
+      </Field>
+
+      {/* Only a state the select cannot show is stated once here: it never contradicts the choice. */}
+      {document.type.resolution === "Inactive" || document.type.resolution === "Missing" || typeChoicesState !== "ok" ? (
+        <p className="text-xs text-gray-600" data-testid="shipping-authoring-type-state">
+          {document.type.resolution === "Inactive"
+            ? messages.typeInactiveStored
+            : document.type.resolution === "Missing"
+              ? messages.typeMissingStored
+              : typeChoicesState === "loading"
+                ? messages.entryLoading
+                : typeChoicesState === "error"
+                  ? messages.entryFailed
+                  : messages.typeCatalogEmptyHint}
+        </p>
+      ) : null}
 
       <section className="rounded-xl border border-border bg-surface-elevated p-3 md:p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -215,7 +218,7 @@ export function AuthoringGeneralTab({
               id="authoring-name"
               label={`${messages.nameLabel} — ${languageLabel(active, locale)}`}
               hint={messages.contentLanguageHint}
-              error={nameInvalid ? messages.nameRequired : undefined}
+              error={nameInvalid ? messages.nameRequired : (serverErrors?.name ?? undefined)}
             >
               <Input
                 dir={active.direction}
@@ -230,6 +233,7 @@ export function AuthoringGeneralTab({
             <Field
               id="authoring-description"
               label={`${messages.descriptionLabel} — ${languageLabel(active, locale)}`}
+              error={serverErrors?.description}
             >
               <Textarea
                 dir={active.direction}
@@ -281,6 +285,9 @@ export function AuthoringGeneralTab({
               </label>
             ))}
           </div>
+          {serverErrors?.settings ? (
+            <p role="alert" className="mt-1 text-[11px] font-semibold text-danger">{serverErrors.settings}</p>
+          ) : null}
         </fieldset>
 
         <fieldset className="rounded-xl border border-border bg-surface-elevated p-3">

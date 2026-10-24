@@ -90,6 +90,7 @@ export function AuthoringWeekEditor({
   editable,
   locale,
   messages,
+  serverErrors,
   onPendingTimeZone,
   onConfigure,
   onTimeZone,
@@ -103,6 +104,8 @@ export function AuthoringWeekEditor({
   editable: boolean;
   locale: AuthoringLocale;
   messages: AuthoringMessages;
+  /** Localized server reasons placed on the time zone or the day list of THIS section. */
+  serverErrors?: { readonly timeZone?: string; readonly days?: string };
   onPendingTimeZone: (value: string) => void;
   onConfigure: () => void;
   onTimeZone: (value: string) => void;
@@ -114,7 +117,11 @@ export function AuthoringWeekEditor({
   const configureTimeZone = week.kind === "unconfigured" ? week.pendingTimeZone : "";
 
   return (
-    <section className="rounded-xl border border-border bg-surface-elevated p-3 md:p-4" data-testid="shipping-authoring-week">
+    <section
+      className="rounded-xl border border-border bg-surface-elevated p-3 md:p-4"
+      data-testid="shipping-authoring-week"
+      tabIndex={-1}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-black text-gray-900">{messages.weekTitle}</h3>
         {editable && week.kind === "configured" && schedule !== null ? (
@@ -135,7 +142,7 @@ export function AuthoringWeekEditor({
           {editable ? (
             <div className="flex flex-wrap items-end gap-2">
               <label className="grid w-full gap-0.5 md:w-72">
-                <span className="text-[10px] font-bold text-gray-600">{messages.weekTimeZone}</span>
+                <span className="text-xs font-bold text-gray-700">{messages.weekTimeZone}</span>
                 <TimeZoneSelect
                   value={configureTimeZone}
                   locale={locale}
@@ -176,7 +183,7 @@ export function AuthoringWeekEditor({
         <div className="mt-2 grid gap-2 text-xs text-gray-700">
           {editable ? (
             <label className="grid w-full gap-0.5 md:w-72">
-              <span className="text-[10px] font-bold text-gray-600">{messages.weekTimeZone}</span>
+              <span className="text-xs font-bold text-gray-700">{messages.weekTimeZone}</span>
               <TimeZoneSelect
                 value={week.timeZoneId}
                 locale={locale}
@@ -197,6 +204,11 @@ export function AuthoringWeekEditor({
           {timeZoneIssue ? (
             <p role="alert" className="text-[11px] font-semibold text-danger">
               {weekIssueMessage(timeZoneIssue.code, messages)}
+            </p>
+          ) : null}
+          {serverErrors?.timeZone ? (
+            <p role="alert" className="text-[11px] font-semibold text-danger" data-testid="shipping-authoring-week-timezone-error">
+              {serverErrors.timeZone}
             </p>
           ) : null}
 
@@ -264,6 +276,11 @@ export function AuthoringWeekEditor({
               );
             })}
           </ul>
+          {serverErrors?.days ? (
+            <p role="alert" className="text-[11px] font-semibold text-danger" data-testid="shipping-authoring-week-days-error">
+              {serverErrors.days}
+            </p>
+          ) : null}
         </div>
       )}
       <p className="mt-2 text-[11px] text-gray-500">{editable ? messages.weekEditNote : messages.weekNote}</p>

@@ -1,10 +1,26 @@
 # Tooba — Agent Rules
 
-## CURRENT TASK —209-R1 / live save accepted, UI incomplete —2026-10-24
+## CURRENT HANDOFF —209-R1 posted / awaiting Architect review —2026-10-24
 
-Read TOP canonical recovery +209/ARCHITECT-REVIEW.md.
+209-R1 executed under the standing local-development authorization. Read
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1/RESULT.md`.
+Delivered: truthful VIEW (rate rows as text via `RateRowSummary`, group title as text, zero controls in the
+Regions panel) plus handler-boundary `blockedNow()` guard for view/saving/reconciling; compact professional
+General (no duplicate type card, one-line owner, `max-w-4xl` content) and 4-field rate rows with a labelled
+collapsible optional-conditions block whose summary always states the active condition; exact server-error
+placement by path segment + exact registered code (description→description, `rows[i].minDeliveryDays`→that
+rate row, timezone.required≠invalid, unknown code never guessed, codes in collapsed diagnostics);
+timezone-options comment corrected to a suggestion list. typecheck clean, 10/10 new + 6/6 existing focused
+tests. Live mounted read-only inspection at 1440/390 on the same rev2 draft with real GETs only; local edit
+then Cancel→discard restored `120000.00`; no Apply/PUT and no domain mutation.
+Active task: NONE. Next task: NONE — wait for Architect review; do not call the user for a full retest until
+these defects are accepted. Host5088/FE3000 preserved; migrations/seeds/save not replayed; TB185 paused.
+Timebox: actual ≈37 min vs 30 (reported honestly, one correction round).
+
+## SUPERSEDED —209-R1 issued task —2026-10-24
+
 Only issued task TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1,parent209;30min/stop22.
-209 live save/readback accepted; user Visual ACCEPT absent. Architect viewed actualdesktopPNGs:
+209 live save/readback accepted; user Visual ACCEPT absent. Architect viewed actual desktop PNGs:
 view-mode rate inputs/delete still rendered; requested compact professional layout not delivered.
 Repair mode/busy mutation guards, compact General/Regions, optional condition organization,
 exact description/nested delivery error targeting and inline feedback. Same feature/design-system.

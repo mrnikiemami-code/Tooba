@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * One cascading, on-demand destination picker inside one group.
@@ -90,7 +90,7 @@ function OptionSelect({
 }) {
   return (
     <label className="grid gap-0.5">
-      <span className="text-[10px] font-bold text-gray-600">{label}</span>
+      <span className="text-xs font-bold text-gray-600">{label}</span>
       <select
         className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
         value={value}
@@ -198,7 +198,7 @@ export function AuthoringDestinationPicker({
         </div>
       </div>
 
-      <p className="text-[10px] text-gray-500">{messages.destinationHint}</p>
+      <p className="text-xs text-gray-500">{messages.destinationHint}</p>
 
       <div className="grid gap-2 md:grid-cols-4">
         <OptionSelect
@@ -279,21 +279,21 @@ export function AuthoringDestinationPicker({
         >
           {messages.groupRemoveCancelAction}
         </button>
-        {loading ? <span className="text-[10px] text-gray-500">{messages.destinationLoading}</span> : null}
+        {loading ? <span className="text-xs text-gray-500">{messages.destinationLoading}</span> : null}
         {failure ? (
-          <span role="alert" className="text-[10px] font-semibold text-danger">
+          <span role="alert" className="text-xs font-semibold text-danger">
             {failureText(failure, messages)}
           </span>
         ) : null}
         {duplicate || rejected ? (
-          <span role="alert" className="text-[10px] font-semibold text-danger" data-testid="shipping-authoring-destination-duplicate">
+          <span role="alert" className="text-xs font-semibold text-danger" data-testid="shipping-authoring-destination-duplicate">
             {messages.destinationDuplicate}
           </span>
         ) : null}
       </div>
 
       {countryId !== "" && !loading && lists.cities.length === 0 ? (
-        <p className="text-[10px] text-gray-500">{messages.destinationEmpty}</p>
+        <p className="text-xs text-gray-500">{messages.destinationEmpty}</p>
       ) : null}
     </div>
   );

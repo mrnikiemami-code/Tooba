@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * Editable rows of ONE existing region group: identity, order, currency and geography are shown
@@ -61,12 +61,12 @@ function BoundField({
 }) {
   return (
     <label className="grid gap-0.5">
-      <span className="text-[10px] font-bold text-gray-600">{label}</span>
+      <span className="text-xs font-bold text-gray-700">{label}</span>
       <input
         type="text"
         inputMode={inputMode}
         dir="ltr"
-        className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
+        className="min-h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
@@ -83,6 +83,7 @@ export function RateRowEditor({
   locale,
   messages,
   issue,
+  serverError,
   onChange,
   onRemove,
 }: {
@@ -91,6 +92,8 @@ export function RateRowEditor({
   locale: AuthoringLocale;
   messages: AuthoringMessages;
   issue: RateRowIssue | undefined;
+  /** Localized reason placed by the SERVER on this exact row (never a generic banner). */
+  serverError?: string;
   onChange: (field: RateField, value: string) => void;
   onRemove: () => void;
 }) {
@@ -109,93 +112,142 @@ export function RateRowEditor({
           {messages.removeRowAction}
         </button>
       </div>
-      <div className="grid gap-2 md:grid-cols-4">
-        <div className="grid grid-cols-2 gap-1">
-          <BoundField
-            label={`${messages.weightLabel} ${messages.minLabel}`}
-            value={row.minWeightGrams}
-            inputMode="numeric"
-            onChange={(value) => onChange("minWeightGrams", value)}
-            testId="shipping-authoring-rate-min-weight"
-          />
-          <BoundField
-            label={`${messages.weightLabel} ${messages.maxLabel}`}
-            value={row.maxWeightGrams}
-            inputMode="numeric"
-            onChange={(value) => onChange("maxWeightGrams", value)}
-            testId="shipping-authoring-rate-max-weight"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-1">
-          <BoundField
-            label={`${messages.countLabel} ${messages.minLabel}`}
-            value={row.minItemCount}
-            inputMode="numeric"
-            onChange={(value) => onChange("minItemCount", value)}
-            testId="shipping-authoring-rate-min-count"
-          />
-          <BoundField
-            label={`${messages.countLabel} ${messages.maxLabel}`}
-            value={row.maxItemCount}
-            inputMode="numeric"
-            onChange={(value) => onChange("maxItemCount", value)}
-            testId="shipping-authoring-rate-max-count"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-1">
-          <BoundField
-            label={`${messages.amountLabel} ${messages.minLabel}`}
-            value={row.minMerchandiseAmount}
-            inputMode="decimal"
-            onChange={(value) => onChange("minMerchandiseAmount", value)}
-            testId="shipping-authoring-rate-min-amount"
-          />
-          <BoundField
-            label={`${messages.amountLabel} ${messages.maxLabel}`}
-            value={row.maxMerchandiseAmount}
-            inputMode="decimal"
-            onChange={(value) => onChange("maxMerchandiseAmount", value)}
-            testId="shipping-authoring-rate-max-amount"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-1">
-          <BoundField
-            label={messages.freightLabel}
-            value={row.freightAmount}
-            inputMode="decimal"
-            onChange={(value) => onChange("freightAmount", value)}
-            testId="shipping-authoring-rate-freight"
-          />
-          <BoundField
-            label={messages.packagingLabel}
-            value={row.packagingAmount}
-            inputMode="decimal"
-            onChange={(value) => onChange("packagingAmount", value)}
-            testId="shipping-authoring-rate-packaging"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-1">
-          <BoundField
-            label={`${messages.deliveryLabel} ${messages.minLabel}`}
-            value={row.minDeliveryDays}
-            inputMode="numeric"
-            onChange={(value) => onChange("minDeliveryDays", value)}
-            testId="shipping-authoring-rate-min-days"
-          />
-          <BoundField
-            label={`${messages.deliveryLabel} ${messages.maxLabel}`}
-            value={row.maxDeliveryDays}
-            inputMode="numeric"
-            onChange={(value) => onChange("maxDeliveryDays", value)}
-            testId="shipping-authoring-rate-max-days"
-          />
-        </div>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <BoundField
+          label={messages.freightLabel}
+          value={row.freightAmount}
+          inputMode="decimal"
+          onChange={(value) => onChange("freightAmount", value)}
+          testId="shipping-authoring-rate-freight"
+        />
+        <BoundField
+          label={messages.packagingLabel}
+          value={row.packagingAmount}
+          inputMode="decimal"
+          onChange={(value) => onChange("packagingAmount", value)}
+          testId="shipping-authoring-rate-packaging"
+        />
+        <BoundField
+          label={`${messages.deliveryLabel} ${messages.minLabel}`}
+          value={row.minDeliveryDays}
+          inputMode="numeric"
+          onChange={(value) => onChange("minDeliveryDays", value)}
+          testId="shipping-authoring-rate-min-days"
+        />
+        <BoundField
+          label={`${messages.deliveryLabel} ${messages.maxLabel}`}
+          value={row.maxDeliveryDays}
+          inputMode="numeric"
+          onChange={(value) => onChange("maxDeliveryDays", value)}
+          testId="shipping-authoring-rate-max-days"
+        />
       </div>
+
+      {/* Optional axes stay collapsed but are never hidden: the summary line states the active
+          condition, so a configured weight/count/merchandise range is always visible at a glance.
+          Opening or closing this disclosure only changes presentation, never the values. */}
+      <details className="rounded-lg bg-surface px-2 py-1" data-testid="shipping-authoring-rate-conditions">
+        <summary className="cursor-pointer text-[11px] font-bold text-gray-700">
+          {messages.conditionsToggle}
+          <span className="ms-2 font-normal text-gray-500">
+            {messages.conditionSummary}: {rateDraftConditionText(row, locale, messages)}
+          </span>
+        </summary>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-1">
+            <BoundField
+              label={`${messages.weightLabel} ${messages.minLabel}`}
+              value={row.minWeightGrams}
+              inputMode="numeric"
+              onChange={(value) => onChange("minWeightGrams", value)}
+              testId="shipping-authoring-rate-min-weight"
+            />
+            <BoundField
+              label={`${messages.weightLabel} ${messages.maxLabel}`}
+              value={row.maxWeightGrams}
+              inputMode="numeric"
+              onChange={(value) => onChange("maxWeightGrams", value)}
+              testId="shipping-authoring-rate-max-weight"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-1">
+            <BoundField
+              label={`${messages.countLabel} ${messages.minLabel}`}
+              value={row.minItemCount}
+              inputMode="numeric"
+              onChange={(value) => onChange("minItemCount", value)}
+              testId="shipping-authoring-rate-min-count"
+            />
+            <BoundField
+              label={`${messages.countLabel} ${messages.maxLabel}`}
+              value={row.maxItemCount}
+              inputMode="numeric"
+              onChange={(value) => onChange("maxItemCount", value)}
+              testId="shipping-authoring-rate-max-count"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-1">
+            <BoundField
+              label={`${messages.amountLabel} ${messages.minLabel}`}
+              value={row.minMerchandiseAmount}
+              inputMode="decimal"
+              onChange={(value) => onChange("minMerchandiseAmount", value)}
+              testId="shipping-authoring-rate-min-amount"
+            />
+            <BoundField
+              label={`${messages.amountLabel} ${messages.maxLabel}`}
+              value={row.maxMerchandiseAmount}
+              inputMode="decimal"
+              onChange={(value) => onChange("maxMerchandiseAmount", value)}
+              testId="shipping-authoring-rate-max-amount"
+            />
+          </div>
+        </div>
+      </details>
       {issue ? (
         <p role="alert" className="text-[11px] font-semibold text-danger" data-testid="shipping-authoring-rate-row-issue">
           {rowIssueMessage(issue.code, messages)}
         </p>
       ) : null}
+      {serverError ? (
+        <p role="alert" className="text-[11px] font-semibold text-danger" data-testid="shipping-authoring-rate-row-server-error">
+          {serverError}
+        </p>
+      ) : null}
+    </li>
+  );
+}
+
+/** Truthful read-only row: the same stored values as text, with no input and no mutation control. */
+export function RateRowSummary({
+  row,
+  locale,
+  messages,
+}: {
+  row: RateRowDraft;
+  locale: AuthoringLocale;
+  messages: AuthoringMessages;
+}) {
+  return (
+    <li
+      className="grid gap-1 rounded-lg bg-surface px-2.5 py-1.5 text-xs text-gray-700 sm:grid-cols-3"
+      data-testid="shipping-authoring-rate-row"
+    >
+      <span data-testid="shipping-authoring-rate-row-condition">
+        {messages.conditionSummary}: {rateDraftConditionText(row, locale, messages)}
+      </span>
+      <span>
+        {messages.freightLabel}: <span dir="ltr">{row.freightAmount || "—"}</span>
+        {" · "}
+        {messages.packagingLabel}: <span dir="ltr">{row.packagingAmount || "—"}</span>
+      </span>
+      <span>
+        {messages.deliveryLabel}:{" "}
+        {authoringFormat(messages.deliveryRange, {
+          min: row.minDeliveryDays || "—",
+          max: row.maxDeliveryDays || "—",
+        })}
+      </span>
     </li>
   );
 }

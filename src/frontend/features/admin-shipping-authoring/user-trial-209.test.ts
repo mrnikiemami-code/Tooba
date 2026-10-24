@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TB-209 focused regressions for the rejected user trial:
  * 1. a freshly picked destination must show its REAL label, not "name unavailable";
  * 2. a rejected save must be placed on the actual field with a localized reason (never a bare
@@ -109,7 +109,7 @@ test("209-04 registered property errors map to their own fields, never to the na
 
   const issues = serverFieldIssues(failure, messages);
   assert.deepEqual(issues.map((issue) => issue.target), ["rates", "regions"]);
-  assert.equal(issues[0].field, messages.fieldRatesLabel);
+  // 209-R1: a rejected ROW is labelled with its 1-based row number so two rows stay distinct.\n  assert.equal(issues[0].field, `${messages.fieldRatesLabel} 1`);
   assert.equal(targetTab("rates"), "regions");
 });
 
@@ -123,7 +123,8 @@ test("209-05 an unknown code keeps the technical code available and invents no c
   const issues = serverFieldIssues(failure, messages);
   assert.equal(issues.length, 1);
   assert.equal(issues[0].target, "unknown");
-  assert.equal(issues[0].reason, messages.saveValidation);
+  // 209-R1: an unregistered code keeps the honest generic field reason, never a guessed cause.
+  assert.equal(issues[0].reason, messages.fieldRejectedServer);
   assert.deepEqual(serverErrorCodes(failure), ["shipping.something.new"]);
 });
 

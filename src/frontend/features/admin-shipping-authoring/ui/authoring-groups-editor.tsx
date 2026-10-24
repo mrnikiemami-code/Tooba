@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * Ordered GROUP-COLLECTION editor of the existing draft: add an empty group, delete one deliberately
@@ -19,7 +19,7 @@ import type { RateField, RateRowDraft, RateRowIssue, RatesFormState } from "../m
 import type { UnresolvedDraftSelection } from "../model/destination-choice.ts";
 import { areaIdentity } from "../model/destination-choice.ts";
 import { AuthoringDestinationPicker } from "./authoring-destination-picker.tsx";
-import { RateRowEditor } from "./authoring-rates-editor.tsx";
+import { RateRowEditor, RateRowSummary } from "./authoring-rates-editor.tsx";
 import { formatNumber } from "./authoring-format.ts";
 
 function groupIssueMessage(code: GroupIssue["code"], messages: AuthoringMessages): string {
@@ -47,6 +47,7 @@ export function AuthoringGroupsEditor({
   rateIssues,
   unresolved,
   editable,
+  serverRateErrors,
   onAddGroup,
   onRemoveGroup,
   onMoveGroup,
@@ -68,6 +69,8 @@ export function AuthoringGroupsEditor({
   rateIssues: readonly RateRowIssue[];
   unresolved: readonly UnresolvedDraftSelection[];
   editable: boolean;
+  /** Server rejections placed on a specific rate row index of the submitted group tree. */
+  serverRateErrors?: ReadonlyMap<number, string>;
   onAddGroup: () => void;
   onRemoveGroup: (groupKey: string) => void;
   onMoveGroup: (groupKey: string, delta: -1 | 1) => void;
@@ -85,7 +88,6 @@ export function AuthoringGroupsEditor({
     <div className="grid gap-3" data-testid="shipping-authoring-groups-panel">
       <div className="grid gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs text-gray-600">
         <p className="font-bold text-gray-800">{messages.regionsIntro}</p>
-        <p>{editable ? messages.groupsEditNote : messages.regionsNote}</p>
       </div>
 
       {editable ? (
@@ -175,6 +177,7 @@ export function AuthoringGroupsEditor({
                   <button
                     type="button"
                     className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-gray-700"
+                    data-testid="shipping-authoring-group-remove-cancel"
                     onClick={() => setPendingRemoval(null)}
                   >
                     {messages.groupRemoveCancelAction}
@@ -183,20 +186,25 @@ export function AuthoringGroupsEditor({
               </div>
             ) : null}
 
-            <label className="mt-2 grid gap-0.5">
-              <span className="text-[10px] font-bold text-gray-600">{messages.groupTitleLabel}</span>
-              <input
-                type="text"
-                className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
-                value={titleEntry?.title ?? ""}
-                placeholder={storedTitle?.title ?? ""}
-                disabled={!editable}
-                data-testid="shipping-authoring-group-title"
-                onChange={(event) => onChangeTitle(group.key, contentLanguageId, event.target.value)}
-              />
-            </label>
+            {editable ? (
+              <label className="mt-2 grid gap-0.5">
+                <span className="text-xs font-bold text-gray-700">{messages.groupTitleLabel}</span>
+                <input
+                  type="text"
+                  className="min-h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
+                  value={titleEntry?.title ?? ""}
+                  placeholder={storedTitle?.title ?? ""}
+                  data-testid="shipping-authoring-group-title"
+                  onChange={(event) => onChangeTitle(group.key, contentLanguageId, event.target.value)}
+                />
+              </label>
+            ) : (
+              <p className="mt-2 text-sm font-bold text-gray-900" data-testid="shipping-authoring-group-title-text">
+                {(storedTitle?.title ?? titleEntry?.title ?? "").trim() || messages.noAreaTitle}
+              </p>
+            )}
             {inactiveTitles.length > 0 ? (
-              <p className="mt-1 text-[10px] text-gray-500">
+              <p className="mt-1 text-xs text-gray-500">
                 {inactiveTitles.map((entry) => (
                   <span key={entry.languageId} dir="auto" className="me-2">
                     {entry.title}
@@ -290,18 +298,23 @@ export function AuthoringGroupsEditor({
                 <p className="mt-1 text-[11px] text-gray-500">{messages.noRows}</p>
               ) : (
                 <ul className="mt-1 grid gap-2">
-                  {(rates[group.key] ?? []).map((row: RateRowDraft, rowIndex: number) => (
-                    <RateRowEditor
-                      key={row.rowKey}
-                      row={row}
-                      index={rowIndex}
-                      locale={locale}
-                      messages={messages}
-                      issue={groupRateIssues.find((issue) => issue.rowKey === row.rowKey)}
-                      onChange={(field, value) => onChangeRowField(group.key, row.rowKey, field, value)}
-                      onRemove={() => onRemoveRow(group.key, row.rowKey)}
-                    />
-                  ))}
+                  {editable
+                    ? (rates[group.key] ?? []).map((row: RateRowDraft, rowIndex: number) => (
+                        <RateRowEditor
+                          key={row.rowKey}
+                          row={row}
+                          index={rowIndex}
+                          locale={locale}
+                          messages={messages}
+                          issue={groupRateIssues.find((issue) => issue.rowKey === row.rowKey)}
+                          serverError={serverRateErrors?.get(rowIndex)}
+                          onChange={(field, value) => onChangeRowField(group.key, row.rowKey, field, value)}
+                          onRemove={() => onRemoveRow(group.key, row.rowKey)}
+                        />
+                      ))
+                    : (rates[group.key] ?? []).map((row: RateRowDraft) => (
+                        <RateRowSummary key={row.rowKey} row={row} locale={locale} messages={messages} />
+                      ))}
                 </ul>
               )}
             </div>
