@@ -1,3 +1,14 @@
+## نتیجه اجرای208 — READY_FOR_USER_TRIAL روی استک توسعهٔ محلی — 2026-10-24
+
+208 اجرا و به Bridge گزارش شد؛ Worker، base`822a8ea8`، فقط یک تسک. [evidence208](../../architecture/evidence/TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208/RESULT.md).
+**مجوز کاربر ثبت شد و تکرار نمی‌شود:** دیتابیس توسعه است؛ migration+اثرات startup Host+حداکثر یک draft تست، روی همین هدف محلی مجاز است و برای همین اقدامات approval دوباره گرفته نمی‌شود.
+**Migrationها:** plan تمام33descriptor؛ pending دقیقاً 9 (Shipping7+Fulfillment2)؛ apply با Runner فعلی (build ایزوله `D:\temp\tb208-runner\out`) exit0؛ اکنون Shipping13 و Fulfillment12 و جدول‌های authoring/type موجود. backup ابزاری موجود نبود و طبق تسک مانع نبود. هیچ migration/history دست‌کاری نشد.
+**Runtime:** Host قدیمی PID24304 (bin\Debug، 22Oct) پس از verify با force متوقف شد (بستن graceful مؤثر نبود — deviation)؛ binary آمادهٔ207 با hash`9987f7a5…` بدون build دوباره اجرا شد: **PID10800**, `D:\temp\tb207-build\out`, Development, port5088, content root همان پوشه؛ startup بدون error (3 warning) و Language bootstrap skipped طبق ordering مستند. رستارت با `D:\temp\tb208-host\run-host.cmd`. FE`3000` (PID19108) دست‌نخورده.
+**Draft واقعی تست:** `01a16eeb-70b3-7000-87c2-564c82835496`، binding`post`/`optionCode=null`، revision1، regionGroups خالی؛ فقط از POST مجاز ساخته شد و همان تنها نوشتن business این تسک است. types واقعاً خالی است و seed نشد.
+**URL تست کاربر:** `http://127.0.0.1:3000/admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=view`
+**نقص واقعی integration و repair محدود:** backend مالک را `owner.ownerKind` می‌دهد ولی decoder فرانت `owner.kind` می‌خواست → صفحه با GETهای200 خطای «خواندن پیش‌نویس ناموفق» می‌داد. repair در `editor-document-decode.ts` + fixture تست، بدون تغییر API؛ focused test 7/7. mount واقعی بدون هیچ Fetch-interception: General/زبان‌های واقعی/نوعUnconfigured/تنظیمات و هفتهٔ واقعاً پیکربندی‌نشده، ویرایش و خروج پاک، بدون PUT.
+**محدودیت‌ها:** type catalog خالی است؛ write acceptance روی draft واقعی سنجیده نشد؛ هیچ quote/activation/whole-method/certification ادعا نمی‌شود.190–205 دست‌نخورده، بدون replay؛ TB185 paused/defaultOFF.
+
 ## تسک جاری208 — مجوز صریح ادامه روی دیتابیس توسعه — 2026-10-24
 
 کاربر صریحاً اعلام کرد دیتابیس production نیست، تغییرات لازم انجام شود، توقف/تأییدهای تکراری نمی‌خواهد و فقط وقتی مسیر واقعی آماده شد برای تست صدایش کنیم. **این مجوز جایگزین holdهای approval قبلی207 است.**

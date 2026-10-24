@@ -92,21 +92,28 @@ Do not replay historical tasks or resume TB-185 performance. Fetch current HEAD
 and verify actual task state;
 this is a recovery pointer, not a new implementation authorization.
 
-## Current accepted checkpoint — 2026-10-24 — USER TRIAL
+## Current accepted checkpoint — 2026-10-24 — LOCAL STACK REFRESHED, REAL TRIAL HANDOFF
 
 TB196–204 bounded capabilities remain accepted through their latest reviewed repairs.
 TB205-R2 successful intercepted composite-save/duplicate/locale evidence and TB205-R3 mounted
 invalid/discard, canonical409 and transportUnknown/explicit-reconcile work protection are Architect-accepted
 within their reviews. R3 source/evidence: d6fd1ba0c7e43fe3493f91b77a6bd5a6402c3e76.
-Read the TOP canonical recovery and 205-R3/ARCHITECT-REVIEW.md first after chat loss.
-Existing authorized draft authoring is ready for USER TRIAL. Active task: NONE. Next task: NONE.
-Await user trial/feedback; do not replay 199–205 or add full-matrix proof tasks.
-Canonical UI route: /admin/shipping-services/authoring/[draftId]; entry from an existing method's
-view-only authorized draft link. No automatic draft creation.
-Production-Functional-Acceptance remains PENDING: intercepted browser data is not live integration,
-merchant mutation, deployment or user Visual ACCEPT. R2 screenshots are REVIEW_EVIDENCE_ONLY.
+TB206 diagnosed the stale `:5088` binary; TB207 proved the pending migrations and built the retained Host.
+TB208 (base `822a8ea8`) executed under the user's explicit local-development authorization: the nine
+pending Shipping/Fulfillment migrations are APPLIED via the existing tenant-scoped MigrationRunner,
+`Tooba.Host` was refreshed on `:5088` (PID 10800, `D:\temp\tb207-build\out`, Development), the shared
+frontend `:3000` was left untouched, and ONE real existing-service draft
+(`01a16eeb-70b3-7000-87c2-564c82835496`, `post`, no option) exists for the user trial. A real
+`owner.ownerKind` vs `owner.kind` decoder mismatch was repaired with a focused 7/7 adapter test.
+Read the TOP canonical recovery and TB208/RESULT.md first after chat loss.
+**State: READY_FOR_USER_TRIAL** for the existing-draft authoring slice; result awaiting Architect review.
+Active task: NONE. Next task: NONE — wait for Architect review, do not replay 199–208.
+Trial URL: /admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=view
+No automatic draft creation; the active type catalog is genuinely empty and was not seeded.
+Authoring WRITE acceptance was not exercised; Production-Functional-Acceptance remains PENDING, and
+intercepted/prior evidence is not live integration, merchant mutation, deployment or user Visual ACCEPT.
 Whole-method creation, activation/readiness, cutoff/carrier/funding and runtime quote are outside this slice.
-R2/R3 timing deviations remain recorded, not timing PASS. TB185 paused; default-OFF/PendingAllocation unchanged.
+TB185 paused; default-OFF/PendingAllocation unchanged.
 Historical active-task paragraphs above/below are not current authorization.
 
 ## Core rules

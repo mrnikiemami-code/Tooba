@@ -36,7 +36,7 @@ function rawNumbers(text: string): string {
 /** Real composite wire shape: camelCase, string enums, nulls omitted (`WhenWritingNull`). */
 const WIRE = rawNumbers(JSON.stringify({
   draftId: DRAFT,
-  owner: { kind: "Marketplace" },
+  owner: { ownerKind: "Marketplace" },
   serviceCode: "tooba.post",
   revision: 7,
   createdAt: "2026-10-23T00:15:00.1234567+03:30",
@@ -240,7 +240,7 @@ test("untrusted payloads fail closed instead of yielding a partial document", ()
     WIRE.replace('"regionGroups":', '"regionGroupsUnused":'),
     WIRE.replace('"defaultContentLanguageId":"' + LANGUAGE_EN + '"', '"defaultContentLanguageId":"' + LANGUAGE_STORED_INACTIVE + '"'),
     WIRE.replace('"freightAmount":1850000.00', '"freightAmount":1850000.00, "freightAmount":1'),
-    WIRE.replace('"kind":"Marketplace"', '"kind":"Tenant"'),
+    WIRE.replace('"ownerKind":"Marketplace"', '"ownerKind":"Tenant"'),
   ];
   for (const text of broken) {
     const node = parseJsonNode(text);

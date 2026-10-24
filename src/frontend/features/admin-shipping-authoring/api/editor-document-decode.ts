@@ -151,7 +151,8 @@ export function decodeEditorDocument(node: JsonNode, expectedDraftId: string): D
     if (draftId.toLowerCase() !== expectedDraftId.toLowerCase()) return { ok: false, reason: "draftId:mismatch" };
     const ownerNode = object(required(root, "owner"), "owner");
     const owner: EditorOwnerView = {
-      kind: variant(ownerNode.get("kind"), "owner.kind", OWNER_KINDS),
+      // Canonical wire field of `ShippingAuthoringOwnerView.OwnerKind` (Contracts, ownerKind).
+      kind: variant(ownerNode.get("ownerKind"), "owner.ownerKind", OWNER_KINDS),
       sellerPartyId: optionalGuid(ownerNode.get("sellerPartyId"), "owner.sellerPartyId"),
     };
     if (owner.kind === "Seller" && owner.sellerPartyId === null) fail("owner.sellerPartyId:required");
