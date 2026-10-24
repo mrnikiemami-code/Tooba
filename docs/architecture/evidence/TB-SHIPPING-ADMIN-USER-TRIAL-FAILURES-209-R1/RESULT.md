@@ -106,3 +106,16 @@ Screenshots (`screenshots/`): `regions-view-1440.png`, `general-edit-1440.png`,
   "no write" is worker observation (no Apply click, no mutating request initiated).
 - `RateRowSummary` labels the condition axis with the existing `weightLabel` (now «وزن (گرم)»).
 - Timebox exceeded by ≈7 min (§1). TB185 paused; default-OFF/PendingAllocation unchanged.
+
+---
+
+## Correction —2026-10-24 TB209-R2 (append-only, history preserved above)
+
+The R1 claim that a rejected rate row was targeted at its "exact row" was **over-claimed**. The R1 code
+carried only ows[j]: group identity was dropped, the screen shared a rowIndex-only map with every
+group, and focus used a document-wide Nth-match. Consequently egionGroups[1].rows[0].freightAmount
+targeted group0 row0, equal row indices across groups collapsed, and a rejected optional-condition input
+inside a closed disclosure could not be focused. Those R1 statements are corrected here, not rewritten.
+
+Fixed in `TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R2/RESULT.md` (composite group+row ownership,
+scoped selector, honest out-of-range handling, containing-disclosure opening only).

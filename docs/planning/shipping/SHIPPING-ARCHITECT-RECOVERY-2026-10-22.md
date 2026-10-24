@@ -6,7 +6,19 @@
 Pickerهنوز4selectهمهlevelsراrenderمی‌کند؛relevant-onlyخواسته‌شدهانجامنشدهوpresentationlimitationاست،نهscopeجدیدبرایحلقه. R1زمان37>30صریحnoncompliance.
 Draft01a16eeb-70b3-7000-87c2-564c82835496populatedrev2snapshot؛usercontentرامحفوظنگه‌دار. Host5088/FE3000روشن،مجوزdevبدونتکرارapprovalمحفوظ.190–209scopeهایپذیرفتهدوبارهبازنشوند.issued≠claimed.
 
-## مرجع جاری:209-R1 اجرا شد — منتظر بررسی معماری —2026-10-24
+## مرجع جاری:209-R2 اجرا شد — منتظر بررسی معماری —2026-10-24
+
+209-R1 به‌صورت bounded پذیرفته شد؛ تنها نقص واقعیِ باقی‌مانده اتصال خطای ردیف به گروه/ردیف درست بود.
+209-R2 آن را اصلاح کرد: [RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R2/RESULT.md).
+`ServerFieldIssue.groupIndex` از خودِ مسیر سرور (`regionGroups[i]`) استخراج می‌شود، dedup شامل group+row+input است،
+نگاشت صفحه با کلید ترکیبی `rateRowKey(g,r)` به همان گروه/ردیف جاری می‌رسد، focus فقط از گروهِ مقصود → ردیفِ مقصود →
+input واقعی می‌رود (بدون Nth سراسری)، و اگر فیلد داخل disclosure بستهٔ شرایط اختیاری باشد فقط همان باز می‌شود
+(فقط نمایش؛ بدون تغییر مقدار/dirty/revision). ایندکس خارج از محدوده صادقانه کاری نمی‌کند و به row0 هدایت نمی‌شود.
+typecheck پاک؛ 10/10 تست جدید دومجموعه‌ای + 26/26 مجموع سه فایل تمرکزی. بدون اجرای مجدد save/seed/migration/اسکرین‌شات،
+draft واقعی rev2 دست‌نخورده. زمان ≈12min > 10min (ثبت صادقانه). Active task=NONE. Next task=NONE — منتظر بررسی معماری؛
+سپس retest کاربر روی همان URL، بدون حلقهٔ بصری/اثبات جدید. Host5088/FE3000 محفوظ؛ TB185 متوقف.
+
+## مرجع قبلی:209-R1 اجرا شد — منتظر بررسی معماری —2026-10-24
 
 209-R1 نتیجه دارد: [RESULT](../../architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R1/RESULT.md).
 VIEW حالا واقعاً فقط‌خواندنی است (rows با RateRowSummary، title به‌صورت متن، هیچ input/button در پنل مناطق؛

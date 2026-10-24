@@ -98,7 +98,11 @@ export function RateRowEditor({
   onRemove: () => void;
 }) {
   return (
-    <li className="grid gap-2 rounded-lg border border-border bg-surface p-2" data-testid="shipping-authoring-rate-row-edit">
+    <li
+      className="grid gap-2 rounded-lg border border-border bg-surface p-2"
+      data-testid="shipping-authoring-rate-row-edit"
+      data-row-index={index}
+    >
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-black text-gray-800">
           {authoringFormat(messages.rowLabel, { index: formatNumber(index + 1, locale) })}

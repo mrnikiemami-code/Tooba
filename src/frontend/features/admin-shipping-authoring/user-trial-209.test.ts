@@ -109,7 +109,11 @@ test("209-04 registered property errors map to their own fields, never to the na
 
   const issues = serverFieldIssues(failure, messages);
   assert.deepEqual(issues.map((issue) => issue.target), ["rates", "regions"]);
-  // 209-R1: a rejected ROW is labelled with its 1-based row number so two rows stay distinct.\n  assert.equal(issues[0].field, `${messages.fieldRatesLabel} 1`);
+  // 209-R1/R2: the label carries the real group and 1-based row, so two rows stay distinct.
+  assert.equal(
+    issues[0].field,
+    `${messages.fieldRatesLabel} — ${messages.groupTitle.replace("{index}", "1")} · ${messages.rowLabel.replace("{index}", "1")}`,
+  );
   assert.equal(targetTab("rates"), "regions");
 });
 

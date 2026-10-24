@@ -21,6 +21,7 @@ import { areaIdentity } from "../model/destination-choice.ts";
 import { AuthoringDestinationPicker } from "./authoring-destination-picker.tsx";
 import { RateRowEditor, RateRowSummary } from "./authoring-rates-editor.tsx";
 import { formatNumber } from "./authoring-format.ts";
+import { rateRowKey } from "./server-field-error.ts";
 
 function groupIssueMessage(code: GroupIssue["code"], messages: AuthoringMessages): string {
   switch (code) {
@@ -69,8 +70,8 @@ export function AuthoringGroupsEditor({
   rateIssues: readonly RateRowIssue[];
   unresolved: readonly UnresolvedDraftSelection[];
   editable: boolean;
-  /** Server rejections placed on a specific rate row index of the submitted group tree. */
-  serverRateErrors?: ReadonlyMap<number, string>;
+  /** Server rejections keyed by composite group+row ownership (`rateRowKey`), never row alone. */
+  serverRateErrors?: ReadonlyMap<string, string>;
   onAddGroup: () => void;
   onRemoveGroup: (groupKey: string) => void;
   onMoveGroup: (groupKey: string, delta: -1 | 1) => void;
@@ -119,6 +120,7 @@ export function AuthoringGroupsEditor({
             key={group.key}
             className="rounded-xl border border-border bg-surface-elevated p-3"
             data-testid="shipping-authoring-group-draft"
+            data-group-index={position}
           >
             <header className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-black text-gray-900">
@@ -307,7 +309,7 @@ export function AuthoringGroupsEditor({
                           locale={locale}
                           messages={messages}
                           issue={groupRateIssues.find((issue) => issue.rowKey === row.rowKey)}
-                          serverError={serverRateErrors?.get(rowIndex)}
+                          serverError={serverRateErrors?.get(rateRowKey(position, rowIndex))}
                           onChange={(field, value) => onChangeRowField(group.key, row.rowKey, field, value)}
                           onRemove={() => onRemoveRow(group.key, row.rowKey)}
                         />

@@ -69,7 +69,15 @@ import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor, weekIssueMessage } from "./authoring-week-editor.tsx";
 import { rowIssueMessage } from "./authoring-rates-editor.tsx";
 import { AuthoringGroupsEditor } from "./authoring-groups-editor.tsx";
-import { serverErrorCodes, serverFieldIssues, targetTab, type ServerFieldIssue } from "./server-field-error.ts";
+import {
+  isRowScoped,
+  rateRowKey,
+  serverErrorCodes,
+  serverFieldIssues,
+  serverIssueSelector,
+  targetTab,
+  type ServerFieldIssue,
+} from "./server-field-error.ts";
 
 const TABS = ["general", "regions"] as const;
 type ScreenTab = (typeof TABS)[number];
@@ -507,28 +515,34 @@ export function ShippingAuthoringScreen({
     }
     return map;
   }, [serverIssues]);
-  /** Rate-row reasons keyed by the rejected row index inside the submitted group tree. */
+  /** Rate-row reasons keyed by composite group+row ownership of the SUBMITTED document. */
   const rateServerErrors = useMemo(() => {
-    const map = new Map<number, string>();
+    const map = new Map<string, string>();
     for (const issue of serverIssues) {
-      if (issue.target !== "rates" || issue.rowIndex === null) continue;
-      if (!map.has(issue.rowIndex)) map.set(issue.rowIndex, issue.reason);
+      if (!isRowScoped(issue)) continue;
+      const key = rateRowKey(issue.groupIndex!, issue.rowIndex!);
+      if (!map.has(key)) map.set(key, issue.reason);
     }
     return map;
   }, [serverIssues]);
 
-  /** Reveals the section that owns a rejected field and moves focus to that exact input/row. */
+  /**
+   * Reveals the owning section and moves focus to the exact GROUP -> ROW -> input of the rejection.
+   * Opening a closed optional-conditions disclosure is presentation only: it never edits a value,
+   * never marks the form dirty and never touches the revision.
+   */
   const revealServerIssue = useCallback((issue: ServerFieldIssue) => {
     setTab(targetTab(issue.target));
-    const testId = issue.testId;
-    if (testId === null) return;
+    const selector = serverIssueSelector(issue);
+    if (selector === null) return;
     window.requestAnimationFrame(() => {
-      // A row field can repeat (one input per row), so pick the element of the REJECTED row.
-      const candidates = globalThis.document.querySelectorAll<HTMLElement>(`[data-testid="${testId}"]`);
-      const element = issue.rowIndex !== null && candidates.length > issue.rowIndex
-        ? candidates[issue.rowIndex]!
-        : candidates[0] ?? null;
+      const element = globalThis.document.querySelector<HTMLElement>(selector);
       if (!element) return;
+      // The target may be inside a collapsed disclosure (optional conditions): open ONLY the
+      // disclosures that contain it, so the input is focusable and still inside its own group.
+      for (let parent = element.parentElement; parent !== null; parent = parent.parentElement) {
+        if (parent instanceof HTMLDetailsElement && !parent.open) parent.open = true;
+      }
       element.scrollIntoView({ block: "center" });
       element.focus({ preventScroll: true });
     });

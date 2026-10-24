@@ -1,6 +1,22 @@
 # Tooba — Agent Rules
 
-## CURRENT TASK —209-R2 / exact nested error targeting only —2026-10-24
+## CURRENT HANDOFF —209-R2 posted / awaiting Architect review —2026-10-24
+
+209-R2 executed frontend-only under the standing local-development authorization. Read
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R2/RESULT.md`.
+Fixed the one remaining real defect: `ServerFieldIssue` now keeps `groupIndex` AND `rowIndex` from the
+submitted path, dedup keys include group+row+owning input, the screen resolves the submitted index against
+the current ordered groups/rows via `rateRowKey(g,r)` (no rowIndex-only map shared across groups), focus is a
+scoped selector (intended group element → intended row element → actual input) with no document-wide Nth
+match, out-of-range indices highlight nothing instead of row0, and a rejected optional-condition input opens
+ONLY its enclosing disclosure (presentation only: no value, dirty flag or revision change).
+typecheck clean; 10/10 new two-group regressions + 26/26 across the three focused 209 files.
+No browser/runtime/screenshot, no save replay, no seed/migration/Host restart; real rev2 draft untouched.
+Active task: NONE. Next task: NONE — wait for Architect review, then hand the same live URL to the user for
+retest; do not open another automatic visual/proof loop. Host5088/FE3000 preserved; TB185 paused.
+Timebox: actual ≈12 min vs 10 (reported honestly, one correction round).
+
+## SUPERSEDED —209-R2 issued task —2026-10-24
 
 Only issued TB-SHIPPING-ADMIN-USER-TRIAL-FAILURES-209-R2,parent209-R1;10min/stop6.
 R1 presentation/view improvements accepted after Architect viewed all4screenshots; not userVisualACCEPT.

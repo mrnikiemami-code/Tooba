@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Exact placement of a REJECTED save on the local field that actually caused it.
  *
  * The server is the authority: this module never guesses a cause, never turns a failure into success
@@ -12,7 +12,7 @@
  * A code outside the registered set keeps the honest generic reason of its owning field.
  */
 import type { EditorPropertyError, EditorTransportFailure } from "../api/editor-document-api.ts";
-import type { AuthoringMessages } from "../messages/authoring-messages.ts";
+import { authoringFormat, type AuthoringMessages } from "../messages/authoring-messages.ts";
 
 /** The local target a server rejection points at (only fields this screen really owns). */
 export type ServerFieldTarget =
@@ -35,10 +35,37 @@ export interface ServerFieldIssue {
   readonly reason: string;
   /** The server property path, when the rejection carried one. */
   readonly property: string | null;
+  /** Index of the rejected GROUP inside the submitted `regionGroups`, when the path owns one. */
+  readonly groupIndex: number | null;
   /** Index of the rejected rate row inside the submitted `regionGroups[i].rows`, if any. */
   readonly rowIndex: number | null;
   /** `data-testid` of the input to focus, when the screen renders one. */
   readonly testId: string | null;
+}
+
+/** True when this issue is scoped to one rate row of one group. */
+export function isRowScoped(issue: ServerFieldIssue): boolean {
+  return issue.target === "rates" && issue.groupIndex !== null && issue.rowIndex !== null;
+}
+
+/** Composite key of the rejected row: BOTH indices, so equal row indices in two groups stay distinct. */
+export function rateRowKey(groupIndex: number, rowIndex: number): string {
+  return `${groupIndex}:${rowIndex}`;
+}
+
+/**
+ * The scoped DOM selector of exactly one rejected input: intended GROUP element, then intended ROW
+ * element (when row-scoped), then the input itself. Never a document-wide Nth-match shortcut — that
+ * would silently target another group's row.
+ */
+export function serverIssueSelector(issue: ServerFieldIssue): string | null {
+  if (issue.testId === null) return null;
+  const field = `[data-testid="${issue.testId}"]`;
+  if (issue.groupIndex === null) return field;
+  const group = `[data-testid="shipping-authoring-group-draft"][data-group-index="${issue.groupIndex}"]`;
+  if (issue.rowIndex === null) return `${group} ${field}`;
+  const row = `[data-testid="shipping-authoring-rate-row-edit"][data-row-index="${issue.rowIndex}"]`;
+  return `${group} ${row} ${field}`;
 }
 
 /** TAB that owns each target, so the screen can reveal the failing section. */
@@ -106,6 +133,7 @@ const REGISTERED: Readonly<Record<string, { target: ServerFieldTarget; key: keyo
 interface ParsedPath {
   readonly target: ServerFieldTarget;
   readonly segment: string;
+  readonly groupIndex: number | null;
   readonly rowIndex: number | null;
   readonly testId: string | null;
 }
@@ -130,28 +158,40 @@ function parseProperty(property: string): ParsedPath | null {
 
   if (first.name === "regionGroups" && parent?.name === "rows" && parent.index !== null) {
     const testId = ROW_FIELD_TEST_ID[last.name] ?? "shipping-authoring-rate-row-edit";
-    return { target: "rates", segment: last.name, rowIndex: parent.index, testId };
+    return { target: "rates", segment: last.name, groupIndex: first.index, rowIndex: parent.index, testId };
   }
   if (first.name === "regionGroups") {
-    return { target: "regions", segment: last.name, rowIndex: null, testId: STATIC_TEST_ID.regions };
+    return {
+      target: "regions",
+      segment: last.name,
+      groupIndex: first.index,
+      rowIndex: null,
+      testId: STATIC_TEST_ID.regions,
+    };
   }
   if (first.name === "weeklySchedule") {
     if (last.name === "timeZoneId") {
-      return { target: "weekTimeZone", segment: last.name, rowIndex: null, testId: STATIC_TEST_ID.weekTimeZone };
+      return {
+        target: "weekTimeZone",
+        segment: last.name,
+        groupIndex: null,
+        rowIndex: null,
+        testId: STATIC_TEST_ID.weekTimeZone,
+      };
     }
-    return { target: "weekDays", segment: last.name, rowIndex: null, testId: STATIC_TEST_ID.weekDays };
+    return { target: "weekDays", segment: last.name, groupIndex: null, rowIndex: null, testId: STATIC_TEST_ID.weekDays };
   }
   if (first.name === "methodTranslations") {
     const target: ServerFieldTarget = last.name === "description" ? "description" : "name";
-    return { target, segment: last.name, rowIndex: null, testId: STATIC_TEST_ID[target] };
+    return { target, segment: last.name, groupIndex: null, rowIndex: null, testId: STATIC_TEST_ID[target] };
   }
   if (first.name === "methodSettings") {
-    return { target: "settings", segment: last.name, rowIndex: null, testId: STATIC_TEST_ID.settings };
+    return { target: "settings", segment: last.name, groupIndex: null, rowIndex: null, testId: STATIC_TEST_ID.settings };
   }
   if (first.name === "typeAssignment") {
-    return { target: "type", segment: last.name, rowIndex: null, testId: STATIC_TEST_ID.type };
+    return { target: "type", segment: last.name, groupIndex: null, rowIndex: null, testId: STATIC_TEST_ID.type };
   }
-  return { target: "unknown", segment: last.name, rowIndex: null, testId: null };
+  return { target: "unknown", segment: last.name, groupIndex: null, rowIndex: null, testId: null };
 }
 
 /** Localized human name of one target. */
@@ -178,14 +218,21 @@ export function targetFieldLabel(target: ServerFieldTarget, messages: AuthoringM
   }
 }
 
-/** Row-scoped human name, so two rejected rows of the same group stay distinguishable. */
+/**
+ * Human name of the rejection, scoped by the indices the path actually carried: group, then row, so
+ * two groups' first rows read differently and no index is flattened away.
+ */
 function fieldName(
   target: ServerFieldTarget,
+  groupIndex: number | null,
   rowIndex: number | null,
   messages: AuthoringMessages,
 ): string {
   const base = targetFieldLabel(target, messages);
-  return rowIndex === null ? base : `${base} ${rowIndex + 1}`;
+  const parts: string[] = [];
+  if (groupIndex !== null) parts.push(authoringFormat(messages.groupTitle, { index: String(groupIndex + 1) }));
+  if (rowIndex !== null) parts.push(authoringFormat(messages.rowLabel, { index: String(rowIndex + 1) }));
+  return parts.length === 0 ? base : `${base} — ${parts.join(" · ")}`;
 }
 
 function codeReason(code: string | null, messages: AuthoringMessages): string | null {
@@ -219,15 +266,19 @@ export function serverFieldIssues(
     // cannot own stays `unknown` rather than being attached to a plausible-looking field.
     const target = parsed?.target ?? registered?.target ?? "unknown";
     const rowIndex = parsed?.rowIndex ?? null;
+    const groupIndex = parsed?.groupIndex ?? null;
     const issue: ServerFieldIssue = {
       target,
-      field: fieldName(target, rowIndex, messages),
+      field: fieldName(target, groupIndex, rowIndex, messages),
       reason: codeReason(code, messages) ?? messages.fieldRejectedServer,
       property: group.property,
+      groupIndex,
       rowIndex,
       testId: parsed?.testId ?? STATIC_TEST_ID[target],
     };
-    const key = `${issue.target}|${issue.rowIndex}|${issue.reason}`;
+    // BOTH indices and the owning input are part of identity: equal row indices in two groups are two
+    // real rejections, never one collapsed line.
+    const key = `${issue.target}|${issue.groupIndex}|${issue.rowIndex}|${issue.testId}|${issue.reason}`;
     if (seen.has(key)) continue;
     seen.add(key);
     issues.push(issue);
@@ -239,9 +290,10 @@ export function serverFieldIssues(
     const target = registered?.target ?? "unknown";
     issues.push({
       target,
-      field: fieldName(target, null, messages),
+      field: fieldName(target, null, null, messages),
       reason: codeReason(rootCode, messages) ?? messages.fieldRejectedServer,
       property: null,
+      groupIndex: null,
       rowIndex: null,
       testId: STATIC_TEST_ID[target],
     });
