@@ -80,6 +80,18 @@ public static class ShippingAuthoringDraftEndpoints
         group.MapPut(
             "/shipping-services/authoring-drafts/{draftId:guid}/editor-document",
             ReplaceEditorDocumentAsync);
+        // TB-220 authorized publication INTENT for an EXISTING draft: an explicit read of the TB-219 selected
+        // capture, an explicit capture+select, and an explicit withdraw. Ordinary Save never publishes and
+        // no value here implies customer eligibility, readiness or a quote.
+        group.MapGet(
+            "/shipping-services/authoring-drafts/{draftId:guid}/publication",
+            GetPublicationAsync);
+        group.MapPost(
+            "/shipping-services/authoring-drafts/{draftId:guid}/publication",
+            PublishAsync);
+        group.MapPost(
+            "/shipping-services/authoring-drafts/{draftId:guid}/publication/withdraw",
+            WithdrawPublicationAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -387,6 +399,66 @@ public static class ShippingAuthoringDraftEndpoints
 
         return api.From(await sender.Send(
             new ReplaceShippingAuthoringEditorDocumentCommand(scope, draftId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> GetPublicationAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new GetShippingAuthoringPublicationQuery(scope, draftId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> PublishAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringPublicationPublishRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new PublishShippingAuthoringDraftCommand(scope, draftId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> WithdrawPublicationAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringPublicationWithdrawRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new WithdrawShippingAuthoringPublicationCommand(scope, draftId, body!),
             cancellationToken));
     }
 }

@@ -70,6 +70,17 @@ public static class ShippingSellerAuthoringDraftEndpoints
         group.MapPut(
             "/shipping-services/authoring-drafts/{draftId:guid}/editor-document",
             ReplaceEditorDocumentAsync);
+        // Same TB-220 publication use cases behind the seller owner gate. The owner kind never comes from
+        // the payload, so a legitimate Marketplace seller keeps its own owner identity.
+        group.MapGet(
+            "/shipping-services/authoring-drafts/{draftId:guid}/publication",
+            GetPublicationAsync);
+        group.MapPost(
+            "/shipping-services/authoring-drafts/{draftId:guid}/publication",
+            PublishAsync);
+        group.MapPost(
+            "/shipping-services/authoring-drafts/{draftId:guid}/publication/withdraw",
+            WithdrawPublicationAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -376,6 +387,66 @@ public static class ShippingSellerAuthoringDraftEndpoints
 
         return api.From(await sender.Send(
             new ReplaceShippingAuthoringEditorDocumentCommand(scope, draftId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> GetPublicationAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new GetShippingAuthoringPublicationQuery(scope, draftId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> PublishAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringPublicationPublishRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new PublishShippingAuthoringDraftCommand(scope, draftId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> WithdrawPublicationAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingAuthoringPublicationWithdrawRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new WithdrawShippingAuthoringPublicationCommand(scope, draftId, body!),
             cancellationToken));
     }
 }

@@ -80,6 +80,12 @@ public static class ShippingAuthoringValidationCodes
 
     /// <summary>شناسهٔ نوع ارسال در بدنه خالی (Guid.Empty) است؛ خالی هرگز «انتخاب‌نشده» نیست.</summary>
     public const string TypeSelectionInvalid = "shipping.validation.type_selection_invalid";
+
+    /// <summary>
+    /// نسخهٔ مورد انتظار اشاره‌گر انتخاب در بدنه غایب یا منفی است؛ غیبت هرگز «صفر» نیست.
+    /// </summary>
+    public const string ExpectedSelectionVersionInvalid =
+        "shipping.validation.expected_selection_version_invalid";
 }
 
 /// <summary>اعتبارسنجی شکل درخواست ایجاد پیش‌نویس.</summary>

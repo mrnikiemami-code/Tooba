@@ -207,4 +207,19 @@
   <data name="shipping.authoring.revision_snapshot_not_found" xml:space="preserve">
     <value>No captured revision snapshot exists for the requested draft revision.</value>
   </data>
+  <data name="shipping.selected_capture.conflict" xml:space="preserve">
+    <value>The captured revision selection was changed by another request. Reload and try again.</value>
+  </data>
+  <data name="shipping.selected_capture.snapshot_unavailable" xml:space="preserve">
+    <value>The selected captured revision cannot be proven for this owner.</value>
+  </data>
+  <data name="shipping.selected_capture.binding_mismatch" xml:space="preserve">
+    <value>The selected captured revision belongs to another shipping method.</value>
+  </data>
+  <data name="shipping.selected_capture.invalid" xml:space="preserve">
+    <value>The captured revision selection request is not valid.</value>
+  </data>
+  <data name="shipping.selected_capture.owner_scope_unavailable" xml:space="preserve">
+    <value>The shipping owner identity cannot be resolved for this request.</value>
+  </data>
 </root>

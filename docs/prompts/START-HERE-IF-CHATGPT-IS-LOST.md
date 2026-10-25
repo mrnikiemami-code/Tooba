@@ -1,4 +1,30 @@
-## CURRENT —219-R1 bounded ACCEPT; only220 authorized publication API —2026-10-25
+## CURRENT —220 publication API delivered; NOT live —2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-PUBLICATION-API-220/RESULT.md` and `TASK.md`. 220
+added the authorized publication actions for an EXISTING draft on BOTH `/v1/admin` and `/v1/seller`:
+`GET|POST .../authoring-drafts/{draftId}/publication` and `POST .../publication/withdraw`. Thin real
+delegates: existing owner authorizer (`View` GET / `Manage` POST) FIRST, existing `ShippingEndpointBody`,
+then typed MediatR. BOTH tokens are `[JsonRequired]` and the expected selection version is NULLABLE, so an
+omitted field is never version 0. GET derives the binding from the owned draft and reads the TB-219 pointer
+once, returning explicit Absent/Cleared/Selected, version 0 only for Absent, and a pure DATA equality against
+the current saved revision. POST = owned draft read → stale saved revision refused BEFORE capture → KNOWN
+stale pointer token refused BEFORE capture → ONE existing capture → ONE existing select. Withdraw = ONE
+existing clear. Capture and select stay TWO explicit commits: a lost pointer CAS is 409 with the OLD pointer
+kept and a staging capture possibly left (asserted; no combined atomicity). Adjacent hygiene: a
+`ReloadAsync` that leaves EF `Detached` now returns null (source guard, branch NOT executed).
+`selected_capture.conflict`/`snapshot_unavailable` → 409 with FA/EN resources; `binding_mismatch`/`invalid`
+stay 400. Executed: 0 build errors; ONE new class `ShippingAuthoringPublicationEndpointTests` 8/8 green TWICE
+on disposable `127.0.0.1:15432/shipping_tb214` (container removed). No 12/9/43/18/8/119/194/16 replay.
+**NOT WIRED / NOT LIVE**: no Storefront/checkout consumer, no FE list/editor controls, no Order projection/
+selection/commit. `Selected` is selection INTENT only — never eligibility, readiness, activation or price.
+No schema/migration, no user-draft write, no Host5088/FE3000 restart, no flags/seeds; 214/219 migrations
+still NOT shared-applied. §29 and 211–219 preserved; TB185 paused, default-OFF, PendingAllocation.
+Actual ≈120 min vs 35/23/12 boxes — recorded, NOT a process PASS.
+Active task: NONE. Next: NOT ISSUED — STOP_FOR_ARCHITECT (wire publish/withdraw + direct new-editor from the
+service LIST, then real fulfillment owner/type/group-membership/measurement through projection/selection/
+commit). No generic audit/calculator task; no 221 envelope.
+
+## SUPERSEDED —219-R1 bounded ACCEPT; only220 authorized publication API —2026-10-25
 
 Architect source-reviewed4fa863c9150c79759d43a5b1624e4eaed2e856cc againste4e3a1cf7b6fcc0e9ba7e84c77eb1526a49bb101. Fresh pointer reload precedes version/no-op decisions; Domain next-version validation now precedes target/time assignment; typed domain refusal preserved. Worker red3/green12 real15432 storage facts/build0; root source review, no reruns. Time26>20/stop12 deviation remains.
 219/219-R1 accepted for the two demonstrated defects and ordinary select/clear/capture-pointer behavior; no R2 proof loop. Reload disappearance claim is NOT proven: EF can detach missing row without throwing;220 must add the small post-Reload Detached-state guard before returning tracked reference. This is adjacent hygiene, no schema/engine rewrite.

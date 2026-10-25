@@ -502,7 +502,10 @@ public sealed class ShippingSelectedCapturedRevisionDirectory(
         try
         {
             await context.Entry(tracked).ReloadAsync(cancellationToken);
-            return tracked;
+
+            // A reload of a row that no longer exists can detach the entry instead of throwing. That
+            // reference is NOT a verified live token, so it is never returned as one (TB-220 hygiene).
+            return context.Entry(tracked).State == EntityState.Detached ? null : tracked;
         }
         catch (DbUpdateConcurrencyException)
         {

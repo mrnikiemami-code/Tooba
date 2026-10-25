@@ -207,4 +207,19 @@
   <data name="shipping.authoring.revision_snapshot_not_found" xml:space="preserve">
     <value>نسخهٔ ثبت‌شدهٔ این بازبینی پیش‌نویس یافت نشد.</value>
   </data>
+  <data name="shipping.selected_capture.conflict" xml:space="preserve">
+    <value>انتخاب نسخهٔ ثبت‌شده توسط درخواست دیگری تغییر کرده است؛ دوباره بخوانید و تکرار کنید.</value>
+  </data>
+  <data name="shipping.selected_capture.snapshot_unavailable" xml:space="preserve">
+    <value>نسخهٔ ثبت‌شدهٔ انتخاب‌شده برای این مالک قابل اثبات نیست.</value>
+  </data>
+  <data name="shipping.selected_capture.binding_mismatch" xml:space="preserve">
+    <value>نسخهٔ ثبت‌شدهٔ انتخاب‌شده به روش ارسال دیگری تعلق دارد.</value>
+  </data>
+  <data name="shipping.selected_capture.invalid" xml:space="preserve">
+    <value>درخواست انتخاب نسخهٔ ثبت‌شده معتبر نیست.</value>
+  </data>
+  <data name="shipping.selected_capture.owner_scope_unavailable" xml:space="preserve">
+    <value>هویت مالک ارسال برای این درخواست قابل تشخیص نیست.</value>
+  </data>
 </root>

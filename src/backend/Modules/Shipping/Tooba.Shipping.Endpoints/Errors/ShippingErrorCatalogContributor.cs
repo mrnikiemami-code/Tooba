@@ -143,6 +143,24 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
         D(ShippingErrorCodes.AuthoringMethodSettingsInvalid, "The method draft settings are not a valid freight payment and calculation choice."),
         D(ShippingErrorCodes.AuthoringTypeAssignmentInvalid, "The draft shipping type selection is not a valid catalog reference."),
         D(ShippingErrorCodes.AuthoringTypeSelectionUnavailable, "The selected shipping type is unknown or not active."),
+        // TB-220: selection conflicts are genuine state conflicts (a stale expected token), never a generic
+        // 400/500. All other selection refusals keep the module's explicit Business classification.
+        new(
+            Code: ShippingErrorCodes.SelectedCaptureConflict,
+            Classification: ErrorClassification.Conflict,
+            HttpStatus: StatusCodes.Status409Conflict,
+            LocalizationKey: ShippingErrorCodes.SelectedCaptureConflict,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "The selected captured revision was changed by another request."),
+        new(
+            Code: ShippingErrorCodes.SelectedCaptureSnapshotUnavailable,
+            Classification: ErrorClassification.Conflict,
+            HttpStatus: StatusCodes.Status409Conflict,
+            LocalizationKey: ShippingErrorCodes.SelectedCaptureSnapshotUnavailable,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "The selected captured revision cannot be proven for this owner."),
+        D(ShippingErrorCodes.SelectedCaptureBindingMismatch, "The selected captured revision belongs to another shipping method."),
+        D(ShippingErrorCodes.SelectedCaptureInvalid, "The captured revision selection request is not valid."),
     ];
 
     private static ErrorDescriptor D(string code, string fallback) =>
